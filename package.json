@@ -60,6 +60,11 @@
 			"import": "./dist/geometry/index.mjs",
 			"require": "./dist/geometry/index.cjs"
 		},
+		"./diagram": {
+			"types": "./dist/diagram/index.d.ts",
+			"import": "./dist/diagram/index.mjs",
+			"require": "./dist/diagram/index.cjs"
+		},
 		"./xml": {
 			"types": "./dist/xml/index.d.ts",
 			"import": "./dist/xml/index.mjs",

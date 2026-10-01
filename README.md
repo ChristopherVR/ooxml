@@ -34,15 +34,16 @@ import { parseXml } from '@christophervr/ooxml-core/xml'; // one area
 import { xml, opc } from '@christophervr/ooxml-core'; // or by namespace (shared building blocks)
 ```
 
-| Area       | What it is                                                                                                                                                          |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `xml`      | The shared XML model: strict DOM parsing and serialization, namespaces, namespace-aware helpers.                                                                    |
-| `opc`      | Open Packaging Conventions: relationships, content types, part paths, zip helpers, safe hyperlinks.                                                                 |
-| `units`    | Branded EMU, twip and point types, constants and conversions.                                                                                                       |
-| `color`    | Hex, RGB, HSL and linear colour primitives, OOXML percent and angle parsing.                                                                                        |
-| `geometry` | DrawingML preset shapes, connection sites, clip paths, callouts and boolean shape operations.                                                                       |
-| `docx`     | WordprocessingML: model, parser, preserving serializer, editing, validation. Also `/docx/embedded`.                                                                 |
-| `pptx`     | PresentationML: model, parser, serializer, editing, charts, SmartArt, converters, CLI, signatures. Subpaths `/pptx/converter`, `/pptx/cli`, `/pptx/signature-node`. |
+| Area       | What it is                                                                                                                                                                                                   |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `xml`      | The shared XML model: strict DOM parsing and serialization, namespaces, namespace-aware helpers.                                                                                                             |
+| `opc`      | Open Packaging Conventions: relationships, content types, part paths, zip helpers, safe hyperlinks.                                                                                                          |
+| `units`    | Branded EMU, twip and point types, constants and conversions.                                                                                                                                                |
+| `color`    | Hex, RGB, HSL and linear colour primitives, OOXML percent and angle parsing.                                                                                                                                 |
+| `geometry` | DrawingML preset shapes, connection sites, clip paths, callouts and boolean shape operations.                                                                                                                |
+| `diagram`  | SmartArt (DiagramML), format-neutral: data model, layout/colour/quick-style parts, the cached `dsp:drawing` shape tree, relationship resolution and a loader. Used by `docx`; `pptx` re-imports its parsers. |
+| `docx`     | WordprocessingML: model, parser, preserving serializer, editing, validation. Also `/docx/embedded`.                                                                                                          |
+| `pptx`     | PresentationML: model, parser, serializer, editing, charts, SmartArt, converters, CLI, signatures. Subpaths `/pptx/converter`, `/pptx/cli`, `/pptx/signature-node`.                                          |
 
 Legacy binary formats (`.doc`, `.xls`, `.ppt`) and the compound-file container live in the sibling package [`ole2`](https://github.com/ChristopherVR/ole2); this package never contains binary codecs, and `ole2` never contains modern OOXML.
 
