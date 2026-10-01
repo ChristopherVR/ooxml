@@ -23,6 +23,8 @@
  *   - a version older than the registry's `latest` is published under the `old` dist-tag so it
  *     cannot move `latest` backwards.
  *
+ * `--manual` publishes without provenance, for the one-off first publish from a maintainer machine
+ * (the manifest rewrite and every check still run).
  * `--dry-run` runs all the checks and prints the `npm publish` commands without running them.
  * Node >= 22, npm >= 11.5.1 (trusted publishing) on the publishing runner.
  */
@@ -160,9 +162,11 @@ function main() {
 				}
 			}
 		}
+		// `--manual` is for the one-off first publish from a maintainer machine: provenance needs the
+		// OIDC token of a CI run, so it is omitted. Every other check and rewrite is unchanged.
 		const args = [
 			'publish',
-			'--provenance',
+			...(argv.includes('--manual') ? [] : ['--provenance']),
 			'--access',
 			'public',
 			'--tag',

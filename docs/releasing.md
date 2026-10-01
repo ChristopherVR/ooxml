@@ -36,7 +36,7 @@ The level is the highest Conventional Commit level among the commits since that 
 
 ### How core releases affect ui
 
-The ui manifest declares `"@christophervr/ooxml-core": "workspace:*"`, so Bun links the workspace in development. In the published tarball that becomes `^<core version in the repository at publish time>` (see below). A core release therefore does not force a ui release as long as the new core version still satisfies the range ui last shipped with:
+The ui manifest declares `"@christophervr/ooxml-core": "*"` (the repository root is the core and cannot be a member of its own Bun workspace, so `workspace:*` cannot link; tsconfig paths point the UI at the core source in development). In the published tarball that becomes `^<core version in the repository at publish time>` (see below). A core release therefore does not force a ui release as long as the new core version still satisfies the range ui last shipped with:
 
 | Core change                                 | Core release | ui release                                                              |
 | ------------------------------------------- | ------------ | ----------------------------------------------------------------------- |
@@ -83,7 +83,7 @@ gh workflow run release.yml -f tag=@christophervr/office-ui@0.1.0
 
 `scripts/publish-released.mjs` publishes the released packages in dependency order (core, then ui), each with `npm publish --provenance --access public` run **from that package's own directory**. Before uploading it checks that the manifest on disk is the version being published, that no dependency uses `file:`/`link:` or a `workspace:` range on anything but the sibling, that a sibling required by the package is already on npm, and that the version is not already published (it is skipped if so, so re-runs are safe). A version older than the registry's `latest` is published under the `old` dist-tag. `--dry-run` prints the commands without publishing.
 
-`npm publish` does not rewrite `workspace:` ranges (Bun and pnpm do, npm does not), so for the upload only, the script rewrites the ui manifest's `workspace:*` on core to `^<core version on disk>` and restores the file afterwards. The repository keeps `workspace:*`; the tarball carries a real caret range. Because core is stamped and published before ui in the same run, that range always points at a version that exists on npm.
+`npm publish` does not rewrite `workspace:` ranges (Bun and pnpm do, npm does not), so for the upload only, the script rewrites the ui manifest's `*` (or `workspace:*`) on core to `^<core version on disk>` and restores the file afterwards. The repository keeps `*`, so `bun install` never has to resolve a core version that is published later in the same release; the tarball carries a real caret range. Because core is stamped and published before ui in the same run, that range always points at a version that exists on npm.
 
 ### Authentication: trusted publishing, no secrets
 
@@ -107,16 +107,15 @@ There is no npm token anywhere. The `publish` job requests an OIDC token (`id-to
 Trusted publishing cannot create a package. Either publish the first version by hand, or let the workflow try (it will fail at the `npm publish` step with a 404/permission error until the publisher exists, and the retry is `gh workflow run release.yml -f tag=@christophervr/office-ui@<version>`). By hand, from a clean checkout of the commit you want to publish, logged in to npm with an account that owns the `@christophervr` scope:
 
 ```sh
+git pull
 bun install
 bun run build                         # core first: the UI resolves it through dist
-cd packages/ui
-bun run build
-# Bun and pnpm rewrite `workspace:*`; npm does not. Pack with Bun, publish the tarball with npm:
-bun pm pack                           # writes christophervr-office-ui-<version>.tgz with ^<core> in place of workspace:*
-npm publish ./christophervr-office-ui-<version>.tgz --access public
+bun run --cwd packages/ui build
+npm login                             # as an owner of the @christophervr scope (2FA)
+node scripts/publish-released.mjs --tag @christophervr/office-ui@<version> --manual
 ```
 
-(`bun pm pack` is used only because it substitutes the workspace range; check with `tar -xOf christophervr-office-ui-*.tgz package/package.json | grep ooxml-core` that it shows `^x.y.z`, not `workspace:`. The version must equal the manifest version, and core's published version must satisfy the range.) A manual publish carries no provenance; that is expected.
+(`publish-released.mjs` does what the workflow does: it rewrites the ui manifest's `*` on core to `^<core version on disk>` for the upload only and restores the file, refuses to publish unless that core version is already on npm, and publishes from `packages/ui`. `--manual` only omits provenance, which needs a CI OIDC token; that is expected for the first publish. `--dry-run` prints the command first.)
 
 Then configure the trusted publisher (table above) on npmjs.com. Nothing else is needed: the next scheduled run sees `@christophervr/office-ui@<version>` on npm with no tag, treats it as the baseline (see "First release and baselines"), pushes the tag, and later UI changes release normally. If you want the tag immediately: `git tag @christophervr/office-ui@<version> <commit> && git push origin @christophervr/office-ui@<version>`.
 

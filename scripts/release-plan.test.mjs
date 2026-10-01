@@ -258,6 +258,14 @@ test('applyPlan stamps versions and keeps workspace ranges for Bun', () => {
 	assert.deepEqual(read('packages/ui/package.json').dependencies, { [CORE]: 'workspace:*' });
 });
 
+test('applyPlan keeps a `*` sibling range (published as a caret range later)', () => {
+	const r = repo({ uiRange: '*' });
+	r.commit('feat(core): add a parser', r.touch('src/index.ts'));
+	applyPlan({ root: r.root, packages: PACKAGES }, r.plan(bothPublished));
+	const ui = JSON.parse(readFileSync(join(r.root, 'packages/ui/package.json'), 'utf8'));
+	assert.deepEqual(ui.dependencies, { [CORE]: '*' });
+});
+
 test('applyPlan repoints a plain range only for a released dependent', () => {
 	const r = repo({ uiRange: '^0.1.0' });
 	r.commit('feat(core): add a parser', r.touch('src/index.ts'));

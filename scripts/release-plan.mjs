@@ -125,8 +125,14 @@ export function satisfies(range, version) {
 	return low[1] > 0 ? v[0] === 0 && v[1] === low[1] : v[0] === 0 && v[1] === 0 && v[2] === low[2];
 }
 
-/** A `workspace:` range: published as a caret range on the sibling's version at publish time. */
-export const isWorkspaceRange = (range) => /^workspace:/u.test(range);
+/**
+ * A range that tracks the sibling in this repository: `workspace:*`, or `*` where Bun cannot link
+ * the sibling (the repository root is the core and cannot be a member of its own workspace, so the
+ * UI declares `*` and tsconfig paths point at the core source). Either is published as a caret
+ * range on the sibling's version at publish time and is never rewritten in the repository, so
+ * `bun install` never has to resolve a version that is only published later in the same release.
+ */
+export const isWorkspaceRange = (range) => /^(?:workspace:|\*$)/u.test(range);
 
 /** The packages of `table` whose manifest exists in `root` (a package may not be merged yet). */
 export function presentPackages(root, table) {

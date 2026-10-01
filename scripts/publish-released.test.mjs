@@ -68,6 +68,14 @@ test('a workspace range on a sibling is published as a caret range on its versio
 	assert.deepEqual(manifest.devDependencies, { '@x/core': '^0.4.2' });
 });
 
+test('a `*` range on a sibling (the UI on the core) is published as a caret range', () => {
+	writeUi({ '@x/core': '*', lit: '^3.0.0' });
+	assert.deepEqual(publishManifest(ui, versions, temp).dependencies, {
+		'@x/core': '^0.4.2',
+		lit: '^3.0.0',
+	});
+});
+
 test('a workspace range on anything but a sibling cannot be published', () => {
 	writeUi({ '@x/other': 'workspace:*' });
 	assert.throws(() => verifyManifest(ui, versions, temp), /cannot be installed/);

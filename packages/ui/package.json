@@ -70,7 +70,7 @@
 		"test:package": "node scripts/package-smoke.mjs"
 	},
 	"dependencies": {
-		"@christophervr/ooxml-core": "^0.1.0"
+		"@christophervr/ooxml-core": "*"
 	},
 	"devDependencies": {
 		"@types/jsdom": "^21.1.7",
