@@ -1,0 +1,26 @@
+{
+	"name": "ooxml-core-workspace",
+	"private": true,
+	"description": "Shared modern OOXML logic for the Word, PowerPoint and Excel viewers",
+	"license": "Apache-2.0",
+	"author": "ChristopherVR",
+	"workspaces": [
+		"packages/*"
+	],
+	"type": "module",
+	"scripts": {
+		"typecheck": "tsc -p tsconfig.json --noEmit",
+		"test": "vitest run",
+		"fmt": "oxfmt",
+		"fmt:check": "oxfmt --check"
+	},
+	"devDependencies": {
+		"@types/node": "^22.0.0",
+		"oxfmt": "*",
+		"typescript": "^5.9.3",
+		"vitest": "^3.2.0"
+	},
+	"engines": {
+		"node": ">=22"
+	}
+}

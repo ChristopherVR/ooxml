@@ -1,0 +1,17 @@
+{
+	"name": "@christophervr/ooxml-units",
+	"version": "0.1.0",
+	"description": "Branded OOXML length units (EMU, twips, half- and eighth-points) and conversions",
+	"license": "Apache-2.0",
+	"author": "ChristopherVR",
+	"files": [
+		"src"
+	],
+	"type": "module",
+	"sideEffects": false,
+	"main": "./src/index.ts",
+	"types": "./src/index.ts",
+	"exports": {
+		".": "./src/index.ts"
+	}
+}
