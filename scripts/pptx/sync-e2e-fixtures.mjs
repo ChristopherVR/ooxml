@@ -3,7 +3,8 @@
 // copies them from a pptx-viewer checkout into the git-ignored `src/pptx/__tests__/fixtures/e2e`.
 //
 // Source lookup: $PPTX_VIEWER_E2E_FIXTURES, else `../pptx-viewer/e2e/fixtures` next to this repo.
-// Returns true when the fixtures are present afterwards.
+// Missing decks are copied on every call; existing files are left alone. Returns true when the
+// fixtures are present afterwards.
 import { cpSync, existsSync, readdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -13,11 +14,11 @@ export const target = resolve(root, 'src/pptx/__tests__/fixtures/e2e');
 
 export function syncE2eFixtures({ quiet = false } = {}) {
 	const present = () => existsSync(target) && readdirSync(target).some((f) => f.endsWith('.pptx'));
-	if (present()) return true;
 	const source = resolve(
 		process.env.PPTX_VIEWER_E2E_FIXTURES ?? resolve(root, '../pptx-viewer/e2e/fixtures'),
 	);
 	if (!existsSync(source)) {
+		if (present()) return true;
 		if (!quiet)
 			console.warn(
 				`[ooxml-core] pptx e2e fixtures not found (looked in ${source}); tests that read them are skipped. ` +
@@ -25,8 +26,8 @@ export function syncE2eFixtures({ quiet = false } = {}) {
 			);
 		return false;
 	}
-	cpSync(source, target, { recursive: true });
-	if (!quiet) console.log(`[ooxml-core] copied pptx e2e fixtures from ${source}`);
+	// Copy any deck that is missing (new decks added to pptx-viewer); never overwrite existing ones.
+	cpSync(source, target, { recursive: true, force: false, errorOnExist: false });
 	return present();
 }
 
