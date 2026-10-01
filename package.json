@@ -2,6 +2,22 @@
 	"name": "@christophervr/ooxml-core",
 	"version": "0.1.0",
 	"description": "Shared OOXML logic for the Word, PowerPoint and Excel viewers: everything except the UI",
+	"keywords": [
+		"charts",
+		"docx",
+		"drawingml",
+		"office",
+		"ooxml",
+		"opc",
+		"pptx",
+		"presentationml",
+		"smartart",
+		"wordprocessingml"
+	],
+	"homepage": "https://github.com/ChristopherVR/ooxml-core#readme",
+	"bugs": {
+		"url": "https://github.com/ChristopherVR/ooxml-core/issues"
+	},
 	"license": "Apache-2.0",
 	"author": "ChristopherVR",
 	"repository": {
@@ -84,6 +100,9 @@
 			"require": "./dist/pptx/signature-node/index.cjs"
 		}
 	},
+	"publishConfig": {
+		"access": "public"
+	},
 	"scripts": {
 		"build": "node scripts/clean.mjs dist && tsc -p tsconfig.build.json && bun run build:pptx",
 		"build:pptx": "tsup --config tsup.pptx.config.ts && tsdown --config tsdown.pptx.config.ts && node scripts/pptx/merge-declarations.mjs",
@@ -94,7 +113,8 @@
 		"test": "vitest run",
 		"gen:docx-schema-types": "bun scripts/gen-schema-types.ts",
 		"fmt": "oxfmt",
-		"fmt:check": "oxfmt --check"
+		"fmt:check": "oxfmt --check",
+		"test:package": "node scripts/package-smoke.mjs"
 	},
 	"dependencies": {
 		"@xmldom/xmldom": "^0.9.12",

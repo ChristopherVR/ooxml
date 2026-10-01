@@ -1,0 +1,36 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+env:
+  # The pptx tests read decks that belong to the pptx-viewer end-to-end suite. They are not stored
+  # here; this pinned revision of the public pptx-viewer repository supplies them.
+  PPTX_VIEWER_FIXTURES_REF: 17d75540e
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.5
+      - name: Fetch the pptx end-to-end decks
+        run: |
+          git clone --filter=blob:none --no-checkout https://github.com/ChristopherVR/pptx-viewer.git ../pptx-viewer
+          git -C ../pptx-viewer sparse-checkout set e2e/fixtures
+          git -C ../pptx-viewer checkout "$PPTX_VIEWER_FIXTURES_REF"
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun run test
+      - run: bun run build
+      - run: bun run test:package

@@ -16,7 +16,7 @@ Each area is a subpath import (`import { parseXml } from '@christophervr/ooxml-c
 | `geometry` | from pptx-viewer | Preset shapes, connection sites, clip paths, callouts, boolean shape ops                                                                                                           |
 | `xml`      | from docx-viewer | The shared XML model: strict DOM parse/serialize, namespaces, helpers                                                                                                              |
 | `opc`      | from docx-viewer | Relationships, content types, part paths, zip helpers, safe hyperlinks                                                                                                             |
-| `docx`     | from docx-viewer | WordprocessingML model, parser, serializer, editing, validation (ECMA-376 XSD checks in tests) |
+| `docx`     | from docx-viewer | WordprocessingML model, parser, serializer, editing, validation (ECMA-376 XSD checks in tests)                                                                                     |
 | `pptx`     | from pptx-viewer | PresentationML model, parser, serializer, editing, converter, CLI, signatures (subpaths `/pptx`, `/pptx/converter`, `/pptx/cli`, `/pptx/signature-node`; relaxed TS flags for now) |
 
 Planned areas: `drawingml`, `chart`, `diagram`, `math`, `crypto`, `schema`, then the document area `xlsx` (models, parsers, serializers, editing, layout) and `collab` (Yjs and the sync protocol).
