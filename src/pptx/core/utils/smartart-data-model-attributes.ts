@@ -1,3 +1,4 @@
+import { parseConnectionAttributes, parseCustomLayoutAttributes } from '../../../diagram/index.js';
 import type {
 	PptxSmartArtConnection,
 	PptxSmartArtNode,
@@ -6,6 +7,12 @@ import type {
 } from '../types';
 
 type NullableAttribute = string | null | undefined;
+
+/** Reads `@_name` attributes of a `fast-xml-parser` node for the neutral diagram parsers. */
+const objectAttributeReader = (node: XmlObject) => (name: string) => {
+	const value = node['@_' + name];
+	return value === undefined ? undefined : String(value ?? '');
+};
 
 export interface SmartArtDataModelIssue {
 	code:
@@ -22,11 +29,6 @@ function optionalString(value: unknown): string | undefined {
 	return text.length > 0 ? text : undefined;
 }
 
-function optionalInteger(value: unknown): number | undefined {
-	const parsed = Number.parseInt(String(value ?? ''), 10);
-	return Number.isFinite(parsed) ? parsed : undefined;
-}
-
 function applyNullableAttribute(xml: XmlObject, key: string, value: NullableAttribute): void {
 	if (value === undefined) {
 		return;
@@ -40,30 +42,7 @@ function applyNullableAttribute(xml: XmlObject, key: string, value: NullableAttr
 
 /** Parse the typed CT_Cxn attributes while leaving its XML object untouched. */
 export function parseSmartArtConnection(connection: XmlObject): PptxSmartArtConnection | undefined {
-	const sourceId = optionalString(connection['@_srcId']);
-	const destId = optionalString(connection['@_destId']);
-	if (!sourceId || !destId) {
-		return undefined;
-	}
-	const parsed: PptxSmartArtConnection = {
-		sourceId,
-		destId,
-	};
-	const optionalValues = {
-		modelId: optionalString(connection['@_modelId']),
-		type: optionalString(connection['@_type']),
-		srcOrd: optionalInteger(connection['@_srcOrd']),
-		destOrd: optionalInteger(connection['@_destOrd']),
-		parentTransitionId: optionalString(connection['@_parTransId']),
-		siblingTransitionId: optionalString(connection['@_sibTransId']),
-		presentationId: optionalString(connection['@_presId']),
-	};
-	for (const [key, value] of Object.entries(optionalValues)) {
-		if (value !== undefined) {
-			(parsed as unknown as Record<string, unknown>)[key] = value;
-		}
-	}
-	return parsed;
+	return parseConnectionAttributes(objectAttributeReader(connection));
 }
 
 /** Apply editable CT_Pt attributes without disturbing unknown attributes/children. */
@@ -88,35 +67,6 @@ export function applySmartArtConnectionAttributes(
 	applyNullableAttribute(xml, '@_presId', connection.presentationId);
 }
 
-/** Parse a `dgm:prSet` boolean attribute (`"1"`/`"true"`), or `undefined`. */
-function optionalBoolean(value: unknown): boolean | undefined {
-	const text = String(value ?? '').trim();
-	if (text.length === 0) {
-		return undefined;
-	}
-	return text === '1' || text.toLowerCase() === 'true';
-}
-
-/** Parse a `dgm:prSet` angle attribute (60,000ths of a degree) to plain degrees. */
-function optionalAngleDegrees(value: unknown): number | undefined {
-	const text = String(value ?? '').trim();
-	if (text.length === 0) {
-		return undefined;
-	}
-	const parsed = Number.parseFloat(text);
-	return Number.isFinite(parsed) ? parsed / 60000 : undefined;
-}
-
-/** Parse a `dgm:prSet` percentage attribute (100,000ths of a percent) to a ratio. */
-function optionalPercentageRatio(value: unknown): number | undefined {
-	const text = String(value ?? '').trim();
-	if (text.length === 0) {
-		return undefined;
-	}
-	const parsed = Number.parseFloat(text);
-	return Number.isFinite(parsed) ? parsed / 100000 : undefined;
-}
-
 /**
  * Parse the manual layout override attributes (`cust*`) from a `dgm:pt`'s
  * `dgm:prSet` element, or `undefined` when `prSet` is absent or carries none of
@@ -126,67 +76,7 @@ function optionalPercentageRatio(value: unknown): number | undefined {
 export function parseSmartArtPointCustomLayout(
 	prSet: XmlObject | undefined,
 ): SmartArtNodeCustomLayout | undefined {
-	if (!prSet) {
-		return undefined;
-	}
-	const custom: SmartArtNodeCustomLayout = {};
-	const angle = optionalAngleDegrees(prSet['@_custAng']);
-	if (angle !== undefined) {
-		custom.angle = angle;
-	}
-	const scaleX = optionalPercentageRatio(prSet['@_custScaleX']);
-	if (scaleX !== undefined) {
-		custom.scaleX = scaleX;
-	}
-	const scaleY = optionalPercentageRatio(prSet['@_custScaleY']);
-	if (scaleY !== undefined) {
-		custom.scaleY = scaleY;
-	}
-	const sizeX = optionalPercentageRatio(prSet['@_custSzX']);
-	if (sizeX !== undefined) {
-		custom.sizeX = sizeX;
-	}
-	const sizeY = optionalPercentageRatio(prSet['@_custSzY']);
-	if (sizeY !== undefined) {
-		custom.sizeY = sizeY;
-	}
-	const linFactX = optionalPercentageRatio(prSet['@_custLinFactX']);
-	if (linFactX !== undefined) {
-		custom.linearFactorX = linFactX;
-	}
-	const linFactY = optionalPercentageRatio(prSet['@_custLinFactY']);
-	if (linFactY !== undefined) {
-		custom.linearFactorY = linFactY;
-	}
-	const linFactNeighborX = optionalPercentageRatio(prSet['@_custLinFactNeighborX']);
-	if (linFactNeighborX !== undefined) {
-		custom.linearFactorNeighborX = linFactNeighborX;
-	}
-	const linFactNeighborY = optionalPercentageRatio(prSet['@_custLinFactNeighborY']);
-	if (linFactNeighborY !== undefined) {
-		custom.linearFactorNeighborY = linFactNeighborY;
-	}
-	const radScaleRad = optionalPercentageRatio(prSet['@_custRadScaleRad']);
-	if (radScaleRad !== undefined) {
-		custom.radialScaleRadius = radScaleRad;
-	}
-	const radScaleInc = optionalPercentageRatio(prSet['@_custRadScaleInc']);
-	if (radScaleInc !== undefined) {
-		custom.radialScaleIncrement = radScaleInc;
-	}
-	const flipHor = optionalBoolean(prSet['@_custFlipHor']);
-	if (flipHor !== undefined) {
-		custom.flipHorizontal = flipHor;
-	}
-	const flipVert = optionalBoolean(prSet['@_custFlipVert']);
-	if (flipVert !== undefined) {
-		custom.flipVertical = flipVert;
-	}
-	const custT = optionalBoolean(prSet['@_custT']);
-	if (custT !== undefined) {
-		custom.hasCustomTransform = custT;
-	}
-	return Object.keys(custom).length > 0 ? custom : undefined;
+	return prSet ? parseCustomLayoutAttributes(objectAttributeReader(prSet)) : undefined;
 }
 
 function childrenByLocalName(parent: XmlObject | undefined, name: string): XmlObject[] {

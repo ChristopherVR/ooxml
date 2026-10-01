@@ -6,6 +6,12 @@
  * @module pptx-types/smart-art
  */
 
+import type {
+	DiagramColorScheme,
+	DiagramConnection,
+	DiagramLayoutType,
+	DiagramStyleIntensity,
+} from '../../../diagram/index.js';
 import type { PptxCustomPathProperties } from './geometry';
 import type { PptxSmartArtChrome } from './smart-art-chrome';
 import type { PptxSmartArtLayoutDefinition } from './smart-art-layout-definition';
@@ -60,22 +66,7 @@ export type * from './smart-art-constraint-rules';
  * // => "hierarchy" — one of: "list" | "process" | "cycle" | "hierarchy" | "relationship" | …
  * ```
  */
-export type SmartArtLayoutType =
-	| 'list'
-	| 'process'
-	| 'cycle'
-	| 'hierarchy'
-	| 'relationship'
-	| 'matrix'
-	| 'pyramid'
-	| 'funnel'
-	| 'gear'
-	| 'target'
-	| 'timeline'
-	| 'venn'
-	| 'chevron'
-	| 'bending'
-	| 'unknown';
+export type SmartArtLayoutType = DiagramLayoutType;
 
 /**
  * Named SmartArt layout presets for creation (subset of PowerPoint layouts).
@@ -132,12 +123,7 @@ export type SmartArtLayout =
  * // => "colorful1" — one of: "colorful1" | "colorful2" | "colorful3" | "monochromatic1" | "monochromatic2"
  * ```
  */
-export type SmartArtColorScheme =
-	| 'colorful1'
-	| 'colorful2'
-	| 'colorful3'
-	| 'monochromatic1'
-	| 'monochromatic2';
+export type SmartArtColorScheme = DiagramColorScheme;
 
 /**
  * SmartArt visual style intensity.
@@ -148,7 +134,7 @@ export type SmartArtColorScheme =
  * // => "moderate" — one of: "flat" | "moderate" | "intense"
  * ```
  */
-export type SmartArtStyle = 'flat' | 'moderate' | 'intense';
+export type SmartArtStyle = DiagramStyleIntensity;
 
 /**
  * A connection between two SmartArt data-model nodes.
@@ -163,34 +149,7 @@ export type SmartArtStyle = 'flat' | 'moderate' | 'intense';
  * // => satisfies PptxSmartArtConnection
  * ```
  */
-export interface PptxSmartArtConnection {
-	/** Stable CT_Cxn model identifier. Required when serialized. */
-	modelId?: string | null;
-	/** Model ID of the source node. */
-	sourceId: string;
-	/** Model ID of the destination node. */
-	destId: string;
-	/** Connection type (e.g. "parOf", "presOf", "sibTrans"). */
-	type?: string;
-	/** Source index for ordering sibling connections. */
-	srcOrd?: number;
-	/** Destination index for ordering. */
-	destOrd?: number;
-	/** Model ID of the parent transition point associated with this edge. */
-	parentTransitionId?: string | null;
-	/** Model ID of the sibling transition point associated with this edge. */
-	siblingTransitionId?: string | null;
-	/** Layout presentation identifier used by presentation connections. */
-	presentationId?: string | null;
-	/**
-	 * Connector text, read from the linked `parTrans`/`sibTrans` transition
-	 * point's `dgm:t` (via {@link parentTransitionId} / {@link siblingTransitionId}).
-	 * PowerPoint's own diagram editor lets a user type text directly onto an
-	 * org-chart relationship connector; `undefined` when the transition point
-	 * carries no text. Written back to that point on save.
-	 */
-	label?: string;
-}
+export type PptxSmartArtConnection = DiagramConnection;
 
 /**
  * A pre-computed shape from `ppt/diagrams/drawing*.xml`.
