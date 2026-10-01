@@ -53,7 +53,7 @@ Commits **must** follow [Conventional Commits](https://www.conventionalcommits.o
 - **scope**: the area: `units`, `color`, `geometry`, `xml`, `opc`, `docx`, `pptx`, `ci`, `deps`, `docs`.
 - **subject**: imperative, lower-case, no trailing period, header at most 72 characters.
 
-Whether a commit releases at all is decided by the **paths it touches**, not its type: only changes to published files (`src/` outside tests, the bundler and declaration configs, the manifest's shipping fields, the licence files) release a new version. Tests, docs, CI and fixtures never do, whatever their type, and a test-only `feat` does not raise the bump level. See [docs/releasing.md](docs/releasing.md).
+Whether a commit releases at all is decided by the **paths it touches**, not its type: only changes to a package's published files release a new version of that package (for `@christophervr/ooxml-core`: `src/` outside tests, the bundler and declaration configs, the manifest's shipping fields, the licence files; for `@christophervr/office-ui`: everything under `packages/ui/` outside tests). Tests, docs, CI and fixtures never do, whatever their type, and a test-only `feat` does not raise the bump level. See [docs/releasing.md](docs/releasing.md).
 
 Examples: `feat(xml): add a streaming serializer`, `fix(opc): resolve relative part names`, `feat(docx)!: rename the section model`.
 

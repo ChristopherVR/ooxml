@@ -1,21 +1,24 @@
 name: Release
 
 # Adapted from ChristopherVR/pptx-viewer .github/workflows/release.yml (Apache-2.0). See
-# docs/releasing.md for the whole flow. Single-package form: one package, one changelog.
+# docs/releasing.md for the whole flow. Two packages (core at the root, office-ui at packages/ui),
+# each with its own tag, changelog and npm publish.
 
 on:
   # Hourly. The planner is cumulative (the package is diffed from its own last tag), so everything
   # merged since the previous run lands in one release, and a run with no changes exits at the
   # planning step, so quiet hours are cheap no-ops. The baseline tag
   # `@christophervr/ooxml-core@0.1.0` marks the version already published, so the first run is a
-  # no-op until a commit touches published files (see docs/releasing.md).
+  # no-op until a commit touches published files (see docs/releasing.md). A package that is
+  # neither tagged nor on npm (office-ui before its first publish) is released as `initial`.
   schedule:
     - cron: '0 * * * *' # hourly, on the hour
   # Manual runs, two modes:
   #   - no input: cut a release now (same as the schedule would).
-  #   - tag=<npm-name>@<version>: re-publish ONLY that existing tag to npm, skipping the release
-  #     job. Useful when a publish was skipped or failed:
+  #   - tag=<npm-name>@<version>: re-publish ONLY that existing tag (either package) to npm,
+  #     skipping the release job. Useful when a publish was skipped or failed:
   #       gh workflow run release.yml -f tag=@christophervr/ooxml-core@0.1.0
+  #       gh workflow run release.yml -f tag=@christophervr/office-ui@0.1.0
   workflow_dispatch:
     inputs:
       tag:
@@ -74,6 +77,19 @@ jobs:
         id: plan
         run: node scripts/release-plan.mjs --write
 
+      # A package published by hand (the manual first publish of office-ui) has no tag yet. The
+      # planner baselines it at the commit npm recorded (or HEAD); record that as the tag so the
+      # next run finds it. No-op once the tags exist.
+      - name: Adopt baseline tags for packages published by hand
+        run: |
+          node -e "for (const p of Object.values(require('./release-plan.json').packages)) if (p.adopt) console.log(p.adopt.tag + ' ' + p.adopt.sha)" |
+          while read -r tag sha; do
+            [ -z "$tag" ] && continue
+            echo "Adopting $tag at $sha"
+            git tag "$tag" "$sha"
+            git push origin "refs/tags/$tag"
+          done
+
       # Publishing is switched on per repository, so a release is never tagged that cannot be
       # published afterwards. Set the NPM_PUBLISH repository variable to 'true' to enable.
       - name: Verify publishing is enabled
@@ -97,6 +113,7 @@ jobs:
         run: |
           bun run build
           bun run test:package
+          node scripts/build-released.mjs --smoke
 
       # Prepend the new release section to CHANGELOG.md. Prepend (rather than regeneration) means
       # shipped sections are never rewritten, so old tags can be culled by prune-releases without
@@ -112,16 +129,19 @@ jobs:
           # split into separate arguments; disable filename expansion so the shell does not expand
           # the globs first (that silently produced heading-only changelog sections).
           set -f
-          field() { node -p "require('./release-plan.json').packages['core']$1"; }
-          npm=$(field .npm)
-          tag=$(field .tag)
-          inc=$(node -e "console.log(require('./release-plan.json').packages.core.includePaths.map(p => '--include-path ' + p).join(' '))")
-          echo "Changelog for $npm -> $tag"
-          if [ -f CHANGELOG.md ]; then
-            bunx git-cliff --config cliff.toml --tag-pattern "^${npm}@" $inc --unreleased --tag "$tag" --prepend CHANGELOG.md
-          else
-            bunx git-cliff --config cliff.toml --tag-pattern "^${npm}@" $inc --tag "$tag" --output CHANGELOG.md
-          fi
+          field() { node -p "require('./release-plan.json').packages['$1']$2"; }
+          for key in $(node -p "const p=require('./release-plan.json');p.order.filter(k=>p.packages[k].release).join(' ')"); do
+            npm=$(field "$key" .npm)
+            tag=$(field "$key" .tag)
+            changelog=$(field "$key" .changelog)
+            inc=$(node -e "console.log(require('./release-plan.json').packages['$key'].includePaths.map(p => '--include-path ' + p).join(' '))")
+            echo "Changelog for $npm -> $tag ($changelog)"
+            if [ -f "$changelog" ]; then
+              bunx git-cliff --config cliff.toml --tag-pattern "^${npm}@" $inc --unreleased --tag "$tag" --prepend "$changelog"
+            else
+              bunx git-cliff --config cliff.toml --tag-pattern "^${npm}@" $inc --tag "$tag" --output "$changelog"
+            fi
+          done
 
       - name: Commit version bumps and changelogs
         if: steps.plan.outputs.any_changed == 'true'
@@ -132,10 +152,10 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          # Stage the changelog, the version bump AND the lockfile, so package.json +
-          # bun.lock in the repo always match what is published and the tag points at a commit
-          # whose manifests are truthful.
-          git add CHANGELOG.md package.json bun.lock
+          # Stage each released package's changelog and manifest (version bump) AND the lockfile,
+          # so package.json + bun.lock in the repo always match what is published and the tag
+          # points at a commit whose manifests are truthful.
+          git add $(node -p "const p=require('./release-plan.json');p.order.filter(k=>p.packages[k].release).flatMap(k=>[p.packages[k].manifest,p.packages[k].changelog]).join(' ')") bun.lock
           if git diff --cached --quiet; then
             echo "No release changes to commit"
           else
@@ -193,10 +213,11 @@ jobs:
               continue
             fi
             node scripts/release-notes.mjs "$key" > "${RUNNER_TEMP}/notes.md"
+            changelog=$(field "$key" .changelog)
             {
               echo ""
               echo "---"
-              echo "Superseded releases are pruned from this page; the full version history lives in [\`CHANGELOG.md\`](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/blob/main/CHANGELOG.md)."
+              echo "Superseded releases are pruned from this page; the full version history lives in [\`${changelog}\`](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/blob/main/${changelog})."
             } >> "${RUNNER_TEMP}/notes.md"
             gh release create "$tag" --target "$COMMIT" --title "$tag" --notes-file "${RUNNER_TEMP}/notes.md"
             echo "Released $tag"
@@ -297,6 +318,21 @@ jobs:
 
       - run: bun run build
 
+      # Workspace packages (office-ui) build after core, which they resolve through its dist.
+      # In re-publish mode there is no plan artifact, so build every workspace package present.
+      - name: Build workspace packages
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          if [ -n "$INPUT_TAG" ]; then
+            node scripts/release-plan.mjs --no-npm >/dev/null
+            node scripts/build-released.mjs --all
+          else
+            node scripts/build-released.mjs
+          fi
+
+      # Publishes each released package from its own directory (core first, then office-ui), with
+      # OIDC provenance. A `workspace:` range on core is rewritten to a caret range for the upload.
       - name: Publish to npm
         env:
           INPUT_TAG: ${{ inputs.tag }}

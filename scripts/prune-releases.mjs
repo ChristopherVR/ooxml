@@ -33,8 +33,10 @@
 
 import { execFileSync } from 'node:child_process';
 
-/** Published npm names, mirroring PACKAGES in scripts/release-plan.mjs. */
-const NPM_NAMES = ['@christophervr/ooxml-core'];
+import { PACKAGES } from './release-plan.mjs';
+
+/** Published npm names: every package of scripts/release-plan.mjs (core and ui). */
+const NPM_NAMES = Object.values(PACKAGES).map((meta) => meta.npm);
 
 const DEFAULT_KEEP = 1;
 
