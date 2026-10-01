@@ -26,7 +26,7 @@ bun run build
 bun run test:package   # packs the build and imports every entry point from a clean install
 ```
 
-The pptx tests read decks from the pptx-viewer end-to-end suite, which are not stored here. Check out [pptx-viewer](https://github.com/ChristopherVR/pptx-viewer) next to this repository (`../pptx-viewer`) or set `PPTX_VIEWER_E2E_FIXTURES` to its `e2e/fixtures` folder; the first test run copies them into a git-ignored folder. Without them, the tests that need them are skipped with a notice.
+The pptx tests read real decks from `src/pptx/__tests__/fixtures`, including a committed snapshot of the pptx-viewer end-to-end decks under `fixtures/e2e`; everything needed is in this repository.
 
 ## Code rules
 

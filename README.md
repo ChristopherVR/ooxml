@@ -109,7 +109,7 @@ bun run build
 bun run test:package   # packs the build and imports every entry point from a clean install
 ```
 
-The `pptx` tests read decks from the pptx-viewer end-to-end suite, which are not stored here; see [CONTRIBUTING.md](CONTRIBUTING.md) for how they are supplied. The working agreements are in [AGENTS.md](AGENTS.md), and [PROVENANCE.md](PROVENANCE.md) records where each module came from.
+The working agreements are in [AGENTS.md](AGENTS.md), and [PROVENANCE.md](PROVENANCE.md) records where each module came from.
 
 ## Related projects
 
