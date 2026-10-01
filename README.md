@@ -1,22 +1,23 @@
-# ooxml-core
+# @christophervr/ooxml-core
 
-Shared modern OOXML logic for the Office viewers: units, colour, geometry, packaging (OPC), the common XML model, DrawingML, charts, diagrams (SmartArt), math and encryption primitives.
+All the logic behind the Office viewers, as one package. The viewers (`docx-viewer`, `pptx-viewer`, later `xlsx-viewer`) contain only their UI and consume this.
 
 - Legacy binary formats and the compound-file container live in [`ole2`](../ole2), not here.
-- Each Office type has its own repository and model (`docx-viewer`, `pptx-viewer`, `xlsx-viewer` later) and consumes these packages.
-- The extraction plan, phases and decisions are in `docx-viewer/docs/ooxml-core-plan.md`.
+- The migration plan, phases and decisions are in `docx-viewer/docs/ooxml-core-plan.md`.
 
-## Packages
+## Areas
 
-| Package                         | Status                                        | Purpose                                                                               |
-| ------------------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `@christophervr/ooxml-units`    | seeded from docx-viewer                       | Branded Emu/Twips/points types, EMU constants and conversions                         |
-| `@christophervr/ooxml-color`    | seeded from pptx-viewer                       | Hex/RGB/HSL primitives, linear sRGB, OOXML percent and angle parsing                  |
-| `@christophervr/ooxml-geometry` | seeded from pptx-viewer (self-contained part) | Preset shape definitions, connection sites, clip paths, callouts, boolean shape ops   |
-| `@christophervr/ooxml-xml`      | seeded from docx-viewer                       | The shared XML model: strict DOM parse/serialize, namespaces, namespace-aware helpers |
-| `@christophervr/ooxml-opc`      | seeded from docx-viewer                       | OPC packaging: relationships, content types, part paths, zip helpers, safe hyperlinks |
+Each area is a subpath import (`import { parseXml } from '@christophervr/ooxml-core/xml'`); the root entry groups them by namespace (`import { xml } from '@christophervr/ooxml-core'`).
 
-Further packages (`color`, `geometry`, `opc`, `xml`, `drawingml`, `chart`, `diagram`, `math`, `crypto`, `schema`) are added phase by phase; see the plan.
+| Area       | Status           | Purpose                                                                  |
+| ---------- | ---------------- | ------------------------------------------------------------------------ |
+| `units`    | from docx-viewer | Branded Emu/Twips/points types, EMU constants and conversions            |
+| `color`    | from pptx-viewer | Hex/RGB/HSL primitives, linear sRGB, OOXML percent and angle parsing     |
+| `geometry` | from pptx-viewer | Preset shapes, connection sites, clip paths, callouts, boolean shape ops |
+| `xml`      | from docx-viewer | The shared XML model: strict DOM parse/serialize, namespaces, helpers    |
+| `opc`      | from docx-viewer | Relationships, content types, part paths, zip helpers, safe hyperlinks   |
+
+Planned areas: `drawingml`, `chart`, `diagram`, `math`, `crypto`, `schema`, then the document areas `docx`, `pptx`, `xlsx` (models, parsers, serializers, editing, layout) and `collab` (Yjs and the sync protocol).
 
 ## Working here
 
@@ -24,6 +25,7 @@ Further packages (`color`, `geometry`, `opc`, `xml`, `drawingml`, `chart`, `diag
 bun install
 bun run typecheck
 bun run test
+bun run build
 ```
 
 See `AGENTS.md` for the working agreements and `PROVENANCE.md` for where each module came from.
