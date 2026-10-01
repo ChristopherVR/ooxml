@@ -8,9 +8,10 @@ Shared modern OOXML logic for the Office viewers: units, colour, geometry, packa
 
 ## Packages
 
-| Package                      | Status                  | Purpose                                                       |
-| ---------------------------- | ----------------------- | ------------------------------------------------------------- |
-| `@christophervr/ooxml-units` | seeded from docx-viewer | Branded Emu/Twips/points types, EMU constants and conversions |
+| Package                      | Status                  | Purpose                                                              |
+| ---------------------------- | ----------------------- | -------------------------------------------------------------------- |
+| `@christophervr/ooxml-units` | seeded from docx-viewer | Branded Emu/Twips/points types, EMU constants and conversions        |
+| `@christophervr/ooxml-color` | seeded from pptx-viewer | Hex/RGB/HSL primitives, linear sRGB, OOXML percent and angle parsing |
 
 Further packages (`color`, `geometry`, `opc`, `xml`, `drawingml`, `chart`, `diagram`, `math`, `crypto`, `schema`) are added phase by phase; see the plan.
 

@@ -11,12 +11,18 @@
         "vitest": "^3.2.0",
       },
     },
+    "packages/color": {
+      "name": "@christophervr/ooxml-color",
+      "version": "0.1.0",
+    },
     "packages/units": {
       "name": "@christophervr/ooxml-units",
       "version": "0.1.0",
     },
   },
   "packages": {
+    "@christophervr/ooxml-color": ["@christophervr/ooxml-color@workspace:packages/color"],
+
     "@christophervr/ooxml-units": ["@christophervr/ooxml-units@workspace:packages/units"],
 
     "@esbuild/aix-ppc64": ["@esbuild/aix-ppc64@0.28.2", "", { "os": "aix", "cpu": "ppc64" }, "sha512-XExcO+dvLKvVtNTibSTBej1NCAbaGhWn9Ww1ZPx80qsahhPFe/8jgWP0IchNe0F3HwkU7n8ejhH8bjonqht8mQ=="],
