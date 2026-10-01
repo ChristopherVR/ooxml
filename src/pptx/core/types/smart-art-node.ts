@@ -8,6 +8,7 @@
  * @module pptx-types/smart-art-node
  */
 
+import type { DiagramNodeCustomLayout } from '../../../diagram/index.js';
 import type { TextStyle } from './text';
 
 /**
@@ -134,42 +135,7 @@ export interface PptxSmartArtNodeStyle {
  * // => a node manually rotated 15 degrees and widened 20% in PowerPoint
  * ```
  */
-export interface SmartArtNodeCustomLayout {
-	/** `custAng`: additional rotation in degrees. */
-	angle?: number;
-	/** `custScaleX`: horizontal scale ratio (1 = no change). */
-	scaleX?: number;
-	/** `custScaleY`: vertical scale ratio (1 = no change). */
-	scaleY?: number;
-	/** `custSzX`: horizontal size ratio, layered on top of {@link scaleX}. */
-	sizeX?: number;
-	/** `custSzY`: vertical size ratio, layered on top of {@link scaleY}. */
-	sizeY?: number;
-	/** `custFlipHor`: the node was manually mirrored horizontally. */
-	flipHorizontal?: boolean;
-	/** `custFlipVert`: the node was manually mirrored vertically. */
-	flipVertical?: boolean;
-	/** `custLinFactX`: manual position nudge along X, as a fraction of the container width. */
-	linearFactorX?: number;
-	/** `custLinFactY`: manual position nudge along Y, as a fraction of the container height. */
-	linearFactorY?: number;
-	/**
-	 * `custLinFactNeighborX`: spacing compensation applied to a NEIGHBOURING
-	 * node when this one is resized. Parsed for round-trip completeness; not
-	 * applied by the per-node final transform (it has no effect on this node's
-	 * own geometry; folding it into a neighbour's geometry would require
-	 * whole-layout awareness the final transform pass does not have).
-	 */
-	linearFactorNeighborX?: number;
-	/** `custLinFactNeighborY`: see {@link linearFactorNeighborX} (Y axis). */
-	linearFactorNeighborY?: number;
-	/** `custRadScaleRad`: manual radius scale ratio for a radial/cycle node. */
-	radialScaleRadius?: number;
-	/** `custRadScaleInc`: manual angular-position nudge for a radial/cycle node. */
-	radialScaleIncrement?: number;
-	/** `custT`: whether `prSet` declares a custom transform is present at all. */
-	hasCustomTransform?: boolean;
-}
+export type SmartArtNodeCustomLayout = DiagramNodeCustomLayout;
 
 /**
  * A single node in the SmartArt data model.

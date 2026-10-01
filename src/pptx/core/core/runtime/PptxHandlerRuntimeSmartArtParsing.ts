@@ -1,3 +1,4 @@
+import { connectionLabel } from '../../../../diagram/index.js';
 import { XmlObject } from '../../types';
 import type {
 	PptxSmartArtConnection,
@@ -89,13 +90,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			// ordinal badges live on the `sibTrans` point; its paired `parTrans`
 			// is always blank). `parentTransitionId`'s text still wins when BOTH
 			// carry text, matching the documented org-chart connector-label case.
-			const parentText = parsed.parentTransitionId
-				? transitionTextById.get(parsed.parentTransitionId)
-				: undefined;
-			const siblingText = parsed.siblingTransitionId
-				? transitionTextById.get(parsed.siblingTransitionId)
-				: undefined;
-			const label = parentText ?? siblingText;
+			const label = connectionLabel(parsed, transitionTextById);
 			parsedConnections.push(label ? { ...parsed, label } : parsed);
 			// `parOf` (the schema default when `@_type` is omitted, per ECMA-376
 			// CT_Cxn) is the only connection type expressing a data-graph

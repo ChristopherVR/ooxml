@@ -1,3 +1,4 @@
+import { parseRelationshipIdAttributes } from '../../../diagram/index.js';
 import type { PptxSmartArtData, XmlObject } from '../types';
 
 /** Typed view of the four required relationship attributes on `dgm:relIds`. */
@@ -28,14 +29,7 @@ export function parseDiagramRelationshipIds(
 	if (!relIds) {
 		return undefined;
 	}
-	const result: DiagramRelationshipIds = {};
-	for (const [property, localName] of RELATIONSHIP_ATTRIBUTES) {
-		const value = readAttribute(relIds, localName);
-		if (value) {
-			result[property] = value;
-		}
-	}
-	return result;
+	return parseRelationshipIdAttributes((localName) => readAttribute(relIds, localName));
 }
 
 /**

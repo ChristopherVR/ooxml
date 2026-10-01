@@ -14,11 +14,10 @@
  * @module smartart-connector-labels
  */
 
+import { collectTransitionText } from '../../../diagram/index.js';
 import type { PptxSmartArtConnection, XmlObject } from '../types';
 
 type LocalName = (key: string) => string;
-
-const TRANSITION_POINT_TYPES: ReadonlySet<string> = new Set(['parTrans', 'sibTrans']);
 
 /**
  * Resolve `transitionPointModelId -> text` for every `parTrans`/`sibTrans`
@@ -32,24 +31,11 @@ export function collectSmartArtTransitionText(
 	points: XmlObject[],
 	collectText: (point: XmlObject) => string,
 ): Map<string, string> {
-	const textById = new Map<string, string>();
-	for (const pt of points) {
-		if (!pt || typeof pt !== 'object') {
-			continue;
-		}
-		if (!TRANSITION_POINT_TYPES.has(String(pt['@_type'] ?? '').trim())) {
-			continue;
-		}
-		const id = String(pt['@_modelId'] ?? '').trim();
-		if (!id) {
-			continue;
-		}
-		const text = collectText(pt).trim();
-		if (text.length > 0) {
-			textById.set(id, text);
-		}
-	}
-	return textById;
+	return collectTransitionText(
+		points.filter((pt) => pt && typeof pt === 'object'),
+		(pt) => ({ type: String(pt['@_type'] ?? ''), modelId: String(pt['@_modelId'] ?? '') }),
+		collectText,
+	);
 }
 
 /** Build a minimal single-run `dgm:t` text body for a transition point. */
