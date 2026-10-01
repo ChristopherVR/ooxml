@@ -1,0 +1,20 @@
+{
+	// The pptx area predates this repository's strict flags and is compiled with them relaxed.
+	// Tighten gradually; new code elsewhere stays strict (see AGENTS.md).
+	"extends": "./tsconfig.json",
+	"compilerOptions": {
+		"exactOptionalPropertyTypes": false,
+		"noUncheckedIndexedAccess": false,
+		"noImplicitOverride": false,
+		"forceConsistentCasingInFileNames": true,
+		"declarationMap": true,
+		"resolveJsonModule": true,
+		"isolatedModules": true,
+		"allowImportingTsExtensions": true,
+		"noUnusedLocals": false,
+		"noUnusedParameters": false,
+		"noEmit": true
+	},
+	"include": ["src/pptx/**/*.ts", "src/pptx/**/*.tsx"],
+	"exclude": ["**/dist/**", "**/node_modules/**", "src/pptx/**/*.test.ts", "src/pptx/**/*.test.tsx"]
+}
