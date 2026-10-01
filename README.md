@@ -14,6 +14,7 @@ Shared modern OOXML logic for the Office viewers: units, colour, geometry, packa
 | `@christophervr/ooxml-color`    | seeded from pptx-viewer                       | Hex/RGB/HSL primitives, linear sRGB, OOXML percent and angle parsing                  |
 | `@christophervr/ooxml-geometry` | seeded from pptx-viewer (self-contained part) | Preset shape definitions, connection sites, clip paths, callouts, boolean shape ops   |
 | `@christophervr/ooxml-xml`      | seeded from docx-viewer                       | The shared XML model: strict DOM parse/serialize, namespaces, namespace-aware helpers |
+| `@christophervr/ooxml-opc`      | seeded from docx-viewer                       | OPC packaging: relationships, content types, part paths, zip helpers, safe hyperlinks |
 
 Further packages (`color`, `geometry`, `opc`, `xml`, `drawingml`, `chart`, `diagram`, `math`, `crypto`, `schema`) are added phase by phase; see the plan.
 

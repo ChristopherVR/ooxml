@@ -13,7 +13,7 @@
 		"test": "vitest run",
 		"fmt": "oxfmt",
 		"fmt:check": "oxfmt --check",
-		"build": "bun run --filter \"./packages/*\" build"
+		"build": "bun run --cwd packages/units build && bun run --cwd packages/color build && bun run --cwd packages/geometry build && bun run --cwd packages/xml build && bun run --cwd packages/opc build"
 	},
 	"devDependencies": {
 		"@types/node": "^22.0.0",
