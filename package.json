@@ -104,9 +104,8 @@
 		"access": "public"
 	},
 	"scripts": {
-		"build": "node scripts/clean.mjs dist && tsc -p tsconfig.build.json && tsup --config tsup.config.ts && bun run build:pptx",
-		"build:pptx": "tsup --config tsup.pptx.config.ts && tsdown --config tsdown.pptx.config.ts && node scripts/pptx/merge-declarations.mjs",
-		"prepack": "bun run build",
+		"build": "node scripts/build.mjs",
+		"prepack": "node scripts/ensure-built.mjs",
 		"typecheck": "bun run typecheck:strict && bun run typecheck:pptx",
 		"typecheck:strict": "tsc -p tsconfig.json --noEmit",
 		"typecheck:pptx": "tsc -p tsconfig.pptx.json --noEmit",
