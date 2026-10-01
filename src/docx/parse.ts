@@ -30,6 +30,7 @@ import { type DrawingContext } from './drawing.js';
 import { parseContentTypes, parseRelationships } from './package-parts.js';
 import { withParseWarnings } from './parse-diagnostics.js';
 import { warningsFor, imageAndBookmarkWarnings, forEachParagraph } from './parse-warnings.js';
+import { diagramWarnings, resolveDocumentDiagrams } from './diagram-document.js';
 
 export interface PackageContext {
 	original: Uint8Array;
@@ -186,11 +187,7 @@ export async function readPackage(input: Uint8Array | ArrayBuffer): Promise<{
 		model.warnings.push(
 			'Nested tables render as a read-only text preview; edit their content from the original document.',
 		);
-	model.warnings.push(...imageAndBookmarkWarnings(blocks));
-	for (const warning of schemaWarnings)
-		if (!model.warnings.includes(warning)) model.warnings.push(warning);
-	// Pictures anywhere in the document: body, headers, footers, footnotes and endnotes.
-	const imagePartNames = new Set<string>();
+	// Every block that can hold a drawing: body, headers, footers, footnotes and endnotes.
 	const pictureBlocks = [
 		...blocks,
 		...(model.sections ?? []).flatMap((section) =>
@@ -200,6 +197,14 @@ export async function readPackage(input: Uint8Array | ArrayBuffer): Promise<{
 		),
 		...[...(model.footnotes ?? []), ...(model.endnotes ?? [])].flatMap((note) => note.blocks),
 	];
+	await resolveDocumentDiagrams(pictureBlocks, async (partName) =>
+		zip.file(partName)?.async('string'),
+	);
+	model.warnings.push(...imageAndBookmarkWarnings(blocks), ...diagramWarnings(pictureBlocks));
+	for (const warning of schemaWarnings)
+		if (!model.warnings.includes(warning)) model.warnings.push(warning);
+	// Pictures anywhere in the document: body, headers, footers, footnotes and endnotes.
+	const imagePartNames = new Set<string>();
 	forEachParagraph(pictureBlocks, (paragraph) => {
 		for (const run of paragraph.runs)
 			for (const part of [run.image?.partName, run.image?.svgPartName])

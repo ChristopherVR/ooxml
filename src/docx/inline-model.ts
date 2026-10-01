@@ -1,5 +1,6 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Inline pictures and hyperlink targets carried by text runs.
+import type { DocxDiagram } from './diagram.js';
 import type { StRelFromH, StRelFromV } from './generated/wml-simple-types.js';
 
 /** An inline drawing (`w:drawing` or legacy `w:pict`) modeled at run granularity. */
@@ -31,6 +32,8 @@ export interface InlineImage {
 	textBoxEditable?: boolean;
 	/** For an editable text box: whether it draws an outline (default true). */
 	textBoxBorder?: boolean;
+	/** For SmartArt (`unsupported: "SmartArt"`): its parts, extent and cached drawing; the markup and parts are preserved on save. */
+	diagram?: DocxDiagram;
 }
 /** A Word text watermark (`PowerPlusWaterMarkObject`), carried by an inline object run in a header. */
 export interface WatermarkSpec {

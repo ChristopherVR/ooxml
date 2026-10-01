@@ -22,6 +22,15 @@ export {
 	isThemeColorToken,
 } from './theme-color.js';
 export { loadDocx } from './parse.js';
+export {
+	DIAGRAM_GRAPHIC_URI,
+	type DocxDiagram,
+	type DocxDiagramNode,
+	type DocxDiagramPart,
+	type DocxDiagramRendering,
+} from './diagram.js';
+export { diagramsIn } from './diagram-document.js';
+export { diagramColorTheme, resolveDiagramColor } from './diagram-theme.js';
 export { saveDocx } from './save.js';
 export {
 	assertValidDocumentModel,
