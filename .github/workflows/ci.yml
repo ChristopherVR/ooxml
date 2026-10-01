@@ -12,7 +12,7 @@ concurrency:
 env:
   # The pptx tests read decks that belong to the pptx-viewer end-to-end suite. They are not stored
   # here; this pinned revision of the public pptx-viewer repository supplies them.
-  PPTX_VIEWER_FIXTURES_REF: 17d75540e
+  PPTX_VIEWER_FIXTURES_REF: b663ba35d0f30a1d309c3eb7c9e7e31b86020dbb
 jobs:
   verify:
     runs-on: ubuntu-latest
