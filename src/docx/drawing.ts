@@ -15,6 +15,7 @@ import { isSimpleTextBox, textBoxHasBorder } from './write-text-box.js';
 import { getR, isElement, type XmlElement } from './xml.js';
 import { isStRelFromH, isStRelFromV } from './generated/wml-simple-types.js';
 import { enumValue } from './parse-diagnostics.js';
+import { DIAGRAM_GRAPHIC_URI, parseDiagramGraphic } from './diagram.js';
 
 const WP_NS = 'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing';
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main';
@@ -156,6 +157,10 @@ function parseModernDrawing(node: XmlElement, context: DrawingContext): InlineIm
 			...(placement ? { placement } : {}),
 			...(svg ? { svgPartName: svg.partName } : {}),
 		};
+	const diagram =
+		uri === DIAGRAM_GRAPHIC_URI && graphicData
+			? parseDiagramGraphic(graphicData, extent, docPr, context.rels, Boolean(anchored))
+			: undefined;
 	const textBox = uri.includes('wordprocessingShape') ? textBoxParagraphs(graphicData) : undefined;
 	return {
 		relId: relId ?? '',
@@ -165,6 +170,8 @@ function parseModernDrawing(node: XmlElement, context: DrawingContext): InlineIm
 		heightPx,
 		...definedProps({ altText, title, anchored }),
 		unsupported: textBox ? 'Text box' : unsupportedKindLabel(uri),
+		...(diagram ? { diagram } : {}),
+		...(diagram && placement ? { placement } : {}),
 		...(textBox ? { textBoxText: textBox } : {}),
 		...(textBox && isSimpleTextBox(graphicData, Boolean(anchored))
 			? { textBoxEditable: true, textBoxBorder: textBoxHasBorder(graphicData) }

@@ -74,8 +74,11 @@ export function imageAndBookmarkWarnings(blocks: Block[]): string[] {
 		if (paragraph.bookmarks?.length) hasBookmarks = true;
 		for (const run of paragraph.runs) {
 			if (!run.image) continue;
-			if (run.image.unsupported) unsupportedKinds.add(run.image.unsupported);
-			else hasPicture = true;
+			if (run.image.unsupported) {
+				// A SmartArt shown from its cached drawing gets its own, more precise warning.
+				if (run.image.diagram?.rendering !== 'cached-drawing')
+					unsupportedKinds.add(run.image.unsupported);
+			} else hasPicture = true;
 			if (run.image.anchored) hasAnchored = true;
 		}
 	});
