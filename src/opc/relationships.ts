@@ -1,4 +1,4 @@
-import { NS, elements, parseXml, relAttr, type XmlElement } from '@christophervr/ooxml-xml';
+import { NS, elements, parseXml, relAttr, type XmlElement } from '../xml/index.js';
 
 export interface Relationship {
 	id: string;

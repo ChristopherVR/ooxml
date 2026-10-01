@@ -1,19 +1,66 @@
 {
-	"name": "ooxml-core-workspace",
-	"private": true,
-	"description": "Shared modern OOXML logic for the Word, PowerPoint and Excel viewers",
+	"name": "@christophervr/ooxml-core",
+	"version": "0.1.0",
+	"description": "Shared OOXML logic for the Word, PowerPoint and Excel viewers: everything except the UI",
 	"license": "Apache-2.0",
 	"author": "ChristopherVR",
-	"workspaces": [
-		"packages/*"
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/ChristopherVR/ooxml-core.git"
+	},
+	"files": [
+		"dist",
+		"LICENSE",
+		"NOTICE",
+		"README.md"
 	],
 	"type": "module",
+	"sideEffects": false,
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js",
+			"default": "./dist/index.js"
+		},
+		"./units": {
+			"types": "./dist/units/index.d.ts",
+			"import": "./dist/units/index.js",
+			"default": "./dist/units/index.js"
+		},
+		"./color": {
+			"types": "./dist/color/index.d.ts",
+			"import": "./dist/color/index.js",
+			"default": "./dist/color/index.js"
+		},
+		"./geometry": {
+			"types": "./dist/geometry/index.d.ts",
+			"import": "./dist/geometry/index.js",
+			"default": "./dist/geometry/index.js"
+		},
+		"./xml": {
+			"types": "./dist/xml/index.d.ts",
+			"import": "./dist/xml/index.js",
+			"default": "./dist/xml/index.js"
+		},
+		"./opc": {
+			"types": "./dist/opc/index.d.ts",
+			"import": "./dist/opc/index.js",
+			"default": "./dist/opc/index.js"
+		}
+	},
 	"scripts": {
+		"build": "node scripts/clean.mjs dist && tsc -p tsconfig.build.json",
+		"prepack": "bun run build",
 		"typecheck": "tsc -p tsconfig.json --noEmit",
 		"test": "vitest run",
 		"fmt": "oxfmt",
-		"fmt:check": "oxfmt --check",
-		"build": "bun run --cwd packages/units build && bun run --cwd packages/color build && bun run --cwd packages/geometry build && bun run --cwd packages/xml build && bun run --cwd packages/opc build"
+		"fmt:check": "oxfmt --check"
+	},
+	"dependencies": {
+		"@xmldom/xmldom": "^0.9.12",
+		"jszip": "^3.10.2"
 	},
 	"devDependencies": {
 		"@types/node": "^22.0.0",

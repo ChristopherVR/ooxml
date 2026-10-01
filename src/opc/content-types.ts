@@ -1,4 +1,4 @@
-import { NS, elements, parseXml } from '@christophervr/ooxml-xml';
+import { NS, elements, parseXml } from '../xml/index.js';
 
 export interface ContentTypes {
 	/** Extension (lower case, no dot) to content type. */

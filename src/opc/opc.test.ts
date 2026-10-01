@@ -17,7 +17,7 @@ import {
 	relationshipsPartFor,
 	resolvePartPath,
 } from './index.js';
-import { NS, parseXml } from '@christophervr/ooxml-xml';
+import { NS, parseXml } from '../xml/index.js';
 
 const RELS = `<Relationships xmlns="${NS.rels}"><Relationship Id="rId1" Type="${RELATIONSHIP_TYPES.styles}" Target="styles.xml"/><Relationship Id="rId2" Type="${RELATIONSHIP_TYPES.hyperlink}" Target="https://a.test/?a=1&amp;b=2" TargetMode="External"/><Relationship Id="" Type="x" Target="skipped.xml"/></Relationships>`;
 

@@ -1,11 +1,12 @@
 # Working agreements
 
-- This repository owns **modern OOXML** (ECMA-376 / ISO 29500: WordprocessingML, PresentationML, SpreadsheetML and the shared DrawingML, charts, diagrams, math, OPC packaging) logic that more than one Office viewer needs. It is a sibling of `ole2`.
+- This repository is the **single published package `@christophervr/ooxml-core`**. It owns **all the logic** of the Office products: OOXML (ECMA-376 / ISO 29500) packaging, XML, WordprocessingML, PresentationML and later SpreadsheetML models, parsing and serialization, DrawingML, charts, diagrams (SmartArt), maths, geometry, layout, editing commands, validation, and collaboration (Yjs and the sync protocol). It is a sibling of `ole2`.
+- The viewer repositories (`docx-viewer`, `pptx-viewer`, later `xlsx-viewer`) own **only the UI**: web components, framework bindings, ribbon and dialog views, styling, demos and end-to-end tests. They consume this package and must not keep, copy or fork logic that belongs here. Where a viewer still holds logic (today: nearly all of it), `docx-viewer/docs/ooxml-core-plan.md` says when it moves.
 - `ole2` owns the legacy compound-file and binary formats (DOC, XLS, PPT, CFB, RC4/MD4). Never move modern OOXML into `ole2`, and never move binary codecs here. The encrypted-package container is CFB (ole2); the encryption primitives are modern OOXML (here).
-- Each Office type keeps its own repository and document model (`docx-viewer`, `pptx-viewer`, later `xlsx-viewer`). They consume packages from here; they must not fork or copy what lives here. Where a viewer still has its own copy, the extraction plan (`docx-viewer/docs/ooxml-core-plan.md`) says when it is replaced.
-- One shared XML model and one package structure for every consumer. Parsers and writers are written once against that model; type-specific code (slides, paragraphs, sheets) stays in the viewer repositories.
-- Bun workspaces, one package per boundary, TypeScript strict (including `exactOptionalPropertyTypes` and `noUncheckedIndexedAccess`), Vitest. Publish ESM and CJS because consumers need both.
-- Keep source modules under 300 lines where practical. Add regression tests for parsing, preservation and round-trip behaviour; move tests with the code they cover.
+- One shared XML model and one structure for every Office type. Parsers and writers are written once against it; type-specific code lives in its own area (`docx`, `pptx`, `xlsx`) of this package, shared code in `xml`, `opc`, `drawingml`, `chart`, `diagram`, and so on.
+- Layout: `src/<area>/` with its own `index.ts`; each area is a subpath export (`@christophervr/ooxml-core/xml`) and the root entry groups them by namespace. Do not add a second package; add an area.
+- Bun, TypeScript strict (including `exactOptionalPropertyTypes` and `noUncheckedIndexedAccess`), Vitest with tests next to the code, ESM output (add CJS when a consumer needs it).
+- Keep source modules under 300 lines where practical. Add regression tests for parsing, preservation, round-trip and editing behaviour; move tests with the code they cover.
 - Unsupported features must be reported honestly. Never claim Office parity or lossless export without evidence.
 - Record extraction provenance (source repository, path, commit, what changed) in `PROVENANCE.md` for every module moved here.
-- No commits or publishing unless requested. Never publish fixtures or stale output.
+- Releases use matching `v<version>` tags and npm provenance, as in `ole2`. No commits to published history, no publishing unless requested. Never publish fixtures or stale output.

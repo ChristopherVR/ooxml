@@ -13,6 +13,6 @@
 		"declaration": true,
 		"types": ["node", "vitest/globals"]
 	},
-	"include": ["packages/*/src/**/*.ts"],
+	"include": ["src/**/*.ts"],
 	"exclude": ["**/dist/**", "**/node_modules/**"]
 }
