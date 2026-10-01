@@ -35,6 +35,9 @@
 		"README.md"
 	],
 	"type": "module",
+	"workspaces": [
+		"packages/*"
+	],
 	"sideEffects": false,
 	"main": "./dist/index.cjs",
 	"module": "./dist/index.mjs",
