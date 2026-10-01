@@ -28,6 +28,17 @@ jobs:
       - run: bun run check:changelog
       - run: bun run build
       - run: bun run test:package
+      # The shared UI package (packages/ui): typecheck, tests, build and a packed-tarball import check.
+      - run: bun run --cwd packages/ui typecheck
+      - run: bun run --cwd packages/ui test
+      - run: bun run --cwd packages/ui build
+      - run: bun run --cwd packages/ui test:package
+      - name: The core never imports the UI package
+        run: |
+          if grep -rEln "office-ui" src --include='*.ts' --include='*.mjs' | grep -v '\.test\.'; then
+            echo "::error::src/ (the core) must not import @christophervr/office-ui; the UI depends on the core, never the reverse."
+            exit 1
+          fi
 
   # The single check the `main` ruleset requires. Funnelling through one job keeps branch
   # protection stable when jobs are added or renamed (a required check that no longer exists blocks
