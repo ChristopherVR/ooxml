@@ -85,6 +85,16 @@
 			"import": "./dist/docx/embedded.mjs",
 			"require": "./dist/docx/embedded.cjs"
 		},
+		"./docx/layout": {
+			"types": "./dist/docx/layout/index.d.ts",
+			"import": "./dist/docx/layout/index.mjs",
+			"require": "./dist/docx/layout/index.cjs"
+		},
+		"./docx/load": {
+			"types": "./dist/docx/load/index.d.ts",
+			"import": "./dist/docx/load/index.mjs",
+			"require": "./dist/docx/load/index.cjs"
+		},
 		"./pptx": {
 			"types": "./dist/pptx/index.d.ts",
 			"import": "./dist/pptx/index.mjs",
