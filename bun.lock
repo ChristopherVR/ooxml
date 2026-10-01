@@ -23,6 +23,13 @@
       "name": "@christophervr/ooxml-units",
       "version": "0.1.0",
     },
+    "packages/xml": {
+      "name": "@christophervr/ooxml-xml",
+      "version": "0.1.0",
+      "dependencies": {
+        "@xmldom/xmldom": "^0.9.12",
+      },
+    },
   },
   "packages": {
     "@christophervr/ooxml-color": ["@christophervr/ooxml-color@workspace:packages/color"],
@@ -30,6 +37,8 @@
     "@christophervr/ooxml-geometry": ["@christophervr/ooxml-geometry@workspace:packages/geometry"],
 
     "@christophervr/ooxml-units": ["@christophervr/ooxml-units@workspace:packages/units"],
+
+    "@christophervr/ooxml-xml": ["@christophervr/ooxml-xml@workspace:packages/xml"],
 
     "@esbuild/aix-ppc64": ["@esbuild/aix-ppc64@0.28.2", "", { "os": "aix", "cpu": "ppc64" }, "sha512-XExcO+dvLKvVtNTibSTBej1NCAbaGhWn9Ww1ZPx80qsahhPFe/8jgWP0IchNe0F3HwkU7n8ejhH8bjonqht8mQ=="],
 
@@ -196,6 +205,8 @@
     "@vitest/spy": ["@vitest/spy@3.2.7", "", { "dependencies": { "tinyspy": "^4.0.3" } }, "sha512-Q2eQGI6d2L/hBtZ0qNuKcAGid68XK6cv1xsoaIma6PaJhHPoqcEJhYpXZ/5myCMqkNgtP6UKuBhbc0nHKnrkuQ=="],
 
     "@vitest/utils": ["@vitest/utils@3.2.7", "", { "dependencies": { "@vitest/pretty-format": "3.2.7", "loupe": "^3.1.4", "tinyrainbow": "^2.0.0" } }, "sha512-x6BDOd7dyo3PFLY3I9/HJ25X/6OurhGXk2/B9gOZNPF7XDVjeBK4k01lQE5uvDpbuheErh91qYuE1E2OEjK3Rw=="],
+
+    "@xmldom/xmldom": ["@xmldom/xmldom@0.9.12", "", {}, "sha512-5AXjrcMClTryPe9LgZrygpB1lj7s0S9E0+W+AHaVKAVyHanafK86iPSvG5xHVSp/jC+VH1UXu0TAEmY279xH7A=="],
 
     "assertion-error": ["assertion-error@2.0.1", "", {}, "sha512-Izi8RQcffqCeNVgFigKli1ssklIbpHnCYc6AknXGYoB6grJqyeby7jv12JUQgmTAnIDnbck1uxksT4dzN3PWBA=="],
 
