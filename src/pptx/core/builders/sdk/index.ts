@@ -73,6 +73,8 @@ export {
 	setChartHelperLine,
 	setChartColorMapOverride,
 } from './chart-formatting-operations';
+export { setChartSeriesGradient, setChartDataPointGradient } from './chart-gradient-operations';
+export { toChartGradientFill } from './chart-gradient-input';
 
 // Chart drawing-overlay (c:userShapes) operations
 export {
@@ -207,6 +209,8 @@ export type {
 	TableCellInput,
 	TableOptions,
 	ChartSeriesInput,
+	ChartGradientInput,
+	ChartGradientStopInput,
 	ChartInput,
 	ChartOptions,
 	ConnectorOptions,

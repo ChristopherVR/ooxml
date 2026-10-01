@@ -53,6 +53,9 @@ import {
 	applyFilteredSeriesToXml,
 	filteredSeriesUnchanged,
 } from '../../utils/chart-filtered-series-writer';
+import { parseChartGradientFill } from '../../utils/chart-gradient-fill';
+import type { ChartGradientWriteOptions } from '../../utils/chart-gradient-fill-writer';
+import { buildChartGradFillXml } from '../../utils/chart-gradient-fill-writer';
 import { applyChartLayouts } from '../../utils/chart-layout';
 import { applyChartLegendToXml } from '../../utils/chart-legend-serializer';
 import { applyChartLineStyle } from '../../utils/chart-line-style-serializer';
@@ -61,7 +64,11 @@ import { applyChartPivotFormats } from '../../utils/chart-pivot-formats';
 import { applyChartPivotSource } from '../../utils/chart-pivot-source';
 import { applyChartPrintSettings } from '../../utils/chart-print-settings';
 import { applyChartProtection } from '../../utils/chart-protection';
-import { writeSeriesColorToSpPr } from '../../utils/chart-series-color-serializer';
+import {
+	applySeriesGradientToXml,
+	ensureSeriesSpPr,
+	writeSeriesColorToSpPr,
+} from '../../utils/chart-series-color-serializer';
 import { applySeriesDataLabelsToXml } from '../../utils/chart-series-datalabel-serializer';
 import {
 	buildChartUniqueIdExtLst,
@@ -496,21 +503,24 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					// `a:solidFill` sibling AFTER an existing `a:ln`, which
 					// `CT_ShapeProperties` never allows (the fill group must precede
 					// `a:ln`).
-					if (seriesData.color) {
-						const isLineFamily = isLineDrawnChartType(
-							seriesData.seriesChartType ?? chartData.chartType,
-						);
-						const spPrKey =
-							Object.keys(seriesNode).find(
-								(k) => this.compatibilityService.getXmlLocalName(k) === 'spPr',
-							) ?? 'c:spPr';
-						let spPr = (seriesNode as XmlObject)[spPrKey] as XmlObject | undefined;
-						if (!spPr) {
-							spPr = {};
-							(seriesNode as XmlObject)[spPrKey] = spPr;
-						}
+					//
+					// A series gradient (`a:gradFill`) is the same fill choice and wins
+					// over `color`; `applySeriesGradientToXml` leaves an authored one
+					// the model still describes byte-for-byte alone, and removes one
+					// the model dropped so the colour below can take its place.
+					const isLineFamily = isLineDrawnChartType(
+						seriesData.seriesChartType ?? chartData.chartType,
+					);
+					const gradientOptions = this.chartGradientWriteOptions(isLineFamily);
+					applySeriesGradientToXml(
+						seriesNode,
+						seriesData.gradientFill,
+						(key) => this.compatibilityService.getXmlLocalName(key),
+						gradientOptions,
+					);
+					if (seriesData.color && !(seriesData.gradientFill && !isLineFamily)) {
 						writeSeriesColorToSpPr(
-							spPr,
+							ensureSeriesSpPr(seriesNode, (key) => this.compatibilityService.getXmlLocalName(key)),
 							seriesData.color,
 							isLineFamily,
 							(key) => this.compatibilityService.getXmlLocalName(key),
@@ -555,6 +565,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 							seriesData.dataPoints,
 							(key) => this.compatibilityService.getXmlLocalName(key),
 							(node) => this.parseColor(node),
+							gradientOptions,
 						);
 					}
 
@@ -1426,6 +1437,25 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	}
 
 	/**
+	 * Save-side context for `a:gradFill` writes on a series or data point: the
+	 * load-time parser (so an untouched gradient is detected and kept
+	 * verbatim) and the colour resolver (so an edited gradient's unchanged
+	 * stops keep their theme colours).
+	 */
+	protected chartGradientWriteOptions(lineDrawn: boolean): ChartGradientWriteOptions {
+		return {
+			lineDrawn,
+			resolveColor: (node) => this.parseColor(node),
+			...(this.colorStyleCodec
+				? {
+						parseGradient: (spPr: XmlObject | undefined) =>
+							parseChartGradientFill(spPr, this.xmlLookupService, this.colorStyleCodec),
+					}
+				: {}),
+		};
+	}
+
+	/**
 	 * Build a minimal `<c:ser>` XML object for a newly-added series.
 	 *
 	 * If a `templateSeries` is provided, it is deep-cloned and its data is
@@ -1490,10 +1520,18 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				this.updateChartCacheValues(valNode, true, seriesData.values.map(String));
 			}
 
-			// Update colour. Line-drawn families (line/line3D/scatter/radar/stock)
-			// author it on `a:ln/a:solidFill`, not a direct fill; see
+			// Update the fill. A gradient replaces (or, when the model has none,
+			// drops) the template's fill choice before the colour is considered.
+			// Line-drawn families (line/line3D/scatter/radar/stock) author the
+			// colour on `a:ln/a:solidFill`, not a direct fill; see
 			// `writeSeriesColorToSpPr`.
-			if (seriesData.color) {
+			applySeriesGradientToXml(
+				clone,
+				seriesData.gradientFill,
+				(key) => this.compatibilityService.getXmlLocalName(key),
+				this.chartGradientWriteOptions(isLineFamily),
+			);
+			if (seriesData.color && !(seriesData.gradientFill && !isLineFamily)) {
 				const spPr = this.xmlLookupService.getChildByLocalName(clone, 'spPr');
 				if (spPr) {
 					writeSeriesColorToSpPr(
@@ -1524,7 +1562,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			},
 			'c:spPr': isLineFamily
 				? { 'a:ln': { 'a:solidFill': { 'a:srgbClr': { '@_val': colorHex } } } }
-				: { 'a:solidFill': { 'a:srgbClr': { '@_val': colorHex } } },
+				: seriesData.gradientFill
+					? { 'a:gradFill': buildChartGradFillXml(seriesData.gradientFill) }
+					: { 'a:solidFill': { 'a:srgbClr': { '@_val': colorHex } } },
 			'c:cat': dateCategories
 				? {
 						'c:numRef': {

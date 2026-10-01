@@ -46,6 +46,11 @@ ctx.updateChartCacheValues = (
 		...args: unknown[]
 	) => unknown
 ).bind(ctx);
+ctx.chartGradientWriteOptions = (
+	(SaveDataRuntime.prototype as Record<string, unknown>).chartGradientWriteOptions as (
+		...args: unknown[]
+	) => unknown
+).bind(ctx);
 const buildNewSeriesXml = (
 	(SaveDataRuntime.prototype as Record<string, unknown>).buildNewSeriesXml as (
 		...args: unknown[]

@@ -15,6 +15,19 @@ export { PRESET_COLOR_MAP, SYSTEM_COLOR_MAP } from './constants-colors';
 /** EMU (English Metric Units) per pixel -- approximate at 96 DPI. */
 export const EMU_PER_PX: number = EMU_PER_PIXEL;
 
+/**
+ * DrawingML angle units per degree: `ST_Angle` / `ST_PositiveFixedAngle`
+ * (e.g. `a:lin/@ang`) count 60,000ths of a degree, so 90 degrees is 5400000.
+ */
+export const OOXML_ANGLE_UNITS_PER_DEGREE = 60000;
+
+/**
+ * DrawingML percentage units for 100%: `ST_PositiveFixedPercentage` and
+ * friends (`a:gs/@pos`, `a:alpha/@val`, `a:fillToRect/@l`) count 1,000ths of a
+ * percent, so 100% is 100000.
+ */
+export const OOXML_PERCENT_UNITS = 100000;
+
 // ---------------------------------------------------------------------------
 // Default styling
 // ---------------------------------------------------------------------------

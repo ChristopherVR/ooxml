@@ -268,9 +268,10 @@ export type PptxChartScatterStyle =
 
 /** Shape properties extracted from c:spPr for chart formatting. */
 /**
- * A render-ready gradient fill from a chart `c:spPr/a:gradFill` (chart area,
- * plot area or series). Positions are 0..100; a linear gradient's `angle` is
- * in degrees clockwise from left-to-right (`a:lin/@ang`); a radial (`a:path`)
+ * A gradient fill from a chart `c:spPr/a:gradFill` (chart area, plot area,
+ * series or data point). Positions are 0..100 and stop `opacity` 0..1 (absent
+ * means opaque); a linear gradient's `angle` is in degrees clockwise from
+ * left-to-right (`a:lin/@ang`, so 90 is top to bottom); a radial (`a:path`)
  * gradient centres on `focalPoint` (0..1 fractions of the box), the middle
  * when absent.
  */
@@ -309,6 +310,14 @@ export interface PptxChartMarker {
 export interface PptxChartDataPoint {
 	idx: number;
 	spPr?: PptxChartShapeProps;
+	/**
+	 * Per-point gradient fill (`c:dPt/c:spPr/a:gradFill`): one bar, column or
+	 * slice painted with its own gradient. Takes precedence over
+	 * `spPr.fillColor` and round-trips with the same lossless rules as
+	 * {@link PptxChartSeries.gradientFill}; ignored for line-drawn series. Set
+	 * it through `setChartDataPointGradient`.
+	 */
+	gradientFill?: PptxChartGradientFill;
 	explosion?: number;
 	invertIfNegative?: boolean;
 	marker?: PptxChartMarker;
@@ -653,8 +662,17 @@ export interface PptxChartSeries {
 	values: number[];
 	/**
 	 * Series gradient fill (`c:ser/c:spPr/a:gradFill`), painted on every mark
-	 * of the series that has no per-point override. Render-only: the series'
-	 * own `c:spPr` round-trips untouched.
+	 * of the series that has no per-point override.
+	 *
+	 * Written back on save for area-filled chart types (bar, area, pie,
+	 * doughnut, ofPie, bubble, surface and their 3-D variants, and such series
+	 * inside a combo): when set it takes precedence over {@link color} and
+	 * replaces the series' fill choice; clearing it removes the authored
+	 * `a:gradFill`. A loaded gradient the model still describes round-trips
+	 * byte-for-byte, theme colours included. Ignored for line-drawn series
+	 * (line, line3D, scatter, radar, stock), which have no fillable area. Set
+	 * it through `setChartSeriesGradient` to get validation and the
+	 * colour/gradient "last action wins" behaviour.
 	 */
 	gradientFill?: PptxChartGradientFill;
 	/**

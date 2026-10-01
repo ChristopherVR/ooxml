@@ -21,6 +21,9 @@ import type {
 import type { PptxThemeColorRef } from '../../types/color-ref';
 import type { StrokeDashType, ConnectorArrowType } from '../../types/common';
 import type { PptxTransitionType } from '../../types/transition';
+import type { ChartGradientInput } from './chart-gradient-input';
+
+export type { ChartGradientInput, ChartGradientStopInput } from './chart-gradient-input';
 
 // ---------------------------------------------------------------------------
 // Position & layout
@@ -198,6 +201,13 @@ export interface ChartSeriesInput {
 	name: string;
 	values: number[];
 	color?: string;
+	/**
+	 * Gradient fill for the whole series, written as `c:ser/c:spPr/a:gradFill`.
+	 * Takes precedence over `color`. Area-filled chart types only (bar, area,
+	 * pie, doughnut, ofPie, bubble, surface and their 3-D variants);
+	 * `createChartElement` throws for line-drawn and ChartEx types.
+	 */
+	gradientFill?: ChartGradientInput;
 	boxWhiskerOptions?: PptxChartBoxWhiskerOptions;
 	histogramOptions?: PptxChartHistogramOptions;
 	waterfallOptions?: PptxChartWaterfallOptions;

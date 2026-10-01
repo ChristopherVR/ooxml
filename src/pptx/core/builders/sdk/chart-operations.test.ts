@@ -1336,7 +1336,7 @@ describe('setChartDataPointFill', () => {
 		const el = makeTestChart({ chartType: 'pie' });
 		setChartDataPointFill(el, 0, 2, '#123456');
 		setChartDataPointFill(el, 0, 2, null);
-		expect(el.chartData?.series[0].dataPoints).toBeUndefined();
+		expect(el.chartData?.series[0].dataPoints).toStrictEqual([]);
 	});
 
 	it('keeps the override when explosion is also set', () => {
@@ -1356,7 +1356,7 @@ describe('setChartDataPointExplosion', () => {
 		setChartDataPointExplosion(el, 0, 0, 30);
 		expect(el.chartData?.series[0].dataPoints?.[0].explosion).toBe(30);
 		setChartDataPointExplosion(el, 0, 0, null);
-		expect(el.chartData?.series[0].dataPoints).toBeUndefined();
+		expect(el.chartData?.series[0].dataPoints).toStrictEqual([]);
 	});
 
 	it('keeps points sorted by idx', () => {

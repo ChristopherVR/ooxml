@@ -19,7 +19,9 @@ import { applyGeneratedChartSpaceMetadata } from './chart-space-metadata';
 import { applySeriesTrendlinesToXml } from './chart-trendline-serializer';
 import { applyChartUpDownBars } from './chart-up-down-bars';
 import { buildGeneratedChartAxis } from './chart-xml-axis-generator';
+import type { ChartFamily } from './chart-xml-container-map';
 import { resolveChartContainerType } from './chart-xml-container-map';
+import { buildGeneratedSeriesSpPr, isLineDrawnChartFamily } from './chart-xml-series-fill';
 
 const NS_C = 'http://schemas.openxmlformats.org/drawingml/2006/chart';
 const NS_A = 'http://schemas.openxmlformats.org/drawingml/2006/main';
@@ -29,10 +31,6 @@ const CAT_AX_ID = 111111111;
 const VAL_AX_ID = 222222222;
 
 const SCATTER_LIKE = new Set<PptxChartType>(['scatter', 'bubble']);
-
-function hex(color: string | undefined): string | undefined {
-	return color ? color.replace(/^#/u, '').toUpperCase() : undefined;
-}
 
 function points(values: string[]): XmlObject[] {
 	return values.map((v, i) => ({ '@_idx': String(i), 'c:v': v }));
@@ -57,17 +55,8 @@ function strLit(values: string[]): XmlObject {
 	};
 }
 
-function fillSpPr(color: string | undefined, asLine: boolean): XmlObject | undefined {
-	const h = hex(color);
-	if (!h) {
-		return undefined;
-	}
-	const fill = { 'a:solidFill': { 'a:srgbClr': { '@_val': h } } };
-	return asLine ? { 'a:ln': fill } : fill;
-}
-
 function buildSeries(
-	family: string,
+	family: ChartFamily,
 	s: PptxChartSeries,
 	index: number,
 	categories: string[],
@@ -79,7 +68,7 @@ function buildSeries(
 		'c:tx': { 'c:v': s.name },
 	};
 
-	const spPr = fillSpPr(s.color, family === 'line' || family === 'radar' || family === 'scatter');
+	const spPr = buildGeneratedSeriesSpPr(s, family);
 	if (spPr) {
 		ser['c:spPr'] = spPr;
 	}
@@ -87,7 +76,9 @@ function buildSeries(
 		applySeriesMarkerToXml(ser, s.marker, (key) => key.replace(/^.*:/u, ''));
 	}
 	if (s.dataPoints !== undefined) {
-		applySeriesDataPointsToXml(ser, s.dataPoints, (key) => key.replace(/^.*:/u, ''));
+		applySeriesDataPointsToXml(ser, s.dataPoints, (key) => key.replace(/^.*:/u, ''), undefined, {
+			lineDrawn: isLineDrawnChartFamily(family),
+		});
 	}
 
 	if (family === 'scatter' || family === 'bubble') {
@@ -133,7 +124,7 @@ function axisFormatting(
 	);
 }
 
-function buildChartTypeContainer(chartData: PptxChartData, family: string): XmlObject {
+function buildChartTypeContainer(chartData: PptxChartData, family: ChartFamily): XmlObject {
 	const container: XmlObject = {};
 	if (family === 'bar') {
 		container['c:barDir'] = { '@_val': chartData.barDirection === 'bar' ? 'bar' : 'col' };
@@ -205,7 +196,7 @@ function buildChartTypeContainer(chartData: PptxChartData, family: string): XmlO
 	return container;
 }
 
-function buildPlotArea(chartData: PptxChartData, tag: string, family: string): XmlObject {
+function buildPlotArea(chartData: PptxChartData, tag: string, family: ChartFamily): XmlObject {
 	const plotArea: XmlObject = { 'c:layout': {} };
 	plotArea[tag] = buildChartTypeContainer(chartData, family);
 	if (chartData.style) {

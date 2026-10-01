@@ -27,8 +27,9 @@ import {
  * expose (it only ever sets `fillColor`).
  *
  * Pass a {@link PptxChartShapeProps} patch to merge into the point's existing
- * style, or `null` to remove it entirely (dropping the whole `c:dPt`
- * override when nothing else is set on it).
+ * style, or `null` to remove it entirely, including a per-point gradient
+ * (dropping the whole `c:dPt` override when nothing else is set on it). A
+ * patch carrying `fillColor` clears a per-point gradient (the last call wins).
  *
  * @example
  * ```ts
@@ -48,12 +49,17 @@ export function setChartDataPointStyle(
 		const dp = series.dataPoints?.find((p) => p.idx === pointIndex);
 		if (dp) {
 			dp.spPr = undefined;
+			delete dp.gradientFill;
 			removeEmptyDataPoint(series, pointIndex);
 		}
 		return;
 	}
 	const dp = ensureDataPoint(series, pointIndex);
 	dp.spPr = { ...(dp.spPr ?? {}), ...style };
+	if (style.fillColor !== undefined) {
+		// A solid fill replaces a per-point gradient: the last call wins.
+		delete dp.gradientFill;
+	}
 }
 
 /** Chart-type containers that legally carry `c:dropLines`/`c:hiLowLines`. */

@@ -17,17 +17,26 @@
  * (`a:ln/a:solidFill`), so an inspector-edited colour looked applied in
  * memory but was invisible on reopen.
  *
+ * A series gradient (`a:gradFill`, {@link applySeriesGradientToXml}) is the
+ * same fill choice: the save path reconciles it first, and a solid colour is
+ * only written when the series carries no gradient.
+ *
  * Dependency-light (a `getLocalName` resolver + colour resolver only) so it
  * can be unit-tested directly and shared by every save-side write site.
  *
  * @module utils/chart-series-color-serializer
  */
 
-import type { XmlObject } from '../types';
+import type { PptxChartSeries, XmlObject } from '../types';
+import type { ChartGradientWriteOptions } from './chart-gradient-fill-writer';
+import { applyChartGradientToSpPr } from './chart-gradient-fill-writer';
 import { serializeColorChoice } from './color-xml-preservation';
 
 type GetLocalName = (key: string) => string;
 type ResolveColor = (node: XmlObject | undefined) => string | undefined;
+
+/** `EG_FillProperties` members a newly inserted `a:solidFill` replaces. */
+const OTHER_FILL_CHOICES = new Set(['noFill', 'gradFill', 'blipFill', 'pattFill', 'grpFill']);
 
 function findKey(obj: XmlObject, local: string, getLocalName: GetLocalName): string | undefined {
 	return Object.keys(obj).find((k) => getLocalName(k) === local);
@@ -136,11 +145,6 @@ export function writeSeriesColorToSpPr(
 		return;
 	}
 
-	const noFillKey = findKey(spPr, 'noFill', getLocalName);
-	if (noFillKey) {
-		delete spPr[noFillKey];
-	}
-
 	const fillKey = findKey(spPr, 'solidFill', getLocalName) ?? 'a:solidFill';
 	const authoredFill = spPr[fillKey] as XmlObject | undefined;
 	const fillNode = serializeColorChoice(
@@ -149,8 +153,88 @@ export function writeSeriesColorToSpPr(
 		normalizedHex,
 	);
 	if (authoredFill) {
+		const noFillKey = findKey(spPr, 'noFill', getLocalName);
+		if (noFillKey) {
+			delete spPr[noFillKey];
+		}
 		spPr[fillKey] = fillNode;
 	} else {
+		// A new solid fill replaces whatever other fill choice was authored
+		// (`a:noFill`, or an `a:gradFill` the model no longer carries): the
+		// `EG_FillProperties` group allows exactly one member.
+		for (const key of Object.keys(spPr)) {
+			if (OTHER_FILL_CHOICES.has(getLocalName(key))) {
+				delete spPr[key];
+			}
+		}
 		insertBeforeLn(spPr, fillKey, fillNode, getLocalName);
 	}
+}
+
+/** `CT_*Ser` children that follow `c:spPr` in every series schema. */
+const AFTER_SERIES_SP_PR = new Set([
+	'invertIfNegative',
+	'pictureOptions',
+	'marker',
+	'explosion',
+	'dPt',
+	'dLbls',
+	'trendline',
+	'errBars',
+	'cat',
+	'val',
+	'xVal',
+	'yVal',
+	'smooth',
+	'shape',
+	'bubbleSize',
+	'bubble3D',
+	'extLst',
+]);
+
+/**
+ * The series' `c:spPr`, created in schema order (after `c:tx`, before
+ * `c:invertIfNegative` / `c:marker` / `c:dPt` / `c:cat` / ...) when absent.
+ */
+export function ensureSeriesSpPr(seriesNode: XmlObject, getLocalName: GetLocalName): XmlObject {
+	const existingKey = findKey(seriesNode, 'spPr', getLocalName);
+	if (existingKey) {
+		return seriesNode[existingKey] as XmlObject;
+	}
+	const spPr: XmlObject = {};
+	const entries = Object.entries(seriesNode);
+	const at = entries.findIndex(([key]) => AFTER_SERIES_SP_PR.has(getLocalName(key)));
+	entries.splice(at === -1 ? entries.length : at, 0, ['c:spPr', spPr]);
+	for (const key of Object.keys(seriesNode)) {
+		delete seriesNode[key];
+	}
+	for (const [key, value] of entries) {
+		seriesNode[key] = value;
+	}
+	return spPr;
+}
+
+/**
+ * Reconcile a series' `c:ser/c:spPr/a:gradFill` with its modelled
+ * {@link PptxChartSeries.gradientFill} (see {@link applyChartGradientToSpPr}
+ * for the lossless rules). Creates `c:spPr` only when there is a gradient to
+ * write. Returns whether the series fill changed.
+ */
+export function applySeriesGradientToXml(
+	seriesNode: XmlObject,
+	gradient: PptxChartSeries['gradientFill'],
+	getLocalName: GetLocalName,
+	options: ChartGradientWriteOptions = {},
+): boolean {
+	if (options.lineDrawn) {
+		return false;
+	}
+	const spPrKey = findKey(seriesNode, 'spPr', getLocalName);
+	if (!spPrKey && !gradient) {
+		return false;
+	}
+	const spPr = spPrKey
+		? (seriesNode[spPrKey] as XmlObject)
+		: ensureSeriesSpPr(seriesNode, getLocalName);
+	return applyChartGradientToSpPr(spPr, gradient, getLocalName, options);
 }

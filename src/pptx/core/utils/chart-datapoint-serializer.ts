@@ -14,6 +14,8 @@
 import type { PptxChartDataPoint, PptxChartDataPointPicture, XmlObject } from '../types';
 import type { ResolveChartColor } from './chart-color-choice';
 import { buildDptPictureOptions } from './chart-datapoint-picture';
+import type { ChartGradientWriteOptions } from './chart-gradient-fill-writer';
+import { applyChartGradientToSpPr } from './chart-gradient-fill-writer';
 import { buildChartMarkerXml } from './chart-marker-serializer';
 import { writeChartShapeProps } from './chart-shape-props-writer';
 
@@ -64,12 +66,23 @@ function buildDptSpPr(
 	dp: PptxChartDataPoint,
 	getLocalName: GetLocalName,
 	resolveColor?: ResolveChartColor,
+	gradient: ChartGradientWriteOptions = {},
 ): XmlObject | undefined {
-	const props = dp.spPr;
-	if (!props) {
-		return existing;
+	let spPr = existing;
+	// The gradient is reconciled first so a solid fill merged below never
+	// lands beside an `a:gradFill`; an untouched authored one stays verbatim.
+	if (dp.gradientFill || existing) {
+		const next: XmlObject = { ...(existing ?? {}) };
+		if (applyChartGradientToSpPr(next, dp.gradientFill, getLocalName, gradient)) {
+			spPr = next;
+		}
 	}
-	return writeChartShapeProps(existing, props, getLocalName, resolveColor);
+	const paintsGradient = dp.gradientFill !== undefined && !gradient.lineDrawn;
+	const props = paintsGradient && dp.spPr ? { ...dp.spPr, fillColor: undefined } : dp.spPr;
+	if (!props) {
+		return spPr;
+	}
+	return writeChartShapeProps(spPr, props, getLocalName, resolveColor);
 }
 
 /** Local names this serializer owns; everything else on the existing node is preserved. */
@@ -101,6 +114,7 @@ function buildDataPoint(
 	dp: PptxChartDataPoint,
 	getLocalName: GetLocalName,
 	resolveColor?: ResolveChartColor,
+	gradient?: ChartGradientWriteOptions,
 ): XmlObject {
 	assertDataPoint(dp);
 	const node: XmlObject = {};
@@ -130,7 +144,7 @@ function buildDataPoint(
 	const existingSpPr = existing
 		? (existing[findKey(existing, 'spPr', getLocalName) ?? ''] as XmlObject | undefined)
 		: undefined;
-	const spPr = buildDptSpPr(existingSpPr, dp, getLocalName, resolveColor);
+	const spPr = buildDptSpPr(existingSpPr, dp, getLocalName, resolveColor, gradient);
 	if (spPr) {
 		node['c:spPr'] = spPr;
 	}
@@ -160,12 +174,18 @@ function buildDataPoint(
  * series' `c:dPt` children (in schema order, before `c:dLbls`/`c:cat`/`c:val`),
  * reusing matched existing nodes by `c:idx` to preserve unmodeled styling. An
  * empty/undefined `dataPoints` removes all `c:dPt`. Mutates `seriesNode`.
+ *
+ * `gradient` carries the load-time gradient parser so an untouched
+ * `c:dPt/c:spPr/a:gradFill` round-trips verbatim (see
+ * `chart-gradient-fill-writer.ts`), and flags line-drawn series, whose points
+ * never get a gradient written.
  */
 export function applySeriesDataPointsToXml(
 	seriesNode: XmlObject,
 	dataPoints: PptxChartDataPoint[] | undefined,
 	getLocalName: GetLocalName,
 	resolveColor?: ResolveChartColor,
+	gradient?: ChartGradientWriteOptions,
 ): void {
 	const existingKey = findKey(seriesNode, 'dPt', getLocalName);
 	const existingNodes = (existingKey ? ensureArray(seriesNode[existingKey]) : []) as XmlObject[];
@@ -182,7 +202,7 @@ export function applySeriesDataPointsToXml(
 
 	const points = dataPoints ?? [];
 	const built = points.map((dp) =>
-		buildDataPoint(byIdx.get(dp.idx), dp, getLocalName, resolveColor),
+		buildDataPoint(byIdx.get(dp.idx), dp, getLocalName, resolveColor, gradient),
 	);
 
 	if (existingKey) {

@@ -25,6 +25,7 @@ import type {
 import type { ShapeStyle } from '../../types/shape-style';
 import type { PptxTableData, PptxTableRow, PptxTableCell } from '../../types/table';
 import type { TextStyle, TextSegment } from '../../types/text';
+import { chartSeriesGradientFromInput } from './chart-gradient-input';
 import type {
 	TextOptions,
 	TextSegmentInput,
@@ -508,10 +509,11 @@ export function createChartElement(
 ): ChartPptxElement {
 	const p = pos('chart', options);
 
-	const series: PptxChartSeries[] = input.series.map((s) => ({
+	const series: PptxChartSeries[] = input.series.map((s, index) => ({
 		name: s.name,
 		values: s.values,
 		color: s.color,
+		...chartSeriesGradientFromInput(chartType, s.gradientFill, index),
 		...(s.boxWhiskerOptions ? { boxWhiskerOptions: { ...s.boxWhiskerOptions } } : {}),
 		...(s.histogramOptions ? { histogramOptions: { ...s.histogramOptions } } : {}),
 		...(s.waterfallOptions

@@ -22,7 +22,7 @@
 import type { PptxChartType } from '../../types/chart';
 import type { ChartPptxElement } from '../../types/elements';
 import { createChartElement } from './ElementFactory';
-import type { ChartInput, ChartOptions } from './types';
+import type { ChartGradientInput, ChartInput, ChartOptions } from './types';
 
 /**
  * Fluent builder for {@link ChartPptxElement} instances.
@@ -122,6 +122,35 @@ export class ChartBuilder {
 	 */
 	addSeries(name: string, values: number[], color?: string): this {
 		this._input.series.push({ name, values, color });
+		return this;
+	}
+
+	/**
+	 * Give the most recently added series a gradient fill instead of a solid
+	 * colour (`c:ser/c:spPr/a:gradFill`). Area-filled chart types only;
+	 * {@link ChartBuilder.build | .build()} throws for line-drawn ones.
+	 *
+	 * @param gradient - Stops plus a linear angle or a radial focal point.
+	 * @throws {Error} If no series has been added yet.
+	 *
+	 * @example
+	 * ```ts
+	 * ChartBuilder.create("bar")
+	 *   .categories(["Q1", "Q2"])
+	 *   .addSeries("Revenue", [100, 150])
+	 *   .gradient({ angle: 90, stops: [
+	 *     { color: "#60A5FA", position: 0 },
+	 *     { color: "#1E3A8A", position: 100 },
+	 *   ] })
+	 *   .build();
+	 * ```
+	 */
+	gradient(gradient: ChartGradientInput): this {
+		const series = this._input.series.at(-1);
+		if (!series) {
+			throw new Error('ChartBuilder.gradient() needs a series: call addSeries() first.');
+		}
+		series.gradientFill = gradient;
 		return this;
 	}
 

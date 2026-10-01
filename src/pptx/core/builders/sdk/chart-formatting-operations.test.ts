@@ -46,7 +46,7 @@ describe('setChartDataPointStyle', () => {
 		const chart = makeChart();
 		setChartDataPointStyle(chart, 0, 0, { fillColor: '#111111' });
 		setChartDataPointStyle(chart, 0, 0, null);
-		expect(chart.chartData!.series[0].dataPoints).toBeUndefined();
+		expect(chart.chartData!.series[0].dataPoints).toStrictEqual([]);
 	});
 
 	it('throws for an out-of-range series index', () => {

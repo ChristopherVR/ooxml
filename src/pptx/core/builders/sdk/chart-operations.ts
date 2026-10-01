@@ -530,6 +530,9 @@ export function removeChartCategory(element: ChartPptxElement, categoryIndex: nu
  * series colour, or `null`/`undefined` to clear it so the series falls back to
  * its automatic theme colour.
  *
+ * Also clears any series gradient (`setChartSeriesGradient`): solid colour
+ * and gradient are one fill choice, so the last call wins.
+ *
  * @param element - The chart element to modify.
  * @param seriesIndex - Zero-based index of the series to recolour.
  * @param color - Hex colour string, or `null`/`undefined` to clear.
@@ -548,6 +551,8 @@ export function setChartSeriesColor(
 ): void {
 	validateSeriesIndex(element, seriesIndex);
 	const series = element.chartData!.series[seriesIndex];
+	// A solid colour and a gradient are one fill choice: the last call wins.
+	delete series.gradientFill;
 	if (!color) {
 		series.color = undefined;
 		return;
@@ -799,6 +804,8 @@ export function ensureDataPoint(
  *
  * Pass a hex colour to set the fill, or `null` to remove the per-point fill
  * (dropping the whole `c:dPt` override when nothing else is set on it).
+ * Setting a colour also clears a per-point gradient
+ * (`setChartDataPointGradient`); the last call wins.
  *
  * @example
  * ```ts
@@ -835,6 +842,7 @@ export function setChartDataPointFill(
 	}
 	const dp = ensureDataPoint(series, pointIndex);
 	dp.spPr = { ...(dp.spPr ?? {}), fillColor: color };
+	delete dp.gradientFill;
 }
 
 /**
@@ -1041,14 +1049,16 @@ export function removeEmptyDataPoint(
 	}
 	const empty =
 		dp.spPr === undefined &&
+		dp.gradientFill === undefined &&
 		dp.explosion === undefined &&
 		dp.invertIfNegative === undefined &&
 		dp.bubble3D === undefined &&
 		dp.marker === undefined;
 	if (empty) {
+		// Leave an empty list rather than `undefined` once the last override is
+		// gone: the save path reads `undefined` as "untouched, pass the authored
+		// c:dPt through", so clearing a loaded chart's only override used to
+		// leave it in the saved file.
 		series.dataPoints = series.dataPoints.filter((p) => p.idx !== pointIndex);
-		if (series.dataPoints.length === 0) {
-			series.dataPoints = undefined;
-		}
 	}
 }

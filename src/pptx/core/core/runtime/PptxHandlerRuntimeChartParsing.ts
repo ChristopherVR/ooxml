@@ -43,7 +43,7 @@ import {
 import { parseChartDateCategories } from '../../utils/chart-date-categories';
 import { parseFilteredTitles } from '../../utils/chart-ext-titles';
 import { parseFilteredSeries } from '../../utils/chart-filtered-series';
-import { seriesGradientFill } from '../../utils/chart-gradient-fill';
+import { parseChartGradientFill, seriesGradientFill } from '../../utils/chart-gradient-fill';
 import { parseChartLayouts } from '../../utils/chart-layout';
 import { parseChartPivotFormats } from '../../utils/chart-pivot-formats';
 import { parseChartPrintSettings } from '../../utils/chart-print-settings';
@@ -832,7 +832,14 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			);
 
 			// Parse data points (c:dPt)
-			const dataPoints = parseSeriesDataPoints(seriesNode, this.xmlLookupService, colorAdapter);
+			const dataPoints = parseSeriesDataPoints(
+				seriesNode,
+				this.xmlLookupService,
+				colorAdapter,
+				this.colorStyleCodec
+					? (spPr) => parseChartGradientFill(spPr, this.xmlLookupService, this.colorStyleCodec)
+					: undefined,
+			);
 
 			// Parse series marker (c:marker)
 			const seriesMarker = parseMarker(

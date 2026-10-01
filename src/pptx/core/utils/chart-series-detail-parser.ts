@@ -1,5 +1,6 @@
 import type {
 	PptxChartDataPoint,
+	PptxChartGradientFill,
 	PptxChartMarker,
 	PptxChartMarkerSymbol,
 	PptxChartShapeProps,
@@ -152,11 +153,16 @@ export function parseMarker(
 	return result;
 }
 
-/** Parse per-data-point formatting overrides (c:dPt). */
+/**
+ * Parse per-data-point formatting overrides (c:dPt). `parseGradient`, when
+ * supplied, reads each point's `c:spPr/a:gradFill` into
+ * {@link PptxChartDataPoint.gradientFill}.
+ */
 export function parseSeriesDataPoints(
 	seriesNode: XmlObject,
 	xmlLookup: XmlLookupLike,
 	colorParser: ColorParserLike,
+	parseGradient?: (spPr: XmlObject | undefined) => PptxChartGradientFill | undefined,
 ): PptxChartDataPoint[] {
 	const dPtNodes = xmlLookup.getChildrenArrayByLocalName(seriesNode, 'dPt');
 	if (dPtNodes.length === 0) {
@@ -173,13 +179,14 @@ export function parseSeriesDataPoints(
 
 			const result: PptxChartDataPoint = { idx };
 
-			const spPr = parseShapeProps(
-				xmlLookup.getChildByLocalName(node, 'spPr'),
-				xmlLookup,
-				colorParser,
-			);
+			const spPrNode = xmlLookup.getChildByLocalName(node, 'spPr');
+			const spPr = parseShapeProps(spPrNode, xmlLookup, colorParser);
 			if (spPr) {
 				result.spPr = spPr;
+			}
+			const gradientFill = parseGradient?.(spPrNode);
+			if (gradientFill) {
+				result.gradientFill = gradientFill;
 			}
 
 			const picture = parseChartDataPointPicture(node, xmlLookup);
