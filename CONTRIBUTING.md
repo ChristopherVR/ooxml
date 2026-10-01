@@ -37,11 +37,32 @@ The pptx tests read real decks from `src/pptx/__tests__/fixtures`, including a c
 - When moving code in from another repository, add an entry to [PROVENANCE.md](PROVENANCE.md) (source, path, commit, what changed).
 - Formatting is `oxfmt` (`bun run fmt`); the project uses tabs and single quotes.
 
-## Commits and pull requests
+## Commit conventions
 
-- Use conventional commit messages (`feat(xml): ...`, `fix(opc): ...`, `test(docx): ...`, `docs: ...`).
-- Keep pull requests focused; describe what changed and how you checked it. CI runs typecheck, tests, build and the package smoke test.
-- Releases are cut by the maintainer from a `v<version>` tag that matches `package.json`; do not bump versions in pull requests.
+Commits **must** follow [Conventional Commits](https://www.conventionalcommits.org). This is load-bearing, not cosmetic: the published package is versioned and released automatically, and **the bump level is derived from your commit type**. A mislabelled commit mis-versions the package, and a non-conforming commit is silently dropped from the changelog. The `Conventional Commits` check on every pull request validates the PR title and every commit subject (`scripts/check-conventional-commits.mjs`).
+
+```
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+- **type**: `feat` (minor bump); `fix`, `perf`, `refactor`, `docs`, `test`, `build`, `ci`, `style`, `chore`, `revert` (patch bump). A `!` after the type/scope, or a `BREAKING CHANGE:` footer, bumps major.
+- **scope**: the area: `units`, `color`, `geometry`, `xml`, `opc`, `docx`, `pptx`, `ci`, `deps`, `docs`.
+- **subject**: imperative, lower-case, no trailing period, header at most 72 characters.
+
+Whether a commit releases at all is decided by the **paths it touches**, not its type: only changes to published files (`src/` outside tests, the bundler and declaration configs, the manifest's shipping fields, the licence files) release a new version. Tests, docs, CI and fixtures never do, whatever their type, and a test-only `feat` does not raise the bump level. See [docs/releasing.md](docs/releasing.md).
+
+Examples: `feat(xml): add a streaming serializer`, `fix(opc): resolve relative part names`, `feat(docx)!: rename the section model`.
+
+The release workflow writes `chore(release): bump versions and update changelogs [skip ci]` commits to `main`; do not edit the version or `CHANGELOG.md` by hand.
+
+## Pull requests
+
+- Keep pull requests focused; describe what changed and how you checked it. CI runs typecheck, tests, the release-script tests, build and the package smoke test, and must be green (`ci-success`).
+- Releases are cut automatically from `main` (hourly, plus manual dispatch); do not bump versions in pull requests.
 
 ## License
 

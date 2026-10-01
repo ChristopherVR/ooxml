@@ -37,6 +37,7 @@
 	"type": "module",
 	"sideEffects": false,
 	"main": "./dist/index.cjs",
+	"module": "./dist/index.mjs",
 	"types": "./dist/index.d.ts",
 	"exports": {
 		".": {
@@ -113,7 +114,12 @@
 		"gen:docx-schema-types": "bun scripts/gen-schema-types.ts",
 		"fmt": "oxfmt",
 		"fmt:check": "oxfmt --check",
-		"test:package": "node scripts/package-smoke.mjs"
+		"test:package": "node scripts/package-smoke.mjs",
+		"test:scripts": "node --test 'scripts/*.test.mjs'",
+		"check:changelog": "node scripts/check-changelog-sections.mjs",
+		"release:plan": "node scripts/release-plan.mjs",
+		"release:publish": "node scripts/publish-released.mjs",
+		"changelog:unreleased": "bunx git-cliff --config cliff.toml --tag-pattern \"^@christophervr/ooxml-core@\" --unreleased"
 	},
 	"dependencies": {
 		"@xmldom/xmldom": "^0.9.12",
@@ -156,6 +162,5 @@
 	},
 	"engines": {
 		"node": ">=22"
-	},
-	"module": "./dist/index.mjs"
+	}
 }

@@ -11,3 +11,4 @@ src/pptx/__tests__/fixtures/smartart-gallery/baseline.json
 # The e2e decks under fixtures/e2e are committed (a snapshot of pptx-viewer's e2e fixtures). Its
 # fixture generators import pptx-viewer-core and stay in pptx-viewer.
 src/pptx/__tests__/fixtures/e2e/generate-*.ts
+release-plan.json

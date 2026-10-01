@@ -23,5 +23,33 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun run typecheck
       - run: bun run test
+      # Release machinery: planner, publish guards, commit and changelog checks.
+      - run: bun run test:scripts
+      - run: bun run check:changelog
       - run: bun run build
       - run: bun run test:package
+
+  # The single check the `main` ruleset requires. Funnelling through one job keeps branch
+  # protection stable when jobs are added or renamed (a required check that no longer exists blocks
+  # every PR silently). `always()` plus the explicit result test is deliberate: without it a
+  # cancelled or skipped dependency would let this pass.
+  ci-success:
+    name: ci-success
+    if: always()
+    needs: [verify]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check every required job succeeded
+        run: |
+          results="${{ join(needs.*.result, ' ') }}"
+          echo "Upstream results: $results"
+          for result in $results; do
+            case "$result" in
+              success) ;;
+              *)
+                echo "::error::A required CI job did not succeed (got: $results)."
+                exit 1
+                ;;
+            esac
+          done
+          echo "All required CI jobs succeeded."
