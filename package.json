@@ -8,10 +8,14 @@
 		"type": "git",
 		"url": "git+https://github.com/ChristopherVR/ooxml-core.git"
 	},
+	"bin": {
+		"pptx": "./dist/pptx/cli/index.mjs"
+	},
 	"files": [
 		"dist",
 		"LICENSE",
 		"NOTICE",
+		"THIRD-PARTY-LICENSES",
 		"README.md"
 	],
 	"type": "module",
@@ -58,12 +62,35 @@
 			"types": "./dist/opc/index.d.ts",
 			"import": "./dist/opc/index.js",
 			"default": "./dist/opc/index.js"
+		},
+		"./pptx": {
+			"types": "./dist/pptx/index.d.ts",
+			"import": "./dist/pptx/index.mjs",
+			"require": "./dist/pptx/index.cjs"
+		},
+		"./pptx/converter": {
+			"types": "./dist/pptx/converter/index.d.ts",
+			"import": "./dist/pptx/converter/index.mjs",
+			"require": "./dist/pptx/converter/index.cjs"
+		},
+		"./pptx/cli": {
+			"types": "./dist/pptx/cli/index.d.ts",
+			"import": "./dist/pptx/cli/index.mjs",
+			"require": "./dist/pptx/cli/index.cjs"
+		},
+		"./pptx/signature-node": {
+			"types": "./dist/pptx/signature-node/index.d.ts",
+			"import": "./dist/pptx/signature-node/index.mjs",
+			"require": "./dist/pptx/signature-node/index.cjs"
 		}
 	},
 	"scripts": {
-		"build": "node scripts/clean.mjs dist && tsc -p tsconfig.build.json",
+		"build": "node scripts/clean.mjs dist && tsc -p tsconfig.build.json && bun run build:pptx",
+		"build:pptx": "tsup --config tsup.pptx.config.ts && tsdown --config tsdown.pptx.config.ts && node scripts/pptx/merge-declarations.mjs",
 		"prepack": "bun run build",
-		"typecheck": "tsc -p tsconfig.json --noEmit",
+		"typecheck": "bun run typecheck:strict && bun run typecheck:pptx",
+		"typecheck:strict": "tsc -p tsconfig.json --noEmit",
+		"typecheck:pptx": "tsc -p tsconfig.pptx.json --noEmit",
 		"test": "vitest run",
 		"gen:docx-schema-types": "bun scripts/gen-schema-types.ts",
 		"fmt": "oxfmt",
@@ -71,14 +98,42 @@
 	},
 	"dependencies": {
 		"@xmldom/xmldom": "^0.9.12",
-		"jszip": "^3.10.2"
+		"emf-converter": "^3.3.0",
+		"fast-xml-parser": "^5.11.1",
+		"jszip": "^3.10.2",
+		"mtx-decompressor": "^1.6.0",
+		"utif": "3.1.0"
 	},
 	"devDependencies": {
+		"@christophervr/ole2": "0.3.0",
+		"@napi-rs/canvas": "^1.0.9",
 		"@types/node": "^22.0.0",
+		"@types/node-forge": "^1.3.14",
+		"@types/utif": "3.0.6",
+		"node-forge": "^1.4.0",
 		"oxfmt": "*",
+		"tsdown": "^0.23.0",
+		"tsup": "^8.5.1",
 		"typescript": "^5.9.3",
 		"vitest": "^3.2.0",
+		"xml-crypto": "^6.1.2",
 		"xmllint-wasm": "5.3.0"
+	},
+	"peerDependencies": {
+		"@napi-rs/canvas": "^1.0.9",
+		"node-forge": "^1.3.0",
+		"xml-crypto": "^6.0.0"
+	},
+	"peerDependenciesMeta": {
+		"@napi-rs/canvas": {
+			"optional": true
+		},
+		"node-forge": {
+			"optional": true
+		},
+		"xml-crypto": {
+			"optional": true
+		}
 	},
 	"engines": {
 		"node": ">=22"

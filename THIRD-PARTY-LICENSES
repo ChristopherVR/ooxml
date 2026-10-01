@@ -1,0 +1,26 @@
+Third-Party Licenses
+====================
+
+Runtime dependencies of @christophervr/ooxml-core (installed from npm, not
+copied into this repository) and the legacy Office codecs inlined into the
+pptx bundle. Licenses as declared by the versions resolved in bun.lock.
+
+jszip                  (MIT OR GPL-3.0-or-later; used under MIT)  https://github.com/Stuk/jszip
+fast-xml-parser        MIT                                        https://github.com/NaturalIntelligence/fast-xml-parser
+@xmldom/xmldom         MIT                                        https://github.com/xmldom/xmldom
+utif                   MIT                                        https://github.com/photopea/UTIF.js
+pako (via utif)        (MIT AND Zlib)                             https://github.com/nodeca/pako
+emf-converter          Apache-2.0                                 https://github.com/ChristopherVR/pptx-viewer
+mtx-decompressor       MPL-2.0                                    https://github.com/ChristopherVR/pptx-viewer
+@christophervr/ole2    Apache-2.0 (inlined in the pptx bundle)    https://github.com/ChristopherVR/ole2
+
+Optional peer dependencies (not installed by default):
+
+node-forge             (BSD-3-Clause OR GPL-2.0; used under BSD-3)  https://github.com/digitalbazaar/forge
+xml-crypto             MIT                                          https://github.com/node-saml/xml-crypto
+@napi-rs/canvas        MIT                                          https://github.com/Brooooooklyn/canvas
+
+mtx-decompressor is a port of libeot (https://github.com/nicowilliams/libeot) by
+Brennan T. Vincent, licensed under MPL-2.0. It stays a separate package; its
+source is available at the URL above under the Mozilla Public License 2.0
+(https://mozilla.org/MPL/2.0/).

@@ -13,7 +13,8 @@ describe('generated schema simple types', () => {
 		);
 	});
 	it('is identical to a fresh generation from the checked-in XSDs (drift check)', () => {
-		expect(readFileSync(OUTPUT_PATH, 'utf8')).toBe(generate());
+		// Working copies may carry CRLF line endings (Windows autocrlf); the generator writes LF.
+		expect(readFileSync(OUTPUT_PATH, 'utf8').replace(/\r\n/g, '\n')).toBe(generate());
 	});
 
 	it('exposes enumerations, guards and provenance from the schemas', () => {
