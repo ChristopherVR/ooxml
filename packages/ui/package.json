@@ -1,6 +1,85 @@
 {
 	"name": "@christophervr/office-ui",
 	"version": "0.1.0",
-	"private": true,
-	"type": "module"
+	"description": "Shared, format-neutral web components and styles for the Office viewers (Word, PowerPoint, Excel)",
+	"keywords": [
+		"custom-elements",
+		"docx",
+		"office",
+		"pptx",
+		"ribbon",
+		"web-components"
+	],
+	"homepage": "https://github.com/ChristopherVR/ooxml-core/tree/main/packages/ui#readme",
+	"bugs": {
+		"url": "https://github.com/ChristopherVR/ooxml-core/issues"
+	},
+	"license": "Apache-2.0",
+	"author": "ChristopherVR",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/ChristopherVR/ooxml-core.git",
+		"directory": "packages/ui"
+	},
+	"files": [
+		"dist",
+		"LICENSE",
+		"NOTICE",
+		"README.md"
+	],
+	"type": "module",
+	"sideEffects": false,
+	"main": "./dist/index.js",
+	"module": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		},
+		"./theme": {
+			"types": "./dist/theme.d.ts",
+			"import": "./dist/theme.js"
+		},
+		"./icons": {
+			"types": "./dist/icons.d.ts",
+			"import": "./dist/icons.js"
+		},
+		"./controls": {
+			"types": "./dist/controls.d.ts",
+			"import": "./dist/controls.js"
+		},
+		"./presence": {
+			"types": "./dist/presence.d.ts",
+			"import": "./dist/presence.js"
+		},
+		"./smartart": {
+			"types": "./dist/smartart.d.ts",
+			"import": "./dist/smartart.js"
+		},
+		"./package.json": "./package.json"
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"scripts": {
+		"build": "node scripts/build.mjs",
+		"prepack": "node scripts/ensure-built.mjs",
+		"typecheck": "tsc -p tsconfig.json --noEmit",
+		"test": "vitest run",
+		"test:package": "node scripts/package-smoke.mjs"
+	},
+	"dependencies": {
+		"@christophervr/ooxml-core": "^0.1.0"
+	},
+	"devDependencies": {
+		"@types/jsdom": "^21.1.7",
+		"jsdom": "^26.1.0",
+		"tsup": "^8.5.1",
+		"typescript": "^5.9.3",
+		"vitest": "^3.2.0"
+	},
+	"engines": {
+		"node": ">=22"
+	}
 }

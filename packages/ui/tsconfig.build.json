@@ -1,0 +1,13 @@
+{
+	"extends": "./tsconfig.json",
+	"compilerOptions": {
+		"rootDir": "src",
+		"outDir": "dist",
+		"emitDeclarationOnly": true,
+		"types": [],
+		"paths": {
+			"@christophervr/ooxml-core/*": ["../../dist/*/index.d.ts"]
+		}
+	},
+	"exclude": ["src/**/*.test.ts", "dist", "node_modules"]
+}

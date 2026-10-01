@@ -1,0 +1,72 @@
+# @christophervr/office-ui
+
+Shared, format-neutral web components and styles for the Office viewers (Word, PowerPoint, later
+Excel). Vanilla custom elements with shadow-root controls, typed events, no framework and no
+runtime dependency except `@christophervr/ooxml-core` (types and a few pure helpers).
+
+> **You do not install this package.** It is a regular `dependency` of every published editor
+> package (`docx-viewer-*`, `pptx-viewer-*`), so installing the editor of your framework pulls it
+> in. It is published separately only so that the editors share one copy of the controls. Do not
+> add it to your own install instructions or `package.json`; import controls through the editor
+> package, which registers them for you. Importing `@christophervr/office-ui` directly is for
+> the viewer packages themselves and for people building their own Office-style UI.
+
+## Entries (ESM only)
+
+| Entry                               | Contents                                                                                |
+| ----------------------------------- | --------------------------------------------------------------------------------------- |
+| `@christophervr/office-ui`          | everything below plus `registerOfficeUi()` and `OFFICE_UI_TAGS`                         |
+| `@christophervr/office-ui/theme`    | `THEME_CSS`, `installOfficeUiTheme()` (tokens, dark mode, forced-colors, touch targets) |
+| `@christophervr/office-ui/icons`    | icon registry (`registerIcon`, `getIcon`, `listIcons`) and `<office-ui-icon>`           |
+| `@christophervr/office-ui/controls` | button, checkbox, switch, select, ribbon group, toolbar, dialog, status bar and item    |
+| `@christophervr/office-ui/presence` | `<office-ui-presence>` avatar stack for collaboration awareness                         |
+| `@christophervr/office-ui/smartart` | `<office-ui-smartart>`: draws a core `DiagramDrawing` as SVG                            |
+
+Importing an entry never touches the DOM (SSR-safe). Elements are defined by the `define*` /
+`register*` functions, which are idempotent, no-ops without a `window`, and refuse to coexist
+with an incompatible build of this package.
+
+## Elements
+
+| Tag                                      | Attributes / properties                                                                         | Events (all bubble, composed)                   |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| `office-ui-button`                       | `label`, `icon`, `command`, `disabled`, `pressed`, `expanded`, `icon-only`, `variant="stacked"` | `office-command` `{ command }`                  |
+| `office-ui-checkbox`, `office-ui-switch` | `checked`, `disabled`, `value`, `aria-label`; form-associated                                   | `input`, `change`                               |
+| `office-ui-select`                       | `options` `[{ value, label, disabled? }]`, `value`, `selectedIndex`, `disabled`                 | `input`, `change`                               |
+| `office-ui-ribbon-group`                 | `label`; default slot                                                                           | none                                            |
+| `office-ui-toolbar`                      | `aria-label`, `aria-orientation`; arrow-key focus movement                                      | none                                            |
+| `office-ui-dialog`                       | `open`, `heading`, `dismissible="false"`, `show()`, `close()`; slots default, `footer`          | `office-dialog-close` `{ reason }` (cancelable) |
+| `office-ui-status-bar` / `-status-item`  | `label`, `value`, `interactive`, `id`                                                           | `office-status-activate` `{ id }`               |
+| `office-ui-presence`                     | `participants`, `max`, `label`                                                                  | `office-presence-select` `{ id }`               |
+| `office-ui-smartart`                     | `drawing` (core `DiagramDrawing`), `schemeColors`, `label`                                      | `office-smartart-render` (render report)        |
+| `office-ui-icon`                         | `name`, `label`                                                                                 | none                                            |
+
+Setting a property never emits an event; only user activation does. Controls honour
+`prefers-color-scheme`, `forced-colors: active` (system colours and a visible focus ring) and
+coarse pointers (44px targets through `--office-target-size`). Tokens are the `--office-*`
+custom properties in `THEME_CSS`; override them on `:root` or any container.
+
+`office-ui-smartart` shows the drawing the producing application cached; it never lays out a
+diagram itself. Preset outlines it cannot draw are rendered as rectangles, gradient and pattern
+fills are approximated, and 3D is flattened. All of that is listed in the `office-smartart-render`
+event detail (`approximatedGeometries`, `approximatedFills`, `flattened3d`); nothing is hidden.
+
+## Scope
+
+Only what every Office product needs lives here. Product-specific ribbon content (PowerPoint
+slides, transitions, animations; Word styles and review) stays in the viewers. See
+`docs/office-ui-plan.md` in the repository for what moves when, and how the `pptx-ui-*` tags
+become aliases of `office-ui-*`.
+
+## Development
+
+```
+bun install
+bun run --cwd packages/ui typecheck
+bun run --cwd packages/ui test
+bun run build && bun run --cwd packages/ui build   # core first: the declarations read ../../dist
+bun run --cwd packages/ui test:package
+```
+
+Licensed under Apache-2.0. Several controls are derived from `pptx-viewer`; see
+`PROVENANCE.md` at the repository root.
