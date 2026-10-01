@@ -14,6 +14,8 @@ export default defineConfig({
 		'diagram/index': 'src/diagram/index.ts',
 		'docx/index': 'src/docx/index.ts',
 		'docx/embedded': 'src/docx/embedded.ts',
+		'docx/layout/index': 'src/docx/layout/index.ts',
+		'docx/load/index': 'src/docx/load/index.ts',
 	},
 	outDir: 'dist',
 	tsconfig: 'tsconfig.build.json',
@@ -27,4 +29,6 @@ export default defineConfig({
 	external: ['jszip', '@xmldom/xmldom'],
 	treeshake: true,
 	platform: 'neutral',
+	// The legacy .doc loader inlines the shared ole2 codecs (a devDependency), like the pptx bundle.
+	noExternal: [/^@christophervr\/ole2(?:\/|$)/],
 });
