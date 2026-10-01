@@ -14,7 +14,7 @@ concurrency:
   group: npm-release
   cancel-in-progress: false
 env:
-  PPTX_VIEWER_FIXTURES_REF: b663ba35d0f30a1d309c3eb7c9e7e31b86020dbb
+  PPTX_VIEWER_FIXTURES_REF: a9b95c62ff904f041f514cdc7bd3caa827ac2f2b
 jobs:
   publish:
     environment: npm
