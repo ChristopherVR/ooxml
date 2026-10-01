@@ -12,8 +12,13 @@
  *
  * Safety checks before anything is uploaded, per package:
  *   - the manifest on disk is the version being published (a re-publish checks out the tag),
- *   - no dependency range uses the `workspace:` or `file:` protocol, which no consumer can install,
- *   - every range on another package of this repo points at the version that package ships with,
+ *   - no dependency range uses the `file:` or `link:` protocol, and no `workspace:` range names
+ *     anything but a sibling of this repo, because no consumer can install them. A `workspace:`
+ *     range on a sibling (office-ui on ooxml-core) is published as `^<sibling version on disk>`:
+ *     the manifest is rewritten only for the `npm publish` call and restored afterwards, so the
+ *     repo keeps its workspace link (npm never rewrites `workspace:` itself),
+ *   - a sibling the package requires is already on npm (core is published before ui),
+ *   - every other range on a sibling is satisfied by the version that sibling ships with,
  *   - a version that already exists on the registry is skipped, so a re-run is idempotent,
  *   - a version older than the registry's `latest` is published under the `old` dist-tag so it
  *     cannot move `latest` backwards.
@@ -23,13 +28,20 @@
  */
 
 import { spawnSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { cmpSemver, PACKAGES } from './release-plan.mjs';
+import {
+	cmpSemver,
+	isWorkspaceRange,
+	PACKAGES,
+	presentPackages,
+	satisfies,
+} from './release-plan.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const packages = () => presentPackages(ROOT, PACKAGES);
 const FIELDS = ['dependencies', 'peerDependencies', 'optionalDependencies', 'devDependencies'];
 const npm = (args, options = {}) =>
 	spawnSync('npm', args, {
@@ -47,7 +59,7 @@ export function resolveTargets({ plan, tag }) {
 		}
 		const at = tag.lastIndexOf('@');
 		const [name, version] = [tag.slice(0, at), tag.slice(at + 1)];
-		const key = Object.keys(PACKAGES).find((k) => PACKAGES[k].npm === name);
+		const key = Object.keys(packages()).find((k) => PACKAGES[k].npm === name);
 		if (!key) throw new Error(`Unknown package '${name}' (from tag ${tag}).`);
 		return [{ key, npm: name, dir: PACKAGES[key].dir, version }];
 	}
@@ -57,9 +69,12 @@ export function resolveTargets({ plan, tag }) {
 }
 const pick = ({ npm: name, dir, version }) => ({ npm: name, dir, version });
 
-/** Throws when the manifest on disk is not publishable as `target`. */
-export function verifyManifest(target, versions = workspaceVersions()) {
-	const manifest = JSON.parse(readFileSync(join(ROOT, target.dir, 'package.json'), 'utf8'));
+/**
+ * The manifest as it must be published: `workspace:` ranges on siblings become `^<version>`.
+ * Throws when the manifest on disk is not publishable as `target`.
+ */
+export function publishManifest(target, versions = workspaceVersions(), root = ROOT) {
+	const manifest = JSON.parse(readFileSync(join(root, target.dir, 'package.json'), 'utf8'));
 	if (manifest.name !== target.npm)
 		throw new Error(`${target.dir} is ${manifest.name}, not ${target.npm}.`);
 	if (manifest.version !== target.version) {
@@ -68,22 +83,28 @@ export function verifyManifest(target, versions = workspaceVersions()) {
 	if (manifest.private) throw new Error(`${target.npm} is private and cannot be published.`);
 	for (const field of FIELDS) {
 		for (const [dep, range] of Object.entries(manifest[field] ?? {})) {
-			if (/^(?:workspace|file|link):/u.test(range)) {
+			const sibling = versions.get(dep);
+			if (isWorkspaceRange(range) && sibling) {
+				manifest[field][dep] = `^${sibling}`;
+			} else if (/^(?:workspace|file|link):/u.test(range)) {
 				throw new Error(
 					`${target.npm}: ${field}["${dep}"] is "${range}", which cannot be installed.`,
 				);
-			}
-			const sibling = versions.get(dep);
-			if (field !== 'devDependencies' && sibling && range.replace(/^[\^~]/u, '') !== sibling) {
+			} else if (field !== 'devDependencies' && sibling && !satisfies(range, sibling)) {
 				throw new Error(`${target.npm}: ${dep} is "${range}" but that package is at ${sibling}.`);
 			}
 		}
 	}
+	return manifest;
 }
+
+/** Throws when the manifest on disk is not publishable as `target`. */
+export const verifyManifest = (target, versions, root) =>
+	void publishManifest(target, versions, root);
 
 function workspaceVersions() {
 	return new Map(
-		Object.values(PACKAGES).map((meta) => {
+		Object.values(packages()).map((meta) => {
 			const manifest = JSON.parse(readFileSync(join(ROOT, meta.dir, 'package.json'), 'utf8'));
 			return [meta.npm, manifest.version];
 		}),
@@ -125,10 +146,19 @@ function main() {
 	}
 	for (const target of targets) {
 		console.log(`--- ${target.npm}@${target.version} ---`);
-		verifyManifest(target);
+		const manifest = publishManifest(target);
 		if (registryState(target.npm, target.version) === 'exists') {
 			console.log('already published, skipping');
 			continue;
+		}
+		// A sibling this package requires must already be installable (core is published first).
+		for (const field of ['dependencies', 'peerDependencies', 'optionalDependencies']) {
+			for (const [dep, range] of Object.entries(manifest[field] ?? {})) {
+				const version = range.replace(/^[\^~]/u, '');
+				if (!dryRun && workspaceVersions().has(dep) && registryState(dep, version) !== 'exists') {
+					throw new Error(`${target.npm} needs ${dep}@${version}, which is not on npm yet.`);
+				}
+			}
 		}
 		const args = [
 			'publish',
@@ -142,7 +172,16 @@ function main() {
 			console.log(`dry run: (cd ${target.dir} && npm ${args.join(' ')})`);
 			continue;
 		}
-		const result = npm(args, { cwd: join(ROOT, target.dir), stdio: 'inherit' });
+		// Publish from the package's own directory with the rewritten manifest, then restore it.
+		const manifestPath = join(ROOT, target.dir, 'package.json');
+		const original = readFileSync(manifestPath, 'utf8');
+		let result;
+		try {
+			writeFileSync(manifestPath, `${JSON.stringify(manifest, null, '\t')}\n`);
+			result = npm(args, { cwd: join(ROOT, target.dir), stdio: 'inherit' });
+		} finally {
+			writeFileSync(manifestPath, original);
+		}
 		if (result.status !== 0) throw new Error(`Publishing ${target.npm}@${target.version} failed.`);
 	}
 }
