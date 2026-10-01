@@ -78,6 +78,11 @@
 			"import": "./dist/opc/index.mjs",
 			"require": "./dist/opc/index.cjs"
 		},
+		"./collab": {
+			"types": "./dist/collab/index.d.ts",
+			"import": "./dist/collab/index.mjs",
+			"require": "./dist/collab/index.cjs"
+		},
 		"./docx": {
 			"types": "./dist/docx/index.d.ts",
 			"import": "./dist/docx/index.mjs",
@@ -144,8 +149,11 @@
 		"emf-converter": "^3.3.0",
 		"fast-xml-parser": "^5.11.1",
 		"jszip": "^3.10.2",
+		"lib0": "^0.2.117",
 		"mtx-decompressor": "^1.6.0",
-		"utif": "3.1.0"
+		"utif": "3.1.0",
+		"y-protocols": "^1.0.7",
+		"yjs": "^13.6.32"
 	},
 	"devDependencies": {
 		"@christophervr/ole2": "0.3.0",
