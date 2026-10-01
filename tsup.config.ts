@@ -16,6 +16,7 @@ export default defineConfig({
 		'docx/embedded': 'src/docx/embedded.ts',
 		'docx/layout/index': 'src/docx/layout/index.ts',
 		'docx/load/index': 'src/docx/load/index.ts',
+		'collab/index': 'src/collab/index.ts',
 	},
 	outDir: 'dist',
 	tsconfig: 'tsconfig.build.json',
@@ -26,7 +27,7 @@ export default defineConfig({
 	sourcemap: false,
 	// dist also holds the declarations and the pptx bundle: never clean it here.
 	clean: false,
-	external: ['jszip', '@xmldom/xmldom'],
+	external: ['jszip', '@xmldom/xmldom', 'yjs', 'y-protocols', 'lib0'],
 	treeshake: true,
 	platform: 'neutral',
 	// The legacy .doc loader inlines the shared ole2 codecs (a devDependency), like the pptx bundle.
