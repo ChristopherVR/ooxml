@@ -15,6 +15,10 @@
       "name": "@christophervr/ooxml-color",
       "version": "0.1.0",
     },
+    "packages/geometry": {
+      "name": "@christophervr/ooxml-geometry",
+      "version": "0.1.0",
+    },
     "packages/units": {
       "name": "@christophervr/ooxml-units",
       "version": "0.1.0",
@@ -22,6 +26,8 @@
   },
   "packages": {
     "@christophervr/ooxml-color": ["@christophervr/ooxml-color@workspace:packages/color"],
+
+    "@christophervr/ooxml-geometry": ["@christophervr/ooxml-geometry@workspace:packages/geometry"],
 
     "@christophervr/ooxml-units": ["@christophervr/ooxml-units@workspace:packages/units"],
 
