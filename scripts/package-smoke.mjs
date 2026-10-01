@@ -30,7 +30,7 @@ try {
 		run(npm, ['pack', '--json', '--ignore-scripts', '--pack-destination', work], root),
 	)[0];
 	const files = new Set(packed.files.map((entry) => entry.path));
-	for (const required of ['LICENSE', 'NOTICE', 'README.md', 'dist/index.js', 'dist/index.d.ts'])
+	for (const required of ['LICENSE', 'NOTICE', 'README.md', 'dist/index.mjs', 'dist/index.d.ts'])
 		assert(files.has(required), `the package is missing ${required}`);
 	assert(
 		![...files].some((file) => /__tests__|\.test\.|fixtures\//.test(file)),

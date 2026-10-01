@@ -4,6 +4,7 @@
 		"rootDir": "src",
 		"outDir": "dist",
 		"noEmit": false,
+		"emitDeclarationOnly": true,
 		"declaration": true,
 		"declarationMap": true,
 		"sourceMap": true,

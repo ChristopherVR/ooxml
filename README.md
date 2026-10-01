@@ -17,8 +17,6 @@ One package, one XML model, every format: Word, PowerPoint and the shared buildi
 
 </div>
 
-> **First release pending.** `0.1.0` has not been published to npm yet; until it is, build from this repository (see [Development](#development)).
-
 ## Why ooxml-core?
 
 - **No UI, no framework.** Everything runs in browsers, Node.js, Bun, workers and serverless functions. The viewer apps ([docx-viewer](https://github.com/ChristopherVR/docx-viewer), [pptx-viewer](https://github.com/ChristopherVR/pptx-viewer)) are thin interfaces on top of it, and so can your application be.
@@ -29,11 +27,11 @@ One package, one XML model, every format: Word, PowerPoint and the shared buildi
 
 ## One package, many areas
 
-`@christophervr/ooxml-core` is a **single published package**. Every area is a subpath import, so you only load what you use, and the root entry groups the shared areas and `docx` by namespace (`pptx` is bundled separately and is imported through its subpaths).
+`@christophervr/ooxml-core` is a **single published package**. Every area is a subpath import, so you only load what you use, and the formats are symmetrical: `docx` and `pptx` are each imported through their own subpaths, and the root entry groups only the shared building blocks by namespace.
 
 ```ts
 import { parseXml } from '@christophervr/ooxml-core/xml'; // one area
-import { xml, opc } from '@christophervr/ooxml-core'; // or by namespace (shared areas)
+import { xml, opc } from '@christophervr/ooxml-core'; // or by namespace (shared building blocks)
 ```
 
 | Area       | What it is                                                                                                                                                          |
