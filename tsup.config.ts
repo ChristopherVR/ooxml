@@ -11,6 +11,7 @@ export default defineConfig({
 		'geometry/index': 'src/geometry/index.ts',
 		'xml/index': 'src/xml/index.ts',
 		'opc/index': 'src/opc/index.ts',
+		'diagram/index': 'src/diagram/index.ts',
 		'docx/index': 'src/docx/index.ts',
 		'docx/embedded': 'src/docx/embedded.ts',
 	},
