@@ -44,6 +44,16 @@
 			"import": "./dist/xml/index.js",
 			"default": "./dist/xml/index.js"
 		},
+		"./docx": {
+			"types": "./dist/docx/index.d.ts",
+			"import": "./dist/docx/index.js",
+			"default": "./dist/docx/index.js"
+		},
+		"./docx/embedded": {
+			"types": "./dist/docx/embedded.d.ts",
+			"import": "./dist/docx/embedded.js",
+			"default": "./dist/docx/embedded.js"
+		},
 		"./opc": {
 			"types": "./dist/opc/index.d.ts",
 			"import": "./dist/opc/index.js",
@@ -55,6 +65,7 @@
 		"prepack": "bun run build",
 		"typecheck": "tsc -p tsconfig.json --noEmit",
 		"test": "vitest run",
+		"gen:docx-schema-types": "bun scripts/gen-schema-types.ts",
 		"fmt": "oxfmt",
 		"fmt:check": "oxfmt --check"
 	},
@@ -66,7 +77,8 @@
 		"@types/node": "^22.0.0",
 		"oxfmt": "*",
 		"typescript": "^5.9.3",
-		"vitest": "^3.2.0"
+		"vitest": "^3.2.0",
+		"xmllint-wasm": "5.3.0"
 	},
 	"engines": {
 		"node": ">=22"
