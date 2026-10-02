@@ -19,9 +19,10 @@
 		<link rel="stylesheet" href="styles.css" />
 		<link rel="stylesheet" href="desk.css" />
 		<script>
-			// Apply a saved theme before first paint so the page never flashes.
+			// Apply a saved theme before first paint so the page never flashes. The key
+			// is VitePress's, shared with the embedded demos and both docs sites.
 			try {
-				const theme = localStorage.getItem('office-theme');
+				const theme = localStorage.getItem('vitepress-theme-appearance');
 				if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
 			} catch {}
 		</script>

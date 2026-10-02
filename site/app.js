@@ -1,4 +1,5 @@
 import { APPS, appIcon, demoUrl, isLive } from './apps.js';
+import { currentTheme, initTheme, shareTheme } from './theme.js';
 
 /**
  * Hash routes: `#/` is the launcher, `#/<app>` opens an app with its saved
@@ -100,6 +101,7 @@ function openApp(app, frameworkId) {
 		loadingLabel.textContent = `Starting ${app.name} (${framework.label})`;
 		loading.hidden = false;
 		frame.title = `${app.name} (${framework.label} demo)`;
+		shareTheme(currentTheme());
 		frame.src = src;
 	}
 }
@@ -111,19 +113,10 @@ function route() {
 	else showHome();
 }
 
-function toggleTheme() {
-	const root = document.documentElement;
-	const current =
-		root.dataset.theme ?? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-	const next = current === 'dark' ? 'light' : 'dark';
-	root.dataset.theme = next;
-	writeStore('office-theme', next);
-}
-
 frame.addEventListener('load', () => {
 	if (frame.getAttribute('src')) loading.hidden = true;
 });
-document.getElementById('theme-toggle')?.addEventListener('click', toggleTheme);
+initTheme(frame);
 window.addEventListener('hashchange', route);
 renderGrid();
 route();
