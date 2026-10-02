@@ -1,7 +1,7 @@
 # Pinned core development integration
 
 `core-revision.txt` pins the published source baseline
-`7364222cc9687da5e10a5992c2bf373cb6d68d98` from `ChristopherVR/ooxml`.
+`2c6e66afa7520e882d89498bebd117eb966476ea` from `ChristopherVR/ooxml`.
 That commit already contains the canonical `ooxml-core/visio` area. No historical
 Visio bootstrap patch is needed to reproduce it.
 

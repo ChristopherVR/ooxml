@@ -158,7 +158,7 @@
 							<tr>
 								<td>Arrowheads</td>
 								<td>All connector end variants</td>
-								<td>Partial: codes 1-4</td>
+								<td>Partial: codes 1-5</td>
 								<td>Viewer arrowheads.ts; SVG markers</td>
 								<td>Exact sizing, remaining codes, reference corpus</td>
 							</tr>
@@ -340,9 +340,15 @@
 							<tr>
 								<td>Corner rounding</td>
 								<td>Rounded contiguous geometry</td>
-								<td>Partial: closed axis-aligned rectangles</td>
-								<td>29 generated cases; five source-confirmed 60973 shapes</td>
-								<td>General polygon, open and mixed/curved path rounding</td>
+								<td>
+									Partial: closed axis-aligned rectangles and nonclamped open orthogonal paths
+								</td>
+								<td>
+									Analytic regressions; five 60973 rectangles and five connectors (14 corners)
+								</td>
+								<td>
+									Short-segment connector clamping, general polygon and mixed/curved path rounding
+								</td>
 							</tr>
 						</tbody>
 					</table>

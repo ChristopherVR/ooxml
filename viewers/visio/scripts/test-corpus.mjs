@@ -79,6 +79,23 @@ for (const [index, group] of baseline.groups.entries()) {
 				const result = exportPageSvg(model, pageIndex);
 				const parsed = new dom.window.DOMParser().parseFromString(result.svg, 'image/svg+xml');
 				assert.equal(parsed.querySelector('parsererror'), null, `${label}: valid SVG XML`);
+				if (
+					group.id === 'poi' &&
+					file.path.endsWith('/60973.vsdx') &&
+					model.pages[pageIndex].id === '0'
+				) {
+					assert.equal(
+						parsed.querySelectorAll('marker').length,
+						8,
+						'60973: eight saved code-5 ends',
+					);
+					assert.equal(
+						parsed.querySelectorAll('[marker-start][marker-end]').length,
+						4,
+						'60973: four two-ended connectors',
+					);
+				}
+
 				assert.equal(
 					parsed.querySelectorAll('[data-shape-id], [tabindex], script, foreignObject, a, style')
 						.length,
