@@ -3,6 +3,7 @@ interface Controls {
 	viewport: HTMLDivElement;
 	toolbar: HTMLDivElement;
 	pageSelect: HTMLSelectElement;
+	searchInput: HTMLInputElement;
 }
 const targetShape = (event: Event) =>
 	(event.target as Element)?.closest?.<SVGGElement>('[data-shape-id]');
@@ -21,10 +22,31 @@ export function wireViewerInputs(
 	controller: ViewerController,
 	fit: () => void,
 ): () => void {
-	const { viewport, toolbar, pageSelect } = controls;
+	const { viewport, toolbar, pageSelect, searchInput } = controls;
 	const Abort = viewport.ownerDocument.defaultView?.AbortController ?? AbortController,
 		events = new Abort();
 	const options = { signal: events.signal };
+	searchInput.addEventListener(
+		'input',
+		() => controller.setSearchQuery(searchInput.value),
+		options,
+	);
+	searchInput.addEventListener(
+		'keydown',
+		(event) => {
+			if (event.isComposing) return;
+			if (event.key === 'Enter') {
+				event.preventDefault();
+				if (event.shiftKey) controller.previousSearchResult();
+				else controller.nextSearchResult();
+			}
+			if (event.key === 'Escape') {
+				event.preventDefault();
+				controller.setSearchQuery('');
+			}
+		},
+		options,
+	);
 	pageSelect.addEventListener(
 		'change',
 		() => controller.setPage(Number(pageSelect.value)),
@@ -39,6 +61,8 @@ export function wireViewerInputs(
 			if (action === 'out') controller.setZoom(controller.state.zoom / 1.25);
 			if (action === 'fit') fit();
 			if (action === 'actual') controller.setZoom(1);
+			if (action === 'search-next') controller.nextSearchResult();
+			if (action === 'search-previous') controller.previousSearchResult();
 		},
 		options,
 	);

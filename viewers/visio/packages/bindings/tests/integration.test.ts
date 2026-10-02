@@ -336,3 +336,59 @@ describe('current-page SVG contract across all native adapters', () => {
 		});
 	}
 });
+
+describe('document text search across all native adapters', () => {
+	for (const [framework, mountNative] of Object.entries(mounts)) {
+		it(`${framework}: shared UI, imperative search, callbacks, replacement and cleanup`, async () => {
+			const host = document.createElement('div');
+			document.body.append(host);
+			const oldCallback = vi.fn(),
+				pageChanged = vi.fn(),
+				shapeSelected = vi.fn();
+			const mounted = await mountNative(host, {
+				document: demoDocument,
+				events: { 'page-change': oldCallback },
+			});
+			await mounted.update({
+				document: demoDocument,
+				events: { 'page-change': pageChanged, 'shape-select': shapeSelected },
+			});
+			const controller = mounted.handle.controller,
+				element = mounted.handle.element;
+			const root = element.shadowRoot!;
+			const input = root.querySelector<HTMLInputElement>('input[type="search"]')!;
+			const next = root.querySelector<HTMLButtonElement>('[data-action="search-next"]')!;
+			input.value = 'framework';
+			input.dispatchEvent(new Event('input', { bubbles: true }));
+			expect(controller.state.search.results).toHaveLength(2);
+			expect(controller.state.pageIndex).toBe(0);
+			next.click();
+			expect(controller.state.pageIndex).toBe(1);
+			expect(controller.state.selectedShape).toEqual({
+				id: 'a1',
+				name: 'Your framework',
+				pageId: '2',
+			});
+			expect(oldCallback).not.toHaveBeenCalled();
+			expect(pageChanged).toHaveBeenCalledWith(1);
+			expect(shapeSelected).toHaveBeenCalledWith(controller.state.selectedShape);
+			controller.setZoom(3);
+			const search = controller.state.search;
+			await mounted.update({ document: demoDocument, showToolbar: false });
+			expect(controller.state.search).toBe(search);
+			expect(controller.state.pageIndex).toBe(1);
+			expect(controller.state.zoom).toBe(3);
+			controller.previousSearchResult();
+			expect(controller.state.selectedShape?.id).toBe('a4');
+			await mounted.update({ document: { ...demoDocument }, showToolbar: true });
+			expect(input.value).toBe('');
+			expect(controller.state.search.results).toHaveLength(0);
+			await mounted.destroy();
+			next.click();
+			input.dispatchEvent(new Event('input', { bubbles: true }));
+			expect(controller.state.search.results).toHaveLength(0);
+			expect(() => controller.nextSearchResult()).toThrow('destroyed');
+			host.remove();
+		});
+	}
+});

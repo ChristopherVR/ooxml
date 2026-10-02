@@ -36,6 +36,52 @@ describe('SVG renderer', () => {
 });
 
 describe('line ends', () => {
+	it('uses core-normalized dash ratios at the actual saved line width', () => {
+		const model = structuredClone(demoDocument),
+			line = model.pages[0]!.shapes[1]!;
+		line.style.linePattern = 2;
+		line.style.lineDash = [6, 3];
+		line.style.lineWidth = 0.005;
+		const result = renderPage(model, model.pages[0]!);
+		expect(
+			result.svg.querySelector('[data-shape-id="c1"] path')?.getAttribute('stroke-dasharray'),
+		).toBe('0.03 0.015');
+		expect(line.style.lineDash).toEqual([6, 3]);
+		expect(result.warnings).toContain('Some dashed strokes use inferred Visio pattern spacing.');
+		result.dispose();
+	});
+	it('reports unresolved positive patterns instead of guessing a dash sequence', () => {
+		const model = structuredClone(demoDocument),
+			line = model.pages[0]!.shapes[1]!;
+		line.style.linePattern = 254;
+		const result = renderPage(model, model.pages[0]!);
+		expect(
+			result.svg.querySelector('[data-shape-id="c1"] path')?.hasAttribute('stroke-dasharray'),
+		).toBe(false);
+		expect(result.warnings).toContain('An unresolved line pattern is shown as a solid stroke.');
+		result.dispose();
+	});
+	it.each(['no-line-geometry', 'transparent-pattern'] as const)(
+		'suppresses markers for %s',
+		(mode) => {
+			const model = structuredClone(demoDocument),
+				line = model.pages[0]!.shapes[1]!;
+			line.style.startArrow = 1;
+			line.style.endArrow = 4;
+			if (mode === 'no-line-geometry')
+				for (const geometry of line.geometry) geometry.stroke = false;
+			else line.style.linePattern = 0;
+			const result = renderPage(model, model.pages[0]!);
+			expect(result.svg.querySelector('[data-shape-id="c1"] path')?.getAttribute('stroke')).toBe(
+				'none',
+			);
+			expect(result.svg.querySelectorAll('marker')).toHaveLength(0);
+			expect(
+				result.svg.querySelector('[data-shape-id="c1"] path')?.hasAttribute('marker-end'),
+			).toBe(false);
+			result.dispose();
+		},
+	);
 	it.each(['round', 'butt', 'square'] as const)('uses the normalized %s cap', (lineCap) => {
 		const model = structuredClone(demoDocument);
 		model.pages[0]!.shapes[1]!.style.lineCap = lineCap;

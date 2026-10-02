@@ -4,6 +4,7 @@
 
 - `ooxml-core/visio` in sibling `ooxml`: package intake, XML, model, inheritance, cached geometry, structured diagnostics. No viewer UI belongs here.
 - `src/controller.ts`: document/view state, selection, events, latest-load-wins behavior.
+- `src/document-text-search.ts`: bounded literal matching over normalized visible shape text, with immutable page-scoped results. The shared controller owns navigation and reentrancy checks.
 - `src/render-svg.ts` and `src/render-text.ts`: SVG presentation and rendering warnings.
 - `src/export-svg.ts`: bounded, static current-page serialization through the same SVG renderer, with embedded raster resources and compatibility metadata.
 - `src/viewer-element.ts`: shared browser surface.

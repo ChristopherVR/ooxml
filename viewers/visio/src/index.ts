@@ -22,3 +22,9 @@ export type { VisioDocument, VisioPage, VisioShape, VisioDiagnostic } from 'ooxm
 export { createWorkerParser, type CancellableParser } from './worker-parser.js';
 
 export { compatibilityNotes, compatibilityText, type CompatibilityNote } from './diagnostics.js';
+
+export {
+	TEXT_SEARCH_LIMITS,
+	type TextSearchResult,
+	type TextSearchState,
+} from './document-text-search.js';

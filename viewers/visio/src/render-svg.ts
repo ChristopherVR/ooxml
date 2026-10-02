@@ -165,27 +165,21 @@ function drawOwn(shape: VisioShape, group: SVGElement, context: RenderContext): 
 		path.setAttribute('d', geometry.path);
 		path.setAttribute('fill', geometry.fill ? fill : 'none');
 		path.setAttribute('fill-opacity', String(shape.style.fillOpacity));
-		path.setAttribute(
-			'stroke',
-			geometry.stroke && shape.style.linePattern !== 0 ? safeColor(shape.style.lineColor) : 'none',
-		);
+		const stroked = geometry.stroke && shape.style.linePattern !== 0;
+		path.setAttribute('stroke', stroked ? safeColor(shape.style.lineColor) : 'none');
 		path.setAttribute('stroke-width', String(shape.style.lineWidth));
 		path.setAttribute('stroke-opacity', String(shape.style.lineOpacity));
 		path.setAttribute('stroke-linejoin', 'round');
 		path.setAttribute('stroke-linecap', shape.style.lineCap ?? 'round');
-		if (shape.style.linePattern > 1) {
-			const unit = Math.max(shape.style.lineWidth, 0.01);
-			const patterns: Record<number, number[]> = {
-				2: [6, 3],
-				3: [1, 3],
-				4: [6, 3, 1, 3],
-				5: [6, 3, 1, 3, 1, 3],
-			};
-			const dash = patterns[shape.style.linePattern];
-			if (dash) path.setAttribute('stroke-dasharray', dash.map((n) => n * unit).join(' '));
-			warnings.add('Visio line-pattern spacing is approximated.');
+		if (stroked && shape.style.linePattern > 1) {
+			const dash = shape.style.lineDash;
+			if (dash) {
+				path.setAttribute('stroke-dasharray', dash.map((n) => n * shape.style.lineWidth).join(' '));
+				if (shape.style.linePattern <= 23)
+					warnings.add('Some dashed strokes use inferred Visio pattern spacing.');
+			} else warnings.add('An unresolved line pattern is shown as a solid stroke.');
 		}
-		applyArrowheads(path, shape.style, defs, warnings);
+		if (stroked) applyArrowheads(path, shape.style, defs, warnings);
 		group.append(path);
 	}
 	const raster = renderImage(shape, resources);

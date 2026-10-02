@@ -108,6 +108,14 @@ export function assertViewableDocument(model: VisioDocument): void {
 		finite(shape.text.height, 'text height', 0);
 		finite(shape.text.fontSize, 'font size', 0, 100);
 		finite(shape.style.lineWidth, 'line width', 0, 100);
+		if (shape.style.lineDash !== undefined) {
+			const dash = shape.style.lineDash;
+			if (!Array.isArray(dash) || dash.length < 2 || dash.length > 6 || dash.length % 2 !== 0)
+				throw new Error('The scene has an invalid normalized line dash.');
+			for (const value of dash) finite(value, 'line dash length', 0, 27);
+			if (!dash.some((value) => value > 0))
+				throw new Error('The scene has an empty line dash pattern.');
+		}
 		for (const value of [shape.style.linePattern, shape.style.startArrow, shape.style.endArrow]) {
 			finite(value, 'line pattern or arrow code', 0, 65535);
 			if (!Number.isInteger(value))

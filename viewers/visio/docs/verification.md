@@ -2,14 +2,14 @@
 
 Status: local development evidence, 2026-10-02. Full Microsoft Visio parity is not established.
 
-Current focused checkpoint: 529 core Visio tests, 143 viewer tests, 54 framework/SSR tests and 18 documentation tests pass. Both core TypeScript projects, viewer/binding typechecks, production builds and worker/packed-consumer checks pass. The earlier full core run at the 423-test Visio checkpoint recorded 16,417 passes, 231 skips and one failure: the unchanged PowerPoint AES-256 test exceeded its existing 20-second timeout under aggregate load. Its entire crypto file passes all 72 tests when rerun alone. The full core build, all 16 non-CLI packed ESM/CJS exports and 47 script tests pass. The original aggregate run is not recorded as green.
+Current focused checkpoint: 582 core Visio tests, 186 viewer tests, 60 framework/SSR tests and 18 documentation tests pass. Both core TypeScript projects, viewer/binding typechecks, production builds and worker/packed-consumer checks pass. The earlier full core run at the 423-test Visio checkpoint recorded 16,417 passes, 231 skips and one failure: the unchanged PowerPoint AES-256 test exceeded its existing 20-second timeout under aggregate load. Its entire crypto file passes all 72 tests when rerun alone. The full core build, all 16 non-CLI packed ESM/CJS exports and 47 script tests pass. The original aggregate run is not recorded as green.
 
 ## What has been exercised
 
 - Strict TypeScript for the viewer and core; the existing relaxed PowerPoint project also remains type-correct.
 - Core ZIP/XML/security, inheritance, geometry, text, layer and raster tests. The earlier broad core result and its unrelated timeout are reported above. Focused counts identify the frozen local checkpoint; later feature additions must be rerun before their own checkpoint.
-- Viewer controller, resource lifecycle, source races, page-scoped selection, renderer safety and text-work budgets in a DOM test environment.
-- Actual React, Vue, Angular, Svelte, Solid and vanilla lifecycle integration. The binding package has 49 DOM-environment tests and five separate no-DOM tests, including selected React/Vue hydration checks.
+- Viewer controller, resource lifecycle, source races, page-scoped selection, renderer safety and text-work budgets in a DOM test environment. Bounded document text search adds31 index/controller/UI regressions and six native-adapter cases, including reentrant navigation and unchanged-selection rendering work.
+- Actual React, Vue, Angular, Svelte, Solid and vanilla lifecycle integration. The binding package has 55 DOM-environment tests and five separate no-DOM tests, including selected React/Vue hydration checks.
 - Static documentation contracts: local/base-relative links, landmarks, labels, color contrast, responsive/reduced-motion rules and control-state tests.
 - Production multipage build and parser worker bundle. The actual worker bundle parses a synthetic VSDX and returns structured errors in an isolated Node worker. This is not a browser/CSP test.
 - The actual packed root artifact installs into a fresh consumer with the unreleased local core. ESM imports, declarations, a fresh Vite build and the packaged worker's valid/error paths pass. Framework adapters remain private source integrations, not standalone published artifacts.
@@ -34,7 +34,7 @@ This process detects gross omissions and transformation/color problems. It canno
 - `tdf154379-QuickStyleFillMatrix`: preview contains a larger process; the current file has a single document shape
 - `github260`: embedded preview decodes empty/transparent, so it is not a visual oracle
 
-These cases are excluded as authoritative fidelity oracles. A thumbnail mismatch is investigated against package XML before any code change. Solid theme-color assertions and actual gradient rendering are recorded separately. The post-fix SVGs contain true linear gradients. Saved corner rounding is implemented for closed axis-aligned rectangles and confirmed on five shapes in the 60973 source drawing. Other rounding cases remain explicitly unsupported.
+These cases are excluded as authoritative fidelity oracles. A thumbnail mismatch is investigated against package XML before any code change. Solid theme-color assertions and actual gradient rendering are recorded separately. The post-fix SVGs contain true linear gradients. Saved corner rounding is implemented for closed axis-aligned rectangles and confirmed on five shapes in the 60973 source drawing. Other rounding cases remain explicitly unsupported. Cached dash patterns2-23 now use bounded core-normalized stroke-width ratios, with inference diagnostics. Six actual pattern23 shapes in60973 retain their saved thin stroke widths without an arbitrary floor. Transparent/NoLine geometry no longer renders arrowheads. Numerical spacing still requires native reference comparison.
 
 ## Not verified
 

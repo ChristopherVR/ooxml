@@ -67,10 +67,10 @@ index bc99393..3ef4f6e 100644
  	tsconfig: 'tsconfig.build.json',
 diff --git a/src/visio/README.md b/src/visio/README.md
 new file mode 100644
-index 0000000..2f2795e
+index 0000000..7bd21b1
 --- /dev/null
 +++ b/src/visio/README.md
-@@ -0,0 +1,122 @@
+@@ -0,0 +1,133 @@
 +# Visio read-only scenes
 +
 +`ooxml-core/visio` imports VSDX drawing packages into a DOM-independent typed scene.
@@ -104,6 +104,8 @@ index 0000000..2f2795e
 +- Cached solid colors/fills, line widths/pattern codes, arrow codes/sizes, and opacity
 +- Cached/themed normalized line caps; legacy square/extended mappings are marked
 +  as inferred compatibility until verified against native geometry
++- Cached line patterns 2-23 normalized to bounded dash/gap sequences, with inferred
++  spacing diagnostics. Custom master patterns and themed dashes remain unresolved
 +- Saved Quick Style color selectors and internal DrawingML theme color/variant records;
 +  solid fills, linear gradient endpoints/stops, tint/shade/alpha color transforms,
 +  and themed line widths, with diagnostics for approximations
@@ -145,6 +147,15 @@ index 0000000..2f2795e
 +resolve independently of line width and use Office's flat default when the selected
 +theme line omits its cap. Cached caps 1/2 map to butt/square based on observed upstream
 +compatibility, with `inferred-line-cap` diagnostics; they are not an exact-fidelity claim.
++Normalized `style.lineDash` contains alternating dash/gap lengths in stroke-width
++multiples, unlike the scene's inch coordinates. Consumers multiply by the actual
++`lineWidth` without a minimum-width floor. The cached built-in sequences have 2-6
++entries, each at most 27, and retain `inferred-line-pattern` diagnostics because
++MS-VSDX pictures the patterns without specifying exact numerical spacing. Cached
++values override unused themed dashes. A requested themed pattern stays unresolved
++with a solid fallback; custom pattern 254 and invalid enumerations are diagnosed.
++Line properties, including arrowheads, must be suppressed when geometry has
++`stroke: false` or the effective `linePattern` is 0.
 +Rectangle rounding preserves local coordinates and winding, and honors inherited
 +cached line styles. Open, curved, mixed or nonrectangular paths stay unchanged with
 +a diagnostic. Negative radii are ignored; radii below output precision are diagnosed.
@@ -1807,6 +1818,265 @@ index 0000000..7cd938f
 +	// MS-VSDX 2.2.3.2.2: a geometry path must not belong to a layer whose Visible is zero.
 +	return { layerIds, hidden };
 +}
+diff --git a/src/visio/line-pattern.test.ts b/src/visio/line-pattern.test.ts
+new file mode 100644
+index 0000000..bebad45
+--- /dev/null
++++ b/src/visio/line-pattern.test.ts
+@@ -0,0 +1,175 @@
++import { describe, expect, it, vi } from 'vitest';
++import { linePattern } from './line-pattern.js';
++import { parseVsdx } from './parser.js';
++import type { Cells } from './sheet.js';
++import { cell, fixture, shape } from './test-fixtures.js';
++import { generatedTheme, themeFixture } from './theme-fixtures.js';
++
++const cells = (value: string): Cells => new Map([['LinePattern', { value }]]);
++const expected: [number, number[]][] = [
++	[2, [6, 3]],
++	[3, [1, 3]],
++	[4, [6, 3, 1, 3]],
++	[5, [6, 3, 1, 3, 1, 3]],
++	[6, [6, 3, 6, 3, 1, 3]],
++	[7, [14, 2, 6, 2]],
++	[8, [14, 2, 6, 2, 6, 2]],
++	[9, [3, 2]],
++	[10, [1, 2]],
++	[11, [3, 2, 1, 2]],
++	[12, [3, 2, 1, 2, 1, 2]],
++	[13, [3, 2, 3, 2, 1, 2]],
++	[14, [7, 2, 3, 2]],
++	[15, [7, 2, 3, 2, 3, 2]],
++	[16, [11, 5]],
++	[17, [1, 5]],
++	[18, [11, 5, 1, 5]],
++	[19, [11, 5, 1, 5, 1, 5]],
++	[20, [11, 5, 11, 5, 1, 5]],
++	[21, [27, 5, 11, 5]],
++	[22, [27, 5, 11, 5, 11, 5]],
++	[23, [2, 2]],
++];
++
++describe('Visio cached line-pattern normalization', () => {
++	// Expected sequences are stated independently of the implementation's three-band formula.
++	it.each(expected)('normalizes built-in %i with explicit inference diagnostics', (id, dash) => {
++		const report = vi.fn();
++		expect(linePattern(cells(String(id)), report)).toEqual({ linePattern: id, lineDash: dash });
++		expect(report.mock.calls.map(([code]) => code)).toEqual(['inferred-line-pattern']);
++	});
++	it.each(['0', '1'])('keeps %s undashed without an inference warning', (value) => {
++		const report = vi.fn();
++		expect(linePattern(cells(value), report)).toEqual({ linePattern: Number(value) });
++		expect(report).not.toHaveBeenCalled();
++	});
++	it('defaults absent cells to solid without a warning', () => {
++		const report = vi.fn();
++		expect(linePattern(new Map(), report)).toEqual({ linePattern: 1 });
++		expect(report).not.toHaveBeenCalled();
++	});
++	it('preserves custom sentinel 254 and diagnoses the solid fallback without evaluating USE', () => {
++		const report = vi.fn();
++		const pattern: Cells = new Map([
++			['LinePattern', { value: '254', formula: 'USE("CustomPattern")' }],
++		]);
++		expect(linePattern(pattern, report)).toEqual({ linePattern: 254 });
++		expect(report.mock.calls.map(([code]) => code)).toEqual(['unsupported-custom-line-pattern']);
++	});
++	it.each(['-1', '1.5', '24', '253', '255', '1000000000'])(
++		'normalizes invalid cached %s to a solid fallback',
++		(value) => {
++			const report = vi.fn();
++			expect(linePattern(cells(value), report)).toEqual({ linePattern: 1 });
++			expect(report.mock.calls.map(([code]) => code)).toEqual(['invalid-line-pattern']);
++		},
++	);
++	it.each([
++		'',
++		'NaN',
++		'Infinity',
++		'1e999',
++		'1000000001',
++		'__proto__',
++		'0'.repeat(129),
++		' '.repeat(129) + '23',
++		'23' + ' '.repeat(129),
++	])('bounds invalid or oversized numeric cache %j', (value) => {
++		const report = vi.fn();
++		expect(linePattern(cells(value), report)).toEqual({ linePattern: 1 });
++		expect(report.mock.calls.map(([code]) => code)).toEqual(['missing-cached-value']);
++	});
++	it('uses numeric saved results without evaluating a formula', () => {
++		const pattern: Cells = new Map([['LinePattern', { value: ' 2.3e1 ', formula: 'THEMEVAL()' }]]);
++		expect(linePattern(pattern, vi.fn())).toEqual({ linePattern: 23, lineDash: [2, 2] });
++		const report = vi.fn();
++		expect(linePattern(new Map([['LinePattern', { formula: '2+2' }]]), report)).toEqual({
++			linePattern: 1,
++		});
++		expect(report).toHaveBeenCalledWith('missing-cached-value', expect.any(String));
++	});
++	it('does not share mutable sequence arrays between shapes', () => {
++		const first = linePattern(cells('23'), vi.fn());
++		(first.lineDash as number[])[0] = 100;
++		expect(linePattern(cells('23'), vi.fn()).lineDash).toEqual([2, 2]);
++	});
++	it.each([0, 0.001, 0.02])(
++		'keeps stroke-width multipliers independent of line width %s',
++		async (width) => {
++			const doc = await parseVsdx(
++				await fixture({
++					pages: [
++						{
++							id: '0',
++							contents: `<Shapes>${shape('1', cell('LinePattern', 23) + cell('LineWeight', width))}</Shapes>`,
++						},
++					],
++				}),
++			);
++			expect(doc.pages[0]!.shapes[0]!.style).toMatchObject({
++				lineWidth: width,
++				linePattern: 23,
++				lineDash: [2, 2],
++			});
++		},
++	);
++	it('honors style, master and local caches including F=Inh', async () => {
++		const doc = await parseVsdx(
++			await fixture({
++				document: `<StyleSheets><StyleSheet ID="0">${cell('LinePattern', 9)}</StyleSheet><StyleSheet ID="4" LineStyle="0">${cell('LinePattern', 23)}</StyleSheet></StyleSheets>`,
++				masters: [{ id: '5', shapes: shape('10', cell('LinePattern', 6), 'LineStyle="4"') }],
++				pages: [
++					{
++						id: '0',
++						contents: `<Shapes>${shape('1', '', 'LineStyle="4"')}${shape('2', '', 'Master="5"')}${shape('3', cell('LinePattern', 0, 'Inh'), 'Master="5"')}${shape('4', '<Cell N="LinePattern" F="Inh"/>', 'Master="5"')}${shape('5', cell('LinePattern', 1), 'Master="5"')}</Shapes>`,
++					},
++				],
++			}),
++		);
++		expect(doc.pages[0]!.shapes.map(({ style }) => [style.linePattern, style.lineDash])).toEqual([
++			[23, [2, 2]],
++			[6, [6, 3, 6, 3, 1, 3]],
++			[0, undefined],
++			[6, [6, 3, 6, 3, 1, 3]],
++			[1, undefined],
++		]);
++	});
++	it.each(['solid', 'sysDash'])(
++		'leaves requested theme %s explicitly unresolved, independently of width',
++		async (dash) => {
++			const theme = generatedTheme().replaceAll(
++				'<a:ln>',
++				`<a:ln w="12700"><a:prstDash val="${dash}"/>`,
++			);
++			for (const width of [cell('LineWeight', 0.02), cell('LineWeight', 'Themed')]) {
++				const doc = await parseVsdx(
++					await themeFixture({ theme, contents: width + cell('LinePattern', 'Themed') }),
++				);
++				expect(doc.pages[0]!.shapes[0]!.style.lineDash).toBeUndefined();
++				expect(doc.pages[0]!.shapes[0]!.style.linePattern).toBe(1);
++				expect(doc.diagnostics.map(({ code }) => code)).toContain('unresolved-line-pattern');
++			}
++		},
++	);
++	it.each([undefined, 0, 1, 23])(
++		'does not diagnose unused theme dash when cached pattern is %s',
++		async (pattern) => {
++			const theme = generatedTheme().replaceAll(
++				'<a:ln>',
++				'<a:ln w="12700"><a:prstDash val="sysDash"/>',
++			);
++			const doc = await parseVsdx(
++				await themeFixture({
++					theme,
++					contents:
++						cell('LineWeight', 'Themed') +
++						(pattern === undefined ? '' : cell('LinePattern', pattern, 'THEMEVAL()')),
++				}),
++			);
++			const codes = doc.diagnostics.map(({ code }) => code);
++			expect(codes).not.toContain('unsupported-theme-line-dash');
++			expect(codes).not.toContain('unresolved-line-pattern');
++			expect(doc.pages[0]!.shapes[0]!.style.linePattern).toBe(pattern ?? 1);
++		},
++	);
++});
+diff --git a/src/visio/line-pattern.ts b/src/visio/line-pattern.ts
+new file mode 100644
+index 0000000..2db9cbf
+--- /dev/null
++++ b/src/visio/line-pattern.ts
+@@ -0,0 +1,72 @@
++import type { VisioStyle } from './model.js';
++import { number, type Cells, type Report } from './sheet.js';
++
++/**
++ * MS-VSDX 2.4.4.180 defines 0 transparent, 1 solid, pictured built-ins 2-23,
++ * and 254 custom-master patterns. It does not specify numerical dash lengths:
++ * https://learn.microsoft.com/en-us/openspecs/sharepoint_protocols/ms-vsdx/f718c500-6066-4fcc-8b66-4bb5015f133f
++ * The compatibility ratios below are inferred, not native-renderer measurements.
++ * Corroborating implementation: LibreOffice/libvisio commit
++ * 49fb9d3a9d21d4374cad782925e48c577a41f5be, src/lib/VSDContentCollector.cpp:3037-3196.
++ * This is an original bounded normalization, not copied implementation code.
++ */
++function builtinDash(pattern: number): number[] {
++	if (pattern === 23) return [2, 2];
++	const band = Math.floor((pattern - 2) / 7);
++	const motif = (pattern - 2) % 7;
++	const dash = [6, 3, 11][band]!;
++	const gap = [3, 2, 5][band]!;
++	const long = [14, 7, 27][band]!;
++	const longGap = [2, 2, 5][band]!;
++	const lengths = [
++		[dash],
++		[1],
++		[dash, 1],
++		[dash, 1, 1],
++		[dash, dash, 1],
++		[long, dash],
++		[long, dash, dash],
++	][motif]!;
++	return lengths.flatMap((length) => [length, motif >= 5 ? longGap : gap]);
++}
++
++/** Cached values win over formulas and themes; formulas are never evaluated. */
++export function linePattern(
++	cells: Cells,
++	report: Report,
++): Pick<VisioStyle, 'linePattern' | 'lineDash'> {
++	const raw = cells.get('LinePattern')?.value;
++	if (raw === 'Themed') {
++		report(
++			'unresolved-line-pattern',
++			'The requested theme line pattern is not resolved; a solid fallback was used.',
++		);
++		return { linePattern: 1 };
++	}
++	// Check before trimming so whitespace cannot evade the numeric-cache bound.
++	if (raw !== undefined && raw.length > 128) {
++		report('missing-cached-value', 'Cell LinePattern exceeds the bounded numeric cache length.');
++		return { linePattern: 1 };
++	}
++	const pattern = number(cells, 'LinePattern', 1, report);
++	if (Number.isInteger(pattern) && pattern >= 2 && pattern <= 23) {
++		report(
++			'inferred-line-pattern',
++			'Built-in line-pattern spacing uses inferred stroke-width ratios, not verified native spacing.',
++		);
++		return { linePattern: pattern, lineDash: builtinDash(pattern) };
++	}
++	if (pattern === 254)
++		report(
++			'unsupported-custom-line-pattern',
++			'Custom master-based line patterns are unsupported; a solid fallback is used.',
++		);
++	else if (pattern !== 0 && pattern !== 1) {
++		report(
++			'invalid-line-pattern',
++			'The cached line-pattern value is outside the supported enumeration; a solid fallback was used.',
++		);
++		return { linePattern: 1 };
++	}
++	return { linePattern: pattern };
++}
 diff --git a/src/visio/line-style.test.ts b/src/visio/line-style.test.ts
 new file mode 100644
 index 0000000..d771266
@@ -2708,10 +2978,10 @@ index 0000000..04e3b92
 +}
 diff --git a/src/visio/model.ts b/src/visio/model.ts
 new file mode 100644
-index 0000000..378812a
+index 0000000..e7ba184
 --- /dev/null
 +++ b/src/visio/model.ts
-@@ -0,0 +1,152 @@
+@@ -0,0 +1,157 @@
 +import type { VisioHyperlink, VisioShapeData } from './shape-metadata.js';
 +
 +/** Visio's internal distance unit is the inch; angles are radians. */
@@ -2745,8 +3015,13 @@ index 0000000..378812a
 +	lineWidth: number;
 +	/** Normalized SVG-compatible cap; absent means the effective cap is unresolved. */
 +	lineCap?: 'round' | 'butt' | 'square';
-+	/** ShapeSheet line pattern number; 0 is no line, 1 is solid. */
++	/** Effective ShapeSheet line pattern; 0 is no line, 1 is solid (also invalid-cache fallback). */
 +	linePattern: number;
++	/** Alternating dash/gap lengths in stroke-width multiples, not inches.
++	 * Cached built-ins 2-23 use inferred compatibility spacing (2-6 entries, each 0-27).
++	 * Absent for solid, invisible or unresolved patterns. Consumers scale by lineWidth.
++	 */
++	lineDash?: readonly number[];
 +	fillOpacity: number;
 +	lineOpacity: number;
 +	/** Visio arrowhead codes. Consumers must report unsupported arrow variants. */
@@ -6535,13 +6810,14 @@ index 0000000..fb583f8
 +}
 diff --git a/src/visio/style.ts b/src/visio/style.ts
 new file mode 100644
-index 0000000..61ee2f4
+index 0000000..e648359
 --- /dev/null
 +++ b/src/visio/style.ts
-@@ -0,0 +1,225 @@
+@@ -0,0 +1,226 @@
 +import { themeLinearGradient } from './theme-gradient.js';
 +import { themeLineWeight, reportThemeEffects } from './theme-line.js';
 +import { lineCap } from './line-style.js';
++import { linePattern } from './line-pattern.js';
 +import { themeColor, type ThemeResources } from './theme-resolve.js';
 +import { textBackground } from './text-background.js';
 +import { textParagraphs, type ParagraphMarker } from './paragraphs.js';
@@ -6642,7 +6918,7 @@ index 0000000..61ee2f4
 +			themeLineWeight(cells, resources, report) ??
 +			Math.max(0, number(cells, 'LineWeight', 0.01, report)),
 +		...(cap === undefined ? {} : { lineCap: cap }),
-+		linePattern: number(cells, 'LinePattern', 1, report),
++		...linePattern(cells, report),
 +		fillOpacity: opacity(number(cells, 'FillForegndTrans', 0, report)),
 +		lineOpacity: opacity(number(cells, 'LineColorTrans', 0, report)),
 +		startArrow: number(cells, 'BeginArrow', 0, report),
@@ -7567,13 +7843,12 @@ index 0000000..44ae4c7
 +});
 diff --git a/src/visio/theme-line.ts b/src/visio/theme-line.ts
 new file mode 100644
-index 0000000..738a004
+index 0000000..12f84eb
 --- /dev/null
 +++ b/src/visio/theme-line.ts
-@@ -0,0 +1,56 @@
+@@ -0,0 +1,49 @@
 +import { elements } from '../xml/index.js';
 +import type { Cells, Report } from './sheet.js';
-+import { themeChild } from './theme-color.js';
 +import { themeFormat, type ThemeResources } from './theme-resolve.js';
 +
 +/** DrawingML line widths are EMUs; one inch is 914400 EMUs. Cached values win. */
@@ -7593,12 +7868,6 @@ index 0000000..738a004
 +		report(
 +			'unsupported-theme-line-compound',
 +			'A compound theme line is approximated by a single stroke.',
-+		);
-+	const dash = themeChild(line, 'prstDash');
-+	if (dash && dash.getAttribute('val') !== 'solid')
-+		report(
-+			'unsupported-theme-line-dash',
-+			'A theme line dash is not resolved; the saved line pattern or default is used.',
 +		);
 +	return emu / 914_400;
 +}

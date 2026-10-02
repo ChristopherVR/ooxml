@@ -5,6 +5,15 @@ import { renderText } from './render-text.js';
 import { rasterFixture } from '../tests/raster-fixtures.mjs';
 
 describe('defensive scene limits', () => {
+	it.each(
+		[[], [1], [0, 0], [1, NaN], [1, 28], [1, -1], [1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1]].map(
+			(lineDash) => ({ lineDash }),
+		),
+	)('rejects invalid normalized line-dash arrays %j', ({ lineDash }) => {
+		const model = structuredClone(demoDocument);
+		model.pages[0]!.shapes[0]!.style.lineDash = lineDash;
+		expect(() => assertViewableDocument(model)).toThrow(/line dash/);
+	});
 	it('rejects nonfinite and excessive dimensions before rendering', () => {
 		const model = structuredClone(demoDocument);
 		model.pages[0]!.width = Infinity;

@@ -51,6 +51,12 @@ viewer.destroy(); // idempotent; later commands reject
 
 Importing the module is SSR-safe; mounting and element registration are browser-only. `ViewerController` is DOM-free, so another renderer can subscribe to the same state/events. `renderPage` is the SVG renderer port. See [architecture](docs/architecture.md) and `packages/bindings/README.md` for framework entry points.
 
+## Find diagram text
+
+The shared search controls find literal text across visible shapes and pages. Programmatic hosts use `controller.setSearchQuery(query)`, `nextSearchResult()`, `previousSearchResult()` and `selectSearchResult(index)`; immutable query/results are available in `controller.state.search`. Querying leaves selection alone until explicit navigation. A new document clears the search, and newer reentrant host actions supersede old result navigation.
+
+Search returns one result per matching shape, with a bounded text preview. It uses ECMAScript lowercase comparison, not regex or language-aware collation. Limits are 256 query characters, 500 matching shapes, 32,768 indexed characters per shape and 2 million indexed characters overall. The status explicitly identifies partial results. Hidden subtrees and suppressed group text are excluded; background pages are indexed once as separate pages. Per-occurrence highlighting and Shape Data search are not implemented.
+
 ## Static SVG export
 
 `exportPageSvg(model, pageIndex, { maxBytes })` and each mounted/native handle's `exportSvg()` return a current-page snapshot without changing the document, selection or viewport. Export includes supported backgrounds, embedded raster resources and visible compatibility notes in SVG description/metadata. There are no remote assets, automatic downloads or editable VSDX output. The demo downloads only after an explicit button press.

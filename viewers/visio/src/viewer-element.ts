@@ -8,6 +8,13 @@ import { selectedShape, shapeDetails } from './shape-inspector.js';
 import { compatibilityNotes, compatibilityText } from './diagnostics.js';
 import { wireViewerInputs } from './viewer-input.js';
 import { viewerStyles } from './styles.js';
+import {
+	searchTemplate,
+	searchControls,
+	renderSearchControls,
+	type SearchControls,
+} from './viewer-search.js';
+import type { TextSearchResult } from './document-text-search.js';
 import { exportPageSvg, type SvgExportOptions, type SvgExportResult } from './export-svg.js';
 
 const BaseElement = (
@@ -23,10 +30,13 @@ export class VisioViewerElement extends BaseElement {
 	#status: HTMLSpanElement;
 	#diagnostics: HTMLSpanElement;
 	#toolbar: HTMLDivElement;
+	#search: SearchControls;
+	#revealedSearchResult: TextSearchResult | undefined;
 	#notes: HTMLUListElement;
 	#notesPanel: HTMLDetailsElement;
 	#inspector: HTMLDetailsElement;
 	#inspectedShape: VisioShape | undefined;
+	#renderedSelection: ViewerState['selectedShape'] = null;
 	#unsubscribe: () => void;
 	#eventUnsubscribe: () => void;
 	#document: VisioDocument | null = null;
@@ -46,21 +56,18 @@ export class VisioViewerElement extends BaseElement {
 		super();
 		this.#root = this.attachShadow({ mode: 'open' });
 		// This template is static, never document content.
-		this.#root.innerHTML = `<style>${viewerStyles}</style><div class="toolbar" role="group" aria-label="Diagram controls"><label>Page <select aria-label="Page"></select></label><span class="spacer"></span><button type="button" data-action="out" aria-label="Zoom out">−</button><output class="zoom" aria-label="Zoom level">100%</output><button type="button" data-action="in" aria-label="Zoom in">+</button><button type="button" data-action="fit">Fit page</button><button type="button" data-action="actual">100%</button></div><div class="viewport" tabindex="0" role="region" aria-label="Diagram canvas"></div><details class="shape-inspector" hidden><summary>Selected shape</summary><div></div></details><details class="notes"><summary>Compatibility notes</summary><ul></ul></details><div class="status" role="status"><span data-status></span><span data-diagnostics></span></div>`;
+		this.#root.innerHTML = `<style>${viewerStyles}</style><div class="toolbar" role="group" aria-label="Diagram controls"><label>Page <select aria-label="Page"></select></label><span class="spacer"></span><button type="button" data-action="out" aria-label="Zoom out">−</button><output class="zoom" aria-label="Zoom level">100%</output><button type="button" data-action="in" aria-label="Zoom in">+</button><button type="button" data-action="fit">Fit page</button><button type="button" data-action="actual">100%</button>${searchTemplate}</div><div class="viewport" tabindex="0" role="region" aria-label="Diagram canvas"></div><details class="shape-inspector" hidden><summary>Selected shape</summary><div></div></details><details class="notes"><summary>Compatibility notes</summary><ul></ul></details><div class="status" role="status"><span data-status></span><span data-diagnostics></span></div>`;
 		this.#viewport = this.#root.querySelector('.viewport')!;
 		this.#pageSelect = this.#root.querySelector('select')!;
 		this.#zoomLabel = this.#root.querySelector('output')!;
 		this.#status = this.#root.querySelector('[data-status]')!;
 		this.#diagnostics = this.#root.querySelector('[data-diagnostics]')!;
 		this.#toolbar = this.#root.querySelector('.toolbar')!;
+		this.#search = searchControls(this.#root);
 		this.#notes = this.#root.querySelector('.notes ul')!;
 		this.#notesPanel = this.#root.querySelector('.notes')!;
 		this.#inspector = this.#root.querySelector('.shape-inspector')!;
-		this.#disposeInputs = wireViewerInputs(
-			{ viewport: this.#viewport, toolbar: this.#toolbar, pageSelect: this.#pageSelect },
-			this.controller,
-			() => this.fit(),
-		);
+		this.#disposeInputs = this.#wireInputs();
 		this.#unsubscribe = this.controller.subscribe((state) => this.#render(state));
 		this.#eventUnsubscribe = this.controller.onEvent((name, detail) => {
 			this.dispatchEvent(new CustomEvent(name, { detail, bubbles: true, composed: true }));
@@ -127,10 +134,13 @@ export class VisioViewerElement extends BaseElement {
 		this.#unsubscribe();
 		this.#eventUnsubscribe();
 		this.controller.destroy();
+		this.#revealedSearchResult = undefined;
+		this.#renderedSelection = null;
 		this.#root.replaceChildren();
 	}
 	connectedCallback(): void {
 		if (this.#disposed) return;
+		if (this.#suspended) this.#disposeInputs = this.#wireInputs();
 		this.#suspended = false;
 		this.#fontEvents = this.ownerDocument.fonts;
 		this.#fontEvents?.addEventListener('loadingdone', this.#fontsChanged);
@@ -139,6 +149,7 @@ export class VisioViewerElement extends BaseElement {
 	disconnectedCallback(): void {
 		if (!this.#disposed) {
 			this.#suspended = true;
+			this.#disposeInputs();
 			this.#fontEvents?.removeEventListener('loadingdone', this.#fontsChanged);
 			this.#fontEvents = undefined;
 			this.controller.cancelLoad();
@@ -146,6 +157,18 @@ export class VisioViewerElement extends BaseElement {
 			this.#document = null;
 			this.#renderedPage = -1;
 		}
+	}
+	#wireInputs(): () => void {
+		return wireViewerInputs(
+			{
+				viewport: this.#viewport,
+				toolbar: this.#toolbar,
+				pageSelect: this.#pageSelect,
+				searchInput: this.#search.input,
+			},
+			this.controller,
+			() => this.fit(),
+		);
 	}
 	#assertAlive(): void {
 		if (this.#disposed) throw new Error('The viewer has been destroyed.');
@@ -196,27 +219,50 @@ export class VisioViewerElement extends BaseElement {
 			svg.style.width = `${page.width * 96 * state.zoom}px`;
 			svg.style.height = `${page.height * 96 * state.zoom}px`;
 		}
-		for (const shape of this.#viewport.querySelectorAll<SVGGElement>('[data-shape-id]')) {
-			const selected =
-				!!state.selectedShape &&
-				shape.dataset.shapeId === state.selectedShape.id &&
-				(!state.selectedShape.pageId || shape.dataset.pageId === state.selectedShape.pageId);
-			shape.dataset.selected = String(selected);
-			if (state.selectedShape) shape.setAttribute('tabindex', selected ? '0' : '-1');
-			if (shape.getAttribute('role') === 'button')
-				shape.setAttribute('aria-pressed', String(selected));
+		const searchResult = state.search.results[state.search.activeIndex];
+		const selection = state.selectedShape;
+		if (
+			changed ||
+			this.#renderedSelection?.id !== selection?.id ||
+			this.#renderedSelection?.pageId !== selection?.pageId ||
+			this.#renderedSelection?.name !== selection?.name ||
+			(searchResult && searchResult !== this.#revealedSearchResult)
+		) {
+			for (const shape of this.#viewport.querySelectorAll<SVGGElement>('[data-shape-id]')) {
+				const selected =
+					!!state.selectedShape &&
+					shape.dataset.shapeId === state.selectedShape.id &&
+					(!state.selectedShape.pageId || shape.dataset.pageId === state.selectedShape.pageId);
+				shape.dataset.selected = String(selected);
+				if (
+					selected &&
+					searchResult &&
+					searchResult !== this.#revealedSearchResult &&
+					shape.dataset.shapeId === searchResult.shapeId &&
+					shape.dataset.pageId === searchResult.pageId
+				) {
+					shape.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+					this.#revealedSearchResult = searchResult;
+				}
+				if (state.selectedShape) shape.setAttribute('tabindex', selected ? '0' : '-1');
+				if (shape.getAttribute('role') === 'button')
+					shape.setAttribute('aria-pressed', String(selected));
+			}
+			const inspected = selectedShape(state.document, state.selectedShape, state.pageIndex);
+			if (inspected !== this.#inspectedShape) {
+				this.#inspectedShape = inspected;
+				this.#inspector.hidden = !inspected;
+				this.#inspector
+					.querySelector('div')!
+					.replaceChildren(...(inspected ? [shapeDetails(inspected)] : []));
+			}
+			this.#renderedSelection = selection ? { ...selection } : null;
 		}
-		const inspected = selectedShape(state.document, state.selectedShape, state.pageIndex);
-		if (inspected !== this.#inspectedShape) {
-			this.#inspectedShape = inspected;
-			this.#inspector.hidden = !inspected;
-			this.#inspector
-				.querySelector('div')!
-				.replaceChildren(...(inspected ? [shapeDetails(inspected)] : []));
-		}
+		if (!searchResult) this.#revealedSearchResult = undefined;
 		this.#zoomLabel.value = `${Math.round(state.zoom * 100)}%`;
 		this.#pageSelect.disabled = !page;
 		for (const button of this.#toolbar.querySelectorAll('button')) button.disabled = !page;
+		renderSearchControls(this.#search, state);
 		this.#viewport.setAttribute('aria-busy', String(state.loading));
 		this.#status.textContent = state.loading
 			? 'Opening diagram…'
