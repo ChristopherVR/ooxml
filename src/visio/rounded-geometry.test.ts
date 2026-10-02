@@ -124,12 +124,6 @@ describe('bounded cached rectangle rounding', () => {
 				[
 					[0, 0],
 					[4, 0],
-					[4, 2],
-					[0, 2],
-				],
-				[
-					[0, 0],
-					[4, 0],
 					[3, 2],
 					[0, 2],
 					[0, 0],
@@ -157,7 +151,7 @@ describe('bounded cached rectangle rounding', () => {
 				],
 			] as Point[][]
 		).map((points) => ({ points })),
-	)('leaves open, diagonal, zero-length and nonrectangular paths unchanged', ({ points }) => {
+	)('leaves diagonal, zero-length and nonrectangular paths unchanged', ({ points }) => {
 		const source = section('Geometry', rows(points));
 		const result = parse(source, 0.3);
 		expect(result.paths).toEqual(parse(source, 0).paths);
@@ -188,7 +182,17 @@ describe('bounded cached rectangle rounding', () => {
 		expect(result.warnings).toEqual([]);
 	});
 	it('can round one section while warning and preserving another unsupported section', () => {
-		const source = rect() + section('Geometry', rows(ccw), 1);
+		const source =
+			rect() +
+			section(
+				'Geometry',
+				rows([
+					[0, 0],
+					[4, 1],
+					[4, 2],
+				]),
+				1,
+			);
 		const result = parse(source, 0.3);
 		expect(result.paths[0]!.path).toContain('A 0.3 0.3');
 		expect(result.paths[1]).toEqual(parse(source, 0).paths[1]);

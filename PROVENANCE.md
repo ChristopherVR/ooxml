@@ -104,6 +104,14 @@ conversion, and an experimental source-backed plain-text transaction. The new
 were developed here, not extracted from another repository. This remains a
 supported subset, not a ShapeSheet engine or general round-trip editor.
 
+The subsequent bounded open orthogonal rounding extension is original work in
+`geometry.ts` and `rounded-geometry.ts`, with analytic and hash-pinned external
+Apache POI corpus regressions in `orthogonal-rounding.test.ts` and
+`orthogonal-rounding-corpus.test.ts`. See `docs/visio-connector-rounding.md` for
+primary semantics, fixture provenance and the nonclamped admission boundary.
+The source evidence supports five connectors and 14 corners; native Visio
+pixel equivalence and short-segment radius allocation remain unverified.
+
 All new files under `src/visio/`:
 
 - `README.md`

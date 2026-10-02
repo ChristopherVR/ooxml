@@ -96,8 +96,11 @@ with a solid fallback; custom pattern 254 and invalid enumerations are diagnosed
 Line properties, including arrowheads, must be suppressed when geometry has
 `stroke: false` or the effective `linePattern` is 0.
 Rectangle rounding preserves local coordinates and winding, and honors inherited
-cached line styles. Open, curved, mixed or nonrectangular paths stay unchanged with
-a diagnostic. Negative radii are ignored; radii below output precision are diagnosed.
+cached line styles. Open orthogonal line chains also support the saved radius when
+every segment has enough room for adjacent tangent arcs, preserving endpoints.
+Short-segment clamping, duplicates, reversals, curves and mixed subpaths remain
+diagnosed and unchanged. See [connector rounding evidence](../../docs/visio-connector-rounding.md).
+Negative radii are ignored; radii below output precision are diagnosed.
 Shape Data dates remain serial days and durations remain days; formats are retained
 without locale-dependent evaluation. Raw hyperlink addresses are untrusted metadata.
 Relative/file targets, external addresses with subaddresses, and unsupported link

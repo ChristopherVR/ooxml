@@ -1,6 +1,10 @@
 import { splineGeometry } from './spline-geometry.js';
 import { geometryRow } from './complex-geometry.js';
-import { roundedRectanglePath, type RectanglePoint } from './rounded-geometry.js';
+import {
+	roundedRectanglePath,
+	roundedOrthogonalPath,
+	type RectanglePoint,
+} from './rounded-geometry.js';
 import type { VisioGeometry, VisioMatrix } from './model.js';
 import { number, type Cells, type Report, type Sheet } from './sheet.js';
 
@@ -101,8 +105,8 @@ export function geometryPaths(
 		const rows = [...section.rows.values()]
 			.filter((row) => !row.deleted)
 			.sort((a, b) => Number(a.index) - Number(b.index));
-		let rectangle: RectanglePoint[] | undefined =
-			rows.length === 5 &&
+		let linePoints: RectanglePoint[] | undefined =
+			rows.length >= 3 &&
 			rows.every((row, i) =>
 				i === 0
 					? ['MoveTo', 'RelMoveTo'].includes(row.type)
@@ -163,13 +167,14 @@ export function geometryPaths(
 				yScale = relative ? height : 1;
 			const cell = (name: string, fallback = 0) =>
 				number(row.cells, name, fallback, (code, message, context) => {
-					// A defaulted coordinate must not turn an invalid path into a proven rectangle.
-					rectangle = undefined;
+					// A defaulted coordinate must not turn an invalid path into a proven rounded path.
+					linePoints = undefined;
 					report(code, message, context);
 				});
+			if (!row.cells.has('X') || !row.cells.has('Y')) linePoints = undefined;
 			const x = cell('X') * xScale,
 				y = cell('Y') * yScale;
-			rectangle?.push([x, y]);
+			linePoints?.push([x, y]);
 			switch (row.type) {
 				case 'MoveTo':
 				case 'RelMoveTo':
@@ -283,14 +288,17 @@ export function geometryPaths(
 			currentY = y;
 		}
 		if (!supported) continue;
-		const rounded = rounding > 0 ? roundedRectanglePath(rectangle, rounding, point) : undefined;
+		const rectangle = rounding > 0 ? roundedRectanglePath(linePoints, rounding, point) : undefined;
+		const open =
+			rounding > 0 && !rectangle ? roundedOrthogonalPath(linePoints, rounding, point) : undefined;
+		const rounded = rectangle ?? open?.path;
 		if (rounded) {
-			// The five source rows become ten SVG commands, including the closing Z.
-			for (let i = 0; i < 5; i++) consume();
+			// Charge the extra commands beyond the already charged source rows.
+			for (let i = 0; i < (rectangle ? 5 : open!.extraCommands); i++) consume();
 		} else if (rounding > 0 && commands.length)
 			report(
 				'unsupported-corner-rounding',
-				'Corner rounding is supported only on a closed axis-aligned rectangular line path; this geometry was left unchanged.',
+				'Corner rounding requires a closed axis-aligned rectangle or an open orthogonal line chain with space for the saved radius; this geometry was left unchanged.',
 			);
 		// SVG implicitly closes filled paths; leave strokes open unless the source returns to its origin.
 		if (commands.length)
