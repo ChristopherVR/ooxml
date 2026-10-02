@@ -123,6 +123,25 @@ function registryState(name, version) {
 	throw new Error(`Could not query npm for ${name}@${version}: ${result.stderr || result.stdout}`);
 }
 
+/** Blocks the (synchronous) script for `ms` milliseconds. */
+function sleep(ms) {
+	Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+
+/**
+ * Waits until `name@version`, published earlier in this same run, is visible on npm. The registry
+ * takes a while to serve a version it has just accepted, and a dependent published straight after
+ * it (ooxml-ui after ooxml-core) otherwise fails the installability check below.
+ */
+function waitForRegistry(name, version, { attempts = 40, intervalMs = 15_000 } = {}) {
+	for (let attempt = 1; attempt <= attempts; attempt++) {
+		if (registryState(name, version) === 'exists') return true;
+		console.log(`waiting for ${name}@${version} to appear on npm (${attempt}/${attempts})`);
+		sleep(intervalMs);
+	}
+	return registryState(name, version) === 'exists';
+}
+
 function distTag(name, version) {
 	const latest = npm(['view', name, 'version']);
 	const current = latest.status === 0 ? latest.stdout.trim() : '';
@@ -146,6 +165,7 @@ function main() {
 		console.log('Nothing to publish.');
 		return;
 	}
+	const publishedNow = new Set();
 	for (const target of targets) {
 		console.log(`--- ${target.npm}@${target.version} ---`);
 		const manifest = publishManifest(target);
@@ -157,7 +177,10 @@ function main() {
 		for (const field of ['dependencies', 'peerDependencies', 'optionalDependencies']) {
 			for (const [dep, range] of Object.entries(manifest[field] ?? {})) {
 				const version = range.replace(/^[\^~]/u, '');
-				if (!dryRun && workspaceVersions().has(dep) && registryState(dep, version) !== 'exists') {
+				if (dryRun || !workspaceVersions().has(dep) || registryState(dep, version) === 'exists') {
+					continue;
+				}
+				if (!publishedNow.has(`${dep}@${version}`) || !waitForRegistry(dep, version)) {
 					throw new Error(`${target.npm} needs ${dep}@${version}, which is not on npm yet.`);
 				}
 			}
@@ -187,6 +210,7 @@ function main() {
 			writeFileSync(manifestPath, original);
 		}
 		if (result.status !== 0) throw new Error(`Publishing ${target.npm}@${target.version} failed.`);
+		publishedNow.add(`${target.npm}@${target.version}`);
 	}
 }
 
