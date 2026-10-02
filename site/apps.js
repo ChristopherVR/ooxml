@@ -56,8 +56,9 @@ export const APPS = [
 		letter: 'X',
 		color: '#1f9d63',
 		format: '.xlsx',
-		description: 'Spreadsheets, formulas and charts.',
-		tag: { label: 'Soon', tone: 'soon' },
+		description: 'Spreadsheet beta in development. Follow the implementation on GitHub.',
+		tag: { label: 'Beta', tone: 'beta' },
+		repo: 'xlsx-viewer',
 	},
 	{
 		id: 'visio',

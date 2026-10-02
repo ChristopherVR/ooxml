@@ -47,7 +47,9 @@ function renderGrid() {
 			<span class="app__desc">${escapeHtml(app.description)}</span>`;
 		return isLive(app)
 			? `<li><a class="app" href="#/${app.id}" style="--app:${app.color}">${body}</a></li>`
-			: `<li><div class="app app--off" aria-disabled="true" style="--app:${app.color}">${body}</div></li>`;
+			: app.repo
+				? `<li><a class="app" href="https://github.com/ChristopherVR/${app.repo}" target="_blank" rel="noreferrer" style="--app:${app.color}">${body}</a></li>`
+				: `<li><div class="app app--off" aria-disabled="true" style="--app:${app.color}">${body}</div></li>`;
 	}).join('');
 }
 
