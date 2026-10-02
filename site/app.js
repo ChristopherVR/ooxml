@@ -1,4 +1,4 @@
-import { APPS, appIcon, demoUrl, isLive } from './apps.js';
+import { APPS, appIcon, demoUrl, isLive } from './apps.js?v=beta-viewers-20261003';
 import { initChungus } from './chungus.js';
 import { currentTheme, initTheme, shareTheme } from './theme.js';
 

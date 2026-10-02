@@ -6,7 +6,7 @@
 		<title>OOXML Office</title>
 		<meta
 			name="description"
-			content="An open-source office suite for the web. Open, edit and present .pptx and .docx files in your browser, built on one shared OOXML core."
+			content="Office files in your browser: PowerPoint, Word and the Visio and Excel betas, built on one shared OOXML core."
 		/>
 		<meta name="color-scheme" content="dark light" />
 		<link rel="icon" href="favicon.svg" type="image/svg+xml" />
@@ -16,7 +16,7 @@
 			rel="stylesheet"
 			href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:ital,wght@0,400..900;1,400..900&display=swap"
 		/>
-		<link rel="stylesheet" href="styles.css" />
+		<link rel="stylesheet" href="styles.css?v=beta-viewers-20261003" />
 		<link rel="stylesheet" href="desk.css" />
 		<link rel="stylesheet" href="chungus.css" />
 		<script>
@@ -35,7 +35,7 @@
 				}
 			}
 		</script>
-		<script type="module" src="app.js"></script>
+		<script type="module" src="app.js?v=beta-viewers-20261003"></script>
 	</head>
 	<body>
 		<header class="topbar">
@@ -123,13 +123,7 @@
 						<span class="sticker sticker--beta">Visio, beta</span>
 					</a>
 
-					<a
-						class="paper paper--sheet"
-						href="https://github.com/ChristopherVR/xlsx-viewer"
-						target="_blank"
-						rel="noreferrer"
-						aria-label="Follow Excel beta development on GitHub"
-					>
+					<a class="paper paper--sheet" href="#/excel" aria-label="Open Excel (beta)">
 						<span class="sheet__grid"></span>
 						<span class="sticker sticker--beta">Excel, beta</span>
 					</a>
