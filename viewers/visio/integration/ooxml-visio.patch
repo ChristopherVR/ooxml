@@ -67,10 +67,10 @@ index bc99393..3ef4f6e 100644
  	tsconfig: 'tsconfig.build.json',
 diff --git a/src/visio/README.md b/src/visio/README.md
 new file mode 100644
-index 0000000..0b09764
+index 0000000..7a41387
 --- /dev/null
 +++ b/src/visio/README.md
-@@ -0,0 +1,149 @@
+@@ -0,0 +1,172 @@
 +# Visio read-only scenes
 +
 +`ooxml-core/visio` imports VSDX drawing packages into a DOM-independent typed scene.
@@ -220,6 +220,29 @@ index 0000000..0b09764
 +floating-point fidelity is not certified. Generated analytic
 +quadratic/cubic tests cover sampled chord error, but no genuine spline-row fixture
 +or native Visio comparison is yet available.
++
++## Metafile inspection and future vector boundary
++
++`inspectVisioEmfAdmission` performs bounded classic-record inspection and returns
++`renderingEnabled: false` in every result. No converter runs. VSDX enhanced-metafile
++parts receive specific diagnostics through an inspection-only package adapter,
++limited to 32 unique parts, 32 MiB aggregate bytes and 100,000 inspected records.
++Parts exceeding available encoded-byte budgets are rejected from validated ZIP
++metadata before inflation. Concurrent duplicate requests share a reserved promise,
++and distinct inspections are queued so aggregate budgets remain deterministic.
++Original-equivalent WMF comments are recognized only in their documented position
++with validated lengths/flags and whole-file checksum; the payload is never decoded.
++All EMF+, images, text, unresolved palette colors and INSIDEFRAME pens remain
++unsupported, as do characterized converter mapping/full-circle edge cases.
++
++`sanitizeVisioForeignVectorTree` converts a narrow unknown SVG tree to inert numeric
++paths, literal paints, matrices and a closed indexed clipping graph.
++`validateVisioForeignVector` validates and copies that canonical scene again after
++transport or raw host input. Both return deeply frozen independent data and reject
++unsafe tags, URLs, fonts, styles, sparse arrays, accessors, cycles, invalid paths,
++coordinate/transform amplification and expanded clip work. These helpers are not a
++metafile renderer or a guarantee of converter completeness. The viewer's live
++model still does not render EMF/vector foreign data.
 diff --git a/src/visio/complex-geometry.test.ts b/src/visio/complex-geometry.test.ts
 new file mode 100644
 index 0000000..2eb0a65
@@ -764,6 +787,3609 @@ index 0000000..66409ab
 +		},
 +	};
 +}
+diff --git a/src/visio/emf-admission-adversarial.test.ts b/src/visio/emf-admission-adversarial.test.ts
+new file mode 100644
+index 0000000..cd818e9
+--- /dev/null
++++ b/src/visio/emf-admission-adversarial.test.ts
+@@ -0,0 +1,182 @@
++import { describe, expect, it } from 'vitest';
++import {
++	inspectVisioEmfAdmission as inspect,
++	type VisioEmfAdmissionOptions,
++} from './emf-admission.js';
++import {
++	checksumComment,
++	emf,
++	polygon16,
++	record,
++	setWord,
++	sourceComment,
++	triangle,
++} from './emf-admission.test-fixtures.js';
++const has = (b: Uint8Array, code: string) =>
++	expect(inspect(b).diagnostics.map((d) => d.code)).toContain(code);
++
++describe('EMF malformed and adversarial inputs', () => {
++	it.each([
++		null,
++		undefined,
++		'',
++		{},
++		new Uint16Array(40),
++		new Uint8Array(new SharedArrayBuffer(100)),
++	])('rejects invalid runtime input %# without throwing', (b) => {
++		expect(inspect(b as Uint8Array).status).toBe('invalid');
++	});
++	it('rejects detached and resizable backing buffers', () => {
++		const b = emf([]);
++		structuredClone(b, { transfer: [b.buffer] });
++		expect(inspect(b).status).toBe('invalid');
++		const ctor = ArrayBuffer as unknown as new (
++			n: number,
++			options: { maxByteLength: number },
++		) => ArrayBuffer;
++		const resizable = new Uint8Array(new ctor(100, { maxByteLength: 200 }));
++		expect(inspect(resizable).status).toBe('invalid');
++	});
++	it('does not read past any truncated generated stream or record', () => {
++		const b = checksumComment(
++			emf([
++				sourceComment(),
++				record(17, [8]),
++				record(11, [10, 10]),
++				polygon16(triangle),
++				record(75, [0, 5]),
++			]),
++		);
++		for (let end = 0; end < b.length; end++)
++			expect(inspect(b.subarray(0, end)).status).not.toBe('admitted');
++		for (const type of [
++			9, 17, 27, 33, 34, 37, 38, 39, 40, 42, 43, 45, 47, 48, 54, 70, 75, 86, 87,
++		]) {
++			const payload = record(type, Array(12).fill(0));
++			for (let size = 8; size < payload.length; size += 4) {
++				const short = setWord(payload.subarray(0, size), 4, size);
++				expect(() => inspect(emf([short]))).not.toThrow();
++			}
++		}
++	});
++	it('rejects duplicate/truncated headers, missing EOF and trailing data', () => {
++		has(emf([record(1)]), 'header');
++		has(setWord(emf([]), 108, 33), 'payload-size');
++		const b = emf([record(14, [0, 16, 20]), record(33)]);
++		has(b, 'trailing-data');
++		has(setWord(emf([]), 52, 3), 'record-count');
++	});
++	it('rejects incorrect fixed sizes and record-local variable ranges', () => {
++		has(emf([record(38, [1, 0, 1, 0])]), 'payload-size');
++		has(emf([setWord(polygon16(triangle), 24, 0xffffffff)]), 'payload-size');
++		has(emf([record(70, [500, 0x43494447])]), 'comment-range');
++		has(emf([record(75, [100, 5])]), 'region-data');
++		has(emf([record(75, [32, 5, 32, 1, 0xffffffff, 0, 0, 0, 1, 1])]), 'region-data');
++	});
++	it('rejects unsafe header descriptions and extension payloads', () => {
++		let b = setWord(emf([]), 60, 100);
++		b = setWord(b, 64, 100);
++		has(b, 'header');
++		has(setWord(emf([]), 88, 20), 'header');
++		has(setWord(emf([]), 58, 1), 'header');
++	});
++	it('rejects invalid handles, duplicate live objects, deletion and saved-state selection', () => {
++		for (const handle of [0, 32, 0x80000001])
++			has(emf([record(38, [handle, 0, 1, 0, 0])]), 'object-handle');
++		has(emf([record(38, [1, 0, 1, 0, 0]), record(38, [1, 0, 1, 0, 0])]), 'object-handle');
++		has(emf([record(40, [1])]), 'object-reference');
++		has(
++			emf([
++				record(38, [1, 0, 1, 0, 0]),
++				record(37, [1]),
++				record(33),
++				record(37, [0x80000007]),
++				record(40, [1]),
++				record(34, [-1]),
++			]),
++			'selected-object',
++		);
++	});
++	it('does not invent an invalid handle/restore diagnosis after unknown state-changing records', () => {
++		const r = inspect(emf([record(82), record(37, [1]), record(40, [1]), record(34, [-1])]));
++		expect(r.status).toBe('unsupported');
++		expect(r.diagnostics.every((d) => d.kind === 'unsupported')).toBe(true);
++	});
++	it('rejects invalid restores and unbalanced supported stacks', () => {
++		for (const n of [-2, 0, 1]) has(emf([record(33), record(34, [n])]), 'restore-state');
++		has(emf([record(33)]), 'unbalanced-state');
++		expect(inspect(emf([record(33), record(33), record(34, [-2])])).status).toBe('admitted');
++	});
++	it('rejects degenerate arcs and unsupported styles rather than normalizing them', () => {
++		has(emf([record(45, [0, 0, 10, 10, 5, 5, 10, 10])]), 'parameter');
++		for (const style of [1, 2, 3, 4, 6, 7, 8, 0x10000])
++			has(emf([record(38, [1, style, 1, 0, 0])]), 'pen-style');
++		has(emf([record(39, [1, 2, 0, 0])]), 'brush-style');
++	});
++	it('rejects nonpositive, extreme and highly anisotropic mapping', () => {
++		for (const size of [
++			[0, 1],
++			[-1, 1],
++		])
++			has(emf([record(17, [8]), record(9, size)]), 'parameter');
++		has(emf([record(17, [8]), record(11, [4097, 1])]), 'mapping-scale');
++		has(emf([record(17, [8]), record(11, [4096, 1]), record(9, [1, 4096])]), 'mapping-scale');
++		has(emf([record(17, [8]), record(11, [100, 100]), record(27, [10001, 0])]), 'coordinate-limit');
++	});
++	it('charges repeated object creation even when handles are reused', () => {
++		const records = Array.from({ length: 10 }, () => [
++			record(38, [1, 0, 1, 0, 0]),
++			record(40, [1]),
++		]).flat();
++		expect(inspect(emf(records), { maxObjects: 2 }).status).toBe('budget-exceeded');
++	});
++	it.each<[string, Uint8Array, VisioEmfAdmissionOptions]>([
++		['input', emf([]), { maxInputBytes: 100 }],
++		['records', emf([record(33), record(34, [-1])]), { maxRecords: 3 }],
++		['types', emf([record(43, [0, 0, 10, 10])]), { maxRecordTypes: 1 }],
++		['handles', emf([]), { maxHandles: 10 }],
++		['points', emf([polygon16(triangle), polygon16(triangle)]), { maxPoints: 4 }],
++		[
++			'regions',
++			emf([record(75, [64, 5, 32, 1, 2, 32, 0, 0, 20, 20, 0, 0, 10, 10, 10, 10, 20, 20])]),
++			{ maxRegionRects: 1 },
++		],
++		['state', emf([record(33), record(33)]), { maxStateDepth: 1 }],
++		['clip ops', emf([record(75, [0, 5]), record(75, [0, 5])]), { maxClipOperations: 1 }],
++		[
++			'clip depth',
++			emf([record(30, [0, 0, 10, 10]), record(30, [0, 0, 9, 9])]),
++			{ maxClipDepth: 1 },
++		],
++		['comments', checksumComment(emf([sourceComment()])), { maxCommentBytes: 1 }],
++		['allocation', emf([polygon16(triangle)]), { maxAllocationUnits: 1 }],
++		['pen', emf([record(38, [1, 0, 3, 0, 0])]), { maxPenWidth: 2 }],
++	])('enforces aggregate %s before variable allocation', (_, b, options) => {
++		expect(inspect(b, options).status).toBe('budget-exceeded');
++	});
++	it('charges clip ancestry multiplied by draw work, not records alone', () => {
++		const one = inspect(emf([polygon16(triangle)]));
++		const clips = Array.from({ length: 8 }, () => record(30, [0, 0, 10, 10]));
++		const many = inspect(emf([...clips, ...Array.from({ length: 10 }, () => polygon16(triangle))]));
++		expect(many.metrics.allocationUnits).toBeGreaterThan(one.metrics.allocationUnits * 50);
++	});
++	it('validates EOF palette sizes/counts and caps palette allocation', () => {
++		has(setWord(emf([]), 108 + 8, 1), 'eof');
++		expect(inspect(setWord(emf([]), 68, 257)).status).toBe('budget-exceeded');
++	});
++	it('never throws or returns unbounded diagnostics on deterministic byte mutations', () => {
++		const source = checksumComment(
++			emf([sourceComment(), record(38, [1, 0, 1, 0, 0]), record(37, [1]), polygon16(triangle)]),
++		);
++		let seed = 42;
++		for (let i = 0; i < 1500; i++) {
++			seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
++			const b = source.slice(),
++				at = seed % b.length;
++			b[at] = (b[at] ?? 0) ^ (1 << (seed % 8));
++			const r = inspect(b, { maxDiagnostics: 4 });
++			expect(r.diagnostics.length).toBeLessThanOrEqual(4);
++			expect(r.renderingEnabled).toBe(false);
++		}
++	});
++});
+diff --git a/src/visio/emf-admission-comment.ts b/src/visio/emf-admission-comment.ts
+new file mode 100644
+index 0000000..57db756
+--- /dev/null
++++ b/src/visio/emf-admission-comment.ts
+@@ -0,0 +1,62 @@
++import { type EmfAdmissionContext as Context } from './emf-admission-context.js';
++
++/** Original-equivalent WMF comments only: GdiComment documents checksum and placement.
++ * https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-gdicomment
++ * No WMF bytes are copied, decoded, replayed, or traversed as nested records.
++ */
++export function inspectEmfComment(c: Context, size: number, headerSize: number): void {
++	if (size < 12) {
++		c.emit('invalid', 'comment-range', 'Truncated comment length.');
++		return;
++	}
++	const bytes = c.u32(8);
++	if (size !== 12 + Math.ceil(bytes / 4) * 4) {
++		c.emit('invalid', 'comment-range', 'Comment length must exactly fit its aligned record.');
++		return;
++	}
++	c.metrics.commentBytes += bytes;
++	if (
++		!c.bound(
++			c.metrics.commentBytes,
++			c.limits.maxCommentBytes,
++			'comment-limit',
++			'Aggregate comment payload exceeds budget.',
++		)
++	)
++		return;
++	if (bytes >= 4 && c.u32(12) === 0x2b464d45) {
++		c.emit('unsupported', 'emf-plus', 'All EMF+ payloads are rejected without decoding.');
++		return;
++	}
++	if (bytes < 8 || c.u32(12) !== 0x43494447 || c.u32(16) !== 0x80000001) {
++		c.emit(
++			'unsupported',
++			'comment-subtype',
++			'Only a validated original-equivalent WMF comment is characterized.',
++		);
++		return;
++	}
++	if (bytes < 24 || c.u32(32) !== bytes - 24) {
++		c.emit(
++			'invalid',
++			'comment-range',
++			'Equivalent-source WMF length escapes or underfills its comment.',
++		);
++		return;
++	}
++	if (c.offset !== headerSize || c.u32(20) !== 0x00000300 || c.u32(28) !== 0 || c.u32(32) < 18) {
++		c.emit(
++			'unsupported',
++			'embedded-wmf',
++			'WMF metadata must be immediately after the header with version 3, reserved/flags zero.',
++		);
++		return;
++	}
++	// The containing input is already byte-bounded and aligned. At most one comment can qualify.
++	if (!c.charge(c.view.byteLength / 4)) return;
++	let checksum = 0;
++	for (let p = 0; p < c.view.byteLength; p += 4)
++		checksum = (checksum + c.view.getUint32(p, true)) >>> 0;
++	if (checksum !== 0)
++		c.emit('unsupported', 'embedded-wmf', 'Original-equivalent WMF checksum is stale or invalid.');
++}
+diff --git a/src/visio/emf-admission-compatibility.test.ts b/src/visio/emf-admission-compatibility.test.ts
+new file mode 100644
+index 0000000..80fc804
+--- /dev/null
++++ b/src/visio/emf-admission-compatibility.test.ts
+@@ -0,0 +1,166 @@
++import { describe, expect, it } from 'vitest';
++import {
++	inspectVisioEmfAdmission as inspect,
++	type VisioEmfAdmissionOptions,
++} from './emf-admission.js';
++import { emf, record, setWord } from './emf-admission.test-fixtures.js';
++const rect = record(43, [0, 0, 10, 10]);
++const mapping = [record(17, [8]), record(9, [1, 1]), record(11, [2, 2])];
++const codes = (bytes: Uint8Array) => inspect(bytes).diagnostics.map((d) => d.code);
++
++// Fail-closed regressions from independent synthetic converter3.5.1 review.
++// They assert admission only, never import or execute the converter in this core test suite.
++describe('known converter mapping and arc compatibility exclusions', () => {
++	it('rejects anisotropic to MM_TEXT transitions that retain stale converter scale', () => {
++		expect(codes(emf([...mapping, record(17, [1]), rect]))).toContain(
++			'mapping-transition-fidelity',
++		);
++		expect(inspect(emf([record(17, [1]), rect])).status).toBe('admitted');
++	});
++	it.each([
++		record(9, [2, 2]),
++		record(10, [10, 10]),
++		record(11, [4, 4]),
++		record(12, [10, 10]),
++		record(17, [1]),
++	])('rejects any mapping mutation inside saved state %#', (changed) => {
++		expect(codes(emf([...mapping, record(33), changed, record(34, [-1]), rect]))).toContain(
++			'mapping-restore-fidelity',
++		);
++	});
++	it('allows balanced save/restore without mapping edits', () => {
++		expect(inspect(emf([...mapping, record(33), rect, record(34, [-1]), rect])).status).toBe(
++			'admitted',
++		);
++	});
++	it.each([{ setup: [] }, { setup: [record(9, [1, 1])] }, { setup: [record(11, [2, 2])] }])(
++		'rejects partial anisotropic defaults before drawing %#',
++		({ setup }) => {
++			expect(codes(emf([record(17, [8]), ...setup, rect]))).toContain('mapping-incomplete');
++		},
++	);
++	it('also requires complete mapping before clipping or current-position capture', () => {
++		for (const action of [record(30, [0, 0, 10, 10]), record(27, [10, 10])])
++			expect(
++				codes(emf([record(17, [8]), record(11, [2, 2]), action, record(9, [1, 1]), rect])),
++			).toContain('mapping-incomplete');
++	});
++	it('requires an explicit window origin for nonzero header origins', () => {
++		const incomplete = setWord(setWord(emf([...mapping, rect]), 8, 10), 12, 10);
++		expect(codes(incomplete)).toContain('mapping-incomplete');
++		const complete = setWord(setWord(emf([...mapping, record(10, [0, 0]), rect]), 8, 10), 12, 10);
++		expect(inspect(complete).status).toBe('admitted');
++	});
++	it.each([45, 47])('rejects same-ray full-ellipse semantics for record%i', (type) => {
++		for (const endpoints of [
++			[40, 10, 40, 10],
++			[40, 10, 60, 10],
++			[0, 0, -20, -10],
++		])
++			expect(codes(emf([record(type, [0, 0, 40, 20, ...endpoints])]))).toContain(
++				'arc-full-ellipse-fidelity',
++			);
++		// Opposite radial directions form a half ellipse and do not trigger this exclusion.
++		expect(inspect(emf([record(type, [0, 0, 40, 20, 40, 10, 0, 10])])).status).toBe('admitted');
++	});
++	it('uses exact doubled-center arithmetic with odd bounds and bounded large coordinates', () => {
++		expect(codes(emf([record(45, [0, 0, 41, 21, 41, 21, 82, 42])]))).toContain(
++			'arc-full-ellipse-fidelity',
++		);
++		expect(
++			codes(
++				emf([record(45, [-1000000, -1000000, 1000000, 1000000, 1000000, 500000, 500000, 250000])]),
++			),
++		).toContain('arc-full-ellipse-fidelity');
++	});
++});
++
++describe('intrinsic EMF input and data-only options boundary', () => {
++	it.each(['buffer', 'byteOffset', 'byteLength'])(
++		'never invokes a source-owned %s accessor',
++		(key) => {
++			const bytes = emf([rect]);
++			let calls = 0;
++			Object.defineProperty(bytes, key, {
++				get() {
++					calls++;
++					throw new Error('do not expose source exceptions');
++				},
++			});
++			expect(inspect(bytes).status).toBe('admitted');
++			expect(calls).toBe(0);
++		},
++	);
++	it('uses the intrinsic typed-array tag and rejects proxy/fake typed arrays', () => {
++		const bytes = emf([rect]);
++		Object.defineProperty(bytes, Symbol.toStringTag, {
++			get() {
++				throw new Error('tag accessor');
++			},
++		});
++		expect(inspect(bytes).status).toBe('admitted');
++		for (const fake of [
++			new Proxy(bytes, {}),
++			Object.create(Uint8Array.prototype),
++			new Uint16Array(100),
++		])
++			expect(inspect(fake as Uint8Array).status).toBe('invalid');
++	});
++	it.each(['maxDiagnostics', 'maxRecords', 'maxCoordinate'])(
++		'rejects own %s accessors without executing them',
++		(key) => {
++			const bytes = emf([rect]);
++			let calls = 0;
++			const options = Object.defineProperty({}, key, {
++				get() {
++					calls++;
++					structuredClone(bytes, { transfer: [bytes.buffer] });
++					return 1;
++				},
++			});
++			const result = inspect(bytes, options);
++			expect(result.status).toBe('invalid');
++			expect(result.diagnostics[0]?.code).toBe('limits');
++			expect(calls).toBe(0);
++		},
++	);
++	it('rejects inherited options without invoking their accessors', () => {
++		let calls = 0;
++		const options = Object.create({
++			get maxRecords() {
++				calls++;
++				return 2;
++			},
++		}) as VisioEmfAdmissionOptions;
++		expect(inspect(emf([rect]), options).status).toBe('invalid');
++		expect(calls).toBe(0);
++	});
++	it('sanitizes throwing option-proxy traps and reads options before the input buffer', () => {
++		const throws = new Proxy(
++			{},
++			{
++				getOwnPropertyDescriptor() {
++					throw new Error('private detail');
++				},
++			},
++		);
++		const failure = inspect(emf([rect]), throws);
++		expect(failure.status).toBe('invalid');
++		expect(JSON.stringify(failure)).not.toContain('private detail');
++		const bytes = emf([rect]);
++		let detached = false;
++		const detaches = new Proxy(
++			{},
++			{
++				getOwnPropertyDescriptor() {
++					if (!detached) {
++						structuredClone(bytes, { transfer: [bytes.buffer] });
++						detached = true;
++					}
++					return undefined;
++				},
++			},
++		);
++		expect(inspect(bytes, detaches).diagnostics[0]?.code).toBe('input');
++	});
++});
+diff --git a/src/visio/emf-admission-context.ts b/src/visio/emf-admission-context.ts
+new file mode 100644
+index 0000000..e41c8ff
+--- /dev/null
++++ b/src/visio/emf-admission-context.ts
+@@ -0,0 +1,258 @@
++import {
++	VISIO_EMF_ADMISSION_LIMITS,
++	type VisioEmfAdmissionOptions,
++	type VisioEmfAdmissionResult,
++	type VisioEmfAdmissionDiagnostic,
++	type VisioEmfAdmissionHeader,
++	type VisioEmfAdmissionMetrics,
++	type VisioEmfDiagnosticCode,
++} from './emf-admission-types.js';
++
++export interface EmfState {
++	mapMode: number;
++	windowExtentSet: boolean;
++	viewportExtentSet: boolean;
++	windowOriginSet: boolean;
++	windowX: number;
++	windowY: number;
++	viewportX: number;
++	viewportY: number;
++	windowWidth: number;
++	windowHeight: number;
++	viewportWidth: number;
++	viewportHeight: number;
++	pen: number;
++	brush: number;
++	x: number;
++	y: number;
++	clipDepth: number;
++}
++export class EmfAdmissionContext {
++	readonly limits: { -readonly [K in keyof typeof VISIO_EMF_ADMISSION_LIMITS]: number };
++	readonly diagnostics: VisioEmfAdmissionDiagnostic[] = [];
++	readonly inventory = new Map<number, number>();
++	readonly objects = new Map<number, { kind: 'pen' | 'brush'; width: number }>();
++	readonly stack: EmfState[] = [];
++	readonly metrics: VisioEmfAdmissionMetrics = {
++		records: 0,
++		objectsCreated: 0,
++		peakLiveObjects: 0,
++		points: 0,
++		regionRects: 0,
++		clipOperations: 0,
++		peakClipDepth: 0,
++		peakStateDepth: 0,
++		paletteEntries: 0,
++		commentBytes: 0,
++		allocationUnits: 0,
++		maxMappedCoordinate: 0,
++	};
++	state: EmfState = {
++		mapMode: 1,
++		windowExtentSet: false,
++		viewportExtentSet: false,
++		windowOriginSet: false,
++		windowX: 0,
++		windowY: 0,
++		viewportX: 0,
++		viewportY: 0,
++		windowWidth: 1,
++		windowHeight: 1,
++		viewportWidth: 1,
++		viewportHeight: 1,
++		pen: 0x80000007,
++		brush: 0x80000000,
++		x: 0,
++		y: 0,
++		clipDepth: 0,
++	};
++	header: VisioEmfAdmissionHeader | null = null;
++	headerPaletteEntries = 0;
++	offset = 0;
++	type: number | null = null;
++	scanComplete = false;
++	semanticStateKnown = true;
++	omittedDiagnostics = 0;
++	budgetExceeded = false;
++	invalid = false;
++	unsupported = false;
++	constructor(
++		readonly view: DataView,
++		options: VisioEmfAdmissionOptions,
++	) {
++		this.limits = { ...VISIO_EMF_ADMISSION_LIMITS };
++		if (!options || typeof options !== 'object') {
++			this.emit('invalid', 'limits', 'Expected an options object.');
++			return;
++		}
++		const cap = options.maxDiagnostics;
++		if (cap !== undefined && Number.isInteger(cap) && cap > 0 && cap <= this.limits.maxDiagnostics)
++			this.limits.maxDiagnostics = cap;
++		for (const key of Object.keys(VISIO_EMF_ADMISSION_LIMITS) as (keyof typeof this.limits)[]) {
++			const value = options[key];
++			if (value === undefined) continue;
++			if (!Number.isSafeInteger(value) || value < 1 || value > this.limits[key])
++				this.emit('invalid', 'limits', 'Limits must be positive integers below the hard ceiling.');
++			else this.limits[key] = value;
++		}
++	}
++	u32(at: number): number {
++		return this.view.getUint32(this.offset + at, true);
++	}
++	i32(at: number): number {
++		return this.view.getInt32(this.offset + at, true);
++	}
++	i16(at: number): number {
++		return this.view.getInt16(this.offset + at, true);
++	}
++	emit(
++		kind: VisioEmfAdmissionDiagnostic['kind'],
++		code: VisioEmfDiagnosticCode,
++		message: string,
++		limit?: number,
++	): void {
++		if (kind === 'invalid') this.invalid = true;
++		if (kind === 'unsupported') this.unsupported = true;
++		if (kind === 'budget-exceeded') this.budgetExceeded = true;
++		if (this.diagnostics.length < this.limits.maxDiagnostics)
++			this.diagnostics.push({
++				kind,
++				code,
++				offset: this.offset,
++				recordType: this.type,
++				message,
++				...(limit === undefined ? {} : { limit }),
++			});
++		else this.omittedDiagnostics++;
++	}
++	charge(units: number): boolean {
++		this.metrics.allocationUnits += units;
++		return this.bound(
++			this.metrics.allocationUnits,
++			this.limits.maxAllocationUnits,
++			'allocation-limit',
++			'Aggregate abstract allocation/work budget exceeded.',
++		);
++	}
++	bound(value: number, limit: number, code: VisioEmfDiagnosticCode, message: string): boolean {
++		if (Number.isFinite(value) && Math.abs(value) <= limit) return true;
++		this.emit('budget-exceeded', code, message, limit);
++		return false;
++	}
++	coordinate(value: number): boolean {
++		return this.bound(
++			value,
++			this.limits.maxCoordinate,
++			'coordinate-limit',
++			'Source coordinate exceeds budget.',
++		);
++	}
++	point(x: number, y: number, mapped = true): void {
++		this.coordinate(x);
++		this.coordinate(y);
++		if (!mapped || !this.semanticStateKnown) return;
++		const s = this.state;
++		if (
++			s.mapMode === 8 &&
++			(!s.windowExtentSet ||
++				!s.viewportExtentSet ||
++				(!s.windowOriginSet && (this.header?.bounds[0] !== 0 || this.header?.bounds[1] !== 0)))
++		)
++			this.emit(
++				'unsupported',
++				'mapping-incomplete',
++				'Anisotropic geometry requires explicit extents and a resolved window origin.',
++			);
++		const sx = s.mapMode === 8 ? s.viewportWidth / s.windowWidth : 1;
++		const sy = s.mapMode === 8 ? s.viewportHeight / s.windowHeight : 1;
++		const mx = (x - s.windowX) * sx + s.viewportX;
++		const my = (y - s.windowY) * sy + s.viewportY;
++		this.metrics.maxMappedCoordinate = Math.max(
++			this.metrics.maxMappedCoordinate,
++			Math.abs(mx),
++			Math.abs(my),
++		);
++		this.bound(
++			mx,
++			this.limits.maxCoordinate,
++			'coordinate-limit',
++			'Mapped coordinate exceeds budget.',
++		);
++		this.bound(
++			my,
++			this.limits.maxCoordinate,
++			'coordinate-limit',
++			'Mapped coordinate exceeds budget.',
++		);
++	}
++	rect(at: number, mapped = true): void {
++		this.point(this.i32(at), this.i32(at + 4), mapped);
++		this.point(this.i32(at + 8), this.i32(at + 12), mapped);
++		if (this.i32(at) > this.i32(at + 8) || this.i32(at + 4) > this.i32(at + 12))
++			this.emit(
++				'unsupported',
++				'parameter',
++				'Inverted rectangle semantics are outside this subset.',
++			);
++	}
++	clip(reset = false): void {
++		this.metrics.clipOperations++;
++		this.state.clipDepth = reset ? 0 : this.state.clipDepth + 1;
++		this.metrics.peakClipDepth = Math.max(this.metrics.peakClipDepth, this.state.clipDepth);
++		this.bound(
++			this.metrics.clipOperations,
++			this.limits.maxClipOperations,
++			'clip-limit',
++			'Aggregate clipping budget exceeded.',
++		);
++		this.bound(
++			this.state.clipDepth,
++			this.limits.maxClipDepth,
++			'clip-limit',
++			'Active clip depth exceeds budget.',
++		);
++		this.charge(8);
++	}
++	draw(points: number): void {
++		const width = this.objects.get(this.state.pen)?.width ?? 1;
++		if (width > 0 && this.state.mapMode === 8) {
++			for (const scale of [
++				this.state.viewportWidth / this.state.windowWidth,
++				this.state.viewportHeight / this.state.windowHeight,
++			])
++				this.bound(
++					width * scale,
++					this.limits.maxCoordinate,
++					'coordinate-limit',
++					'Mapped pen width exceeds budget.',
++				);
++		}
++		this.metrics.points += points;
++		this.bound(
++			this.metrics.points,
++			this.limits.maxPoints,
++			'point-limit',
++			'Aggregate point budget exceeded.',
++		);
++		// Charge repeated traversal of the complete active clip ancestry at every draw.
++		this.charge((points + 16) * (this.state.clipDepth + 1));
++	}
++	result(): VisioEmfAdmissionResult {
++		return {
++			status: this.budgetExceeded
++				? 'budget-exceeded'
++				: this.invalid
++					? 'invalid'
++					: this.unsupported
++						? 'unsupported'
++						: 'admitted',
++			renderingEnabled: false,
++			header: this.header,
++			metrics: this.metrics,
++			recordTypes: Array.from(this.inventory, ([type, count]) => ({ type, count })),
++			diagnostics: this.diagnostics,
++			omittedDiagnostics: this.omittedDiagnostics,
++			scanComplete: this.scanComplete,
++		};
++	}
++}
+diff --git a/src/visio/emf-admission-corpus.test.ts b/src/visio/emf-admission-corpus.test.ts
+new file mode 100644
+index 0000000..9b40dac
+--- /dev/null
++++ b/src/visio/emf-admission-corpus.test.ts
+@@ -0,0 +1,119 @@
++import { createHash } from 'node:crypto';
++import { readFile } from 'node:fs/promises';
++import JSZip from 'jszip';
++import { describe, expect, it } from 'vitest';
++import { inspectVisioEmfAdmission } from './emf-admission.js';
++
++// Optional read-only external validation; never copies or redistributes corpus fixture bytes.
++// Provenance: Apache POI test-data/diagram/60973.vsdx. Set VISIO_EMF_CORPUS_FILE explicitly.
++const file = process.env.VISIO_EMF_CORPUS_FILE;
++const inventory2 = {
++	1: 1,
++	9: 2,
++	10: 1,
++	11: 1,
++	14: 1,
++	17: 1,
++	18: 1,
++	20: 2,
++	22: 2,
++	24: 2,
++	25: 2,
++	30: 1,
++	33: 3,
++	34: 3,
++	37: 32,
++	38: 10,
++	39: 2,
++	40: 12,
++	42: 9,
++	45: 8,
++	47: 8,
++	48: 1,
++	70: 1,
++	75: 1,
++};
++const inventory3 = {
++	1: 1,
++	9: 2,
++	10: 1,
++	11: 1,
++	14: 1,
++	17: 1,
++	18: 1,
++	20: 2,
++	22: 2,
++	24: 2,
++	25: 2,
++	27: 2,
++	30: 3,
++	33: 5,
++	34: 5,
++	37: 24,
++	38: 5,
++	39: 5,
++	40: 10,
++	42: 2,
++	48: 1,
++	54: 2,
++	70: 1,
++	75: 1,
++	86: 18,
++};
++const fixtures = [
++	{
++		name: 'image2.emf',
++		bytes: 3736,
++		sha256: '87543078d0617e08a4649d6141fc443418903f1f951417490d0348c91c6e49b4',
++		inventory: inventory2,
++		header: { pixelWidth: 83, pixelHeight: 50, declaredRecords: 107, declaredHandles: 6 },
++		metrics: {
++			objectsCreated: 12,
++			peakLiveObjects: 5,
++			clipOperations: 2,
++			peakClipDepth: 1,
++			peakStateDepth: 3,
++			commentBytes: 1588,
++		},
++	},
++	{
++		name: 'image3.emf',
++		bytes: 4216,
++		sha256: '8093b61d382b703f07e499f239377b6d0092230d69d3f779a209cec682a89ee0',
++		inventory: inventory3,
++		header: { pixelWidth: 65, pixelHeight: 38, declaredRecords: 100, declaredHandles: 7 },
++		metrics: {
++			objectsCreated: 10,
++			peakLiveObjects: 6,
++			clipOperations: 4,
++			peakClipDepth: 2,
++			peakStateDepth: 4,
++			commentBytes: 1856,
++		},
++	},
++] as const;
++
++describe.skipIf(!file)('explicit external Apache POI 60973.vsdx classic media', () => {
++	it.each(fixtures)('characterizes $name without claiming render fidelity', async (expected) => {
++		const zip = await JSZip.loadAsync(await readFile(file!));
++		const bytes = await zip.file(`visio/media/${expected.name}`)!.async('uint8array');
++		expect(bytes.byteLength).toBe(expected.bytes);
++		expect(createHash('sha256').update(bytes).digest('hex')).toBe(expected.sha256);
++		const result = inspectVisioEmfAdmission(bytes);
++		expect(result).toMatchObject({
++			status: 'unsupported',
++			renderingEnabled: false,
++			scanComplete: true,
++			header: expected.header,
++			metrics: expected.metrics,
++		});
++		expect(Object.fromEntries(result.recordTypes.map(({ type, count }) => [type, count]))).toEqual(
++			expected.inventory,
++		);
++		expect(new Set(result.diagnostics.map((d) => d.code))).toEqual(
++			new Set(['pen-style', 'palette-color']),
++		);
++		expect(result.diagnostics.every((d) => d.kind === 'unsupported')).toBe(true);
++		expect(result.omittedDiagnostics).toBe(0);
++	});
++});
+diff --git a/src/visio/emf-admission-geometry.ts b/src/visio/emf-admission-geometry.ts
+new file mode 100644
+index 0000000..256c468
+--- /dev/null
++++ b/src/visio/emf-admission-geometry.ts
+@@ -0,0 +1,111 @@
++import { type EmfAdmissionContext as Context } from './emf-admission-context.js';
++
++export function inspectEmfGeometry(c: Context, size: number): boolean {
++	const t = c.type;
++	if (t === 27 || t === 54) {
++		const x = c.i32(8),
++			y = c.i32(12);
++		c.point(x, y);
++		if (t === 54) {
++			c.point(c.state.x, c.state.y);
++			c.draw(2);
++		}
++		c.state.x = x;
++		c.state.y = y;
++	} else if (t === 30) {
++		c.rect(8);
++		c.clip();
++	} else if (t === 42 || t === 43 || t === 45 || t === 47) {
++		c.rect(8);
++		if (c.i32(8) === c.i32(16) || c.i32(12) === c.i32(20))
++			c.emit('unsupported', 'parameter', 'Degenerate bounded primitives are outside this subset.');
++		if (t === 45 || t === 47) {
++			// Radial direction points may be outside the ellipse. They are not arc endpoints.
++			c.point(c.i32(24), c.i32(28));
++			c.point(c.i32(32), c.i32(36));
++			const cx = (c.i32(8) + c.i32(16)) / 2,
++				cy = (c.i32(12) + c.i32(20)) / 2;
++			if ((c.i32(24) === cx && c.i32(28) === cy) || (c.i32(32) === cx && c.i32(36) === cy))
++				c.emit(
++					'unsupported',
++					'parameter',
++					'An arc radial point at the center has unresolved semantics.',
++				);
++			// Twice the center keeps odd-size ellipses integral. Coordinate ceilings make
++			// these products exact (< 2^53). Same ray is a full ellipse, not an empty arc.
++			if (!c.budgetExceeded) {
++				const ax = 2 * c.i32(24) - c.i32(8) - c.i32(16),
++					ay = 2 * c.i32(28) - c.i32(12) - c.i32(20);
++				const bx = 2 * c.i32(32) - c.i32(8) - c.i32(16),
++					by = 2 * c.i32(36) - c.i32(12) - c.i32(20);
++				if (ax * by === ay * bx && ax * bx + ay * by > 0)
++					c.emit(
++						'unsupported',
++						'arc-full-ellipse-fidelity',
++						'Same-ray arc endpoints require full-ellipse converter semantics.',
++					);
++			}
++		}
++		c.draw(t === 43 ? 4 : 16);
++	} else if (t === 86 || t === 87) {
++		if (size < 28) {
++			c.emit('invalid', 'payload-size', 'Truncated 16-bit poly record.');
++			return true;
++		}
++		const count = c.u32(24);
++		if (size !== 28 + count * 4 || count < (t === 86 ? 3 : 2)) {
++			c.emit('invalid', 'payload-size', 'Point count must exactly match the record payload.');
++			return true;
++		}
++		c.draw(count);
++		if (c.budgetExceeded) return true;
++		// Record Bounds are advisory; validate independently, never use them instead of points.
++		c.rect(8, false);
++		for (let i = 0; i < count; i++) c.point(c.i16(28 + i * 4), c.i16(30 + i * 4));
++	} else if (t === 75) inspectRegion(c, size);
++	else return false;
++	return true;
++}
++
++function inspectRegion(c: Context, size: number): void {
++	if (size < 16) {
++		c.emit('invalid', 'payload-size', 'Truncated clip region record.');
++		return;
++	}
++	const bytes = c.u32(8),
++		mode = c.u32(12);
++	if (bytes !== size - 16) {
++		c.emit('invalid', 'region-data', 'Region byte count must exactly match the record.');
++		return;
++	}
++	if (mode !== 5)
++		c.emit('unsupported', 'region-mode', 'Only copy/reset clip regions are characterized.');
++	if (bytes === 0) {
++		if (mode !== 5) c.emit('invalid', 'region-data', 'An omitted region requires RGN_COPY.');
++		c.clip(true);
++		return;
++	}
++	if (bytes < 32) {
++		c.emit('invalid', 'region-data', 'Truncated RegionDataHeader.');
++		return;
++	}
++	const count = c.u32(24),
++		payload = c.u32(28);
++	if (c.u32(16) !== 32 || c.u32(20) !== 1 || payload !== count * 16 || bytes !== 32 + payload) {
++		c.emit('invalid', 'region-data', 'Region header/count/rectangle payload is inconsistent.');
++		return;
++	}
++	c.metrics.regionRects += count;
++	c.bound(
++		c.metrics.regionRects,
++		c.limits.maxRegionRects,
++		'region-limit',
++		'Aggregate region rectangle budget exceeded.',
++	);
++	if (!c.charge(count * 4) || c.budgetExceeded) return;
++	c.rect(32);
++	for (let i = 0; i < count; i++) c.rect(48 + i * 16);
++	// Multiple-rectangle band ordering, unions, and device/logical clipping need independent review.
++	c.emit('unsupported', 'region-mode', 'Nonempty region replay semantics are not admitted.');
++	c.clip();
++}
+diff --git a/src/visio/emf-admission-input.ts b/src/visio/emf-admission-input.ts
+new file mode 100644
+index 0000000..f7b8d5b
+--- /dev/null
++++ b/src/visio/emf-admission-input.ts
+@@ -0,0 +1,55 @@
++import {
++	VISIO_EMF_ADMISSION_LIMITS,
++	type VisioEmfAdmissionOptions,
++} from './emf-admission-types.js';
++
++// Capture the actual TypedArray accessors. Own accessors, proxies and toStringTag overrides
++// must never control buffer boundaries or execute while byte records are inspected.
++const typedArray = Object.getPrototypeOf(Uint8Array.prototype) as object;
++const bufferGetter = Object.getOwnPropertyDescriptor(typedArray, 'buffer')!.get!;
++const offsetGetter = Object.getOwnPropertyDescriptor(typedArray, 'byteOffset')!.get!;
++const lengthGetter = Object.getOwnPropertyDescriptor(typedArray, 'byteLength')!.get!;
++const tagGetter = Object.getOwnPropertyDescriptor(typedArray, Symbol.toStringTag)!.get!;
++const resizableGetter = Object.getOwnPropertyDescriptor(ArrayBuffer.prototype, 'resizable')?.get;
++
++export function emfInputView(input: unknown): DataView<ArrayBuffer> | null {
++	try {
++		if (tagGetter.call(input) !== 'Uint8Array') return null;
++		const buffer: unknown = bufferGetter.call(input);
++		if (!(buffer instanceof ArrayBuffer) || resizableGetter?.call(buffer) === true) return null;
++		return new DataView(
++			buffer,
++			offsetGetter.call(input) as number,
++			lengthGetter.call(input) as number,
++		);
++	} catch {
++		return null;
++	}
++}
++
++/** Read only known own data properties, before inspecting the source byte buffer.
++ * Accessors/inherited configuration are rejected. Proxy traps can run as part of descriptor
++ * lookup, but their exceptions cannot escape and they cannot detach an already-inspected view.
++ */
++export function emfInputOptions(options: unknown): VisioEmfAdmissionOptions | null {
++	if (!options || typeof options !== 'object') return null;
++	try {
++		const prototype: unknown = Object.getPrototypeOf(options);
++		if (prototype !== null && prototype !== Object.prototype) return null;
++		const snapshot: { -readonly [K in keyof VisioEmfAdmissionOptions]: number } = {};
++		for (const key of Object.keys(
++			VISIO_EMF_ADMISSION_LIMITS,
++		) as (keyof VisioEmfAdmissionOptions)[]) {
++			const descriptor = Object.getOwnPropertyDescriptor(options, key);
++			if (!descriptor) continue;
++			if (!('value' in descriptor)) return null;
++			const value: unknown = descriptor.value;
++			if (value === undefined) continue;
++			if (typeof value !== 'number') return null;
++			snapshot[key] = value;
++		}
++		return snapshot;
++	} catch {
++		return null;
++	}
++}
+diff --git a/src/visio/emf-admission-records.ts b/src/visio/emf-admission-records.ts
+new file mode 100644
+index 0000000..18907a5
+--- /dev/null
++++ b/src/visio/emf-admission-records.ts
+@@ -0,0 +1,215 @@
++import { type EmfAdmissionContext as Context } from './emf-admission-context.js';
++
++export const EMF_FIXED_SIZES = new Map<number, number>([
++	[9, 16],
++	[10, 16],
++	[11, 16],
++	[12, 16],
++	[17, 12],
++	[18, 12],
++	[19, 12],
++	[20, 12],
++	[22, 12],
++	[24, 12],
++	[25, 12],
++	[27, 16],
++	[30, 24],
++	[33, 8],
++	[34, 12],
++	[37, 12],
++	[38, 28],
++	[39, 24],
++	[40, 12],
++	[42, 24],
++	[43, 24],
++	[45, 40],
++	[47, 40],
++	[48, 12],
++	[54, 16],
++]);
++
++// Only these text state records are inert because every text/font drawing record is rejected.
++export function inspectEmfStateRecord(c: Context): boolean {
++	const t = c.type;
++	if ((t === 9 || t === 10 || t === 11 || t === 12 || t === 17) && c.stack.length)
++		c.emit(
++			'unsupported',
++			'mapping-restore-fidelity',
++			'Mapping mutations in saved DC state require corrected converter restoration.',
++		);
++	if (t === 33) {
++		const depth = c.stack.length + 1;
++		c.metrics.peakStateDepth = Math.max(c.metrics.peakStateDepth, depth);
++		if (
++			c.bound(depth, c.limits.maxStateDepth, 'state-depth', 'SaveDC depth exceeds budget.') &&
++			c.charge(16)
++		)
++			c.stack.push({ ...c.state });
++	} else if (t === 34) {
++		const relative = c.i32(8);
++		if (relative >= 0 || -relative > c.stack.length) {
++			if (c.semanticStateKnown)
++				c.emit(
++					'invalid',
++					'restore-state',
++					'RestoreDC must reference an existing relative saved state.',
++				);
++		} else {
++			c.state = c.stack[c.stack.length + relative]!;
++			c.stack.length += relative;
++		}
++	} else if (t === 17) {
++		if (c.state.mapMode === 8 && c.u32(8) === 1)
++			c.emit(
++				'unsupported',
++				'mapping-transition-fidelity',
++				'Returning from anisotropic mapping to MM_TEXT requires corrected converter semantics.',
++			);
++		if (![1, 8].includes(c.u32(8))) {
++			c.emit('unsupported', 'mapping-mode', 'Only MM_TEXT and MM_ANISOTROPIC are characterized.');
++			c.semanticStateKnown = false;
++		} else c.state.mapMode = c.u32(8);
++	} else if (t === 9 || t === 10 || t === 11 || t === 12) {
++		const x = c.i32(8),
++			y = c.i32(12),
++			s = c.state;
++		c.point(x, y, false);
++		if (t === 10) {
++			s.windowOriginSet = true;
++			s.windowX = x;
++			s.windowY = y;
++		}
++		if (t === 12) {
++			s.viewportX = x;
++			s.viewportY = y;
++		}
++		if (t === 9 || t === 11) {
++			if (x <= 0 || y <= 0) {
++				c.emit('unsupported', 'parameter', 'Nonpositive mapping extents are outside this subset.');
++				return true;
++			}
++			if (s.mapMode === 1) {
++				// MS-EMF ignores extents in MM_TEXT; the audited converter did not.
++				c.emit(
++					'unsupported',
++					'mapping-extents-fidelity',
++					'MM_TEXT extent records require corrected converter semantics.',
++				);
++				return true;
++			}
++			if (t === 9) {
++				s.windowExtentSet = true;
++				s.windowWidth = x;
++				s.windowHeight = y;
++			} else {
++				s.viewportExtentSet = true;
++				s.viewportWidth = x;
++				s.viewportHeight = y;
++			}
++			for (const scale of [
++				s.viewportWidth / s.windowWidth,
++				s.viewportHeight / s.windowHeight,
++				s.viewportWidth / s.windowWidth / (s.viewportHeight / s.windowHeight),
++			]) {
++				c.bound(scale, c.limits.maxMappingScale, 'mapping-scale', 'Mapping scale exceeds budget.');
++				c.bound(
++					1 / scale,
++					c.limits.maxMappingScale,
++					'mapping-scale',
++					'Inverse mapping scale exceeds budget.',
++				);
++			}
++		}
++	} else if (t === 18 || t === 19) {
++		if (![1, 2].includes(c.u32(8)))
++			c.emit('invalid', 'parameter', 'Invalid background or polygon fill mode.');
++	} else if (t === 20) {
++		if (c.u32(8) !== 13) c.emit('unsupported', 'parameter', 'Only copy-pen ROP2 is admitted.');
++	} else if (t === 22) {
++		if (![0, 24].includes(c.u32(8)))
++			c.emit('unsupported', 'parameter', 'Text alignment is outside the inert-state subset.');
++	} else if (t === 24 || t === 25) inspectEmfColor(c, c.u32(8));
++	else if (t === 48) {
++		if (c.u32(8) !== 0x8000000f)
++			c.emit('unsupported', 'palette', 'Only DEFAULT_PALETTE selection is characterized.');
++	} else return false;
++	return true;
++}
++
++export function inspectEmfColor(c: Context, color: number): void {
++	if (color >>> 24)
++		c.emit(
++			'unsupported',
++			'palette-color',
++			'Palette-relative colors require an explicit output-device compatibility contract.',
++		);
++}
++
++export function inspectEmfObjectRecord(c: Context): boolean {
++	const t = c.type;
++	if (t !== 37 && t !== 38 && t !== 39 && t !== 40) return false;
++	const handle = c.u32(8);
++	if (t === 38 || t === 39) {
++		c.metrics.objectsCreated++;
++		c.bound(
++			c.metrics.objectsCreated,
++			c.limits.maxObjects,
++			'object-limit',
++			'Aggregate object creation budget exceeded.',
++		);
++		const valid = handle > 0 && handle < (c.header?.declaredHandles ?? 0) && !c.objects.has(handle);
++		if (c.semanticStateKnown && !valid)
++			c.emit(
++				'invalid',
++				'object-handle',
++				'Object handle is reserved, duplicated, or outside the declared table.',
++			);
++		if (valid && !c.budgetExceeded && c.charge(8))
++			c.objects.set(handle, { kind: t === 38 ? 'pen' : 'brush', width: t === 38 ? c.i32(16) : 0 });
++		c.metrics.peakLiveObjects = Math.max(c.metrics.peakLiveObjects, c.objects.size);
++		const style = c.u32(12);
++		if (t === 38) {
++			if (![0, 5].includes(style))
++				c.emit(
++					'unsupported',
++					'pen-style',
++					'Only solid/null pens are admitted; INSIDEFRAME is not a centered stroke.',
++				);
++			const width = c.i32(16);
++			if (width < 0 || c.i32(20) !== 0)
++				c.emit('invalid', 'parameter', 'Pen width must be nonnegative with zero Y component.');
++			c.bound(width, c.limits.maxPenWidth, 'coordinate-limit', 'Pen width exceeds budget.');
++			// A zero width is a device hairline, not zero geometry. Conversion remains disabled.
++			inspectEmfColor(c, c.u32(24));
++		} else {
++			if (![0, 1].includes(style))
++				c.emit('unsupported', 'brush-style', 'Only solid/null brushes are admitted.');
++			inspectEmfColor(c, c.u32(16));
++			if (c.u32(20) !== 0)
++				c.emit('unsupported', 'brush-style', 'Nonzero brush hatch data is outside this subset.');
++		}
++	} else if (t === 37) {
++		const kind =
++			c.objects.get(handle)?.kind ??
++			(handle >= 0x80000000 && handle <= 0x80000005
++				? 'brush'
++				: handle >= 0x80000006 && handle <= 0x80000008
++					? 'pen'
++					: undefined);
++		if (!kind && c.semanticStateKnown)
++			c.emit('unsupported', 'object-reference', 'Unknown or unsupported object selection.');
++		else if (kind) c.state[kind] = handle;
++	} else if (c.semanticStateKnown) {
++		c.charge(c.stack.length + 1);
++		if (!c.objects.has(handle))
++			c.emit('invalid', 'object-reference', 'DeleteObject references an absent object.');
++		else if ([c.state, ...c.stack].some((s) => s.pen === handle || s.brush === handle))
++			c.emit(
++				'unsupported',
++				'selected-object',
++				'Deletion of an object referenced by live or saved state is unresolved.',
++			);
++		else c.objects.delete(handle);
++	}
++	return true;
++}
+diff --git a/src/visio/emf-admission-types.ts b/src/visio/emf-admission-types.ts
+new file mode 100644
+index 0000000..4fbcfa7
+--- /dev/null
++++ b/src/visio/emf-admission-types.ts
+@@ -0,0 +1,117 @@
++/** Hard ceilings for the DOM-free, vector-only admission checker, not converter memory quotas. */
++export const VISIO_EMF_ADMISSION_LIMITS = Object.freeze({
++	maxInputBytes: 4 * 1024 * 1024,
++	maxRecords: 20_000,
++	maxRecordTypes: 128,
++	maxHandles: 4096,
++	maxObjects: 4096,
++	maxPoints: 100_000,
++	maxRegionRects: 4096,
++	maxClipOperations: 4096,
++	maxClipDepth: 64,
++	maxStateDepth: 64,
++	maxPaletteEntries: 256,
++	maxCommentBytes: 256 * 1024,
++	maxCoordinate: 1_000_000,
++	maxMappingScale: 4096,
++	maxPenWidth: 1024,
++	maxAllocationUnits: 500_000,
++	maxDiagnostics: 64,
++});
++export type VisioEmfAdmissionLimits = typeof VISIO_EMF_ADMISSION_LIMITS;
++export type VisioEmfAdmissionOptions = Partial<{ [K in keyof VisioEmfAdmissionLimits]: number }>;
++export type VisioEmfAdmissionStatus = 'admitted' | 'unsupported' | 'invalid' | 'budget-exceeded';
++export type VisioEmfDiagnosticCode =
++	| 'input'
++	| 'limits'
++	| 'header'
++	| 'record-size'
++	| 'record-count'
++	| 'record-limit'
++	| 'unsupported-record'
++	| 'payload-size'
++	| 'parameter'
++	| 'coordinate-limit'
++	| 'mapping-scale'
++	| 'mapping-mode'
++	| 'mapping-extents-fidelity'
++	| 'mapping-transition-fidelity'
++	| 'mapping-restore-fidelity'
++	| 'mapping-incomplete'
++	| 'arc-full-ellipse-fidelity'
++	| 'state-depth'
++	| 'restore-state'
++	| 'unbalanced-state'
++	| 'object-limit'
++	| 'object-handle'
++	| 'object-reference'
++	| 'selected-object'
++	| 'pen-style'
++	| 'brush-style'
++	| 'palette-color'
++	| 'palette-limit'
++	| 'palette'
++	| 'point-limit'
++	| 'region-limit'
++	| 'region-data'
++	| 'region-mode'
++	| 'clip-limit'
++	| 'allocation-limit'
++	| 'comment-range'
++	| 'comment-limit'
++	| 'embedded-wmf'
++	| 'emf-plus'
++	| 'comment-subtype'
++	| 'eof'
++	| 'missing-eof'
++	| 'trailing-data';
++export interface VisioEmfAdmissionDiagnostic {
++	readonly kind: Exclude<VisioEmfAdmissionStatus, 'admitted'>;
++	readonly code: VisioEmfDiagnosticCode;
++	readonly offset: number;
++	readonly recordType: number | null;
++	readonly message: string;
++	readonly limit?: number;
++}
++export interface VisioEmfAdmissionMetrics {
++	records: number;
++	objectsCreated: number;
++	peakLiveObjects: number;
++	/** Conservative point-equivalent units, including fixed primitive expansion allowances. */
++	points: number;
++	regionRects: number;
++	clipOperations: number;
++	peakClipDepth: number;
++	peakStateDepth: number;
++	paletteEntries: number;
++	commentBytes: number;
++	/** Bounded abstract work ledger; not an estimate or guarantee of JS/native heap bytes. */
++	allocationUnits: number;
++	maxMappedCoordinate: number;
++}
++export interface VisioEmfAdmissionHeader {
++	readonly bounds: readonly [number, number, number, number];
++	/** EMF header bounds are inclusive-inclusive. */
++	readonly pixelWidth: number;
++	readonly pixelHeight: number;
++	readonly declaredRecords: number;
++	readonly declaredHandles: number;
++}
++interface VisioEmfAdmissionBase {
++	readonly header: VisioEmfAdmissionHeader | null;
++	readonly metrics: Readonly<VisioEmfAdmissionMetrics>;
++	readonly recordTypes: ReadonlyArray<{ readonly type: number; readonly count: number }>;
++	readonly diagnostics: readonly VisioEmfAdmissionDiagnostic[];
++	readonly omittedDiagnostics: number;
++	/** True only when bounded framing reached the EOF; not a full conformance assertion. */
++	readonly scanComplete: boolean;
++}
++/** Inspection is not a reusable authorization token: mutable bytes must be checked again at use. */
++export type VisioEmfAdmissionResult = VisioEmfAdmissionBase &
++	(
++		| { readonly status: 'admitted'; readonly renderingEnabled: false }
++		| {
++				readonly status: 'unsupported' | 'invalid' | 'budget-exceeded';
++				readonly renderingEnabled: false;
++		  }
++	);
+diff --git a/src/visio/emf-admission.test-fixtures.ts b/src/visio/emf-admission.test-fixtures.ts
+new file mode 100644
+index 0000000..bc6c81e
+--- /dev/null
++++ b/src/visio/emf-admission.test-fixtures.ts
+@@ -0,0 +1,75 @@
++// Entirely generated format cases. No corpus or converter source bytes are redistributed.
++export function record(type: number, words: number[] = []): Uint8Array {
++	const b = new Uint8Array(8 + words.length * 4),
++		v = new DataView(b.buffer);
++	v.setUint32(0, type, true);
++	v.setUint32(4, b.length, true);
++	words.forEach((n, i) => v.setUint32(8 + i * 4, n, true));
++	return b;
++}
++export function emf(records: Uint8Array[], headerSize = 108): Uint8Array {
++	const eof = record(14, [0, 16, 20]);
++	const bytes = new Uint8Array(headerSize + records.reduce((n, r) => n + r.length, 0) + eof.length);
++	const v = new DataView(bytes.buffer);
++	for (const [at, n] of [
++		[0, 1],
++		[4, headerSize],
++		[16, 99],
++		[20, 99],
++		[32, 1000],
++		[36, 1000],
++		[40, 0x464d4520],
++		[44, 0x10000],
++		[48, bytes.length],
++		[52, records.length + 2],
++		[56, 32],
++		[72, 1000],
++		[76, 1000],
++		[80, 100],
++		[84, 100],
++	])
++		v.setUint32(at!, n!, true);
++	if (headerSize === 108) {
++		v.setUint32(100, 100000, true);
++		v.setUint32(104, 100000, true);
++	}
++	let offset = headerSize;
++	for (const r of [...records, eof]) {
++		bytes.set(r, offset);
++		offset += r.length;
++	}
++	return bytes;
++}
++export function polygon16(points: [number, number][], type = 86): Uint8Array {
++	const b = record(type, [
++		0,
++		0,
++		99,
++		99,
++		points.length,
++		...points.map(([x, y]) => (x & 65535) | ((y & 65535) << 16)),
++	]);
++	return b;
++}
++export function setWord(bytes: Uint8Array, at: number, word: number): Uint8Array {
++	const result = bytes.slice();
++	new DataView(result.buffer).setUint32(at, word, true);
++	return result;
++}
++export function sourceComment(): Uint8Array {
++	// The ignored payload is deliberately not a decoded WMF stream.
++	return record(70, [44, 0x43494447, 0x80000001, 0x300, 0, 0, 20, 0x2b464d45, 0, 0, 0, 0]);
++}
++export function checksumComment(bytes: Uint8Array, commentOffset = 108): Uint8Array {
++	const result = setWord(bytes, commentOffset + 24, 0),
++		v = new DataView(result.buffer);
++	let sum = 0;
++	for (let i = 0; i < result.length; i += 4) sum = (sum + v.getUint32(i, true)) >>> 0;
++	v.setUint32(commentOffset + 24, -sum >>> 0, true);
++	return result;
++}
++export const triangle: [number, number][] = [
++	[0, 0],
++	[10, 0],
++	[0, 10],
++];
+diff --git a/src/visio/emf-admission.test.ts b/src/visio/emf-admission.test.ts
+new file mode 100644
+index 0000000..7e33de5
+--- /dev/null
++++ b/src/visio/emf-admission.test.ts
+@@ -0,0 +1,198 @@
++import { describe, expect, it } from 'vitest';
++import {
++	inspectVisioEmfAdmission as inspect,
++	VISIO_EMF_ADMISSION_LIMITS,
++} from './emf-admission.js';
++import {
++	checksumComment,
++	emf,
++	polygon16,
++	record,
++	setWord,
++	sourceComment,
++	triangle,
++} from './emf-admission.test-fixtures.js';
++
++const codes = (bytes: Uint8Array) => inspect(bytes).diagnostics.map((d) => d.code);
++const map = [
++	record(17, [8]),
++	record(11, [100, 100]),
++	record(9, [200, 200]),
++	record(10, [-100, -100]),
++];
++
++describe('bounded classic EMF admission, rendering disabled', () => {
++	it.each([88, 100, 108])(
++		'admits the generated fixed %i-byte header and literal rectangle subset',
++		(size) => {
++			const result = inspect(emf([record(43, [0, 0, 90, 90])], size));
++			expect(result).toMatchObject({
++				status: 'admitted',
++				renderingEnabled: false,
++				scanComplete: true,
++				diagnostics: [],
++				header: { pixelWidth: 100, pixelHeight: 100 },
++			});
++		},
++	);
++	it('checks a nonzero-offset view without retaining or changing the source', () => {
++		const source = emf([record(42, [0, 0, 99, 99])]),
++			b = new Uint8Array(source.length + 20).fill(255);
++		b.set(source, 8);
++		const slice = b.subarray(8, 8 + source.length);
++		const result = inspect(slice);
++		expect(result.status).toBe('admitted');
++		expect(slice).toEqual(source);
++		expect(JSON.stringify(result)).not.toContain('buffer');
++	});
++	it('bounds restored mapping but rejects converter-incompatible origin restoration', () => {
++		const result = inspect(
++			emf([
++				...map,
++				record(33),
++				record(10, [-200, -200]),
++				polygon16(triangle),
++				record(34, [-1]),
++				polygon16([
++					[-100, -100],
++					[0, -100],
++					[-100, 0],
++				]),
++			]),
++		);
++		expect(result.status).toBe('unsupported');
++		expect(result.diagnostics.map((d) => d.code)).toContain('mapping-restore-fidelity');
++		expect(result.metrics.maxMappedCoordinate).toBe(105);
++		expect(result.metrics.points).toBe(6);
++		expect(result.metrics.peakStateDepth).toBe(1);
++	});
++	it('validates ARC45 and PIE47 radial points outside their bounding rectangle', () => {
++		const result = inspect(
++			emf([
++				record(45, [0, 0, 100, 100, 200, 50, 50, -100]),
++				record(47, [0, 0, 100, 100, 200, 50, 50, -100]),
++			]),
++		);
++		expect(result.status).toBe('admitted');
++		expect(result.recordTypes.map((r) => r.type)).toContain(47);
++		expect(codes(emf([record(55, [0, 0, 100, 100, 200, 50, 50, -100])]))).toContain(
++			'unsupported-record',
++		);
++	});
++	it('tracks current position for LineTo and restores it with the DC', () => {
++		const result = inspect(
++			emf([
++				...map,
++				record(27, [-100, -100]),
++				record(33),
++				record(27, [0, 0]),
++				record(34, [-1]),
++				record(54, [-90, -90]),
++			]),
++		);
++		expect(result.status).toBe('admitted');
++		expect(result.metrics.points).toBe(2);
++	});
++	it('handles literal pen/brush lifetimes and stock selections', () => {
++		const result = inspect(
++			emf([
++				record(38, [1, 0, 0, 0, 0]),
++				record(39, [2, 0, 0xffffff, 0]),
++				record(37, [1]),
++				record(37, [2]),
++				record(43, [0, 0, 10, 10]),
++				record(37, [0x80000007]),
++				record(37, [0x80000000]),
++				record(40, [1]),
++				record(40, [2]),
++				record(48, [0x8000000f]),
++			]),
++		);
++		expect(result.status).toBe('admitted');
++		expect(result.metrics.objectsCreated).toBe(2);
++	});
++	it('accepts inert text state without permitting text or font records', () => {
++		expect(
++			inspect(
++				emf([
++					record(18, [1]),
++					record(19, [2]),
++					record(20, [13]),
++					record(22, [24]),
++					record(24, [0]),
++					record(25, [0xffffff]),
++				]),
++			).status,
++		).toBe('admitted');
++		for (const type of [76, 82, 84, 96, 98, 114, 115])
++			expect(codes(emf([record(type)]))).toContain('unsupported-record');
++	});
++	it('admits only the exact original-equivalent opaque WMF metadata convention', () => {
++		const b = checksumComment(emf([sourceComment(), record(43, [0, 0, 10, 10])]));
++		expect(inspect(b).status).toBe('admitted');
++		expect(inspect(b).metrics.commentBytes).toBe(44);
++		expect(codes(setWord(b, b.length - 8, 0))).toContain('embedded-wmf');
++		const moved = checksumComment(emf([record(33), sourceComment(), record(34, [-1])]), 116);
++		expect(codes(moved)).toContain('embedded-wmf');
++	});
++	it('rejects every EMF+ comment without descending into the stream', () => {
++		const result = inspect(emf([record(70, [16, 0x2b464d45, 0xffffffff, 0xffffffff, 0xffffffff])]));
++		expect(result.status).toBe('unsupported');
++		expect(result.diagnostics[0]?.code).toBe('emf-plus');
++		expect(result.metrics.records).toBe(3);
++	});
++	it.each([0, 0x43494447, 0x12345678])('rejects unresolved private/public comment %i', (id) => {
++		expect(codes(emf([record(70, [8, id, 0x40000004])]))).toContain('comment-subtype');
++	});
++	it('rejects unresolved palette colors, styled pens, raster operations and MM_TEXT extents', () => {
++		expect(codes(emf([record(38, [1, 6, 3, 0, 0x02938f6c])]))).toEqual(
++			expect.arrayContaining(['pen-style', 'palette-color']),
++		);
++		expect(codes(emf([record(20, [7])]))).toContain('parameter');
++		expect(codes(emf([record(9, [10, 10])]))).toContain('mapping-extents-fidelity');
++	});
++	it('counts clip ancestry and resets it with omitted RGN_COPY', () => {
++		const result = inspect(
++			emf([
++				record(30, [0, 0, 90, 90]),
++				record(33),
++				record(30, [0, 0, 80, 80]),
++				polygon16(triangle),
++				record(34, [-1]),
++				record(75, [0, 5]),
++				polygon16(triangle),
++			]),
++		);
++		expect(result.status).toBe('admitted');
++		expect(result.metrics).toMatchObject({ clipOperations: 3, peakClipDepth: 2 });
++	});
++	it('does not silently skip nonempty or union regions', () => {
++		const r = record(75, [48, 5, 32, 1, 1, 16, 0, 0, 10, 10, 0, 0, 10, 10]);
++		expect(inspect(emf([r])).status).toBe('unsupported');
++		expect(inspect(emf([r])).metrics.regionRects).toBe(1);
++		expect(codes(emf([record(75, [0, 2])]))).toContain('region-data');
++	});
++	it('bounds diagnostic output even for repeated unknown records', () => {
++		const result = inspect(emf(Array.from({ length: 200 }, () => record(500))), {
++			maxDiagnostics: 3,
++		});
++		expect(result.status).toBe('unsupported');
++		expect(result.diagnostics).toHaveLength(3);
++		expect(result.omittedDiagnostics).toBe(197);
++	});
++	it('rechecks mutable inputs and reports no converter authorization', () => {
++		const b = emf([record(43, [0, 0, 10, 10])]);
++		expect(inspect(b).status).toBe('admitted');
++		new DataView(b.buffer).setUint32(108, 76, true);
++		expect(inspect(b).status).toBe('unsupported');
++	});
++	it('makes every exported default a hard ceiling', () => {
++		expect(Object.isFrozen(VISIO_EMF_ADMISSION_LIMITS)).toBe(true);
++		for (const key of Object.keys(
++			VISIO_EMF_ADMISSION_LIMITS,
++		) as (keyof typeof VISIO_EMF_ADMISSION_LIMITS)[]) {
++			for (const value of [0, -1, NaN, Infinity, 0.5, VISIO_EMF_ADMISSION_LIMITS[key] + 1])
++				expect(inspect(emf([]), { [key]: value }).status).toBe('invalid');
++		}
++	});
++});
+diff --git a/src/visio/emf-admission.ts b/src/visio/emf-admission.ts
+new file mode 100644
+index 0000000..25a23fd
+--- /dev/null
++++ b/src/visio/emf-admission.ts
+@@ -0,0 +1,214 @@
++import { emfInputOptions, emfInputView } from './emf-admission-input.js';
++import { EmfAdmissionContext } from './emf-admission-context.js';
++import { inspectEmfComment } from './emf-admission-comment.js';
++import { inspectEmfGeometry } from './emf-admission-geometry.js';
++import {
++	EMF_FIXED_SIZES,
++	inspectEmfObjectRecord,
++	inspectEmfStateRecord,
++} from './emf-admission-records.js';
++import {
++	type VisioEmfAdmissionOptions,
++	type VisioEmfAdmissionResult,
++} from './emf-admission-types.js';
++export * from './emf-admission-types.js';
++
++/** Bounded, DOM-free classic EMF inspection. Never invokes a converter or enables rendering.
++ * Unknown or unresolved semantics reject the entire asset; no partial drawing is returned.
++ * Caller owns package/document-wide limits and must recheck bytes at the conversion boundary.
++ * MS-EMF records: https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/67fd513f-e633-419c-93c2-8368779ac15a
++ */
++export function inspectVisioEmfAdmission(
++	input: Uint8Array,
++	options: VisioEmfAdmissionOptions = {},
++): VisioEmfAdmissionResult {
++	const snapshot = emfInputOptions(options);
++	const view = snapshot === null ? null : emfInputView(input);
++	const c = new EmfAdmissionContext(view ?? new DataView(new ArrayBuffer(0)), snapshot ?? {});
++	if (snapshot === null) {
++		c.emit('invalid', 'limits', 'Options must contain only plain own numeric data properties.');
++		return c.result();
++	}
++	if (c.invalid) return c.result();
++	if (view === null) {
++		c.emit(
++			'invalid',
++			'input',
++			'Expected a Uint8Array backed by an unshared, fixed, attached ArrayBuffer.',
++		);
++		return c.result();
++	}
++	if (
++		!c.bound(
++			view.byteLength,
++			c.limits.maxInputBytes,
++			'allocation-limit',
++			'Encoded input exceeds byte budget.',
++		)
++	)
++		return c.result();
++	if (view.byteLength < 88 || view.byteLength % 4 !== 0) {
++		c.emit('invalid', 'header', 'Input must contain an aligned complete EMF header.');
++		return c.result();
++	}
++	const headerSize = c.u32(4);
++	if (!inspectHeader(c, headerSize)) return c.result();
++	let eof = false;
++	while (c.offset < view.byteLength && !c.budgetExceeded) {
++		if (++c.metrics.records > c.limits.maxRecords) {
++			c.emit(
++				'budget-exceeded',
++				'record-limit',
++				'Aggregate record budget exceeded.',
++				c.limits.maxRecords,
++			);
++			break;
++		}
++		if (view.byteLength - c.offset < 8) {
++			c.emit('invalid', 'record-size', 'Truncated record header.');
++			break;
++		}
++		c.type = c.u32(0);
++		const size = c.u32(4);
++		if (size < 8 || size % 4 || size > view.byteLength - c.offset) {
++			c.emit(
++				'invalid',
++				'record-size',
++				'Record must progress, align, and fit entirely within input.',
++			);
++			break;
++		}
++		if (!c.inventory.has(c.type) && c.inventory.size >= c.limits.maxRecordTypes) {
++			c.emit(
++				'budget-exceeded',
++				'record-limit',
++				'Distinct record type budget exceeded.',
++				c.limits.maxRecordTypes,
++			);
++			break;
++		}
++		c.inventory.set(c.type, (c.inventory.get(c.type) ?? 0) + 1);
++		if (!c.charge(1)) break;
++		const fixedSize = EMF_FIXED_SIZES.get(c.type);
++		if (fixedSize !== undefined && size !== fixedSize) {
++			c.emit('invalid', 'payload-size', 'Fixed record size does not match its defined payload.');
++			c.semanticStateKnown = false;
++		} else if (c.type === 1) {
++			if (c.offset !== 0) c.emit('invalid', 'header', 'EMF header must occur exactly once.');
++		} else if (c.type === 14) {
++			inspectEof(c, size);
++			eof = true;
++			if (c.offset + size !== view.byteLength)
++				c.emit('invalid', 'trailing-data', 'Data follows EOF.');
++			else c.scanComplete = true;
++			break;
++		} else if (c.type === 70) inspectEmfComment(c, size, headerSize);
++		else if (
++			!inspectEmfStateRecord(c) &&
++			!inspectEmfObjectRecord(c) &&
++			!inspectEmfGeometry(c, size)
++		) {
++			c.emit(
++				'unsupported',
++				'unsupported-record',
++				'Record has no admitted semantics; images, fonts, text and nested formats are excluded.',
++			);
++			// Unknown records may alter the object table or DC; do not fabricate downstream corruption.
++			c.semanticStateKnown = false;
++		}
++		c.offset += size;
++	}
++	if (!c.budgetExceeded) {
++		if (!eof) c.emit('invalid', 'missing-eof', 'A terminal EOF record is required.');
++		if (c.metrics.records !== c.header?.declaredRecords)
++			c.emit('invalid', 'record-count', 'Declared and framed record counts differ.');
++		if (c.semanticStateKnown && c.stack.length)
++			c.emit('unsupported', 'unbalanced-state', 'This subset requires a balanced SaveDC stack.');
++	}
++	return c.result();
++}
++
++function inspectHeader(c: EmfAdmissionContext, size: number): boolean {
++	c.type = 1;
++	if (
++		c.u32(0) !== 1 ||
++		c.u32(40) !== 0x464d4520 ||
++		c.u32(44) !== 0x10000 ||
++		size < 88 ||
++		size % 4 ||
++		size > c.view.byteLength ||
++		c.u32(48) !== c.view.byteLength ||
++		c.u32(52) < 2
++	) {
++		c.emit('invalid', 'header', 'Invalid EMF header type, signature, version, size, or counts.');
++		return false;
++	}
++	const handles = c.view.getUint16(56, true);
++	if (handles === 0 || c.view.getUint16(58, true) !== 0)
++		c.emit('invalid', 'header', 'Reserved header fields or handle count are invalid.');
++	c.bound(handles, c.limits.maxHandles, 'object-limit', 'Declared handle table exceeds budget.');
++	c.bound(c.u32(52), c.limits.maxRecords, 'record-limit', 'Declared record count exceeds budget.');
++	const count = c.u32(60),
++		at = c.u32(64);
++	if (count && at && (at < 88 || at % 2 || count * 2 > size - at)) {
++		c.emit('invalid', 'header', 'Description exceeds its header record.');
++		return false;
++	}
++	if (count || at || ![88, 100, 108].includes(size))
++		c.emit('unsupported', 'header', 'Only fixed headers without descriptions are characterized.');
++	if ((size === 100 || size === 108) && (c.u32(88) || c.u32(92) || c.u32(96)))
++		c.emit('unsupported', 'header', 'Pixel format and OpenGL header extensions are excluded.');
++	c.rect(8, false);
++	c.rect(24, false);
++	const bounds = [c.i32(8), c.i32(12), c.i32(16), c.i32(20)] as const;
++	const width = bounds[2] - bounds[0] + 1,
++		height = bounds[3] - bounds[1] + 1;
++	if (width <= 0 || height <= 0)
++		c.emit('invalid', 'header', 'Inclusive header bounds must be nonempty.');
++	for (const offset of [72, 76, 80, 84, ...(size === 108 ? [100, 104] : [])]) {
++		const value = c.i32(offset);
++		if (value <= 0) c.emit('unsupported', 'header', 'Device dimensions must be positive.');
++		c.coordinate(value);
++	}
++	c.headerPaletteEntries = c.u32(68);
++	c.bound(
++		c.headerPaletteEntries,
++		c.limits.maxPaletteEntries,
++		'palette-limit',
++		'Declared palette exceeds budget.',
++	);
++	if (c.headerPaletteEntries)
++		c.emit('unsupported', 'palette', 'Header/EOF palettes are outside this subset.');
++	c.header = {
++		bounds,
++		pixelWidth: width,
++		pixelHeight: height,
++		declaredRecords: c.u32(52),
++		declaredHandles: handles,
++	};
++	return !c.invalid && !c.budgetExceeded;
++}
++
++function inspectEof(c: EmfAdmissionContext, size: number): void {
++	if (size < 20) {
++		c.emit('invalid', 'eof', 'Truncated EOF record.');
++		return;
++	}
++	const count = c.u32(8),
++		offset = c.u32(12);
++	c.metrics.paletteEntries += count;
++	c.bound(
++		c.metrics.paletteEntries,
++		c.limits.maxPaletteEntries,
++		'palette-limit',
++		'Aggregate EOF palette exceeds budget.',
++	);
++	if (
++		size !== 20 + count * 4 ||
++		c.u32(size - 4) !== size ||
++		(count && offset !== 16) ||
++		count !== c.headerPaletteEntries
++	)
++		c.emit('invalid', 'eof', 'EOF size, palette count/offset, or terminal size is inconsistent.');
++	if (count) c.emit('unsupported', 'palette', 'EOF palettes are outside this subset.');
++}
+diff --git a/src/visio/foreign-vector-adversarial.test.ts b/src/visio/foreign-vector-adversarial.test.ts
+new file mode 100644
+index 0000000..0ef99f1
+--- /dev/null
++++ b/src/visio/foreign-vector-adversarial.test.ts
+@@ -0,0 +1,295 @@
++import { describe, expect, it, vi } from 'vitest';
++import {
++	sanitizeVisioForeignVectorTree as sanitize,
++	validateVisioForeignVector as validate,
++	VisioForeignVectorError,
++} from './foreign-vector.js';
++import { root, path, group, clip, defs } from './foreign-vector-test-fixtures.js';
++
++const rejected = (input: unknown, code: 'unsafe-vector' | 'vector-limit' = 'unsafe-vector') => {
++	expect(() => sanitize(input)).toThrowError(
++		expect.objectContaining({ name: 'VisioForeignVectorError', code }),
++	);
++};
++const invalidPaths = [
++	'L0 0',
++	'M',
++	'M0',
++	'M,0 0',
++	'M0 0,',
++	'M0 0,,1 1',
++	'M0 0,L1 1',
++	'M0 0L1',
++	'M0 0L1 1 2',
++	'M0 0Z1 2',
++	'M0 0B1 1',
++	'MNaN 0',
++	'MInfinity 0',
++	'M0x10 0',
++	'M1e999 0',
++	'M1e 0',
++	'M0 0A-1 1 0 0 0 1 1',
++	'M0 0A1 1 0 2 0 1 1',
++	'M0 0A1 1 0 +1 0 1 1',
++	'M0 0A1 1 0 1.0 0 1 1',
++	'M0 0A1 1 0 0 0',
++	'M0 0<script/>',
++	'M0\u00a00',
++];
++
++describe('fail-closed converter tree boundary', () => {
++	it.each([
++		'script',
++		'text',
++		'image',
++		'use',
++		'foreignObject',
++		'a',
++		'style',
++		'filter',
++		'animate',
++		'svg',
++		'rect',
++	])('rejects unsupported %s elements without partial rendering', (tag) =>
++		rejected(root([path(), { tag, attrs: {}, children: [] }])),
++	);
++	it.each([
++		'onclick',
++		'onload',
++		'style',
++		'class',
++		'font-family',
++		'filter',
++		'mask',
++		'href',
++		'xlink:href',
++		'xml:base',
++		'marker-end',
++		'stroke-dasharray',
++		'id',
++		'__proto__',
++		'constructor',
++	])('rejects attribute %s', (key) => rejected(root([path('M0 0', { [key]: 'payload' })])));
++	it.each([
++		'url(#a)',
++		'url(https://example.com/a)',
++		'var(--color)',
++		'currentColor',
++		'red',
++		'#fff',
++		'#00000000',
++		'inherit',
++		'none;stroke:red',
++	])('rejects nonliteral paint %s', (fill) => rejected(root([path('M0 0', { fill })])));
++	it.each(invalidPaths)('rejects malformed path %s', (d) => rejected(root([path(d)])));
++	it.each([null, true, {}, [], '', ' ', '0x10', 'Infinity', 'NaN', '1px', '-1'])(
++		'rejects invalid numeric paint %j',
++		(value) => rejected(root([path('M0 0', { 'stroke-width': value })])),
++	);
++	it.each([null, undefined, NaN, Infinity, '20', 0, -1])('rejects invalid root width %j', (width) =>
++		rejected(root([], { width })),
++	);
++	it('rejects invalid numeric paint ranges', () => {
++		for (const attrs of [
++			{ opacity: -1 },
++			{ opacity: 1.1 },
++			{ 'stroke-miterlimit': 0 },
++			{ 'fill-rule': 'inherit' },
++		])
++			expect(() => sanitize(root([path('M0 0', attrs)]))).toThrow(VisioForeignVectorError);
++	});
++	it('rejects invalid root viewport, namespace, style and unknown root fields', () => {
++		for (const attrs of [
++			{ viewBox: '0 0 21 20' },
++			{ viewBox: '1 0 20 20' },
++			{ viewBox: '0 0 20 20 1' },
++			{ xmlns: 'https://www.w3.org/2000/svg' },
++			{ style: 'isolation:isolate;color:red' },
++			{ preserveAspectRatio: 'none' },
++		])
++			rejected(root([], attrs));
++		rejected({ ...root(), text: 'hidden' });
++		rejected({ ...root(), [Symbol('hidden')]: true });
++		rejected(root([{ ...path(), children: [path()] }]));
++	});
++	it.each([
++		'translate(1 2)',
++		'matrix(1 0 0 1 0)',
++		'matrix(1 0 0 1 0 0 0)',
++		'matrix(1 0 0 1 NaN 0)',
++		'matrix(1 0 0 1 0 0);color:red',
++	])('rejects unsupported transform %s', (transform) =>
++		rejected(root([group([path()], { transform })])),
++	);
++	it('rejects huge and sparse child arrays before visiting or mapping entries', () => {
++		const getter = vi.fn(() => path()),
++			huge = new Array(0xffffffff);
++		Object.defineProperty(huge, '0', { get: getter });
++		for (const input of [
++			root(huge),
++			root([group(huge)]),
++			root([defs(huge)]),
++			root([defs([clip('c', huge)])]),
++		])
++			rejected(input, 'vector-limit');
++		expect(getter).not.toHaveBeenCalled();
++		rejected(root(new Array(5)));
++		rejected(root(Object.assign([path()], { unwanted: true })));
++		const sparse = [path(), , path()];
++		rejected(root(sparse));
++	});
++	it('rejects accessors without invoking them and never string-coerces values', () => {
++		const getter = vi.fn(() => 'M0 0'),
++			coercion = vi.fn(() => '1');
++		const child = path(),
++			input = root([child]);
++		Object.defineProperty(child.attrs, 'd', { enumerable: true, get: getter });
++		rejected(input);
++		rejected(root([path('M0 0', { 'stroke-width': { toString: coercion } })]));
++		expect(getter).not.toHaveBeenCalled();
++		expect(coercion).not.toHaveBeenCalled();
++	});
++	it('rejects exotic prototypes, type mismatches and hidden fields', () => {
++		for (const input of [
++			new Date(),
++			[],
++			Object.create(root()),
++			{ ...root(), attrs: [] },
++			{ ...root(), children: {} },
++		])
++			rejected(input);
++		const customArray = [path()];
++		Object.setPrototypeOf(customArray, {});
++		rejected(root(customArray));
++		const hidden = root();
++		Object.defineProperty(hidden, 'secret', { value: true });
++		rejected(hidden);
++	});
++	it('rejects cycles and repeated node or child-array references', () => {
++		const repeated = path();
++		rejected(root([repeated, repeated]));
++		const cycle = group([]);
++		cycle.children.push(cycle);
++		rejected(root([cycle]));
++		const same: unknown[] = [];
++		rejected(root([group(same), group(same)]));
++	});
++	it('never includes untrusted exception or source content in errors', () => {
++		const input = new Proxy(
++			{},
++			{
++				getPrototypeOf() {
++					throw new Error('secret source');
++				},
++			},
++		);
++		expect(() => sanitize(input)).toThrow('Unable to inspect converter output safely.');
++		expect(() => sanitize(input)).not.toThrow('secret source');
++	});
++	it('bounds aggregate text, path operands, normalized commands, nodes and depth', () => {
++		const cases = [
++			{ maxCharacters: 10 },
++			{ maxPathOperands: 3 },
++			{ maxPathCommands: 1 },
++			{ maxNodes: 1 },
++		];
++		for (const option of cases)
++			expect(() => sanitize(root(), option)).toThrowError(
++				expect.objectContaining({ code: 'vector-limit' }),
++			);
++		expect(() => sanitize(root([path('M0 0H1')]), { maxPathOperands: 3 })).toThrowError(
++			expect.objectContaining({ code: 'vector-limit' }),
++		);
++		expect(() => sanitize(root([group([group([path()])])]), { maxDepth: 2 })).toThrowError(
++			expect.objectContaining({ code: 'vector-limit' }),
++		);
++		for (const bad of [0, -1, 1.5, Infinity, NaN, '1', null])
++			expect(() => sanitize(root(), { maxNodes: bad as number })).toThrow(VisioForeignVectorError);
++		expect(() => sanitize(root(), { unknown: 1 } as object)).toThrow(VisioForeignVectorError);
++	});
++	it('bounds relative accumulation, reflected controls, arc radius correction and composed transforms', () => {
++		for (const d of [
++			'M900000 0l200000 0',
++			'M0 0Q-900000 0 100000 0T0 0',
++			'M0 0A1e-300 100 0 0 0 10 10',
++		])
++			expect(() => sanitize(root([path(d)]))).toThrow(VisioForeignVectorError);
++		const transform = { transform: 'matrix(1000 0 0 1000 0 0)' };
++		rejected(
++			root([group([group([group([path()], transform)], transform)], transform)]),
++			'vector-limit',
++		);
++		rejected(
++			root([group([path('M1000 0L2000 0')], { transform: 'matrix(1000 0 0 1000 0 0)' })]),
++			'vector-limit',
++		);
++	});
++});
++
++describe('closed clip graph validation', () => {
++	it('rejects duplicate, dangling, non-clip and malformed identities', () => {
++		rejected(root([defs([clip('c'), clip('c')])]));
++		for (const ref of [
++			'url(#missing)',
++			'url(https://example.com/#c)',
++			'url(data:image/svg+xml,a)',
++			'url(#c) url(#d)',
++			'#c',
++			'url("#c")',
++			'none',
++		])
++			rejected(root([group([path()], { 'clip-path': ref })]));
++		for (const id of ['x y', '', '#x', 'x'.repeat(129)]) rejected(root([defs([clip(id)])]));
++		rejected(root([defs([path()])]));
++		rejected(root([defs([clip('c', [group([path()])])])]));
++		rejected(root([defs([clip('c', [path()], { clipPathUnits: 'objectBoundingBox' })])]));
++	});
++	it('rejects unused self-cycles, mutual cycles and child-reference cycles', () => {
++		rejected(root([defs([clip('a', [], { 'clip-path': 'url(#a)' })])]));
++		rejected(
++			root([
++				defs([
++					clip('a', [], { 'clip-path': 'url(#b)' }),
++					clip('b', [], { 'clip-path': 'url(#a)' }),
++				]),
++			]),
++		);
++		rejected(root([defs([clip('a', [path('M0 0', { 'clip-path': 'url(#a)' })])])]));
++	});
++	it('bounds clip graph depth and repeated resource expansion', () => {
++		const chain = Array.from({ length: 10 }, (_, i) =>
++			clip(`c${i}`, [path()], i ? { 'clip-path': `url(#c${i - 1})` } : {}),
++		);
++		expect(() => sanitize(root([defs(chain)]), { maxDepth: 5 })).toThrowError(
++			expect.objectContaining({ code: 'vector-limit' }),
++		);
++		const branch = Array.from({ length: 8 }, (_, i) =>
++			clip(
++				`c${i}`,
++				i
++					? [
++							path('M0 0', { 'clip-path': `url(#c${i - 1})` }),
++							path('M0 0', { 'clip-path': `url(#c${i - 1})` }),
++						]
++					: [path()],
++			),
++		);
++		expect(() => sanitize(root([defs(branch)]), { maxExpandedNodes: 100 })).toThrowError(
++			expect.objectContaining({ code: 'vector-limit' }),
++		);
++		expect(() =>
++			sanitize(root([defs([clip('c')]), group([path()], { 'clip-path': 'url(#c)' })]), {
++				maxExpandedOperands: 10,
++			}),
++		).toThrowError(expect.objectContaining({ code: 'vector-limit' }));
++	});
++	it('checks clip transforms and geometry at every use site', () => {
++		rejected(
++			root([
++				defs([clip('c', [path('M1000 0L2000 0')])]),
++				group([path('M0 0')], { transform: 'matrix(1000 0 0 1000 0 0)', 'clip-path': 'url(#c)' }),
++			]),
++			'vector-limit',
++		);
++	});
++});
+diff --git a/src/visio/foreign-vector-graph.ts b/src/visio/foreign-vector-graph.ts
+new file mode 100644
+index 0000000..1d4b76b
+--- /dev/null
++++ b/src/visio/foreign-vector-graph.ts
+@@ -0,0 +1,96 @@
++import {
++	limit,
++	unsafe,
++	type VisioForeignVector,
++	type VisioForeignVectorClip,
++	type VisioForeignVectorClipPath,
++	type VisioForeignVectorLimits,
++	type VisioForeignVectorMatrix,
++	type VisioForeignVectorNode,
++} from './foreign-vector-types.js';
++import { compose, finite, IDENTITY } from './foreign-vector-values.js';
++import { checkPathBounds } from './foreign-vector-path.js';
++
++/** Validate ALL definitions, including unused clips, before charging their use-site expansions. */
++export function checkVectorGraph(
++	scene: VisioForeignVector,
++	limits: VisioForeignVectorLimits,
++): void {
++	// Count retained string values once, independently of source SVG spelling and clip reuse.
++	let characters = scene.kind.length;
++	function strings(
++		target: VisioForeignVectorNode | VisioForeignVectorClip | VisioForeignVectorClipPath,
++	): void {
++		if ('kind' in target) characters += target.kind.length;
++		if ('commands' in target) {
++			characters += target.commands.length;
++			if ('clipRule' in target) characters += target.clipRule.length;
++			if ('paint' in target) {
++				const p = target.paint;
++				characters +=
++					p.fill.length +
++					p.stroke.length +
++					p.fillRule.length +
++					p.strokeLinecap.length +
++					p.strokeLinejoin.length;
++			}
++		} else for (const child of target.items) strings(child);
++		if (characters > limits.maxCharacters) limit('Retained vector character limit exceeded.');
++	}
++	for (const clip of scene.clips) strings(clip);
++	for (const item of scene.items) strings(item);
++	const active = new Set<number>(),
++		done = new Set<number>();
++	const depths = new Map<number, number>();
++	function checkClip(index: number, depth: number): number {
++		if (depth > limits.maxDepth) limit('Clip graph depth limit exceeded.');
++		if (active.has(index)) unsafe('Cyclic clip reference.');
++		if (done.has(index)) return depths.get(index)!;
++		active.add(index);
++		const clip = scene.clips[index]!;
++		let height = 1;
++		for (const target of [clip, ...clip.items]) {
++			if (target.clipIndex !== undefined)
++				height = Math.max(height, 1 + checkClip(target.clipIndex, depth + 1));
++		}
++		if (height > limits.maxDepth) limit('Clip graph depth limit exceeded.');
++		active.delete(index);
++		done.add(index);
++		depths.set(index, height);
++		return height;
++	}
++	for (let i = 0; i < scene.clips.length; i++) checkClip(i, 1);
++	let expandedNodes = 0,
++		expandedOperands = 0,
++		expandedCommands = 0;
++	function charge(depth: number): void {
++		if (depth > limits.maxDepth) limit('Expanded vector depth limit exceeded.');
++		if (++expandedNodes > limits.maxExpandedNodes) limit('Expanded vector node limit exceeded.');
++	}
++	function content(
++		target: VisioForeignVectorNode | VisioForeignVectorClip | VisioForeignVectorClipPath,
++		parent: VisioForeignVectorMatrix,
++		depth: number,
++	): void {
++		charge(depth);
++		const matrix = compose(parent, target.matrix, limits.maxCoordinate);
++		if ('commands' in target) {
++			expandedCommands += target.commands.length;
++			if (expandedCommands > limits.maxExpandedCommands)
++				limit('Expanded path command limit exceeded.');
++			for (const command of target.commands) expandedOperands += command.values.length;
++			if (expandedOperands > limits.maxExpandedOperands)
++				limit('Expanded path operand limit exceeded.');
++			checkPathBounds(target.commands, matrix, limits.maxCoordinate);
++			if ('paint' in target && target.paint.stroke !== 'none') {
++				const extent = target.paint.strokeWidth * target.paint.strokeMiterlimit;
++				finite(extent * (Math.abs(matrix[0]) + Math.abs(matrix[2])), limits.maxCoordinate);
++				finite(extent * (Math.abs(matrix[1]) + Math.abs(matrix[3])), limits.maxCoordinate);
++			}
++		} else for (const child of target.items) content(child, matrix, depth + 1);
++		if (target.clipIndex !== undefined) content(scene.clips[target.clipIndex]!, matrix, depth + 1);
++	}
++	// Even unused definitions are fully checked; otherwise unsafe numeric content could hide there.
++	for (const clip of scene.clips) content(clip, IDENTITY, 1);
++	for (const item of scene.items) content(item, IDENTITY, 1);
++}
+diff --git a/src/visio/foreign-vector-path.ts b/src/visio/foreign-vector-path.ts
+new file mode 100644
+index 0000000..5b0695f
+--- /dev/null
++++ b/src/visio/foreign-vector-path.ts
+@@ -0,0 +1,221 @@
++import {
++	limit,
++	unsafe,
++	type VisioForeignVectorCommand,
++	type VisioForeignVectorLimits,
++	type VisioForeignVectorMatrix,
++} from './foreign-vector-types.js';
++import { finite } from './foreign-vector-values.js';
++
++const ARITY: Readonly<Record<string, number>> = {
++	M: 2,
++	L: 2,
++	H: 1,
++	V: 1,
++	C: 6,
++	S: 4,
++	Q: 4,
++	T: 2,
++	A: 7,
++	Z: 0,
++};
++const NUMBER = /[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?/y;
++const WSP = /[\x20\t\r\n]/;
++export interface PathBudget {
++	operands: number;
++	commands: number;
++}
++/** Deliberately strict SVG grammar: malformed paths reject the whole drawing, never partial playback.
++ * https://www.w3.org/TR/SVG11/paths.html#PathDataBNF
++ */
++export function pathCommands(
++	value: unknown,
++	limits: VisioForeignVectorLimits,
++	budget: PathBudget,
++): readonly VisioForeignVectorCommand[] {
++	if (typeof value !== 'string') unsafe('Missing path data.');
++	const data = value;
++	let position = 0,
++		current = '',
++		x = 0,
++		y = 0,
++		startX = 0,
++		startY = 0;
++	let controlX = 0,
++		controlY = 0,
++		previous = '';
++	const result: VisioForeignVectorCommand[] = [];
++	const whitespace = () => {
++		while (position < data.length && WSP.test(data[position]!)) position++;
++	};
++	function operand(separator: boolean, flag: boolean): number {
++		whitespace();
++		if (separator && data[position] === ',') {
++			position++;
++			whitespace();
++		}
++		if (flag) {
++			const char = data[position++];
++			if (char !== '0' && char !== '1') unsafe('Invalid arc flag.');
++			return Number(char);
++		}
++		NUMBER.lastIndex = position;
++		const match = NUMBER.exec(data);
++		if (!match) unsafe('Invalid path operand.');
++		position = NUMBER.lastIndex;
++		return finite(Number(match[0]), limits.maxCoordinate);
++	}
++	while (true) {
++		whitespace();
++		if (position === data.length) break;
++		const explicit = /^[a-zA-Z]$/.test(data[position]!);
++		if (explicit) current = data[position++]!;
++		if (!current || !Object.hasOwn(ARITY, current.toUpperCase())) unsafe('Unknown path command.');
++		const command = current.toUpperCase(),
++			relative = current !== command;
++		if (!result.length && command !== 'M') unsafe('Path must begin with moveto.');
++		const arity = ARITY[command]!;
++		if (budget.operands + arity > limits.maxPathOperands) limit('Path operand limit exceeded.');
++		if (budget.commands >= limits.maxPathCommands) limit('Path command limit exceeded.');
++		const values: number[] = [];
++		for (let i = 0; i < arity; i++)
++			values.push(operand(i > 0 || !explicit, command === 'A' && (i === 3 || i === 4)));
++		const px = (i: number) => values[i]! + (relative ? x : 0);
++		const py = (i: number) => values[i]! + (relative ? y : 0);
++		let output: VisioForeignVectorCommand;
++		switch (command) {
++			case 'M':
++			case 'L':
++				output = { command, values: [px(0), py(1)] };
++				break;
++			case 'H':
++				output = { command: 'L', values: [px(0), y] };
++				break;
++			case 'V':
++				output = { command: 'L', values: [x, py(0)] };
++				break;
++			case 'C':
++				output = { command: 'C', values: [px(0), py(1), px(2), py(3), px(4), py(5)] };
++				break;
++			case 'S':
++				output = {
++					command: 'C',
++					values: [
++						previous === 'C' || previous === 'S' ? 2 * x - controlX : x,
++						previous === 'C' || previous === 'S' ? 2 * y - controlY : y,
++						px(0),
++						py(1),
++						px(2),
++						py(3),
++					],
++				};
++				break;
++			case 'Q':
++				output = { command: 'Q', values: [px(0), py(1), px(2), py(3)] };
++				break;
++			case 'T':
++				output = {
++					command: 'Q',
++					values: [
++						previous === 'Q' || previous === 'T' ? 2 * x - controlX : x,
++						previous === 'Q' || previous === 'T' ? 2 * y - controlY : y,
++						px(0),
++						py(1),
++					],
++				};
++				break;
++			case 'A':
++				if (values[0]! < 0 || values[1]! < 0) unsafe('Negative arc radius.');
++				output = { command: 'A', values: [...values.slice(0, 5), px(5), py(6)] };
++				break;
++			case 'Z':
++				output = { command: 'Z', values: [] };
++				break;
++			default:
++				unsafe('Unknown path command.');
++		}
++		budget.operands += Math.max(arity, output.values.length);
++		budget.commands++;
++		if (budget.operands > limits.maxPathOperands) limit('Normalized path operand limit exceeded.');
++		for (const item of output.values) finite(item, limits.maxCoordinate);
++		if (output.command === 'Z') {
++			x = startX;
++			y = startY;
++			current = '';
++		} else {
++			x = output.values[output.values.length - 2]!;
++			y = output.values[output.values.length - 1]!;
++			if (command === 'M') {
++				startX = x;
++				startY = y;
++				current = relative ? 'l' : 'L';
++			}
++			if (output.command === 'C' || output.command === 'Q') {
++				controlX = output.values[output.values.length - 4]!;
++				controlY = output.values[output.values.length - 3]!;
++			}
++		}
++		previous = command;
++		Object.freeze(output.values);
++		result.push(Object.freeze(output));
++	}
++	return Object.freeze(result);
++}
++
++/** Conservative transformed bounds, including accumulated relative coordinates and corrected arc radii. */
++export function checkPathBounds(
++	commands: readonly VisioForeignVectorCommand[],
++	matrix: VisioForeignVectorMatrix,
++	max: number,
++): void {
++	const point = (x: number, y: number) => {
++		finite(x, max);
++		finite(y, max);
++		finite(matrix[0] * x + matrix[2] * y + matrix[4], max);
++		finite(matrix[1] * x + matrix[3] * y + matrix[5], max);
++	};
++	let x = 0,
++		y = 0,
++		startX = 0,
++		startY = 0;
++	for (const { command, values: v } of commands) {
++		if (command === 'Z') {
++			x = startX;
++			y = startY;
++			continue;
++		}
++		if (command === 'A') {
++			const endX = v[5]!,
++				endY = v[6]!;
++			point(endX, endY);
++			if (v[0] !== 0 && v[1] !== 0 && (x !== endX || y !== endY)) {
++				// SVG endpoint-to-center conversion corrects radii that are too small for the endpoints.
++				const angle = ((v[2]! % 360) * Math.PI) / 180,
++					c = Math.cos(angle),
++					s = Math.sin(angle);
++				const dx = (x - endX) / 2,
++					dy = (y - endY) / 2;
++				const scale = Math.max(
++					1,
++					Math.hypot((c * dx + s * dy) / v[0]!, (-s * dx + c * dy) / v[1]!),
++				);
++				const rx = finite(v[0]! * scale, max),
++					ry = finite(v[1]! * scale, max);
++				const bx = 2 * (Math.abs(c) * rx + Math.abs(s) * ry);
++				const by = 2 * (Math.abs(s) * rx + Math.abs(c) * ry);
++				for (const signX of [-1, 1])
++					for (const signY of [-1, 1]) point(x + signX * bx, y + signY * by);
++			}
++			x = endX;
++			y = endY;
++		} else {
++			for (let i = 0; i < v.length; i += 2) point(v[i]!, v[i + 1]!);
++			x = v[v.length - 2]!;
++			y = v[v.length - 1]!;
++			if (command === 'M') {
++				startX = x;
++				startY = y;
++			}
++		}
++	}
++}
+diff --git a/src/visio/foreign-vector-test-fixtures.ts b/src/visio/foreign-vector-test-fixtures.ts
+new file mode 100644
+index 0000000..9cd4f18
+--- /dev/null
++++ b/src/visio/foreign-vector-test-fixtures.ts
+@@ -0,0 +1,23 @@
++export const path = (d = 'M0 0L10 0L10 10Z', attrs = {}) => ({
++	tag: 'path',
++	attrs: { d, ...attrs },
++});
++export const group = (children: unknown[], attrs = {}) => ({ tag: 'g', attrs, children });
++export const clip = (id: string, children: unknown[] = [path()], attrs = {}) => ({
++	tag: 'clipPath',
++	attrs: { id, ...attrs },
++	children,
++});
++export const defs = (children: unknown[]) => ({ tag: 'defs', attrs: {}, children });
++export const root = (children: unknown[] = [path()], attrs = {}) => ({
++	tag: 'svg',
++	attrs: {
++		xmlns: 'http://www.w3.org/2000/svg',
++		width: 20,
++		height: 20,
++		viewBox: '0 0 20 20',
++		style: 'isolation:isolate',
++		...attrs,
++	},
++	children,
++});
+diff --git a/src/visio/foreign-vector-types.ts b/src/visio/foreign-vector-types.ts
+new file mode 100644
+index 0000000..286542e
+--- /dev/null
++++ b/src/visio/foreign-vector-types.ts
+@@ -0,0 +1,99 @@
++/** Inert converter-output scene. Never contains markup, document IDs, URLs, fonts or images. */
++export type VisioForeignVectorMatrix = readonly [number, number, number, number, number, number];
++export type VisioForeignVectorRule = 'nonzero' | 'evenodd';
++/** Commands are normalized to absolute coordinates; each values array has the command's SVG arity. */
++export interface VisioForeignVectorCommand {
++	readonly command: 'M' | 'L' | 'C' | 'Q' | 'A' | 'Z';
++	readonly values: readonly number[];
++}
++export interface VisioForeignVectorPaint {
++	readonly fill: string;
++	readonly stroke: string;
++	readonly fillRule: VisioForeignVectorRule;
++	readonly strokeWidth: number;
++	readonly strokeMiterlimit: number;
++	readonly strokeLinecap: 'butt' | 'round' | 'square';
++	readonly strokeLinejoin: 'miter' | 'round' | 'bevel';
++	readonly opacity: number;
++	readonly fillOpacity: number;
++	readonly strokeOpacity: number;
++}
++export interface VisioForeignVectorPath {
++	readonly kind: 'path';
++	readonly matrix: VisioForeignVectorMatrix;
++	readonly commands: readonly VisioForeignVectorCommand[];
++	readonly paint: VisioForeignVectorPaint;
++	/** Exact index into this scene's clips. No cross-scene or DOM identity. */
++	readonly clipIndex?: number;
++}
++export interface VisioForeignVectorGroup {
++	readonly kind: 'group';
++	readonly matrix: VisioForeignVectorMatrix;
++	readonly items: readonly VisioForeignVectorNode[];
++	readonly clipIndex?: number;
++}
++export type VisioForeignVectorNode = VisioForeignVectorPath | VisioForeignVectorGroup;
++export interface VisioForeignVectorClipPath {
++	readonly matrix: VisioForeignVectorMatrix;
++	readonly commands: readonly VisioForeignVectorCommand[];
++	/** SVG clip-rule, independently defaulted to nonzero, never inferred from fill-rule. */
++	readonly clipRule: VisioForeignVectorRule;
++	readonly clipIndex?: number;
++}
++export interface VisioForeignVectorClip {
++	readonly matrix: VisioForeignVectorMatrix;
++	/** Union of path silhouettes. An empty array clips away everything.
++	 * https://www.w3.org/TR/SVG11/masking.html#EstablishingANewClippingPath
++	 */
++	readonly items: readonly VisioForeignVectorClipPath[];
++	/** Intersection with another validated clip, in userSpaceOnUse coordinates. */
++	readonly clipIndex?: number;
++}
++export interface VisioForeignVector {
++	readonly kind: 'vector';
++	readonly width: number;
++	readonly height: number;
++	readonly items: readonly VisioForeignVectorNode[];
++	readonly clips: readonly VisioForeignVectorClip[];
++}
++export interface VisioForeignVectorLimits {
++	maxNodes: number;
++	/** Aggregate UTF-16 code units of source SVG strings and, separately, retained scene values. */
++	maxCharacters: number;
++	maxPathOperands: number;
++	maxPathCommands: number;
++	maxDepth: number;
++	maxDimension: number;
++	maxCoordinate: number;
++	/** Includes every clip reference expansion, even repeated uses. */
++	maxExpandedNodes: number;
++	maxExpandedOperands: number;
++	maxExpandedCommands: number;
++}
++export const VISIO_FOREIGN_VECTOR_LIMITS: Readonly<VisioForeignVectorLimits> = Object.freeze({
++	maxNodes: 25_000,
++	maxCharacters: 2 * 1024 * 1024,
++	maxPathOperands: 100_000,
++	maxPathCommands: 50_000,
++	maxDepth: 64,
++	maxDimension: 2048,
++	maxCoordinate: 1_000_000,
++	maxExpandedNodes: 25_000,
++	maxExpandedOperands: 100_000,
++	maxExpandedCommands: 50_000,
++});
++export class VisioForeignVectorError extends Error {
++	override readonly name = 'VisioForeignVectorError';
++	constructor(
++		readonly code: 'unsafe-vector' | 'vector-limit',
++		message: string,
++	) {
++		super(message);
++	}
++}
++export function unsafe(message: string): never {
++	throw new VisioForeignVectorError('unsafe-vector', message);
++}
++export function limit(message: string): never {
++	throw new VisioForeignVectorError('vector-limit', message);
++}
+diff --git a/src/visio/foreign-vector-validation.test.ts b/src/visio/foreign-vector-validation.test.ts
+new file mode 100644
+index 0000000..cc9d982
+--- /dev/null
++++ b/src/visio/foreign-vector-validation.test.ts
+@@ -0,0 +1,224 @@
++import { describe, expect, it, vi } from 'vitest';
++import {
++	sanitizeVisioForeignVectorTree as sanitize,
++	validateVisioForeignVector as validate,
++	VisioForeignVectorError,
++} from './foreign-vector.js';
++import { root, path, group, clip, defs } from './foreign-vector-test-fixtures.js';
++
++function canonical(): Record<string, any> {
++	return structuredClone(
++		sanitize(root([defs([clip('c')]), group([path()], { 'clip-path': 'url(#c)' })])),
++	);
++}
++function rejectMutation(mutate: (scene: Record<string, any>) => void): void {
++	const scene = canonical();
++	mutate(scene);
++	expect(() => validate(scene)).toThrow(VisioForeignVectorError);
++}
++
++describe('untrusted canonical foreign-vector boundary', () => {
++	it.each(['script', 'attrs', 'xmlns', 'href', 'style', 'rawMarkup', 'image', 'text'])(
++		'rejects unexpected %s fields at every structural level',
++		(key) => {
++			for (const locate of [
++				(s: any) => s,
++				(s: any) => s.items[0],
++				(s: any) => s.items[0].items[0],
++				(s: any) => s.clips[0],
++				(s: any) => s.clips[0].items[0],
++			])
++				rejectMutation((s) => {
++					locate(s)[key] = 'payload';
++				});
++		},
++	);
++	it.each([-1, 1, 1.5, '0', NaN, Infinity, null])(
++		'rejects out-of-range or wrongly typed clip index %j',
++		(index) =>
++			rejectMutation((s) => {
++				s.items[0].clipIndex = index;
++			}),
++	);
++	it('rejects clip graph cycles and indexes on clip children', () => {
++		rejectMutation((s) => {
++			s.clips[0].clipIndex = 0;
++		});
++		rejectMutation((s) => {
++			s.clips[0].items[0].clipIndex = 0;
++		});
++		rejectMutation((s) => {
++			s.clips[0].items[0].clipIndex = 20;
++		});
++	});
++	it.each(['M', 'L', 'C', 'Q', 'A', 'Z'])('rejects wrong arity for %s', (command) =>
++		rejectMutation((s) => {
++			s.items[0].items[0].commands[0] = { command, values: [1, 2, 3] };
++		}),
++	);
++	it('rejects unnormalized commands, invalid flags, nonfinite values and non-moveto start', () => {
++		for (const command of [
++			{ command: 'm', values: [0, 0] },
++			{ command: 'L', values: [0, 0] },
++			{ command: '<script>', values: [] },
++			{ command: 'M', values: [Infinity, 0] },
++			{ command: 'M', values: ['1', 0] },
++		])
++			rejectMutation((s) => {
++				s.items[0].items[0].commands = [command];
++			});
++		for (const values of [
++			[1, 1, 0, 2, 0, 1, 1],
++			[-1, 1, 0, 0, 0, 1, 1],
++		])
++			rejectMutation((s) => {
++				s.items[0].items[0].commands.push({ command: 'A', values });
++			});
++	});
++	it('rejects paint injections, missing values, stringified numbers and invalid clip rules', () => {
++		for (const [key, value] of [
++			['fill', 'url(#x)'],
++			['stroke', 'currentColor'],
++			['fillRule', 'inherit'],
++			['strokeWidth', '1'],
++			['strokeMiterlimit', null],
++			['opacity', Infinity],
++		])
++			rejectMutation((s) => {
++				s.items[0].items[0].paint[key as string] = value;
++			});
++		rejectMutation((s) => {
++			delete s.items[0].items[0].paint.stroke;
++		});
++		rejectMutation((s) => {
++			s.clips[0].items[0].clipRule = 'inherit';
++		});
++		rejectMutation((s) => {
++			s.clips[0].items[0].paint = {};
++		});
++	});
++	it('rejects mismatched node variants', () => {
++		rejectMutation((s) => {
++			s.items[0].commands = [];
++		});
++		rejectMutation((s) => {
++			s.items[0].items[0].items = [];
++		});
++		rejectMutation((s) => {
++			s.items[0].kind = 'image';
++		});
++		rejectMutation((s) => {
++			s.kind = 'svg';
++		});
++	});
++	it('bounds sparse arrays before accessing values at all array-bearing fields', () => {
++		const huge = new Array(0xffffffff),
++			getter = vi.fn();
++		Object.defineProperty(huge, 0, { get: getter });
++		for (const mutate of [
++			(s: any) => {
++				s.items = huge;
++			},
++			(s: any) => {
++				s.clips = huge;
++			},
++			(s: any) => {
++				s.items[0].matrix = huge;
++			},
++			(s: any) => {
++				s.clips[0].items = huge;
++			},
++			(s: any) => {
++				s.items[0].items[0].commands = huge;
++			},
++			(s: any) => {
++				s.items[0].items[0].commands[0].values = huge;
++			},
++		])
++			rejectMutation(mutate);
++		expect(getter).not.toHaveBeenCalled();
++		rejectMutation((s) => {
++			s.items = new Array(2);
++		});
++		rejectMutation((s) => {
++			s.items[0].matrix = [1, 0, 0, 1, 0];
++		});
++	});
++	it('rejects repeated/cyclic structural objects and accessors without running getters', () => {
++		rejectMutation((s) => {
++			s.items.push(s.items[0]);
++		});
++		rejectMutation((s) => {
++			s.items[0].items.push(s.items[0]);
++		});
++		const getter = vi.fn();
++		rejectMutation((s) => {
++			Object.defineProperty(s.items[0], 'matrix', { enumerable: true, get: getter });
++		});
++		expect(getter).not.toHaveBeenCalled();
++	});
++	it('rejects transform and use-site amplification after transport', () => {
++		rejectMutation((s) => {
++			s.items[0].matrix = [1_000_000, 0, 0, 1_000_000, 0, 0];
++		});
++		rejectMutation((s) => {
++			s.clips[0].items[0].matrix = [1_000_000, 0, 0, 1_000_000, 0, 0];
++		});
++	});
++	it('enforces aggregate canonical node, text, operand, command and expanded-work limits', () => {
++		for (const options of [
++			{ maxNodes: 1 },
++			{ maxCharacters: 1 },
++			{ maxPathOperands: 1 },
++			{ maxPathCommands: 1 },
++			{ maxDepth: 1 },
++			{ maxExpandedNodes: 1 },
++			{ maxExpandedOperands: 1 },
++			{ maxExpandedCommands: 1 },
++		])
++			expect(() => validate(canonical(), options)).toThrowError(
++				expect.objectContaining({ code: 'vector-limit' }),
++			);
++	});
++	it('rejects generated command mutations deterministically and preserves input after failure', () => {
++		for (let seed = 0; seed < 100; seed++) {
++			const scene = canonical(),
++				before = structuredClone(scene);
++			const shape = scene.items[0].items[0];
++			shape.commands[0].values[seed % 2] =
++				seed % 3 === 0 ? Infinity : seed % 3 === 1 ? 1_000_001 + seed : `url(#${seed})`;
++			const mutated = structuredClone(scene);
++			expect(() => validate(scene)).toThrow(VisioForeignVectorError);
++			expect(scene).toEqual(mutated);
++			expect(before.items).not.toEqual(scene.items);
++		}
++	});
++	it('charges zero-operand close commands on every resource use', () => {
++		const input = root([
++			defs([clip('c', [path('M0 0' + 'Z'.repeat(100))])]),
++			group([path('M0 0')], { 'clip-path': 'url(#c)' }),
++		]);
++		expect(() => sanitize(input, { maxExpandedCommands: 150 })).toThrowError(
++			expect.objectContaining({ code: 'vector-limit' }),
++		);
++		const scene = sanitize(input);
++		expect(() => validate(scene, { maxExpandedCommands: 150 })).toThrowError(
++			expect.objectContaining({ code: 'vector-limit' }),
++		);
++	});
++	it('counts retained string values consistently without charging generated object keys', () => {
++		const many = root(Array.from({ length: 10_000 }, () => path('')));
++		const scene = sanitize(many);
++		expect(validate(scene)).toEqual(scene);
++		expect(() =>
++			sanitize(root(Array.from({ length: 100 }, () => path(''))), { maxCharacters: 1000 }),
++		).toThrowError(expect.objectContaining({ code: 'vector-limit' }));
++	});
++	it('rejects long malformed numeric tokens with bounded linear token scans', () => {
++		const malformed = '9'.repeat(100_000) + 'x';
++		expect(() => sanitize(root([path('M0 0', { 'stroke-width': malformed })]))).toThrow(
++			VisioForeignVectorError,
++		);
++		expect(() => sanitize(root([], { viewBox: malformed }))).toThrow(VisioForeignVectorError);
++	});
++});
+diff --git a/src/visio/foreign-vector-validation.ts b/src/visio/foreign-vector-validation.ts
+new file mode 100644
+index 0000000..c163e28
+--- /dev/null
++++ b/src/visio/foreign-vector-validation.ts
+@@ -0,0 +1,196 @@
++import {
++	VisioForeignVectorError,
++	limit,
++	unsafe,
++	type VisioForeignVector,
++	type VisioForeignVectorClip,
++	type VisioForeignVectorClipPath,
++	type VisioForeignVectorCommand,
++	type VisioForeignVectorLimits,
++	type VisioForeignVectorMatrix,
++	type VisioForeignVectorNode,
++	type VisioForeignVectorPaint,
++} from './foreign-vector-types.js';
++import { checkVectorGraph } from './foreign-vector-graph.js';
++import { finite, limitsFor, paint, record } from './foreign-vector-values.js';
++
++const ARITY: Readonly<Record<string, number>> = { M: 2, L: 2, C: 6, Q: 4, A: 7, Z: 0 };
++const PAINT = {
++	fill: 'fill',
++	stroke: 'stroke',
++	fillRule: 'fill-rule',
++	strokeWidth: 'stroke-width',
++	strokeMiterlimit: 'stroke-miterlimit',
++	strokeLinecap: 'stroke-linecap',
++	strokeLinejoin: 'stroke-linejoin',
++	opacity: 'opacity',
++	fillOpacity: 'fill-opacity',
++	strokeOpacity: 'stroke-opacity',
++};
++/** Validate untrusted worker/host scenes, returning an independent deeply frozen canonical copy. */
++export function validateVisioForeignVector(
++	value: unknown,
++	options: Partial<VisioForeignVectorLimits> = {},
++): VisioForeignVector {
++	try {
++		return validate(value, limitsFor(options));
++	} catch (error) {
++		if (error instanceof VisioForeignVectorError) throw error;
++		unsafe('Unable to inspect vector scene safely.');
++	}
++}
++function validate(value: unknown, limits: VisioForeignVectorLimits): VisioForeignVector {
++	let nodes = 0,
++		operands = 0,
++		commands = 0,
++		characters = 0,
++		clipCount = 0;
++	const seen = new WeakSet<object>();
++	function own(input: unknown, fields: readonly string[], depth: number): Record<string, unknown> {
++		if (depth > limits.maxDepth) limit('Scene depth limit exceeded.');
++		if (++nodes > limits.maxNodes) limit('Scene node limit exceeded.');
++		if (!input || typeof input !== 'object' || seen.has(input))
++			unsafe('Repeated or cyclic scene object.');
++		seen.add(input);
++		return data(input, fields);
++	}
++	function data(input: unknown, fields: readonly string[]): Record<string, unknown> {
++		const output = record(input, fields);
++		for (const value of Object.values(output)) {
++			characters += typeof value === 'string' ? value.length : 0;
++			if (characters > limits.maxCharacters) limit('Scene character limit exceeded.');
++		}
++		return output;
++	}
++	function array(input: unknown, maximum: number): unknown[] {
++		if (!Array.isArray(input) || Object.getPrototypeOf(input) !== Array.prototype)
++			unsafe('Expected plain scene array.');
++		if (input.length > maximum) limit('Scene array limit exceeded.');
++		if (Reflect.ownKeys(input).length !== input.length + 1)
++			unsafe('Sparse or extended scene array.');
++		const output: unknown[] = [];
++		for (let i = 0; i < input.length; i++) {
++			const item = Object.getOwnPropertyDescriptor(input, i);
++			if (!item || !('value' in item) || !item.enumerable)
++				unsafe('Sparse or accessor scene array.');
++			output.push(item.value as unknown);
++		}
++		return output;
++	}
++	function base(input: Record<string, unknown>): {
++		matrix: VisioForeignVectorMatrix;
++		clipIndex?: number;
++	} {
++		const values = array(input.matrix, 6);
++		if (values.length !== 6) unsafe('Invalid matrix arity.');
++		const matrix = Object.freeze(
++			values.map((item) => finite(item, limits.maxCoordinate)),
++		) as unknown as VisioForeignVectorMatrix;
++		if (input.clipIndex === undefined) return { matrix };
++		if (
++			typeof input.clipIndex !== 'number' ||
++			!Number.isSafeInteger(input.clipIndex) ||
++			input.clipIndex < 0 ||
++			input.clipIndex >= clipCount
++		)
++			unsafe('Invalid clip index.');
++		return { matrix, clipIndex: input.clipIndex };
++	}
++	function path(input: unknown): readonly VisioForeignVectorCommand[] {
++		const values = array(input, limits.maxPathCommands - commands);
++		const result: VisioForeignVectorCommand[] = [];
++		for (const value of values) {
++			const command = data(value, ['command', 'values']);
++			if (typeof command.command !== 'string' || !Object.hasOwn(ARITY, command.command))
++				unsafe('Invalid normalized command.');
++			if (!result.length && command.command !== 'M') unsafe('Path must begin with moveto.');
++			const count = ARITY[command.command]!;
++			const numbers = array(command.values, count);
++			if (numbers.length !== count) unsafe('Invalid normalized command arity.');
++			if ((operands += count) > limits.maxPathOperands) limit('Scene operand limit exceeded.');
++			commands++;
++			const copied = numbers.map((item) => finite(item, limits.maxCoordinate));
++			if (
++				command.command === 'A' &&
++				(copied[0]! < 0 ||
++					copied[1]! < 0 ||
++					![0, 1].includes(copied[3]!) ||
++					![0, 1].includes(copied[4]!))
++			)
++				unsafe('Invalid normalized arc.');
++			result.push(
++				Object.freeze({
++					command: command.command as VisioForeignVectorCommand['command'],
++					values: Object.freeze(copied),
++				}),
++			);
++		}
++		return Object.freeze(result);
++	}
++	function literalPaint(input: unknown): VisioForeignVectorPaint {
++		const fields = Object.keys(PAINT) as (keyof typeof PAINT)[];
++		const value = data(input, fields);
++		if (Object.keys(value).length !== fields.length) unsafe('Missing normalized paint field.');
++		const attrs: Record<string, unknown> = Object.create(null) as Record<string, unknown>;
++		for (const field of fields) {
++			if (value[field] === undefined) unsafe('Missing normalized paint value.');
++			if (
++				['strokeWidth', 'strokeMiterlimit', 'opacity', 'fillOpacity', 'strokeOpacity'].includes(
++					field,
++				) &&
++				typeof value[field] !== 'number'
++			)
++				unsafe('Normalized paint must be numeric.');
++			attrs[PAINT[field]] = value[field];
++		}
++		return paint(attrs);
++	}
++	function item(input: unknown, depth: number): VisioForeignVectorNode {
++		const node = own(input, ['kind', 'matrix', 'clipIndex', 'items', 'commands', 'paint'], depth);
++		if (node.kind === 'path') {
++			if (Object.hasOwn(node, 'items')) unsafe('Path contains group fields.');
++			return Object.freeze({
++				kind: 'path',
++				...base(node),
++				commands: path(node.commands),
++				paint: literalPaint(node.paint),
++			});
++		}
++		if (node.kind !== 'group' || Object.hasOwn(node, 'commands') || Object.hasOwn(node, 'paint'))
++			unsafe('Invalid normalized group.');
++		return Object.freeze({
++			kind: 'group',
++			...base(node),
++			items: Object.freeze(
++				array(node.items, limits.maxNodes - nodes).map((child) => item(child, depth + 1)),
++			),
++		});
++	}
++	function clip(input: unknown, depth: number): VisioForeignVectorClip {
++		const node = own(input, ['matrix', 'clipIndex', 'items'], depth);
++		const items: VisioForeignVectorClipPath[] = [];
++		for (const value of array(node.items, limits.maxNodes - nodes)) {
++			const child = own(value, ['matrix', 'clipIndex', 'commands', 'clipRule'], depth + 1);
++			if (child.clipRule !== 'nonzero' && child.clipRule !== 'evenodd')
++				unsafe('Invalid normalized clip rule.');
++			items.push(
++				Object.freeze({ ...base(child), commands: path(child.commands), clipRule: child.clipRule }),
++			);
++		}
++		return Object.freeze({ ...base(node), items: Object.freeze(items) });
++	}
++	const root = own(value, ['kind', 'width', 'height', 'items', 'clips'], 0);
++	if (root.kind !== 'vector') unsafe('Invalid normalized vector.');
++	const width = finite(root.width, limits.maxDimension),
++		height = finite(root.height, limits.maxDimension);
++	if (width < 1 || height < 1) unsafe('Empty normalized dimensions.');
++	const definitions = array(root.clips, limits.maxNodes - nodes);
++	clipCount = definitions.length;
++	const clips = Object.freeze(definitions.map((value) => clip(value, 1)));
++	const items = Object.freeze(
++		array(root.items, limits.maxNodes - nodes).map((value) => item(value, 1)),
++	);
++	const scene: VisioForeignVector = { kind: 'vector', width, height, clips, items };
++	checkVectorGraph(scene, limits);
++	return Object.freeze(scene);
++}
+diff --git a/src/visio/foreign-vector-values.ts b/src/visio/foreign-vector-values.ts
+new file mode 100644
+index 0000000..9e15d16
+--- /dev/null
++++ b/src/visio/foreign-vector-values.ts
+@@ -0,0 +1,137 @@
++import {
++	VISIO_FOREIGN_VECTOR_LIMITS,
++	limit,
++	unsafe,
++	type VisioForeignVectorLimits,
++	type VisioForeignVectorMatrix,
++	type VisioForeignVectorPaint,
++	type VisioForeignVectorRule,
++} from './foreign-vector-types.js';
++
++export const IDENTITY: VisioForeignVectorMatrix = Object.freeze([1, 0, 0, 1, 0, 0]);
++const NUMBER = /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/;
++const LIST =
++	/^[\x20\t\r\n]*[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?(?:[\x20\t\r\n]*,[\x20\t\r\n]*|[\x20\t\r\n]+)/;
++export type RecordValue = Record<string, unknown>;
++/** Reject accessors/exotic prototypes rather than invoking document-owned getters or coercions. */
++export function record(value: unknown, allowed: readonly string[]): RecordValue {
++	if (!value || typeof value !== 'object' || Array.isArray(value))
++		unsafe('Expected a plain object.');
++	const prototype: unknown = Object.getPrototypeOf(value);
++	if (prototype !== Object.prototype && prototype !== null) unsafe('Unexpected object prototype.');
++	const result: RecordValue = Object.create(null) as RecordValue;
++	const keys = Reflect.ownKeys(value);
++	if (keys.length > allowed.length) unsafe('Unexpected object fields.');
++	for (const key of keys) {
++		if (typeof key !== 'string' || !allowed.includes(key)) unsafe('Unexpected object field.');
++		const descriptor = Object.getOwnPropertyDescriptor(value, key);
++		if (!descriptor || !('value' in descriptor) || !descriptor.enumerable)
++			unsafe('Invalid data property.');
++		result[key] = descriptor.value as unknown;
++	}
++	return result;
++}
++export function limitsFor(options: Partial<VisioForeignVectorLimits>): VisioForeignVectorLimits {
++	const result = { ...VISIO_FOREIGN_VECTOR_LIMITS };
++	const values = record(options, Object.keys(result));
++	for (const key of Object.keys(values) as (keyof VisioForeignVectorLimits)[]) {
++		const value = values[key];
++		if (
++			typeof value !== 'number' ||
++			!Number.isSafeInteger(value) ||
++			value < 1 ||
++			value > result[key]
++		)
++			unsafe('Limits must be positive integers no greater than the defaults.');
++		result[key] = value;
++	}
++	return result;
++}
++export function finite(value: unknown, maximum: number): number {
++	if (typeof value !== 'number' || !Number.isFinite(value)) unsafe('Expected a finite number.');
++	if (Math.abs(value) > maximum) limit('Numeric magnitude limit exceeded.');
++	return value;
++}
++export function scalar(value: unknown, maximum: number, minimum = 0): number {
++	if (typeof value === 'string') {
++		if (!NUMBER.test(value)) unsafe('Invalid numeric attribute.');
++		value = Number(value);
++	}
++	const n = finite(value, maximum);
++	if (n < minimum) unsafe('Numeric attribute below its minimum.');
++	return n;
++}
++export function numberList(value: unknown, length: number, maximum: number): number[] {
++	if (typeof value !== 'string') unsafe('Expected a numeric list.');
++	const result: number[] = [];
++	let rest = value.trim();
++	for (let i = 0; i < length - 1; i++) {
++		const match = LIST.exec(rest);
++		if (!match) unsafe('Invalid numeric list.');
++		const token = match[0].trim().replace(/,$/, '').trim();
++		result.push(finite(Number(token), maximum));
++		rest = rest.slice(match[0].length);
++	}
++	if (!NUMBER.test(rest)) unsafe('Invalid numeric list arity.');
++	result.push(finite(Number(rest), maximum));
++	return result;
++}
++export function matrix(value: unknown, maximum: number): VisioForeignVectorMatrix {
++	if (value === undefined) return IDENTITY;
++	if (typeof value !== 'string' || !/^matrix\([^()]*\)$/.test(value))
++		unsafe('Unsupported affine transform.');
++	return Object.freeze(
++		numberList(value.slice(7, -1), 6, maximum),
++	) as unknown as VisioForeignVectorMatrix;
++}
++export function compose(
++	a: VisioForeignVectorMatrix,
++	b: VisioForeignVectorMatrix,
++	max: number,
++): VisioForeignVectorMatrix {
++	const result: VisioForeignVectorMatrix = [
++		a[0] * b[0] + a[2] * b[1],
++		a[1] * b[0] + a[3] * b[1],
++		a[0] * b[2] + a[2] * b[3],
++		a[1] * b[2] + a[3] * b[3],
++		a[0] * b[4] + a[2] * b[5] + a[4],
++		a[1] * b[4] + a[3] * b[5] + a[5],
++	];
++	for (const value of result) finite(value, max);
++	return result;
++}
++export function rule(value: unknown): VisioForeignVectorRule {
++	if (value === undefined) return 'nonzero';
++	if (value !== 'nonzero' && value !== 'evenodd') unsafe('Unsupported winding rule.');
++	return value;
++}
++function literal(value: unknown, fallback: string): string {
++	if (value === undefined) return fallback;
++	if (typeof value !== 'string' || !/^(?:none|#[0-9a-fA-F]{6})$/.test(value))
++		unsafe('Nonliteral paint.');
++	return value.toLowerCase();
++}
++function choice<T extends string>(value: unknown, choices: readonly T[], fallback: T): T {
++	if (value === undefined) return fallback;
++	if (typeof value !== 'string' || !choices.includes(value as T))
++		unsafe('Unsupported paint value.');
++	return value as T;
++}
++export function paint(attrs: RecordValue): VisioForeignVectorPaint {
++	return Object.freeze({
++		fill: literal(attrs.fill, '#000000'),
++		stroke: literal(attrs.stroke, 'none'),
++		fillRule: rule(attrs['fill-rule']),
++		strokeWidth: scalar(attrs['stroke-width'] === undefined ? 1 : attrs['stroke-width'], 1024),
++		strokeMiterlimit: scalar(
++			attrs['stroke-miterlimit'] === undefined ? 4 : attrs['stroke-miterlimit'],
++			1024,
++			1,
++		),
++		strokeLinecap: choice(attrs['stroke-linecap'], ['butt', 'round', 'square'], 'butt'),
++		strokeLinejoin: choice(attrs['stroke-linejoin'], ['miter', 'round', 'bevel'], 'miter'),
++		opacity: scalar(attrs.opacity === undefined ? 1 : attrs.opacity, 1),
++		fillOpacity: scalar(attrs['fill-opacity'] === undefined ? 1 : attrs['fill-opacity'], 1),
++		strokeOpacity: scalar(attrs['stroke-opacity'] === undefined ? 1 : attrs['stroke-opacity'], 1),
++	});
++}
+diff --git a/src/visio/foreign-vector.test.ts b/src/visio/foreign-vector.test.ts
+new file mode 100644
+index 0000000..19b5259
+--- /dev/null
++++ b/src/visio/foreign-vector.test.ts
+@@ -0,0 +1,169 @@
++import { describe, expect, it } from 'vitest';
++import {
++	sanitizeVisioForeignVectorTree as sanitize,
++	validateVisioForeignVector as validate,
++	VisioForeignVectorError,
++	VISIO_FOREIGN_VECTOR_LIMITS,
++	type VisioForeignVectorPath,
++} from './foreign-vector.js';
++
++import { root, path, group, clip, defs } from './foreign-vector-test-fixtures.js';
++
++const first = (d: string) =>
++	(sanitize(root([path(d)])).items[0] as VisioForeignVectorPath).commands;
++
++describe('bounded foreign vector normalization', () => {
++	it('copies and deeply freezes the scene without mutating or freezing converter input', () => {
++		const input = root(),
++			before = structuredClone(input),
++			scene = sanitize(input);
++		expect(scene).toMatchObject({ kind: 'vector', width: 20, height: 20, clips: [] });
++		expect(scene.items[0]).toMatchObject({
++			kind: 'path',
++			paint: { fill: '#000000', stroke: 'none', fillRule: 'nonzero' },
++		});
++		expect(input).toEqual(before);
++		expect(Object.isFrozen(input)).toBe(false);
++		expect(Object.isFrozen(input.children)).toBe(false);
++		expect(Object.isFrozen(scene)).toBe(true);
++		expect(Object.isFrozen(scene.items)).toBe(true);
++		const child = scene.items[0] as VisioForeignVectorPath;
++		for (const value of [
++			child,
++			child.commands,
++			child.matrix,
++			child.paint,
++			child.commands[0],
++			child.commands[0]!.values,
++		])
++			expect(Object.isFrozen(value)).toBe(true);
++		expect(JSON.stringify(scene)).not.toMatch(/url\(|xmlns|isolation|asset-/);
++	});
++	it('expands relative, implicit, horizontal, vertical and smooth commands to absolute numeric primitives', () => {
++		expect(first('m1 2 3 4h2v3c1 2 3 4 5 6s1 2 3 4q1 2 3 4t5 6z')).toEqual([
++			{ command: 'M', values: [1, 2] },
++			{ command: 'L', values: [4, 6] },
++			{ command: 'L', values: [6, 6] },
++			{ command: 'L', values: [6, 9] },
++			{ command: 'C', values: [7, 11, 9, 13, 11, 15] },
++			{ command: 'C', values: [13, 17, 12, 17, 14, 19] },
++			{ command: 'Q', values: [15, 21, 17, 23] },
++			{ command: 'Q', values: [19, 25, 22, 29] },
++			{ command: 'Z', values: [] },
++		]);
++	});
++	it('resets shorthand reflection after a nonmatching command and restores subpath origin', () => {
++		expect(first('M10 20L30 40s1 2 3 4t5 6z m1 2')).toEqual([
++			{ command: 'M', values: [10, 20] },
++			{ command: 'L', values: [30, 40] },
++			{ command: 'C', values: [30, 40, 31, 42, 33, 44] },
++			{ command: 'Q', values: [33, 44, 38, 50] },
++			{ command: 'Z', values: [] },
++			{ command: 'M', values: [11, 22] },
++		]);
++	});
++	it('accepts strict compressed numbers and adjacent arc flags', () => {
++		expect(first('M.5-.5L1e1,2E+1a5 6 20 0110 10')).toEqual([
++			{ command: 'M', values: [0.5, -0.5] },
++			{ command: 'L', values: [10, 20] },
++			{ command: 'A', values: [5, 6, 20, 0, 1, 20, 30] },
++		]);
++	});
++	it('validates literal paints with explicit independent defaults', () => {
++		const scene = sanitize(
++			root([
++				path('M0 0L1 1', {
++					fill: '#ABCDEF',
++					stroke: '#123456',
++					'fill-rule': 'evenodd',
++					'stroke-width': '2.5',
++					'stroke-miterlimit': '10',
++					opacity: '.5',
++					'stroke-linejoin': 'round',
++				}),
++			]),
++		);
++		expect((scene.items[0] as VisioForeignVectorPath).paint).toMatchObject({
++			fill: '#abcdef',
++			stroke: '#123456',
++			fillRule: 'evenodd',
++			strokeWidth: 2.5,
++			strokeMiterlimit: 10,
++			opacity: 0.5,
++			strokeLinejoin: 'round',
++		});
++	});
++	it('preserves union/intersection clip structure and resolves forward references without retaining IDs', () => {
++		const scene = sanitize(
++			root([
++				group([path()], { 'clip-path': 'url(#front)' }),
++				defs([
++					clip(
++						'front',
++						[path('M1 1L5 5', { 'clip-rule': 'evenodd', 'clip-path': 'url(#back)' }), path()],
++						{ 'clip-path': 'url(#back)' },
++					),
++					clip('back'),
++				]),
++			]),
++		);
++		expect(scene.items[0]!.clipIndex).toBe(0);
++		expect(scene.clips[0]!.clipIndex).toBe(1);
++		expect(scene.clips[0]!.items[0]).toMatchObject({ clipIndex: 1, clipRule: 'evenodd' });
++		expect(scene.clips[0]!.items[1]!.clipRule).toBe('nonzero');
++		expect(JSON.stringify(scene)).not.toMatch(/front|back|url\(/);
++	});
++	it('supports an empty clipping path and explicit user-space units', () => {
++		const scene = sanitize(
++			root([
++				defs([clip('c', [], { clipPathUnits: 'userSpaceOnUse' })]),
++				group([path()], { 'clip-path': 'url(#c)' }),
++			]),
++		);
++		expect(scene.clips[0]!.items).toEqual([]);
++	});
++	it('inherits only explicit clip-rule inside definitions', () => {
++		const scene = sanitize(root([defs([clip('c', [path()], { 'clip-rule': 'evenodd' })])]));
++		expect(scene.clips[0]!.items[0]!.clipRule).toBe('evenodd');
++		expect(() =>
++			sanitize(root([defs([clip('c', [path('M0 0', { 'fill-rule': 'evenodd' })])])])),
++		).toThrow(VisioForeignVectorError);
++	});
++	it('accepts bounded composed transforms and does not retain transform text', () => {
++		const scene = sanitize(
++			root([
++				group([path('M1 1L2 2', { transform: 'matrix(1, 0, 0, 1, 3, 4)' })], {
++					transform: 'matrix(2 0 0 2 5 6)',
++				}),
++			]),
++		);
++		expect(scene.items[0]!.matrix).toEqual([2, 0, 0, 2, 5, 6]);
++		expect(() => validate(structuredClone(scene))).not.toThrow();
++	});
++	it('roundtrips safe canonical scenes through structured clone and fresh immutable copies', () => {
++		const scene = sanitize(
++			root([defs([clip('c')]), group([path(), path()], { 'clip-path': 'url(#c)' })]),
++		);
++		const copied = validate(scene);
++		expect(copied).toEqual(scene);
++		expect(copied).not.toBe(scene);
++		expect(copied.clips[0]).not.toBe(scene.clips[0]);
++		expect(Object.isFrozen(copied.clips[0]!.items[0]!.commands)).toBe(true);
++		expect(validate(structuredClone(scene))).toEqual(scene);
++	});
++	it('accepts plain null-prototype records', () => {
++		const input = root();
++		Object.setPrototypeOf(input, null);
++		Object.setPrototypeOf(input.attrs, null);
++		expect(sanitize(input).width).toBe(20);
++	});
++	it('exports immutable lower-only default limits', () => {
++		expect(Object.isFrozen(VISIO_FOREIGN_VECTOR_LIMITS)).toBe(true);
++		for (const [key, value] of Object.entries(VISIO_FOREIGN_VECTOR_LIMITS)) {
++			expect(() => sanitize(root(), { [key]: value + 1 })).toThrow(VisioForeignVectorError);
++			expect(() => validate(sanitize(root()), { [key]: value + 1 })).toThrow(
++				VisioForeignVectorError,
++			);
++		}
++	});
++});
+diff --git a/src/visio/foreign-vector.ts b/src/visio/foreign-vector.ts
+new file mode 100644
+index 0000000..f944fd6
+--- /dev/null
++++ b/src/visio/foreign-vector.ts
+@@ -0,0 +1,239 @@
++import {
++	VisioForeignVectorError,
++	limit,
++	unsafe,
++	type VisioForeignVector,
++	type VisioForeignVectorClip,
++	type VisioForeignVectorClipPath,
++	type VisioForeignVectorLimits,
++	type VisioForeignVectorNode,
++	type VisioForeignVectorPath,
++} from './foreign-vector-types.js';
++import {
++	finite,
++	limitsFor,
++	matrix,
++	numberList,
++	paint,
++	record,
++	rule,
++	type RecordValue,
++} from './foreign-vector-values.js';
++import { pathCommands } from './foreign-vector-path.js';
++import { checkVectorGraph } from './foreign-vector-graph.js';
++export { VISIO_FOREIGN_VECTOR_LIMITS, VisioForeignVectorError } from './foreign-vector-types.js';
++export type {
++	VisioForeignVector,
++	VisioForeignVectorClip,
++	VisioForeignVectorClipPath,
++	VisioForeignVectorCommand,
++	VisioForeignVectorGroup,
++	VisioForeignVectorLimits,
++	VisioForeignVectorMatrix,
++	VisioForeignVectorNode,
++	VisioForeignVectorPaint,
++	VisioForeignVectorPath,
++	VisioForeignVectorRule,
++} from './foreign-vector-types.js';
++
++const BASE = ['transform', 'clip-path'];
++const PAINT = [
++	'fill',
++	'stroke',
++	'fill-rule',
++	'stroke-width',
++	'stroke-miterlimit',
++	'stroke-linecap',
++	'stroke-linejoin',
++	'opacity',
++	'fill-opacity',
++	'stroke-opacity',
++];
++const ATTRS: Readonly<Record<string, readonly string[]>> = {
++	svg: ['xmlns', 'width', 'height', 'viewBox', 'style'],
++	defs: [],
++	g: BASE,
++	path: ['d', ...BASE, ...PAINT],
++	clipPath: ['id', 'clipPathUnits', 'clip-rule', ...BASE],
++};
++const ID = /^[A-Za-z_][A-Za-z0-9_.-]{0,127}$/;
++type ClipTarget = { clipIndex?: number };
++/**
++ * Converts a narrowly supported converter-owned SVG tree into a copied, deeply frozen scene.
++ * This is an output boundary, not permission to run a converter or evidence of EMF fidelity.
++ * Unknown content rejects the entire scene. The only admitted style is the exact inert root
++ * marker "isolation:isolate"; it is not retained. No caller-owned object is mutated or frozen.
++ * Revalidate data after crossing an untrusted transport; a TypeScript type is not validation.
++ */
++export function sanitizeVisioForeignVectorTree(
++	root: unknown,
++	options: Partial<VisioForeignVectorLimits> = {},
++): VisioForeignVector {
++	try {
++		return sanitize(root, limitsFor(options));
++	} catch (error) {
++		if (error instanceof VisioForeignVectorError) throw error;
++		// Do not expose converter content or arbitrary property-trap exception messages.
++		unsafe('Unable to inspect converter output safely.');
++	}
++}
++function sanitize(root: unknown, limits: VisioForeignVectorLimits): VisioForeignVector {
++	let nodes = 0,
++		characters = 0;
++	const seen = new WeakSet<object>(),
++		pathBudget = { operands: 0, commands: 0 };
++	const clips: VisioForeignVectorClip[] = [],
++		ids = new Map<string, number>();
++	const pending: { target: ClipTarget; id: string }[] = [];
++	const freezeLater: object[] = [];
++	function claim(value: unknown, depth: number): void {
++		if (!value || typeof value !== 'object' || seen.has(value))
++			unsafe('Repeated or cyclic tree object.');
++		if (depth > limits.maxDepth) limit('Tree depth limit exceeded.');
++		if (++nodes > limits.maxNodes) limit('Tree node limit exceeded.');
++		seen.add(value);
++	}
++	function charge(value: string): void {
++		characters += value.length;
++		if (characters > limits.maxCharacters) limit('Tree character limit exceeded.');
++	}
++	function node(
++		value: unknown,
++		depth: number,
++		clipping = false,
++	): { tag: string; attrs: RecordValue; children: unknown } {
++		claim(value, depth);
++		const data = record(value, ['tag', 'attrs', 'children']);
++		if (typeof data.tag !== 'string' || !Object.hasOwn(ATTRS, data.tag))
++			unsafe('Unsupported vector element.');
++		charge(data.tag);
++		const allowed =
++			clipping && data.tag === 'path' ? ['d', 'clip-rule', ...BASE] : ATTRS[data.tag]!;
++		const attrs = record(data.attrs, allowed);
++		for (const key of Object.keys(attrs)) {
++			charge(key);
++			if (typeof attrs[key] === 'string') charge(attrs[key]);
++			else if (typeof attrs[key] !== 'number') unsafe('Invalid attribute value type.');
++		}
++		return { tag: data.tag, attrs, children: data.children };
++	}
++	function children(value: unknown, optional = false): unknown[] {
++		if (value === undefined && optional) return [];
++		if (!Array.isArray(value) || Object.getPrototypeOf(value) !== Array.prototype)
++			unsafe('Expected plain child array.');
++		// Check length before keys, copies, mapping or sparse-array allocation.
++		if (value.length > limits.maxNodes - nodes) limit('Child array node limit exceeded.');
++		if (seen.has(value)) unsafe('Repeated child array.');
++		seen.add(value);
++		const keys = Reflect.ownKeys(value);
++		if (keys.length !== value.length + 1) unsafe('Sparse or extended child array.');
++		const output: unknown[] = [];
++		for (let i = 0; i < value.length; i++) {
++			const descriptor = Object.getOwnPropertyDescriptor(value, i);
++			if (!descriptor || !('value' in descriptor) || !descriptor.enumerable)
++				unsafe('Sparse or accessor child array.');
++			output.push(descriptor.value as unknown);
++		}
++		return output;
++	}
++	function base(attrs: RecordValue): { matrix: ReturnType<typeof matrix>; clipIndex?: number } {
++		const target: { matrix: ReturnType<typeof matrix>; clipIndex?: number } = {
++			matrix: matrix(attrs.transform, limits.maxCoordinate),
++		};
++		if (attrs['clip-path'] !== undefined) {
++			const value = attrs['clip-path'];
++			const match =
++				typeof value === 'string' ? /^url\(#([A-Za-z_][A-Za-z0-9_.-]{0,127})\)$/.exec(value) : null;
++			if (!match) unsafe('Unsupported clip reference.');
++			pending.push({ target, id: match[1]! });
++		}
++		return target;
++	}
++	function leaf(data: ReturnType<typeof node>): readonly ReturnType<typeof pathCommands>[number][] {
++		if (children(data.children, true).length !== 0) unsafe('Path cannot contain child elements.');
++		return pathCommands(data.attrs.d, limits, pathBudget);
++	}
++	function item(value: unknown, depth: number): VisioForeignVectorNode {
++		const data = node(value, depth);
++		if (data.tag !== 'g' && data.tag !== 'path') unsafe('Only paths and groups may be drawn.');
++		const target = base(data.attrs);
++		// Mutate only new output objects while resolving references, never converter-owned objects.
++		const result: VisioForeignVectorNode =
++			data.tag === 'path'
++				? (Object.assign(target, {
++						kind: 'path' as const,
++						commands: leaf(data),
++						paint: paint(data.attrs),
++					}) satisfies VisioForeignVectorPath)
++				: Object.assign(target, {
++						kind: 'group' as const,
++						items: Object.freeze(children(data.children).map((child) => item(child, depth + 1))),
++					});
++		freezeLater.push(result);
++		return result;
++	}
++	function definition(value: unknown, depth: number): void {
++		const data = node(value, depth);
++		if (data.tag !== 'clipPath') unsafe('Only clip paths may be defined.');
++		const id = data.attrs.id;
++		if (typeof id !== 'string' || !ID.test(id) || ids.has(id))
++			unsafe('Invalid or duplicate clip identity.');
++		if (data.attrs.clipPathUnits !== undefined && data.attrs.clipPathUnits !== 'userSpaceOnUse')
++			unsafe('Unsupported clip coordinate system.');
++		const inheritedRule = rule(data.attrs['clip-rule']);
++		ids.set(id, clips.length);
++		const target = base(data.attrs);
++		const paths: VisioForeignVectorClipPath[] = [];
++		for (const child of children(data.children)) {
++			const part = node(child, depth + 1, true);
++			if (part.tag !== 'path') unsafe('Clip content must be a path.');
++			const path = Object.assign(base(part.attrs), {
++				commands: leaf(part),
++				clipRule:
++					part.attrs['clip-rule'] === undefined ? inheritedRule : rule(part.attrs['clip-rule']),
++			});
++			paths.push(path);
++			freezeLater.push(path);
++		}
++		const clip = Object.assign(target, { items: Object.freeze(paths) });
++		clips.push(clip);
++		freezeLater.push(clip);
++	}
++	const data = node(root, 0);
++	if (data.tag !== 'svg' || data.attrs.xmlns !== 'http://www.w3.org/2000/svg')
++		unsafe('Invalid vector root.');
++	if (data.attrs.style !== undefined && data.attrs.style !== 'isolation:isolate')
++		unsafe('Unsupported root style.');
++	const width = finite(data.attrs.width, limits.maxDimension),
++		height = finite(data.attrs.height, limits.maxDimension);
++	if (width < 1 || height < 1) unsafe('Empty vector dimensions.');
++	const viewBox = numberList(data.attrs.viewBox, 4, limits.maxDimension);
++	if (viewBox[0] !== 0 || viewBox[1] !== 0 || viewBox[2] !== width || viewBox[3] !== height)
++		unsafe('Viewport differs from dimensions.');
++	const items: VisioForeignVectorNode[] = [];
++	for (const child of children(data.children)) {
++		// Inspect the discriminator without invoking getters; claim and charge in the selected branch.
++		const peek = record(child, ['tag', 'attrs', 'children']);
++		if (peek.tag === 'defs') {
++			const defs = node(child, 1);
++			for (const value of children(defs.children)) definition(value, 2);
++		} else items.push(item(child, 1));
++	}
++	for (const { target, id } of pending) {
++		const index = ids.get(id);
++		if (index === undefined) unsafe('Unresolved clip reference.');
++		target.clipIndex = index;
++	}
++	const scene: VisioForeignVector = {
++		kind: 'vector',
++		width,
++		height,
++		items: Object.freeze(items),
++		clips: Object.freeze(clips),
++	};
++	checkVectorGraph(scene, limits);
++	for (const value of freezeLater) Object.freeze(value);
++	return Object.freeze(scene);
++}
++
++export { validateVisioForeignVector } from './foreign-vector-validation.js';
 diff --git a/src/visio/geometry.test.ts b/src/visio/geometry.test.ts
 new file mode 100644
 index 0000000..6d62274
@@ -1313,10 +4939,10 @@ index 0000000..c08bb99
 +});
 diff --git a/src/visio/index.ts b/src/visio/index.ts
 new file mode 100644
-index 0000000..c555a8a
+index 0000000..a106561
 --- /dev/null
 +++ b/src/visio/index.ts
-@@ -0,0 +1,19 @@
+@@ -0,0 +1,43 @@
 +/** Read-only VSDX parsing and normalized scenes. Legacy VSD/VDX and saving are not supported. */
 +export type * from './model.js';
 +export type { VisioShapeData, VisioHyperlink, VisioMetadataOptions } from './shape-metadata.js';
@@ -1336,6 +4962,30 @@ index 0000000..c555a8a
 +	type VisioImageErrorCode,
 +	type VisioRasterImageInfo,
 +} from './media.js';
++export {
++	inspectVisioEmfAdmission,
++	VISIO_EMF_ADMISSION_LIMITS,
++	type VisioEmfAdmissionOptions,
++	type VisioEmfAdmissionResult,
++	type VisioEmfAdmissionStatus,
++	type VisioEmfAdmissionDiagnostic,
++	type VisioEmfAdmissionMetrics,
++} from './emf-admission.js';
++export {
++	sanitizeVisioForeignVectorTree,
++	validateVisioForeignVector,
++	VisioForeignVectorError,
++	VISIO_FOREIGN_VECTOR_LIMITS,
++	type VisioForeignVector,
++	type VisioForeignVectorLimits,
++	type VisioForeignVectorCommand,
++	type VisioForeignVectorClip,
++	type VisioForeignVectorClipPath,
++	type VisioForeignVectorNode,
++	type VisioForeignVectorPath,
++	type VisioForeignVectorPaint,
++	type VisioForeignVectorMatrix,
++} from './foreign-vector.js';
 diff --git a/src/visio/layer-limits.test.ts b/src/visio/layer-limits.test.ts
 new file mode 100644
 index 0000000..2a0e055
@@ -2294,10 +5944,10 @@ index 0000000..6cb770f
 +}
 diff --git a/src/visio/media.test.ts b/src/visio/media.test.ts
 new file mode 100644
-index 0000000..ed6796b
+index 0000000..7124b95
 --- /dev/null
 +++ b/src/visio/media.test.ts
-@@ -0,0 +1,264 @@
+@@ -0,0 +1,278 @@
 +import JSZip from 'jszip';
 +import { describe, expect, it, vi } from 'vitest';
 +import { crc32 } from './package-common.js';
@@ -2388,6 +6038,20 @@ index 0000000..ed6796b
 +}
 +
 +describe('safe Visio raster images', () => {
++	it('uses declared part size to reject lowered raster limits before materialization', async () => {
++		const { pkg, foreignData, report } = await setup();
++		const read = vi.spyOn(pkg, 'readBytes');
++		expect(
++			await readVisioImage(pkg, source, foreignData, report, { maxImageBytes: 8 }),
++		).toBeUndefined();
++		expect(read).not.toHaveBeenCalledWith(media);
++		expect(report).toHaveBeenCalledWith(
++			'image-limit',
++			expect.stringContaining('before inflation'),
++			expect.any(Object),
++		);
++	});
++
 +	it.each([
 +		['PNG', png, 'image/png', 1, 1],
 +		['GIF', gif, 'image/gif', 1, 1],
@@ -2564,10 +6228,10 @@ index 0000000..ed6796b
 +});
 diff --git a/src/visio/media.ts b/src/visio/media.ts
 new file mode 100644
-index 0000000..3155c9f
+index 0000000..51e0119
 --- /dev/null
 +++ b/src/visio/media.ts
-@@ -0,0 +1,310 @@
+@@ -0,0 +1,312 @@
 +import { NS } from '../xml/index.js';
 +import { crc32 } from './package-common.js';
 +import { VisioPackage, VisioPackageError } from './package.js';
@@ -2837,6 +6501,8 @@ index 0000000..3155c9f
 +			'invalid-image-relationship',
 +			'Foreign data does not reference an image relationship.',
 +		);
++	if (pkg.getPartByteLength(rel.target) > limits.maxImageBytes)
++		return omit('image-limit', 'Raster image bytes exceed the configured limit before inflation.');
 +	const bytes = await pkg.readBytes(rel.target);
 +	if (bytes.length > limits.maxImageBytes)
 +		return omit('image-limit', 'Raster image bytes exceed the configured limit.');
@@ -3730,10 +7396,10 @@ index 0000000..66e459c
 +}
 diff --git a/src/visio/package.test.ts b/src/visio/package.test.ts
 new file mode 100644
-index 0000000..e7671b6
+index 0000000..44b5d19
 --- /dev/null
 +++ b/src/visio/package.test.ts
-@@ -0,0 +1,432 @@
+@@ -0,0 +1,444 @@
 +import { deflateRawSync } from 'node:zlib';
 +import JSZip from 'jszip';
 +import { describe, expect, it, vi } from 'vitest';
@@ -3831,6 +7497,18 @@ index 0000000..e7671b6
 +	`<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${body}</Relationships>`;
 +
 +describe('VisioPackage', () => {
++	it('exposes validated declared part size without inflating the payload', async () => {
++		const bytes = encode('hello');
++		const pkg = await VisioPackage.open(
++			archive([{ name: 'asset.bin', data: bytes, deflate: true }]),
++		);
++		const read = vi.spyOn(pkg, 'readBytes');
++		expect(pkg.getPartByteLength('asset.bin')).toBe(5);
++		expect(read).not.toHaveBeenCalled();
++		expect(() => pkg.getPartByteLength('../asset.bin')).toThrow(VisioPackageError);
++		expect(() => pkg.getPartByteLength('absent.bin')).toThrow(VisioPackageError);
++	});
++
 +	it('reads stored or deflated XML without including directory placeholders', async () => {
 +		for (const streamFiles of [false, true]) {
 +			const zip = new JSZip();
@@ -4168,10 +7846,10 @@ index 0000000..e7671b6
 +});
 diff --git a/src/visio/package.ts b/src/visio/package.ts
 new file mode 100644
-index 0000000..6e63cb1
+index 0000000..4c64117
 --- /dev/null
 +++ b/src/visio/package.ts
-@@ -0,0 +1,285 @@
+@@ -0,0 +1,293 @@
 +import JSZip from 'jszip';
 +import { parseXml } from '../xml/index.js';
 +import {
@@ -4293,6 +7971,14 @@ index 0000000..6e63cb1
 +		return root;
 +	}
 +
++	/** Validated declared size, so resource-specific limits can reject before inflation. */
++	getPartByteLength(path: string): number {
++		this.check();
++		safePath(path);
++		const entry = this.entries.get(path);
++		if (!entry || entry.directory) fail('MISSING_PART', `Missing package part: ${path}`);
++		return entry.size;
++	}
 +	/** Shared package-owned bytes. Treat the returned buffer as immutable. */
 +	async readBytes(path: string): Promise<Uint8Array> {
 +		this.check();
@@ -5404,10 +9090,11 @@ index 0000000..781615c
 +}
 diff --git a/src/visio/prepare-images.ts b/src/visio/prepare-images.ts
 new file mode 100644
-index 0000000..291db40
+index 0000000..21e654d
 --- /dev/null
 +++ b/src/visio/prepare-images.ts
-@@ -0,0 +1,23 @@
+@@ -0,0 +1,34 @@
++import { inspectEmbeddedVisioMetafile } from './prepare-metafiles.js';
 +import { readVisioImage, type VisioImageOptions } from './media.js';
 +import type { VisioPackage } from './package.js';
 +import type { RawShape, Report } from './sheet.js';
@@ -5425,11 +9112,351 @@ index 0000000..291db40
 +		const localReport: Report = (code, message, extra) =>
 +			report(code, message, { part: sourcePart, shapeId: shape.id, ...extra });
 +		if (shape.foreignData) {
-+			const image = await readVisioImage(pkg, sourcePart, shape.foreignData, localReport, options);
-+			if (image) shape.image = image;
++			if (shape.foreignData.getAttribute('ForeignType') === 'EnhMetaFile') {
++				await inspectEmbeddedVisioMetafile(pkg, sourcePart, shape.foreignData, localReport);
++			} else {
++				const image = await readVisioImage(
++					pkg,
++					sourcePart,
++					shape.foreignData,
++					localReport,
++					options,
++				);
++				if (image) shape.image = image;
++			}
 +		}
 +		await prepareImages(shape.children, pkg, sourcePart, report, options);
 +	}
++}
+diff --git a/src/visio/prepare-metafiles.test.ts b/src/visio/prepare-metafiles.test.ts
+new file mode 100644
+index 0000000..f3dc2f5
+--- /dev/null
++++ b/src/visio/prepare-metafiles.test.ts
+@@ -0,0 +1,195 @@
++import { describe, expect, it, vi } from 'vitest';
++import { parseVsdx } from './index.js';
++import { fixture, shape, xml, relations } from './test-fixtures.js';
++import { emf, record } from './emf-admission.test-fixtures.js';
++import { inspectEmbeddedVisioMetafile } from './prepare-metafiles.js';
++import { parseXml, NS } from '../xml/index.js';
++import type { VisioPackage } from './package.js';
++
++const data = '<ForeignData ForeignType="EnhMetaFile"><Rel r:id="media"/></ForeignData>';
++const relation = (mode = 'Internal', type = `${NS.r}/image`) =>
++	`<Relationship Id="media" Type="${type}" Target="../media/item.emf" TargetMode="${mode}"/>`;
++const build = (bytes: Uint8Array, mode = 'Internal', type = `${NS.r}/image`) =>
++	fixture({
++		pages: [{ id: '0', contents: `<Shapes>${shape('1', data)}</Shapes>` }],
++		edit: (zip) => {
++			zip.file('visio/pages/_rels/page1.xml.rels', relations(relation(mode, type)));
++			zip.file('visio/media/item.emf', bytes);
++		},
++	});
++const codes = (model: Awaited<ReturnType<typeof parseVsdx>>) =>
++	model.diagnostics.map((d) => d.code);
++const rectangle = () => emf([record(43, [0, 0, 90, 90])]);
++
++describe('embedded EMF compatibility inspection without conversion', () => {
++	it('preserves omission and explicitly reports rendering disabled for admitted structural input', async () => {
++		const model = await parseVsdx(await build(rectangle()));
++		expect(codes(model)).toContain('emf-rendering-disabled');
++		expect(model.pages[0]!.shapes[0]!.image).toBeUndefined();
++		expect(model.diagnostics.find((d) => d.code === 'emf-rendering-disabled')).toMatchObject({
++			shapeId: '1',
++			part: 'visio/media/item.emf',
++		});
++	});
++	it('reports specific unsupported semantics instead of claiming an invalid drawing', async () => {
++		const model = await parseVsdx(
++			await build(emf([record(38, [1, 6, 3, 0, 0x02000000]), record(43, [0, 0, 90, 90])])),
++		);
++		expect(codes(model)).toContain('emf-pen-style');
++		expect(codes(model)).toContain('emf-palette-color');
++		expect(codes(model)).not.toContain('emf-rendering-disabled');
++	});
++	it('omits malformed EMF while keeping the outer VSDX document usable', async () => {
++		const model = await parseVsdx(await build(new Uint8Array([1, 2, 3])));
++		expect(codes(model)).toContain('emf-header');
++		expect(model.pages).toHaveLength(1);
++	});
++	it('never loads external image relationships or other relationship categories', async () => {
++		const external = await parseVsdx(await build(rectangle(), 'External'));
++		expect(codes(external)).toContain('external-image');
++		const other = await parseVsdx(await build(rectangle(), 'Internal', `${NS.r}/oleObject`));
++		expect(codes(other)).toContain('invalid-image-relationship');
++	});
++	it('rejects missing and ambiguous relationship references', async () => {
++		const model = await parseVsdx(
++			await fixture({
++				pages: [
++					{
++						id: '0',
++						contents: `<Shapes>${shape('1', data.replace('<Rel r:id="media"/>', '<Rel r:id="media"/><Rel r:id="other"/>'))}</Shapes>`,
++					},
++				],
++			}),
++		);
++		expect(codes(model)).toContain('invalid-image-relationship');
++	});
++
++	it('rejects oversized declared assets before reading or inflating bytes', async () => {
++		const readBytes = vi.fn(async () => rectangle());
++		const pkg = {
++			getPartByteLength: () => 4 * 1024 * 1024 + 1,
++			relationships: async () =>
++				new Map([
++					['media', { mode: 'Internal', target: 'visio/media/big.emf', type: `${NS.r}/image` }],
++				]),
++			readBytes,
++		} as unknown as VisioPackage;
++		const element = parseXml(xml('Shape', data)).documentElement.firstChild as Element;
++		const notes: string[] = [];
++		await inspectEmbeddedVisioMetafile(pkg, 'page', element, (code) => notes.push(code));
++		expect(readBytes).not.toHaveBeenCalled();
++		expect(notes).toEqual(['emf-input-limit']);
++	});
++	it('deduplicates scanning of a shared internal media part across instances', async () => {
++		const readBytes = vi.fn(async () => rectangle());
++		const pkg = {
++			getPartByteLength: () => rectangle().byteLength,
++			relationships: async () =>
++				new Map([
++					['media', { mode: 'Internal', target: 'visio/media/one.emf', type: `${NS.r}/image` }],
++				]),
++			readBytes,
++		} as unknown as VisioPackage;
++		const element = parseXml(xml('Shape', data)).documentElement.firstChild as Element;
++		const notes: string[] = [];
++		await inspectEmbeddedVisioMetafile(pkg, 'page', element, (code) => notes.push(code));
++		await inspectEmbeddedVisioMetafile(pkg, 'page', element, (code) => notes.push(code));
++		expect(readBytes).toHaveBeenCalledTimes(1);
++		expect(notes).toEqual(['emf-rendering-disabled', 'emf-rendering-disabled']);
++	});
++
++	it('reserves concurrent slots and coalesces pending reads without bypassing the asset limit', async () => {
++		let next = 0;
++		const readBytes = vi.fn(async () => {
++			await Promise.resolve();
++			return rectangle();
++		});
++		const pkg = {
++			getPartByteLength: () => rectangle().byteLength,
++			relationships: async () =>
++				new Map([
++					[
++						'media',
++						{
++							mode: 'Internal',
++							target: `visio/media/${Math.floor(next++ / 2)}.emf`,
++							type: `${NS.r}/image`,
++						},
++					],
++				]),
++			readBytes,
++		} as unknown as VisioPackage;
++		const element = parseXml(xml('Shape', data)).documentElement.firstChild as Element;
++		const notes: string[] = [];
++		await Promise.all(
++			Array.from({ length: 80 }, () =>
++				inspectEmbeddedVisioMetafile(pkg, 'page', element, (code) => notes.push(code)),
++			),
++		);
++		expect(readBytes).toHaveBeenCalledTimes(32);
++		expect(notes.filter((code) => code === 'emf-document-limit')).toHaveLength(16);
++	});
++	it('stops materialization before crossing aggregate byte and record limits', async () => {
++		const element = parseXml(xml('Shape', data)).documentElement.firstChild as Element;
++		let next = 0;
++		const large = new Uint8Array(4 * 1024 * 1024);
++		const readBytes = vi.fn(async () => large);
++		const pkg = {
++			getPartByteLength: () => large.length,
++			relationships: async () =>
++				new Map([
++					[
++						'media',
++						{ mode: 'Internal', target: `visio/media/${next++}.emf`, type: `${NS.r}/image` },
++					],
++				]),
++			readBytes,
++		} as unknown as VisioPackage;
++		const notes: string[] = [];
++		await Promise.all(
++			Array.from({ length: 12 }, () =>
++				inspectEmbeddedVisioMetafile(pkg, 'page', element, (code) => notes.push(code)),
++			),
++		);
++		expect(readBytes).toHaveBeenCalledTimes(8);
++		expect(notes.filter((code) => code === 'emf-document-limit')).toHaveLength(4);
++		let id = 0;
++		const many = emf(Array.from({ length: 19998 }, () => record(18, [1])));
++		const readRecords = vi.fn(async () => many);
++		const second = {
++			getPartByteLength: () => many.length,
++			relationships: async () =>
++				new Map([
++					['media', { mode: 'Internal', target: `visio/media/${id++}.emf`, type: `${NS.r}/image` }],
++				]),
++			readBytes: readRecords,
++		} as unknown as VisioPackage;
++		await Promise.all(
++			Array.from({ length: 9 }, () =>
++				inspectEmbeddedVisioMetafile(second, 'page', element, () => {}),
++			),
++		);
++		expect(readRecords).toHaveBeenCalledTimes(5);
++	});
++	it('bounds unique asset reads before materializing later parts', async () => {
++		let next = 0;
++		const readBytes = vi.fn(async () => rectangle());
++		const pkg = {
++			getPartByteLength: () => rectangle().byteLength,
++			relationships: async () =>
++				new Map([
++					[
++						'media',
++						{ mode: 'Internal', target: `visio/media/${next++}.emf`, type: `${NS.r}/image` },
++					],
++				]),
++			readBytes,
++		} as unknown as VisioPackage;
++		const element = parseXml(xml('Shape', data)).documentElement.firstChild as Element;
++		const notes: string[] = [];
++		for (let i = 0; i < 40; i++)
++			await inspectEmbeddedVisioMetafile(pkg, 'page', element, (code) => notes.push(code));
++		expect(readBytes).toHaveBeenCalledTimes(32);
++		expect(notes.filter((code) => code === 'emf-document-limit')).toHaveLength(8);
++	});
++});
+diff --git a/src/visio/prepare-metafiles.ts b/src/visio/prepare-metafiles.ts
+new file mode 100644
+index 0000000..e4d8c93
+--- /dev/null
++++ b/src/visio/prepare-metafiles.ts
+@@ -0,0 +1,123 @@
++import { NS } from '../xml/index.js';
++import { inspectVisioEmfAdmission } from './emf-admission.js';
++import type { VisioPackage } from './package.js';
++import { children, type Report } from './sheet.js';
++
++/** Inspection budgets across unique internal media parts, independently of ZIP/XML limits. */
++export const VISIO_METAFILE_INSPECTION_LIMITS = Object.freeze({
++	maxAssets: 32,
++	maxTotalBytes: 32 * 1024 * 1024,
++	maxTotalRecords: 100_000,
++});
++type Note = { code: string; message: string };
++interface State {
++	bytes: number;
++	records: number;
++	results: Map<string, Promise<readonly Note[]>>;
++	tail: Promise<void>;
++}
++const states = new WeakMap<VisioPackage, State>();
++/** Detailed fail-closed compatibility inspection only. Never invokes a converter or returns drawable media. */
++export async function inspectEmbeddedVisioMetafile(
++	pkg: VisioPackage,
++	sourcePart: string,
++	foreignData: Element,
++	report: Report,
++): Promise<void> {
++	const refs = children(foreignData, 'Rel');
++	const id = refs.length === 1 ? refs[0]?.getAttributeNS(NS.r, 'id') : undefined;
++	const rel = id ? (await pkg.relationships(sourcePart)).get(id) : undefined;
++	if (!rel) {
++		report('invalid-image-relationship', 'Metafile has no unambiguous relationship reference.');
++		return;
++	}
++	if (rel.mode !== 'Internal') {
++		report('external-image', 'External metafile relationships are not loaded.');
++		return;
++	}
++	if (rel.type !== `${NS.r}/image`) {
++		report('invalid-image-relationship', 'Metafile does not reference an image relationship.');
++		return;
++	}
++	let state = states.get(pkg);
++	if (!state) {
++		state = { bytes: 0, records: 0, results: new Map(), tail: Promise.resolve() };
++		states.set(pkg, state);
++	}
++	let pending = state.results.get(rel.target);
++	if (!pending) {
++		if (state.results.size >= VISIO_METAFILE_INSPECTION_LIMITS.maxAssets) {
++			report(
++				'emf-document-limit',
++				'Additional metafile parts were not inspected because the document asset limit was reached.',
++				{ part: rel.target },
++			);
++			return;
++		}
++		const current = state;
++		pending = current.tail.then(() => inspectPart(pkg, rel.target, current));
++		// Reserve a unique slot before yielding; duplicate calls share the same promise.
++		current.results.set(rel.target, pending);
++		current.tail = pending.then(
++			() => undefined,
++			() => undefined,
++		);
++	}
++	for (const note of await pending) report(note.code, note.message, { part: rel.target });
++}
++
++async function inspectPart(
++	pkg: VisioPackage,
++	part: string,
++	state: State,
++): Promise<readonly Note[]> {
++	let notes: readonly Note[];
++	const size = pkg.getPartByteLength(part);
++	const remaining = VISIO_METAFILE_INSPECTION_LIMITS.maxTotalRecords - state.records;
++	if (size > 4 * 1024 * 1024) {
++		notes = [
++			{
++				code: 'emf-input-limit',
++				message: 'Metafile bytes exceed the per-asset limit; the part was not inflated.',
++			},
++		];
++	} else if (
++		size > VISIO_METAFILE_INSPECTION_LIMITS.maxTotalBytes - state.bytes ||
++		remaining <= 0
++	) {
++		notes = [
++			{
++				code: 'emf-document-limit',
++				message:
++					'Metafile inspection exceeded the aggregate byte or record limit; the part was not inflated.',
++			},
++		];
++	} else {
++		const bytes = await pkg.readBytes(part);
++		state.bytes += bytes.byteLength;
++		const result = inspectVisioEmfAdmission(bytes, { maxRecords: Math.min(20_000, remaining) });
++		state.records += result.metrics.records;
++		notes = result.diagnostics.map((note) => ({
++			code: `emf-${note.code}`,
++			message: `${note.message} Record ${note.recordType ?? 'header'} at byte ${note.offset}.`,
++		}));
++		if (result.omittedDiagnostics)
++			notes = [
++				...notes,
++				{
++					code: 'emf-diagnostics-truncated',
++					message: `${result.omittedDiagnostics} additional metafile inspection diagnostics were omitted.`,
++				},
++			];
++		if (result.status === 'admitted')
++			notes = [
++				...notes,
++				{
++					code: 'emf-rendering-disabled',
++					message:
++						'This metafile passes the narrow structural preflight, but vector conversion and fidelity are not enabled.',
++				},
++			];
++	}
++	return notes;
 +}
 diff --git a/src/visio/raster-inspection.test.ts b/src/visio/raster-inspection.test.ts
 new file mode 100644

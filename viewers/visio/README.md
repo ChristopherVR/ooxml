@@ -84,6 +84,12 @@ The core validates OPC relationships, rejects DTD/entities and suspicious ZIP pa
 
 The browser custom element uses a dedicated parsing worker with cancellation and a parent-side 15-second limit. The headless controller and environments without Worker support use cooperative core limits. SVG/text rendering still runs on the main thread with separate scene, raster, metadata and text-work limits. The project is not yet security-certified or production-hardened.
 
+## Metafile compatibility checks
+
+Embedded enhanced metafiles now receive bounded record-level compatibility diagnostics. The checker rejects unsupported formats, styles, mapping states and resource amplification before any conversion. It does not execute embedded WMF data, fonts, images, scripts or external references. All five inspected real EMF media parts remain unsupported; passing structural preflight never enables rendering.
+
+The headless core also contains a tested neutral-vector sanitizer and transport validator for future converter integration. That path is separate from live document rendering. Generated path-only clipping tests agree with the local Skia SVG backend; the installed librsvg backend ignores nested clip-path intersections. Browser and native Visio comparisons remain required. See [the detailed adoption review](docs/research/emf-adoption-review.md).
+
 ## Publication
 
 No npm publication, GitHub Pages deployment or public hosting is configured. A private GitHub repository must be created through an authorized signed-in connection before pushing these files. The local `ooxml` changes have not been pushed or released.
