@@ -1,0 +1,104 @@
+name: Release
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing package tag to re-publish; leave empty to plan a release'
+        required: false
+        default: ''
+        type: string
+permissions:
+  contents: write
+concurrency:
+  group: release
+  cancel-in-progress: false
+jobs:
+  release:
+    if: inputs.tag == ''
+    runs-on: ubuntu-latest
+    outputs:
+      any_released: ${{ steps.plan.outputs.any_changed }}
+      release_sha: ${{ steps.tagged.outputs.release_sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_TOKEN || github.token }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Plan release
+        id: plan
+        run: node scripts/release-plan.mjs --write
+      - name: Verify publishing is enabled
+        if: steps.plan.outputs.any_changed == 'true'
+        env:
+          ENABLED: ${{ vars.NPM_PUBLISH }}
+        run: test "$ENABLED" = true
+      - name: Verify release planner
+        run: node --test scripts/release-plan.test.mjs
+      - name: Validate publish targets
+        if: steps.plan.outputs.any_changed == 'true'
+        run: node scripts/publish-released.mjs --plan release-plan.json --dry-run
+      - name: Commit, tag and release changed packages
+        id: tagged
+        if: steps.plan.outputs.any_changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node scripts/prepare-release-notes.mjs
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add npm-placeholders/*/package.json npm-placeholders/*/CHANGELOG.md
+          git commit -m 'chore(release): bump placeholder versions [skip ci]' -m 'Co-Authored-By: Codex <noreply@openai.com>'
+          git fetch origin main
+          git rebase origin/main
+          git push origin HEAD:main
+          COMMIT=$(git rev-parse HEAD)
+          for tag in $(node -p "const p=require('./release-plan.json');p.order.filter(k=>p.packages[k].release).map(k=>p.packages[k].tag).join(' ')"); do
+            gh release create "$tag" --target "$COMMIT" --title "$tag" --notes-file "release-notes/$tag.md"
+          done
+          echo "release_sha=$COMMIT" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        if: steps.plan.outputs.any_changed == 'true'
+        with:
+          name: release-plan-${{ github.run_id }}
+          path: release-plan.json
+          retention-days: 1
+  publish:
+    needs: release
+    if: always() && ((needs.release.result == 'success' && needs.release.outputs.any_released == 'true') || inputs.tag != '')
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Verify publishing is enabled
+        env:
+          ENABLED: ${{ vars.NPM_PUBLISH }}
+        run: test "$ENABLED" = true
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.tag != '' && format('refs/tags/{0}', inputs.tag) || needs.release.outputs.release_sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: https://registry.npmjs.org
+      - run: npm install --global npm@11.11.1
+      - uses: actions/download-artifact@v4
+        if: inputs.tag == ''
+        with:
+          name: release-plan-${{ github.run_id }}
+      - name: Publish with OIDC and provenance
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          if [ -n "$INPUT_TAG" ]; then
+            node scripts/publish-released.mjs --tag "$INPUT_TAG"
+          else
+            node scripts/publish-released.mjs --plan release-plan.json
+          fi

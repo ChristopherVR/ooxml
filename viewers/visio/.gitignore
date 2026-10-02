@@ -4,3 +4,6 @@ site-dist/
 playwright-report/
 test-results/
 *.local
+
+release-plan.json
+release-notes/
