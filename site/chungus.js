@@ -19,6 +19,9 @@ const OLD_SUITE = [
 
 const LOCK = `<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5" fill="currentColor"/><path d="M5 7V5a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>`;
 
+/** How often the button turns up on a page load; `?chungus` always shows it. */
+const APPEARANCE_CHANCE = 0.2;
+
 const ABORT = Symbol('abort');
 const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const escape = (text) => text.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
@@ -90,6 +93,9 @@ function pin(el, point) {
 
 export function initChungus() {
 	const trigger = document.getElementById('chungus');
+	// An easter egg: the gauntlet only shows up now and then.
+	const forced = new URLSearchParams(location.search).has('chungus');
+	if (trigger && (forced || Math.random() < APPEARANCE_CHANCE)) trigger.hidden = false;
 	/** @type {HTMLElement | null} */
 	let root = null;
 	let run = 0;
