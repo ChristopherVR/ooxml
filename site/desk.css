@@ -1,0 +1,332 @@
+/*
+ * The hero desk: each app is the file it opens, drawn as paper. Everything is
+ * sized in container units so the arrangement scales as one piece.
+ */
+
+.desk {
+	container-type: inline-size;
+	position: relative;
+	width: 100%;
+	aspect-ratio: 1 / 0.95;
+}
+
+.paper {
+	--r: 0deg;
+	position: absolute;
+	display: block;
+	background: var(--paper);
+	color: var(--paper-ink);
+	border-radius: 0.8cqw;
+	box-shadow: var(--shadow);
+	rotate: var(--r);
+	text-decoration: none;
+	animation: land 700ms cubic-bezier(0.2, 0.75, 0.25, 1) backwards;
+}
+
+a.paper {
+	cursor: pointer;
+	transition:
+		translate 220ms ease,
+		rotate 220ms ease,
+		box-shadow 220ms ease;
+}
+
+a.paper:hover,
+a.paper:focus-visible {
+	translate: 0 -1.6cqw;
+	rotate: calc(var(--r) * 0.5);
+	box-shadow: var(--shadow-lift);
+}
+
+a.paper:focus-visible {
+	outline: 0.45cqw solid var(--app);
+	outline-offset: 0.9cqw;
+}
+
+/* Papers drop onto the desk in the order you would reach for them. */
+@keyframes land {
+	from {
+		opacity: 0;
+		translate: 0 -5cqw;
+		scale: 1.04;
+	}
+}
+
+.paper__label {
+	position: absolute;
+	left: 0;
+	top: calc(100% + 1.6cqw);
+	font-size: max(0.9rem, 2.3cqw);
+	font-weight: 750;
+	color: var(--ink);
+	white-space: nowrap;
+}
+
+.paper__label small {
+	margin-left: 0.3em;
+	font-size: 0.8em;
+	font-weight: 500;
+	color: var(--ink-soft);
+}
+
+.sticker {
+	position: absolute;
+	top: -1.8cqw;
+	right: -2cqw;
+	padding: 0.6cqw 1.5cqw;
+	border-radius: 0.8cqw;
+	font-size: max(0.72rem, 1.9cqw);
+	font-weight: 700;
+	color: #fff;
+	rotate: 7deg;
+	box-shadow: 0 0.6cqw 1.4cqw -0.4cqw rgba(3, 4, 22, 0.45);
+	white-space: nowrap;
+}
+
+.sticker--beta {
+	background: var(--page);
+}
+
+.sticker--soon {
+	background: var(--sheet);
+}
+
+.sticker--planned {
+	background: var(--diagram);
+}
+
+/* ---- The slide: a 16:9 title slide ---------------------------------- */
+
+.paper--slide {
+	--r: -5deg;
+	--app: var(--slide);
+	left: 1cqw;
+	top: 11cqw;
+	z-index: 3;
+	width: 60cqw;
+	aspect-ratio: 16 / 9;
+	overflow: visible;
+	animation-delay: 120ms;
+}
+
+.slide__shape {
+	position: absolute;
+	right: 7%;
+	top: 14%;
+	width: 31%;
+	aspect-ratio: 1;
+	border-radius: 50%;
+	background: var(--slide);
+}
+
+.slide__shape::after {
+	content: '';
+	position: absolute;
+	left: -28%;
+	bottom: -12%;
+	width: 52%;
+	aspect-ratio: 1;
+	border-radius: 18%;
+	background: color-mix(in srgb, var(--slide) 30%, var(--paper));
+	mix-blend-mode: multiply;
+}
+
+.slide__title {
+	position: absolute;
+	left: 8%;
+	top: 30%;
+	width: 46%;
+	height: 9%;
+	border-radius: 0.5cqw;
+	background: var(--paper-ink);
+}
+
+.slide__title--short {
+	top: 44%;
+	width: 30%;
+}
+
+.slide__sub {
+	position: absolute;
+	left: 8%;
+	top: 64%;
+	width: 36%;
+	height: 4%;
+	border-radius: 0.4cqw;
+	background: var(--paper-rule);
+}
+
+/* ---- The page: an A4 sheet of text ---------------------------------- */
+
+.paper--page {
+	--r: 4deg;
+	--app: var(--page);
+	left: 57cqw;
+	top: 24cqw;
+	z-index: 4;
+	width: 37cqw;
+	aspect-ratio: 1 / 1.414;
+	animation-delay: 260ms;
+}
+
+.page__heading {
+	position: absolute;
+	left: 12%;
+	top: 9%;
+	width: 58%;
+	height: 4.2%;
+	border-radius: 0.4cqw;
+	background: var(--page);
+}
+
+.page__lines {
+	position: absolute;
+	left: 12%;
+	right: 12%;
+	top: 18%;
+	height: 26%;
+	background: repeating-linear-gradient(
+		to bottom,
+		var(--paper-rule) 0 1.1cqw,
+		transparent 1.1cqw 2.6cqw
+	);
+	mask:
+		linear-gradient(to right, #000 82%, transparent 82% 100%) bottom / 100% 2.6cqw no-repeat,
+		linear-gradient(#000, #000) top / 100% calc(100% - 2.6cqw) no-repeat;
+}
+
+.page__figure {
+	position: absolute;
+	left: 12%;
+	right: 12%;
+	top: 48%;
+	height: 20%;
+	border-radius: 0.5cqw;
+	background:
+		linear-gradient(to top, var(--page) 0 100%) 14% 85% / 12% 55% no-repeat,
+		linear-gradient(to top, var(--page) 0 100%) 34% 85% / 12% 30% no-repeat,
+		linear-gradient(to top, var(--page) 0 100%) 54% 85% / 12% 70% no-repeat,
+		linear-gradient(to top, var(--page) 0 100%) 74% 85% / 12% 45% no-repeat,
+		color-mix(in srgb, var(--page) 10%, var(--paper));
+}
+
+.page__lines--short {
+	top: 73%;
+	height: 16%;
+}
+
+/* ---- The sheet: a grid that is not ready yet ------------------------ */
+
+.paper--sheet {
+	--r: -3deg;
+	left: 6cqw;
+	top: 60cqw;
+	z-index: 2;
+	width: 44cqw;
+	aspect-ratio: 4 / 2.6;
+	animation-delay: 400ms;
+}
+
+.sheet__grid {
+	position: absolute;
+	inset: 6%;
+	border: 1px solid #c9ccd8;
+	background:
+		linear-gradient(var(--sheet), var(--sheet)) top / 100% 14.3% no-repeat,
+		linear-gradient(
+				color-mix(in srgb, var(--sheet) 22%, var(--paper)),
+				color-mix(in srgb, var(--sheet) 22%, var(--paper))
+			)
+			16.7% 57% / 16.7% 14.3% no-repeat,
+		repeating-linear-gradient(to right, #c9ccd8 0 1px, transparent 1px 16.66%),
+		repeating-linear-gradient(to bottom, #c9ccd8 0 1px, transparent 1px 14.28%);
+}
+
+/* ---- The diagram: a flowchart that is further out ------------------- */
+
+.paper--diagram {
+	--r: 8deg;
+	left: 68cqw;
+	top: 0;
+	z-index: 1;
+	width: 27cqw;
+	aspect-ratio: 1 / 0.8;
+	animation-delay: 520ms;
+}
+
+.node {
+	position: absolute;
+	width: 30%;
+	height: 20%;
+	border: 0.45cqw solid var(--diagram);
+	border-radius: 0.8cqw;
+}
+
+.node--a {
+	left: 35%;
+	top: 12%;
+	background: color-mix(in srgb, var(--diagram) 18%, var(--paper));
+}
+
+.node--b {
+	left: 10%;
+	top: 66%;
+}
+
+.node--c {
+	left: 60%;
+	top: 66%;
+	border-radius: 50%;
+}
+
+.wire {
+	position: absolute;
+	top: 32%;
+	height: 34%;
+	border-left: 0.35cqw solid color-mix(in srgb, var(--diagram) 60%, var(--paper));
+	border-top: 0.35cqw solid color-mix(in srgb, var(--diagram) 60%, var(--paper));
+}
+
+.wire--ab {
+	left: 25%;
+	width: 25%;
+	top: 22%;
+	height: 44%;
+}
+
+.wire--ac {
+	left: 65%;
+	width: 10%;
+	top: 22%;
+	height: 44%;
+	border-left: 0;
+	border-right: 0.35cqw solid color-mix(in srgb, var(--diagram) 60%, var(--paper));
+}
+
+/* Apps that are not ready sit further back: faded, still recognisable. */
+.paper--sheet,
+.paper--diagram {
+	background: color-mix(in srgb, var(--paper) 93%, var(--desk));
+}
+
+.paper--sheet > :not(.sticker),
+.paper--diagram > :not(.sticker) {
+	opacity: 0.75;
+	filter: saturate(0.6);
+}
+
+@media (max-width: 900px) {
+	.desk {
+		max-width: 40rem;
+		margin: 1rem auto 0;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.paper {
+		animation: none;
+	}
+	a.paper {
+		transition: none;
+	}
+}

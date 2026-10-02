@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>OOXML Office</title>
+		<meta
+			name="description"
+			content="An open-source office suite for the web. Open, edit and present .pptx and .docx files in your browser, built on one shared OOXML core."
+		/>
+		<meta name="color-scheme" content="dark light" />
+		<link rel="icon" href="favicon.svg" type="image/svg+xml" />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			rel="stylesheet"
+			href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:ital,wght@0,400..900;1,400..900&display=swap"
+		/>
+		<link rel="stylesheet" href="styles.css" />
+		<link rel="stylesheet" href="desk.css" />
+		<script>
+			// Apply a saved theme before first paint so the page never flashes.
+			try {
+				const theme = localStorage.getItem('office-theme');
+				if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
+			} catch {}
+		</script>
+		<script type="module" src="app.js"></script>
+	</head>
+	<body>
+		<header class="topbar">
+			<a class="topbar__waffle" href="#/" aria-label="All apps" title="All apps">
+				<svg viewBox="0 0 18 18" aria-hidden="true">
+					<g fill="currentColor">
+						<circle cx="3" cy="3" r="1.6" />
+						<circle cx="9" cy="3" r="1.6" />
+						<circle cx="15" cy="3" r="1.6" />
+						<circle cx="3" cy="9" r="1.6" />
+						<circle cx="9" cy="9" r="1.6" />
+						<circle cx="15" cy="9" r="1.6" />
+						<circle cx="3" cy="15" r="1.6" />
+						<circle cx="9" cy="15" r="1.6" />
+						<circle cx="15" cy="15" r="1.6" />
+					</g>
+				</svg>
+			</a>
+			<a class="topbar__brand" href="#/">OOXML Office</a>
+			<div class="topbar__app" id="topbar-app" hidden></div>
+			<nav class="topbar__links">
+				<a href="https://github.com/ChristopherVR/ooxml-core" target="_blank" rel="noreferrer"
+					>GitHub</a
+				>
+				<button
+					class="topbar__theme"
+					id="theme-toggle"
+					type="button"
+					aria-label="Switch between light and dark"
+					title="Switch between light and dark"
+				>
+					<svg viewBox="0 0 20 20" aria-hidden="true">
+						<path fill="currentColor" d="M10 2a8 8 0 1 0 0 16V2z" />
+						<circle cx="10" cy="10" r="7.25" fill="none" stroke="currentColor" stroke-width="1.5" />
+					</svg>
+				</button>
+			</nav>
+		</header>
+
+		<main id="home" class="home">
+			<section class="hero">
+				<div class="hero__copy">
+					<h1>Office, opened&nbsp;up.</h1>
+					<p class="hero__lede">
+						Slides and documents that open, edit and present right here in your browser. Nothing to
+						install, and the files you open are read on your own machine.
+					</p>
+					<div class="hero__actions">
+						<a class="button button--slide" href="#/powerpoint">Open PowerPoint</a>
+						<a class="button button--page" href="#/word"
+							>Open Word <span class="button__tag">Beta</span></a
+						>
+					</div>
+				</div>
+
+				<div class="desk" aria-label="Apps">
+					<div class="paper paper--diagram" aria-hidden="true">
+						<i class="node node--a"></i><i class="node node--b"></i><i class="node node--c"></i
+						><i class="wire wire--ab"></i><i class="wire wire--ac"></i>
+						<span class="sticker sticker--planned">Visio, planned</span>
+					</div>
+
+					<div class="paper paper--sheet" aria-hidden="true">
+						<span class="sheet__grid"></span>
+						<span class="sticker sticker--soon">Excel, soon</span>
+					</div>
+
+					<a class="paper paper--slide" href="#/powerpoint" aria-label="Open PowerPoint">
+						<span class="slide__shape"></span>
+						<span class="slide__title"></span>
+						<span class="slide__title slide__title--short"></span>
+						<span class="slide__sub"></span>
+						<span class="paper__label">PowerPoint <small>.pptx</small></span>
+					</a>
+
+					<a class="paper paper--page" href="#/word" aria-label="Open Word (beta)">
+						<span class="page__heading"></span>
+						<span class="page__lines"></span>
+						<span class="page__figure"></span>
+						<span class="page__lines page__lines--short"></span>
+						<span class="sticker sticker--beta">Beta</span>
+						<span class="paper__label">Word <small>.docx</small></span>
+					</a>
+				</div>
+			</section>
+
+			<section class="dock" aria-labelledby="dock-title">
+				<h2 id="dock-title">All apps</h2>
+				<ul class="dock__grid" id="app-grid"></ul>
+			</section>
+
+			<section class="core" aria-labelledby="core-title">
+				<h2 id="core-title">One core under every app</h2>
+				<p class="core__lede">
+					Every app reads and writes its files through the same open-source library, so a chart, a
+					picture or a table behaves the same way in a slide as it does on a page.
+				</p>
+				<dl class="core__list">
+					<div>
+						<dt>
+							<a
+								href="https://www.npmjs.com/package/@christophervr/ooxml-core"
+								target="_blank"
+								rel="noreferrer"
+								>ooxml-core</a
+							>
+						</dt>
+						<dd>
+							The shared engine: file packaging, drawings, charts, SmartArt, editing and live
+							collaboration.
+						</dd>
+					</div>
+					<div>
+						<dt>
+							<a
+								href="https://christophervr.github.io/pptx-viewer/"
+								target="_blank"
+								rel="noreferrer"
+								>pptx-viewer</a
+							>
+						</dt>
+						<dd>PowerPoint components for React, Vue, Angular, Svelte and plain JavaScript.</dd>
+					</div>
+					<div>
+						<dt>
+							<a
+								href="https://christophervr.github.io/docx-viewer/"
+								target="_blank"
+								rel="noreferrer"
+								>docx-viewer</a
+							>
+						</dt>
+						<dd>
+							Word components for the same frameworks, plus Solid. Still in beta, so expect gaps.
+						</dd>
+					</div>
+				</dl>
+			</section>
+
+			<footer class="footer">
+				<p>
+					Open source under Apache-2.0. Not affiliated with or endorsed by Microsoft. PowerPoint,
+					Word, Excel and Visio are trademarks of Microsoft Corporation, used here only to name the
+					file formats each app opens.
+				</p>
+			</footer>
+		</main>
+
+		<section id="workspace" class="workspace" hidden>
+			<div class="workspace__loading" id="workspace-loading">
+				<i class="spinner" aria-hidden="true"></i>
+				<span id="workspace-loading-label">Loading</span>
+			</div>
+			<iframe
+				id="workspace-frame"
+				title="App"
+				allow="clipboard-read; clipboard-write; fullscreen"
+			></iframe>
+		</section>
+	</body>
+</html>
