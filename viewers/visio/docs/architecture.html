@@ -7,8 +7,17 @@
 			name="description"
 			content="One format engine, one shared rendering path, and a small lifecycle boundary for every host framework."
 		/>
-		<meta name="theme-color" content="#2459c5" />
+		<meta name="theme-color" content="#fbfaf7" />
 		<title>Architecture · visio-viewer</title>
+		<script>
+			// Resolve the shared preference before the first paint; storage is optional.
+			try {
+				const saved = localStorage.getItem('visio-docs-theme');
+				if (saved === 'light' || saved === 'dark') document.documentElement.dataset.theme = saved;
+			} catch {
+				// CSS follows the system preference when storage is unavailable.
+			}
+		</script>
 		<link rel="stylesheet" href="../docs/assets/site.css" />
 		<script type="module" src="../docs/assets/site.js"></script>
 	</head>
@@ -19,9 +28,19 @@
 				<a class="brand" href="../index.html"
 					><span class="brand-mark" aria-hidden="true">v</span>visio-viewer</a
 				>
-				<nav class="site-nav" aria-label="Main navigation">
+				<button
+					class="menu-toggle"
+					type="button"
+					aria-expanded="false"
+					aria-controls="site-navigation"
+				>
+					Menu <span aria-hidden="true">☰</span>
+				</button>
+				<nav id="site-navigation" class="site-nav" aria-label="Main navigation">
 					<a href="../demo/index.html">Playground</a><a href="../docs/index.html">Guide</a
 					><a href="../docs/parity.html">Compatibility</a
+					><a href="../docs/architecture.html" aria-current="page">Architecture</a>
+					<span class="nav-divider" aria-hidden="true"></span
 					><button class="theme-toggle" type="button" aria-label="Switch color theme">◐</button>
 				</nav>
 			</div>
@@ -108,9 +127,21 @@
 					<li><code>src/binding.ts</code>: lifecycle, properties, events and cleanup.</li>
 				</ul>
 				<p>
-					Native framework packages, where supplied, should delegate to this surface. A behavior
-					fixed in one wrapper must be checked across the others. Successful compilation alone does
-					not verify a framework's runtime lifecycle.
+					The six native adapters in <code>packages/bindings</code> delegate to this surface. A
+					behavior fixed in one wrapper must be checked across the others. Successful compilation
+					alone does not verify a framework's runtime lifecycle.
+				</p>
+				<h2>Shared appearance</h2>
+				<p>
+					All framework hosts use the same custom element styling. Set <code>--vv-background</code>,
+					<code>--vv-surface</code>, <code>--vv-secondary</code>, <code>--vv-ink</code>,
+					<code>--vv-muted</code>, <code>--vv-border</code>, <code>--vv-accent</code>, and
+					<code>--vv-accent-soft</code> on the host to fit your application. Keep text and control
+					contrast accessible.
+				</p>
+				<p>
+					The playground and documentation share one local light/dark preference. An embedded live
+					demo follows the containing page without replacing the document or resetting edits.
 				</p>
 				<h2>Safety boundaries</h2>
 				<ul>
@@ -173,15 +204,17 @@
 				<p>
 					The documentation is a lightweight static, multi-page Vite site. Relative links and
 					bundled local assets allow it to run under a repository-prefixed path. It uses system
-					fonts and no third-party scripts. The playground is an independent page, so visiting the
-					home does not load the parser or open a file.
+					fonts and no third-party scripts or font requests. The home embeds one same-origin
+					playground only after you choose Load live demo. The preview illustration is distinct from
+					the actual shared component; your files open only when you select or drop them.
 				</p>
 				<p>
 					The visual structure takes inspiration from
-					<a href="https://github.com/ChristopherVR/pptx-viewer">pptx-viewer</a>: clear hero, real
-					playground entry, shared framework story, task-oriented documentation, and visible limits.
-					The local review in <code>docs/research/pptx-pages-design-review.md</code> records the
-					detailed findings.
+					<a href="https://github.com/ChristopherVR/pptx-viewer">pptx-viewer</a>: warm paper and
+					rust colors, a dot-grid hero, an embedded live playground, monospaced controls, framework
+					quickstart, and task-oriented documentation. Light and dark modes share the same
+					preference with the application. The local review in
+					<code>docs/research/pptx-pages-design-review.md</code> records the detailed findings.
 				</p>
 				<h2>Publication is separate</h2>
 				<p>
@@ -197,7 +230,7 @@
 		</main>
 		<footer class="footer">
 			<div class="wrap footer-inner">
-				<p>visio-viewer · Public beta</p>
+				<p>visio-viewer <span aria-hidden="true">/</span> Public beta</p>
 				<nav aria-label="Footer">
 					<a href="../docs/architecture.html">Architecture</a
 					><a href="../docs/parity.html">Known limits</a

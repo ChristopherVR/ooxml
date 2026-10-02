@@ -7,8 +7,17 @@
 			name="description"
 			content="What exists, how it is evidenced, and what is still missing. A transparent map toward richer Visio support."
 		/>
-		<meta name="theme-color" content="#2459c5" />
+		<meta name="theme-color" content="#fbfaf7" />
 		<title>Capability ledger · visio-viewer</title>
+		<script>
+			// Resolve the shared preference before the first paint; storage is optional.
+			try {
+				const saved = localStorage.getItem('visio-docs-theme');
+				if (saved === 'light' || saved === 'dark') document.documentElement.dataset.theme = saved;
+			} catch {
+				// CSS follows the system preference when storage is unavailable.
+			}
+		</script>
 		<link rel="stylesheet" href="../docs/assets/site.css" />
 		<script type="module" src="../docs/assets/site.js"></script>
 	</head>
@@ -19,9 +28,19 @@
 				<a class="brand" href="../index.html"
 					><span class="brand-mark" aria-hidden="true">v</span>visio-viewer</a
 				>
-				<nav class="site-nav" aria-label="Main navigation">
+				<button
+					class="menu-toggle"
+					type="button"
+					aria-expanded="false"
+					aria-controls="site-navigation"
+				>
+					Menu <span aria-hidden="true">☰</span>
+				</button>
+				<nav id="site-navigation" class="site-nav" aria-label="Main navigation">
 					<a href="../demo/index.html">Playground</a><a href="../docs/index.html">Guide</a
 					><a href="../docs/parity.html" aria-current="page">Compatibility</a
+					><a href="../docs/architecture.html">Architecture</a>
+					<span class="nav-divider" aria-hidden="true"></span
 					><button class="theme-toggle" type="button" aria-label="Switch color theme">◐</button>
 				</nav>
 			</div>

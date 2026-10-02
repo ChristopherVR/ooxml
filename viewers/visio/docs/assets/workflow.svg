@@ -1,14 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 530" role="img" aria-labelledby="title desc">
 <title id="title">An illustrative release workflow</title><desc id="desc">An idea flows to design and build, through a review decision, then to release. A revision connection loops back to design. This is an illustration of the viewer sample, not a fidelity comparison with Microsoft Visio.</desc>
-<defs><pattern id="grid" width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".7" fill="#dde5e9"/></pattern><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 1 L 8 5 L 0 9" fill="none" stroke="#7a93aa" stroke-width="1.6"/></marker></defs>
-<rect width="600" height="530" fill="#fbfcfd"/><rect width="600" height="530" fill="url(#grid)"/>
-<g font-family="system-ui,-apple-system,Segoe UI,sans-serif"><text x="35" y="37" fill="#5c7282" font-size="10" letter-spacing="1.8">RELEASE WORKFLOW</text><text x="35" y="56" fill="#5c7282" font-size="9">An original sample diagram</text>
-<g fill="none" stroke="#7a93aa" stroke-width="1.5" marker-end="url(#arrow)"><path d="M 278 145 V 186"/><path d="M 278 247 V 286"/><path d="M 278 378 V 411"/><path d="M 337 331 H 442 V 217 H 370"/></g>
-<rect x="186" y="93" width="184" height="52" rx="26" fill="#e0f0ec" stroke="#9fc9bf"/><text x="278" y="124" font-size="13" text-anchor="middle" fill="#30584f">Start with an idea</text>
-<rect x="186" y="191" width="184" height="56" rx="5" fill="#e7edfb" stroke="#91ade7"/><text x="278" y="224" font-size="13" text-anchor="middle" fill="#2b4d89">Design and build</text>
-<path d="M 278 286 L 337 331 L 278 378 L 219 331 Z" fill="#f8efd9" stroke="#d9bf84"/><text x="278" y="336" font-size="13" text-anchor="middle" fill="#75602d">Ready?</text>
-<rect x="186" y="416" width="184" height="52" rx="5" fill="#e0f0ec" stroke="#9fc9bf"/><text x="278" y="447" font-size="13" text-anchor="middle" fill="#30584f">Review and release</text>
-<text x="289" y="399" font-size="9" fill="#5c7282">Yes</text><text x="388" y="322" font-size="9" fill="#5c7282">Iterate</text>
-<g fill="#fff" stroke="#2459c5" stroke-width="1.1"><rect x="181" y="186" width="194" height="66" fill="none" stroke-dasharray="3 3"/><rect x="178" y="183" width="6" height="6"/><rect x="372" y="183" width="6" height="6"/><rect x="178" y="249" width="6" height="6"/><rect x="372" y="249" width="6" height="6"/></g>
-<rect x="30" y="486" width="180" height="23" rx="4" fill="#eef3f7"/><text x="41" y="501" font-size="9" fill="#536b7b">ILLUSTRATION · NOT A LIVE EDITOR</text>
+<defs><pattern id="grid" width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".7" fill="#e6e2d9"/></pattern><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 1 L 8 5 L 0 9" fill="none" stroke="#a48f85" stroke-width="1.6"/></marker></defs>
+<rect width="600" height="530" fill="#fbfaf7"/><rect width="600" height="530" fill="url(#grid)"/>
+<g font-family="system-ui,-apple-system,Segoe UI,sans-serif"><text x="35" y="37" fill="#5a626e" font-size="10" letter-spacing="1.8">RELEASE WORKFLOW</text><text x="35" y="56" fill="#5a626e" font-size="9">An original sample diagram</text>
+<g fill="none" stroke="#a48f85" stroke-width="1.5" marker-end="url(#arrow)"><path d="M 278 145 V 186"/><path d="M 278 247 V 286"/><path d="M 278 378 V 411"/><path d="M 337 331 H 442 V 217 H 370"/></g>
+<rect x="186" y="93" width="184" height="52" rx="26" fill="#f6e5dc" stroke="#cc9d87"/><text x="278" y="124" font-size="13" text-anchor="middle" fill="#6d3928">Start with an idea</text>
+<rect x="186" y="191" width="184" height="56" rx="5" fill="#faeee8" stroke="#d7957d"/><text x="278" y="224" font-size="13" text-anchor="middle" fill="#8f2e12">Design and build</text>
+<path d="M 278 286 L 337 331 L 278 378 L 219 331 Z" fill="#f5eddb" stroke="#c9b790"/><text x="278" y="336" font-size="13" text-anchor="middle" fill="#75602d">Ready?</text>
+<rect x="186" y="416" width="184" height="52" rx="5" fill="#f6e5dc" stroke="#cc9d87"/><text x="278" y="447" font-size="13" text-anchor="middle" fill="#6d3928">Review and release</text>
+<text x="289" y="399" font-size="9" fill="#5a626e">Yes</text><text x="388" y="322" font-size="9" fill="#5a626e">Iterate</text>
+<g fill="#fff" stroke="#c2431f" stroke-width="1.1"><rect x="181" y="186" width="194" height="66" fill="none" stroke-dasharray="3 3"/><rect x="178" y="183" width="6" height="6"/><rect x="372" y="183" width="6" height="6"/><rect x="178" y="249" width="6" height="6"/><rect x="372" y="249" width="6" height="6"/></g>
+<rect x="30" y="486" width="180" height="23" rx="4" fill="#f2efe8"/><text x="41" y="501" font-size="9" fill="#5a626e">ILLUSTRATION · NOT A LIVE EDITOR</text>
 </g></svg>

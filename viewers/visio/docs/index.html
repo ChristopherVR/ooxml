@@ -7,8 +7,17 @@
 			name="description"
 			content="Open a diagram locally, understand the current limits, and embed the same viewer in your application."
 		/>
-		<meta name="theme-color" content="#2459c5" />
+		<meta name="theme-color" content="#fbfaf7" />
 		<title>Getting started · visio-viewer</title>
+		<script>
+			// Resolve the shared preference before the first paint; storage is optional.
+			try {
+				const saved = localStorage.getItem('visio-docs-theme');
+				if (saved === 'light' || saved === 'dark') document.documentElement.dataset.theme = saved;
+			} catch {
+				// CSS follows the system preference when storage is unavailable.
+			}
+		</script>
 		<link rel="stylesheet" href="../docs/assets/site.css" />
 		<script type="module" src="../docs/assets/site.js"></script>
 	</head>
@@ -19,10 +28,20 @@
 				<a class="brand" href="../index.html"
 					><span class="brand-mark" aria-hidden="true">v</span>visio-viewer</a
 				>
-				<nav class="site-nav" aria-label="Main navigation">
+				<button
+					class="menu-toggle"
+					type="button"
+					aria-expanded="false"
+					aria-controls="site-navigation"
+				>
+					Menu <span aria-hidden="true">☰</span>
+				</button>
+				<nav id="site-navigation" class="site-nav" aria-label="Main navigation">
 					<a href="../demo/index.html">Playground</a
 					><a href="../docs/index.html" aria-current="page">Guide</a
 					><a href="../docs/parity.html">Compatibility</a
+					><a href="../docs/architecture.html">Architecture</a>
+					<span class="nav-divider" aria-hidden="true"></span
 					><button class="theme-toggle" type="button" aria-label="Switch color theme">◐</button>
 				</nav>
 			</div>
@@ -51,7 +70,7 @@
 						represented faithfully.
 					</p>
 				</div>
-				<h2>Try the local playground</h2>
+				<h2 id="playground">Try the local playground</h2>
 				<ol>
 					<li>
 						<a href="../demo/index.html">Open the playground</a> to see an original sample document.
@@ -64,11 +83,12 @@
 					</li>
 				</ol>
 				<p>
-					No document upload is performed. Plain-text editing, VSDX-copy export, SVG export and
-					print snapshots are experimental. General drawing editing and legacy binary
-					<code>.vsd</code> support remain outside this build.
+					No document upload is performed. The controls support search, display layers, experimental
+					plain-text editing, bounded undo/redo, SVG export, and explicit VSDX-copy downloads. Print
+					snapshots are API-only preparation; there is no print dialog. General drawing, PDF export,
+					and legacy binary <code>.vsd</code> are outside this build.
 				</p>
-				<h2>Run the development workspace</h2>
+				<h2 id="local-setup">Run the development workspace</h2>
 				<p>
 					Use Node.js 22.12 or newer. The setup script prepares a pinned sibling
 					<code>ooxml</code> checkout and verifies its source before building the Visio entry point.
@@ -86,12 +106,13 @@ npm run dev</code></pre>
 				</p>
 				<h2>Mount a viewer</h2>
 				<p>
-					The current public integration point is <code>mountViewer</code>. The container must have
-					a height. A browser <code>File</code>, <code>Blob</code>, <code>Uint8Array</code>, or
+					The shared integration point is <code>mountViewer</code>. This example imports local
+					source from a file in <code>demo/</code>. The container must have a height. A browser
+					<code>File</code>, <code>Blob</code>, <code>Uint8Array</code>, or
 					<code>ArrayBuffer</code> can be passed to <code>load</code>.
 				</p>
 				<div class="code-card">
-					<pre><code>import { mountViewer } from &#x27;@christophervr/visio-viewer&#x27;;
+					<pre><code>import { mountViewer } from &#x27;../src/index&#x27;;
 
 const viewer = mountViewer(host, {
   events: {
@@ -105,7 +126,86 @@ viewer.fit();
 // When your view unmounts:
 viewer.destroy();</code></pre>
 				</div>
-				<h2>Export a static SVG</h2>
+				<h2 id="frameworks">Use a native framework component</h2>
+				<p>
+					The <code>packages/bindings</code> source workspace contains real native adapters. They
+					forward the same controller, properties, events, and imperative handle; they do not
+					contain another parser or renderer. Use the source entry point for your framework while
+					developing in this repository. The seven npm placeholders at version 0.0.1 contain no
+					viewer API. Functional npm releases need a published Visio core dependency.
+				</p>
+				<div
+					class="table-scroll"
+					role="region"
+					aria-label="Native framework source entry points"
+					tabindex="0"
+				>
+					<table>
+						<thead>
+							<tr>
+								<th>Framework</th>
+								<th>Source entry</th>
+								<th>Export</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>Vanilla</td>
+								<td><code>packages/bindings/src/vanilla.ts</code></td>
+								<td><code>mountViewer</code></td>
+							</tr>
+							<tr>
+								<td>React</td>
+								<td><code>packages/bindings/src/react.ts</code></td>
+								<td><code>VisioViewer</code></td>
+							</tr>
+							<tr>
+								<td>Vue 3</td>
+								<td><code>packages/bindings/src/vue.ts</code></td>
+								<td><code>VisioViewer</code></td>
+							</tr>
+							<tr>
+								<td>Angular</td>
+								<td><code>packages/bindings/src/angular.ts</code></td>
+								<td><code>VisioViewerComponent</code></td>
+							</tr>
+							<tr>
+								<td>Svelte 5</td>
+								<td><code>packages/bindings/src/VisioViewer.svelte</code></td>
+								<td>default <code>VisioViewer</code></td>
+							</tr>
+							<tr>
+								<td>Solid</td>
+								<td><code>packages/bindings/src/solid.tsx</code></td>
+								<td><code>VisioViewer</code></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<p>
+					Native lifecycle and real-element integration tests run in jsdom. All six entry points
+					have no-DOM import checks; React and Vue have server-markup hydration checks. This does
+					not establish complete SSR framework coverage or real-browser visual fidelity. Run
+					<code>npm run check:bindings</code> after installing that workspace's dependencies.
+				</p>
+				<h2 id="editing">Experimental plain-text editing</h2>
+				<p>
+					Load a local source package, select a supported shape, and use its text controls.
+					<code>replacePlainText(pageId, shapeId, text)</code>, <code>undo()</code>, and
+					<code>redo()</code> expose the same operations through each handle. A model assigned with
+					<code>document</code> has no package bytes and stays read-only.
+				</p>
+				<p>
+					Editing rejects master-linked text, rich text, fields, signed packages, and macro content.
+					History is bounded and can discard old undo states. Saved formula caches are not
+					recalculated. General drawing, shape geometry and style editing are not implemented.
+				</p>
+				<p>
+					<code>exportVsdx()</code> returns original or edited package bytes and diagnostics for an
+					explicit copy download. It never overwrites the input file. Native Visio reopening and
+					lossless round-trip fidelity remain unverified.
+				</p>
+				<h2 id="export">Export a static SVG</h2>
 				<p>
 					<code>viewer.exportSvg()</code> returns the current page's SVG string, dimensions, byte
 					length and compatibility diagnostics. It leaves selection, zoom and the source document
@@ -117,6 +217,13 @@ viewer.destroy();</code></pre>
 					metadata. Export is limited to 16 MiB, with conservative early resource checks. Callers
 					can lower the limit with <code>{ maxBytes }</code>. This is not editable VSDX output.
 					Downstream rasterizers must independently cap dimensions and pixel area.
+				</p>
+				<h2 id="print-snapshots">Prepare page snapshots</h2>
+				<p>
+					<code>createPrintSnapshot()</code> returns immutable SVG page artifacts and diagnostics
+					through the API. It preserves drawing dimensions but does not apply native printer
+					settings, open a print dialog, or implement PDF export. This prepares data for a future
+					print workflow.
 				</p>
 				<h2>Properties and events</h2>
 				<div
@@ -143,15 +250,18 @@ viewer.destroy();</code></pre>
 							<tr>
 								<td>Events</td>
 								<td>
-									<code>document-load</code>, <code>document-error</code>, <code>page-change</code>,
-									<code>zoom-change</code>, <code>shape-select</code>
+									<code>document-load</code>, <code>document-change</code>,
+									<code>document-error</code>, <code>page-change</code>, <code>zoom-change</code>,
+									<code>shape-select</code>
 								</td>
 							</tr>
 							<tr>
 								<td>Lifecycle</td>
 								<td>
 									<code>update</code>, <code>load</code>, <code>fit</code>, <code>exportSvg</code>,
-									<code>destroy</code>
+									<code>createPrintSnapshot</code>, <code>replacePlainText</code>,
+									<code>undo</code>, <code>redo</code>, <code>cancelEdit</code>,
+									<code>exportVsdx</code>, <code>destroy</code>
 								</td>
 							</tr>
 						</tbody>
@@ -176,7 +286,7 @@ viewer.destroy();</code></pre>
 		</main>
 		<footer class="footer">
 			<div class="wrap footer-inner">
-				<p>visio-viewer · Public beta</p>
+				<p>visio-viewer <span aria-hidden="true">/</span> Public beta</p>
 				<nav aria-label="Footer">
 					<a href="../docs/architecture.html">Architecture</a
 					><a href="../docs/parity.html">Known limits</a

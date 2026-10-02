@@ -1,97 +1,90 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width,initial-scale=1" />
-		<meta name="description" content="Private, local-first Visio diagram viewer preview" />
+		<meta name="description" content="Public beta, local-first Visio diagram viewer" />
+		<meta name="theme-color" content="#171a1e" />
 		<title>Visio Viewer · Workspace</title>
+		<script>
+			try {
+				const theme = localStorage.getItem('visio-docs-theme');
+				if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
+			} catch {
+				// Keep the default appearance when preference storage is unavailable.
+			}
+		</script>
 		<link rel="stylesheet" href="./workspace.css" />
 	</head>
 	<body>
-		<header class="topbar">
-			<a class="brand" href="../"
-				><span class="brand-mark">V</span><span>Visio Viewer<small>Early preview</small></span></a
+		<a class="skip" href="#viewer">Skip to diagram</a>
+		<header class="topbar" aria-label="Document workspace">
+			<a class="brand" href="../" aria-label="Visio Viewer home"
+				><span class="brand-mark" aria-hidden="true">V</span
+				><span class="brand-name">visio-viewer</span></a
 			>
 			<div class="document-title">
 				<span id="file-name">Sample workflow</span
+				><span class="title-divider" aria-hidden="true">·</span
 				><small id="file-state">Original sample scene</small>
 			</div>
-			<div class="top-actions">
-				<button
-					id="export-svg"
+			<div class="filebar" role="group" aria-label="File commands">
+				<div class="file-actions">
+					<button id="open" class="primary" type="button">
+						<span aria-hidden="true">↥</span> Open .vsdx</button
+					><button id="sample" type="button">Load sample</button
+					><span class="command-divider" aria-hidden="true"></span
+					><button
+						id="export-svg"
+						type="button"
+						title="Download an approximate, current-page SVG with compatibility notes"
+					>
+						Export SVG</button
+					><button id="export-vsdx" type="button" disabled>Download VSDX copy</button
+					><input id="file" type="file" accept=".vsdx" hidden />
+				</div>
+				<span class="local-label"><span aria-hidden="true">●</span> Local only</span>
+			</div>
+			<div class="workspace-links">
+				<a href="../docs/index.html">Guide</a
+				><button
+					id="theme-toggle"
 					type="button"
-					title="Download an approximate, current-page SVG with compatibility notes"
+					aria-label="Switch to light theme"
+					title="Switch to light theme"
 				>
-					Export SVG
+					◐
 				</button>
-				<button id="export-vsdx" type="button" disabled>Download VSDX copy</button>
-				<button id="sample" type="button">Load sample</button
-				><button id="open" class="primary" type="button">Open .vsdx</button
-				><input id="file" type="file" accept=".vsdx" hidden />
 			</div>
 		</header>
-		<main>
-			<aside class="rail">
-				<span class="eyebrow">WORKSPACE</span>
-				<h1>A little clarity.<br />A bigger picture.</h1>
-				<p>Open your diagram, explore its pages, and see exactly what this preview supports.</p>
-				<div class="local-badge">
-					<span aria-hidden="true">◉</span>
-					<div>
-						<strong>Your files stay here</strong
-						><small>Processed in your browser.<br />No uploads or telemetry.</small>
-					</div>
-				</div>
-				<section class="capability">
-					<span class="eyebrow">CURRENT SUPPORT</span>
-					<ul>
-						<li>Multiple pages and backgrounds</li>
-						<li>Basic shapes, paths and groups</li>
-						<li>Cached text and shape styles</li>
-						<li>Zoom, fit and shape inspection</li>
-					</ul>
-					<a href="../#compatibility">View compatibility roadmap ↗</a>
-				</section>
-				<p class="rail-note">
-					This is an early viewer, not full Microsoft Visio parity. Check the notes for every file.
-				</p>
-			</aside>
-			<section class="stage" aria-label="Viewer workspace">
-				<div class="stage-heading">
-					<span id="diagram-label">Release workflow</span
-					><span class="pill" id="edit-label">MODEL PREVIEW</span>
-				</div>
-				<div id="viewer"></div>
-				<div id="drop-overlay" hidden>Drop a .vsdx file to open it</div>
-			</section>
-			<aside class="inspector">
-				<div class="inspector-head">
-					<h2>Document details</h2>
-					<span class="pill">PREVIEW</span>
-				</div>
-				<section>
-					<span class="eyebrow">SELECTED SHAPE</span>
-					<p id="selection">Select a shape on the canvas to inspect it.</p>
-				</section>
-				<section class="compatibility">
-					<div class="section-heading">
-						<h3>Compatibility notes</h3>
-						<span id="note-count">0</span>
-					</div>
-					<p class="muted">What is approximate, omitted or unsupported in this drawing.</p>
-					<ul id="notes" aria-live="polite"></ul>
-				</section>
-				<p id="error" role="alert" hidden></p>
-				<p id="export-status" role="status"></p>
-				<p class="muted">
-					Text editing is experimental. Formulas are not recalculated. Native Visio compatibility is
-					not verified. Keep the original and review downloaded copies in Visio.
-				</p>
-			</aside>
+		<main class="stage" aria-label="Viewer workspace">
+			<div id="viewer" tabindex="-1"></div>
+			<div id="drop-overlay" hidden>Drop a .vsdx file to open it</div>
 		</main>
-		<footer>
-			<span>Built on ooxml-core · Framework-neutral</span
-			><span>Local preview · No Microsoft Visio comparison yet</span>
+		<div class="notices">
+			<p id="error" role="alert" hidden></p>
+			<p id="export-status" role="status"></p>
+		</div>
+		<footer class="workspace-footer">
+			<details class="document-report">
+				<summary>Document report <span id="note-count">0</span></summary>
+				<div class="report-body">
+					<div class="report-heading">
+						<h1 id="diagram-label">Release workflow</h1>
+						<span class="pill" id="edit-label">MODEL PREVIEW</span>
+					</div>
+					<h2>Selected shape</h2>
+					<p id="selection">Select a shape on the canvas to inspect it.</p>
+					<h2>Compatibility notes</h2>
+					<ul id="notes"></ul>
+					<p>
+						Text editing is experimental. Formulas are not recalculated. Native Visio compatibility
+						is not verified. Keep the original and review downloaded copies in Visio.
+					</p>
+					<a href="../docs/parity.html">Full capability ledger →</a>
+				</div>
+			</details>
+			<span class="privacy-note">Files stay in your browser · Preview</span>
 		</footer>
 		<script type="module" src="./main.ts"></script>
 	</body>

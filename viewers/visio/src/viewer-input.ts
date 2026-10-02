@@ -1,7 +1,7 @@
 import type { ViewerController, ViewerState } from './controller.js';
 interface Controls {
 	viewport: HTMLDivElement;
-	toolbar: HTMLDivElement;
+	commandRoot: ShadowRoot;
 	pageSelect: HTMLSelectElement;
 	searchInput: HTMLInputElement;
 }
@@ -22,7 +22,7 @@ export function wireViewerInputs(
 	controller: ViewerController,
 	fit: () => void,
 ): () => void {
-	const { viewport, toolbar, pageSelect, searchInput } = controls;
+	const { viewport, commandRoot, pageSelect, searchInput } = controls;
 	const Abort = viewport.ownerDocument.defaultView?.AbortController ?? AbortController,
 		events = new Abort();
 	const options = { signal: events.signal };
@@ -52,7 +52,7 @@ export function wireViewerInputs(
 		() => controller.setPage(Number(pageSelect.value)),
 		options,
 	);
-	toolbar.addEventListener(
+	commandRoot.addEventListener(
 		'click',
 		(event) => {
 			const action = (event.target as Element)?.closest?.<HTMLButtonElement>('button')?.dataset

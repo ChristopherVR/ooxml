@@ -1,78 +1,207 @@
 const root = document.documentElement;
+root.classList.add('js');
 const themeButton = document.querySelector('.theme-toggle');
-function syncThemeLabel() {
-	if (!themeButton) return;
-	const dark =
-		root.dataset.theme === 'dark' ||
-		(!root.dataset.theme && matchMedia('(prefers-color-scheme: dark)').matches);
-	themeButton.setAttribute('aria-label', `Switch to ${dark ? 'light' : 'dark'} theme`);
-	themeButton.setAttribute('title', `Switch to ${dark ? 'light' : 'dark'} theme`);
-	themeButton.textContent = dark ? '☀' : '◐';
-}
+const media = matchMedia('(prefers-color-scheme: dark)');
+const storageKey = 'visio-docs-theme';
+let preference;
 try {
-	const saved = localStorage.getItem('visio-docs-theme');
-	if (saved === 'dark' || saved === 'light') root.dataset.theme = saved;
+	const saved = localStorage.getItem(storageKey);
+	if (saved === 'dark' || saved === 'light') preference = saved;
 } catch {
-	/* Preference storage can be unavailable. */
+	// Preference storage is optional; the current tab still works.
 }
-syncThemeLabel();
-themeButton?.addEventListener('click', () => {
-	const dark =
-		root.dataset.theme === 'dark' ||
-		(!root.dataset.theme && matchMedia('(prefers-color-scheme: dark)').matches);
-	root.dataset.theme = dark ? 'light' : 'dark';
+function syncEmbeddedTheme() {
+	const frame = document.getElementById('live-viewer');
 	try {
-		localStorage.setItem('visio-docs-theme', root.dataset.theme);
+		if (frame?.contentDocument)
+			frame.contentDocument.documentElement.dataset.theme = root.dataset.theme;
 	} catch {
-		/* Keep session preference without storage. */
+		// Only the site's own same-origin demo may receive the preference.
 	}
-	syncThemeLabel();
+}
+function applyTheme() {
+	const theme = preference ?? (media.matches ? 'dark' : 'light');
+	root.dataset.theme = theme;
+	const label = `Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`;
+	themeButton?.setAttribute('aria-label', label);
+	themeButton?.setAttribute('title', label);
+	if (themeButton) themeButton.textContent = theme === 'dark' ? '☀' : '◐';
+	document
+		.querySelector('meta[name="theme-color"]')
+		?.setAttribute('content', theme === 'dark' ? '#0f1113' : '#fbfaf7');
+	syncEmbeddedTheme();
+}
+applyTheme();
+themeButton?.addEventListener('click', () => {
+	preference = root.dataset.theme === 'dark' ? 'light' : 'dark';
+	try {
+		localStorage.setItem(storageKey, preference);
+	} catch {
+		// Keep session preference without storage.
+	}
+	applyTheme();
 });
+media.addEventListener?.('change', applyTheme);
+window.addEventListener('storage', (event) => {
+	if (event.key !== storageKey && event.key !== null) return;
+	preference = event.newValue === 'light' || event.newValue === 'dark' ? event.newValue : undefined;
+	applyTheme();
+});
+document.getElementById('live-viewer')?.addEventListener('load', syncEmbeddedTheme);
+
+const menuButton = document.querySelector('.menu-toggle');
+const navigation = document.getElementById('site-navigation');
+function setMenu(open, returnFocus = false) {
+	menuButton?.setAttribute('aria-expanded', String(open));
+	if (navigation) navigation.dataset.open = String(open);
+	if (returnFocus) menuButton?.focus();
+}
+menuButton?.addEventListener('click', () =>
+	setMenu(menuButton.getAttribute('aria-expanded') !== 'true'),
+);
+navigation?.addEventListener('click', (event) => {
+	if (event.target.closest('a')) setMenu(false);
+});
+document.addEventListener('keydown', (event) => {
+	if (event.key === 'Escape' && menuButton?.getAttribute('aria-expanded') === 'true')
+		setMenu(false, true);
+});
+
 const snippets = {
 	vanilla: [
 		'main.ts',
-		`import { mountViewer } from '@christophervr/visio-viewer';\n\nconst viewer = mountViewer(host, {\n  events: {\n    'shape-select': (shape) => console.log(shape),\n  },\n});\n\nawait viewer.load(file); // A local File or bytes\nviewer.fit();\n\n// When your view unmounts:\nviewer.destroy();`,
+		`import { mountViewer } from './src/index';
+
+const viewer = mountViewer(host, {
+  events: { 'document-error': console.error },
+});
+
+await viewer.load(file); // A local File or bytes
+viewer.fit();
+
+// When your view unmounts:
+viewer.destroy();`,
 	],
 	react: [
-		'Diagram.tsx · lifecycle pattern',
-		`import { useEffect, useRef } from 'react';\nimport { mountViewer } from '@christophervr/visio-viewer';\n\nexport function Diagram({ file }: { file: File }) {\n  const host = useRef<HTMLDivElement>(null);\n  useEffect(() => {\n    if (!host.current) return;\n    const viewer = mountViewer(host.current);\n    viewer.load(file).catch(console.error);\n    return () => viewer.destroy();\n  }, [file]);\n  return <div ref={host} style={{ height: 600 }} />;\n}`,
+		'Diagram.tsx · local React component',
+		`import { VisioViewer } from './packages/bindings/src/react';
+import type { VisioDocument } from './src/index';
+
+export function Diagram({ diagram }: {
+  diagram: VisioDocument;
+}) {
+  return <VisioViewer
+    document={diagram}
+    style={{ height: 600 }}
+    events={{ 'document-error': console.error }}
+  />;
+}
+// The native component handles mount and cleanup.`,
 	],
 	vue: [
-		'Diagram.vue · lifecycle pattern',
-		`<script setup lang="ts">\nimport { ref, onMounted, onBeforeUnmount } from 'vue';\nimport { mountViewer } from '@christophervr/visio-viewer';\nconst props = defineProps<{ file: File }>();\nconst host = ref<HTMLDivElement>();\nlet viewer: ReturnType<typeof mountViewer>;\nonMounted(() => {\n  viewer = mountViewer(host.value!);\n  viewer.load(props.file).catch(console.error);\n});\nonBeforeUnmount(() => viewer?.destroy());\n</script>\n<template><div ref="host" style="height:600px" /></template>`,
+		'Diagram.vue · local Vue component',
+		`<script setup lang="ts">
+import { VisioViewer } from './packages/bindings/src/vue';
+import type { VisioDocument } from './src/index';
+defineProps<{ diagram: VisioDocument }>();
+</script>
+
+<template>
+  <VisioViewer
+    :document="diagram"
+    style="height: 600px"
+    @document-error="console.error"
+  />
+</template>`,
 	],
 	angular: [
-		'Component lifecycle · integration pattern',
-		`import { mountViewer } from '@christophervr/visio-viewer';\n\n// Inside your component, after the host view exists:\nngAfterViewInit() {\n  this.viewer = mountViewer(this.host.nativeElement);\n  this.viewer.load(this.file).catch(console.error);\n}\n\n// Release subscriptions and pending work:\nngOnDestroy() {\n  this.viewer?.destroy();\n}\n\n// host: ElementRef<HTMLElement>; file: File`,
+		'diagram.ts · local Angular component',
+		`import { Component, Input } from '@angular/core';
+import { VisioViewerComponent }
+  from './packages/bindings/src/angular';
+import type { VisioDocument } from './src/index';
+
+@Component({
+  selector: 'app-diagram',
+  imports: [VisioViewerComponent],
+  template: '<visio-viewer-host [document]="diagram" />',
+  styles: ['visio-viewer-host { display:block; height:600px }'],
+})
+export class Diagram {
+  @Input() diagram: VisioDocument | null = null;
+}`,
 	],
 	svelte: [
-		'Diagram.svelte · lifecycle pattern',
-		`<script lang="ts">\nimport { onMount } from 'svelte';\nimport { mountViewer } from '@christophervr/visio-viewer';\nlet { file }: { file: File } = $props();\nlet host: HTMLDivElement;\nonMount(() => {\n  const viewer = mountViewer(host);\n  viewer.load(file).catch(console.error);\n  return () => viewer.destroy();\n});\n</script>\n<div bind:this={host} style="height:600px"></div>`,
+		'Diagram.svelte · local Svelte component',
+		`<script lang="ts">
+import VisioViewer
+  from './packages/bindings/src/VisioViewer.svelte';
+import type { VisioDocument } from './src/index';
+let { diagram }: { diagram: VisioDocument } = $props();
+</script>
+
+<VisioViewer
+  document={diagram}
+  style="height:600px"
+  events={{ 'document-error': console.error }}
+/>`,
 	],
 	solid: [
-		'Diagram.tsx · lifecycle pattern',
-		`import { createEffect, onMount, onCleanup } from 'solid-js';\nimport { mountViewer } from '@christophervr/visio-viewer';\n\nexport function Diagram(props: { file: File }) {\n  let host!: HTMLDivElement;\n  onMount(() => {\n    const viewer = mountViewer(host);\n    createEffect(() => {\n      viewer.load(props.file).catch(console.error);\n    });\n    onCleanup(() => viewer.destroy());\n  });\n  return <div ref={host} style={{ height: '600px' }} />;\n}`,
+		'Diagram.tsx · local Solid component',
+		`import { VisioViewer } from './packages/bindings/src/solid';
+import type { VisioDocument } from './src/index';
+
+export function Diagram(props: { diagram: VisioDocument }) {
+  return <VisioViewer
+    document={props.diagram}
+    style={{ height: '600px' }}
+    events={{ 'document-error': console.error }}
+  />;
+}
+// Each binding uses the same shared browser element.`,
 	],
 };
-const code = document.querySelector('#integration-code');
-const filename = document.querySelector('#integration-filename');
-const status = document.querySelector('#copy-status');
-for (const button of document.querySelectorAll('[data-framework]')) {
-	button.addEventListener('click', () => {
-		const sample = snippets[button.dataset.framework];
-		if (!sample || !code || !filename) return;
-		for (const choice of document.querySelectorAll('[data-framework]'))
-			choice.setAttribute('aria-pressed', String(choice === button));
-		filename.textContent = sample[0];
-		code.textContent = sample[1];
-		if (status) status.textContent = '';
+const code = document.getElementById('integration-code');
+const filename = document.getElementById('integration-filename');
+const status = document.getElementById('copy-status');
+const panel = document.getElementById('integration-example');
+const choices = [...document.querySelectorAll('[data-framework]')];
+let copyAttempt = 0;
+function selectFramework(button, focus = false) {
+	const sample = snippets[button.dataset.framework];
+	if (!sample || !code || !filename) return;
+	copyAttempt++;
+	for (const choice of choices) {
+		choice.setAttribute('aria-selected', String(choice === button));
+		choice.tabIndex = choice === button ? 0 : -1;
+	}
+	panel?.setAttribute('aria-labelledby', button.id);
+	filename.textContent = sample[0];
+	code.textContent = sample[1];
+	if (status) status.textContent = '';
+	if (focus) button.focus();
+}
+for (const button of choices) {
+	button.addEventListener('click', () => selectFramework(button));
+	button.addEventListener('keydown', (event) => {
+		const index = choices.indexOf(button);
+		let next;
+		if (event.key === 'ArrowRight') next = choices[(index + 1) % choices.length];
+		if (event.key === 'ArrowLeft') next = choices[(index + choices.length - 1) % choices.length];
+		if (event.key === 'Home') next = choices[0];
+		if (event.key === 'End') next = choices.at(-1);
+		if (!next) return;
+		event.preventDefault();
+		selectFramework(next, true);
 	});
 }
 document.querySelector('.copy-code')?.addEventListener('click', async () => {
+	const attempt = ++copyAttempt;
 	try {
 		await navigator.clipboard.writeText(code?.textContent ?? '');
-		if (status) status.textContent = 'Code copied.';
+		if (status && attempt === copyAttempt) status.textContent = 'Code copied.';
 	} catch {
-		if (status) status.textContent = 'Copy is unavailable. Select and copy the code below.';
+		if (status && attempt === copyAttempt)
+			status.textContent = 'Copy is unavailable. Select and copy the code below.';
 	}
 });

@@ -1,10 +1,12 @@
 import { mountViewer, compatibilityNotes, compatibilityText } from '../src/index.js';
 import { demoDocument } from '../src/demo-document.js';
+import { wireWorkspaceTheme } from './workspace-theme.js';
 
 const get = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
 const fileName = get('file-name'),
 	fileState = get('file-state'),
 	errorBox = get('error');
+const disposeTheme = wireWorkspaceTheme(document);
 let requestId = 0;
 const viewer = mountViewer(get('viewer'), {
 	document: demoDocument,
@@ -190,6 +192,7 @@ window.addEventListener('pagehide', (event) => {
 		viewer.controller.cancelLoad();
 		viewer.cancelEdit();
 	} else {
+		disposeTheme();
 		unsubscribeEdit();
 		viewer.destroy();
 	}

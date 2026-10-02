@@ -2,6 +2,14 @@
 
 Status: local development evidence, 2026-10-02. Full Microsoft Visio parity is not established.
 
+## PPTX-aligned interface checkpoint
+
+The app and Pages sources now share a PPTX-referenced design language: compact Office-style workspace chrome, orange accents, Home/View tabs, page navigation, inspector cards, and coordinated light/dark themes. The landing and guide use a warm paper/rust palette, large headline, framework examples, and the existing lazy local demo. Public-beta and placeholder-package limitations remain explicit.
+
+Local aggregate checks pass: 1,109 core tests (six optional corpus skips), 387 viewer tests (one optional corpus skip), 79 bindings tests, and 24 documentation tests. Formatting, strict typechecks, production builds, actual parser/edit workers, and the packed external consumer pass. Independent source review found no remaining blocking issue in the reviewed chrome/theme/navigation paths.
+
+Desktop/mobile light/dark screenshot and interaction scenarios are committed for remote Chromium CI. Their visual result is pending at this checkpoint: local Chromium cannot launch. Screenshot artifacts contain synthetic demo drawings and documentation only. This redesign does not establish Microsoft Visio rendering or editing parity.
+
 ## Local rendering checkpoint
 
 The combined rendering slice passed the complete viewer `npm run check` before

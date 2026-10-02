@@ -51,8 +51,11 @@ describe('static documentation contracts', () => {
 		});
 		it(`${page}: relative local links resolve under a repository prefix`, () => {
 			const { document } = dom(page).window;
-			for (const element of document.querySelectorAll('[href], [src]')) {
-				const value = element.getAttribute('href') ?? element.getAttribute('src');
+			for (const element of document.querySelectorAll('[href], [src], [data-src]')) {
+				const value =
+					element.getAttribute('href') ??
+					element.getAttribute('src') ??
+					element.getAttribute('data-src');
 				if (/^(https?:|mailto:|#)/.test(value)) continue;
 				assert.ok(!value.startsWith('/'), `Root-absolute URL breaks repository hosting: ${value}`);
 				const target = resolve(root, dirname(page), decodeURIComponent(value.split(/[?#]/)[0]));
@@ -105,6 +108,12 @@ describe('static documentation contracts', () => {
 		assert.ok(has(tablet, '.doc-layout', 'display', 'block'));
 		assert.equal(declarations(rule('.table-scroll')).overflow, 'auto');
 		assert.equal(declarations(rule('.code-section>div,.code-card'))['min-width'], '0');
+		assert.equal(
+			declarations(rule('.theme-toggle'))['min-height'] ??
+				declarations(rule('.theme-toggle')).height,
+			'44px',
+		);
+		assert.equal(declarations(rule('.frameworks button'))['min-height'], '44px');
 		assert.ok(
 			motion.nodes.some(
 				(n) =>
@@ -121,12 +130,15 @@ describe('static documentation contracts', () => {
 		assert.ok(!hiddenContent, 'Content must not be hidden pending JavaScript');
 	});
 	it('keeps sample and fidelity limitations explicit', () => {
-		const home = dom('index.html').window.document.body.textContent;
+		const home = dom('index.html').window.document.body.textContent.replace(/\s+/g, ' ');
 		const ledger = dom('docs/parity.html').window.document.body.textContent;
-		assert.match(home, /Illustration · not a live editor/);
+		assert.match(home, /Original illustration · not a live editor/);
 		assert.match(home, /public beta/i);
 		assert.match(home, /npm packages are placeholders without a viewer API/i);
-		assert.match(home, /General drawing edits/);
+		assert.match(home, /General drawing/);
+		assert.match(home, /Experimental source-backed plain-text/);
+		assert.match(home, /Native Visio reopening remains unverified/);
+		assert.doesNotMatch(home, /private and unpublished|npm install|MIT license/i);
 		assert.match(ledger, /parity is a target, not the current result/i);
 		assert.match(ledger, /Generated fixtures/);
 		const rows = [...dom('docs/parity.html').window.document.querySelectorAll('tbody tr')];
@@ -139,16 +151,17 @@ describe('static documentation contracts', () => {
 });
 
 describe('documentation interaction logic in a simulated DOM', () => {
-	function interactive() {
+	function interactive(configure = () => {}) {
 		const instance = new JSDOM(read('index.html'), {
 			url: 'https://example.test/visio-viewer/',
 			runScripts: 'outside-only',
 		});
 		instance.window.matchMedia = () => ({ matches: false });
+		configure(instance.window);
 		instance.window.eval(read('docs/assets/site.js'));
 		return instance;
 	}
-	it('each framework button selects exactly one labelled code example', () => {
+	it('native framework tabs select one labelled local-source example', () => {
 		const instance = interactive();
 		const document = instance.window.document;
 		const choices = [...document.querySelectorAll('[data-framework]')];
@@ -160,26 +173,64 @@ describe('documentation interaction logic in a simulated DOM', () => {
 			'vanilla',
 			'vue',
 		]);
-		assert.equal(
-			document.querySelectorAll('[role="tab"]').length,
-			0,
-			'Use native toggle buttons, not incomplete ARIA tabs',
-		);
+		assert.equal(document.querySelectorAll('[role="tab"]').length, 6);
 		for (const choice of choices) {
 			choice.click();
-			assert.equal(document.querySelectorAll('[data-framework][aria-pressed="true"]').length, 1);
-			assert.equal(choice.getAttribute('aria-pressed'), 'true');
-			assert.match(document.querySelector('#integration-code').textContent, /mountViewer/);
-			assert.match(document.querySelector('#integration-code').textContent, /destroy/);
+			assert.equal(document.querySelectorAll('[data-framework][aria-selected="true"]').length, 1);
+			assert.equal(choice.tabIndex, 0);
 			assert.equal(
-				document.querySelector('#integration-code').children.length,
-				0,
-				'Code is text, never injected HTML',
+				document.querySelector('#integration-example').getAttribute('aria-labelledby'),
+				choice.id,
 			);
+			const content = document.querySelector('#integration-code');
+			if (choice.dataset.framework === 'vanilla') {
+				assert.match(content.textContent, /mountViewer/);
+				assert.match(content.textContent, /destroy/);
+			} else {
+				assert.match(content.textContent, /VisioViewer/);
+				assert.match(content.textContent, /\.\/packages\/bindings\/src\//);
+			}
+			assert.match(content.textContent, /\.\/src\/index/);
+			assert.equal(content.children.length, 0, 'Code is text, never injected HTML');
 		}
 		instance.window.close();
 	});
-	it('theme toggle updates preference and accessible label', () => {
+	it('code tabs use roving keyboard focus with Arrow, Home, and End', () => {
+		const instance = interactive();
+		const { document, KeyboardEvent } = instance.window;
+		const choices = [...document.querySelectorAll('[data-framework]')];
+		const press = (tab, key) =>
+			tab.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
+		choices[0].focus();
+		press(choices[0], 'ArrowLeft');
+		assert.equal(document.activeElement, choices.at(-1));
+		press(choices.at(-1), 'ArrowRight');
+		assert.equal(document.activeElement, choices[0]);
+		press(choices[0], 'End');
+		assert.equal(document.activeElement, choices.at(-1));
+		press(choices.at(-1), 'Home');
+		assert.equal(document.activeElement, choices[0]);
+		assert.equal(choices.filter((choice) => choice.tabIndex === 0).length, 1);
+		instance.window.close();
+	});
+	it('mobile menu toggles, closes on Escape, and returns focus', () => {
+		const instance = interactive();
+		const { document, KeyboardEvent } = instance.window;
+		const menu = document.querySelector('.menu-toggle');
+		const navigation = document.getElementById(menu.getAttribute('aria-controls'));
+		menu.click();
+		assert.equal(menu.getAttribute('aria-expanded'), 'true');
+		assert.equal(navigation.dataset.open, 'true');
+		navigation.querySelector('a').focus();
+		document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+		assert.equal(menu.getAttribute('aria-expanded'), 'false');
+		assert.equal(document.activeElement, menu);
+		menu.click();
+		menu.click();
+		assert.equal(navigation.dataset.open, 'false');
+		instance.window.close();
+	});
+	it('theme toggle updates shared preference, frame, metadata, and accessible label', () => {
 		const instance = interactive();
 		const { document, localStorage } = instance.window;
 		const button = document.querySelector('.theme-toggle');
@@ -187,8 +238,55 @@ describe('documentation interaction logic in a simulated DOM', () => {
 		assert.equal(document.documentElement.dataset.theme, 'dark');
 		assert.equal(localStorage.getItem('visio-docs-theme'), 'dark');
 		assert.equal(button.getAttribute('aria-label'), 'Switch to light theme');
+		assert.equal(document.querySelector('meta[name="theme-color"]').content, '#0f1113');
+		assert.equal(
+			document.getElementById('live-viewer').contentDocument.documentElement.dataset.theme,
+			'dark',
+		);
 		button.click();
 		assert.equal(document.documentElement.dataset.theme, 'light');
+		instance.window.close();
+	});
+	it('saved theme and later workspace storage changes synchronize the page', () => {
+		const instance = interactive((window) =>
+			window.localStorage.setItem('visio-docs-theme', 'dark'),
+		);
+		const { document, StorageEvent } = instance.window;
+		assert.equal(document.documentElement.dataset.theme, 'dark');
+		instance.window.dispatchEvent(
+			new StorageEvent('storage', { key: 'visio-docs-theme', newValue: 'light' }),
+		);
+		assert.equal(document.documentElement.dataset.theme, 'light');
+		instance.window.dispatchEvent(
+			new StorageEvent('storage', { key: 'unrelated', newValue: 'dark' }),
+		);
+		assert.equal(document.documentElement.dataset.theme, 'light');
+		instance.window.close();
+	});
+	it('system changes follow until the visitor chooses a theme, even without storage', () => {
+		let systemChanged;
+		const media = {
+			matches: true,
+			addEventListener: (_, listener) => {
+				systemChanged = listener;
+			},
+		};
+		const instance = interactive((window) => {
+			window.matchMedia = () => media;
+			Object.defineProperty(window, 'localStorage', {
+				get() {
+					throw new Error('Unavailable');
+				},
+			});
+		});
+		const { document } = instance.window;
+		assert.equal(document.documentElement.dataset.theme, 'dark');
+		media.matches = false;
+		systemChanged();
+		assert.equal(document.documentElement.dataset.theme, 'light');
+		document.querySelector('.theme-toggle').click();
+		systemChanged();
+		assert.equal(document.documentElement.dataset.theme, 'dark');
 		instance.window.close();
 	});
 	it('unavailable clipboard gives an announced recovery message', async () => {
@@ -198,6 +296,66 @@ describe('documentation interaction logic in a simulated DOM', () => {
 		const status = instance.window.document.querySelector('#copy-status');
 		assert.equal(status.getAttribute('role'), 'status');
 		assert.match(status.textContent, /Select and copy/);
+		instance.window.close();
+	});
+	it('late clipboard completion cannot announce copying a newly selected example', async () => {
+		let finish;
+		const instance = interactive((window) => {
+			Object.defineProperty(window.navigator, 'clipboard', {
+				value: {
+					writeText: () =>
+						new Promise((resolve) => {
+							finish = resolve;
+						}),
+				},
+			});
+		});
+		instance.window.document.querySelector('.copy-code').click();
+		instance.window.document.querySelector('[data-framework="react"]').click();
+		finish();
+		await Promise.resolve();
+		assert.equal(instance.window.document.querySelector('#copy-status').textContent, '');
+		instance.window.close();
+	});
+	it('lazy live viewer admits one load and only the expected readiness sender', () => {
+		let timeout;
+		const instance = interactive((window) => {
+			window.setTimeout = (callback) => {
+				timeout = callback;
+				return 1;
+			};
+		});
+		instance.window.eval(read('docs/assets/live-demo.js'));
+		const { document, MessageEvent } = instance.window;
+		const frame = document.getElementById('live-viewer');
+		const button = document.getElementById('load-demo');
+		const status = document.getElementById('demo-status');
+		assert.equal(frame.hasAttribute('src'), false);
+		button.click();
+		assert.equal(frame.getAttribute('src'), 'demo/index.html?embed=1');
+		assert.equal(frame.hidden, false);
+		const source = frame.contentWindow;
+		// jsdom does not fetch the iframe HTML; supply the ready document root.
+		frame.contentDocument.appendChild(frame.contentDocument.createElement('html'));
+		button.click();
+		assert.equal(frame.contentWindow, source, 'Repeated clicks must not reload a live document');
+		const ready = (origin, sender, data = { type: 'visio-viewer-ready' }) =>
+			instance.window.dispatchEvent(new MessageEvent('message', { origin, source: sender, data }));
+		ready('https://untrusted.test', source);
+		ready(instance.window.location.origin, instance.window);
+		ready(instance.window.location.origin, source, { type: 'other' });
+		assert.match(status.textContent, /Loading/);
+		timeout();
+		assert.match(status.textContent, /taking longer/);
+		ready(instance.window.location.origin, source);
+		assert.match(status.textContent, /Viewer ready/);
+		assert.equal(frame.getAttribute('aria-busy'), 'false');
+		assert.equal(
+			frame.contentDocument.documentElement.dataset.theme,
+			document.documentElement.dataset.theme,
+		);
+		timeout();
+		assert.match(status.textContent, /Viewer ready/);
 		instance.window.close();
 	});
 });
