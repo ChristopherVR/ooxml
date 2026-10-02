@@ -12,3 +12,6 @@ src/pptx/__tests__/fixtures/smartart-gallery/baseline.json
 # fixture generators import pptx-viewer-core and stay in pptx-viewer.
 src/pptx/__tests__/fixtures/e2e/generate-*.ts
 release-plan.json
+
+# Machine-specific agent notes (checkout paths and the like); see AGENTS.md
+CLAUDE.local.md
