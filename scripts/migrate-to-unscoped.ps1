@@ -79,7 +79,26 @@ function Invoke-Read([string]$Cwd, [string]$Exe, [string[]]$Arguments) {
 	return (($out | Out-String).Trim())
 }
 
-function Test-OnNpm([string]$Spec) { return [bool](Invoke-Read $Ooxml 'npm' @('view', $Spec, 'version')) }
+# --prefer-online skips npm's local cache, which still answers for a package just unpublished.
+function Test-OnNpm([string]$Spec) { return [bool](Invoke-Read $Ooxml 'npm' @('view', $Spec, 'version', '--prefer-online')) }
+
+# The registry's CDN can serve a removed package for a short while after npm confirms the unpublish.
+function Wait-GoneFromNpm([string]$Spec) {
+	for ($i = 0; $i -lt 12; $i++) {
+		if (-not (Test-OnNpm $Spec)) { return }
+		Start-Sleep -Seconds 5
+	}
+	throw "Stopped: $Spec is still on npm a minute after the unpublish."
+}
+
+# The other way round: a fresh publish can take a moment to become visible.
+function Wait-OnNpm([string]$Spec) {
+	for ($i = 0; $i -lt 24; $i++) {
+		if (Test-OnNpm $Spec) { return }
+		Start-Sleep -Seconds 5
+	}
+	throw "Stopped: $Spec is not visible on npm two minutes after publishing."
+}
 function Get-Json([string]$Path) { return Get-Content -Raw $Path | ConvertFrom-Json }
 
 function Wait-User([string]$Message) {
@@ -143,7 +162,7 @@ function Step-Unpublish {
 		if (-not (Test-OnNpm $spec)) { Write-Host "${spec}: already gone"; continue }
 		$whole = -not $spec.Substring(1).Contains('@')
 		Invoke-Npm $Ooxml (@('unpublish', $spec) + $(if ($whole) { @('--force') } else { @() }))
-		if (-not $DryRun -and (Test-OnNpm $spec)) { throw "Stopped: $spec is still on npm after the unpublish." }
+		if (-not $DryRun) { Wait-GoneFromNpm $spec }
 	}
 }
 
@@ -172,6 +191,8 @@ function Step-Ooxml {
 	Invoke-Change $Ooxml 'bun' @('run', 'build')
 	Invoke-Change $Ooxml 'bun' @('run', '--cwd', 'packages/ui', 'build')
 	Invoke-Change $Ooxml 'node' @('scripts/publish-released.mjs', '--tag', "ooxml-core@$core", '--manual')
+	# publish-released.mjs refuses the UI until the core it depends on is visible on npm.
+	if (-not $DryRun) { Wait-OnNpm "ooxml-core@$core" }
 	Invoke-Change $Ooxml 'node' @('scripts/publish-released.mjs', '--tag', "ooxml-ui@$ui", '--manual')
 	# The UI workspace resolves ooxml-core from the registry, so the lockfile changes now.
 	Invoke-Change $Ooxml 'bun' @('install')
