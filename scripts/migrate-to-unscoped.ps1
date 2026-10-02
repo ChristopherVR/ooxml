@@ -151,10 +151,11 @@ function Get-TrustedPublisherNote([string[]]$Packages, [string]$Repo) {
 	"    repository $($Repo.Split('/')[1]), workflow release.yml, environment npm"
 }
 
-function Assert-Clean([string]$Dir, [string]$Name) {
+# -AllowLockfile: the step refreshes and commits bun.lock itself, so an earlier refresh may be there.
+function Assert-Clean([string]$Dir, [string]$Name, [switch]$AllowLockfile) {
 	# Machine-local agent settings never get committed by this script, so they may be edited.
 	$dirty = (Split-Lines (Invoke-Read $Dir 'git' @('status', '--porcelain', '--untracked-files=no')) |
-		Where-Object { $_ -notmatch '\.claude/settings\.local\.json$' }) -join "`n"
+		Where-Object { $_ -notmatch '\.claude/settings\.local\.json$' -and -not ($AllowLockfile -and $_ -match ' bun\.lock$') }) -join "`n"
 	if ($dirty) { throw "$Name ($Dir) has uncommitted changes:`n$dirty" }
 	$branch = Invoke-Read $Dir 'git' @('branch', '--show-current')
 	if ($branch -ne 'main') { throw "$Name ($Dir) is on '$branch', not main." }
@@ -261,7 +262,7 @@ function Step-Ooxml {
 
 function Step-Docx {
 	Confirm-NpmLogin
-	Assert-Clean $Docx 'docx-viewer'
+	Assert-Clean $Docx 'docx-viewer' -AllowLockfile
 	Invoke-Change $Docx 'git' @('pull', '--ff-only', 'origin', 'main')
 	$json = Invoke-Read $Docx 'node' @('-e', "import('./scripts/release-plan.mjs').then(m => console.log(JSON.stringify(Object.values(m.PACKAGES))))")
 	# docx-core first: every framework package depends on it.
