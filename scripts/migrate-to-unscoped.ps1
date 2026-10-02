@@ -152,7 +152,9 @@ function Get-TrustedPublisherNote([string[]]$Packages, [string]$Repo) {
 }
 
 function Assert-Clean([string]$Dir, [string]$Name) {
-	$dirty = Invoke-Read $Dir 'git' @('status', '--porcelain', '--untracked-files=no')
+	# Machine-local agent settings never get committed by this script, so they may be edited.
+	$dirty = (Split-Lines (Invoke-Read $Dir 'git' @('status', '--porcelain', '--untracked-files=no')) |
+		Where-Object { $_ -notmatch '\.claude/settings\.local\.json$' }) -join "`n"
 	if ($dirty) { throw "$Name ($Dir) has uncommitted changes:`n$dirty" }
 	$branch = Invoke-Read $Dir 'git' @('branch', '--show-current')
 	if ($branch -ne 'main') { throw "$Name ($Dir) is on '$branch', not main." }
