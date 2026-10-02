@@ -145,12 +145,14 @@
 							<tr>
 								<td>Line and fill styles</td>
 								<td>Full styles, patterns, gradients and opacity</td>
-								<td>Partial: solids, linear gradients, caps and cached dash patterns 2-23</td>
+								<td>Partial: cached caps/dashes, solid theme dashes and linear gradients</td>
 								<td>
-									Core style tests; ten real gradients; six real pattern-23 strokes; SVG paint tests
+									Core style/root tests; ten real gradients; six real pattern-23 strokes; SVG paint
+									tests
 								</td>
 								<td>
-									Themed/custom patterns, native dash/cap comparison, radial/hatch fills and effects
+									Non-solid theme/custom patterns, native dash/cap comparison, radial/hatch fills
+									and effects
 								</td>
 							</tr>
 							<tr>
@@ -186,9 +188,17 @@
 							<tr>
 								<td>Themes and styles</td>
 								<td>Theme colors, variants and inheritance</td>
-								<td>Partial: bounded selected theme records</td>
-								<td>Core theme resolver; exact upstream color assertions and gradient stops</td>
-								<td>Complete old-theme variants, effects and full reference equivalence</td>
+								<td>Partial: selected theme records and explicit root-style caches</td>
+								<td>
+									Core theme resolver; upstream colors/gradients;
+									<a href="research/theme-root-style-evidence.md"
+										>hash-pinned root-cache regressions</a
+									>
+								</td>
+								<td>
+									Missing caches, complete theme variants/fonts/effects and native reference
+									equivalence
+								</td>
 							</tr>
 							<tr>
 								<td>Images and foreign data</td>

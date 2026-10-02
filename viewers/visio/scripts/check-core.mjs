@@ -16,3 +16,6 @@ execFileSync(
 		stdio: 'inherit',
 	},
 );
+// The viewer imports the built package entry. Rebuild after source checks so
+// worker, renderer and packed-consumer tests cannot accidentally use stale code.
+execFileSync('npm', ['run', 'build:visio'], { cwd: core, stdio: 'inherit' });

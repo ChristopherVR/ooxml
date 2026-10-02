@@ -67,10 +67,10 @@ index bc99393..3ef4f6e 100644
  	tsconfig: 'tsconfig.build.json',
 diff --git a/src/visio/README.md b/src/visio/README.md
 new file mode 100644
-index 0000000..7a41387
+index 0000000..22e08be
 --- /dev/null
 +++ b/src/visio/README.md
-@@ -0,0 +1,172 @@
+@@ -0,0 +1,186 @@
 +# Visio read-only scenes
 +
 +`ooxml-core/visio` imports VSDX drawing packages into a DOM-independent typed scene.
@@ -110,6 +110,8 @@ index 0000000..7a41387
 +- Saved Quick Style color selectors and internal DrawingML theme color/variant records;
 +  solid fills, linear gradient endpoints/stops, tint/shade/alpha color transforms,
 +  and themed line widths, with diagnostics for approximations
++- Explicit root-style selection for saved themed colors and scalar line/fill formats;
++  root fill patterns and opacity honor zero Quick Style fill-matrix selection
 +- Character runs, fonts, bold/italic/underline, text box transforms and margins;
 +  paragraph offsets, alignment, indentation, spacing, direction, bullet metadata,
 +  and cached text backdrop colors/transparency
@@ -143,6 +145,9 @@ index 0000000..7a41387
 +gradient overrides, and unsupported color transforms retain a solid fallback and
 +diagnostic. Selected theme effects and unsupported line styling are diagnosed
 +separately. Visio-specific ignored theme attributes do not alter normalized paint.
++Root fill-format selection replaces only existing `Themed` scalar caches, preserves
++literal caches and leaves missing root values unresolved. Root gradient stop rows,
++hatch rendering and arbitrary saved gradients remain unsupported.
 +Normalized `style.lineCap` maps directly to SVG `stroke-linecap`. An absent effective
 +cell leaves it undefined; consumers retain their documented fallback. Themed caps
 +resolve independently of line width and use Office's flat default when the selected
@@ -243,6 +248,15 @@ index 0000000..7a41387
 +coordinate/transform amplification and expanded clip work. These helpers are not a
 +metafile renderer or a guarantee of converter completeness. The viewer's live
 +model still does not render EMF/vector foreign data.
++
++`convertVisioMetafile` is an experimental adapter for a trusted
++`emf-converter` browser-package function supplied by the host. It copies and
++reinspects input, narrows admission further to stock-painted primitive shapes
++and lines, fixes non-raster conversion options, and validates the resulting tree.
++Its 256 KiB, 512-record, 2048-pixel limits do not establish a hard heap quota.
++Use it only inside a disposable worker with a parent-owned deadline; it neither
++loads Node codecs nor enables VSDX import. All format conversion remains in
++`emf-converter`; the adapter owns admission and the inert output boundary only.
 diff --git a/src/visio/complex-geometry.test.ts b/src/visio/complex-geometry.test.ts
 new file mode 100644
 index 0000000..2eb0a65
@@ -596,6 +610,219 @@ index 0000000..ce36968
 +	controls.push({ ...end, weight: read('B') });
 +	knots.push(read('A'), values[0]!);
 +	return normalizedNurbs(controls, knots, degree, report, consume, 'NURBSTo', consumeWork);
++}
+diff --git a/src/visio/convert-metafile.test.ts b/src/visio/convert-metafile.test.ts
+new file mode 100644
+index 0000000..aa59df4
+--- /dev/null
++++ b/src/visio/convert-metafile.test.ts
+@@ -0,0 +1,89 @@
++import { describe, expect, it, vi } from 'vitest';
++import { convertVisioMetafile, type VisioMetafileTreeConverter } from './convert-metafile.js';
++import { emf, record, setWord } from './emf-admission.test-fixtures.js';
++const tree = () => ({
++	tag: 'svg',
++	attrs: { xmlns: 'http://www.w3.org/2000/svg', width: 100, height: 100, viewBox: '0 0 100 100' },
++	children: [],
++});
++describe('bounded package conversion adapter', () => {
++	it('copies only the selected input view and passes fixed safe converter options', async () => {
++		const source = emf([record(43, [0, 0, 20, 20])]);
++		const padded = new Uint8Array(source.length + 8);
++		padded.set(source, 4);
++		const convert = vi.fn<VisioMetafileTreeConverter>(async (buffer: ArrayBuffer) => {
++			expect(new Uint8Array(buffer)).toEqual(source);
++			expect(buffer).not.toBe(padded.buffer);
++			return tree();
++		});
++		const result = await convertVisioMetafile(padded.subarray(4, padded.length - 4), convert);
++		expect(result.status).toBe('ok');
++		expect(convert.mock.calls[0]?.[1]).toMatchObject({
++			exactRasterOps: false,
++			dpiScale: 1,
++			maxCanvasDimension: 2048,
++		});
++	});
++	it.each([
++		new Uint8Array(),
++		emf([record(0xffff)]),
++		emf([record(33), record(34, [-1])]),
++		new Uint8Array(256 * 1024 + 1),
++	])('never calls the package for rejected input', async (bytes) => {
++		const convert = vi.fn();
++		expect((await convertVisioMetafile(bytes, convert)).status).not.toBe('ok');
++		expect(convert).not.toHaveBeenCalled();
++	});
++	it('rejects shared input and never invokes caller accessors', async () => {
++		const bytes = emf([]),
++			getter = vi.fn(() => {
++				throw new Error('getter');
++			});
++		Object.defineProperty(bytes, 'byteLength', { get: getter });
++		expect((await convertVisioMetafile(bytes, async () => tree())).status).toBe('ok');
++		expect(getter).not.toHaveBeenCalled();
++		expect(
++			(await convertVisioMetafile(new Uint8Array(new SharedArrayBuffer(128)), vi.fn())).status,
++		).toBe('invalid');
++	});
++	it.each([
++		null,
++		{ ...tree(), attrs: { ...tree().attrs, width: 99, viewBox: '0 0 99 100' } },
++		{ ...tree(), children: [{ tag: 'script', attrs: {}, children: [] }] },
++	])('rejects null, wrong dimensions and active output', async (output) => {
++		expect((await convertVisioMetafile(emf([]), async () => output)).status).toBe(
++			'conversion-failed',
++		);
++	});
++	it.each([setWord(emf([]), 16, 2048), emf(Array.from({ length: 511 }, () => record(27, [0, 0])))])(
++		'rejects excessive dimensions or records before package execution',
++		async (bytes) => {
++			const convert = vi.fn();
++			expect((await convertVisioMetafile(bytes, convert)).status).toBe('budget-exceeded');
++			expect(convert).not.toHaveBeenCalled();
++		},
++	);
++	it('reports oversized output as budget exceeded', async () => {
++		const output = { ...tree(), children: new Array(25_001).fill(null) };
++		expect((await convertVisioMetafile(emf([]), async () => output)).status).toBe(
++			'budget-exceeded',
++		);
++	});
++	it('redacts converter errors', async () => {
++		const result = await convertVisioMetafile(emf([]), async () => {
++			throw new Error('private document contents');
++		});
++		expect(result.status).toBe('conversion-failed');
++		expect(JSON.stringify(result)).not.toContain('private document');
++	});
++	it('isolates input changes during async package work', async () => {
++		const source = emf([]);
++		await convertVisioMetafile(source, async (buffer) => {
++			const before = new Uint8Array(buffer).slice();
++			source.fill(0);
++			await Promise.resolve();
++			expect(new Uint8Array(buffer)).toEqual(before);
++			return tree();
++		});
++	});
++});
+diff --git a/src/visio/convert-metafile.ts b/src/visio/convert-metafile.ts
+new file mode 100644
+index 0000000..4a0fdf9
+--- /dev/null
++++ b/src/visio/convert-metafile.ts
+@@ -0,0 +1,112 @@
++import { inspectVisioEmfAdmission } from './emf-admission.js';
++import { emfInputView } from './emf-admission-input.js';
++import {
++	sanitizeVisioForeignVectorTree,
++	VisioForeignVectorError,
++	type VisioForeignVector,
++} from './foreign-vector.js';
++
++/** Trusted package function, normally emf-converter's browser convertMetafileToSvgTree.
++ * The host supplies the package so this format boundary cannot accidentally load Node codecs.
++ * Invoke only inside a disposable worker with a parent-owned deadline and cancellation.
++ */
++export type VisioMetafileTreeConverter = (
++	bytes: ArrayBuffer,
++	options: {
++		dpiScale: number;
++		maxWidth: number;
++		maxHeight: number;
++		maxCanvasDimension: number;
++		exactRasterOps: false;
++		includeSize: true;
++		idPrefix: string;
++	},
++) => Promise<unknown>;
++export type VisioMetafileConversionResult =
++	| { status: 'ok'; vector: VisioForeignVector }
++	| {
++			status: 'invalid' | 'unsupported' | 'budget-exceeded' | 'conversion-failed';
++			code: string;
++			message: string;
++	  };
++// Deliberately narrower than structural inspection. No mapping changes, clipping,
++// path accumulation, comments, bitmaps, text, EMF+, WMF, or user-created GDI objects.
++const RECORDS = new Set([1, 14, 27, 37, 42, 43, 54]);
++/** Package adapter, not a second EMF renderer. Never returns raw SVG or partial output.
++ * This does not enable document import. Its small generated-case subset remains experimental.
++ * Post-conversion validation bounds retained output, not peak converter heap allocation.
++ */
++export async function convertVisioMetafile(
++	input: Uint8Array,
++	converter: VisioMetafileTreeConverter,
++): Promise<VisioMetafileConversionResult> {
++	const source = emfInputView(input);
++	if (!source)
++		return { status: 'invalid', code: 'input', message: 'Expected fixed, unshared EMF bytes.' };
++	if (source.byteLength > 256 * 1024)
++		return {
++			status: 'budget-exceeded',
++			code: 'input-limit',
++			message: 'Conversion input exceeds 256 KiB.',
++		};
++	// Intrinsic view access and a private copy avoid caller iterators, accessors and mutation
++	// between inspection and the converter's first asynchronous continuation.
++	const bytes = new Uint8Array(source.byteLength);
++	bytes.set(new Uint8Array(source.buffer, source.byteOffset, source.byteLength));
++	const admission = inspectVisioEmfAdmission(bytes, { maxRecords: 512, maxPoints: 4096 });
++	if (admission.status !== 'admitted') {
++		const note = admission.diagnostics[0];
++		return {
++			status: admission.status,
++			code: note?.code ?? 'admission',
++			message: note?.message ?? 'Metafile did not pass bounded preflight.',
++		};
++	}
++	if (admission.recordTypes.some(({ type }) => !RECORDS.has(type)))
++		return {
++			status: 'unsupported',
++			code: 'conversion-subset',
++			message: 'Record is outside the experimental package conversion subset.',
++		};
++	const header = admission.header!;
++	if (header.pixelWidth > 2048 || header.pixelHeight > 2048)
++		return {
++			status: 'budget-exceeded',
++			code: 'dimension-limit',
++			message: 'Conversion dimensions exceed 2048 pixels.',
++		};
++	try {
++		const tree = await converter(bytes.buffer, {
++			dpiScale: 1,
++			maxWidth: 2048,
++			maxHeight: 2048,
++			maxCanvasDimension: 2048,
++			exactRasterOps: false,
++			includeSize: true,
++			idPrefix: 'visio-emf-',
++		});
++		if (tree === null)
++			return {
++				status: 'conversion-failed',
++				code: 'empty-output',
++				message: 'Converter returned no vector output.',
++			};
++		const vector = sanitizeVisioForeignVectorTree(tree);
++		if (vector.width !== header.pixelWidth || vector.height !== header.pixelHeight)
++			return {
++				status: 'conversion-failed',
++				code: 'dimension-mismatch',
++				message: 'Converter output differs from inclusive EMF bounds.',
++			};
++		return { status: 'ok', vector };
++	} catch (error) {
++		return {
++			status:
++				error instanceof VisioForeignVectorError && error.code === 'vector-limit'
++					? 'budget-exceeded'
++					: 'conversion-failed',
++			code: error instanceof VisioForeignVectorError ? error.code : 'converter-error',
++			message: 'Metafile conversion failed or produced inadmissible vector output.',
++		};
++	}
 +}
 diff --git a/src/visio/corpus-regressions.test.ts b/src/visio/corpus-regressions.test.ts
 new file mode 100644
@@ -4939,10 +5166,10 @@ index 0000000..c08bb99
 +});
 diff --git a/src/visio/index.ts b/src/visio/index.ts
 new file mode 100644
-index 0000000..a106561
+index 0000000..d2059d9
 --- /dev/null
 +++ b/src/visio/index.ts
-@@ -0,0 +1,43 @@
+@@ -0,0 +1,48 @@
 +/** Read-only VSDX parsing and normalized scenes. Legacy VSD/VDX and saving are not supported. */
 +export type * from './model.js';
 +export type { VisioShapeData, VisioHyperlink, VisioMetadataOptions } from './shape-metadata.js';
@@ -4986,6 +5213,11 @@ index 0000000..a106561
 +	type VisioForeignVectorPaint,
 +	type VisioForeignVectorMatrix,
 +} from './foreign-vector.js';
++export {
++	convertVisioMetafile,
++	type VisioMetafileTreeConverter,
++	type VisioMetafileConversionResult,
++} from './convert-metafile.js';
 diff --git a/src/visio/layer-limits.test.ts b/src/visio/layer-limits.test.ts
 new file mode 100644
 index 0000000..2a0e055
@@ -5474,10 +5706,10 @@ index 0000000..9c668b7
 +}
 diff --git a/src/visio/line-pattern.test.ts b/src/visio/line-pattern.test.ts
 new file mode 100644
-index 0000000..bebad45
+index 0000000..6332814
 --- /dev/null
 +++ b/src/visio/line-pattern.test.ts
-@@ -0,0 +1,175 @@
+@@ -0,0 +1,177 @@
 +import { describe, expect, it, vi } from 'vitest';
 +import { linePattern } from './line-pattern.js';
 +import { parseVsdx } from './parser.js';
@@ -5615,7 +5847,7 @@ index 0000000..bebad45
 +		]);
 +	});
 +	it.each(['solid', 'sysDash'])(
-+		'leaves requested theme %s explicitly unresolved, independently of width',
++		'resolves saved solid theme dashes but leaves %s spacing unresolved',
 +		async (dash) => {
 +			const theme = generatedTheme().replaceAll(
 +				'<a:ln>',
@@ -5627,7 +5859,9 @@ index 0000000..bebad45
 +				);
 +				expect(doc.pages[0]!.shapes[0]!.style.lineDash).toBeUndefined();
 +				expect(doc.pages[0]!.shapes[0]!.style.linePattern).toBe(1);
-+				expect(doc.diagnostics.map(({ code }) => code)).toContain('unresolved-line-pattern');
++				expect(doc.diagnostics.some(({ code }) => code === 'unresolved-line-pattern')).toBe(
++					dash !== 'solid',
++				);
 +			}
 +		},
 +	);
@@ -8702,10 +8936,10 @@ index 0000000..f5b6b8c
 +});
 diff --git a/src/visio/parser.ts b/src/visio/parser.ts
 new file mode 100644
-index 0000000..07303f8
+index 0000000..dee3088
 --- /dev/null
 +++ b/src/visio/parser.ts
-@@ -0,0 +1,276 @@
+@@ -0,0 +1,291 @@
 +import { connections, indexedPart, related, validateBackgrounds, visioXml } from './parts.js';
 +import { prepareImages } from './prepare-images.js';
 +import type { VisioImageOptions } from './media.js';
@@ -8719,7 +8953,7 @@ index 0000000..07303f8
 +import { createMetadataBudget, type VisioMetadataOptions } from './shape-metadata.js';
 +import { VisioPackage, VisioPackageError, type VisioPackageLimits } from './package.js';
 +import { normalizeShapes, type ShapeContext } from './shapes.js';
-+import type { StyleRecord } from './style-inheritance.js';
++import { styleSheet, type StyleRecord } from './style-inheritance.js';
 +import {
 +	attribute,
 +	child,
@@ -8825,6 +9059,8 @@ index 0000000..07303f8
 +			sheet: readSheet(style),
 +			attributes: metadataAttributes(style),
 +		});
++	const rootStyle = styles.get('0');
++	if (rootStyle?.attributes.get('NameU') === 'No Style') resources.rootSheet = rootStyle.sheet;
 +	const masters = new Map<string, RawShape[]>();
 +	const mastersPart = await related(pkg, documentPart, 'masters', false);
 +	if (mastersPart) {
@@ -8913,7 +9149,20 @@ index 0000000..07303f8
 +		context.report = localReport;
 +		const sheet = readSheet(child(page, 'PageSheet'));
 +		reportCachedErrors(sheet, localReport);
-+		resources.pageCells = sheet.cells;
++		// PageSheet theme selectors also inherit its explicitly referenced styles.
++		const pageCells = new Map<string, { value?: string; formula?: string }>();
++		for (const category of ['LineStyle', 'FillStyle', 'TextStyle']) {
++			const styleId = attribute(child(page, 'PageSheet'), category);
++			if (styleId === undefined) continue;
++			for (const [name, cell] of styleSheet(styleId, category, context).cells)
++				if (
++					/^(ColorSchemeIndex|EffectSchemeIndex|ConnectorSchemeIndex|FontSchemeIndex|VariationColorIndex|VariationStyleIndex)$/.test(
++						name,
++					)
++				)
++					pageCells.set(name, cell);
++		}
++		resources.pageCells = new Map([...pageCells, ...sheet.cells]);
 +		const layers = pageLayers(sheet, resources, localReport);
 +		context.layers = indexLayers(layers);
 +		const width = number(sheet.cells, 'PageWidth', 8.5, localReport),
@@ -10797,10 +11046,11 @@ index 0000000..977438e
 +}
 diff --git a/src/visio/shapes.ts b/src/visio/shapes.ts
 new file mode 100644
-index 0000000..51cca7f
+index 0000000..4ea4708
 --- /dev/null
 +++ b/src/visio/shapes.ts
-@@ -0,0 +1,273 @@
+@@ -0,0 +1,275 @@
++import { rootThemeSheet } from './theme-root.js';
 +import { styleSheet, type StyleContext } from './style-inheritance.js';
 +import { metadata } from './metadata.js';
 +import { shapeMetadata, type VisioMetadataBudget } from './shape-metadata.js';
@@ -10951,6 +11201,7 @@ index 0000000..51cca7f
 +			}
 +			sheet = mergeSheets(sheet, shape);
 +			reportCachedErrors(sheet, report);
++			sheet = rootThemeSheet(sheet, context.resources, report);
 +			const oneD =
 +				number(sheet.cells, 'OneD', 0, report) !== 0 ||
 +				(sheet.cells.has('BeginX') && sheet.cells.has('EndX'));
@@ -11715,12 +11966,12 @@ index 0000000..fb583f8
 +}
 diff --git a/src/visio/style.ts b/src/visio/style.ts
 new file mode 100644
-index 0000000..e648359
+index 0000000..4abe380
 --- /dev/null
 +++ b/src/visio/style.ts
 @@ -0,0 +1,226 @@
 +import { themeLinearGradient } from './theme-gradient.js';
-+import { themeLineWeight, reportThemeEffects } from './theme-line.js';
++import { themeLineWeight, reportThemeEffects, themeSolidLinePattern } from './theme-line.js';
 +import { lineCap } from './line-style.js';
 +import { linePattern } from './line-pattern.js';
 +import { themeColor, type ThemeResources } from './theme-resolve.js';
@@ -11823,7 +12074,7 @@ index 0000000..e648359
 +			themeLineWeight(cells, resources, report) ??
 +			Math.max(0, number(cells, 'LineWeight', 0.01, report)),
 +		...(cap === undefined ? {} : { lineCap: cap }),
-+		...linePattern(cells, report),
++		...(themeSolidLinePattern(cells, resources) ?? linePattern(cells, report)),
 +		fillOpacity: opacity(number(cells, 'FillForegndTrans', 0, report)),
 +		lineOpacity: opacity(number(cells, 'LineColorTrans', 0, report)),
 +		startArrow: number(cells, 'BeginArrow', 0, report),
@@ -12674,10 +12925,10 @@ index 0000000..b1784d4
 +}
 diff --git a/src/visio/theme-line.test.ts b/src/visio/theme-line.test.ts
 new file mode 100644
-index 0000000..44ae4c7
+index 0000000..29911aa
 --- /dev/null
 +++ b/src/visio/theme-line.test.ts
-@@ -0,0 +1,68 @@
+@@ -0,0 +1,87 @@
 +import { describe, expect, it } from 'vitest';
 +import { parseVsdx } from './parser.js';
 +import { generatedTheme, themeFixture } from './theme-fixtures.js';
@@ -12746,14 +12997,34 @@ index 0000000..44ae4c7
 +			).not.toContain('unsupported-theme-effects');
 +	});
 +});
++
++describe('bounded selected solid theme lines', () => {
++	it.each([
++		'',
++		'<a:prstDash/>',
++		'<a:prstDash val="other"/>',
++		'<a:prstDash val="solid"/><a:prstDash val="solid"/>',
++		'<a:prstDash val="solid"/><a:custDash/>',
++		'<v:prstDash val="solid"/>',
++	])('keeps missing, malformed or ambiguous dash definitions unresolved (%s)', async (dash) => {
++		const document = await parseVsdx(
++			await themeFixture({
++				theme: generatedTheme().replaceAll('<a:ln>', `<a:ln>${dash}`),
++				contents: cell('LinePattern', 'Themed'),
++			}),
++		);
++		expect(document.diagnostics.map((item) => item.code)).toContain('unresolved-line-pattern');
++	});
++});
 diff --git a/src/visio/theme-line.ts b/src/visio/theme-line.ts
 new file mode 100644
-index 0000000..12f84eb
+index 0000000..3a1536d
 --- /dev/null
 +++ b/src/visio/theme-line.ts
-@@ -0,0 +1,49 @@
+@@ -0,0 +1,67 @@
 +import { elements } from '../xml/index.js';
 +import type { Cells, Report } from './sheet.js';
++import { themeChild, themeChildren } from './theme-color.js';
 +import { themeFormat, type ThemeResources } from './theme-resolve.js';
 +
 +/** DrawingML line widths are EMUs; one inch is 914400 EMUs. Cached values win. */
@@ -12801,12 +13072,29 @@ index 0000000..12f84eb
 +			'The selected theme effect style contains effects that are not rendered.',
 +		);
 +}
++
++/**
++ * ISO 29500 prstDash selects a named dashing scheme:
++ * https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.drawing.presetdash
++ * Only an explicit solid token is resolved here. Omission and non-solid spacing stay diagnosed.
++ */
++export function themeSolidLinePattern(
++	cells: Cells,
++	resources: ThemeResources,
++): { linePattern: number } | undefined {
++	if (cells.get('LinePattern')?.value !== 'Themed') return undefined;
++	const line = themeFormat(cells, 'Line', resources);
++	const dash = themeChildren(line, 'prstDash');
++	if (dash.length !== 1 || themeChild(line, 'custDash') || dash[0]?.getAttribute('val') !== 'solid')
++		return undefined;
++	return { linePattern: 1 };
++}
 diff --git a/src/visio/theme-resolve.ts b/src/visio/theme-resolve.ts
 new file mode 100644
-index 0000000..02f33b3
+index 0000000..8da5332
 --- /dev/null
 +++ b/src/visio/theme-resolve.ts
-@@ -0,0 +1,182 @@
+@@ -0,0 +1,193 @@
 +/**
 + * MS-VSDX ColorSchemeIndex (2.4.4.58), QuickStyleFillColor (2.4.4.270),
 + * QuickStyleFillMatrix (2.4.4.271), and QuickStyleType (2.4.4.277):
@@ -12815,15 +13103,25 @@ index 0000000..02f33b3
 + * https://learn.microsoft.com/en-us/openspecs/sharepoint_protocols/ms-vsdx/25689058-b1e7-4d3c-a833-0a4c7180f5f2
 + * https://learn.microsoft.com/en-us/openspecs/sharepoint_protocols/ms-vsdx/550dd5fb-2388-41c9-867d-3a8af03c94b8
 + */
-+import type { Cells, Report } from './sheet.js';
++import type { Cells, Report, Sheet } from './sheet.js';
 +import type { VisioTheme } from './theme.js';
 +import { colorChoice, drawingColor, integer, themeChild, THEME_NS } from './theme-color.js';
 +
 +export interface ThemeResources {
 +	themes?: VisioTheme[];
 +	pageCells?: Cells;
++	/** Verified ID 0 / NameU No Style, for explicitly selected root formatting. */
++	rootSheet?: Sheet;
 +}
 +const cellNumber = (cells: Cells | undefined, name: string) => integer(cells?.get(name)?.value);
++/** Only saved zero, or saved page inheritance to zero, explicitly selects root formats. */
++export function rootThemeSelected(cells: Cells, resources: ThemeResources): boolean {
++	const local = cellNumber(cells, 'ColorSchemeIndex');
++	return (
++		local === 0 || (local === 65534 && cellNumber(resources.pageCells, 'ColorSchemeIndex') === 0)
++	);
++}
++
 +function inheritedIndex(
 +	cells: Cells,
 +	page: Cells | undefined,
@@ -12877,13 +13175,14 @@ index 0000000..02f33b3
 +	return drawingColor(theme.variants[variant]?.get(String(index - 99)), theme.colors);
 +}
 +export type ThemeCategory = 'Fill' | 'Line' | 'Font' | 'Effects';
-+/** Select only saved format indices; numeric formatting does not depend on color selectors. */
++/** Select saved format indices independently of colors, except explicit root-format selection. */
 +export function themeFormat(
 +	cells: Cells,
 +	category: ThemeCategory,
 +	resources: ThemeResources,
 +): Element | undefined {
-+	if (!resources.themes?.length) return undefined;
++	// Root selection is authoritative even when its saved cache is absent or unusable.
++	if (rootThemeSelected(cells, resources) || !resources.themes?.length) return undefined;
 +	const type = cells.has('QuickStyleType') ? cellNumber(cells, 'QuickStyleType') : 0;
 +	if (type === undefined || type > 3) return undefined;
 +	const oneD = cellNumber(cells, 'OneD') === 1 || (cells.has('BeginX') && cells.has('EndX'));
@@ -12988,6 +13287,709 @@ index 0000000..02f33b3
 +		return base;
 +	}
 +	return undefined;
++}
+diff --git a/src/visio/theme-root-corpus.test.ts b/src/visio/theme-root-corpus.test.ts
+new file mode 100644
+index 0000000..faccdbc
+--- /dev/null
++++ b/src/visio/theme-root-corpus.test.ts
+@@ -0,0 +1,84 @@
++import { createHash } from 'node:crypto';
++import { readFile } from 'node:fs/promises';
++import { join } from 'node:path';
++import JSZip from 'jszip';
++import { describe, expect, it } from 'vitest';
++import { parseVsdx } from './parser.js';
++import { parseXml } from '../xml/index.js';
++import { children, child, readSheet } from './sheet.js';
++import type { VisioShape } from './model.js';
++
++// Optional read-only external corpus check. No third-party fixture bytes are redistributed.
++// Apache POI 732120980140d5ed64b482c470e0b625cdb1ab15, test-data/diagram/{60489,60973}.vsdx.
++// Source: https://github.com/apache/poi/tree/732120980140d5ed64b482c470e0b625cdb1ab15/test-data/diagram
++const directory = process.env.VISIO_THEME_CORPUS_DIR;
++const files = [
++	{
++		name: '60489.vsdx',
++		hash: '15494702ecb5554c1dfaee2c09ac35e2ea656e2eed7ba4ba0cf1039e6125fbe1',
++		shape: '16',
++		colors: 1,
++	},
++	{
++		name: '60973.vsdx',
++		hash: 'c61ca252ea251262f81b18fb0e461c50797bf4b148b2c01448792447ada51f03',
++		shape: '11',
++		colors: 0,
++	},
++];
++const flatten = (shapes: VisioShape[]): VisioShape[] =>
++	shapes.flatMap((shape) => [shape, ...flatten(shape.children)]);
++
++describe.skipIf(!directory)('hash-pinned Apache POI root theme caches', () => {
++	it.each(files)(
++		'resolves saved root line formatting in $name',
++		async ({ name, hash, shape, colors }) => {
++			const bytes = await readFile(join(directory!, name));
++			expect(createHash('sha256').update(bytes).digest('hex')).toBe(hash);
++			const zip = await JSZip.loadAsync(bytes);
++			const xml = parseXml(await zip.file('visio/document.xml')!.async('string')).documentElement;
++			const root = children(child(xml, 'StyleSheets'), 'StyleSheet').find(
++				(style) => style.getAttribute('ID') === '0',
++			)!;
++			expect(root.getAttribute('NameU')).toBe('No Style');
++			const saved = readSheet(root).cells;
++			expect(saved.get('LineWeight')?.value).toBe('0.01041666666666667');
++			expect(saved.get('LineCap')?.value).toBe('0');
++			expect(saved.get('LinePattern')?.value).toBe('1');
++			expect(saved.get('ColorSchemeIndex')?.value).toBe('0');
++			const pages = parseXml(
++				await zip.file('visio/pages/pages.xml')!.async('string'),
++			).documentElement;
++			const page = child(child(pages, 'Page'), 'PageSheet')!;
++			expect(page.getAttribute('LineStyle')).toBe('0');
++			expect(page.getAttribute('TextStyle')).toBe('0');
++			expect(readSheet(page).cells.has('ColorSchemeIndex')).toBe(false);
++			const doc = await parseVsdx(bytes, { maxDiagnostics: 100_000 });
++			const selected = flatten(doc.pages[0]!.shapes).find((item) => item.id === shape)!;
++			expect(selected.style).toMatchObject({
++				lineWidth: 0.01041666666666667,
++				lineCap: 'round',
++				linePattern: 1,
++				lineColor: '#000000',
++				fill: '#ffffff',
++			});
++			const codes = doc.diagnostics.map((d) => d.code);
++			expect(codes).not.toContain('unresolved-line-cap');
++			expect(codes).not.toContain('unresolved-line-pattern');
++			expect(codes.filter((code) => code === 'unsupported-color')).toHaveLength(colors);
++			// Font/effect/formula gaps are still diagnosed, rather than hidden by root fallback.
++			expect(codes).toContain('missing-cached-value');
++			if (name === '60489.vsdx') {
++				const all = flatten(doc.pages[0]!.shapes);
++				expect(all.find((item) => item.id === '2')!.style.lineWidth).toBe(0.006944444444444444);
++				expect(all.find((item) => item.id === '111')!.style.fill).toBe('#5b9bd5');
++				expect(doc.diagnostics.filter((d) => d.code === 'unsupported-color')).toEqual([
++					expect.objectContaining({
++						shapeId: '111',
++						message: 'Cell Color uses an unresolved color; a default was used.',
++					}),
++				]);
++			}
++		},
++	);
++});
+diff --git a/src/visio/theme-root-fallthrough.test.ts b/src/visio/theme-root-fallthrough.test.ts
+new file mode 100644
+index 0000000..538b583
+--- /dev/null
++++ b/src/visio/theme-root-fallthrough.test.ts
+@@ -0,0 +1,107 @@
++import { describe, expect, it } from 'vitest';
++import { parseVsdx } from './parser.js';
++import { cell, fixture, rectangle, shape, xml, relations, relation } from './test-fixtures.js';
++import { generatedTheme, themeRelationship } from './theme-fixtures.js';
++
++const names = ['LineWeight', 'LineCap', 'LinePattern', 'LineColor', 'FillForegnd'];
++const character = (contents: string) =>
++	`<Section N="Character"><Row IX="0">${contents}</Row></Section>`;
++async function parse(
++	rootCache: string | undefined,
++	inherited = false,
++	rootName = 'No Style',
++	colorSelector = true,
++) {
++	const root = rootCache === undefined ? '' : names.map((name) => cell(name, rootCache)).join('');
++	const requested =
++		names.map((name) => cell(name, 'Themed')).join('') + character(cell('Color', 'Themed'));
++	const bytes = await fixture({
++		document: `<StyleSheets><StyleSheet ID="0" NameU="${rootName}">${root}${character(rootCache === undefined ? '' : cell('Color', rootCache))}</StyleSheet><StyleSheet ID="1">${requested}</StyleSheet></StyleSheets>`,
++		pages: [
++			{
++				id: '0',
++				contents: `<Shapes>${shape('1', rectangle + (colorSelector ? cell('ColorSchemeIndex', inherited ? 65534 : 0) : '') + cell('EffectSchemeIndex', 42) + cell('QuickStyleLineMatrix', 1) + cell('QuickStyleFillMatrix', 1) + cell('QuickStyleFontMatrix', 1) + '<Text>Test</Text>', 'LineStyle="1" FillStyle="1" TextStyle="1"')}</Shapes>`,
++			},
++		],
++		edit: (zip) => {
++			zip.file(
++				'visio/_rels/document.xml.rels',
++				relations(
++					relation('rId1', 'pages', 'pages/pages.xml') +
++						`<Relationship Id="theme" Type="${themeRelationship}" Target="theme/theme1.xml"/>`,
++				),
++			);
++			zip.file(
++				'visio/theme/theme1.xml',
++				generatedTheme().replaceAll('<a:ln>', '<a:ln w="91440" cap="sq"><a:prstDash val="solid"/>'),
++			);
++			zip.file(
++				'visio/pages/pages.xml',
++				xml(
++					'Pages',
++					`<Page ID="0"><PageSheet>${cell('PageWidth', 8)}${cell('PageHeight', 10)}${inherited ? cell('ColorSchemeIndex', 0) : ''}</PageSheet><Rel r:id="rId1"/></Page>`,
++				),
++			);
++		},
++	});
++	const doc = await parseVsdx(bytes);
++	return { shape: doc.pages[0]!.shapes[0]!, diagnostics: doc.diagnostics };
++}
++
++describe('root selection cannot fall through to a populated dynamic theme', () => {
++	it.each([
++		[undefined, false],
++		['Themed', false],
++		[undefined, true],
++		['Themed', true],
++	] as const)(
++		'keeps unusable root cache %s diagnosed (page inheritance %s)',
++		async (cache, inherited) => {
++			const { shape, diagnostics } = await parse(cache, inherited);
++			expect(shape.style).toMatchObject({
++				lineWidth: 0.01,
++				linePattern: 1,
++				lineColor: '#000000',
++				fill: '#ffffff',
++			});
++			expect(shape.style.lineCap).toBeUndefined();
++			expect(shape.text.color).toBe('#000000');
++			expect(diagnostics.map((d) => d.code)).toContain('unresolved-line-cap');
++			expect(diagnostics.map((d) => d.code)).toContain('unresolved-line-pattern');
++			expect(diagnostics).toContainEqual(
++				expect.objectContaining({
++					code: 'missing-cached-value',
++					message: expect.stringContaining('LineWeight'),
++				}),
++			);
++			for (const name of ['LineColor', 'FillForegnd', 'Color'])
++				expect(diagnostics).toContainEqual(
++					expect.objectContaining({
++						code: 'unsupported-color',
++						message: `Cell ${name} uses an unresolved color; a default was used.`,
++					}),
++				);
++		},
++	);
++	it('does not bypass root selection when the root identity cannot be verified', async () => {
++		const { shape, diagnostics } = await parse(undefined, false, 'Other Style');
++		expect(shape.style.lineWidth).toBe(0.01);
++		expect(shape.style.lineCap).toBeUndefined();
++		expect(diagnostics.map((d) => d.code)).toContain('unresolved-line-pattern');
++	});
++	it('keeps valid numeric root caches authoritative despite a populated dynamic theme', async () => {
++		const { shape } = await parse('0');
++		expect(shape.style).toMatchObject({
++			lineWidth: 0,
++			lineCap: 'round',
++			linePattern: 0,
++			lineColor: '#000000',
++			fill: '#000000',
++		});
++	});
++	it('does not mistake entirely absent color selectors for explicit root selection', async () => {
++		const { shape, diagnostics } = await parse(undefined, false, 'No Style', false);
++		expect(shape.style).toMatchObject({ lineWidth: 0.1, lineCap: 'square', linePattern: 1 });
++		expect(diagnostics.map((d) => d.code)).not.toContain('unresolved-line-pattern');
++	});
++});
+diff --git a/src/visio/theme-root-fill.test.ts b/src/visio/theme-root-fill.test.ts
+new file mode 100644
+index 0000000..855fa0d
+--- /dev/null
++++ b/src/visio/theme-root-fill.test.ts
+@@ -0,0 +1,136 @@
++import { describe, expect, it } from 'vitest';
++import { parseVsdx } from './parser.js';
++import { rootThemeSheet } from './theme-root.js';
++import { emptySheet } from './sheet.js';
++import { cell, fixture, rectangle, relation, relations, shape, xml } from './test-fixtures.js';
++import { generatedTheme, themeRelationship } from './theme-fixtures.js';
++
++const properties = [
++	'FillForegndTrans',
++	'FillBkgndTrans',
++	'FillPattern',
++	'FillGradientDir',
++	'FillGradientAngle',
++	'FillGradientEnabled',
++	'RotateGradientWithShape',
++	'UseGroupGradient',
++];
++async function parse(
++	options: { root?: string; local?: string; selectors?: string; page?: string } = {},
++) {
++	const data = await fixture({
++		document: `<StyleSheets><StyleSheet ID="0" NameU="No Style">${options.root ?? cell('FillPattern', 0) + cell('FillForegndTrans', 0.4)}</StyleSheet><StyleSheet ID="1" FillStyle="0">${cell('FillPattern', 'Themed')}${cell('FillForegndTrans', 'Themed')}</StyleSheet></StyleSheets>`,
++		pages: [
++			{
++				id: '0',
++				contents: `<Shapes>${shape('1', rectangle + cell('FillForegnd', '#abcdef') + (options.selectors ?? cell('ColorSchemeIndex', 42) + cell('QuickStyleFillMatrix', 0)) + (options.local ?? ''), 'FillStyle="1"')}</Shapes>`,
++			},
++		],
++		edit: (zip) => {
++			zip.file(
++				'visio/_rels/document.xml.rels',
++				relations(
++					relation('rId1', 'pages', 'pages/pages.xml') +
++						`<Relationship Id="theme" Type="${themeRelationship}" Target="theme/theme1.xml"/>`,
++				),
++			);
++			zip.file('visio/theme/theme1.xml', generatedTheme());
++			zip.file(
++				'visio/pages/pages.xml',
++				xml(
++					'Pages',
++					`<Page ID="0"><PageSheet>${cell('PageWidth', 8)}${cell('PageHeight', 10)}${options.page ?? ''}</PageSheet><Rel r:id="rId1"/></Page>`,
++				),
++			);
++		},
++	});
++	const document = await parseVsdx(data);
++	return { style: document.pages[0]!.shapes[0]!.style, diagnostics: document.diagnostics };
++}
++
++describe('explicit root fill format selection', () => {
++	it('inherits root no-fill and opacity through a fill style independently of colors', async () => {
++		const { style, diagnostics } = await parse();
++		expect(style).toMatchObject({ fill: 'none', fillOpacity: 0.6 });
++		expect(diagnostics.some((d) => d.message.includes('FillPattern'))).toBe(false);
++		expect(diagnostics.some((d) => d.message.includes('FillForegndTrans'))).toBe(false);
++	});
++	it('does not replace a literal foreground when resolving root fill properties', async () => {
++		const { style } = await parse({
++			root:
++				cell('FillPattern', 1) + cell('FillForegndTrans', 0.25) + cell('FillForegnd', '#ff0000'),
++		});
++		expect(style).toMatchObject({ fill: '#abcdef', fillOpacity: 0.75 });
++	});
++	it.each([false, true])(
++		'uses root fill formats for root color selection (page inheritance %s)',
++		async (page) => {
++			const { style } = await parse({
++				selectors: cell('ColorSchemeIndex', page ? 65534 : 0) + cell('QuickStyleFillMatrix', 1),
++				page: cell('ColorSchemeIndex', 0),
++			});
++			expect(style).toMatchObject({ fill: 'none', fillOpacity: 0.6 });
++		},
++	);
++	it('preserves local caches instead of evaluating formulas or replacing them', async () => {
++		const { style } = await parse({
++			local: cell('FillPattern', 1, 'THEMEVAL()') + cell('FillForegndTrans', 0.1, 'THEMEVAL()'),
++		});
++		expect(style).toMatchObject({ fill: '#abcdef', fillOpacity: 0.9 });
++	});
++	it.each(['', 'Themed', '65534', 'oops'])(
++		'does not infer root fill selection from unavailable selector %s',
++		async (selector) => {
++			const { style, diagnostics } = await parse({
++				selectors:
++					cell('ColorSchemeIndex', 42) + (selector ? cell('QuickStyleFillMatrix', selector) : ''),
++			});
++			expect(style).toMatchObject({ fill: '#abcdef', fillOpacity: 1 });
++			expect(diagnostics.some((d) => d.message.includes('FillPattern'))).toBe(true);
++		},
++	);
++	it.each(['', cell('FillPattern', 'Themed'), '<Cell N="FillPattern" F="0"/>'])(
++		'does not invent missing or unusable root caches: %s',
++		async (root) => {
++			const { style, diagnostics } = await parse({ root });
++			expect(style.fill).toBe('#abcdef');
++			expect(diagnostics.some((d) => d.message.includes('FillPattern'))).toBe(true);
++		},
++	);
++	it('retains unsupported root hatch and gradient diagnostics', async () => {
++		const { style, diagnostics } = await parse({
++			root: cell('FillPattern', 2) + cell('FillForegndTrans', 0) + cell('FillGradientEnabled', 1),
++			local: cell('FillGradientEnabled', 'Themed'),
++		});
++		expect(style.fillGradient).toBeUndefined();
++		expect(diagnostics.map((d) => d.code)).toContain('unsupported-fill-pattern');
++		expect(diagnostics.map((d) => d.code)).toContain('unsupported-gradient');
++	});
++	it('copies supported scalar fill caches immutably without adding absent cells', () => {
++		const root = emptySheet(),
++			sheet = emptySheet();
++		sheet.cells.set('QuickStyleFillMatrix', { value: '0' });
++		for (const name of properties) {
++			sheet.cells.set(name, { value: 'Themed' });
++			root.cells.set(name, { value: '0' });
++		}
++		root.cells.set('FillForegnd', { value: '#112233' });
++		const result = rootThemeSheet(sheet, { rootSheet: root });
++		for (const name of properties) {
++			expect(result.cells.get(name)?.value).toBe('0');
++			expect(sheet.cells.get(name)?.value).toBe('Themed');
++		}
++		expect(result.cells.has('FillForegnd')).toBe(false);
++	});
++	it('reports errors from substituted root fill caches', async () => {
++		const { style, diagnostics } = await parse({
++			root: '<Cell N="FillPattern" V="0" E="#REF!"/>' + cell('FillForegndTrans', 0),
++		});
++		expect(style.fill).toBe('none');
++		expect(
++			diagnostics.filter(
++				(d) => d.code === 'cached-cell-error' && d.message.includes('FillPattern'),
++			),
++		).toHaveLength(1);
++	});
++});
+diff --git a/src/visio/theme-root.test.ts b/src/visio/theme-root.test.ts
+new file mode 100644
+index 0000000..f65d859
+--- /dev/null
++++ b/src/visio/theme-root.test.ts
+@@ -0,0 +1,245 @@
++import { describe, expect, it } from 'vitest';
++import { parseVsdx } from './parser.js';
++import { rootThemeSheet } from './theme-root.js';
++import { emptySheet } from './sheet.js';
++import { cell, fixture, rectangle, shape, xml } from './test-fixtures.js';
++
++const rootCells =
++	cell('LineWeight', 0.035) +
++	cell('LineCap', 2) +
++	cell('LinePattern', 23) +
++	cell('LineColor', '#123456') +
++	cell('FillForegnd', '#abcdef') +
++	cell('LineColorTrans', 0.25);
++const requested = [
++	'LineWeight',
++	'LineCap',
++	'LinePattern',
++	'LineColor',
++	'FillForegnd',
++	'LineColorTrans',
++]
++	.map((name) => cell(name, 'Themed', 'THEMEVAL()'))
++	.join('');
++const character = (contents: string) =>
++	`<Section N="Character"><Row IX="0">${contents}</Row></Section>`;
++async function parse(
++	options: {
++		contents?: string;
++		selectors?: string;
++		root?: string;
++		rootName?: string;
++		page?: string;
++		pageStyle?: string;
++		styles?: string;
++	} = {},
++) {
++	const data = await fixture({
++		document: `<StyleSheets><StyleSheet ID="0" NameU="${options.rootName ?? 'No Style'}">${options.root ?? rootCells}${character(cell('Color', '#654321'))}</StyleSheet><StyleSheet ID="1" LineStyle="0" FillStyle="0" TextStyle="0">${requested}${character(cell('Color', 'Themed'))}</StyleSheet>${options.styles ?? ''}</StyleSheets>`,
++		pages: [
++			{
++				id: '0',
++				contents: `<Shapes>${shape('1', rectangle + (options.selectors ?? cell('ColorSchemeIndex', 0)) + (options.contents ?? '') + '<Text>Hello</Text>', 'LineStyle="1" FillStyle="1" TextStyle="1"')}</Shapes>`,
++			},
++		],
++		edit: (zip) =>
++			zip.file(
++				'visio/pages/pages.xml',
++				xml(
++					'Pages',
++					`<Page ID="0"><PageSheet ${options.pageStyle ?? ''}>${cell('PageWidth', 8)}${cell('PageHeight', 10)}${options.page ?? ''}</PageSheet><Rel r:id="rId1"/></Page>`,
++				),
++			),
++	});
++	const document = await parseVsdx(data);
++	return { shape: document.pages[0]!.shapes[0]!, codes: document.diagnostics.map((d) => d.code) };
++}
++describe('explicit root theme selection', () => {
++	it('uses saved root colors, width, cap, pattern and transparency for Themed cells', async () => {
++		const result = await parse();
++		expect(result.shape.style).toMatchObject({
++			lineColor: '#123456',
++			fill: '#abcdef',
++			lineWidth: 0.035,
++			lineCap: 'square',
++			linePattern: 23,
++			lineDash: [2, 2],
++			lineOpacity: 0.75,
++		});
++		expect(result.shape.text.color).toBe('#654321');
++		expect(result.shape.text.runs[0]!.color).toBe('#654321');
++		expect(result.codes).not.toContain('unsupported-color');
++		expect(result.codes).not.toContain('unresolved-line-cap');
++	});
++	it('resolves 65534 from explicit page selector', async () => {
++		const result = await parse({
++			selectors: cell('ColorSchemeIndex', 65534),
++			page: cell('ColorSchemeIndex', 0),
++		});
++		expect(result.shape.style.lineWidth).toBe(0.035);
++	});
++	it('resolves page selectors through explicitly assigned PageSheet styles', async () => {
++		const result = await parse({
++			selectors: cell('ColorSchemeIndex', 65534),
++			pageStyle: 'LineStyle="2" FillStyle="2" TextStyle="2"',
++			styles: `<StyleSheet ID="2">${cell('ColorSchemeIndex', 0)}</StyleSheet>`,
++		});
++		expect(result.shape.style.lineColor).toBe('#123456');
++	});
++	it('lets local page selectors override PageSheet style selectors', async () => {
++		const result = await parse({
++			selectors: cell('ColorSchemeIndex', 65534),
++			page: cell('ColorSchemeIndex', 42),
++			pageStyle: 'LineStyle="2"',
++			styles: `<StyleSheet ID="2">${cell('ColorSchemeIndex', 0)}</StyleSheet>`,
++		});
++		expect(result.shape.style.lineColor).toBe('#000000');
++		expect(result.codes).toContain('unsupported-color');
++	});
++	it('resolves explicit line matrix zero independently without masking color selection', async () => {
++		const result = await parse({
++			selectors: cell('ColorSchemeIndex', 42) + cell('QuickStyleLineMatrix', 0),
++		});
++		expect(result.shape.style.lineWidth).toBe(0.035);
++		expect(result.shape.style.lineCap).toBe('square');
++		expect(result.shape.style.lineColor).toBe('#000000');
++		expect(result.codes).toContain('unsupported-color');
++	});
++	it.each([
++		'',
++		cell('ColorSchemeIndex', 'Themed'),
++		cell('ColorSchemeIndex', 65534),
++		cell('ColorSchemeIndex', 42),
++		'<Cell N="ColorSchemeIndex" F="0"/>',
++	])(
++		'keeps absent, unavailable and malformed theme selections unresolved (%s)',
++		async (selectors) => {
++			const result = await parse({ selectors });
++			expect(result.shape.style.lineWidth).toBe(0.01);
++			expect(result.codes).toContain('unsupported-color');
++			expect(result.codes).toContain('unresolved-line-cap');
++		},
++	);
++	it.each(['Themed', 'oops', '65534'])(
++		'does not treat malformed or unresolved PageSheet %s as root',
++		async (value) => {
++			const result = await parse({
++				selectors: cell('ColorSchemeIndex', 65534),
++				page: cell('ColorSchemeIndex', value),
++			});
++			expect(result.shape.style.lineWidth).toBe(0.01);
++		},
++	);
++	it('does not treat a non-root style with ID zero as a verified root', async () => {
++		expect((await parse({ rootName: 'Something else' })).shape.style.lineWidth).toBe(0.01);
++	});
++	it('preserves numeric/literal caches and never evaluates their formulas', async () => {
++		const result = await parse({
++			contents:
++				cell('LineWeight', 0.07, 'THEMEVAL()') +
++				cell('LineColor', '#fedcba') +
++				cell('LineCap', 0) +
++				cell('LinePattern', 0),
++		});
++		expect(result.shape.style).toMatchObject({
++			lineWidth: 0.07,
++			lineColor: '#fedcba',
++			lineCap: 'round',
++			linePattern: 0,
++		});
++	});
++	it('does not recursively evaluate a themed root or fill a missing root cache', async () => {
++		const result = await parse({
++			root: cell('LineWeight', 'Themed') + '<Cell N="LineCap" F="0"/>',
++		});
++		expect(result.shape.style.lineWidth).toBe(0.01);
++		expect(result.shape.style.lineCap).toBeUndefined();
++		expect(result.codes).toContain('unresolved-line-cap');
++	});
++	it('does not fill missing shape cells and does not mutate source maps', () => {
++		const sheet = emptySheet(),
++			root = emptySheet();
++		sheet.cells.set('ColorSchemeIndex', { value: '0' });
++		sheet.cells.set('LineColor', { value: 'Themed' });
++		root.cells.set('LineColor', { value: '#123456' });
++		root.cells.set('LineWeight', { value: '0.035' });
++		const result = rootThemeSheet(sheet, { rootSheet: root });
++		expect(result.cells.get('LineColor')?.value).toBe('#123456');
++		expect(sheet.cells.get('LineColor')?.value).toBe('Themed');
++		expect(result.cells.has('LineWeight')).toBe(false);
++	});
++});
++
++describe('root cache errors and immutable Character lookup', () => {
++	it('reports errors from substituted root caches without duplicating existing cell errors', async () => {
++		const bytes = await fixture({
++			document: `<StyleSheets><StyleSheet ID="0" NameU="No Style"><Cell N="LineWeight" V="0.035" E="#REF!"/>${character('<Cell N="Color" V="#123456" E="#REF!"/>')}</StyleSheet><StyleSheet ID="1" LineStyle="0" TextStyle="0">${cell('LineWeight', 'Themed')}${character(cell('Color', 'Themed'))}</StyleSheet></StyleSheets>`,
++			pages: [
++				{
++					id: '0',
++					contents: `<Shapes>${shape('1', rectangle + cell('ColorSchemeIndex', 0) + '<Cell N="LineCap" V="0" E="#REF!"/><Text>Test</Text>', 'LineStyle="1" TextStyle="1"')}</Shapes>`,
++				},
++			],
++		});
++		const doc = await parseVsdx(bytes);
++		expect(doc.pages[0]!.shapes[0]!.style.lineWidth).toBe(0.035);
++		expect(doc.pages[0]!.shapes[0]!.text.color).toBe('#123456');
++		const errors = doc.diagnostics.filter((d) => d.code === 'cached-cell-error');
++		expect(errors).toHaveLength(3);
++		for (const name of ['LineWeight', 'LineCap', 'Color'])
++			expect(errors.filter((d) => d.message.startsWith(`Cell ${name} `))).toHaveLength(1);
++	});
++	it('looks up the immutable root Character row once while respecting deleted sections and rows', () => {
++		const root = emptySheet(),
++			sheet = emptySheet();
++		const row = (deleted: boolean, color: string) => ({
++			index: '0',
++			type: '',
++			deleted,
++			cells: new Map([['Color', { value: color }]]),
++		});
++		root.sections.set('deleted-section', {
++			name: 'Character',
++			index: '0',
++			deleted: true,
++			cells: new Map(),
++			rows: new Map([['0', row(false, '#ff0000')]]),
++		});
++		root.sections.set('deleted-row', {
++			name: 'Character',
++			index: '1',
++			deleted: false,
++			cells: new Map(),
++			rows: new Map([['0', row(true, '#00ff00')]]),
++		});
++		root.sections.set('live', {
++			name: 'Character',
++			index: '2',
++			deleted: false,
++			cells: new Map(),
++			rows: new Map([['0', row(false, '#123456')]]),
++		});
++		sheet.cells.set('ColorSchemeIndex', { value: '0' });
++		sheet.sections.set('live', {
++			name: 'Character',
++			index: '0',
++			deleted: false,
++			cells: new Map(),
++			rows: new Map([['0', row(false, 'Themed')]]),
++		});
++		let scans = 0;
++		const values = root.sections.values.bind(root.sections);
++		root.sections.values = () => {
++			scans++;
++			return values();
++		};
++		for (let index = 0; index < 3; index++) {
++			const resolved = rootThemeSheet(sheet, { rootSheet: root });
++			expect(resolved.sections.get('live')!.rows.get('0')!.cells.get('Color')?.value).toBe(
++				'#123456',
++			);
++		}
++		expect(scans).toBe(1);
++		expect(sheet.sections.get('live')!.rows.get('0')!.cells.get('Color')?.value).toBe('Themed');
++	});
++});
+diff --git a/src/visio/theme-root.ts b/src/visio/theme-root.ts
+new file mode 100644
+index 0000000..f7de74c
+--- /dev/null
++++ b/src/visio/theme-root.ts
+@@ -0,0 +1,101 @@
++/**
++ * MS-VSDX 2.4.4.58: ColorSchemeIndex 0 selects the root style's colors.
++ * MS-VSDX 2.4.4.70 likewise specifies root formats when ColorSchemeIndex is zero.
++ * https://learn.microsoft.com/en-us/openspecs/sharepoint_protocols/ms-vsdx/9753d977-a1de-49e8-888c-cf532efe7982
++ * MS-VSDX 2.4.4.275: QuickStyleLineMatrix 0 selects root line properties.
++ * MS-VSDX 2.4.4.271: QuickStyleFillMatrix 0 selects root fill properties.
++ * https://learn.microsoft.com/en-us/openspecs/sharepoint_protocols/ms-vsdx/25689058-b1e7-4d3c-a833-0a4c7180f5f2
++ * https://learn.microsoft.com/en-us/openspecs/sharepoint_protocols/ms-vsdx/1e7e9b7e-d116-41c0-9c53-5e57c26042a4
++ * https://learn.microsoft.com/en-us/openspecs/sharepoint_protocols/ms-vsdx/edfd9f33-fea3-4bf5-8cd5-a91a3d677b03
++ * Resolve saved selectors only. Missing or malformed selectors are not root selection.
++ */
++import type { Cells, Report, Sheet } from './sheet.js';
++import { integer } from './theme-color.js';
++import { rootThemeSelected, type ThemeResources } from './theme-resolve.js';
++
++const LINE_PROPERTIES = [
++	'LineWeight',
++	'LineCap',
++	'LinePattern',
++	'LineColorTrans',
++	'BeginArrow',
++	'EndArrow',
++	'BeginArrowSize',
++	'EndArrowSize',
++];
++// Scalar fill formats only. Saved gradient stop rows still require a separate renderer.
++const FILL_PROPERTIES = [
++	'FillForegndTrans',
++	'FillBkgndTrans',
++	'FillPattern',
++	'FillGradientDir',
++	'FillGradientAngle',
++	'FillGradientEnabled',
++	'RotateGradientWithShape',
++	'UseGroupGradient',
++];
++// Parsed root sheets are immutable during normalization. Cache missing rows as well.
++const rootCharacters = new WeakMap<Sheet, Cells | undefined>();
++function rootCharacterCells(root: Sheet): Cells | undefined {
++	if (rootCharacters.has(root)) return rootCharacters.get(root);
++	for (const section of root.sections.values()) {
++		if (section.name !== 'Character' || section.deleted) continue;
++		for (const row of section.rows.values()) {
++			if (row.index !== '0' || row.deleted) continue;
++			rootCharacters.set(root, row.cells);
++			return row.cells;
++		}
++	}
++	rootCharacters.set(root, undefined);
++	return undefined;
++}
++function replaceThemed(
++	cells: Cells,
++	root: Cells,
++	names: readonly string[],
++	report?: Report,
++): Cells {
++	let result = cells;
++	for (const name of names) {
++		const saved = root.get(name);
++		if (cells.get(name)?.value !== 'Themed' || !saved?.value || saved.value === 'Themed') continue;
++		if (result === cells) result = new Map(cells);
++		result.set(name, saved);
++		// Original-cell errors were already reported before substitution. Do not duplicate them.
++		if (saved.error !== undefined && cells.get(name)?.error === undefined)
++			report?.(
++				'cached-cell-error',
++				`Cell ${name} records a formula error; only its last valid cached value is available.`,
++			);
++	}
++	return result;
++}
++/** Never mutate inherited sheets or fill absent caches from a root-style guess. */
++export function rootThemeSheet(sheet: Sheet, resources: ThemeResources, report?: Report): Sheet {
++	const root = resources.rootSheet;
++	if (!root) return sheet;
++	const colorRoot = rootThemeSelected(sheet.cells, resources);
++	const lineRoot = colorRoot || integer(sheet.cells.get('QuickStyleLineMatrix')?.value) === 0;
++	const fillRoot = colorRoot || integer(sheet.cells.get('QuickStyleFillMatrix')?.value) === 0;
++	let cells = sheet.cells;
++	if (colorRoot)
++		cells = replaceThemed(cells, root.cells, ['LineColor', 'FillForegnd', 'FillBkgnd'], report);
++	if (lineRoot) cells = replaceThemed(cells, root.cells, LINE_PROPERTIES, report);
++	if (fillRoot) cells = replaceThemed(cells, root.cells, FILL_PROPERTIES, report);
++	let sections = sheet.sections;
++	const rootCharacter = colorRoot ? rootCharacterCells(root) : undefined;
++	if (colorRoot && rootCharacter) {
++		for (const [key, section] of sheet.sections) {
++			if (section.name !== 'Character' || section.deleted) continue;
++			const rows = new Map(section.rows);
++			for (const [index, row] of rows) {
++				if (row.deleted) continue;
++				const resolved = replaceThemed(row.cells, rootCharacter, ['Color'], report);
++				if (resolved !== row.cells) rows.set(index, { ...row, cells: resolved });
++			}
++			if (sections === sheet.sections) sections = new Map(sheet.sections);
++			sections.set(key, { ...section, rows });
++		}
++	}
++	return cells === sheet.cells && sections === sheet.sections ? sheet : { cells, sections };
 +}
 diff --git a/src/visio/theme.test.ts b/src/visio/theme.test.ts
 new file mode 100644

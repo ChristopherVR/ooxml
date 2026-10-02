@@ -2,7 +2,7 @@
 
 Status: local development evidence, 2026-10-02. Full Microsoft Visio parity is not established.
 
-Current focused checkpoint: 935 core Visio tests, 287 viewer tests, 72 framework/SSR tests and 18 documentation tests pass. The local core run explicitly enables two optional hash-pinned real-media cases; without that corpus path, those two cases skip. The separate pinned-converter audit passes 15 characterization/safety tests; its pass count does not mean the known converter defects are fixed. Both core TypeScript projects, viewer/binding typechecks, production builds and worker/packed-consumer checks pass. The earlier full core run at the 423-test Visio checkpoint recorded 16,417 passes, 231 skips and one failure: the unchanged PowerPoint AES-256 test exceeded its existing 20-second timeout under aggregate load. Its entire crypto file passes all 72 tests when rerun alone. The full core build, all 16 non-CLI packed ESM/CJS exports and 47 script tests pass. The original aggregate run is not recorded as green.
+Current focused checkpoint: 994 core Visio tests, 287 viewer tests, 72 framework/SSR tests and 18 documentation tests pass. Four optional external-corpus cases skip in this checkpoint; the test fixtures were not configured. The separate pinned-converter audit passes 15 characterization/safety tests; its pass count does not mean the known converter defects are fixed. Both core TypeScript projects, viewer/binding typechecks, production builds and worker/packed-consumer checks pass. The earlier full core run at the 423-test Visio checkpoint recorded 16,417 passes, 231 skips and one failure: the unchanged PowerPoint AES-256 test exceeded its existing 20-second timeout under aggregate load. Its entire crypto file passes all 72 tests when rerun alone. The full core build, all 16 non-CLI packed ESM/CJS exports and 47 script tests pass. The original aggregate run is not recorded as green.
 
 ## What has been exercised
 
@@ -59,3 +59,35 @@ These cases are excluded as authoritative fidelity oracles. A thumbnail mismatch
 Run `npm run check` after `npm run setup:core` and both root/binding installations. Run `npm run test:browser` only in a supported browser environment. The current eight browser scenarios remain launch-blocked here. `scripts/render-corpus.mjs INPUT_DIRECTORY OUTPUT_DIRECTORY` produces secondary-renderer diagnostic artifacts from an explicitly supplied local corpus.
 
 Use the capability ledger for remaining functionality. Passing generated-fixture tests, showing a drawing, or absence of warnings is not a parity guarantee.
+
+## Current converter package adapter checkpoint
+
+The isolated bridge now targets emf-converter 4.8.7 with the reviewed local GDI fix
+patch. The older 3.5.1 audit remains separate. Core `convertVisioMetafile` accepts
+a trusted browser-package function and delegates all drawing conversion to that
+package. It admits at most 512 records and 256 KiB with 2048-pixel dimensions and
+only header/EOF, stock object selection, rectangle, ellipse, move and line records.
+Every other record is rejected before package invocation. Input is privately
+copied and reinspected; only sanitized neutral vectors cross the result boundary.
+
+Seven isolated browser-distribution integration cases cover empty output, three
+primitive drawings, stock paint selection and two rejected stream classes. These are generated structural
+and adapter regressions, not native-render parity evidence. Production VSDX
+conversion stays disabled. The adapter requires a disposable host worker with a
+parent deadline; the test harness exercises that arrangement. It does not claim
+a hard converter heap limit.
+
+Browser regression execution is currently launch-blocked: the bundled Playwright
+Chromium shell is missing; the installed Chromium alternative aborts before tests
+with `socket() Operation not permitted`. All eight browser cases fail before their
+assertions. This does not establish a product regression or a browser pass.
+
+Checkpoint commands: `npm run check`, `npm run check:converter`,
+`npm run test:converter-integration` and `npm run test:converter-setup`. The isolated
+converter suite passes 3,743 tests with 117 skips (92 files pass, one file skips);
+its TypeScript, Node/browser builds and browser-package consumer checks pass.
+Ten bridge setup tests pass, including committed/freshly applied patch equivalence,
+refusal of unrelated edits and semantic lock comparison. A fresh local baseline
+clone plus the full patch independently reproduces the pinned source snapshot.
+The integration runner verifies this snapshot and rebuilds the browser distribution
+before its seven deadline-isolated cases, so stale output cannot count as evidence.
