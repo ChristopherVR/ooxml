@@ -12,7 +12,9 @@ is safe to re-run. The script stops at the first failure; fix it and resume with
 
   preflight  tools, logins and the three checkouts; changes nothing
   pause      disable the release workflow in all three repositories
-  unpublish  remove every scoped version that depends on the old names, dependents first
+  unpublish  remove the scoped docx packages and @christophervr/office-ui, dependents first;
+             deprecate pptx-viewer-core@4.9.3 and @christophervr/ooxml-core, which npm will not
+             let go because pptx-viewer-core has dependents
   tags       delete the git tags and GitHub releases of every version that is now gone
   ooxml      build, publish ooxml-core then ooxml-ui, refresh the lockfile, push main and tags
   docx       publish the seven unscoped docx packages from docx-viewer's main and tag them
@@ -51,7 +53,15 @@ $Steps = 'preflight', 'pause', 'unpublish', 'tags', 'ooxml', 'docx', 'pptx'
 
 # Dependents first: npm refuses to unpublish a package another package depends on.
 $Unpublish = @($Frameworks | ForEach-Object { "@christophervr/docx-$_-viewer" }) + @(
-	'@christophervr/docx-core', 'pptx-viewer-core@4.9.3', '@christophervr/office-ui', '@christophervr/ooxml-core')
+	'@christophervr/docx-core', '@christophervr/office-ui')
+
+# These cannot be unpublished, so they are deprecated instead. pptx-viewer-core has dependents
+# (pptx-angular-viewer, pptx-viewer-mcp), and npm refuses to unpublish any version of such a
+# package (E405). Its 4.9.3 depends on @christophervr/ooxml-core, which therefore stays too.
+$Deprecate = [ordered]@{
+	'pptx-viewer-core@4.9.3'    = 'Depends on @christophervr/ooxml-core, now published as ooxml-core. Use 4.9.4 or later.'
+	'@christophervr/ooxml-core' = 'Renamed to ooxml-core. Install ooxml-core instead.'
+}
 
 # A command that changes something: printed under -DryRun, otherwise run with the console as its
 # stdin/stdout so npm can show its browser login prompt. It must never be captured (no [void],
@@ -164,6 +174,7 @@ function Step-Unpublish {
 		Invoke-Npm $Ooxml (@('unpublish', $spec) + $(if ($whole) { @('--force') } else { @() }))
 		if (-not $DryRun) { Wait-GoneFromNpm $spec }
 	}
+	foreach ($spec in $Deprecate.Keys) { Invoke-Npm $Ooxml @('deprecate', $spec, $Deprecate[$spec]) }
 }
 
 function Step-Tags {
@@ -246,7 +257,7 @@ function Step-Pptx {
 	Invoke-Change $Pptx 'bun' @('run', '--filter', 'pptx-viewer-core', 'build')
 	Invoke-Change $Pptx 'git' (@('add') + $files + @('bun.lock'))
 	Invoke-Change $Pptx 'git' @('commit', '-m', 'build(core): depend on the unscoped ooxml-core package', '-m',
-		'@christophervr/ooxml-core is now published as ooxml-core. pptx-viewer-core@4.9.3, the one version that depended on the scoped name, was unpublished; this releases 4.9.4.',
+		'@christophervr/ooxml-core is now published as ooxml-core. pptx-viewer-core@4.9.3, the one version that depends on the scoped name, is deprecated (npm will not unpublish it: the package has dependents); this releases 4.9.4.',
 		'-m', $Trailer)
 	Invoke-Change $Pptx 'git' @('push', 'origin', 'HEAD:main')
 	Invoke-Change $Pptx 'gh' @('workflow', 'enable', 'release.yml', '-R', $Repos.pptx)
