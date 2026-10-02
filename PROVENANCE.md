@@ -217,3 +217,28 @@ New code, written for this repository rather than moved: no viewer had a Spreads
 | `xlsx`       | `model.ts`, `address.ts`, `cells.ts`, `workbook.ts`, `styles.ts`, `numfmt/`, `formula/`, `read/`, `write/`, `edit/`, `layout/` | New    | Expected results in the tests were recorded from Excel 16 through COM (`__fixtures__` generators: number formats, formula results, theme tints). Fixtures were generated with openpyxl and Excel COM; personal metadata is scrubbed by the generators. |
 | `xlsx/load`  | `detect.ts`, `legacy-xls*.ts`, `csv.ts`                                                                                        | New    | Maps ole2's `readXlsWorkbook` (new in ole2 on branch `xls-workbook`) onto the workbook model; ole2 is inlined by tsup like `docx/load`. The `.xls` fixtures are copies of ole2's `test/fixtures/xls/`, which holds their generator.                    |
 | `xml`, `opc` | `namespaces.ts` (`xdr`, `x14`, `x14ac`, `xr`, `tc`, `xv`, ...), `relationship-types.ts` (SpreadsheetML types)                  | New    | Appended constants only.                                                                                                                                                                                                                               |
+
+## Math equation conversion (2026-10-03)
+
+Source: `ChristopherVR/pptx-viewer`, commit `32df019105bbf5c77e63798c8fa1c0af23fc4e70`,
+`packages/shared/src/render/`. The source and destination are Apache-2.0; the existing
+root LICENSE and NOTICE cover this extraction. No third-party implementation was added.
+
+- Moved `latex-omml-siblings.ts`, `latex-omml-symbols.ts`, `latex-to-omml.ts`,
+  `latex-to-omml-commands.ts`, `latex-to-omml-constructs.ts`,
+  `latex-to-omml-environments.ts`, `omml-color.ts`, `omml-to-latex.ts`,
+  `omml-to-latex-helpers.ts`, `omml-to-latex-layout.ts`, `omml-to-mathml.ts`
+  and the four existing converter/helper test files into `src/math`.
+- The MathML converter was split into helpers, construct converters and dispatch
+  to keep each source module below 300 lines. Strict indexing was made explicit
+  in the delimiter loop; output behavior is unchanged.
+- Product imports became local neutral OMML types. The compatibility tree keeps
+  the established `@_` attributes and encoded ordering key spelling so existing
+  PowerPoint equation load/edit/save output is unchanged. Ordering helpers are
+  local and import no PowerPoint code. The shared DOM adapter additionally
+  accepts ordered, namespace-aware OMML from any Office format, normalizes known
+  namespace prefixes and uses the shared XML parser.
+- Viewer entry files delegate to `ooxml-core/math`; their existing tests remain
+  as compatibility coverage. Sanitization, equation editor controls and template
+  galleries remain UI. The older PPTX Markdown `OmmlLatexConverter` remains
+  unchanged because it has a distinct output contract.

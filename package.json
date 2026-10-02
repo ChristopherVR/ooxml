@@ -140,6 +140,11 @@
 			"types": "./dist/pptx/signature-node/index.d.ts",
 			"import": "./dist/pptx/signature-node/index.mjs",
 			"require": "./dist/pptx/signature-node/index.cjs"
+		},
+		"./math": {
+			"types": "./dist/math/index.d.ts",
+			"import": "./dist/math/index.mjs",
+			"require": "./dist/math/index.cjs"
 		}
 	},
 	"publishConfig": {

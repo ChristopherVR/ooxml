@@ -8,3 +8,4 @@ export * as geometry from './geometry/index.js';
 export * as opc from './opc/index.js';
 export * as units from './units/index.js';
 export * as xml from './xml/index.js';
+export * as math from './math/index.js';
