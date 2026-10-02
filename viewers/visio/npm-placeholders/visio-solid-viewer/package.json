@@ -1,6 +1,6 @@
 {
 	"name": "visio-solid-viewer",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"description": "Placeholder for the Visio beta viewer. No viewer API is included yet.",
 	"homepage": "https://christophervr.github.io/visio-viewer/",
 	"license": "UNLICENSED",
