@@ -1,12 +1,12 @@
 # Visio Viewer
 
-A private, local-first Visio viewing project. One headless controller, one SVG renderer and one custom element, with thin React, Vue, Angular, Svelte, Solid and vanilla adapters. Format logic belongs to the sibling `ooxml` repository's new `ooxml-core/visio` area.
+A public beta, local-first Visio viewing project. One headless controller, one SVG renderer and one custom element, with thin React, Vue, Angular, Svelte, Solid and vanilla adapters. Format logic belongs to the sibling `ooxml` repository's new `ooxml-core/visio` area.
 
 **This is an early implementation, not Microsoft Visio parity.** The shared viewer has experimental source-backed plain-text editing, bounded undo/redo and explicit VSDX-copy export. Native Visio reopening remains unverified. The [capability ledger](docs/parity.md) separates implemented code, tested evidence and missing functionality. Real upstream drawings and embedded previews have been inspected with a secondary renderer, but no controlled Microsoft Visio full-page comparison has passed.
 
 ## Local setup
 
-Node.js 22.12 or newer is required. The Visio area is not published in `ooxml-core` yet, so this private repository uses a sibling checkout.
+Node.js 22.12 or newer is required. The Visio area is not published in `ooxml-core` yet, so this repository uses a pinned sibling checkout.
 
 ```sh
 node scripts/setup-core.mjs
@@ -92,7 +92,7 @@ The headless core contains a tested neutral-vector sanitizer and transport valid
 
 ## Publication
 
-This viewer remains private; no npm publication, GitHub Pages deployment or public hosting is configured. Its core integration pins a separately published source baseline. New local core changes require separate review and publication before advancing that pin; source publication does not imply an npm package release.
+The repository and GitHub Pages demo are public beta previews. The seven packages in `npm-placeholders/` reserve the `visio-core` and `visio-<framework>-viewer` names at version 0.0.1 and contain no viewer API. Try [the live demo](https://christophervr.github.io/visio-viewer/demo/). Functional npm releases require a published Visio core dependency. The Pages workflow runs the complete check and browser suites before deploying the pinned source build.
 
 ## Experimental local plain-text editing
 

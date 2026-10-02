@@ -1,0 +1,33 @@
+.live-copy {
+	max-width: 650px;
+	line-height: 1.75;
+	color: var(--muted);
+}
+.live-toolbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	flex-wrap: wrap;
+	margin: 28px 0 16px;
+}
+.live-stage {
+	display: grid;
+	place-items: center;
+	min-height: 360px;
+	border: 1px solid var(--line);
+	border-radius: 8px;
+	background: var(--surface);
+	overflow: hidden;
+	box-shadow: var(--shadow);
+}
+.live-stage iframe {
+	width: 100%;
+	height: 720px;
+	border: 0;
+}
+@media (max-width: 560px) {
+	.live-stage iframe {
+		height: 900px;
+	}
+}

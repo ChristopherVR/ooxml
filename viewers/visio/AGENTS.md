@@ -1,6 +1,6 @@
 # Agent guidance
 
-This is the private, UI-only Visio viewer. Do not publish or enable GitHub Pages without explicit permission. Full Microsoft Visio parity is a target, not a current claim.
+This is the public, UI-only Visio beta viewer. GitHub Pages deployment and the initial npm placeholder packages are authorized. Functional npm releases require a released core dependency first. Full Microsoft Visio parity is a target, not a current claim.
 
 - All VSDX parsing, packaging, ShapeSheet interpretation and document models live in `ooxml-core/visio` in the sibling `ooxml` repository. Do not fork that logic here.
 - One SVG renderer and one custom element serve every framework. Bindings own lifecycle and prop/event forwarding only.

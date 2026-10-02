@@ -1,17 +1,17 @@
 :root {
 	color-scheme: light;
-	--paper: #f7f8f5;
+	--paper: #fbfaf7;
 	--surface: #fff;
-	--ink: #172c38;
-	--muted: #5e707a;
-	--line: #dce3e3;
+	--ink: #1a1d21;
+	--muted: #5a626e;
+	--line: #e6e2d9;
 	--accent: #2459c5;
 	--soft: #eaf0ff;
 	--green: #18665c;
 	--mono: ui-monospace, SFMono-Regular, Consolas, monospace;
 	--shadow: 0 24px 60px -32px #15334e55;
 	font-family:
-		Inter,
+		'Bricolage Grotesque',
 		ui-sans-serif,
 		system-ui,
 		-apple-system,
@@ -173,6 +173,8 @@ button:disabled {
 }
 .hero h1 span {
 	color: var(--accent);
+	font-style: italic;
+	font-weight: 460;
 }
 .hero-copy {
 	font-size: 17px;
@@ -226,7 +228,7 @@ button:disabled {
 	overflow: hidden;
 	background: var(--surface);
 	box-shadow: var(--shadow);
-	transform: rotate(-1deg);
+	transform: none;
 }
 .preview-bar {
 	display: flex;

@@ -1,0 +1,22 @@
+{
+	"name": "visio-angular-viewer",
+	"version": "0.0.1",
+	"description": "Placeholder for the Visio beta viewer. No viewer API is included yet.",
+	"homepage": "https://christophervr.github.io/visio-viewer/",
+	"license": "UNLICENSED",
+	"author": "ChristopherVR",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/ChristopherVR/visio-viewer.git",
+		"directory": "npm-placeholders/visio-angular-viewer"
+	},
+	"files": [
+		"index.js",
+		"README.md"
+	],
+	"type": "module",
+	"exports": "./index.js",
+	"publishConfig": {
+		"access": "public"
+	}
+}

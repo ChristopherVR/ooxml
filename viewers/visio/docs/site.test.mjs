@@ -124,8 +124,9 @@ describe('static documentation contracts', () => {
 		const home = dom('index.html').window.document.body.textContent;
 		const ledger = dom('docs/parity.html').window.document.body.textContent;
 		assert.match(home, /Illustration · not a live editor/);
-		assert.match(home, /private and unpublished/i);
-		assert.match(home, /Editing, native save/);
+		assert.match(home, /public beta/i);
+		assert.match(home, /npm packages are placeholders without a viewer API/i);
+		assert.match(home, /General drawing edits/);
 		assert.match(ledger, /parity is a target, not the current result/i);
 		assert.match(ledger, /Generated fixtures/);
 		const rows = [...dom('docs/parity.html').window.document.querySelectorAll('tbody tr')];
