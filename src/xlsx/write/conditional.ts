@@ -1,0 +1,188 @@
+import { NS } from '../../xml/index.js';
+import { formatAddress, formatRange } from '../address.js';
+import type {
+	CfvoThreshold,
+	ConditionalFormat,
+	ConditionalRule,
+	DataValidation,
+} from '../model.js';
+import { addFuturePrefixes } from '../read/formula-text.js';
+import { timePeriodFormula } from '../time-period.js';
+import { colorXml } from './style-xml.js';
+import type { StyleWriter } from './styles.js';
+import { attrs, el, escapeText } from './xml-out.js';
+
+const cfvoXml = (threshold: CfvoThreshold) =>
+	el('cfvo', { type: threshold.type, val: threshold.value });
+const formulaXml = (formula: string, name = 'formula') =>
+	`<${name}>${escapeText(addFuturePrefixes(formula))}</${name}>`;
+const quote = (text: string) => `"${text.replace(/"/g, '""')}"`;
+
+/** The formula Excel stores alongside a text or blanks rule, anchored at `cell`. */
+function textRuleFormula(rule: ConditionalRule, cell: string): string | undefined {
+	switch (rule.type) {
+		case 'containsText':
+			return `NOT(ISERROR(SEARCH(${quote(rule.text)},${cell})))`;
+		case 'notContainsText':
+			return `ISERROR(SEARCH(${quote(rule.text)},${cell}))`;
+		case 'beginsWith':
+			return `LEFT(${cell},LEN(${quote(rule.text)}))=${quote(rule.text)}`;
+		case 'endsWith':
+			return `RIGHT(${cell},LEN(${quote(rule.text)}))=${quote(rule.text)}`;
+		case 'containsBlanks':
+			return `LEN(TRIM(${cell}))=0`;
+		case 'notContainsBlanks':
+			return `LEN(TRIM(${cell}))>0`;
+		case 'containsErrors':
+			return `ISERROR(${cell})`;
+		case 'notContainsErrors':
+			return `NOT(ISERROR(${cell}))`;
+		default:
+			return undefined;
+	}
+}
+
+const TEXT_OPERATORS: Record<string, string> = {
+	containsText: 'containsText',
+	notContainsText: 'notContains',
+	beginsWith: 'beginsWith',
+	endsWith: 'endsWith',
+};
+
+function ruleXml(rule: ConditionalRule, styles: StyleWriter, anchor: string): string {
+	const base = { type: rule.type, priority: rule.priority };
+	switch (rule.type) {
+		case 'cellIs':
+			return el(
+				'cfRule',
+				{
+					...base,
+					dxfId: styles.dxfId(rule.style),
+					stopIfTrue: rule.stopIfTrue || undefined,
+					operator: rule.operator,
+				},
+				rule.formulas.map((f) => formulaXml(f)).join(''),
+			);
+		case 'expression':
+			return el(
+				'cfRule',
+				{ ...base, dxfId: styles.dxfId(rule.style), stopIfTrue: rule.stopIfTrue || undefined },
+				formulaXml(rule.formula),
+			);
+		case 'colorScale':
+			return el(
+				'cfRule',
+				base,
+				`<colorScale>${rule.thresholds.map(cfvoXml).join('')}${rule.colors.map((c) => colorXml(c)).join('')}</colorScale>`,
+			);
+		case 'dataBar': {
+			const ext = rule.extensionId
+				? `<extLst><ext uri="{B025F937-C7B1-47D3-B67F-A62EFF666E3E}" xmlns:x14="${NS.x14}"><x14:id>${escapeText(rule.extensionId)}</x14:id></ext></extLst>`
+				: '';
+			const bar = el(
+				'dataBar',
+				{ showValue: rule.showValue === false ? false : undefined },
+				cfvoXml(rule.min) + cfvoXml(rule.max) + colorXml(rule.color),
+			);
+			return el('cfRule', base, bar + ext);
+		}
+		case 'iconSet':
+			return el(
+				'cfRule',
+				base,
+				el(
+					'iconSet',
+					{
+						iconSet: rule.iconSet,
+						showValue: rule.showValue === false ? false : undefined,
+						reverse: rule.reverse || undefined,
+					},
+					rule.thresholds.map(cfvoXml).join(''),
+				),
+			);
+		case 'top10':
+			return el('cfRule', {
+				...base,
+				dxfId: styles.dxfId(rule.style),
+				percent: rule.percent || undefined,
+				bottom: rule.bottom || undefined,
+				rank: rule.rank,
+			});
+		case 'aboveAverage':
+			return el('cfRule', {
+				...base,
+				dxfId: styles.dxfId(rule.style),
+				aboveAverage: rule.below ? false : undefined,
+				equalAverage: rule.equalAverage || undefined,
+			});
+		case 'duplicateValues':
+		case 'uniqueValues':
+			return el('cfRule', { ...base, dxfId: styles.dxfId(rule.style) });
+		case 'timePeriod':
+			return el(
+				'cfRule',
+				{
+					...base,
+					dxfId: styles.dxfId(rule.style),
+					stopIfTrue: rule.stopIfTrue || undefined,
+					timePeriod: rule.timePeriod,
+				},
+				formulaXml(timePeriodFormula(rule.timePeriod, anchor)),
+			);
+		default: {
+			const formula = textRuleFormula(rule, anchor);
+			const text = 'text' in rule ? rule.text : undefined;
+			return el(
+				'cfRule',
+				{ ...base, dxfId: styles.dxfId(rule.style), operator: TEXT_OPERATORS[rule.type], text },
+				formula ? formulaXml(formula) : '',
+			);
+		}
+	}
+}
+
+export function conditionalFormatsXml(
+	formats: readonly ConditionalFormat[],
+	styles: StyleWriter,
+): string {
+	return formats
+		.filter((format) => format.ranges.length && format.rules.length)
+		.map((format) => {
+			const first = format.ranges[0];
+			const anchor = first ? formatAddress(first.start) : 'A1';
+			const rules = format.rules.map((rule) => ruleXml(rule, styles, anchor)).join('');
+			return `<conditionalFormatting sqref="${format.ranges.map((r) => formatRange(r)).join(' ')}">${rules}</conditionalFormatting>`;
+		})
+		.join('');
+}
+
+export function dataValidationsXml(validations: readonly DataValidation[]): string {
+	const items = validations
+		.filter((dv) => dv.ranges.length)
+		.map((dv) => {
+			const hideDropDown = dv.showDropDown === false ? true : undefined;
+			const values = attrs({
+				type: dv.type === 'none' ? undefined : dv.type,
+				errorStyle: dv.errorStyle,
+				operator: dv.operator,
+				allowBlank: dv.allowBlank || undefined,
+				showDropDown: hideDropDown,
+				showInputMessage: dv.showInputMessage || undefined,
+				showErrorMessage: dv.showErrorMessage || undefined,
+				errorTitle: dv.errorTitle,
+				error: dv.error,
+				promptTitle: dv.promptTitle,
+				prompt: dv.prompt,
+				sqref: dv.ranges.map((r) => formatRange(r)).join(' '),
+			});
+			const formulas =
+				(dv.formula1 !== undefined ? formulaXml(dv.formula1, 'formula1') : '') +
+				(dv.formula2 !== undefined ? formulaXml(dv.formula2, 'formula2') : '');
+			return formulas
+				? `<dataValidation${values}>${formulas}</dataValidation>`
+				: `<dataValidation${values}/>`;
+		});
+	return items.length
+		? `<dataValidations count="${items.length}">${items.join('')}</dataValidations>`
+		: '';
+}

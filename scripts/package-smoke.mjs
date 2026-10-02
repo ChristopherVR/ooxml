@@ -41,8 +41,13 @@ try {
 		'a runtime dependency uses file:',
 	);
 
-	// The legacy .doc loader inlines ole2: consumers must not need it.
-	for (const file of ['dist/docx/load/index.mjs', 'dist/docx/load/index.cjs']) {
+	// The legacy .doc and .xls loaders inline ole2: consumers must not need it.
+	for (const file of [
+		'dist/docx/load/index.mjs',
+		'dist/docx/load/index.cjs',
+		'dist/xlsx/load/index.mjs',
+		'dist/xlsx/load/index.cjs',
+	]) {
 		assert(files.has(file), `the package is missing ${file}`);
 		const text = await readFile(path.join(root, file), 'utf8');
 		assert(!/(?:from|require\()\s*['"]@christophervr\/ole2/.test(text), `${file} imports ole2`);

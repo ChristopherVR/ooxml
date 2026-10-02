@@ -12,7 +12,10 @@
 		"pptx",
 		"presentationml",
 		"smartart",
-		"wordprocessingml"
+		"spreadsheetml",
+		"wordprocessingml",
+		"xls",
+		"xlsx"
 	],
 	"homepage": "https://github.com/ChristopherVR/ooxml#readme",
 	"bugs": {
@@ -108,6 +111,16 @@
 			"import": "./dist/visio/index.mjs",
 			"require": "./dist/visio/index.cjs"
 		},
+		"./xlsx": {
+			"types": "./dist/xlsx/index.d.ts",
+			"import": "./dist/xlsx/index.mjs",
+			"require": "./dist/xlsx/index.cjs"
+		},
+		"./xlsx/load": {
+			"types": "./dist/xlsx/load/index.d.ts",
+			"import": "./dist/xlsx/load/index.mjs",
+			"require": "./dist/xlsx/load/index.cjs"
+		},
 		"./pptx": {
 			"types": "./dist/pptx/index.d.ts",
 			"import": "./dist/pptx/index.mjs",
@@ -162,7 +175,7 @@
 		"yjs": "^13.6.32"
 	},
 	"devDependencies": {
-		"@christophervr/ole2": "0.3.0",
+		"@christophervr/ole2": "0.4.0",
 		"@napi-rs/canvas": "^1.0.9",
 		"@types/node": "^22.0.0",
 		"@types/node-forge": "^1.3.14",

@@ -1,0 +1,678 @@
+import type { CellAddress, CellRange } from './address.js';
+
+/** Excel error values. */
+export const ERROR_CODES = [
+	'#NULL!',
+	'#DIV/0!',
+	'#VALUE!',
+	'#REF!',
+	'#NAME?',
+	'#NUM!',
+	'#N/A',
+	'#GETTING_DATA',
+	'#SPILL!',
+	'#CALC!',
+] as const;
+export type ErrorCode = (typeof ERROR_CODES)[number];
+
+/** An error cell value (`#DIV/0!`, `#N/A`, ...). */
+export interface CellError {
+	readonly error: ErrorCode;
+}
+
+export const isErrorCode = (value: string): value is ErrorCode =>
+	(ERROR_CODES as readonly string[]).includes(value);
+export const cellError = (error: ErrorCode): CellError => ({ error });
+export const isCellError = (value: unknown): value is CellError =>
+	typeof value === 'object' && value !== null && 'error' in value;
+
+/**
+ * A cell's value. Dates are numbers (serial days since the workbook epoch) whose style carries a
+ * date number format, exactly as SpreadsheetML stores them.
+ */
+export type CellValue = number | string | boolean | CellError | null;
+
+/** A colour as SpreadsheetML records it: explicit ARGB, a theme slot with tint, or a legacy index. */
+export interface Color {
+	/** `AARRGGBB` or `RRGGBB`, upper case. */
+	rgb?: string;
+	/** Theme colour slot (0 lt1/bg1, 1 dk1/tx1, 2 lt2, 3 dk2, 4-9 accent1-6, 10 hlink, 11 folHlink). */
+	theme?: number;
+	/** -1 (darker) to 1 (lighter). */
+	tint?: number;
+	/** Legacy palette index (64 is system foreground, 65 system background). */
+	indexed?: number;
+	/** `auto` colour (the system default). */
+	auto?: boolean;
+}
+
+export type UnderlineStyle = 'single' | 'double' | 'singleAccounting' | 'doubleAccounting';
+
+export interface Font {
+	name?: string;
+	/** Points. */
+	size?: number;
+	bold?: boolean;
+	italic?: boolean;
+	underline?: UnderlineStyle;
+	strike?: boolean;
+	color?: Color;
+	vertAlign?: 'superscript' | 'subscript';
+	/** Font family class (`2` swiss, ...), kept for round trip. */
+	family?: number;
+	scheme?: 'major' | 'minor';
+}
+
+export type PatternType =
+	| 'none'
+	| 'solid'
+	| 'gray125'
+	| 'gray0625'
+	| 'darkGray'
+	| 'mediumGray'
+	| 'lightGray'
+	| 'darkHorizontal'
+	| 'darkVertical'
+	| 'darkDown'
+	| 'darkUp'
+	| 'darkGrid'
+	| 'darkTrellis'
+	| 'lightHorizontal'
+	| 'lightVertical'
+	| 'lightDown'
+	| 'lightUp'
+	| 'lightGrid'
+	| 'lightTrellis';
+
+export interface GradientStop {
+	position: number;
+	color: Color;
+}
+
+export type Fill =
+	| { type: 'pattern'; pattern: PatternType; fgColor?: Color; bgColor?: Color }
+	| {
+			type: 'gradient';
+			gradient: 'linear' | 'path';
+			degree?: number;
+			stops: GradientStop[];
+	  };
+
+export type BorderStyle =
+	| 'thin'
+	| 'medium'
+	| 'thick'
+	| 'dashed'
+	| 'dotted'
+	| 'double'
+	| 'hair'
+	| 'mediumDashed'
+	| 'dashDot'
+	| 'mediumDashDot'
+	| 'dashDotDot'
+	| 'mediumDashDotDot'
+	| 'slantDashDot';
+
+export interface BorderEdge {
+	style: BorderStyle;
+	color?: Color;
+}
+
+export interface Border {
+	left?: BorderEdge;
+	right?: BorderEdge;
+	top?: BorderEdge;
+	bottom?: BorderEdge;
+	diagonal?: BorderEdge;
+	diagonalUp?: boolean;
+	diagonalDown?: boolean;
+}
+
+export type HorizontalAlignment =
+	| 'general'
+	| 'left'
+	| 'center'
+	| 'right'
+	| 'fill'
+	| 'justify'
+	| 'centerContinuous'
+	| 'distributed';
+export type VerticalAlignment = 'top' | 'center' | 'bottom' | 'justify' | 'distributed';
+
+export interface Alignment {
+	horizontal?: HorizontalAlignment;
+	vertical?: VerticalAlignment;
+	wrapText?: boolean;
+	shrinkToFit?: boolean;
+	indent?: number;
+	/** 0-90 counter-clockwise, 91-180 clockwise (90 + n), 255 vertical stacked text. */
+	textRotation?: number;
+	readingOrder?: number;
+}
+
+export interface Protection {
+	locked?: boolean;
+	hidden?: boolean;
+}
+
+/**
+ * A fully resolved cell format (one `cellXfs` entry with its font, fill, border and number
+ * format inlined). Style 0 of every workbook is the default format. Formats are immutable: an
+ * edit creates or reuses another entry through {@link StyleTable}.
+ */
+export interface CellStyle {
+	font: Font;
+	fill: Fill;
+	border: Border;
+	/** The number format code (`General`, `0.00`, `m/d/yyyy`, ...). */
+	numFmt: string;
+	alignment?: Alignment;
+	protection?: Protection;
+	/** Name of the cell style (`Normal`, `Heading 1`) this format derives from, if any. */
+	cellStyleName?: string;
+}
+
+/** A run of rich text in a cell (`<r>` in a shared string). */
+export interface RichTextRun {
+	text: string;
+	font?: Font;
+}
+
+export interface Cell {
+	value: CellValue;
+	/** The formula without its leading `=`, as written in `<f>`. */
+	formula?: string;
+	/** Array formula range (`<f t="array" ref="...">`), when this cell anchors one. */
+	arrayRange?: CellRange;
+	/** Index into {@link Workbook.styles}; absent means style 0. */
+	styleId?: number;
+	/** Rich text runs for a string value with mixed formatting. */
+	richText?: RichTextRun[];
+	/**
+	 * The formula was stored as an Excel dynamic-array formula (`cm` pointing at `XLDAPR`
+	 * cell metadata with `fDynamic`). Informational: formulas without {@link legacyFormula}
+	 * are always evaluated with dynamic-array semantics, and the writer stores any formula that
+	 * spills (or needs array evaluation) as a dynamic array whether or not this flag is set.
+	 */
+	dynamicArray?: true;
+	/**
+	 * The formula came from a file without dynamic-array metadata, so it uses pre-dynamic-array
+	 * semantics: a range or array where one value is expected is reduced by implicit
+	 * intersection (Excel shows these formulas with `@`) and the result never spills. The
+	 * readers set it on plain formulas they load (not on CSE array formulas, which keep
+	 * {@link arrayRange}); formulas typed in an edit session do not have it and are dynamic.
+	 * Copying, filling and moving a cell keep the flag.
+	 */
+	legacyFormula?: true;
+}
+
+export interface RowInfo {
+	/** Points. */
+	height?: number;
+	customHeight?: boolean;
+	hidden?: boolean;
+	styleId?: number;
+	outlineLevel?: number;
+	collapsed?: boolean;
+}
+
+export interface ColumnInfo {
+	/** Zero-based first and last column this entry covers. */
+	min: number;
+	max: number;
+	/** Width in characters of the default font's maximum digit width. */
+	width?: number;
+	customWidth?: boolean;
+	hidden?: boolean;
+	styleId?: number;
+	outlineLevel?: number;
+	collapsed?: boolean;
+	bestFit?: boolean;
+}
+
+export interface Hyperlink {
+	range: CellRange;
+	/** External target (URL or file); absent for in-workbook locations. */
+	target?: string;
+	/** In-workbook location (`Sheet2!A1`). */
+	location?: string;
+	tooltip?: string;
+	display?: string;
+}
+
+export interface Comment {
+	address: CellAddress;
+	author: string;
+	text: string;
+	/** Threaded-comment replies, oldest first (read from `threadedComments` when present). */
+	replies?: { author: string; text: string; date?: string }[];
+}
+
+export type ConditionalOperator =
+	| 'lessThan'
+	| 'lessThanOrEqual'
+	| 'equal'
+	| 'notEqual'
+	| 'greaterThanOrEqual'
+	| 'greaterThan'
+	| 'between'
+	| 'notBetween';
+
+/** Differential format applied by conditional formatting (`dxf`). */
+export interface DifferentialStyle {
+	font?: Font;
+	fill?: Fill;
+	border?: Border;
+	numFmt?: string;
+}
+
+export interface CfvoThreshold {
+	type: 'min' | 'max' | 'num' | 'percent' | 'percentile' | 'formula';
+	value?: string;
+}
+
+export type ConditionalRule =
+	| {
+			type: 'cellIs';
+			operator: ConditionalOperator;
+			formulas: string[];
+			style: DifferentialStyle;
+			priority: number;
+			stopIfTrue?: boolean;
+	  }
+	| {
+			type: 'expression';
+			formula: string;
+			style: DifferentialStyle;
+			priority: number;
+			stopIfTrue?: boolean;
+	  }
+	| {
+			type: 'colorScale';
+			thresholds: CfvoThreshold[];
+			colors: Color[];
+			priority: number;
+	  }
+	| {
+			type: 'dataBar';
+			min: CfvoThreshold;
+			max: CfvoThreshold;
+			color: Color;
+			priority: number;
+			showValue?: boolean;
+			/** GUID linking this rule to its Excel 2010 (`x14:dataBar`) extension, kept for round trip. */
+			extensionId?: string;
+	  }
+	| {
+			type: 'iconSet';
+			iconSet: string;
+			thresholds: CfvoThreshold[];
+			priority: number;
+			reverse?: boolean;
+			showValue?: boolean;
+	  }
+	| {
+			type: 'top10';
+			rank: number;
+			bottom?: boolean;
+			percent?: boolean;
+			style: DifferentialStyle;
+			priority: number;
+	  }
+	| {
+			type: 'aboveAverage';
+			below?: boolean;
+			equalAverage?: boolean;
+			style: DifferentialStyle;
+			priority: number;
+	  }
+	| {
+			type:
+				| 'duplicateValues'
+				| 'uniqueValues'
+				| 'containsBlanks'
+				| 'notContainsBlanks'
+				| 'containsErrors'
+				| 'notContainsErrors';
+			style: DifferentialStyle;
+			priority: number;
+	  }
+	| {
+			type: 'containsText' | 'notContainsText' | 'beginsWith' | 'endsWith';
+			text: string;
+			style: DifferentialStyle;
+			priority: number;
+	  }
+	| {
+			/** "A Date Occurring": the cell's date falls in a period relative to today. */
+			type: 'timePeriod';
+			timePeriod: TimePeriod;
+			style: DifferentialStyle;
+			priority: number;
+			stopIfTrue?: boolean;
+	  };
+
+/** Periods of a `timePeriod` conditional-format rule (`ST_TimePeriod`). */
+export type TimePeriod =
+	| 'today'
+	| 'yesterday'
+	| 'tomorrow'
+	| 'last7Days'
+	| 'thisWeek'
+	| 'lastWeek'
+	| 'nextWeek'
+	| 'thisMonth'
+	| 'lastMonth'
+	| 'nextMonth';
+
+export const TIME_PERIODS: readonly TimePeriod[] = [
+	'today',
+	'yesterday',
+	'tomorrow',
+	'last7Days',
+	'thisWeek',
+	'lastWeek',
+	'nextWeek',
+	'thisMonth',
+	'lastMonth',
+	'nextMonth',
+];
+
+export interface ConditionalFormat {
+	ranges: CellRange[];
+	rules: ConditionalRule[];
+}
+
+export type ValidationType =
+	| 'none'
+	| 'whole'
+	| 'decimal'
+	| 'list'
+	| 'date'
+	| 'time'
+	| 'textLength'
+	| 'custom';
+
+export interface DataValidation {
+	ranges: CellRange[];
+	type: ValidationType;
+	operator?: ConditionalOperator;
+	formula1?: string;
+	formula2?: string;
+	allowBlank?: boolean;
+	/** Show the in-cell drop-down for list validations (SpreadsheetML inverts this flag). */
+	showDropDown?: boolean;
+	showErrorMessage?: boolean;
+	showInputMessage?: boolean;
+	errorStyle?: 'stop' | 'warning' | 'information';
+	errorTitle?: string;
+	error?: string;
+	promptTitle?: string;
+	prompt?: string;
+}
+
+export interface FreezePane {
+	/** Number of frozen rows at the top. */
+	rows: number;
+	/** Number of frozen columns on the left. */
+	cols: number;
+}
+
+export interface AutoFilter {
+	range: CellRange;
+	/** Per-column filters keyed by zero-based column offset within the range. */
+	columns?: { offset: number; values?: string[]; blank?: boolean }[];
+}
+
+export interface TableColumn {
+	name: string;
+	totalsRowFunction?: string;
+	totalsRowLabel?: string;
+	calculatedColumnFormula?: string;
+}
+
+/** An Excel table (ListObject). */
+export interface Table {
+	id: number;
+	name: string;
+	displayName: string;
+	range: CellRange;
+	headerRow: boolean;
+	totalsRow: boolean;
+	columns: TableColumn[];
+	styleName?: string;
+	showRowStripes?: boolean;
+	showColumnStripes?: boolean;
+	showFirstColumn?: boolean;
+	showLastColumn?: boolean;
+	/** Package part the table was read from, reused on save. */
+	partName?: string;
+}
+
+/** Where a drawing object sits on the grid (two-cell anchor, offsets in EMU). */
+export interface DrawingAnchor {
+	from: CellAddress & { colOffset: number; rowOffset: number };
+	to?: CellAddress & { colOffset: number; rowOffset: number };
+	/** Extent in EMU for one-cell and absolute anchors. */
+	ext?: { cx: number; cy: number };
+}
+
+export interface ImageObject {
+	kind: 'image';
+	anchor: DrawingAnchor;
+	/** Package part of the image (`xl/media/image1.png`). */
+	partName: string;
+	contentType: string;
+	name?: string;
+	description?: string;
+}
+
+export type ChartType =
+	| 'bar'
+	| 'column'
+	| 'line'
+	| 'pie'
+	| 'doughnut'
+	| 'area'
+	| 'scatter'
+	| 'radar'
+	| 'bubble'
+	| 'stock'
+	| 'surface';
+
+export interface ChartSeries {
+	name?: string;
+	/** Formula reference for the series name (`Sheet1!$B$1`). */
+	nameRef?: string;
+	categoriesRef?: string;
+	valuesRef?: string;
+	/** Cached categories and values from the chart part, used when references cannot resolve. */
+	categories: (string | number)[];
+	values: (number | null)[];
+	color?: Color;
+}
+
+export interface ChartObject {
+	kind: 'chart';
+	anchor: DrawingAnchor;
+	chartType: ChartType;
+	/** Bar/column grouping. */
+	grouping?: 'clustered' | 'stacked' | 'percentStacked' | 'standard';
+	title?: string;
+	series: ChartSeries[];
+	showLegend: boolean;
+	legendPosition?: 'r' | 'l' | 't' | 'b' | 'tr';
+	/** Package part of the chart (`xl/charts/chart1.xml`), kept so unmodelled detail survives. */
+	partName?: string;
+	name?: string;
+}
+
+/** A shape or object the model does not draw; reported so the UI can say so honestly. */
+export interface UnsupportedDrawingObject {
+	kind: 'unsupported';
+	anchor: DrawingAnchor;
+	/** What it is (`shape`, `smartArt`, `ole`, `form control`, ...). */
+	description: string;
+	/** The anchor element's XML as read, written back verbatim when the drawing is regenerated. */
+	sourceXml?: string;
+}
+
+export type DrawingObject = ImageObject | ChartObject | UnsupportedDrawingObject;
+
+export interface SheetView {
+	showGridLines: boolean;
+	showHeaders: boolean;
+	showZeros: boolean;
+	rightToLeft: boolean;
+	/** Percent. */
+	zoom: number;
+	freeze?: FreezePane;
+	/** Top-left visible cell of the scrollable pane. */
+	topLeft?: CellAddress;
+	selection?: { active: CellAddress; ranges: CellRange[] };
+	/** Show formula text instead of results (`showFormulas`, Ctrl+`). */
+	showFormulas?: boolean;
+}
+
+/** Print options (`<printOptions>`). */
+export interface PrintOptions {
+	/** Print gridlines. */
+	gridLines?: boolean;
+	/** Print row and column headings. */
+	headings?: boolean;
+	horizontalCentered?: boolean;
+	verticalCentered?: boolean;
+}
+
+export interface PageSetup {
+	orientation?: 'portrait' | 'landscape';
+	paperSize?: number;
+	scale?: number;
+	fitToWidth?: number;
+	fitToHeight?: number;
+	margins?: {
+		left: number;
+		right: number;
+		top: number;
+		bottom: number;
+		header: number;
+		footer: number;
+	};
+	printArea?: CellRange;
+	header?: string;
+	footer?: string;
+}
+
+export interface SheetProtection {
+	sheet: boolean;
+	/** Legacy password hash (`password` attribute), kept for round trip. */
+	passwordHash?: string;
+	/** Actions still allowed (`formatCells`, `insertRows`, `sort`, `autoFilter`, ...). */
+	allow?: string[];
+}
+
+export type SheetState = 'visible' | 'hidden' | 'veryHidden';
+
+export interface Worksheet {
+	name: string;
+	/** `sheetId` from workbook.xml; unique and stable within the workbook. */
+	sheetId: number;
+	state: SheetState;
+	/** Cells keyed by row index, then column index (both zero-based). */
+	rows: Map<number, Map<number, Cell>>;
+	rowInfo: Map<number, RowInfo>;
+	columns: ColumnInfo[];
+	/** Points. */
+	defaultRowHeight: number;
+	/** Characters; absent means the Excel default (8.43 plus padding). */
+	defaultColWidth?: number;
+	merges: CellRange[];
+	view: SheetView;
+	hyperlinks: Hyperlink[];
+	comments: Comment[];
+	conditionalFormats: ConditionalFormat[];
+	dataValidations: DataValidation[];
+	tables: Table[];
+	drawings: DrawingObject[];
+	autoFilter?: AutoFilter;
+	pageSetup?: PageSetup;
+	/** Print options; absent means none set. */
+	printOptions?: PrintOptions;
+	protection?: SheetProtection;
+	tabColor?: Color;
+	/**
+	 * Worksheet XML elements the model does not represent, keyed by local name and kept verbatim
+	 * so a save writes them back in schema order (`printOptions`, `rowBreaks`, `extLst`, ...).
+	 */
+	preserved: Map<string, string[]>;
+	/** Package part the sheet was read from, reused on save. */
+	partName?: string;
+}
+
+export interface DefinedName {
+	name: string;
+	/** The reference or formula, without a leading `=`. */
+	formula: string;
+	/** Zero-based sheet index for a sheet-scoped name. */
+	localSheet?: number;
+	hidden?: boolean;
+	comment?: string;
+}
+
+/** The workbook theme's colour palette and fonts, resolved for rendering. */
+export interface ThemePalette {
+	/** 12 colours in theme order (lt1, dk1, lt2, dk2, accent1-6, hlink, folHlink) as `RRGGBB`. */
+	colors: string[];
+	majorFont: string;
+	minorFont: string;
+}
+
+export interface WorkbookProperties {
+	title?: string;
+	subject?: string;
+	creator?: string;
+	keywords?: string;
+	description?: string;
+	lastModifiedBy?: string;
+	created?: string;
+	modified?: string;
+	company?: string;
+	application?: string;
+}
+
+export interface Workbook {
+	sheets: Worksheet[];
+	/** Resolved cell formats; index 0 is the default. */
+	styles: CellStyle[];
+	/** Named cell styles (`Normal`, `Good`, `Heading 1`, ...) available for the styles gallery. */
+	namedStyles: { name: string; style: CellStyle; builtinId?: number }[];
+	definedNames: DefinedName[];
+	theme: ThemePalette;
+	/** Zero-based index of the sheet shown first. */
+	activeSheet: number;
+	/** Dates count from 1904-01-01 instead of 1900-01-01. */
+	date1904: boolean;
+	properties: WorkbookProperties;
+	/** Recalculate formulas when the file opens (`calcPr fullCalcOnLoad`). */
+	fullCalcOnLoad?: boolean;
+	/** Workbook structure protection (no adding, deleting or renaming sheets). */
+	structureLocked?: boolean;
+	/** Legacy 16-bit hash of the structure protection password (`workbookPassword`, hex). */
+	workbookPasswordHash?: string;
+	/** Calculation mode (`calcPr calcMode`); absent means automatic. */
+	calcMode?: 'auto' | 'manual';
+	/**
+	 * The package the workbook was loaded from, kept so parts the model does not represent
+	 * (charts' full detail, VBA, pivot caches, custom XML) survive a save. Absent for new workbooks.
+	 */
+	source?: SourcePackage;
+	/** Where the workbook came from, for honest reporting in the UI. */
+	format: 'xlsx' | 'xlsm' | 'xls' | 'csv' | 'new';
+	/** Things the loader read but could not model, surfaced to the user. */
+	warnings: string[];
+}
+
+/** Raw parts of the loaded package, keyed by part name (no leading slash). */
+export interface SourcePackage {
+	parts: Map<string, Uint8Array>;
+}

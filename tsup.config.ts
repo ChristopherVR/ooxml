@@ -18,6 +18,8 @@ export default defineConfig({
 		'docx/load/index': 'src/docx/load/index.ts',
 		'collab/index': 'src/collab/index.ts',
 		'visio/index': 'src/visio/index.ts',
+		'xlsx/index': 'src/xlsx/index.ts',
+		'xlsx/load/index': 'src/xlsx/load/index.ts',
 	},
 	outDir: 'dist',
 	tsconfig: 'tsconfig.build.json',
@@ -31,6 +33,6 @@ export default defineConfig({
 	external: ['jszip', '@xmldom/xmldom', 'yjs', 'y-protocols', 'lib0'],
 	treeshake: true,
 	platform: 'neutral',
-	// The legacy .doc loader inlines the shared ole2 codecs (a devDependency), like the pptx bundle.
+	// The legacy .doc and .xls loaders inline the shared ole2 codecs (a devDependency), like the pptx bundle.
 	noExternal: [/^@christophervr\/ole2(?:\/|$)/],
 });
