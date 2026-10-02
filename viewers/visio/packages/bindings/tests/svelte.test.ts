@@ -17,6 +17,15 @@ it('Svelte action receives reactive props and callbacks and disposes on native u
 	const live = current();
 	const retained = harness.getHandle();
 	const viewer = harness.getViewer();
+	await viewer.replacePlainText('page', 'shape', 'Changed');
+	expect(live.binding.replacePlainText).toHaveBeenCalledWith('page', 'shape', 'Changed');
+	await viewer.undo();
+	await viewer.redo();
+	viewer.cancelEdit();
+	expect(live.binding.undo).toHaveBeenCalledOnce();
+	expect(live.binding.redo).toHaveBeenCalledOnce();
+	expect(live.binding.cancelEdit).toHaveBeenCalledOnce();
+	expect(viewer.exportVsdx().dirty).toBe(true);
 	viewer.setLayerVisibility('background', '0', true);
 	expect(live.binding.setLayerVisibility).toHaveBeenCalledWith('background', '0', true);
 	viewer.setLayerVisibility('background', '0', null);

@@ -1,11 +1,11 @@
 export const viewerStyles = `
 :host { --vv-accent:#126a64; --vv-ink:#182a33; --vv-muted:#5c6d76; --vv-border:#dce5e7; display:flex; flex-direction:column; min-height:320px; height:100%; color:var(--vv-ink); font:14px/1.5 system-ui,sans-serif; contain:layout; }
 * { box-sizing:border-box; }
-button,select,input { font:inherit; color:inherit; border:1px solid var(--vv-border); background:#fff; border-radius:7px; min-height:36px; padding:5px 10px; }
+button,select,input,textarea { font:inherit; color:inherit; border:1px solid var(--vv-border); background:#fff; border-radius:7px; min-height:36px; padding:5px 10px; }
 button { cursor:pointer; }
 button:hover:enabled { background:#eef6f5; border-color:#8daca9; }
 button:disabled { opacity:.45; cursor:default; }
-button:focus-visible,select:focus-visible,input:focus-visible,[tabindex]:focus-visible { outline:3px solid #edb852; outline-offset:2px; }
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible,[tabindex]:focus-visible { outline:3px solid #edb852; outline-offset:2px; }
 .toolbar { display:flex; align-items:center; flex-wrap:wrap; gap:8px; padding:10px 14px; border-bottom:1px solid var(--vv-border); background:#fff; }
 .toolbar[hidden] { display:none; }
 .toolbar label { color:var(--vv-muted); }
@@ -24,6 +24,14 @@ button:focus-visible,select:focus-visible,input:focus-visible,[tabindex]:focus-v
 .layer-controls fieldset div { display:flex; align-items:center; gap:8px; margin:3px 0; }
 .layer-controls label { display:flex; align-items:center; gap:8px; overflow-wrap:anywhere; }
 .layer-controls input { flex-shrink:0; width:18px; min-height:18px; padding:0; }
+.edit-controls { flex-basis:100%; min-width:0; font-size:12px; }
+.edit-controls summary { cursor:pointer; min-height:28px; line-height:28px; }
+.edit-controls p { margin:4px 0; overflow-wrap:anywhere; }
+.edit-controls textarea { display:block; width:100%; resize:vertical; max-height:180px; }
+.edit-controls label { display:block; }
+.edit-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+.edit-controls [data-edit-error] { color:#9e2c22; }
+.edit-controls [data-edit-diagnostics] { max-height:100px; overflow:auto; }
 .spacer { flex:1; }
 .zoom { min-width:4em; text-align:center; font-variant-numeric:tabular-nums; }
 .viewport { flex:1; overflow:auto; min-height:0; padding:32px; background-color:#eaf0f1; background-image:radial-gradient(#b8c8cb 0.7px,transparent 0.7px); background-size:16px 16px; }
@@ -45,5 +53,5 @@ button:focus-visible,select:focus-visible,input:focus-visible,[tabindex]:focus-v
 .notes li { margin:5px 0; }
 .empty { max-width:400px; margin:60px auto; text-align:center; color:var(--vv-muted); }
 .empty strong { display:block; color:var(--vv-ink); font-size:20px; margin-bottom:8px; }
-@media(max-width:600px) { button,select,input { min-height:44px; min-width:44px; } .notes summary,.shape-inspector summary,.layer-controls summary { min-height:44px; line-height:44px; } .viewport { padding:16px; } .toolbar { padding:8px; gap:5px; } .toolbar select { max-width:120px; } }
+@media(max-width:600px) { button,select,input,textarea { min-height:44px; min-width:44px; } .notes summary,.shape-inspector summary,.layer-controls summary,.edit-controls summary { min-height:44px; line-height:44px; } .viewport { padding:16px; } .toolbar { padding:8px; gap:5px; } .toolbar select { max-width:120px; } }
 `;

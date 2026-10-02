@@ -15,6 +15,11 @@
   }
   export function getHandle() { return handle; }
   export function load(source: VsdxSource) { return handle.load(source); }
+  export function replacePlainText(pageId: string, shapeId: string, text: string) { return handle.replacePlainText(pageId, shapeId, text); }
+  export function undo() { return handle.undo(); }
+  export function redo() { return handle.redo(); }
+  export function cancelEdit() { handle.cancelEdit(); }
+  export function exportVsdx() { return handle.exportVsdx(); }
   export function fit() { handle.fit(); }
   export function setLayerVisibility(pageId: string, layerId: string, visible: boolean | null) { handle.setLayerVisibility(pageId, layerId, visible); }
   export function resetLayerVisibility(pageId?: string) { handle.resetLayerVisibility(pageId); }

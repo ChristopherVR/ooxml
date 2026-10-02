@@ -21,11 +21,11 @@ All adapters accept the same properties:
 - `showToolbar`: toolbar visibility
 - `events`: typed callback map using literal event names
 
-The event map currently contains `document-load`, `document-error`, `page-change`, `zoom-change`, and `shape-select`. It is derived from the canonical contract. All adapters pass every event; none parse documents or own another renderer.
+The event map currently contains `document-load`, `document-change`, `document-error`, `page-change`, `zoom-change`, and `shape-select`. It is derived from the canonical contract. All adapters pass every event; none parse documents or own another renderer.
 
 Property updates are partial. Native framework snapshots are diffed so unrelated rerenders do not undo an imperative load or a user-changed viewport. Omitted or `undefined` properties preserve current viewer state. `null` explicitly clears the document. Removing the `events` prop clears callback-map handlers. Supply a new document object for an external replacement; in-place mutation is not a supported reactivity mechanism. Page and zoom interactions may update internal viewer state; the props request changes when their framework updates them.
 
-The imperative `ViewerHandle` exposes `element`, `controller`, `load(bytesOrBlob)` and `fit()`. Read access and operations through a framework handle fail clearly before mounting or after unmounting. A retained controller or element is also disposed when the owner unmounts. Vanilla returns the full shared binding with `update()` and idempotent `destroy()`.
+The imperative `ViewerHandle` exposes `element`, `controller`, `load(bytesOrBlob)` and `fit()`. Editing methods are `replacePlainText(pageId, shapeId, text)`, `undo()`, `redo()`, `cancelEdit()` and `exportVsdx()`. They forward to the same source-backed worker-isolated implementation. `ViewerEditState` and `VsdxExportResult` are shared exported types; state is available at `controller.state.edit`. Angular exposes the native `documentChange` output; every adapter supports the `document-change` callback map. Read access and operations through a framework handle fail clearly before mounting or after unmounting. A retained controller or element is also disposed when the owner unmounts. Vanilla returns the full shared binding with `update()` and idempotent `destroy()`.
 
 The editor itself mounts on the client. Separate Node tests verify all six entry points import without browser globals; React, Vue, Svelte and Solid also render empty native hosts on the server. React and Vue have tests hydrating their actual server markup before mounting the shared element. Angular server rendering and Solid/Svelte hydration remain unverified, as does cross-document mounting. These checks use the installed versions and do not imply full SSR-framework integration coverage.
 
@@ -107,3 +107,7 @@ Checks include TypeScript, `svelte-check`, native runtime lifecycle tests and re
 - Disposal clears the real element, listeners and owned DOM
 
 The focused lifecycle tests mock only the shared mount to isolate framework wiring. The integration matrix uses the real controller, parser and custom element. These tests run in jsdom and do not replace real-browser visual, accessibility, layout or framework-version compatibility tests. Only the installed versions are currently verified.
+
+## Editing scope
+
+Editing is experimental and limited to source-backed local plain-text replacement. Load package bytes before editing; assigning a `VisioDocument` model alone remains read-only. Core rejects master-linked text, rich text, fields, signed packages and macro content. History is bounded, formula caches are not recalculated, and native Visio reopening remains unverified. `exportVsdx()` returns copy bytes and diagnostics without downloading or overwriting a file; consumers choose an explicit save/download action. A `document-change` callback reports `{ document, dirty, kind }`, with kind `edit`, `undo` or `redo`. Unrelated framework rerenders must not replace an edited model with stale props.

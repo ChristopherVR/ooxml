@@ -168,6 +168,7 @@ const mounts: Record<string, NativeMount> = {
 };
 const payloads: ViewerEvents = {
 	'document-load': { format: 'vsdx', pages: [], diagnostics: [] },
+	'document-change': { document: demoDocument, dirty: true, kind: 'edit' },
 	'document-error': new Error('contract error'),
 	'page-change': 2,
 	'zoom-change': 3,
@@ -527,6 +528,46 @@ describe('page-scoped layer visibility across all native adapters', () => {
 				/not mounted|destroyed/,
 			);
 			expect(() => mounted.handle.resetLayerVisibility()).toThrow(/not mounted|destroyed/);
+		});
+	}
+});
+
+describe('shared editing methods across all six native adapters', () => {
+	for (const [framework, mountNative] of Object.entries(mounts)) {
+		it(`${framework}: forwards edit operations and guards disposal`, async () => {
+			const host = document.createElement('div');
+			document.body.append(host);
+			const mounted = await mountNative(host, { document: demoDocument });
+			const element = mounted.handle.element;
+			const replace = vi.spyOn(element, 'replacePlainText').mockResolvedValue();
+			const undo = vi.spyOn(element, 'undo').mockResolvedValue();
+			const redo = vi.spyOn(element, 'redo').mockResolvedValue();
+			const cancel = vi.spyOn(element, 'cancelEdit').mockImplementation(() => {});
+			const exported = { bytes: new Uint8Array([1, 2]), dirty: true, diagnostics: [] };
+			const save = vi.spyOn(element, 'exportVsdx').mockReturnValue(exported);
+			await mounted.handle.replacePlainText('p', 's', 'Text');
+			await mounted.handle.undo();
+			await mounted.handle.redo();
+			mounted.handle.cancelEdit();
+			expect(replace).toHaveBeenCalledWith('p', 's', 'Text');
+			expect(undo).toHaveBeenCalledOnce();
+			expect(redo).toHaveBeenCalledOnce();
+			expect(cancel).toHaveBeenCalledOnce();
+			expect(mounted.handle.exportVsdx()).toBe(exported);
+			replace.mockRestore();
+			undo.mockRestore();
+			redo.mockRestore();
+			cancel.mockRestore();
+			save.mockRestore();
+			await mounted.destroy();
+			await expect(mounted.handle.replacePlainText('p', 's', 'Text')).rejects.toThrow(
+				/not mounted|destroyed/,
+			);
+			await expect(mounted.handle.undo()).rejects.toThrow(/not mounted|destroyed/);
+			await expect(mounted.handle.redo()).rejects.toThrow(/not mounted|destroyed/);
+			expect(() => mounted.handle.cancelEdit()).toThrow(/not mounted|destroyed/);
+			expect(() => mounted.handle.exportVsdx()).toThrow(/not mounted|destroyed/);
+			host.remove();
 		});
 	}
 });

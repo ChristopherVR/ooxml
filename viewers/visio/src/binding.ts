@@ -4,12 +4,18 @@ import { registerVisioViewer, type VisioViewerElement } from './viewer-element.j
 import type { ViewerController } from './controller.js';
 import type { SvgExportOptions, SvgExportResult } from './export-svg.js';
 import type { CurrentPagePrintSnapshotOptions, PrintSnapshot } from './print-snapshot.js';
+import type { VsdxExportResult } from './document-history.js';
 
 export interface MountedViewer {
 	readonly element: VisioViewerElement;
 	readonly controller: ViewerController;
 	update(options: ViewerOptions): void;
 	load(source: VsdxSource): Promise<void>;
+	replacePlainText(pageId: string, shapeId: string, text: string): Promise<void>;
+	undo(): Promise<void>;
+	redo(): Promise<void>;
+	cancelEdit(): void;
+	exportVsdx(): VsdxExportResult;
 	fit(): void;
 	setLayerVisibility(pageId: string, layerId: string, visible: boolean | null): void;
 	resetLayerVisibility(pageId?: string): void;
@@ -62,6 +68,26 @@ export function mountViewer(container: HTMLElement, initial: ViewerOptions = {})
 		async load(source) {
 			assertAlive();
 			await element.load(source);
+		},
+		async replacePlainText(pageId, shapeId, text) {
+			assertAlive();
+			await element.replacePlainText(pageId, shapeId, text);
+		},
+		async undo() {
+			assertAlive();
+			await element.undo();
+		},
+		async redo() {
+			assertAlive();
+			await element.redo();
+		},
+		cancelEdit() {
+			assertAlive();
+			element.cancelEdit();
+		},
+		exportVsdx() {
+			assertAlive();
+			return element.exportVsdx();
 		},
 		fit() {
 			assertAlive();

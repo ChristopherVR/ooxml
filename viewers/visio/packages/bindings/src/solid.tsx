@@ -48,4 +48,11 @@ export function VisioViewer(props: VisioViewerProps) {
 	});
 	return <div ref={host} class={props.class} style={props.style} />;
 }
-export type { ViewerHandle, ViewerCallbacks, ViewerOptions, ViewerEvents } from './common.js';
+export type {
+	ViewerHandle,
+	ViewerCallbacks,
+	ViewerOptions,
+	ViewerEvents,
+	ViewerEditState,
+	VsdxExportResult,
+} from './common.js';

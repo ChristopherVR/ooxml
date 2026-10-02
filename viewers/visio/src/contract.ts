@@ -8,6 +8,7 @@ export interface ViewerProperties {
 }
 export interface ViewerEvents {
 	'document-load': VisioDocument;
+	'document-change': { document: VisioDocument; dirty: boolean; kind: 'edit' | 'undo' | 'redo' };
 	'document-error': Error;
 	'page-change': number;
 	'zoom-change': number;
@@ -24,6 +25,7 @@ export const propertyKeys = [
 ] as const satisfies readonly (keyof ViewerProperties)[];
 export const eventKeys = [
 	'document-load',
+	'document-change',
 	'document-error',
 	'page-change',
 	'zoom-change',

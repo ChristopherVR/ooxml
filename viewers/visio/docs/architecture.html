@@ -127,7 +127,13 @@
 						Unimplemented visual features generate diagnostics where detected; warnings are not
 						exhaustive.
 					</li>
-					<li>No native writer exists in this build. Opening a file does not modify it.</li>
+					<li>
+						Experimental source-backed local plain-text edits run in an isolated worker and use
+						bounded undo/redo history. Opening a file does not modify it; VSDX copies download only
+						through an explicit action. Core rejects master-linked/rich text, fields, signed and
+						macro packages. Formula caches are not recalculated, and native Visio reopening remains
+						unverified.
+					</li>
 				</ul>
 				<h2>Testing layers</h2>
 				<div class="table-scroll" role="region" aria-label="Testing layers" tabindex="0">

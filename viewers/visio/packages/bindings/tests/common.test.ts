@@ -139,3 +139,34 @@ it('a throwing callback still delivers the framework-native output without chang
 	expect(() => options.events?.['zoom-change']?.(2)).toThrow(failure);
 	expect(emit).toHaveBeenCalledWith('zoom-change', 2);
 });
+
+it('forwards every editing operation and guards an absent owner', async () => {
+	let binding: MountedViewer | undefined;
+	const handle = viewerHandle(() => binding);
+	const assertUnavailable = async () => {
+		await expect(handle.replacePlainText('p', 's', 'New text')).rejects.toThrow('not mounted');
+		await expect(handle.undo()).rejects.toThrow('not mounted');
+		await expect(handle.redo()).rejects.toThrow('not mounted');
+		expect(() => handle.cancelEdit()).toThrow('not mounted');
+		expect(() => handle.exportVsdx()).toThrow('not mounted');
+	};
+	await assertUnavailable();
+	binding = mountViewer(document.createElement('div'));
+	const live = current().binding;
+	await handle.replacePlainText('p', 's', 'New text');
+	expect(live.replacePlainText).toHaveBeenCalledWith('p', 's', 'New text');
+	await handle.undo();
+	await handle.redo();
+	handle.cancelEdit();
+	expect(live.undo).toHaveBeenCalledOnce();
+	expect(live.redo).toHaveBeenCalledOnce();
+	expect(live.cancelEdit).toHaveBeenCalledOnce();
+	expect(handle.exportVsdx()).toEqual({
+		bytes: new Uint8Array([1, 2]),
+		dirty: true,
+		diagnostics: [],
+	});
+	binding.destroy();
+	binding = undefined;
+	await assertUnavailable();
+});

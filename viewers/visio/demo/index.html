@@ -24,6 +24,7 @@
 				>
 					Export SVG
 				</button>
+				<button id="export-vsdx" type="button" disabled>Download VSDX copy</button>
 				<button id="sample" type="button">Load sample</button
 				><button id="open" class="primary" type="button">Open .vsdx</button
 				><input id="file" type="file" accept=".vsdx" hidden />
@@ -57,7 +58,8 @@
 			</aside>
 			<section class="stage" aria-label="Viewer workspace">
 				<div class="stage-heading">
-					<span id="diagram-label">Release workflow</span><span class="pill">VIEW ONLY</span>
+					<span id="diagram-label">Release workflow</span
+					><span class="pill" id="edit-label">MODEL PREVIEW</span>
 				</div>
 				<div id="viewer"></div>
 				<div id="drop-overlay" hidden>Drop a .vsdx file to open it</div>
@@ -81,6 +83,10 @@
 				</section>
 				<p id="error" role="alert" hidden></p>
 				<p id="export-status" role="status"></p>
+				<p class="muted">
+					Text editing is experimental. Formulas are not recalculated. Native Visio compatibility is
+					not verified. Keep the original and review downloaded copies in Visio.
+				</p>
 			</aside>
 		</main>
 		<footer>

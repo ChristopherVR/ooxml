@@ -32,10 +32,28 @@ it('Angular mounts with real native lifecycle and zoneless input/output updates'
 	component.setInput('showToolbar', false);
 	component.setInput('events', { 'zoom-change': first });
 	component.instance.zoomChange.subscribe(native);
+	const changed = vi.fn();
+	component.instance.documentChange.subscribe(changed);
 	app.attachView(component.hostView);
 	component.changeDetectorRef.detectChanges();
+	const change = {
+		document: { format: 'vsdx' as const, pages: [], diagnostics: [] },
+		dirty: true,
+		kind: 'edit' as const,
+	};
+	emit('document-change', change);
+	expect(changed).toHaveBeenCalledWith(change);
 	const live = current();
 	const retained = component.instance;
+	await retained.replacePlainText('page', 'shape', 'Changed');
+	expect(live.binding.replacePlainText).toHaveBeenCalledWith('page', 'shape', 'Changed');
+	await retained.undo();
+	await retained.redo();
+	retained.cancelEdit();
+	expect(live.binding.undo).toHaveBeenCalledOnce();
+	expect(live.binding.redo).toHaveBeenCalledOnce();
+	expect(live.binding.cancelEdit).toHaveBeenCalledOnce();
+	expect(retained.exportVsdx().dirty).toBe(true);
 	retained.setLayerVisibility('background', '0', true);
 	expect(live.binding.setLayerVisibility).toHaveBeenCalledWith('background', '0', true);
 	retained.resetLayerVisibility('background');

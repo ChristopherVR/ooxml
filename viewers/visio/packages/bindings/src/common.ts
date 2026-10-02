@@ -16,6 +16,11 @@ export type ViewerHandle = Pick<
 	| 'element'
 	| 'controller'
 	| 'load'
+	| 'replacePlainText'
+	| 'undo'
+	| 'redo'
+	| 'cancelEdit'
+	| 'exportVsdx'
 	| 'fit'
 	| 'setLayerVisibility'
 	| 'resetLayerVisibility'
@@ -95,6 +100,21 @@ export function viewerHandle(current: () => MountedViewer | undefined): ViewerHa
 		async load(source) {
 			await requireViewer().load(source);
 		},
+		async replacePlainText(pageId, shapeId, text) {
+			await requireViewer().replacePlainText(pageId, shapeId, text);
+		},
+		async undo() {
+			await requireViewer().undo();
+		},
+		async redo() {
+			await requireViewer().redo();
+		},
+		cancelEdit() {
+			requireViewer().cancelEdit();
+		},
+		exportVsdx() {
+			return requireViewer().exportVsdx();
+		},
 		fit() {
 			requireViewer().fit();
 		},
@@ -147,3 +167,5 @@ export type {
 	PrintSnapshotLimits,
 	PrintSnapshotUsage,
 } from '../../../src/print-snapshot.js';
+
+export type { ViewerEditState, VsdxExportResult } from '../../../src/document-history.js';

@@ -30,6 +30,7 @@ export class VisioViewerComponent implements AfterViewInit, OnChanges, OnDestroy
 	@Input() showToolbar?: boolean;
 	@Input() events?: ViewerCallbacks;
 	@Output() documentLoad = new EventEmitter<ViewerEvents['document-load']>();
+	@Output() documentChange = new EventEmitter<ViewerEvents['document-change']>();
 	@Output() documentError = new EventEmitter<ViewerEvents['document-error']>();
 	@Output() pageChange = new EventEmitter<ViewerEvents['page-change']>();
 	@Output() zoomChange = new EventEmitter<ViewerEvents['zoom-change']>();
@@ -39,6 +40,7 @@ export class VisioViewerComponent implements AfterViewInit, OnChanges, OnDestroy
 	private readonly handle = viewerHandle(() => this.binding);
 	private readonly outputs = {
 		'document-load': this.documentLoad,
+		'document-change': this.documentChange,
 		'document-error': this.documentError,
 		'page-change': this.pageChange,
 		'zoom-change': this.zoomChange,
@@ -69,6 +71,21 @@ export class VisioViewerComponent implements AfterViewInit, OnChanges, OnDestroy
 	load(source: VsdxSource) {
 		return this.handle.load(source);
 	}
+	replacePlainText(pageId: string, shapeId: string, text: string) {
+		return this.handle.replacePlainText(pageId, shapeId, text);
+	}
+	undo() {
+		return this.handle.undo();
+	}
+	redo() {
+		return this.handle.redo();
+	}
+	cancelEdit() {
+		this.handle.cancelEdit();
+	}
+	exportVsdx() {
+		return this.handle.exportVsdx();
+	}
 	fit() {
 		this.handle.fit();
 	}
@@ -85,7 +102,14 @@ export class VisioViewerComponent implements AfterViewInit, OnChanges, OnDestroy
 		return this.handle.createPrintSnapshot(options);
 	}
 }
-export type { ViewerHandle, ViewerCallbacks, ViewerOptions, ViewerEvents } from './common.js';
+export type {
+	ViewerHandle,
+	ViewerCallbacks,
+	ViewerOptions,
+	ViewerEvents,
+	ViewerEditState,
+	VsdxExportResult,
+} from './common.js';
 
 // A new shared property must also become an actual Angular input on this class.
 const completeInputs: Record<

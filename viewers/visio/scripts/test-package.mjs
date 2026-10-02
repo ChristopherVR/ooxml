@@ -25,6 +25,10 @@ assert.ok(
 	'Worker entry must ship in the actual npm artifact',
 );
 assert.ok(
+	packed.files.some((file) => file.path === 'dist/edit-worker.js'),
+	'Edit worker entry must ship in the actual npm artifact',
+);
+assert.ok(
 	!packed.files.some((file) => /\.test\.|test-fixture|integration\//.test(file.path)),
 	'Fixtures and development patches must not ship in the package',
 );
@@ -49,7 +53,7 @@ run(process.execPath, [
 ]);
 writeFileSync(
 	resolve(temporary, 'smoke.ts'),
-	`import { ViewerController, exportPageSvg, type SvgExportOptions, type SvgExportResult, type MountedViewer, type ViewerOptions, type TextSearchState, type PrintSnapshot, type CurrentPagePrintSnapshotOptions, type LayerVisibilityOverride } from '@christophervr/visio-viewer'; const controller=new ViewerController(); const props:ViewerOptions={zoom:1}; controller.setZoom(props.zoom!); controller.setSearchQuery("literal text"); controller.nextSearchResult(); const search:TextSearchState=controller.state.search; void search; const exportOptions:SvgExportOptions={maxBytes:100000}; const exporter:(...args:Parameters<typeof exportPageSvg>)=>SvgExportResult=exportPageSvg; function snapshot(viewer:MountedViewer):SvgExportResult { return viewer.exportSvg(exportOptions); } const printOptions:CurrentPagePrintSnapshotOptions={limits:{maxPages:1}}; function prepare(viewer:MountedViewer):PrintSnapshot { return viewer.createPrintSnapshot(printOptions); } function layers(viewer:MountedViewer):void { viewer.setLayerVisibility("0","1",false); viewer.setLayerVisibility("0","1",null); viewer.resetLayerVisibility("0"); viewer.resetLayerVisibility(); } const overrides:readonly LayerVisibilityOverride[]=controller.state.layerVisibilityOverrides; void overrides; void layers; void exporter; void snapshot; void prepare;`,
+	`import { ViewerController, exportPageSvg, type SvgExportOptions, type SvgExportResult, type MountedViewer, type ViewerOptions, type TextSearchState, type PrintSnapshot, type CurrentPagePrintSnapshotOptions, type LayerVisibilityOverride, type ViewerEditState, type VsdxExportResult } from '@christophervr/visio-viewer'; const controller=new ViewerController(); const props:ViewerOptions={zoom:1}; controller.setZoom(props.zoom!); controller.setSearchQuery("literal text"); controller.nextSearchResult(); const search:TextSearchState=controller.state.search; void search; const exportOptions:SvgExportOptions={maxBytes:100000}; const exporter:(...args:Parameters<typeof exportPageSvg>)=>SvgExportResult=exportPageSvg; function snapshot(viewer:MountedViewer):SvgExportResult { return viewer.exportSvg(exportOptions); } const printOptions:CurrentPagePrintSnapshotOptions={limits:{maxPages:1}}; function prepare(viewer:MountedViewer):PrintSnapshot { return viewer.createPrintSnapshot(printOptions); } function layers(viewer:MountedViewer):void { viewer.setLayerVisibility("0","1",false); viewer.setLayerVisibility("0","1",null); viewer.resetLayerVisibility("0"); viewer.resetLayerVisibility(); } const overrides:readonly LayerVisibilityOverride[]=controller.state.layerVisibilityOverrides; void overrides; void layers; void exporter; void snapshot; void prepare; const editState:ViewerEditState=controller.state.edit; const saved:VsdxExportResult=controller.exportVsdx(); const edit:Promise<void>=controller.replacePlainText('1','1','literal'); const undo:Promise<void>=controller.undo(); const redo:Promise<void>=controller.redo(); controller.cancelEdit(); function mountedEdit(viewer:MountedViewer):VsdxExportResult { void viewer.replacePlainText('1','1','literal'); void viewer.undo(); void viewer.redo(); viewer.cancelEdit(); return viewer.exportVsdx(); } void editState; void saved; void edit; void undo; void redo; void mountedEdit;`,
 );
 run(process.execPath, [
 	resolve(root, 'node_modules/typescript/bin/tsc'),
@@ -81,6 +85,10 @@ assert.ok(
 		/^parse-worker-.*\.js$/.test(file),
 	),
 	'Consumer build must resolve the packaged worker',
+);
+assert.ok(
+	readdirSync(resolve(temporary, 'build/assets')).some((file) => /^edit-worker-.*\.js$/.test(file)),
+	'Consumer build must resolve the packaged edit worker',
 );
 run(process.execPath, [
 	resolve(root, 'scripts/test-worker-bundle.mjs'),

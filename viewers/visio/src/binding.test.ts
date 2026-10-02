@@ -221,3 +221,38 @@ describe('shared shape details across bindings', () => {
 		viewer.destroy();
 	});
 });
+
+describe('shared editing binding lifecycle', () => {
+	it('forwards edit methods, export results and document-change callbacks', async () => {
+		const changed = vi.fn();
+		const viewer = mountViewer(document.createElement('div'), {
+			events: { 'document-change': changed },
+		});
+		const replace = vi.spyOn(viewer.element, 'replacePlainText').mockResolvedValue();
+		const undo = vi.spyOn(viewer.element, 'undo').mockResolvedValue();
+		const redo = vi.spyOn(viewer.element, 'redo').mockResolvedValue();
+		const cancel = vi.spyOn(viewer.element, 'cancelEdit').mockImplementation(() => {});
+		const result = { bytes: new Uint8Array([1]), dirty: true, diagnostics: [] };
+		vi.spyOn(viewer.element, 'exportVsdx').mockReturnValue(result);
+		await viewer.replacePlainText('p', 's', 'Text');
+		await viewer.undo();
+		await viewer.redo();
+		viewer.cancelEdit();
+		expect(replace).toHaveBeenCalledWith('p', 's', 'Text');
+		expect(undo).toHaveBeenCalledOnce();
+		expect(redo).toHaveBeenCalledOnce();
+		expect(cancel).toHaveBeenCalledOnce();
+		expect(viewer.exportVsdx()).toBe(result);
+		const detail = { document: demoDocument, dirty: true, kind: 'edit' };
+		viewer.element.dispatchEvent(new CustomEvent('document-change', { detail }));
+		expect(changed).toHaveBeenCalledWith(detail);
+		viewer.destroy();
+		viewer.element.dispatchEvent(new CustomEvent('document-change', { detail }));
+		expect(changed).toHaveBeenCalledOnce();
+		await expect(viewer.replacePlainText('p', 's', 'Text')).rejects.toThrow('destroyed');
+		await expect(viewer.undo()).rejects.toThrow('destroyed');
+		await expect(viewer.redo()).rejects.toThrow('destroyed');
+		expect(() => viewer.cancelEdit()).toThrow('destroyed');
+		expect(() => viewer.exportVsdx()).toThrow('destroyed');
+	});
+});

@@ -3,7 +3,8 @@
 ## Ownership
 
 - `ooxml-core/visio` in sibling `ooxml`: package intake, XML, model, inheritance, cached geometry, structured diagnostics. No viewer UI belongs here.
-- `src/controller.ts`: document/view state, selection, events, latest-load-wins behavior.
+- `src/controller.ts`: document/view state, selection, events, latest-load-wins behavior and transactional editing orchestration.
+- `src/document-history.ts`: bounded source-backed edit history and VSDX-copy export state. XML/package mutation remains in the core and runs through a dedicated worker.
 - `src/document-text-search.ts`: bounded literal matching over normalized visible shape text, with immutable page-scoped results. The shared controller owns navigation and reentrancy checks.
 - `src/render-svg.ts` and `src/render-text.ts`: SVG presentation and rendering warnings.
 - `src/export-svg.ts`: bounded, static current-page serialization through the same SVG renderer, with embedded raster resources and compatibility metadata.
@@ -18,7 +19,7 @@ The engine currently uses cached ShapeSheet values. This is not comprehensive fo
 
 Document XML/HTML is not injected into the DOM. SVG nodes are created through DOM APIs. No document upload, telemetry or remote-document fetch is provided. Package and relationship checks belong to the core. The browser component parses in a dedicated worker with cancellation and a 15-second parent timeout. Independent scene, metadata, text-work and decoded-raster budgets protect rendering. Image resources are shared within each render and revoked on replacement, disconnect or disposal. Font load listeners trigger text reflow and are removed on disconnect. These defenses are not a security certification.
 
-No native Visio writer exists. The current viewer cannot provide edit/save round-trip guarantees.
+Experimental source-backed plain-text replacement supports bounded undo/redo and explicit VSDX-copy export. Core rejects master-linked shapes, rich text, fields, signed packages and macro content. Model-only documents are read-only. Formula caches are not recalculated and native Visio reopen verification remains outstanding; this is not an edit/save round-trip guarantee.
 
 ## Verification
 

@@ -13,6 +13,7 @@ const viewer = mountViewer(get('viewer'), {
 			refreshNotes();
 			viewer.fit();
 		},
+		'document-change': () => refreshNotes(),
 		'page-change': () => {
 			refreshNotes();
 			viewer.fit();
@@ -24,6 +25,22 @@ const viewer = mountViewer(get('viewer'), {
 		},
 	},
 });
+function refreshEditState(): void {
+	const state = viewer.controller.state;
+	get<HTMLButtonElement>('export-vsdx').disabled =
+		!state.edit.sourceAvailable || state.loading || state.edit.busy;
+	get('edit-label').textContent = !state.edit.sourceAvailable
+		? 'MODEL PREVIEW'
+		: state.edit.dirty
+			? 'EDITED COPY'
+			: 'ORIGINAL';
+	fileState.textContent = !state.edit.sourceAvailable
+		? 'Model-only preview · Cannot save VSDX'
+		: state.edit.dirty
+			? 'Local file · Edited copy'
+			: 'Local file · Original bytes';
+}
+const unsubscribeEdit = viewer.controller.subscribe(() => refreshEditState());
 function refreshNotes(): void {
 	const model = viewer.element.document;
 	const notes = compatibilityNotes(model?.diagnostics ?? [], viewer.element.renderWarnings);
@@ -50,7 +67,7 @@ async function openFile(file: File): Promise<void> {
 		await viewer.load(file);
 		if (request !== requestId) return;
 		fileName.textContent = file.name;
-		fileState.textContent = 'Local file · Read only';
+		refreshEditState();
 		get('selection').textContent = 'Select a shape on the canvas to inspect it.';
 	} catch (cause) {
 		if (request !== requestId) return;
@@ -90,6 +107,36 @@ get('export-svg').addEventListener('click', () => {
 		}
 	}
 });
+get('export-vsdx').addEventListener('click', () => {
+	errorBox.hidden = true;
+	let url: string | undefined;
+	const anchor = document.createElement('a');
+	try {
+		const result = viewer.element.exportVsdx();
+		url = URL.createObjectURL(
+			new Blob([new Uint8Array(result.bytes)], { type: 'application/vnd.ms-visio.drawing' }),
+		);
+		downloadUrls.add(url);
+		anchor.href = url;
+		anchor.download = `${(fileName.textContent || 'diagram').replace(/\.vsdx$/i, '')}-${result.dirty ? 'edited' : 'original'}-copy.vsdx`;
+		anchor.hidden = true;
+		document.body.append(anchor);
+		anchor.click();
+		get('export-status').textContent =
+			`VSDX ${result.dirty ? 'edited' : 'original'} copy download requested. Formulas are not recalculated; native Visio compatibility is not verified. ${result.diagnostics.map((item) => item.message).join(' ')}`;
+	} catch (cause) {
+		errorBox.hidden = false;
+		errorBox.textContent = cause instanceof Error ? cause.message : String(cause);
+	} finally {
+		anchor.remove();
+		if (url) {
+			const created = url;
+			window.setTimeout(() => {
+				if (downloadUrls.delete(created)) URL.revokeObjectURL(created);
+			}, 1000);
+		}
+	}
+});
 get('open').addEventListener('click', () => input.click());
 input.addEventListener('change', () => {
 	const file = input.files?.[0];
@@ -101,7 +148,7 @@ get('sample').addEventListener('click', () => {
 	errorBox.hidden = true;
 	viewer.update({ document: demoDocument, pageIndex: 0 });
 	fileName.textContent = 'Sample workflow';
-	fileState.textContent = 'Original sample scene';
+	refreshEditState();
 	refreshNotes();
 	viewer.fit();
 });
@@ -139,8 +186,13 @@ window.addEventListener('drop', (event) => {
 window.addEventListener('pagehide', (event) => {
 	for (const url of downloadUrls) URL.revokeObjectURL(url);
 	downloadUrls.clear();
-	if (event.persisted) viewer.controller.cancelLoad();
-	else viewer.destroy();
+	if (event.persisted) {
+		viewer.controller.cancelLoad();
+		viewer.cancelEdit();
+	} else {
+		unsubscribeEdit();
+		viewer.destroy();
+	}
 });
 window.addEventListener('pageshow', (event) => {
 	if (event.persisted) viewer.fit();

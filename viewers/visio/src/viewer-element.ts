@@ -13,6 +13,7 @@ import {
 	wireLayerControls,
 } from './viewer-layer-controls.js';
 import { viewerStyles } from './styles.js';
+import { editControlsTemplate, ViewerEditControls } from './viewer-edit-controls.js';
 import {
 	searchTemplate,
 	searchControls,
@@ -41,6 +42,7 @@ export class VisioViewerElement extends BaseElement {
 	#diagnostics: HTMLSpanElement;
 	#toolbar: HTMLDivElement;
 	#search: SearchControls;
+	#edit: ViewerEditControls;
 	#layers: HTMLDetailsElement;
 	#renderedLayerOverrides: ViewerState['layerVisibilityOverrides'] | undefined;
 	#revealedSearchResult: TextSearchResult | undefined;
@@ -68,7 +70,7 @@ export class VisioViewerElement extends BaseElement {
 		super();
 		this.#root = this.attachShadow({ mode: 'open' });
 		// This template is static, never document content.
-		this.#root.innerHTML = `<style>${viewerStyles}</style><div class="toolbar" role="group" aria-label="Diagram controls"><label>Page <select aria-label="Page"></select></label><span class="spacer"></span><button type="button" data-action="out" aria-label="Zoom out">−</button><output class="zoom" aria-label="Zoom level">100%</output><button type="button" data-action="in" aria-label="Zoom in">+</button><button type="button" data-action="fit">Fit page</button><button type="button" data-action="actual">100%</button>${searchTemplate}${layerControlsTemplate}</div><div class="viewport" tabindex="0" role="region" aria-label="Diagram canvas"></div><details class="shape-inspector" hidden><summary>Selected shape</summary><div></div></details><details class="notes"><summary>Compatibility notes</summary><ul></ul></details><div class="status" role="status"><span data-status></span><span data-diagnostics></span></div>`;
+		this.#root.innerHTML = `<style>${viewerStyles}</style><div class="toolbar" role="group" aria-label="Diagram controls"><label>Page <select aria-label="Page"></select></label><span class="spacer"></span><button type="button" data-action="out" aria-label="Zoom out">−</button><output class="zoom" aria-label="Zoom level">100%</output><button type="button" data-action="in" aria-label="Zoom in">+</button><button type="button" data-action="fit">Fit page</button><button type="button" data-action="actual">100%</button>${searchTemplate}${layerControlsTemplate}${editControlsTemplate}</div><div class="viewport" tabindex="0" role="region" aria-label="Diagram canvas"></div><details class="shape-inspector" hidden><summary>Selected shape</summary><div></div></details><details class="notes"><summary>Compatibility notes</summary><ul></ul></details><div class="status" role="status"><span data-status></span><span data-diagnostics></span></div>`;
 		this.#viewport = this.#root.querySelector('.viewport')!;
 		this.#pageSelect = this.#root.querySelector('select')!;
 		this.#zoomLabel = this.#root.querySelector('output')!;
@@ -76,6 +78,7 @@ export class VisioViewerElement extends BaseElement {
 		this.#diagnostics = this.#root.querySelector('[data-diagnostics]')!;
 		this.#toolbar = this.#root.querySelector('.toolbar')!;
 		this.#search = searchControls(this.#root);
+		this.#edit = new ViewerEditControls(this.#root, this.controller);
 		this.#layers = this.#root.querySelector('.layer-controls')!;
 		this.#notes = this.#root.querySelector('.notes ul')!;
 		this.#notesPanel = this.#root.querySelector('.notes')!;
@@ -116,11 +119,33 @@ export class VisioViewerElement extends BaseElement {
 	}
 	async load(source: VsdxSource): Promise<void> {
 		this.#assertAlive();
-		await this.controller.loadSource(() => {
-			if ((source instanceof Blob ? source.size : source.byteLength) > MAX_INPUT_BYTES)
-				throw new Error('This viewer accepts files up to 32 MiB.');
-			return source instanceof Blob ? source.arrayBuffer() : source;
-		});
+		if (source instanceof Blob) {
+			await this.controller.loadSource(() => {
+				if (source.size > MAX_INPUT_BYTES)
+					throw new Error('This viewer accepts files up to 32 MiB.');
+				return source.arrayBuffer();
+			});
+		} else await this.controller.load(source);
+	}
+	replacePlainText(pageId: string, shapeId: string, text: string): Promise<void> {
+		this.#assertAlive();
+		return this.controller.replacePlainText(pageId, shapeId, text);
+	}
+	undo(): Promise<void> {
+		this.#assertAlive();
+		return this.controller.undo();
+	}
+	redo(): Promise<void> {
+		this.#assertAlive();
+		return this.controller.redo();
+	}
+	cancelEdit(): void {
+		this.#assertAlive();
+		this.#edit.reset(false);
+	}
+	exportVsdx(): ReturnType<ViewerController['exportVsdx']> {
+		this.#assertAlive();
+		return this.controller.exportVsdx();
 	}
 	fit(): void {
 		this.#assertAlive();
@@ -195,12 +220,14 @@ export class VisioViewerElement extends BaseElement {
 			this.#fontEvents?.removeEventListener('loadingdone', this.#fontsChanged);
 			this.#fontEvents = undefined;
 			this.controller.cancelLoad();
+			this.controller.cancelEdit();
 			this.#disposeRenderer();
 			this.#document = null;
 			this.#renderedPage = -1;
 		}
 	}
 	#wireInputs(): () => void {
+		const disposeEdit = this.#edit.wire();
 		const disposeLayers = wireLayerControls(this.#layers, this.controller);
 		const disposeInputs = wireViewerInputs(
 			{
@@ -215,6 +242,7 @@ export class VisioViewerElement extends BaseElement {
 		return () => {
 			disposeInputs();
 			disposeLayers();
+			disposeEdit();
 		};
 	}
 	#assertAlive(): void {
@@ -316,11 +344,12 @@ export class VisioViewerElement extends BaseElement {
 		this.#pageSelect.disabled = !page;
 		for (const button of this.#toolbar.querySelectorAll('button')) button.disabled = !page;
 		renderSearchControls(this.#search, state);
+		this.#edit.render(state);
 		if (changed) renderLayerControls(this.#layers, state);
 		else
 			this.#layers.querySelector<HTMLButtonElement>('[data-layer-reset="all"]')!.disabled =
 				state.layerVisibilityOverrides.length === 0;
-		this.#viewport.setAttribute('aria-busy', String(state.loading));
+		this.#viewport.setAttribute('aria-busy', String(state.loading || state.edit.busy));
 		this.#status.textContent = state.loading
 			? 'Opening diagram…'
 			: (state.error?.message ??

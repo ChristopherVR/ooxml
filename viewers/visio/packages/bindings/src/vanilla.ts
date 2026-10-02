@@ -7,4 +7,6 @@ export type {
 	ViewerCallbacks,
 	ViewerEvents,
 	VsdxSource,
+	ViewerEditState,
+	VsdxExportResult,
 } from './common.js';

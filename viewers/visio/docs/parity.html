@@ -282,17 +282,19 @@
 							<tr>
 								<td>Editing and history</td>
 								<td>Move, resize, style, text, undo/redo</td>
-								<td>Not implemented</td>
-								<td>Read-only viewer contract</td>
-								<td>Command system, mutations, history, bindings parity</td>
+								<td>
+									Experimental source-backed local plain-text replacement and bounded undo/redo
+								</td>
+								<td>Shared controller/element and six-adapter method/event forwarding tests</td>
+								<td>Move/resize/style/rich text, master-linked text, fields and native fidelity</td>
 							</tr>
 							<tr>
 								<td>Native save and round-trip</td>
 								<td>Save editable VSDX preserving unknown parts</td>
-								<td>Experimental core plain-text save only</td>
+								<td>Experimental local VSDX copy export for source-backed plain-text edits</td>
 								<td>
-									Core-only atomic plain-text transaction and preservation/security tests; no viewer
-									save UI
+									Core atomic plain-text preservation/security tests; worker-isolated edits, bounded
+									history and explicit downloaded copies. Signed and macro packages are rejected
 								</td>
 								<td>
 									General writer, rich-text/geometry editing, cache recalculation, native Visio

@@ -1,3 +1,11 @@
+import {
+	DocumentHistory,
+	EMPTY_EDIT_STATE,
+	type ViewerEditState,
+	type VsdxExportResult,
+} from './document-history.js';
+import { createWorkerEditor, type CancellableEditor } from './worker-editor.js';
+import { MAX_INPUT_BYTES } from './scene-validation.js';
 import { parseVsdx, type VisioDocument } from 'ooxml-core/visio';
 import {
 	EMPTY_LAYER_OVERRIDES,
@@ -19,6 +27,7 @@ import {
 
 export interface ViewerState {
 	readonly document: VisioDocument | null;
+	readonly edit: ViewerEditState;
 	readonly pageIndex: number;
 	readonly zoom: number;
 	readonly loading: boolean;
@@ -33,6 +42,7 @@ type EventListener = <K extends keyof ViewerEvents>(name: K, detail: ViewerEvent
 export class ViewerController {
 	#state: ViewerState = Object.freeze({
 		document: null,
+		edit: EMPTY_EDIT_STATE,
 		pageIndex: 0,
 		zoom: 1,
 		loading: false,
@@ -48,6 +58,8 @@ export class ViewerController {
 	#revision = 0;
 	#documentGeneration = 0;
 	#searchIndex: DocumentTextIndex | null = null;
+	#history: DocumentHistory | null = null;
+	#editId = 0;
 	#visible = documentVisibility(null);
 	constructor(
 		private readonly parser: Parser = parseVsdx,
@@ -55,6 +67,7 @@ export class ViewerController {
 			if (typeof globalThis.reportError === 'function') globalThis.reportError(error);
 			else console.error('Visio viewer listener failed:', error);
 		},
+		private readonly editor: CancellableEditor = createWorkerEditor(),
 	) {}
 	get state(): ViewerState {
 		return this.#state;
@@ -80,12 +93,15 @@ export class ViewerController {
 		if (document) assertViewableDocument(document);
 		const visible = documentVisibility(document);
 		++this.#documentGeneration;
+		this.#invalidateEdit();
+		this.#history = null;
 		this.#loadId++;
 		this.parser.cancel?.();
 		this.#searchIndex = null;
 		this.#visible = visible;
 		this.#change({
 			document,
+			edit: EMPTY_EDIT_STATE,
 			pageIndex: 0,
 			loading: false,
 			error: null,
@@ -223,7 +239,12 @@ export class ViewerController {
 			: Object.freeze({ ...this.#state.search, activeIndex: -1 });
 	}
 	async load(bytes: Uint8Array | ArrayBuffer): Promise<void> {
-		return this.loadSource(() => bytes);
+		this.#assertAlive();
+		if (bytes.byteLength > MAX_INPUT_BYTES)
+			throw new Error('This viewer accepts files up to 32 MiB.');
+		const owned =
+			bytes instanceof Uint8Array ? Uint8Array.from(bytes) : new Uint8Array(bytes.slice(0));
+		return this.loadSource(() => owned);
 	}
 	/** Reading bytes shares the same request epoch and error state as parsing them. */
 	async loadSource(
@@ -231,15 +252,22 @@ export class ViewerController {
 	): Promise<void> {
 		this.#assertAlive();
 		const id = ++this.#loadId;
+		this.#invalidateEdit();
 		this.parser.cancel?.();
-		this.#change({ loading: true, error: null });
+		this.#change({ loading: true, error: null, edit: this.#history?.state ?? EMPTY_EDIT_STATE });
 		if (this.#destroyed || id !== this.#loadId) return;
 		let document: VisioDocument;
+		let history: DocumentHistory;
 		let visible: ReturnType<typeof documentVisibility>;
 		try {
 			const bytes = await read();
 			if (this.#destroyed || id !== this.#loadId) return;
-			document = await this.parser(bytes);
+			if (bytes.byteLength > MAX_INPUT_BYTES)
+				throw new Error('This viewer accepts files up to 32 MiB.');
+			const owned =
+				bytes instanceof Uint8Array ? Uint8Array.from(bytes) : new Uint8Array(bytes.slice(0));
+			history = new DocumentHistory(owned);
+			document = await this.parser(Uint8Array.from(owned));
 			if (this.#destroyed || id !== this.#loadId) return;
 			assertViewableDocument(document);
 			visible = documentVisibility(document);
@@ -250,11 +278,13 @@ export class ViewerController {
 			if (!this.#destroyed && id === this.#loadId) this.#emit('document-error', error);
 			throw error;
 		}
+		this.#history = history;
 		this.#searchIndex = null;
 		this.#visible = visible;
 		++this.#documentGeneration;
 		this.#change({
 			document,
+			edit: history.state,
 			pageIndex: 0,
 			loading: false,
 			error: null,
@@ -268,11 +298,14 @@ export class ViewerController {
 		this.#assertAlive();
 		++this.#loadId;
 		this.parser.cancel?.();
-		this.#change({ loading: false });
+		this.#invalidateEdit();
+		this.#change({ loading: false, edit: this.#history?.state ?? EMPTY_EDIT_STATE });
 	}
 	destroy(): void {
 		if (this.#destroyed) return;
 		this.#destroyed = true;
+		this.#invalidateEdit();
+		this.#history = null;
 		++this.#documentGeneration;
 		++this.#loadId;
 		this.parser.cancel?.();
@@ -282,6 +315,7 @@ export class ViewerController {
 		this.#visible = documentVisibility(null);
 		this.#state = Object.freeze({
 			document: null,
+			edit: EMPTY_EDIT_STATE,
 			pageIndex: 0,
 			zoom: 1,
 			loading: false,
@@ -290,6 +324,110 @@ export class ViewerController {
 			search: EMPTY_TEXT_SEARCH,
 			layerVisibilityOverrides: EMPTY_LAYER_OVERRIDES,
 		});
+	}
+	/** Replace one source-backed local plain-text target. Core decides target support. */
+	async replacePlainText(pageId: string, shapeId: string, text: string): Promise<void> {
+		return this.#mutate('edit', { pageId, shapeId, text });
+	}
+	async undo(): Promise<void> {
+		return this.#mutate('undo');
+	}
+	async redo(): Promise<void> {
+		return this.#mutate('redo');
+	}
+	cancelEdit(): void {
+		this.#assertAlive();
+		if (!this.#state.edit.busy) return;
+		this.#invalidateEdit();
+		this.parser.cancel?.();
+		this.#change({ edit: this.#history?.state ?? EMPTY_EDIT_STATE });
+	}
+	exportVsdx(): VsdxExportResult {
+		this.#assertAlive();
+		if (!this.#history)
+			throw new Error('Load a VSDX file before downloading a source-backed copy.');
+		if (this.#state.edit.busy || this.#state.loading)
+			throw new Error('Wait for the current document operation before downloading.');
+		return this.#history.export();
+	}
+	#invalidateEdit(): void {
+		++this.#editId;
+		this.editor.cancel?.();
+	}
+	async #mutate(
+		kind: 'edit' | 'undo' | 'redo',
+		command?: { pageId: string; shapeId: string; text: string },
+	): Promise<void> {
+		this.#assertAlive();
+		const history = this.#history;
+		if (!history)
+			throw new Error('Load a VSDX file before editing. Model-only documents are read only.');
+		if (this.#state.loading || this.#state.edit.busy)
+			throw new Error('Another document operation is in progress.');
+		const target =
+			kind === 'undo' ? history.undoTarget : kind === 'redo' ? history.redoTarget : undefined;
+		if (kind !== 'edit' && !target) return;
+		const id = ++this.#editId;
+		const loadId = this.#loadId;
+		const current = () =>
+			!this.#destroyed &&
+			id === this.#editId &&
+			loadId === this.#loadId &&
+			history === this.#history;
+		const assertCurrent = () => {
+			if (!current())
+				throw new DOMException('The diagram edit was superseded or cancelled.', 'AbortError');
+		};
+		this.#change({ edit: Object.freeze({ ...history.state, busy: true }) });
+		assertCurrent();
+		try {
+			let document: VisioDocument;
+			let edited: Awaited<ReturnType<CancellableEditor>> | undefined;
+			if (kind === 'edit') {
+				edited = await this.editor(Uint8Array.from(history.current.bytes), [
+					{ type: 'replace-plain-text', ...command! },
+				]);
+				assertCurrent();
+				if (edited.bytes.byteLength > MAX_INPUT_BYTES)
+					throw new Error('The modified VSDX exceeds 32 MiB.');
+				document = edited.document;
+			} else document = await this.parser(Uint8Array.from(target!.bytes));
+			assertCurrent();
+			assertViewableDocument(document);
+			if (edited && !edited.changedParts.length) {
+				this.#change({ edit: history.state });
+				return;
+			}
+			const visible = documentVisibility(document, this.#state.layerVisibilityOverrides);
+			const searchIndex = this.#state.search.query
+				? indexDocumentText(document, (shape) => visible.get(shape) === true)
+				: null;
+			const search = searchIndex
+				? searchDocumentText(searchIndex, this.#state.search.query)
+				: EMPTY_TEXT_SEARCH;
+			const selection = this.#state.selectedShape;
+			const selectedShape =
+				selection && visibleSelection(document, this.#state.pageIndex, selection, visible)
+					? selection
+					: null;
+			// No external callbacks occur between history acceptance and model acceptance.
+			if (edited) history.append(edited.bytes, edited.diagnostics);
+			else history.move(target!);
+			this.#visible = visible;
+			this.#searchIndex = searchIndex;
+			++this.#documentGeneration;
+			if (
+				this.#change({ document, edit: history.state, search, selectedShape, error: null }) &&
+				current()
+			)
+				this.#emit('document-change', { document, dirty: history.state.dirty, kind });
+		} catch (cause) {
+			if (!current())
+				throw new DOMException('The diagram edit was superseded or cancelled.', 'AbortError');
+			const error = cause instanceof Error ? cause : new Error(String(cause));
+			this.#change({ edit: Object.freeze({ ...history.state, error }) });
+			throw error;
+		}
 	}
 	#assertAlive(): void {
 		if (this.#destroyed) throw new Error('The viewer has been destroyed.');

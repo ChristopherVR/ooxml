@@ -2,7 +2,21 @@
 
 Status: local development evidence, 2026-10-02. Full Microsoft Visio parity is not established.
 
-Current focused checkpoint: 994 core Visio tests, 287 viewer tests, 72 framework/SSR tests and 18 documentation tests pass. Four optional external-corpus cases skip in this checkpoint; the test fixtures were not configured. The separate pinned-converter audit passes 15 characterization/safety tests; its pass count does not mean the known converter defects are fixed. Both core TypeScript projects, viewer/binding typechecks, production builds and worker/packed-consumer checks pass. The earlier full core run at the 423-test Visio checkpoint recorded 16,417 passes, 231 skips and one failure: the unchanged PowerPoint AES-256 test exceeded its existing 20-second timeout under aggregate load. Its entire crypto file passes all 72 tests when rerun alone. The full core build, all 16 non-CLI packed ESM/CJS exports and 47 script tests pass. The original aggregate run is not recorded as green.
+## Shared editing checkpoint
+
+The current local checkpoint passes 1,096 core Visio tests (five optional corpus skips), 357 viewer tests, 74 framework DOM tests, five SSR tests, and 18 documentation tests. Both core TypeScript projects, viewer/binding typechecks, builds, actual production parser/edit workers, and the packed external consumer pass. Independent controller/history and worker reviews found no remaining blockers after regression fixes. The edit worker exercises edit/reparse, unchanged-byte no-op, unsupported-input rejection, and retained embedded-EMF behavior.
+
+Shared editing is experimental plain local text only. It includes bounded source/history ownership, undo/redo, cancellation, and explicit VSDX copy download. Core rejects unsupported rich text, master-linked targets, signatures/macros, ambiguous targets, and serialization-sensitive input. Untouched package part payloads are preserved; edited XML/ZIP representations and recalculated native appearance are not claimed byte-identical. Native Microsoft Visio reopen remains unverified.
+
+The previous published checkpoint passed [core CI](https://github.com/ChristopherVR/ooxml/actions/runs/37071473295) at core `7364222` and [viewer CI](https://github.com/ChristopherVR/visio-viewer/actions/runs/37071926285) at viewer `3e54de0`, including ten Chromium tests. Those tests cover bounded EMF import/rejection and pixel agreement between live vector rendering, SVG export, and detached print artifacts. They do not certify the newly added editing UI browser scenarios. The new desktop/mobile edit/download scenarios require remote CI because local Chromium fails before assertions with a socket permission error.
+
+The current viewer uses released `emf-converter` 4.8.9 for a narrow admitted primitive subset in a disposable parser/edit worker. Saved custom gradients support horizontal angles only. Full Microsoft Visio parity is not established.
+
+## Historical evidence
+
+The sections below describe earlier checkpoints and investigation limits; they are not additional claims about the current release. Earlier disabled-conversion statements refer to the inspection-only implementation before the bounded worker activation described above.
+
+The earlier full core run at the 423-test Visio checkpoint recorded 16,417 passes, 231 skips and one unchanged PowerPoint AES-256 timeout; its full crypto file passed separately. A later whole-core local checkpoint passed 16,989 tests with 235 skips. The current published core also passed its complete remote CI gate. A redundant later local aggregate was stopped after remote success and is not recorded as a completed local run.
 
 ## What has been exercised
 

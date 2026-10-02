@@ -44,4 +44,11 @@ export const VisioViewer = forwardRef<ViewerHandle, VisioViewerProps>(
 		});
 	},
 );
-export type { ViewerHandle, ViewerCallbacks, ViewerOptions, ViewerEvents } from './common.js';
+export type {
+	ViewerHandle,
+	ViewerCallbacks,
+	ViewerOptions,
+	ViewerEvents,
+	ViewerEditState,
+	VsdxExportResult,
+} from './common.js';

@@ -39,6 +39,20 @@ vi.mock('../../../src/binding.js', () => ({
 				load: vi.fn(async () => {
 					assertAlive();
 				}),
+				replacePlainText: vi.fn(async () => {
+					assertAlive();
+				}),
+				undo: vi.fn(async () => {
+					assertAlive();
+				}),
+				redo: vi.fn(async () => {
+					assertAlive();
+				}),
+				cancelEdit: vi.fn(assertAlive),
+				exportVsdx: vi.fn(() => {
+					assertAlive();
+					return { bytes: new Uint8Array([1, 2]), dirty: true, diagnostics: [] };
+				}),
 				fit: vi.fn(assertAlive),
 				setLayerVisibility: vi.fn(assertAlive),
 				resetLayerVisibility: vi.fn(assertAlive),

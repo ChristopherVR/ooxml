@@ -40,4 +40,11 @@ export const VisioViewer = defineComponent({
 		return () => h('div', { ref: host });
 	},
 });
-export type { ViewerHandle, ViewerCallbacks, ViewerOptions, ViewerEvents } from './common.js';
+export type {
+	ViewerHandle,
+	ViewerCallbacks,
+	ViewerOptions,
+	ViewerEvents,
+	ViewerEditState,
+	VsdxExportResult,
+} from './common.js';

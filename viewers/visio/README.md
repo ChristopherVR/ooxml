@@ -2,7 +2,7 @@
 
 A private, local-first Visio viewing project. One headless controller, one SVG renderer and one custom element, with thin React, Vue, Angular, Svelte, Solid and vanilla adapters. Format logic belongs to the sibling `ooxml` repository's new `ooxml-core/visio` area.
 
-**This is an early implementation, not Microsoft Visio parity.** The viewer has no editing or native-save UI. The core exposes an experimental source-backed plain-text save API; native Visio reopening remains unverified. The [capability ledger](docs/parity.md) separates implemented code, tested evidence and missing functionality. Real upstream drawings and embedded previews have been inspected with a secondary renderer, but no controlled Microsoft Visio full-page comparison has passed.
+**This is an early implementation, not Microsoft Visio parity.** The shared viewer has experimental source-backed plain-text editing, bounded undo/redo and explicit VSDX-copy export. Native Visio reopening remains unverified. The [capability ledger](docs/parity.md) separates implemented code, tested evidence and missing functionality. Real upstream drawings and embedded previews have been inspected with a secondary renderer, but no controlled Microsoft Visio full-page comparison has passed.
 
 ## Local setup
 
@@ -66,7 +66,7 @@ Layer changes synchronize rendering, selection and search without changing the d
 
 ## Static SVG export
 
-`exportPageSvg(model, pageIndex, { maxBytes })` and each mounted/native handle's `exportSvg()` return a current-page snapshot without changing the document, selection or viewport. Export includes supported backgrounds, embedded raster resources and visible compatibility notes in SVG description/metadata. There are no remote assets, automatic downloads or editable VSDX output. The demo downloads only after an explicit button press.
+`exportPageSvg(model, pageIndex, { maxBytes })` and each mounted/native handle's `exportSvg()` return a current-page snapshot without changing the document, selection or viewport. Export includes supported backgrounds, embedded raster resources and visible compatibility notes in SVG description/metadata. SVG export has no remote assets or automatic downloads. The demo downloads only after an explicit button press.
 
 The UTF-8 ceiling is 16 MiB; callers can lower it. Conservative preflight checks can reject content whose eventual serialization would be smaller. Fonts are not embedded and text/layout remain approximate. Physical page dimensions are preserved; downstream rasterizers must cap their output dimensions and pixel area before allocating an image surface. PDF, bitmap export and print layout remain unimplemented.
 
@@ -93,3 +93,11 @@ The headless core contains a tested neutral-vector sanitizer and transport valid
 ## Publication
 
 This viewer remains private; no npm publication, GitHub Pages deployment or public hosting is configured. Its core integration pins a separately published source baseline. New local core changes require separate review and publication before advancing that pin; source publication does not imply an npm package release.
+
+## Experimental local plain-text editing
+
+After `load(bytesOrBlob)`, select a local shape and use the shared text controls, or call `replacePlainText(pageId, shapeId, text)` on any mounted/native handle. `undo()` and `redo()` use bounded document history; `cancelEdit()` cancels pending work. All six adapters forward the same methods and `document-change` event, whose detail is `{ document, dirty, kind: 'edit' | 'undo' | 'redo' }`. Inspect `controller.state.edit` for source availability, busy/dirty status, undo/redo availability, history truncation, errors and diagnostics.
+
+Only imported source-backed documents can be edited or exported as VSDX. Assigning a model with `document` does not supply editable package bytes. Core validation rejects master-linked shapes, rich text, fields, signed packages and macro-enabled content. XML/package edits run in an isolated worker; framework wrappers do not implement format logic. Saved formula caches are not recalculated.
+
+`exportVsdx()` returns `{ bytes, dirty, diagnostics }` for an explicit downloaded copy. It does not overwrite the source file, upload it or claim native round-trip fidelity. The shared UI downloads only after the user's explicit action. History is bounded and may discard older undo states, reported by `historyTruncated`. General drawing, geometry/style editing, rich-text editing and native Visio reopen verification remain unsupported.
