@@ -44,6 +44,10 @@ for (const theme of ['light', 'dark'] as const) {
 test('workspace appearance persists across navigation and embed mode is compact', async ({
 	page,
 }) => {
+	await page.addInitScript(() => {
+		if (!localStorage.getItem('vitepress-theme-appearance'))
+			localStorage.setItem('vitepress-theme-appearance', 'dark');
+	});
 	await page.goto('/demo/');
 	await expect(page.locator('visio-viewer .viewport > svg')).toBeVisible();
 	await page.getByRole('button', { name: 'Switch to light theme', exact: true }).click();

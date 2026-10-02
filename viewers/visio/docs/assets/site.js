@@ -1,53 +1,7 @@
-const root = document.documentElement;
-root.classList.add('js');
-const themeButton = document.querySelector('.theme-toggle');
-const media = matchMedia('(prefers-color-scheme: dark)');
-const storageKey = 'visio-docs-theme';
-let preference;
-try {
-	const saved = localStorage.getItem(storageKey);
-	if (saved === 'dark' || saved === 'light') preference = saved;
-} catch {
-	// Preference storage is optional; the current tab still works.
-}
-function syncEmbeddedTheme() {
-	const frame = document.getElementById('live-viewer');
-	try {
-		if (frame?.contentDocument)
-			frame.contentDocument.documentElement.dataset.theme = root.dataset.theme;
-	} catch {
-		// Only the site's own same-origin demo may receive the preference.
-	}
-}
-function applyTheme() {
-	const theme = preference ?? (media.matches ? 'dark' : 'light');
-	root.dataset.theme = theme;
-	const label = `Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`;
-	themeButton?.setAttribute('aria-label', label);
-	themeButton?.setAttribute('title', label);
-	if (themeButton) themeButton.textContent = theme === 'dark' ? '☀' : '◐';
-	document
-		.querySelector('meta[name="theme-color"]')
-		?.setAttribute('content', theme === 'dark' ? '#0f1113' : '#fbfaf7');
-	syncEmbeddedTheme();
-}
-applyTheme();
-themeButton?.addEventListener('click', () => {
-	preference = root.dataset.theme === 'dark' ? 'light' : 'dark';
-	try {
-		localStorage.setItem(storageKey, preference);
-	} catch {
-		// Keep session preference without storage.
-	}
-	applyTheme();
-});
-media.addEventListener?.('change', applyTheme);
-window.addEventListener('storage', (event) => {
-	if (event.key !== storageKey && event.key !== null) return;
-	preference = event.newValue === 'light' || event.newValue === 'dark' ? event.newValue : undefined;
-	applyTheme();
-});
-document.getElementById('live-viewer')?.addEventListener('load', syncEmbeddedTheme);
+import { initVisioTheme } from './theme.js';
+
+document.documentElement.classList.add('js');
+initVisioTheme(window);
 
 const menuButton = document.querySelector('.menu-toggle');
 const navigation = document.getElementById('site-navigation');

@@ -25,7 +25,7 @@
 		"setup:converter": "node scripts/check-converter-release.mjs",
 		"check:converter": "npm run test:converter-integration",
 		"check:bindings": "npm --prefix packages/bindings run check",
-		"test:docs": "node scripts/sync-parity.mjs --check && node --test docs/site.test.mjs",
+		"test:docs": "node scripts/sync-parity.mjs --check && node --test docs/site.test.mjs docs/theme.test.mjs",
 		"test:worker": "node scripts/test-worker-bundle.mjs",
 		"fmt": "oxfmt",
 		"fmt:check": "oxfmt --check",

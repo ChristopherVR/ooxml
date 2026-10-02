@@ -1,7 +1,14 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { wireWorkspaceTheme } from '../demo/workspace-theme.js';
 
 let dispose: (() => void) | undefined;
+beforeEach(() => {
+	vi.stubGlobal('matchMedia', () => ({
+		matches: false,
+		addEventListener() {},
+		removeEventListener() {},
+	}));
+});
 afterEach(() => {
 	dispose?.();
 	dispose = undefined;
@@ -10,6 +17,7 @@ afterEach(() => {
 	delete document.documentElement.dataset.theme;
 	delete document.documentElement.dataset.embedded;
 	history.replaceState(null, '', '/');
+	vi.unstubAllGlobals();
 });
 function mount(): HTMLButtonElement {
 	document.documentElement.dataset.theme = 'dark';

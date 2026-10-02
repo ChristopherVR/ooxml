@@ -5,6 +5,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { JSDOM } from 'jsdom';
 import postcss from 'postcss';
+import { initVisioTheme } from './assets/theme.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const pages = ['index.html', 'docs/index.html', 'docs/parity.html', 'docs/architecture.html'];
@@ -158,7 +159,12 @@ describe('documentation interaction logic in a simulated DOM', () => {
 		});
 		instance.window.matchMedia = () => ({ matches: false });
 		configure(instance.window);
-		instance.window.eval(read('docs/assets/site.js'));
+		initVisioTheme(instance.window);
+		instance.window.eval(
+			read('docs/assets/site.js')
+				.replace(/^import .*;\r?\n/m, '')
+				.replace('initVisioTheme(window);', ''),
+		);
 		return instance;
 	}
 	it('native framework tabs select one labelled local-source example', () => {
