@@ -41,6 +41,9 @@ function Remove-PersonalData([string]$path) {
 }
 
 $excel = New-Object -ComObject Excel.Application
+# Excel.UserName is the user's Office-wide name (saved in the registry): stamp the
+# fixtures with a neutral name, then put the user's own name back in the finally block.
+$previousUserName = $excel.UserName
 $excel.UserName = 'Fixture Author'
 $excel.Visible = $false
 $excel.DisplayAlerts = $false
@@ -162,6 +165,7 @@ try {
 	$wb.SaveAs((Join-Path $here 'excel-1904.xlsx'), 51)
 	$wb.Close($false)
 } finally {
+	$excel.UserName = $previousUserName
 	$excel.Quit()
 	[void][Runtime.InteropServices.Marshal]::ReleaseComObject($excel)
 	Remove-Item $png -ErrorAction SilentlyContinue
