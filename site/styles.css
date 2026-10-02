@@ -471,6 +471,26 @@ a.app:hover .app-icon {
 
 /* ---- Workspace (embedded app) ------------------------------------- */
 
+.button--visio {
+	background: #6546c0;
+	color: white;
+}
+.button--excel {
+	background: #167848;
+	color: white;
+}
+.beta-preview {
+	max-width: 780px;
+	margin: 0 auto;
+	padding: 80px 24px;
+}
+.beta-preview p {
+	line-height: 1.75;
+	margin-bottom: 28px;
+}
+.beta-preview .button {
+	margin: 0 12px 12px 0;
+}
 .workspace {
 	position: relative;
 	height: calc(100dvh - var(--topbar));

@@ -107,6 +107,12 @@
 						<a class="button button--page" href="#/word"
 							>Open Word <span class="button__tag">Beta</span></a
 						>
+						<a class="button button--visio" href="#/visio"
+							>Open Visio <span class="button__tag">Beta</span></a
+						>
+						<a class="button button--excel" href="#/excel"
+							>Open Excel <span class="button__tag">Beta</span></a
+						>
 					</div>
 				</div>
 
@@ -155,8 +161,9 @@
 			<section class="core" aria-labelledby="core-title">
 				<h2 id="core-title">One core under every app</h2>
 				<p class="core__lede">
-					Every app reads and writes its files through the same open-source library, so a chart, a
-					picture or a table behaves the same way in a slide as it does on a page.
+					OOXML owns the format logic. Each viewer repository owns its browser interface and
+					framework bindings, with shared controls and supporting codecs underneath. Coverage varies
+					by format; the beta apps document their current limits.
 				</p>
 				<dl class="core__list">
 					<div>
@@ -195,6 +202,80 @@
 						</dd>
 					</div>
 				</dl>
+				<dl class="core__list">
+					<div>
+						<dt>
+							<a
+								href="https://christophervr.github.io/visio-viewer/"
+								target="_blank"
+								rel="noreferrer"
+								>visio-viewer</a
+							>
+						</dt>
+						<dd>
+							Public beta for local .vsdx diagrams, shared SVG rendering and experimental plain-text
+							editing. Its npm packages are placeholders.
+						</dd>
+					</div>
+					<div>
+						<dt>
+							<a
+								href="https://github.com/ChristopherVR/xlsx-viewer"
+								target="_blank"
+								rel="noreferrer"
+								>xlsx-viewer</a
+							>
+						</dt>
+						<dd>
+							Excel UI and six framework bindings over ooxml-core/xlsx. The public beta is being
+							integrated; its live demo is pending.
+						</dd>
+					</div>
+					<div>
+						<dt>
+							<a href="https://www.npmjs.com/package/ooxml-ui" target="_blank" rel="noreferrer"
+								>ooxml-ui</a
+							>
+						</dt>
+						<dd>
+							Shared browser controls used across the viewer interfaces, maintained in the ooxml
+							repository.
+						</dd>
+					</div>
+					<div>
+						<dt>
+							<a href="https://github.com/ChristopherVR/ole2" target="_blank" rel="noreferrer"
+								>ole2</a
+							>
+						</dt>
+						<dd>
+							Compound-file containers and legacy binary Office codecs, included through the core's
+							format loaders.
+						</dd>
+					</div>
+					<div>
+						<dt>
+							<a
+								href="https://github.com/ChristopherVR/emf-converter"
+								target="_blank"
+								rel="noreferrer"
+								>emf-converter</a
+							>
+						</dt>
+						<dd>EMF and WMF graphics conversion for supported embedded metafiles.</dd>
+					</div>
+					<div>
+						<dt>
+							<a
+								href="https://github.com/ChristopherVR/mtx-decompressor"
+								target="_blank"
+								rel="noreferrer"
+								>mtx-decompressor</a
+							>
+						</dt>
+						<dd>MicroType Express decompression for supported embedded EOT fonts.</dd>
+					</div>
+				</dl>
 			</section>
 
 			<footer class="footer">
@@ -206,6 +287,22 @@
 			</footer>
 		</main>
 
+		<section id="excel-preview" class="beta-preview" hidden aria-labelledby="excel-preview-title">
+			<span class="tag tag--beta">Beta</span>
+			<h1 id="excel-preview-title">Excel is being prepared.</h1>
+			<p>
+				The spreadsheet viewer is still being integrated and tested. Its live demo will appear here
+				when that build is ready.
+			</p>
+			<a
+				class="button button--excel"
+				href="https://github.com/ChristopherVR/xlsx-viewer"
+				target="_blank"
+				rel="noreferrer"
+				>Follow xlsx-viewer on GitHub ↗</a
+			>
+			<a class="button" href="#/">Back to all apps</a>
+		</section>
 		<section id="workspace" class="workspace" hidden>
 			<div class="workspace__loading" id="workspace-loading">
 				<i class="spinner" aria-hidden="true"></i>
