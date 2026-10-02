@@ -66,7 +66,10 @@ export const APPS = [
 		color: '#8a6cf0',
 		format: '.vsdx',
 		description: 'Diagrams and flowcharts.',
-		tag: { label: 'Planned', tone: 'planned' },
+		tag: { label: 'Beta', tone: 'beta' },
+		repo: 'visio-viewer',
+		docs: `${PAGES}/visio-viewer/`,
+		frameworks: [{ id: 'vanilla', label: 'Vanilla JS', route: 'demo' }],
 	},
 ];
 
