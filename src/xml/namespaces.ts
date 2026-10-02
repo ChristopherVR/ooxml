@@ -40,6 +40,22 @@ export const NS = {
 	o: 'urn:schemas-microsoft-com:office:office',
 	/** Word VML extensions. */
 	w10: 'urn:schemas-microsoft-com:office:word',
+	/** SpreadsheetML drawing (`xdr:wsDr`, cell anchors). */
+	xdr: 'http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing',
+	/** SpreadsheetML 2009 extensions (`x14:conditionalFormatting`, `x14:dataBar`). */
+	x14: 'http://schemas.microsoft.com/office/spreadsheetml/2009/9/main',
+	/** SpreadsheetML 2009 attribute extensions (`x14ac:dyDescent`). */
+	x14ac: 'http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac',
+	/** SpreadsheetML revision ids (`xr:uid`). */
+	xr: 'http://schemas.microsoft.com/office/spreadsheetml/2014/revision',
+	/** Excel threaded comments and persons. */
+	tc: 'http://schemas.microsoft.com/office/spreadsheetml/2018/threadedcomments',
+	/** Legacy VML Excel client data (`x:ClientData`). */
+	xv: 'urn:schemas-microsoft-com:office:excel',
+	/** Extended (app) properties. */
+	extendedProperties: 'http://schemas.openxmlformats.org/officeDocument/2006/extended-properties',
+	/** Dublin Core terms (`dcterms:created`). */
+	dcterms: 'http://purl.org/dc/terms/',
 	/** XML itself (`xml:space`). */
 	xml: 'http://www.w3.org/XML/1998/namespace',
 } as const;
