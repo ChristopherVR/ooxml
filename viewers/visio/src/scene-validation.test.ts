@@ -5,6 +5,93 @@ import { renderText } from './render-text.js';
 import { rasterFixture } from '../tests/raster-fixtures.mjs';
 
 describe('defensive scene limits', () => {
+	it('rejects iterable substitutes for diagnostic and gradient arrays and nonboolean hiding', () => {
+		const model = structuredClone(demoDocument),
+			shape = model.pages[0]!.shapes[0]!;
+		Object.assign(model, {
+			diagnostics: new Set([{ code: 'x', message: '', severity: 'warning' }]),
+		});
+		expect(() => assertViewableDocument(model)).toThrow('page list');
+		model.diagnostics = [];
+		shape.style.fillGradient = { type: 'linear', start: [0, 0], end: [1, 1], stops: [] };
+		Object.assign(shape.style.fillGradient, {
+			stops: new Set([
+				{ offset: 0, color: '#000', opacity: 1 },
+				{ offset: 1, color: '#fff', opacity: 1 },
+			]),
+		});
+		expect(() => assertViewableDocument(model)).toThrow('fill gradient');
+		delete shape.style.fillGradient;
+		Object.assign(shape, { hidden: 'false' });
+		expect(() => assertViewableDocument(model)).toThrow('hidden flag');
+	});
+	it('bounds aggregate gradient stops even when many shapes share one style object', () => {
+		const model = structuredClone(demoDocument),
+			shape = model.pages[0]!.shapes[0]!;
+		const stops = new Array(128).fill({ offset: 0, color: '#000', opacity: 1 });
+		shape.style.fillGradient = { type: 'linear', start: [0, 0], end: [1, 1], stops };
+		model.pages = [model.pages[0]!];
+		model.pages[0]!.shapes = Array.from({ length: 781 }, (_, i) => ({ ...shape, id: String(i) }));
+		model.pages[0]!.shapes.push({
+			...shape,
+			id: 'last',
+			style: {
+				...shape.style,
+				fillGradient: { ...shape.style.fillGradient, stops: stops.slice(0, 32) },
+			},
+		});
+		assertViewableDocument(model);
+		model.pages[0]!.shapes.push({ ...shape, id: 'too-many' });
+		expect(() => assertViewableDocument(model)).toThrow('gradient stop limits');
+	});
+	it('rejects non-array paragraphs and preflights the aggregate paragraph count', () => {
+		const model = structuredClone(demoDocument),
+			shape = model.pages[0]!.shapes[0]!;
+		const paragraph = {
+			start: 0,
+			end: 0,
+			horizontalAlign: 'left' as const,
+			indentLeft: 0,
+			indentRight: 0,
+			indentFirst: 0,
+			spaceBefore: 0,
+			spaceAfter: 0,
+			lineSpacing: { kind: 'multiple' as const, value: 1 },
+			direction: 'ltr' as const,
+		};
+		Object.assign(shape.text, { paragraphs: new Set([paragraph]) });
+		expect(() => assertViewableDocument(model)).toThrow('paragraph limits');
+		shape.text.paragraphs = new Array(5000).fill(paragraph);
+		model.pages = [model.pages[0]!];
+		model.pages[0]!.shapes = Array.from({ length: 10 }, (_, i) => ({ ...shape, id: String(i) }));
+		assertViewableDocument(model);
+		model.pages[0]!.shapes.push({
+			...shape,
+			id: 'one-more',
+			text: { ...shape.text, paragraphs: [paragraph] },
+		});
+		expect(() => assertViewableDocument(model)).toThrow('paragraph limits');
+	});
+	it('rejects oversized root and child queues before traversing their entries', () => {
+		const model = structuredClone(demoDocument),
+			shape = model.pages[0]!.shapes[0]!;
+		model.pages[0]!.shapes = new Array(25_001).fill(shape);
+		expect(() => assertViewableDocument(model)).toThrow('shape count');
+		model.pages[0]!.shapes = [shape];
+		shape.children = new Array(25_000).fill(shape);
+		expect(() => assertViewableDocument(model)).toThrow('shape count');
+	});
+	it('checks aggregate layer count before walking excessive metadata', () => {
+		const model = structuredClone(demoDocument);
+		model.pages[0]!.layers = new Array(25_001).fill({
+			id: '0',
+			name: 'Layer',
+			visible: true,
+			printable: true,
+			locked: false,
+		});
+		expect(() => assertViewableDocument(model)).toThrow('layer count');
+	});
 	it.each(
 		[[], [1], [0, 0], [1, NaN], [1, 28], [1, -1], [1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1]].map(
 			(lineDash) => ({ lineDash }),
@@ -53,6 +140,43 @@ describe('defensive scene limits', () => {
 });
 
 describe('aggregate raster and metadata limits', () => {
+	it.each(['value', 'label', 'rawValue'] as const)(
+		'rejects array-valued shape data %s before inspector coercion',
+		(field) => {
+			const model = structuredClone(demoDocument),
+				shape = model.pages[0]!.shapes[0]!;
+			shape.shapeData = [
+				{ id: '0', name: 'Property', type: 0, valueKind: 'string', value: 'text' },
+			];
+			Object.assign(shape.shapeData[0]!, { [field]: ['x'.repeat(100_000)] });
+			expect(() => assertViewableDocument(model)).toThrow(/metadata/);
+		},
+	);
+	it('rejects non-string hyperlink payloads and oversized metadata lists', () => {
+		const model = structuredClone(demoDocument),
+			shape = model.pages[0]!.shapes[0]!;
+		shape.hyperlinks = [
+			{ id: '0', name: 'Link', target: { kind: 'external', href: 'https://example.test' } },
+		];
+		Object.assign(shape.hyperlinks[0]!.target, { href: ['https://example.test'] });
+		expect(() => assertViewableDocument(model)).toThrow('metadata text');
+		shape.hyperlinks = [];
+		shape.shapeData = new Array(1025).fill({
+			id: '0',
+			name: 'Property',
+			type: 0,
+			valueKind: 'string',
+		});
+		expect(() => assertViewableDocument(model)).toThrow('metadata row');
+	});
+	it('bounds normalized visibility metadata enums and cached flags', () => {
+		const model = structuredClone(demoDocument),
+			shape = model.pages[0]!.shapes[0]!;
+		shape.visibility = { layerHidden: false, guide: false, layerPrintSummary: 'unlayered' };
+		assertViewableDocument(model);
+		Object.assign(shape.visibility, { nonPrinting: 'x'.repeat(100_000) });
+		expect(() => assertViewableDocument(model)).toThrow('NonPrinting metadata');
+	});
 	it('validates host-supplied raster bytes instead of trusting MIME and dimensions', () => {
 		const model = structuredClone(demoDocument),
 			shape = model.pages[0]!.shapes[0]!;

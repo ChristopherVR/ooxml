@@ -41,6 +41,7 @@ describe('complete shared adapter contract', () => {
 		expect(() => handle.controller).toThrow('not mounted');
 		expect(() => handle.fit()).toThrow('not mounted');
 		expect(() => handle.exportSvg()).toThrow('not mounted');
+		expect(() => handle.createPrintSnapshot()).toThrow('not mounted');
 		await expect(handle.load(new Uint8Array())).rejects.toThrow('not mounted');
 		const host = document.createElement('div');
 		binding = mountViewer(host, {});
@@ -48,12 +49,17 @@ describe('complete shared adapter contract', () => {
 		handle.fit();
 		expect(handle.exportSvg({ maxBytes: 1000 }).svg).toBe('<svg/>');
 		expect(current().binding.exportSvg).toHaveBeenCalledWith({ maxBytes: 1000 });
+		expect(handle.createPrintSnapshot({ limits: { maxPages: 1 } }).appearance).toBe(
+			'saved-display',
+		);
+		expect(current().binding.createPrintSnapshot).toHaveBeenCalledWith({ limits: { maxPages: 1 } });
 		await handle.load(new Uint8Array());
 		expect(current().binding.fit).toHaveBeenCalledOnce();
 		binding.destroy();
 		binding = undefined;
 		expect(() => handle.fit()).toThrow('not mounted');
 		expect(() => handle.exportSvg()).toThrow('not mounted');
+		expect(() => handle.createPrintSnapshot()).toThrow('not mounted');
 	});
 	it('vanilla is the exact shared mount without another renderer or lifecycle', () => {
 		const host = document.createElement('div');

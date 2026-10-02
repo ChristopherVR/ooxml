@@ -26,6 +26,27 @@ afterEach(() => {
 });
 
 describe('portable current-page SVG export', () => {
+	it('retains dimensions matching serialized SVG when a serializer callback changes the source', () => {
+		const model = scene(),
+			serialize = XMLSerializer.prototype.serializeToString;
+		const width = model.pages[0]!.width,
+			height = model.pages[0]!.height;
+		vi.spyOn(XMLSerializer.prototype, 'serializeToString').mockImplementationOnce((node) => {
+			const xml = serialize.call(new XMLSerializer(), node);
+			model.pages[0]!.width = model.pages[0]!.height = 5000;
+			return xml;
+		});
+		const result = exportPageSvg(model);
+		const xml = parse(result.svg);
+		expect(result.width).toBe(width);
+		expect(result.height).toBe(height);
+		expect(xml.documentElement.getAttribute('width')).toBe(`${width}in`);
+		expect(xml.documentElement.getAttribute('height')).toBe(`${height}in`);
+		expect(JSON.parse(xml.querySelector('metadata')!.textContent!).page).toMatchObject({
+			width,
+			height,
+		});
+	});
 	it('includes dimensions, accessible title, UTF-8 length and honest compatibility metadata', () => {
 		const result = exportPageSvg(demoDocument);
 		const xml = parse(result.svg),
@@ -136,6 +157,34 @@ describe('portable current-page SVG export', () => {
 });
 
 describe('embedded raster resources and export bounds', () => {
+	it.each(['path', 'plainText', 'runText'] as const)(
+		'rejects array-valued %s before implicit DOM string expansion',
+		(field) => {
+			const model = scene(),
+				shape = model.pages[0]!.shapes[0]!;
+			const value = ['x'.repeat(100_000)];
+			if (field === 'path') Object.assign(shape.geometry[0]!, { path: value });
+			else if (field === 'plainText') Object.assign(shape.text, { plainText: value });
+			else
+				shape.text.runs = [
+					Object.assign(
+						{
+							text: 'text',
+							fontFamily: 'Arial',
+							fontSize: 0.1,
+							color: '#000',
+							bold: false,
+							italic: false,
+							underline: false,
+						},
+						{ text: value },
+					),
+				] as never;
+			const create = vi.spyOn(document, 'createElementNS');
+			expect(() => exportPageSvg(model)).toThrow(/invalid (path|plain|run) text/);
+			expect(create).not.toHaveBeenCalled();
+		},
+	);
 	it('embeds shared raster bytes once, keeps crop coordinates and releases transient resources', () => {
 		const model = imageScene(24_577),
 			original = model.pages[0]!.shapes[0]!;

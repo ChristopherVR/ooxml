@@ -195,9 +195,11 @@
 							<tr>
 								<td>Layers</td>
 								<td>Visibility, locks, colors and print settings</td>
-								<td>Partial: cached layer model and visibility</td>
-								<td>Core layer tests; normalized hidden state</td>
-								<td>Layer UI, color overrides, editing and print behavior</td>
+								<td>Partial: independent visibility reasons and bounded display resolver</td>
+								<td>
+									Core visibility/override tests; identical display state for 706 real-corpus shapes
+								</td>
+								<td>Layer UI, color overrides, editing and mixed-layer/group print policy</td>
 							</tr>
 							<tr>
 								<td>Shape data and hyperlinks</td>
@@ -274,11 +276,15 @@
 							<tr>
 								<td>Export and print</td>
 								<td>SVG, images, PDF and print layout</td>
-								<td>Partial: bounded current-page SVG snapshot</td>
+								<td>Partial: SVG export and bounded immutable print artifacts</td>
 								<td>
-									Shared export API and all-six handle tests; three secondary raster pixel cases
+									Shared export/snapshot APIs, all-six handle tests, four-page real snapshot and
+									raster pixel tests
 								</td>
-								<td>PNG/PDF output, print layout, embedded fonts and native Visio comparison</td>
+								<td>
+									Print frames/dialogs, saved printer/layer settings, PNG/PDF output, embedded fonts
+									and native comparison
+								</td>
 							</tr>
 							<tr>
 								<td>Legacy and other Visio formats</td>

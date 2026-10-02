@@ -19,6 +19,7 @@ import {
 	type ViewerProperties,
 	type VsdxSource,
 	type SvgExportOptions,
+	type CurrentPagePrintSnapshotOptions,
 } from './common.js';
 /** Angular input/output and lifecycle wiring over the one shared browser binding. */
 @Component({ selector: 'visio-viewer-host', standalone: true, template: '' })
@@ -73,6 +74,9 @@ export class VisioViewerComponent implements AfterViewInit, OnChanges, OnDestroy
 	}
 	exportSvg(options?: SvgExportOptions) {
 		return this.handle.exportSvg(options);
+	}
+	createPrintSnapshot(options?: CurrentPagePrintSnapshotOptions) {
+		return this.handle.createPrintSnapshot(options);
 	}
 }
 export type { ViewerHandle, ViewerCallbacks, ViewerOptions, ViewerEvents } from './common.js';

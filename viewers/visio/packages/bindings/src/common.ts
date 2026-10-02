@@ -13,7 +13,7 @@ export type ViewerProps = { [K in keyof ViewerProperties]?: ViewerProperties[K] 
 };
 export type ViewerHandle = Pick<
 	MountedViewer,
-	'element' | 'controller' | 'load' | 'fit' | 'exportSvg'
+	'element' | 'controller' | 'load' | 'fit' | 'exportSvg' | 'createPrintSnapshot'
 >;
 
 /** One mapping for every property and event, shared by every framework adapter. */
@@ -94,6 +94,9 @@ export function viewerHandle(current: () => MountedViewer | undefined): ViewerHa
 		exportSvg(options) {
 			return requireViewer().exportSvg(options);
 		},
+		createPrintSnapshot(options) {
+			return requireViewer().createPrintSnapshot(options);
+		},
 	};
 }
 
@@ -123,3 +126,11 @@ export { eventKeys, propertyKeys };
 export type { ViewerEvents, VsdxSource } from '../../../src/contract.js';
 export { ViewerController, type ViewerState } from '../../../src/controller.js';
 export type { SvgExportOptions, SvgExportResult } from '../../../src/export-svg.js';
+export type {
+	CurrentPagePrintSnapshotOptions,
+	PrintSnapshot,
+	PrintSnapshotPage,
+	PrintSnapshotOptions,
+	PrintSnapshotLimits,
+	PrintSnapshotUsage,
+} from '../../../src/print-snapshot.js';

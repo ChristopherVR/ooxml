@@ -3,6 +3,7 @@ import { eventKeys, propertyKeys } from './contract.js';
 import { registerVisioViewer, type VisioViewerElement } from './viewer-element.js';
 import type { ViewerController } from './controller.js';
 import type { SvgExportOptions, SvgExportResult } from './export-svg.js';
+import type { CurrentPagePrintSnapshotOptions, PrintSnapshot } from './print-snapshot.js';
 
 export interface MountedViewer {
 	readonly element: VisioViewerElement;
@@ -11,6 +12,7 @@ export interface MountedViewer {
 	load(source: VsdxSource): Promise<void>;
 	fit(): void;
 	exportSvg(options?: SvgExportOptions): SvgExportResult;
+	createPrintSnapshot(options?: CurrentPagePrintSnapshotOptions): PrintSnapshot;
 	destroy(): void;
 }
 /** One client-only lifecycle adapter; framework wrappers forward to this implementation. */
@@ -66,6 +68,10 @@ export function mountViewer(container: HTMLElement, initial: ViewerOptions = {})
 		exportSvg(options) {
 			assertAlive();
 			return element.exportSvg(options);
+		},
+		createPrintSnapshot(options) {
+			assertAlive();
+			return element.createPrintSnapshot(options);
 		},
 		destroy() {
 			if (destroyed) return;

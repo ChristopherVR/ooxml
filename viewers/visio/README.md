@@ -46,6 +46,7 @@ await viewer.load(file); // Blob, Uint8Array or ArrayBuffer
 viewer.fit();
 viewer.update({ pageIndex: 1 });
 const snapshot = viewer.exportSvg(); // SVG string, dimensions, byteLength and diagnostics
+const prepared = viewer.createPrintSnapshot(); // Frozen current-page artifacts, no printing
 viewer.destroy(); // idempotent; later commands reject
 ```
 
@@ -64,6 +65,12 @@ Search returns one result per matching shape, with a bounded text preview. It us
 The UTF-8 ceiling is 16 MiB; callers can lower it. Conservative preflight checks can reject content whose eventual serialization would be smaller. Fonts are not embedded and text/layout remain approximate. Physical page dimensions are preserved; downstream rasterizers must cap their output dimensions and pixel area before allocating an image surface. PDF, bitmap export and print layout remain unimplemented.
 
 Optional Linux secondary pixel tests run with `node scripts/test-svg-rasterization.mjs` after building, using system Python 3, librsvg/Cairo and the core's native canvas dependency. These checks are separate from browser or Microsoft Visio validation.
+
+## Prepare drawing-page artifacts
+
+`createPrintSnapshot(model, { pageIndices: [0, 2] })` preserves explicit page order and returns deeply frozen, separate SVG records with drawing dimensions and all export diagnostics. Each mounted/native handle's `createPrintSnapshot()` captures its current page. It rejects document replacement during preparation without changing view state. There are no frames, dialogs, downloads or printer commands.
+
+The snapshot uses saved display appearance. Layer Print, NonPrinting and saved printer settings are not applied; drawing dimensions are not printer paper or print scale. The result includes these limitations. Guards bound selected pages, aggregate bytes, repeated backgrounds, raster dimensions, text/path work and repeated whole-model validation. Callers may lower limits. Separate SVGs must remain isolated because their internal resource IDs can repeat. This is preparation for a future print workflow, not native Visio printing support.
 
 ## Safety and limits
 

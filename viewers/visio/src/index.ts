@@ -9,6 +9,16 @@ export {
 	type SvgExportResult,
 } from './export-svg.js';
 export {
+	createPrintSnapshot,
+	PRINT_SNAPSHOT_LIMITS,
+	type PrintSnapshot,
+	type PrintSnapshotPage,
+	type PrintSnapshotOptions,
+	type PrintSnapshotLimits,
+	type PrintSnapshotUsage,
+	type CurrentPagePrintSnapshotOptions,
+} from './print-snapshot.js';
+export {
 	eventKeys,
 	propertyKeys,
 	type ViewerProperties,

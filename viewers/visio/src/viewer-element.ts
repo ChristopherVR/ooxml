@@ -16,6 +16,11 @@ import {
 } from './viewer-search.js';
 import type { TextSearchResult } from './document-text-search.js';
 import { exportPageSvg, type SvgExportOptions, type SvgExportResult } from './export-svg.js';
+import {
+	createPrintSnapshot,
+	type CurrentPagePrintSnapshotOptions,
+	type PrintSnapshot,
+} from './print-snapshot.js';
 
 const BaseElement = (
 	typeof HTMLElement === 'undefined' ? class {} : HTMLElement
@@ -123,6 +128,27 @@ export class VisioViewerElement extends BaseElement {
 		const { document, pageIndex } = this.controller.state;
 		if (!document) throw new Error('Open a document before exporting SVG.');
 		return exportPageSvg(document, pageIndex, options);
+	}
+	/** Prepare only the captured current drawing. No frame, download, print dialog or state change. */
+	createPrintSnapshot(options?: CurrentPagePrintSnapshotOptions): PrintSnapshot {
+		this.#assertAlive();
+		if (
+			options !== undefined &&
+			(!options ||
+				typeof options !== 'object' ||
+				Array.isArray(options) ||
+				'pageIndices' in options)
+		)
+			throw new Error('Current-page print snapshot options may only contain limits.');
+		const { document, pageIndex } = this.controller.state;
+		const generation = this.controller.documentGeneration;
+		if (!document) throw new Error('Open a document before preparing a print snapshot.');
+		const page = document.pages[pageIndex];
+		const result = createPrintSnapshot(document, { ...options, pageIndices: [pageIndex] });
+		this.#assertAlive();
+		if (generation !== this.controller.documentGeneration || document.pages[pageIndex] !== page)
+			throw new Error('The document changed while preparing the print snapshot.');
+		return result;
 	}
 	destroy(): void {
 		if (this.#disposed) return;

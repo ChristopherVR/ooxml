@@ -47,14 +47,16 @@ export function exportPageSvg(
 	if (!Number.isSafeInteger(pageIndex) || pageIndex < 0 || pageIndex >= model.pages.length)
 		throw new Error('The SVG export page index is out of range.');
 	const page = model.pages[pageIndex]!;
-	preflight(model, page, maxBytes);
+	// Keep drawing dimensions consistent even if host DOM/serializer hooks mutate the source.
+	const { width, height } = page;
+	estimatePageSvgBytes(model, page, maxBytes);
 	if (typeof document === 'undefined' || typeof XMLSerializer === 'undefined')
 		throw new Error('SVG export requires a browser DOM and XMLSerializer.');
 	const rendered = renderPage(model, page, { static: true });
 	try {
 		const { svg } = rendered;
-		svg.setAttribute('width', `${page.width}in`);
-		svg.setAttribute('height', `${page.height}in`);
+		svg.setAttribute('width', `${width}in`);
+		svg.setAttribute('height', `${height}in`);
 		// XML 1.0 cannot represent isolated surrogates or control characters. Keep all valid Unicode.
 		let replaced = normalizeXmlTree(svg);
 		const notes = compatibilityNotes(model.diagnostics, [APPROXIMATION, ...rendered.warnings]);
@@ -74,8 +76,8 @@ export function exportPageSvg(
 			page: {
 				index: pageIndex,
 				name: pageName,
-				width: page.width,
-				height: page.height,
+				width,
+				height,
 				unit: 'in',
 			},
 			diagnostics: notes,
@@ -91,8 +93,8 @@ export function exportPageSvg(
 			byteLength,
 			pageIndex,
 			pageName,
-			width: page.width,
-			height: page.height,
+			width,
+			height,
 			diagnostics: notes,
 		};
 	} finally {
@@ -100,8 +102,12 @@ export function exportPageSvg(
 	}
 }
 
-/** Bound markup, raster encoding and worst-case text-fragment expansion before allocating DOM. */
-function preflight(model: VisioDocument, page: VisioPage, maxBytes: number): void {
+/** @internal Call only after canonical scene validation. Shared conservative allocation preflight. */
+export function estimatePageSvgBytes(
+	model: VisioDocument,
+	page: VisioPage,
+	maxBytes: number,
+): number {
 	let remaining = maxBytes;
 	const reserve = (bytes: number) => {
 		remaining -= bytes;
@@ -159,6 +165,7 @@ function preflight(model: VisioDocument, page: VisioPage, maxBytes: number): voi
 							6,
 				);
 	}
+	return maxBytes - remaining;
 }
 
 function xmlText(value: string): string {

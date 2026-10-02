@@ -1343,15 +1343,21 @@ index 0000000..c08bb99
 +});
 diff --git a/src/visio/index.ts b/src/visio/index.ts
 new file mode 100644
-index 0000000..3abb785
+index 0000000..c555a8a
 --- /dev/null
 +++ b/src/visio/index.ts
-@@ -0,0 +1,13 @@
+@@ -0,0 +1,19 @@
 +/** Read-only VSDX parsing and normalized scenes. Legacy VSD/VDX and saving are not supported. */
 +export type * from './model.js';
 +export type { VisioShapeData, VisioHyperlink, VisioMetadataOptions } from './shape-metadata.js';
 +export { parseVsdx, getVisioPageLayers, type ParseVsdxOptions } from './parser.js';
 +export { VisioPackageError, type VisioPackageLimits } from './package.js';
++export {
++	resolveVisioPageVisibility,
++	VISIO_VISIBILITY_LIMITS,
++	type VisioVisibilityOptions,
++	type VisioResolvedShapeVisibility,
++} from './visibility.js';
 +export {
 +	inspectVisioRasterImage,
 +	VisioImageError,
@@ -1362,10 +1368,10 @@ index 0000000..3abb785
 +} from './media.js';
 diff --git a/src/visio/layer-limits.test.ts b/src/visio/layer-limits.test.ts
 new file mode 100644
-index 0000000..de17ad8
+index 0000000..2a0e055
 --- /dev/null
 +++ b/src/visio/layer-limits.test.ts
-@@ -0,0 +1,226 @@
+@@ -0,0 +1,235 @@
 +import { describe, expect, it, vi } from 'vitest';
 +import { parseXml } from '../xml/index.js';
 +import { parseVsdx } from './index.js';
@@ -1391,19 +1397,28 @@ index 0000000..de17ad8
 +
 +describe('Visio bounded cached layer membership', () => {
 +	it.each([undefined, '', ' ', '\n\t'])('preserves empty membership %j', (value) => {
-+		expect(shapeLayers(sheet(value), layers, () => {})).toEqual({ layerIds: [], hidden: false });
++		expect(shapeLayers(sheet(value), layers, () => {})).toEqual({
++			layerIds: [],
++			hidden: false,
++			printSummary: 'unlayered',
++		});
 +	});
 +	it('canonicalizes leading zeros without altering order or duplicating IDs', () => {
 +		expect(shapeLayers(sheet(' 001;000;1;00 '), layers, () => {})).toEqual({
 +			layerIds: ['1', '0'],
 +			hidden: true,
++			printSummary: 'all-enabled',
 +		});
 +	});
 +	it.each([';0', '0;', '0;;1', '1 2', '-1', '1.0', '1e2', '１２'])(
 +		'diagnoses malformed %s',
 +		(value) => {
 +			const report = vi.fn();
-+			expect(shapeLayers(sheet(value), layers, report)).toEqual({ layerIds: [], hidden: false });
++			expect(shapeLayers(sheet(value), layers, report)).toEqual({
++				layerIds: [],
++				hidden: false,
++				printSummary: 'unknown',
++			});
 +			expect(report).toHaveBeenCalledWith('invalid-layer-membership', expect.any(String));
 +		},
 +	);
@@ -1594,10 +1609,10 @@ index 0000000..de17ad8
 +});
 diff --git a/src/visio/layers.test.ts b/src/visio/layers.test.ts
 new file mode 100644
-index 0000000..1fc8326
+index 0000000..e7da0d8
 --- /dev/null
 +++ b/src/visio/layers.test.ts
-@@ -0,0 +1,108 @@
+@@ -0,0 +1,109 @@
 +import { describe, expect, it } from 'vitest';
 +import { parseXml } from '../xml/index.js';
 +import { parseVsdx } from './index.js';
@@ -1663,6 +1678,7 @@ index 0000000..1fc8326
 +		expect(shapeLayers(sheet(cell('LayerMember', '0;1')), indexLayers(layers), () => {})).toEqual({
 +			layerIds: ['0', '1'],
 +			hidden: true,
++			printSummary: 'all-enabled',
 +		});
 +		expect(shapeLayers(sheet(cell('LayerMember', '1')), indexLayers(layers), () => {}).hidden).toBe(
 +			false,
@@ -1708,11 +1724,11 @@ index 0000000..1fc8326
 +});
 diff --git a/src/visio/layers.ts b/src/visio/layers.ts
 new file mode 100644
-index 0000000..7cd938f
+index 0000000..9c668b7
 --- /dev/null
 +++ b/src/visio/layers.ts
-@@ -0,0 +1,106 @@
-+import type { VisioLayer } from './model.js';
+@@ -0,0 +1,124 @@
++import type { VisioLayer, VisioLayerPrintSummary } from './model.js';
 +import { metadata } from './metadata.js';
 +import { VisioPackageError } from './package.js';
 +import { number, sectionRows, type Report, type Sheet } from './sheet.js';
@@ -1776,15 +1792,17 @@ index 0000000..7cd938f
 +	layers: ReadonlyMap<string, VisioLayer>,
 +	report: Report,
 +	budget: LayerBudget = createLayerBudget(),
-+): { layerIds: string[]; hidden: boolean } {
-+	const raw = metadata(
-+		sheet.cells.get('LayerMember')?.value ?? '',
-+		8192,
-+		'Cached layer membership',
-+	);
++): { layerIds: string[]; hidden: boolean; printSummary: VisioLayerPrintSummary } {
++	const cached = sheet.cells.get('LayerMember');
++	const raw = metadata(cached?.value ?? '', 8192, 'Cached layer membership');
 +	budget.consumeCharacters(raw.length);
 +	const value = raw.trim();
-+	if (!value) return { layerIds: [], hidden: false };
++	if (!value)
++		return {
++			layerIds: [],
++			hidden: false,
++			printSummary: cached && cached.value === undefined ? 'unknown' : 'unlayered',
++		};
 +	let count = 1;
 +	for (const character of value)
 +		if (character === ';' && ++count > 1024)
@@ -1792,7 +1810,7 @@ index 0000000..7cd938f
 +	budget.consumeMemberships(count);
 +	if (!/^\d+(;\d+)*$/.test(value)) {
 +		report('invalid-layer-membership', 'Invalid cached layer membership was ignored.');
-+		return { layerIds: [], hidden: false };
++		return { layerIds: [], hidden: false, printSummary: 'unknown' };
 +	}
 +	// LayerMember permits decimal digits. Preserve unknown large IDs without Number rounding.
 +	const layerIds = [
@@ -1802,12 +1820,16 @@ index 0000000..7cd938f
 +	];
 +	let missing = false,
 +		colored = false,
-+		hidden = false;
++		hidden = false,
++		printEnabled = false,
++		printDisabled = false;
 +	for (const id of layerIds) {
 +		const layer = layers.get(id);
 +		missing ||= layer === undefined;
 +		colored ||= layer?.color !== undefined;
 +		hidden ||= layer?.visible === false;
++		printEnabled ||= layer?.printable === true;
++		printDisabled ||= layer?.printable === false;
 +	}
 +	if (missing) report('missing-layer', 'Shape references a layer absent from this page.');
 +	if (colored)
@@ -1816,7 +1838,19 @@ index 0000000..7cd938f
 +			'Layer color overrides are retained as metadata but not applied to shape styling.',
 +		);
 +	// MS-VSDX 2.2.3.2.2: a geometry path must not belong to a layer whose Visible is zero.
-+	return { layerIds, hidden };
++	return {
++		layerIds,
++		hidden,
++		// Summarize normalized Print flags, including pageLayers' existing cached-value defaults.
++		// This deliberately does not resolve mixed print policy or a shape's final printability.
++		printSummary: missing
++			? 'unknown'
++			: printEnabled && printDisabled
++				? 'mixed'
++				: printEnabled
++					? 'all-enabled'
++					: 'all-disabled',
++	};
 +}
 diff --git a/src/visio/line-pattern.test.ts b/src/visio/line-pattern.test.ts
 new file mode 100644
@@ -2978,10 +3012,10 @@ index 0000000..04e3b92
 +}
 diff --git a/src/visio/model.ts b/src/visio/model.ts
 new file mode 100644
-index 0000000..e7ba184
+index 0000000..7852016
 --- /dev/null
 +++ b/src/visio/model.ts
-@@ -0,0 +1,157 @@
+@@ -0,0 +1,181 @@
 +import type { VisioHyperlink, VisioShapeData } from './shape-metadata.js';
 +
 +/** Visio's internal distance unit is the inch; angles are radians. */
@@ -3094,6 +3128,27 @@ index 0000000..e7ba184
 +	color?: string;
 +	colorOpacity?: number;
 +}
++/** Summary of normalized layer Print flags, not a shape printing decision or mixed-layer policy. */
++export type VisioLayerPrintSummary =
++	| 'unlayered'
++	| 'all-enabled'
++	| 'all-disabled'
++	| 'mixed'
++	| 'unknown';
++/** Saved reasons retained independently so display overrides cannot reveal intrinsic hiding. */
++export interface VisioShapeVisibility {
++	layerHidden: boolean;
++	/** Guides are hidden by this renderer, but can be printable in Visio. */
++	guide: boolean;
++	/** Legacy shape-level NoShow compatibility flag, not Geometry.NoShow. Missing means unknown. */
++	noShow?: boolean;
++	layerPrintSummary: VisioLayerPrintSummary;
++	/**
++	 * Cached NonPrinting only. Missing or unusable caches remain unknown.
++	 * https://learn.microsoft.com/en-us/office/client-developer/visio/nonprinting-cell-miscellaneous-section
++	 */
++	nonPrinting?: boolean;
++}
 +export interface VisioShape {
 +	id: string;
 +	name: string;
@@ -3107,7 +3162,10 @@ index 0000000..e7ba184
 +	geometry: VisioGeometry[];
 +	style: VisioStyle;
 +	text: VisioText;
++	/** Saved display suppression of this shape and its subtree; retained for existing consumers. */
 +	hidden: boolean;
++	/** Additive metadata. Older or manually constructed scenes may omit it. */
++	visibility?: VisioShapeVisibility;
 +	children: VisioShape[];
 +	masterId?: string;
 +	layerIds?: string[];
@@ -6257,10 +6315,10 @@ index 0000000..977438e
 +}
 diff --git a/src/visio/shapes.ts b/src/visio/shapes.ts
 new file mode 100644
-index 0000000..ffe268b
+index 0000000..fa59ac2
 --- /dev/null
 +++ b/src/visio/shapes.ts
-@@ -0,0 +1,256 @@
+@@ -0,0 +1,265 @@
 +import { styleSheet, type StyleContext } from './style-inheritance.js';
 +import { metadata } from './metadata.js';
 +import { shapeMetadata, type VisioMetadataBudget } from './shape-metadata.js';
@@ -6448,6 +6506,8 @@ index 0000000..ffe268b
 +					'Arbitrary image clipping paths are not applied; only the shape frame is used.',
 +				);
 +			const membership = shapeLayers(sheet, context.layers, report, context.layerBudget);
++			const cachedNoShow = number(sheet.cells, 'NoShow', sheet.cells.has('NoShow') ? NaN : 0);
++			const nonPrinting = number(sheet.cells, 'NonPrinting', NaN);
 +			const geometry = geometryPaths(sheet, width, height, report, context.consumeGeometry);
 +			if (
 +				!geometry.length &&
@@ -6496,6 +6556,13 @@ index 0000000..ffe268b
 +				),
 +				hidden:
 +					membership.hidden || type === 'Guide' || number(sheet.cells, 'NoShow', 0, report) !== 0,
++				visibility: {
++					layerHidden: membership.hidden,
++					guide: type === 'Guide',
++					...(Number.isNaN(cachedNoShow) ? {} : { noShow: cachedNoShow !== 0 }),
++					layerPrintSummary: membership.printSummary,
++					...(Number.isNaN(nonPrinting) ? {} : { nonPrinting: nonPrinting !== 0 }),
++				},
 +				layerIds: membership.layerIds,
 +				children: normalizeShapes(shape.children, context, depth + 1, stack),
 +				...(masterId === undefined ? {} : { masterId }),
@@ -8420,6 +8487,698 @@ index 0000000..ffa40a6
 +				)
 +				.slice(0, 6)
 +		: [];
++}
+diff --git a/src/visio/visibility-limits.test.ts b/src/visio/visibility-limits.test.ts
+new file mode 100644
+index 0000000..6c38401
+--- /dev/null
++++ b/src/visio/visibility-limits.test.ts
+@@ -0,0 +1,179 @@
++import { describe, expect, it } from 'vitest';
++import {
++	parseVsdx,
++	resolveVisioPageVisibility,
++	VISIO_VISIBILITY_LIMITS as limits,
++	type VisioLayer,
++	type VisioPage,
++	type VisioShape,
++} from './index.js';
++import { fixture } from './test-fixtures.js';
++
++const template = (await parseVsdx(await fixture())).pages[0]!;
++const node = (): VisioShape => ({ ...template.shapes[0]!, children: [] });
++const layer = (id = '0'): VisioLayer => ({
++	id,
++	name: id,
++	visible: true,
++	printable: true,
++	locked: false,
++});
++const page = (changes: Partial<VisioPage> = {}): VisioPage => ({
++	...template,
++	shapes: [node()],
++	layers: [layer()],
++	...changes,
++});
++const tree = (depth: number) => {
++	const root = node();
++	let parent = root;
++	for (let index = 0; index < depth; index++) {
++		const child = node();
++		parent.children.push(child);
++		parent = child;
++	}
++	return root;
++};
++const visibilityError = { code: 'VISIBILITY_LIMIT' };
++const invalidError = { code: 'INVALID_VISIBILITY_INPUT' };
++
++describe('bounded display visibility resolution', () => {
++	it('accepts the exact shape budget and rejects one more before allocating results', () => {
++		const shapes = Array.from({ length: limits.maxShapes }, node);
++		expect(resolveVisioPageVisibility(page({ shapes }))).toHaveLength(limits.maxShapes);
++		shapes.push(node());
++		expect(() => resolveVisioPageVisibility(page({ shapes }))).toThrowError(
++			expect.objectContaining(visibilityError),
++		);
++	});
++	it('bounds total shapes across branches', () => {
++		const first = node();
++		first.children = Array.from({ length: limits.maxShapes - 1 }, node);
++		expect(() => resolveVisioPageVisibility(page({ shapes: [first, node()] }))).toThrowError(
++			expect.objectContaining(visibilityError),
++		);
++	});
++	it('accepts the exact depth budget and rejects one deeper', () => {
++		expect(resolveVisioPageVisibility(page({ shapes: [tree(limits.maxDepth)] }))).toHaveLength(
++			limits.maxDepth + 1,
++		);
++		expect(() =>
++			resolveVisioPageVisibility(page({ shapes: [tree(limits.maxDepth + 1)] })),
++		).toThrowError(expect.objectContaining(visibilityError));
++	});
++	it.each(['self', 'ancestor', 'shared'])(
++		'rejects %s object cycles or ambiguous repeated objects',
++		(kind) => {
++			const first = node(),
++				second = node();
++			if (kind === 'self') first.children = [first];
++			if (kind === 'ancestor') {
++				first.children = [second];
++				second.children = [first];
++			}
++			const shapes = kind === 'shared' ? [first, first] : [first];
++			expect(() => resolveVisioPageVisibility(page({ shapes }))).toThrowError(
++				expect.objectContaining(invalidError),
++			);
++		},
++	);
++	it('counts all memberships including duplicates across different shapes', () => {
++		const shapes = Array.from({ length: 100 }, () => ({
++			...node(),
++			layerIds: Array<string>(1000).fill('0'),
++		}));
++		expect(resolveVisioPageVisibility(page({ shapes }))).toHaveLength(100);
++		shapes[0]!.layerIds.push('0');
++		expect(() => resolveVisioPageVisibility(page({ shapes }))).toThrowError(
++			expect.objectContaining(visibilityError),
++		);
++	});
++	it('bounds membership count on a single shape', () => {
++		const item = { ...node(), layerIds: Array<string>(limits.maxMembershipsPerShape).fill('0') };
++		expect(resolveVisioPageVisibility(page({ shapes: [item] }))).toHaveLength(1);
++		item.layerIds.push('0');
++		expect(() => resolveVisioPageVisibility(page({ shapes: [item] }))).toThrowError(
++			expect.objectContaining(visibilityError),
++		);
++	});
++	it('bounds layer count and preserves the exact boundary', () => {
++		const layers = Array.from({ length: limits.maxLayers }, (_, id) => layer(String(id)));
++		expect(resolveVisioPageVisibility(page({ layers }))).toHaveLength(1);
++		layers.push(layer('more'));
++		expect(() => resolveVisioPageVisibility(page({ layers }))).toThrowError(
++			expect.objectContaining(visibilityError),
++		);
++	});
++	it('bounds IDs in layers, memberships and overrides', () => {
++		const id = '9'.repeat(limits.maxLayerIdLength);
++		const source = page({ layers: [layer(id)], shapes: [{ ...node(), layerIds: [id] }] });
++		expect(
++			resolveVisioPageVisibility(source, { layerVisibilityOverrides: new Map([[id, false]]) })[0]!
++				.hidden,
++		).toBe(true);
++		expect(() => resolveVisioPageVisibility(page({ layers: [layer(id + '9')] }))).toThrowError(
++			expect.objectContaining(visibilityError),
++		);
++		expect(() =>
++			resolveVisioPageVisibility(page({ shapes: [{ ...node(), layerIds: [id + '9'] }] })),
++		).toThrowError(expect.objectContaining(visibilityError));
++		expect(() =>
++			resolveVisioPageVisibility(source, {
++				layerVisibilityOverrides: new Map([[id + '9', false]]),
++			}),
++		).toThrowError(expect.objectContaining(visibilityError));
++	});
++	it.each([NaN, Infinity, -1, 0.5, limits.maxLayers + 1])(
++		'rejects invalid override collection size %s',
++		(size) => {
++			const overrides = new Map<string, boolean>();
++			Object.defineProperty(overrides, 'size', { value: size });
++			expect(() =>
++				resolveVisioPageVisibility(page(), { layerVisibilityOverrides: overrides }),
++			).toThrowError(expect.objectContaining(visibilityError));
++		},
++	);
++	it('bounds actual iteration even when a caller-defined map lies about its size', () => {
++		const overrides = {
++			size: 0,
++			*[Symbol.iterator]() {
++				for (;;) yield ['0', false] as const;
++			},
++		} as ReadonlyMap<string, boolean>;
++		expect(() =>
++			resolveVisioPageVisibility(page(), { layerVisibilityOverrides: overrides }),
++		).toThrowError(expect.objectContaining(visibilityError));
++	});
++	it.each([0, 1, 'false', null, undefined])('rejects nonboolean override %j', (value) => {
++		const overrides = new Map([['0', value]]) as unknown as ReadonlyMap<string, boolean>;
++		expect(() =>
++			resolveVisioPageVisibility(page(), { layerVisibilityOverrides: overrides }),
++		).toThrowError(expect.objectContaining(invalidError));
++	});
++	it.each(['', 'missing', '00'])('rejects empty, foreign or noncanonical override ID %j', (id) => {
++		expect(() =>
++			resolveVisioPageVisibility(page(), { layerVisibilityOverrides: new Map([[id, true]]) }),
++		).toThrowError(expect.objectContaining(invalidError));
++	});
++	it('rejects malformed runtime scenes rather than interpreting truthy hidden flags', () => {
++		const item = node();
++		(item as unknown as { hidden: unknown }).hidden = 'false';
++		expect(() => resolveVisioPageVisibility(page({ shapes: [item] }))).toThrowError(
++			expect.objectContaining(invalidError),
++		);
++		const invalidLayer = layer();
++		(invalidLayer as unknown as { visible: unknown }).visible = 1;
++		expect(() => resolveVisioPageVisibility(page({ layers: [invalidLayer] }))).toThrowError(
++			expect.objectContaining(invalidError),
++		);
++	});
++	it('does not mutate or freeze inputs when a later node fails validation', () => {
++		const first = node(),
++			second = node();
++		second.children = [second];
++		const source = page({ shapes: [first, second] });
++		expect(() => resolveVisioPageVisibility(source)).toThrowError();
++		expect(Object.isFrozen(first)).toBe(false);
++		expect(source.shapes).toEqual([first, second]);
++	});
++});
+diff --git a/src/visio/visibility-metadata.test.ts b/src/visio/visibility-metadata.test.ts
+new file mode 100644
+index 0000000..2485ceb
+--- /dev/null
++++ b/src/visio/visibility-metadata.test.ts
+@@ -0,0 +1,166 @@
++import { describe, expect, it } from 'vitest';
++import { parseVsdx, resolveVisioPageVisibility } from './index.js';
++import { cell, fixture, rectangle, row, section, shape, xml } from './test-fixtures.js';
++
++async function scene(contents: string, layers: string, masters?: { id: string; shapes: string }[]) {
++	return parseVsdx(
++		await fixture({
++			pages: [{ id: '1', contents: `<Shapes>${contents}</Shapes>` }],
++			...(masters ? { masters } : {}),
++			edit(zip) {
++				zip.file(
++					'visio/pages/pages.xml',
++					xml(
++						'Pages',
++						`<Page ID="1"><PageSheet>${section('Layer', layers)}</PageSheet><Rel r:id="rId1"/></Page>`,
++					),
++				);
++			},
++		}),
++	);
++}
++const layers = (visible: number, printable: number) =>
++	row(0, '', cell('Visible', visible) + cell('Print', printable));
++
++describe('Visio independent saved visibility metadata', () => {
++	const combinations = [0, 1].flatMap((visible) =>
++		[0, 1].flatMap((printable) =>
++			[0, 1].flatMap((guide) => [0, 1].map((noShow) => ({ visible, printable, guide, noShow }))),
++		),
++	);
++	it.each(combinations)(
++		'preserves display reasons independently for %j',
++		async ({ visible, printable, guide, noShow }) => {
++			const doc = await scene(
++				shape(
++					'1',
++					cell('LayerMember', '0') + cell('NoShow', noShow) + rectangle,
++					guide ? 'Type="Guide"' : '',
++				),
++				layers(visible, printable),
++			);
++			const item = doc.pages[0]!.shapes[0]!;
++			expect(item.hidden).toBe(!visible || !!guide || !!noShow);
++			expect(item.visibility).toEqual({
++				layerHidden: !visible,
++				guide: !!guide,
++				noShow: !!noShow,
++				layerPrintSummary: printable ? 'all-enabled' : 'all-disabled',
++			});
++			expect(resolveVisioPageVisibility(doc.pages[0]!)[0]!.hidden).toBe(item.hidden);
++		},
++	);
++	it.each([
++		['', 'unlayered'],
++		[cell('LayerMember', ''), 'unlayered'],
++		[cell('LayerMember', ' '), 'unlayered'],
++		[cell('LayerMember', '0'), 'all-enabled'],
++		[cell('LayerMember', '1'), 'all-disabled'],
++		[cell('LayerMember', '0;00;2'), 'all-enabled'],
++		[cell('LayerMember', '1;3'), 'all-disabled'],
++		[cell('LayerMember', '0;1'), 'mixed'],
++		[cell('LayerMember', '0;1;99'), 'unknown'],
++		[cell('LayerMember', '99'), 'unknown'],
++		[cell('LayerMember', 'RUN()'), 'unknown'],
++		['<Cell N="LayerMember" F="RUN()"/>', 'unknown'],
++	])(
++		'summarizes membership facts for %s without deciding printability',
++		async (membership, expected) => {
++			const doc = await scene(
++				shape('1', membership + rectangle),
++				[1, 0, 1, 0].map((printable, id) => row(id, '', cell('Print', printable))).join(''),
++			);
++			expect(doc.pages[0]!.shapes[0]!.visibility!.layerPrintSummary).toBe(expected);
++		},
++	);
++	it.each([
++		[cell('NonPrinting', 0), false],
++		[cell('NonPrinting', 1), true],
++		[cell('NonPrinting', -1), true],
++		['', undefined],
++		[cell('NonPrinting', 'broken'), undefined],
++		['<Cell N="NonPrinting" F="RUN()"/>', undefined],
++	])('retains only independently usable NonPrinting caches: %s', async (printing, expected) => {
++		const doc = await scene(shape('1', printing + rectangle, 'Type="Guide"'), '');
++		const item = doc.pages[0]!.shapes[0]!;
++		expect(item.hidden).toBe(true);
++		expect(item.visibility!.guide).toBe(true);
++		expect(item.visibility!.nonPrinting).toBe(expected);
++		expect(Object.hasOwn(item.visibility!, 'nonPrinting')).toBe(expected !== undefined);
++	});
++	it('keeps geometry NoShow independent of shape suppression and text', async () => {
++		const doc = await scene(
++			shape(
++				'1',
++				rectangle.replace(
++					'<Section N="Geometry" IX="0">',
++					'<Section N="Geometry" IX="0">' + cell('NoShow', 1),
++				) + '<Text>Still visible text</Text>',
++			),
++			'',
++		);
++		const item = doc.pages[0]!.shapes[0]!;
++		expect(item.hidden).toBe(false);
++		expect(item.visibility!.noShow).toBe(false);
++		expect(item.geometry).toEqual([]);
++		expect(item.text.plainText).toBe('Still visible text');
++	});
++	it('does not reveal a layer-hidden shape with an unusable top-level NoShow cache', async () => {
++		const doc = await scene(
++			shape('1', cell('LayerMember', '0') + '<Cell N="NoShow" F="RUN()"/>' + rectangle),
++			layers(0, 1),
++		);
++		const page = doc.pages[0]!;
++		expect(page.shapes[0]!.visibility!.noShow).toBeUndefined();
++		expect(page.shapes[0]!.hidden).toBe(true);
++		expect(
++			resolveVisioPageVisibility(page, { layerVisibilityOverrides: new Map([['0', true]]) })[0]!
++				.hidden,
++		).toBe(true);
++		// The old short-circuit did not report an unusable NoShow on already-hidden shapes.
++		expect(doc.diagnostics.some((entry) => entry.message.includes('Cell NoShow'))).toBe(false);
++	});
++	it('uses cached master inheritance and local overrides without inheriting group membership into children', async () => {
++		const doc = await scene(
++			shape(
++				'2',
++				`<Shapes>${shape('3', cell('NoShow', 0), 'MasterShape="11"')}</Shapes>`,
++				'Master="5"',
++			),
++			layers(0, 1),
++			[
++				{
++					id: '5',
++					shapes: shape(
++						'10',
++						cell('LayerMember', '0') +
++							'<Shapes>' +
++							shape('11', cell('NoShow', 1) + cell('NonPrinting', 1) + rectangle) +
++							'</Shapes>',
++						'Type="Group"',
++					),
++				},
++			],
++		);
++		const parent = doc.pages[0]!.shapes[0]!;
++		const child = parent.children[0]!;
++		expect(parent.visibility!.layerHidden).toBe(true);
++		expect(parent.hidden).toBe(true);
++		expect(child.layerIds).toEqual([]);
++		expect(child.visibility).toMatchObject({
++			layerHidden: false,
++			noShow: false,
++			nonPrinting: true,
++		});
++		expect(child.hidden).toBe(false);
++		expect(resolveVisioPageVisibility(doc.pages[0]!).map((item) => item.hidden)).toEqual([
++			true,
++			true,
++		]);
++		expect(
++			resolveVisioPageVisibility(doc.pages[0]!, {
++				layerVisibilityOverrides: new Map([['0', true]]),
++			}).map((item) => item.hidden),
++		).toEqual([false, false]);
++	});
++});
+diff --git a/src/visio/visibility.test.ts b/src/visio/visibility.test.ts
+new file mode 100644
+index 0000000..3b95fc2
+--- /dev/null
++++ b/src/visio/visibility.test.ts
+@@ -0,0 +1,178 @@
++import { describe, expect, it } from 'vitest';
++import {
++	parseVsdx,
++	resolveVisioPageVisibility,
++	type VisioLayer,
++	type VisioPage,
++	type VisioShape,
++	type VisioShapeVisibility,
++} from './index.js';
++import { fixture } from './test-fixtures.js';
++
++const template = (await parseVsdx(await fixture())).pages[0]!;
++const layer = (id: string, visible = true): VisioLayer => ({
++	id,
++	name: id,
++	visible,
++	printable: true,
++	locked: false,
++});
++const reasons = (changes: Partial<VisioShapeVisibility> = {}): VisioShapeVisibility => ({
++	layerHidden: false,
++	guide: false,
++	noShow: false,
++	layerPrintSummary: 'unlayered',
++	...changes,
++});
++const shape = (id: string, changes: Partial<VisioShape> = {}): VisioShape => ({
++	...template.shapes[0]!,
++	id,
++	visibility: reasons(),
++	children: [],
++	...changes,
++});
++const page = (shapes: VisioShape[], layers: VisioLayer[] = []): VisioPage => ({
++	...template,
++	shapes,
++	layers,
++});
++const overrides = (...entries: [string, boolean][]) => ({
++	layerVisibilityOverrides: new Map(entries),
++});
++
++describe('pure page-local display visibility resolver', () => {
++	it('reveals only layer-hidden shapes and freezes results without changing source data', () => {
++		const source = page(
++			[
++				shape('layer', {
++					hidden: true,
++					layerIds: ['0'],
++					visibility: reasons({ layerHidden: true }),
++				}),
++				shape('guide', {
++					hidden: true,
++					layerIds: ['0'],
++					visibility: reasons({ layerHidden: true, guide: true }),
++				}),
++				shape('NoShow', {
++					hidden: true,
++					layerIds: ['0'],
++					visibility: reasons({ layerHidden: true, noShow: true }),
++				}),
++			],
++			[layer('0', false)],
++		);
++		const before = structuredClone(source);
++		const result = resolveVisioPageVisibility(source, overrides(['0', true]));
++		expect(result.map((item) => item.hidden)).toEqual([false, true, true]);
++		expect(result.every((item) => !item.layerHidden)).toBe(true);
++		expect(Object.isFrozen(result)).toBe(true);
++		expect(result.every(Object.isFrozen)).toBe(true);
++		expect(result[0]!.shape).toBe(source.shapes[0]);
++		expect(Object.isFrozen(source)).toBe(false);
++		expect(Object.isFrozen(source.shapes[0])).toBe(false);
++		expect(source).toEqual(before);
++	});
++	it('requires every known member layer to be visible and keeps unknown references inert', () => {
++		const source = page(
++			[
++				shape('1', {
++					hidden: true,
++					layerIds: ['0', '1', '99'],
++					visibility: reasons({ layerHidden: true }),
++				}),
++			],
++			[layer('0', false), layer('1', false)],
++		);
++		expect(resolveVisioPageVisibility(source, overrides(['0', true]))[0]!.hidden).toBe(true);
++		expect(resolveVisioPageVisibility(source, overrides(['0', true], ['1', true]))[0]!.hidden).toBe(
++			false,
++		);
++		expect(() => resolveVisioPageVisibility(source, overrides(['99', true]))).toThrowError(
++			'this page',
++		);
++	});
++	it('keeps independent overrides page-local and preserves first duplicate layer semantics', () => {
++		const first = page([shape('1', { layerIds: ['0'] })], [layer('0'), layer('0', false)]);
++		const second = page(
++			[shape('1', { hidden: true, layerIds: ['0'], visibility: reasons({ layerHidden: true }) })],
++			[layer('0', false)],
++		);
++		first.backgroundPageId = second.id;
++		expect(resolveVisioPageVisibility(first)[0]!.layerHidden).toBe(false);
++		expect(resolveVisioPageVisibility(first, overrides(['0', false]))[0]!.hidden).toBe(true);
++		expect(resolveVisioPageVisibility(second)[0]!.hidden).toBe(true);
++		expect(first.layers![0]!.visible).toBe(true);
++	});
++	it('retains saved hidden for legacy scenes even when all layers are made visible', () => {
++		const legacy = shape('1', { hidden: true, layerIds: ['0'] });
++		delete legacy.visibility;
++		const source = page([legacy], [layer('0', false)]);
++		expect(resolveVisioPageVisibility(source, overrides(['0', true]))[0]!.hidden).toBe(true);
++		legacy.hidden = false;
++		expect(resolveVisioPageVisibility(source)[0]!.hidden).toBe(false);
++		expect(resolveVisioPageVisibility(source, overrides(['0', false]))[0]!.hidden).toBe(true);
++	});
++	it.each(['unknown-no-show', 'stale-layer-reason', 'unexplained-hidden', 'malformed-guide'])(
++		'cannot reveal incomplete or inconsistent metadata: %s',
++		(kind) => {
++			const item = shape('1', {
++				hidden: true,
++				layerIds: ['0'],
++				visibility: reasons({ layerHidden: true }),
++			});
++			if (kind === 'unknown-no-show') delete item.visibility!.noShow;
++			if (kind === 'stale-layer-reason') item.visibility!.layerHidden = false;
++			if (kind === 'unexplained-hidden') item.layerIds = [];
++			if (kind === 'malformed-guide')
++				(item.visibility as unknown as { guide: unknown }).guide = 'false';
++			expect(
++				resolveVisioPageVisibility(page([item], [layer('0', false)]), overrides(['0', true]))[0]!
++					.hidden,
++			).toBe(true);
++		},
++	);
++	it('preserves the existing display bit without overrides, including caller modifications', () => {
++		const source = page([
++			shape('1', { hidden: false, visibility: reasons({ guide: true, noShow: true }) }),
++		]);
++		expect(resolveVisioPageVisibility(source)[0]!.hidden).toBe(false);
++		expect(resolveVisioPageVisibility(source, overrides())[0]!.hidden).toBe(false);
++	});
++	it('propagates ancestor suppression without changing member layer IDs or whole-group DisplayMode', () => {
++		const leaf = shape('leaf');
++		const child = shape('child', { kind: 'group', groupDisplayMode: 0, children: [leaf] });
++		const parent = shape('group', {
++			hidden: true,
++			layerIds: ['0'],
++			visibility: reasons({ layerHidden: true }),
++			children: [child],
++		});
++		const source = page([parent], [layer('0', false)]);
++		const saved = resolveVisioPageVisibility(source);
++		expect(saved.map((item) => item.shape.id)).toEqual(['group', 'child', 'leaf']);
++		expect(saved.map((item) => [item.ownHidden, item.inheritedHidden, item.hidden])).toEqual([
++			[true, false, true],
++			[false, true, true],
++			[false, true, true],
++		]);
++		expect(saved.map((item) => item.layerHidden)).toEqual([true, false, false]);
++		expect(
++			resolveVisioPageVisibility(source, overrides(['0', true])).map((item) => item.hidden),
++		).toEqual([false, false, false]);
++		expect(child.layerIds).toEqual([]);
++	});
++	it('does not interpret printable, NonPrinting or group own-data visibility as display hiding', () => {
++		const source = page(
++			[
++				shape('1', {
++					groupDisplayMode: 0,
++					layerIds: ['0'],
++					visibility: reasons({ nonPrinting: true, layerPrintSummary: 'all-disabled' }),
++				}),
++			],
++			[{ ...layer('0'), printable: false }],
++		);
++		expect(resolveVisioPageVisibility(source, overrides(['0', true]))[0]!.hidden).toBe(false);
++	});
++});
+diff --git a/src/visio/visibility.ts b/src/visio/visibility.ts
+new file mode 100644
+index 0000000..2fe23b1
+--- /dev/null
++++ b/src/visio/visibility.ts
+@@ -0,0 +1,145 @@
++import type { VisioLayer, VisioPage, VisioShape } from './model.js';
++import { VisioPackageError } from './package-common.js';
++
++/** Fixed work/allocation budgets, including for caller-constructed scenes. */
++export const VISIO_VISIBILITY_LIMITS = Object.freeze({
++	maxShapes: 25_000,
++	maxDepth: 64,
++	maxLayers: 25_000,
++	maxMemberships: 100_000,
++	maxMembershipsPerShape: 1024,
++	maxLayerIdLength: 256,
++});
++
++export interface VisioVisibilityOptions {
++	/** Exact IDs from this page's layers; values replace saved Visible, not Print. */
++	layerVisibilityOverrides?: ReadonlyMap<string, boolean>;
++}
++export interface VisioResolvedShapeVisibility {
++	/** Live input reference; the resolver never mutates or freezes the source shape. */
++	readonly shape: VisioShape;
++	/** Whole-shape suppression before ancestor suppression. */
++	readonly ownHidden: boolean;
++	readonly inheritedHidden: boolean;
++	readonly hidden: boolean;
++	/** Suppression from this shape's own memberships, excluding ancestor memberships. */
++	readonly layerHidden: boolean;
++}
++
++function invalid(message: string): never {
++	throw new VisioPackageError('INVALID_VISIBILITY_INPUT', message);
++}
++function bounded(count: number, maximum: number, name: string): void {
++	if (!Number.isSafeInteger(count) || count < 0 || count > maximum)
++		throw new VisioPackageError('VISIBILITY_LIMIT', `Visibility ${name} limit exceeded.`);
++}
++function layerId(id: string): void {
++	if (typeof id !== 'string' || !id.length) invalid('Layer IDs must be nonempty strings.');
++	bounded(id.length, VISIO_VISIBILITY_LIMITS.maxLayerIdLength, 'layer ID length');
++}
++
++/**
++ * Resolve saved display visibility, optionally replacing page-local layer Visible flags.
++ * Returns frozen preorder records in a frozen array. The source references stay live.
++ *
++ * No overrides preserves `hidden` exactly (plus existing ancestor suppression). With
++ * overrides, only complete, consistent metadata may reveal a saved layer-hidden shape.
++ * Legacy scenes or unknown NoShow caches can be hidden further but never revealed.
++ * Missing layer references are ignored, matching parsing. Unknown override IDs reject.
++ *
++ * This is not a print resolver: Print, NonPrinting, Geometry.NoShow, HideText and group
++ * own-data DisplayMode remain independent. DisplayMode=0 never hides group members.
++ * Resolve background pages separately with their own layers and overrides.
++ *
++ * Display membership uses MS-VSDX 2.2.3.2.2: any invisible layer suppresses its shape.
++ * https://learn.microsoft.com/en-us/openspecs/sharepoint_protocols/ms-vsdx/1b69f6b8-31d4-4b28-bc37-70ee4956d8cb
++ */
++export function resolveVisioPageVisibility(
++	page: VisioPage,
++	options: VisioVisibilityOptions = {},
++): readonly VisioResolvedShapeVisibility[] {
++	const limits = VISIO_VISIBILITY_LIMITS;
++	const sourceLayers = page.layers ?? [];
++	if (!Array.isArray(sourceLayers) || !Array.isArray(page.shapes))
++		invalid('Page layers and shapes must be arrays.');
++	bounded(sourceLayers.length, limits.maxLayers, 'layer count');
++	const layers = new Map<string, VisioLayer>();
++	for (const layer of sourceLayers) {
++		if (!layer || typeof layer.visible !== 'boolean') invalid('Layer Visible must be boolean.');
++		layerId(layer.id);
++		// Match parser indexing when duplicate saved rows are present.
++		if (!layers.has(layer.id)) layers.set(layer.id, layer);
++	}
++	const overrides = new Map<string, boolean>();
++	if (options.layerVisibilityOverrides !== undefined) {
++		const source = options.layerVisibilityOverrides;
++		if (!source || typeof source[Symbol.iterator] !== 'function')
++			invalid('Layer visibility overrides must be an iterable map.');
++		bounded(source.size, limits.maxLayers, 'override count');
++		let entries = 0;
++		for (const [id, visible] of source) {
++			bounded(++entries, limits.maxLayers, 'override count');
++			layerId(id);
++			if (!layers.has(id)) invalid('Layer visibility overrides must reference this page.');
++			if (typeof visible !== 'boolean') invalid('Layer visibility overrides must be boolean.');
++			overrides.set(id, visible);
++		}
++	}
++	const result: VisioResolvedShapeVisibility[] = [];
++	const seen = new Set<VisioShape>();
++	const stack = [{ shapes: page.shapes, index: 0, inheritedHidden: false }];
++	let memberships = 0;
++	while (stack.length) {
++		const frame = stack[stack.length - 1]!;
++		if (frame.index >= frame.shapes.length) {
++			stack.pop();
++			continue;
++		}
++		bounded(result.length + frame.shapes.length - frame.index, limits.maxShapes, 'shape count');
++		const shape = frame.shapes[frame.index++]!;
++		if (!shape || typeof shape.hidden !== 'boolean' || !Array.isArray(shape.children))
++			invalid('Each shape needs boolean hidden and an array of children.');
++		if (seen.has(shape)) invalid('Shape trees cannot contain cycles or repeated shape objects.');
++		seen.add(shape);
++		const ids = shape.layerIds ?? [];
++		if (!Array.isArray(ids)) invalid('Shape layer memberships must be an array.');
++		bounded(ids.length, limits.maxMembershipsPerShape, 'shape membership count');
++		memberships += ids.length;
++		bounded(memberships, limits.maxMemberships, 'membership count');
++		let savedLayerHidden = false,
++			layerHidden = false;
++		for (const id of ids) {
++			layerId(id);
++			const layer = layers.get(id);
++			savedLayerHidden ||= layer?.visible === false;
++			layerHidden ||= (overrides.get(id) ?? layer?.visible) === false;
++		}
++		let ownHidden = shape.hidden;
++		if (overrides.size) {
++			const reasons = shape.visibility;
++			const complete =
++				typeof reasons?.guide === 'boolean' &&
++				typeof reasons.noShow === 'boolean' &&
++				typeof reasons.layerHidden === 'boolean' &&
++				reasons.layerHidden === savedLayerHidden &&
++				shape.hidden === (reasons.guide || reasons.noShow || reasons.layerHidden);
++			const intrinsicHidden = reasons?.guide === true || reasons?.noShow === true;
++			ownHidden = layerHidden || intrinsicHidden || (!complete && shape.hidden);
++		}
++		const hidden = frame.inheritedHidden || ownHidden;
++		result.push(
++			Object.freeze({
++				shape,
++				ownHidden,
++				inheritedHidden: frame.inheritedHidden,
++				hidden,
++				layerHidden,
++			}),
++		);
++		if (shape.children.length) {
++			bounded(stack.length, limits.maxDepth, 'shape depth');
++			stack.push({ shapes: shape.children, index: 0, inheritedHidden: hidden });
++		}
++	}
++	return Object.freeze(result);
 +}
 diff --git a/src/visio/xml-validation.ts b/src/visio/xml-validation.ts
 new file mode 100644

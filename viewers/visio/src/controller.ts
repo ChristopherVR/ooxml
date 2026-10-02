@@ -37,6 +37,7 @@ export class ViewerController {
 	#loadId = 0;
 	#destroyed = false;
 	#revision = 0;
+	#documentGeneration = 0;
 	#searchIndex: DocumentTextIndex | null = null;
 	constructor(
 		private readonly parser: Parser = parseVsdx,
@@ -47,6 +48,11 @@ export class ViewerController {
 	) {}
 	get state(): ViewerState {
 		return this.#state;
+	}
+	/** Accepted document replacements, including the same object, invalidate captured artifacts. */
+	get documentGeneration(): number {
+		this.#assertAlive();
+		return this.#documentGeneration;
 	}
 	subscribe(listener: (state: ViewerState) => void): () => void {
 		this.#assertAlive();
@@ -62,6 +68,7 @@ export class ViewerController {
 	setDocument(document: VisioDocument | null): void {
 		this.#assertAlive();
 		if (document) assertViewableDocument(document);
+		++this.#documentGeneration;
 		this.#loadId++;
 		this.parser.cancel?.();
 		this.#searchIndex = null;
@@ -165,6 +172,7 @@ export class ViewerController {
 			throw error;
 		}
 		this.#searchIndex = null;
+		++this.#documentGeneration;
 		this.#change({
 			document,
 			pageIndex: 0,
@@ -184,6 +192,7 @@ export class ViewerController {
 	destroy(): void {
 		if (this.#destroyed) return;
 		this.#destroyed = true;
+		++this.#documentGeneration;
 		++this.#loadId;
 		this.parser.cancel?.();
 		this.#subscribers.clear();

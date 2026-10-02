@@ -52,6 +52,10 @@ vi.mock('../../../src/binding.js', () => ({
 						diagnostics: [],
 					};
 				}),
+				createPrintSnapshot: vi.fn(() => {
+					assertAlive();
+					return { appearance: 'saved-display', pages: [], byteLength: 0 };
+				}),
 			} as unknown as MountedViewer,
 		});
 		mocks.instances.push(instance);

@@ -337,6 +337,41 @@ describe('current-page SVG contract across all native adapters', () => {
 	}
 });
 
+describe('current-page immutable print artifacts across all native adapters', () => {
+	for (const [framework, mountNative] of Object.entries(mounts)) {
+		it(`${framework}: snapshots use the shared renderer, retain state and reject after unmount`, async () => {
+			const host = document.createElement('div');
+			document.body.append(host);
+			const events = vi.fn();
+			const mounted = await mountNative(host, {
+				document: demoDocument,
+				pageIndex: 1,
+				zoom: 2,
+				events: { 'page-change': events, 'shape-select': events },
+			});
+			mounted.handle.controller.setSearchQuery('framework');
+			mounted.handle.controller.selectShape({ id: 'a1', name: 'Your framework', pageId: '2' });
+			events.mockClear();
+			const state = mounted.handle.controller.state;
+			const before = mounted.handle.element.shadowRoot!.innerHTML;
+			const snapshot = mounted.handle.createPrintSnapshot({ limits: { maxPages: 1 } });
+			expect(snapshot.pageIndices).toEqual([1]);
+			expect(snapshot.pages[0]!.pageName).toBe('Architecture');
+			expect(snapshot.appearance).toBe('saved-display');
+			expect(Object.isFrozen(snapshot.pages[0]!.diagnostics)).toBe(true);
+			expect(snapshot.pages[0]!.svg).not.toMatch(/data-search-result|data-selected|data-shape-id/);
+			expect(mounted.handle.controller.state).toBe(state);
+			expect(mounted.handle.element.shadowRoot!.innerHTML).toBe(before);
+			expect(events).not.toHaveBeenCalled();
+			expect(() => mounted.handle.createPrintSnapshot({ limits: { maxTotalBytes: 1 } })).toThrow();
+			expect(mounted.handle.controller.state).toBe(state);
+			await mounted.destroy();
+			expect(() => mounted.handle.createPrintSnapshot()).toThrow(/not mounted|destroyed/);
+			host.remove();
+		});
+	}
+});
+
 describe('document text search across all native adapters', () => {
 	for (const [framework, mountNative] of Object.entries(mounts)) {
 		it(`${framework}: shared UI, imperative search, callbacks, replacement and cleanup`, async () => {

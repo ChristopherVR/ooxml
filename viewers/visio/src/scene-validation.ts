@@ -5,9 +5,11 @@ import {
 	type VisioShape,
 	type VisioImage,
 } from 'ooxml-core/visio';
+import { assertShapeDetails } from './scene-details.js';
 
 export const MAX_INPUT_BYTES = 32 * 1024 * 1024;
 const MAX_DIMENSION = 10_000;
+const MAX_SHAPES = 25_000;
 function finite(value: number, label: string, min = -MAX_DIMENSION, max = MAX_DIMENSION): void {
 	if (!Number.isFinite(value) || value < min || value > max)
 		throw new Error(`The scene has an invalid ${label}.`);
@@ -21,6 +23,7 @@ export function assertViewableDocument(model: VisioDocument): void {
 		model.format !== 'vsdx' ||
 		!Array.isArray(model.pages) ||
 		model.pages.length > 256 ||
+		!Array.isArray(model.diagnostics) ||
 		model.diagnostics.length > 2000
 	)
 		throw new Error('The scene has an invalid page list.');
@@ -31,11 +34,13 @@ export function assertViewableDocument(model: VisioDocument): void {
 		imageBytes = 0,
 		geometryCount = 0,
 		uniquePixels = 0,
-		drawnPixels = 0;
+		drawnPixels = 0,
+		layerCount = 0,
+		paragraphCount = 0,
+		gradientStops = 0;
 	const imageResources = new Map<Uint8Array, VisioImage>();
-	let metadataBytes = 0,
-		detailCharacters = 0,
-		detailRows = 0;
+	let metadataBytes = 0;
+	const detailBudget = { rows: 0, characters: 0 };
 	const label = (value: string, limit = 4096) => {
 		if (typeof value !== 'string' || value.length > limit)
 			throw new Error('The scene exceeds safe metadata string limits.');
@@ -55,23 +60,37 @@ export function assertViewableDocument(model: VisioDocument): void {
 		if (pageIds.has(page.id)) throw new Error('The scene has duplicate page identities.');
 		pageIds.add(page.id);
 		label(page.name);
+		if (page.layers !== undefined && !Array.isArray(page.layers))
+			throw new Error('The scene has an invalid layer list.');
+		layerCount += page.layers?.length ?? 0;
+		if (layerCount > 25_000) throw new Error('The scene exceeds safe layer count limits.');
 		for (const layer of page.layers ?? []) {
 			label(layer.id, 256);
 			label(layer.name);
+			for (const flag of [layer.visible, layer.printable, layer.locked])
+				member(flag, [true, false], 'layer flag');
 		}
 		finite(page.width, 'page width', 0.001);
 		finite(page.height, 'page height', 0.001);
+		if (!Array.isArray(page.shapes) || stack.length + page.shapes.length > MAX_SHAPES)
+			throw new Error('The scene exceeds safe shape count limits or has an invalid shape list.');
 		const ids = new Set<string>();
 		for (const shape of page.shapes) stack.push({ shape, depth: 0, ids });
 	}
 	while (stack.length) {
 		const { shape, depth, ids } = stack.pop()!;
-		if (depth > 64 || seen.has(shape) || seen.size >= 25_000)
+		if (depth > 64 || seen.has(shape) || seen.size >= MAX_SHAPES)
 			throw new Error('The scene exceeds safe shape depth/count limits or contains a cycle.');
 		seen.add(shape);
+		if (
+			!Array.isArray(shape.children) ||
+			seen.size + stack.length + shape.children.length > MAX_SHAPES
+		)
+			throw new Error('The scene exceeds safe shape count limits or has an invalid child list.');
 		label(shape.id, 1024);
 		if (ids.has(shape.id)) throw new Error('The scene has duplicate shape identities on one page.');
 		ids.add(shape.id);
+		member(shape.hidden, [true, false], 'hidden flag');
 		member(shape.kind, ['shape', 'group', 'connector', 'foreign'], 'shape kind');
 		if (shape.groupDisplayMode !== undefined)
 			member(shape.groupDisplayMode, [0, 1, 2], 'group display mode');
@@ -85,19 +104,17 @@ export function assertViewableDocument(model: VisioDocument): void {
 		if (shape.text.backgroundColor) label(shape.text.backgroundColor, 256);
 		if (shape.text.backgroundOpacity !== undefined)
 			finite(shape.text.backgroundOpacity, 'text background opacity', 0, 1);
-		const details = [...(shape.shapeData ?? []), ...(shape.hyperlinks ?? [])];
-		if (details.length > 1024 || (detailRows += details.length) > 100_000)
-			throw new Error('The scene exceeds shape metadata row limits.');
-		const detail = (value: unknown) => {
-			if (typeof value === 'string') {
-				if (value.length > 8192 || (detailCharacters += value.length) > 5_000_000)
-					throw new Error('The scene exceeds shape metadata string limits.');
-			} else if (typeof value === 'number' && !Number.isFinite(value))
-				throw new Error('The scene has invalid numeric metadata.');
-		};
-		for (const row of details) {
-			for (const value of Object.values(row)) detail(value);
-			if ('target' in row) for (const value of Object.values(row.target)) detail(value);
+		assertShapeDetails(shape, detailBudget);
+		if (shape.visibility) {
+			member(shape.visibility.layerHidden, [true, false], 'layer visibility metadata');
+			member(shape.visibility.guide, [true, false], 'guide visibility metadata');
+			member(shape.visibility.noShow, [undefined, true, false], 'NoShow visibility metadata');
+			member(shape.visibility.nonPrinting, [undefined, true, false], 'NonPrinting metadata');
+			member(
+				shape.visibility.layerPrintSummary,
+				['unlayered', 'all-enabled', 'all-disabled', 'mixed', 'unknown'],
+				'layer print summary',
+			);
 		}
 		finite(shape.width, 'shape width', 0);
 		finite(shape.height, 'shape height', 0);
@@ -134,12 +151,15 @@ export function assertViewableDocument(model: VisioDocument): void {
 			const gradient = shape.style.fillGradient;
 			if (
 				gradient.type !== 'linear' ||
+				!Array.isArray(gradient.stops) ||
 				gradient.stops.length < 2 ||
 				gradient.stops.length > 128 ||
 				gradient.start.length !== 2 ||
 				gradient.end.length !== 2
 			)
 				throw new Error('The scene has an invalid fill gradient.');
+			if ((gradientStops += gradient.stops.length) > 100_000)
+				throw new Error('The scene exceeds aggregate gradient stop limits.');
 			for (const value of [...gradient.start, ...gradient.end])
 				finite(value, 'gradient position', -20_000, 20_000);
 			let offset = -1;
@@ -151,25 +171,46 @@ export function assertViewableDocument(model: VisioDocument): void {
 				offset = stop.offset;
 			}
 		}
+		if (typeof shape.text.plainText !== 'string')
+			throw new Error('The scene has invalid plain text.');
 		textBytes += shape.text.plainText.length;
+		if (!Array.isArray(shape.text.runs) || runCount + shape.text.runs.length > 100_000)
+			throw new Error('The scene exceeds safe text run limits or has an invalid run list.');
 		for (const run of shape.text.runs) {
 			label(run.fontFamily, 1024);
 			label(run.color, 256);
+			if (typeof run.text !== 'string') throw new Error('The scene has invalid run text.');
 			textBytes += run.text.length;
 			++runCount;
 			finite(run.fontSize, 'run font size', 0, 100);
 		}
+		if (!Array.isArray(shape.geometry) || geometryCount + shape.geometry.length > 100_000)
+			throw new Error('The scene exceeds safe geometry limits or has an invalid geometry list.');
 		for (const geometry of shape.geometry) {
+			if (typeof geometry.path !== 'string') throw new Error('The scene has invalid path text.');
+			member(geometry.fill, [true, false], 'geometry fill flag');
+			member(geometry.stroke, [true, false], 'geometry stroke flag');
 			pathBytes += geometry.path.length;
 			geometryCount++;
 		}
 		if (geometryCount > 100_000) throw new Error('The scene exceeds safe geometry limits.');
 		if (pathBytes > 16_000_000 || textBytes > 5_000_000 || runCount > 100_000)
 			throw new Error('The scene exceeds safe path/text limits.');
-		for (const value of Object.values(shape.text.margins)) finite(value, 'text margin');
-		if ((shape.text.paragraphs?.length ?? 0) > 5000)
+		for (const value of [
+			shape.text.margins.left,
+			shape.text.margins.right,
+			shape.text.margins.top,
+			shape.text.margins.bottom,
+		])
+			finite(value, 'text margin');
+		const paragraphs = shape.text.paragraphs ?? [];
+		if (
+			!Array.isArray(paragraphs) ||
+			paragraphs.length > 5000 ||
+			(paragraphCount += paragraphs.length) > 50_000
+		)
 			throw new Error('The scene exceeds safe paragraph limits.');
-		for (const paragraph of shape.text.paragraphs ?? []) {
+		for (const paragraph of paragraphs) {
 			member(paragraph.direction, ['ltr', 'rtl'], 'paragraph direction');
 			member(
 				paragraph.horizontalAlign,

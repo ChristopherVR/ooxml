@@ -7,6 +7,7 @@
 - `src/document-text-search.ts`: bounded literal matching over normalized visible shape text, with immutable page-scoped results. The shared controller owns navigation and reentrancy checks.
 - `src/render-svg.ts` and `src/render-text.ts`: SVG presentation and rendering warnings.
 - `src/export-svg.ts`: bounded, static current-page serialization through the same SVG renderer, with embedded raster resources and compatibility metadata.
+- `src/print-snapshot.ts`: side-effect-free selected-page artifacts, aggregate budgets and preserved diagnostics. It does not create print frames or implement printer policy.
 - `src/viewer-element.ts`: shared browser surface.
 - `src/contract.ts` and `src/binding.ts`: properties, events, client-only mount/update/load/fit/exportSvg/destroy lifecycle. Reentrant newer updates supersede the remaining older patch.
 - Framework wrappers: framework lifecycle and event/prop forwarding only. No per-framework parser, rendering or geometry fork.

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { mountFrameworkViewer, viewerHandle, viewerOptions, type MountedViewer, type ViewerProps, type VsdxSource, type SvgExportOptions } from './common.js';
+  import { mountFrameworkViewer, viewerHandle, viewerOptions, type MountedViewer, type ViewerProps, type VsdxSource, type SvgExportOptions, type CurrentPagePrintSnapshotOptions } from './common.js';
   type Props = ViewerProps & { class?: string; style?: string };
   let { document, pageIndex, zoom, showToolbar, events, class: className, style }: Props = $props();
   const options = $derived({ document, pageIndex, zoom, showToolbar, events } satisfies Required<ViewerProps>);
@@ -17,5 +17,6 @@
   export function load(source: VsdxSource) { return handle.load(source); }
   export function fit() { handle.fit(); }
   export function exportSvg(options?: SvgExportOptions) { return handle.exportSvg(options); }
+  export function createPrintSnapshot(options?: CurrentPagePrintSnapshotOptions) { return handle.createPrintSnapshot(options); }
 </script>
 <div class={className} {style} use:attach={options}></div>

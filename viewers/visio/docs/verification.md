@@ -2,18 +2,20 @@
 
 Status: local development evidence, 2026-10-02. Full Microsoft Visio parity is not established.
 
-Current focused checkpoint: 582 core Visio tests, 186 viewer tests, 60 framework/SSR tests and 18 documentation tests pass. Both core TypeScript projects, viewer/binding typechecks, production builds and worker/packed-consumer checks pass. The earlier full core run at the 423-test Visio checkpoint recorded 16,417 passes, 231 skips and one failure: the unchanged PowerPoint AES-256 test exceeded its existing 20-second timeout under aggregate load. Its entire crypto file passes all 72 tests when rerun alone. The full core build, all 16 non-CLI packed ESM/CJS exports and 47 script tests pass. The original aggregate run is not recorded as green.
+Current focused checkpoint: 656 core Visio tests, 264 viewer tests, 66 framework/SSR tests and 18 documentation tests pass. Both core TypeScript projects, viewer/binding typechecks, production builds and worker/packed-consumer checks pass. The earlier full core run at the 423-test Visio checkpoint recorded 16,417 passes, 231 skips and one failure: the unchanged PowerPoint AES-256 test exceeded its existing 20-second timeout under aggregate load. Its entire crypto file passes all 72 tests when rerun alone. The full core build, all 16 non-CLI packed ESM/CJS exports and 47 script tests pass. The original aggregate run is not recorded as green.
 
 ## What has been exercised
 
 - Strict TypeScript for the viewer and core; the existing relaxed PowerPoint project also remains type-correct.
 - Core ZIP/XML/security, inheritance, geometry, text, layer and raster tests. The earlier broad core result and its unrelated timeout are reported above. Focused counts identify the frozen local checkpoint; later feature additions must be rerun before their own checkpoint.
-- Viewer controller, resource lifecycle, source races, page-scoped selection, renderer safety and text-work budgets in a DOM test environment. Bounded document text search adds31 index/controller/UI regressions and six native-adapter cases, including reentrant navigation and unchanged-selection rendering work.
-- Actual React, Vue, Angular, Svelte, Solid and vanilla lifecycle integration. The binding package has 55 DOM-environment tests and five separate no-DOM tests, including selected React/Vue hydration checks.
+- Viewer controller, resource lifecycle, source races, page-scoped selection, renderer safety and text-work budgets in a DOM test environment. Bounded document text search adds 31 index/controller/UI regressions and six native-adapter cases, including reentrant navigation and unchanged-selection rendering work.
+- Actual React, Vue, Angular, Svelte, Solid and vanilla lifecycle integration. The binding package has 61 DOM-environment tests and five separate no-DOM tests, including selected React/Vue hydration checks.
 - Static documentation contracts: local/base-relative links, landmarks, labels, color contrast, responsive/reduced-motion rules and control-state tests.
 - Production multipage build and parser worker bundle. The actual worker bundle parses a synthetic VSDX and returns structured errors in an isolated Node worker. This is not a browser/CSP test.
 - The actual packed root artifact installs into a fresh consumer with the unreleased local core. ESM imports, declarations, a fresh Vite build and the packaged worker's valid/error paths pass. Framework adapters remain private source integrations, not standalone published artifacts.
 - Bounded static SVG export passes shared API, lifecycle, XML-safety and amplification tests across all six handles. Original PNG/JPEG/GIF raster scenes pass dimension, crop, flip, alpha and shared-resource pixel assertions through librsvg 2.60.0/Cairo 1.18.4, with native canvas 1.0.10 generating and inspecting raster pixels. This is secondary-renderer evidence; the installed native canvas SVG decoder omits symbols/embedded raster images and is not used as the SVG oracle.
+- Immutable print snapshots pass bounded composition, source-mutation isolation, copied-resource, current-page handle and all-six-adapter tests. Independent adversarial review passed 138 focused checks, including depth boundaries, non-array collections, aggregate paragraphs/gradients, serializer reentry and copy-time resource insertion. The four-page 60973 drawing produces 275,842 SVG bytes from 423 composed shapes. Snapshots preserve saved display visibility; they do not invoke printing or implement printer settings.
+- Separate cached visibility reasons and a bounded core layer-visibility resolver pass 74 tests. The original display-hidden flags remain unchanged across the 19-file real corpus.
 - The core integration patch includes tracked changes and all new files. It applies to a clean checkout at the pinned revision. The setup script refuses mismatched revisions or unexpected source changes, uses a pinned npm lock and builds the Visio subpath in an isolated sibling setup.
 
 ## Real upstream corpus
@@ -26,6 +28,8 @@ Fixture bytes are kept outside this repository. Separate provenance records reta
 
 The 14 libvisio drawings include embedded EMF previews. Those previews were converted locally through `emf-converter` and `@napi-rs/canvas`. The current viewer's SVG output was independently rasterized with native canvas font measurement. Uncropped page images and normalized content crops are retained separately, with generator/decoder versions and hashes.
 
+Known upstream converter reports describe driver-string, clip-replacement and mapping-mode errors; these reports have not yet been independently reproduced here. Converter output remains secondary evidence, and converter adoption requires a separate bounded-record/security review.
+
 This process detects gross omissions and transformation/color problems. It cannot certify browser rendering, exact fonts, full-page placement or native Visio fidelity. Several previews are stale or empty:
 
 - `qs-box`: preview fill disagrees with the current drawing/upstream assertion
@@ -34,7 +38,7 @@ This process detects gross omissions and transformation/color problems. It canno
 - `tdf154379-QuickStyleFillMatrix`: preview contains a larger process; the current file has a single document shape
 - `github260`: embedded preview decodes empty/transparent, so it is not a visual oracle
 
-These cases are excluded as authoritative fidelity oracles. A thumbnail mismatch is investigated against package XML before any code change. Solid theme-color assertions and actual gradient rendering are recorded separately. The post-fix SVGs contain true linear gradients. Saved corner rounding is implemented for closed axis-aligned rectangles and confirmed on five shapes in the 60973 source drawing. Other rounding cases remain explicitly unsupported. Cached dash patterns2-23 now use bounded core-normalized stroke-width ratios, with inference diagnostics. Six actual pattern23 shapes in60973 retain their saved thin stroke widths without an arbitrary floor. Transparent/NoLine geometry no longer renders arrowheads. Numerical spacing still requires native reference comparison.
+These cases are excluded as authoritative fidelity oracles. A thumbnail mismatch is investigated against package XML before any code change. Solid theme-color assertions and actual gradient rendering are recorded separately. The post-fix SVGs contain true linear gradients. Saved corner rounding is implemented for closed axis-aligned rectangles and confirmed on five shapes in the 60973 source drawing. Other rounding cases remain explicitly unsupported. Cached dash patterns 2-23 now use bounded core-normalized stroke-width ratios, with inference diagnostics. Six actual pattern 23 shapes in 60973 retain their saved thin stroke widths without an arbitrary floor. Transparent/NoLine geometry no longer renders arrowheads. Numerical spacing still requires native reference comparison.
 
 ## Not verified
 
