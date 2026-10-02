@@ -16,6 +16,14 @@ function setup(saved, systemDark = false) {
 test('shell preference overrides the legacy Visio preference and updates live', () => {
 	const { dom, root, dispose } = setup('dark');
 	assert.equal(root.dataset.theme, 'dark');
+	dom.window.localStorage.setItem('visio-docs-theme', 'light');
+	dom.window.dispatchEvent(
+		new dom.window.StorageEvent('storage', {
+			key: 'visio-docs-theme',
+			newValue: 'light',
+		}),
+	);
+	assert.equal(root.dataset.theme, 'dark');
 	dom.window.dispatchEvent(
 		new dom.window.StorageEvent('storage', {
 			key: 'vitepress-theme-appearance',

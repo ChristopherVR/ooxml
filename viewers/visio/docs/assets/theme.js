@@ -45,7 +45,15 @@ export function initVisioTheme(win) {
 		}
 	}
 	function storage(event) {
-		if (event.key === key || event.key === null || event.key === legacyKey) apply(event.newValue);
+		if (event.key === key || event.key === null) apply(event.newValue);
+		else if (event.key === legacyKey) {
+			try {
+				if (win.localStorage.getItem(key) !== null) return;
+			} catch {
+				/* With blocked storage, use the explicit event preference. */
+			}
+			apply(event.newValue);
+		}
 	}
 	function systemChange() {
 		if (!preference) apply(null);
