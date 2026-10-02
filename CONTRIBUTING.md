@@ -17,8 +17,8 @@ This repository is the single package `@christophervr/ooxml-core`: all the logic
 You need [Bun](https://bun.sh/) and Node.js 22 or newer.
 
 ```bash
-git clone https://github.com/ChristopherVR/ooxml-core.git
-cd ooxml-core
+git clone https://github.com/ChristopherVR/ooxml.git
+cd ooxml
 bun install
 bun run typecheck   # strict project and the pptx project
 bun run test

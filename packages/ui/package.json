@@ -10,15 +10,15 @@
 		"ribbon",
 		"web-components"
 	],
-	"homepage": "https://github.com/ChristopherVR/ooxml-core/tree/main/packages/ui#readme",
+	"homepage": "https://github.com/ChristopherVR/ooxml/tree/main/packages/ui#readme",
 	"bugs": {
-		"url": "https://github.com/ChristopherVR/ooxml-core/issues"
+		"url": "https://github.com/ChristopherVR/ooxml/issues"
 	},
 	"license": "Apache-2.0",
 	"author": "ChristopherVR",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/ChristopherVR/ooxml-core.git",
+		"url": "git+https://github.com/ChristopherVR/ooxml.git",
 		"directory": "packages/ui"
 	},
 	"files": [

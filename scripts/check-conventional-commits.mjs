@@ -156,7 +156,7 @@ function main() {
 
 	console.log(
 		'\nCommit types drive published version bumps here, so this is load-bearing.\n' +
-			'See https://github.com/ChristopherVR/ooxml-core/blob/main/CONTRIBUTING.md#commit-conventions',
+			'See https://github.com/ChristopherVR/ooxml/blob/main/CONTRIBUTING.md#commit-conventions',
 	);
 	process.exit(1);
 }

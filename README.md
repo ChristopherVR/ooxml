@@ -6,10 +6,10 @@
 One package, one XML model, every format: Word, PowerPoint and the shared building blocks beneath them. Spreadsheets, Visio and more are planned.
 
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
-[![CI](https://github.com/ChristopherVR/ooxml-core/actions/workflows/ci.yml/badge.svg)](https://github.com/ChristopherVR/ooxml-core/actions/workflows/ci.yml)
+[![CI](https://github.com/ChristopherVR/ooxml/actions/workflows/ci.yml/badge.svg)](https://github.com/ChristopherVR/ooxml/actions/workflows/ci.yml)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 
-[**Try the apps**](https://christophervr.github.io/ooxml-core/) &nbsp;&middot;&nbsp;
+[**Try the apps**](https://christophervr.github.io/ooxml/) &nbsp;&middot;&nbsp;
 [**Packages and areas**](#one-package-many-areas) &nbsp;&middot;&nbsp;
 [**Install**](#install) &nbsp;&middot;&nbsp;
 [**Examples**](#examples) &nbsp;&middot;&nbsp;
@@ -117,7 +117,7 @@ The working agreements are in [AGENTS.md](AGENTS.md), and [PROVENANCE.md](PROVEN
 ## Related projects
 
 - [docx-viewer](https://github.com/ChristopherVR/docx-viewer) and [pptx-viewer](https://github.com/ChristopherVR/pptx-viewer): the editors and viewers built on this package.
-- [OOXML Office](https://christophervr.github.io/ooxml-core/): the suite's launcher page (`site/`), which opens the demos those viewers deploy to their own GitHub Pages sites.
+- [OOXML Office](https://christophervr.github.io/ooxml/): the suite's launcher page (`site/`), which opens the demos those viewers deploy to their own GitHub Pages sites.
 - [ole2](https://github.com/ChristopherVR/ole2): the compound-file container and legacy binary Office codecs.
 
 ## License

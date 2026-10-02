@@ -8,7 +8,7 @@ The package parses untrusted Office files (OOXML packages, XML parts, embedded m
 
 ## Reporting a vulnerability
 
-Please do **not** open a public issue. Report it through a [private GitHub security advisory](https://github.com/ChristopherVR/ooxml-core/security/advisories/new) and include:
+Please do **not** open a public issue. Report it through a [private GitHub security advisory](https://github.com/ChristopherVR/ooxml/security/advisories/new) and include:
 
 - the affected area (`xml`, `opc`, `docx`, `pptx`, ...) and version,
 - a minimal file or input that reproduces it, and the observed impact,

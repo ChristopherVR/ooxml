@@ -55,7 +55,7 @@ moderation decisions when appropriate.
 
 This Code of Conduct applies within all community spaces for this project -
 issues, pull requests, discussions, and code review on the
-[GitHub repository](https://github.com/ChristopherVR/ooxml-core) - and also
+[GitHub repository](https://github.com/ChristopherVR/ooxml) - and also
 applies when an individual is officially representing the project in public
 spaces.
 
@@ -63,7 +63,7 @@ spaces.
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
 reported to the maintainer via a
-[private GitHub security advisory](https://github.com/ChristopherVR/ooxml-core/security/advisories/new)
+[private GitHub security advisory](https://github.com/ChristopherVR/ooxml/security/advisories/new)
 (the same private-reporting channel used for security issues, per
 [SECURITY.md](SECURITY.md)) or by opening a regular issue asking the
 maintainer to reach out privately; do not name or shame the other party in a

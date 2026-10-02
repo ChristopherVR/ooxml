@@ -135,7 +135,7 @@ npm publish --access public
 ```
 
 Afterwards, on npmjs.com, package Settings, Trusted Publisher: GitHub Actions, repository
-`ChristopherVR/ooxml-core`, workflow `release.yml`, environment `npm`. From then on only the
+`ChristopherVR/ooxml`, workflow `release.yml`, environment `npm`. From then on only the
 workflow publishes it (OIDC, provenance, no token).
 Do not tag by hand. The core `^0.1.0` range must resolve on the registry at first publish
 (core 0.1.0 is published).

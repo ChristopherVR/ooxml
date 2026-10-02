@@ -30,7 +30,7 @@ conventional commits.
 # GITHUB_TOKEN (the [remote.github] block enriches author handles when a token
 # is available, but is not required for the file to generate).
 body = """
-{% set repo = "https://github.com/ChristopherVR/ooxml-core" %}\
+{% set repo = "https://github.com/ChristopherVR/ooxml" %}\
 {% if version %}\
     ## [{{ version | split(pat="@") | last | trim_start_matches(pat="v") }}]({{ repo }}/releases/tag/{{ version }}) - {{ timestamp | date(format="%Y-%m-%d") }}
 {% else %}\
@@ -59,7 +59,7 @@ split_commits = false
 # Tidy up raw subjects before grouping.
 commit_preprocessors = [
 	# Turn "#123" issue refs into links to the repo.
-	{ pattern = '\((\w+\s)?#([0-9]+)\)', replace = "([#${2}](https://github.com/ChristopherVR/ooxml-core/issues/${2}))" },
+	{ pattern = '\((\w+\s)?#([0-9]+)\)', replace = "([#${2}](https://github.com/ChristopherVR/ooxml/issues/${2}))" },
 ]
 
 # Map commit types → changelog sections. Order here = order in the output.
@@ -98,4 +98,4 @@ ignore_tags = ""
 
 [remote.github]
 owner = "ChristopherVR"
-repo = "ooxml-core"
+repo = "ooxml"
