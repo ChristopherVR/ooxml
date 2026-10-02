@@ -17,6 +17,7 @@ export default defineConfig({
 		'docx/layout/index': 'src/docx/layout/index.ts',
 		'docx/load/index': 'src/docx/load/index.ts',
 		'collab/index': 'src/collab/index.ts',
+		'visio/index': 'src/visio/index.ts',
 	},
 	outDir: 'dist',
 	tsconfig: 'tsconfig.build.json',

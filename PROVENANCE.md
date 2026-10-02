@@ -86,3 +86,111 @@ Logic that is DOM-free and useful to both products was extracted and generalised
 | `external-provider.ts`                                                                                                                        | `collaboration-external-session.ts` (`observeExternalCollaborationSession`); per-binding y-websocket/y-webrtc wiring                                                                                                                                                                              | `adaptYjsProvider` is new (wraps y-websocket/y-webrtc as a `SyncProvider`).                                                                                                                                                                                                                                                                                        |
 | `ordering.ts`                                                                                                                                 | `docx-viewer .../collaboration.ts`, `collaboration-protocol.ts`, `presence.ts` (version/sequence/duplicate rules, bounded caches, `freezeBatch`) and `collaboration-authority.ts` (request idempotency)                                                                                           | ProseMirror removed: the same decisions as pure functions and small classes (`classifyVersion`, `IdempotencyCache`, `SequenceTracker`, `BoundedMap`, `freezeDeep`). The step-rebasing authority itself stays in docx-viewer.                                                                                                                                       |
 | `codec.ts`, `emitter.ts`, `provider.ts`, `transport-provider.ts`, `memory-transport.ts`, `websocket-transport.ts`, `session.ts`, `binding.ts` | New                                                                                                                                                                                                                                                                                               | No source: the two viewers had no shared session, transport abstraction, in-memory transport or update validation. `transport-provider.ts` implements the y-websocket wire protocol (sync step 1/2/update, awareness, query-awareness) over a `Transport`. `binding.ts` encodes the seeding/adoption rules from pptx-viewer `collaboration-external-readiness.ts`. |
+
+## `visio` area (2026-10-02)
+
+New DOM-independent Visio VSDX scene logic, developed in this repository alongside
+`ChristopherVR/visio-viewer`. The viewer's integration snapshot at commit
+`ad5644f` (`integration/ooxml-visio.patch`) records this code against ooxml
+`1a927a16ea8451f569a4ba226ac3db4baa5d87df`; these modules were not extracted
+from an existing viewer implementation. Publication adds the `ooxml-core/visio`
+subpath and strict ESM/CJS/declaration build entries. UI, text layout, raster
+decoding, and worker lifecycle remain in the viewer. EMF conversion remains in
+`emf-converter`; this area supplies bounded admission and inert vector validation.
+This is a read-only supported subset, not a ShapeSheet engine or round-trip editor.
+
+All new files under `src/visio/`:
+
+- `README.md`
+- `complex-geometry.test.ts`
+- `complex-geometry.ts`
+- `convert-metafile.test.ts`
+- `convert-metafile.ts`
+- `corpus-regressions.test.ts`
+- `diagnostics.ts`
+- `emf-admission-adversarial.test.ts`
+- `emf-admission-comment.ts`
+- `emf-admission-compatibility.test.ts`
+- `emf-admission-context.ts`
+- `emf-admission-corpus.test.ts`
+- `emf-admission-geometry.ts`
+- `emf-admission-input.ts`
+- `emf-admission-records.ts`
+- `emf-admission-types.ts`
+- `emf-admission.test-fixtures.ts`
+- `emf-admission.test.ts`
+- `emf-admission.ts`
+- `foreign-vector-adversarial.test.ts`
+- `foreign-vector-graph.ts`
+- `foreign-vector-path.ts`
+- `foreign-vector-test-fixtures.ts`
+- `foreign-vector-types.ts`
+- `foreign-vector-validation.test.ts`
+- `foreign-vector-validation.ts`
+- `foreign-vector-values.ts`
+- `foreign-vector.test.ts`
+- `foreign-vector.ts`
+- `geometry.test.ts`
+- `geometry.ts`
+- `images-integration.test.ts`
+- `index.ts`
+- `layer-limits.test.ts`
+- `layers.test.ts`
+- `layers.ts`
+- `line-pattern.test.ts`
+- `line-pattern.ts`
+- `line-style.test.ts`
+- `line-style.ts`
+- `media.test.ts`
+- `media.ts`
+- `metadata.test.ts`
+- `metadata.ts`
+- `model.ts`
+- `nurbs-flatten.test.ts`
+- `nurbs-flatten.ts`
+- `nurbs-independent.test.ts`
+- `nurbs.ts`
+- `package-common.ts`
+- `package.test.ts`
+- `package.ts`
+- `paragraphs.ts`
+- `parser.test.ts`
+- `parser.ts`
+- `parts.ts`
+- `prepare-images.ts`
+- `prepare-metafiles.test.ts`
+- `prepare-metafiles.ts`
+- `raster-inspection.test.ts`
+- `rounded-geometry.test.ts`
+- `rounded-geometry.ts`
+- `shape-metadata.test.ts`
+- `shape-metadata.ts`
+- `shapes.ts`
+- `sheet.ts`
+- `spline-geometry.test.ts`
+- `spline-geometry.ts`
+- `style-inheritance.ts`
+- `style.ts`
+- `test-fixtures.ts`
+- `text-background.ts`
+- `text.test.ts`
+- `theme-color.ts`
+- `theme-fixtures.ts`
+- `theme-gradient.test.ts`
+- `theme-gradient.ts`
+- `theme-line.test.ts`
+- `theme-line.ts`
+- `theme-resolve.ts`
+- `theme-root-corpus.test.ts`
+- `theme-root-fallthrough.test.ts`
+- `theme-root-fill.test.ts`
+- `theme-root.test.ts`
+- `theme-root.ts`
+- `theme.test.ts`
+- `theme.ts`
+- `visibility-limits.test.ts`
+- `visibility-metadata.test.ts`
+- `visibility.test.ts`
+- `visibility.ts`
+- `xml-validation.ts`
+- `zip-validation.ts`

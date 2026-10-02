@@ -11,5 +11,5 @@
 		"types": ["node"]
 	},
 	"include": ["src/**/*.ts"],
-	"exclude": ["src/**/*.test.ts", "src/pptx", "dist"]
+	"exclude": ["src/**/*.test.ts", "src/visio/*-fixtures.ts", "src/pptx", "dist"]
 }

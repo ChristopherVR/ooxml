@@ -27,6 +27,9 @@
 	"bin": {
 		"pptx": "./dist/pptx/cli/index.mjs"
 	},
+	"workspaces": [
+		"packages/*"
+	],
 	"files": [
 		"dist",
 		"LICENSE",
@@ -35,9 +38,6 @@
 		"README.md"
 	],
 	"type": "module",
-	"workspaces": [
-		"packages/*"
-	],
 	"sideEffects": false,
 	"main": "./dist/index.cjs",
 	"module": "./dist/index.mjs",
@@ -103,6 +103,11 @@
 			"import": "./dist/docx/load/index.mjs",
 			"require": "./dist/docx/load/index.cjs"
 		},
+		"./visio": {
+			"types": "./dist/visio/index.d.ts",
+			"import": "./dist/visio/index.mjs",
+			"require": "./dist/visio/index.cjs"
+		},
 		"./pptx": {
 			"types": "./dist/pptx/index.d.ts",
 			"import": "./dist/pptx/index.mjs",
@@ -129,6 +134,7 @@
 	},
 	"scripts": {
 		"build": "node scripts/build.mjs",
+		"build:visio": "tsup --config tsup.visio.config.ts",
 		"prepack": "node scripts/ensure-built.mjs",
 		"typecheck": "bun run typecheck:strict && bun run typecheck:pptx",
 		"typecheck:strict": "tsc -p tsconfig.json --noEmit",
