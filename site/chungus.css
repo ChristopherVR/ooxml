@@ -1,0 +1,516 @@
+/*
+ * The Chungus scene. A full-screen 3D canvas sits behind a grid that flanks
+ * him with the cards. Phases accumulate as classes on `.chungus` (is-old,
+ * is-walk, is-speak, is-raise, is-charge, is-snap, is-dust, is-new), so each
+ * rule below reads "from this phase onwards".
+ */
+
+body.chungus-open {
+	overflow: hidden;
+}
+
+/* The top-bar button borrows the theme toggle's size; only the icon is its own. */
+.topbar__chungus svg {
+	width: 1.25rem;
+	height: 1.25rem;
+}
+
+/* ---- Stage --------------------------------------------------------- */
+
+.chungus {
+	--card: clamp(84px, 8.5vw, 118px);
+	--app-card: clamp(124px, 11vw, 150px);
+	position: fixed;
+	inset: 0;
+	z-index: 100;
+	overflow: hidden;
+	color: var(--ink);
+	background: radial-gradient(90% 70% at 50% 85%, var(--desk-lit), var(--desk) 75%);
+	animation: chungus-fade 300ms ease both;
+}
+
+.chungus__world,
+.chungus__world canvas {
+	position: absolute;
+	inset: 0;
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+.chungus__stage {
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	display: grid;
+	grid-template:
+		'head head head' auto
+		'left . right' 1fr
+		'foot foot foot' auto / 1fr minmax(300px, 40vw) 1fr;
+	padding: clamp(1.5rem, 5vh, 3.5rem) clamp(16px, 4vw, 4rem) clamp(1rem, 3vh, 2rem);
+	pointer-events: none;
+}
+
+.chungus.is-thud .chungus__stage {
+	animation: chungus-thud 200ms ease-out;
+}
+
+.chungus__head {
+	grid-area: head;
+	display: grid;
+	justify-items: center;
+	text-align: center;
+}
+
+.chungus__eyebrow,
+.chungus__title {
+	margin: 0;
+	transition:
+		opacity 500ms ease,
+		transform 500ms ease;
+}
+
+.chungus__eyebrow {
+	grid-area: 1 / 1;
+	font-size: 0.8rem;
+	font-weight: 700;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--ink-soft);
+}
+
+.chungus__title {
+	grid-area: 2 / 1;
+	margin-top: 0.4rem;
+	font-size: clamp(1.8rem, 4.5vw, 3.2rem);
+	font-weight: 900;
+	letter-spacing: -0.02em;
+}
+
+.chungus [data-new],
+.chungus.is-dust [data-old] {
+	opacity: 0;
+	transform: translateY(0.5rem);
+}
+
+.chungus.is-new [data-new] {
+	opacity: 1;
+	transform: none;
+	transition-delay: 300ms;
+}
+
+.chungus__side {
+	display: grid;
+	align-content: center;
+	transition: opacity 400ms ease;
+}
+
+.chungus__head {
+	transition: opacity 400ms ease;
+}
+
+.chungus__side--left {
+	grid-area: left;
+	justify-items: end;
+}
+
+.chungus__side--right {
+	grid-area: right;
+	justify-items: start;
+}
+
+.chungus__list {
+	grid-area: 1 / 1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: clamp(0.8rem, 2.5vh, 1.5rem);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+/* ---- The suite being snapped ---------------------------------------- */
+
+.chungus__card {
+	container-type: inline-size;
+	position: relative;
+	width: var(--card);
+	aspect-ratio: 1;
+	border-radius: 22%;
+	color: #fff;
+	background: var(--c);
+	box-shadow: 0 12px 26px -12px rgba(0, 0, 0, 0.55);
+	opacity: 0;
+	transform: translateY(1rem) scale(0.9);
+}
+
+.chungus.is-old .chungus__card {
+	animation: chungus-pop 450ms cubic-bezier(0.3, 1.4, 0.5, 1) calc(var(--i) * 90ms) forwards;
+}
+
+.chungus__letter,
+.chungus__name {
+	position: absolute;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	white-space: nowrap;
+}
+
+.chungus__letter {
+	top: 44%;
+	font-size: 42cqw;
+	font-weight: 800;
+	line-height: 1;
+}
+
+.chungus__name {
+	top: 80%;
+	font-size: 12cqw;
+	font-weight: 600;
+}
+
+.chungus__lock {
+	position: absolute;
+	top: -8px;
+	right: -8px;
+	display: grid;
+	place-items: center;
+	width: 26px;
+	height: 26px;
+	border-radius: 50%;
+	color: #2a1a00;
+	background: #ffd23f;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.chungus__lock svg {
+	width: 14px;
+}
+
+.chungus__card.is-dust {
+	visibility: hidden;
+}
+
+/* ---- The open-source suite: every card the same size ---------------- */
+
+.chungus__list--new {
+	visibility: hidden;
+}
+
+.chungus.is-new .chungus__list--new {
+	visibility: visible;
+}
+
+.chungus__app {
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 0.45rem;
+	width: var(--app-card);
+	height: var(--app-card);
+	border-radius: 20px;
+	color: var(--ink);
+	text-decoration: none;
+	background: var(--surface);
+	box-shadow:
+		inset 0 0 0 1.5px var(--line),
+		0 14px 30px -16px rgba(0, 0, 0, 0.5);
+	opacity: 0;
+	transform: translateY(1.5rem) scale(0.85);
+	pointer-events: auto;
+}
+
+.chungus.is-new .chungus__app {
+	animation: chungus-rise 650ms cubic-bezier(0.3, 1.5, 0.5, 1) calc(400ms + var(--i) * 140ms)
+		forwards;
+}
+
+a.chungus__app:hover {
+	box-shadow:
+		inset 0 0 0 1.5px var(--app),
+		0 0 1.5rem -0.3rem var(--app);
+}
+
+.chungus__app .app-icon {
+	width: 50px;
+	height: 50px;
+}
+
+.chungus__app-name {
+	font-weight: 700;
+}
+
+.chungus__app--off {
+	color: var(--ink-soft);
+}
+
+/* ---- Caption, actions, close ---------------------------------------- */
+
+.chungus__foot {
+	grid-area: foot;
+	display: grid;
+	justify-items: center;
+	gap: 0.9rem;
+	text-align: center;
+}
+
+.chungus__caption {
+	min-height: 1.6em;
+	margin: 0;
+	padding: 0.25rem 0.8rem;
+	border-radius: 999px;
+	font-size: 1.15rem;
+	font-style: italic;
+	color: var(--ink);
+	background: color-mix(in srgb, var(--desk) 70%, transparent);
+}
+
+.chungus__caption:empty {
+	visibility: hidden;
+}
+
+.chungus__actions {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 0.75rem;
+	visibility: hidden;
+	opacity: 0;
+	transition:
+		opacity 400ms ease 1.2s,
+		visibility 0s linear 1.2s;
+}
+
+.chungus.is-new .chungus__actions {
+	visibility: visible;
+	opacity: 1;
+	pointer-events: auto;
+}
+
+.chungus__actions .button--page {
+	border: 0;
+	font: inherit;
+	font-weight: 700;
+	background: var(--surface);
+	cursor: pointer;
+}
+
+.chungus__close {
+	position: absolute;
+	top: 12px;
+	right: 12px;
+	z-index: 4;
+	width: 40px;
+	height: 40px;
+	border: 0;
+	border-radius: 50%;
+	font: inherit;
+	font-size: 1.5rem;
+	line-height: 1;
+	color: var(--ink);
+	background: var(--line);
+	cursor: pointer;
+}
+
+/* ---- Speech, snap, flash, dust -------------------------------------- */
+
+.chungus__bubble {
+	position: absolute;
+	z-index: 2;
+	margin: 0;
+	padding: 0.7rem 1rem;
+	border-radius: 16px;
+	font-weight: 800;
+	white-space: nowrap;
+	color: var(--paper-ink);
+	background: var(--paper);
+	box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.5);
+	opacity: 0;
+	transform: translate(calc(-100% - 16px), -50%) scale(0.7);
+	transform-origin: 100% 50%;
+	transition:
+		opacity 200ms ease,
+		transform 300ms cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+
+.chungus__bubble::after {
+	content: '';
+	position: absolute;
+	top: 50%;
+	right: -16px;
+	margin-top: -9px;
+	border: 9px solid transparent;
+	border-left-color: var(--paper);
+}
+
+.chungus.is-speak:not(.is-raise) .chungus__bubble {
+	opacity: 1;
+	transform: translate(calc(-100% - 16px), -50%);
+}
+
+.chungus__snap {
+	position: absolute;
+	z-index: 2;
+	font-size: clamp(2.6rem, 8vw, 6rem);
+	font-weight: 900;
+	font-style: italic;
+	color: #ffd23f;
+	text-shadow:
+		0 4px 0 #9c6a10,
+		0 0 30px rgba(255, 196, 64, 0.85);
+	opacity: 0;
+	pointer-events: none;
+}
+
+.chungus.is-snap .chungus__snap {
+	animation: chungus-snap 1100ms cubic-bezier(0.2, 1.6, 0.4, 1) forwards;
+}
+
+.chungus__flash {
+	position: absolute;
+	inset: 0;
+	z-index: 3;
+	background: radial-gradient(circle at 50% 45%, #fff, #fff6d6 40%, rgba(255, 220, 140, 0.6));
+	opacity: 0;
+	pointer-events: none;
+}
+
+.chungus.is-snap .chungus__flash {
+	animation: chungus-flash 1100ms ease-out;
+}
+
+.chungus__dust {
+	position: absolute;
+	inset: 0;
+	z-index: 2;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+}
+
+/* ---- Small screens: cards in rows above Chungus ---------------------- */
+
+@media (max-width: 760px) {
+	.chungus {
+		--card: min(17vw, 76px);
+		--app-card: min(22vw, 108px);
+	}
+	.chungus__stage {
+		grid-template:
+			'head' auto
+			'left' auto
+			'right' auto
+			'.' 1fr
+			'foot' auto / minmax(0, 1fr);
+		row-gap: 0.6rem;
+		padding-top: 3.5rem;
+	}
+	.chungus__side--left,
+	.chungus__side--right {
+		justify-items: center;
+	}
+	.chungus__title {
+		font-size: 1.6rem;
+	}
+	.chungus__bubble {
+		transform: translate(-50%, calc(-100% - 16px)) scale(0.7);
+		transform-origin: 50% 100%;
+	}
+	.chungus.is-speak:not(.is-raise) .chungus__bubble {
+		transform: translate(-50%, calc(-100% - 16px));
+	}
+	.chungus__bubble::after {
+		top: auto;
+		right: auto;
+		bottom: -16px;
+		left: 50%;
+		margin: 0 0 0 -9px;
+		border-left-color: transparent;
+		border-top-color: var(--paper);
+	}
+	.chungus__list {
+		flex-direction: row;
+		gap: 0.5rem;
+	}
+	.chungus__side {
+		padding: 0 0.25rem;
+	}
+	.chungus__app .app-icon {
+		width: 36px;
+		height: 36px;
+	}
+	.chungus__app {
+		gap: 0.25rem;
+		font-size: 0.85rem;
+	}
+}
+
+/* ---- Keyframes ------------------------------------------------------ */
+
+@keyframes chungus-fade {
+	from {
+		opacity: 0;
+	}
+}
+@keyframes chungus-pop {
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+@keyframes chungus-rise {
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+@keyframes chungus-thud {
+	30% {
+		translate: 0 5px;
+	}
+	60% {
+		translate: 0 -2px;
+	}
+}
+
+@keyframes chungus-flash {
+	0% {
+		opacity: 0;
+	}
+	20% {
+		opacity: 0.5;
+	}
+	100% {
+		opacity: 0;
+	}
+}
+
+@keyframes chungus-snap {
+	0% {
+		opacity: 0;
+		transform: translate(25%, -60%) scale(0.3) rotate(-12deg);
+	}
+	30% {
+		opacity: 1;
+		transform: translate(25%, -60%) scale(1.15) rotate(-6deg);
+	}
+	75% {
+		opacity: 1;
+	}
+	100% {
+		opacity: 0;
+		transform: translate(25%, calc(-60% - 30px)) scale(1) rotate(-6deg);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.chungus,
+	.chungus * {
+		animation-duration: 1ms !important;
+		transition-duration: 1ms !important;
+	}
+}

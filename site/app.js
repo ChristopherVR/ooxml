@@ -1,4 +1,5 @@
 import { APPS, appIcon, demoUrl, isLive } from './apps.js';
+import { initChungus } from './chungus.js';
 import { currentTheme, initTheme, shareTheme } from './theme.js';
 
 /**
@@ -117,6 +118,7 @@ frame.addEventListener('load', () => {
 	if (frame.getAttribute('src')) loading.hidden = true;
 });
 initTheme(frame);
+initChungus();
 window.addEventListener('hashchange', route);
 renderGrid();
 route();

@@ -18,6 +18,7 @@
 		/>
 		<link rel="stylesheet" href="styles.css" />
 		<link rel="stylesheet" href="desk.css" />
+		<link rel="stylesheet" href="chungus.css" />
 		<script>
 			// Apply a saved theme before first paint so the page never flashes. The key
 			// is VitePress's, shared with the embedded demos and both docs sites.
@@ -25,6 +26,14 @@
 				const theme = localStorage.getItem('vitepress-theme-appearance');
 				if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
 			} catch {}
+		</script>
+		<script type="importmap">
+			{
+				"imports": {
+					"three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+					"three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+				}
+			}
 		</script>
 		<script type="module" src="app.js"></script>
 	</head>
@@ -48,6 +57,26 @@
 			<a class="topbar__brand" href="#/">OOXML Office</a>
 			<div class="topbar__app" id="topbar-app" hidden></div>
 			<nav class="topbar__links">
+				<button
+					class="topbar__theme topbar__chungus"
+					id="chungus"
+					type="button"
+					aria-label="Chungus"
+					title="Chungus"
+				>
+					<svg viewBox="0 0 20 20" aria-hidden="true">
+						<rect x="5" y="15" width="10" height="4" rx="1" fill="#c48a1a" />
+						<rect x="3.5" y="5" width="13" height="11" rx="3.5" fill="#e3ad42" />
+						<rect x="4" y="1.5" width="3" height="5" rx="1.5" fill="#e3ad42" />
+						<rect x="7.7" y="1" width="3" height="5" rx="1.5" fill="#e3ad42" />
+						<rect x="11.4" y="1.5" width="3" height="5" rx="1.5" fill="#e3ad42" />
+						<circle cx="5.5" cy="7.3" r="1.1" fill="#9b4dff" />
+						<circle cx="8.5" cy="7.3" r="1.1" fill="#2f7dff" />
+						<circle cx="11.5" cy="7.3" r="1.1" fill="#ff3b4e" />
+						<circle cx="14.5" cy="7.3" r="1.1" fill="#ffd23f" />
+						<circle cx="10" cy="11.3" r="2" fill="#ff8a1f" />
+					</svg>
+				</button>
 				<a href="https://github.com/ChristopherVR/ooxml" target="_blank" rel="noreferrer">GitHub</a>
 				<button
 					class="topbar__theme"
@@ -125,10 +154,7 @@
 				<dl class="core__list">
 					<div>
 						<dt>
-							<a
-								href="https://www.npmjs.com/package/ooxml-core"
-								target="_blank"
-								rel="noreferrer"
+							<a href="https://www.npmjs.com/package/ooxml-core" target="_blank" rel="noreferrer"
 								>ooxml-core</a
 							>
 						</dt>
