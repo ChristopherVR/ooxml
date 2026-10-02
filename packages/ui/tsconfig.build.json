@@ -6,7 +6,7 @@
 		"emitDeclarationOnly": true,
 		"types": [],
 		"paths": {
-			"@christophervr/ooxml-core/*": ["../../dist/*/index.d.ts"]
+			"ooxml-core/*": ["../../dist/*/index.d.ts"]
 		}
 	},
 	"exclude": ["src/**/*.test.ts", "dist", "node_modules"]

@@ -14,7 +14,7 @@
 		"types": ["vitest/globals"],
 		"baseUrl": ".",
 		"paths": {
-			"@christophervr/ooxml-core/*": ["../../src/*/index.ts"]
+			"ooxml-core/*": ["../../src/*/index.ts"]
 		}
 	},
 	"include": ["src/**/*.ts"],

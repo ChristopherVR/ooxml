@@ -1,7 +1,7 @@
 Third-Party Licenses
 ====================
 
-Runtime dependencies of @christophervr/ooxml-core (installed from npm, not
+Runtime dependencies of ooxml-core (installed from npm, not
 copied into this repository) and the legacy Office codecs inlined into the
 pptx bundle. Licenses as declared by the versions resolved in bun.lock.
 

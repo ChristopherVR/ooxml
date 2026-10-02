@@ -23,7 +23,7 @@ after(() => roots.forEach((r) => rmSync(r, { recursive: true, force: true })));
 const json = (data) => `${JSON.stringify(data, null, '\t')}\n`;
 
 /**
- * A throwaway repository shaped like this one: core at the root (0.1.0), office-ui at packages/ui
+ * A throwaway repository shaped like this one: core at the root (0.1.0), ooxml-ui at packages/ui
  * (0.1.0, `workspace:*` on core). `tagged` lists the packages whose baseline tag is set.
  */
 function repo({ ui = true, tagged = ['core', 'ui'], uiRange = 'workspace:*' } = {}) {

@@ -1,8 +1,8 @@
 # git-cliff configuration: generates CHANGELOG.md from Conventional Commits.
 #
 # Adapted from ChristopherVR/pptx-viewer cliff.toml (Apache-2.0). This repository publishes TWO
-# packages, @christophervr/ooxml-core (CHANGELOG.md at the root) and @christophervr/office-ui
-# (packages/ui/CHANGELOG.md), each tagged `<npm-name>@<version>` (`@christophervr/ooxml-core@0.2.0`).
+# packages, ooxml-core (CHANGELOG.md at the root) and ooxml-ui
+# (packages/ui/CHANGELOG.md), each tagged `<npm-name>@<version>` (`ooxml-core@0.2.0`).
 # The Release workflow runs git-cliff once per released package with
 # `--tag-pattern "^<npm-name>@"` and that package's `includePaths` from release-plan.json (only
 # commits touching its published files), PREPENDING the new release section to its changelog (never
@@ -91,7 +91,7 @@ protect_breaking_commits = false
 topo_order = false
 sort_commits = "oldest"
 # Only consider semver tags like v1.2.3 as releases.
-tag_pattern = "^@christophervr/(ooxml-core|office-ui)@[0-9]"
+tag_pattern = "^(ooxml-core|ooxml-ui)@[0-9]"
 # Never treat the auto-generated changelog commit as a feature/fix.
 skip_tags = ""
 ignore_tags = ""

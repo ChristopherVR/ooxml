@@ -1,5 +1,5 @@
 {
-	"name": "@christophervr/office-ui",
+	"name": "ooxml-ui",
 	"version": "0.1.1",
 	"description": "Shared, format-neutral web components and styles for the Office viewers (Word, PowerPoint, Excel)",
 	"keywords": [
@@ -70,7 +70,7 @@
 		"test:package": "node scripts/package-smoke.mjs"
 	},
 	"dependencies": {
-		"@christophervr/ooxml-core": "*"
+		"ooxml-core": "*"
 	},
 	"devDependencies": {
 		"@types/jsdom": "^21.1.7",

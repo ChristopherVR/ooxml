@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-`@christophervr/ooxml-core` is a single package. Security fixes target the **latest release**; there are no long-lived security branches. Upgrade to the latest version before reporting a suspected vulnerability, in case it has been fixed.
+`ooxml-core` is a single package. Security fixes target the **latest release**; there are no long-lived security branches. Upgrade to the latest version before reporting a suspected vulnerability, in case it has been fixed.
 
 The package parses untrusted Office files (OOXML packages, XML parts, embedded media and metafiles, encrypted packages) and can write them back. Reports about how it handles hostile input are especially welcome: XML entity or DTD handling, zip bombs and path traversal in package parts, unbounded recursion or memory growth, unsafe hyperlink or URL schemes, and weaknesses in the encryption or signature code paths.
 

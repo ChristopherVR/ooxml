@@ -1,11 +1,11 @@
-import { normalizeHexColor } from '@christophervr/ooxml-core/color';
+import { normalizeHexColor } from 'ooxml-core/color';
 import type {
 	DiagramColor,
 	DiagramDrawing,
 	DiagramDrawingShape,
 	DiagramFill,
 	DiagramPath,
-} from '@christophervr/ooxml-core/diagram';
+} from 'ooxml-core/diagram';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const EMU_PER_PX = 9525;

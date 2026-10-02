@@ -1,5 +1,5 @@
 {
-	"name": "@christophervr/ooxml-core",
+	"name": "ooxml-core",
 	"version": "0.2.0",
 	"description": "Shared OOXML logic for the Word, PowerPoint and Excel viewers: everything except the UI",
 	"keywords": [
@@ -142,7 +142,7 @@
 		"check:changelog": "node scripts/check-changelog-sections.mjs",
 		"release:plan": "node scripts/release-plan.mjs",
 		"release:publish": "node scripts/publish-released.mjs",
-		"changelog:unreleased": "bunx git-cliff --config cliff.toml --tag-pattern \"^@christophervr/ooxml-core@\" --unreleased"
+		"changelog:unreleased": "bunx git-cliff --config cliff.toml --tag-pattern \"^ooxml-core@\" --unreleased"
 	},
 	"dependencies": {
 		"@xmldom/xmldom": "^0.9.12",

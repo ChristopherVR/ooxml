@@ -1,4 +1,4 @@
-# The `collab` area (`@christophervr/ooxml-core/collab`)
+# The `collab` area (`ooxml-core/collab`)
 
 Format-neutral real-time collaboration on Yjs. It owns the logic that has nothing to do with a particular document format or UI: session and provider lifecycle, awareness and presence, a transport-neutral sync protocol, update codecs, ordering helpers, binary asset sync and the seam products plug their document model into. `yjs`, `y-protocols` and `lib0` are real dependencies of the package (not optional peers); a host that also installs `yjs` itself must dedupe it, because two Yjs copies break `instanceof` checks.
 
@@ -34,7 +34,7 @@ import {
 	bindDocument,
 	LOCAL_ORIGIN,
 	type DocumentAdapter,
-} from '@christophervr/ooxml-core/collab';
+} from 'ooxml-core/collab';
 ```
 
 **Session**

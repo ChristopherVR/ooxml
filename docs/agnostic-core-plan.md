@@ -99,14 +99,14 @@ The core package stays logic-only: **no DOM, no custom elements, no CSS, no fram
 ```
 ooxml-core/                  repository root (private workspace root, no package published from here)
   packages/
-    ooxml-core/              @christophervr/ooxml-core   logic only (today's package, moved down one level)
-    office-ui/               @christophervr/office-ui    shared web components, styles, icons, i18n keys
+    ooxml-core/              ooxml-core   logic only (today's package, moved down one level)
+    ooxml-ui/               ooxml-ui    shared web components, styles, icons, i18n keys
     office-collab/           @christophervr/office-collab (optional, later) sync protocol + Yjs/ProseMirror adapters
   package.json               { "private": true, "workspaces": ["packages/*"] }
 ```
 
-- Dependency direction: `office-ui` may import `ooxml-core` types; `ooxml-core` never imports `office-ui`. A CI check (like `check-shared.mjs` in docx-viewer) enforces it.
-- `office-ui` exports subpaths per element family (`/ribbon`, `/select`, `/theme-editor`, `/i18n`), each registering its custom elements idempotently, SSR-safe (pptx already has `ssr.test.ts` and `registration-contract.test.ts` to port). Locale catalogues stay data (`/i18n/en` ...), like `pptx-viewer-locales`.
+- Dependency direction: `ooxml-ui` may import `ooxml-core` types; `ooxml-core` never imports `ooxml-ui`. A CI check (like `check-shared.mjs` in docx-viewer) enforces it.
+- `ooxml-ui` exports subpaths per element family (`/ribbon`, `/select`, `/theme-editor`, `/i18n`), each registering its custom elements idempotently, SSR-safe (pptx already has `ssr.test.ts` and `registration-contract.test.ts` to port). Locale catalogues stay data (`/i18n/en` ...), like `pptx-viewer-locales`.
 - Viewers depend on both packages; the framework bindings (React, Vue, Angular, Svelte, Solid, vanilla) stay in the viewer repositories because they are lifecycle adapters of the viewer's own element.
 - Collaboration: the two products use different engines (ProseMirror steps vs Yjs). The shared part is the transport-neutral session/identity/authority API; extract it to `office-collab` only after both sides agree on one session interface. Until then it stays in the viewers. Yjs is an optional peer, as in pptx today.
 
@@ -114,12 +114,12 @@ ooxml-core/                  repository root (private workspace root, no package
 
 pptx-viewer publishes several packages with **independent semver** (`pptx-viewer-core` 4.9.1, bindings 4.16.0, CLI 2.33.0) driven by a `release-plan.json` computed from conventional commits and per-package `includePaths`, tags `<name>@<version>`, git-cliff changelogs, and its `shared` and `locales` packages are private and bundled into each binding. docx-viewer publishes six packages at one shared version with `v<version>` tags. ooxml-core today publishes one package with `v<version>` tags.
 
-Proposal: keep **independent versions with per-package tags** (`ooxml-core@x.y.z`, `office-ui@x.y.z`) using the pptx-viewer release-plan mechanism (affected-package detection by path, conventional commits, git-cliff per package), because the logic package changes far more often than the UI and the UI must not force logic releases (or vice versa). `office-ui` declares `@christophervr/ooxml-core` as a peer dependency range. npm provenance and trusted publishing per package, as today. Existing `v<version>` tags stay valid for `ooxml-core` 0.x; the first release from the workspace switches to `ooxml-core@<version>` tags.
+Proposal: keep **independent versions with per-package tags** (`ooxml-core@x.y.z`, `ooxml-ui@x.y.z`) using the pptx-viewer release-plan mechanism (affected-package detection by path, conventional commits, git-cliff per package), because the logic package changes far more often than the UI and the UI must not force logic releases (or vice versa). `ooxml-ui` declares `ooxml-core` as a peer dependency range. npm provenance and trusted publishing per package, as today. Existing `v<version>` tags stay valid for `ooxml-core` 0.x; the first release from the workspace switches to `ooxml-core@<version>` tags.
 
 ### 6.3 Migration steps and what is needed
 
 1. Convert the repo to workspaces: move the current package to `packages/ooxml-core` (history preserved with `git mv`), root `package.json` becomes private; update CI paths, `tsup`/`tsdown` configs, `files`, the pack smoke test, the `OOXML_CORE_REF` pinning used by docx-viewer CI, and docx-viewer's `file:../ooxml-core` dependency (becomes `file:../ooxml-core/packages/ooxml-core`). Do this alone, behaviour unchanged.
-2. Add `packages/office-ui` with an empty build, lint and test pipeline, its own release-plan entry, and a dependency-direction check.
+2. Add `packages/ooxml-ui` with an empty build, lint and test pipeline, its own release-plan entry, and a dependency-direction check.
 3. Move the **already identical** elements first: `checkbox`, `select*`, `search-field`, `ribbon-command`, `ribbon-group`, with their tests, from pptx-viewer `packages/shared/src/web-components`; docx-viewer swaps its copies. Provenance recorded in `PROVENANCE.md` per module.
 4. Move styles and icons, then the ribbon section/gallery/view elements (pptx-specific commands are injected, not imported), then i18n key plumbing and the en/de/es/fr catalogues for the shared strings (Word-specific and PowerPoint-specific strings stay in each viewer's catalogue; the catalogue is merged at runtime).
 5. Decide collaboration separately (6.1).

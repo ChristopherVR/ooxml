@@ -1,4 +1,4 @@
-import type { DiagramDrawing } from '@christophervr/ooxml-core/diagram';
+import type { DiagramDrawing } from 'ooxml-core/diagram';
 import { definer, emit } from './registry.js';
 import {
 	renderDiagramDrawing,
@@ -21,7 +21,7 @@ text { font-family: var(--office-font, system-ui, sans-serif); pointer-events: n
 
 /**
  * `<office-ui-smartart>` draws the cached drawing of a SmartArt diagram (core
- * `DiagramDrawing`, from `@christophervr/ooxml-core/diagram`) as SVG. Set `drawing` (and
+ * `DiagramDrawing`, from `ooxml-core/diagram`) as SVG. Set `drawing` (and
  * optionally `schemeColors`, resolved theme colours such as `{ accent1: '#4472c4' }`);
  * `label` becomes the accessible name (`role="img"`). It never re-lays-out a diagram: it shows
  * what the producing application last computed. Approximations (preset outlines drawn as

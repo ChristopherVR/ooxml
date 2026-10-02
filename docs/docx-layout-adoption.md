@@ -6,8 +6,8 @@ The pagination engine and the document loading facade now live in this package. 
 
 | Import                                  | Replaces                                                        | Contents                                                                                                                                                                                                                                                              |
 | --------------------------------------- | --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@christophervr/ooxml-core/docx/layout` | `@christophervr/docx-layout`                                    | `layoutDocumentModel`, `layoutDocument`, `layoutSections`, `adaptDocumentModel`, the `Layout*` input/result types, `TextMeasurer`, `LayoutFontSpec`, `createFakeMeasurer`, `fontMetrics`, `cssFontStack`, `ligatureCss`, unit helpers (`twipsToPx`, `pxToTwips`, ...) |
-| `@christophervr/ooxml-core/docx/load`   | `@christophervr/docx-document` and `@christophervr/docx-legacy` | `detectDocumentFormat`, `loadDocument`, `loadLegacyDoc`, `LegacyDocError`, `DocumentFormat`                                                                                                                                                                           |
+| `ooxml-core/docx/layout` | `@christophervr/docx-layout`                                    | `layoutDocumentModel`, `layoutDocument`, `layoutSections`, `adaptDocumentModel`, the `Layout*` input/result types, `TextMeasurer`, `LayoutFontSpec`, `createFakeMeasurer`, `fontMetrics`, `cssFontStack`, `ligatureCss`, unit helpers (`twipsToPx`, `pxToTwips`, ...) |
+| `ooxml-core/docx/load`   | `@christophervr/docx-document` and `@christophervr/docx-legacy` | `detectDocumentFormat`, `loadDocument`, `loadLegacyDoc`, `LegacyDocError`, `DocumentFormat`                                                                                                                                                                           |
 
 Both ship ESM and CJS with declarations. `docx/load` inlines the `@christophervr/ole2` codecs at build time (`tsup.config.ts` `noExternal`, as the pptx bundle does); `scripts/package-smoke.mjs` fails if the packed output still imports ole2. Consumers add no ole2 dependency, and the main `docx` entry never pulls the legacy reader in.
 
@@ -17,11 +17,11 @@ Both ship ESM and CJS with declarations. `docx/load` inlines the `@christophervr
 
 ## Mechanical steps
 
-1. Bump the `@christophervr/ooxml-core` dependency to the release that contains these areas (rebuild `../ooxml-core` and `bun install --force` while using the `file:` dependency; update `OOXML_CORE_REF` in CI).
+1. Bump the `ooxml-core` dependency to the release that contains these areas (rebuild `../ooxml-core` and `bun install --force` while using the `file:` dependency; update `OOXML_CORE_REF` in CI).
 2. Rewrite imports across `packages/*` and `tests`:
-   - `@christophervr/docx-layout` -> `@christophervr/ooxml-core/docx/layout`
-   - `@christophervr/docx-document` -> `@christophervr/ooxml-core/docx/load`
-   - `@christophervr/docx-legacy` -> `@christophervr/ooxml-core/docx/load`
+   - `@christophervr/docx-layout` -> `ooxml-core/docx/layout`
+   - `@christophervr/docx-document` -> `ooxml-core/docx/load`
+   - `@christophervr/docx-legacy` -> `ooxml-core/docx/load`
    - Keep `@christophervr/docx-core` (re-export of `/docx`); `docx/layout` takes the same `DocumentModel`.
 3. Delete `packages/layout`, `packages/document`, `packages/legacy`, their `tsconfig.json` path mappings (`@christophervr/docx-layout`, `-document`, `-legacy`), and the workspace/build/bundle entries that name them. Remove the `@christophervr/ole2` dependency from the viewer's own `package.json` if nothing else imports it; the shared ole2 repository is unaffected.
 4. Drop the `workspace:*` dependencies on the three packages from the framework packages and from the web component; bundlers now resolve the core package.

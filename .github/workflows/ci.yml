@@ -35,8 +35,8 @@ jobs:
       - run: bun run --cwd packages/ui test:package
       - name: The core never imports the UI package
         run: |
-          if grep -rEln "office-ui" src --include='*.ts' --include='*.mjs' | grep -v '\.test\.'; then
-            echo "::error::src/ (the core) must not import @christophervr/office-ui; the UI depends on the core, never the reverse."
+          if grep -rEln "ooxml-ui" src --include='*.ts' --include='*.mjs' | grep -v '\.test\.'; then
+            echo "::error::src/ (the core) must not import ooxml-ui; the UI depends on the core, never the reverse."
             exit 1
           fi
 

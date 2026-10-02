@@ -21,5 +21,5 @@ export default defineConfig({
 	clean: false,
 	treeshake: true,
 	platform: 'browser',
-	external: [/^@christophervr\/ooxml-core/],
+	external: [/^ooxml-core(\/|$)/],
 });

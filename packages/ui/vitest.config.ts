@@ -7,7 +7,7 @@ const coreSource = fileURLToPath(new URL('../../src', import.meta.url)).replaceA
 export default {
 	resolve: {
 		alias: [
-			{ find: /^@christophervr\/ooxml-core\/(.+)$/, replacement: `${coreSource}/$1/index.ts` },
+			{ find: /^ooxml-core\/(.+)$/, replacement: `${coreSource}/$1/index.ts` },
 		],
 	},
 	test: {

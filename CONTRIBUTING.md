@@ -4,7 +4,7 @@ Thanks for wanting to help. Please read the [Code of Conduct](CODE_OF_CONDUCT.md
 
 ## What belongs here
 
-This repository is the single package `@christophervr/ooxml-core`: all the logic behind the Office viewers (`docx-viewer`, `pptx-viewer`, later `xlsx-viewer`), organised as **areas** under `src/<area>/`, each a subpath export (`@christophervr/ooxml-core/xml`). The viewers keep only their UI.
+This repository is the single package `ooxml-core`: all the logic behind the Office viewers (`docx-viewer`, `pptx-viewer`, later `xlsx-viewer`), organised as **areas** under `src/<area>/`, each a subpath export (`ooxml-core/xml`). The viewers keep only their UI.
 
 - Shared modern OOXML (units, colour, geometry, XML, OPC, and later DrawingML, charts, diagrams) goes in its own area.
 - Format-specific code goes in `docx`, `pptx` or `xlsx`.
@@ -53,7 +53,7 @@ Commits **must** follow [Conventional Commits](https://www.conventionalcommits.o
 - **scope**: the area: `units`, `color`, `geometry`, `xml`, `opc`, `docx`, `pptx`, `ci`, `deps`, `docs`.
 - **subject**: imperative, lower-case, no trailing period, header at most 72 characters.
 
-Whether a commit releases at all is decided by the **paths it touches**, not its type: only changes to a package's published files release a new version of that package (for `@christophervr/ooxml-core`: `src/` outside tests, the bundler and declaration configs, the manifest's shipping fields, the licence files; for `@christophervr/office-ui`: everything under `packages/ui/` outside tests). Tests, docs, CI and fixtures never do, whatever their type, and a test-only `feat` does not raise the bump level. See [docs/releasing.md](docs/releasing.md).
+Whether a commit releases at all is decided by the **paths it touches**, not its type: only changes to a package's published files release a new version of that package (for `ooxml-core`: `src/` outside tests, the bundler and declaration configs, the manifest's shipping fields, the licence files; for `ooxml-ui`: everything under `packages/ui/` outside tests). Tests, docs, CI and fixtures never do, whatever their type, and a test-only `feat` does not raise the bump level. See [docs/releasing.md](docs/releasing.md).
 
 Examples: `feat(xml): add a streaming serializer`, `fix(opc): resolve relative part names`, `feat(docx)!: rename the section model`.
 

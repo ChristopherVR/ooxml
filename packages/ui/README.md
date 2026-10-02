@@ -1,26 +1,26 @@
-# @christophervr/office-ui
+# ooxml-ui
 
 Shared, format-neutral web components and styles for the Office viewers (Word, PowerPoint, later
 Excel). Vanilla custom elements with shadow-root controls, typed events, no framework and no
-runtime dependency except `@christophervr/ooxml-core` (types and a few pure helpers).
+runtime dependency except `ooxml-core` (types and a few pure helpers).
 
 > **You do not install this package.** It is a regular `dependency` of every published editor
 > package (`docx-viewer-*`, `pptx-viewer-*`), so installing the editor of your framework pulls it
 > in. It is published separately only so that the editors share one copy of the controls. Do not
 > add it to your own install instructions or `package.json`; import controls through the editor
-> package, which registers them for you. Importing `@christophervr/office-ui` directly is for
+> package, which registers them for you. Importing `ooxml-ui` directly is for
 > the viewer packages themselves and for people building their own Office-style UI.
 
 ## Entries (ESM only)
 
 | Entry                               | Contents                                                                                |
 | ----------------------------------- | --------------------------------------------------------------------------------------- |
-| `@christophervr/office-ui`          | everything below plus `registerOfficeUi()` and `OFFICE_UI_TAGS`                         |
-| `@christophervr/office-ui/theme`    | `THEME_CSS`, `installOfficeUiTheme()` (tokens, dark mode, forced-colors, touch targets) |
-| `@christophervr/office-ui/icons`    | icon registry (`registerIcon`, `getIcon`, `listIcons`) and `<office-ui-icon>`           |
-| `@christophervr/office-ui/controls` | button, checkbox, switch, select, ribbon group, toolbar, dialog, status bar and item    |
-| `@christophervr/office-ui/presence` | `<office-ui-presence>` avatar stack for collaboration awareness                         |
-| `@christophervr/office-ui/smartart` | `<office-ui-smartart>`: draws a core `DiagramDrawing` as SVG                            |
+| `ooxml-ui`          | everything below plus `registerOfficeUi()` and `OFFICE_UI_TAGS`                         |
+| `ooxml-ui/theme`    | `THEME_CSS`, `installOfficeUiTheme()` (tokens, dark mode, forced-colors, touch targets) |
+| `ooxml-ui/icons`    | icon registry (`registerIcon`, `getIcon`, `listIcons`) and `<office-ui-icon>`           |
+| `ooxml-ui/controls` | button, checkbox, switch, select, ribbon group, toolbar, dialog, status bar and item    |
+| `ooxml-ui/presence` | `<office-ui-presence>` avatar stack for collaboration awareness                         |
+| `ooxml-ui/smartart` | `<office-ui-smartart>`: draws a core `DiagramDrawing` as SVG                            |
 
 Importing an entry never touches the DOM (SSR-safe). Elements are defined by the `define*` /
 `register*` functions, which are idempotent, no-ops without a `window`, and refuse to coexist
@@ -55,7 +55,7 @@ event detail (`approximatedGeometries`, `approximatedFills`, `flattened3d`); not
 
 Only what every Office product needs lives here. Product-specific ribbon content (PowerPoint
 slides, transitions, animations; Word styles and review) stays in the viewers. See
-`docs/office-ui-plan.md` in the repository for what moves when, and how the `pptx-ui-*` tags
+`docs/ooxml-ui-plan.md` in the repository for what moves when, and how the `pptx-ui-*` tags
 become aliases of `office-ui-*`.
 
 ## Development

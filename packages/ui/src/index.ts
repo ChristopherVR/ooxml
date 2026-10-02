@@ -10,7 +10,7 @@ export * from './smartart.js';
 export * from './theme.js';
 export { CONTRACT_REVISION, type Definer } from './registry.js';
 
-/** Every office-ui tag this package defines, in registration order. */
+/** Every ooxml-ui tag this package defines, in registration order. */
 export const OFFICE_UI_TAGS = [
 	'office-ui-icon',
 	'office-ui-button',

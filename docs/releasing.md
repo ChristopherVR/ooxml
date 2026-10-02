@@ -4,8 +4,8 @@ This repository publishes two packages to npm, each with its own version line, t
 
 | Key    | npm name                    | Directory     | Changelog                  | Depends on |
 | ------ | --------------------------- | ------------- | -------------------------- | ---------- |
-| `core` | `@christophervr/ooxml-core` | `.` (root)    | `CHANGELOG.md`             | nothing    |
-| `ui`   | `@christophervr/office-ui`  | `packages/ui` | `packages/ui/CHANGELOG.md` | `core`     |
+| `core` | `ooxml-core` | `.` (root)    | `CHANGELOG.md`             | nothing    |
+| `ui`   | `ooxml-ui`  | `packages/ui` | `packages/ui/CHANGELOG.md` | `core`     |
 
 The UI package depends on the core, never the reverse. Viewers depend on both, so users never install the UI separately.
 
@@ -23,7 +23,7 @@ A package whose `package.json` does not exist yet (the UI before it is merged) i
 
 ### Baseline and what counts as a change
 
-Each package's baseline is the newest tag `<npm-name>@x.y.z` that is an ancestor of `HEAD` (`@christophervr/ooxml-core@0.1.0`, `@christophervr/office-ui@0.1.0`). A tag on `HEAD` yields an empty diff, so an already released `HEAD` is a no-op. A package releases when one of **its published files** changed since its baseline:
+Each package's baseline is the newest tag `<npm-name>@x.y.z` that is an ancestor of `HEAD` (`ooxml-core@0.1.0`, `ooxml-ui@0.1.0`). A tag on `HEAD` yields an empty diff, so an already released `HEAD` is a no-op. A package releases when one of **its published files** changed since its baseline:
 
 - core: `src/` except tests (`*.test.ts`, `__tests__/`, fixtures), `scripts/pptx/merge-declarations.mjs`, `tsconfig*.json`, `tsup*.config.ts`, `tsdown.pptx.config.ts`, `package.json`, `LICENSE`, `NOTICE`, `THIRD-PARTY-LICENSES`. Nothing under `packages/` counts for core.
 - ui: everything under `packages/ui/` except tests and its `CHANGELOG.md`, including its `package.json`.
@@ -36,7 +36,7 @@ The level is the highest Conventional Commit level among the commits since that 
 
 ### How core releases affect ui
 
-The ui manifest declares `"@christophervr/ooxml-core": "*"` (the repository root is the core and cannot be a member of its own Bun workspace, so `workspace:*` cannot link; tsconfig paths point the UI at the core source in development). In the published tarball that becomes `^<core version in the repository at publish time>` (see below). A core release therefore does not force a ui release as long as the new core version still satisfies the range ui last shipped with:
+The ui manifest declares `"ooxml-core": "*"` (the repository root is the core and cannot be a member of its own Bun workspace, so `workspace:*` cannot link; tsconfig paths point the UI at the core source in development). In the published tarball that becomes `^<core version in the repository at publish time>` (see below). A core release therefore does not force a ui release as long as the new core version still satisfies the range ui last shipped with:
 
 | Core change                                 | Core release | ui release                                                              |
 | ------------------------------------------- | ------------ | ----------------------------------------------------------------------- |
@@ -49,11 +49,11 @@ The ui manifest declares `"@christophervr/ooxml-core": "*"` (the repository root
 
 ### First release and baselines
 
-- **Untagged and not on npm (E404)** (the UI before its first publish): released as `initial` at its manifest version (no bump), tagged `@christophervr/office-ui@<manifest version>`. This is what the scheduled run does if nobody bootstraps the package by hand.
+- **Untagged and not on npm (E404)** (the UI before its first publish): released as `initial` at its manifest version (no bump), tagged `ooxml-ui@<manifest version>`. This is what the scheduled run does if nobody bootstraps the package by hand.
 - **Published by hand, never tagged** (the manual bootstrap below): the registry version is a baseline, not a reason to release. The planner uses the commit npm recorded as `gitHead` for that version when it is in this history (so UI changes made since the manual publish still release), otherwise `HEAD`, and the workflow pushes the tag `<npm-name>@<published version>` there (the "Adopt baseline tags" step). If the tag lands on `HEAD` because npm had no usable `gitHead`, any change between the manual publish and that run is treated as already released: move the tag by hand if that matters.
 - If a baseline tag is deleted for a package that is on npm and was never adopted, the planner sees an untagged published package. Restore the tag rather than rely on that.
 
-`@christophervr/ooxml-core@0.1.0` points at `1272e23`, the commit npm records as `gitHead` of the published `0.1.0`.
+`ooxml-core@0.1.0` points at `1272e23`, the commit npm records as `gitHead` of the published `0.1.0`.
 
 ## Commit conventions
 
@@ -77,8 +77,8 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md#commit-conventions). The `PR hygiene / 
 **Manual dispatch with `tag`** re-publishes one existing tag of either package (skips the `release` job), for when a publish failed or was skipped:
 
 ```sh
-gh workflow run release.yml -f tag=@christophervr/ooxml-core@0.2.0
-gh workflow run release.yml -f tag=@christophervr/office-ui@0.1.0
+gh workflow run release.yml -f tag=ooxml-core@0.2.0
+gh workflow run release.yml -f tag=ooxml-ui@0.1.0
 ```
 
 `scripts/publish-released.mjs` publishes the released packages in dependency order (core, then ui), each with `npm publish --provenance --access public` run **from that package's own directory**. Before uploading it checks that the manifest on disk is the version being published, that no dependency uses `file:`/`link:` or a `workspace:` range on anything but the sibling, that a sibling required by the package is already on npm, and that the version is not already published (it is skipped if so, so re-runs are safe). A version older than the registry's `latest` is published under the `old` dist-tag. `--dry-run` prints the commands without publishing.
@@ -91,8 +91,8 @@ There is no npm token anywhere. The `publish` job requests an OIDC token (`id-to
 
 | Package                     | Organization or user | Repository   | Workflow filename | Environment |
 | --------------------------- | -------------------- | ------------ | ----------------- | ----------- |
-| `@christophervr/ooxml-core` | `ChristopherVR`      | `ooxml-core` | `release.yml`     | `npm`       |
-| `@christophervr/office-ui`  | `ChristopherVR`      | `ooxml-core` | `release.yml`     | `npm`       |
+| `ooxml-core` | `ChristopherVR`      | `ooxml-core` | `release.yml`     | `npm`       |
+| `ooxml-ui`  | `ChristopherVR`      | `ooxml-core` | `release.yml`     | `npm`       |
 
 ## One-time setup
 
@@ -100,24 +100,27 @@ There is no npm token anywhere. The `publish` job requests an OIDC token (`id-to
 2. **`RELEASE_TOKEN` secret**: a fine-grained personal access token with `Contents: Read and write` on this repository, owned by a repository admin. The default `GITHUB_TOKEN` cannot be granted ruleset bypass, so without it the release commit and baseline tags cannot be pushed.
 3. **`NPM_PUBLISH` repository variable** set to `true`.
 4. **`npm` environment** (Settings, Environments), optionally with required reviewers.
-5. The trusted publisher for `@christophervr/ooxml-core` (already configured) and for `@christophervr/office-ui`. npm only lets you add a trusted publisher to a package that exists, so the UI needs one manual publish first.
+5. The trusted publisher for `ooxml-core` and for `ooxml-ui`. npm only lets you add a trusted publisher to a package that exists, so each new package name needs one manual publish first.
 
-### First publish of `@christophervr/office-ui` (manual bootstrap)
+### First publish of a new package name (manual bootstrap)
 
-Trusted publishing cannot create a package. Either publish the first version by hand, or let the workflow try (it will fail at the `npm publish` step with a 404/permission error until the publisher exists, and the retry is `gh workflow run release.yml -f tag=@christophervr/office-ui@<version>`). By hand, from a clean checkout of the commit you want to publish, logged in to npm with an account that owns the `@christophervr` scope:
+The packages were first published as `@christophervr/ooxml-core` and `@christophervr/office-ui`; from 2026-10 they are the unscoped `ooxml-core` and `ooxml-ui`. Publish core before the UI.
+
+Trusted publishing cannot create a package. Either publish the first version by hand, or let the workflow try (it will fail at the `npm publish` step with a 404/permission error until the publisher exists, and the retry is `gh workflow run release.yml -f tag=ooxml-ui@<version>`). By hand, from a clean checkout of the commit you want to publish, logged in to npm with the account that will own the packages:
 
 ```sh
 git pull
 bun install
 bun run build                         # core first: the UI resolves it through dist
 bun run --cwd packages/ui build
-npm login                             # as an owner of the @christophervr scope (2FA)
-node scripts/publish-released.mjs --tag @christophervr/office-ui@<version> --manual
+npm login                             # 2FA
+node scripts/publish-released.mjs --tag ooxml-core@<version> --manual
+node scripts/publish-released.mjs --tag ooxml-ui@<version> --manual
 ```
 
 (`publish-released.mjs` does what the workflow does: it rewrites the ui manifest's `*` on core to `^<core version on disk>` for the upload only and restores the file, refuses to publish unless that core version is already on npm, and publishes from `packages/ui`. `--manual` only omits provenance, which needs a CI OIDC token; that is expected for the first publish. `--dry-run` prints the command first.)
 
-Then configure the trusted publisher (table above) on npmjs.com. Nothing else is needed: the next scheduled run sees `@christophervr/office-ui@<version>` on npm with no tag, treats it as the baseline (see "First release and baselines"), pushes the tag, and later UI changes release normally. If you want the tag immediately: `git tag @christophervr/office-ui@<version> <commit> && git push origin @christophervr/office-ui@<version>`.
+Then configure the trusted publisher (table above) on npmjs.com. Nothing else is needed: the next scheduled run sees `ooxml-core@<version>` and `ooxml-ui@<version>` on npm with no tag, treats it as the baseline (see "First release and baselines"), pushes the tag, and later UI changes release normally. If you want the tag immediately: `git tag ooxml-ui@<version> <commit> && git push origin ooxml-ui@<version>`.
 
 ## Housekeeping
 

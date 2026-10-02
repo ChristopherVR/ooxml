@@ -1,24 +1,24 @@
 name: Release
 
 # Adapted from ChristopherVR/pptx-viewer .github/workflows/release.yml (Apache-2.0). See
-# docs/releasing.md for the whole flow. Two packages (core at the root, office-ui at packages/ui),
+# docs/releasing.md for the whole flow. Two packages (core at the root, ooxml-ui at packages/ui),
 # each with its own tag, changelog and npm publish.
 
 on:
   # Hourly. The planner is cumulative (the package is diffed from its own last tag), so everything
   # merged since the previous run lands in one release, and a run with no changes exits at the
   # planning step, so quiet hours are cheap no-ops. The baseline tag
-  # `@christophervr/ooxml-core@0.1.0` marks the version already published, so the first run is a
+  # `ooxml-core@0.1.0` marks the version already published, so the first run is a
   # no-op until a commit touches published files (see docs/releasing.md). A package that is
-  # neither tagged nor on npm (office-ui before its first publish) is released as `initial`.
+  # neither tagged nor on npm (ooxml-ui before its first publish) is released as `initial`.
   schedule:
     - cron: '0 * * * *' # hourly, on the hour
   # Manual runs, two modes:
   #   - no input: cut a release now (same as the schedule would).
   #   - tag=<npm-name>@<version>: re-publish ONLY that existing tag (either package) to npm,
   #     skipping the release job. Useful when a publish was skipped or failed:
-  #       gh workflow run release.yml -f tag=@christophervr/ooxml-core@0.1.0
-  #       gh workflow run release.yml -f tag=@christophervr/office-ui@0.1.0
+  #       gh workflow run release.yml -f tag=ooxml-core@0.1.0
+  #       gh workflow run release.yml -f tag=ooxml-ui@0.1.0
   workflow_dispatch:
     inputs:
       tag:
@@ -77,7 +77,7 @@ jobs:
         id: plan
         run: node scripts/release-plan.mjs --write
 
-      # A package published by hand (the manual first publish of office-ui) has no tag yet. The
+      # A package published by hand (the manual first publish of ooxml-ui) has no tag yet. The
       # planner baselines it at the commit npm recorded (or HEAD); record that as the tag so the
       # next run finds it. No-op once the tags exist.
       - name: Adopt baseline tags for packages published by hand
@@ -318,7 +318,7 @@ jobs:
 
       - run: bun run build
 
-      # Workspace packages (office-ui) build after core, which they resolve through its dist.
+      # Workspace packages (ooxml-ui) build after core, which they resolve through its dist.
       # In re-publish mode there is no plan artifact, so build every workspace package present.
       - name: Build workspace packages
         env:
@@ -331,7 +331,7 @@ jobs:
             node scripts/build-released.mjs
           fi
 
-      # Publishes each released package from its own directory (core first, then office-ui), with
+      # Publishes each released package from its own directory (core first, then ooxml-ui), with
       # OIDC provenance. A `workspace:` range on core is rewritten to a caret range for the upload.
       - name: Publish to npm
         env:

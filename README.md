@@ -1,6 +1,6 @@
 <div align="center">
 
-# @christophervr/ooxml-core
+# ooxml-core
 
 **Read, edit, validate and write Office Open XML documents in TypeScript.**
 One package, one XML model, every format: Word, PowerPoint and the shared building blocks beneath them. Spreadsheets, Visio and more are planned.
@@ -28,11 +28,11 @@ One package, one XML model, every format: Word, PowerPoint and the shared buildi
 
 ## One package, many areas
 
-`@christophervr/ooxml-core` is a **single published package**. Every area is a subpath import, so you only load what you use, and the formats are symmetrical: `docx` and `pptx` are each imported through their own subpaths, and the root entry groups only the shared building blocks by namespace.
+`ooxml-core` is a **single published package**. Every area is a subpath import, so you only load what you use, and the formats are symmetrical: `docx` and `pptx` are each imported through their own subpaths, and the root entry groups only the shared building blocks by namespace.
 
 ```ts
-import { parseXml } from '@christophervr/ooxml-core/xml'; // one area
-import { xml, opc } from '@christophervr/ooxml-core'; // or by namespace (shared building blocks)
+import { parseXml } from 'ooxml-core/xml'; // one area
+import { xml, opc } from 'ooxml-core'; // or by namespace (shared building blocks)
 ```
 
 | Area       | What it is                                                                                                                                                                                                                                                          |
@@ -52,7 +52,7 @@ Legacy binary formats (`.doc`, `.xls`, `.ppt`) and the compound-file container l
 ## Install
 
 ```bash
-npm install @christophervr/ooxml-core
+npm install ooxml-core
 ```
 
 Optional peer dependencies enable specific features: `node-forge` and `xml-crypto` for digital signatures (`/pptx/signature-node`), and `@napi-rs/canvas` for server-side rasterisation.
@@ -62,7 +62,7 @@ Optional peer dependencies enable specific features: `node-forge` and `xml-crypt
 **Open a Word document, change it, save it**
 
 ```ts
-import { loadDocx } from '@christophervr/ooxml-core/docx';
+import { loadDocx } from 'ooxml-core/docx';
 
 const loaded = await loadDocx(bytes); // Uint8Array | ArrayBuffer
 loaded.model.blocks; // paragraphs and tables
@@ -72,7 +72,7 @@ const edited = await loaded.save(); // original package parts are preserved
 **Build or edit a PowerPoint deck**
 
 ```ts
-import { PptxHandler } from '@christophervr/ooxml-core/pptx';
+import { PptxHandler } from 'ooxml-core/pptx';
 
 const { handler, data, createSlide } = await PptxHandler.create({ title: 'Quarterly Review' });
 data.slides.push(
@@ -84,8 +84,8 @@ const bytes = await handler.save(data.slides); // a valid .pptx
 **Work at the package level**
 
 ```ts
-import { parseXml } from '@christophervr/ooxml-core/xml';
-import { parseRelationships, resolvePartPath } from '@christophervr/ooxml-core/opc';
+import { parseXml } from 'ooxml-core/xml';
+import { parseRelationships, resolvePartPath } from 'ooxml-core/opc';
 
 const rels = parseRelationships(relsXml);
 const part = resolvePartPath('word/document.xml', rels.get('rId5')!.target);

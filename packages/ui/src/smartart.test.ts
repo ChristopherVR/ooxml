@@ -1,4 +1,4 @@
-import type { DiagramDrawing, DiagramDrawingShape } from '@christophervr/ooxml-core/diagram';
+import type { DiagramDrawing, DiagramDrawingShape } from 'ooxml-core/diagram';
 import { registerOfficeUi, type SmartArtRenderReport } from './index.js';
 
 beforeAll(() => registerOfficeUi());

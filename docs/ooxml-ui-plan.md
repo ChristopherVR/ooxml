@@ -1,16 +1,16 @@
 # Office UI package plan
 
-`@christophervr/office-ui` (`packages/ui`) is the second published package of this repository
+`ooxml-ui` (`packages/ui`) is the second published package of this repository
 (section 6 of `agnostic-core-plan.md` proposed the idea; this file is the working plan and
 supersedes its layout). It holds the web components every Office product needs, and nothing
 product-specific.
 
 ## Decisions
 
-- **Layout.** The repository root stays the published `@christophervr/ooxml-core`; `src/` and
+- **Layout.** The repository root stays the published `ooxml-core`; `src/` and
   its paths do not move. `package.json` lists `"workspaces": ["packages/*"]`, so `packages/ui` is
   a Bun workspace next to it. The root is not a workspace member (a package cannot be its own
-  workspace), so the UI declares `"@christophervr/ooxml-core": "^0.1.0"` as an ordinary semver
+  workspace), so the UI declares `"ooxml-core": "^0.1.0"` as an ordinary semver
   dependency and development resolves the core **from source** (tsconfig `paths` and a vitest
   alias to `../../src/<area>/index.ts`; declaration builds read `../../dist`). Keep that range
   in step with the core when it reaches 0.2.0 (release tooling: see "Release").
@@ -22,7 +22,7 @@ product-specific.
   Typed events: `office-command`, `office-dialog-close`, `office-presence-select`,
   `office-status-activate`, `office-smartart-render`, plus native `input`/`change` for value
   controls. ESM only, strict TypeScript (`exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`).
-- **Product rule.** Viewers list `@christophervr/office-ui` as a normal `dependency` of every
+- **Product rule.** Viewers list `ooxml-ui` as a normal `dependency` of every
   published editor package, so users never install it by hand. The README and install docs of
   the viewers never mention it as a separate install step.
 - **Honesty.** `office-ui-smartart` shows the cached drawing and reports approximated
@@ -48,7 +48,7 @@ Sources: `pptx` = `pptx-viewer/packages/shared/src/web-components` (and `render/
 | Split button, menu/popover, colour picker, tooltip                                                       | pptx/docx               | **later (wave 2)**                 | Need a shared popover (anchoring, outside click, focus return) first; build once, then the three consumers                      |
 | Search field, ribbon gallery, ribbon section, ribbon toggle                                              | pptx                    | **later (wave 2)**                 | Gallery and section depend on the popover                                                                                       |
 | Theme editor                                                                                             | pptx                    | **later (wave 3)**                 | Format-neutral in intent but bound to the pptx theme model; move after the shared theme model is in core                        |
-| i18n plumbing (`shared/src/i18n`, `packages/locales`)                                                    | pptx                    | **later (wave 2)**                 | Catalogues stay data (`@christophervr/office-ui/i18n/<locale>`); keys namespaced `ui.*`                                         |
+| i18n plumbing (`shared/src/i18n`, `packages/locales`)                                                    | pptx                    | **later (wave 2)**                 | Catalogues stay data (`ooxml-ui/i18n/<locale>`); keys namespaced `ui.*`                                         |
 | Collaboration UI beyond avatars (cursors, follow, comments)                                              | both                    | **later**                          | Depends on the core `collab` session API                                                                                        |
 | Chart and 3D SmartArt renderers (`three-view`, `smartart-3d`)                                            | pptx                    | **later / stays**                  | Consume pptx runtime models, not neutral core output; revisit when core owns `chart` and the 3D drawing model                   |
 | Presentation Home/Insert/Draw/Transitions/Animations/View strips, slide-show options, subtitle settings  | pptx                    | **stays**                          | Product content                                                                                                                 |
@@ -57,7 +57,7 @@ Sources: `pptx` = `pptx-viewer/packages/shared/src/web-components` (and `render/
 
 ## Token map
 
-| pptx                            | office-ui                    |
+| pptx                            | ooxml-ui                    |
 | ------------------------------- | ---------------------------- |
 | `--pptx-foreground`             | `--office-foreground`        |
 | `--pptx-muted-foreground`       | `--office-muted-foreground`  |
@@ -74,7 +74,7 @@ its theming API does not change.
 
 pptx-viewer must not break, so migration is two-step and the public pptx tags never disappear.
 
-1. **Wave 1 (this PR).** office-ui exists and is released; pptx is untouched.
+1. **Wave 1 (this PR).** ooxml-ui exists and is released; pptx is untouched.
 2. **Wave 2 (pptx-viewer).** Add the dependency, call `registerOfficeUi({ theme: false })` and map
    tokens. For each moved element the pptx tag becomes a thin alias:
    `class PptxUiCheckbox extends customElements.get('office-ui-checkbox')` (a trivial subclass,
@@ -92,7 +92,7 @@ pptx-viewer must not break, so migration is two-step and the public pptx tags ne
 
 docx-viewer:
 
-1. Add `@christophervr/office-ui` to the `dependencies` of each published editor package
+1. Add `ooxml-ui` to the `dependencies` of each published editor package
    (not to peers, not to the install docs) and register through `registerOfficeUi()` from the
    editor's own entry (SSR-safe, idempotent).
 2. Replace the local button/checkbox/select/dialog/status primitives with `office-ui-*`
@@ -109,14 +109,14 @@ diagrams that have a cached drawing, behind a parity test.
 ## Release
 
 Independent versions per package (as proposed in `agnostic-core-plan.md` 6.2): tag
-`@christophervr/office-ui@<version>`, changelog from commits touching `packages/ui`. The release
+`ooxml-ui@<version>`, changelog from commits touching `packages/ui`. The release
 scripts and CI are owned by the release-tooling work; they must (a) plan and publish
 `packages/ui` separately, (b) rewrite nothing (the dependency range is already a plain `^`
 range), (c) run `bun run --cwd packages/ui typecheck|test`, then root `build`, `packages/ui`
 `build` and `test:package` before publishing. Core must be built before the UI (declarations
 read `../../dist`).
 
-## First publish of `@christophervr/office-ui`
+## First publish of `ooxml-ui`
 
 A brand-new scoped name cannot use trusted publishing yet: the package does not exist, so there
 is nothing to attach a trusted publisher to. The first publish is manual, with a logged-in
@@ -130,7 +130,7 @@ bun run --cwd packages/ui build
 bun run --cwd packages/ui test:package   # packs core + UI, installs, imports every entry (Node + jsdom)
 cd packages/ui
 npm pack --dry-run                  # inspect: dist/, LICENSE, NOTICE, README.md, package.json only
-npm login                           # manual; scope @christophervr must be owned by the account
+npm login                           # manual, with 2FA
 npm publish --access public
 ```
 

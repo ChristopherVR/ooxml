@@ -12,7 +12,7 @@
  * repo-specific part): the same file is vendored in ooxml-core.
  *
  * Every published package carries its own version and its own git tag `<npm-name>@<version>`
- * (e.g. `@christophervr/ooxml-core@0.2.0`). From the history since each package's last tag this
+ * (e.g. `ooxml-core@0.2.0`). From the history since each package's last tag this
  * script computes which packages changed (directly, or because an internal dependency is being
  * released) and the next version for each. The bump level follows Conventional Commits: a
  * breaking change (`!` or a BREAKING CHANGE footer) bumps major, `feat` bumps minor, anything
@@ -50,7 +50,7 @@ import { fileURLToPath } from 'node:url';
 export const PACKAGES = {
 	core: {
 		dir: '.',
-		npm: '@christophervr/ooxml-core',
+		npm: 'ooxml-core',
 		paths: [
 			'src/',
 			'scripts/pptx/merge-declarations.mjs',
@@ -66,7 +66,7 @@ export const PACKAGES = {
 			'THIRD-PARTY-LICENSES',
 		],
 	},
-	ui: { dir: 'packages/ui', npm: '@christophervr/office-ui' },
+	ui: { dir: 'packages/ui', npm: 'ooxml-ui' },
 };
 
 /** Paths outside any package that still change every published artifact: none for one package. */

@@ -14,7 +14,7 @@
  *   - the manifest on disk is the version being published (a re-publish checks out the tag),
  *   - no dependency range uses the `file:` or `link:` protocol, and no `workspace:` range names
  *     anything but a sibling of this repo, because no consumer can install them. A `workspace:`
- *     range on a sibling (office-ui on ooxml-core) is published as `^<sibling version on disk>`:
+ *     range on a sibling (ooxml-ui on ooxml-core) is published as `^<sibling version on disk>`:
  *     the manifest is rewritten only for the `npm publish` call and restored afterwards, so the
  *     repo keeps its workspace link (npm never rewrites `workspace:` itself),
  *   - a sibling the package requires is already on npm (core is published before ui),

@@ -1,4 +1,4 @@
-// `@christophervr/ooxml-core/collab`: format-neutral real-time collaboration on Yjs. Session and
+// `ooxml-core/collab`: format-neutral real-time collaboration on Yjs. Session and
 // provider lifecycle, awareness/presence, transport-neutral sync, update codecs, ordering helpers,
 // asset sync and the adapter seam products implement. No DOM, UI, ProseMirror or React.
 // See docs/collab-area.md.

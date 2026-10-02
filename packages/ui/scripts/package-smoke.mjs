@@ -47,7 +47,7 @@ try {
 		![...files].some((file) => /\.test\.|__tests__|src\//.test(file)),
 		'tests or sources were packed',
 	);
-	assert(manifest.dependencies['@christophervr/ooxml-core'], 'the core dependency is missing');
+	assert(manifest.dependencies['ooxml-core'], 'the core dependency is missing');
 	assert(
 		!JSON.stringify(manifest.dependencies).match(/file:|workspace:|link:/),
 		'a runtime dependency uses file:, workspace: or link:',

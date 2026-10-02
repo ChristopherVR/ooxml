@@ -4,12 +4,12 @@ const CONTRACT_KEY = Symbol.for('office-ui.web-control-contract');
 
 type Stamped = CustomElementConstructor & { [CONTRACT_KEY]?: number };
 
-/** Throws when a tag is already defined by an incompatible office-ui build. */
+/** Throws when a tag is already defined by an incompatible ooxml-ui build. */
 export function assertContract(registry: Pick<CustomElementRegistry, 'get'>, tag: string): void {
 	const revision = (registry.get(tag) as Stamped | undefined)?.[CONTRACT_KEY];
 	if (revision !== undefined && revision !== CONTRACT_REVISION) {
 		throw new Error(
-			`Incompatible ${tag} contract (${revision}; expected ${CONTRACT_REVISION}). Load one version of @christophervr/office-ui per window.`,
+			`Incompatible ${tag} contract (${revision}; expected ${CONTRACT_REVISION}). Load one version of ooxml-ui per window.`,
 		);
 	}
 }

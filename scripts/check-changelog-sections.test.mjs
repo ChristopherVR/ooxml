@@ -11,7 +11,7 @@ const STUB = ['## 2026-08-13', '', '_Releases: _', ''].join('\n');
 const REAL = [
 	'## 2026-08-13',
 	'',
-	'_Releases: @christophervr/ooxml-core@2.3.6, @christophervr/ooxml-core@2.18.0_',
+	'_Releases: ooxml-core@2.3.6, ooxml-core@2.18.0_',
 	'',
 	'### Bug Fixes',
 	'',
@@ -25,7 +25,7 @@ test('parseSections splits on ## headings and ignores the file header', () => {
 	const sections = parseSections(`${HEADER}${REAL}${STUB}`);
 	assert.equal(sections.length, 2);
 	assert.equal(sections[0].heading, '## 2026-08-13');
-	assert.ok(sections[0].body.some((l) => l.startsWith('_Releases: @christophervr/ooxml-core')));
+	assert.ok(sections[0].body.some((l) => l.startsWith('_Releases: ooxml-core')));
 	assert.ok(sections[1].body.includes('_Releases: _'));
 });
 
