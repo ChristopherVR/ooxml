@@ -1,35 +1,84 @@
-# Unreleased core development bridge
+# Pinned core development integration
 
-`ooxml-visio.patch` contains the new canonical `ooxml-core/visio` area and its integration changes, against the exact revision in `core-revision.txt`. It is retained privately so this viewer can be built before the core changes are separately approved and released.
+`core-revision.txt` pins the published source baseline
+`7364222cc9687da5e10a5992c2bf373cb6d68d98` from `ChristopherVR/ooxml`.
+That commit already contains the canonical `ooxml-core/visio` area. No historical
+Visio bootstrap patch is needed to reproduce it.
 
-Do not maintain a second implementation here. Make format changes only in the sibling `ooxml` checkout, rerun its strict checks and tests, then regenerate this patch. The setup script never resets or overwrites an existing checkout.
+The root dependency remains the portable `file:../ooxml`. `npm run setup:core`
+clones that sibling when absent, checks out the exact pin, verifies the checkout,
+installs the reviewed `core-package-lock.json` with `npm ci --ignore-scripts`, and
+builds the Visio export. The integration lock was retained after verifying all
+published manifest dependency/workspace fields match and successfully running a
+clean npm CI install and Visio build. The upstream repository uses Bun; this lock
+exists solely to make the viewer's npm CI setup deterministic.
 
-Once the core area is released, replace the root `file:../ooxml` dependency with the reviewed published version, remove this bridge and verify a clean install and all entry points.
+Existing checkouts are never reset or patched by setup. Wrong revisions, staged
+changes, unexpected tracked/untracked source changes and different npm locks are
+refused before any install or build. Equivalent npm lock formatting is accepted.
+`npm run test:core-setup` covers these refusal paths, the clean baseline, optional
+patches, isolated cloning and local dependency linking without network access.
+
+## Trying local core changes
+
+All parsing and document-model changes still belong in the core repository.
+To leave the canonical sibling untouched while testing a separate checkout, set
+`VISIO_CORE_DIR` to its absolute path or a path relative to the viewer root:
+
+```sh
+VISIO_CORE_DIR=../my-ooxml-checkout npm run setup:core
+npm ci --ignore-scripts
+npm ci --prefix packages/bindings --ignore-scripts
+VISIO_CORE_DIR=../my-ooxml-checkout npm run link:core
+VISIO_CORE_DIR=../my-ooxml-checkout npm run check
+VISIO_CORE_DIR=../my-ooxml-checkout npm run test:browser
+```
+
+For an intentionally modified checkout, build it manually instead of running
+setup until its changes have been reviewed. `link:core` changes only the installed
+`node_modules/ooxml-core` symlink. It refuses to overwrite a real directory and
+leaves both package manifests and locks unchanged. Run it again after `npm ci`,
+which restores the manifest's canonical sibling link. Core checks refuse a mismatch
+between the selected checkout and the installed link; packed-consumer and raster
+checks use the same override. Historical 3.5.1 converter audits retain their
+original sibling-core dependency for that separate characterization evidence.
+
+When unreleased changes need a reproducible private bridge, run
+`VISIO_CORE_DIR=../my-ooxml-checkout node scripts/update-core-patch.mjs` after core
+checks. It requires the pinned HEAD and an unstaged index, and records tracked and
+untracked changes as optional `ooxml-visio.patch`. Empty patches are removed. Setup
+applies this patch only to a newly cloned checkout and requires an exact match for
+an existing checkout. Validate a fresh isolated setup before sharing a patch.
+After a separately approved core publication, deliberately advance the pin and
+remove incorporated changes from the optional patch. Do not maintain a second
+format implementation in this repository.
 
 ## Released converter package integration
 
-Normal development uses the exact published `emf-converter` 4.8.8 dev dependency
-and the root npm lock's registry integrity. `npm ci` installs it; no converter
-source checkout, patch application or source build is required. The core adapter
-accepts a trusted package function, so this viewer-only dependency does not change
-the core's existing converter dependency or its publication commit.
+Normal development uses the exact published `emf-converter` 4.8.9 production
+dependency and the root npm lock's registry integrity. `npm ci` installs it; no
+converter source checkout, patch application or source build is required. The
+core adapter accepts a trusted package function, so this viewer dependency does
+not change the core's existing converter dependency or its publication baseline.
 
-`npm run setup:converter` verifies the installed package version, lock integrity and
-browser bundle hash recorded in `emf-converter-release.json`. `npm run check` now
-includes `npm run check:converter`, which runs seven deadline-isolated integration
-cases against the package's actual browser export. The released browser bundle is
-byte-identical to the previously verified corrected source build. Node's browser
-condition is explicit in that test worker and its resolved export is asserted;
-Node codecs are never selected for these tests.
+`npm run setup:converter` verifies the installed package version, production
+dependency declaration, lock integrity and browser bundle SHA-256 recorded in
+`emf-converter-release.json`. Registry `gitHead` and the peeled v4.8.9 tag both
+identify source commit `f0ca94d898cc4bf6f51e8c4e81085a61a5bf5bf0`.
+`npm run check:converter` runs deadline-isolated integration cases against the
+package's actual browser export. The browser condition is explicit in that test
+worker and its resolved export is asserted. Browser/worker bundle checks reject
+Node-native canvas and filesystem loading.
 
-The core adapter accepts only a small generated-case classic EMF subset, makes a
-private input copy, reinspects it, uses fixed non-raster converter options and
-returns independently validated neutral vectors. It contains no EMF renderer.
-Live document conversion remains disabled. These generated regressions do not
-establish native Visio fidelity or a hard peak-memory quota.
+The adapter accepts only a bounded generated-case classic EMF subset, copies and
+reinspects the input, uses fixed non-raster converter options and returns
+independently validated neutral vectors. It contains no EMF renderer. Generated
+regressions do not establish native Visio fidelity or a hard peak-memory quota.
+Unsupported records still need honest diagnostics and fallback presentation.
 
 The converter is Apache-2.0. Its unmodified license and shipped third-party notices
 remain in `emf-converter-LICENSE.txt` and `emf-converter-THIRD_PARTY_NOTICES.txt`.
+Both were checked against the 4.8.9 package and remain unchanged.
 
 ## Historical source correction and audit
 

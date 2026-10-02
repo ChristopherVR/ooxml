@@ -99,6 +99,7 @@ export function hasVisibleShapeContent(
 		!(shape.kind === 'group' && shape.groupDisplayMode === 0) &&
 		(shape.geometry.length > 0 ||
 			!!shape.image ||
+			!!shape.foreignVector ||
 			!!shape.text.plainText ||
 			shape.kind === 'foreign');
 	const renderable =

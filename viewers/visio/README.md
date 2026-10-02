@@ -2,7 +2,7 @@
 
 A private, local-first Visio viewing project. One headless controller, one SVG renderer and one custom element, with thin React, Vue, Angular, Svelte, Solid and vanilla adapters. Format logic belongs to the sibling `ooxml` repository's new `ooxml-core/visio` area.
 
-**This is an early implementation, not Microsoft Visio parity.** It cannot edit or save native drawings. The [capability ledger](docs/parity.md) separates implemented code, tested evidence and missing functionality. Real upstream drawings and embedded previews have been inspected with a secondary renderer, but no controlled Microsoft Visio full-page comparison has passed.
+**This is an early implementation, not Microsoft Visio parity.** The viewer has no editing or native-save UI. The core exposes an experimental source-backed plain-text save API; native Visio reopening remains unverified. The [capability ledger](docs/parity.md) separates implemented code, tested evidence and missing functionality. Real upstream drawings and embedded previews have been inspected with a secondary renderer, but no controlled Microsoft Visio full-page comparison has passed.
 
 ## Local setup
 
@@ -16,7 +16,7 @@ npm run check
 npm run dev
 ```
 
-The setup script clones the public core at the pinned revision in `integration/core-revision.txt`, applies the included local integration patch, installs dependencies from a pinned lock and builds only the Visio subpath. It refuses mismatched revisions, staged changes, different source edits or a different npm lock in an existing sibling checkout without overwriting them. The patch is a temporary development bridge, not a second canonical format implementation. Core changes must be reviewed and released separately before replacing the local dependency with a published version.
+The setup script clones the public core at the pinned revision in `integration/core-revision.txt`, applies an optional integration patch only when present, installs dependencies from a pinned lock and builds only the Visio subpath. It refuses mismatched revisions, staged changes, different source edits or a different npm lock in an existing sibling checkout without overwriting them. An optional patch is a temporary development bridge, not a second canonical format implementation. Core changes must be reviewed and released separately before replacing the local dependency with a published version.
 
 Open the printed local URL for the documentation landing page or `/demo/` for the viewer workspace. `.vsdx` input stays in your browser; there are no uploads, telemetry, external fonts or document URL fetches.
 
@@ -86,10 +86,10 @@ The browser custom element uses a dedicated parsing worker with cancellation and
 
 ## Metafile compatibility checks
 
-Embedded enhanced metafiles now receive bounded record-level compatibility diagnostics. The checker rejects unsupported formats, styles, mapping states and resource amplification before any conversion. It does not execute embedded WMF data, fonts, images, scripts or external references. All five inspected real EMF media parts remain unsupported; passing structural preflight never enables rendering.
+Embedded enhanced metafiles now receive bounded record-level compatibility diagnostics. The checker rejects unsupported formats, styles, mapping states and resource amplification before any conversion. It does not execute embedded WMF data, fonts, images, scripts or external references. The disposable parser worker converts only a narrow admitted line/rectangle/ellipse and stock-object subset through the released converter package, with document budgets and a parent-owned hard deadline. Direct core parsing remains inspection-only unless a trusted converter is explicitly supplied in an isolated host. All five previously inspected real EMF media parts remain unsupported; structural admission alone does not promise rendering or Visio fidelity.
 
-The headless core also contains a tested neutral-vector sanitizer and transport validator for future converter integration. That path is separate from live document rendering. Generated path-only clipping tests agree with the local Skia SVG backend; the installed librsvg backend ignores nested clip-path intersections. Browser and native Visio comparisons remain required. See [the detailed adoption review](docs/research/emf-adoption-review.md).
+The headless core contains a tested neutral-vector sanitizer and transport validator. The parser worker uses the released converter for a bounded primitive EMF subset, which shares live, SVG export and immutable print rendering. The non-worker parser fallback remains converter-free. Generated path-only clipping tests agree with the local Skia SVG backend; the installed librsvg backend ignores nested clip-path intersections. Browser and native Visio comparisons remain required. See [the detailed adoption review](docs/research/emf-adoption-review.md).
 
 ## Publication
 
-No npm publication, GitHub Pages deployment or public hosting is configured. A private GitHub repository must be created through an authorized signed-in connection before pushing these files. The local `ooxml` changes have not been pushed or released.
+This viewer remains private; no npm publication, GitHub Pages deployment or public hosting is configured. Its core integration pins a separately published source baseline. New local core changes require separate review and publication before advancing that pin; source publication does not imply an npm package release.

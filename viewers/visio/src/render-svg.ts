@@ -14,6 +14,8 @@ import {
 } from './viewer-layers.js';
 import { fillPaint } from './render-fill.js';
 import { renderImage } from './render-image.js';
+import { renderForeignVectorShape } from './render-foreign-vector-shape.js';
+import { ForeignVectorBudget } from './foreign-vector-budget.js';
 import { RenderResources } from './render-resources.js';
 import { applyArrowheads } from './arrowheads.js';
 import { assertViewableDocument } from './scene-validation.js';
@@ -47,6 +49,7 @@ interface RenderContext {
 	resources: RenderResources;
 	nodes: number;
 	textBudget: TextLayoutBudget;
+	vectorBudget: ForeignVectorBudget;
 	renderable: WeakMap<VisioShape, boolean>;
 	visible: WeakMap<VisioShape, boolean> | undefined;
 	interactive: boolean;
@@ -99,6 +102,7 @@ export function renderPage(
 		resources: new RenderResources(options.static ? defs : undefined),
 		nodes: 0,
 		textBudget: createTextLayoutBudget(),
+		vectorBudget: new ForeignVectorBudget(),
 		renderable: new WeakMap(),
 		visible,
 		interactive: !options.static,
@@ -195,7 +199,9 @@ function drawOwn(shape: VisioShape, group: SVGElement, context: RenderContext): 
 	}
 	const raster = renderImage(shape, resources);
 	if (raster) group.append(raster);
+	const vector = renderForeignVectorShape(shape, context.vectorBudget);
+	if (vector) group.append(vector);
 	if (shape.text.plainText) group.append(renderText(shape.text, warnings, context.textBudget));
-	if (shape.kind === 'foreign' && !shape.image)
+	if (shape.kind === 'foreign' && !shape.image && !shape.foreignVector)
 		warnings.add('Embedded or foreign objects are not rendered in this build.');
 }

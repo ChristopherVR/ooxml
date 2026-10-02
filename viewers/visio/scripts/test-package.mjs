@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import assert from 'node:assert/strict';
+import { coreDirectory } from './core-paths.mjs';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..'),
 	temporary = mkdtempSync(resolve(tmpdir(), 'visio-packed-consumer-'));
 const env = {
@@ -35,7 +36,7 @@ writeFileSync(
 		private: true,
 		type: 'module',
 		dependencies: {
-			'ooxml-core': `file:${resolve(root, '..', 'ooxml')}`,
+			'ooxml-core': `file:${coreDirectory}`,
 			'@christophervr/visio-viewer': `file:${resolve(temporary, packed.filename)}`,
 		},
 	}),

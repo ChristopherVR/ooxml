@@ -1,53 +1,49 @@
-import { execFileSync, spawnSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, copyFileSync, mkdtempSync } from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { resolve } from 'node:path';
+import { isDeepStrictEqual } from 'node:util';
+import { coreDirectory as core, viewerRoot as root } from './core-paths.mjs';
+import { canonicalPatch, coreSnapshot } from './core-snapshot.mjs';
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const core = resolve(root, '..', 'ooxml');
 const revision = readFileSync(resolve(root, 'integration/core-revision.txt'), 'utf8').trim();
 const patchPath = resolve(root, 'integration/ooxml-visio.patch');
-const expectedPatch = readFileSync(patchPath, 'utf8').replace(/\r\n/g, '\n');
+const expectedPatch = existsSync(patchPath) ? canonicalPatch(readFileSync(patchPath, 'utf8')) : '';
 const lockPath = resolve(root, 'integration/core-package-lock.json');
-const git = (args, cwd = core) => execFileSync('git', args, { cwd, stdio: 'inherit' });
+const git = (args, cwd = core) =>
+	execFileSync('git', args, {
+		cwd,
+		stdio: 'inherit',
+		env: { ...process.env, GIT_TERMINAL_PROMPT: '0' },
+	});
 const output = (args) => execFileSync('git', args, { cwd: core, encoding: 'utf8' });
 if (!/^[a-f0-9]{40}$/.test(revision)) throw new Error('Invalid pinned core revision.');
 if (!existsSync(core)) {
 	git(['clone', 'https://github.com/ChristopherVR/ooxml.git', core], root);
 	git(['checkout', '--detach', revision]);
-	git(['apply', '--check', patchPath]);
-	git(['apply', patchPath]);
+	if (expectedPatch) {
+		git(['apply', '--check', patchPath]);
+		git(['apply', patchPath]);
+	}
 }
-// Refuse to mutate or build an unrelated/partially patched existing checkout.
+// Never reset, patch or build an unrelated/partially modified existing checkout.
 if (output(['rev-parse', 'HEAD']).trim() !== revision)
 	throw new Error(
-		'Existing ooxml checkout has a different revision. Use an isolated sibling checkout at integration/core-revision.txt. Nothing was overwritten.',
+		'Existing ooxml checkout has a different revision. Use an isolated checkout at integration/core-revision.txt with VISIO_CORE_DIR. Nothing was overwritten.',
 	);
 if (output(['diff', '--cached', '--name-only']).trim())
 	throw new Error('Existing ooxml checkout has staged changes. Nothing was overwritten.');
-let actualPatch = output(['diff', '--binary']);
-for (const file of output(['ls-files', '--others', '--exclude-standard'])
-	.trim()
-	.split('\n')
-	.filter(Boolean)) {
-	if (file === 'package-lock.json') continue;
-	const result = spawnSync('git', ['diff', '--no-index', '--binary', '--', '/dev/null', file], {
-		cwd: core,
-		encoding: 'utf8',
-	});
-	if (result.status !== 0 && result.status !== 1)
-		throw new Error(`Cannot verify untracked core file ${file}.`);
-	actualPatch += result.stdout;
-}
-if (actualPatch.replace(/\r\n/g, '\n') !== expectedPatch)
+if (coreSnapshot(core, revision) !== expectedPatch)
 	throw new Error(
-		'Existing ooxml changes do not match the included Visio patch. Nothing was overwritten. Use an isolated clean checkout, or rebuild your intentionally modified core manually.',
+		'Existing ooxml changes do not match the optional integration patch (or clean published baseline). Nothing was overwritten. Rebuild intentionally modified core manually, or review and regenerate the patch.',
 	);
 const installedLock = resolve(core, 'package-lock.json');
 if (
 	existsSync(installedLock) &&
-	readFileSync(installedLock, 'utf8') !== readFileSync(lockPath, 'utf8')
+	!isDeepStrictEqual(
+		JSON.parse(readFileSync(installedLock, 'utf8')),
+		JSON.parse(readFileSync(lockPath, 'utf8')),
+	)
 )
 	throw new Error(
 		'Existing core npm lock differs from the pinned integration lock. Nothing was overwritten.',
@@ -61,4 +57,6 @@ execFileSync('npm', ['ci', '--ignore-scripts', ...(cache ? ['--cache', cache] : 
 	stdio: 'inherit',
 });
 execFileSync('npm', ['run', 'build:visio'], { cwd: core, stdio: 'inherit' });
-console.log('Pinned Visio core ready. Run npm ci and npm ci --prefix packages/bindings.');
+console.log(
+	'Pinned Visio core ready. Run npm ci and npm ci --prefix packages/bindings. If using VISIO_CORE_DIR, run npm run link:core with the same override after npm ci.',
+);

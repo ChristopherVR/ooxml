@@ -1,9 +1,13 @@
 import { execFileSync } from 'node:child_process';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { resolve } from 'node:path';
+import { realpathSync } from 'node:fs';
+import { coreDirectory as core, viewerRoot } from './core-paths.mjs';
 
-const core = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', 'ooxml');
-// The viewer relies on unreleased local format code. Verify that code in CI too,
+if (realpathSync(resolve(viewerRoot, 'node_modules/ooxml-core')) !== realpathSync(core))
+	throw new Error(
+		'Installed ooxml-core does not match VISIO_CORE_DIR. Run npm run link:core with the same override after npm ci.',
+	);
+// Verify the selected published baseline or intentionally modified local format code,
 // rather than treating a successful viewer bundle as parser conformance evidence.
 for (const script of ['typecheck:strict', 'typecheck:pptx']) {
 	execFileSync('npm', ['run', script], { cwd: core, stdio: 'inherit' });

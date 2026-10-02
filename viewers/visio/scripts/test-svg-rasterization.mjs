@@ -1,3 +1,5 @@
+import { coreDirectory } from './core-paths.mjs';
+import { join } from 'node:path';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { execFileSync } from 'node:child_process';
@@ -6,7 +8,7 @@ import { JSDOM } from 'jsdom';
 
 // Secondary SVG renderer evidence only. This is not browser or Microsoft Visio visual parity.
 // Uses the native canvas already installed by the private sibling core checkout.
-const requireCore = createRequire(new URL('../../ooxml/package.json', import.meta.url));
+const requireCore = createRequire(join(coreDirectory, 'package.json'));
 const { createCanvas, loadImage } = requireCore('@napi-rs/canvas');
 const dom = new JSDOM('<!doctype html>');
 globalThis.document = dom.window.document;

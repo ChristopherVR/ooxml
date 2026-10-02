@@ -1,10 +1,10 @@
 import {
-	validateVisioForeignVector,
 	type VisioForeignVector,
 	type VisioForeignVectorClipPath,
 	type VisioForeignVectorNode,
 	type VisioForeignVectorCommand,
 } from 'ooxml-core/visio';
+import { ForeignVectorBudget } from './foreign-vector-budget.js';
 
 const NS = 'http://www.w3.org/2000/svg';
 let nextResource = 0;
@@ -13,8 +13,12 @@ const pathData = (commands: readonly VisioForeignVectorCommand[]) =>
 		.map(({ command, values }) => `${command}${values.length ? ' ' + values.join(' ') : ''}`)
 		.join(' ');
 /** Render an independently validated inert scene. Never forwards source tags, IDs or attributes. */
-export function renderForeignVector(source: unknown, owner: Document = document): SVGSVGElement {
-	const scene: VisioForeignVector = validateVisioForeignVector(source);
+export function renderForeignVector(
+	source: unknown,
+	owner: Document = document,
+	budget = new ForeignVectorBudget(),
+): SVGSVGElement {
+	const scene: VisioForeignVector = budget.take(source).vector;
 	const element = <K extends keyof SVGElementTagNameMap>(tag: K) => owner.createElementNS(NS, tag);
 	const root = element('svg'),
 		defs = element('defs'),

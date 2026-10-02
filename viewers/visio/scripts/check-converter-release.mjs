@@ -13,6 +13,10 @@ const release = JSON.parse(
 const packageRoot = resolve(dirname(require.resolve('emf-converter')), '..');
 const metadata = JSON.parse(readFileSync(resolve(packageRoot, 'package.json'), 'utf8'));
 const lock = JSON.parse(readFileSync(resolve(root, 'package-lock.json'), 'utf8'));
+const manifest = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8'));
+assert.equal(manifest.dependencies['emf-converter'], release.version);
+assert.equal(lock.packages[''].dependencies['emf-converter'], release.version);
+assert.notEqual(lock.packages['node_modules/emf-converter'].dev, true);
 assert.equal(metadata.name, 'emf-converter');
 assert.equal(metadata.version, release.version);
 assert.equal(lock.packages['node_modules/emf-converter'].version, release.version);

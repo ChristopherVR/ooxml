@@ -7,6 +7,7 @@ import {
 import { compatibilityNotes, compatibilityText, type CompatibilityNote } from './diagnostics.js';
 import { renderPage, svgElement } from './render-svg.js';
 import { assertViewableDocument } from './scene-validation.js';
+import { inspectForeignVectorResource } from './foreign-vector-budget.js';
 
 export const MAX_SVG_EXPORT_BYTES = 16 * 1024 * 1024;
 export interface SvgExportOptions {
@@ -142,6 +143,8 @@ export function estimatePageSvgBytes(
 				images.set(image.bytes, types);
 			}
 		}
+		if (shape.foreignVector)
+			reserve(inspectForeignVectorResource(shape.foreignVector.vector).svgBytes);
 		if (!shape.text.plainText) continue;
 		const text = shape.text;
 		const runs = text.runs.length

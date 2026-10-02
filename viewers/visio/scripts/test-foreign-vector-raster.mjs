@@ -1,3 +1,5 @@
+import { coreDirectory } from './core-paths.mjs';
+import { join } from 'node:path';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { execFileSync } from 'node:child_process';
@@ -5,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { JSDOM } from 'jsdom';
 import { sanitizeVisioForeignVectorTree } from 'ooxml-core/visio';
 import { renderForeignVector } from '../dist/render-foreign-vector.js';
-const requireCore = createRequire(new URL('../../ooxml/package.json', import.meta.url));
+const requireCore = createRequire(join(coreDirectory, 'package.json'));
 const { createCanvas, loadImage } = requireCore('@napi-rs/canvas');
 const dom = new JSDOM('<!doctype html>');
 const shape = (d, extra = {}) => ({ tag: 'path', attrs: { d, ...extra } });

@@ -3,6 +3,10 @@ import type { CompatibilityNote } from './diagnostics.js';
 import { estimatePageSvgBytes, exportPageSvg, MAX_SVG_EXPORT_BYTES } from './export-svg.js';
 import { assertViewableDocument } from './scene-validation.js';
 import { copySnapshotScene } from './snapshot-scene.js';
+import {
+	FOREIGN_VECTOR_SCENE_LIMITS,
+	inspectForeignVectorResource,
+} from './foreign-vector-budget.js';
 
 /** Application guardrails, not printer capabilities or Microsoft Visio limits. */
 export const PRINT_SNAPSHOT_LIMITS = Object.freeze({
@@ -17,6 +21,9 @@ export const PRINT_SNAPSHOT_LIMITS = Object.freeze({
 	maxImageBytes: 64 * 1024 * 1024,
 	maxUniqueImagePixels: 64_000_000,
 	maxImageInstancePixels: 256_000_000,
+	maxVectorNodes: FOREIGN_VECTOR_SCENE_LIMITS.maxNodes,
+	maxVectorCommands: FOREIGN_VECTOR_SCENE_LIMITS.maxCommands,
+	maxVectorOperands: FOREIGN_VECTOR_SCENE_LIMITS.maxOperands,
 	maxPageAxisCssPixels: 4096,
 	maxPageAreaCssPixels: 16_000_000,
 	maxTotalAreaCssPixels: 64_000_000,
@@ -55,6 +62,10 @@ export interface PrintSnapshotUsage {
 	readonly imageBytes: number;
 	readonly uniqueImagePixels: number;
 	readonly imageInstancePixels: number;
+	/** Includes all clip reference expansions and repeated/background vector instances. */
+	readonly vectorNodes: number;
+	readonly vectorCommands: number;
+	readonly vectorOperands: number;
 	readonly totalAreaCssPixels: number;
 	readonly validationShapeVisits: number;
 	/** Conservative bytes, characters and records across validation and the private copy pass. */
@@ -134,6 +145,8 @@ export function createPrintSnapshot(
 	// Account conservatively for source validation, a bounded private copy, validation of that
 	// copy, and exportPageSvg + renderPage validation per page, including unselected images.
 	const passes = 3 + 2 * pageIndices.length;
+	// Vector copy/validation also runs in cost accounting, page allocation preflight and drawing.
+	const vectorPasses = 5 + 6 * pageIndices.length;
 	const usage = {
 		estimatedSvgBytes: 0,
 		svgBytes: 0,
@@ -145,9 +158,12 @@ export function createPrintSnapshot(
 		imageBytes: 0,
 		uniqueImagePixels: 0,
 		imageInstancePixels: 0,
+		vectorNodes: 0,
+		vectorCommands: 0,
+		vectorOperands: 0,
 		totalAreaCssPixels: 0,
 		validationShapeVisits: validation.shapes * passes,
-		validationWork: validation.work * passes,
+		validationWork: validation.work * passes + validation.vectorWork * vectorPasses,
 	};
 	within(
 		usage.validationShapeVisits,
@@ -163,7 +179,9 @@ export function createPrintSnapshot(
 	// validated scene, rather than letting a cheap original estimate undercount later exports.
 	const detached = validationCost(model);
 	usage.validationShapeVisits = Math.max(validation.shapes, detached.shapes) * passes;
-	usage.validationWork = Math.max(validation.work, detached.work) * passes;
+	usage.validationWork =
+		Math.max(validation.work, detached.work) * passes +
+		Math.max(validation.vectorWork, detached.vectorWork) * vectorPasses;
 	within(
 		usage.validationShapeVisits,
 		limits.maxValidationShapeVisits,
@@ -196,6 +214,12 @@ export function createPrintSnapshot(
 				add('textRuns', shape.text.runs.length, limits.maxTextRuns);
 				for (const run of shape.text.runs)
 					add('textCharacters', run.text.length, limits.maxTextCharacters);
+				if (shape.foreignVector) {
+					const vector = inspectForeignVectorResource(shape.foreignVector.vector);
+					add('vectorNodes', vector.nodes, limits.maxVectorNodes);
+					add('vectorCommands', vector.commands, limits.maxVectorCommands);
+					add('vectorOperands', vector.operands, limits.maxVectorOperands);
+				}
 				if (shape.image) {
 					const { bytes, pixelWidth, pixelHeight } = shape.image;
 					add('imageInstancePixels', pixelWidth * pixelHeight, limits.maxImageInstancePixels);
@@ -247,9 +271,14 @@ export function createPrintSnapshot(
 }
 
 /** Cost accounting only. Format interpretation and safety checks remain canonical. */
-function validationCost(model: VisioDocument): { shapes: number; work: number } {
+function validationCost(model: VisioDocument): {
+	shapes: number;
+	work: number;
+	vectorWork: number;
+} {
 	let shapes = 0,
-		work = model.pages.length;
+		work = model.pages.length,
+		vectorWork = 0;
 	const images = new Set<Uint8Array>();
 	const strings = (...values: (string | undefined)[]): void => {
 		for (const value of values) work += 1 + (value?.length ?? 0);
@@ -299,8 +328,10 @@ function validationCost(model: VisioDocument): { shapes: number; work: number } 
 				images.add(shape.image.bytes);
 				work += shape.image.bytes.byteLength;
 			}
+			if (shape.foreignVector)
+				vectorWork += inspectForeignVectorResource(shape.foreignVector.vector).validationWork;
 			stack.push(...shape.children);
 		}
 	}
-	return { shapes, work };
+	return { shapes, work, vectorWork };
 }

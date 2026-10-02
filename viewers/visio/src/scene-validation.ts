@@ -6,6 +6,7 @@ import {
 	type VisioImage,
 } from 'ooxml-core/visio';
 import { assertShapeDetails } from './scene-details.js';
+import { ForeignVectorBudget } from './foreign-vector-budget.js';
 
 export const MAX_INPUT_BYTES = 32 * 1024 * 1024;
 const MAX_DIMENSION = 10_000;
@@ -39,6 +40,7 @@ export function assertViewableDocument(model: VisioDocument): void {
 		paragraphCount = 0,
 		gradientStops = 0;
 	const imageResources = new Map<Uint8Array, VisioImage>();
+	const vectorBudget = new ForeignVectorBudget();
 	let metadataBytes = 0;
 	const detailBudget = { rows: 0, characters: 0 };
 	const label = (value: string, limit = 4096) => {
@@ -241,6 +243,17 @@ export function assertViewableDocument(model: VisioDocument): void {
 				finite(paragraph.bullet.fontSize, 'bullet size', 0, 100);
 				finite(paragraph.bullet.offset, 'bullet offset');
 			}
+		}
+		if (shape.foreignVector !== undefined) {
+			const foreign = shape.foreignVector;
+			if (!foreign || typeof foreign !== 'object')
+				throw new Error('The scene has an invalid foreign vector placement.');
+			finite(foreign.x, 'foreign vector position');
+			finite(foreign.y, 'foreign vector position');
+			finite(foreign.width, 'foreign vector width', 0);
+			finite(foreign.height, 'foreign vector height', 0);
+			finite(foreign.opacity, 'foreign vector opacity', 0, 1);
+			vectorBudget.take(foreign.vector);
 		}
 		if (shape.image) {
 			const image = shape.image;

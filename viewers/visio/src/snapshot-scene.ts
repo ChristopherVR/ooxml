@@ -7,6 +7,7 @@ import type {
 	VisioStyle,
 	VisioText,
 } from 'ooxml-core/visio';
+import { ForeignVectorBudget } from './foreign-vector-budget.js';
 
 /** Copy only named scalar fields, never arbitrary host properties or their getters. */
 function fields<T, K extends keyof T>(source: T, keys: readonly K[]): Pick<T, K> {
@@ -57,6 +58,13 @@ export function copySnapshotScene(model: VisioDocument): VisioDocument {
 		return result;
 	};
 	const resources = new Map<Uint8Array, Uint8Array>();
+	const vectorBudget = new ForeignVectorBudget();
+	const foreignVector = (
+		source: NonNullable<VisioShape['foreignVector']>,
+	): NonNullable<VisioShape['foreignVector']> => ({
+		...fields(source, ['x', 'y', 'width', 'height', 'opacity']),
+		vector: vectorBudget.take(source.vector).vector,
+	});
 	const image = (source: VisioImage): VisioImage => {
 		const original = source.bytes;
 		if (!(original instanceof Uint8Array) || original.byteLength > 8 * 1024 * 1024) throw invalid();
@@ -177,6 +185,7 @@ export function copySnapshotScene(model: VisioDocument): VisioDocument {
 				text: text(shape.text),
 				children: shapes(shape.children, depth + 1),
 				...(shape.image ? { image: image(shape.image) } : {}),
+				...(shape.foreignVector ? { foreignVector: foreignVector(shape.foreignVector) } : {}),
 			};
 		});
 	};

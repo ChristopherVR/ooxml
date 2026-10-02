@@ -19,7 +19,7 @@ try {
 	});
 	assert.deepEqual(result, { passed: 7 });
 	console.log(
-		'Released browser converter package passes seven isolated adapter cases. Live document conversion remains disabled.',
+		'Released browser converter package passes seven isolated adapter cases. Document conversion is enabled only in the disposable parser worker.',
 	);
 } finally {
 	clearTimeout(timer);

@@ -46,3 +46,23 @@ describe('isolated parser lifecycle', () => {
 		expect(worker.terminate).toHaveBeenCalledOnce();
 	});
 });
+
+it('times out a stalled converter worker and ignores late completion before a fresh import', async () => {
+	vi.useFakeTimers();
+	const first = fake(),
+		second = fake();
+	const factory = vi.fn().mockReturnValueOnce(first).mockReturnValueOnce(second);
+	const parser = createWorkerParser(factory, 20);
+	const stalled = parser(new ArrayBuffer(1));
+	const late = first.onmessage;
+	const rejected = expect(stalled).rejects.toThrow('isolated parsing limit');
+	await vi.advanceTimersByTimeAsync(20);
+	await rejected;
+	const next = parser(new ArrayBuffer(1));
+	late?.({ data: { ok: true, document: demoDocument } } as MessageEvent);
+	expect(second.terminate).not.toHaveBeenCalled();
+	second.onmessage?.({ data: { ok: true, document: demoDocument } } as MessageEvent);
+	await expect(next).resolves.toBe(demoDocument);
+	expect(first.terminate).toHaveBeenCalledOnce();
+	expect(second.terminate).toHaveBeenCalledOnce();
+});

@@ -113,3 +113,33 @@ test('explicit SVG download contains the current page and leaves selection uncha
 	await expect(page.locator('visio-viewer svg')).toHaveAttribute('aria-label', 'Architecture');
 	await expect(page.locator('#export-status')).toContainText('approximate snapshot');
 });
+
+test('isolated import renders the bounded embedded EMF subset and safely omits other records', async ({
+	page,
+}) => {
+	const { createMetafileFixture } = await import('./metafile-fixture.mjs');
+	const external: string[] = [];
+	page.on('request', (request) => {
+		if (!request.url().startsWith('http://127.0.0.1:4173') && !request.url().startsWith('data:'))
+			external.push(request.url());
+	});
+	await page.goto('/demo/');
+	await page.locator('#file').setInputFiles({
+		name: 'vector.vsdx',
+		mimeType: 'application/vnd.ms-visio.drawing',
+		buffer: await createMetafileFixture(),
+	});
+	await expect(page.locator('visio-viewer [data-shape-id="emf"] svg path').first()).toBeVisible();
+	await expect(page.locator('#notes')).toContainText('bounded EMF primitive subset');
+	expect(external).toEqual([]);
+	await page.locator('#file').setInputFiles({
+		name: 'unsupported.vsdx',
+		mimeType: 'application/vnd.ms-visio.drawing',
+		buffer: await createMetafileFixture(true),
+	});
+	await expect(page.locator('#file-name')).toHaveText('unsupported.vsdx');
+	await expect(page.locator('visio-viewer [data-shape-id="emf"] svg')).toHaveCount(0);
+	await expect(page.locator('#notes')).toContainText('conversion subset');
+	await page.getByRole('button', { name: 'Load sample' }).click();
+	await expect(page.locator('visio-viewer svg')).toHaveAttribute('aria-label', 'Release workflow');
+});

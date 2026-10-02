@@ -145,14 +145,14 @@
 							<tr>
 								<td>Line and fill styles</td>
 								<td>Full styles, patterns, gradients and opacity</td>
-								<td>Partial: cached caps/dashes, solid theme dashes and linear gradients</td>
+								<td>Partial: cached caps/dashes, theme linear and saved horizontal gradients</td>
 								<td>
-									Core style/root tests; ten real gradients; six real pattern-23 strokes; SVG paint
-									tests
+									Core style/root and generated horizontal-gradient tests; ten real theme gradients;
+									six real pattern-23 strokes; SVG paint tests
 								</td>
 								<td>
-									Non-solid theme/custom patterns, native dash/cap comparison, radial/hatch fills
-									and effects
+									Non-horizontal saved gradients, non-solid theme/custom patterns, native
+									comparison, radial/hatch fills and effects
 								</td>
 							</tr>
 							<tr>
@@ -203,14 +203,12 @@
 							<tr>
 								<td>Images and foreign data</td>
 								<td>Raster, vector, OLE and foreign objects</td>
-								<td>Partial: embedded PNG/JPEG/GIF; bounded EMF inspection</td>
+								<td>Partial: embedded PNG/JPEG/GIF; isolated bounded EMF primitives</td>
 								<td>
-									Core raster/admission tests; neutral vector boundary tests; shared resource
-									lifecycle
+									Core raster/admission tests; inert vector boundary; isolated production worker and
+									shared rendering tests
 								</td>
-								<td>
-									EMF conversion remains disabled; SVG/OLE, effects and native browser verification
-								</td>
+								<td>Most EMF records, EMF+/WMF, SVG/OLE, effects and native Visio fidelity</td>
 							</tr>
 							<tr>
 								<td>Layers</td>
@@ -291,9 +289,15 @@
 							<tr>
 								<td>Native save and round-trip</td>
 								<td>Save editable VSDX preserving unknown parts</td>
-								<td>Not implemented</td>
-								<td>No writer API</td>
-								<td>Writer, relationships, unknown-part preservation, Visio reopen</td>
+								<td>Experimental core plain-text save only</td>
+								<td>
+									Core-only atomic plain-text transaction and preservation/security tests; no viewer
+									save UI
+								</td>
+								<td>
+									General writer, rich-text/geometry editing, cache recalculation, native Visio
+									reopen
+								</td>
 							</tr>
 							<tr>
 								<td>Export and print</td>
