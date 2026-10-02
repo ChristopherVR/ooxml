@@ -1,6 +1,6 @@
-import type { Table } from './model.js';
+import type { Table, TableCell } from './model.js';
 import type { TableBorders, TableRowProperties } from './table-model.js';
-import { buildRowProperties } from './table-cell-write.js';
+import { buildCellProperties, buildRowProperties } from './table-cell-write.js';
 import { buildBorders, buildMargins } from './table-defaults.js';
 import { orderChildren } from './element-order.js';
 import { children, first, makeW, type XmlDocument, type XmlElement } from './xml.js';
@@ -155,6 +155,33 @@ export function patchCellBorders(
 	if (!Array.from(borders.childNodes).some((node) => node.nodeType === 1))
 		props.removeChild(borders);
 	else orderChildren(borders, CELL_BORDER_ORDER);
+	orderChildren(props, CELL_ORDER);
+	if (!Array.from(props.childNodes).some((node) => node.nodeType === 1)) tc.removeChild(props);
+}
+
+/** Replaces only changed cell shading, preserving widths, borders, margins and extension XML. */
+export function patchCellShading(
+	doc: XmlDocument,
+	tc: XmlElement,
+	next: TableCell,
+	base?: TableCell,
+): void {
+	if (
+		next.shadingFill === base?.shadingFill &&
+		JSON.stringify(next.shadingThemeFill) === JSON.stringify(base?.shadingThemeFill)
+	)
+		return;
+	if (next.shadingFill && next.shadingFill !== 'auto' && !/^#?[0-9a-f]{6}$/i.test(next.shadingFill))
+		throw new Error('Cell shading must be a six-digit RGB color or auto.');
+	let props = first(tc, 'tcPr');
+	if (!props) {
+		props = makeW(doc, 'tcPr');
+		tc.insertBefore(props, tc.firstChild);
+	}
+	for (const old of children(props, 'shd')) props.removeChild(old);
+	const built = buildCellProperties(doc, next);
+	const replacement = built && first(built, 'shd');
+	if (replacement) props.appendChild(replacement);
 	orderChildren(props, CELL_ORDER);
 	if (!Array.from(props.childNodes).some((node) => node.nodeType === 1)) tc.removeChild(props);
 }

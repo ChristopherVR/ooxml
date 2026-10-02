@@ -49,14 +49,16 @@ function parseCell(
 	const vMerge = first(props, 'vMerge');
 	if (vMerge) result.verticalMerge = getW(vMerge, 'val') === 'restart' ? 'restart' : 'continue';
 	const tcW = first(props, 'tcW');
-	if (getW(tcW, 'type') !== 'nil') {
+	if ((getW(tcW, 'type') ?? 'dxa') === 'dxa') {
 		const width = dxa(getW(tcW, 'w'));
 		if (width !== undefined) result.widthTwips = width;
 	}
 	const vAlign = enumValue(isStVerticalJc, getW(first(props, 'vAlign'), 'val'), 'w:tcPr/w:vAlign');
 	if (vAlign) result.verticalAlign = vAlign;
 	const shd = first(props, 'shd');
-	const fill = parseShadingFill(shd);
+	const fill =
+		parseShadingFill(shd) ??
+		(getW(shd, 'fill') === 'auto' && !getW(shd, 'themeFill') ? 'auto' : undefined);
 	if (fill) result.shadingFill = fill;
 	const themeFill = parseShadingThemeFill(shd);
 	if (themeFill) result.shadingThemeFill = themeFill;
@@ -138,7 +140,9 @@ export function parseTable(
 		: [];
 	if (grid.length) table.grid = grid;
 	const tblPr = first(node, 'tblPr');
-	const width = dxa(getW(first(tblPr, 'tblW'), 'w'));
+	const tableWidth = first(tblPr, 'tblW');
+	const width =
+		(getW(tableWidth, 'type') ?? 'dxa') === 'dxa' ? dxa(getW(tableWidth, 'w')) : undefined;
 	if (width !== undefined) table.widthTwips = width;
 	const justification = enumValue(isStJcTable, getW(first(tblPr, 'jc'), 'val'), 'w:tblPr/w:jc');
 	if (justification) {

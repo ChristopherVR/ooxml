@@ -2,6 +2,7 @@ import { expectDefined } from './expect-defined.js';
 import type { Paragraph, Table, TableCell } from './model.js';
 import {
 	patchCellBorders,
+	patchCellShading,
 	patchRowProperties,
 	patchTableMargins,
 } from './write-table-properties.js';
@@ -82,8 +83,6 @@ const CELL_DESCRIPTOR_KEYS = [
 	'verticalMerge',
 	'widthTwips',
 	'verticalAlign',
-	'shadingFill',
-	'shadingThemeFill',
 	'margins',
 ] as const;
 function pick(source: object, keys: readonly string[]): Record<string, unknown> {
@@ -93,8 +92,8 @@ function pick(source: object, keys: readonly string[]): Record<string, unknown> 
 	return result;
 }
 /**
- * Table grid/width/border/style and per-cell width/merge/shading/border/margin values render
- * (see resolve-table.ts) but are not yet serialized on save; reject rather than silently drop edits.
+ * Table grid/width/border/style and per-cell width/merge/alignment/margin values render
+ * but cannot be edited yet. Cell borders and shading have preservation-safe writers below.
  */
 function assertNoDescriptorEdits(table: Table, base: Table | undefined): void {
 	if (!base) return;
@@ -121,7 +120,7 @@ function assertNoDescriptorEdits(table: Table, base: Table | undefined): void {
 				JSON.stringify(pick(source, CELL_DESCRIPTOR_KEYS))
 			)
 				throw new Error(
-					'Cannot edit table cell width, merge, vertical alignment, shading, or margins on an existing cell; only cell text and borders are supported. The original DOCX package remains unchanged.',
+					'Cannot edit table cell width, merge, vertical alignment, or margins on an existing cell; only cell text, borders and shading are supported. The original DOCX package remains unchanged.',
 				);
 		}
 }
@@ -213,6 +212,7 @@ export function writeTable(
 				throw new Error('Moving paragraphs between table cells is not supported.');
 			const tc = source?.cell ?? makeW(doc, 'tc');
 			patchCellBorders(doc, tc, cell.borders, source?.model.borders);
+			patchCellShading(doc, tc, cell, source?.model);
 			const oldParagraphs = children(tc, 'p');
 			const nextParagraphs = cell.paragraphs.map((paragraph) => {
 				const index = source?.paragraphs.findIndex((p) => p.id === paragraph.id) ?? -1;

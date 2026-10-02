@@ -25,6 +25,18 @@ async function loadTable(xml = mergedTableXml, styles?: string) {
 }
 
 describe('table grid, merge, border, shading and style fidelity', () => {
+	it('does not turn automatic, nil or percentage table/cell widths into fixed twips', async () => {
+		for (const type of ['auto', 'nil', 'pct']) {
+			const xml = `<w:document xmlns:w="${ns}"><w:body><w:tbl><w:tblPr><w:tblW w:w="0" w:type="${type}"/></w:tblPr><w:tr><w:tc><w:tcPr><w:tcW w:w="0" w:type="${type}"/></w:tcPr><w:p><w:r><w:t>A</w:t></w:r></w:p></w:tc></w:tr></w:tbl><w:sectPr/></w:body></w:document>`;
+			const { table, loaded } = await loadTable(xml);
+			expect(table.widthTwips).toBeUndefined();
+			expect(table.rows[0]![0]!.widthTwips).toBeUndefined();
+			table.rows[0]![0]!.paragraphs[0]!.runs[0]!.text = 'Changed';
+			const output = await JSZip.loadAsync(await loaded.save());
+			expect(await output.file('word/document.xml')!.async('string')).toContain(`w:type="${type}"`);
+		}
+	});
+
 	it('parses grid widths, table width/alignment/indent, borders and tblLook', async () => {
 		const { table } = await loadTable();
 		expect(table.grid).toEqual([1000, 2000]);
@@ -89,7 +101,7 @@ describe('table grid, merge, border, shading and style fidelity', () => {
 
 	it('rejects silently dropping a direct edit to cell-level descriptive properties', async () => {
 		const { table, loaded } = await loadTable();
-		at(at(table.rows, 0), 0).shadingFill = '#000000';
+		at(at(table.rows, 0), 0).widthTwips = twips(9999);
 		await expect(loaded.save()).rejects.toThrow('Cannot edit table cell width, merge');
 	});
 
