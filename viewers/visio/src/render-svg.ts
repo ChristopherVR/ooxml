@@ -1,10 +1,17 @@
 import {
 	getVisioPageLayers,
+	resolveVisioPageVisibility,
 	type VisioDocument,
 	type VisioPage,
 	type VisioShape,
 	type VisioMatrix,
 } from 'ooxml-core/visio';
+import {
+	layerOverrideMaps,
+	hasVisibleShapeContent,
+	EMPTY_LAYER_OVERRIDES,
+	type LayerVisibilityOverride,
+} from './viewer-layers.js';
 import { fillPaint } from './render-fill.js';
 import { renderImage } from './render-image.js';
 import { RenderResources } from './render-resources.js';
@@ -31,6 +38,8 @@ export interface RenderResult {
 export interface RenderOptions {
 	/** Static output embeds rasters and omits viewer selection semantics. Prefer exportPageSvg for bounded serialization. */
 	static?: boolean;
+	/** Optional viewer display state. Export/print snapshot APIs deliberately use saved display. */
+	layerVisibilityOverrides?: readonly LayerVisibilityOverride[];
 }
 interface RenderContext {
 	defs: SVGDefsElement;
@@ -39,6 +48,7 @@ interface RenderContext {
 	nodes: number;
 	textBudget: TextLayoutBudget;
 	renderable: WeakMap<VisioShape, boolean>;
+	visible: WeakMap<VisioShape, boolean> | undefined;
 	interactive: boolean;
 }
 export function renderPage(
@@ -49,6 +59,20 @@ export function renderPage(
 	assertViewableDocument(model);
 	if (!model.pages.includes(page))
 		throw new Error('The selected page does not belong to this document.');
+	const overrides = layerOverrideMaps(
+		model,
+		options.layerVisibilityOverrides ?? EMPTY_LAYER_OVERRIDES,
+	);
+	const visible = overrides.size ? new WeakMap<VisioShape, boolean>() : undefined;
+	const pages = getVisioPageLayers(model, page.id);
+	for (const source of visible ? pages : []) {
+		const layerVisibilityOverrides = overrides.get(source.id);
+		for (const entry of resolveVisioPageVisibility(
+			source,
+			layerVisibilityOverrides ? { layerVisibilityOverrides } : {},
+		))
+			visible!.set(entry.shape, !entry.hidden);
+	}
 	const svg = svgElement('svg');
 	if (!options.static) svg.classList.add('paper');
 	svg.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns', NS);
@@ -76,10 +100,11 @@ export function renderPage(
 		nodes: 0,
 		textBudget: createTextLayoutBudget(),
 		renderable: new WeakMap(),
+		visible,
 		interactive: !options.static,
 	};
 	try {
-		for (const layer of getVisioPageLayers(model, page.id))
+		for (const layer of pages)
 			for (const shape of layer.shapes) drawShape(shape, root, context, layer.id);
 	} catch (error) {
 		context.resources.dispose();
@@ -91,27 +116,13 @@ export function renderPage(
 	}
 	return { svg, warnings: [...context.warnings], dispose: () => context.resources.dispose() };
 }
-function hasRenderableContent(shape: VisioShape, context: RenderContext): boolean {
-	const cached = context.renderable.get(shape);
-	if (cached !== undefined) return cached;
-	const own =
-		!(shape.kind === 'group' && shape.groupDisplayMode === 0) &&
-		(shape.geometry.length > 0 ||
-			!!shape.image ||
-			!!shape.text.plainText ||
-			shape.kind === 'foreign');
-	const visible =
-		!shape.hidden && (own || shape.children.some((child) => hasRenderableContent(child, context)));
-	context.renderable.set(shape, visible);
-	return visible;
-}
 function drawShape(
 	shape: VisioShape,
 	parent: SVGElement,
 	context: RenderContext,
 	pageId: string,
 ): void {
-	if (!hasRenderableContent(shape, context)) return;
+	if (!hasVisibleShapeContent(shape, context.visible, context.renderable)) return;
 	if (++context.nodes > 50_000) {
 		context.warnings.add(
 			'Some drawing content was omitted because it exceeds the safe rendering node limit.',

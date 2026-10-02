@@ -11,6 +11,8 @@ export interface MountedViewer {
 	update(options: ViewerOptions): void;
 	load(source: VsdxSource): Promise<void>;
 	fit(): void;
+	setLayerVisibility(pageId: string, layerId: string, visible: boolean | null): void;
+	resetLayerVisibility(pageId?: string): void;
 	exportSvg(options?: SvgExportOptions): SvgExportResult;
 	createPrintSnapshot(options?: CurrentPagePrintSnapshotOptions): PrintSnapshot;
 	destroy(): void;
@@ -64,6 +66,14 @@ export function mountViewer(container: HTMLElement, initial: ViewerOptions = {})
 		fit() {
 			assertAlive();
 			element.fit();
+		},
+		setLayerVisibility(pageId, layerId, visible) {
+			assertAlive();
+			element.setLayerVisibility(pageId, layerId, visible);
+		},
+		resetLayerVisibility(pageId) {
+			assertAlive();
+			element.resetLayerVisibility(pageId);
 		},
 		exportSvg(options) {
 			assertAlive();

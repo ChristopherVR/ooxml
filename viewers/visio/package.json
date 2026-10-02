@@ -30,7 +30,8 @@
 		"test:package": "node scripts/test-package.mjs",
 		"docs:sync": "node scripts/sync-parity.mjs",
 		"check:core": "node scripts/check-core.mjs",
-		"test:corpus": "node scripts/test-corpus.mjs"
+		"test:corpus": "node scripts/test-corpus.mjs",
+		"test:emf-audit": "node --test scripts/emf-audit/audit.test.mjs"
 	},
 	"dependencies": {
 		"ooxml-core": "file:../ooxml"

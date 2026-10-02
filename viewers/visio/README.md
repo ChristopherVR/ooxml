@@ -58,6 +58,12 @@ The shared search controls find literal text across visible shapes and pages. Pr
 
 Search returns one result per matching shape, with a bounded text preview. It uses ECMAScript lowercase comparison, not regex or language-aware collation. Limits are 256 query characters, 500 matching shapes, 32,768 indexed characters per shape and 2 million indexed characters overall. The status explicitly identifies partial results. Hidden subtrees and suppressed group text are excluded; background pages are indexed once as separate pages. Per-occurrence highlighting and Shape Data search are not implemented.
 
+## Display layers
+
+Use the shared Layers controls or any mounted/native handle's `setLayerVisibility(pageId, layerId, visible)` to override display visibility. `visible: null` restores one saved flag; `resetLayerVisibility(pageId?)` resets one source page or the entire document. Source-page IDs distinguish foreground and background layers. Frozen overrides are available in `controller.state.layerVisibilityOverrides`.
+
+Layer changes synchronize rendering, selection and search without changing the document. Guides, NoShow and incompletely described legacy hidden shapes cannot be revealed by a layer override. The accessible panel shows at most 200 unique layers and announces truncation; the API allows at most 25,000 document-scoped overrides. SVG and print artifacts continue to use saved visibility. Layer colors, editing and saved print policy are not implemented.
+
 ## Static SVG export
 
 `exportPageSvg(model, pageIndex, { maxBytes })` and each mounted/native handle's `exportSvg()` return a current-page snapshot without changing the document, selection or viewport. Export includes supported backgrounds, embedded raster resources and visible compatibility notes in SVG description/metadata. There are no remote assets, automatic downloads or editable VSDX output. The demo downloads only after an explicit button press.

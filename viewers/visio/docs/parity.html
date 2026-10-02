@@ -133,9 +133,14 @@
 							<tr>
 								<td>NURBS, splines, polylines</td>
 								<td>All Visio Geometry row forms</td>
-								<td>Partial: polylines and bounded NURBS approximation</td>
-								<td>Core geometry.ts; literal-curve tests; real upstream curve fixture</td>
-								<td>Periodic/general expressions, remaining spline forms, measured error bounds</td>
+								<td>Partial: polylines, cached splines and bounded NURBS approximation</td>
+								<td>
+									Core geometry.ts; literal/spline analytic tests; real upstream NURBS fixture
+								</td>
+								<td>
+									Periodic/nonclamped forms, expressions, global error bounds and native spline
+									fixtures
+								</td>
 							</tr>
 							<tr>
 								<td>Line and fill styles</td>
@@ -195,11 +200,13 @@
 							<tr>
 								<td>Layers</td>
 								<td>Visibility, locks, colors and print settings</td>
-								<td>Partial: independent visibility reasons and bounded display resolver</td>
+								<td>Partial: shared display controls and bounded visibility resolver</td>
 								<td>
-									Core visibility/override tests; identical display state for 706 real-corpus shapes
+									Core visibility tests; shared control/search/selection tests; all-six binding APIs
 								</td>
-								<td>Layer UI, color overrides, editing and mixed-layer/group print policy</td>
+								<td>
+									Layer color overrides, editing, native visibility comparison and print policy
+								</td>
 							</tr>
 							<tr>
 								<td>Shape data and hyperlinks</td>

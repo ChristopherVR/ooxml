@@ -43,8 +43,11 @@ export const EMPTY_TEXT_SEARCH: TextSearchState = Object.freeze({
 	resultsTruncated: false,
 });
 
-/** Index canonical model text once per accepted document. No XML, DOM or layout parsing. */
-export function indexDocumentText(model: VisioDocument | null): DocumentTextIndex {
+/** Index canonical text for the current display state. No XML, DOM or layout parsing. */
+export function indexDocumentText(
+	model: VisioDocument | null,
+	isVisible: (shape: VisioShape) => boolean = (shape) => !shape.hidden,
+): DocumentTextIndex {
 	const entries: SearchEntry[] = [];
 	const seen = new Set<VisioShape>();
 	let characters = 0,
@@ -60,7 +63,7 @@ export function indexDocumentText(model: VisioDocument | null): DocumentTextInde
 			if (seen.size >= TEXT_SEARCH_LIMITS.shapes)
 				return Object.freeze({ entries: Object.freeze(entries), truncated: true });
 			seen.add(shape);
-			if (shape.hidden) continue;
+			if (!isVisible(shape)) continue;
 			if (!(shape.kind === 'group' && shape.groupDisplayMode === 0)) {
 				const source = shape.text.plainText;
 				const length = Math.min(

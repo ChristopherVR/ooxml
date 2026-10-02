@@ -40,6 +40,8 @@ vi.mock('../../../src/binding.js', () => ({
 					assertAlive();
 				}),
 				fit: vi.fn(assertAlive),
+				setLayerVisibility: vi.fn(assertAlive),
+				resetLayerVisibility: vi.fn(assertAlive),
 				exportSvg: vi.fn(() => {
 					assertAlive();
 					return {

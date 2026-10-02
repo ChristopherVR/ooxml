@@ -7,6 +7,11 @@ import { MAX_INPUT_BYTES } from './scene-validation.js';
 import { selectedShape, shapeDetails } from './shape-inspector.js';
 import { compatibilityNotes, compatibilityText } from './diagnostics.js';
 import { wireViewerInputs } from './viewer-input.js';
+import {
+	layerControlsTemplate,
+	renderLayerControls,
+	wireLayerControls,
+} from './viewer-layer-controls.js';
 import { viewerStyles } from './styles.js';
 import {
 	searchTemplate,
@@ -36,6 +41,8 @@ export class VisioViewerElement extends BaseElement {
 	#diagnostics: HTMLSpanElement;
 	#toolbar: HTMLDivElement;
 	#search: SearchControls;
+	#layers: HTMLDetailsElement;
+	#renderedLayerOverrides: ViewerState['layerVisibilityOverrides'] | undefined;
 	#revealedSearchResult: TextSearchResult | undefined;
 	#notes: HTMLUListElement;
 	#notesPanel: HTMLDetailsElement;
@@ -61,7 +68,7 @@ export class VisioViewerElement extends BaseElement {
 		super();
 		this.#root = this.attachShadow({ mode: 'open' });
 		// This template is static, never document content.
-		this.#root.innerHTML = `<style>${viewerStyles}</style><div class="toolbar" role="group" aria-label="Diagram controls"><label>Page <select aria-label="Page"></select></label><span class="spacer"></span><button type="button" data-action="out" aria-label="Zoom out">−</button><output class="zoom" aria-label="Zoom level">100%</output><button type="button" data-action="in" aria-label="Zoom in">+</button><button type="button" data-action="fit">Fit page</button><button type="button" data-action="actual">100%</button>${searchTemplate}</div><div class="viewport" tabindex="0" role="region" aria-label="Diagram canvas"></div><details class="shape-inspector" hidden><summary>Selected shape</summary><div></div></details><details class="notes"><summary>Compatibility notes</summary><ul></ul></details><div class="status" role="status"><span data-status></span><span data-diagnostics></span></div>`;
+		this.#root.innerHTML = `<style>${viewerStyles}</style><div class="toolbar" role="group" aria-label="Diagram controls"><label>Page <select aria-label="Page"></select></label><span class="spacer"></span><button type="button" data-action="out" aria-label="Zoom out">−</button><output class="zoom" aria-label="Zoom level">100%</output><button type="button" data-action="in" aria-label="Zoom in">+</button><button type="button" data-action="fit">Fit page</button><button type="button" data-action="actual">100%</button>${searchTemplate}${layerControlsTemplate}</div><div class="viewport" tabindex="0" role="region" aria-label="Diagram canvas"></div><details class="shape-inspector" hidden><summary>Selected shape</summary><div></div></details><details class="notes"><summary>Compatibility notes</summary><ul></ul></details><div class="status" role="status"><span data-status></span><span data-diagnostics></span></div>`;
 		this.#viewport = this.#root.querySelector('.viewport')!;
 		this.#pageSelect = this.#root.querySelector('select')!;
 		this.#zoomLabel = this.#root.querySelector('output')!;
@@ -69,6 +76,7 @@ export class VisioViewerElement extends BaseElement {
 		this.#diagnostics = this.#root.querySelector('[data-diagnostics]')!;
 		this.#toolbar = this.#root.querySelector('.toolbar')!;
 		this.#search = searchControls(this.#root);
+		this.#layers = this.#root.querySelector('.layer-controls')!;
 		this.#notes = this.#root.querySelector('.notes ul')!;
 		this.#notesPanel = this.#root.querySelector('.notes')!;
 		this.#inspector = this.#root.querySelector('.shape-inspector')!;
@@ -122,14 +130,22 @@ export class VisioViewerElement extends BaseElement {
 		const height = Math.max(1, this.#viewport.clientHeight - 64);
 		this.zoom = Math.min(width / (page.width * 96), height / (page.height * 96));
 	}
-	/** Return a portable current-page snapshot without changing selection or downloading a file. */
+	setLayerVisibility(pageId: string, layerId: string, visible: boolean | null): void {
+		this.#assertAlive();
+		this.controller.setLayerVisibility(pageId, layerId, visible);
+	}
+	resetLayerVisibility(pageId?: string): void {
+		this.#assertAlive();
+		this.controller.resetLayerVisibility(pageId);
+	}
+	/** Return a portable saved-display current-page snapshot without changing selection or downloading a file. */
 	exportSvg(options?: SvgExportOptions): SvgExportResult {
 		this.#assertAlive();
 		const { document, pageIndex } = this.controller.state;
 		if (!document) throw new Error('Open a document before exporting SVG.');
 		return exportPageSvg(document, pageIndex, options);
 	}
-	/** Prepare only the captured current drawing. No frame, download, print dialog or state change. */
+	/** Prepare only the captured current drawing with saved display visibility. No frame, download, print dialog or state change. */
 	createPrintSnapshot(options?: CurrentPagePrintSnapshotOptions): PrintSnapshot {
 		this.#assertAlive();
 		if (
@@ -185,7 +201,8 @@ export class VisioViewerElement extends BaseElement {
 		}
 	}
 	#wireInputs(): () => void {
-		return wireViewerInputs(
+		const disposeLayers = wireLayerControls(this.#layers, this.controller);
+		const disposeInputs = wireViewerInputs(
 			{
 				viewport: this.#viewport,
 				toolbar: this.#toolbar,
@@ -195,6 +212,10 @@ export class VisioViewerElement extends BaseElement {
 			this.controller,
 			() => this.fit(),
 		);
+		return () => {
+			disposeInputs();
+			disposeLayers();
+		};
 	}
 	#assertAlive(): void {
 		if (this.#disposed) throw new Error('The viewer has been destroyed.');
@@ -202,12 +223,16 @@ export class VisioViewerElement extends BaseElement {
 	#render(state: ViewerState): void {
 		if (this.#suspended) return;
 		const page = state.document?.pages[state.pageIndex];
-		const changed = this.#document !== state.document || this.#renderedPage !== state.pageIndex;
+		const changed =
+			this.#document !== state.document ||
+			this.#renderedPage !== state.pageIndex ||
+			this.#renderedLayerOverrides !== state.layerVisibilityOverrides;
 		if (changed) {
 			this.#disposeRenderer();
 			this.#disposeRenderer = () => {};
 			this.#document = state.document;
 			this.#renderedPage = state.pageIndex;
+			this.#renderedLayerOverrides = state.layerVisibilityOverrides;
 			this.#pageSelect.replaceChildren();
 			for (const [index, candidate] of (state.document?.pages ?? []).entries()) {
 				const option = document.createElement('option');
@@ -218,7 +243,9 @@ export class VisioViewerElement extends BaseElement {
 			this.#pageSelect.value = String(state.pageIndex);
 			this.#renderWarnings = [];
 			if (state.document && page) {
-				const result = renderPage(state.document, page);
+				const result = renderPage(state.document, page, {
+					layerVisibilityOverrides: state.layerVisibilityOverrides,
+				});
 				this.#renderWarnings = result.warnings;
 				this.#disposeRenderer = result.dispose;
 				this.#viewport.replaceChildren(result.svg);
@@ -289,6 +316,10 @@ export class VisioViewerElement extends BaseElement {
 		this.#pageSelect.disabled = !page;
 		for (const button of this.#toolbar.querySelectorAll('button')) button.disabled = !page;
 		renderSearchControls(this.#search, state);
+		if (changed) renderLayerControls(this.#layers, state);
+		else
+			this.#layers.querySelector<HTMLButtonElement>('[data-layer-reset="all"]')!.disabled =
+				state.layerVisibilityOverrides.length === 0;
 		this.#viewport.setAttribute('aria-busy', String(state.loading));
 		this.#status.textContent = state.loading
 			? 'Opening diagram…'

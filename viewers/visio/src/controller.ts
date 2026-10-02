@@ -1,4 +1,10 @@
 import { parseVsdx, type VisioDocument } from 'ooxml-core/visio';
+import {
+	EMPTY_LAYER_OVERRIDES,
+	documentVisibility,
+	visibleSelection,
+	type LayerVisibilityOverride,
+} from './viewer-layers.js';
 import { assertViewableDocument } from './scene-validation.js';
 import type { CancellableParser } from './worker-parser.js';
 import type { ViewerEvents } from './contract.js';
@@ -18,6 +24,8 @@ export interface ViewerState {
 	readonly loading: boolean;
 	readonly error: Error | null;
 	readonly search: TextSearchState;
+	/** Viewer-only display overrides, independent of saved model and print policy. */
+	readonly layerVisibilityOverrides: readonly LayerVisibilityOverride[];
 	readonly selectedShape: { id: string; name: string; pageId?: string } | null;
 }
 type Parser = CancellableParser;
@@ -31,6 +39,7 @@ export class ViewerController {
 		error: null,
 		selectedShape: null,
 		search: EMPTY_TEXT_SEARCH,
+		layerVisibilityOverrides: EMPTY_LAYER_OVERRIDES,
 	});
 	#subscribers = new Set<(state: ViewerState) => void>();
 	#events = new Set<EventListener>();
@@ -39,6 +48,7 @@ export class ViewerController {
 	#revision = 0;
 	#documentGeneration = 0;
 	#searchIndex: DocumentTextIndex | null = null;
+	#visible = documentVisibility(null);
 	constructor(
 		private readonly parser: Parser = parseVsdx,
 		private readonly listenerError: (error: unknown) => void = (error) => {
@@ -68,10 +78,12 @@ export class ViewerController {
 	setDocument(document: VisioDocument | null): void {
 		this.#assertAlive();
 		if (document) assertViewableDocument(document);
+		const visible = documentVisibility(document);
 		++this.#documentGeneration;
 		this.#loadId++;
 		this.parser.cancel?.();
 		this.#searchIndex = null;
+		this.#visible = visible;
 		this.#change({
 			document,
 			pageIndex: 0,
@@ -79,6 +91,7 @@ export class ViewerController {
 			error: null,
 			selectedShape: null,
 			search: EMPTY_TEXT_SEARCH,
+			layerVisibilityOverrides: EMPTY_LAYER_OVERRIDES,
 		});
 	}
 	setPage(index: number): void {
@@ -97,15 +110,79 @@ export class ViewerController {
 	}
 	selectShape(shape: ViewerState['selectedShape']): void {
 		this.#assertAlive();
+		if (
+			shape &&
+			!visibleSelection(this.#state.document, this.#state.pageIndex, shape, this.#visible)
+		)
+			return;
 		if (this.#change({ selectedShape: shape, search: this.#inactiveSearch() }))
 			this.#emit('shape-select', shape);
+	}
+	/** Override one source-page layer for viewing. null restores its saved display flag. */
+	setLayerVisibility(pageId: string, layerId: string, visible: boolean | null): void {
+		this.#assertAlive();
+		const page = this.#state.document?.pages.find((candidate) => candidate.id === pageId);
+		if (!page) throw new Error('The layer override page does not belong to this document.');
+		if (!page.layers?.some((layer) => layer.id === layerId))
+			throw new Error('The layer does not belong to this page.');
+		if (visible !== null && typeof visible !== 'boolean')
+			throw new Error('Layer visibility must be boolean or null.');
+		const previous = this.#state.layerVisibilityOverrides;
+		const found = previous.find((entry) => entry.pageId === pageId && entry.layerId === layerId);
+		if (visible === null ? !found : found?.visible === visible) return;
+		const next = previous.filter((entry) => entry !== found);
+		if (visible !== null) next.push(Object.freeze({ pageId, layerId, visible }));
+		this.#setLayerOverrides(Object.freeze(next));
+	}
+	/** Reset a source page, or all pages when omitted. Does not modify the document. */
+	resetLayerVisibility(pageId?: string): void {
+		this.#assertAlive();
+		if (pageId !== undefined && !this.#state.document?.pages.some((page) => page.id === pageId))
+			throw new Error('The layer override page does not belong to this document.');
+		const previous = this.#state.layerVisibilityOverrides;
+		const next =
+			pageId === undefined
+				? EMPTY_LAYER_OVERRIDES
+				: Object.freeze(previous.filter((entry) => entry.pageId !== pageId));
+		if (next.length !== previous.length) this.#setLayerOverrides(next);
+	}
+	#setLayerOverrides(layerVisibilityOverrides: readonly LayerVisibilityOverride[]): void {
+		const visible = documentVisibility(this.#state.document, layerVisibilityOverrides);
+		const searchIndex = this.#state.search.query
+			? indexDocumentText(this.#state.document, (shape) => visible.get(shape) === true)
+			: null;
+		const search = searchIndex
+			? searchDocumentText(searchIndex, this.#state.search.query)
+			: EMPTY_TEXT_SEARCH;
+		const cleared =
+			!!this.#state.selectedShape &&
+			!visibleSelection(
+				this.#state.document,
+				this.#state.pageIndex,
+				this.#state.selectedShape,
+				visible,
+			);
+		this.#visible = visible;
+		this.#searchIndex = searchIndex;
+		if (
+			this.#change({
+				layerVisibilityOverrides,
+				search,
+				...(cleared ? { selectedShape: null } : {}),
+			}) &&
+			cleared
+		)
+			this.#emit('shape-select', null);
 	}
 	/** Search does not change the page or selection until explicit result navigation. */
 	setSearchQuery(query: string): void {
 		this.#assertAlive();
 		validateSearchQuery(query);
 		if (query === this.#state.search.query) return;
-		this.#searchIndex ??= indexDocumentText(this.#state.document);
+		this.#searchIndex ??= indexDocumentText(
+			this.#state.document,
+			(shape) => this.#visible.get(shape) === true,
+		);
 		this.#change({ search: searchDocumentText(this.#searchIndex, query) });
 	}
 	selectSearchResult(index: number): void {
@@ -158,12 +235,14 @@ export class ViewerController {
 		this.#change({ loading: true, error: null });
 		if (this.#destroyed || id !== this.#loadId) return;
 		let document: VisioDocument;
+		let visible: ReturnType<typeof documentVisibility>;
 		try {
 			const bytes = await read();
 			if (this.#destroyed || id !== this.#loadId) return;
 			document = await this.parser(bytes);
 			if (this.#destroyed || id !== this.#loadId) return;
 			assertViewableDocument(document);
+			visible = documentVisibility(document);
 		} catch (cause) {
 			if (this.#destroyed || id !== this.#loadId) return;
 			const error = cause instanceof Error ? cause : new Error(String(cause));
@@ -172,6 +251,7 @@ export class ViewerController {
 			throw error;
 		}
 		this.#searchIndex = null;
+		this.#visible = visible;
 		++this.#documentGeneration;
 		this.#change({
 			document,
@@ -180,6 +260,7 @@ export class ViewerController {
 			error: null,
 			selectedShape: null,
 			search: EMPTY_TEXT_SEARCH,
+			layerVisibilityOverrides: EMPTY_LAYER_OVERRIDES,
 		});
 		if (!this.#destroyed && id === this.#loadId) this.#emit('document-load', document);
 	}
@@ -198,6 +279,7 @@ export class ViewerController {
 		this.#subscribers.clear();
 		this.#events.clear();
 		this.#searchIndex = null;
+		this.#visible = documentVisibility(null);
 		this.#state = Object.freeze({
 			document: null,
 			pageIndex: 0,
@@ -206,6 +288,7 @@ export class ViewerController {
 			error: null,
 			selectedShape: null,
 			search: EMPTY_TEXT_SEARCH,
+			layerVisibilityOverrides: EMPTY_LAYER_OVERRIDES,
 		});
 	}
 	#assertAlive(): void {

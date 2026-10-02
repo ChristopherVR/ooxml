@@ -13,7 +13,14 @@ export type ViewerProps = { [K in keyof ViewerProperties]?: ViewerProperties[K] 
 };
 export type ViewerHandle = Pick<
 	MountedViewer,
-	'element' | 'controller' | 'load' | 'fit' | 'exportSvg' | 'createPrintSnapshot'
+	| 'element'
+	| 'controller'
+	| 'load'
+	| 'fit'
+	| 'setLayerVisibility'
+	| 'resetLayerVisibility'
+	| 'exportSvg'
+	| 'createPrintSnapshot'
 >;
 
 /** One mapping for every property and event, shared by every framework adapter. */
@@ -90,6 +97,12 @@ export function viewerHandle(current: () => MountedViewer | undefined): ViewerHa
 		},
 		fit() {
 			requireViewer().fit();
+		},
+		setLayerVisibility(pageId, layerId, visible) {
+			requireViewer().setLayerVisibility(pageId, layerId, visible);
+		},
+		resetLayerVisibility(pageId) {
+			requireViewer().resetLayerVisibility(pageId);
 		},
 		exportSvg(options) {
 			return requireViewer().exportSvg(options);

@@ -16,6 +16,8 @@
   export function getHandle() { return handle; }
   export function load(source: VsdxSource) { return handle.load(source); }
   export function fit() { handle.fit(); }
+  export function setLayerVisibility(pageId: string, layerId: string, visible: boolean | null) { handle.setLayerVisibility(pageId, layerId, visible); }
+  export function resetLayerVisibility(pageId?: string) { handle.resetLayerVisibility(pageId); }
   export function exportSvg(options?: SvgExportOptions) { return handle.exportSvg(options); }
   export function createPrintSnapshot(options?: CurrentPagePrintSnapshotOptions) { return handle.createPrintSnapshot(options); }
 </script>

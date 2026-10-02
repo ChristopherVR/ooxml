@@ -427,3 +427,106 @@ describe('document text search across all native adapters', () => {
 		});
 	}
 });
+
+describe('page-scoped layer visibility across all native adapters', () => {
+	for (const [framework, mountNative] of Object.entries(mounts)) {
+		it(`${framework}: shared display, search, overrides, resets and disposal`, async () => {
+			const model = structuredClone(demoDocument);
+			for (const [index, page] of model.pages.entries()) {
+				const savedVisible = index === 0;
+				page.layers = [
+					{
+						id: 'shared',
+						name: 'Shared layer ID',
+						visible: savedVisible,
+						printable: true,
+						locked: false,
+					},
+				];
+				const shape = page.shapes[0]!;
+				page.shapes = [shape];
+				shape.id = 'layer-shape';
+				shape.name = 'Layer label';
+				shape.text.plainText = 'Layer label';
+				shape.layerIds = ['shared'];
+				shape.hidden = !savedVisible;
+				shape.visibility = {
+					guide: false,
+					noShow: false,
+					layerHidden: !savedVisible,
+					layerPrintSummary: 'all-enabled',
+				};
+			}
+			model.pages[0]!.backgroundPageId = '2';
+			model.pages[1]!.isBackground = true;
+			const saved = structuredClone(model);
+			const host = document.createElement('div');
+			document.body.append(host);
+			const mounted = await mountNative(host, { document: model });
+			try {
+				const { handle } = mounted;
+				const controller = handle.controller;
+				const root = handle.element.shadowRoot!;
+				const visiblePages = () =>
+					[...root.querySelectorAll('[data-shape-id="layer-shape"]')]
+						.map((shape) => shape.getAttribute('data-page-id'))
+						.sort();
+				controller.setSearchQuery('Layer label');
+				controller.selectShape({ id: 'layer-shape', name: 'Layer label', pageId: '1' });
+				expect(visiblePages()).toEqual(['1']);
+				expect(controller.state.search.results).toHaveLength(1);
+				expect(controller.state.layerVisibilityOverrides).toEqual([]);
+
+				handle.setLayerVisibility('1', 'shared', false);
+				expect(visiblePages()).toEqual([]);
+				expect(controller.state.search.results).toHaveLength(0);
+				expect(controller.state.selectedShape).toBeNull();
+				const firstOverrides = controller.state.layerVisibilityOverrides;
+				expect(firstOverrides).toEqual([{ pageId: '1', layerId: 'shared', visible: false }]);
+				expect(Object.isFrozen(firstOverrides)).toBe(true);
+				expect(Object.isFrozen(firstOverrides[0])).toBe(true);
+
+				handle.setLayerVisibility('2', 'shared', true);
+				expect(visiblePages()).toEqual(['2']);
+				expect(controller.state.search.results.map((result) => result.pageId)).toEqual(['2']);
+				expect(firstOverrides).toEqual([{ pageId: '1', layerId: 'shared', visible: false }]);
+				await mounted.update({ document: model, showToolbar: false });
+				expect(visiblePages()).toEqual(['2']);
+				expect(controller.state.layerVisibilityOverrides).toEqual([
+					{ pageId: '1', layerId: 'shared', visible: false },
+					{ pageId: '2', layerId: 'shared', visible: true },
+				]);
+
+				handle.setLayerVisibility('1', 'shared', null);
+				expect(visiblePages()).toEqual(['1', '2']);
+				expect(controller.state.search.results).toHaveLength(2);
+				expect(controller.state.layerVisibilityOverrides).toEqual([
+					{ pageId: '2', layerId: 'shared', visible: true },
+				]);
+				handle.setLayerVisibility('1', 'shared', false);
+				handle.resetLayerVisibility('1');
+				expect(visiblePages()).toEqual(['1', '2']);
+				expect(controller.state.layerVisibilityOverrides).toEqual([
+					{ pageId: '2', layerId: 'shared', visible: true },
+				]);
+				handle.resetLayerVisibility();
+				expect(visiblePages()).toEqual(['1']);
+				expect(controller.state.search.results).toHaveLength(1);
+				expect(controller.state.layerVisibilityOverrides).toEqual([]);
+				expect(model).toEqual(saved);
+
+				handle.setLayerVisibility('1', 'shared', false);
+				await mounted.update({ document: structuredClone(model) });
+				expect(visiblePages()).toEqual(['1']);
+				expect(controller.state.layerVisibilityOverrides).toEqual([]);
+			} finally {
+				await mounted.destroy();
+				host.remove();
+			}
+			expect(() => mounted.handle.setLayerVisibility('1', 'shared', true)).toThrow(
+				/not mounted|destroyed/,
+			);
+			expect(() => mounted.handle.resetLayerVisibility()).toThrow(/not mounted|destroyed/);
+		});
+	}
+});

@@ -38,3 +38,5 @@ export {
 	type TextSearchResult,
 	type TextSearchState,
 } from './document-text-search.js';
+
+export { VIEWER_LAYER_LIMITS, type LayerVisibilityOverride } from './viewer-layers.js';

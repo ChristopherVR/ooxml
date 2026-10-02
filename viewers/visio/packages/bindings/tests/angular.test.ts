@@ -36,6 +36,10 @@ it('Angular mounts with real native lifecycle and zoneless input/output updates'
 	component.changeDetectorRef.detectChanges();
 	const live = current();
 	const retained = component.instance;
+	retained.setLayerVisibility('background', '0', true);
+	expect(live.binding.setLayerVisibility).toHaveBeenCalledWith('background', '0', true);
+	retained.resetLayerVisibility('background');
+	expect(live.binding.resetLayerVisibility).toHaveBeenCalledWith('background');
 	expect(live.options).toMatchObject({ document: null, pageIndex: 0, zoom: 2, showToolbar: false });
 	component.setInput('zoom', 3);
 	component.setInput('showToolbar', true);
@@ -55,5 +59,7 @@ it('Angular mounts with real native lifecycle and zoneless input/output updates'
 	app.destroy();
 	expect(live.destroy).toHaveBeenCalledOnce();
 	expect(() => retained.fit()).toThrow('not mounted');
+	expect(() => retained.setLayerVisibility('background', '0', null)).toThrow('not mounted');
+	expect(() => retained.resetLayerVisibility()).toThrow('not mounted');
 	host.remove();
 });

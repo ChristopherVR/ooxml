@@ -72,6 +72,12 @@ export class VisioViewerComponent implements AfterViewInit, OnChanges, OnDestroy
 	fit() {
 		this.handle.fit();
 	}
+	setLayerVisibility(pageId: string, layerId: string, visible: boolean | null) {
+		this.handle.setLayerVisibility(pageId, layerId, visible);
+	}
+	resetLayerVisibility(pageId?: string) {
+		this.handle.resetLayerVisibility(pageId);
+	}
 	exportSvg(options?: SvgExportOptions) {
 		return this.handle.exportSvg(options);
 	}

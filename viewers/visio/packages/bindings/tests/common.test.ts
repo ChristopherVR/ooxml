@@ -40,6 +40,8 @@ describe('complete shared adapter contract', () => {
 		expect(() => handle.element).toThrow('not mounted');
 		expect(() => handle.controller).toThrow('not mounted');
 		expect(() => handle.fit()).toThrow('not mounted');
+		expect(() => handle.setLayerVisibility('page', 'layer', false)).toThrow('not mounted');
+		expect(() => handle.resetLayerVisibility()).toThrow('not mounted');
 		expect(() => handle.exportSvg()).toThrow('not mounted');
 		expect(() => handle.createPrintSnapshot()).toThrow('not mounted');
 		await expect(handle.load(new Uint8Array())).rejects.toThrow('not mounted');
@@ -47,6 +49,14 @@ describe('complete shared adapter contract', () => {
 		binding = mountViewer(host, {});
 		expect(handle.element).toBe(current().binding.element);
 		handle.fit();
+		handle.setLayerVisibility('page', 'layer', false);
+		expect(current().binding.setLayerVisibility).toHaveBeenLastCalledWith('page', 'layer', false);
+		handle.setLayerVisibility('page', 'layer', null);
+		expect(current().binding.setLayerVisibility).toHaveBeenLastCalledWith('page', 'layer', null);
+		handle.resetLayerVisibility('page');
+		expect(current().binding.resetLayerVisibility).toHaveBeenLastCalledWith('page');
+		handle.resetLayerVisibility();
+		expect(current().binding.resetLayerVisibility).toHaveBeenLastCalledWith(undefined);
 		expect(handle.exportSvg({ maxBytes: 1000 }).svg).toBe('<svg/>');
 		expect(current().binding.exportSvg).toHaveBeenCalledWith({ maxBytes: 1000 });
 		expect(handle.createPrintSnapshot({ limits: { maxPages: 1 } }).appearance).toBe(
@@ -58,6 +68,8 @@ describe('complete shared adapter contract', () => {
 		binding.destroy();
 		binding = undefined;
 		expect(() => handle.fit()).toThrow('not mounted');
+		expect(() => handle.setLayerVisibility('page', 'layer', true)).toThrow('not mounted');
+		expect(() => handle.resetLayerVisibility('page')).toThrow('not mounted');
 		expect(() => handle.exportSvg()).toThrow('not mounted');
 		expect(() => handle.createPrintSnapshot()).toThrow('not mounted');
 	});

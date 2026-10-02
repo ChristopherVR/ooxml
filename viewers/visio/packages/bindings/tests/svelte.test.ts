@@ -16,6 +16,15 @@ it('Svelte action receives reactive props and callbacks and disposes on native u
 	await tick();
 	const live = current();
 	const retained = harness.getHandle();
+	const viewer = harness.getViewer();
+	viewer.setLayerVisibility('background', '0', true);
+	expect(live.binding.setLayerVisibility).toHaveBeenCalledWith('background', '0', true);
+	viewer.setLayerVisibility('background', '0', null);
+	expect(live.binding.setLayerVisibility).toHaveBeenLastCalledWith('background', '0', null);
+	viewer.resetLayerVisibility('background');
+	expect(live.binding.resetLayerVisibility).toHaveBeenLastCalledWith('background');
+	viewer.resetLayerVisibility();
+	expect(live.binding.resetLayerVisibility).toHaveBeenLastCalledWith(undefined);
 	expect(live.options).toMatchObject({ document: null, pageIndex: 0, zoom: 2, showToolbar: false });
 	harness.update(3, { 'zoom-change': latest });
 	flushSync();
@@ -33,5 +42,7 @@ it('Svelte action receives reactive props and callbacks and disposes on native u
 	expect(live.destroy).toHaveBeenCalledOnce();
 	expect(host.children).toHaveLength(0);
 	expect(() => retained.fit()).toThrow('not mounted');
+	expect(() => viewer.setLayerVisibility('background', '0', false)).toThrow('not mounted');
+	expect(() => viewer.resetLayerVisibility()).toThrow('not mounted');
 	host.remove();
 });

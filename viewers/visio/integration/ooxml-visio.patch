@@ -67,10 +67,10 @@ index bc99393..3ef4f6e 100644
  	tsconfig: 'tsconfig.build.json',
 diff --git a/src/visio/README.md b/src/visio/README.md
 new file mode 100644
-index 0000000..7bd21b1
+index 0000000..0b09764
 --- /dev/null
 +++ b/src/visio/README.md
-@@ -0,0 +1,133 @@
+@@ -0,0 +1,149 @@
 +# Visio read-only scenes
 +
 +`ooxml-core/visio` imports VSDX drawing packages into a DOM-independent typed scene.
@@ -100,7 +100,8 @@ index 0000000..7bd21b1
 +- Saved corner radius on explicitly closed, axis-aligned rectangular line geometry;
 +  exact circular SVG arcs with radius clamped to half the shortest edge
 +- Literal `POLYLINE` coordinate lists; bounded approximation of literal, clamped,
-+  positive-weight NURBS. NURBS produces an explicit approximation diagnostic
++  positive-weight NURBS. Cached contiguous `SplineStart`/`SplineKnot` sequences use
++  the same sampler with implicit unit weights. Both produce explicit approximation diagnostics
 +- Cached solid colors/fills, line widths/pattern codes, arrow codes/sizes, and opacity
 +- Cached/themed normalized line caps; legacy square/extended mappings are marked
 +  as inferred compatibility until verified against native geometry
@@ -179,7 +180,8 @@ index 0000000..7bd21b1
 +commands, five million text characters, 100,000 text runs, 50,000 paragraphs and 2,000 diagnostics. Raster defaults:
 +8 MiB each, 16 million pixels, and a maximum dimension of 16,384 pixels. Literal
 +curve limits include 64 KiB formulas, 256 controls and 2,048 generated segments.
-+NURBS uses sampled 0.0001-inch flatness, not a certified global error bound.
++NURBS uses positive-weight control-hull flatness at 0.0001 inch, with floating-point
++fidelity unverified. Weighted curve work is also bounded per curve and per package.
 +Diagnostic strings are bounded before deduplication, with a one-million-character
 +aggregate cap. Metadata limits include 256-character source IDs/attribute names,
 +128-character geometry row types, 1,024-character fonts/inherited IDs, and
@@ -204,9 +206,23 @@ index 0000000..7bd21b1
 +Run `npm run build:visio` for just this area, or the repository's normal build for
 +all areas. Tests: `npx vitest run src/visio`. Strict typecheck remains the base
 +repository TypeScript project. Synthetic fixture generators are not shipped.
++
++Cached spline sequences require a preceding endpoint and one or more contiguous knot
++rows. They are bounded to 256 controls, degrees 1-25, 2,048 output segments and
++2 million weighted refinement/subdivision work units per curve. The package default
++`maxCurveWork` is 20 million aggregate units, checked during refinement and subdivision.
++Maximum degree and control counts are independent ceilings and may not be combined
++within the work budget. Only clamped, nondecreasing compact knot vectors are supported;
++missing numeric caches, malformed order and unsupported nonclamped/periodic
++sequences omit the complete geometry section with diagnostics. Approximation uses
++positive-weight homogeneous knot insertion and Bezier control-hull subdivision
++with a 0.0001-inch flatness threshold. This avoids fixed-sample aliasing, but
++floating-point fidelity is not certified. Generated analytic
++quadratic/cubic tests cover sampled chord error, but no genuine spline-row fixture
++or native Visio comparison is yet available.
 diff --git a/src/visio/complex-geometry.test.ts b/src/visio/complex-geometry.test.ts
 new file mode 100644
-index 0000000..f826b02
+index 0000000..2eb0a65
 --- /dev/null
 +++ b/src/visio/complex-geometry.test.ts
 @@ -0,0 +1,200 @@
@@ -320,7 +336,7 @@ index 0000000..f826b02
 +		expect(points.at(-1)).toEqual([2, 0]);
 +		expect(result.consumed).toBe(points.length);
 +		expect(result.warnings).toEqual([
-+			{ code: 'geometry-approximation', message: expect.stringContaining('sampled flatness') },
++			{ code: 'geometry-approximation', message: expect.stringContaining('control-hull flatness') },
 +		]);
 +		for (const [x, y] of points) expect(y).toBeCloseTo((x! * (2 - x!)) / 2, 10);
 +	});
@@ -412,10 +428,11 @@ index 0000000..f826b02
 +});
 diff --git a/src/visio/complex-geometry.ts b/src/visio/complex-geometry.ts
 new file mode 100644
-index 0000000..b2009dd
+index 0000000..ce36968
 --- /dev/null
 +++ b/src/visio/complex-geometry.ts
-@@ -0,0 +1,274 @@
+@@ -0,0 +1,142 @@
++import { normalizedNurbs } from './nurbs.js';
 +import { number, type Report, type Row } from './sheet.js';
 +
 +// Literal data only, never a ShapeSheet expression evaluator. Syntax and units:
@@ -424,9 +441,6 @@ index 0000000..b2009dd
 +// https://learn.microsoft.com/en-us/office/vba/api/visio.page.drawnurbs
 +const MAX_TEXT = 65_536;
 +const MAX_POINTS = 256;
-+const MAX_SEGMENTS = 2_048;
-+const MAX_EVALUATIONS = 16_384;
-+const TOLERANCE = 0.0001; // Inches; sampled flatness, not a certified error bound.
 +// Keep digit runs separated by a required decimal point to avoid quadratic backtracking.
 +const numeric = /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i;
 +type Point = { x: number; y: number };
@@ -486,112 +500,6 @@ index 0000000..b2009dd
 +	return values;
 +}
 +
-+function distance(p: Point, a: Point, b: Point): number {
-+	const dx = b.x - a.x,
-+		dy = b.y - a.y;
-+	const squared = dx * dx + dy * dy;
-+	const t = squared ? Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / squared)) : 0;
-+	return Math.hypot(p.x - a.x - t * dx, p.y - a.y - t * dy);
-+}
-+
-+/** Homogeneous de Boor evaluation on a known nonempty knot span. */
-+function evaluate(
-+	controls: Control[],
-+	knots: number[],
-+	degree: number,
-+	span: number,
-+	t: number,
-+): Point {
-+	const work = controls
-+		.slice(span - degree, span + 1)
-+		.map((p) => [p.x * p.weight, p.y * p.weight, p.weight]);
-+	for (let r = 1; r <= degree; r++) {
-+		for (let j = degree; j >= r; j--) {
-+			const i = span - degree + j;
-+			const denominator = knots[i + degree - r + 1]! - knots[i]!;
-+			const alpha = denominator === 0 ? 0 : (t - knots[i]!) / denominator;
-+			for (let k = 0; k < 3; k++)
-+				work[j]![k] = (1 - alpha) * work[j - 1]![k]! + alpha * work[j]![k]!;
-+		}
-+	}
-+	const result = work[degree]!;
-+	return { x: result[0]! / result[2]!, y: result[1]! / result[2]! };
-+}
-+
-+function sampleNurbs(
-+	controls: Control[],
-+	knots: number[],
-+	degree: number,
-+	report: Report,
-+	consume: () => void,
-+): string | undefined {
-+	const commands: string[] = [];
-+	let evaluations = 0,
-+		failed = false;
-+	const sample = (span: number, t: number) => {
-+		if (++evaluations > MAX_EVALUATIONS) {
-+			failed = true;
-+			return { x: NaN, y: NaN };
-+		}
-+		const p = evaluate(controls, knots, degree, span, t);
-+		if (!validPoint(p)) failed = true;
-+		return p;
-+	};
-+	const subdivide = (
-+		span: number,
-+		a: number,
-+		b: number,
-+		pa: Point,
-+		pb: Point,
-+		depth: number,
-+	): void => {
-+		if (failed) return;
-+		const middle = (a + b) / 2;
-+		const pm = sample(span, middle);
-+		const pq = sample(span, (a + middle) / 2),
-+			pr = sample(span, (middle + b) / 2);
-+		if (failed) return;
-+		const error = Math.max(distance(pm, pa, pb), distance(pq, pa, pb), distance(pr, pa, pb));
-+		// At least four segments per span reduce missed inflections. This remains an approximation.
-+		if (depth < 2 || error > TOLERANCE) {
-+			if (depth >= 12 || middle === a || middle === b) {
-+				failed = true;
-+				return;
-+			}
-+			subdivide(span, a, middle, pa, pm, depth + 1);
-+			subdivide(span, middle, b, pm, pb, depth + 1);
-+		} else {
-+			if (commands.length >= MAX_SEGMENTS) {
-+				failed = true;
-+				return;
-+			}
-+			consume();
-+			commands.push(command(pb));
-+		}
-+	};
-+	for (let span = degree; span < controls.length && !failed; span++) {
-+		const a = knots[span]!,
-+			b = knots[span + 1]!;
-+		if (b <= a) continue;
-+		const pa = span === degree ? controls[0]! : sample(span, a);
-+		// Preserve the cached X/Y endpoint exactly, without evaluating at a repeated final knot.
-+		const pb = span === controls.length - 1 ? controls[controls.length - 1]! : sample(span, b);
-+		subdivide(span, a, b, pa, pb, 0);
-+	}
-+	if (failed || !commands.length) {
-+		report(
-+			'geometry-limit',
-+			'NURBS sampling exceeded its numeric, depth, segment or evaluation bound; its geometry section was omitted.',
-+		);
-+		return;
-+	}
-+	report(
-+		'geometry-approximation',
-+		`NURBSTo was approximated by line segments with ${TOLERANCE}-inch sampled flatness; exact curve parity is not supported.`,
-+	);
-+	return commands.join(' ');
-+}
-+
 +/** Handles literal PolyLineTo/NURBSTo rows. Every emitted segment consumes the caller's budget. */
 +export function geometryRow(
 +	row: Row,
@@ -601,6 +509,7 @@ index 0000000..b2009dd
 +	height: number,
 +	report: Report,
 +	consume: () => void,
++	consumeWork: (units: number) => void = () => {},
 +): string | undefined {
 +	if (row.type !== 'PolylineTo' && row.type !== 'PolyLineTo' && row.type !== 'NURBSTo') return;
 +	const values = literalData(row, report);
@@ -663,32 +572,7 @@ index 0000000..b2009dd
 +	}
 +	controls.push({ ...end, weight: read('B') });
 +	knots.push(read('A'), values[0]!);
-+	if (controls.some((p) => !bounded(p.weight) || p.weight < 1e-9))
-+		return invalid('NURBS supports only positive weights from 1e-9 to 1e9');
-+	if (
-+		knots.some((k, i) => !bounded(k) || (i > 0 && k < knots[i - 1]!)) ||
-+		knots[0] === knots[knots.length - 1]
-+	)
-+		return invalid('NURBS knots must be nondecreasing with a nonempty parameter range');
-+	let initial = 1;
-+	while (initial < knots.length && knots[initial] === knots[0]) initial++;
-+	if (initial < degree + 1) {
-+		report(
-+			'unsupported-geometry',
-+			'Periodic NURBS is unsupported; its geometry section was omitted.',
-+		);
-+		return;
-+	}
-+	if (initial > degree + 1) return invalid('NURBS first-knot multiplicity exceeds degree + 1');
-+	let repeats = 1;
-+	for (let i = initial; i < knots.length; i++) {
-+		repeats = knots[i] === knots[i - 1] ? repeats + 1 : 1;
-+		if (repeats > degree || (i === knots.length - 1 && repeats > 1))
-+			return invalid('Invalid NURBS internal or last-knot multiplicity');
-+	}
-+	// Visio stores n + 1 knots for n controls; the repeated end knots are implicit.
-+	for (let i = 0; i < degree; i++) knots.push(values[0]!);
-+	return sampleNurbs(controls, knots, degree, report, consume);
++	return normalizedNurbs(controls, knots, degree, report, consume, 'NURBSTo', consumeWork);
 +}
 diff --git a/src/visio/corpus-regressions.test.ts b/src/visio/corpus-regressions.test.ts
 new file mode 100644
@@ -882,10 +766,10 @@ index 0000000..66409ab
 +}
 diff --git a/src/visio/geometry.test.ts b/src/visio/geometry.test.ts
 new file mode 100644
-index 0000000..6b992f9
+index 0000000..6d62274
 --- /dev/null
 +++ b/src/visio/geometry.test.ts
-@@ -0,0 +1,134 @@
+@@ -0,0 +1,153 @@
 +import { describe, expect, it } from 'vitest';
 +import { parseXml } from '../xml/index.js';
 +import { geometryPaths, shapeTransform } from './geometry.js';
@@ -955,7 +839,7 @@ index 0000000..6b992f9
 +	it('omits an entire section rather than joining across an unsupported curve', () => {
 +		const result = geometry(
 +			row(1, 'MoveTo', cell('X', 0)) +
-+				row(2, 'SplineStart', cell('X', 1)) +
++				row(2, 'UnknownCurve', cell('X', 1)) +
 +				row(3, 'LineTo', cell('X', 2)),
 +		);
 +		expect(result.paths).toEqual([]);
@@ -1003,6 +887,25 @@ index 0000000..6b992f9
 +		expect(nurbs.paths[0]!.path.endsWith('L 2 0')).toBe(true);
 +		expect(nurbs.warnings).toContain('geometry-approximation');
 +	});
++
++	it.each([undefined, 'Width', '1e999'])(
++		'does not synthesize NURBS first control from invalid predecessor %s',
++		(value) => {
++			const before = row(1, 'MoveTo', cell('Y', 0) + (value === undefined ? '' : cell('X', value)));
++			const curve = row(
++				2,
++				'NURBSTo',
++				cell('X', 2) +
++					cell('Y', 0) +
++					cell('A', 0) +
++					cell('B', 1) +
++					cell('C', 0) +
++					cell('D', 1) +
++					'<Cell N="E" F="NURBS(1,2,1,1,1,1,0,1)"/>',
++			);
++			expect(geometry(before + curve).paths).toEqual([]);
++		},
++	);
 +	it('bounds numeric cached tokens before number parsing', () => {
 +		const result = geometry(row(1, 'MoveTo', cell('X', '1'.repeat(60000) + 'x') + cell('Y', 0)));
 +		expect(result.paths[0]!.path).toBe('M 0 0');
@@ -1022,10 +925,11 @@ index 0000000..6b992f9
 +});
 diff --git a/src/visio/geometry.ts b/src/visio/geometry.ts
 new file mode 100644
-index 0000000..ff19402
+index 0000000..d9e8179
 --- /dev/null
 +++ b/src/visio/geometry.ts
-@@ -0,0 +1,237 @@
+@@ -0,0 +1,304 @@
++import { splineGeometry } from './spline-geometry.js';
 +import { geometryRow } from './complex-geometry.js';
 +import { roundedRectanglePath, type RectanglePoint } from './rounded-geometry.js';
 +import type { VisioGeometry, VisioMatrix } from './model.js';
@@ -1111,6 +1015,7 @@ index 0000000..ff19402
 +	height: number,
 +	report: Report,
 +	consume: () => void,
++	consumeWork: (units: number) => void = () => {},
 +): VisioGeometry[] {
 +	const geometry: VisioGeometry[] = [];
 +	const rounding = number(sheet.cells, 'Rounding', 0, report);
@@ -1138,9 +1043,52 @@ index 0000000..ff19402
 +				: undefined;
 +		let currentX = 0,
 +			currentY = 0,
++			currentValid = false,
 +			supported = true;
-+		for (const row of rows) {
++		for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
++			const row = rows[rowIndex]!;
 +			consume();
++			if (row.type === 'SplineStart') {
++				let end = rowIndex + 1;
++				while (end < rows.length && rows[end]!.type === 'SplineKnot') {
++					consume();
++					end++;
++				}
++				if (end - rowIndex - 1 > 254) {
++					report(
++						'geometry-limit',
++						'A spline exceeds 256 control points; its geometry section was omitted.',
++					);
++					supported = false;
++				} else if (!currentValid || rowIndex === 0 || rows[rowIndex - 1]!.type === 'Ellipse') {
++					report(
++						'invalid-spline',
++						'A spline requires a preceding endpoint row; its geometry section was omitted.',
++					);
++					supported = false;
++				} else {
++					const spline = splineGeometry(
++						row,
++						rows.slice(rowIndex + 1, end),
++						currentX,
++						currentY,
++						report,
++						consume,
++						consumeWork,
++					);
++					if (spline) {
++						commands.push(spline.path);
++						currentX = spline.endX;
++						currentY = spline.endY;
++						currentValid = true;
++					} else {
++						supported = false;
++						currentValid = false;
++					}
++				}
++				rowIndex = end - 1;
++				continue;
++			}
 +			const relative = row.type.startsWith('Rel');
 +			const xScale = relative ? width : 1,
 +				yScale = relative ? height : 1;
@@ -1228,7 +1176,24 @@ index 0000000..ff19402
 +				case 'PolylineTo':
 +				case 'PolyLineTo':
 +				case 'NURBSTo': {
-+					const suffix = geometryRow(row, currentX, currentY, width, height, report, consume);
++					if (row.type === 'NURBSTo' && (!currentValid || rows[rowIndex - 1]?.type === 'Ellipse')) {
++						report(
++							'invalid-geometry',
++							'NURBSTo requires a usable cached preceding endpoint; its geometry section was omitted.',
++						);
++						supported = false;
++						break;
++					}
++					const suffix = geometryRow(
++						row,
++						currentX,
++						currentY,
++						width,
++						height,
++						report,
++						consume,
++						consumeWork,
++					);
 +					if (suffix) commands.push(suffix);
 +					else supported = false;
 +					break;
@@ -1240,6 +1205,11 @@ index 0000000..ff19402
 +						`Geometry row ${row.type || '(missing type)'} is unsupported; its geometry section was omitted.`,
 +					);
 +			}
++			currentValid =
++				Number.isFinite(number(row.cells, 'X', NaN)) &&
++				Number.isFinite(number(row.cells, 'Y', NaN)) &&
++				Number.isFinite(x) &&
++				Number.isFinite(y);
 +			currentX = x;
 +			currentY = y;
 +		}
@@ -3197,6 +3167,478 @@ index 0000000..7852016
 +	pages: VisioPage[];
 +	diagnostics: VisioDiagnostic[];
 +}
+diff --git a/src/visio/nurbs-flatten.test.ts b/src/visio/nurbs-flatten.test.ts
+new file mode 100644
+index 0000000..41535a9
+--- /dev/null
++++ b/src/visio/nurbs-flatten.test.ts
+@@ -0,0 +1,90 @@
++import { describe, expect, it } from 'vitest';
++import { normalizedNurbs } from './nurbs.js';
++
++// Independently generated Bernstein coefficients of k*product(t-j/16), j=0..16,
++// scaled so y(1/64)=1. Fixed quarter/midpoint probes previously missed every loop.
++const ALIAS = [
++	0, 9.28059844954701, -44.189179606705224, 131.96610459207767, -299.9224747307209,
++	554.991357023364, -863.8055237910094, 1151.019022475428, -1325.79936188791, 1325.79936188791,
++	-1151.019022475428, 863.8055237910094, -554.991357023364, 299.9224747307209, -131.96610459207767,
++	44.189179606705224, -9.28059844954701, 0,
++];
++function curve(
++	ys: number[],
++	knots: number[],
++	degree: number,
++	work: (n: number) => void = () => {},
++) {
++	const notes: string[] = [];
++	const path = normalizedNurbs(
++		ys.map((y, i) => ({ x: i / (ys.length - 1), y, weight: 1 })),
++		knots,
++		degree,
++		(code) => notes.push(code),
++		() => {},
++		'test',
++		work,
++	);
++	const points = [
++		[0, ys[0]!],
++		...Array.from(path?.matchAll(/L ([^ ]+) ([^ ]+)/g) ?? [], (m) => [Number(m[1]), Number(m[2])]),
++	];
++	return { path, points, notes };
++}
++function bernstein(ys: number[], t: number): number {
++	const work = [...ys];
++	for (let r = 1; r < work.length; r++)
++		for (let i = 0; i < work.length - r; i++) work[i] = (1 - t) * work[i]! + t * work[i + 1]!;
++	return work[0]!;
++}
++function nearest(points: number[][], x: number, y: number): number {
++	let best = Infinity;
++	for (let i = 1; i < points.length; i++) {
++		const a = points[i - 1]!,
++			b = points[i]!,
++			dx = b[0]! - a[0]!,
++			dy = b[1]! - a[1]!,
++			sq = dx * dx + dy * dy;
++		const t = sq ? Math.max(0, Math.min(1, ((x - a[0]!) * dx + (y - a[1]!) * dy) / sq)) : 0;
++		best = Math.min(best, Math.hypot(x - a[0]! - t * dx, y - a[1]! - t * dy));
++	}
++	return best;
++}
++describe('control-hull bounded NURBS flattening', () => {
++	it('preserves degree17 lobes invisible to fixed flatness probes', () => {
++		const result = curve(ALIAS, [...Array<number>(18).fill(0), 1], 17);
++		expect(result.path).toBeDefined();
++		expect(Math.max(...result.points.map((p) => Math.abs(p[1]!)))).toBeGreaterThan(0.9);
++		for (let i = 0; i <= 1024; i++)
++			expect(nearest(result.points, i / 1024, bernstein(ALIAS, i / 1024))).toBeLessThanOrEqual(
++				0.000101,
++			);
++	});
++	it.each([1, 2, 3, 5, 9, 17, 25])(
++		'matches independent polynomial evaluation for degree %i',
++		(degree) => {
++			const ys = Array.from({ length: degree + 1 }, (_, i) => Math.sin(i) * 0.2);
++			const result = curve(ys, [...Array<number>(degree + 1).fill(0), 1], degree);
++			expect(result.path).toBeDefined();
++			for (let i = 0; i <= 128; i++)
++				expect(nearest(result.points, i / 128, bernstein(ys, i / 128))).toBeLessThanOrEqual(
++					0.000101,
++				);
++		},
++	);
++	it('propagates aggregate work failures instead of converting them into omission diagnostics', () => {
++		let work = 0;
++		expect(() =>
++			curve(ALIAS, [...Array<number>(18).fill(0), 1], 17, (n) => {
++				if ((work += n) > 100) throw new Error('work budget');
++			}),
++		).toThrow('work budget');
++		expect(work).toBeGreaterThan(100);
++	});
++	it('retains a valid curve over a subnormal knot range without parameter midpoint underflow', () => {
++		const result = curve([0, 1, 0], [0, 0, 0, Number.MIN_VALUE], 2);
++		expect(result.path).toBeDefined();
++		expect(result.points.every((p) => p.every(Number.isFinite))).toBe(true);
++		expect(nearest(result.points, 0.5, 0.5)).toBeLessThanOrEqual(0.000101);
++	});
++});
+diff --git a/src/visio/nurbs-flatten.ts b/src/visio/nurbs-flatten.ts
+new file mode 100644
+index 0000000..2341b61
+--- /dev/null
++++ b/src/visio/nurbs-flatten.ts
+@@ -0,0 +1,116 @@
++import type { NurbsControl, NurbsPoint } from './nurbs.js';
++
++// Knot insertion preserves the curve. Positive-weight rational Bezier curves stay
++// inside the Euclidean control hull, so hull-to-segment distance bounds deviation.
++// https://pages.mtu.edu/~shene/COURSES/cs3621/NOTES/spline/NURBS-knot-insert.html
++// https://pages.mtu.edu/~shene/COURSES/cs3621/NOTES/spline/B-spline/bspline-curve-prop.html
++// This remains floating-point approximation, not a numerical certification.
++type Homogeneous = readonly [number, number, number];
++export const CURVE_TOLERANCE = 0.0001;
++const MAX_WORK = 2_000_000;
++const MAX_SEGMENTS = 2048;
++const MAX_REFINED_CONTROLS = 6400;
++const MAX_DEPTH = 20;
++const failure = Symbol('curve-limit');
++const project = (p: Homogeneous): NurbsPoint => ({ x: p[0] / p[2], y: p[1] / p[2] });
++function blend(a: Homogeneous, b: Homogeneous, t: number): Homogeneous {
++	return [(1 - t) * a[0] + t * b[0], (1 - t) * a[1] + t * b[1], (1 - t) * a[2] + t * b[2]];
++}
++function distance(p: NurbsPoint, a: NurbsPoint, b: NurbsPoint): number {
++	const dx = b.x - a.x,
++		dy = b.y - a.y,
++		squared = dx * dx + dy * dy;
++	const t = squared ? Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / squared)) : 0;
++	return Math.hypot(p.x - a.x - t * dx, p.y - a.y - t * dy);
++}
++/** Private numeric kernel. Inputs must already satisfy normalizedNurbs validation. */
++export function flattenNurbs(
++	controls: readonly NurbsControl[],
++	sourceKnots: readonly number[],
++	degree: number,
++	consume: () => void,
++	consumeWork: (units: number) => void,
++): NurbsPoint[] | undefined {
++	let work = 0;
++	const charge = (units: number) => {
++		consumeWork(units);
++		if ((work += units) > MAX_WORK) throw failure;
++	};
++	try {
++		charge(controls.length + sourceKnots.length);
++		let points: Homogeneous[] = controls.map((p) => [p.x * p.weight, p.y * p.weight, p.weight]);
++		let knots = [...sourceKnots];
++		// Expand each internal knot to degree multiplicity. Refined spans are Beziers.
++		const internal = [...new Set(knots.slice(degree + 1, -degree - 1))];
++		for (const u of internal) {
++			charge(knots.length);
++			let multiplicity = knots.filter((k) => k === u).length;
++			while (multiplicity < degree) {
++				charge(points.length + knots.length + degree * 4);
++				if (points.length >= MAX_REFINED_CONTROLS) throw failure;
++				let span = degree;
++				while (span < points.length - 1 && knots[span + 1]! <= u) span++;
++				const next: Homogeneous[] = new Array(points.length + 1);
++				for (let i = 0; i <= span - degree; i++) next[i] = points[i]!;
++				for (let i = span - multiplicity; i < points.length; i++) next[i + 1] = points[i]!;
++				for (let i = span - degree + 1; i <= span - multiplicity; i++) {
++					const alpha = (u - knots[i]!) / (knots[i + degree]! - knots[i]!);
++					if (!Number.isFinite(alpha) || alpha < 0 || alpha > 1) throw failure;
++					next[i] = blend(points[i - 1]!, points[i]!, alpha);
++				}
++				knots = [...knots.slice(0, span + 1), u, ...knots.slice(span + 1)];
++				points = next;
++				multiplicity++;
++			}
++		}
++		const output: NurbsPoint[] = [];
++		const subdivide = (h: readonly Homogeneous[], depth: number): void => {
++			charge(h.length);
++			const p = h.map(project),
++				a = p[0]!,
++				b = p.at(-1)!;
++			if (
++				p.some(
++					(q) =>
++						!Number.isFinite(q.x) ||
++						!Number.isFinite(q.y) ||
++						Math.abs(q.x) > 1e9 ||
++						Math.abs(q.y) > 1e9,
++				)
++			)
++				throw failure;
++			const flat = p.every((q) => distance(q, a, b) <= CURVE_TOLERANCE);
++			// Retain at least four segments per span for consistent existing rendering.
++			if (depth >= 2 && flat) {
++				if (output.length >= MAX_SEGMENTS) throw failure;
++				consume();
++				output.push(b);
++				return;
++			}
++			if (depth >= MAX_DEPTH) throw failure;
++			charge(h.length * h.length);
++			const row = [...h],
++				left: Homogeneous[] = [row[0]!],
++				right: Homogeneous[] = [row.at(-1)!];
++			for (let count = row.length - 1; count > 0; count--) {
++				for (let i = 0; i < count; i++) row[i] = blend(row[i]!, row[i + 1]!, 0.5);
++				left.push(row[0]!);
++				right.push(row[count - 1]!);
++			}
++			subdivide(left, depth + 1);
++			subdivide(right.reverse(), depth + 1);
++		};
++		for (let span = degree; span < points.length; span++) {
++			charge(1);
++			if (knots[span + 1]! > knots[span]!) subdivide(points.slice(span - degree, span + 1), 0);
++		}
++		if (output.length) {
++			const last = controls.at(-1)!;
++			output[output.length - 1] = { x: last.x, y: last.y };
++		}
++		return output.length ? output : undefined;
++	} catch (error) {
++		if (error === failure) return undefined;
++		throw error;
++	}
++}
+diff --git a/src/visio/nurbs-independent.test.ts b/src/visio/nurbs-independent.test.ts
+new file mode 100644
+index 0000000..42aef7a
+--- /dev/null
++++ b/src/visio/nurbs-independent.test.ts
+@@ -0,0 +1,168 @@
++import { describe, expect, it } from 'vitest';
++import { normalizedNurbs, type NurbsControl } from './nurbs.js';
++
++type Point = readonly [number, number];
++function sample(controls: NurbsControl[], knots: number[], degree: number) {
++	let consumed = 0;
++	const warnings: string[] = [];
++	const path = normalizedNurbs(
++		controls,
++		knots,
++		degree,
++		(code) => warnings.push(code),
++		() => consumed++,
++	);
++	const points: Point[] = path
++		? Array.from(path.matchAll(/L ([^ ]+) ([^ ]+)/g), (m) => [Number(m[1]), Number(m[2])])
++		: [];
++	return { path, points, warnings, consumed };
++}
++function bernstein(controls: number[], t: number): number {
++	const values = [...controls];
++	for (let level = 1; level < values.length; level++)
++		for (let i = 0; i < values.length - level; i++)
++			values[i] = values[i]! * (1 - t) + values[i + 1]! * t;
++	return values[0]!;
++}
++function distance(p: Point, a: Point, b: Point): number {
++	const dx = b[0] - a[0],
++		dy = b[1] - a[1],
++		squared = dx * dx + dy * dy;
++	const t = squared
++		? Math.min(1, Math.max(0, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / squared))
++		: 0;
++	return Math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy);
++}
++/** Independent Cox basis recurrence: no knot insertion or homogeneous subdivision. */
++function referencePoint(
++	controls: NurbsControl[],
++	compact: number[],
++	degree: number,
++	t: number,
++): Point {
++	if (t === compact.at(-1)) return [controls.at(-1)!.x, controls.at(-1)!.y];
++	const knots: number[] = [...compact, ...Array<number>(degree).fill(compact.at(-1)!)];
++	let basis: number[] = knots.slice(0, -1).map((k, i) => (k <= t && t < knots[i + 1]! ? 1 : 0));
++	for (let d = 1; d <= degree; d++) {
++		const next: number[] = [];
++		for (let i = 0; i < basis.length - 1; i++) {
++			const a = knots[i + d]! - knots[i]!,
++				b = knots[i + d + 1]! - knots[i + 1]!;
++			next.push(
++				(a ? ((t - knots[i]!) / a) * basis[i]! : 0) +
++					(b ? ((knots[i + d + 1]! - t) / b) * basis[i + 1]! : 0),
++			);
++		}
++		basis = next;
++	}
++	let x = 0,
++		y = 0,
++		weight = 0;
++	for (let i = 0; i < controls.length; i++) {
++		const control = controls[i]!,
++			factor = basis[i]! * control.weight;
++		x += factor * control.x;
++		y += factor * control.y;
++		weight += factor;
++	}
++	return [x / weight, y / weight];
++}
++function compareReference(
++	controls: NurbsControl[],
++	knots: number[],
++	degree: number,
++	count: number,
++) {
++	const result = sample(controls, knots, degree);
++	expect(result.path).toBeDefined();
++	const points: Point[] = [[controls[0]!.x, controls[0]!.y], ...result.points];
++	for (let j = 0; j <= count; j++) {
++		const t = j / count,
++			p = referencePoint(controls, knots, degree, t);
++		const error = Math.min(...points.slice(1).map((point, i) => distance(p, points[i]!, point)));
++		expect(error, `degree ${degree}, parameter ${t}`).toBeLessThanOrEqual(0.000102);
++	}
++}
++
++describe('independent bounded NURBS reference oracles', () => {
++	it('matches independent Bernstein ordinates for every degree from 1 through 25', () => {
++		for (let degree = 1; degree <= 25; degree++) {
++			const y = Array.from({ length: degree + 1 }, (_, i) => Math.sin(i) * 0.01);
++			const result = sample(
++				y.map((value, i) => ({ x: i / degree, y: value, weight: 1 })),
++				[...Array<number>(degree + 1).fill(0), 1],
++				degree,
++			);
++			expect(result.path).toBeDefined();
++			// Uniform x control coordinates make the Bezier's x equal its parameter.
++			for (const [x, actualY] of result.points)
++				expect(Math.abs(actualY - bernstein(y, x))).toBeLessThan(1e-12);
++			expect(result.points.at(-1)).toEqual([1, y.at(-1)]);
++		}
++	});
++
++	it('matches the rational quarter-circle equation and exact cached endpoint', () => {
++		const result = sample(
++			[
++				{ x: 1, y: 0, weight: 1 },
++				{ x: 1, y: 1, weight: Math.SQRT1_2 },
++				{ x: 0, y: 1, weight: 1 },
++			],
++			[0, 0, 0, 1],
++			2,
++		);
++		expect(result.path).toBeDefined();
++		for (const [x, y] of result.points) expect(Math.abs(x * x + y * y - 1)).toBeLessThan(1e-14);
++		expect(result.points.at(-1)).toEqual([0, 1]);
++	});
++
++	it('bounds 48 seeded multi-span rational curves against an independent Cox basis', () => {
++		let seed = 827361;
++		const random = () => {
++			seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
++			return seed / 2 ** 32;
++		};
++		for (let test = 0; test < 48; test++) {
++			const degree = 1 + (test % 8),
++				count = degree + 2 + (test % 5),
++				internal = count - degree - 1;
++			const controls = Array.from({ length: count }, (_, i) => ({
++				x: i / (count - 1),
++				y: (random() - 0.5) * 0.1,
++				weight: 0.2 + random() * 3,
++			}));
++			const knots = [
++				...Array<number>(degree + 1).fill(0),
++				...Array.from({ length: internal }, (_, i) => (i + 1) / (internal + 1)),
++				1,
++			];
++			compareReference(controls, knots, degree, 200);
++		}
++	});
++
++	it('preserves a degree-25 repeated C0 knot while inserting a second internal knot', () => {
++		const controls = Array.from({ length: 52 }, (_, i) => ({
++			x: i / 51,
++			y: 0.01 * Math.sin(i),
++			weight: 0.5 + (i % 5) / 3,
++		}));
++		const knots = [...Array<number>(26).fill(0), ...Array<number>(25).fill(0.25), 0.75, 1];
++		compareReference(controls, knots, 25, 1000);
++	});
++
++	it('keeps simultaneous degree-25 and 256-control input subject to the work limit', () => {
++		const controls = Array.from({ length: 256 }, (_, i) => ({ x: i / 255, y: 0, weight: 1 }));
++		const knots = [...Array<number>(26).fill(-5), ...Array.from({ length: 231 }, (_, i) => i - 4)];
++		const result = sample(controls, knots, 25);
++		// The maxima are independent: large refinement can be explicitly omitted.
++		if (!result.path) {
++			expect(result.warnings).toContain('geometry-limit');
++			expect(result.warnings).not.toContain('geometry-approximation');
++		} else {
++			expect(result.consumed).toBeGreaterThan(0);
++			expect(result.consumed).toBeLessThanOrEqual(2048);
++			expect(result.points.every((point) => point.every(Number.isFinite))).toBe(true);
++			expect(result.points.at(-1)).toEqual([1, 0]);
++		}
++	});
++});
+diff --git a/src/visio/nurbs.ts b/src/visio/nurbs.ts
+new file mode 100644
+index 0000000..e17ceb2
+--- /dev/null
++++ b/src/visio/nurbs.ts
+@@ -0,0 +1,74 @@
++import { flattenNurbs, CURVE_TOLERANCE } from './nurbs-flatten.js';
++import type { Report } from './sheet.js';
++
++export type NurbsPoint = { x: number; y: number };
++export type NurbsControl = NurbsPoint & { weight: number };
++type Point = NurbsPoint;
++const bounded = (n: number) => Number.isFinite(n) && Math.abs(n) <= 1e9;
++const validPoint = (p: Point) => bounded(p.x) && bounded(p.y);
++/** Validate and expand Visio's compact n+1 knot sequence before shared bounded sampling. */
++export function normalizedNurbs(
++	controls: NurbsControl[],
++	compactKnots: number[],
++	degree: number,
++	report: Report,
++	consume: () => void,
++	kind = 'NURBSTo',
++	consumeWork: (units: number) => void = () => {},
++): string | undefined {
++	const invalid = (message: string) => {
++		report('invalid-geometry', `${message}; its geometry section was omitted.`);
++		return undefined;
++	};
++	if (
++		!Number.isInteger(degree) ||
++		degree < 1 ||
++		degree > 25 ||
++		controls.length <= degree ||
++		controls.length > 256
++	)
++		return invalid(
++			'NURBS requires degree 1 to 25 and 2 to 256 control points, more than its degree',
++		);
++	if (controls.some((p) => !validPoint(p) || !bounded(p.weight) || p.weight < 1e-9))
++		return invalid('NURBS supports bounded coordinates and positive weights from 1e-9 to 1e9');
++	if (
++		compactKnots.length !== controls.length + 1 ||
++		compactKnots.some((k, i) => !bounded(k) || (i > 0 && k < compactKnots[i - 1]!)) ||
++		compactKnots[0] === compactKnots.at(-1)
++	)
++		return invalid('NURBS knots must be nondecreasing with a nonempty parameter range');
++	const knots = [...compactKnots],
++		lastKnot = knots.at(-1)!;
++	let initial = 1;
++	while (initial < knots.length && knots[initial] === knots[0]) initial++;
++	if (initial < degree + 1) {
++		report(
++			'unsupported-geometry',
++			'Periodic NURBS is unsupported; its geometry section was omitted.',
++		);
++		return;
++	}
++	if (initial > degree + 1) return invalid('NURBS first-knot multiplicity exceeds degree + 1');
++	let repeats = 1;
++	for (let i = initial; i < knots.length; i++) {
++		repeats = knots[i] === knots[i - 1] ? repeats + 1 : 1;
++		if (repeats > degree || (i === knots.length - 1 && repeats > 1))
++			return invalid('Invalid NURBS internal or last-knot multiplicity');
++	}
++	// Visio stores n + 1 knots for n controls; the repeated end knots are implicit.
++	for (let i = 0; i < degree; i++) knots.push(lastKnot);
++	const points = flattenNurbs(controls, knots, degree, consume, consumeWork);
++	if (!points) {
++		report(
++			'geometry-limit',
++			'NURBS subdivision exceeded its numeric, depth, segment or work bound; its geometry section was omitted.',
++		);
++		return;
++	}
++	report(
++		'geometry-approximation',
++		`${kind} was approximated by line segments with ${CURVE_TOLERANCE}-inch control-hull flatness; floating-point curve parity is not certified.`,
++	);
++	return points.map((p) => `L ${p.x === 0 ? 0 : p.x} ${p.y === 0 ? 0 : p.y}`).join(' ');
++}
 diff --git a/src/visio/package-common.ts b/src/visio/package-common.ts
 new file mode 100644
 index 0000000..66e459c
@@ -4574,10 +5016,10 @@ index 0000000..f5b6b8c
 +});
 diff --git a/src/visio/parser.ts b/src/visio/parser.ts
 new file mode 100644
-index 0000000..7341da1
+index 0000000..07303f8
 --- /dev/null
 +++ b/src/visio/parser.ts
-@@ -0,0 +1,263 @@
+@@ -0,0 +1,276 @@
 +import { connections, indexedPart, related, validateBackgrounds, visioXml } from './parts.js';
 +import { prepareImages } from './prepare-images.js';
 +import type { VisioImageOptions } from './media.js';
@@ -4611,6 +5053,8 @@ index 0000000..7341da1
 +	metadata?: VisioMetadataOptions;
 +	maxShapes?: number;
 +	maxShapeDepth?: number;
++	/** Aggregate weighted knot-refinement and curve subdivision work. */
++	maxCurveWork?: number;
 +	maxGeometryCommands?: number;
 +	maxTextCharacters?: number;
 +	maxTextRuns?: number;
@@ -4635,6 +5079,8 @@ index 0000000..7341da1
 +	};
 +	const maxShapes = option(options.maxShapes, 25_000),
 +		maxShapeDepth = option(options.maxShapeDepth, 64);
++	const maxCurveWork = option(options.maxCurveWork, 20_000_000);
++	let curveWork = 0;
 +	const maxGeometry = option(options.maxGeometryCommands, 500_000),
 +		maxText = option(options.maxTextCharacters, 5_000_000);
 +	const maxDiagnostics = option(options.maxDiagnostics, 2_000);
@@ -4736,6 +5182,15 @@ index 0000000..7341da1
 +			checkTime();
 +			if (++expansionCount > maxShapes)
 +				throw new VisioPackageError('SHAPE_LIMIT', 'Inherited shape expansion limit exceeded.');
++		},
++		consumeCurveWork: (units) => {
++			checkTime();
++			curveWork += units;
++			if (curveWork > maxCurveWork)
++				throw new VisioPackageError(
++					'CURVE_WORK_LIMIT',
++					'Curve refinement/subdivision work limit exceeded.',
++				);
 +		},
 +		consumeGeometry: () => {
 +			checkTime();
@@ -6315,10 +6770,10 @@ index 0000000..977438e
 +}
 diff --git a/src/visio/shapes.ts b/src/visio/shapes.ts
 new file mode 100644
-index 0000000..fa59ac2
+index 0000000..51cca7f
 --- /dev/null
 +++ b/src/visio/shapes.ts
-@@ -0,0 +1,265 @@
+@@ -0,0 +1,273 @@
 +import { styleSheet, type StyleContext } from './style-inheritance.js';
 +import { metadata } from './metadata.js';
 +import { shapeMetadata, type VisioMetadataBudget } from './shape-metadata.js';
@@ -6348,6 +6803,7 @@ index 0000000..fa59ac2
 +	shapeCount: number;
 +	consumeExpansion: () => void;
 +	consumeGeometry: () => void;
++	consumeCurveWork: (units: number) => void;
 +	consumeText: (length: number) => void;
 +	consumeParagraph: () => void;
 +}
@@ -6508,7 +6964,14 @@ index 0000000..fa59ac2
 +			const membership = shapeLayers(sheet, context.layers, report, context.layerBudget);
 +			const cachedNoShow = number(sheet.cells, 'NoShow', sheet.cells.has('NoShow') ? NaN : 0);
 +			const nonPrinting = number(sheet.cells, 'NonPrinting', NaN);
-+			const geometry = geometryPaths(sheet, width, height, report, context.consumeGeometry);
++			const geometry = geometryPaths(
++				sheet,
++				width,
++				height,
++				report,
++				context.consumeGeometry,
++				context.consumeCurveWork,
++			);
 +			if (
 +				!geometry.length &&
 +				oneD &&
@@ -6796,6 +7259,354 @@ index 0000000..bff3c55
 +		visit(section.cells);
 +		for (const row of section.rows.values()) visit(row.cells);
 +	}
++}
+diff --git a/src/visio/spline-geometry.test.ts b/src/visio/spline-geometry.test.ts
+new file mode 100644
+index 0000000..3c541c1
+--- /dev/null
++++ b/src/visio/spline-geometry.test.ts
+@@ -0,0 +1,280 @@
++import { describe, expect, it } from 'vitest';
++import { parseXml } from '../xml/index.js';
++import { geometryPaths } from './geometry.js';
++import { readSheet, mergeSheets } from './sheet.js';
++import { parseVsdx } from './index.js';
++import { cell, row, section, xml, fixture, shape } from './test-fixtures.js';
++
++const cells = (v: Record<string, string | number>) =>
++	Object.entries(v)
++		.map(([k, v]) => cell(k, v))
++		.join('');
++const move = row(1, 'MoveTo', cells({ X: 0, Y: 0 }));
++const start = (v: Record<string, string | number> = {}) =>
++	row(2, 'SplineStart', cells({ X: 1, Y: 1, A: 0, B: 0, C: 1, D: 2, ...v }));
++const knot = (v: Record<string, string | number> = {}, index = 3) =>
++	row(index, 'SplineKnot', cells({ X: 2, Y: 0, A: 0, ...v }));
++const quadratic = move + start() + knot();
++function run(rows: string, consumeExtra = () => {}) {
++	const warnings: { code: string; message: string }[] = [];
++	let consumed = 0;
++	const sheet = readSheet(parseXml(xml('Shape', section('Geometry', rows))).documentElement);
++	const paths = geometryPaths(
++		sheet,
++		4,
++		2,
++		(code, message) => warnings.push({ code, message }),
++		() => {
++			consumed++;
++			consumeExtra();
++		},
++	);
++	return { paths, warnings, consumed };
++}
++const vertices = (path: string) =>
++	Array.from(path.matchAll(/L ([^ ]+) ([^ ]+)/g), (m) => [Number(m[1]), Number(m[2])]);
++describe('cached contiguous Visio spline sequences', () => {
++	it('approximates the unit-weight quadratic with exact endpoints and midpoint', () => {
++		const result = run(quadratic),
++			points = vertices(result.paths[0]!.path);
++		expect(result.paths[0]!.path).toMatch(/^M 0 0 L /);
++		expect(points).toContainEqual([1, 0.5]);
++		expect(points.at(-1)).toEqual([2, 0]);
++		expect(result.consumed).toBe(3 + points.length);
++		expect(result.warnings).toEqual([
++			{
++				code: 'geometry-approximation',
++				message: expect.stringContaining('SplineStart/SplineKnot'),
++			},
++		]);
++	});
++
++	it('bounds analytic quadratic chord error at dense interior samples', () => {
++		const points = [[0, 0], ...vertices(run(quadratic).paths[0]!.path)];
++		for (let i = 1; i < points.length; i++) {
++			const a = points[i - 1]!,
++				b = points[i]!;
++			const dx = b[0]! - a[0]!,
++				dy = b[1]! - a[1]!;
++			for (let j = 1; j < 10; j++) {
++				const t = (a[0]! + ((b[0]! - a[0]!) * j) / 10) / 2,
++					x = 2 * t,
++					y = 2 * t * (1 - t);
++				const u = Math.max(
++					0,
++					Math.min(1, ((x - a[0]!) * dx + (y - a[1]!) * dy) / (dx * dx + dy * dy)),
++				);
++				expect(Math.hypot(x - a[0]! - u * dx, y - a[1]! - u * dy)).toBeLessThanOrEqual(0.000101);
++			}
++		}
++	});
++	it('matches analytic cubic vertices with linear x and bounds sampled chord error', () => {
++		const points = [
++			[0, 0],
++			...vertices(
++				run(
++					move +
++						start({ X: 1 / 3, Y: 1, D: 3 }) +
++						knot({ X: 2 / 3, Y: 1 }, 3) +
++						knot({ X: 1, Y: 0 }, 4),
++				).paths[0]!.path,
++			),
++		];
++		for (const [x, y] of points) expect(y).toBeCloseTo(3 * x! * (1 - x!), 12);
++		for (let i = 1; i < points.length; i++) {
++			const a = points[i - 1]!,
++				b = points[i]!,
++				x = (a[0]! + b[0]!) / 2,
++				y = 3 * x * (1 - x);
++			const dx = b[0]! - a[0]!,
++				dy = b[1]! - a[1]!,
++				u = ((x - a[0]!) * dx + (y - a[1]!) * dy) / (dx * dx + dy * dy);
++			expect(Math.hypot(x - a[0]! - u * dx, y - a[1]! - u * dy)).toBeLessThanOrEqual(0.000101);
++		}
++	});
++	it('accepts exactly 256 controls and the documented maximum degree 25', () => {
++		const max = run(
++			move +
++				start({ D: 1, C: 255 }) +
++				Array.from({ length: 254 }, (_, i) => knot({ X: i + 2, Y: 0, A: i + 1 }, i + 3)).join(''),
++		);
++		expect(vertices(max.paths[0]!.path).at(-1)).toEqual([255, 0]);
++		const high = run(
++			move +
++				start({ D: 25, X: 0, Y: 0 }) +
++				Array.from({ length: 24 }, (_, i) => knot({ X: 0, Y: 0, A: 0 }, i + 3)).join(''),
++		);
++		expect(vertices(high.paths[0]!.path)).toEqual([
++			[0, 0],
++			[0, 0],
++			[0, 0],
++			[0, 0],
++		]);
++	});
++	it('rejects numeric curves that cannot fit the bounded approximation work', () => {
++		const result = run(move + start({ X: 1e9, Y: 1e9 }) + knot({ X: 1e9, Y: 0 }));
++		expect(result.paths).toEqual([]);
++		expect(result.warnings).toContainEqual(expect.objectContaining({ code: 'geometry-limit' }));
++		expect(result.consumed).toBeLessThanOrEqual(2051);
++	});
++	it('uses cached cubic controls, rather than drawing through their coordinates', () => {
++		const result = run(
++			move + start({ X: 0, Y: 1, D: 3 }) + knot({ X: 1, Y: 1 }, 3) + knot({ X: 1, Y: 0 }, 4),
++		);
++		const points = vertices(result.paths[0]!.path);
++		expect(points).toContainEqual([0.5, 0.75]);
++		expect(points.at(-1)).toEqual([1, 0]);
++		expect(points).not.toContainEqual([0, 1]);
++	});
++	it('handles a degree-one multi-span polyline and a non-unit parameter range', () => {
++		const result = run(move + start({ D: 1, B: 3, A: 3, C: 7 }) + knot({ A: 5 }));
++		const points = vertices(result.paths[0]!.path);
++		expect(points).toContainEqual([1, 1]);
++		expect(points.at(-1)).toEqual([2, 0]);
++	});
++	it('keeps local coordinates independent of shape width and height', () => {
++		const result = run(
++			row(1, 'RelMoveTo', cells({ X: 0.5, Y: 0.5 })) + start({ X: 3, Y: 2 }) + knot({ X: 4, Y: 1 }),
++		);
++		expect(result.paths[0]!.path).toMatch(/^M 2 1 /);
++		expect(vertices(result.paths[0]!.path)).toContainEqual([3, 1.5]);
++	});
++	it('uses the last spline control point as the next arc endpoint origin', () => {
++		const result = run(quadratic + row(4, 'ArcTo', cells({ X: 4, Y: 0, A: 1 })));
++		expect(result.paths[0]!.path).toMatch(/L 2 0 A 1 1 0 0 0 4 0$/);
++	});
++	it('supports successive spline sequences without leaking control points', () => {
++		const second = start({ X: 3, Y: 1 }).replace('IX="2"', 'IX="4"') + knot({ X: 4 }, 5);
++		const result = run(quadratic + second);
++		expect(vertices(result.paths[0]!.path)).toContainEqual([3, 0.5]);
++		expect(vertices(result.paths[0]!.path).at(-1)).toEqual([4, 0]);
++		expect(result.warnings.filter((d) => d.code === 'geometry-approximation')).toHaveLength(2);
++	});
++	it.each([0, 26, 1.5, -1, 'Width', '1e999'])(
++		'rejects unusable degree %s without partial section output',
++		(D) => {
++			const result = run(move + start({ D }) + knot() + row(4, 'LineTo', cells({ X: 5, Y: 5 })));
++			expect(result.paths).toEqual([]);
++			expect(result.warnings.some((d) => d.code === 'invalid-geometry')).toBe(true);
++		},
++	);
++	it.each([
++		start() + knot(),
++		move + start(),
++		move + knot(),
++		move + start() + row(3, 'LineTo', cells({ X: 2, Y: 0 })) + knot({}, 4),
++		row(1, 'Ellipse', cells({ X: 0, Y: 0, A: 1, B: 0, C: 0, D: 1 })) + start() + knot(),
++	])('rejects malformed ordering and refuses to bridge omitted content', (rows) => {
++		expect(run(rows).paths).toEqual([]);
++	});
++
++	it.each([undefined, 'Width', '1e999'])(
++		'rejects unusable preceding endpoint %s instead of inventing origin',
++		(value) => {
++			const before = row(
++				1,
++				'MoveTo',
++				value === undefined ? cells({ Y: 0 }) : cells({ X: value, Y: 0 }),
++			);
++			const result = run(before + start() + knot());
++			expect(result.paths).toEqual([]);
++			expect(result.warnings.some((d) => d.code === 'invalid-spline')).toBe(true);
++		},
++	);
++	it('enforces aggregate weighted curve work separately from output commands', async () => {
++		const bytes = await fixture({
++			pages: [
++				{ id: '0', contents: `<Shapes>${shape('1', section('Geometry', quadratic))}</Shapes>` },
++			],
++		});
++		await expect(parseVsdx(bytes, { maxCurveWork: 1 })).rejects.toMatchObject({
++			code: 'CURVE_WORK_LIMIT',
++		});
++		await expect(parseVsdx(bytes, { maxCurveWork: 0 })).rejects.toMatchObject({
++			code: 'INVALID_LIMIT',
++		});
++		await expect(parseVsdx(bytes, { maxCurveWork: 200000 })).resolves.toMatchObject({
++			format: 'vsdx',
++		});
++	});
++	it('does not infer absent cached numbers from formula text or default zero', () => {
++		for (const field of ['X', 'Y', 'A', 'B', 'C', 'D']) {
++			// Replace directly on the start row, so MoveTo may keep its valid saved endpoint.
++			const rawStart = start().replace(
++				new RegExp(`<Cell N="${field}"[^>]*/>`),
++				`<Cell N="${field}" F="GUARD(1)"/>`,
++			);
++			expect(run(move + rawStart + knot()).paths).toEqual([]);
++		}
++	});
++	it('rejects descending, repeated-end, empty and unsupported nonclamped knot vectors', () => {
++		for (const rows of [
++			move + start({ B: 1, A: 0 }) + knot(),
++			move + start({ C: 0 }) + knot(),
++			move + start() + knot({ A: 1 }),
++			move + start({ A: 0.1 }) + knot({ A: 0.2 }),
++		])
++			expect(run(rows).paths).toEqual([]);
++	});
++	it('bounds cached tokens and coordinates before curve evaluation', () => {
++		for (const value of ['1e999', '9'.repeat(10000), '1+2', 'NaN'])
++			expect(run(move + start({ X: value }) + knot()).paths).toEqual([]);
++	});
++	it('rejects over 256 controls while charging all source rows', () => {
++		const result = run(
++			move +
++				start({ D: 1 }) +
++				Array.from({ length: 255 }, (_, i) => knot({ A: i / 256 }, i + 3)).join(''),
++		);
++		expect(result.paths).toEqual([]);
++		expect(result.consumed).toBe(257);
++		expect(result.warnings).toContainEqual(expect.objectContaining({ code: 'geometry-limit' }));
++	});
++	it('propagates the caller work budget during source rows and generated segments', () => {
++		let count = 0;
++		expect(() =>
++			run(quadratic, () => {
++				if (++count > 10) throw new Error('budget');
++			}),
++		).toThrow('budget');
++		expect(count).toBe(11);
++	});
++	it('honors inherited/deleted rows before grouping a spline sequence', () => {
++		const base = readSheet(parseXml(xml('Shape', section('Geometry', quadratic))).documentElement);
++		const local = readSheet(
++			parseXml(xml('Shape', section('Geometry', '<Row IX="3"><Cell N="Y" V="2"/></Row>')))
++				.documentElement,
++		);
++		const geometry = geometryPaths(
++			mergeSheets(base, local),
++			1,
++			1,
++			() => {},
++			() => {},
++		);
++		expect(vertices(geometry[0]!.path).at(-1)).toEqual([2, 2]);
++		const deleted = readSheet(
++			parseXml(xml('Shape', section('Geometry', '<Row IX="3" Del="1"/>'))).documentElement,
++		);
++		expect(
++			geometryPaths(
++				mergeSheets(base, deleted),
++				1,
++				1,
++				() => {},
++				() => {},
++			),
++		).toEqual([]);
++	});
++	it('integrates through the bounded package parser and records approximation evidence', async () => {
++		const model = await parseVsdx(
++			await fixture({
++				pages: [
++					{ id: '0', contents: `<Shapes>${shape('1', section('Geometry', quadratic))}</Shapes>` },
++				],
++			}),
++		);
++		expect(vertices(model.pages[0]!.shapes[0]!.geometry[0]!.path)).toContainEqual([1, 0.5]);
++		expect(model.diagnostics.some((d) => d.code === 'geometry-approximation')).toBe(true);
++	});
++});
+diff --git a/src/visio/spline-geometry.ts b/src/visio/spline-geometry.ts
+new file mode 100644
+index 0000000..a4917ea
+--- /dev/null
++++ b/src/visio/spline-geometry.ts
+@@ -0,0 +1,56 @@
++import { normalizedNurbs, type NurbsControl } from './nurbs.js';
++import { number, type Row, type Report } from './sheet.js';
++
++// Microsoft defines one cached control point per row, with implicit unit weights:
++// https://learn.microsoft.com/en-us/office/client-developer/visio/splinestart-row-geometry-section
++// https://learn.microsoft.com/en-us/office/client-developer/visio/splineknot-row-geometry-section
++// Only contiguous, cached, clamped sequences are supported. Never evaluate formulas.
++export interface SplineResult {
++	path: string;
++	endX: number;
++	endY: number;
++}
++export function splineGeometry(
++	start: Row,
++	following: readonly Row[],
++	startX: number,
++	startY: number,
++	report: Report,
++	consume: () => void,
++	consumeWork: (units: number) => void = () => {},
++): SplineResult | undefined {
++	const invalid = (message: string) => {
++		report('invalid-spline', `${message}; its geometry section was omitted.`);
++		return undefined;
++	};
++	if (
++		start.type !== 'SplineStart' ||
++		following.length === 0 ||
++		following.length > 254 ||
++		following.some((row) => row.type !== 'SplineKnot')
++	)
++		return invalid('A spline requires a SplineStart and 1 to 254 contiguous SplineKnot rows');
++	const read = (row: Row, name: string) => number(row.cells, name, NaN, report);
++	const controls: NurbsControl[] = [
++		{ x: startX, y: startY, weight: 1 },
++		{ x: read(start, 'X'), y: read(start, 'Y'), weight: 1 },
++	];
++	const knots = [read(start, 'B'), read(start, 'A')];
++	for (const row of following) {
++		controls.push({ x: read(row, 'X'), y: read(row, 'Y'), weight: 1 });
++		knots.push(read(row, 'A'));
++	}
++	knots.push(read(start, 'C'));
++	const path = normalizedNurbs(
++		controls,
++		knots,
++		read(start, 'D'),
++		report,
++		consume,
++		'SplineStart/SplineKnot',
++		consumeWork,
++	);
++	if (!path) return;
++	const end = controls.at(-1)!;
++	return { path, endX: end.x, endY: end.y };
 +}
 diff --git a/src/visio/style-inheritance.ts b/src/visio/style-inheritance.ts
 new file mode 100644

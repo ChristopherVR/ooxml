@@ -8,5 +8,6 @@
   let viewer: ReturnType<typeof VisioViewer>;
   export function update(next: number, callbacks?: ViewerCallbacks) { zoom = next; events = callbacks; }
   export function getHandle(): ViewerHandle { return viewer.getHandle(); }
+  export function getViewer() { return viewer; }
 </script>
 <VisioViewer bind:this={viewer} document={null} pageIndex={0} {zoom} showToolbar={false} {events} />
