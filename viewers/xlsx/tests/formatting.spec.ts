@@ -33,7 +33,10 @@ test('Bold, Fill Color and the number format list format the selection', async (
 	await ribbon(page)
 		.locator('select[data-command="home.number-format"]')
 		.selectOption({ label: 'Currency' });
-	await expect(grid(page)).toContainText('$1,234.50');
+	await expect.poll(async () => (await cellStyle(page, 0, 0))?.numFmt).toContain('$');
+	// Display text depends on font metrics: without Calibri (Linux CI) bold `$1,234.50` is wider
+	// than the default column, and the grid shows `#######` exactly as Excel does.
+	await expect(grid(page)).toContainText(/\$1,234\.50|#{4,}/);
 	await page.keyboard.press('Control+B');
 	expect((await cellStyle(page, 0, 0))?.font.bold).toBeFalsy();
 });
