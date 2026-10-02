@@ -66,14 +66,14 @@ $Deprecate = [ordered]@{
 # A command that changes something: printed under -DryRun, otherwise run with the console as its
 # stdin/stdout so npm can show its browser login prompt. It must never be captured (no [void],
 # no assignment): a captured native command loses the terminal and npm fails with EOTP.
-# Any failure stops the script; -AllowFail is only for idempotent no-ops (a workflow that is
-# already disabled, a tag that already exists).
-function Invoke-Change([string]$Cwd, [string]$Exe, [string[]]$Arguments, [switch]$AllowFail) {
+# Any failure stops the script. Each step checks the current state first and skips what is
+# already done.
+function Invoke-Change([string]$Cwd, [string]$Exe, [string[]]$Arguments) {
 	Write-Host "  ($Cwd) $Exe $($Arguments -join ' ')" -ForegroundColor Cyan
 	if ($DryRun) { return }
 	Push-Location $Cwd
 	try { & $Exe @Arguments; $ok = $LASTEXITCODE -eq 0 } finally { Pop-Location }
-	if (-not $ok -and -not $AllowFail) { throw "Stopped: '$Exe $($Arguments -join ' ')' failed (exit $LASTEXITCODE). Fix it and resume with -From." }
+	if (-not $ok) { throw "Stopped: '$Exe $($Arguments -join ' ')' failed (exit $LASTEXITCODE). Fix it and resume with -From." }
 }
 
 # npm commands that need the account: web authentication opens the browser instead of asking
@@ -91,6 +91,35 @@ function Invoke-Read([string]$Cwd, [string]$Exe, [string[]]$Arguments) {
 
 # --prefer-online skips npm's local cache, which still answers for a package just unpublished.
 function Test-OnNpm([string]$Spec) { return [bool](Invoke-Read $Ooxml 'npm' @('view', $Spec, 'version', '--prefer-online')) }
+
+# Native output on Windows ends lines with CRLF: split on both and trim, or every name keeps a \r.
+function Split-Lines([string]$Text) { return @($Text -split '\r?\n' | ForEach-Object { $_.Trim() } | Where-Object { $_ }) }
+
+function Test-Deprecated([string]$Spec) { return [bool](Invoke-Read $Ooxml 'npm' @('view', $Spec, 'deprecated', '--prefer-online')) }
+function Test-LocalTag([string]$Dir, [string]$Tag) { return [bool](Invoke-Read $Dir 'git' @('tag', '-l', $Tag)) }
+function Test-RemoteTag([string]$Dir, [string]$Tag) {
+	return [bool](Invoke-Read $Dir 'git' @('ls-remote', '--tags', '--refs', 'origin', "refs/tags/$Tag"))
+}
+function Get-RemoteTags([string]$Dir, [string]$Pattern) {
+	return @(Split-Lines (Invoke-Read $Dir 'git' @('ls-remote', '--tags', '--refs', 'origin', "refs/tags/$Pattern")) |
+		ForEach-Object { ($_ -split 'refs/tags/')[1] })
+}
+# Tag a published version at the commit npm recorded for it (gitHead), so a resumed run that
+# has since committed the lockfile still tags the commit that was actually published.
+function Add-Tag([string]$Dir, [string]$Tag) {
+	if (Test-LocalTag $Dir $Tag) { Write-Host "${Tag}: tag already exists"; return }
+	$sha = Invoke-Read $Ooxml 'npm' @('view', $Tag, 'gitHead', '--prefer-online')
+	if (-not $sha) { $sha = Invoke-Read $Dir 'git' @('rev-parse', 'HEAD') }
+	Invoke-Change $Dir 'git' @('tag', $Tag, $sha)
+}
+
+# Turn a repository's release workflow on or off, only when it is not already in that state.
+function Set-ReleaseWorkflow([string]$Repo, [bool]$Enabled) {
+	$state = Invoke-Read $Ooxml 'gh' @('api', "repos/$Repo/actions/workflows/release.yml", '--jq', '.state')
+	$word = if ($Enabled) { 'enabled' } else { 'disabled' }
+	if (($state -eq 'active') -eq $Enabled) { Write-Host "${Repo}: release workflow already $word"; return }
+	Invoke-Change $Ooxml 'gh' @('workflow', $(if ($Enabled) { 'enable' } else { 'disable' }), 'release.yml', '-R', $Repo)
+}
 
 # The registry's CDN can serve a removed package for a short while after npm confirms the unpublish.
 function Wait-GoneFromNpm([string]$Spec) {
@@ -163,7 +192,7 @@ function Step-Preflight {
 }
 
 function Step-Pause {
-	foreach ($repo in $Repos.Values) { Invoke-Change $Ooxml 'gh' @('workflow', 'disable', 'release.yml', '-R', $repo) -AllowFail }
+	foreach ($repo in $Repos.Values) { Set-ReleaseWorkflow $repo $false }
 }
 
 function Step-Unpublish {
@@ -174,22 +203,27 @@ function Step-Unpublish {
 		Invoke-Npm $Ooxml (@('unpublish', $spec) + $(if ($whole) { @('--force') } else { @() }))
 		if (-not $DryRun) { Wait-GoneFromNpm $spec }
 	}
-	foreach ($spec in $Deprecate.Keys) { Invoke-Npm $Ooxml @('deprecate', $spec, $Deprecate[$spec]) }
+	foreach ($spec in $Deprecate.Keys) {
+		if (Test-Deprecated $spec) { Write-Host "${spec}: already deprecated"; continue }
+		Invoke-Npm $Ooxml @('deprecate', $spec, $Deprecate[$spec])
+	}
 }
 
 function Step-Tags {
-	$docxTags = (Invoke-Read $Docx 'git' @('ls-remote', '--tags', '--refs', 'origin', 'refs/tags/@christophervr/docx-*')) -split "`n" |
-		Where-Object { $_ } | ForEach-Object { ($_ -split 'refs/tags/')[1] }
-	$ooxmlTags = (Invoke-Read $Ooxml 'git' @('tag', '-l', '@christophervr/*')) -split "`n" | Where-Object { $_ }
-	$sets = @(@($Ooxml, $Repos.ooxml, $ooxmlTags), @($Docx, $Repos.docx, $docxTags), @($Pptx, $Repos.pptx, @('pptx-viewer-core@4.9.3')))
+	$sets = @(
+		@($Ooxml, $Repos.ooxml, (Get-RemoteTags $Ooxml '@christophervr/*')),
+		@($Docx, $Repos.docx, (Get-RemoteTags $Docx '@christophervr/docx-*')),
+		@($Pptx, $Repos.pptx, @('pptx-viewer-core@4.9.3')))
 	foreach ($set in $sets) {
-		foreach ($tag in $set[2]) {
-			if (-not $tag) { continue }
+		$dir, $repo, $tags = $set
+		foreach ($tag in $tags) {
 			if (Test-OnNpm $tag) { Write-Host "${tag}: still on npm, keeping the tag"; continue }
-			$hasRelease = [bool](Invoke-Read $set[0] 'gh' @('release', 'view', $tag, '-R', $set[1], '--json', 'tagName'))
-			if ($hasRelease) { Invoke-Change $set[0] 'gh' @('release', 'delete', $tag, '-R', $set[1], '--cleanup-tag', '-y') }
-			else { Invoke-Change $set[0] 'git' @('push', 'origin', ":refs/tags/$tag") -AllowFail }
-			Invoke-Change $set[0] 'git' @('tag', '-d', $tag) -AllowFail
+			if (Invoke-Read $dir 'gh' @('release', 'view', $tag, '-R', $repo, '--json', 'tagName')) {
+				Invoke-Change $dir 'gh' @('release', 'delete', $tag, '-R', $repo, '--cleanup-tag', '-y')
+			}
+			elseif (Test-RemoteTag $dir $tag) { Invoke-Change $dir 'git' @('push', 'origin', ":refs/tags/$tag") }
+			else { Write-Host "${tag}: no tag or release on GitHub" }
+			if (Test-LocalTag $dir $tag) { Invoke-Change $dir 'git' @('tag', '-d', $tag) }
 		}
 	}
 }
@@ -198,13 +232,18 @@ function Step-Ooxml {
 	Confirm-NpmLogin
 	$core = (Get-Json (Join-Path $Ooxml 'package.json')).version
 	$ui = (Get-Json (Join-Path $Ooxml 'packages/ui/package.json')).version
-	$published = Invoke-Read $Ooxml 'git' @('rev-parse', 'HEAD')
-	Invoke-Change $Ooxml 'bun' @('run', 'build')
-	Invoke-Change $Ooxml 'bun' @('run', '--cwd', 'packages/ui', 'build')
-	Invoke-Change $Ooxml 'node' @('scripts/publish-released.mjs', '--tag', "ooxml-core@$core", '--manual')
-	# publish-released.mjs refuses the UI until the core it depends on is visible on npm.
-	if (-not $DryRun) { Wait-OnNpm "ooxml-core@$core" }
-	Invoke-Change $Ooxml 'node' @('scripts/publish-released.mjs', '--tag', "ooxml-ui@$ui", '--manual')
+	if ((Test-OnNpm "ooxml-core@$core") -and (Test-OnNpm "ooxml-ui@$ui")) {
+		Write-Host "ooxml-core@$core and ooxml-ui@${ui}: already on npm"
+	}
+	else {
+		Invoke-Change $Ooxml 'bun' @('run', 'build')
+		Invoke-Change $Ooxml 'bun' @('run', '--cwd', 'packages/ui', 'build')
+		# publish-released.mjs skips a version that is already on npm.
+		Invoke-Change $Ooxml 'node' @('scripts/publish-released.mjs', '--tag', "ooxml-core@$core", '--manual')
+		# It also refuses the UI until the core it depends on is visible on npm.
+		if (-not $DryRun) { Wait-OnNpm "ooxml-core@$core" }
+		Invoke-Change $Ooxml 'node' @('scripts/publish-released.mjs', '--tag', "ooxml-ui@$ui", '--manual')
+	}
 	# The UI workspace resolves ooxml-core from the registry, so the lockfile changes now.
 	Invoke-Change $Ooxml 'bun' @('install')
 	if ($DryRun -or (Invoke-Read $Ooxml 'git' @('status', '--porcelain', 'bun.lock'))) {
@@ -212,10 +251,10 @@ function Step-Ooxml {
 		Invoke-Change $Ooxml 'git' @('commit', '-m', 'chore(deps): lock the unscoped ooxml-core in the UI workspace', '-m', $Trailer)
 	}
 	Wait-User (Get-TrustedPublisherNote @('ooxml-core', 'ooxml-ui') $Repos.ooxml)
-	foreach ($tag in "ooxml-core@$core", "ooxml-ui@$ui") { Invoke-Change $Ooxml 'git' @('tag', $tag, $published) -AllowFail }
+	foreach ($tag in "ooxml-core@$core", "ooxml-ui@$ui") { Add-Tag $Ooxml $tag }
 	Invoke-Change $Ooxml 'git' @('push', 'origin', 'HEAD:main')
 	Invoke-Change $Ooxml 'git' @('push', 'origin', "ooxml-core@$core", "ooxml-ui@$ui")
-	Invoke-Change $Ooxml 'gh' @('workflow', 'enable', 'release.yml', '-R', $Repos.ooxml)
+	Set-ReleaseWorkflow $Repos.ooxml $true
 }
 
 function Step-Docx {
@@ -226,25 +265,35 @@ function Step-Docx {
 	# docx-core first: every framework package depends on it.
 	$targets = @($json | ConvertFrom-Json | Sort-Object { if ($_.npm -eq 'docx-core') { 0 } else { 1 } } |
 		ForEach-Object { [pscustomobject]@{ npm = $_.npm; dir = $_.dir; version = (Get-Json (Join-Path $Docx "$($_.dir)/package.json")).version } })
-	Invoke-Change $Docx 'bun' @('install', '--frozen-lockfile')
-	Invoke-Change $Docx 'bun' @('run', 'build:packages')
-	Invoke-Change $Docx 'bun' @('run', 'check:published')
-	$published = Invoke-Read $Docx 'git' @('rev-parse', 'HEAD')
+	$missing = @($targets | Where-Object { -not (Test-OnNpm "$($_.npm)@$($_.version)") })
+	if ($missing.Count -gt 0) {
+		Invoke-Change $Docx 'bun' @('install', '--frozen-lockfile')
+		Invoke-Change $Docx 'bun' @('run', 'build:packages')
+		Invoke-Change $Docx 'bun' @('run', 'check:published')
+	}
 	foreach ($t in $targets) {
 		if (Test-OnNpm "$($t.npm)@$($t.version)") { Write-Host "$($t.npm)@$($t.version): already on npm" }
 		else { Invoke-Npm (Join-Path $Docx $t.dir) @('publish', '--access', 'public') }
-		Invoke-Change $Docx 'git' @('tag', "$($t.npm)@$($t.version)", $published) -AllowFail
+		Add-Tag $Docx "$($t.npm)@$($t.version)"
 	}
 	Invoke-Change $Docx 'git' (@('push', 'origin') + @($targets | ForEach-Object { "$($_.npm)@$($_.version)" }))
 	Wait-User (Get-TrustedPublisherNote @($targets.npm) $Repos.docx)
-	Invoke-Change $Docx 'gh' @('workflow', 'enable', 'release.yml', '-R', $Repos.docx)
+	Set-ReleaseWorkflow $Repos.docx $true
 }
 
 function Step-Pptx {
 	Assert-Clean $Pptx 'pptx-viewer'
 	Invoke-Change $Pptx 'git' @('pull', '--ff-only', 'origin', 'main')
 	$coreVersion = (Get-Json (Join-Path $Ooxml 'package.json')).version
-	$files = (Invoke-Read $Pptx 'git' @('grep', '-l', '-I', '@christophervr/ooxml-core', '--', ':!*CHANGELOG.md', ':!bun.lock')) -split "`n" | Where-Object { $_ }
+	$files = Split-Lines (Invoke-Read $Pptx 'git' @('grep', '-l', '-I', '@christophervr/ooxml-core', '--', ':!*CHANGELOG.md', ':!bun.lock'))
+	if ($files.Count -eq 0) {
+		Write-Host 'pptx-viewer: already on ooxml-core'
+		Set-ReleaseWorkflow $Repos.pptx $true
+		$latest = Invoke-Read $Ooxml 'npm' @('view', 'pptx-viewer-core', 'version', '--prefer-online')
+		if ([version]$latest -gt [version]'4.9.3') { Write-Host "pptx-viewer-core@${latest}: already released"; return }
+		Invoke-Change $Pptx 'gh' @('workflow', 'run', 'release.yml', '-R', $Repos.pptx, '--ref', 'main')
+		return
+	}
 	foreach ($file in $files) {
 		$path = Join-Path $Pptx $file
 		$text = (Get-Content -Raw $path).Replace('@christophervr/ooxml-core', 'ooxml-core')
@@ -260,7 +309,7 @@ function Step-Pptx {
 		'@christophervr/ooxml-core is now published as ooxml-core. pptx-viewer-core@4.9.3, the one version that depends on the scoped name, is deprecated (npm will not unpublish it: the package has dependents); this releases 4.9.4.',
 		'-m', $Trailer)
 	Invoke-Change $Pptx 'git' @('push', 'origin', 'HEAD:main')
-	Invoke-Change $Pptx 'gh' @('workflow', 'enable', 'release.yml', '-R', $Repos.pptx)
+	Set-ReleaseWorkflow $Repos.pptx $true
 	Invoke-Change $Pptx 'gh' @('workflow', 'run', 'release.yml', '-R', $Repos.pptx, '--ref', 'main')
 }
 
