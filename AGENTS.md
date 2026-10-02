@@ -6,8 +6,8 @@ file and never fork the two (the viewer repositories drifted that way once).
 
 ## Working agreements
 
-- This repository is the **single published package `ooxml-core`**. It owns **all the logic** of the Office products: OOXML (ECMA-376 / ISO 29500) packaging, XML, WordprocessingML, PresentationML and later SpreadsheetML models, parsing and serialization, DrawingML, charts, diagrams (SmartArt), maths, geometry, layout, editing commands, validation, and collaboration (Yjs and the sync protocol). It is a sibling of `ole2`.
-- The viewer repositories (`docx-viewer`, `pptx-viewer`, later `xlsx-viewer`) own **only the UI**: web components, framework bindings, ribbon and dialog views, styling, demos and end-to-end tests. They consume this package and must not keep, copy or fork logic that belongs here. Where a viewer still holds logic (today: the Word model, parser, serializer, editing and layout live here in `docx`, and the PowerPoint engine in `pptx`; the pptx-viewer `shared` render logic and the Word editor's view code still live in the viewers), `docx-viewer/docs/ooxml-core-plan.md` says when it moves.
+- This repository is the **single published package `ooxml-core`**. It owns **all the logic** of the Office products: OOXML (ECMA-376 / ISO 29500) packaging, XML, WordprocessingML, PresentationML and SpreadsheetML models, parsing and serialization, DrawingML, charts, diagrams (SmartArt), maths, geometry, layout, editing commands, validation, and collaboration (Yjs and the sync protocol). It is a sibling of `ole2`.
+- The viewer repositories (`docx-viewer`, `pptx-viewer`, `xlsx-viewer`) own **only the UI**: web components, framework bindings, ribbon and dialog views, styling, demos and end-to-end tests. They consume this package and must not keep, copy or fork logic that belongs here. Where a viewer still holds logic (today: the Word model, parser, serializer, editing and layout live here in `docx`, and the PowerPoint engine in `pptx`; the pptx-viewer `shared` render logic and the Word editor's view code still live in the viewers), `docx-viewer/docs/ooxml-core-plan.md` says when it moves.
 - `ole2` owns the legacy compound-file and binary formats (DOC, XLS, PPT, CFB, RC4/MD4). Never move modern OOXML into `ole2`, and never move binary codecs here. The encrypted-package container is CFB (ole2); the encryption primitives are modern OOXML (here).
 - One shared XML model and one structure for every Office type. Parsers and writers are written once against it; type-specific code lives in its own area (`docx`, `pptx`, `xlsx`) of this package, shared code in `xml`, `opc`, `drawingml`, `chart`, `diagram`, and so on.
 - Layout: `src/<area>/` with its own `index.ts`; each area is a subpath export (`ooxml-core/xml`) and the root entry groups them by namespace. Do not add a second logic package; add an area. The only other package is the DOM-only `ooxml-ui` in `packages/ui` (see `docs/ooxml-ui-plan.md`); core never imports it.
@@ -17,7 +17,8 @@ file and never fork the two (the viewer repositories drifted that way once).
 - Unsupported features must be reported honestly. Never claim Office parity or lossless export without evidence.
 - Record extraction provenance (source repository, path, commit, what changed) in `PROVENANCE.md` for every module moved here.
 - Releases are automated from conventional commits: `scripts/release-plan.mjs` versions the package from the commits since its last `ooxml-core@<version>` tag, and `.github/workflows/release.yml` tags, writes the changelog and publishes via npm trusted publishing (OIDC, provenance, no token). See `docs/releasing.md`. Never run `npm publish` or push release tags by hand; no commits to published history; never publish fixtures or stale output.
-- Status: areas `units`, `color`, `geometry`, `xml`, `opc`, `diagram`, `docx` and `collab` are populated (`diagram` is the format-neutral SmartArt part model; see `docs/agnostic-core-plan.md` for the migration order of `drawingml`, `chart` and the rest of the diagram code). `@christophervr/docx-core` is a thin re-export of `ooxml-core/docx` (and `/docx/embedded`); thin viewer-side packages reference only their own area.
+- Status: areas `units`, `color`, `geometry`, `xml`, `opc`, `diagram`, `docx`, `xlsx` and `collab` are populated (`diagram` is the format-neutral SmartArt part model; see `docs/agnostic-core-plan.md` for the migration order of `drawingml`, `chart` and the rest of the diagram code). `@christophervr/docx-core` is a thin re-export of `ooxml-core/docx` (and `/docx/embedded`), and `@christophervr/xlsx-core` of `ooxml-core/xlsx` (and `/xlsx/load`); thin viewer-side packages reference only their own area.
+- The `xlsx` area is strict. Its modules: `model.ts` and helpers, `numfmt/`, `formula/`, `read/`, `write/`, `edit/`, `layout/` (the DOM-free view logic the Excel UI paints: grid metrics, colours, cell views, conditional formats, navigation, chart SVG), and `load/` (the `ooxml-core/xlsx/load` subpath: format detection, legacy `.xls` through ole2's `readXlsWorkbook`, CSV). The main `xlsx` entry never imports ole2. Fixtures and their generators (openpyxl and Excel COM) live in `src/xlsx/__fixtures__/`; `scripts/xlsx-excel-acceptance.ps1` (Windows, real Excel, manual) checks that saved workbooks open without repair.
 - **The `pptx` area is compiled with relaxed flags (temporary).** It was moved from `pptx-viewer` and predates this repository's strict settings. `tsconfig.pptx.json` extends the base but turns off `exactOptionalPropertyTypes`, `noUncheckedIndexedAccess` and `noImplicitOverride`; `src/pptx` is excluded from the strict base project (`tsconfig.json`, `tsconfig.build.json`). `bun run typecheck` runs both. Tighten the pptx flags gradually, one directory at a time; new code elsewhere stays strict, and code moved out of `src/pptx` into a shared area must compile under the strict project.
 - The pptx area is bundled with tsup (ESM `.mjs` + CJS `.cjs`, legacy codecs from `@christophervr/ole2` inlined) and declarations from tsdown (`bun run build` runs the tsc declarations, both tsup bundles and the tsdown declarations in parallel via `scripts/build.mjs`; `prepack` only builds when `dist` is missing). Its subpaths are `./pptx`, `./pptx/converter`, `./pptx/cli`, `./pptx/signature-node`; the root entry does not re-export it, so importing another area never pulls the pptx bundle into the strict project. The pptx area keeps its own XML model (`fast-xml-parser` object trees); unifying it with the shared `xml` area is the next step.
 - pptx tests read decks from `src/pptx/__tests__/fixtures`, including a committed snapshot of `pptx-viewer/e2e/fixtures` under `fixtures/e2e` (the generator scripts stay in pptx-viewer). CI never reads from pptx-viewer. The viewer's Playwright setup regenerates its own copies; refresh the snapshot here deliberately, never automatically.
@@ -29,14 +30,15 @@ Repositories are named by their GitHub name under `ChristopherVR/`. Where each
 one is checked out on a given machine is local knowledge: keep it in an
 untracked `CLAUDE.local.md` (git-ignored), never in this file.
 
-| Repository         | npm package                                                          | Owns                                                                                                                                                                                      |
-| ------------------ | -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ooxml` (this one) | `ooxml-core`, `ooxml-ui`              | **All OOXML logic**, by area under `src/`, plus the DOM-only `packages/ui` and the Office-suite launcher in `site/`.                                                                      |
-| `pptx-viewer`      | `pptx-*-viewer`, `pptx-viewer-core`                                  | PowerPoint UI: five bindings (react, vue, angular, svelte, vanilla), the internal `shared` render logic, locales, MCP tools, demos, e2e and the docs site. Consumes `src/pptx` from here. |
-| `docx-viewer`      | `@christophervr/docx-core`, `@christophervr/docx-<framework>-viewer` | Word UI: the `<docx-editor>` web component and six bindings (react, vue, angular, svelte, solid, vanilla), demos, browser tests and the docs site. Consumes `src/docx` from here.         |
-| `ole2`             | `@christophervr/ole2`                                                | Legacy binary formats (CFB, DOC, XLS, PPT, RC4/MD4). A pinned dev dependency here whose codecs are inlined into the bundles.                                                              |
-| `emf-converter`    | `emf-converter`                                                      | EMF/WMF rendering.                                                                                                                                                                        |
-| `mtx-decompressor` | `mtx-decompressor`                                                   | MicroType Express (embedded EOT font) decompression.                                                                                                                                      |
+| Repository         | npm package                                                                               | Owns                                                                                                                                                                                      |
+| ------------------ | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ooxml` (this one) | `ooxml-core`, `ooxml-ui`                                                                  | **All OOXML logic**, by area under `src/`, plus the DOM-only `packages/ui` and the Office-suite launcher in `site/`.                                                                      |
+| `pptx-viewer`      | `pptx-*-viewer`, `pptx-viewer-core`                                                       | PowerPoint UI: five bindings (react, vue, angular, svelte, vanilla), the internal `shared` render logic, locales, MCP tools, demos, e2e and the docs site. Consumes `src/pptx` from here. |
+| `docx-viewer`      | `@christophervr/docx-core`, `@christophervr/docx-<framework>-viewer`                      | Word UI: the `<docx-editor>` web component and six bindings (react, vue, angular, svelte, solid, vanilla), demos, browser tests and the docs site. Consumes `src/docx` from here.         |
+| `xlsx-viewer`      | `@christophervr/xlsx-core`, `@christophervr/xlsx-react-viewer`, `xlsx-<framework>-viewer` | Excel UI: the `<xlsx-editor>` web component and six bindings, demos, browser tests and the docs site. Consumes `src/xlsx` from here.                                                      |
+| `ole2`             | `@christophervr/ole2`                                                                     | Legacy binary formats (CFB, DOC, XLS, PPT, RC4/MD4). A pinned dev dependency here whose codecs are inlined into the bundles.                                                              |
+| `emf-converter`    | `emf-converter`                                                                           | EMF/WMF rendering.                                                                                                                                                                        |
+| `mtx-decompressor` | `mtx-decompressor`                                                                        | MicroType Express (embedded EOT font) decompression.                                                                                                                                      |
 
 The repository was renamed from `ooxml-core` to `ooxml`, and the packages
 from `@christophervr/ooxml-core` and `@christophervr/office-ui` to the unscoped
@@ -53,29 +55,31 @@ in that repository. Commits to another repository follow that repository's own
 
 ### Where does my change go?
 
-| The change is about...                                                                | Make it in                                                      |
-| ------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| Parsing, the document model, editing commands, saving or round-trip loss (any format) | `src/<format>/` here, with a round-trip test                    |
-| Units, colour, geometry, XML, OPC, SmartArt or collaboration shared by formats        | the shared area here (`units`, `color`, `geometry`, `xml`, ...) |
-| `.doc` / `.xls` / `.ppt` binary codecs, CFB containers, RC4                           | `ole2`                                                          |
-| How a correctly parsed element is drawn or laid out in the PowerPoint UI              | `packages/shared` in `pptx-viewer`                              |
-| Ribbons, dialogs, framework wiring, styling, demos, browser tests                     | the viewer repository                                           |
-| The launcher page at christophervr.github.io/ooxml                                    | `site/` here (no logic; it embeds the viewers' deployed demos)  |
+| The change is about...                                                                   | Make it in                                                      |
+| ---------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| Parsing, the document model, editing commands, saving or round-trip loss (any format)    | `src/<format>/` here, with a round-trip test                    |
+| Units, colour, geometry, XML, OPC, SmartArt or collaboration shared by formats           | the shared area here (`units`, `color`, `geometry`, `xml`, ...) |
+| `.doc` / `.xls` / `.ppt` binary codecs, CFB containers, RC4                              | `ole2`                                                          |
+| How a correctly parsed element is drawn or laid out in the PowerPoint UI                 | `packages/shared` in `pptx-viewer`                              |
+| How a spreadsheet is laid out for painting (grid sizes, colours, cell views, CF, charts) | `src/xlsx/layout/` here (the Excel UI only paints it)           |
+| Ribbons, dialogs, framework wiring, styling, demos, browser tests                        | the viewer repository                                           |
+| The launcher page at christophervr.github.io/ooxml                                       | `site/` here (no logic; it embeds the viewers' deployed demos)  |
 
 ### GitHub Pages
 
 - `https://christophervr.github.io/ooxml/` is the Office-suite launcher
   (`site/`, deployed by `.github/workflows/pages.yml` on pushes to `main` that
   touch `site/`).
-- `https://christophervr.github.io/pptx-viewer/` and
-  `https://christophervr.github.io/docx-viewer/` are the viewers' docs sites;
+- `https://christophervr.github.io/pptx-viewer/`,
+  `https://christophervr.github.io/docx-viewer/` and
+  `https://christophervr.github.io/xlsx-viewer/` are the viewers' docs sites;
   each serves its framework demos at `/demo/` (React), `/demo-vue/`,
-  `/demo-angular/`, `/demo-svelte/`, `/demo-vanilla/` and, for Word,
+  `/demo-angular/`, `/demo-svelte/`, `/demo-vanilla/` and, for Word and Excel,
   `/demo-solid/`. The launcher embeds those URLs (see `site/apps.js`), so a demo
   route renamed in a viewer must be renamed there too.
-- All three share the `christophervr.github.io` origin and therefore
+- All the viewers share the `christophervr.github.io` origin and therefore
   `localStorage`. The launcher's theme uses VitePress's
-  `vitepress-theme-appearance` key, which the docx demo follows live; the pptx
+  `vitepress-theme-appearance` key, which the docx and xlsx demos follow live; the pptx
   demos read `pptx-demo-theme` and `pptx-viewer-prefs` at start-up (see
   `site/theme.js`).
 
@@ -120,7 +124,7 @@ patch), and the **paths** a commit touches decide whether it releases at all
 shipping fields and the licence files do; `site/`, docs, tests and CI never do).
 
 - Scope is the area: `units`, `color`, `geometry`, `xml`, `opc`, `docx`,
-  `pptx`, `collab`, `ui`, `site`, `ci`, `deps`, `docs`.
+  `pptx`, `xlsx`, `collab`, `ui`, `site`, `ci`, `deps`, `docs`.
 - Subject: imperative, lower-case, no trailing period, header at most 72
   characters.
 - Write multi-line messages with a real heredoc or `git commit -F <file>`;

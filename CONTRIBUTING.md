@@ -4,7 +4,7 @@ Thanks for wanting to help. Please read the [Code of Conduct](CODE_OF_CONDUCT.md
 
 ## What belongs here
 
-This repository is the single package `ooxml-core`: all the logic behind the Office viewers (`docx-viewer`, `pptx-viewer`, later `xlsx-viewer`), organised as **areas** under `src/<area>/`, each a subpath export (`ooxml-core/xml`). The viewers keep only their UI.
+This repository is the single package `ooxml-core`: all the logic behind the Office viewers (`docx-viewer`, `pptx-viewer`, `xlsx-viewer`), organised as **areas** under `src/<area>/`, each a subpath export (`ooxml-core/xml`). The viewers keep only their UI.
 
 - Shared modern OOXML (units, colour, geometry, XML, OPC, and later DrawingML, charts, diagrams) goes in its own area.
 - Format-specific code goes in `docx`, `pptx` or `xlsx`.

@@ -3,7 +3,7 @@
  *
  * The shell and the viewer demos are all served from christophervr.github.io,
  * so they share localStorage. The shell stores its choice under VitePress's
- * key, which the docx-viewer demo (and both docs sites) already follow live
+ * key, which the docx-viewer and xlsx-viewer demos (and the docs sites) follow live
  * through the `storage` event. The pptx-viewer demos read their own keys once
  * at start-up, so the shell writes those too and reloads a PowerPoint frame
  * that has no deck open; one with a deck open picks the theme up next load.
@@ -53,10 +53,10 @@ function applyTheme(theme) {
 }
 
 /**
- * Bring an embedded app in line with the shell's theme. The docx demo follows
- * the storage event by itself; a pptx demo only re-reads on load, so reload it
- * while it is still on its upload screen. Cross-origin frames (local preview)
- * cannot be inspected and are left alone.
+ * Bring an embedded app in line with the shell's theme. The docx and xlsx
+ * demos follow the storage event by themselves; a pptx demo only re-reads on
+ * load, so reload it while it is still on its upload screen. Cross-origin
+ * frames (local preview) cannot be inspected and are left alone.
  * @param {HTMLIFrameElement} frame
  */
 function refreshFrame(frame) {

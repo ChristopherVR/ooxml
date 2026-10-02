@@ -3,7 +3,7 @@
 # ooxml-core
 
 **Read, edit, validate and write Office Open XML documents in TypeScript.**
-One package, one XML model, every format: Word, PowerPoint and the shared building blocks beneath them. Spreadsheets, Visio and more are planned.
+One package, one XML model, every format: Word, PowerPoint, Excel and the shared building blocks beneath them. Visio and more are planned.
 
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![CI](https://github.com/ChristopherVR/ooxml/actions/workflows/ci.yml/badge.svg)](https://github.com/ChristopherVR/ooxml/actions/workflows/ci.yml)
@@ -28,24 +28,25 @@ One package, one XML model, every format: Word, PowerPoint and the shared buildi
 
 ## One package, many areas
 
-`ooxml-core` is a **single published package**. Every area is a subpath import, so you only load what you use, and the formats are symmetrical: `docx` and `pptx` are each imported through their own subpaths, and the root entry groups only the shared building blocks by namespace.
+`ooxml-core` is a **single published package**. Every area is a subpath import, so you only load what you use, and the formats are symmetrical: `docx`, `pptx` and `xlsx` are each imported through their own subpaths, and the root entry groups only the shared building blocks by namespace.
 
 ```ts
 import { parseXml } from 'ooxml-core/xml'; // one area
 import { xml, opc } from 'ooxml-core'; // or by namespace (shared building blocks)
 ```
 
-| Area       | What it is                                                                                                                                                                                                                                                          |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `xml`      | The shared XML model: strict DOM parsing and serialization, namespaces, namespace-aware helpers.                                                                                                                                                                    |
-| `opc`      | Open Packaging Conventions: relationships, content types, part paths, zip helpers, safe hyperlinks.                                                                                                                                                                 |
-| `units`    | Branded EMU, twip and point types, constants and conversions.                                                                                                                                                                                                       |
-| `color`    | Hex, RGB, HSL and linear colour primitives, OOXML percent and angle parsing.                                                                                                                                                                                        |
-| `geometry` | DrawingML preset shapes, connection sites, clip paths, callouts and boolean shape operations.                                                                                                                                                                       |
-| `diagram`  | SmartArt (DiagramML), format-neutral: data model, layout/colour/quick-style parts, the cached `dsp:drawing` shape tree, relationship resolution and a loader. Used by `docx`; `pptx` re-imports its parsers.                                                        |
-| `collab`   | Format-neutral real-time collaboration on Yjs: session and provider lifecycle, awareness/presence, transport-neutral sync (WebSocket, in-memory, any byte channel), update codecs, ordering helpers, asset sync and the product adapter seam. See `docs/collab-area.md`. |
-| `docx`     | WordprocessingML: model, parser, preserving serializer, editing, validation. Also `/docx/embedded`. `/docx/layout` is the DOM-free pagination engine (an approximation of Word, not parity) and `/docx/load` detects and loads DOCX and legacy .doc (ole2 inlined). |
-| `pptx`     | PresentationML: model, parser, serializer, editing, charts, SmartArt, converters, CLI, signatures. Subpaths `/pptx/converter`, `/pptx/cli`, `/pptx/signature-node`.                                                                                                 |
+| Area       | What it is                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `xml`      | The shared XML model: strict DOM parsing and serialization, namespaces, namespace-aware helpers.                                                                                                                                                                                                                                                                                                                   |
+| `opc`      | Open Packaging Conventions: relationships, content types, part paths, zip helpers, safe hyperlinks.                                                                                                                                                                                                                                                                                                                |
+| `units`    | Branded EMU, twip and point types, constants and conversions.                                                                                                                                                                                                                                                                                                                                                      |
+| `color`    | Hex, RGB, HSL and linear colour primitives, OOXML percent and angle parsing.                                                                                                                                                                                                                                                                                                                                       |
+| `geometry` | DrawingML preset shapes, connection sites, clip paths, callouts and boolean shape operations.                                                                                                                                                                                                                                                                                                                      |
+| `diagram`  | SmartArt (DiagramML), format-neutral: data model, layout/colour/quick-style parts, the cached `dsp:drawing` shape tree, relationship resolution and a loader. Used by `docx`; `pptx` re-imports its parsers.                                                                                                                                                                                                       |
+| `collab`   | Format-neutral real-time collaboration on Yjs: session and provider lifecycle, awareness/presence, transport-neutral sync (WebSocket, in-memory, any byte channel), update codecs, ordering helpers, asset sync and the product adapter seam. See `docs/collab-area.md`.                                                                                                                                           |
+| `docx`     | WordprocessingML: model, parser, preserving serializer, editing, validation. Also `/docx/embedded`. `/docx/layout` is the DOM-free pagination engine (an approximation of Word, not parity) and `/docx/load` detects and loads DOCX and legacy .doc (ole2 inlined).                                                                                                                                                |
+| `pptx`     | PresentationML: model, parser, serializer, editing, charts, SmartArt, converters, CLI, signatures. Subpaths `/pptx/converter`, `/pptx/cli`, `/pptx/signature-node`.                                                                                                                                                                                                                                                |
+| `xlsx`     | SpreadsheetML: workbook model, `.xlsx`/`.xlsm` reader and preserving writer, formula engine (dependency graph, dynamic arrays, 380+ functions), Excel number formats, editing commands with undo, and the DOM-free grid layout (sizes, colours, conditional formats, charts as SVG). `/xlsx/load` detects and loads `.xlsx`, `.xlsm`, legacy `.xls` (ole2 inlined) and CSV. An approximation of Excel, not parity. |
 
 Legacy binary formats (`.doc`, `.xls`, `.ppt`) and the compound-file container live in the sibling package [`ole2`](https://github.com/ChristopherVR/ole2); this package never contains binary codecs, and `ole2` never contains modern OOXML.
 
@@ -96,7 +97,7 @@ const part = resolvePartPath('word/document.xml', rels.get('rId5')!.target);
 The shared areas come first, then more formats on the same foundation:
 
 - **Shared layers:** DrawingML (fills, lines, effects, text, theme), charts, diagrams (SmartArt), maths, encryption primitives and schema-generated types, each as an area, written once for every format.
-- **More formats:** `xlsx` (SpreadsheetML), Visio (`.vsdx`, also an OPC package), and further Office Open XML parts as they are needed. Each arrives as its own area.
+- **More formats:** Visio (`.vsdx`, also an OPC package), and further Office Open XML parts as they are needed. Each arrives as its own area.
 - **One XML model:** the `pptx` area still uses its own XML object model and is compiled with relaxed TypeScript flags while it is migrated onto the shared `xml` area and tightened. New code is strict.
 - **Collaboration:** the Yjs and sync protocol that the viewers share will live here as a `collab` area.
 
