@@ -7,6 +7,8 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.1.2](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.1.2) - 2026-10-02
+
 ## [0.1.0](https://github.com/ChristopherVR/ooxml-core/releases/tag/@christophervr/office-ui@0.1.0) - 2026-10-01
 
 ### Features
