@@ -1,8 +1,12 @@
 import assert from 'node:assert/strict';
 import { parentPort } from 'node:worker_threads';
-import { convertMetafileToSvgTree } from '../../emf-converter-current/dist/browser.mjs';
+import { convertMetafileToSvgTree } from 'emf-converter';
 import { convertVisioMetafile, validateVisioForeignVector } from 'ooxml-core/visio';
 import { emf, record } from './emf-audit/fixtures.mjs';
+assert.ok(
+	import.meta.resolve('emf-converter').endsWith('/dist/browser.mjs'),
+	'The browser export must be selected; never load Node codecs.',
+);
 for (const records of [
 	[],
 	[record(43, [0, 0, 99, 99])],

@@ -20,10 +20,10 @@
 		"typecheck": "tsc --noEmit",
 		"test": "vitest run",
 		"test:browser": "playwright test",
-		"check": "npm run fmt:check && npm run test:converter-setup && npm run check:core && npm run typecheck && npm test && npm run check:bindings && npm run test:docs && npm run build && npm run test:worker && npm run test:package",
+		"check": "npm run fmt:check && npm run test:converter-setup && npm run check:core && npm run check:converter && npm run typecheck && npm test && npm run check:bindings && npm run test:docs && npm run build && npm run test:worker && npm run test:package",
 		"setup:core": "node scripts/setup-core.mjs",
-		"setup:converter": "node scripts/setup-converter.mjs",
-		"check:converter": "npm --prefix ../emf-converter-current run typecheck && npm --prefix ../emf-converter-current test && npm --prefix ../emf-converter-current run build && npm --prefix ../emf-converter-current run test:browser-package",
+		"setup:converter": "node scripts/check-converter-release.mjs",
+		"check:converter": "npm run test:converter-integration",
 		"check:bindings": "npm --prefix packages/bindings run check",
 		"test:docs": "node scripts/sync-parity.mjs --check && node --test docs/site.test.mjs",
 		"test:worker": "node scripts/test-worker-bundle.mjs",
@@ -35,7 +35,9 @@
 		"test:corpus": "node scripts/test-corpus.mjs",
 		"test:emf-audit": "node --test scripts/emf-audit/audit.test.mjs",
 		"test:converter-setup": "node --test scripts/test-converter-setup.mjs",
-		"test:converter-integration": "node scripts/test-converter-integration.mjs"
+		"test:converter-integration": "node scripts/test-converter-integration.mjs",
+		"setup:converter-source": "node scripts/setup-converter.mjs",
+		"check:converter-source": "npm --prefix ../emf-converter-current run typecheck && npm --prefix ../emf-converter-current test && npm --prefix ../emf-converter-current run build && npm --prefix ../emf-converter-current run test:browser-package"
 	},
 	"dependencies": {
 		"ooxml-core": "file:../ooxml"
@@ -43,6 +45,7 @@
 	"devDependencies": {
 		"@playwright/test": "^1.58.0",
 		"@types/node": "^24.0.0",
+		"emf-converter": "4.8.8",
 		"jsdom": "^29.0.0",
 		"jszip": "^3.10.2",
 		"oxfmt": "^0.71.0",

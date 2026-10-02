@@ -6,34 +6,42 @@ Do not maintain a second implementation here. Make format changes only in the si
 
 Once the core area is released, replace the root `file:../ooxml` dependency with the reviewed published version, remove this bridge and verify a clean install and all entry points.
 
-## Isolated converter package integration
+## Released converter package integration
 
-`emf-converter-visio.patch` records local, unreleased corrections against upstream
-v4.8.7 at the exact revision in `emf-converter-revision.txt`. The separate
-`emf-converter-patched-revision.txt` identifies the reviewed local commit carrying
-those corrections. `npm run setup:converter` creates or verifies the sibling
-`emf-converter-current` checkout, installs the pinned npm lock and builds it.
-An existing checkout must be at either recorded revision and its effective source
-changes must match the patch exactly. Unrelated changes are never overwritten.
-The older `emf-converter-visio` checkout and original core dependency stay available
-for the 3.5.1 characterization audit; neither is replaced by this setup.
+Normal development uses the exact published `emf-converter` 4.8.8 dev dependency
+and the root npm lock's registry integrity. `npm ci` installs it; no converter
+source checkout, patch application or source build is required. The core adapter
+accepts a trusted package function, so this viewer-only dependency does not change
+the core's existing converter dependency or its publication commit.
 
-Run `npm run check:converter` for package tests, types, builds and the browser-package
-check. After building the core, run `npm run test:converter-integration` to exercise
-the actual browser distribution in a disposable worker through the core's bounded
-adapter. The adapter accepts only a small generated-case classic EMF subset, makes
-a private input copy, reinspects it, uses fixed non-raster converter options and
-returns only independently validated neutral vectors. It contains no EMF renderer.
+`npm run setup:converter` verifies the installed package version, lock integrity and
+browser bundle hash recorded in `emf-converter-release.json`. `npm run check` now
+includes `npm run check:converter`, which runs seven deadline-isolated integration
+cases against the package's actual browser export. The released browser bundle is
+byte-identical to the previously verified corrected source build. Node's browser
+condition is explicit in that test worker and its resolved export is asserted;
+Node codecs are never selected for these tests.
 
-This bridge does not enable live document conversion or establish native Visio
-fidelity. It remains isolated pending broader record-specific evidence, resource
-limits and browser verification. A post-conversion output limit is not a guarantee
-of peak converter heap use. The parent worker deadline can terminate conversion,
-but cannot impose a hard memory quota.
+The core adapter accepts only a small generated-case classic EMF subset, makes a
+private input copy, reinspects it, uses fixed non-raster converter options and
+returns independently validated neutral vectors. It contains no EMF renderer.
+Live document conversion remains disabled. These generated regressions do not
+establish native Visio fidelity or a hard peak-memory quota.
 
 The converter is Apache-2.0. Its unmodified license and shipped third-party notices
-are retained as `emf-converter-LICENSE.txt` and
-`emf-converter-THIRD_PARTY_NOTICES.txt`. The local patch changes inclusive header
-bounds, mapping/state behavior and narrow primitive geometry. Package regressions
-requiring unavailable native Windows fonts may skip; report skips explicitly.
-The patch is not a new upstream release and setup does not publish anything.
+remain in `emf-converter-LICENSE.txt` and `emf-converter-THIRD_PARTY_NOTICES.txt`.
+
+## Historical source correction and audit
+
+`emf-converter-visio.patch` and its revision/lock files preserve the correction
+provenance against v4.8.7. Those changes were published in source commit
+`5a5df709b256803e66199293033fb47d27c3a787` and package 4.8.8. They are no longer an
+unreleased prerequisite for this viewer. To reproduce that historical source
+checkpoint explicitly, use `npm run setup:converter-source` and
+`npm run check:converter-source`; these keep their isolated
+`emf-converter-current` checkout and refuse unrelated edits. The root check runs
+only synthetic setup safety tests, without creating this checkout.
+
+The older `emf-converter-visio` checkout and core's original converter dependency
+remain separate for the 3.5.1 characterization audit. Do not rewrite its known-defect
+assertions as release evidence. Neither normal setup nor checks publish anything.

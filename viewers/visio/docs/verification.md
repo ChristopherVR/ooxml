@@ -60,7 +60,7 @@ Run `npm run check` after `npm run setup:core` and both root/binding installatio
 
 Use the capability ledger for remaining functionality. Passing generated-fixture tests, showing a drawing, or absence of warnings is not a parity guarantee.
 
-## Current converter package adapter checkpoint
+## Initial converter package adapter checkpoint
 
 The isolated bridge now targets emf-converter 4.8.7 with the reviewed local GDI fix
 patch. The older 3.5.1 audit remains separate. Core `convertVisioMetafile` accepts
@@ -82,7 +82,8 @@ Chromium shell is missing; the installed Chromium alternative aborts before test
 with `socket() Operation not permitted`. All eight browser cases fail before their
 assertions. This does not establish a product regression or a browser pass.
 
-Checkpoint commands: `npm run check`, `npm run check:converter`,
+Initial checkpoint commands: `npm run check`, `npm run check:converter` (now
+`npm run check:converter-source`),
 `npm run test:converter-integration` and `npm run test:converter-setup`. The isolated
 converter suite passes 3,743 tests with 117 skips (92 files pass, one file skips);
 its TypeScript, Node/browser builds and browser-package consumer checks pass.
@@ -91,3 +92,19 @@ refusal of unrelated edits and semantic lock comparison. A fresh local baseline
 clone plus the full patch independently reproduces the pinned source snapshot.
 The integration runner verifies this snapshot and rebuilds the browser distribution
 before its seven deadline-isolated cases, so stale output cannot count as evidence.
+
+## Released converter adoption
+
+The normal viewer setup and aggregate check now use published `emf-converter`
+4.8.8 as an exact dev dependency. npm registry integrity is locked and the actual
+browser artifact SHA-256 is verified. Its browser bundle is byte-identical to the
+corrected local build above; all seven isolated integration cases pass with the
+released package selected through its browser export. The source correction
+bridge remains historical provenance, available only through explicit
+`setup:converter-source` / `check:converter-source` commands. It is no longer a
+normal build requirement. The older audit remains unchanged. Core publication
+and the live-conversion gate are unaffected.
+
+Release adoption validation also passes from a temporary harness with no sibling
+converter source checkout. Only the installed package, locked release metadata,
+core package and generated test inputs are required.
