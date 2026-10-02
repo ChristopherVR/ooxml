@@ -15,6 +15,9 @@ for (const key of plan.order.filter((key) => plan.packages[key].release)) {
 	} catch (error) {
 		if (error.code !== 'ENOENT') throw error;
 	}
-	writeFileSync(path, `## ${pkg.version}\n\n${notes}\n${previous}`);
+	writeFileSync(
+		path,
+		`## ${pkg.version}\n\n${notes.trimEnd()}\n${previous ? `\n${previous.trimEnd()}\n` : ''}`,
+	);
 	writeFileSync(`release-notes/${pkg.tag}.md`, notes);
 }
