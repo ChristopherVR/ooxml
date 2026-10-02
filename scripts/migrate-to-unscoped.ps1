@@ -269,7 +269,14 @@ function Step-Docx {
 		ForEach-Object { [pscustomobject]@{ npm = $_.npm; dir = $_.dir; version = (Get-Json (Join-Path $Docx "$($_.dir)/package.json")).version } })
 	$missing = @($targets | Where-Object { -not (Test-OnNpm "$($_.npm)@$($_.version)") })
 	if ($missing.Count -gt 0) {
-		Invoke-Change $Docx 'bun' @('install', '--frozen-lockfile')
+		# The lockfile was committed before ooxml-core and ooxml-ui existed on npm, so it is
+		# refreshed now and pushed, keeping the published commit on main.
+		Invoke-Change $Docx 'bun' @('install')
+		if ($DryRun -or (Invoke-Read $Docx 'git' @('status', '--porcelain', 'bun.lock'))) {
+			Invoke-Change $Docx 'git' @('add', 'bun.lock')
+			Invoke-Change $Docx 'git' @('commit', '-m', 'chore(deps): lock the unscoped ooxml-core and ooxml-ui', '-m', $Trailer)
+			Invoke-Change $Docx 'git' @('push', 'origin', 'HEAD:main')
+		}
 		Invoke-Change $Docx 'bun' @('run', 'build:packages')
 		Invoke-Change $Docx 'bun' @('run', 'check:published')
 	}
