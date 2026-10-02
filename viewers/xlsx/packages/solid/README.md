@@ -1,0 +1,30 @@
+# xlsx-solid-viewer
+
+The Excel spreadsheet editor for Solid. One self-contained package: the `<xlsx-editor>` web component, the legacy Excel 97-2003 `.xls` reader and the Solid adapter are bundled in, and the workbook model (`@christophervr/xlsx-core`: `createWorkbook`, `loadWorkbook`, `saveXlsx`, ...) installs with it and is re-exported, so one install and one import path are all an application needs.
+
+> **Not published to npm yet.** Build from the repository to try it; the commands below are the intended API.
+
+```sh
+npm install xlsx-solid-viewer solid-js
+```
+
+```tsx
+import { createSignal } from 'solid-js';
+import { createWorkbook, SpreadsheetEditor } from 'xlsx-solid-viewer';
+
+export function Editor() {
+	const [workbook, setWorkbook] = createSignal(createWorkbook());
+	return <SpreadsheetEditor workbook={workbook()} onWorkbookChange={setWorkbook} />;
+}
+```
+
+The shared option types and the `loadWorkbook` / `detectWorkbookFormat` helpers are exported from the package root.
+
+Notes:
+
+- `.xlsx`, `.xlsm`, legacy `.xls` and `.csv` files are opened; the format is sniffed from the bytes. A legacy `.xls` file is saved back as `.xlsx`.
+- solid-js is a peer dependency. `ooxml-core` and `ooxml-ui` are regular dependencies; never import `ooxml-ui` yourself.
+- Use one editor package per application: each bundles its own copy of the editor and registers the `<xlsx-editor>` element.
+- An early editor: not Microsoft Excel parity, and saving is not lossless for unsupported features (pivot tables, slicers, sparklines and macros are kept but not editable). See the [features and limitations](https://christophervr.github.io/xlsx-viewer/features).
+
+Documentation: [element API](https://christophervr.github.io/xlsx-viewer/api), [Solid guide](https://christophervr.github.io/xlsx-viewer/frameworks/solid). Licensed under Apache-2.0.

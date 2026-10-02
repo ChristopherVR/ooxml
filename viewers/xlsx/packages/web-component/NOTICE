@@ -1,0 +1,1 @@
+The legacy Excel 97-2003 (.xls) reader reached through this package (ooxml-core/xlsx/load) inlines the shared OLE2 codecs adapted from ChristopherVR/pptx-viewer, Copyright ChristopherVR, licensed under the Apache License, Version 2.0. The Apache License text is included in LICENSE.

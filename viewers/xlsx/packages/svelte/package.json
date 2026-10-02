@@ -1,0 +1,52 @@
+{
+	"name": "xlsx-svelte-viewer",
+	"version": "0.1.0",
+	"description": "Svelte 5 component for the Excel spreadsheet editor. Self-contained: includes the editor, the formula engine and the legacy .xls reader.",
+	"keywords": [
+		"editor",
+		"excel",
+		"spreadsheet",
+		"svelte",
+		"xls",
+		"xlsx"
+	],
+	"license": "Apache-2.0",
+	"author": "ChristopherVR",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/ChristopherVR/xlsx-viewer.git",
+		"directory": "packages/svelte"
+	},
+	"files": [
+		"dist",
+		"README.md",
+		"LICENSE",
+		"NOTICE"
+	],
+	"type": "module",
+	"main": "./dist/runtime.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"svelte": "./dist/XlsxEditor.svelte",
+			"default": "./dist/XlsxEditor.svelte"
+		},
+		"./runtime": {
+			"types": "./dist/runtime.d.ts",
+			"import": "./dist/runtime.js"
+		},
+		"./package.json": "./package.json"
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"dependencies": {
+		"@christophervr/xlsx-core": "^0.1.0",
+		"ooxml-core": "^0.4.0",
+		"ooxml-ui": "^0.1.1"
+	},
+	"peerDependencies": {
+		"svelte": "^5.0.0"
+	}
+}

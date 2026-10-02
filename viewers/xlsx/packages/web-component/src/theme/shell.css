@@ -1,0 +1,277 @@
+/* Frame, title bar and status bar. Mirrors docx-viewer's chrome (styles/base.css,
+   chrome-titlebar.css, status-dialogs.css) with --xve-* tokens. */
+:host {
+	--xl: var(--xve-primary);
+	--xl-strong: color-mix(in srgb, var(--xve-primary) 70%, #000);
+	--xl-soft: color-mix(in srgb, var(--xve-primary) 12%, transparent);
+	--accent-soft: var(--xl-soft);
+	--ink: var(--xve-foreground);
+	--muted: var(--xve-muted-foreground);
+	--line: var(--xve-border);
+	--surface: var(--xve-card);
+	--chrome: var(--xve-background);
+	display: block;
+	box-sizing: border-box;
+	width: 100%;
+	height: 100%;
+	min-height: 0;
+	color: var(--ink);
+	font:
+		13px/1.35 'Segoe UI',
+		Arial,
+		sans-serif;
+}
+.xve-frame {
+	position: relative;
+	display: flex;
+	box-sizing: border-box;
+	width: 100%;
+	height: 100%;
+	min-height: 0;
+	min-width: 0;
+	flex-direction: column;
+	overflow: hidden;
+	background: var(--surface);
+}
+:focus-visible {
+	outline: 2px solid var(--xve-ring);
+	outline-offset: 1px;
+}
+.xve-tellme input:focus-visible {
+	outline: none;
+}
+[hidden],
+[data-xve-hidden] {
+	display: none !important;
+}
+.xve-icon {
+	flex: none;
+}
+.xve-icon-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 28px;
+	height: 28px;
+	padding: 0 6px;
+	border: 0;
+	border-radius: 4px;
+	background: none;
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+}
+.xve-icon-button:hover:not(:disabled),
+.xve-icon-button[aria-pressed='true'] {
+	background: var(--xl-soft);
+}
+.xve-icon-button:disabled {
+	opacity: 0.4;
+	cursor: default;
+}
+
+/* Workspace: formula bar, grid and sheet tabs between the ribbon and the status bar. */
+.xve-workspace {
+	position: relative;
+	display: flex;
+	flex: 1;
+	min-height: 0;
+	min-width: 0;
+	flex-direction: column;
+	background: var(--xve-sheet-bg);
+}
+.xve-formula-row {
+	flex: none;
+	min-width: 0;
+	border-bottom: 1px solid var(--line);
+	background: var(--surface);
+}
+.xve-grid-host {
+	position: relative;
+	display: flex;
+	flex: 1;
+	min-height: 0;
+	min-width: 0;
+	overflow: hidden;
+	background: var(--xve-sheet-bg);
+	color-scheme: light;
+}
+.xve-grid-host > * {
+	flex: 1;
+	min-width: 0;
+}
+.xve-tabs-row {
+	flex: none;
+	min-width: 0;
+	border-top: 1px solid var(--line);
+	background: var(--chrome);
+}
+.xve-empty {
+	position: absolute;
+	z-index: 5;
+	inset: 0;
+	display: grid;
+	place-items: center;
+	color: var(--muted);
+	background: var(--chrome);
+}
+:host([show-formula-bar='false']) .xve-formula-row,
+:host([show-toolbar='false']) .xve-ribbon {
+	display: none;
+}
+
+/* Title bar */
+.xve-titlebar {
+	display: grid;
+	flex: none;
+	grid-template-columns: minmax(0, 1fr) minmax(180px, 460px) minmax(0, 1fr);
+	align-items: center;
+	gap: 12px;
+	min-height: 40px;
+	padding: 0 10px;
+	background: var(--chrome);
+	border-bottom: 1px solid var(--line);
+	font-size: 12px;
+}
+.xve-titlebar-start {
+	display: flex;
+	min-width: 0;
+	align-items: center;
+	gap: 12px;
+}
+.xve-quick-access,
+.xve-title-actions {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+}
+.xve-title-actions {
+	justify-self: end;
+}
+.xve-app-badge {
+	display: inline-grid;
+	width: 22px;
+	height: 22px;
+	margin-right: 6px;
+	place-items: center;
+	border-radius: 4px;
+	background: var(--xl);
+	color: var(--xve-primary-foreground);
+	font:
+		700 13px 'Segoe UI',
+		Arial,
+		sans-serif;
+}
+.xve-document-title {
+	display: flex;
+	min-width: 0;
+	align-items: baseline;
+	gap: 6px;
+	white-space: nowrap;
+}
+.xve-filename {
+	overflow: hidden;
+	color: var(--ink);
+	font-weight: 600;
+	text-overflow: ellipsis;
+}
+.xve-title-separator,
+.xve-save-state {
+	color: var(--muted);
+}
+.xve-save-state[data-state='dirty'] {
+	color: var(--ink);
+}
+.xve-mode-select {
+	height: 28px;
+	margin-left: 4px;
+	padding: 0 6px;
+	border: 1px solid var(--line);
+	border-radius: 4px;
+	background: var(--surface);
+	color: var(--ink);
+	font: inherit;
+}
+
+/* Status bar */
+.xve-status {
+	display: flex;
+	flex: none;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	min-height: 26px;
+	min-width: 0;
+	padding: 0 10px;
+	border-top: 1px solid var(--line);
+	background: var(--chrome);
+	color: var(--muted);
+	font-size: 11px;
+}
+.xve-status-left,
+.xve-status-right,
+.xve-status-stats {
+	display: flex;
+	min-width: 0;
+	align-items: center;
+	gap: 14px;
+	white-space: nowrap;
+}
+.xve-status-right {
+	gap: 2px;
+}
+.xve-status-stats {
+	margin-right: 10px;
+	overflow: hidden;
+	color: var(--ink);
+}
+.xve-status-badge {
+	padding: 1px 6px;
+	border: 1px solid var(--line);
+	border-radius: 3px;
+}
+.xve-status-notes {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 2px 6px;
+	border: 0;
+	border-radius: 4px;
+	background: none;
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+}
+.xve-status-notes:hover {
+	background: var(--xl-soft);
+}
+.xve-status-notes .xve-icon {
+	color: #b7791f;
+}
+.xve-status .xve-icon-button {
+	min-width: 24px;
+	height: 22px;
+}
+.xve-zoom-slider {
+	width: 110px;
+	accent-color: var(--xl);
+}
+.xve-zoom-percent {
+	min-width: 44px;
+	border: 0;
+	background: none;
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+}
+
+@media (max-width: 760px) {
+	.xve-titlebar {
+		grid-template-columns: minmax(0, 1fr) auto;
+	}
+	.xve-tellme,
+	.xve-zoom-slider,
+	.xve-status-stats {
+		display: none;
+	}
+}

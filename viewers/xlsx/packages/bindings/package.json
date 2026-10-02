@@ -1,0 +1,43 @@
+{
+	"name": "xlsx-bindings",
+	"version": "0.1.0",
+	"private": true,
+	"description": "React, Vue, Angular, Svelte and Solid bindings for the Excel spreadsheet editor (internal; bundled into the published framework packages)",
+	"license": "Apache-2.0",
+	"author": "ChristopherVR",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/ChristopherVR/xlsx-viewer.git",
+		"directory": "packages/bindings"
+	},
+	"type": "module",
+	"dependencies": {
+		"@christophervr/xlsx-core": "workspace:*",
+		"ooxml-core": "^0.4.0",
+		"xlsx-web-component": "workspace:*"
+	},
+	"peerDependencies": {
+		"@angular/core": ">=19",
+		"react": ">=18",
+		"solid-js": "^1.9.0",
+		"svelte": "^5",
+		"vue": "^3"
+	},
+	"peerDependenciesMeta": {
+		"react": {
+			"optional": true
+		},
+		"vue": {
+			"optional": true
+		},
+		"@angular/core": {
+			"optional": true
+		},
+		"svelte": {
+			"optional": true
+		},
+		"solid-js": {
+			"optional": true
+		}
+	}
+}

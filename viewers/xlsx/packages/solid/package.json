@@ -1,0 +1,47 @@
+{
+	"name": "xlsx-solid-viewer",
+	"version": "0.1.0",
+	"description": "Solid component for the Excel spreadsheet editor. Self-contained: includes the editor, the formula engine and the legacy .xls reader.",
+	"keywords": [
+		"editor",
+		"excel",
+		"solid",
+		"spreadsheet",
+		"xls",
+		"xlsx"
+	],
+	"license": "Apache-2.0",
+	"author": "ChristopherVR",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/ChristopherVR/xlsx-viewer.git",
+		"directory": "packages/solid"
+	},
+	"files": [
+		"dist",
+		"README.md",
+		"LICENSE",
+		"NOTICE"
+	],
+	"type": "module",
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		},
+		"./package.json": "./package.json"
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"dependencies": {
+		"@christophervr/xlsx-core": "^0.1.0",
+		"ooxml-core": "^0.4.0",
+		"ooxml-ui": "^0.1.1"
+	},
+	"peerDependencies": {
+		"solid-js": "^1.9.0"
+	}
+}

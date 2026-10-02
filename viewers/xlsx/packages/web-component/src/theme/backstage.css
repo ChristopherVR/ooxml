@@ -1,0 +1,249 @@
+/* File backstage, after docx-viewer's styles/backstage.css. */
+.xve-backstage {
+	position: absolute;
+	z-index: 40;
+	inset: 0;
+	display: grid;
+	grid-template-columns: 220px minmax(0, 1fr);
+	background: var(--surface);
+}
+.xve-backstage-nav {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	padding: 12px 0;
+	overflow-y: auto;
+	background: var(--xl);
+	color: var(--xve-primary-foreground);
+}
+.xve-backstage-nav-item {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 10px 22px;
+	border: 0;
+	background: none;
+	color: inherit;
+	font:
+		14px 'Segoe UI',
+		Arial,
+		sans-serif;
+	text-align: left;
+	cursor: pointer;
+}
+.xve-backstage-nav-item:hover,
+.xve-backstage-nav-item[aria-current='true'] {
+	background: var(--xl-strong);
+}
+.xve-backstage-back {
+	margin-bottom: 12px;
+}
+.xve-backstage-separator {
+	height: 1px;
+	margin: 8px 22px;
+	background: color-mix(in srgb, var(--xve-primary-foreground) 35%, transparent);
+}
+.xve-backstage-content {
+	overflow: auto;
+	padding: 28px 40px;
+	color: var(--ink);
+}
+.xve-backstage-content h2 {
+	margin: 0 0 20px;
+	font-size: 30px;
+	font-weight: 300;
+}
+.xve-backstage-content h3 {
+	margin: 24px 0 10px;
+	font-size: 15px;
+	font-weight: 600;
+}
+.xve-backstage-title {
+	margin: 0 0 4px;
+	font-size: 26px;
+	font-weight: 400;
+	overflow-wrap: anywhere;
+}
+.xve-backstage-muted {
+	color: var(--muted);
+}
+.xve-backstage-facts {
+	display: grid;
+	grid-template-columns: max-content minmax(0, 1fr);
+	gap: 6px 24px;
+	margin: 0;
+}
+.xve-backstage-facts dt {
+	color: var(--muted);
+}
+.xve-backstage-facts dd {
+	margin: 0;
+	overflow-wrap: anywhere;
+}
+.xve-compatibility-notes {
+	display: grid;
+	gap: 8px;
+	max-width: 760px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.xve-compatibility-notes li {
+	display: flex;
+	gap: 8px;
+	padding: 10px 12px;
+	border: 1px solid var(--line);
+	border-radius: 6px;
+	line-height: 1.45;
+}
+.xve-compatibility-notes .xve-icon {
+	margin-top: 2px;
+	color: #b7791f;
+}
+.xve-backstage-columns {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 300px;
+	gap: 40px;
+	align-items: start;
+}
+.xve-backstage-properties {
+	padding: 4px 0 0 24px;
+	border-left: 1px solid var(--line);
+}
+.xve-backstage-properties h3 {
+	margin-top: 0;
+}
+.xve-backstage-tiles {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+}
+.xve-backstage-tile {
+	display: inline-flex;
+	flex-direction: column;
+	gap: 8px;
+	padding: 8px;
+	border: 1px solid transparent;
+	border-radius: 6px;
+	background: none;
+	color: var(--ink);
+	font: inherit;
+	cursor: pointer;
+}
+.xve-backstage-tile:hover {
+	border-color: var(--line);
+	background: var(--xl-soft);
+}
+.xve-backstage-tile-preview {
+	display: block;
+	width: 150px;
+	height: 112px;
+	border: 1px solid var(--line);
+	background-color: #fff;
+	background-image:
+		linear-gradient(#e1e1e1 1px, transparent 1px),
+		linear-gradient(90deg, #e1e1e1 1px, transparent 1px);
+	background-size: 30px 14px;
+	box-shadow: 0 1px 3px #0002;
+}
+.xve-backstage-tile-preview[data-template]::before {
+	display: block;
+	height: 14px;
+	background: var(--xl);
+	content: '';
+	opacity: 0.85;
+}
+.xve-backstage-card {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 24px;
+	max-width: 760px;
+	margin-bottom: 12px;
+	padding: 14px 18px;
+	border: 1px solid var(--line);
+	border-radius: 6px;
+}
+.xve-backstage-card h3 {
+	margin: 0 0 4px;
+}
+.xve-backstage-card p {
+	margin: 0;
+}
+.xve-backstage-primary {
+	padding: 8px 18px;
+	border: 0;
+	border-radius: 4px;
+	background: var(--xl);
+	color: var(--xve-primary-foreground);
+	font: inherit;
+	cursor: pointer;
+	white-space: nowrap;
+}
+.xve-backstage-field {
+	display: grid;
+	gap: 4px;
+	max-width: 420px;
+	margin-bottom: 14px;
+	color: var(--muted);
+	font-size: 12px;
+}
+.xve-backstage-field input,
+.xve-backstage-field select {
+	height: 32px;
+	padding: 0 8px;
+	border: 1px solid var(--line);
+	border-radius: 4px;
+	background: var(--surface);
+	color: var(--ink);
+	font:
+		14px 'Segoe UI',
+		Arial,
+		sans-serif;
+}
+.xve-backstage-check {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 10px;
+}
+.xve-customize-group {
+	margin: 0 0 8px;
+	padding: 6px 10px 8px;
+	border: 1px solid var(--line);
+	border-radius: 4px;
+}
+.xve-customize-group legend {
+	padding: 0 4px;
+	color: var(--muted);
+	font-size: 12px;
+}
+.xve-customize-row {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	min-width: 180px;
+	padding: 2px 8px 2px 0;
+	font-size: 13px;
+}
+@media (max-width: 760px) {
+	.xve-backstage {
+		grid-template-columns: 1fr;
+		grid-template-rows: auto minmax(0, 1fr);
+	}
+	.xve-backstage-nav {
+		flex-direction: row;
+		overflow-x: auto;
+		padding: 0;
+	}
+	.xve-backstage-content {
+		padding: 20px;
+	}
+	.xve-backstage-columns {
+		grid-template-columns: minmax(0, 1fr);
+	}
+	.xve-backstage-properties {
+		padding-left: 0;
+		border-left: 0;
+	}
+}

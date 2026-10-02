@@ -1,0 +1,335 @@
+/* Floating surfaces: ribbon popovers, menus, the colour grid, Tell me, toasts and the shell dialogs. */
+.ribbon-popover {
+	position: fixed;
+	z-index: 1000;
+	box-sizing: border-box;
+	padding: 4px;
+	border: 1px solid var(--line);
+	border-radius: 6px;
+	background: var(--xve-popover);
+	box-shadow: 0 6px 20px rgb(0 0 0 / 0.18);
+	color: var(--xve-popover-foreground);
+	font:
+		12px 'Segoe UI',
+		Arial,
+		sans-serif;
+}
+.ribbon-popover.ribbon-menu-list,
+.ribbon-popover.ribbon-list {
+	display: flex;
+	min-width: 180px;
+	max-height: min(70vh, 420px);
+	flex-direction: column;
+	overflow-y: auto;
+}
+.ribbon-menu-list [role='menuitem'],
+.ribbon-menu-list [role='menuitemcheckbox'],
+.ribbon-list [role='option'] {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	width: 100%;
+	padding: 5px 12px 5px 8px;
+	border: 0;
+	border-radius: 3px;
+	background: none;
+	color: inherit;
+	font: inherit;
+	text-align: left;
+	white-space: nowrap;
+	cursor: pointer;
+}
+.ribbon-menu-list [role^='menuitem']:hover:not(:disabled),
+.ribbon-menu-list [role^='menuitem']:focus-visible,
+.ribbon-list [role='option']:hover,
+.ribbon-list [role='option']:focus-visible {
+	background: var(--accent-soft);
+	outline: none;
+}
+.ribbon-menu-list [role^='menuitem']:disabled {
+	opacity: 0.45;
+	cursor: default;
+}
+.ribbon-menu-list [aria-checked='true'] {
+	font-weight: 600;
+}
+.ribbon-menu-list .ribbon-menu-icon {
+	display: inline-flex;
+	width: 16px;
+}
+.ribbon-menu-list .ribbon-menu-shortcut {
+	margin-left: auto;
+	padding-left: 18px;
+	color: var(--muted);
+}
+.ribbon-menu-list [role='separator'] {
+	height: 1px;
+	margin: 4px 2px;
+	background: var(--line);
+}
+.ribbon-list [aria-selected='true'] {
+	color: var(--xl);
+	font-weight: 600;
+}
+.ribbon-popover.ribbon-gallery-menu {
+	display: grid;
+	grid-template-columns: repeat(4, 96px);
+	gap: 4px;
+	max-height: min(70vh, 420px);
+	overflow-y: auto;
+}
+.ribbon-gallery-menu button {
+	padding: 4px;
+	border: 1px solid transparent;
+	border-radius: 3px;
+	background: none;
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+}
+.ribbon-gallery-menu button:hover,
+.ribbon-gallery-menu button:focus-visible {
+	border-color: var(--line);
+	background: var(--accent-soft);
+	outline: none;
+}
+
+/* Colour picker: Automatic, Theme Colors (ten columns over five tints), Standard Colors, More. */
+.ribbon-popover.color-grid {
+	display: block;
+	width: 236px;
+	padding: 8px 10px;
+}
+.color-grid-title {
+	margin: 6px 0 4px;
+	color: var(--muted);
+	font-weight: 600;
+	font-size: 11px;
+}
+.color-grid-cells {
+	display: grid;
+	grid-template-columns: repeat(10, 20px);
+	gap: 2px 3px;
+}
+.color-grid .swatch {
+	width: 20px;
+	height: 20px;
+	padding: 0;
+	border: 1px solid var(--line);
+	border-radius: 2px;
+	background: var(--swatch);
+	cursor: pointer;
+}
+.color-grid .swatch:hover,
+.color-grid .swatch:focus-visible {
+	outline: 2px solid var(--xl);
+	outline-offset: 1px;
+}
+.color-grid-command {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	margin: 2px 0;
+	padding: 5px 6px;
+	border: 0;
+	border-radius: 3px;
+	background: none;
+	color: inherit;
+	font: inherit;
+	text-align: left;
+	cursor: pointer;
+}
+.color-grid-command:hover,
+.color-grid-command:focus-visible {
+	background: var(--accent-soft);
+}
+.color-grid-input {
+	position: absolute;
+	width: 0;
+	height: 0;
+	padding: 0;
+	border: 0;
+	opacity: 0;
+	pointer-events: none;
+}
+
+/* Tell me */
+.xve-tellme {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	height: 28px;
+	padding: 0 10px;
+	border: 1px solid var(--line);
+	border-radius: 6px;
+	background: var(--surface);
+	color: var(--muted);
+}
+.xve-tellme:focus-within {
+	border-color: var(--xl);
+	box-shadow: 0 0 0 1px var(--xl);
+}
+.xve-tellme input {
+	flex: 1;
+	min-width: 0;
+	border: 0;
+	outline: 0;
+	background: none;
+	color: var(--ink);
+	font: inherit;
+}
+.xve-tellme-results {
+	position: absolute;
+	z-index: 80;
+	top: calc(100% + 4px);
+	right: 0;
+	left: 0;
+	margin: 0;
+	padding: 4px;
+	border: 1px solid var(--line);
+	border-radius: 6px;
+	background: var(--xve-popover);
+	box-shadow: 0 8px 24px #0002;
+	list-style: none;
+}
+.xve-tellme-results li {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 8px;
+	border-radius: 4px;
+	color: var(--ink);
+	cursor: pointer;
+}
+.xve-tellme-results li[aria-selected='true'],
+.xve-tellme-results li[role='option']:hover {
+	background: var(--xl-soft);
+}
+.xve-tellme-results .xve-tellme-hint {
+	margin-left: auto;
+	color: var(--muted);
+	font-size: 11px;
+}
+.xve-tellme-results .xve-tellme-empty {
+	color: var(--muted);
+	cursor: default;
+}
+
+/* Toasts */
+.xve-toasts {
+	position: absolute;
+	z-index: 90;
+	right: 16px;
+	bottom: 40px;
+	display: flex;
+	max-width: min(420px, calc(100% - 32px));
+	flex-direction: column;
+	gap: 8px;
+	pointer-events: none;
+}
+.xve-toast {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+	padding: 10px 12px;
+	border: 1px solid var(--line);
+	border-left: 4px solid var(--xl);
+	border-radius: 6px;
+	background: var(--xve-popover);
+	box-shadow: 0 8px 24px #0003;
+	color: var(--xve-popover-foreground);
+	pointer-events: auto;
+}
+.xve-toast[data-kind='warning'] {
+	border-left-color: #b7791f;
+}
+.xve-toast[data-kind='error'] {
+	border-left-color: var(--xve-destructive);
+}
+.xve-toast-text {
+	flex: 1;
+}
+
+/* Shell dialogs (shortcut help, prompts) */
+.xve-dialog {
+	position: absolute;
+	z-index: 85;
+	top: 120px;
+	left: 50%;
+	display: grid;
+	box-sizing: border-box;
+	width: min(440px, calc(100% - 32px));
+	gap: 10px;
+	padding: 18px 20px;
+	border: 1px solid var(--line);
+	border-radius: 8px;
+	background: var(--xve-popover);
+	box-shadow: 0 12px 32px #0003;
+	color: var(--ink);
+	transform: translateX(-50%);
+}
+.xve-dialog h2 {
+	margin: 0 0 4px;
+	font-size: 16px;
+	font-weight: 600;
+}
+.xve-dialog-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+	margin-top: 6px;
+}
+.xve-dialog-actions button {
+	min-height: 30px;
+	padding: 0 14px;
+	border: 1px solid var(--line);
+	border-radius: 4px;
+	background: var(--surface);
+	color: var(--ink);
+	font: inherit;
+	cursor: pointer;
+}
+.xve-dialog-actions .xve-dialog-primary {
+	border-color: var(--xl);
+	background: var(--xl);
+	color: var(--xve-primary-foreground);
+}
+.xve-shortcut-help {
+	width: min(620px, calc(100% - 32px));
+	max-height: calc(100% - 160px);
+	overflow: auto;
+}
+.xve-shortcut-help p {
+	margin: 0;
+	color: var(--muted);
+	font-size: 12px;
+}
+.xve-shortcut-help table {
+	width: 100%;
+	border-collapse: collapse;
+}
+.xve-shortcut-help th,
+.xve-shortcut-help td {
+	padding: 5px 8px;
+	border-bottom: 1px solid var(--line);
+	text-align: left;
+	vertical-align: top;
+}
+.xve-shortcut-help th {
+	color: var(--muted);
+	font-size: 12px;
+	font-weight: 600;
+}
+.xve-shortcut-help kbd {
+	padding: 1px 6px;
+	border: 1px solid var(--line);
+	border-radius: 4px;
+	background: var(--surface);
+	font:
+		12px/1.4 ui-monospace,
+		Consolas,
+		monospace;
+	white-space: nowrap;
+}

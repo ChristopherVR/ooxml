@@ -1,0 +1,60 @@
+{
+	"name": "xlsx-viewer-workspace",
+	"version": "0.1.0",
+	"private": true,
+	"workspaces": [
+		"packages/*"
+	],
+	"type": "module",
+	"scripts": {
+		"typecheck": "tsc --noEmit && svelte-check --tsconfig ./tsconfig.json",
+		"typecheck:local": "node scripts/local-core-tsconfig.mjs && tsc --noEmit -p tsconfig.local.json",
+		"test": "vitest run",
+		"build:packages": "node scripts/build-packages.mjs",
+		"pack:smoke": "node scripts/pack-smoke.mjs",
+		"release:plan": "node scripts/release-plan.mjs",
+		"release:publish": "node scripts/publish-released.mjs",
+		"build": "vite build demos/demo-vanilla --config vite.config.ts",
+		"demo": "vite demos/demo-vanilla --config vite.config.ts --host 127.0.0.1",
+		"test:browser": "playwright test",
+		"check:shared": "node scripts/check-shared.mjs",
+		"check:published": "node scripts/check-published-refs.mjs",
+		"fmt": "oxfmt",
+		"fmt:check": "oxfmt --check",
+		"test:scripts": "node --test 'scripts/*.test.mjs'",
+		"check:changelog": "node scripts/check-changelog-sections.mjs",
+		"changelog:unreleased": "bunx git-cliff --config cliff-root.toml --unreleased",
+		"changelog:latest": "bunx git-cliff --config cliff-root.toml --latest --strip header"
+	},
+	"dependencies": {
+		"@angular/common": "^21.0.0",
+		"@angular/compiler": "^21.0.0",
+		"@angular/core": "^21.0.0",
+		"@angular/platform-browser": "^21.0.0",
+		"@xmldom/xmldom": "^0.9.12",
+		"jszip": "^3.10.1",
+		"react": "^19.0.0",
+		"react-dom": "^19.0.0",
+		"rxjs": "^7.8.0",
+		"svelte": "^5.0.0",
+		"vue": "^3.5.0"
+	},
+	"devDependencies": {
+		"@playwright/test": "^1.55.0",
+		"@sveltejs/vite-plugin-svelte": "^6.0.0",
+		"@tailwindcss/vite": "^4.3.3",
+		"@types/node": "^24.0.0",
+		"@types/react": "^19.0.0",
+		"@types/react-dom": "^19.0.0",
+		"jsdom": "^26.0.0",
+		"oxfmt": "0.67.0",
+		"rollup": "^4.63.6",
+		"rollup-plugin-dts": "^6.5.1",
+		"solid-js": "^1.9.0",
+		"svelte-check": "^4.0.0",
+		"tailwindcss": "^4.3.3",
+		"typescript": "~5.9.3",
+		"vite": "^7.0.0",
+		"vitest": "^3.2.0"
+	}
+}

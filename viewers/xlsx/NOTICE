@@ -1,0 +1,6 @@
+xlsx-viewer
+Copyright 2026 ChristopherVR
+
+The Excel 97-2003 (.xls) reader reached through ooxml-core/xlsx/load inlines the shared OLE2 codecs of ChristopherVR/ole2, which were adapted from ChristopherVR/pptx-viewer, Copyright ChristopherVR, licensed under the Apache License, Version 2.0. The Apache License text is included in LICENSE.
+
+The repository structure, build and release scripts are adapted from ChristopherVR/docx-viewer (Apache-2.0).

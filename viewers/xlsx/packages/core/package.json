@@ -1,0 +1,43 @@
+{
+	"name": "@christophervr/xlsx-core",
+	"version": "0.1.0",
+	"description": "Framework-neutral Excel workbook model, parser, formula engine and serializer (thin entry point over ooxml-core/xlsx)",
+	"keywords": [
+		"excel",
+		"spreadsheet",
+		"xls",
+		"xlsx"
+	],
+	"license": "Apache-2.0",
+	"author": "ChristopherVR",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/ChristopherVR/xlsx-viewer.git",
+		"directory": "packages/core"
+	},
+	"files": [
+		"dist",
+		"README.md",
+		"LICENSE",
+		"NOTICE"
+	],
+	"type": "module",
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		},
+		"./load": {
+			"types": "./dist/load.d.ts",
+			"import": "./dist/load.js"
+		}
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"dependencies": {
+		"ooxml-core": "^0.4.0"
+	}
+}

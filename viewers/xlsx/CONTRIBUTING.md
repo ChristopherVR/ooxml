@@ -1,0 +1,49 @@
+# Contributing to xlsx-viewer
+
+Read [AGENTS.md](AGENTS.md) for the working agreements (one framework-neutral model, one web-component editor, honest reporting of unsupported features, no logic that belongs in `ooxml-core`).
+
+## Getting set up
+
+You need [Bun](https://bun.sh/) 1.3 and Node.js 24.
+
+```sh
+bun install
+bun run typecheck
+bun run test
+bun run test:browser   # Playwright contract tests (bun x playwright install chromium once)
+bun run build:packages && bun run pack:smoke
+```
+
+Formatting is `oxfmt` (`bun run fmt`, `bun run fmt:check`): tabs, single quotes.
+
+The demo sample workbook and the legacy `.xls` fixture are generated: `python scripts/sample-workbook.py` (openpyxl) and, on Windows with Excel installed, `pwsh scripts/sample-workbook-excel.ps1`.
+
+## Commit conventions
+
+Commits **must** follow [Conventional Commits](https://www.conventionalcommits.org). This is load-bearing, not cosmetic: each of the seven published packages is versioned and released independently, and **the bump level is derived from your commit type**. A mislabelled commit mis-versions a published package, and a non-conforming commit is silently dropped from the changelog. The `Conventional Commits` check on every pull request validates the PR title and every commit subject (`scripts/check-conventional-commits.mjs`).
+
+```
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+- **type**: `feat` (minor bump); `fix`, `perf`, `refactor`, `docs`, `test`, `build`, `ci`, `style`, `chore`, `revert` (patch bump). A `!` after the type/scope, or a `BREAKING CHANGE:` footer, bumps major.
+- **scope**: the package or area: `core`, `react`, `vue`, `angular`, `svelte`, `solid`, `vanilla`, or an internal package (`web-component`, `bindings`), `demo`, `release`, `ci`, `deps`, `docs`.
+- **subject**: imperative, lower-case, no trailing period, header at most 72 characters.
+
+Which package a commit versions is decided by the **paths it touches**, not by its scope, so keep a commit within one package where practical. A change to `core` or to any internal package (`web-component`, `bindings`) re-releases every framework package, because their code is bundled into each one (see [docs/releasing.md](docs/releasing.md)). Changes that only touch tests, docs or the demos never release anything, whatever their type.
+
+Examples: `feat(web-component): add a format cells dialog`, `fix(bindings): forward showFormulaBar in the Vue adapter`, `feat(core)!: rename the load entry`.
+
+The release workflow also writes `chore(release): bump versions and update changelogs [skip ci]` commits to `main`; do not edit versions or `CHANGELOG.md` files by hand.
+
+## Pull requests
+
+Keep them focused, describe how you checked the change, and add a regression test for every rendering, editing or binding change (parsing and calculation tests belong in `ooxml-core`). Do not bump versions in a pull request. CI must be green (`ci-success`).
+
+## License
+
+By contributing you agree that your contributions are licensed under the [Apache License 2.0](LICENSE).

@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900" font-family="Segoe UI, Arial, sans-serif">
+	<title>Illustration of the spreadsheet editor: ribbon, formula bar, grid and sheet tabs</title>
+	<rect width="1440" height="900" fill="#f3f2f1"/>
+	<rect width="1440" height="44" fill="#1f9d63"/>
+	<text x="28" y="29" font-size="18" font-weight="700" fill="#fff">Sample workbook.xlsx</text>
+	<rect y="44" width="1440" height="112" fill="#ffffff"/>
+	<g font-size="15" fill="#3b3a39">
+		<text x="28" y="74" font-weight="600" fill="#107c41">Home</text>
+		<text x="98" y="74">Insert</text>
+		<text x="166" y="74">Formulas</text>
+		<text x="256" y="74">Data</text>
+		<text x="318" y="74">Review</text>
+		<text x="392" y="74">View</text>
+	</g>
+	<rect x="24" y="80" width="40" height="3" fill="#1f9d63"/>
+	<g fill="#e1dfdd">
+		<rect x="28" y="96" width="54" height="46" rx="4"/>
+		<rect x="96" y="96" width="140" height="20" rx="3"/>
+		<rect x="96" y="122" width="140" height="20" rx="3"/>
+		<rect x="252" y="96" width="30" height="46" rx="3"/>
+		<rect x="292" y="96" width="30" height="46" rx="3"/>
+		<rect x="332" y="96" width="30" height="46" rx="3"/>
+		<rect x="392" y="96" width="96" height="46" rx="3"/>
+		<rect x="502" y="96" width="120" height="46" rx="3"/>
+		<rect x="636" y="96" width="120" height="46" rx="3"/>
+	</g>
+	<rect y="156" width="1440" height="40" fill="#ffffff" stroke="#e1dfdd"/>
+	<rect x="12" y="164" width="110" height="24" fill="#fff" stroke="#c8c6c4"/>
+	<text x="22" y="181" font-size="14" fill="#201f1e">N4</text>
+	<text x="140" y="182" font-size="15" font-style="italic" fill="#605e5c">fx</text>
+	<text x="176" y="182" font-size="15" fill="#201f1e">=SUM(B4:M4)</text>
+	<rect y="196" width="1440" height="26" fill="#f3f2f1" stroke="#d2d0ce"/>
+	<g font-size="13" fill="#605e5c" text-anchor="middle">
+		<text x="120" y="214">A</text><text x="260" y="214">B</text><text x="370" y="214">C</text>
+		<text x="480" y="214">D</text><text x="590" y="214">E</text><text x="700" y="214">F</text>
+		<text x="810" y="214">G</text><text x="920" y="214">H</text><text x="1030" y="214">N</text>
+		<text x="1150" y="214">O</text>
+	</g>
+	<rect y="222" width="1440" height="618" fill="#ffffff"/>
+	<text x="720" y="258" font-size="24" font-weight="700" fill="#0e5a38" text-anchor="middle">Regional Sales 2026</text>
+	<rect x="40" y="290" width="1170" height="30" fill="#1f9d63"/>
+	<g font-size="14" font-weight="700" fill="#fff">
+		<text x="56" y="310">Region</text><text x="232" y="310">Jan</text><text x="342" y="310">Feb</text>
+		<text x="452" y="310">Mar</text><text x="562" y="310">Apr</text><text x="672" y="310">May</text>
+		<text x="782" y="310">Jun</text><text x="892" y="310">Jul</text><text x="990" y="310">Total</text>
+		<text x="1110" y="310">Growth</text>
+	</g>
+	<g font-size="14" fill="#201f1e">
+		<rect x="200" y="320" width="110" height="30" fill="#9bd39a"/><rect x="310" y="320" width="110" height="30" fill="#b6dc8f"/>
+		<rect x="420" y="320" width="110" height="30" fill="#8fcd7f"/><rect x="530" y="320" width="110" height="30" fill="#7cc77c"/>
+		<rect x="200" y="350" width="110" height="30" fill="#fbd27f"/><rect x="310" y="350" width="110" height="30" fill="#fcc87d"/>
+		<rect x="420" y="350" width="110" height="30" fill="#e3e283"/><rect x="530" y="350" width="110" height="30" fill="#d9df84"/>
+		<rect x="200" y="380" width="110" height="30" fill="#f8696b"/><rect x="310" y="380" width="110" height="30" fill="#f98370"/>
+		<rect x="420" y="380" width="110" height="30" fill="#fa9473"/><rect x="530" y="380" width="110" height="30" fill="#fcb279"/>
+		<rect x="960" y="324" width="150" height="22" fill="#1f9d63" opacity="0.55"/>
+		<rect x="960" y="354" width="110" height="22" fill="#1f9d63" opacity="0.55"/>
+		<rect x="960" y="384" width="96" height="22" fill="#1f9d63" opacity="0.55"/>
+		<rect x="958" y="321" width="152" height="28" fill="none" stroke="#107c41" stroke-width="3"/>
+		<text x="56" y="340">North</text><text x="240" y="340">$42,100</text><text x="350" y="340">$39,800</text>
+		<text x="460" y="340">$45,250</text><text x="570" y="340">$47,100</text><text x="990" y="340">$624,640</text>
+		<text x="1110" y="340" font-weight="700" fill="#006100">62.6%</text>
+		<text x="56" y="370">South</text><text x="240" y="370">$31,200</text><text x="350" y="370">$30,150</text>
+		<text x="460" y="370">$33,900</text><text x="570" y="370">$35,020</text><text x="990" y="370">$459,700</text>
+		<text x="1110" y="370">59.6%</text>
+		<text x="56" y="400">East</text><text x="240" y="400">$27,800</text><text x="350" y="400">$28,900</text>
+		<text x="460" y="400">$29,450</text><text x="570" y="400">$31,200</text><text x="990" y="400">$408,220</text>
+		<text x="1110" y="400">55.2%</text>
+	</g>
+	<g stroke="#e1dfdd">
+		<line x1="40" y1="350" x2="1210" y2="350"/><line x1="40" y1="380" x2="1210" y2="380"/>
+		<line x1="40" y1="410" x2="1210" y2="410"/>
+	</g>
+	<g transform="translate(60 450)">
+		<rect width="640" height="330" fill="#fff" stroke="#d2d0ce"/>
+		<text x="320" y="34" font-size="17" font-weight="600" fill="#201f1e" text-anchor="middle">Revenue by region</text>
+		<g fill="#1f9d63">
+			<rect x="70" y="80" width="70" height="210"/><rect x="180" y="135" width="70" height="155"/>
+			<rect x="290" y="152" width="70" height="138"/><rect x="400" y="110" width="70" height="180"/>
+			<rect x="510" y="196" width="70" height="94"/>
+		</g>
+		<line x1="50" y1="290" x2="610" y2="290" stroke="#8a8886"/>
+	</g>
+	<rect y="840" width="1440" height="32" fill="#f3f2f1" stroke="#d2d0ce"/>
+	<rect x="12" y="840" width="90" height="32" fill="#ffffff"/>
+	<rect x="12" y="868" width="90" height="4" fill="#1f9d63"/>
+	<g font-size="14" fill="#201f1e"><text x="34" y="861" font-weight="600" fill="#107c41">Sales</text><text x="124" y="861">Budget</text><text x="206" y="861">Summary</text></g>
+	<rect y="872" width="1440" height="28" fill="#1f9d63"/>
+	<text x="1412" y="891" font-size="13" fill="#fff" text-anchor="end">Sum: $624,640   Count: 1</text>
+</svg>
