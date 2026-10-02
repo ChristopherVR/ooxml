@@ -1,7 +1,13 @@
 export { ViewerController, type ViewerState } from './controller.js';
 export { mountViewer, type MountedViewer } from './binding.js';
 export { VisioViewerElement, registerVisioViewer } from './viewer-element.js';
-export { renderPage, type RenderResult } from './render-svg.js';
+export { renderPage, type RenderResult, type RenderOptions } from './render-svg.js';
+export {
+	exportPageSvg,
+	MAX_SVG_EXPORT_BYTES,
+	type SvgExportOptions,
+	type SvgExportResult,
+} from './export-svg.js';
 export {
 	eventKeys,
 	propertyKeys,

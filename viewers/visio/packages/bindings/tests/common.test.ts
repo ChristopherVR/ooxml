@@ -40,16 +40,20 @@ describe('complete shared adapter contract', () => {
 		expect(() => handle.element).toThrow('not mounted');
 		expect(() => handle.controller).toThrow('not mounted');
 		expect(() => handle.fit()).toThrow('not mounted');
+		expect(() => handle.exportSvg()).toThrow('not mounted');
 		await expect(handle.load(new Uint8Array())).rejects.toThrow('not mounted');
 		const host = document.createElement('div');
 		binding = mountViewer(host, {});
 		expect(handle.element).toBe(current().binding.element);
 		handle.fit();
+		expect(handle.exportSvg({ maxBytes: 1000 }).svg).toBe('<svg/>');
+		expect(current().binding.exportSvg).toHaveBeenCalledWith({ maxBytes: 1000 });
 		await handle.load(new Uint8Array());
 		expect(current().binding.fit).toHaveBeenCalledOnce();
 		binding.destroy();
 		binding = undefined;
 		expect(() => handle.fit()).toThrow('not mounted');
+		expect(() => handle.exportSvg()).toThrow('not mounted');
 	});
 	it('vanilla is the exact shared mount without another renderer or lifecycle', () => {
 		const host = document.createElement('div');
@@ -78,6 +82,28 @@ it('native prop snapshots do not overwrite loaded documents or user zoom during 
 	viewer.destroy();
 	expect(current().destroy).toHaveBeenCalledOnce();
 	expect(() => viewer.update({})).toThrow('destroyed');
+});
+it('a failed older update cannot roll back a newer reentrant native snapshot', () => {
+	const viewer = mountFrameworkViewer(document.createElement('div'), { zoom: 1 });
+	const failure = new Error('older update failed');
+	current().update.mockImplementationOnce(() => {
+		viewer.update({ zoom: 3 });
+		throw failure;
+	});
+	expect(() => viewer.update({ zoom: 2 })).toThrow(failure);
+	viewer.update({ zoom: 3 });
+	expect(current().update).toHaveBeenLastCalledWith({ events: {} });
+	viewer.destroy();
+});
+it('a failed current update remains retryable against the previous native snapshot', () => {
+	const viewer = mountFrameworkViewer(document.createElement('div'), { zoom: 1 });
+	current().update.mockImplementationOnce(() => {
+		throw new Error('current update failed');
+	});
+	expect(() => viewer.update({ zoom: 2 })).toThrow('current update failed');
+	viewer.update({ zoom: 2 });
+	expect(current().update).toHaveBeenLastCalledWith({ events: {}, zoom: 2 });
+	viewer.destroy();
 });
 it('a throwing callback still delivers the framework-native output without changing the error', () => {
 	const failure = new Error('host callback failed');

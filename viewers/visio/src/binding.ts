@@ -2,6 +2,7 @@ import type { ViewerOptions, ViewerCallbacks, VsdxSource } from './contract.js';
 import { eventKeys, propertyKeys } from './contract.js';
 import { registerVisioViewer, type VisioViewerElement } from './viewer-element.js';
 import type { ViewerController } from './controller.js';
+import type { SvgExportOptions, SvgExportResult } from './export-svg.js';
 
 export interface MountedViewer {
 	readonly element: VisioViewerElement;
@@ -9,6 +10,7 @@ export interface MountedViewer {
 	update(options: ViewerOptions): void;
 	load(source: VsdxSource): Promise<void>;
 	fit(): void;
+	exportSvg(options?: SvgExportOptions): SvgExportResult;
 	destroy(): void;
 }
 /** One client-only lifecycle adapter; framework wrappers forward to this implementation. */
@@ -16,6 +18,7 @@ export function mountViewer(container: HTMLElement, initial: ViewerOptions = {})
 	registerVisioViewer();
 	const element = document.createElement('visio-viewer');
 	let destroyed = false;
+	let updateRevision = 0;
 	let callbacks: ViewerCallbacks = {};
 	const listeners = eventKeys.map((name) => {
 		const listener = (event: Event): void => {
@@ -30,10 +33,12 @@ export function mountViewer(container: HTMLElement, initial: ViewerOptions = {})
 	}
 	function update(options: ViewerOptions): void {
 		assertAlive();
+		const revision = ++updateRevision;
 		if ('events' in options) callbacks = options.events ?? {};
 		// Partial updates leave omitted properties alone. Set all initial props before connecting.
 		for (const key of propertyKeys) {
-			if (destroyed) break;
+			// A callback may synchronously replace this patch with a newer update.
+			if (destroyed || revision !== updateRevision) break;
 			if (!(key in options)) continue;
 			if (key === 'document' && options.document !== undefined) {
 				if (element.document !== options.document) element.document = options.document;
@@ -57,6 +62,10 @@ export function mountViewer(container: HTMLElement, initial: ViewerOptions = {})
 		fit() {
 			assertAlive();
 			element.fit();
+		},
+		exportSvg(options) {
+			assertAlive();
+			return element.exportSvg(options);
 		},
 		destroy() {
 			if (destroyed) return;

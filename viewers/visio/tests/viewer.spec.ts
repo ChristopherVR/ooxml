@@ -88,3 +88,28 @@ test('mobile primary controls have usable touch targets', async ({ page }) => {
 		expect(box?.width).toBeGreaterThanOrEqual(44);
 	}
 });
+
+test('explicit SVG download contains the current page and leaves selection unchanged', async ({
+	page,
+}) => {
+	await page.goto('/demo/');
+	await page.locator('visio-viewer select').selectOption('1');
+	await page.locator('visio-viewer [data-shape-id="a1"]').click();
+	const selection = await page.locator('#selection').textContent();
+	const downloadEvent = page.waitForEvent('download');
+	await page.getByRole('button', { name: 'Export SVG', exact: true }).click();
+	const download = await downloadEvent;
+	expect(download.suggestedFilename()).toBe('visio-page-2.svg');
+	const stream = await download.createReadStream();
+	const chunks: Buffer[] = [];
+	for await (const chunk of stream!) chunks.push(Buffer.from(chunk));
+	const svg = Buffer.concat(chunks).toString('utf8');
+	expect(svg).toContain('Architecture');
+	expect(svg).toContain('<metadata>');
+	expect(svg).not.toContain('blob:');
+	expect(svg).not.toContain('data-shape-id');
+	expect(svg).not.toContain('tabindex');
+	await expect(page.locator('#selection')).toHaveText(selection!);
+	await expect(page.locator('visio-viewer svg')).toHaveAttribute('aria-label', 'Architecture');
+	await expect(page.locator('#export-status')).toContainText('approximate snapshot');
+});

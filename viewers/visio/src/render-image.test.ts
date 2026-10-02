@@ -2,14 +2,12 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { demoDocument } from './demo-document.js';
 import { renderPage } from './render-svg.js';
 import { mountViewer } from './binding.js';
+import { rasterFixture } from '../tests/raster-fixtures.mjs';
 
 function imageDocument() {
 	const model = structuredClone(demoDocument);
 	model.pages[0]!.shapes[0]!.image = {
-		mimeType: 'image/png',
-		bytes: new Uint8Array([137, 80, 78, 71]),
-		pixelWidth: 1,
-		pixelHeight: 1,
+		...rasterFixture(),
 		x: 0.1,
 		y: 0.2,
 		width: 0.5,

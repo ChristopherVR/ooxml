@@ -128,7 +128,12 @@ describe('static documentation contracts', () => {
 		assert.match(home, /Editing, native save/);
 		assert.match(ledger, /parity is a target, not the current result/i);
 		assert.match(ledger, /Generated fixtures/);
-		assert.equal(dom('docs/parity.html').window.document.querySelectorAll('tbody tr').length, 28);
+		const rows = [...dom('docs/parity.html').window.document.querySelectorAll('tbody tr')];
+		assert.ok(rows.length >= 29, 'The ledger must retain the established capability inventory');
+		const names = rows.map((row) => row.cells[0].textContent.trim());
+		assert.equal(names.length, new Set(names).size, 'Capability names must be unique');
+		for (const required of ['ShapeSheet formulas', 'Corner rounding', 'Visio visual parity'])
+			assert.ok(names.includes(required), `Missing capability: ${required}`);
 	});
 });
 
@@ -146,7 +151,14 @@ describe('documentation interaction logic in a simulated DOM', () => {
 		const instance = interactive();
 		const document = instance.window.document;
 		const choices = [...document.querySelectorAll('[data-framework]')];
-		assert.equal(choices.length, 5);
+		assert.deepEqual(choices.map((choice) => choice.dataset.framework).sort(), [
+			'angular',
+			'react',
+			'solid',
+			'svelte',
+			'vanilla',
+			'vue',
+		]);
 		assert.equal(
 			document.querySelectorAll('[role="tab"]').length,
 			0,

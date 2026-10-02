@@ -18,6 +18,7 @@ import { mountViewer } from '../src/vanilla.js';
 import {
 	eventKeys,
 	propertyKeys,
+	mountFrameworkViewer,
 	type ViewerCallbacks,
 	type ViewerHandle,
 	type ViewerEvents,
@@ -216,6 +217,31 @@ describe('native adapters against the real shared custom element', () => {
 
 // Unlike imperative vanilla patches, native framework updates contain a full props snapshot.
 describe('real native props snapshot updates', () => {
+	it.each([1, 2, 3])(
+		'a reentrant shared snapshot preserves pending zoom %s on later identical props',
+		(zoom) => {
+			const viewer = mountFrameworkViewer(document.createElement('div'), {
+				document: demoDocument,
+				pageIndex: 0,
+				zoom: 1,
+			});
+			const replacement = { ...demoDocument };
+			viewer.controller.setDocument(replacement);
+			const events: ViewerCallbacks = {
+				'page-change': (page) => {
+					if (page === 1) viewer.update({ document: demoDocument, pageIndex: 0, zoom, events });
+				},
+			};
+			viewer.update({ document: demoDocument, pageIndex: 1, zoom: 2, events });
+			expect(viewer.element.pageIndex).toBe(0);
+			expect(viewer.element.zoom).toBe(zoom);
+			expect(viewer.element.document).toBe(replacement);
+			viewer.update({ document: demoDocument, pageIndex: 0, zoom, events });
+			expect(viewer.element.zoom).toBe(zoom);
+			expect(viewer.element.document).toBe(replacement);
+			viewer.destroy();
+		},
+	);
 	for (const [framework, mountNative] of Object.entries(mounts).filter(
 		([name]) => name !== 'vanilla',
 	)) {
@@ -287,5 +313,26 @@ describe('interrupted Blob loads across native owners', () => {
 				host.remove();
 			});
 		}
+	}
+});
+
+describe('current-page SVG contract across all native adapters', () => {
+	for (const [framework, mountNative] of Object.entries(mounts)) {
+		it(`${framework}: one exporter preserves state and rejects after unmount`, async () => {
+			const host = document.createElement('div');
+			document.body.append(host);
+			const mounted = await mountNative(host, { document: demoDocument, pageIndex: 1, zoom: 2 });
+			mounted.handle.controller.selectShape({ id: 'a1', name: 'Your framework', pageId: '2' });
+			const state = mounted.handle.controller.state;
+			const result = mounted.handle.exportSvg();
+			expect(result.pageIndex).toBe(1);
+			expect(result.pageName).toBe('Architecture');
+			expect(result.svg).toContain('<metadata>');
+			expect(result.svg).not.toContain('data-shape-id');
+			expect(mounted.handle.controller.state).toBe(state);
+			await mounted.destroy();
+			expect(() => mounted.handle.exportSvg()).toThrow(/not mounted|destroyed/);
+			host.remove();
+		});
 	}
 });

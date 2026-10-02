@@ -12,12 +12,13 @@ export function renderImage(
 	if (!shape.image) return undefined;
 	const image = shape.image;
 	const url = resources.imageUrl(image);
-	const node = svgElement('image');
+	const node = resources.portable ? svgElement('use') : svgElement('image');
 	const width = image.width ?? shape.width,
 		height = image.height ?? shape.height;
 	const x = image.x ?? 0,
 		y = image.y ?? 0;
-	node.setAttribute('href', url);
+	if (resources.portable) node.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', url);
+	else node.setAttribute('href', url);
 	node.setAttribute('width', String(width));
 	node.setAttribute('height', String(height));
 	node.setAttribute('transform', `translate(${x} ${y + height}) scale(1 -1)`);

@@ -8,4 +8,4 @@ This is the private, UI-only Visio viewer. Do not publish or enable GitHub Pages
 - No uploads, telemetry or remote document fetches. Documents remain local to the browser. Never insert document XML/HTML into the DOM.
 - Run `npm run check` and `npm run test:browser` before declaring completion. Record anything not tested. Unsupported features must produce honest diagnostics.
 - Follow conventional commits. No em dashes in source, docs or UI. Do not commit generated output, credentials or user's documents.
-- `docs/parity.md` is the evidence-based capability ledger. Generated fixture tests do not establish visual parity with Microsoft Visio.
+- `docs/parity.md` is the evidence-based capability ledger. Edit the canonical table in `docs/parity.html`, then run `npm run docs:sync`. Documentation checks reject drift between the two copies. Generated fixture tests do not establish visual parity with Microsoft Visio.

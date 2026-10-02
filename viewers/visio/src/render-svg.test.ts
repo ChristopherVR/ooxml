@@ -36,6 +36,15 @@ describe('SVG renderer', () => {
 });
 
 describe('line ends', () => {
+	it.each(['round', 'butt', 'square'] as const)('uses the normalized %s cap', (lineCap) => {
+		const model = structuredClone(demoDocument);
+		model.pages[0]!.shapes[1]!.style.lineCap = lineCap;
+		const result = renderPage(model, model.pages[0]!);
+		expect(
+			result.svg.querySelector('[data-shape-id="c1"] path')?.getAttribute('stroke-linecap'),
+		).toBe(lineCap);
+		result.dispose();
+	});
 	it('renders common arrowheads with unique local IDs and warns on unsupported codes', () => {
 		const model = structuredClone(demoDocument);
 		const line = model.pages[0]!.shapes[1]!;
@@ -124,5 +133,13 @@ describe('non-displayed master alternatives', () => {
 		expect(
 			result.svg.querySelector('[data-shape-id="s1"] [data-shape-id="visible-child"]'),
 		).not.toBeNull();
+	});
+});
+
+describe('page identity validation', () => {
+	it('rejects an outside page rather than bypassing validated frame dimensions', () => {
+		expect(() => renderPage(demoDocument, { ...demoDocument.pages[0]!, width: Infinity })).toThrow(
+			'does not belong',
+		);
 	});
 });

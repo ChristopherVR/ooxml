@@ -5,8 +5,9 @@
 - `ooxml-core/visio` in sibling `ooxml`: package intake, XML, model, inheritance, cached geometry, structured diagnostics. No viewer UI belongs here.
 - `src/controller.ts`: document/view state, selection, events, latest-load-wins behavior.
 - `src/render-svg.ts` and `src/render-text.ts`: SVG presentation and rendering warnings.
+- `src/export-svg.ts`: bounded, static current-page serialization through the same SVG renderer, with embedded raster resources and compatibility metadata.
 - `src/viewer-element.ts`: shared browser surface.
-- `src/contract.ts` and `src/binding.ts`: properties, events, client-only mount/update/load/fit/destroy lifecycle.
+- `src/contract.ts` and `src/binding.ts`: properties, events, client-only mount/update/load/fit/exportSvg/destroy lifecycle. Reentrant newer updates supersede the remaining older patch.
 - Framework wrappers: framework lifecycle and event/prop forwarding only. No per-framework parser, rendering or geometry fork.
 
 ## Boundaries

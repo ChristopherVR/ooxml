@@ -64,22 +64,19 @@
 					</li>
 				</ol>
 				<p>
-					No document upload is performed. Editing, native save, export, and legacy binary
+					No document upload is performed. Editing, native save, PDF/print, and legacy binary
 					<code>.vsd</code> support are outside this build.
 				</p>
 				<h2>Run the development workspace</h2>
 				<p>
-					Keep the sibling <code>ooxml</code> checkout available: the viewer uses a local
-					<code>file:../ooxml</code> dependency. Build the engine before installing or rebuilding
-					the viewer.
+					Use Node.js 22.12 or newer. The setup script prepares a pinned sibling
+					<code>ooxml</code> checkout and verifies its source before building the Visio entry point.
 				</p>
 				<div class="code-card">
-					<pre><code>cd ../ooxml
-npm install
-npm run build
-
-cd ../visio-viewer
-npm install
+					<pre><code>node scripts/setup-core.mjs
+npm ci --ignore-scripts
+npm ci --prefix packages/bindings --ignore-scripts
+npm run check
 npm run dev</code></pre>
 				</div>
 				<p>
@@ -107,6 +104,19 @@ viewer.fit();
 // When your view unmounts:
 viewer.destroy();</code></pre>
 				</div>
+				<h2>Export a static SVG</h2>
+				<p>
+					<code>viewer.exportSvg()</code> returns the current page's SVG string, dimensions, byte
+					length and compatibility diagnostics. It leaves selection, zoom and the source document
+					unchanged. The playground's Export SVG button performs an explicit local download.
+				</p>
+				<p>
+					Supported background content and validated raster images are embedded. Fonts are not
+					embedded; wrapping and other approximations remain visible in the SVG description and
+					metadata. Export is limited to 16 MiB, with conservative early resource checks. Callers
+					can lower the limit with <code>{ maxBytes }</code>. This is not editable VSDX output.
+					Downstream rasterizers must independently cap dimensions and pixel area.
+				</p>
 				<h2>Properties and events</h2>
 				<div
 					class="table-scroll"
@@ -139,7 +149,8 @@ viewer.destroy();</code></pre>
 							<tr>
 								<td>Lifecycle</td>
 								<td>
-									<code>update</code>, <code>load</code>, <code>fit</code>, <code>destroy</code>
+									<code>update</code>, <code>load</code>, <code>fit</code>, <code>exportSvg</code>,
+									<code>destroy</code>
 								</td>
 							</tr>
 						</tbody>

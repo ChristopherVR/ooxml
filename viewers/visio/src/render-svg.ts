@@ -28,6 +28,10 @@ export interface RenderResult {
 	warnings: string[];
 	dispose(): void;
 }
+export interface RenderOptions {
+	/** Static output embeds rasters and omits viewer selection semantics. Prefer exportPageSvg for bounded serialization. */
+	static?: boolean;
+}
 interface RenderContext {
 	defs: SVGDefsElement;
 	warnings: Set<string>;
@@ -35,14 +39,27 @@ interface RenderContext {
 	nodes: number;
 	textBudget: TextLayoutBudget;
 	renderable: WeakMap<VisioShape, boolean>;
+	interactive: boolean;
 }
-export function renderPage(model: VisioDocument, page: VisioPage): RenderResult {
+export function renderPage(
+	model: VisioDocument,
+	page: VisioPage,
+	options: RenderOptions = {},
+): RenderResult {
 	assertViewableDocument(model);
+	if (!model.pages.includes(page))
+		throw new Error('The selected page does not belong to this document.');
 	const svg = svgElement('svg');
-	svg.classList.add('paper');
+	if (!options.static) svg.classList.add('paper');
 	svg.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns', NS);
+	if (options.static)
+		svg.setAttributeNS(
+			'http://www.w3.org/2000/xmlns/',
+			'xmlns:xlink',
+			'http://www.w3.org/1999/xlink',
+		);
 	svg.setAttribute('viewBox', `0 0 ${page.width} ${page.height}`);
-	svg.setAttribute('role', 'group');
+	svg.setAttribute('role', options.static ? 'img' : 'group');
 	svg.setAttribute('aria-label', page.name);
 	const title = svgElement('title');
 	title.textContent = page.name;
@@ -55,10 +72,11 @@ export function renderPage(model: VisioDocument, page: VisioPage): RenderResult 
 	const context: RenderContext = {
 		defs,
 		warnings: new Set(),
-		resources: new RenderResources(),
+		resources: new RenderResources(options.static ? defs : undefined),
 		nodes: 0,
 		textBudget: createTextLayoutBudget(),
 		renderable: new WeakMap(),
+		interactive: !options.static,
 	};
 	try {
 		for (const layer of getVisioPageLayers(model, page.id))
@@ -67,8 +85,10 @@ export function renderPage(model: VisioDocument, page: VisioPage): RenderResult 
 		context.resources.dispose();
 		throw error;
 	}
-	const first = svg.querySelector<SVGGElement>('[data-shape-id]');
-	first?.setAttribute('tabindex', '0');
+	if (!options.static) {
+		const first = svg.querySelector<SVGGElement>('[data-shape-id]');
+		first?.setAttribute('tabindex', '0');
+	}
 	return { svg, warnings: [...context.warnings], dispose: () => context.resources.dispose() };
 }
 function hasRenderableContent(shape: VisioShape, context: RenderContext): boolean {
@@ -99,13 +119,15 @@ function drawShape(
 		return;
 	}
 	const group = svgElement('g');
-	group.dataset.shapeId = shape.id;
-	group.dataset.shapeName = shape.name;
-	group.dataset.pageId = pageId;
 	group.setAttribute('transform', matrix(shape.transform));
-	group.setAttribute('role', shape.kind === 'group' ? 'group' : 'button');
-	group.setAttribute('tabindex', '-1');
-	group.setAttribute('aria-label', shape.text.plainText || shape.name || `Shape ${shape.id}`);
+	if (context.interactive) {
+		group.dataset.shapeId = shape.id;
+		group.dataset.shapeName = shape.name;
+		group.dataset.pageId = pageId;
+		group.setAttribute('role', shape.kind === 'group' ? 'group' : 'button');
+		group.setAttribute('tabindex', '-1');
+		group.setAttribute('aria-label', shape.text.plainText || shape.name || `Shape ${shape.id}`);
+	}
 	const title = svgElement('title');
 	title.textContent = shape.text.plainText || shape.name;
 	group.append(title);
@@ -139,7 +161,7 @@ function drawOwn(shape: VisioShape, group: SVGElement, context: RenderContext): 
 			return;
 		}
 		const path = svgElement('path');
-		path.dataset.geometry = '';
+		if (context.interactive) path.dataset.geometry = '';
 		path.setAttribute('d', geometry.path);
 		path.setAttribute('fill', geometry.fill ? fill : 'none');
 		path.setAttribute('fill-opacity', String(shape.style.fillOpacity));
@@ -150,7 +172,7 @@ function drawOwn(shape: VisioShape, group: SVGElement, context: RenderContext): 
 		path.setAttribute('stroke-width', String(shape.style.lineWidth));
 		path.setAttribute('stroke-opacity', String(shape.style.lineOpacity));
 		path.setAttribute('stroke-linejoin', 'round');
-		path.setAttribute('stroke-linecap', 'round');
+		path.setAttribute('stroke-linecap', shape.style.lineCap ?? 'round');
 		if (shape.style.linePattern > 1) {
 			const unit = Math.max(shape.style.lineWidth, 0.01);
 			const patterns: Record<number, number[]> = {

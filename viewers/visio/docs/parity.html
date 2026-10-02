@@ -140,9 +140,11 @@
 							<tr>
 								<td>Line and fill styles</td>
 								<td>Full styles, patterns, gradients and opacity</td>
-								<td>Partial: solids and normalized linear gradients</td>
-								<td>Core theme/gradient tests; ten real-corpus gradients; SVG paint tests</td>
-								<td>Radial/hatch fills, exact dash/cap behavior, complex effects</td>
+								<td>Partial: solids, linear gradients and normalized line caps</td>
+								<td>Core theme/gradient/cap tests; ten real-corpus gradients; SVG paint tests</td>
+								<td>
+									Radial/hatch fills, exact dash spacing, native cap comparison, complex effects
+								</td>
 							</tr>
 							<tr>
 								<td>Arrowheads</td>
@@ -260,9 +262,11 @@
 							<tr>
 								<td>Export and print</td>
 								<td>SVG, images, PDF and print layout</td>
-								<td>Not implemented</td>
-								<td>No export/print API</td>
-								<td>Dedicated export pipeline and fidelity tests</td>
+								<td>Partial: bounded current-page SVG snapshot</td>
+								<td>
+									Shared export API and all-six handle tests; three secondary raster pixel cases
+								</td>
+								<td>PNG/PDF output, print layout, embedded fonts and native Visio comparison</td>
 							</tr>
 							<tr>
 								<td>Legacy and other Visio formats</td>

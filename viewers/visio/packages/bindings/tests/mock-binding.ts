@@ -40,6 +40,18 @@ vi.mock('../../../src/binding.js', () => ({
 					assertAlive();
 				}),
 				fit: vi.fn(assertAlive),
+				exportSvg: vi.fn(() => {
+					assertAlive();
+					return {
+						svg: '<svg/>',
+						byteLength: 6,
+						pageIndex: 0,
+						pageName: 'Mock',
+						width: 1,
+						height: 1,
+						diagnostics: [],
+					};
+				}),
 			} as unknown as MountedViewer,
 		});
 		mocks.instances.push(instance);

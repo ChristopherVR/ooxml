@@ -44,11 +44,11 @@ run('npm', ['install', '--ignore-scripts']);
 run(process.execPath, [
 	'--input-type=module',
 	'-e',
-	`const m=await import('@christophervr/visio-viewer');if(!m.ViewerController||!m.registerVisioViewer)throw Error('Missing public API');`,
+	`const m=await import('@christophervr/visio-viewer');if(!m.ViewerController||!m.registerVisioViewer||!m.exportPageSvg||m.MAX_SVG_EXPORT_BYTES!==16777216)throw Error('Missing public API');`,
 ]);
 writeFileSync(
 	resolve(temporary, 'smoke.ts'),
-	`import { ViewerController, type ViewerOptions } from '@christophervr/visio-viewer'; const controller=new ViewerController(); const props:ViewerOptions={zoom:1}; controller.setZoom(props.zoom!);`,
+	`import { ViewerController, exportPageSvg, type SvgExportOptions, type SvgExportResult, type MountedViewer, type ViewerOptions } from '@christophervr/visio-viewer'; const controller=new ViewerController(); const props:ViewerOptions={zoom:1}; controller.setZoom(props.zoom!); const exportOptions:SvgExportOptions={maxBytes:100000}; const exporter:(...args:Parameters<typeof exportPageSvg>)=>SvgExportResult=exportPageSvg; function snapshot(viewer:MountedViewer):SvgExportResult { return viewer.exportSvg(exportOptions); } void exporter; void snapshot;`,
 );
 run(process.execPath, [
 	resolve(root, 'node_modules/typescript/bin/tsc'),

@@ -8,6 +8,7 @@ import { selectedShape, shapeDetails } from './shape-inspector.js';
 import { compatibilityNotes, compatibilityText } from './diagnostics.js';
 import { wireViewerInputs } from './viewer-input.js';
 import { viewerStyles } from './styles.js';
+import { exportPageSvg, type SvgExportOptions, type SvgExportResult } from './export-svg.js';
 
 const BaseElement = (
 	typeof HTMLElement === 'undefined' ? class {} : HTMLElement
@@ -108,6 +109,13 @@ export class VisioViewerElement extends BaseElement {
 		const width = Math.max(1, this.#viewport.clientWidth - 64);
 		const height = Math.max(1, this.#viewport.clientHeight - 64);
 		this.zoom = Math.min(width / (page.width * 96), height / (page.height * 96));
+	}
+	/** Return a portable current-page snapshot without changing selection or downloading a file. */
+	exportSvg(options?: SvgExportOptions): SvgExportResult {
+		this.#assertAlive();
+		const { document, pageIndex } = this.controller.state;
+		if (!document) throw new Error('Open a document before exporting SVG.');
+		return exportPageSvg(document, pageIndex, options);
 	}
 	destroy(): void {
 		if (this.#disposed) return;

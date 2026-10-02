@@ -1,0 +1,233 @@
+{
+	"description": "Hash-pinned local compatibility regression baseline. Normalized counts are implementation regressions, not native Visio fidelity claims. No third-party fixture bytes are included.",
+	"groups": [
+		{
+			"id": "libvisio",
+			"source": "https://github.com/LibreOffice/libvisio",
+			"revision": "49fb9d3a9d21d4374cad782925e48c577a41f5be",
+			"licenseUrl": "https://github.com/LibreOffice/libvisio/blob/49fb9d3a9d21d4374cad782925e48c577a41f5be/COPYING.MPL",
+			"files": [
+				{
+					"path": "src/test/data/bgcolor.vsdx",
+					"sha256": "7b89f56666ec41b4e1122d3ffcaa11ec1c102ec42c5a11b1a95617c4626c8ae0",
+					"bytes": 17905,
+					"pages": 1,
+					"shapes": 3,
+					"paths": 3
+				},
+				{
+					"path": "src/test/data/blue-box.vsdx",
+					"sha256": "6c67a8b3ccd2b81b3d9d41b74aa0ef5f31b506a714b761b4b4fb4c76ebeb7a94",
+					"bytes": 20964,
+					"pages": 1,
+					"shapes": 1,
+					"paths": 1
+				},
+				{
+					"path": "src/test/data/color-boxes.vsdx",
+					"sha256": "75072b91b5c3023eeea25d2480776e5a1ee8c336ca263adf3a6440e25f35f800",
+					"bytes": 24693,
+					"pages": 1,
+					"shapes": 7,
+					"paths": 7
+				},
+				{
+					"path": "src/test/data/dwg.vsdx",
+					"sha256": "e05d55753bdc206dac427ec50e95fcc5672b2067e6ce9384682dfc508af5e189",
+					"bytes": 24469,
+					"pages": 1,
+					"shapes": 4,
+					"paths": 4
+				},
+				{
+					"path": "src/test/data/fdo86664.vsdx",
+					"sha256": "fc628bbb1c4686489a6b5bf7c2f9987db870ac2bb12dd8a6c9c27ed501a338b5",
+					"bytes": 22175,
+					"pages": 1,
+					"shapes": 3,
+					"paths": 3
+				},
+				{
+					"path": "src/test/data/office_varient4.vsdx",
+					"sha256": "bdb1d90a52d1d9cc67a71369d15f28fb20647a47e76e09977ed765faada383bf",
+					"bytes": 21225,
+					"pages": 1,
+					"shapes": 1,
+					"paths": 1
+				},
+				{
+					"path": "src/test/data/qs-box.vsdx",
+					"sha256": "e8c253142d30f434229eb810eeecb48cd69886faf5e7c7555d91bb5f6d6c4ee8",
+					"bytes": 21037,
+					"pages": 1,
+					"shapes": 1,
+					"paths": 1
+				},
+				{
+					"path": "src/test/data/recursion-cycle.vsdx",
+					"sha256": "4a2ff4bc60c0b8683aae227d6eea72ed5f7eab2f434fa03518ed6467ad5e70c1",
+					"bytes": 2478,
+					"rejectCode": "MISSING_PART"
+				},
+				{
+					"path": "src/test/data/tab-short-prefix.vsdx",
+					"sha256": "7ae4b2084f96758084c607af2b303e3580322b822aeabb2743406f14a3edb501",
+					"bytes": 3191,
+					"rejectCode": "MISSING_PART"
+				},
+				{
+					"path": "src/test/data/tdf136564-WhiteTextBackground.vsdx",
+					"sha256": "6a4b29df7c637c8ae2a5ed43517c75aafa3d63167a5226e8a43261172b9de283",
+					"bytes": 19149,
+					"pages": 1,
+					"shapes": 4,
+					"paths": 4
+				},
+				{
+					"path": "src/test/data/tdf154379-QuickStyleFillMatrix.vsdx",
+					"sha256": "4a2c8a08567f9c6e59d4784affea1ecf024d6890dd8c2c9020e0c71d64d37783",
+					"bytes": 87603,
+					"pages": 1,
+					"shapes": 1,
+					"paths": 1
+				},
+				{
+					"path": "src/test/data/testfile1.vsdx",
+					"sha256": "2ebcf3e9ce4a599c749e5dc7d31030ef4d7d8b69dfbd2565b59b854133cdeec8",
+					"bytes": 43669,
+					"pages": 1,
+					"shapes": 13,
+					"paths": 2
+				},
+				{
+					"path": "src/test/data/testfile3.vsdx",
+					"sha256": "9ea7dd2a88ecc4e7f29ff5b022712db18baa5b607e44b32d73f2b79bd4029387",
+					"bytes": 43054,
+					"pages": 1,
+					"shapes": 17,
+					"paths": 6
+				},
+				{
+					"path": "src/test/data/testfile4.vsdx",
+					"sha256": "cba7f2981207bcf553a13cc145ca07a5ff6cdeb8a553bb339e6a0757ef55230d",
+					"bytes": 33175,
+					"pages": 1,
+					"shapes": 13,
+					"paths": 2
+				},
+				{
+					"path": "src/test/data/testfile5.vsdx",
+					"sha256": "f2e6ea832811a4e181f252baf84ac99402ff093ef10f48521b8012315191ee1a",
+					"bytes": 20687,
+					"pages": 1,
+					"shapes": 1,
+					"paths": 1
+				},
+				{
+					"path": "src/test/data/testfile6.vsdx",
+					"sha256": "102269177b3ca1d287959c5a857279bc3e84fae628f1cc8e023193719790b5b3",
+					"bytes": 41365,
+					"pages": 1,
+					"shapes": 14,
+					"paths": 3
+				}
+			]
+		},
+		{
+			"id": "poi",
+			"source": "https://github.com/apache/poi",
+			"revision": "732120980140d5ed64b482c470e0b625cdb1ab15",
+			"licenseUrl": "https://github.com/apache/poi/blob/732120980140d5ed64b482c470e0b625cdb1ab15/legal/LICENSE",
+			"files": [
+				{
+					"path": "test-data/diagram/60489.vsdx",
+					"sha256": "15494702ecb5554c1dfaee2c09ac35e2ea656e2eed7ba4ba0cf1039e6125fbe1",
+					"bytes": 44426,
+					"pages": 1,
+					"shapes": 108,
+					"paths": 47
+				},
+				{
+					"path": "test-data/diagram/60973.vsdx",
+					"sha256": "c61ca252ea251262f81b18fb0e461c50797bf4b148b2c01448792447ada51f03",
+					"bytes": 238720,
+					"pages": 4,
+					"shapes": 423,
+					"paths": 478
+				},
+				{
+					"path": "test-data/diagram/clusterfuzz-testcase-minimized-POIVisioFuzzer-4513310052515840.vsdx",
+					"sha256": "daed9bff15201f0f9519f00744d13265668f00a4efe01e4d97f11576f5920521",
+					"bytes": 26536,
+					"rejectCode": "INVALID_ZIP"
+				},
+				{
+					"path": "test-data/diagram/clusterfuzz-testcase-minimized-POIVisioFuzzer-5026516754628608.vsdx",
+					"sha256": "38276cd2174855bd9cd4c2ae144c4c00870f1a23a4d8e537798e3ade288d0772",
+					"bytes": 24625,
+					"rejectCode": "INVALID_ZIP"
+				},
+				{
+					"path": "test-data/diagram/clusterfuzz-testcase-minimized-POIVisioFuzzer-5313947071217664.vsdx",
+					"sha256": "8042ce8d7807bdac4cb990ce85f5e5e961c06e97f862663e9279c0b0fb2c9654",
+					"bytes": 238145,
+					"rejectCode": "INVALID_ZIP"
+				},
+				{
+					"path": "test-data/diagram/clusterfuzz-testcase-minimized-POIVisioFuzzer-5492358185353216.vsdx",
+					"sha256": "177bda10883591cf814c9ebf29d9a4f787e69730290d2507d2e055709d2581fa",
+					"bytes": 106491,
+					"rejectCode": "INVALID_ZIP"
+				},
+				{
+					"path": "test-data/diagram/clusterfuzz-testcase-minimized-POIVisioFuzzer-5842659694215168.vsdx",
+					"sha256": "bcacf7e33a197c2806c349eae70be9b3bde0e3f5cea526811a9560c6e1488937",
+					"bytes": 35605,
+					"rejectCode": "INVALID_ZIP"
+				},
+				{
+					"path": "test-data/diagram/clusterfuzz-testcase-minimized-POIVisioFuzzer-5981064948219904.vsdx",
+					"sha256": "2af0104ca75d5789b940876c06184f6c457d64b6589b15b5b6641b6af12f7874",
+					"bytes": 86540,
+					"rejectCode": "INVALID_ZIP"
+				},
+				{
+					"path": "test-data/diagram/clusterfuzz-testcase-minimized-POIVisioFuzzer-6312416206454784.vsdx",
+					"sha256": "31da22e69f7f7cf39b745fd750af44384932f2c2d7166c4dfe26435fd5054efc",
+					"bytes": 33849,
+					"rejectCode": "INVALID_ZIP"
+				},
+				{
+					"path": "test-data/diagram/clusterfuzz-testcase-minimized-POIVisioFuzzer-6358126418591744.vsdx",
+					"sha256": "aa9b781bc9adccef6e8b17872143446a1f5cbb732d29ec8b58a4118109f8d9b1",
+					"bytes": 33741,
+					"rejectCode": "INVALID_ZIP"
+				},
+				{
+					"path": "test-data/diagram/github260.vsdx",
+					"sha256": "cdad6713023d8bc4e66461d0083a3c6c12a90f0a85228906387ddafd57e60739",
+					"bytes": 34167,
+					"pages": 1,
+					"shapes": 78,
+					"paths": 49
+				},
+				{
+					"path": "test-data/diagram/test.vsdx",
+					"sha256": "558c09c518848c98a815c9684f511d5260585fa0c893f2d570b6284d6a9b29a8",
+					"bytes": 32350,
+					"pages": 1,
+					"shapes": 8,
+					"paths": 5
+				},
+				{
+					"path": "test-data/diagram/test_text_extraction.vsdx",
+					"sha256": "5a5117a6c41313a6e7253689d7ae09c7e46bfbb958a670f60f7f5d0bbaef27f9",
+					"bytes": 22343,
+					"pages": 1,
+					"shapes": 6,
+					"paths": 9
+				}
+			]
+		}
+	]
+}

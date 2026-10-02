@@ -59,6 +59,37 @@ async function openFile(file: File): Promise<void> {
 	}
 }
 const input = get<HTMLInputElement>('file');
+const downloadUrls = new Set<string>();
+get('export-svg').addEventListener('click', () => {
+	errorBox.hidden = true;
+	get('export-status').textContent = '';
+	let url: string | undefined;
+	const anchor = document.createElement('a');
+	try {
+		const result = viewer.exportSvg();
+		url = URL.createObjectURL(new Blob([result.svg], { type: 'image/svg+xml;charset=utf-8' }));
+		downloadUrls.add(url);
+		anchor.href = url;
+		anchor.download = `visio-page-${result.pageIndex + 1}.svg`;
+		anchor.hidden = true;
+		document.body.append(anchor);
+		anchor.click();
+		get('export-status').textContent =
+			`SVG download requested for ${result.pageName}. This is an approximate snapshot. ${result.diagnostics.length} compatibility notes are included in the file.`;
+	} catch (cause) {
+		errorBox.hidden = false;
+		errorBox.textContent = cause instanceof Error ? cause.message : String(cause);
+	} finally {
+		anchor.remove();
+		if (url) {
+			const created = url;
+			// Keep the URL alive through browser download dispatch, then release it.
+			window.setTimeout(() => {
+				if (downloadUrls.delete(created)) URL.revokeObjectURL(created);
+			}, 1000);
+		}
+	}
+});
 get('open').addEventListener('click', () => input.click());
 input.addEventListener('change', () => {
 	const file = input.files?.[0];
@@ -106,6 +137,8 @@ window.addEventListener('drop', (event) => {
 	if (file) void openFile(file);
 });
 window.addEventListener('pagehide', (event) => {
+	for (const url of downloadUrls) URL.revokeObjectURL(url);
+	downloadUrls.clear();
 	if (event.persisted) viewer.controller.cancelLoad();
 	else viewer.destroy();
 });

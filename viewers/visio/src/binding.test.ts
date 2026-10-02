@@ -121,6 +121,21 @@ describe('Blob read errors', () => {
 });
 
 describe('reentrant binding updates', () => {
+	it('stops an older patch when a callback applies a newer update', () => {
+		const viewer = mountViewer(document.createElement('div'), { document: demoDocument });
+		viewer.update({
+			events: {
+				'page-change': (page) => {
+					if (page === 1) viewer.update({ pageIndex: 0, zoom: 3, showToolbar: false });
+				},
+			},
+		});
+		viewer.update({ pageIndex: 1, zoom: 2, showToolbar: true });
+		expect(viewer.element.pageIndex).toBe(0);
+		expect(viewer.element.zoom).toBe(3);
+		expect(viewer.element.showToolbar).toBe(false);
+		viewer.destroy();
+	});
 	it('stops applying properties when a callback destroys the binding', () => {
 		const viewer = mountViewer(document.createElement('div'), { document: demoDocument });
 		expect(() =>

@@ -17,6 +17,13 @@
 				><small id="file-state">Original sample scene</small>
 			</div>
 			<div class="top-actions">
+				<button
+					id="export-svg"
+					type="button"
+					title="Download an approximate, current-page SVG with compatibility notes"
+				>
+					Export SVG
+				</button>
 				<button id="sample" type="button">Load sample</button
 				><button id="open" class="primary" type="button">Open .vsdx</button
 				><input id="file" type="file" accept=".vsdx" hidden />
@@ -73,6 +80,7 @@
 					<ul id="notes" aria-live="polite"></ul>
 				</section>
 				<p id="error" role="alert" hidden></p>
+				<p id="export-status" role="status"></p>
 			</aside>
 		</main>
 		<footer>

@@ -13,6 +13,21 @@ function pending<T>() {
 	return { promise, resolve, reject };
 }
 describe('headless viewer controller', () => {
+	it('freezes initial, changed and destroyed state records without mutating old snapshots', () => {
+		const controller = new ViewerController();
+		const initial = controller.state;
+		expect(Object.isFrozen(initial)).toBe(true);
+		expect(() => Object.assign(initial, { zoom: 7 })).toThrow(TypeError);
+		controller.setZoom(2);
+		const changed = controller.state;
+		expect(Object.isFrozen(changed)).toBe(true);
+		controller.destroy();
+		expect(Object.isFrozen(controller.state)).toBe(true);
+		expect(() => Object.assign(controller.state, { document: demoDocument })).toThrow(TypeError);
+		expect(initial.zoom).toBe(1);
+		expect(changed.zoom).toBe(2);
+		expect(controller.state.document).toBeNull();
+	});
 	it('clamps page and zoom and notifies typed events', () => {
 		const controller = new ViewerController();
 		const listener = vi.fn();

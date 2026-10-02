@@ -49,6 +49,10 @@ const snippets = {
 		'Diagram.svelte · lifecycle pattern',
 		`<script lang="ts">\nimport { onMount } from 'svelte';\nimport { mountViewer } from '@christophervr/visio-viewer';\nlet { file }: { file: File } = $props();\nlet host: HTMLDivElement;\nonMount(() => {\n  const viewer = mountViewer(host);\n  viewer.load(file).catch(console.error);\n  return () => viewer.destroy();\n});\n</script>\n<div bind:this={host} style="height:600px"></div>`,
 	],
+	solid: [
+		'Diagram.tsx · lifecycle pattern',
+		`import { createEffect, onMount, onCleanup } from 'solid-js';\nimport { mountViewer } from '@christophervr/visio-viewer';\n\nexport function Diagram(props: { file: File }) {\n  let host!: HTMLDivElement;\n  onMount(() => {\n    const viewer = mountViewer(host);\n    createEffect(() => {\n      viewer.load(props.file).catch(console.error);\n    });\n    onCleanup(() => viewer.destroy());\n  });\n  return <div ref={host} style={{ height: '600px' }} />;\n}`,
+	],
 };
 const code = document.querySelector('#integration-code');
 const filename = document.querySelector('#integration-filename');

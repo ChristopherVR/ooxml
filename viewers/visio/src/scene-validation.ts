@@ -1,10 +1,19 @@
-import type { VisioDocument, VisioShape } from 'ooxml-core/visio';
+import {
+	inspectVisioRasterImage,
+	VISIO_RASTER_IMAGE_LIMITS,
+	type VisioDocument,
+	type VisioShape,
+	type VisioImage,
+} from 'ooxml-core/visio';
 
 export const MAX_INPUT_BYTES = 32 * 1024 * 1024;
 const MAX_DIMENSION = 10_000;
 function finite(value: number, label: string, min = -MAX_DIMENSION, max = MAX_DIMENSION): void {
 	if (!Number.isFinite(value) || value < min || value > max)
 		throw new Error(`The scene has an invalid ${label}.`);
+}
+function member(value: unknown, choices: readonly unknown[], label: string): void {
+	if (!choices.includes(value)) throw new Error(`The scene has an invalid ${label}.`);
 }
 /** Defensive display limits also protect callers supplying their own typed scenes. */
 export function assertViewableDocument(model: VisioDocument): void {
@@ -23,7 +32,7 @@ export function assertViewableDocument(model: VisioDocument): void {
 		geometryCount = 0,
 		uniquePixels = 0,
 		drawnPixels = 0;
-	const imageResources = new Set<Uint8Array>();
+	const imageResources = new Map<Uint8Array, VisioImage>();
 	let metadataBytes = 0,
 		detailCharacters = 0,
 		detailRows = 0;
@@ -36,11 +45,15 @@ export function assertViewableDocument(model: VisioDocument): void {
 	for (const diagnostic of model.diagnostics) {
 		label(diagnostic.code, 256);
 		label(diagnostic.message);
+		member(diagnostic.severity, ['info', 'warning'], 'diagnostic severity');
 	}
 
-	const stack: Array<{ shape: VisioShape; depth: number }> = [];
+	const pageIds = new Set<string>();
+	const stack: Array<{ shape: VisioShape; depth: number; ids: Set<string> }> = [];
 	for (const page of model.pages) {
 		label(page.id, 256);
+		if (pageIds.has(page.id)) throw new Error('The scene has duplicate page identities.');
+		pageIds.add(page.id);
 		label(page.name);
 		for (const layer of page.layers ?? []) {
 			label(layer.id, 256);
@@ -48,14 +61,22 @@ export function assertViewableDocument(model: VisioDocument): void {
 		}
 		finite(page.width, 'page width', 0.001);
 		finite(page.height, 'page height', 0.001);
-		for (const shape of page.shapes) stack.push({ shape, depth: 0 });
+		const ids = new Set<string>();
+		for (const shape of page.shapes) stack.push({ shape, depth: 0, ids });
 	}
 	while (stack.length) {
-		const { shape, depth } = stack.pop()!;
+		const { shape, depth, ids } = stack.pop()!;
 		if (depth > 64 || seen.has(shape) || seen.size >= 25_000)
 			throw new Error('The scene exceeds safe shape depth/count limits or contains a cycle.');
 		seen.add(shape);
-		label(shape.id, 256);
+		label(shape.id, 1024);
+		if (ids.has(shape.id)) throw new Error('The scene has duplicate shape identities on one page.');
+		ids.add(shape.id);
+		member(shape.kind, ['shape', 'group', 'connector', 'foreign'], 'shape kind');
+		if (shape.groupDisplayMode !== undefined)
+			member(shape.groupDisplayMode, [0, 1, 2], 'group display mode');
+		member(shape.text.horizontalAlign, ['left', 'center', 'right'], 'text alignment');
+		member(shape.text.verticalAlign, ['top', 'middle', 'bottom'], 'text alignment');
 		label(shape.name);
 		label(shape.text.fontFamily, 1024);
 		label(shape.style.fill, 256);
@@ -87,6 +108,18 @@ export function assertViewableDocument(model: VisioDocument): void {
 		finite(shape.text.height, 'text height', 0);
 		finite(shape.text.fontSize, 'font size', 0, 100);
 		finite(shape.style.lineWidth, 'line width', 0, 100);
+		for (const value of [shape.style.linePattern, shape.style.startArrow, shape.style.endArrow]) {
+			finite(value, 'line pattern or arrow code', 0, 65535);
+			if (!Number.isInteger(value))
+				throw new Error('The scene has an invalid line pattern or arrow code.');
+		}
+		for (const size of [shape.style.startArrowSize, shape.style.endArrowSize])
+			if (size !== undefined) finite(size, 'arrow size', 0, 65535);
+		if (
+			shape.style.lineCap !== undefined &&
+			!['round', 'butt', 'square'].includes(shape.style.lineCap)
+		)
+			throw new Error('The scene has an invalid normalized line cap.');
 		finite(shape.style.fillOpacity, 'fill opacity', 0, 1);
 		finite(shape.style.lineOpacity, 'line opacity', 0, 1);
 		if (shape.style.fillGradient) {
@@ -129,6 +162,13 @@ export function assertViewableDocument(model: VisioDocument): void {
 		if ((shape.text.paragraphs?.length ?? 0) > 5000)
 			throw new Error('The scene exceeds safe paragraph limits.');
 		for (const paragraph of shape.text.paragraphs ?? []) {
+			member(paragraph.direction, ['ltr', 'rtl'], 'paragraph direction');
+			member(
+				paragraph.horizontalAlign,
+				['left', 'center', 'right', 'justify', 'distributed'],
+				'paragraph alignment',
+			);
+			member(paragraph.lineSpacing.kind, ['multiple', 'exact'], 'paragraph line spacing');
 			if (
 				!Number.isSafeInteger(paragraph.start) ||
 				!Number.isSafeInteger(paragraph.end) ||
@@ -167,19 +207,39 @@ export function assertViewableDocument(model: VisioDocument): void {
 			finite(image.pixelHeight, 'image height', 1, 16_384);
 			drawnPixels += image.pixelWidth * image.pixelHeight;
 			if (!imageResources.has(image.bytes)) {
-				imageResources.add(image.bytes);
+				imageResources.set(image.bytes, image);
 				uniquePixels += image.pixelWidth * image.pixelHeight;
+			} else {
+				const previous = imageResources.get(image.bytes)!;
+				if (
+					previous.mimeType !== image.mimeType ||
+					previous.pixelWidth !== image.pixelWidth ||
+					previous.pixelHeight !== image.pixelHeight
+				)
+					throw new Error('Shared raster bytes have inconsistent declared metadata.');
 			}
 			if (uniquePixels > 64_000_000 || drawnPixels > 256_000_000)
 				throw new Error('The scene exceeds aggregate decoded image limits.');
 			if (image.opacity !== undefined) finite(image.opacity, 'image opacity', 0, 1);
-			if (image.pixelWidth * image.pixelHeight > 32_000_000)
+			if (image.pixelWidth * image.pixelHeight > VISIO_RASTER_IMAGE_LIMITS.maxPixels)
 				throw new Error('The scene exceeds safe image pixel limits.');
 			if (image.x !== undefined) finite(image.x, 'image position');
 			if (image.y !== undefined) finite(image.y, 'image position');
 			if (image.width !== undefined) finite(image.width, 'image width', 0);
 			if (image.height !== undefined) finite(image.height, 'image height', 0);
 		}
-		for (const child of shape.children) stack.push({ shape: child, depth: depth + 1 });
+		for (const child of shape.children) stack.push({ shape: child, depth: depth + 1, ids });
+	}
+	// Raw host scenes bypass package parsing. Reuse canonical format checks before any
+	// browser decoding/export. Validate each shared resource once per pass, after cheap
+	// aggregate checks. Never cache by byte identity across calls: typed arrays can mutate.
+	for (const image of imageResources.values()) {
+		const actual = inspectVisioRasterImage(image.bytes);
+		if (
+			actual.mimeType !== image.mimeType ||
+			actual.pixelWidth !== image.pixelWidth ||
+			actual.pixelHeight !== image.pixelHeight
+		)
+			throw new Error('Declared raster MIME or dimensions do not match the embedded bytes.');
 	}
 }

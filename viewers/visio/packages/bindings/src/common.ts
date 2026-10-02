@@ -11,7 +11,10 @@ import {
 export type ViewerProps = { [K in keyof ViewerProperties]?: ViewerProperties[K] | undefined } & {
 	events?: ViewerCallbacks | undefined;
 };
-export type ViewerHandle = Pick<MountedViewer, 'element' | 'controller' | 'load' | 'fit'>;
+export type ViewerHandle = Pick<
+	MountedViewer,
+	'element' | 'controller' | 'load' | 'fit' | 'exportSvg'
+>;
 
 /** One mapping for every property and event, shared by every framework adapter. */
 export function viewerOptions(props: ViewerProps): ViewerOptions {
@@ -34,23 +37,30 @@ export function mountFrameworkViewer(
 	const binding = mountViewer(container, initial);
 	let previous: ViewerOptions = { ...initial };
 	let destroyed = false;
+	let updateRevision = 0;
+	const activePatches = new Set<ViewerOptions>();
 	return {
 		...binding,
 		update(next) {
 			if (destroyed) throw new Error('The viewer has been destroyed.');
-			const patch: ViewerOptions = { events: next.events ?? {} };
+			const revision = ++updateRevision;
+			const snapshot: ViewerOptions = { ...next };
+			const patch: ViewerOptions = { events: snapshot.events ?? {} };
 			for (const key of propertyKeys) {
-				if (next[key] !== undefined && next[key] !== previous[key])
-					Object.assign(patch, { [key]: next[key] });
+				const touchedByOlderCall = [...activePatches].some((active) => key in active);
+				if (snapshot[key] !== undefined && (snapshot[key] !== previous[key] || touchedByOlderCall))
+					Object.assign(patch, { [key]: snapshot[key] });
 			}
-			const before = previous;
-			previous = { ...next };
+			// Nested updates compare against committed inputs, never an older patch's pending values.
+			// They must also restore unchanged inputs touched by an older call still in progress.
+			// A failed or superseded call leaves the latest successful snapshot intact.
+			activePatches.add(patch);
 			try {
 				binding.update(patch);
-			} catch (error) {
-				previous = before;
-				throw error;
+			} finally {
+				activePatches.delete(patch);
 			}
+			if (!destroyed && revision === updateRevision) previous = snapshot;
 		},
 		destroy() {
 			if (destroyed) return;
@@ -81,6 +91,9 @@ export function viewerHandle(current: () => MountedViewer | undefined): ViewerHa
 		fit() {
 			requireViewer().fit();
 		},
+		exportSvg(options) {
+			return requireViewer().exportSvg(options);
+		},
 	};
 }
 
@@ -109,3 +122,4 @@ export type { MountedViewer, ViewerCallbacks, ViewerOptions, ViewerProperties };
 export { eventKeys, propertyKeys };
 export type { ViewerEvents, VsdxSource } from '../../../src/contract.js';
 export { ViewerController, type ViewerState } from '../../../src/controller.js';
+export type { SvgExportOptions, SvgExportResult } from '../../../src/export-svg.js';

@@ -2,24 +2,25 @@
 
 Status: local development evidence, 2026-10-02. Full Microsoft Visio parity is not established.
 
-Current focused checkpoint: 423 core Visio tests, 91 viewer tests, 43 framework/SSR tests and 18 documentation tests pass. Both core TypeScript projects, viewer/binding typechecks, production builds and worker/packed-consumer checks pass. A fresh full core suite and full-package build/import run is in progress; its outcome is recorded separately when complete.
+Current focused checkpoint: 529 core Visio tests, 143 viewer tests, 54 framework/SSR tests and 18 documentation tests pass. Both core TypeScript projects, viewer/binding typechecks, production builds and worker/packed-consumer checks pass. The earlier full core run at the 423-test Visio checkpoint recorded 16,417 passes, 231 skips and one failure: the unchanged PowerPoint AES-256 test exceeded its existing 20-second timeout under aggregate load. Its entire crypto file passes all 72 tests when rerun alone. The full core build, all 16 non-CLI packed ESM/CJS exports and 47 script tests pass. The original aggregate run is not recorded as green.
 
 ## What has been exercised
 
 - Strict TypeScript for the viewer and core; the existing relaxed PowerPoint project also remains type-correct.
-- Core ZIP/XML/security, inheritance, geometry, text, layer and raster tests. The initial broad `ooxml` run passed 16,087 tests with 231 skipped; later isolated Visio additions require their own final focused rerun and are not represented by that older broad count.
+- Core ZIP/XML/security, inheritance, geometry, text, layer and raster tests. The earlier broad core result and its unrelated timeout are reported above. Focused counts identify the frozen local checkpoint; later feature additions must be rerun before their own checkpoint.
 - Viewer controller, resource lifecycle, source races, page-scoped selection, renderer safety and text-work budgets in a DOM test environment.
-- Actual React, Vue, Angular, Svelte, Solid and vanilla lifecycle integration. The binding package has 38 DOM-environment tests and five separate no-DOM tests, including selected React/Vue hydration checks.
+- Actual React, Vue, Angular, Svelte, Solid and vanilla lifecycle integration. The binding package has 49 DOM-environment tests and five separate no-DOM tests, including selected React/Vue hydration checks.
 - Static documentation contracts: local/base-relative links, landmarks, labels, color contrast, responsive/reduced-motion rules and control-state tests.
 - Production multipage build and parser worker bundle. The actual worker bundle parses a synthetic VSDX and returns structured errors in an isolated Node worker. This is not a browser/CSP test.
 - The actual packed root artifact installs into a fresh consumer with the unreleased local core. ESM imports, declarations, a fresh Vite build and the packaged worker's valid/error paths pass. Framework adapters remain private source integrations, not standalone published artifacts.
+- Bounded static SVG export passes shared API, lifecycle, XML-safety and amplification tests across all six handles. Original PNG/JPEG/GIF raster scenes pass dimension, crop, flip, alpha and shared-resource pixel assertions through librsvg 2.60.0/Cairo 1.18.4, with native canvas 1.0.10 generating and inspecting raster pixels. This is secondary-renderer evidence; the installed native canvas SVG decoder omits symbols/embedded raster images and is not used as the SVG oracle.
 - The core integration patch includes tracked changes and all new files. It applies to a clean checkout at the pinned revision. The setup script refuses mismatched revisions or unexpected source changes, uses a pinned npm lock and builds the Visio subpath in an isolated sibling setup.
 
 ## Real upstream corpus
 
 The read-only research corpus contains 14 Microsoft Visio-authored drawings from LibreOffice/libvisio and five additional real drawings from Apache POI. The parser currently imports all 19: 22 pages, 706 normalized shapes and 627 geometry paths. Ten malformed security inputs are rejected. These observations apply to the inspected upstream revisions and do not establish universal format coverage.
 
-Fixture bytes are kept outside this repository. Separate provenance records retain upstream URLs/revisions, SHA-256 values, license files and expected numeric/text assertions. No external document uploads were used.
+Fixture bytes are kept outside this repository. Separate provenance records retain upstream URLs/revisions, SHA-256 values, license files and expected numeric/text assertions. No external document uploads were used. The optional [corpus runner](corpus.md) reproduces the hash-pinned parse, scene-validation, color and rounded-rectangle assertions from explicitly supplied local upstream checkouts. Its optional `--svg` pass successfully exports all 22 pages, verifies XML, preserved diagnostics and local-only resources, and excludes controls/event attributes.
 
 ### Visual diagnostics
 
@@ -47,6 +48,6 @@ These cases are excluded as authoritative fidelity oracles. A thumbnail mismatch
 
 ## Re-run commands
 
-Run `npm run check` after `npm run setup:core` and both root/binding installations. Run `npm run test:browser` only in a supported browser environment. `scripts/render-corpus.mjs INPUT_DIRECTORY OUTPUT_DIRECTORY` produces secondary-renderer diagnostic artifacts from an explicitly supplied local corpus.
+Run `npm run check` after `npm run setup:core` and both root/binding installations. Run `npm run test:browser` only in a supported browser environment. The current eight browser scenarios remain launch-blocked here. `scripts/render-corpus.mjs INPUT_DIRECTORY OUTPUT_DIRECTORY` produces secondary-renderer diagnostic artifacts from an explicitly supplied local corpus.
 
 Use the capability ledger for remaining functionality. Passing generated-fixture tests, showing a drawing, or absence of warnings is not a parity guarantee.

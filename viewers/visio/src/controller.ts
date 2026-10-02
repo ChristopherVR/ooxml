@@ -14,14 +14,14 @@ export interface ViewerState {
 type Parser = CancellableParser;
 type EventListener = <K extends keyof ViewerEvents>(name: K, detail: ViewerEvents[K]) => void;
 export class ViewerController {
-	#state: ViewerState = {
+	#state: ViewerState = Object.freeze({
 		document: null,
 		pageIndex: 0,
 		zoom: 1,
 		loading: false,
 		error: null,
 		selectedShape: null,
-	};
+	});
 	#subscribers = new Set<(state: ViewerState) => void>();
 	#events = new Set<EventListener>();
 	#loadId = 0;
@@ -114,14 +114,14 @@ export class ViewerController {
 		this.parser.cancel?.();
 		this.#subscribers.clear();
 		this.#events.clear();
-		this.#state = {
+		this.#state = Object.freeze({
 			document: null,
 			pageIndex: 0,
 			zoom: 1,
 			loading: false,
 			error: null,
 			selectedShape: null,
-		};
+		});
 	}
 	#assertAlive(): void {
 		if (this.#destroyed) throw new Error('The viewer has been destroyed.');

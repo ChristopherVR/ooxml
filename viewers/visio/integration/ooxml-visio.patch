@@ -67,10 +67,10 @@ index bc99393..3ef4f6e 100644
  	tsconfig: 'tsconfig.build.json',
 diff --git a/src/visio/README.md b/src/visio/README.md
 new file mode 100644
-index 0000000..8d2126a
+index 0000000..2f2795e
 --- /dev/null
 +++ b/src/visio/README.md
-@@ -0,0 +1,110 @@
+@@ -0,0 +1,122 @@
 +# Visio read-only scenes
 +
 +`ooxml-core/visio` imports VSDX drawing packages into a DOM-independent typed scene.
@@ -102,6 +102,8 @@ index 0000000..8d2126a
 +- Literal `POLYLINE` coordinate lists; bounded approximation of literal, clamped,
 +  positive-weight NURBS. NURBS produces an explicit approximation diagnostic
 +- Cached solid colors/fills, line widths/pattern codes, arrow codes/sizes, and opacity
++- Cached/themed normalized line caps; legacy square/extended mappings are marked
++  as inferred compatibility until verified against native geometry
 +- Saved Quick Style color selectors and internal DrawingML theme color/variant records;
 +  solid fills, linear gradient endpoints/stops, tint/shade/alpha color transforms,
 +  and themed line widths, with diagnostics for approximations
@@ -138,6 +140,11 @@ index 0000000..8d2126a
 +gradient overrides, and unsupported color transforms retain a solid fallback and
 +diagnostic. Selected theme effects and unsupported line styling are diagnosed
 +separately. Visio-specific ignored theme attributes do not alter normalized paint.
++Normalized `style.lineCap` maps directly to SVG `stroke-linecap`. An absent effective
++cell leaves it undefined; consumers retain their documented fallback. Themed caps
++resolve independently of line width and use Office's flat default when the selected
++theme line omits its cap. Cached caps 1/2 map to butt/square based on observed upstream
++compatibility, with `inferred-line-cap` diagnostics; they are not an exact-fidelity claim.
 +Rectangle rounding preserves local coordinates and winding, and honors inherited
 +cached line styles. Open, curved, mixed or nonrectangular paths stay unchanged with
 +a diagnostic. Negative radii are ignored; radii below output precision are diagnosed.
@@ -167,11 +174,16 @@ index 0000000..8d2126a
 +128-character geometry row types, 1,024-character fonts/inherited IDs, and
 +4,096-character display names. Metadata limits do not truncate document text or
 +geometry formulas; excessive metadata throws `METADATA_LIMIT`.
++Layer membership limits are 8,192 cached characters before trimming, 1,024 tokens
++per shape before deduplication, 256 characters per normalized ID, and 100,000
++processed membership tokens plus five million cached characters across all pages
++and inherited instances. These include duplicate tokens and whitespace. Layer
++names are limited to 4,096 characters. Each page uses one indexed layer lookup.
 +Shape Data/hyperlink budgets are separate: 100,000 rows and five million retained
 +characters per document, at most 1,024 rows per shape and 8,192 characters per
 +metadata string. `ParseVsdxOptions.metadata` configures the aggregate limits.
 +
-+Limits are configurable via `ParseVsdxOptions`. Runtime checks cannot preempt an
++Selected package and scene limits are configurable via `ParseVsdxOptions`. Runtime checks cannot preempt an
 +already executing JavaScript inflater chunk; output retained by the reader is
 +bounded. Put parsing in an application worker when hard UI responsiveness is
 +required.
@@ -1320,26 +1332,265 @@ index 0000000..c08bb99
 +});
 diff --git a/src/visio/index.ts b/src/visio/index.ts
 new file mode 100644
-index 0000000..6a2c052
+index 0000000..3abb785
 --- /dev/null
 +++ b/src/visio/index.ts
-@@ -0,0 +1,6 @@
+@@ -0,0 +1,13 @@
 +/** Read-only VSDX parsing and normalized scenes. Legacy VSD/VDX and saving are not supported. */
 +export type * from './model.js';
 +export type { VisioShapeData, VisioHyperlink, VisioMetadataOptions } from './shape-metadata.js';
 +export { parseVsdx, getVisioPageLayers, type ParseVsdxOptions } from './parser.js';
 +export { VisioPackageError, type VisioPackageLimits } from './package.js';
-+export type { VisioImageOptions } from './media.js';
++export {
++	inspectVisioRasterImage,
++	VisioImageError,
++	VISIO_RASTER_IMAGE_LIMITS,
++	type VisioImageOptions,
++	type VisioImageErrorCode,
++	type VisioRasterImageInfo,
++} from './media.js';
+diff --git a/src/visio/layer-limits.test.ts b/src/visio/layer-limits.test.ts
+new file mode 100644
+index 0000000..de17ad8
+--- /dev/null
++++ b/src/visio/layer-limits.test.ts
+@@ -0,0 +1,226 @@
++import { describe, expect, it, vi } from 'vitest';
++import { parseXml } from '../xml/index.js';
++import { parseVsdx } from './index.js';
++import { createLayerBudget, indexLayers, pageLayers, shapeLayers } from './layers.js';
++import type { VisioLayer } from './model.js';
++import { readSheet, type Sheet } from './sheet.js';
++import { cell, fixture, row, section, shape, xml } from './test-fixtures.js';
++
++const resources = { colors: new Map<string, string>(), fonts: new Map<string, string>() };
++const layer = (id: string, visible = true): VisioLayer => ({
++	id,
++	name: `Layer ${id}`,
++	visible,
++	printable: true,
++	locked: false,
++});
++const sheet = (value?: string): Sheet => ({
++	cells: new Map(value === undefined ? [] : [['LayerMember', { value }]]),
++	sections: new Map(),
++});
++const members = Array.from({ length: 1000 }, (_, index) => String(index)).join(';');
++const layers = indexLayers([layer('0'), layer('1', false)]);
++
++describe('Visio bounded cached layer membership', () => {
++	it.each([undefined, '', ' ', '\n\t'])('preserves empty membership %j', (value) => {
++		expect(shapeLayers(sheet(value), layers, () => {})).toEqual({ layerIds: [], hidden: false });
++	});
++	it('canonicalizes leading zeros without altering order or duplicating IDs', () => {
++		expect(shapeLayers(sheet(' 001;000;1;00 '), layers, () => {})).toEqual({
++			layerIds: ['1', '0'],
++			hidden: true,
++		});
++	});
++	it.each([';0', '0;', '0;;1', '1 2', '-1', '1.0', '1e2', '１２'])(
++		'diagnoses malformed %s',
++		(value) => {
++			const report = vi.fn();
++			expect(shapeLayers(sheet(value), layers, report)).toEqual({ layerIds: [], hidden: false });
++			expect(report).toHaveBeenCalledWith('invalid-layer-membership', expect.any(String));
++		},
++	);
++	it('checks the untrimmed string length before allocating tokens', () => {
++		expect(shapeLayers(sheet(' '.repeat(8192)), layers, () => {}).layerIds).toEqual([]);
++		expect(() => shapeLayers(sheet(' '.repeat(8193)), layers, () => {})).toThrowError(
++			'Cached layer membership exceeds its metadata length limit.',
++		);
++		expect(shapeLayers(sheet('0'.repeat(8192)), layers, () => {}).layerIds).toEqual(['0']);
++	});
++	it('checks membership length when reading a cached cell', () => {
++		const read = () =>
++			readSheet(parseXml(xml('Shape', cell('LayerMember', '0'.repeat(8193)))).documentElement);
++		expect(read).toThrowError(expect.objectContaining({ code: 'METADATA_LIMIT' }));
++	});
++	it('limits raw token count before duplicate removal', () => {
++		expect(shapeLayers(sheet(Array(1024).fill('0').join(';')), layers, () => {}).layerIds).toEqual([
++			'0',
++		]);
++		expect(() =>
++			shapeLayers(sheet(Array(1025).fill('0').join(';')), layers, () => {}),
++		).toThrowError('Shape layer membership count exceeded.');
++	});
++	it('bounds normalized IDs and preserves large decimal references without numeric aliases', () => {
++		const report = vi.fn();
++		const ids = [
++			'4294967295',
++			'4294967296',
++			'9007199254740992',
++			'9007199254740993',
++			'9'.repeat(256),
++		];
++		expect(shapeLayers(sheet(ids.join(';')), layers, report).layerIds).toEqual(ids);
++		expect(report).toHaveBeenCalledWith('missing-layer', expect.any(String));
++		expect(() => shapeLayers(sheet('9'.repeat(257)), layers, () => {})).toThrowError(
++			'Layer member ID exceeds its metadata length limit.',
++		);
++	});
++	it('uses one lookup per unique membership and preserves first duplicate layer semantics', () => {
++		const index = indexLayers([layer('0'), layer('0', false), layer('1', false)]) as Map<
++			string,
++			VisioLayer
++		>;
++		const get = vi.spyOn(index, 'get');
++		expect(shapeLayers(sheet('0;0;1;1'), index, () => {}).hidden).toBe(true);
++		expect(get).toHaveBeenCalledTimes(2);
++		expect(shapeLayers(sheet('0'), index, () => {}).hidden).toBe(false);
++	});
++	it('counts all processed tokens across repeated calls, including discarded duplicates', () => {
++		const budget = createLayerBudget();
++		for (let index = 0; index < 100; index++) shapeLayers(sheet(members), layers, () => {}, budget);
++		expect(() => shapeLayers(sheet('0'), layers, () => {}, budget)).toThrowError(
++			'Layer membership budget exceeded.',
++		);
++		const duplicateBudget = createLayerBudget();
++		duplicateBudget.consumeMemberships(99_997);
++		expect(shapeLayers(sheet('0;00;000'), layers, () => {}, duplicateBudget).layerIds).toEqual([
++			'0',
++		]);
++		shapeLayers(sheet(''), layers, () => {}, duplicateBudget);
++		expect(() => shapeLayers(sheet('0'), layers, () => {}, duplicateBudget)).toThrowError(
++			'Layer membership budget exceeded.',
++		);
++	});
++	it('counts raw characters before trimming, including whitespace-only caches', () => {
++		const budget = createLayerBudget();
++		budget.consumeCharacters(4_999_999);
++		expect(shapeLayers(sheet(' '), layers, () => {}, budget).layerIds).toEqual([]);
++		shapeLayers(sheet(''), layers, () => {}, budget);
++		expect(() => shapeLayers(sheet(' '), layers, () => {}, budget)).toThrowError(
++			'Layer membership character budget exceeded.',
++		);
++	});
++	it('retains hidden status and emits missing/color diagnostics once for mixed membership', () => {
++		const report = vi.fn();
++		const index = indexLayers([
++			{ ...layer('0'), color: '#ff0000' },
++			layer('1', false),
++			{ ...layer('2'), color: '#00ff00' },
++		]);
++		expect(shapeLayers(sheet('0;1;2;3;4;0'), index, report).hidden).toBe(true);
++		expect(report.mock.calls.map(([code]) => code)).toEqual([
++			'missing-layer',
++			'unsupported-layer-color',
++		]);
++	});
++	it.each(['Name', 'NameUniv'])('bounds %s even for a constructed Sheet', (name) => {
++		const source = readSheet(
++			parseXml(xml('PageSheet', section('Layer', row(0, '', cell(name, 'a'))))).documentElement,
++		);
++		const cells = source.sections.get('Layer:0')!.rows.get('0')!.cells;
++		cells.set(name, { value: 'a'.repeat(4096) });
++		expect(pageLayers(source, resources, () => {})[0]!.name).toHaveLength(4096);
++		cells.set(name, { value: 'a'.repeat(4097) });
++		expect(() => pageLayers(source, resources, () => {})).toThrowError(
++			'Layer name exceeds its metadata length limit.',
++		);
++	});
++	it.each(['Name', 'NameUniv'])(
++		'rejects oversized page %s caches through the parser',
++		async (name) => {
++			const bytes = await fixture({
++				edit(zip) {
++					zip.file(
++						'visio/pages/pages.xml',
++						xml(
++							'Pages',
++							`<Page ID="1"><PageSheet>${section('Layer', row(0, '', cell(name, 'a'.repeat(4097))))}</PageSheet><Rel r:id="rId1"/></Page>`,
++						),
++					);
++				},
++			});
++			await expect(parseVsdx(bytes)).rejects.toMatchObject({ code: 'METADATA_LIMIT' });
++		},
++	);
++	it('does not reuse another page layer index for inherited membership', async () => {
++		const bytes = await fixture({
++			masters: [{ id: '5', shapes: shape('10', cell('LayerMember', '0')) }],
++			pages: [
++				{ id: '1', contents: `<Shapes>${shape('1', '', 'Master="5"')}</Shapes>` },
++				{ id: '2', contents: `<Shapes>${shape('1', '', 'Master="5"')}</Shapes>` },
++			],
++			edit(zip) {
++				zip.file(
++					'visio/pages/pages.xml',
++					xml(
++						'Pages',
++						[0, 1]
++							.map(
++								(visible, index) =>
++									`<Page ID="${index + 1}"><PageSheet>${section('Layer', row(0, '', cell('Visible', visible)))}</PageSheet><Rel r:id="rId${index + 1}"/></Page>`,
++							)
++							.join(''),
++					),
++				);
++			},
++		});
++		const parsed = await parseVsdx(bytes);
++		expect(parsed.pages.map((page) => page.shapes[0]!.hidden)).toEqual([true, false]);
++	});
++	it('bounds repeated inherited cache processing even when every token canonicalizes to one ID', async () => {
++		const bytes = await fixture({
++			masters: [{ id: '5', shapes: shape('10', cell('LayerMember', '0'.repeat(8192))) }],
++			pages: [
++				{
++					id: '1',
++					contents: `<Shapes>${Array.from({ length: 611 }, (_, index) => shape(String(index), '', 'Master="5"')).join('')}</Shapes>`,
++				},
++			],
++		});
++		await expect(parseVsdx(bytes)).rejects.toMatchObject({
++			code: 'METADATA_LIMIT',
++			message: 'Layer membership character budget exceeded.',
++		});
++	});
++	it('shares membership budgets across pages and inherited master instances', async () => {
++		const instances = (count: number) =>
++			`<Shapes>${Array.from({ length: count }, (_, index) => shape(String(index), '', 'Master="5"')).join('')}</Shapes>`;
++		const bytes = await fixture({
++			masters: [{ id: '5', shapes: shape('10', cell('LayerMember', members)) }],
++			pages: [
++				{ id: '1', contents: instances(50) },
++				{ id: '2', contents: instances(51) },
++			],
++		});
++		await expect(parseVsdx(bytes)).rejects.toMatchObject({
++			code: 'METADATA_LIMIT',
++			message: 'Layer membership budget exceeded.',
++		});
++	});
++	it('accepts the aggregate boundary and starts a new budget for each document', async () => {
++		const bytes = await fixture({
++			masters: [{ id: '5', shapes: shape('10', cell('LayerMember', members)) }],
++			pages: [
++				{
++					id: '1',
++					contents: `<Shapes>${Array.from({ length: 100 }, (_, index) => shape(String(index), '', 'Master="5"')).join('')}</Shapes>`,
++				},
++			],
++		});
++		for (let attempt = 0; attempt < 2; attempt++) {
++			const parsed = await parseVsdx(bytes);
++			expect(
++				parsed.pages[0]!.shapes.reduce((count, item) => count + item.layerIds!.length, 0),
++			).toBe(100_000);
++		}
++	});
++});
 diff --git a/src/visio/layers.test.ts b/src/visio/layers.test.ts
 new file mode 100644
-index 0000000..9d97994
+index 0000000..1fc8326
 --- /dev/null
 +++ b/src/visio/layers.test.ts
-@@ -0,0 +1,104 @@
+@@ -0,0 +1,108 @@
 +import { describe, expect, it } from 'vitest';
 +import { parseXml } from '../xml/index.js';
 +import { parseVsdx } from './index.js';
-+import { pageLayers, shapeLayers } from './layers.js';
++import { indexLayers, pageLayers, shapeLayers } from './layers.js';
 +import { readSheet } from './sheet.js';
 +import { cell, fixture, row, section, shape, xml } from './test-fixtures.js';
 +
@@ -1398,11 +1649,13 @@ index 0000000..9d97994
 +			resources,
 +			() => {},
 +		);
-+		expect(shapeLayers(sheet(cell('LayerMember', '0;1')), layers, () => {})).toEqual({
++		expect(shapeLayers(sheet(cell('LayerMember', '0;1')), indexLayers(layers), () => {})).toEqual({
 +			layerIds: ['0', '1'],
 +			hidden: true,
 +		});
-+		expect(shapeLayers(sheet(cell('LayerMember', '1')), layers, () => {}).hidden).toBe(false);
++		expect(shapeLayers(sheet(cell('LayerMember', '1')), indexLayers(layers), () => {}).hidden).toBe(
++			false,
++		);
 +	});
 +	it('reports missing or malformed memberships and unapplied colors', () => {
 +		const messages: string[] = [],
@@ -1412,8 +1665,10 @@ index 0000000..9d97994
 +			resources,
 +			report,
 +		);
-+		expect(shapeLayers(sheet(cell('LayerMember', 'RUN()')), layers, report).layerIds).toEqual([]);
-+		shapeLayers(sheet(cell('LayerMember', '0;99')), layers, report);
++		expect(
++			shapeLayers(sheet(cell('LayerMember', 'RUN()')), indexLayers(layers), report).layerIds,
++		).toEqual([]);
++		shapeLayers(sheet(cell('LayerMember', '0;99')), indexLayers(layers), report);
 +		expect(messages).toEqual([
 +			'invalid-layer-membership',
 +			'missing-layer',
@@ -1442,22 +1697,57 @@ index 0000000..9d97994
 +});
 diff --git a/src/visio/layers.ts b/src/visio/layers.ts
 new file mode 100644
-index 0000000..d9dcdea
+index 0000000..7cd938f
 --- /dev/null
 +++ b/src/visio/layers.ts
-@@ -0,0 +1,47 @@
+@@ -0,0 +1,106 @@
 +import type { VisioLayer } from './model.js';
++import { metadata } from './metadata.js';
++import { VisioPackageError } from './package.js';
 +import { number, sectionRows, type Report, type Sheet } from './sheet.js';
 +import { color, type Resources } from './style.js';
 +
++export interface LayerBudget {
++	consumeCharacters(count: number): void;
++	consumeMemberships(count: number): void;
++}
++/** Share across pages and inherited instances to bound normalization work and arrays. */
++export function createLayerBudget(): LayerBudget {
++	let memberships = 0,
++		characters = 0;
++	return {
++		consumeCharacters(count) {
++			characters += count;
++			if (characters > 5_000_000)
++				throw new VisioPackageError(
++					'METADATA_LIMIT',
++					'Layer membership character budget exceeded.',
++				);
++		},
++		consumeMemberships(count) {
++			memberships += count;
++			if (memberships > 100_000)
++				throw new VisioPackageError('METADATA_LIMIT', 'Layer membership budget exceeded.');
++		},
++	};
++}
++/** Construct once per page; preserve the first matching row's existing semantics. */
++export function indexLayers(layers: readonly VisioLayer[]): ReadonlyMap<string, VisioLayer> {
++	const index = new Map<string, VisioLayer>();
++	for (const layer of layers) if (!index.has(layer.id)) index.set(layer.id, layer);
++	return index;
++}
 +/** PageSheet Layer row indices are the stable layer IDs used by LayerMember. */
 +export function pageLayers(sheet: Sheet, resources: Resources, report: Report): VisioLayer[] {
 +	return sectionRows(sheet, 'Layer').map((row) => {
 +		const colorValue = row.cells.get('Color')?.value;
 +		return {
 +			id: row.index,
-+			name:
++			name: metadata(
 +				row.cells.get('Name')?.value ?? row.cells.get('NameUniv')?.value ?? `Layer ${row.index}`,
++				4096,
++				'Layer name',
++			),
 +			visible: number(row.cells, 'Visible', 1, report) !== 0,
 +			printable: number(row.cells, 'Print', 1, report) !== 0,
 +			locked: number(row.cells, 'Lock', 0, report) !== 0,
@@ -1472,26 +1762,261 @@ index 0000000..d9dcdea
 +}
 +export function shapeLayers(
 +	sheet: Sheet,
-+	layers: VisioLayer[],
++	layers: ReadonlyMap<string, VisioLayer>,
 +	report: Report,
++	budget: LayerBudget = createLayerBudget(),
 +): { layerIds: string[]; hidden: boolean } {
-+	const value = sheet.cells.get('LayerMember')?.value?.trim() ?? '';
++	const raw = metadata(
++		sheet.cells.get('LayerMember')?.value ?? '',
++		8192,
++		'Cached layer membership',
++	);
++	budget.consumeCharacters(raw.length);
++	const value = raw.trim();
 +	if (!value) return { layerIds: [], hidden: false };
++	let count = 1;
++	for (const character of value)
++		if (character === ';' && ++count > 1024)
++			throw new VisioPackageError('METADATA_LIMIT', 'Shape layer membership count exceeded.');
++	budget.consumeMemberships(count);
 +	if (!/^\d+(;\d+)*$/.test(value)) {
 +		report('invalid-layer-membership', 'Invalid cached layer membership was ignored.');
 +		return { layerIds: [], hidden: false };
 +	}
-+	const layerIds = [...new Set(value.split(';').map((id) => String(Number(id))))];
-+	const matching = layerIds.map((id) => layers.find((layer) => layer.id === id));
-+	if (matching.some((layer) => !layer))
-+		report('missing-layer', 'Shape references a layer absent from this page.');
-+	if (matching.some((layer) => layer?.color !== undefined))
++	// LayerMember permits decimal digits. Preserve unknown large IDs without Number rounding.
++	const layerIds = [
++		...new Set(
++			value.split(';').map((id) => metadata(id.replace(/^0+/, '') || '0', 256, 'Layer member ID')),
++		),
++	];
++	let missing = false,
++		colored = false,
++		hidden = false;
++	for (const id of layerIds) {
++		const layer = layers.get(id);
++		missing ||= layer === undefined;
++		colored ||= layer?.color !== undefined;
++		hidden ||= layer?.visible === false;
++	}
++	if (missing) report('missing-layer', 'Shape references a layer absent from this page.');
++	if (colored)
 +		report(
 +			'unsupported-layer-color',
 +			'Layer color overrides are retained as metadata but not applied to shape styling.',
 +		);
 +	// MS-VSDX 2.2.3.2.2: a geometry path must not belong to a layer whose Visible is zero.
-+	return { layerIds, hidden: matching.some((layer) => layer?.visible === false) };
++	return { layerIds, hidden };
++}
+diff --git a/src/visio/line-style.test.ts b/src/visio/line-style.test.ts
+new file mode 100644
+index 0000000..d771266
+--- /dev/null
++++ b/src/visio/line-style.test.ts
+@@ -0,0 +1,148 @@
++import { describe, expect, it, vi } from 'vitest';
++import { lineCap } from './line-style.js';
++import { parseVsdx } from './parser.js';
++import type { Cells } from './sheet.js';
++import type { ThemeResources } from './theme-resolve.js';
++import { generatedTheme, themeFixture } from './theme-fixtures.js';
++import { cell, fixture, shape } from './test-fixtures.js';
++
++const caps = (value: string): Cells => new Map([['LineCap', { value }]]);
++const resources: ThemeResources = {};
++async function themed(cap: string | undefined, contents = cell('LineCap', 'Themed')) {
++	const theme = generatedTheme().replaceAll(
++		'<a:ln>',
++		`<a:ln${cap === undefined ? '' : ` cap="${cap}"`}>`,
++	);
++	const doc = await parseVsdx(await themeFixture({ theme, contents }));
++	return { style: doc.pages[0]!.shapes[0]!.style, codes: doc.diagnostics.map((item) => item.code) };
++}
++
++describe('Visio normalized line caps', () => {
++	it.each([
++		['0', 'round'],
++		['1', 'butt'],
++		['2', 'square'],
++	] as const)(
++		'normalizes cached %s to %s without hiding compatibility inferences',
++		(value, expected) => {
++			const report = vi.fn();
++			expect(lineCap(caps(value), resources, report)).toBe(expected);
++			expect(report.mock.calls.map(([code]) => code)).toEqual(
++				value === '0' ? [] : ['inferred-line-cap'],
++			);
++		},
++	);
++	it('leaves absent caps undefined instead of manufacturing a ShapeSheet default', () => {
++		const report = vi.fn();
++		expect(lineCap(new Map(), resources, report)).toBeUndefined();
++		expect(report).not.toHaveBeenCalled();
++	});
++	it.each(['3', '-1', '0.5', '255'])('diagnoses out-of-range cached %s', (value) => {
++		const report = vi.fn();
++		expect(lineCap(caps(value), resources, report)).toBeUndefined();
++		expect(report).toHaveBeenCalledWith('invalid-line-cap', expect.any(String));
++	});
++	it.each([
++		'',
++		'bad',
++		'NaN',
++		'Infinity',
++		'1e999',
++		'0'.repeat(129),
++		' '.repeat(129) + '0',
++		'0' + ' '.repeat(129),
++	])('rejects unusable cached %s', (value) => {
++		const report = vi.fn();
++		expect(lineCap(caps(value), resources, report)).toBeUndefined();
++		expect(report).toHaveBeenCalledWith('missing-cached-value', expect.any(String));
++	});
++	it('does not evaluate formula-only cells', () => {
++		const report = vi.fn();
++		expect(lineCap(new Map([['LineCap', { formula: '1+1' }]]), resources, report)).toBeUndefined();
++		expect(report).toHaveBeenCalledWith('missing-cached-value', expect.any(String));
++	});
++	it.each([
++		['rnd', 'round'],
++		['flat', 'butt'],
++		['sq', 'square'],
++		[undefined, 'butt'],
++	] as const)(
++		'resolves selected themed cap %s to %s independently of width',
++		async (cap, expected) => {
++			const result = await themed(cap, cell('LineCap', 'Themed') + cell('LineWeight', 0.02));
++			expect(result.style.lineCap).toBe(expected);
++			expect(result.style.lineWidth).toBe(0.02);
++			expect(result.codes).not.toContain('missing-cached-value');
++			expect(result.codes).not.toContain('inferred-line-cap');
++		},
++	);
++	it('does not require a cached or themed line width for themed caps', async () => {
++		expect((await themed('sq')).style.lineCap).toBe('square');
++		const result = await themed('sq', cell('LineCap', 'Themed') + cell('LineWeight', 'bad'));
++		expect(result.style.lineCap).toBe('square');
++		expect(result.codes).toContain('missing-cached-value');
++	});
++	it.each(['', 'round', 'SQ', 'injected'])(
++		'diagnoses unsupported DrawingML cap token %j',
++		async (cap) => {
++			const result = await themed(cap);
++			expect(result.style.lineCap).toBeUndefined();
++			expect(result.codes).toContain('unsupported-theme-line-cap');
++		},
++	);
++	it('leaves unresolved themed cap absent without selecting a guessed theme', async () => {
++		const doc = await parseVsdx(
++			await themeFixture({ omitTheme: true, contents: cell('LineCap', 'Themed') }),
++		);
++		expect(doc.pages[0]!.shapes[0]!.style.lineCap).toBeUndefined();
++		expect(doc.diagnostics.map((item) => item.code)).toContain('unresolved-line-cap');
++	});
++	it('preserves a cached cap override without diagnosing unused theme cap geometry', async () => {
++		const result = await themed(
++			'unknown',
++			cell('LineCap', 0, 'THEMEVAL()') + cell('LineWeight', 'Themed'),
++		);
++		expect(result.style.lineCap).toBe('round');
++		expect(result.codes).not.toContain('unsupported-theme-line-cap');
++	});
++	it('does not import theme caps when only line width is themed', async () => {
++		const result = await themed('unknown', cell('LineWeight', 'Themed'));
++		expect(result.style.lineCap).toBeUndefined();
++		expect(result.codes).not.toContain('unsupported-theme-line-cap');
++	});
++	it('honors style, master and local cached inheritance including F=Inh', async () => {
++		const bytes = await fixture({
++			document: `<StyleSheets><StyleSheet ID="0">${cell('LineCap', 0)}</StyleSheet><StyleSheet ID="4" LineStyle="0">${cell('LineCap', 1)}</StyleSheet></StyleSheets>`,
++			masters: [{ id: '5', shapes: shape('10', cell('LineCap', 2), 'LineStyle="4"') }],
++			pages: [
++				{
++					id: '1',
++					contents: `<Shapes>${shape('1', '', 'LineStyle="4"')}${shape('2', '', 'Master="5"')}${shape('3', cell('LineCap', 0, 'Inh'), 'Master="5"')}${shape('4', '<Cell N="LineCap" F="Inh"/>', 'Master="5"')}</Shapes>`,
++				},
++			],
++		});
++		const doc = await parseVsdx(bytes);
++		expect(doc.pages[0]!.shapes.map((item) => item.style.lineCap)).toEqual([
++			'butt',
++			'square',
++			'round',
++			'square',
++		]);
++	});
++	it('selects connector theme caps using saved QuickStyleType', async () => {
++		const theme = generatedTheme()
++			.replaceAll('<a:ln>', '<a:ln cap="flat">')
++			.replace(
++				/(<v:fmtConnectorScheme>[\s\S]*?<a:lnStyleLst>)([\s\S]*?)(<\/a:lnStyleLst>)/,
++				(_, start: string, content: string, end: string) =>
++					start + content.replaceAll('cap="flat"', 'cap="rnd"') + end,
++			);
++		const doc = await parseVsdx(
++			await themeFixture({
++				theme,
++				contents: cell('LineCap', 'Themed') + cell('QuickStyleType', 3),
++			}),
++		);
++		expect(doc.pages[0]!.shapes[0]!.style.lineCap).toBe('round');
++	});
++});
+diff --git a/src/visio/line-style.ts b/src/visio/line-style.ts
+new file mode 100644
+index 0000000..6cb770f
+--- /dev/null
++++ b/src/visio/line-style.ts
+@@ -0,0 +1,51 @@
++import type { VisioStyle } from './model.js';
++import { number, type Cells, type Report } from './sheet.js';
++import { themeFormat, type ThemeResources } from './theme-resolve.js';
++
++/**
++ * MS-VSDX 2.4.4.170 names cached cap 0 Rounded, 1 Square, and 2 Extended:
++ * https://learn.microsoft.com/en-us/openspecs/sharepoint_protocols/ms-vsdx/b08a8361-c0c1-4d5f-8915-6810bcedfbc3
++ * DrawingML cap tokens have an unambiguous normalized meaning. Office's omitted
++ * cap default is flat (MS-OI29500 2.1.1212), despite the ECMA prose saying square:
++ * https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oi29500/5564035f-88ff-4ab8-bbfb-d2998a83324d
++ */
++export function lineCap(
++	cells: Cells,
++	resources: ThemeResources,
++	report: Report,
++): VisioStyle['lineCap'] {
++	const cell = cells.get('LineCap');
++	if (!cell) return undefined;
++	if (cell.value === 'Themed') {
++		const line = themeFormat(cells, 'Line', resources);
++		if (!line) {
++			report('unresolved-line-cap', 'The requested theme line cap could not be resolved.');
++			return undefined;
++		}
++		const cap = line.getAttribute('cap') ?? 'flat';
++		if (cap === 'rnd') return 'round';
++		if (cap === 'flat') return 'butt';
++		if (cap === 'sq') return 'square';
++		report('unsupported-theme-line-cap', 'The selected theme line has an unsupported cap token.');
++		return undefined;
++	}
++	if (cell.value !== undefined && cell.value.length > 128) {
++		report('missing-cached-value', 'Cell LineCap exceeds the bounded numeric cache length.');
++		return undefined;
++	}
++	const value = number(cells, 'LineCap', NaN, report);
++	if (value === 0) return 'round';
++	if (value === 1 || value === 2) {
++		// Compatibility inference corroborated by libvisio 49fb9d3a9d21d4374cad782925e48c577a41f5be,
++		// src/lib/VSDContentCollector.cpp:2992-3007. No implementation code is copied.
++		// Microsoft's legacy names alone do not define these caps' exact endpoint geometry.
++		report(
++			'inferred-line-cap',
++			'Legacy square/extended cap geometry uses an inferred compatibility mapping.',
++		);
++		return value === 1 ? 'butt' : 'square';
++	}
++	if (Number.isFinite(value))
++		report('invalid-line-cap', 'The cached line cap is outside the supported enumeration.');
++	return undefined;
 +}
 diff --git a/src/visio/media.test.ts b/src/visio/media.test.ts
 new file mode 100644
@@ -1765,10 +2290,10 @@ index 0000000..ed6796b
 +});
 diff --git a/src/visio/media.ts b/src/visio/media.ts
 new file mode 100644
-index 0000000..7b0b3b4
+index 0000000..3155c9f
 --- /dev/null
 +++ b/src/visio/media.ts
-@@ -0,0 +1,271 @@
+@@ -0,0 +1,310 @@
 +import { NS } from '../xml/index.js';
 +import { crc32 } from './package-common.js';
 +import { VisioPackage, VisioPackageError } from './package.js';
@@ -1779,27 +2304,41 @@ index 0000000..7b0b3b4
 +	maxPixels?: number;
 +	maxDimension?: number;
 +}
-+export interface VisioRasterImage {
++export interface VisioRasterImageInfo {
 +	mimeType: 'image/png' | 'image/jpeg' | 'image/gif';
-+	/** Shared package-owned bytes. Consumers must not modify them. */
-+	bytes: Uint8Array;
 +	pixelWidth: number;
 +	pixelHeight: number;
 +}
++export interface VisioRasterImage extends VisioRasterImageInfo {
++	/** Shared package-owned bytes. Consumers must not modify them. */
++	bytes: Uint8Array;
++}
 +type ImageLimits = Required<VisioImageOptions>;
-+class ImageError extends Error {
++/** Defaults and hard ceilings for inspecting caller-owned raster bytes. */
++export const VISIO_RASTER_IMAGE_LIMITS: Readonly<ImageLimits> = Object.freeze({
++	maxImageBytes: 8 * 1024 * 1024,
++	maxPixels: 16_000_000,
++	maxDimension: 16384,
++});
++export type VisioImageErrorCode =
++	| 'invalid-image'
++	| 'unsupported-image'
++	| 'image-limit'
++	| 'invalid-limit';
++export class VisioImageError extends Error {
 +	constructor(
-+		public readonly code: string,
++		public readonly code: VisioImageErrorCode,
 +		message: string,
 +	) {
 +		super(message);
++		this.name = 'VisioImageError';
 +	}
 +}
 +const invalid = (message: string): never => {
-+	throw new ImageError('invalid-image', message);
++	throw new VisioImageError('invalid-image', message);
 +};
 +const unsupported = (message: string): never => {
-+	throw new ImageError('unsupported-image', message);
++	throw new VisioImageError('unsupported-image', message);
 +};
 +function dimensions(width: number, height: number, limits: ImageLimits): void {
 +	if (!width || !height) invalid('Raster image has zero dimensions.');
@@ -1808,7 +2347,10 @@ index 0000000..7b0b3b4
 +		height > limits.maxDimension ||
 +		width * height > limits.maxPixels
 +	)
-+		throw new ImageError('image-limit', 'Raster image dimensions exceed the configured limit.');
++		throw new VisioImageError(
++			'image-limit',
++			'Raster image dimensions exceed the configured limit.',
++		);
 +}
 +const ascii = (bytes: Uint8Array, start: number, length: number) =>
 +	String.fromCharCode(...bytes.subarray(start, start + length));
@@ -1891,7 +2433,7 @@ index 0000000..7b0b3b4
 +		// Bound animation work as well as the logical canvas size.
 +		pixels += width * height;
 +		if (pixels > limits.maxPixels)
-+			throw new ImageError('image-limit', 'GIF animation exceeds the pixel limit.');
++			throw new VisioImageError('image-limit', 'GIF animation exceeds the pixel limit.');
 +		const packed = bytes[at + 8]!;
 +		at += 9 + (packed & 128 ? 3 * 2 ** ((packed & 7) + 1) : 0);
 +		if (at >= bytes.length || bytes[at]! < 2 || bytes[at]! > 8)
@@ -1961,6 +2503,31 @@ index 0000000..7b0b3b4
 +	return invalid('JPEG has no image terminator.');
 +}
 +
++/**
++ * Inspect PNG, JPEG, or GIF structure and intrinsic dimensions without trusting declared metadata.
++ * Checks PNG chunk checksums, but does not decode pixel/entropy data or prove browser decodability.
++ * Limits are positive safe integers and may only lower VISIO_RASTER_IMAGE_LIMITS. Throws
++ * VisioImageError on invalid limits, unsupported/malformed input, or an exceeded limit.
++ * Reads only the supplied view and does not cache, copy, or retain mutable caller-owned bytes.
++ */
++export function inspectVisioRasterImage(
++	bytes: Uint8Array,
++	options: VisioImageOptions = {},
++): VisioRasterImageInfo {
++	if (!options || typeof options !== 'object' || Array.isArray(options))
++		throw new VisioImageError('invalid-limit', 'Image limits must be an options object.');
++	const limits = { ...VISIO_RASTER_IMAGE_LIMITS, ...options };
++	for (const key of Object.keys(VISIO_RASTER_IMAGE_LIMITS) as (keyof ImageLimits)[]) {
++		const value = limits[key];
++		if (!Number.isSafeInteger(value) || value <= 0 || value > VISIO_RASTER_IMAGE_LIMITS[key])
++			throw new VisioImageError('invalid-limit', `Invalid raster image limit: ${key}.`);
++	}
++	if (!(bytes instanceof Uint8Array)) invalid('Raster image bytes must be a Uint8Array.');
++	if (bytes.byteLength > limits.maxImageBytes)
++		throw new VisioImageError('image-limit', 'Raster image bytes exceed the configured limit.');
++	return inspect(bytes, limits);
++}
++
 +/** Read only authenticated internal raster parts; no URLs or active media are returned. */
 +export async function readVisioImage(
 +	pkg: VisioPackage,
@@ -1970,9 +2537,7 @@ index 0000000..7b0b3b4
 +	options: VisioImageOptions = {},
 +): Promise<VisioRasterImage | undefined> {
 +	const limits: ImageLimits = {
-+		maxImageBytes: 8 * 1024 * 1024,
-+		maxPixels: 16_000_000,
-+		maxDimension: 16384,
++		...VISIO_RASTER_IMAGE_LIMITS,
 +		...options,
 +	};
 +	if (Object.values(limits).some((value) => !Number.isSafeInteger(value) || value <= 0))
@@ -2009,36 +2574,35 @@ index 0000000..7b0b3b4
 +	const key = `${rel.target}\0${limits.maxImageBytes}/${limits.maxPixels}/${limits.maxDimension}`;
 +	let result = cache.get(key);
 +	if (!result) {
-+		result = validate(bytes, limits);
++		try {
++			result = { ...inspect(bytes, limits), bytes };
++		} catch (error) {
++			if (!(error instanceof VisioImageError)) throw error;
++			result = error;
++		}
 +		cache.set(key, result);
 +	}
-+	return result instanceof ImageError ? omit(result.code, result.message) : result;
++	return result instanceof VisioImageError ? omit(result.code, result.message) : result;
 +}
 +
 +// Package-keyed cache is weak, so finished imports do not retain package buffers.
-+const validationCache = new WeakMap<VisioPackage, Map<string, VisioRasterImage | ImageError>>();
-+function validate(bytes: Uint8Array, limits: ImageLimits): VisioRasterImage | ImageError {
-+	try {
-+		let mimeType: VisioRasterImage['mimeType'], size: [number, number];
-+		if ([137, 80, 78, 71, 13, 10, 26, 10].every((value, index) => bytes[index] === value)) {
-+			mimeType = 'image/png';
-+			size = png(bytes, limits);
-+		} else if (['GIF87a', 'GIF89a'].includes(ascii(bytes, 0, 6))) {
-+			mimeType = 'image/gif';
-+			size = gif(bytes, limits);
-+		} else if (bytes[0] === 0xff && bytes[1] === 0xd8) {
-+			mimeType = 'image/jpeg';
-+			size = jpeg(bytes, limits);
-+		} else
-+			return new ImageError(
-+				'unsupported-image',
-+				'Foreign data is not a supported PNG, JPEG, or GIF raster image.',
-+			);
-+		return { mimeType, bytes, pixelWidth: size[0], pixelHeight: size[1] };
-+	} catch (error) {
-+		if (error instanceof ImageError) return error;
-+		throw error;
-+	}
++const validationCache = new WeakMap<
++	VisioPackage,
++	Map<string, VisioRasterImage | VisioImageError>
++>();
++function inspect(bytes: Uint8Array, limits: ImageLimits): VisioRasterImageInfo {
++	let mimeType: VisioRasterImageInfo['mimeType'], size: [number, number];
++	if ([137, 80, 78, 71, 13, 10, 26, 10].every((value, index) => bytes[index] === value)) {
++		mimeType = 'image/png';
++		size = png(bytes, limits);
++	} else if (['GIF87a', 'GIF89a'].includes(ascii(bytes, 0, 6))) {
++		mimeType = 'image/gif';
++		size = gif(bytes, limits);
++	} else if (bytes[0] === 0xff && bytes[1] === 0xd8) {
++		mimeType = 'image/jpeg';
++		size = jpeg(bytes, limits);
++	} else return unsupported('Foreign data is not a supported PNG, JPEG, or GIF raster image.');
++	return { mimeType, pixelWidth: size[0], pixelHeight: size[1] };
 +}
 diff --git a/src/visio/metadata.test.ts b/src/visio/metadata.test.ts
 new file mode 100644
@@ -2144,10 +2708,10 @@ index 0000000..04e3b92
 +}
 diff --git a/src/visio/model.ts b/src/visio/model.ts
 new file mode 100644
-index 0000000..cb90c71
+index 0000000..378812a
 --- /dev/null
 +++ b/src/visio/model.ts
-@@ -0,0 +1,150 @@
+@@ -0,0 +1,152 @@
 +import type { VisioHyperlink, VisioShapeData } from './shape-metadata.js';
 +
 +/** Visio's internal distance unit is the inch; angles are radians. */
@@ -2179,6 +2743,8 @@ index 0000000..cb90c71
 +	fillGradient?: VisioLinearGradient;
 +	lineColor: string;
 +	lineWidth: number;
++	/** Normalized SVG-compatible cap; absent means the effective cap is unresolved. */
++	lineCap?: 'round' | 'butt' | 'square';
 +	/** ShapeSheet line pattern number; 0 is no line, 1 is solid. */
 +	linePattern: number;
 +	fillOpacity: number;
@@ -3675,14 +4241,14 @@ index 0000000..f5b6b8c
 +});
 diff --git a/src/visio/parser.ts b/src/visio/parser.ts
 new file mode 100644
-index 0000000..ea430dd
+index 0000000..7341da1
 --- /dev/null
 +++ b/src/visio/parser.ts
-@@ -0,0 +1,262 @@
+@@ -0,0 +1,263 @@
 +import { connections, indexedPart, related, validateBackgrounds, visioXml } from './parts.js';
 +import { prepareImages } from './prepare-images.js';
 +import type { VisioImageOptions } from './media.js';
-+import { pageLayers } from './layers.js';
++import { createLayerBudget, indexLayers, pageLayers } from './layers.js';
 +import { loadVisioThemes } from './theme.js';
 +import type { Resources } from './style.js';
 +import { elements } from '../xml/index.js';
@@ -3814,8 +4380,9 @@ index 0000000..ea430dd
 +		paragraphCount = 0;
 +	const context: ShapeContext = {
 +		metadataBudget: createMetadataBudget(options.metadata),
++		layerBudget: createLayerBudget(),
 +		masters,
-+		layers: [],
++		layers: new Map(),
 +		styles,
 +		styleCache: new Map(),
 +		defaultStyles: new Map(
@@ -3874,7 +4441,7 @@ index 0000000..ea430dd
 +		reportCachedErrors(sheet, localReport);
 +		resources.pageCells = sheet.cells;
 +		const layers = pageLayers(sheet, resources, localReport);
-+		context.layers = layers;
++		context.layers = indexLayers(layers);
 +		const width = number(sheet.cells, 'PageWidth', 8.5, localReport),
 +			height = number(sheet.cells, 'PageHeight', 11, localReport);
 +		if (width <= 0 || height <= 0)
@@ -4076,6 +4643,256 @@ index 0000000..291db40
 +		await prepareImages(shape.children, pkg, sourcePart, report, options);
 +	}
 +}
+diff --git a/src/visio/raster-inspection.test.ts b/src/visio/raster-inspection.test.ts
+new file mode 100644
+index 0000000..5626042
+--- /dev/null
++++ b/src/visio/raster-inspection.test.ts
+@@ -0,0 +1,244 @@
++import JSZip from 'jszip';
++import { describe, expect, it, vi } from 'vitest';
++import {
++	inspectVisioRasterImage,
++	VisioImageError,
++	VISIO_RASTER_IMAGE_LIMITS,
++	type VisioImageOptions,
++} from './index.js';
++import { readVisioImage } from './media.js';
++import { crc32 } from './package-common.js';
++import { VisioPackage } from './package.js';
++import { child, type Report } from './sheet.js';
++import { relations, xml } from './test-fixtures.js';
++
++const png = Uint8Array.from(
++	Buffer.from(
++		'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABHNCSVQICAgIfAhkiAAAAAFzUkdCAK7OHOkAAAALSURBVAiZY2AAAgAABQABYlUyiAAAAABJRU5ErkJggg==',
++		'base64',
++	),
++);
++const gif = Uint8Array.from(
++	Buffer.from('R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==', 'base64'),
++);
++const jpeg = Uint8Array.from(
++	Buffer.from(
++		'/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/2wBDAQMDAwQDBAgEBAgQCwkLEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBD/wAARCAADAAIDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAn/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFAEBAAAAAAAAAAAAAAAAAAAAAP/EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAMAwEAAhEDEQA/AJVAA//Z',
++		'base64',
++	),
++);
++const fixtures = [
++	['PNG', png, 'image/png', 1, 1],
++	['GIF', gif, 'image/gif', 1, 1],
++	['JPEG', jpeg, 'image/jpeg', 2, 3],
++] as const;
++
++function pngSize(width: number, height: number): Uint8Array {
++	const bytes = png.slice(),
++		view = new DataView(bytes.buffer);
++	view.setUint32(16, width);
++	view.setUint32(20, height);
++	view.setUint32(29, (crc32(bytes.subarray(12, 29)) ^ 0xffffffff) >>> 0);
++	return bytes;
++}
++
++describe('public Visio raster inspection', () => {
++	it.each(fixtures)(
++		'detects %s MIME and intrinsic dimensions without retaining bytes',
++		(_, bytes, mimeType, pixelWidth, pixelHeight) => {
++			const before = bytes.slice();
++			expect(inspectVisioRasterImage(bytes)).toEqual({ mimeType, pixelWidth, pixelHeight });
++			expect(bytes).toEqual(before);
++		},
++	);
++	it.each(fixtures)(
++		'reads only a nonzero-offset %s view',
++		(_, bytes, mimeType, pixelWidth, pixelHeight) => {
++			const allocation = new Uint8Array(bytes.length + 32).fill(0xff);
++			allocation.set(bytes, 13);
++			const view = allocation.subarray(13, 13 + bytes.length);
++			expect(inspectVisioRasterImage(view, { maxImageBytes: bytes.length })).toEqual({
++				mimeType,
++				pixelWidth,
++				pixelHeight,
++			});
++		},
++	);
++	it('returns intrinsic dimensions so a host can reject mismatched declared dimensions', () => {
++		const declared = { mimeType: 'image/png', pixelWidth: 10, pixelHeight: 20 };
++		const detected = inspectVisioRasterImage(png);
++		expect(detected.mimeType).toBe(declared.mimeType);
++		expect(detected.pixelWidth).not.toBe(declared.pixelWidth);
++		expect(detected.pixelHeight).not.toBe(declared.pixelHeight);
++		expect(inspectVisioRasterImage(jpeg).mimeType).not.toBe(declared.mimeType);
++	});
++	it('rechecks mutable bytes on every call instead of caching by identity', () => {
++		const bytes = png.slice();
++		expect(inspectVisioRasterImage(bytes).mimeType).toBe('image/png');
++		bytes[29]! ^= 1;
++		expect(() => inspectVisioRasterImage(bytes)).toThrowError(
++			expect.objectContaining({ code: 'invalid-image', message: 'PNG chunk checksum mismatch.' }),
++		);
++		bytes.set(pngSize(2, 3));
++		expect(inspectVisioRasterImage(bytes)).toMatchObject({ pixelWidth: 2, pixelHeight: 3 });
++	});
++	it.each([
++		'<svg xmlns="http://www.w3.org/2000/svg" onload="alert(1)"/>',
++		'<!DOCTYPE html><html><script>alert(1)</script></html>',
++		'GIF89b',
++		'',
++	])('rejects unsupported or active content regardless of a host MIME claim: %s', (content) => {
++		expect(() => inspectVisioRasterImage(new TextEncoder().encode(content))).toThrowError(
++			expect.objectContaining({ name: 'VisioImageError', code: 'unsupported-image' }),
++		);
++	});
++	it.each(fixtures)('rejects a %s signature followed by HTML', (_, bytes) => {
++		const signature = bytes.subarray(0, bytes === png ? 8 : bytes === gif ? 6 : 2);
++		const html = new TextEncoder().encode('<html><script>alert(1)</script></html>');
++		expect(() => inspectVisioRasterImage(Uint8Array.from([...signature, ...html]))).toThrowError(
++			VisioImageError,
++		);
++	});
++	it.each(fixtures)('rejects truncated recognized %s headers and payloads', (_, bytes) => {
++		const signatureLength = bytes === png ? 8 : bytes === gif ? 6 : 2;
++		for (const end of [signatureLength, Math.floor(bytes.length / 2), bytes.length - 1])
++			expect(() => inspectVisioRasterImage(bytes.subarray(0, end))).toThrowError(
++				expect.objectContaining({ code: 'invalid-image' }),
++			);
++	});
++	it.each(fixtures)('rejects data appended after the %s terminator', (_, bytes) => {
++		const content = Uint8Array.from([...bytes, ...new TextEncoder().encode('<svg/>')]);
++		expect(() => inspectVisioRasterImage(content)).toThrowError(
++			expect.objectContaining({ code: 'invalid-image' }),
++		);
++	});
++	it('checks PNG payload checksums as well as the header checksum', () => {
++		const bytes = png.slice();
++		const at = Buffer.from(bytes).indexOf('IDAT');
++		expect(at).toBeGreaterThan(0);
++		bytes[at + 4]! ^= 1;
++		expect(() => inspectVisioRasterImage(bytes)).toThrowError(
++			expect.objectContaining({ code: 'invalid-image', message: 'PNG chunk checksum mismatch.' }),
++		);
++	});
++	it('rejects corrupt GIF descriptors and JPEG segment markers', () => {
++		const badGif = gif.slice();
++		badGif[badGif.indexOf(0x2c)] = 0;
++		const badJpeg = jpeg.slice();
++		badJpeg[2] = 0;
++		for (const bytes of [badGif, badJpeg, pngSize(0, 1)])
++			expect(() => inspectVisioRasterImage(bytes)).toThrowError(
++				expect.objectContaining({ code: 'invalid-image' }),
++			);
++	});
++	it.each([null, undefined, 'PNG', new ArrayBuffer(16), new Uint16Array(8)])(
++		'rejects a non-Uint8Array runtime input with a structured error',
++		(bytes) => {
++			expect(() => inspectVisioRasterImage(bytes as unknown as Uint8Array)).toThrowError(
++				expect.objectContaining({ code: 'invalid-image' }),
++			);
++		},
++	);
++});
++
++describe('public Visio raster inspection limits', () => {
++	it('exposes frozen default limits that are also hard inspection ceilings', () => {
++		expect(VISIO_RASTER_IMAGE_LIMITS).toEqual({
++			maxImageBytes: 8 * 1024 * 1024,
++			maxPixels: 16_000_000,
++			maxDimension: 16384,
++		});
++		expect(Object.isFrozen(VISIO_RASTER_IMAGE_LIMITS)).toBe(true);
++		expect(inspectVisioRasterImage(png, { ...VISIO_RASTER_IMAGE_LIMITS })).toBeDefined();
++	});
++	it.each(['maxImageBytes', 'maxPixels', 'maxDimension'] as const)(
++		'rejects invalid or raised %s options rather than weakening the hard ceiling',
++		(key) => {
++			for (const value of [
++				0,
++				-1,
++				0.5,
++				NaN,
++				Infinity,
++				Number.MAX_SAFE_INTEGER + 1,
++				VISIO_RASTER_IMAGE_LIMITS[key] + 1,
++				undefined,
++				null,
++				'1',
++			])
++				expect(() => inspectVisioRasterImage(png, { [key]: value })).toThrowError(
++					expect.objectContaining({ code: 'invalid-limit' }),
++				);
++		},
++	);
++	it.each([null, 1, 'limits', []])('rejects an invalid limits object', (options) => {
++		expect(() => inspectVisioRasterImage(png, options as VisioImageOptions)).toThrowError(
++			expect.objectContaining({ code: 'invalid-limit' }),
++		);
++	});
++	it.each([{ maxImageBytes: jpeg.length - 1 }, { maxPixels: 5 }, { maxDimension: 2 }])(
++		'honors lower caller bounds %j',
++		(options) => {
++			expect(() => inspectVisioRasterImage(jpeg, options)).toThrowError(
++				expect.objectContaining({ code: 'image-limit' }),
++			);
++		},
++	);
++	it('accepts exact lower bounds inclusively', () => {
++		expect(
++			inspectVisioRasterImage(jpeg, {
++				maxImageBytes: jpeg.length,
++				maxPixels: 6,
++				maxDimension: 3,
++			}),
++		).toEqual({ mimeType: 'image/jpeg', pixelWidth: 2, pixelHeight: 3 });
++	});
++	it.each([pngSize(16385, 1), pngSize(4001, 4000), pngSize(0xffffffff, 0xffffffff)])(
++		'enforces default dimension and pixel ceilings',
++		(bytes) => {
++			expect(() => inspectVisioRasterImage(bytes)).toThrowError(
++				expect.objectContaining({ code: 'image-limit' }),
++			);
++		},
++	);
++	it('applies the byte ceiling before inspecting format structure', () => {
++		const bytes = new Uint8Array(VISIO_RASTER_IMAGE_LIMITS.maxImageBytes + 1);
++		expect(() => inspectVisioRasterImage(bytes)).toThrowError(
++			expect.objectContaining({ code: 'image-limit' }),
++		);
++	});
++	it('counts all GIF frames toward the pixel ceiling', () => {
++		const start = gif.indexOf(0x2c);
++		const bytes = Uint8Array.from([...gif.subarray(0, -1), ...gif.subarray(start)]);
++		expect(() => inspectVisioRasterImage(bytes, { maxPixels: 1 })).toThrowError(
++			expect.objectContaining({ code: 'image-limit' }),
++		);
++	});
++	it('preserves package parser options that raise limits above inspection ceilings', async () => {
++		const zip = new JSZip(),
++			source = 'visio/pages/page1.xml';
++		zip.file(source, xml('PageContents', '<ForeignData><Rel r:id="rId1"/></ForeignData>'));
++		zip.file(
++			'visio/pages/_rels/page1.xml.rels',
++			relations(
++				'<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/image.png"/>',
++			),
++		);
++		zip.file('visio/media/image.png', pngSize(16385, 1000));
++		const pkg = await VisioPackage.open(await zip.generateAsync({ type: 'uint8array' }));
++		const report = vi.fn<Report>();
++		const image = await readVisioImage(
++			pkg,
++			source,
++			child(await pkg.readXml(source), 'ForeignData')!,
++			report,
++			{
++				maxImageBytes: VISIO_RASTER_IMAGE_LIMITS.maxImageBytes + 1,
++				maxDimension: 16385,
++				maxPixels: 16_385_000,
++			},
++		);
++		expect(image).toMatchObject({ mimeType: 'image/png', pixelWidth: 16385, pixelHeight: 1000 });
++		expect(report).not.toHaveBeenCalled();
++	});
++});
 diff --git a/src/visio/rounded-geometry.test.ts b/src/visio/rounded-geometry.test.ts
 new file mode 100644
 index 0000000..dd1d529
@@ -5165,14 +5982,14 @@ index 0000000..977438e
 +}
 diff --git a/src/visio/shapes.ts b/src/visio/shapes.ts
 new file mode 100644
-index 0000000..5b22ca7
+index 0000000..ffe268b
 --- /dev/null
 +++ b/src/visio/shapes.ts
-@@ -0,0 +1,255 @@
+@@ -0,0 +1,256 @@
 +import { styleSheet, type StyleContext } from './style-inheritance.js';
 +import { metadata } from './metadata.js';
 +import { shapeMetadata, type VisioMetadataBudget } from './shape-metadata.js';
-+import { shapeLayers } from './layers.js';
++import { shapeLayers, type LayerBudget } from './layers.js';
 +import type { VisioLayer, VisioShape } from './model.js';
 +import { shapeTransform, geometryPaths } from './geometry.js';
 +import { VisioPackageError } from './package.js';
@@ -5188,8 +6005,9 @@ index 0000000..5b22ca7
 +
 +export interface ShapeContext extends StyleContext {
 +	metadataBudget: VisioMetadataBudget;
++	layerBudget: LayerBudget;
 +	masters: Map<string, RawShape[]>;
-+	layers: VisioLayer[];
++	layers: ReadonlyMap<string, VisioLayer>;
 +	defaultStyles: Map<string, string>;
 +	resources: Resources;
 +	maxShapes: number;
@@ -5354,7 +6172,7 @@ index 0000000..5b22ca7
 +					'unsupported-image-clipping',
 +					'Arbitrary image clipping paths are not applied; only the shape frame is used.',
 +				);
-+			const membership = shapeLayers(sheet, context.layers, report);
++			const membership = shapeLayers(sheet, context.layers, report, context.layerBudget);
 +			const geometry = geometryPaths(sheet, width, height, report, context.consumeGeometry);
 +			if (
 +				!geometry.length &&
@@ -5426,10 +6244,10 @@ index 0000000..5b22ca7
 +}
 diff --git a/src/visio/sheet.ts b/src/visio/sheet.ts
 new file mode 100644
-index 0000000..0ef888d
+index 0000000..bff3c55
 --- /dev/null
 +++ b/src/visio/sheet.ts
-@@ -0,0 +1,205 @@
+@@ -0,0 +1,207 @@
 +import { elements } from '../xml/index.js';
 +import type { VisioDiagnostic, VisioImage } from './model.js';
 +import { metadata, metadataAttributes } from './metadata.js';
@@ -5498,6 +6316,8 @@ index 0000000..0ef888d
 +				metadata(value, 1024, 'Font name');
 +			if (value !== undefined && ['Name', 'NameUniv', 'BulletStr'].includes(name))
 +				metadata(value, 4096, 'Display label');
++			if (value !== undefined && name === 'LayerMember')
++				metadata(value, 8192, 'Cached layer membership');
 +			return [
 +				name,
 +				{
@@ -5715,12 +6535,13 @@ index 0000000..fb583f8
 +}
 diff --git a/src/visio/style.ts b/src/visio/style.ts
 new file mode 100644
-index 0000000..5511cf1
+index 0000000..61ee2f4
 --- /dev/null
 +++ b/src/visio/style.ts
-@@ -0,0 +1,222 @@
+@@ -0,0 +1,225 @@
 +import { themeLinearGradient } from './theme-gradient.js';
 +import { themeLineWeight, reportThemeEffects } from './theme-line.js';
++import { lineCap } from './line-style.js';
 +import { themeColor, type ThemeResources } from './theme-resolve.js';
 +import { textBackground } from './text-background.js';
 +import { textParagraphs, type ParagraphMarker } from './paragraphs.js';
@@ -5809,6 +6630,7 @@ index 0000000..5511cf1
 +	reportThemeEffects(cells, resources, report);
 +	if (number(cells, 'ShdwPattern', 0, report))
 +		report('unsupported-shadow', 'Shape shadows are not rendered.');
++	const cap = lineCap(cells, resources, report);
 +	return {
 +		fill:
 +			pattern === 0
@@ -5819,6 +6641,7 @@ index 0000000..5511cf1
 +		lineWidth:
 +			themeLineWeight(cells, resources, report) ??
 +			Math.max(0, number(cells, 'LineWeight', 0.01, report)),
++		...(cap === undefined ? {} : { lineCap: cap }),
 +		linePattern: number(cells, 'LinePattern', 1, report),
 +		fillOpacity: opacity(number(cells, 'FillForegndTrans', 0, report)),
 +		lineOpacity: opacity(number(cells, 'LineColorTrans', 0, report)),
@@ -6670,10 +7493,10 @@ index 0000000..b1784d4
 +}
 diff --git a/src/visio/theme-line.test.ts b/src/visio/theme-line.test.ts
 new file mode 100644
-index 0000000..de8721e
+index 0000000..44ae4c7
 --- /dev/null
 +++ b/src/visio/theme-line.test.ts
-@@ -0,0 +1,64 @@
+@@ -0,0 +1,68 @@
 +import { describe, expect, it } from 'vitest';
 +import { parseVsdx } from './parser.js';
 +import { generatedTheme, themeFixture } from './theme-fixtures.js';
@@ -6718,9 +7541,13 @@ index 0000000..de8721e
 +			).toBe(true);
 +		},
 +	);
-+	it('reports unrepresented caps and compound strokes separately', async () => {
-+		const result = await parse({ line: 'cap="rnd" cmpd="dbl"' });
-+		expect(result.diagnostics.map((item) => item.code)).toContain('unsupported-theme-line-cap');
++	it('resolves supported caps and reports unsupported compound strokes separately', async () => {
++		const result = await parse({
++			line: 'cap="rnd" cmpd="dbl"',
++			contents: cell('LineCap', 'Themed'),
++		});
++		expect(result.style.lineCap).toBe('round');
++		expect(result.diagnostics.map((item) => item.code)).not.toContain('unsupported-theme-line-cap');
 +		expect(result.diagnostics.map((item) => item.code)).toContain(
 +			'unsupported-theme-line-compound',
 +		);
@@ -6740,10 +7567,10 @@ index 0000000..de8721e
 +});
 diff --git a/src/visio/theme-line.ts b/src/visio/theme-line.ts
 new file mode 100644
-index 0000000..6b03f96
+index 0000000..738a004
 --- /dev/null
 +++ b/src/visio/theme-line.ts
-@@ -0,0 +1,62 @@
+@@ -0,0 +1,56 @@
 +import { elements } from '../xml/index.js';
 +import type { Cells, Report } from './sheet.js';
 +import { themeChild } from './theme-color.js';
@@ -6761,12 +7588,6 @@ index 0000000..6b03f96
 +	if (!line || !raw || !/^\d{1,8}$/.test(raw)) return undefined;
 +	const emu = Number(raw);
 +	if (emu > 20_116_800) return undefined;
-+	const cap = line.getAttribute('cap');
-+	if (cap && cap !== 'flat')
-+		report(
-+			'unsupported-theme-line-cap',
-+			'A theme line cap is not represented; the default cap is used.',
-+		);
 +	const compound = line.getAttribute('cmpd');
 +	if (compound && compound !== 'sng')
 +		report(
