@@ -1,3 +1,4 @@
+import type { VisioForeignVector } from './foreign-vector.js';
 import { elements } from '../xml/index.js';
 import type { VisioDiagnostic, VisioImage } from './model.js';
 import { metadata, metadataAttributes } from './metadata.js';
@@ -49,6 +50,7 @@ export interface RawShape extends Sheet {
 	foreign: boolean;
 	foreignData?: Element;
 	image?: VisioImage;
+	foreignVector?: VisioForeignVector;
 	deleted: boolean;
 }
 export type Report = (code: string, message: string, context?: Partial<VisioDiagnostic>) => void;

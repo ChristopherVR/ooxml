@@ -1,8 +1,9 @@
-# Visio read-only scenes
+# Visio scenes and experimental text saving
 
 `ooxml-core/visio` imports VSDX drawing packages into a DOM-independent typed scene.
 UI components live in the separate viewer. This is a supported subset, not Visio
-parity, a ShapeSheet calculation engine, an editor, or a round-trip serializer.
+parity or a ShapeSheet calculation engine. A separate experimental plain-text
+save API preserves untouched package payloads under the limitations documented below.
 
 ```ts
 import { parseVsdx, getVisioPageLayers } from 'ooxml-core/visio';
@@ -37,6 +38,8 @@ Background page layers are returned in painting order.
 - Saved Quick Style color selectors and internal DrawingML theme color/variant records;
   solid fills, linear gradient endpoints/stops, tint/shade/alpha color transforms,
   and themed line widths, with diagnostics for approximations
+- Saved horizontal linear gradients with complete cached stops and per-stop opacity;
+  explicit root selection resolves existing themed stop cells without inventing rows
 - Explicit root-style selection for saved themed colors and scalar line/fill formats;
   root fill patterns and opacity honor zero Quick Style fill-matrix selection
 - Character runs, fonts, bold/italic/underline, text box transforms and margins;
@@ -56,7 +59,7 @@ Only saved cached values, supported theme records and numeric coordinate-list li
 macros, addons, hyperlinks, external data, or network resources are executed or
 fetched. Unsupported theme effects/transforms, complex paint, arbitrary-path corner rounding,
 layer color overrides, nonliteral/periodic
-splines, foreign/vector/OLE objects, APNG, uncommon JPEG coding, and arbitrary image
+splines, most foreign/vector records, OLE objects, APNG, uncommon JPEG coding, and arbitrary image
 clipping are unsupported. Resized masters with inherited absolute geometry are
 warned because their formulas are not recalculated. Master roots that themselves
 inherit another master are diagnosed. Missing/unsupported features are returned
@@ -68,13 +71,16 @@ spacing is in inches; multiple spacing scales the largest font on a line. Raster
 placement is local y-up inches and should be clipped to the shape frame. Header
 validation does not replace browser image decoding or guarantee pixel fidelity.
 Text backdrops apply behind laid-out text. Supported theme gradients expose local
-y-up inch endpoints and at most 32 sorted stops. Radial gradients, custom saved
+y-up inch endpoints and at most 32 sorted stops. Radial and non-horizontal saved gradients, incomplete saved
 gradient overrides, and unsupported color transforms retain a solid fallback and
 diagnostic. Selected theme effects and unsupported line styling are diagnosed
 separately. Visio-specific ignored theme attributes do not alter normalized paint.
 Root fill-format selection replaces only existing `Themed` scalar caches, preserves
-literal caches and leaves missing root values unresolved. Root gradient stop rows,
-hatch rendering and arbitrary saved gradients remain unsupported.
+literal caches and leaves missing root values unresolved. Only complete saved horizontal gradients (zero or pi radians modulo turns), with
+shape rotation enabled and group gradients disabled, are normalized. Existing themed
+root stop cells resolve at matching indices; literal caches remain authoritative.
+The first ten active stop rows are used. Hatch rendering and arbitrary saved
+gradients remain unsupported; native visual equivalence is unverified.
 Normalized `style.lineCap` maps directly to SVG `stroke-linecap`. An absent effective
 cell leaves it undefined; consumers retain their documented fallback. Themed caps
 resolve independently of line width and use Office's flat default when the selected
@@ -153,7 +159,7 @@ floating-point fidelity is not certified. Generated analytic
 quadratic/cubic tests cover sampled chord error, but no genuine spline-row fixture
 or native Visio comparison is yet available.
 
-## Metafile inspection and future vector boundary
+## Metafile inspection and bounded worker conversion
 
 `inspectVisioEmfAdmission` performs bounded classic-record inspection and returns
 `renderingEnabled: false` in every result. No converter runs. VSDX enhanced-metafile
@@ -173,8 +179,8 @@ paths, literal paints, matrices and a closed indexed clipping graph.
 transport or raw host input. Both return deeply frozen independent data and reject
 unsafe tags, URLs, fonts, styles, sparse arrays, accessors, cycles, invalid paths,
 coordinate/transform amplification and expanded clip work. These helpers are not a
-metafile renderer or a guarantee of converter completeness. The viewer's live
-model still does not render EMF/vector foreign data.
+metafile renderer or a guarantee of converter completeness. The private viewer renders the supported primitive subset only through its
+deadline-controlled parser worker. The non-worker fallback remains converter-free.
 
 `convertVisioMetafile` is an experimental adapter for a trusted
 `emf-converter` browser-package function supplied by the host. It copies and
@@ -182,5 +188,51 @@ reinspects input, narrows admission further to stock-painted primitive shapes
 and lines, fixes non-raster conversion options, and validates the resulting tree.
 Its 256 KiB, 512-record, 2048-pixel limits do not establish a hard heap quota.
 Use it only inside a disposable worker with a parent-owned deadline; it neither
-loads Node codecs nor enables VSDX import. All format conversion remains in
+loads Node codecs nor enables conversion by default. `parseVsdx` accepts an optional
+trusted `metafileConverter` callback for worker-only use. Per-document admission
+allows at most eight unique conversions and 1 MiB aggregate input. See
+[bounded conversion](../../docs/visio-metafile-conversion.md) for the exact subset. All format conversion remains in
 `emf-converter`; the adapter owns admission and the inert output boundary only.
+
+## Experimental plain-text save
+
+`editVsdx(input, edits, options)` applies an atomic, source-backed batch of
+`{ type: 'replace-plain-text', pageId, shapeId, text }` commands and returns
+`{ bytes, changedParts, diagnostics }`. It edits one existing local plain-text
+`Text` element per command. It does not serialize the normalized rendering model.
+
+Untouched package part payloads retain their exact uncompressed bytes, including
+unknown parts, relationships and content types. An edited XML part preserves
+unrelated content semantically, not lexically. ZIP headers, comments, directory
+entries, extra fields and compression representation are not preservation targets.
+A no-op returns an independent copy of the original archive. Changed saves use
+STORE compression to avoid introducing compression ratios outside reader limits;
+files may grow and exceeding the output limit fails without returning a result.
+
+Only VSDX drawing packages are admitted. Signed/macro-indicated packages,
+master-linked or deleted targets, missing/ambiguous IDs, rich text, fields and
+unknown text markup are rejected. Replacement text must contain valid XML
+characters and cannot contain carriage returns. Edited documents containing
+carriage-return text or tab/newline/carriage-return attribute values are rejected
+conservatively because this slice does not establish their serialization fidelity.
+UTF-16 source XML becomes declared UTF-8 only in the edited part.
+
+Every retained payload is inflated through the bounded reader and CRC checked.
+External relationships remain inert. Unknown untouched payloads are preserved as
+opaque bytes; this is not a safety certification of their content. Dirty output
+is re-admitted with the remaining transaction deadline. Package limits still
+apply, plus defaults of 1,000 commands, one million replacement UTF-16 code units
+and an output ceiling equal to `maxInputBytes`. Output is streamed with an actual
+byte limit. Runtime checks are cooperative, not hard CPU/heap quotas; applications
+should run editing in a disposable worker for responsiveness.
+
+Calls own input bytes and command values before their first asynchronous step.
+Each call has a fresh bounded operation lifetime; do not keep a `VisioPackage`
+reader alive as an interactive editing session. No public mutable DOM is exposed.
+
+There is no geometry editing, rich-text editing, master override creation,
+formula evaluation, dependent-cache refresh, undo UI or native save parity claim.
+Text-dependent formulas can have stale caches after a save. Every changed result
+reports `edit-caches-not-recalculated`. Automated evidence covers reopening in
+this library and preservation/security invariants; reopening in Microsoft Visio
+and native rendering fidelity remain unverified.

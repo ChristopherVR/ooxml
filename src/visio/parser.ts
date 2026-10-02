@@ -1,3 +1,4 @@
+import type { VisioMetafileTreeConverter } from './convert-metafile.js';
 import { connections, indexedPart, related, validateBackgrounds, visioXml } from './parts.js';
 import { prepareImages } from './prepare-images.js';
 import type { VisioImageOptions } from './media.js';
@@ -26,6 +27,8 @@ import {
 } from './sheet.js';
 
 export interface ParseVsdxOptions {
+	/** Trusted converter package injection. Only supply inside a disposable, externally timed worker. */
+	metafileConverter?: VisioMetafileTreeConverter;
 	limits?: Partial<VisioPackageLimits>;
 	images?: VisioImageOptions;
 	metadata?: VisioMetadataOptions;
@@ -128,7 +131,14 @@ export async function parseVsdx(
 			if (!id || masters.has(id))
 				throw new VisioPackageError('INVALID_MASTER_ID', 'Master IDs must be present and unique.');
 			const masterShapes = readShapes(await visioXml(pkg, part, 'MasterContents'));
-			await prepareImages(masterShapes, pkg, part, report, options.images);
+			await prepareImages(
+				masterShapes,
+				pkg,
+				part,
+				report,
+				options.images,
+				options.metafileConverter,
+			);
 			masters.set(id, masterShapes);
 		}
 	}
@@ -230,7 +240,14 @@ export async function parseVsdx(
 		const backgroundPageId = attribute(page, 'BackPage');
 		if (backgroundPageId !== undefined) metadata(backgroundPageId, 256, 'Background page ID');
 		const rawShapes = readShapes(root);
-		await prepareImages(rawShapes, pkg, part, localReport, options.images);
+		await prepareImages(
+			rawShapes,
+			pkg,
+			part,
+			localReport,
+			options.images,
+			options.metafileConverter,
+		);
 		const shapes = normalizeShapes(rawShapes, context);
 		const seen = new Set<string>();
 		const visit = (items: typeof shapes): void => {

@@ -64,6 +64,7 @@ function mergeShape(base: RawShape, local: RawShape, context: ShapeContext): Raw
 		foreign: local.foreign || base.foreign,
 	};
 	if (local.foreign && !local.image) delete result.image;
+	if (local.foreign && !local.foreignVector) delete result.foreignVector;
 	return result;
 }
 function cloneInherited(shape: RawShape, parentId: string, context: ShapeContext): RawShape {
@@ -176,13 +177,13 @@ export function normalizeShapes(
 			const groupDisplayMode = mode === 0 || mode === 1 || mode === 2 ? mode : undefined;
 			if (mode !== undefined && groupDisplayMode === undefined)
 				report('invalid-group-display-mode', 'Invalid cached group display mode was ignored.');
-			if ((shape.foreign || type === 'Foreign') && !shape.image)
+			if ((shape.foreign || type === 'Foreign') && !shape.image && !shape.foreignVector)
 				report(
 					'unsupported-foreign-object',
-					'This foreign object is not a supported embedded raster image and is not rendered.',
+					'This foreign object is not a supported embedded image or bounded vector and is not rendered.',
 				);
 			if (type === 'Guide') report('hidden-guide', 'Guide shapes are retained but hidden.');
-			if (shape.image && sheet.cells.get('ClippingPath')?.value)
+			if ((shape.image || shape.foreignVector) && sheet.cells.get('ClippingPath')?.value)
 				report(
 					'unsupported-image-clipping',
 					'Arbitrary image clipping paths are not applied; only the shape frame is used.',
@@ -255,6 +256,21 @@ export function normalizeShapes(
 				layerIds: membership.layerIds,
 				children: normalizeShapes(shape.children, context, depth + 1, stack),
 				...(masterId === undefined ? {} : { masterId }),
+				...(shape.foreignVector
+					? {
+							foreignVector: {
+								vector: shape.foreignVector,
+								opacity: Math.max(
+									0,
+									Math.min(1, 1 - number(sheet.cells, 'Transparency', 0, report)),
+								),
+								x: number(sheet.cells, 'ImgOffsetX', 0, report),
+								y: number(sheet.cells, 'ImgOffsetY', 0, report),
+								width: Math.max(0, number(sheet.cells, 'ImgWidth', width, report)),
+								height: Math.max(0, number(sheet.cells, 'ImgHeight', height, report)),
+							},
+						}
+					: {}),
 				...(shape.image
 					? {
 							image: {

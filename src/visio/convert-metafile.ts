@@ -33,7 +33,7 @@ export type VisioMetafileConversionResult =
 // path accumulation, comments, bitmaps, text, EMF+, WMF, or user-created GDI objects.
 const RECORDS = new Set([1, 14, 27, 37, 42, 43, 54]);
 /** Package adapter, not a second EMF renderer. Never returns raw SVG or partial output.
- * This does not enable document import. Its small generated-case subset remains experimental.
+ * Document import must explicitly inject the trusted converter in an isolated worker.
  * Post-conversion validation bounds retained output, not peak converter heap allocation.
  */
 export async function convertVisioMetafile(
@@ -91,7 +91,15 @@ export async function convertVisioMetafile(
 				code: 'empty-output',
 				message: 'Converter returned no vector output.',
 			};
-		const vector = sanitizeVisioForeignVectorTree(tree);
+		const vector = sanitizeVisioForeignVectorTree(tree, {
+			maxNodes: 2048,
+			maxPathOperands: 20000,
+			maxPathCommands: 10000,
+			maxCharacters: 256 * 1024,
+			maxExpandedNodes: 2048,
+			maxExpandedOperands: 20000,
+			maxExpandedCommands: 10000,
+		});
 		if (vector.width !== header.pixelWidth || vector.height !== header.pixelHeight)
 			return {
 				status: 'conversion-failed',

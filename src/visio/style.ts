@@ -1,3 +1,4 @@
+import { savedFillGradient } from './saved-fill-gradient.js';
 import { themeLinearGradient } from './theme-gradient.js';
 import { themeLineWeight, reportThemeEffects, themeSolidLinePattern } from './theme-line.js';
 import { lineCap } from './line-style.js';
@@ -72,9 +73,20 @@ export function shapeStyle(
 ): VisioStyle {
 	const cells = sheet.cells,
 		pattern = number(cells, 'FillPattern', 1, report);
+	const savedGradient =
+		pattern !== 0
+			? savedFillGradient(
+					sheet,
+					width,
+					height,
+					(stops) => color(stops, 'GradientStopColor', '', resources, report),
+					report,
+				)
+			: undefined;
 	const fillGradient =
-		pattern === 1 ? themeLinearGradient(sheet, resources, width, height, report) : undefined;
-	if (pattern > 1)
+		savedGradient ??
+		(pattern === 1 ? themeLinearGradient(sheet, resources, width, height, report) : undefined);
+	if (pattern > 1 && !fillGradient)
 		report(
 			'unsupported-fill-pattern',
 			`Fill pattern ${pattern} is approximated by its foreground color.`,
@@ -103,7 +115,8 @@ export function shapeStyle(
 			Math.max(0, number(cells, 'LineWeight', 0.01, report)),
 		...(cap === undefined ? {} : { lineCap: cap }),
 		...(themeSolidLinePattern(cells, resources) ?? linePattern(cells, report)),
-		fillOpacity: opacity(number(cells, 'FillForegndTrans', 0, report)),
+		// Saved stop transparencies are the fill opacity, not a second alpha layer.
+		fillOpacity: savedGradient ? 1 : opacity(number(cells, 'FillForegndTrans', 0, report)),
 		lineOpacity: opacity(number(cells, 'LineColorTrans', 0, report)),
 		startArrow: number(cells, 'BeginArrow', 0, report),
 		endArrow: number(cells, 'EndArrow', 0, report),

@@ -97,7 +97,12 @@ from an existing viewer implementation. Publication adds the `ooxml-core/visio`
 subpath and strict ESM/CJS/declaration build entries. UI, text layout, raster
 decoding, and worker lifecycle remain in the viewer. EMF conversion remains in
 `emf-converter`; this area supplies bounded admission and inert vector validation.
-This is a read-only supported subset, not a ShapeSheet engine or round-trip editor.
+The initial publication was a read-only supported subset. Subsequent original
+work adds bounded cached horizontal gradients, optional trusted worker metafile
+conversion, and an experimental source-backed plain-text transaction. The new
+`edit*.ts`, `saved-fill-gradient*.ts` and `theme-root-gradient.test.ts` modules
+were developed here, not extracted from another repository. This remains a
+supported subset, not a ShapeSheet engine or general round-trip editor.
 
 All new files under `src/visio/`:
 

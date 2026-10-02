@@ -193,3 +193,115 @@ describe('embedded EMF compatibility inspection without conversion', () => {
 		expect(notes.filter((code) => code === 'emf-document-limit')).toHaveLength(8);
 	});
 });
+
+const inertTree = () => ({
+	tag: 'svg',
+	attrs: { xmlns: 'http://www.w3.org/2000/svg', width: 100, height: 100, viewBox: '0 0 100 100' },
+	children: [],
+});
+describe('opt-in isolated package converter integration', () => {
+	it('attaches inert vectors only after admission and reports limited rendering honestly', async () => {
+		const converter = vi.fn(async () => inertTree());
+		const model = await parseVsdx(await build(rectangle()), { metafileConverter: converter });
+		expect(converter).toHaveBeenCalledOnce();
+		expect(model.pages[0]!.shapes[0]!.foreignVector).toMatchObject({
+			vector: { kind: 'vector', width: 100, height: 100 },
+			x: 0,
+			y: 0,
+			opacity: 1,
+		});
+		expect(codes(model)).toContain('emf-limited-rendering');
+		expect(codes(model)).not.toContain('emf-rendering-disabled');
+		expect(codes(model)).not.toContain('unsupported-foreign-object');
+	});
+	it.each([
+		new Uint8Array([1]),
+		emf([record(33), record(34, [-1])]),
+		emf([record(70, [4, 0x2b464d45])]),
+	])('never converts unsupported or malformed parts', async (bytes) => {
+		const converter = vi.fn(async () => inertTree());
+		const model = await parseVsdx(await build(bytes), { metafileConverter: converter });
+		expect(converter).not.toHaveBeenCalled();
+		expect(model.pages[0]!.shapes[0]!.foreignVector).toBeUndefined();
+	});
+	it.each([
+		async () => {
+			throw new Error('private converter detail');
+		},
+		async () => ({
+			tag: 'svg',
+			attrs: { width: 100, height: 100 },
+			children: [{ tag: 'script', attrs: {}, children: [] }],
+		}),
+	])(
+		'omits a failed asset without dropping the document or exposing converter output',
+		async (converter) => {
+			const model = await parseVsdx(await build(rectangle()), { metafileConverter: converter });
+			expect(model.pages).toHaveLength(1);
+			expect(model.pages[0]!.shapes[0]!.foreignVector).toBeUndefined();
+			expect(JSON.stringify(model)).not.toContain('private converter detail');
+			expect(codes(model)).toContain('unsupported-foreign-object');
+		},
+	);
+	it('shares one validated conversion across repeated references and bounds unique asset attempts', async () => {
+		const converter = vi.fn(async () => inertTree());
+		const input = await fixture({
+			pages: [
+				{
+					id: '0',
+					contents: `<Shapes>${Array.from({ length: 10 }, (_, i) => shape(String(i), data.replace('media', `m${i}`))).join('')}${shape('repeat', data.replace('media', 'm0'))}</Shapes>`,
+				},
+			],
+			edit: (zip) => {
+				zip.file(
+					'visio/pages/_rels/page1.xml.rels',
+					relations(
+						Array.from({ length: 10 }, (_, i) =>
+							relation().replace('Id="media"', `Id="m${i}"`).replace('item.emf', `${i}.emf`),
+						).join(''),
+					),
+				);
+				for (let i = 0; i < 10; i++) zip.file(`visio/media/${i}.emf`, rectangle());
+			},
+		});
+		const model = await parseVsdx(input, { metafileConverter: converter });
+		expect(converter).toHaveBeenCalledTimes(8);
+		expect(codes(model)).toContain('emf-conversion-document-limit');
+		expect(model.pages[0]!.shapes[0]!.foreignVector!.vector).toBe(
+			model.pages[0]!.shapes[10]!.foreignVector!.vector,
+		);
+		expect(model.pages[0]!.shapes[8]!.foreignVector).toBeUndefined();
+	});
+	it('does not run a converter for external relationships', async () => {
+		const converter = vi.fn();
+		await parseVsdx(await build(rectangle(), 'External'), { metafileConverter: converter });
+		expect(converter).not.toHaveBeenCalled();
+	});
+});
+
+it('inherits converted master media and suppresses it when a local foreign object replaces it', async () => {
+	const converter = vi.fn(async () => inertTree());
+	const input = await fixture({
+		masters: [{ id: '5', shapes: shape('10', data) }],
+		pages: [
+			{
+				id: '0',
+				contents: `<Shapes>${shape('1', '<Cell N="ImgOffsetX" V="0.2"/><Cell N="ImgOffsetY" V="0.3"/><Cell N="ImgWidth" V="2"/><Cell N="ImgHeight" V="1"/><Cell N="Transparency" V="0.25"/>', 'Master="5"')}${shape('2', '<ForeignData ForeignType="Object"/>', 'Master="5"')}</Shapes>`,
+			},
+		],
+		edit: (zip) => {
+			zip.file('visio/masters/_rels/master1.xml.rels', relations(relation()));
+			zip.file('visio/media/item.emf', rectangle());
+		},
+	});
+	const model = await parseVsdx(input, { metafileConverter: converter });
+	expect(converter).toHaveBeenCalledOnce();
+	expect(model.pages[0]!.shapes[0]!.foreignVector).toMatchObject({
+		x: 0.2,
+		y: 0.3,
+		width: 2,
+		height: 1,
+		opacity: 0.75,
+	});
+	expect(model.pages[0]!.shapes[1]!.foreignVector).toBeUndefined();
+});

@@ -1,3 +1,4 @@
+import type { VisioMetafileTreeConverter } from './convert-metafile.js';
 import { inspectEmbeddedVisioMetafile } from './prepare-metafiles.js';
 import { readVisioImage, type VisioImageOptions } from './media.js';
 import type { VisioPackage } from './package.js';
@@ -10,6 +11,7 @@ export async function prepareImages(
 	sourcePart: string,
 	report: Report,
 	options?: VisioImageOptions,
+	converter?: VisioMetafileTreeConverter,
 ): Promise<void> {
 	for (const shape of shapes) {
 		if (shape.deleted) continue;
@@ -17,7 +19,14 @@ export async function prepareImages(
 			report(code, message, { part: sourcePart, shapeId: shape.id, ...extra });
 		if (shape.foreignData) {
 			if (shape.foreignData.getAttribute('ForeignType') === 'EnhMetaFile') {
-				await inspectEmbeddedVisioMetafile(pkg, sourcePart, shape.foreignData, localReport);
+				const vector = await inspectEmbeddedVisioMetafile(
+					pkg,
+					sourcePart,
+					shape.foreignData,
+					localReport,
+					converter,
+				);
+				if (vector) shape.foreignVector = vector;
 			} else {
 				const image = await readVisioImage(
 					pkg,
@@ -29,6 +38,6 @@ export async function prepareImages(
 				if (image) shape.image = image;
 			}
 		}
-		await prepareImages(shape.children, pkg, sourcePart, report, options);
+		await prepareImages(shape.children, pkg, sourcePart, report, options, converter);
 	}
 }

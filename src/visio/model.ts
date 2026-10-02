@@ -1,3 +1,4 @@
+import type { VisioForeignVector } from './foreign-vector.js';
 import type { VisioHyperlink, VisioShapeData } from './shape-metadata.js';
 
 /** Visio's internal distance unit is the inch; angles are radians. */
@@ -88,6 +89,14 @@ export interface VisioText {
 	height: number;
 	margins: { left: number; right: number; top: number; bottom: number };
 }
+export interface VisioPlacedForeignVector {
+	vector: VisioForeignVector;
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+	opacity: number;
+}
 export interface VisioImage {
 	mimeType: 'image/png' | 'image/jpeg' | 'image/gif';
 	/** Validated embedded raster bytes shared between instances. Consumers must not modify them. */
@@ -152,6 +161,7 @@ export interface VisioShape {
 	masterId?: string;
 	layerIds?: string[];
 	image?: VisioImage;
+	foreignVector?: VisioPlacedForeignVector;
 	shapeData?: VisioShapeData[];
 	hyperlinks?: VisioHyperlink[];
 }

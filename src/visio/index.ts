@@ -1,4 +1,4 @@
-/** Read-only VSDX parsing and normalized scenes. Legacy VSD/VDX and saving are not supported. */
+/** VSDX parsing, normalized scenes and experimental bounded plain-text editing. */
 export type * from './model.js';
 export type { VisioShapeData, VisioHyperlink, VisioMetadataOptions } from './shape-metadata.js';
 export { parseVsdx, getVisioPageLayers, type ParseVsdxOptions } from './parser.js';
@@ -46,3 +46,5 @@ export {
 	type VisioMetafileTreeConverter,
 	type VisioMetafileConversionResult,
 } from './convert-metafile.js';
+
+export { editVsdx, type VisioTextEdit, type EditVsdxOptions, type EditVsdxResult } from './edit.js';

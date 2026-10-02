@@ -23,7 +23,7 @@ const LINE_PROPERTIES = [
 	'BeginArrowSize',
 	'EndArrowSize',
 ];
-// Scalar fill formats only. Saved gradient stop rows still require a separate renderer.
+// Scalar fill formats; row caches are resolved separately by matching row indices.
 const FILL_PROPERTIES = [
 	'FillForegndTrans',
 	'FillBkgndTrans',
@@ -83,6 +83,27 @@ export function rootThemeSheet(sheet: Sheet, resources: ThemeResources, report?:
 	if (lineRoot) cells = replaceThemed(cells, root.cells, LINE_PROPERTIES, report);
 	if (fillRoot) cells = replaceThemed(cells, root.cells, FILL_PROPERTIES, report);
 	let sections = sheet.sections;
+	if (fillRoot) {
+		for (const [key, section] of sheet.sections) {
+			if (section.name !== 'FillGradient' || section.deleted) continue;
+			const source = root.sections.get(key);
+			if (!source || source.deleted) continue;
+			let rows = section.rows;
+			for (const [index, row] of section.rows) {
+				const saved = source.rows.get(index);
+				if (row.deleted || !saved || saved.deleted) continue;
+				const names = ['GradientStopColorTrans', 'GradientStopPosition'];
+				if (colorRoot) names.push('GradientStopColor');
+				const resolved = replaceThemed(row.cells, saved.cells, names, report);
+				if (resolved === row.cells) continue;
+				if (rows === section.rows) rows = new Map(section.rows);
+				rows.set(index, { ...row, cells: resolved });
+			}
+			if (rows === section.rows) continue;
+			if (sections === sheet.sections) sections = new Map(sheet.sections);
+			sections.set(key, { ...section, rows });
+		}
+	}
 	const rootCharacter = colorRoot ? rootCharacterCells(root) : undefined;
 	if (colorRoot && rootCharacter) {
 		for (const [key, section] of sheet.sections) {

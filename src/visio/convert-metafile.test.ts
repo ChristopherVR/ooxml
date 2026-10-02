@@ -87,3 +87,12 @@ describe('bounded package conversion adapter', () => {
 		});
 	});
 });
+
+it('applies the tighter conversion output ceiling before retaining a document asset', async () => {
+	const output = {
+		...tree(),
+		children: Array.from({ length: 2048 }, () => ({ tag: 'g', attrs: {}, children: [] })),
+	};
+	const result = await convertVisioMetafile(emf([]), async () => output);
+	expect(result).toMatchObject({ status: 'budget-exceeded', code: 'vector-limit' });
+});
