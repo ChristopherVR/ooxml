@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<meta
+			name="description"
+			content="A private, local-first Visio viewer preview. Explore pages and supported shapes, with clear compatibility limits."
+		/>
+		<meta name="theme-color" content="#2459c5" />
+		<title>Diagrams, within reach · visio-viewer</title>
+		<link rel="stylesheet" href="docs/assets/site.css" />
+		<script type="module" src="docs/assets/site.js"></script>
+	</head>
+	<body>
+		<a class="skip" href="#main">Skip to content</a>
+		<header class="site-header">
+			<div class="wrap header-inner">
+				<a class="brand" href="index.html"
+					><span class="brand-mark" aria-hidden="true">v</span>visio-viewer</a
+				>
+				<nav class="site-nav" aria-label="Main navigation">
+					<a href="demo/index.html">Playground</a><a href="docs/index.html">Guide</a
+					><a href="docs/parity.html">Compatibility</a
+					><button class="theme-toggle" type="button" aria-label="Switch color theme">◐</button>
+				</nav>
+			</div>
+		</header>
+		<main id="main">
+			<section class="hero">
+				<div class="wrap hero-grid">
+					<div>
+						<p class="eyebrow">
+							<span class="status-dot" aria-hidden="true"></span>Local-first · TypeScript · Early
+							preview
+						</p>
+						<h1>Diagrams,<br /><span>within reach.</span></h1>
+						<p class="hero-copy">
+							A lightweight foundation for viewing Visio files on the web. Open a diagram, explore
+							its pages, and inspect its shapes in your browser.
+						</p>
+						<div class="actions">
+							<a class="button primary" href="demo/index.html"
+								>Open playground <span aria-hidden="true">↗</span></a
+							><a class="button" href="docs/index.html"
+								>Read the guide <span aria-hidden="true">→</span></a
+							>
+						</div>
+						<p class="hero-note">
+							.vsdx viewer preview <span aria-hidden="true">/</span> No file uploads
+							<span aria-hidden="true">/</span> No Microsoft Visio parity claim
+						</p>
+					</div>
+					<figure class="preview" style="margin: 0">
+						<div class="preview-bar">
+							<span class="window-dots" aria-hidden="true"><i></i><i></i><i></i></span
+							><span class="file">release-workflow</span
+							><span class="sample-tag">Original sample</span>
+						</div>
+						<img
+							src="docs/assets/workflow.svg"
+							width="600"
+							height="530"
+							alt="Illustrative workflow: idea, design and build, a ready decision, then release, with an iteration loop."
+						/>
+						<figcaption class="preview-caption">
+							<span>Illustration · not a live editor</span
+							><a href="demo/index.html">Explore the real viewer →</a>
+						</figcaption>
+					</figure>
+				</div>
+			</section>
+			<div class="proof-strip">
+				<div class="wrap proof-inner">
+					<div>
+						<strong>Local by design</strong><span>Document bytes stay in this browser.</span>
+					</div>
+					<div>
+						<strong>One rendering path</strong
+						><span>A shared custom element and lifecycle API.</span>
+					</div>
+					<div>
+						<strong>Explicit coverage</strong
+						><span>Implementation and evidence tracked separately.</span>
+					</div>
+				</div>
+			</div>
+			<section class="section wrap" aria-labelledby="features-title">
+				<div class="section-intro">
+					<div>
+						<p class="eyebrow">A useful beginning</p>
+						<h2 id="features-title">See what is here.</h2>
+						<p>Start with the viewer. Follow the evidence as the implementation grows.</p>
+					</div>
+					<a class="text-link" href="docs/parity.html">Read the capability ledger →</a>
+				</div>
+				<div class="feature-grid">
+					<article class="feature">
+						<span class="feature-number">01 / EXPLORE</span>
+						<h3>Your diagram, in focus.</h3>
+						<p>
+							Open a local .vsdx file, move between pages, and zoom into the details. The playground
+							starts with an original sample.
+						</p>
+					</article>
+					<article class="feature">
+						<span class="feature-number">02 / RENDER</span>
+						<h3>A shared SVG view.</h3>
+						<p>
+							Supported cached geometry and text are rendered as SVG. Every integration uses the
+							same renderer and document model.
+						</p>
+					</article>
+					<article class="feature">
+						<span class="feature-number">03 / UNDERSTAND</span>
+						<h3>Limits in plain sight.</h3>
+						<p>
+							Compatibility notes identify known approximations and unsupported content. A
+							successful open is not a fidelity guarantee.
+						</p>
+					</article>
+				</div>
+				<p class="capability-note">
+					<span class="pill partial">Initial support</span
+					><span
+						>Editing, native save, full ShapeSheet evaluation, and legacy .vsd support are not
+						implemented. Rendering fidelity remains under development.</span
+					>
+				</p>
+			</section>
+			<section class="section wrap code-section" aria-labelledby="integration-title">
+				<div>
+					<p class="eyebrow">Built to embed</p>
+					<h2 id="integration-title">Your framework.<br />One viewer.</h2>
+					<p>
+						The shared lifecycle adapter mounts a custom element and forwards properties and events.
+						Keep format logic in the core engine and UI behavior consistent.
+					</p>
+					<p>
+						This package is private and unpublished. These are local integration patterns, not five
+						separately certified framework packages.
+					</p>
+					<a class="text-link" href="docs/architecture.html">Explore the architecture →</a>
+				</div>
+				<div>
+					<div class="frameworks" role="group" aria-label="Integration example">
+						<button
+							type="button"
+							data-framework="vanilla"
+							aria-pressed="true"
+							aria-controls="integration-example"
+						>
+							Vanilla JS</button
+						><button
+							type="button"
+							data-framework="react"
+							aria-pressed="false"
+							aria-controls="integration-example"
+						>
+							React</button
+						><button
+							type="button"
+							data-framework="vue"
+							aria-pressed="false"
+							aria-controls="integration-example"
+						>
+							Vue</button
+						><button
+							type="button"
+							data-framework="angular"
+							aria-pressed="false"
+							aria-controls="integration-example"
+						>
+							Angular</button
+						><button
+							type="button"
+							data-framework="svelte"
+							aria-pressed="false"
+							aria-controls="integration-example"
+						>
+							Svelte
+						</button>
+					</div>
+					<div
+						class="code-card"
+						id="integration-example"
+						role="region"
+						aria-label="Integration code example"
+					>
+						<div class="code-bar">
+							<span id="integration-filename">main.ts</span
+							><button class="copy-code" type="button">Copy code</button>
+						</div>
+						<pre><code id="integration-code">import { mountViewer } from &#x27;@christophervr/visio-viewer&#x27;;
+
+const viewer = mountViewer(host, {
+  events: {
+    &#x27;shape-select&#x27;: (shape) =&gt; console.log(shape),
+  },
+});
+
+await viewer.load(file); // A local File or bytes
+viewer.fit();
+
+// When your view unmounts:
+viewer.destroy();</code></pre>
+					</div>
+					<p id="copy-status" class="code-status" role="status" aria-live="polite"></p>
+					<p class="code-caption">
+						Give the host a height. Mount on the client. Destroy on unmount. Framework snippets
+						illustrate lifecycle wiring; dedicated framework build verification is still required.
+					</p>
+				</div>
+			</section>
+			<section class="section wrap faq-grid" aria-labelledby="faq-title">
+				<div>
+					<p class="eyebrow">Before you begin</p>
+					<h2 id="faq-title">A few honest answers.</h2>
+				</div>
+				<div class="faq-list">
+					<details>
+						<summary>Is this a complete replacement for Visio?</summary>
+						<p>
+							No. It is an initial browser viewer. Full Microsoft Visio parity is a long-term
+							target, and this build does not provide editing, native save, or comprehensive
+							rendering. The <a href="docs/parity.html">capability ledger</a> separates current code
+							from missing work.
+						</p>
+					</details>
+					<details>
+						<summary>Does opening a file upload it?</summary>
+						<p>
+							The playground reads the File you select locally. It has no document upload,
+							telemetry, or remote-file loading feature. The page assets are served by the host
+							running this site.
+						</p>
+					</details>
+					<details>
+						<summary>Why might my diagram look different?</summary>
+						<p>
+							Only part of the Visio format is interpreted. Complex geometry, formula evaluation,
+							text layout, themes, images, and layers still have gaps. Read the compatibility notes
+							for each document and compare important diagrams in Microsoft Visio.
+						</p>
+					</details>
+					<details>
+						<summary>Can I edit or save a .vsdx file?</summary>
+						<p>
+							Not in this build. Shape selection and zoom are viewing interactions. There is no
+							native Visio writer or round-trip guarantee, and the source file is not changed.
+						</p>
+					</details>
+					<details>
+						<summary>Is the sample a Visio fidelity test?</summary>
+						<p>
+							No. It is an original, programmatically created scene that demonstrates the viewer.
+							Genuine Visio-authored fixtures and reference render comparisons are required before
+							claiming visual equivalence.
+						</p>
+					</details>
+				</div>
+			</section>
+		</main>
+		<footer class="footer">
+			<div class="wrap footer-inner">
+				<p>visio-viewer · Private development build</p>
+				<nav aria-label="Footer">
+					<a href="docs/architecture.html">Architecture</a
+					><a href="docs/parity.html">Known limits</a
+					><a href="https://github.com/ChristopherVR/pptx-viewer">Design reference ↗</a>
+				</nav>
+			</div>
+		</footer>
+	</body>
+</html>

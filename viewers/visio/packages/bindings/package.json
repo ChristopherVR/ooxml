@@ -1,0 +1,44 @@
+{
+	"name": "@christophervr/visio-viewer-bindings",
+	"version": "0.0.0",
+	"private": true,
+	"description": "Private native framework lifecycle adapters for the shared Visio viewer",
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts",
+		"./vanilla": "./src/vanilla.ts",
+		"./react": "./src/react.ts",
+		"./vue": "./src/vue.ts",
+		"./angular": "./src/angular.ts",
+		"./solid": "./src/solid.tsx",
+		"./svelte": {
+			"svelte": "./src/VisioViewer.svelte",
+			"default": "./src/VisioViewer.svelte"
+		}
+	},
+	"scripts": {
+		"typecheck": "tsc --noEmit -p tsconfig.json && svelte-check --tsconfig tsconfig.svelte.json",
+		"test": "vitest run --config vitest.config.ts && vitest run --config vitest.ssr.config.ts",
+		"check": "npm run typecheck && npm test"
+	},
+	"devDependencies": {
+		"@angular/common": "^21.0.0",
+		"@angular/compiler": "^21.0.0",
+		"@angular/core": "^21.0.0",
+		"@angular/platform-browser": "^21.0.0",
+		"@sveltejs/vite-plugin-svelte": "^7.3.1",
+		"@types/react": "^19.0.0",
+		"@types/react-dom": "^19.0.0",
+		"react": "^19.0.0",
+		"react-dom": "^19.0.0",
+		"rxjs": "^7.8.0",
+		"solid-js": "^1.9.0",
+		"svelte": "^5.46.4",
+		"svelte-check": "^4.0.0",
+		"typescript": "^5.9.3",
+		"vite": "^8.0.0",
+		"vite-plugin-solid": "^2.11.0",
+		"vitest": "^4.0.0",
+		"vue": "^3.5.43"
+	}
+}

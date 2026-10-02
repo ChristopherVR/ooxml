@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<meta
+			name="description"
+			content="One format engine, one shared rendering path, and a small lifecycle boundary for every host framework."
+		/>
+		<meta name="theme-color" content="#2459c5" />
+		<title>Architecture · visio-viewer</title>
+		<link rel="stylesheet" href="../docs/assets/site.css" />
+		<script type="module" src="../docs/assets/site.js"></script>
+	</head>
+	<body>
+		<a class="skip" href="#main">Skip to content</a>
+		<header class="site-header">
+			<div class="wrap header-inner">
+				<a class="brand" href="../index.html"
+					><span class="brand-mark" aria-hidden="true">v</span>visio-viewer</a
+				>
+				<nav class="site-nav" aria-label="Main navigation">
+					<a href="../demo/index.html">Playground</a><a href="../docs/index.html">Guide</a
+					><a href="../docs/parity.html">Compatibility</a
+					><button class="theme-toggle" type="button" aria-label="Switch color theme">◐</button>
+				</nav>
+			</div>
+		</header>
+		<main id="main" class="wrap doc-layout">
+			<aside class="doc-sidebar">
+				<nav aria-label="Documentation">
+					<p class="eyebrow">Developer preview</p>
+					<a href="index.html">Getting started</a><a href="parity.html">Capability ledger</a
+					><a href="architecture.html" aria-current="page">Architecture</a
+					><a href="../demo/index.html">Open playground</a>
+				</nav>
+			</aside>
+			<article class="doc-content">
+				<p class="eyebrow">visio-viewer / architecture</p>
+				<h1>Architecture</h1>
+				<p class="lead">
+					One format engine, one shared rendering path, and a small lifecycle boundary for every
+					host framework.
+				</p>
+				<h2>Separate format from presentation</h2>
+				<div class="flow">
+					<article>
+						<span>01 / FORMAT</span>
+						<h3>ooxml-core/visio</h3>
+						<p>
+							Package intake, XML, document model, inheritance, cached geometry and diagnostics.
+						</p>
+					</article>
+					<article>
+						<span>02 / VIEW</span>
+						<h3>One shared viewer</h3>
+						<p>
+							Controller, SVG rendering, selection, page navigation, zoom and compatibility notes.
+						</p>
+					</article>
+					<article>
+						<span>03 / HOST</span>
+						<h3>Your application</h3>
+						<p>A lifecycle adapter or custom element forwards properties and events.</p>
+					</article>
+				</div>
+				<p>
+					The viewer imports the public <code>ooxml-core/visio</code> entry point. Parsing and
+					document semantics stay in the sibling engine, so a future renderer or headless consumer
+					does not need a UI dependency.
+				</p>
+				<h2>Document flow</h2>
+				<ol>
+					<li>A local File or byte buffer enters the viewer.</li>
+					<li>
+						The core checks package structure and resource limits, then resolves the relevant parts.
+					</li>
+					<li>Shapes, styles and cached geometry normalize into a typed model with diagnostics.</li>
+					<li>
+						The shared SVG renderer draws a selected page, including supported background content.
+					</li>
+					<li>The controller owns navigation, zoom, loading, selection and events.</li>
+				</ol>
+				<div class="callout">
+					<strong>Cached geometry is not formula evaluation</strong>
+					<p>
+						The current engine uses cached ShapeSheet values. It does not recalculate the full Visio
+						formula language, routing behavior, constraints, or editing dependencies.
+					</p>
+				</div>
+				<h2>Framework contract</h2>
+				<p>
+					<code>mountViewer(host, options)</code> creates the custom element and manages common
+					event forwarding. Framework integrations should own only mount/update/unmount wiring. The
+					same properties and events are declared in <code>src/contract.ts</code>.
+				</p>
+				<ul>
+					<li>
+						<code>src/controller.ts</code>: document/view state and latest-load-wins handling.
+					</li>
+					<li><code>src/render-svg.ts</code>: geometry-to-SVG presentation and visual warnings.</li>
+					<li><code>src/render-text.ts</code>: browser text rendering and run styling.</li>
+					<li><code>src/viewer-element.ts</code>: shared browser view and controls.</li>
+					<li><code>src/binding.ts</code>: lifecycle, properties, events and cleanup.</li>
+				</ul>
+				<p>
+					Native framework packages, where supplied, should delegate to this surface. A behavior
+					fixed in one wrapper must be checked across the others. Successful compilation alone does
+					not verify a framework's runtime lifecycle.
+				</p>
+				<h2>Safety boundaries</h2>
+				<ul>
+					<li>
+						No raw document XML or HTML is inserted into the DOM. SVG elements are created through
+						DOM APIs, and text is assigned as text.
+					</li>
+					<li>No document uploads, telemetry, or remote-document fetch API.</li>
+					<li>
+						ZIP/XML limits and relationship checks belong to the core. These are defenses, not a
+						claim of complete security certification.
+					</li>
+					<li>
+						Unimplemented visual features generate diagnostics where detected; warnings are not
+						exhaustive.
+					</li>
+					<li>No native writer exists in this build. Opening a file does not modify it.</li>
+				</ul>
+				<h2>Testing layers</h2>
+				<div class="table-scroll" role="region" aria-label="Testing layers" tabindex="0">
+					<table>
+						<thead>
+							<tr>
+								<th>Layer</th>
+								<th>What to verify</th>
+								<th>What it does not prove</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>Core unit/fixture tests</td>
+								<td>Package limits, relationships, model values, geometry math</td>
+								<td>Comprehensive Visio rendering fidelity</td>
+							</tr>
+							<tr>
+								<td>Viewer unit tests</td>
+								<td>Lifecycle, event forwarding, input handling, rendering decisions</td>
+								<td>Real browser interaction or framework wiring</td>
+							</tr>
+							<tr>
+								<td>Browser tests</td>
+								<td>Open, pages, zoom, selection, errors, cleanup and no unexpected upload</td>
+								<td>Untested commands or real Visio round-trip</td>
+							</tr>
+							<tr>
+								<td>Reference corpus</td>
+								<td>Compare genuine documents with Visio output</td>
+								<td>Features absent from the corpus</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<h2>Site architecture</h2>
+				<p>
+					The documentation is a lightweight static, multi-page Vite site. Relative links and
+					bundled local assets allow it to run under a repository-prefixed path. It uses system
+					fonts and no third-party scripts. The playground is an independent page, so visiting the
+					home does not load the parser or open a file.
+				</p>
+				<p>
+					The visual structure takes inspiration from
+					<a href="https://github.com/ChristopherVR/pptx-viewer">pptx-viewer</a>: clear hero, real
+					playground entry, shared framework story, task-oriented documentation, and visible limits.
+					The local review in <code>docs/research/pptx-pages-design-review.md</code> records the
+					detailed findings.
+				</p>
+				<h2>Publication is separate</h2>
+				<p>
+					This package is private and unpublished. No deployment workflow is included. Enabling
+					hosting requires an explicit decision about audience and access; a private repository
+					alone does not establish a private website.
+				</p>
+				<div class="doc-next">
+					<a href="parity.html">← Capability ledger</a
+					><a href="../demo/index.html">Open playground →</a>
+				</div>
+			</article>
+		</main>
+		<footer class="footer">
+			<div class="wrap footer-inner">
+				<p>visio-viewer · Private development build</p>
+				<nav aria-label="Footer">
+					<a href="../docs/architecture.html">Architecture</a
+					><a href="../docs/parity.html">Known limits</a
+					><a href="https://github.com/ChristopherVR/pptx-viewer">Design reference ↗</a>
+				</nav>
+			</div>
+		</footer>
+	</body>
+</html>

@@ -1,0 +1,17 @@
+{
+	"extends": "../../tsconfig.json",
+	"compilerOptions": {
+		"jsx": "preserve",
+		"jsxImportSource": "solid-js",
+		"experimentalDecorators": true,
+		"useDefineForClassFields": false
+	},
+	"include": [
+		"src/**/*.ts",
+		"src/**/*.tsx",
+		"tests/**/*.ts",
+		"vitest.config.ts",
+		"vitest.ssr.config.ts"
+	],
+	"exclude": ["node_modules"]
+}

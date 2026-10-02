@@ -1,0 +1,36 @@
+name: Verify private viewer
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            packages/bindings/package-lock.json
+            integration/core-package-lock.json
+      - name: Prepare pinned local core
+        run: node scripts/setup-core.mjs
+      - run: npm ci --ignore-scripts
+      - run: npm ci --prefix packages/bindings --ignore-scripts
+      - run: npm run check
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:browser
+      - name: Preserve test evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-test-results
+          path: test-results/
+          retention-days: 7
+# No deployment, Pages permissions, package publishing or repository writes.

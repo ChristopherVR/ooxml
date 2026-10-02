@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<meta
+			name="description"
+			content="What exists, how it is evidenced, and what is still missing. A transparent map toward richer Visio support."
+		/>
+		<meta name="theme-color" content="#2459c5" />
+		<title>Capability ledger · visio-viewer</title>
+		<link rel="stylesheet" href="../docs/assets/site.css" />
+		<script type="module" src="../docs/assets/site.js"></script>
+	</head>
+	<body>
+		<a class="skip" href="#main">Skip to content</a>
+		<header class="site-header">
+			<div class="wrap header-inner">
+				<a class="brand" href="../index.html"
+					><span class="brand-mark" aria-hidden="true">v</span>visio-viewer</a
+				>
+				<nav class="site-nav" aria-label="Main navigation">
+					<a href="../demo/index.html">Playground</a><a href="../docs/index.html">Guide</a
+					><a href="../docs/parity.html" aria-current="page">Compatibility</a
+					><button class="theme-toggle" type="button" aria-label="Switch color theme">◐</button>
+				</nav>
+			</div>
+		</header>
+		<main id="main" class="wrap doc-layout">
+			<aside class="doc-sidebar">
+				<nav aria-label="Documentation">
+					<p class="eyebrow">Developer preview</p>
+					<a href="index.html">Getting started</a
+					><a href="parity.html" aria-current="page">Capability ledger</a
+					><a href="architecture.html">Architecture</a
+					><a href="../demo/index.html">Open playground</a>
+				</nav>
+			</aside>
+			<article class="doc-content">
+				<p class="eyebrow">visio-viewer / parity</p>
+				<h1>Capability ledger</h1>
+				<p class="lead">
+					What exists, how it is evidenced, and what is still missing. A transparent map toward
+					richer Visio support.
+				</p>
+				<div class="callout">
+					<strong>Full Microsoft Visio parity is a target, not the current result.</strong>
+					<p>
+						Implementation means code exists for the described subset. It does not mean a Microsoft
+						Visio comparison passed. Generated fixtures exercise selected cases; the original sample
+						is a demonstration, not a reference document.
+					</p>
+				</div>
+				<h2>How to read this ledger</h2>
+				<p>
+					<strong>Initial implementation</strong> identifies a working code path that still needs
+					broader validation. <strong>Partial</strong> means known gaps or approximations.
+					<strong>Not implemented</strong> means no supported end-to-end capability.
+					<strong>Not established</strong> means there is insufficient evidence to make the claim.
+				</p>
+				<p>
+					Snapshot: 2 October 2026. The evidence column identifies source locations and test suites
+					to inspect, not a claim that every listed test has passed in your checkout. Final test
+					results belong to the specific commit being evaluated.
+				</p>
+				<h2>Capability inventory</h2>
+				<div
+					class="table-scroll"
+					role="region"
+					aria-label="Visio capability inventory; scroll horizontally for all columns"
+					tabindex="0"
+				>
+					<table>
+						<thead>
+							<tr>
+								<th>Capability</th>
+								<th>Target</th>
+								<th>Current state</th>
+								<th>Evidence to inspect</th>
+								<th>Still missing</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>VSDX package intake</td>
+								<td>Safe local OPC/ZIP reading</td>
+								<td>Initial implementation</td>
+								<td>Core package.ts; package.test.ts</td>
+								<td>Broader producer corpus, independent security review</td>
+							</tr>
+							<tr>
+								<td>Format discovery and pages</td>
+								<td>Relationships, page order, dimensions</td>
+								<td>Initial implementation</td>
+								<td>Core parser.ts; parser.test.ts</td>
+								<td>More genuine document fixtures</td>
+							</tr>
+							<tr>
+								<td>Background pages</td>
+								<td>Resolve and draw inherited background pages</td>
+								<td>Partial</td>
+								<td>Core getVisioPageLayers; viewer render-svg.ts</td>
+								<td>Visio reference comparisons; page-scale interactions</td>
+							</tr>
+							<tr>
+								<td>Master inheritance</td>
+								<td>Master and instance cell/section merging</td>
+								<td>Partial</td>
+								<td>Core shapes.ts and sheet.ts</td>
+								<td>Formula-driven resizing, full master semantics</td>
+							</tr>
+							<tr>
+								<td>Group transforms</td>
+								<td>Nested coordinate systems, rotation, flips and group display modes</td>
+								<td>Partial</td>
+								<td>Core geometry.ts; groupDisplayMode; renderer order tests</td>
+								<td>Complex group corpus and reference renders</td>
+							</tr>
+							<tr>
+								<td>Basic paths</td>
+								<td>Move, line, relative quadratic/cubic segments</td>
+								<td>Partial</td>
+								<td>Core geometryPaths in geometry.ts</td>
+								<td>Comprehensive geometry conformance corpus</td>
+							</tr>
+							<tr>
+								<td>Ellipses and arcs</td>
+								<td>Native cached arc and ellipse geometry</td>
+								<td>Partial</td>
+								<td>Core geometry.ts; geometry.test.ts</td>
+								<td>Degenerate cases and reference images</td>
+							</tr>
+							<tr>
+								<td>NURBS, splines, polylines</td>
+								<td>All Visio Geometry row forms</td>
+								<td>Partial: polylines and bounded NURBS approximation</td>
+								<td>Core geometry.ts; literal-curve tests; real upstream curve fixture</td>
+								<td>Periodic/general expressions, remaining spline forms, measured error bounds</td>
+							</tr>
+							<tr>
+								<td>Line and fill styles</td>
+								<td>Full styles, patterns, gradients and opacity</td>
+								<td>Partial: solids and normalized linear gradients</td>
+								<td>Core theme/gradient tests; ten real-corpus gradients; SVG paint tests</td>
+								<td>Radial/hatch fills, exact dash/cap behavior, complex effects</td>
+							</tr>
+							<tr>
+								<td>Arrowheads</td>
+								<td>All connector end variants</td>
+								<td>Partial: codes 1-4</td>
+								<td>Viewer arrowheads.ts; SVG markers</td>
+								<td>Exact sizing, remaining codes, reference corpus</td>
+							</tr>
+							<tr>
+								<td>Connectors and glue</td>
+								<td>Connectivity, routing, dynamic glue</td>
+								<td>Partial read</td>
+								<td>Core page connection model; cached geometry</td>
+								<td>Live routing, glue constraints, editing and reroute</td>
+							</tr>
+							<tr>
+								<td>ShapeSheet formulas</td>
+								<td>Recalculation and dependencies</td>
+								<td>Cached values only</td>
+								<td>Core sheet.ts diagnostics</td>
+								<td>Formula evaluator, dependencies, functions, recalc</td>
+							</tr>
+							<tr>
+								<td>Text</td>
+								<td>Runs, margins, orientation, paragraphs and layout</td>
+								<td>Partial: rich runs, wrapping, spacing, RTL and bullets</td>
+								<td>Core paragraph model; bounded text/paragraph layout tests</td>
+								<td>
+									Exact Visio font metrics, tabs, advanced typography and reference comparisons
+								</td>
+							</tr>
+							<tr>
+								<td>Themes and styles</td>
+								<td>Theme colors, variants and inheritance</td>
+								<td>Partial: bounded selected theme records</td>
+								<td>Core theme resolver; exact upstream color assertions and gradient stops</td>
+								<td>Complete old-theme variants, effects and full reference equivalence</td>
+							</tr>
+							<tr>
+								<td>Images and foreign data</td>
+								<td>Raster, vector, OLE and foreign objects</td>
+								<td>Partial: embedded PNG/JPEG/GIF</td>
+								<td>Core media tests; clipped raster SVG; shared resource lifecycle tests</td>
+								<td>SVG/EMF/OLE, complex clipping/effects, native browser decode verification</td>
+							</tr>
+							<tr>
+								<td>Layers</td>
+								<td>Visibility, locks, colors and print settings</td>
+								<td>Partial: cached layer model and visibility</td>
+								<td>Core layer tests; normalized hidden state</td>
+								<td>Layer UI, color overrides, editing and print behavior</td>
+							</tr>
+							<tr>
+								<td>Shape data and hyperlinks</td>
+								<td>Properties, data graphics and links</td>
+								<td>Partial: cached data and guarded hyperlink metadata</td>
+								<td>389 real-corpus data rows; generated URL tests; shared inspector tests</td>
+								<td>
+									Internal-target navigation, external subaddresses, frames, data graphics and
+									editing
+								</td>
+							</tr>
+							<tr>
+								<td>Containers and swimlanes</td>
+								<td>Container relationships and layout</td>
+								<td>Not implemented</td>
+								<td>Cached child shapes may still render</td>
+								<td>Semantic model, memberships, layout and editing</td>
+							</tr>
+							<tr>
+								<td>Page navigation</td>
+								<td>Select pages and report current page</td>
+								<td>Initial implementation</td>
+								<td>ViewerController and viewer-element.ts</td>
+								<td>Genuine multi-page usability corpus</td>
+							</tr>
+							<tr>
+								<td>Zoom and fit</td>
+								<td>Bounded zoom and viewport fitting</td>
+								<td>Initial implementation</td>
+								<td>ViewerController; viewer-element.ts</td>
+								<td>Pinch/pan behavior and large-diagram performance</td>
+							</tr>
+							<tr>
+								<td>Shape selection</td>
+								<td>Identify shapes by page and shape ID</td>
+								<td>Partial: pointer and keyboard navigation</td>
+								<td>Page-scoped selection, roving focus and lifecycle tests</td>
+								<td>Multi-selection, assistive-technology and real-browser audit</td>
+							</tr>
+							<tr>
+								<td>Framework integration</td>
+								<td>One renderer across host frameworks</td>
+								<td>Six thin native adapters with lifecycle tests</td>
+								<td>
+									React/Vue/Angular/Svelte/Solid/vanilla runtime checks; selected SSR/hydration
+									checks
+								</td>
+								<td>Standalone packaging, cross-browser and historical peer-version matrix</td>
+							</tr>
+							<tr>
+								<td>Editing and history</td>
+								<td>Move, resize, style, text, undo/redo</td>
+								<td>Not implemented</td>
+								<td>Read-only viewer contract</td>
+								<td>Command system, mutations, history, bindings parity</td>
+							</tr>
+							<tr>
+								<td>Native save and round-trip</td>
+								<td>Save editable VSDX preserving unknown parts</td>
+								<td>Not implemented</td>
+								<td>No writer API</td>
+								<td>Writer, relationships, unknown-part preservation, Visio reopen</td>
+							</tr>
+							<tr>
+								<td>Export and print</td>
+								<td>SVG, images, PDF and print layout</td>
+								<td>Not implemented</td>
+								<td>No export/print API</td>
+								<td>Dedicated export pipeline and fidelity tests</td>
+							</tr>
+							<tr>
+								<td>Legacy and other Visio formats</td>
+								<td>VSD, VDX, stencils, templates, macros</td>
+								<td>Not supported</td>
+								<td>Input contract currently targets VSDX</td>
+								<td>Format-specific parsing, validation and test corpus</td>
+							</tr>
+							<tr>
+								<td>Collaboration and comments</td>
+								<td>Shared editing with durable state</td>
+								<td>Not implemented</td>
+								<td>No collaboration transport</td>
+								<td>Editing model, conflict handling, authentication, privacy</td>
+							</tr>
+							<tr>
+								<td>Visio visual parity</td>
+								<td>Measured equivalence on real documents</td>
+								<td>Not established; real corpus under comparison</td>
+								<td>
+									19 upstream drawings import; secondary embedded-thumbnail comparisons reveal gaps
+								</td>
+								<td>Full reference renders, fonts/settings, measured fidelity and manual review</td>
+							</tr>
+							<tr>
+								<td>Corner rounding</td>
+								<td>Rounded contiguous geometry</td>
+								<td>Partial: closed axis-aligned rectangles</td>
+								<td>29 generated cases; five source-confirmed 60973 shapes</td>
+								<td>General polygon, open and mixed/curved path rounding</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<h2>What the viewer tells you</h2>
+				<p>
+					Read compatibility notes after opening a document. The core emits structured diagnostic
+					codes with available part, page and shape context. The renderer adds warnings for visual
+					approximations such as unsupported arrow variants, approximate arrow sizing, and
+					browser-based text metrics. Absence of a warning is not a guarantee that every unsupported
+					construct was detected.
+				</p>
+				<h2>Evidence required for a parity claim</h2>
+				<ol>
+					<li>Collect genuine Visio-authored fixtures spanning the capability inventory.</li>
+					<li>
+						Export reference views from a recorded Microsoft Visio version with known fonts and page
+						settings.
+					</li>
+					<li>
+						Compare geometry, text, styles, connectors and page backgrounds with measured
+						tolerances.
+					</li>
+					<li>
+						For editing, verify the result in the viewer and after saving and reopening in Visio.
+					</li>
+					<li>For round-trip, compare untouched XML parts, relationships and unknown content.</li>
+					<li>Run the same workflow across every advertised framework and browser.</li>
+				</ol>
+				<p>
+					A full-parity percentage is deliberately not shown. No denominator or independent
+					validation corpus has been established.
+				</p>
+				<h2>Source references</h2>
+				<ul>
+					<li>
+						<a
+							href="https://learn.microsoft.com/en-us/office/client-developer/visio/visio-file-format-reference"
+							>Microsoft Visio file format reference</a
+						>
+					</li>
+					<li>
+						<a
+							href="https://learn.microsoft.com/en-us/office/client-developer/visio/introduction-to-the-visio-file-formatvsdx"
+							>Microsoft introduction to the VSDX format</a
+						>
+					</li>
+					<li>
+						<a
+							href="https://learn.microsoft.com/en-us/openspecs/sharepoint_protocols/ms-vsdx/50c23601-c943-4ff2-b4a1-02445f52daf0"
+							>MS-VSDX: Visio Graphics Service file format</a
+						>
+					</li>
+					<li>
+						<a href="https://github.com/ChristopherVR/ooxml">ooxml engine repository</a>: current
+						local implementation is under <code>src/visio</code>; unpublished changes may not be on
+						the remote.
+					</li>
+					<li>
+						<a href="https://github.com/ChristopherVR/pptx-viewer"
+							>pptx-viewer design and architecture reference</a
+						>
+					</li>
+				</ul>
+				<div class="doc-next">
+					<a href="index.html">← Getting started</a><a href="architecture.html">Architecture →</a>
+				</div>
+			</article>
+		</main>
+		<footer class="footer">
+			<div class="wrap footer-inner">
+				<p>visio-viewer · Private development build</p>
+				<nav aria-label="Footer">
+					<a href="../docs/architecture.html">Architecture</a
+					><a href="../docs/parity.html">Known limits</a
+					><a href="https://github.com/ChristopherVR/pptx-viewer">Design reference ↗</a>
+				</nav>
+			</div>
+		</footer>
+	</body>
+</html>

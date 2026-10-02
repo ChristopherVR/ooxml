@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<meta
+			name="description"
+			content="Open a diagram locally, understand the current limits, and embed the same viewer in your application."
+		/>
+		<meta name="theme-color" content="#2459c5" />
+		<title>Getting started · visio-viewer</title>
+		<link rel="stylesheet" href="../docs/assets/site.css" />
+		<script type="module" src="../docs/assets/site.js"></script>
+	</head>
+	<body>
+		<a class="skip" href="#main">Skip to content</a>
+		<header class="site-header">
+			<div class="wrap header-inner">
+				<a class="brand" href="../index.html"
+					><span class="brand-mark" aria-hidden="true">v</span>visio-viewer</a
+				>
+				<nav class="site-nav" aria-label="Main navigation">
+					<a href="../demo/index.html">Playground</a
+					><a href="../docs/index.html" aria-current="page">Guide</a
+					><a href="../docs/parity.html">Compatibility</a
+					><button class="theme-toggle" type="button" aria-label="Switch color theme">◐</button>
+				</nav>
+			</div>
+		</header>
+		<main id="main" class="wrap doc-layout">
+			<aside class="doc-sidebar">
+				<nav aria-label="Documentation">
+					<p class="eyebrow">Developer preview</p>
+					<a href="index.html" aria-current="page">Getting started</a
+					><a href="parity.html">Capability ledger</a><a href="architecture.html">Architecture</a
+					><a href="../demo/index.html">Open playground</a>
+				</nav>
+			</aside>
+			<article class="doc-content">
+				<p class="eyebrow">visio-viewer / guide</p>
+				<h1>Getting started</h1>
+				<p class="lead">
+					Open a diagram locally, understand the current limits, and embed the same viewer in your
+					application.
+				</p>
+				<div class="callout">
+					<strong>Initial viewer support, not Visio certification</strong>
+					<p>
+						This is a private development package. It is not published to npm. Do not use a
+						successful file open as evidence that every shape, formula, or format feature is
+						represented faithfully.
+					</p>
+				</div>
+				<h2>Try the local playground</h2>
+				<ol>
+					<li>
+						<a href="../demo/index.html">Open the playground</a> to see an original sample document.
+					</li>
+					<li>Choose a local <code>.vsdx</code> file using the file picker or drop area.</li>
+					<li>Switch pages, adjust zoom, fit the page, and select a shape.</li>
+					<li>
+						Review compatibility notes. Compare important files with their Microsoft Visio
+						rendering.
+					</li>
+				</ol>
+				<p>
+					No document upload is performed. Editing, native save, export, and legacy binary
+					<code>.vsd</code> support are outside this build.
+				</p>
+				<h2>Run the development workspace</h2>
+				<p>
+					Keep the sibling <code>ooxml</code> checkout available: the viewer uses a local
+					<code>file:../ooxml</code> dependency. Build the engine before installing or rebuilding
+					the viewer.
+				</p>
+				<div class="code-card">
+					<pre><code>cd ../ooxml
+npm install
+npm run build
+
+cd ../visio-viewer
+npm install
+npm run dev</code></pre>
+				</div>
+				<p>
+					Use the local URL printed by Vite. This starts a development server; it does not publish
+					the site. Follow the repository README for the final verified build and test commands.
+				</p>
+				<h2>Mount a viewer</h2>
+				<p>
+					The current public integration point is <code>mountViewer</code>. The container must have
+					a height. A browser <code>File</code>, <code>Blob</code>, <code>Uint8Array</code>, or
+					<code>ArrayBuffer</code> can be passed to <code>load</code>.
+				</p>
+				<div class="code-card">
+					<pre><code>import { mountViewer } from &#x27;@christophervr/visio-viewer&#x27;;
+
+const viewer = mountViewer(host, {
+  events: {
+    &#x27;shape-select&#x27;: (shape) =&gt; console.log(shape),
+  },
+});
+
+await viewer.load(file); // A local File or bytes
+viewer.fit();
+
+// When your view unmounts:
+viewer.destroy();</code></pre>
+				</div>
+				<h2>Properties and events</h2>
+				<div
+					class="table-scroll"
+					role="region"
+					aria-label="Viewer integration properties"
+					tabindex="0"
+				>
+					<table>
+						<thead>
+							<tr>
+								<th>Surface</th>
+								<th>Current contract</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>Properties</td>
+								<td>
+									<code>document</code>, <code>pageIndex</code>, <code>zoom</code>,
+									<code>showToolbar</code>
+								</td>
+							</tr>
+							<tr>
+								<td>Events</td>
+								<td>
+									<code>document-load</code>, <code>document-error</code>, <code>page-change</code>,
+									<code>zoom-change</code>, <code>shape-select</code>
+								</td>
+							</tr>
+							<tr>
+								<td>Lifecycle</td>
+								<td>
+									<code>update</code>, <code>load</code>, <code>fit</code>, <code>destroy</code>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<p>
+					Mount after the host exists and call <code>destroy()</code> when the framework view
+					unmounts. Repeated destruction is safe. Partial updates leave omitted properties
+					unchanged.
+				</p>
+				<h2>Verification before adoption</h2>
+				<p>
+					Run <code>npm run check</code> and <code>npm run test:browser</code> in the viewer
+					checkout. Core parser tests belong to the sibling engine. These checks establish only
+					their asserted behavior; they do not establish Microsoft Visio visual parity.
+				</p>
+				<div class="doc-next">
+					<a href="parity.html">Next: capability ledger →</a
+					><a href="architecture.html">Architecture →</a>
+				</div>
+			</article>
+		</main>
+		<footer class="footer">
+			<div class="wrap footer-inner">
+				<p>visio-viewer · Private development build</p>
+				<nav aria-label="Footer">
+					<a href="../docs/architecture.html">Architecture</a
+					><a href="../docs/parity.html">Known limits</a
+					><a href="https://github.com/ChristopherVR/pptx-viewer">Design reference ↗</a>
+				</nav>
+			</div>
+		</footer>
+	</body>
+</html>

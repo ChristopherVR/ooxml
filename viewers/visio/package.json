@@ -1,0 +1,49 @@
+{
+	"name": "@christophervr/visio-viewer",
+	"version": "0.0.0",
+	"private": true,
+	"description": "Framework-neutral, local-first Visio viewer built on ooxml-core",
+	"license": "UNLICENSED",
+	"files": [
+		"dist"
+	],
+	"type": "module",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		}
+	},
+	"scripts": {
+		"dev": "vite --host 127.0.0.1",
+		"build": "tsc -p tsconfig.build.json && vite build",
+		"typecheck": "tsc --noEmit",
+		"test": "vitest run",
+		"test:browser": "playwright test",
+		"check": "npm run typecheck && npm test && npm run check:bindings && npm run test:docs && npm run build && npm run test:worker && npm run test:package",
+		"setup:core": "node scripts/setup-core.mjs",
+		"check:bindings": "npm --prefix packages/bindings run check",
+		"test:docs": "node --test docs/site.test.mjs",
+		"test:worker": "node scripts/test-worker-bundle.mjs",
+		"fmt": "oxfmt",
+		"fmt:check": "oxfmt --check",
+		"test:package": "node scripts/test-package.mjs"
+	},
+	"dependencies": {
+		"ooxml-core": "file:../ooxml"
+	},
+	"devDependencies": {
+		"@playwright/test": "^1.58.0",
+		"@types/node": "^24.0.0",
+		"jsdom": "^29.0.0",
+		"jszip": "^3.10.2",
+		"oxfmt": "^0.71.0",
+		"postcss": "^8.5.28",
+		"typescript": "^5.9.3",
+		"vite": "^8.0.0",
+		"vitest": "^4.0.0"
+	},
+	"engines": {
+		"node": ">=22.12"
+	}
+}

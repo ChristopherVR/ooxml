@@ -1,0 +1,208 @@
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { mountViewer } from './binding.js';
+import { demoDocument } from './demo-document.js';
+
+afterEach(() => document.body.replaceChildren());
+describe('shared lifecycle binding', () => {
+	it('applies initial properties and forwards latest callbacks only', () => {
+		const host = document.createElement('div');
+		document.body.append(host);
+		const old = vi.fn(),
+			current = vi.fn();
+		const viewer = mountViewer(host, {
+			document: demoDocument,
+			zoom: 2,
+			events: { 'page-change': old },
+		});
+		expect(viewer.element.document).toBe(demoDocument);
+		expect(viewer.element.zoom).toBe(2);
+		viewer.update({ events: { 'page-change': current } });
+		viewer.update({ pageIndex: 1 });
+		expect(old).not.toHaveBeenCalled();
+		expect(current).toHaveBeenCalledWith(1);
+		viewer.update({ events: {} });
+		viewer.update({ pageIndex: 0 });
+		expect(current).toHaveBeenCalledTimes(1);
+		viewer.destroy();
+	});
+	it('accepts A -> B -> C -> B replacements without stale echo suppression', () => {
+		const host = document.createElement('div');
+		const a = demoDocument,
+			b = { ...demoDocument },
+			c = { ...demoDocument };
+		const viewer = mountViewer(host, { document: a });
+		viewer.update({ document: b });
+		viewer.update({ document: c });
+		viewer.update({ document: b });
+		expect(viewer.element.document).toBe(b);
+		viewer.destroy();
+	});
+	it('clears on explicit null but leaves omitted props unchanged', () => {
+		const viewer = mountViewer(document.createElement('div'), { document: demoDocument, zoom: 3 });
+		viewer.update({ showToolbar: false });
+		expect(viewer.element.document).toBe(demoDocument);
+		expect(viewer.element.zoom).toBe(3);
+		viewer.update({ document: null });
+		expect(viewer.element.document).toBeNull();
+		viewer.destroy();
+	});
+	it('destroy removes content and guards load, fit and update', async () => {
+		const host = document.createElement('div'),
+			viewer = mountViewer(host, { document: demoDocument });
+		viewer.destroy();
+		viewer.destroy();
+		expect(host.children.length).toBe(0);
+		expect(() => viewer.update({ zoom: 2 })).toThrow('destroyed');
+		expect(() => viewer.fit()).toThrow('destroyed');
+		await expect(viewer.load(new ArrayBuffer(0))).rejects.toThrow('destroyed');
+	});
+});
+
+describe('custom element safety', () => {
+	it('rejects oversized Blobs before reading or allocating their bytes', async () => {
+		const viewer = mountViewer(document.createElement('div'));
+		const blob = new Blob(['small']);
+		Object.defineProperty(blob, 'size', { value: 33 * 1024 * 1024 });
+		const read = vi.fn();
+		Object.defineProperty(blob, 'arrayBuffer', { value: read });
+		await expect(viewer.load(blob)).rejects.toThrow('32 MiB');
+		expect(read).not.toHaveBeenCalled();
+		viewer.destroy();
+	});
+	it('allows remove/reappend without losing document state', () => {
+		const host = document.createElement('div');
+		document.body.append(host);
+		const viewer = mountViewer(host, { document: demoDocument });
+		viewer.element.remove();
+		host.append(viewer.element);
+		expect(viewer.element.document).toBe(demoDocument);
+		expect(viewer.element.shadowRoot?.querySelector('svg')).not.toBeNull();
+		viewer.destroy();
+	});
+	it('guards direct element fit and toolbar after destruction', () => {
+		const viewer = mountViewer(document.createElement('div'));
+		const element = viewer.element;
+		viewer.destroy();
+		expect(() => element.fit()).toThrow('destroyed');
+		expect(() => {
+			element.showToolbar = true;
+		}).toThrow('destroyed');
+	});
+	it('exposes full compatibility notes in accessible disclosure', () => {
+		const viewer = mountViewer(document.createElement('div'), { document: demoDocument });
+		expect(viewer.element.shadowRoot?.querySelector('.notes summary')?.textContent).toBe(
+			'Compatibility notes',
+		);
+		expect(viewer.element.shadowRoot?.querySelector('.notes ul')?.textContent).toContain(
+			'Text metrics',
+		);
+		viewer.destroy();
+	});
+});
+
+describe('Blob read errors', () => {
+	it('reports errors through the same event and loading state as parser errors', async () => {
+		const error = new Error('File could not be read');
+		const callback = vi.fn();
+		const viewer = mountViewer(document.createElement('div'), {
+			events: { 'document-error': callback },
+		});
+		const blob = new Blob(['x']);
+		Object.defineProperty(blob, 'arrayBuffer', {
+			value: async () => {
+				throw error;
+			},
+		});
+		await expect(viewer.load(blob)).rejects.toThrow('File could not be read');
+		expect(callback).toHaveBeenCalledWith(error);
+		expect(viewer.controller.state.loading).toBe(false);
+		viewer.destroy();
+	});
+});
+
+describe('reentrant binding updates', () => {
+	it('stops applying properties when a callback destroys the binding', () => {
+		const viewer = mountViewer(document.createElement('div'), { document: demoDocument });
+		expect(() =>
+			viewer.update({
+				zoom: 2,
+				showToolbar: false,
+				events: { 'zoom-change': () => viewer.destroy() },
+			}),
+		).not.toThrow();
+		expect(() => viewer.fit()).toThrow('destroyed');
+	});
+});
+
+describe('accessible selection and connected font resources', () => {
+	it('disambiguates foreground/background IDs and supports keyboard selection', () => {
+		const model = structuredClone(demoDocument);
+		model.pages[0]!.backgroundPageId = '2';
+		model.pages[1]!.shapes[0]!.id = 's1';
+		const viewer = mountViewer(document.createElement('div'), { document: model });
+		const root = viewer.element.shadowRoot!;
+		const foreground = root.querySelector<SVGGElement>('[data-page-id="1"][data-shape-id="s1"]')!;
+		foreground.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+		expect(viewer.controller.state.selectedShape?.pageId).toBe('1');
+		expect(root.querySelectorAll('[data-selected="true"]')).toHaveLength(1);
+		viewer.destroy();
+	});
+	it('reflows when fonts finish loading and tears down the listener on disconnect', () => {
+		const previous = Object.getOwnPropertyDescriptor(document, 'fonts');
+		const fonts = new EventTarget();
+		const add = vi.spyOn(fonts, 'addEventListener'),
+			remove = vi.spyOn(fonts, 'removeEventListener');
+		Object.defineProperty(document, 'fonts', { configurable: true, value: fonts });
+		try {
+			const host = document.createElement('div');
+			document.body.append(host);
+			const viewer = mountViewer(host, { document: demoDocument });
+			const before = viewer.element.shadowRoot?.querySelector('svg');
+			fonts.dispatchEvent(new Event('loadingdone'));
+			expect(viewer.element.shadowRoot?.querySelector('svg')).not.toBe(before);
+			expect(add).toHaveBeenCalledOnce();
+			viewer.element.remove();
+			expect(remove).toHaveBeenCalledOnce();
+			host.append(viewer.element);
+			expect(add).toHaveBeenCalledTimes(2);
+			viewer.destroy();
+			expect(remove).toHaveBeenCalledTimes(2);
+		} finally {
+			if (previous) Object.defineProperty(document, 'fonts', previous);
+			else Reflect.deleteProperty(document, 'fonts');
+		}
+	});
+});
+
+describe('disposed DOM resources', () => {
+	it('removes retained-control event handlers on destroy', () => {
+		const viewer = mountViewer(document.createElement('div'), { document: demoDocument });
+		const button =
+			viewer.element.shadowRoot!.querySelector<HTMLButtonElement>('[data-action="in"]')!;
+		const errors: ErrorEvent[] = [];
+		const listen = (event: ErrorEvent) => errors.push(event);
+		window.addEventListener('error', listen);
+		viewer.destroy();
+		button.click();
+		window.removeEventListener('error', listen);
+		expect(errors).toEqual([]);
+	});
+});
+
+describe('shared shape details across bindings', () => {
+	it('opens an inert data preview for the selected shape', () => {
+		const model = structuredClone(demoDocument);
+		model.pages[0]!.shapes[0]!.shapeData = [
+			{ id: '0', name: 'Owner', type: 0, valueKind: 'string', value: 'Alex' },
+		];
+		const viewer = mountViewer(document.createElement('div'), { document: model });
+		viewer.controller.selectShape({ id: 's1', name: 'Start', pageId: '1' });
+		const inspector =
+			viewer.element.shadowRoot!.querySelector<HTMLDetailsElement>('.shape-inspector')!;
+		expect(inspector.hidden).toBe(false);
+		expect(inspector.textContent).toContain('Alex');
+		viewer.controller.selectShape(null);
+		expect(inspector.hidden).toBe(true);
+		viewer.destroy();
+	});
+});

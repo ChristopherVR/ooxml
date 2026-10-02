@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<meta name="description" content="Private, local-first Visio diagram viewer preview" />
+		<title>Visio Viewer · Workspace</title>
+		<link rel="stylesheet" href="./workspace.css" />
+	</head>
+	<body>
+		<header class="topbar">
+			<a class="brand" href="../"
+				><span class="brand-mark">V</span><span>Visio Viewer<small>Early preview</small></span></a
+			>
+			<div class="document-title">
+				<span id="file-name">Sample workflow</span
+				><small id="file-state">Original sample scene</small>
+			</div>
+			<div class="top-actions">
+				<button id="sample" type="button">Load sample</button
+				><button id="open" class="primary" type="button">Open .vsdx</button
+				><input id="file" type="file" accept=".vsdx" hidden />
+			</div>
+		</header>
+		<main>
+			<aside class="rail">
+				<span class="eyebrow">WORKSPACE</span>
+				<h1>A little clarity.<br />A bigger picture.</h1>
+				<p>Open your diagram, explore its pages, and see exactly what this preview supports.</p>
+				<div class="local-badge">
+					<span aria-hidden="true">◉</span>
+					<div>
+						<strong>Your files stay here</strong
+						><small>Processed in your browser.<br />No uploads or telemetry.</small>
+					</div>
+				</div>
+				<section class="capability">
+					<span class="eyebrow">CURRENT SUPPORT</span>
+					<ul>
+						<li>Multiple pages and backgrounds</li>
+						<li>Basic shapes, paths and groups</li>
+						<li>Cached text and shape styles</li>
+						<li>Zoom, fit and shape inspection</li>
+					</ul>
+					<a href="../#compatibility">View compatibility roadmap ↗</a>
+				</section>
+				<p class="rail-note">
+					This is an early viewer, not full Microsoft Visio parity. Check the notes for every file.
+				</p>
+			</aside>
+			<section class="stage" aria-label="Viewer workspace">
+				<div class="stage-heading">
+					<span id="diagram-label">Release workflow</span><span class="pill">VIEW ONLY</span>
+				</div>
+				<div id="viewer"></div>
+				<div id="drop-overlay" hidden>Drop a .vsdx file to open it</div>
+			</section>
+			<aside class="inspector">
+				<div class="inspector-head">
+					<h2>Document details</h2>
+					<span class="pill">PREVIEW</span>
+				</div>
+				<section>
+					<span class="eyebrow">SELECTED SHAPE</span>
+					<p id="selection">Select a shape on the canvas to inspect it.</p>
+				</section>
+				<section class="compatibility">
+					<div class="section-heading">
+						<h3>Compatibility notes</h3>
+						<span id="note-count">0</span>
+					</div>
+					<p class="muted">What is approximate, omitted or unsupported in this drawing.</p>
+					<ul id="notes" aria-live="polite"></ul>
+				</section>
+				<p id="error" role="alert" hidden></p>
+			</aside>
+		</main>
+		<footer>
+			<span>Built on ooxml-core · Framework-neutral</span
+			><span>Local preview · No Microsoft Visio comparison yet</span>
+		</footer>
+		<script type="module" src="./main.ts"></script>
+	</body>
+</html>
