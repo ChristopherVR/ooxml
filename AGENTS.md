@@ -88,7 +88,7 @@ in that repository. Commits to another repository follow that repository's own
 ```bash
 bun install
 bun run typecheck      # strict project and the relaxed pptx project
-bun run test           # vitest
+bun run test           # vitest (CI splits it: bun run test --shard=1/6; add --maxWorkers=8 on a big machine)
 bun run build          # declarations, tsup bundles, tsdown declarations
 bun run test:package   # pack and import every entry point from a clean install
 bun run test:scripts   # release planner, publish guards, commit checks
