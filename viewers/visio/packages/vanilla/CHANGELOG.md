@@ -1,3 +1,14 @@
+## 0.4.0
+
+### Changes
+
+- feat(viewer): add pan & zoom window and a shapes strip to reopen shapes (01c5a82)
+- feat(viewer): add visio keytips for keyboard ribbon access (8a9d6d1)
+- feat(viewer): add visio tell me, help tab and presentation mode (d048a45)
+- feat(viewer): add visio file backstage, context menus and page bar (8c54263)
+- feat(viewer): add visio's shapes window with a basic shapes stencil (98cb55e)
+- feat(viewer): match the visio ribbon layout with honest disabled commands (bb74402)
+
 ## 0.3.0
 
 ### Changes
