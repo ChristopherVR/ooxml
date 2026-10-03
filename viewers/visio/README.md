@@ -1,12 +1,44 @@
 # Visio Viewer
 
+[![npm version](https://img.shields.io/npm/v/visio-react-viewer.svg)](https://www.npmjs.com/package/visio-react-viewer)
+[![license](https://img.shields.io/npm/l/visio-react-viewer.svg)](https://github.com/ChristopherVR/visio-viewer/blob/main/LICENSE)
+[![types](https://img.shields.io/npm/types/visio-react-viewer.svg)](https://www.npmjs.com/package/visio-react-viewer)
+
 A public beta, local-first Visio viewing project. One headless controller, one SVG renderer and one custom element, with thin React, Vue, Angular, Svelte, Solid and vanilla adapters. Format logic belongs to the sibling `ooxml` repository's new `ooxml-core/visio` area.
 
 **This is an early implementation, not Microsoft Visio parity.** The shared viewer has experimental source-backed plain-text editing, bounded undo/redo and explicit VSDX-copy export. Native Visio reopening remains unverified. The [capability ledger](docs/parity.md) separates implemented code, tested evidence and missing functionality. Real upstream drawings and embedded previews have been inspected with a secondary renderer, but no controlled Microsoft Visio full-page comparison has passed.
 
-## Local setup
+## Install
 
-Node.js 22.12 or newer is required. The Visio area is not published in `ooxml-core` yet, so this repository uses a pinned sibling checkout.
+```bash
+npm install visio-react-viewer
+```
+
+Functional packages are available for React, Vue, Angular, Svelte, Solid and
+vanilla JavaScript. Each viewer re-exports the document API. Use the
+[package READMEs](https://github.com/ChristopherVR/visio-viewer/tree/main/packages)
+for framework-specific quick starts. `visio-core` is the DOM-free document API;
+`visio-viewer-mcp` supplies headless agent tools.
+
+## Quick start
+
+```js
+import { mountViewer } from 'visio-vanilla-viewer';
+
+const host = document.createElement('div');
+host.style.height = '600px';
+document.body.append(host);
+const viewer = mountViewer(host, { showToolbar: true });
+const bytes = await (await fetch('/diagram.vsdx')).arrayBuffer();
+await viewer.load(bytes);
+```
+
+This example uses `npm install visio-vanilla-viewer`. Files are loaded in the
+browser. Call `viewer.destroy()` when removing the host.
+
+## Development setup
+
+Node.js 22.12 or newer is required. The Visio area is published as `ooxml-core/visio`. The development checks also use a pinned core checkout for integration evidence.
 
 ```sh
 npm ci --ignore-scripts
@@ -15,7 +47,7 @@ npm run check
 npm run dev
 ```
 
-The setup script clones the public core at the pinned revision in `integration/core-revision.txt`, installs dependencies from a pinned lock and builds only the Visio subpath. The current pin includes the published geometry commands and requires no integration patch. It refuses mismatched revisions, staged changes, different source edits or a different npm lock in an existing sibling checkout without overwriting them. The setup still supports an explicit temporary patch for development. Core changes must be reviewed and released separately before replacing the local dependency with a published version.
+The setup script clones the public core at the pinned revision in `integration/core-revision.txt`, installs dependencies from a pinned lock and builds only the Visio subpath. The current pin includes the published geometry commands and requires no integration patch. It refuses mismatched revisions, staged changes, different source edits or a different npm lock in an existing sibling checkout without overwriting them. The setup still supports an explicit temporary patch for development. Published packages use registry dependencies. Core changes are reviewed and released separately.
 
 Open the printed local URL for the documentation landing page or `/demo/` for the viewer workspace. `.vsdx` input stays in your browser; there are no uploads, telemetry, external fonts or document URL fetches.
 
@@ -142,3 +174,11 @@ non-page dependency scope cannot yet be proved independent. Thirteen also lack a
 eligible local shape. Practical editing coverage for that corpus remains blocked;
 next work is a scoped package/master/theme dependency graph and master-instance
 editing, followed by glued endpoint routing. Native Visio reopen/fidelity is unverified.
+
+## Documentation
+
+[Guide](https://christophervr.github.io/visio-viewer/docs/) | [Demo](https://christophervr.github.io/visio-viewer/demo/)
+
+## License
+
+Apache-2.0.
