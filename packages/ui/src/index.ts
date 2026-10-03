@@ -32,6 +32,11 @@ export const OFFICE_UI_TAGS = [
 	'office-ui-tab-strip',
 	'office-ui-options-dialog',
 	'office-ui-account',
+	'office-ui-ribbon',
+	'office-ui-find-bar',
+	'office-ui-ruler',
+	'office-ui-backstage',
+	'office-ui-print-preview',
 	'office-ui-presence',
 	'office-ui-smartart',
 ] as const;

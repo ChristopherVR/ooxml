@@ -1,3 +1,8 @@
+import { defineBackstage } from './backstage.js';
+import { defineFindBar } from './find-bar.js';
+import { definePrintPreview } from './print-preview.js';
+import { defineRibbon } from './ribbon-tabs.js';
+import { defineRuler } from './ruler.js';
 import { defineAccount } from './account.js';
 import { defineButton } from './button.js';
 import { defineCheckbox, defineSwitch } from './checkable.js';
@@ -15,6 +20,11 @@ import { defineZoomSlider } from './zoom-slider.js';
 
 export {
 	defineAccount,
+	defineBackstage,
+	defineFindBar,
+	definePrintPreview,
+	defineRibbon,
+	defineRuler,
 	defineButton,
 	defineCheckbox,
 	defineCommandSearch,
@@ -42,6 +52,15 @@ export type { OfficeStatusActivateEvent } from './status-bar.js';
 export type { OfficeTab, OfficeTabSelectEvent } from './tab-strip.js';
 export type { OfficeSearchCommand } from './command-search.js';
 export { attachKeyTips, type KeyTipsHandle } from './keytips.js';
+export type {
+	OfficeBackstageCloseEvent,
+	OfficeBackstageItem,
+	OfficeBackstageSelectEvent,
+} from './backstage.js';
+export type { OfficeFindInputEvent, OfficeFindStepEvent } from './find-bar.js';
+export type { OfficePrintPreviewPageEvent } from './print-preview.js';
+export type { OfficeRibbonSelectEvent } from './ribbon-tabs.js';
+export { rulerDivisions } from './ruler.js';
 export {
 	clearOfficeProfile,
 	DEFAULT_OFFICE_PROFILE,
@@ -87,6 +106,11 @@ export const CONTROL_DEFINERS = [
 	defineTabStrip,
 	defineOptionsDialog,
 	defineAccount,
+	defineRibbon,
+	defineFindBar,
+	defineRuler,
+	defineBackstage,
+	definePrintPreview,
 ] as const;
 
 /** Idempotent, SSR-safe (no-op without a DOM). */

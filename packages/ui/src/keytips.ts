@@ -30,6 +30,26 @@ const visible = (el: Element) => {
 	return box.width > 0 && box.height > 0;
 };
 
+/**
+ * Marked controls under `root`, including inside open shadow roots of shared elements (the
+ * ribbon renders its tabs in its own shadow root). A shadow-hosted control has no light-DOM
+ * `[data-keytip-level]` ancestor, so it belongs to the level of its host.
+ */
+function deepTips(root: ParentNode): HTMLElement[] {
+	const found = [...root.querySelectorAll<HTMLElement>('[data-keytip]')];
+	for (const host of root.querySelectorAll('*')) {
+		const shadow = (host as Element).shadowRoot;
+		if (!shadow) continue;
+		const inner = deepTips(shadow);
+		if (!inner.length) continue;
+		// Treat inner controls as if they sat where their host is, for level ownership.
+		for (const el of inner) hostOf.set(el, host);
+		found.push(...inner);
+	}
+	return found;
+}
+const hostOf = new WeakMap<Element, Element>();
+
 /** Activate a control as a click would, reaching into shared controls' shadow buttons. */
 function activate(el: HTMLElement): void {
 	const inner = el.shadowRoot?.querySelector<HTMLElement>('.main, button');
@@ -50,8 +70,9 @@ export function attachKeyTips(scope: Root): KeyTipsHandle {
 	let typed = '';
 	let altAlone = false;
 	const tipsAt = (container: Element | null): HTMLElement[] =>
-		[...(container ?? scope).querySelectorAll<HTMLElement>('[data-keytip]')].filter((el) => {
-			const owner = el.parentElement?.closest('[data-keytip-level]') ?? null;
+		deepTips(container ?? scope).filter((el) => {
+			// A control inside a shared element's shadow root belongs where its host is.
+			const owner = (hostOf.get(el) ?? el.parentElement)?.closest('[data-keytip-level]') ?? null;
 			return owner === container && visible(el);
 		});
 	const current = () => tipsAt(levels.at(-1) ?? null);
