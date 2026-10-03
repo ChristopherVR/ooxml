@@ -224,3 +224,34 @@ describe('Visio context menus', () => {
 		viewer.destroy();
 	});
 });
+
+describe('Visio Tell me', () => {
+	it('finds ribbon commands, runs enabled ones and lists unsupported ones with reasons', async () => {
+		const { mountViewer } = await import('./binding.js');
+		const host = document.createElement('div');
+		document.body.append(host);
+		const viewer = mountViewer(host, { document: structuredClone(demoDocument) });
+		const root = viewer.element.shadowRoot!;
+		const search = root.querySelector<HTMLElement>('.tell-me')!;
+		const input = search.shadowRoot!.querySelector('input')!;
+		input.dispatchEvent(new FocusEvent('focusin', { bubbles: true, composed: true }));
+		const type = (value: string) => {
+			input.value = value;
+			input.dispatchEvent(new Event('input'));
+		};
+		const options = () => [...search.shadowRoot!.querySelectorAll('li')];
+		type('bold');
+		expect(options()[0]!.getAttribute('aria-disabled')).toBe('true');
+		expect(options()[0]!.textContent).toMatch(/Bold.*not available yet\. Needs core text/);
+		type('grid');
+		const first = options()[0]!;
+		expect(first.querySelector('span')!.textContent).toBe('Grid');
+		expect(first.querySelector('small')!.textContent).toBe('View › Show');
+		input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+		expect(root.querySelector<HTMLElement>('.viewport')!.dataset.grid).toBe('true');
+		type('page width');
+		input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+		expect(viewer.element.zoom).not.toBe(1);
+		viewer.destroy();
+	});
+});

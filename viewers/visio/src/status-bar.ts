@@ -43,7 +43,27 @@ export function createStatusBar(doc: Document): HTMLElement {
 	zoom.setAttribute('label', 'Canvas zoom');
 	zoom.setAttribute('fit', 'Fit page to current window');
 	zoom.setAttribute('value', '100');
-	bar.append(item('data-page-status'), item('data-shape-status'), message, notes, footer, zoom);
+	// Visio's view switch beside the zoom slider; presentation needs a page-by-page view.
+	const presentation = doc.createElement('office-ui-button');
+	presentation.slot = 'end';
+	presentation.className = 'presentation-mode';
+	presentation.setAttribute('icon', 'visioPresentation');
+	presentation.setAttribute('icon-only', '');
+	presentation.setAttribute('label', 'Presentation Mode');
+	presentation.setAttribute('disabled', '');
+	presentation.setAttribute(
+		'title',
+		'Presentation Mode: not available yet. Needs a page-by-page presentation view.',
+	);
+	bar.append(
+		item('data-page-status'),
+		item('data-shape-status'),
+		message,
+		notes,
+		footer,
+		presentation,
+		zoom,
+	);
 	return bar;
 }
 

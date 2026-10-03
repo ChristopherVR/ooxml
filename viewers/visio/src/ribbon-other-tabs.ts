@@ -240,3 +240,34 @@ export function buildReviewPanel(doc: Document, panel: HTMLElement): void {
 		]),
 	);
 }
+
+/** Visio's Help tab. Help content, support and training are not bundled in this viewer. */
+export function buildHelpPanel(doc: Document, panel: HTMLElement): void {
+	const OFFLINE = 'Help content is not bundled; see the viewer guide.';
+	panel.append(
+		commandRow(doc, 'Help commands', [
+			group(doc, 'Help', [
+				command(doc, unsupported('help', 'Help', 'help', OFFLINE)),
+				command(
+					doc,
+					unsupported(
+						'contact-support',
+						'Contact Support',
+						'message',
+						'No support service is connected.',
+					),
+				),
+				command(
+					doc,
+					unsupported(
+						'help-feedback',
+						'Feedback',
+						'message',
+						'Feedback is not collected by this viewer.',
+					),
+				),
+				command(doc, unsupported('show-training', 'Show Training', 'visioPresentation', OFFLINE)),
+			]),
+		]),
+	);
+}

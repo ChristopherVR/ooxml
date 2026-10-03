@@ -32,7 +32,7 @@
 	--office-target-size: 30px;
 }
 .ribbon-head .ribbon-tabs {
-	flex: 1;
+	flex: 0 1 auto;
 	min-width: 0;
 	height: 36px;
 	border-bottom: 0;
@@ -305,5 +305,21 @@ office-ui-status-item[data-page-status] {
 		flex: 1;
 		min-width: 0;
 		--office-zoom-slider-width: 0;
+	}
+}
+
+/* Visio's Tell me box sits right after the tabs. */
+.tell-me {
+	flex: 0 1 280px;
+	min-width: 140px;
+	margin: 0 8px;
+	--office-target-size: 28px;
+}
+.presentation-mode {
+	--office-target-size: 24px;
+}
+@media (max-width: 760px) {
+	.tell-me {
+		display: none;
 	}
 }

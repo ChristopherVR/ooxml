@@ -108,6 +108,11 @@ describe('shared Office-style viewer chrome', () => {
 		button('[data-tab="insert"]').dispatchEvent(
 			new KeyboardEvent('keydown', { key: 'End', bubbles: true }),
 		);
+		// Help is Visio's last tab; ArrowLeft steps back to View.
+		expect(button('[data-tab="help"]').getAttribute('aria-selected')).toBe('true');
+		button('[data-tab="help"]').dispatchEvent(
+			new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }),
+		);
 		expect(button('[data-tab="view"]').getAttribute('aria-selected')).toBe('true');
 		expect(root.activeElement).toBe(button('[data-tab="view"]'));
 		expect(root.querySelector<HTMLElement>('#home-panel')!.hidden).toBe(true);

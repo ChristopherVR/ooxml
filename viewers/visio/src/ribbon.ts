@@ -2,12 +2,14 @@ import { buildHomePanel } from './ribbon-home.js';
 import {
 	buildDataPanel,
 	buildDesignPanel,
+	buildHelpPanel,
 	buildInsertPanel,
 	buildProcessPanel,
 	buildReviewPanel,
 } from './ribbon-other-tabs.js';
 import { command } from './ribbon-parts.js';
 import { buildViewPanel } from './ribbon-view.js';
+import { createTellMe } from './viewer-tell-me.js';
 
 export type { VisioRibbonAction } from './ribbon-action.js';
 
@@ -20,6 +22,7 @@ export const RIBBON_TABS = [
 	['process', 'Process', buildProcessPanel],
 	['review', 'Review', buildReviewPanel],
 	['view', 'View', buildViewPanel],
+	['help', 'Help', buildHelpPanel],
 ] as const;
 export type RibbonTab = (typeof RIBBON_TABS)[number][0];
 
@@ -72,7 +75,7 @@ export function createRibbon(doc: Document): HTMLElement {
 	file.textContent = 'File';
 	file.setAttribute('aria-haspopup', 'dialog');
 	file.setAttribute('aria-expanded', 'false');
-	head.append(quickAccess(doc), file, tabs);
+	head.append(quickAccess(doc), file, tabs, createTellMe(doc));
 	toolbar.append(head);
 	for (const [key, name, build] of RIBBON_TABS) {
 		const selected = key === 'home';

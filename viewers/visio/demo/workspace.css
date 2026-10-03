@@ -287,28 +287,7 @@ summary:focus-visible,
 	padding: 0;
 	font-size: 17px;
 }
-.filebar {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 8px;
-	padding: 5px 9px;
-	min-height: 40px;
-	border-bottom: 1px solid var(--vv-border);
-	background: var(--vv-surface);
-}
-.file-actions {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 4px;
-}
-.command-divider {
-	height: 20px;
-	width: 1px;
-	background: var(--vv-border);
-	margin: 0 5px;
-}
+
 .local-label {
 	color: var(--vv-muted);
 	font-size: 10px;
@@ -466,16 +445,7 @@ summary:focus-visible,
 		align-items: center;
 		justify-content: center;
 	}
-	.filebar {
-		padding: 4px 6px;
-	}
-	.file-actions {
-		gap: 2px;
-	}
-	.file-actions button {
-		font-size: 11px;
-		padding: 5px 8px;
-	}
+
 	.command-divider,
 	.local-label {
 		display: none;
@@ -524,16 +494,7 @@ summary:focus-visible,
 	.topbar {
 		gap: 12px;
 	}
-	.filebar {
-		min-height: 28px;
-		padding: 0;
-		border: 0;
-		background: transparent;
-	}
-	.file-actions button {
-		font-size: 11px;
-		padding-inline: 8px;
-	}
+
 	.local-label {
 		display: none;
 	}
@@ -556,13 +517,6 @@ summary:focus-visible,
 	.workspace-links {
 		margin-left: auto;
 	}
-	.filebar {
-		order: 4;
-		width: calc(100% + 18px);
-		margin-inline: -9px;
-		border-bottom: 0;
-		border-top: 1px solid var(--vv-border);
-	}
 }
 
 /* Keep the same single title row at every size; file commands expand on demand. */
@@ -581,87 +535,16 @@ summary:focus-visible,
 	width: 22px;
 	height: 22px;
 }
-#file-menu {
-	min-width: 44px;
-	color: var(--vv-accent);
-}
-.filebar {
-	order: 0;
-	width: auto;
-	margin: 0;
-	min-height: 28px;
-	padding: 0;
-	border: 0;
-	background: transparent;
-}
-.file-actions {
-	flex-wrap: nowrap;
-	gap: 4px;
-}
-.file-actions button {
-	font-size: 11px;
-	padding: 3px 8px;
-}
+
 .document-title {
 	font-size: 12px;
 }
-.filebar[data-open] {
-	position: absolute;
-	left: 8px;
-	top: 40px;
-	z-index: 7;
-	width: 260px;
-	padding: 12px;
-	border: 1px solid var(--vv-border);
-	background: var(--vv-surface);
-	box-shadow: var(--vv-shadow);
-	border-radius: 4px;
-}
-.filebar[data-open] .file-actions {
-	flex-direction: column;
-	align-items: stretch;
-}
-.filebar[data-open] button {
-	font-size: 13px;
-	min-height: 38px;
-	text-align: left;
-}
-.filebar[data-open] .command-divider {
-	display: none;
-}
+
 @media (max-width: 1100px) {
-	.filebar:not([data-open]) .file-actions button {
-		font-size: 0;
-		width: 30px;
-		min-width: 30px;
-		height: 30px;
-		padding: 0;
-	}
-	.filebar:not([data-open]) .file-actions button::before {
-		font-size: 18px;
-	}
-	.filebar:not([data-open]) #open::before {
-		content: '↥';
-	}
-	.filebar:not([data-open]) #export-svg::before {
-		content: '↧';
-	}
-	.filebar:not([data-open]) #export-vsdx::before {
-		content: '↓';
-	}
-	.filebar:not([data-open]) #sample {
-		display: none;
-	}
-	.filebar:not([data-open]) #open span {
-		display: none;
-	}
 	.workspace-links a {
 		display: none;
 	}
 	.document-title small {
-		display: none;
-	}
-	.command-divider {
 		display: none;
 	}
 }
@@ -681,14 +564,7 @@ summary:focus-visible,
 	.title-divider {
 		display: none;
 	}
-	.filebar:not([data-open]) .file-actions button {
-		min-width: 44px;
-		width: 44px;
-		height: 44px;
-	}
-	.filebar:not([data-open]) #export-svg {
-		display: none;
-	}
+
 	.workspace-links {
 		gap: 0;
 	}
@@ -704,9 +580,6 @@ summary:focus-visible,
 	.document-report summary {
 		min-height: 44px;
 		line-height: 44px;
-	}
-	.filebar[data-open] {
-		top: 48px;
 	}
 }
 

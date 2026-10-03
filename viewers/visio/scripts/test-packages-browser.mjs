@@ -51,6 +51,7 @@ try {
 			'office-ui-menu-item',
 			'office-ui-menu-separator',
 			'office-ui-context-menu',
+			'office-ui-command-search',
 			'office-ui-checkbox',
 			'office-ui-select',
 		].filter((tag) => !customElements.get(tag)),

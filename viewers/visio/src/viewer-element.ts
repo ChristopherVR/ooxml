@@ -1,11 +1,9 @@
-import type { VisioDocument, VisioShape, VisioEdit } from 'ooxml-core/visio';
+import type { VisioDocument, VisioEdit } from 'ooxml-core/visio';
 import type { VsdxSource } from './contract.js';
 import { createWorkerParser } from './worker-parser.js';
 import { ViewerController, type ViewerState } from './controller.js';
-import { renderPage } from './render-svg.js';
 import { MAX_INPUT_BYTES } from './scene-validation.js';
-import { selectedShape, shapeDetails } from './shape-inspector.js';
-import { compatibilityNotes, compatibilityText } from './diagnostics.js';
+import { selectedShape } from './shape-inspector.js';
 import { wireViewerInputs } from './viewer-input.js';
 import { renderLayerControls, wireLayerControls } from './viewer-layer-controls.js';
 import { viewerStyles } from './styles.js';
@@ -18,15 +16,16 @@ import { createShapesWindow } from './shapes-window.js';
 import { createBackstage, type BackstagePage } from './backstage.js';
 import { ViewerBackstage } from './viewer-backstage.js';
 import { createContextMenus, wireContextMenus } from './viewer-context-menu.js';
+import { wireTellMe } from './viewer-tell-me.js';
 import { wireStencil } from './viewer-stencil.js';
 import { createRulers, type Rulers } from './viewer-ruler.js';
 import { ViewerEditControls } from './viewer-edit-controls.js';
 import { searchControls, renderSearchControls, type SearchControls } from './viewer-search.js';
 import { ViewerChrome, viewerChromeTemplate } from './viewer-chrome.js';
+import { ViewerCanvas } from './viewer-canvas.js';
 import { ViewerCommands } from './viewer-commands.js';
 import { editErrorMessage } from './edit-error.js';
 import { registerViewerControls } from './office-ui.js';
-import type { TextSearchResult } from './document-text-search.js';
 import { exportPageSvg, type SvgExportOptions, type SvgExportResult } from './export-svg.js';
 import {
 	createPrintSnapshot,
@@ -47,6 +46,7 @@ export class VisioViewerElement extends BaseElement {
 	#announcement: string | undefined;
 	#commands: ViewerCommands;
 	#rulers: Rulers;
+	#canvas: ViewerCanvas;
 	#backstage: ViewerBackstage;
 	#fileName = '';
 	#loadToken = 0;
@@ -58,26 +58,15 @@ export class VisioViewerElement extends BaseElement {
 	#search: SearchControls;
 	#edit: ViewerEditControls;
 	#layers: HTMLDetailsElement;
-	#renderedLayerOverrides: ViewerState['layerVisibilityOverrides'] | undefined;
-	#revealedSearchResult: TextSearchResult | undefined;
 	#notes: HTMLUListElement;
-	#notesPanel: HTMLDetailsElement;
-	#inspector: HTMLDetailsElement;
-	#inspectedShape: VisioShape | undefined;
-	#renderedSelection: ViewerState['selectedShape'] = null;
 	#unsubscribe: () => void;
 	#eventUnsubscribe: () => void;
-	#document: VisioDocument | null = null;
-	#renderedPage = -1;
 	#disposed = false;
 	#suspended = false;
-	#renderWarnings: string[] = [];
-	#disposeRenderer: () => void = () => {};
 	#fontEvents: FontFaceSet | undefined;
 	#fontsChanged = () => {
 		if (this.#disposed) return;
-		this.#document = null;
-		this.#renderedPage = -1;
+		this.#canvas.invalidate();
 		this.#render(this.controller.state);
 	};
 	constructor() {
@@ -104,8 +93,12 @@ export class VisioViewerElement extends BaseElement {
 		this.#edit = new ViewerEditControls(this.#root, this.controller);
 		this.#layers = this.#root.querySelector('.layer-controls')!;
 		this.#notes = this.#root.querySelector('.notes ul')!;
-		this.#notesPanel = this.#root.querySelector('.notes')!;
-		this.#inspector = this.#root.querySelector('.shape-inspector')!;
+		this.#canvas = new ViewerCanvas(
+			this.#viewport,
+			this.#notes,
+			this.#root.querySelector('.notes')!,
+			this.#root.querySelector('.shape-inspector')!,
+		);
 		this.#chrome = new ViewerChrome(this.#root, this.controller);
 		this.#commands = new ViewerCommands({
 			root: this.#root,
@@ -179,7 +172,7 @@ export class VisioViewerElement extends BaseElement {
 		this.#root.querySelector<HTMLElement>('.zoom-controls')!.hidden = !value;
 	}
 	get renderWarnings(): readonly string[] {
-		return this.#renderWarnings;
+		return this.#canvas.warnings;
 	}
 	async load(source: VsdxSource): Promise<void> {
 		this.#assertAlive();
@@ -285,12 +278,10 @@ export class VisioViewerElement extends BaseElement {
 		this.#disposeInputs();
 		this.#fontEvents?.removeEventListener('loadingdone', this.#fontsChanged);
 		this.#fontEvents = undefined;
-		this.#disposeRenderer();
+		this.#canvas.dispose();
 		this.#unsubscribe();
 		this.#eventUnsubscribe();
 		this.controller.destroy();
-		this.#revealedSearchResult = undefined;
-		this.#renderedSelection = null;
 		this.#root.replaceChildren();
 	}
 	connectedCallback(): void {
@@ -309,9 +300,8 @@ export class VisioViewerElement extends BaseElement {
 			this.#fontEvents = undefined;
 			this.controller.cancelLoad();
 			this.controller.cancelEdit();
-			this.#disposeRenderer();
-			this.#document = null;
-			this.#renderedPage = -1;
+			this.#canvas.dispose();
+			this.#canvas.invalidate();
 		}
 	}
 	#wireInputs(): () => void {
@@ -319,6 +309,7 @@ export class VisioViewerElement extends BaseElement {
 		const disposeCommands = this.#commands.wire();
 		const disposeBackstage = this.#backstage.wire();
 		const disposeMenus = wireContextMenus(this.#root, this.#viewport, this.controller);
+		const disposeTellMe = wireTellMe(this.#root);
 		const disposeRulers = this.#rulers.wire();
 		const disposeStencil = wireStencil(
 			this.#root.querySelector('.shapes-pane')!,
@@ -349,6 +340,7 @@ export class VisioViewerElement extends BaseElement {
 			disposeCommands();
 			disposeBackstage();
 			disposeMenus();
+			disposeTellMe();
 			disposeRulers();
 			disposeStencil();
 			disposeFind();
@@ -363,94 +355,8 @@ export class VisioViewerElement extends BaseElement {
 	#render(state: ViewerState): void {
 		if (this.#suspended) return;
 		const page = state.document?.pages[state.pageIndex];
-		const changed =
-			this.#document !== state.document ||
-			this.#renderedPage !== state.pageIndex ||
-			this.#renderedLayerOverrides !== state.layerVisibilityOverrides;
-		if (changed) {
-			this.#disposeRenderer();
-			this.#disposeRenderer = () => {};
-			this.#document = state.document;
-			this.#renderedPage = state.pageIndex;
-			this.#renderedLayerOverrides = state.layerVisibilityOverrides;
-			this.#announcement = undefined;
-			this.#renderWarnings = [];
-			if (state.document && page) {
-				const result = renderPage(state.document, page, {
-					layerVisibilityOverrides: state.layerVisibilityOverrides,
-				});
-				this.#renderWarnings = result.warnings;
-				this.#disposeRenderer = result.dispose;
-				this.#viewport.replaceChildren(result.svg);
-			} else {
-				const empty = document.createElement('div');
-				empty.className = 'empty';
-				const heading = document.createElement('strong');
-				heading.textContent = 'Open a Visio drawing';
-				empty.append(
-					heading,
-					'Open a .vsdx or supported .vsd file to start. Files stay in this browser.',
-				);
-				this.#viewport.replaceChildren(empty);
-			}
-			const notes = compatibilityNotes(state.document?.diagnostics ?? [], this.#renderWarnings);
-			this.#notes.replaceChildren(
-				...notes.map((note) => {
-					const item = document.createElement('li');
-					item.textContent = compatibilityText(note);
-					return item;
-				}),
-			);
-			this.#notesPanel.hidden = !notes.length;
-		}
-		const svg = this.#viewport.querySelector<SVGSVGElement>('svg');
-		if (svg && page) {
-			svg.style.width = `${page.width * 96 * state.zoom}px`;
-			svg.style.height = `${page.height * 96 * state.zoom}px`;
-			// Viewer-only grid spacing: quarter-inch minor and one-inch major lines.
-			svg.style.setProperty('--vv-inch', `${96 * state.zoom}px`);
-		}
-		const searchResult = state.search.results[state.search.activeIndex];
-		const selection = state.selectedShape;
-		if (
-			changed ||
-			this.#renderedSelection?.id !== selection?.id ||
-			this.#renderedSelection?.pageId !== selection?.pageId ||
-			this.#renderedSelection?.name !== selection?.name ||
-			(searchResult && searchResult !== this.#revealedSearchResult)
-		) {
-			for (const shape of this.#viewport.querySelectorAll<SVGGElement>('[data-shape-id]')) {
-				const selected =
-					!!state.selectedShape &&
-					shape.dataset.shapeId === state.selectedShape.id &&
-					(!state.selectedShape.pageId || shape.dataset.pageId === state.selectedShape.pageId);
-				shape.dataset.selected = String(selected);
-				if (
-					selected &&
-					searchResult &&
-					searchResult !== this.#revealedSearchResult &&
-					shape.dataset.shapeId === searchResult.shapeId &&
-					shape.dataset.pageId === searchResult.pageId
-				) {
-					shape.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
-					this.#revealedSearchResult = searchResult;
-				}
-				if (state.selectedShape) shape.setAttribute('tabindex', selected ? '0' : '-1');
-				if (shape.getAttribute('role') === 'button')
-					shape.setAttribute('aria-pressed', String(selected));
-			}
-			const inspected = selectedShape(state.document, state.selectedShape, state.pageIndex);
-			if (inspected !== this.#inspectedShape) {
-				this.#inspectedShape = inspected;
-				this.#inspector.hidden = !inspected;
-				if (inspected) this.#inspector.open = true;
-				this.#inspector
-					.querySelector('div')!
-					.replaceChildren(...(inspected ? [shapeDetails(inspected)] : []));
-			}
-			this.#renderedSelection = selection ? { ...selection } : null;
-		}
-		if (!searchResult) this.#revealedSearchResult = undefined;
+		const changed = this.#canvas.render(state);
+		if (changed) this.#announcement = undefined;
 		this.#zoomSlider.value = Math.round(state.zoom * 100);
 		this.#zoomSlider.disabled = !page;
 		const inspected = selectedShape(state.document, state.selectedShape, state.pageIndex);
@@ -479,7 +385,7 @@ export class VisioViewerElement extends BaseElement {
 					(state.edit.error ? `Edit rejected: ${editErrorMessage(state.edit.error)}` : undefined) ??
 					this.#announcement ??
 					(page ? `${page.name} · ${page.shapes.length} top-level shapes` : 'No diagram open'));
-		const warnings = (state.document?.diagnostics.length ?? 0) + this.#renderWarnings.length;
+		const warnings = (state.document?.diagnostics.length ?? 0) + this.#canvas.warnings.length;
 		this.#diagnostics.textContent = warnings
 			? `${this.#notes.children.length} compatibility notes`
 			: 'Local-only viewing';
