@@ -1,17 +1,47 @@
 # ooxml-ui
 
-Shared, format-neutral web components and styles for the Office viewers (Word, PowerPoint, later
+[![npm version](https://img.shields.io/npm/v/ooxml-ui.svg)](https://www.npmjs.com/package/ooxml-ui)
+[![license](https://img.shields.io/npm/l/ooxml-ui.svg)](https://github.com/ChristopherVR/ooxml/blob/main/LICENSE)
+[![types](https://img.shields.io/npm/types/ooxml-ui.svg)](https://www.npmjs.com/package/ooxml-ui)
+
+> Shared Office controls, styles and custom elements for browser applications.
+
+[Try the apps](https://christophervr.github.io/ooxml/) | [npm](https://www.npmjs.com/package/ooxml-ui) | [Full docs](https://christophervr.github.io/ooxml/) | [Source](https://github.com/ChristopherVR/ooxml)
+
+Shared, format-neutral web components and styles for the Office viewers (Word, PowerPoint and
 Excel). Vanilla custom elements with shadow-root controls, typed events, no framework and no
 runtime dependency except `ooxml-core` (types and a few pure helpers).
 
 > **You do not install this package.** It is a regular `dependency` of every published editor
-> package (`docx-viewer-*`, `pptx-viewer-*`), so installing the editor of your framework pulls it
+> package (`docx-*-viewer`, `pptx-*-viewer` and `xlsx-*-viewer`), so installing the editor of your framework pulls it
 > in. It is published separately only so that the editors share one copy of the controls. Do not
 > add it to your own install instructions or `package.json`; import controls through the editor
 > package, which registers them for you. Importing `ooxml-ui` directly is for
 > the viewer packages themselves and for people building their own Office-style UI.
 
-## Entries (ESM only)
+## Install
+
+Applications using a viewer receive this package as a dependency. For a custom
+Office UI, install it directly:
+
+```bash
+npm install ooxml-ui
+```
+
+## Quick start
+
+```js
+import { registerOfficeUi } from 'ooxml-ui';
+
+registerOfficeUi();
+const button = document.createElement('office-ui-button');
+button.setAttribute('label', 'Save');
+button.setAttribute('command', 'save');
+button.addEventListener('office-command', (event) => console.log(event.detail));
+document.body.append(button);
+```
+
+## API: entries (ESM only)
 
 | Entry               | Contents                                                                                |
 | ------------------- | --------------------------------------------------------------------------------------- |
@@ -26,7 +56,7 @@ Importing an entry never touches the DOM (SSR-safe). Elements are defined by the
 `register*` functions, which are idempotent, no-ops without a `window`, and refuse to coexist
 with an incompatible build of this package.
 
-## Elements
+## Features: elements
 
 | Tag                                      | Attributes / properties                                                                         | Events (all bubble, composed)                   |
 | ---------------------------------------- | ----------------------------------------------------------------------------------------------- | ----------------------------------------------- |
@@ -68,5 +98,12 @@ bun run build && bun run --cwd packages/ui build   # core first: the declaration
 bun run --cwd packages/ui test:package
 ```
 
-Licensed under Apache-2.0. Several controls are derived from `pptx-viewer`; see
+## Documentation
+
+[Core and UI source](https://github.com/ChristopherVR/ooxml) |
+[Shared UI plan](https://github.com/ChristopherVR/ooxml/blob/main/docs/ooxml-ui-plan.md)
+
+## License
+
+Apache-2.0. Several controls are derived from `pptx-viewer`; see
 `PROVENANCE.md` at the repository root.

@@ -2,17 +2,21 @@
 
 # ooxml-core
 
+[![npm version](https://img.shields.io/npm/v/ooxml-core.svg)](https://www.npmjs.com/package/ooxml-core)
+[![license](https://img.shields.io/npm/l/ooxml-core.svg)](https://github.com/ChristopherVR/ooxml/blob/main/LICENSE)
+[![types](https://img.shields.io/npm/types/ooxml-core.svg)](https://www.npmjs.com/package/ooxml-core)
+
 **Read, edit, validate and write Office Open XML documents in TypeScript.**
-One package, one XML model, every format: Word, PowerPoint, Excel and the shared building blocks beneath them. Visio and more are planned.
+One package, one XML model, every format: Word, PowerPoint, Excel and the shared building blocks beneath them. Visio VSDX parsing and bounded editing are available through `ooxml-core/visio`.
 
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![CI](https://github.com/ChristopherVR/ooxml/actions/workflows/ci.yml/badge.svg)](https://github.com/ChristopherVR/ooxml/actions/workflows/ci.yml)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 
 [**Try the apps**](https://christophervr.github.io/ooxml/) &nbsp;&middot;&nbsp;
-[**Packages and areas**](#one-package-many-areas) &nbsp;&middot;&nbsp;
+[**Packages and areas**](#features-and-api-one-package-many-areas) &nbsp;&middot;&nbsp;
 [**Install**](#install) &nbsp;&middot;&nbsp;
-[**Examples**](#examples) &nbsp;&middot;&nbsp;
+[**Examples**](#quick-start) &nbsp;&middot;&nbsp;
 [**Roadmap**](#roadmap) &nbsp;&middot;&nbsp;
 [**Contributing**](CONTRIBUTING.md)
 
@@ -26,7 +30,7 @@ One package, one XML model, every format: Word, PowerPoint, Excel and the shared
 - **Strict by default.** New code is strict TypeScript with branded measurement units, the shared `xml` area parses strictly (no DTD or entity expansion), and the `docx` area is checked against the ECMA-376 schemas in the test suite.
 - **Honest about its limits.** Unsupported features are reported, never hidden, and nothing here claims Office parity or lossless export without evidence.
 
-## One package, many areas
+## Features and API: one package, many areas
 
 `ooxml-core` is a **single published package**. Every area is a subpath import, so you only load what you use, and the formats are symmetrical: `docx`, `pptx` and `xlsx` are each imported through their own subpaths, and the root entry groups only the shared building blocks by namespace.
 
@@ -67,7 +71,7 @@ npm install ooxml-core
 
 Optional peer dependencies enable specific features: `node-forge` and `xml-crypto` for digital signatures (`/pptx/signature-node`), and `@napi-rs/canvas` for server-side rasterisation.
 
-## Examples
+## Quick start
 
 **Open a Word document, change it, save it**
 
@@ -124,7 +128,7 @@ bun run test:package   # packs the build and imports every entry point from a cl
 
 The working agreements are in [AGENTS.md](AGENTS.md), and [PROVENANCE.md](PROVENANCE.md) records where each module came from.
 
-## Related projects
+## Documentation and related projects
 
 - [docx-viewer](https://github.com/ChristopherVR/docx-viewer) and [pptx-viewer](https://github.com/ChristopherVR/pptx-viewer): the editors and viewers built on this package.
 - [OOXML Office](https://christophervr.github.io/ooxml/): the suite's launcher page (`site/`), which opens the demos those viewers deploy to their own GitHub Pages sites.
