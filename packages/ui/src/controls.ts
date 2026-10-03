@@ -2,6 +2,7 @@ import { defineButton } from './button.js';
 import { defineCheckbox, defineSwitch } from './checkable.js';
 import { defineDialog } from './dialog.js';
 import { defineIcon } from './icons.js';
+import { defineCommandSearch } from './command-search.js';
 import { defineContextMenu, defineMenuSeparator } from './context-menu.js';
 import { defineMenuButton, defineMenuItem } from './menu.js';
 import { defineRibbonGroup, defineRibbonStack, defineToolbar } from './ribbon.js';
@@ -13,6 +14,7 @@ import { defineZoomSlider } from './zoom-slider.js';
 export {
 	defineButton,
 	defineCheckbox,
+	defineCommandSearch,
 	defineContextMenu,
 	defineDialog,
 	defineIcon,
@@ -34,6 +36,7 @@ export type { OfficeDialogCloseEvent, OfficeDialogCloseReason } from './dialog.j
 export type { OfficeSelectOption } from './select.js';
 export type { OfficeStatusActivateEvent } from './status-bar.js';
 export type { OfficeTab, OfficeTabSelectEvent } from './tab-strip.js';
+export type { OfficeSearchCommand } from './command-search.js';
 
 /** Every control of this entry. */
 export const CONTROL_DEFINERS = [
@@ -48,6 +51,7 @@ export const CONTROL_DEFINERS = [
 	defineMenuSeparator,
 	defineMenuButton,
 	defineContextMenu,
+	defineCommandSearch,
 	defineToolbar,
 	defineDialog,
 	defineStatusBar,

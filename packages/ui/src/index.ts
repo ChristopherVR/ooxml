@@ -23,6 +23,7 @@ export const OFFICE_UI_TAGS = [
 	'office-ui-menu-button',
 	'office-ui-menu-separator',
 	'office-ui-context-menu',
+	'office-ui-command-search',
 	'office-ui-toolbar',
 	'office-ui-dialog',
 	'office-ui-status-bar',
