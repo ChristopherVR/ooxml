@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.14.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@0.14.1) - 2026-10-03
+
+### Bug Fixes
+
+- **collab:** Accept broadcast bytes cloned from another realm (by @ChristopherVR) ([03eb043](https://github.com/ChristopherVR/ooxml/commit/03eb0431c304641ba4e3f4e235625bc54c545105))
+
 ## [0.14.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@0.14.0) - 2026-10-03
 
 ### Features
