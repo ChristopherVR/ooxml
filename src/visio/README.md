@@ -233,9 +233,83 @@ Calls own input bytes and command values before their first asynchronous step.
 Each call has a fresh bounded operation lifetime; do not keep a `VisioPackage`
 reader alive as an interactive editing session. No public mutable DOM is exposed.
 
-There is no geometry editing, rich-text editing, master override creation,
-formula evaluation, dependent-cache refresh, undo UI or native save parity claim.
-Text-dependent formulas can have stale caches after a save. Every changed result
-reports `edit-caches-not-recalculated`. Automated evidence covers reopening in
-this library and preservation/security invariants; reopening in Microsoft Visio
-and native rendering fidelity remain unverified.
+Plain-text edits still do not recalculate text-dependent formulas and report
+`edit-caches-not-recalculated`. Rich-text editing and master overrides remain unsupported.
+Automated evidence covers reopening in this library and preservation/security
+invariants. Microsoft Visio reopen and native rendering fidelity remain unverified.
+
+## Experimental geometry transaction
+
+The same atomic `editVsdx` transaction accepts the typed `VisioEdit` union:
+
+```ts
+{ type: 'create-rectangle', pageId, shapeId, x, y, width, height, text? }
+{ type: 'move-shape', pageId, shapeId, x, y }
+{ type: 'resize-shape', pageId, shapeId, width, height }
+{ type: 'delete-shape', pageId, shapeId }
+```
+
+Coordinates are drawing inches, bottom-left origin, up-positive, at the rotation
+pin. Resizing holds that pin fixed. Shape IDs are explicit canonical positive
+unsigned integers. Coordinates and dimensions are bounded to one million inches;
+dimensions must be positive. Existing admitted top-level local 2D shapes can be
+edited, including shapes imported from another producer. There is no provenance
+requirement that the viewer created the shape.
+
+Numeric ShapeSheet interpretation uses a bounded AST, never JavaScript execution.
+Arithmetic, comparisons, IF, GUARD, Width/Height scaling, local geometry/named-row
+references and static Sheet.ID references have dependency analysis. ATAN2 uses
+(y,x); SIGN defaults to fuzz 1e-9. DL/DP/DT caches are internal inches and DA is
+radians. Dimensional comparisons require explicit compatible units, such as
+`Width > 3 IN`. Unknown units and compound dimensions fail. Defaults are 8,192
+formula characters, 1,024 AST nodes, depth 64, 100,000 indexed cells, 10,000
+affected cells and 100,000 aggregate evaluation steps per recalculation. Existing
+package and transaction deadlines still apply. These are cooperative bounds.
+
+Affected caches are computed before writeback, with F/U retained. Implicit local
+and text pin/dimension dependencies participate. Unsupported known pure formulas
+can remain unchanged when provably independent. Opaque, unknown-function or
+dynamic dependencies fail safely. A final check refuses formulas that would
+contradict the requested dimensions or fixed pin.
+
+`F="No Formula"` is the native locally deleted/blocked formula marker, not an
+expression. Its numeric cache remains usable and the marker is preserved when
+setting a direct value. `F="Inh"` requires actual inheritance resolution; it is
+never treated as the blocked marker. See the [Microsoft Cell schema](https://learn.microsoft.com/en-us/office/client-developer/visio/cell-element-geometry-sectionvisio-xml).
+Master IDs and page IDs have separate scopes; PageSheet metadata uses its owning
+Page ID. Selected/default styles, ancestry, local overrides and planned creates
+are checked before saving. Unsupported affected inheritance and unknown dynamic
+dependencies still refuse. Theme reads record implicit theme/QuickStyle selector
+dependencies; independent caches are preserved, while affected theme evaluation
+remains unsupported. THEMEGUARD is distinct from GUARD and does not protect
+manual formatting. Literal double-click event handlers are inert during geometry
+recalculation; transform events receive no such exemption.
+
+This first bundle has deliberate exclusions:
+
+| Exclusion                                                                  | Reason                                                                             | Next expansion                                                                  |
+| -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Master-linked shapes, groups and foreign shapes                            | Instance overrides, nested transforms and resource semantics are not proven        | Scoped master/instance graph and safe overrides                                 |
+| Glue/Connects participation and 1D shapes                                  | Formula-only recalculation cannot route connectors or establish glue               | Endpoint dependencies and glued connector routing                               |
+| Non-page affected/unknown dependencies                                     | Page metadata, document, master and style scopes can otherwise retain stale caches | Scoped package-wide graph, starting with page metadata and pure theme functions |
+| GUARD, SETATREF and referenced transform formulas                          | Direct overwrites would bypass protection/redirection or discard semantics         | Verified redirection commands; never bypass protection                          |
+| Protected cells and inherited/ambiguous protection                         | LockMoveX/Y, LockWidth/Height/Aspect/Delete must be honored                        | Proven effective protection resolution                                          |
+| Absolute geometry lacking dimension-dependent formulas; nonlinear geometry | Scaling cached coordinates can distort shape semantics                             | Additional row evaluators and explicit scaling proofs                           |
+| Referenced deletion                                                        | Formulas, Connects or metadata could dangle                                        | Explicit validated dependency-removal transactions                              |
+
+Relative MoveTo/LineTo geometry scales with Width/Height. Absolute MoveTo/LineTo
+coordinates require a supported transitive dependency on dimensions, except zero
+coordinates. Formula graph cycles, error caches, unknown affected dependencies
+and incomplete recalculation refuse the whole transaction.
+
+Contract, independent review and preservation tests cover the admitted synthetic
+subset and hash-pinned public corpus. Of 19 admitted drawings, six accept rectangle
+creation. Existing shapes in blue-box (page 0/shape 75), color-boxes (0/68) and
+qs-box (0/75) each accept separate move, resize and delete commands with round-trip
+and untouched-payload preservation assertions. Three further candidates, 60973
+(0/11), test (0/1) and test_text_extraction (0/1), refuse unknown used-master
+dependencies. Thirteen drawings have no candidate in the test's first-page scan;
+this is not a claim about every shape on every page. Ten malformed inputs retain
+their expected admission failures. Native Visio reopen/fidelity is unverified.
+The next expansion is a scoped effective master/style graph with explicit
+dependency recalculation, rather than ignoring unknown dependencies.

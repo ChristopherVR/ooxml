@@ -47,4 +47,23 @@ export {
 	type VisioMetafileConversionResult,
 } from './convert-metafile.js';
 
-export { editVsdx, type VisioTextEdit, type EditVsdxOptions, type EditVsdxResult } from './edit.js';
+export {
+	editVsdx,
+	type VisioEdit,
+	type VisioGeometryEdit,
+	type VisioTextEdit,
+	type EditVsdxOptions,
+	type EditVsdxResult,
+} from './edit.js';
+export {
+	parseVisioFormula,
+	analyzeVisioFormula,
+	evaluateVisioFormula,
+	visioFormulaCachedValue,
+	VisioFormulaError,
+	type VisioFormulaAst,
+	type VisioFormulaLimits,
+	type VisioFormulaValue,
+	type VisioFormulaReference,
+	type VisioFormulaUnit,
+} from './formula.js';
