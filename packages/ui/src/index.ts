@@ -22,6 +22,8 @@ export const OFFICE_UI_TAGS = [
 	'office-ui-dialog',
 	'office-ui-status-bar',
 	'office-ui-status-item',
+	'office-ui-zoom-slider',
+	'office-ui-tab-strip',
 	'office-ui-presence',
 	'office-ui-smartart',
 ] as const;

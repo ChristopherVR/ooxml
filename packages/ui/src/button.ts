@@ -29,7 +29,8 @@ svg:not([data-painted]) { display: none; }
 
 /**
  * Command button. Attributes: `label`, `icon`, `command`, `disabled`, `pressed` (aria-pressed),
- * `expanded` (aria-expanded), `icon-only`, `variant="stacked"`, `title`.
+ * `expanded` (aria-expanded), `icon-only`, `variant="stacked"`, `title`, `keyshortcuts`
+ * (forwarded as aria-keyshortcuts, e.g. `Control+Z`).
  * Activation (pointer, Enter, Space) emits one bubbling, composed `office-command`
  * event with `{ command }`; the host decides what it does. Nothing happens when disabled.
  */
@@ -44,6 +45,7 @@ export const defineButton = definer('office-ui-button', () => {
 			'expanded',
 			'icon-only',
 			'title',
+			'keyshortcuts',
 		];
 		private readonly button: HTMLButtonElement;
 		private readonly svg: SVGSVGElement;
@@ -93,6 +95,9 @@ export const defineButton = definer('office-ui-button', () => {
 			else this.button.removeAttribute('aria-label');
 			this.button.title = this.getAttribute('title') ?? (iconOnly ? label : '');
 			this.button.disabled = this.disabled;
+			const shortcuts = this.getAttribute('keyshortcuts');
+			if (shortcuts) this.button.setAttribute('aria-keyshortcuts', shortcuts);
+			else this.button.removeAttribute('aria-keyshortcuts');
 			if (paintIcon(this.svg, this.getAttribute('icon'))) this.svg.setAttribute('data-painted', '');
 			else this.svg.removeAttribute('data-painted');
 			for (const attr of ['pressed', 'expanded'] as const) {

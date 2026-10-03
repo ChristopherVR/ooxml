@@ -43,14 +43,14 @@ document.body.append(button);
 
 ## API: entries (ESM only)
 
-| Entry               | Contents                                                                                |
-| ------------------- | --------------------------------------------------------------------------------------- |
-| `ooxml-ui`          | everything below plus `registerOfficeUi()` and `OFFICE_UI_TAGS`                         |
-| `ooxml-ui/theme`    | `THEME_CSS`, `installOfficeUiTheme()` (tokens, dark mode, forced-colors, touch targets) |
-| `ooxml-ui/icons`    | icon registry (`registerIcon`, `getIcon`, `listIcons`) and `<office-ui-icon>`           |
-| `ooxml-ui/controls` | button, checkbox, switch, select, ribbon group, toolbar, dialog, status bar and item    |
-| `ooxml-ui/presence` | `<office-ui-presence>` avatar stack for collaboration awareness                         |
-| `ooxml-ui/smartart` | `<office-ui-smartart>`: draws a core `DiagramDrawing` as SVG                            |
+| Entry               | Contents                                                                                                     |
+| ------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `ooxml-ui`          | everything below plus `registerOfficeUi()` and `OFFICE_UI_TAGS`                                              |
+| `ooxml-ui/theme`    | `THEME_CSS`, `installOfficeUiTheme()` (tokens, dark mode, forced-colors, touch targets)                      |
+| `ooxml-ui/icons`    | icon registry (`registerIcon`, `getIcon`, `listIcons`) and `<office-ui-icon>`                                |
+| `ooxml-ui/controls` | button, checkbox, switch, select, ribbon group, toolbar, dialog, status bar and item, zoom slider, tab strip |
+| `ooxml-ui/presence` | `<office-ui-presence>` avatar stack for collaboration awareness                                              |
+| `ooxml-ui/smartart` | `<office-ui-smartart>`: draws a core `DiagramDrawing` as SVG                                                 |
 
 Importing an entry never touches the DOM (SSR-safe). Elements are defined by the `define*` /
 `register*` functions, which are idempotent, no-ops without a `window`, and refuse to coexist
@@ -58,18 +58,20 @@ with an incompatible build of this package.
 
 ## Features: elements
 
-| Tag                                      | Attributes / properties                                                                         | Events (all bubble, composed)                   |
-| ---------------------------------------- | ----------------------------------------------------------------------------------------------- | ----------------------------------------------- |
-| `office-ui-button`                       | `label`, `icon`, `command`, `disabled`, `pressed`, `expanded`, `icon-only`, `variant="stacked"` | `office-command` `{ command }`                  |
-| `office-ui-checkbox`, `office-ui-switch` | `checked`, `disabled`, `value`, `aria-label`; form-associated                                   | `input`, `change`                               |
-| `office-ui-select`                       | `options` `[{ value, label, disabled? }]`, `value`, `selectedIndex`, `disabled`                 | `input`, `change`                               |
-| `office-ui-ribbon-group`                 | `label`; default slot                                                                           | none                                            |
-| `office-ui-toolbar`                      | `aria-label`, `aria-orientation`; arrow-key focus movement                                      | none                                            |
-| `office-ui-dialog`                       | `open`, `heading`, `dismissible="false"`, `show()`, `close()`; slots default, `footer`          | `office-dialog-close` `{ reason }` (cancelable) |
-| `office-ui-status-bar` / `-status-item`  | `label`, `value`, `interactive`, `id`                                                           | `office-status-activate` `{ id }`               |
-| `office-ui-presence`                     | `participants`, `max`, `label`                                                                  | `office-presence-select` `{ id }`               |
-| `office-ui-smartart`                     | `drawing` (core `DiagramDrawing`), `schemeColors`, `label`                                      | `office-smartart-render` (render report)        |
-| `office-ui-icon`                         | `name`, `label`                                                                                 | none                                            |
+| Tag                                      | Attributes / properties                                                                                         | Events (all bubble, composed)                                      |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `office-ui-button`                       | `label`, `icon`, `command`, `disabled`, `pressed`, `expanded`, `icon-only`, `variant="stacked"`, `keyshortcuts` | `office-command` `{ command }`                                     |
+| `office-ui-checkbox`, `office-ui-switch` | `checked`, `disabled`, `value`, `aria-label`; form-associated                                                   | `input`, `change`                                                  |
+| `office-ui-select`                       | `options` `[{ value, label, disabled? }]`, `value`, `selectedIndex`, `disabled`                                 | `input`, `change`                                                  |
+| `office-ui-ribbon-group`                 | `label`; default slot                                                                                           | none                                                               |
+| `office-ui-toolbar`                      | `aria-label`, `aria-orientation`; arrow-key focus movement                                                      | none                                                               |
+| `office-ui-dialog`                       | `open`, `heading`, `dismissible="false"`, `show()`, `close()`; slots default, `footer`                          | `office-dialog-close` `{ reason }` (cancelable)                    |
+| `office-ui-status-bar` / `-status-item`  | `label`, `value`, `interactive`, `id`                                                                           | `office-status-activate` `{ id }`                                  |
+| `office-ui-zoom-slider`                  | `value` (percent), `min`, `max`, `step`, `disabled`, `fit` (fit button name), `label`                           | `input`, `change`; fit: `office-command` `{ command: 'zoom-fit' }` |
+| `office-ui-tab-strip`                    | `tabs` `[{ id, label, title? }]`, `selected`, `label`, `disabled`                                               | `office-tab-select` `{ id }` (cancelable)                          |
+| `office-ui-presence`                     | `participants`, `max`, `label`                                                                                  | `office-presence-select` `{ id }`                                  |
+| `office-ui-smartart`                     | `drawing` (core `DiagramDrawing`), `schemeColors`, `label`                                                      | `office-smartart-render` (render report)                           |
+| `office-ui-icon`                         | `name`, `label`                                                                                                 | none                                                               |
 
 Setting a property never emits an event; only user activation does. Controls honour
 `prefers-color-scheme`, `forced-colors: active` (system colours and a visible focus ring) and

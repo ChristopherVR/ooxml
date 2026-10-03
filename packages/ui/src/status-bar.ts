@@ -11,14 +11,19 @@ const BAR_CSS = `
 @media (forced-colors: active) { :host { background: Canvas; color: CanvasText; border-top-color: CanvasText; } }
 `;
 
-/** Status bar container: `role="group"` named by its `label` attribute (default "Status"). */
+/**
+ * Status bar container: `role="group"` named by its `label` attribute (default "Status").
+ * Children with `slot="end"` are pushed to the trailing edge (zoom, view switches).
+ */
 export const defineStatusBar = definer('office-ui-status-bar', () => {
 	class OfficeUiStatusBar extends HTMLElement {
 		constructor() {
 			super();
 			const root = this.attachShadow({ mode: 'open' });
 			attachStyles(root, controlCss(BAR_CSS));
-			root.append(this.ownerDocument.createElement('slot'));
+			const end = this.ownerDocument.createElement('slot');
+			end.name = 'end';
+			root.append(this.ownerDocument.createElement('slot'), end);
 		}
 		connectedCallback(): void {
 			this.setAttribute('role', 'group');

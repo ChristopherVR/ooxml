@@ -31,6 +31,16 @@ const BUILT_IN: Readonly<Record<string, string>> = {
 	clock: 'M3 10a7 7 0 1 0 14 0 7 7 0 1 0-14 0M10 6v4l3 2',
 	reset: 'M4 10a6 6 0 1 1 1.8 4.2M4 6v4h4',
 	search: 'M3 8.5a5.5 5.5 0 1 0 11 0 5.5 5.5 0 1 0-11 0M13 13l4 4',
+	undo: 'M7.5 11.5 3.5 7.5l4-4M3.5 7.5h9a4 4 0 0 1 0 8H10',
+	redo: 'm12.5 11.5 4-4-4-4M16.5 7.5h-9a4 4 0 0 0 0 8H10',
+	pointer: 'm5 2.5v13.5l3.6-3.6 2.4 5.1 2.1-1-2.4-5H15.5Z',
+	rectangle: 'M3 5.5h14v9H3Z',
+	fullscreen: 'M3 7.5V3h4.5M12.5 3H17v4.5M17 12.5V17h-4.5M7.5 17H3v-4.5',
+	grid: 'M3 3h14v14H3ZM7.7 3v14M12.3 3v14M3 7.7h14M3 12.3h14',
+	fitPage: 'M6.5 6.5h7v7h-7ZM2.5 6V2.5H6M14 2.5h3.5V6M17.5 14v3.5H14M6 17.5H2.5V14',
+	pageWidth: 'M5.5 3.5h9v13h-9ZM1.5 10h17M4 8l-2.5 2L4 12M16 8l2.5 2-2.5 2',
+	zoomIn: 'M3 8.5a5.5 5.5 0 1 0 11 0 5.5 5.5 0 1 0-11 0M13 13l4 4M6 8.5h5M8.5 6v5',
+	zoomOut: 'M3 8.5a5.5 5.5 0 1 0 11 0 5.5 5.5 0 1 0-11 0M13 13l4 4M6 8.5h5',
 };
 for (const [name, d] of Object.entries(BUILT_IN)) registry.set(name, { d });
 
