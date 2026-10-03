@@ -1,3 +1,4 @@
+import { tok } from './tokens.js';
 import { createIconSvg, paintIcon } from './icons.js';
 import { definer, emit } from './registry.js';
 import { attachStyles, controlCss } from './styles.js';
@@ -9,21 +10,21 @@ export type OfficeDialogCloseEvent = CustomEvent<{ reason: OfficeDialogCloseReas
 const CSS = `
 :host { display: none; position: fixed; inset: 0; z-index: 1000; align-items: center; justify-content: center; }
 :host([open]) { display: flex; }
-.backdrop { position: absolute; inset: 0; background: rgb(0 0 0 / .4); }
+.backdrop { position: absolute; inset: 0; background: ${tok('--office-overlay')}; }
 .box { position: relative; box-sizing: border-box; display: flex; flex-direction: column;
-	width: var(--office-dialog-width, auto); min-width: min(320px, 100vw); max-width: var(--office-dialog-max-width, min(640px, 100vw)); max-height: 90vh;
-	background: var(--office-background, #fff); color: var(--office-foreground, #1f2937);
-	border: 1px solid var(--office-border, #d1d5db); border-radius: 8px; font-family: var(--office-font, system-ui, sans-serif); }
-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 16px;
-	border-bottom: 1px solid var(--office-border, #d1d5db); }
-h2 { margin: 0; font-size: 15px; font-weight: 600; }
-.body { padding: 16px; overflow: auto; font-size: 13px; }
-footer { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--office-border, #d1d5db); }
+	width: ${tok('--office-dialog-width')}; min-width: ${tok('--office-dialog-min-width')}; max-width: ${tok('--office-dialog-max-width')}; max-height: ${tok('--office-dialog-max-height')};
+	background: ${tok('--office-background')}; color: ${tok('--office-foreground')};
+	border: ${tok('--office-border-width')} solid ${tok('--office-border')}; border-radius: ${tok('--office-radius-lg')}; font-family: ${tok('--office-font')}; }
+header { display: flex; align-items: center; justify-content: space-between; gap: ${tok('--office-space-2')}; padding: ${tok('--office-space-3')} ${tok('--office-space-4')};
+	border-bottom: ${tok('--office-border-width')} solid ${tok('--office-border')}; }
+h2 { margin: 0; font-size: ${tok('--office-font-size-lg')}; font-weight: 600; }
+.body { padding: ${tok('--office-space-4')}; overflow: auto; font-size: ${tok('--office-font-size')}; }
+footer { display: flex; justify-content: flex-end; gap: ${tok('--office-space-2')}; padding: ${tok('--office-space-3')} ${tok('--office-space-4')}; border-top: ${tok('--office-border-width')} solid ${tok('--office-border')}; }
 footer[hidden] { display: none; }
-.close { display: inline-flex; align-items: center; justify-content: center; min-width: var(--office-target-size, 28px);
-	min-height: var(--office-target-size, 28px); border: 0; background: transparent; color: inherit; cursor: pointer; border-radius: 4px; }
-.close svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; }
-.close:focus-visible { outline: 2px solid var(--office-ring, #2563eb); }
+.close { display: inline-flex; align-items: center; justify-content: center; min-width: ${tok('--office-target-size')};
+	min-height: ${tok('--office-target-size')}; border: 0; background: transparent; color: inherit; cursor: pointer; border-radius: ${tok('--office-radius')}; }
+.close svg { width: ${tok('--office-icon-size-md')}; height: ${tok('--office-icon-size-md')}; fill: none; stroke: currentColor; stroke-width: ${tok('--office-icon-stroke')}; stroke-linecap: round; }
+.close:focus-visible { outline: ${tok('--office-focus-width')} solid ${tok('--office-ring')}; }
 @media (forced-colors: active) { .box { border-color: CanvasText; background: Canvas; } .backdrop { background: transparent; } }
 `;
 

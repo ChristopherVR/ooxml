@@ -1,3 +1,4 @@
+import { tok } from './tokens.js';
 import { definer } from './registry.js';
 import { attachStyles, controlCss } from './styles.js';
 
@@ -9,20 +10,20 @@ export interface OfficeSelectOption {
 
 const CSS = `
 :host { display: inline-block; position: relative; vertical-align: middle; }
-button { box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: 8px;
-	width: 100%; min-height: var(--office-target-size, 28px); padding: 0 8px; font: inherit; font-size: 12px;
-	color: var(--office-foreground, #1f2937); background: var(--office-background, #fff);
-	border: 1px solid var(--office-border, #d1d5db); border-radius: var(--office-radius, 4px); cursor: pointer; }
-button:focus-visible { outline: 2px solid var(--office-ring, #2563eb); outline-offset: 1px; }
+button { box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: ${tok('--office-space-2')};
+	width: 100%; min-height: ${tok('--office-target-size')}; padding: 0 ${tok('--office-space-2')}; font: inherit; font-size: ${tok('--office-font-size-sm')};
+	color: ${tok('--office-foreground')}; background: ${tok('--office-background')};
+	border: ${tok('--office-border-width')} solid ${tok('--office-border')}; border-radius: ${tok('--office-radius')}; cursor: pointer; }
+button:focus-visible { outline: ${tok('--office-focus-width')} solid ${tok('--office-ring')}; outline-offset: calc(${tok('--office-focus-offset')} / 2); }
 :host([disabled]) button { opacity: .5; cursor: not-allowed; }
-ul { position: absolute; z-index: 10; inset-inline: 0; top: 100%; margin: 2px 0 0; padding: 2px; list-style: none;
-	max-height: 240px; overflow: auto; background: var(--office-background, #fff);
-	border: 1px solid var(--office-border, #d1d5db); border-radius: var(--office-radius, 4px); }
+ul { position: absolute; z-index: 10; inset-inline: 0; top: 100%; margin: ${tok('--office-space-0')} 0 0; padding: ${tok('--office-space-0')}; list-style: none;
+	max-height: ${tok('--office-select-max-height')}; overflow: auto; background: ${tok('--office-background')};
+	border: ${tok('--office-border-width')} solid ${tok('--office-border')}; border-radius: ${tok('--office-radius')}; }
 ul[hidden] { display: none; }
-li { display: flex; align-items: center; min-height: var(--office-target-size, 28px); padding: 0 8px;
-	font-size: 12px; color: var(--office-foreground, #1f2937); cursor: pointer; border-radius: 3px; }
+li { display: flex; align-items: center; min-height: ${tok('--office-target-size')}; padding: 0 ${tok('--office-space-2')};
+	font-size: ${tok('--office-font-size-sm')}; color: ${tok('--office-foreground')}; cursor: pointer; border-radius: ${tok('--office-radius-sm')}; }
 li[aria-selected="true"] { font-weight: 600; }
-li[data-active] { background: var(--office-surface, #f3f4f6); }
+li[data-active] { background: ${tok('--office-surface')}; }
 li[aria-disabled="true"] { opacity: .5; cursor: not-allowed; }
 @media (forced-colors: active) {
 	button, ul { border-color: CanvasText; background: Canvas; color: CanvasText; }

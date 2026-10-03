@@ -1,3 +1,4 @@
+import { tok } from './tokens.js';
 import { definer, emit } from './registry.js';
 import { attachStyles, controlCss } from './styles.js';
 
@@ -50,14 +51,14 @@ export const initialsOf = (name: string): string => {
 const CSS = `
 :host { display: inline-flex; align-items: center; }
 ul { display: flex; margin: 0; padding: 0; list-style: none; }
-li { margin-inline-start: -6px; }
+li { margin-inline-start: calc(-1 * ${tok('--office-space-1-5')}); }
 li:first-child { margin-inline-start: 0; }
 button, .more { box-sizing: border-box; display: inline-grid; place-items: center;
-	width: var(--office-target-size, 28px); height: var(--office-target-size, 28px); padding: 0; border-radius: 50%;
-	border: 2px solid var(--office-avatar-color, #6b7280); background: var(--office-surface, #f3f4f6);
-	color: var(--office-foreground, #1f2937); font: 600 11px var(--office-font, system-ui, sans-serif); cursor: pointer; }
-.more { cursor: default; border-color: var(--office-border, #d1d5db); }
-button:focus-visible { outline: 2px solid var(--office-ring, #2563eb); outline-offset: 1px; z-index: 1; }
+	width: ${tok('--office-target-size')}; height: ${tok('--office-target-size')}; padding: 0; border-radius: 50%;
+	border: ${tok('--office-border-width-thick')} solid ${tok('--office-avatar-color')}; background: ${tok('--office-surface')};
+	color: ${tok('--office-foreground')}; font: 600 ${tok('--office-font-size-xs')} ${tok('--office-font')}; cursor: pointer; }
+.more { cursor: default; border-color: ${tok('--office-border')}; }
+button:focus-visible { outline: ${tok('--office-focus-width')} solid ${tok('--office-ring')}; outline-offset: calc(${tok('--office-focus-offset')} / 2); z-index: 1; }
 button[data-status="idle"] { opacity: .7; }
 button[data-status="away"] { opacity: .45; border-style: dashed; }
 @media (forced-colors: active) {

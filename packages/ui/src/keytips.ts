@@ -1,3 +1,4 @@
+import { tok } from './tokens.js';
 /**
  * Office KeyTips: press and release Alt to show letter badges on ribbon controls, then type a
  * badge to activate it. Products annotate controls only:
@@ -18,9 +19,11 @@ export interface KeyTipsHandle {
 const BADGE_CSS =
 	'position:fixed;inset:auto;margin:0;padding:0;border:0;background:transparent;overflow:visible;pointer-events:none';
 const TIP_CSS =
-	'position:fixed;transform:translate(-50%,-30%);min-width:14px;padding:1px 4px;border:1px solid #8a8886;' +
-	'border-radius:2px;background:#fff;color:#1f1f1f;font:600 11px/14px "Segoe UI",system-ui,sans-serif;' +
-	'text-align:center;box-shadow:0 1px 3px rgb(0 0 0 / 25%)';
+	`position:fixed;transform:translate(-50%,-30%);min-width:${tok('--office-icon-size')};` +
+	`padding:${tok('--office-space-px')} ${tok('--office-space-1')};border:${tok('--office-border-width')} solid ${tok('--office-keytip-border')};` +
+	`border-radius:${tok('--office-radius-xs')};background:${tok('--office-keytip-background')};color:${tok('--office-keytip-foreground')};` +
+	`font:${tok('--office-font-weight-bold')} ${tok('--office-font-size-xs')}/${tok('--office-icon-size')} ${tok('--office-font')};` +
+	`text-align:center;box-shadow:${tok('--office-shadow-sm')}`;
 
 type Root = ShadowRoot | HTMLElement;
 const isDisabled = (el: Element) =>

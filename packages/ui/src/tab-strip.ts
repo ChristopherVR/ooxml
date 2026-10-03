@@ -1,3 +1,4 @@
+import { tok } from './tokens.js';
 import { createIconSvg, paintIcon } from './icons.js';
 import { definer, emit } from './registry.js';
 import { attachStyles, controlCss } from './styles.js';
@@ -11,26 +12,26 @@ export interface OfficeTab {
 export type OfficeTabSelectEvent = CustomEvent<{ id: string }>;
 
 const CSS = `
-:host { display: flex; align-items: stretch; min-width: 0; min-height: 28px; gap: 2px; padding: 0 6px;
-	background: var(--office-surface, #f3f4f6); color: var(--office-muted-foreground, #6b7280);
-	border-top: 1px solid var(--office-border, #d1d5db); font-size: 12px;
-	font-family: var(--office-font, system-ui, sans-serif); }
-.step { flex: none; display: inline-grid; place-items: center; width: var(--office-target-size, 26px);
-	min-height: var(--office-target-size, 26px);
+:host { display: flex; align-items: stretch; min-width: 0; min-height: ${tok('--office-tab-height')}; gap: ${tok('--office-space-0')}; padding: 0 ${tok('--office-space-1-5')};
+	background: ${tok('--office-surface')}; color: ${tok('--office-muted-foreground')};
+	border-top: ${tok('--office-border-width')} solid ${tok('--office-border')}; font-size: ${tok('--office-font-size-sm')};
+	font-family: ${tok('--office-font')}; }
+.step { flex: none; display: inline-grid; place-items: center; width: ${tok('--office-target-size')};
+	min-height: ${tok('--office-target-size')};
 	padding: 0; border: 0; background: transparent; color: inherit; cursor: pointer; }
 .step:disabled { opacity: .4; cursor: default; }
-.add { font-size: 18px; line-height: 1; }
+.add { font-size: ${tok('--office-font-size-xl')}; line-height: 1; }
 .add[hidden] { display: none; }
 .list { display: flex; align-items: stretch; min-width: 0; overflow-x: auto; scrollbar-width: thin; }
-.tab { flex: none; max-width: 220px; min-height: var(--office-target-size, 26px); margin-top: -1px;
-	padding: 2px 14px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
-	border: 1px solid transparent; border-top: 0; border-radius: 0 0 var(--office-radius, 4px) var(--office-radius, 4px);
+.tab { flex: none; max-width: ${tok('--office-tab-max-width')}; min-height: ${tok('--office-target-size')}; margin-top: calc(-1 * ${tok('--office-space-px')});
+	padding: ${tok('--office-space-0')} ${tok('--office-space-3-5')}; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+	border: ${tok('--office-border-width')} solid transparent; border-top: 0; border-radius: 0 0 ${tok('--office-radius')} ${tok('--office-radius')};
 	background: transparent; color: inherit; font: inherit; cursor: pointer; }
-.tab:hover { color: var(--office-foreground, #1f2937); }
-.tab[aria-selected="true"] { border-color: var(--office-border, #d1d5db); background: var(--office-background, #fff);
-	color: var(--office-accent, #2563eb); font-weight: 600; box-shadow: inset 0 2px 0 var(--office-accent, #2563eb); }
-button:focus-visible { outline: 2px solid var(--office-ring, #2563eb); outline-offset: -2px; }
-svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5;
+.tab:hover { color: ${tok('--office-foreground')}; }
+.tab[aria-selected="true"] { border-color: ${tok('--office-border')}; background: ${tok('--office-background')};
+	color: ${tok('--office-accent')}; font-weight: 600; box-shadow: inset 0 ${tok('--office-border-width-thick')} 0 ${tok('--office-accent')}; }
+button:focus-visible { outline: ${tok('--office-focus-width')} solid ${tok('--office-ring')}; outline-offset: calc(-1 * ${tok('--office-focus-width')}); }
+svg { width: ${tok('--office-icon-size-md')}; height: ${tok('--office-icon-size-md')}; fill: none; stroke: currentColor; stroke-width: ${tok('--office-icon-stroke')};
 	stroke-linecap: round; stroke-linejoin: round; }
 @media (forced-colors: active) {
 	:host { border-top-color: CanvasText; }

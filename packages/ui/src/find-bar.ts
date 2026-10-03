@@ -1,3 +1,4 @@
+import { tok } from './tokens.js';
 import { definer, emit } from './registry.js';
 import { attachStyles, controlCss } from './styles.js';
 
@@ -5,22 +6,22 @@ export type OfficeFindInputEvent = CustomEvent<{ query: string }>;
 export type OfficeFindStepEvent = CustomEvent<{ direction: 'next' | 'previous' }>;
 
 const CSS = `
-:host { display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 4px 8px 4px 12px;
-	border-bottom: 1px solid var(--office-border, #d1d5db); background: var(--office-surface, #f3f4f6);
-	color: var(--office-foreground, #1f2937); font: 12px var(--office-font, system-ui, sans-serif); }
+:host { display: flex; align-items: center; gap: ${tok('--office-space-2')}; min-height: ${tok('--office-find-bar-height')}; padding: ${tok('--office-space-1')} ${tok('--office-space-2')} ${tok('--office-space-1')} ${tok('--office-space-3')};
+	border-bottom: ${tok('--office-border-width')} solid ${tok('--office-border')}; background: ${tok('--office-surface')};
+	color: ${tok('--office-foreground')}; font: ${tok('--office-font-size-sm')} ${tok('--office-font')}; }
 :host(:not([open])) { display: none; }
-[role="search"] { display: flex; flex: 1; align-items: center; gap: 4px; min-width: 0; max-width: 640px; }
-label { display: flex; flex: 1; align-items: center; gap: 6px; min-width: 0; }
-input { flex: 1; min-width: 0; min-height: 26px; padding: 2px 6px; font: inherit; color: inherit;
-	border: 1px solid var(--office-border, #d1d5db); border-radius: 3px; background: var(--office-background, #fff); }
-button { min-height: 26px; padding: 2px 8px; font: inherit; color: inherit; cursor: pointer;
-	border: 1px solid var(--office-border, #d1d5db); border-radius: 3px; background: var(--office-background, #fff); }
+[role="search"] { display: flex; flex: 1; align-items: center; gap: ${tok('--office-space-1')}; min-width: 0; max-width: ${tok('--office-find-max-width')}; }
+label { display: flex; flex: 1; align-items: center; gap: ${tok('--office-space-1-5')}; min-width: 0; }
+input { flex: 1; min-width: 0; min-height: ${tok('--office-input-height')}; padding: ${tok('--office-space-0')} ${tok('--office-space-1-5')}; font: inherit; color: inherit;
+	border: ${tok('--office-border-width')} solid ${tok('--office-border')}; border-radius: ${tok('--office-radius-sm')}; background: ${tok('--office-background')}; }
+button { min-height: ${tok('--office-input-height')}; padding: ${tok('--office-space-0')} ${tok('--office-space-2')}; font: inherit; color: inherit; cursor: pointer;
+	border: ${tok('--office-border-width')} solid ${tok('--office-border')}; border-radius: ${tok('--office-radius-sm')}; background: ${tok('--office-background')}; }
 button:disabled { opacity: .5; cursor: default; }
 .status { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
-	color: var(--office-muted-foreground, #6b7280); }
-.close { margin-inline-start: auto; width: var(--office-target-size, 28px); padding: 0; border-color: transparent;
-	background: transparent; font-size: 18px; line-height: 1; }
-input:focus-visible, button:focus-visible { outline: 2px solid var(--office-ring, #2563eb); outline-offset: 1px; }
+	color: ${tok('--office-muted-foreground')}; }
+.close { margin-inline-start: auto; width: ${tok('--office-target-size')}; padding: 0; border-color: transparent;
+	background: transparent; font-size: ${tok('--office-font-size-xl')}; line-height: 1; }
+input:focus-visible, button:focus-visible { outline: ${tok('--office-focus-width')} solid ${tok('--office-ring')}; outline-offset: calc(${tok('--office-focus-offset')} / 2); }
 @media (max-width: 760px) { :host { flex-wrap: wrap; } [role="search"] { flex-wrap: wrap; } }
 `;
 

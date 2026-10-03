@@ -1,3 +1,7 @@
+import { OFFICE_TOKENS, TOUCH } from './tokens.js';
+
+export { COMPACT, FOCUS_RING, OFFICE_TOKENS, tok, TOUCH, type OfficeToken } from './tokens.js';
+
 /**
  * Theme-token foundation. Custom properties cross shadow boundaries, so one `<style>` in the
  * document head themes every control. Every token also has a fallback inside each control, so
@@ -13,22 +17,24 @@ const DARK = `
 	--office-border: #374151;
 	--office-accent: #6366f1;
 	--office-ring: #818cf8;
-	--office-danger: #f87171;`;
+	--office-danger: #f87171;
+	--office-selected: #374151;
+	--office-notice-background: rgb(120 53 15 / 20%);
+	--office-notice-foreground: #fde68a;
+	--office-notice-accent: #fbbf24;
+	--office-info: #60a5fa;
+	--office-warning: #f59e0b;
+	--office-shadow: 0 6px 20px rgb(0 0 0 / 45%);
+	--office-shadow-lg: 0 10px 25px rgb(0 0 0 / 45%);`;
+
+/** Every token's default on `:root`, generated from the token table. */
+const LIGHT = Object.entries(OFFICE_TOKENS)
+	.map(([name, value]) => `\t${name}: ${value};`)
+	.join('\n');
 
 export const THEME_CSS = `
 :root {
-	--office-foreground: #1f2937;
-	--office-muted-foreground: #6b7280;
-	--office-background: #ffffff;
-	--office-surface: #f3f4f6;
-	--office-border: #d1d5db;
-	--office-accent: #2563eb;
-	--office-accent-foreground: #ffffff;
-	--office-ring: #2563eb;
-	--office-danger: #b91c1c;
-	--office-target-size: 28px;
-	--office-radius: 4px;
-	--office-font: system-ui, -apple-system, "Segoe UI", sans-serif;
+${LIGHT}
 }
 @media (prefers-color-scheme: dark) {
 	:root:not([data-office-theme="light"]) {${DARK}
@@ -36,8 +42,8 @@ export const THEME_CSS = `
 }
 :root[data-office-theme="dark"] {${DARK}
 }
-@media (pointer: coarse), (max-width: 767px) {
-	:root { --office-target-size: 44px; }
+@media ${TOUCH} {
+	:root { --office-target-size: var(--office-target-size-touch); }
 }
 @media (forced-colors: active) {
 	:root {

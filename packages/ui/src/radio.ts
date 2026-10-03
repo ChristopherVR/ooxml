@@ -1,3 +1,4 @@
+import { tok } from './tokens.js';
 import { definer } from './registry.js';
 import { attachStyles, controlCss } from './styles.js';
 
@@ -12,19 +13,19 @@ import { attachStyles, controlCss } from './styles.js';
  * `--office-radio-dot-size` (8px), `--office-radio-dot-size-touch` (12px).
  */
 const CSS = `
-:host { display: inline-grid; box-sizing: border-box; width: var(--office-checkbox-size, 16px);
-	height: var(--office-checkbox-size, 16px); flex: none; place-items: center;
-	border: 1px solid var(--office-checkbox-border, var(--office-border, #d1d5db)); border-radius: 50%;
-	background: var(--office-checkbox-background, var(--office-background, #fff)); cursor: pointer; vertical-align: middle; }
-:host([checked]) { border-color: var(--office-checkbox-accent, var(--office-accent, #2563eb)); }
-:host(:focus-visible) { outline: 2px solid var(--office-ring, #2563eb); outline-offset: 2px; }
+:host { display: inline-grid; box-sizing: border-box; width: ${tok('--office-checkbox-size')};
+	height: ${tok('--office-checkbox-size')}; flex: none; place-items: center;
+	border: ${tok('--office-border-width')} solid ${tok('--office-checkbox-border')}; border-radius: 50%;
+	background: ${tok('--office-checkbox-background')}; cursor: pointer; vertical-align: middle; }
+:host([checked]) { border-color: ${tok('--office-checkbox-accent')}; }
+:host(:focus-visible) { outline: ${tok('--office-focus-width')} solid ${tok('--office-ring')}; outline-offset: ${tok('--office-focus-offset')}; }
 :host([disabled]) { opacity: .5; cursor: not-allowed; }
-.dot { display: none; width: var(--office-radio-dot-size, 8px); height: var(--office-radio-dot-size, 8px);
-	border-radius: 50%; background: var(--office-checkbox-accent, var(--office-accent, #2563eb)); }
+.dot { display: none; width: ${tok('--office-radio-dot-size')}; height: ${tok('--office-radio-dot-size')};
+	border-radius: 50%; background: ${tok('--office-checkbox-accent')}; }
 :host([checked]) .dot { display: block; }
 @media (pointer: coarse), (max-width: 767px) {
-	:host { width: var(--office-checkbox-size-touch, 22px); height: var(--office-checkbox-size-touch, 22px); }
-	.dot { width: var(--office-radio-dot-size-touch, 12px); height: var(--office-radio-dot-size-touch, 12px); }
+	:host { width: ${tok('--office-checkbox-size-touch')}; height: ${tok('--office-checkbox-size-touch')}; }
+	.dot { width: ${tok('--office-radio-dot-size-touch')}; height: ${tok('--office-radio-dot-size-touch')}; }
 }
 @media (forced-colors: active) {
 	:host { border-color: CanvasText; background: Canvas; forced-color-adjust: auto; }

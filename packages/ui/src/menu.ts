@@ -1,31 +1,32 @@
+import { tok } from './tokens.js';
 import { createIconSvg, paintIcon } from './icons.js';
 import { definer, emit } from './registry.js';
 import { attachStyles, controlCss } from './styles.js';
 
 const BUTTON_CSS = `
 :host { display: inline-flex; vertical-align: middle; }
-.wrap { display: inline-flex; align-items: stretch; border: 1px solid transparent; border-radius: var(--office-radius, 4px); }
+.wrap { display: inline-flex; align-items: stretch; border: ${tok('--office-border-width')} solid transparent; border-radius: ${tok('--office-radius')}; }
 :host([variant="stacked"]) .wrap { flex-direction: column; }
-button { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; gap: 4px;
-	min-width: var(--office-target-size, 28px); min-height: var(--office-target-size, 28px); padding: 0 6px;
-	border: 0; border-radius: var(--office-radius, 4px); background: transparent; color: var(--office-foreground, #1f2937);
-	font: inherit; font-size: 12px; cursor: pointer; white-space: nowrap; }
-:host([variant="stacked"]) .main { flex-direction: column; padding: 4px 6px 0; }
-:host([variant="stacked"]) .caret { min-height: 16px; padding: 0 6px 2px; }
+button { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; gap: ${tok('--office-space-1')};
+	min-width: ${tok('--office-target-size')}; min-height: ${tok('--office-target-size')}; padding: 0 ${tok('--office-space-1-5')};
+	border: 0; border-radius: ${tok('--office-radius')}; background: transparent; color: ${tok('--office-foreground')};
+	font: inherit; font-size: ${tok('--office-font-size-sm')}; cursor: pointer; white-space: nowrap; }
+:host([variant="stacked"]) .main { flex-direction: column; padding: ${tok('--office-space-1')} ${tok('--office-space-1-5')} 0; }
+:host([variant="stacked"]) .caret { min-height: ${tok('--office-icon-size-md')}; padding: 0 ${tok('--office-space-1-5')} ${tok('--office-space-0')}; }
 :host([variant="stacked"]:not([command])) .main { padding-bottom: 0; }
-.wrap:hover:not(.disabled) { border-color: var(--office-border, #d1d5db); }
-button:hover:not(:disabled) { background: var(--office-surface, #f3f4f6); }
-button:focus-visible { outline: 2px solid var(--office-ring, #2563eb); outline-offset: -2px; }
+.wrap:hover:not(.disabled) { border-color: ${tok('--office-border')}; }
+button:hover:not(:disabled) { background: ${tok('--office-surface')}; }
+button:focus-visible { outline: ${tok('--office-focus-width')} solid ${tok('--office-ring')}; outline-offset: calc(-1 * ${tok('--office-focus-width')}); }
 button:disabled { opacity: .5; cursor: not-allowed; }
-button[aria-expanded="true"] { background: var(--office-surface, #f3f4f6); }
-.caret svg { width: 12px; height: 12px; }
-svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.5;
+button[aria-expanded="true"] { background: ${tok('--office-surface')}; }
+.caret svg { width: ${tok('--office-icon-size-sm')}; height: ${tok('--office-icon-size-sm')}; }
+svg { width: ${tok('--office-icon-size-ml')}; height: ${tok('--office-icon-size-ml')}; fill: none; stroke: currentColor; stroke-width: ${tok('--office-icon-stroke')};
 	stroke-linecap: round; stroke-linejoin: round; }
 svg:not([data-painted]) { display: none; }
-.panel { position: fixed; inset: auto; margin: 0; min-width: 180px; padding: 4px; box-sizing: border-box;
-	background: var(--office-background, #fff); color: var(--office-foreground, #1f2937);
-	border: 1px solid var(--office-border, #d1d5db); border-radius: var(--office-radius, 4px);
-	box-shadow: 0 8px 24px rgb(0 0 0 / 18%); }
+.panel { position: fixed; inset: auto; margin: 0; min-width: ${tok('--office-menu-min-width')}; padding: ${tok('--office-space-1')}; box-sizing: border-box;
+	background: ${tok('--office-background')}; color: ${tok('--office-foreground')};
+	border: ${tok('--office-border-width')} solid ${tok('--office-border')}; border-radius: ${tok('--office-radius')};
+	box-shadow: ${tok('--office-shadow')}; }
 .panel[hidden] { display: none; }
 @media (forced-colors: active) {
 	button { color: ButtonText; } button:disabled { color: GrayText; }
@@ -36,13 +37,13 @@ svg:not([data-painted]) { display: none; }
 const ITEM_CSS = `
 :host { display: block; }
 :host([hidden]) { display: none; }
-button { box-sizing: border-box; display: flex; align-items: center; gap: 8px; width: 100%;
-	min-height: var(--office-target-size, 28px); padding: 0 10px 0 8px; border: 0; border-radius: 3px;
-	background: transparent; color: inherit; font: inherit; font-size: 12px; text-align: start; cursor: pointer; }
-button:hover:not(:disabled), button:focus-visible { background: var(--office-surface, #f3f4f6); outline: none; }
+button { box-sizing: border-box; display: flex; align-items: center; gap: ${tok('--office-space-2')}; width: 100%;
+	min-height: ${tok('--office-target-size')}; padding: 0 ${tok('--office-space-2-5')} 0 ${tok('--office-space-2')}; border: 0; border-radius: ${tok('--office-radius-sm')};
+	background: transparent; color: inherit; font: inherit; font-size: ${tok('--office-font-size-sm')}; text-align: start; cursor: pointer; }
+button:hover:not(:disabled), button:focus-visible { background: ${tok('--office-surface')}; outline: none; }
 button:disabled { opacity: .5; cursor: not-allowed; }
-.check { width: 14px; text-align: center; }
-svg { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.5;
+.check { width: ${tok('--office-icon-size')}; text-align: center; }
+svg { width: ${tok('--office-icon-size-md')}; height: ${tok('--office-icon-size-md')}; flex: none; fill: none; stroke: currentColor; stroke-width: ${tok('--office-icon-stroke')};
 	stroke-linecap: round; stroke-linejoin: round; }
 svg:not([data-painted]) { visibility: hidden; }
 @media (forced-colors: active) { button:focus-visible { background: Highlight; color: HighlightText; } }

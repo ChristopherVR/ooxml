@@ -1,21 +1,22 @@
+import { tok } from './tokens.js';
 import { createIconSvg, paintIcon } from './icons.js';
 import { definer, emit } from './registry.js';
 import { attachStyles, controlCss } from './styles.js';
 
 const CSS = `
-:host { display: inline-flex; align-items: center; gap: 2px; font-size: 11px;
-	color: var(--office-foreground, #1f2937); font-family: var(--office-font, system-ui, sans-serif); }
-button { box-sizing: border-box; display: inline-grid; place-items: center; min-width: var(--office-target-size, 24px);
-	min-height: var(--office-target-size, 24px); padding: 0; border: 1px solid transparent;
-	border-radius: var(--office-radius, 4px); background: transparent; color: inherit; font: inherit;
-	font-size: 15px; line-height: 1; cursor: pointer; }
-button:hover:not(:disabled) { background: var(--office-background, #fff); }
-button:focus-visible, input:focus-visible { outline: 2px solid var(--office-ring, #2563eb); outline-offset: 1px; }
+:host { display: inline-flex; align-items: center; gap: ${tok('--office-space-0')}; font-size: ${tok('--office-font-size-xs')};
+	color: ${tok('--office-foreground')}; font-family: ${tok('--office-font')}; }
+button { box-sizing: border-box; display: inline-grid; place-items: center; min-width: ${tok('--office-target-size')};
+	min-height: ${tok('--office-target-size')}; padding: 0; border: ${tok('--office-border-width')} solid transparent;
+	border-radius: ${tok('--office-radius')}; background: transparent; color: inherit; font: inherit;
+	font-size: ${tok('--office-font-size-lg')}; line-height: 1; cursor: pointer; }
+button:hover:not(:disabled) { background: ${tok('--office-background')}; }
+button:focus-visible, input:focus-visible { outline: ${tok('--office-focus-width')} solid ${tok('--office-ring')}; outline-offset: calc(${tok('--office-focus-offset')} / 2); }
 button:disabled, input:disabled { opacity: .5; cursor: not-allowed; }
-input { width: var(--office-zoom-slider-width, 110px); min-width: 48px; margin: 0 2px;
-	accent-color: var(--office-accent, #2563eb); }
-output { min-width: 40px; text-align: center; font-variant-numeric: tabular-nums; }
-svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5;
+input { width: ${tok('--office-zoom-slider-width')}; min-width: ${tok('--office-zoom-slider-min-width')}; margin: 0 ${tok('--office-space-0')};
+	accent-color: ${tok('--office-accent')}; }
+output { min-width: ${tok('--office-zoom-value-width')}; text-align: center; font-variant-numeric: tabular-nums; }
+svg { width: ${tok('--office-icon-size-md')}; height: ${tok('--office-icon-size-md')}; fill: none; stroke: currentColor; stroke-width: ${tok('--office-icon-stroke')};
 	stroke-linecap: round; stroke-linejoin: round; }
 :host(:not([fit])) .fit { display: none; }
 @media (pointer: coarse), (max-width: 767px) { input { flex: 1; } }

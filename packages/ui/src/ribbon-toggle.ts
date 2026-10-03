@@ -1,3 +1,4 @@
+import { tok } from './tokens.js';
 import { definer } from './registry.js';
 import { attachStyles, controlCss } from './styles.js';
 
@@ -10,10 +11,10 @@ import { attachStyles, controlCss } from './styles.js';
  */
 const CSS = `
 :host { display: block; }
-label { display: flex; align-items: center; gap: 4px; min-height: 22px; padding: 0 4px;
-	color: var(--office-foreground, #1f2937); font: inherit; font-size: 12px; white-space: nowrap; cursor: pointer; }
-:host([disabled]) label { color: var(--office-muted-foreground, #6b7280); cursor: not-allowed; }
-@media (pointer: coarse), (max-width: 767px) { label { min-height: 44px; font-size: 12px; } }
+label { display: flex; align-items: center; gap: ${tok('--office-space-1')}; min-height: ${tok('--office-ribbon-row-height')}; padding: 0 ${tok('--office-space-1')};
+	color: ${tok('--office-foreground')}; font: inherit; font-size: ${tok('--office-font-size-sm')}; white-space: nowrap; cursor: pointer; }
+:host([disabled]) label { color: ${tok('--office-muted-foreground')}; cursor: not-allowed; }
+@media (pointer: coarse), (max-width: 767px) { label { min-height: ${tok('--office-target-size-touch')}; font-size: ${tok('--office-font-size-sm')}; } }
 `;
 
 type Configured = { requestEvent: string; idAttribute: string; detailKey: string };

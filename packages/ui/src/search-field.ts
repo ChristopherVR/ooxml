@@ -1,3 +1,4 @@
+import { tok } from './tokens.js';
 import { definer } from './registry.js';
 import { attachStyles, controlCss } from './styles.js';
 
@@ -10,26 +11,26 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
  * `input` and `change` bubble from the host; setting `value` is silent. Tokens: `--office-field-*`.
  */
 const CSS = `
-:host { display: flex; align-items: center; gap: 8px; box-sizing: border-box; width: 100%;
-	height: var(--office-field-height-lg, 40px); padding: 0 12px;
-	border: 1px solid var(--office-field-border, var(--office-border, #d1d5db));
-	border-radius: var(--office-field-radius, 5px); background: var(--office-field-background, var(--office-background, #fff));
-	color: var(--office-field-placeholder, var(--office-muted-foreground, #6b7280)); font: inherit; }
-:host(:focus-within) { border-color: var(--office-field-border-focus, var(--office-ring, #2563eb)); }
-:host([variant="titlebar"]) { height: var(--office-field-height, 28px); gap: 7px; padding-inline: 14px;
-	border-color: var(--office-border, #d1d5db); border-radius: 6px; background: var(--office-background, #fff); }
-:host([variant="titlebar"]:focus-within) { color: var(--office-foreground, #1f2937); }
+:host { display: flex; align-items: center; gap: ${tok('--office-space-2')}; box-sizing: border-box; width: 100%;
+	height: ${tok('--office-field-height-lg')}; padding: 0 ${tok('--office-space-3')};
+	border: ${tok('--office-border-width')} solid ${tok('--office-field-border')};
+	border-radius: ${tok('--office-field-radius')}; background: ${tok('--office-field-background')};
+	color: ${tok('--office-field-placeholder')}; font: inherit; }
+:host(:focus-within) { border-color: ${tok('--office-field-border-focus')}; }
+:host([variant="titlebar"]) { height: ${tok('--office-field-height')}; gap: ${tok('--office-space-1-5')}; padding-inline: ${tok('--office-space-3-5')};
+	border-color: ${tok('--office-border')}; border-radius: ${tok('--office-radius-md')}; background: ${tok('--office-background')}; }
+:host([variant="titlebar"]:focus-within) { color: ${tok('--office-foreground')}; }
 :host([disabled]) { opacity: .5; cursor: not-allowed; }
-svg { width: 16px; height: 16px; flex: none; }
-:host([variant="titlebar"]) svg { width: 14px; height: 14px; }
+svg { width: ${tok('--office-icon-size-md')}; height: ${tok('--office-icon-size-md')}; flex: none; }
+:host([variant="titlebar"]) svg { width: ${tok('--office-icon-size')}; height: ${tok('--office-icon-size')}; }
 input { min-width: 0; width: 100%; height: 100%; flex: 1; padding: 0; border: 0; outline: 0; background: transparent;
-	color: var(--office-field-foreground, var(--office-foreground, #1f2937)); font: inherit; font-size: 13px; }
-:host([variant="titlebar"]) input { font-size: 11px; color: var(--office-foreground, #1f2937); }
-input::placeholder { color: var(--office-field-placeholder, var(--office-muted-foreground, #6b7280)); opacity: .8; }
+	color: ${tok('--office-field-foreground')}; font: inherit; font-size: ${tok('--office-font-size')}; }
+:host([variant="titlebar"]) input { font-size: ${tok('--office-font-size-xs')}; color: ${tok('--office-foreground')}; }
+input::placeholder { color: ${tok('--office-field-placeholder')}; opacity: .8; }
 input::-webkit-search-cancel-button { display: none; }
 @media (forced-colors: active) {
 	:host { border-color: CanvasText; background: Canvas; color: CanvasText; }
-	:host(:focus-within) { outline: 2px solid Highlight; outline-offset: 2px; }
+	:host(:focus-within) { outline: ${tok('--office-focus-width')} solid Highlight; outline-offset: ${tok('--office-focus-offset')}; }
 	input { color: CanvasText; }
 }
 `;

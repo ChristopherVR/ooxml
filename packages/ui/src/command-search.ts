@@ -1,3 +1,4 @@
+import { tok } from './tokens.js';
 import { createIconSvg, paintIcon } from './icons.js';
 import { definer, emit } from './registry.js';
 import { attachStyles, controlCss } from './styles.js';
@@ -14,26 +15,26 @@ export interface OfficeSearchCommand {
 }
 
 const CSS = `
-:host { display: inline-flex; align-items: center; min-width: 0; font-family: var(--office-font, system-ui, sans-serif); }
-.field { display: flex; align-items: center; gap: 6px; width: 100%; min-width: 0; height: var(--office-target-size, 28px);
-	padding: 0 8px; box-sizing: border-box; border: 1px solid transparent; border-radius: var(--office-radius, 4px);
-	color: var(--office-muted-foreground, #6b7280); }
-.field:hover, .field:focus-within { border-color: var(--office-border, #d1d5db); background: var(--office-background, #fff); }
-input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--office-foreground, #1f2937);
-	font: inherit; font-size: 13px; }
-svg { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.5;
+:host { display: inline-flex; align-items: center; min-width: 0; font-family: ${tok('--office-font')}; }
+.field { display: flex; align-items: center; gap: ${tok('--office-space-1-5')}; width: 100%; min-width: 0; height: ${tok('--office-target-size')};
+	padding: 0 ${tok('--office-space-2')}; box-sizing: border-box; border: ${tok('--office-border-width')} solid transparent; border-radius: ${tok('--office-radius')};
+	color: ${tok('--office-muted-foreground')}; }
+.field:hover, .field:focus-within { border-color: ${tok('--office-border')}; background: ${tok('--office-background')}; }
+input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: ${tok('--office-foreground')};
+	font: inherit; font-size: ${tok('--office-font-size')}; }
+svg { width: ${tok('--office-icon-size-md')}; height: ${tok('--office-icon-size-md')}; flex: none; fill: none; stroke: currentColor; stroke-width: ${tok('--office-icon-stroke')};
 	stroke-linecap: round; stroke-linejoin: round; }
-ul { position: fixed; inset: auto; margin: 0; padding: 4px; min-width: 240px; max-height: 320px; overflow: auto;
-	box-sizing: border-box; list-style: none; background: var(--office-background, #fff); color: var(--office-foreground, #1f2937);
-	border: 1px solid var(--office-border, #d1d5db); border-radius: var(--office-radius, 4px);
-	box-shadow: 0 8px 24px rgb(0 0 0 / 18%); font-size: 12px; }
+ul { position: fixed; inset: auto; margin: 0; padding: ${tok('--office-space-1')}; min-width: ${tok('--office-search-popup-min-width')}; max-height: ${tok('--office-search-popup-max-height')}; overflow: auto;
+	box-sizing: border-box; list-style: none; background: ${tok('--office-background')}; color: ${tok('--office-foreground')};
+	border: ${tok('--office-border-width')} solid ${tok('--office-border')}; border-radius: ${tok('--office-radius')};
+	box-shadow: ${tok('--office-shadow')}; font-size: ${tok('--office-font-size-sm')}; }
 ul[hidden] { display: none; }
-li { display: flex; flex-direction: column; justify-content: center; min-height: var(--office-target-size, 28px);
-	padding: 2px 10px; border-radius: 3px; cursor: pointer; }
-li[data-active] { background: var(--office-surface, #f3f4f6); }
-li[aria-disabled="true"] { cursor: not-allowed; color: var(--office-muted-foreground, #6b7280); }
-li small { color: var(--office-muted-foreground, #6b7280); font-size: 11px; }
-li.empty { cursor: default; color: var(--office-muted-foreground, #6b7280); }
+li { display: flex; flex-direction: column; justify-content: center; min-height: ${tok('--office-target-size')};
+	padding: ${tok('--office-space-0')} ${tok('--office-space-2-5')}; border-radius: ${tok('--office-radius-sm')}; cursor: pointer; }
+li[data-active] { background: ${tok('--office-surface')}; }
+li[aria-disabled="true"] { cursor: not-allowed; color: ${tok('--office-muted-foreground')}; }
+li small { color: ${tok('--office-muted-foreground')}; font-size: ${tok('--office-font-size-xs')}; }
+li.empty { cursor: default; color: ${tok('--office-muted-foreground')}; }
 @media (forced-colors: active) {
 	.field, ul { border-color: CanvasText; background: Canvas; color: CanvasText; }
 	li[data-active] { background: Highlight; color: HighlightText; }

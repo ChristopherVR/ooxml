@@ -1,3 +1,4 @@
+import { tok } from './tokens.js';
 import { createIconSvg, paintIcon } from './icons.js';
 import { definer, emit } from './registry.js';
 import { attachStyles, controlCss } from './styles.js';
@@ -7,17 +8,17 @@ export type OfficeCommandEvent = CustomEvent<{ command: string }>;
 const CSS = `
 :host { display: inline-flex; vertical-align: middle; }
 button { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;
-	gap: 6px; min-width: var(--office-target-size, 28px); min-height: var(--office-target-size, 28px);
-	padding: 0 8px; border: 1px solid transparent; border-radius: var(--office-radius, 4px);
-	background: transparent; color: var(--office-foreground, #1f2937); font: inherit; font-size: 12px;
+	gap: ${tok('--office-space-1-5')}; min-width: ${tok('--office-target-size')}; min-height: ${tok('--office-target-size')};
+	padding: 0 ${tok('--office-space-2')}; border: ${tok('--office-border-width')} solid transparent; border-radius: ${tok('--office-radius')};
+	background: transparent; color: ${tok('--office-foreground')}; font: inherit; font-size: ${tok('--office-font-size-sm')};
 	cursor: pointer; white-space: nowrap; }
-:host([variant="stacked"]) button { flex-direction: column; padding: 4px 8px; }
-button:hover:not(:disabled) { background: var(--office-surface, #f3f4f6); }
-button:focus-visible { outline: 2px solid var(--office-ring, #2563eb); outline-offset: 1px; }
-button[aria-pressed="true"], button[aria-expanded="true"] { border-color: var(--office-accent, #2563eb);
-	background: var(--office-surface, #f3f4f6); }
+:host([variant="stacked"]) button { flex-direction: column; padding: ${tok('--office-space-1')} ${tok('--office-space-2')}; }
+button:hover:not(:disabled) { background: ${tok('--office-surface')}; }
+button:focus-visible { outline: ${tok('--office-focus-width')} solid ${tok('--office-ring')}; outline-offset: calc(${tok('--office-focus-offset')} / 2); }
+button[aria-pressed="true"], button[aria-expanded="true"] { border-color: ${tok('--office-accent')};
+	background: ${tok('--office-surface')}; }
 button:disabled { opacity: .5; cursor: not-allowed; }
-svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.5;
+svg { width: ${tok('--office-icon-size-ml')}; height: ${tok('--office-icon-size-ml')}; fill: none; stroke: currentColor; stroke-width: ${tok('--office-icon-stroke')};
 	stroke-linecap: round; stroke-linejoin: round; }
 svg:not([data-painted]) { display: none; }
 @media (forced-colors: active) {

@@ -1,22 +1,23 @@
+import { tok } from './tokens.js';
 import { definer, emit } from './registry.js';
 import { attachStyles, controlCss } from './styles.js';
 
 export type OfficePrintPreviewPageEvent = CustomEvent<{ index: number }>;
 
 const CSS = `
-:host { display: block; max-width: 420px; font: 12px var(--office-font, system-ui, sans-serif);
-	color: var(--office-foreground, #1f2937); }
-.sheet { padding: 12px; border: 1px solid var(--office-border, #d1d5db); background: #fff;
-	box-shadow: 0 1px 4px rgb(0 0 0 / 15%); }
+:host { display: block; max-width: ${tok('--office-print-preview-width')}; font: ${tok('--office-font-size-sm')} ${tok('--office-font')};
+	color: ${tok('--office-foreground')}; }
+.sheet { padding: ${tok('--office-space-3')}; border: ${tok('--office-border-width')} solid ${tok('--office-border')}; background: ${tok('--office-paper')};
+	box-shadow: ${tok('--office-shadow-sm')}; }
 .sheet > * { display: block; width: 100%; height: auto; }
-.empty { color: var(--office-muted-foreground, #6b7280); }
-.nav { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; }
+.empty { color: ${tok('--office-muted-foreground')}; }
+.nav { display: flex; align-items: center; justify-content: center; gap: ${tok('--office-space-2')}; margin-top: ${tok('--office-space-2')}; }
 .nav[hidden] { display: none; }
-button { min-width: var(--office-target-size, 28px); min-height: var(--office-target-size, 28px); font: inherit;
-	color: inherit; border: 1px solid var(--office-border, #d1d5db); border-radius: 3px;
-	background: var(--office-background, #fff); cursor: pointer; }
+button { min-width: ${tok('--office-target-size')}; min-height: ${tok('--office-target-size')}; font: inherit;
+	color: inherit; border: ${tok('--office-border-width')} solid ${tok('--office-border')}; border-radius: ${tok('--office-radius-sm')};
+	background: ${tok('--office-background')}; cursor: pointer; }
 button:disabled { opacity: .5; cursor: default; }
-button:focus-visible { outline: 2px solid var(--office-ring, #2563eb); outline-offset: 1px; }
+button:focus-visible { outline: ${tok('--office-focus-width')} solid ${tok('--office-ring')}; outline-offset: calc(${tok('--office-focus-offset')} / 2); }
 `;
 
 /**

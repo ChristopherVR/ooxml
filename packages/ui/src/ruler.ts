@@ -1,11 +1,13 @@
+import { OFFICE_TOKENS, tok } from './tokens.js';
 import { definer } from './registry.js';
 import { attachStyles, controlCss } from './styles.js';
 
 const CSS = `
-:host { display: block; box-sizing: border-box; background: var(--office-background, #fff);
-	color: var(--office-muted-foreground, #605e5c); overflow: hidden; }
-:host(:not([orientation="vertical"])) { height: 18px; border-bottom: 1px solid var(--office-border, #d1d5db); }
-:host([orientation="vertical"]) { width: 18px; border-inline-end: 1px solid var(--office-border, #d1d5db); }
+:host { display: block; box-sizing: border-box; background: ${tok('--office-background')};
+	color: ${tok('--office-muted-foreground')}; overflow: hidden;
+	font-size: ${tok('--office-font-size-3xs')}; font-family: ${tok('--office-font')}; }
+:host(:not([orientation="vertical"])) { height: ${tok('--office-ruler-size')}; border-bottom: ${tok('--office-border-width')} solid ${tok('--office-border')}; }
+:host([orientation="vertical"]) { width: ${tok('--office-ruler-size')}; border-inline-end: ${tok('--office-border-width')} solid ${tok('--office-border')}; }
 canvas { display: block; width: 100%; height: 100%; }
 `;
 
@@ -66,7 +68,8 @@ export const defineRuler = definer('office-ui-ruler', () => {
 			const reverse = this.getAttribute('direction') === 'reverse';
 			const box = this.getBoundingClientRect();
 			const length = vertical ? box.height : box.width;
-			const thickness = (vertical ? box.width : box.height) || 18;
+			const thickness =
+				(vertical ? box.width : box.height) || parseFloat(OFFICE_TOKENS['--office-ruler-size']);
 			const ratio = view?.devicePixelRatio ?? 1;
 			const canvas = this.#canvas;
 			canvas.width = Math.max(1, Math.round((vertical ? thickness : length) * ratio));
@@ -74,11 +77,13 @@ export const defineRuler = definer('office-ui-ruler', () => {
 			const context = canvas.getContext?.('2d');
 			if (!context || !length) return;
 			context.scale(ratio, ratio);
-			const ink = view?.getComputedStyle(this).color || '#605e5c';
+			// A canvas cannot read custom properties: draw with the host's computed, token-driven style.
+			const style = view?.getComputedStyle(this);
+			const ink = style?.color || OFFICE_TOKENS['--office-muted-foreground'];
 			context.strokeStyle = ink;
 			context.fillStyle = ink;
 			context.lineWidth = 1;
-			context.font = `9px ${view?.getComputedStyle(this).fontFamily || 'system-ui, sans-serif'}`;
+			context.font = `${style?.fontSize || OFFICE_TOKENS['--office-font-size-3xs']} ${style?.fontFamily || OFFICE_TOKENS['--office-font']}`;
 			const origin = this.#number('origin', 0);
 			const unit = Math.max(1, this.#number('scale', 96));
 			const divisions = rulerDivisions(unit);

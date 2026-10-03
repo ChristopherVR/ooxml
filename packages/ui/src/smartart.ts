@@ -1,3 +1,4 @@
+import { tok } from './tokens.js';
 import type { DiagramDrawing } from 'ooxml-core/diagram';
 import { definer, emit } from './registry.js';
 import {
@@ -14,8 +15,8 @@ export type OfficeSmartArtRenderEvent = CustomEvent<SmartArtRenderReport>;
 const CSS = `
 :host { display: block; }
 svg { display: block; width: 100%; height: auto; max-height: 100%; }
-text { font-family: var(--office-font, system-ui, sans-serif); pointer-events: none; }
-.empty { padding: 8px; font-size: 12px; color: var(--office-muted-foreground, #6b7280); }
+text { font-family: ${tok('--office-font')}; pointer-events: none; }
+.empty { padding: ${tok('--office-space-2')}; font-size: ${tok('--office-font-size-sm')}; color: ${tok('--office-muted-foreground')}; }
 @media (forced-colors: active) { text { fill: CanvasText; } }
 `;
 

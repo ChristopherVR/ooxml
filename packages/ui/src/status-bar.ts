@@ -1,12 +1,13 @@
+import { tok } from './tokens.js';
 import { definer, emit } from './registry.js';
 import { attachStyles, controlCss } from './styles.js';
 
 export type OfficeStatusActivateEvent = CustomEvent<{ id: string }>;
 
 const BAR_CSS = `
-:host { display: flex; align-items: center; gap: 12px; min-height: 24px; padding: 0 8px; font-size: 11px;
-	background: var(--office-surface, #f3f4f6); color: var(--office-foreground, #1f2937);
-	border-top: 1px solid var(--office-border, #d1d5db); font-family: var(--office-font, system-ui, sans-serif); }
+:host { display: flex; align-items: center; gap: ${tok('--office-space-3')}; min-height: ${tok('--office-status-bar-height')}; padding: 0 ${tok('--office-space-2')}; font-size: ${tok('--office-font-size-xs')};
+	background: ${tok('--office-surface')}; color: ${tok('--office-foreground')};
+	border-top: ${tok('--office-border-width')} solid ${tok('--office-border')}; font-family: ${tok('--office-font')}; }
 ::slotted([slot="end"]) { margin-inline-start: auto; }
 @media (forced-colors: active) { :host { background: Canvas; color: CanvasText; border-top-color: CanvasText; } }
 `;
@@ -35,12 +36,12 @@ export const defineStatusBar = definer('office-ui-status-bar', () => {
 });
 
 const ITEM_CSS = `
-:host { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
-.label { color: var(--office-muted-foreground, #6b7280); }
-button { all: unset; display: inline-flex; gap: 4px; align-items: center; cursor: pointer; padding: 0 4px;
-	min-height: var(--office-target-size, 24px); border-radius: 3px; }
-button:hover { background: var(--office-background, #fff); }
-button:focus-visible { outline: 2px solid var(--office-ring, #2563eb); }
+:host { display: inline-flex; align-items: center; gap: ${tok('--office-space-1')}; white-space: nowrap; }
+.label { color: ${tok('--office-muted-foreground')}; }
+button { all: unset; display: inline-flex; gap: ${tok('--office-space-1')}; align-items: center; cursor: pointer; padding: 0 ${tok('--office-space-1')};
+	min-height: ${tok('--office-target-size')}; border-radius: ${tok('--office-radius-sm')}; }
+button:hover { background: ${tok('--office-background')}; }
+button:focus-visible { outline: ${tok('--office-focus-width')} solid ${tok('--office-ring')}; }
 @media (forced-colors: active) { .label { color: GrayText; } button:focus-visible { outline-color: Highlight; } }
 `;
 
@@ -96,7 +97,7 @@ export const defineStatusItem = definer('office-ui-status-item', () => {
 			} else {
 				wrap = doc.createElement('span');
 				wrap.style.display = 'inline-flex';
-				wrap.style.gap = '4px';
+				wrap.style.gap = tok('--office-space-1');
 			}
 			wrap.className = 'wrap';
 			wrap.append(content);

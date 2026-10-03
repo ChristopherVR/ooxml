@@ -1,3 +1,4 @@
+import { tok } from './tokens.js';
 import { initialsOf } from './presence.js';
 import { definer, emit } from './registry.js';
 import { attachStyles, controlCss } from './styles.js';
@@ -105,22 +106,22 @@ export function clearOfficeProfile(
 }
 
 const CSS = `
-:host { display: block; font-family: var(--office-font, system-ui, sans-serif); font-size: 13px; }
-h2 { margin: 0 0 12px; font-size: 15px; font-weight: 600; }
-.who { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-.avatar { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%;
-	color: #fff; font-weight: 600; font-size: 18px; flex: none; }
-.name { font-size: 14px; font-weight: 600; }
-.note { margin: 2px 0 0; color: var(--office-muted, #6b7280); font-size: 12px; }
-label { display: grid; gap: 4px; max-width: 320px; margin-bottom: 12px; }
-input { min-height: 28px; box-sizing: border-box; padding: 2px 6px; font: inherit; color: inherit;
-	border: 1px solid var(--office-border, #d1d5db); border-radius: 3px; background: var(--office-background, #fff); }
-.swatches { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 12px; }
-.swatches button { width: var(--office-target-size, 28px); height: var(--office-target-size, 28px); padding: 0;
-	border: 2px solid transparent; border-radius: 50%; cursor: pointer; }
-.swatches button[aria-checked="true"] { border-color: var(--office-foreground, #1f2937);
-	box-shadow: inset 0 0 0 2px var(--office-background, #fff); }
-.swatches button:focus-visible, input:focus-visible { outline: 2px solid var(--office-ring, #2563eb); outline-offset: 1px; }
+:host { display: block; font-family: ${tok('--office-font')}; font-size: ${tok('--office-font-size')}; }
+h2 { margin: 0 0 ${tok('--office-space-3')}; font-size: ${tok('--office-font-size-lg')}; font-weight: 600; }
+.who { display: flex; align-items: center; gap: ${tok('--office-space-3')}; margin-bottom: ${tok('--office-space-3')}; }
+.avatar { display: grid; place-items: center; width: ${tok('--office-avatar-size')}; height: ${tok('--office-avatar-size')}; border-radius: 50%;
+	color: ${tok('--office-accent-foreground')}; font-weight: ${tok('--office-font-weight-bold')}; font-size: ${tok('--office-font-size-xl')}; flex: none; }
+.name { font-size: ${tok('--office-font-size-md')}; font-weight: 600; }
+.note { margin: ${tok('--office-space-0')} 0 0; color: ${tok('--office-muted-foreground')}; font-size: ${tok('--office-font-size-sm')}; }
+label { display: grid; gap: ${tok('--office-space-1')}; max-width: ${tok('--office-account-field-width')}; margin-bottom: ${tok('--office-space-3')}; }
+input { min-height: ${tok('--office-field-height')}; box-sizing: border-box; padding: ${tok('--office-space-0')} ${tok('--office-space-1-5')}; font: inherit; color: inherit;
+	border: ${tok('--office-border-width')} solid ${tok('--office-border')}; border-radius: ${tok('--office-radius-sm')}; background: ${tok('--office-background')}; }
+.swatches { display: flex; flex-wrap: wrap; gap: ${tok('--office-space-1-5')}; margin: ${tok('--office-space-1')} 0 ${tok('--office-space-3')}; }
+.swatches button { width: ${tok('--office-target-size')}; height: ${tok('--office-target-size')}; padding: 0;
+	border: ${tok('--office-border-width-thick')} solid transparent; border-radius: 50%; cursor: pointer; }
+.swatches button[aria-checked="true"] { border-color: ${tok('--office-foreground')};
+	box-shadow: inset 0 0 0 ${tok('--office-border-width-thick')} ${tok('--office-background')}; }
+.swatches button:focus-visible, input:focus-visible { outline: ${tok('--office-focus-width')} solid ${tok('--office-ring')}; outline-offset: calc(${tok('--office-focus-offset')} / 2); }
 @media (forced-colors: active) { .swatches button { forced-color-adjust: none; } }
 `;
 

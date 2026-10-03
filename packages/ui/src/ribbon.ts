@@ -1,3 +1,4 @@
+import { tok } from './tokens.js';
 import { createIconSvg, paintIcon } from './icons.js';
 import { definer, emit } from './registry.js';
 import { attachStyles, controlCss } from './styles.js';
@@ -5,22 +6,22 @@ import { attachStyles, controlCss } from './styles.js';
 const GROUP_CSS = `
 :host { display: inline-flex; flex: none; align-self: stretch; }
 .group { box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between;
-	min-height: 78px; padding: 4px 8px 2px;
-	border-inline-end: 1px solid color-mix(in srgb, var(--office-border, #d1d5db) 60%, transparent); }
+	min-height: ${tok('--office-ribbon-group-height')}; padding: ${tok('--office-space-1')} ${tok('--office-space-2')} ${tok('--office-space-0')};
+	border-inline-end: ${tok('--office-border-width')} solid color-mix(in srgb, ${tok('--office-border')} 60%, transparent); }
 :host(:last-child) .group { border-inline-end: 0; }
-.row { display: flex; align-items: flex-start; gap: 4px; }
+.row { display: flex; align-items: flex-start; gap: ${tok('--office-space-1')}; }
 ::slotted(*) { flex-shrink: 0; }
-.foot { position: relative; display: flex; justify-content: center; padding-top: 2px; }
-.caption { color: var(--office-muted-foreground, #6b7280); font-size: 10px;
-	line-height: 12px; text-align: center; white-space: nowrap; }
-.launcher { position: absolute; inset-inline-end: -6px; bottom: -1px; display: inline-grid; place-items: center;
-	width: 16px; height: 14px; padding: 0; border: 0; border-radius: 2px; background: transparent;
-	color: var(--office-muted-foreground, #6b7280); cursor: pointer; }
-.launcher:hover:not(:disabled) { background: var(--office-surface, #f3f4f6); }
-.launcher:focus-visible { outline: 2px solid var(--office-ring, #2563eb); }
+.foot { position: relative; display: flex; justify-content: center; padding-top: ${tok('--office-space-0')}; }
+.caption { color: ${tok('--office-muted-foreground')}; font-size: ${tok('--office-font-size-2xs')};
+	line-height: ${tok('--office-ribbon-caption-line-height')}; text-align: center; white-space: nowrap; }
+.launcher { position: absolute; inset-inline-end: -6px; bottom: calc(-1 * ${tok('--office-space-px')}); display: inline-grid; place-items: center;
+	width: ${tok('--office-launcher-width')}; height: ${tok('--office-launcher-height')}; padding: 0; border: 0; border-radius: ${tok('--office-radius-xs')}; background: transparent;
+	color: ${tok('--office-muted-foreground')}; cursor: pointer; }
+.launcher:hover:not(:disabled) { background: ${tok('--office-surface')}; }
+.launcher:focus-visible { outline: ${tok('--office-focus-width')} solid ${tok('--office-ring')}; }
 .launcher:disabled { opacity: .45; cursor: not-allowed; }
 .launcher[hidden] { display: none; }
-.launcher svg { width: 10px; height: 10px; fill: none; stroke: currentColor; stroke-width: 1.6;
+.launcher svg { width: ${tok('--office-icon-size-xs')}; height: ${tok('--office-icon-size-xs')}; fill: none; stroke: currentColor; stroke-width: ${tok('--office-icon-stroke')};
 	stroke-linecap: round; stroke-linejoin: round; }
 @media (forced-colors: active) { .group { border-inline-end-color: CanvasText; } .caption { color: CanvasText; } }
 `;
@@ -84,15 +85,15 @@ export const defineRibbonGroup = definer('office-ui-ribbon-group', () => {
 });
 
 const TOOLBAR_CSS = `
-:host { display: flex; flex-wrap: wrap; align-items: stretch; gap: 2px; padding: 2px 4px;
-	background: var(--office-surface, #f3f4f6); border-bottom: 1px solid var(--office-border, #d1d5db); }
+:host { display: flex; flex-wrap: wrap; align-items: stretch; gap: ${tok('--office-space-0')}; padding: ${tok('--office-space-0')} ${tok('--office-space-1')};
+	background: ${tok('--office-surface')}; border-bottom: ${tok('--office-border-width')} solid ${tok('--office-border')}; }
 @media (forced-colors: active) { :host { border-bottom-color: CanvasText; background: Canvas; } }
 `;
 
 const STACK_CSS = `
 :host { display: inline-flex; flex-direction: column; align-items: flex-start; justify-content: flex-start;
-	gap: 1px; align-self: stretch; }
-:host([orientation="horizontal"]) { flex-direction: row; align-items: center; gap: 2px; align-self: auto; }
+	gap: ${tok('--office-space-px')}; align-self: stretch; }
+:host([orientation="horizontal"]) { flex-direction: row; align-items: center; gap: ${tok('--office-space-0')}; align-self: auto; }
 ::slotted(*) { flex-shrink: 0; }
 `;
 

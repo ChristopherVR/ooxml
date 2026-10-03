@@ -1,3 +1,4 @@
+import { tok } from './tokens.js';
 import { definer, emit } from './registry.js';
 import { attachStyles, controlCss } from './styles.js';
 
@@ -21,31 +22,31 @@ export type OfficeBackstageCloseEvent = CustomEvent<{ reason: 'back' | 'escape' 
 
 const CSS = `
 :host { position: absolute; inset: 0; z-index: 30; display: none; min-width: 0;
-	background: var(--office-background, #fff); color: var(--office-foreground, #1f2937);
-	font-family: var(--office-font, system-ui, sans-serif); }
+	background: ${tok('--office-background')}; color: ${tok('--office-foreground')};
+	font-family: ${tok('--office-font')}; }
 :host([open]) { display: block; }
 .frame { display: flex; height: 100%; min-width: 0; }
-nav { display: flex; flex: 0 0 200px; flex-direction: column; padding: 12px 0; overflow: auto;
-	background: var(--office-accent, #2563eb); color: var(--office-accent-foreground, #fff); }
+nav { display: flex; flex: 0 0 ${tok('--office-backstage-nav-width')}; flex-direction: column; padding: ${tok('--office-space-3')} 0; overflow: auto;
+	background: ${tok('--office-backstage-nav-background')}; color: ${tok('--office-backstage-nav-foreground')}; }
 nav button { border: 0; border-radius: 0; background: transparent; color: inherit; font: inherit; text-align: start; cursor: pointer; }
-.back { width: 36px; min-height: 36px; margin: 0 0 12px 16px; padding: 0; border: 1.5px solid currentColor;
-	border-radius: 50%; font-size: 18px; text-align: center; }
-.item { min-height: 38px; padding: 6px 24px; font-size: 14px; }
-.item:hover:enabled, .item[aria-current="page"] { background: color-mix(in srgb, #000 22%, transparent); }
+.back { width: ${tok('--office-backstage-back-size')}; min-height: ${tok('--office-backstage-back-size')}; margin: 0 0 ${tok('--office-space-3')} ${tok('--office-space-4')}; padding: 0; border: calc(${tok('--office-border-width-thick')} * .75) solid currentColor;
+	border-radius: 50%; font-size: ${tok('--office-font-size-xl')}; text-align: center; }
+.item { min-height: ${tok('--office-backstage-item-height')}; padding: ${tok('--office-space-1-5')} ${tok('--office-space-6')}; font-size: ${tok('--office-font-size-md')}; }
+.item:hover:enabled, .item[aria-current="page"] { background: ${tok('--office-backstage-item-hover')}; }
 .item:disabled { opacity: .55; cursor: default; }
-nav button:focus-visible { outline: 2px solid currentColor; outline-offset: -3px; }
+nav button:focus-visible { outline: ${tok('--office-focus-width')} solid currentColor; outline-offset: calc(-1 * ${tok('--office-focus-width')}); }
 .items { display: flex; flex-direction: column; }
-.footer { display: flex; flex-direction: column; margin-top: auto; padding-top: 16px; }
-.body { flex: 1; min-width: 0; overflow: auto; padding: 28px 40px; }
+.footer { display: flex; flex-direction: column; margin-top: auto; padding-top: ${tok('--office-space-4')}; }
+.body { flex: 1; min-width: 0; overflow: auto; padding: ${tok('--office-backstage-padding')}; }
 @media (max-width: 760px) {
 	.frame { flex-direction: column; }
-	nav { flex: none; flex-direction: row; flex-wrap: wrap; padding: 6px; }
-	.back { margin: 4px; }
-	.item { min-height: 44px; padding: 6px 12px; }
+	nav { flex: none; flex-direction: row; flex-wrap: wrap; padding: ${tok('--office-space-1-5')}; }
+	.back { margin: ${tok('--office-space-1')}; }
+	.item { min-height: ${tok('--office-target-size-touch')}; padding: ${tok('--office-space-1-5')} ${tok('--office-space-3')}; }
 	.items, .footer { flex-direction: row; flex-wrap: wrap; margin-top: 0; padding-top: 0; }
-	.body { padding: 16px; }
+	.body { padding: ${tok('--office-space-4')}; }
 }
-@media (forced-colors: active) { nav { border-inline-end: 1px solid CanvasText; } .item[aria-current="page"] { outline: 2px solid Highlight; } }
+@media (forced-colors: active) { nav { border-inline-end: ${tok('--office-border-width')} solid CanvasText; } .item[aria-current="page"] { outline: ${tok('--office-focus-width')} solid Highlight; } }
 `;
 
 /**

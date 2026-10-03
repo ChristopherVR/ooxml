@@ -1,3 +1,4 @@
+import { tok } from './tokens.js';
 import { definer, emit } from './registry.js';
 import { attachStyles, controlCss } from './styles.js';
 
@@ -65,35 +66,35 @@ export function clampOptionNumber(raw: string, min: number, max: number): number
 
 const CSS = `
 :host { display: contents; }
-office-ui-dialog { --office-dialog-width: min(820px, 100vw); --office-dialog-max-width: min(820px, 100vw); }
-.layout { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 0; min-height: min(440px, 70vh); margin: -16px; }
-nav { display: flex; flex-direction: column; padding: 8px 0; border-inline-end: 1px solid var(--office-border, #d1d5db);
-	background: var(--office-surface, #f3f4f6); overflow: auto; }
-nav button { min-height: 30px; padding: 4px 14px; border: 0; border-radius: 0; background: transparent; color: inherit;
+office-ui-dialog { --office-dialog-width: ${tok('--office-options-width')}; --office-dialog-max-width: ${tok('--office-options-width')}; }
+.layout { display: grid; grid-template-columns: ${tok('--office-options-nav-width')} minmax(0, 1fr); gap: 0; min-height: ${tok('--office-options-min-height')}; margin: calc(-1 * ${tok('--office-space-4')}); }
+nav { display: flex; flex-direction: column; padding: ${tok('--office-space-2')} 0; border-inline-end: ${tok('--office-border-width')} solid ${tok('--office-border')};
+	background: ${tok('--office-surface')}; overflow: auto; }
+nav button { min-height: ${tok('--office-options-row-height')}; padding: ${tok('--office-space-1')} ${tok('--office-space-3-5')}; border: 0; border-radius: 0; background: transparent; color: inherit;
 	font: inherit; text-align: start; cursor: pointer; }
-nav button[aria-selected="true"] { background: var(--office-selected, #e5e7eb); font-weight: 600;
-	box-shadow: inset 3px 0 0 var(--office-accent, #2563eb); }
-nav button:focus-visible { outline: 2px solid var(--office-ring, #2563eb); outline-offset: -2px; }
-[role="tabpanel"] { padding: 16px 20px; overflow: auto; }
-.lead { margin: 0 0 12px; font-size: 14px; }
-.unavailable { margin: 0 0 12px; color: var(--office-muted, #6b7280); }
-section + section { margin-top: 16px; }
-h3 { margin: 0 0 8px; padding-bottom: 4px; border-bottom: 1px solid var(--office-border, #d1d5db); font-size: 13px; font-weight: 600; }
-.desc { margin: 0 0 8px; color: var(--office-muted, #6b7280); }
-.row { display: flex; align-items: center; gap: 8px; min-height: 30px; }
-.row.indent { padding-inline-start: 24px; }
-.row.field > span:first-child { min-width: 180px; }
-.row[data-disabled] { color: var(--office-muted, #6b7280); }
-input[type="text"], input[type="number"], select { min-height: 26px; box-sizing: border-box; font: inherit;
-	border: 1px solid var(--office-border, #d1d5db); border-radius: 3px; background: var(--office-background, #fff); color: inherit; }
-input[type="number"] { width: 80px; }
-.info { display: inline-grid; place-items: center; width: 15px; height: 15px; border: 1px solid currentColor;
-	border-radius: 50%; font-size: 10px; color: var(--office-muted, #6b7280); cursor: help; }
-.actions { display: flex; gap: 8px; }
-.actions button { min-width: 76px; min-height: 28px; font: inherit; cursor: pointer; }
+nav button[aria-selected="true"] { background: ${tok('--office-selected')}; font-weight: 600;
+	box-shadow: inset ${tok('--office-selection-bar-width')} 0 0 ${tok('--office-accent')}; }
+nav button:focus-visible { outline: ${tok('--office-focus-width')} solid ${tok('--office-ring')}; outline-offset: calc(-1 * ${tok('--office-focus-width')}); }
+[role="tabpanel"] { padding: ${tok('--office-space-4')} ${tok('--office-space-5')}; overflow: auto; }
+.lead { margin: 0 0 ${tok('--office-space-3')}; font-size: ${tok('--office-font-size-md')}; }
+.unavailable { margin: 0 0 ${tok('--office-space-3')}; color: ${tok('--office-muted-foreground')}; }
+section + section { margin-top: ${tok('--office-space-4')}; }
+h3 { margin: 0 0 ${tok('--office-space-2')}; padding-bottom: ${tok('--office-space-1')}; border-bottom: ${tok('--office-border-width')} solid ${tok('--office-border')}; font-size: ${tok('--office-font-size')}; font-weight: 600; }
+.desc { margin: 0 0 ${tok('--office-space-2')}; color: ${tok('--office-muted-foreground')}; }
+.row { display: flex; align-items: center; gap: ${tok('--office-space-2')}; min-height: ${tok('--office-options-row-height')}; }
+.row.indent { padding-inline-start: ${tok('--office-space-6')}; }
+.row.field > span:first-child { min-width: ${tok('--office-options-label-width')}; }
+.row[data-disabled] { color: ${tok('--office-muted-foreground')}; }
+input[type="text"], input[type="number"], select { min-height: ${tok('--office-input-height')}; box-sizing: border-box; font: inherit;
+	border: ${tok('--office-border-width')} solid ${tok('--office-border')}; border-radius: ${tok('--office-radius-sm')}; background: ${tok('--office-background')}; color: inherit; }
+input[type="number"] { width: ${tok('--office-options-number-width')}; }
+.info { display: inline-grid; place-items: center; width: ${tok('--office-info-size')}; height: ${tok('--office-info-size')}; border: ${tok('--office-border-width')} solid currentColor;
+	border-radius: 50%; font-size: ${tok('--office-font-size-2xs')}; color: ${tok('--office-muted-foreground')}; cursor: help; }
+.actions { display: flex; gap: ${tok('--office-space-2')}; }
+.actions button { min-width: ${tok('--office-dialog-button-min-width')}; min-height: ${tok('--office-control-height-md')}; font: inherit; cursor: pointer; }
 @media (max-width: 600px) {
 	.layout { grid-template-columns: 1fr; }
-	nav { flex-direction: row; border-inline-end: 0; border-bottom: 1px solid var(--office-border, #d1d5db); }
+	nav { flex-direction: row; border-inline-end: 0; border-bottom: ${tok('--office-border-width')} solid ${tok('--office-border')}; }
 	nav button { white-space: nowrap; }
 	.row.field { flex-wrap: wrap; }
 }

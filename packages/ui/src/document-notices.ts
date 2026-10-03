@@ -1,3 +1,4 @@
+import { tok } from './tokens.js';
 import { createIconSvg, paintIcon } from './icons.js';
 import { definer } from './registry.js';
 import { attachStyles, controlCss } from './styles.js';
@@ -48,26 +49,26 @@ const BANNER_CSS = `
 :host { display: block; flex: none; }
 :host([hidden]) { display: none !important; }
 [hidden] { display: none !important; }
-svg { flex: none; width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.45;
-	stroke-linecap: round; stroke-linejoin: round; color: #d97706; }
-.banner { box-sizing: border-box; display: flex; align-items: center; gap: 12px; padding: 6px 16px;
-	border-bottom: 1px solid rgba(180, 83, 9, .3); background: var(--office-notice-background, #fef3c7);
-	color: var(--office-notice-foreground, #78350f); font: 12px/1.4 var(--office-font, system-ui, sans-serif); }
+svg { flex: none; width: ${tok('--office-icon-size-md')}; height: ${tok('--office-icon-size-md')}; fill: none; stroke: currentColor; stroke-width: ${tok('--office-icon-stroke')};
+	stroke-linecap: round; stroke-linejoin: round; color: ${tok('--office-notice-accent')}; }
+.banner { box-sizing: border-box; display: flex; align-items: center; gap: ${tok('--office-space-3')}; padding: ${tok('--office-space-1-5')} ${tok('--office-space-4')};
+	border-bottom: ${tok('--office-border-width')} solid ${tok('--office-notice-border')}; background: ${tok('--office-notice-background')};
+	color: ${tok('--office-notice-foreground')}; font: ${tok('--office-font-size-sm')}/1.4 ${tok('--office-font')}; }
 .text { flex: 1 1 auto; min-width: 0; margin: 0; }
-.form { display: flex; flex: none; align-items: center; gap: 8px; }
-.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
+.form { display: flex; flex: none; align-items: center; gap: ${tok('--office-space-2')}; }
+.sr-only { position: absolute; width: ${tok('--office-space-px')}; height: ${tok('--office-space-px')}; margin: calc(-1 * ${tok('--office-space-px')}); padding: 0; overflow: hidden;
 	clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 button, input { font: inherit; }
-button { box-sizing: border-box; flex: none; min-height: 24px; padding: 4px 12px; border: 1px solid transparent;
-	border-radius: 4px; background: transparent; color: inherit; font-weight: 500; cursor: pointer; touch-action: manipulation; }
-button.primary { border-color: rgba(217, 119, 6, .5); }
-button:hover { background: rgba(180, 83, 9, .15); }
+button { box-sizing: border-box; flex: none; min-height: ${tok('--office-control-height')}; padding: ${tok('--office-space-1')} ${tok('--office-space-3')}; border: ${tok('--office-border-width')} solid transparent;
+	border-radius: ${tok('--office-radius')}; background: transparent; color: inherit; font-weight: 500; cursor: pointer; touch-action: manipulation; }
+button.primary { border-color: color-mix(in srgb, ${tok('--office-notice-accent')} 50%, transparent); }
+button:hover { background: color-mix(in srgb, ${tok('--office-notice-accent')} 15%, transparent); }
 button:disabled { opacity: .6; cursor: not-allowed; }
-button:focus-visible, input:focus-visible { outline: 2px solid var(--office-ring, #2563eb); outline-offset: 1px; }
-input { box-sizing: border-box; min-height: 24px; padding: 4px 8px; border: 1px solid rgba(217, 119, 6, .4);
-	border-radius: 4px; background: var(--office-background, #fff); color: var(--office-foreground, #1f2937); }
-.error { flex: none; color: var(--office-danger, #b91c1c); }
-@media (pointer: coarse) { button, input { min-height: 44px; min-width: 44px; } }
+button:focus-visible, input:focus-visible { outline: ${tok('--office-focus-width')} solid ${tok('--office-ring')}; outline-offset: calc(${tok('--office-focus-offset')} / 2); }
+input { box-sizing: border-box; min-height: ${tok('--office-control-height')}; padding: ${tok('--office-space-1')} ${tok('--office-space-2')}; border: ${tok('--office-border-width')} solid color-mix(in srgb, ${tok('--office-notice-accent')} 40%, transparent);
+	border-radius: ${tok('--office-radius')}; background: ${tok('--office-background')}; color: ${tok('--office-foreground')}; }
+.error { flex: none; color: ${tok('--office-danger')}; }
+@media (pointer: coarse) { button, input { min-height: ${tok('--office-target-size-touch')}; min-width: ${tok('--office-target-size-touch')}; } }
 @media (forced-colors: active) {
 	.banner { border-bottom-color: CanvasText; background: Canvas; color: CanvasText; }
 	svg, .error { color: CanvasText; }
@@ -232,14 +233,14 @@ export interface OfficePasteOptionsState {
 const PASTE_CSS = `
 :host { position: fixed; z-index: 1100; display: block; }
 :host([hidden]) { display: none !important; }
-.toolbar { box-sizing: border-box; display: flex; align-items: center; gap: 2px; padding: 4px;
-	border: 1px solid var(--office-border, #d1d5db); border-radius: 4px; background: var(--office-popover, var(--office-background, #fff));
-	box-shadow: 0 10px 25px rgba(0, 0, 0, .2); font: 11px/1.2 var(--office-font, system-ui, sans-serif); }
-button { box-sizing: border-box; min-height: 24px; padding: 4px 8px; border: 0; border-radius: 4px; background: transparent;
-	color: var(--office-foreground, #1f2937); font: inherit; white-space: nowrap; cursor: pointer; touch-action: manipulation; }
-button:hover { background: var(--office-surface, #f3f4f6); }
-button:focus-visible { outline: 2px solid var(--office-ring, #2563eb); outline-offset: 1px; }
-@media (pointer: coarse) { button { min-height: 44px; min-width: 44px; } }
+.toolbar { box-sizing: border-box; display: flex; align-items: center; gap: ${tok('--office-space-0')}; padding: ${tok('--office-space-1')};
+	border: ${tok('--office-border-width')} solid ${tok('--office-border')}; border-radius: ${tok('--office-radius')}; background: ${tok('--office-popover')};
+	box-shadow: ${tok('--office-shadow-lg')}; font: ${tok('--office-font-size-xs')}/1.2 ${tok('--office-font')}; }
+button { box-sizing: border-box; min-height: ${tok('--office-control-height')}; padding: ${tok('--office-space-1')} ${tok('--office-space-2')}; border: 0; border-radius: ${tok('--office-radius')}; background: transparent;
+	color: ${tok('--office-foreground')}; font: inherit; white-space: nowrap; cursor: pointer; touch-action: manipulation; }
+button:hover { background: ${tok('--office-surface')}; }
+button:focus-visible { outline: ${tok('--office-focus-width')} solid ${tok('--office-ring')}; outline-offset: calc(${tok('--office-focus-offset')} / 2); }
+@media (pointer: coarse) { button { min-height: ${tok('--office-target-size-touch')}; min-width: ${tok('--office-target-size-touch')}; } }
 @media (forced-colors: active) {
 	.toolbar { border-color: CanvasText; background: Canvas; }
 	button { color: ButtonText; } button:hover { background: Highlight; color: HighlightText; }
@@ -248,7 +249,7 @@ button:focus-visible { outline: 2px solid var(--office-ring, #2563eb); outline-o
 `;
 
 /**
- * `<office-ui-paste-options>`: the strip anchored 4px past a just-pasted object's bottom-right
+ * `<office-ui-paste-options>`: the strip anchored one `--office-space-1` step past a just-pasted object's bottom-right
  * corner (the host is the fixed box). A choice emits `office-paste-options-request`
  * `{ format }` then `office-paste-options-dismiss`; the first pointerdown or keydown outside
  * (Escape inside too) dismisses, armed one task after connecting so the paste gesture does not.
@@ -308,8 +309,8 @@ export const definePasteOptions = definer('office-ui-paste-options', () => {
 		private render(): void {
 			const s = this.model;
 			this.toolbar.setAttribute('aria-label', s.label ?? 'Paste Options');
-			this.style.left = `${s.left + 4}px`;
-			this.style.top = `${s.top + 4}px`;
+			this.style.left = `calc(${s.left}px + ${tok('--office-space-1')})`;
+			this.style.top = `calc(${s.top}px + ${tok('--office-space-1')})`;
 			const doc = this.ownerDocument;
 			const existing = [...this.toolbar.querySelectorAll<HTMLButtonElement>('button')];
 			const same =

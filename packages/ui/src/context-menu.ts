@@ -1,18 +1,19 @@
+import { tok } from './tokens.js';
 import { definer } from './registry.js';
 import { attachStyles, controlCss } from './styles.js';
 
 const CSS = `
 :host { display: contents; }
-.panel { position: fixed; inset: auto; margin: 0; min-width: 200px; padding: 4px; box-sizing: border-box;
-	background: var(--office-background, #fff); color: var(--office-foreground, #1f2937);
-	border: 1px solid var(--office-border, #d1d5db); border-radius: var(--office-radius, 4px);
-	box-shadow: 0 8px 24px rgb(0 0 0 / 18%); font-family: var(--office-font, system-ui, sans-serif); }
+.panel { position: fixed; inset: auto; margin: 0; min-width: ${tok('--office-context-menu-min-width')}; padding: ${tok('--office-space-1')}; box-sizing: border-box;
+	background: ${tok('--office-background')}; color: ${tok('--office-foreground')};
+	border: ${tok('--office-border-width')} solid ${tok('--office-border')}; border-radius: ${tok('--office-radius')};
+	box-shadow: ${tok('--office-shadow')}; font-family: ${tok('--office-font')}; }
 .panel[hidden] { display: none; }
 @media (forced-colors: active) { .panel { border-color: CanvasText; background: Canvas; color: CanvasText; } }
 `;
 
 const SEPARATOR_CSS = `
-:host { display: block; height: 1px; margin: 4px 6px; background: var(--office-border, #d1d5db); }
+:host { display: block; height: ${tok('--office-border-width')}; margin: ${tok('--office-space-1')} ${tok('--office-space-1-5')}; background: ${tok('--office-border')}; }
 @media (forced-colors: active) { :host { background: CanvasText; } }
 `;
 

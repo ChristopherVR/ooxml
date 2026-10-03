@@ -46,7 +46,8 @@ describe('theme tokens', () => {
 		expect(THEME_CSS).toContain('@media (forced-colors: active)');
 		expect(THEME_CSS).toContain('prefers-color-scheme: dark');
 		expect(THEME_CSS).toContain('@media (pointer: coarse)');
-		expect(THEME_CSS).toContain('--office-target-size: 44px');
+		expect(THEME_CSS).toContain('--office-target-size: var(--office-target-size-touch)');
+		expect(THEME_CSS).toContain('--office-target-size-touch: 44px');
 		expect(THEME_CSS).toMatch(/Highlight/);
 	});
 });

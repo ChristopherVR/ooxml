@@ -200,8 +200,8 @@ describe('office-ui-paste-options', () => {
 		const host = document.createElement('office-ui-paste-options') as Stateful<unknown>;
 		host.state = { left: 100, top: 50, options: OPTIONS, label: 'Paste Options' };
 		document.body.append(host);
-		expect(host.style.left).toBe('104px');
-		expect(host.style.top).toBe('54px');
+		expect(host.style.left).toBe('calc(100px + var(--office-space-1, 4px))');
+		expect(host.style.top).toBe('calc(50px + var(--office-space-1, 4px))');
 		expect(q(host, '[role="toolbar"]')!.getAttribute('aria-label')).toBe('Paste Options');
 		const buttons = host.shadowRoot!.querySelectorAll('button');
 		expect(buttons[1]!.textContent).toBe('Picture');

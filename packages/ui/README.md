@@ -104,8 +104,29 @@ Elements with intent events read their event name and test-id prefix from static
 
 Setting a property never emits an event; only user activation does. Controls honour
 `prefers-color-scheme`, `forced-colors: active` (system colours and a visible focus ring) and
-coarse pointers (44px targets through `--office-target-size`). Tokens are the `--office-*`
-custom properties in `THEME_CSS`; override them on `:root` or any container.
+coarse pointers (44px targets through `--office-target-size`).
+
+## Design tokens
+
+Every control is token based: no colour, length, radius, font size, shadow, duration or layer
+is written literally. `OFFICE_TOKENS` (from `ooxml-ui/theme`) is the single table of
+`--office-*` tokens and their defaults; controls read them through `tok(name)`, which expands to
+`var(--office-…, <default>)`, so they render correctly with or without the installed theme.
+`THEME_CSS` declares every default on `:root`, plus dark-mode and forced-colours values. Override
+any token on `:root` or on any container to retheme or resize the suite:
+
+- semantic colours: `--office-foreground`, `-background`, `-surface`, `-selected`, `-border`,
+  `-accent`, `-accent-foreground`, `-ring`, `-danger`, `-warning`, `-info`, `-popover`, `-overlay`,
+  `-notice-*`, `-paper`;
+- scales: `--office-space-*`, `--office-radius-*`, `--office-font-size-*`, `--office-icon-size-*`,
+  `--office-control-height-*`, `--office-shadow-*`, `--office-duration-*`, `--office-z-*`;
+- component tokens that default to the scales, for example `--office-checkbox-size`,
+  `--office-switch-width`, `--office-ribbon-tab-height`, `--office-backstage-nav-width` and
+  `--office-dialog-max-width`.
+
+Only the two layout breakpoints (`COMPACT`, `TOUCH`) are literal, because CSS does not allow
+custom properties in media queries. A test fails when any control's stylesheet contains a raw
+colour or length outside a token, or references an undeclared token.
 
 `office-ui-smartart` shows the drawing the producing application cached; it never lays out a
 diagram itself. Preset outlines it cannot draw are rendered as rectangles, gradient and pattern

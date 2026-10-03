@@ -1,3 +1,5 @@
+import { TOUCH, tok } from './tokens.js';
+
 /** Share parsed stylesheets between control instances of one document. */
 const sheetsByDocument = new WeakMap<Document, Map<string, CSSStyleSheet>>();
 
@@ -35,11 +37,11 @@ export function attachStyles(root: ShadowRoot, css: string): void {
  */
 export const COMMON_CONTROL_CSS = `
 :host([hidden]) { display: none !important; }
-@media (pointer: coarse), (max-width: 767px) {
-	:host { --office-target-size: 44px; }
+@media ${TOUCH} {
+	:host { --office-target-size: ${tok('--office-target-size-touch')}; }
 }
 @media (forced-colors: active) {
-	:host(:focus-visible), :focus-visible { outline: 2px solid Highlight; outline-offset: 2px; }
+	:host(:focus-visible), :focus-visible { outline: ${tok('--office-focus-width')} solid Highlight; outline-offset: ${tok('--office-focus-offset')}; }
 }
 `;
 
