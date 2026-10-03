@@ -10,7 +10,7 @@ function setup() {
 	document.body.append(el);
 	el.commands = [
 		{ id: 'bold', label: 'Bold', disabled: true, title: 'Needs text formatting' },
-		{ id: 'grid', label: 'Grid', keywords: 'show lines' },
+		{ id: 'grid', label: 'Grid', keywords: 'show lines', description: 'View › Show' },
 		{ id: 'ruler', label: 'Ruler', keywords: 'show measure' },
 	];
 	const input = el.shadowRoot!.querySelector('input')!;
@@ -38,7 +38,7 @@ describe('office-ui-command-search', () => {
 		const { el, input, type, key, options, seen } = setup();
 		type('show');
 		expect(el.isOpen).toBe(true);
-		expect(options()).toEqual(['Grid', 'Ruler']);
+		expect(options()).toEqual(['GridView › Show', 'Ruler']);
 		expect(input.getAttribute('aria-activedescendant')).toMatch(/-0$/);
 		key('ArrowDown');
 		key('Enter');
@@ -58,5 +58,16 @@ describe('office-ui-command-search', () => {
 		expect(options()).toEqual(['No matching commands']);
 		key('Escape');
 		expect(el.isOpen).toBe(false);
+	});
+
+	it('ranks usable commands and label prefixes first', () => {
+		const { el, type, options } = setup();
+		el.commands = [
+			{ id: 'a', label: 'Bold text', disabled: true, title: 'Off' },
+			{ id: 'b', label: 'Text bold' },
+			{ id: 'c', label: 'Bold' },
+		];
+		type('bold');
+		expect(options()).toEqual(['Bold', 'Text bold', 'Bold textOff']);
 	});
 });

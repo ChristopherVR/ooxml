@@ -7,6 +7,8 @@ export interface OfficeSearchCommand {
 	id: string;
 	label: string;
 	keywords?: string;
+	/** Where the command lives, shown under the label (for example "Home › Paragraph"). */
+	description?: string;
 	disabled?: boolean;
 	title?: string;
 }
@@ -121,8 +123,18 @@ export const defineCommandSearch = definer('office-ui-command-search', () => {
 			const query = this.input.value.trim().toLowerCase();
 			if (!query) return this.hide();
 			const limit = Math.max(1, Number(this.getAttribute('limit')) || 8);
+			// Office ranks usable commands first, then label prefix matches, then the rest.
+			const rank = (item: OfficeSearchCommand) =>
+				(item.disabled ? 2 : 0) + (item.label.toLowerCase().startsWith(query) ? 0 : 1);
 			this.found = this.items
-				.filter((item) => `${item.label} ${item.keywords ?? ''}`.toLowerCase().includes(query))
+				.map((item, order) => ({ item, order }))
+				.filter(({ item }) =>
+					`${item.label} ${item.keywords ?? ''} ${item.description ?? ''}`
+						.toLowerCase()
+						.includes(query),
+				)
+				.sort((a, b) => rank(a.item) - rank(b.item) || a.order - b.order)
+				.map(({ item }) => item)
 				.slice(0, limit);
 			this.active = this.found.findIndex((item) => !item.disabled);
 			this.render();
@@ -151,11 +163,12 @@ export const defineCommandSearch = definer('office-ui-command-search', () => {
 					const label = doc.createElement('span');
 					label.textContent = item.label;
 					option.append(label);
-					if (item.disabled) {
-						option.setAttribute('aria-disabled', 'true');
-						const reason = doc.createElement('small');
-						reason.textContent = item.title ?? 'Not available';
-						option.append(reason);
+					if (item.disabled) option.setAttribute('aria-disabled', 'true');
+					const detail = item.disabled ? (item.title ?? 'Not available') : item.description;
+					if (detail) {
+						const line = doc.createElement('small');
+						line.textContent = detail;
+						option.append(line);
 					}
 					return option;
 				}),
