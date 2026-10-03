@@ -23,12 +23,16 @@ export interface BroadcastTransportOptions {
 
 type Envelope = { kind: 'hello' | 'data'; from: string; data?: Uint8Array };
 
+/** Realm-independent: structured clone may deliver another realm's Uint8Array. */
+const isBytes = (value: unknown): value is Uint8Array =>
+	ArrayBuffer.isView(value) && Object.prototype.toString.call(value) === '[object Uint8Array]';
+
 const isEnvelope = (value: unknown): value is Envelope => {
 	const envelope = value as Partial<Envelope> | null;
 	return (
 		!!envelope &&
 		typeof envelope.from === 'string' &&
-		(envelope.kind === 'hello' || (envelope.kind === 'data' && envelope.data instanceof Uint8Array))
+		(envelope.kind === 'hello' || (envelope.kind === 'data' && isBytes(envelope.data)))
 	);
 };
 
@@ -68,7 +72,7 @@ export function createBroadcastTransport(options: BroadcastTransportOptions): Tr
 				// A newcomer announced itself: the provider answers with a sync handshake and its
 				// awareness. The newcomer's own opening handshake reaches us through `send`.
 				if (data.kind === 'hello') handlers?.peer?.();
-				else handlers?.message(data.data!);
+				else handlers?.message(new Uint8Array(data.data!));
 			};
 			next.open();
 			open.postMessage({ kind: 'hello', from: self } satisfies Envelope);

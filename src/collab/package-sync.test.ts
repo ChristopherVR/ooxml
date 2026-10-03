@@ -76,6 +76,32 @@ describe('same-browser package sharing', () => {
 		bindB.dispose();
 	});
 
+	it('accepts bytes cloned from another realm', async () => {
+		const received: Uint8Array[] = [];
+		let deliver: ((event: { data: unknown }) => void) | null = null;
+		const Channel = class implements BroadcastChannelLike {
+			onmessage: ((event: { data: unknown }) => void) | null = null;
+			constructor() {
+				queueMicrotask(() => (deliver = this.onmessage));
+			}
+			postMessage(): void {}
+			close(): void {}
+		};
+		createBroadcastTransport({ roomId: 'drawing', BroadcastChannel: Channel }).connect({
+			open: () => {},
+			close: () => {},
+			message: (data) => received.push(data),
+			error: () => {},
+		});
+		await settle();
+		const { runInNewContext } = await import('node:vm');
+		const foreign = runInNewContext('new Uint8Array([5, 6])') as Uint8Array;
+		expect(foreign instanceof Uint8Array).toBe(false);
+		deliver!({ data: { kind: 'data', from: 'other', data: foreign } });
+		expect(received).toEqual([new Uint8Array([5, 6])]);
+		expect(received[0] instanceof Uint8Array).toBe(true);
+	});
+
 	it('refuses packages above the limit', () => {
 		const Channel = fakeChannels();
 		const session = join(Channel, 'Ada');
