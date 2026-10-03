@@ -79,6 +79,10 @@ const BUILT_IN: Readonly<Record<string, string>> = {
 	textBox: 'M3 3h14v14H3ZM6.5 6.5h7M10 6.5v7',
 	ruler: 'M2 7h16v6H2ZM5 7v3M8 7v2M11 7v3M14 7v2',
 	launcher: 'M5 15 15 5M9 5h6v6',
+	warning: 'M10 3l7.5 13H2.5ZM10 8v3.5M10 14v.1',
+	info: 'M3 10a7 7 0 1 0 14 0 7 7 0 1 0-14 0M10 9v4.5M10 6.3v.1',
+	restore: 'M3.5 10a6.5 6.5 0 1 0 2-4.6M3.5 3v3.5H7M10 6.5v3.8l2.5 1.6',
+	print: 'M5.5 7.5V3h9v4.5M5.5 14.5H3V8h14v6.5h-2.5M5.5 12h9v5h-9Z',
 };
 for (const [name, d] of Object.entries(BUILT_IN)) registry.set(name, { d });
 

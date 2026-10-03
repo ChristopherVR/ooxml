@@ -1,3 +1,8 @@
+import { defineDialogFooter, defineToasts } from './chrome-controls.js';
+import { definePasteOptions, defineReadOnlyBanner } from './document-notices.js';
+import { defineRadio } from './radio.js';
+import { defineRibbonToggle } from './ribbon-toggle.js';
+import { defineSearchField } from './search-field.js';
 import { defineBackstage } from './backstage.js';
 import { defineFindBar } from './find-bar.js';
 import { definePrintPreview } from './print-preview.js';
@@ -20,6 +25,13 @@ import { defineZoomSlider } from './zoom-slider.js';
 
 export {
 	defineAccount,
+	defineDialogFooter,
+	definePasteOptions,
+	defineRadio,
+	defineReadOnlyBanner,
+	defineRibbonToggle,
+	defineSearchField,
+	defineToasts,
 	defineBackstage,
 	defineFindBar,
 	definePrintPreview,
@@ -61,6 +73,20 @@ export type { OfficeFindInputEvent, OfficeFindStepEvent } from './find-bar.js';
 export type { OfficePrintPreviewPageEvent } from './print-preview.js';
 export type { OfficeRibbonSelectEvent } from './ribbon-tabs.js';
 export { rulerDivisions } from './ruler.js';
+export {
+	OFFICE_TOAST_VISIBLE_LIMIT,
+	type OfficeDialogFooterAction,
+	type OfficeDialogFooterState,
+	type OfficeDialogFooterVariant,
+	type OfficeToast,
+	type OfficeToastsState,
+} from './chrome-controls.js';
+export type {
+	OfficePasteOption,
+	OfficePasteOptionsState,
+	OfficeReadOnlyBannerIntent,
+	OfficeReadOnlyBannerState,
+} from './document-notices.js';
 export {
 	clearOfficeProfile,
 	DEFAULT_OFFICE_PROFILE,
@@ -111,6 +137,13 @@ export const CONTROL_DEFINERS = [
 	defineRuler,
 	defineBackstage,
 	definePrintPreview,
+	defineRadio,
+	defineSearchField,
+	defineRibbonToggle,
+	defineDialogFooter,
+	defineToasts,
+	defineReadOnlyBanner,
+	definePasteOptions,
 ] as const;
 
 /** Idempotent, SSR-safe (no-op without a DOM). */

@@ -37,6 +37,13 @@ export const OFFICE_UI_TAGS = [
 	'office-ui-ruler',
 	'office-ui-backstage',
 	'office-ui-print-preview',
+	'office-ui-radio',
+	'office-ui-search',
+	'office-ui-ribbon-toggle',
+	'office-ui-dialog-footer',
+	'office-ui-toasts',
+	'office-ui-read-only-banner',
+	'office-ui-paste-options',
 	'office-ui-presence',
 	'office-ui-smartart',
 ] as const;
