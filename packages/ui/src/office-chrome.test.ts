@@ -68,6 +68,20 @@ describe('office-ui-ribbon', () => {
 		expect(seen).toEqual(['view', 'home', 'view']);
 	});
 
+	it('steps from the focused tab, not the selected one', () => {
+		const { el, tabs } = ribbon();
+		const third = document.createElement('div');
+		third.dataset.ribbonTab = 'help';
+		third.dataset.label = 'Help';
+		el.append(third);
+		return Promise.resolve().then(() => {
+			tabs()[2]!.focus();
+			key(tabs()[2]!, 'ArrowLeft');
+			expect(el.selected).toBe('view');
+			expect(el.shadowRoot!.activeElement).toBe(tabs()[1]);
+		});
+	});
+
 	it('has a File button that reports activation and expansion', () => {
 		const { el, file } = ribbon();
 		const opened = vi.fn();

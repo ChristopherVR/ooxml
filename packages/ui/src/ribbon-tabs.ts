@@ -166,7 +166,11 @@ export const defineRibbon = definer('office-ui-ribbon', () => {
 		}
 		#key(event: KeyboardEvent): void {
 			const tabs = [...this.#tabs.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
-			const at = tabs.findIndex((tab) => tab.dataset.tab === this.selected);
+			// Step from the focused tab (it may differ from the selected one), as Office does.
+			const focused = (event.target as Element).closest?.<HTMLButtonElement>('[role="tab"]');
+			const at = focused
+				? tabs.indexOf(focused)
+				: tabs.findIndex((tab) => tab.dataset.tab === this.selected);
 			const step = { ArrowRight: 1, ArrowLeft: -1 }[event.key];
 			const next =
 				event.key === 'Home'
