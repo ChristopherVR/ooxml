@@ -1,6 +1,6 @@
 {
 	"name": "@christophervr/xlsx-core",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "Framework-neutral Excel workbook model, parser, formula engine and serializer (thin entry point over ooxml-core/xlsx)",
 	"keywords": [
 		"excel",
