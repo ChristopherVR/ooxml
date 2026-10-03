@@ -20,7 +20,13 @@ export { uniqueHeaders } from './tables.js';
 export { IMAGE_EXTENSIONS, newMediaPart, type ChartPatch } from './charts.js';
 export { validateTableName, type TablePatch, type TableRef } from './table-edits.js';
 export { autoGrowRows, rowsToRefit } from './row-autofit.js';
-export { legacyPasswordHash, verifySheetPassword, verifyWorkbookPassword } from './protection.js';
+export {
+	legacyPasswordHash,
+	modernPasswordHash,
+	verifySheetPassword,
+	verifySheetPasswordAsync,
+	verifyWorkbookPassword,
+} from './protection.js';
 export { MAX_OUTLINE_LEVEL } from './outline.js';
 export type { RemoveDuplicatesResult } from './duplicates.js';
 export { calcModeOf, type CalcMode } from './calc-mode.js';

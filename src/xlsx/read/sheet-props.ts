@@ -187,6 +187,16 @@ export function readProtection(node: XmlElement | undefined): SheetProtection | 
 	const protection: SheetProtection = { sheet: boolAttr(node, 'sheet', false) };
 	const password = att(node, 'password');
 	if (password) protection.passwordHash = password;
+	const algorithmName = att(node, 'algorithmName');
+	const hashValue = att(node, 'hashValue');
+	const saltValue = att(node, 'saltValue');
+	if (algorithmName && hashValue && saltValue)
+		protection.modernHash = {
+			algorithmName,
+			hashValue,
+			saltValue,
+			spinCount: Number(att(node, 'spinCount') ?? 0) || 0,
+		};
 	const allow: string[] = [];
 	for (const attribute of Array.from(node.attributes)) {
 		if (PROTECTION_META.has(attribute.name)) continue;

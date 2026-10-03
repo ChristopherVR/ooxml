@@ -166,8 +166,18 @@ export function protectionXml(sheet: Worksheet): string {
 	if (source && sameModel(readProtection(source), protection))
 		return snapshotXml(sheet, 'sheetProtection') ?? '';
 	const values: Record<string, string | boolean | undefined> = {};
+	if (protection.modernHash) {
+		const hash = protection.modernHash;
+		values['algorithmName'] = hash.algorithmName;
+		values['hashValue'] = hash.hashValue;
+		values['saltValue'] = hash.saltValue;
+		values['spinCount'] = String(hash.spinCount);
+	}
 	// The modern hash still matches only while the legacy password is the source's one.
-	if (protection.passwordHash !== undefined && protection.passwordHash === att(source, 'password'))
+	else if (
+		protection.passwordHash !== undefined &&
+		protection.passwordHash === att(source, 'password')
+	)
 		for (const name of HASH_ATTRS) values[name] = att(source, name);
 	else if (protection.passwordHash === undefined && att(source, 'password') === undefined)
 		for (const name of HASH_ATTRS) values[name] = att(source, name);

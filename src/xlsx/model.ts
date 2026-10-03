@@ -563,10 +563,24 @@ export interface PageSetup {
 	footer?: string;
 }
 
+/** An ECMA-376 agile password hash: base64 salt and hash, digest name and iteration count. */
+export interface ModernPasswordHash {
+	algorithmName: string;
+	hashValue: string;
+	saltValue: string;
+	spinCount: number;
+}
+
 export interface SheetProtection {
 	sheet: boolean;
 	/** Legacy password hash (`password` attribute), kept for round trip. */
 	passwordHash?: string;
+	/**
+	 * Excel 2013+ password hash (`algorithmName`, `hashValue`, `saltValue`, `spinCount`), which
+	 * Excel writes instead of (or as well as) the legacy one. Verify it with
+	 * `verifySheetPasswordAsync`; the synchronous check cannot.
+	 */
+	modernHash?: ModernPasswordHash;
 	/** Actions still allowed (`formatCells`, `insertRows`, `sort`, `autoFilter`, ...). */
 	allow?: string[];
 }
