@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.7.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.7.0) - 2026-10-03
+
+### Features
+
+- **ui:** Rank tell me results and show where commands live (by @ChristopherVR) ([1f2284e](https://github.com/ChristopherVR/ooxml/commit/1f2284eb47c579f4c417b0dda29a2055c506df99))
+
 ## [0.6.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.6.0) - 2026-10-03
 
 ### Features
