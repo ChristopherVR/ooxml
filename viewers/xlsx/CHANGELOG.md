@@ -9,6 +9,14 @@ history lives in `packages/<name>/CHANGELOG.md`. Nothing has been published yet,
 sections: the first release run writes them.
 ## 2026-10-03
 
+_Releases: xlsx-viewer-mcp@0.1.2, @christophervr/xlsx-react-viewer@0.3.2, xlsx-vue-viewer@0.3.2, xlsx-angular-viewer@0.3.2, xlsx-svelte-viewer@0.3.2, xlsx-solid-viewer@0.3.2, xlsx-vanilla-viewer@0.3.2_
+
+### Bug Fixes
+
+- **release:** Stage planned package versions and changelogs (by @ChristopherVR) ([66e7c29](https://github.com/ChristopherVR/xlsx-viewer/commit/66e7c29b4c8d5109c358ac1df77a4afad91a86f1))
+
+## 2026-10-03
+
 _Releases: @christophervr/xlsx-core@0.2.0, @christophervr/xlsx-react-viewer@0.3.0, xlsx-vue-viewer@0.3.0, xlsx-angular-viewer@0.3.0, xlsx-svelte-viewer@0.3.0, xlsx-solid-viewer@0.3.0, xlsx-vanilla-viewer@0.3.0_
 
 ### Features
