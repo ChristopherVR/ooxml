@@ -25,6 +25,8 @@ export const viewerChromeTemplate = `<div class="workspace">
 </div>`;
 
 /** Presentation state stays local; page navigation uses the same controller as every binding. */
+export type TaskPane = 'shapes' | 'pages' | 'inspector';
+
 export class ViewerChrome {
 	#root: ShadowRoot;
 	#controller: ViewerController;
@@ -34,11 +36,12 @@ export class ViewerChrome {
 	#tools: HTMLDetailsElement;
 	#rail: HTMLElement;
 	#inspector: HTMLElement;
+	#panes: Record<TaskPane, HTMLElement>;
 	#notes: HTMLDetailsElement;
 	#responsive: MediaQueryList | undefined;
 	#compact: MediaQueryList | undefined;
-	#pagesManuallyToggled = false;
-	#inspectorManuallyToggled = false;
+	/** Panes the user showed or hid; responsive defaults leave them alone afterwards. */
+	#manual = new Set<TaskPane>();
 	constructor(root: ShadowRoot, controller: ViewerController) {
 		this.#root = root;
 		this.#controller = controller;
@@ -47,6 +50,11 @@ export class ViewerChrome {
 		this.#tools = root.querySelector('.ribbon-tools')!;
 		this.#rail = root.querySelector('.page-rail')!;
 		this.#inspector = root.querySelector('.inspector-pane')!;
+		this.#panes = {
+			shapes: root.querySelector('.shapes-pane')!,
+			pages: this.#rail,
+			inspector: this.#inspector,
+		};
 		this.#notes = root.querySelector('.notes')!;
 	}
 	wire(): () => void {
@@ -76,8 +84,10 @@ export class ViewerChrome {
 			{ ...options, capture: true },
 		);
 		const responsive = () => {
-			if (!this.#pagesManuallyToggled) this.#setPane('pages', !this.#responsive?.matches);
-			if (!this.#inspectorManuallyToggled) this.#setPane('inspector', !compact?.matches);
+			// Visio's defaults: the Shapes window on wide screens; pages live in the bottom tabs.
+			if (!this.#manual.has('shapes')) this.#setPane('shapes', !this.#responsive?.matches);
+			if (!this.#manual.has('pages')) this.#setPane('pages', false);
+			if (!this.#manual.has('inspector')) this.#setPane('inspector', !compact?.matches);
 		};
 		responsive();
 		this.#responsive?.addEventListener('change', responsive, options);
@@ -92,7 +102,7 @@ export class ViewerChrome {
 				if (button.dataset.pageIndex !== undefined)
 					this.#controller.setPage(Number(button.dataset.pageIndex));
 				const action = button.dataset.chrome;
-				if (action === 'inspector') this.togglePane('inspector');
+				if (action === 'inspector' || action === 'shapes') this.togglePane(action);
 				if (action === 'notes') this.reveal('notes');
 			},
 			options,
@@ -170,23 +180,31 @@ export class ViewerChrome {
 		if (this.#compact?.matches) this.#tools.open = false;
 	}
 	/** Show or hide a task pane; compact layouts close the Tools menu afterwards. */
-	togglePane(pane: 'pages' | 'inspector'): void {
+	togglePane(pane: TaskPane): void {
 		if (this.#compact?.matches) this.#tools.open = false;
-		if (pane === 'pages') this.#pagesManuallyToggled = true;
-		else this.#inspectorManuallyToggled = true;
-		this.#setPane(pane, (pane === 'pages' ? this.#rail : this.#inspector).hidden);
+		this.#manual.add(pane);
+		this.#setPane(pane, this.#panes[pane].hidden);
 	}
 	/** A ribbon command or menu item by its stable id (the first match wins). */
 	#command(name: string): HTMLElement & { disabled: boolean } {
 		return this.#root.querySelector(`[command="${name}"]`)!;
 	}
-	#setPane(pane: 'pages' | 'inspector', visible: boolean): void {
-		if (visible && this.#compact?.matches) {
-			const other = pane === 'pages' ? 'inspector' : 'pages';
-			(other === 'pages' ? this.#rail : this.#inspector).hidden = true;
-			this.#command(other).setAttribute('checked', 'false');
-		}
-		(pane === 'pages' ? this.#rail : this.#inspector).hidden = !visible;
+	#setPane(pane: TaskPane, visible: boolean): void {
+		// Phones show one pane at a time; the left column also holds one of Shapes or Pages.
+		const exclusive = this.#compact?.matches
+			? (Object.keys(this.#panes) as TaskPane[])
+			: pane === 'shapes'
+				? ['pages' as const]
+				: pane === 'pages'
+					? ['shapes' as const]
+					: [];
+		if (visible)
+			for (const other of exclusive)
+				if (other !== pane) {
+					this.#panes[other].hidden = true;
+					this.#command(other).setAttribute('checked', 'false');
+				}
+		this.#panes[pane].hidden = !visible;
 		this.#command(pane).setAttribute('checked', String(visible));
 		this.#syncNotes();
 	}
@@ -198,7 +216,7 @@ export class ViewerChrome {
 	/** Open an inspector disclosure; text editing may focus the text field directly (F2). */
 	reveal(kind: 'notes' | 'selection' | 'edit' | 'layers', focusText = false): void {
 		if (this.#compact?.matches) this.#tools.open = false;
-		this.#inspectorManuallyToggled = true;
+		this.#manual.add('inspector');
 		this.#setPane('inspector', true);
 		const selector =
 			kind === 'notes'

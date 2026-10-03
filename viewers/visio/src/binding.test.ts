@@ -76,7 +76,7 @@ describe('custom element safety', () => {
 		viewer.element.remove();
 		host.append(viewer.element);
 		expect(viewer.element.document).toBe(demoDocument);
-		expect(viewer.element.shadowRoot?.querySelector('svg')).not.toBeNull();
+		expect(viewer.element.shadowRoot?.querySelector('svg.paper')).not.toBeNull();
 		viewer.destroy();
 	});
 	it('guards direct element fit and toolbar after destruction', () => {
@@ -172,9 +172,9 @@ describe('accessible selection and connected font resources', () => {
 			const host = document.createElement('div');
 			document.body.append(host);
 			const viewer = mountViewer(host, { document: demoDocument });
-			const before = viewer.element.shadowRoot?.querySelector('svg');
+			const before = viewer.element.shadowRoot?.querySelector('svg.paper');
 			fonts.dispatchEvent(new Event('loadingdone'));
-			expect(viewer.element.shadowRoot?.querySelector('svg')).not.toBe(before);
+			expect(viewer.element.shadowRoot?.querySelector('svg.paper')).not.toBe(before);
 			expect(add).toHaveBeenCalledOnce();
 			viewer.element.remove();
 			expect(remove).toHaveBeenCalledOnce();

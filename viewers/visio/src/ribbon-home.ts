@@ -180,7 +180,11 @@ export function buildHomePanel(doc: Document, panel: HTMLElement): void {
 			icon: 'visioChangeShape',
 			unsupported: 'Needs core master replacement.',
 			items: [
-				{ id: 'change-shape-item', label: 'Shapes', unsupported: 'Needs core master replacement.' },
+				{
+					id: 'change-shape-item',
+					label: 'Shape gallery',
+					unsupported: 'Needs core master replacement.',
+				},
 			],
 		}),
 		stack(doc, [

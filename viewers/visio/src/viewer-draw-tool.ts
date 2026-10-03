@@ -20,7 +20,11 @@ export function nextShapeId(page: VisioPage): string {
 }
 
 /** Page inches with a top-left origin (SVG user space) from a client point. */
-function pagePoint(svg: SVGSVGElement, page: VisioPage, event: PointerEvent) {
+export function pagePoint(
+	svg: SVGSVGElement,
+	page: VisioPage,
+	event: Pick<MouseEvent, 'clientX' | 'clientY'>,
+) {
 	const matrix = svg.getScreenCTM?.();
 	if (!matrix) return undefined;
 	const point = new DOMPoint(event.clientX, event.clientY).matrixTransform(matrix.inverse());
@@ -28,6 +32,36 @@ function pagePoint(svg: SVGSVGElement, page: VisioPage, event: PointerEvent) {
 		x: snap(Math.max(0, Math.min(page.width, point.x))),
 		y: snap(Math.max(0, Math.min(page.height, point.y))),
 	};
+}
+
+/**
+ * Create one rectangle through core and select it. `centre` is in top-left page inches (SVG
+ * space); core pins are centre points in bottom-left, y-up drawing inches.
+ */
+export async function insertRectangle(
+	controller: ViewerController,
+	page: VisioPage,
+	centre: { x: number; y: number },
+	size: { width: number; height: number },
+): Promise<string> {
+	const shapeId = nextShapeId(page);
+	const pageId = page.id;
+	await controller.applyEdits([
+		{
+			type: 'create-rectangle',
+			pageId,
+			shapeId,
+			x: centre.x,
+			y: page.height - centre.y,
+			width: size.width,
+			height: size.height,
+		},
+	]);
+	const created = controller.state.document?.pages
+		.find((candidate) => candidate.id === pageId)
+		?.shapes.find((shape) => shape.id === shapeId);
+	if (created) controller.selectShape({ id: shapeId, name: created.name, pageId });
+	return shapeId;
 }
 
 /** Drag-to-draw rectangle tool. The preview is viewer-only; the shape is created by core. */
@@ -130,27 +164,15 @@ export class RectangleDrawTool {
 		}
 		const state = this.controller.state;
 		if (state.document?.pages[state.pageIndex] !== drag.page) return;
-		const shapeId = nextShapeId(drag.page);
-		const pageId = drag.page.id;
 		const request = ++this.#request;
 		try {
-			// Core pins are centre points in bottom-left, y-up drawing inches.
-			await this.controller.applyEdits([
-				{
-					type: 'create-rectangle',
-					pageId,
-					shapeId,
-					x: (drag.x + end.x) / 2,
-					y: drag.page.height - (drag.y + end.y) / 2,
-					width,
-					height,
-				},
-			]);
+			const shapeId = await insertRectangle(
+				this.controller,
+				drag.page,
+				{ x: (drag.x + end.x) / 2, y: (drag.y + end.y) / 2 },
+				{ width, height },
+			);
 			if (request !== this.#request) return;
-			const created = this.controller.state.document?.pages
-				.find((page) => page.id === pageId)
-				?.shapes.find((shape) => shape.id === shapeId);
-			if (created) this.controller.selectShape({ id: shapeId, name: created.name, pageId });
 			this.options.announce(
 				`Rectangle ${shapeId} added (${+width.toFixed(4)} × ${+height.toFixed(4)} in).`,
 			);

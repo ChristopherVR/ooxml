@@ -3,17 +3,21 @@ import type { Locator } from '@playwright/test';
 /** Visio ribbon interactions shared by the browser specs. */
 export async function taskPane(
 	viewer: Locator,
-	name: 'Pages' | 'Inspector' | 'Shape Data' | 'Layers' | 'Compatibility Notes',
+	name: 'Shapes' | 'Pages' | 'Inspector' | 'Shape Data' | 'Layers' | 'Compatibility Notes',
 ): Promise<void> {
 	await viewer.getByRole('tab', { name: 'View', exact: true }).click();
 	await viewer.getByRole('button', { name: 'Task Panes', exact: true }).click();
-	await viewer.locator(`office-ui-menu-item[label="${name}"]`).click();
+	await viewer
+		.locator(`office-ui-menu-button[data-menu="task-panes"] office-ui-menu-item[label="${name}"]`)
+		.click();
 }
 
 export async function zoomPreset(viewer: Locator, percent: number): Promise<void> {
 	await viewer.getByRole('tab', { name: 'View', exact: true }).click();
 	await viewer.getByRole('button', { name: 'Zoom', exact: true }).click();
-	await viewer.locator(`office-ui-menu-item[label="${percent}%"]`).click();
+	await viewer
+		.locator(`office-ui-menu-button[data-menu="zoom"] office-ui-menu-item[label="${percent}%"]`)
+		.click();
 }
 
 /** Home > Editing > Find > Find... opens the find bar, as Ctrl+F does. */

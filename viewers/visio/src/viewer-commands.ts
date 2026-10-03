@@ -13,7 +13,7 @@ interface CommandHost {
 	rulers: Rulers;
 	controller: ViewerController;
 	fit(mode: 'page' | 'width'): void;
-	togglePane(pane: 'pages' | 'inspector'): void;
+	togglePane(pane: 'shapes' | 'pages' | 'inspector'): void;
 	reveal(panel: 'edit' | 'notes' | 'selection' | 'layers', focusText: boolean): void;
 	focusSearch(): void;
 	/** Transient command feedback for the status bar; document text is never interpreted as markup. */

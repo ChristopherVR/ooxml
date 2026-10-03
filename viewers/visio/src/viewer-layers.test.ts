@@ -285,12 +285,12 @@ describe('shared layer controls and rendering', () => {
 		const printBefore = viewer.createPrintSnapshot().pages[0]!.svg;
 		viewer.setLayerVisibility('1', '0', false);
 		viewer.setLayerVisibility('2', '0', true);
-		expect(drawingIds(viewer.element.shadowRoot!.querySelector('svg')!)).toEqual(['2:same']);
+		expect(drawingIds(viewer.element.shadowRoot!.querySelector('svg.paper')!)).toEqual(['2:same']);
 		expect(viewer.exportSvg().svg).toBe(svgBefore);
 		expect(viewer.createPrintSnapshot().pages[0]!.svg).toBe(printBefore);
 		expect(source).toEqual(before);
 		viewer.resetLayerVisibility();
-		expect(drawingIds(viewer.element.shadowRoot!.querySelector('svg')!)).toEqual(['1:same']);
+		expect(drawingIds(viewer.element.shadowRoot!.querySelector('svg.paper')!)).toEqual(['1:same']);
 		viewer.destroy();
 	});
 	it('reconnects listeners once, preserves overrides and guards both handle surfaces after destruction', () => {
@@ -352,17 +352,17 @@ describe('shared layer controls and rendering', () => {
 			}),
 		];
 		const viewer = mountViewer(document.createElement('div'), { document: source });
-		expect(drawingIds(viewer.element.shadowRoot!.querySelector('svg')!)).toEqual([
+		expect(drawingIds(viewer.element.shadowRoot!.querySelector('svg.paper')!)).toEqual([
 			'1:group',
 			'1:child',
 		]);
 		viewer.controller.selectShape({ id: 'group', name: 'group', pageId: '1' });
 		expect(viewer.controller.state.selectedShape?.id).toBe('group');
 		viewer.setLayerVisibility('1', '0', false);
-		expect(drawingIds(viewer.element.shadowRoot!.querySelector('svg')!)).toEqual([]);
+		expect(drawingIds(viewer.element.shadowRoot!.querySelector('svg.paper')!)).toEqual([]);
 		expect(viewer.controller.state.selectedShape).toBeNull();
 		viewer.resetLayerVisibility();
-		expect(drawingIds(viewer.element.shadowRoot!.querySelector('svg')!)).toEqual([
+		expect(drawingIds(viewer.element.shadowRoot!.querySelector('svg.paper')!)).toEqual([
 			'1:group',
 			'1:child',
 		]);

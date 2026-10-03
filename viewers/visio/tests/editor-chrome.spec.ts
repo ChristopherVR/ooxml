@@ -12,9 +12,11 @@ test('shared editor matches compact chrome geometry and keeps all navigation fun
 		'aria-selected',
 		'true',
 	);
-	const rail = await viewer.locator('.page-rail').boundingBox();
+	// Visio's layout: Shapes window on the left, pages as bottom tabs, no page rail by default.
+	const shapes = await viewer.locator('.shapes-pane').boundingBox();
 	const inspector = await viewer.locator('.inspector-pane').boundingBox();
-	expect(rail?.width).toBe(180);
+	expect(shapes?.width).toBe(232);
+	await expect(viewer.locator('.page-rail')).toBeHidden();
 	expect(inspector?.width).toBe(288);
 	const tabs = await viewer.locator('office-ui-tab-strip').boundingBox();
 	expect(tabs?.height).toBeGreaterThanOrEqual(26);
@@ -22,6 +24,9 @@ test('shared editor matches compact chrome geometry and keeps all navigation fun
 	expect((await viewer.locator('.ribbon-tabs').boundingBox())?.height).toBe(36);
 	expect((await viewer.locator('.status').boundingBox())?.height).toBeGreaterThanOrEqual(28);
 	expect((await viewer.locator('.status').boundingBox())?.height).toBeLessThanOrEqual(36);
+	await taskPane(viewer, 'Pages');
+	await expect(viewer.locator('.shapes-pane')).toBeHidden();
+	expect((await viewer.locator('.page-rail').boundingBox())?.width).toBe(180);
 	await viewer.getByRole('button', { name: 'Go to page 2: Architecture' }).click();
 	await expect(viewer.locator('svg.paper')).toHaveAttribute('aria-label', 'Architecture');
 	await expect(viewer.getByRole('tab', { name: 'Architecture', exact: true })).toHaveAttribute(
@@ -32,8 +37,8 @@ test('shared editor matches compact chrome geometry and keeps all navigation fun
 	await expect(viewer.locator('[data-page-index="1"]')).toHaveAttribute('aria-current', 'page');
 	await taskPane(viewer, 'Pages');
 	await expect(viewer.locator('.page-rail')).toBeHidden();
-	await taskPane(viewer, 'Pages');
-	await expect(viewer.locator('.page-rail')).toBeVisible();
+	await taskPane(viewer, 'Shapes');
+	await expect(viewer.locator('.shapes-pane')).toBeVisible();
 	await viewer.getByRole('button', { name: 'Zoom in', exact: true }).click();
 	await zoomPreset(viewer, 100);
 	await expect(viewer.locator('output')).toHaveText('100%');

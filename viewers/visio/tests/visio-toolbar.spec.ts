@@ -7,7 +7,8 @@ test('Visio ribbon draws, deletes, undoes and redoes with tools and shortcuts', 
 	await page.setViewportSize({ width: 1440, height: 1000 });
 	await page.goto('/demo/?sample=1');
 	const viewer = page.locator('visio-viewer');
-	const ribbon = (name: string) => viewer.getByRole('button', { name, exact: true });
+	const ribbon = (name: string) =>
+		viewer.locator('.toolbar').getByRole('button', { name, exact: true });
 	await expect(ribbon('Rectangle')).toBeDisabled();
 	await page.locator('#file').setInputFiles({
 		name: 'toolbar.vsdx',
@@ -68,6 +69,19 @@ test('Visio ribbon draws, deletes, undoes and redoes with tools and shortcuts', 
 	expect(box!.x + box!.width).toBeLessThanOrEqual(1440);
 	await page.keyboard.press('Escape');
 	await expect(menu).toBeHidden();
+
+	// Visio's Shapes window: drag the Rectangle master onto the page to drop a shape there.
+	const shapesBefore = await viewer.locator('svg.paper > g > [data-shape-id]').count();
+	await viewer
+		.locator('[data-master="rectangle"]')
+		.first()
+		.dragTo(viewer.locator('svg.paper'), { targetPosition: { x: 120, y: 120 } });
+	await expect(viewer.locator('svg.paper > g > [data-shape-id]')).toHaveCount(shapesBefore + 1);
+	await expect(viewer.locator('[data-status]')).toHaveText(/added from Basic Shapes/);
+	await expect(viewer.locator('[data-master="circle"]').first()).toHaveAttribute(
+		'aria-disabled',
+		'true',
+	);
 
 	await viewer.getByRole('tab', { name: 'View', exact: true }).click();
 	await viewer.locator('[data-check="ruler"]').click();

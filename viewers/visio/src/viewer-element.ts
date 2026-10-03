@@ -14,6 +14,8 @@ import { createRibbon } from './ribbon.js';
 import { createPageTabs, createStatusBar } from './status-bar.js';
 import { createFindBar, wireFindBar } from './viewer-search.js';
 import { fitZoom } from './viewer-fit.js';
+import { createShapesWindow } from './shapes-window.js';
+import { wireStencil } from './viewer-stencil.js';
 import { createRulers, type Rulers } from './viewer-ruler.js';
 import { ViewerEditControls } from './viewer-edit-controls.js';
 import { searchControls, renderSearchControls, type SearchControls } from './viewer-search.js';
@@ -82,6 +84,7 @@ export class VisioViewerElement extends BaseElement {
 		const workspace = this.#root.querySelector('.workspace')!;
 		this.#findBar = createFindBar(document);
 		workspace.before(createRibbon(document), this.#findBar);
+		workspace.prepend(createShapesWindow(document));
 		workspace.after(createPageTabs(document), createStatusBar(document));
 		this.#viewport = this.#root.querySelector('.viewport')!;
 		this.#rulers = createRulers(this.#viewport);
@@ -269,6 +272,15 @@ export class VisioViewerElement extends BaseElement {
 		const disposeChrome = this.#chrome.wire();
 		const disposeCommands = this.#commands.wire();
 		const disposeRulers = this.#rulers.wire();
+		const disposeStencil = wireStencil(
+			this.#root.querySelector('.shapes-pane')!,
+			this.#viewport,
+			this.controller,
+			(message) => {
+				this.#announcement = message;
+				this.#status.textContent = message;
+			},
+		);
 		const disposeFind = wireFindBar(this.#findBar, this.#search.input, () =>
 			this.#viewport.focus({ preventScroll: true }),
 		);
@@ -288,6 +300,7 @@ export class VisioViewerElement extends BaseElement {
 			disposeChrome();
 			disposeCommands();
 			disposeRulers();
+			disposeStencil();
 			disposeFind();
 			disposeInputs();
 			disposeLayers();

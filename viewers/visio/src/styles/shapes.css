@@ -1,0 +1,151 @@
+/* Visio's Shapes window: stencil views, More/Quick Shapes rows and a two-column master grid. */
+.shapes-pane {
+	display: flex;
+	flex: 0 0 232px;
+	flex-direction: column;
+	width: 232px;
+	min-width: 0;
+	overflow: hidden;
+	border-right: 1px solid var(--_vv-border);
+	background: var(--_vv-secondary);
+}
+.shapes-pane .pane-heading {
+	height: 42px;
+	font-size: 18px;
+	font-weight: 400;
+	color: var(--_vv-accent);
+}
+.pane-collapse {
+	min-height: 28px;
+	width: 28px;
+	padding: 0;
+	border-color: transparent;
+	background: transparent;
+	font-size: 18px;
+	line-height: 1;
+}
+.shapes-views {
+	display: flex;
+	gap: 14px;
+	padding: 4px 12px 0;
+	border-bottom: 1px solid var(--_vv-border);
+}
+.shapes-views button {
+	position: relative;
+	min-height: 28px;
+	padding: 2px 0 6px;
+	border: 0;
+	border-radius: 0;
+	background: transparent;
+	color: var(--_vv-muted);
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+.shapes-views button[aria-selected='true'] {
+	color: var(--_vv-ink);
+}
+.shapes-views button[aria-selected='true']::after {
+	content: '';
+	position: absolute;
+	inset: auto 0 -1px;
+	height: 2px;
+	background: var(--_vv-accent);
+}
+#shapes-stencils,
+#shapes-search {
+	flex: 1;
+	min-height: 0;
+	overflow: auto;
+	padding: 4px 0 8px;
+}
+.shapes-row {
+	display: flex;
+	align-items: center;
+	width: 100%;
+	min-height: 30px;
+	padding: 0 12px;
+	border: 0;
+	border-radius: 0;
+	background: transparent;
+	font-size: 12px;
+	text-align: left;
+}
+.shapes-row::after {
+	content: '›';
+	margin-left: auto;
+	font-size: 15px;
+}
+.stencil-title {
+	margin: 2px 0;
+	padding: 6px 12px;
+	border-left: 3px solid var(--_vv-accent);
+	background: var(--_vv-accent-soft);
+	font-size: 12px;
+	font-weight: 600;
+}
+.masters {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 2px;
+	margin: 0;
+	padding: 4px 6px;
+	list-style: none;
+}
+.masters li[hidden] {
+	display: none;
+}
+.master {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	width: 100%;
+	min-height: 40px;
+	padding: 4px 6px;
+	border-color: transparent;
+	background: transparent;
+	font-size: 11px;
+	line-height: 1.2;
+	text-align: left;
+	cursor: grab;
+}
+.master svg {
+	flex: none;
+	width: 28px;
+	height: 28px;
+	fill: var(--_vv-surface);
+	stroke: var(--_vv-accent);
+	stroke-width: 1.2;
+	stroke-linejoin: round;
+}
+.master[data-unsupported] {
+	cursor: not-allowed;
+	opacity: 0.45;
+}
+.master[data-unsupported]:hover {
+	border-color: transparent;
+	background: transparent;
+}
+.shapes-search-field {
+	display: block;
+	width: calc(100% - 24px);
+	margin: 6px 12px;
+}
+.shapes-empty {
+	margin: 8px 12px;
+	color: var(--_vv-muted);
+	font-size: 12px;
+}
+@media (max-width: 760px) {
+	.shapes-pane {
+		position: absolute;
+		inset: 0 auto 0 0;
+		z-index: 3;
+		width: min(260px, 100%);
+		box-shadow: 8px 0 24px #0002;
+	}
+	.master {
+		min-height: 44px;
+	}
+}

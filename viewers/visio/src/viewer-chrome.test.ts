@@ -71,8 +71,19 @@ describe('shared Office-style viewer chrome', () => {
 		expect(root.activeElement).toBe(button('[data-tab="view"]'));
 		expect(root.querySelector<HTMLElement>('#home-panel')!.hidden).toBe(true);
 		expect(root.querySelector<HTMLElement>('#view-panel')!.hidden).toBe(false);
+		// Visio's defaults: the Shapes window is open; pages live in the bottom tabs.
+		const shapes = root.querySelector<HTMLElement>('.shapes-pane')!;
+		const rail = root.querySelector<HTMLElement>('.page-rail')!;
+		expect(shapes.hidden).toBe(false);
+		expect(rail.hidden).toBe(true);
 		press('pages');
-		expect(root.querySelector<HTMLElement>('.page-rail')!.hidden).toBe(true);
+		// Shapes and Pages share the left column.
+		expect(rail.hidden).toBe(false);
+		expect(shapes.hidden).toBe(true);
+		expect(command('pages').getAttribute('checked')).toBe('true');
+		expect(command('shapes').getAttribute('checked')).toBe('false');
+		press('pages');
+		expect(rail.hidden).toBe(true);
 		expect(command('pages').getAttribute('checked')).toBe('false');
 		press('inspector');
 		expect(root.querySelector<HTMLElement>('.inspector-pane')!.hidden).toBe(true);
