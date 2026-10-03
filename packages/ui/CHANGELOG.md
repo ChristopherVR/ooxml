@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.10.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.10.1) - 2026-10-03
+
+### Bug Fixes
+
+- **ui:** Step ribbon tabs from the focused tab (by @ChristopherVR) ([efe1a96](https://github.com/ChristopherVR/ooxml/commit/efe1a96934b699b0d37d69a2ea756ccbdbc16a26))
+
 ## [0.10.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.10.0) - 2026-10-03
 
 ### Features
