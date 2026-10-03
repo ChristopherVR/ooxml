@@ -4,6 +4,9 @@ export interface LayoutFragment {
 	xPx: number;
 	widthPx: number;
 	runIndex: number;
+	/** Paragraph source range represented by this fragment; generated list labels have an empty range. */
+	sourceStart?: number;
+	sourceEnd?: number;
 	bold?: boolean;
 	italic?: boolean;
 	fontFamily?: string;

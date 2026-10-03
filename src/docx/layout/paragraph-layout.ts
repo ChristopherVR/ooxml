@@ -161,6 +161,14 @@ export function layoutParagraph(
 		rendered.forEach(({ token }, index) => {
 			const extent = tokenExtent(token, paragraph, fonts, measurer);
 			const fragment = expectDefined(fragments[index], 'fragment for rendered token');
+			fragment.sourceStart = globalOffset(token);
+			fragment.sourceEnd =
+				fragment.sourceStart +
+				(paragraph.runs[token.runIndex]?.synthetic
+					? 0
+					: token.kind === 'word' || token.kind === 'space'
+						? token.text.length
+						: 1);
 			fragment.topPx = baselinePx - extent.above;
 			if (token.kind !== 'object') fragment.boxHeightPx = extent.ascent + extent.descent;
 		});
