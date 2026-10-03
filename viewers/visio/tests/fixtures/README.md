@@ -9,5 +9,8 @@ Generator: `test/fixtures/vsd/generated.ts`; provenance:
 It exercises compressed pointers, a finite page, one literal transform,
 UTF-16 text, move/line geometry and opaque preserved content. Independent
 libvisio callback and Windows IStorage checks establish only those scoped
-assertions. It was not produced or validated by native Visio. The fixture
-is test-only and is excluded from published viewer packages.
+assertions. It was not produced by native Visio. Microsoft Visio 16 rejects
+this synthetic file as a newer or unrecognized version (HRESULT -2032466854).
+It establishes parser mechanics and independent libvisio callbacks, not a
+native-valid VSD file or native writer acceptance. The fixture is test-only
+and is excluded from published viewer packages.
