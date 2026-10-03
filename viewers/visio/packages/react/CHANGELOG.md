@@ -1,3 +1,10 @@
+## 0.3.0
+
+### Changes
+
+- fix(packages): pin released core and shared ui dependencies (4d035f6)
+- feat(visio): preview legacy VSD through the shared binary codec (6772ff3)
+
 ## 0.2.0
 
 ### Changes

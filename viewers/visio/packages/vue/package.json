@@ -1,6 +1,6 @@
 {
 	"name": "visio-vue-viewer",
-	"version": "0.2.0",
+	"version": "0.3.0",
 	"description": "Local-first Visio viewer for vue",
 	"homepage": "https://christophervr.github.io/visio-viewer/",
 	"license": "Apache-2.0",
@@ -30,7 +30,7 @@
 		"emf-converter": "4.8.9",
 		"ooxml-core": "^0.13.0",
 		"ooxml-ui": "^0.4.1",
-		"visio-core": "^0.2.0"
+		"visio-core": "^0.2.1"
 	},
 	"peerDependencies": {
 		"vue": "^3.5.0"

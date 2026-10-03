@@ -1,3 +1,9 @@
+## 0.2.1
+
+### Changes
+
+- fix(packages): pin released core and shared ui dependencies (4d035f6)
+
 ## 0.2.0
 
 ### Changes
