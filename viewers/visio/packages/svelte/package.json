@@ -35,8 +35,8 @@
 	},
 	"dependencies": {
 		"emf-converter": "4.8.9",
-		"ooxml-core": "^0.12.0",
-		"ooxml-ui": "^0.2.0",
+		"ooxml-core": "^0.13.0",
+		"ooxml-ui": "^0.4.1",
 		"visio-core": "^0.2.0"
 	},
 	"peerDependencies": {
