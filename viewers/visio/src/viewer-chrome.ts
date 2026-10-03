@@ -19,17 +19,17 @@ export const viewerChromeTemplate = `
   <div class="ribbon-content" id="home-panel" role="tabpanel" aria-labelledby="home-tab">
     <div class="ribbon-group search-group">${searchTemplate}<span class="group-label">Find in drawing</span></div>
     <div class="ribbon-group"><div class="ribbon-actions">
-      <button class="ribbon-command" type="button" data-chrome="selection"><span class="command-icon" aria-hidden="true">⌖</span><span>Shape details</span></button>
-      <button class="ribbon-command" type="button" data-chrome="edit"><span class="command-icon" aria-hidden="true">T</span><span>Edit text</span></button>
-      <button class="ribbon-command" type="button" data-chrome="layers"><span class="command-icon" aria-hidden="true">▱</span><span>Layers</span></button>
+      <button class="ribbon-command" type="button" data-chrome="selection"><span class="command-icon" data-icon="selection" aria-hidden="true"></span><span>Shape details</span></button>
+      <button class="ribbon-command" type="button" data-chrome="edit"><span class="command-icon" data-icon="edit" aria-hidden="true"></span><span>Edit text</span></button>
+      <button class="ribbon-command" type="button" data-chrome="layers"><span class="command-icon" data-icon="layers" aria-hidden="true"></span><span>Layers</span></button>
     </div><span class="group-label">Inspect and edit</span></div>
     <p class="ribbon-hint">Select a shape to inspect its details.<br>Text editing is experimental.</p>
   </div>
   <div class="ribbon-content" id="view-panel" role="tabpanel" aria-labelledby="view-tab" hidden>
     <div class="ribbon-group"><div class="ribbon-actions">
-      <button class="ribbon-command" type="button" data-chrome="pages" aria-pressed="true" aria-controls="page-rail"><span class="command-icon" aria-hidden="true">▤</span><span>Pages pane</span></button>
-      <button class="ribbon-command" type="button" data-chrome="inspector" aria-pressed="true" aria-controls="inspector-pane"><span class="command-icon" aria-hidden="true">◫</span><span>Inspector pane</span></button>
-      <button class="ribbon-command" type="button" data-chrome="notes"><span class="command-icon" aria-hidden="true">≡</span><span>Review notes</span></button>
+      <button class="ribbon-command" type="button" data-chrome="pages" aria-pressed="true" aria-controls="page-rail"><span class="command-icon" data-icon="pages" aria-hidden="true"></span><span>Pages pane</span></button>
+      <button class="ribbon-command" type="button" data-chrome="inspector" aria-pressed="true" aria-controls="inspector-pane"><span class="command-icon" data-icon="inspector" aria-hidden="true"></span><span>Inspector pane</span></button>
+      <button class="ribbon-command" type="button" data-chrome="notes"><span class="command-icon" data-icon="notes" aria-hidden="true"></span><span>Review notes</span></button>
     </div><span class="group-label">Workspace panes</span></div>
     <p class="ribbon-hint">Canvas shortcuts: + / − to zoom, 0 to fit.<br>Arrow keys move between focused shapes.</p>
   </div>

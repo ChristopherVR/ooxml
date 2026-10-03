@@ -34,10 +34,10 @@ test('mobile layout keeps open control, canvas and notes accessible', async ({ p
 	expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
 	await page.screenshot({ path: 'test-results/mobile-workspace.png', fullPage: true });
 });
-test('does not make remote requests while using sample', async ({ page }) => {
+test('does not make remote requests while using sample', async ({ page, baseURL }) => {
 	const external: string[] = [];
 	page.on('request', (request) => {
-		if (!request.url().startsWith('http://127.0.0.1:4173') && !request.url().startsWith('data:'))
+		if (!request.url().startsWith(baseURL!) && !request.url().startsWith('data:'))
 			external.push(request.url());
 	});
 	await page.goto('/demo/');
@@ -116,11 +116,12 @@ test('explicit SVG download contains the current page and leaves selection uncha
 
 test('isolated import renders the bounded embedded EMF subset and safely omits other records', async ({
 	page,
+	baseURL,
 }) => {
 	const { createMetafileFixture } = await import('./metafile-fixture.mjs');
 	const external: string[] = [];
 	page.on('request', (request) => {
-		if (!request.url().startsWith('http://127.0.0.1:4173') && !request.url().startsWith('data:'))
+		if (!request.url().startsWith(baseURL!) && !request.url().startsWith('data:'))
 			external.push(request.url());
 	});
 	await page.goto('/demo/');

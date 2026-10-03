@@ -21,7 +21,7 @@ test('shared Office theme changes update the embedded viewer without replacing i
 	const darkSurface = await frame
 		.locator('visio-viewer .status')
 		.evaluate((el) => getComputedStyle(el).backgroundColor);
-	expect(darkSurface).toBe('rgb(23, 26, 30)');
+	expect(darkSurface).toBe('rgb(27, 29, 32)');
 	await expect(svg).toHaveAttribute('aria-label', 'Architecture');
 	await expect(frame.locator('visio-viewer [data-shape-id="a1"]')).toHaveAttribute(
 		'data-selected',

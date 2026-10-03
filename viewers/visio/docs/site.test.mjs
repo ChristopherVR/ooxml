@@ -163,6 +163,7 @@ describe('documentation interaction logic in a simulated DOM', () => {
 		instance.window.eval(
 			read('docs/assets/site.js')
 				.replace(/^import .*;\r?\n/m, '')
+				.replace("import './search.js';", '')
 				.replace('initVisioTheme(window);', ''),
 		);
 		return instance;

@@ -3,10 +3,11 @@ import { createVsdxFixture } from './fixture.mjs';
 
 test('edits literal text locally, undoes/redoes and downloads a reopenable VSDX copy', async ({
 	page,
+	baseURL,
 }) => {
 	const external: string[] = [];
 	page.on('request', (request) => {
-		if (!request.url().startsWith('http://127.0.0.1:4173') && !request.url().startsWith('data:'))
+		if (!request.url().startsWith(baseURL!) && !request.url().startsWith('data:'))
 			external.push(request.url());
 	});
 	await page.goto('/demo/');

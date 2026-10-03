@@ -1,4 +1,5 @@
 import { initVisioTheme } from './theme.js';
+import './search.js';
 
 document.documentElement.classList.add('js');
 initVisioTheme(window);
@@ -17,6 +18,8 @@ navigation?.addEventListener('click', (event) => {
 	if (event.target.closest('a')) setMenu(false);
 });
 document.addEventListener('keydown', (event) => {
+	if (event.key === 'Escape')
+		for (const resources of document.querySelectorAll('.nav-resources')) resources.open = false;
 	if (event.key === 'Escape' && menuButton?.getAttribute('aria-expanded') === 'true')
 		setMenu(false, true);
 });

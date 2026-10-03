@@ -1,14 +1,16 @@
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width,initial-scale=1" />
 		<meta name="description" content="Public beta, local-first Visio diagram viewer" />
-		<meta name="theme-color" content="#171a1e" />
+		<meta name="theme-color" content="#f3f2f1" />
 		<title>Visio Viewer · Workspace</title>
 		<script>
 			try {
-				const theme = localStorage.getItem('visio-docs-theme');
+				const theme =
+					localStorage.getItem('vitepress-theme-appearance') ??
+					localStorage.getItem('visio-docs-theme');
 				if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
 			} catch {
 				// Keep the default appearance when preference storage is unavailable.

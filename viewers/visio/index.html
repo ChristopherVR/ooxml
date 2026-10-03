@@ -12,7 +12,9 @@
 		<script>
 			// Resolve the shared preference before the first paint; storage is optional.
 			try {
-				const saved = localStorage.getItem('visio-docs-theme');
+				const saved =
+					localStorage.getItem('vitepress-theme-appearance') ??
+					localStorage.getItem('visio-docs-theme');
 				if (saved === 'light' || saved === 'dark') document.documentElement.dataset.theme = saved;
 			} catch {
 				// CSS follows the system preference when storage is unavailable.
@@ -27,9 +29,10 @@
 		<a class="skip" href="#main">Skip to content</a>
 		<header class="site-header">
 			<div class="wrap header-inner">
-				<a class="brand" href="index.html"
-					><span class="brand-mark" aria-hidden="true">v</span>visio-viewer</a
-				>
+				<a class="brand" href="index.html">visio-viewer</a>
+				<button class="site-search-toggle" type="button" aria-haspopup="dialog">
+					Search <kbd>Ctrl K</kbd>
+				</button>
 				<button
 					class="menu-toggle"
 					type="button"
@@ -39,11 +42,19 @@
 					Menu <span aria-hidden="true">☰</span>
 				</button>
 				<nav id="site-navigation" class="site-nav" aria-label="Main navigation">
-					<a href="demo/index.html">Playground</a><a href="docs/index.html">Guide</a
-					><a href="docs/parity.html">Compatibility</a
-					><a href="docs/architecture.html">Architecture</a>
-					<span class="nav-divider" aria-hidden="true"></span
-					><button class="theme-toggle" type="button" aria-label="Switch color theme">◐</button>
+					<a href="docs/index.html#frameworks">Developer Guide</a>
+					<a href="docs/index.html#playground">User Guide</a>
+					<a href="demo/index.html">Playground</a>
+					<details class="nav-resources">
+						<summary>Resources</summary>
+						<div>
+							<a href="docs/parity.html">Compatibility</a>
+							<a href="docs/architecture.html">Architecture</a>
+							<a href="https://github.com/ChristopherVR/visio-viewer">GitHub</a>
+						</div>
+					</details>
+					<span class="nav-divider" aria-hidden="true"></span>
+					<button class="theme-toggle" type="button" aria-label="Switch color theme">◐</button>
 				</nav>
 			</div>
 		</header>
@@ -51,7 +62,7 @@
 			<section class="hero" aria-labelledby="hero-title">
 				<div class="wrap hero-grid">
 					<div class="hero-content">
-						<p class="eyebrow">TypeScript · Local-first · Public beta</p>
+						<p class="eyebrow">Public beta · Apache-2.0 · TypeScript</p>
 						<h1 id="hero-title">.vsdx viewing,<br /><em>made embeddable.</em></h1>
 						<p class="hero-copy">
 							Bring Visio diagrams into your web app. Explore pages, inspect shapes, and make
@@ -375,5 +386,20 @@ viewer.destroy();</code></pre>
 				</nav>
 			</div>
 		</footer>
+		<dialog class="site-search" aria-labelledby="site-search-title">
+			<div class="search-heading">
+				<h2 id="site-search-title">Search documentation</h2>
+				<button type="button" data-search-close aria-label="Close search">Close</button>
+			</div>
+			<label for="site-search-input">Search guides, capabilities, and architecture</label>
+			<input
+				id="site-search-input"
+				type="search"
+				autocomplete="off"
+				placeholder="Search documentation"
+			/>
+			<p class="site-search-status" role="status">Type to find a topic.</p>
+			<ul class="site-search-results"></ul>
+		</dialog>
 	</body>
 </html>
