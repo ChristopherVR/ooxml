@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.14.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@0.14.0) - 2026-10-03
+
+### Features
+
+- **collab:** Add broadcast channel transport and package adapter (by @ChristopherVR) ([9aa3f4a](https://github.com/ChristopherVR/ooxml/commit/9aa3f4ab8bbca06ede53c779e72342f3c8cb51ef))
+
 ## [0.13.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@0.13.0) - 2026-10-03
 
 ### Features
