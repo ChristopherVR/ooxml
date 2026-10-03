@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.10.2](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.10.2) - 2026-10-03
+
+### Bug Fixes
+
+- **ui:** Stack backstage items in one column (by @ChristopherVR) ([23fd1cb](https://github.com/ChristopherVR/ooxml/commit/23fd1cb2e9ff3eccfc29b40c41e9599585a35f9b))
+
 ## [0.10.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.10.1) - 2026-10-03
 
 ### Bug Fixes
