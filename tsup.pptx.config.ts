@@ -5,6 +5,7 @@ import { defineConfig } from 'tsup';
 // (`@christophervr/ole2`) inlined, which a plain tsc build cannot produce.
 export default defineConfig((options) => ({
 	entry: {
+		'pptx/automation/index': 'src/pptx/automation/index.ts',
 		'pptx/index': 'src/pptx/index.ts',
 		'pptx/converter/index': 'src/pptx/converter/index.ts',
 		'pptx/cli/index': 'src/pptx/cli/index.ts',
@@ -20,6 +21,7 @@ export default defineConfig((options) => ({
 	// dist also holds the tsc output of the other areas: never clean it here.
 	clean: false,
 	external: [
+		'yjs',
 		'emf-converter',
 		'mtx-decompressor',
 		'jszip',

@@ -165,6 +165,21 @@
 			"types": "./dist/math/index.d.ts",
 			"import": "./dist/math/index.mjs",
 			"require": "./dist/math/index.cjs"
+		},
+		"./automation": {
+			"types": "./dist/automation/index.d.ts",
+			"import": "./dist/automation/index.mjs",
+			"require": "./dist/automation/index.cjs"
+		},
+		"./automation/node": {
+			"types": "./dist/automation/node.d.ts",
+			"import": "./dist/automation/node.mjs",
+			"require": "./dist/automation/node.cjs"
+		},
+		"./pptx/automation": {
+			"types": "./dist/pptx/automation/index.d.ts",
+			"import": "./dist/pptx/automation/index.mjs",
+			"require": "./dist/pptx/automation/index.cjs"
 		}
 	},
 	"publishConfig": {
@@ -186,7 +201,8 @@
 		"check:changelog": "node scripts/check-changelog-sections.mjs",
 		"release:plan": "node scripts/release-plan.mjs",
 		"release:publish": "node scripts/publish-released.mjs",
-		"changelog:unreleased": "bunx git-cliff --config cliff.toml --tag-pattern \"^ooxml-core@\" --unreleased"
+		"changelog:unreleased": "bunx git-cliff --config cliff.toml --tag-pattern \"^ooxml-core@\" --unreleased",
+		"test:mcp": "node --test mcp/test/*.test.js"
 	},
 	"dependencies": {
 		"@xmldom/xmldom": "^0.9.12",
@@ -201,6 +217,7 @@
 	},
 	"devDependencies": {
 		"@christophervr/ole2": "0.4.0",
+		"@modelcontextprotocol/sdk": "^1.30.0",
 		"@napi-rs/canvas": "^1.0.9",
 		"@types/node": "^22.0.0",
 		"@types/node-forge": "^1.3.14",
@@ -212,7 +229,8 @@
 		"typescript": "^5.9.3",
 		"vitest": "^3.2.0",
 		"xml-crypto": "^6.1.2",
-		"xmllint-wasm": "5.3.0"
+		"xmllint-wasm": "5.3.0",
+		"zod": "^4.4.3"
 	},
 	"peerDependencies": {
 		"@napi-rs/canvas": "^1.0.9",

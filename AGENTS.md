@@ -6,6 +6,11 @@ file and never fork the two (the viewer repositories drifted that way once).
 
 ## Working agreements
 
+- `mcp/` owns the `ooxml-mcp` combined server. Each viewer repository owns its
+  standalone MCP package, schemas and registration. The combined server composes
+  those registrations without duplicating tools. Shared headless document operations
+  and filesystem execution live in `src/automation/`; all format logic stays in core.
+
 - This repository is the **single published package `ooxml-core`**. It owns **all the logic** of the Office products: OOXML (ECMA-376 / ISO 29500) packaging, XML, WordprocessingML, PresentationML and SpreadsheetML models, parsing and serialization, DrawingML, charts, diagrams (SmartArt), maths, geometry, layout, editing commands, validation, and collaboration (Yjs and the sync protocol). It is a sibling of `ole2`.
 - The viewer repositories (`docx-viewer`, `pptx-viewer`, `xlsx-viewer`) own **only the UI**: web components, framework bindings, ribbon and dialog views, styling, demos and end-to-end tests. They consume this package and must not keep, copy or fork logic that belongs here. Where a viewer still holds logic (today: the Word model, parser, serializer, editing and layout live here in `docx`, and the PowerPoint engine in `pptx`; the pptx-viewer `shared` render logic and the Word editor's view code still live in the viewers), `docx-viewer/docs/ooxml-core-plan.md` says when it moves.
 - `ole2` owns the legacy compound-file and binary formats (DOC, XLS, PPT, CFB, RC4/MD4). Never move modern OOXML into `ole2`, and never move binary codecs here. The encrypted-package container is CFB (ole2); the encryption primitives are modern OOXML (here).

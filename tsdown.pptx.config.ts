@@ -2,6 +2,7 @@ import { defineConfig } from 'tsdown';
 
 export default defineConfig({
 	entry: {
+		'pptx/automation/index': 'src/pptx/automation/index.ts',
 		'pptx/index': 'src/pptx/index.ts',
 		'pptx/converter/index': 'src/pptx/converter/index.ts',
 		'pptx/cli/index': 'src/pptx/cli/index.ts',

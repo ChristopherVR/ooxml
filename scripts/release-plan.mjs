@@ -67,6 +67,7 @@ export const PACKAGES = {
 		],
 	},
 	ui: { dir: 'packages/ui', npm: 'ooxml-ui' },
+	mcp: { dir: 'mcp', npm: 'ooxml-mcp' },
 };
 
 /** Paths outside any package that still change every published artifact: none for one package. */

@@ -58,6 +58,7 @@ jobs:
       - run: bun install --frozen-lockfile
       # Release machinery: planner, publish guards, commit and changelog checks.
       - run: bun run test:scripts
+      - run: bun run test:mcp
       - run: bun run check:changelog
       - run: bun run build
       - run: bun run test:package

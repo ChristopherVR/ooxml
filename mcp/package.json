@@ -1,0 +1,55 @@
+{
+	"name": "ooxml-mcp",
+	"version": "0.1.0",
+	"license": "Apache-2.0",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/ChristopherVR/ooxml.git",
+		"directory": "mcp"
+	},
+	"bin": {
+		"ooxml-tools": "src/cli.js"
+	},
+	"files": [
+		"src",
+		"README.md",
+		"LICENSE"
+	],
+	"type": "module",
+	"types": "./src/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./src/index.d.ts",
+			"import": "./src/index.js"
+		}
+	},
+	"scripts": {
+		"test": "node --test test/*.test.js"
+	},
+	"dependencies": {
+		"@modelcontextprotocol/sdk": "^1.30.0"
+	},
+	"peerDependencies": {
+		"docx-viewer-mcp": "^0.1.0",
+		"pptx-viewer-mcp": ">=2.6.0 <3",
+		"visio-viewer-mcp": "^0.1.0",
+		"xlsx-viewer-mcp": "^0.1.0"
+	},
+	"peerDependenciesMeta": {
+		"docx-viewer-mcp": {
+			"optional": true
+		},
+		"xlsx-viewer-mcp": {
+			"optional": true
+		},
+		"visio-viewer-mcp": {
+			"optional": true
+		},
+		"pptx-viewer-mcp": {
+			"optional": true
+		}
+	},
+	"engines": {
+		"node": ">=22"
+	}
+}
