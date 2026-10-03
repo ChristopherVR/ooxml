@@ -51,6 +51,8 @@ const TYPE_RANK = (value: Exclude<Scalar, CellError | null>): number =>
 /** Compares numbers at Excel's 15-significant-digit precision. */
 export function compareNumbers(a: number, b: number): number {
 	if (a === b) return 0;
+	// Numbers further apart than one unit in the 15th digit cannot round to the same value.
+	if (Math.abs(a - b) > Math.max(Math.abs(a), Math.abs(b)) * 1e-14) return a < b ? -1 : 1;
 	const ra = round15(a);
 	const rb = round15(b);
 	return ra === rb ? 0 : ra < rb ? -1 : 1;

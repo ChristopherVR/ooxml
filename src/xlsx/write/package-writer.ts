@@ -53,6 +53,8 @@ export class RelationshipSet {
 export class PackageWriter {
 	private readonly parts = new Map<string, Uint8Array | string>();
 	private readonly types = new Map<string, string>();
+	/** Output parts still holding the source bytes of a carried part (output name to source name). */
+	private readonly verbatim = new Map<string, string>();
 
 	constructor(readonly source: SourceIndex | undefined) {}
 
@@ -61,6 +63,7 @@ export class PackageWriter {
 	}
 
 	add(partName: string, data: Uint8Array | string, contentType?: string): void {
+		this.verbatim.delete(partName);
 		this.parts.set(partName, data);
 		const type = contentType ?? this.source?.contentType(partName);
 		if (type) this.types.set(partName, type);
@@ -93,6 +96,7 @@ export class PackageWriter {
 		const bytes = source?.bytes(partName);
 		if (!source || !bytes || this.parts.has(as)) return;
 		this.add(as, bytes, source.contentType(partName));
+		this.verbatim.set(as, partName);
 		const relsPart = relationshipsPartFor(partName);
 		const relsBytes = source.bytes(relsPart);
 		if (!relsBytes) return;
@@ -101,6 +105,18 @@ export class PackageWriter {
 			const target = source.target(partName, rel);
 			if (target) this.carry(target);
 		}
+	}
+
+	/** Carried parts written byte for byte so far, as [output name, source name] pairs. */
+	carriedParts(): [output: string, source: string][] {
+		return [...this.verbatim];
+	}
+
+	/** Replaces a part's content, keeping its content type. */
+	replace(partName: string, data: Uint8Array | string): void {
+		if (!this.parts.has(partName)) return;
+		this.verbatim.delete(partName);
+		this.parts.set(partName, data);
 	}
 
 	private contentTypesXml(): string {

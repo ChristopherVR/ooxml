@@ -1,7 +1,7 @@
 import { normalizeLocalName } from '../ast.js';
 import { compareScalars, toBool } from '../coerce.js';
 import type { CallContext, LazyArg } from '../context.js';
-import { pick } from '../operators.js';
+import { broadcastShape, pick } from '../operators.js';
 import {
 	ERR,
 	ErrorSignal,
@@ -41,14 +41,8 @@ function elementwise(cond: Matrix, branch: (truthy: boolean) => Value, ctx: Call
 		if (truthy) return (thenM ??= asMatrix(deref(ctx, branch(true))));
 		return (elseM ??= asMatrix(deref(ctx, branch(false))));
 	};
-	let rows = cond.rows;
-	let cols = cond.cols;
-	for (const flag of [true, false]) {
-		const m = branchMatrix(flag);
-		rows = Math.max(rows, m.rows);
-		cols = Math.max(cols, m.cols);
-	}
-	return Matrix.build(rows, cols, (r, c) => {
+	// Both branches set the result's shape; a whole-column condition stays padded.
+	return broadcastShape([cond, branchMatrix(true), branchMatrix(false)], (r, c) => {
 		const v = pick(cond, r, c);
 		if (isError(v)) return v;
 		try {

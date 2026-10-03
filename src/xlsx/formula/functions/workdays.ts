@@ -11,9 +11,10 @@ function weekendDays(value: Value | undefined): Set<number> {
 	const v = scalar(value);
 	if (v === null || value === undefined) return new Set([0, 6]);
 	if (typeof v === 'string') {
-		if (!/^[01]{7}$/.test(v) || v === '1111111') fail(ERR.VALUE);
+		if (!/^[01]{7}$/.test(v)) fail(ERR.VALUE);
 		const days = new Set<number>();
-		// The string starts with Monday.
+		// The string starts with Monday; all seven ("1111111") leaves no working days (WORKDAY.INTL
+		// rejects it, NETWORKDAYS.INTL counts 0).
 		for (let i = 0; i < 7; i++) if (v[i] === '1') days.add((i + 1) % 7);
 		return days;
 	}

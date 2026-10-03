@@ -34,7 +34,18 @@ function filter(args: Value[], ctx: CallContext): Value {
 	};
 	let out: Matrix;
 	if (include.cols === 1 && include.rows === array.rows) {
-		out = new Matrix(array.data.filter((_, r) => truthy(include.get(r, 0))));
+		// A whole-column condition whose blank rows are false keeps only rows of the used part.
+		const fill = include.fill;
+		const limit =
+			include.isPadded && !isError(fill) && !truthy(fill) ? include.blockRows : include.rows;
+		const kept: Scalar[][] = [];
+		for (let r = 0; r < limit; r++) {
+			if (!truthy(include.get(r, 0))) continue;
+			const line: Scalar[] = [];
+			for (let c = 0; c < array.cols; c++) line.push(array.get(r, c));
+			kept.push(line);
+		}
+		out = new Matrix(kept);
 	} else if (include.rows === 1 && include.cols === array.cols) {
 		const keep = include.data[0]?.map((v) => truthy(v)) ?? [];
 		out = new Matrix(array.data.map((row) => row.filter((_, c) => keep[c])));

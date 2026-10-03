@@ -118,7 +118,11 @@ export function clearConditionalFormats(ctx: EditContext, s: number, range?: Cel
 	);
 }
 
-/** Sets the validation of a range (replacing what overlapped it) or clears it when undefined. */
+/**
+ * Sets the validation of a range (replacing what overlapped it) or clears it when undefined.
+ * `showErrorMessage` and `showInputMessage` left out default to on, as Excel's Data Validation
+ * dialog does (the file format's default for an absent attribute is off).
+ */
 export function setDataValidation(
 	ctx: EditContext,
 	s: number,
@@ -135,7 +139,13 @@ export function setDataValidation(
 			sheet.dataValidations = sheet.dataValidations
 				.map((dv) => ({ ...dv, ranges: dv.ranges.flatMap((dr) => subtractRange(dr, r)) }))
 				.filter((dv) => dv.ranges.length > 0);
-			if (validation) sheet.dataValidations.push({ ...structuredClone(validation), ranges: [r] });
+			if (validation)
+				sheet.dataValidations.push({
+					showErrorMessage: true,
+					showInputMessage: true,
+					...structuredClone(validation),
+					ranges: [r],
+				});
 		},
 		{ sheet: s, ranges: [r] },
 	);

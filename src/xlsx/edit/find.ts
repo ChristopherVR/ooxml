@@ -2,9 +2,10 @@ import { rangeContains } from '../address.js';
 import { forEachCell, getCell } from '../cells.js';
 import type { Workbook } from '../model.js';
 import { syncTableHeader, writeInput } from './cell-values.js';
-import { type EditContext, displayText, inputText, sheetAt } from './context.js';
+import { type EditContext, displayText, sheetAt } from './context.js';
 import { isSpilledCell } from './deps.js';
 import type { EditScope } from './history.js';
+import { formulaBarText } from './input-text.js';
 import type { FindMatch, FindQuery } from './types.js';
 
 /** A regular expression for a find query (Excel wildcards `*`, `?`, `~` unless turned off). */
@@ -38,7 +39,9 @@ function searchText(
 	if (query.lookIn === 'comments')
 		return ws.comments.find((c) => c.address.row === row && c.address.col === col)?.text ?? '';
 	const cell = getCell(ws, row, col);
-	return query.lookIn === 'values' ? displayText(workbook, cell) : inputText(cell);
+	return query.lookIn === 'values'
+		? displayText(workbook, cell)
+		: formulaBarText(workbook, cell, { quote: false });
 }
 
 /** Every cell matching the query, sheet by sheet, in row (or column) order. */
@@ -86,6 +89,19 @@ const isSpilledAt = (
 const replaceQuery = (query: FindQuery): FindQuery =>
 	query.lookIn === 'comments' ? query : { ...query, lookIn: 'formulas' };
 
+/** What replacing changes on a sheet: the matched cells (and table headers) or the comments. */
+function replaceScopes(query: FindQuery, sheet: number, matches: FindMatch[]): EditScope[] {
+	if (query.lookIn === 'comments') return [{ kind: 'parts', sheet, parts: ['comments'] }];
+	const ranges = matches.map((m) => ({
+		start: { row: m.row, col: m.col },
+		end: { row: m.row, col: m.col },
+	}));
+	return [
+		{ kind: 'cells', sheet, ranges },
+		{ kind: 'parts', sheet, parts: ['tables'] },
+	];
+}
+
 function applyReplace(
 	ctx: EditContext,
 	query: FindQuery,
@@ -113,7 +129,8 @@ function applyReplace(
 
 /**
  * Replaces the query in every matching cell and returns how many cells changed. Cells are matched
- * and edited on what was typed (formula text and raw constants), then re-parsed like typing.
+ * and edited on their formula-bar text (formulas, dates as `3/15/2023`, percents as `40%`), then
+ * re-parsed like typing, as Excel does: replacing `4` never touches a date's serial.
  */
 export function replaceAll(ctx: EditContext, query: FindQuery, replacement: string): number {
 	const q = replaceQuery(query);
@@ -122,7 +139,13 @@ export function replaceAll(ctx: EditContext, query: FindQuery, replacement: stri
 	);
 	if (!matches.length) return 0;
 	const sheets = [...new Set(matches.map((m) => m.sheet))];
-	const scopes: EditScope[] = sheets.map((sheet) => ({ kind: 'sheet', sheet }));
+	const scopes = sheets.flatMap((sheet) =>
+		replaceScopes(
+			q,
+			sheet,
+			matches.filter((m) => m.sheet === sheet),
+		),
+	);
 	return ctx.run('Replace', 'cells', scopes, () => applyReplace(ctx, q, replacement, matches), {
 		...(sheets.length === 1 && sheets[0] !== undefined ? { sheet: sheets[0] } : {}),
 	});
@@ -145,7 +168,7 @@ export function replaceOne(
 	ctx.run(
 		'Replace',
 		'cells',
-		[{ kind: 'sheet', sheet: at.sheet }],
+		replaceScopes(q, at.sheet, [match]),
 		() => applyReplace(ctx, q, replacement, [match]),
 		{ sheet: at.sheet },
 	);

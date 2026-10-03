@@ -4,6 +4,7 @@ import { getCell } from '../cells.js';
 import type { Workbook, Worksheet } from '../model.js';
 import { styleAt } from '../styles.js';
 import { createWorkbook } from '../workbook.js';
+import { mergeWouldDiscard } from './merge.js';
 import { createEditSession } from './session.js';
 
 const A = (ref: string) => {
@@ -197,6 +198,32 @@ describe('merge', () => {
 		s.undo();
 		expect(getCell(sheet0(wb), 0, 1)?.value).toBe(2);
 		expect(sheet0(wb).merges).toEqual([]);
+	});
+	// Excel 16: B1 =1+1 (0.00) and C1 "c" merged over A1:C1 -> A1 holds =1+1 in 0.00; B3 "r1"
+	// and A4 "r2" merged over A3:B4 -> A3 = "r1" (row-major first non-empty).
+	it('keeps the first non-empty cell in the corner, with its formula and format', () => {
+		const { wb, s } = setup();
+		s.setCellInput(0, 0, 1, '=1+1');
+		s.applyStyle(0, [R('B1')], { numFmt: '0.00' });
+		s.setCellInput(0, 0, 2, 'c');
+		expect(mergeWouldDiscard(sheet0(wb), R('A1:C1'))).toBe(true);
+		expect(mergeWouldDiscard(sheet0(wb), R('A1:B1'))).toBe(false);
+		s.merge(0, R('A1:C1'), 'merge');
+		expect(getCell(sheet0(wb), 0, 0)?.formula).toBe('1+1');
+		expect(style(wb, 'A1').numFmt).toBe('0.00');
+		expect(getCell(sheet0(wb), 0, 1)?.formula).toBeUndefined();
+		expect(getCell(sheet0(wb), 0, 2)?.value ?? null).toBeNull();
+		s.undo();
+		expect(getCell(sheet0(wb), 0, 0)).toBeUndefined();
+		expect(getCell(sheet0(wb), 0, 1)?.formula).toBe('1+1');
+		s.setCellInput(0, 2, 1, 'r1');
+		s.setCellInput(0, 3, 0, 'r2');
+		s.merge(0, R('A3:B4'), 'merge');
+		expect(getCell(sheet0(wb), 2, 0)?.value).toBe('r1');
+		expect(getCell(sheet0(wb), 3, 0)?.value ?? null).toBeNull();
+		s.setCellValue(0, 5, 1, 5);
+		s.merge(0, R('A6:B6'), 'across');
+		expect(getCell(sheet0(wb), 5, 0)?.value).toBe(5);
 	});
 	it('merge & center centres the result', () => {
 		const { wb, s } = setup();

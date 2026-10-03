@@ -13,8 +13,8 @@ const signal = (fn: () => Scalar): Scalar => {
 	}
 };
 
-/** `(-8)^(1/3)` is -2 in Excel: odd roots of negative numbers are allowed. */
-function power(base: number, exponent: number): number {
+/** `(-8)^(1/3)` is -2 in Excel: odd roots of negative numbers are allowed (POWER shares it). */
+export function power(base: number, exponent: number): number {
 	if (base === 0 && exponent === 0) throw new ErrorSignal(ERR.NUM);
 	if (base === 0 && exponent < 0) throw new ErrorSignal(ERR.DIV0);
 	if (base < 0 && !Number.isInteger(exponent)) {
@@ -117,17 +117,47 @@ export function pick(m: Matrix, row: number, col: number): Scalar {
 	return m.get(r, c);
 }
 
+/**
+ * The elementwise result over broadcast operands, `at(r, c)` giving one element. When an operand
+ * is padded (a whole-column read), only the block the operands store is computed and the rest
+ * becomes padding holding the value of one tail element, as long as every operand is uniform
+ * there; otherwise the full result is built (within the array size limits).
+ */
+export function broadcastShape(operands: Matrix[], at: (r: number, c: number) => Scalar): Matrix {
+	let rows = 1;
+	let cols = 1;
+	for (const m of operands) {
+		rows = Math.max(rows, m.rows);
+		cols = Math.max(cols, m.cols);
+	}
+	if (!operands.some((m) => m.isPadded)) return Matrix.build(rows, cols, at);
+	let blockRows = 1;
+	let blockCols = 1;
+	for (const m of operands) {
+		blockRows = Math.max(blockRows, m.isPadded ? m.blockRows : m.rows);
+		blockCols = Math.max(blockCols, m.isPadded ? m.blockCols : m.cols);
+	}
+	blockRows = Math.min(blockRows, rows);
+	blockCols = Math.min(blockCols, cols);
+	// A single row repeated down the row padding (or a column across the column padding) varies.
+	const varies = operands.some(
+		(m) =>
+			(blockRows < rows && m.rows === 1 && m.cols > 1) ||
+			(blockCols < cols && m.cols === 1 && m.rows > 1),
+	);
+	if (varies) return Matrix.build(rows, cols, at);
+	return Matrix.padded(Matrix.build(blockRows, blockCols, at), rows, cols, at(rows - 1, cols - 1));
+}
+
 /** Broadcasts a binary scalar function over matrices like Excel's array arithmetic. */
 export function broadcast2(a: Scalar | Matrix, b: Scalar | Matrix, fn: ScalarOp): Scalar | Matrix {
 	if (!(a instanceof Matrix) && !(b instanceof Matrix)) return fn(a, b);
 	const ma = a instanceof Matrix ? a : new Matrix([[a]]);
 	const mb = b instanceof Matrix ? b : new Matrix([[b]]);
-	const rows = Math.max(ma.rows, mb.rows);
-	const cols = Math.max(ma.cols, mb.cols);
-	return Matrix.build(rows, cols, (r, c) => fn(pick(ma, r, c), pick(mb, r, c)));
+	return broadcastShape([ma, mb], (r, c) => fn(pick(ma, r, c), pick(mb, r, c)));
 }
 
 /** Maps a unary scalar function over a matrix. */
 export function broadcast1(a: Scalar | Matrix, fn: (x: Scalar) => Scalar): Scalar | Matrix {
-	return a instanceof Matrix ? a.map((x) => fn(x)) : fn(a);
+	return a instanceof Matrix ? a.mapValues(fn) : fn(a);
 }

@@ -1,15 +1,18 @@
 import { RELATIONSHIP_TYPES } from '../../opc/index.js';
+import { DIGITAL_SIGNATURE_ORIGIN_REL_TYPE, isSignaturePart } from '../../opc/signature/index.js';
 import type { Workbook } from '../model.js';
 import { parsePersons } from '../read/comments.js';
 import { CONTENT_TYPES, SourceIndex } from '../read/package.js';
 import { PersonRegistry } from './comments.js';
 import { relativeTarget } from './drawing.js';
-import { DYNAMIC_ARRAY_METADATA_XML } from './dynamic-array.js';
+import { patchCarriedParts, workbookRefEdits } from './carried-refs.js';
+import { MetadataPlan, writeMetadataPart } from './metadata.js';
 import { PackageWriter, RelationshipSet } from './package-writer.js';
 import { SharedStringTable } from './shared-strings.js';
 import { StyleWriter } from './styles.js';
 import { themePart } from './theme.js';
-import { appXml, coreXml, workbookXml, type SheetRef } from './workbook-part.js';
+import { regeneratesRootRel, writeDocProps } from './doc-props.js';
+import { workbookXml, type SheetRef } from './workbook-part.js';
 import { writeWorksheet, type SaveContext } from './worksheet.js';
 
 /** Workbook relationships regenerated on save (everything else in the source is kept). */
@@ -55,6 +58,8 @@ export async function saveXlsx(workbook: Workbook): Promise<Uint8Array> {
 		source && sourceBook ? source.targetOfType(sourceBook, type) : undefined;
 	const stylesPart = sourcePart(RELATIONSHIP_TYPES.styles);
 	const personsSource = sourcePart(RELATIONSHIP_TYPES.person);
+	const metadataSource = sourcePart(RELATIONSHIP_TYPES.sheetMetadata);
+	const metadata = new MetadataPlan(metadataSource ? source?.text(metadataSource) : undefined);
 	const ctx: SaveContext = {
 		writer,
 		workbook,
@@ -68,6 +73,7 @@ export async function saveXlsx(workbook: Workbook): Promise<Uint8Array> {
 		tableIds: new Set(),
 		threaded: { used: false },
 		dynamicArrays: { used: false },
+		metadata,
 	};
 	const rels = new RelationshipSet();
 	let keptVba = false;
@@ -148,14 +154,15 @@ export async function saveXlsx(workbook: Workbook): Promise<Uint8Array> {
 		rels.add(RELATIONSHIP_TYPES.person, relativeTarget(bookPart, personsPart));
 	}
 
-	if (ctx.dynamicArrays?.used) {
-		const metadataPart = writer.uniqueName(
-			(n) => (n === 1 ? 'xl/metadata.xml' : `xl/metadata${n}.xml`),
-			new Set([...reserved].filter((p) => p !== sourcePart(RELATIONSHIP_TYPES.sheetMetadata))),
-		);
-		writer.add(metadataPart, DYNAMIC_ARRAY_METADATA_XML, CONTENT_TYPES.sheetMetadata);
-		rels.add(RELATIONSHIP_TYPES.sheetMetadata, relativeTarget(bookPart, metadataPart));
-	}
+	writeMetadataPart(
+		writer,
+		rels,
+		bookPart,
+		metadata,
+		ctx.dynamicArrays?.used ?? false,
+		metadataSource,
+		reserved,
+	);
 
 	const sourceXml = sourceBook ? source?.text(sourceBook) : undefined;
 	writer.add(
@@ -171,16 +178,21 @@ export async function saveXlsx(workbook: Workbook): Promise<Uint8Array> {
 	root.add(RELATIONSHIP_TYPES.extendedProperties, 'docProps/app.xml');
 	if (source) {
 		for (const rel of source.rels('').values()) {
-			if (ROOT_REGENERATED.has(rel.type)) continue;
+			if (ROOT_REGENERATED.has(rel.type) || regeneratesRootRel(workbook, rel.type)) continue;
 			const target = source.target('', rel);
+			// A regenerated package invalidates any digital signature (Excel drops it too), so the
+			// origin, the signatures, their relationships and content types are never carried.
+			if (rel.type === DIGITAL_SIGNATURE_ORIGIN_REL_TYPE || (target && isSignaturePart(target)))
+				continue;
 			if (target && target !== 'docProps/core.xml' && target !== 'docProps/app.xml') {
 				root.add(rel.type, rel.target, rel.mode === 'External');
 				writer.carry(target);
 			}
 		}
 	}
+	writeDocProps(writer, root, workbook, source);
 	writer.rels('', root);
-	writer.add('docProps/core.xml', coreXml(workbook), CONTENT_TYPES.core);
-	writer.add('docProps/app.xml', appXml(workbook), CONTENT_TYPES.app);
+	// Carried parts (pivot caches, chartsheet charts) follow sheet renames and deletions.
+	patchCarriedParts(writer, workbookRefEdits(workbook, source));
 	return writer.build();
 }

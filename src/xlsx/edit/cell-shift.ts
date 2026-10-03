@@ -46,7 +46,7 @@ function shiftBand(
 	ctx.run(
 		`${insert ? 'Insert' : 'Delete'} cells`,
 		'structure',
-		[{ kind: 'workbook' }],
+		[{ kind: 'shift', sheet: s, shift, band }],
 		() => {
 			rewriteFormulas(ctx.workbook, (formula, formulaSheet) =>
 				shiftFormulaInBand(formula, formulaSheet, sheet.name, shift, band),

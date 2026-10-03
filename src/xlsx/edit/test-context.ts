@@ -25,7 +25,7 @@ export function testContext(workbook: Workbook): TestContext {
 				kind,
 				entries: befores.map((before, i) => ({
 					before,
-					after: captureScope(workbook, scopes[i] ?? { kind: 'meta' }),
+					after: captureScope(workbook, scopes[i] ?? { kind: 'meta' }, before),
 				})),
 			});
 			return result;

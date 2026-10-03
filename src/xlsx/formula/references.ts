@@ -9,6 +9,7 @@ import {
 	fail,
 	LambdaValue,
 	Matrix,
+	MAX_ARRAY_CELLS,
 	RefValue,
 	type Scalar,
 	type Value,
@@ -194,7 +195,10 @@ export function unionOperator(left: Value, right: Value): Value {
 const CLIP_THRESHOLD = 100_000;
 const MAX_MATRIX_CELLS = 4_000_000;
 
-/** Reads an area into a dense matrix (blank cells are `null`). */
+/**
+ * Reads an area into a matrix (blank cells are `null`). Large areas read only the sheet's used
+ * part and pad the rest with blanks, so whole-column references keep their full size.
+ */
 export function areaToMatrix(host: EvalHost, area: Area): Matrix {
 	const { start } = area.range;
 	let { row: endRow, col: endCol } = area.range.end;
@@ -206,9 +210,11 @@ export function areaToMatrix(host: EvalHost, area: Area): Matrix {
 		endCol = Math.max(start.col, Math.min(endCol, bounds.cols - 1));
 	}
 	if ((endRow - start.row + 1) * (endCol - start.col + 1) > MAX_MATRIX_CELLS) fail(ERR.NUM);
-	return Matrix.build(endRow - start.row + 1, endCol - start.col + 1, (r, c) =>
+	const block = Matrix.build(endRow - start.row + 1, endCol - start.col + 1, (r, c) =>
 		host.readCell(area.sheet, start.row + r, start.col + c),
 	);
+	// Past the array budget (whole sheets) the used part alone stands in, as before.
+	return rows * cols > MAX_ARRAY_CELLS ? block : Matrix.padded(block, rows, cols, null);
 }
 
 /** A dense matrix for any value; unions and lambdas are `#VALUE!`. */

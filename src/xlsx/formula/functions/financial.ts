@@ -98,15 +98,12 @@ export const FINANCIAL_FUNCTIONS: FunctionSpec[] = [
 		3,
 		6,
 		(n, p, v, f = 0, t = 0, g = 0.1) =>
-			solve(
-				(r) =>
-					Math.abs(r) < 1e-12
-						? (v ?? 0) + (p ?? 0) * n + f
-						: (v ?? 0) * Math.pow(1 + r, n) +
-							((p ?? 0) * (1 + r * t) * (Math.pow(1 + r, n) - 1)) / r +
-							f,
-				g,
-			),
+			solve((r) => {
+				if (Math.abs(r) < 1e-12) return (v ?? 0) + (p ?? 0) * n + f;
+				// expm1/log1p keep (1 + r)^n - 1 accurate near r = 0, so a zero rate converges.
+				const growth = Math.expm1(n * Math.log1p(r));
+				return (v ?? 0) * (1 + growth) + ((p ?? 0) * (1 + r * t) * growth) / r + f;
+			}, g),
 	),
 	spec(
 		'NPV',

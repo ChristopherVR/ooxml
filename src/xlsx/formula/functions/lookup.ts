@@ -1,7 +1,15 @@
 import type { CallContext } from '../context.js';
 import { ERR, fail, isError, Matrix, RefValue, type Scalar, type Value } from '../values.js';
 import { bool, int, num, optNum, scalar, spec } from './helpers.js';
-import { findExact, findSorted, line, shape, vectorOf, xsearch } from './lookup-core.js';
+import {
+	findAscending,
+	findDescending,
+	findExact,
+	line,
+	shape,
+	vectorOf,
+	xsearch,
+} from './lookup-core.js';
 import { REFERENCE_FUNCTIONS } from './reference.js';
 import type { FunctionSpec } from './types.js';
 
@@ -52,8 +60,11 @@ function lookupValue(args: Value[]): Scalar {
 	return v;
 }
 
+/** MATCH, VLOOKUP, HLOOKUP and LOOKUP look a blank value up as 0 (XLOOKUP and XMATCH do not). */
+const blankAsZero = (args: Value[]): Scalar => lookupValue(args) ?? 0;
+
 function vhlookup(args: Value[], ctx: CallContext, vertical: boolean): Value {
-	const lookup = lookupValue(args);
+	const lookup = blankAsZero(args);
 	const table = args[1] ?? null;
 	const index = int(args[2]);
 	const approximate = args.length < 4 ? true : bool(args[3]);
@@ -61,26 +72,31 @@ function vhlookup(args: Value[], ctx: CallContext, vertical: boolean): Value {
 	if (index < 1) fail(ERR.VALUE);
 	if (index > (vertical ? cols : rows)) fail(ERR.REF);
 	const keys = line(ctx, table, vertical ? 'col' : 'row', 0);
-	const at = approximate ? findSorted(keys, lookup) : findExact(keys, lookup, true);
+	const at = approximate ? findAscending(keys, lookup) : findExact(keys, lookup, true);
 	if (at < 0) fail(ERR.NA);
 	return vertical ? cellOf(table, at, index - 1) : cellOf(table, index - 1, at);
 }
 
 function match(args: Value[], ctx: CallContext): number {
-	const lookup = lookupValue(args);
+	const lookup = blankAsZero(args);
 	const type = Math.sign(optNum(args, 2, 1));
 	const { vector } = vectorOf(ctx, args[1] ?? null);
-	const at = type === 0 ? findExact(vector, lookup, true) : findSorted(vector, lookup, type < 0);
+	const at =
+		type === 0
+			? findExact(vector, lookup, true)
+			: type > 0
+				? findAscending(vector, lookup)
+				: findDescending(vector, lookup);
 	return at < 0 ? fail(ERR.NA) : at + 1;
 }
 
 function lookup(args: Value[], ctx: CallContext): Value {
-	const value = lookupValue(args);
+	const value = blankAsZero(args);
 	const source = args[1] ?? null;
 	const { rows, cols } = shape(source);
 	if (args.length > 2) {
 		const keys = vectorOf(ctx, source).vector;
-		const at = findSorted(keys, value);
+		const at = findAscending(keys, value);
 		if (at < 0) fail(ERR.NA);
 		const result = args[2] ?? null;
 		const rs = shape(result);
@@ -88,7 +104,7 @@ function lookup(args: Value[], ctx: CallContext): Value {
 	}
 	const vertical = rows >= cols;
 	const keys = line(ctx, source, vertical ? 'col' : 'row', 0);
-	const at = findSorted(keys, value);
+	const at = findAscending(keys, value);
 	if (at < 0) fail(ERR.NA);
 	return vertical ? cellOf(source, at, cols - 1) : cellOf(source, rows - 1, at);
 }
@@ -105,14 +121,17 @@ function index(args: Value[]): Value {
 	let r = args.length > 1 && args[1] !== null ? int(args[1]) : 0;
 	let c = args.length > 2 && args[2] !== null ? int(args[2]) : 0;
 	if (args.length <= 2 && rows === 1 && cols > 1) {
+		// A single row takes its one index as the column: INDEX({1,2,3},0) is the whole row.
 		c = r;
 		r = 1;
+	} else if (args.length <= 2 && r > 0 && rows > 1 && cols > 1 && source instanceof RefValue) {
+		// A two-dimensional reference needs both indexes (an array returns the whole row).
+		fail(ERR.REF);
 	}
 	if (r < 0 || c < 0 || r > rows || c > cols) fail(ERR.REF);
 	if (r === 0 && c === 0) return source;
 	if (r === 0) return cols === 1 ? source : sliceOf(source, 'col', c - 1);
-	if (c === 0)
-		return rows === 1 || cols === 1 ? cellOf(source, r - 1, 0) : sliceOf(source, 'row', r - 1);
+	if (c === 0) return rows === 1 ? source : sliceOf(source, 'row', r - 1);
 	return cellOf(source, r - 1, c - 1);
 }
 

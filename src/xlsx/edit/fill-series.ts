@@ -110,11 +110,36 @@ function addMonths(serial: number, months: number, date1904: boolean): number {
 	return dateToSerial(next, date1904);
 }
 
-function dateSeries(serials: number[], date1904: boolean): SeriesGenerator {
-	if (serials.length === 1) {
-		const first = serials[0] ?? 0;
-		return (k) => ({ kind: 'value', value: first + k });
-	}
+/** Whether a date/time format shows a calendar part (year, month or day) or only a time. */
+function formatShowsDate(code: string): boolean {
+	if (/[ydeb]/.test(code) || /mmm/.test(code)) return true;
+	return /m/.test(code) && !/[hs]/.test(code);
+}
+
+/** The date/time letters of a format's first section (literals, colours and AM/PM removed). */
+function dateCode(format: string): string {
+	return (format.split(';')[0] ?? '')
+		.replace(/"[^"]*"|\\.|_.|\*./g, '')
+		.replace(/\[(h+|m+|s+)\]/gi, '$1')
+		.replace(/\[[^\]]*\]/g, '')
+		.replace(/am\/pm|a\/p/gi, '')
+		.toLowerCase();
+}
+
+/**
+ * A single date or time continues the way Excel's AutoFill does (checked in Excel 16): a format
+ * with a date part steps one day (a date-only format drops the time), a time-only format one
+ * hour.
+ */
+function singleDateSeries(first: number, format: string): SeriesGenerator {
+	const code = dateCode(format);
+	if (!formatShowsDate(code)) return (k) => ({ kind: 'value', value: first + k / 24 });
+	const base = /[hs]/.test(code) ? first : Math.floor(first);
+	return (k) => ({ kind: 'value', value: k === 0 ? first : base + k });
+}
+
+function dateSeries(serials: number[], date1904: boolean, format: string): SeriesGenerator {
+	if (serials.length === 1) return singleDateSeries(serials[0] ?? 0, format);
 	const dates = serials.map((s) => serialToDate(s, date1904));
 	const monthIndex = dates.map((d) => d.getUTCFullYear() * 12 + d.getUTCMonth());
 	const sameDay = dates.every((d) => d.getUTCDate() === dates[0]?.getUTCDate());
@@ -137,8 +162,8 @@ export function detectSeries(workbook: Workbook, lane: (Cell | undefined)[]): Se
 		return COPY;
 	const values = lane.map((c) => c?.value ?? null);
 	if (values.every((v): v is number => typeof v === 'number')) {
-		const isDate = isDateFormat(styleAt(workbook, lane[0]?.styleId).numFmt);
-		if (isDate) return dateSeries(values, workbook.date1904);
+		const format = styleAt(workbook, lane[0]?.styleId).numFmt;
+		if (isDateFormat(format)) return dateSeries(values, workbook.date1904, format);
 		if (values.length === 1) return COPY;
 		const trend = linearTrend(values);
 		return (k) => ({ kind: 'value', value: trend(k) });

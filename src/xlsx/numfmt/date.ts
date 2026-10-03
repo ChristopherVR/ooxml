@@ -102,6 +102,38 @@ export function datePrecision(tokens: readonly Token[]): number {
 	return p;
 }
 
+/**
+ * True for a section whose only time part is one elapsed unit (`[h]`, `[mm]`, `[s] "sec"`): Excel
+ * shows it as a plain count, with a minus sign for negative values and no date range limit.
+ */
+export function isElapsedOnly(tokens: readonly Token[]): boolean {
+	let elapsed = 0;
+	for (const t of tokens) {
+		if (t.t === 'elapsed') elapsed++;
+		else if (t.t === 'date' || t.t === 'ampm' || t.t === 'subsec') return false;
+	}
+	return elapsed === 1;
+}
+
+/** Renders an {@link isElapsedOnly} section for `|serial|`. */
+export function renderElapsedOnly(serial: number, tokens: readonly Token[]): string {
+	const seconds = Math.round(Math.abs(serial) * 86_400);
+	let text = '';
+	for (const tok of tokens) {
+		if (tok.t === 'lit') text += tok.v;
+		else if (tok.t === 'elapsed') {
+			const amount =
+				tok.unit === 'h'
+					? Math.floor(seconds / 3600)
+					: tok.unit === 'm'
+						? Math.floor(seconds / 60)
+						: seconds;
+			text += String(amount).padStart(tok.width, '0');
+		}
+	}
+	return text;
+}
+
 /** Formats a non-negative serial with a date/time section; `undefined` when out of range. */
 export function renderDate(
 	serial: number,

@@ -1,4 +1,5 @@
 import type { ConditionalRule, Workbook, Worksheet } from '../model.js';
+import { rewritePreservedFormulas } from './shift-preserved.js';
 
 /** Rewrites one formula; `formulaSheet` is the sheet unqualified references point at. */
 export type FormulaRewrite = (formula: string, formulaSheet: string) => string;
@@ -39,9 +40,11 @@ export function rewriteFormulas(workbook: Workbook, rewrite: FormulaRewrite): vo
 
 /**
  * The per-sheet part of {@link rewriteFormulas}: cell, conditional-format, validation, table
- * column (calculated and totals) formulas, hyperlink locations and chart series references.
+ * column (calculated and totals) formulas, hyperlink locations, chart series references and the
+ * `xm:f` formulas of preserved extensions (sparkline sources, x14 formats and validations).
  */
 export function rewriteSheetFormulas(sheet: Worksheet, rewrite: FormulaRewrite): void {
+	rewritePreservedFormulas(sheet, rewrite);
 	{
 		const name = sheet.name;
 		for (const table of sheet.tables)

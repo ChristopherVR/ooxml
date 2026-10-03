@@ -1,6 +1,7 @@
 import { RELATIONSHIP_TYPES } from '../../opc/index.js';
+import { detectDigitalSignatures } from '../../opc/signature/index.js';
 import { parseRange } from '../address.js';
-import type { Workbook, Worksheet } from '../model.js';
+import type { Workbook, WorkbookProperties, Worksheet } from '../model.js';
 import { createWorksheet } from '../workbook.js';
 import { parsePersons } from './comments.js';
 import { CONTENT_TYPES, SourceIndex, readZipParts } from './package.js';
@@ -9,6 +10,7 @@ import { parseSharedStrings } from './shared-strings.js';
 import { parseStyles } from './styles.js';
 import { parseTheme } from './theme.js';
 import { parseDocProps, parseWorkbookPart } from './workbook-part.js';
+import { resolveSmartArt } from './smart-art.js';
 import { parseWorksheet, type SheetContext } from './worksheet.js';
 
 const MACRO_TYPES = new Set<string>([CONTENT_TYPES.workbookMacro, CONTENT_TYPES.templateMacro]);
@@ -85,9 +87,21 @@ export async function loadXlsx(input: Uint8Array | ArrayBuffer): Promise<Workboo
 		warn('Pivot tables are kept on save but are not refreshed or shown as pivot tables.');
 	if (partOf(RELATIONSHIP_TYPES.externalLink))
 		warn('External workbook links are kept but not updated.');
+	const signatures = detectDigitalSignatures([...parts.keys()]);
+	if (signatures.hasSignatures)
+		warn(
+			'The workbook is digitally signed. The signature is not verified, and saving removes it because any change invalidates it.',
+		);
 	const contentType = source.contentType(workbookPart) ?? CONTENT_TYPES.workbook;
 	const corePart = source.targetOfType('', RELATIONSHIP_TYPES.coreProperties);
 	const appPart = source.targetOfType('', RELATIONSHIP_TYPES.extendedProperties);
+	const customPart = source.targetOfType('', RELATIONSHIP_TYPES.customProperties);
+	const properties = readProperties(
+		corePart ? source.text(corePart) : undefined,
+		appPart ? source.text(appPart) : undefined,
+		customPart ? source.text(customPart) : undefined,
+		warn,
+	);
 	const workbook: Workbook = {
 		sheets,
 		styles: styles.styles,
@@ -96,10 +110,7 @@ export async function loadXlsx(input: Uint8Array | ArrayBuffer): Promise<Workboo
 		theme: parseTheme(themePart ? source.text(themePart) : undefined),
 		activeSheet: Math.min(Math.max(0, book.activeTab), Math.max(0, sheets.length - 1)),
 		date1904: book.date1904,
-		properties: parseDocProps(
-			corePart ? source.text(corePart) : undefined,
-			appPart ? source.text(appPart) : undefined,
-		),
+		properties,
 		source: { parts },
 		format: MACRO_TYPES.has(contentType) ? 'xlsm' : 'xlsx',
 		warnings,
@@ -109,7 +120,34 @@ export async function loadXlsx(input: Uint8Array | ArrayBuffer): Promise<Workboo
 	if (book.workbookPasswordHash) workbook.workbookPasswordHash = book.workbookPasswordHash;
 	if (book.workbookModernHash) workbook.workbookModernHash = book.workbookModernHash;
 	if (book.calcMode) workbook.calcMode = book.calcMode;
+	if (signatures.hasSignatures)
+		workbook.signatures = { count: signatures.signatureCount, parts: signatures.signaturePaths };
 	if (!sheets.length) throw new Error('XLSX workbook has no sheets');
+	await resolveSmartArt(sheets, source, warn);
 	liftPrintAreas(workbook);
 	return workbook;
+}
+
+/** Document properties; a malformed property part is reported and read as empty. */
+function readProperties(
+	core: string | undefined,
+	app: string | undefined,
+	custom: string | undefined,
+	warn: (message: string) => void,
+): WorkbookProperties {
+	const attempt = <T>(read: () => T, fallback: T, what: string): T => {
+		try {
+			return read();
+		} catch {
+			warn(`The ${what} part could not be read; its properties are not shown.`);
+			return fallback;
+		}
+	};
+	return {
+		...attempt(() => parseDocProps(core, undefined), {}, 'core document properties'),
+		...attempt(() => parseDocProps(undefined, app), {}, 'extended document properties'),
+		...(custom === undefined
+			? {}
+			: attempt(() => parseDocProps(undefined, undefined, custom), {}, 'custom properties')),
+	};
 }

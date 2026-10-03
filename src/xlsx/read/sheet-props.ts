@@ -4,13 +4,14 @@ import type {
 	Color,
 	ColumnInfo,
 	PageSetup,
+	SheetFormat,
 	SheetProtection,
 	SheetView,
 } from '../model.js';
 import type { XmlElement } from '../../xml/index.js';
 import { readModernHash } from './password-hash.js';
 import { parseColor } from './style-parts.js';
-import { att, boolAttr, numAttr, xChildren, xFirst, xText } from './xml-util.js';
+import { att, boolAttr, numAttr, outerXml, xChildren, xFirst, xText } from './xml-util.js';
 
 export const defaultSheetView = (): SheetView => ({
 	showGridLines: true,
@@ -77,15 +78,26 @@ export function readSheetView(sheetViews: XmlElement | undefined): SheetView {
 	return view;
 }
 
+const FORMAT_FLAGS = ['zeroHeight', 'customHeight', 'thickTop', 'thickBottom'] as const;
+
 export function readSheetFormat(format: XmlElement | undefined): {
 	defaultRowHeight: number;
 	defaultColWidth?: number;
+	format?: SheetFormat;
 } {
-	const result: { defaultRowHeight: number; defaultColWidth?: number } = {
+	const result: { defaultRowHeight: number; defaultColWidth?: number; format?: SheetFormat } = {
 		defaultRowHeight: numAttr(format, 'defaultRowHeight') ?? 15,
 	};
 	const width = numAttr(format, 'defaultColWidth');
 	if (width !== undefined) result.defaultColWidth = width;
+	const flags: SheetFormat = {};
+	for (const key of FORMAT_FLAGS) {
+		const value = boolAttr(format, key);
+		if (value !== undefined) flags[key] = value;
+	}
+	const base = numAttr(format, 'baseColWidth');
+	if (base !== undefined) flags.baseColWidth = base;
+	if (Object.keys(flags).length) result.format = flags;
 	return result;
 }
 
@@ -111,6 +123,10 @@ export function readColumns(cols: XmlElement | undefined, xfMap: readonly number
 	return out;
 }
 
+/** The default SpreadsheetML declaration xmldom adds to a serialized fragment's first tag. */
+const MAIN_NS_DECL =
+	/(?<=^<[^>]*) xmlns="http:\/\/schemas\.openxmlformats\.org\/spreadsheetml\/2006\/main"/;
+
 export function readAutoFilter(node: XmlElement | undefined): AutoFilter | undefined {
 	const range = parseRange(att(node, 'ref') ?? '');
 	if (!node || !range) return undefined;
@@ -125,10 +141,45 @@ export function readAutoFilter(node: XmlElement | undefined): AutoFilter | undef
 			entry.values = xChildren(filters, 'filter').map((f) => att(f, 'val') ?? '');
 			if (boolAttr(filters, 'blank')) entry.blank = true;
 		}
+		entry.sourceXml = outerXml(column).replace(MAIN_NS_DECL, '');
 		columns.push(entry);
 	}
 	if (columns.length) filter.columns = columns;
 	return filter;
+}
+
+/** `headerFooter` element names keyed by their `PageSetup` field. */
+export const HEADER_FOOTER_TEXT = {
+	header: 'oddHeader',
+	footer: 'oddFooter',
+	evenHeader: 'evenHeader',
+	evenFooter: 'evenFooter',
+	firstHeader: 'firstHeader',
+	firstFooter: 'firstFooter',
+} as const;
+export const HEADER_FOOTER_FLAGS = [
+	'differentOddEven',
+	'differentFirst',
+	'scaleWithDoc',
+	'alignWithMargins',
+] as const;
+export type HeaderFooterFields = Pick<
+	PageSetup,
+	keyof typeof HEADER_FOOTER_TEXT | (typeof HEADER_FOOTER_FLAGS)[number]
+>;
+
+/** Every header and footer text and the `headerFooter` flags as written in the file. */
+export function readHeaderFooter(node: XmlElement): HeaderFooterFields {
+	const out: HeaderFooterFields = {};
+	for (const key of HEADER_FOOTER_FLAGS) {
+		const value = boolAttr(node, key);
+		if (value !== undefined) out[key] = value;
+	}
+	for (const [key, local] of Object.entries(HEADER_FOOTER_TEXT)) {
+		const child = xFirst(node, local);
+		if (child) out[key as keyof typeof HEADER_FOOTER_TEXT] = xText(child);
+	}
+	return out;
 }
 
 const ORIENTATIONS = new Set(['portrait', 'landscape']);
@@ -165,10 +216,7 @@ export function readPageSetup(
 			footer: m('footer', 0.3),
 		};
 	}
-	const header = xFirst(headerFooter, 'oddHeader');
-	if (header) page.header = xText(header);
-	const footer = xFirst(headerFooter, 'oddFooter');
-	if (footer) page.footer = xText(footer);
+	if (headerFooter) Object.assign(page, readHeaderFooter(headerFooter));
 	return Object.keys(page).length ? page : undefined;
 }
 

@@ -10,12 +10,15 @@ import { parseDrawing } from '../read/drawing.js';
 import { CONTENT_TYPES, type SourceIndex } from '../read/package.js';
 import { parseTable } from '../read/tables.js';
 import { commentParts, type PersonRegistry } from './comments.js';
-import { relativeTarget, writeDrawing } from './drawing.js';
+import { relativeTarget, savedDrawingShape, writeDrawing } from './drawing.js';
+import type { MetadataPlan } from './metadata.js';
 import type { PackageWriter, RelationshipSet } from './package-writer.js';
 import type { SharedStringTable } from './shared-strings.js';
 import { sameModel } from './snapshot.js';
 import type { StyleWriter } from './styles.js';
-import { resolveTableColumns, safeTableName, tableXml, totalsRowFormulas } from './tables.js';
+import { stripNoteShapes, vmlAllocatorFor, vmlIdmapBlocks } from './vml-ids.js';
+import { patchTableXml } from './table-patch.js';
+import { resolveTableColumns, resolveTableNames, tableXml, totalsRowFormulas } from './tables.js';
 
 /** Worksheet dependents: comments (+ VML, threads), tables and the drawing part. */
 export interface SaveContext {
@@ -32,6 +35,11 @@ export interface SaveContext {
 	threaded: { used: boolean };
 	/** Set when a dynamic-array formula was written (see `DYNAMIC_ARRAY_METADATA_XML`). */
 	dynamicArrays?: { used: boolean };
+	/**
+	 * The cell metadata plan (`new MetadataPlan(sourceMetadataXml)`); when present the source
+	 * `xl/metadata.xml` is kept and cells write their `vm` and source `cm` indices.
+	 */
+	metadata?: MetadataPlan;
 }
 
 export function sourceRelIds(
@@ -54,15 +62,32 @@ export function writeComments(
 	partName: string,
 	rels: RelationshipSet,
 ): string {
-	if (!sheet.comments.length) return '';
 	const { writer, source } = ctx;
 	const name = (pattern: (n: number) => string) => writer.uniqueName(pattern, ctx.reserved);
+	const fromSource = source && sheet.partName && source.has(sheet.partName);
+	const sourceVml = fromSource ? sourceVmlPart(source, sheet.partName ?? '') : undefined;
+	// Form controls and other non-comment shapes of the source drawing survive a regeneration.
+	const kept =
+		source && sourceVml && !writer.has(sourceVml)
+			? stripNoteShapes(source.text(sourceVml) ?? '')
+			: undefined;
+	const base = kept && kept.kept > 0 ? kept.xml : undefined;
+	const writeVml = (xml: string) => {
+		let vmlPart = sourceVml;
+		if (base && vmlPart) {
+			writer.carry(vmlPart);
+			writer.add(vmlPart, xml, CONTENT_TYPES.vml);
+		} else {
+			vmlPart = name((n) => `xl/drawings/vmlDrawing${n}.vml`);
+			writer.add(vmlPart, xml, CONTENT_TYPES.vml);
+		}
+		return `<legacyDrawing r:id="${rels.add(RELATIONSHIP_TYPES.vmlDrawing, relativeTarget(partName, vmlPart))}"/>`;
+	};
+	if (!sheet.comments.length) return base ? writeVml(base) : '';
 	if (source && sheet.partName && source.has(sheet.partName)) {
 		const legacyPart = source.targetOfType(sheet.partName, RELATIONSHIP_TYPES.comments);
 		const threadedPart = source.targetOfType(sheet.partName, RELATIONSHIP_TYPES.threadedComment);
-		const vmlId = sourceRelIds(source, sheet.partName).legacy;
-		const vmlRel = vmlId ? source.rels(sheet.partName).get(vmlId) : undefined;
-		const vmlPart = vmlRel ? source.target(sheet.partName, vmlRel) : undefined;
+		const vmlPart = sourceVml;
 		const personsPart = source.workbookPart()
 			? source.targetOfType(source.workbookPart() ?? '', RELATIONSHIP_TYPES.person)
 			: undefined;
@@ -86,7 +111,12 @@ export function writeComments(
 			return `<legacyDrawing r:id="${rels.add(RELATIONSHIP_TYPES.vmlDrawing, relativeTarget(partName, vmlPart))}"/>`;
 		}
 	}
-	const parts = commentParts(sheet.comments, index + 1, ctx.persons, sheet.name);
+	const own = base ? vmlIdmapBlocks(base) : [];
+	const layout = vmlAllocatorFor(ctx, source).allocate(sheet.comments.length, index + 1, own);
+	const parts = commentParts(sheet.comments, index + 1, ctx.persons, sheet.name, {
+		...layout,
+		...(base ? { base } : {}),
+	});
 	const commentsPart = name((n) => `xl/comments${n}.xml`);
 	writer.add(commentsPart, parts.comments, CONTENT_TYPES.comments);
 	rels.add(RELATIONSHIP_TYPES.comments, relativeTarget(partName, commentsPart));
@@ -96,9 +126,14 @@ export function writeComments(
 		rels.add(RELATIONSHIP_TYPES.threadedComment, relativeTarget(partName, threadedPart));
 		ctx.threaded.used = true;
 	}
-	const vmlPart = name((n) => `xl/drawings/vmlDrawing${n}.vml`);
-	writer.add(vmlPart, parts.vml, CONTENT_TYPES.vml);
-	return `<legacyDrawing r:id="${rels.add(RELATIONSHIP_TYPES.vmlDrawing, relativeTarget(partName, vmlPart))}"/>`;
+	return writeVml(parts.vml);
+}
+
+/** The legacy (VML) drawing a source worksheet points at with `<legacyDrawing>`. */
+function sourceVmlPart(source: SourceIndex, sheetPart: string): string | undefined {
+	const vmlId = sourceRelIds(source, sheetPart).legacy;
+	const vmlRel = vmlId ? source.rels(sheetPart).get(vmlId) : undefined;
+	return vmlRel ? source.target(sheetPart, vmlRel) : undefined;
 }
 
 export function writeTables(
@@ -111,15 +146,20 @@ export function writeTables(
 ): string {
 	const ids: string[] = [];
 	for (const [index, original] of sheet.tables.entries()) {
-		const name = safeTableName(original.name, index + 1);
-		const table = name === original.name ? original : { ...original, name, displayName: name };
+		const { writer, source } = ctx;
+		const sourceXml = original.partName ? source?.text(original.partName) : undefined;
+		const before =
+			sourceXml && original.partName ? parseTable(sourceXml, original.partName) : undefined;
+		const { name, displayName } = resolveTableNames(original, before, index + 1);
+		const table =
+			name === original.name && displayName === original.displayName
+				? original
+				: { ...original, name, displayName };
 		const { names, headerText: forced } = resolveTableColumns(sheet, table);
 		for (const [key, text] of forced) headerText.set(key, text);
 		const totals = totalsRowFormulas(sheet, table, names);
 		for (const [key, formula] of totals) formulas.set(key, formula);
 		let id = table.id;
-		const { writer, source } = ctx;
-		const sourceXml = table.partName ? source?.text(table.partName) : undefined;
 		const unchanged =
 			table.partName &&
 			sourceXml &&
@@ -128,7 +168,7 @@ export function writeTables(
 			forced.size === 0 &&
 			totals.size === 0 &&
 			table === original &&
-			sameModel(parseTable(sourceXml, table.partName), table);
+			sameModel(before, table);
 		let part: string;
 		if (unchanged && table.partName) {
 			part = table.partName;
@@ -139,7 +179,10 @@ export function writeTables(
 				table.partName && !writer.has(table.partName)
 					? table.partName
 					: writer.uniqueName((n) => `xl/tables/table${n}.xml`, ctx.reserved);
-			writer.add(part, tableXml(table, id, names), CONTENT_TYPES.table);
+			const xml =
+				(sourceXml && patchTableXml(sourceXml, sheet, table, id, names)) ??
+				tableXml(table, id, names);
+			writer.add(part, xml, CONTENT_TYPES.table);
 		}
 		ctx.tableIds.add(id);
 		ids.push(rels.add(RELATIONSHIP_TYPES.table, relativeTarget(partName, part)));
@@ -160,8 +203,8 @@ export function writeSheetDrawing(
 	const { writer, source } = ctx;
 	if (source && sourceDrawing && source.has(sourceDrawing)) {
 		const unchanged = sameModel(
-			parseDrawing(source, sourceDrawing, () => undefined),
-			sheet.drawings,
+			savedDrawingShape(parseDrawing(source, sourceDrawing, () => undefined)),
+			savedDrawingShape(sheet.drawings),
 		);
 		if (unchanged) {
 			const target = writer.has(sourceDrawing)

@@ -1,6 +1,13 @@
 // Calendar arithmetic behind the date functions.
 import type { CallContext } from '../context.js';
-import { daysInMonth, isLeapYear, serialToYmd, weekdayOf, ymdToSerial } from '../date-serial.js';
+import {
+	daysInMonth,
+	isLeapYear,
+	monthStartSerial,
+	serialToYmd,
+	weekdayOf,
+	ymdToSerial,
+} from '../date-serial.js';
 import { ERR, fail, type Value } from '../values.js';
 import { num } from './helpers.js';
 
@@ -56,13 +63,15 @@ export function weekday(serial: number, type: number, ctx: CallContext): number 
 	return ((dow - start + 7) % 7) + 1;
 }
 
+/**
+ * ISO week number on Excel's calendar, whose weekdays before 1900-03-01 follow the phantom
+ * 1900-02-29 (serial 1 is a Sunday, so ISOWEEKNUM(1) is 52).
+ */
 export function isoWeek(serial: number, ctx: CallContext): number {
-	const { year, month, day } = serialToYmd(serial, ctx.date1904);
-	const date = new Date(Date.UTC(year, month - 1, day));
-	const dayNum = date.getUTCDay() || 7;
-	date.setUTCDate(date.getUTCDate() + 4 - dayNum);
-	const yearStart = Date.UTC(date.getUTCFullYear(), 0, 1);
-	return Math.ceil(((date.getTime() - yearStart) / 86_400_000 + 1) / 7);
+	const days = Math.floor(serial);
+	const thursday = days - ((weekdayOf(days, ctx.date1904) + 6) % 7) + 3;
+	const year = !ctx.date1904 && thursday < 1 ? 1899 : serialToYmd(thursday, ctx.date1904).year;
+	return Math.floor((thursday - monthStartSerial(year, 0, ctx.date1904)) / 7) + 1;
 }
 
 export function weekNum(serial: number, type: number, ctx: CallContext): number {
@@ -108,13 +117,12 @@ export function datedif(start: number, end: number, unit: string, ctx: CallConte
 			return daysInMonth(py, pm) - a.day + b.day;
 		}
 		case 'YD': {
+			// The anniversary overflows like DATE (a 29 February start falls on 1 March).
 			let y = b.year;
-			let anniversary =
-				ymdToSerial(y, a.month, Math.min(a.day, daysInMonth(y, a.month)), ctx.date1904) ?? 0;
+			let anniversary = ymdToSerial(y, a.month, a.day, ctx.date1904) ?? 0;
 			if (anniversary > Math.floor(end)) {
 				y--;
-				anniversary =
-					ymdToSerial(y, a.month, Math.min(a.day, daysInMonth(y, a.month)), ctx.date1904) ?? 0;
+				anniversary = ymdToSerial(y, a.month, a.day, ctx.date1904) ?? 0;
 			}
 			return Math.floor(end) - anniversary;
 		}
@@ -141,6 +149,23 @@ export function days360(start: number, end: number, european: boolean, ctx: Call
 	return (b.year - a.year) * 360 + (b.month - a.month) * 30 + (d2 - d1);
 }
 
+/** YEARFRAC's US 30/360 day count, whose end-of-February rules differ from DAYS360's. */
+function yearFrac30(a: { year: number; month: number; day: number }, b: typeof a): number {
+	const lastFeb = (d: typeof a): boolean => d.month === 2 && d.day === daysInMonth(d.year, 2);
+	let d1 = a.day;
+	let d2 = b.day;
+	if (d1 === 31 && d2 === 31) {
+		d1 = 30;
+		d2 = 30;
+	} else if (d1 === 31) d1 = 30;
+	else if (d1 === 30 && d2 === 31) d2 = 30;
+	else if (lastFeb(a) && lastFeb(b)) {
+		d1 = 30;
+		d2 = 30;
+	} else if (lastFeb(a)) d1 = 30;
+	return ((b.year - a.year) * 360 + (b.month - a.month) * 30 + (d2 - d1)) / 360;
+}
+
 export function yearFrac(s: number, e: number, basis: number, ctx: CallContext): number {
 	let start = Math.floor(s);
 	let end = Math.floor(e);
@@ -149,7 +174,7 @@ export function yearFrac(s: number, e: number, basis: number, ctx: CallContext):
 	const b = serialToYmd(end, ctx.date1904);
 	switch (basis) {
 		case 0:
-			return days360(start, end, false, ctx) / 360;
+			return yearFrac30(a, b);
 		case 1: {
 			if (a.year === b.year) return (end - start) / (isLeapYear(a.year) ? 366 : 365);
 			const oneYear =

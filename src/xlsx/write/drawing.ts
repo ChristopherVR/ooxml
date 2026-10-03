@@ -101,6 +101,17 @@ function writeChart(writer: PackageWriter, chart: ChartObject): string {
 }
 
 /**
+ * Drawing objects as far as saving is concerned: a SmartArt object's diagram, nodes and notices
+ * are read from its parts and never written, so only its anchor, name and frame XML count.
+ */
+export const savedDrawingShape = (objects: readonly DrawingObject[]): unknown[] =>
+	objects.map((o) =>
+		o.kind === 'smartArt'
+			? { kind: o.kind, anchor: o.anchor, name: o.name, sourceXml: o.sourceXml }
+			: o,
+	);
+
+/**
  * Regenerates a drawing part from the model. Relationships of the source drawing are kept so
  * the anchors of unsupported objects (written back verbatim) still resolve.
  */
@@ -121,7 +132,7 @@ export function writeDrawing(
 		}
 	}
 	const kept = objects.flatMap((o) =>
-		o.kind === 'unsupported' && o.sourceXml ? [o.sourceXml] : [],
+		(o.kind === 'unsupported' || o.kind === 'smartArt') && o.sourceXml ? [o.sourceXml] : [],
 	);
 	let nextId =
 		Math.max(
@@ -132,7 +143,9 @@ export function writeDrawing(
 		) + 1;
 	let body = '';
 	for (const object of objects) {
-		if (object.kind === 'unsupported') {
+		if (object.kind === 'unsupported' || object.kind === 'smartArt') {
+			// SmartArt and unsupported objects are kept verbatim (their parts are carried with the
+			// source drawing's relationships); only the anchor position comes from the model.
 			// Without the source drawing's relationships, ids inside the kept XML would dangle.
 			if (
 				object.sourceXml &&

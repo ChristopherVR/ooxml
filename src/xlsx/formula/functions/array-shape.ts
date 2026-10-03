@@ -1,5 +1,5 @@
 import type { CallContext } from '../context.js';
-import { ERR, fail, isError, Matrix, type Scalar, type Value } from '../values.js';
+import { ERR, fail, isError, Matrix, MAX_ARRAY_SIDE, type Scalar, type Value } from '../values.js';
 import { num, spec } from './helpers.js';
 import type { FunctionSpec } from './types.js';
 
@@ -41,7 +41,7 @@ function indexList(ctx: CallContext, args: Value[]): number[] {
 function stack(ctx: CallContext, args: Value[], vertical: boolean): Matrix {
 	const parts = args.map((a) => ctx.toMatrix(a));
 	if (vertical) {
-		const width = Math.max(...parts.map((p) => p.cols));
+		const width = parts.reduce((w, p) => Math.max(w, p.cols), 0);
 		return new Matrix(
 			parts.flatMap((p) =>
 				p.data.map((row) =>
@@ -50,7 +50,7 @@ function stack(ctx: CallContext, args: Value[], vertical: boolean): Matrix {
 			),
 		);
 	}
-	const height = Math.max(...parts.map((p) => p.rows));
+	const height = parts.reduce((h, p) => Math.max(h, p.rows), 0);
 	return Matrix.build(
 		height,
 		parts.reduce((a, p) => a + p.cols, 0),
@@ -224,6 +224,7 @@ export const ARRAY_SHAPE_FUNCTIONS: FunctionSpec[] = [
 			const rows = intAt(ctx, args, 1) ?? m.rows;
 			const cols = intAt(ctx, args, 2) ?? m.cols;
 			if (rows < m.rows || cols < m.cols) return ERR.VALUE;
+			if (rows > MAX_ARRAY_SIDE || cols > MAX_ARRAY_SIDE) return ERR.NUM;
 			const pad: Scalar = args.length > 3 ? ctx.toScalar(args[3] ?? null) : ERR.NA;
 			return Matrix.build(rows, cols, (r, c) => (r < m.rows && c < m.cols ? m.get(r, c) : pad));
 		},

@@ -4,7 +4,7 @@ import { applyBuiltinStyle, type BuiltinCellStyle, builtinCellStyle } from '../c
 import type { CellStyle, Workbook } from '../model.js';
 import { internStyle, styleAt } from '../styles.js';
 import { type EditContext, sheetAt } from './context.js';
-import { formatScope, patchRangeWith } from './format.js';
+import { formatScopes, patchRangeWith } from './format.js';
 
 /** The named style entry, added to `workbook.namedStyles` from the catalogue when missing. */
 function ensureNamedStyle(workbook: Workbook, name: string): Workbook['namedStyles'][number] {
@@ -66,7 +66,7 @@ export function applyCellStyle(
 	ctx.run(
 		`Cell style ${builtin?.name ?? name}`,
 		'format',
-		[formatScope(s, normalized)],
+		formatScopes(s, normalized),
 		() => {
 			const named = ensureNamedStyle(workbook, name);
 			const normal = styleAt(workbook, 0);

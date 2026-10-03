@@ -33,8 +33,8 @@ export const LAMBDA_HELPERS: FunctionSpec[] = [
 		(args, ctx) => {
 			const fn = lambdaArg(args[args.length - 1]);
 			const arrays = args.slice(0, -1).map((a) => ctx.toMatrix(a));
-			const rows = Math.max(...arrays.map((m) => m.rows));
-			const cols = Math.max(...arrays.map((m) => m.cols));
+			const rows = arrays.reduce((n, m) => Math.max(n, m.rows), 0);
+			const cols = arrays.reduce((n, m) => Math.max(n, m.cols), 0);
 			return Matrix.build(rows, cols, (r, c) =>
 				element(
 					ctx,

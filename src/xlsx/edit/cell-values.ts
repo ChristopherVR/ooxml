@@ -17,7 +17,7 @@ import {
 	sheetAt,
 } from './context.js';
 import { parseCellInput } from './deps.js';
-import type { EditScope } from './history.js';
+import type { EditScope, SheetPart } from './history.js';
 import { cellRange, subtractRange } from './range-math.js';
 import type { ClearWhat } from './types.js';
 
@@ -47,8 +47,16 @@ export function syncTableHeader(
 	if (text) column.name = text;
 }
 
-/** Undo scope for writing to cells: the cells, or the whole sheet when a table header changes. */
-export function writeScope(sheet: Worksheet, index: number, range: CellRange): EditScope {
+/**
+ * Undo scopes for writing to cells: the cells, plus the table list when a table header changes
+ * (the column names follow the header text). `parts` adds other sheet properties the edit changes.
+ */
+export function writeScopes(
+	sheet: Worksheet,
+	index: number,
+	range: CellRange,
+	parts: SheetPart[] = [],
+): EditScope[] {
 	const r = normalizeRange(range);
 	const touchesHeader = sheet.tables.some(
 		(t) =>
@@ -58,9 +66,16 @@ export function writeScope(sheet: Worksheet, index: number, range: CellRange): E
 				cellRange(t.range.start.row, t.range.start.col, t.range.start.row, t.range.end.col),
 			),
 	);
-	return touchesHeader
-		? { kind: 'sheet', sheet: index }
-		: { kind: 'cells', sheet: index, ranges: [r] };
+	const all = touchesHeader && !parts.includes('tables') ? [...parts, 'tables' as const] : parts;
+	const scopes: EditScope[] = [{ kind: 'cells', sheet: index, ranges: [r] }];
+	if (all.length) scopes.push({ kind: 'parts', sheet: index, parts: all });
+	return scopes;
+}
+
+/** The single undo scope of {@link writeScopes}, kept for callers that want one. */
+export function writeScope(sheet: Worksheet, index: number, range: CellRange): EditScope {
+	const scopes = writeScopes(sheet, index, range);
+	return scopes.length === 1 && scopes[0] ? scopes[0] : { kind: 'sheet', sheet: index };
 }
 
 /** Writes typed text into a cell without opening an undo step (shared by paste and replace). */
@@ -128,7 +143,7 @@ export function setCellInput(
 	ctx.run(
 		`Typing in ${formatAddress({ row, col })}`,
 		'cells',
-		[writeScope(sheet, s, range)],
+		writeScopes(sheet, s, range),
 		() => {
 			writeInput(ctx, sheet, row, col, text);
 			syncTableHeader(ctx, sheet, row, col);
@@ -149,7 +164,7 @@ export function setCellValue(
 	ctx.run(
 		`Edit ${formatAddress({ row, col })}`,
 		'cells',
-		[writeScope(sheet, s, range)],
+		writeScopes(sheet, s, range),
 		() => {
 			writeValue(sheet, row, col, value);
 			syncTableHeader(ctx, sheet, row, col);
@@ -171,7 +186,7 @@ export function setRangeValues(
 	ctx.run(
 		'Edit cells',
 		'cells',
-		[writeScope(sheet, s, range)],
+		writeScopes(sheet, s, range),
 		() => {
 			values.forEach((rowValues, r) =>
 				rowValues.forEach((value, c) => {
@@ -192,15 +207,26 @@ const CLEAR_LABELS: Record<ClearWhat, string> = {
 	hyperlinks: 'Clear hyperlinks',
 };
 
+/** The sheet properties each kind of clear changes besides the cells. */
+const CLEAR_PARTS: Record<ClearWhat, SheetPart[]> = {
+	all: ['merges', 'conditionalFormats', 'comments', 'hyperlinks'],
+	contents: [],
+	formats: ['merges', 'conditionalFormats'],
+	comments: ['comments'],
+	hyperlinks: ['hyperlinks'],
+};
+
 export function clearRange(ctx: EditContext, s: number, range: CellRange, what: ClearWhat): void {
 	const sheet = sheetAt(ctx.workbook, s);
 	const r = normalizeRange(range);
-	const scope: EditScope =
-		what === 'contents' ? writeScope(sheet, s, r) : { kind: 'sheet', sheet: s };
+	const cellsChange = what === 'all' || what === 'contents' || what === 'formats';
+	const scopes: EditScope[] = cellsChange
+		? writeScopes(sheet, s, r, CLEAR_PARTS[what])
+		: [{ kind: 'parts', sheet: s, parts: CLEAR_PARTS[what] }];
 	ctx.run(
 		CLEAR_LABELS[what],
 		what === 'formats' ? 'format' : what === 'contents' || what === 'all' ? 'cells' : 'annotations',
-		[scope],
+		scopes,
 		() => clearIn(ctx, sheet, r, what),
 		{ sheet: s, ranges: [r] },
 	);

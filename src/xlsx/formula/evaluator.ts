@@ -95,8 +95,23 @@ export function operand(value: Value, frame: Frame): Scalar | Matrix {
 	return value;
 }
 
-function evaluateBinary(node: Extract<FormulaAst, { type: 'binary' }>, frame: Frame): Value {
-	const left = evaluateNode(node.left, frame);
+type BinaryNode = Extract<FormulaAst, { type: 'binary' }>;
+
+/** Evaluates a binary node, walking its left spine so long chains (1+1+...+1) do not recurse. */
+function evaluateBinary(node: BinaryNode, frame: Frame): Value {
+	const spine: BinaryNode[] = [];
+	let leftmost: FormulaAst = node;
+	while (leftmost.type === 'binary') {
+		spine.push(leftmost);
+		leftmost = leftmost.left;
+	}
+	let value = evaluateNode(leftmost, frame);
+	for (let i = spine.length - 1; i >= 0; i--)
+		value = applyBinary(spine[i] as BinaryNode, value, frame);
+	return value;
+}
+
+function applyBinary(node: BinaryNode, left: Value, frame: Frame): Value {
 	if (node.op === ':' || node.op === ' ' || node.op === ',') {
 		if (isError(left)) return left;
 		const right = evaluateNode(node.right, frame);

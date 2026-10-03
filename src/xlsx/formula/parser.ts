@@ -14,7 +14,15 @@ interface Cursor {
 	/** For each significant token: whether whitespace preceded it. */
 	wsBefore: boolean[];
 	pos: number;
+	/** Nesting of sub-expressions and of function calls being parsed. */
+	depth: number;
+	calls: number;
 }
+
+/** Excel allows 64 nested function calls; deeper formulas show #VALUE! here. */
+export const MAX_FUNCTION_NESTING = 64;
+/** Nesting of parentheses and prefix operators, bounded so parsing cannot exhaust the stack. */
+const MAX_EXPRESSION_NESTING = 512;
 
 const BINARY: Partial<Record<string, { prec: number; op: BinaryOperator }>> = {
 	'=': { prec: 1, op: '=' },
@@ -55,7 +63,7 @@ export function parseFormula(formula: string): FormulaAst {
 		sawWs = false;
 	}
 	if (tokens.length === 0) throw new FormulaError('Empty formula', 0);
-	const cursor: Cursor = { tokens, wsBefore, pos: 0 };
+	const cursor: Cursor = { tokens, wsBefore, pos: 0, depth: 0, calls: 0 };
 	const ast = parseExpression(cursor, 0, false);
 	const extra = cursor.tokens[cursor.pos];
 	if (extra) throw new FormulaError(`Unexpected '${extra.text}'`, extra.start);
@@ -74,6 +82,18 @@ function expect(c: Cursor, kind: Token['kind'], what: string): Token {
 }
 
 function parseExpression(c: Cursor, minPrec: number, inParens: boolean): FormulaAst {
+	if (++c.depth > MAX_EXPRESSION_NESTING) {
+		throw new FormulaError('Formula is nested too deeply', peek(c)?.start ?? -1, '#VALUE!');
+	}
+	try {
+		return parseOperators(c, minPrec, inParens);
+	} finally {
+		c.depth--;
+	}
+}
+
+/** Operators after a prefix; left-associative chains (1+2+3+...) loop rather than recurse. */
+function parseOperators(c: Cursor, minPrec: number, inParens: boolean): FormulaAst {
 	let left = parsePrefix(c, inParens);
 	for (;;) {
 		const token = peek(c);
@@ -171,12 +191,12 @@ function parsePrefix(c: Cursor, inParens: boolean): FormulaAst {
 		case 'func': {
 			expect(c, 'open', "'('");
 			const rawName = token.value as string;
-			return {
-				type: 'call',
-				name: normalizeFunctionName(rawName),
-				rawName,
-				args: parseArguments(c),
-			};
+			if (++c.calls > MAX_FUNCTION_NESTING) {
+				throw new FormulaError('More than 64 nested functions', token.start, '#VALUE!');
+			}
+			const args = parseArguments(c);
+			c.calls--;
+			return { type: 'call', name: normalizeFunctionName(rawName), rawName, args };
 		}
 		case 'open': {
 			const inner = parseExpression(c, 0, true);

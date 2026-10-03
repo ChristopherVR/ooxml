@@ -24,7 +24,8 @@ export function finalize(value: Value, host: EvalHost): Scalar | Matrix {
 	else result = value;
 	if (result instanceof Matrix) {
 		if (result.rows === 1 && result.cols === 1) result = result.get(0, 0);
-		else return result.map(clean);
+		// A whole-column result spills only its stored block (the used rows), not a million cells.
+		else return result.block().mapValues(clean);
 	}
 	return clean(result);
 }
@@ -52,14 +53,14 @@ export function sameRange(a: CellRange | undefined, b: CellRange | undefined): b
 }
 
 export function boundingBox(ranges: CellRange[]): CellRange {
-	return {
-		start: {
-			row: Math.min(...ranges.map((r) => r.start.row)),
-			col: Math.min(...ranges.map((r) => r.start.col)),
-		},
-		end: {
-			row: Math.max(...ranges.map((r) => r.end.row)),
-			col: Math.max(...ranges.map((r) => r.end.col)),
-		},
-	};
+	const first = ranges[0] as CellRange;
+	const start = { ...first.start };
+	const end = { ...first.end };
+	for (const r of ranges) {
+		start.row = Math.min(start.row, r.start.row);
+		start.col = Math.min(start.col, r.start.col);
+		end.row = Math.max(end.row, r.end.row);
+		end.col = Math.max(end.col, r.end.col);
+	}
+	return { start, end };
 }

@@ -160,6 +160,7 @@ export function parseWorksheet(
 	const format = readSheetFormat(byName.get('sheetFormatPr'));
 	sheet.defaultRowHeight = format.defaultRowHeight;
 	if (format.defaultColWidth !== undefined) sheet.defaultColWidth = format.defaultColWidth;
+	if (format.format) sheet.format = format.format;
 	sheet.columns = readColumns(byName.get('cols'), ctx.xfMap);
 	const data = byName.get('sheetData');
 	if (data) readSheetData(ctx, data, sheet);

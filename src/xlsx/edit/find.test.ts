@@ -74,7 +74,9 @@ describe('findAll', () => {
 		expect(refs(s.findAll({ text: 'SUM' }))).toEqual(['0:A3']);
 		expect(refs(s.findAll({ text: 'SUM', lookIn: 'values' }))).toEqual([]);
 		expect(refs(s.findAll({ text: '50%', lookIn: 'values' }))).toEqual(['0:B3']);
-		expect(refs(s.findAll({ text: '0.5', lookIn: 'formulas' }))).toEqual(['0:B3']);
+		// Excel's formula-bar text for 0.5 in a 0% cell is 50%, so the raw 0.5 is not found.
+		expect(refs(s.findAll({ text: '50%', lookIn: 'formulas' }))).toEqual(['0:B3']);
+		expect(refs(s.findAll({ text: '0.5', lookIn: 'formulas' }))).toEqual([]);
 	});
 	it('limits the search to a sheet and range, and orders by columns', () => {
 		const { s } = setup();
@@ -129,6 +131,21 @@ describe('replace', () => {
 		s.setComment(0, A('A1'), 'old note', 'me');
 		expect(s.replaceAll({ text: 'old', lookIn: 'comments' }, 'new')).toBe(1);
 		expect(wb.sheets[0]?.comments[0]?.text).toBe('new note');
+	});
+	// Excel 16 (Range.Replace "4" -> "5"): a date keeps its serial 45000 and 40% becomes 50%.
+	it('replaces on the formula-bar text, so dates and percents re-parse as typed', () => {
+		const wb = createWorkbook();
+		const s = createEditSession(wb, { recalc: false });
+		s.setCellInput(0, 0, 0, '3/15/2023');
+		s.setCellValue(0, 1, 0, 0.4);
+		s.applyStyle(0, [R('A2')], { numFmt: '0%' });
+		expect(s.findAll({ text: '3/15/2023' }).map((m) => m.text)).toEqual(['3/15/2023']);
+		expect(s.findAll({ text: '45000' })).toEqual([]);
+		expect(s.replaceAll({ text: '4' }, '5')).toBe(1);
+		expect(cell(wb, 'A1')?.value).toBe(45000);
+		expect(cell(wb, 'A2')?.value).toBe(0.5);
+		s.replaceAll({ text: '2023' }, '2024');
+		expect(cell(wb, 'A1')?.value).toBe(45366);
 	});
 	it('returns 0 when nothing matches', () => {
 		const { s } = setup();

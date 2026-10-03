@@ -2,6 +2,7 @@ import type { CellRange } from '../address.js';
 import { putCell } from '../cells.js';
 import type { Cell, DrawingAnchor, Table, TableColumn, Worksheet } from '../model.js';
 import { normalizeColumns } from './columns.js';
+import { shiftPreservedXml } from './shift-preserved.js';
 import {
 	type AxisShift,
 	shiftIndex,
@@ -20,8 +21,8 @@ export interface Band {
 /**
  * Moves everything positioned on a sheet for a row or column insert/delete: cells, merges,
  * conditional-format and validation ranges, hyperlinks, comments, tables, drawing anchors, row and
- * column formats, the auto-filter, the freeze pane and the print area. Formulas are rewritten
- * separately (they live on every sheet).
+ * column formats, the auto-filter, the freeze pane, the print area, and the page breaks, sparklines
+ * and x14 extensions kept as XML. Formulas are rewritten separately (they live on every sheet).
  */
 export function shiftSheetContent(sheet: Worksheet, shift: AxisShift, band?: Band): void {
 	const moveRange = (range: CellRange): CellRange | undefined =>
@@ -68,6 +69,7 @@ export function shiftSheetContent(sheet: Worksheet, shift: AxisShift, band?: Ban
 		if (moved) sheet.pageSetup.printArea = moved;
 		else delete sheet.pageSetup.printArea;
 	}
+	shiftPreservedXml(sheet, shift, moveRange, !!band);
 }
 
 function shiftCells(

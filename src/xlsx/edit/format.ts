@@ -3,6 +3,7 @@ import { forEachCellInRange } from '../cells.js';
 import type { Workbook, Worksheet } from '../model.js';
 import { type StylePatch, applyStylePatch } from '../styles.js';
 import { editColumns } from './columns.js';
+import { addColumnIntersections, addRowIntersections, rowBaseStyle } from './format-lines.js';
 import {
 	type EditContext,
 	ensureCell,
@@ -52,15 +53,22 @@ export function patchRangeWith(
 		else delete target.styleId;
 	};
 	if (isWholeColumns(r) || isWholeRows(r)) {
+		const wholeSheet = isWholeColumns(r) && isWholeRows(r);
+		if (!wholeSheet && isWholeColumns(r)) addColumnIntersections(sheet, r, patcher);
+		if (!wholeSheet && isWholeRows(r)) addRowIntersections(sheet, r, patcher);
 		if (isWholeColumns(r)) {
 			const cols: number[] = [];
 			for (let c = r.start.col; c <= r.end.col; c++) cols.push(c);
 			editColumns(sheet, cols, (info) => setId(info, patcher(info.styleId)));
 		}
-		if (isWholeRows(r) && !isWholeColumns(r))
+		if (wholeSheet) {
+			// Rows with their own style override the columns, so they take the patch too.
+			for (const info of sheet.rowInfo.values())
+				if (info.styleId !== undefined) setId(info, patcher(info.styleId));
+		} else if (isWholeRows(r))
 			for (let row = r.start.row; row <= r.end.row; row++) {
 				const info = sheet.rowInfo.get(row) ?? {};
-				setId(info, patcher(info.styleId));
+				setId(info, patcher(info.styleId ?? rowBaseStyle(sheet, row)));
 				sheet.rowInfo.set(row, info);
 			}
 		const stored: [number, number][] = [];
@@ -78,9 +86,11 @@ export function patchRangeWith(
 	});
 }
 
-export function formatScope(index: number, ranges: CellRange[]): EditScope {
+/** What a format edit can change: the cells of its ranges, plus row and column styles. */
+export function formatScopes(index: number, ranges: CellRange[]): EditScope[] {
+	const cells: EditScope = { kind: 'cells', sheet: index, ranges };
 	const whole = ranges.some((r) => isWholeColumns(r) || isWholeRows(r));
-	return whole ? { kind: 'sheet', sheet: index } : { kind: 'cells', sheet: index, ranges };
+	return whole ? [cells, { kind: 'parts', sheet: index, parts: ['columns', 'rowInfo'] }] : [cells];
 }
 
 export function applyStyle(
@@ -96,7 +106,7 @@ export function applyStyle(
 	ctx.run(
 		'Format cells',
 		'format',
-		[formatScope(s, normalized)],
+		formatScopes(s, normalized),
 		() => {
 			for (const range of normalized) patchRangeWith(sheet, range, patcher);
 		},

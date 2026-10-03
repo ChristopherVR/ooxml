@@ -1,4 +1,4 @@
-import type { Color, SheetState, Table, Workbook } from '../model.js';
+import type { Color, DefinedName, SheetState, Table, Workbook } from '../model.js';
 import {
 	createWorksheet,
 	nextSheetId,
@@ -153,6 +153,27 @@ function uniqueTableName(workbook: Workbook, base: string, extra: ReadonlySet<st
 	for (let n = 2; ; n++) if (!taken.has(`${stem}_${n}`.toLowerCase())) return `${stem}_${n}`;
 }
 
+/**
+ * The names a copied sheet gets, as Excel 16 makes them: every name scoped to the source sheet
+ * (including `_xlnm.Print_Titles`, `_xlnm.Print_Area` and `_xlnm._FilterDatabase`), and a
+ * sheet-scoped copy of each workbook name that refers to the source sheet, all re-pointed from
+ * the source sheet to the copy.
+ */
+function namesForCopy(workbook: Workbook, index: number, from: string, to: string): DefinedName[] {
+	const local = workbook.definedNames.filter((n) => n.localSheet === index);
+	const taken = new Set(local.map((n) => n.name.toLowerCase()));
+	const global = workbook.definedNames.filter(
+		(n) =>
+			n.localSheet === undefined &&
+			!taken.has(n.name.toLowerCase()) &&
+			renameSheetInFormula(n.formula, from, to) !== n.formula,
+	);
+	return [...local, ...global].map((n) => ({
+		...structuredClone(n),
+		formula: renameSheetInFormula(n.formula, from, to),
+	}));
+}
+
 /** Copies a sheet next to the original (named `Name (2)`) and returns the copy's index. */
 export function duplicateSheet(ctx: EditContext, index: number): number {
 	const { workbook } = ctx;
@@ -186,11 +207,10 @@ export function duplicateSheet(ctx: EditContext, index: number): number {
 					renames.reduce((f, [from, to]) => renameTableInFormula(f, from, to), formula),
 				);
 			for (const drawing of copy.drawings) if (drawing.kind === 'chart') delete drawing.partName;
-			const localNames = workbook.definedNames.filter((n) => n.localSheet === index);
+			const copiedNames = namesForCopy(workbook, index, sheet.name, copy.name);
 			workbook.sheets.splice(at, 0, copy);
 			remapSheets(workbook, (i) => (i >= at ? i + 1 : i));
-			for (const n of localNames)
-				workbook.definedNames.push({ ...structuredClone(n), localSheet: at });
+			for (const n of copiedNames) workbook.definedNames.push({ ...n, localSheet: at });
 			workbook.activeSheet = at;
 			return at;
 		},

@@ -6,6 +6,8 @@ export class FormulaError extends Error {
 		message: string,
 		/** Character offset in the formula where the problem was found. */
 		readonly position = -1,
+		/** The error a cell shows for this formula when it is not a syntax error (#NAME?). */
+		readonly code?: ErrorCode,
 	) {
 		super(message);
 		this.name = 'FormulaError';

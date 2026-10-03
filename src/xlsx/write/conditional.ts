@@ -13,7 +13,11 @@ import type { StyleWriter } from './styles.js';
 import { attrs, el, escapeText } from './xml-out.js';
 
 const cfvoXml = (threshold: CfvoThreshold) =>
-	el('cfvo', { type: threshold.type, val: threshold.value });
+	el('cfvo', {
+		type: threshold.type,
+		val: threshold.value,
+		gte: threshold.gte === false ? false : undefined,
+	});
 const formulaXml = (formula: string, name = 'formula') =>
 	`<${name}>${escapeText(addFuturePrefixes(formula))}</${name}>`;
 const quote = (text: string) => `"${text.replace(/"/g, '""')}"`;
@@ -51,6 +55,8 @@ const TEXT_OPERATORS: Record<string, string> = {
 
 function ruleXml(rule: ConditionalRule, styles: StyleWriter, anchor: string): string {
 	const base = { type: rule.type, priority: rule.priority };
+	// `stopIfTrue` is written for every rule type that carries it, after `dxfId` as Excel does.
+	const stop = { stopIfTrue: rule.stopIfTrue || undefined };
 	switch (rule.type) {
 		case 'cellIs':
 			return el(
@@ -58,7 +64,7 @@ function ruleXml(rule: ConditionalRule, styles: StyleWriter, anchor: string): st
 				{
 					...base,
 					dxfId: styles.dxfId(rule.style),
-					stopIfTrue: rule.stopIfTrue || undefined,
+					...stop,
 					operator: rule.operator,
 				},
 				rule.formulas.map((f) => formulaXml(f)).join(''),
@@ -66,13 +72,13 @@ function ruleXml(rule: ConditionalRule, styles: StyleWriter, anchor: string): st
 		case 'expression':
 			return el(
 				'cfRule',
-				{ ...base, dxfId: styles.dxfId(rule.style), stopIfTrue: rule.stopIfTrue || undefined },
+				{ ...base, dxfId: styles.dxfId(rule.style), ...stop },
 				formulaXml(rule.formula),
 			);
 		case 'colorScale':
 			return el(
 				'cfRule',
-				base,
+				{ ...base, ...stop },
 				`<colorScale>${rule.thresholds.map(cfvoXml).join('')}${rule.colors.map((c) => colorXml(c)).join('')}</colorScale>`,
 			);
 		case 'dataBar': {
@@ -84,12 +90,12 @@ function ruleXml(rule: ConditionalRule, styles: StyleWriter, anchor: string): st
 				{ showValue: rule.showValue === false ? false : undefined },
 				cfvoXml(rule.min) + cfvoXml(rule.max) + colorXml(rule.color),
 			);
-			return el('cfRule', base, bar + ext);
+			return el('cfRule', { ...base, ...stop }, bar + ext);
 		}
 		case 'iconSet':
 			return el(
 				'cfRule',
-				base,
+				{ ...base, ...stop },
 				el(
 					'iconSet',
 					{
@@ -104,6 +110,7 @@ function ruleXml(rule: ConditionalRule, styles: StyleWriter, anchor: string): st
 			return el('cfRule', {
 				...base,
 				dxfId: styles.dxfId(rule.style),
+				...stop,
 				percent: rule.percent || undefined,
 				bottom: rule.bottom || undefined,
 				rank: rule.rank,
@@ -112,19 +119,20 @@ function ruleXml(rule: ConditionalRule, styles: StyleWriter, anchor: string): st
 			return el('cfRule', {
 				...base,
 				dxfId: styles.dxfId(rule.style),
+				...stop,
 				aboveAverage: rule.below ? false : undefined,
 				equalAverage: rule.equalAverage || undefined,
 			});
 		case 'duplicateValues':
 		case 'uniqueValues':
-			return el('cfRule', { ...base, dxfId: styles.dxfId(rule.style) });
+			return el('cfRule', { ...base, dxfId: styles.dxfId(rule.style), ...stop });
 		case 'timePeriod':
 			return el(
 				'cfRule',
 				{
 					...base,
 					dxfId: styles.dxfId(rule.style),
-					stopIfTrue: rule.stopIfTrue || undefined,
+					...stop,
 					timePeriod: rule.timePeriod,
 				},
 				formulaXml(timePeriodFormula(rule.timePeriod, anchor)),
@@ -134,7 +142,13 @@ function ruleXml(rule: ConditionalRule, styles: StyleWriter, anchor: string): st
 			const text = 'text' in rule ? rule.text : undefined;
 			return el(
 				'cfRule',
-				{ ...base, dxfId: styles.dxfId(rule.style), operator: TEXT_OPERATORS[rule.type], text },
+				{
+					...base,
+					dxfId: styles.dxfId(rule.style),
+					...stop,
+					operator: TEXT_OPERATORS[rule.type],
+					text,
+				},
 				formula ? formulaXml(formula) : '',
 			);
 		}

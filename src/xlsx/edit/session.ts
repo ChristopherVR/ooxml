@@ -21,6 +21,7 @@ import {
 } from './history.js';
 import { SessionCalculator } from './session-calc.js';
 import * as calcMode from './calc-mode.js';
+import * as docProps from './doc-properties.js';
 import * as drawings from './drawings.js';
 import * as cellStyle from './cell-style.js';
 import * as cfEdits from './conditional-formats.js';
@@ -130,7 +131,8 @@ export function createEditSession(
 		}
 		scopes.forEach((scope, i) => {
 			const before = befores[i];
-			if (before) current.step.entries.push({ before, after: captureScope(workbook, scope) });
+			if (before)
+				current.step.entries.push({ before, after: captureScope(workbook, scope, before) });
 		});
 		if (outer) {
 			refitRows(current);
@@ -247,6 +249,7 @@ export function createEditSession(
 		removeDuplicates: (s, range, cols, hasHeader) =>
 			duplicates.removeDuplicates(ctx, s, range, cols, hasHeader),
 		setCalcMode: (mode) => calcMode.setCalcMode(ctx, mode),
+		setDocumentProperties: (patch) => docProps.setDocumentProperties(ctx, patch),
 		setAutoRecalc: (enabled) => calcMode.setCalcMode(ctx, enabled ? 'auto' : 'manual'),
 		autoRecalc: () => autoRecalc && calcMode.calcModeOf(workbook) === 'auto',
 		calculateNow() {

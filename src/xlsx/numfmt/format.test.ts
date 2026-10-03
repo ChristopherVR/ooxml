@@ -132,6 +132,11 @@ describe('formatValue: dates and times', () => {
 		[0, 'm/d/yyyy', '1/0/1900'],
 		[-0.5, '[h]:mm', OVERFLOW_TEXT],
 		[2958466, 'm/d/yyyy', OVERFLOW_TEXT],
+		// A lone elapsed unit is a signed count with no date limit (Excel 16).
+		[-0.5, '[s]', '-43200'],
+		[-0.5, '[h] "h"', '-12 h'],
+		[1e15, '[h]', '24000000000000000'],
+		[-0.5, '[s].00', OVERFLOW_TEXT],
 		[45000, '[$-F800]dddd, mmmm dd, yyyy', 'Wednesday, March 15, 2023'],
 		[45000, 'ggge"年"m"月"d"日"', '2023年3月15日'],
 		[45000, 'bbbb', '2566'],
@@ -142,6 +147,29 @@ describe('formatValue: dates and times', () => {
 	it('supports the 1904 date system', () => {
 		expect(formatValue(0, 'm/d/yyyy', { date1904: true }).text).toBe('1/1/1904');
 		expect(formatValue(45000, 'dddd', { date1904: true }).text).toBe('Tuesday');
+	});
+});
+
+// Recorded from Excel 16: the last continued-fraction convergent that fits, never a semiconvergent.
+describe('formatValue: fractions', () => {
+	it.each([
+		[0.06, '?/?', '0/1'],
+		[0.3, '?/?', '2/7'],
+		[0.09, '??/??', ' 1/11'],
+		[0.13, '??/??', ' 3/23'],
+		[84152.9034, '?/?', '84153/1'],
+		[1000.11, '# ??/??', '1000  1/9 '],
+		[0.6, '# ?/8', ' 5/8'],
+		[0.5, '# #/#', '1/2'],
+		[1, '# #/#', '1'],
+		[0, '# #/# "x"', '0 x'],
+		[0.5, '# #/?', '1/2'],
+		[0.5, '# ?/#', ' 1/2'],
+		[-0.0001, '# ?/?', '-0    '],
+		[-0.0001, '?/?', '0/1'],
+		[0, '##0.0E+0', '000.0E+0'],
+	])('%d with %s', (value, format, expected) => {
+		expect(fmt(value, format)).toBe(expected);
 	});
 });
 

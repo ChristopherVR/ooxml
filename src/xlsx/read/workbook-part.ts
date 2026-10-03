@@ -1,3 +1,8 @@
+import {
+	parseAppProperties,
+	parseCoreProperties,
+	parseCustomProperties,
+} from '../../opc/properties/index.js';
 import { NS, first, parseXml, relAttr } from '../../xml/index.js';
 import type { DefinedName, ModernPasswordHash, SheetState, WorkbookProperties } from '../model.js';
 import { stripFuturePrefixes } from './formula-text.js';
@@ -69,34 +74,18 @@ export function parseWorkbookPart(xml: string): WorkbookPart {
 	};
 }
 
-/** Reads `docProps/core.xml` and `docProps/app.xml`. */
+/**
+ * Reads `docProps/core.xml`, `docProps/app.xml` and `docProps/custom.xml` through the shared
+ * OPC property model. `custom` is set only when the package has a custom properties part.
+ */
 export function parseDocProps(
 	core: string | undefined,
 	app: string | undefined,
+	custom?: string,
 ): WorkbookProperties {
-	const props: WorkbookProperties = {};
-	if (core) {
-		const root = parseXml(core, { label: 'XLSX core properties' }).documentElement;
-		const read = (ns: string, local: string, key: keyof WorkbookProperties) => {
-			const node = first(root, local, ns);
-			const text = node?.textContent ?? '';
-			if (node && text !== '') props[key] = text;
-		};
-		read(NS.dc, 'title', 'title');
-		read(NS.dc, 'subject', 'subject');
-		read(NS.dc, 'creator', 'creator');
-		read(NS.cp, 'keywords', 'keywords');
-		read(NS.dc, 'description', 'description');
-		read(NS.cp, 'lastModifiedBy', 'lastModifiedBy');
-		read(NS.dcterms, 'created', 'created');
-		read(NS.dcterms, 'modified', 'modified');
-	}
-	if (app) {
-		const root = parseXml(app, { label: 'XLSX app properties' }).documentElement;
-		const company = first(root, 'Company', NS.extendedProperties)?.textContent ?? '';
-		if (company) props.company = company;
-		const application = first(root, 'Application', NS.extendedProperties)?.textContent ?? '';
-		if (application) props.application = application;
-	}
-	return props;
+	return {
+		...parseCoreProperties(core),
+		...parseAppProperties(app),
+		...(custom !== undefined ? { custom: parseCustomProperties(custom) } : {}),
+	};
 }

@@ -28,8 +28,10 @@ function monthFromName(name: string): number | undefined {
 	return lower.length === 3 || full.startsWith(lower) || lower === 'sept' ? index + 1 : undefined;
 }
 
-const NUMBER_RE = /^(\d{1,3}(?:,\d{3})+|\d*)(\.\d*)?(?:e([+-]?\d+))?$/i;
-const TIME_RE = /^(\d{1,4}):(\d{1,2})(?::(\d{1,2}(?:\.\d*)?))?\s*(am|pm|a|p)?$/i;
+// Excel accepts a thousands separator before any group of three or more digits ("1,0000").
+const NUMBER_RE = /^(\d+(?:,\d{3,})+|\d*)(\.\d*)?(?:e([+-]?\d+))?$/i;
+// Minutes and seconds may overflow ("12:60" is 13:00); AM/PM needs a space ("5 PM", not "5PM").
+const TIME_RE = /^(\d{1,4})(?::(\d+))?(?::(\d+(?:\.\d*)?))?(?:\s+(am|pm|a|p))?$/i;
 
 function parsePlainNumber(text: string): number | undefined {
 	const match = NUMBER_RE.exec(text);
@@ -45,12 +47,13 @@ function parseTime(text: string): number | undefined {
 	const match = TIME_RE.exec(text);
 	if (!match) return undefined;
 	let hours = Number(match[1]);
-	const minutes = Number(match[2]);
+	const minutes = Number(match[2] ?? 0);
 	const seconds = match[3] ? Number(match[3]) : 0;
 	const meridiem = match[4]?.toLowerCase();
-	if (minutes > 59 || seconds >= 60) return undefined;
+	// A bare hour is a time only with AM/PM ("5 PM"); "5" alone is a number.
+	if (match[2] === undefined && (!meridiem || match[3] !== undefined)) return undefined;
 	if (meridiem) {
-		if (hours < 1 || hours > 12) return undefined;
+		if (hours > 12) return undefined;
 		if (hours === 12) hours = 0;
 		if (meridiem.startsWith('p')) hours += 12;
 	}
@@ -59,6 +62,7 @@ function parseTime(text: string): number | undefined {
 
 function serialOrUndefined(year: number, month: number, day: number): number | undefined {
 	if (month < 1 || month > 12 || day < 1 || day > 31) return undefined;
+	if (year < (currentDate1904() ? 1904 : 1900)) return undefined;
 	const check = new Date(Date.UTC(year, month - 1, day));
 	if (check.getUTCMonth() !== month - 1 && !(year === 1900 && month === 2 && day === 29)) {
 		return undefined;
@@ -114,7 +118,7 @@ export function parseNumberText(input: string): number | undefined {
 		sign = -1;
 		text = text.slice(1, -1).trim();
 	}
-	const signed = /^([+-]?)\$?([+-]?)/.exec(text);
+	const signed = /^([+-]?)\s*\$?\s*([+-]?)\s*/.exec(text);
 	const signText = `${signed?.[1] ?? ''}${signed?.[2] ?? ''}`;
 	if (signText.length <= 1) {
 		const body = text.slice(signed?.[0].length ?? 0);

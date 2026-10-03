@@ -1,5 +1,6 @@
-// Static dependency extraction and the indexes the calc engine uses to order and propagate work.
-import { cellKey, type CellRange, keyToAddress, rangesIntersect } from '../address.js';
+// Static dependency extraction: which areas each formula reads (graph-index.ts indexes them).
+import type { CellRange } from '../address.js';
+import type { CellError } from '../model.js';
 import { FormulaError, type FormulaAst } from './ast.js';
 import type { EvalHost } from './context.js';
 import { findDefinedName } from './evaluator.js';
@@ -14,8 +15,15 @@ export interface FormulaNode {
 	col: number;
 	formula: string;
 	ast: FormulaAst | undefined;
-	/** Static precedents. */
+	/** Static precedents: evaluation order and cycle detection follow these. */
 	deps: Area[];
+	/**
+	 * Areas read only through reference arguments (OFFSET's base, INDEX's array, ROW's
+	 * reference) or spanned by `:` between computed references. They only drive incremental
+	 * recalculation: the cells actually read are computed on demand, so `=OFFSET(B2,-1,0)+1` in
+	 * B2 is not a circular reference (a real loop is still found while evaluating).
+	 */
+	dynamicDeps: Area[];
 	volatile: boolean;
 	/** Uses a function this engine does not implement. */
 	unsupported: boolean;
@@ -29,6 +37,8 @@ export interface FormulaNode {
 	spill?: CellRange;
 	/** Where the formula would spill if it were not blocked. */
 	blockedSpill?: CellRange;
+	/** The error shown for a formula that cannot be parsed for a reason other than syntax. */
+	parseError?: CellError;
 }
 
 interface DepContext {
@@ -37,9 +47,48 @@ interface DepContext {
 	row: number;
 	col: number;
 	deps: Area[];
+	dynamicDeps: Area[];
+	/** Inside a reference argument whose cells are not read as a whole. */
+	dynamic: number;
 	volatile: boolean;
 	unsupported: boolean;
 	depth: number;
+}
+
+/**
+ * Functions whose leading reference argument is not read as a whole: OFFSET and INDEX pick
+ * cells from it, ROW / COLUMN / ROWS / COLUMNS / AREAS / ISREF only look at its shape.
+ */
+const REFERENCE_ARGUMENT = new Set([
+	'OFFSET',
+	'INDEX',
+	'ROW',
+	'COLUMN',
+	'ROWS',
+	'COLUMNS',
+	'AREAS',
+	'ISREF',
+]);
+
+const push = (c: DepContext, area: Area): void => {
+	(c.dynamic > 0 ? c.dynamicDeps : c.deps).push(area);
+};
+
+/** The bounding box, per sheet, of areas (what `:` between computed references can span). */
+function spans(areas: readonly Area[]): Area[] {
+	const boxes = new Map<number, Area>();
+	for (const { sheet, range } of areas) {
+		const box = boxes.get(sheet);
+		if (!box) {
+			boxes.set(sheet, { sheet, range: { start: { ...range.start }, end: { ...range.end } } });
+			continue;
+		}
+		box.range.start.row = Math.min(box.range.start.row, range.start.row);
+		box.range.start.col = Math.min(box.range.start.col, range.start.col);
+		box.range.end.row = Math.max(box.range.end.row, range.end.row);
+		box.range.end.col = Math.max(box.range.end.col, range.end.col);
+	}
+	return [...boxes.values()];
 }
 
 function visit(node: FormulaAst, c: DepContext): void {
@@ -50,7 +99,7 @@ function visit(node: FormulaAst, c: DepContext): void {
 			if (!sheets) return;
 			const range = specRange(node.ref);
 			const target = node.spill ? { start: range.start, end: { ...range.start } } : range;
-			for (const sheet of sheets) c.deps.push({ sheet, range: target });
+			for (const sheet of sheets) push(c, { sheet, range: target });
 			return;
 		}
 		case 'name': {
@@ -82,33 +131,20 @@ function visit(node: FormulaAst, c: DepContext): void {
 			visit(node.operand, c);
 			return;
 		case 'binary':
-			visit(node.left, c);
-			visit(node.right, c);
-			if (node.op === ':' && node.left.type === 'ref' && node.right.type === 'ref') {
-				const l = c.deps[c.deps.length - 2];
-				const r = c.deps[c.deps.length - 1];
-				if (l && r && l.sheet === r.sheet) {
-					c.deps.push({
-						sheet: l.sheet,
-						range: {
-							start: {
-								row: Math.min(l.range.start.row, r.range.start.row),
-								col: Math.min(l.range.start.col, r.range.start.col),
-							},
-							end: {
-								row: Math.max(l.range.end.row, r.range.end.row),
-								col: Math.max(l.range.end.col, r.range.end.col),
-							},
-						},
-					});
-				}
-			}
+			visitBinary(node, c);
 			return;
 		case 'call': {
 			const spec = getFunction(node.name);
 			if (spec?.volatile) c.volatile = true;
 			if (!spec && !isLocalOrDefined(node.rawName, c)) c.unsupported = true;
-			for (const arg of node.args) visit(arg, c);
+			const reference = spec !== undefined && REFERENCE_ARGUMENT.has(node.name);
+			node.args.forEach((arg, i) => {
+				if (reference && i === 0) {
+					c.dynamic++;
+					visit(arg, c);
+					c.dynamic--;
+				} else visit(arg, c);
+			});
 			return;
 		}
 		case 'invoke':
@@ -117,6 +153,37 @@ function visit(node: FormulaAst, c: DepContext): void {
 			return;
 		default:
 			return;
+	}
+}
+
+/**
+ * A binary chain, walking the left spine so long chains (1+1+...+1) do not recurse per term.
+ * `A1:B5` depends on the whole box; `:` between computed references (names, INDEX, CHOOSE,
+ * OFFSET...) depends dynamically on the box of everything its operands mention.
+ */
+function visitBinary(node: Extract<FormulaAst, { type: 'binary' }>, c: DepContext): void {
+	const spine: Extract<FormulaAst, { type: 'binary' }>[] = [];
+	let leftmost: FormulaAst = node;
+	while (leftmost.type === 'binary') {
+		spine.push(leftmost);
+		leftmost = leftmost.left;
+	}
+	const staticStart = c.deps.length;
+	const dynamicStart = c.dynamicDeps.length;
+	visit(leftmost, c);
+	for (let i = spine.length - 1; i >= 0; i--) {
+		const op = spine[i] as (typeof spine)[number];
+		visit(op.right, c);
+		if (op.op !== ':') continue;
+		if (op.left.type === 'ref' && op.right.type === 'ref') {
+			const list = c.dynamic > 0 ? c.dynamicDeps : c.deps;
+			const l = list[list.length - 2];
+			const r = list[list.length - 1];
+			if (l && r && l.sheet === r.sheet) push(c, spans([l, r])[0] as Area);
+			continue;
+		}
+		const mentioned = [...c.deps.slice(staticStart), ...c.dynamicDeps.slice(dynamicStart)];
+		c.dynamicDeps.push(...spans(mentioned));
 	}
 }
 
@@ -134,7 +201,7 @@ function addStructured(ref: Parameters<typeof resolveStructured>[0], c: DepConte
 		scope: undefined,
 		depth: 0,
 	});
-	if (value instanceof RefValue) c.deps.push(...value.areas);
+	if (value instanceof RefValue) for (const area of value.areas) push(c, area);
 }
 
 /** Static precedents of a formula plus whether it is volatile or uses unknown functions. */
@@ -144,152 +211,24 @@ export function analyze(
 	sheet: number,
 	row: number,
 	col: number,
-): { deps: Area[]; volatile: boolean; unsupported: boolean } {
+): { deps: Area[]; dynamicDeps: Area[]; volatile: boolean; unsupported: boolean } {
 	const c: DepContext = {
 		host,
 		sheet,
 		row,
 		col,
 		deps: [],
+		dynamicDeps: [],
+		dynamic: 0,
 		volatile: false,
 		unsupported: false,
 		depth: 0,
 	};
 	visit(ast, c);
-	return { deps: c.deps, volatile: c.volatile, unsupported: c.unsupported };
-}
-
-/** Formula nodes by sheet and column, rows sorted, for "which formulas are inside this range". */
-export class ColumnIndex {
-	private readonly sheets = new Map<number, Map<number, FormulaNode[]>>();
-
-	constructor(nodes: Iterable<FormulaNode>) {
-		for (const node of nodes) {
-			let cols = this.sheets.get(node.sheet);
-			if (!cols) this.sheets.set(node.sheet, (cols = new Map()));
-			let list = cols.get(node.col);
-			if (!list) cols.set(node.col, (list = []));
-			list.push(node);
-		}
-		for (const cols of this.sheets.values())
-			for (const list of cols.values()) list.sort((a, b) => a.row - b.row);
-	}
-
-	nodesIn(area: Area, out: FormulaNode[]): void {
-		const cols = this.sheets.get(area.sheet);
-		if (!cols) return;
-		const { start, end } = area.range;
-		const width = end.col - start.col + 1;
-		const scan = (list: FormulaNode[]): void => {
-			let lo = 0;
-			let hi = list.length;
-			while (lo < hi) {
-				const mid = (lo + hi) >> 1;
-				if ((list[mid] as FormulaNode).row < start.row) lo = mid + 1;
-				else hi = mid;
-			}
-			for (let i = lo; i < list.length; i++) {
-				const node = list[i] as FormulaNode;
-				if (node.row > end.row) break;
-				out.push(node);
-			}
-		};
-		if (width <= cols.size) {
-			for (let c = start.col; c <= end.col; c++) {
-				const list = cols.get(c);
-				if (list) scan(list);
-			}
-		} else {
-			for (const [c, list] of cols) if (c >= start.col && c <= end.col) scan(list);
-		}
-	}
-}
-
-const BUCKET_WIDTH = 64;
-
-/** Which formulas read a cell: single-cell deps by key, ranges bucketed by column. */
-export class ReverseIndex {
-	private readonly cells = new Map<number, Map<number, FormulaNode[]>>();
-	private readonly columns = new Map<
-		number,
-		Map<number, { range: CellRange; node: FormulaNode }[]>
-	>();
-	private readonly wide = new Map<number, { range: CellRange; node: FormulaNode }[]>();
-
-	constructor(nodes: Iterable<FormulaNode>) {
-		for (const node of nodes) for (const dep of node.deps) this.add(dep, node);
-	}
-
-	private add(dep: Area, node: FormulaNode): void {
-		const { start, end } = dep.range;
-		if (start.row === end.row && start.col === end.col) {
-			let map = this.cells.get(dep.sheet);
-			if (!map) this.cells.set(dep.sheet, (map = new Map()));
-			const key = cellKey(start.row, start.col);
-			const list = map.get(key);
-			if (list) list.push(node);
-			else map.set(key, [node]);
-			return;
-		}
-		const entry = { range: dep.range, node };
-		if (end.col - start.col + 1 > BUCKET_WIDTH) {
-			let list = this.wide.get(dep.sheet);
-			if (!list) this.wide.set(dep.sheet, (list = []));
-			list.push(entry);
-			return;
-		}
-		let cols = this.columns.get(dep.sheet);
-		if (!cols) this.columns.set(dep.sheet, (cols = new Map()));
-		for (let c = start.col; c <= end.col; c++) {
-			const list = cols.get(c);
-			if (list) list.push(entry);
-			else cols.set(c, [entry]);
-		}
-	}
-
-	/** Formulas whose precedents intersect `range` on `sheet`. */
-	dependents(sheet: number, range: CellRange, out: Set<FormulaNode>): void {
-		const cells = this.cells.get(sheet);
-		if (cells) {
-			const size = (range.end.row - range.start.row + 1) * (range.end.col - range.start.col + 1);
-			if (size <= 4096) {
-				for (let r = range.start.row; r <= range.end.row; r++) {
-					for (let c = range.start.col; c <= range.end.col; c++) {
-						const list = cells.get(cellKey(r, c));
-						if (list) for (const node of list) out.add(node);
-					}
-				}
-			} else {
-				for (const [key, list] of cells) {
-					const { row, col } = keyToAddress(key);
-					if (
-						row < range.start.row ||
-						row > range.end.row ||
-						col < range.start.col ||
-						col > range.end.col
-					)
-						continue;
-					for (const node of list) out.add(node);
-				}
-			}
-		}
-		const cols = this.columns.get(sheet);
-		if (cols) {
-			const width = range.end.col - range.start.col + 1;
-			const check = (list: { range: CellRange; node: FormulaNode }[]): void => {
-				for (const entry of list) if (rangesIntersect(entry.range, range)) out.add(entry.node);
-			};
-			if (width <= cols.size) {
-				for (let c = range.start.col; c <= range.end.col; c++) {
-					const list = cols.get(c);
-					if (list) check(list);
-				}
-			} else {
-				for (const [c, list] of cols) if (c >= range.start.col && c <= range.end.col) check(list);
-			}
-		}
-		for (const entry of this.wide.get(sheet) ?? []) {
-			if (rangesIntersect(entry.range, range)) out.add(entry.node);
-		}
-	}
+	return {
+		deps: c.deps,
+		dynamicDeps: c.dynamicDeps,
+		volatile: c.volatile,
+		unsupported: c.unsupported,
+	};
 }

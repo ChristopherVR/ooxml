@@ -74,7 +74,11 @@ export function compileFraction(tokens: readonly Token[], slash: number): Fracti
 	return plan;
 }
 
-/** Best rational approximation of `x` with a denominator of at most `maxDen`. */
+/**
+ * Rational approximation of `x` with a denominator of at most `maxDen`, as Excel computes it: the
+ * last continued-fraction convergent whose denominator fits (semiconvergents are never used, so
+ * 0.3 with `?/?` is 1/3 and 0.06 is 0/1).
+ */
 export function approximate(x: number, maxDen: number): [number, number] {
 	if (Number.isInteger(x)) return [x, 1];
 	let p0 = 0;
@@ -86,18 +90,13 @@ export function approximate(x: number, maxDen: number): [number, number] {
 		const a = Math.floor(y);
 		const p2 = a * p1 + p0;
 		const q2 = a * q1 + q0;
-		if (q2 > maxDen) {
-			const t = Math.floor((maxDen - q0) / q1);
-			const ps = p0 + t * p1;
-			const qs = q0 + t * q1;
-			return Math.abs(x - ps / qs) < Math.abs(x - p1 / q1) ? [ps, qs] : [p1, q1];
-		}
+		if (q2 > maxDen) break;
 		p0 = p1;
 		q0 = q1;
 		p1 = p2;
 		q1 = q2;
 		const rest = y - a;
-		if (rest < 1e-10 || Math.abs(x - p1 / q1) < 1e-15) break;
+		if (rest < 1e-10) break;
 		y = 1 / rest;
 	}
 	return [p1, q1];
@@ -131,16 +130,29 @@ export function renderFraction(value: number, plan: FractionPlan): { text: strin
 		ip += 1;
 		n = 0;
 	}
-	const zero = ip === 0 && n === 0;
+	// A sign is kept for a mixed fraction that rounds to zero ("-0"), not for a bare "0/1".
+	const zero = !hasInt && n === 0;
 	const blank = hasInt && n === 0;
 	const intText = hasInt ? padLeft(ip > 0 ? String(ip) : n === 0 ? '0' : '', plan.intDigits) : '';
+	const allHash = (slots: readonly DigitChar[]): boolean => slots.every((c) => c === '#');
+	const numHash = allHash(plan.numDigits);
+	// With `#` numerator digits Excel drops the separator after an empty integer ("1/2" for
+	// `# #/#`) and the whole fraction, separator included, when it is zero ("1" for `# #/#`).
+	const hideFraction =
+		blank && numHash && (plan.fixedDenominator !== undefined || allHash(plan.denDigits));
+	const dropSeparator = hideFraction || (hasInt && intText === '' && numHash);
+	const lastInt = plan.tokens.reduce((last, t, i) => (t.r === 'int' ? i : last), -1);
+	const firstNum = plan.tokens.findIndex((t) => t.r === 'num');
 	let text = '';
 	let intDone = false;
-	for (const tok of plan.tokens) {
-		if (tok.r === 'lit') text += tok.v;
-		else if (tok.r === 'int') {
+	plan.tokens.forEach((tok, i) => {
+		if (tok.r === 'lit') {
+			if (!(dropSeparator && i > lastInt && i < firstNum)) text += tok.v;
+		} else if (tok.r === 'int') {
 			if (!intDone) text += intText;
 			intDone = true;
+		} else if (hideFraction) {
+			// nothing
 		} else if (blank) {
 			if (tok.r === 'num') text += ' ';
 			else if (tok.r === 'slash') text += ' ';
@@ -150,6 +162,6 @@ export function renderFraction(value: number, plan: FractionPlan): { text: strin
 		} else if (tok.r === 'slash') text += '/';
 		else if (plan.fixedDenominator) text += String(d);
 		else if (tok.index === 0) text += padRight(String(d), plan.denDigits);
-	}
+	});
 	return { text, zero };
 }

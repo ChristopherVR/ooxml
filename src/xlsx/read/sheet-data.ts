@@ -171,6 +171,9 @@ export function readSheetData(ctx: CellContext, sheetData: XmlElement, sheet: Wo
 			const f = xFirst(c, 'f');
 			const cm = numAttr(c, 'cm');
 			const dynamic = cm !== undefined && (ctx.dynamicCells?.has(cm) ?? false);
+			if (cm !== undefined && !dynamic) cell.cellMetadata = cm;
+			const vm = numAttr(c, 'vm');
+			if (vm !== undefined) cell.valueMetadata = vm;
 			if (f) readFormula(ctx, f, row, colIndex, cell, masters, dynamic, anchors);
 			if (cell.formula === undefined) {
 				delete cell.legacyFormula;

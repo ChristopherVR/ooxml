@@ -1,21 +1,21 @@
-import { elements } from '../../xml/index.js';
+import { NS, elements, parseXml } from '../../xml/index.js';
 import { formatAddress, formatRange, type CellAddress } from '../address.js';
 import { usedRange } from '../cells.js';
-import type { ColumnInfo, Worksheet } from '../model.js';
+import type { AutoFilterColumn, ColumnInfo, Worksheet } from '../model.js';
 import {
 	readAutoFilter,
 	readFitToPage,
-	readPageSetup,
 	readProtection,
 	readSheetFormat,
 	readSheetView,
 	readTabColor,
 } from '../read/sheet-props.js';
 import { outerXml } from '../read/xml-util.js';
+import { mergedAttrs } from './attr-merge.js';
 import { modernHashValues } from './password-hash.js';
 import { sameModel, snapshotElement, snapshotXml } from './snapshot.js';
 import { colorXml } from './style-xml.js';
-import { attrs, el, escapeAttr, escapeText } from './xml-out.js';
+import { attrs, el, escapeAttr } from './xml-out.js';
 
 const sqref = (ranges: readonly { start: CellAddress; end: CellAddress }[]) =>
 	ranges.map((range) => formatRange(range)).join(' ');
@@ -111,6 +111,7 @@ export function sheetFormatXml(sheet: Worksheet): string {
 	const source = snapshotElement(sheet, 'sheetFormatPr');
 	const current: ReturnType<typeof readSheetFormat> = { defaultRowHeight: sheet.defaultRowHeight };
 	if (sheet.defaultColWidth !== undefined) current.defaultColWidth = sheet.defaultColWidth;
+	if (sheet.format && Object.keys(sheet.format).length) current.format = sheet.format;
 	const rowLevel = Math.max(
 		0,
 		...[...sheet.rowInfo.values()].map((info) => info.outlineLevel ?? 0),
@@ -123,13 +124,19 @@ export function sheetFormatXml(sheet: Worksheet): string {
 		Number(source.getAttribute('outlineLevelCol') ?? 0) === colLevel
 	)
 		return snapshotXml(sheet, 'sheetFormatPr') ?? '';
-	return el('sheetFormatPr', {
+	const format = sheet.format ?? {};
+	// Unknown and prefixed attributes (`x14ac:dyDescent`) are kept from the source.
+	return `<sheetFormatPr${mergedAttrs(source, {
+		baseColWidth: format.baseColWidth,
 		defaultColWidth: sheet.defaultColWidth,
 		defaultRowHeight: sheet.defaultRowHeight,
-		customHeight: sheet.defaultRowHeight !== 15 ? true : undefined,
+		customHeight: format.customHeight ?? (sheet.defaultRowHeight !== 15 ? true : undefined),
+		zeroHeight: format.zeroHeight,
+		thickTop: format.thickTop,
+		thickBottom: format.thickBottom,
 		outlineLevelRow: rowLevel || undefined,
 		outlineLevelCol: colLevel || undefined,
-	});
+	})}/>`;
 }
 
 export function colsXml(sheet: Worksheet, styleCount: number): string {
@@ -179,94 +186,68 @@ export function protectionXml(sheet: Worksheet): string {
 	return el('sheetProtection', values);
 }
 
+/** The modelled criteria of a kept `<filterColumn>`, to tell whether an edit replaced them. */
+function sourceCriteria(
+	xml: string,
+): { values: string[] | undefined; blank: boolean | undefined } | undefined {
+	try {
+		const wrapped = `<autoFilter xmlns="${NS.x}" ref="A1">${xml}</autoFilter>`;
+		const column = readAutoFilter(parseXml(wrapped).documentElement)?.columns?.[0];
+		return column ? { values: column.values, blank: column.blank } : undefined;
+	} catch {
+		return undefined;
+	}
+}
+
+function filterColumnXml(column: AutoFilterColumn): string {
+	if (
+		column.sourceXml &&
+		sameModel(sourceCriteria(column.sourceXml), { values: column.values, blank: column.blank })
+	) {
+		const head = /^<filterColumn\b[^>]*?>/.exec(column.sourceXml)?.[0];
+		if (head) {
+			const colId = ` colId="${column.offset}"`;
+			const patched = /\scolId="[^"]*"/.test(head)
+				? head.replace(/\scolId="[^"]*"/, colId)
+				: head.replace(/^<filterColumn\b/, `<filterColumn${colId}`);
+			return patched + column.sourceXml.slice(head.length);
+		}
+	}
+	// Criteria the model does not hold are never written as an empty `<filterColumn>`.
+	if (!column.values?.length && !column.blank) return '';
+	const values = (column.values ?? []).map((value) => el('filter', { val: value })).join('');
+	return el(
+		'filterColumn',
+		{ colId: column.offset },
+		el('filters', { blank: column.blank || undefined }, values) || '<filters/>',
+	);
+}
+
 export function autoFilterXml(sheet: Worksheet): string {
 	const filter = sheet.autoFilter;
 	if (!filter) return '';
 	const source = snapshotElement(sheet, 'autoFilter');
 	if (source && sameModel(readAutoFilter(source), filter))
 		return snapshotXml(sheet, 'autoFilter') ?? '';
+	const width = filter.range.end.col - filter.range.start.col + 1;
 	const columns = (filter.columns ?? [])
-		.map((column) => {
-			if (!column.values && !column.blank) return el('filterColumn', { colId: column.offset });
-			const values = (column.values ?? []).map((value) => el('filter', { val: value })).join('');
-			return el(
-				'filterColumn',
-				{ colId: column.offset },
-				el('filters', { blank: column.blank || undefined }, values) || '<filters/>',
-			);
-		})
+		.filter((column) => column.offset >= 0 && column.offset < width)
+		.sort((a, b) => a.offset - b.offset)
+		.map(filterColumnXml)
 		.join('');
-	return el('autoFilter', { ref: formatRange(filter.range) }, columns);
+	// A kept `sortState` (inside the filter) stays only while the range is unchanged.
+	const sort =
+		source && sameModel(readAutoFilter(source)?.range, filter.range)
+			? elements(source)
+					.filter((node) => node.localName === 'sortState' || node.localName === 'extLst')
+					.map((node) => outerXml(node))
+					.join('')
+			: '';
+	return el('autoFilter', { ref: formatRange(filter.range) }, columns + sort);
 }
 
 export function mergeCellsXml(sheet: Worksheet): string {
 	if (!sheet.merges.length) return '';
 	const cells = sheet.merges.map((range) => `<mergeCell ref="${formatRange(range)}"/>`).join('');
 	return `<mergeCells count="${sheet.merges.length}">${cells}</mergeCells>`;
-}
-
-/** `pageMargins`, `pageSetup` and `headerFooter`, reusing the source XML where unchanged. */
-export function pageXml(sheet: Worksheet): {
-	margins: string;
-	setup: string;
-	headerFooter: string;
-} {
-	const page = sheet.pageSetup ?? {};
-	const result = { margins: '', setup: '', headerFooter: '' };
-	const marginsSource = snapshotElement(sheet, 'pageMargins');
-	if (page.margins) {
-		const same =
-			marginsSource &&
-			sameModel(readPageSetup(marginsSource, undefined, undefined, false)?.margins, page.margins);
-		result.margins = same
-			? (snapshotXml(sheet, 'pageMargins') ?? '')
-			: el('pageMargins', { ...page.margins });
-	}
-	const setupSource = snapshotElement(sheet, 'pageSetup');
-	const fit = page.fitToWidth !== undefined || page.fitToHeight !== undefined;
-	const pick = (p: typeof page) => ({
-		orientation: p.orientation,
-		paperSize: p.paperSize,
-		scale: p.scale,
-		fitToWidth: p.fitToWidth,
-		fitToHeight: p.fitToHeight,
-	});
-	if (
-		page.orientation ||
-		page.paperSize !== undefined ||
-		page.scale !== undefined ||
-		fit ||
-		setupSource
-	) {
-		const sourcePage = setupSource
-			? (readPageSetup(undefined, setupSource, undefined, fit) ?? {})
-			: undefined;
-		if (setupSource && sourcePage && sameModel(pick(sourcePage), pick(page)))
-			result.setup = snapshotXml(sheet, 'pageSetup') ?? '';
-		else {
-			const relId = setupSource?.getAttribute('r:id') || undefined;
-			result.setup = `<pageSetup${attrs({
-				paperSize: page.paperSize,
-				scale: page.scale,
-				fitToWidth: page.fitToWidth,
-				fitToHeight: page.fitToHeight,
-				orientation: page.orientation,
-			})}${relId ? ` r:id="${escapeAttr(relId)}"` : ''}/>`;
-		}
-	}
-	const hfSource = snapshotElement(sheet, 'headerFooter');
-	if (page.header !== undefined || page.footer !== undefined) {
-		const sourceHf = hfSource ? readPageSetup(undefined, undefined, hfSource, false) : undefined;
-		const same =
-			hfSource &&
-			sameModel({ h: sourceHf?.header, f: sourceHf?.footer }, { h: page.header, f: page.footer });
-		result.headerFooter = same
-			? (snapshotXml(sheet, 'headerFooter') ?? '')
-			: `<headerFooter>${page.header !== undefined ? `<oddHeader>${escapeText(page.header)}</oddHeader>` : ''}${page.footer !== undefined ? `<oddFooter>${escapeText(page.footer)}</oddFooter>` : ''}</headerFooter>`;
-	} else if (hfSource) {
-		const sourceHf = readPageSetup(undefined, undefined, hfSource, false);
-		if (sourceHf?.header === undefined && sourceHf?.footer === undefined)
-			result.headerFooter = snapshotXml(sheet, 'headerFooter') ?? '';
-	}
-	return result;
 }

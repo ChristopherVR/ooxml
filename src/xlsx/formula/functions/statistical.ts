@@ -1,5 +1,5 @@
 import { ERR, fail, type Scalar } from '../values.js';
-import { criteriaPairs, matchingValues } from './criteria.js';
+import { criteriaPairs, liftCriteria, matchingValues } from './criteria.js';
 import { all, collectNumbers, num, spec } from './helpers.js';
 import { STATISTICAL_MORE } from './statistical-more.js';
 import * as S from './stats-core.js';
@@ -12,8 +12,7 @@ const C = 'Statistical';
 const numbersOf = (values: Scalar[]): number[] =>
 	values.filter((v): v is number => typeof v === 'number');
 
-const extreme = (values: number[], max: boolean): number =>
-	values.length === 0 ? 0 : max ? Math.max(...values) : Math.min(...values);
+const extreme = S.extreme;
 
 export const STATISTICAL_FUNCTIONS: FunctionSpec[] = [
 	...STATISTICAL_SPREAD,
@@ -57,7 +56,9 @@ export const STATISTICAL_FUNCTIONS: FunctionSpec[] = [
 		3,
 		255,
 		(args, ctx) =>
-			S.mean(numbersOf(matchingValues(ctx, criteriaPairs(args, 1), args[0] ?? null, true))),
+			liftCriteria(ctx, criteriaPairs(args, 1), (pairs) =>
+				S.mean(numbersOf(matchingValues(ctx, pairs, args[0] ?? null, true))),
+			),
 		['any'],
 	),
 	spec(
@@ -108,7 +109,9 @@ export const STATISTICAL_FUNCTIONS: FunctionSpec[] = [
 		3,
 		255,
 		(args, ctx) =>
-			extreme(numbersOf(matchingValues(ctx, criteriaPairs(args, 1), args[0] ?? null, true)), true),
+			liftCriteria(ctx, criteriaPairs(args, 1), (pairs) =>
+				extreme(numbersOf(matchingValues(ctx, pairs, args[0] ?? null, true)), true),
+			),
 		['any'],
 	),
 	spec(
@@ -119,7 +122,9 @@ export const STATISTICAL_FUNCTIONS: FunctionSpec[] = [
 		3,
 		255,
 		(args, ctx) =>
-			extreme(numbersOf(matchingValues(ctx, criteriaPairs(args, 1), args[0] ?? null, true)), false),
+			liftCriteria(ctx, criteriaPairs(args, 1), (pairs) =>
+				extreme(numbersOf(matchingValues(ctx, pairs, args[0] ?? null, true)), false),
+			),
 		['any'],
 	),
 	spec(

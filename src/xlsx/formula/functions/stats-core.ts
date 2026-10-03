@@ -55,11 +55,23 @@ export function modes(values: readonly number[]): number[] {
 	return [...counts].filter(([, c]) => c === best).map(([v]) => v);
 }
 
+/**
+ * LARGE / SMALL: `k` must lie in 1..n before rounding; SMALL then truncates it and LARGE rounds
+ * it up (LARGE(k) is SMALL(n + 1 - k)), as Excel does.
+ */
 export function kth(values: readonly number[], k: number, largest: boolean): number {
-	const index = Math.ceil(k) - 1;
-	if (values.length === 0 || index < 0 || index >= values.length) fail(ERR.NUM);
-	const s = sorted(values);
-	return s[largest ? s.length - 1 - index : index] as number;
+	const n = values.length;
+	if (n === 0 || !(k >= 1) || k > n) fail(ERR.NUM);
+	const index = Math.floor(largest ? n + 1 - k : k) - 1;
+	return sorted(values)[index] as number;
+}
+
+/** The largest (or smallest) value without spreading the list into arguments; 0 when empty. */
+export function extreme(values: readonly number[], max: boolean): number {
+	if (values.length === 0) return 0;
+	let best = values[0] as number;
+	for (const v of values) if (max ? v > best : v < best) best = v;
+	return best;
 }
 
 export function percentileInc(values: readonly number[], p: number): number {

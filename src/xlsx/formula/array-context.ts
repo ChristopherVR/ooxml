@@ -31,12 +31,24 @@ function scan(node: FormulaAst, native: boolean): Scan {
 			return { multi: inner.multi, needs: inner.needs || (inner.multi && !native) };
 		}
 		case 'binary': {
-			const l = scan(node.left, native);
-			const r = scan(node.right, native);
-			if (node.op === ':' || node.op === ' ' || node.op === ',')
-				return { multi: true, needs: l.needs || r.needs };
-			const multi = l.multi || r.multi;
-			return { multi, needs: l.needs || r.needs || (multi && !native) };
+			// Walk the left spine so long operator chains do not recurse once per term.
+			const spine: Extract<FormulaAst, { type: 'binary' }>[] = [];
+			let leftmost: FormulaAst = node;
+			while (leftmost.type === 'binary') {
+				spine.push(leftmost);
+				leftmost = leftmost.left;
+			}
+			let l = scan(leftmost, native);
+			for (let i = spine.length - 1; i >= 0; i--) {
+				const op = (spine[i] as (typeof spine)[number]).op;
+				const r = scan((spine[i] as (typeof spine)[number]).right, native);
+				if (op === ':' || op === ' ' || op === ',') l = { multi: true, needs: l.needs || r.needs };
+				else {
+					const multi = l.multi || r.multi;
+					l = { multi, needs: l.needs || r.needs || (multi && !native) };
+				}
+			}
+			return l;
 		}
 		case 'call': {
 			const spec = getFunction(node.name);

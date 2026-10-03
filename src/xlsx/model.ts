@@ -1,3 +1,5 @@
+import type { AppProperties, CoreProperties, CustomProperty } from '../opc/properties/types.js';
+import type { DiagramDrawing, DiagramIssue } from '../diagram/types.js';
 import type { CellAddress, CellRange } from './address.js';
 
 /** Excel error values. */
@@ -170,6 +172,10 @@ export interface CellStyle {
 	protection?: Protection;
 	/** Name of the cell style (`Normal`, `Heading 1`) this format derives from, if any. */
 	cellStyleName?: string;
+	/** Text typed with a leading apostrophe (`quotePrefix`): shown and edited as text. */
+	quotePrefix?: true;
+	/** The cell shows a pivot table field drop-down (`pivotButton`). */
+	pivotButton?: true;
 }
 
 /** A run of rich text in a cell (`<r>` in a shared string). */
@@ -204,6 +210,15 @@ export interface Cell {
 	 * Copying, filling and moving a cell keep the flag.
 	 */
 	legacyFormula?: true;
+	/**
+	 * One-based `vm` index into the source `xl/metadata.xml` value metadata (rich values: data
+	 * types, pictures in cells, rich `#SPILL!`/`#CALC!` errors). Written back only while the cell
+	 * still holds an error value (Excel stores those cells as `#VALUE!`) and the source metadata
+	 * part is kept; a typed value drops it.
+	 */
+	valueMetadata?: number;
+	/** One-based `cm` index of source cell metadata other than the dynamic-array marker. */
+	cellMetadata?: number;
 }
 
 export interface RowInfo {
@@ -269,6 +284,11 @@ export interface DifferentialStyle {
 export interface CfvoThreshold {
 	type: 'min' | 'max' | 'num' | 'percent' | 'percentile' | 'formula';
 	value?: string;
+	/**
+	 * Icon sets: whether a value equal to the threshold reaches it (`>=`, the default) or must
+	 * exceed it (`>`, `gte="0"`).
+	 */
+	gte?: boolean;
 }
 
 export type ConditionalRule =
@@ -292,6 +312,7 @@ export type ConditionalRule =
 			thresholds: CfvoThreshold[];
 			colors: Color[];
 			priority: number;
+			stopIfTrue?: boolean;
 	  }
 	| {
 			type: 'dataBar';
@@ -299,6 +320,7 @@ export type ConditionalRule =
 			max: CfvoThreshold;
 			color: Color;
 			priority: number;
+			stopIfTrue?: boolean;
 			showValue?: boolean;
 			/** GUID linking this rule to its Excel 2010 (`x14:dataBar`) extension, kept for round trip. */
 			extensionId?: string;
@@ -308,6 +330,7 @@ export type ConditionalRule =
 			iconSet: string;
 			thresholds: CfvoThreshold[];
 			priority: number;
+			stopIfTrue?: boolean;
 			reverse?: boolean;
 			showValue?: boolean;
 	  }
@@ -318,6 +341,7 @@ export type ConditionalRule =
 			percent?: boolean;
 			style: DifferentialStyle;
 			priority: number;
+			stopIfTrue?: boolean;
 	  }
 	| {
 			type: 'aboveAverage';
@@ -325,6 +349,7 @@ export type ConditionalRule =
 			equalAverage?: boolean;
 			style: DifferentialStyle;
 			priority: number;
+			stopIfTrue?: boolean;
 	  }
 	| {
 			type:
@@ -336,12 +361,14 @@ export type ConditionalRule =
 				| 'notContainsErrors';
 			style: DifferentialStyle;
 			priority: number;
+			stopIfTrue?: boolean;
 	  }
 	| {
 			type: 'containsText' | 'notContainsText' | 'beginsWith' | 'endsWith';
 			text: string;
 			style: DifferentialStyle;
 			priority: number;
+			stopIfTrue?: boolean;
 	  }
 	| {
 			/** "A Date Occurring": the cell's date falls in a period relative to today. */
@@ -421,7 +448,19 @@ export interface FreezePane {
 export interface AutoFilter {
 	range: CellRange;
 	/** Per-column filters keyed by zero-based column offset within the range. */
-	columns?: { offset: number; values?: string[]; blank?: boolean }[];
+	columns?: AutoFilterColumn[];
+}
+
+export interface AutoFilterColumn {
+	offset: number;
+	values?: string[];
+	blank?: boolean;
+	/**
+	 * The `<filterColumn>` XML as read (custom, top 10, dynamic, colour, icon and date-group
+	 * criteria the model does not represent). Written back, re-indexed to `offset`, while
+	 * `values` and `blank` still match it; an edit that replaces the column drops it.
+	 */
+	sourceXml?: string;
 }
 
 export interface TableColumn {
@@ -517,7 +556,43 @@ export interface UnsupportedDrawingObject {
 	sourceXml?: string;
 }
 
-export type DrawingObject = ImageObject | ChartObject | UnsupportedDrawingObject;
+/** One content node of a SmartArt data model (for a placeholder or an outline view). */
+export interface SmartArtNode {
+	id: string;
+	text: string;
+	/** Model id of the parent content node, when it has one. */
+	parentId?: string;
+}
+
+/**
+ * A SmartArt graphic (`xdr:graphicFrame` with the DiagramML graphic). Shown from the drawing the
+ * producing application cached (`dsp:drawing`); no SmartArt layout is computed and the content
+ * is not editable. On save the frame XML and every diagram part are kept verbatim; only the
+ * anchor position is written from the model.
+ */
+export interface SmartArtObject {
+	kind: 'smartArt';
+	anchor: DrawingAnchor;
+	name?: string;
+	/**
+	 * The cached drawing, in EMU relative to the frame: what `<office-ui-smartart>` (`ooxml-ui`)
+	 * takes as `drawing`. Absent when the file has no usable cached drawing: show a placeholder
+	 * with `nodes`.
+	 */
+	diagram?: DiagramDrawing;
+	/** Content nodes of the data model, in document order. */
+	nodes: SmartArtNode[];
+	/** `dgm:layoutDef/@uniqueId` (`urn:microsoft.com/office/officeart/2005/8/layout/default`). */
+	layoutId?: string;
+	/** What is and is not shown, for the UI to display honestly. */
+	notice: string;
+	/** Problems met reading the diagram parts; empty when everything resolved. */
+	issues: DiagramIssue[];
+	/** The anchor element's XML as read, written back (re-anchored) on save. */
+	sourceXml: string;
+}
+
+export type DrawingObject = ImageObject | ChartObject | SmartArtObject | UnsupportedDrawingObject;
 
 export interface SheetView {
 	showGridLines: boolean;
@@ -559,8 +634,30 @@ export interface PageSetup {
 		footer: number;
 	};
 	printArea?: CellRange;
+	/** Odd-page (or every-page) header and footer. */
 	header?: string;
 	footer?: string;
+	/** Even-page header and footer, used when `differentOddEven` is set. */
+	evenHeader?: string;
+	evenFooter?: string;
+	/** First-page header and footer, used when `differentFirst` is set. */
+	firstHeader?: string;
+	firstFooter?: string;
+	differentFirst?: boolean;
+	differentOddEven?: boolean;
+	/** Absent means the Excel default (on); kept as read. */
+	scaleWithDoc?: boolean;
+	alignWithMargins?: boolean;
+}
+
+/** `<sheetFormatPr>` attributes besides the default row height and column width. */
+export interface SheetFormat {
+	/** Rows are hidden unless written (`zeroHeight`). */
+	zeroHeight?: boolean;
+	baseColWidth?: number;
+	customHeight?: boolean;
+	thickTop?: boolean;
+	thickBottom?: boolean;
 }
 
 /**
@@ -603,6 +700,8 @@ export interface Worksheet {
 	defaultRowHeight: number;
 	/** Characters; absent means the Excel default (8.43 plus padding). */
 	defaultColWidth?: number;
+	/** Other `sheetFormatPr` attributes; absent for new sheets. */
+	format?: SheetFormat;
 	merges: CellRange[];
 	view: SheetView;
 	hyperlinks: Hyperlink[];
@@ -644,17 +743,17 @@ export interface ThemePalette {
 	minorFont: string;
 }
 
-export interface WorkbookProperties {
-	title?: string;
-	subject?: string;
-	creator?: string;
-	keywords?: string;
-	description?: string;
-	lastModifiedBy?: string;
-	created?: string;
-	modified?: string;
-	company?: string;
-	application?: string;
+/**
+ * Document properties: every core (`docProps/core.xml`) and extended (`docProps/app.xml`) field
+ * of the shared OPC model, plus custom properties. On save, `headingPairs` and `titlesOfParts`
+ * are refreshed from the sheet names; app.xml elements the model does not know are kept.
+ */
+export interface WorkbookProperties extends CoreProperties, AppProperties {
+	/**
+	 * `docProps/custom.xml`. Absent: the source part (if any) is saved unchanged; present (even
+	 * empty) it replaces the part, and an empty list removes it.
+	 */
+	custom?: CustomProperty[];
 }
 
 export interface Workbook {
@@ -692,9 +791,30 @@ export interface Workbook {
 	format: 'xlsx' | 'xlsm' | 'xls' | 'csv' | 'new';
 	/** Things the loader read but could not model, surfaced to the user. */
 	warnings: string[];
+	/**
+	 * The digital signatures of the loaded package (`_xmlsignatures/`), when it was signed. They
+	 * are not verified, and `saveXlsx` never writes them: a regenerated package invalidates them.
+	 */
+	signatures?: WorkbookSignatures;
+}
+
+/** The digital signatures found in a loaded package. */
+export interface WorkbookSignatures {
+	/** How many signature parts the package holds. */
+	count: number;
+	/** The signature part names (`_xmlsignatures/sig1.xml`, ...). */
+	parts: string[];
 }
 
 /** Raw parts of the loaded package, keyed by part name (no leading slash). */
 export interface SourcePackage {
 	parts: Map<string, Uint8Array>;
 }
+
+export type {
+	AppProperties,
+	CoreProperties,
+	CustomProperty,
+	CustomPropertyType,
+	HeadingPair,
+} from '../opc/properties/types.js';

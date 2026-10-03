@@ -116,8 +116,12 @@ export function pasteAt(
 		throw new RangeError('The paste area extends beyond the sheet.');
 	const dest: CellRange = { start: at, end: { row: at.row + height - 1, col: at.col + width - 1 } };
 	const cut = typeof payload !== 'string' && payload.cut && cells.source ? cells.source : undefined;
-	// A move rewrites references anywhere in the workbook, so it records the whole workbook.
-	const scopes: EditScope[] = cut ? [{ kind: 'workbook' }] : [{ kind: 'sheet', sheet: s }];
+	// A move rewrites references anywhere in the workbook: it records the references that change
+	// (and every sheet's merges) besides the cells it empties and fills.
+	const destCells: EditScope = { kind: 'cells', sheet: s, ranges: [dest] };
+	const scopes: EditScope[] = cut
+		? [{ kind: 'refs' }, { kind: 'cells', sheet: cut.sheet, ranges: [cut.range] }, destCells]
+		: [destCells, { kind: 'parts', sheet: s, parts: ['merges'] }];
 	const move = cut && {
 		fromSheet: sheetAt(workbook, cut.sheet).name,
 		range: cut.range,

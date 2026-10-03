@@ -128,7 +128,7 @@ export const TEXT_EXTRA_FUNCTIONS: FunctionSpec[] = [
 			const rows = splitText(text, rowDelims, insensitive, ignoreEmpty).map((line) =>
 				splitText(line, colDelims, insensitive, ignoreEmpty),
 			);
-			const width = Math.max(...rows.map((r) => r.length));
+			const width = rows.reduce((w, r) => Math.max(w, r.length), 0);
 			return new Matrix(rows.map((r) => Array.from({ length: width }, (_, i) => r[i] ?? pad)));
 		},
 		['any'],

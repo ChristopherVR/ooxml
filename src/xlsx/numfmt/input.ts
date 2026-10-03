@@ -28,23 +28,28 @@ function currencyFormat(symbol: string, decimals: boolean): string {
 export function parseNumberInput(text: string): NumberInput | undefined {
 	let s = text.trim();
 	let negative = false;
+	let parenthesized = false;
 	if (s.startsWith('(') && s.endsWith(')')) {
 		negative = true;
+		parenthesized = true;
 		s = s.slice(1, -1).trim();
 	}
-	const sign = (): void => {
+	const sign = (): boolean => {
 		if (s.startsWith('-') || s.startsWith('+')) {
+			// Excel keeps `(-5)`, `(+5)` and `(-$5)` as text: parentheses already carry the sign.
+			if (parenthesized) return false;
 			if (s.startsWith('-')) negative = !negative;
 			s = s.slice(1).trim();
 		}
+		return true;
 	};
-	sign();
+	if (!sign()) return undefined;
 	let currency = '';
 	const lead = /^([$€£])\s*/.exec(s);
 	if (lead) {
 		currency = lead[1] ?? '';
 		s = s.slice(lead[0].length);
-		sign();
+		if (!sign()) return undefined;
 	} else {
 		const trail = /\s*([€£])$/.exec(s);
 		if (trail) {
@@ -104,8 +109,11 @@ export function parseCellInput(text: string, options: FormatOptions = {}): Parse
 	const trimmed = text.trim();
 	if (trimmed === '') return { value: text };
 	const upper = trimmed.toUpperCase();
-	if (upper === 'TRUE' || upper === 'FALSE') return { value: upper === 'TRUE' };
-	if (isErrorCode(upper)) return { value: cellError(upper) };
+	// Booleans and error literals must be typed without surrounding spaces (`TRUE ` stays text).
+	if (trimmed === text) {
+		if (upper === 'TRUE' || upper === 'FALSE') return { value: upper === 'TRUE' };
+		if (isErrorCode(upper)) return { value: cellError(upper) };
+	}
 	const parsed =
 		parseNumberInput(trimmed) ??
 		parseFractionInput(trimmed) ??

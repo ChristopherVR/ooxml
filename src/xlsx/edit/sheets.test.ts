@@ -143,6 +143,35 @@ describe('move, duplicate, hide, colour', () => {
 		s.setCellValue(1, 0, 0, 'changed');
 		expect(cell(wb, 'A1', 0)?.value).toBe('x');
 	});
+	// Excel 16 (Worksheet.Copy): local names, print titles, print area and _FilterDatabase are
+	// copied pointing at 'Sheet1 (2)', and a workbook name on Sheet1 gets a local copy there.
+	it('re-points the copied sheet-scoped names to the copy', () => {
+		const { wb, s } = setup();
+		wb.definedNames.push(
+			{ name: 'Local1', formula: 'Sheet1!$A$1:$B$2', localSheet: 0 },
+			{ name: '_xlnm.Print_Titles', formula: 'Sheet1!$1:$1', localSheet: 0 },
+			{ name: '_xlnm.Print_Area', formula: 'Sheet1!$A$1:$D$10', localSheet: 0 },
+			{ name: '_xlnm._FilterDatabase', formula: 'Sheet1!$A$1:$B$3', localSheet: 0, hidden: true },
+			{ name: 'Global1', formula: 'Sheet1!$C$1' },
+			{ name: 'Other', formula: 'Sheet2!$C$1' },
+		);
+		s.duplicateSheet(0);
+		const copies = wb.definedNames.filter((n) => n.localSheet === 1);
+		expect(copies.map((n) => [n.name, n.formula])).toEqual([
+			['Local1', "'Sheet1 (2)'!$A$1:$B$2"],
+			['_xlnm.Print_Titles', "'Sheet1 (2)'!$1:$1"],
+			['_xlnm.Print_Area', "'Sheet1 (2)'!$A$1:$D$10"],
+			['_xlnm._FilterDatabase', "'Sheet1 (2)'!$A$1:$B$3"],
+			['Global1', "'Sheet1 (2)'!$C$1"],
+		]);
+		expect(copies[3]?.hidden).toBe(true);
+		expect(wb.definedNames.find((n) => n.name === 'Local1' && n.localSheet === 0)?.formula).toBe(
+			'Sheet1!$A$1:$B$2',
+		);
+		expect(wb.definedNames.filter((n) => n.name === 'Other')).toHaveLength(1);
+		s.undo();
+		expect(wb.definedNames.filter((n) => n.localSheet === 1)).toEqual([]);
+	});
 	it('hides and unhides sheets but keeps one visible', () => {
 		const { wb, s } = setup(['A', 'B']);
 		wb.activeSheet = 0;

@@ -2,6 +2,7 @@ import { NS, elements, first, parseXml, relAttr, type XmlElement } from '../../x
 import type { DrawingAnchor, DrawingObject } from '../model.js';
 import { parseChart } from './chart.js';
 import type { SourceIndex } from './package.js';
+import { SMART_ART_GRAPHIC_URI, smartArtFrame } from './smart-art.js';
 import { att, selfContainedXml } from './xml-util.js';
 
 const xdr = (parent: ParentNode | null | undefined, local: string) => first(parent, local, NS.xdr);
@@ -68,8 +69,8 @@ function describe(content: XmlElement): string {
 }
 
 /**
- * Reads a drawing part (`xdr:wsDr`) into drawing objects. Pictures and charts are modelled;
- * everything else becomes an unsupported object that keeps its anchor XML.
+ * Reads a drawing part (`xdr:wsDr`) into drawing objects. Pictures, charts and SmartArt frames
+ * are modelled (SmartArt parts are read later by `resolveSmartArt`); everything else becomes an unsupported object that keeps its anchor XML.
  */
 export function parseDrawing(
 	source: SourceIndex,
@@ -131,6 +132,10 @@ export function parseDrawing(
 				continue;
 			}
 			const uri = att(data, 'uri') ?? '';
+			if (data && uri === SMART_ART_GRAPHIC_URI) {
+				out.push(smartArtFrame(data, anchor, name, selfContainedXml(anchorEl), partName));
+				continue;
+			}
 			out.push(
 				unsupported(
 					uri.includes('diagram')

@@ -11,7 +11,7 @@ import {
 	parseIndexedPalette,
 	parseProtection,
 } from './style-parts.js';
-import { att, numAttr, xChildren, xFirst } from './xml-util.js';
+import { att, boolAttr, numAttr, xChildren, xFirst } from './xml-util.js';
 
 export interface ParsedStyles {
 	styles: CellStyle[];
@@ -92,6 +92,8 @@ export function parseStyles(xml: string | undefined, warnings: string[]): Parsed
 		if (alignment) style.alignment = alignment;
 		const protection = parseProtection(xFirst(xf, 'protection'));
 		if (protection) style.protection = protection;
+		if (boolAttr(xf, 'quotePrefix')) style.quotePrefix = true;
+		if (boolAttr(xf, 'pivotButton')) style.pivotButton = true;
 		return style;
 	};
 

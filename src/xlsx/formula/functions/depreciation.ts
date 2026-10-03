@@ -49,7 +49,9 @@ export const DEPRECIATION_FUNCTIONS: FunctionSpec[] = [
 		4,
 		5,
 		(c, s = 0, l = 1, p = 1, m = 12) => {
-			if (c < 0 || s < 0 || l <= 0 || p <= 0 || m < 1 || m > 12 || p > l + 1) fail(ERR.NUM);
+			// A partial first year (month < 12) adds a final period after the life.
+			if (c < 0 || s < 0 || l <= 0 || p <= 0 || m < 1 || m > 12 || p > (m < 12 ? l + 1 : l))
+				fail(ERR.NUM);
 			if (c === 0) return 0;
 			const rate = Math.round((1 - Math.pow(s / c, 1 / l)) * 1000) / 1000;
 			let total = 0;

@@ -134,40 +134,4 @@ export function workbookXml(
 	return `${out}</workbook>`;
 }
 
-/** `docProps/core.xml` from the workbook properties. */
-export function coreXml(workbook: Workbook): string {
-	const p = workbook.properties;
-	const text = (tag: string, value: string | undefined) =>
-		value ? `<${tag}>${escapeText(value)}</${tag}>` : '';
-	const date = (tag: string, value: string | undefined) =>
-		value ? `<${tag} xsi:type="dcterms:W3CDTF">${escapeText(value)}</${tag}>` : '';
-	return (
-		`${XML_HEADER}<cp:coreProperties xmlns:cp="${NS.cp}" xmlns:dc="${NS.dc}" xmlns:dcterms="${NS.dcterms}" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">` +
-		text('dc:title', p.title) +
-		text('dc:subject', p.subject) +
-		text('dc:creator', p.creator) +
-		text('cp:keywords', p.keywords) +
-		text('dc:description', p.description) +
-		text('cp:lastModifiedBy', p.lastModifiedBy) +
-		date('dcterms:created', p.created) +
-		date('dcterms:modified', p.modified) +
-		'</cp:coreProperties>'
-	);
-}
-
-/** `docProps/app.xml`: application, company and the sheet titles. */
-export function appXml(workbook: Workbook): string {
-	const names = workbook.sheets
-		.map((sheet) => `<vt:lpstr>${escapeText(sheet.name)}</vt:lpstr>`)
-		.join('');
-	const company = workbook.properties.company
-		? `<Company>${escapeText(workbook.properties.company)}</Company>`
-		: '';
-	return (
-		`${XML_HEADER}<Properties xmlns="${NS.extendedProperties}" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes">` +
-		`<Application>${escapeText(workbook.properties.application ?? 'Microsoft Excel')}</Application><DocSecurity>0</DocSecurity><ScaleCrop>false</ScaleCrop>` +
-		`<HeadingPairs><vt:vector size="2" baseType="variant"><vt:variant><vt:lpstr>Worksheets</vt:lpstr></vt:variant><vt:variant><vt:i4>${workbook.sheets.length}</vt:i4></vt:variant></vt:vector></HeadingPairs>` +
-		`<TitlesOfParts><vt:vector size="${workbook.sheets.length}" baseType="lpstr">${names}</vt:vector></TitlesOfParts>` +
-		`${company}<LinksUpToDate>false</LinksUpToDate><SharedDoc>false</SharedDoc><HyperlinksChanged>false</HyperlinksChanged><AppVersion>16.0300</AppVersion></Properties>`
-	);
-}
+export { appXml, coreXml } from './doc-props.js';

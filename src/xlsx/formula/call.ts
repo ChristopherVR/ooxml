@@ -5,7 +5,7 @@ import { currentDate1904 } from './date-serial.js';
 import { evaluateDefinedName, evaluateNode, invokeLambda } from './evaluator.js';
 import { getFunction } from './functions/registry.js';
 import { type FunctionSpec, paramKind } from './functions/types.js';
-import { pick } from './operators.js';
+import { broadcastShape, pick } from './operators.js';
 import { parseFormula } from './parser.js';
 import { implicitIntersection, toMatrix } from './references.js';
 import {
@@ -71,9 +71,7 @@ export function callFunction(node: Extract<FormulaAst, { type: 'call' }>, frame:
 export function applyFunction(spec: FunctionSpec, args: Value[], ctx: CallContext): Value {
 	const fn = spec.fn;
 	if (!fn) return ERR.VALUE;
-	let lifted = false;
-	let rows = 1;
-	let cols = 1;
+	const lifted: Matrix[] = [];
 	for (let i = 0; i < args.length; i++) {
 		if (paramKind(spec, i) !== 'value') continue;
 		let arg = args[i] as Value;
@@ -93,16 +91,12 @@ export function applyFunction(spec: FunctionSpec, args: Value[], ctx: CallContex
 		}
 		if (arg instanceof Matrix) {
 			if (arg.rows === 1 && arg.cols === 1) arg = arg.get(0, 0);
-			else {
-				lifted = true;
-				rows = Math.max(rows, arg.rows);
-				cols = Math.max(cols, arg.cols);
-			}
+			else lifted.push(arg);
 		}
 		args[i] = arg;
 	}
-	if (!lifted) return guard(() => fn(args, ctx));
-	return Matrix.build(rows, cols, (r, c) => {
+	if (lifted.length === 0) return guard(() => fn(args, ctx));
+	return broadcastShape(lifted, (r, c) => {
 		const element = args.map((arg, i) =>
 			arg instanceof Matrix && paramKind(spec, i) === 'value' ? pick(arg, r, c) : arg,
 		);
@@ -140,7 +134,7 @@ export function createContext(frame: Frame): CallContext {
 				return;
 			}
 			if (value instanceof Matrix) {
-				for (const line of value.data) for (const v of line) visit(v, 'array');
+				value.forEachValue((v) => visit(v, 'array'));
 				return;
 			}
 			if (value instanceof LambdaValue) throw new ErrorSignal(ERR.CALC);

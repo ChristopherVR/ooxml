@@ -20,6 +20,17 @@ export {
 	type GridMetricsOptions,
 } from './metrics.js';
 export { visibleCells, type Viewport, type VisibleCells } from './viewport.js';
+export {
+	DEFAULT_ANCHOR_EXTENT_EMU,
+	MIN_TWO_CELL_PIXELS,
+	anchorKind,
+	anchorToPixelBox,
+	pictureAnchorAt,
+	pixelBoxToAnchor,
+	pixelSizeToExtent,
+	type AnchorKind,
+	type PixelBox,
+} from './anchors.js';
 export { applyTint, hls240ToRgb, parseHex, rgbToHls240, toHexColor, type Hls } from './tint.js';
 export { INDEXED_COLORS, THEME_SLOTS, mixColors, resolveColor, themeColor } from './colors.js';
 export type {

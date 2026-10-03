@@ -88,6 +88,21 @@ describe('shiftFormula', () => {
 			'IF( A6 > 0 , "A5" , B6 )',
 		);
 	});
+
+	// Results recorded from Excel 16 deleting row 1 (see __fixtures__ for the formula corpus).
+	it.each([
+		['SUM(A1 : A5)', 'SUM(A1:A4)'],
+		['SUM(A1 :A5)', 'SUM(A1:A4)'],
+		['SUM(A1:A5)', 'SUM(A1:A4)'],
+		['SUM(Sheet1!A1:Sheet1!A5)', 'SUM(Sheet1!#REF!:Sheet1!A4)'],
+		['SUM(A1:INDEX(A:A,5))', 'SUM(#REF!:INDEX(A:A,5))'],
+	])('treats %s like Excel when row 1 is deleted', (formula, expected) => {
+		expect(shiftFormula(formula, 'Sheet1', { ...rows(0, 1), count: -1 })).toBe(expected);
+	});
+
+	it('keeps a spaced area untouched when the shift misses it', () => {
+		expect(shiftFormula('SUM(A1 : A5)', 'Sheet1', rows(9, 1))).toBe('SUM(A1 : A5)');
+	});
 });
 
 describe('renameSheetInFormula', () => {
@@ -99,6 +114,16 @@ describe('renameSheetInFormula', () => {
 		['Sheet1:Sheet3!A1', 'Sheet3', 'End', 'Sheet1:End!A1'],
 		['SUM(Sheet1!A:A)', 'Other', 'X', 'SUM(Sheet1!A:A)'],
 		['Sheet1!A1', 'Sheet1', 'A1', "'A1'!A1"],
+		// Names Excel quotes because they read as R1C1 references or logicals.
+		['Sheet1!A1', 'Sheet1', 'R', "'R'!A1"],
+		['Sheet1!A1', 'Sheet1', 'C', "'C'!A1"],
+		['Sheet1!A1', 'Sheet1', 'RC', "'RC'!A1"],
+		['Sheet1!A1', 'Sheet1', 'R1', "'R1'!A1"],
+		['Sheet1!A1', 'Sheet1', 'R1C1', "'R1C1'!A1"],
+		['Sheet1!A1', 'Sheet1', 'TRUE', "'TRUE'!A1"],
+		['Sheet1!A1', 'Sheet1', 'false', "'false'!A1"],
+		['Sheet1!A1', 'Sheet1', 'A1B', 'A1B!A1'],
+		['Sheet1!A1', 'Sheet1', 'Rates', 'Rates!A1'],
 		['INDIRECT("Sheet1!A1")', 'Sheet1', 'X', 'INDIRECT("Sheet1!A1")'],
 	])('%s: %s -> %s', (formula, from, to, expected) => {
 		expect(renameSheetInFormula(formula, from, to)).toBe(expected);

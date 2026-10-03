@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { getCell } from '../cells.js';
+import type { Cell } from '../model.js';
 import { styleAt } from '../styles.js';
 import { createWorkbook } from '../workbook.js';
 import {
@@ -56,9 +57,7 @@ describe('csvToWorkbook', () => {
 	it('types values through parseCellInput', () => {
 		const workbook = csvToWorkbook(
 			'Item;Price;When;Ok;Share;F\nTea;1234.5;2024-01-15;TRUE;12%;=B2*2\n',
-			{
-				sheetName: 'prices',
-			},
+			{ sheetName: 'prices', formulas: true },
 		);
 		const sheet = workbook.sheets[0]!;
 		expect(workbook.format).toBe('csv');
@@ -71,6 +70,17 @@ describe('csvToWorkbook', () => {
 		expect(getCell(sheet, 1, 4)?.value).toBeCloseTo(0.12);
 		expect(getCell(sheet, 1, 5)?.formula).toBe('B2*2');
 		expect(getCell(sheet, 0, 6)).toBeUndefined();
+	});
+
+	it('imports = fields as text unless formulas are enabled', () => {
+		const text = 'a,=WEBSERVICE("http://x"),-5,+1,@SUM(A1)\n';
+		const sheet = csvToWorkbook(text).sheets[0]!;
+		expect(getCell(sheet, 0, 1)).toEqual({ value: '=WEBSERVICE("http://x")' });
+		expect(getCell(sheet, 0, 2)?.value).toBe(-5);
+		expect(getCell(sheet, 0, 3)?.value).toBe(1);
+		expect(getCell(sheet, 0, 4)?.value).toBe('@SUM(A1)');
+		const enabled = csvToWorkbook(text, { formulas: true }).sheets[0]!;
+		expect(getCell(enabled, 0, 1)?.formula).toBe('WEBSERVICE("http://x")');
 	});
 });
 
@@ -103,6 +113,31 @@ describe('sheetToCsv', () => {
 	it('round-trips through csvToWorkbook', () => {
 		const source = 'h1,h2\r\n"x, y",2\r\n';
 		expect(sheetToCsv(csvToWorkbook(source), 0)).toBe(source);
+	});
+
+	it('neutralises text that a spreadsheet would run as a formula', () => {
+		const workbook = createWorkbook();
+		const sheet = workbook.sheets[0]!;
+		const cells: [number, Cell][] = [
+			[0, { value: '=1+2' }],
+			[1, { value: '+cmd' }],
+			[2, { value: '-x' }],
+			[3, { value: '@SUM(A1)' }],
+			[4, { value: '\tTab' }],
+			[5, { value: '\rCR' }],
+			[6, { value: -5 }],
+			[7, { value: 'plain' }],
+			[8, { value: '=calc', formula: '"="&"calc"' }],
+		];
+		sheet.rows.set(0, new Map(cells));
+		expect(sheetToCsv(workbook, 0)).toBe(
+			`'=1+2,'+cmd,'-x,'@SUM(A1),'\tTab,"'\rCR",-5,plain,'=calc\r\n`,
+		);
+		expect(sheetToCsv(workbook, 0, { escapeFormulas: false }).startsWith('=1+2,+cmd')).toBe(true);
+		// The quote prefix reads back as the original text.
+		const back = csvToWorkbook(sheetToCsv(workbook, 0), { delimiter: ',' }).sheets[0]!;
+		expect(getCell(back, 0, 0)?.value).toBe('=1+2');
+		expect(getCell(back, 0, 6)?.value).toBe(-5);
 	});
 
 	it('writes nothing for an empty sheet and rejects a missing one', () => {

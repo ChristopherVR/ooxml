@@ -143,6 +143,8 @@ export class StyleWriter {
 				applyBorder: xfId !== undefined && borderId !== 0 ? true : undefined,
 				applyAlignment: xfId !== undefined && style.alignment ? true : undefined,
 				applyProtection: xfId !== undefined && style.protection ? true : undefined,
+				quotePrefix: style.quotePrefix,
+				pivotButton: style.pivotButton,
 			},
 			inner,
 		);

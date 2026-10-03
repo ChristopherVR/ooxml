@@ -1,7 +1,16 @@
 import { toNumber } from '../coerce.js';
 import type { CallContext } from '../context.js';
-import { ERR, fail, isError, RefValue, type Scalar, type Value } from '../values.js';
-import { criteriaPairs, matchingValues } from './criteria.js';
+import {
+	ERR,
+	ErrorSignal,
+	fail,
+	isError,
+	Matrix,
+	RefValue,
+	type Scalar,
+	type Value,
+} from '../values.js';
+import { criteriaPairs, liftCriteria, matchingValues } from './criteria.js';
 import { collectNumbers, int, spec } from './helpers.js';
 import * as S from './stats-core.js';
 import type { FunctionSpec } from './types.js';
@@ -80,21 +89,20 @@ function subtotalValues(
 
 /** The aggregations behind SUBTOTAL (1-11) and AGGREGATE (1-19). */
 export function aggregate(code: number, values: Scalar[], k?: number): number {
+	// COUNT and COUNTA count around errors; every other aggregation propagates the first one.
+	if (code === 2) return numbersOf(values).length;
+	if (code === 3) return values.filter((v) => v !== null).length;
 	for (const v of values) if (isError(v)) fail(v);
 	const nums = numbersOf(values);
 	switch (code) {
 		case 1:
 			return S.mean(nums);
-		case 2:
-			return nums.length;
-		case 3:
-			return values.filter((v) => v !== null).length;
 		case 4:
-			return nums.length ? Math.max(...nums) : 0;
+			return S.extreme(nums, true);
 		case 5:
-			return nums.length ? Math.min(...nums) : 0;
+			return S.extreme(nums, false);
 		case 6:
-			return nums.reduce((a, b) => a * b, 1);
+			return nums.length ? nums.reduce((a, b) => a * b, 1) : 0;
 		case 7:
 			return S.stdev(nums, true);
 		case 8:
@@ -144,7 +152,11 @@ export const SUM_FUNCTIONS: FunctionSpec[] = [
 		'Multiplies its arguments.',
 		1,
 		255,
-		(args, ctx) => collectNumbers(ctx, args).reduce((a, b) => a * b, 1),
+		(args, ctx) => {
+			// With no numbers at all PRODUCT is 0, not the empty product 1.
+			const nums = collectNumbers(ctx, args);
+			return nums.length ? nums.reduce((a, b) => a * b, 1) : 0;
+		},
 		['any'],
 	),
 	spec(
@@ -218,7 +230,9 @@ export const SUM_FUNCTIONS: FunctionSpec[] = [
 		3,
 		255,
 		(args, ctx) =>
-			S.sum(numbersOf(matchingValues(ctx, criteriaPairs(args, 1), args[0] ?? null, true))),
+			liftCriteria(ctx, criteriaPairs(args, 1), (pairs) =>
+				S.sum(numbersOf(matchingValues(ctx, pairs, args[0] ?? null, true))),
+			),
 		['any'],
 	),
 	spec(
@@ -251,13 +265,25 @@ export const SUM_FUNCTIONS: FunctionSpec[] = [
 			const skipHidden = options === 1 || options === 3 || options === 5 || options === 7;
 			const skipErrors = options === 2 || options === 3 || options === 6 || options === 7;
 			if (code >= 14) {
-				const k = toNumber(ctx.toScalar(args[3] ?? null));
-				return aggregate(
-					code,
-					subtotalValues(ctx, [args[2] ?? null], skipHidden, skipErrors, skipNested),
-					k,
-				);
+				// The array form: one array or reference plus k, which lifts like a value argument.
+				if (args.length !== 4) fail(ERR.VALUE);
+				const values = subtotalValues(ctx, [args[2] ?? null], skipHidden, skipErrors, skipNested);
+				const k = args[3] ?? null;
+				const one = (kv: Scalar): Scalar => {
+					if (isError(kv)) return kv;
+					try {
+						return aggregate(code, values, toNumber(kv));
+					} catch (e) {
+						if (e instanceof ErrorSignal) return e.value;
+						throw e;
+					}
+				};
+				if (k instanceof RefValue && k.isCell()) return one(ctx.toScalar(k));
+				if (k instanceof RefValue || k instanceof Matrix) return ctx.toMatrix(k).map(one);
+				return aggregate(code, values, toNumber(ctx.toScalar(k)));
 			}
+			// The reference form takes references only.
+			if (args.slice(2).some((a) => !(a instanceof RefValue))) fail(ERR.VALUE);
 			return aggregate(
 				code,
 				subtotalValues(ctx, args.slice(2), skipHidden, skipErrors, skipNested),

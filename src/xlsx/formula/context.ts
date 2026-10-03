@@ -14,6 +14,11 @@ export interface EvalHost {
 		range: CellRange,
 		visit: (value: Scalar, row: number, col: number) => void,
 	): void;
+	/**
+	 * The values of a range as a matrix, cached for the rest of a recalculation (criteria ranges
+	 * that many formulas read). Optional: callers fall back to `readCell`.
+	 */
+	readBlock?(sheet: number, range: CellRange): Matrix;
 	/** One past the last stored row and column of a sheet. */
 	bounds(sheet: number): { rows: number; cols: number };
 	/** The spill range anchored at a cell, if it currently spills. */

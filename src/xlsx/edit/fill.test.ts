@@ -90,6 +90,30 @@ describe('fill series', () => {
 		expect(values(wb, 'A1:A3')).toEqual([45321, 45322, 45323]);
 		expect(styleAt(wb, getCell(ws(wb), 2, 0)?.styleId).numFmt).toBe('yyyy-mm-dd');
 	});
+	// Excel 16 AutoFill from one cell: 0.375 [h:mm] -> 0.41667, 0.45833; 45000.375 [m/d/yyyy h:mm]
+	// -> 45001.375; 45000.375 [h:mm] -> +1 hour; 45000.375 [yyyy-mm-dd] -> 45001, 45002.
+	it('steps a single time by one hour and a date with a time by one day', () => {
+		const fillFrom = (value: number, numFmt: string) => {
+			const wb = createWorkbook();
+			const s = createEditSession(wb, { recalc: false });
+			s.setCellValue(0, 0, 0, value);
+			s.applyStyle(0, [R('A1')], { numFmt });
+			s.fill(0, R('A1'), R('A1:A3'));
+			return values(wb, 'A2:A3').map((v) => Number((v as number).toFixed(9)));
+		};
+		expect(fillFrom(0.375, 'h:mm')).toEqual([0.416666667, 0.458333333]);
+		expect(fillFrom(0.375, 'h:mm:ss AM/PM')).toEqual([0.416666667, 0.458333333]);
+		expect(fillFrom(1.5, '[h]:mm')).toEqual([1.541666667, 1.583333333]);
+		expect(fillFrom(0.375, 'mm:ss')).toEqual([0.416666667, 0.458333333]);
+		expect(fillFrom(45000.375, 'h:mm')).toEqual([45000.416666667, 45000.458333333]);
+		expect(fillFrom(45000.375, 'm/d/yyyy h:mm')).toEqual([45001.375, 45002.375]);
+		expect(fillFrom(0.375, 'm/d/yyyy h:mm')).toEqual([1.375, 2.375]);
+		expect(fillFrom(45000.375, 'yyyy-mm-dd')).toEqual([45001, 45002]);
+	});
+	it('fills a typed time by the hour', () => {
+		const { wb } = fillDown(['9:00'], 'A1:A4');
+		expect(values(wb, 'A4:A4').map((v) => Number((v as number).toFixed(9)))).toEqual([0.5]);
+	});
 	it('steps dates by months when the day of month repeats', () => {
 		expect(values(fillDown(['2024-01-15', '2024-02-15'], 'A1:A3').wb, 'A3:A3')).toEqual([45366]);
 		// Jan 31, Mar 31 -> May 31 (two-month steps, clamped to the month end where needed)

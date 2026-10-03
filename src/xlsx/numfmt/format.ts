@@ -1,6 +1,6 @@
 import { type CellValue, isCellError } from '../model.js';
 import { chooseSection, type CompiledSection, compileFormat } from './compile.js';
-import { renderDate } from './date.js';
+import { isElapsedOnly, renderDate, renderElapsedOnly } from './date.js';
 import { renderFraction } from './fraction.js';
 import { formatGeneral } from './general.js';
 import { renderNumber } from './number.js';
@@ -111,6 +111,10 @@ function formatNumber(
 	const { section, abs } = choice;
 	if (section.kind === 'date') {
 		const serial = abs ? Math.abs(value) : value;
+		if (isElapsedOnly(section.tokens)) {
+			const text = renderElapsedOnly(serial, section.tokens);
+			return result(serial < 0 ? `-${text}` : text, section);
+		}
 		const text = renderDate(serial, section.tokens, date1904);
 		return text === undefined ? { text: OVERFLOW_TEXT } : result(text, section);
 	}

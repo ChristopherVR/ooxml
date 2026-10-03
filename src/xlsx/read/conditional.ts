@@ -25,6 +25,7 @@ function cfvo(node: XmlElement): CfvoThreshold {
 	};
 	const value = att(node, 'val');
 	if (value !== undefined) threshold.value = value;
+	if (boolAttr(node, 'gte') === false) threshold.gte = false;
 	return threshold;
 }
 
@@ -46,11 +47,21 @@ function readRule(
 	dxfs: readonly DifferentialStyle[],
 	palette: readonly string[] | undefined,
 ): ConditionalRule | undefined {
+	const out = readRuleBody(rule, dxfs, palette);
+	// `stopIfTrue` is an attribute of every `cfRule`, whatever its type.
+	if (out && boolAttr(rule, 'stopIfTrue')) out.stopIfTrue = true;
+	return out;
+}
+
+function readRuleBody(
+	rule: XmlElement,
+	dxfs: readonly DifferentialStyle[],
+	palette: readonly string[] | undefined,
+): ConditionalRule | undefined {
 	const type = att(rule, 'type') ?? '';
 	const priority = numAttr(rule, 'priority') ?? 1;
 	const dxfId = numAttr(rule, 'dxfId');
 	const style: DifferentialStyle = structuredClone(dxfId === undefined ? {} : (dxfs[dxfId] ?? {}));
-	const stop = boolAttr(rule, 'stopIfTrue') ? { stopIfTrue: true } : {};
 	const colors = (parent: XmlElement | undefined): Color[] =>
 		parent
 			? xChildren(parent, 'color')
@@ -65,10 +76,9 @@ function readRule(
 				formulas: formulasOf(rule),
 				style,
 				priority,
-				...stop,
 			};
 		case 'expression':
-			return { type, formula: formulasOf(rule)[0] ?? '', style, priority, ...stop };
+			return { type, formula: formulasOf(rule)[0] ?? '', style, priority };
 		case 'colorScale': {
 			const scale = xFirst(rule, 'colorScale');
 			return {
@@ -123,7 +133,7 @@ function readRule(
 		case 'timePeriod': {
 			const period = att(rule, 'timePeriod') ?? '';
 			if (!(TIME_PERIODS as readonly string[]).includes(period)) return undefined;
-			return { type, timePeriod: period as TimePeriod, style, priority, ...stop };
+			return { type, timePeriod: period as TimePeriod, style, priority };
 		}
 		default:
 			if (SIMPLE_TYPES.has(type)) return { type: type as 'duplicateValues', style, priority };

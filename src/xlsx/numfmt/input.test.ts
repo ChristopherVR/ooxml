@@ -53,6 +53,17 @@ describe('parseCellInput', () => {
 		['8:30:15 PM', 0.854340277777778, 'h:mm:ss AM/PM'],
 		['25:00', 1.04166666666667, '[h]:mm:ss'],
 		['45:30.5', 0.0316030092592593, 'mm:ss.0'],
+		['10:30:00.5', 0.437505787037037, 'mm:ss.0'],
+		['1:02:03.456', 0.0430955555555556, 'mm:ss.0'],
+		['0:30 am', 0.0208333333333333, 'h:mm AM/PM'],
+		['0:30 pm', 0.520833333333333, 'h:mm AM/PM'],
+		['0:30:15 am', 0.0210069444444444, 'h:mm:ss AM/PM'],
+		['Jan-32', 11689, 'mmm-yy'],
+		['Jan 32', 11689, 'mmm-yy'],
+		['Jan-99', 36161, 'mmm-yy'],
+		['( 5 )', -5, undefined],
+		['($5)', -5, '$#,##0_);[Red]($#,##0)'],
+		[' 5 ', 5, undefined],
 		['3/15/2023 13:45', 45000.5729166667, 'm/d/yyyy h:mm'],
 		['2023-03-15 08:30', 45000.3541666667, 'yyyy-mm-dd h:mm'],
 	])('%s', (text, value, numFmt) => {
@@ -62,12 +73,30 @@ describe('parseCellInput', () => {
 		expect(parsed.formula).toBeUndefined();
 	});
 
-	it.each(['12,34', '1.2.3', '5-', '5e', '1899-12-31', '2023-02-30', 'hello', '13:75', '$1e3'])(
-		'keeps %s as text',
-		(text) => {
-			expect(parseCellInput(text)).toEqual({ value: text });
-		},
-	);
+	it.each([
+		'12,34',
+		'1.2.3',
+		'5-',
+		'5e',
+		'1899-12-31',
+		'2023-02-30',
+		'hello',
+		'13:75',
+		'$1e3',
+		'(-5)',
+		'(+5)',
+		'(-$5)',
+		'-(5)',
+		'TRUE ',
+		' true',
+		'FALSE  ',
+		' #DIV/0!',
+		'#N/A ',
+		'13:30 pm',
+		'Jan. 5',
+	])('keeps %s as text', (text) => {
+		expect(parseCellInput(text)).toEqual({ value: text });
+	});
 
 	it('handles formulas, forced text, booleans, errors and blanks', () => {
 		expect(parseCellInput('=SUM(A1:A3)')).toEqual({ value: null, formula: 'SUM(A1:A3)' });
@@ -87,6 +116,20 @@ describe('parseCellInput', () => {
 		expect(parsed.numFmt).toBe('d-mmm');
 		expect(formatValue(parsed.value, 'yyyy').text).toBe(String(new Date().getFullYear()));
 	});
+
+	// Excel 16: a month name and a number is a day of the current year when that day exists.
+	it.each(['Jan 5', 'Jan-5', 'jan-5', 'Jan5', 'January 5', 'Jan-24', 'Sept 5', 'Jan-31'])(
+		'reads %s as a day of the current year',
+		(text) => {
+			const parsed = parseCellInput(text);
+			expect(parsed.numFmt).toBe('d-mmm');
+			const day = text.replace(/\D/g, '');
+			const month = text.startsWith('Sept') ? 'Sep' : 'Jan';
+			expect(formatValue(parsed.value, 'yyyy d mmm').text).toBe(
+				`${new Date().getFullYear()} ${day} ${month}`,
+			);
+		},
+	);
 
 	it('produces 1904 serials when asked', () => {
 		expect(parseCellInput('1904-01-02', { date1904: true }).value).toBe(1);

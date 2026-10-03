@@ -63,14 +63,15 @@ class Engine extends EngineCore implements CalcEngine {
 				structural = true;
 			} else if (existing && formula) seeds.add(existing);
 			changed.push({ sheet: change.sheet, range: { start: { row, col }, end: { row, col } } });
-			for (const anchor of this.footprints) {
+			const anchors: FormulaNode[] = [];
+			this.footprintsBy().dependents(
+				change.sheet,
+				{ start: { row, col }, end: { row, col } },
+				anchors,
+			);
+			for (const anchor of anchors) {
 				const fp = anchor.spill ?? anchor.blockedSpill;
-				if (
-					anchor.sheet === change.sheet &&
-					fp &&
-					rangeHas(fp, row, col) &&
-					!(anchor.row === row && anchor.col === col)
-				) {
+				if (fp && rangeHas(fp, row, col) && !(anchor.row === row && anchor.col === col)) {
 					seeds.add(anchor);
 				}
 			}
@@ -133,7 +134,9 @@ class Engine extends EngineCore implements CalcEngine {
 		const value = this.evaluateAdHoc(formula, at);
 		if (value instanceof LambdaValue) return [[ERR.CALC]];
 		try {
-			return toMatrix(this, value).data.map((row) => [...row]);
+			return toMatrix(this, value)
+				.block()
+				.data.map((row) => [...row]);
 		} catch (e) {
 			if (e instanceof ErrorSignal) return [[e.value]];
 			throw e;

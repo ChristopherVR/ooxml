@@ -118,10 +118,32 @@ export function totalsRowFormulas(
 		if (code === undefined) return;
 		const col = table.range.start.col + index;
 		const escaped = name.replace(/['#[\]]/g, "'$&");
-		const formula = `SUBTOTAL(${code},${table.name}[${escaped}])`;
+		const formula = `SUBTOTAL(${code},${table.displayName || table.name}[${escaped}])`;
 		if (sheet.rows.get(row)?.get(col)?.formula !== formula) out.set(`${row}:${col}`, formula);
 	});
 	return out;
+}
+
+/**
+ * The `name` and `displayName` to write. Names read from the source and left unedited are kept
+ * exactly (Excel itself writes `name="T1" displayName="T1_"`); only names the user created or
+ * changed are made safe, since `displayName` is what formulas refer to.
+ */
+export function resolveTableNames(
+	table: Table,
+	before: Pick<Table, 'name' | 'displayName'> | undefined,
+	index: number,
+): { name: string; displayName: string } {
+	const display = table.displayName || table.name;
+	const displayName =
+		before && before.displayName === display ? display : safeTableName(display, index);
+	const name =
+		before && before.name === table.name
+			? table.name
+			: table.name === display
+				? displayName
+				: safeTableName(table.name, index);
+	return { name, displayName };
 }
 
 /** Excel rejects table names that are not identifiers or that read as cell references. */

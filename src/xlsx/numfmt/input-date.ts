@@ -72,17 +72,15 @@ export function parseTime(text: string): TimeInput | undefined {
 	if (frac !== undefined) {
 		if (ampm) return undefined;
 		const secondsPart = Number(`${c ?? b}.${frac}`);
+		// Excel picks `mm:ss.0` for every time with fractional seconds, even `10:30:00.5`.
+		format = 'mm:ss.0';
 		if (c === undefined) {
 			minutes = hours;
 			hours = 0;
-			seconds = secondsPart;
-			format = 'mm:ss.0';
-		} else {
-			seconds = secondsPart;
-			format = 'h:mm:ss.0';
 		}
+		seconds = secondsPart;
 	} else if (ampm) {
-		if (hours < 1 || hours > 12) return undefined;
+		if (hours > 12) return undefined;
 		const pm = ampm.toLowerCase().startsWith('p');
 		hours = (hours % 12) + (pm ? 12 : 0);
 		format = c === undefined ? 'h:mm AM/PM' : 'h:mm:ss AM/PM';
@@ -127,6 +125,18 @@ function parseDay(text: string): DayInput | undefined {
 	if (m) {
 		const month = monthFromName(m[1] ?? '');
 		return month ? { year: Number(m[3]), month, day: Number(m[2]), format: 'd-mmm-yy' } : undefined;
+	}
+	m = /^([a-z]{3,})[- ]?(\d{1,2})$/i.exec(text);
+	if (m) {
+		// `Jan 5`, `Jan-24`: a day of the current year when it exists, otherwise a two-digit year
+		// (`Jan-32` is January 1932, `Feb-30` February 1930), as Excel reads them.
+		const month = monthFromName(m[1] ?? '');
+		if (!month) return undefined;
+		const n = Number(m[2]);
+		const year = currentYear();
+		if (n >= 1 && serialOf(year, month, n, false) !== undefined)
+			return { year, month, day: n, format: 'd-mmm' };
+		return { year: fullYear(m[2] ?? ''), month, day: 1, format: 'mmm-yy' };
 	}
 	m = /^([a-z]+)\.?[- ](\d{4})$/i.exec(text);
 	if (m) {

@@ -1,3 +1,4 @@
+import type { DocumentPropertiesPatch } from './doc-properties.js';
 import type { CellAddress, CellRange } from '../address.js';
 import type {
 	BorderEdge,
@@ -251,6 +252,12 @@ export interface EditSession {
 	): { removed: number; remaining: number };
 	/** Automatic or manual calculation (saved with the workbook). */
 	setCalcMode(mode: 'auto' | 'manual'): void;
+	/**
+	 * Changes document properties (File > Info): a value sets a core, extended or custom field,
+	 * `null` clears it; `custom` replaces the whole list. One undo step; returns whether anything
+	 * changed.
+	 */
+	setDocumentProperties(patch: DocumentPropertiesPatch): boolean;
 	/** `setCalcMode(enabled ? 'auto' : 'manual')`. */
 	setAutoRecalc(enabled: boolean): void;
 	/**

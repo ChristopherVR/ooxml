@@ -131,9 +131,15 @@ export function makeCriteria(criteria: Scalar): (value: Scalar) => boolean {
 	if (op === '' || op === '=' || op === '<>') {
 		let test: (value: Scalar) => boolean;
 		if (operandText === '') {
-			test = (value) => value === null || value === '';
-			if (op === '') return test;
+			// "" matches empty cells and empty text, "=" only truly empty cells, and "<>" counts an
+			// empty-text formula result as non-empty.
+			if (op === '') return (value) => value === null || value === '';
+			if (op === '=') return (value) => value === null;
+			return (value) => value !== null;
 		} else if (asNumber !== undefined) {
+			// "=2" also matches the text "2", but "<>2" only excludes the number.
+			if (op === '<>')
+				return (value) => !(typeof value === 'number' && compareScalars(value, asNumber) === 0);
 			test = (value) =>
 				(typeof value === 'number' && compareScalars(value, asNumber) === 0) ||
 				(typeof value === 'string' && parseNumberText(value) === asNumber);
@@ -148,16 +154,16 @@ export function makeCriteria(criteria: Scalar): (value: Scalar) => boolean {
 			const lower = operandText.toLowerCase();
 			test = (value) => typeof value === 'string' && value.toLowerCase() === lower;
 		}
-		if (op === '<>') {
-			if (operandText === '') return (value) => value !== null && value !== '';
-			return (value) => !test(value);
-		}
-		return test;
+		return op === '<>' ? (value) => !test(value) : test;
 	}
 	const sign = (c: number): boolean =>
 		op === '<' ? c < 0 : op === '>' ? c > 0 : op === '<=' ? c <= 0 : c >= 0;
 	if (asNumber !== undefined) {
 		return (value) => typeof value === 'number' && sign(compareScalars(value, asNumber));
+	}
+	if (asBool !== undefined) {
+		// ">=FALSE" compares logicals with logicals.
+		return (value) => typeof value === 'boolean' && sign(compareScalars(value, asBool));
 	}
 	return (value) => typeof value === 'string' && sign(compareScalars(value, operandText));
 }

@@ -18,6 +18,11 @@ export interface CellWriteContext {
 	formulas?: ReadonlyMap<string, string>;
 	/** Set when a dynamic-array formula was written (the package then needs `xl/metadata.xml`). */
 	dynamicArrays?: { used: boolean };
+	/**
+	 * The cell metadata the package will carry (see `MetadataPlan`). Without it the source
+	 * `metadata.xml` is not kept, so `vm` and source `cm` indices are not written.
+	 */
+	metadata?: { readonly dynamicCm: number; readonly keepsSource: boolean };
 }
 
 /** The `cm` value of the XLDAPR dynamic-array cell metadata block the writer emits. */
@@ -49,7 +54,7 @@ function cellXml(
 		const formula = escapeText(addFuturePrefixes(cell.formula));
 		const dynamic = forced ? undefined : spills.dynamicRange(cell, row, col);
 		if (dynamic) {
-			cm = DYNAMIC_ARRAY_CM;
+			cm = ctx.metadata?.dynamicCm ?? DYNAMIC_ARRAY_CM;
 			if (ctx.dynamicArrays) ctx.dynamicArrays.used = true;
 			f = `<f t="array" ref="${formatRange(dynamic)}" aca="false">${formula}</f>`;
 		} else
@@ -83,7 +88,11 @@ function cellXml(
 		v = storedError(value.error);
 	}
 	if (!f && !v && t !== 'str') return `<c${attrs({ r, s })}/>`;
-	return `<c${attrs({ r, s, t, cm })}>${f}${t === 'str' || v ? `<v>${v}</v>` : ''}</c>`;
+	const keeps = ctx.metadata?.keepsSource === true;
+	if (cm === undefined && keeps) cm = cell.cellMetadata;
+	// Rich values are stored on error cells (`#VALUE!`); a typed value no longer refers to one.
+	const vm = keeps && isCellError(value) ? cell.valueMetadata : undefined;
+	return `<c${attrs({ r, s, t, cm, vm })}>${f}${t === 'str' || v ? `<v>${v}</v>` : ''}</c>`;
 }
 
 /**

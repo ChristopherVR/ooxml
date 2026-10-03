@@ -16,6 +16,8 @@ export const MAX_INPUT_BYTES = 50 * 1024 * 1024;
 export const MAX_PARTS = 10_000;
 /** Largest total uncompressed size, guarding against zip bombs. */
 export const MAX_UNCOMPRESSED_BYTES = 300 * 1024 * 1024;
+/** Largest uncompressed size of a single part. */
+export const MAX_PART_BYTES = 200 * 1024 * 1024;
 
 /** Content types of the SpreadsheetML parts the reader and writer know. */
 export const CONTENT_TYPES = {
@@ -125,13 +127,96 @@ function uncompressedSize(entry: JSZip.JSZipObject): number {
 	return Number.isFinite(size) ? size : 0;
 }
 
-/** Unzips a package into raw parts, enforcing the size and part-count limits. */
+const mib = (bytes: number): number => Math.round(bytes / 1048576);
+
+/** Size limits applied while unzipping; every field defaults to the exported constant. */
+export interface ZipLimits {
+	/** Largest accepted package (compressed). */
+	maxInputBytes?: number;
+	/** Largest number of zip entries. */
+	maxParts?: number;
+	/** Largest inflated size of one part. */
+	maxPartBytes?: number;
+	/** Largest total inflated size of all parts. */
+	maxTotalBytes?: number;
+}
+
+/** The streaming surface of a JSZip entry (present at runtime, missing from the typings). */
+interface InternalStream {
+	internalStream(type: 'uint8array'): JSZip.JSZipStreamHelper<Uint8Array>;
+}
+
+/**
+ * Inflates one entry chunk by chunk, counting the bytes actually produced. The declared sizes in
+ * the zip headers are attacker-controlled, so the stream is paused and the read rejected as soon
+ * as the entry inflates past its declared size or the running total passes the package limit,
+ * before the rest of the entry is inflated.
+ */
+function inflateEntry(
+	entry: JSZip.JSZipObject,
+	alreadyRead: number,
+	maxTotalBytes: number,
+): Promise<Uint8Array> {
+	// Valid packages declare exact sizes (JSZip itself rejects a mismatch, but only at the end),
+	// and the declared size already passed the per-part limit, so it is the cap for this entry.
+	const declared = uncompressedSize(entry);
+	return new Promise((resolve, reject) => {
+		const chunks: Uint8Array[] = [];
+		let size = 0;
+		let done = false;
+		const stream = (entry as unknown as InternalStream).internalStream('uint8array');
+		const fail = (error: Error): void => {
+			if (done) return;
+			done = true;
+			stream.pause();
+			chunks.length = 0;
+			reject(error);
+		};
+		stream.on('data', (chunk) => {
+			if (done) return;
+			size += chunk.byteLength;
+			if (size > declared)
+				return fail(new Error(`XLSX part ${entry.name} inflates past its declared size`));
+			if (alreadyRead + size > maxTotalBytes)
+				return fail(
+					new Error(
+						`XLSX package exceeds the ${mib(maxTotalBytes)} MiB uncompressed content limit`,
+					),
+				);
+			chunks.push(chunk);
+		});
+		stream.on('error', (error) => fail(error));
+		stream.on('end', () => {
+			if (done) return;
+			done = true;
+			if (chunks.length === 1 && chunks[0]) return resolve(chunks[0]);
+			const out = new Uint8Array(size);
+			let offset = 0;
+			for (const chunk of chunks) {
+				out.set(chunk, offset);
+				offset += chunk.byteLength;
+			}
+			resolve(out);
+		});
+		stream.resume();
+	});
+}
+
+/**
+ * Unzips a package into raw parts, enforcing the size and part-count limits. Declared sizes give
+ * a cheap early reject; the real guard counts inflated bytes while streaming each entry.
+ */
 export async function readZipParts(
 	input: Uint8Array | ArrayBuffer,
+	limits: ZipLimits = {},
 ): Promise<Map<string, Uint8Array>> {
+	const maxInput = limits.maxInputBytes ?? MAX_INPUT_BYTES;
+	const maxParts = limits.maxParts ?? MAX_PARTS;
+	const maxPart = limits.maxPartBytes ?? MAX_PART_BYTES;
+	const maxTotal = limits.maxTotalBytes ?? MAX_UNCOMPRESSED_BYTES;
 	const bytes = input instanceof Uint8Array ? input : new Uint8Array(input);
-	if (bytes.byteLength > MAX_INPUT_BYTES)
-		throw new Error('XLSX package exceeds the 50 MiB compressed input limit');
+	if (bytes.byteLength > maxInput)
+		throw new Error(`XLSX package exceeds the ${mib(maxInput)} MiB compressed input limit`);
 	let zip: JSZip;
 	try {
 		zip = await JSZip.loadAsync(bytes);
@@ -141,17 +226,22 @@ export async function readZipParts(
 		);
 	}
 	const entries = Object.values(zip.files).filter((entry) => !entry.dir);
-	if (entries.length > MAX_PARTS) throw new Error('XLSX package exceeds the 10,000 part limit');
-	const total = entries.reduce((sum, entry) => sum + uncompressedSize(entry), 0);
-	if (total > MAX_UNCOMPRESSED_BYTES)
-		throw new Error('XLSX package exceeds the 300 MiB uncompressed content limit');
+	if (entries.length > maxParts)
+		throw new Error(`XLSX package exceeds the ${maxParts.toLocaleString('en-US')} part limit`);
+	let declared = 0;
+	for (const entry of entries) {
+		const size = uncompressedSize(entry);
+		if (size > maxPart)
+			throw new Error(`XLSX part ${entry.name} exceeds the uncompressed part size limit`);
+		declared += size;
+	}
+	if (declared > maxTotal)
+		throw new Error(`XLSX package exceeds the ${mib(maxTotal)} MiB uncompressed content limit`);
 	const parts = new Map<string, Uint8Array>();
 	let read = 0;
 	for (const entry of entries) {
-		const data = await entry.async('uint8array');
+		const data = await inflateEntry(entry, read, maxTotal);
 		read += data.byteLength;
-		if (read > MAX_UNCOMPRESSED_BYTES)
-			throw new Error('XLSX package exceeds the 300 MiB uncompressed content limit');
 		parts.set(entry.name.replace(/^\//, ''), data);
 	}
 	return parts;

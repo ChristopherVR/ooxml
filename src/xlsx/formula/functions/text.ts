@@ -4,6 +4,7 @@ import { ERR, fail, isError, type Value } from '../values.js';
 import { bool, num, optNum, spec, str, wildcardRegex } from './helpers.js';
 import type { FunctionSpec } from './types.js';
 import { TEXT_CONVERT } from './text-convert.js';
+import { left, lower, proper, right, upper } from './text-case.js';
 
 const C = 'Text';
 const MAX_TEXT = 32_767;
@@ -14,7 +15,8 @@ function find(args: Value[], insensitive: boolean): number {
 	const needle = str(args[0]);
 	const haystack = str(args[1]);
 	const start = optNum(args, 2, 1);
-	if (start < 1 || start > haystack.length + 1) fail(ERR.VALUE);
+	// FIND may start just past the end (FIND("","abc",4) is 4); SEARCH may not.
+	if (start < 1 || start > haystack.length + (insensitive ? 0 : 1)) fail(ERR.VALUE);
 	const from = Math.trunc(start) - 1;
 	if (needle === '') return from + 1;
 	if (!insensitive) {
@@ -25,17 +27,6 @@ function find(args: Value[], insensitive: boolean): number {
 	const pattern = new RegExp(regex.source.slice(1, -1), 'i');
 	const match = pattern.exec(haystack.slice(from));
 	return match ? from + match.index + 1 : fail(ERR.VALUE);
-}
-
-function proper(text: string): string {
-	let out = '';
-	let previousLetter = false;
-	for (const ch of text) {
-		const isLetter = ch.toLowerCase() !== ch.toUpperCase();
-		out += isLetter ? (previousLetter ? ch.toLowerCase() : ch.toUpperCase()) : ch;
-		previousLetter = isLetter;
-	}
-	return out;
 }
 
 /** Every value of the arguments as text, blanks included (ranges are read densely). */
@@ -92,15 +83,14 @@ export const TEXT_FUNCTIONS: FunctionSpec[] = [
 		spec(name, C, `${name}(text, [num_chars])`, 'The first characters of a text.', 1, 2, (args) => {
 			const n = optNum(args, 1, 1);
 			if (n < 0) fail(ERR.VALUE);
-			return str(args[0]).slice(0, Math.trunc(n));
+			return left(str(args[0]), Math.trunc(n));
 		}),
 	),
 	...(['RIGHT', 'RIGHTB'] as const).map((name) =>
 		spec(name, C, `${name}(text, [num_chars])`, 'The last characters of a text.', 1, 2, (args) => {
 			const n = Math.trunc(optNum(args, 1, 1));
 			if (n < 0) fail(ERR.VALUE);
-			const text = str(args[0]);
-			return n === 0 ? '' : text.slice(Math.max(0, text.length - n));
+			return right(str(args[0]), n);
 		}),
 	),
 	...(['MID', 'MIDB'] as const).map((name) =>
@@ -131,10 +121,10 @@ export const TEXT_FUNCTIONS: FunctionSpec[] = [
 		),
 	),
 	spec('LOWER', C, 'LOWER(text)', 'Converts text to lower case.', 1, 1, (args) =>
-		str(args[0]).toLowerCase(),
+		lower(str(args[0])),
 	),
 	spec('UPPER', C, 'UPPER(text)', 'Converts text to upper case.', 1, 1, (args) =>
-		str(args[0]).toUpperCase(),
+		upper(str(args[0])),
 	),
 	spec('PROPER', C, 'PROPER(text)', 'Capitalizes the first letter of each word.', 1, 1, (args) =>
 		proper(str(args[0])),

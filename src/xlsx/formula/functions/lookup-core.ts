@@ -85,8 +85,54 @@ export function findExact(
 }
 
 /**
- * Binary search like Excel's approximate lookups: on ascending data the last position whose value
- * is <= `lookup` (`descending`: the last position whose value is >= `lookup`).
+ * MATCH / VLOOKUP / HLOOKUP / LOOKUP approximate search on ascending data, like Excel's binary
+ * search: the last position whose value is <= the lookup value. A probe that lands on a value of another
+ * type (text among numbers, blanks, errors) moves right to the next value of the lookup's type,
+ * so those values are skipped: MATCH(4,{1,2,"",3,5}) is 4.
+ */
+export function findAscending(vector: Vector, lookup: Scalar): number {
+	if (isError(lookup)) fail(lookup);
+	let lo = 0;
+	let hi = vector.length - 1;
+	let best = -1;
+	while (lo <= hi) {
+		const mid = (lo + hi) >> 1;
+		let at = mid;
+		let v = vector.get(at);
+		while (at <= hi && !sameKind(v, lookup)) v = ++at <= hi ? vector.get(at) : null;
+		if (at > hi) {
+			hi = mid - 1;
+			continue;
+		}
+		if (compareScalars(v as never, lookup as never) <= 0) {
+			best = at;
+			lo = at + 1;
+		} else hi = mid - 1;
+	}
+	return best;
+}
+
+/**
+ * MATCH with match_type -1: Excel scans from the start while values (of the lookup's type) are
+ * >= the lookup value, stopping at an exact match or at the first smaller value.
+ */
+export function findDescending(vector: Vector, lookup: Scalar): number {
+	if (isError(lookup)) fail(lookup);
+	let best = -1;
+	for (let i = 0; i < vector.length; i++) {
+		const v = vector.get(i);
+		if (!sameKind(v, lookup)) continue;
+		const c = compareScalars(v as never, lookup as never);
+		if (c === 0) return i;
+		if (c < 0) break;
+		best = i;
+	}
+	return best;
+}
+
+/**
+ * XMATCH binary search (search_mode 2 / -2), which compares across types: on ascending data the
+ * last position whose value is <= `lookup` (`descending`: the last one whose value is >= it).
  */
 export function findSorted(vector: Vector, lookup: Scalar, descending = false): number {
 	if (isError(lookup)) fail(lookup);
@@ -161,9 +207,10 @@ export function xsearch(
 ): number {
 	if (![0, -1, 1, 2].includes(matchMode) || ![1, -1, 2, -2].includes(searchMode)) fail(ERR.VALUE);
 	if (searchMode === 2 || searchMode === -2) {
+		if (matchMode === 2) fail(ERR.VALUE);
 		const descending = searchMode === -2;
 		const at = findSorted(vector, lookup, descending);
-		if (matchMode === 0 || matchMode === 2) {
+		if (matchMode === 0) {
 			return at >= 0 && exactMatcher(lookup, false)(vector.get(at)) ? at : -1;
 		}
 		if (at >= 0 && exactMatcher(lookup, false)(vector.get(at))) return at;

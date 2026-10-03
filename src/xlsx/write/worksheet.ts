@@ -6,6 +6,7 @@ import { CONTENT_TYPES } from '../read/package.js';
 import { printOptionsXml } from '../read/print-options.js';
 import { conditionalFormatsXml, dataValidationsXml } from './conditional.js';
 import { RelationshipSet } from './package-writer.js';
+import { pageXml } from './page-setup.js';
 import { sheetDataXml } from './sheet-data.js';
 import {
 	sourceRelIds,
@@ -19,7 +20,6 @@ import {
 	colsXml,
 	dimensionXml,
 	mergeCellsXml,
-	pageXml,
 	protectionXml,
 	sheetFormatXml,
 	sheetPrXml,
@@ -126,6 +126,7 @@ export function writeWorksheet(
 				headerText,
 				formulas,
 				...(ctx.dynamicArrays ? { dynamicArrays: ctx.dynamicArrays } : {}),
+				...(ctx.metadata ? { metadata: ctx.metadata } : {}),
 			},
 			sheet,
 		),
@@ -158,7 +159,7 @@ export function writeWorksheet(
 		if (key.startsWith('source:') || !ORDER.includes(key) || (blocks.get(key) ?? '') !== '')
 			continue;
 		const valid = list.filter((xml) =>
-			[...xml.matchAll(/r:(?:id|embed|link|pict)="([^"]*)"/g)].every((m) =>
+			[...xml.matchAll(/\br:(?:id|embed|link|pict)="([^"]*)"/g)].every((m) =>
 				rels.entries.has(m[1] ?? ''),
 			),
 		);

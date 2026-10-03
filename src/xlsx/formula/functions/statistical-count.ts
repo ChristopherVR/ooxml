@@ -2,7 +2,7 @@
 import { parseNumberText } from '../text-number.js';
 import { RefValue, type Value } from '../values.js';
 import type { CallContext } from '../context.js';
-import { criteriaPairs, matchingValues } from './criteria.js';
+import { criteriaPairs, liftCriteria, matchingCells } from './criteria.js';
 import { collectNumbers, makeCriteria, scalar, spec } from './helpers.js';
 import * as S from './stats-core.js';
 import type { FunctionSpec } from './types.js';
@@ -60,8 +60,19 @@ function countBlank(ctx: CallContext, value: Value): number {
 }
 
 function countIf(ctx: CallContext, range: Value, criteria: Value): number {
+	if (range instanceof RefValue && range.areas.length === 1) {
+		// One area: read through the shared (cached) criteria path, blanks past the used part counted.
+		const found = matchingCells(ctx, [{ range, criteria }], undefined, false);
+		return found.values.length + found.blankTail;
+	}
 	const test = makeCriteria(scalar(criteria));
-	if (!(range instanceof RefValue)) return ctx.toMatrix(range).flat().filter(test).length;
+	if (!(range instanceof RefValue)) {
+		let n = 0;
+		ctx.toMatrix(range).forEachValue((v) => {
+			if (test(v)) n++;
+		});
+		return n;
+	}
 	let matched = 0;
 	let stored = 0;
 	ctx.forEach(range, (v) => {
@@ -119,7 +130,11 @@ export const COUNT_FUNCTIONS: FunctionSpec[] = [
 		'Counts the cells that meet several criteria.',
 		2,
 		254,
-		(args, ctx) => matchingValues(ctx, criteriaPairs(args, 0), undefined, true).length,
+		(args, ctx) =>
+			liftCriteria(ctx, criteriaPairs(args, 0), (pairs) => {
+				const found = matchingCells(ctx, pairs, undefined, true);
+				return found.values.length + found.blankTail;
+			}),
 		['any'],
 	),
 	spec(

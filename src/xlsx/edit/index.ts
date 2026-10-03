@@ -13,7 +13,9 @@ export { parseHtmlTable } from './clipboard-html-parse.js';
 export { toHtml } from './clipboard-html.js';
 export { cellsFromText } from './clipboard.js';
 export { currentRegion } from './filter.js';
+export { mergeWouldDiscard } from './merge.js';
 export { queryPattern, replaceText } from './find.js';
+export { cellInputText, formulaBarText, numberInputText } from './input-text.js';
 export { presetEdges } from './borders.js';
 export { validateDefinedName } from './view.js';
 export { uniqueHeaders } from './tables.js';
@@ -30,6 +32,7 @@ export {
 export { MAX_OUTLINE_LEVEL } from './outline.js';
 export type { RemoveDuplicatesResult } from './duplicates.js';
 export { calcModeOf, type CalcMode } from './calc-mode.js';
+export type { DocumentPropertiesPatch } from './doc-properties.js';
 export { shiftRange, shiftSpan, subtractRange, type Axis, type AxisShift } from './range-math.js';
 export type {
 	BorderPreset,

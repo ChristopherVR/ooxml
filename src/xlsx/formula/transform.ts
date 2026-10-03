@@ -103,13 +103,57 @@ function shiftInterval(
 }
 
 /**
+ * Joins `A1 : A5` (spaces around the colon) into one area token, the way Excel reads it when
+ * rows or columns shift, so deleting row 1 gives `A1:A4` rather than `#REF! : A4`.
+ */
+function mergeSpacedAreas(tokens: Token[]): Token[] {
+	const out: Token[] = [];
+	const plainCell = (t: Token | undefined): boolean =>
+		t?.kind === 'ref' && t.ref?.kind === 'cell' && !t.spill;
+	for (let i = 0; i < tokens.length; i++) {
+		const first = tokens[i] as Token;
+		let j = i + 1;
+		while (tokens[j]?.kind === 'ws') j++;
+		let k = j + 1;
+		while (tokens[k]?.kind === 'ws') k++;
+		const colon = tokens[j];
+		const last = tokens[k];
+		if (
+			plainCell(first) &&
+			colon?.kind === 'op' &&
+			colon.text === ':' &&
+			plainCell(last) &&
+			!last?.prefix &&
+			k > i + 2 &&
+			first.ref &&
+			last?.ref
+		) {
+			const text = tokens
+				.slice(i, k + 1)
+				.map((t) => t.text)
+				.join('');
+			out.push({
+				...first,
+				text,
+				ref: { kind: 'area', start: first.ref.start, end: last.ref.start },
+			});
+			i = k;
+			continue;
+		}
+		out.push(first);
+	}
+	return out;
+}
+
+/**
  * Adjusts references for inserted (`count` > 0) or deleted (`count` < 0) rows or columns on
  * `spec.sheet`. References into deleted cells become `#REF!`.
  */
 export function shiftFormula(formula: string, formulaSheet: string, spec: ShiftSpec): string {
 	if (spec.count === 0) return formula;
-	const tokens = safeTokens(formula);
-	if (!tokens) return formula;
+	const raw = safeTokens(formula);
+	if (!raw) return formula;
+	const tokens = mergeSpacedAreas(raw);
 	const isRow = spec.axis === 'row';
 	for (const token of tokens) {
 		if (token.kind !== 'ref' || !token.ref || !sheetMatches(token.prefix, formulaSheet, spec.sheet))
@@ -140,10 +184,16 @@ export function shiftFormula(formula: string, formulaSheet: string, spec: ShiftS
 	return joinTokens(tokens);
 }
 
+/**
+ * Whether a sheet name must be quoted in a reference: anything but a plain identifier, and names
+ * Excel would read as something else: A1 or R1C1 references (`R`, `C`, `RC`, `R1`, `C2`,
+ * `R1C1`) and the logicals TRUE and FALSE.
+ */
 const needsQuote = (name: string): boolean =>
 	!/^[A-Za-z_\u00A1-\uFFFF][A-Za-z0-9_.\u00A1-\uFFFF]*$/.test(name) ||
 	/^[A-Za-z]{1,3}\d+$/.test(name) ||
-	/^R\d*C\d*$/i.test(name);
+	/^(?:R\d*C?\d*|C\d*)$/i.test(name) ||
+	/^(?:TRUE|FALSE)$/i.test(name);
 
 /** The text of a sheet prefix (`Sheet1!`, `'My Sheet'!`), quoted when needed. */
 export function prefixText(prefix: SheetPrefix): string {

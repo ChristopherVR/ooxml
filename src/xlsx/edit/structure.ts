@@ -55,12 +55,13 @@ function shiftAxis(
 	checkSpan(axis, at, count);
 	const sheet = sheetAt(ctx.workbook, s);
 	const noun = axis === 'row' ? (count === 1 ? 'row' : 'rows') : count === 1 ? 'column' : 'columns';
+	const shift: AxisShift = { axis, at, count: insert ? count : -count };
 	ctx.run(
 		`${insert ? 'Insert' : 'Delete'} ${noun}`,
 		'structure',
-		[{ kind: 'workbook' }],
+		[{ kind: 'shift', sheet: s, shift }],
 		() => {
-			applyAxisShift(ctx, sheet, { axis, at, count: insert ? count : -count });
+			applyAxisShift(ctx, sheet, shift);
 			if (insert) inheritFormats(sheet, axis, at, count);
 		},
 		{ sheet: s, structural: true },

@@ -2,7 +2,9 @@ import { cellKey, rangeContains } from '../address.js';
 import { forEachCellInRange, getValue } from '../cells.js';
 import { translateFormula } from '../formula/index.js';
 import { inTimePeriod } from '../time-period.js';
-import { literal, localTodaySerial, mergeDxf } from './cf-helpers.js';
+import { iconIndex, literal, localTodaySerial, mergeDxf, scaleColor } from './cf-helpers.js';
+
+export { iconIndex, scaleColor } from './cf-helpers.js';
 import type {
 	CellValue,
 	CfvoThreshold,
@@ -12,7 +14,7 @@ import type {
 	Worksheet,
 } from '../model.js';
 import { isCellError } from '../model.js';
-import { mixColors, resolveColor } from './colors.js';
+import { resolveColor } from './colors.js';
 import {
 	computeStats,
 	isTruthy,
@@ -36,6 +38,8 @@ export interface ConditionalFormatOptions {
 	 */
 	today?: () => number;
 }
+
+const GRAPHIC_RULES = new Set(['colorScale', 'dataBar', 'iconSet']);
 
 interface Entry {
 	format: ConditionalFormat;
@@ -201,6 +205,53 @@ export function createConditionalFormatEvaluator(
 		}
 	};
 
+	/** Applies one rule to `result`; false when it does not apply to this cell. */
+	const apply = (
+		entry: Entry,
+		value: CellValue,
+		row: number,
+		col: number,
+		result: ConditionalFormatResult,
+	): boolean => {
+		const { rule } = entry;
+		if (rule.type === 'colorScale') {
+			if (result.colorScale || typeof value !== 'number') return false;
+			const color = scaleColor(
+				value,
+				thresholds(entry, rule.thresholds),
+				rule.colors.map((c) => resolveColor(c, workbook.theme, '#FFFFFF') ?? '#FFFFFF'),
+			);
+			if (!color) return false;
+			result.colorScale = color;
+			return true;
+		}
+		if (rule.type === 'dataBar') {
+			if (result.dataBar || typeof value !== 'number') return false;
+			const [lo = 0, hi = 0] = thresholds(entry, [rule.min, rule.max]);
+			const fraction = hi > lo ? Math.max(0, Math.min(1, (value - lo) / (hi - lo))) : 1;
+			result.dataBar = {
+				fraction,
+				color: resolveColor(rule.color, workbook.theme, '#638EC6') ?? '#638EC6',
+			};
+			if (value < 0) result.dataBar.negative = true;
+			if (rule.showValue === false) result.hideValue = true;
+			return true;
+		}
+		if (rule.type === 'iconSet') {
+			if (result.icon || typeof value !== 'number') return false;
+			const index = iconIndex(value, thresholds(entry, rule.thresholds), rule.thresholds);
+			result.icon = {
+				set: rule.iconSet,
+				index: rule.reverse ? rule.thresholds.length - 1 - index : index,
+			};
+			if (rule.showValue === false) result.hideValue = true;
+			return true;
+		}
+		if (!matches(entry, value, row, col)) return false;
+		result.style = mergeDxf(result.style, rule.style);
+		return true;
+	};
+
 	return {
 		at(row, col) {
 			const result: ConditionalFormatResult = {};
@@ -209,74 +260,15 @@ export function createConditionalFormatEvaluator(
 			for (const entry of entries) {
 				if (!entry.format.ranges.some((r) => rangeContains(r, { row, col }))) continue;
 				value ??= getValue(sheet, row, col);
-				const { rule } = entry;
-				if (rule.type === 'colorScale') {
-					if (result.colorScale || typeof value !== 'number') continue;
-					const color = scaleColor(
-						value,
-						thresholds(entry, rule.thresholds),
-						rule.colors.map((c) => resolveColor(c, workbook.theme, '#FFFFFF') ?? '#FFFFFF'),
-					);
-					if (color) {
-						result.colorScale = color;
-						any = true;
-					}
-					continue;
-				}
-				if (rule.type === 'dataBar') {
-					if (result.dataBar || typeof value !== 'number') continue;
-					const [lo = 0, hi = 0] = thresholds(entry, [rule.min, rule.max]);
-					const fraction = hi > lo ? Math.max(0, Math.min(1, (value - lo) / (hi - lo))) : 1;
-					result.dataBar = {
-						fraction,
-						color: resolveColor(rule.color, workbook.theme, '#638EC6') ?? '#638EC6',
-					};
-					if (value < 0) result.dataBar.negative = true;
-					if (rule.showValue === false) result.hideValue = true;
-					any = true;
-					continue;
-				}
-				if (rule.type === 'iconSet') {
-					if (result.icon || typeof value !== 'number') continue;
-					const cuts = thresholds(entry, rule.thresholds);
-					let index = 0;
-					for (let i = 1; i < cuts.length; i++) if (value >= (cuts[i] ?? Infinity)) index = i;
-					if (rule.reverse) index = cuts.length - 1 - index;
-					result.icon = { set: rule.iconSet, index };
-					if (rule.showValue === false) result.hideValue = true;
-					any = true;
-					continue;
-				}
-				if (!matches(entry, value, row, col)) continue;
-				result.style = mergeDxf(result.style, rule.style);
+				if (!apply(entry, value, row, col, result)) continue;
 				any = true;
-				if ('stopIfTrue' in rule && rule.stopIfTrue) break;
+				// "Stop If True" on a matching rule holds back every lower-priority rule. Excel 16
+				// ignores it on colour scales, data bars and icon sets even when the file sets it.
+				if (entry.rule.stopIfTrue && !GRAPHIC_RULES.has(entry.rule.type)) break;
 			}
 			return any ? result : undefined;
 		},
 	};
-}
-
-/** The colour-scale colour of `value` between threshold positions. */
-export function scaleColor(
-	value: number,
-	cuts: readonly number[],
-	colors: readonly string[],
-): string | undefined {
-	if (!cuts.length || cuts.length !== colors.length) return undefined;
-	if (value <= (cuts[0] ?? 0)) return colors[0];
-	const last = cuts.length - 1;
-	if (value >= (cuts[last] ?? 0)) return colors[last];
-	for (let i = 0; i < last; i++) {
-		const lo = cuts[i] ?? 0;
-		const hi = cuts[i + 1] ?? 0;
-		if (value >= lo && value <= hi) {
-			const a = colors[i] ?? '#FFFFFF';
-			const b = colors[i + 1] ?? a;
-			return hi > lo ? mixColors(a, b, (value - lo) / (hi - lo)) : b;
-		}
-	}
-	return colors[last];
 }
 
 /** The values of every distinct stored cell inside a format's ranges. */

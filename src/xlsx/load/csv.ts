@@ -3,7 +3,7 @@
 // detection between comma, semicolon and tab.
 import { usedRange } from '../cells.js';
 import type { Cell, Workbook } from '../model.js';
-import { formatValue, parseCellInput } from '../numfmt/index.js';
+import { formatValue, parseCellInput, type ParsedInput } from '../numfmt/index.js';
 import { styleAt, internStyle } from '../styles.js';
 import { createWorkbook } from '../workbook.js';
 
@@ -123,11 +123,18 @@ export function sheetNameFromFileName(fileName: string | undefined): string {
 
 export interface CsvWorkbookOptions extends CsvOptions {
 	sheetName?: string;
+	/**
+	 * Treat fields starting with `=` as formulas, as Excel does when it opens a CSV. Off by
+	 * default: a CSV from an untrusted source must not inject formulas (`=HYPERLINK(...)`,
+	 * `=WEBSERVICE(...)`) into the workbook, so such fields are imported as text.
+	 */
+	formulas?: boolean;
 }
 
 /**
  * A one-sheet workbook from CSV text. Each field goes through `parseCellInput`, so numbers,
- * dates, percentages, booleans, errors and `=` formulas become typed cells as Excel opens them.
+ * dates, percentages, booleans and errors become typed cells as Excel opens them; `=` fields
+ * become formulas only with `formulas: true` and are text otherwise.
  */
 export function csvToWorkbook(text: string, options: CsvWorkbookOptions = {}): Workbook {
 	const workbook = createWorkbook({ sheets: [options.sheetName ?? 'Sheet1'] });
@@ -143,7 +150,8 @@ export function csvToWorkbook(text: string, options: CsvWorkbookOptions = {}): W
 	rows.forEach((fields, row) => {
 		fields.forEach((field, col) => {
 			if (field === '') return;
-			const parsed = parseCellInput(field);
+			const parsed: ParsedInput =
+				!options.formulas && field.startsWith('=') ? { value: field } : parseCellInput(field);
 			const cell: Cell = { value: parsed.value };
 			if (parsed.formula !== undefined) cell.formula = parsed.formula;
 			if (parsed.numFmt && parsed.numFmt !== 'General') {
@@ -165,19 +173,41 @@ export function csvToWorkbook(text: string, options: CsvWorkbookOptions = {}): W
 	return workbook;
 }
 
+/** Leading characters a spreadsheet may read as the start of a formula (OWASP CSV injection). */
+const FORMULA_TRIGGER = /^[=+\-@\t\r]/;
+
+/**
+ * A text value that would run as a formula when the CSV is opened in a spreadsheet, prefixed
+ * with a single quote so it stays text (OWASP CSV injection guidance). Numbers such as `-5` are
+ * not text cells and are never prefixed.
+ */
+export function neutraliseCsvFormula(text: string): string {
+	return FORMULA_TRIGGER.test(text) ? `'${text}` : text;
+}
+
+export interface CsvWriteOptions extends CsvOptions {
+	/**
+	 * Prefix text that starts with `=`, `+`, `-`, `@`, tab or carriage return with `'` so a
+	 * spreadsheet opening the file does not evaluate it. On by default.
+	 */
+	escapeFormulas?: boolean;
+}
+
 function quoteField(text: string, delimiter: string): string {
 	return text.includes(delimiter) || /["\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 }
 
 /**
  * One sheet as CSV: each cell's formatted display text (as Excel's CSV export writes it), rows
- * from A1 to the end of the used range padded to the same width, CRLF line endings.
+ * from A1 to the end of the used range padded to the same width, CRLF line endings. Text that a
+ * spreadsheet would evaluate as a formula is neutralised (see {@link neutraliseCsvFormula}).
  */
 export function sheetToCsv(
 	workbook: Workbook,
 	sheetIndex: number,
-	options: CsvOptions = {},
+	options: CsvWriteOptions = {},
 ): string {
+	const escape = options.escapeFormulas ?? true;
 	const sheet = workbook.sheets[sheetIndex];
 	if (!sheet) throw new RangeError(`No sheet at index ${sheetIndex}`);
 	const delimiter = options.delimiter ?? ',';
@@ -189,11 +219,12 @@ export function sheetToCsv(
 		const fields: string[] = [];
 		for (let col = 0; col <= range.end.col; col++) {
 			const cell = cells?.get(col);
-			const text = cell
+			let text = cell
 				? formatValue(cell.value, styleAt(workbook, cell.styleId).numFmt, {
 						date1904: workbook.date1904,
 					}).text
 				: '';
+			if (escape && typeof cell?.value === 'string') text = neutraliseCsvFormula(text);
 			fields.push(quoteField(text, delimiter));
 		}
 		lines.push(fields.join(delimiter));

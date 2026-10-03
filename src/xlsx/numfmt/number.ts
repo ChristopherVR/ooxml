@@ -175,7 +175,11 @@ export function renderNumber(value: number, plan: NumberPlan): { text: string; z
 		rounded = m.value;
 		exp = m.exp;
 	} else rounded = roundDecimals(v, plan.fracDigits.length);
-	const ints = placeIntegers(integerPart(rounded), plan.intDigits, plan.grouping);
+	// Excel fills every integer placeholder of a zero mantissa: 0 with `##0.0E+0` is 000.0E+0.
+	const ints =
+		plan.exponent && isZero(rounded)
+			? plan.intDigits.map(() => '0')
+			: placeIntegers(integerPart(rounded), plan.intDigits, plan.grouping);
 	const fracs = placeFraction(fractionPart(rounded, plan.fracDigits.length), plan.fracDigits);
 	let text = '';
 	for (const tok of plan.tokens) {

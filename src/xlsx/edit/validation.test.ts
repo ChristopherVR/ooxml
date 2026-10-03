@@ -176,3 +176,80 @@ describe('listValidationOptions', () => {
 		expect(listValidationOptions(wb, 0, 0, 0)).toEqual(['p', 'q']);
 	});
 });
+
+// Expectations checked in Excel 16 through COM (Range.Validation.Value after entering the value).
+describe('Excel validation semantics', () => {
+	it('evaluates a custom rule with the proposed value in the target cell', () => {
+		const wb = createWorkbook();
+		const s = createEditSession(wb);
+		s.setDataValidation(0, { ranges: [], type: 'custom', formula1: 'ISNUMBER(A1)' }, R('A1:A3'));
+		expect(s.validate(0, 0, 0, 5).ok).toBe(true);
+		expect(s.validate(0, 2, 0, 5).ok).toBe(true);
+		expect(s.validate(0, 0, 0, 'text').ok).toBe(false);
+		expect(wb.sheets[0]?.rows.size).toBe(0);
+	});
+	it('moves relative references from the rule corner to the target cell', () => {
+		const wb = createWorkbook();
+		const s = createEditSession(wb);
+		s.setCellValue(0, 0, 1, 0);
+		s.setCellValue(0, 1, 1, 10);
+		s.setDataValidation(0, { ranges: [], type: 'custom', formula1: 'B1>5' }, R('C1:C3'));
+		expect(s.validate(0, 0, 2, 1).ok).toBe(false);
+		expect(s.validate(0, 1, 2, 1).ok).toBe(true);
+	});
+	it('anchors formulas at the top-left of the bounding box of every range', () => {
+		const wb = createWorkbook();
+		const s = createEditSession(wb);
+		s.setCellValue(0, 3, 0, 'x');
+		wb.sheets[0]?.dataValidations.push({
+			ranges: [R('C1:C2'), R('A3:A4')],
+			type: 'custom',
+			formula1: 'ISNUMBER(A1)',
+			showErrorMessage: true,
+		});
+		// A1 is the corner, so at A4 the formula reads ISNUMBER(A4): the proposed value.
+		expect(s.validate(0, 3, 0, 7).ok).toBe(true);
+		expect(s.validate(0, 3, 0, 'y').ok).toBe(false);
+	});
+	it('compares list entries by value, not display text', () => {
+		const wb = createWorkbook();
+		const s = createEditSession(wb);
+		s.setCellValue(0, 0, 0, 45000);
+		s.applyStyle(0, [R('A1')], { numFmt: 'm/d/yyyy' });
+		s.setCellValue(0, 1, 0, 1.5);
+		s.applyStyle(0, [R('A2')], { numFmt: '0.00' });
+		s.setCellValue(0, 2, 0, 'Red');
+		s.setDataValidation(0, { ranges: [], type: 'list', formula1: '$A$1:$A$3' }, R('B1'));
+		expect(s.validate(0, 0, 1, 45000).ok).toBe(true);
+		expect(s.validate(0, 0, 1, 1.5).ok).toBe(true);
+		expect(s.validate(0, 0, 1, 'RED').ok).toBe(true);
+		expect(s.validate(0, 0, 1, '1.50').ok).toBe(false);
+		expect(s.validate(0, 0, 1, 2).ok).toBe(false);
+	});
+	it('matches numbers typed against a literal list', () => {
+		const { check } = withRule({ type: 'list', formula1: '"1,2,3"' });
+		expect(check(2).ok).toBe(true);
+		expect(check(4).ok).toBe(false);
+	});
+	it('does not enforce a rule read without showErrorMessage (the OOXML default)', () => {
+		const wb = createWorkbook();
+		wb.sheets[0]?.dataValidations.push({
+			ranges: [R('D1:D5')],
+			type: 'whole',
+			operator: 'between',
+			formula1: '1',
+			formula2: '10',
+		});
+		expect(validateCellInput(wb, 0, 0, 3, 50).ok).toBe(true);
+		const dv = wb.sheets[0]?.dataValidations[0];
+		if (dv) dv.showErrorMessage = true;
+		expect(validateCellInput(wb, 0, 0, 3, 50).ok).toBe(false);
+	});
+	it('turns the error alert and input message on for rules created in the editor', () => {
+		const { wb } = withRule({ type: 'whole', operator: 'equal', formula1: '1' });
+		expect(wb.sheets[0]?.dataValidations[0]).toMatchObject({
+			showErrorMessage: true,
+			showInputMessage: true,
+		});
+	});
+});

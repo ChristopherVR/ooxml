@@ -32,23 +32,111 @@ export const ERR = {
 
 export const isError = isCellError;
 
-/** A dense two-dimensional array of values (array constants, array results, dereferenced ranges). */
+/** Excel's longest array side: SEQUENCE(1048577) and SEQUENCE(1,1048577) are `#VALUE!`. */
+export const MAX_ARRAY_SIDE = 1_048_576;
+/**
+ * The most cells one array may hold, so no formula can exhaust memory (Excel gives up somewhere
+ * past 40 million with "out of resources"; this engine stops at 16 million with `#NUM!`).
+ */
+export const MAX_ARRAY_CELLS = 16_777_216;
+
+/** `#VALUE!` past the longest side, `#NUM!` past the cell budget. */
+export function checkArraySize(rows: number, cols: number): void {
+	if (rows > MAX_ARRAY_SIDE || cols > MAX_ARRAY_SIDE) fail(ERR.VALUE);
+	if (rows * cols > MAX_ARRAY_CELLS) fail(ERR.NUM);
+}
+
+/** The part of a padded matrix outside its stored block: every such cell holds `fill`. */
+interface Padding {
+	rows: number;
+	cols: number;
+	fill: Scalar;
+}
+
+/**
+ * A two-dimensional array of values (array constants, array results, dereferenced ranges). A
+ * padded matrix stores only a top-left block and reports a larger size whose remaining cells all
+ * hold one value: whole-column references read that way, so `ROWS(A:A*1)` is 1048576 and
+ * `SUMPRODUCT(--(A:A=""))` counts every blank row without materialising a million cells.
+ */
 export class Matrix {
-	constructor(readonly data: Scalar[][]) {}
+	private readonly dense: Scalar[][];
+	private readonly padding: Padding | undefined;
+	/** The full rows of a padded matrix, built once when `data` is first asked for. */
+	private materialized: Scalar[][] | undefined;
+
+	constructor(data: Scalar[][], padding?: Padding) {
+		this.dense = data;
+		const rows = data.length;
+		const cols = data[0]?.length ?? 0;
+		this.padding =
+			padding && (padding.rows > rows || padding.cols > cols) ? { ...padding } : undefined;
+	}
+
+	/** A padded matrix (or a plain one when `rows` x `cols` is no larger than the block). */
+	static padded(block: Matrix, rows: number, cols: number, fill: Scalar): Matrix {
+		return new Matrix(block.dense, { rows, cols, fill });
+	}
+
+	/** Every row, materialising a padded matrix (bounded by `MAX_ARRAY_CELLS`). */
+	get data(): Scalar[][] {
+		const pad = this.padding;
+		if (!pad) return this.dense;
+		if (this.materialized) return this.materialized;
+		checkArraySize(pad.rows, pad.cols);
+		const out: Scalar[][] = [];
+		for (let r = 0; r < pad.rows; r++) {
+			const line: Scalar[] = [];
+			const stored = this.dense[r];
+			for (let c = 0; c < pad.cols; c++)
+				line.push(stored && c < stored.length ? (stored[c] as Scalar) : pad.fill);
+			out.push(line);
+		}
+		this.materialized = out;
+		return out;
+	}
 
 	get rows(): number {
-		return this.data.length;
+		return this.padding ? this.padding.rows : this.dense.length;
 	}
 
 	get cols(): number {
-		return this.data[0]?.length ?? 0;
+		return this.padding ? this.padding.cols : (this.dense[0]?.length ?? 0);
+	}
+
+	/** Whether some cells are implied by the padding rather than stored. */
+	get isPadded(): boolean {
+		return this.padding !== undefined;
+	}
+
+	/** Rows and columns of the stored block. */
+	get blockRows(): number {
+		return this.dense.length;
+	}
+
+	get blockCols(): number {
+		return this.dense[0]?.length ?? 0;
+	}
+
+	/** The value of every cell outside the stored block. */
+	get fill(): Scalar {
+		return this.padding?.fill ?? null;
 	}
 
 	get(row: number, col: number): Scalar {
-		return this.data[row]?.[col] ?? null;
+		const stored = this.dense[row];
+		if (stored && col < stored.length) return stored[col] ?? null;
+		const pad = this.padding;
+		return pad && row < pad.rows && col < pad.cols ? pad.fill : null;
+	}
+
+	/** Only the stored block of a padded matrix (what a spilling formula shows). */
+	block(): Matrix {
+		return this.padding ? new Matrix(this.dense) : this;
 	}
 
 	static build(rows: number, cols: number, fill: (row: number, col: number) => Scalar): Matrix {
+		checkArraySize(rows, cols);
 		const data: Scalar[][] = [];
 		for (let r = 0; r < rows; r++) {
 			const line: Scalar[] = [];
@@ -62,9 +150,35 @@ export class Matrix {
 		return new Matrix(this.data.map((line, r) => line.map((value, c) => fn(value, r, c))));
 	}
 
+	/** Maps every value; a padded matrix maps its block and its fill once. */
+	mapValues(fn: (value: Scalar) => Scalar): Matrix {
+		const block = this.dense.map((line) => line.map((value) => fn(value)));
+		const pad = this.padding;
+		return new Matrix(block, pad ? { ...pad, fill: fn(pad.fill) } : undefined);
+	}
+
+	/** Visits every value in row-major order without materialising a padded matrix. */
+	forEachValue(visit: (value: Scalar) => void): void {
+		const pad = this.padding;
+		if (!pad) {
+			for (const line of this.dense) for (const v of line) visit(v);
+			return;
+		}
+		for (let r = 0; r < pad.rows; r++) {
+			const stored = this.dense[r];
+			const n = stored ? stored.length : 0;
+			for (let c = 0; c < n; c++) visit((stored as Scalar[])[c] ?? null);
+			for (let c = n; c < pad.cols; c++) visit(pad.fill);
+		}
+	}
+
 	/** Every element in row-major order. */
 	flat(): Scalar[] {
-		return this.data.flat();
+		if (!this.padding) return this.dense.flat();
+		const out: Scalar[] = [];
+		checkArraySize(this.rows, this.cols);
+		this.forEachValue((v) => out.push(v));
+		return out;
 	}
 }
 

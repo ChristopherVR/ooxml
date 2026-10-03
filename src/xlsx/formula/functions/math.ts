@@ -6,6 +6,8 @@ import { SUM_FUNCTIONS } from './math-sum.js';
 import type { FunctionSpec } from './types.js';
 import { MATH_MORE } from './math-more.js';
 import { combin, COMBINATORIC_FUNCTIONS } from './math-combin.js';
+import { excelMod, mround } from './math-mod.js';
+import { power } from '../operators.js';
 
 export { combin };
 
@@ -93,11 +95,7 @@ export const MATH_FUNCTIONS: FunctionSpec[] = [
 		'Rounds a number to the nearest multiple.',
 		2,
 		2,
-		(x, m) => {
-			if (m === 0) return 0;
-			if (Math.sign(x) * Math.sign(m ?? 0) < 0) fail(ERR.NUM);
-			return roundTo(x / (m ?? 1), 0, 'half') * (m ?? 1);
-		},
+		(x, m) => mround(x, m ?? 0),
 	),
 	numeric(
 		'CEILING',
@@ -205,12 +203,7 @@ export const MATH_FUNCTIONS: FunctionSpec[] = [
 		'The remainder after division (sign of the divisor).',
 		2,
 		2,
-		(n, d) => {
-			if (d === 0) fail(ERR.DIV0);
-			const div = d ?? 1;
-			const r = n - div * Math.floor(round15(n / div));
-			return Math.abs(r) < 1e-15 * Math.abs(n) ? 0 : r;
-		},
+		(n, d) => excelMod(n, d ?? 0),
 	),
 	numeric(
 		'QUOTIENT',
@@ -230,11 +223,9 @@ export const MATH_FUNCTIONS: FunctionSpec[] = [
 	numeric('SQRTPI', C, 'SQRTPI(number)', 'The square root of number * pi.', 1, 1, (x) =>
 		domain(x >= 0, Math.sqrt(x * Math.PI)),
 	),
-	numeric('POWER', C, 'POWER(number, power)', 'A number raised to a power.', 2, 2, (b, e) => {
-		if (b === 0 && e === 0) fail(ERR.NUM);
-		if (b === 0 && (e ?? 0) < 0) fail(ERR.DIV0);
-		return Math.pow(b, e ?? 1);
-	}),
+	numeric('POWER', C, 'POWER(number, power)', 'A number raised to a power.', 2, 2, (b, e) =>
+		power(b, e ?? 1),
+	),
 	numeric('EXP', C, 'EXP(number)', 'e raised to a power.', 1, 1, Math.exp),
 	numeric('LN', C, 'LN(number)', 'The natural logarithm.', 1, 1, (x) => domain(x > 0, Math.log(x))),
 	numeric('LOG10', C, 'LOG10(number)', 'The base-10 logarithm.', 1, 1, (x) =>
