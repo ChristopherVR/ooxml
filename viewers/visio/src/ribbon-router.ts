@@ -8,6 +8,7 @@ export interface RibbonTargets {
 	deleteSelection(): void;
 	setTool(tool: 'pointer' | 'rectangle'): void;
 	toggleGrid(): void;
+	toggleRuler(): void;
 	toggleFullscreen(): void;
 	togglePane(pane: 'pages' | 'inspector'): void;
 	reveal(panel: 'edit' | 'notes' | 'selection' | 'layers', focusText: boolean): void;
@@ -28,6 +29,8 @@ export function routeRibbonAction(targets: RibbonTargets, action: VisioRibbonAct
 			return targets.setTool(action.tool);
 		case 'grid':
 			return targets.toggleGrid();
+		case 'ruler':
+			return targets.toggleRuler();
 		case 'fullscreen':
 			return targets.toggleFullscreen();
 		case 'pane':
@@ -38,6 +41,9 @@ export function routeRibbonAction(targets: RibbonTargets, action: VisioRibbonAct
 			return targets.focusSearch();
 		case 'page':
 			return controller.setPage(controller.state.pageIndex + action.step);
+		case 'zoomTo':
+			if (page) controller.setZoom(action.percent / 100);
+			return;
 		case 'zoom':
 			if (!page) return;
 			if (action.mode === 'actual') return controller.setZoom(1);

@@ -46,6 +46,11 @@ try {
 			'office-ui-status-bar',
 			'office-ui-status-item',
 			'office-ui-zoom-slider',
+			'office-ui-ribbon-stack',
+			'office-ui-menu-button',
+			'office-ui-menu-item',
+			'office-ui-checkbox',
+			'office-ui-select',
 		].filter((tag) => !customElements.get(tag)),
 	);
 	assert.deepEqual(undefinedControls, [], 'Shared ooxml-ui controls must be defined');

@@ -88,7 +88,7 @@ export class ViewerChrome {
 				const button = (event.target as Element)?.closest?.<HTMLButtonElement>('button');
 				if (!button || button.disabled) return;
 				const tab = button.dataset.tab;
-				if (tab === 'home' || tab === 'view') this.showTab(tab);
+				if (tab) this.showTab(tab);
 				if (button.dataset.pageIndex !== undefined)
 					this.#controller.setPage(Number(button.dataset.pageIndex));
 				const action = button.dataset.chrome;
@@ -118,16 +118,17 @@ export class ViewerChrome {
 				if (button.dataset.tab) {
 					if (key.key === 'ArrowUp' || key.key === 'ArrowDown') return;
 					key.preventDefault();
-					const tab =
+					const tabs = [...this.#root.querySelectorAll<HTMLButtonElement>('[data-tab]')];
+					const index = tabs.indexOf(button);
+					const next =
 						key.key === 'Home'
-							? 'home'
+							? tabs[0]
 							: key.key === 'End'
-								? 'view'
-								: button.dataset.tab === 'home'
-									? 'view'
-									: 'home';
-					this.showTab(tab);
-					this.#root.querySelector<HTMLButtonElement>(`[data-tab="${tab}"]`)!.focus();
+								? tabs.at(-1)
+								: tabs[(index + (key.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length];
+					if (!next?.dataset.tab) return;
+					this.showTab(next.dataset.tab);
+					next.focus();
 				} else if (button.dataset.pageIndex !== undefined) {
 					key.preventDefault();
 					const pages = [
@@ -155,7 +156,7 @@ export class ViewerChrome {
 		this.#notes.addEventListener('toggle', () => this.#syncNotes(), options);
 		return () => events.abort();
 	}
-	showTab(tab: 'home' | 'view'): void {
+	showTab(tab: string): void {
 		for (const button of this.#root.querySelectorAll<HTMLButtonElement>('[data-tab]')) {
 			const selected = button.dataset.tab === tab;
 			button.setAttribute('aria-selected', String(selected));
@@ -164,6 +165,10 @@ export class ViewerChrome {
 		for (const panel of this.#root.querySelectorAll<HTMLElement>('[role="tabpanel"]'))
 			panel.hidden = panel.id !== `${tab}-panel`;
 	}
+	/** On phones, close the Tools sheet once a command runs. */
+	closeCompactTools(): void {
+		if (this.#compact?.matches) this.#tools.open = false;
+	}
 	/** Show or hide a task pane; compact layouts close the Tools menu afterwards. */
 	togglePane(pane: 'pages' | 'inspector'): void {
 		if (this.#compact?.matches) this.#tools.open = false;
@@ -171,17 +176,18 @@ export class ViewerChrome {
 		else this.#inspectorManuallyToggled = true;
 		this.#setPane(pane, (pane === 'pages' ? this.#rail : this.#inspector).hidden);
 	}
+	/** A ribbon command or menu item by its stable id (the first match wins). */
 	#command(name: string): HTMLElement & { disabled: boolean } {
-		return this.#root.querySelector(`office-ui-button[command="${name}"]`)!;
+		return this.#root.querySelector(`[command="${name}"]`)!;
 	}
 	#setPane(pane: 'pages' | 'inspector', visible: boolean): void {
 		if (visible && this.#compact?.matches) {
 			const other = pane === 'pages' ? 'inspector' : 'pages';
 			(other === 'pages' ? this.#rail : this.#inspector).hidden = true;
-			this.#command(other).setAttribute('pressed', 'false');
+			this.#command(other).setAttribute('checked', 'false');
 		}
 		(pane === 'pages' ? this.#rail : this.#inspector).hidden = !visible;
-		this.#command(pane).setAttribute('pressed', String(visible));
+		this.#command(pane).setAttribute('checked', String(visible));
 		this.#syncNotes();
 	}
 	#syncNotes(): void {
@@ -283,10 +289,10 @@ export class ViewerChrome {
 			? `${page.shapes.length} top-level`
 			: 'No shapes';
 		this.#root.querySelector<HTMLElement>('.selection-hint')!.hidden = !!state.selectedShape;
-		this.#command('selection').disabled = !state.selectedShape;
-		this.#command('edit').disabled = !page;
-		this.#command('layers').disabled =
-			this.#root.querySelector<HTMLDetailsElement>('.layer-controls')!.hidden;
+		const layers = this.#root.querySelector<HTMLDetailsElement>('.layer-controls')!.hidden;
+		this.#command('shape-data').disabled = !state.selectedShape;
+		this.#command('layer-properties').disabled = layers;
+		this.#command('layers-pane').disabled = layers;
 		this.#command('notes').disabled = noteCount === 0;
 		this.#root.querySelector<HTMLButtonElement>('.notes-strip button')!.disabled = noteCount === 0;
 		this.#root.querySelector('[data-note-count]')!.textContent = noteCount ? ` · ${noteCount}` : '';

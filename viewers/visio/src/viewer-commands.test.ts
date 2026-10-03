@@ -6,6 +6,7 @@ import { registerViewerControls } from './office-ui.js';
 import { ViewerCommands } from './viewer-commands.js';
 import { nextShapeId } from './viewer-draw-tool.js';
 import { createRibbon } from './ribbon.js';
+import { createRulers } from './viewer-ruler.js';
 import type { CancellableEditor } from './worker-editor.js';
 
 afterEach(() => document.body.replaceChildren());
@@ -37,10 +38,12 @@ async function setup(source = true) {
 	viewport.tabIndex = 0;
 	viewport.append(document.createElement('textarea'));
 	root.append(createRibbon(document), viewport);
+	const rulers = createRulers(viewport);
 	const calls: string[] = [];
 	const commands = new ViewerCommands({
 		root,
 		viewport,
+		rulers,
 		controller,
 		fit: (mode) => calls.push(`fit:${mode}`),
 		togglePane: (pane) => calls.push(`pane:${pane}`),
@@ -50,9 +53,13 @@ async function setup(source = true) {
 	});
 	const dispose = commands.wire();
 	controller.subscribe((state) => commands.render(state));
+	/** Any ribbon command, split menu or menu item by stable id. */
 	const command = (name: string) =>
-		root.querySelector<HTMLElement & { disabled: boolean }>(`office-ui-button[command="${name}"]`)!;
-	const press = (name: string) => command(name).shadowRoot!.querySelector('button')!.click();
+		root.querySelector<HTMLElement & { disabled: boolean }>(`[command="${name}"]`)!;
+	const press = (name: string) =>
+		command(name).shadowRoot!.querySelector<HTMLButtonElement>('.main, button')!.click();
+	const check = (name: string) =>
+		root.querySelector<HTMLElement & { checked: boolean }>(`[data-check="${name}"]`)!;
 	const key = (init: KeyboardEventInit, target: Element = viewport) =>
 		target.dispatchEvent(
 			new KeyboardEvent('keydown', { bubbles: true, cancelable: true, ...init }),
@@ -67,6 +74,7 @@ async function setup(source = true) {
 		edits,
 		command,
 		press,
+		check,
 		key,
 		settle,
 		dispose,
@@ -92,27 +100,30 @@ describe('Visio ribbon commands', () => {
 	});
 
 	it('routes shared office-command buttons to pane, zoom and tool commands', async () => {
-		const { calls, command, press, viewport } = await setup();
+		const { calls, command, press, check, viewport, controller } = await setup();
 		press('pages');
-		press('layers');
+		press('layer-properties');
 		press('zoom-fit');
 		press('page-width');
 		expect(calls).toEqual(['pane:pages', 'reveal:layers:false', 'fit:page', 'fit:width']);
 		press('rectangle');
-		expect(command('rectangle').getAttribute('pressed')).toBe('true');
+		expect(command('rectangle').hasAttribute('data-active')).toBe(true);
+		expect(command('rectangle-item').getAttribute('checked')).toBe('true');
 		expect(command('pointer').getAttribute('pressed')).toBe('false');
 		expect(viewport.dataset.tool).toBe('rectangle');
-		press('grid');
+		check('grid').click();
 		expect(viewport.dataset.grid).toBe('true');
-		expect(command('grid').getAttribute('pressed')).toBe('true');
+		expect(check('grid').checked).toBe(true);
+		check('ruler').click();
+		expect(viewport.closest('.canvas-area')!.getAttribute('data-ruler')).toBe('true');
+		press('zoom-150');
+		expect(controller.state.zoom).toBe(1.5);
 	});
 
 	it('deletes the selection with Delete, then undoes and redoes with Visio shortcuts', async () => {
 		const { controller, command, edits, key, settle, calls } = await setup();
 		expect(command('undo').disabled).toBe(true);
-		expect(command('delete').disabled).toBe(true);
 		controller.selectShape({ id: 's1', name: 'Start', pageId: '1' });
-		expect(command('delete').disabled).toBe(false);
 		key({ key: 'Delete' });
 		await settle();
 		expect(edits).toEqual([[{ type: 'delete-shape', pageId: '1', shapeId: 's1' }]]);
@@ -129,7 +140,7 @@ describe('Visio ribbon commands', () => {
 	it('maps Visio tool, page, find, fit and text shortcuts', async () => {
 		const { controller, command, key, calls } = await setup();
 		key({ key: '8', ctrlKey: true });
-		expect(command('rectangle').getAttribute('pressed')).toBe('true');
+		expect(command('rectangle').hasAttribute('data-active')).toBe(true);
 		key({ key: 'Escape' });
 		expect(command('pointer').getAttribute('pressed')).toBe('true');
 		key({ key: 'PageDown', ctrlKey: true });
@@ -159,7 +170,6 @@ describe('Visio ribbon commands', () => {
 		key({ key: '8', ctrlKey: true });
 		expect(command('pointer').getAttribute('pressed')).toBe('true');
 		controller.selectShape({ id: 's1', name: 'Start', pageId: '1' });
-		expect(command('delete').disabled).toBe(true);
 		key({ key: 'Delete' });
 		key({ key: 'z', ctrlKey: true });
 		await settle();

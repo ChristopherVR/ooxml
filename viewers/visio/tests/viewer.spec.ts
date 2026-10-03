@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { zoomPreset } from './ribbon.js';
 
 test('sample supports page navigation, zoom, selection and compatibility notes', async ({
 	page,
@@ -14,8 +15,7 @@ test('sample supports page navigation, zoom, selection and compatibility notes',
 		'aria-label',
 		'Architecture',
 	);
-	await page.locator('visio-viewer').getByRole('tab', { name: 'View', exact: true }).click();
-	await page.locator('visio-viewer').getByRole('button', { name: '100%', exact: true }).click();
+	await zoomPreset(page.locator('visio-viewer'), 100);
 	await expect(page.locator('visio-viewer output')).toHaveText('100%');
 	await page.locator('visio-viewer [data-shape-id="a1"]').click();
 	await expect(page.locator('#selection')).toContainText('Your framework');

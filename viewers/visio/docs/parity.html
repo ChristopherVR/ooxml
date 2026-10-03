@@ -336,22 +336,33 @@
 							</tr>
 							<tr>
 								<td>Ribbon and toolbar commands</td>
-								<td>Microsoft Visio Home and View ribbon with native shortcuts</td>
 								<td>
-									Partial: Undo/Redo (Ctrl+Z/Y), Pointer Tool (Ctrl+1), Rectangle drag tool (Ctrl+8,
-									1/16 in snap), Edit text (F2, double-click), Delete (Del), Find (Ctrl+F), Layers,
-									Full Screen (F5), Grid, task panes; composed from shared ooxml-ui controls
+									Microsoft Visio ribbon layout (Quick Access Toolbar; Home, Insert, Design, Data,
+									Process, Review and View tabs) with native shortcuts
 								</td>
 								<td>
-									ribbon.ts, ribbon-home.ts, ribbon-view.ts, ribbon-router.ts; viewer-commands.ts;
-									viewer-draw-tool.ts; viewer-commands.test.ts; visio-toolbar.spec.ts. Rectangle
-									create plus delete reopened in Visio 16 over COM with exact PinX/PinY/Width/Height
+									Partial: Visio's tabs, groups, large/small/three-row command layout, dropdown and
+									split menus and dialog launchers, compared with a capture of Visio 16's Home tab.
+									Working: Undo/Redo (Quick Access, Ctrl+Z/Y), Pointer Tool (Ctrl+1), Rectangle drag
+									tool (Ctrl+8, 1/16 in snap), Find... (Ctrl+F find bar), Layer Properties, Ruler,
+									Grid, Task Panes, Full Screen (F5), Zoom presets, Fit to Window, Page Width, Shape
+									Data Window, Delete (Del), Edit text (F2, double-click). Every other command is
+									visible, disabled and names the missing capability; composed from shared ooxml-ui
+									controls
 								</td>
 								<td>
-									Clipboard (cut/copy/paste/duplicate), Font, Paragraph, Shape Styles, Arrange
-									(align, position, order, group), Connector and Text tools, Insert and Design tabs,
-									on-canvas move/resize handles, multi-selection, Ruler, Guides, Page Breaks. Most
-									need new core edit commands; drag move needs core-exposed PinX/LocPin
+									ribbon.ts, ribbon-home.ts, ribbon-view.ts, ribbon-other-tabs.ts, ribbon-parts.ts,
+									ribbon-router.ts; viewer-commands.ts; viewer-ruler.ts; viewer-draw-tool.ts;
+									viewer-commands.test.ts; visio-toolbar.spec.ts. Rectangle create plus delete
+									reopened in Visio 16 over COM with exact PinX/PinY/Width/Height
+								</td>
+								<td>
+									Clipboard, Font, Paragraph, Shape Styles, Arrange, Connector, Text and other
+									drawing tools, Change Shape, Insert, Design, Data, Process and Review commands
+									need new core edit commands. Also missing: File backstage (host-owned today),
+									shape context menu, on-canvas move/resize handles (need core-exposed PinX/LocPin),
+									multi-selection, Guides, Page Breaks, Pan &amp; Zoom and Size &amp; Position
+									panes, KeyTips
 								</td>
 							</tr>
 							<tr>

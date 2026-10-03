@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { taskPane } from './ribbon.js';
 
 for (const theme of ['light', 'dark'] as const) {
 	for (const width of [1440, 768, 390]) {
@@ -29,10 +30,9 @@ for (const theme of ['light', 'dark'] as const) {
 			expect(colors.accent).toBe(theme === 'light' ? 'rgb(57, 85, 163)' : 'rgb(139, 159, 240)');
 			expect(colors.width).toBeLessThanOrEqual(width);
 			expect(colors.height).toBe(844);
-			await viewer.getByRole('tab', { name: 'View', exact: true }).click();
-			if (width > 760) await viewer.getByRole('button', { name: 'Inspector pane' }).click();
+			if (width > 760) await taskPane(viewer, 'Inspector');
 			await expect(viewer.locator('.inspector-pane')).toBeHidden();
-			await viewer.getByRole('button', { name: 'Inspector pane' }).click();
+			await taskPane(viewer, 'Inspector');
 			await viewer.locator('.edit-controls summary').click();
 			await viewer.getByLabel('Selected shape text', { exact: true }).scrollIntoViewIfNeeded();
 			await expect(viewer.getByLabel('Selected shape text', { exact: true })).toBeInViewport();
@@ -41,6 +41,8 @@ for (const theme of ['light', 'dark'] as const) {
 			await expect(viewer.locator('.viewport > svg')).toHaveAttribute('aria-label', 'Architecture');
 			await viewer.getByRole('tab', { name: 'View', exact: true }).focus();
 			await page.keyboard.press('ArrowLeft');
+			await expect(viewer.getByRole('tab', { name: 'Review', exact: true })).toBeFocused();
+			await page.keyboard.press('Home');
 			await expect(viewer.getByRole('tab', { name: 'Home', exact: true })).toBeFocused();
 			await page.screenshot({ path: test.info().outputPath(`suite-${width}-${theme}.png`) });
 		});

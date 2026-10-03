@@ -1,6 +1,6 @@
 /*
- * Layout for the shared ooxml-ui ribbon, tab strip and status controls inside the viewer.
- * Viewer theme tokens feed the shared --office-* tokens, so host themes still apply.
+ * Microsoft Visio ribbon layout on the shared ooxml-ui controls. Viewer theme tokens feed the
+ * shared --office-* tokens, so host themes still apply. Loaded after the legacy styles.ts.
  */
 :host {
 	--office-foreground: var(--_vv-ink);
@@ -13,6 +13,44 @@
 	--office-ring: var(--vv-focus, var(--_vv-accent));
 	--office-font: 'Segoe UI', Arial, sans-serif;
 }
+
+/* Tab row: Quick Access Toolbar, then Visio's tabs. */
+.ribbon-head {
+	display: flex;
+	align-items: stretch;
+	min-width: 0;
+	border-bottom: 1px solid var(--_vv-border);
+}
+.qat {
+	display: flex;
+	align-items: center;
+	gap: 0;
+	padding: 0 6px;
+	border-right: 1px solid var(--_vv-border);
+}
+.qat office-ui-button {
+	--office-target-size: 30px;
+}
+.ribbon-head .ribbon-tabs {
+	flex: 1;
+	min-width: 0;
+	height: 36px;
+	border-bottom: 0;
+	overflow-x: auto;
+	scrollbar-width: none;
+}
+.ribbon-head .ribbon-tabs button {
+	flex: none;
+	min-height: 35px;
+	padding: 6px 12px;
+	font-size: 13px;
+}
+
+/* Panels: groups of large commands and three-row stacks, as dense as Visio's. */
+.ribbon-content {
+	min-height: 96px;
+	padding: 2px 2px 0;
+}
 .ribbon-row {
 	display: flex;
 	flex-wrap: nowrap;
@@ -22,20 +60,153 @@
 	border: 0;
 	background: transparent;
 }
-.ribbon-row office-ui-ribbon-group {
+.ribbon-row office-ui-ribbon-group,
+.tools-content office-ui-ribbon-group {
 	min-width: 0;
 }
-.ribbon-row office-ui-button {
-	--office-target-size: 28px;
+office-ui-ribbon-group office-ui-button,
+office-ui-ribbon-group office-ui-menu-button {
+	--office-target-size: 24px;
 }
-.ribbon-row office-ui-button[variant='stacked']::part(button) {
-	min-width: 64px;
-	min-height: 62px;
+office-ui-ribbon-group [data-size='large'] {
+	--office-target-size: 30px;
+}
+office-ui-button[variant='stacked']::part(button) {
+	min-width: 48px;
+	min-height: 66px;
+	padding: 2px 6px;
 	font-size: 12px;
 }
-office-ui-button[disabled]::part(button) {
-	opacity: 0.45;
+office-ui-menu-button[variant='stacked']::part(button) {
+	min-width: 48px;
+	min-height: 50px;
+	font-size: 12px;
 }
+office-ui-ribbon-group [data-size='small']::part(button) {
+	justify-content: flex-start;
+	font-size: 12px;
+}
+office-ui-ribbon-stack:not([orientation]) {
+	justify-content: flex-start;
+	padding-top: 2px;
+}
+office-ui-ribbon-stack:not([orientation]) > * {
+	min-height: 24px;
+}
+office-ui-ribbon-group > office-ui-ribbon-stack > office-ui-ribbon-stack[orientation] {
+	min-height: 32px;
+}
+office-ui-select[data-combo] {
+	--office-target-size: 24px;
+}
+office-ui-menu-button[data-active]::part(button) {
+	background: var(--_vv-accent-soft);
+	box-shadow: inset 0 0 0 1px var(--_vv-accent);
+}
+[data-unsupported] {
+	cursor: not-allowed;
+}
+.ribbon-check {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	min-height: 24px;
+	padding: 0 6px;
+	font-size: 12px;
+	white-space: nowrap;
+	cursor: pointer;
+}
+.ribbon-check[data-unsupported] {
+	color: var(--_vv-muted);
+	opacity: 0.6;
+}
+.ribbon-hint {
+	display: none;
+}
+
+/* Find bar: Visio opens Find on demand instead of keeping a box in the ribbon. */
+.find-bar {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-height: 40px;
+	padding: 4px 8px 4px 12px;
+	border-bottom: 1px solid var(--_vv-border);
+	background: var(--_vv-secondary);
+}
+.find-bar .search-group {
+	flex: 1;
+	width: auto;
+	max-width: 640px;
+	padding: 0;
+	border: 0;
+}
+.find-bar .search-group .group-label {
+	display: none;
+}
+.find-bar .search-controls {
+	flex-wrap: nowrap;
+}
+.find-bar [role='status'] {
+	width: auto;
+	flex: 1;
+}
+.find-close {
+	margin-left: auto;
+	width: 28px;
+	padding: 0;
+	border-color: transparent;
+	background: transparent;
+	font-size: 18px;
+}
+
+/* Drawing window with optional rulers. */
+.canvas-area {
+	display: grid;
+	flex: 1;
+	min-width: 0;
+	min-height: 0;
+	grid-template-columns: 0 1fr;
+	grid-template-rows: 0 1fr;
+}
+.canvas-area[data-ruler='true'] {
+	grid-template-columns: 18px 1fr;
+	grid-template-rows: 18px 1fr;
+}
+.canvas-area > .viewport {
+	grid-column: 2;
+	grid-row: 2;
+}
+.ruler,
+.ruler-corner {
+	display: none;
+	background: var(--_vv-surface);
+}
+.canvas-area[data-ruler='true'] > .ruler,
+.canvas-area[data-ruler='true'] > .ruler-corner {
+	display: block;
+}
+.ruler-corner {
+	grid-column: 1;
+	grid-row: 1;
+	border-right: 1px solid var(--_vv-border);
+	border-bottom: 1px solid var(--_vv-border);
+}
+.ruler-h {
+	grid-column: 2;
+	grid-row: 1;
+	width: 100%;
+	height: 18px;
+	border-bottom: 1px solid var(--_vv-border);
+}
+.ruler-v {
+	grid-column: 1;
+	grid-row: 2;
+	width: 18px;
+	height: 100%;
+	border-right: 1px solid var(--_vv-border);
+}
+
 .page-tabs {
 	flex: none;
 }
@@ -90,23 +261,20 @@ office-ui-status-item[data-page-status] {
 	width: 100vw;
 	height: 100vh;
 }
+
 @media (max-width: 760px) {
 	.ribbon-row {
 		flex: 1;
 		min-width: 0;
 	}
-	.undo-group {
-		flex: none;
-	}
-	.ribbon-row office-ui-button[variant='stacked']::part(button) {
-		min-width: 52px;
-		min-height: 44px;
+	.qat office-ui-button {
+		--office-target-size: 44px;
 	}
 	.ribbon-tools .tools-content office-ui-ribbon-group {
 		width: 100%;
 	}
-	.search-group {
-		scroll-snap-align: start;
+	.find-bar {
+		flex-wrap: wrap;
 	}
 	office-ui-status-bar.status {
 		gap: 4px;

@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { taskPane } from './ribbon.js';
 import { createVsdxFixture } from './fixture.mjs';
 
 test('edits literal text locally, undoes/redoes and downloads a reopenable VSDX copy', async ({
@@ -69,8 +70,7 @@ test('mobile editor preserves literal drafts, keyboard cancellation and touch ta
 	});
 	await expect(page.locator('#file-name')).toHaveText('mobile.vsdx');
 	await page.locator('visio-viewer [data-shape-id="1"]').click();
-	await page.getByRole('tab', { name: 'View', exact: true }).click();
-	await page.getByRole('button', { name: 'Inspector pane' }).click();
+	await taskPane(page.locator('visio-viewer'), 'Inspector');
 	await page.locator('visio-viewer .edit-controls summary').click();
 	const input = page.getByLabel('Selected shape text', { exact: true });
 	await input.fill('draft + - 0');

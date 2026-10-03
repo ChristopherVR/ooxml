@@ -12,6 +12,9 @@ import { viewerStyles } from './styles.js';
 import { canvasAndRibbonStyles } from './styles/index.js';
 import { createRibbon } from './ribbon.js';
 import { createPageTabs, createStatusBar } from './status-bar.js';
+import { createFindBar, wireFindBar } from './viewer-search.js';
+import { fitZoom } from './viewer-fit.js';
+import { createRulers, type Rulers } from './viewer-ruler.js';
 import { ViewerEditControls } from './viewer-edit-controls.js';
 import { searchControls, renderSearchControls, type SearchControls } from './viewer-search.js';
 import { ViewerChrome, viewerChromeTemplate } from './viewer-chrome.js';
@@ -38,6 +41,8 @@ export class VisioViewerElement extends BaseElement {
 	#shapeStatus: HTMLElement;
 	#announcement: string | undefined;
 	#commands: ViewerCommands;
+	#rulers: Rulers;
+	#findBar: HTMLElement;
 	#status: HTMLSpanElement;
 	#diagnostics: HTMLSpanElement;
 	#toolbar: HTMLDivElement;
@@ -75,9 +80,11 @@ export class VisioViewerElement extends BaseElement {
 		// This template is static, never document content.
 		this.#root.innerHTML = `<style>${viewerStyles}${canvasAndRibbonStyles}</style>${viewerChromeTemplate}`;
 		const workspace = this.#root.querySelector('.workspace')!;
-		workspace.before(createRibbon(document));
+		this.#findBar = createFindBar(document);
+		workspace.before(createRibbon(document), this.#findBar);
 		workspace.after(createPageTabs(document), createStatusBar(document));
 		this.#viewport = this.#root.querySelector('.viewport')!;
+		this.#rulers = createRulers(this.#viewport);
 		this.#zoomSlider = this.#root.querySelector('office-ui-zoom-slider')!;
 		this.#shapeStatus = this.#root.querySelector('[data-shape-status]')!;
 		this.#status = this.#root.querySelector('[data-status]')!;
@@ -97,8 +104,10 @@ export class VisioViewerElement extends BaseElement {
 			fit: (mode) => this.#fit(mode),
 			togglePane: (pane) => this.#chrome.togglePane(pane),
 			reveal: (panel, focusText) => this.#chrome.reveal(panel, focusText),
+			rulers: this.#rulers,
 			focusSearch: () => {
-				this.#chrome.showTab('home');
+				this.#chrome.closeCompactTools();
+				this.#findBar.hidden = false;
 				this.#search.input.focus();
 				this.#search.input.select();
 			},
@@ -183,26 +192,7 @@ export class VisioViewerElement extends BaseElement {
 	/** Visio Fit to Window shows the whole page; Page Width fills the canvas width. */
 	#fit(mode: 'page' | 'width'): void {
 		const page = this.document?.pages[this.pageIndex];
-		if (!page) return;
-		const style = this.ownerDocument.defaultView?.getComputedStyle(this.#viewport);
-		const padding = (value: string | undefined) => Number.parseFloat(value ?? '') || 0;
-		const width = Math.max(
-			1,
-			this.#viewport.clientWidth - padding(style?.paddingLeft) - padding(style?.paddingRight),
-		);
-		const height = Math.max(
-			1,
-			this.#viewport.clientHeight - padding(style?.paddingTop) - padding(style?.paddingBottom),
-		);
-		if (mode === 'page') {
-			this.zoom = Math.min(1, width / (page.width * 96), height / (page.height * 96));
-			return;
-		}
-		// Page Width scrolls vertically; reserve that scrollbar so no horizontal one appears.
-		const scrollbar = this.#viewport.offsetWidth - this.#viewport.clientWidth;
-		const fitted = width / (page.width * 96);
-		const reserve = page.height * 96 * fitted > height && scrollbar <= 0 ? 17 : 0;
-		this.zoom = Math.max(1, width - reserve - 1) / (page.width * 96);
+		if (page) this.zoom = fitZoom(this.#viewport, page, mode);
 	}
 	setLayerVisibility(pageId: string, layerId: string, visible: boolean | null): void {
 		this.#assertAlive();
@@ -278,6 +268,10 @@ export class VisioViewerElement extends BaseElement {
 	#wireInputs(): () => void {
 		const disposeChrome = this.#chrome.wire();
 		const disposeCommands = this.#commands.wire();
+		const disposeRulers = this.#rulers.wire();
+		const disposeFind = wireFindBar(this.#findBar, this.#search.input, () =>
+			this.#viewport.focus({ preventScroll: true }),
+		);
 		const disposeEdit = this.#edit.wire();
 		const disposeLayers = wireLayerControls(this.#layers, this.controller);
 		const disposeInputs = wireViewerInputs(
@@ -293,6 +287,8 @@ export class VisioViewerElement extends BaseElement {
 		return () => {
 			disposeChrome();
 			disposeCommands();
+			disposeRulers();
+			disposeFind();
 			disposeInputs();
 			disposeLayers();
 			disposeEdit();

@@ -4,11 +4,13 @@ import { RIBBON_ACTION_EVENT, type VisioRibbonAction } from './ribbon-action.js'
 import type { RibbonCommand } from './ribbon-parts.js';
 import { routeRibbonAction, type RibbonTargets } from './ribbon-router.js';
 import { RectangleDrawTool } from './viewer-draw-tool.js';
+import type { Rulers } from './viewer-ruler.js';
 
 export type CanvasTool = 'pointer' | 'rectangle';
 interface CommandHost {
 	root: ShadowRoot;
 	viewport: HTMLElement;
+	rulers: Rulers;
 	controller: ViewerController;
 	fit(mode: 'page' | 'width'): void;
 	togglePane(pane: 'pages' | 'inspector'): void;
@@ -29,6 +31,7 @@ const editable = (target: EventTarget | null) =>
 export class ViewerCommands {
 	#tool: CanvasTool = 'pointer';
 	#grid = false;
+	#ruler = false;
 	#pending = 0;
 	#draw: RectangleDrawTool;
 	readonly #targets: RibbonTargets;
@@ -44,6 +47,10 @@ export class ViewerCommands {
 			setTool: (tool) => this.setTool(tool),
 			toggleGrid: () => {
 				this.#grid = !this.#grid;
+				this.render(host.controller.state);
+			},
+			toggleRuler: () => {
+				this.#ruler = !this.#ruler;
 				this.render(host.controller.state);
 			},
 			toggleFullscreen: () => this.#toggleFullscreen(),
@@ -205,29 +212,36 @@ export class ViewerCommands {
 	}
 	render(state: ViewerState): void {
 		const { root, viewport } = this.host;
-		const button = (name: string) =>
-			root.querySelector<RibbonCommand>(`office-ui-button[command="${name}"]`)!;
+		const button = (name: string) => root.querySelector<RibbonCommand>(`[command="${name}"]`)!;
+		const box = (name: string) =>
+			root.querySelector<RibbonCommand & { checked: boolean }>(`[data-check="${name}"]`)!;
 		const editing = this.#canEdit(state);
 		if (this.#tool === 'rectangle' && !state.edit.sourceAvailable) this.#tool = 'pointer';
 		const page = state.document?.pages[state.pageIndex];
 		button('undo').disabled = !state.edit.canUndo || state.edit.busy || state.loading;
 		button('redo').disabled = !state.edit.canRedo || state.edit.busy || state.loading;
-		button('delete').disabled = !editing || !state.selectedShape;
 		button('pointer').setAttribute('pressed', String(this.#tool === 'pointer'));
+		// The drawing-tools split button shows the active tool; its Rectangle item is checked.
 		const rectangle = button('rectangle');
-		rectangle.setAttribute('pressed', String(this.#tool === 'rectangle'));
+		rectangle.toggleAttribute('data-active', this.#tool === 'rectangle');
 		rectangle.disabled = !editing || !page;
+		button('rectangle-item').setAttribute('checked', String(this.#tool === 'rectangle'));
+		button('rectangle-item').disabled = !editing || !page;
 		rectangle.title = state.edit.sourceAvailable
 			? 'Rectangle (Ctrl+8)'
 			: 'Rectangle (Ctrl+8): open a .vsdx file to draw. Model-only documents are read only.';
-		button('grid').setAttribute('pressed', String(this.#grid));
-		button('grid').disabled = !page;
-		for (const name of ['zoom-fit', 'page-width', 'actual-size']) button(name).disabled = !page;
+		box('grid').checked = this.#grid;
+		box('grid').disabled = !page;
+		box('ruler').checked = this.#ruler;
+		box('ruler').disabled = !page;
+		for (const name of ['zoom-fit', 'page-width']) button(name).disabled = !page;
+		root.querySelector<RibbonCommand>('[data-menu="zoom"]')!.disabled = !page;
 		const fullscreen = button('fullscreen');
 		const host = root.host as HTMLElement;
 		fullscreen.disabled = typeof host.requestFullscreen !== 'function';
 		fullscreen.setAttribute('pressed', String(root.ownerDocument.fullscreenElement === host));
 		viewport.dataset.tool = this.#tool;
 		viewport.dataset.grid = String(this.#grid);
+		this.host.rulers.render(this.#ruler && !!page, state.zoom);
 	}
 }

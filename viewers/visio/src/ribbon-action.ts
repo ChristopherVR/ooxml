@@ -6,8 +6,10 @@ export type VisioRibbonAction =
 	| { type: 'pane'; pane: 'pages' | 'inspector' }
 	| { type: 'reveal'; panel: 'edit' | 'notes' | 'selection' | 'layers'; focusText?: boolean }
 	| { type: 'grid' }
+	| { type: 'ruler' }
 	| { type: 'fullscreen' }
 	| { type: 'zoom'; mode: 'fit' | 'width' | 'actual' }
+	| { type: 'zoomTo'; percent: number }
 	| { type: 'search' }
 	| { type: 'page'; step: 1 | -1 };
 

@@ -11,8 +11,9 @@ function setup() {
 	const button = (selector: string) => root.querySelector<HTMLButtonElement>(selector)!;
 	/** Shared ribbon command host element and the real button inside it. */
 	const command = (name: string) =>
-		root.querySelector<HTMLElement & { disabled: boolean }>(`office-ui-button[command="${name}"]`)!;
-	const press = (name: string) => command(name).shadowRoot!.querySelector('button')!.click();
+		root.querySelector<HTMLElement & { disabled: boolean }>(`[command="${name}"]`)!;
+	const press = (name: string) =>
+		command(name).shadowRoot!.querySelector<HTMLButtonElement>('.main, button')!.click();
 	const strip = () => root.querySelector('office-ui-tab-strip')!.shadowRoot!;
 	const slider = () => root.querySelector<Slider>('office-ui-zoom-slider')!;
 	const zoomButton = (label: string) =>
@@ -61,19 +62,24 @@ describe('shared Office-style viewer chrome', () => {
 		button('[data-tab="home"]').dispatchEvent(
 			new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }),
 		);
+		expect(button('[data-tab="insert"]').getAttribute('aria-selected')).toBe('true');
+		expect(root.activeElement).toBe(button('[data-tab="insert"]'));
+		button('[data-tab="insert"]').dispatchEvent(
+			new KeyboardEvent('keydown', { key: 'End', bubbles: true }),
+		);
 		expect(button('[data-tab="view"]').getAttribute('aria-selected')).toBe('true');
 		expect(root.activeElement).toBe(button('[data-tab="view"]'));
 		expect(root.querySelector<HTMLElement>('#home-panel')!.hidden).toBe(true);
 		expect(root.querySelector<HTMLElement>('#view-panel')!.hidden).toBe(false);
 		press('pages');
 		expect(root.querySelector<HTMLElement>('.page-rail')!.hidden).toBe(true);
-		expect(command('pages').getAttribute('pressed')).toBe('false');
+		expect(command('pages').getAttribute('checked')).toBe('false');
 		press('inspector');
 		expect(root.querySelector<HTMLElement>('.inspector-pane')!.hidden).toBe(true);
 		expect(viewer.element.zoom).toBe(1.7);
 		button('.notes-strip button').click();
 		expect(root.querySelector<HTMLElement>('.inspector-pane')!.hidden).toBe(false);
-		expect(command('inspector').getAttribute('pressed')).toBe('true');
+		expect(command('inspector').getAttribute('checked')).toBe('true');
 		expect(root.querySelector<HTMLDetailsElement>('.notes')!.open).toBe(true);
 		expect(button('.notes-strip button').getAttribute('aria-expanded')).toBe('true');
 		expect(root.activeElement).toBe(root.querySelector('.notes summary'));
@@ -90,7 +96,7 @@ describe('shared Office-style viewer chrome', () => {
 		range.value = '250';
 		range.dispatchEvent(new Event('input'));
 		expect(viewer.element.zoom).toBe(2.5);
-		press('actual-size');
+		press('zoom-100');
 		expect(viewer.element.zoom).toBe(1);
 		viewer.element.zoom = 2;
 		expect(slider().value).toBe(200);
@@ -102,23 +108,26 @@ describe('shared Office-style viewer chrome', () => {
 		viewer.destroy();
 	});
 	it('uses disabled states honestly and routes editing to the existing disclosure', () => {
-		const { viewer, root, command, press, slider } = setup();
-		expect(command('selection').disabled).toBe(true);
-		expect(command('layers').disabled).toBe(true);
+		const { viewer, root, command, slider } = setup();
+		expect(command('shape-data').disabled).toBe(true);
+		expect(command('layer-properties').disabled).toBe(true);
 		// The sample is a model-only document: no source bytes means no drawing or deletion.
 		expect(command('rectangle').disabled).toBe(true);
 		expect(command('undo').disabled).toBe(true);
-		press('edit');
+		// Unsupported Visio commands are visible, disabled and say what is missing.
+		expect(command('bold').disabled).toBe(true);
+		expect(command('bold').getAttribute('title')).toMatch(/not available yet\. Needs core text/);
+		root
+			.querySelector<HTMLElement>('.viewport')!
+			.dispatchEvent(new KeyboardEvent('keydown', { key: 'F2', bubbles: true, composed: true }));
 		expect(root.querySelector<HTMLDetailsElement>('.edit-controls')!.open).toBe(true);
 		expect(root.querySelector<HTMLTextAreaElement>('#edit-text')!.disabled).toBe(true);
 		viewer.controller.selectShape({ id: 's1', name: 'Start', pageId: '1' });
-		expect(command('selection').disabled).toBe(false);
-		expect(command('delete').disabled).toBe(true);
+		expect(command('shape-data').disabled).toBe(false);
 		expect(root.querySelector<HTMLDetailsElement>('.shape-inspector')!.open).toBe(true);
 		expect(root.querySelector('[data-shape-status]')!.getAttribute('value')).toMatch(/^Width: /);
 		viewer.update({ document: null });
 		expect(root.querySelectorAll('.page-link')).toHaveLength(0);
-		expect(command('edit').disabled).toBe(true);
 		expect(command('zoom-fit').disabled).toBe(true);
 		expect(slider().disabled).toBe(true);
 		expect(root.querySelector<HTMLButtonElement>('[data-tab="view"]')!.disabled).toBe(false);
@@ -127,29 +136,30 @@ describe('shared Office-style viewer chrome', () => {
 	it('aborts chrome, command and zoom listeners, then reconnects exactly one set', () => {
 		const { host, viewer, root, button, press, strip, zoomButton } = setup();
 		const view = button('[data-tab="view"]');
+		const grid = () => root.querySelector<HTMLElement>('[data-check="grid"]')!.click();
 		const next = () =>
 			strip().querySelector<HTMLButtonElement>('[aria-label="Next page"]')!.click();
 		viewer.element.remove();
 		zoomButton('Zoom in').click();
-		press('grid');
+		grid();
 		view.click();
 		expect(viewer.element.zoom).toBe(1);
 		expect(root.querySelector<HTMLElement>('.viewport')!.dataset.grid).not.toBe('true');
 		expect(view.getAttribute('aria-selected')).toBe('false');
 		host.append(viewer.element);
-		press('actual-size');
+		press('zoom-100');
 		viewer.element.zoom = 1.25;
-		press('grid');
+		grid();
 		expect(root.querySelector<HTMLElement>('.viewport')!.dataset.grid).toBe('true');
 		viewer.element.remove();
 		host.append(viewer.element);
-		press('grid');
+		grid();
 		expect(root.querySelector<HTMLElement>('.viewport')!.dataset.grid).toBe('false');
 		next();
 		expect(viewer.element.pageIndex).toBe(1);
 		const zoomIn = zoomButton('Zoom in');
 		const inspector = root
-			.querySelector('office-ui-button[command="inspector"]')!
+			.querySelector('[command="inspector"]')!
 			.shadowRoot!.querySelector('button')!;
 		viewer.destroy();
 		zoomIn.click();

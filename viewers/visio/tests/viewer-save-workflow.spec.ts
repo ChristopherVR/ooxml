@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { taskPane } from './ribbon.js';
 import JSZip from 'jszip';
 import { createVsdxFixture } from './fixture.mjs';
 
@@ -130,8 +131,7 @@ test('mobile geometry-only drafts can be cancelled without editing the document'
 	await page.setViewportSize({ width: 390, height: 844 });
 	await page.goto('/demo/?sample=1');
 	await open(page, await createVsdxFixture(), 'mobile-draft.vsdx');
-	await page.getByRole('tab', { name: 'View', exact: true }).click();
-	await page.getByRole('button', { name: 'Inspector pane' }).click();
+	await taskPane(page.locator('visio-viewer'), 'Inspector');
 	await page.locator('visio-viewer .edit-controls summary').click();
 	await page.getByLabel('Pin X (inches)').fill('4');
 	await expect(page.getByRole('button', { name: 'Cancel', exact: true })).toBeEnabled();

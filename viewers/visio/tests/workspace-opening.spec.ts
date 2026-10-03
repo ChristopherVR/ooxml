@@ -1,25 +1,27 @@
 import { test, expect } from '@playwright/test';
+import { openFind, taskPane } from './ribbon.js';
 import { createVsdxFixture } from './fixture.mjs';
 
-test('mobile Tools exposes labeled editing and find commands with keyboard dismissal', async ({
-	page,
-}) => {
+test('mobile Tools exposes Visio groups, opens Find and edits text with F2', async ({ page }) => {
 	await page.setViewportSize({ width: 390, height: 844 });
 	await page.goto('/demo/?sample=1');
 	const viewer = page.locator('visio-viewer');
 	await viewer.locator('[data-shape-id="s1"]').click();
 	const tools = viewer.locator('.ribbon-tools>summary');
 	await tools.click();
-	for (const name of ['Shape details', 'Edit text', 'Layers'])
+	for (const name of ['Pointer Tool', 'Find', 'Layers'])
 		await expect(viewer.getByRole('button', { name, exact: true })).toBeVisible();
-	await expect(viewer.getByRole('searchbox', { name: 'Search diagram text' })).toBeVisible();
-	await viewer.getByRole('searchbox', { name: 'Search diagram text' }).fill('idea');
 	await page.keyboard.press('Escape');
 	await expect(tools).toBeFocused();
-	await tools.click();
-	await expect(viewer.getByRole('searchbox', { name: 'Search diagram text' })).toHaveValue('idea');
-	await viewer.getByRole('button', { name: 'Edit text', exact: true }).click();
+	const search = await openFind(viewer);
 	await expect(viewer.locator('.ribbon-tools')).not.toHaveAttribute('open');
+	await expect(search).toBeFocused();
+	await search.fill('idea');
+	await page.keyboard.press('Escape');
+	await expect(search).toHaveValue('');
+	await page.keyboard.press('Escape');
+	await expect(viewer.locator('.find-bar')).toBeHidden();
+	await page.keyboard.press('F2');
 	await expect(viewer.locator('.inspector-pane')).toBeVisible();
 	await expect(viewer.getByLabel('Selected shape text', { exact: true })).toBeVisible();
 	await viewer.getByRole('button', { name: 'Close inspector' }).click();
@@ -95,13 +97,12 @@ test('mobile local file opens into bounded canvas and inspector can close and su
 	await expect(page.locator('#file-name')).toHaveText('local.vsdx');
 	const viewer = page.locator('visio-viewer');
 	await expect(viewer.locator('.inspector-pane')).toBeHidden();
-	await viewer.getByRole('tab', { name: 'View', exact: true }).click();
-	await viewer.getByRole('button', { name: 'Inspector pane', exact: true }).click();
+	await taskPane(viewer, 'Inspector');
 	await expect(viewer.locator('.inspector-pane')).toBeVisible();
 	await viewer.getByRole('button', { name: 'Close inspector', exact: true }).click();
 	await page.setViewportSize({ width: 1440, height: 900 });
 	await expect(viewer.locator('.inspector-pane')).toBeHidden();
-	await viewer.getByRole('button', { name: 'Inspector pane', exact: true }).click();
+	await taskPane(viewer, 'Inspector');
 	await page.setViewportSize({ width: 390, height: 844 });
 	await expect(viewer.locator('.inspector-pane')).toBeVisible();
 	await viewer.getByRole('button', { name: 'Close inspector', exact: true }).click();

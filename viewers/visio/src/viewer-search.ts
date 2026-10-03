@@ -47,6 +47,53 @@ export function createSearchGroup(doc: Document): HTMLElement {
 	group.append(controls, caption);
 	return group;
 }
+/**
+ * Visio opens Find from Home > Editing rather than keeping a box in the ribbon. The find bar
+ * sits under the ribbon, hidden until Find... or Ctrl+F, and closes with its button or Escape.
+ */
+export function createFindBar(doc: Document): HTMLElement {
+	const bar = doc.createElement('div');
+	bar.className = 'find-bar';
+	bar.hidden = true;
+	const close = doc.createElement('button');
+	close.type = 'button';
+	close.className = 'find-close';
+	close.dataset.action = 'find-close';
+	close.setAttribute('aria-label', 'Close Find');
+	close.title = 'Close Find (Esc)';
+	close.textContent = '×';
+	bar.append(createSearchGroup(doc), close);
+	return bar;
+}
+/** The find bar closes from its button, or Escape once the query is already empty. */
+export function wireFindBar(
+	bar: HTMLElement,
+	input: HTMLInputElement,
+	closed: () => void,
+): () => void {
+	const Abort = bar.ownerDocument.defaultView?.AbortController ?? AbortController;
+	const events = new Abort();
+	const close = () => {
+		bar.hidden = true;
+		closed();
+	};
+	bar.addEventListener(
+		'click',
+		(event) => {
+			if ((event.target as Element).closest?.('[data-action="find-close"]')) close();
+		},
+		{ signal: events.signal },
+	);
+	// Capture runs before the search field clears its query on Escape.
+	bar.addEventListener(
+		'keydown',
+		(event) => {
+			if (event.key === 'Escape' && input.value === '') close();
+		},
+		{ signal: events.signal, capture: true },
+	);
+	return () => events.abort();
+}
 export interface SearchControls {
 	input: HTMLInputElement;
 	status: HTMLSpanElement;

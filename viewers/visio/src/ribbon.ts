@@ -1,28 +1,73 @@
 import { buildHomePanel } from './ribbon-home.js';
+import {
+	buildDataPanel,
+	buildDesignPanel,
+	buildInsertPanel,
+	buildProcessPanel,
+	buildReviewPanel,
+} from './ribbon-other-tabs.js';
+import { command } from './ribbon-parts.js';
 import { buildViewPanel } from './ribbon-view.js';
 
 export type { VisioRibbonAction } from './ribbon-action.js';
 
-const TABS = [
+/** Visio's ribbon tab order. File (backstage) belongs to the host application. */
+export const RIBBON_TABS = [
 	['home', 'Home', buildHomePanel],
+	['insert', 'Insert', buildInsertPanel],
+	['design', 'Design', buildDesignPanel],
+	['data', 'Data', buildDataPanel],
+	['process', 'Process', buildProcessPanel],
+	['review', 'Review', buildReviewPanel],
 	['view', 'View', buildViewPanel],
 ] as const;
+export type RibbonTab = (typeof RIBBON_TABS)[number][0];
+
+/** Visio's Quick Access Toolbar: Undo and Redo beside the tabs, as in the desktop app. */
+function quickAccess(doc: Document): HTMLElement {
+	const qat = doc.createElement('div');
+	qat.className = 'qat';
+	qat.setAttribute('role', 'toolbar');
+	qat.setAttribute('aria-label', 'Quick Access Toolbar');
+	qat.append(
+		command(doc, {
+			id: 'undo',
+			label: 'Undo',
+			icon: 'undo',
+			size: 'icon',
+			action: { type: 'history', key: 'undo' },
+			keys: ['Control+Z', 'Ctrl+Z'],
+		}),
+		command(doc, {
+			id: 'redo',
+			label: 'Redo',
+			icon: 'redo',
+			size: 'icon',
+			action: { type: 'history', key: 'redo' },
+			keys: ['Control+Y', 'Ctrl+Y'],
+		}),
+	);
+	return qat;
+}
 
 /**
- * The Visio ribbon: a tab list and one panel per tab. Tab switching and keyboard movement
- * belong to the chrome; commands emit `ribbon-action` events for the router.
+ * The Visio ribbon: Quick Access Toolbar, tab list and one panel per tab. Tab switching and
+ * keyboard movement belong to the chrome; commands emit `ribbon-action` events for the router.
  */
 export function createRibbon(doc: Document): HTMLElement {
 	const toolbar = doc.createElement('div');
 	toolbar.className = 'toolbar';
 	toolbar.setAttribute('role', 'group');
 	toolbar.setAttribute('aria-label', 'Diagram controls');
+	const head = doc.createElement('div');
+	head.className = 'ribbon-head';
 	const tabs = doc.createElement('div');
 	tabs.className = 'ribbon-tabs';
 	tabs.setAttribute('role', 'tablist');
 	tabs.setAttribute('aria-label', 'Ribbon');
-	toolbar.append(tabs);
-	for (const [key, name, build] of TABS) {
+	head.append(quickAccess(doc), tabs);
+	toolbar.append(head);
+	for (const [key, name, build] of RIBBON_TABS) {
 		const selected = key === 'home';
 		const tab = doc.createElement('button');
 		tab.type = 'button';

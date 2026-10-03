@@ -19,7 +19,10 @@ test('Visio ribbon draws, deletes, undoes and redoes with tools and shortcuts', 
 	await expect(ribbon('Undo')).toHaveAttribute('aria-keyshortcuts', 'Control+Z');
 
 	await ribbon('Rectangle').click();
-	await expect(ribbon('Rectangle')).toHaveAttribute('aria-pressed', 'true');
+	await expect(viewer.locator('office-ui-menu-button[command="rectangle"]')).toHaveAttribute(
+		'data-active',
+		'',
+	);
 	const paper = await viewer.locator('svg.paper').boundingBox();
 	const start = { x: paper!.x + paper!.width * 0.2, y: paper!.y + paper!.height * 0.6 };
 	await page.mouse.move(start.x, start.y);
@@ -50,8 +53,27 @@ test('Visio ribbon draws, deletes, undoes and redoes with tools and shortcuts', 
 	await ribbon('Undo').click();
 	await expect(created).toHaveCount(1);
 
+	// Visio's full Home layout is present; commands the core lacks are disabled with a reason.
+	await expect(ribbon('Bold')).toBeDisabled();
+	await expect(ribbon('Bold')).toHaveAttribute('title', /not available yet\. Needs core text/);
+	// Dropdowns open as top-layer menus that stay inside the window, even at the right edge.
+	await expect(viewer.getByRole('button', { name: 'Select', exact: true })).toHaveAttribute(
+		'title',
+		/not available yet\. Needs multi-shape selection/,
+	);
+	await viewer.getByRole('button', { name: 'Find', exact: true }).click();
+	const menu = viewer.locator('office-ui-menu-button[data-menu="find"] >> [role="menu"]');
+	await expect(menu).toBeVisible();
+	const box = await menu.boundingBox();
+	expect(box!.x + box!.width).toBeLessThanOrEqual(1440);
+	await page.keyboard.press('Escape');
+	await expect(menu).toBeHidden();
+
 	await viewer.getByRole('tab', { name: 'View', exact: true }).click();
-	await ribbon('Grid').click();
+	await viewer.locator('[data-check="ruler"]').click();
+	await expect(viewer.locator('.canvas-area')).toHaveAttribute('data-ruler', 'true');
+	await expect(viewer.locator('canvas.ruler-h')).toBeVisible();
+	await viewer.locator('[data-check="grid"]').click();
 	await expect(viewer.locator('.viewport')).toHaveAttribute('data-grid', 'true');
 	const before = await viewer.evaluate(
 		(element) => (element as HTMLElement & { zoom: number }).zoom,
