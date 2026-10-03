@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.15.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.15.0) - 2026-10-03
+
+### Features
+
+- **ui:** Add ribbon command sizes, badges and group collapse (by @ChristopherVR) ([dbfb89e](https://github.com/ChristopherVR/ooxml/commit/dbfb89ecbd16b382642b349f33b2cb336c86985f))
+
 ## [0.14.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.14.0) - 2026-10-03
 
 ### Features
