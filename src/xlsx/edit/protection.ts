@@ -1,6 +1,6 @@
 import type { ModernPasswordHash, SheetProtection, Workbook, Worksheet } from '../model.js';
 import { type EditContext, sheetAt } from './context.js';
-import { sha512 } from './sha512.js';
+import { hashPassword, verifyPasswordHash } from '../../digest/index.js';
 
 /**
  * Excel's legacy 16-bit password verifier (ECMA-376 Part 4, 14.7.1), upper-case hex as the
@@ -17,17 +17,33 @@ export function legacyPasswordHash(password: string): string {
 	return hash.toString(16).toUpperCase();
 }
 
-const sameHash = (hash: string | undefined, password: string): boolean =>
-	hash === undefined || hash.toUpperCase() === legacyPasswordHash(password);
+const sameLegacyHash = (hash: string, password: string): boolean =>
+	hash.toUpperCase() === legacyPasswordHash(password);
+
+/**
+ * Whether `password` matches a protection's hashes. The modern hash wins when its digest is one
+ * `ooxml-core/digest` computes (SHA-1, SHA-256, SHA-384, SHA-512); with another digest the legacy
+ * hash decides, and without one nothing unlocks. No hash at all means no password.
+ */
+function matchesHashes(
+	modern: ModernPasswordHash | undefined,
+	legacy: string | undefined,
+	password: string,
+): boolean {
+	const verdict = modern ? verifyPasswordHash(password, modern) : undefined;
+	if (verdict !== undefined) return verdict;
+	if (legacy !== undefined) return sameLegacyHash(legacy, password);
+	return !modern;
+}
 
 const protectionOf = (sheet: Worksheet | SheetProtection | undefined) =>
 	sheet && 'rows' in sheet ? sheet.protection : sheet;
 
 /**
  * Whether `password` unlocks a sheet's protection (true when it is not protected or has no
- * password). Excel's modern hash is checked when it uses SHA-512 (what Excel writes); a modern
- * hash with another digest needs {@link verifySheetPasswordAsync}, and without a legacy hash to
- * fall back on it never unlocks here, so a sheet is never unprotected by mistake.
+ * password). Excel's modern hash is checked synchronously for SHA-1, SHA-256, SHA-384 and SHA-512;
+ * a modern hash with any other digest falls back to the legacy hash and, without one, never
+ * unlocks, so a sheet is never unprotected by mistake. Malformed hashes fail rather than throw.
  */
 export function verifySheetPassword(
 	sheet: Worksheet | SheetProtection | undefined,
@@ -35,103 +51,45 @@ export function verifySheetPassword(
 ): boolean {
 	const protection = protectionOf(sheet);
 	if (!protection?.sheet) return true;
-	const modern = protection.modernHash;
-	if (!modern) return sameHash(protection.passwordHash, password);
-	if (modern.algorithmName.toUpperCase() === 'SHA-512')
-		return spinHash(password, modern, sha512) === modern.hashValue;
-	return protection.passwordHash !== undefined && sameHash(protection.passwordHash, password);
+	return matchesHashes(protection.modernHash, protection.passwordHash, password);
 }
 
-/**
- * Like {@link verifySheetPassword}, but also checks modern hashes that use SHA-1, SHA-256 or
- * SHA-384, through Web Crypto.
- */
+/** {@link verifySheetPassword} as a promise, kept for callers written against the async API. */
 export async function verifySheetPasswordAsync(
 	sheet: Worksheet | SheetProtection | undefined,
 	password: string,
 ): Promise<boolean> {
-	const protection = protectionOf(sheet);
-	const modern = protection?.sheet ? protection.modernHash : undefined;
-	const digest = modern ? WEB_CRYPTO_DIGESTS[modern.algorithmName.toUpperCase()] : undefined;
-	if (!modern || !digest || digest === 'SHA-512') return verifySheetPassword(sheet, password);
-	return (await modernPasswordHash(password, modern, digest)) === modern.hashValue;
-}
-
-const WEB_CRYPTO_DIGESTS: Readonly<Record<string, string>> = {
-	'SHA-1': 'SHA-1',
-	'SHA-256': 'SHA-256',
-	'SHA-384': 'SHA-384',
-	'SHA-512': 'SHA-512',
-};
-
-const fromBase64 = (text: string): Uint8Array =>
-	Uint8Array.from(atob(text), (c) => c.charCodeAt(0));
-const toBase64 = (bytes: Uint8Array): string => btoa(String.fromCharCode(...bytes));
-
-/** The salt followed by the password as UTF-16LE: the input of the first hash round. */
-function saltedPassword(password: string, saltValue: string): Uint8Array<ArrayBuffer> {
-	const salt = fromBase64(saltValue);
-	const input = new Uint8Array(salt.length + password.length * 2);
-	input.set(salt);
-	for (let i = 0; i < password.length; i++) {
-		const code = password.charCodeAt(i);
-		input[salt.length + i * 2] = code & 0xff;
-		input[salt.length + i * 2 + 1] = code >> 8;
-	}
-	return input;
-}
-
-/** ECMA-376 agile hashing: H(salt + password), then `spinCount` rounds of H(previous + i). */
-function spinHash(
-	password: string,
-	hash: Pick<ModernPasswordHash, 'saltValue' | 'spinCount'>,
-	digest: (data: Uint8Array) => Uint8Array,
-): string {
-	let value = digest(saltedPassword(password, hash.saltValue));
-	const buffer = new Uint8Array(value.length + 4);
-	const view = new DataView(buffer.buffer);
-	for (let i = 0; i < hash.spinCount; i++) {
-		buffer.set(value);
-		view.setUint32(value.length, i, true);
-		value = digest(buffer);
-	}
-	return toBase64(value);
+	return verifySheetPassword(sheet, password);
 }
 
 /**
- * The base64 ECMA-376 agile hash of `password` for the salt and iteration count in `hash`.
- * SHA-512 runs synchronously; other digests go through Web Crypto.
+ * The base64 ECMA-376 agile hash of `password` for the salt and iteration count in `hash`, as a
+ * promise for callers written against the async API; `hashPassword` in `ooxml-core/digest` is the
+ * synchronous form. Rejects for a digest other than SHA-1/256/384/512 or unusable parameters.
  */
 export async function modernPasswordHash(
 	password: string,
 	hash: Pick<ModernPasswordHash, 'saltValue' | 'spinCount'>,
 	digest = 'SHA-512',
 ): Promise<string> {
-	if (digest.toUpperCase() === 'SHA-512') return spinHash(password, hash, sha512);
-	let value = new Uint8Array(
-		await crypto.subtle.digest(digest, saltedPassword(password, hash.saltValue)),
-	);
-	const buffer = new Uint8Array(value.length + 4);
-	const view = new DataView(buffer.buffer);
-	for (let i = 0; i < hash.spinCount; i++) {
-		buffer.set(value);
-		view.setUint32(value.length, i, true);
-		value = new Uint8Array(await crypto.subtle.digest(digest, buffer));
-	}
-	return toBase64(value);
+	const value = hashPassword(password, { ...hash, algorithmName: digest });
+	if (value === undefined) throw new Error(`Cannot compute a ${digest} password hash`);
+	return value;
 }
 
-/** Whether `password` unlocks the workbook structure protection. */
+/** Whether `password` unlocks the workbook structure protection (modern or legacy hash). */
 export function verifyWorkbookPassword(workbook: Workbook, password: string): boolean {
 	if (!workbook.structureLocked) return true;
-	return sameHash(workbook.workbookPasswordHash, password);
+	return matchesHashes(workbook.workbookModernHash, workbook.workbookPasswordHash, password);
 }
 
 const WRONG_PASSWORD = 'The password you supplied is not correct.';
 
 /**
  * Protects (or with `undefined`, unprotects) a sheet. A non-empty `password` sets the legacy
- * hash; `''` removes it. Unprotecting with a password checks it first and throws when wrong.
+ * hash and drops the modern one (it would no longer match); `''` removes both hashes, and
+ * `undefined` keeps whatever `protection` carries. Unprotecting with a password checks it first
+ * (against the modern or legacy hash) and throws when it is wrong.
  */
 export function setSheetProtection(
 	ctx: EditContext,
@@ -168,7 +126,8 @@ export function setSheetProtection(
 
 /**
  * Locks or unlocks the workbook structure. Locking with a non-empty password stores its legacy
- * hash; unlocking with a password checks it first and throws when wrong.
+ * hash and drops the modern one; `''` removes both, `undefined` keeps them. Unlocking with a
+ * password checks it first (against the modern or legacy hash) and throws when it is wrong.
  */
 export function setWorkbookProtection(ctx: EditContext, locked: boolean, password?: string): void {
 	const { workbook } = ctx;
@@ -179,9 +138,11 @@ export function setWorkbookProtection(ctx: EditContext, locked: boolean, passwor
 			workbook.structureLocked = true;
 			if (password) workbook.workbookPasswordHash = legacyPasswordHash(password);
 			else if (password === '') delete workbook.workbookPasswordHash;
+			if (password !== undefined) delete workbook.workbookModernHash;
 		} else {
 			delete workbook.structureLocked;
 			delete workbook.workbookPasswordHash;
+			delete workbook.workbookModernHash;
 		}
 	});
 }

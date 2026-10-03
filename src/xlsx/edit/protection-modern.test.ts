@@ -56,5 +56,12 @@ describe('modern (SHA-512) sheet protection', () => {
 			modernHash: { algorithmName: 'WHIRLPOOL', hashValue: 'x', saltValue: 'eA==', spinCount: 1 },
 		};
 		await expect(verifySheetPasswordAsync(protection, 'anything')).resolves.toBe(false);
+		expect(verifySheetPassword(protection, 'anything')).toBe(false);
+	});
+
+	it('keeps modernPasswordHash for other digests, rejecting ones it cannot compute', async () => {
+		const hash = { saltValue: 'eA==', spinCount: 2 };
+		await expect(modernPasswordHash('x', hash, 'SHA-256')).resolves.toMatch(/^[A-Za-z0-9+/]{43}=$/);
+		await expect(modernPasswordHash('x', hash, 'WHIRLPOOL')).rejects.toThrow(/WHIRLPOOL/);
 	});
 });

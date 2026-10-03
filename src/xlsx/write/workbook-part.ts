@@ -3,6 +3,7 @@ import { columnLabel, quoteSheetName } from '../address.js';
 import type { DefinedName, Workbook } from '../model.js';
 import { addFuturePrefixes } from '../read/formula-text.js';
 import { selfContainedXml } from '../read/xml-util.js';
+import { modernHashValues } from './password-hash.js';
 import { XML_HEADER, attrs, escapeAttr, escapeText, inlineFragment } from './xml-out.js';
 
 /** CT_Workbook children kept verbatim from the source, by position in the schema sequence. */
@@ -90,21 +91,24 @@ export function workbookXml(
 		'<fileVersion appName="xl" lastEdited="7" lowestEdited="7" rupBuild="27328"/>';
 	out += `<workbookPr${copyAttrs(kept.get('workbookPr'), ['date1904'])}${workbook.date1904 ? ' date1904="1"' : ''}/>`;
 	if (workbook.structureLocked) {
-		const protection = kept.get('workbookProtection');
-		const sourceHash = protection?.getAttribute('workbookPassword') || undefined;
-		const skip = ['lockStructure', 'workbookPassword'];
-		// A changed legacy password invalidates the source's modern hash attributes.
-		if (sourceHash !== workbook.workbookPasswordHash)
-			skip.push(
-				'workbookAlgorithmName',
-				'workbookHashValue',
-				'workbookSaltValue',
-				'workbookSpinCount',
-			);
+		// The hashes come from the model only: a removed or changed password must not keep the
+		// source's hash attributes.
+		const skip = [
+			'lockStructure',
+			'workbookPassword',
+			'workbookAlgorithmName',
+			'workbookHashValue',
+			'workbookSaltValue',
+			'workbookSpinCount',
+		];
+		const modern = Object.entries(modernHashValues(workbook.workbookModernHash, 'workbook'))
+			.filter((entry): entry is [string, string] => entry[1] !== undefined)
+			.map(([name, value]) => ` ${name}="${escapeAttr(value)}"`)
+			.join('');
 		const password = workbook.workbookPasswordHash
 			? ` workbookPassword="${escapeAttr(workbook.workbookPasswordHash)}"`
 			: '';
-		out += `<workbookProtection${copyAttrs(protection, skip)}${password} lockStructure="1"/>`;
+		out += `<workbookProtection${copyAttrs(kept.get('workbookProtection'), skip)}${modern}${password} lockStructure="1"/>`;
 	}
 	const view = kept.get('bookViews') ? elements(kept.get('bookViews') as XmlElement)[0] : undefined;
 	out += `<bookViews><workbookView${copyAttrs(view, ['activeTab', 'firstSheet', 'xr2:uid'])}${activeTab ? ` activeTab="${activeTab}"` : ''}/></bookViews>`;

@@ -224,8 +224,8 @@ export interface EditSession {
 	/** Patches the print options (gridlines, headings, centring); false clears one. */
 	setPrintOptions(sheet: number, patch: Partial<PrintOptions>): void;
 	/**
-	 * Protects a sheet (`undefined` unprotects). A non-empty `password` stores its legacy hash,
-	 * `''` removes it; unprotecting with a wrong password throws.
+	 * Protects a sheet (`undefined` unprotects). A non-empty `password` stores its legacy hash and
+	 * drops the modern one, `''` removes both; unprotecting with a wrong password throws.
 	 */
 	setSheetProtection(
 		sheet: number,

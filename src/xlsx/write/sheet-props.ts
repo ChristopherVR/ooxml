@@ -11,7 +11,8 @@ import {
 	readSheetView,
 	readTabColor,
 } from '../read/sheet-props.js';
-import { att, outerXml } from '../read/xml-util.js';
+import { outerXml } from '../read/xml-util.js';
+import { modernHashValues } from './password-hash.js';
 import { sameModel, snapshotElement, snapshotXml } from './snapshot.js';
 import { colorXml } from './style-xml.js';
 import { attrs, el, escapeAttr, escapeText } from './xml-out.js';
@@ -157,30 +158,16 @@ export function colsXml(sheet: Worksheet, styleCount: number): string {
 	return out.length ? `<cols>${out.join('')}</cols>` : '';
 }
 
-const HASH_ATTRS = ['algorithmName', 'hashValue', 'saltValue', 'spinCount'];
-
 export function protectionXml(sheet: Worksheet): string {
 	const protection = sheet.protection;
 	if (!protection) return '';
 	const source = snapshotElement(sheet, 'sheetProtection');
 	if (source && sameModel(readProtection(source), protection))
 		return snapshotXml(sheet, 'sheetProtection') ?? '';
-	const values: Record<string, string | boolean | undefined> = {};
-	if (protection.modernHash) {
-		const hash = protection.modernHash;
-		values['algorithmName'] = hash.algorithmName;
-		values['hashValue'] = hash.hashValue;
-		values['saltValue'] = hash.saltValue;
-		values['spinCount'] = String(hash.spinCount);
-	}
-	// The modern hash still matches only while the legacy password is the source's one.
-	else if (
-		protection.passwordHash !== undefined &&
-		protection.passwordHash === att(source, 'password')
-	)
-		for (const name of HASH_ATTRS) values[name] = att(source, name);
-	else if (protection.passwordHash === undefined && att(source, 'password') === undefined)
-		for (const name of HASH_ATTRS) values[name] = att(source, name);
+	// Both hashes come from the model only: one the edit removed must not be copied back.
+	const values: Record<string, string | boolean | undefined> = modernHashValues(
+		protection.modernHash,
+	);
 	values['password'] = protection.passwordHash;
 	values['sheet'] = protection.sheet || undefined;
 	const allow = new Set(protection.allow ?? []);

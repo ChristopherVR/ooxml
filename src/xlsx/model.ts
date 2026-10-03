@@ -563,12 +563,15 @@ export interface PageSetup {
 	footer?: string;
 }
 
-/** An ECMA-376 agile password hash: base64 salt and hash, digest name and iteration count. */
+/**
+ * An ECMA-376 agile password hash: digest name, base64 salt and hash, and the number of extra
+ * rounds (absent when the file omits `spinCount`, so a round trip does not invent one).
+ */
 export interface ModernPasswordHash {
 	algorithmName: string;
 	hashValue: string;
 	saltValue: string;
-	spinCount: number;
+	spinCount?: number;
 }
 
 export interface SheetProtection {
@@ -577,8 +580,8 @@ export interface SheetProtection {
 	passwordHash?: string;
 	/**
 	 * Excel 2013+ password hash (`algorithmName`, `hashValue`, `saltValue`, `spinCount`), which
-	 * Excel writes instead of (or as well as) the legacy one. Verify it with
-	 * `verifySheetPasswordAsync`; the synchronous check cannot.
+	 * Excel writes instead of (or as well as) the legacy one. `verifySheetPassword` checks it
+	 * synchronously for SHA-1, SHA-256, SHA-384 and SHA-512; the writer emits it only from here.
 	 */
 	modernHash?: ModernPasswordHash;
 	/** Actions still allowed (`formatCells`, `insertRows`, `sort`, `autoFilter`, ...). */
@@ -673,6 +676,11 @@ export interface Workbook {
 	structureLocked?: boolean;
 	/** Legacy 16-bit hash of the structure protection password (`workbookPassword`, hex). */
 	workbookPasswordHash?: string;
+	/**
+	 * Excel 2013+ structure protection hash (`workbookAlgorithmName`, `workbookHashValue`,
+	 * `workbookSaltValue`, `workbookSpinCount`), which Excel writes instead of the legacy one.
+	 */
+	workbookModernHash?: ModernPasswordHash;
 	/** Calculation mode (`calcPr calcMode`); absent means automatic. */
 	calcMode?: 'auto' | 'manual';
 	/**

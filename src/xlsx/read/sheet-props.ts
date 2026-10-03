@@ -8,6 +8,7 @@ import type {
 	SheetView,
 } from '../model.js';
 import type { XmlElement } from '../../xml/index.js';
+import { readModernHash } from './password-hash.js';
 import { parseColor } from './style-parts.js';
 import { att, boolAttr, numAttr, xChildren, xFirst, xText } from './xml-util.js';
 
@@ -187,16 +188,8 @@ export function readProtection(node: XmlElement | undefined): SheetProtection | 
 	const protection: SheetProtection = { sheet: boolAttr(node, 'sheet', false) };
 	const password = att(node, 'password');
 	if (password) protection.passwordHash = password;
-	const algorithmName = att(node, 'algorithmName');
-	const hashValue = att(node, 'hashValue');
-	const saltValue = att(node, 'saltValue');
-	if (algorithmName && hashValue && saltValue)
-		protection.modernHash = {
-			algorithmName,
-			hashValue,
-			saltValue,
-			spinCount: Number(att(node, 'spinCount') ?? 0) || 0,
-		};
+	const modernHash = readModernHash(node);
+	if (modernHash) protection.modernHash = modernHash;
 	const allow: string[] = [];
 	for (const attribute of Array.from(node.attributes)) {
 		if (PROTECTION_META.has(attribute.name)) continue;

@@ -25,8 +25,16 @@ type Snapshot =
 	  };
 
 /** Workbook-level settings `meta` and `workbook` snapshots also record. */
-type BookSettings = Pick<Workbook, 'structureLocked' | 'workbookPasswordHash' | 'calcMode'>;
-const SETTING_KEYS = ['structureLocked', 'workbookPasswordHash', 'calcMode'] as const;
+type BookSettings = Pick<
+	Workbook,
+	'structureLocked' | 'workbookPasswordHash' | 'workbookModernHash' | 'calcMode'
+>;
+const SETTING_KEYS = [
+	'structureLocked',
+	'workbookPasswordHash',
+	'workbookModernHash',
+	'calcMode',
+] as const;
 
 function captureSettings(workbook: Workbook): BookSettings {
 	const out: Record<string, unknown> = {};

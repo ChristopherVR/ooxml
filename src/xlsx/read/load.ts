@@ -107,6 +107,7 @@ export async function loadXlsx(input: Uint8Array | ArrayBuffer): Promise<Workboo
 	if (book.fullCalcOnLoad) workbook.fullCalcOnLoad = true;
 	if (book.structureLocked) workbook.structureLocked = true;
 	if (book.workbookPasswordHash) workbook.workbookPasswordHash = book.workbookPasswordHash;
+	if (book.workbookModernHash) workbook.workbookModernHash = book.workbookModernHash;
 	if (book.calcMode) workbook.calcMode = book.calcMode;
 	if (!sheets.length) throw new Error('XLSX workbook has no sheets');
 	liftPrintAreas(workbook);

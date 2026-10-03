@@ -1,6 +1,7 @@
 import { NS, first, parseXml, relAttr } from '../../xml/index.js';
-import type { DefinedName, SheetState, WorkbookProperties } from '../model.js';
+import type { DefinedName, ModernPasswordHash, SheetState, WorkbookProperties } from '../model.js';
 import { stripFuturePrefixes } from './formula-text.js';
+import { readModernHash } from './password-hash.js';
 import { att, boolAttr, numAttr, xChildren, xFirst, xText } from './xml-util.js';
 
 export interface SheetEntry {
@@ -19,6 +20,8 @@ export interface WorkbookPart {
 	fullCalcOnLoad: boolean;
 	/** `workbookProtection workbookPassword` (legacy hash, hex). */
 	workbookPasswordHash?: string;
+	/** `workbookProtection workbookAlgorithmName` and friends (Excel 2013+ agile hash). */
+	workbookModernHash?: ModernPasswordHash;
 	/** `calcPr calcMode`: `manual` (and `autoNoTable`, read as automatic). */
 	calcMode?: 'auto' | 'manual';
 }
@@ -49,16 +52,19 @@ export function parseWorkbookPart(xml: string): WorkbookPart {
 		if (name.name) definedNames.push(name);
 	}
 	const view = xFirst(xFirst(root, 'bookViews'), 'workbookView');
-	const password = att(xFirst(root, 'workbookProtection'), 'workbookPassword');
+	const protection = xFirst(root, 'workbookProtection');
+	const password = att(protection, 'workbookPassword');
+	const modernHash = readModernHash(protection, 'workbook');
 	const calcMode = att(xFirst(root, 'calcPr'), 'calcMode');
 	return {
 		...(password ? { workbookPasswordHash: password } : {}),
+		...(modernHash ? { workbookModernHash: modernHash } : {}),
 		...(calcMode === 'manual' ? { calcMode: 'manual' as const } : {}),
 		sheets,
 		definedNames,
 		date1904: boolAttr(xFirst(root, 'workbookPr'), 'date1904', false),
 		activeTab: numAttr(view, 'activeTab') ?? 0,
-		structureLocked: boolAttr(xFirst(root, 'workbookProtection'), 'lockStructure', false),
+		structureLocked: boolAttr(protection, 'lockStructure', false),
 		fullCalcOnLoad: boolAttr(xFirst(root, 'calcPr'), 'fullCalcOnLoad', false),
 	};
 }
