@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.10.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.10.0) - 2026-10-03
+
+### Features
+
+- **ui:** Add office ribbon, backstage, find bar, ruler and print preview (by @ChristopherVR) ([c7d47f5](https://github.com/ChristopherVR/ooxml/commit/c7d47f545876c793d2fc965f8db252f172bc1d5c))
+
 ## [0.9.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.9.1) - 2026-10-03
 
 ## [0.9.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.9.0) - 2026-10-03
