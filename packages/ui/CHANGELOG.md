@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.9.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.9.0) - 2026-10-03
+
+### Features
+
+- **ui:** Add office options dialog and account profile (by @ChristopherVR) ([7c75493](https://github.com/ChristopherVR/ooxml/commit/7c75493d55743d0adbb466377f94f4115bee42c4))
+
 ## [0.8.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.8.0) - 2026-10-03
 
 ### Features
