@@ -15,10 +15,81 @@ This repository owns the browser UI: one controller, one SVG renderer, one
 tests and documentation. Microsoft Visio equivalence is a long-term target,
 not a description of the current beta.
 
+### Shared Office UI lives in `ooxml-ui`
+
+Any UI control another Office product could use belongs in `ooxml-ui`
+(`packages/ui` in `ooxml`) as an `office-ui-*` web component, never as a
+Visio-only copy. Examples: ribbon buttons and groups, toolbars, status bar,
+zoom slider, bottom page/sheet tab strip, dialogs and neutral icons (undo,
+redo, delete, full screen, fit). Word, PowerPoint and Excel consume the same
+elements; docx-viewer follows the same web-component model.
+
+- This repository keeps only Visio product content: which commands the ribbon
+  shows, Visio shortcuts, canvas tools, page/shape semantics and SVG rendering.
+- Compose the ribbon and status bar from `office-ui-*` elements and react to
+  their events (`office-command`, `office-status-activate` and so on). Register
+  product-only glyphs with `registerIcon`; add neutral glyphs to `ooxml-ui`.
+- If a needed control is missing, add it to `ooxml-ui` first, release it, then
+  adopt the released version here. Do not ship a local stand-in.
+- All UI ships inside the one `<visio-viewer>` element, so the six framework
+  bindings get it without per-framework code. Never build controls in an adapter.
+
+### Build the element the docx-viewer way
+
+`docx-viewer` (`packages/web-component`) is the reference for how the viewer
+element is built. New and touched UI code follows it; older template-string
+code migrates when it is next changed.
+
+- **Package layout (target).** The element lives in a private workspace
+  package, `packages/web-component` (`visio-web-component`). It is bundled into
+  every framework package beside `packages/bindings`, as `docx-web-component`
+  is. Root `src/` is the current location; move modules there instead of adding
+  new top-level layers.
+- **DOM is built by typed builder functions**, never HTML template strings.
+  Builders live in `ribbon-parts.ts` (`group`, `tool` and similar) and create
+  elements with `createElement`, composing `office-ui-*` controls. Document
+  text is only ever assigned with `textContent`.
+- **One typed action union.** Every ribbon control carries a
+  `VisioRibbonAction` (`ribbon-action.ts`) and emits a `ribbon-action` event.
+  `routeRibbonAction` (`ribbon-router.ts`) sends it to the controller that owns
+  it. Keyboard shortcuts route through the same router. Stable string ids are
+  for state sync and tests only, never for dispatch logic.
+- **One module per ribbon tab** (`ribbon-home.ts`, `ribbon-view.ts`), assembled
+  by `createRibbon()` in `ribbon.ts`. The status bar and page tabs have their
+  own builder modules.
+- **Styles are CSS files.** Write them under `styles/*.css`, import them with
+  `?inline` and join them in `styles/index.ts`. Theme tokens come from a typed
+  `theme/` module (defaults to CSS variables, with `theme` set to
+  `light`, `dark` or `auto`), and shared controls read them through
+  `--office-*` aliases.
+- **Vite builds all JavaScript; `tsc` only type-checks and emits declarations.**
+  The root package (`vite.lib.config.ts`) and the framework packages
+  (`scripts/build-packages.mjs`) are Vite library builds; workers land in
+  `assets/` and `?inline` CSS is inlined. Angular is not an exception: its
+  binding uses `inject()` and legacy decorators, which Vite's Oxc transform
+  lowers (`oxc.decorator.legacy`). VoidZero's Oxc Angular Compiler
+  (`@oxc-angular/vite`) is still experimental; adopt it when it is stable or
+  when the binding needs AOT templates. Never add a `tsc` JavaScript emit step.
+- **Typed element surface.** Keep a typed event map with a runtime list
+  (`events.ts`), observed attributes (`editor-attributes`-style) and the public
+  API (`element-api`-style) in separate small modules. Tests sit next to the
+  code.
+
 ### One viewer, six thin bindings
 
 React, Vue, Angular, Svelte, Solid and vanilla use the same viewer. Adapters in
 `packages/bindings/src` own lifecycle, properties, events and handle forwarding.
+
+The UI is one web component, but every binding must feel native, as
+pptx-viewer's do. A React developer gets a `forwardRef` component with an
+imperative handle, `on*` callback props and hooks; Angular gets `@Input`,
+`@Output`, lifecycle hooks and signals; Vue gets props, emits, `expose` and
+composables; Svelte and Solid get their own reactive primitives. Viewer state
+(page, zoom, selection, edit and undo state) is exposed through each framework's
+reactivity (for example `useSyncExternalStore` in React and signals in Angular
+and Solid), built on the controller's `subscribe`, never by polling or by
+reaching into the shadow DOM. Hosts never touch `<visio-viewer>` internals to
+integrate.
 
 1. Diagnose whether a bug comes from document logic, shared view behavior or
    framework wiring before choosing a file to change.
