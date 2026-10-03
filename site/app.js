@@ -17,7 +17,6 @@ const loadingLabel = /** @type {HTMLElement} */ (
 );
 const topbarApp = /** @type {HTMLElement} */ (document.getElementById('topbar-app'));
 const grid = /** @type {HTMLElement} */ (document.getElementById('app-grid'));
-const excelPreview = document.getElementById('excel-preview');
 
 /** Per-viewer conveniences only; the page works the same when storage is blocked. */
 function readStore(key) {
@@ -55,7 +54,6 @@ function renderGrid() {
 }
 
 function showHome() {
-	excelPreview.hidden = true;
 	document.title = 'OOXML Office';
 	document.body.classList.remove('in-app');
 	home.hidden = false;
@@ -66,7 +64,6 @@ function showHome() {
 }
 
 function openApp(app, frameworkId) {
-	excelPreview.hidden = true;
 	const frameworks = app.frameworks ?? [];
 	const saved = readStore(`office-framework:${app.id}`);
 	const framework =
@@ -116,12 +113,7 @@ function route() {
 	const [, appId, frameworkId] = location.hash.replace(/^#/, '').split('/');
 	const app = APPS.find((a) => a.id === appId);
 	if (app && isLive(app)) openApp(app, frameworkId);
-	else if (app?.id === 'excel') {
-		showHome();
-		home.hidden = true;
-		excelPreview.hidden = false;
-		document.title = 'Excel beta · OOXML Office';
-	} else showHome();
+	else showHome();
 }
 
 frame.addEventListener('load', () => {

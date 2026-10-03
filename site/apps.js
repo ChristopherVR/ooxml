@@ -57,7 +57,7 @@ export const APPS = [
 		letter: 'X',
 		color: '#1f9d63',
 		format: '.xlsx',
-		description: 'Spreadsheets, formulas and charts.',
+		description: 'Open, edit and calculate spreadsheets, with charts.',
 		tag: { label: 'Beta', tone: 'beta' },
 		repo: 'xlsx-viewer',
 		docs: `${PAGES}/xlsx-viewer/`,
