@@ -52,6 +52,23 @@ try {
 	const bytes = await page.evaluate(() => [...window.viewer.exportVsdx().bytes]);
 	const saved = await parseVsdx(Uint8Array.from(bytes));
 	assert.equal(saved.pages[0].shapes[0].text.plainText, 'Published browser edit');
+	await page.locator('#file').setInputFiles(resolve(consumer, 'fixture.vsd'));
+	await page.waitForFunction(() => window.viewer.controller.state.document?.format === 'vsd');
+	const legacyState = await page.evaluate(() => {
+		const controller = window.viewer.controller;
+		let refused = false;
+		try {
+			controller.exportVsdx();
+		} catch {
+			refused = true;
+		}
+		return {
+			sourceAvailable: controller.state.edit.sourceAvailable,
+			refused,
+			text: controller.state.document.pages[0].shapes[0].text.plainText,
+		};
+	});
+	assert.deepEqual(legacyState, { sourceAvailable: false, refused: true, text: 'Hello\n' });
 	assert.deepEqual(errors, []);
 	await page.evaluate(() => window.viewer.destroy());
 	console.log(

@@ -48,6 +48,10 @@ writeFileSync(
 );
 runNpm(['install', '--ignore-scripts'], { cwd: consumer, stdio: 'inherit' });
 writeFileSync(resolve(consumer, 'fixture.vsdx'), await createVsdxFixture('Published consumer'));
+writeFileSync(
+	resolve(consumer, 'fixture.vsd'),
+	readFileSync(resolve(root, 'tests/fixtures/owned-v11.vsd')),
+);
 const names = Object.values(VIEWER_PACKAGES).map((meta) => meta.npm);
 writeFileSync(
 	resolve(consumer, 'smoke.mjs'),
@@ -56,15 +60,25 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 await import('@angular/compiler');
 const bytes = readFileSync(new URL('./fixture.vsdx', import.meta.url));
+const legacy = readFileSync(new URL('./fixture.vsd', import.meta.url));
 for (const name of ${JSON.stringify(names)}) {
  const api = await import(name);
  const document = await api.parseVsdx(bytes);
  assert.equal(document.pages[0].shapes[0].text.plainText, 'Published consumer');
+ const legacyDocument = await api.loadVisio(legacy);
+ assert.equal(legacyDocument.format, 'vsd');
+ assert.equal(legacyDocument.pages[0].shapes[0].text.plainText, 'Hello\\n');
  if (name !== 'visio-core') {
   assert.equal(typeof api.mountViewer, 'function', name);
   const controller = new api.ViewerController();
   controller.setZoom(1.25);
   assert.equal(controller.state.zoom, 1.25);
+  await controller.load(legacy);
+  assert.equal(controller.state.document.format, 'vsd');
+  assert.equal(controller.state.edit.sourceAvailable, false);
+  assert.throws(() => controller.exportVsdx(), /Load a VSDX/);
+  await assert.rejects(controller.replacePlainText('0', '7', 'changed'), /Load a VSDX/);
+  controller.destroy();
  }
 }
 `,
@@ -83,7 +97,7 @@ writeFileSync(
 	names
 		.map(
 			(name, index) =>
-				`import * as p${index} from '${name}';\nvoid p${index}.parseVsdx;${index ? `void new p${index}.ViewerController();` : ''}`,
+				`import * as p${index} from '${name}';\nvoid p${index}.parseVsdx; void p${index}.loadVisio;${index ? `void new p${index}.ViewerController();` : ''}`,
 		)
 		.join('\n'),
 );
@@ -134,5 +148,5 @@ execFileSync(
 	{ cwd: root, stdio: 'inherit' },
 );
 console.log(
-	'Seven tarballs pass registry-only install, ESM imports, VSDX parsing, declarations and consumer worker checks.',
+	'Seven tarballs pass registry-only install, ESM imports, VSD/VSDX parsing, legacy edit/export refusal, declarations and consumer worker checks.',
 );

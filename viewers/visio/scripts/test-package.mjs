@@ -1,6 +1,6 @@
 import { runNpm } from './npm-command.mjs';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, writeFileSync, readdirSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, readdirSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -41,7 +41,9 @@ writeFileSync(
 		private: true,
 		type: 'module',
 		dependencies: {
-			'ooxml-core': '0.12.0',
+			'ooxml-core': JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8')).dependencies[
+				'ooxml-core'
+			],
 			'ooxml-ui': '0.2.0',
 			'@christophervr/visio-viewer': `file:${resolve(temporary, packed.filename)}`,
 		},
