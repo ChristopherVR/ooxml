@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.11.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.11.0) - 2026-10-03
+
+### Features
+
+- **ui:** Move shared office chrome controls from pptx-viewer (by @ChristopherVR) ([4fd820e](https://github.com/ChristopherVR/ooxml/commit/4fd820e06f2ca740532ea55678dd429d9584b874))
+
 ## [0.10.2](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.10.2) - 2026-10-03
 
 ### Bug Fixes
