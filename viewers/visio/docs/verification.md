@@ -2,6 +2,42 @@
 
 Status: local Windows development evidence, 2026-10-03. Full Microsoft Visio parity is not established.
 
+## Published active-master independence follow-up
+
+The local sibling core now resolves untouched active master templates, instance
+overrides and selected style ancestry in separate sheet scopes. This is a bounded
+independence proof, including Control row aliases, field-free text inputs and
+direct single-reference SETATREF. It does not write master caches or enable
+editing master-linked shapes. Missing mappings, fields, style collisions, cycles,
+unknown dependencies and construction limits refuse the transaction.
+
+The original hash-pinned POI `test_text_extraction.vsdx` rectangle (page 0, shape 1)
+now passes separate move, resize and delete saves, combined move/resize and caller
+mutation isolation. Tests preserve sibling subtrees and every untouched package
+payload, including all master definitions and relationships. Existing corpus
+candidates passing all three commands increase from three to four; rectangle
+creation increases from six to seven of 19 accepted drawings.
+
+POI `test.vsdx` remains refused because of explicit container membership references.
+`60973.vsdx` remains refused because other pages contain ambiguous IDs and
+unsupported dynamic formulas. Neither case has a supported recalculation proof.
+Native Microsoft Visio reopen and rendering fidelity remain unverified.
+
+Local verification passed both core type projects and the full viewer `check`:
+1,265 core Visio tests with the original corpus enabled (six optional skips),
+394 viewer tests (one optional skip), 74 binding tests, five SSR tests, 27 docs
+tests, builds, workers and packed-consumer checks. Independent review passed
+79 cases across four suites. All 25 installed Chrome scenarios passed against
+the final rebuilt bundle. Changed Visio files pass formatting.
+
+Core follow-up is published at
+[`5590c8af893e81b8a3d9f3f8874c9434821b6abd`](https://github.com/ChristopherVR/ooxml/commit/5590c8af893e81b8a3d9f3f8874c9434821b6abd).
+The viewer pins this exact commit with a clean portable lock and no source patch.
+Integration preserved the published shared chart, text, SVG and Word changes.
+Both core type projects, 1,319 combined Visio/shared-API tests, full build,
+packed-consumer checks and 49 release-script tests passed on the integrated core.
+Native Visio fidelity remains unverified.
+
 ## Safe geometry bundle and Windows recovery
 
 Development checkouts are siblings under
