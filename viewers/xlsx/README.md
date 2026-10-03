@@ -2,6 +2,10 @@
 
 # xlsx-viewer
 
+[![npm version](https://img.shields.io/npm/v/%40christophervr%2Fxlsx-react-viewer.svg)](https://www.npmjs.com/package/@christophervr/xlsx-react-viewer)
+[![license](https://img.shields.io/npm/l/%40christophervr%2Fxlsx-react-viewer.svg)](https://github.com/ChristopherVR/xlsx-viewer/blob/main/LICENSE)
+[![types](https://img.shields.io/npm/types/%40christophervr%2Fxlsx-react-viewer.svg)](https://www.npmjs.com/package/@christophervr/xlsx-react-viewer)
+
 **A browser Excel spreadsheet editor with one workbook model, one web component and thin adapters for your framework.**
 An early implementation: not Microsoft Excel parity, and not lossless export.
 
@@ -34,19 +38,20 @@ An early release: the areas below work and are covered by unit and browser tests
 | **Formatting**    | Fonts, fills, borders, alignment, number formats, merged cells, column widths, row heights, conditional formatting (rules, colour scales, data bars, icon sets), validation lists.                                                                     |
 | **Objects**       | Common chart types drawn as SVG from live values and pictures; both can be selected, moved, resized and deleted, and a chart's type, title and legend changed. Shapes, SmartArt and form controls show as placeholders.                                |
 | **File formats**  | `.xlsx`, `.xlsm` (macros never run, kept on save), `.xltx`, legacy Excel 97-2003 `.xls` (read; saved as `.xlsx`) via the shared `ole2` codecs inside `ooxml-core`, and `.csv`.                                                                         |
-| **Not supported** | Pivot tables, slicers, sparklines, external links and Power Query are kept but not shown or refreshed. Password-protected files are rejected. No real-time collaboration yet.                                                                          |
+| **Not supported** | Pivot tables, slicers, sparklines, external links and Power Query are kept but not shown or refreshed. Password-protected loading and saving use the shared core encryption API; UI support varies by operation. No real-time collaboration yet.       |
 | **Localization**  | Interface in English, French, German, Spanish and Simplified Chinese through a `locale` option. Workbook content is never translated.                                                                                                                  |
 
 ## Getting started
 
-### 1. Build from source
+### 1. Install
 
 ```bash
-git clone https://github.com/ChristopherVR/xlsx-viewer.git
-cd xlsx-viewer
-bun install
-bun run demo   # vanilla demo; add ?framework=react|vue|angular|svelte|solid
+npm install @christophervr/xlsx-react-viewer
 ```
+
+Choose the package for your framework in the package table below. The editor
+installs its core and shared UI dependencies and re-exports its model API.
+For source development, see [Development](#development).
 
 ### 2. Mount the editor
 

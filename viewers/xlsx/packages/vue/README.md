@@ -1,12 +1,26 @@
 # xlsx-vue-viewer
 
-Available on npm. Install the package using the command below.
+[![npm version](https://img.shields.io/npm/v/xlsx-vue-viewer.svg)](https://www.npmjs.com/package/xlsx-vue-viewer)
+[![license](https://img.shields.io/npm/l/xlsx-vue-viewer.svg)](https://github.com/ChristopherVR/xlsx-viewer/blob/main/LICENSE)
+[![types](https://img.shields.io/npm/types/xlsx-vue-viewer.svg)](https://www.npmjs.com/package/xlsx-vue-viewer)
 
-The Excel spreadsheet editor for Vue 3. One self-contained package: the `<xlsx-editor>` web component, the legacy Excel 97-2003 `.xls` reader and the Vue 3 adapter are bundled in, and the workbook model (`@christophervr/xlsx-core`: `createWorkbook`, `loadWorkbook`, `saveXlsx`, ...) installs with it and is re-exported, so one install and one import path are all an application needs.
+> A browser Excel spreadsheet editor for Vue 3, using one shared editor and the canonical OOXML document engine.
 
-```sh
-npm install xlsx-vue-viewer vue
+[Live demo](https://christophervr.github.io/xlsx-viewer/demo/) | [npm](https://www.npmjs.com/package/xlsx-vue-viewer) | [Full docs](https://christophervr.github.io/xlsx-viewer/) | [Source](https://github.com/ChristopherVR/xlsx-viewer)
+
+## Install
+
+```bash
+npm install xlsx-vue-viewer
 ```
+
+Use the framework peers declared by this package: `vue` (`^3.5.0`). Existing framework apps normally already provide them.
+
+The package bundles its editor UI and adapter. The core model and shared controls
+are installed as regular registry dependencies and the model API is re-exported.
+One viewer package is enough; no separate core install is required.
+
+## Quick start
 
 ```vue
 <script setup lang="ts">
@@ -20,13 +34,38 @@ const workbook = shallowRef(createWorkbook());
 </template>
 ```
 
-The shared option types and the `loadWorkbook` / `detectWorkbookFormat` helpers are exported from the package root.
+Mount in the browser and give the host a height. Use one editor package per
+application: each registers the same editor custom element.
 
-Notes:
+## Features
 
-- `.xlsx`, `.xlsm`, legacy `.xls` and `.csv` files are opened; the format is sniffed from the bytes. A legacy `.xls` file is saved back as `.xlsx`.
-- vue is a peer dependency. `ooxml-core` and `ooxml-ui` are regular dependencies; never import `ooxml-ui` yourself.
-- Use one editor package per application: each bundles its own copy of the editor and registers the `<xlsx-editor>` element.
-- An early editor: not Microsoft Excel parity, and saving is not lossless for unsupported features (pivot tables, slicers, sparklines and macros are kept but not editable). See the [features and limitations](https://christophervr.github.io/xlsx-viewer/features).
+| Feature    | Description                                                                         |
+| ---------- | ----------------------------------------------------------------------------------- |
+| Editing    | Shared grid, ribbon, formula bar, sheet tabs and workbook change events.            |
+| Files      | XLSX, XLSM, XLTX, legacy XLS and CSV loading through core.                          |
+| Model      | `createWorkbook`, `loadWorkbook`, `saveXlsx` and core types from the package entry. |
+| Frameworks | The same `<xlsx-editor>` UI behind six thin adapters.                               |
 
-Documentation: [element API](https://christophervr.github.io/xlsx-viewer/api), [Vue 3 guide](https://christophervr.github.io/xlsx-viewer/frameworks/vue). Licensed under Apache-2.0.
+## API
+
+Shared option types, `loadWorkbook` and `detectWorkbookFormat` helpers are exported
+from the package. Framework handles expose `load`, `save` and `download`. The
+vanilla package supplies `mountEditor(container, options)` for framework-free
+lifecycle management. `ooxml-core` and `ooxml-ui` are regular
+dependencies. Parsing, formulas, editing and grid calculations live in core.
+
+## Limitations
+
+This is an early editor, without Microsoft Excel parity or guaranteed lossless
+saving for unsupported features. Legacy XLS input saves as XLSX. Pivot tables,
+slicers and sparklines are not editable; macros never execute. Review core
+diagnostics and the feature guide before relying on preservation.
+
+## Documentation
+
+[Framework guide](https://christophervr.github.io/xlsx-viewer/frameworks/vue) |
+[Bindings](https://christophervr.github.io/xlsx-viewer/bindings)
+
+## License
+
+Apache-2.0.
