@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.5.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.5.0) - 2026-10-03
+
+### Features
+
+- **ui:** Add context menu, menu separator and tab strip add button (by @ChristopherVR) ([69b3cb4](https://github.com/ChristopherVR/ooxml/commit/69b3cb4fd38e175ec1f34b64a3c190b755678d35))
+
 ## [0.4.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.4.1) - 2026-10-03
 
 ## [0.4.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.4.0) - 2026-10-03
