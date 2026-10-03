@@ -3,9 +3,10 @@
 	"version": "0.0.0",
 	"private": true,
 	"description": "Framework-neutral, local-first Visio viewer built on ooxml-core",
-	"license": "UNLICENSED",
+	"license": "Apache-2.0",
 	"files": [
-		"dist"
+		"dist",
+		"NOTICE"
 	],
 	"type": "module",
 	"exports": {
