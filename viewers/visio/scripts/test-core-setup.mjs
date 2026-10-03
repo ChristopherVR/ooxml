@@ -17,6 +17,19 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const scripts = dirname(fileURLToPath(import.meta.url));
+test('pinned core lock retains optional dependencies for every platform', () => {
+	const lock = JSON.parse(
+		readFileSync(join(scripts, '../integration/core-package-lock.json'), 'utf8'),
+	);
+	for (const [path, entry] of Object.entries(lock.packages)) {
+		for (const name of Object.keys(entry.optionalDependencies ?? {})) {
+			assert.ok(
+				lock.packages[`${path}/node_modules/${name}`] ?? lock.packages[`node_modules/${name}`],
+				`${path} is missing optional dependency ${name}; regenerate from clean manifests without node_modules or a seed lock`,
+			);
+		}
+	}
+});
 function fixture(t) {
 	const dir = mkdtempSync(join(tmpdir(), 'visio-core-setup-'));
 	t.after(() => rmSync(dir, { recursive: true, force: true }));

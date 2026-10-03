@@ -10,7 +10,7 @@ Core geometry logic is published at
 [`dc60e01ff97ae4db5e346c9942cd4e9052ba7b9d`](https://github.com/ChristopherVR/ooxml/commit/dc60e01ff97ae4db5e346c9942cd4e9052ba7b9d),
 preserving concurrent upstream changes and their automated release. The viewer
 pins that actual commit with its exact npm lock and no temporary source patch.
-Patch-free setup and build reproduce in `ooxml-published-verified`. Earlier
+Patch-free setup and build reproduce in `ooxml-portable-verified`. Earlier
 reviewed snapshots remain in `ooxml-scope-verified` and `ooxml-verified`; the old
 baseline remains in `ooxml-pinned`. No unrelated Office source was edited.
 
@@ -18,6 +18,10 @@ The published core's [exact-commit CI](https://github.com/ChristopherVR/ooxml/ac
 passed both type projects, all six complete test shards, package builds/imports
 and the final required status. Local verification also passed full core builds,
 all entry-point imports and release tooling after preserving the upstream release.
+The pinned npm lock includes optional native packages for every platform. It is
+generated from clean manifests without an installed dependency tree or seed lock;
+setup regressions check complete optional dependency entries. Linux-targeted
+`npm ci` validation passes as well as the installed Windows route.
 
 The shared UI and every framework handle expose create rectangle, move, resize
 and safe delete through typed atomic `applyEdits`, isolated worker execution and
