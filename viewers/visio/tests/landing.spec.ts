@@ -12,9 +12,12 @@ test('shared Office theme changes update the embedded viewer without replacing i
 	await page.getByRole('button', { name: 'Load live viewer' }).click();
 	const frame = page.frameLocator('#live-viewer');
 	await expect(frame.locator('html')).toHaveAttribute('data-theme', 'light');
-	await frame.locator('visio-viewer select').selectOption('1');
+	await frame
+		.locator('visio-viewer')
+		.getByRole('tab', { name: 'Architecture', exact: true })
+		.click();
 	await frame.locator('visio-viewer [data-shape-id="a1"]').click();
-	const svg = frame.locator('visio-viewer svg').first();
+	const svg = frame.locator('visio-viewer svg.paper');
 	await expect(svg).toHaveAttribute('aria-label', 'Architecture');
 	await page.getByRole('button', { name: 'Switch to dark theme', exact: true }).click();
 	await expect(frame.locator('html')).toHaveAttribute('data-theme', 'dark');

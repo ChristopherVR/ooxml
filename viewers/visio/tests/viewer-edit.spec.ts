@@ -29,10 +29,16 @@ test('edits literal text locally, undoes/redoes and downloads a reopenable VSDX 
 	);
 	await expect(page.locator('#edit-label')).toHaveText('EDITED COPY');
 	await expect(page.locator('visio-viewer script')).toHaveCount(0);
-	await page.getByRole('button', { name: 'Undo', exact: true }).click();
+	await page
+		.locator('visio-viewer .edit-controls')
+		.getByRole('button', { name: 'Undo', exact: true })
+		.click();
 	await expect(page.locator('visio-viewer svg text')).toContainText('Before edit');
 	await expect(page.locator('#edit-label')).toHaveText('ORIGINAL');
-	await page.getByRole('button', { name: 'Redo', exact: true }).click();
+	await page
+		.locator('visio-viewer .edit-controls')
+		.getByRole('button', { name: 'Redo', exact: true })
+		.click();
 	await expect(page.locator('visio-viewer svg text')).toContainText('Literal edited text');
 	const downloadEvent = page.waitForEvent('download');
 	await page.getByRole('button', { name: 'Download VSDX copy' }).click();

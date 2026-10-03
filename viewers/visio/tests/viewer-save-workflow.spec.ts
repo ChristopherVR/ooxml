@@ -37,10 +37,16 @@ test('geometry preserves an unapplied text draft and downloads/reloads actual ed
 	await expect(page.getByLabel('Pin X (inches)')).toHaveValue('');
 	await expect(text).toHaveValue('Unapplied text draft');
 	await expect(page.locator('visio-viewer svg text')).toContainText('Original text');
-	await page.getByRole('button', { name: 'Undo', exact: true }).click();
+	await page
+		.locator('visio-viewer .edit-controls')
+		.getByRole('button', { name: 'Undo', exact: true })
+		.click();
 	await expect(page.locator('#edit-label')).toHaveText('ORIGINAL');
 	await expect(text).toHaveValue('Unapplied text draft');
-	await page.getByRole('button', { name: 'Redo', exact: true }).click();
+	await page
+		.locator('visio-viewer .edit-controls')
+		.getByRole('button', { name: 'Redo', exact: true })
+		.click();
 	await expect(page.locator('#edit-label')).toHaveText('EDITED COPY');
 	await expect(text).toHaveValue('Unapplied text draft');
 	await page.getByLabel('Width (inches)', { exact: true }).fill('4');
@@ -103,7 +109,9 @@ test('protected geometry refusal keeps draft, history and byte-exact original co
 		'Keep unapplied text',
 	);
 	await expect(page.locator('#edit-label')).toHaveText('ORIGINAL');
-	await expect(page.getByRole('button', { name: 'Undo', exact: true })).toBeDisabled();
+	await expect(
+		page.locator('visio-viewer .edit-controls').getByRole('button', { name: 'Undo', exact: true }),
+	).toBeDisabled();
 	await expect(page.locator('visio-viewer [data-shape-id="1"]')).toHaveAttribute(
 		'transform',
 		before!,

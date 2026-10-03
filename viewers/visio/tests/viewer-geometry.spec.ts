@@ -28,7 +28,10 @@ test('geometry controls create, resize, move existing shapes, delete and undo th
 	await expect(page.getByLabel('Width (inches)', { exact: true })).toHaveValue('');
 	await page.getByRole('button', { name: 'Delete selected', exact: true }).click();
 	await expect(rectangle).toHaveCount(0);
-	await page.getByRole('button', { name: 'Undo', exact: true }).click();
+	await page
+		.locator('visio-viewer .edit-controls')
+		.getByRole('button', { name: 'Undo', exact: true })
+		.click();
 	await expect(rectangle).toHaveCount(1);
 	const existing = page.locator('visio-viewer [data-shape-id="1"]');
 	await existing.click();
@@ -38,6 +41,9 @@ test('geometry controls create, resize, move existing shapes, delete and undo th
 	await page.getByRole('button', { name: 'Move selected', exact: true }).click();
 	await expect(existing).not.toHaveAttribute('transform', before!);
 	await expect(page.locator('visio-viewer [data-geometry-error]')).toBeHidden();
-	await page.getByRole('button', { name: 'Undo', exact: true }).click();
+	await page
+		.locator('visio-viewer .edit-controls')
+		.getByRole('button', { name: 'Undo', exact: true })
+		.click();
 	await expect(existing).toHaveAttribute('transform', before!);
 });

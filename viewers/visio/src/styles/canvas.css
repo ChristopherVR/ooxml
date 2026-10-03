@@ -1,0 +1,14 @@
+/*
+ * Drawing canvas focus. SVG outlines are drawn in drawing units (inches here), so a browser
+ * focus ring on a shape becomes a page-sized blob. Shapes show focus with a dashed accent
+ * stroke instead, only for keyboard focus; selection keeps its solid accent stroke.
+ */
+.paper [data-shape-id]:focus,
+.paper [data-shape-id]:focus-visible {
+	outline: none;
+}
+.paper [data-shape-id]:focus-visible > [data-geometry] {
+	stroke: var(--vv-focus, var(--_vv-accent)) !important;
+	stroke-width: 0.04 !important;
+	stroke-dasharray: 0.08 0.05;
+}

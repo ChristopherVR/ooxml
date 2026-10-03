@@ -17,7 +17,7 @@
 	},
 	"scripts": {
 		"dev": "vite --host 127.0.0.1",
-		"build": "tsc -p tsconfig.build.json && vite build",
+		"build": "vite build --config vite.lib.config.ts && tsc -p tsconfig.build.json --emitDeclarationOnly && vite build",
 		"typecheck": "tsc --noEmit",
 		"test": "vitest run",
 		"test:browser": "playwright test && node scripts/test-packages-browser.mjs",
@@ -47,7 +47,8 @@
 	},
 	"dependencies": {
 		"emf-converter": "4.8.9",
-		"ooxml-core": "0.12.0"
+		"ooxml-core": "0.12.0",
+		"ooxml-ui": "0.2.0"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.58.0",

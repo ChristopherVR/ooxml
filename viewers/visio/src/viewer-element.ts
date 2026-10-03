@@ -9,9 +9,15 @@ import { compatibilityNotes, compatibilityText } from './diagnostics.js';
 import { wireViewerInputs } from './viewer-input.js';
 import { renderLayerControls, wireLayerControls } from './viewer-layer-controls.js';
 import { viewerStyles } from './styles.js';
+import { canvasAndRibbonStyles } from './styles/index.js';
+import { createRibbon } from './ribbon.js';
+import { createPageTabs, createStatusBar } from './status-bar.js';
 import { ViewerEditControls } from './viewer-edit-controls.js';
 import { searchControls, renderSearchControls, type SearchControls } from './viewer-search.js';
 import { ViewerChrome, viewerChromeTemplate } from './viewer-chrome.js';
+import { ViewerCommands } from './viewer-commands.js';
+import { editErrorMessage } from './edit-error.js';
+import { registerViewerControls } from './office-ui.js';
 import type { TextSearchResult } from './document-text-search.js';
 import { exportPageSvg, type SvgExportOptions, type SvgExportResult } from './export-svg.js';
 import {
@@ -28,8 +34,10 @@ export class VisioViewerElement extends BaseElement {
 	#root: ShadowRoot;
 	#disposeInputs: () => void;
 	#viewport: HTMLDivElement;
-	#pageSelect: HTMLSelectElement;
-	#zoomLabel: HTMLOutputElement;
+	#zoomSlider: HTMLElement & { value: number; disabled: boolean };
+	#shapeStatus: HTMLElement;
+	#announcement: string | undefined;
+	#commands: ViewerCommands;
 	#status: HTMLSpanElement;
 	#diagnostics: HTMLSpanElement;
 	#toolbar: HTMLDivElement;
@@ -62,11 +70,16 @@ export class VisioViewerElement extends BaseElement {
 	constructor() {
 		super();
 		this.#root = this.attachShadow({ mode: 'open' });
+		// Shared Office controls must be defined before the static template upgrades them.
+		registerViewerControls();
 		// This template is static, never document content.
-		this.#root.innerHTML = `<style>${viewerStyles}</style>${viewerChromeTemplate}`;
+		this.#root.innerHTML = `<style>${viewerStyles}${canvasAndRibbonStyles}</style>${viewerChromeTemplate}`;
+		const workspace = this.#root.querySelector('.workspace')!;
+		workspace.before(createRibbon(document));
+		workspace.after(createPageTabs(document), createStatusBar(document));
 		this.#viewport = this.#root.querySelector('.viewport')!;
-		this.#pageSelect = this.#root.querySelector('select')!;
-		this.#zoomLabel = this.#root.querySelector('output')!;
+		this.#zoomSlider = this.#root.querySelector('office-ui-zoom-slider')!;
+		this.#shapeStatus = this.#root.querySelector('[data-shape-status]')!;
 		this.#status = this.#root.querySelector('[data-status]')!;
 		this.#diagnostics = this.#root.querySelector('[data-diagnostics]')!;
 		this.#toolbar = this.#root.querySelector('.toolbar')!;
@@ -77,6 +90,23 @@ export class VisioViewerElement extends BaseElement {
 		this.#notesPanel = this.#root.querySelector('.notes')!;
 		this.#inspector = this.#root.querySelector('.shape-inspector')!;
 		this.#chrome = new ViewerChrome(this.#root, this.controller);
+		this.#commands = new ViewerCommands({
+			root: this.#root,
+			viewport: this.#viewport,
+			controller: this.controller,
+			fit: (mode) => this.#fit(mode),
+			togglePane: (pane) => this.#chrome.togglePane(pane),
+			reveal: (panel, focusText) => this.#chrome.reveal(panel, focusText),
+			focusSearch: () => {
+				this.#chrome.showTab('home');
+				this.#search.input.focus();
+				this.#search.input.select();
+			},
+			announce: (message) => {
+				this.#announcement = message;
+				this.#status.textContent = message;
+			},
+		});
 		this.#disposeInputs = this.#wireInputs();
 		this.#unsubscribe = this.controller.subscribe((state) => this.#render(state));
 		this.#eventUnsubscribe = this.controller.onEvent((name, detail) => {
@@ -148,6 +178,10 @@ export class VisioViewerElement extends BaseElement {
 	}
 	fit(): void {
 		this.#assertAlive();
+		this.#fit('page');
+	}
+	/** Visio Fit to Window shows the whole page; Page Width fills the canvas width. */
+	#fit(mode: 'page' | 'width'): void {
 		const page = this.document?.pages[this.pageIndex];
 		if (!page) return;
 		const style = this.ownerDocument.defaultView?.getComputedStyle(this.#viewport);
@@ -160,7 +194,15 @@ export class VisioViewerElement extends BaseElement {
 			1,
 			this.#viewport.clientHeight - padding(style?.paddingTop) - padding(style?.paddingBottom),
 		);
-		this.zoom = Math.min(1, width / (page.width * 96), height / (page.height * 96));
+		if (mode === 'page') {
+			this.zoom = Math.min(1, width / (page.width * 96), height / (page.height * 96));
+			return;
+		}
+		// Page Width scrolls vertically; reserve that scrollbar so no horizontal one appears.
+		const scrollbar = this.#viewport.offsetWidth - this.#viewport.clientWidth;
+		const fitted = width / (page.width * 96);
+		const reserve = page.height * 96 * fitted > height && scrollbar <= 0 ? 17 : 0;
+		this.zoom = Math.max(1, width - reserve - 1) / (page.width * 96);
 	}
 	setLayerVisibility(pageId: string, layerId: string, visible: boolean | null): void {
 		this.#assertAlive();
@@ -235,20 +277,22 @@ export class VisioViewerElement extends BaseElement {
 	}
 	#wireInputs(): () => void {
 		const disposeChrome = this.#chrome.wire();
+		const disposeCommands = this.#commands.wire();
 		const disposeEdit = this.#edit.wire();
 		const disposeLayers = wireLayerControls(this.#layers, this.controller);
 		const disposeInputs = wireViewerInputs(
 			{
 				viewport: this.#viewport,
 				commandRoot: this.#root,
-				pageSelect: this.#pageSelect,
+				zoomSlider: this.#zoomSlider,
 				searchInput: this.#search.input,
 			},
 			this.controller,
-			() => this.fit(),
+			(mode) => this.#fit(mode),
 		);
 		return () => {
 			disposeChrome();
+			disposeCommands();
 			disposeInputs();
 			disposeLayers();
 			disposeEdit();
@@ -270,14 +314,7 @@ export class VisioViewerElement extends BaseElement {
 			this.#document = state.document;
 			this.#renderedPage = state.pageIndex;
 			this.#renderedLayerOverrides = state.layerVisibilityOverrides;
-			this.#pageSelect.replaceChildren();
-			for (const [index, candidate] of (state.document?.pages ?? []).entries()) {
-				const option = document.createElement('option');
-				option.value = String(index);
-				option.textContent = candidate.name + (candidate.isBackground ? ' (background)' : '');
-				this.#pageSelect.append(option);
-			}
-			this.#pageSelect.value = String(state.pageIndex);
+			this.#announcement = undefined;
 			this.#renderWarnings = [];
 			if (state.document && page) {
 				const result = renderPage(state.document, page, {
@@ -308,6 +345,8 @@ export class VisioViewerElement extends BaseElement {
 		if (svg && page) {
 			svg.style.width = `${page.width * 96 * state.zoom}px`;
 			svg.style.height = `${page.height * 96 * state.zoom}px`;
+			// Viewer-only grid spacing: quarter-inch minor and one-inch major lines.
+			svg.style.setProperty('--vv-inch', `${96 * state.zoom}px`);
 		}
 		const searchResult = state.search.results[state.search.activeIndex];
 		const selection = state.selectedShape;
@@ -350,8 +389,14 @@ export class VisioViewerElement extends BaseElement {
 			this.#renderedSelection = selection ? { ...selection } : null;
 		}
 		if (!searchResult) this.#revealedSearchResult = undefined;
-		this.#zoomLabel.value = `${Math.round(state.zoom * 100)}%`;
-		this.#pageSelect.disabled = !page;
+		this.#zoomSlider.value = Math.round(state.zoom * 100);
+		this.#zoomSlider.disabled = !page;
+		const inspected = selectedShape(state.document, state.selectedShape, state.pageIndex);
+		const inches = (value: number) => `${+value.toFixed(3)} in`;
+		this.#shapeStatus.setAttribute(
+			'value',
+			inspected ? `Width: ${inches(inspected.width)}  Height: ${inches(inspected.height)}` : '',
+		);
 		for (const button of this.#root.querySelectorAll<HTMLButtonElement>('[data-action]'))
 			button.disabled = !page;
 		renderSearchControls(this.#search, state);
@@ -361,11 +406,16 @@ export class VisioViewerElement extends BaseElement {
 			this.#layers.querySelector<HTMLButtonElement>('[data-layer-reset="all"]')!.disabled =
 				state.layerVisibilityOverrides.length === 0;
 		this.#chrome.render(state, this.#notes.children.length);
+		this.#commands.render(state);
 		this.#viewport.setAttribute('aria-busy', String(state.loading || state.edit.busy));
 		this.#status.textContent = state.loading
 			? 'Opening diagram…'
-			: (state.error?.message ??
-				(page ? `${page.name} · ${page.shapes.length} top-level shapes` : 'No diagram open'));
+			: state.edit.busy
+				? 'Updating diagram…'
+				: (state.error?.message ??
+					(state.edit.error ? `Edit rejected: ${editErrorMessage(state.edit.error)}` : undefined) ??
+					this.#announcement ??
+					(page ? `${page.name} · ${page.shapes.length} top-level shapes` : 'No diagram open'));
 		const warnings = (state.document?.diagnostics.length ?? 0) + this.#renderWarnings.length;
 		this.#diagnostics.textContent = warnings
 			? `${this.#notes.children.length} compatibility notes`

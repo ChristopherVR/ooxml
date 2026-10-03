@@ -20,6 +20,8 @@ writeFileSync(
 		compilerOptions: {
 			noEmit: false,
 			declaration: true,
+			// Vite bundles every package's JavaScript; tsc only writes declarations.
+			emitDeclarationOnly: true,
 			rootDir: '..',
 			outDir: './output',
 			paths: { 'visio-core': ['../packages/core/src/index.ts'] },
@@ -61,16 +63,14 @@ for (const [key, meta] of Object.entries(VIEWER_PACKAGES)) {
 				: key === 'svelte'
 					? [(await bindingPlugin('@sveltejs/vite-plugin-svelte')).svelte()]
 					: [];
-		// Compile Angular's legacy decorators with tsc before bundling.
-		const entry =
-			key === 'angular'
-				? resolve(declarations, meta.dir, 'src/index.js')
-				: resolve(directory, 'src/index.ts');
+		const entry = resolve(directory, 'src/index.ts');
 		await build({
 			configFile: false,
 			root,
 			base: './',
 			plugins,
+			// Angular's binding uses legacy decorators with inject(); Vite's Oxc transform lowers them.
+			...(key === 'angular' ? { oxc: { decorator: { legacy: true } } } : {}),
 			worker: { format: 'es' },
 			build: {
 				outDir,
@@ -79,7 +79,7 @@ for (const [key, meta] of Object.entries(VIEWER_PACKAGES)) {
 				lib: { entry, formats: ['es'], fileName: () => 'index.js' },
 				rolldownOptions: {
 					external: (id) =>
-						/^(?:visio-core|ooxml-core|emf-converter|react|vue|@angular\/core|solid-js|svelte)(?:\/|$)/.test(
+						/^(?:visio-core|ooxml-core|ooxml-ui|emf-converter|react|vue|@angular\/core|solid-js|svelte)(?:\/|$)/.test(
 							id,
 						),
 				},
@@ -104,7 +104,7 @@ for (const [key, meta] of Object.entries(VIEWER_PACKAGES)) {
 					rolldownOptions: {
 						output: { entryFileNames: 'index.server.js' },
 						external: (id) =>
-							/^(?:visio-core|ooxml-core|emf-converter|solid-js|svelte)(?:\/|$)/.test(id),
+							/^(?:visio-core|ooxml-core|ooxml-ui|emf-converter|solid-js|svelte)(?:\/|$)/.test(id),
 					},
 				},
 			});
@@ -147,7 +147,9 @@ for (const [key, meta] of Object.entries(VIEWER_PACKAGES)) {
 						formats: ['es'],
 						fileName: () => 'runtime.js',
 					},
-					rolldownOptions: { external: /^(?:visio-core|ooxml-core|emf-converter)(?:\/|$)/ },
+					rolldownOptions: {
+						external: /^(?:visio-core|ooxml-core|ooxml-ui|emf-converter)(?:\/|$)/,
+					},
 				},
 			});
 			writeFileSync(

@@ -1,42 +1,15 @@
 import type { VisioDocument } from 'ooxml-core/visio';
+import type { OfficeTab } from 'ooxml-ui/controls';
 import type { ViewerController, ViewerState } from './controller.js';
 import { editControlsTemplate } from './viewer-edit-controls.js';
 import { layerControlsTemplate } from './viewer-layer-controls.js';
-import { searchTemplate } from './viewer-search.js';
 
-/** Only static application markup belongs here. All document labels are inserted as text. */
-export const viewerChromeTemplate = `
-<div class="toolbar" role="group" aria-label="Diagram controls">
-
-  <div class="ribbon-tabs" role="tablist" aria-label="Ribbon">
-    <button type="button" id="home-tab" role="tab" aria-selected="true" aria-controls="home-panel" data-tab="home">Home</button>
-    <button type="button" id="view-tab" role="tab" aria-selected="false" aria-controls="view-panel" tabindex="-1" data-tab="view">View</button>
-  </div>
-  <div class="ribbon-content" id="home-panel" role="tabpanel" aria-labelledby="home-tab">
-    <details class="ribbon-tools" open><summary>Tools <span aria-hidden="true">⌄</span></summary><div class="tools-content"><div class="ribbon-group search-group">${searchTemplate}<span class="group-label">Find in drawing</span></div>
-    <div class="ribbon-group"><div class="ribbon-actions">
-      <button class="ribbon-command" type="button" data-chrome="selection"><span class="command-icon" data-icon="selection" aria-hidden="true"></span><span>Shape details</span></button>
-      <button class="ribbon-command" type="button" data-chrome="edit"><span class="command-icon" data-icon="edit" aria-hidden="true"></span><span>Edit text</span></button>
-      <button class="ribbon-command" type="button" data-chrome="layers"><span class="command-icon" data-icon="layers" aria-hidden="true"></span><span>Layers</span></button>
-    </div><span class="group-label">Inspect and edit</span></div>
-    </div></details>
-  <div class="ribbon-primary">
-    <label class="page-picker">Page <select aria-label="Page"></select></label>
-    <div class="page-stepper"><button type="button" data-chrome="previous-page" aria-label="Previous page">‹</button><button type="button" data-chrome="next-page" aria-label="Next page">›</button></div>
-    <span class="spacer"></span><span class="local-label">Local workspace</span>
-  </div>
-    <p class="ribbon-hint">Select a shape to inspect its details.<br>Text editing is experimental.</p>
-  </div>
-  <div class="ribbon-content" id="view-panel" role="tabpanel" aria-labelledby="view-tab" hidden>
-    <div class="ribbon-group"><div class="ribbon-actions">
-      <button class="ribbon-command" type="button" data-chrome="pages" aria-pressed="true" aria-controls="page-rail"><span class="command-icon" data-icon="pages" aria-hidden="true"></span><span>Pages pane</span></button>
-      <button class="ribbon-command" type="button" data-chrome="inspector" aria-pressed="true" aria-controls="inspector-pane"><span class="command-icon" data-icon="inspector" aria-hidden="true"></span><span>Inspector pane</span></button>
-      <button class="ribbon-command" type="button" data-chrome="notes"><span class="command-icon" data-icon="notes" aria-hidden="true"></span><span>Review notes</span></button>
-    </div><span class="group-label">Workspace panes</span></div>
-    <p class="ribbon-hint">Canvas shortcuts: + / − to zoom, 0 to fit.<br>Arrow keys move between focused shapes.</p>
-  </div>
-</div>
-<div class="workspace">
+/**
+ * Static workspace markup (legacy; migrate to builders when next changed). The ribbon, page
+ * tabs and status bar are built by `createRibbon`, `createPageTabs` and `createStatusBar`.
+ * All document labels are inserted as text.
+ */
+export const viewerChromeTemplate = `<div class="workspace">
   <nav id="page-rail" class="page-rail" aria-label="Diagram pages"><div class="pane-heading"><span>Pages</span><span data-page-count>0</span></div><ol class="page-list"></ol><p class="page-empty">Open a drawing to see its pages.</p></nav>
   <div class="viewport" tabindex="0" role="region" aria-label="Diagram canvas"></div>
   <aside id="inspector-pane" class="inspector-pane" aria-label="Drawing inspector">
@@ -49,8 +22,7 @@ export const viewerChromeTemplate = `
       <details class="notes inspector-card"><summary>Compatibility notes</summary><ul></ul></details>
     </div>
   </aside>
-</div>
-<div class="status"><div class="status-message" role="status"><span data-status></span><span data-diagnostics></span></div><div class="notes-strip"><button type="button" data-chrome="notes" aria-controls="inspector-pane" aria-expanded="false">Notes<span class="notes-count" data-note-count></span></button><span>Files stay in your browser</span></div><slot name="workspace-footer"></slot><div class="zoom-controls" role="group" aria-label="Canvas zoom"><button type="button" data-action="fit">Fit page</button><button type="button" data-action="actual">100%</button><span class="zoom-divider"></span><button type="button" data-action="out" aria-label="Zoom out">−</button><output class="zoom" aria-label="Zoom level">100%</output><button type="button" data-action="in" aria-label="Zoom in">+</button></div></div>`;
+</div>`;
 
 /** Presentation state stays local; page navigation uses the same controller as every binding. */
 export class ViewerChrome {
@@ -58,6 +30,8 @@ export class ViewerChrome {
 	#controller: ViewerController;
 	#document: VisioDocument | null | undefined;
 	#pageList: HTMLOListElement;
+	#pageTabs: HTMLElement & { tabs: OfficeTab[]; selected: string };
+	#tools: HTMLDetailsElement;
 	#rail: HTMLElement;
 	#inspector: HTMLElement;
 	#notes: HTMLDetailsElement;
@@ -69,6 +43,8 @@ export class ViewerChrome {
 		this.#root = root;
 		this.#controller = controller;
 		this.#pageList = root.querySelector('.page-list')!;
+		this.#pageTabs = root.querySelector('office-ui-tab-strip')!;
+		this.#tools = root.querySelector('.ribbon-tools')!;
 		this.#rail = root.querySelector('.page-rail')!;
 		this.#inspector = root.querySelector('.inspector-pane')!;
 		this.#notes = root.querySelector('.notes')!;
@@ -81,7 +57,7 @@ export class ViewerChrome {
 		this.#responsive = view?.matchMedia?.('(max-width: 980px)');
 		const compact = view?.matchMedia?.('(max-width: 760px)');
 		this.#compact = compact;
-		const tools = this.#root.querySelector<HTMLDetailsElement>('.ribbon-tools')!;
+		const tools = this.#tools;
 		const toolLayout = () => {
 			tools.open = !compact?.matches;
 		};
@@ -111,30 +87,21 @@ export class ViewerChrome {
 			(event) => {
 				const button = (event.target as Element)?.closest?.<HTMLButtonElement>('button');
 				if (!button || button.disabled) return;
-				if (compact?.matches && button.dataset.chrome) tools.open = false;
 				const tab = button.dataset.tab;
-				if (tab === 'home' || tab === 'view') this.#showTab(tab);
+				if (tab === 'home' || tab === 'view') this.showTab(tab);
 				if (button.dataset.pageIndex !== undefined)
 					this.#controller.setPage(Number(button.dataset.pageIndex));
 				const action = button.dataset.chrome;
-				if (action === 'previous-page')
-					this.#controller.setPage(this.#controller.state.pageIndex - 1);
-				if (action === 'next-page') this.#controller.setPage(this.#controller.state.pageIndex + 1);
-				if (action === 'pages') {
-					this.#pagesManuallyToggled = true;
-					this.#setPane('pages', this.#rail.hidden);
-				}
-				if (action === 'inspector') {
-					this.#inspectorManuallyToggled = true;
-					this.#setPane('inspector', this.#inspector.hidden);
-				}
-				if (
-					action === 'notes' ||
-					action === 'selection' ||
-					action === 'edit' ||
-					action === 'layers'
-				)
-					this.#reveal(action);
+				if (action === 'inspector') this.togglePane('inspector');
+				if (action === 'notes') this.reveal('notes');
+			},
+			options,
+		);
+		this.#root.addEventListener(
+			'office-tab-select',
+			(event) => {
+				const id = Number((event as CustomEvent<{ id: string }>).detail.id);
+				if (Number.isSafeInteger(id)) this.#controller.setPage(id);
 			},
 			options,
 		);
@@ -159,11 +126,13 @@ export class ViewerChrome {
 								: button.dataset.tab === 'home'
 									? 'view'
 									: 'home';
-					this.#showTab(tab);
+					this.showTab(tab);
 					this.#root.querySelector<HTMLButtonElement>(`[data-tab="${tab}"]`)!.focus();
 				} else if (button.dataset.pageIndex !== undefined) {
 					key.preventDefault();
-					const pages = [...this.#pageList.querySelectorAll<HTMLButtonElement>('button')];
+					const pages = [
+						...this.#pageList.querySelectorAll<HTMLButtonElement>('[data-page-index]'),
+					];
 					const current = Number(button.dataset.pageIndex);
 					const next =
 						key.key === 'Home'
@@ -186,7 +155,7 @@ export class ViewerChrome {
 		this.#notes.addEventListener('toggle', () => this.#syncNotes(), options);
 		return () => events.abort();
 	}
-	#showTab(tab: 'home' | 'view'): void {
+	showTab(tab: 'home' | 'view'): void {
 		for (const button of this.#root.querySelectorAll<HTMLButtonElement>('[data-tab]')) {
 			const selected = button.dataset.tab === tab;
 			button.setAttribute('aria-selected', String(selected));
@@ -195,16 +164,24 @@ export class ViewerChrome {
 		for (const panel of this.#root.querySelectorAll<HTMLElement>('[role="tabpanel"]'))
 			panel.hidden = panel.id !== `${tab}-panel`;
 	}
+	/** Show or hide a task pane; compact layouts close the Tools menu afterwards. */
+	togglePane(pane: 'pages' | 'inspector'): void {
+		if (this.#compact?.matches) this.#tools.open = false;
+		if (pane === 'pages') this.#pagesManuallyToggled = true;
+		else this.#inspectorManuallyToggled = true;
+		this.#setPane(pane, (pane === 'pages' ? this.#rail : this.#inspector).hidden);
+	}
+	#command(name: string): HTMLElement & { disabled: boolean } {
+		return this.#root.querySelector(`office-ui-button[command="${name}"]`)!;
+	}
 	#setPane(pane: 'pages' | 'inspector', visible: boolean): void {
 		if (visible && this.#compact?.matches) {
 			const other = pane === 'pages' ? 'inspector' : 'pages';
 			(other === 'pages' ? this.#rail : this.#inspector).hidden = true;
-			this.#root.querySelector(`[data-chrome="${other}"]`)!.setAttribute('aria-pressed', 'false');
+			this.#command(other).setAttribute('pressed', 'false');
 		}
 		(pane === 'pages' ? this.#rail : this.#inspector).hidden = !visible;
-		this.#root
-			.querySelector(`[data-chrome="${pane}"]`)!
-			.setAttribute('aria-pressed', String(visible));
+		this.#command(pane).setAttribute('pressed', String(visible));
 		this.#syncNotes();
 	}
 	#syncNotes(): void {
@@ -212,7 +189,9 @@ export class ViewerChrome {
 			.querySelector('.notes-strip button')!
 			.setAttribute('aria-expanded', String(!this.#inspector.hidden && this.#notes.open));
 	}
-	#reveal(kind: 'notes' | 'selection' | 'edit' | 'layers'): void {
+	/** Open an inspector disclosure; text editing may focus the text field directly (F2). */
+	reveal(kind: 'notes' | 'selection' | 'edit' | 'layers', focusText = false): void {
+		if (this.#compact?.matches) this.#tools.open = false;
 		this.#inspectorManuallyToggled = true;
 		this.#setPane('inspector', true);
 		const selector =
@@ -226,7 +205,9 @@ export class ViewerChrome {
 		const panel = this.#root.querySelector<HTMLDetailsElement>(selector)!;
 		if (panel.hidden) return;
 		panel.open = true;
-		panel.querySelector('summary')!.focus();
+		const text = panel.querySelector<HTMLTextAreaElement>('textarea');
+		if (focusText && text && !text.disabled) text.focus();
+		else panel.querySelector('summary')!.focus();
 		panel.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
 		this.#syncNotes();
 	}
@@ -267,17 +248,30 @@ export class ViewerChrome {
 				fragment.append(item);
 			}
 			this.#pageList.replaceChildren(fragment);
+			// The shared tab strip inserts labels as text.
+			this.#pageTabs.tabs = (state.document?.pages ?? []).map((candidate, index) => ({
+				id: String(index),
+				label: candidate.name,
+				title: candidate.isBackground ? `${candidate.name} (background page)` : candidate.name,
+			}));
 			if (restoreFocus !== undefined)
 				[...this.#pageList.querySelectorAll<HTMLButtonElement>('button')]
 					.find((button) => button.dataset.pageIndex === restoreFocus)
 					?.focus();
 		}
+		this.#pageTabs.selected = page ? String(state.pageIndex) : '';
 		for (const button of this.#pageList.querySelectorAll<HTMLButtonElement>('button')) {
 			const selected = Number(button.dataset.pageIndex) === state.pageIndex;
 			if (selected) button.setAttribute('aria-current', 'page');
 			else button.removeAttribute('aria-current');
 			button.tabIndex = selected ? 0 : -1;
 		}
+		this.#root
+			.querySelector('[data-page-status]')!
+			.setAttribute(
+				'value',
+				page ? `Page ${state.pageIndex + 1} of ${state.document!.pages.length}` : '',
+			);
 		const count = state.document?.pages.length ?? 0;
 		this.#root.querySelector('[data-page-count]')!.textContent = String(count);
 		this.#root.querySelector<HTMLElement>('.page-empty')!.hidden = count > 0;
@@ -289,17 +283,12 @@ export class ViewerChrome {
 			? `${page.shapes.length} top-level`
 			: 'No shapes';
 		this.#root.querySelector<HTMLElement>('.selection-hint')!.hidden = !!state.selectedShape;
-		this.#root.querySelector<HTMLButtonElement>('[data-chrome="previous-page"]')!.disabled =
-			!page || state.pageIndex === 0;
-		this.#root.querySelector<HTMLButtonElement>('[data-chrome="next-page"]')!.disabled =
-			!page || state.pageIndex >= count - 1;
-		this.#root.querySelector<HTMLButtonElement>('[data-chrome="selection"]')!.disabled =
-			!state.selectedShape;
-		this.#root.querySelector<HTMLButtonElement>('[data-chrome="edit"]')!.disabled = !page;
-		this.#root.querySelector<HTMLButtonElement>('[data-chrome="layers"]')!.disabled =
+		this.#command('selection').disabled = !state.selectedShape;
+		this.#command('edit').disabled = !page;
+		this.#command('layers').disabled =
 			this.#root.querySelector<HTMLDetailsElement>('.layer-controls')!.hidden;
-		for (const button of this.#root.querySelectorAll<HTMLButtonElement>('[data-chrome="notes"]'))
-			button.disabled = noteCount === 0;
+		this.#command('notes').disabled = noteCount === 0;
+		this.#root.querySelector<HTMLButtonElement>('.notes-strip button')!.disabled = noteCount === 0;
 		this.#root.querySelector('[data-note-count]')!.textContent = noteCount ? ` · ${noteCount}` : '';
 		this.#syncNotes();
 	}

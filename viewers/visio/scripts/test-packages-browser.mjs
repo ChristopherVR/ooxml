@@ -35,6 +35,20 @@ try {
 			'Published browser edit',
 		);
 	});
+	// The ribbon, page tabs and status bar are shared ooxml-ui elements; an older ooxml-ui
+	// would leave them undefined and silently inert.
+	const undefinedControls = await page.evaluate(() =>
+		[
+			'office-ui-button',
+			'office-ui-ribbon-group',
+			'office-ui-toolbar',
+			'office-ui-tab-strip',
+			'office-ui-status-bar',
+			'office-ui-status-item',
+			'office-ui-zoom-slider',
+		].filter((tag) => !customElements.get(tag)),
+	);
+	assert.deepEqual(undefinedControls, [], 'Shared ooxml-ui controls must be defined');
 	const bytes = await page.evaluate(() => [...window.viewer.exportVsdx().bytes]);
 	const saved = await parseVsdx(Uint8Array.from(bytes));
 	assert.equal(saved.pages[0].shapes[0].text.plainText, 'Published browser edit');

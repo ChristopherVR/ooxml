@@ -192,8 +192,9 @@ describe('accessible selection and connected font resources', () => {
 describe('disposed DOM resources', () => {
 	it('removes retained-control event handlers on destroy', () => {
 		const viewer = mountViewer(document.createElement('div'), { document: demoDocument });
-		const button =
-			viewer.element.shadowRoot!.querySelector<HTMLButtonElement>('[data-action="in"]')!;
+		const button = viewer.element
+			.shadowRoot!.querySelector('office-ui-zoom-slider')!
+			.shadowRoot!.querySelector<HTMLButtonElement>('[aria-label="Zoom in"]')!;
 		const errors: ErrorEvent[] = [];
 		const listen = (event: ErrorEvent) => errors.push(event);
 		window.addEventListener('error', listen);

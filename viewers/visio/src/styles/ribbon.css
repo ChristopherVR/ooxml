@@ -1,0 +1,126 @@
+/*
+ * Layout for the shared ooxml-ui ribbon, tab strip and status controls inside the viewer.
+ * Viewer theme tokens feed the shared --office-* tokens, so host themes still apply.
+ */
+:host {
+	--office-foreground: var(--_vv-ink);
+	--office-muted-foreground: var(--_vv-muted);
+	--office-background: var(--_vv-surface);
+	--office-surface: var(--_vv-accent-soft);
+	--office-border: var(--_vv-border);
+	--office-accent: var(--_vv-accent);
+	--office-accent-foreground: var(--vv-accent-ink, #fff);
+	--office-ring: var(--vv-focus, var(--_vv-accent));
+	--office-font: 'Segoe UI', Arial, sans-serif;
+}
+.ribbon-row {
+	display: flex;
+	flex-wrap: nowrap;
+	align-items: stretch;
+	gap: 0;
+	padding: 0;
+	border: 0;
+	background: transparent;
+}
+.ribbon-row office-ui-ribbon-group {
+	min-width: 0;
+}
+.ribbon-row office-ui-button {
+	--office-target-size: 28px;
+}
+.ribbon-row office-ui-button[variant='stacked']::part(button) {
+	min-width: 64px;
+	min-height: 62px;
+	font-size: 12px;
+}
+office-ui-button[disabled]::part(button) {
+	opacity: 0.45;
+}
+.page-tabs {
+	flex: none;
+}
+office-ui-status-bar.status {
+	gap: 16px;
+	min-height: 29px;
+	padding: 0 8px 0 12px;
+	font-size: 11px;
+	background: var(--_vv-surface);
+	color: var(--_vv-muted);
+}
+office-ui-status-item[value=''] {
+	display: none;
+}
+office-ui-status-item[data-page-status] {
+	color: var(--_vv-ink);
+}
+.status-message {
+	flex: 1;
+	min-width: 0;
+}
+.viewport[data-tool='rectangle'],
+.viewport[data-tool='rectangle'] .paper [data-shape-id] {
+	cursor: crosshair;
+}
+.viewport[data-tool='rectangle'] {
+	touch-action: none;
+}
+.draw-preview {
+	fill: var(--_vv-accent-soft);
+	stroke: var(--_vv-accent);
+	stroke-width: 1.5px;
+	stroke-dasharray: 4 3;
+	pointer-events: none;
+}
+.viewport[data-grid='true'] .paper {
+	--_vv-grid-minor: rgb(0 0 0 / 7%);
+	--_vv-grid-major: rgb(0 0 0 / 16%);
+	background-image:
+		linear-gradient(to right, var(--_vv-grid-major) 1px, transparent 1px),
+		linear-gradient(to top, var(--_vv-grid-major) 1px, transparent 1px),
+		linear-gradient(to right, var(--_vv-grid-minor) 1px, transparent 1px),
+		linear-gradient(to top, var(--_vv-grid-minor) 1px, transparent 1px);
+	background-size:
+		var(--vv-inch, 96px) var(--vv-inch, 96px),
+		var(--vv-inch, 96px) var(--vv-inch, 96px),
+		calc(var(--vv-inch, 96px) / 4) calc(var(--vv-inch, 96px) / 4),
+		calc(var(--vv-inch, 96px) / 4) calc(var(--vv-inch, 96px) / 4);
+	background-position: left bottom;
+}
+:host(:fullscreen) {
+	width: 100vw;
+	height: 100vh;
+}
+@media (max-width: 760px) {
+	.ribbon-row {
+		flex: 1;
+		min-width: 0;
+	}
+	.undo-group {
+		flex: none;
+	}
+	.ribbon-row office-ui-button[variant='stacked']::part(button) {
+		min-width: 52px;
+		min-height: 44px;
+	}
+	.ribbon-tools .tools-content office-ui-ribbon-group {
+		width: 100%;
+	}
+	.search-group {
+		scroll-snap-align: start;
+	}
+	office-ui-status-bar.status {
+		gap: 4px;
+		min-height: 48px;
+	}
+	office-ui-status-bar .notes-strip,
+	office-ui-status-bar .status-message,
+	office-ui-status-item[data-shape-status],
+	office-ui-status-item[data-page-status] {
+		display: none;
+	}
+	.zoom-controls {
+		flex: 1;
+		min-width: 0;
+		--office-zoom-slider-width: 0;
+	}
+}

@@ -22,11 +22,11 @@ const packed = JSON.parse(
 	}),
 )[0];
 assert.ok(
-	packed.files.some((file) => file.path === 'dist/parse-worker.js'),
+	packed.files.some((file) => /^dist\/assets\/parse-worker-[\w-]+\.js$/.test(file.path)),
 	'Worker entry must ship in the actual npm artifact',
 );
 assert.ok(
-	packed.files.some((file) => file.path === 'dist/edit-worker.js'),
+	packed.files.some((file) => /^dist\/assets\/edit-worker-[\w-]+\.js$/.test(file.path)),
 	'Edit worker entry must ship in the actual npm artifact',
 );
 assert.ok(
@@ -42,6 +42,7 @@ writeFileSync(
 		type: 'module',
 		dependencies: {
 			'ooxml-core': '0.12.0',
+			'ooxml-ui': '0.2.0',
 			'@christophervr/visio-viewer': `file:${resolve(temporary, packed.filename)}`,
 		},
 	}),

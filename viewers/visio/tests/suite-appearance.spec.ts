@@ -37,7 +37,7 @@ for (const theme of ['light', 'dark'] as const) {
 			await viewer.getByLabel('Selected shape text', { exact: true }).scrollIntoViewIfNeeded();
 			await expect(viewer.getByLabel('Selected shape text', { exact: true })).toBeInViewport();
 			await viewer.getByRole('tab', { name: 'Home', exact: true }).click();
-			await viewer.getByRole('combobox', { name: 'Page', exact: true }).selectOption('1');
+			await viewer.getByRole('tab', { name: 'Architecture', exact: true }).click();
 			await expect(viewer.locator('.viewport > svg')).toHaveAttribute('aria-label', 'Architecture');
 			await viewer.getByRole('tab', { name: 'View', exact: true }).focus();
 			await page.keyboard.press('ArrowLeft');
