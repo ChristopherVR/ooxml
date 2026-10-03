@@ -8,6 +8,8 @@ export default defineConfig({
 		index: 'src/index.ts',
 		'units/index': 'src/units/index.ts',
 		'color/index': 'src/color/index.ts',
+		'chart/index': 'src/chart/index.ts',
+		'text/index': 'src/text/index.ts',
 		'geometry/index': 'src/geometry/index.ts',
 		'xml/index': 'src/xml/index.ts',
 		'opc/index': 'src/opc/index.ts',

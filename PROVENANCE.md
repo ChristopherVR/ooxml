@@ -263,3 +263,40 @@ root LICENSE and NOTICE cover this extraction. No third-party implementation was
   as compatibility coverage. Sanitization, equation editor controls and template
   galleries remain UI. The older PPTX Markdown `OmmlLatexConverter` remains
   unchanged because it has a distinct output contract.
+
+## SVG curve flattening (2026-10-03)
+
+Source: `ChristopherVR/pptx-viewer`, commit `bb89b9bddd6b3f696143164665f9539257cc057c`,
+`packages/shared/src/render/svg-path-flatten.ts` and its colocated test file.
+Both repositories are Apache-2.0; the existing LICENSE and NOTICE cover the extraction.
+
+- Moved the pure SVG path-to-points algorithm and seven original tests into `src/geometry`.
+  Cubic, quadratic and elliptical-arc sampling live in `svg-path-curves.ts`; the neutral
+  `Point2` contract lives in `svg-path-types.ts`. No product model, DOM or UI dependency moved.
+- Strict array indexing uses the geometry area's existing checked accessor. Incomplete
+  move commands and nonfinite coordinates are ignored; invalid sampling counts use the
+  default and excessive counts are bounded. Ordinary valid SVG output is unchanged.
+- The viewer module delegates to `ooxml-core/geometry`, preserving the imports used by
+  custom-shape merge outlines and SmartArt extrusion. The existing core boolean SVG
+  parser and its linear-only behavior remain unchanged.
+
+## Shared chart calculations and text primitives (2026-10-03)
+
+Source: `ChristopherVR/pptx-viewer`, commit
+`0d5a181fbfbd9f65c82fb7f973c05ebf4afade49`, `packages/shared/src/render/`.
+Both repositories are Apache-2.0; the existing LICENSE and NOTICE cover this extraction.
+
+- `chart-overlays-regression.ts`, `chart-box-whisker-stats.ts`,
+  `chart-blank-display.ts` and `chart-stacked-series.ts` moved into `src/chart`
+  as `regression.ts`, `box-stats.ts`, `blank-display.ts` and `stacked-series.ts`.
+  The functions keep their established numerical contracts; structural series types
+  replace product-specific imports. Algorithm tests accompany the move and viewer
+  tests remain as compatibility coverage. The legacy viewer trendline implementation
+  now calls the same regression functions rather than keeping a second copy.
+- `unicode-script-detection.ts` moved into `src/text`, with tests. Runtime behavior
+  is unchanged. It is a block-based font-category heuristic, not full Unicode script
+  analysis or Word's language, hint and bidi font-slot rules.
+- The viewer keeps thin compatibility entries through `pptx-viewer-core/chart`,
+  `/text`, `/geometry` and `/color`. Its duplicate `normalizeHexColor`,
+  `clampUnitInterval`, `hexToRgbChannels` and `colorWithOpacity` definitions now
+  use the already canonical `src/color` implementations; no color algorithm was copied.

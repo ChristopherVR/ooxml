@@ -77,3 +77,4 @@ export * from './shape-boolean.js';
 export * from './shape-definitions-extended.js';
 export * from './shape-definitions-primary.js';
 export { at } from './indexed.js';
+export * from './svg-path-flatten.js';

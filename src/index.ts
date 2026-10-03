@@ -3,6 +3,8 @@
 // (`ooxml-core/docx`, `ooxml-core/pptx`), so importing the root never
 // pulls in a format and its dependencies.
 export * as color from './color/index.js';
+export * as chart from './chart/index.js';
+export * as text from './text/index.js';
 export * as diagram from './diagram/index.js';
 export * as digest from './digest/index.js';
 export * as geometry from './geometry/index.js';

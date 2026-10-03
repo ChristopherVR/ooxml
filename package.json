@@ -66,6 +66,16 @@
 			"import": "./dist/geometry/index.mjs",
 			"require": "./dist/geometry/index.cjs"
 		},
+		"./chart": {
+			"types": "./dist/chart/index.d.ts",
+			"import": "./dist/chart/index.mjs",
+			"require": "./dist/chart/index.cjs"
+		},
+		"./text": {
+			"types": "./dist/text/index.d.ts",
+			"import": "./dist/text/index.mjs",
+			"require": "./dist/text/index.cjs"
+		},
 		"./diagram": {
 			"types": "./dist/diagram/index.d.ts",
 			"import": "./dist/diagram/index.mjs",
