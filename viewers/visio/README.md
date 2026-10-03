@@ -9,7 +9,6 @@ A public beta, local-first Visio viewing project. One headless controller, one S
 Node.js 22.12 or newer is required. The Visio area is not published in `ooxml-core` yet, so this repository uses a pinned sibling checkout.
 
 ```sh
-node scripts/setup-core.mjs
 npm ci --ignore-scripts
 npm ci --prefix packages/bindings --ignore-scripts
 npm run check
@@ -92,7 +91,7 @@ The headless core contains a tested neutral-vector sanitizer and transport valid
 
 ## Publication
 
-The repository and GitHub Pages demo are public beta previews. The seven packages in `npm-placeholders/` reserve the `visio-core` and `visio-<framework>-viewer` names at version 0.0.1 and contain no viewer API. Try [the live demo](https://christophervr.github.io/visio-viewer/demo/). Functional npm releases require a published Visio core dependency. The Pages workflow runs the complete check and browser suites before deploying the pinned source build.
+Install `visio-vanilla-viewer` or a framework package: `visio-react-viewer`, `visio-vue-viewer`, `visio-angular-viewer`, `visio-svelte-viewer` or `visio-solid-viewer`. Each ships the shared viewer, its adapter and both workers, and re-exports the document API. `visio-core` provides the headless `ooxml-core/visio` API. The hourly release workflow publishes implementation changes with npm provenance after package and browser checks. Try [the live demo](https://christophervr.github.io/visio-viewer/demo/). Rendering and editing remain beta features.
 
 ## Experimental local plain-text editing
 

@@ -75,9 +75,8 @@
 				<div class="callout">
 					<strong>Initial viewer support, not Visio certification</strong>
 					<p>
-						This is a public beta. The npm packages are placeholders without a viewer API. Do not
-						use a successful file open as evidence that every shape, formula, or format feature is
-						represented faithfully.
+						This is a public beta. Do not use a successful file open as evidence that every shape,
+						formula, or format feature is represented faithfully.
 					</p>
 				</div>
 				<h2 id="playground">Try the local playground</h2>
@@ -100,12 +99,11 @@
 				</p>
 				<h2 id="local-setup">Run the development workspace</h2>
 				<p>
-					Use Node.js 22.12 or newer. The setup script prepares a pinned sibling
-					<code>ooxml</code> checkout and verifies its source before building the Visio entry point.
+					Use Node.js 22.12 or newer. Normal builds install the released
+					<code>ooxml-core/visio</code> API from npm.
 				</p>
 				<div class="code-card">
-					<pre><code>node scripts/setup-core.mjs
-npm ci --ignore-scripts
+					<pre><code>npm ci --ignore-scripts
 npm ci --prefix packages/bindings --ignore-scripts
 npm run check
 npm run dev</code></pre>
@@ -116,13 +114,12 @@ npm run dev</code></pre>
 				</p>
 				<h2>Mount a viewer</h2>
 				<p>
-					The shared integration point is <code>mountViewer</code>. This example imports local
-					source from a file in <code>demo/</code>. The container must have a height. A browser
-					<code>File</code>, <code>Blob</code>, <code>Uint8Array</code>, or
-					<code>ArrayBuffer</code> can be passed to <code>load</code>.
+					Install <code>visio-vanilla-viewer</code> with npm and import <code>mountViewer</code>.
+					The container must have a height. A browser <code>File</code>, <code>Blob</code>,
+					<code>Uint8Array</code>, or <code>ArrayBuffer</code> can be passed to <code>load</code>.
 				</p>
 				<div class="code-card">
-					<pre><code>import { mountViewer } from &#x27;../src/index&#x27;;
+					<pre><code>import { mountViewer } from &#x27;visio-vanilla-viewer&#x27;;
 
 const viewer = mountViewer(host, {
   events: {
@@ -138,18 +135,10 @@ viewer.destroy();</code></pre>
 				</div>
 				<h2 id="frameworks">Use a native framework component</h2>
 				<p>
-					The <code>packages/bindings</code> source workspace contains real native adapters. They
-					forward the same controller, properties, events, and imperative handle; they do not
-					contain another parser or renderer. Use the source entry point for your framework while
-					developing in this repository. The seven npm placeholders at version 0.0.1 contain no
-					viewer API. Functional npm releases need a published Visio core dependency.
+					Install the package for your framework. All six adapters forward the same controller,
+					properties, events and imperative handle through the shared viewer.
 				</p>
-				<div
-					class="table-scroll"
-					role="region"
-					aria-label="Native framework source entry points"
-					tabindex="0"
-				>
+				<div class="table-scroll" role="region" aria-label="Native framework packages" tabindex="0">
 					<table>
 						<thead>
 							<tr>
@@ -161,32 +150,32 @@ viewer.destroy();</code></pre>
 						<tbody>
 							<tr>
 								<td>Vanilla</td>
-								<td><code>packages/bindings/src/vanilla.ts</code></td>
+								<td><code>visio-vanilla-viewer</code></td>
 								<td><code>mountViewer</code></td>
 							</tr>
 							<tr>
 								<td>React</td>
-								<td><code>packages/bindings/src/react.ts</code></td>
+								<td><code>visio-react-viewer</code></td>
 								<td><code>VisioViewer</code></td>
 							</tr>
 							<tr>
 								<td>Vue 3</td>
-								<td><code>packages/bindings/src/vue.ts</code></td>
+								<td><code>visio-vue-viewer</code></td>
 								<td><code>VisioViewer</code></td>
 							</tr>
 							<tr>
 								<td>Angular</td>
-								<td><code>packages/bindings/src/angular.ts</code></td>
+								<td><code>visio-angular-viewer</code></td>
 								<td><code>VisioViewerComponent</code></td>
 							</tr>
 							<tr>
 								<td>Svelte 5</td>
-								<td><code>packages/bindings/src/VisioViewer.svelte</code></td>
+								<td><code>visio-svelte-viewer</code></td>
 								<td>default <code>VisioViewer</code></td>
 							</tr>
 							<tr>
 								<td>Solid</td>
-								<td><code>packages/bindings/src/solid.tsx</code></td>
+								<td><code>visio-solid-viewer</code></td>
 								<td><code>VisioViewer</code></td>
 							</tr>
 						</tbody>

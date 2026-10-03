@@ -135,7 +135,7 @@ describe('static documentation contracts', () => {
 		const ledger = dom('docs/parity.html').window.document.body.textContent;
 		assert.match(home, /Original illustration · not a live editor/);
 		assert.match(home, /public beta/i);
-		assert.match(home, /npm packages are placeholders without a viewer API/i);
+		assert.match(home, /Install one viewer package for your framework/i);
 		assert.match(home, /General drawing/);
 		assert.match(home, /Experimental source-backed plain-text/);
 		assert.match(home, /Native Visio reopening remains unverified/);
@@ -168,7 +168,7 @@ describe('documentation interaction logic in a simulated DOM', () => {
 		);
 		return instance;
 	}
-	it('native framework tabs select one labelled local-source example', () => {
+	it('native framework tabs select one labelled npm package example', () => {
 		const instance = interactive();
 		const document = instance.window.document;
 		const choices = [...document.querySelectorAll('[data-framework]')];
@@ -195,9 +195,9 @@ describe('documentation interaction logic in a simulated DOM', () => {
 				assert.match(content.textContent, /destroy/);
 			} else {
 				assert.match(content.textContent, /VisioViewer/);
-				assert.match(content.textContent, /\.\/packages\/bindings\/src\//);
+				assert.match(content.textContent, new RegExp(`visio-${choice.dataset.framework}-viewer`));
 			}
-			assert.match(content.textContent, /\.\/src\/index/);
+			assert.match(content.textContent, /visio-[a-z]+-viewer/);
 			assert.equal(content.children.length, 0, 'Code is text, never injected HTML');
 		}
 		instance.window.close();

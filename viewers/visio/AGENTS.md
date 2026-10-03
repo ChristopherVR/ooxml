@@ -35,16 +35,16 @@ React, Vue, Angular, Svelte, Solid and vanilla use the same viewer. Adapters in
 These are GitHub names under `ChristopherVR/`. Machine-local checkout paths
 belong in an untracked, git-ignored `CLAUDE.local.md`, never in this file.
 
-| Repository            | Packages                                              | Owns                                                                 |
-| --------------------- | ----------------------------------------------------- | -------------------------------------------------------------------- |
-| `visio-viewer` (this) | `visio-core`, `visio-<framework>-viewer` placeholders | Visio UI, adapters, demos, browser tests and docs                    |
-| `ooxml`               | `ooxml-core`, `ooxml-ui`                              | All OOXML logic by format/shared area, plus DOM-only Office controls |
-| `pptx-viewer`         | `pptx-viewer-core`, `pptx-*-viewer`                   | PowerPoint UI and framework-neutral rendering                        |
-| `docx-viewer`         | `docx-core`, `docx-<framework>-viewer`                | Word editor UI and six thin adapters                                 |
-| `xlsx-viewer`         | XLSX core and framework viewer packages               | Excel UI and adapters                                                |
-| `ole2`                | `@christophervr/ole2`                                 | Legacy compound-file and binary formats                              |
-| `emf-converter`       | `emf-converter`                                       | EMF/WMF conversion and rendering                                     |
-| `mtx-decompressor`    | `mtx-decompressor`                                    | MicroType Express font decompression                                 |
+| Repository            | Packages                                 | Owns                                                                 |
+| --------------------- | ---------------------------------------- | -------------------------------------------------------------------- |
+| `visio-viewer` (this) | `visio-core`, `visio-<framework>-viewer` | Visio UI, adapters, demos, browser tests and docs                    |
+| `ooxml`               | `ooxml-core`, `ooxml-ui`                 | All OOXML logic by format/shared area, plus DOM-only Office controls |
+| `pptx-viewer`         | `pptx-viewer-core`, `pptx-*-viewer`      | PowerPoint UI and framework-neutral rendering                        |
+| `docx-viewer`         | `docx-core`, `docx-<framework>-viewer`   | Word editor UI and six thin adapters                                 |
+| `xlsx-viewer`         | XLSX core and framework viewer packages  | Excel UI and adapters                                                |
+| `ole2`                | `@christophervr/ole2`                    | Legacy compound-file and binary formats                              |
+| `emf-converter`       | `emf-converter`                          | EMF/WMF conversion and rendering                                     |
+| `mtx-decompressor`    | `mtx-decompressor`                       | MicroType Express font decompression                                 |
 
 ### Where does my change go?
 
@@ -76,32 +76,21 @@ must update `PROVENANCE.md` and retain licenses.
 - Cancellation and replacement must prevent stale worker results updating UI.
 - `packages/bindings` is private source. Use explicit framework entry points
   so hosts do not load unrelated framework runtimes.
-- Seven published `npm-placeholders/` packages reserve `visio-core` and
-  `visio-{react,vue,angular,svelte,solid,vanilla}-viewer`. They contain no API
-  or dependencies; never describe them as usable integrations.
-- The root implementation package is private. Functional releases need a
-  released core dependency, distribution build and packed-consumer validation
-  before expanding the placeholder release table.
+- Seven distribution packages live in `packages/{core,react,vue,angular,svelte,solid,vanilla}`. `npm run build:packages` bundles shared UI and adapters, declarations and browser workers. `npm run test:packages` installs their tarballs in a clean registry-only consumer.
+- The root implementation and bindings remain private build inputs; never put them in a published manifest.
 
 ### Core development bridge
 
-The Visio core currently uses a pinned source checkout. `scripts/setup-core.mjs`
-prepares `integration/core-revision.txt`, its lock and any explicit patch.
-`scripts/core-paths.mjs` resolves `file:../ooxml`; `VISIO_CORE_DIR` and
-`npm run link:core` allow a local checkout override.
+Normal builds use the released `ooxml-core/visio` dependency. Format conformance tests run in `ooxml`; viewer and packed-consumer tests exercise the released API here.
 
-Never overwrite a sibling session's edits to make setup pass. Setup intentionally
-rejects mismatched revisions and snapshots. Fix core in `ooxml`, then deliberately
-refresh the pin. A temporary patch is a bridge, not a second canonical engine.
-Restore temporary dependency edits before committing. Move to published ranges
-once the required entry point is released and verified.
+For intentional core development, the legacy `scripts/setup-core.mjs` prepares `integration/core-revision.txt`, its lock and any explicit patch in an isolated checkout. `VISIO_CORE_DIR` and `npm run link:core` support local overrides. Never overwrite sibling edits. Restore published dependency ranges before committing.
 
 ## Working agreements
 
 - `mcp/` owns `visio-viewer-mcp`: schemas, MCP registration and its stdio CLI.
   It delegates inspection, experimental editing and filesystem execution to
   `ooxml-core/automation` and `/automation/node`. It is separate from the viewer
-  placeholder packages. The combined `ooxml-mcp` imports its `registerTools`.
+  distribution packages. The combined `ooxml-mcp` imports its `registerTools`.
   Release the core automation entry before publishing the MCP package.
 
 - Node.js 22.12+, npm lockfiles, strict TypeScript with exact optional properties
@@ -157,13 +146,12 @@ when a public demo route changes. Embedded theme follows the shared
 
 ## Releasing
 
-See `docs/releasing.md` for the placeholder-only flow.
+See `docs/releasing.md` for the functional package release flow.
 
 - Hourly/manual `release.yml` independently versions packages from conventional
   commits since each `<npm-name>@<version>` tag, writes changelogs, commits
   versions to `main`, creates GitHub releases and publishes with provenance.
-- Only `npm-placeholders/<name>` changes release that placeholder. Viewer,
-  adapter, demo and doc changes do not publish functional APIs.
+- Shared viewer or adapter changes release all six viewer packages. Core releases also release dependents. Build scripts trigger all packages; docs and test-only changes do not release unless a shipped package README changes.
 - npm trust names `ChristopherVR/visio-viewer`, `release.yml`, environment
   `npm`; the job requests `id-token: write`. `NPM_PUBLISH=true` enables it.
   No npm token is required.

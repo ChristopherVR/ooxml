@@ -9,8 +9,9 @@ export default defineConfig({
 		},
 	},
 	webServer: {
-		command: 'npm run dev -- --port 4173',
+		command:
+			'npm exec vite build -- --mode browser-tests && npm exec vite preview -- --outDir .browser-test-dist --host 127.0.0.1 --port 4173',
 		url: 'http://127.0.0.1:4173/demo/',
-		reuseExistingServer: !process.env.CI,
+		reuseExistingServer: false,
 	},
 });

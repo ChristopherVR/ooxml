@@ -1,9 +1,11 @@
 # Releasing
 
-The seven placeholder packages use the hourly `release.yml` workflow, conventional commits and independent package tags. Changes to `npm-placeholders/<name>` release that package. Viewer, demo and binding changes do not release placeholders.
+Seven packages ship from `packages/{core,react,vue,angular,svelte,solid,vanilla}`. They use the hourly `release.yml` workflow, conventional commits and independent package tags. Viewer changes in `src/` and adapter changes in `packages/bindings/src/` release all six viewer packages. A core release also releases dependent viewers. Documentation and test-only changes do not release packages unless they change a shipped package README.
 
-The publish job runs in the GitHub environment `npm`, requests `id-token: write`, and publishes with npm OIDC and provenance. Each npm trusted publisher must name `ChristopherVR/visio-viewer`, `release.yml`, and environment `npm`. No npm token is required. `NPM_PUBLISH=true` enables publishing.
+The build uses released `ooxml-core/visio`, includes both browser workers, emits TypeScript declarations and supplies native Svelte source and Solid/Svelte server entries. `npm run check` verifies source, adapters, docs, builds, release planning and all seven packed consumers. `npm run test:browser` verifies browser behavior. Both run before release tags are created. The publish job rebuilds the exact release revision and validates its tarballs before publishing.
 
-Run `gh workflow run release.yml` to release now. To retry a failed publish, dispatch with `-f tag=<npm-name>@<version>`; the workflow checks out that exact tag and skips versions already present on npm. Never publish release tags or packages manually after the initial bootstrap.
+The publish job runs in GitHub environment `npm`, requests `id-token: write`, and publishes with npm OIDC and provenance. Each npm trusted publisher must name `ChristopherVR/visio-viewer`, `release.yml`, and environment `npm`. No npm token is required. `NPM_PUBLISH=true` enables publishing.
 
-The existing packages are explicit placeholders. Functional releases need a separate package build and consumer validation workflow before expanding the release table. Release tooling provenance and its license are recorded in `scripts/RELEASE-PROVENANCE.md`.
+Run `gh workflow run release.yml` to release now. Retry a failed publish with `-f tag=<npm-name>@<version>`; the workflow checks out that exact tag and skips versions already on npm. Never publish release tags or packages manually. Historical placeholder tags remain retryable from their own revisions.
+
+Release tooling provenance and its license are recorded in `scripts/RELEASE-PROVENANCE.md`.

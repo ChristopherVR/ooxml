@@ -1,0 +1,44 @@
+{
+	"name": "visio-svelte-viewer",
+	"version": "0.0.2",
+	"description": "Local-first Visio viewer for svelte",
+	"homepage": "https://christophervr.github.io/visio-viewer/",
+	"license": "Apache-2.0",
+	"author": "ChristopherVR",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/ChristopherVR/visio-viewer.git",
+		"directory": "packages/svelte"
+	},
+	"files": [
+		"dist",
+		"LICENSE",
+		"NOTICE"
+	],
+	"type": "module",
+	"svelte": "./dist/index.svelte.js",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"svelte": "./dist/index.svelte.js",
+			"node": "./dist/index.server.js",
+			"import": "./dist/index.js",
+			"default": "./dist/index.js"
+		},
+		"./runtime": {
+			"types": "./dist/runtime.d.ts",
+			"import": "./dist/runtime.js"
+		}
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"dependencies": {
+		"emf-converter": "4.8.9",
+		"ooxml-core": "^0.10.0",
+		"visio-core": "^0.0.2"
+	},
+	"peerDependencies": {
+		"svelte": "^5.0.0"
+	}
+}

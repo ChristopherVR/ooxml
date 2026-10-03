@@ -33,4 +33,4 @@ The documentation design adapts the [pptx-viewer reference](https://github.com/C
 
 ## Publication
 
-The package is private and unpublished. There is no deployment workflow. Publication and access controls require a separate authorized decision. A private repository is not proof of private website access.
+Seven npm packages expose the headless Visio API and the shared viewer with six native framework adapters. They depend on released `ooxml-core/visio`. Hourly conventional-commit releases build and verify packed artifacts before npm trusted publishing. GitHub Pages deploys the documentation and demo after checks.

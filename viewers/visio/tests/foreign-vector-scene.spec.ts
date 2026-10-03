@@ -6,13 +6,8 @@ test('live, SVG export and print render the same cropped, upright foreign vector
 	await page.goto('/demo/');
 	const result = await page.evaluate(async () => {
 		const load = (path: string) => import(/* @vite-ignore */ path);
-		const [{ demoDocument }, { renderPage }, { exportPageSvg }, { createPrintSnapshot }] =
-			await Promise.all([
-				load('/src/demo-document.ts'),
-				load('/src/render-svg.ts'),
-				load('/src/export-svg.ts'),
-				load('/src/print-snapshot.ts'),
-			]);
+		const { demoDocument, renderPage, exportPageSvg, createPrintSnapshot } =
+			await load('/test-api.js');
 		const model = structuredClone(demoDocument),
 			shape = model.pages[0].shapes[0];
 		model.pages = [model.pages[0]];

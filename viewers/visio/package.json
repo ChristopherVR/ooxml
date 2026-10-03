@@ -20,8 +20,8 @@
 		"build": "tsc -p tsconfig.build.json && vite build",
 		"typecheck": "tsc --noEmit",
 		"test": "vitest run",
-		"test:browser": "playwright test",
-		"check": "npm run fmt:check && npm run test:core-setup && npm run test:converter-setup && npm run check:core && npm run check:converter && npm run typecheck && npm test && npm run check:bindings && npm run test:docs && npm run build && npm run test:worker && npm run test:package",
+		"test:browser": "playwright test && node scripts/test-packages-browser.mjs",
+		"check": "npm run fmt:check && npm run test:core-setup && npm run test:converter-setup && npm run check:core && npm run check:converter && npm run typecheck && npm test && npm run check:bindings && npm run test:docs && npm run build && npm run test:worker && npm run test:package && npm run test:scripts && npm run build:packages && npm run test:packages",
 		"setup:core": "node scripts/setup-core.mjs",
 		"setup:converter": "node scripts/check-converter-release.mjs",
 		"check:converter": "npm run test:converter-integration",
@@ -40,11 +40,14 @@
 		"setup:converter-source": "node scripts/setup-converter.mjs",
 		"check:converter-source": "npm --prefix ../emf-converter-current run typecheck && npm --prefix ../emf-converter-current test && npm --prefix ../emf-converter-current run build && npm --prefix ../emf-converter-current run test:browser-package",
 		"test:core-setup": "node --test scripts/test-core-setup.mjs",
-		"link:core": "node scripts/link-core.mjs"
+		"link:core": "node scripts/link-core.mjs",
+		"build:packages": "node scripts/build-packages.mjs",
+		"test:packages": "node scripts/test-packages.mjs",
+		"test:scripts": "node --test scripts/release-plan.test.mjs scripts/release-packages.test.mjs"
 	},
 	"dependencies": {
 		"emf-converter": "4.8.9",
-		"ooxml-core": "file:../ooxml"
+		"ooxml-core": "0.10.0"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.58.0",

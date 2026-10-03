@@ -7,11 +7,7 @@ test('code-5 arrows paint both endpoint directions and preserve the inward base 
 	await page.goto('/demo/');
 	const result = await page.evaluate(async () => {
 		const load = (path: string) => import(/* @vite-ignore */ path);
-		const [{ demoDocument }, { renderPage }, { exportPageSvg }] = await Promise.all([
-			load('/src/demo-document.ts'),
-			load('/src/render-svg.ts'),
-			load('/src/export-svg.ts'),
-		]);
+		const { demoDocument, renderPage, exportPageSvg } = await load('/test-api.js');
 		const model = structuredClone(demoDocument),
 			shape = model.pages[0].shapes[1];
 		model.pages = [model.pages[0]];

@@ -7,3 +7,6 @@ test-results/
 
 release-plan.json
 release-notes/
+
+.package-build/
+.browser-test-dist/

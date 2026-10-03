@@ -1,4 +1,4 @@
-name: Verify private viewer
+name: Verify viewer packages
 on:
   push:
     branches: [main]
@@ -19,15 +19,14 @@ jobs:
             package-lock.json
             packages/bindings/package-lock.json
             integration/core-package-lock.json
-      - name: Prepare pinned local core
-        run: node scripts/setup-core.mjs
       - run: npm ci --ignore-scripts
       - run: npm ci --prefix packages/bindings --ignore-scripts
       - run: npm run check
       - name: Verify standalone MCP
+        working-directory: mcp
         run: |
-          npm install --prefix mcp --ignore-scripts --no-package-lock
-          npm test --prefix mcp
+          npm install --ignore-scripts --no-package-lock
+          npm test
       - run: npx playwright install --with-deps chromium
       - run: npm run test:browser
       - name: Preserve test evidence

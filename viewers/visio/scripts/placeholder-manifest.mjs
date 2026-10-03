@@ -1,4 +1,4 @@
-/** Placeholder packages deliberately contain no install-time dependencies. */
+/** Published artifacts may use registry dependencies, never private source packages. */
 export function forbiddenManifestEntries(manifest) {
 	const found = [];
 	for (const field of [
@@ -7,7 +7,16 @@ export function forbiddenManifestEntries(manifest) {
 		'optionalDependencies',
 		'devDependencies',
 	]) {
-		for (const name of Object.keys(manifest[field] ?? {})) found.push(`${field}.${name}`);
+		for (const name of Object.keys(manifest[field] ?? {})) {
+			if (
+				[
+					'@christophervr/visio-viewer',
+					'@christophervr/visio-viewer-bindings',
+					'@christophervr/ole2',
+				].includes(name)
+			)
+				found.push(field + '.' + name);
+		}
 	}
 	return found;
 }

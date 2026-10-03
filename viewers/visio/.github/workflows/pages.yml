@@ -19,8 +19,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Prepare pinned core
-        run: node scripts/setup-core.mjs
       - run: npm ci --ignore-scripts
       - run: npm ci --prefix packages/bindings --ignore-scripts
       - run: npm run check

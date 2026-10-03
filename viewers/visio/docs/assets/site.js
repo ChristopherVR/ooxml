@@ -27,7 +27,7 @@ document.addEventListener('keydown', (event) => {
 const snippets = {
 	vanilla: [
 		'main.ts',
-		`import { mountViewer } from './src/index';
+		`import { mountViewer } from 'visio-vanilla-viewer';
 
 const viewer = mountViewer(host, {
   events: { 'document-error': console.error },
@@ -40,9 +40,9 @@ viewer.fit();
 viewer.destroy();`,
 	],
 	react: [
-		'Diagram.tsx · local React component',
-		`import { VisioViewer } from './packages/bindings/src/react';
-import type { VisioDocument } from './src/index';
+		'Diagram.tsx · React component',
+		`import { VisioViewer } from 'visio-react-viewer';
+import type { VisioDocument } from 'visio-react-viewer';
 
 export function Diagram({ diagram }: {
   diagram: VisioDocument;
@@ -56,10 +56,10 @@ export function Diagram({ diagram }: {
 // The native component handles mount and cleanup.`,
 	],
 	vue: [
-		'Diagram.vue · local Vue component',
+		'Diagram.vue · Vue component',
 		`<script setup lang="ts">
-import { VisioViewer } from './packages/bindings/src/vue';
-import type { VisioDocument } from './src/index';
+import { VisioViewer } from 'visio-vue-viewer';
+import type { VisioDocument } from 'visio-vue-viewer';
 defineProps<{ diagram: VisioDocument }>();
 </script>
 
@@ -72,11 +72,11 @@ defineProps<{ diagram: VisioDocument }>();
 </template>`,
 	],
 	angular: [
-		'diagram.ts · local Angular component',
+		'diagram.ts · Angular component',
 		`import { Component, Input } from '@angular/core';
 import { VisioViewerComponent }
-  from './packages/bindings/src/angular';
-import type { VisioDocument } from './src/index';
+  from 'visio-angular-viewer';
+import type { VisioDocument } from 'visio-angular-viewer';
 
 @Component({
   selector: 'app-diagram',
@@ -89,11 +89,11 @@ export class Diagram {
 }`,
 	],
 	svelte: [
-		'Diagram.svelte · local Svelte component',
+		'Diagram.svelte · Svelte component',
 		`<script lang="ts">
 import VisioViewer
-  from './packages/bindings/src/VisioViewer.svelte';
-import type { VisioDocument } from './src/index';
+  from 'visio-svelte-viewer';
+import type { VisioDocument } from 'visio-svelte-viewer';
 let { diagram }: { diagram: VisioDocument } = $props();
 </script>
 
@@ -104,9 +104,9 @@ let { diagram }: { diagram: VisioDocument } = $props();
 />`,
 	],
 	solid: [
-		'Diagram.tsx · local Solid component',
-		`import { VisioViewer } from './packages/bindings/src/solid';
-import type { VisioDocument } from './src/index';
+		'Diagram.tsx · Solid component',
+		`import { VisioViewer } from 'visio-solid-viewer';
+import type { VisioDocument } from 'visio-solid-viewer';
 
 export function Diagram(props: { diagram: VisioDocument }) {
   return <VisioViewer

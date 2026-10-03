@@ -1,0 +1,32 @@
+{
+	"name": "visio-core",
+	"version": "0.0.2",
+	"description": "Visio document API powered by ooxml-core",
+	"homepage": "https://christophervr.github.io/visio-viewer/",
+	"license": "Apache-2.0",
+	"author": "ChristopherVR",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/ChristopherVR/visio-viewer.git",
+		"directory": "packages/core"
+	},
+	"files": [
+		"dist",
+		"LICENSE",
+		"NOTICE"
+	],
+	"type": "module",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js",
+			"default": "./dist/index.js"
+		}
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"dependencies": {
+		"ooxml-core": "^0.10.0"
+	}
+}

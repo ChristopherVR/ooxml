@@ -29,6 +29,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
+      - run: npm ci --ignore-scripts
+      - run: npm ci --prefix packages/bindings --ignore-scripts
+      - run: npm run check
+      - name: Verify standalone MCP
+        working-directory: mcp
+        run: |
+          npm install --ignore-scripts --no-package-lock
+          npm test
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:browser
       - name: Plan release
         id: plan
         run: node scripts/release-plan.mjs --write
@@ -49,10 +59,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           node scripts/prepare-release-notes.mjs
+          npm exec oxfmt -- $(node -p "const p=require('./release-plan.json');p.order.filter(k=>p.packages[k].release).map(k=>p.packages[k].changelog).join(' ')")
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add $(node -p "const p=require('./release-plan.json');p.order.filter(k=>p.packages[k].release).flatMap(k=>[p.packages[k].manifest,p.packages[k].changelog]).join(' ')")
-          git commit -m 'chore(release): bump placeholder versions [skip ci]' -m 'Co-Authored-By: Codex <noreply@openai.com>'
+          git commit -m 'chore(release): bump package versions [skip ci]' -m 'Co-Authored-By: Codex <noreply@openai.com>'
           git fetch origin main
           git rebase origin/main
           git push origin HEAD:main
@@ -93,6 +104,13 @@ jobs:
         if: inputs.tag == ''
         with:
           name: release-plan-${{ github.run_id }}
+      - name: Build and validate release artifacts
+        if: hashFiles('scripts/build-packages.mjs') != ''
+        run: |
+          npm ci --ignore-scripts
+          npm ci --prefix packages/bindings --ignore-scripts
+          npm run build:packages
+          npm run test:packages
       - name: Publish with OIDC and provenance
         env:
           INPUT_TAG: ${{ inputs.tag }}

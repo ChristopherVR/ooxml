@@ -1,0 +1,34 @@
+{
+	"name": "visio-vanilla-viewer",
+	"version": "0.0.2",
+	"description": "Local-first Visio viewer for vanilla",
+	"homepage": "https://christophervr.github.io/visio-viewer/",
+	"license": "Apache-2.0",
+	"author": "ChristopherVR",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/ChristopherVR/visio-viewer.git",
+		"directory": "packages/vanilla"
+	},
+	"files": [
+		"dist",
+		"LICENSE",
+		"NOTICE"
+	],
+	"type": "module",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js",
+			"default": "./dist/index.js"
+		}
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"dependencies": {
+		"emf-converter": "4.8.9",
+		"ooxml-core": "^0.10.0",
+		"visio-core": "^0.0.2"
+	}
+}

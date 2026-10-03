@@ -53,21 +53,27 @@ export const INTERNAL_DIRS = [];
  * `paths` (optional) narrows what counts as a published file, for a package that is the repo
  * root: entries ending in `/` are directories, anything else a single file.
  */
-export const PACKAGES = {
-	mcp: { dir: 'mcp', npm: 'visio-viewer-mcp' },
-	...Object.fromEntries(
-		['core', 'react', 'vue', 'angular', 'svelte', 'solid', 'vanilla'].map((key) => {
-			const npm = key === 'core' ? 'visio-core' : 'visio-' + key + '-viewer';
-			return [key, { dir: 'npm-placeholders/' + npm, npm }];
-		}),
-	),
-};
+export const VIEWER_PACKAGES = Object.fromEntries(
+	['core', 'react', 'vue', 'angular', 'svelte', 'solid', 'vanilla'].map((key) => {
+		const npm = key === 'core' ? 'visio-core' : 'visio-' + key + '-viewer';
+		return [
+			key,
+			{
+				dir: 'packages/' + key,
+				npm,
+				...(key !== 'core' ? { triggers: ['src', 'packages/bindings/src'] } : {}),
+			},
+		];
+	}),
+);
+
+export const PACKAGES = { mcp: { dir: 'mcp', npm: 'visio-viewer-mcp' }, ...VIEWER_PACKAGES };
 
 /**
  * Paths outside any package directory that still change what every published artifact contains,
  * so a change forces a re-release of all of them: the shared build pipeline.
  */
-export const GLOBAL_TRIGGERS = [];
+export const GLOBAL_TRIGGERS = ['scripts/build-packages.mjs', 'tsconfig.build.json'];
 
 /** package.json fields whose change never alters what a consumer receives. */
 const IGNORED_MANIFEST_FIELDS = ['version', 'scripts', 'devDependencies'];
@@ -286,6 +292,8 @@ export function planRelease({ root, packages: table, globalTriggers = [], npm })
 		plan[key] = {
 			npm: meta.npm,
 			dir: meta.dir,
+			manifest: `${meta.dir}/package.json`,
+			changelog: `${meta.dir}/CHANGELOG.md`,
 			baseline: base,
 			release,
 			reason: release ? reason : null,
