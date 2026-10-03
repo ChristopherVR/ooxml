@@ -14,6 +14,8 @@ export interface VisioRecalculationOptions {
 	maxSteps?: number;
 	maxDepth?: number;
 	check?: () => void;
+	/** Internal post-proof authorization of explicit local master move leaves only. */
+	masterMovePins?: ReadonlySet<Element>;
 }
 export interface IndexedCell extends VisioCellKey {
 	node?: Element;

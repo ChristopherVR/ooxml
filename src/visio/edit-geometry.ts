@@ -86,6 +86,7 @@ export function applyGeometryEdit(
 	document: Element,
 	edit: VisioGeometryEdit,
 	check: () => void,
+	masterMovePins: ReadonlySet<Element> = new Set(),
 ): readonly string[] {
 	check();
 	const root = roots.get(edit.pageId);
@@ -98,7 +99,11 @@ export function applyGeometryEdit(
 		expected = { width: edit.width, height: edit.height, x: edit.x, y: edit.y };
 		for (const name of ['Width', 'Height', 'PinX', 'PinY']) add(name);
 	} else {
-		const shape = admitted(root, edit.shapeId);
+		const shape = admitted(
+			root,
+			edit.shapeId,
+			edit.type === 'move-shape' ? masterMovePins : new Set(),
+		);
 		protectedShape(shape, document);
 		if (edit.type !== 'delete-shape')
 			for (const connections of children(root, 'Connects'))
@@ -184,8 +189,10 @@ export function applyGeometryEdit(
 		}
 	}
 	if (!changed.length) return [];
-	const affectedPages = recalculateVisioCells(roots, changed, { check });
-	const result = cells(admitted(root, edit.shapeId));
+	const affectedPages = recalculateVisioCells(roots, changed, { check, masterMovePins });
+	const result = cells(
+		admitted(root, edit.shapeId, edit.type === 'move-shape' ? masterMovePins : new Set()),
+	);
 	if (
 		expected &&
 		(numeric(result.get('Width')) !== expected.width ||

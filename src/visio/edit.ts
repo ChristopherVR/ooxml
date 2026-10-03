@@ -50,13 +50,14 @@ export async function editVsdx(
 	const roots = new Map<string, Element>();
 	const geometry = commands.some((command) => command.type !== 'replace-plain-text');
 	let document: Element | undefined;
+	let masterMovePins: ReadonlySet<Element> = new Set();
 	if (geometry) {
 		// All pages are indexed before editing: dependencies are never inferred from only the target shape.
 		for (const [pageId, path] of pages) {
 			const sourceRoot = await visioXml(pkg, path, 'PageContents');
 			roots.set(pageId, (sourceRoot.ownerDocument!.cloneNode(true) as Document).documentElement);
 		}
-		await assertGeometryPackageScope(
+		masterMovePins = await assertGeometryPackageScope(
 			pkg,
 			new Set(pages.values()),
 			commands.filter((command) => command.type !== 'replace-plain-text'),
@@ -83,7 +84,7 @@ export async function editVsdx(
 				textChanged = true;
 			}
 		} else {
-			for (const pageId of applyGeometryEdit(roots, document!, command, check))
+			for (const pageId of applyGeometryEdit(roots, document!, command, check, masterMovePins))
 				dirty.set(pages.get(pageId)!, roots.get(pageId)!);
 		}
 	}

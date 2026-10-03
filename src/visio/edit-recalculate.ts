@@ -56,7 +56,7 @@ export function recalculateVisioCells(
 		if (active.size >= maxDepth)
 			fail('LIMIT_FORMULA_DEPTH', 'ShapeSheet dependency depth limit exceeded.');
 		const item = cells.get(id);
-		if (!item || item.unsafe)
+		if (!item || (item.unsafe && (!item.node || !options.masterMovePins?.has(item.node))))
 			fail(
 				'EDIT_UNSUPPORTED_DEPENDENCY',
 				'Affected formula references missing, inherited or grouped cells.',

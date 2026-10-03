@@ -61,7 +61,11 @@ export function setCell(shape: Element, name: string, value: number, formula?: s
 	if (formula) node.setAttribute('F', formula);
 	else if (attribute(node, 'F') !== 'No Formula') node.removeAttribute('F');
 }
-export function admitted(root: Element, shapeId: string): Element {
+export function admitted(
+	root: Element,
+	shapeId: string,
+	masterMovePins: ReadonlySet<Element> = new Set(),
+): Element {
 	const containers = children(root, 'Shapes');
 	if (containers.length !== 1)
 		fail('UNSUPPORTED_GEOMETRY_EDIT', 'One local Shapes container is required.');
@@ -72,8 +76,11 @@ export function admitted(root: Element, shapeId: string): Element {
 		fail('EDIT_TARGET_NOT_FOUND', 'A unique top-level local shape is required.');
 	const shape = candidates[0]!;
 	if (
-		shape.hasAttribute('Master') ||
-		shape.hasAttribute('MasterShape') ||
+		((shape.hasAttribute('Master') || shape.hasAttribute('MasterShape')) &&
+			!['PinX', 'PinY'].every((name) => {
+				const cell = cells(shape).get(name);
+				return cell && masterMovePins.has(cell);
+			})) ||
 		['1', 'true'].includes(attribute(shape, 'Del') ?? '') ||
 		children(shape, 'Shapes').length ||
 		children(shape, 'ForeignData').length ||

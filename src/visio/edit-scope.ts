@@ -48,7 +48,7 @@ export async function assertGeometryPackageScope(
 	commands: readonly VisioGeometryEdit[],
 	check: () => void,
 	roots: ReadonlyMap<string, Element>,
-): Promise<void> {
+): Promise<ReadonlySet<Element>> {
 	const changed = commands.flatMap((command) =>
 		command.type === 'delete-shape'
 			? []
@@ -168,6 +168,7 @@ export async function assertGeometryPackageScope(
 					});
 		}
 	}
+	let movePins: ReadonlySet<Element> = new Set();
 	if (hasMasterInstances) {
 		for (const command of commands) {
 			const root = roots.get(command.pageId);
@@ -175,12 +176,20 @@ export async function assertGeometryPackageScope(
 			const target = Array.from(root.getElementsByTagNameNS(root.namespaceURI!, 'Shape')).find(
 				(shape) => attribute(shape, 'ID') === command.shapeId,
 			);
-			if (target?.hasAttribute('Master') || target?.hasAttribute('MasterShape'))
+			if (target?.hasAttribute('MasterShape') && !target.hasAttribute('Master'))
 				fail('UNSUPPORTED_GEOMETRY_EDIT', 'Editing master-linked shapes is unsupported.');
+			if (
+				target?.hasAttribute('Master') &&
+				(command.type !== 'move-shape' ||
+					!['PinX', 'PinY', 'Width', 'Height', 'LocPinX', 'LocPinY'].every((name) =>
+						children(target, 'Cell').some((node) => attribute(node, 'N') === name),
+					))
+			)
+				fail('UNSUPPORTED_GEOMETRY_EDIT', 'Master moves require complete local transform caches.');
 		}
-		await assertVisioMasterIndependence(pkg, roots, commands, check);
+		movePins = await assertVisioMasterIndependence(pkg, roots, commands, check);
 	}
-	if (!documentRoot) return;
+	if (!documentRoot) return movePins;
 	const styles = new Map<string, Element>();
 	for (const container of children(documentRoot, 'StyleSheets'))
 		for (const style of children(container, 'StyleSheet')) {
@@ -264,4 +273,5 @@ export async function assertGeometryPackageScope(
 			}
 		}
 	}
+	return movePins;
 }

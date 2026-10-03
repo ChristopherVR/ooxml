@@ -302,17 +302,28 @@ and [TEXTHEIGHT](https://learn.microsoft.com/en-us/office/client-developer/visio
 contracts. Construction is limited to 100,000 work steps and 10,000 bindings;
 dependency traversal has a separate 100,000-step limit and depth 64.
 
+Master-linked top-level 2D instances admit only a narrowly proven move: all six
+transform caches must be explicit local lengths, the two rotation pins must be
+unguarded direct overrides, and effective master/style protection must be proven
+inactive. Inherited pin guards and redirection still refuse. Only the two local
+pin caches are written; dimensions, geometry, LocPin caches, master attributes
+and definitions remain unchanged. Any other effective or page cache reading a
+changed pin refuses the whole transaction, including transitive dependencies.
+Master-linked resize and deletion remain unsupported.
+Move preparation has an aggregate 100,000-work budget charging formula source
+length, evaluation steps and cell/command checks, with deadline checks throughout.
+
 This first bundle has deliberate exclusions:
 
-| Exclusion                                                                  | Reason                                                                             | Next expansion                                                                  |
-| -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| Master-linked shapes, groups and foreign shapes                            | Instance overrides, nested transforms and resource semantics are not proven        | Scoped master/instance graph and safe overrides                                 |
-| Glue/Connects participation and 1D shapes                                  | Formula-only recalculation cannot route connectors or establish glue               | Endpoint dependencies and glued connector routing                               |
-| Non-page affected/unknown dependencies                                     | Page metadata, document, master and style scopes can otherwise retain stale caches | Scoped package-wide graph, starting with page metadata and pure theme functions |
-| GUARD, SETATREF and referenced transform formulas                          | Direct overwrites would bypass protection/redirection or discard semantics         | Verified redirection commands; never bypass protection                          |
-| Protected cells and inherited/ambiguous protection                         | LockMoveX/Y, LockWidth/Height/Aspect/Delete must be honored                        | Proven effective protection resolution                                          |
-| Absolute geometry lacking dimension-dependent formulas; nonlinear geometry | Scaling cached coordinates can distort shape semantics                             | Additional row evaluators and explicit scaling proofs                           |
-| Referenced deletion                                                        | Formulas, Connects or metadata could dangle                                        | Explicit validated dependency-removal transactions                              |
+| Exclusion                                                                     | Reason                                                                              | Next expansion                                                                  |
+| ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Master-linked resize/delete, unproven master moves, groups and foreign shapes | Broader instance overrides, nested transforms and resource semantics are not proven | Additional scoped master/instance proofs                                        |
+| Glue/Connects participation and 1D shapes                                     | Formula-only recalculation cannot route connectors or establish glue                | Endpoint dependencies and glued connector routing                               |
+| Non-page affected/unknown dependencies                                        | Page metadata, document, master and style scopes can otherwise retain stale caches  | Scoped package-wide graph, starting with page metadata and pure theme functions |
+| GUARD, SETATREF and referenced transform formulas                             | Direct overwrites would bypass protection/redirection or discard semantics          | Verified redirection commands; never bypass protection                          |
+| Protected cells and inherited/ambiguous protection                            | LockMoveX/Y, LockWidth/Height/Aspect/Delete must be honored                         | Proven effective protection resolution                                          |
+| Absolute geometry lacking dimension-dependent formulas; nonlinear geometry    | Scaling cached coordinates can distort shape semantics                              | Additional row evaluators and explicit scaling proofs                           |
+| Referenced deletion                                                           | Formulas, Connects or metadata could dangle                                         | Explicit validated dependency-removal transactions                              |
 
 Relative MoveTo/LineTo geometry scales with Width/Height. Absolute MoveTo/LineTo
 coordinates require a supported transitive dependency on dimensions, except zero
@@ -330,5 +341,13 @@ container membership dependencies; 60973 (0/11) has ambiguous IDs and unsupporte
 dynamic dependencies on other pages. Thirteen drawings have no candidate in the test's first-page scan;
 this is not a claim about every shape on every page. Ten malformed inputs retain
 their expected admission failures. Native Visio reopen/fidelity is unverified.
+An additional master-linked Pentagon in test_text_extraction (0/3) accepts move
+and inverse-move only, with parsed scene translation and unchanged geometry,
+siblings, inherited caches and every untouched ZIP payload verified separately.
+This adds a move candidate without extending the resize/delete corpus counts.
+The separate bounded scan of 71 top-level non-group master-linked instances
+admits only this Pentagon. The other 70 refuse safely: 38 unsupported geometry,
+30 unsupported package dependencies and two unknown dependencies. Successful
+output preserves geometry and untouched payloads; every scan input stays unchanged.
 Affected master caches, container membership changes and connector routing still
 require explicit supported recalculation before their editing scope can expand.

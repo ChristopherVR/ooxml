@@ -6,6 +6,7 @@ import { fail } from './package-common.js';
 import { executableCellFormula, inertDoubleClickFormula } from './cell-formula.js';
 import { analyzeVisioMasterFormula } from './formula-master.js';
 import { createVisioDependencyQuery } from './edit-recalculate.js';
+import { prepareMasterMovePins } from './edit-master-move.js';
 import {
 	masterCells,
 	masterShapes,
@@ -21,6 +22,7 @@ interface Binding {
 	template: Element;
 	instance?: Element;
 	cells: Map<string, Source>;
+	inheritedCells: ReadonlyMap<string, Source>;
 	context: Map<string, Binding>;
 }
 function problem(message: string): never {
@@ -36,13 +38,13 @@ export async function assertVisioMasterIndependence(
 	roots: ReadonlyMap<string, Element>,
 	commands: readonly VisioGeometryEdit[],
 	check: () => void,
-): Promise<void> {
+): Promise<ReadonlySet<Element>> {
 	const instances = [...roots].flatMap(([pageId, root]) =>
 		masterShapes(root)
 			.filter((shape) => shape.hasAttribute('Master'))
 			.map((instance) => ({ pageId, instance })),
 	);
-	if (!instances.length) return;
+	if (!instances.length) return new Set();
 	const documentPart = await related(pkg, '', 'document');
 	if (!documentPart) problem('Missing master document relationship.');
 	const document = await visioXml(pkg, documentPart, 'VisioDocument');
@@ -127,12 +129,14 @@ export async function assertVisioMasterIndependence(
 			for (const [name, node] of masterStyleCells(document, template, local, check, charge))
 				cells.set(name, { node, kind: 'style' });
 			overlay(cells, masterCells(template, charge), 'template', charge);
+			const inheritedCells = new Map(cells);
 			overlay(cells, masterCells(local, charge), 'instance', charge);
 			const binding: Binding = {
 				id: `${pageId}:${attribute(instance, 'ID')}:${templateId}`,
 				pageId,
 				template,
 				cells,
+				inheritedCells,
 				context,
 				...(local ? { instance: local } : {}),
 			};
@@ -143,6 +147,7 @@ export async function assertVisioMasterIndependence(
 		for (const id of byTemplate.keys())
 			if (!context.has(id)) problem('MasterShape refers to a missing template.');
 	}
+	const movePins = prepareMasterMovePins(roots, commands, bindings, check);
 	const changed = commands.flatMap((command) =>
 		command.type === 'delete-shape'
 			? []
@@ -186,6 +191,7 @@ export async function assertVisioMasterIndependence(
 			template: shape,
 			instance: shape,
 			cells,
+			inheritedCells: new Map(),
 			context: new Map(),
 		};
 		pageInputs.set(id, result);
@@ -274,5 +280,18 @@ export async function assertVisioMasterIndependence(
 		active.delete(id);
 		done.add(id);
 	};
-	for (const binding of bindings) for (const name of binding.cells.keys()) inspect(binding, name);
+	for (const binding of bindings)
+		for (const name of binding.cells.keys()) {
+			// Skip only the two prepared local pin roots. Recursive inspect still refuses
+			// any other effective formula that reaches an edited pin or its dependencies.
+			const source = binding.cells.get(name);
+			if (
+				['pinx', 'piny'].includes(name) &&
+				source?.kind === 'instance' &&
+				movePins.has(source.node)
+			)
+				continue;
+			inspect(binding, name);
+		}
+	return movePins;
 }
