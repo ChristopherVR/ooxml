@@ -3,16 +3,21 @@ import {
 	forwardRef,
 	useEffect,
 	useImperativeHandle,
+	useMemo,
 	useRef,
+	useSyncExternalStore,
 	type CSSProperties,
+	type RefObject,
 } from 'react';
 import {
 	mountFrameworkViewer,
 	viewerHandle,
 	viewerOptions,
+	viewerStateSource,
 	type MountedViewer,
 	type ViewerHandle,
 	type ViewerProps,
+	type ViewerState,
 } from './common.js';
 export interface VisioViewerProps extends ViewerProps {
 	className?: string | undefined;
@@ -44,7 +49,18 @@ export const VisioViewer = forwardRef<ViewerHandle, VisioViewerProps>(
 		});
 	},
 );
+/**
+ * Reactive viewer state (page, zoom, selection, search, edit and undo state) for the `ref`
+ * given to `<VisioViewer>`, through React's external-store hook. `null` until mounted.
+ */
+export function useVisioViewerState(
+	ref: RefObject<ViewerHandle | null | undefined>,
+): ViewerState | null {
+	const source = useMemo(() => viewerStateSource(() => ref.current), [ref]);
+	return useSyncExternalStore(source.subscribe, source.getSnapshot, () => null);
+}
 export type {
+	ViewerState,
 	ViewerHandle,
 	ViewerCallbacks,
 	ViewerOptions,

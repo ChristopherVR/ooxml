@@ -5,6 +5,7 @@ import {
 	Input,
 	Output,
 	inject,
+	signal,
 	type AfterViewInit,
 	type OnChanges,
 	type OnDestroy,
@@ -12,11 +13,13 @@ import {
 import {
 	mountFrameworkViewer,
 	viewerHandle,
+	viewerStateSource,
 	withEventEmitter,
 	type MountedViewer,
 	type ViewerCallbacks,
 	type ViewerEvents,
 	type ViewerProperties,
+	type ViewerState,
 	type VsdxSource,
 	type VisioEdit,
 	type SvgExportOptions,
@@ -39,6 +42,10 @@ export class VisioViewerComponent implements AfterViewInit, OnChanges, OnDestroy
 	private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 	private binding: MountedViewer | undefined;
 	private readonly handle = viewerHandle(() => this.binding);
+	private stopState = () => {};
+	private readonly viewerState = signal<ViewerState | null>(null);
+	/** Reactive viewer state as an Angular signal (`viewer.state()?.pageIndex`); `null` until mounted. */
+	readonly state = this.viewerState.asReadonly();
 	private readonly outputs = {
 		'document-load': this.documentLoad,
 		'document-change': this.documentChange,
@@ -54,11 +61,17 @@ export class VisioViewerComponent implements AfterViewInit, OnChanges, OnDestroy
 	}
 	ngAfterViewInit() {
 		this.binding = mountFrameworkViewer(this.host.nativeElement, this.options());
+		const source = viewerStateSource(() => this.handle);
+		this.viewerState.set(source.getSnapshot());
+		this.stopState = source.subscribe(() => this.viewerState.set(source.getSnapshot()));
 	}
 	ngOnChanges() {
 		this.binding?.update(this.options());
 	}
 	ngOnDestroy() {
+		this.stopState();
+		this.stopState = () => {};
+		this.viewerState.set(null);
 		const mounted = this.binding;
 		this.binding = undefined;
 		mounted?.destroy();
@@ -107,6 +120,7 @@ export class VisioViewerComponent implements AfterViewInit, OnChanges, OnDestroy
 	}
 }
 export type {
+	ViewerState,
 	ViewerHandle,
 	ViewerCallbacks,
 	ViewerOptions,

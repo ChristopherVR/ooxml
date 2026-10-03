@@ -159,8 +159,9 @@ for (const [key, meta] of Object.entries(VIEWER_PACKAGES)) {
 			writeFileSync(
 				resolve(outDir, 'VisioViewer.svelte.d.ts'),
 				`import type { Component } from 'svelte';
-import type { ViewerProps, ViewerHandle } from './types/packages/bindings/src/common.js';
-declare const VisioViewer: Component<ViewerProps & { class?: string; style?: string }, Pick<ViewerHandle, 'load' | 'replacePlainText' | 'applyEdits' | 'undo' | 'redo' | 'cancelEdit' | 'exportVsdx' | 'fit' | 'setLayerVisibility' | 'resetLayerVisibility' | 'exportSvg' | 'createPrintSnapshot'> & { getHandle(): ViewerHandle }>;
+import type { Readable } from 'svelte/store';
+import type { ViewerProps, ViewerHandle, ViewerState } from './types/packages/bindings/src/common.js';
+declare const VisioViewer: Component<ViewerProps & { class?: string; style?: string }, Pick<ViewerHandle, 'load' | 'replacePlainText' | 'applyEdits' | 'undo' | 'redo' | 'cancelEdit' | 'exportVsdx' | 'fit' | 'setLayerVisibility' | 'resetLayerVisibility' | 'exportSvg' | 'createPrintSnapshot'> & { getHandle(): ViewerHandle; getState(): Readable<ViewerState | null> }>;
 export default VisioViewer;
 `,
 			);

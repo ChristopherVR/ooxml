@@ -1,4 +1,5 @@
 import { mountViewer, type MountedViewer } from '../../../src/binding.js';
+import type { ViewerState } from '../../../src/controller.js';
 import {
 	eventKeys,
 	propertyKeys,
@@ -133,6 +134,36 @@ export function viewerHandle(current: () => MountedViewer | undefined): ViewerHa
 		},
 		createPrintSnapshot(options) {
 			return requireViewer().createPrintSnapshot(options);
+		},
+	};
+}
+
+/**
+ * Framework-neutral view of the controller's state for native hooks, composables, signals and
+ * stores. `current` returns the mounted handle or nothing; before mount and after unmount the
+ * snapshot is `null` and subscribing is a no-op that the binding repeats once mounted.
+ */
+export interface ViewerStateSource {
+	subscribe(onChange: () => void): () => void;
+	getSnapshot(): ViewerState | null;
+}
+export function viewerStateSource(
+	current: () => Pick<ViewerHandle, 'controller'> | null | undefined,
+): ViewerStateSource {
+	const controller = () => {
+		try {
+			return current()?.controller;
+		} catch {
+			// Lazy handles throw before mount and after unmount; that is "no state yet".
+			return undefined;
+		}
+	};
+	return {
+		subscribe(onChange) {
+			return controller()?.subscribe(() => onChange()) ?? (() => {});
+		},
+		getSnapshot() {
+			return controller()?.state ?? null;
 		},
 	};
 }

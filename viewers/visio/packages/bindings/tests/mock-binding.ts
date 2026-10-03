@@ -7,6 +7,9 @@ export interface FakeBinding {
 	destroyed: boolean;
 	update: ReturnType<typeof vi.fn>;
 	destroy: ReturnType<typeof vi.fn>;
+	/** Minimal controller store: native state hooks subscribe to it. */
+	listeners: Set<(state: Record<string, unknown>) => void>;
+	state: Record<string, unknown>;
 }
 const mocks = vi.hoisted(() => ({ instances: [] as FakeBinding[], mount: vi.fn() }));
 vi.mock('../../../src/binding.js', () => ({
@@ -29,11 +32,23 @@ vi.mock('../../../src/binding.js', () => ({
 		Object.assign(instance, {
 			options: initial,
 			destroyed: false,
+			listeners: new Set(),
+			state: { pageIndex: 0, zoom: 1 },
 			update,
 			destroy,
 			binding: {
 				element,
-				controller: { marker: 'controller' },
+				controller: {
+					marker: 'controller',
+					get state() {
+						return instance.state;
+					},
+					subscribe(listener: (state: Record<string, unknown>) => void) {
+						instance.listeners.add(listener);
+						listener(instance.state);
+						return () => instance.listeners.delete(listener);
+					},
+				},
 				update,
 				destroy,
 				load: vi.fn(async () => {
@@ -87,6 +102,11 @@ export function current(): FakeBinding {
 }
 export function emit<K extends keyof ViewerEvents>(name: K, value: ViewerEvents[K]): void {
 	current().options.events?.[name]?.(value);
+}
+/** Publish a new controller state snapshot to every subscriber of the current mock. */
+export function setState(patch: Record<string, unknown>, target: FakeBinding = current()): void {
+	target.state = Object.freeze({ ...target.state, ...patch });
+	for (const listener of [...target.listeners]) listener(target.state);
 }
 export function reset(): void {
 	mocks.instances.length = 0;

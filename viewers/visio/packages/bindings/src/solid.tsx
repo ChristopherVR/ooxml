@@ -1,11 +1,13 @@
-import { createEffect, createSignal, onCleanup, onMount, type JSX } from 'solid-js';
+import { createEffect, createSignal, onCleanup, onMount, type Accessor, type JSX } from 'solid-js';
 import {
 	mountFrameworkViewer,
 	viewerHandle,
 	viewerOptions,
+	viewerStateSource,
 	type MountedViewer,
 	type ViewerHandle,
 	type ViewerProps,
+	type ViewerState,
 } from './common.js';
 export interface VisioViewerProps extends ViewerProps {
 	class?: string | undefined;
@@ -48,7 +50,24 @@ export function VisioViewer(props: VisioViewerProps) {
 	});
 	return <div ref={host} class={props.class} style={props.style} />;
 }
+/**
+ * Reactive viewer state as a Solid accessor for a handle accessor (for example a signal set by
+ * `viewerRef`). Follows handle changes and cleans up with the owning scope.
+ */
+export function createVisioViewerState(
+	handle: Accessor<ViewerHandle | undefined>,
+): Accessor<ViewerState | null> {
+	const [state, setState] = createSignal<ViewerState | null>(null);
+	createEffect(() => {
+		const current = handle();
+		const source = viewerStateSource(() => current);
+		setState(() => source.getSnapshot());
+		onCleanup(source.subscribe(() => setState(() => source.getSnapshot())));
+	});
+	return state;
+}
 export type {
+	ViewerState,
 	ViewerHandle,
 	ViewerCallbacks,
 	ViewerOptions,
