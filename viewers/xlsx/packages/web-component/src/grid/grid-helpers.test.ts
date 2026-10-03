@@ -1,13 +1,8 @@
 // @vitest-environment jsdom
-import {
-	createGridMetrics,
-	createWorkbook,
-	putCell,
-	type ChartObject,
-} from '@christophervr/xlsx-core';
+import { createWorkbook, putCell, type ChartObject } from '@christophervr/xlsx-core';
 import { describe, expect, it } from 'vitest';
 import { drawingKeyDown } from './drawing-keys.js';
-import { anchorBox, boxAnchor, type DrawingLayer } from './drawings.js';
+import type { DrawingLayer } from './drawings.js';
 import { createTestContext } from './test-context.js';
 import { closeParens } from './formula-text.js';
 import { currentRegionOrAll, fillPlan } from './grid-commands.js';
@@ -53,19 +48,6 @@ describe('grid helpers', () => {
 		expect(
 			currentRegionOrAll(sheet, { sheet: 0, active: at, anchor: at, ranges: [region!] }),
 		).toBeUndefined();
-	});
-
-	it('round-trips drawing anchors through plane boxes', () => {
-		const wb = createWorkbook();
-		const metrics = createGridMetrics(wb.sheets[0]!, { zoom: 100 });
-		const anchor = {
-			from: { row: 2, col: 1, rowOffset: 9525 * 4, colOffset: 9525 * 10 },
-			ext: { cx: 9525 * 200, cy: 9525 * 100 },
-		};
-		const box = anchorBox(metrics, anchor);
-		expect(box.w).toBe(200);
-		expect(box.x).toBe(metrics.colLeft(1) + 10);
-		expect(boxAnchor(metrics, anchor, box)).toEqual(anchor);
 	});
 
 	it('deletes, deselects and nudges the selected drawing from the keyboard', () => {

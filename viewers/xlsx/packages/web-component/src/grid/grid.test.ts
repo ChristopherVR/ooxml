@@ -161,6 +161,7 @@ describe('mountGrid', () => {
 			formula1: '1',
 			formula2: '10',
 			errorStyle: 'stop',
+			showErrorMessage: true,
 			error: 'Between 1 and 10',
 		});
 		const { ctx, type, key } = setup(wb);

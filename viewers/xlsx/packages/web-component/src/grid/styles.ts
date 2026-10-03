@@ -98,5 +98,12 @@ export const GRID_CSS = `
 .xg-obj .xg-grip{position:absolute;width:8px;height:8px;background:#fff;border:1px solid #555;box-sizing:border-box;border-radius:50%}
 .xg-obj-unsupported{background:repeating-linear-gradient(45deg,#f6f6f6,#f6f6f6 6px,#ececec 6px,#ececec 12px);border:1px dashed #aaa;
 	font-size:11px;color:#555;display:flex;align-items:center;justify-content:center;text-align:center}
+.xg-obj.xg-smartart{overflow:hidden}
+.xg-obj.xg-smartart office-ui-smartart{display:block;pointer-events:none}
+.xg-smartart-placeholder{background:#fafafa;border:1px dashed #aaa;font-size:11px;color:#333;padding:4px;overflow:auto}
+.xg-smartart-nodes{margin:0;padding-left:16px}
+.xg-smartart-nodes .xg-smartart-child{margin-left:12px}
+.xg-smartart-notice{display:none;position:absolute;left:0;bottom:0;padding:1px 4px;font-size:10px;background:rgba(255,255,255,.9);color:#555;border-top-right-radius:3px}
+.xg-obj-sel .xg-smartart-notice,.xg-smartart-placeholder .xg-smartart-notice{display:block}
 .xg-live{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 `;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createWorkbook, internStyle, putCell, styleAt, cellError } from '@christophervr/xlsx-core';
-import { cellInputText } from './cell-input-text.js';
+import { cellInputText } from '@christophervr/xlsx-core';
 
 const setup = () => {
 	const wb = createWorkbook();

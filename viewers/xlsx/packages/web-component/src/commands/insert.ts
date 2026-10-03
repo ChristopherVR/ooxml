@@ -1,11 +1,9 @@
 // Insert tab: Table, Pictures, Charts, Link, Comment and Symbol.
-import { IMAGE_EXTENSIONS, type ChartType } from '@christophervr/xlsx-core';
+import { IMAGE_EXTENSIONS, pictureAnchorAt, type ChartType } from '@christophervr/xlsx-core';
 import type { Command } from '../commands.js';
 import type { EditorContext } from '../context.js';
 import { icon } from './icons.js';
 import { editing, target } from './util.js';
-
-const EMU_PER_PX = 9525;
 
 /** Picture types the core stores that a browser can also paint. */
 const PICTURE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/bmp', 'image/webp'].filter(
@@ -68,18 +66,11 @@ export async function insertPicture(ctx: EditorContext, file: File): Promise<voi
 	}
 	const bytes = new Uint8Array(await file.arrayBuffer());
 	const { width, height } = await imageSize(file);
-	const scale = Math.min(1, 640 / Math.max(1, width));
 	t.session.addImage(
 		t.sheet,
 		bytes,
 		file.type,
-		{
-			from: { row: t.active.row, col: t.active.col, rowOffset: 0, colOffset: 0 },
-			ext: {
-				cx: Math.round(width * scale * EMU_PER_PX),
-				cy: Math.round(height * scale * EMU_PER_PX),
-			},
-		},
+		pictureAnchorAt(t.active, width, height),
 		file.name,
 	);
 	ctx.selection.set({ drawing: t.ws.drawings.length - 1 });

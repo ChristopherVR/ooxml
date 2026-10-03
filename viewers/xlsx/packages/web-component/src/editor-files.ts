@@ -17,6 +17,7 @@ import {
 } from './file-commands';
 import { sheetBaseName } from './localization';
 import { printWorkbook } from './print';
+import { packagePassword } from './dialogs/package-password';
 import type { SaveState } from './title-bar';
 
 /** Chrome callbacks the file actions report to (title bar save state, backstage). */
@@ -56,8 +57,26 @@ export async function loadInto(
 ): Promise<void> {
 	const generation = ++core.loadGeneration;
 	try {
-		const { loadWorkbook } = await import('@christophervr/xlsx-core/load');
-		const workbook = await loadWorkbook(bytes, fileName ? { fileName } : {});
+		const { loadWorkbook, isOoxmlCryptoError } = await import('@christophervr/xlsx-core/load');
+		let password: string | undefined;
+		let workbook: Workbook;
+		for (;;) {
+			try {
+				workbook = await loadWorkbook(bytes, {
+					...(fileName ? { fileName } : {}),
+					...(password === undefined ? {} : { password }),
+				});
+				break;
+			} catch (error) {
+				if (generation !== core.loadGeneration) return;
+				if (!isOoxmlCryptoError(error) || error.code === 'data-integrity' || !core.host.isConnected)
+					throw error;
+				if (error.code === 'incorrect-password')
+					core.ctx.toast(core.ctx.t(error.message), 'warning');
+				password = await packagePassword(core.ctx);
+				if (password === undefined || generation !== core.loadGeneration) return;
+			}
+		}
 		if (generation !== core.loadGeneration) return;
 		showWorkbook(core, workbook, fileName || core.fileName || DEFAULT_FILE_NAME, chrome);
 		if (workbook.warnings.length)
@@ -97,7 +116,12 @@ export async function saveBytes(
 	const grid = core.ctx.grid();
 	if (grid?.isEditing()) grid.commitEdit();
 	const { saveWorkbook } = await import('@christophervr/xlsx-core/load');
-	return saveWorkbook(core.workbook, format, core.activeSheet);
+	return saveWorkbook(core.workbook, format, {
+		sheetIndex: core.activeSheet,
+		...(format === 'xlsx' && core.savePassword !== undefined
+			? { password: core.savePassword }
+			: {}),
+	});
 }
 
 export async function saveBlob(core: EditorCore): Promise<Blob> {

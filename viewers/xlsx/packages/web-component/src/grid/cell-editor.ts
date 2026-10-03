@@ -2,13 +2,13 @@
 // while not editing (typing starts Enter mode, IME composition works, copy/paste events land
 // here). Commit validates with the core (data validation) before writing through the session.
 import {
+	cellInputText,
 	formatAddress,
 	parseCellInput,
 	translateFormula,
 	type CellAddress,
 	type CellRange,
 } from '@christophervr/xlsx-core';
-import { cellInputText } from '../formula-bar/cell-input-text.js';
 import { showValidationAlert } from './alert.js';
 import { cssFont } from './cell-paint.js';
 import { h, place } from './dom.js';

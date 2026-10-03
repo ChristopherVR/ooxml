@@ -8,14 +8,14 @@ The workbook engine in `ooxml-core` and the `<xlsx-editor>` component are young.
 
 ## File formats
 
-| Format             | Open | Save       | Notes                                                                                                                                        |
-| ------------------ | ---- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.xlsx`, `.xltx`   | yes  | yes        | The main format.                                                                                                                             |
-| `.xlsm`            | yes  | yes        | The VBA project is carried through unchanged; macros never run.                                                                              |
-| `.xls` (97-2003)   | yes  | as `.xlsx` | Read through the shared ole2 codecs: values, formulas where they decode, basic formatting, merges, column widths, row heights, frozen panes. |
-| `.csv`             | yes  | yes        | RFC 4180, delimiter auto-detected; export writes the active sheet's displayed values.                                                        |
-| Password-protected | no   | no         | Encrypted files are rejected with an error.                                                                                                  |
-| `.xlsb`, `.ods`    | no   | no         |                                                                                                                                              |
+| Format             | Open | Save       | Notes                                                                                                                                                                                                                        |
+| ------------------ | ---- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.xlsx`, `.xltx`   | yes  | yes        | The main format.                                                                                                                                                                                                             |
+| `.xlsm`            | yes  | yes        | The VBA project is carried through unchanged; macros never run.                                                                                                                                                              |
+| `.xls` (97-2003)   | yes  | as `.xlsx` | Read through the shared ole2 codecs: values, formulas where they decode, basic formatting, merges, column widths, row heights, frozen panes.                                                                                 |
+| `.csv`             | yes  | yes        | RFC 4180, delimiter auto-detected; fields beginning with = stay text on import. Export writes the active sheet's displayed values and protects against formula injection.                                                    |
+| Password-protected | yes  | yes        | Encrypted .xlsx/.xlsm files prompt for a password. File > Info > Encrypt Workbook sets a password for subsequent Excel saves. Opening an encrypted file does not retain its password for saving; set it again before saving. |
+| `.xlsb`, `.ods`    | no   | no         |                                                                                                                                                                                                                              |
 
 ## Grid and formatting
 
@@ -49,11 +49,13 @@ Pictures and charts are selected by clicking them: they move and resize with the
 | Pivot tables and pivot caches       | Kept on save; not shown as pivots and not refreshed.                                                                                                                                                                   |
 | Slicers, timelines, sparklines      | Kept on save; not drawn.                                                                                                                                                                                               |
 | Charts                              | Common types drawn as SVG from live values. Type, title and legend can be changed; formatting the chart's own parts (axes, series colours, labels) is not. A loaded chart keeps its part on save, patched by the core. |
-| Shapes, SmartArt, form controls     | Pictures display; other drawings show as placeholders.                                                                                                                                                                 |
+| Shapes, SmartArt, form controls     | Pictures display. SmartArt uses the cached drawing through the shared renderer (display only); without a cached drawing, its text is listed. Other drawings show as placeholders.                                      |
 | Macros (VBA), add-ins, Power Query  | Never executed; the VBA project is carried through.                                                                                                                                                                    |
 | External links and data connections | Kept; values are the cached ones.                                                                                                                                                                                      |
 | Real-time collaboration             | Not implemented yet, see [collaboration](/collaboration).                                                                                                                                                              |
 | Printing                            | The browser's print of the used range or print area; no Page Layout view or page break preview.                                                                                                                        |
-| Document properties                 | Editable in File > Info, but the change is not an undo step.                                                                                                                                                           |
+| Document properties                 | Core, company, manager and custom properties are editable in File > Info with undo. Unknown custom-property types are kept and displayed read-only.                                                                    |
 
 The core's round-trip tests and Excel acceptance checks live in the `ooxml` repository. Report a workbook that renders or saves wrongly as an issue with the file attached if you can share it.
+
+Digital signatures are reported when opening a workbook and removed on save. The editor does not sign files. Hyperlinks follow the shared core policy; only web and e-mail links open externally.

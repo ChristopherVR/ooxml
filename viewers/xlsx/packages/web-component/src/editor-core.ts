@@ -56,6 +56,7 @@ export class EditorCore {
 	appliedThemeVars: string[] = [];
 	hiddenActions: string[] = [];
 	loadGeneration = 0;
+	savePassword: string | undefined;
 	shell: ShellHooks | undefined;
 	readonly selection: SelectionModel = createSelectionModel();
 	readonly commands: CommandRegistry;
@@ -183,6 +184,7 @@ export class EditorCore {
 
 	/** Replaces the workbook (load, new, template, property), with a fresh edit session. */
 	setWorkbook(workbook: Workbook | undefined): void {
+		this.savePassword = undefined;
 		this.stopSession?.();
 		this.stopSession = undefined;
 		this.workbook = workbook;

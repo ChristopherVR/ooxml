@@ -1,8 +1,10 @@
 // Hover tooltips for comments (the red corner triangle) and hyperlinks, and hyperlink following:
-// external targets open only when `isSafeHyperlinkHref` accepts them; in-workbook locations
-// (`Sheet2!B4`, defined names) navigate inside the editor.
+// external targets open (in a new browsing context without opener or referrer) only when the
+// core's `isOpenableHyperlinkHref` accepts them (http, https, mailto); in-workbook locations
+// (`Sheet2!B4`, `#Sheet2!B4`, defined names), also when stored as a scheme-less target, navigate
+// inside the editor.
 import { rangeContains, sheetByName, type CellAddress } from '@christophervr/xlsx-core';
-import { isSafeHyperlinkHref } from 'ooxml-core/opc';
+import { hyperlinkPolicy } from 'ooxml-core/opc';
 import { h, viewOf } from './dom.js';
 import { referenceTarget } from './formula-text.js';
 import type { GridSelection } from './grid-selection.js';
@@ -80,6 +82,13 @@ export function wireTooltips(view: GridView): () => void {
 	};
 }
 
+/** The in-workbook location a scheme-less target names (`#Sheet2!A1`, `Sheet2!A1`), if any. */
+function workbookLocation(target: string): string | undefined {
+	const value = target.trim();
+	if (value.startsWith('#')) return value.slice(1);
+	return /^[a-z][a-z0-9+.-]+:/i.test(value) || /[\\/]/.test(value) ? undefined : value;
+}
+
 /** Follows the hyperlink of a cell; false when the cell has none. */
 export function followLink(
 	view: GridView,
@@ -91,25 +100,37 @@ export function followLink(
 	const workbook = view.workbook();
 	const link = sheet?.hyperlinks.find((l) => rangeContains(l.range, { row, col }));
 	if (!link || !workbook) return false;
-	if (link.target) {
-		if (!isSafeHyperlinkHref(link.target)) {
+	const inside = link.target ? workbookLocation(link.target) : undefined;
+	if (link.target && !(inside && goTo(view, selection, inside))) {
+		const policy = hyperlinkPolicy(link.target);
+		if (policy.open) viewOf(view.root)?.open(link.target, '_blank', 'noopener,noreferrer');
+		else
 			view.ctx.toast(
-				view.ctx.t('This link was not opened because its address is not allowed.'),
+				view.ctx.t(
+					policy.store
+						? 'This link is kept in the workbook, but only web and e-mail links open from the editor.'
+						: 'This link was not opened because its address is not allowed.',
+				),
 				'warning',
 			);
-			return true;
-		}
-		viewOf(view.root)?.open(link.target, '_blank', 'noopener,noreferrer');
 		return true;
 	}
-	const location = (link.location ?? '').replace(/^#/, '');
-	const name = workbook.definedNames.find((n) => n.name.toLowerCase() === location.toLowerCase());
-	const target = referenceTarget(name ? name.formula : location);
-	if (!target) return true;
+	if (!link.target) goTo(view, selection, link.location ?? '');
+	return true;
+}
+
+/** Selects an in-workbook location (`Sheet2!B4`, `'My sheet'!A1`, a defined name); false when it names none. */
+function goTo(view: GridView, selection: GridSelection, location: string): boolean {
+	const workbook = view.workbook();
+	if (!workbook) return false;
+	const text = location.replace(/^#/, '');
+	const name = workbook.definedNames.find((n) => n.name.toLowerCase() === text.toLowerCase());
+	const target = referenceTarget(name ? name.formula : text);
+	if (!target) return false;
 	const sheetIndex = target.sheet
 		? workbook.sheets.indexOf(sheetByName(workbook, target.sheet) as never)
 		: view.sheetIndex();
-	if (sheetIndex < 0) return true;
+	if (sheetIndex < 0) return false;
 	if (sheetIndex !== view.sheetIndex()) view.ctx.setActiveSheet(sheetIndex);
 	const next = selectCell(sheetIndex, workbook.sheets[sheetIndex], target.range.start);
 	selection.set({ ...next, ranges: [target.range] }, target.range.start);

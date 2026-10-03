@@ -25,7 +25,10 @@ export interface BackstageHost {
 	options(): EditorOptions;
 	setOption<K extends keyof EditorOptions>(key: K, value: EditorOptions[K]): void;
 	/** Sets a workbook property (title, author, ...); an empty value clears it. */
-	setProperty(key: keyof WorkbookProperties, value: string): void;
+	setProperty<K extends keyof WorkbookProperties>(key: K, value: WorkbookProperties[K]): void;
+	passwordProtected?(): boolean;
+	setPassword?(): Promise<void>;
+	removePassword?(): void;
 	hiddenActions(): readonly string[];
 	setHiddenActions(ids: string[]): void;
 }

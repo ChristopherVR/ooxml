@@ -27,6 +27,98 @@ const accentShades: Translations = Object.fromEntries(
 );
 
 export const CORE_FEATURE_STRINGS: Translations = {
+	'Custom properties': [
+		'Propriétés personnalisées',
+		'Benutzerdefinierte Eigenschaften',
+		'Propiedades personalizadas',
+		'自定义属性',
+	],
+	'Add text property': [
+		'Ajouter une propriété texte',
+		'Texteigenschaft hinzufügen',
+		'Agregar propiedad de texto',
+		'添加文本属性',
+	],
+	'Property name': ['Nom de propriété', 'Eigenschaftsname', 'Nombre de propiedad', '属性名称'],
+	'Property value': ['Valeur de propriété', 'Eigenschaftswert', 'Valor de propiedad', '属性值'],
+	'Password required': [
+		'Mot de passe requis',
+		'Passwort erforderlich',
+		'Se requiere contraseña',
+		'需要密码',
+	],
+	'Encrypt Workbook': [
+		'Chiffrer le classeur',
+		'Arbeitsmappe verschlüsseln',
+		'Cifrar libro',
+		'加密工作簿',
+	],
+	Remove: ['Supprimer', 'Entfernen', 'Quitar', '删除'],
+	'Confirm password:': [
+		'Confirmer le mot de passe :',
+		'Passwort bestätigen:',
+		'Confirmar contraseña:',
+		'确认密码：',
+	],
+	'Enter a password.': [
+		'Saisissez un mot de passe.',
+		'Geben Sie ein Passwort ein.',
+		'Introduzca una contraseña.',
+		'请输入密码。',
+	],
+	'The password is incorrect.': [
+		'Le mot de passe est incorrect.',
+		'Das Passwort ist falsch.',
+		'La contraseña es incorrecta.',
+		'密码不正确。',
+	],
+	'Change password': [
+		'Changer le mot de passe',
+		'Passwort ändern',
+		'Cambiar contraseña',
+		'更改密码',
+	],
+	'Remove password': [
+		'Supprimer le mot de passe',
+		'Passwort entfernen',
+		'Quitar contraseña',
+		'删除密码',
+	],
+	'SmartArt graphic': [
+		'Graphique SmartArt',
+		'SmartArt-Grafik',
+		'Gráfico SmartArt',
+		'SmartArt 图形',
+	],
+	'SmartArt (display only)': [
+		'SmartArt (affichage uniquement)',
+		'SmartArt (nur Anzeige)',
+		'SmartArt (solo visualización)',
+		'SmartArt（仅显示）',
+	],
+	Category: ['Catégorie', 'Kategorie', 'Categoría', '类别'],
+	'Content status': ['État du contenu', 'Inhaltsstatus', 'Estado del contenido', '内容状态'],
+	Company: ['Société', 'Firma', 'Empresa', '公司'],
+	Manager: ['Responsable', 'Manager', 'Administrador', '经理'],
+	'Hyperlink base': [
+		'Base des liens hypertexte',
+		'Hyperlinkbasis',
+		'Base de hipervínculos',
+		'超链接基础',
+	],
+	'Excel saves are encrypted with the password set for this workbook. CSV exports are not encrypted.':
+		[
+			'Les fichiers Excel sont chiffrés avec le mot de passe de ce classeur. Les exports CSV ne sont pas chiffrés.',
+			'Excel-Dateien werden mit dem Passwort dieser Arbeitsmappe verschlüsselt. CSV-Exporte sind unverschlüsselt.',
+			'Los archivos Excel se cifran con la contraseña de este libro. Las exportaciones CSV no se cifran.',
+			'Excel 保存使用为此工作簿设置的密码加密。CSV 导出不加密。',
+		],
+	'Saving writes this workbook without a password. Set a password here to encrypt Excel saves.': [
+		'Ce classeur est enregistré sans mot de passe. Définissez un mot de passe ici pour chiffrer les fichiers Excel.',
+		'Diese Arbeitsmappe wird ohne Passwort gespeichert. Legen Sie hier ein Passwort zum Verschlüsseln von Excel-Dateien fest.',
+		'Este libro se guarda sin contraseña. Establezca una contraseña aquí para cifrar los archivos Excel.',
+		'保存此工作簿时不使用密码。在此设置密码以加密 Excel 保存。',
+	],
 	...accentShades,
 	'Comma [0]': ['Milliers [0]', 'Komma [0]', 'Millares [0]', '千位分隔[0]'],
 	'Currency [0]': ['Monétaire [0]', 'Währung [0]', 'Moneda [0]', '货币[0]'],

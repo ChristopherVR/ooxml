@@ -18,6 +18,7 @@ import { createStatusBar } from './status-bar';
 import { editorStyleText } from './theme';
 import { createTitleBar, type SaveState, type TitleBar } from './title-bar';
 import { createToaster } from './toast';
+import { packagePassword } from './dialogs/package-password';
 
 /** Element properties the shell's options and customize pages change. */
 export interface ShellElement extends HTMLElement {
@@ -94,13 +95,24 @@ export function buildShell(core: EditorCore): Shell {
 			else core.setCalculation(value === 'manual' ? 'manual' : 'automatic');
 		},
 		setProperty(key, value) {
+			if (core.readOnly) return;
+			core.session?.setDocumentProperties({ [key]: value === '' ? null : value });
+		},
+		passwordProtected: () => core.savePassword !== undefined,
+		async setPassword() {
+			if (core.readOnly || !core.workbook) return;
 			const workbook = core.workbook;
-			if (!workbook || (workbook.properties[key] ?? '') === value) return;
-			if (value) workbook.properties[key] = value;
-			else delete workbook.properties[key];
+			const password = await packagePassword(ctx, true);
+			if (password === undefined || core.workbook !== workbook || core.readOnly) return;
+			core.savePassword = password;
 			core.dirty.set(true);
-			chrome.setSaveState('dirty');
-			emit(element, 'workbook-change', { workbook });
+			backstage.relocalize();
+		},
+		removePassword() {
+			if (core.readOnly) return;
+			core.savePassword = undefined;
+			core.dirty.set(true);
+			backstage.relocalize();
 		},
 		hiddenActions: () => core.hiddenActions,
 		setHiddenActions(ids) {

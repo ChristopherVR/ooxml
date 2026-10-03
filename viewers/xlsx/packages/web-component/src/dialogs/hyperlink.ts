@@ -1,5 +1,7 @@
 // Insert > Link: a web page or file address, a place in this workbook, or an e-mail address.
-// Only safe schemes are accepted (http, https, mailto, ftp, file and scheme-less paths).
+// What may be stored is the core's shared hyperlink policy (`hyperlinkPolicy` of ooxml-core/opc):
+// http, https, mailto, ftp, file and scheme-less paths; script schemes and disguised schemes are
+// refused with the policy's reason.
 import {
 	type Hyperlink,
 	getCell,
@@ -7,22 +9,36 @@ import {
 	parseRange,
 	rangesIntersect,
 } from '@christophervr/xlsx-core';
+import { hyperlinkPolicy, type HyperlinkRejection } from 'ooxml-core/opc';
 import { target } from '../commands/util.js';
 import type { EditorContext } from '../context.js';
 import { field, invalid, panel, radios, select, textInput } from './fields.js';
 import { button, showDialog } from './frame.js';
 
-const SAFE_SCHEMES = ['http:', 'https:', 'mailto:', 'ftp:', 'file:'];
+/** The English message shown when the policy refuses to store an address, by reason. */
+export const HYPERLINK_REJECTIONS: Readonly<Record<HyperlinkRejection, string>> = {
+	empty: 'Enter an address.',
+	'script-scheme': 'Addresses that run scripts (javascript:, vbscript:, data:) are not allowed.',
+	'obfuscated-scheme': 'This address hides its protocol and is not allowed.',
+	'control-characters': 'This address contains control characters and is not allowed.',
+	'unsupported-scheme': 'This address uses a protocol that is not allowed.',
+	'not-openable': 'This address uses a protocol that is not allowed.',
+};
 
-/** The address to store, or undefined when its scheme is not allowed (javascript:, data:, ...). */
-export function safeAddress(text: string): string | undefined {
+/**
+ * The address to store (`www.` gains `https://`), or the reason it may not be stored
+ * (javascript:, data:, a disguised scheme, ...).
+ */
+export function checkAddress(text: string): { href: string } | { reason: HyperlinkRejection } {
 	const value = text.trim();
-	if (!value) return undefined;
-	if (/^www\./i.test(value)) return `https://${value}`;
-	const scheme = /^([a-z][a-z0-9+.-]*):/i.exec(value)?.[1];
-	// A single letter is a Windows drive (C:\...), not a scheme.
-	if (!scheme || scheme.length === 1) return value;
-	return SAFE_SCHEMES.includes(`${scheme.toLowerCase()}:`) ? value : undefined;
+	const href = /^www\./i.test(value) ? `https://${value}` : value;
+	const policy = hyperlinkPolicy(href);
+	return policy.store ? { href } : { reason: policy.reason ?? 'unsupported-scheme' };
+}
+
+export function safeAddress(text: string): string | undefined {
+	const checked = checkAddress(text);
+	return 'href' in checked ? checked.href : undefined;
 }
 
 /** Splits `Sheet!A1` / `'My sheet'!A1` / a defined name into its sheet and reference parts. */
@@ -102,10 +118,9 @@ export function hyperlinkDialog(
 		const link: Omit<Hyperlink, 'range'> = {};
 		const v = linkTo.get();
 		if (v === 'web') {
-			if (!address.value.trim()) return invalid(ctx, address, 'Enter an address.');
-			const safe = safeAddress(address.value);
-			if (!safe) return invalid(ctx, address, 'This address uses a protocol that is not allowed.');
-			link.target = safe;
+			const checked = checkAddress(address.value);
+			if ('reason' in checked) return invalid(ctx, address, HYPERLINK_REJECTIONS[checked.reason]);
+			link.target = checked.href;
 		} else if (v === 'email') {
 			const to = email.value.trim().replace(/^mailto:/i, '');
 			if (!to || /[\s<>"]/.test(to)) return invalid(ctx, email, 'Enter a valid e-mail address.');

@@ -1,7 +1,7 @@
 // Home > Alignment: vertical and horizontal alignment, orientation, wrap text, indent and the
 // merge variants. Checked state reflects the active cell.
 import type { HorizontalAlignment, MergeMode, VerticalAlignment } from '@christophervr/xlsx-core';
-import { rangesIntersect } from '@christophervr/xlsx-core';
+import { mergeWouldDiscard, rangesIntersect } from '@christophervr/xlsx-core';
 import type { Command } from '../commands.js';
 import type { EditorContext } from '../context.js';
 import { style } from './font.js';
@@ -33,7 +33,7 @@ function mergeCommand(id: string, label: string, mode: MergeMode): Command {
 		icon: icon('mergeCenter'),
 		lock: 'formatCells',
 		...(mode === 'center' ? { checked: mergedAtActive } : {}),
-		run: (ctx) => {
+		run: async (ctx) => {
 			const t = target(ctx);
 			if (!t) return;
 			if (mode === 'center' && mergedAtActive(ctx)) {
@@ -42,19 +42,15 @@ function mergeCommand(id: string, label: string, mode: MergeMode): Command {
 				});
 				return;
 			}
-			const lossy = t.ranges.some((r) => {
-				let filled = 0;
-				for (let row = r.start.row; row <= r.end.row; row++)
-					for (const [col, cell] of t.ws.rows.get(row) ?? [])
-						if (col >= r.start.col && col <= r.end.col && cell.value !== null && cell.value !== '')
-							filled++;
-				return mode === 'across' ? false : filled > 1;
-			});
-			if (lossy)
-				ctx.toast(
-					ctx.t('Merging cells only keeps the upper-left value and discards other values.'),
-					'warning',
-				);
+			// Excel asks before a merge that would drop values (OK merges, Cancel keeps the cells).
+			if (t.ranges.some((range) => mergeWouldDiscard(t.ws, range, mode))) {
+				const ok = await ctx.dialogs.open('confirm', {
+					heading: label,
+					message: 'Merging cells only keeps the upper-left value and discards other values.',
+				});
+				if (ok !== true) return;
+				if (ctx.session() !== t.session || ctx.readOnly()) return;
+			}
 			t.session.batch(label, () => {
 				for (const range of t.ranges) t.session.merge(t.sheet, range, mode);
 			});

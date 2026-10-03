@@ -39,6 +39,7 @@ describe('safeAddress', () => {
 		expect(safeAddress(' JavaScript:alert(1)')).toBeUndefined();
 		expect(safeAddress('data:text/html,x')).toBeUndefined();
 		expect(safeAddress('vbscript:x')).toBeUndefined();
+		expect(safeAddress('java\tscript:alert(1)')).toBeUndefined();
 	});
 });
 

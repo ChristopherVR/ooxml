@@ -1,6 +1,7 @@
 /** File > Info: name and save state, compatibility notes, properties and workbook facts. */
 import type { Workbook, WorkbookProperties } from '@christophervr/xlsx-core';
-import { facts, heading, labelled, noteList, paragraph, type PageContext } from './parts';
+import { facts, heading, labelled, noteList, paragraph, primary, type PageContext } from './parts';
+import { customProperties } from './properties-custom';
 
 type T = PageContext['t'];
 
@@ -28,12 +29,20 @@ export function compatibilityNotes(workbook: Workbook, t: T): string[] {
 	return [...formatNotes(workbook, t), ...workbook.warnings];
 }
 
-const PROPERTY_FIELDS: ReadonlyArray<readonly [keyof WorkbookProperties, string]> = [
+type TextProperty = {
+	[K in keyof WorkbookProperties]-?: WorkbookProperties[K] extends string | undefined ? K : never;
+}[keyof WorkbookProperties];
+const PROPERTY_FIELDS: ReadonlyArray<readonly [TextProperty, string]> = [
 	['title', 'Title'],
 	['subject', 'Subject'],
 	['creator', 'Author'],
 	['keywords', 'Tags'],
 	['description', 'Comments'],
+	['category', 'Category'],
+	['contentStatus', 'Content status'],
+	['company', 'Company'],
+	['manager', 'Manager'],
+	['hyperlinkBase', 'Hyperlink base'],
 ];
 
 const FORMAT_NAMES: Record<Workbook['format'], string> = {
@@ -91,6 +100,32 @@ export function renderInfo(page: PageContext): void {
 	right.className = 'xve-backstage-properties';
 	right.append(heading(page, t('Properties'), 'h3'));
 	if (workbook) {
+		if (host.setPassword) {
+			const protectedSave = host.passwordProtected?.() ?? false;
+			const encrypt = primary(
+				page,
+				t(protectedSave ? 'Change password' : 'Encrypt Workbook'),
+				() => void host.setPassword?.(),
+			);
+			encrypt.disabled = host.ctx.readOnly();
+			left.append(
+				heading(page, t('Protect Workbook'), 'h3'),
+				paragraph(
+					page,
+					t(
+						protectedSave
+							? 'Excel saves are encrypted with the password set for this workbook. CSV exports are not encrypted.'
+							: 'Saving writes this workbook without a password. Set a password here to encrypt Excel saves.',
+					),
+				),
+				encrypt,
+			);
+			if (protectedSave) {
+				const remove = primary(page, t('Remove password'), () => host.removePassword?.());
+				remove.disabled = host.ctx.readOnly();
+				left.append(remove);
+			}
+		}
 		for (const [key, label] of PROPERTY_FIELDS) {
 			const input = doc.createElement('input');
 			input.type = 'text';
@@ -100,6 +135,7 @@ export function renderInfo(page: PageContext): void {
 			right.append(labelled(page, t(label), input));
 		}
 		const { cells, formulas } = countCells(workbook);
+		right.append(customProperties(page, workbook));
 		const stamp = (value: string | undefined) =>
 			value ? new Date(value).toLocaleString(host.ctx.locale()) : '-';
 		right.append(

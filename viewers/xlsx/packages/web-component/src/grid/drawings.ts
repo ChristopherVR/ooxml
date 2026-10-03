@@ -1,59 +1,20 @@
-// Pictures and charts over the grid, positioned from their anchors in the quadrant of their
+// Pictures, charts and SmartArt over the grid, positioned from their anchors in the quadrant of their
 // top-left cell. Pictures come from the package parts as object URLs; charts are drawn by the core
 // (`chartView` + `renderChartSvg`) from live cell values. When editing, objects can be selected,
 // moved and resized (the anchor change is one undoable edit). The selected object lives in the
 // shared selection model (`selection.drawing`), so the Chart Design tab and Delete follow it.
 import {
+	anchorToPixelBox,
 	chartView,
 	createRefEvaluator,
+	pixelBoxToAnchor,
 	renderChartSvg,
-	type DrawingAnchor,
 	type DrawingObject,
-	type GridMetrics,
 } from '@christophervr/xlsx-core';
 import { h, place, svgNode, viewOf } from './dom.js';
 import { QUADRANTS, type Box } from './geometry.js';
 import type { GridView } from './grid-view.js';
-
-export const EMU_PER_PX = 9525;
-
-/** Plane rectangle of an anchor at the metrics' zoom. */
-export function anchorBox(metrics: GridMetrics, anchor: DrawingAnchor): Box {
-	const f = metrics.zoom / 100;
-	const x = metrics.colLeft(anchor.from.col) + (anchor.from.colOffset / EMU_PER_PX) * f;
-	const y = metrics.rowTop(anchor.from.row) + (anchor.from.rowOffset / EMU_PER_PX) * f;
-	if (anchor.to) {
-		const x2 = metrics.colLeft(anchor.to.col) + (anchor.to.colOffset / EMU_PER_PX) * f;
-		const y2 = metrics.rowTop(anchor.to.row) + (anchor.to.rowOffset / EMU_PER_PX) * f;
-		return { x, y, w: Math.max(4, x2 - x), h: Math.max(4, y2 - y) };
-	}
-	const w = ((anchor.ext?.cx ?? 1905000) / EMU_PER_PX) * f;
-	const hgt = ((anchor.ext?.cy ?? 1905000) / EMU_PER_PX) * f;
-	return { x, y, w, h: hgt };
-}
-
-/** The anchor that puts an object at a plane rectangle (keeps the anchor kind). */
-export function boxAnchor(metrics: GridMetrics, previous: DrawingAnchor, box: Box): DrawingAnchor {
-	const f = metrics.zoom / 100;
-	const point = (px: number, py: number) => {
-		const col = metrics.colAt(Math.max(0, px));
-		const row = metrics.rowAt(Math.max(0, py));
-		return {
-			col,
-			row,
-			colOffset: Math.round(((px - metrics.colLeft(col)) / f) * EMU_PER_PX),
-			rowOffset: Math.round(((py - metrics.rowTop(row)) / f) * EMU_PER_PX),
-		};
-	};
-	const next: DrawingAnchor = { from: point(box.x, box.y) };
-	if (previous.to) next.to = point(box.x + box.w, box.y + box.h);
-	else
-		next.ext = {
-			cx: Math.round((box.w / f) * EMU_PER_PX),
-			cy: Math.round((box.h / f) * EMU_PER_PX),
-		};
-	return next;
-}
+import { paintSmartArt } from './smartart.js';
 
 interface ObjectNode extends HTMLDivElement {
 	xgSig?: string | undefined;
@@ -98,7 +59,7 @@ export class DrawingLayer {
 		const keep = new Set<string>();
 		const g = view.geometry;
 		sheet?.drawings.forEach((drawing, index) => {
-			const box = anchorBox(view.metrics, drawing.anchor);
+			const box = anchorToPixelBox(sheet, drawing.anchor, view.metrics);
 			// An object may cross the frozen-pane split: paint it in every pane (each clips its part).
 			for (const quadrant of QUADRANTS) {
 				const pane = g.box(quadrant);
@@ -167,6 +128,8 @@ export class DrawingLayer {
 			}
 			node.setAttribute('role', 'img');
 			node.setAttribute('aria-label', drawing.title ?? view.ctx.t('Chart'));
+		} else if (drawing.kind === 'smartArt') {
+			paintSmartArt(view.ctx, node, drawing, view.workbook()?.theme);
 		} else {
 			node.classList.add('xg-obj-unsupported');
 			node.textContent = view.ctx.t('{name} (not shown)', { name: drawing.description });
@@ -193,15 +156,16 @@ export class DrawingLayer {
 		event.stopPropagation();
 		if (event.button !== 0) return;
 		event.preventDefault();
-		const drawing = view.sheet()?.drawings[index];
-		if (!drawing) return;
+		const sheet = view.sheet();
+		const drawing = sheet?.drawings[index];
+		if (!sheet || !drawing) return;
 		view.ctx.selection.set({ drawing: index });
 		view.ctx.grid()?.focus();
 		const session = view.ctx.session();
 		if (view.ctx.readOnly() || !session) return;
 		const grip = (event.target as Element).closest<HTMLElement>('[data-grip]')?.dataset.grip;
 		const start = view.clientToView(event.clientX, event.clientY);
-		const origin = anchorBox(view.metrics, drawing.anchor);
+		const origin = anchorToPixelBox(sheet, drawing.anchor, view.metrics);
 		const node = event.currentTarget as HTMLElement;
 		let box = origin;
 		node.setPointerCapture?.(event.pointerId);
@@ -235,7 +199,7 @@ export class DrawingLayer {
 				session.setDrawingAnchor(
 					view.sheetIndex(),
 					index,
-					boxAnchor(view.metrics, drawing.anchor, box),
+					pixelBoxToAnchor(sheet, box, view.metrics, drawing.anchor),
 				);
 		};
 		node.addEventListener('pointermove', move);
@@ -246,16 +210,17 @@ export class DrawingLayer {
 	nudge(dx: number, dy: number): boolean {
 		const view = this.#view;
 		const index = this.#selected;
-		const drawing = index === undefined ? undefined : view.sheet()?.drawings[index];
+		const sheet = view.sheet();
+		const drawing = index === undefined ? undefined : sheet?.drawings[index];
 		const session = view.ctx.session();
-		if (index === undefined || !drawing) return false;
+		if (index === undefined || !sheet || !drawing) return false;
 		if (!session || view.ctx.readOnly()) return true;
-		const box = anchorBox(view.metrics, drawing.anchor);
+		const box = anchorToPixelBox(sheet, drawing.anchor, view.metrics);
 		const next = { ...box, x: Math.max(0, box.x + dx), y: Math.max(0, box.y + dy) };
 		session.setDrawingAnchor(
 			view.sheetIndex(),
 			index,
-			boxAnchor(view.metrics, drawing.anchor, next),
+			pixelBoxToAnchor(sheet, next, view.metrics, drawing.anchor),
 		);
 		return true;
 	}

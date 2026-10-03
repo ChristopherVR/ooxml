@@ -5,7 +5,6 @@ import { createFormulaInput } from './formula-input.js';
 import { createNameBox } from './name-box.js';
 import { FORMULA_BAR_CSS } from './styles.js';
 
-export { cellInputText } from './cell-input-text.js';
 export {
 	absoluteReference,
 	nameForRange,

@@ -1,13 +1,13 @@
 // The formula input of the formula bar: shows the active cell's content, edits it through the
 // shared edit bridge (so the in-cell editor follows), offers function autocomplete and expands
 // to several lines.
+import { cellInputText } from '@christophervr/xlsx-core';
 import type { EditorContext } from '../context.js';
 import { h } from '../grid/dom.js';
 import { editBridge, type EditState } from '../grid/edit-bridge.js';
 import { createFormulaField, type FormulaField } from '../grid/formula-field.js';
 import { createFunctionAssist, type FunctionAssist } from '../grid/function-assist.js';
 import { splice } from '../grid/formula-text.js';
-import { cellInputText } from './cell-input-text.js';
 
 export interface FormulaInput {
 	readonly field: FormulaField;
