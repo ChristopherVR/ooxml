@@ -6,7 +6,11 @@ import { fail } from './package-common.js';
 import { executableCellFormula, inertDoubleClickFormula } from './cell-formula.js';
 import { analyzeVisioMasterFormula } from './formula-master.js';
 import { createVisioDependencyQuery } from './edit-recalculate.js';
-import { prepareMasterMovePins } from './edit-master-move.js';
+import {
+	prepareMasterMovePins,
+	emptyMasterMoveProof,
+	type MasterMoveProof,
+} from './edit-master-move.js';
 import {
 	masterCells,
 	masterShapes,
@@ -38,18 +42,29 @@ export async function assertVisioMasterIndependence(
 	roots: ReadonlyMap<string, Element>,
 	commands: readonly VisioGeometryEdit[],
 	check: () => void,
-): Promise<ReadonlySet<Element>> {
+): Promise<MasterMoveProof> {
 	const instances = [...roots].flatMap(([pageId, root]) =>
 		masterShapes(root)
 			.filter((shape) => shape.hasAttribute('Master'))
 			.map((instance) => ({ pageId, instance })),
 	);
-	if (!instances.length) return new Set();
+	if (!instances.length) return emptyMasterMoveProof();
 	const documentPart = await related(pkg, '', 'document');
 	if (!documentPart) problem('Missing master document relationship.');
 	const document = await visioXml(pkg, documentPart, 'VisioDocument');
 	const mastersPart = await related(pkg, documentPart, 'masters', false);
-	if (!mastersPart) problem('Active master definitions are missing.');
+	if (!mastersPart) {
+		if (
+			commands.some((command) =>
+				instances.some(
+					(item) =>
+						item.pageId === command.pageId && attribute(item.instance, 'ID') === command.shapeId,
+				),
+			)
+		)
+			fail('UNSUPPORTED_GEOMETRY_EDIT', 'Active master definitions are missing.');
+		problem('Active master definitions are missing.');
+	}
 	const definitions = new Map<string, Element>();
 	for (const node of children(await visioXml(pkg, mastersPart, 'Masters'), 'Master')) {
 		const id = attribute(node, 'ID');
@@ -64,6 +79,12 @@ export async function assertVisioMasterIndependence(
 		if (--buildWork < 0) problem('Master effective-cell construction budget exceeded.');
 	};
 	const pageBindings = new Map<string, Binding>();
+	const movingTargets = new Set<string>();
+	for (const command of commands) {
+		charge();
+		if (command.type === 'move-shape')
+			movingTargets.add(JSON.stringify([command.pageId, command.shapeId]));
+	}
 	const pageShapes = new Map<string, Element>();
 	for (const [pageId, root] of roots)
 		for (const shape of masterShapes(root)) {
@@ -126,7 +147,16 @@ export async function assertVisioMasterIndependence(
 			if (!templateId || context.has(templateId)) problem('Master-local sheet IDs are ambiguous.');
 			const local = byTemplate.get(templateId),
 				cells = new Map<string, Source>();
-			for (const [name, node] of masterStyleCells(document, template, local, check, charge))
+			const movedInstance =
+				local === instance && movingTargets.has(JSON.stringify([pageId, attribute(local, 'ID')]));
+			for (const [name, node] of masterStyleCells(
+				document,
+				template,
+				local,
+				check,
+				charge,
+				movedInstance,
+			))
 				cells.set(name, { node, kind: 'style' });
 			overlay(cells, masterCells(template, charge), 'template', charge);
 			const inheritedCells = new Map(cells);
@@ -288,7 +318,7 @@ export async function assertVisioMasterIndependence(
 			if (
 				['pinx', 'piny'].includes(name) &&
 				source?.kind === 'instance' &&
-				movePins.has(source.node)
+				movePins.pins.has(source.node)
 			)
 				continue;
 			inspect(binding, name);

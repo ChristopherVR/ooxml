@@ -103,11 +103,14 @@ describe('proven local master rotation-pin moves', () => {
 				'UNSUPPORTED_GEOMETRY_EDIT',
 			);
 	});
-	it.each(locks)('refuses effective inherited protection %s', async (lock) => {
-		expect(
-			(await rejected(await source({ template: dimensions() + rectangle + cell(lock, 1) }))).code,
-		).toBe('EDIT_PROTECTED_CELL');
-	});
+	it.each(['LockMoveX', 'LockMoveY'])(
+		'refuses effective inherited movement protection %s',
+		async (lock) => {
+			expect(
+				(await rejected(await source({ template: dimensions() + rectangle + cell(lock, 1) }))).code,
+			).toBe('EDIT_PROTECTED_CELL');
+		},
+	);
 	it.each(['GUARD(2)', 'SETATREF(User.Pin)', 'Inh'])(
 		'refuses protected or inherited local PinX %s',
 		async (formula) => {
@@ -236,7 +239,7 @@ describe('proven local master rotation-pin moves', () => {
 				await source({ sibling: shape('2', dimensions(true) + rectangle + dependency, attrs) }),
 			);
 	});
-	it('refuses unknown/dynamic effective dependencies and missing local transform proof', async () => {
+	it('refuses unknown/dynamic effective dependencies and missing effective transform proof', async () => {
 		await rejected(
 			await source({
 				template: dimensions() + rectangle + cell('TxtPinX', 2, 'INDIRECT(&quot;PinX&quot;)'),
@@ -244,6 +247,7 @@ describe('proven local master rotation-pin moves', () => {
 		);
 		await rejected(
 			await source({
+				template: dimensions().replace(cell('LocPinX', 1.5, 'Width*0.5'), '') + rectangle,
 				local: dimensions(true).replace(cell('LocPinX', 1.5, 'Inh'), '') + rectangle,
 			}),
 		);

@@ -5,6 +5,7 @@ import { replacePlainText, serializeEditedXml } from './edit-text.js';
 import { snapshotVisioEdits, type VisioEdit } from './edit-commands.js';
 import { applyGeometryEdit } from './edit-geometry.js';
 import { assertGeometryPackageScope } from './edit-scope.js';
+import { emptyMasterMoveProof } from './edit-master-move.js';
 export type { VisioEdit, VisioTextEdit, VisioGeometryEdit } from './edit-commands.js';
 
 export interface EditVsdxOptions {
@@ -50,7 +51,7 @@ export async function editVsdx(
 	const roots = new Map<string, Element>();
 	const geometry = commands.some((command) => command.type !== 'replace-plain-text');
 	let document: Element | undefined;
-	let masterMovePins: ReadonlySet<Element> = new Set();
+	let masterMovePins = emptyMasterMoveProof();
 	if (geometry) {
 		// All pages are indexed before editing: dependencies are never inferred from only the target shape.
 		for (const [pageId, path] of pages) {

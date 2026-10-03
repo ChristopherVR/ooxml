@@ -65,6 +65,7 @@ export function admitted(
 	root: Element,
 	shapeId: string,
 	masterMovePins: ReadonlySet<Element> = new Set(),
+	masterDimensions: ReadonlyMap<Element, { width: number; height: number }> = new Map(),
 ): Element {
 	const containers = children(root, 'Shapes');
 	if (containers.length !== 1)
@@ -106,13 +107,27 @@ export function admitted(
 			'UNSUPPORTED_GEOMETRY_EDIT',
 			'Only local 2D shapes are admitted; line routing and glue are unsupported.',
 		);
-	if (!(numeric(local.get('Width')) > 0) || !(numeric(local.get('Height')) > 0))
-		fail('UNSUPPORTED_GEOMETRY_EDIT', 'Positive local Width and Height caches are required.');
+	const proven = masterDimensions.get(shape);
+	if (
+		!(numeric(local.get('Width'), proven?.width) > 0) ||
+		!(numeric(local.get('Height'), proven?.height) > 0)
+	)
+		fail('UNSUPPORTED_GEOMETRY_EDIT', 'Positive proven Width and Height caches are required.');
 	return shape;
 }
-/** Only proven inactive inherited scalar protection is admitted; masters remain unsupported. */
-export function protectedShape(shape: Element, document: Element): void {
+/** Validate scalar protection; certified master moves preserve active non-movement locks. */
+export function protectedShape(
+	shape: Element,
+	document: Element,
+	masterMovePins: ReadonlySet<Element> = new Set(),
+): void {
 	const local = cells(shape);
+	const certifiedMove =
+		shape.hasAttribute('Master') &&
+		['PinX', 'PinY'].every((name) => {
+			const node = local.get(name);
+			return node !== undefined && masterMovePins.has(node);
+		});
 	const styles = new Map<string, Element>();
 	for (const container of children(document, 'StyleSheets'))
 		for (const node of children(container, 'StyleSheet')) {
@@ -120,13 +135,19 @@ export function protectedShape(shape: Element, document: Element): void {
 			if (!id || styles.has(id)) fail('EDIT_PROTECTED_CELL', 'Ambiguous protection style IDs.');
 			styles.set(id, node);
 		}
-	const inactive = (cell: Element): void => {
+	const validateProtection = (cell: Element): void => {
 		try {
+			const cached = numeric(cell);
+			const operationIndependent =
+				certifiedMove &&
+				['LockWidth', 'LockHeight', 'LockAspect', 'LockDelete'].includes(
+					attribute(cell, 'N') ?? '',
+				);
 			if (
 				cell.hasAttribute('E') ||
 				visioFormulaCachedValue(attribute(cell, 'V') ?? '', attribute(cell, 'U')).unit !==
 					'scalar' ||
-				numeric(cell) !== 0
+				!(cached === 0 || (operationIndependent && cached === 1))
 			)
 				fail('EDIT_PROTECTED_CELL', 'Inherited protection is active or invalid.');
 			const source = executableCellFormula(attribute(cell, 'F'));
@@ -137,12 +158,12 @@ export function protectedShape(shape: Element, document: Element): void {
 			const result = evaluateVisioFormula(source, () =>
 				fail('EDIT_PROTECTED_CELL', 'Inherited protection has dependencies.'),
 			);
-			if (result.unit !== 'scalar' || result.value !== 0)
-				fail('EDIT_PROTECTED_CELL', 'Inherited protection formula is active or stale.');
+			if (result.unit !== 'scalar' || result.value !== cached)
+				fail('EDIT_PROTECTED_CELL', 'Inherited protection formula cache is stale.');
 		} catch (error) {
 			fail(
 				'EDIT_PROTECTED_CELL',
-				`Inherited protection cannot be proven inactive: ${error instanceof Error ? error.message : 'invalid cache'}`,
+				`Inherited protection cannot be proven safe for this operation: ${error instanceof Error ? error.message : 'invalid cache'}`,
 			);
 		}
 	};
@@ -160,17 +181,19 @@ export function protectedShape(shape: Element, document: Element): void {
 		const cell = cells(style).get(lock),
 			parent = attribute(style, category);
 		if (cell && attribute(cell, 'F') !== 'Inh') {
-			inactive(cell);
+			validateProtection(cell);
 			return cell;
 		}
 		if (cell) {
-			// An Inh zero cache is not evidence: a real parent must prove the effective protection value.
-			inactive(cell);
+			// An Inh cache is not evidence: a real parent must prove the effective protection value.
+			validateProtection(cell);
 			if (parent === undefined || parent === id)
 				fail('EDIT_PROTECTED_CELL', 'Inherited protection has no provable parent.');
 			const inherited = resolve(parent, category, lock, seen);
 			if (!inherited)
-				fail('EDIT_PROTECTED_CELL', 'Inherited protection has no explicit inactive ancestor.');
+				fail('EDIT_PROTECTED_CELL', 'Inherited protection has no explicit provable ancestor.');
+			if (numeric(cell) !== numeric(inherited))
+				fail('EDIT_PROTECTED_CELL', 'Delegated protection cache disagrees with its ancestor.');
 			return inherited;
 		}
 		return parent !== undefined && parent !== id

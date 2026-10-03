@@ -6,6 +6,7 @@ import {
 	type VisioCellKey,
 } from './edit-recalculate.js';
 import type { VisioGeometryEdit } from './edit-commands.js';
+import { emptyMasterMoveProof, type MasterMoveProof } from './edit-master-move.js';
 import {
 	numeric,
 	editableCell,
@@ -86,8 +87,10 @@ export function applyGeometryEdit(
 	document: Element,
 	edit: VisioGeometryEdit,
 	check: () => void,
-	masterMovePins: ReadonlySet<Element> = new Set(),
+	masterMoveProof: MasterMoveProof = emptyMasterMoveProof(),
 ): readonly string[] {
+	const masterMovePins = masterMoveProof.pins,
+		masterDimensions = masterMoveProof.dimensions;
 	check();
 	const root = roots.get(edit.pageId);
 	if (!root) fail('EDIT_TARGET_NOT_FOUND', 'Page does not exist.');
@@ -103,8 +106,9 @@ export function applyGeometryEdit(
 			root,
 			edit.shapeId,
 			edit.type === 'move-shape' ? masterMovePins : new Set(),
+			edit.type === 'move-shape' ? masterDimensions : new Map(),
 		);
-		protectedShape(shape, document);
+		protectedShape(shape, document, edit.type === 'move-shape' ? masterMovePins : new Set());
 		if (edit.type !== 'delete-shape')
 			for (const connections of children(root, 'Connects'))
 				for (const connection of children(connections, 'Connect'))
@@ -127,9 +131,10 @@ export function applyGeometryEdit(
 			return [edit.pageId];
 		}
 		if (edit.type === 'move-shape') {
+			const proven = masterDimensions.get(shape);
 			expected = {
-				width: numeric(local.get('Width')),
-				height: numeric(local.get('Height')),
+				width: numeric(local.get('Width'), proven?.width),
+				height: numeric(local.get('Height'), proven?.height),
 				x: edit.x,
 				y: edit.y,
 			};
@@ -138,10 +143,8 @@ export function applyGeometryEdit(
 				['PinY', edit.y, 'LockMoveY'],
 			] as const) {
 				if (
-					numeric(
-						local.get(name),
-						name === 'PinX' ? numeric(local.get('Width')) / 2 : numeric(local.get('Height')) / 2,
-					) === value
+					numeric(local.get(name), name === 'PinX' ? expected.width / 2 : expected.height / 2) ===
+					value
 				)
 					continue;
 				unlocked(lock);
@@ -190,13 +193,18 @@ export function applyGeometryEdit(
 	}
 	if (!changed.length) return [];
 	const affectedPages = recalculateVisioCells(roots, changed, { check, masterMovePins });
-	const result = cells(
-		admitted(root, edit.shapeId, edit.type === 'move-shape' ? masterMovePins : new Set()),
+	const resultShape = admitted(
+		root,
+		edit.shapeId,
+		edit.type === 'move-shape' ? masterMovePins : new Set(),
+		edit.type === 'move-shape' ? masterDimensions : new Map(),
 	);
+	const result = cells(resultShape),
+		provenResult = masterDimensions.get(resultShape);
 	if (
 		expected &&
-		(numeric(result.get('Width')) !== expected.width ||
-			numeric(result.get('Height')) !== expected.height ||
+		(numeric(result.get('Width'), provenResult?.width) !== expected.width ||
+			numeric(result.get('Height'), provenResult?.height) !== expected.height ||
 			numeric(result.get('PinX'), expected.width / 2) !== expected.x ||
 			numeric(result.get('PinY'), expected.height / 2) !== expected.y)
 	)

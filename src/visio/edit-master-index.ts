@@ -1,5 +1,29 @@
 import { attribute, children } from './sheet.js';
 import { fail } from './package-common.js';
+import { visioFormulaCachedValue } from './formula.js';
+
+function inheritedProtection(node: Element, ancestor: Element | undefined): void {
+	try {
+		const boolean = (cell: Element | undefined) => {
+			if (!cell || cell.hasAttribute('E'))
+				fail('EDIT_PROTECTED_CELL', 'Inherited protection has an unresolved or error cache.');
+			const value = visioFormulaCachedValue(attribute(cell, 'V') ?? '', attribute(cell, 'U'));
+			if (value.unit !== 'scalar' || ![0, 1].includes(value.value))
+				fail('EDIT_PROTECTED_CELL', 'Inherited protection requires scalar boolean caches.');
+			return value.value;
+		};
+		if (boolean(node) !== boolean(ancestor))
+			fail(
+				'EDIT_PROTECTED_CELL',
+				'Delegated master style protection cache disagrees with its ancestor.',
+			);
+	} catch (error) {
+		fail(
+			'EDIT_PROTECTED_CELL',
+			`Inherited master style protection cannot be proven: ${error instanceof Error ? error.message : 'invalid cache'}`,
+		);
+	}
+}
 
 export function masterCells(
 	sheet: Element | undefined,
@@ -84,6 +108,7 @@ export function masterStyleCells(
 	instance: Element | undefined,
 	check: () => void,
 	charge: () => void = () => {},
+	verifyMovementProtection = false,
 ): Map<string, Element> {
 	const styles = new Map<string, Element>();
 	for (const container of children(document, 'StyleSheets'))
@@ -116,6 +141,13 @@ export function masterStyleCells(
 		for (const [name, node] of own) {
 			charge();
 			if (attribute(node, 'F') !== 'Inh') result.set(name, node);
+			else if (
+				verifyMovementProtection &&
+				/^lock(move[xy]|width|height|aspect|delete)$/.test(name)
+			) {
+				charge();
+				inheritedProtection(node, result.get(name));
+			}
 		}
 		return result;
 	};

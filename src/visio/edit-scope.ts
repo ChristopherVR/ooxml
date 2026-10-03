@@ -6,6 +6,7 @@ import { VISIO_NS, VISIO_LEGACY_NS, attribute, children } from './sheet.js';
 import { createVisioDependencyQuery } from './edit-recalculate.js';
 import { executableCellFormula, inertDoubleClickFormula } from './cell-formula.js';
 import { assertVisioMasterIndependence } from './edit-master-scope.js';
+import { emptyMasterMoveProof, type MasterMoveProof } from './edit-master-move.js';
 
 const admitted = (node: Element) =>
 	node.namespaceURI === VISIO_NS || node.namespaceURI === VISIO_LEGACY_NS;
@@ -48,7 +49,7 @@ export async function assertGeometryPackageScope(
 	commands: readonly VisioGeometryEdit[],
 	check: () => void,
 	roots: ReadonlyMap<string, Element>,
-): Promise<ReadonlySet<Element>> {
+): Promise<MasterMoveProof> {
 	const changed = commands.flatMap((command) =>
 		command.type === 'delete-shape'
 			? []
@@ -168,7 +169,7 @@ export async function assertGeometryPackageScope(
 					});
 		}
 	}
-	let movePins: ReadonlySet<Element> = new Set();
+	let movePins = emptyMasterMoveProof();
 	if (hasMasterInstances) {
 		for (const command of commands) {
 			const root = roots.get(command.pageId);
@@ -181,11 +182,11 @@ export async function assertGeometryPackageScope(
 			if (
 				target?.hasAttribute('Master') &&
 				(command.type !== 'move-shape' ||
-					!['PinX', 'PinY', 'Width', 'Height', 'LocPinX', 'LocPinY'].every((name) =>
+					!['PinX', 'PinY'].every((name) =>
 						children(target, 'Cell').some((node) => attribute(node, 'N') === name),
 					))
 			)
-				fail('UNSUPPORTED_GEOMETRY_EDIT', 'Master moves require complete local transform caches.');
+				fail('UNSUPPORTED_GEOMETRY_EDIT', 'Master moves require explicit local rotation pins.');
 		}
 		movePins = await assertVisioMasterIndependence(pkg, roots, commands, check);
 	}

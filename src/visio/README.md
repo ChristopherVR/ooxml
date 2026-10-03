@@ -303,13 +303,29 @@ contracts. Construction is limited to 100,000 work steps and 10,000 bindings;
 dependency traversal has a separate 100,000-step limit and depth 64.
 
 Master-linked top-level 2D instances admit only a narrowly proven move: all six
-transform caches must be explicit local lengths, the two rotation pins must be
-unguarded direct overrides, and effective master/style protection must be proven
-inactive. Inherited pin guards and redirection still refuse. Only the two local
+transform caches must be proven lengths in their effective sources, the two rotation pins must be
+unguarded direct overrides, and effective master/style movement protection must be proven
+inactive. All six protection caches must be explicit scalar booleans with matching
+supported static formulas.
+Selected inherited protection caches must agree with their resolved ancestors,
+including styles selected only by the master's template.
+Width, height, aspect and deletion locks may remain active during these proven
+moves; their cells and the protected dimensions remain
+unchanged. This operation-specific style policy requires the owned master move
+certificate; existing non-master admission policy remains conservative. See Microsoft's
+[LockAspect](https://learn.microsoft.com/en-us/office/client-developer/visio/lockaspect-cell-protection-section),
+[LockWidth](https://learn.microsoft.com/en-us/office/client-developer/visio/lockwidth-cell-protection-section),
+[LockMoveX](https://learn.microsoft.com/en-us/office/client-developer/visio/lockmovex-cell-protection-section)
+and [LockDelete](https://learn.microsoft.com/en-us/office/client-developer/visio/lockdelete-cell-protection-section)
+contracts. Inherited pin guards and redirection still refuse. Only the two local
 pin caches are written; dimensions, geometry, LocPin caches, master attributes
 and definitions remain unchanged. Any other effective or page cache reading a
 changed pin refuses the whole transaction, including transitive dependencies.
 Master-linked resize and deletion remain unsupported.
+Width, Height and LocPin caches may remain inherited from a resolved master/style.
+Both local cache representations and effective inherited sources undergo error/unit
+checks. No missing transform cells are synthesized, and effective dimensions are
+read-only transaction data keyed by the owned instance DOM.
 Move preparation has an aggregate 100,000-work budget charging formula source
 length, evaluation steps and cell/command checks, with deadline checks throughout.
 
@@ -346,8 +362,12 @@ and inverse-move only, with parsed scene translation and unchanged geometry,
 siblings, inherited caches and every untouched ZIP payload verified separately.
 This adds a move candidate without extending the resize/delete corpus counts.
 The separate bounded scan of 71 top-level non-group master-linked instances
-admits only this Pentagon. The other 70 refuse safely: 38 unsupported geometry,
-30 unsupported package dependencies and two unknown dependencies. Successful
+admits twelve moves: this Pentagon, the Router (0/2) in the same POI drawing, bgcolor
+(0/1, 0/2, 0/3), dwg (0/1, 0/2, 0/3, 0/4) and fdo86664 (0/1, 0/2, 0/3). All eleven additional
+inherited-transform instances have hash-pinned pristine move/inverse-move tests.
+The other 59 refuse safely: one unsupported geometry, 54 unsupported package
+dependencies and four unknown dependencies. The two newly admitted shapes retain
+their inherited active LockAspect cells through move and inverse-move tests. Successful
 output preserves geometry and untouched payloads; every scan input stays unchanged.
 Affected master caches, container membership changes and connector routing still
 require explicit supported recalculation before their editing scope can expand.

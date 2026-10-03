@@ -22,14 +22,23 @@ const protection = [
 	'LockDelete',
 ];
 const dimensions = ['PinX', 'PinY', 'Width', 'Height', 'LocPinX', 'LocPinY'];
+export interface MasterMoveProof {
+	pins: ReadonlySet<Element>;
+	dimensions: ReadonlyMap<Element, { width: number; height: number }>;
+}
+export const emptyMasterMoveProof = (): MasterMoveProof => ({
+	pins: new Set(),
+	dimensions: new Map(),
+});
 /** Preparing pin leaves is not authorization: the entire master dependency proof must still succeed. */
 export function prepareMasterMovePins(
 	roots: ReadonlyMap<string, Element>,
 	commands: readonly VisioGeometryEdit[],
 	bindings: readonly MoveBinding[],
 	check: () => void,
-): ReadonlySet<Element> {
+): MasterMoveProof {
 	const result = new Set<Element>();
+	const provenDimensions = new Map<Element, { width: number; height: number }>();
 	let work = 100_000;
 	const charge = (amount = 1) => {
 		check();
@@ -78,26 +87,36 @@ export function prepareMasterMovePins(
 			fail('UNSUPPORTED_GEOMETRY_EDIT', 'A static effective 2D master is required.');
 		const local = cells(instance);
 		for (const name of dimensions) {
-			charge();
-			const node = local.get(name);
-			numeric(node);
-			if (visioFormulaCachedValue('0', attribute(node, 'U') ?? 'DL').unit !== 'length')
-				fail('EDIT_FORMULA_UNIT', 'Master transform caches require length units.');
+			const effective = binding.cells.get(name.toLowerCase())?.node;
+			for (const node of new Set([effective, ...(local.has(name) ? [local.get(name)] : [])])) {
+				charge();
+				numeric(node);
+				if (visioFormulaCachedValue('0', attribute(node, 'U') ?? 'DL').unit !== 'length')
+					fail('EDIT_FORMULA_UNIT', 'Master transform caches require length units.');
+			}
 		}
-		if (numeric(local.get('Width')) <= 0 || numeric(local.get('Height')) <= 0)
-			fail('UNSUPPORTED_GEOMETRY_EDIT', 'Positive explicit local dimensions are required.');
+		const dimension = (name: string) =>
+			numeric(local.get(name) ?? binding.cells.get(name.toLowerCase())?.node);
+		const width = dimension('Width'),
+			height = dimension('Height');
+		if (width <= 0 || height <= 0)
+			fail('UNSUPPORTED_GEOMETRY_EDIT', 'Positive proven effective dimensions are required.');
+		provenDimensions.set(instance, { width, height });
 		for (const name of protection) {
 			charge();
 			const node = binding.cells.get(name.toLowerCase())?.node;
+			const cached = node ? numeric(node) : NaN;
+			const moving = name === 'LockMoveX' || name === 'LockMoveY';
 			if (
 				!node ||
 				visioFormulaCachedValue(attribute(node, 'V') ?? '', attribute(node, 'U')).unit !==
 					'scalar' ||
-				numeric(node) !== 0
+				![0, 1].includes(cached) ||
+				(moving && cached !== 0)
 			)
 				fail(
 					'EDIT_PROTECTED_CELL',
-					'Effective master protection must be explicitly proven inactive.',
+					'Effective master protection must be proven boolean with inactive movement locks.',
 				);
 			const formula = executableCellFormula(attribute(node, 'F'));
 			if (formula) {
@@ -109,13 +128,15 @@ export function prepareMasterMovePins(
 					() => fail('EDIT_PROTECTED_CELL', 'Unexpected protection dependency.'),
 					{ onStep: () => charge() },
 				);
-				if (value.unit !== 'scalar' || value.value !== 0)
-					fail('EDIT_PROTECTED_CELL', 'Effective master protection is active or stale.');
+				if (value.unit !== 'scalar' || value.value !== cached)
+					fail('EDIT_PROTECTED_CELL', 'Effective master protection cache is stale.');
 			}
 		}
 		for (const name of ['PinX', 'PinY']) {
 			charge();
-			const node = local.get(name)!;
+			const node = local.get(name);
+			if (!node)
+				fail('EDIT_PROTECTED_CELL', 'The rotation pin must be an explicit local override.');
 			if (binding.cells.get(name.toLowerCase())?.node !== node)
 				fail('EDIT_PROTECTED_CELL', 'The rotation pin must be an explicit local override.');
 			charge(executableCellFormula(attribute(node, 'F'))?.length ?? 0);
@@ -144,5 +165,5 @@ export function prepareMasterMovePins(
 			if ((charge(), cell.dependencies.some((dependency) => pins.has(dependency))))
 				fail('EDIT_UNSUPPORTED_DEPENDENCY', 'A page cache depends on a master rotation pin.');
 	}
-	return result;
+	return { pins: result, dimensions: provenDimensions };
 }
