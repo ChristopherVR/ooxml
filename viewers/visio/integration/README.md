@@ -1,12 +1,30 @@
-# Pinned core development integration
+# Core and converter integration
 
-`core-revision.txt` pins the published source baseline
+Normal installs use released registry packages: `ooxml-core` 0.13.0 and
+`ooxml-ui` 0.4.1, with exact root pins and npm lock integrity. The seven
+distribution packages require compatible released ranges. No sibling checkout,
+development link or source patch is required for normal builds and checks:
+
+```sh
+npm ci --ignore-scripts
+npm ci --prefix packages/bindings --ignore-scripts
+npm run check
+npm run test:browser
+```
+
+Format conformance remains in the core repository. This viewer tests the
+released API, inert legacy VSD preview, VSDX editing, packed consumers and workers.
+Legacy VSD is read-only here and does not establish native Visio visual fidelity.
+
+## Historical optional core source helper
+
+`core-revision.txt` retains the historical source baseline
 `2c6e66afa7520e882d89498bebd117eb966476ea` from `ChristopherVR/ooxml`.
 That commit already contains the canonical `ooxml-core/visio` area. No historical
 Visio bootstrap patch is needed to reproduce it.
 
-The root dependency remains the portable `file:../ooxml`. `npm run setup:core`
-clones that sibling when absent, checks out the exact pin, verifies the checkout,
+For intentional source development, `npm run setup:core` clones the selected
+checkout when absent, checks out this historical pin, verifies the checkout,
 installs the reviewed `core-package-lock.json` with `npm ci --ignore-scripts`, and
 builds the Visio export. The integration lock was retained after verifying all
 published manifest dependency/workspace fields match and successfully running a
@@ -38,9 +56,9 @@ For an intentionally modified checkout, build it manually instead of running
 setup until its changes have been reviewed. `link:core` changes only the installed
 `node_modules/ooxml-core` symlink. It refuses to overwrite a real directory and
 leaves both package manifests and locks unchanged. Run it again after `npm ci`,
-which restores the manifest's canonical sibling link. Core checks refuse a mismatch
-between the selected checkout and the installed link; packed-consumer and raster
-checks use the same override. Historical 3.5.1 converter audits retain their
+which restores the released registry dependency. Source overrides are local only;
+restore normal registry installation before committing or validating release
+consumers. Historical 3.5.1 converter audits retain their
 original sibling-core dependency for that separate characterization evidence.
 
 When unreleased changes need a reproducible private bridge, run

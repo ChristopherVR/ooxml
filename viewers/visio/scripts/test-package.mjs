@@ -44,7 +44,9 @@ writeFileSync(
 			'ooxml-core': JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8')).dependencies[
 				'ooxml-core'
 			],
-			'ooxml-ui': '0.2.0',
+			'ooxml-ui': JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8')).dependencies[
+				'ooxml-ui'
+			],
 			'@christophervr/visio-viewer': `file:${resolve(temporary, packed.filename)}`,
 		},
 	}),
