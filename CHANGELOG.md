@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.13.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@0.13.0) - 2026-10-03
+
+### Features
+
+- **visio:** Import legacy VSD using the shared binary model (by @ChristopherVR) ([9810823](https://github.com/ChristopherVR/ooxml/commit/9810823ded5e2b1d6268914b7c9bd55a5ba62d0a))
+
 ## [0.12.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@0.12.0) - 2026-10-03
 
 ### Features
