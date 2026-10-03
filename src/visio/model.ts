@@ -185,7 +185,7 @@ export interface VisioPage {
 	layers?: VisioLayer[];
 }
 export interface VisioDocument {
-	format: 'vsdx';
+	format: 'vsdx' | 'vsd';
 	pages: VisioPage[];
 	diagnostics: VisioDiagnostic[];
 }

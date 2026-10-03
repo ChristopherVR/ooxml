@@ -72,37 +72,44 @@ function userEditAtom(offsetLastEdit: number, offsetPersistDirectory: number): U
 
 describe('persist-directory', () => {
 	it('parses packed persist directory entries', () => {
-		const atom = persistDirectoryAtom([
-			[1, [100, 200]],
-			[7, [700]],
-		]);
-		const pairs = parsePersistDirectoryAtom(new DataView(atom.buffer.slice(0)), 0);
+		const stream = new StreamBuilder();
+		const objects = [1, 2, 7].map(() => stream.push(header(RT.Document, 0, 0x0f)));
+		const directory = stream.push(
+			persistDirectoryAtom([
+				[1, [objects[0]!, objects[1]!]],
+				[7, [objects[2]!]],
+			]),
+		);
+		const pairs = parsePersistDirectoryAtom(stream.build(), directory);
 		expect(pairs).toStrictEqual([
-			[1, 100],
-			[2, 200],
-			[7, 700],
+			[1, objects[0]],
+			[2, objects[1]],
+			[7, objects[2]],
 		]);
 	});
 
 	it('walks the user edit chain, newest entries winning', () => {
 		const stream = new StreamBuilder();
-		// Edit 1 (oldest): persist 1 -> 0x10, persist 2 -> 0x20.
-		const dir1 = stream.push(persistDirectoryAtom([[1, [0x10, 0x20]]]));
+		// Real object headers precede each save's directory and UserEditAtom.
+		const document = stream.push(header(RT.Document, 0, 0x0f));
+		const oldObject = stream.push(header(RT.Document, 0, 0x0f));
+		const dir1 = stream.push(persistDirectoryAtom([[1, [document, oldObject]]]));
 		const edit1 = stream.push(userEditAtom(0, dir1));
-		// Edit 2 (newest): persist 2 -> 0x99 (override), persist 3 -> 0x30 (new).
+		const replacement = stream.push(header(RT.Document, 0, 0x0f));
+		const added = stream.push(header(RT.Document, 0, 0x0f));
 		const dir2 = stream.push(
 			persistDirectoryAtom([
-				[2, [0x99]],
-				[3, [0x30]],
+				[2, [replacement]],
+				[3, [added]],
 			]),
 		);
 		const edit2 = stream.push(userEditAtom(edit1, dir2));
 
 		const { currentEdit, directory } = buildPersistDirectory(stream.build(), edit2);
 		expect(currentEdit.docPersistIdRef).toBe(1);
-		expect(directory.get(1)).toBe(0x10);
-		expect(directory.get(2)).toBe(0x99); // newer edit overrides
-		expect(directory.get(3)).toBe(0x30);
+		expect(directory.get(1)).toBe(document);
+		expect(directory.get(2)).toBe(replacement); // newer edit overrides
+		expect(directory.get(3)).toBe(added);
 	});
 
 	it('rejects circular user edit chains', () => {

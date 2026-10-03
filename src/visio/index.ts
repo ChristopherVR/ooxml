@@ -1,7 +1,9 @@
-/** VSDX parsing, normalized scenes and experimental bounded plain-text editing. */
+/** VSDX parsing/editing and conservative legacy VSD preview scenes. */
 export type * from './model.js';
 export type { VisioShapeData, VisioHyperlink, VisioMetadataOptions } from './shape-metadata.js';
 export { parseVsdx, getVisioPageLayers, type ParseVsdxOptions } from './parser.js';
+export { loadVisio } from './load.js';
+export { parseLegacyVsd, type ParseLegacyVsdOptions } from './legacy.js';
 export { VisioPackageError, type VisioPackageLimits } from './package.js';
 export {
 	resolveVisioPageVisibility,

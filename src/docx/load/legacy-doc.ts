@@ -4,9 +4,9 @@ import {
 	readOleDocParagraphs,
 	writeOleDocParagraphEdit,
 } from '@christophervr/ole2/ole-document-doc-editor';
-import { unwrapDocBytes } from '@christophervr/ole2/ole-document-doc-cfb';
 import { readDocFib } from '@christophervr/ole2/ole-document-doc-fib';
 import { parseOle2 } from '@christophervr/ole2/ole2-parser-read';
+import { readCompoundFileStream } from '@christophervr/ole2/ole2-stream-edit';
 
 export class LegacyDocError extends Error {
 	constructor(message: string) {
@@ -69,6 +69,7 @@ function makeModel(paragraphs: string[]): DocumentModel {
 export async function loadLegacyDoc(input: Uint8Array | ArrayBuffer): Promise<LoadedDocument> {
 	const original = toBytes(input);
 	let streams: string[] = [];
+	let wordDocument: Uint8Array | null = null;
 	try {
 		const parsed = parseOle2(
 			original.buffer.slice(
@@ -77,6 +78,7 @@ export async function loadLegacyDoc(input: Uint8Array | ArrayBuffer): Promise<Lo
 			) as ArrayBuffer,
 		);
 		streams = parsed.entries.map((entry) => entry.name);
+		wordDocument = readCompoundFileStream(original, ['WordDocument']) ?? null;
 	} catch (error) {
 		throw new LegacyDocError(
 			`Invalid or truncated OLE compound file: ${error instanceof Error ? error.message : 'parse failed'}`,
@@ -87,9 +89,15 @@ export async function loadLegacyDoc(input: Uint8Array | ArrayBuffer): Promise<Lo
 			'This is a password-protected .docx, not a legacy .doc: open it with loadDocument and its password.',
 		);
 	}
-	const cfb = unwrapDocBytes(original);
-	if (cfb && (readDocFib(cfb.wordDocBytes).flags1 & (1 << 8)) !== 0) {
-		throw new LegacyDocError('Encrypted legacy Word documents are not supported.');
+	if (wordDocument) {
+		try {
+			readDocFib(wordDocument);
+		} catch (error) {
+			// The shared FIB reader rejects encryption before stream unwrapping.
+			if (error instanceof Error && error.message === 'Encrypted or obfuscated Word document')
+				throw new LegacyDocError('Encrypted legacy Word documents are not supported.');
+			// Other malformed FIBs retain the existing unsupported-document diagnostic below.
+		}
 	}
 	const paragraphs = readOleDocParagraphs(original);
 	if (!paragraphs) {
