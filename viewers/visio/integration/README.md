@@ -1,7 +1,7 @@
 # Core and converter integration
 
 Normal installs use released registry packages: `ooxml-core` 0.14.1 and
-`ooxml-ui` 0.10.2, with exact root pins and npm lock integrity. The seven
+`ooxml-ui` 0.13.0, with exact root pins and npm lock integrity. The seven
 distribution packages require compatible released ranges. No sibling checkout,
 development link or source patch is required for normal builds and checks:
 
