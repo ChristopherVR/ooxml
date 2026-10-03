@@ -38,7 +38,8 @@ describe('design tokens', () => {
 		const offenders: string[] = [];
 		for (const tag of OFFICE_UI_TAGS) {
 			const raw = outsideTokens(shadowCss(tag)).match(
-				/#[0-9a-f]{3,8}\b|(?<![\w.-])\d*\.?\d+px\b|rgba?\([^)]*\)/gi,
+				// Negative lengths count too: a leading minus is part of the raw value.
+				/#[0-9a-f]{3,8}\b|(?<![\w.])-?\d*\.?\d+px\b|rgba?\([^)]*\)/gi,
 			);
 			if (raw) offenders.push(`${tag}: ${[...new Set(raw)].join(', ')}`);
 		}
