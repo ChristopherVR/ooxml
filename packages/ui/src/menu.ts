@@ -117,7 +117,7 @@ export const defineMenuItem = definer('office-ui-menu-item', () => {
 /**
  * Dropdown command with a menu of `office-ui-menu-item` children (Office's Find, Layers,
  * Align). With a `command` attribute it is a split button: the main part emits that command
- * and the caret opens the menu. Attributes: `label`, `icon`, `command`, `variant="stacked"`,
+ * and the caret opens the menu. Attributes: `label`, `icon`, `command`, `variant="stacked"`, `icon-only`,
  * `disabled`, `title`, `keyshortcuts`. The menu uses the top layer (`popover`) so ribbon
  * overflow never clips it. Keyboard: Enter, Space or ArrowDown open; arrows, Home and End move;
  * Escape and Tab close; focus returns to the trigger. Choosing an item closes the menu; its
@@ -125,7 +125,15 @@ export const defineMenuItem = definer('office-ui-menu-item', () => {
  */
 export const defineMenuButton = definer('office-ui-menu-button', () => {
 	class OfficeUiMenuButton extends HTMLElement {
-		static observedAttributes = ['label', 'icon', 'command', 'disabled', 'title', 'keyshortcuts'];
+		static observedAttributes = [
+			'label',
+			'icon',
+			'command',
+			'disabled',
+			'title',
+			'keyshortcuts',
+			'icon-only',
+		];
 		private readonly wrap: HTMLDivElement;
 		private readonly main: HTMLButtonElement;
 		private readonly caret: HTMLButtonElement;
@@ -228,7 +236,23 @@ export const defineMenuButton = definer('office-ui-menu-button', () => {
 				this.ownerDocument.addEventListener('pointerdown', this.outside, true);
 			}
 			this.setExpanded(true);
+			this.place(anchor);
 			this.items()[focusIndex]?.focus();
+		}
+		/** Keep the open menu inside the viewport: flip left of the trigger's right edge if needed. */
+		private place(anchor: DOMRect): void {
+			const view = this.ownerDocument.defaultView;
+			const width = this.panel.offsetWidth;
+			const height = this.panel.offsetHeight;
+			if (!view || !width) return;
+			const maxLeft = view.innerWidth - width - 4;
+			const left = anchor.left > maxLeft ? Math.max(4, anchor.right - width) : anchor.left;
+			const top =
+				anchor.bottom + 2 + height > view.innerHeight && anchor.top - height - 2 > 0
+					? anchor.top - height - 2
+					: anchor.bottom + 2;
+			this.panel.style.left = `${Math.round(Math.min(left, Math.max(4, maxLeft)))}px`;
+			this.panel.style.top = `${Math.round(top)}px`;
 		}
 		private hide(restoreFocus: boolean): void {
 			if (!this.open) return;
@@ -274,11 +298,22 @@ export const defineMenuButton = definer('office-ui-menu-button', () => {
 		private sync(): void {
 			const label = this.getAttribute('label') ?? '';
 			const split = this.hasAttribute('command');
+			const iconOnly = this.hasAttribute('icon-only');
 			this.text.textContent = label;
+			this.text.hidden = iconOnly;
+			if (iconOnly) this.main.setAttribute('aria-label', label);
+			else this.main.removeAttribute('aria-label');
 			const title = this.getAttribute('title') ?? label;
 			this.main.title = title;
 			this.caret.title = split ? `${label} options` : title;
-			this.caret.setAttribute('aria-label', split ? `${label} options` : label);
+			// Without a split command the caret is decoration on one control, not a second button.
+			if (split) {
+				this.caret.setAttribute('aria-label', `${label} options`);
+				this.caret.removeAttribute('aria-hidden');
+			} else {
+				this.caret.removeAttribute('aria-label');
+				this.caret.setAttribute('aria-hidden', 'true');
+			}
 			if (split) {
 				this.main.removeAttribute('aria-haspopup');
 				this.main.removeAttribute('aria-expanded');

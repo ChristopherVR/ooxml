@@ -34,6 +34,8 @@ describe('office-ui-menu-button', () => {
 		const seen = commands();
 		const main = el.shadowRoot!.querySelector<HTMLButtonElement>('.main')!;
 		expect(main.getAttribute('aria-haspopup')).toBe('menu');
+		// One control, one accessible name: the caret is decorative here.
+		expect(el.shadowRoot!.querySelector('.caret')!.getAttribute('aria-hidden')).toBe('true');
 		main.click();
 		expect(el.open).toBe(true);
 		expect(main.getAttribute('aria-expanded')).toBe('true');
@@ -62,6 +64,13 @@ describe('office-ui-menu-button', () => {
 		expect(el.open).toBe(true);
 		key(el.querySelector('office-ui-menu-item')!, 'Escape');
 		expect(el.open).toBe(false);
+	});
+
+	it('keeps an accessible name when icon-only', () => {
+		const el = make<MenuButton>(markup(' icon-only command="layers-pane"'));
+		const main = el.shadowRoot!.querySelector<HTMLButtonElement>('.main')!;
+		expect(main.getAttribute('aria-label')).toBe('Layers');
+		expect(main.querySelector('span')!.hidden).toBe(true);
 	});
 
 	it('stays closed and silent when disabled', () => {
