@@ -1,9 +1,5 @@
 # Vue
 
-::: warning Not published to npm yet
-Nothing has been released yet, so there is nothing to `npm install` today. Build from the repository (`bun install`, `bun run demo`). The imports below are the intended API of the self-contained `xlsx-vue-viewer` package; it needs only `vue` next to it.
-:::
-
 The Vue 3 adapter is a component with the shared props and kebab-case events.
 
 ```vue

@@ -1,9 +1,5 @@
 # Getting started
 
-::: warning Not published to npm yet
-Nothing has been released yet, so there is nothing to `npm install` today. Build from the repository; the import paths on this site are the intended API of the packages the release workflow will publish.
-:::
-
 ## Run the demo from source
 
 You need [Bun](https://bun.sh/) 1.3 and Node.js 24.

@@ -1,9 +1,5 @@
 # Vanilla JavaScript
 
-::: warning Not published to npm yet
-Nothing has been released yet, so there is nothing to `npm install` today. Build from the repository (`bun install`, `bun run demo`). The imports below are the intended API of the self-contained `xlsx-vanilla-viewer` package; it has no framework peer.
-:::
-
 No framework: `mountEditor` creates the element in a container and returns the [handle](/bindings#handle) plus `update(options)` and `destroy()`.
 
 ```ts

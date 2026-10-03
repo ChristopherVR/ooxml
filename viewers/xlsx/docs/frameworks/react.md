@@ -1,9 +1,5 @@
 # React
 
-::: warning Not published to npm yet
-Nothing has been released yet, so there is nothing to `npm install` today. Build from the repository (`bun install`, `bun run demo`). The imports below are the intended API of the self-contained `@christophervr/xlsx-react-viewer` package; it needs only `react` next to it.
-:::
-
 The React adapter mounts the shared `<xlsx-editor>` element and forwards workbook updates through `onWorkbookChange`.
 
 ```tsx

@@ -1,9 +1,5 @@
 # Framework bindings
 
-::: warning Not published to npm yet
-Nothing has been released yet, so there is nothing to `npm install` today. Build from the repository (`bun install`, `bun run demo`). Each framework has its own self-contained package: `@christophervr/xlsx-react-viewer`, `xlsx-vue-viewer`, `xlsx-angular-viewer`, `xlsx-svelte-viewer`, `xlsx-solid-viewer` and `xlsx-vanilla-viewer`. Use one editor package per application.
-:::
-
 All bindings mount `<xlsx-editor>` through the same `mountEditor` function in `packages/bindings/src/index.ts`, so every framework gets identical semantics.
 
 ## Props

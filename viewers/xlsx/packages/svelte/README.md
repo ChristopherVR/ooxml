@@ -2,8 +2,6 @@
 
 The Excel spreadsheet editor for Svelte 5. One self-contained package: the `<xlsx-editor>` web component, the legacy Excel 97-2003 `.xls` reader and the Svelte 5 adapter are bundled in, and the workbook model (`@christophervr/xlsx-core`: `createWorkbook`, `loadWorkbook`, `saveXlsx`, ...) installs with it and is re-exported, so one install and one import path are all an application needs.
 
-> **Not published to npm yet.** Build from the repository to try it; the commands below are the intended API.
-
 ```sh
 npm install xlsx-svelte-viewer svelte
 ```

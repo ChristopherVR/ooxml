@@ -1,9 +1,5 @@
 # Angular
 
-::: warning Not published to npm yet
-Nothing has been released yet, so there is nothing to `npm install` today. Build from the repository (`bun install`, `bun run demo`). The imports below are the intended API of the self-contained `xlsx-angular-viewer` package; it needs only `@angular/core` next to it.
-:::
-
 The Angular adapter is a standalone component (`spreadsheet-editor`) with inputs for the shared props and camelCase outputs.
 
 ```ts

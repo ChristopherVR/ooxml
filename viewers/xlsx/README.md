@@ -16,8 +16,6 @@ An early implementation: not Microsoft Excel parity, and not lossless export.
 
 </div>
 
-> **Not published to npm yet.** Nothing has been released or tagged. Build from this repository to try the editor; the install commands and import paths below are the intended API of the packages the release workflow will publish.
-
 ## Why xlsx-viewer?
 
 - **One editor, every framework.** An `<xlsx-editor>` web component owns the grid, ribbon, formula bar, sheet tabs, selection, commands, history and styling. React, Vue, Angular, Svelte, Solid and vanilla adapters only handle lifecycle and events.
@@ -50,7 +48,7 @@ bun install
 bun run demo   # vanilla demo; add ?framework=react|vue|angular|svelte|solid
 ```
 
-### 2. Mount the editor (intended API)
+### 2. Mount the editor
 
 Install one self-contained editor package for your framework, for example `npm install @christophervr/xlsx-react-viewer react`. Each one bundles the editor, brings the workbook model (`@christophervr/xlsx-core`) with it and re-exports it, so a single install and a single import path are all an application needs. Install `@christophervr/xlsx-core` on its own only for headless use.
 
@@ -150,7 +148,7 @@ See the [bindings guide](https://christophervr.github.io/xlsx-viewer/bindings) f
 
 ## Packages
 
-Seven packages are published (nothing has been released yet), each versioned independently:
+Seven packages are published on npm, each versioned independently:
 
 | Package                            | What it is                                                                                                    |
 | ---------------------------------- | ------------------------------------------------------------------------------------------------------------- |
