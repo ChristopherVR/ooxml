@@ -14,7 +14,11 @@ function setup() {
 	mounted.push(viewer);
 	const root = viewer.element.shadowRoot!;
 	const button = (selector: string) => root.querySelector<HTMLButtonElement>(selector)!;
-	return { viewer, root, button };
+	/** The shared ribbon renders File and the tabs in its own shadow root. */
+	const ribbonRoot = () => root.querySelector('office-ui-ribbon')!.shadowRoot!;
+	const tab = (id: string) =>
+		ribbonRoot().querySelector<HTMLButtonElement>(`[role="tab"][data-tab="${id}"]`)!;
+	return { viewer, root, button, ribbonRoot, tab };
 }
 describe('independent shared-chrome regression review', () => {
 	it('inserts hostile page names as text, including updated document replacements', () => {
@@ -55,24 +59,18 @@ describe('independent shared-chrome regression review', () => {
 		expect(step('Previous page').disabled).toBe(true);
 	});
 	it('moves tab focus and panel visibility together for keyboard navigation', () => {
-		const { root, button } = setup();
-		button('[data-tab="home"]').focus();
-		button('[data-tab="home"]').dispatchEvent(
-			new KeyboardEvent('keydown', { key: 'End', bubbles: true }),
-		);
+		const { root, ribbonRoot, tab } = setup();
+		tab('home').focus();
+		tab('home').dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }));
 		// Help is Visio's last tab; ArrowLeft steps back to View.
-		expect(button('[data-tab="help"]').getAttribute('aria-selected')).toBe('true');
-		button('[data-tab="help"]').dispatchEvent(
-			new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }),
-		);
-		expect(root.activeElement).toBe(button('[data-tab="view"]'));
-		expect(button('[data-tab="view"]').getAttribute('aria-selected')).toBe('true');
+		expect(tab('help').getAttribute('aria-selected')).toBe('true');
+		tab('help').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+		expect(ribbonRoot().activeElement).toBe(tab('view'));
+		expect(tab('view').getAttribute('aria-selected')).toBe('true');
 		expect(root.querySelector<HTMLElement>('#home-panel')!.hidden).toBe(true);
 		expect(root.querySelector<HTMLElement>('#view-panel')!.hidden).toBe(false);
-		button('[data-tab="view"]').dispatchEvent(
-			new KeyboardEvent('keydown', { key: 'Home', bubbles: true }),
-		);
-		expect(root.activeElement).toBe(button('[data-tab="home"]'));
+		tab('view').dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true }));
+		expect(ribbonRoot().activeElement).toBe(tab('home'));
 	});
 	it('preserves zoom and document while toggling panes and toolbar', () => {
 		const { viewer, root, button } = setup();

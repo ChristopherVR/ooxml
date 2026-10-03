@@ -75,11 +75,11 @@ test('opening screen supports browse cancellation, rejected input and repeated s
 	await expect(page.locator('visio-viewer .viewport>svg')).toBeVisible();
 	// Visio's File backstage: Escape returns to the drawing with focus on File.
 	const viewer = page.locator('visio-viewer');
-	await viewer.locator('.file-tab').click();
+	await viewer.locator('office-ui-ribbon .file').click();
 	await expect(viewer.locator('.backstage')).toBeVisible();
 	await page.keyboard.press('Escape');
 	await expect(viewer.locator('.backstage')).toBeHidden();
-	await expect(viewer.locator('.file-tab')).toBeFocused();
+	await expect(viewer.locator('office-ui-ribbon .file')).toBeFocused();
 	await loadSampleTemplate(viewer);
 	await expect(viewer.locator('.backstage')).toBeHidden();
 });

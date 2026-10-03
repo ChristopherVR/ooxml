@@ -12,7 +12,7 @@ import { createRibbon } from './ribbon.js';
 import { applyKeyTips } from './ribbon-keytips.js';
 import { attachKeyTips } from 'ooxml-ui/controls';
 import { createPageTabs, createStatusBar } from './status-bar.js';
-import { createFindBar, wireFindBar } from './viewer-search.js';
+import { createFindBar, renderFindBar, wireFindBar, type FindBar } from './viewer-search.js';
 import { fitZoom } from './viewer-fit.js';
 import { createShapesStrip, createShapesWindow } from './shapes-window.js';
 import { createBackstage, type BackstagePage } from './backstage.js';
@@ -25,7 +25,6 @@ import { ViewerShare } from './viewer-share.js';
 import { wireStencil } from './viewer-stencil.js';
 import { createRulers, type Rulers } from './viewer-ruler.js';
 import { ViewerEditControls } from './viewer-edit-controls.js';
-import { searchControls, renderSearchControls, type SearchControls } from './viewer-search.js';
 import { ViewerChrome, viewerChromeTemplate } from './viewer-chrome.js';
 import { ViewerCanvas } from './viewer-canvas.js';
 import { ViewerCommands } from './viewer-commands.js';
@@ -58,12 +57,11 @@ export class VisioViewerElement extends BaseElement {
 	#backstage: ViewerBackstage;
 	#fileName = '';
 	#loadToken = 0;
-	#findBar: HTMLElement;
+	#findBar: FindBar;
 	#status: HTMLSpanElement;
 	#diagnostics: HTMLSpanElement;
 	#toolbar: HTMLDivElement;
 	#chrome: ViewerChrome;
-	#search: SearchControls;
 	#edit: ViewerEditControls;
 	#layers: HTMLDetailsElement;
 	#notes: HTMLUListElement;
@@ -104,7 +102,6 @@ export class VisioViewerElement extends BaseElement {
 		this.#status = this.#root.querySelector('[data-status]')!;
 		this.#diagnostics = this.#root.querySelector('[data-diagnostics]')!;
 		this.#toolbar = this.#root.querySelector('.toolbar')!;
-		this.#search = searchControls(this.#root);
 		this.#edit = new ViewerEditControls(this.#root, this.controller);
 		this.#layers = this.#root.querySelector('.layer-controls')!;
 		this.#notes = this.#root.querySelector('.notes ul')!;
@@ -129,9 +126,7 @@ export class VisioViewerElement extends BaseElement {
 			togglePanZoom: () => this.#panZoom.toggle(),
 			focusSearch: () => {
 				this.#chrome.closeCompactTools();
-				this.#findBar.hidden = false;
-				this.#search.input.focus();
-				this.#search.input.select();
+				this.#findBar.show();
 			},
 			announce: (message) => {
 				this.#announcement = message;
@@ -346,7 +341,7 @@ export class VisioViewerElement extends BaseElement {
 				this.#status.textContent = message;
 			},
 		);
-		const disposeFind = wireFindBar(this.#findBar, this.#search.input, () =>
+		const disposeFind = wireFindBar(this.#findBar, this.controller, () =>
 			this.#viewport.focus({ preventScroll: true }),
 		);
 		const disposeEdit = this.#edit.wire();
@@ -354,9 +349,7 @@ export class VisioViewerElement extends BaseElement {
 		const disposeInputs = wireViewerInputs(
 			{
 				viewport: this.#viewport,
-				commandRoot: this.#root,
 				zoomSlider: this.#zoomSlider,
-				searchInput: this.#search.input,
 			},
 			this.controller,
 			(mode) => this.#fit(mode),
@@ -397,7 +390,7 @@ export class VisioViewerElement extends BaseElement {
 		);
 		for (const button of this.#root.querySelectorAll<HTMLButtonElement>('[data-action]'))
 			button.disabled = !page;
-		renderSearchControls(this.#search, state);
+		renderFindBar(this.#findBar, state);
 		this.#edit.render(state);
 		if (changed) renderLayerControls(this.#layers, state);
 		else

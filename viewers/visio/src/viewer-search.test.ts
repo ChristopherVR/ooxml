@@ -9,15 +9,17 @@ function mounted(connected = true) {
 	if (connected) document.body.append(host);
 	const viewer = mountViewer(host, { document: demoDocument });
 	const root = viewer.element.shadowRoot!;
-	const input = root.querySelector<HTMLInputElement>('input[type="search"]')!;
-	const status = root.querySelector<HTMLElement>('#search-status')!;
-	const next = root.querySelector<HTMLButtonElement>('[data-action="search-next"]')!;
-	const previous = root.querySelector<HTMLButtonElement>('[data-action="search-previous"]')!;
+	// The shared office-ui-find-bar owns the field, the steps and the live status.
+	const bar = root.querySelector('office-ui-find-bar')!.shadowRoot!;
+	const input = bar.querySelector<HTMLInputElement>('input[type="search"]')!;
+	const status = bar.querySelector<HTMLElement>('[role="status"]')!;
+	const next = bar.querySelector<HTMLButtonElement>('[data-action="next"]')!;
+	const previous = bar.querySelector<HTMLButtonElement>('[data-action="previous"]')!;
 	const query = (value: string) => {
 		input.value = value;
 		input.dispatchEvent(new Event('input', { bubbles: true }));
 	};
-	return { host, viewer, root, input, status, next, previous, query };
+	return { host, viewer, root, bar, input, status, next, previous, query };
 }
 describe('accessible shared document text search UI', () => {
 	it('searches imported canonical text through the local parser and shared renderer', async () => {
@@ -33,7 +35,7 @@ describe('accessible shared document text search UI', () => {
 		viewer.destroy();
 	});
 	it('labels bounded input, navigates matching shapes, and retains keyboard focus', () => {
-		const { viewer, input, status, next, previous, query, root } = mounted();
+		const { viewer, input, status, next, previous, query, root, bar } = mounted();
 		expect(input.getAttribute('aria-label')).toBe('Search diagram text');
 		expect(input.maxLength).toBe(256);
 		expect(input.getAttribute('aria-describedby')).toBe(status.id);
@@ -49,7 +51,7 @@ describe('accessible shared document text search UI', () => {
 		expect(viewer.element.pageIndex).toBe(1);
 		expect(viewer.controller.state.selectedShape?.id).toBe('a1');
 		expect(status.textContent).toBe('1 of 2 matching shapes');
-		expect(root.activeElement).toBe(input);
+		expect(bar.activeElement).toBe(input);
 		expect(root.querySelector('[data-selected="true"]')?.getAttribute('data-shape-id')).toBe('a1');
 		input.dispatchEvent(
 			new KeyboardEvent('keydown', { key: 'Enter', shiftKey: true, bubbles: true }),

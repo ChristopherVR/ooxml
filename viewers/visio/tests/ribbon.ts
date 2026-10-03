@@ -45,7 +45,7 @@ export async function fileBackstage(
 		| 'options' = 'info',
 ): Promise<void> {
 	const backstage = viewer.locator('.backstage');
-	if (!(await backstage.isVisible())) await viewer.locator('.file-tab').click();
+	if (!(await backstage.isVisible())) await viewer.locator('office-ui-ribbon .file').click();
 	await viewer.locator(`[data-backstage-item="${item}"]`).click();
 }
 

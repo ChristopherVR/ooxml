@@ -21,9 +21,13 @@ test('shared editor matches compact chrome geometry and keeps all navigation fun
 	const tabs = await viewer.locator('office-ui-tab-strip').boundingBox();
 	expect(tabs?.height).toBeGreaterThanOrEqual(26);
 	expect(tabs?.height).toBeLessThanOrEqual(36);
-	expect((await viewer.locator('.ribbon-tabs').boundingBox())?.height).toBe(36);
-	expect((await viewer.locator('.status').boundingBox())?.height).toBeGreaterThanOrEqual(28);
-	expect((await viewer.locator('.status').boundingBox())?.height).toBeLessThanOrEqual(36);
+	expect((await viewer.locator('office-ui-ribbon .head').boundingBox())?.height).toBe(36);
+	expect(
+		(await viewer.locator('office-ui-status-bar.status').boundingBox())?.height,
+	).toBeGreaterThanOrEqual(28);
+	expect(
+		(await viewer.locator('office-ui-status-bar.status').boundingBox())?.height,
+	).toBeLessThanOrEqual(36);
 	// Visio's All pages list beside the page tabs.
 	await viewer.getByRole('button', { name: 'All', exact: true }).click();
 	await viewer.locator('[data-menu="all-pages"] office-ui-menu-item[label="Architecture"]').click();

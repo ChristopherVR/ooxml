@@ -17,10 +17,7 @@ function ribbonCommands(root: ShadowRoot): OfficeSearchCommand[] {
 	const commands: OfficeSearchCommand[] = [];
 	const context = (node: Element) => {
 		const group = node.closest('office-ui-ribbon-group')?.getAttribute('label') ?? '';
-		const panel = node.closest('.ribbon-content');
-		const tab = panel
-			? (root.querySelector(`[aria-controls="${panel.id}"]`)?.textContent ?? '')
-			: '';
+		const tab = node.closest<HTMLElement>('[data-ribbon-tab]')?.dataset.label ?? '';
 		return [tab, group].filter(Boolean).join(' › ');
 	};
 	for (const node of root.querySelectorAll<HTMLElement>('.toolbar [command]')) {

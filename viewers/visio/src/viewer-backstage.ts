@@ -1,6 +1,6 @@
 import type { ViewerState } from './controller.js';
 import type { VsdxSource } from './contract.js';
-import type { BackstagePage } from './backstage.js';
+import { backstageItems, type BackstagePage } from './backstage.js';
 
 /** What the backstage needs from the element; every action delegates to existing APIs. */
 export interface BackstageHost {
@@ -21,63 +21,76 @@ export interface BackstageHost {
  * Visio's File backstage: opened from the File tab, closed with Back or Escape (focus returns to
  * File). Open, Save, Save As, Export, Print and Close are real; the rest is shown disabled.
  */
+type Backstage = HTMLElement & {
+	items: unknown;
+	open: boolean;
+	show(page?: string): void;
+	close(): void;
+};
+type Ribbon = HTMLElement & { focusFile(): void };
+
 export class ViewerBackstage {
-	readonly #root: HTMLElement;
-	readonly #file: HTMLButtonElement;
+	readonly #root: Backstage;
+	readonly #ribbon: Ribbon;
 	readonly #input: HTMLInputElement;
 	#state: ViewerState | undefined;
+	#items = '';
 	#urls = new Set<string>();
 	constructor(private readonly host: BackstageHost) {
-		this.#root = host.root.querySelector('.backstage')!;
-		this.#file = host.root.querySelector('.file-tab')!;
+		this.#root = host.root.querySelector<Backstage>('office-ui-backstage')!;
+		this.#ribbon = host.root.querySelector<Ribbon>('office-ui-ribbon')!;
 		this.#input = this.#root.querySelector('.backstage-file-input')!;
 	}
 	get open(): boolean {
-		return !this.#root.hidden;
+		return this.#root.open;
 	}
 	show(page: BackstagePage = 'info'): void {
-		this.#root.hidden = false;
-		this.#file.setAttribute('aria-expanded', 'true');
-		this.#select(page);
-		this.#root.querySelector<HTMLElement>(`[data-backstage-item="${page}"]`)?.focus();
+		this.#ribbon.setAttribute('file-expanded', 'true');
+		this.#root.show(page);
+		if (page === 'print') this.#preview();
 	}
 	hide(): void {
-		if (!this.open) return;
-		this.#root.hidden = true;
-		this.#file.setAttribute('aria-expanded', 'false');
-		this.#file.focus();
+		this.#root.close();
 	}
 	wire(): () => void {
 		const Abort = this.host.root.ownerDocument.defaultView?.AbortController ?? AbortController;
 		const events = new Abort();
 		const options = { signal: events.signal };
-		this.#file.addEventListener('click', () => (this.open ? this.hide() : this.show()), options);
+		this.#ribbon.addEventListener(
+			'office-ribbon-file',
+			() => (this.open ? this.hide() : this.show()),
+			options,
+		);
 		this.#root.addEventListener(
-			'click',
+			'office-backstage-select',
 			(event) => {
-				const target = event.target as Element;
-				if (target.closest?.('[data-backstage="back"]')) return this.hide();
-				const item = target.closest?.<HTMLElement>('[data-backstage-item]')?.dataset.backstageItem;
-				if (item === 'save') return this.#download();
-				if (item === 'close') return this.#close();
-				if (item === 'options') {
+				const id = (event as CustomEvent<{ id: string }>).detail.id;
+				if (id === 'save') this.#download();
+				else if (id === 'close') this.#close();
+				else if (id === 'options') {
 					// Visio opens its Options dialog over the drawing, not a backstage page.
 					this.hide();
-					return this.host.showOptions();
-				}
-				if (item) return this.#select(item as BackstagePage);
-				const action = target.closest?.<HTMLButtonElement>('[data-backstage-action]');
-				if (action && !action.disabled) this.#run(action.dataset.backstageAction!);
+					this.host.showOptions();
+				} else if (id === 'print') this.#preview();
+			},
+			options,
+		);
+		// Back, Escape or a command closed the backstage: return focus to File.
+		this.#root.addEventListener(
+			'office-backstage-close',
+			() => {
+				this.#ribbon.setAttribute('file-expanded', 'false');
+				this.#ribbon.focusFile();
 			},
 			options,
 		);
 		this.#root.addEventListener(
-			'keydown',
+			'click',
 			(event) => {
-				if (event.key !== 'Escape') return;
-				event.preventDefault();
-				event.stopPropagation();
-				this.hide();
+				const action = (event.target as Element).closest?.<HTMLButtonElement>(
+					'[data-backstage-action]',
+				);
+				if (action && !action.disabled) this.#run(action.dataset.backstageAction!);
 			},
 			options,
 		);
@@ -101,13 +114,6 @@ export class ViewerBackstage {
 			for (const url of this.#urls) URL.revokeObjectURL(url);
 			this.#urls.clear();
 		};
-	}
-	#select(page: BackstagePage): void {
-		for (const item of this.#root.querySelectorAll<HTMLElement>('[data-backstage-item]'))
-			item.toggleAttribute('aria-current', item.dataset.backstageItem === page);
-		for (const section of this.#root.querySelectorAll<HTMLElement>('[data-backstage-page]'))
-			section.hidden = section.dataset.backstagePage !== page;
-		if (page === 'print') this.#preview();
 	}
 	#run(action: string): void {
 		if (action === 'open') this.#input.click();
@@ -167,14 +173,13 @@ export class ViewerBackstage {
 			this.host.announce(error instanceof Error ? error.message : String(error));
 		}
 	}
-	/** Preview is a DOM clone of the rendered page, never document markup parsed from text. */
+	/** The shared print preview shows an inert clone of the rendered page, never parsed markup. */
 	#preview(): void {
-		const target = this.#root.querySelector<HTMLElement>('.backstage-print-preview')!;
+		const preview = this.#root.querySelector<HTMLElement & { pages: Node[] }>(
+			'office-ui-print-preview',
+		)!;
 		const paper = this.host.viewport.querySelector('svg.paper');
-		target.replaceChildren(...(paper ? [paper.cloneNode(true)] : []));
-		const clone = target.querySelector('svg');
-		clone?.removeAttribute('style');
-		clone?.querySelectorAll('[tabindex]').forEach((node) => node.removeAttribute('tabindex'));
+		preview.pages = paper ? [paper] : [];
 	}
 	#print(): void {
 		const doc = this.host.root.ownerDocument;
@@ -234,11 +239,21 @@ export class ViewerBackstage {
 			state.document?.format === 'vsd'
 				? 'Legacy VSD drawings are read only here.'
 				: 'Open a .vsdx file to save a copy.';
-		for (const node of this.#root.querySelectorAll<HTMLButtonElement>(
-			'[data-backstage-action="download"], [data-backstage-item="save"]',
-		)) {
-			node.disabled = !state.edit.sourceAvailable || busy;
-			node.title = node.disabled ? saveReason : '';
+		const saveDisabled = !state.edit.sourceAvailable || busy;
+		const download = this.#root.querySelector<HTMLButtonElement>(
+			'[data-backstage-action="download"]',
+		)!;
+		download.disabled = saveDisabled;
+		download.title = saveDisabled ? saveReason : '';
+		// Rebuild the navigation only when Save or Close change, so focus stays put.
+		const items = backstageItems({
+			save: { disabled: saveDisabled, ...(saveDisabled ? { title: saveReason } : {}) },
+			close: { disabled: !state.document },
+		});
+		const key = JSON.stringify(items);
+		if (key !== this.#items) {
+			this.#items = key;
+			this.#root.items = items;
 		}
 		for (const node of this.#root.querySelectorAll<HTMLButtonElement>(
 			'[data-backstage-action="export-svg"], [data-backstage-action="print"]',
@@ -246,7 +261,5 @@ export class ViewerBackstage {
 			node.disabled = !page || busy;
 		this.#root.querySelector<HTMLButtonElement>('[data-backstage-action="notes"]')!.disabled =
 			notes === 0;
-		this.#root.querySelector<HTMLButtonElement>('[data-backstage-item="close"]')!.disabled =
-			!state.document;
 	}
 }

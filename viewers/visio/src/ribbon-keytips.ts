@@ -105,13 +105,14 @@ function generated(label: string, used: Set<string>, singles: Set<string>): stri
 
 /** Annotate the ribbon for KeyTips. Labels and ids are static application strings. */
 export function applyKeyTips(toolbar: HTMLElement): void {
-	toolbar.querySelector<HTMLElement>('.file-tab')!.dataset.keytip = 'F';
+	// File and the tabs live in the shared ribbon, which copies these onto its own buttons.
+	toolbar.setAttribute('file-keytip', 'F');
 	toolbar.querySelector<HTMLElement>('.tell-me')!.dataset.keytip = 'Q';
 	toolbar.querySelector<HTMLElement>('.qat [command="undo"]')!.dataset.keytip = '1';
 	toolbar.querySelector<HTMLElement>('.qat [command="redo"]')!.dataset.keytip = '2';
-	for (const tab of toolbar.querySelectorAll<HTMLElement>('[data-tab]')) {
-		tab.dataset.keytip = TABS[tab.dataset.tab!] ?? tab.dataset.tab!.slice(0, 1).toUpperCase();
-		tab.dataset.keytipPanel = `${tab.dataset.tab}-panel`;
+	for (const panel of toolbar.querySelectorAll<HTMLElement>('[data-ribbon-tab]')) {
+		const tab = panel.dataset.ribbonTab!;
+		panel.dataset.tabKeytip = TABS[tab] ?? tab.slice(0, 1).toUpperCase();
 	}
 	for (const panel of toolbar.querySelectorAll<HTMLElement>('.ribbon-content')) {
 		panel.dataset.keytipLevel = '';

@@ -19,10 +19,13 @@ not a description of the current beta.
 
 Any UI control another Office product could use belongs in `ooxml-ui`
 (`packages/ui` in `ooxml`) as an `office-ui-*` web component, never as a
-Visio-only copy. Examples: ribbon buttons and groups, toolbars, status bar,
-zoom slider, bottom page/sheet tab strip, dialogs and neutral icons (undo,
-redo, delete, full screen, fit). Word, PowerPoint and Excel consume the same
-elements; docx-viewer follows the same web-component model.
+Visio-only copy. Examples: the ribbon tab row, ribbon buttons and groups,
+toolbars, the File backstage and print preview, Find bar, rulers, status bar,
+zoom slider, bottom page/sheet tab strip, dialogs (Options), Account profile,
+presence and neutral icons (undo, redo, delete, full screen, fit). Word,
+PowerPoint and Excel consume the same elements; docx-viewer follows the same
+web-component model. Before building any control here, check whether
+pptx-viewer, docx-viewer or xlsx-viewer has one; if so it belongs in ooxml-ui.
 
 - This repository keeps only Visio product content: which commands the ribbon
   shows, Visio shortcuts, canvas tools, page/shape semantics and SVG rendering.

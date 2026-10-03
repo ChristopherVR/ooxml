@@ -22,7 +22,7 @@ test('shared Office theme changes update the embedded viewer without replacing i
 	await page.getByRole('button', { name: 'Switch to dark theme', exact: true }).click();
 	await expect(frame.locator('html')).toHaveAttribute('data-theme', 'dark');
 	const darkSurface = await frame
-		.locator('visio-viewer .status')
+		.locator('visio-viewer office-ui-status-bar.status')
 		.evaluate((el) => getComputedStyle(el).backgroundColor);
 	expect(darkSurface).toBe('rgb(27, 29, 32)');
 	await expect(svg).toHaveAttribute('aria-label', 'Architecture');
@@ -34,7 +34,7 @@ test('shared Office theme changes update the embedded viewer without replacing i
 	await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
 	await expect(svg).toHaveAttribute('aria-label', 'Architecture');
 	const lightSurface = await frame
-		.locator('visio-viewer .status')
+		.locator('visio-viewer office-ui-status-bar.status')
 		.evaluate((el) => getComputedStyle(el).backgroundColor);
 	expect(lightSurface).not.toBe(darkSurface);
 });

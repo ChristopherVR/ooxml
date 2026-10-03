@@ -19,7 +19,11 @@ for (const theme of ['light', 'dark'] as const) {
 					font: getComputedStyle(root.host).fontFamily,
 					canvas: getComputedStyle(root.querySelector('.viewport')!).backgroundColor,
 					ribbon: getComputedStyle(root.querySelector('.toolbar')!).backgroundColor,
-					accent: getComputedStyle(root.querySelector('[aria-selected="true"]')!).color,
+					accent: getComputedStyle(
+						root
+							.querySelector('office-ui-ribbon')!
+							.shadowRoot!.querySelector('[role="tab"][aria-selected="true"]')!,
+					).color,
 					width: document.documentElement.scrollWidth,
 					height: document.documentElement.scrollHeight,
 				};

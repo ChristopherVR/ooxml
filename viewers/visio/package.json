@@ -48,7 +48,7 @@
 	"dependencies": {
 		"emf-converter": "4.8.9",
 		"ooxml-core": "0.14.1",
-		"ooxml-ui": "0.9.1"
+		"ooxml-ui": "0.10.2"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.58.0",

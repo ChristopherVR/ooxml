@@ -124,42 +124,6 @@ office-ui-menu-button[data-active]::part(button) {
 	display: none;
 }
 
-/* Find bar: Visio opens Find on demand instead of keeping a box in the ribbon. */
-.find-bar {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	min-height: 40px;
-	padding: 4px 8px 4px 12px;
-	border-bottom: 1px solid var(--_vv-border);
-	background: var(--_vv-secondary);
-}
-.find-bar .search-group {
-	flex: 1;
-	width: auto;
-	max-width: 640px;
-	padding: 0;
-	border: 0;
-}
-.find-bar .search-group .group-label {
-	display: none;
-}
-.find-bar .search-controls {
-	flex-wrap: nowrap;
-}
-.find-bar [role='status'] {
-	width: auto;
-	flex: 1;
-}
-.find-close {
-	margin-left: auto;
-	width: 28px;
-	padding: 0;
-	border-color: transparent;
-	background: transparent;
-	font-size: 18px;
-}
-
 /* Drawing window with optional rulers. */
 .canvas-area {
 	display: grid;
@@ -192,19 +156,14 @@ office-ui-menu-button[data-active]::part(button) {
 	border-right: 1px solid var(--_vv-border);
 	border-bottom: 1px solid var(--_vv-border);
 }
+/* The shared office-ui-ruler draws ticks, labels and its own edge. */
 .ruler-h {
 	grid-column: 2;
 	grid-row: 1;
-	width: 100%;
-	height: 18px;
-	border-bottom: 1px solid var(--_vv-border);
 }
 .ruler-v {
 	grid-column: 1;
 	grid-row: 2;
-	width: 18px;
-	height: 100%;
-	border-right: 1px solid var(--_vv-border);
 }
 
 .page-bar {
@@ -287,9 +246,6 @@ office-ui-status-item[data-page-status] {
 	}
 	.ribbon-tools .tools-content office-ui-ribbon-group {
 		width: 100%;
-	}
-	.find-bar {
-		flex-wrap: wrap;
 	}
 	office-ui-status-bar.status {
 		gap: 4px;

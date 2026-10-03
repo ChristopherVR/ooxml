@@ -86,7 +86,7 @@ test('Visio ribbon draws, deletes, undoes and redoes with tools and shortcuts', 
 	await viewer.getByRole('tab', { name: 'View', exact: true }).click();
 	await viewer.locator('[data-check="ruler"]').click();
 	await expect(viewer.locator('.canvas-area')).toHaveAttribute('data-ruler', 'true');
-	await expect(viewer.locator('canvas.ruler-h')).toBeVisible();
+	await expect(viewer.locator('office-ui-ruler.ruler-h')).toBeVisible();
 	await viewer.locator('[data-check="grid"]').click();
 	await expect(viewer.locator('.viewport')).toHaveAttribute('data-grid', 'true');
 	const before = await viewer.evaluate(

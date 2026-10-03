@@ -1,9 +1,7 @@
 import type { ViewerController, ViewerState } from './controller.js';
 interface Controls {
 	viewport: HTMLDivElement;
-	commandRoot: ShadowRoot;
 	zoomSlider: HTMLElement & { value: number };
-	searchInput: HTMLInputElement;
 }
 const targetShape = (event: Event) =>
 	(event.target as Element)?.closest?.<SVGGElement>('[data-shape-id]');
@@ -22,42 +20,11 @@ export function wireViewerInputs(
 	controller: ViewerController,
 	fit: (mode: 'page' | 'width') => void,
 ): () => void {
-	const { viewport, commandRoot, zoomSlider, searchInput } = controls;
+	const { viewport, zoomSlider } = controls;
 	const Abort = viewport.ownerDocument.defaultView?.AbortController ?? AbortController,
 		events = new Abort();
 	const options = { signal: events.signal };
-	searchInput.addEventListener(
-		'input',
-		() => controller.setSearchQuery(searchInput.value),
-		options,
-	);
-	searchInput.addEventListener(
-		'keydown',
-		(event) => {
-			if (event.isComposing) return;
-			if (event.key === 'Enter') {
-				event.preventDefault();
-				if (event.shiftKey) controller.previousSearchResult();
-				else controller.nextSearchResult();
-			}
-			if (event.key === 'Escape') {
-				event.preventDefault();
-				controller.setSearchQuery('');
-			}
-		},
-		options,
-	);
 	zoomSlider.addEventListener('input', () => controller.setZoom(zoomSlider.value / 100), options);
-	commandRoot.addEventListener(
-		'click',
-		(event) => {
-			const action = (event.target as Element)?.closest?.<HTMLButtonElement>('button')?.dataset
-				.action;
-			if (action === 'search-next') controller.nextSearchResult();
-			if (action === 'search-previous') controller.previousSearchResult();
-		},
-		options,
-	);
 	viewport.addEventListener(
 		'click',
 		(event) => controller.selectShape(selection(targetShape(event))),

@@ -89,8 +89,6 @@ export class ViewerChrome {
 			(event) => {
 				const button = (event.target as Element)?.closest?.<HTMLButtonElement>('button');
 				if (!button || button.disabled) return;
-				const tab = button.dataset.tab;
-				if (tab) this.showTab(tab);
 				const action = button.dataset.chrome;
 				if (action === 'inspector' || action === 'shapes') this.togglePane(action);
 				if (action === 'notes') this.reveal('notes');
@@ -117,39 +115,14 @@ export class ViewerChrome {
 			},
 			options,
 		);
-		this.#root.addEventListener(
-			'keydown',
-			(event) => {
-				const key = event as KeyboardEvent;
-				const button = (event.target as Element)?.closest?.<HTMLButtonElement>('button');
-				if (!button?.dataset.tab || !['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(key.key))
-					return;
-				key.preventDefault();
-				const tabs = [...this.#root.querySelectorAll<HTMLButtonElement>('[data-tab]')];
-				const index = tabs.indexOf(button);
-				const next =
-					key.key === 'Home'
-						? tabs[0]
-						: key.key === 'End'
-							? tabs.at(-1)
-							: tabs[(index + (key.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length];
-				if (!next?.dataset.tab) return;
-				this.showTab(next.dataset.tab);
-				next.focus();
-			},
-			options,
-		);
+		// The shared ribbon selects tabs itself; phones close the Tools sheet as Visio does.
+		this.#root.addEventListener('office-ribbon-select', () => this.closeCompactTools(), options);
 		this.#notes.addEventListener('toggle', () => this.#syncNotes(), options);
 		return () => events.abort();
 	}
 	showTab(tab: string): void {
-		for (const button of this.#root.querySelectorAll<HTMLButtonElement>('[data-tab]')) {
-			const selected = button.dataset.tab === tab;
-			button.setAttribute('aria-selected', String(selected));
-			button.tabIndex = selected ? 0 : -1;
-		}
-		for (const panel of this.#root.querySelectorAll<HTMLElement>('.ribbon-content'))
-			panel.hidden = panel.id !== `${tab}-panel`;
+		const ribbon = this.#root.querySelector<HTMLElement & { selected: string }>('office-ui-ribbon');
+		if (ribbon) ribbon.selected = tab;
 	}
 	/** On phones, close the Tools sheet once a command runs. */
 	closeCompactTools(): void {

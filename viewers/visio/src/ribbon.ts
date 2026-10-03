@@ -54,49 +54,30 @@ function quickAccess(doc: Document): HTMLElement {
 }
 
 /**
- * The Visio ribbon: Quick Access Toolbar, tab list and one panel per tab. Tab switching and
- * keyboard movement belong to the chrome; commands emit `ribbon-action` events for the router.
+ * The Visio ribbon on the shared `office-ui-ribbon`: Quick Access Toolbar, File, one panel per
+ * tab and Tell me. The shared element owns the tab row, selection and arrow-key movement;
+ * commands emit `ribbon-action` events for the router.
  */
 export function createRibbon(doc: Document): HTMLElement {
-	const toolbar = doc.createElement('div');
-	toolbar.className = 'toolbar';
-	toolbar.setAttribute('role', 'group');
-	toolbar.setAttribute('aria-label', 'Diagram controls');
-	const head = doc.createElement('div');
-	head.className = 'ribbon-head';
-	const tabs = doc.createElement('div');
-	tabs.className = 'ribbon-tabs';
-	tabs.setAttribute('role', 'tablist');
-	tabs.setAttribute('aria-label', 'Ribbon');
-	// Visio's File tab opens the backstage rather than a ribbon panel.
-	const file = doc.createElement('button');
-	file.type = 'button';
-	file.className = 'file-tab';
-	file.textContent = 'File';
-	file.setAttribute('aria-haspopup', 'dialog');
-	file.setAttribute('aria-expanded', 'false');
-	head.append(quickAccess(doc), file, tabs, createTellMe(doc));
-	toolbar.append(head);
+	const ribbon = doc.createElement('office-ui-ribbon');
+	ribbon.className = 'toolbar';
+	ribbon.setAttribute('role', 'group');
+	ribbon.setAttribute('aria-label', 'Diagram controls');
+	ribbon.setAttribute('label', 'Ribbon');
+	ribbon.setAttribute('selected', 'home');
+	const qat = quickAccess(doc);
+	qat.slot = 'quick-access';
+	const tellMe = createTellMe(doc);
+	tellMe.slot = 'search';
+	ribbon.append(qat, tellMe);
 	for (const [key, name, build] of RIBBON_TABS) {
-		const selected = key === 'home';
-		const tab = doc.createElement('button');
-		tab.type = 'button';
-		tab.id = `${key}-tab`;
-		tab.dataset.tab = key;
-		tab.textContent = name;
-		tab.setAttribute('role', 'tab');
-		tab.setAttribute('aria-selected', String(selected));
-		tab.setAttribute('aria-controls', `${key}-panel`);
-		if (!selected) tab.tabIndex = -1;
 		const panel = doc.createElement('div');
 		panel.className = 'ribbon-content';
 		panel.id = `${key}-panel`;
-		panel.setAttribute('role', 'tabpanel');
-		panel.setAttribute('aria-labelledby', tab.id);
-		panel.hidden = !selected;
+		panel.dataset.ribbonTab = key;
+		panel.dataset.label = name;
 		build(doc, panel);
-		tabs.append(tab);
-		toolbar.append(panel);
+		ribbon.append(panel);
 	}
-	return toolbar;
+	return ribbon;
 }

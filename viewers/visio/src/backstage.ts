@@ -1,3 +1,5 @@
+import type { OfficeBackstageItem } from 'ooxml-ui/controls';
+
 /** Visio's File (backstage) pages, in Visio's order. Save and Close act without a page. */
 export const BACKSTAGE_ITEMS = [
 	['info', 'Info'],
@@ -19,6 +21,22 @@ export type BackstagePage = Exclude<
 	(typeof BACKSTAGE_ITEMS)[number][0] | (typeof BACKSTAGE_FOOTER)[number][0],
 	'save' | 'close' | 'options'
 >;
+/** The navigation items, with optional disabled states (Save and Close follow the drawing). */
+export function backstageItems(
+	state: Partial<Record<string, { disabled: boolean; title?: string }>> = {},
+): OfficeBackstageItem[] {
+	const item = (id: string, label: string, group?: 'footer'): OfficeBackstageItem => ({
+		id,
+		label,
+		...(group ? { group } : {}),
+		...(state[id]?.disabled ? { disabled: true } : {}),
+		...(state[id]?.title ? { title: state[id]!.title } : {}),
+	});
+	return [
+		...BACKSTAGE_ITEMS.map(([id, label]) => item(id, label)),
+		...BACKSTAGE_FOOTER.map(([id, label]) => item(id, label, 'footer')),
+	];
+}
 const LOCAL = 'Documents stay in this browser; nothing is uploaded.';
 
 function el<K extends keyof HTMLElementTagNameMap>(
@@ -56,7 +74,6 @@ function action(
 function page(doc: Document, id: BackstagePage, title: string, ...content: Node[]): HTMLElement {
 	const section = el(doc, 'section', 'backstage-page');
 	section.dataset.backstagePage = id;
-	section.hidden = true;
 	section.setAttribute('aria-labelledby', `backstage-${id}-title`);
 	const heading = el(doc, 'h1', '', title);
 	heading.id = `backstage-${id}-title`;
@@ -134,27 +151,12 @@ function account(doc: Document): HTMLElement {
  * Static application structure only; document values are filled in later as text.
  */
 export function createBackstage(doc: Document): HTMLElement {
-	const root = el(doc, 'div', 'backstage');
-	root.hidden = true;
-	root.setAttribute('role', 'dialog');
-	root.setAttribute('aria-modal', 'true');
-	root.setAttribute('aria-label', 'File');
-	const nav = el(doc, 'nav', 'backstage-nav');
-	nav.setAttribute('aria-label', 'File');
-	const back = el(doc, 'button', 'backstage-back', '←');
-	back.type = 'button';
-	back.dataset.backstage = 'back';
-	back.setAttribute('aria-label', 'Back to the drawing');
-	back.title = 'Back (Esc)';
-	const item = ([id, label]: readonly [string, string]) => {
-		const button = el(doc, 'button', 'backstage-item', label);
-		button.type = 'button';
-		button.dataset.backstageItem = id;
-		return button;
+	const root = doc.createElement('office-ui-backstage') as HTMLElement & {
+		items: OfficeBackstageItem[];
 	};
-	const footer = el(doc, 'div', 'backstage-footer');
-	footer.append(...BACKSTAGE_FOOTER.map(item));
-	nav.append(back, ...BACKSTAGE_ITEMS.map(item), footer);
+	root.className = 'backstage';
+	root.setAttribute('back-label', 'Back to the drawing');
+	root.items = backstageItems();
 
 	const facts = el(doc, 'dl', 'backstage-facts');
 	for (const [key, label] of [
@@ -195,11 +197,11 @@ export function createBackstage(doc: Document): HTMLElement {
 	input.accept = '.vsdx,.vsd';
 	input.hidden = true;
 	input.setAttribute('aria-label', 'Choose a Visio drawing');
-	const preview = el(doc, 'div', 'backstage-print-preview');
-	preview.setAttribute('aria-label', 'Print preview of the current page');
-
-	const body = el(doc, 'div', 'backstage-body');
-	body.append(
+	const preview = doc.createElement('office-ui-print-preview');
+	preview.className = 'backstage-print-preview';
+	preview.setAttribute('label', 'Print preview of the current page');
+	preview.setAttribute('empty-label', 'Open a drawing to print it.');
+	root.append(
 		page(doc, 'info', 'Info', file, facts, notes),
 		page(doc, 'new', 'New', templates),
 		page(
@@ -273,6 +275,5 @@ export function createBackstage(doc: Document): HTMLElement {
 			el(doc, 'p', 'backstage-muted', 'Feedback is not collected by this viewer.'),
 		),
 	);
-	root.append(nav, body);
 	return root;
 }

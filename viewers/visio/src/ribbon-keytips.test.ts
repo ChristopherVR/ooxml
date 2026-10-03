@@ -36,7 +36,9 @@ describe('Visio KeyTips', () => {
 					`${single} prefixes another KeyTip in ${level.id || 'tabs'}`,
 				).toEqual([]);
 		}
-		expect(root.querySelector<HTMLElement>('[data-tab="home"]')!.dataset.keytip).toBe('H');
+		const tabs = root.querySelector('office-ui-ribbon')!.shadowRoot!;
+		expect(tabs.querySelector<HTMLElement>('[data-tab="home"]')!.dataset.keytip).toBe('H');
+		expect(tabs.querySelector<HTMLElement>('.file')!.dataset.keytip).toBe('F');
 		expect(root.querySelector<HTMLElement>('[command="paste"]')!.dataset.keytip).toBe('V');
 		viewer.destroy();
 	});

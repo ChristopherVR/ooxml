@@ -392,8 +392,10 @@ describe('document text search across all native adapters', () => {
 			const controller = mounted.handle.controller,
 				element = mounted.handle.element;
 			const root = element.shadowRoot!;
-			const input = root.querySelector<HTMLInputElement>('input[type="search"]')!;
-			const next = root.querySelector<HTMLButtonElement>('[data-action="search-next"]')!;
+			// The shared office-ui-find-bar owns the field and the steps.
+			const find = root.querySelector('office-ui-find-bar')!.shadowRoot!;
+			const input = find.querySelector<HTMLInputElement>('input[type="search"]')!;
+			const next = find.querySelector<HTMLButtonElement>('[data-action="next"]')!;
 			input.value = 'framework';
 			input.dispatchEvent(new Event('input', { bubbles: true }));
 			expect(controller.state.search.results).toHaveLength(2);

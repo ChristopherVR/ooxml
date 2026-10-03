@@ -9,6 +9,10 @@ function setup() {
 	const viewer = mountViewer(host, { document: demoDocument });
 	const root = viewer.element.shadowRoot!;
 	const button = (selector: string) => root.querySelector<HTMLButtonElement>(selector)!;
+	/** The shared ribbon renders File and the tabs in its own shadow root. */
+	const ribbonRoot = () => root.querySelector('office-ui-ribbon')!.shadowRoot!;
+	const tab = (id: string) =>
+		ribbonRoot().querySelector<HTMLButtonElement>(`[role="tab"][data-tab="${id}"]`)!;
 	/** Shared ribbon command host element and the real button inside it. */
 	const command = (name: string) =>
 		root.querySelector<HTMLElement & { disabled: boolean }>(`[command="${name}"]`)!;
@@ -18,7 +22,19 @@ function setup() {
 	const slider = () => root.querySelector<Slider>('office-ui-zoom-slider')!;
 	const zoomButton = (label: string) =>
 		slider().shadowRoot!.querySelector<HTMLButtonElement>(`[aria-label="${label}"]`)!;
-	return { host, viewer, root, button, command, press, strip, slider, zoomButton };
+	return {
+		host,
+		viewer,
+		root,
+		button,
+		command,
+		press,
+		strip,
+		slider,
+		zoomButton,
+		ribbonRoot,
+		tab,
+	};
 }
 afterEach(() => {
 	document.body.replaceChildren();
@@ -61,12 +77,14 @@ describe('shared Office-style viewer chrome', () => {
 		viewer.destroy();
 	});
 	it('opens the File backstage with real Info, Save and Close and disabled Visio pages', () => {
-		const { viewer, root } = setup();
-		const file = root.querySelector<HTMLButtonElement>('.file-tab')!;
-		const backstage = root.querySelector<HTMLElement>('.backstage')!;
-		expect(backstage.hidden).toBe(true);
+		const { viewer, root, ribbonRoot } = setup();
+		const file = ribbonRoot().querySelector<HTMLButtonElement>('.file')!;
+		const backstage = root.querySelector<HTMLElement & { open: boolean }>('office-ui-backstage')!;
+		const item = (id: string) =>
+			backstage.shadowRoot!.querySelector<HTMLButtonElement>(`[data-backstage-item="${id}"]`)!;
+		expect(backstage.open).toBe(false);
 		file.click();
-		expect(backstage.hidden).toBe(false);
+		expect(backstage.open).toBe(true);
 		expect(file.getAttribute('aria-expanded')).toBe('true');
 		const info = root.querySelector<HTMLElement>('[data-backstage-page="info"]')!;
 		expect(info.hidden).toBe(false);
@@ -75,46 +93,41 @@ describe('shared Office-style viewer chrome', () => {
 			'Model-only preview (read only)',
 		);
 		// The sample is model-only, so Save has nothing to save.
-		expect(root.querySelector<HTMLButtonElement>('[data-backstage-item="save"]')!.disabled).toBe(
-			true,
-		);
-		root.querySelector<HTMLButtonElement>('[data-backstage-item="new"]')!.click();
+		expect(item('save').disabled).toBe(true);
+		item('new').click();
 		const blank = root.querySelector<HTMLButtonElement>('[data-backstage-action="new-blank"]')!;
 		expect(blank.disabled).toBe(true);
 		expect(blank.title).toMatch(/not available yet\. Needs core blank drawing creation/);
-		root.querySelector<HTMLButtonElement>('[data-backstage-item="export"]')!.click();
+		item('export').click();
 		expect(
 			root.querySelector<HTMLButtonElement>(
 				'[data-backstage-page="export"] [data-backstage-action="export-svg"]',
 			)!.disabled,
 		).toBe(false);
-		backstage.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-		expect(backstage.hidden).toBe(true);
-		expect(root.activeElement).toBe(file);
+		item('export').dispatchEvent(
+			new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, composed: true }),
+		);
+		expect(backstage.open).toBe(false);
+		expect(file.getAttribute('aria-expanded')).toBe('false');
+		expect(ribbonRoot().activeElement).toBe(file);
 		file.click();
-		root.querySelector<HTMLButtonElement>('[data-backstage-item="close"]')!.click();
+		item('close').click();
 		expect(viewer.element.document).toBeNull();
-		expect(backstage.hidden).toBe(true);
+		expect(backstage.open).toBe(false);
 		viewer.destroy();
 	});
 	it('provides real keyboard tabs and working pane toggles without changing zoom', () => {
-		const { viewer, root, button, command, press } = setup();
+		const { viewer, root, button, command, press, slider, ribbonRoot, tab } = setup();
 		viewer.element.zoom = 1.7;
-		button('[data-tab="home"]').dispatchEvent(
-			new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }),
-		);
-		expect(button('[data-tab="insert"]').getAttribute('aria-selected')).toBe('true');
-		expect(root.activeElement).toBe(button('[data-tab="insert"]'));
-		button('[data-tab="insert"]').dispatchEvent(
-			new KeyboardEvent('keydown', { key: 'End', bubbles: true }),
-		);
+		tab('home').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+		expect(tab('insert').getAttribute('aria-selected')).toBe('true');
+		expect(ribbonRoot().activeElement).toBe(tab('insert'));
+		tab('insert').dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }));
 		// Help is Visio's last tab; ArrowLeft steps back to View.
-		expect(button('[data-tab="help"]').getAttribute('aria-selected')).toBe('true');
-		button('[data-tab="help"]').dispatchEvent(
-			new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }),
-		);
-		expect(button('[data-tab="view"]').getAttribute('aria-selected')).toBe('true');
-		expect(root.activeElement).toBe(button('[data-tab="view"]'));
+		expect(tab('help').getAttribute('aria-selected')).toBe('true');
+		tab('help').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+		expect(tab('view').getAttribute('aria-selected')).toBe('true');
+		expect(ribbonRoot().activeElement).toBe(tab('view'));
 		expect(root.querySelector<HTMLElement>('#home-panel')!.hidden).toBe(true);
 		expect(root.querySelector<HTMLElement>('#view-panel')!.hidden).toBe(false);
 		// Visio's default: the Shapes window is open.
@@ -159,7 +172,7 @@ describe('shared Office-style viewer chrome', () => {
 		viewer.destroy();
 	});
 	it('uses disabled states honestly and routes editing to the existing disclosure', () => {
-		const { viewer, root, command, slider } = setup();
+		const { viewer, root, command, slider, tab } = setup();
 		expect(command('shape-data').disabled).toBe(true);
 		expect(command('layer-properties').disabled).toBe(true);
 		// The sample is a model-only document: no source bytes means no drawing or deletion.
@@ -181,22 +194,20 @@ describe('shared Office-style viewer chrome', () => {
 		expect(root.querySelectorAll('.page-link')).toHaveLength(0);
 		expect(command('zoom-fit').disabled).toBe(true);
 		expect(slider().disabled).toBe(true);
-		expect(root.querySelector<HTMLButtonElement>('[data-tab="view"]')!.disabled).toBe(false);
+		expect(tab('view').disabled).toBe(false);
 		viewer.destroy();
 	});
 	it('aborts chrome, command and zoom listeners, then reconnects exactly one set', () => {
-		const { host, viewer, root, button, press, strip, zoomButton } = setup();
-		const view = button('[data-tab="view"]');
+		const { host, viewer, root, press, strip, zoomButton, tab } = setup();
+		const view = tab('view');
 		const grid = () => root.querySelector<HTMLElement>('[data-check="grid"]')!.click();
 		const next = () =>
 			strip().querySelector<HTMLButtonElement>('[aria-label="Next page"]')!.click();
 		viewer.element.remove();
 		zoomButton('Zoom in').click();
 		grid();
-		view.click();
 		expect(viewer.element.zoom).toBe(1);
 		expect(root.querySelector<HTMLElement>('.viewport')!.dataset.grid).not.toBe('true');
-		expect(view.getAttribute('aria-selected')).toBe('false');
 		host.append(viewer.element);
 		press('zoom-100');
 		viewer.element.zoom = 1.25;

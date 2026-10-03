@@ -57,6 +57,11 @@ try {
 			'office-ui-options-dialog',
 			'office-ui-account',
 			'office-ui-presence',
+			'office-ui-ribbon',
+			'office-ui-backstage',
+			'office-ui-find-bar',
+			'office-ui-ruler',
+			'office-ui-print-preview',
 		].filter((tag) => !customElements.get(tag)),
 	);
 	assert.deepEqual(undefinedControls, [], 'Shared ooxml-ui controls must be defined');
