@@ -1,6 +1,6 @@
 {
 	"name": "visio-solid-viewer",
-	"version": "0.4.0",
+	"version": "0.5.0",
 	"description": "Local-first Visio viewer for solid",
 	"homepage": "https://christophervr.github.io/visio-viewer/",
 	"license": "Apache-2.0",
@@ -31,7 +31,7 @@
 		"emf-converter": "4.8.9",
 		"ooxml-core": "^0.14.1",
 		"ooxml-ui": "^0.13.0",
-		"visio-core": "^0.2.1"
+		"visio-core": "^0.3.0"
 	},
 	"peerDependencies": {
 		"solid-js": "^1.9.0"

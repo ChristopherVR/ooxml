@@ -1,3 +1,11 @@
+## 0.5.0
+
+### Changes
+
+- build(viewer): adopt token based ooxml-ui 0.13 (590a5c8)
+- refactor(viewer): use shared ooxml-ui ribbon, backstage, find and rulers (cd1088b)
+- feat(viewer): add visio account, options dialog and live sharing (fe7fed1)
+
 ## 0.4.0
 
 ### Changes

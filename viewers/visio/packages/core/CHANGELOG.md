@@ -1,3 +1,9 @@
+## 0.3.0
+
+### Changes
+
+- feat(viewer): add visio account, options dialog and live sharing (fe7fed1)
+
 ## 0.2.1
 
 ### Changes
