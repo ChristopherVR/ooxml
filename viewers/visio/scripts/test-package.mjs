@@ -41,7 +41,7 @@ writeFileSync(
 		private: true,
 		type: 'module',
 		dependencies: {
-			'ooxml-core': '0.10.0',
+			'ooxml-core': '0.12.0',
 			'@christophervr/visio-viewer': `file:${resolve(temporary, packed.filename)}`,
 		},
 	}),

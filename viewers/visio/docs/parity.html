@@ -337,15 +337,18 @@
 								<td>Editing and history</td>
 								<td>Move, resize, style, text, undo/redo</td>
 								<td>
-									Experimental plain text and admitted local 2D create/move/resize/delete, with
-									bounded undo/redo
+									Experimental plain text and admitted top-level local 2D create/move/resize/delete,
+									plus bounded primitive master-instance moves with explicit local pins and
+									undo/redo
 								</td>
 								<td>
-									Shared geometry controls, atomic API, all-six forwarding and Chrome editing tests
+									Shared geometry controls, atomic API, all-six forwarding and Chrome editing tests;
+									core corpus: 12 admitted master instances across four files, 59 refusals from 71
+									scanned
 								</td>
 								<td>
-									19-file real corpus currently admits zero geometry edits; master/package scope,
-									glue, styles, rich text and native fidelity
+									Master resize/delete, groups, glue, unsupported package dependencies,
+									style/rich-text edits and native Visio fidelity remain unsupported or unverified
 								</td>
 							</tr>
 							<tr>

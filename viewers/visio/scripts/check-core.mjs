@@ -6,7 +6,7 @@ import * as visio from 'ooxml-core/visio';
 const require = createRequire(import.meta.url);
 const directory = resolve(dirname(require.resolve('ooxml-core/visio')), '../..');
 const manifest = JSON.parse(readFileSync(resolve(directory, 'package.json'), 'utf8'));
-assert.equal(manifest.version, '0.10.0');
+assert.equal(manifest.version, '0.12.0');
 for (const name of [
 	'parseVsdx',
 	'editVsdx',
