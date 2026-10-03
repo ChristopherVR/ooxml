@@ -1,3 +1,4 @@
+import { runNpm } from './npm-command.mjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
@@ -25,6 +26,7 @@ function fixture(t) {
 		mkdirSync(path, { recursive: true });
 	for (const file of [
 		'setup-core.mjs',
+		'npm-command.mjs',
 		'core-paths.mjs',
 		'core-snapshot.mjs',
 		'link-core.mjs',
@@ -47,9 +49,11 @@ function fixture(t) {
 	const lock = '{"name":"fixture","lockfileVersion":3}\n';
 	writeFileSync(join(viewer, 'integration/core-package-lock.json'), lock);
 	const calls = join(dir, 'npm-calls');
-	writeFileSync(join(dir, 'bin/npm'), '#!/bin/sh\nprintf "%s\\n" "$*" >> "$SETUP_TEST_CALLS"\n', {
-		mode: 0o755,
-	});
+	const npmCli = join(dir, 'bin/npm-cli.mjs');
+	writeFileSync(
+		npmCli,
+		`import { appendFileSync } from 'node:fs'; appendFileSync(process.env.SETUP_TEST_CALLS, process.argv.slice(2).join(' ') + '\\n');`,
+	);
 	const run = (env = {}, script = 'setup-core.mjs') => {
 		const inherited = { ...process.env };
 		delete inherited.VISIO_CORE_DIR;
@@ -58,7 +62,7 @@ function fixture(t) {
 			encoding: 'utf8',
 			env: {
 				...inherited,
-				PATH: `${join(dir, 'bin')}:${process.env.PATH}`,
+				npm_execpath: npmCli,
 				SETUP_TEST_CALLS: calls,
 				...env,
 			},
@@ -189,4 +193,29 @@ test('local link is explicit, repeatable and refuses a real installed directory'
 	assert.notEqual(result.status, 0);
 	assert.match(result.stderr, /not a symlink/);
 	assert.equal(readFileSync(join(link, 'user.txt'), 'utf8'), 'preserve');
+});
+
+test('npm invocation preserves literal arguments and paths without shell parsing', (t) => {
+	const dir = mkdtempSync(join(tmpdir(), 'visio npm & args-'));
+	t.after(() => rmSync(dir, { recursive: true, force: true }));
+	const cli = join(dir, 'mock npm-cli.mjs');
+	const output = join(dir, 'arguments.json');
+	writeFileSync(
+		cli,
+		`import { writeFileSync } from 'node:fs'; writeFileSync(process.env.SETUP_TEST_CALLS, JSON.stringify(process.argv.slice(2)));`,
+	);
+	const args = [
+		'ci',
+		'--cache',
+		join(dir, 'cache & literal'),
+		'$(literal)',
+		'quote"value',
+		'%PATH%',
+		'semi;colon',
+	];
+	runNpm(args, {
+		env: { ...process.env, npm_execpath: cli, SETUP_TEST_CALLS: output },
+		stdio: 'pipe',
+	});
+	assert.deepEqual(JSON.parse(readFileSync(output, 'utf8')), args);
 });

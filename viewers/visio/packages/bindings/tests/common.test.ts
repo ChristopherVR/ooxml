@@ -144,6 +144,7 @@ it('forwards every editing operation and guards an absent owner', async () => {
 	let binding: MountedViewer | undefined;
 	const handle = viewerHandle(() => binding);
 	const assertUnavailable = async () => {
+		await expect(handle.applyEdits([])).rejects.toThrow('not mounted');
 		await expect(handle.replacePlainText('p', 's', 'New text')).rejects.toThrow('not mounted');
 		await expect(handle.undo()).rejects.toThrow('not mounted');
 		await expect(handle.redo()).rejects.toThrow('not mounted');
@@ -153,6 +154,9 @@ it('forwards every editing operation and guards an absent owner', async () => {
 	await assertUnavailable();
 	binding = mountViewer(document.createElement('div'));
 	const live = current().binding;
+	const edits = [{ type: 'delete-shape' as const, pageId: 'p', shapeId: 's' }];
+	await handle.applyEdits(edits);
+	expect(live.applyEdits).toHaveBeenCalledWith(edits);
 	await handle.replacePlainText('p', 's', 'New text');
 	expect(live.replacePlainText).toHaveBeenCalledWith('p', 's', 'New text');
 	await handle.undo();

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { mountFrameworkViewer, viewerHandle, viewerOptions, type MountedViewer, type ViewerProps, type VsdxSource, type SvgExportOptions, type CurrentPagePrintSnapshotOptions } from './common.js';
+  import { mountFrameworkViewer, viewerHandle, viewerOptions, type MountedViewer, type ViewerProps, type VsdxSource, type VisioEdit, type SvgExportOptions, type CurrentPagePrintSnapshotOptions } from './common.js';
   type Props = ViewerProps & { class?: string; style?: string };
   let { document, pageIndex, zoom, showToolbar, events, class: className, style }: Props = $props();
   const options = $derived({ document, pageIndex, zoom, showToolbar, events } satisfies Required<ViewerProps>);
@@ -15,6 +15,7 @@
   }
   export function getHandle() { return handle; }
   export function load(source: VsdxSource) { return handle.load(source); }
+  export function applyEdits(edits: readonly VisioEdit[]) { return handle.applyEdits(edits); }
   export function replacePlainText(pageId: string, shapeId: string, text: string) { return handle.replacePlainText(pageId, shapeId, text); }
   export function undo() { return handle.undo(); }
   export function redo() { return handle.redo(); }

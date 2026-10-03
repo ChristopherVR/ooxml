@@ -18,6 +18,7 @@ import {
 	type ViewerEvents,
 	type ViewerProperties,
 	type VsdxSource,
+	type VisioEdit,
 	type SvgExportOptions,
 	type CurrentPagePrintSnapshotOptions,
 } from './common.js';
@@ -70,6 +71,9 @@ export class VisioViewerComponent implements AfterViewInit, OnChanges, OnDestroy
 	}
 	load(source: VsdxSource) {
 		return this.handle.load(source);
+	}
+	applyEdits(edits: readonly VisioEdit[]) {
+		return this.handle.applyEdits(edits);
 	}
 	replacePlainText(pageId: string, shapeId: string, text: string) {
 		return this.handle.replacePlainText(pageId, shapeId, text);

@@ -1,3 +1,4 @@
+import { runNpm } from './npm-command.mjs';
 import { canonicalPatch, converterSnapshot } from './converter-snapshot.mjs';
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, copyFileSync, mkdtempSync } from 'node:fs';
@@ -63,11 +64,11 @@ if (!existsSync(installedLock)) copyFileSync(lockPath, installedLock);
 const cache =
 	process.env.VISIO_NPM_CACHE ??
 	(existsSync(homedir()) ? undefined : mkdtempSync(resolve(tmpdir(), 'visio-converter-cache-')));
-execFileSync('npm', ['ci', '--ignore-scripts', ...(cache ? ['--cache', cache] : [])], {
+runNpm(['ci', '--ignore-scripts', ...(cache ? ['--cache', cache] : [])], {
 	cwd: core,
 	stdio: 'inherit',
 });
-execFileSync('npm', ['run', 'build'], { cwd: core, stdio: 'inherit' });
+runNpm(['run', 'build'], { cwd: core, stdio: 'inherit' });
 console.log(
 	'Pinned local converter built. No application dependency or live conversion was changed. Run npm run check:converter for its regression suite.',
 );

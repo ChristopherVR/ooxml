@@ -1,3 +1,4 @@
+import type { VisioEdit } from 'ooxml-core/visio';
 import type { ViewerOptions, ViewerCallbacks, VsdxSource } from './contract.js';
 import { eventKeys, propertyKeys } from './contract.js';
 import { registerVisioViewer, type VisioViewerElement } from './viewer-element.js';
@@ -11,6 +12,7 @@ export interface MountedViewer {
 	readonly controller: ViewerController;
 	update(options: ViewerOptions): void;
 	load(source: VsdxSource): Promise<void>;
+	applyEdits(edits: readonly VisioEdit[]): Promise<void>;
 	replacePlainText(pageId: string, shapeId: string, text: string): Promise<void>;
 	undo(): Promise<void>;
 	redo(): Promise<void>;
@@ -68,6 +70,10 @@ export function mountViewer(container: HTMLElement, initial: ViewerOptions = {})
 		async load(source) {
 			assertAlive();
 			await element.load(source);
+		},
+		async applyEdits(edits) {
+			assertAlive();
+			await element.applyEdits(edits);
 		},
 		async replacePlainText(pageId, shapeId, text) {
 			assertAlive();

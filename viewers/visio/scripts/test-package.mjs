@@ -1,3 +1,4 @@
+import { runNpm } from './npm-command.mjs';
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, writeFileSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -14,7 +15,7 @@ const env = {
 const run = (command, args, cwd = temporary) =>
 	execFileSync(command, args, { cwd, env, stdio: 'inherit' });
 const packed = JSON.parse(
-	execFileSync('npm', ['pack', '--json', '--ignore-scripts', '--pack-destination', temporary], {
+	runNpm(['pack', '--json', '--ignore-scripts', '--pack-destination', temporary], {
 		cwd: root,
 		env,
 		encoding: 'utf8',
@@ -45,7 +46,7 @@ writeFileSync(
 		},
 	}),
 );
-run('npm', ['install', '--ignore-scripts']);
+runNpm(['install', '--ignore-scripts'], { cwd: temporary, env, stdio: 'inherit' });
 run(process.execPath, [
 	'--input-type=module',
 	'-e',

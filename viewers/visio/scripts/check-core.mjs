@@ -1,3 +1,4 @@
+import { runNpm } from './npm-command.mjs';
 import { execFileSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import { realpathSync } from 'node:fs';
@@ -10,7 +11,7 @@ if (realpathSync(resolve(viewerRoot, 'node_modules/ooxml-core')) !== realpathSyn
 // Verify the selected published baseline or intentionally modified local format code,
 // rather than treating a successful viewer bundle as parser conformance evidence.
 for (const script of ['typecheck:strict', 'typecheck:pptx']) {
-	execFileSync('npm', ['run', script], { cwd: core, stdio: 'inherit' });
+	runNpm(['run', script], { cwd: core, stdio: 'inherit' });
 }
 execFileSync(
 	process.execPath,
@@ -22,4 +23,4 @@ execFileSync(
 );
 // The viewer imports the built package entry. Rebuild after source checks so
 // worker, renderer and packed-consumer tests cannot accidentally use stale code.
-execFileSync('npm', ['run', 'build:visio'], { cwd: core, stdio: 'inherit' });
+runNpm(['run', 'build:visio'], { cwd: core, stdio: 'inherit' });

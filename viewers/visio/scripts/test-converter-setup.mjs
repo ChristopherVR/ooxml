@@ -24,6 +24,10 @@ function fixture(t) {
 		mkdirSync(path, { recursive: true });
 	copyFileSync(source, join(viewer, 'scripts/setup-converter.mjs'));
 	copyFileSync(
+		resolve(dirname(source), 'npm-command.mjs'),
+		join(viewer, 'scripts/npm-command.mjs'),
+	);
+	copyFileSync(
 		resolve(dirname(source), 'converter-snapshot.mjs'),
 		join(viewer, 'scripts/converter-snapshot.mjs'),
 	);
@@ -42,15 +46,17 @@ function fixture(t) {
 	const lock = '{"name":"fixture","lockfileVersion":3}\n';
 	writeFileSync(join(viewer, 'integration/emf-converter-package-lock.json'), lock);
 	const calls = join(dir, 'npm-calls');
-	writeFileSync(join(dir, 'bin/npm'), '#!/bin/sh\nprintf "%s\\n" "$*" >> "$SETUP_TEST_CALLS"\n', {
-		mode: 0o755,
-	});
+	const npmCli = join(dir, 'bin/npm-cli.mjs');
+	writeFileSync(
+		npmCli,
+		`import { appendFileSync } from 'node:fs'; appendFileSync(process.env.SETUP_TEST_CALLS, process.argv.slice(2).join(' ') + '\\n');`,
+	);
 	const run = () =>
 		spawnSync(process.execPath, [join(viewer, 'scripts/setup-converter.mjs')], {
 			encoding: 'utf8',
 			env: {
 				...process.env,
-				PATH: `${join(dir, 'bin')}:${process.env.PATH}`,
+				npm_execpath: npmCli,
 				SETUP_TEST_CALLS: calls,
 			},
 		});

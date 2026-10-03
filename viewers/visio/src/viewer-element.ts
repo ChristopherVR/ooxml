@@ -1,4 +1,4 @@
-import type { VisioDocument, VisioShape } from 'ooxml-core/visio';
+import type { VisioDocument, VisioShape, VisioEdit } from 'ooxml-core/visio';
 import type { VsdxSource } from './contract.js';
 import { createWorkerParser } from './worker-parser.js';
 import { ViewerController, type ViewerState } from './controller.js';
@@ -121,6 +121,10 @@ export class VisioViewerElement extends BaseElement {
 				return source.arrayBuffer();
 			});
 		} else await this.controller.load(source);
+	}
+	applyEdits(edits: readonly VisioEdit[]): Promise<void> {
+		this.#assertAlive();
+		return this.controller.applyEdits(edits);
 	}
 	replacePlainText(pageId: string, shapeId: string, text: string): Promise<void> {
 		this.#assertAlive();

@@ -1,9 +1,11 @@
-import type { VisioDocument, VisioTextEdit } from 'ooxml-core/visio';
+import { snapshotEdits } from './edit-commands.js';
+export { snapshotEdits } from './edit-commands.js';
+import type { VisioDocument, VisioEdit } from 'ooxml-core/visio';
 import type { EditDiagnostic } from './document-history.js';
 import { MAX_INPUT_BYTES } from './scene-validation.js';
 export interface EditWorkerRequest {
 	bytes: ArrayBuffer;
-	edits: readonly VisioTextEdit[];
+	edits: readonly VisioEdit[];
 }
 export interface EditTransactionResult {
 	bytes: Uint8Array;
@@ -13,7 +15,7 @@ export interface EditTransactionResult {
 }
 export type CancellableEditor = ((
 	bytes: Uint8Array,
-	edits: readonly VisioTextEdit[],
+	edits: readonly VisioEdit[],
 ) => Promise<EditTransactionResult>) & { cancel?: () => void };
 export interface EditWorkerLike {
 	onmessage: ((event: MessageEvent) => void) | null;
@@ -37,38 +39,11 @@ export function createWorkerEditor(
 		cancel?.();
 		if (bytes.byteLength > MAX_INPUT_BYTES)
 			return Promise.reject(new Error('This viewer accepts files up to 32 MiB.'));
-		// Bound UI-thread cloning before the core repeats authoritative command validation.
-		if (!Array.isArray(edits) || edits.length > 1000)
-			return Promise.reject(
-				new Error('At most 1000 text replacements are accepted per operation.'),
-			);
-		let characters = 0;
-		const commands: VisioTextEdit[] = [];
-		for (const command of edits) {
-			if (
-				!command ||
-				command.type !== 'replace-plain-text' ||
-				typeof command.pageId !== 'string' ||
-				!command.pageId ||
-				command.pageId.length > 256 ||
-				typeof command.shapeId !== 'string' ||
-				!command.shapeId ||
-				command.shapeId.length > 256 ||
-				typeof command.text !== 'string'
-			)
-				return Promise.reject(new Error('Invalid plain-text edit command.'));
-			characters += command.text.length;
-			if (characters > 1_000_000)
-				return Promise.reject(
-					new Error('Replacement text exceeds the one-million-character limit.'),
-				);
-			// Never clone arbitrary extra properties supplied by an imperative API caller.
-			commands.push({
-				type: 'replace-plain-text',
-				pageId: command.pageId,
-				shapeId: command.shapeId,
-				text: command.text,
-			});
+		let commands: VisioEdit[];
+		try {
+			commands = snapshotEdits(edits);
+		} catch (error) {
+			return Promise.reject(error);
 		}
 		const copy = Uint8Array.from(bytes);
 		return new Promise((resolve, reject) => {

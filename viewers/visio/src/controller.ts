@@ -4,9 +4,9 @@ import {
 	type ViewerEditState,
 	type VsdxExportResult,
 } from './document-history.js';
-import { createWorkerEditor, type CancellableEditor } from './worker-editor.js';
+import { createWorkerEditor, snapshotEdits, type CancellableEditor } from './worker-editor.js';
 import { MAX_INPUT_BYTES } from './scene-validation.js';
-import { parseVsdx, type VisioDocument } from 'ooxml-core/visio';
+import { parseVsdx, type VisioDocument, type VisioEdit } from 'ooxml-core/visio';
 import {
 	EMPTY_LAYER_OVERRIDES,
 	documentVisibility,
@@ -327,7 +327,11 @@ export class ViewerController {
 	}
 	/** Replace one source-backed local plain-text target. Core decides target support. */
 	async replacePlainText(pageId: string, shapeId: string, text: string): Promise<void> {
-		return this.#mutate('edit', { pageId, shapeId, text });
+		return this.applyEdits([{ type: 'replace-plain-text', pageId, shapeId, text }]);
+	}
+	/** Atomic source-backed edits. Core owns protection, dependency and target validation. */
+	async applyEdits(edits: readonly VisioEdit[]): Promise<void> {
+		return this.#mutate('edit', snapshotEdits(edits));
 	}
 	async undo(): Promise<void> {
 		return this.#mutate('undo');
@@ -354,10 +358,7 @@ export class ViewerController {
 		++this.#editId;
 		this.editor.cancel?.();
 	}
-	async #mutate(
-		kind: 'edit' | 'undo' | 'redo',
-		command?: { pageId: string; shapeId: string; text: string },
-	): Promise<void> {
+	async #mutate(kind: 'edit' | 'undo' | 'redo', commands?: readonly VisioEdit[]): Promise<void> {
 		this.#assertAlive();
 		const history = this.#history;
 		if (!history)
@@ -384,9 +385,7 @@ export class ViewerController {
 			let document: VisioDocument;
 			let edited: Awaited<ReturnType<CancellableEditor>> | undefined;
 			if (kind === 'edit') {
-				edited = await this.editor(Uint8Array.from(history.current.bytes), [
-					{ type: 'replace-plain-text', ...command! },
-				]);
+				edited = await this.editor(Uint8Array.from(history.current.bytes), commands!);
 				assertCurrent();
 				if (edited.bytes.byteLength > MAX_INPUT_BYTES)
 					throw new Error('The modified VSDX exceeds 32 MiB.');

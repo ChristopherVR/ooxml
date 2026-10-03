@@ -188,3 +188,76 @@ it('real core transaction edits, reparses, undoes and redoes source-backed bytes
 	await viewer.redo();
 	expect(viewer.state.edit.dirty).toBe(true);
 });
+
+it('snapshots an atomic geometry bundle before subscribers and records one history operation', async () => {
+	const editor = vi.fn<CancellableEditor>().mockResolvedValue(result());
+	const viewer = setup(editor);
+	await viewer.load(new Uint8Array([1]));
+	const commands = [
+		{ type: 'move-shape' as const, pageId: '1', shapeId: 's1', x: 2, y: 3 },
+		{ type: 'resize-shape' as const, pageId: '1', shapeId: 's1', width: 4, height: 5 },
+	];
+	viewer.subscribe((state) => {
+		if (state.edit.busy) commands[0]!.x = 99;
+	});
+	await viewer.applyEdits(commands);
+	expect(editor.mock.calls[0]![1]).toEqual([
+		{ type: 'move-shape', pageId: '1', shapeId: 's1', x: 2, y: 3 },
+		{ type: 'resize-shape', pageId: '1', shapeId: 's1', width: 4, height: 5 },
+	]);
+	await viewer.undo();
+	expect(viewer.exportVsdx().bytes[0]).toBe(1);
+	expect(viewer.state.edit.canUndo).toBe(false);
+	viewer.destroy();
+});
+it('clears selection when a geometry transaction deletes its target', async () => {
+	const edited = result();
+	edited.document.pages[0]!.shapes = edited.document.pages[0]!.shapes.filter(
+		(shape) => shape.id !== 's1',
+	);
+	const viewer = setup(async () => edited);
+	await viewer.load(new Uint8Array([1]));
+	viewer.selectShape({ id: 's1', name: 'Start', pageId: '1' });
+	await viewer.applyEdits([{ type: 'delete-shape', pageId: '1', shapeId: 's1' }]);
+	expect(viewer.state.selectedShape).toBeNull();
+	viewer.destroy();
+});
+
+it('real geometry transactions flow through source history, reparsing and export', async () => {
+	const editor: CancellableEditor = async (bytes, commands) => {
+		const edited = await editVsdx(bytes, commands);
+		return { ...edited, document: await parseVsdx(edited.bytes) };
+	};
+	const viewer = new ViewerController(parseVsdx, () => {}, editor);
+	const original = await createVsdxFixture('Existing source shape');
+	await viewer.load(original);
+	await viewer.applyEdits([
+		{
+			type: 'create-rectangle',
+			pageId: '1',
+			shapeId: '42',
+			x: 2,
+			y: 3,
+			width: 1,
+			height: 2,
+			text: 'New rectangle',
+		},
+		{ type: 'resize-shape', pageId: '1', shapeId: '42', width: 3, height: 4 },
+		{ type: 'move-shape', pageId: '1', shapeId: '1', x: 5, y: 6 },
+	]);
+	const page = viewer.state.document!.pages[0]!;
+	expect(page.shapes.find((shape) => shape.id === '42')).toMatchObject({
+		width: 3,
+		height: 4,
+		text: { plainText: 'New rectangle' },
+	});
+	expect((await parseVsdx(viewer.exportVsdx().bytes)).pages[0]!.shapes).toHaveLength(2);
+	viewer.selectShape({ id: '42', name: 'New rectangle', pageId: '1' });
+	await viewer.applyEdits([{ type: 'delete-shape', pageId: '1', shapeId: '42' }]);
+	expect(viewer.state.selectedShape).toBeNull();
+	await viewer.undo();
+	expect(viewer.state.document!.pages[0]!.shapes).toHaveLength(2);
+	await viewer.undo();
+	expect(viewer.exportVsdx().bytes).toEqual(Uint8Array.from(original));
+	viewer.destroy();
+});

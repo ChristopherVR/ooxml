@@ -540,12 +540,16 @@ describe('shared editing methods across all six native adapters', () => {
 			const mounted = await mountNative(host, { document: demoDocument });
 			const element = mounted.handle.element;
 			const replace = vi.spyOn(element, 'replacePlainText').mockResolvedValue();
+			const applyEdits = vi.spyOn(element, 'applyEdits').mockResolvedValue();
 			const undo = vi.spyOn(element, 'undo').mockResolvedValue();
 			const redo = vi.spyOn(element, 'redo').mockResolvedValue();
 			const cancel = vi.spyOn(element, 'cancelEdit').mockImplementation(() => {});
 			const exported = { bytes: new Uint8Array([1, 2]), dirty: true, diagnostics: [] };
 			const save = vi.spyOn(element, 'exportVsdx').mockReturnValue(exported);
 			await mounted.handle.replacePlainText('p', 's', 'Text');
+			const edits = [{ type: 'move-shape' as const, pageId: 'p', shapeId: 's', x: 2, y: 3 }];
+			await mounted.handle.applyEdits(edits);
+			expect(applyEdits).toHaveBeenCalledWith(edits);
 			await mounted.handle.undo();
 			await mounted.handle.redo();
 			mounted.handle.cancelEdit();

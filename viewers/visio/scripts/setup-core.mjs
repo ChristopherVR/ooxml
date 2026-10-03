@@ -1,3 +1,4 @@
+import { runNpm } from './npm-command.mjs';
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, copyFileSync, mkdtempSync } from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
@@ -52,11 +53,11 @@ if (!existsSync(installedLock)) copyFileSync(lockPath, installedLock);
 const cache =
 	process.env.VISIO_NPM_CACHE ??
 	(existsSync(homedir()) ? undefined : mkdtempSync(resolve(tmpdir(), 'visio-core-cache-')));
-execFileSync('npm', ['ci', '--ignore-scripts', ...(cache ? ['--cache', cache] : [])], {
+runNpm(['ci', '--ignore-scripts', ...(cache ? ['--cache', cache] : [])], {
 	cwd: core,
 	stdio: 'inherit',
 });
-execFileSync('npm', ['run', 'build:visio'], { cwd: core, stdio: 'inherit' });
+runNpm(['run', 'build:visio'], { cwd: core, stdio: 'inherit' });
 console.log(
 	'Pinned Visio core ready. Run npm ci and npm ci --prefix packages/bindings. If using VISIO_CORE_DIR, run npm run link:core with the same override after npm ci.',
 );

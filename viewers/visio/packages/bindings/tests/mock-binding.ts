@@ -39,6 +39,9 @@ vi.mock('../../../src/binding.js', () => ({
 				load: vi.fn(async () => {
 					assertAlive();
 				}),
+				applyEdits: vi.fn(async () => {
+					assertAlive();
+				}),
 				replacePlainText: vi.fn(async () => {
 					assertAlive();
 				}),

@@ -16,7 +16,7 @@ npm run check
 npm run dev
 ```
 
-The setup script clones the public core at the pinned revision in `integration/core-revision.txt`, applies an optional integration patch only when present, installs dependencies from a pinned lock and builds only the Visio subpath. It refuses mismatched revisions, staged changes, different source edits or a different npm lock in an existing sibling checkout without overwriting them. An optional patch is a temporary development bridge, not a second canonical format implementation. Core changes must be reviewed and released separately before replacing the local dependency with a published version.
+The setup script clones the public core at the pinned revision in `integration/core-revision.txt`, installs dependencies from a pinned lock and builds only the Visio subpath. The current pin includes the published geometry commands and requires no integration patch. It refuses mismatched revisions, staged changes, different source edits or a different npm lock in an existing sibling checkout without overwriting them. The setup still supports an explicit temporary patch for development. Core changes must be reviewed and released separately before replacing the local dependency with a published version.
 
 Open the printed local URL for the documentation landing page or `/demo/` for the viewer workspace. `.vsdx` input stays in your browser; there are no uploads, telemetry, external fonts or document URL fetches.
 
@@ -98,6 +98,48 @@ The repository and GitHub Pages demo are public beta previews. The seven package
 
 After `load(bytesOrBlob)`, select a local shape and use the shared text controls, or call `replacePlainText(pageId, shapeId, text)` on any mounted/native handle. `undo()` and `redo()` use bounded document history; `cancelEdit()` cancels pending work. All six adapters forward the same methods and `document-change` event, whose detail is `{ document, dirty, kind: 'edit' | 'undo' | 'redo' }`. Inspect `controller.state.edit` for source availability, busy/dirty status, undo/redo availability, history truncation, errors and diagnostics.
 
-Only imported source-backed documents can be edited or exported as VSDX. Assigning a model with `document` does not supply editable package bytes. Core validation rejects master-linked shapes, rich text, fields, signed packages and macro-enabled content. XML/package edits run in an isolated worker; framework wrappers do not implement format logic. Saved formula caches are not recalculated.
+Only imported source-backed documents can be edited or exported as VSDX. Assigning a model with `document` does not supply editable package bytes. Core validation rejects master-linked shapes, rich text, fields, signed packages and macro-enabled content. XML/package edits run in an isolated worker; framework wrappers do not implement format logic. Plain-text edits do not recalculate text-dependent formula caches.
 
-`exportVsdx()` returns `{ bytes, dirty, diagnostics }` for an explicit downloaded copy. It does not overwrite the source file, upload it or claim native round-trip fidelity. The shared UI downloads only after the user's explicit action. History is bounded and may discard older undo states, reported by `historyTruncated`. General drawing, geometry/style editing, rich-text editing and native Visio reopen verification remain unsupported.
+`exportVsdx()` returns `{ bytes, dirty, diagnostics }` for an explicit downloaded copy. It does not overwrite the source file, upload it or claim native round-trip fidelity. The shared UI downloads only after the user's explicit action. History is bounded and may discard older undo states, reported by `historyTruncated`. General drawing, style editing, rich-text editing and native Visio reopen verification remain unsupported.
+
+## Experimental geometry editing
+
+The shared geometry controls expose create rectangle, move, resize and safe delete.
+Every native/mounted framework handle also forwards `applyEdits(edits: readonly VisioEdit[])`
+for an atomic batch through the same worker, history and cancellation path.
+
+```ts
+await handle.applyEdits([
+	{
+		type: 'create-rectangle',
+		pageId: '0',
+		shapeId: '9',
+		x: 4,
+		y: 5,
+		width: 3,
+		height: 2,
+		text: 'New shape',
+	},
+	{ type: 'move-shape', pageId: '0', shapeId: '1', x: 6, y: 7 },
+]);
+```
+
+Coordinates are rotation-pin positions in drawing inches, bottom-left origin,
+up-positive. Resizing holds the pin fixed. IDs are explicit. Existing admitted
+local top-level 2D shapes can be edited, including shapes imported from other
+producers. Core evaluates supported affected numeric ShapeSheet dependencies and
+preserves untouched ZIP payloads. The viewer never mutates XML itself.
+
+This is a narrow admitted subset. Masters/groups/foreign shapes, connectors/glue,
+unsafe protection/redirection, unsupported affected formulas, ambiguous package
+dependencies and referenced deletion fail with a visible error. Relative line
+geometry scales; absolute line geometry needs a supported dimension dependency.
+See the core `src/visio/README.md` for the command contract, numeric limits,
+exclusion reasons and next expansions.
+
+Generated/imported simple-shape tests and a local Chrome workflow pass. The 19
+accepted public corpus diagrams currently admit zero geometry edits because
+non-page dependency scope cannot yet be proved independent. Thirteen also lack an
+eligible local shape. Practical editing coverage for that corpus remains blocked;
+next work is a scoped package/master/theme dependency graph and master-instance
+editing, followed by glued endpoint routing. Native Visio reopen/fidelity is unverified.

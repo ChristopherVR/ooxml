@@ -1,6 +1,88 @@
 # Verification record
 
-Status: local development evidence, 2026-10-02. Full Microsoft Visio parity is not established.
+Status: local Windows development evidence, 2026-10-03. Full Microsoft Visio parity is not established.
+
+## Safe geometry bundle and Windows recovery
+
+Development checkouts are siblings under
+`C:\Users\Christopher\Documents\Codex\2026-10-03\task`: `ooxml` and `visio-viewer`.
+Core geometry logic is published at
+[`dc60e01ff97ae4db5e346c9942cd4e9052ba7b9d`](https://github.com/ChristopherVR/ooxml/commit/dc60e01ff97ae4db5e346c9942cd4e9052ba7b9d),
+preserving concurrent upstream changes and their automated release. The viewer
+pins that actual commit with its exact npm lock and no temporary source patch.
+Patch-free setup and build reproduce in `ooxml-published-verified`. Earlier
+reviewed snapshots remain in `ooxml-scope-verified` and `ooxml-verified`; the old
+baseline remains in `ooxml-pinned`. No unrelated Office source was edited.
+
+The published core's [exact-commit CI](https://github.com/ChristopherVR/ooxml/actions/runs/37085119760)
+passed both type projects, all six complete test shards, package builds/imports
+and the final required status. Local verification also passed full core builds,
+all entry-point imports and release tooling after preserving the upstream release.
+
+The shared UI and every framework handle expose create rectangle, move, resize
+and safe delete through typed atomic `applyEdits`, isolated worker execution and
+bounded history. Existing admitted top-level local 2D shapes are supported; the
+shape need not originate in this viewer. Coordinates are rotation-pin drawing
+inches, bottom-left origin, up-positive. Resizing holds the pin fixed. Bounded
+numeric ShapeSheet dependency closure and cache writeback preserve F/U and untouched
+package payloads. The core README documents every exclusion and next expansion.
+
+Final verification on Christopher-PC:
+
+- Complete viewer `npm run check` passed: formatting, setup regressions, both
+  core TypeScript projects, 1,220 active core Visio tests, converter verification,
+  viewer types, 394 viewer tests, 74 native binding lifecycle tests, five SSR tests,
+  27 documentation tests, production builds/workers and the packed external consumer.
+- Seven optional core corpus cases and one optional viewer arrow case were skipped
+  in that aggregate run. Separate `VISIO_EDIT_CORPUS_DIR=../corpus` core execution
+  passed 1,221 tests with six unrelated optional corpus skips.
+- Installed Chrome via `CHROMIUM_PATH` passed all 25 browser scenarios, including
+  the new geometry controls, editing an existing imported local shape, undo,
+  downloaded text reload, desktop/mobile themes and layout.
+- Hash-pinned parser/scene/SVG corpus passed: 19 accepted drawings, ten expected
+  malformed refusals, 22 SVG pages, 706 shapes and 627 paths.
+- Independent review added nine passing safety regressions. Findings concerning
+  glued endpoint caches, non-page and transitive metadata dependencies, units,
+  implicit text dimensions and contradictory requested coordinates were fixed.
+  Shared controller/worker/history/adapter review found no remaining material issue.
+- The scope/protection follow-up passed 45 independent review regressions across
+  three suites, including inherited cache/default and surviving-reference checks.
+
+The subsequent scope correction verifies Microsoft's `F="No Formula"` marker,
+separates master/page IDs, checks default/selected style ancestry and overrides,
+records implicit theme selectors, and resolves inherited protection only through
+verified inactive scalar ancestors. Unknown dynamic and affected unsupported
+dependencies continue to refuse. Independent review covers inherited constants,
+created-shape defaults, other-page metadata, used masters and unsafe locks.
+
+The 29-file geometry corpus now passes with six successful rectangle creations
+(bgcolor, blue-box, color-boxes, dwg, fdo86664 and qs-box). Of six first-page local
+candidates, three each pass separate move, resize and delete saves:
+
+| Drawing                       | Page / shape | Move / resize / delete                 |
+| ----------------------------- | ------------ | -------------------------------------- |
+| libvisio blue-box.vsdx        | 0 / 75       | All pass                               |
+| libvisio color-boxes.vsdx     | 0 / 68       | All pass                               |
+| libvisio qs-box.vsdx          | 0 / 75       | All pass                               |
+| POI 60973.vsdx                | 0 / 11       | Unknown used-master dependency refusal |
+| POI test.vsdx                 | 0 / 1        | Unknown used-master dependency refusal |
+| POI test_text_extraction.vsdx | 0 / 1        | Unknown used-master dependency refusal |
+
+Every successful save reopens and preserves all untouched package payloads;
+refusals preserve the caller's original bytes. The 13 creation refusals remain
+explicit. Thirteen admitted files have no candidate in the first-page scan:
+bgcolor, dwg, fdo86664, office_varient4, tdf136564-WhiteTextBackground,
+tdf154379-QuickStyleFillMatrix, testfile1, testfile3, testfile4, testfile5, testfile6,
+60489 and github260. This does not assert absence on every page. Ten malformed
+cases retain two MISSING_PART and eight INVALID_ZIP failures. No native Visio
+reopen/fidelity evidence exists; standard executable locations and COM
+registration did not detect Visio.
+
+Windows npm child invocation now runs the JavaScript CLI through Node without
+shell interpolation. Setup and literal-argument tests pass. This repairs the local
+route; earlier cloud ENOSPC remains a separate environment failure. No PC files
+were deleted to repair that cloud error, and no credentials or local Codex memory
+were modified.
 
 ## PPTX-aligned interface checkpoint
 

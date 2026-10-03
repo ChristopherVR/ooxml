@@ -42,3 +42,5 @@ export {
 export { VIEWER_LAYER_LIMITS, type LayerVisibilityOverride } from './viewer-layers.js';
 
 export type { ViewerEditState, VsdxExportResult } from './document-history.js';
+
+export type { VisioEdit, VisioGeometryEdit } from 'ooxml-core/visio';

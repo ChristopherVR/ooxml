@@ -23,7 +23,7 @@ it('copies borrowed source/commands and cleans up success', async () => {
 	source[0] = 8;
 	commands[0]!.text = 'changed';
 	expect(new Uint8Array(sent.bytes)[0]).toBe(1);
-	expect(sent.edits[0]!.text).toBe('text');
+	expect(sent.edits[0]).toMatchObject({ text: 'text' });
 	worker.onmessage?.({ data: response() } as MessageEvent);
 	await expect(pending).resolves.toMatchObject({ bytes: new Uint8Array([2]) });
 	expect(worker.terminate).toHaveBeenCalledOnce();
@@ -122,6 +122,43 @@ it('rejects unbounded commands before worker construction and strips unknown pro
 	const pending = editor(new Uint8Array([1]), [{ ...command, extra: () => {} } as typeof command]);
 	const worker = factory.mock.results[0]!.value;
 	expect(vi.mocked(worker.postMessage).mock.calls[0]![0].edits[0]).not.toHaveProperty('extra');
+	worker.onmessage?.({ data: response() } as MessageEvent);
+	await pending;
+});
+
+it('bounds and snapshots geometry commands without cloning arbitrary extras', async () => {
+	const worker = fake(),
+		factory = vi.fn(() => worker),
+		editor = createWorkerEditor(factory);
+	await expect(
+		editor(new Uint8Array([1]), [{ type: 'move-shape', pageId: '1', shapeId: '2', x: NaN, y: 1 }]),
+	).rejects.toThrow('Invalid');
+	expect(factory).not.toHaveBeenCalled();
+	const move = {
+		type: 'move-shape' as const,
+		pageId: '1',
+		shapeId: '2',
+		x: -2,
+		y: 3,
+		extra: () => {},
+	};
+	const pending = editor(new Uint8Array([1]), [
+		move,
+		{
+			type: 'create-rectangle',
+			pageId: '1',
+			shapeId: '3',
+			x: 1,
+			y: 2,
+			width: 3,
+			height: 4,
+			text: 'Rectangle',
+		},
+	]);
+	move.x = 99;
+	const sent = vi.mocked(worker.postMessage).mock.calls[0]![0];
+	expect(sent.edits[0]).toEqual({ type: 'move-shape', pageId: '1', shapeId: '2', x: -2, y: 3 });
+	expect(sent.edits[1]).toMatchObject({ type: 'create-rectangle', text: 'Rectangle' });
 	worker.onmessage?.({ data: response() } as MessageEvent);
 	await pending;
 });

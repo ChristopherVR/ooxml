@@ -86,6 +86,9 @@ summary::marker { color:var(--_vv-muted); font-size:10px; }
 .edit-actions { display:flex; flex-wrap:wrap; gap:4px; margin-top:8px; }
 .edit-actions button { font-size:11px; padding:3px 7px; }
 .edit-actions [data-edit="apply"]:enabled { background:var(--_vv-accent); border-color:var(--_vv-accent); color:var(--vv-accent-ink,#fff); }
+.edit-controls [data-geometry] { min-width:0; margin:8px 0 0; padding:6px; border:1px solid var(--_vv-border); }
+.edit-controls [data-geometry-field] { display:block; width:100%; min-width:0; margin-top:4px; }
+.edit-controls [data-geometry-error] { color:var(--vv-danger,#b42318); }
 .edit-controls [data-edit-error] { color:var(--vv-danger,#b42318); }
 .edit-controls [data-edit-diagnostics] { max-height:100px; overflow:auto; padding-left:16px; }
 .layer-controls [data-layer-list] { max-height:240px; overflow:auto; }

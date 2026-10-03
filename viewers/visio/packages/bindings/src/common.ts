@@ -16,6 +16,7 @@ export type ViewerHandle = Pick<
 	| 'element'
 	| 'controller'
 	| 'load'
+	| 'applyEdits'
 	| 'replacePlainText'
 	| 'undo'
 	| 'redo'
@@ -100,6 +101,9 @@ export function viewerHandle(current: () => MountedViewer | undefined): ViewerHa
 		async load(source) {
 			await requireViewer().load(source);
 		},
+		async applyEdits(edits) {
+			await requireViewer().applyEdits(edits);
+		},
 		async replacePlainText(pageId, shapeId, text) {
 			await requireViewer().replacePlainText(pageId, shapeId, text);
 		},
@@ -169,3 +173,5 @@ export type {
 } from '../../../src/print-snapshot.js';
 
 export type { ViewerEditState, VsdxExportResult } from '../../../src/document-history.js';
+
+export type { VisioEdit, VisioGeometryEdit } from 'ooxml-core/visio';

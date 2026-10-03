@@ -1,8 +1,9 @@
+import { geometryControlsTemplate, ViewerGeometryControls } from './viewer-geometry-controls.js';
 import type { ViewerController, ViewerState } from './controller.js';
 import { selectedShape } from './shape-inspector.js';
 
 /** Static markup only. Document text is assigned exclusively through value/textContent. */
-export const editControlsTemplate = `<details class="edit-controls"><summary>Edit text (experimental)</summary><p id="edit-warning">Experimental plain-text replacement. Unsupported targets are rejected. Formulas are not recalculated; native Visio compatibility is not verified. Keep your original file.</p><p data-edit-target></p><label for="edit-text">Selected shape text</label><textarea id="edit-text" rows="3" aria-describedby="edit-warning edit-target edit-status"></textarea><div class="edit-actions"><button type="button" data-edit="apply">Apply text</button><button type="button" data-edit="cancel">Cancel</button><button type="button" data-edit="undo">Undo</button><button type="button" data-edit="redo">Redo</button></div><p id="edit-status" role="status" aria-live="polite"></p><p data-edit-error role="alert" hidden></p><ul data-edit-diagnostics></ul></details>`;
+export const editControlsTemplate = `<details class="edit-controls"><summary>Edit diagram (experimental)</summary><p id="edit-warning">Experimental source-backed editing. Unsupported targets are rejected. Native Visio compatibility is not verified. Keep your original file.</p><p data-edit-target></p><label for="edit-text">Selected shape text</label><textarea id="edit-text" rows="3" aria-describedby="edit-warning edit-target edit-status"></textarea><div class="edit-actions"><button type="button" data-edit="apply">Apply text</button><button type="button" data-edit="cancel">Cancel</button><button type="button" data-edit="undo">Undo</button><button type="button" data-edit="redo">Redo</button></div><p id="edit-status" role="status" aria-live="polite"></p><p data-edit-error role="alert" hidden></p><ul data-edit-diagnostics></ul>${geometryControlsTemplate}</details>`;
 
 export class ViewerEditControls {
 	readonly panel: HTMLDetailsElement;
@@ -20,9 +21,11 @@ export class ViewerEditControls {
 	#pending = false;
 	#localError: string | undefined;
 	#controller: ViewerController;
+	#geometry: ViewerGeometryControls;
 	constructor(root: ShadowRoot, controller: ViewerController) {
 		this.#controller = controller;
 		this.panel = root.querySelector('.edit-controls')!;
+		this.#geometry = new ViewerGeometryControls(this.panel, controller);
 		this.input = this.panel.querySelector('textarea')!;
 		this.#target = this.panel.querySelector('[data-edit-target]')!;
 		this.#target.id = 'edit-target';
@@ -39,6 +42,7 @@ export class ViewerEditControls {
 		};
 	}
 	wire(): () => void {
+		const disposeGeometry = this.#geometry.wire();
 		const Abort = this.panel.ownerDocument.defaultView?.AbortController ?? AbortController;
 		const events = new Abort();
 		const options = { signal: events.signal };
@@ -68,6 +72,7 @@ export class ViewerEditControls {
 				options,
 			);
 		return () => {
+			disposeGeometry();
 			events.abort();
 			// Disposal must also work after a consumer has destroyed the controller.
 			// The element owns transaction cancellation; only forget local draft state here.
@@ -79,6 +84,7 @@ export class ViewerEditControls {
 		};
 	}
 	reset(focus = true): void {
+		this.#geometry.reset();
 		++this.#request;
 		this.#pending = false;
 		this.#localError = undefined;
@@ -109,6 +115,7 @@ export class ViewerEditControls {
 		}
 	}
 	render(state: ViewerState): void {
+		this.#geometry.render(state);
 		const selection = state.selectedShape;
 		const pageId = selection?.pageId ?? state.document?.pages[state.pageIndex]?.id;
 		const shape = selectedShape(state.document, selection, state.pageIndex);
