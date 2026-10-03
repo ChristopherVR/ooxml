@@ -1,6 +1,6 @@
 {
 	"name": "ooxml-core",
-	"version": "0.11.0",
+	"version": "0.12.0",
 	"description": "Shared OOXML logic for the Word, PowerPoint and Excel viewers: everything except the UI",
 	"keywords": [
 		"charts",

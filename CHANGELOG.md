@@ -7,6 +7,17 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.12.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@0.12.0) - 2026-10-03
+
+### Features
+
+- **visio:** Admit proven inherited master shape moves (by @ChristopherVR) ([6cb176f](https://github.com/ChristopherVR/ooxml/commit/6cb176f4b8c58cb21b7aed30259e1dfc94371fb9))
+
+### Performance
+
+- **xlsx:** Reuse spill cells and index short row footprints (by @ChristopherVR) ([c3b7d37](https://github.com/ChristopherVR/ooxml/commit/c3b7d37c3cf2596a381b3b3d6ebce7a56a1e9aec))
+- **xlsx:** Reuse validated full recalculation ordering (by @ChristopherVR) ([490f124](https://github.com/ChristopherVR/ooxml/commit/490f124e215853515c34d3f2504a700a62a97ee1))
+
 ## [0.11.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@0.11.0) - 2026-10-03
 
 ### Features
