@@ -53,6 +53,8 @@ const staticUnsupported = new Set([
 	'TINT',
 	'MSOTINT',
 	'SHADE',
+	'LUMDIFF',
+	'MODULUS',
 ]);
 // These functions can introduce references that cannot be identified from argument ASTs.
 const dynamic = new Set([

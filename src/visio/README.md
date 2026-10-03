@@ -285,6 +285,19 @@ remains unsupported. THEMEGUARD is distinct from GUARD and does not protect
 manual formatting. Literal double-click event handlers are inert during geometry
 recalculation; transform events receive no such exemption.
 
+Untouched active masters undergo a separate bounded independence proof. Effective
+template, instance override and selected style cells are resolved in their actual
+sheet scopes, including named Control rows. Static master-local Sheet references
+never become page references. Missing mappings, ambiguous style inputs, inherited
+fields, cycles and unknown dependencies refuse. The proof allows only direct
+single-reference SETATREF and field-free local TheText measurement forms; it does
+not evaluate text layout, write master caches or bypass redirection. See Microsoft's
+[SETATREF](https://learn.microsoft.com/en-us/office/client-developer/visio/setatref-function),
+[TEXTWIDTH](https://learn.microsoft.com/en-us/office/client-developer/visio/textwidth-function)
+and [TEXTHEIGHT](https://learn.microsoft.com/en-us/office/client-developer/visio/textheight-function)
+contracts. Construction is limited to 100,000 work steps and 10,000 bindings;
+dependency traversal has a separate 100,000-step limit and depth 64.
+
 This first bundle has deliberate exclusions:
 
 | Exclusion                                                                  | Reason                                                                             | Next expansion                                                                  |
@@ -303,13 +316,15 @@ coordinates. Formula graph cycles, error caches, unknown affected dependencies
 and incomplete recalculation refuse the whole transaction.
 
 Contract, independent review and preservation tests cover the admitted synthetic
-subset and hash-pinned public corpus. Of 19 admitted drawings, six accept rectangle
-creation. Existing shapes in blue-box (page 0/shape 75), color-boxes (0/68) and
-qs-box (0/75) each accept separate move, resize and delete commands with round-trip
-and untouched-payload preservation assertions. Three further candidates, 60973
-(0/11), test (0/1) and test_text_extraction (0/1), refuse unknown used-master
-dependencies. Thirteen drawings have no candidate in the test's first-page scan;
+subset and hash-pinned public corpus. Of 19 admitted drawings, seven accept rectangle
+creation. Existing shapes in blue-box (page 0/shape 75), color-boxes (0/68),
+qs-box (0/75) and test_text_extraction (0/1) each accept separate move, resize and
+delete commands with round-trip and untouched-payload preservation assertions.
+The latter also verifies combined move/resize, mutation isolation and unchanged
+Router master instances. Two candidates remain refused: test (0/1) has explicit
+container membership dependencies; 60973 (0/11) has ambiguous IDs and unsupported
+dynamic dependencies on other pages. Thirteen drawings have no candidate in the test's first-page scan;
 this is not a claim about every shape on every page. Ten malformed inputs retain
 their expected admission failures. Native Visio reopen/fidelity is unverified.
-The next expansion is a scoped effective master/style graph with explicit
-dependency recalculation, rather than ignoring unknown dependencies.
+Affected master caches, container membership changes and connector routing still
+require explicit supported recalculation before their editing scope can expand.

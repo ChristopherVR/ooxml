@@ -5,6 +5,7 @@ import { fail } from './package-common.js';
 import { VISIO_NS, VISIO_LEGACY_NS, attribute, children } from './sheet.js';
 import { createVisioDependencyQuery } from './edit-recalculate.js';
 import { executableCellFormula, inertDoubleClickFormula } from './cell-formula.js';
+import { assertVisioMasterIndependence } from './edit-master-scope.js';
 
 const admitted = (node: Element) =>
 	node.namespaceURI === VISIO_NS || node.namespaceURI === VISIO_LEGACY_NS;
@@ -119,35 +120,14 @@ export async function assertGeometryPackageScope(
 	let documentRoot: Element | undefined;
 	for (const path of pkg.paths()) {
 		if (!/^visio\/.*\.xml$/i.test(path) || pagePaths.has(path)) continue;
-		// Master-local Sheet.ID references and Connect records do not reference page instances.
-		// Page edits reject master instances; no master definition is changed by this transaction.
-		if (/^visio\/masters\//i.test(path) && !hasMasterInstances) continue;
+		// Active masters are checked below with their effective instance and template scopes.
+		// Unused definitions remain untouched and cannot influence page geometry caches.
+		if (/^visio\/masters\//i.test(path)) continue;
 		const root = await pkg.readXml(path);
 		const masterScope =
 			/^visio\/masters\//i.test(path) ||
 			(admitted(root) && ['MasterContents', 'Masters'].includes(root.localName));
-		if (masterScope) {
-			if (hasMasterInstances)
-				for (const node of [root, ...Array.from(root.getElementsByTagName('*'))]) {
-					check();
-					if (!admitted(node)) continue;
-					const source = executableCellFormula(attribute(node, 'F'));
-					if (!source || inertDoubleClickFormula(attribute(node, 'N') ?? '', source)) continue;
-					try {
-						if (analyzeVisioFormula(source).dynamic)
-							fail(
-								'EDIT_UNSUPPORTED_PACKAGE_DEPENDENCY',
-								'Used master formulas have unknown dynamic dependencies.',
-							);
-					} catch (error) {
-						fail(
-							'EDIT_UNSUPPORTED_PACKAGE_DEPENDENCY',
-							`Cannot prove used master formula independence: ${error instanceof Error ? error.message : 'invalid formula'}`,
-						);
-					}
-				}
-			continue;
-		}
+		if (masterScope) continue;
 		if (admitted(root) && root.localName === 'VisioDocument') {
 			if (documentRoot)
 				fail('EDIT_UNSUPPORTED_PACKAGE_DEPENDENCY', 'Multiple document scopes are ambiguous.');
@@ -187,6 +167,18 @@ export async function assertGeometryPackageScope(
 						...(pageId === undefined ? {} : { pageId }),
 					});
 		}
+	}
+	if (hasMasterInstances) {
+		for (const command of commands) {
+			const root = roots.get(command.pageId);
+			if (!root) continue;
+			const target = Array.from(root.getElementsByTagNameNS(root.namespaceURI!, 'Shape')).find(
+				(shape) => attribute(shape, 'ID') === command.shapeId,
+			);
+			if (target?.hasAttribute('Master') || target?.hasAttribute('MasterShape'))
+				fail('UNSUPPORTED_GEOMETRY_EDIT', 'Editing master-linked shapes is unsupported.');
+		}
+		await assertVisioMasterIndependence(pkg, roots, commands, check);
 	}
 	if (!documentRoot) return;
 	const styles = new Map<string, Element>();
