@@ -44,6 +44,11 @@ re-emit its events as callbacks.
 
 ## Working agreements
 
+- `mcp/` owns `xlsx-viewer-mcp`: schemas, MCP registration and its stdio CLI.
+  It delegates headless workbook operations and filesystem execution to
+  `ooxml-core/automation` and `/automation/node`. The combined `ooxml-mcp`
+  server imports this package's `registerTools`; never duplicate document logic here.
+
 - Published packages (the same model as docx-viewer and pptx-viewer):
   `@christophervr/xlsx-core` and one self-contained editor package per
   framework (`@christophervr/xlsx-react-viewer`, `xlsx-vue-viewer`,

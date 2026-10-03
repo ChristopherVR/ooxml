@@ -54,6 +54,7 @@ export const INTERNAL_DIRS = ['packages/web-component', 'packages/bindings'];
  * root: entries ending in `/` are directories, anything else a single file.
  */
 export const PACKAGES = {
+	mcp: { dir: 'mcp', npm: 'xlsx-viewer-mcp' },
 	core: { dir: 'packages/core', npm: '@christophervr/xlsx-core' },
 	react: {
 		dir: 'packages/react',
