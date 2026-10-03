@@ -39,7 +39,7 @@ test('rejected inputs show an error and retain prior diagram', async ({ page }) 
 test('mobile layout keeps open control, canvas and notes accessible', async ({ page }) => {
 	await page.setViewportSize({ width: 390, height: 844 });
 	await page.goto('/demo/?sample=1');
-	await expect(page.getByRole('button', { name: 'Open .vsdx' })).toBeVisible();
+	await expect(page.getByRole('button', { name: 'Open Visio file' })).toBeVisible();
 	await expect(page.locator('visio-viewer svg.paper')).toBeVisible();
 	expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
 	await page.screenshot({ path: 'test-results/mobile-workspace.png', fullPage: true });
@@ -99,7 +99,7 @@ test('mobile primary controls have usable touch targets', async ({ page }) => {
 	await page.setViewportSize({ width: 390, height: 844 });
 	await page.goto('/demo/?sample=1');
 	for (const locator of [
-		page.getByRole('button', { name: 'Open .vsdx' }),
+		page.getByRole('button', { name: 'Open Visio file' }),
 		page.locator('visio-viewer office-ui-zoom-slider .fit'),
 	]) {
 		const box = await locator.boundingBox();

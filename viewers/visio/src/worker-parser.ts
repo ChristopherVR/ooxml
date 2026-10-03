@@ -1,5 +1,5 @@
 import { MAX_INPUT_BYTES } from './scene-validation.js';
-import { parseVsdx, type VisioDocument } from 'ooxml-core/visio';
+import { loadVisio, type VisioDocument } from 'ooxml-core/visio';
 export type CancellableParser = ((bytes: Uint8Array | ArrayBuffer) => Promise<VisioDocument>) & {
 	cancel?: () => void;
 };
@@ -13,7 +13,7 @@ export type WorkerFactory = () => WorkerLike;
 
 /** One disposable worker per document prevents old parses and long CPU tasks from occupying the UI. */
 export function createWorkerParser(factory?: WorkerFactory, timeoutMs = 15_000): CancellableParser {
-	if (!factory && typeof Worker === 'undefined') return parseVsdx;
+	if (!factory && typeof Worker === 'undefined') return loadVisio;
 	const create =
 		factory ??
 		(() => new Worker(new URL('./parse-worker.js', import.meta.url), { type: 'module' }));

@@ -36,16 +36,22 @@ function refreshEditState(): void {
 	const state = viewer.controller.state;
 	get<HTMLButtonElement>('export-vsdx').disabled =
 		!state.edit.sourceAvailable || state.loading || state.edit.busy;
-	get('edit-label').textContent = !state.edit.sourceAvailable
-		? 'MODEL PREVIEW'
-		: state.edit.dirty
-			? 'EDITED COPY'
-			: 'ORIGINAL';
-	fileState.textContent = !state.edit.sourceAvailable
-		? 'Model-only preview · Cannot save VSDX'
-		: state.edit.dirty
-			? 'Local file · Edited copy'
-			: 'Local file · Original bytes';
+	get('edit-label').textContent =
+		state.document?.format === 'vsd'
+			? 'LEGACY VSD PREVIEW'
+			: !state.edit.sourceAvailable
+				? 'MODEL PREVIEW'
+				: state.edit.dirty
+					? 'EDITED COPY'
+					: 'ORIGINAL';
+	fileState.textContent =
+		state.document?.format === 'vsd'
+			? 'Legacy VSD preview: editing and VSDX export are unavailable'
+			: !state.edit.sourceAvailable
+				? 'Model-only preview · Cannot save VSDX'
+				: state.edit.dirty
+					? 'Local file · Edited copy'
+					: 'Local file · Original bytes';
 }
 const unsubscribeEdit = viewer.controller.subscribe(() => refreshEditState());
 function refreshNotes(): void {
@@ -66,9 +72,9 @@ async function openFile(file: File): Promise<void> {
 	viewer.controller.cancelLoad();
 	errorBox.hidden = true;
 	try {
-		if (!/\.vsdx$/i.test(file.name))
+		if (!/\.vsdx?$/i.test(file.name))
 			throw new Error(
-				'Choose a .vsdx drawing. Legacy .vsd and macro-enabled files are not supported.',
+				'Choose a .vsdx or supported legacy .vsd drawing. Macro-enabled files are not supported.',
 			);
 		if (file.size > 32 * 1024 * 1024) throw new Error('This preview accepts files up to 32 MiB.');
 		await viewer.load(file);

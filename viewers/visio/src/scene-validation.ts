@@ -21,7 +21,7 @@ function member(value: unknown, choices: readonly unknown[], label: string): voi
 /** Defensive display limits also protect callers supplying their own typed scenes. */
 export function assertViewableDocument(model: VisioDocument): void {
 	if (
-		model.format !== 'vsdx' ||
+		(model.format !== 'vsdx' && model.format !== 'vsd') ||
 		!Array.isArray(model.pages) ||
 		model.pages.length > 256 ||
 		!Array.isArray(model.diagnostics) ||

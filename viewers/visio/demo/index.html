@@ -28,7 +28,7 @@
 				aria-describedby="start-note"
 			>
 				<span class="start-badge" aria-hidden="true">V</span>
-				<p id="start-title">Drop a .vsdx file here or click to browse</p>
+				<p id="start-title">Drop a .vsdx or .vsd file here or click to browse</p>
 				<p id="start-note">The file is processed entirely in the browser</p>
 				<div class="start-actions">
 					<button id="start-browse" class="primary" type="button">Browse files</button>
@@ -56,7 +56,7 @@
 			<div id="file-commands" class="filebar" role="group" aria-label="File commands">
 				<div class="file-actions">
 					<button id="open" class="primary" type="button">
-						<span aria-hidden="true">↥</span> Open .vsdx</button
+						<span aria-hidden="true">↥</span> Open Visio file</button
 					><button id="sample" type="button">Load sample</button
 					><span class="command-divider" aria-hidden="true"></span
 					><button
@@ -66,7 +66,7 @@
 					>
 						Export SVG</button
 					><button id="export-vsdx" type="button" disabled>Download VSDX copy</button
-					><input id="file" type="file" accept=".vsdx" hidden />
+					><input id="file" type="file" accept=".vsdx,.vsd" hidden />
 				</div>
 				<span class="local-label"><span aria-hidden="true">●</span> Local only</span>
 			</div>
@@ -84,7 +84,7 @@
 		</header>
 		<main class="stage" aria-label="Viewer workspace">
 			<div id="viewer" tabindex="-1"></div>
-			<div id="drop-overlay" hidden>Drop a .vsdx file to open it</div>
+			<div id="drop-overlay" hidden>Drop a .vsdx or .vsd file to open it</div>
 		</main>
 		<div class="notices">
 			<p id="error" role="alert" hidden></p>

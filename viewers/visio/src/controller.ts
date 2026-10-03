@@ -6,7 +6,7 @@ import {
 } from './document-history.js';
 import { createWorkerEditor, snapshotEdits, type CancellableEditor } from './worker-editor.js';
 import { MAX_INPUT_BYTES } from './scene-validation.js';
-import { parseVsdx, type VisioDocument, type VisioEdit } from 'ooxml-core/visio';
+import { loadVisio, type VisioDocument, type VisioEdit } from 'ooxml-core/visio';
 import {
 	EMPTY_LAYER_OVERRIDES,
 	documentVisibility,
@@ -60,10 +60,11 @@ export class ViewerController {
 	#sourceGeneration = 0;
 	#searchIndex: DocumentTextIndex | null = null;
 	#history: DocumentHistory | null = null;
+	#sourceFormat: VisioDocument['format'] | null = null;
 	#editId = 0;
 	#visible = documentVisibility(null);
 	constructor(
-		private readonly parser: Parser = parseVsdx,
+		private readonly parser: Parser = loadVisio,
 		private readonly listenerError: (error: unknown) => void = (error) => {
 			if (typeof globalThis.reportError === 'function') globalThis.reportError(error);
 			else console.error('Visio viewer listener failed:', error);
@@ -102,6 +103,7 @@ export class ViewerController {
 		++this.#sourceGeneration;
 		this.#invalidateEdit();
 		this.#history = null;
+		this.#sourceFormat = null;
 		this.#loadId++;
 		this.parser.cancel?.();
 		this.#searchIndex = null;
@@ -261,7 +263,7 @@ export class ViewerController {
 		const id = ++this.#loadId;
 		this.#invalidateEdit();
 		this.parser.cancel?.();
-		this.#change({ loading: true, error: null, edit: this.#history?.state ?? EMPTY_EDIT_STATE });
+		this.#change({ loading: true, error: null, edit: this.#sourceEditState() });
 		if (this.#destroyed || id !== this.#loadId) return;
 		let document: VisioDocument;
 		let history: DocumentHistory;
@@ -273,10 +275,11 @@ export class ViewerController {
 				throw new Error('This viewer accepts files up to 32 MiB.');
 			const owned =
 				bytes instanceof Uint8Array ? Uint8Array.from(bytes) : new Uint8Array(bytes.slice(0));
-			history = new DocumentHistory(owned);
 			document = await this.parser(Uint8Array.from(owned));
 			if (this.#destroyed || id !== this.#loadId) return;
 			assertViewableDocument(document);
+			// Retain original binary source privately, including preview-only VSD.
+			history = new DocumentHistory(owned);
 			visible = documentVisibility(document);
 		} catch (cause) {
 			if (this.#destroyed || id !== this.#loadId) return;
@@ -286,13 +289,14 @@ export class ViewerController {
 			throw error;
 		}
 		this.#history = history;
+		this.#sourceFormat = document.format;
 		this.#searchIndex = null;
 		this.#visible = visible;
 		++this.#documentGeneration;
 		++this.#sourceGeneration;
 		this.#change({
 			document,
-			edit: history.state,
+			edit: document.format === 'vsdx' ? history.state : EMPTY_EDIT_STATE,
 			pageIndex: 0,
 			loading: false,
 			error: null,
@@ -307,13 +311,14 @@ export class ViewerController {
 		++this.#loadId;
 		this.parser.cancel?.();
 		this.#invalidateEdit();
-		this.#change({ loading: false, edit: this.#history?.state ?? EMPTY_EDIT_STATE });
+		this.#change({ loading: false, edit: this.#sourceEditState() });
 	}
 	destroy(): void {
 		if (this.#destroyed) return;
 		this.#destroyed = true;
 		this.#invalidateEdit();
 		this.#history = null;
+		this.#sourceFormat = null;
 		++this.#documentGeneration;
 		++this.#sourceGeneration;
 		++this.#loadId;
@@ -353,11 +358,11 @@ export class ViewerController {
 		if (!this.#state.edit.busy) return;
 		this.#invalidateEdit();
 		this.parser.cancel?.();
-		this.#change({ edit: this.#history?.state ?? EMPTY_EDIT_STATE });
+		this.#change({ edit: this.#sourceEditState() });
 	}
 	exportVsdx(): VsdxExportResult {
 		this.#assertAlive();
-		if (!this.#history)
+		if (!this.#history || this.#sourceFormat !== 'vsdx' || this.#state.document?.format !== 'vsdx')
 			throw new Error('Load a VSDX file before downloading a source-backed copy.');
 		if (this.#state.edit.busy || this.#state.loading)
 			throw new Error('Wait for the current document operation before downloading.');
@@ -367,10 +372,15 @@ export class ViewerController {
 		++this.#editId;
 		this.editor.cancel?.();
 	}
+	#sourceEditState(): ViewerEditState {
+		return this.#sourceFormat === 'vsdx' && this.#state.document?.format === 'vsdx'
+			? (this.#history?.state ?? EMPTY_EDIT_STATE)
+			: EMPTY_EDIT_STATE;
+	}
 	async #mutate(kind: 'edit' | 'undo' | 'redo', commands?: readonly VisioEdit[]): Promise<void> {
 		this.#assertAlive();
 		const history = this.#history;
-		if (!history)
+		if (!history || this.#sourceFormat !== 'vsdx' || this.#state.document?.format !== 'vsdx')
 			throw new Error('Load a VSDX file before editing. Model-only documents are read only.');
 		if (this.#state.loading || this.#state.edit.busy)
 			throw new Error('Another document operation is in progress.');
@@ -402,6 +412,8 @@ export class ViewerController {
 			} else document = await this.parser(Uint8Array.from(target!.bytes));
 			assertCurrent();
 			assertViewableDocument(document);
+			if (document.format !== 'vsdx')
+				throw new Error('A VSDX edit or history operation cannot change the source format.');
 			if (edited && !edited.changedParts.length) {
 				this.#change({ edit: history.state });
 				return;

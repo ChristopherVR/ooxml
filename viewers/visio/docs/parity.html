@@ -419,9 +419,16 @@
 							<tr>
 								<td>Legacy and other Visio formats</td>
 								<td>VSD, VDX, stencils, templates, macros</td>
-								<td>Not supported</td>
-								<td>Input contract currently targets VSDX</td>
-								<td>Format-specific parsing, validation and test corpus</td>
+								<td>Bounded binary VSD v11 preview through ole2</td>
+								<td>
+									Byte-signature dispatch; explicit page/shape transforms, move/line geometry and
+									plain text with diagnosed fallback styles. Legacy source is retained, with VSDX
+									editing/export disabled.
+								</td>
+								<td>
+									Older binary versions, groups/masters, rich formatting, complex geometry, native
+									Visio fidelity, VDX, stencils, templates and macros
+								</td>
 							</tr>
 							<tr>
 								<td>Collaboration and comments</td>

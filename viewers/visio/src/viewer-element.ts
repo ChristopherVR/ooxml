@@ -328,7 +328,10 @@ export class VisioViewerElement extends BaseElement {
 				empty.className = 'empty';
 				const heading = document.createElement('strong');
 				heading.textContent = 'Open a Visio drawing';
-				empty.append(heading, 'Open a .vsdx file to start. Files stay in this browser.');
+				empty.append(
+					heading,
+					'Open a .vsdx or supported .vsd file to start. Files stay in this browser.',
+				);
 				this.#viewport.replaceChildren(empty);
 			}
 			const notes = compatibilityNotes(state.document?.diagnostics ?? [], this.#renderWarnings);

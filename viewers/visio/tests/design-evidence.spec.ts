@@ -57,5 +57,5 @@ test('workspace appearance persists across navigation and embed mode is compact'
 	await page.goto('/demo/?embed=1');
 	await expect(page.locator('html')).toHaveAttribute('data-embedded', '');
 	await expect(page.locator('.workspace-footer')).toBeHidden();
-	await expect(page.getByRole('button', { name: 'Open .vsdx' })).toBeVisible();
+	await expect(page.getByRole('button', { name: 'Open Visio file' })).toBeVisible();
 });

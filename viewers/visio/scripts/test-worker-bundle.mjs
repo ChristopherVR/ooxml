@@ -1,5 +1,5 @@
 import { Worker } from 'node:worker_threads';
-import { readdir } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 import { resolve } from 'node:path';
 import assert from 'node:assert/strict';
@@ -52,6 +52,17 @@ try {
 	assert.equal(valid.ok, true);
 	assert.equal(valid.document.pages[0].name, 'Imported page');
 	assert.equal(valid.document.pages[0].shapes[0].text.plainText, 'Worker fixture');
+	const legacyResponse = new Promise((resolve, reject) => {
+		worker.once('message', resolve);
+		worker.once('error', reject);
+	});
+	const legacy = await readFile(new URL('../tests/fixtures/owned-v11.vsd', import.meta.url));
+	worker.postMessage(Uint8Array.from(legacy).buffer);
+	const legacyResult = await legacyResponse;
+	assert.equal(legacyResult.ok, true, legacyResult.message);
+	assert.equal(legacyResult.document.format, 'vsd');
+	assert.equal(legacyResult.document.pages[0].shapes[0].id, '7');
+	assert.equal(legacyResult.document.pages[0].shapes[0].text.plainText, 'Hello\n');
 	for (const unsupported of [false, true]) {
 		const response = new Promise((resolve, reject) => {
 			worker.once('message', resolve);
@@ -69,7 +80,7 @@ try {
 		}
 	}
 	console.log(
-		'Production parser worker passes valid import, bounded EMF conversion, rejection and structured-error smoke checks.',
+		'Production parser worker passes binary VSD and VSDX import, bounded EMF conversion, rejection and structured-error smoke checks.',
 	);
 } finally {
 	clearTimeout(timeout);
