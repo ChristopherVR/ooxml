@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.6.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.6.0) - 2026-10-03
+
+### Features
+
+- **ui:** Add office tell me command search (by @ChristopherVR) ([1b0db43](https://github.com/ChristopherVR/ooxml/commit/1b0db4335dcde1a74995c6ca19810db4df2337dd))
+
 ## [0.5.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.5.0) - 2026-10-03
 
 ### Features
