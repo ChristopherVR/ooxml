@@ -1,7 +1,8 @@
 import type { Table, TableCell } from './model.js';
-import type { TableBorders, TableRowProperties } from './table-model.js';
+import type { TableBorders, TableCellMargins, TableRowProperties } from './table-model.js';
 import { buildCellProperties, buildRowProperties } from './table-cell-write.js';
-import { buildBorders, buildMargins } from './table-defaults.js';
+import { buildBorders } from './table-defaults.js';
+import { patchMarginProperties } from './write-table-margins.js';
 import { orderChildren } from './element-order.js';
 import { children, first, makeW, type XmlDocument, type XmlElement } from './xml.js';
 
@@ -77,26 +78,15 @@ export function patchTableMargins(
 	node: XmlElement,
 	base?: Table,
 ): void {
-	if (JSON.stringify(table.cellMargins ?? {}) === JSON.stringify(base?.cellMargins ?? {})) return;
-	let props = first(node, 'tblPr');
-	if (!props) {
-		props = makeW(doc, 'tblPr');
-		node.insertBefore(props, node.firstChild);
-	}
-	let margins = first(props, 'tblCellMar');
-	if (!margins) {
-		margins = makeW(doc, 'tblCellMar');
-		props.appendChild(margins);
-	}
-	const built = buildMargins(doc, table.cellMargins ?? {}, 'tblCellMar');
-	for (const side of ['top', 'left', 'bottom', 'right'] as const) {
-		if (table.cellMargins?.[side] === base?.cellMargins?.[side]) continue;
-		for (const old of children(margins, side)) margins.removeChild(old);
-		const replacement = first(built, side);
-		if (replacement) margins.appendChild(replacement);
-	}
-	orderChildren(margins, ['top', 'left', 'start', 'bottom', 'right', 'end']);
-	orderChildren(props, TABLE_ORDER);
+	patchMarginProperties(
+		doc,
+		node,
+		'tblPr',
+		'tblCellMar',
+		TABLE_ORDER,
+		table.cellMargins,
+		base?.cellMargins,
+	);
 }
 
 const CELL_ORDER = [
@@ -121,6 +111,16 @@ const CELL_ORDER = [
 ];
 const CELL_BORDER_ORDER = ['top', 'start', 'left', 'bottom', 'end', 'right', 'insideH', 'insideV'];
 const CELL_SIDES = ['top', 'left', 'bottom', 'right'] as const;
+
+/** Changes individual cell overrides; deleting an override restores table/default inheritance. */
+export function patchCellMargins(
+	doc: XmlDocument,
+	tc: XmlElement,
+	next: TableCellMargins | undefined,
+	base: TableCellMargins | undefined,
+): void {
+	patchMarginProperties(doc, tc, 'tcPr', 'tcMar', CELL_ORDER, next, base);
+}
 
 /**
  * Changes only the cell border sides that differ from `base`, keeping every other `tcPr` child

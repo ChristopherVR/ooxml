@@ -43,6 +43,18 @@ const table: Table = {
 };
 
 describe('tables in Print Layout', () => {
+	it('inherits each margin side and honors zero until the cell override is cleared', () => {
+		const next = structuredClone(table);
+		next.cellMargins = { top: twips(60), left: twips(150), right: twips(300) };
+		const selected = next.rows[0]![0]!;
+		selected.margins = { left: twips(0) };
+		const padding = () =>
+			(at(at(adaptDocumentModel(model(next)).sections, 0).blocks, 0) as LayoutTable).rows[0]!
+				.cells[0]!.padding;
+		expect(padding()).toEqual({ top: 4, left: 0, right: 20, bottom: 0 });
+		delete selected.margins;
+		expect(padding()).toEqual({ top: 4, left: 10, right: 20, bottom: 0 });
+	});
 	it('adapts grid positions, spans, margins, borders, shading and vertical merges', () => {
 		const adapted = at(at(adaptDocumentModel(model(table)).sections, 0).blocks, 0) as LayoutTable;
 		expect(adapted).toMatchObject({ widthPx: 400, alignment: 'center' });

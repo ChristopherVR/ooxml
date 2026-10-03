@@ -3,6 +3,7 @@ import type { Paragraph, Table, TableCell } from './model.js';
 import {
 	patchCellBorders,
 	patchCellShading,
+	patchCellMargins,
 	patchRowProperties,
 	patchTableMargins,
 } from './write-table-properties.js';
@@ -78,13 +79,7 @@ const TABLE_DESCRIPTOR_KEYS = [
 	'style',
 	'look',
 ] as const;
-const CELL_DESCRIPTOR_KEYS = [
-	'gridSpan',
-	'verticalMerge',
-	'widthTwips',
-	'verticalAlign',
-	'margins',
-] as const;
+const CELL_DESCRIPTOR_KEYS = ['gridSpan', 'verticalMerge', 'widthTwips', 'verticalAlign'] as const;
 function pick(source: object, keys: readonly string[]): Record<string, unknown> {
 	const record = source as Record<string, unknown>;
 	const result: Record<string, unknown> = {};
@@ -92,7 +87,7 @@ function pick(source: object, keys: readonly string[]): Record<string, unknown> 
 	return result;
 }
 /**
- * Table grid/width/border/style and per-cell width/merge/alignment/margin values render
+ * Table grid/width/border/style and per-cell width/merge/alignment values render
  * but cannot be edited yet. Cell borders and shading have preservation-safe writers below.
  */
 function assertNoDescriptorEdits(table: Table, base: Table | undefined): void {
@@ -120,7 +115,7 @@ function assertNoDescriptorEdits(table: Table, base: Table | undefined): void {
 				JSON.stringify(pick(source, CELL_DESCRIPTOR_KEYS))
 			)
 				throw new Error(
-					'Cannot edit table cell width, merge, vertical alignment, or margins on an existing cell; only cell text, borders and shading are supported. The original DOCX package remains unchanged.',
+					'Cannot edit table cell width, merge or vertical alignment on an existing cell; only cell text, borders, shading and margins are supported. The original DOCX package remains unchanged.',
 				);
 		}
 }
@@ -213,6 +208,7 @@ export function writeTable(
 			const tc = source?.cell ?? makeW(doc, 'tc');
 			patchCellBorders(doc, tc, cell.borders, source?.model.borders);
 			patchCellShading(doc, tc, cell, source?.model);
+			patchCellMargins(doc, tc, cell.margins, source?.model.margins);
 			const oldParagraphs = children(tc, 'p');
 			const nextParagraphs = cell.paragraphs.map((paragraph) => {
 				const index = source?.paragraphs.findIndex((p) => p.id === paragraph.id) ?? -1;

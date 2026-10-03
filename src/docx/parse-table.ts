@@ -100,7 +100,14 @@ function parseMargins(element: XmlElement | undefined): TableCellMargins | undef
 		['left', 'start'],
 		['right', 'end'],
 	] as const) {
-		const value = dxa(getW(first(element, side) ?? first(element, logical), 'w'));
+		const edge = first(element, logical) ?? first(element, side);
+		const type = getW(edge, 'type') ?? 'dxa';
+		const value =
+			type === 'nil'
+				? parseSignedTwips('0')
+				: type === 'dxa'
+					? parseSignedTwips(getW(edge, 'w'))
+					: undefined;
 		if (value !== undefined) parsed[side] = value;
 	}
 	return Object.keys(parsed).length ? parsed : undefined;
