@@ -2,7 +2,8 @@ import { defineButton } from './button.js';
 import { defineCheckbox, defineSwitch } from './checkable.js';
 import { defineDialog } from './dialog.js';
 import { defineIcon } from './icons.js';
-import { defineRibbonGroup, defineToolbar } from './ribbon.js';
+import { defineMenuButton, defineMenuItem } from './menu.js';
+import { defineRibbonGroup, defineRibbonStack, defineToolbar } from './ribbon.js';
 import { defineSelect } from './select.js';
 import { defineStatusBar, defineStatusItem } from './status-bar.js';
 import { defineTabStrip } from './tab-strip.js';
@@ -13,7 +14,10 @@ export {
 	defineCheckbox,
 	defineDialog,
 	defineIcon,
+	defineMenuButton,
+	defineMenuItem,
 	defineRibbonGroup,
+	defineRibbonStack,
 	defineSelect,
 	defineStatusBar,
 	defineStatusItem,
@@ -36,6 +40,9 @@ export const CONTROL_DEFINERS = [
 	defineSwitch,
 	defineSelect,
 	defineRibbonGroup,
+	defineRibbonStack,
+	defineMenuItem,
+	defineMenuButton,
 	defineToolbar,
 	defineDialog,
 	defineStatusBar,
