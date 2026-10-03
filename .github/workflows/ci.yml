@@ -67,11 +67,7 @@ jobs:
       - run: bun run --cwd packages/ui build
       - run: bun run --cwd packages/ui test:package
       - name: The core never imports the UI package
-        run: |
-          if grep -rEln "ooxml-ui" src --include='*.ts' --include='*.mjs' | grep -v '\.test\.'; then
-            echo "::error::src/ (the core) must not import ooxml-ui; the UI depends on the core, never the reverse."
-            exit 1
-          fi
+        run: node scripts/check-core-ui-boundary.mjs
 
   # The single check the `main` ruleset requires. Funnelling through one job keeps branch
   # protection stable when jobs are added or renamed (a required check that no longer exists blocks
