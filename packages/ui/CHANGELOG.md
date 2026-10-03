@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.12.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.12.0) - 2026-10-03
+
+### Features
+
+- **ui:** Expose checkbox and switch metrics as tokens (by @ChristopherVR) ([778431c](https://github.com/ChristopherVR/ooxml/commit/778431c1d9119d198cda35ecce03d3419a95ed05))
+
 ## [0.11.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.11.0) - 2026-10-03
 
 ### Features
