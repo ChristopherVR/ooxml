@@ -9,6 +9,19 @@ history lives in `packages/<name>/CHANGELOG.md`. Nothing has been published yet,
 sections: the first release run writes them.
 ## 2026-10-03
 
+_Releases: @christophervr/xlsx-core@0.1.2, @christophervr/xlsx-react-viewer@0.2.0, xlsx-vue-viewer@0.2.0, xlsx-angular-viewer@0.2.0, xlsx-svelte-viewer@0.2.0, xlsx-solid-viewer@0.2.0, xlsx-vanilla-viewer@0.2.0_
+
+### Features
+
+- **bindings:** Keep in-editor changes and add readOnly/ribbon callbacks (by @ChristopherVR) ([6196ce1](https://github.com/ChristopherVR/xlsx-viewer/commit/6196ce10a9145bb1a409bd694086b772740045fa))
+
+### Bug Fixes
+
+- **web-component:** Restore sheet selections and fire selection once (by @ChristopherVR) ([fdfe205](https://github.com/ChristopherVR/xlsx-viewer/commit/fdfe205cd0a3bdb3ad575447a5bd842591eae942))
+- **deps:** Depend on ooxml-core ^0.9.0 and ooxml-ui ^0.1.8 (by @ChristopherVR) ([e2a8ae6](https://github.com/ChristopherVR/xlsx-viewer/commit/e2a8ae63533262f4fef4fb8c93feadd3ca3b15b8))
+
+## 2026-10-03
+
 _Releases: @christophervr/xlsx-core@0.1.1, @christophervr/xlsx-react-viewer@0.1.1, xlsx-vue-viewer@0.1.1, xlsx-angular-viewer@0.1.1, xlsx-svelte-viewer@0.1.1, xlsx-solid-viewer@0.1.1, xlsx-vanilla-viewer@0.1.1_
 
 ### Features
