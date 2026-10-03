@@ -258,10 +258,14 @@ requirement that the viewer created the shape.
 
 Numeric ShapeSheet interpretation uses a bounded AST, never JavaScript execution.
 Arithmetic, comparisons, IF, GUARD, Width/Height scaling, local geometry/named-row
-references and static Sheet.ID references have dependency analysis. ATAN2 uses
+references and static Sheet.ID references have dependency analysis. MODULUS,
+AND/OR/NOT and bounded BITAND/BITOR/BITXOR are supported. Bitwise inputs must be
+integral scalars in 0..65535; undocumented negative/fractional coercions refuse.
+Squared-length intermediates support compatible distance/SQRT calculations, but
+area caches cannot be written into length or scalar cells. ATAN2 uses
 (y,x); SIGN defaults to fuzz 1e-9. DL/DP/DT caches are internal inches and DA is
 radians. Dimensional comparisons require explicit compatible units, such as
-`Width > 3 IN`. Unknown units and compound dimensions fail. Defaults are 8,192
+`Width > 3 IN`. Unknown units and unsupported compound dimensions fail. Defaults are 8,192
 formula characters, 1,024 AST nodes, depth 64, 100,000 indexed cells, 10,000
 affected cells and 100,000 aggregate evaluation steps per recalculation. Existing
 package and transaction deadlines still apply. These are cooperative bounds.

@@ -1,5 +1,5 @@
 /** Conservative numeric ShapeSheet interpreter. Values use Visio internal units. */
-export type VisioFormulaUnit = 'scalar' | 'length' | 'angle' | 'time';
+export type VisioFormulaUnit = 'scalar' | 'length' | 'area' | 'angle' | 'time';
 export interface VisioFormulaValue {
 	value: number;
 	unit: VisioFormulaUnit;

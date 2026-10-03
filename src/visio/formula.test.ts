@@ -87,7 +87,7 @@ describe('bounded Visio ShapeSheet formulas', () => {
 	it('rejects dimensions, division by zero, nonfinite results and invalid arity', () => {
 		for (const formula of [
 			'Width+1 rad',
-			'Width*Height',
+			'Width*Height*Width',
 			'1/0',
 			'1e309',
 			'SQRT(-1)',

@@ -1,4 +1,16 @@
 import { themeInputs } from './formula-theme.js';
+import {
+	finiteFormulaValue as finite,
+	compatibleFormulaUnits as compatible,
+	formulaProductUnit,
+	formulaQuotientUnit,
+	formulaExponentUnit,
+	formulaSquareRootUnit,
+} from './formula-arithmetic.js';
+import {
+	numericFormulaFunctions,
+	evaluateNumericFormulaFunction,
+} from './formula-numeric-functions.js';
 import { formulaFailure, formulaLimit, parseVisioFormula } from './formula.js';
 import type {
 	VisioFormulaAst,
@@ -20,6 +32,7 @@ const supported = new Set([
 	'ATAN2',
 	'SIGN',
 	'PI',
+	...numericFormulaFunctions,
 ]);
 // Known pure numeric functions may be independent of an edit even when evaluation is unsupported.
 const staticUnsupported = new Set([
@@ -138,19 +151,6 @@ export function analyzeVisioFormula(
 		guarded,
 	};
 }
-function finite(value: VisioFormulaValue): VisioFormulaValue {
-	if (!Number.isFinite(value.value)) return formulaFailure('value', 'Formula result is not finite');
-	if (!['scalar', 'length', 'angle', 'time'].includes(value.unit))
-		return formulaFailure('unit', 'Unknown resolved unit');
-	return value;
-}
-function compatible(a: VisioFormulaValue, b: VisioFormulaValue): VisioFormulaValue['unit'] {
-	if (a.unit === b.unit) return a.unit;
-	// The dimensionless zero is valid in comparisons and sums with dimensional values.
-	if (a.unit === 'scalar' && a.value === 0) return b.unit;
-	if (b.unit === 'scalar' && b.value === 0) return a.unit;
-	return formulaFailure('unit', `Incompatible units ${a.unit} and ${b.unit}`);
-}
 function binary(operator: string, a: VisioFormulaValue, b: VisioFormulaValue): VisioFormulaValue {
 	let unit: VisioFormulaValue['unit'];
 	if (operator === '+' || operator === '-') {
@@ -158,20 +158,14 @@ function binary(operator: string, a: VisioFormulaValue, b: VisioFormulaValue): V
 		return finite({ value: operator === '+' ? a.value + b.value : a.value - b.value, unit });
 	}
 	if (operator === '*') {
-		if (a.unit !== 'scalar' && b.unit !== 'scalar')
-			return formulaFailure('unit', 'Compound dimensions are unsupported');
-		return finite({ value: a.value * b.value, unit: a.unit === 'scalar' ? b.unit : a.unit });
+		return finite({ value: a.value * b.value, unit: formulaProductUnit(a.unit, b.unit) });
 	}
 	if (operator === '/') {
 		if (b.value === 0) return formulaFailure('value', 'Division by zero');
-		if (b.unit !== 'scalar' && a.unit !== b.unit)
-			return formulaFailure('unit', 'Inverse dimensions are unsupported');
-		return finite({ value: a.value / b.value, unit: a.unit === b.unit ? 'scalar' : a.unit });
+		return finite({ value: a.value / b.value, unit: formulaQuotientUnit(a.unit, b.unit) });
 	}
 	if (operator === '^') {
-		if (b.unit !== 'scalar' || (a.unit !== 'scalar' && b.value !== 1 && b.value !== 0))
-			return formulaFailure('unit', 'Dimensional powers are unsupported');
-		return finite({ value: a.value ** b.value, unit: b.value === 0 ? 'scalar' : a.unit });
+		return finite({ value: a.value ** b.value, unit: formulaExponentUnit(a.unit, b) });
 	}
 	compatible(a, b);
 	const comparisons: Record<string, boolean> = {
@@ -222,6 +216,11 @@ export function evaluateVisioFormula(
 				return formulaFailure('arity', `Invalid ${name} argument count`);
 		};
 		const arg = (index: number) => evaluate(node.args[index]!, depth + 1);
+		if (numericFormulaFunctions.has(name))
+			return evaluateNumericFormulaFunction(
+				name,
+				node.args.map((_, index) => arg(index)),
+			);
 		if (name === 'PI') {
 			arity(0);
 			return { value: Math.PI, unit: 'scalar' };
@@ -274,8 +273,7 @@ export function evaluateVisioFormula(
 		const value = arg(0);
 		if (name === 'ABS') return { value: Math.abs(value.value), unit: value.unit };
 		if (name === 'SQRT') {
-			if (value.unit !== 'scalar') return formulaFailure('unit', 'Dimensional SQRT unsupported');
-			return finite({ value: Math.sqrt(value.value), unit: 'scalar' });
+			return finite({ value: Math.sqrt(value.value), unit: formulaSquareRootUnit(value.unit) });
 		}
 		if (value.unit !== 'angle' && value.unit !== 'scalar')
 			return formulaFailure('unit', `${name} requires radians`);
