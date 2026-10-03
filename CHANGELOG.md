@@ -7,6 +7,17 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.11.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@0.11.0) - 2026-10-03
+
+### Features
+
+- **visio:** Move independently proven master instances (by @ChristopherVR) ([d6fc328](https://github.com/ChristopherVR/ooxml/commit/d6fc32885af6a7afe704a22337057a12c215dd3e))
+- **automation:** Centralize document tools and compose MCP servers (by @ChristopherVR) ([8c586b5](https://github.com/ChristopherVR/ooxml/commit/8c586b56df6b5853cfb9dd971073a04687d985b0))
+
+### Chores
+
+- **style:** Format existing docs and package configuration (by @ChristopherVR) ([09a7466](https://github.com/ChristopherVR/ooxml/commit/09a7466e8289e8f1cd0165e7830138f73b93fcf2))
+
 ## [0.10.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@0.10.0) - 2026-10-03
 
 ### Features
