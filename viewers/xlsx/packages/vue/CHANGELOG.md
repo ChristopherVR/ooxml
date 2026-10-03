@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs re-releases a package whenever any of its files, or an internal
 dependency it ships against, changes, not only on conventional commits.
 
+## [0.3.0](https://github.com/ChristopherVR/xlsx-viewer/releases/tag/xlsx-vue-viewer@0.3.0) - 2026-10-03
+
+### Features
+
+- **web-component:** Adopt core encryption and workbook features (by @ChristopherVR) ([857348f](https://github.com/ChristopherVR/xlsx-viewer/commit/857348fb817ce99d773c8d4dad6258ff1dc93384))
+
 ## [0.2.0](https://github.com/ChristopherVR/xlsx-viewer/releases/tag/xlsx-vue-viewer@0.2.0) - 2026-10-03
 
 ### Features

@@ -9,6 +9,14 @@ history lives in `packages/<name>/CHANGELOG.md`. Nothing has been published yet,
 sections: the first release run writes them.
 ## 2026-10-03
 
+_Releases: @christophervr/xlsx-core@0.2.0, @christophervr/xlsx-react-viewer@0.3.0, xlsx-vue-viewer@0.3.0, xlsx-angular-viewer@0.3.0, xlsx-svelte-viewer@0.3.0, xlsx-solid-viewer@0.3.0, xlsx-vanilla-viewer@0.3.0_
+
+### Features
+
+- **web-component:** Adopt core encryption and workbook features (by @ChristopherVR) ([857348f](https://github.com/ChristopherVR/xlsx-viewer/commit/857348fb817ce99d773c8d4dad6258ff1dc93384))
+
+## 2026-10-03
+
 _Releases: @christophervr/xlsx-core@0.1.2, @christophervr/xlsx-react-viewer@0.2.0, xlsx-vue-viewer@0.2.0, xlsx-angular-viewer@0.2.0, xlsx-svelte-viewer@0.2.0, xlsx-solid-viewer@0.2.0, xlsx-vanilla-viewer@0.2.0_
 
 ### Features
