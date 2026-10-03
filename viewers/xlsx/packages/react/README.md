@@ -1,5 +1,7 @@
 # @christophervr/xlsx-react-viewer
 
+Available on npm. Install the package using the command below.
+
 The Excel spreadsheet editor for React. One self-contained package: the `<xlsx-editor>` web component, the legacy Excel 97-2003 `.xls` reader and the React adapter are bundled in, and the workbook model (`@christophervr/xlsx-core`: `createWorkbook`, `loadWorkbook`, `saveXlsx`, ...) installs with it and is re-exported, so one install and one import path are all an application needs.
 
 ```sh

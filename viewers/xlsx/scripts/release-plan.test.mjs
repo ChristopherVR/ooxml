@@ -213,3 +213,11 @@ test('the real package table names every published manifest', async () => {
 		assert.notEqual(manifest.private, true, meta.dir);
 	}
 });
+
+test('release plan supplies the paths staged by the release workflow', () => {
+	const p = plan(() => '1.0.0');
+	for (const entry of Object.values(p.packages)) {
+		assert.equal(entry.manifest, entry.dir + '/package.json');
+		assert.equal(entry.changelog, entry.dir + '/CHANGELOG.md');
+	}
+});
