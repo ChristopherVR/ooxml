@@ -100,32 +100,55 @@ describe('office-ui-checkbox and switch', () => {
 });
 
 describe('office-ui-select', () => {
-	type Sel = HTMLElement & { options: unknown[]; value: string; selectedIndex: number };
-	const options = [
+	type Sel = HTMLElement & { options: { value: string }[]; value: string; selectedIndex: number };
+	const programmatic = [
 		{ value: 'a', label: 'Alpha' },
 		{ value: 'b', label: 'Beta', disabled: true },
 		{ value: 'c', label: 'Gamma' },
 	];
-	const setup = (): { el: Sel; trigger: HTMLButtonElement; list: HTMLElement } => {
+	/** Programmatic options (Visio) or `<option>` children (pptx); both behave the same. */
+	const setup = (children = false) => {
 		const el = make<Sel>('<office-ui-select aria-label="Greek"></office-ui-select>');
-		el.options = options;
+		if (children) {
+			for (const [value, label, disabled] of [
+				['a', 'Alpha'],
+				['b', 'Beta', true],
+				['c', 'Gamma'],
+			] as const) {
+				const option = document.createElement('option');
+				option.value = value;
+				option.textContent = label;
+				option.disabled = disabled === true;
+				el.append(option);
+			}
+			el.setAttribute('aria-label', 'Greek');
+		} else el.options = programmatic;
 		const root = el.shadowRoot!;
-		return { el, trigger: root.querySelector('button')!, list: root.querySelector('ul')! };
+		return {
+			el,
+			trigger: root.querySelector('button')!,
+			list: root.querySelector<HTMLElement>('[role="listbox"]')!,
+		};
 	};
 
-	it('has combobox/listbox/option semantics', () => {
-		const { el, trigger, list } = setup();
+	it.each([false, true])('has combobox/listbox/option semantics (children: %s)', (children) => {
+		const { el, trigger, list } = setup(children);
 		el.value = 'c';
 		expect(trigger.getAttribute('role')).toBe('combobox');
 		expect(trigger.getAttribute('aria-label')).toBe('Greek');
+		expect(trigger.getAttribute('aria-controls')).toBe(list.id);
 		expect(trigger.getAttribute('aria-expanded')).toBe('false');
-		expect(list.getAttribute('role')).toBe('listbox');
-		const items = [...list.querySelectorAll('li')];
-		expect(items.map((i) => i.getAttribute('role'))).toEqual(['option', 'option', 'option']);
+		trigger.click();
+		const items = [...list.querySelectorAll('[role="option"]')];
 		expect(items.map((i) => i.getAttribute('aria-selected'))).toEqual(['false', 'false', 'true']);
 		expect(items[1]!.getAttribute('aria-disabled')).toBe('true');
 		expect(trigger.textContent).toContain('Gamma');
 		expect(el.selectedIndex).toBe(2);
+	});
+
+	it('defaults to the first enabled option, like a native select', () => {
+		const { el } = setup();
+		expect(el.value).toBe('a');
 	});
 
 	it('navigates with arrows skipping disabled options, chooses with Enter, emits input then change', () => {
@@ -133,9 +156,9 @@ describe('office-ui-select', () => {
 		const events: string[] = [];
 		el.addEventListener('input', () => events.push('input'));
 		el.addEventListener('change', () => events.push('change'));
+		// A closed select opens and moves in one press, skipping the disabled option.
 		key(trigger, 'ArrowDown');
 		expect(trigger.getAttribute('aria-expanded')).toBe('true');
-		key(trigger, 'ArrowDown');
 		expect(trigger.getAttribute('aria-activedescendant')).toMatch(/-2$/);
 		key(trigger, 'Enter');
 		expect(el.value).toBe('c');
@@ -143,8 +166,10 @@ describe('office-ui-select', () => {
 		expect(events).toEqual(['input', 'change']);
 	});
 
-	it('Escape closes without changing, Home/End jump, typeahead picks', () => {
-		const { el, trigger } = setup();
+	it('Escape closes without changing, Home/End jump, typeahead moves and Enter commits once', () => {
+		const { el, trigger } = setup(true);
+		const change = vi.fn();
+		el.addEventListener('change', change);
 		key(trigger, 'ArrowDown');
 		key(trigger, 'End');
 		expect(trigger.getAttribute('aria-activedescendant')).toMatch(/-2$/);
@@ -152,21 +177,78 @@ describe('office-ui-select', () => {
 		expect(trigger.getAttribute('aria-activedescendant')).toMatch(/-0$/);
 		key(trigger, 'Escape');
 		expect(trigger.getAttribute('aria-expanded')).toBe('false');
-		expect(el.value).toBe('');
+		expect(el.value).toBe('a');
 		key(trigger, 'g');
+		key(trigger, 'Enter');
 		expect(el.value).toBe('c');
+		key(trigger, 'Enter');
+		key(trigger, 'Enter');
+		expect(change).toHaveBeenCalledOnce();
 	});
 
-	it('property writes are silent; disabled does not open', () => {
+	it('PageDown and PageUp jump eight enabled options and clamp at the ends', () => {
+		// Options present before connecting are read at once (later ones on the next frame).
+		const el = document.createElement('office-ui-select') as Sel;
+		el.setAttribute('aria-label', 'Long');
+		for (let i = 0; i < 20; i++) {
+			const option = document.createElement('option');
+			option.value = String(i);
+			option.textContent = `Item ${i}`;
+			option.disabled = i === 9;
+			el.append(option);
+		}
+		document.body.append(el);
+		const trigger = el.shadowRoot!.querySelector('button')!;
+		const menu = el.shadowRoot!.querySelector<HTMLElement>('[role="listbox"]')!;
+		trigger.click();
+		const active = () => menu.querySelector('[data-active]')?.textContent;
+		key(trigger, 'PageDown');
+		expect(active()).toBe('Item 8');
+		key(trigger, 'PageDown');
+		expect(active()).toBe('Item 16');
+		key(trigger, 'PageDown');
+		expect(active()).toBe('Item 19');
+		key(trigger, 'PageUp');
+		key(trigger, 'PageUp');
+		key(trigger, 'PageUp');
+		expect(active()).toBe('Item 0');
+	});
+
+	it('groups optgroup children, honours display labels and keeps an open popup on re-sync', async () => {
+		const el = make<Sel>('<office-ui-select aria-label="Fonts"></office-ui-select>');
+		const group = document.createElement('optgroup');
+		group.label = 'Theme Fonts';
+		const option = document.createElement('option');
+		option.value = 'Aptos';
+		option.textContent = 'Aptos';
+		option.dataset.displayLabel = 'Aptos (Body)';
+		group.append(option);
+		el.append(group);
+		el.value = 'Aptos';
+		const trigger = el.shadowRoot!.querySelector('button')!;
+		const menu = el.shadowRoot!.querySelector<HTMLElement>('[role="listbox"]')!;
+		expect(trigger.textContent).toContain('Aptos (Body)');
+		trigger.click();
+		expect(menu.querySelector('.group')!.textContent).toBe('Theme Fonts');
+		const first = menu.querySelector('[role="option"]');
+		el.value = 'Aptos';
+		await new Promise((resolve) => requestAnimationFrame(resolve));
+		expect(menu.querySelector('[role="option"]')).toBe(first);
+	});
+
+	it('property writes are silent; disabled does not open; ribbon-font keeps unlisted values', () => {
 		const { el, trigger } = setup();
 		const spy = vi.fn();
 		el.addEventListener('change', spy);
-		el.selectedIndex = 0;
-		expect(el.value).toBe('a');
+		el.selectedIndex = 2;
+		expect(el.value).toBe('c');
 		expect(spy).not.toHaveBeenCalled();
 		el.setAttribute('disabled', '');
 		trigger.click();
 		expect(trigger.getAttribute('aria-expanded')).toBe('false');
+		el.setAttribute('variant', 'ribbon-font');
+		el.value = '13.5';
+		expect(el.value).toBe('13.5');
 	});
 });
 
