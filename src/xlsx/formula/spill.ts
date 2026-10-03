@@ -106,7 +106,8 @@ export function writeFootprint(sheet: Worksheet, footprint: CellRange, m: Matrix
 			}
 			if (cell) {
 				cell.value = value;
-				(cell as SpilledCell).spillAnchor = { row, col };
+				if (!isSpilledCell(cell) || cell.spillAnchor.row !== row || cell.spillAnchor.col !== col)
+					(cell as SpilledCell).spillAnchor = { row, col };
 			} else {
 				const spilled: SpilledCell = { value, spillAnchor: { row, col } };
 				putCell(sheet, r, c, spilled);

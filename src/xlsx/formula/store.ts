@@ -1,6 +1,7 @@
 // Writing a formula's result into the sheet: plain values, CSE array ranges, or spills.
 import { type CellAddress, MAX_COL, MAX_ROW } from '../address.js';
 import type { Cell, Worksheet } from '../model.js';
+import { sameRange } from './engine-util.js';
 import type { FormulaNode } from './graph.js';
 import {
 	clearFootprint,
@@ -39,9 +40,9 @@ export function storeResult(
 		return;
 	}
 	const footprint = footprintFor(row, col, result);
-	if (node.spill) clearFootprint(sheet, node.spill, row, col);
-	delete node.spill;
 	if (!footprint || !footprintFree(sheet, footprint, row, col, claims)) {
+		if (node.spill) clearFootprint(sheet, node.spill, row, col);
+		delete node.spill;
 		node.blockedSpill = footprint ?? {
 			start: { row, col },
 			end: {
@@ -52,6 +53,9 @@ export function storeResult(
 		cell.value = ERR.SPILL;
 		return;
 	}
+	// Own spill cells are valid destinations. Reuse them when the shape stays the same,
+	// but still check for user overwrites, merges and competing spills on every pass.
+	if (node.spill && !sameRange(node.spill, footprint)) clearFootprint(sheet, node.spill, row, col);
 	delete node.blockedSpill;
 	writeFootprint(sheet, footprint, result);
 	node.spill = footprint;

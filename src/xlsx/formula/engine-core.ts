@@ -88,14 +88,14 @@ export abstract class EngineCore extends EngineHost {
 			let out = succCache.get(node);
 			if (out) return out;
 			const found: FormulaNode[] = [];
+			const anchors = new Set<FormulaNode>();
 			for (const dep of node.deps) {
 				columns.nodesIn(dep, found);
-				const anchors: FormulaNode[] = [];
 				footprints.dependents(dep.sheet, dep.range, anchors);
-				// A blocked spill does not cover its footprint; only live spills and CSE ranges do.
-				for (const anchor of anchors) if (anchor.spill ?? anchor.arrayRange) found.push(anchor);
 			}
-			out = [...new Set(found)].filter((n) => dirty.has(n));
+			// A blocked spill does not cover its footprint; only live spills and CSE ranges do.
+			for (const anchor of anchors) if (anchor.spill ?? anchor.arrayRange) found.push(anchor);
+			out = found.length ? [...new Set(found)].filter((n) => dirty.has(n)) : [];
 			succCache.set(node, out);
 			return out;
 		};
@@ -218,9 +218,7 @@ export abstract class EngineCore extends EngineHost {
 		root: FormulaAst | undefined,
 		legacy = false,
 	): Frame {
-		const frame: Frame = { host: this, sheet, row, col, scope: undefined, depth: 0 };
-		if (legacy) Object.assign(frame, { legacy: true });
-		return root ? { ...frame, root } : frame;
+		return { host: this, sheet, row, col, scope: undefined, depth: 0, root, legacy };
 	}
 
 	protected evaluateFormula(node: FormulaNode): Scalar | Matrix {

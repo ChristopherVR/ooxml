@@ -27,9 +27,9 @@ function inner<K, V>(map: Map<number, Map<K, V>>, sheet: number): Map<K, V> {
 }
 
 /**
- * Items keyed by the areas they cover. Single cells are found by key; narrow ranges sit in
- * per-column row chunks (so thousands of one-row spills do not share one list), tall ranges in
- * per-column lists and very wide ranges in one list per sheet.
+ * Items keyed by the areas they cover. Short single-row ranges are found by cell key; other
+ * narrow ranges sit in per-column row chunks, tall ranges in per-column lists and very wide
+ * ranges in one list per sheet.
  */
 export class AreaIndex<T> {
 	private readonly cells = new Map<number, Map<number, T[]>>();
@@ -39,8 +39,9 @@ export class AreaIndex<T> {
 
 	add(area: Area, node: T): void {
 		const { start, end } = area.range;
-		if (start.row === end.row && start.col === end.col) {
-			push(inner(this.cells, area.sheet), cellKey(start.row, start.col), node);
+		if (start.row === end.row && end.col - start.col + 1 <= BUCKET_WIDTH) {
+			const cells = inner(this.cells, area.sheet);
+			for (let col = start.col; col <= end.col; col++) push(cells, cellKey(start.row, col), node);
 			return;
 		}
 		const entry = { range: area.range, node };
