@@ -178,3 +178,39 @@ export function commandRow(doc: Document, label: string, children: readonly HTML
 	el.append(...children);
 	return el;
 }
+
+/**
+ * A shared `office-ui-context-menu` of typed commands and separators (`'-'`). Items without an
+ * action are shown disabled with their reason, as in the ribbon.
+ */
+export function contextMenu(
+	doc: Document,
+	id: string,
+	label: string,
+	items: readonly (CommandSpec | '-')[],
+): HTMLElement & { openAt(x: number, y: number): void; close(): void; open: boolean } {
+	const el = doc.createElement('office-ui-context-menu') as HTMLElement & {
+		openAt(x: number, y: number): void;
+		close(): void;
+		open: boolean;
+	};
+	el.dataset.contextMenu = id;
+	el.setAttribute('label', label);
+	const actions = new Map<string, VisioRibbonAction | undefined>();
+	for (const item of items) {
+		if (item === '-') {
+			el.append(doc.createElement('office-ui-menu-separator'));
+			continue;
+		}
+		const entry = doc.createElement('office-ui-menu-item');
+		decorate(entry, item);
+		actions.set(item.id, item.action);
+		el.append(entry);
+	}
+	el.addEventListener('office-command', (event) => {
+		event.stopPropagation();
+		const action = actions.get((event as CustomEvent<{ command: string }>).detail.command);
+		if (action) emitRibbonAction(el, action);
+	});
+	return el;
+}

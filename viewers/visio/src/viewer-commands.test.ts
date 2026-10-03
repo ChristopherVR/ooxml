@@ -101,11 +101,11 @@ describe('Visio ribbon commands', () => {
 
 	it('routes shared office-command buttons to pane, zoom and tool commands', async () => {
 		const { calls, command, press, check, viewport, controller } = await setup();
-		press('pages');
+		press('shapes');
 		press('layer-properties');
 		press('zoom-fit');
 		press('page-width');
-		expect(calls).toEqual(['pane:pages', 'reveal:layers:false', 'fit:page', 'fit:width']);
+		expect(calls).toEqual(['pane:shapes', 'reveal:layers:false', 'fit:page', 'fit:width']);
 		press('rectangle');
 		expect(command('rectangle').hasAttribute('data-active')).toBe(true);
 		expect(command('rectangle-item').getAttribute('checked')).toBe('true');
@@ -191,5 +191,36 @@ describe('rectangle tool shape IDs', () => {
 		page.shapes[0]!.children = [{ ...structuredClone(page.shapes[1]!), id: '41', children: [] }];
 		expect(nextShapeId(page)).toBe('42');
 		expect(nextShapeId({ ...page, shapes: [] })).toBe('1');
+	});
+});
+
+describe('Visio context menus', () => {
+	it('opens the shape menu on right-click, selects the shape and runs Edit Text', async () => {
+		const { mountViewer } = await import('./binding.js');
+		const host = document.createElement('div');
+		document.body.append(host);
+		const viewer = mountViewer(host, { document: structuredClone(demoDocument) });
+		const root = viewer.element.shadowRoot!;
+		const shape = root.querySelector<SVGGElement>('svg.paper [data-shape-id="s1"]')!;
+		shape.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, clientX: 30, clientY: 40 }));
+		const menu = root.querySelector<HTMLElement & { open: boolean }>(
+			'[data-context-menu="shape"]',
+		)!;
+		expect(menu.open).toBe(true);
+		expect(viewer.controller.state.selectedShape?.id).toBe('s1');
+		const cut = menu.querySelector<HTMLElement & { disabled: boolean }>('[command="ctx-cut"]')!;
+		expect(cut.disabled).toBe(true);
+		expect(cut.getAttribute('title')).toMatch(/not available yet\. Needs core shape copy/);
+		menu.querySelector('[command="ctx-edit-text"]')!.shadowRoot!.querySelector('button')!.click();
+		expect(menu.open).toBe(false);
+		expect(root.querySelector<HTMLDetailsElement>('.edit-controls')!.open).toBe(true);
+		root
+			.querySelector('.viewport')!
+			.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, clientX: 5, clientY: 5 }));
+		const page = root.querySelector<HTMLElement & { open: boolean }>('[data-context-menu="page"]')!;
+		expect(page.open).toBe(true);
+		page.querySelector('[command="ctx-grid"]')!.shadowRoot!.querySelector('button')!.click();
+		expect(root.querySelector<HTMLElement>('.viewport')!.dataset.grid).toBe('true');
+		viewer.destroy();
 	});
 });

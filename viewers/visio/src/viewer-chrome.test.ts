@@ -26,34 +26,75 @@ afterEach(() => {
 });
 
 describe('shared Office-style viewer chrome', () => {
-	it('uses one canvas, literal page cards, page tabs and synchronized keyboard navigation', () => {
-		const { viewer, root, button, strip } = setup();
+	it('uses one canvas and Visio page tabs, All pages and status instead of a page pane', () => {
+		const { viewer, root, strip } = setup();
 		expect(root.querySelectorAll('svg.paper')).toHaveLength(1);
-		expect(root.querySelectorAll('.page-link')).toHaveLength(2);
-		const first = button('[data-page-index="0"]'),
-			second = button('[data-page-index="1"]');
-		expect(first.getAttribute('aria-current')).toBe('page');
-		second.click();
+		expect(root.querySelector('.page-rail, .page-link')).toBeNull();
+		const all = root.querySelector('[data-menu="all-pages"]')!;
+		const items = [...all.querySelectorAll('office-ui-menu-item')];
+		expect(items.map((item) => item.getAttribute('label'))).toEqual([
+			'Release workflow',
+			'Architecture',
+		]);
+		expect(items[0]!.getAttribute('checked')).toBe('true');
+		items[1]!.shadowRoot!.querySelector('button')!.click();
 		expect(viewer.element.pageIndex).toBe(1);
+		expect(items[1]!.getAttribute('checked')).toBe('true');
 		expect(strip().querySelector('[aria-selected="true"]')!.textContent).toBe('Architecture');
 		expect(root.querySelector('[data-page-status]')!.getAttribute('value')).toBe('Page 2 of 2');
-		expect(second.getAttribute('aria-current')).toBe('page');
-		expect(first.hasAttribute('aria-current')).toBe(false);
 		expect(root.querySelector('[data-page-name]')!.textContent).toBe('Architecture');
-		second.dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true }));
+		strip().querySelectorAll<HTMLButtonElement>('[role="tab"]')[0]!.click();
 		expect(viewer.element.pageIndex).toBe(0);
-		expect(root.activeElement).toBe(first);
-		strip().querySelectorAll<HTMLButtonElement>('[role="tab"]')[1]!.click();
+		strip().querySelector<HTMLButtonElement>('[aria-label="Next page"]')!.click();
 		expect(viewer.element.pageIndex).toBe(1);
-		strip().querySelector<HTMLButtonElement>('[aria-label="Previous page"]')!.click();
-		expect(viewer.element.pageIndex).toBe(0);
+		// Insert Page is Visio's, shown disabled until core can add pages.
+		const add = strip().querySelector<HTMLButtonElement>('.add')!;
+		expect(add.hidden).toBe(false);
+		expect(add.disabled).toBe(true);
+		expect(add.title).toMatch(/not available yet\. Needs core page insertion/);
 		const model = structuredClone(demoDocument);
 		model.pages[0]!.name = '<img src=x onerror=alert(1)>';
 		viewer.update({ document: model });
-		expect(root.querySelector('.page-name')!.textContent).toBe(model.pages[0]!.name);
 		expect(strip().querySelector('[role="tab"]')!.textContent).toBe(model.pages[0]!.name);
 		expect(root.querySelector('img')).toBeNull();
 		expect(strip().querySelector('img')).toBeNull();
+		viewer.destroy();
+	});
+	it('opens the File backstage with real Info, Save and Close and disabled Visio pages', () => {
+		const { viewer, root } = setup();
+		const file = root.querySelector<HTMLButtonElement>('.file-tab')!;
+		const backstage = root.querySelector<HTMLElement>('.backstage')!;
+		expect(backstage.hidden).toBe(true);
+		file.click();
+		expect(backstage.hidden).toBe(false);
+		expect(file.getAttribute('aria-expanded')).toBe('true');
+		const info = root.querySelector<HTMLElement>('[data-backstage-page="info"]')!;
+		expect(info.hidden).toBe(false);
+		expect(info.querySelector('[data-info="pages"]')!.textContent).toBe('2');
+		expect(info.querySelector('[data-info="state"]')!.textContent).toBe(
+			'Model-only preview (read only)',
+		);
+		// The sample is model-only, so Save has nothing to save.
+		expect(root.querySelector<HTMLButtonElement>('[data-backstage-item="save"]')!.disabled).toBe(
+			true,
+		);
+		root.querySelector<HTMLButtonElement>('[data-backstage-item="new"]')!.click();
+		const blank = root.querySelector<HTMLButtonElement>('[data-backstage-action="new-blank"]')!;
+		expect(blank.disabled).toBe(true);
+		expect(blank.title).toMatch(/not available yet\. Needs core blank drawing creation/);
+		root.querySelector<HTMLButtonElement>('[data-backstage-item="export"]')!.click();
+		expect(
+			root.querySelector<HTMLButtonElement>(
+				'[data-backstage-page="export"] [data-backstage-action="export-svg"]',
+			)!.disabled,
+		).toBe(false);
+		backstage.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+		expect(backstage.hidden).toBe(true);
+		expect(root.activeElement).toBe(file);
+		file.click();
+		root.querySelector<HTMLButtonElement>('[data-backstage-item="close"]')!.click();
+		expect(viewer.element.document).toBeNull();
+		expect(backstage.hidden).toBe(true);
 		viewer.destroy();
 	});
 	it('provides real keyboard tabs and working pane toggles without changing zoom', () => {
@@ -71,20 +112,14 @@ describe('shared Office-style viewer chrome', () => {
 		expect(root.activeElement).toBe(button('[data-tab="view"]'));
 		expect(root.querySelector<HTMLElement>('#home-panel')!.hidden).toBe(true);
 		expect(root.querySelector<HTMLElement>('#view-panel')!.hidden).toBe(false);
-		// Visio's defaults: the Shapes window is open; pages live in the bottom tabs.
+		// Visio's default: the Shapes window is open.
 		const shapes = root.querySelector<HTMLElement>('.shapes-pane')!;
-		const rail = root.querySelector<HTMLElement>('.page-rail')!;
 		expect(shapes.hidden).toBe(false);
-		expect(rail.hidden).toBe(true);
-		press('pages');
-		// Shapes and Pages share the left column.
-		expect(rail.hidden).toBe(false);
+		press('shapes');
 		expect(shapes.hidden).toBe(true);
-		expect(command('pages').getAttribute('checked')).toBe('true');
 		expect(command('shapes').getAttribute('checked')).toBe('false');
-		press('pages');
-		expect(rail.hidden).toBe(true);
-		expect(command('pages').getAttribute('checked')).toBe('false');
+		press('shapes');
+		expect(shapes.hidden).toBe(false);
 		press('inspector');
 		expect(root.querySelector<HTMLElement>('.inspector-pane')!.hidden).toBe(true);
 		expect(viewer.element.zoom).toBe(1.7);

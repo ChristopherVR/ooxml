@@ -45,31 +45,12 @@
 				><span class="brand-mark" aria-hidden="true">V</span
 				><span class="brand-name">visio-viewer</span></a
 			>
-			<button id="file-menu" type="button" aria-expanded="false" aria-controls="file-commands">
-				File
-			</button>
 			<div class="document-title">
 				<span id="file-name">Sample workflow</span
 				><span class="title-divider" aria-hidden="true">·</span
 				><small id="file-state">Original sample scene</small>
 			</div>
-			<div id="file-commands" class="filebar" role="group" aria-label="File commands">
-				<div class="file-actions">
-					<button id="open" class="primary" type="button">
-						<span aria-hidden="true">↥</span> Open Visio file</button
-					><button id="sample" type="button">Load sample</button
-					><span class="command-divider" aria-hidden="true"></span
-					><button
-						id="export-svg"
-						type="button"
-						title="Download an approximate, current-page SVG with compatibility notes"
-					>
-						Export SVG</button
-					><button id="export-vsdx" type="button" disabled>Download VSDX copy</button
-					><input id="file" type="file" accept=".vsdx,.vsd" hidden />
-				</div>
-				<span class="local-label"><span aria-hidden="true">●</span> Local only</span>
-			</div>
+			<input id="file" type="file" accept=".vsdx,.vsd" hidden />
 			<div class="workspace-links">
 				<a href="../docs/index.html">Guide</a
 				><button

@@ -49,6 +49,8 @@ try {
 			'office-ui-ribbon-stack',
 			'office-ui-menu-button',
 			'office-ui-menu-item',
+			'office-ui-menu-separator',
+			'office-ui-context-menu',
 			'office-ui-checkbox',
 			'office-ui-select',
 		].filter((tag) => !customElements.get(tag)),

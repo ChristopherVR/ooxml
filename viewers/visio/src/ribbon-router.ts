@@ -10,7 +10,7 @@ export interface RibbonTargets {
 	toggleGrid(): void;
 	toggleRuler(): void;
 	toggleFullscreen(): void;
-	togglePane(pane: 'shapes' | 'pages' | 'inspector'): void;
+	togglePane(pane: 'shapes' | 'inspector'): void;
 	reveal(panel: 'edit' | 'notes' | 'selection' | 'layers', focusText: boolean): void;
 	fit(mode: 'page' | 'width'): void;
 	focusSearch(): void;

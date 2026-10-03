@@ -207,8 +207,23 @@ office-ui-menu-button[data-active]::part(button) {
 	border-right: 1px solid var(--_vv-border);
 }
 
-.page-tabs {
+.page-bar {
+	display: flex;
 	flex: none;
+	align-items: stretch;
+	min-width: 0;
+	border-top: 1px solid var(--_vv-border);
+	background: var(--_vv-secondary);
+}
+.page-bar office-ui-menu-button {
+	--office-target-size: 28px;
+	flex: none;
+	padding: 0 2px;
+}
+.page-tabs {
+	flex: 1;
+	min-width: 0;
+	border-top: 0;
 }
 office-ui-status-bar.status {
 	gap: 16px;

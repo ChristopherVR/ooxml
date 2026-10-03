@@ -65,7 +65,14 @@ export function createRibbon(doc: Document): HTMLElement {
 	tabs.className = 'ribbon-tabs';
 	tabs.setAttribute('role', 'tablist');
 	tabs.setAttribute('aria-label', 'Ribbon');
-	head.append(quickAccess(doc), tabs);
+	// Visio's File tab opens the backstage rather than a ribbon panel.
+	const file = doc.createElement('button');
+	file.type = 'button';
+	file.className = 'file-tab';
+	file.textContent = 'File';
+	file.setAttribute('aria-haspopup', 'dialog');
+	file.setAttribute('aria-expanded', 'false');
+	head.append(quickAccess(doc), file, tabs);
 	toolbar.append(head);
 	for (const [key, name, build] of RIBBON_TABS) {
 		const selected = key === 'home';

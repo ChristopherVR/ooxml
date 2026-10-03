@@ -5,12 +5,11 @@ import { editControlsTemplate } from './viewer-edit-controls.js';
 import { layerControlsTemplate } from './viewer-layer-controls.js';
 
 /**
- * Static workspace markup (legacy; migrate to builders when next changed). The ribbon, page
- * tabs and status bar are built by `createRibbon`, `createPageTabs` and `createStatusBar`.
- * All document labels are inserted as text.
+ * Static workspace markup (legacy; migrate to builders when next changed). The ribbon, Shapes
+ * window, page tabs and status bar are built by their own modules. Visio keeps pages in the
+ * bottom tabs and the All pages list, so there is no page pane. Labels are inserted as text.
  */
 export const viewerChromeTemplate = `<div class="workspace">
-  <nav id="page-rail" class="page-rail" aria-label="Diagram pages"><div class="pane-heading"><span>Pages</span><span data-page-count>0</span></div><ol class="page-list"></ol><p class="page-empty">Open a drawing to see its pages.</p></nav>
   <div class="viewport" tabindex="0" role="region" aria-label="Diagram canvas"></div>
   <aside id="inspector-pane" class="inspector-pane" aria-label="Drawing inspector">
     <div class="pane-heading"><span>Inspector</span><span class="inspector-kind">Drawing</span><button class="pane-close" type="button" data-chrome="inspector" aria-label="Close inspector">×</button></div>
@@ -24,17 +23,16 @@ export const viewerChromeTemplate = `<div class="workspace">
   </aside>
 </div>`;
 
-/** Presentation state stays local; page navigation uses the same controller as every binding. */
-export type TaskPane = 'shapes' | 'pages' | 'inspector';
+export type TaskPane = 'shapes' | 'inspector';
 
+/** Presentation state stays local; page navigation uses the same controller as every binding. */
 export class ViewerChrome {
 	#root: ShadowRoot;
 	#controller: ViewerController;
 	#document: VisioDocument | null | undefined;
-	#pageList: HTMLOListElement;
 	#pageTabs: HTMLElement & { tabs: OfficeTab[]; selected: string };
+	#allPages: HTMLElement & { disabled: boolean };
 	#tools: HTMLDetailsElement;
-	#rail: HTMLElement;
 	#inspector: HTMLElement;
 	#panes: Record<TaskPane, HTMLElement>;
 	#notes: HTMLDetailsElement;
@@ -45,16 +43,11 @@ export class ViewerChrome {
 	constructor(root: ShadowRoot, controller: ViewerController) {
 		this.#root = root;
 		this.#controller = controller;
-		this.#pageList = root.querySelector('.page-list')!;
 		this.#pageTabs = root.querySelector('office-ui-tab-strip')!;
+		this.#allPages = root.querySelector('[data-menu="all-pages"]')!;
 		this.#tools = root.querySelector('.ribbon-tools')!;
-		this.#rail = root.querySelector('.page-rail')!;
 		this.#inspector = root.querySelector('.inspector-pane')!;
-		this.#panes = {
-			shapes: root.querySelector('.shapes-pane')!,
-			pages: this.#rail,
-			inspector: this.#inspector,
-		};
+		this.#panes = { shapes: root.querySelector('.shapes-pane')!, inspector: this.#inspector };
 		this.#notes = root.querySelector('.notes')!;
 	}
 	wire(): () => void {
@@ -84,9 +77,8 @@ export class ViewerChrome {
 			{ ...options, capture: true },
 		);
 		const responsive = () => {
-			// Visio's defaults: the Shapes window on wide screens; pages live in the bottom tabs.
+			// Visio's defaults: the Shapes window on wide screens, the inspector unless on a phone.
 			if (!this.#manual.has('shapes')) this.#setPane('shapes', !this.#responsive?.matches);
-			if (!this.#manual.has('pages')) this.#setPane('pages', false);
 			if (!this.#manual.has('inspector')) this.#setPane('inspector', !compact?.matches);
 		};
 		responsive();
@@ -99,8 +91,6 @@ export class ViewerChrome {
 				if (!button || button.disabled) return;
 				const tab = button.dataset.tab;
 				if (tab) this.showTab(tab);
-				if (button.dataset.pageIndex !== undefined)
-					this.#controller.setPage(Number(button.dataset.pageIndex));
 				const action = button.dataset.chrome;
 				if (action === 'inspector' || action === 'shapes') this.togglePane(action);
 				if (action === 'notes') this.reveal('notes');
@@ -115,51 +105,37 @@ export class ViewerChrome {
 			},
 			options,
 		);
+		// Visio's All pages list beside the page tabs.
+		this.#allPages.addEventListener(
+			'office-command',
+			(event) => {
+				const command = (event as CustomEvent<{ command: string }>).detail.command;
+				const index = /^page-(\d+)$/.exec(command)?.[1];
+				if (index === undefined) return;
+				event.stopPropagation();
+				this.#controller.setPage(Number(index));
+			},
+			options,
+		);
 		this.#root.addEventListener(
 			'keydown',
 			(event) => {
 				const key = event as KeyboardEvent;
 				const button = (event.target as Element)?.closest?.<HTMLButtonElement>('button');
-				if (
-					!button ||
-					!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(key.key)
-				)
+				if (!button?.dataset.tab || !['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(key.key))
 					return;
-				if (button.dataset.tab) {
-					if (key.key === 'ArrowUp' || key.key === 'ArrowDown') return;
-					key.preventDefault();
-					const tabs = [...this.#root.querySelectorAll<HTMLButtonElement>('[data-tab]')];
-					const index = tabs.indexOf(button);
-					const next =
-						key.key === 'Home'
-							? tabs[0]
-							: key.key === 'End'
-								? tabs.at(-1)
-								: tabs[(index + (key.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length];
-					if (!next?.dataset.tab) return;
-					this.showTab(next.dataset.tab);
-					next.focus();
-				} else if (button.dataset.pageIndex !== undefined) {
-					key.preventDefault();
-					const pages = [
-						...this.#pageList.querySelectorAll<HTMLButtonElement>('[data-page-index]'),
-					];
-					const current = Number(button.dataset.pageIndex);
-					const next =
-						key.key === 'Home'
-							? 0
-							: key.key === 'End'
-								? pages.length - 1
-								: Math.max(
-										0,
-										Math.min(
-											pages.length - 1,
-											current + (['ArrowRight', 'ArrowDown'].includes(key.key) ? 1 : -1),
-										),
-									);
-					this.#controller.setPage(next);
-					pages[next]?.focus();
-				}
+				key.preventDefault();
+				const tabs = [...this.#root.querySelectorAll<HTMLButtonElement>('[data-tab]')];
+				const index = tabs.indexOf(button);
+				const next =
+					key.key === 'Home'
+						? tabs[0]
+						: key.key === 'End'
+							? tabs.at(-1)
+							: tabs[(index + (key.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length];
+				if (!next?.dataset.tab) return;
+				this.showTab(next.dataset.tab);
+				next.focus();
 			},
 			options,
 		);
@@ -172,7 +148,7 @@ export class ViewerChrome {
 			button.setAttribute('aria-selected', String(selected));
 			button.tabIndex = selected ? 0 : -1;
 		}
-		for (const panel of this.#root.querySelectorAll<HTMLElement>('[role="tabpanel"]'))
+		for (const panel of this.#root.querySelectorAll<HTMLElement>('.ribbon-content'))
 			panel.hidden = panel.id !== `${tab}-panel`;
 	}
 	/** On phones, close the Tools sheet once a command runs. */
@@ -190,16 +166,9 @@ export class ViewerChrome {
 		return this.#root.querySelector(`[command="${name}"]`)!;
 	}
 	#setPane(pane: TaskPane, visible: boolean): void {
-		// Phones show one pane at a time; the left column also holds one of Shapes or Pages.
-		const exclusive = this.#compact?.matches
-			? (Object.keys(this.#panes) as TaskPane[])
-			: pane === 'shapes'
-				? ['pages' as const]
-				: pane === 'pages'
-					? ['shapes' as const]
-					: [];
-		if (visible)
-			for (const other of exclusive)
+		// Phones show one pane at a time.
+		if (visible && this.#compact?.matches)
+			for (const other of Object.keys(this.#panes) as TaskPane[])
 				if (other !== pane) {
 					this.#panes[other].hidden = true;
 					this.#command(other).setAttribute('checked', 'false');
@@ -237,68 +206,41 @@ export class ViewerChrome {
 	}
 	render(state: ViewerState, noteCount: number): void {
 		const page = state.document?.pages[state.pageIndex];
+		const doc = this.#root.ownerDocument;
 		if (state.document !== this.#document) {
 			this.#document = state.document;
-			const focused = this.#root.activeElement as HTMLElement | null;
-			const restoreFocus = focused?.dataset.pageIndex;
-			const fragment = this.#root.ownerDocument.createDocumentFragment();
-			for (const [index, candidate] of (state.document?.pages ?? []).entries()) {
-				const item = this.#root.ownerDocument.createElement('li');
-				const button = this.#root.ownerDocument.createElement('button');
-				button.type = 'button';
-				button.className = 'page-link';
-				button.dataset.pageIndex = String(index);
-				button.setAttribute('aria-label', `Go to page ${index + 1}: ${candidate.name}`);
-				const number = this.#root.ownerDocument.createElement('span');
-				number.className = 'page-number';
-				number.textContent = String(index + 1);
-				const card = this.#root.ownerDocument.createElement('span');
-				card.className = 'page-card';
-				const mark = this.#root.ownerDocument.createElement('span');
-				mark.className = 'page-mark';
-				mark.textContent = '▤';
-				mark.setAttribute('aria-hidden', 'true');
-				const name = this.#root.ownerDocument.createElement('span');
-				name.className = 'page-name';
-				name.textContent = candidate.name;
-				const meta = this.#root.ownerDocument.createElement('span');
-				meta.className = 'page-meta';
-				meta.textContent = candidate.isBackground
-					? 'Background page'
-					: `${candidate.width} × ${candidate.height} in`;
-				card.append(mark, name, meta);
-				button.append(number, card);
-				item.append(button);
-				fragment.append(item);
-			}
-			this.#pageList.replaceChildren(fragment);
-			// The shared tab strip inserts labels as text.
-			this.#pageTabs.tabs = (state.document?.pages ?? []).map((candidate, index) => ({
+			const pages = state.document?.pages ?? [];
+			// The shared tab strip and menu items insert labels as text.
+			this.#pageTabs.tabs = pages.map((candidate, index) => ({
 				id: String(index),
 				label: candidate.name,
 				title: candidate.isBackground ? `${candidate.name} (background page)` : candidate.name,
 			}));
-			if (restoreFocus !== undefined)
-				[...this.#pageList.querySelectorAll<HTMLButtonElement>('button')]
-					.find((button) => button.dataset.pageIndex === restoreFocus)
-					?.focus();
+			this.#allPages.replaceChildren(
+				...pages.map((candidate, index) => {
+					const item = doc.createElement('office-ui-menu-item');
+					item.setAttribute('command', `page-${index}`);
+					item.setAttribute(
+						'label',
+						candidate.isBackground ? `${candidate.name} (background)` : candidate.name,
+					);
+					return item;
+				}),
+			);
 		}
 		this.#pageTabs.selected = page ? String(state.pageIndex) : '';
-		for (const button of this.#pageList.querySelectorAll<HTMLButtonElement>('button')) {
-			const selected = Number(button.dataset.pageIndex) === state.pageIndex;
-			if (selected) button.setAttribute('aria-current', 'page');
-			else button.removeAttribute('aria-current');
-			button.tabIndex = selected ? 0 : -1;
-		}
+		for (const item of this.#allPages.querySelectorAll('office-ui-menu-item'))
+			item.setAttribute(
+				'checked',
+				String(item.getAttribute('command') === `page-${state.pageIndex}`),
+			);
+		this.#allPages.disabled = !page;
 		this.#root
 			.querySelector('[data-page-status]')!
 			.setAttribute(
 				'value',
 				page ? `Page ${state.pageIndex + 1} of ${state.document!.pages.length}` : '',
 			);
-		const count = state.document?.pages.length ?? 0;
-		this.#root.querySelector('[data-page-count]')!.textContent = String(count);
-		this.#root.querySelector<HTMLElement>('.page-empty')!.hidden = count > 0;
 		this.#root.querySelector('[data-page-name]')!.textContent = page?.name ?? 'No diagram open';
 		this.#root.querySelector('[data-page-size]')!.textContent = page
 			? `${page.width} × ${page.height} in`

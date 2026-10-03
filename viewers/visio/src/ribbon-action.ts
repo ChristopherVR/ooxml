@@ -3,7 +3,7 @@ export type VisioRibbonAction =
 	| { type: 'history'; key: 'undo' | 'redo' }
 	| { type: 'tool'; tool: 'pointer' | 'rectangle' }
 	| { type: 'delete' }
-	| { type: 'pane'; pane: 'shapes' | 'pages' | 'inspector' }
+	| { type: 'pane'; pane: 'shapes' | 'inspector' }
 	| { type: 'reveal'; panel: 'edit' | 'notes' | 'selection' | 'layers'; focusText?: boolean }
 	| { type: 'grid' }
 	| { type: 'ruler' }

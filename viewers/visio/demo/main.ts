@@ -8,12 +8,18 @@ const fileName = get('file-name'),
 	fileState = get('file-state'),
 	errorBox = get('error');
 const disposeTheme = wireWorkspaceTheme(document);
-const revealWorkspace = wireWorkspaceShell(document);
+const revealWorkspace = wireWorkspaceShell(document, {
+	browse: () => get<HTMLInputElement>('file').click(),
+	sample: () => loadSample(),
+});
 let requestId = 0;
 const viewer = mountViewer(get('viewer'), {
 	document: demoDocument,
 	events: {
 		'document-load': () => {
+			// Files opened from the viewer's own File > Open land here too.
+			fileName.textContent = viewer.element.fileName || 'Untitled drawing';
+			revealWorkspace();
 			refreshNotes();
 			viewer.fit();
 		},
@@ -34,8 +40,6 @@ workspaceReport.slot = 'workspace-footer';
 viewer.element.append(workspaceReport);
 function refreshEditState(): void {
 	const state = viewer.controller.state;
-	get<HTMLButtonElement>('export-vsdx').disabled =
-		!state.edit.sourceAvailable || state.loading || state.edit.busy;
 	get('edit-label').textContent =
 		state.document?.format === 'vsd'
 			? 'LEGACY VSD PREVIEW'
@@ -90,74 +94,24 @@ async function openFile(file: File): Promise<void> {
 	}
 }
 const input = get<HTMLInputElement>('file');
-const downloadUrls = new Set<string>();
-get('export-svg').addEventListener('click', () => {
-	errorBox.hidden = true;
-	get('export-status').textContent = '';
-	let url: string | undefined;
-	const anchor = document.createElement('a');
-	try {
-		const result = viewer.exportSvg();
-		url = URL.createObjectURL(new Blob([result.svg], { type: 'image/svg+xml;charset=utf-8' }));
-		downloadUrls.add(url);
-		anchor.href = url;
-		anchor.download = `visio-page-${result.pageIndex + 1}.svg`;
-		anchor.hidden = true;
-		document.body.append(anchor);
-		anchor.click();
-		get('export-status').textContent =
-			`SVG download requested for ${result.pageName}. This is an approximate snapshot. ${result.diagnostics.length} compatibility notes are included in the file.`;
-	} catch (cause) {
-		errorBox.hidden = false;
-		errorBox.textContent = cause instanceof Error ? cause.message : String(cause);
-	} finally {
-		anchor.remove();
-		if (url) {
-			const created = url;
-			// Keep the URL alive through browser download dispatch, then release it.
-			window.setTimeout(() => {
-				if (downloadUrls.delete(created)) URL.revokeObjectURL(created);
-			}, 1000);
-		}
-	}
-});
-get('export-vsdx').addEventListener('click', () => {
-	errorBox.hidden = true;
-	let url: string | undefined;
-	const anchor = document.createElement('a');
-	try {
-		const result = viewer.element.exportVsdx();
-		url = URL.createObjectURL(
-			new Blob([new Uint8Array(result.bytes)], { type: 'application/vnd.ms-visio.drawing' }),
-		);
-		downloadUrls.add(url);
-		anchor.href = url;
-		anchor.download = `${(fileName.textContent || 'diagram').replace(/\.vsdx$/i, '')}-${result.dirty ? 'edited' : 'original'}-copy.vsdx`;
-		anchor.hidden = true;
-		document.body.append(anchor);
-		anchor.click();
-		get('export-status').textContent =
-			`VSDX ${result.dirty ? 'edited' : 'original'} copy download requested. Supported affected formula caches are recalculated for geometry edits. Unsupported edits are rejected; native Visio compatibility is not verified. ${result.diagnostics.map((item) => item.message).join(' ')}`;
-	} catch (cause) {
-		errorBox.hidden = false;
-		errorBox.textContent = cause instanceof Error ? cause.message : String(cause);
-	} finally {
-		anchor.remove();
-		if (url) {
-			const created = url;
-			window.setTimeout(() => {
-				if (downloadUrls.delete(created)) URL.revokeObjectURL(created);
-			}, 1000);
-		}
-	}
-});
-get('open').addEventListener('click', () => input.click());
 input.addEventListener('change', () => {
 	const file = input.files?.[0];
 	if (file) void openFile(file);
 	input.value = '';
 });
-get('sample').addEventListener('click', () => {
+/** The sample is offered as a template in the viewer's File > New page. */
+const sampleTemplate = document.createElement('button');
+sampleTemplate.type = 'button';
+sampleTemplate.slot = 'templates';
+sampleTemplate.className = 'template-card';
+const templateTitle = document.createElement('strong');
+templateTitle.textContent = 'Sample workflow';
+const templateDescription = document.createElement('span');
+templateDescription.textContent = 'A two-page release diagram.';
+sampleTemplate.append(templateTitle, templateDescription);
+sampleTemplate.addEventListener('click', () => loadSample());
+viewer.element.append(sampleTemplate);
+function loadSample(): void {
 	++requestId;
 	errorBox.hidden = true;
 	viewer.update({ document: demoDocument, pageIndex: 0 });
@@ -166,7 +120,8 @@ get('sample').addEventListener('click', () => {
 	refreshEditState();
 	refreshNotes();
 	viewer.fit();
-});
+	viewer.element.closeBackstage();
+}
 const overlay = get('drop-overlay');
 let dragDepth = 0;
 window.addEventListener('dragenter', (event) => {
@@ -199,8 +154,6 @@ window.addEventListener('drop', (event) => {
 	if (file) void openFile(file);
 });
 window.addEventListener('pagehide', (event) => {
-	for (const url of downloadUrls) URL.revokeObjectURL(url);
-	downloadUrls.clear();
 	if (event.persisted) {
 		viewer.controller.cancelLoad();
 		viewer.cancelEdit();

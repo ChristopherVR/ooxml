@@ -56,12 +56,6 @@ export function buildViewPanel(doc: Document, panel: HTMLElement): void {
 								checked: true,
 							},
 							{
-								id: 'pages',
-								label: 'Pages',
-								action: { type: 'pane', pane: 'pages' },
-								checked: false,
-							},
-							{
 								id: 'inspector',
 								label: 'Inspector',
 								action: { type: 'pane', pane: 'inspector' },

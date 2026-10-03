@@ -1,12 +1,12 @@
 import { test, expect } from '@playwright/test';
-import { zoomPreset } from './ribbon.js';
+import { exportSvgCommand, loadSampleTemplate, zoomPreset } from './ribbon.js';
 
 test('sample supports page navigation, zoom, selection and compatibility notes', async ({
 	page,
 }) => {
 	await page.goto('/demo/?sample=1');
 	await expect(page.locator('visio-viewer svg.paper')).toBeVisible();
-	await expect(page.getByText('Sample workflow', { exact: true })).toBeVisible();
+	await expect(page.locator('#file-name')).toHaveText('Sample workflow');
 	await page
 		.locator('visio-viewer')
 		.getByRole('tab', { name: 'Architecture', exact: true })
@@ -33,13 +33,13 @@ test('rejected inputs show an error and retain prior diagram', async ({ page }) 
 		'aria-label',
 		'Release workflow',
 	);
-	await page.getByRole('button', { name: 'Load sample' }).click();
+	await loadSampleTemplate(page.locator('visio-viewer'));
 	await expect(page.locator('#error')).toBeHidden();
 });
 test('mobile layout keeps open control, canvas and notes accessible', async ({ page }) => {
 	await page.setViewportSize({ width: 390, height: 844 });
 	await page.goto('/demo/?sample=1');
-	await expect(page.getByRole('button', { name: 'Open Visio file' })).toBeVisible();
+	await expect(page.locator('visio-viewer .file-tab')).toBeVisible();
 	await expect(page.locator('visio-viewer svg.paper')).toBeVisible();
 	expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
 	await page.screenshot({ path: 'test-results/mobile-workspace.png', fullPage: true });
@@ -99,7 +99,7 @@ test('mobile primary controls have usable touch targets', async ({ page }) => {
 	await page.setViewportSize({ width: 390, height: 844 });
 	await page.goto('/demo/?sample=1');
 	for (const locator of [
-		page.getByRole('button', { name: 'Open Visio file' }),
+		page.locator('visio-viewer .file-tab'),
 		page.locator('visio-viewer office-ui-zoom-slider .fit'),
 	]) {
 		const box = await locator.boundingBox();
@@ -118,10 +118,11 @@ test('explicit SVG download contains the current page and leaves selection uncha
 		.click();
 	await page.locator('visio-viewer [data-shape-id="a1"]').click();
 	const selection = await page.locator('#selection').textContent();
+	const exportSvg = await exportSvgCommand(page.locator('visio-viewer'));
 	const downloadEvent = page.waitForEvent('download');
-	await page.getByRole('button', { name: 'Export SVG', exact: true }).click();
+	await exportSvg.click();
 	const download = await downloadEvent;
-	expect(download.suggestedFilename()).toBe('visio-page-2.svg');
+	expect(download.suggestedFilename()).toBe('Drawing-page-2.svg');
 	const stream = await download.createReadStream();
 	const chunks: Buffer[] = [];
 	for await (const chunk of stream!) chunks.push(Buffer.from(chunk));
@@ -136,7 +137,7 @@ test('explicit SVG download contains the current page and leaves selection uncha
 		'aria-label',
 		'Architecture',
 	);
-	await expect(page.locator('#export-status')).toContainText('approximate snapshot');
+	await expect(page.locator('visio-viewer [data-status]')).toContainText('approximate snapshot');
 });
 
 test('isolated import renders the bounded embedded EMF subset and safely omits other records', async ({
@@ -166,7 +167,7 @@ test('isolated import renders the bounded embedded EMF subset and safely omits o
 	await expect(page.locator('#file-name')).toHaveText('unsupported.vsdx');
 	await expect(page.locator('visio-viewer [data-shape-id="emf"] svg')).toHaveCount(0);
 	await expect(page.locator('#notes')).toContainText('conversion subset');
-	await page.getByRole('button', { name: 'Load sample' }).click();
+	await loadSampleTemplate(page.locator('visio-viewer'));
 	await expect(page.locator('visio-viewer svg.paper')).toHaveAttribute(
 		'aria-label',
 		'Release workflow',

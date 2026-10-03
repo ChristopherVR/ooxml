@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { taskPane } from './ribbon.js';
+import { downloadCopy, loadSampleTemplate, saveCommand, taskPane } from './ribbon.js';
 import { createVsdxFixture } from './fixture.mjs';
 
 test('edits literal text locally, undoes/redoes and downloads a reopenable VSDX copy', async ({
@@ -12,7 +12,7 @@ test('edits literal text locally, undoes/redoes and downloads a reopenable VSDX 
 			external.push(request.url());
 	});
 	await page.goto('/demo/?sample=1');
-	await expect(page.getByRole('button', { name: 'Download VSDX copy' })).toBeDisabled();
+	await expect(saveCommand(page.locator('visio-viewer'))).toBeDisabled();
 	await page.locator('#file').setInputFiles({
 		name: 'editable.vsdx',
 		mimeType: 'application/vnd.ms-visio.drawing',
@@ -41,8 +41,9 @@ test('edits literal text locally, undoes/redoes and downloads a reopenable VSDX 
 		.getByRole('button', { name: 'Redo', exact: true })
 		.click();
 	await expect(page.locator('visio-viewer svg text')).toContainText('Literal edited text');
+	const saveAs = await downloadCopy(page.locator('visio-viewer'));
 	const downloadEvent = page.waitForEvent('download');
-	await page.getByRole('button', { name: 'Download VSDX copy' }).click();
+	await saveAs.click();
 	const download = await downloadEvent;
 	expect(download.suggestedFilename()).toBe('editable-edited-copy.vsdx');
 	const stream = await download.createReadStream();
@@ -82,8 +83,7 @@ test('mobile editor preserves literal drafts, keyboard cancellation and touch ta
 		expect(box?.height).toBeGreaterThanOrEqual(44);
 	}
 	expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
-	await page.locator('#file-menu').click();
-	await page.getByRole('button', { name: 'Load sample' }).click();
+	await loadSampleTemplate(page.locator('visio-viewer'));
 	await expect(input).toHaveValue('');
 	await expect(input).toBeDisabled();
 });

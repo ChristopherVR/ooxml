@@ -47,12 +47,26 @@ export function createStatusBar(doc: Document): HTMLElement {
 	return bar;
 }
 
-/** Visio's page tabs under the drawing, on the shared document tab strip. */
+/**
+ * Visio's page bar under the drawing: the All pages list, the shared document tab strip and
+ * Insert Page, which stays disabled until core can add pages.
+ */
 export function createPageTabs(doc: Document): HTMLElement {
+	const bar = doc.createElement('div');
+	bar.className = 'page-bar';
+	const all = doc.createElement('office-ui-menu-button');
+	all.dataset.menu = 'all-pages';
+	all.setAttribute('label', 'All');
+	all.setAttribute('title', 'All pages');
+	all.setAttribute('disabled', '');
 	const strip = doc.createElement('office-ui-tab-strip');
 	strip.className = 'page-tabs';
 	strip.setAttribute('label', 'Pages');
 	strip.setAttribute('previous-label', 'Previous page');
 	strip.setAttribute('next-label', 'Next page');
-	return strip;
+	strip.setAttribute('add-label', 'Insert Page');
+	strip.setAttribute('add-disabled', '');
+	strip.setAttribute('add-title', 'Insert Page: not available yet. Needs core page insertion.');
+	bar.append(all, strip);
+	return bar;
 }

@@ -1,0 +1,187 @@
+/* Visio's File tab and backstage. */
+:host {
+	position: relative;
+}
+.file-tab {
+	flex: none;
+	min-height: 35px;
+	margin: 0 4px 0 0;
+	padding: 6px 16px;
+	border: 0;
+	border-radius: 0;
+	background: var(--_vv-accent);
+	color: var(--vv-accent-ink, #fff);
+	font-size: 13px;
+}
+.file-tab:hover:enabled {
+	background: color-mix(in srgb, var(--_vv-accent) 85%, #000);
+	color: var(--vv-accent-ink, #fff);
+}
+.backstage {
+	position: absolute;
+	inset: 0;
+	z-index: 30;
+	display: flex;
+	min-width: 0;
+	background: var(--_vv-surface);
+}
+.backstage[hidden] {
+	display: none;
+}
+.backstage-nav {
+	display: flex;
+	flex: 0 0 200px;
+	flex-direction: column;
+	padding: 12px 0;
+	overflow: auto;
+	background: var(--_vv-accent);
+	color: var(--vv-accent-ink, #fff);
+}
+.backstage-nav button {
+	border: 0;
+	border-radius: 0;
+	background: transparent;
+	color: inherit;
+	text-align: left;
+}
+.backstage-back {
+	width: 36px;
+	min-height: 36px;
+	margin: 0 0 12px 16px;
+	padding: 0;
+	border: 1.5px solid currentColor !important;
+	border-radius: 50% !important;
+	font-size: 18px;
+	text-align: center !important;
+}
+.backstage-item {
+	min-height: 38px;
+	padding: 6px 24px;
+	font-size: 14px;
+}
+.backstage-item:hover:enabled,
+.backstage-item[aria-current] {
+	background: color-mix(in srgb, #000 22%, transparent) !important;
+	color: inherit;
+}
+.backstage-item:disabled {
+	opacity: 0.55;
+}
+.backstage-footer {
+	display: flex;
+	flex-direction: column;
+	margin-top: auto;
+	padding-top: 16px;
+}
+.backstage-body {
+	flex: 1;
+	min-width: 0;
+	overflow: auto;
+	padding: 28px 40px;
+}
+.backstage-page h1 {
+	margin: 0 0 24px;
+	font-size: 34px;
+	font-weight: 300;
+}
+.backstage-page h2 {
+	margin: 20px 0 8px;
+	font-size: 16px;
+	font-weight: 600;
+}
+.backstage-file {
+	margin-top: 0 !important;
+	font-size: 20px !important;
+	font-weight: 400 !important;
+	overflow-wrap: anywhere;
+}
+.backstage-facts {
+	display: grid;
+	grid-template-columns: max-content 1fr;
+	gap: 8px 24px;
+	max-width: 520px;
+	margin: 0;
+	font-size: 13px;
+}
+.backstage-facts dt {
+	color: var(--_vv-muted);
+}
+.backstage-facts dd {
+	margin: 0;
+	overflow-wrap: anywhere;
+}
+.backstage-action {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 2px;
+	width: min(420px, 100%);
+	min-height: 64px;
+	margin: 0 0 10px;
+	padding: 10px 16px;
+	text-align: left;
+	background: var(--_vv-surface);
+}
+.backstage-action strong {
+	font-size: 14px;
+	font-weight: 600;
+}
+.backstage-action span,
+.backstage-muted,
+.backstage-note-count {
+	color: var(--_vv-muted);
+	font-size: 12px;
+}
+.backstage-templates {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+}
+.backstage-templates .backstage-action,
+.backstage-templates ::slotted(*) {
+	width: 200px;
+	min-height: 120px;
+}
+.backstage-print-preview {
+	max-width: 420px;
+	padding: 12px;
+	border: 1px solid var(--_vv-border);
+	background: #fff;
+}
+.backstage-print-preview svg {
+	display: block;
+	width: 100%;
+	height: auto;
+}
+@media (max-width: 760px), (pointer: coarse) {
+	.file-tab {
+		min-height: 44px;
+		min-width: 52px;
+	}
+}
+@media (max-width: 760px) {
+	.backstage {
+		flex-direction: column;
+	}
+	.backstage-nav {
+		flex: none;
+		flex-direction: row;
+		flex-wrap: wrap;
+		padding: 6px;
+	}
+	.backstage-back {
+		margin: 4px;
+	}
+	.backstage-item {
+		min-height: 44px;
+		padding: 6px 12px;
+	}
+	.backstage-footer {
+		flex-direction: row;
+		margin-top: 0;
+		padding-top: 0;
+	}
+	.backstage-body {
+		padding: 16px;
+	}
+}

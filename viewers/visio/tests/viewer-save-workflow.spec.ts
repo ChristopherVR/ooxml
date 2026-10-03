@@ -1,11 +1,12 @@
 import { test, expect, type Page } from '@playwright/test';
-import { taskPane } from './ribbon.js';
+import { downloadCopy, taskPane } from './ribbon.js';
 import JSZip from 'jszip';
 import { createVsdxFixture } from './fixture.mjs';
 
-async function downloadCopy(page: Page): Promise<Buffer> {
+async function savedBytes(page: Page): Promise<Buffer> {
+	const command = await downloadCopy(page.locator('visio-viewer'));
 	const next = page.waitForEvent('download');
-	await page.getByRole('button', { name: 'Download VSDX copy' }).click();
+	await command.click();
 	const download = await next,
 		stream = await download.createReadStream();
 	const chunks: Buffer[] = [];
@@ -64,7 +65,7 @@ test('geometry preserves an unapplied text draft and downloads/reloads actual ed
 	await page.getByLabel('Height (inches)', { exact: true }).fill('2');
 	await page.getByRole('button', { name: 'Create rectangle', exact: true }).click();
 	await expect(page.locator('visio-viewer [data-shape-id="42"]')).toHaveCount(1);
-	const copy = await downloadCopy(page),
+	const copy = await savedBytes(page),
 		reopened = await JSZip.loadAsync(copy);
 	expect(await reopened.file('unknown/preserved.bin')!.async('nodebuffer')).toEqual(preserved);
 	const xml = await reopened.file('visio/pages/page1.xml')!.async('string');
@@ -117,7 +118,7 @@ test('protected geometry refusal keeps draft, history and byte-exact original co
 		'transform',
 		before!,
 	);
-	expect(await downloadCopy(page)).toEqual(original);
+	expect(await savedBytes(page)).toEqual(original);
 	await page.getByRole('button', { name: 'Cancel', exact: true }).click();
 	await expect(page.getByLabel('Pin X (inches)')).toHaveValue('');
 	await expect(page.getByLabel('Selected shape text', { exact: true })).toHaveValue(

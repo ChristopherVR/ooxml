@@ -15,6 +15,9 @@ import { createPageTabs, createStatusBar } from './status-bar.js';
 import { createFindBar, wireFindBar } from './viewer-search.js';
 import { fitZoom } from './viewer-fit.js';
 import { createShapesWindow } from './shapes-window.js';
+import { createBackstage, type BackstagePage } from './backstage.js';
+import { ViewerBackstage } from './viewer-backstage.js';
+import { createContextMenus, wireContextMenus } from './viewer-context-menu.js';
 import { wireStencil } from './viewer-stencil.js';
 import { createRulers, type Rulers } from './viewer-ruler.js';
 import { ViewerEditControls } from './viewer-edit-controls.js';
@@ -44,6 +47,9 @@ export class VisioViewerElement extends BaseElement {
 	#announcement: string | undefined;
 	#commands: ViewerCommands;
 	#rulers: Rulers;
+	#backstage: ViewerBackstage;
+	#fileName = '';
+	#loadToken = 0;
 	#findBar: HTMLElement;
 	#status: HTMLSpanElement;
 	#diagnostics: HTMLSpanElement;
@@ -85,6 +91,7 @@ export class VisioViewerElement extends BaseElement {
 		this.#findBar = createFindBar(document);
 		workspace.before(createRibbon(document), this.#findBar);
 		workspace.prepend(createShapesWindow(document));
+		this.#root.append(createBackstage(document), ...createContextMenus(document));
 		workspace.after(createPageTabs(document), createStatusBar(document));
 		this.#viewport = this.#root.querySelector('.viewport')!;
 		this.#rulers = createRulers(this.#viewport);
@@ -119,6 +126,24 @@ export class VisioViewerElement extends BaseElement {
 				this.#status.textContent = message;
 			},
 		});
+		this.#backstage = new ViewerBackstage({
+			root: this.#root,
+			viewport: this.#viewport,
+			fileName: () => this.#fileName,
+			load: (source) => this.load(source),
+			exportVsdx: () => this.controller.exportVsdx(),
+			exportSvg: () => this.exportSvg(),
+			closeDocument: () => {
+				this.#fileName = '';
+				this.controller.setDocument(null);
+			},
+			revealNotes: () => this.#chrome.reveal('notes'),
+			announce: (message) => {
+				this.#announcement = message;
+				this.#status.textContent = message;
+			},
+			noteCount: () => this.#notes.children.length,
+		});
 		this.#disposeInputs = this.#wireInputs();
 		this.#unsubscribe = this.controller.subscribe((state) => this.#render(state));
 		this.#eventUnsubscribe = this.controller.onEvent((name, detail) => {
@@ -129,6 +154,8 @@ export class VisioViewerElement extends BaseElement {
 		return this.controller.state.document;
 	}
 	set document(value: VisioDocument | null) {
+		++this.#loadToken;
+		this.#fileName = '';
 		this.controller.setDocument(value);
 	}
 	get pageIndex(): number {
@@ -156,6 +183,7 @@ export class VisioViewerElement extends BaseElement {
 	}
 	async load(source: VsdxSource): Promise<void> {
 		this.#assertAlive();
+		const token = ++this.#loadToken;
 		if (source instanceof Blob) {
 			await this.controller.loadSource(() => {
 				if (source.size > MAX_INPUT_BYTES)
@@ -163,6 +191,24 @@ export class VisioViewerElement extends BaseElement {
 				return source.arrayBuffer();
 			});
 		} else await this.controller.load(source);
+		// A destroyed or superseded viewer keeps no name from a late load.
+		if (this.#disposed || token !== this.#loadToken) return;
+		this.#fileName = typeof File !== 'undefined' && source instanceof File ? source.name : '';
+		this.#render(this.controller.state);
+	}
+	/** Leave Visio's File backstage and return to the drawing. */
+	closeBackstage(): void {
+		this.#assertAlive();
+		this.#backstage.hide();
+	}
+	/** Open Visio's File backstage at a page (Info by default). */
+	openBackstage(page?: BackstagePage): void {
+		this.#assertAlive();
+		this.#backstage.show(page);
+	}
+	/** Name of the last opened local file, or empty for bytes, models and closed drawings. */
+	get fileName(): string {
+		return this.#fileName;
 	}
 	applyEdits(edits: readonly VisioEdit[]): Promise<void> {
 		this.#assertAlive();
@@ -271,6 +317,8 @@ export class VisioViewerElement extends BaseElement {
 	#wireInputs(): () => void {
 		const disposeChrome = this.#chrome.wire();
 		const disposeCommands = this.#commands.wire();
+		const disposeBackstage = this.#backstage.wire();
+		const disposeMenus = wireContextMenus(this.#root, this.#viewport, this.controller);
 		const disposeRulers = this.#rulers.wire();
 		const disposeStencil = wireStencil(
 			this.#root.querySelector('.shapes-pane')!,
@@ -299,6 +347,8 @@ export class VisioViewerElement extends BaseElement {
 		return () => {
 			disposeChrome();
 			disposeCommands();
+			disposeBackstage();
+			disposeMenus();
 			disposeRulers();
 			disposeStencil();
 			disposeFind();
@@ -419,6 +469,7 @@ export class VisioViewerElement extends BaseElement {
 				state.layerVisibilityOverrides.length === 0;
 		this.#chrome.render(state, this.#notes.children.length);
 		this.#commands.render(state);
+		this.#backstage.render(state);
 		this.#viewport.setAttribute('aria-busy', String(state.loading || state.edit.busy));
 		this.#status.textContent = state.loading
 			? 'Opening diagram…'

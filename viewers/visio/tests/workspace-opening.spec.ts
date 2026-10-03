@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { openFind, taskPane } from './ribbon.js';
+import { loadSampleTemplate, openFind, taskPane } from './ribbon.js';
 import { createVsdxFixture } from './fixture.mjs';
 
 test('mobile Tools exposes Visio groups, opens Find and edits text with F2', async ({ page }) => {
@@ -73,14 +73,15 @@ test('opening screen supports browse cancellation, rejected input and repeated s
 	await expect(page.locator('#start-screen')).toBeHidden();
 	await expect(page.locator('#error')).toBeHidden();
 	await expect(page.locator('visio-viewer .viewport>svg')).toBeVisible();
-	await page.locator('#file-menu').click();
-	await expect(page.locator('#file-commands')).toHaveAttribute('data-open', '');
+	// Visio's File backstage: Escape returns to the drawing with focus on File.
+	const viewer = page.locator('visio-viewer');
+	await viewer.locator('.file-tab').click();
+	await expect(viewer.locator('.backstage')).toBeVisible();
 	await page.keyboard.press('Escape');
-	await expect(page.locator('#file-menu')).toBeFocused();
-	await expect(page.locator('#file-commands')).not.toHaveAttribute('data-open');
-	await page.locator('#file-menu').click();
-	await page.getByRole('button', { name: 'Load sample', exact: true }).click();
-	await expect(page.locator('#file-commands')).not.toHaveAttribute('data-open');
+	await expect(viewer.locator('.backstage')).toBeHidden();
+	await expect(viewer.locator('.file-tab')).toBeFocused();
+	await loadSampleTemplate(viewer);
+	await expect(viewer.locator('.backstage')).toBeHidden();
 });
 
 test('mobile local file opens into bounded canvas and inspector can close and survive resize', async ({

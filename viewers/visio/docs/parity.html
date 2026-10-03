@@ -337,32 +337,37 @@
 							<tr>
 								<td>Ribbon and toolbar commands</td>
 								<td>
-									Microsoft Visio ribbon layout (Quick Access Toolbar; Home, Insert, Design, Data,
-									Process, Review and View tabs) with native shortcuts
+									Microsoft Visio window: File backstage, Quick Access Toolbar, Home, Insert,
+									Design, Data, Process, Review and View tabs, Shapes window, context menus, page
+									bar and status bar, with native shortcuts
 								</td>
 								<td>
-									Partial: Visio's tabs, groups, large/small/three-row command layout, dropdown and
-									split menus and dialog launchers, compared with a capture of Visio 16's Home tab.
-									Working: Undo/Redo (Quick Access, Ctrl+Z/Y), Pointer Tool (Ctrl+1), Rectangle drag
-									tool (Ctrl+8, 1/16 in snap), Find... (Ctrl+F find bar), Layer Properties, Ruler,
-									Grid, Task Panes, Full Screen (F5), Zoom presets, Fit to Window, Page Width, Shape
-									Data Window, Delete (Del), Edit text (F2, double-click). Every other command is
-									visible, disabled and names the missing capability; composed from shared ooxml-ui
+									Partial. Layout follows a capture of Visio 16: tabs, groups, large and three-row
+									commands, dropdown and split menus, dialog launchers; File backstage (Info, New,
+									Open, Save, Save As, Print, Share, Export, Close, Account, Feedback, Options); the
+									Shapes window with the Basic Shapes stencil; shape and page context menus; page
+									tabs with All pages and Insert Page. Working: Undo/Redo, Pointer Tool, Rectangle
+									drag tool and Rectangle master (drag or Enter), Edit Text, Shape Data, Find
+									(Ctrl+F), Layer Properties, Ruler, Grid, Task Panes, Zoom presets, Fit to Window,
+									Page Width, Full Screen, File Open, Save and Save As (VSDX copy), Export SVG,
+									Print current page, Close and Info. Every other command, master and page is
+									visible, disabled and names the missing capability. Composed from shared ooxml-ui
 									controls
 								</td>
 								<td>
-									ribbon.ts, ribbon-home.ts, ribbon-view.ts, ribbon-other-tabs.ts, ribbon-parts.ts,
-									ribbon-router.ts; viewer-commands.ts; viewer-ruler.ts; viewer-draw-tool.ts;
-									viewer-commands.test.ts; visio-toolbar.spec.ts. Rectangle create plus delete
-									reopened in Visio 16 over COM with exact PinX/PinY/Width/Height
+									ribbon*.ts, backstage.ts, viewer-backstage.ts, shapes-window.ts,
+									viewer-stencil.ts, viewer-context-menu.ts, viewer-commands.ts, viewer-ruler.ts;
+									viewer-chrome.test.ts, viewer-commands.test.ts, shapes-window.test.ts,
+									visio-toolbar.spec.ts. Rectangle create plus delete reopened in Visio 16 over COM
+									with exact PinX/PinY/Width/Height
 								</td>
 								<td>
 									Clipboard, Font, Paragraph, Shape Styles, Arrange, Connector, Text and other
-									drawing tools, Change Shape, Insert, Design, Data, Process and Review commands
-									need new core edit commands. Also missing: File backstage (host-owned today),
-									shape context menu, on-canvas move/resize handles (need core-exposed PinX/LocPin),
-									multi-selection, Guides, Page Breaks, Pan &amp; Zoom and Size &amp; Position
-									panes, KeyTips
+									drawing tools, other Basic Shapes masters, Change Shape, Insert Page and the
+									Insert, Design, Data, Process and Review commands need new core edit commands.
+									Also missing: New blank drawing, PDF export, on-canvas move/resize handles (need
+									core-exposed PinX/LocPin), multi-selection, Guides, Page Breaks, Pan &amp; Zoom
+									and Size &amp; Position panes, KeyTips, stencil files
 								</td>
 							</tr>
 							<tr>
