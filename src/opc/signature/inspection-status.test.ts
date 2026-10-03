@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest';
 
-import { computeDetailStatus, computeVerificationStatus } from './signature-inspection-status';
+import { computeDetailStatus, computeVerificationStatus } from './inspection-status.js';
 import type {
 	SignatureDetail,
 	SignatureValidationPolicy,
 	SignatureReferenceCheck,
-} from './signature-types';
+} from './types.js';
 
 const defaultPolicy: SignatureValidationPolicy = {
 	requireRevocationCheck: false,

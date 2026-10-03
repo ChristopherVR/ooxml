@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { normalizePartPath, resolveReferenceUriToPart } from './signature-reference-utils';
+import { normalizePartPath, resolveReferenceUriToPart } from './reference-utils.js';
 
 describe('normalizePartPath', () => {
 	it('converts backslashes to forward slashes', () => {

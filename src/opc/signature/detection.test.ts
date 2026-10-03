@@ -1,12 +1,12 @@
 import { describe, it, expect } from 'vitest';
 
-import { DIGITAL_SIGNATURE_ORIGIN_REL_TYPE } from './signature-constants';
+import { DIGITAL_SIGNATURE_ORIGIN_REL_TYPE } from './constants.js';
 import {
 	detectDigitalSignatures,
 	getSignaturePathsToStrip,
 	parseSignatureXml,
 	verifySignatureDigests,
-} from './signature-detection';
+} from './detection.js';
 
 describe('detectDigitalSignatures', () => {
 	it('should detect no signatures when there are no _xmlsignatures entries', () => {
@@ -216,10 +216,10 @@ describe('parseSignatureXml', () => {
 
 		const result = parseSignatureXml(xml, '_xmlsignatures/sig1.xml');
 		expect(result.references).toHaveLength(2);
-		expect(result.references[0].uri).toContain('slide1.xml');
-		expect(result.references[0].digestValue).toBe('digest1==');
-		expect(result.references[1].uri).toContain('slide2.xml');
-		expect(result.references[1].digestValue).toBe('digest2==');
+		expect(result.references[0]!.uri).toContain('slide1.xml');
+		expect(result.references[0]!.digestValue).toBe('digest1==');
+		expect(result.references[1]!.uri).toContain('slide2.xml');
+		expect(result.references[1]!.digestValue).toBe('digest2==');
 	});
 
 	it('should extract digest method from first reference', () => {

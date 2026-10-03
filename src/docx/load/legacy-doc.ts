@@ -83,7 +83,9 @@ export async function loadLegacyDoc(input: Uint8Array | ArrayBuffer): Promise<Lo
 		);
 	}
 	if (streams.includes('EncryptionInfo') || streams.includes('EncryptedPackage')) {
-		throw new LegacyDocError('Encrypted Office files are not supported.');
+		throw new LegacyDocError(
+			'This is a password-protected .docx, not a legacy .doc: open it with loadDocument and its password.',
+		);
 	}
 	const cfb = unwrapDocBytes(original);
 	if (cfb && (readDocFib(cfb.wordDocBytes).flags1 & (1 << 8)) !== 0) {

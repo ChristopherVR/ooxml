@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 
-import { detectFileFormat, EncryptedFileError } from './encryption-detection';
+import { buildOle2 } from '@christophervr/ole2/ole2-parser-write';
+import { detectFileFormat, EncryptedFileError, isEncryptedOoxmlPackage } from './detect.js';
+import { encryptOoxmlPackage } from './index.js';
 
 // ---------------------------------------------------------------------------
 // detectFileFormat
@@ -139,5 +141,20 @@ describe('encryptedFileError', () => {
 	it('is instanceof EncryptedFileError', () => {
 		const err = new EncryptedFileError('Test');
 		expect(err).toBeInstanceOf(EncryptedFileError);
+	});
+});
+
+describe('isEncryptedOoxmlPackage', () => {
+	it('needs both encryption streams in a compound file', async () => {
+		const zip = new Uint8Array([0x50, 0x4b, 0x03, 0x04, 0, 0, 0, 0, 0, 0]);
+		const encrypted = await encryptOoxmlPackage(zip, 'pw', { spinCount: 10 });
+		expect(isEncryptedOoxmlPackage(encrypted)).toBe(true);
+		expect(isEncryptedOoxmlPackage(encrypted.buffer as ArrayBuffer)).toBe(true);
+		const legacy = buildOle2(new Map([['WordDocument', new Uint8Array(600)]]));
+		expect(isEncryptedOoxmlPackage(legacy)).toBe(false);
+		expect(detectFileFormat(legacy)).toStrictEqual({ format: 'ole', encrypted: true });
+		expect(isEncryptedOoxmlPackage(zip)).toBe(false);
+		// A truncated compound file is not an encrypted package (and does not throw).
+		expect(isEncryptedOoxmlPackage(encrypted.subarray(0, 600))).toBe(false);
 	});
 });

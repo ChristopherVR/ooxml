@@ -15,6 +15,7 @@ export default defineConfig({
 		'opc/index': 'src/opc/index.ts',
 		'diagram/index': 'src/diagram/index.ts',
 		'digest/index': 'src/digest/index.ts',
+		'crypto/index': 'src/crypto/index.ts',
 		'math/index': 'src/math/index.ts',
 		'docx/index': 'src/docx/index.ts',
 		'docx/embedded': 'src/docx/embedded.ts',
@@ -37,6 +38,7 @@ export default defineConfig({
 	external: ['jszip', '@xmldom/xmldom', 'yjs', 'y-protocols', 'lib0'],
 	treeshake: true,
 	platform: 'neutral',
-	// The legacy .doc and .xls loaders inline the shared ole2 codecs (a devDependency), like the pptx bundle.
+	// The legacy .doc and .xls loaders and the package encryption (its CFB container) inline the
+	// shared ole2 codecs (a devDependency), like the pptx bundle.
 	noExternal: [/^@christophervr\/ole2(?:\/|$)/],
 });

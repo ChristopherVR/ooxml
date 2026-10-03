@@ -15,7 +15,7 @@ import {
 	ENTERPRISE_REQUIRE_TIMESTAMP_ENV,
 	DIGEST_ALGORITHM_TO_HASH,
 	DIGEST_ALGORITHM_TO_WEB_CRYPTO,
-} from './signature-constants';
+} from './constants.js';
 
 describe('signature-constants', () => {
 	describe('relationship type constants', () => {

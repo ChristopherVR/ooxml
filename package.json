@@ -86,6 +86,11 @@
 			"import": "./dist/digest/index.mjs",
 			"require": "./dist/digest/index.cjs"
 		},
+		"./crypto": {
+			"types": "./dist/crypto/index.d.ts",
+			"import": "./dist/crypto/index.mjs",
+			"require": "./dist/crypto/index.cjs"
+		},
 		"./xml": {
 			"types": "./dist/xml/index.d.ts",
 			"import": "./dist/xml/index.mjs",

@@ -5,7 +5,7 @@ import {
 	extractTagAttribute,
 	extractFirstTagText,
 	extractAllTagText,
-} from './signature-xml-utils';
+} from './xml-utils.js';
 
 describe('escapeXmlAttr', () => {
 	it('escapes ampersands', () => {

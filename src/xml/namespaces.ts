@@ -56,6 +56,10 @@ export const NS = {
 	extendedProperties: 'http://schemas.openxmlformats.org/officeDocument/2006/extended-properties',
 	/** Dublin Core terms (`dcterms:created`). */
 	dcterms: 'http://purl.org/dc/terms/',
+	/** Custom document properties (`docProps/custom.xml`). */
+	customProperties: 'http://schemas.openxmlformats.org/officeDocument/2006/custom-properties',
+	/** Document property variant types (`vt:lpwstr`, `vt:vector`). */
+	vt: 'http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes',
 	/** XML itself (`xml:space`). */
 	xml: 'http://www.w3.org/XML/1998/namespace',
 } as const;

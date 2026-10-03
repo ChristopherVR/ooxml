@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { computeDigestBase64 } from './signature-digest';
+import { computeDigestBase64 } from './digest.js';
 
 describe('computeDigestBase64', () => {
 	it('returns the correct SHA-256 digest for an empty string', async () => {

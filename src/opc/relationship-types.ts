@@ -31,6 +31,7 @@ export const RELATIONSHIP_TYPES = {
 	coreProperties:
 		'http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties',
 	extendedProperties: `${BASE}/extended-properties`,
+	customProperties: `${BASE}/custom-properties`,
 	customXml: `${BASE}/customXml`,
 	worksheet: `${BASE}/worksheet`,
 	chartsheet: `${BASE}/chartsheet`,

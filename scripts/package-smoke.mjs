@@ -41,8 +41,11 @@ try {
 		'a runtime dependency uses file:',
 	);
 
-	// The legacy .doc and .xls loaders inline ole2: consumers must not need it.
+	// The legacy .doc and .xls loaders and the package encryption (its CFB container) inline
+	// ole2: consumers must not need it.
 	for (const file of [
+		'dist/crypto/index.mjs',
+		'dist/crypto/index.cjs',
 		'dist/docx/load/index.mjs',
 		'dist/docx/load/index.cjs',
 		'dist/xlsx/load/index.mjs',
