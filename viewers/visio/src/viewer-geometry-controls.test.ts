@@ -98,3 +98,61 @@ it('shows safe core rejection text and forgets obsolete errors on navigation', a
 	expect(error.hidden).toBe(true);
 	dispose();
 });
+
+it('forwards optional rectangle text literally and retains rejected geometry drafts and codes', async () => {
+	const { root, controller, input, button, dispose } = await setup();
+	const apply = vi
+		.spyOn(controller, 'applyEdits')
+		.mockRejectedValue(
+			Object.assign(new Error('ID already exists'), { code: 'EDIT_DUPLICATE_SHAPE' }),
+		);
+	input('id', '42');
+	input('x', '2');
+	input('y', '3');
+	input('width', '1');
+	input('height', '2');
+	input('text', '<script>Literal rectangle</script>');
+	button('create-rectangle').click();
+	await Promise.resolve();
+	await Promise.resolve();
+	expect(apply).toHaveBeenCalledWith([
+		{
+			type: 'create-rectangle',
+			pageId: '1',
+			shapeId: '42',
+			x: 2,
+			y: 3,
+			width: 1,
+			height: 2,
+			text: '<script>Literal rectangle</script>',
+		},
+	]);
+	expect(root.querySelector<HTMLInputElement>('[data-geometry-field="id"]')!.value).toBe('42');
+	expect(root.querySelector('[data-geometry-error]')?.textContent).toBe(
+		'EDIT_DUPLICATE_SHAPE: ID already exists',
+	);
+	expect(root.querySelector('script')).toBeNull();
+	dispose();
+});
+
+it('source replacement cancels the geometry draft identity and ignores an obsolete worker refusal', async () => {
+	const { root, controller, input, button, dispose } = await setup();
+	let reject!: (cause: Error) => void;
+	vi.spyOn(controller, 'applyEdits').mockImplementation(
+		() =>
+			new Promise((_, fail) => {
+				reject = fail;
+			}),
+	);
+	input('x', '2');
+	input('y', '3');
+	button('move-shape').click();
+	await controller.load(new Uint8Array([3]));
+	expect(root.querySelector<HTMLInputElement>('[data-geometry-field="x"]')!.value).toBe('');
+	reject(Object.assign(new Error('Obsolete protected target'), { code: 'EDIT_PROTECTED_CELL' }));
+	await Promise.resolve();
+	await Promise.resolve();
+	expect(root.querySelector<HTMLElement>('[data-geometry-error]')!.hidden).toBe(true);
+	expect(controller.state.edit.dirty).toBe(false);
+	dispose();
+});

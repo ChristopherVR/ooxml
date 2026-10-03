@@ -154,11 +154,15 @@ it('shared controls drive a real core edit, refresh draft and restore byte-exact
 	const unsubscribe = controller.subscribe((state) => controls.render(state));
 	const dispose = controls.wire();
 	controller.selectShape({ id: '1', name: 'Import test', pageId: '1' });
+	const geometryDraft = root.querySelector<HTMLInputElement>('[data-geometry-field="width"]')!;
+	geometryDraft.value = '4';
+	geometryDraft.dispatchEvent(new Event('input'));
 	controls.input.value = '<script>safe & edited</script>';
 	controls.input.dispatchEvent(new Event('input'));
 	root.querySelector<HTMLButtonElement>('[data-edit="apply"]')!.click();
 	await vi.waitFor(() => expect(controller.state.edit.dirty).toBe(true));
 	expect(controls.input.value).toBe('<script>safe & edited</script>');
+	expect(geometryDraft.value).toBe('4');
 	expect(root.querySelector<HTMLButtonElement>('[data-edit="apply"]')!.disabled).toBe(true);
 	expect(root.querySelector('script')).toBeNull();
 	expect((await parseVsdx(controller.exportVsdx().bytes)).pages[0]!.shapes[0]!.text.plainText).toBe(
@@ -167,10 +171,12 @@ it('shared controls drive a real core edit, refresh draft and restore byte-exact
 	root.querySelector<HTMLButtonElement>('[data-edit="undo"]')!.click();
 	await vi.waitFor(() => expect(controller.state.edit.dirty).toBe(false));
 	expect(controls.input.value).toBe('Original');
+	expect(geometryDraft.value).toBe('4');
 	expect(controller.exportVsdx().bytes).toEqual(Uint8Array.from(bytes));
 	root.querySelector<HTMLButtonElement>('[data-edit="redo"]')!.click();
 	await vi.waitFor(() => expect(controller.state.edit.dirty).toBe(true));
 	expect(controls.input.value).toBe('<script>safe & edited</script>');
+	expect(geometryDraft.value).toBe('4');
 	dispose();
 	unsubscribe();
 	controller.destroy();
@@ -212,3 +218,119 @@ it('reconnects controls without retaining a draft or duplicating action listener
 	await Promise.resolve();
 	disconnectAgain();
 });
+
+it('preserves unapplied text across same-source geometry/history updates and resets on source replacement', async () => {
+	const { controller, controls, state, input, dispose } = setup();
+	input('Unapplied text');
+	const updated = structuredClone(state.document!);
+	updated.pages[0]!.shapes[0]!.width = 4;
+	controls.render({ ...state, document: updated });
+	expect(controls.input.value).toBe('Unapplied text');
+	updated.pages[0]!.shapes[0]!.text.plainText = 'Restored source text';
+	controls.render({ ...state, document: updated });
+	expect(controls.input.value).toBe('Unapplied text');
+	controller.setDocument(updated);
+	controls.render({ ...state, document: updated });
+	expect(controls.input.value).toBe('Restored source text');
+	dispose();
+});
+it('Cancel handles geometry-only drafts and clears every field', () => {
+	const { root, controller, controls, state, button, dispose } = setup();
+	const cancel = vi.spyOn(controller, 'cancelEdit');
+	const x = root.querySelector<HTMLInputElement>('[data-geometry-field="x"]')!;
+	x.value = '4';
+	x.dispatchEvent(new Event('input'));
+	expect(button('cancel').disabled).toBe(false);
+	button('cancel').click();
+	expect(cancel).toHaveBeenCalledOnce();
+	expect(x.value).toBe('');
+	expect(button('cancel').disabled).toBe(true);
+	expect(controls.input.value).toBe(state.document!.pages[0]!.shapes[0]!.text.plainText);
+	dispose();
+});
+it('shows the core refusal code as plain text while retaining the text draft', async () => {
+	const { root, controller, controls, button, input, dispose } = setup();
+	vi.spyOn(controller, 'replacePlainText').mockRejectedValue(
+		Object.assign(new Error('Protected text'), { code: 'EDIT_PROTECTED_CELL' }),
+	);
+	input('Keep this draft');
+	button('apply').click();
+	await Promise.resolve();
+	await Promise.resolve();
+	expect(root.querySelector('[data-edit-error]')?.textContent).toBe(
+		'EDIT_PROTECTED_CELL: Protected text',
+	);
+	expect(controls.input.value).toBe('Keep this draft');
+	dispose();
+});
+
+it.each(['text', 'geometry'] as const)(
+	'retains %s draft without obsolete AbortError while a replacement load is cancelled or fails',
+	async (action) => {
+		for (const replacement of ['cancel', 'fail'] as const) {
+			let rejectEdit: ((cause: Error) => void) | undefined;
+			const editor = Object.assign(
+				() =>
+					new Promise<never>((_, reject) => {
+						rejectEdit = reject;
+					}),
+				{ cancel: () => rejectEdit?.(new DOMException('Superseded edit', 'AbortError')) },
+			);
+			const controller = new ViewerController(
+				async () => structuredClone(demoDocument),
+				() => {},
+				editor,
+			);
+			await controller.load(new Uint8Array([1]));
+			controller.selectShape({ id: 's1', name: 'Start', pageId: '1' });
+			const source = controller.sourceGeneration;
+			const host = document.createElement('div');
+			document.body.append(host);
+			const root = host.attachShadow({ mode: 'open' });
+			root.innerHTML = editControlsTemplate;
+			const controls = new ViewerEditControls(root, controller);
+			const unsubscribe = controller.subscribe((state) => controls.render(state)),
+				dispose = controls.wire();
+			controls.input.value = 'Keep pending text';
+			controls.input.dispatchEvent(new Event('input'));
+			const field = (name: string) =>
+				root.querySelector<HTMLInputElement>(`[data-geometry-field="${name}"]`)!;
+			if (action === 'geometry') {
+				field('x').value = '2';
+				field('y').value = '3';
+				field('y').dispatchEvent(new Event('input'));
+			}
+			root
+				.querySelector<HTMLButtonElement>(
+					action === 'text' ? '[data-edit="apply"]' : '[data-geometry-action="move-shape"]',
+				)!
+				.click();
+			let rejectRead!: (cause: Error) => void;
+			const loading = controller
+				.loadSource(
+					() =>
+						new Promise<never>((_, reject) => {
+							rejectRead = reject;
+						}),
+				)
+				.catch((error: unknown) => error);
+			await Promise.resolve();
+			await Promise.resolve();
+			await Promise.resolve();
+			if (replacement === 'cancel') controller.cancelLoad();
+			rejectRead(new Error('Replacement read failed'));
+			await loading;
+			await vi.waitFor(() => expect(controller.state.edit.busy).toBe(false));
+			expect(controller.sourceGeneration).toBe(source);
+			expect(controller.exportVsdx().bytes).toEqual(new Uint8Array([1]));
+			expect(controls.input.value).toBe('Keep pending text');
+			if (action === 'geometry') expect(field('x').value).toBe('2');
+			expect(root.querySelector<HTMLElement>('[data-edit-error]')!.hidden).toBe(true);
+			expect(root.querySelector<HTMLElement>('[data-geometry-error]')!.hidden).toBe(true);
+			dispose();
+			unsubscribe();
+			controller.destroy();
+			host.remove();
+		}
+	},
+);

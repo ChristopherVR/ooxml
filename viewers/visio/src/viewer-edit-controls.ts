@@ -1,3 +1,4 @@
+import { editErrorMessage, isEditCancellation } from './edit-error.js';
 import { geometryControlsTemplate, ViewerGeometryControls } from './viewer-geometry-controls.js';
 import type { ViewerController, ViewerState } from './controller.js';
 import { selectedShape } from './shape-inspector.js';
@@ -25,7 +26,9 @@ export class ViewerEditControls {
 	constructor(root: ShadowRoot, controller: ViewerController) {
 		this.#controller = controller;
 		this.panel = root.querySelector('.edit-controls')!;
-		this.#geometry = new ViewerGeometryControls(this.panel, controller);
+		this.#geometry = new ViewerGeometryControls(this.panel, controller, () =>
+			this.render(controller.state),
+		);
 		this.input = this.panel.querySelector('textarea')!;
 		this.#target = this.panel.querySelector('[data-edit-target]')!;
 		this.#target.id = 'edit-target';
@@ -105,8 +108,8 @@ export class ViewerEditControls {
 				await this.#controller.replacePlainText(this.#pageId, this.#shapeId, this.input.value);
 			} else await this.#controller[action]();
 		} catch (error) {
-			if (request === this.#request)
-				this.#localError = error instanceof Error ? error.message : String(error);
+			if (request === this.#request && !isEditCancellation(error))
+				this.#localError = editErrorMessage(error);
 		} finally {
 			if (request === this.#request) {
 				this.#pending = false;
@@ -120,7 +123,7 @@ export class ViewerEditControls {
 		const pageId = selection?.pageId ?? state.document?.pages[state.pageIndex]?.id;
 		const shape = selectedShape(state.document, selection, state.pageIndex);
 		const identity = JSON.stringify([
-			this.#controller.documentGeneration,
+			this.#controller.sourceGeneration,
 			state.pageIndex,
 			pageId,
 			selection?.id,
@@ -134,6 +137,11 @@ export class ViewerEditControls {
 			this.#shapeId = shape?.id;
 			this.#initial = shape?.text?.plainText ?? '';
 			this.input.value = this.#initial;
+		} else if (shape) {
+			// Geometry/history updates on the same target must not discard an unapplied text draft.
+			const dirty = this.input.value !== this.#initial;
+			this.#initial = shape.text?.plainText ?? '';
+			if (!dirty) this.input.value = this.#initial;
 		}
 		const busy = state.loading || state.edit.busy || this.#pending;
 		const available = state.edit.sourceAvailable && !!shape && pageId !== undefined;
@@ -144,7 +152,10 @@ export class ViewerEditControls {
 		this.input.disabled = !available || busy;
 		this.#buttons.apply.disabled = !available || busy || this.input.value === this.#initial;
 		this.#buttons.cancel.disabled =
-			!state.edit.busy && !this.#pending && this.input.value === this.#initial;
+			!state.edit.busy &&
+			!this.#pending &&
+			this.input.value === this.#initial &&
+			!this.#geometry.hasDraft;
 		this.#buttons.undo.disabled = busy || !state.edit.canUndo;
 		this.#buttons.redo.disabled = busy || !state.edit.canRedo;
 		this.#status.textContent = state.loading
@@ -154,7 +165,8 @@ export class ViewerEditControls {
 				: !state.edit.sourceAvailable
 					? 'Open a .vsdx file to edit or download a VSDX copy. Model-only documents cannot be saved.'
 					: `${state.edit.dirty ? 'Edited copy' : 'Original bytes'}${state.edit.historyTruncated ? ' · Earlier undo history was discarded.' : ''}`;
-		const error = this.#localError ?? state.edit.error?.message;
+		const error =
+			this.#localError ?? (state.edit.error ? editErrorMessage(state.edit.error) : undefined);
 		this.#error.hidden = !error;
 		this.#error.textContent = error ?? '';
 		this.#diagnostics.replaceChildren(

@@ -125,7 +125,7 @@ get('export-vsdx').addEventListener('click', () => {
 		document.body.append(anchor);
 		anchor.click();
 		get('export-status').textContent =
-			`VSDX ${result.dirty ? 'edited' : 'original'} copy download requested. Formulas are not recalculated; native Visio compatibility is not verified. ${result.diagnostics.map((item) => item.message).join(' ')}`;
+			`VSDX ${result.dirty ? 'edited' : 'original'} copy download requested. Supported affected formula caches are recalculated for geometry edits. Unsupported edits are rejected; native Visio compatibility is not verified. ${result.diagnostics.map((item) => item.message).join(' ')}`;
 	} catch (cause) {
 		errorBox.hidden = false;
 		errorBox.textContent = cause instanceof Error ? cause.message : String(cause);

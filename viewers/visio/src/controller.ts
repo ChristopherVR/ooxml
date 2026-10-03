@@ -57,6 +57,7 @@ export class ViewerController {
 	#destroyed = false;
 	#revision = 0;
 	#documentGeneration = 0;
+	#sourceGeneration = 0;
 	#searchIndex: DocumentTextIndex | null = null;
 	#history: DocumentHistory | null = null;
 	#editId = 0;
@@ -77,6 +78,11 @@ export class ViewerController {
 		this.#assertAlive();
 		return this.#documentGeneration;
 	}
+	/** Accepted source/model replacements invalidate drafts; edit/undo/redo keep this source epoch. */
+	get sourceGeneration(): number {
+		this.#assertAlive();
+		return this.#sourceGeneration;
+	}
 	subscribe(listener: (state: ViewerState) => void): () => void {
 		this.#assertAlive();
 		this.#subscribers.add(listener);
@@ -93,6 +99,7 @@ export class ViewerController {
 		if (document) assertViewableDocument(document);
 		const visible = documentVisibility(document);
 		++this.#documentGeneration;
+		++this.#sourceGeneration;
 		this.#invalidateEdit();
 		this.#history = null;
 		this.#loadId++;
@@ -282,6 +289,7 @@ export class ViewerController {
 		this.#searchIndex = null;
 		this.#visible = visible;
 		++this.#documentGeneration;
+		++this.#sourceGeneration;
 		this.#change({
 			document,
 			edit: history.state,
@@ -307,6 +315,7 @@ export class ViewerController {
 		this.#invalidateEdit();
 		this.#history = null;
 		++this.#documentGeneration;
+		++this.#sourceGeneration;
 		++this.#loadId;
 		this.parser.cancel?.();
 		this.#subscribers.clear();

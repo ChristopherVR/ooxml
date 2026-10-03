@@ -261,3 +261,21 @@ it('real geometry transactions flow through source history, reparsing and export
 	expect(viewer.exportVsdx().bytes).toEqual(Uint8Array.from(original));
 	viewer.destroy();
 });
+
+it('keeps the source epoch stable for edits and history, but invalidates replacement sources', async () => {
+	const viewer = setup();
+	await viewer.load(new Uint8Array([1]));
+	const source = viewer.sourceGeneration;
+	await viewer.replacePlainText('1', 's1', 'Changed');
+	expect(viewer.sourceGeneration).toBe(source);
+	await viewer.undo();
+	expect(viewer.sourceGeneration).toBe(source);
+	await viewer.redo();
+	expect(viewer.sourceGeneration).toBe(source);
+	await viewer.load(new Uint8Array([3]));
+	expect(viewer.sourceGeneration).toBe(source + 1);
+	viewer.setDocument(demoDocument);
+	expect(viewer.sourceGeneration).toBe(source + 2);
+	viewer.destroy();
+	expect(() => viewer.sourceGeneration).toThrow('destroyed');
+});

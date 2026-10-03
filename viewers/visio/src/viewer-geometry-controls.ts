@@ -1,11 +1,12 @@
+import { editErrorMessage, isEditCancellation } from './edit-error.js';
 import type { VisioGeometryEdit } from 'ooxml-core/visio';
 import type { ViewerController, ViewerState } from './controller.js';
 
-export const geometryControlsTemplate = `<fieldset data-geometry><legend>Geometry (experimental)</legend><p>Pin X/Y use drawing inches, bottom-left origin, Y up. Resize holds the rotation pin fixed. Core rejects unsupported formulas, protected cells, groups, masters and referenced deletion. Native Visio reopen fidelity is unverified.</p><label>New rectangle ID <input data-geometry-field="id" type="text" maxlength="256"></label><label>Pin X (inches) <input data-geometry-field="x" type="number" step="any"></label><label>Pin Y (inches) <input data-geometry-field="y" type="number" step="any"></label><label>Width (inches) <input data-geometry-field="width" type="number" min="0" step="any"></label><label>Height (inches) <input data-geometry-field="height" type="number" min="0" step="any"></label><div class="edit-actions"><button type="button" data-geometry-action="create-rectangle">Create rectangle</button><button type="button" data-geometry-action="move-shape">Move selected</button><button type="button" data-geometry-action="resize-shape">Resize selected</button><button type="button" data-geometry-action="delete-shape">Delete selected</button></div><p data-geometry-error role="alert" hidden></p></fieldset>`;
+export const geometryControlsTemplate = `<fieldset data-geometry><legend>Geometry (experimental)</legend><p>Pin X/Y use drawing inches, bottom-left origin, Y up. Resize holds the rotation pin fixed. Core rejects unsupported formulas, protected cells, unsafe group/master dependencies and referenced deletion. Native Visio reopen fidelity is unverified.</p><label>New rectangle ID <input data-geometry-field="id" type="text" maxlength="256"></label><label>Rectangle text (optional) <input data-geometry-field="text" type="text" maxlength="1000000"></label><label>Pin X (inches) <input data-geometry-field="x" type="number" step="any"></label><label>Pin Y (inches) <input data-geometry-field="y" type="number" step="any"></label><label>Width (inches) <input data-geometry-field="width" type="number" min="0" step="any"></label><label>Height (inches) <input data-geometry-field="height" type="number" min="0" step="any"></label><div class="edit-actions"><button type="button" data-geometry-action="create-rectangle">Create rectangle</button><button type="button" data-geometry-action="move-shape">Move selected</button><button type="button" data-geometry-action="resize-shape">Resize selected</button><button type="button" data-geometry-action="delete-shape">Delete selected</button></div><p data-geometry-error role="alert" hidden></p></fieldset>`;
 
 /** Collect explicit coordinates; never infer a Visio pin from rendered SVG transforms. */
 export class ViewerGeometryControls {
-	#fields: Record<'id' | 'x' | 'y' | 'width' | 'height', HTMLInputElement>;
+	#fields: Record<'id' | 'text' | 'x' | 'y' | 'width' | 'height', HTMLInputElement>;
 	#buttons: HTMLButtonElement[];
 	#error: HTMLElement;
 	#identity = '';
@@ -13,11 +14,13 @@ export class ViewerGeometryControls {
 	constructor(
 		private readonly panel: HTMLElement,
 		private readonly controller: ViewerController,
+		private readonly draftChanged: () => void = () => {},
 	) {
 		const field = (name: string) =>
 			panel.querySelector<HTMLInputElement>(`[data-geometry-field="${name}"]`)!;
 		this.#fields = {
 			id: field('id'),
+			text: field('text'),
 			x: field('x'),
 			y: field('y'),
 			width: field('width'),
@@ -30,9 +33,16 @@ export class ViewerGeometryControls {
 		const Abort = this.panel.ownerDocument.defaultView?.AbortController ?? AbortController;
 		const events = new Abort();
 		for (const field of Object.values(this.#fields))
-			field.addEventListener('input', () => this.render(this.controller.state), {
-				signal: events.signal,
-			});
+			field.addEventListener(
+				'input',
+				() => {
+					this.render(this.controller.state);
+					this.draftChanged();
+				},
+				{
+					signal: events.signal,
+				},
+			);
 		for (const button of this.#buttons)
 			button.addEventListener(
 				'click',
@@ -61,7 +71,15 @@ export class ViewerGeometryControls {
 		const target = { pageId, shapeId };
 		const command: VisioGeometryEdit =
 			type === 'create-rectangle'
-				? { type, ...target, x, y, width, height }
+				? {
+						type,
+						...target,
+						x,
+						y,
+						width,
+						height,
+						...(this.#fields.text.value ? { text: this.#fields.text.value } : {}),
+					}
 				: type === 'move-shape'
 					? { type, ...target, x, y }
 					: type === 'resize-shape'
@@ -71,12 +89,20 @@ export class ViewerGeometryControls {
 		this.#error.hidden = true;
 		try {
 			await this.controller.applyEdits([command]);
-		} catch (error) {
 			if (request === this.#request) {
-				this.#error.textContent = error instanceof Error ? error.message : String(error);
+				this.reset();
+				this.render(this.controller.state);
+				this.draftChanged();
+			}
+		} catch (error) {
+			if (request === this.#request && !isEditCancellation(error)) {
+				this.#error.textContent = editErrorMessage(error);
 				this.#error.hidden = false;
 			}
 		}
+	}
+	get hasDraft(): boolean {
+		return Object.values(this.#fields).some((field) => field.value !== '');
 	}
 	reset(): void {
 		++this.#request;
@@ -86,7 +112,7 @@ export class ViewerGeometryControls {
 	render(state: ViewerState): void {
 		const pageId = state.selectedShape?.pageId ?? state.document?.pages[state.pageIndex]?.id;
 		const identity = JSON.stringify([
-			this.controller.documentGeneration,
+			this.controller.sourceGeneration,
 			state.pageIndex,
 			pageId,
 			state.selectedShape?.id,

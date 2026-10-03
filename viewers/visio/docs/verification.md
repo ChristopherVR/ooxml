@@ -2,6 +2,40 @@
 
 Status: local Windows development evidence, 2026-10-03. Full Microsoft Visio parity is not established.
 
+## Draft safety and bounded formula follow-up
+
+The viewer now pins published core
+[`2343de2d82d863b7d9f765c07b8484b97a96917a`](https://github.com/ChristopherVR/ooxml/commit/2343de2d82d863b7d9f765c07b8484b97a96917a).
+Its [exact-commit CI](https://github.com/ChristopherVR/ooxml/actions/runs/37091852205)
+passed all six test shards, types, builds and package checks. This bounded formula
+increment adds MODULUS, AND/OR/NOT, conservative scalar bit operations and
+square-inch intermediate arithmetic. It adds real-corpus formula/cache evidence
+without broadening package admission or claiming native Visio fidelity.
+
+Editing controls preserve unapplied text across geometry edits and history on the
+same source and target. Replacing the source resets drafts even when page and shape
+IDs match. Refused operations retain inputs and display the core error code;
+obsolete cancellation errors cannot replace current status. Rectangle creation
+accepts optional plain text. Browser regressions download and reopen saved copies
+and verify unknown package payloads, applied geometry and text.
+
+The combined Windows aggregate passes both core type projects, 1,277 Visio tests
+with the original corpus enabled (six optional skips), 402 viewer tests (one
+optional skip), 74 binding tests, five SSR tests, 27 docs tests, converter checks,
+production builds, workers and packed consumers. Installed Chrome passes all 38
+supported development-route scenarios and all 36 production-compatible scenarios,
+including four geometry/save workflows. Two source-import-only rendering tests
+run on the development route. Independent integration review is clear.
+Fresh public sibling clones also reproduce the exact pin, portable locks and
+Apache metadata: core setup, root/binding locked installs, both core types,
+1,265 core tests (18 optional corpus skips without the corpus environment),
+viewer types/build and binding types pass.
+
+This integration preserves the published UI and Apache metadata from
+[`24d9ff8308230f06df7745bbf3ea13f9a1aae2bf`](https://github.com/ChristopherVR/visio-viewer/commit/24d9ff8308230f06df7745bbf3ea13f9a1aae2bf).
+Master-linked moves remain a separate unpublished candidate. Native Microsoft
+Visio reopen and fidelity remain unverified.
+
 ## Published active-master independence follow-up
 
 The local sibling core now resolves untouched active master templates, instance
@@ -32,7 +66,8 @@ the final rebuilt bundle. Changed Visio files pass formatting.
 
 Core follow-up is published at
 [`5590c8af893e81b8a3d9f3f8874c9434821b6abd`](https://github.com/ChristopherVR/ooxml/commit/5590c8af893e81b8a3d9f3f8874c9434821b6abd).
-The viewer pins this exact commit with a clean portable lock and no source patch.
+At this checkpoint the viewer pinned this exact commit with a clean portable lock
+and no source patch.
 Integration preserved the published shared chart, text, SVG and Word changes.
 Both core type projects, 1,319 combined Visio/shared-API tests, full build,
 packed-consumer checks and 49 release-script tests passed on the integrated core.
