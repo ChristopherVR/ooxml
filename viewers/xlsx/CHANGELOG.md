@@ -9,6 +9,18 @@ history lives in `packages/<name>/CHANGELOG.md`. Nothing has been published yet,
 sections: the first release run writes them.
 ## 2026-10-03
 
+_Releases: xlsx-viewer-mcp@0.1.3, @christophervr/xlsx-core@0.2.1, @christophervr/xlsx-react-viewer@0.3.3, xlsx-vue-viewer@0.3.3, xlsx-angular-viewer@0.3.3, xlsx-svelte-viewer@0.3.3, xlsx-solid-viewer@0.3.3, xlsx-vanilla-viewer@0.3.3_
+
+### Documentation
+
+- **packages:** Align npm readmes with powerpoint structure (by @ChristopherVR) ([afbbf9c](https://github.com/ChristopherVR/xlsx-viewer/commit/afbbf9c9a88f70e0afeec47da60e6cd9339c76ba))
+
+### Chores
+
+- **repo:** Remove Codex co-author trailers (by @ChristopherVR) ([f594bc2](https://github.com/ChristopherVR/xlsx-viewer/commit/f594bc238ccfb180bf1599abffde1093d3b08711))
+
+## 2026-10-03
+
 _Releases: xlsx-viewer-mcp@0.1.2, @christophervr/xlsx-react-viewer@0.3.2, xlsx-vue-viewer@0.3.2, xlsx-angular-viewer@0.3.2, xlsx-svelte-viewer@0.3.2, xlsx-solid-viewer@0.3.2, xlsx-vanilla-viewer@0.3.2_
 
 ### Bug Fixes

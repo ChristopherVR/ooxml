@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs re-releases a package whenever any of its files, or an internal
 dependency it ships against, changes, not only on conventional commits.
 
+## [0.1.3](https://github.com/ChristopherVR/xlsx-viewer/releases/tag/xlsx-viewer-mcp@0.1.3) - 2026-10-03
+
+### Documentation
+
+- **packages:** Align npm readmes with powerpoint structure (by @ChristopherVR) ([afbbf9c](https://github.com/ChristopherVR/xlsx-viewer/commit/afbbf9c9a88f70e0afeec47da60e6cd9339c76ba))
+
 ## [0.1.2](https://github.com/ChristopherVR/xlsx-viewer/releases/tag/xlsx-viewer-mcp@0.1.2) - 2026-10-03
 
 ### Features
