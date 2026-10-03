@@ -18,7 +18,7 @@ Dependencies between published packages are read from the manifests, never from 
 
 ## Status
 
-The seven package names were claimed with `0.0.1` placeholders that contain only a README. The first real version, `0.1.0`, needs the `ooxml-core` release that contains the `xlsx` area (the manifests ask for `ooxml-core@^0.4.0`).
+The seven package names were claimed with `0.0.1` placeholders that contain only a README. The first real version, `0.1.0`, needs the `ooxml-core` release that contains the `xlsx` area (the manifests ask for `ooxml-core@^0.9.0`; on 0.x a caret range pins the minor, so bump it with each core minor release).
 
 ## How a release is decided
 
@@ -93,7 +93,7 @@ Like pptx-viewer, the release job does not repeat typecheck, unit and browser te
 
 ## Before the first release
 
-- Make sure an `ooxml-core` with the `xlsx` area (`^0.4.0`) and `ooxml-ui@^0.1.1` are on npm, and that no manifest still has a local `file:` range; `@christophervr/xlsx-core` depends on `ooxml-core`. `@christophervr/ole2` is not a dependency here: its codecs are inlined in `ooxml-core/xlsx/load`.
+- Make sure an `ooxml-core` with the `xlsx` area (`^0.9.0`) and `ooxml-ui@^0.1.8` are on npm, and that no manifest still has a local `file:` range; `@christophervr/xlsx-core` depends on `ooxml-core`. `@christophervr/ole2` is not a dependency here: its codecs are inlined in `ooxml-core/xlsx/load`.
 - Check the plan: `bun run release:plan` should list seven packages at `0.1.0` with bump `initial` and no internal package.
 - Dispatch the workflow by hand. The seven packages are tagged `<npm-name>@0.1.0` and published with `@christophervr/xlsx-core` first.
 

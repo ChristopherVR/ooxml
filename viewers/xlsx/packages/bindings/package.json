@@ -13,7 +13,7 @@
 	"type": "module",
 	"dependencies": {
 		"@christophervr/xlsx-core": "workspace:*",
-		"ooxml-core": "^0.4.0",
+		"ooxml-core": "^0.9.0",
 		"xlsx-web-component": "workspace:*"
 	},
 	"peerDependencies": {

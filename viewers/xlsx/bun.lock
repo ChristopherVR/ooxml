@@ -38,11 +38,11 @@
     },
     "packages/angular": {
       "name": "xlsx-angular-viewer",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "dependencies": {
-        "@christophervr/xlsx-core": "^0.1.0",
-        "ooxml-core": "^0.4.0",
-        "ooxml-ui": "^0.1.1",
+        "@christophervr/xlsx-core": "^0.1.1",
+        "ooxml-core": "^0.9.0",
+        "ooxml-ui": "^0.1.8",
       },
       "peerDependencies": {
         "@angular/core": ">=19",
@@ -53,7 +53,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@christophervr/xlsx-core": "workspace:*",
-        "ooxml-core": "^0.4.0",
+        "ooxml-core": "^0.9.0",
         "xlsx-web-component": "workspace:*",
       },
       "peerDependencies": {
@@ -73,18 +73,18 @@
     },
     "packages/core": {
       "name": "@christophervr/xlsx-core",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "dependencies": {
-        "ooxml-core": "^0.4.0",
+        "ooxml-core": "^0.9.0",
       },
     },
     "packages/react": {
       "name": "@christophervr/xlsx-react-viewer",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "dependencies": {
-        "@christophervr/xlsx-core": "^0.1.0",
-        "ooxml-core": "^0.4.0",
-        "ooxml-ui": "^0.1.1",
+        "@christophervr/xlsx-core": "^0.1.1",
+        "ooxml-core": "^0.9.0",
+        "ooxml-ui": "^0.1.8",
       },
       "peerDependencies": {
         "react": ">=18",
@@ -92,11 +92,11 @@
     },
     "packages/solid": {
       "name": "xlsx-solid-viewer",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "dependencies": {
-        "@christophervr/xlsx-core": "^0.1.0",
-        "ooxml-core": "^0.4.0",
-        "ooxml-ui": "^0.1.1",
+        "@christophervr/xlsx-core": "^0.1.1",
+        "ooxml-core": "^0.9.0",
+        "ooxml-ui": "^0.1.8",
       },
       "peerDependencies": {
         "solid-js": "^1.9.0",
@@ -104,11 +104,11 @@
     },
     "packages/svelte": {
       "name": "xlsx-svelte-viewer",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "dependencies": {
-        "@christophervr/xlsx-core": "^0.1.0",
-        "ooxml-core": "^0.4.0",
-        "ooxml-ui": "^0.1.1",
+        "@christophervr/xlsx-core": "^0.1.1",
+        "ooxml-core": "^0.9.0",
+        "ooxml-ui": "^0.1.8",
       },
       "peerDependencies": {
         "svelte": "^5.0.0",
@@ -116,20 +116,20 @@
     },
     "packages/vanilla": {
       "name": "xlsx-vanilla-viewer",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "dependencies": {
-        "@christophervr/xlsx-core": "^0.1.0",
-        "ooxml-core": "^0.4.0",
-        "ooxml-ui": "^0.1.1",
+        "@christophervr/xlsx-core": "^0.1.1",
+        "ooxml-core": "^0.9.0",
+        "ooxml-ui": "^0.1.8",
       },
     },
     "packages/vue": {
       "name": "xlsx-vue-viewer",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "dependencies": {
-        "@christophervr/xlsx-core": "^0.1.0",
-        "ooxml-core": "^0.4.0",
-        "ooxml-ui": "^0.1.1",
+        "@christophervr/xlsx-core": "^0.1.1",
+        "ooxml-core": "^0.9.0",
+        "ooxml-ui": "^0.1.8",
       },
       "peerDependencies": {
         "vue": "^3.5.0",
@@ -140,8 +140,8 @@
       "version": "0.1.0",
       "dependencies": {
         "@christophervr/xlsx-core": "workspace:*",
-        "ooxml-core": "^0.4.0",
-        "ooxml-ui": "^0.1.1",
+        "ooxml-core": "^0.9.0",
+        "ooxml-ui": "^0.1.8",
       },
     },
   },
@@ -594,9 +594,9 @@
 
     "obug": ["obug@2.2.1", "", {}, "sha512-XrsrhT5sybtKI6wakr2SPOlGZWWYbUXZ7a0jT8/QOeAPau+1X/bSegNe5YR75oJmEZQbKningirmGOEJCIk61Q=="],
 
-    "ooxml-core": ["ooxml-core@0.4.0", "", { "dependencies": { "@xmldom/xmldom": "^0.9.12", "emf-converter": "^3.3.0", "fast-xml-parser": "^5.11.1", "jszip": "^3.10.2", "lib0": "^0.2.117", "mtx-decompressor": "^1.6.0", "utif": "3.1.0", "y-protocols": "^1.0.7", "yjs": "^13.6.32" }, "peerDependencies": { "@napi-rs/canvas": "^1.0.9", "node-forge": "^1.3.0", "xml-crypto": "^6.0.0" }, "optionalPeers": ["@napi-rs/canvas", "node-forge", "xml-crypto"], "bin": { "pptx": "dist/pptx/cli/index.mjs" } }, "sha512-yMEQmRrbGsl9lU+aVmvCORjMtoKgVsgwthuYnQxyv9weneNnafmEJzX0xdY0tNI/Zxbq26vriNKecrm3PqcT/Q=="],
+    "ooxml-core": ["ooxml-core@0.9.0", "", { "dependencies": { "@xmldom/xmldom": "^0.9.12", "emf-converter": "^3.3.0", "fast-xml-parser": "^5.11.1", "jszip": "^3.10.2", "lib0": "^0.2.117", "mtx-decompressor": "^1.6.0", "utif": "3.1.0", "y-protocols": "^1.0.7", "yjs": "^13.6.32" }, "peerDependencies": { "@napi-rs/canvas": "^1.0.9", "node-forge": "^1.3.0", "xml-crypto": "^6.0.0" }, "optionalPeers": ["@napi-rs/canvas", "node-forge", "xml-crypto"], "bin": { "pptx": "dist/pptx/cli/index.mjs" } }, "sha512-IdASFoPsWeWwN9DYCXSZiTrTC2fwqTdNGF31ZuxKcVEDRIyTcdlx/qnJ8+WqIZGWsqDyftKOsqbJ+3Dv6sFQIg=="],
 
-    "ooxml-ui": ["ooxml-ui@0.1.3", "", { "dependencies": { "ooxml-core": "^0.4.0" } }, "sha512-uH9+OAXgf7twFWXa3IOgXDWW63x5IhlpEh9lDh6/yWFCSMXQ6zcCS2SgyNCelv0olYZ7ahEVlPymeSV0/8dXhg=="],
+    "ooxml-ui": ["ooxml-ui@0.1.8", "", { "dependencies": { "ooxml-core": "^0.9.0" } }, "sha512-O8hLa+rx5MKvtnmN5Sh3FPdoK1OK5aTx+I3luWRE3ncdf5TA9zKPo9yGLB1MXYe4IjyL5OzwD9wjGQLV8H2+gw=="],
 
     "oxfmt": ["oxfmt@0.67.0", "", { "dependencies": { "tinypool": "2.1.2" }, "optionalDependencies": { "@oxfmt/binding-android-arm-eabi": "0.67.0", "@oxfmt/binding-android-arm64": "0.67.0", "@oxfmt/binding-darwin-arm64": "0.67.0", "@oxfmt/binding-darwin-x64": "0.67.0", "@oxfmt/binding-freebsd-x64": "0.67.0", "@oxfmt/binding-linux-arm-gnueabihf": "0.67.0", "@oxfmt/binding-linux-arm-musleabihf": "0.67.0", "@oxfmt/binding-linux-arm64-gnu": "0.67.0", "@oxfmt/binding-linux-arm64-musl": "0.67.0", "@oxfmt/binding-linux-ppc64-gnu": "0.67.0", "@oxfmt/binding-linux-riscv64-gnu": "0.67.0", "@oxfmt/binding-linux-riscv64-musl": "0.67.0", "@oxfmt/binding-linux-s390x-gnu": "0.67.0", "@oxfmt/binding-linux-x64-gnu": "0.67.0", "@oxfmt/binding-linux-x64-musl": "0.67.0", "@oxfmt/binding-openharmony-arm64": "0.67.0", "@oxfmt/binding-win32-arm64-msvc": "0.67.0", "@oxfmt/binding-win32-ia32-msvc": "0.67.0", "@oxfmt/binding-win32-x64-msvc": "0.67.0" }, "peerDependencies": { "svelte": "^5.0.0", "vite-plus": "*" }, "optionalPeers": ["svelte", "vite-plus"], "bin": { "oxfmt": "bin/oxfmt" } }, "sha512-vV7sSiPsaO0mSxdoUdayipVDFPzW/UQ+hrezEHa20+Tx1dnMdZLSRHMT0PdS67FFbhd74M1n08asW21aLGeCrA=="],
 
