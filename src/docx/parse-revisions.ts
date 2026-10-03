@@ -1,7 +1,7 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import { expectDefined } from './expect-defined.js';
 import type { Revision, TextRun } from './model.js';
-import { children, first, getW, isElement, named, type XmlElement, WORD_NS } from './xml.js';
+import { first, getW, isElement, named, type XmlElement, WORD_NS } from './xml.js';
 
 const REVISION_WRAPPERS: Record<string, Revision['kind']> = {
 	ins: 'insert',
@@ -107,10 +107,11 @@ export function collectParagraphRuns(
 			if (!isCommentReferenceRun(item)) push(parseRun(item));
 		} else if (named(item, 'hyperlink')) {
 			const link = resolveLink?.(item);
-			for (const run of children(item, 'r')) {
-				const parsed = parseRun(run);
-				if (link) parsed.link = link;
-				push(parsed);
+			for (const child of Array.from(item.childNodes).filter(isElement)) {
+				for (const parsed of named(child, 'r') ? [parseRun(child)] : (parseOther?.(child) ?? [])) {
+					if (link) parsed.link = link;
+					push(parsed);
+				}
 			}
 		} else if (
 			(!item.namespaceURI || item.namespaceURI === WORD_NS) &&
@@ -124,7 +125,14 @@ export function collectParagraphRuns(
 			const revision = revisionFrom(item, kind);
 			const range = kind === 'moveFrom' || kind === 'moveTo' ? moves[kind].at(-1) : undefined;
 			if (range) revision.move = { name: range.name, rangeId: range.id };
-			for (const run of children(item, 'r')) push(parseRun(run, revision));
+			for (const child of Array.from(item.childNodes).filter(isElement)) {
+				for (const parsed of named(child, 'r')
+					? [parseRun(child, revision)]
+					: (parseOther?.(child) ?? [])) {
+					parsed.revision = revision;
+					push(parsed);
+				}
+			}
 		} else if (trackMoveRange(item, moves)) {
 			continue;
 		} else if (named(item, 'commentRangeStart')) {

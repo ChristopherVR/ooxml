@@ -25,6 +25,8 @@ export interface Revision {
 
 export interface TextRun {
 	text: string;
+	/** Imported, display-only equation. Source OMML is preserved; equation editing is unsupported. */
+	equation?: { omml: string; display: boolean };
 	bold?: boolean;
 	italic?: boolean;
 	underline?: boolean;

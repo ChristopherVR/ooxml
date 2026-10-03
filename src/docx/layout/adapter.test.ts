@@ -21,6 +21,20 @@ function baseModel(overrides: Partial<DocumentModel> = {}): DocumentModel {
 }
 
 describe('adaptDocumentModel', () => {
+	it('keeps imported equations visible as print markers and reports the approximation once', () => {
+		const notes: string[] = [];
+		const equation = { text: '', equation: { omml: '<m:oMath/>', display: false } };
+		const input = adaptDocumentModel(
+			baseModel({ blocks: [{ type: 'paragraph', id: 'math', runs: [equation, equation] }] }),
+			(note) => notes.push(note),
+		);
+		expect(at(at(input.sections, 0).blocks, 0)).toMatchObject({
+			runs: [{ text: '[Equation]' }, { text: '[Equation]' }],
+		});
+		expect(notes).toEqual([
+			'Equations display on the editing surface; Print Layout shows markers rather than typeset equations.',
+		]);
+	});
 	it('produces a single section from model.page when no sections hint is present', () => {
 		const input = adaptDocumentModel(baseModel());
 		expect(input.sections).toHaveLength(1);

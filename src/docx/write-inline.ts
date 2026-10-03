@@ -14,6 +14,7 @@ import {
 } from './write-ranges.js';
 
 import { createRun } from './write-run.js';
+import { isEquationElement, preserveEquation } from './equation.js';
 import { hasSpecialBreak, isModeledBreak } from './breaks.js';
 import { isCommentReferenceRun } from './parse-revisions.js';
 import {
@@ -83,7 +84,9 @@ function runsOf(
 			if (child.nodeType === 3 && child.textContent?.trim()) return false;
 			continue;
 		}
-		if (named(child, 'r')) {
+		if (isEquationElement(child)) {
+			slots.push({ element: child, ...(container && { container }) });
+		} else if (named(child, 'r')) {
 			if (isCommentReferenceRun(child)) continue;
 			if (!runIsSafe(child)) return false;
 			slots.push({ element: child, ...(container && { container }) });
@@ -117,7 +120,9 @@ export function collectInlineSlots(paragraph: XmlElement): InlineSlot[] | undefi
 			if (child.nodeType === 3 && child.textContent?.trim()) return undefined;
 			continue;
 		}
-		if (named(child, 'r')) {
+		if (isEquationElement(child)) {
+			slots.push({ element: child });
+		} else if (named(child, 'r')) {
 			if (isCommentReferenceRun(child)) continue;
 			if (!runIsSafe(child)) return undefined;
 			slots.push({ element: child });
@@ -137,7 +142,8 @@ export function replaceableInlineChildren(paragraph: XmlElement): XmlElement[] {
 	return Array.from(paragraph.childNodes).filter(
 		(child): child is XmlElement =>
 			isElement(child) &&
-			(named(child, 'r') ||
+			(isEquationElement(child) ||
+				named(child, 'r') ||
 				named(child, 'hyperlink') ||
 				named(child, 'fldSimple') ||
 				isRevisionWrapperElement(child) ||
@@ -184,7 +190,9 @@ function runNodes(
 ): XmlElement[] {
 	// Comments open outside moves and close outside them, so ranges nest.
 	const nodes = opens.flatMap((edge) => rangeStartNodes(doc, edge));
-	const node = createRun(doc, run, base, old, allocator);
+	const node = run.equation
+		? preserveEquation(run, base, old)
+		: createRun(doc, run, base, old, allocator);
 	const revision = run.revision;
 	if (revision && ['insert', 'delete', 'moveFrom', 'moveTo'].includes(revision.kind)) {
 		if (revision.kind === 'delete' || revision.kind === 'moveFrom') convertToDeleteText(doc, node);
@@ -206,16 +214,28 @@ export function buildInlineContent(
 	// Ranges continuing from an earlier paragraph or into a later one open or close there instead.
 	const { opens, closes } = rangeEdges(runs, ranges);
 	const runAt = (at: number) => expectDefined(runs[at], `run ${at}`);
-	const nodesFor = (index: number) =>
-		runNodes(
+	const nodesFor = (index: number) => {
+		const run = runAt(index);
+		// Text edits can split runs before an equation. Find its source by OMML, not position.
+		const sourceIndex = run.equation
+			? base?.findIndex(
+					(source) =>
+						source.equation?.omml === run.equation?.omml &&
+						source.equation?.display === run.equation?.display,
+				)
+			: index;
+		const source = sourceIndex === undefined ? undefined : base?.[sourceIndex];
+		const old = sourceIndex === undefined ? undefined : slots[sourceIndex]?.element;
+		return runNodes(
 			doc,
-			runAt(index),
-			base?.[index],
-			slots[index]?.element,
+			run,
+			!run.equation && source?.equation ? undefined : source,
+			!run.equation && old && isEquationElement(old) ? undefined : old,
 			opens.get(index) ?? [],
 			closes.get(index) ?? [],
 			allocator,
 		);
+	};
 	const output: XmlElement[] = [];
 	let index = 0;
 	while (index < runs.length) {

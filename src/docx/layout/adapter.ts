@@ -42,6 +42,8 @@ const DROP_CAP_NOTE =
 	'Drop caps are laid out as an enlarged first letter (a raised cap), not as a dropped cap.';
 const TEXT_BOX_NOTE =
 	'Text boxes are shown on the editing surface but are not drawn in Print Layout.';
+const EQUATION_NOTE =
+	'Equations display on the editing surface; Print Layout shows markers rather than typeset equations.';
 const NEXT_COLUMN_NOTE = 'A "next column" section break is laid out as a continuous section break.';
 
 const twipsToPx = twipsToPixels;
@@ -96,6 +98,7 @@ export function adaptDocumentModel(
 		markLabel?: string,
 	): LayoutRun {
 		const { formatting, family, color } = effective(run, paragraphStyleId);
+		if (run.equation) reportOnce(EQUATION_NOTE);
 		// DATE and TIME update when Word paginates for display or printing.
 		const name = run.field ? fieldName(run.field.instr) : '';
 		// Note references and a note's own number mark show the note's number, raised.
@@ -108,7 +111,9 @@ export function adaptDocumentModel(
 			noteText ??
 			(run.field && (name === 'DATE' || name === 'TIME')
 				? dateFieldResult(name, run.field.instr, now)
-				: run.text);
+				: run.equation
+					? '[Equation]'
+					: run.text);
 		const script =
 			formatting.verticalAlign === 'superscript' ||
 			(noteText !== undefined && formatting.verticalAlign === undefined)

@@ -25,6 +25,7 @@ import { onOffElement, parseInteger, parseSignedTwips, parseTwips } from './simp
 import { PAGINATION_KEYS } from './paragraph-styles.js';
 import { parseParagraphBorders, parseShadingFill } from './table-borders.js';
 import { createFieldTracker } from './field-runs.js';
+import { parseEquation } from './equation.js';
 import {
 	collectParagraphRuns,
 	type OpenMoves,
@@ -156,14 +157,22 @@ function parseParagraph(node: XmlElement, id: string): Paragraph {
 		node,
 		(element, revision) => trackField(element, parseRun(element, revision)),
 		(item) => {
+			const equation = parseEquation(item);
+			if (equation) return [equation];
 			if (!named(item, 'fldSimple')) return undefined;
 			const instr = getW(item, 'instr') ?? '';
 			const link = parseSimpleHyperlinkField(instr);
-			const results = children(item, 'r').map((run) => parseRun(run));
+			const results = Array.from(item.childNodes)
+				.filter(isElement)
+				.flatMap((child) => {
+					const equation = parseEquation(child);
+					return equation ? [equation] : named(child, 'r') ? [parseRun(child)] : [];
+				});
 			if (link) return results.map((run) => ({ ...run, link }));
 			const field = { instr: instr.trim(), simple: true };
 			// Show Word's cached result; fall back to a readable placeholder when none was saved.
-			if (!results.some((run) => run.text)) return [{ text: fieldPlaceholderText(instr), field }];
+			if (!results.some((run) => run.text || run.equation))
+				return [{ text: fieldPlaceholderText(instr), field }];
 			return results.map((run) => ({ ...run, field }));
 		},
 		(hyperlink) => {
