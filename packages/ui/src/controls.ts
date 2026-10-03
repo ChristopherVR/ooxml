@@ -37,6 +37,7 @@ export type { OfficeSelectOption } from './select.js';
 export type { OfficeStatusActivateEvent } from './status-bar.js';
 export type { OfficeTab, OfficeTabSelectEvent } from './tab-strip.js';
 export type { OfficeSearchCommand } from './command-search.js';
+export { attachKeyTips, type KeyTipsHandle } from './keytips.js';
 
 /** Every control of this entry. */
 export const CONTROL_DEFINERS = [

@@ -77,6 +77,11 @@ with an incompatible build of this package.
 | `office-ui-smartart`                                  | `drawing` (core `DiagramDrawing`), `schemeColors`, `label`                                                                                         | `office-smartart-render` (render report)                                                  |
 | `office-ui-icon`                                      | `name`, `label`                                                                                                                                    | none                                                                                      |
 
+`attachKeyTips(scope)` (from `ooxml-ui/controls`) adds Office KeyTips to any element or shadow
+root: press and release Alt to show badges on controls marked `data-keytip="H"`, type a badge to
+activate it, and use `data-keytip-panel` / `data-keytip-level` for a tab's second level. Escape
+steps back; disabled controls are dimmed and never run.
+
 Setting a property never emits an event; only user activation does. Controls honour
 `prefers-color-scheme`, `forced-colors: active` (system colours and a visible focus ring) and
 coarse pointers (44px targets through `--office-target-size`). Tokens are the `--office-*`
