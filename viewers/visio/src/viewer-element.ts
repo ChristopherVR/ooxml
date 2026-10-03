@@ -9,6 +9,8 @@ import { renderLayerControls, wireLayerControls } from './viewer-layer-controls.
 import { viewerStyles } from './styles.js';
 import { canvasAndRibbonStyles } from './styles/index.js';
 import { createRibbon } from './ribbon.js';
+import { applyKeyTips } from './ribbon-keytips.js';
+import { attachKeyTips } from 'ooxml-ui/controls';
 import { createPageTabs, createStatusBar } from './status-bar.js';
 import { createFindBar, wireFindBar } from './viewer-search.js';
 import { fitZoom } from './viewer-fit.js';
@@ -78,7 +80,9 @@ export class VisioViewerElement extends BaseElement {
 		this.#root.innerHTML = `<style>${viewerStyles}${canvasAndRibbonStyles}</style>${viewerChromeTemplate}`;
 		const workspace = this.#root.querySelector('.workspace')!;
 		this.#findBar = createFindBar(document);
-		workspace.before(createRibbon(document), this.#findBar);
+		const ribbon = createRibbon(document);
+		applyKeyTips(ribbon);
+		workspace.before(ribbon, this.#findBar);
 		workspace.prepend(createShapesWindow(document));
 		this.#root.append(createBackstage(document), ...createContextMenus(document));
 		workspace.after(createPageTabs(document), createStatusBar(document));
@@ -310,6 +314,7 @@ export class VisioViewerElement extends BaseElement {
 		const disposeBackstage = this.#backstage.wire();
 		const disposeMenus = wireContextMenus(this.#root, this.#viewport, this.controller);
 		const disposeTellMe = wireTellMe(this.#root);
+		const keyTips = attachKeyTips(this.#root);
 		const disposeRulers = this.#rulers.wire();
 		const disposeStencil = wireStencil(
 			this.#root.querySelector('.shapes-pane')!,
@@ -341,6 +346,7 @@ export class VisioViewerElement extends BaseElement {
 			disposeBackstage();
 			disposeMenus();
 			disposeTellMe();
+			keyTips.dispose();
 			disposeRulers();
 			disposeStencil();
 			disposeFind();
