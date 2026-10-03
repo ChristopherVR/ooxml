@@ -135,7 +135,7 @@ shipping fields and the licence files do; `site/`, docs, tests and CI never do).
 - Write multi-line messages with a real heredoc or `git commit -F <file>`;
   never wrap them in a PowerShell here-string under bash, where the stray `@`
   leaks into the subject.
-- End every commit message with the `Co-Authored-By:` trailer. Never include an
+- Never add a Codex co-author trailer. Never include an
   AI chat share link in a commit, PR, changelog, comment or doc.
 
 ## Style
