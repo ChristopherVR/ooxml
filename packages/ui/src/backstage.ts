@@ -34,6 +34,7 @@ nav button { border: 0; border-radius: 0; background: transparent; color: inheri
 .item:hover:enabled, .item[aria-current="page"] { background: color-mix(in srgb, #000 22%, transparent); }
 .item:disabled { opacity: .55; cursor: default; }
 nav button:focus-visible { outline: 2px solid currentColor; outline-offset: -3px; }
+.items { display: flex; flex-direction: column; }
 .footer { display: flex; flex-direction: column; margin-top: auto; padding-top: 16px; }
 .body { flex: 1; min-width: 0; overflow: auto; padding: 28px 40px; }
 @media (max-width: 760px) {
@@ -41,7 +42,7 @@ nav button:focus-visible { outline: 2px solid currentColor; outline-offset: -3px
 	nav { flex: none; flex-direction: row; flex-wrap: wrap; padding: 6px; }
 	.back { margin: 4px; }
 	.item { min-height: 44px; padding: 6px 12px; }
-	.footer { flex-direction: row; margin-top: 0; padding-top: 0; }
+	.items, .footer { flex-direction: row; flex-wrap: wrap; margin-top: 0; padding-top: 0; }
 	.body { padding: 16px; }
 }
 @media (forced-colors: active) { nav { border-inline-end: 1px solid CanvasText; } .item[aria-current="page"] { outline: 2px solid Highlight; } }
@@ -80,6 +81,7 @@ export const defineBackstage = definer('office-ui-backstage', () => {
 			this.#back.textContent = '←';
 			this.#back.dataset.backstage = 'back';
 			this.#main = doc.createElement('div');
+			this.#main.className = 'items';
 			this.#footer = doc.createElement('div');
 			this.#footer.className = 'footer';
 			this.#nav.append(this.#back, this.#main, this.#footer);

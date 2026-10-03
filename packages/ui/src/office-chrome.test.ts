@@ -222,6 +222,7 @@ describe('office-ui-backstage', () => {
 		expect(item('save').disabled).toBe(true);
 		expect(item('save').title).toBe('Nothing to save');
 		expect(item('options').parentElement!.className).toBe('footer');
+		expect(item('info').parentElement!.className).toBe('items');
 		expect(el.querySelector<HTMLElement>('[data-backstage-page="options"]')!.hidden).toBe(true);
 		item('options').click();
 		expect(el.querySelector<HTMLElement>('[data-backstage-page="info"]')!.hidden).toBe(true);
