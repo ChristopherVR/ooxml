@@ -12,6 +12,7 @@ export default defineConfig({
 		'xml/index': 'src/xml/index.ts',
 		'opc/index': 'src/opc/index.ts',
 		'diagram/index': 'src/diagram/index.ts',
+		'digest/index': 'src/digest/index.ts',
 		'math/index': 'src/math/index.ts',
 		'docx/index': 'src/docx/index.ts',
 		'docx/embedded': 'src/docx/embedded.ts',

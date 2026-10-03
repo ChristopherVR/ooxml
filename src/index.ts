@@ -4,6 +4,7 @@
 // pulls in a format and its dependencies.
 export * as color from './color/index.js';
 export * as diagram from './diagram/index.js';
+export * as digest from './digest/index.js';
 export * as geometry from './geometry/index.js';
 export * as opc from './opc/index.js';
 export * as units from './units/index.js';

@@ -218,6 +218,27 @@ New code, written for this repository rather than moved: no viewer had a Spreads
 | `xlsx/load`  | `detect.ts`, `legacy-xls*.ts`, `csv.ts`                                                                                        | New    | Maps ole2's `readXlsWorkbook` (new in ole2 on branch `xls-workbook`) onto the workbook model; ole2 is inlined by tsup like `docx/load`. The `.xls` fixtures are copies of ole2's `test/fixtures/xls/`, which holds their generator.                    |
 | `xml`, `opc` | `namespaces.ts` (`xdr`, `x14`, `x14ac`, `xr`, `tc`, `xv`, ...), `relationship-types.ts` (SpreadsheetML types)                  | New    | Appended constants only.                                                                                                                                                                                                                               |
 
+## `digest` area (2026-10-03)
+
+New code, written for this repository rather than moved. A strict shared area holding
+synchronous, pure-TypeScript message digests and the ECMA-376 agile password hash, so every
+format can verify protection hashes without Web Crypto (which needs a secure context and is too
+slow when each of Office's 100,000 spin rounds is awaited).
+
+- `sha512.ts` (SHA-512 and SHA-384 on one core with separate IVs) moved from
+  `src/xlsx/edit/sha512.ts` (commit `b38a0b7`, new code there); `sha256.ts` and `sha1.ts` are new.
+  The tests check each digest against `node:crypto` across the padding boundaries and against the
+  FIPS 180-4 vectors.
+- `algorithm-names.ts` ports `normalizeDigestAlgorithmName` and its tests from the pptx area's
+  `src/pptx/core/utils/digests/algorithm-names.ts` (same repository); the pptx module is
+  unchanged.
+- `password-hash.ts` (`hashPassword`, `verifyPasswordHash`) replaces the spin loops in
+  `src/xlsx/edit/protection.ts`. Expected values are hashes Excel 16 wrote through COM for a
+  sheet and a workbook structure password.
+- The pptx area keeps its own `src/pptx/core/utils/digests` (MD2, MD4, MD5, RIPEMD, WHIRLPOOL and
+  a Web Crypto `digest`) for `p:modifyVerifier`; it can adopt this area for the SHA family and the
+  spin loop, and move its other digests here, when it is tightened to the strict flags.
+
 ## Math equation conversion (2026-10-03)
 
 Source: `ChristopherVR/pptx-viewer`, commit `32df019105bbf5c77e63798c8fa1c0af23fc4e70`,

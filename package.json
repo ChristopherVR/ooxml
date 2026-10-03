@@ -71,6 +71,11 @@
 			"import": "./dist/diagram/index.mjs",
 			"require": "./dist/diagram/index.cjs"
 		},
+		"./digest": {
+			"types": "./dist/digest/index.d.ts",
+			"import": "./dist/digest/index.mjs",
+			"require": "./dist/digest/index.cjs"
+		},
 		"./xml": {
 			"types": "./dist/xml/index.d.ts",
 			"import": "./dist/xml/index.mjs",
