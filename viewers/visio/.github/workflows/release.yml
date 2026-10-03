@@ -63,7 +63,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add $(node -p "const p=require('./release-plan.json');p.order.filter(k=>p.packages[k].release).flatMap(k=>[p.packages[k].manifest,p.packages[k].changelog]).join(' ')")
-          git commit -m 'chore(release): bump package versions [skip ci]' -m 'Co-Authored-By: Codex <noreply@openai.com>'
+          git commit -m 'chore(release): bump package versions [skip ci]'
           git fetch origin main
           git rebase origin/main
           git push origin HEAD:main

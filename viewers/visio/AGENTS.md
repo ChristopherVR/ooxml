@@ -175,7 +175,7 @@ isolated worktree when needed.
 - Conventional Commits: `<type>(<scope>): <subject>`, scoped to the affected
   area. Imperative lower-case subject, no trailing period, at most 72 characters.
   Types determine version bumps; touched paths determine package scope.
-- End commits with a `Co-Authored-By:` trailer. Use `git commit -F` for multiline
+- Never add a Codex co-author trailer. Use `git commit -F` for multiline
   messages and never include assistant chat share links.
 - No U+2014 in source, comments, docs, commits or UI except intentional content
   or assertions. Use punctuation or a spaced hyphen.
