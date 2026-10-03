@@ -11,7 +11,7 @@ const CSS = `
 :host([open]) { display: flex; }
 .backdrop { position: absolute; inset: 0; background: rgb(0 0 0 / .4); }
 .box { position: relative; box-sizing: border-box; display: flex; flex-direction: column;
-	min-width: min(320px, 100vw); max-width: min(640px, 100vw); max-height: 90vh;
+	width: var(--office-dialog-width, auto); min-width: min(320px, 100vw); max-width: var(--office-dialog-max-width, min(640px, 100vw)); max-height: 90vh;
 	background: var(--office-background, #fff); color: var(--office-foreground, #1f2937);
 	border: 1px solid var(--office-border, #d1d5db); border-radius: 8px; font-family: var(--office-font, system-ui, sans-serif); }
 header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 16px;
