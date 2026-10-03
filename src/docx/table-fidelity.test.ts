@@ -102,7 +102,7 @@ describe('table grid, merge, border, shading and style fidelity', () => {
 	it('rejects silently dropping a direct edit to cell-level descriptive properties', async () => {
 		const { table, loaded } = await loadTable();
 		at(at(table.rows, 0), 0).widthTwips = twips(9999);
-		await expect(loaded.save()).rejects.toThrow('Cannot edit table cell width, merge');
+		await expect(loaded.save()).rejects.toThrow('Cannot edit table cell width or merge');
 	});
 
 	it('parses table style conditional formatting (tblStylePr) and resolves banding/first-row precedence', () => {

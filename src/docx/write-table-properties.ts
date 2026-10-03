@@ -4,7 +4,8 @@ import { buildCellProperties, buildRowProperties } from './table-cell-write.js';
 import { buildBorders } from './table-defaults.js';
 import { patchMarginProperties } from './write-table-margins.js';
 import { orderChildren } from './element-order.js';
-import { children, first, makeW, type XmlDocument, type XmlElement } from './xml.js';
+import { children, first, makeW, WORD_NS, type XmlDocument, type XmlElement } from './xml.js';
+import { isStVerticalJc } from './generated/wml-simple-types.js';
 
 const ROW_ORDER = [
 	'cnfStyle',
@@ -111,6 +112,33 @@ const CELL_ORDER = [
 ];
 const CELL_BORDER_ORDER = ['top', 'start', 'left', 'bottom', 'end', 'right', 'insideH', 'insideV'];
 const CELL_SIDES = ['top', 'left', 'bottom', 'right'] as const;
+
+/** Patches only vertical alignment; undefined restores table/style default inheritance. */
+export function patchCellVerticalAlignment(
+	doc: XmlDocument,
+	tc: XmlElement,
+	next: TableCell['verticalAlign'],
+	base: TableCell['verticalAlign'],
+): void {
+	if (next === base) return;
+	if (next !== undefined && !isStVerticalJc(next))
+		throw new Error('Cell vertical alignment must be a valid ST_VerticalJc value.');
+	let props = first(tc, 'tcPr');
+	if (!props) {
+		if (next === undefined) return;
+		props = makeW(doc, 'tcPr');
+		tc.insertBefore(props, tc.firstChild);
+	}
+	const alignment = first(props, 'vAlign') ?? makeW(doc, 'vAlign');
+	for (const old of children(props, 'vAlign')) props.removeChild(old);
+	if (next !== undefined) {
+		alignment.setAttributeNS(WORD_NS, 'w:val', next);
+		props.appendChild(alignment);
+	}
+	orderChildren(props, CELL_ORDER);
+	if (!Array.from(props.childNodes).some((node) => node.nodeType === 1) && !props.attributes.length)
+		tc.removeChild(props);
+}
 
 /** Changes individual cell overrides; deleting an override restores table/default inheritance. */
 export function patchCellMargins(
