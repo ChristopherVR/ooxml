@@ -1,3 +1,10 @@
+## 0.1.1
+
+### Changes
+
+- docs(packages): align npm readmes with powerpoint structure (5c6f120)
+- fix(ui): match suite Pages and responsive editor composition (960d3bc)
+
 ## 0.1.0
 
 ### Changes
