@@ -42,6 +42,9 @@ export class SpreadsheetEditorComponent implements AfterViewInit, OnChanges, OnD
 	@Output() workbookError = new EventEmitter<Error>();
 	@Output() selectionChange = new EventEmitter<SelectionChangeDetail>();
 	@Output() dirtyChange = new EventEmitter<boolean>();
+	/** Pairs with `readOnly` for `[(readOnly)]` two-way binding. */
+	@Output() readOnlyChange = new EventEmitter<boolean>();
+	@Output() ribbonCustomize = new EventEmitter<string[]>();
 	@Output() ready = new EventEmitter<XlsxEditorElement>();
 	private host = inject<ElementRef<HTMLElement>>(ElementRef);
 	private binding?: EditorBinding;
@@ -54,6 +57,8 @@ export class SpreadsheetEditorComponent implements AfterViewInit, OnChanges, OnD
 				'workbook-error': (error) => this.workbookError.emit(error),
 				'selection-change': (detail) => this.selectionChange.emit(detail),
 				'dirty-change': (dirty) => this.dirtyChange.emit(dirty),
+				'readonly-change': (readOnly) => this.readOnlyChange.emit(readOnly),
+				'ribbon-customize': (hiddenActions) => this.ribbonCustomize.emit(hiddenActions),
 				ready: (element) => this.ready.emit(element),
 			}),
 		};

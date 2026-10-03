@@ -47,4 +47,33 @@ describe('Vue editor adapter', () => {
 		app.unmount();
 		expect(container.querySelector('xlsx-editor')).toBeNull();
 	});
+
+	it('keeps in-editor changes across re-renders and emits readonly-change and ribbon-customize', async () => {
+		const container = document.createElement('div');
+		document.body.append(container);
+		const tick = ref(0);
+		const onReadOnly = vi.fn();
+		const onCustomize = vi.fn();
+		const app = createApp({
+			render: () =>
+				h(SpreadsheetEditor, {
+					readOnly: false,
+					hiddenActions: ['bold'],
+					'data-tick': tick.value,
+					themeColors: { primary: '#123456' },
+					'onReadonly-change': onReadOnly,
+					'onRibbon-customize': onCustomize,
+				}),
+		});
+		app.mount(container);
+		const editor = container.querySelector('xlsx-editor') as XlsxEditorElement;
+		editor.readOnly = true;
+		expect(onReadOnly).toHaveBeenCalledWith(true);
+		emit(editor, 'ribbon-customize', { hiddenActions: ['italic'] });
+		expect(onCustomize).toHaveBeenCalledWith(['italic']);
+		tick.value++;
+		await nextTick();
+		expect(editor.readOnly).toBe(true);
+		app.unmount();
+	});
 });

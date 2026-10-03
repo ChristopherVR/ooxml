@@ -111,6 +111,8 @@ describe('shared option keys', () => {
 			'workbook-error': undefined,
 			'selection-change': undefined,
 			'dirty-change': undefined,
+			'readonly-change': undefined,
+			'ribbon-customize': undefined,
 		});
 		options.onWorkbookChange?.(workbook);
 		expect(change).toHaveBeenCalledWith(workbook);
@@ -218,7 +220,7 @@ describe('bytes and src', () => {
 		const onWorkbookError = vi.fn();
 		const binding = mountEditor(newHost(), { src: '/files/Q3%20Sales.xlsx?v=2', onWorkbookError });
 		await flush();
-		expect(fetchMock).toHaveBeenCalledWith('/files/Q3%20Sales.xlsx?v=2');
+		expect(fetchMock.mock.calls[0]?.[0]).toBe('/files/Q3%20Sales.xlsx?v=2');
 		expect(load).toHaveBeenCalledWith(new Uint8Array([80, 75, 3, 4]), 'Q3 Sales.xlsx');
 		binding.update({ src: '/files/Q3%20Sales.xlsx?v=2', onWorkbookError });
 		await flush();

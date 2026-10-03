@@ -9,6 +9,7 @@ import {
 	type XlsxThemeColors,
 } from 'xlsx-web-component';
 import type { Workbook } from '@christophervr/xlsx-core';
+import { createPropTracker, createSrcLoader, sameList, sameThemeColors } from './forwarding';
 
 /** Editor state a framework passes down as props. */
 export interface EditorProps {
@@ -43,6 +44,10 @@ export interface EditorEventOptions {
 	onWorkbookError?: ((error: Error) => void) | undefined;
 	onSelectionChange?: ((detail: SelectionChangeDetail) => void) | undefined;
 	onDirtyChange?: ((dirty: boolean) => void) | undefined;
+	/** The user toggled Editing / Viewing (or `readOnly` changed); lets a controlled parent sync. */
+	onReadOnlyChange?: ((readOnly: boolean) => void) | undefined;
+	/** The user changed the shown ribbon commands (File > Options > Customize Ribbon). */
+	onRibbonCustomize?: ((hiddenActions: string[]) => void) | undefined;
 	/** Called once, after the element is created and attached. */
 	onReady?: ((element: XlsxEditorElement) => void) | undefined;
 }
@@ -75,6 +80,8 @@ export const EDITOR_EVENT_NAMES = [
 	'workbook-error',
 	'selection-change',
 	'dirty-change',
+	'readonly-change',
+	'ribbon-customize',
 ] as const satisfies readonly XlsxEditorEventName[];
 export type EditorEventName = (typeof EDITOR_EVENT_NAMES)[number];
 /** One handler per bound event (unwrapped payload); a missing key is a compile error in every adapter. */
@@ -83,12 +90,11 @@ export interface EditorEventHandlers {
 	'workbook-error': EditorEventOptions['onWorkbookError'];
 	'selection-change': EditorEventOptions['onSelectionChange'];
 	'dirty-change': EditorEventOptions['onDirtyChange'];
+	'readonly-change': EditorEventOptions['onReadOnlyChange'];
+	'ribbon-customize': EditorEventOptions['onRibbonCustomize'];
 	ready?: EditorEventOptions['onReady'];
 }
 
-function sameList(a: readonly string[], b: readonly string[]): boolean {
-	return a.length === b.length && a.every((item, index) => item === b[index]);
-}
 function copyProp<K extends EditorPropKey>(to: EditorProps, from: EditorProps, key: K): void {
 	to[key] = from[key];
 }
@@ -105,6 +111,8 @@ export function eventOptions(handlers: EditorEventHandlers): EditorEventOptions 
 		onWorkbookError: handlers['workbook-error'],
 		onSelectionChange: handlers['selection-change'],
 		onDirtyChange: handlers['dirty-change'],
+		onReadOnlyChange: handlers['readonly-change'],
+		onRibbonCustomize: handlers['ribbon-customize'],
 		onReady: handlers.ready,
 	};
 }
@@ -158,11 +166,6 @@ export function deferredHandle(current: () => EditorBinding | null | undefined):
 	};
 }
 
-const nameFromUrl = (url: string): string | undefined => {
-	const last = url.split(/[?#]/u)[0]?.split('/').pop();
-	return last ? decodeURIComponent(last) : undefined;
-};
-
 type Listener<K extends EditorEventName> = (event: CustomEvent<XlsxEditorEventDetail<K>>) => void;
 
 /** All framework adapters share property, event and lifecycle semantics here. */
@@ -174,10 +177,8 @@ export function mountEditor(host: HTMLElement, initial: EditorOptions = {}): Edi
 	let lastEmitted: Workbook | undefined;
 	let lastBytes: Uint8Array | ArrayBuffer | undefined;
 	let lastSrc: string | undefined;
-	let lastFileName: string | undefined;
-	let lastThemeColors: XlsxThemeColors | undefined;
-	let srcGeneration = 0;
 	let destroyed = false;
+	const changed = createPropTracker<EditorPropKey>();
 	const reportError = (cause: unknown) => {
 		if (destroyed) return;
 		options.onWorkbookError?.(cause instanceof Error ? cause : new Error(String(cause)));
@@ -185,18 +186,7 @@ export function mountEditor(host: HTMLElement, initial: EditorOptions = {}): Edi
 	// The element reports load failures itself (`workbook-error`); only swallow the rejection here.
 	const loadQuietly = (input: Uint8Array | ArrayBuffer, fileName: string | undefined) =>
 		element.load(input, fileName).catch(() => undefined);
-	const fetchSrc = (url: string, fileName: string | undefined) => {
-		const generation = ++srcGeneration;
-		void fetch(url)
-			.then(async (response) => {
-				if (!response.ok) throw new Error(`Could not fetch ${url}: HTTP ${response.status}`);
-				return new Uint8Array(await response.arrayBuffer());
-			})
-			.then((bytes) => {
-				if (destroyed || generation !== srcGeneration) return;
-				return loadQuietly(bytes, fileName ?? nameFromUrl(url));
-			}, reportError);
-	};
+	const src = createSrcLoader(loadQuietly, reportError);
 
 	const listeners: { [K in EditorEventName]: Listener<K> } = {
 		'workbook-change': (event) => {
@@ -206,6 +196,8 @@ export function mountEditor(host: HTMLElement, initial: EditorOptions = {}): Edi
 		'workbook-error': (event) => options.onWorkbookError?.(event.detail.error),
 		'selection-change': (event) => options.onSelectionChange?.(event.detail),
 		'dirty-change': (event) => options.onDirtyChange?.(event.detail.dirty),
+		'readonly-change': (event) => options.onReadOnlyChange?.(event.detail.readOnly),
+		'ribbon-customize': (event) => options.onRibbonCustomize?.([...event.detail.hiddenActions]),
 	};
 	const listen = (add: boolean) => {
 		for (const name of EDITOR_EVENT_NAMES) {
@@ -221,29 +213,40 @@ export function mountEditor(host: HTMLElement, initial: EditorOptions = {}): Edi
 		update(next) {
 			if (destroyed) return;
 			options = next;
-			element.locale = next.locale ?? 'en';
-			element.readOnly = next.readOnly ?? false;
-			element.theme = next.theme ?? 'auto';
-			element.authorName = next.authorName ?? 'Author';
-			element.showToolbar = next.showToolbar ?? true;
-			element.showFormulaBar = next.showFormulaBar ?? true;
-			if (!sameList(element.hiddenActions, next.hiddenActions ?? []))
+			// Each prop is forwarded only when the prop itself changed since it was last forwarded,
+			// so a re-render never undoes a change the user made inside the editor.
+			if (changed('locale', next.locale)) element.locale = next.locale ?? 'en';
+			if (changed('readOnly', next.readOnly)) element.readOnly = next.readOnly ?? false;
+			if (changed('theme', next.theme)) element.theme = next.theme ?? 'auto';
+			if (changed('authorName', next.authorName)) element.authorName = next.authorName ?? 'Author';
+			if (changed('showToolbar', next.showToolbar)) element.showToolbar = next.showToolbar ?? true;
+			if (changed('showFormulaBar', next.showFormulaBar))
+				element.showFormulaBar = next.showFormulaBar ?? true;
+			if (changed('hiddenActions', next.hiddenActions, sameList))
 				element.hiddenActions = [...(next.hiddenActions ?? [])];
-			if (next.themeColors !== lastThemeColors) element.themeColors = next.themeColors ?? {};
-			lastThemeColors = next.themeColors;
+			if (changed('themeColors', next.themeColors, sameThemeColors))
+				element.themeColors = { ...next.themeColors };
 			// The element renames itself on File > Open; only forward a name the parent changed.
-			if (next.fileName !== undefined && next.fileName !== lastFileName)
+			if (changed('fileName', next.fileName) && next.fileName !== undefined)
 				element.fileName = next.fileName;
-			lastFileName = next.fileName;
-			if (next.workbook && next.workbook !== lastInput && next.workbook !== lastEmitted)
+			if (next.workbook && next.workbook !== lastInput && next.workbook !== lastEmitted) {
+				src.cancel();
 				element.workbook = next.workbook;
+			}
 			lastInput = next.workbook;
-			if (next.bytes && next.bytes !== lastBytes) void loadQuietly(next.bytes, next.fileName);
+			if (next.bytes && next.bytes !== lastBytes) {
+				src.cancel();
+				void loadQuietly(next.bytes, next.fileName);
+			}
 			lastBytes = next.bytes;
-			if (next.src && next.src !== lastSrc) fetchSrc(next.src, next.fileName);
+			if (next.src && next.src !== lastSrc) src.fetch(next.src, next.fileName);
+			else if (!next.src && lastSrc) src.cancel();
 			lastSrc = next.src;
 		},
-		load: (input, fileName) => element.load(input, fileName),
+		load: (input, fileName) => {
+			src.cancel();
+			return element.load(input, fileName);
+		},
 		newWorkbook: () => element.newWorkbook(),
 		save: () => element.save(),
 		saveBytes: (format) => element.saveBytes(format),
@@ -258,6 +261,7 @@ export function mountEditor(host: HTMLElement, initial: EditorOptions = {}): Edi
 		destroy() {
 			if (destroyed) return;
 			destroyed = true;
+			src.cancel();
 			listen(false);
 			element.remove();
 		},

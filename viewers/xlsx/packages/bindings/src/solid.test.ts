@@ -53,4 +53,34 @@ describe('Solid editor adapter', () => {
 		dispose();
 		expect(host.querySelector('xlsx-editor')).toBeNull();
 	});
+
+	it('keeps in-editor changes when other props change and reports them', () => {
+		let dispose!: () => void;
+		const [author, setAuthor] = createSignal('Ada');
+		const onReadOnlyChange = vi.fn();
+		const onRibbonCustomize = vi.fn();
+		const host = document.createElement('div');
+		document.body.append(host);
+		const props = {
+			readOnly: false,
+			get authorName() {
+				return author();
+			},
+			onReadOnlyChange,
+			onRibbonCustomize,
+		};
+		createRoot((stop) => {
+			dispose = stop;
+			render(() => SpreadsheetEditor(props), host);
+		});
+		const editor = host.querySelector('xlsx-editor') as XlsxEditorElement;
+		editor.readOnly = true;
+		expect(onReadOnlyChange).toHaveBeenCalledWith(true);
+		emit(editor, 'ribbon-customize', { hiddenActions: ['italic'] });
+		expect(onRibbonCustomize).toHaveBeenCalledWith(['italic']);
+		setAuthor('Grace');
+		expect(editor.authorName).toBe('Grace');
+		expect(editor.readOnly).toBe(true);
+		dispose();
+	});
 });

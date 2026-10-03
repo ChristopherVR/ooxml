@@ -5,14 +5,16 @@
     onworkbookerror?: EditorEventHandlers['workbook-error'];
     onselectionchange?: EditorEventHandlers['selection-change'];
     ondirtychange?: EditorEventHandlers['dirty-change'];
+    onreadonlychange?: EditorEventHandlers['readonly-change'];
+    onribboncustomize?: EditorEventHandlers['ribbon-customize'];
     onready?: EditorEventHandlers['ready'];
   };
-  let { workbook, bytes, src, fileName, readOnly = false, locale = 'en', theme = 'auto', authorName = 'Author', showToolbar = true, showFormulaBar = true, hiddenActions = [], themeColors, onworkbookchange, onworkbookerror, onselectionchange, ondirtychange, onready }: Props = $props();
+  let { workbook, bytes, src, fileName, readOnly = false, locale = 'en', theme = 'auto', authorName = 'Author', showToolbar = true, showFormulaBar = true, hiddenActions = [], themeColors, onworkbookchange, onworkbookerror, onselectionchange, ondirtychange, onreadonlychange, onribboncustomize, onready }: Props = $props();
   let binding: EditorBinding | undefined;
   const handle = deferredHandle(() => binding);
   function attach(host: HTMLElement, options: Props) {
     const normalized = (value: Props) => ({ ...pickEditorProps(value),
-      ...eventOptions({ 'workbook-change': value.onworkbookchange, 'workbook-error': value.onworkbookerror, 'selection-change': value.onselectionchange, 'dirty-change': value.ondirtychange, ready: value.onready }) });
+      ...eventOptions({ 'workbook-change': value.onworkbookchange, 'workbook-error': value.onworkbookerror, 'selection-change': value.onselectionchange, 'dirty-change': value.ondirtychange, 'readonly-change': value.onreadonlychange, 'ribbon-customize': value.onribboncustomize, ready: value.onready }) });
     binding = mountEditor(host, normalized(options));
     return { update(next: Props) { binding?.update(normalized(next)); }, destroy() { binding?.destroy(); binding = undefined; } };
   }
@@ -28,4 +30,4 @@
   export function isDirty() { return handle.dirty; }
   export function getElement() { return binding?.element; }
 </script>
-<div use:attach={{ workbook, bytes, src, fileName, readOnly, locale, theme, authorName, showToolbar, showFormulaBar, hiddenActions, themeColors, onworkbookchange, onworkbookerror, onselectionchange, ondirtychange, onready }}></div>
+<div use:attach={{ workbook, bytes, src, fileName, readOnly, locale, theme, authorName, showToolbar, showFormulaBar, hiddenActions, themeColors, onworkbookchange, onworkbookerror, onselectionchange, ondirtychange, onreadonlychange, onribboncustomize, onready }}></div>

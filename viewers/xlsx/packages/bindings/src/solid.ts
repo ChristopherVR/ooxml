@@ -18,6 +18,8 @@ export function SpreadsheetEditor(props: SpreadsheetEditorProps) {
 			'workbook-error': props.onWorkbookError,
 			'selection-change': props.onSelectionChange,
 			'dirty-change': props.onDirtyChange,
+			'readonly-change': props.onReadOnlyChange,
+			'ribbon-customize': props.onRibbonCustomize,
 			ready: props.onReady,
 		}),
 	});

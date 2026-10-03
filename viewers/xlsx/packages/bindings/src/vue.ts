@@ -38,6 +38,8 @@ export const SpreadsheetEditor = defineComponent({
 				'workbook-error': (error: Error) => emit('workbook-error', error),
 				'selection-change': (detail) => emit('selection-change', detail),
 				'dirty-change': (dirty: boolean) => emit('dirty-change', dirty),
+				'readonly-change': (readOnly: boolean) => emit('readonly-change', readOnly),
+				'ribbon-customize': (hiddenActions: string[]) => emit('ribbon-customize', hiddenActions),
 				ready: (element: XlsxEditorElement) => emit('ready', element),
 			}),
 		});

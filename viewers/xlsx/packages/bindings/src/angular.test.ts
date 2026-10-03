@@ -43,4 +43,31 @@ describe('Angular editor adapter', () => {
 		expect(hostElement.querySelector('xlsx-editor')).toBeNull();
 		app.destroy();
 	});
+
+	it('keeps in-editor changes on unrelated input changes and emits readOnlyChange', async () => {
+		const app = await createApplication({ providers: [provideZonelessChangeDetection()] });
+		const hostElement = document.createElement('spreadsheet-editor');
+		document.body.append(hostElement);
+		const ref = createComponent(SpreadsheetEditorComponent, {
+			environmentInjector: app.injector,
+			hostElement,
+		});
+		const onReadOnly = vi.fn();
+		const onCustomize = vi.fn();
+		ref.instance.readOnlyChange.subscribe(onReadOnly);
+		ref.instance.ribbonCustomize.subscribe(onCustomize);
+		app.attachView(ref.hostView);
+		ref.changeDetectorRef.detectChanges();
+		const editor = hostElement.querySelector('xlsx-editor') as XlsxEditorElement;
+		editor.readOnly = true;
+		expect(onReadOnly).toHaveBeenCalledWith(true);
+		emit(editor, 'ribbon-customize', { hiddenActions: ['italic'] });
+		expect(onCustomize).toHaveBeenCalledWith(['italic']);
+		ref.setInput('authorName', 'Grace');
+		ref.changeDetectorRef.detectChanges();
+		expect(editor.authorName).toBe('Grace');
+		expect(editor.readOnly).toBe(true);
+		ref.destroy();
+		app.destroy();
+	});
 });

@@ -38,4 +38,35 @@ describe('React editor adapter', () => {
 		expect(container.querySelector('xlsx-editor')).toBeNull();
 		expect(() => ref.current?.element).not.toThrow();
 	});
+
+	it('keeps in-editor changes across re-renders and reports them to a controlled parent', () => {
+		const container = document.createElement('div');
+		document.body.append(container);
+		const root = createRoot(container);
+		const onReadOnlyChange = vi.fn();
+		const onRibbonCustomize = vi.fn();
+		const render = () =>
+			act(() =>
+				root.render(
+					createElement(SpreadsheetEditor, {
+						readOnly: false,
+						hiddenActions: ['bold'],
+						themeColors: { primary: '#123456' },
+						onReadOnlyChange,
+						onRibbonCustomize,
+					}),
+				),
+			);
+		render();
+		const editor = container.querySelector('xlsx-editor') as XlsxEditorElement;
+		editor.readOnly = true;
+		expect(onReadOnlyChange).toHaveBeenCalledWith(true);
+		emit(editor, 'ribbon-customize', { hiddenActions: ['italic'] });
+		expect(onRibbonCustomize).toHaveBeenCalledWith(['italic']);
+		editor.hiddenActions = ['italic'];
+		render();
+		expect(editor.readOnly).toBe(true);
+		expect(editor.hiddenActions).toEqual(['italic']);
+		act(() => root.unmount());
+	});
 });
