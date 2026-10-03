@@ -48,7 +48,7 @@ describe('mountGrid', () => {
 		expect(ctx.commands.get('edit.copy')).toBeDefined();
 	});
 
-	it('moves with arrows, extends with Shift and emits selection-change', () => {
+	it('moves with arrows and extends with Shift, leaving selection-change to the core', () => {
 		const { ctx, key } = setup();
 		key('ArrowDown');
 		key('ArrowRight');
@@ -58,8 +58,8 @@ describe('mountGrid', () => {
 			start: { row: 1, col: 1 },
 			end: { row: 1, col: 2 },
 		});
-		const last = ctx.events.filter((e) => e.type === 'selection-change').pop();
-		expect(last?.detail).toEqual({ sheet: 0, ref: 'B2:C2', active: 'B2' });
+		// The editor core announces selection-change (once, one formatter); the grid never does.
+		expect(ctx.events.filter((e) => e.type === 'selection-change')).toEqual([]);
 	});
 
 	it('jumps with Ctrl+arrows using the core navigation', () => {

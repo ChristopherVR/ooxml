@@ -10,6 +10,7 @@ import {
 	type EditSession,
 	type FontView,
 	type Workbook,
+	type Worksheet,
 } from '@christophervr/xlsx-core';
 import { createCommandRegistry, type CommandRegistry } from './commands';
 import type { EditorContext, GridController, SelectionModel } from './context';
@@ -23,7 +24,13 @@ import {
 	translator,
 	type EditorLocale,
 } from './localization';
-import { activeRef, createSelectionModel, initialSelection, selectionRef } from './selection';
+import {
+	activeRef,
+	createSelectionModel,
+	initialSelection,
+	selectionRef,
+	SheetSelections,
+} from './selection';
 import type { CalculationMode } from './backstage';
 import type { EditorThemeMode, XlsxTheme } from './theme';
 
@@ -60,6 +67,9 @@ export class EditorCore {
 	private stopSession: (() => void) | undefined;
 	private renderQueued = false;
 	private lastSelection = '';
+	private readonly sheetSelections = new SheetSelections();
+	/** The worksheet object on screen, to notice sheets inserted, moved or deleted around it. */
+	private shownSheet: Worksheet | undefined;
 
 	/** Automatic or manual calculation: the workbook's own mode (`calcPr calcMode`). */
 	get calculation(): CalculationMode {
@@ -89,6 +99,8 @@ export class EditorCore {
 			(name, error) => report(name, error),
 		);
 		this.selection.onChange((selection) => {
+			if (selection.sheet === this.activeSheet)
+				this.sheetSelections.remember(this.shownSheet, selection);
 			const detail = {
 				sheet: selection.sheet,
 				ref: selectionRef(selection),
@@ -191,6 +203,7 @@ export class EditorCore {
 			if (visible >= 0) this.activeSheet = visible;
 		}
 		this.lastSelection = '';
+		this.shownSheet = workbook?.sheets[this.activeSheet];
 		this.selection.set(initialSelection(this.activeSheet, workbook));
 		this.dirty.set(false);
 		this.notifyModel({ kind: 'load' });
@@ -212,8 +225,7 @@ export class EditorCore {
 
 	private onSessionChange(change: unknown): void {
 		const workbook = this.workbook;
-		if (workbook && this.activeSheet >= workbook.sheets.length)
-			this.setActiveSheet(Math.max(0, workbook.sheets.length - 1), true);
+		if (workbook) this.followShownSheet(workbook);
 		this.dirty.set(true);
 		if (workbook) emit(this.host, 'workbook-change', { workbook });
 		this.notifyModel(change);
@@ -224,9 +236,34 @@ export class EditorCore {
 		if (!sheet || (index === this.activeSheet && !force)) return;
 		if (this.gridController?.isEditing()) this.gridController.commitEdit();
 		this.activeSheet = index;
-		this.selection.set(initialSelection(index, this.workbook));
+		this.shownSheet = sheet;
+		this.selection.set(this.sheetSelections.restore(index, this.workbook));
 		emit(this.host, 'sheet-change', { index, name: sheet.name });
 		this.notifyModel({ kind: 'sheet', sheet: index });
+	}
+
+	/**
+	 * After an edit that inserted, moved or deleted sheets: keep showing the same worksheet at its
+	 * new index, or, when it was deleted, switch to the nearest visible sheet (always announcing
+	 * `sheet-change` and restoring that sheet's selection, even when the index is unchanged).
+	 */
+	private followShownSheet(workbook: Workbook): void {
+		const shown = this.shownSheet;
+		if (workbook.sheets[this.activeSheet] === shown && shown) return;
+		const moved = shown ? workbook.sheets.indexOf(shown) : -1;
+		if (moved >= 0 && shown) {
+			this.activeSheet = moved;
+			this.selection.set({ ...this.selection.get(), sheet: moved });
+			emit(this.host, 'sheet-change', { index: moved, name: shown.name });
+			return;
+		}
+		const sheets = workbook.sheets;
+		const from = Math.min(this.activeSheet, Math.max(0, sheets.length - 1));
+		const after = sheets.findIndex((sheet, i) => i >= from && sheet.state === 'visible');
+		const any = sheets.findIndex((sheet) => sheet.state === 'visible');
+		const next = after >= 0 ? after : any >= 0 ? any : 0;
+		if (sheets[next]) this.setActiveSheet(next, true);
+		else this.shownSheet = undefined;
 	}
 
 	/** Text width for the core's automatic row heights, from the grid's canvas measurer. */

@@ -1,7 +1,7 @@
 // `mountGrid(ctx, container)`: the virtualized worksheet grid. Wires the view, selection,
 // in-cell editor, keyboard, pointer, clipboard, menus, drawings, indicators and accessibility,
 // registers the grid's `edit.*` commands and attaches the GridController to the context.
-import { formatAddress, type CellRange, type Worksheet } from '@christophervr/xlsx-core';
+import type { CellRange } from '@christophervr/xlsx-core';
 import { createGridClipboard } from '../clipboard.js';
 import type { EditorContext, GridController, Selection } from '../context.js';
 import { CellEditor } from './cell-editor.js';
@@ -16,7 +16,7 @@ import { wirePointer } from './grid-pointer.js';
 import { GridSelection } from './grid-selection.js';
 import { GridView } from './grid-view.js';
 import { followLink, wireTooltips } from './indicators.js';
-import { selectCell, selectionRef } from './selection-ops.js';
+import { selectCell } from './selection-ops.js';
 import { GRID_CSS } from './styles.js';
 import { ValidationList } from './validation-list.js';
 
@@ -111,18 +111,16 @@ export function mountGrid(ctx: EditorContext, container: HTMLElement): () => voi
 		}),
 	);
 
-	// Selection memory per sheet, so switching tabs comes back to the same cells.
-	const remembered = new WeakMap<Worksheet, Selection>();
+	// The editor core keeps each sheet's selection (and emits selection-change, once, with the
+	// shared A1 formatter); the grid only falls back to the file's selection when it mounts on a
+	// sheet the selection does not belong to.
 	let shownSheet = view.sheet();
 	let shownWorkbook = view.workbook();
-	let lastEmitted = '';
 	const restoreSelection = () => {
 		const sheet = view.sheet();
 		const index = view.sheetIndex();
-		const saved = sheet ? remembered.get(sheet) : undefined;
 		const fromFile = sheet?.view.selection;
-		if (saved) ctx.selection.set({ ...saved, sheet: index });
-		else if (fromFile?.ranges.length)
+		if (fromFile?.ranges.length)
 			ctx.selection.set({
 				sheet: index,
 				active: fromFile.active,
@@ -132,14 +130,6 @@ export function mountGrid(ctx: EditorContext, container: HTMLElement): () => voi
 		else ctx.selection.set(selectCell(index, sheet, { row: 0, col: 0 }));
 	};
 	const onSelection = (next: Selection) => {
-		const sheet = view.sheet();
-		if (sheet && next.sheet === view.sheetIndex()) remembered.set(sheet, next);
-		const ref = selectionRef(next);
-		const key = `${next.sheet}|${ref}|${next.active.row},${next.active.col}`;
-		if (key !== lastEmitted) {
-			lastEmitted = key;
-			ctx.emit('selection-change', { sheet: next.sheet, ref, active: formatAddress(next.active) });
-		}
 		a11y.update(next, editor.editing);
 		view.schedule();
 		ctx.requestRender();

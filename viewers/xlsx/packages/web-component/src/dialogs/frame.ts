@@ -82,13 +82,33 @@ export function showDialog<T>(
 			dialog.remove();
 			resolve(result);
 		};
+		// One submit at a time: a double Enter or double click must not apply an async submit twice.
+		// A synchronous submit settles at once; an async one disables OK until it settles.
+		let submitting = false;
+		const failed = (error: unknown) =>
+			ctx.toast(ctx.t(error instanceof Error ? error.message : String(error)), 'error');
+		const settle = (result: T | undefined) => {
+			if (result !== undefined) finish(result);
+		};
 		const confirm = async (): Promise<void> => {
+			if (done || submitting) return;
 			if (!spec.submit) return finish(undefined);
+			let outcome: T | undefined | Promise<T | undefined>;
 			try {
-				const result = await spec.submit();
-				if (result !== undefined) finish(result);
+				outcome = spec.submit();
 			} catch (error) {
-				ctx.toast(ctx.t(error instanceof Error ? error.message : String(error)), 'error');
+				return failed(error);
+			}
+			if (!(outcome instanceof Promise)) return settle(outcome);
+			submitting = true;
+			if (ok) ok.disabled = true;
+			try {
+				settle(await outcome);
+			} catch (error) {
+				failed(error);
+			} finally {
+				submitting = false;
+				if (ok && !done) ok.disabled = false;
 			}
 		};
 		dialog.addEventListener('office-dialog-close', () => finish(undefined));

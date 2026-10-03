@@ -1,7 +1,6 @@
 // Pure selection arithmetic for the grid (no DOM): Excel-style extension, header selections,
 // moving the active cell inside a selection (Enter/Tab) and merge expansion.
 import {
-	formatRange,
 	MAX_COL,
 	MAX_ROW,
 	normalizeRange,
@@ -11,6 +10,7 @@ import {
 	type Worksheet,
 } from '@christophervr/xlsx-core';
 import type { Selection } from '../context.js';
+import { isWholeCols, isWholeRows } from '../selection.js';
 
 export const cellRange = (at: CellAddress): CellRange => ({ start: { ...at }, end: { ...at } });
 
@@ -28,10 +28,8 @@ export const ALL_RANGE: CellRange = {
 	end: { row: MAX_ROW, col: MAX_COL },
 };
 
-export const isWholeRows = (range: CellRange): boolean =>
-	range.start.col === 0 && range.end.col === MAX_COL;
-export const isWholeCols = (range: CellRange): boolean =>
-	range.start.row === 0 && range.end.row === MAX_ROW;
+// One A1 formatter for the whole editor (events, getSelection, announcements): see selection.ts.
+export { isWholeCols, isWholeRows, rangeRef, selectionRef } from '../selection.js';
 
 export const isSingleCell = (range: CellRange): boolean =>
 	range.start.row === range.end.row && range.start.col === range.end.col;
@@ -173,23 +171,6 @@ export function moveWithinSelection(
 		col = forward ? range.start.col : range.end.col;
 	}
 	return { ...selection, active: { row, col } };
-}
-
-/** `A1:B2,D4` (whole rows / columns as `1:3` / `A:C`). */
-export function selectionRef(selection: Selection): string {
-	return selection.ranges.map(rangeRef).join(',');
-}
-
-export function rangeRef(range: CellRange): string {
-	if (isWholeRows(range) && isWholeCols(range)) return '1:1048576';
-	if (isWholeRows(range)) return `${range.start.row + 1}:${range.end.row + 1}`;
-	if (isWholeCols(range)) {
-		const [a, b] = formatRange({ start: range.start, end: { row: 0, col: range.end.col } })
-			.replace(/\d+/g, '')
-			.split(':');
-		return `${a}:${b ?? a}`;
-	}
-	return formatRange(range);
 }
 
 /** Clamps an address to the sheet. */

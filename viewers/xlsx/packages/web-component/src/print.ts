@@ -112,8 +112,18 @@ td{overflow:hidden;padding:0 3px;box-sizing:border-box;line-height:1.2}</style><
 	return `${head}<table style="width:${width}px"><colgroup>${colgroup}</colgroup><tbody>${rows.join('')}</tbody></table></body></html>`;
 }
 
-/** Prints through a hidden frame so the editor page itself is never reflowed. */
+/** How long a print frame may stay without `afterprint` before it is removed anyway. */
+export const PRINT_FRAME_TIMEOUT_MS = 60_000;
+/** The frame of the previous print, per document, removed when the next print starts. */
+const pendingFrames = new WeakMap<Document, () => void>();
+
+/**
+ * Prints through a hidden frame so the editor page itself is never reflowed. The frame is removed
+ * on `afterprint` (some browsers return from `print()` before the dialog closes, so removing it
+ * then would cancel the job), on the next print, or after a long safety timeout.
+ */
 export function printHtml(doc: Document, html: string): void {
+	pendingFrames.get(doc)?.();
 	const frame = doc.createElement('iframe');
 	frame.setAttribute('aria-hidden', 'true');
 	frame.tabIndex = -1;
@@ -129,14 +139,25 @@ export function printHtml(doc: Document, html: string): void {
 	frameDoc.open();
 	frameDoc.write(html);
 	frameDoc.close();
-	const cleanup = () => setTimeout(() => frame.remove(), 1000);
-	target.addEventListener('afterprint', cleanup, { once: true });
+	let safety: ReturnType<typeof setTimeout> | undefined;
+	const cleanup = () => {
+		if (safety !== undefined) clearTimeout(safety);
+		target.removeEventListener('afterprint', cleanup);
+		frame.remove();
+		if (pendingFrames.get(doc) === cleanup) pendingFrames.delete(doc);
+	};
+	pendingFrames.set(doc, cleanup);
+	target.addEventListener('afterprint', cleanup);
+	safety = setTimeout(cleanup, PRINT_FRAME_TIMEOUT_MS);
 	setTimeout(() => {
+		if (!frame.isConnected) return;
 		try {
 			target.focus();
 			target.print();
-		} finally {
+		} catch (error) {
+			// Nothing awaits this timer, so report instead of throwing an uncaught error.
 			cleanup();
+			console.error('xlsx-editor: printing failed', error);
 		}
 	}, 50);
 }
