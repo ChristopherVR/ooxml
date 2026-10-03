@@ -21,6 +21,8 @@ export const OFFICE_UI_TAGS = [
 	'office-ui-ribbon-stack',
 	'office-ui-menu-item',
 	'office-ui-menu-button',
+	'office-ui-menu-separator',
+	'office-ui-context-menu',
 	'office-ui-toolbar',
 	'office-ui-dialog',
 	'office-ui-status-bar',

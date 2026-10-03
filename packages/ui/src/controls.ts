@@ -2,6 +2,7 @@ import { defineButton } from './button.js';
 import { defineCheckbox, defineSwitch } from './checkable.js';
 import { defineDialog } from './dialog.js';
 import { defineIcon } from './icons.js';
+import { defineContextMenu, defineMenuSeparator } from './context-menu.js';
 import { defineMenuButton, defineMenuItem } from './menu.js';
 import { defineRibbonGroup, defineRibbonStack, defineToolbar } from './ribbon.js';
 import { defineSelect } from './select.js';
@@ -12,10 +13,12 @@ import { defineZoomSlider } from './zoom-slider.js';
 export {
 	defineButton,
 	defineCheckbox,
+	defineContextMenu,
 	defineDialog,
 	defineIcon,
 	defineMenuButton,
 	defineMenuItem,
+	defineMenuSeparator,
 	defineRibbonGroup,
 	defineRibbonStack,
 	defineSelect,
@@ -42,7 +45,9 @@ export const CONTROL_DEFINERS = [
 	defineRibbonGroup,
 	defineRibbonStack,
 	defineMenuItem,
+	defineMenuSeparator,
 	defineMenuButton,
+	defineContextMenu,
 	defineToolbar,
 	defineDialog,
 	defineStatusBar,

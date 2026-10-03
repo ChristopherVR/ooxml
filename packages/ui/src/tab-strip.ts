@@ -19,6 +19,8 @@ const CSS = `
 	min-height: var(--office-target-size, 26px);
 	padding: 0; border: 0; background: transparent; color: inherit; cursor: pointer; }
 .step:disabled { opacity: .4; cursor: default; }
+.add { font-size: 18px; line-height: 1; }
+.add[hidden] { display: none; }
 .list { display: flex; align-items: stretch; min-width: 0; overflow-x: auto; scrollbar-width: thin; }
 .tab { flex: none; max-width: 220px; min-height: var(--office-target-size, 26px); margin-top: -1px;
 	padding: 2px 14px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
@@ -42,15 +44,26 @@ svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width:
  * keys move the selection; the tab list uses a roving tabindex. User selection emits
  * `office-tab-select` `{ id }` (cancelable); setting properties never emits.
  * Attributes: `label` (tab list name, default "Tabs"), `previous-label` and `next-label`
- * (step button names, default "Previous" and "Next"), `disabled`.
+ * (step button names, default "Previous" and "Next"), `disabled`, and `add-label` to show an
+ * add button after the tabs (Insert Page, New Sheet) that emits `office-command`
+ * `{ command: 'tab-add' }`; `add-disabled` and `add-title` disable and explain it.
  */
 export const defineTabStrip = definer('office-ui-tab-strip', () => {
 	class OfficeUiTabStrip extends HTMLElement {
-		static observedAttributes = ['label', 'disabled', 'selected', 'previous-label', 'next-label'];
+		static observedAttributes = [
+			'label',
+			'disabled',
+			'selected',
+			'previous-label',
+			'next-label',
+			'add-label',
+			'add-disabled',
+		];
 		private items: OfficeTab[] = [];
 		private readonly list: HTMLDivElement;
 		private readonly previous: HTMLButtonElement;
 		private readonly next: HTMLButtonElement;
+		private readonly add: HTMLButtonElement;
 		constructor() {
 			super();
 			const doc = this.ownerDocument;
@@ -72,7 +85,14 @@ export const defineTabStrip = definer('office-ui-tab-strip', () => {
 			this.list = doc.createElement('div');
 			this.list.className = 'list';
 			this.list.setAttribute('role', 'tablist');
-			root.append(this.previous, this.next, this.list);
+			this.add = doc.createElement('button');
+			this.add.type = 'button';
+			this.add.className = 'step add';
+			this.add.textContent = '+';
+			this.add.addEventListener('click', () => {
+				if (!this.add.disabled) emit(this, 'office-command', { command: 'tab-add' });
+			});
+			root.append(this.previous, this.next, this.list, this.add);
 			this.previous.addEventListener('click', () => this.move(-1, false));
 			this.next.addEventListener('click', () => this.move(1, false));
 			this.list.addEventListener('click', (event) => {
@@ -177,6 +197,11 @@ export const defineTabStrip = definer('office-ui-tab-strip', () => {
 				if (selected) tab.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
 			}
 			this.previous.disabled = disabled || index <= 0;
+			const addLabel = this.getAttribute('add-label');
+			this.add.hidden = !addLabel;
+			this.add.disabled = disabled || this.hasAttribute('add-disabled');
+			this.add.setAttribute('aria-label', addLabel ?? 'Add');
+			this.add.title = this.getAttribute('add-title') ?? addLabel ?? '';
 			this.next.disabled = disabled || index < 0 || index >= this.items.length - 1;
 		}
 	}
