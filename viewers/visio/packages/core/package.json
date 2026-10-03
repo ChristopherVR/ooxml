@@ -27,6 +27,6 @@
 		"access": "public"
 	},
 	"dependencies": {
-		"ooxml-core": "^0.13.0"
+		"ooxml-core": "^0.14.1"
 	}
 }

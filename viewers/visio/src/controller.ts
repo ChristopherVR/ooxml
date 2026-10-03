@@ -350,6 +350,13 @@ export class ViewerController {
 	async undo(): Promise<void> {
 		return this.#mutate('undo');
 	}
+	/**
+	 * Adopt a package from a shared session as one undoable history step. Emits `document-change`
+	 * with kind `remote`, which a session must not publish back.
+	 */
+	async applyRemoteSource(bytes: Uint8Array): Promise<void> {
+		return this.#mutate('remote', undefined, bytes);
+	}
 	async redo(): Promise<void> {
 		return this.#mutate('redo');
 	}
@@ -377,7 +384,11 @@ export class ViewerController {
 			? (this.#history?.state ?? EMPTY_EDIT_STATE)
 			: EMPTY_EDIT_STATE;
 	}
-	async #mutate(kind: 'edit' | 'undo' | 'redo', commands?: readonly VisioEdit[]): Promise<void> {
+	async #mutate(
+		kind: 'edit' | 'undo' | 'redo' | 'remote',
+		commands?: readonly VisioEdit[],
+		remote?: Uint8Array,
+	): Promise<void> {
 		this.#assertAlive();
 		const history = this.#history;
 		if (!history || this.#sourceFormat !== 'vsdx' || this.#state.document?.format !== 'vsdx')
@@ -386,7 +397,7 @@ export class ViewerController {
 			throw new Error('Another document operation is in progress.');
 		const target =
 			kind === 'undo' ? history.undoTarget : kind === 'redo' ? history.redoTarget : undefined;
-		if (kind !== 'edit' && !target) return;
+		if ((kind === 'undo' || kind === 'redo') && !target) return;
 		const id = ++this.#editId;
 		const loadId = this.#loadId;
 		const current = () =>
@@ -409,6 +420,10 @@ export class ViewerController {
 				if (edited.bytes.byteLength > MAX_INPUT_BYTES)
 					throw new Error('The modified VSDX exceeds 32 MiB.');
 				document = edited.document;
+			} else if (kind === 'remote') {
+				if (remote!.byteLength > MAX_INPUT_BYTES)
+					throw new Error('The shared VSDX exceeds 32 MiB.');
+				document = await this.parser(Uint8Array.from(remote!));
 			} else document = await this.parser(Uint8Array.from(target!.bytes));
 			assertCurrent();
 			assertViewableDocument(document);
@@ -432,6 +447,7 @@ export class ViewerController {
 					: null;
 			// No external callbacks occur between history acceptance and model acceptance.
 			if (edited) history.append(edited.bytes, edited.diagnostics);
+			else if (kind === 'remote') history.append(Uint8Array.from(remote!), []);
 			else history.move(target!);
 			this.#visible = visible;
 			this.#searchIndex = searchIndex;

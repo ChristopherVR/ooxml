@@ -20,6 +20,8 @@ import { ViewerBackstage } from './viewer-backstage.js';
 import { createContextMenus, wireContextMenus } from './viewer-context-menu.js';
 import { wireTellMe } from './viewer-tell-me.js';
 import { createPanZoom, ViewerPanZoom } from './viewer-pan-zoom.js';
+import { createOptionsDialog, ViewerProfile } from './viewer-options.js';
+import { ViewerShare } from './viewer-share.js';
 import { wireStencil } from './viewer-stencil.js';
 import { createRulers, type Rulers } from './viewer-ruler.js';
 import { ViewerEditControls } from './viewer-edit-controls.js';
@@ -51,6 +53,8 @@ export class VisioViewerElement extends BaseElement {
 	#rulers: Rulers;
 	#canvas: ViewerCanvas;
 	#panZoom: ViewerPanZoom;
+	#profile: ViewerProfile;
+	#share: ViewerShare;
 	#backstage: ViewerBackstage;
 	#fileName = '';
 	#loadToken = 0;
@@ -87,7 +91,11 @@ export class VisioViewerElement extends BaseElement {
 		workspace.before(ribbon, this.#findBar);
 		workspace.prepend(createShapesStrip(document), createShapesWindow(document));
 		workspace.append(createPanZoom(document));
-		this.#root.append(createBackstage(document), ...createContextMenus(document));
+		this.#root.append(
+			createBackstage(document),
+			createOptionsDialog(document),
+			...createContextMenus(document),
+		);
 		workspace.after(createPageTabs(document), createStatusBar(document));
 		this.#viewport = this.#root.querySelector('.viewport')!;
 		this.#rulers = createRulers(this.#viewport);
@@ -130,6 +138,8 @@ export class VisioViewerElement extends BaseElement {
 				this.#status.textContent = message;
 			},
 		});
+		this.#profile = new ViewerProfile(this.#root);
+		this.#share = new ViewerShare(this.#root, this.controller, () => this.#profile.profile);
 		this.#backstage = new ViewerBackstage({
 			root: this.#root,
 			viewport: this.#viewport,
@@ -142,6 +152,7 @@ export class VisioViewerElement extends BaseElement {
 				this.controller.setDocument(null);
 			},
 			revealNotes: () => this.#chrome.reveal('notes'),
+			showOptions: () => this.#profile.showOptions(),
 			announce: (message) => {
 				this.#announcement = message;
 				this.#status.textContent = message;
@@ -323,6 +334,8 @@ export class VisioViewerElement extends BaseElement {
 		const disposeTellMe = wireTellMe(this.#root);
 		const keyTips = attachKeyTips(this.#root);
 		const disposePanZoom = this.#panZoom.wire();
+		const disposeProfile = this.#profile.wire();
+		const disposeShare = this.#share.wire();
 		const disposeRulers = this.#rulers.wire();
 		const disposeStencil = wireStencil(
 			this.#root.querySelector('.shapes-pane')!,
@@ -356,6 +369,8 @@ export class VisioViewerElement extends BaseElement {
 			disposeTellMe();
 			keyTips.dispose();
 			disposePanZoom();
+			disposeProfile();
+			disposeShare();
 			disposeRulers();
 			disposeStencil();
 			disposeFind();

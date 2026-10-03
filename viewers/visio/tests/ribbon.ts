@@ -33,7 +33,16 @@ export async function openFind(viewer: Locator): Promise<Locator> {
 /** Visio's File backstage. */
 export async function fileBackstage(
 	viewer: Locator,
-	item: 'info' | 'new' | 'open' | 'save-as' | 'print' | 'export' = 'info',
+	item:
+		| 'info'
+		| 'new'
+		| 'open'
+		| 'save-as'
+		| 'print'
+		| 'share'
+		| 'export'
+		| 'account'
+		| 'options' = 'info',
 ): Promise<void> {
 	const backstage = viewer.locator('.backstage');
 	if (!(await backstage.isVisible())) await viewer.locator('.file-tab').click();

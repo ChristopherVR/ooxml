@@ -8,7 +8,11 @@ export interface ViewerProperties {
 }
 export interface ViewerEvents {
 	'document-load': VisioDocument;
-	'document-change': { document: VisioDocument; dirty: boolean; kind: 'edit' | 'undo' | 'redo' };
+	'document-change': {
+		document: VisioDocument;
+		dirty: boolean;
+		kind: 'edit' | 'undo' | 'redo' | 'remote';
+	};
 	'document-error': Error;
 	'page-change': number;
 	'zoom-change': number;

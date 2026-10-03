@@ -185,3 +185,45 @@
 		padding: 16px;
 	}
 }
+/* Account: the shared profile editor, then Visio's product information. */
+.backstage-page office-ui-account {
+	max-width: 560px;
+}
+.backstage-product {
+	margin-top: 24px;
+}
+/* Share with people: a live session between windows of this browser. */
+.share-panel {
+	max-width: 560px;
+	margin-bottom: 16px;
+}
+.share-panel h2 {
+	margin-top: 0 !important;
+}
+.share-field {
+	display: grid;
+	gap: 4px;
+	max-width: 320px;
+	margin: 12px 0;
+	font-size: 13px;
+}
+.share-room {
+	min-height: 30px;
+	padding: 2px 8px;
+	border: 1px solid var(--_vv-border);
+	border-radius: 3px;
+	background: var(--_vv-surface);
+	color: inherit;
+	font: inherit;
+}
+.share-buttons button {
+	min-height: 32px;
+	padding: 0 16px;
+}
+.share-buttons button[hidden] {
+	display: none;
+}
+.share-status {
+	min-height: 20px;
+	font-size: 13px;
+}

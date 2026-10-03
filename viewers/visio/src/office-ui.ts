@@ -1,5 +1,6 @@
 import { registerControls } from 'ooxml-ui/controls';
 import { getIcon, registerIcon } from 'ooxml-ui/icons';
+import { definePresence } from 'ooxml-ui/presence';
 
 /**
  * Visio-only glyphs (20x20 path data). Neutral Office glyphs come from ooxml-ui; add a glyph
@@ -30,4 +31,5 @@ export function registerViewerControls(registry?: CustomElementRegistry): void {
 	for (const [name, path] of Object.entries(VISIO_ICONS))
 		if (!getIcon(name)) registerIcon(name, path);
 	registerControls(registry);
+	definePresence(registry);
 }

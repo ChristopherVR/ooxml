@@ -12,6 +12,7 @@ export interface BackstageHost {
 	exportSvg(): { svg: string; pageIndex: number };
 	closeDocument(): void;
 	revealNotes(): void;
+	showOptions(): void;
 	announce(message: string): void;
 	noteCount(): number;
 }
@@ -59,6 +60,11 @@ export class ViewerBackstage {
 				const item = target.closest?.<HTMLElement>('[data-backstage-item]')?.dataset.backstageItem;
 				if (item === 'save') return this.#download();
 				if (item === 'close') return this.#close();
+				if (item === 'options') {
+					// Visio opens its Options dialog over the drawing, not a backstage page.
+					this.hide();
+					return this.host.showOptions();
+				}
 				if (item) return this.#select(item as BackstagePage);
 				const action = target.closest?.<HTMLButtonElement>('[data-backstage-action]');
 				if (action && !action.disabled) this.#run(action.dataset.backstageAction!);

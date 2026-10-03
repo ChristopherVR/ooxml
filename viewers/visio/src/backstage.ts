@@ -17,7 +17,7 @@ export const BACKSTAGE_FOOTER = [
 ] as const;
 export type BackstagePage = Exclude<
 	(typeof BACKSTAGE_ITEMS)[number][0] | (typeof BACKSTAGE_FOOTER)[number][0],
-	'save' | 'close'
+	'save' | 'close' | 'options'
 >;
 const LOCAL = 'Documents stay in this browser; nothing is uploaded.';
 
@@ -62,6 +62,71 @@ function page(doc: Document, id: BackstagePage, title: string, ...content: Node[
 	heading.id = `backstage-${id}-title`;
 	section.append(heading, ...content);
 	return section;
+}
+
+/**
+ * Share with people: a live session (Yjs) between tabs and windows of this browser. The room name
+ * is all a second window needs; nothing is uploaded.
+ */
+function share(doc: Document): HTMLElement {
+	const panel = el(doc, 'section', 'share-panel');
+	panel.setAttribute('aria-labelledby', 'share-title');
+	const title = el(doc, 'h2', '', 'Share with people');
+	title.id = 'share-title';
+	const field = el(doc, 'label', 'share-field');
+	const room = el(doc, 'input', 'share-room');
+	room.type = 'text';
+	room.maxLength = 64;
+	room.autocomplete = 'off';
+	room.spellcheck = false;
+	field.append(el(doc, 'span', '', 'Session name'), room);
+	const buttons = el(doc, 'div', 'share-buttons');
+	const start = el(doc, 'button', 'share-start', 'Start sharing');
+	start.type = 'button';
+	start.dataset.share = 'start';
+	const stop = el(doc, 'button', 'share-stop', 'Stop sharing');
+	stop.type = 'button';
+	stop.dataset.share = 'stop';
+	stop.hidden = true;
+	buttons.append(start, stop);
+	const status = el(doc, 'p', 'share-status');
+	status.setAttribute('role', 'status');
+	const people = doc.createElement('office-ui-presence');
+	people.className = 'share-people';
+	people.setAttribute('label', 'People in this session');
+	panel.append(
+		title,
+		el(
+			doc,
+			'p',
+			'',
+			'Edit this drawing together with other windows of this browser. Open the same session name in another window to join.',
+		),
+		field,
+		buttons,
+		status,
+		people,
+		el(
+			doc,
+			'p',
+			'backstage-muted',
+			'The whole drawing is shared; when two people change it at once, the last change wins. Nothing leaves this device.',
+		),
+	);
+	return panel;
+}
+
+/** Visio's Account page: the shared Office profile editor and product information. */
+function account(doc: Document): HTMLElement {
+	const profile = doc.createElement('office-ui-account');
+	const product = el(doc, 'section', 'backstage-product');
+	product.append(
+		el(doc, 'h2', '', 'Product Information'),
+		el(doc, 'p', '', 'Visio viewer (beta). No sign-in or subscription is used.'),
+		el(doc, 'p', 'backstage-muted', LOCAL),
+	);
+	profile.append(product);
+	return profile;
 }
 
 /**
@@ -172,7 +237,7 @@ export function createBackstage(doc: Document): HTMLElement {
 			doc,
 			'share',
 			'Share',
-			action(doc, 'share', 'Share with people', 'Invite people to the drawing.', LOCAL),
+			share(doc),
 			action(doc, 'email', 'Email', 'Send the drawing as an attachment.', LOCAL),
 		),
 		page(
@@ -200,23 +265,12 @@ export function createBackstage(doc: Document): HTMLElement {
 				'Needs core format conversion.',
 			),
 		),
-		page(
-			doc,
-			'account',
-			'Account',
-			el(doc, 'p', 'backstage-muted', `No account is used. ${LOCAL}`),
-		),
+		page(doc, 'account', 'Account', account(doc)),
 		page(
 			doc,
 			'feedback',
 			'Feedback',
 			el(doc, 'p', 'backstage-muted', 'Feedback is not collected by this viewer.'),
-		),
-		page(
-			doc,
-			'options',
-			'Options',
-			el(doc, 'p', 'backstage-muted', 'Visio Options are not available in this viewer.'),
 		),
 	);
 	root.append(nav, body);

@@ -1,0 +1,96 @@
+import { afterEach, describe, expect, it } from 'vitest';
+import { mountViewer } from './binding.js';
+import { demoDocument } from './demo-document.js';
+
+afterEach(() => {
+	document.body.replaceChildren();
+	localStorage.clear();
+});
+
+type Profile = { displayName: string; avatarColor: string; initial?: string };
+
+function setup() {
+	localStorage.setItem(
+		'ooxml-office-profile',
+		JSON.stringify({ displayName: 'Ada Lovelace', avatarColor: '#16a34a' }),
+	);
+	const host = document.createElement('div');
+	document.body.append(host);
+	const viewer = mountViewer(host, { document: structuredClone(demoDocument) });
+	const root = viewer.element.shadowRoot!;
+	const item = (id: string) =>
+		root.querySelector<HTMLButtonElement>(`[data-backstage-item="${id}"]`)!;
+	const dialog = root.querySelector<HTMLElement & { open: boolean }>('office-ui-options-dialog')!;
+	const account = root.querySelector<HTMLElement & { profile: Profile }>('office-ui-account')!;
+	const field = (key: string) =>
+		dialog.shadowRoot!.querySelector<HTMLInputElement>(
+			`[data-key="${key}"] input, [data-key="${key}"] select`,
+		)!;
+	return { viewer, root, item, dialog, account, field };
+}
+
+describe('Visio File > Account and Options', () => {
+	it('shows the shared profile on the Account page', () => {
+		const { viewer, root, item, account } = setup();
+		root.querySelector<HTMLButtonElement>('.file-tab')!.click();
+		item('account').click();
+		const page = root.querySelector<HTMLElement>('[data-backstage-page="account"]')!;
+		expect(page.hidden).toBe(false);
+		expect(page.contains(account)).toBe(true);
+		expect(account.profile).toEqual({ displayName: 'Ada Lovelace', avatarColor: '#16a34a' });
+		expect(page.querySelector('.backstage-product h2')!.textContent).toBe('Product Information');
+		viewer.destroy();
+	});
+
+	it('opens Visio Options over the drawing and honours only the profile settings', () => {
+		const { viewer, root, item, dialog, field } = setup();
+		root.querySelector<HTMLButtonElement>('.file-tab')!.click();
+		item('options').click();
+		expect(root.querySelector<HTMLElement>('.backstage')!.hidden).toBe(true);
+		expect(dialog.open).toBe(true);
+		expect(dialog.getAttribute('heading')).toBe('Visio Options');
+		const tabs = [...dialog.shadowRoot!.querySelectorAll('[role="tab"]')].map(
+			(tab) => tab.textContent,
+		);
+		expect(tabs).toEqual([
+			'General',
+			'Proofing',
+			'Save',
+			'Language',
+			'Advanced',
+			'Customize Ribbon',
+			'Quick Access Toolbar',
+			'Add-ins',
+			'Trust Center',
+		]);
+		expect(field('livePreview').disabled).toBe(true);
+		expect(field('livePreview').closest('label')!.title).toMatch(/^Not available yet\./);
+		expect(field('userName').value).toBe('Ada Lovelace');
+		viewer.destroy();
+	});
+
+	it('writes Options edits to the profile and mirrors Account edits back', () => {
+		const { viewer, item, root, dialog, account, field } = setup();
+		root.querySelector<HTMLButtonElement>('.file-tab')!.click();
+		item('options').click();
+		const name = field('userName');
+		name.value = 'Grace Hopper';
+		name.dispatchEvent(new Event('input'));
+		const initials = field('userInitials');
+		initials.value = 'GH';
+		initials.dispatchEvent(new Event('input'));
+		dialog.shadowRoot!.querySelector<HTMLButtonElement>('[data-action="ok"]')!.click();
+		expect(dialog.open).toBe(false);
+		expect(account.profile).toEqual({
+			displayName: 'Grace Hopper',
+			avatarColor: '#16a34a',
+			initial: 'GH',
+		});
+		expect(JSON.parse(localStorage.getItem('ooxml-office-profile')!).displayName).toBe(
+			'Grace Hopper',
+		);
+		account.shadowRoot!.querySelector<HTMLButtonElement>('[data-color="#c2431f"]')!.click();
+		expect(JSON.parse(localStorage.getItem('ooxml-office-profile')!).avatarColor).toBe('#c2431f');
+		viewer.destroy();
+	});
+});

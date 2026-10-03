@@ -54,6 +54,9 @@ try {
 			'office-ui-command-search',
 			'office-ui-checkbox',
 			'office-ui-select',
+			'office-ui-options-dialog',
+			'office-ui-account',
+			'office-ui-presence',
 		].filter((tag) => !customElements.get(tag)),
 	);
 	assert.deepEqual(undefinedControls, [], 'Shared ooxml-ui controls must be defined');
