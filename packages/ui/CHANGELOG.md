@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.14.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.14.0) - 2026-10-03
+
+### Features
+
+- **ui:** Move the declarative select from pptx-viewer (by @ChristopherVR) ([5e90b46](https://github.com/ChristopherVR/ooxml/commit/5e90b46c6a87c11e9a2485a8899b79275d2ef0a4))
+
 ## [0.13.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.13.0) - 2026-10-03
 
 ### Features
