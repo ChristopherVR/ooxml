@@ -53,12 +53,15 @@ export const INTERNAL_DIRS = [];
  * `paths` (optional) narrows what counts as a published file, for a package that is the repo
  * root: entries ending in `/` are directories, anything else a single file.
  */
-export const PACKAGES = Object.fromEntries(
-	['core', 'react', 'vue', 'angular', 'svelte', 'solid', 'vanilla'].map((key) => {
-		const npm = key === 'core' ? 'visio-core' : 'visio-' + key + '-viewer';
-		return [key, { dir: 'npm-placeholders/' + npm, npm }];
-	}),
-);
+export const PACKAGES = {
+	mcp: { dir: 'mcp', npm: 'visio-viewer-mcp' },
+	...Object.fromEntries(
+		['core', 'react', 'vue', 'angular', 'svelte', 'solid', 'vanilla'].map((key) => {
+			const npm = key === 'core' ? 'visio-core' : 'visio-' + key + '-viewer';
+			return [key, { dir: 'npm-placeholders/' + npm, npm }];
+		}),
+	),
+};
 
 /**
  * Paths outside any package directory that still change what every published artifact contains,

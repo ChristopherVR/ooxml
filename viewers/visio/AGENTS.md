@@ -98,6 +98,12 @@ once the required entry point is released and verified.
 
 ## Working agreements
 
+- `mcp/` owns `visio-viewer-mcp`: schemas, MCP registration and its stdio CLI.
+  It delegates inspection, experimental editing and filesystem execution to
+  `ooxml-core/automation` and `/automation/node`. It is separate from the viewer
+  placeholder packages. The combined `ooxml-mcp` imports its `registerTools`.
+  Release the core automation entry before publishing the MCP package.
+
 - Node.js 22.12+, npm lockfiles, strict TypeScript with exact optional properties
   and unchecked indexed access, Vitest and Playwright. Keep modules under
   300 lines where practical.

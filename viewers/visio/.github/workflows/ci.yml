@@ -24,6 +24,10 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm ci --prefix packages/bindings --ignore-scripts
       - run: npm run check
+      - name: Verify standalone MCP
+        run: |
+          npm install --prefix mcp --ignore-scripts --no-package-lock
+          npm test --prefix mcp
       - run: npx playwright install --with-deps chromium
       - run: npm run test:browser
       - name: Preserve test evidence
