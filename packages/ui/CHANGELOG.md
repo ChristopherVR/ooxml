@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.4.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.4.0) - 2026-10-03
+
+### Features
+
+- **ui:** Add icon-only menu buttons and keep menus on screen (by @ChristopherVR) ([410d508](https://github.com/ChristopherVR/ooxml/commit/410d50801b39e52dd90c3a4bc9158127d8e9497d))
+
 ## [0.3.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.3.0) - 2026-10-03
 
 ### Features
