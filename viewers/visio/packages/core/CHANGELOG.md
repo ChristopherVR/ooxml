@@ -1,3 +1,11 @@
+## 0.2.0
+
+### Changes
+
+- feat(bindings): expose native reactive viewer state in every binding (ccd9ba8)
+- feat(viewer): add visio ribbon toolbar on shared office-ui controls (afc7047)
+- fix(deps): use released core for proven master shape moves (28989be)
+
 ## 0.1.1
 
 ### Changes
