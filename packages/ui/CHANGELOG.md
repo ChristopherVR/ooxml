@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.8.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.8.0) - 2026-10-03
+
+### Features
+
+- **ui:** Add office keytips for keyboard ribbon access (by @ChristopherVR) ([29fbada](https://github.com/ChristopherVR/ooxml/commit/29fbadadf4843f3f9ccdfea944dcf9d41c19cf9c))
+
 ## [0.7.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.7.0) - 2026-10-03
 
 ### Features
