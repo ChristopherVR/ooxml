@@ -133,7 +133,9 @@ describe('static documentation contracts', () => {
 	it('keeps sample and fidelity limitations explicit', () => {
 		const home = dom('index.html').window.document.body.textContent.replace(/\s+/g, ' ');
 		const ledger = dom('docs/parity.html').window.document.body.textContent;
-		assert.match(home, /Original illustration · not a live editor/);
+		assert.ok(
+			dom('index.html').window.document.querySelector('img[src="docs/assets/viewer-preview.png"]'),
+		);
 		assert.match(home, /public beta/i);
 		assert.match(home, /Install one viewer package for your framework/i);
 		assert.match(home, /General drawing/);
@@ -279,7 +281,8 @@ describe('documentation interaction logic in a simulated DOM', () => {
 			},
 		};
 		const instance = interactive((window) => {
-			window.matchMedia = () => media;
+			window.matchMedia = (query) =>
+				query.includes('prefers-color-scheme') ? media : { matches: false };
 			Object.defineProperty(window, 'localStorage', {
 				get() {
 					throw new Error('Unavailable');

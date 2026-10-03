@@ -10,7 +10,7 @@ test('edits literal text locally, undoes/redoes and downloads a reopenable VSDX 
 		if (!request.url().startsWith(baseURL!) && !request.url().startsWith('data:'))
 			external.push(request.url());
 	});
-	await page.goto('/demo/');
+	await page.goto('/demo/?sample=1');
 	await expect(page.getByRole('button', { name: 'Download VSDX copy' })).toBeDisabled();
 	await page.locator('#file').setInputFiles({
 		name: 'editable.vsdx',
@@ -55,7 +55,7 @@ test('mobile editor preserves literal drafts, keyboard cancellation and touch ta
 	page,
 }) => {
 	await page.setViewportSize({ width: 390, height: 844 });
-	await page.goto('/demo/');
+	await page.goto('/demo/?sample=1');
 	await page.locator('#file').setInputFiles({
 		name: 'mobile.vsdx',
 		mimeType: 'application/vnd.ms-visio.drawing',
@@ -63,6 +63,8 @@ test('mobile editor preserves literal drafts, keyboard cancellation and touch ta
 	});
 	await expect(page.locator('#file-name')).toHaveText('mobile.vsdx');
 	await page.locator('visio-viewer [data-shape-id="1"]').click();
+	await page.getByRole('tab', { name: 'View', exact: true }).click();
+	await page.getByRole('button', { name: 'Inspector pane' }).click();
 	await page.locator('visio-viewer .edit-controls summary').click();
 	const input = page.getByLabel('Selected shape text', { exact: true });
 	await input.fill('draft + - 0');
@@ -74,6 +76,7 @@ test('mobile editor preserves literal drafts, keyboard cancellation and touch ta
 		expect(box?.height).toBeGreaterThanOrEqual(44);
 	}
 	expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+	await page.locator('#file-menu').click();
 	await page.getByRole('button', { name: 'Load sample' }).click();
 	await expect(input).toHaveValue('');
 	await expect(input).toBeDisabled();

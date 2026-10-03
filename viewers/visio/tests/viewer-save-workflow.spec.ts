@@ -25,7 +25,7 @@ test('geometry preserves an unapplied text draft and downloads/reloads actual ed
 	const preserved = Buffer.from([1, 9, 0, 255, 42]);
 	zip.file('unknown/preserved.bin', preserved);
 	const original = await zip.generateAsync({ type: 'nodebuffer' });
-	await page.goto('/demo/');
+	await page.goto('/demo/?sample=1');
 	await open(page, original, 'roundtrip.vsdx');
 	await page.locator('visio-viewer [data-shape-id="1"]').click();
 	await page.locator('visio-viewer .edit-controls summary').click();
@@ -86,7 +86,7 @@ test('protected geometry refusal keeps draft, history and byte-exact original co
 		),
 	);
 	const original = await zip.generateAsync({ type: 'nodebuffer' });
-	await page.goto('/demo/');
+	await page.goto('/demo/?sample=1');
 	await open(page, original, 'protected.vsdx');
 	await page.locator('visio-viewer [data-shape-id="1"]').click();
 	await page.locator('visio-viewer .edit-controls summary').click();
@@ -120,8 +120,10 @@ test('mobile geometry-only drafts can be cancelled without editing the document'
 	page,
 }) => {
 	await page.setViewportSize({ width: 390, height: 844 });
-	await page.goto('/demo/');
+	await page.goto('/demo/?sample=1');
 	await open(page, await createVsdxFixture(), 'mobile-draft.vsdx');
+	await page.getByRole('tab', { name: 'View', exact: true }).click();
+	await page.getByRole('button', { name: 'Inspector pane' }).click();
 	await page.locator('visio-viewer .edit-controls summary').click();
 	await page.getByLabel('Pin X (inches)').fill('4');
 	await expect(page.getByRole('button', { name: 'Cancel', exact: true })).toBeEnabled();

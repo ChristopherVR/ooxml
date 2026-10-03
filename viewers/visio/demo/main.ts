@@ -1,5 +1,6 @@
 import { mountViewer, compatibilityNotes, compatibilityText } from '../src/index.js';
 import { demoDocument } from '../src/demo-document.js';
+import { wireWorkspaceShell } from './workspace-shell.js';
 import { wireWorkspaceTheme } from './workspace-theme.js';
 
 const get = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
@@ -7,6 +8,7 @@ const fileName = get('file-name'),
 	fileState = get('file-state'),
 	errorBox = get('error');
 const disposeTheme = wireWorkspaceTheme(document);
+const revealWorkspace = wireWorkspaceShell(document);
 let requestId = 0;
 const viewer = mountViewer(get('viewer'), {
 	document: demoDocument,
@@ -27,6 +29,9 @@ const viewer = mountViewer(get('viewer'), {
 		},
 	},
 });
+const workspaceReport = document.querySelector<HTMLElement>('.workspace-footer')!;
+workspaceReport.slot = 'workspace-footer';
+viewer.element.append(workspaceReport);
 function refreshEditState(): void {
 	const state = viewer.controller.state;
 	get<HTMLButtonElement>('export-vsdx').disabled =
@@ -69,6 +74,7 @@ async function openFile(file: File): Promise<void> {
 		await viewer.load(file);
 		if (request !== requestId) return;
 		fileName.textContent = file.name;
+		revealWorkspace();
 		refreshEditState();
 		get('selection').textContent = 'Select a shape on the canvas to inspect it.';
 	} catch (cause) {
@@ -150,6 +156,7 @@ get('sample').addEventListener('click', () => {
 	errorBox.hidden = true;
 	viewer.update({ document: demoDocument, pageIndex: 0 });
 	fileName.textContent = 'Sample workflow';
+	revealWorkspace();
 	refreshEditState();
 	refreshNotes();
 	viewer.fit();

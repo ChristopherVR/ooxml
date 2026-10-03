@@ -23,7 +23,7 @@
 		<link rel="stylesheet" href="../docs/assets/site.css" />
 		<script type="module" src="../docs/assets/site.js"></script>
 	</head>
-	<body>
+	<body class="docs-page">
 		<a class="skip" href="#main">Skip to content</a>
 		<header class="site-header">
 			<div class="wrap header-inner">
@@ -42,31 +42,53 @@
 				<nav id="site-navigation" class="site-nav" aria-label="Main navigation">
 					<a href="../docs/index.html#frameworks">Developer Guide</a>
 					<a href="../docs/index.html#playground">User Guide</a>
-					<a href="../demo/index.html">Playground</a>
+					<details class="nav-resources">
+						<summary>Packages</summary>
+						<div>
+							<a href="../docs/index.html#frameworks">Six source bindings</a
+							><a href="../docs/index.html#local-setup">Local setup</a>
+						</div>
+					</details>
+					<a href="https://github.com/ChristopherVR/visio-viewer/releases">Releases</a>
 					<details class="nav-resources">
 						<summary>Resources</summary>
 						<div>
 							<a href="../docs/parity.html">Compatibility</a>
 							<a href="../docs/architecture.html">Architecture</a>
-							<a href="https://github.com/ChristopherVR/visio-viewer">GitHub</a>
+							<a href="../demo/index.html">Live demo</a
+							><a href="https://github.com/ChristopherVR/visio-viewer">GitHub</a>
 						</div>
 					</details>
 					<span class="nav-divider" aria-hidden="true"></span>
-					<button class="theme-toggle" type="button" aria-label="Switch color theme">◐</button>
+					<button class="theme-toggle" type="button" aria-label="Switch color theme">
+						<span aria-hidden="true">☼</span>
+					</button>
+					<a
+						class="github-link"
+						href="https://github.com/ChristopherVR/visio-viewer"
+						aria-label="GitHub repository"
+						>GitHub</a
+					>
 				</nav>
 			</div>
 		</header>
 		<main id="main" class="wrap doc-layout">
 			<aside class="doc-sidebar">
-				<nav aria-label="Documentation">
-					<p class="eyebrow">Developer preview</p>
-					<a href="index.html">Getting started</a><a href="parity.html">Capability ledger</a
-					><a href="architecture.html" aria-current="page">Architecture</a
-					><a href="../demo/index.html">Open playground</a>
-				</nav>
+				<details class="doc-mobile-menu" open>
+					<summary>Menu <span aria-hidden="true">⌄</span></summary>
+					<nav aria-label="Documentation">
+						<p class="eyebrow">Start here</p>
+						<a href="index.html#playground">Open a drawing</a
+						><a href="index.html#local-setup">Local setup</a
+						><a href="index.html#frameworks">Framework bindings</a>
+						<p class="eyebrow sidebar-section">Concepts</p>
+						<a href="index.html">Getting started</a><a href="parity.html">Capability ledger</a
+						><a href="architecture.html" aria-current="page">Architecture</a
+						><a href="../demo/index.html">Open playground</a>
+					</nav>
+				</details>
 			</aside>
 			<article class="doc-content">
-				<p class="eyebrow">visio-viewer / architecture</p>
 				<h1>Architecture</h1>
 				<p class="lead">
 					One format engine, one shared rendering path, and a small lifecycle boundary for every
@@ -81,6 +103,10 @@
 							Package intake, XML, document model, inheritance, cached geometry and diagnostics.
 						</p>
 					</article>
+					<aside class="doc-outline" aria-label="On this page">
+						<p>On this page</p>
+						<nav></nav>
+					</aside>
 					<article>
 						<span>02 / VIEW</span>
 						<h3>One shared viewer</h3>

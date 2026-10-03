@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test('live, SVG export and print render the same cropped, upright foreign vector pixels', async ({
 	page,
 }) => {
-	await page.goto('/demo/');
+	await page.goto('/demo/?sample=1');
 	const result = await page.evaluate(async () => {
 		const load = (path: string) => import(/* @vite-ignore */ path);
 		const { demoDocument, renderPage, exportPageSvg, createPrintSnapshot } =

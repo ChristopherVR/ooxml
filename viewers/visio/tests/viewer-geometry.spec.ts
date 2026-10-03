@@ -4,7 +4,7 @@ import { createVsdxFixture } from './fixture.mjs';
 test('geometry controls create, resize, move existing shapes, delete and undo through the isolated worker', async ({
 	page,
 }) => {
-	await page.goto('/demo/');
+	await page.goto('/demo/?sample=1');
 	await page.locator('#file').setInputFiles({
 		name: 'geometry.vsdx',
 		mimeType: 'application/vnd.ms-visio.drawing',

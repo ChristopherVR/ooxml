@@ -8,7 +8,7 @@ for (const theme of ['light', 'dark'] as const) {
 				(value) => localStorage.setItem('vitepress-theme-appearance', value),
 				theme,
 			);
-			await page.goto('/demo/');
+			await page.goto('/demo/?sample=1');
 			const viewer = page.locator('visio-viewer');
 			await expect(viewer.locator('.viewport > svg')).toBeVisible();
 			await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
@@ -30,12 +30,13 @@ for (const theme of ['light', 'dark'] as const) {
 			expect(colors.width).toBeLessThanOrEqual(width);
 			expect(colors.height).toBe(844);
 			await viewer.getByRole('tab', { name: 'View', exact: true }).click();
-			await viewer.getByRole('button', { name: 'Inspector pane' }).click();
+			if (width > 760) await viewer.getByRole('button', { name: 'Inspector pane' }).click();
 			await expect(viewer.locator('.inspector-pane')).toBeHidden();
 			await viewer.getByRole('button', { name: 'Inspector pane' }).click();
 			await viewer.locator('.edit-controls summary').click();
 			await viewer.getByLabel('Selected shape text', { exact: true }).scrollIntoViewIfNeeded();
 			await expect(viewer.getByLabel('Selected shape text', { exact: true })).toBeInViewport();
+			await viewer.getByRole('tab', { name: 'Home', exact: true }).click();
 			await viewer.getByRole('combobox', { name: 'Page', exact: true }).selectOption('1');
 			await expect(viewer.locator('.viewport > svg')).toHaveAttribute('aria-label', 'Architecture');
 			await viewer.getByRole('tab', { name: 'View', exact: true }).focus();

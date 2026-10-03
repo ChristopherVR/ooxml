@@ -44,17 +44,33 @@
 				<nav id="site-navigation" class="site-nav" aria-label="Main navigation">
 					<a href="docs/index.html#frameworks">Developer Guide</a>
 					<a href="docs/index.html#playground">User Guide</a>
-					<a href="demo/index.html">Playground</a>
+					<details class="nav-resources">
+						<summary>Packages</summary>
+						<div>
+							<a href="docs/index.html#frameworks">Six source bindings</a
+							><a href="docs/index.html#local-setup">Local setup</a>
+						</div>
+					</details>
+					<a href="https://github.com/ChristopherVR/visio-viewer/releases">Releases</a>
 					<details class="nav-resources">
 						<summary>Resources</summary>
 						<div>
 							<a href="docs/parity.html">Compatibility</a>
 							<a href="docs/architecture.html">Architecture</a>
-							<a href="https://github.com/ChristopherVR/visio-viewer">GitHub</a>
+							<a href="demo/index.html">Live demo</a
+							><a href="https://github.com/ChristopherVR/visio-viewer">GitHub</a>
 						</div>
 					</details>
 					<span class="nav-divider" aria-hidden="true"></span>
-					<button class="theme-toggle" type="button" aria-label="Switch color theme">◐</button>
+					<button class="theme-toggle" type="button" aria-label="Switch color theme">
+						<span aria-hidden="true">☼</span>
+					</button>
+					<a
+						class="github-link"
+						href="https://github.com/ChristopherVR/visio-viewer"
+						aria-label="GitHub repository"
+						>GitHub</a
+					>
 				</nav>
 			</div>
 		</header>
@@ -69,13 +85,16 @@
 							supported plain-text edits with one shared viewer.
 						</p>
 						<div class="actions">
-							<a class="button primary" href="docs/index.html"
-								>Get started <span aria-hidden="true">→</span></a
-							><a class="button" href="#live-demo">Try it live <span aria-hidden="true">↘</span></a>
+							<a class="button primary" href="docs/index.html">Get started</a
+							><a class="button" href="#live-demo">Live demo</a>
+						</div>
+						<div class="hero-bindings" aria-label="Shared viewer integrations">
+							<span>React</span><span>Vue 3</span><span>Angular</span><span>Svelte</span
+							><span>Solid</span><span>Vanilla JS</span>
 						</div>
 						<a class="workspace-command" href="docs/index.html#local-setup"
-							><span>Local workspace</span><code><b aria-hidden="true">$</b> npm run dev</code
-							><span aria-hidden="true">↗</span></a
+							><span>Run locally</span><code><b aria-hidden="true">$</b> npm run dev</code
+							><span>Setup →</span></a
 						>
 						<p class="hero-note">
 							Public beta. No document uploads.<br />Full Microsoft Visio parity remains a target.
@@ -84,23 +103,16 @@
 					<figure class="preview">
 						<div class="preview-bar">
 							<span class="window-dots" aria-hidden="true"><i></i><i></i><i></i></span
-							><span class="file">release-workflow</span
-							><a class="sample-tag" href="#live-demo">Try it live →</a>
+							><span class="file">Sample workflow · live in the browser</span
+							><a class="sample-tag" href="#live-demo">Try it →</a>
 						</div>
-						<div class="preview-tools" aria-hidden="true">
-							<span>Original sample</span><span>Pages / 2</span><span>Fit to page</span>
-						</div>
-						<a class="preview-image" href="#live-demo"
+						<a class="preview-image" href="demo/index.html?sample=1"
 							><img
-								src="docs/assets/workflow.svg"
-								width="600"
-								height="530"
-								alt="Original diagram illustration showing an idea, design and build, a readiness decision, and release. Try the live viewer below."
+								src="docs/assets/viewer-preview.png"
+								width="1440"
+								height="900"
+								alt="Actual Visio beta workspace showing the original sample, page navigation, ribbon and shape inspector."
 						/></a>
-						<figcaption class="preview-caption">
-							<span>Original illustration · not a live editor</span
-							><a href="#live-demo">Open live viewer ↗</a>
-						</figcaption>
 					</figure>
 				</div>
 				<a class="hero-cue" href="#features"

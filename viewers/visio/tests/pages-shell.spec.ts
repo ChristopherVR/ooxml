@@ -28,7 +28,7 @@ for (const width of [1440, 390]) {
 			await page.getByRole('link', { name: 'Developer Guide', exact: true }).click();
 			await expect(page.locator('.doc-content h1')).toHaveText('Getting started');
 			if (width === 390) await page.locator('.menu-toggle').click();
-			await page.locator('.nav-resources summary').click();
+			await page.locator('.nav-resources summary').filter({ hasText: 'Resources' }).click();
 			await page.locator('.nav-resources').getByRole('link', { name: 'Architecture' }).click();
 			await expect(page.locator('.doc-content h1')).toContainText('Architecture');
 			expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(

@@ -19,18 +19,41 @@
 		<link rel="stylesheet" href="./workspace.css" />
 	</head>
 	<body>
+		<section id="start-screen" class="start-screen" aria-labelledby="start-title">
+			<div
+				id="start-dropzone"
+				class="start-dropzone"
+				tabindex="0"
+				role="button"
+				aria-describedby="start-note"
+			>
+				<span class="start-badge" aria-hidden="true">V</span>
+				<p id="start-title">Drop a .vsdx file here or click to browse</p>
+				<p id="start-note">The file is processed entirely in the browser</p>
+				<div class="start-actions">
+					<button id="start-browse" class="primary" type="button">Browse files</button>
+				</div>
+				<button id="start-sample" class="start-link" type="button">Open the sample drawing</button>
+				<p class="start-limit">
+					Public beta. Supported edits only; native Visio compatibility is not verified.
+				</p>
+			</div>
+		</section>
 		<a class="skip" href="#viewer">Skip to diagram</a>
 		<header class="topbar" aria-label="Document workspace">
 			<a class="brand" href="../" aria-label="Visio Viewer home"
 				><span class="brand-mark" aria-hidden="true">V</span
 				><span class="brand-name">visio-viewer</span></a
 			>
+			<button id="file-menu" type="button" aria-expanded="false" aria-controls="file-commands">
+				File
+			</button>
 			<div class="document-title">
 				<span id="file-name">Sample workflow</span
 				><span class="title-divider" aria-hidden="true">·</span
 				><small id="file-state">Original sample scene</small>
 			</div>
-			<div class="filebar" role="group" aria-label="File commands">
+			<div id="file-commands" class="filebar" role="group" aria-label="File commands">
 				<div class="file-actions">
 					<button id="open" class="primary" type="button">
 						<span aria-hidden="true">↥</span> Open .vsdx</button

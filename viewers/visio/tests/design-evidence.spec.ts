@@ -11,7 +11,7 @@ for (const theme of ['light', 'dark'] as const) {
 			await page.setViewportSize({ width: size.width, height: size.height });
 			await page.addInitScript((value) => localStorage.setItem('visio-docs-theme', value), theme);
 			for (const route of [
-				{ name: 'workspace', url: '/demo/' },
+				{ name: 'workspace', url: '/demo/?sample=1' },
 				{ name: 'landing', url: '/' },
 				{ name: 'guide', url: '/docs/index.html' },
 			]) {
@@ -48,7 +48,7 @@ test('workspace appearance persists across navigation and embed mode is compact'
 		if (!localStorage.getItem('vitepress-theme-appearance'))
 			localStorage.setItem('vitepress-theme-appearance', 'dark');
 	});
-	await page.goto('/demo/');
+	await page.goto('/demo/?sample=1');
 	await expect(page.locator('visio-viewer .viewport > svg')).toBeVisible();
 	await page.getByRole('button', { name: 'Switch to light theme', exact: true }).click();
 	await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');

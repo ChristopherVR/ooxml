@@ -4,7 +4,7 @@ test('shared editor matches compact chrome geometry and keeps all navigation fun
 	page,
 }) => {
 	await page.setViewportSize({ width: 1440, height: 1000 });
-	await page.goto('/demo/');
+	await page.goto('/demo/?sample=1');
 	const viewer = page.locator('visio-viewer');
 	await expect(viewer.locator('svg')).toHaveCount(1);
 	await expect(viewer.getByRole('tab', { name: 'Home', exact: true })).toHaveAttribute(
@@ -15,9 +15,13 @@ test('shared editor matches compact chrome geometry and keeps all navigation fun
 	const inspector = await viewer.locator('.inspector-pane').boundingBox();
 	expect(rail?.width).toBe(180);
 	expect(inspector?.width).toBe(288);
-	expect((await viewer.locator('.ribbon-primary').boundingBox())?.height).toBe(32);
-	expect((await viewer.locator('.ribbon-tabs').boundingBox())?.height).toBe(35);
-	expect((await viewer.locator('.status').boundingBox())?.height).toBe(29);
+	expect((await viewer.locator('.ribbon-primary').boundingBox())?.height).toBeGreaterThanOrEqual(
+		92,
+	);
+	expect((await viewer.locator('.ribbon-primary').boundingBox())?.height).toBeLessThanOrEqual(112);
+	expect((await viewer.locator('.ribbon-tabs').boundingBox())?.height).toBe(40);
+	expect((await viewer.locator('.status').boundingBox())?.height).toBeGreaterThanOrEqual(28);
+	expect((await viewer.locator('.status').boundingBox())?.height).toBeLessThanOrEqual(36);
 	await viewer.getByRole('button', { name: 'Go to page 2: Architecture' }).click();
 	await expect(viewer.locator('svg')).toHaveAttribute('aria-label', 'Architecture');
 	await expect(viewer.getByRole('combobox', { name: 'Page', exact: true })).toHaveValue('1');
@@ -53,14 +57,21 @@ test('mobile keeps page navigation, editing disclosures and zoom controls reacha
 	page,
 }) => {
 	await page.setViewportSize({ width: 390, height: 844 });
-	await page.goto('/demo/');
+	await page.goto('/demo/?sample=1');
 	const viewer = page.locator('visio-viewer');
 	await expect(viewer.locator('.page-rail')).toBeHidden();
 	await expect(viewer.locator('svg')).toBeVisible();
+	await viewer.getByRole('tab', { name: 'Home', exact: true }).click();
 	await viewer.getByRole('combobox', { name: 'Page', exact: true }).selectOption('1');
 	await expect(viewer.locator('svg')).toHaveAttribute('aria-label', 'Architecture');
+	const pagePicker = await viewer
+		.getByRole('combobox', { name: 'Page', exact: true })
+		.boundingBox();
+	expect(pagePicker?.width).toBeGreaterThanOrEqual(44);
+	expect(pagePicker?.height).toBeGreaterThanOrEqual(44);
+	await viewer.getByRole('tab', { name: 'View', exact: true }).click();
+	await viewer.getByRole('button', { name: 'Inspector pane' }).click();
 	for (const control of [
-		viewer.getByRole('combobox', { name: 'Page', exact: true }),
 		viewer.getByRole('button', { name: 'Fit page', exact: true }),
 		viewer.getByRole('button', { name: 'Zoom in', exact: true }),
 		viewer.locator('.edit-controls summary'),
@@ -75,6 +86,7 @@ test('mobile keeps page navigation, editing disclosures and zoom controls reacha
 	await viewer.locator('[data-page-index="0"]').click();
 	await expect(viewer.locator('svg')).toHaveAttribute('aria-label', 'Release workflow');
 	await viewer.getByRole('button', { name: 'Pages pane' }).click();
+	await viewer.getByRole('button', { name: 'Inspector pane' }).click();
 	await viewer.locator('.edit-controls summary').click();
 	await expect(viewer.getByLabel('Selected shape text', { exact: true })).toBeVisible();
 	expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
@@ -83,7 +95,7 @@ test('mobile keeps page navigation, editing disclosures and zoom controls reacha
 test.describe('touch-enabled tablet chrome', () => {
 	test.use({ hasTouch: true, viewport: { width: 1024, height: 900 } });
 	test('enlarges compact commands to touch targets for coarse pointers', async ({ page }) => {
-		await page.goto('/demo/');
+		await page.goto('/demo/?sample=1');
 		const viewer = page.locator('visio-viewer');
 		await expect(viewer.locator('svg')).toBeVisible();
 		for (const selector of [

@@ -4,7 +4,7 @@ import { test, expect } from '@playwright/test';
 test('code-5 arrows paint both endpoint directions and preserve the inward base in export', async ({
 	page,
 }) => {
-	await page.goto('/demo/');
+	await page.goto('/demo/?sample=1');
 	const result = await page.evaluate(async () => {
 		const load = (path: string) => import(/* @vite-ignore */ path);
 		const { demoDocument, renderPage, exportPageSvg } = await load('/test-api.js');

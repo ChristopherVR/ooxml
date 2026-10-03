@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test('sample supports page navigation, zoom, selection and compatibility notes', async ({
 	page,
 }) => {
-	await page.goto('/demo/');
+	await page.goto('/demo/?sample=1');
 	await expect(page.locator('visio-viewer svg')).toBeVisible();
 	await expect(page.getByText('Sample workflow', { exact: true })).toBeVisible();
 	await page.locator('visio-viewer select').selectOption('1');
@@ -15,7 +15,7 @@ test('sample supports page navigation, zoom, selection and compatibility notes',
 	await expect(page.locator('#notes')).toContainText('Text metrics');
 });
 test('rejected inputs show an error and retain prior diagram', async ({ page }) => {
-	await page.goto('/demo/');
+	await page.goto('/demo/?sample=1');
 	await page.locator('#file').setInputFiles({
 		name: 'broken.vsdx',
 		mimeType: 'application/octet-stream',
@@ -28,7 +28,7 @@ test('rejected inputs show an error and retain prior diagram', async ({ page }) 
 });
 test('mobile layout keeps open control, canvas and notes accessible', async ({ page }) => {
 	await page.setViewportSize({ width: 390, height: 844 });
-	await page.goto('/demo/');
+	await page.goto('/demo/?sample=1');
 	await expect(page.getByRole('button', { name: 'Open .vsdx' })).toBeVisible();
 	await expect(page.locator('visio-viewer svg')).toBeVisible();
 	expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
@@ -40,7 +40,7 @@ test('does not make remote requests while using sample', async ({ page, baseURL 
 		if (!request.url().startsWith(baseURL!) && !request.url().startsWith('data:'))
 			external.push(request.url());
 	});
-	await page.goto('/demo/');
+	await page.goto('/demo/?sample=1');
 	await expect(page.locator('visio-viewer svg')).toBeVisible();
 	expect(external).toEqual([]);
 	await page.screenshot({ path: 'test-results/desktop-workspace.png', fullPage: true });
@@ -50,7 +50,7 @@ test('opens actual synthetic VSDX locally and safely renders literal document te
 	page,
 }) => {
 	const { createVsdxFixture } = await import('./fixture.mjs');
-	await page.goto('/demo/');
+	await page.goto('/demo/?sample=1');
 	await page.locator('#file').setInputFiles({
 		name: 'sample.vsdx',
 		mimeType: 'application/vnd.ms-visio.drawing',
@@ -66,7 +66,7 @@ test('opens actual synthetic VSDX locally and safely renders literal document te
 });
 
 test('back and forward navigation leave a working viewer', async ({ page }) => {
-	await page.goto('/demo/');
+	await page.goto('/demo/?sample=1');
 	await expect(page.locator('visio-viewer svg')).toBeVisible();
 	await page.locator('a.brand').click();
 	await expect(page).toHaveURL(/\/$/);
@@ -78,7 +78,7 @@ test('back and forward navigation leave a working viewer', async ({ page }) => {
 
 test('mobile primary controls have usable touch targets', async ({ page }) => {
 	await page.setViewportSize({ width: 390, height: 844 });
-	await page.goto('/demo/');
+	await page.goto('/demo/?sample=1');
 	for (const locator of [
 		page.getByRole('button', { name: 'Open .vsdx' }),
 		page.locator('visio-viewer button[data-action="fit"]'),
@@ -92,7 +92,7 @@ test('mobile primary controls have usable touch targets', async ({ page }) => {
 test('explicit SVG download contains the current page and leaves selection unchanged', async ({
 	page,
 }) => {
-	await page.goto('/demo/');
+	await page.goto('/demo/?sample=1');
 	await page.locator('visio-viewer select').selectOption('1');
 	await page.locator('visio-viewer [data-shape-id="a1"]').click();
 	const selection = await page.locator('#selection').textContent();
@@ -124,7 +124,7 @@ test('isolated import renders the bounded embedded EMF subset and safely omits o
 		if (!request.url().startsWith(baseURL!) && !request.url().startsWith('data:'))
 			external.push(request.url());
 	});
-	await page.goto('/demo/');
+	await page.goto('/demo/?sample=1');
 	await page.locator('#file').setInputFiles({
 		name: 'vector.vsdx',
 		mimeType: 'application/vnd.ms-visio.drawing',
