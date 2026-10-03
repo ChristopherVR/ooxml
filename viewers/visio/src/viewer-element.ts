@@ -14,11 +14,12 @@ import { attachKeyTips } from 'ooxml-ui/controls';
 import { createPageTabs, createStatusBar } from './status-bar.js';
 import { createFindBar, wireFindBar } from './viewer-search.js';
 import { fitZoom } from './viewer-fit.js';
-import { createShapesWindow } from './shapes-window.js';
+import { createShapesStrip, createShapesWindow } from './shapes-window.js';
 import { createBackstage, type BackstagePage } from './backstage.js';
 import { ViewerBackstage } from './viewer-backstage.js';
 import { createContextMenus, wireContextMenus } from './viewer-context-menu.js';
 import { wireTellMe } from './viewer-tell-me.js';
+import { createPanZoom, ViewerPanZoom } from './viewer-pan-zoom.js';
 import { wireStencil } from './viewer-stencil.js';
 import { createRulers, type Rulers } from './viewer-ruler.js';
 import { ViewerEditControls } from './viewer-edit-controls.js';
@@ -49,6 +50,7 @@ export class VisioViewerElement extends BaseElement {
 	#commands: ViewerCommands;
 	#rulers: Rulers;
 	#canvas: ViewerCanvas;
+	#panZoom: ViewerPanZoom;
 	#backstage: ViewerBackstage;
 	#fileName = '';
 	#loadToken = 0;
@@ -83,7 +85,8 @@ export class VisioViewerElement extends BaseElement {
 		const ribbon = createRibbon(document);
 		applyKeyTips(ribbon);
 		workspace.before(ribbon, this.#findBar);
-		workspace.prepend(createShapesWindow(document));
+		workspace.prepend(createShapesStrip(document), createShapesWindow(document));
+		workspace.append(createPanZoom(document));
 		this.#root.append(createBackstage(document), ...createContextMenus(document));
 		workspace.after(createPageTabs(document), createStatusBar(document));
 		this.#viewport = this.#root.querySelector('.viewport')!;
@@ -104,6 +107,9 @@ export class VisioViewerElement extends BaseElement {
 			this.#root.querySelector('.shape-inspector')!,
 		);
 		this.#chrome = new ViewerChrome(this.#root, this.controller);
+		this.#panZoom = new ViewerPanZoom(this.#root, this.#viewport, this.controller, (open) =>
+			this.#root.querySelector('[command="pan-zoom"]')?.setAttribute('checked', String(open)),
+		);
 		this.#commands = new ViewerCommands({
 			root: this.#root,
 			viewport: this.#viewport,
@@ -112,6 +118,7 @@ export class VisioViewerElement extends BaseElement {
 			togglePane: (pane) => this.#chrome.togglePane(pane),
 			reveal: (panel, focusText) => this.#chrome.reveal(panel, focusText),
 			rulers: this.#rulers,
+			togglePanZoom: () => this.#panZoom.toggle(),
 			focusSearch: () => {
 				this.#chrome.closeCompactTools();
 				this.#findBar.hidden = false;
@@ -315,6 +322,7 @@ export class VisioViewerElement extends BaseElement {
 		const disposeMenus = wireContextMenus(this.#root, this.#viewport, this.controller);
 		const disposeTellMe = wireTellMe(this.#root);
 		const keyTips = attachKeyTips(this.#root);
+		const disposePanZoom = this.#panZoom.wire();
 		const disposeRulers = this.#rulers.wire();
 		const disposeStencil = wireStencil(
 			this.#root.querySelector('.shapes-pane')!,
@@ -347,6 +355,7 @@ export class VisioViewerElement extends BaseElement {
 			disposeMenus();
 			disposeTellMe();
 			keyTips.dispose();
+			disposePanZoom();
 			disposeRulers();
 			disposeStencil();
 			disposeFind();
@@ -382,6 +391,7 @@ export class VisioViewerElement extends BaseElement {
 		this.#chrome.render(state, this.#notes.children.length);
 		this.#commands.render(state);
 		this.#backstage.render(state);
+		this.#panZoom.render();
 		this.#viewport.setAttribute('aria-busy', String(state.loading || state.edit.busy));
 		this.#status.textContent = state.loading
 			? 'Opening diagram…'

@@ -9,6 +9,7 @@ export interface RibbonTargets {
 	setTool(tool: 'pointer' | 'rectangle'): void;
 	toggleGrid(): void;
 	toggleRuler(): void;
+	togglePanZoom(): void;
 	toggleFullscreen(): void;
 	togglePane(pane: 'shapes' | 'inspector'): void;
 	reveal(panel: 'edit' | 'notes' | 'selection' | 'layers', focusText: boolean): void;
@@ -31,6 +32,8 @@ export function routeRibbonAction(targets: RibbonTargets, action: VisioRibbonAct
 			return targets.toggleGrid();
 		case 'ruler':
 			return targets.toggleRuler();
+		case 'panZoom':
+			return targets.togglePanZoom();
 		case 'fullscreen':
 			return targets.toggleFullscreen();
 		case 'pane':

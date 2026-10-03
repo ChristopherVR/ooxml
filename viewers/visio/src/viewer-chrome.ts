@@ -175,6 +175,11 @@ export class ViewerChrome {
 				}
 		this.#panes[pane].hidden = !visible;
 		this.#command(pane).setAttribute('checked', String(visible));
+		// Visio keeps a minimised Shapes strip on wide screens so the window can be reopened.
+		if (pane === 'shapes') {
+			const strip = this.#root.querySelector<HTMLElement>('.shapes-strip');
+			if (strip) strip.hidden = visible || !!this.#compact?.matches;
+		}
 		this.#syncNotes();
 	}
 	#syncNotes(): void {

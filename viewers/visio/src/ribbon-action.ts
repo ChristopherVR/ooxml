@@ -6,6 +6,7 @@ export type VisioRibbonAction =
 	| { type: 'pane'; pane: 'shapes' | 'inspector' }
 	| { type: 'reveal'; panel: 'edit' | 'notes' | 'selection' | 'layers'; focusText?: boolean }
 	| { type: 'grid' }
+	| { type: 'panZoom' }
 	| { type: 'ruler' }
 	| { type: 'fullscreen' }
 	| { type: 'zoom'; mode: 'fit' | 'width' | 'actual' }

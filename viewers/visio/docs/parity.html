@@ -323,15 +323,17 @@
 									Ctrl+wheel
 								</td>
 								<td>
-									Initial implementation: shared ooxml-ui zoom slider and View ribbon Zoom group
+									Initial implementation: shared ooxml-ui zoom slider, View ribbon Zoom group and
+									the floating Pan &amp; Zoom window (page thumbnail, visible-area outline, click or
+									drag to pan, arrow keys, Ctrl+wheel zoom)
 								</td>
 								<td>
-									viewer-element.ts; viewer-commands.ts; viewer-chrome.test.ts;
-									visio-toolbar.spec.ts
+									viewer-element.ts; viewer-commands.ts; viewer-pan-zoom.ts; viewer-chrome.test.ts;
+									viewer-pan-zoom.test.ts; visio-toolbar.spec.ts; task-windows.spec.ts
 								</td>
 								<td>
-									Zoom dialog presets, Pan &amp; Zoom window, pinch/pan behavior and large-diagram
-									performance
+									Zoom dialog presets, resizing the Pan &amp; Zoom outline to zoom, pinch behavior
+									and large-diagram performance
 								</td>
 							</tr>
 							<tr>
@@ -346,13 +348,14 @@
 									commands, dropdown and split menus, dialog launchers; File backstage; Tell me what
 									you want to do (Alt+Q) over every ribbon command with its location; KeyTips (Alt,
 									then letters) across tabs and both Home and View levels; the Shapes window with
-									the Basic Shapes stencil; shape and page context menus; page tabs with All pages
-									and Insert Page; Presentation Mode in the status bar. Working: Undo/Redo, Pointer
-									Tool, Rectangle drag tool and Rectangle master, Edit Text, Shape Data, Find, Layer
-									Properties, Ruler, Grid, Task Panes, Zoom presets, Fit to Window, Page Width, Full
-									Screen, File Open, Save and Save As (VSDX copy), Export SVG, Print current page,
-									Close and Info. Every other command, master and page is visible, disabled and
-									names the missing capability. Composed from shared ooxml-ui controls
+									the Basic Shapes stencil and a minimised Shapes strip that reopens it; shape and
+									page context menus; page tabs with All pages and Insert Page; Presentation Mode in
+									the status bar. Working: Undo/Redo, Pointer Tool, Rectangle drag tool and
+									Rectangle master, Edit Text, Shape Data, Find, Layer Properties, Ruler, Grid, Task
+									Panes, Pan &amp; Zoom, Zoom presets, Fit to Window, Page Width, Full Screen, File
+									Open, Save and Save As (VSDX copy), Export SVG, Print current page, Close and
+									Info. Every other command, master and page is visible, disabled and names the
+									missing capability. Composed from shared ooxml-ui controls
 								</td>
 								<td>
 									ribbon*.ts, backstage.ts, viewer-backstage.ts, viewer-tell-me.ts,
@@ -367,7 +370,7 @@
 									Insert, Design, Data, Process and Review commands need new core edit commands.
 									Also missing: New blank drawing, PDF export, Presentation Mode, bundled Help,
 									on-canvas move/resize handles (need core-exposed PinX/LocPin), multi-selection,
-									Guides, Page Breaks, Pan &amp; Zoom and Size &amp; Position panes, stencil files
+									Guides, Page Breaks and Size &amp; Position panes, stencil files
 								</td>
 							</tr>
 							<tr>

@@ -3,7 +3,7 @@ import type { Locator } from '@playwright/test';
 /** Visio ribbon interactions shared by the browser specs. */
 export async function taskPane(
 	viewer: Locator,
-	name: 'Shapes' | 'Inspector' | 'Shape Data' | 'Layers' | 'Compatibility Notes',
+	name: 'Shapes' | 'Inspector' | 'Shape Data' | 'Layers' | 'Compatibility Notes' | 'Pan & Zoom',
 ): Promise<void> {
 	await viewer.getByRole('tab', { name: 'View', exact: true }).click();
 	await viewer.getByRole('button', { name: 'Task Panes', exact: true }).click();

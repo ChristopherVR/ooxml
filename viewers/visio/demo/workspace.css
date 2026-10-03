@@ -99,6 +99,7 @@
 
 /* The report is slotted into the viewer's single status row. */
 .workspace-footer {
+	position: relative;
 	min-height: 28px;
 	border: 0;
 	background: transparent;
@@ -117,6 +118,9 @@
 	.workspace-footer {
 		min-height: 44px;
 		padding: 0;
+	}
+	.workspace-footer .report-body {
+		bottom: 50px;
 	}
 	.workspace-footer .document-report summary {
 		min-height: 44px;
@@ -362,12 +366,13 @@ summary:focus-visible,
 	font-variant-numeric: tabular-nums;
 }
 .report-body {
-	position: absolute;
-	bottom: 100%;
-	left: 8px;
+	/* Pinned above the status bar against the window, so it never runs off either edge. */
+	position: fixed;
+	bottom: 34px;
+	right: 8px;
 	z-index: 9;
 	width: min(460px, calc(100vw - 16px));
-	max-height: 65vh;
+	max-height: min(65vh, calc(100dvh - 120px));
 	overflow: auto;
 	padding: 18px;
 	background: var(--vv-surface);

@@ -188,3 +188,22 @@ function masterList(doc: Document, masters: readonly Master[]): HTMLUListElement
 export function masterSize(id: string): { width: number; height: number } | undefined {
 	return BASIC_SHAPES.find((master) => master.id === id)?.size;
 }
+
+/** Visio's minimised Shapes window: a narrow strip that reopens the window. */
+export function createShapesStrip(doc: Document): HTMLButtonElement {
+	const strip = doc.createElement('button');
+	strip.type = 'button';
+	strip.className = 'shapes-strip';
+	strip.dataset.chrome = 'shapes';
+	strip.hidden = true;
+	strip.setAttribute('aria-label', 'Open Shapes');
+	strip.title = 'Open Shapes';
+	const arrow = doc.createElement('span');
+	arrow.setAttribute('aria-hidden', 'true');
+	arrow.textContent = '›';
+	const label = doc.createElement('span');
+	label.className = 'shapes-strip-label';
+	label.textContent = 'Shapes';
+	strip.append(arrow, label);
+	return strip;
+}

@@ -72,7 +72,7 @@ export function buildViewPanel(doc: Document, panel: HTMLElement): void {
 								label: 'Compatibility Notes',
 								action: { type: 'reveal', panel: 'notes' },
 							},
-							{ id: 'pan-zoom', label: 'Pan & Zoom', unsupported: 'Needs a thumbnail navigator.' },
+							{ id: 'pan-zoom', label: 'Pan & Zoom', action: { type: 'panZoom' }, checked: false },
 							{
 								id: 'size-position',
 								label: 'Size & Position',

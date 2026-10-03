@@ -49,6 +49,7 @@ async function setup(source = true) {
 		togglePane: (pane) => calls.push(`pane:${pane}`),
 		reveal: (panel, focusText) => calls.push(`reveal:${panel}:${focusText}`),
 		focusSearch: () => calls.push('search'),
+		togglePanZoom: () => calls.push('pan-zoom'),
 		announce: (message) => calls.push(message),
 	});
 	const dispose = commands.wire();

@@ -149,3 +149,77 @@
 		min-height: 44px;
 	}
 }
+.shapes-strip {
+	display: flex;
+	flex: 0 0 28px;
+	flex-direction: column;
+	align-items: center;
+	gap: 10px;
+	width: 28px;
+	min-width: 28px;
+	padding: 8px 0;
+	border: 0;
+	border-right: 1px solid var(--_vv-border);
+	border-radius: 0;
+	background: var(--_vv-secondary);
+	color: var(--_vv-accent);
+	font-size: 16px;
+}
+.shapes-strip[hidden] {
+	display: none;
+}
+.shapes-strip-label {
+	writing-mode: vertical-rl;
+	color: var(--_vv-ink);
+	font-size: 12px;
+}
+/* Visio's floating Pan & Zoom window. */
+.pan-zoom {
+	position: absolute;
+	right: 16px;
+	bottom: 16px;
+	z-index: 5;
+	width: 240px;
+	border: 1px solid var(--_vv-border);
+	background: var(--_vv-surface);
+	box-shadow: 0 6px 20px rgb(0 0 0 / 18%);
+}
+.pan-zoom[hidden] {
+	display: none;
+}
+.pan-zoom-heading {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 2px 4px 2px 10px;
+	border-bottom: 1px solid var(--_vv-border);
+	font-size: 12px;
+	font-weight: 600;
+}
+.pan-zoom-close {
+	min-height: 24px;
+	width: 24px;
+	padding: 0;
+	border-color: transparent;
+	background: transparent;
+}
+.pan-zoom-view {
+	display: grid;
+	place-items: center;
+	height: 180px;
+	padding: 8px;
+	background: var(--_vv-bg);
+	cursor: crosshair;
+	touch-action: none;
+}
+.pan-zoom-view svg {
+	max-width: 100%;
+	max-height: 100%;
+	background: #fff;
+	box-shadow: 0 1px 3px rgb(0 0 0 / 20%);
+}
+.pan-zoom-frame {
+	fill: rgb(220 38 38 / 8%);
+	stroke: #dc2626;
+	stroke-width: 2px;
+}
