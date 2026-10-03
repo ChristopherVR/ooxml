@@ -5,6 +5,7 @@ import type { Cell, Workbook } from '../model.js';
 import { FormulaError, type FormulaAst } from './ast.js';
 import type { EvalHost } from './context.js';
 import type { CalcEngineOptions } from './engine-types.js';
+import type { FormulaOrder } from './engine-order.js';
 import { analyze, type FormulaNode } from './graph.js';
 import { AreaIndex, ColumnIndex, ReverseIndex } from './graph-index.js';
 import { parseFormula } from './parser.js';
@@ -36,6 +37,7 @@ export abstract class EngineHost implements EvalHost {
 	protected columnIndex: ColumnIndex | undefined;
 	protected reverseIndex: ReverseIndex | undefined;
 	protected footprintIndex: AreaIndex<FormulaNode> | undefined;
+	protected fullOrder: FormulaOrder | undefined;
 	/** Range reads cached for one evaluation pass (see `readBlock`). */
 	protected readonly blockCache = new Map<string, Matrix>();
 	/** Counts reads that hit a formula still being evaluated (a circular reference). */
@@ -242,6 +244,7 @@ export abstract class EngineHost implements EvalHost {
 	}
 
 	protected graphChanged(): void {
+		this.fullOrder = undefined;
 		this.columnIndex = undefined;
 		this.reverseIndex = undefined;
 		this.footprintIndex = undefined;

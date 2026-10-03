@@ -5,12 +5,12 @@ import type { FormulaAst } from './ast.js';
 import type { Frame } from './context.js';
 import { withDateSystem } from './date-serial.js';
 import { Deferred, EngineHost } from './engine-host.js';
+import { formulaOrder } from './engine-order.js';
 import { CIRCULAR_REFERENCE_WARNING } from './engine-types.js';
 import { boundingBox, clean, finalize, rangeHas, sameRange } from './engine-util.js';
 import { evaluateNode } from './evaluator.js';
 import type { FormulaNode } from './graph.js';
 import { implicitIntersection } from './references.js';
-import { stronglyConnected } from './scc.js';
 import { isSpilledCell, releaseSpilledCell } from './spill.js';
 import { storeResult } from './store.js';
 import { ERR, ErrorSignal, type Matrix, type Scalar } from './values.js';
@@ -33,7 +33,7 @@ export abstract class EngineCore extends EngineHost {
 			const dirty = everything && round === 0 ? current : this.closure(current);
 			this.footprintChanges = [];
 			this.evaluatedAt = new Map();
-			this.evaluateSet(dirty);
+			this.evaluateSet(dirty, everything && round === 0);
 			if (this.footprintChanges.length === 0) break;
 			const next = new Set<FormulaNode>();
 			const reverse = this.reverse();
@@ -78,7 +78,7 @@ export abstract class EngineCore extends EngineHost {
 		return out;
 	}
 
-	protected evaluateSet(dirty: Set<FormulaNode>): void {
+	protected evaluateSet(dirty: Set<FormulaNode>, full: boolean): void {
 		this.boundsCache.clear();
 		this.blockCache.clear();
 		const columns = this.columns();
@@ -99,14 +99,15 @@ export abstract class EngineCore extends EngineHost {
 			succCache.set(node, out);
 			return out;
 		};
-		const order = stronglyConnected(dirty, successors);
+		const order = (full && this.fullOrder) || formulaOrder(dirty, successors);
+		if (full) this.fullOrder = order;
 		this.pending = new Set(dirty);
 		this.dynamicCycleHits = new Set();
 		try {
-			for (const component of order) {
-				const first = component[0] as FormulaNode;
-				if (component.length > 1 || successors(first).includes(first)) {
-					for (const node of component) this.markCycle(node);
+			for (const component of order.components) {
+				const first = component.nodes[0] as FormulaNode;
+				if (component.cyclic) {
+					for (const node of component.nodes) this.markCycle(node);
 				} else if (this.pending.has(first)) {
 					this.computeFrom(first);
 				}
@@ -191,6 +192,7 @@ export abstract class EngineCore extends EngineHost {
 			return !!other && other !== node && !!other.spill && rangeHas(other.spill, r, c);
 		});
 		if (!sameRange(before, node.spill) || !sameRange(blockedBefore, node.blockedSpill)) {
+			this.updateOrder(node, before, blockedBefore);
 			this.footprintIndex = undefined;
 			this.blockCache.clear();
 		}
@@ -207,6 +209,33 @@ export abstract class EngineCore extends EngineHost {
 			if (bounds && node.spill) {
 				bounds.rows = Math.max(bounds.rows, node.spill.end.row + 1);
 				bounds.cols = Math.max(bounds.cols, node.spill.end.col + 1);
+			}
+		}
+	}
+
+	/** New spill edges may reuse the order only when every reader already follows its anchor. */
+	protected updateOrder(
+		node: FormulaNode,
+		before: CellRange | undefined,
+		blockedBefore: CellRange | undefined,
+	): void {
+		const order = this.fullOrder;
+		if (!order) return;
+		if (before || blockedBefore || !node.spill || node.blockedSpill) {
+			this.fullOrder = undefined;
+			return;
+		}
+		const rank = order.ranks.get(node);
+		if (rank === undefined) {
+			this.fullOrder = undefined;
+			return;
+		}
+		const readers = new Set<FormulaNode>();
+		this.reverse().dependents(node.sheet, node.spill, readers);
+		for (const reader of readers) {
+			if ((order.ranks.get(reader) ?? -1) <= rank) {
+				this.fullOrder = undefined;
+				return;
 			}
 		}
 	}
