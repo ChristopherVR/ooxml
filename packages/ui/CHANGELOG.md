@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.1.11](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.1.11) - 2026-10-03
+
+### Documentation
+
+- **packages:** Align npm readmes with powerpoint structure (by @ChristopherVR) ([52d33d4](https://github.com/ChristopherVR/ooxml/commit/52d33d4c58f4cfac7e47df3c890168ca8542752b))
+
 ## [0.1.10](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.1.10) - 2026-10-03
 
 ### Chores
