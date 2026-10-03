@@ -48,7 +48,7 @@ Sources: `pptx` = `pptx-viewer/packages/shared/src/web-components` (and `render/
 | Split button, menu/popover, colour picker, tooltip                                                       | pptx/docx               | **later (wave 2)**                 | Need a shared popover (anchoring, outside click, focus return) first; build once, then the three consumers                      |
 | Search field, ribbon gallery, ribbon section, ribbon toggle                                              | pptx                    | **later (wave 2)**                 | Gallery and section depend on the popover                                                                                       |
 | Theme editor                                                                                             | pptx                    | **later (wave 3)**                 | Format-neutral in intent but bound to the pptx theme model; move after the shared theme model is in core                        |
-| i18n plumbing (`shared/src/i18n`, `packages/locales`)                                                    | pptx                    | **later (wave 2)**                 | Catalogues stay data (`ooxml-ui/i18n/<locale>`); keys namespaced `ui.*`                                         |
+| i18n plumbing (`shared/src/i18n`, `packages/locales`)                                                    | pptx                    | **later (wave 2)**                 | Catalogues stay data (`ooxml-ui/i18n/<locale>`); keys namespaced `ui.*`                                                         |
 | Collaboration UI beyond avatars (cursors, follow, comments)                                              | both                    | **later**                          | Depends on the core `collab` session API                                                                                        |
 | Chart and 3D SmartArt renderers (`three-view`, `smartart-3d`)                                            | pptx                    | **later / stays**                  | Consume pptx runtime models, not neutral core output; revisit when core owns `chart` and the 3D drawing model                   |
 | Presentation Home/Insert/Draw/Transitions/Animations/View strips, slide-show options, subtitle settings  | pptx                    | **stays**                          | Product content                                                                                                                 |
@@ -57,7 +57,7 @@ Sources: `pptx` = `pptx-viewer/packages/shared/src/web-components` (and `render/
 
 ## Token map
 
-| pptx                            | ooxml-ui                    |
+| pptx                            | ooxml-ui                     |
 | ------------------------------- | ---------------------------- |
 | `--pptx-foreground`             | `--office-foreground`        |
 | `--pptx-muted-foreground`       | `--office-muted-foreground`  |

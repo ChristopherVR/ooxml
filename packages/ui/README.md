@@ -13,8 +13,8 @@ runtime dependency except `ooxml-core` (types and a few pure helpers).
 
 ## Entries (ESM only)
 
-| Entry                               | Contents                                                                                |
-| ----------------------------------- | --------------------------------------------------------------------------------------- |
+| Entry               | Contents                                                                                |
+| ------------------- | --------------------------------------------------------------------------------------- |
 | `ooxml-ui`          | everything below plus `registerOfficeUi()` and `OFFICE_UI_TAGS`                         |
 | `ooxml-ui/theme`    | `THEME_CSS`, `installOfficeUiTheme()` (tokens, dark mode, forced-colors, touch targets) |
 | `ooxml-ui/icons`    | icon registry (`registerIcon`, `getIcon`, `listIcons`) and `<office-ui-icon>`           |

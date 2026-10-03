@@ -2,10 +2,10 @@
 
 This repository publishes two packages to npm, each with its own version line, tag, changelog and GitHub release:
 
-| Key    | npm name                    | Directory     | Changelog                  | Depends on |
-| ------ | --------------------------- | ------------- | -------------------------- | ---------- |
+| Key    | npm name     | Directory     | Changelog                  | Depends on |
+| ------ | ------------ | ------------- | -------------------------- | ---------- |
 | `core` | `ooxml-core` | `.` (root)    | `CHANGELOG.md`             | nothing    |
-| `ui`   | `ooxml-ui`  | `packages/ui` | `packages/ui/CHANGELOG.md` | `core`     |
+| `ui`   | `ooxml-ui`   | `packages/ui` | `packages/ui/CHANGELOG.md` | `core`     |
 
 The UI package depends on the core, never the reverse. Viewers depend on both, so users never install the UI separately.
 
@@ -89,10 +89,10 @@ gh workflow run release.yml -f tag=ooxml-ui@0.1.0
 
 There is no npm token anywhere. The `publish` job requests an OIDC token (`id-token: write`), npm >= 11.5.1 exchanges it for a short-lived publish credential, and `--provenance` attaches the attestation. Each package needs its own trusted publisher on npmjs.com (package Settings, Trusted Publisher, GitHub Actions). Both use the same repository, workflow and environment; renaming the workflow or the environment breaks publishing:
 
-| Package                     | Organization or user | Repository   | Workflow filename | Environment |
-| --------------------------- | -------------------- | ------------ | ----------------- | ----------- |
+| Package      | Organization or user | Repository   | Workflow filename | Environment |
+| ------------ | -------------------- | ------------ | ----------------- | ----------- |
 | `ooxml-core` | `ChristopherVR`      | `ooxml-core` | `release.yml`     | `npm`       |
-| `ooxml-ui`  | `ChristopherVR`      | `ooxml-core` | `release.yml`     | `npm`       |
+| `ooxml-ui`   | `ChristopherVR`      | `ooxml-core` | `release.yml`     | `npm`       |
 
 ## One-time setup
 

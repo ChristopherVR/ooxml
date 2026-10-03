@@ -16,5 +16,11 @@
 		"noEmit": true
 	},
 	"include": ["src/pptx/**/*.ts", "src/pptx/**/*.tsx"],
-	"exclude": ["**/dist/**", "**/node_modules/**", "src/pptx/**/*.test.ts", "src/pptx/**/*.test.tsx", "src/pptx/__tests__/fixtures/e2e/**"]
+	"exclude": [
+		"**/dist/**",
+		"**/node_modules/**",
+		"src/pptx/**/*.test.ts",
+		"src/pptx/**/*.test.tsx",
+		"src/pptx/__tests__/fixtures/e2e/**"
+	]
 }
