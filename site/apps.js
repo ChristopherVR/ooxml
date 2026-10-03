@@ -14,6 +14,7 @@ const PPTX_FRAMEWORKS = [
 	{ id: 'vanilla', label: 'Vanilla JS', route: 'demo-vanilla' },
 ];
 
+/** Word and Excel also deploy a Solid demo. */
 const DOCX_FRAMEWORKS = [...PPTX_FRAMEWORKS, { id: 'solid', label: 'Solid', route: 'demo-solid' }];
 
 /**
@@ -56,9 +57,11 @@ export const APPS = [
 		letter: 'X',
 		color: '#1f9d63',
 		format: '.xlsx',
-		description: 'Spreadsheet beta in development. Follow the implementation on GitHub.',
+		description: 'Spreadsheets, formulas and charts.',
 		tag: { label: 'Beta', tone: 'beta' },
 		repo: 'xlsx-viewer',
+		docs: `${PAGES}/xlsx-viewer/`,
+		frameworks: DOCX_FRAMEWORKS,
 	},
 	{
 		id: 'visio',
