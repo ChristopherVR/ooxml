@@ -1,0 +1,51 @@
+:host {
+	--_size: 2.3em;
+	position: relative;
+	display: inline-block;
+	width: var(--_size);
+	height: var(--_size);
+	flex: none;
+}
+:host([size='sm']) {
+	--_size: 1.7em;
+}
+:host([size='lg']) {
+	--_size: 3em;
+}
+:host([size='xl']) {
+	--_size: 6em;
+}
+
+.face {
+	display: grid;
+	place-items: center;
+	width: 100%;
+	height: 100%;
+	border-radius: var(--office-radius-full);
+	color: var(--office-call-foreground);
+	font-size: calc(var(--_size) * 0.38);
+	font-weight: var(--office-font-weight-bold);
+	user-select: none;
+}
+
+.presence {
+	position: absolute;
+	inset-inline-end: 0;
+	inset-block-end: 0;
+	width: 32%;
+	height: 32%;
+	min-width: 0.5em;
+	min-height: 0.5em;
+	border-radius: var(--office-radius-full);
+	border: var(--office-border-width-thick) solid var(--office-background);
+	background: var(--office-presence-offline);
+}
+.presence[data-presence='available'] {
+	background: var(--office-presence-available);
+}
+.presence[data-presence='busy'] {
+	background: var(--office-presence-busy);
+}
+.presence[data-presence='away'] {
+	background: var(--office-presence-away);
+}

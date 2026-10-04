@@ -1,0 +1,68 @@
+/* Tokens: --office-checkbox-size, --office-radio-dot-size and their -touch variants. */
+:host {
+	display: inline-grid;
+	box-sizing: border-box;
+	width: var(--office-checkbox-size);
+	height: var(--office-checkbox-size);
+	flex: none;
+	place-items: center;
+	border: var(--office-border-width) solid var(--office-checkbox-border);
+	border-radius: 50%;
+	background: var(--office-checkbox-background);
+	cursor: pointer;
+	vertical-align: middle;
+}
+:host([checked]) {
+	border-color: var(--office-checkbox-accent);
+}
+:host(:focus-visible) {
+	outline: var(--office-focus-width) solid var(--office-ring);
+	outline-offset: var(--office-focus-offset);
+}
+:host([disabled]) {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+.dot {
+	display: none;
+	width: var(--office-radio-dot-size);
+	height: var(--office-radio-dot-size);
+	border-radius: 50%;
+	background: var(--office-checkbox-accent);
+}
+:host([checked]) .dot {
+	display: block;
+}
+
+@media (pointer: coarse), (max-width: 767px) {
+	:host {
+		width: var(--office-checkbox-size-touch);
+		height: var(--office-checkbox-size-touch);
+	}
+	.dot {
+		width: var(--office-radio-dot-size-touch);
+		height: var(--office-radio-dot-size-touch);
+	}
+}
+@media (forced-colors: active) {
+	:host {
+		border-color: CanvasText;
+		background: Canvas;
+		forced-color-adjust: auto;
+	}
+	:host([checked]) {
+		border-color: Highlight;
+	}
+	.dot {
+		background: Highlight;
+	}
+	:host([disabled]) {
+		border-color: GrayText;
+	}
+	:host([disabled]) .dot {
+		background: GrayText;
+	}
+	:host(:focus-visible) {
+		outline-color: Highlight;
+	}
+}

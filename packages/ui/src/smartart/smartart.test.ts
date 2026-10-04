@@ -1,5 +1,5 @@
 import type { DiagramDrawing, DiagramDrawingShape } from 'ooxml-core/diagram';
-import { registerOfficeUi, type SmartArtRenderReport } from './index.js';
+import { registerOfficeUi, type SmartArtRenderReport } from '../index.js';
 
 beforeAll(() => registerOfficeUi());
 afterEach(() => document.body.replaceChildren());

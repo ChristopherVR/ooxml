@@ -1,12 +1,16 @@
 import { registerControls } from './controls.js';
 import { definePresence } from './presence.js';
 import { defineSmartArt } from './smartart.js';
+import { TEAMS_TAGS, registerTeams } from './teams/index.js';
 import { installOfficeUiTheme } from './theme.js';
 
+export * from './base.js';
 export * from './controls.js';
+export * from './glyph.js';
 export * from './icons.js';
 export * from './presence.js';
 export * from './smartart.js';
+export * from './teams/index.js';
 export * from './theme.js';
 export { CONTRACT_REVISION, type Definer } from './registry.js';
 
@@ -49,6 +53,7 @@ export const OFFICE_UI_TAGS = [
 	'office-ui-gallery',
 	'office-ui-presence',
 	'office-ui-smartart',
+	...TEAMS_TAGS,
 ] as const;
 
 /**
@@ -61,4 +66,5 @@ export function registerOfficeUi(options: { theme?: boolean } = {}): void {
 	registerControls();
 	definePresence();
 	defineSmartArt();
+	registerTeams();
 }

@@ -2,7 +2,7 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { typeAheadIndex, type OfficeMenuState } from './menu-model.js';
-import { registerOfficeUi } from './index.js';
+import { registerOfficeUi } from '../index.js';
 
 type Menu = HTMLElement & { state: OfficeMenuState };
 

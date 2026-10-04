@@ -10,6 +10,8 @@ export default {
 	},
 	test: {
 		globals: true,
+		// Component styles are `.css?raw` text; return the real CSS so tests can read it.
+		css: { include: [/\.css\?raw$/] },
 		environment: 'jsdom',
 		include: ['src/**/*.test.ts'],
 		exclude: ['node_modules', 'dist'],

@@ -63,6 +63,11 @@
 			"import": "./dist/smartart.js",
 			"default": "./dist/smartart.js"
 		},
+		"./teams": {
+			"types": "./dist/teams/index.d.ts",
+			"import": "./dist/teams.js",
+			"default": "./dist/teams.js"
+		},
 		"./package.json": "./package.json"
 	},
 	"publishConfig": {
@@ -76,6 +81,7 @@
 		"test:package": "node scripts/package-smoke.mjs"
 	},
 	"dependencies": {
+		"lit": "^3.3.3",
 		"ooxml-core": "*"
 	},
 	"devDependencies": {

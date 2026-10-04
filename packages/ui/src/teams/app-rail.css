@@ -1,0 +1,66 @@
+:host {
+	display: block;
+	width: 5em;
+	background: var(--office-teams-rail);
+	border-inline-end: var(--office-border-width) solid var(--office-teams-divider);
+}
+ul {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--office-space-1);
+	margin: 0;
+	padding: var(--office-space-2) 0;
+	list-style: none;
+}
+button {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--office-space-0);
+	width: 4.4em;
+	padding: var(--office-space-2) 0;
+	border: 0;
+	border-radius: var(--office-radius-md);
+	background: transparent;
+	color: var(--office-teams-text-subtle);
+}
+button:hover {
+	background: var(--office-selected);
+}
+button[aria-current='page'] {
+	color: var(--office-teams-brand);
+	font-weight: var(--office-font-weight-bold);
+}
+button[aria-current='page']::before {
+	content: '';
+	position: absolute;
+	inset-inline-start: calc(-1 * var(--office-space-1));
+	inset-block: 20%;
+	width: var(--office-space-1);
+	border-radius: var(--office-radius-full);
+	background: var(--office-teams-brand);
+}
+.glyph {
+	position: relative;
+	display: grid;
+	place-items: center;
+	font-size: 1.3em;
+}
+.label {
+	font-size: var(--office-font-size-2xs);
+}
+.badge {
+	position: absolute;
+	inset-block-start: -0.4em;
+	inset-inline-end: -0.9em;
+	min-width: 1.5em;
+	padding: 0 var(--office-space-1);
+	border-radius: var(--office-radius-full);
+	background: var(--office-teams-brand);
+	color: var(--office-teams-brand-foreground);
+	font-size: var(--office-font-size-3xs);
+	line-height: 1.6;
+	text-align: center;
+}

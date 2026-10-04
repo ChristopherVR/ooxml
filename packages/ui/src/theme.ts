@@ -24,6 +24,15 @@ const DARK = `
 	--office-notice-accent: #fbbf24;
 	--office-info: #60a5fa;
 	--office-warning: #f59e0b;
+	--office-teams-brand: #7f85f5;
+	--office-teams-brand-hover: #96a0ff;
+	--office-teams-brand-subtle: #2f2f4a;
+	--office-teams-rail: #141414;
+	--office-teams-panel: #1f1f1f;
+	--office-teams-bubble: #2d2d2d;
+	--office-teams-bubble-own: #2f2f4a;
+	--office-teams-divider: #3d3d3d;
+	--office-teams-text-subtle: #adadad;
 	--office-shadow: 0 6px 20px rgb(0 0 0 / 45%);
 	--office-shadow-lg: 0 10px 25px rgb(0 0 0 / 45%);`;
 

@@ -1,0 +1,179 @@
+:host {
+	display: inline-flex;
+	flex: none;
+	align-self: stretch;
+}
+.group {
+	position: relative;
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	min-height: var(--office-ribbon-group-height);
+	padding: var(--office-ribbon-group-padding);
+}
+/* Office draws a hairline between groups; a product may stop it short of the top and bottom. */
+.group::after {
+	content: '';
+	position: absolute;
+	top: var(--office-ribbon-separator-inset);
+	bottom: var(--office-ribbon-separator-inset);
+	inset-inline-end: 0;
+	width: var(--office-border-width);
+	background: var(--office-ribbon-separator);
+}
+:host(:last-child) .group::after {
+	content: none;
+}
+.row {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--office-space-1);
+	flex: 1;
+}
+/* One-line groups centre their commands on the whole group box. */
+:host([data-compact-row]) .row {
+	align-items: center;
+}
+/* Several small drop-down galleries stack in columns of three. */
+:host([data-stack]) .row {
+	flex-direction: column;
+	align-items: stretch;
+	align-content: flex-start;
+	flex-wrap: wrap;
+	max-height: var(--office-ribbon-stack-max-height);
+	gap: var(--office-space-0);
+}
+::slotted(*) {
+	flex-shrink: 0;
+}
+.foot {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: var(--office-ribbon-caption-padding);
+}
+.caption {
+	color: var(--office-muted-foreground);
+	font-size: var(--office-ribbon-caption-size);
+	line-height: var(--office-ribbon-caption-line-height);
+	text-align: center;
+	white-space: nowrap;
+}
+.launcher {
+	position: absolute;
+	inset-inline-end: var(--office-launcher-inset-end);
+	bottom: var(--office-launcher-inset-bottom);
+	display: inline-grid;
+	place-items: center;
+	width: var(--office-launcher-width);
+	height: var(--office-launcher-height);
+	padding: 0;
+	border: 0;
+	border-radius: var(--office-radius-xs);
+	background: transparent;
+	color: var(--office-muted-foreground);
+	cursor: pointer;
+}
+.launcher:hover:not(:disabled) {
+	background: var(--office-surface);
+	color: var(--office-foreground);
+}
+.launcher:focus-visible {
+	outline: var(--office-focus-width) solid var(--office-ring);
+}
+.launcher:disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+.launcher[hidden] {
+	display: none;
+}
+.launcher svg {
+	width: var(--office-icon-size-xs);
+	height: var(--office-icon-size-xs);
+	fill: none;
+	stroke: currentColor;
+	stroke-width: var(--office-icon-stroke);
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+/* Collapsed (narrow window): the group is one button; its commands open in a popup. */
+.face {
+	display: none;
+}
+:host([data-collapsed]) .face {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: flex-start;
+	gap: var(--office-space-0);
+	min-width: var(--office-collapsed-group-min-width);
+	height: var(--office-command-large-height);
+	padding: var(--office-space-0) var(--office-space-1-5);
+	border: 0;
+	border-radius: var(--office-radius);
+	background: transparent;
+	color: var(--office-foreground);
+	font: inherit;
+	font-size: var(--office-font-size-sm);
+	cursor: pointer;
+}
+:host([data-collapsed]) .face:hover,
+:host([data-open]) .face {
+	background: var(--office-selected);
+}
+.face:focus-visible {
+	outline: var(--office-focus-width) solid var(--office-ring);
+	outline-offset: var(--office-focus-offset);
+}
+.face svg {
+	width: var(--office-command-large-icon);
+	height: var(--office-command-large-icon);
+	fill: none;
+	stroke: currentColor;
+	stroke-width: var(--office-icon-stroke);
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	color: var(--office-command-icon-color);
+}
+.face svg.chev {
+	width: var(--office-icon-size-xs);
+	height: var(--office-icon-size-xs);
+	color: currentColor;
+}
+:host([data-collapsed]) .foot,
+:host([data-collapsed]) .row {
+	display: none;
+}
+:host([data-collapsed][data-open]) .row {
+	display: flex;
+	flex-wrap: wrap;
+	position: fixed;
+	top: var(--office-ribbon-collapse-y);
+	left: var(--office-ribbon-collapse-x);
+	z-index: var(--office-z-popover);
+	box-sizing: border-box;
+	max-width: calc(100vw - 2 * var(--office-space-2));
+	padding: var(--office-space-2);
+	background: var(--office-popover);
+	color: var(--office-popover-foreground);
+	border: var(--office-border-width) solid var(--office-border);
+	border-radius: var(--office-radius-md);
+	box-shadow: var(--office-shadow);
+}
+
+@media (forced-colors: active) {
+	.group::after {
+		background: CanvasText;
+	}
+	.caption,
+	.launcher {
+		color: CanvasText;
+	}
+	:host([data-collapsed][data-open]) .row {
+		border-color: CanvasText;
+	}
+}

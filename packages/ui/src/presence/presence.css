@@ -1,0 +1,58 @@
+:host {
+	display: inline-flex;
+	align-items: center;
+}
+ul {
+	display: flex;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+li {
+	margin-inline-start: calc(-1 * var(--office-space-1-5));
+}
+li:first-child {
+	margin-inline-start: 0;
+}
+button,
+.more {
+	box-sizing: border-box;
+	display: inline-grid;
+	place-items: center;
+	width: var(--office-target-size);
+	height: var(--office-target-size);
+	padding: 0;
+	border-radius: 50%;
+	border: var(--office-border-width-thick) solid var(--office-avatar-color);
+	background: var(--office-surface);
+	color: var(--office-foreground);
+	font: 600 var(--office-font-size-xs) var(--office-font);
+	cursor: pointer;
+}
+.more {
+	cursor: default;
+	border-color: var(--office-border);
+}
+button:focus-visible {
+	outline: var(--office-focus-width) solid var(--office-ring);
+	outline-offset: calc(var(--office-focus-offset) / 2);
+	z-index: 1;
+}
+button[data-status='idle'] {
+	opacity: 0.7;
+}
+button[data-status='away'] {
+	opacity: 0.45;
+	border-style: dashed;
+}
+@media (forced-colors: active) {
+	button,
+	.more {
+		border-color: CanvasText;
+		background: Canvas;
+		color: CanvasText;
+	}
+	button:focus-visible {
+		outline-color: Highlight;
+	}
+}

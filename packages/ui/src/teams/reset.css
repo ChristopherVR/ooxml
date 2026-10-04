@@ -1,0 +1,31 @@
+:host {
+	box-sizing: border-box;
+	font: var(--office-font-size) var(--office-font);
+	color: var(--office-foreground);
+}
+*,
+*::before,
+*::after {
+	box-sizing: inherit;
+}
+button {
+	font: inherit;
+	color: inherit;
+	cursor: pointer;
+}
+button:focus-visible,
+textarea:focus-visible,
+input:focus-visible {
+	outline: var(--office-focus-width) solid var(--office-ring);
+	outline-offset: var(--office-focus-offset);
+}
+svg.icon {
+	width: 1.25em;
+	height: 1.25em;
+	flex: none;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: var(--office-icon-stroke);
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}

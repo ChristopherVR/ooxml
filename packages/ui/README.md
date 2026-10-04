@@ -9,8 +9,9 @@
 [Try the apps](https://christophervr.github.io/ooxml/) | [npm](https://www.npmjs.com/package/ooxml-ui) | [Full docs](https://christophervr.github.io/ooxml/) | [Source](https://github.com/ChristopherVR/ooxml)
 
 Shared, format-neutral web components and styles for the Office viewers (Word, PowerPoint and
-Excel). Vanilla custom elements with shadow-root controls, typed events, no framework and no
-runtime dependency except `ooxml-core` (types and a few pure helpers).
+Excel). Custom elements with shadow-root controls and typed events, no framework. The runtime
+dependencies are `ooxml-core` (types and a few pure helpers) and `lit`, which every element is built on
+(see "How the elements are built").
 
 > **You do not install this package.** It is a regular `dependency` of every published editor
 > package (`docx-*-viewer`, `pptx-*-viewer` and `xlsx-*-viewer`), so installing the editor of your framework pulls it
@@ -18,6 +19,50 @@ runtime dependency except `ooxml-core` (types and a few pure helpers).
 > add it to your own install instructions or `package.json`; import controls through the editor
 > package, which registers them for you. Importing `ooxml-ui` directly is for
 > the viewer packages themselves and for people building their own Office-style UI.
+
+## How the elements are built
+
+Every element is a Lit class that reads like a component, in a folder named for what it is:
+`<name>.ts` holds the reactive properties and a `render()` template, `<name>.css` the styles (a real
+stylesheet imported as `?raw`, tokens only). The folders are `form/` (checkbox, switch, radio, select,
+search, zoom), `ribbon/` (button, group, stack, toolbar, tabs, section, toggle), `menu/` (menu button
+and item, separator, context menu, command search), `dialog/` (dialog, options dialog, dialog footer),
+`notices/` (toasts, read-only banner, paste options), `chrome/` (title bar, status bar and item, tab
+strip, backstage, account, find bar, print preview, ruler), `presence/`, `smartart/` and `teams/`.
+
+- **`OfficeElement`** (`base.ts`) is the base class, exported for products that build their own
+  elements. Bare `var(--office-x)` in a `.css` file gets the token's default when the sheet loads
+  (`withTokens`), so an element renders correctly with or without the installed theme.
+- **Updates are synchronous.** Setting a property or attribute redraws the shadow DOM before the call
+  returns (the contract the earlier hand-built elements had and every test relies on). The team
+  elements keep Lit's batched updates (`static syncUpdates = false`).
+- **Products subclass these elements** (pptx-viewer registers `pptx-ui-*` aliases that keep their own
+  event names and ids), so the base class keeps what those subclasses lean on: the shadow root exists
+  when the constructor returns, a connected element renders on first `shadowRoot` read or in a
+  microtask even if a subclass skips `super.connectedCallback()`, and a property that a product hook
+  reads as an attribute (`icon`, `command`, `launcher`, `placement`) writes the attribute through.
+  A constructor must not assign a property a subclass may override with its own accessor (it would
+  run the subclass's setter before its fields exist); such state (`state`, `groups`, ...) lives in a
+  private field behind a hand-written accessor.
+- **Text is exact.** Text-bearing elements are written without whitespace between nodes, because
+  consumers compare `textContent`. `oxfmt` is set to `htmlWhitespaceSensitivity: "strict"` for
+  `packages/ui/src` (not `teams/`) so it never adds whitespace to a template; `glyph.ts` opts out of
+  the formatter with `// prettier-ignore` because it reflows `<svg>` regardless.
+- **`ribbon-section` and `keytips`** keep imperative DOM on purpose: the section patches light-DOM
+  children keyed by id (so focus and a product's tags survive), and keytips attaches a badge layer to
+  a scope it does not own.
+
+## Team workspace elements (`ooxml-ui/teams`)
+
+The chat and meeting pieces of the open-source Teams-style workspace (logic in `ooxml-core/teams`,
+app in the `teams-viewer` repository): `office-ui-avatar`, `-app-rail`, `-channel-list`, `-chat-list`,
+`-chat-composer`, `-prejoin`, `-call-grid` and `-call-controls`. Properties in, bubbling `office-*`
+events out, no data fetching; message text is always rendered as text.
+
+```ts
+import { registerOfficeUi } from 'ooxml-ui';
+registerOfficeUi(); // defines every element, idempotent
+```
 
 ## Install
 

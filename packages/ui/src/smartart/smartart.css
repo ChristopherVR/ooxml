@@ -1,0 +1,23 @@
+:host {
+	display: block;
+}
+svg {
+	display: block;
+	width: 100%;
+	height: auto;
+	max-height: 100%;
+}
+text {
+	font-family: var(--office-font);
+	pointer-events: none;
+}
+.empty {
+	padding: var(--office-space-2);
+	font-size: var(--office-font-size-sm);
+	color: var(--office-muted-foreground);
+}
+@media (forced-colors: active) {
+	text {
+		fill: CanvasText;
+	}
+}

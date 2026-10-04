@@ -1,0 +1,7 @@
+:host {
+	display: inline-flex;
+	align-items: stretch;
+}
+::slotted(*) {
+	flex: none;
+}

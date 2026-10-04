@@ -1,0 +1,127 @@
+:host {
+	display: grid;
+	place-items: center;
+	padding: var(--office-space-5);
+	background: var(--office-teams-panel);
+}
+.card {
+	display: grid;
+	grid-template-columns: minmax(0, 3fr) minmax(16em, 2fr);
+	width: min(60em, 100%);
+	overflow: hidden;
+	border-radius: var(--office-radius-lg);
+	background: var(--office-background);
+	box-shadow: var(--office-shadow-teams);
+}
+.stage {
+	position: relative;
+	display: grid;
+	place-content: center;
+	justify-items: center;
+	gap: var(--office-space-3);
+	min-height: 18em;
+	background: var(--office-call-background);
+	color: var(--office-call-muted-foreground);
+}
+.stage video {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	transform: scaleX(-1);
+}
+.panel {
+	display: flex;
+	flex-direction: column;
+	gap: var(--office-space-3);
+	padding: var(--office-space-5);
+}
+h2 {
+	margin: 0;
+	font-size: var(--office-font-size-lg);
+}
+.for {
+	margin: 0;
+	color: var(--office-teams-text-subtle);
+}
+.switch {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: var(--office-space-3);
+	border: var(--office-border-width) solid var(--office-teams-divider);
+	border-radius: var(--office-radius-md);
+	cursor: pointer;
+}
+.what {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--office-space-2);
+}
+.switch input {
+	position: absolute;
+	inset: 0;
+	margin: 0;
+	opacity: 0;
+	cursor: pointer;
+}
+.track {
+	position: relative;
+	width: 2.6em;
+	height: 1.4em;
+	border-radius: var(--office-radius-full);
+	background: var(--office-border);
+	transition: background var(--office-duration-fast);
+}
+.track::after {
+	content: '';
+	position: absolute;
+	inset-block-start: 0.2em;
+	inset-inline-start: 0.2em;
+	width: 1em;
+	height: 1em;
+	border-radius: 50%;
+	background: var(--office-background);
+	transition: transform var(--office-duration-fast);
+}
+.switch input:checked ~ .track {
+	background: var(--office-teams-brand);
+}
+.switch input:checked ~ .track::after {
+	transform: translateX(1.2em);
+}
+.switch:has(input:focus-visible) {
+	outline: var(--office-focus-width) solid var(--office-ring);
+}
+.actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--office-space-2);
+	margin-top: auto;
+}
+.actions button {
+	padding: var(--office-space-2) var(--office-space-5);
+	border: var(--office-border-width) solid var(--office-teams-divider);
+	border-radius: var(--office-radius-md);
+	background: var(--office-background);
+	font-weight: var(--office-font-weight-bold);
+}
+.actions .join {
+	border-color: transparent;
+	background: var(--office-teams-brand);
+	color: var(--office-teams-brand-foreground);
+}
+.actions .join:hover:not(:disabled) {
+	background: var(--office-teams-brand-hover);
+}
+.actions button:disabled {
+	opacity: 0.6;
+	cursor: wait;
+}
+@media (max-width: 767px) {
+	.card {
+		grid-template-columns: 1fr;
+	}
+}

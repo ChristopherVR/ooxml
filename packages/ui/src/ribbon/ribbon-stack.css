@@ -1,0 +1,17 @@
+:host {
+	display: inline-flex;
+	flex-direction: column;
+	align-items: flex-start;
+	justify-content: flex-start;
+	gap: var(--office-space-px);
+	align-self: stretch;
+}
+:host([orientation='horizontal']) {
+	flex-direction: row;
+	align-items: center;
+	gap: var(--office-space-0);
+	align-self: auto;
+}
+::slotted(*) {
+	flex-shrink: 0;
+}

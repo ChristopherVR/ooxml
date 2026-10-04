@@ -1,6 +1,6 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import type { OfficeTitleBarState } from './controls.js';
-import { registerOfficeUi } from './index.js';
+import type { OfficeTitleBarState } from '../controls.js';
+import { registerOfficeUi } from '../index.js';
 
 // Adapted from pptx-viewer's title-bar tests (`packages/shared/src/web-components/title-bar.test.ts`).
 beforeAll(() => registerOfficeUi());

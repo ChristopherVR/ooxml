@@ -1,0 +1,111 @@
+:host {
+	display: block;
+	overflow: auto;
+}
+.team {
+	display: flex;
+	align-items: center;
+	padding: var(--office-space-1) var(--office-space-2) var(--office-space-1) var(--office-space-1);
+}
+.toggle {
+	display: flex;
+	flex: 1;
+	align-items: center;
+	gap: var(--office-space-1);
+	min-width: 0;
+	padding: var(--office-space-2);
+	border: 0;
+	border-radius: var(--office-radius);
+	background: transparent;
+	font-weight: var(--office-font-weight-bold);
+	text-align: start;
+}
+.toggle:hover,
+.add:hover {
+	background: var(--office-selected);
+}
+.chevron {
+	display: grid;
+	transition: transform var(--office-duration-fast);
+}
+.chevron[data-open='true'] {
+	transform: rotate(90deg);
+}
+.name {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.add {
+	display: grid;
+	place-items: center;
+	width: 2em;
+	height: 2em;
+	border: 0;
+	border-radius: var(--office-radius);
+	background: transparent;
+	color: var(--office-teams-text-subtle);
+}
+ul {
+	margin: 0;
+	padding: 0 var(--office-space-2);
+	list-style: none;
+}
+ul[hidden] {
+	display: none;
+}
+.row {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: var(--office-space-2);
+	width: 100%;
+	padding: var(--office-space-2) var(--office-space-3) var(--office-space-2) var(--office-space-5);
+	border: 0;
+	border-radius: var(--office-radius);
+	background: transparent;
+	color: var(--office-teams-text-subtle);
+	text-align: start;
+}
+.row:hover {
+	background: var(--office-selected);
+}
+.row[aria-current='true'] {
+	background: var(--office-teams-brand-subtle);
+	color: var(--office-foreground);
+	font-weight: var(--office-font-weight-bold);
+}
+.row[aria-current='true']::before {
+	content: '';
+	position: absolute;
+	inset-inline-start: 0;
+	inset-block: 20%;
+	width: var(--office-space-1);
+	border-radius: var(--office-radius-full);
+	background: var(--office-teams-brand);
+}
+.row[data-unread='true'] {
+	color: var(--office-foreground);
+	font-weight: var(--office-font-weight-bold);
+}
+.title {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.live {
+	display: grid;
+	color: var(--office-call-live);
+}
+.count {
+	min-width: 1.6em;
+	padding: 0 var(--office-space-1);
+	border-radius: var(--office-radius-full);
+	background: var(--office-teams-brand);
+	color: var(--office-teams-brand-foreground);
+	font-size: var(--office-font-size-xs);
+	line-height: 1.6;
+	text-align: center;
+}

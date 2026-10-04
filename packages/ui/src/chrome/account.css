@@ -1,0 +1,80 @@
+:host {
+	display: block;
+	font-family: var(--office-font);
+	font-size: var(--office-font-size);
+}
+h2 {
+	margin: 0 0 var(--office-space-3);
+	font-size: var(--office-font-size-lg);
+	font-weight: 600;
+}
+.who {
+	display: flex;
+	align-items: center;
+	gap: var(--office-space-3);
+	margin-bottom: var(--office-space-3);
+}
+.avatar {
+	display: grid;
+	place-items: center;
+	width: var(--office-avatar-size);
+	height: var(--office-avatar-size);
+	border-radius: 50%;
+	color: var(--office-accent-foreground);
+	font-weight: var(--office-font-weight-bold);
+	font-size: var(--office-font-size-xl);
+	flex: none;
+}
+.name {
+	font-size: var(--office-font-size-md);
+	font-weight: 600;
+}
+.note {
+	margin: var(--office-space-0) 0 0;
+	color: var(--office-muted-foreground);
+	font-size: var(--office-font-size-sm);
+}
+label {
+	display: grid;
+	gap: var(--office-space-1);
+	max-width: var(--office-account-field-width);
+	margin-bottom: var(--office-space-3);
+}
+input {
+	min-height: var(--office-field-height);
+	box-sizing: border-box;
+	padding: var(--office-space-0) var(--office-space-1-5);
+	font: inherit;
+	color: inherit;
+	border: var(--office-border-width) solid var(--office-border);
+	border-radius: var(--office-radius-sm);
+	background: var(--office-background);
+}
+.swatches {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--office-space-1-5);
+	margin: var(--office-space-1) 0 var(--office-space-3);
+}
+.swatches button {
+	width: var(--office-target-size);
+	height: var(--office-target-size);
+	padding: 0;
+	border: var(--office-border-width-thick) solid transparent;
+	border-radius: 50%;
+	cursor: pointer;
+}
+.swatches button[aria-checked='true'] {
+	border-color: var(--office-foreground);
+	box-shadow: inset 0 0 0 var(--office-border-width-thick) var(--office-background);
+}
+.swatches button:focus-visible,
+input:focus-visible {
+	outline: var(--office-focus-width) solid var(--office-ring);
+	outline-offset: calc(var(--office-focus-offset) / 2);
+}
+@media (forced-colors: active) {
+	.swatches button {
+		forced-color-adjust: none;
+	}
+}

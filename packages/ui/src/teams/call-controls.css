@@ -1,0 +1,73 @@
+:host {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--office-space-4);
+	padding: var(--office-space-2) var(--office-space-4);
+	background: var(--office-call-background);
+	color: var(--office-call-foreground);
+}
+.info {
+	display: flex;
+	align-items: center;
+	gap: var(--office-space-3);
+	min-width: 0;
+	color: var(--office-call-muted-foreground);
+}
+.heading {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+time {
+	font-variant-numeric: tabular-nums;
+}
+.actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: flex-end;
+	gap: var(--office-space-1-5);
+}
+button {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--office-space-2);
+	height: 2.6em;
+	padding: 0 var(--office-space-3);
+	border: 0;
+	border-radius: var(--office-radius-md);
+	background: transparent;
+	color: inherit;
+	font-size: var(--office-font-size-sm);
+}
+button:hover:not(:disabled) {
+	background: var(--office-call-control-hover);
+}
+button[aria-pressed='true'] {
+	background: var(--office-call-control);
+	color: var(--office-call-foreground);
+	box-shadow: inset 0 calc(-1 * var(--office-border-width-thick)) 0 var(--office-teams-brand);
+}
+button[data-off='true'] {
+	color: var(--office-call-danger);
+}
+button:disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+.leave {
+	background: var(--office-call-danger);
+	color: var(--office-call-foreground);
+}
+.leave:hover:not(:disabled) {
+	background: var(--office-call-danger-hover);
+}
+@media (max-width: 767px) {
+	.text {
+		display: none;
+	}
+	.info {
+		display: none;
+	}
+}

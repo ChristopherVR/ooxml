@@ -1,0 +1,105 @@
+:host {
+	display: inline-flex;
+	vertical-align: middle;
+}
+.wrap {
+	display: inline-flex;
+	align-items: stretch;
+	border: var(--office-border-width) solid transparent;
+	border-radius: var(--office-radius);
+}
+:host([variant='stacked']) .wrap {
+	flex-direction: column;
+}
+button {
+	box-sizing: border-box;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--office-space-1);
+	min-width: var(--office-target-size);
+	min-height: var(--office-target-size);
+	padding: 0 var(--office-space-1-5);
+	border: 0;
+	border-radius: var(--office-radius);
+	background: transparent;
+	color: var(--office-foreground);
+	font: inherit;
+	font-size: var(--office-font-size-sm);
+	cursor: pointer;
+	white-space: nowrap;
+}
+:host([variant='stacked']) .main {
+	flex-direction: column;
+	padding: var(--office-space-1) var(--office-space-1-5) 0;
+}
+:host([variant='stacked']) .caret {
+	min-height: var(--office-icon-size-md);
+	padding: 0 var(--office-space-1-5) var(--office-space-0);
+}
+:host([variant='stacked']:not([command])) .main {
+	padding-bottom: 0;
+}
+.wrap:hover:not(.disabled) {
+	border-color: var(--office-border);
+}
+button:hover:not(:disabled) {
+	background: var(--office-surface);
+}
+button:focus-visible {
+	outline: var(--office-focus-width) solid var(--office-ring);
+	outline-offset: calc(-1 * var(--office-focus-width));
+}
+button:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+button[aria-expanded='true'] {
+	background: var(--office-surface);
+}
+.caret svg {
+	width: var(--office-icon-size-sm);
+	height: var(--office-icon-size-sm);
+}
+svg {
+	width: var(--office-icon-size-ml);
+	height: var(--office-icon-size-ml);
+	fill: none;
+	stroke: currentColor;
+	stroke-width: var(--office-icon-stroke);
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+svg:not([data-painted]) {
+	display: none;
+}
+.panel {
+	position: fixed;
+	inset: auto;
+	margin: 0;
+	min-width: var(--office-menu-min-width);
+	padding: var(--office-space-1);
+	box-sizing: border-box;
+	background: var(--office-background);
+	color: var(--office-foreground);
+	border: var(--office-border-width) solid var(--office-border);
+	border-radius: var(--office-radius);
+	box-shadow: var(--office-shadow);
+}
+.panel[hidden] {
+	display: none;
+}
+
+@media (forced-colors: active) {
+	button {
+		color: ButtonText;
+	}
+	button:disabled {
+		color: GrayText;
+	}
+	.panel {
+		border-color: CanvasText;
+		background: Canvas;
+		color: CanvasText;
+	}
+}

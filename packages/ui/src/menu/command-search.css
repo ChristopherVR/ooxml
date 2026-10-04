@@ -1,0 +1,101 @@
+:host {
+	display: inline-flex;
+	align-items: center;
+	min-width: 0;
+	font-family: var(--office-font);
+}
+.field {
+	display: flex;
+	align-items: center;
+	gap: var(--office-space-1-5);
+	width: 100%;
+	min-width: 0;
+	height: var(--office-target-size);
+	padding: 0 var(--office-space-2);
+	box-sizing: border-box;
+	border: var(--office-border-width) solid transparent;
+	border-radius: var(--office-radius);
+	color: var(--office-muted-foreground);
+}
+.field:hover,
+.field:focus-within {
+	border-color: var(--office-border);
+	background: var(--office-background);
+}
+input {
+	flex: 1;
+	min-width: 0;
+	border: 0;
+	outline: 0;
+	background: transparent;
+	color: var(--office-foreground);
+	font: inherit;
+	font-size: var(--office-font-size);
+}
+svg {
+	width: var(--office-icon-size-md);
+	height: var(--office-icon-size-md);
+	flex: none;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: var(--office-icon-stroke);
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+ul {
+	position: fixed;
+	inset: auto;
+	margin: 0;
+	padding: var(--office-space-1);
+	min-width: var(--office-search-popup-min-width);
+	max-height: var(--office-search-popup-max-height);
+	overflow: auto;
+	box-sizing: border-box;
+	list-style: none;
+	background: var(--office-background);
+	color: var(--office-foreground);
+	border: var(--office-border-width) solid var(--office-border);
+	border-radius: var(--office-radius);
+	box-shadow: var(--office-shadow);
+	font-size: var(--office-font-size-sm);
+}
+ul[hidden] {
+	display: none;
+}
+li {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	min-height: var(--office-target-size);
+	padding: var(--office-space-0) var(--office-space-2-5);
+	border-radius: var(--office-radius-sm);
+	cursor: pointer;
+}
+li[data-active] {
+	background: var(--office-surface);
+}
+li[aria-disabled='true'] {
+	cursor: not-allowed;
+	color: var(--office-muted-foreground);
+}
+li small {
+	color: var(--office-muted-foreground);
+	font-size: var(--office-font-size-xs);
+}
+li.empty {
+	cursor: default;
+	color: var(--office-muted-foreground);
+}
+
+@media (forced-colors: active) {
+	.field,
+	ul {
+		border-color: CanvasText;
+		background: Canvas;
+		color: CanvasText;
+	}
+	li[data-active] {
+		background: Highlight;
+		color: HighlightText;
+	}
+}

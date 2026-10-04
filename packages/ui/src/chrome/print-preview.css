@@ -1,0 +1,48 @@
+:host {
+	display: block;
+	max-width: var(--office-print-preview-width);
+	font: var(--office-font-size-sm) var(--office-font);
+	color: var(--office-foreground);
+}
+.sheet {
+	padding: var(--office-space-3);
+	border: var(--office-border-width) solid var(--office-border);
+	background: var(--office-paper);
+	box-shadow: var(--office-shadow-sm);
+}
+.sheet > * {
+	display: block;
+	width: 100%;
+	height: auto;
+}
+.empty {
+	color: var(--office-muted-foreground);
+}
+.nav {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--office-space-2);
+	margin-top: var(--office-space-2);
+}
+.nav[hidden] {
+	display: none;
+}
+button {
+	min-width: var(--office-target-size);
+	min-height: var(--office-target-size);
+	font: inherit;
+	color: inherit;
+	border: var(--office-border-width) solid var(--office-border);
+	border-radius: var(--office-radius-sm);
+	background: var(--office-background);
+	cursor: pointer;
+}
+button:disabled {
+	opacity: 0.5;
+	cursor: default;
+}
+button:focus-visible {
+	outline: var(--office-focus-width) solid var(--office-ring);
+	outline-offset: calc(var(--office-focus-offset) / 2);
+}

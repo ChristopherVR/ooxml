@@ -1,6 +1,7 @@
 /**
- * Popup helpers of `office-ui-select`. Moved from pptx-viewer
- * (`packages/shared/src/web-components/select-menu.ts`, `select-trigger.ts`).
+ * Pure helpers of `office-ui-select` (choice data, popup placement, keyboard stepping). Moved
+ * from pptx-viewer (`packages/shared/src/web-components/select-menu.ts`). The markup is the
+ * element's own `render()`.
  */
 
 /** Mutations that can change a select's value, labels or font preview. */
@@ -45,41 +46,6 @@ export function collectSelectChoices(options: HTMLOptionElement[]): SelectChoice
 	});
 }
 
-/** Build the popup's options (only while it is open or has been opened). */
-export function renderSelectMenu(menu: HTMLElement, choices: SelectChoice[], value: string): void {
-	const doc = menu.ownerDocument;
-	const items: HTMLElement[] = [];
-	let previousGroup = '';
-	choices.forEach((choice, index) => {
-		if (choice.hidden) return;
-		if (choice.group && choice.group !== previousGroup) {
-			const heading = doc.createElement('div');
-			heading.className = 'group';
-			heading.setAttribute('role', 'presentation');
-			heading.textContent = choice.group;
-			items.push(heading);
-		}
-		previousGroup = choice.group;
-		const item = doc.createElement('div');
-		item.className = 'option';
-		item.setAttribute('role', 'option');
-		item.setAttribute('aria-selected', String(choice.value === value));
-		item.setAttribute('aria-disabled', String(choice.disabled));
-		item.id = `${menu.id}-${index}`;
-		item.dataset.index = String(index);
-		item.textContent = choice.displayLabel ?? choice.label;
-		if (choice.fontFamily) item.style.fontFamily = choice.fontFamily;
-		if (choice.description) {
-			const description = doc.createElement('span');
-			description.className = 'description';
-			description.textContent = choice.description;
-			item.append(description);
-		}
-		items.push(item);
-	});
-	menu.replaceChildren(...items);
-}
-
 /** A length token resolved on `el`, in pixels (falls back when unset or not in px). */
 function tokenPx(el: Element, name: string, fallback: number): number {
 	const value = el.ownerDocument.defaultView?.getComputedStyle(el).getPropertyValue(name).trim();
@@ -120,19 +86,6 @@ export function positionSelectMenu(
 	menu.style.left = `${Math.max(margin, Math.min(rect.left, view.innerWidth - menuWidth - margin))}px`;
 }
 
-/** Expose the keyboard target while keeping the selected state separate. */
-export function markSelectActive(
-	menu: HTMLElement,
-	trigger: HTMLElement,
-	active: number,
-	open: boolean,
-): void {
-	for (const item of menu.querySelectorAll<HTMLElement>('[data-index]'))
-		item.toggleAttribute('data-active', Number(item.dataset.index) === active && open);
-	if (open && active >= 0) trigger.setAttribute('aria-activedescendant', `${menu.id}-${active}`);
-	menu.querySelector<HTMLElement>('[data-active]')?.scrollIntoView?.({ block: 'nearest' });
-}
-
 /** The next enabled, visible option when moving with the arrow keys (wrapping). */
 export function nextSelectActive(choices: SelectChoice[], active: number, step: number): number {
 	for (let i = 0; i < choices.length; i++) {
@@ -157,47 +110,4 @@ export function pageSelectActive(
 	for (let index = target; index >= 0 && index <= last; index -= direction)
 		if (usable(index)) return index;
 	return active;
-}
-
-/** Trigger with an `icon` slot, the value text and a chevron. */
-export function createSelectTrigger(doc: Document): {
-	trigger: HTMLButtonElement;
-	text: HTMLSpanElement;
-} {
-	const trigger = doc.createElement('button');
-	trigger.type = 'button';
-	trigger.setAttribute('part', 'trigger');
-	trigger.setAttribute('role', 'combobox');
-	trigger.setAttribute('aria-haspopup', 'listbox');
-	trigger.setAttribute('aria-expanded', 'false');
-	const icon = doc.createElement('slot');
-	icon.name = 'icon';
-	const text = doc.createElement('span');
-	text.className = 'value';
-	text.setAttribute('part', 'value');
-	const chevron = doc.createElement('span');
-	chevron.className = 'chevron';
-	chevron.setAttribute('part', 'indicator');
-	chevron.setAttribute('aria-hidden', 'true');
-	const svg = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
-	svg.setAttribute('viewBox', '0 0 24 24');
-	svg.setAttribute('fill', 'none');
-	svg.setAttribute('stroke', 'currentColor');
-	svg.setAttribute('stroke-width', '2');
-	svg.setAttribute('stroke-linecap', 'round');
-	svg.setAttribute('stroke-linejoin', 'round');
-	const path = doc.createElementNS(svg.namespaceURI, 'path');
-	path.setAttribute('d', 'm6 9 6 6 6-6');
-	svg.append(path);
-	chevron.append(svg);
-	trigger.append(icon, text, chevron);
-	return { trigger, text };
-}
-
-/** Optional editable content (`slot="custom"`) stays in the light DOM so hosts own its events. */
-export function prependSelectCustomSlot(host: HTMLElement, menu: HTMLElement): void {
-	if (!host.querySelector('[slot="custom"]')) return;
-	const custom = host.ownerDocument.createElement('slot');
-	custom.name = 'custom';
-	menu.prepend(custom);
 }

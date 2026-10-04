@@ -3,7 +3,7 @@ import {
 	participantsFromAwareness,
 	registerOfficeUi,
 	type PresenceParticipant,
-} from './index.js';
+} from '../index.js';
 
 beforeAll(() => registerOfficeUi());
 afterEach(() => document.body.replaceChildren());

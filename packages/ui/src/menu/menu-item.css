@@ -1,0 +1,56 @@
+:host {
+	display: block;
+}
+:host([hidden]) {
+	display: none;
+}
+button {
+	box-sizing: border-box;
+	display: flex;
+	align-items: center;
+	gap: var(--office-space-2);
+	width: 100%;
+	min-height: var(--office-target-size);
+	padding: 0 var(--office-space-2-5) 0 var(--office-space-2);
+	border: 0;
+	border-radius: var(--office-radius-sm);
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	font-size: var(--office-font-size-sm);
+	text-align: start;
+	cursor: pointer;
+}
+button:hover:not(:disabled),
+button:focus-visible {
+	background: var(--office-surface);
+	outline: none;
+}
+button:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+.check {
+	width: var(--office-icon-size);
+	text-align: center;
+}
+svg {
+	width: var(--office-icon-size-md);
+	height: var(--office-icon-size-md);
+	flex: none;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: var(--office-icon-stroke);
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+svg:not([data-painted]) {
+	visibility: hidden;
+}
+
+@media (forced-colors: active) {
+	button:focus-visible {
+		background: Highlight;
+		color: HighlightText;
+	}
+}

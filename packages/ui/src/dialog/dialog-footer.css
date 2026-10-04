@@ -1,0 +1,128 @@
+:host {
+	display: block;
+	flex: 1 1 auto;
+	min-width: 0;
+}
+:host([hidden]) {
+	display: none !important;
+}
+svg {
+	flex: none;
+	width: var(--office-icon-size);
+	height: var(--office-icon-size);
+	fill: none;
+	stroke: currentColor;
+	stroke-width: var(--office-icon-stroke);
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+.footer {
+	box-sizing: border-box;
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	gap: var(--office-space-2);
+}
+button {
+	box-sizing: border-box;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--office-space-1-5);
+	min-width: var(--office-control-height);
+	min-height: var(--office-control-height-lg);
+	padding: var(--office-space-1-5) var(--office-space-3-5);
+	border: var(--office-border-width) solid var(--office-border);
+	border-radius: var(--office-radius-md);
+	background: var(--office-surface);
+	color: var(--office-foreground);
+	font: 500 var(--office-font-size)/1.2 var(--office-font);
+	cursor: pointer;
+	touch-action: manipulation;
+}
+button:hover:not(:disabled) {
+	background: var(--office-selected);
+}
+button.primary {
+	border-color: var(--office-accent);
+	background: var(--office-accent);
+	color: var(--office-accent-foreground);
+}
+button.primary:hover:not(:disabled) {
+	opacity: 0.9;
+	background: var(--office-accent);
+}
+button.warning {
+	border-color: var(--office-warning);
+	background: var(--office-warning);
+	color: var(--office-warning-foreground);
+}
+button.warning:hover:not(:disabled) {
+	opacity: 0.9;
+	background: var(--office-warning);
+}
+button.danger {
+	border-color: var(--office-danger);
+	background: var(--office-danger);
+	color: var(--office-danger-foreground);
+}
+button.danger:hover:not(:disabled) {
+	opacity: 0.9;
+	background: var(--office-danger);
+}
+button.start {
+	margin-right: auto;
+}
+button.busy::before {
+	content: '';
+	width: var(--office-icon-size-sm);
+	height: var(--office-icon-size-sm);
+	border: var(--office-border-width-thick) solid currentColor;
+	border-right-color: transparent;
+	border-radius: 50%;
+	animation: office-footer-spin var(--office-duration-spin) linear infinite;
+}
+@keyframes office-footer-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	button.busy::before {
+		animation: none;
+	}
+}
+button:disabled {
+	cursor: not-allowed;
+	opacity: 0.55;
+}
+button:focus-visible {
+	outline: var(--office-focus-width) solid var(--office-ring);
+	outline-offset: var(--office-focus-offset);
+}
+@media (pointer: coarse), (max-width: 767px) {
+	button {
+		min-width: var(--office-target-size-touch);
+		min-height: var(--office-target-size-touch);
+	}
+}
+@media (forced-colors: active) {
+	button,
+	button.primary,
+	button.warning,
+	button.danger {
+		border-color: ButtonText;
+		background: ButtonFace;
+		color: ButtonText;
+	}
+	button:hover:not(:disabled) {
+		background: Highlight;
+		color: HighlightText;
+	}
+	button.primary {
+		border-width: var(--office-border-width-thick);
+	}
+	button:focus-visible {
+		outline-color: Highlight;
+	}
+}

@@ -1,6 +1,6 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import type { OfficeRibbonGroupView } from './controls.js';
-import { registerOfficeUi } from './index.js';
+import type { OfficeRibbonGroupView } from '../controls.js';
+import { registerOfficeUi } from '../index.js';
 
 // Adapted from pptx-viewer's ribbon-section test (`packages/shared/src/web-components/ribbon-section.test.ts`).
 beforeAll(() => registerOfficeUi());

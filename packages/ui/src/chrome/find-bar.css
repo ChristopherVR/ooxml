@@ -1,0 +1,84 @@
+:host {
+	display: flex;
+	align-items: center;
+	gap: var(--office-space-2);
+	min-height: var(--office-find-bar-height);
+	padding: var(--office-space-1) var(--office-space-2) var(--office-space-1) var(--office-space-3);
+	border-bottom: var(--office-border-width) solid var(--office-border);
+	background: var(--office-surface);
+	color: var(--office-foreground);
+	font: var(--office-font-size-sm) var(--office-font);
+}
+:host(:not([open])) {
+	display: none;
+}
+[role='search'] {
+	display: flex;
+	flex: 1;
+	align-items: center;
+	gap: var(--office-space-1);
+	min-width: 0;
+	max-width: var(--office-find-max-width);
+}
+label {
+	display: flex;
+	flex: 1;
+	align-items: center;
+	gap: var(--office-space-1-5);
+	min-width: 0;
+}
+input {
+	flex: 1;
+	min-width: 0;
+	min-height: var(--office-input-height);
+	padding: var(--office-space-0) var(--office-space-1-5);
+	font: inherit;
+	color: inherit;
+	border: var(--office-border-width) solid var(--office-border);
+	border-radius: var(--office-radius-sm);
+	background: var(--office-background);
+}
+button {
+	min-height: var(--office-input-height);
+	padding: var(--office-space-0) var(--office-space-2);
+	font: inherit;
+	color: inherit;
+	cursor: pointer;
+	border: var(--office-border-width) solid var(--office-border);
+	border-radius: var(--office-radius-sm);
+	background: var(--office-background);
+}
+button:disabled {
+	opacity: 0.5;
+	cursor: default;
+}
+.status {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	color: var(--office-muted-foreground);
+}
+.close {
+	margin-inline-start: auto;
+	width: var(--office-target-size);
+	padding: 0;
+	border-color: transparent;
+	background: transparent;
+	font-size: var(--office-font-size-xl);
+	line-height: 1;
+}
+input:focus-visible,
+button:focus-visible {
+	outline: var(--office-focus-width) solid var(--office-ring);
+	outline-offset: calc(var(--office-focus-offset) / 2);
+}
+@media (max-width: 760px) {
+	:host {
+		flex-wrap: wrap;
+	}
+	[role='search'] {
+		flex-wrap: wrap;
+	}
+}

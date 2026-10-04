@@ -1,0 +1,26 @@
+:host {
+	display: block;
+}
+label {
+	display: flex;
+	align-items: center;
+	gap: var(--office-space-1);
+	min-height: var(--office-ribbon-row-height);
+	padding: 0 var(--office-space-1);
+	color: var(--office-foreground);
+	font: inherit;
+	font-size: var(--office-font-size-sm);
+	white-space: nowrap;
+	cursor: pointer;
+}
+:host([disabled]) label {
+	color: var(--office-muted-foreground);
+	cursor: not-allowed;
+}
+
+@media (pointer: coarse), (max-width: 767px) {
+	label {
+		min-height: var(--office-target-size-touch);
+		font-size: var(--office-font-size-sm);
+	}
+}

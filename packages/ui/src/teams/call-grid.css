@@ -1,0 +1,93 @@
+:host {
+	display: block;
+	min-height: 0;
+	background: var(--office-call-background);
+	color: var(--office-call-foreground);
+}
+.empty {
+	display: grid;
+	place-items: center;
+	height: 100%;
+	margin: 0;
+	color: var(--office-call-muted-foreground);
+}
+.grid {
+	display: grid;
+	gap: var(--office-space-2);
+	height: 100%;
+	padding: var(--office-space-2);
+	grid-template-columns: repeat(var(--cols, 1), minmax(0, 1fr));
+	grid-auto-rows: minmax(0, 1fr);
+}
+.grid[data-spotlight='true'] {
+	grid-template-columns: minmax(0, 4fr) minmax(0, 1fr);
+	grid-template-rows: repeat(var(--rows, 1), minmax(0, 1fr));
+}
+.grid[data-spotlight='true'] .tile[data-main='true'] {
+	grid-row: 1 / span var(--rows, 1);
+}
+
+.tile {
+	position: relative;
+	display: grid;
+	place-items: center;
+	min-height: 6em;
+	overflow: hidden;
+	border-radius: var(--office-radius-lg);
+	background: var(--office-call-tile);
+}
+video {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	background: var(--office-call-background);
+}
+.tile[data-screen='true'] video {
+	object-fit: contain;
+}
+.tile[data-self='true'] video {
+	transform: scaleX(-1);
+}
+.tile[data-self='true'][data-screen='true'] video {
+	transform: none;
+}
+
+.name {
+	position: absolute;
+	inset-inline-start: var(--office-space-2);
+	inset-block-end: var(--office-space-2);
+	display: flex;
+	align-items: center;
+	gap: var(--office-space-1-5);
+	max-width: calc(100% - 2 * var(--office-space-2));
+	padding: var(--office-space-0) var(--office-space-2);
+	border-radius: var(--office-radius-md);
+	background: var(--office-call-scrim);
+	font-size: var(--office-font-size-sm);
+}
+.name span:last-child {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.muted {
+	display: grid;
+	color: var(--office-call-danger);
+}
+.hand {
+	position: absolute;
+	inset-block-start: var(--office-space-2);
+	inset-inline-end: var(--office-space-2);
+	font-size: 1.5em;
+}
+.status {
+	position: absolute;
+	inset-block-start: var(--office-space-2);
+	inset-inline-start: var(--office-space-2);
+	padding: 0 var(--office-space-2);
+	border-radius: var(--office-radius-md);
+	background: var(--office-call-scrim);
+	font-size: var(--office-font-size-xs);
+}

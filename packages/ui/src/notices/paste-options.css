@@ -1,0 +1,62 @@
+:host {
+	position: fixed;
+	z-index: 1100;
+	display: block;
+}
+:host([hidden]) {
+	display: none !important;
+}
+.toolbar {
+	box-sizing: border-box;
+	display: flex;
+	align-items: center;
+	gap: var(--office-space-0);
+	padding: var(--office-space-1);
+	border: var(--office-border-width) solid var(--office-border);
+	border-radius: var(--office-radius);
+	background: var(--office-popover);
+	box-shadow: var(--office-shadow-lg);
+	font: var(--office-font-size-xs)/1.2 var(--office-font);
+}
+button {
+	box-sizing: border-box;
+	min-height: var(--office-control-height);
+	padding: var(--office-space-1) var(--office-space-2);
+	border: 0;
+	border-radius: var(--office-radius);
+	background: transparent;
+	color: var(--office-foreground);
+	font: inherit;
+	white-space: nowrap;
+	cursor: pointer;
+	touch-action: manipulation;
+}
+button:hover {
+	background: var(--office-surface);
+}
+button:focus-visible {
+	outline: var(--office-focus-width) solid var(--office-ring);
+	outline-offset: calc(var(--office-focus-offset) / 2);
+}
+@media (pointer: coarse) {
+	button {
+		min-height: var(--office-target-size-touch);
+		min-width: var(--office-target-size-touch);
+	}
+}
+@media (forced-colors: active) {
+	.toolbar {
+		border-color: CanvasText;
+		background: Canvas;
+	}
+	button {
+		color: ButtonText;
+	}
+	button:hover {
+		background: Highlight;
+		color: HighlightText;
+	}
+	button:focus-visible {
+		outline-color: Highlight;
+	}
+}

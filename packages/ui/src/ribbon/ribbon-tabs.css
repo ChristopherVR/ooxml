@@ -1,0 +1,90 @@
+:host {
+	display: block;
+	min-width: 0;
+}
+.head {
+	display: flex;
+	align-items: stretch;
+	min-width: 0;
+	border-bottom: var(--office-border-width) solid var(--office-border);
+}
+.file {
+	flex: none;
+	min-height: var(--office-ribbon-tab-height);
+	margin: 0 var(--office-space-1) 0 0;
+	padding: var(--office-space-1-5) var(--office-space-4);
+	border: 0;
+	border-radius: 0;
+	background: var(--office-accent);
+	color: var(--office-accent-foreground);
+	font: inherit;
+	font-size: var(--office-font-size);
+	cursor: pointer;
+}
+.file:hover {
+	background: var(--office-accent-hover);
+}
+.file[hidden] {
+	display: none;
+}
+[role='tablist'] {
+	display: flex;
+	flex: 0 1 auto;
+	align-items: stretch;
+	min-width: 0;
+	overflow-x: auto;
+	scrollbar-width: none;
+}
+[role='tab'] {
+	position: relative;
+	flex: none;
+	min-height: var(--office-ribbon-tab-height);
+	padding: var(--office-space-1-5) var(--office-space-3);
+	border: 0;
+	border-radius: 0;
+	background: transparent;
+	color: var(--office-muted-foreground);
+	font: inherit;
+	font-size: var(--office-font-size);
+	cursor: pointer;
+}
+[role='tab']:hover {
+	color: var(--office-foreground);
+	background: var(--office-surface);
+}
+[role='tab'][aria-selected='true'] {
+	color: var(--office-accent);
+}
+[role='tab'][aria-selected='true']::after {
+	content: '';
+	position: absolute;
+	inset: auto 0 0;
+	height: var(--office-tab-indicator-width);
+	background: var(--office-accent);
+}
+.file:focus-visible,
+[role='tab']:focus-visible {
+	outline: var(--office-focus-width) solid var(--office-ring);
+	outline-offset: calc(-1 * var(--office-focus-width));
+}
+::slotted([slot='search']) {
+	align-self: center;
+}
+
+@media (max-width: 760px), (pointer: coarse) {
+	.file,
+	[role='tab'] {
+		min-height: var(--office-target-size-touch);
+	}
+	.file {
+		min-width: var(--office-ribbon-file-min-width);
+	}
+}
+@media (forced-colors: active) {
+	.file {
+		border: var(--office-border-width) solid ButtonText;
+	}
+	[role='tab'][aria-selected='true']::after {
+		background: Highlight;
+	}
+}

@@ -1,0 +1,80 @@
+/* Switch metrics are tokens so a host (a title bar) can size it: --office-switch-width, -height,
+ * -border-width, -knob-size, -knob-offset, -knob-travel, -track, -track-on, -thumb, -thumb-on. */
+:host {
+	--_w: var(--office-switch-width);
+	--_h: var(--office-switch-height);
+	--_b: var(--office-switch-border-width);
+	--_k: var(--office-switch-knob-size);
+	--_o: var(--office-switch-knob-offset);
+	display: inline-block;
+	box-sizing: border-box;
+	position: relative;
+	width: var(--_w);
+	height: var(--_h);
+	flex: none;
+	border: var(--_b) solid var(--office-switch-border);
+	border-radius: var(--office-radius-full);
+	background: var(--office-switch-track);
+	cursor: pointer;
+	vertical-align: middle;
+	touch-action: manipulation;
+	transition: background-color var(--office-duration);
+}
+.knob {
+	display: block;
+	position: absolute;
+	top: calc((var(--_h) - 2 * var(--_b) - var(--_k)) / 2);
+	left: var(--_o);
+	width: var(--_k);
+	height: var(--_k);
+	border-radius: 50%;
+	background: var(--office-switch-thumb);
+	box-shadow: var(--office-shadow-sm);
+	transition: transform var(--office-duration);
+}
+:host([checked]) {
+	border-color: var(--office-switch-track-on);
+	background: var(--office-switch-track-on);
+}
+:host([checked]) .knob {
+	transform: translateX(
+		var(--office-switch-knob-travel, calc(var(--_w) - var(--_k) - 2 * var(--_o) - 2 * var(--_b)))
+	);
+	background: var(--office-switch-thumb-on);
+}
+:host(:focus-visible) {
+	outline: var(--office-focus-width) solid var(--office-ring);
+	outline-offset: var(--office-focus-offset);
+}
+:host([disabled]) {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+svg {
+	display: none;
+}
+
+@media (pointer: coarse), (max-width: 767px) {
+	:host {
+		--_w: var(--office-switch-width-touch);
+		--_h: var(--office-switch-height-touch);
+		--_k: var(--office-switch-knob-size-touch);
+	}
+}
+@media (forced-colors: active) {
+	:host {
+		border-color: CanvasText;
+		background: Canvas;
+		forced-color-adjust: none;
+	}
+	.knob {
+		background: CanvasText;
+	}
+	:host([checked]) {
+		border-color: Highlight;
+		background: Highlight;
+	}
+	:host([checked]) .knob {
+		background: HighlightText;
+	}
+}

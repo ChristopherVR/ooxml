@@ -1,0 +1,234 @@
+/*
+ * `variant="ribbon-font"` and `variant="ribbon-icon"` are the compact ribbon combo and icon
+ * picker; `data-font-picker="family"` widens and lengthens the popup. Moved from pptx-viewer
+ * (`select-styles.ts`, `select-ribbon-styles.ts`) and expressed in tokens.
+ */
+:host {
+	display: inline-block;
+	box-sizing: border-box;
+	min-width: 0;
+	max-width: 100%;
+	color: var(--office-foreground);
+	font: inherit;
+	font-size: var(--office-font-size-sm);
+	vertical-align: middle;
+}
+:host([disabled]) {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+button {
+	box-sizing: border-box;
+	width: 100%;
+	min-height: var(--office-field-height);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--office-space-2-5);
+	padding: var(--office-space-1) var(--office-space-1-5);
+	border: var(--office-border-width) solid var(--office-field-border);
+	border-radius: var(--office-field-radius);
+	background: var(--office-select-background);
+	color: inherit;
+	font: inherit;
+	font-size: inherit;
+	text-align: start;
+	cursor: pointer;
+}
+button:focus-visible {
+	outline: var(--office-focus-width) solid var(--office-ring);
+	outline-offset: var(--office-focus-offset);
+}
+button:disabled {
+	cursor: not-allowed;
+}
+.value {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.chevron svg {
+	display: none;
+}
+.chevron {
+	flex: none;
+	width: var(--office-chevron-size);
+	height: var(--office-chevron-size);
+	margin: 0 var(--office-space-0) var(--office-space-0) 0;
+	border-right: calc(var(--office-border-width) * 1.5) solid currentColor;
+	border-bottom: calc(var(--office-border-width) * 1.5) solid currentColor;
+	transform: rotate(45deg);
+}
+:host([open]) .chevron {
+	margin: var(--office-space-0) var(--office-space-0) 0 0;
+	transform: rotate(225deg);
+}
+
+.menu {
+	box-sizing: border-box;
+	position: fixed;
+	margin: 0;
+	padding: var(--office-space-1);
+	min-width: var(--office-select-menu-min-width);
+	max-height: min(var(--office-select-max-height), 50vh);
+	overflow: auto;
+	border: var(--office-border-width) solid var(--office-field-border);
+	border-radius: var(--office-field-radius);
+	background: var(--office-popover);
+	color: var(--office-popover-foreground);
+	box-shadow: var(--office-shadow);
+	font: inherit;
+	font-size: inherit;
+}
+.menu:not(:popover-open):not([data-fallback-open]) {
+	display: none;
+}
+.option {
+	display: block;
+	box-sizing: border-box;
+	width: 100%;
+	padding: var(--office-space-1-5) var(--office-space-2);
+	border-radius: var(--office-radius-sm);
+	cursor: pointer;
+	white-space: nowrap;
+}
+.group {
+	padding: var(--office-space-1-5) var(--office-space-2) var(--office-space-0);
+	color: var(--office-muted-foreground);
+	font-size: 0.9em;
+	font-weight: var(--office-font-weight-bold);
+}
+.option:not([aria-disabled='true']):hover,
+.option[data-active]:not([aria-selected='true']) {
+	background: var(--office-select-option-active);
+}
+.option[aria-selected='true'] {
+	background: var(--office-accent);
+	color: var(--office-accent-foreground);
+}
+.option[aria-selected='true']:hover {
+	filter: brightness(1.08);
+}
+.option[aria-disabled='true'] {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+.description {
+	flex: none;
+	color: var(--office-muted-foreground);
+	font-size: var(--office-font-size-2xs);
+}
+
+/* Ribbon variants */
+:host([variant^='ribbon-'][disabled]) {
+	opacity: 0.4;
+}
+:host([variant^='ribbon-']) button {
+	height: var(--office-ribbon-combo-height);
+	min-height: var(--office-ribbon-combo-height);
+	padding: var(--office-space-1) var(--office-space-2);
+	gap: var(--office-space-1);
+	border: var(--office-border-width) solid
+		color-mix(in oklab, var(--office-border) 60%, transparent);
+	border-radius: var(--office-radius-sm);
+	font-size: var(--office-font-size-sm);
+	background: color-mix(in oklab, var(--office-background) 60%, transparent);
+	color: var(--office-foreground);
+}
+:host([variant^='ribbon-']) .value {
+	flex: 1;
+	min-width: 0;
+}
+:host([variant^='ribbon-']) .chevron {
+	width: var(--office-icon-size-md);
+	height: var(--office-icon-size-md);
+	margin: 0;
+	border: 0;
+	transform: none;
+}
+:host([variant^='ribbon-']) .chevron svg {
+	display: block;
+	width: var(--office-icon-size-md);
+	height: var(--office-icon-size-md);
+}
+:host([variant='ribbon-font']) .chevron {
+	color: var(--office-muted-foreground);
+}
+:host([variant='ribbon-font'][data-font-picker='size']) button {
+	padding-inline: var(--office-space-1-5);
+}
+:host([variant='ribbon-icon']) button {
+	width: var(--office-ribbon-icon-select-width);
+	gap: var(--office-space-1-5);
+	padding: var(--office-space-1-5) var(--office-space-2-5);
+	border: 0;
+	background: var(--office-surface);
+	justify-content: center;
+}
+:host([variant='ribbon-icon']) :is(.value, .chevron) {
+	display: none;
+}
+::slotted(svg[slot='icon']) {
+	display: block;
+	width: var(--office-icon-size-md);
+	height: var(--office-icon-size-md);
+	flex: none;
+}
+:host([variant^='ribbon-']) button:hover:not(:disabled) {
+	background: var(--office-selected);
+}
+:host([variant^='ribbon-']) .menu {
+	width: var(--office-select-ribbon-menu-width);
+	padding: var(--office-space-1) 0;
+	border-radius: var(--office-radius-lg);
+	font-size: var(--office-font-size-sm);
+}
+:host([data-font-picker='family']) .menu {
+	width: var(--office-font-picker-width);
+}
+:host([variant^='ribbon-']) .option {
+	display: flex;
+	justify-content: space-between;
+	gap: var(--office-space-3);
+	padding: var(--office-space-1-5) var(--office-space-3);
+	border-radius: 0;
+}
+:host([variant^='ribbon-']) .option[aria-selected='true'] {
+	background: transparent;
+	color: var(--office-foreground);
+}
+:host([variant^='ribbon-']) .option:hover,
+:host([variant^='ribbon-']) .option[data-active] {
+	background: var(--office-surface);
+	filter: none;
+}
+:host([variant^='ribbon-']) .group {
+	padding: var(--office-space-2) var(--office-space-3) var(--office-space-1);
+	text-transform: uppercase;
+	letter-spacing: 0.02em;
+	font-size: var(--office-font-size-2xs);
+}
+
+@media (pointer: coarse), (max-width: 767px) {
+	button,
+	:host([variant^='ribbon-']) button {
+		min-height: var(--office-target-size-touch);
+	}
+	:host([variant^='ribbon-']) button {
+		height: var(--office-target-size-touch);
+	}
+}
+@media (forced-colors: active) {
+	button,
+	.menu {
+		border-color: CanvasText;
+		background: Canvas;
+		color: CanvasText;
+	}
+	.option[aria-selected='true'],
+	.option[data-active],
+	.option:not([aria-disabled='true']):hover {
+		background: Highlight;
+		color: HighlightText;
+	}
+}

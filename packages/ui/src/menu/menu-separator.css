@@ -1,0 +1,12 @@
+:host {
+	display: block;
+	height: var(--office-border-width);
+	margin: var(--office-space-1) var(--office-space-1-5);
+	background: var(--office-border);
+}
+
+@media (forced-colors: active) {
+	:host {
+		background: CanvasText;
+	}
+}

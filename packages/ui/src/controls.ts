@@ -1,30 +1,38 @@
-import { defineDialogFooter, defineToasts } from './chrome-controls.js';
-import { definePasteOptions, defineReadOnlyBanner } from './document-notices.js';
-import { defineRadio } from './radio.js';
-import { defineRibbonToggle } from './ribbon-toggle.js';
-import { defineSearchField } from './search-field.js';
-import { defineBackstage } from './backstage.js';
-import { defineFindBar } from './find-bar.js';
-import { definePrintPreview } from './print-preview.js';
-import { defineRibbon } from './ribbon-tabs.js';
-import { defineRibbonSection } from './ribbon-section.js';
-import { defineGallery } from './gallery.js';
-import { defineRuler } from './ruler.js';
-import { defineAccount } from './account.js';
-import { defineButton } from './button.js';
-import { defineCheckbox, defineSwitch } from './checkable.js';
-import { defineDialog } from './dialog.js';
-import { defineIcon } from './icons.js';
-import { defineCommandSearch } from './command-search.js';
-import { defineContextMenu, defineMenuSeparator } from './context-menu.js';
-import { defineMenuButton, defineMenuItem } from './menu.js';
-import { defineOptionsDialog } from './options.js';
-import { defineRibbonGroup, defineRibbonStack, defineToolbar } from './ribbon.js';
-import { defineSelect } from './select.js';
-import { defineStatusBar, defineStatusItem } from './status-bar.js';
-import { defineTabStrip } from './tab-strip.js';
-import { defineTitleBar } from './title-bar.js';
-import { defineZoomSlider } from './zoom-slider.js';
+import { defineDialogFooter } from './dialog/dialog-footer.js';
+import { defineToasts } from './notices/toasts.js';
+import { definePasteOptions } from './notices/paste-options.js';
+import { defineReadOnlyBanner } from './notices/read-only-banner.js';
+import { defineRadio } from './form/radio.js';
+import { defineRibbonToggle } from './ribbon/ribbon-toggle.js';
+import { defineSearchField } from './form/search-field.js';
+import { defineBackstage } from './chrome/backstage.js';
+import { defineFindBar } from './chrome/find-bar.js';
+import { definePrintPreview } from './chrome/print-preview.js';
+import { defineRibbon } from './ribbon/ribbon-tabs.js';
+import { defineRibbonSection } from './ribbon/ribbon-section.js';
+import { defineGallery } from './ribbon/gallery.js';
+import { defineRuler } from './chrome/ruler.js';
+import { defineAccount } from './chrome/account.js';
+import { defineButton } from './ribbon/button.js';
+import { defineCheckbox } from './form/checkbox.js';
+import { defineSwitch } from './form/switch.js';
+import { defineDialog } from './dialog/dialog.js';
+import { defineIcon } from './icon.js';
+import { defineCommandSearch } from './menu/command-search.js';
+import { defineContextMenu } from './menu/context-menu.js';
+import { defineMenuSeparator } from './menu/menu-separator.js';
+import { defineMenuButton } from './menu/menu-button.js';
+import { defineMenuItem } from './menu/menu-item.js';
+import { defineOptionsDialog } from './dialog/options-dialog.js';
+import { defineRibbonGroup } from './ribbon/ribbon-group.js';
+import { defineRibbonStack } from './ribbon/ribbon-stack.js';
+import { defineToolbar } from './ribbon/ribbon-toolbar.js';
+import { defineSelect } from './form/select.js';
+import { defineStatusBar } from './chrome/status-bar.js';
+import { defineStatusItem } from './chrome/status-item.js';
+import { defineTabStrip } from './chrome/tab-strip.js';
+import { defineTitleBar } from './chrome/title-bar.js';
+import { defineZoomSlider } from './form/zoom-slider.js';
 
 export {
 	defineAccount,
@@ -63,17 +71,17 @@ export {
 	defineToolbar,
 	defineZoomSlider,
 };
-export type { OfficeCommandEvent } from './button.js';
-export type { OfficeDialogCloseEvent, OfficeDialogCloseReason } from './dialog.js';
-export type { OfficeSelectOption } from './select.js';
+export type { OfficeCommandEvent } from './ribbon/button.js';
+export type { OfficeDialogCloseEvent, OfficeDialogCloseReason } from './dialog/dialog.js';
+export type { OfficeSelectOption } from './form/select.js';
 export type {
 	OfficeStatusActivateEvent,
 	OfficeStatusBarState,
 	OfficeStatusButton,
 	OfficeStatusText,
-} from './status-bar.js';
-export type { OfficeTab, OfficeTabSelectEvent } from './tab-strip.js';
-export type { OfficeSearchCommand } from './command-search.js';
+} from './chrome/status-bar.js';
+export type { OfficeTab, OfficeTabSelectEvent } from './chrome/tab-strip.js';
+export type { OfficeSearchCommand } from './menu/command-search.js';
 export {
 	OFFICE_TITLE_BAR_SEARCH_LIMIT,
 	type OfficeQuickAccessItem,
@@ -84,25 +92,25 @@ export {
 	type OfficeTitleBarSearchDetail,
 	type OfficeTitleBarState,
 	type OfficeTitleBarTone,
-} from './title-bar.js';
+} from './chrome/title-bar.js';
 export { attachKeyTips, type KeyTipsHandle } from './keytips.js';
 export type {
 	OfficeBackstageCloseEvent,
 	OfficeBackstageItem,
 	OfficeBackstageSelectEvent,
-} from './backstage.js';
-export type { OfficeFindInputEvent, OfficeFindStepEvent } from './find-bar.js';
-export type { OfficePrintPreviewPageEvent } from './print-preview.js';
-export type { OfficeRibbonSelectEvent } from './ribbon-tabs.js';
-export type { OfficeRibbonCommandView, OfficeRibbonGroupView } from './ribbon-section.js';
+} from './chrome/backstage.js';
+export type { OfficeFindInputEvent, OfficeFindStepEvent } from './chrome/find-bar.js';
+export type { OfficePrintPreviewPageEvent } from './chrome/print-preview.js';
+export type { OfficeRibbonSelectEvent } from './ribbon/ribbon-tabs.js';
+export type { OfficeRibbonCommandView, OfficeRibbonGroupView } from './ribbon/ribbon-section.js';
 export {
 	parseSvgPreview,
 	type OfficeGalleryItem,
 	type OfficeGalleryPickEvent,
 	type OfficeGallerySection,
 	type OfficeGalleryState,
-} from './gallery.js';
-export { rulerDivisions } from './ruler.js';
+} from './ribbon/gallery.js';
+export { rulerDivisions } from './chrome/ruler.js';
 export {
 	clampFlyoutPosition,
 	EMPTY_MENU_STATE,
@@ -112,21 +120,22 @@ export {
 	type OfficeMenuCloseReason,
 	type OfficeMenuItem,
 	type OfficeMenuState,
-} from './menu-model.js';
+} from './menu/menu-model.js';
+export type {
+	OfficeDialogFooterAction,
+	OfficeDialogFooterState,
+	OfficeDialogFooterVariant,
+} from './dialog/dialog-footer.js';
 export {
 	OFFICE_TOAST_VISIBLE_LIMIT,
-	type OfficeDialogFooterAction,
-	type OfficeDialogFooterState,
-	type OfficeDialogFooterVariant,
 	type OfficeToast,
 	type OfficeToastsState,
-} from './chrome-controls.js';
+} from './notices/toasts.js';
+export type { OfficePasteOption, OfficePasteOptionsState } from './notices/paste-options.js';
 export type {
-	OfficePasteOption,
-	OfficePasteOptionsState,
 	OfficeReadOnlyBannerIntent,
 	OfficeReadOnlyBannerState,
-} from './document-notices.js';
+} from './notices/read-only-banner.js';
 export {
 	clearOfficeProfile,
 	DEFAULT_OFFICE_PROFILE,
@@ -138,7 +147,7 @@ export {
 	writeOfficeProfile,
 	type OfficeProfile,
 	type OfficeProfileChangeEvent,
-} from './account.js';
+} from './chrome/account-profile.js';
 export {
 	clampOptionNumber,
 	type OfficeOptionCategory,
@@ -148,7 +157,7 @@ export {
 	type OfficeOptionsChangeEvent,
 	type OfficeOptionValue,
 	type OfficeOptionValues,
-} from './options.js';
+} from './dialog/options-dialog.js';
 
 /** Every control of this entry. */
 export const CONTROL_DEFINERS = [

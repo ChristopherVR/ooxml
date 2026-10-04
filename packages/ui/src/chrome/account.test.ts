@@ -7,8 +7,8 @@ import {
 	sanitizeOfficeProfile,
 	writeOfficeProfile,
 	type OfficeProfile,
-} from './controls.js';
-import { registerOfficeUi } from './index.js';
+} from '../controls.js';
+import { registerOfficeUi } from '../index.js';
 
 beforeAll(() => registerOfficeUi());
 afterEach(() => {

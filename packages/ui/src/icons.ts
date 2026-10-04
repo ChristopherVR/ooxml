@@ -1,6 +1,3 @@
-import { definer } from './registry.js';
-import { attachStyles, controlCss } from './styles.js';
-
 /** A trusted icon: SVG path data in a 20x20 box. Hosts never inject markup. */
 export interface OfficeIcon {
 	d: string;
@@ -134,52 +131,3 @@ export function paintIcon(svg: SVGElement, name: string | null | undefined): boo
 	svg.append(path);
 	return true;
 }
-
-export const ICON_CSS = `
-svg { width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-width: 1.5;
-	stroke-linecap: round; stroke-linejoin: round; }
-`;
-
-/** `<office-ui-icon name="check" label="Done">`: decorative unless `label` is set. */
-export const defineIcon = definer('office-ui-icon', () => {
-	class OfficeUiIcon extends HTMLElement {
-		static observedAttributes = ['name', 'label'];
-		private readonly svg: SVGSVGElement;
-		constructor() {
-			super();
-			const root = this.attachShadow({ mode: 'open' });
-			attachStyles(
-				root,
-				controlCss(`:host { display: inline-flex; width: 1em; height: 1em; } ${ICON_CSS}`),
-			);
-			this.svg = createIconSvg(this.ownerDocument);
-			root.append(this.svg);
-		}
-		connectedCallback(): void {
-			this.sync();
-		}
-		attributeChangedCallback(): void {
-			this.sync();
-		}
-		get name(): string {
-			return this.getAttribute('name') ?? '';
-		}
-		set name(value: string) {
-			this.setAttribute('name', value);
-		}
-		private sync(): void {
-			paintIcon(this.svg, this.name);
-			const label = this.getAttribute('label');
-			if (label) {
-				this.setAttribute('role', 'img');
-				this.setAttribute('aria-label', label);
-				this.removeAttribute('aria-hidden');
-			} else {
-				this.removeAttribute('role');
-				this.removeAttribute('aria-label');
-				this.setAttribute('aria-hidden', 'true');
-			}
-		}
-	}
-	return OfficeUiIcon;
-});

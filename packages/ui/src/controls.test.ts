@@ -18,7 +18,7 @@ describe('office-ui-button', () => {
 			'<office-ui-button label="Bold" icon="check" command="bold" pressed="true"></office-ui-button>',
 		);
 		const button = el.shadowRoot!.querySelector('button')!;
-		expect(button.textContent).toBe('Bold');
+		expect(button.querySelector('.label')!.textContent!.trim()).toBe('Bold');
 		expect(button.getAttribute('aria-pressed')).toBe('true');
 		expect(el.shadowRoot!.querySelector('svg path')).not.toBeNull();
 		el.setAttribute('pressed', 'false');

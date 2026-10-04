@@ -1,0 +1,112 @@
+:host {
+	display: block;
+	padding: 0 var(--office-space-5) var(--office-space-4);
+}
+.typing {
+	min-height: 1.4em;
+	color: var(--office-teams-text-subtle);
+	font-size: var(--office-font-size-xs);
+}
+.box {
+	position: relative;
+	border: var(--office-border-width) solid var(--office-teams-divider);
+	border-block-end: var(--office-border-width-thick) solid var(--office-teams-divider);
+	border-radius: var(--office-radius-md);
+	background: var(--office-field-background);
+}
+.box:focus-within {
+	border-block-end-color: var(--office-teams-brand);
+}
+.banner {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: var(--office-space-1) var(--office-space-3);
+	border-bottom: var(--office-border-width) solid var(--office-teams-divider);
+	background: var(--office-teams-panel);
+	font-size: var(--office-font-size-sm);
+}
+textarea {
+	display: block;
+	width: 100%;
+	min-height: 3.2em;
+	max-height: 12em;
+	padding: var(--office-space-3);
+	border: 0;
+	outline: 0;
+	resize: none;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	field-sizing: content;
+}
+.bar {
+	display: flex;
+	align-items: center;
+	gap: var(--office-space-1);
+	padding: 0 var(--office-space-2) var(--office-space-2);
+}
+.spacer {
+	flex: 1;
+}
+.bar button,
+.banner button,
+.pending button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--office-space-1);
+	min-width: 2.2em;
+	height: 2.2em;
+	border: 0;
+	border-radius: var(--office-radius);
+	background: transparent;
+	color: var(--office-teams-text-subtle);
+}
+.bar button:hover:not(:disabled),
+.banner button:hover {
+	background: var(--office-selected);
+	color: var(--office-foreground);
+}
+.bar button:disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+.bar .send:not(:disabled) {
+	color: var(--office-teams-brand);
+}
+.pending {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--office-space-1);
+	margin: 0;
+	padding: 0 var(--office-space-3);
+	list-style: none;
+}
+.pending button {
+	padding: 0 var(--office-space-2);
+	border: var(--office-border-width) solid var(--office-teams-divider);
+	background: var(--office-teams-panel);
+	font-size: var(--office-font-size-sm);
+	color: var(--office-foreground);
+}
+.emoji {
+	position: relative;
+}
+.picker {
+	position: absolute;
+	inset-block-end: calc(100% + var(--office-space-1));
+	inset-inline-start: 0;
+	z-index: 2;
+	display: grid;
+	grid-template-columns: repeat(5, 1fr);
+	gap: var(--office-space-0);
+	padding: var(--office-space-2);
+	border: var(--office-border-width) solid var(--office-teams-divider);
+	border-radius: var(--office-radius-md);
+	background: var(--office-popover);
+	box-shadow: var(--office-shadow-teams);
+}
+.picker button {
+	font-size: 1.3em;
+}

@@ -1,0 +1,184 @@
+:host {
+	display: block;
+	min-height: 0;
+	overflow: auto;
+	padding: var(--office-space-2) var(--office-space-5);
+}
+.empty {
+	margin: var(--office-space-6) 0;
+	color: var(--office-teams-text-subtle);
+	text-align: center;
+}
+
+.day {
+	display: flex;
+	align-items: center;
+	gap: var(--office-space-3);
+	margin: var(--office-space-4) 0 var(--office-space-2);
+	color: var(--office-teams-text-subtle);
+	font-size: var(--office-font-size-xs);
+}
+.day::before,
+.day::after {
+	content: '';
+	flex: 1;
+	height: var(--office-border-width);
+	background: var(--office-teams-divider);
+}
+
+.msg {
+	position: relative;
+	display: grid;
+	grid-template-columns: 2.3em minmax(0, 1fr);
+	column-gap: var(--office-space-3);
+	padding: var(--office-space-0) 0;
+}
+.msg[data-grouped='false'] {
+	margin-top: var(--office-space-3);
+}
+.gutter {
+	padding-top: var(--office-space-1);
+}
+header {
+	display: flex;
+	align-items: baseline;
+	gap: var(--office-space-2);
+	margin-bottom: var(--office-space-0);
+}
+.author {
+	font-weight: var(--office-font-weight-bold);
+}
+time,
+.edited,
+.file-size {
+	color: var(--office-teams-text-subtle);
+	font-size: var(--office-font-size-xs);
+}
+
+.bubble {
+	display: inline-block;
+	max-width: min(100%, 44em);
+	padding: var(--office-space-2) var(--office-space-3);
+	border-radius: var(--office-radius-md);
+	background: var(--office-teams-bubble);
+	line-height: var(--office-line-height);
+	overflow-wrap: anywhere;
+}
+.text {
+	white-space: pre-wrap;
+}
+.msg[data-own='true'] .bubble {
+	background: var(--office-teams-bubble-own);
+}
+.deleted {
+	color: var(--office-teams-text-subtle);
+	font-style: italic;
+}
+blockquote {
+	margin: 0 0 var(--office-space-1);
+	padding-inline-start: var(--office-space-2);
+	border-inline-start: var(--office-border-width-thick) solid var(--office-teams-brand);
+	color: var(--office-teams-text-subtle);
+	font-size: var(--office-font-size-sm);
+	white-space: normal;
+}
+blockquote strong {
+	display: block;
+	color: var(--office-foreground);
+}
+
+.files {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--office-space-2);
+	margin-top: var(--office-space-2);
+	white-space: normal;
+}
+.file {
+	display: flex;
+	align-items: center;
+	gap: var(--office-space-3);
+	min-width: 14em;
+	padding: var(--office-space-2) var(--office-space-3);
+	border: var(--office-border-width) solid var(--office-teams-divider);
+	border-radius: var(--office-radius-md);
+	background: var(--office-background);
+	text-align: start;
+}
+.file:hover {
+	border-color: var(--office-teams-brand);
+}
+.badge {
+	display: grid;
+	place-items: center;
+	width: 2.2em;
+	height: 2.2em;
+	border-radius: var(--office-radius);
+	background: var(--office-file-other);
+	color: var(--office-call-foreground);
+	font-weight: var(--office-font-weight-bold);
+}
+.badge[data-kind='docx'] {
+	background: var(--office-file-docx);
+}
+.badge[data-kind='xlsx'] {
+	background: var(--office-file-xlsx);
+}
+.badge[data-kind='pptx'] {
+	background: var(--office-file-pptx);
+}
+.badge[data-kind='vsdx'] {
+	background: var(--office-file-vsdx);
+}
+.meta {
+	display: grid;
+}
+
+.reactions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--office-space-1);
+	margin-top: var(--office-space-1);
+}
+.pill {
+	display: inline-flex;
+	gap: var(--office-space-1);
+	padding: 0 var(--office-space-2);
+	border: var(--office-border-width) solid var(--office-teams-divider);
+	border-radius: var(--office-radius-full);
+	background: var(--office-background);
+	font-size: var(--office-font-size-sm);
+}
+.pill[aria-pressed='true'] {
+	border-color: var(--office-teams-brand);
+	background: var(--office-teams-brand-subtle);
+}
+
+.toolbar {
+	position: absolute;
+	inset-block-start: calc(-1 * var(--office-space-3));
+	inset-inline-end: 0;
+	display: none;
+	gap: var(--office-space-0);
+	padding: var(--office-space-0);
+	border: var(--office-border-width) solid var(--office-teams-divider);
+	border-radius: var(--office-radius-md);
+	background: var(--office-popover);
+	box-shadow: var(--office-shadow-teams);
+}
+.msg:hover .toolbar,
+.msg:focus-within .toolbar {
+	display: flex;
+}
+.toolbar button {
+	display: grid;
+	place-items: center;
+	min-width: 2em;
+	height: 2em;
+	border: 0;
+	border-radius: var(--office-radius-sm);
+	background: transparent;
+}
+.toolbar button:hover {
+	background: var(--office-selected);
+}

@@ -1,0 +1,93 @@
+:host {
+	display: flex;
+	align-items: stretch;
+	min-width: 0;
+	min-height: var(--office-tab-height);
+	gap: var(--office-space-0);
+	padding: 0 var(--office-space-1-5);
+	background: var(--office-surface);
+	color: var(--office-muted-foreground);
+	border-top: var(--office-border-width) solid var(--office-border);
+	font-size: var(--office-font-size-sm);
+	font-family: var(--office-font);
+}
+.step {
+	flex: none;
+	display: inline-grid;
+	place-items: center;
+	width: var(--office-target-size);
+	min-height: var(--office-target-size);
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: inherit;
+	cursor: pointer;
+}
+.step:disabled {
+	opacity: 0.4;
+	cursor: default;
+}
+.add {
+	font-size: var(--office-font-size-xl);
+	line-height: 1;
+}
+.add[hidden] {
+	display: none;
+}
+.list {
+	display: flex;
+	align-items: stretch;
+	min-width: 0;
+	overflow-x: auto;
+	scrollbar-width: thin;
+}
+.tab {
+	flex: none;
+	max-width: var(--office-tab-max-width);
+	min-height: var(--office-target-size);
+	margin-top: calc(-1 * var(--office-space-px));
+	padding: var(--office-space-0) var(--office-space-3-5);
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	border: var(--office-border-width) solid transparent;
+	border-top: 0;
+	border-radius: 0 0 var(--office-radius) var(--office-radius);
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+}
+.tab:hover {
+	color: var(--office-foreground);
+}
+.tab[aria-selected='true'] {
+	border-color: var(--office-border);
+	background: var(--office-background);
+	color: var(--office-accent);
+	font-weight: 600;
+	box-shadow: inset 0 var(--office-border-width-thick) 0 var(--office-accent);
+}
+button:focus-visible {
+	outline: var(--office-focus-width) solid var(--office-ring);
+	outline-offset: calc(-1 * var(--office-focus-width));
+}
+svg {
+	width: var(--office-icon-size-md);
+	height: var(--office-icon-size-md);
+	fill: none;
+	stroke: currentColor;
+	stroke-width: var(--office-icon-stroke);
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+@media (forced-colors: active) {
+	:host {
+		border-top-color: CanvasText;
+	}
+	.tab[aria-selected='true'] {
+		background: Highlight;
+		color: HighlightText;
+		forced-color-adjust: none;
+	}
+}

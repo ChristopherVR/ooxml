@@ -1,0 +1,92 @@
+:host {
+	display: none;
+	position: fixed;
+	inset: 0;
+	z-index: 1000;
+	align-items: center;
+	justify-content: center;
+}
+:host([open]) {
+	display: flex;
+}
+.backdrop {
+	position: absolute;
+	inset: 0;
+	background: var(--office-overlay);
+}
+.box {
+	position: relative;
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	width: var(--office-dialog-width);
+	min-width: var(--office-dialog-min-width);
+	max-width: var(--office-dialog-max-width);
+	max-height: var(--office-dialog-max-height);
+	background: var(--office-background);
+	color: var(--office-foreground);
+	border: var(--office-border-width) solid var(--office-border);
+	border-radius: var(--office-radius-lg);
+	font-family: var(--office-font);
+}
+header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--office-space-2);
+	padding: var(--office-space-3) var(--office-space-4);
+	border-bottom: var(--office-border-width) solid var(--office-border);
+}
+h2 {
+	margin: 0;
+	font-size: var(--office-font-size-lg);
+	font-weight: 600;
+}
+.body {
+	padding: var(--office-space-4);
+	overflow: auto;
+	font-size: var(--office-font-size);
+}
+footer {
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--office-space-2);
+	padding: var(--office-space-3) var(--office-space-4);
+	border-top: var(--office-border-width) solid var(--office-border);
+}
+footer[hidden] {
+	display: none;
+}
+.close {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: var(--office-target-size);
+	min-height: var(--office-target-size);
+	border: 0;
+	background: transparent;
+	color: inherit;
+	cursor: pointer;
+	border-radius: var(--office-radius);
+}
+.close svg {
+	width: var(--office-icon-size-md);
+	height: var(--office-icon-size-md);
+	fill: none;
+	stroke: currentColor;
+	stroke-width: var(--office-icon-stroke);
+	stroke-linecap: round;
+}
+.close:focus-visible {
+	outline: var(--office-focus-width) solid var(--office-ring);
+}
+
+@media (forced-colors: active) {
+	.box {
+		border-color: CanvasText;
+		background: Canvas;
+	}
+	.backdrop {
+		background: transparent;
+	}
+}

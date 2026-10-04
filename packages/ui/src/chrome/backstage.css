@@ -1,0 +1,115 @@
+:host {
+	position: absolute;
+	inset: 0;
+	z-index: 30;
+	display: none;
+	min-width: 0;
+	background: var(--office-background);
+	color: var(--office-foreground);
+	font-family: var(--office-font);
+}
+:host([open]) {
+	display: block;
+}
+.frame {
+	display: flex;
+	height: 100%;
+	min-width: 0;
+}
+nav {
+	display: flex;
+	flex: 0 0 var(--office-backstage-nav-width);
+	flex-direction: column;
+	padding: var(--office-space-3) 0;
+	overflow: auto;
+	background: var(--office-backstage-nav-background);
+	color: var(--office-backstage-nav-foreground);
+}
+nav button {
+	border: 0;
+	border-radius: 0;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+}
+.back {
+	width: var(--office-backstage-back-size);
+	min-height: var(--office-backstage-back-size);
+	margin: 0 0 var(--office-space-3) var(--office-space-4);
+	padding: 0;
+	border: calc(var(--office-border-width-thick) * 0.75) solid currentColor;
+	border-radius: 50%;
+	font-size: var(--office-font-size-xl);
+	text-align: center;
+}
+.item {
+	min-height: var(--office-backstage-item-height);
+	padding: var(--office-space-1-5) var(--office-space-6);
+	font-size: var(--office-font-size-md);
+}
+.item:hover:enabled,
+.item[aria-current='page'] {
+	background: var(--office-backstage-item-hover);
+}
+.item:disabled {
+	opacity: 0.55;
+	cursor: default;
+}
+nav button:focus-visible {
+	outline: var(--office-focus-width) solid currentColor;
+	outline-offset: calc(-1 * var(--office-focus-width));
+}
+.items {
+	display: flex;
+	flex-direction: column;
+}
+.footer {
+	display: flex;
+	flex-direction: column;
+	margin-top: auto;
+	padding-top: var(--office-space-4);
+}
+.body {
+	flex: 1;
+	min-width: 0;
+	overflow: auto;
+	padding: var(--office-backstage-padding);
+}
+@media (max-width: 760px) {
+	.frame {
+		flex-direction: column;
+	}
+	nav {
+		flex: none;
+		flex-direction: row;
+		flex-wrap: wrap;
+		padding: var(--office-space-1-5);
+	}
+	.back {
+		margin: var(--office-space-1);
+	}
+	.item {
+		min-height: var(--office-target-size-touch);
+		padding: var(--office-space-1-5) var(--office-space-3);
+	}
+	.items,
+	.footer {
+		flex-direction: row;
+		flex-wrap: wrap;
+		margin-top: 0;
+		padding-top: 0;
+	}
+	.body {
+		padding: var(--office-space-4);
+	}
+}
+@media (forced-colors: active) {
+	nav {
+		border-inline-end: var(--office-border-width) solid CanvasText;
+	}
+	.item[aria-current='page'] {
+		outline: var(--office-focus-width) solid Highlight;
+	}
+}
