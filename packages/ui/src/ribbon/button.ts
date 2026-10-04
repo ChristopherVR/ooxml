@@ -28,62 +28,29 @@ export class OfficeUiButton extends OfficeElement {
 	static detailKey = 'command';
 	static override shadowRootOptions = { ...LitElement.shadowRootOptions, delegatesFocus: true };
 	static override styles = controlStyles(css);
-	static override properties = {
-		label: { type: String },
-		// Product hooks read these as attributes, so setting the property writes them through.
-		icon: { type: String, reflect: true },
-		command: { type: String, reflect: true },
-		badge: { type: String },
-		caret: { type: String, reflect: true },
-		keyshortcuts: { type: String },
-		size: { type: String, reflect: true },
-		variant: { type: String, reflect: true },
-		disabled: flag,
-		active: flag,
-		tall: flag,
-		iconOnly: { attribute: 'icon-only', ...flag },
-		pressed: triState,
-		expanded: triState,
-	};
-	declare label: string;
-	declare icon: string | null;
-	declare command: string | null;
-	declare badge: string;
-	declare caret: string | null;
-	declare keyshortcuts: string;
-	declare size: string;
-	declare variant: string;
+	static override properties = { disabled: flag, pressed: triState };
+	/** Everything else is an attribute, as it always was (see `OfficeElement.watched`). */
+	static override watched = [
+		'label',
+		'icon',
+		'command',
+		'badge',
+		'caret',
+		'keyshortcuts',
+		'size',
+		'variant',
+		'active',
+		'tall',
+		'icon-only',
+		'expanded',
+		'title',
+	];
 	declare disabled: boolean;
-	declare active: boolean;
-	declare tall: boolean;
-	declare iconOnly: boolean;
 	declare pressed: boolean | undefined;
-	declare expanded: boolean | undefined;
-
-	/** `title` is a native attribute, so it is watched rather than declared as a property. */
-	static override get observedAttributes(): string[] {
-		return [...super.observedAttributes, 'title'];
-	}
 
 	constructor() {
 		super();
-		this.label = '';
-		this.icon = null;
-		this.command = null;
-		this.badge = '';
-		this.caret = null;
-		this.keyshortcuts = '';
-		this.size = '';
-		this.variant = '';
 		this.disabled = false;
-		this.active = false;
-		this.tall = false;
-		this.iconOnly = false;
-	}
-
-	override attributeChangedCallback(name: string, old: string | null, value: string | null): void {
-		super.attributeChangedCallback(name, old, value);
-		if (name === 'title') this.requestUpdate();
 	}
 
 	/** The registered icon to draw; a product subclass may map names onto its glyph set. */
@@ -118,23 +85,26 @@ export class OfficeUiButton extends OfficeElement {
 	}
 
 	protected override render() {
-		const iconOnly = present(this.iconOnly);
-		const tooltip = this.tooltip(this.label, iconOnly);
+		const label = this.getAttribute('label') ?? '';
+		const iconOnly = this.hasAttribute('icon-only');
+		const badge = this.getAttribute('badge') ?? '';
+		const expanded = this.getAttribute('expanded');
+		const tooltip = this.tooltip(label, iconOnly);
 		// The content is written without whitespace between nodes, so `textContent` is the label.
 		return html`<button
 			part="button"
 			type="button"
 			?disabled=${present(this.disabled)}
 			title=${tooltip || nothing}
-			aria-label=${ifDefined(iconOnly && this.label ? this.label : undefined)}
-			aria-keyshortcuts=${ifDefined(this.keyshortcuts || undefined)}
+			aria-label=${ifDefined(iconOnly && label ? label : undefined)}
+			aria-keyshortcuts=${ifDefined(this.getAttribute('keyshortcuts') || undefined)}
 			aria-pressed=${ifDefined(asAttribute(this.pressed))}
-			aria-expanded=${ifDefined(asAttribute(this.expanded))}
+			aria-expanded=${ifDefined(expanded === null ? undefined : String(expanded !== 'false'))}
 			@click=${this.onClick}
 			@keydown=${this.onKeydown}
 			>${glyph(this.iconName())}<span class="label" ?hidden=${iconOnly}
-				>${this.label}${glyph('chevronDown', 'caret', !this.showsCaret())}</span
-			><span class="badge" aria-hidden="true" ?hidden=${!this.badge}>${this.badge}</span></button
+				>${label}${glyph('chevronDown', 'caret', !this.showsCaret())}</span
+			><span class="badge" aria-hidden="true" ?hidden=${!badge}>${badge}</span></button
 		>`;
 	}
 }

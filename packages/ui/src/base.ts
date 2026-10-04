@@ -154,6 +154,17 @@ export class OfficeElement extends LitElement {
 		});
 	}
 
+	/**
+	 * Attributes the element reads straight from the DOM, without a property of the same name: a
+	 * product subclass reads them too, and a framework that assigns properties it finds (React 19)
+	 * must write the attribute instead. Changing one redraws the element.
+	 */
+	static watched: readonly string[] = [];
+
+	static override get observedAttributes(): string[] {
+		return [...super.observedAttributes, ...this.watched];
+	}
+
 	private fromAttribute: string | undefined;
 
 	override attributeChangedCallback(name: string, old: string | null, value: string | null): void {
@@ -163,6 +174,7 @@ export class OfficeElement extends LitElement {
 		} finally {
 			this.fromAttribute = undefined;
 		}
+		if ((this.constructor as typeof OfficeElement).watched.includes(name)) this.requestUpdate();
 	}
 
 	/** Write a property's value to its attribute now, unless the attribute is where it came from. */

@@ -92,20 +92,15 @@ describe('subclassing the elements', () => {
 		expect(el.shadowRoot!.querySelector('.name')).toBeNull();
 	});
 
-	it('writes properties that product hooks read as attributes through to the attribute', () => {
-		const button = document.createElement('office-ui-button') as HTMLElement & {
-			icon: string;
-			command: string;
-		};
-		button.icon = 'copy';
-		button.command = 'copy';
-		expect(button.getAttribute('icon')).toBe('copy');
-		expect(button.getAttribute('command')).toBe('copy');
-		const group = document.createElement('office-ui-ribbon-group') as HTMLElement & {
-			launcher: string;
-		};
-		group.launcher = 'font';
-		expect(group.getAttribute('launcher')).toBe('font');
+	it('leaves attribute-only inputs as attributes, so frameworks write the attribute', () => {
+		const button = document.createElement('office-ui-button');
+		const group = document.createElement('office-ui-ribbon-group');
+		for (const name of ['label', 'icon', 'command', 'badge', 'size'])
+			expect(name in button).toBe(false);
+		for (const name of ['label', 'launcher', 'icon']) expect(name in group).toBe(false);
+		button.setAttribute('icon', 'copy');
+		document.body.append(button);
+		expect(button.shadowRoot!.querySelector('svg path')).not.toBeNull();
 	});
 
 	it('keeps a controlled toggle controlled until the host commits', () => {

@@ -1,5 +1,6 @@
 import { LitElement, html, type PropertyValues } from 'lit';
 import { ifDefined } from 'lit/directives/if-defined.js';
+import { keyed } from 'lit/directives/keyed.js';
 import { OfficeElement, controlStyles, flag } from '../base.js';
 import { definer, present } from '../registry.js';
 import {
@@ -418,7 +419,7 @@ export class OfficeUiSelect extends OfficeElement {
 				}}
 			>
 				${this.querySelector('[slot="custom"]') ? html`<slot name="custom"></slot>` : ''}
-				${this.opened ? this.optionTemplates() : ''}
+				${this.opened ? keyed(value, this.optionTemplates()) : ''}
 			</div>
 		`;
 	}

@@ -1,7 +1,7 @@
 import { html } from 'lit';
-import { OfficeElement, controlStyles, flag } from '../base.js';
+import { OfficeElement, controlStyles } from '../base.js';
 import { glyph } from '../glyph.js';
-import { definer, present } from '../registry.js';
+import { definer } from '../registry.js';
 import css from './ribbon-group.css?raw';
 
 type GroupConfig = { launcherEvent: string; collapseEvent: string };
@@ -29,32 +29,16 @@ export class OfficeUiRibbonGroup extends OfficeElement {
 	static launcherEvent = 'office-command';
 	static collapseEvent = 'office-ribbon-collapse-toggle';
 	static override styles = controlStyles(css);
-	static override properties = {
-		label: { type: String },
-		// Product hooks read these as attributes, so setting the property writes them through.
-		launcher: { type: String, reflect: true },
-		launcherLabel: { attribute: 'launcher-label', type: String },
-		launcherDisabled: { attribute: 'launcher-disabled', ...flag },
-		icon: { type: String, reflect: true },
-		open: { attribute: 'data-open', ...flag },
-	};
-	declare label: string;
-	declare launcher: string | null;
-	declare launcherLabel: string | null;
-	declare launcherDisabled: boolean;
-	declare icon: string | null;
-	declare open: boolean;
+	/** The group is configured by attributes, as it always was (see `OfficeElement.watched`). */
+	static override watched = [
+		'label',
+		'launcher',
+		'launcher-label',
+		'launcher-disabled',
+		'icon',
+		'data-open',
+	];
 	private observer: ResizeObserver | undefined;
-
-	constructor() {
-		super();
-		this.label = '';
-		this.launcher = null;
-		this.launcherLabel = null;
-		this.launcherDisabled = false;
-		this.icon = null;
-		this.open = false;
-	}
 
 	/** The launcher's event detail; null emits nothing. */
 	protected launcherDetail(): Record<string, unknown> | null {
@@ -108,7 +92,7 @@ export class OfficeUiRibbonGroup extends OfficeElement {
 	}
 
 	private onLauncher(): void {
-		if (present(this.launcherDisabled)) return;
+		if (this.hasAttribute('launcher-disabled')) return;
 		const detail = this.launcherDetail();
 		if (detail) this.fire((this.constructor as unknown as GroupConfig).launcherEvent, detail);
 	}
@@ -120,35 +104,36 @@ export class OfficeUiRibbonGroup extends OfficeElement {
 
 	protected override willUpdate(): void {
 		this.setAttribute('role', 'group');
-		this.setAttribute('aria-label', this.label);
+		this.setAttribute('aria-label', this.getAttribute('label') ?? '');
 	}
 
 	protected override render() {
-		const launcherLabel = this.launcherLabel ?? `${this.label} options`;
+		const label = this.getAttribute('label') ?? '';
+		const launcherLabel = this.getAttribute('launcher-label') ?? `${label} options`;
 		return html`
 			<div class="group">
 				<button
 					class="face"
 					type="button"
 					aria-haspopup="true"
-					aria-label=${this.label}
-					aria-expanded=${String(present(this.open))}
-					title=${this.label}
+					aria-label=${label}
+					aria-expanded=${String(this.hasAttribute('data-open'))}
+					title=${label}
 					@click=${this.onFace}
-					>${glyph(this.iconName(), 'face-icon')}<span>${this.label}</span>${glyph('chevronDown', 'chev')}</button
+					>${glyph(this.iconName(), 'face-icon')}<span>${label}</span>${glyph('chevronDown', 'chev')}</button
 				>
 				<div class="row">
 					<slot @slotchange=${this.observe}></slot>
 				</div>
 				<div class="foot">
-					<span class="caption">${this.label}</span>
+					<span class="caption">${label}</span>
 					<button
 						class="launcher"
 						type="button"
 						aria-label=${launcherLabel}
 						title=${launcherLabel}
-						?hidden=${this.launcher === null}
-						?disabled=${present(this.launcherDisabled)}
+						?hidden=${!this.hasAttribute('launcher')}
+						?disabled=${this.hasAttribute('launcher-disabled')}
 						@click=${this.onLauncher}
 						>${glyph('launcher', 'launcher-icon')}</button
 					>

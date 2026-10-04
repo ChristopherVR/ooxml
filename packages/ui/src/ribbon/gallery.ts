@@ -148,6 +148,14 @@ export class OfficeUiGallery extends OfficeElement {
 		this.setAttribute('data-office-gallery', '');
 		attachGalleryStyles(this);
 		super.connectedCallback();
+		this.markHost();
+	}
+
+	/** Host attributes (never written before the element is connected). */
+	private markHost(): void {
+		if (!this.isConnected) return;
+		this.toggleAttribute('data-command', Boolean(this.model?.command));
+		this.toggleAttribute('data-command-large', Boolean(this.model?.command?.large));
 	}
 
 	override disconnectedCallback(): void {
@@ -323,10 +331,7 @@ export class OfficeUiGallery extends OfficeElement {
 		if (state && this.unavailable() && this.opened) this.close();
 		// The tiles live in the light DOM, rendered into the host itself.
 		render(this.lightTemplate(), this, { host: this });
-		if (this.isConnected) {
-			this.toggleAttribute('data-command', Boolean(state?.command));
-			this.toggleAttribute('data-command-large', Boolean(state?.command?.large));
-		}
+		this.markHost();
 		if (this.opened) this.position();
 	}
 }
