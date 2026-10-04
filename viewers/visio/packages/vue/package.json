@@ -1,6 +1,6 @@
 {
 	"name": "visio-vue-viewer",
-	"version": "0.5.0",
+	"version": "0.5.1",
 	"description": "Local-first Visio viewer for vue",
 	"homepage": "https://christophervr.github.io/visio-viewer/",
 	"license": "Apache-2.0",

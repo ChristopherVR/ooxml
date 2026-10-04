@@ -1,3 +1,9 @@
+## 0.5.1
+
+### Changes
+
+- build(viewer): adopt ooxml-ui 0.15 shared select and ribbon commands (e1fe065)
+
 ## 0.5.0
 
 ### Changes
