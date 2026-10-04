@@ -1,0 +1,429 @@
+/* <teams-app>: the shell. Colours, spacing and radii come from the ooxml-ui tokens, so a host
+   retheme or dark mode reaches the whole app. The elements inside bring their own styles. */
+:host {
+	display: block;
+	height: 100%;
+	min-height: 28em;
+	font: var(--office-font-size) var(--office-font);
+	color: var(--office-foreground);
+	background: var(--office-background);
+}
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+button {
+	font: inherit;
+	color: inherit;
+	cursor: pointer;
+}
+:focus-visible {
+	outline: var(--office-focus-width) solid var(--office-ring);
+	outline-offset: var(--office-focus-offset);
+}
+
+.shell {
+	display: grid;
+	grid-template-rows: auto minmax(0, 1fr);
+	height: 100%;
+}
+
+/* ---- top bar ---------------------------------------------------------------------------- */
+.topbar {
+	display: grid;
+	grid-template-columns: 16em minmax(0, 1fr) auto;
+	align-items: center;
+	gap: var(--office-space-4);
+	padding: var(--office-space-2) var(--office-space-4);
+	background: var(--office-teams-rail);
+	border-bottom: var(--office-border-width) solid var(--office-teams-divider);
+}
+.brand {
+	display: flex;
+	align-items: center;
+	gap: var(--office-space-2);
+	font-size: var(--office-font-size-lg);
+	font-weight: var(--office-font-weight-bold);
+}
+.logo {
+	display: inline-grid;
+	place-items: center;
+	width: 1.8em;
+	height: 1.8em;
+	border-radius: var(--office-radius-md);
+	background: var(--office-teams-brand);
+	color: var(--office-teams-brand-foreground);
+	font-size: 0.85em;
+}
+.search {
+	position: relative;
+	justify-self: center;
+	width: min(34em, 100%);
+}
+.search input {
+	width: 100%;
+	padding: var(--office-space-2) var(--office-space-4);
+	border: var(--office-border-width) solid var(--office-teams-divider);
+	border-radius: var(--office-radius-full);
+	background: var(--office-background);
+	color: inherit;
+	font: inherit;
+}
+.results {
+	position: absolute;
+	inset-inline: 0;
+	inset-block-start: calc(100% + var(--office-space-1));
+	z-index: 5;
+	max-height: 22em;
+	margin: 0;
+	padding: var(--office-space-1);
+	overflow: auto;
+	list-style: none;
+	border: var(--office-border-width) solid var(--office-teams-divider);
+	border-radius: var(--office-radius-md);
+	background: var(--office-popover);
+	box-shadow: var(--office-shadow-teams);
+}
+.results button {
+	display: grid;
+	width: 100%;
+	padding: var(--office-space-2) var(--office-space-3);
+	border: 0;
+	border-radius: var(--office-radius);
+	background: transparent;
+	text-align: start;
+}
+.results button:hover {
+	background: var(--office-selected);
+}
+.results .in,
+.results .none {
+	color: var(--office-teams-text-subtle);
+	font-size: var(--office-font-size-sm);
+}
+.results .none {
+	padding: var(--office-space-3);
+}
+.snippet {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.me {
+	display: flex;
+	align-items: center;
+	gap: var(--office-space-3);
+}
+.me select {
+	padding: var(--office-space-1) var(--office-space-2);
+	border: var(--office-border-width) solid var(--office-teams-divider);
+	border-radius: var(--office-radius);
+	background: var(--office-background);
+	color: inherit;
+	font: inherit;
+}
+.link {
+	border: 0;
+	background: transparent;
+	text-decoration: underline;
+	color: var(--office-teams-brand);
+}
+.conn {
+	width: 0.7em;
+	height: 0.7em;
+	border-radius: 50%;
+	background: var(--office-presence-offline);
+}
+.conn[data-status="connected"] { background: var(--office-presence-available); }
+.conn[data-status="connecting"] { background: var(--office-presence-away); }
+.conn[data-status="error"] { background: var(--office-presence-busy); }
+
+/* ---- body ------------------------------------------------------------------------------- */
+.body {
+	display: grid;
+	grid-template-columns: auto 19em minmax(0, 1fr);
+	min-height: 0;
+}
+.side {
+	min-height: 0;
+	overflow: auto;
+	background: var(--office-teams-panel);
+	border-inline-end: var(--office-border-width) solid var(--office-teams-divider);
+}
+.side h2 {
+	margin: 0;
+	padding: var(--office-space-3) var(--office-space-4);
+	font-size: var(--office-font-size-lg);
+}
+.main {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	min-height: 0;
+}
+.main office-ui-chat-list,
+.main office-ui-prejoin {
+	flex: 1;
+}
+
+ul.plain {
+	margin: 0;
+	padding: 0 var(--office-space-3);
+	list-style: none;
+}
+ul.plain li {
+	display: flex;
+	align-items: center;
+	gap: var(--office-space-2);
+	padding: var(--office-space-2) var(--office-space-2);
+}
+ul.plain li > :first-child:not(office-ui-avatar) {
+	flex: 1;
+}
+.hint {
+	padding: 0 var(--office-space-4);
+	color: var(--office-teams-text-subtle);
+}
+.join {
+	padding: var(--office-space-1) var(--office-space-3);
+	border: var(--office-border-width) solid var(--office-teams-divider);
+	border-radius: var(--office-radius-md);
+	background: var(--office-background);
+}
+.join.live {
+	border-color: transparent;
+	background: var(--office-call-live);
+	color: var(--office-call-foreground);
+}
+
+/* ---- conversation ----------------------------------------------------------------------- */
+.channel-head {
+	display: flex;
+	align-items: center;
+	gap: var(--office-space-4);
+	padding: var(--office-space-2) var(--office-space-5);
+	border-bottom: var(--office-border-width) solid var(--office-teams-divider);
+}
+.channel-head h1 {
+	margin: 0;
+	font-size: var(--office-font-size-lg);
+	white-space: nowrap;
+}
+.hash {
+	color: var(--office-teams-text-subtle);
+}
+.tabs {
+	display: flex;
+	gap: var(--office-space-1);
+}
+.tabs button {
+	padding: var(--office-space-2) var(--office-space-3);
+	border: 0;
+	border-bottom: var(--office-border-width-thick) solid transparent;
+	background: transparent;
+}
+.tabs button[aria-selected="true"] {
+	border-bottom-color: var(--office-teams-brand);
+	font-weight: var(--office-font-weight-bold);
+}
+.topic {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	color: var(--office-teams-text-subtle);
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.people {
+	display: flex;
+	align-items: center;
+	gap: var(--office-space-0);
+}
+.more {
+	margin-inline-start: var(--office-space-1);
+	color: var(--office-teams-text-subtle);
+	font-size: var(--office-font-size-sm);
+}
+.meet {
+	padding: var(--office-space-2) var(--office-space-4);
+	border: 0;
+	border-radius: var(--office-radius-md);
+	background: var(--office-teams-brand);
+	color: var(--office-teams-brand-foreground);
+	font-weight: var(--office-font-weight-bold);
+}
+.meet:hover:not(:disabled) {
+	background: var(--office-teams-brand-hover);
+}
+.meet:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+.callbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: var(--office-space-2) var(--office-space-5);
+	background: var(--office-call-live);
+	color: var(--office-call-foreground);
+}
+.callbar button {
+	padding: 0 var(--office-space-3);
+	border: var(--office-border-width) solid currentColor;
+	border-radius: var(--office-radius);
+	background: transparent;
+}
+
+/* ---- files ------------------------------------------------------------------------------ */
+.files {
+	display: grid;
+	flex: 1;
+	align-content: start;
+	gap: var(--office-space-2);
+	margin: 0;
+	padding: var(--office-space-4) var(--office-space-5);
+	overflow: auto;
+	list-style: none;
+}
+.files li {
+	display: flex;
+	align-items: center;
+	gap: var(--office-space-3);
+	padding: var(--office-space-2) var(--office-space-3);
+	border: var(--office-border-width) solid var(--office-teams-divider);
+	border-radius: var(--office-radius-md);
+}
+.files .none {
+	justify-content: center;
+	border: 0;
+	color: var(--office-teams-text-subtle);
+}
+.files .meta {
+	display: grid;
+	flex: 1;
+	min-width: 0;
+}
+.files small {
+	color: var(--office-teams-text-subtle);
+}
+.files button {
+	padding: var(--office-space-1) var(--office-space-3);
+	border: var(--office-border-width) solid var(--office-teams-divider);
+	border-radius: var(--office-radius);
+	background: var(--office-teams-panel);
+}
+.badge {
+	display: grid;
+	place-items: center;
+	width: 2.2em;
+	height: 2.2em;
+	border-radius: var(--office-radius);
+	background: var(--office-file-other);
+	color: var(--office-call-foreground);
+	font-weight: var(--office-font-weight-bold);
+}
+.badge[data-kind="docx"] { background: var(--office-file-docx); }
+.badge[data-kind="xlsx"] { background: var(--office-file-xlsx); }
+.badge[data-kind="pptx"] { background: var(--office-file-pptx); }
+.badge[data-kind="vsdx"] { background: var(--office-file-vsdx); }
+
+/* ---- meeting ---------------------------------------------------------------------------- */
+.meeting {
+	display: grid;
+	grid-template-rows: auto minmax(0, 1fr);
+	height: 100%;
+	background: var(--office-call-background);
+}
+.stage {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	min-height: 0;
+}
+.panel {
+	display: flex;
+	flex-direction: column;
+	width: 22em;
+	min-height: 0;
+	background: var(--office-background);
+	border-inline-start: var(--office-border-width) solid var(--office-teams-divider);
+}
+.panel office-ui-chat-list {
+	flex: 1;
+	padding-inline: var(--office-space-3);
+}
+.panel office-ui-chat-composer {
+	padding-inline: var(--office-space-3);
+}
+.people-panel h2 {
+	margin: 0;
+	padding: var(--office-space-3) var(--office-space-4);
+	font-size: var(--office-font-size-lg);
+}
+
+/* ---- welcome and toast ------------------------------------------------------------------ */
+.welcome {
+	display: grid;
+	place-items: center;
+	height: 100%;
+	background: var(--office-teams-panel);
+}
+.welcome form {
+	display: grid;
+	justify-items: center;
+	gap: var(--office-space-3);
+	width: min(24em, 90%);
+	padding: var(--office-space-6);
+	border-radius: var(--office-radius-lg);
+	background: var(--office-background);
+	box-shadow: var(--office-shadow-teams);
+}
+.welcome h1 {
+	margin: 0;
+	font-size: var(--office-font-size-xl);
+}
+.welcome p {
+	margin: 0;
+	color: var(--office-teams-text-subtle);
+}
+.welcome input {
+	width: 100%;
+	padding: var(--office-space-3);
+	border: var(--office-border-width) solid var(--office-field-border);
+	border-radius: var(--office-radius);
+	background: var(--office-field-background);
+	color: inherit;
+	font: inherit;
+}
+.welcome button {
+	width: 100%;
+	padding: var(--office-space-3);
+	border: 0;
+	border-radius: var(--office-radius-md);
+	background: var(--office-teams-brand);
+	color: var(--office-teams-brand-foreground);
+	font-weight: var(--office-font-weight-bold);
+}
+.toast {
+	position: fixed;
+	inset-block-end: var(--office-space-4);
+	inset-inline-start: 50%;
+	z-index: 10;
+	transform: translateX(-50%);
+	padding: var(--office-space-2) var(--office-space-4);
+	border-radius: var(--office-radius-md);
+	background: var(--office-call-background);
+	color: var(--office-call-foreground);
+}
+
+@media (max-width: 900px) {
+	.body {
+		grid-template-columns: auto minmax(0, 1fr);
+	}
+	.side {
+		display: none;
+	}
+	.topbar {
+		grid-template-columns: auto minmax(0, 1fr) auto;
+	}
+}

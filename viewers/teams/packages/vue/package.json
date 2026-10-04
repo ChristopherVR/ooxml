@@ -1,0 +1,11 @@
+{
+	"name": "teams-vue-viewer",
+	"version": "0.0.0",
+	"private": true,
+	"description": "Vue 3 binding for the teams workspace",
+	"license": "Apache-2.0",
+	"type": "module",
+	"exports": { ".": "./src/index.ts" },
+	"peerDependencies": { "vue": "^3.4.0", "teams-viewer": "*" },
+	"devDependencies": { "vue": "^3.5.0" }
+}

@@ -1,0 +1,10 @@
+{
+	"name": "teams-angular-viewer",
+	"version": "0.0.0",
+	"private": true,
+	"description": "Angular (standalone component) binding for the teams workspace",
+	"license": "Apache-2.0",
+	"type": "module",
+	"exports": { ".": "./src/index.ts" },
+	"peerDependencies": { "@angular/core": ">=17", "teams-viewer": "*" }
+}

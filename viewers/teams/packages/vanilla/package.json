@@ -1,0 +1,10 @@
+{
+	"name": "teams-vanilla-viewer",
+	"version": "0.0.0",
+	"private": true,
+	"description": "Framework-free binding: mount the teams workspace into any element",
+	"license": "Apache-2.0",
+	"type": "module",
+	"exports": { ".": "./src/index.ts" },
+	"peerDependencies": { "teams-viewer": "*" }
+}

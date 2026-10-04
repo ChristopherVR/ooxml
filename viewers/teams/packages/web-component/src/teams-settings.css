@@ -1,0 +1,81 @@
+:host {
+	font: var(--office-font-size) var(--office-font);
+	color: var(--office-foreground);
+}
+dialog {
+	width: min(36em, 94vw);
+	padding: 0;
+	border: var(--office-border-width) solid var(--office-teams-divider);
+	border-radius: var(--office-radius-lg);
+	background: var(--office-popover);
+	color: inherit;
+	box-shadow: var(--office-shadow-teams);
+}
+dialog::backdrop {
+	background: var(--office-overlay);
+}
+form {
+	display: grid;
+	gap: var(--office-space-3);
+	padding: var(--office-space-5);
+}
+h2 {
+	margin: 0;
+	font-size: var(--office-font-size-lg);
+}
+label {
+	display: grid;
+	gap: var(--office-space-1);
+	font-weight: var(--office-font-weight-bold);
+}
+small {
+	color: var(--office-teams-text-subtle);
+	font-weight: normal;
+}
+input,
+textarea,
+select {
+	padding: var(--office-space-2);
+	border: var(--office-border-width) solid var(--office-field-border);
+	border-radius: var(--office-radius);
+	background: var(--office-field-background);
+	color: inherit;
+	font: inherit;
+}
+textarea {
+	min-height: 5.5em;
+	font-family: ui-monospace, monospace;
+	font-size: 0.9em;
+}
+.issues {
+	margin: 0;
+	padding-inline-start: 1.2em;
+	color: var(--office-danger);
+	font-size: var(--office-font-size-sm);
+}
+.actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--office-space-2);
+}
+button {
+	padding: var(--office-space-2) var(--office-space-4);
+	border: var(--office-border-width) solid var(--office-teams-divider);
+	border-radius: var(--office-radius-md);
+	background: var(--office-background);
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+}
+button.primary {
+	border-color: transparent;
+	background: var(--office-teams-brand);
+	color: var(--office-teams-brand-foreground);
+}
+button.primary:hover {
+	background: var(--office-teams-brand-hover);
+}
+:focus-visible {
+	outline: var(--office-focus-width) solid var(--office-ring);
+	outline-offset: var(--office-focus-offset);
+}

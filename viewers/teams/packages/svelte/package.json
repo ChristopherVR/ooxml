@@ -1,0 +1,14 @@
+{
+	"name": "teams-svelte-viewer",
+	"version": "0.0.0",
+	"private": true,
+	"description": "Svelte 5 binding for the teams workspace",
+	"license": "Apache-2.0",
+	"type": "module",
+	"svelte": "./src/index.ts",
+	"exports": {
+		".": { "svelte": "./src/index.ts", "default": "./src/index.ts" },
+		"./Teams.svelte": { "svelte": "./src/Teams.svelte", "default": "./src/Teams.svelte" }
+	},
+	"peerDependencies": { "svelte": "^5.0.0", "teams-viewer": "*" }
+}
