@@ -2,7 +2,10 @@ import type { CallContext } from '../context.js';
 import { ERR, fail, type Value } from '../values.js';
 import { collectNumbers, num, numeric, optNum, spec } from './helpers.js';
 import type { FunctionSpec } from './types.js';
+import { BOND_FUNCTIONS } from './bonds.js';
+import { COUPON_FUNCTIONS } from './coupons.js';
 import { DEPRECIATION_FUNCTIONS } from './depreciation.js';
+import { SECURITY_FUNCTIONS } from './securities.js';
 import { fv, ipmt, pmt, pv, solve } from './financial-core.js';
 
 const C = 'Financial';
@@ -28,6 +31,9 @@ const xnpv = (rate: number, values: number[], dates: number[]): number =>
 
 export const FINANCIAL_FUNCTIONS: FunctionSpec[] = [
 	...DEPRECIATION_FUNCTIONS,
+	...COUPON_FUNCTIONS,
+	...BOND_FUNCTIONS,
+	...SECURITY_FUNCTIONS,
 	numeric(
 		'PMT',
 		C,
