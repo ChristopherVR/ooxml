@@ -3,6 +3,7 @@ import { themeToCssVars } from '../theme/css-vars';
 import type { EditorTheme } from '../theme/types';
 import aliases from './aliases.css?inline';
 import base from './base.css?inline';
+import officeBridge from './office-bridge.css?inline';
 import ribbon from './ribbon.css?inline';
 import ribbonButtons from './ribbon-buttons.css?inline';
 import ribbonGallery from './ribbon-gallery.css?inline';
@@ -37,6 +38,7 @@ export const themeTokenText = `:host{${declarations(lightTheme, 'light')}}
 export const editorStyleText = [
 	themeTokenText,
 	aliases,
+	officeBridge,
 	base,
 	ribbon,
 	ribbonButtons,

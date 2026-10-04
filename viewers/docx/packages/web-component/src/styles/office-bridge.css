@@ -1,0 +1,21 @@
+/*
+ * The shared ooxml-ui elements read only --office-* tokens. This feeds them from the editor's
+ * --dve-* theme, declared on the host so a theme, a dark scheme or a host override of --dve-*
+ * keeps working (the same approach as pptx-viewer's office-token-bridge).
+ */
+:host {
+	--office-font: 'Segoe UI', Arial, sans-serif;
+	--office-foreground: var(--dve-foreground);
+	--office-muted-foreground: var(--dve-muted-foreground);
+	--office-background: var(--dve-background);
+	--office-surface: var(--dve-card);
+	--office-selected: var(--dve-accent);
+	--office-border: var(--dve-border);
+	--office-accent: var(--dve-primary);
+	--office-accent-foreground: var(--dve-primary-foreground);
+	--office-ring: var(--dve-ring);
+	--office-popover: var(--dve-popover);
+	--office-popover-foreground: var(--dve-popover-foreground, var(--dve-foreground));
+	--office-danger: var(--dve-destructive);
+	--office-danger-foreground: var(--dve-destructive-foreground);
+}

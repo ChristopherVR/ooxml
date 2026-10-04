@@ -114,19 +114,3 @@ export function menuStateFromView(view: EditorView, readOnly: boolean): MenuStat
 		canTable: (command) => canExecuteTableCommand(view, command),
 	};
 }
-
-/** Keeps a menu of the given size inside the viewport, preferring the requested corner. */
-export function clampToViewport(
-	x: number,
-	y: number,
-	size: { width: number; height: number },
-	viewport: { width: number; height: number },
-	margin = 4,
-): { left: number; top: number } {
-	const fit = (position: number, extent: number, limit: number) =>
-		Math.max(margin, Math.min(position, limit - extent - margin));
-	return {
-		left: fit(x, size.width, viewport.width),
-		top: fit(y, size.height, viewport.height),
-	};
-}

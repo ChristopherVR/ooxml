@@ -3,12 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { EditorState, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { schema } from './schema';
-import {
-	clampToViewport,
-	computeMenuItems,
-	menuStateFromView,
-	type MenuState,
-} from './context-menu-items';
+import { computeMenuItems, menuStateFromView, type MenuState } from './context-menu-items';
 
 const base: MenuState = {
 	readOnly: false,
@@ -110,23 +105,5 @@ describe('context menu state from a view', () => {
 		expect(menuStateFromView(view(inside), false).inTable).toBe(true);
 		expect(menuStateFromView(view(inside, false), false).readOnly).toBe(true);
 		expect(menuStateFromView(view(inside), true).readOnly).toBe(true);
-	});
-});
-
-describe('viewport clamping', () => {
-	const size = { width: 200, height: 300 };
-	const viewport = { width: 1000, height: 600 };
-	it('keeps the requested position when it fits', () => {
-		expect(clampToViewport(100, 100, size, viewport)).toEqual({ left: 100, top: 100 });
-	});
-	it('shifts the menu back inside on the right and bottom edges', () => {
-		expect(clampToViewport(950, 590, size, viewport)).toEqual({ left: 796, top: 296 });
-	});
-	it('never goes above or left of the margin, even when larger than the viewport', () => {
-		expect(clampToViewport(-20, -5, size, viewport)).toEqual({ left: 4, top: 4 });
-		expect(clampToViewport(10, 10, { width: 2000, height: 900 }, viewport)).toEqual({
-			left: 4,
-			top: 4,
-		});
 	});
 });
