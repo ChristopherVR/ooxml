@@ -22,7 +22,7 @@ import { paragraphBookmarkNames } from './bookmarks.js';
 import { parseTabStops } from './tab-stops.js';
 import { parseJustification } from './paragraph-alignment.js';
 import { onOffElement, parseInteger, parseSignedTwips, parseTwips } from './simple-types.js';
-import { PAGINATION_KEYS } from './paragraph-styles.js';
+import { PAGINATION_KEYS, parseOutlineLevel } from './paragraph-styles.js';
 import { parseParagraphBorders, parseShadingFill } from './table-borders.js';
 import { createFieldTracker } from './field-runs.js';
 import { parseEquation } from './equation.js';
@@ -203,6 +203,8 @@ function parseParagraph(node: XmlElement, id: string): Paragraph {
 		const value = onOffElement(first(props, key));
 		if (value !== undefined) paragraph[key] = value;
 	}
+	const outline = parseOutlineLevel(first(props, 'outlineLvl'));
+	if (outline !== undefined) paragraph.outlineLevel = outline;
 	const frame = first(props, 'framePr');
 	const dropCap = getW(frame, 'dropCap');
 	if (dropCap === 'drop' || dropCap === 'margin') {

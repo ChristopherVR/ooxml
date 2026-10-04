@@ -28,6 +28,15 @@ export const PAGINATION_KEYS = [
 	'suppressLineNumbers',
 ] as const;
 
+/** `w:outlineLvl` as a 1-9 level (0 for body text, `w:val="9"`); undefined when absent or invalid. */
+export function parseOutlineLevel(element: XmlElement | undefined): number | undefined {
+	const raw = getW(element, 'val');
+	if (raw === undefined) return undefined;
+	const value = Number(raw);
+	if (!Number.isInteger(value) || value < 0 || value > 9) return undefined;
+	return value === 9 ? 0 : value + 1;
+}
+
 /** Parses `w:pPr` formatting (shared by styles, docDefaults and direct paragraph properties). */
 export function parseFormatting(pPr: XmlElement | undefined): ParagraphFormatting {
 	const result: ParagraphFormatting = {};
@@ -40,6 +49,8 @@ export function parseFormatting(pPr: XmlElement | undefined): ParagraphFormattin
 		const value = enabled(first(pPr, key));
 		if (value !== undefined) result[key] = value;
 	}
+	const outline = parseOutlineLevel(first(pPr, 'outlineLvl'));
+	if (outline !== undefined) result.outlineLevel = outline;
 	const borders = parseParagraphBorders(first(pPr, 'pBdr'));
 	if (borders) result.borders = borders;
 	const shading = parseShadingFill(first(pPr, 'shd'));
@@ -173,6 +184,7 @@ export function resolveParagraphFormatting(
 		'firstLineTwips',
 		'hangingTwips',
 		...PAGINATION_KEYS,
+		'outlineLevel',
 		'borders',
 		'shadingFill',
 	];

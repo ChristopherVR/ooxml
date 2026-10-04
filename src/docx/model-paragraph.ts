@@ -57,6 +57,11 @@ export interface Paragraph {
 	/** `w:suppressLineNumbers`: omit this paragraph from line numbering; false overrides a style. */
 	suppressLineNumbers?: boolean;
 	/**
+	 * `w:outlineLvl` as a 1-9 level, or 0 for body text (`w:val="9"`, which cancels a style's
+	 * level). Read-only like `borders`: the source XML keeps it and it is not written for new paragraphs.
+	 */
+	outlineLevel?: number;
+	/**
 	 * `w:framePr/@w:dropCap`: this paragraph is a drop cap frame (the initial letter) for the
 	 * paragraph that follows. `lines` is the number of text lines it spans.
 	 */
@@ -93,6 +98,7 @@ export type ParagraphFormatting = Pick<
 	| 'widowControl'
 	| 'contextualSpacing'
 	| 'suppressLineNumbers'
+	| 'outlineLevel'
 	| 'borders'
 	| 'shadingFill'
 >;

@@ -3,6 +3,8 @@
 // refreshes an existing TOC field that spans body paragraphs.
 import { expectDefined } from './expect-defined.js';
 import { fieldName } from './field-runs.js';
+import { resolveParagraphFormatting } from './paragraph-styles.js';
+import { tocSwitches, type TocSwitches } from './toc-switches.js';
 import { captionParagraphs, tocCaptionLabel } from './table-of-figures.js';
 import { signedTwips, twips, type Twips } from './units.js';
 import type { Block, DocumentModel, Paragraph, ParagraphStyleCatalog, TextRun } from './model.js';
@@ -60,16 +62,43 @@ export function tocEntries(
 		return captionParagraphs(model, label)
 			.map((paragraph) => ({ level: 1, text: plainText(paragraph), blockId: paragraph.id }))
 			.filter((entry) => entry.text);
-	const { from, to } = tocLevels(instruction);
+	const switches = tocSwitches(instruction);
 	const entries: TocEntry[] = [];
 	for (const block of model.blocks) {
 		if (block.type !== 'paragraph') continue;
-		const level = headingLevel(block, model.paragraphStyles);
+		const level = entryLevel(block, model.paragraphStyles, switches);
 		const text = plainText(block);
-		if (level !== undefined && level >= from && level <= to && text)
-			entries.push({ level, text, blockId: block.id });
+		if (level !== undefined && text) entries.push({ level, text, blockId: block.id });
 	}
 	return entries;
+}
+
+/** The level a paragraph gets in a TOC, or undefined when the field does not collect it. */
+function entryLevel(
+	paragraph: Paragraph,
+	catalog: ParagraphStyleCatalog | undefined,
+	switches: TocSwitches,
+): number | undefined {
+	const inRange = (level: number | undefined) =>
+		level !== undefined && level >= switches.from && level <= switches.to ? level : undefined;
+	if (switches.styles.size > 0 && paragraph.style) {
+		const name = catalog?.styles[paragraph.style]?.name;
+		const mapped =
+			switches.styles.get(paragraph.style.toLowerCase()) ??
+			(name ? switches.styles.get(name.toLowerCase()) : undefined);
+		if (mapped !== undefined) return mapped;
+	}
+	if (switches.headings) {
+		const heading = inRange(headingLevel(paragraph, catalog));
+		if (heading !== undefined) return heading;
+	}
+	if (switches.outline) {
+		const outline = catalog
+			? resolveParagraphFormatting(paragraph, catalog).outlineLevel
+			: paragraph.outlineLevel;
+		return inRange(outline || undefined);
+	}
+	return undefined;
 }
 
 export interface TocOptions {
