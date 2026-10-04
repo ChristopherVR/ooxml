@@ -4,6 +4,8 @@ import { repeat } from 'lit/directives/repeat.js';
 import { html as staticHtml, unsafeStatic } from 'lit/static-html.js';
 import { OfficeElement, controlStyles } from '../base.js';
 import { glyph } from '../glyph.js';
+import { defineSearchField } from '../form/search-field.js';
+import { defineSwitch } from '../form/switch.js';
 import { definer } from '../registry.js';
 import {
 	matchTitleBarCommands,
@@ -357,4 +359,7 @@ export class OfficeUiTitleBar extends OfficeElement {
 	}
 }
 
-export const defineTitleBar = definer('office-ui-title-bar', () => OfficeUiTitleBar);
+export const defineTitleBar = definer('office-ui-title-bar', () => OfficeUiTitleBar, [
+	defineSearchField,
+	defineSwitch,
+]);

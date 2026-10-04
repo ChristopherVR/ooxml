@@ -1,5 +1,7 @@
 import { html } from 'lit';
 import { OfficeElement, controlStyles } from '../base.js';
+import { defineButton } from './button.js';
+import { defineRibbonGroup } from './ribbon-group.js';
 import { definer } from '../registry.js';
 import { tok } from '../tokens.js';
 import css from './ribbon-section.css?raw';
@@ -155,4 +157,8 @@ export class OfficeUiRibbonSection extends OfficeElement {
 	}
 }
 
-export const defineRibbonSection = definer('office-ui-ribbon-section', () => OfficeUiRibbonSection);
+export const defineRibbonSection = definer(
+	'office-ui-ribbon-section',
+	() => OfficeUiRibbonSection,
+	[defineRibbonGroup, defineButton],
+);

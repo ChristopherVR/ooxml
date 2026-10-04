@@ -1,5 +1,6 @@
 import { html, unsafeStatic } from 'lit/static-html.js';
 import { OfficeElement, controlStyles, flag } from '../base.js';
+import { defineCheckbox } from '../form/checkbox.js';
 import { definer, present } from '../registry.js';
 import css from './ribbon-toggle.css?raw';
 
@@ -82,4 +83,6 @@ export class OfficeUiRibbonToggle extends OfficeElement {
 	}
 }
 
-export const defineRibbonToggle = definer('office-ui-ribbon-toggle', () => OfficeUiRibbonToggle);
+export const defineRibbonToggle = definer('office-ui-ribbon-toggle', () => OfficeUiRibbonToggle, [
+	defineCheckbox,
+]);

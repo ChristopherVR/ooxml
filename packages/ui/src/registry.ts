@@ -37,10 +37,20 @@ export function browserRegistry(): CustomElementRegistry | undefined {
 	return typeof window === 'undefined' ? undefined : window.customElements;
 }
 
-/** Wrap a per-tag `make` factory into a public, SSR-safe, idempotent definer. */
-export function definer(tag: string, make: () => CustomElementConstructor): Definer {
+/**
+ * Wrap a per-tag `make` factory into a public, SSR-safe, idempotent definer. `requires` are the
+ * elements this one renders inside its own template; defining the composite defines them first, so
+ * a product that registers only the element it uses never gets a silently inert inner control.
+ */
+export function definer(
+	tag: string,
+	make: () => CustomElementConstructor,
+	requires: readonly Definer[] = [],
+): Definer {
 	const define = (registry: CustomElementRegistry | undefined = browserRegistry()): void => {
-		if (registry) defineOnce(registry, tag, make);
+		if (!registry) return;
+		for (const dependency of requires) dependency(registry);
+		defineOnce(registry, tag, make);
 	};
 	return Object.assign(define, { tag });
 }

@@ -1,6 +1,7 @@
 import { html, type PropertyValues, type TemplateResult } from 'lit';
 import { ifDefined } from 'lit/directives/if-defined.js';
 import { OfficeElement, controlStyles, flag } from '../base.js';
+import { defineDialog } from './dialog.js';
 import { definer, present } from '../registry.js';
 import css from './options-dialog.css?raw';
 
@@ -287,4 +288,8 @@ export class OfficeUiOptionsDialog extends OfficeElement {
 	}
 }
 
-export const defineOptionsDialog = definer('office-ui-options-dialog', () => OfficeUiOptionsDialog);
+export const defineOptionsDialog = definer(
+	'office-ui-options-dialog',
+	() => OfficeUiOptionsDialog,
+	[defineDialog],
+);
