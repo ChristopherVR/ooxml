@@ -20,7 +20,9 @@ interface RibbonTab {
  * optionally `data-tab-keytip`; the element builds the tabs from them, keeps exactly one panel
  * visible and moves between tabs with the arrow keys, Home and End. Slots: `quick-access`,
  * `search`, `end`. Attributes: `selected`, `label` (tab list name), `file-label` (default "File"),
- * `no-file`, `file-expanded`, `file-keytip`. Events: `office-ribbon-select` `{ tab }`
+ * `no-file`, `file-expanded`, `file-keytip`. A panel with `data-tab-hidden` keeps its content but has
+ * no tab (a contextual tab, or one a customisation removed); if it was selected, the first
+ * remaining tab takes over. Events: `office-ribbon-select` `{ tab }`
  * (cancelable) and `office-ribbon-file` when File is activated.
  */
 export class OfficeUiRibbon extends OfficeElement {
@@ -54,7 +56,9 @@ export class OfficeUiRibbon extends OfficeElement {
 	}
 
 	get selected(): string {
-		return this.chosen ?? this.panels()[0]?.dataset.ribbonTab ?? '';
+		const shown = this.shown();
+		const chosen = shown.find((panel) => panel.dataset.ribbonTab === this.chosen);
+		return chosen?.dataset.ribbonTab ?? shown[0]?.dataset.ribbonTab ?? '';
 	}
 	set selected(tab: string | null) {
 		this.chosen = tab;
@@ -78,9 +82,14 @@ export class OfficeUiRibbon extends OfficeElement {
 		);
 	}
 
+	/** The panels that have a tab: those not marked `data-tab-hidden`. */
+	private shown(): HTMLElement[] {
+		return this.panels().filter((panel) => panel.dataset.tabHidden === undefined);
+	}
+
 	/** Read the tabs off the panels (on connection and whenever the slotted panels change). */
 	private build(): void {
-		this.tabs = this.panels().map((panel) => {
+		this.tabs = this.shown().map((panel) => {
 			const id = panel.dataset.ribbonTab!;
 			panel.setAttribute('role', 'tabpanel');
 			panel.setAttribute('aria-label', panel.dataset.label ?? id);
@@ -129,9 +138,25 @@ export class OfficeUiRibbon extends OfficeElement {
 		this.focusTab();
 	}
 
+	/** Rebuild the tab row when a panel's label or visibility flag changes. */
+	private watcher: MutationObserver | undefined;
+
 	override connectedCallback(): void {
 		this.build();
 		super.connectedCallback();
+		const Observer = this.ownerDocument.defaultView?.MutationObserver;
+		this.watcher = Observer ? new Observer(() => this.build()) : undefined;
+		this.watcher?.observe(this, {
+			attributes: true,
+			subtree: true,
+			attributeFilter: ['data-tab-hidden', 'data-label'],
+		});
+	}
+
+	override disconnectedCallback(): void {
+		super.disconnectedCallback();
+		this.watcher?.disconnect();
+		this.watcher = undefined;
 	}
 
 	/** Exactly one panel shows. */

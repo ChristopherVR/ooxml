@@ -82,6 +82,23 @@ describe('office-ui-ribbon', () => {
 		});
 	});
 
+	it('leaves out the tab of a panel marked data-tab-hidden and falls back when it was selected', async () => {
+		const { el, tabs } = ribbon();
+		el.selected = 'view';
+		await Promise.resolve();
+		const view = el.querySelector<HTMLElement>('#view-panel')!;
+		view.dataset.tabHidden = '';
+		await new Promise((resolve) => setTimeout(resolve, 0));
+		await Promise.resolve();
+		expect(tabs().map((tab) => tab.textContent)).toEqual(['Home']);
+		expect(el.selected).toBe('home');
+		expect(el.querySelector<HTMLElement>('#home-panel')!.hidden).toBe(false);
+		delete view.dataset.tabHidden;
+		await new Promise((resolve) => setTimeout(resolve, 0));
+		await Promise.resolve();
+		expect(tabs().map((tab) => tab.textContent)).toEqual(['Home', 'View']);
+	});
+
 	it('has a File button that reports activation and expansion', () => {
 		const { el, file } = ribbon();
 		const opened = vi.fn();
