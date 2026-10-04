@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.20.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.20.0) - 2026-10-04
+
+### Features
+
+- **ui:** Add the shared office-ui-gallery (by @ChristopherVR) ([720030d](https://github.com/ChristopherVR/ooxml/commit/720030d9ffbb9b0e45a6f1f96ed6739c4645dbd2))
+
 ## [0.19.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.19.0) - 2026-10-04
 
 ### Features
