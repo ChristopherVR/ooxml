@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.16.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.16.0) - 2026-10-04
+
+### Features
+
+- **ui:** Merge the controlled pptx context menu and load from require (by @ChristopherVR) ([213083b](https://github.com/ChristopherVR/ooxml/commit/213083bb83bff467445f920057053c606add99e7))
+
 ## [0.15.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.15.0) - 2026-10-03
 
 ### Features
