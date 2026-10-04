@@ -12,7 +12,9 @@ const finite = (value: number, fallback: number) => (Number.isFinite(value) ? va
  * Office status-bar zoom: zoom out, slider, zoom in, percentage and an optional fit button.
  * Attributes: `value` (percent, default 100), `min` (10), `max` (400), `step` (10, for the
  * buttons), `disabled`, `fit` (shows the fit button; its value is the button's name, e.g.
- * "Fit page to current window"), `label` (group name, default "Zoom").
+ * "Fit page to current window"), `label` (group name, default "Zoom"). `out-label`, `in-label` and
+ * `slider-label` name the zoom-out button, zoom-in button and slider (English by default), so a
+ * product can translate them.
  * User changes emit native `input` (slider drag) and `change` events with `value` updated;
  * the fit button emits `office-command` `{ command: 'zoom-fit' }`. Setting `value` never emits.
  */
@@ -27,6 +29,9 @@ export class OfficeUiZoomSlider extends OfficeElement {
 		disabled: flag,
 		fit: { type: String, reflect: true },
 		label: { type: String },
+		outLabel: { type: String, attribute: 'out-label' },
+		inLabel: { type: String, attribute: 'in-label' },
+		sliderLabel: { type: String, attribute: 'slider-label' },
 	};
 	declare min: number;
 	declare max: number;
@@ -34,6 +39,9 @@ export class OfficeUiZoomSlider extends OfficeElement {
 	declare disabled: boolean;
 	declare fit: string | null;
 	declare label: string | null;
+	declare outLabel: string | null;
+	declare inLabel: string | null;
+	declare sliderLabel: string | null;
 	private requested = 100;
 
 	constructor() {
@@ -44,6 +52,9 @@ export class OfficeUiZoomSlider extends OfficeElement {
 		this.disabled = false;
 		this.fit = null;
 		this.label = null;
+		this.outLabel = null;
+		this.inLabel = null;
+		this.sliderLabel = null;
 	}
 
 	get value(): number {
@@ -92,18 +103,20 @@ export class OfficeUiZoomSlider extends OfficeElement {
 		const { value } = this;
 		const disabled = present(this.disabled);
 		const fit = this.fit || 'Fit';
+		const out = this.outLabel || 'Zoom out';
+		const inn = this.inLabel || 'Zoom in';
 		return html`
 			<button
 				type="button"
-				aria-label="Zoom out"
-				title="Zoom out"
+				aria-label=${out}
+				title=${out}
 				?disabled=${disabled || value <= this.low}
 				@click=${() => this.stepBy(-1)}
 				>−</button
 			>
 			<input
 				type="range"
-				aria-label="Zoom"
+				aria-label=${this.sliderLabel || 'Zoom'}
 				aria-valuetext="${value}%"
 				min=${this.low}
 				max=${this.high}
@@ -115,8 +128,8 @@ export class OfficeUiZoomSlider extends OfficeElement {
 			/>
 			<button
 				type="button"
-				aria-label="Zoom in"
-				title="Zoom in"
+				aria-label=${inn}
+				title=${inn}
 				?disabled=${disabled || value >= this.high}
 				@click=${() => this.stepBy(1)}
 				>+</button

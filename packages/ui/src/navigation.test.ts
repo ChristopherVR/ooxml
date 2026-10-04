@@ -26,6 +26,18 @@ describe('office-ui-zoom-slider', () => {
 		expect(el.getAttribute('role')).toBe('group');
 	});
 
+	it('takes translated names for its buttons and slider', () => {
+		const el = make<Slider>(
+			'<office-ui-zoom-slider out-label="Zoom arriere" in-label="Zoom avant" slider-label="Niveau"></office-ui-zoom-slider>',
+		);
+		const root = el.shadowRoot!;
+		expect(root.querySelector('button[aria-label="Zoom arriere"]')).not.toBeNull();
+		expect(root.querySelector('button[aria-label="Zoom avant"]')?.getAttribute('title')).toBe(
+			'Zoom avant',
+		);
+		expect(root.querySelector('input')!.getAttribute('aria-label')).toBe('Niveau');
+	});
+
 	it('steps to the next multiple like Office and emits input then change', () => {
 		const el = make<Slider>('<office-ui-zoom-slider value="67"></office-ui-zoom-slider>');
 		const events: string[] = [];
