@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.18.2](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.18.2) - 2026-10-04
+
+### Bug Fixes
+
+- **ui:** Keep unchanged icon paths so a pressed button still clicks (by @ChristopherVR) ([aa9a613](https://github.com/ChristopherVR/ooxml/commit/aa9a6135067a7889464a0236763e9a566757187c))
+
 ## [0.18.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.18.1) - 2026-10-04
 
 ### Bug Fixes
