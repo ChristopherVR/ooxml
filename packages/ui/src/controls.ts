@@ -7,6 +7,7 @@ import { defineBackstage } from './backstage.js';
 import { defineFindBar } from './find-bar.js';
 import { definePrintPreview } from './print-preview.js';
 import { defineRibbon } from './ribbon-tabs.js';
+import { defineRibbonSection } from './ribbon-section.js';
 import { defineRuler } from './ruler.js';
 import { defineAccount } from './account.js';
 import { defineButton } from './button.js';
@@ -49,6 +50,7 @@ export {
 	defineMenuSeparator,
 	defineOptionsDialog,
 	defineRibbonGroup,
+	defineRibbonSection,
 	defineRibbonStack,
 	defineSelect,
 	defineStatusBar,
@@ -90,6 +92,7 @@ export type {
 export type { OfficeFindInputEvent, OfficeFindStepEvent } from './find-bar.js';
 export type { OfficePrintPreviewPageEvent } from './print-preview.js';
 export type { OfficeRibbonSelectEvent } from './ribbon-tabs.js';
+export type { OfficeRibbonCommandView, OfficeRibbonGroupView } from './ribbon-section.js';
 export { rulerDivisions } from './ruler.js';
 export {
 	clampFlyoutPosition,
@@ -173,6 +176,7 @@ export const CONTROL_DEFINERS = [
 	defineReadOnlyBanner,
 	definePasteOptions,
 	defineTitleBar,
+	defineRibbonSection,
 ] as const;
 
 /** Idempotent, SSR-safe (no-op without a DOM). */

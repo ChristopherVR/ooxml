@@ -45,6 +45,7 @@ export const OFFICE_UI_TAGS = [
 	'office-ui-read-only-banner',
 	'office-ui-paste-options',
 	'office-ui-title-bar',
+	'office-ui-ribbon-section',
 	'office-ui-presence',
 	'office-ui-smartart',
 ] as const;
