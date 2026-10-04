@@ -74,6 +74,16 @@ export type { OfficePrintPreviewPageEvent } from './print-preview.js';
 export type { OfficeRibbonSelectEvent } from './ribbon-tabs.js';
 export { rulerDivisions } from './ruler.js';
 export {
+	clampFlyoutPosition,
+	EMPTY_MENU_STATE,
+	nextEnabledIndex,
+	typeAheadIndex,
+	type FlyoutPositionInput,
+	type OfficeMenuCloseReason,
+	type OfficeMenuItem,
+	type OfficeMenuState,
+} from './menu-model.js';
+export {
 	OFFICE_TOAST_VISIBLE_LIMIT,
 	type OfficeDialogFooterAction,
 	type OfficeDialogFooterState,

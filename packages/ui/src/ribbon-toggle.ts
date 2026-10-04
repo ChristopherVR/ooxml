@@ -24,6 +24,8 @@ export const defineRibbonToggle = definer('office-ui-ribbon-toggle', () => {
 		static requestEvent = 'office-toggle';
 		static idAttribute = 'command';
 		static detailKey = 'command';
+		/** The checkbox drawn inside; a product subclass may use its own aliased tag. */
+		static checkboxTag = 'office-ui-checkbox';
 		static get observedAttributes(): string[] {
 			return ['label', 'checked', 'disabled', 'title'];
 		}
@@ -35,7 +37,9 @@ export const defineRibbonToggle = definer('office-ui-ribbon-toggle', () => {
 			const root = this.attachShadow({ mode: 'open' });
 			attachStyles(root, controlCss(CSS));
 			const label = doc.createElement('label');
-			this.checkbox = doc.createElement('office-ui-checkbox') as typeof this.checkbox;
+			this.checkbox = doc.createElement(
+				(this.constructor as unknown as { checkboxTag: string }).checkboxTag,
+			) as typeof this.checkbox;
 			this.text = doc.createTextNode('');
 			label.append(this.checkbox, this.text);
 			label.addEventListener('click', (event) => {

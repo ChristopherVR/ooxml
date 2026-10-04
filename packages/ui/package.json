@@ -35,27 +35,33 @@
 	"exports": {
 		".": {
 			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js"
+			"import": "./dist/index.js",
+			"default": "./dist/index.js"
 		},
 		"./theme": {
 			"types": "./dist/theme.d.ts",
-			"import": "./dist/theme.js"
+			"import": "./dist/theme.js",
+			"default": "./dist/theme.js"
 		},
 		"./icons": {
 			"types": "./dist/icons.d.ts",
-			"import": "./dist/icons.js"
+			"import": "./dist/icons.js",
+			"default": "./dist/icons.js"
 		},
 		"./controls": {
 			"types": "./dist/controls.d.ts",
-			"import": "./dist/controls.js"
+			"import": "./dist/controls.js",
+			"default": "./dist/controls.js"
 		},
 		"./presence": {
 			"types": "./dist/presence.d.ts",
-			"import": "./dist/presence.js"
+			"import": "./dist/presence.js",
+			"default": "./dist/presence.js"
 		},
 		"./smartart": {
 			"types": "./dist/smartart.d.ts",
-			"import": "./dist/smartart.js"
+			"import": "./dist/smartart.js",
+			"default": "./dist/smartart.js"
 		},
 		"./package.json": "./package.json"
 	},
