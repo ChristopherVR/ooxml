@@ -13,7 +13,7 @@
 	"type": "module",
 	"dependencies": {
 		"@christophervr/xlsx-core": "workspace:*",
-		"ooxml-core": "^0.14.1",
-		"ooxml-ui": "^0.20.0"
+		"ooxml-core": "^0.15.0",
+		"ooxml-ui": "^0.21.0"
 	}
 }
