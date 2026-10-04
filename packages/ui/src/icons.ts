@@ -116,11 +116,21 @@ export function createIconSvg(doc: Document): SVGSVGElement {
 /** Fill an `<svg>` with a registered icon (empty when unknown). Used by every control. */
 export function paintIcon(svg: SVGElement, name: string | null | undefined): boolean {
 	const icon = getIcon(name);
-	svg.setAttribute('viewBox', icon?.viewBox ?? '0 0 20 20');
+	const d = icon?.d ?? '';
+	const viewBox = icon?.viewBox ?? '0 0 20 20';
+	// Leave an unchanged glyph alone: replacing the path under a pressed pointer makes the
+	// browser drop the click, and controlled controls repaint on every state update.
+	const current = svg.firstElementChild;
+	if (
+		svg.getAttribute('viewBox') === viewBox &&
+		(icon ? svg.childElementCount === 1 && current?.getAttribute('d') === d : !current)
+	)
+		return Boolean(icon);
+	svg.setAttribute('viewBox', viewBox);
 	svg.replaceChildren();
 	if (!icon) return false;
 	const path = svg.ownerDocument.createElementNS(SVG_NS, 'path');
-	path.setAttribute('d', icon.d);
+	path.setAttribute('d', d);
 	svg.append(path);
 	return true;
 }

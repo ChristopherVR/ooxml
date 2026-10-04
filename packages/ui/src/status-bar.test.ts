@@ -65,6 +65,14 @@ describe('office-ui-status-bar (controlled)', () => {
 		expect(bar.shadowRoot!.querySelector<HTMLElement>('.toggles')!.hidden).toBe(true);
 	});
 
+	it('keeps glyph nodes across updates so a pressed pointer still clicks', () => {
+		const bar = make();
+		const path = button(bar, 'Zoom in').querySelector('path');
+		bar.state = { ...STATE, zoom: { ...STATE.zoom!, percent: 120 } };
+		expect(button(bar, 'Zoom in').querySelector('path')).toBe(path);
+		expect(button(bar, 'Normal').querySelector('path')).not.toBeNull();
+	});
+
 	it('emits one activation per click and keeps Enter and Space inside', () => {
 		const bar = make();
 		const seen = vi.fn();
