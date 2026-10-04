@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.18.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.18.0) - 2026-10-04
+
+### Features
+
+- **ui:** Add a controlled mode to office-ui-status-bar (by @ChristopherVR) ([cd96bb5](https://github.com/ChristopherVR/ooxml/commit/cd96bb55d407d2f5b8d95b80bda36ee33f68c005))
+
 ## [0.17.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.17.0) - 2026-10-04
 
 ### Features
