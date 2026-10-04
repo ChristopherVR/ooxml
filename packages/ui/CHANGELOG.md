@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.16.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.16.1) - 2026-10-04
+
+### Bug Fixes
+
+- **ui:** Keep internal fields out of framework property assignment (by @ChristopherVR) ([f66b5aa](https://github.com/ChristopherVR/ooxml/commit/f66b5aa7ef381144a64f67dd076df78faa83e1c8))
+
 ## [0.16.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.16.0) - 2026-10-04
 
 ### Features
