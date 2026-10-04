@@ -54,6 +54,13 @@ from `@christophervr/ooxml-core` and `@christophervr/office-ui` to the unscoped
 `ooxml-ui@<version>`). The `office-ui-*` custom element tags and the
 `office-ui.web-control-contract` symbol are public API and keep their names.
 
+Viewers follow this package's releases automatically: each one calls the reusable
+`.github/workflows/sync-ooxml.yml` on a schedule, which moves its `ooxml-core` and `ooxml-ui` ranges to
+the latest release, runs the viewer's own checks and pushes one `build(deps)` commit (or opens an issue
+when the checks fail). From a viewer's root, `node <ooxml checkout>/scripts/sync-ooxml-deps.mjs --check` shows whether
+it is behind. A breaking change here therefore reaches every viewer within hours; make it deliberately and
+note it in the commit.
+
 The viewers depend on the **published** version of this package. To try a
 change in a viewer before it is released, build here (`bun run build`), point
 the viewer's core package at this checkout with a `file:` dependency, run

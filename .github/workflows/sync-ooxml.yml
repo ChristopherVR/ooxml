@@ -1,0 +1,98 @@
+name: Sync ooxml packages
+
+# Reusable workflow: keeps a viewer repository on the latest `ooxml-core` and `ooxml-ui`.
+# The viewers own only UI and bindings, so they must follow this repository's releases; doing it by
+# hand is how they drift. A viewer calls this from a short scheduled workflow:
+#
+#   jobs:
+#     sync:
+#       uses: ChristopherVR/ooxml/.github/workflows/sync-ooxml.yml@main
+#       permissions: { contents: write, issues: write }
+#       with: { verify-command: 'bun run typecheck && bun run test' }
+#
+# It rewrites the manifests (scripts/sync-ooxml-deps.mjs), installs, runs `verify-command`, and
+# pushes one `build(deps)` commit to main when everything passes. When verification fails it pushes
+# nothing and opens (or comments on) one issue, so a breaking release is seen instead of silently
+# left behind.
+
+on:
+  workflow_call:
+    inputs:
+      verify-command:
+        description: 'Shell command that must pass before the bump is pushed'
+        type: string
+        default: 'bun run typecheck && bun run test'
+      install-command:
+        description: 'Command that refreshes the lockfile after the manifests change'
+        type: string
+        default: 'bun install'
+      bun-version:
+        type: string
+        default: '1.3.5'
+      node-version:
+        type: string
+        default: '24'
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+      - uses: actions/checkout@v7
+        with:
+          repository: ChristopherVR/ooxml
+          ref: main
+          path: .ooxml-tooling
+          sparse-checkout: scripts/sync-ooxml-deps.mjs
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ inputs.node-version }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ inputs.bun-version }}
+
+      - name: Move manifests to the latest releases
+        id: bump
+        run: node .ooxml-tooling/scripts/sync-ooxml-deps.mjs
+
+      - name: Install
+        if: steps.bump.outputs.changed == 'true'
+        run: ${{ inputs.install-command }}
+
+      - name: Verify
+        id: verify
+        if: steps.bump.outputs.changed == 'true'
+        run: ${{ inputs.verify-command }}
+
+      - name: Push the bump
+        if: steps.bump.outputs.changed == 'true' && steps.verify.outcome == 'success'
+        env:
+          SUMMARY: ${{ steps.bump.outputs.summary }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A -- ':!.ooxml-tooling'
+          git commit -m "build(deps): adopt $SUMMARY"
+          git pull --rebase origin main
+          git push origin HEAD:main
+
+      - name: Report a failed bump
+        if: failure() && steps.bump.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUMMARY: ${{ steps.bump.outputs.summary }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="Adopting $SUMMARY fails verification"
+          body="Bumping to $SUMMARY did not pass the repository checks, so nothing was pushed. Run: $RUN_URL"
+          existing=$(gh issue list --state open --search "in:title Adopting" --json number,title \
+            --jq "map(select(.title == \"$title\"))[0].number // empty")
+          if [ -n "$existing" ]; then gh issue comment "$existing" --body "$body"
+          else gh issue create --title "$title" --body "$body"; fi
