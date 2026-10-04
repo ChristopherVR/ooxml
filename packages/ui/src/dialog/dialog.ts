@@ -24,10 +24,13 @@ export class OfficeUiDialog extends OfficeElement {
 		open: flag,
 		heading: { type: String },
 		dismissible: { type: String },
+		closeLabel: { type: String, attribute: 'close-label' },
 	};
 	declare open: boolean;
 	declare heading: string;
 	declare dismissible: string | null;
+	/** Name of the close button (English by default), so a product can translate it. */
+	declare closeLabel: string | null;
 	private returnFocus: Element | null = null;
 
 	constructor() {
@@ -35,6 +38,7 @@ export class OfficeUiDialog extends OfficeElement {
 		this.open = false;
 		this.heading = '';
 		this.dismissible = null;
+		this.closeLabel = null;
 		this.addEventListener('keydown', (event) => this.onKey(event));
 	}
 
@@ -115,7 +119,7 @@ export class OfficeUiDialog extends OfficeElement {
 					<button
 						class="close"
 						type="button"
-						aria-label="Close"
+						aria-label=${this.closeLabel || 'Close'}
 						@click=${() => this.requestClose('close-button')}
 						>${glyph('close', 'icon')}</button
 					>

@@ -46,6 +46,11 @@ describe('office-ui-dialog', () => {
 		expect(labelled.textContent).toBe('Page setup');
 	});
 
+	it('takes a translated name for its close button', () => {
+		const { dialog } = mount('close-label="Fermer"');
+		expect(dialog.shadowRoot!.querySelector('.close')!.getAttribute('aria-label')).toBe('Fermer');
+	});
+
 	it('moves focus in on open and restores it on close', () => {
 		const { dialog, opener } = mount();
 		dialog.show();
