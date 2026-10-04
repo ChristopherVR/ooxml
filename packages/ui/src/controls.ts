@@ -8,6 +8,7 @@ import { defineFindBar } from './find-bar.js';
 import { definePrintPreview } from './print-preview.js';
 import { defineRibbon } from './ribbon-tabs.js';
 import { defineRibbonSection } from './ribbon-section.js';
+import { defineGallery } from './gallery.js';
 import { defineRuler } from './ruler.js';
 import { defineAccount } from './account.js';
 import { defineButton } from './button.js';
@@ -36,6 +37,7 @@ export {
 	defineToasts,
 	defineBackstage,
 	defineFindBar,
+	defineGallery,
 	definePrintPreview,
 	defineRibbon,
 	defineRuler,
@@ -93,6 +95,13 @@ export type { OfficeFindInputEvent, OfficeFindStepEvent } from './find-bar.js';
 export type { OfficePrintPreviewPageEvent } from './print-preview.js';
 export type { OfficeRibbonSelectEvent } from './ribbon-tabs.js';
 export type { OfficeRibbonCommandView, OfficeRibbonGroupView } from './ribbon-section.js';
+export {
+	parseSvgPreview,
+	type OfficeGalleryItem,
+	type OfficeGalleryPickEvent,
+	type OfficeGallerySection,
+	type OfficeGalleryState,
+} from './gallery.js';
 export { rulerDivisions } from './ruler.js';
 export {
 	clampFlyoutPosition,
@@ -177,6 +186,7 @@ export const CONTROL_DEFINERS = [
 	definePasteOptions,
 	defineTitleBar,
 	defineRibbonSection,
+	defineGallery,
 ] as const;
 
 /** Idempotent, SSR-safe (no-op without a DOM). */

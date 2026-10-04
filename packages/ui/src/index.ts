@@ -46,6 +46,7 @@ export const OFFICE_UI_TAGS = [
 	'office-ui-paste-options',
 	'office-ui-title-bar',
 	'office-ui-ribbon-section',
+	'office-ui-gallery',
 	'office-ui-presence',
 	'office-ui-smartart',
 ] as const;

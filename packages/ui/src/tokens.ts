@@ -215,6 +215,15 @@ export const OFFICE_TOKENS = {
 	'--office-avatar-color': 'var(--office-muted-foreground, #6b7280)',
 	'--office-toast-width': '360px',
 	'--office-account-field-width': '320px',
+	// Component: galleries
+	'--office-gallery-trigger-height': '24px',
+	'--office-gallery-strip-background':
+		'color-mix(in srgb, var(--office-surface, #f3f4f6) 30%, transparent)',
+	'--office-gallery-command-min-width': '54px',
+	'--office-gallery-command-max-width': '78px',
+	'--office-gallery-command-height': '58px',
+	'--office-gallery-command-icon': '24px',
+	'--office-gallery-popup-max-height': '65vh',
 	// Component: title bar
 	'--office-title-bar-height': '36px',
 	'--office-title-bar-below-height': '28px',
