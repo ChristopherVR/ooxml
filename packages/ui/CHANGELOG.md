@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.17.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.17.0) - 2026-10-04
+
+### Features
+
+- **ui:** Add the shared office-ui-title-bar (by @ChristopherVR) ([f0468b5](https://github.com/ChristopherVR/ooxml/commit/f0468b5e09291780b3b76246b468a86540bb8a51))
+
 ## [0.16.3](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.16.3) - 2026-10-04
 
 ### Bug Fixes
