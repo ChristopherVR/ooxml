@@ -21,6 +21,7 @@ import { defineRibbonGroup, defineRibbonStack, defineToolbar } from './ribbon.js
 import { defineSelect } from './select.js';
 import { defineStatusBar, defineStatusItem } from './status-bar.js';
 import { defineTabStrip } from './tab-strip.js';
+import { defineTitleBar } from './title-bar.js';
 import { defineZoomSlider } from './zoom-slider.js';
 
 export {
@@ -54,6 +55,7 @@ export {
 	defineStatusItem,
 	defineSwitch,
 	defineTabStrip,
+	defineTitleBar,
 	defineToolbar,
 	defineZoomSlider,
 };
@@ -63,6 +65,17 @@ export type { OfficeSelectOption } from './select.js';
 export type { OfficeStatusActivateEvent } from './status-bar.js';
 export type { OfficeTab, OfficeTabSelectEvent } from './tab-strip.js';
 export type { OfficeSearchCommand } from './command-search.js';
+export {
+	OFFICE_TITLE_BAR_SEARCH_LIMIT,
+	type OfficeQuickAccessItem,
+	type OfficeTitleBarAutosave,
+	type OfficeTitleBarCommand,
+	type OfficeTitleBarPlacement,
+	type OfficeTitleBarSearch,
+	type OfficeTitleBarSearchDetail,
+	type OfficeTitleBarState,
+	type OfficeTitleBarTone,
+} from './title-bar.js';
 export { attachKeyTips, type KeyTipsHandle } from './keytips.js';
 export type {
 	OfficeBackstageCloseEvent,
@@ -154,6 +167,7 @@ export const CONTROL_DEFINERS = [
 	defineToasts,
 	defineReadOnlyBanner,
 	definePasteOptions,
+	defineTitleBar,
 ] as const;
 
 /** Idempotent, SSR-safe (no-op without a DOM). */

@@ -32,6 +32,7 @@ const BUILT_IN: Readonly<Record<string, string>> = {
 	reset: 'M4 10a6 6 0 1 1 1.8 4.2M4 6v4h4',
 	search: 'M3 8.5a5.5 5.5 0 1 0 11 0 5.5 5.5 0 1 0-11 0M13 13l4 4',
 	undo: 'M7.5 11.5 3.5 7.5l4-4M3.5 7.5h9a4 4 0 0 1 0 8H10',
+	save: 'M3.5 3h10.5l2.5 2.5V17h-13ZM6 3v5h7V3M6 17v-5.5h8V17',
 	redo: 'm12.5 11.5 4-4-4-4M16.5 7.5h-9a4 4 0 0 0 0 8H10',
 	pointer: 'm5 2.5v13.5l3.6-3.6 2.4 5.1 2.1-1-2.4-5H15.5Z',
 	rectangle: 'M3 5.5h14v9H3Z',

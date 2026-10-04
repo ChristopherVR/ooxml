@@ -215,6 +215,19 @@ export const OFFICE_TOKENS = {
 	'--office-avatar-color': 'var(--office-muted-foreground, #6b7280)',
 	'--office-toast-width': '360px',
 	'--office-account-field-width': '320px',
+	// Component: title bar
+	'--office-title-bar-height': '36px',
+	'--office-title-bar-below-height': '28px',
+	'--office-title-bar-background': 'var(--office-surface, #f3f4f6)',
+	'--office-title-bar-foreground': 'var(--office-foreground, #1f2937)',
+	'--office-title-bar-border': 'var(--office-border, #d1d5db)',
+	'--office-title-bar-mark-size': '20px',
+	'--office-title-bar-mark-background': 'var(--office-accent, #2563eb)',
+	'--office-title-bar-mark-foreground': 'var(--office-accent-foreground, #ffffff)',
+	'--office-title-bar-name-max-width': '240px',
+	'--office-title-bar-name-max-width-narrow': '140px',
+	'--office-title-bar-search-max-width': '448px',
+	'--office-title-bar-results-max-height': '256px',
 } as const;
 
 export type OfficeToken = keyof typeof OFFICE_TOKENS;
