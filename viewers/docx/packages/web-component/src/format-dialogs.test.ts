@@ -8,6 +8,9 @@ import { applyParagraphFormat, readParagraphFormat } from './paragraph-format';
 import { createRibbon } from './ribbon';
 import { runStylesPlugin } from './run-styles';
 import { schema } from './schema';
+import { isDialogOpen } from './dialog-shell';
+
+const headingOf = (element: HTMLElement) => (element as HTMLElement & { heading: string }).heading;
 
 afterEach(() => (document.body.innerHTML = ''));
 
@@ -133,7 +136,7 @@ describe('Paragraph dialog', () => {
 		const { view, dialogs } = setup({ indentLeftTwips: 720, spacingAfterTwips: 200 });
 		dialogs.open('paragraph');
 		const root = dialogs.elements[1]!;
-		expect(root.hidden).toBe(false);
+		expect(isDialogOpen(root)).toBe(true);
 		expect(field(root, 'Left').value).toBe('0.5');
 		expect(field(root, 'After').value).toBe('10');
 		field(root, 'Alignment').value = 'center';
@@ -141,7 +144,7 @@ describe('Paragraph dialog', () => {
 		field(root, 'Keep with next').checked = true;
 		fire(field(root, 'Keep with next'), 'change');
 		ok(root);
-		expect(root.hidden).toBe(true);
+		expect(isDialogOpen(root)).toBe(false);
 		expect(view.state.doc.firstChild!.attrs).toMatchObject({
 			align: 'center',
 			keepNext: true,
@@ -172,7 +175,7 @@ describe('Paragraph dialog', () => {
 		field(root, 'Alignment').value = 'right';
 		fire(field(root, 'Alignment'), 'change');
 		root.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-		expect(root.hidden).toBe(true);
+		expect(isDialogOpen(root)).toBe(false);
 		expect(view.state.doc.firstChild!.attrs.align).toBeNull();
 	});
 });
@@ -273,9 +276,9 @@ describe('dialog launchers', () => {
 		dialogs.open('font');
 		dialogs.open('paragraph');
 		expect(dialogs.list.filter((dialog) => dialog.isOpen)).toHaveLength(1);
-		expect(dialogs.elements[1]!.hidden).toBe(false);
+		expect(isDialogOpen(dialogs.elements[1]!)).toBe(true);
 		dialogs.closeAll();
-		expect(dialogs.elements.every((element) => element.hidden)).toBe(true);
+		expect(dialogs.elements.every((element) => !isDialogOpen(element))).toBe(true);
 	});
 });
 
@@ -285,14 +288,14 @@ describe('dialog localization and DOM hygiene', () => {
 		dialogs.setLocale('fr');
 		dialogs.open('paragraph');
 		const root = dialogs.elements[1]!;
-		expect(root.querySelector('h2')!.textContent).toBe('Paragraphe');
+		expect(headingOf(root)).toBe('Paragraphe');
 		expect(
 			root.querySelector('[data-localearialabel="Keep with next"]')!.getAttribute('aria-label'),
 		).toBe('Paragraphes solidaires');
 		dialogs.closeAll();
 		dialogs.setLocale('de');
 		dialogs.open('font');
-		expect(dialogs.elements[0]!.querySelector('h2')!.textContent).toBe('Schriftart');
+		expect(headingOf(dialogs.elements[0]!)).toBe('Schriftart');
 	});
 
 	it('keeps no fields in the document while closed, so names never collide', () => {

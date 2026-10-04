@@ -13,6 +13,7 @@ import {
 import { FormatDialogs } from './format-dialogs';
 import { createRibbon } from './ribbon';
 import { schema } from './schema';
+import { isDialogOpen } from './dialog-shell';
 
 beforeAll(() => {
 	const rects = { length: 0, item: () => null, [Symbol.iterator]: function* () {} };
@@ -125,7 +126,7 @@ describe('Bookmark dialog', () => {
 		name.dispatchEvent(new Event('input'));
 		expect(button(root, 'Add').disabled).toBe(false);
 		button(root, 'Add').click();
-		expect(root.hidden).toBe(true);
+		expect(isDialogOpen(root)).toBe(false);
 		expect(marks(view, 0)).toEqual(['Intro']);
 	});
 
@@ -151,7 +152,7 @@ describe('Bookmark dialog', () => {
 		expect(button(root, 'Delete').disabled).toBe(false);
 		button(root, 'Delete').click();
 		expect(marks(view, 0)).toEqual(['Alpha']);
-		expect(root.hidden).toBe(false);
+		expect(isDialogOpen(root)).toBe(true);
 	});
 
 	it('keeps no fields in the document while closed', () => {

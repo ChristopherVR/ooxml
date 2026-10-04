@@ -166,10 +166,7 @@
 
 /* Font and Paragraph dialogs */
 .dve-format-dialog {
-	top: 90px;
-	width: min(520px, calc(100% - 32px));
-	max-height: calc(100% - 120px);
-	overflow-y: auto;
+	--office-dialog-width: min(520px, calc(100vw - 32px));
 }
 .dve-format-dialog .dve-dialog-fieldset {
 	display: grid;

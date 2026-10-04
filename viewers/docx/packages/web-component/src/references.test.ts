@@ -8,6 +8,7 @@ import { insertCrossReference, referenceTargets } from './cross-reference-comman
 import { FormatDialogs } from './format-dialogs';
 import { createRibbon } from './ribbon';
 import { schema } from './schema';
+import { isDialogOpen } from './dialog-shell';
 
 beforeAll(() => {
 	const rects = { length: 0, item: () => null, [Symbol.iterator]: function* () {} };
@@ -250,10 +251,10 @@ describe('caption and cross-reference dialogs', () => {
 		kind.dispatchEvent(new Event('change'));
 		caretIn(view, 1);
 		button(root, 'Insert').click();
-		expect(dialogs.elements[4]!.hidden).toBe(false);
+		expect(isDialogOpen(dialogs.elements[4]!)).toBe(true);
 		expect(view.state.doc.child(1).textContent).toContain('Intro');
 		button(root, 'Close').click();
-		expect(dialogs.elements[4]!.hidden).toBe(true);
+		expect(isDialogOpen(dialogs.elements[4]!)).toBe(false);
 	});
 
 	it('has ribbon buttons for both on the References tab', () => {

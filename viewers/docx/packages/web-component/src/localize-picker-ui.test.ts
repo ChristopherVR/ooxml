@@ -70,6 +70,6 @@ describe('pickers follow the display language', () => {
 		expect(text).toContain('Page entière');
 		expect(text).toContain('Deux pages');
 		expect(text).toContain('Aperçu');
-		expect(dialog.element.getAttribute('aria-label')).toBe('Paramètres de zoom');
+		expect((dialog.element as HTMLElement & { heading: string }).heading).toBe('Zoom');
 	});
 });

@@ -3,7 +3,7 @@ import { checkbox, dialogButton, fieldset, labelled, row, selectOf } from './dia
 import { readCellFill } from './table-shading';
 import { focusView } from './focus-view';
 import type { FormatDialog } from './font-dialog';
-import { localizeElement, type EditorLocale } from './localization';
+import { type EditorLocale } from './localization';
 import {
 	applyCellBorderSettings,
 	readCellBorderSettings,
@@ -15,6 +15,14 @@ import {
 	readBordersAndShading,
 	type BordersAndShading,
 } from './paragraph-decoration';
+import {
+	createDialogShell,
+	dialogActions,
+	isDialogOpen,
+	setDialogOpen,
+	onDialogDismiss,
+	localizeDialog,
+} from './dialog-shell';
 
 const WIDTHS: ReadonlyArray<readonly [string, string]> = [
 	['2', '¼ pt'],
@@ -30,13 +38,7 @@ const WIDTHS: ReadonlyArray<readonly [string, string]> = [
 
 /** Word's Borders and Shading dialog for paragraphs: sides, one pen (style, width, colour) and a fill. */
 export function createBordersDialog(getView: () => EditorView | undefined): FormatDialog {
-	const element = document.createElement('section');
-	element.className = 'dve-dialog dve-format-dialog dve-borders-dialog';
-	element.setAttribute('role', 'dialog');
-	element.setAttribute('aria-label', 'Borders and Shading');
-	element.hidden = true;
-	const heading = document.createElement('h2');
-	heading.textContent = 'Borders and Shading';
+	const element = createDialogShell('Borders and Shading', 'dve-format-dialog dve-borders-dialog');
 	const sides = {
 		top: checkbox('Top'),
 		bottom: checkbox('Bottom'),
@@ -64,11 +66,8 @@ export function createBordersDialog(getView: () => EditorView | undefined): Form
 	const noFill = checkbox('No Color');
 	const ok = dialogButton('OK', true);
 	const cancel = dialogButton('Cancel');
-	const actions = document.createElement('div');
-	actions.className = 'dve-dialog-actions';
-	actions.append(cancel, ok);
+	const actions = dialogActions(cancel, ok);
 	element.append(
-		heading,
 		fieldset(
 			'Borders',
 			labelled('Apply to', scope),
@@ -154,7 +153,7 @@ export function createBordersDialog(getView: () => EditorView | undefined): Form
 		syncDisabled();
 	});
 	const hide = () => {
-		element.hidden = true;
+		setDialogOpen(element, false);
 		element.replaceChildren();
 		focusView(getView());
 	};
@@ -195,23 +194,21 @@ export function createBordersDialog(getView: () => EditorView | undefined): Form
 		hide();
 	});
 	cancel.addEventListener('click', hide);
-	element.addEventListener('keydown', (event) => {
-		if (event.key === 'Escape') hide();
-	});
+	onDialogDismiss(element, hide);
 	return {
 		element,
 		open() {
 			const view = getView();
 			if (!view) return;
 			element.replaceChildren(...content);
-			localizeElement(element, locale);
+			localizeDialog(element, locale);
 			const tabled = inTable();
 			scope.parentElement!.hidden = !tabled;
 			scope.value = tabled ? 'cell' : 'paragraph';
 			loadParagraph(view);
 			show();
 			ok.disabled = !view.editable;
-			element.hidden = false;
+			setDialogOpen(element, true);
 			sides.top.input.focus();
 		},
 		close: hide,
@@ -219,7 +216,7 @@ export function createBordersDialog(getView: () => EditorView | undefined): Form
 			locale = next;
 		},
 		get isOpen() {
-			return !element.hidden;
+			return isDialogOpen(element);
 		},
 	};
 }

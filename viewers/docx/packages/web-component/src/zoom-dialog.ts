@@ -1,7 +1,15 @@
 import { dialogButton, fieldset, labelled, numberInput } from './dialog-fields';
 import type { FormatDialog } from './font-dialog';
-import { localizeElement, type EditorLocale } from './localization';
+import { type EditorLocale } from './localization';
 import type { ZoomFit } from './zoom-fit';
+import {
+	createDialogShell,
+	dialogActions,
+	isDialogOpen,
+	setDialogOpen,
+	onDialogDismiss,
+	localizeDialog,
+} from './dialog-shell';
 
 export interface ZoomHost {
 	/** The current zoom, in percent. */
@@ -35,13 +43,7 @@ export function parseZoomPercent(text: string): number | null {
  * the text at that size. Text width, Wrap to window and page counts beyond two are not offered.
  */
 export function createZoomDialog(host: ZoomHost): FormatDialog {
-	const element = document.createElement('section');
-	element.className = 'dve-dialog dve-format-dialog dve-zoom-dialog';
-	element.setAttribute('role', 'dialog');
-	element.setAttribute('aria-label', 'Zoom settings');
-	element.hidden = true;
-	const heading = document.createElement('h2');
-	heading.textContent = 'Zoom';
+	const element = createDialogShell('Zoom', 'dve-format-dialog dve-zoom-dialog');
 	const radios = new Map<Choice, HTMLInputElement>();
 	const options = CHOICES.map(([value, label]) => {
 		const wrapper = document.createElement('label');
@@ -63,11 +65,8 @@ export function createZoomDialog(host: ZoomHost): FormatDialog {
 	preview.textContent = 'AaBbYyZz';
 	const cancel = dialogButton('Cancel');
 	const confirm = dialogButton('OK', true);
-	const actions = document.createElement('div');
-	actions.className = 'dve-dialog-actions';
-	actions.append(cancel, confirm);
+	const actions = dialogActions(cancel, confirm);
 	element.append(
-		heading,
 		fieldset('Zoom to', ...options, labelled('Percent', percent)),
 		fieldset('Preview', preview),
 		actions,
@@ -83,7 +82,7 @@ export function createZoomDialog(host: ZoomHost): FormatDialog {
 		preview.style.fontSize = `${Math.round(((size ?? 100) / 100) * 14)}px`;
 	};
 	const hide = () => {
-		element.hidden = true;
+		setDialogOpen(element, false);
 		element.replaceChildren();
 		host.restoreFocus();
 	};
@@ -105,9 +104,9 @@ export function createZoomDialog(host: ZoomHost): FormatDialog {
 	});
 	cancel.addEventListener('click', hide);
 	confirm.addEventListener('click', submit);
+	onDialogDismiss(element, hide);
 	element.addEventListener('keydown', (event) => {
-		if (event.key === 'Escape') hide();
-		else if (event.key === 'Enter' && event.target instanceof HTMLInputElement) {
+		if (event.key === 'Enter' && event.target instanceof HTMLInputElement) {
 			event.preventDefault();
 			submit();
 		}
@@ -116,14 +115,14 @@ export function createZoomDialog(host: ZoomHost): FormatDialog {
 		element,
 		open() {
 			element.replaceChildren(...content);
-			localizeElement(element, locale);
+			localizeDialog(element, locale);
 			const current = host.percent();
 			const preset = (['200', '100', '75'] as const).find((value) => Number(value) === current);
 			percent.value = String(current);
 			const radio = radios.get(preset ?? 'custom');
 			if (radio) radio.checked = true;
 			showPreview();
-			element.hidden = false;
+			setDialogOpen(element, true);
 			(radio ?? percent).focus();
 		},
 		close: hide,
@@ -131,7 +130,7 @@ export function createZoomDialog(host: ZoomHost): FormatDialog {
 			locale = next;
 		},
 		get isOpen() {
-			return !element.hidden;
+			return isDialogOpen(element);
 		},
 	};
 }

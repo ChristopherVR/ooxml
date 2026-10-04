@@ -9,19 +9,21 @@ import {
 	updateTextBox,
 	type TextBoxSettings,
 } from './text-box-commands';
+import {
+	createDialogShell,
+	dialogActions,
+	isDialogOpen,
+	setDialogOpen,
+	onDialogDismiss,
+	localizeDialog,
+} from './dialog-shell';
 
 const DEFAULT: TextBoxSettings = { lines: [], widthPx: 192, heightPx: 96, border: true };
 const inches = (px: number) => String(Math.round((px / 96) * 100) / 100);
 
 /** Insert > Text Box: inserts an inline box at the selection, or edits the selected simple box. */
 export function createTextBoxDialog(getView: () => EditorView | undefined): FormatDialog {
-	const element = document.createElement('section');
-	element.className = 'dve-dialog dve-format-dialog dve-text-box-dialog';
-	element.setAttribute('role', 'dialog');
-	element.setAttribute('aria-label', 'Text box');
-	element.hidden = true;
-	const heading = document.createElement('h2');
-	heading.textContent = 'Text box';
+	const element = createDialogShell('Text box', 'dve-format-dialog dve-text-box-dialog');
 	const text = document.createElement('textarea');
 	text.rows = 5;
 	const width = numberInput(0.25, 22, 0.01);
@@ -31,11 +33,8 @@ export function createTextBoxDialog(getView: () => EditorView | undefined): Form
 	message.setAttribute('role', 'alert');
 	const cancel = dialogButton('Cancel');
 	const ok = dialogButton('OK', true);
-	const actions = document.createElement('div');
-	actions.className = 'dve-dialog-actions';
-	actions.append(cancel, ok);
+	const actions = dialogActions(cancel, ok);
 	const content = [
-		heading,
 		labelled('Text', text),
 		row(labelled('Width (inches)', width), labelled('Height (inches)', height), border.wrapper),
 		message,
@@ -54,7 +53,7 @@ export function createTextBoxDialog(getView: () => EditorView | undefined): Form
 	};
 	for (const control of [width, height]) control.addEventListener('input', validate);
 	const hide = () => {
-		element.hidden = true;
+		setDialogOpen(element, false);
 		element.replaceChildren();
 		focusView(getView());
 	};
@@ -73,12 +72,7 @@ export function createTextBoxDialog(getView: () => EditorView | undefined): Form
 	};
 	cancel.addEventListener('click', hide);
 	ok.addEventListener('click', submit);
-	element.addEventListener('keydown', (event) => {
-		if (event.key === 'Escape') {
-			event.preventDefault();
-			hide();
-		}
-	});
+	onDialogDismiss(element, hide);
 	return {
 		element,
 		close: hide,
@@ -86,7 +80,7 @@ export function createTextBoxDialog(getView: () => EditorView | undefined): Form
 			locale = next;
 		},
 		get isOpen() {
-			return !element.hidden;
+			return isDialogOpen(element);
 		},
 		open() {
 			const view = getView();
@@ -95,13 +89,13 @@ export function createTextBoxDialog(getView: () => EditorView | undefined): Form
 			editing = selected?.pos;
 			const settings = selected?.settings ?? DEFAULT;
 			element.replaceChildren(...content);
-			localizeElement(element, locale);
+			localizeDialog(element, locale);
 			text.value = settings.lines.join('\n');
 			width.value = inches(settings.widthPx);
 			height.value = inches(settings.heightPx);
 			border.input.checked = settings.border;
 			validate();
-			element.hidden = false;
+			setDialogOpen(element, true);
 			text.focus();
 		},
 	};

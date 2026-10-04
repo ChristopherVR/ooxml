@@ -21,15 +21,17 @@ import {
 	type TableRowProperties,
 	type RowPatch,
 } from './table-properties';
+import {
+	createDialogShell,
+	dialogActions,
+	isDialogOpen,
+	setDialogOpen,
+	onDialogDismiss,
+	localizeDialog,
+} from './dialog-shell';
 
 export function createTablePropertiesDialog(viewOf: () => EditorView | undefined): FormatDialog {
-	const element = document.createElement('section');
-	element.className = 'dve-dialog dve-format-dialog';
-	element.setAttribute('role', 'dialog');
-	element.setAttribute('aria-label', 'Table properties');
-	element.hidden = true;
-	const heading = document.createElement('h2');
-	heading.textContent = 'Table properties';
+	const element = createDialogShell('Table properties', 'dve-format-dialog');
 	const specified = checkbox('Specify height');
 	const height = numberInput(0.01, 22, 0.01);
 	const rule = selectOf([
@@ -49,13 +51,10 @@ export function createTablePropertiesDialog(viewOf: () => EditorView | undefined
 	message.setAttribute('role', 'alert');
 	const cancel = dialogButton('Cancel');
 	const ok = dialogButton('OK', true);
-	const actions = document.createElement('div');
-	actions.className = 'dve-dialog-actions';
-	actions.append(cancel, ok);
+	const actions = dialogActions(cancel, ok);
 	const cellMargins = createCellMarginFields(() => validate());
 	const cellAlignment = createCellAlignmentField();
 	const content = [
-		heading,
 		fieldset(
 			'Row',
 			specified.wrapper,
@@ -115,7 +114,7 @@ export function createTablePropertiesDialog(viewOf: () => EditorView | undefined
 		});
 	}
 	const hide = () => {
-		element.hidden = true;
+		setDialogOpen(element, false);
 		element.replaceChildren();
 		focusView(viewOf());
 	};
@@ -154,11 +153,8 @@ export function createTablePropertiesDialog(viewOf: () => EditorView | undefined
 	};
 	cancel.addEventListener('click', hide);
 	ok.addEventListener('click', submit);
+	onDialogDismiss(element, hide);
 	element.addEventListener('keydown', (event) => {
-		if (event.key === 'Escape') {
-			event.preventDefault();
-			hide();
-		}
 		if (event.key === 'Enter' && event.target instanceof HTMLInputElement) {
 			event.preventDefault();
 			submit();
@@ -171,7 +167,7 @@ export function createTablePropertiesDialog(viewOf: () => EditorView | undefined
 			locale = next;
 		},
 		get isOpen() {
-			return !element.hidden;
+			return isDialogOpen(element);
 		},
 		open() {
 			const view = viewOf();
@@ -179,7 +175,7 @@ export function createTablePropertiesDialog(viewOf: () => EditorView | undefined
 			if (!view?.editable || !context) return;
 			changed.clear();
 			element.replaceChildren(...content);
-			localizeElement(element, locale);
+			localizeDialog(element, locale);
 			const common = <T>(read: (properties: TableRowProperties) => T): T | null => {
 				const values = context.rows.map((row) => read(row.properties));
 				return values.every((value) => value === values[0]) ? values[0]! : null;
@@ -206,7 +202,7 @@ export function createTablePropertiesDialog(viewOf: () => EditorView | undefined
 			cellMargins.load(context);
 			cellAlignment.load(context);
 			validate();
-			element.hidden = false;
+			setDialogOpen(element, true);
 			specified.input.focus();
 		},
 	};

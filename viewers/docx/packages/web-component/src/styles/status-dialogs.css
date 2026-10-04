@@ -27,31 +27,13 @@
 	}
 }
 
-/* Dialogs (Insert link) */
+/* Dialogs: the shared office-ui-dialog draws the modal frame; these style the fields inside it. */
 .dve-dialog {
-	position: absolute;
-	z-index: 35;
-	top: 150px;
-	left: 50%;
-	display: grid;
-	width: min(440px, calc(100% - 32px));
-	gap: 10px;
-	padding: 18px 20px;
-	border: 1px solid var(--line);
-	border-radius: 8px;
-	background: var(--dve-popover);
-	box-shadow: 0 12px 32px #0003;
-	color: var(--ink);
-	transform: translateX(-50%);
+	--office-dialog-width: min(440px, calc(100vw - 32px));
 }
-.dve-dialog[hidden],
-.dve-dialog label[hidden] {
-	display: none;
-}
-.dve-dialog h2 {
-	margin: 0 0 4px;
-	font-size: 16px;
-	font-weight: 600;
+/* The fields are the dialog's light-DOM children, laid out in the shared body. */
+.dve-dialog > :not([slot]) + :not([slot]) {
+	margin-top: 10px;
 }
 .dve-dialog label {
 	display: grid;
@@ -73,7 +55,6 @@
 	display: flex;
 	justify-content: flex-end;
 	gap: 8px;
-	margin-top: 6px;
 }
 .dve-dialog-actions button {
 	min-height: 30px;

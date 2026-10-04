@@ -4,16 +4,18 @@ import { readDropCap, setDropCap, type DropCapStyle } from './drop-cap-command';
 import { focusView } from './focus-view';
 import type { FormatDialog } from './font-dialog';
 import { localizeElement, type EditorLocale } from './localization';
+import {
+	createDialogShell,
+	dialogActions,
+	isDialogOpen,
+	setDialogOpen,
+	onDialogDismiss,
+	localizeDialog,
+} from './dialog-shell';
 
 /** Word's position, font, height and text-distance controls for the selected initial. */
 export function createDropCapDialog(getView: () => EditorView | undefined): FormatDialog {
-	const element = document.createElement('section');
-	element.className = 'dve-dialog dve-format-dialog';
-	element.setAttribute('role', 'dialog');
-	element.setAttribute('aria-label', 'Drop Cap Options');
-	element.hidden = true;
-	const heading = document.createElement('h2');
-	heading.textContent = 'Drop Cap Options';
+	const element = createDialogShell('Drop Cap Options', 'dve-format-dialog');
 	const position = selectOf([
 		['none', 'None'],
 		['drop', 'Dropped'],
@@ -28,11 +30,8 @@ export function createDropCapDialog(getView: () => EditorView | undefined): Form
 	message.setAttribute('role', 'alert');
 	const cancel = dialogButton('Cancel');
 	const ok = dialogButton('OK', true);
-	const actions = document.createElement('div');
-	actions.className = 'dve-dialog-actions';
-	actions.append(cancel, ok);
+	const actions = dialogActions(cancel, ok);
 	const content = [
-		heading,
 		fieldset('Position', labelled('Position', position)),
 		fieldset(
 			'Options',
@@ -69,7 +68,7 @@ export function createDropCapDialog(getView: () => EditorView | undefined): Form
 		control.addEventListener('change', validate);
 	}
 	const hide = () => {
-		element.hidden = true;
+		setDialogOpen(element, false);
 		element.replaceChildren();
 		focusView(getView());
 	};
@@ -88,11 +87,9 @@ export function createDropCapDialog(getView: () => EditorView | undefined): Form
 	};
 	cancel.addEventListener('click', hide);
 	ok.addEventListener('click', submit);
+	onDialogDismiss(element, hide);
 	element.addEventListener('keydown', (event) => {
-		if (event.key === 'Escape') {
-			event.preventDefault();
-			hide();
-		} else if (event.key === 'Enter' && event.target instanceof HTMLInputElement) {
+		if (event.key === 'Enter' && event.target instanceof HTMLInputElement) {
 			event.preventDefault();
 			submit();
 		}
@@ -101,7 +98,7 @@ export function createDropCapDialog(getView: () => EditorView | undefined): Form
 		element,
 		close: hide,
 		get isOpen() {
-			return !element.hidden;
+			return isDialogOpen(element);
 		},
 		setLocale(next) {
 			locale = next;
@@ -112,13 +109,13 @@ export function createDropCapDialog(getView: () => EditorView | undefined): Form
 			const settings = readDropCap(view);
 			if (!settings) return;
 			element.replaceChildren(...content);
-			localizeElement(element, locale);
+			localizeDialog(element, locale);
 			position.value = settings.style;
 			font.value = settings.fontFamily;
 			lines.value = String(settings.lines);
 			distance.value = String(settings.distanceTwips / 1440);
 			validate();
-			element.hidden = false;
+			setDialogOpen(element, true);
 			position.focus();
 		},
 	};

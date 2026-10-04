@@ -10,6 +10,14 @@ import {
 } from './dialog-fields';
 import type { FormatDialog } from './font-dialog';
 import { localizeElement, type EditorLocale } from './localization';
+import {
+	createDialogShell,
+	dialogActions,
+	isDialogOpen,
+	setDialogOpen,
+	onDialogDismiss,
+	localizeDialog,
+} from './dialog-shell';
 
 export interface WatermarkHost {
 	current(): WatermarkSpec | undefined;
@@ -24,13 +32,7 @@ const DEFAULT_COLOR = '#c0c0c0';
 
 /** Word's Printed Watermark for text: the words, font, colour, layout and transparency. */
 export function createWatermarkDialog(host: WatermarkHost): FormatDialog {
-	const element = document.createElement('section');
-	element.className = 'dve-dialog dve-format-dialog dve-watermark-dialog';
-	element.setAttribute('role', 'dialog');
-	element.setAttribute('aria-label', 'Printed watermark');
-	element.hidden = true;
-	const heading = document.createElement('h2');
-	heading.textContent = 'Printed watermark';
+	const element = createDialogShell('Printed watermark', 'dve-format-dialog dve-watermark-dialog');
 	const setting = selectOf([
 		['none', 'No watermark'],
 		['text', 'Text watermark'],
@@ -48,11 +50,8 @@ export function createWatermarkDialog(host: WatermarkHost): FormatDialog {
 	message.setAttribute('role', 'alert');
 	const cancel = dialogButton('Cancel');
 	const ok = dialogButton('OK', true);
-	const actions = document.createElement('div');
-	actions.className = 'dve-dialog-actions';
-	actions.append(cancel, ok);
+	const actions = dialogActions(cancel, ok);
 	const content = [
-		heading,
 		labelled('Setting', setting),
 		labelled('Text', text),
 		list,
@@ -74,7 +73,7 @@ export function createWatermarkDialog(host: WatermarkHost): FormatDialog {
 	for (const control of [setting, text, font, color, layout, semi.input])
 		for (const type of ['input', 'change']) control.addEventListener(type, validate);
 	const hide = () => {
-		element.hidden = true;
+		setDialogOpen(element, false);
 		element.replaceChildren();
 		host.restoreFocus();
 	};
@@ -95,11 +94,9 @@ export function createWatermarkDialog(host: WatermarkHost): FormatDialog {
 	};
 	cancel.addEventListener('click', hide);
 	ok.addEventListener('click', submit);
+	onDialogDismiss(element, hide);
 	element.addEventListener('keydown', (event) => {
-		if (event.key === 'Escape') {
-			event.preventDefault();
-			hide();
-		} else if (event.key === 'Enter' && event.target instanceof HTMLInputElement) {
+		if (event.key === 'Enter' && event.target instanceof HTMLInputElement) {
 			event.preventDefault();
 			submit();
 		}
@@ -111,13 +108,13 @@ export function createWatermarkDialog(host: WatermarkHost): FormatDialog {
 			locale = next;
 		},
 		get isOpen() {
-			return !element.hidden;
+			return isDialogOpen(element);
 		},
 		open() {
 			if (!host.canEdit()) return;
 			const current = host.current();
 			element.replaceChildren(...content);
-			localizeElement(element, locale);
+			localizeDialog(element, locale);
 			setting.value = current ? 'text' : 'none';
 			text.value = current?.text ?? '';
 			font.value = current?.fontFamily ?? 'Calibri';
@@ -125,7 +122,7 @@ export function createWatermarkDialog(host: WatermarkHost): FormatDialog {
 			layout.value = current?.layout ?? 'diagonal';
 			semi.input.checked = current?.semitransparent ?? true;
 			validate();
-			element.hidden = false;
+			setDialogOpen(element, true);
 			setting.focus();
 		},
 	};

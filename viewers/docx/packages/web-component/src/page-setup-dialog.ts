@@ -10,6 +10,14 @@ import {
 	type PageSetupValues,
 } from './page-setup-model';
 import { PAGE_SIZES, PAGE_SIZE_OPTIONS } from './page-size';
+import {
+	createDialogShell,
+	dialogActions,
+	isDialogOpen,
+	setDialogOpen,
+	onDialogDismiss,
+	localizeDialog,
+} from './dialog-shell';
 
 export interface PageSetupHost {
 	/** The section holding the selection, or undefined when there is none to edit. */
@@ -28,13 +36,7 @@ const MESSAGES: Record<PageSetupProblem, string> = {
 
 /** Word's Page Setup dialog: margins, gutter, header and footer distances, orientation and paper. */
 export function createPageSetupDialog(host: PageSetupHost): FormatDialog {
-	const element = document.createElement('section');
-	element.className = 'dve-dialog dve-format-dialog dve-page-setup-dialog';
-	element.setAttribute('role', 'dialog');
-	element.setAttribute('aria-label', 'Page setup');
-	element.hidden = true;
-	const heading = document.createElement('h2');
-	heading.textContent = 'Page setup';
+	const element = createDialogShell('Page setup', 'dve-format-dialog dve-page-setup-dialog');
 
 	const inch = () => numberInput(0, 22, 0.05);
 	const top = inch();
@@ -56,11 +58,8 @@ export function createPageSetupDialog(host: PageSetupHost): FormatDialog {
 	message.setAttribute('role', 'alert');
 	const cancel = dialogButton('Cancel');
 	const confirm = dialogButton('OK', true);
-	const actions = document.createElement('div');
-	actions.className = 'dve-dialog-actions';
-	actions.append(cancel, confirm);
+	const actions = dialogActions(cancel, confirm);
 	element.append(
-		heading,
 		fieldset(
 			'Margins',
 			row(labelled('Top', top), labelled('Bottom', bottom)),
@@ -123,7 +122,7 @@ export function createPageSetupDialog(host: PageSetupHost): FormatDialog {
 	orientation.addEventListener('change', validate);
 
 	const hide = () => {
-		element.hidden = true;
+		setDialogOpen(element, false);
 		element.replaceChildren();
 		host.restoreFocus();
 	};
@@ -134,9 +133,9 @@ export function createPageSetupDialog(host: PageSetupHost): FormatDialog {
 	};
 	cancel.addEventListener('click', hide);
 	confirm.addEventListener('click', submit);
+	onDialogDismiss(element, hide);
 	element.addEventListener('keydown', (event) => {
-		if (event.key === 'Escape') hide();
-		else if (event.key === 'Enter' && event.target instanceof HTMLInputElement) {
+		if (event.key === 'Enter' && event.target instanceof HTMLInputElement) {
 			event.preventDefault();
 			submit();
 		}
@@ -148,7 +147,7 @@ export function createPageSetupDialog(host: PageSetupHost): FormatDialog {
 			if (!section || !host.canEdit()) return;
 			const current = readPageSetup(section);
 			element.replaceChildren(...content);
-			localizeElement(element, locale);
+			localizeDialog(element, locale);
 			top.value = String(current.topIn);
 			bottom.value = String(current.bottomIn);
 			left.value = String(current.leftIn);
@@ -160,7 +159,7 @@ export function createPageSetupDialog(host: PageSetupHost): FormatDialog {
 			width.value = String(current.widthIn);
 			height.value = String(current.heightIn);
 			syncPreset();
-			element.hidden = false;
+			setDialogOpen(element, true);
 			top.focus();
 			top.select();
 		},
@@ -169,7 +168,7 @@ export function createPageSetupDialog(host: PageSetupHost): FormatDialog {
 			locale = next;
 		},
 		get isOpen() {
-			return !element.hidden;
+			return isDialogOpen(element);
 		},
 	};
 }

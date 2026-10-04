@@ -75,7 +75,7 @@ it('rechecks editing permission at submission and localizes dialog controls', ()
 	s.allow(true);
 	s.dialog.setLocale('fr');
 	s.dialog.open();
-	expect(s.dialog.element.getAttribute('aria-label')).toBe(
+	expect((s.dialog.element as HTMLElement & { heading: string }).heading).toBe(
 		'Définir une nouvelle liste à plusieurs niveaux',
 	);
 	expect(s.dialog.element.querySelector('[aria-label="Niveau à modifier"]')).not.toBeNull();

@@ -50,7 +50,7 @@
       "dependencies": {
         "docx-core": "^0.1.4",
         "ooxml-core": "^0.15.0",
-        "ooxml-ui": "^0.21.0",
+        "ooxml-ui": "^0.22.0",
         "prosemirror-collab": "^1.3.1",
         "prosemirror-commands": "^1.7.1",
         "prosemirror-history": "^1.4.1",
@@ -100,7 +100,7 @@
       "dependencies": {
         "docx-core": "^0.1.4",
         "ooxml-core": "^0.15.0",
-        "ooxml-ui": "^0.21.0",
+        "ooxml-ui": "^0.22.0",
         "prosemirror-collab": "^1.3.1",
         "prosemirror-commands": "^1.7.1",
         "prosemirror-history": "^1.4.1",
@@ -120,7 +120,7 @@
       "dependencies": {
         "docx-core": "^0.1.4",
         "ooxml-core": "^0.15.0",
-        "ooxml-ui": "^0.21.0",
+        "ooxml-ui": "^0.22.0",
         "prosemirror-collab": "^1.3.1",
         "prosemirror-commands": "^1.7.1",
         "prosemirror-history": "^1.4.1",
@@ -140,7 +140,7 @@
       "dependencies": {
         "docx-core": "^0.1.4",
         "ooxml-core": "^0.15.0",
-        "ooxml-ui": "^0.21.0",
+        "ooxml-ui": "^0.22.0",
         "prosemirror-collab": "^1.3.1",
         "prosemirror-commands": "^1.7.1",
         "prosemirror-history": "^1.4.1",
@@ -160,7 +160,7 @@
       "dependencies": {
         "docx-core": "^0.1.4",
         "ooxml-core": "^0.15.0",
-        "ooxml-ui": "^0.21.0",
+        "ooxml-ui": "^0.22.0",
         "prosemirror-collab": "^1.3.1",
         "prosemirror-commands": "^1.7.1",
         "prosemirror-history": "^1.4.1",
@@ -177,7 +177,7 @@
       "dependencies": {
         "docx-core": "^0.1.4",
         "ooxml-core": "^0.15.0",
-        "ooxml-ui": "^0.21.0",
+        "ooxml-ui": "^0.22.0",
         "prosemirror-collab": "^1.3.1",
         "prosemirror-commands": "^1.7.1",
         "prosemirror-history": "^1.4.1",
@@ -197,7 +197,7 @@
       "dependencies": {
         "docx-core": "workspace:*",
         "ooxml-core": "^0.15.0",
-        "ooxml-ui": "^0.21.0",
+        "ooxml-ui": "^0.22.0",
         "prosemirror-collab": "^1.3.1",
         "prosemirror-commands": "^1.7.1",
         "prosemirror-history": "^1.4.1",
@@ -662,7 +662,7 @@
 
     "ooxml-core": ["ooxml-core@0.15.0", "", { "dependencies": { "@xmldom/xmldom": "^0.9.12", "emf-converter": "^4.8.19", "fast-xml-parser": "^5.11.2", "jszip": "^3.10.2", "lib0": "^0.2.119", "mtx-decompressor": "^1.8.0", "utif": "3.1.0", "y-protocols": "^1.0.7", "yjs": "^13.6.33" }, "peerDependencies": { "@napi-rs/canvas": "^1.0.9", "node-forge": "^1.3.0", "xml-crypto": "^6.0.0" }, "optionalPeers": ["@napi-rs/canvas", "node-forge", "xml-crypto"], "bin": { "pptx": "dist/pptx/cli/index.mjs" } }, "sha512-VI7lcZVdPsuNChXsyjSLWCpBq9kEN1nD4rD9CgHj0j4o3qKLG8lbohUeK/HME8VRC0iJF9MPWal8NnCBtegmEA=="],
 
-    "ooxml-ui": ["ooxml-ui@0.21.0", "", { "dependencies": { "lit": "^3.3.3", "ooxml-core": "^0.15.0" } }, "sha512-AkYm+46gZ/tLMCQAjv+FHvcRZo2SKBelE0J1biJKvZzz7YE/zBER6Ze9D/4jKEUCA3eOuiCXnKF2VHsiaTP6IA=="],
+    "ooxml-ui": ["ooxml-ui@0.22.0", "", { "dependencies": { "lit": "^3.3.3", "ooxml-core": "^0.15.0" } }, "sha512-DScYV7o2qNUMiVmn6vHHDL+/UvIEy05Sg9amFMBGaTTDCRDZJ0l/oxhlGll2Lkrf1NlfJuOo6zSdSxBb5eKxMA=="],
 
     "orderedmap": ["orderedmap@2.1.1", "", {}, "sha512-TvAWxi0nDe1j/rtMcWcIj94+Ffe6n7zhow33h40SKxmsmozs6dz/e+EajymfoFcHd7sxNn8yHM8839uixMOV6g=="],
 

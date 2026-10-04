@@ -17,11 +17,19 @@ import {
 	type UnderlineKind,
 } from './font-format';
 import { focusView } from './focus-view';
-import { localizeElement, type EditorLocale } from './localization';
+import { type EditorLocale } from './localization';
 import { FONT_FAMILIES, parseFontFamily, parseFontSize } from './ribbon-combo';
 import { createFontAdvanced } from './font-advanced';
 import { createFontDialogTabs } from './font-dialog-tabs';
 import { closeHistory } from 'prosemirror-history';
+import {
+	createDialogShell,
+	dialogActions,
+	isDialogOpen,
+	setDialogOpen,
+	onDialogDismiss,
+	localizeDialog,
+} from './dialog-shell';
 
 export interface FormatDialog {
 	element: HTMLElement;
@@ -49,13 +57,7 @@ export function createFontDialog(
 	getView: () => EditorView | undefined,
 	getHistoryView = getView,
 ): FormatDialog {
-	const element = document.createElement('section');
-	element.className = 'dve-dialog dve-format-dialog dve-font-dialog';
-	element.setAttribute('role', 'dialog');
-	element.setAttribute('aria-label', 'Font');
-	element.hidden = true;
-	const heading = document.createElement('h2');
-	heading.textContent = 'Font';
+	const element = createDialogShell('Font', 'dve-format-dialog dve-font-dialog');
 	const dirty = new Set<keyof FontFormat>();
 	const mark = (...fields: Array<keyof FontFormat>) => {
 		for (const field of fields) dirty.add(field);
@@ -104,13 +106,11 @@ export function createFontDialog(
 		fieldset('Effects', ...effectBoxes),
 	);
 	tabs.advanced.append(advanced.element);
-	element.append(heading, tabs.list, tabs.basic, tabs.advanced, previewBox);
+	element.append(tabs.list, tabs.basic, tabs.advanced, previewBox);
 	element.append(list);
 	const cancel = dialogButton('Cancel');
 	const confirm = dialogButton('OK', true);
-	const actions = document.createElement('div');
-	actions.className = 'dve-dialog-actions';
-	actions.append(cancel, confirm);
+	const actions = dialogActions(cancel, confirm);
 	element.append(actions);
 
 	let initial: ReturnType<typeof readFontFormat> | undefined;
@@ -204,7 +204,7 @@ export function createFontDialog(
 	};
 
 	const close = () => {
-		element.hidden = true;
+		setDialogOpen(element, false);
 		element.replaceChildren();
 		focusView(getView());
 	};
@@ -221,9 +221,9 @@ export function createFontDialog(
 	};
 	cancel.addEventListener('click', close);
 	confirm.addEventListener('click', submit);
+	onDialogDismiss(element, close);
 	element.addEventListener('keydown', (event) => {
-		if (event.key === 'Escape') close();
-		else if (event.key === 'Enter' && event.target instanceof HTMLInputElement) {
+		if (event.key === 'Enter' && event.target instanceof HTMLInputElement) {
 			event.preventDefault();
 			submit();
 		}
@@ -240,7 +240,7 @@ export function createFontDialog(
 			const view = getView();
 			if (!view?.editable) return;
 			element.replaceChildren(...content);
-			localizeElement(element, locale);
+			localizeDialog(element, locale);
 			initial = readFontFormat(view.state);
 			dirty.clear();
 			tabs.reset();
@@ -268,7 +268,7 @@ export function createFontDialog(
 			setTriState(effects.caps.input, initial.caps);
 			setTriState(effects.hidden.input, initial.hidden);
 			refreshPreview();
-			element.hidden = false;
+			setDialogOpen(element, true);
 			family.focus();
 			family.select();
 		},
@@ -277,7 +277,7 @@ export function createFontDialog(
 			locale = next;
 		},
 		get isOpen() {
-			return !element.hidden;
+			return isDialogOpen(element);
 		},
 	};
 }

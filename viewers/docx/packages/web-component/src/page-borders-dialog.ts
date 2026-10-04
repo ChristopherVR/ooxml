@@ -10,6 +10,14 @@ import {
 } from './dialog-fields';
 import type { FormatDialog } from './font-dialog';
 import { localizeElement, type EditorLocale } from './localization';
+import {
+	createDialogShell,
+	dialogActions,
+	isDialogOpen,
+	setDialogOpen,
+	onDialogDismiss,
+	localizeDialog,
+} from './dialog-shell';
 
 export interface PageBordersHost {
 	section(): SectionProperties | undefined;
@@ -42,13 +50,7 @@ const asHex = (value: unknown): string | null =>
  * imported art side with a plain line.
  */
 export function createPageBordersDialog(host: PageBordersHost): FormatDialog {
-	const element = document.createElement('section');
-	element.className = 'dve-dialog dve-format-dialog dve-page-borders-dialog';
-	element.setAttribute('role', 'dialog');
-	element.setAttribute('aria-label', 'Page borders');
-	element.hidden = true;
-	const heading = document.createElement('h2');
-	heading.textContent = 'Page borders';
+	const element = createDialogShell('Page borders', 'dve-format-dialog dve-page-borders-dialog');
 	const setting = selectOf([
 		['none', 'None'],
 		['box', 'Box'],
@@ -82,11 +84,8 @@ export function createPageBordersDialog(host: PageBordersHost): FormatDialog {
 	message.setAttribute('role', 'alert');
 	const cancel = dialogButton('Cancel');
 	const ok = dialogButton('OK', true);
-	const actions = document.createElement('div');
-	actions.className = 'dve-dialog-actions';
-	actions.append(cancel, ok);
+	const actions = dialogActions(cancel, ok);
 	const content = [
-		heading,
 		labelled('Setting', setting),
 		fieldset('Borders', row(...SIDES.map((side) => sides[side].wrapper))),
 		row(labelled('Style', style), labelled('Width', width)),
@@ -131,7 +130,7 @@ export function createPageBordersDialog(host: PageBordersHost): FormatDialog {
 	for (const side of SIDES) sides[side].input.addEventListener('change', validate);
 
 	const hide = () => {
-		element.hidden = true;
+		setDialogOpen(element, false);
 		element.replaceChildren();
 		host.restoreFocus();
 	};
@@ -159,11 +158,9 @@ export function createPageBordersDialog(host: PageBordersHost): FormatDialog {
 	};
 	cancel.addEventListener('click', hide);
 	ok.addEventListener('click', submit);
+	onDialogDismiss(element, hide);
 	element.addEventListener('keydown', (event) => {
-		if (event.key === 'Escape') {
-			event.preventDefault();
-			hide();
-		} else if (event.key === 'Enter' && event.target instanceof HTMLInputElement) {
+		if (event.key === 'Enter' && event.target instanceof HTMLInputElement) {
 			event.preventDefault();
 			submit();
 		}
@@ -175,14 +172,14 @@ export function createPageBordersDialog(host: PageBordersHost): FormatDialog {
 			locale = next;
 		},
 		get isOpen() {
-			return !element.hidden;
+			return isDialogOpen(element);
 		},
 		open() {
 			const section = host.section();
 			if (!section || !host.canEdit()) return;
 			existing = section.pageBorders;
 			element.replaceChildren(...content);
-			localizeElement(element, locale);
+			localizeDialog(element, locale);
 			const present = SIDES.filter((side) => existing?.[side]);
 			setting.value = !present.length ? 'none' : present.length === 4 ? 'box' : 'custom';
 			for (const side of SIDES) sides[side].input.checked = Boolean(existing?.[side]);
@@ -198,7 +195,7 @@ export function createPageBordersDialog(host: PageBordersHost): FormatDialog {
 			distance.value = String(pen?.spacePoints ?? 24);
 			display.value = existing?.display ?? 'allPages';
 			validate();
-			element.hidden = false;
+			setDialogOpen(element, true);
 			setting.focus();
 		},
 	};

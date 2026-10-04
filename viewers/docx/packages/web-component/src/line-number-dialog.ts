@@ -10,6 +10,14 @@ import {
 } from './dialog-fields';
 import type { FormatDialog } from './font-dialog';
 import { localizeElement, type EditorLocale } from './localization';
+import {
+	createDialogShell,
+	dialogActions,
+	isDialogOpen,
+	setDialogOpen,
+	onDialogDismiss,
+	localizeDialog,
+} from './dialog-shell';
 
 export type LineNumberSettings = NonNullable<SectionProperties['lineNumberSettings']>;
 export interface LineNumberHost {
@@ -21,13 +29,7 @@ export interface LineNumberHost {
 
 /** Word's Line Numbers options, applied to the section holding the selection. */
 export function createLineNumberDialog(host: LineNumberHost): FormatDialog {
-	const element = document.createElement('section');
-	element.className = 'dve-dialog dve-format-dialog';
-	element.setAttribute('role', 'dialog');
-	element.setAttribute('aria-label', 'Line numbers');
-	element.hidden = true;
-	const heading = document.createElement('h2');
-	heading.textContent = 'Line numbers';
+	const element = createDialogShell('Line numbers', 'dve-format-dialog');
 	const enabled = checkbox('Add line numbering');
 	const start = numberInput(1, 32767, 1);
 	const count = numberInput(1, 32767, 1);
@@ -42,11 +44,8 @@ export function createLineNumberDialog(host: LineNumberHost): FormatDialog {
 	message.setAttribute('role', 'alert');
 	const cancel = dialogButton('Cancel');
 	const ok = dialogButton('OK', true);
-	const actions = document.createElement('div');
-	actions.className = 'dve-dialog-actions';
-	actions.append(cancel, ok);
+	const actions = dialogActions(cancel, ok);
 	const content = [
-		heading,
 		enabled.wrapper,
 		fieldset(
 			'Line numbers',
@@ -88,7 +87,7 @@ export function createLineNumberDialog(host: LineNumberHost): FormatDialog {
 		control.addEventListener('change', validate);
 	}
 	const hide = () => {
-		element.hidden = true;
+		setDialogOpen(element, false);
 		element.replaceChildren();
 		host.restoreFocus();
 	};
@@ -110,11 +109,9 @@ export function createLineNumberDialog(host: LineNumberHost): FormatDialog {
 	};
 	cancel.addEventListener('click', hide);
 	ok.addEventListener('click', submit);
+	onDialogDismiss(element, hide);
 	element.addEventListener('keydown', (event) => {
-		if (event.key === 'Escape') {
-			event.preventDefault();
-			hide();
-		} else if (event.key === 'Enter' && event.target instanceof HTMLInputElement) {
+		if (event.key === 'Enter' && event.target instanceof HTMLInputElement) {
 			event.preventDefault();
 			submit();
 		}
@@ -126,13 +123,13 @@ export function createLineNumberDialog(host: LineNumberHost): FormatDialog {
 			locale = next;
 		},
 		get isOpen() {
-			return !element.hidden;
+			return isDialogOpen(element);
 		},
 		open() {
 			const section = host.section();
 			if (!section || !host.canEdit()) return;
 			element.replaceChildren(...content);
-			localizeElement(element, locale);
+			localizeDialog(element, locale);
 			const settings = section.lineNumberSettings;
 			enabled.input.checked = Boolean(settings);
 			start.value = String(settings?.start ?? 1);
@@ -141,7 +138,7 @@ export function createLineNumberDialog(host: LineNumberHost): FormatDialog {
 			distance.value = String((settings?.distanceTwips ?? 360) / 1440);
 			restart.value = settings?.restart ?? 'continuous';
 			validate();
-			element.hidden = false;
+			setDialogOpen(element, true);
 			enabled.input.focus();
 		},
 	};

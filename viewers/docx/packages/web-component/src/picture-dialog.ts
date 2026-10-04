@@ -1,7 +1,15 @@
 import type { EditorView } from 'prosemirror-view';
 import { focusView } from './focus-view';
-import { localizeElement, type EditorLocale } from './localization';
+import { type EditorLocale } from './localization';
 import { schema } from './schema';
+import {
+	createDialogShell,
+	dialogActions,
+	isDialogOpen,
+	setDialogOpen,
+	onDialogDismiss,
+	localizeDialog,
+} from './dialog-shell';
 
 export interface PictureDialog {
 	element: HTMLElement;
@@ -30,13 +38,7 @@ function sizeInput(): HTMLInputElement {
 
 /** Word's Format Picture essentials: alt text and size (px) with an aspect-ratio lock. */
 export function createPictureDialog(getView: () => EditorView | undefined): PictureDialog {
-	const element = document.createElement('section');
-	element.className = 'dve-dialog dve-picture-dialog';
-	element.setAttribute('role', 'dialog');
-	element.setAttribute('aria-label', 'Format picture');
-	element.hidden = true;
-	const heading = document.createElement('h2');
-	heading.textContent = 'Format picture';
+	const element = createDialogShell('Format picture', 'dve-picture-dialog');
 	const alt = document.createElement('textarea');
 	alt.rows = 3;
 	const width = sizeInput();
@@ -52,8 +54,6 @@ export function createPictureDialog(getView: () => EditorView | undefined): Pict
 	const sizes = document.createElement('div');
 	sizes.className = 'dve-dialog-row';
 	sizes.append(labelled('Width', width), labelled('Height', height));
-	const actions = document.createElement('div');
-	actions.className = 'dve-dialog-actions';
 	const cancel = document.createElement('button');
 	cancel.type = 'button';
 	cancel.textContent = 'Cancel';
@@ -61,8 +61,8 @@ export function createPictureDialog(getView: () => EditorView | undefined): Pict
 	apply.type = 'button';
 	apply.className = 'dve-dialog-primary';
 	apply.textContent = 'OK';
-	actions.append(cancel, apply);
-	element.append(heading, labelled('Alt text', alt), sizes, lockLabel, actions);
+	const actions = dialogActions(cancel, apply);
+	element.append(labelled('Alt text', alt), sizes, lockLabel, actions);
 
 	let position = -1;
 	let ratio = 1;
@@ -75,7 +75,7 @@ export function createPictureDialog(getView: () => EditorView | undefined): Pict
 			width.value = String(Math.round(Number(height.value) / ratio));
 	});
 	const close = () => {
-		element.hidden = true;
+		setDialogOpen(element, false);
 		focusView(getView());
 	};
 	const submit = () => {
@@ -96,9 +96,9 @@ export function createPictureDialog(getView: () => EditorView | undefined): Pict
 	};
 	cancel.addEventListener('click', close);
 	apply.addEventListener('click', submit);
+	onDialogDismiss(element, close);
 	element.addEventListener('keydown', (event) => {
-		if (event.key === 'Escape') close();
-		else if (event.key === 'Enter' && event.target instanceof HTMLInputElement) {
+		if (event.key === 'Enter' && event.target instanceof HTMLInputElement) {
 			event.preventDefault();
 			submit();
 		}
@@ -113,15 +113,15 @@ export function createPictureDialog(getView: () => EditorView | undefined): Pict
 			alt.value = node.attrs.altText ?? '';
 			width.value = String(node.attrs.widthPx);
 			height.value = String(node.attrs.heightPx);
-			element.hidden = false;
+			setDialogOpen(element, true);
 			alt.focus();
 		},
 		close,
 		setLocale(locale) {
-			localizeElement(element, locale);
+			localizeDialog(element, locale);
 		},
 		get isOpen() {
-			return !element.hidden;
+			return isDialogOpen(element);
 		},
 	};
 }

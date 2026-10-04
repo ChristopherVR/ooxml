@@ -12,7 +12,7 @@ import {
 } from './dialog-fields';
 import type { FormatDialog } from './font-dialog';
 import { focusView } from './focus-view';
-import { localizeElement, type EditorLocale } from './localization';
+import { type EditorLocale } from './localization';
 import {
 	applyParagraphFormat,
 	readParagraphFormat,
@@ -21,6 +21,14 @@ import {
 	type ParagraphFormat,
 	type Special,
 } from './paragraph-format';
+import {
+	createDialogShell,
+	dialogActions,
+	isDialogOpen,
+	setDialogOpen,
+	onDialogDismiss,
+	localizeDialog,
+} from './dialog-shell';
 
 type BooleanField =
 	| 'contextualSpacing'
@@ -35,13 +43,7 @@ export function createParagraphDialog(
 	getView: () => EditorView | undefined,
 	getModel: () => DocumentModel,
 ): FormatDialog {
-	const element = document.createElement('section');
-	element.className = 'dve-dialog dve-format-dialog dve-paragraph-dialog';
-	element.setAttribute('role', 'dialog');
-	element.setAttribute('aria-label', 'Paragraph');
-	element.hidden = true;
-	const heading = document.createElement('h2');
-	heading.textContent = 'Paragraph';
+	const element = createDialogShell('Paragraph', 'dve-format-dialog dve-paragraph-dialog');
 
 	const align = selectOf([
 		['left', 'Left'],
@@ -88,11 +90,8 @@ export function createParagraphDialog(
 
 	const cancel = dialogButton('Cancel');
 	const confirm = dialogButton('OK', true);
-	const actions = document.createElement('div');
-	actions.className = 'dve-dialog-actions';
-	actions.append(cancel, confirm);
+	const actions = dialogActions(cancel, confirm);
 	element.append(
-		heading,
 		fieldset('General', labelled('Alignment', align)),
 		fieldset(
 			'Indentation',
@@ -167,7 +166,7 @@ export function createParagraphDialog(
 	};
 
 	const close = () => {
-		element.hidden = true;
+		setDialogOpen(element, false);
 		element.replaceChildren();
 		focusView(getView());
 	};
@@ -178,9 +177,9 @@ export function createParagraphDialog(
 	};
 	cancel.addEventListener('click', close);
 	confirm.addEventListener('click', submit);
+	onDialogDismiss(element, close);
 	element.addEventListener('keydown', (event) => {
-		if (event.key === 'Escape') close();
-		else if (event.key === 'Enter' && event.target instanceof HTMLInputElement) {
+		if (event.key === 'Enter' && event.target instanceof HTMLInputElement) {
 			event.preventDefault();
 			submit();
 		}
@@ -200,7 +199,7 @@ export function createParagraphDialog(
 			const view = getView();
 			if (!view?.editable) return;
 			element.replaceChildren(...content);
-			localizeElement(element, locale);
+			localizeDialog(element, locale);
 			const format = readParagraphFormat(view.state, getModel());
 			dirty.clear();
 			if (format.align === null) align.selectedIndex = -1;
@@ -220,7 +219,7 @@ export function createParagraphDialog(
 			);
 			for (const [field, item] of toggles) setTriState(item.input, format[field]);
 			syncEnabled();
-			element.hidden = false;
+			setDialogOpen(element, true);
 			align.focus();
 		},
 		close,
@@ -228,7 +227,7 @@ export function createParagraphDialog(
 			locale = next;
 		},
 		get isOpen() {
-			return !element.hidden;
+			return isDialogOpen(element);
 		},
 	};
 }

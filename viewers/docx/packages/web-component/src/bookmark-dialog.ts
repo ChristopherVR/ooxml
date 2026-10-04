@@ -12,6 +12,14 @@ import { dialogButton, labelled, textInput } from './dialog-fields';
 import { focusView } from './focus-view';
 import type { FormatDialog } from './font-dialog';
 import { localizeElement, type EditorLocale } from './localization';
+import {
+	createDialogShell,
+	dialogActions,
+	isDialogOpen,
+	setDialogOpen,
+	onDialogDismiss,
+	localizeDialog,
+} from './dialog-shell';
 
 const MESSAGES: Record<BookmarkNameProblem, string> = {
 	empty: 'Type a name for the bookmark.',
@@ -22,13 +30,7 @@ const MESSAGES: Record<BookmarkNameProblem, string> = {
 
 /** Word's Bookmark dialog: name a bookmark for the current paragraph, or go to or delete one. */
 export function createBookmarkDialog(getView: () => EditorView | undefined): FormatDialog {
-	const element = document.createElement('section');
-	element.className = 'dve-dialog dve-format-dialog dve-bookmark-dialog';
-	element.setAttribute('role', 'dialog');
-	element.setAttribute('aria-label', 'Bookmark');
-	element.hidden = true;
-	const heading = document.createElement('h2');
-	heading.textContent = 'Bookmark';
+	const element = createDialogShell('Bookmark', 'dve-format-dialog dve-bookmark-dialog');
 	const name = textInput();
 	const list = document.createElement('select');
 	list.size = 6;
@@ -39,16 +41,8 @@ export function createBookmarkDialog(getView: () => EditorView | undefined): For
 	const remove = dialogButton('Delete');
 	const goTo = dialogButton('Go to');
 	const close = dialogButton('Close');
-	const actions = document.createElement('div');
-	actions.className = 'dve-dialog-actions';
-	actions.append(remove, goTo, close, add);
-	element.append(
-		heading,
-		labelled('Bookmark name', name),
-		labelled('Bookmarks', list),
-		message,
-		actions,
-	);
+	const actions = dialogActions(remove, goTo, close, add);
+	element.append(labelled('Bookmark name', name), labelled('Bookmarks', list), message, actions);
 	let locale: EditorLocale = 'en';
 	const content = [...element.childNodes];
 	element.replaceChildren();
@@ -71,7 +65,7 @@ export function createBookmarkDialog(getView: () => EditorView | undefined): For
 		goTo.disabled = !selected;
 	};
 	const hide = () => {
-		element.hidden = true;
+		setDialogOpen(element, false);
 		element.replaceChildren();
 		focusView(getView());
 	};
@@ -105,9 +99,9 @@ export function createBookmarkDialog(getView: () => EditorView | undefined): For
 		if (view) goToBookmark(view, list.value);
 	});
 	close.addEventListener('click', hide);
+	onDialogDismiss(element, hide);
 	element.addEventListener('keydown', (event) => {
-		if (event.key === 'Escape') hide();
-		else if (event.key === 'Enter' && event.target === name && !add.disabled) {
+		if (event.key === 'Enter' && event.target === name && !add.disabled) {
 			event.preventDefault();
 			add.click();
 		}
@@ -118,11 +112,11 @@ export function createBookmarkDialog(getView: () => EditorView | undefined): For
 			const view = getView();
 			if (!view) return;
 			element.replaceChildren(...content);
-			localizeElement(element, locale);
+			localizeDialog(element, locale);
 			name.value = '';
 			say('');
 			refresh();
-			element.hidden = false;
+			setDialogOpen(element, true);
 			name.focus();
 		},
 		close: hide,
@@ -130,7 +124,7 @@ export function createBookmarkDialog(getView: () => EditorView | undefined): For
 			locale = next;
 		},
 		get isOpen() {
-			return !element.hidden;
+			return isDialogOpen(element);
 		},
 	};
 }

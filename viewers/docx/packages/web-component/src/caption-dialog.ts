@@ -4,7 +4,15 @@ import { CAPTION_LABELS, insertCaption } from './caption-commands';
 import { dialogButton, labelled, selectOf, textInput } from './dialog-fields';
 import { focusView } from './focus-view';
 import type { FormatDialog } from './font-dialog';
-import { localizeElement, translate, type EditorLocale } from './localization';
+import { translate, type EditorLocale } from './localization';
+import {
+	createDialogShell,
+	dialogActions,
+	isDialogOpen,
+	setDialogOpen,
+	onDialogDismiss,
+	localizeDialog,
+} from './dialog-shell';
 
 /** The document's Caption style id, matched by id or name. */
 function captionStyle(model: DocumentModel): string | undefined {
@@ -18,13 +26,7 @@ export function createCaptionDialog(
 	getView: () => EditorView | undefined,
 	getModel: () => DocumentModel,
 ): FormatDialog {
-	const element = document.createElement('section');
-	element.className = 'dve-dialog dve-format-dialog dve-caption-dialog';
-	element.setAttribute('role', 'dialog');
-	element.setAttribute('aria-label', 'Insert caption');
-	element.hidden = true;
-	const heading = document.createElement('h2');
-	heading.textContent = 'Insert caption';
+	const element = createDialogShell('Insert caption', 'dve-format-dialog dve-caption-dialog');
 	const label = selectOf(CAPTION_LABELS.map((name) => [name, name] as const));
 	const text = textInput();
 	const position = selectOf([
@@ -33,11 +35,8 @@ export function createCaptionDialog(
 	]);
 	const cancel = dialogButton('Cancel');
 	const confirm = dialogButton('OK', true);
-	const actions = document.createElement('div');
-	actions.className = 'dve-dialog-actions';
-	actions.append(cancel, confirm);
+	const actions = dialogActions(cancel, confirm);
 	element.append(
-		heading,
 		labelled('Label', label),
 		labelled('Caption', text),
 		labelled('Position', position),
@@ -47,7 +46,7 @@ export function createCaptionDialog(
 	const content = [...element.childNodes];
 	element.replaceChildren();
 	const hide = () => {
-		element.hidden = true;
+		setDialogOpen(element, false);
 		element.replaceChildren();
 		focusView(getView());
 	};
@@ -70,9 +69,9 @@ export function createCaptionDialog(
 	};
 	cancel.addEventListener('click', hide);
 	confirm.addEventListener('click', submit);
+	onDialogDismiss(element, hide);
 	element.addEventListener('keydown', (event) => {
-		if (event.key === 'Escape') hide();
-		else if (event.key === 'Enter' && event.target instanceof HTMLInputElement) {
+		if (event.key === 'Enter' && event.target instanceof HTMLInputElement) {
 			event.preventDefault();
 			submit();
 		}
@@ -82,11 +81,11 @@ export function createCaptionDialog(
 		open() {
 			if (!getView()?.editable) return;
 			element.replaceChildren(...content);
-			localizeElement(element, locale);
+			localizeDialog(element, locale);
 			label.value = 'Figure';
 			position.value = 'below';
 			text.value = '';
-			element.hidden = false;
+			setDialogOpen(element, true);
 			text.focus();
 		},
 		close: hide,
@@ -94,7 +93,7 @@ export function createCaptionDialog(
 			locale = next;
 		},
 		get isOpen() {
-			return !element.hidden;
+			return isDialogOpen(element);
 		},
 	};
 }

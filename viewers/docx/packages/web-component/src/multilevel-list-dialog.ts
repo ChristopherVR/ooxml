@@ -23,6 +23,14 @@ import {
 import { focusView } from './focus-view';
 import type { FormatDialog } from './font-dialog';
 import { localizeElement, translate, type EditorLocale } from './localization';
+import {
+	createDialogShell,
+	dialogActions,
+	isDialogOpen,
+	setDialogOpen,
+	onDialogDismiss,
+	localizeDialog,
+} from './dialog-shell';
 
 /** Creates a fresh definition for the selection; imported definitions remain untouched. */
 export function createMultilevelListDialog(
@@ -30,13 +38,7 @@ export function createMultilevelListDialog(
 	getModel: () => DocumentModel,
 	canEdit = () => true,
 ): FormatDialog {
-	const element = document.createElement('section');
-	element.className = 'dve-dialog dve-format-dialog';
-	element.setAttribute('role', 'dialog');
-	element.setAttribute('aria-label', 'Define New Multilevel List');
-	element.hidden = true;
-	const heading = document.createElement('h2');
-	heading.textContent = 'Define New Multilevel List';
+	const element = createDialogShell('Define New Multilevel List', 'dve-format-dialog');
 	const level = selectOf(Array.from({ length: 9 }, (_, i) => [String(i), String(i + 1)] as const));
 	const style = selectOf([
 		['decimal', '1, 2, 3, …'],
@@ -88,13 +90,10 @@ export function createMultilevelListDialog(
 	message.setAttribute('role', 'alert');
 	const ok = dialogButton('OK', true),
 		cancel = dialogButton('Cancel');
-	const actions = document.createElement('div');
-	actions.className = 'dve-dialog-actions';
-	actions.append(cancel, ok);
+	const actions = dialogActions(cancel, ok);
 	const levelField = labelled('Level to modify', level);
 	levelField.style.alignContent = 'start';
 	const content = [
-		heading,
 		row(levelField, preview),
 		fieldset(
 			'Number format',
@@ -308,7 +307,7 @@ export function createMultilevelListDialog(
 			if (store()) renderPreview();
 		});
 	const hide = () => {
-		element.hidden = true;
+		setDialogOpen(element, false);
 		element.replaceChildren();
 		focusView(getView());
 	};
@@ -320,11 +319,9 @@ export function createMultilevelListDialog(
 		hide();
 	};
 	ok.addEventListener('click', submit);
+	onDialogDismiss(element, hide);
 	element.addEventListener('keydown', (event) => {
-		if (event.key === 'Escape') {
-			event.preventDefault();
-			hide();
-		} else if (event.key === 'Enter' && event.target instanceof HTMLInputElement) {
+		if (event.key === 'Enter' && event.target instanceof HTMLInputElement) {
 			event.preventDefault();
 			submit();
 		}
@@ -333,7 +330,7 @@ export function createMultilevelListDialog(
 		element,
 		close: hide,
 		get isOpen() {
-			return !element.hidden;
+			return isDialogOpen(element);
 		},
 		setLocale(next) {
 			locale = next;
@@ -360,9 +357,9 @@ export function createMultilevelListDialog(
 			}));
 			active = Math.min(8, Math.max(0, numbering?.level ?? Number(paragraph.attrs.ilvl ?? 0)));
 			element.replaceChildren(...content);
-			localizeElement(element, locale);
+			localizeDialog(element, locale);
 			read();
-			element.hidden = false;
+			setDialogOpen(element, true);
 			level.focus();
 		},
 	};

@@ -1,7 +1,15 @@
 import type { EditorView } from 'prosemirror-view';
 import { applyLink, bookmarkNames, linkAtSelection, removeLink } from './link-commands';
-import { localizeElement, type EditorLocale } from './localization';
+import { type EditorLocale } from './localization';
 import { focusView } from './focus-view';
+import {
+	createDialogShell,
+	dialogActions,
+	isDialogOpen,
+	setDialogOpen,
+	onDialogDismiss,
+	localizeDialog,
+} from './dialog-shell';
 
 export interface LinkDialogOptions {
 	getView: () => EditorView | undefined;
@@ -35,13 +43,7 @@ function button(label: string, primary = false): HTMLButtonElement {
 
 /** Word's Insert/Edit Hyperlink dialog: web address or a bookmark in this document, plus a ScreenTip. */
 export function createLinkDialog(options: LinkDialogOptions): LinkDialog {
-	const element = document.createElement('section');
-	element.className = 'dve-dialog dve-link-dialog';
-	element.setAttribute('role', 'dialog');
-	element.setAttribute('aria-label', 'Insert link');
-	element.hidden = true;
-	const heading = document.createElement('h2');
-	heading.textContent = 'Insert link';
+	const element = createDialogShell('Insert link', 'dve-link-dialog');
 	const display = document.createElement('input');
 	display.type = 'text';
 	const address = document.createElement('input');
@@ -51,14 +53,11 @@ export function createLinkDialog(options: LinkDialogOptions): LinkDialog {
 	const tooltip = document.createElement('input');
 	tooltip.type = 'text';
 	const displayField = field('Text to display', display);
-	const actions = document.createElement('div');
-	actions.className = 'dve-dialog-actions';
 	const remove = button('Remove link');
 	const cancel = button('Cancel');
 	const confirm = button('Insert', true);
-	actions.append(remove, cancel, confirm);
+	const actions = dialogActions(remove, cancel, confirm);
 	element.append(
-		heading,
 		displayField,
 		field('Address', address),
 		field('Place in this document', place),
@@ -67,7 +66,7 @@ export function createLinkDialog(options: LinkDialogOptions): LinkDialog {
 	);
 
 	const close = () => {
-		element.hidden = true;
+		setDialogOpen(element, false);
 		focusView(options.getView());
 	};
 	const submit = () => {
@@ -102,9 +101,9 @@ export function createLinkDialog(options: LinkDialogOptions): LinkDialog {
 	});
 	cancel.addEventListener('click', close);
 	confirm.addEventListener('click', submit);
+	onDialogDismiss(element, close);
 	element.addEventListener('keydown', (event) => {
-		if (event.key === 'Escape') close();
-		else if (event.key === 'Enter' && event.target instanceof HTMLInputElement) {
+		if (event.key === 'Enter' && event.target instanceof HTMLInputElement) {
 			event.preventDefault();
 			submit();
 		}
@@ -127,15 +126,15 @@ export function createLinkDialog(options: LinkDialogOptions): LinkDialog {
 			);
 			place.value = existing?.anchor ?? '';
 			remove.hidden = !existing;
-			element.hidden = false;
+			setDialogOpen(element, true);
 			(existing?.anchor ? place : address).focus();
 		},
 		close,
 		setLocale(locale) {
-			localizeElement(element, locale);
+			localizeDialog(element, locale);
 		},
 		get isOpen() {
-			return !element.hidden;
+			return isDialogOpen(element);
 		},
 	};
 }

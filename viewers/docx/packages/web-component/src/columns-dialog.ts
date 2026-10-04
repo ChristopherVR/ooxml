@@ -11,6 +11,14 @@ import {
 } from './column-settings';
 import type { FormatDialog } from './font-dialog';
 import { localizeElement, translate, type EditorLocale } from './localization';
+import {
+	createDialogShell,
+	dialogActions,
+	isDialogOpen,
+	setDialogOpen,
+	onDialogDismiss,
+	localizeDialog,
+} from './dialog-shell';
 
 export interface ColumnsHost {
 	section(): SectionProperties | undefined;
@@ -21,13 +29,7 @@ export interface ColumnsHost {
 
 /** Current-section column settings; width edits adjust the adjacent column as Word does. */
 export function createColumnsDialog(host: ColumnsHost): FormatDialog {
-	const element = document.createElement('section');
-	element.className = 'dve-dialog dve-format-dialog';
-	element.setAttribute('role', 'dialog');
-	element.setAttribute('aria-label', 'Columns');
-	element.hidden = true;
-	const heading = document.createElement('h2');
-	heading.textContent = 'Columns';
+	const element = createDialogShell('Columns', 'dve-format-dialog');
 	const count = numberInput(1, 45, 1);
 	const gap = numberInput(0, 22, 0.01);
 	const width = document.createElement('output');
@@ -40,11 +42,8 @@ export function createColumnsDialog(host: ColumnsHost): FormatDialog {
 	message.setAttribute('role', 'alert');
 	const cancel = dialogButton('Cancel');
 	const ok = dialogButton('OK', true);
-	const actions = document.createElement('div');
-	actions.className = 'dve-dialog-actions';
-	actions.append(cancel, ok);
+	const actions = dialogActions(cancel, ok);
 	const content = [
-		heading,
 		fieldset(
 			'Columns',
 			labelled('Number of columns', count),
@@ -149,7 +148,7 @@ export function createColumnsDialog(host: ColumnsHost): FormatDialog {
 		validate();
 	});
 	const hide = () => {
-		element.hidden = true;
+		setDialogOpen(element, false);
 		element.replaceChildren();
 		host.restoreFocus();
 	};
@@ -176,11 +175,9 @@ export function createColumnsDialog(host: ColumnsHost): FormatDialog {
 	};
 	cancel.addEventListener('click', hide);
 	ok.addEventListener('click', submit);
+	onDialogDismiss(element, hide);
 	element.addEventListener('keydown', (event) => {
-		if (event.key === 'Escape') {
-			event.preventDefault();
-			hide();
-		} else if (event.key === 'Enter' && event.target instanceof HTMLInputElement) {
+		if (event.key === 'Enter' && event.target instanceof HTMLInputElement) {
 			event.preventDefault();
 			submit();
 		}
@@ -189,7 +186,7 @@ export function createColumnsDialog(host: ColumnsHost): FormatDialog {
 		element,
 		close: hide,
 		get isOpen() {
-			return !element.hidden;
+			return isDialogOpen(element);
 		},
 		setLocale(next) {
 			locale = next;
@@ -198,7 +195,7 @@ export function createColumnsDialog(host: ColumnsHost): FormatDialog {
 			source = host.section();
 			if (!source || !host.canEdit()) return;
 			element.replaceChildren(...content);
-			localizeElement(element, locale);
+			localizeDialog(element, locale);
 			count.value = String(source.columns.count);
 			gap.value = String((source.columns.spacingTwips ?? 720) / 1440);
 			equal.input.checked = source.columns.equalWidth;
@@ -206,7 +203,7 @@ export function createColumnsDialog(host: ColumnsHost): FormatDialog {
 			draft = readColumnDraft(source);
 			renderIndividual();
 			validate();
-			element.hidden = false;
+			setDialogOpen(element, true);
 			count.focus();
 		},
 	};

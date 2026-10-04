@@ -11,6 +11,14 @@ import { dialogButton, labelled, selectOf } from './dialog-fields';
 import { focusView } from './focus-view';
 import type { FormatDialog } from './font-dialog';
 import { localizeElement, type EditorLocale } from './localization';
+import {
+	createDialogShell,
+	dialogActions,
+	isDialogOpen,
+	setDialogOpen,
+	onDialogDismiss,
+	localizeDialog,
+} from './dialog-shell';
 
 const KINDS: Array<[ReferenceKind, string]> = [
 	['heading', 'Heading'],
@@ -45,24 +53,18 @@ export function createCrossReferenceDialog(
 	getModel: () => DocumentModel,
 	pageOf: (id: string) => string | undefined,
 ): FormatDialog {
-	const element = document.createElement('section');
-	element.className = 'dve-dialog dve-format-dialog dve-cross-reference-dialog';
-	element.setAttribute('role', 'dialog');
-	element.setAttribute('aria-label', 'Cross-reference');
-	element.hidden = true;
-	const heading = document.createElement('h2');
-	heading.textContent = 'Cross-reference';
+	const element = createDialogShell(
+		'Cross-reference',
+		'dve-format-dialog dve-cross-reference-dialog',
+	);
 	const kind = selectOf(KINDS);
 	const content = selectOf(contents('heading'));
 	const list = document.createElement('select');
 	list.size = 8;
 	const insert = dialogButton('Insert', true);
 	const close = dialogButton('Close');
-	const actions = document.createElement('div');
-	actions.className = 'dve-dialog-actions';
-	actions.append(close, insert);
+	const actions = dialogActions(close, insert);
 	element.append(
-		heading,
 		labelled('Reference type', kind),
 		labelled('Insert reference to', content),
 		labelled('For which item', list),
@@ -86,7 +88,7 @@ export function createCrossReferenceDialog(
 		if (targets.length) list.selectedIndex = 0;
 	};
 	const hide = () => {
-		element.hidden = true;
+		setDialogOpen(element, false);
 		element.replaceChildren();
 		focusView(getView());
 	};
@@ -98,18 +100,16 @@ export function createCrossReferenceDialog(
 			insertCrossReference(view, target, content.value as ReferenceContent, pageOf);
 	});
 	close.addEventListener('click', hide);
-	element.addEventListener('keydown', (event) => {
-		if (event.key === 'Escape') hide();
-	});
+	onDialogDismiss(element, hide);
 	return {
 		element,
 		open() {
 			if (!getView()?.editable) return;
 			element.replaceChildren(...built);
-			localizeElement(element, locale);
+			localizeDialog(element, locale);
 			kind.value = 'heading';
 			fill();
-			element.hidden = false;
+			setDialogOpen(element, true);
 			kind.focus();
 		},
 		close: hide,
@@ -117,7 +117,7 @@ export function createCrossReferenceDialog(
 			locale = next;
 		},
 		get isOpen() {
-			return !element.hidden;
+			return isDialogOpen(element);
 		},
 	};
 }
