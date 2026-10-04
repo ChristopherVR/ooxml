@@ -1,4 +1,5 @@
 import { ARRAY_FUNCTIONS } from './array.js';
+import { DATABASE_FUNCTIONS } from './database.js';
 import { DATETIME_FUNCTIONS } from './datetime.js';
 import { ENGINEERING_FUNCTIONS } from './engineering.js';
 import { FINANCIAL_FUNCTIONS } from './financial.js';
@@ -27,6 +28,7 @@ const ALL: readonly FunctionSpec[] = [
 	...INFO_FUNCTIONS,
 	...FINANCIAL_FUNCTIONS,
 	...ENGINEERING_FUNCTIONS,
+	...DATABASE_FUNCTIONS,
 ];
 
 const REGISTRY = new Map<string, FunctionSpec>();
