@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.19.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.19.0) - 2026-10-04
+
+### Features
+
+- **ui:** Add the shared office-ui-ribbon-section (by @ChristopherVR) ([8224de3](https://github.com/ChristopherVR/ooxml/commit/8224de33d6c945c112ce605ee6647f7e4c5dbff3))
+
 ## [0.18.2](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.18.2) - 2026-10-04
 
 ### Bug Fixes
