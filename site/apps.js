@@ -17,6 +17,16 @@ const PPTX_FRAMEWORKS = [
 /** Word and Excel also deploy a Solid demo. */
 const DOCX_FRAMEWORKS = [...PPTX_FRAMEWORKS, { id: 'solid', label: 'Solid', route: 'demo-solid' }];
 
+/** Visio deploys every framework too; its long-standing /demo/ route is the vanilla one. */
+const VISIO_FRAMEWORKS = [
+	{ id: 'react', label: 'React', route: 'demo-react' },
+	{ id: 'vue', label: 'Vue', route: 'demo-vue' },
+	{ id: 'angular', label: 'Angular', route: 'demo-angular' },
+	{ id: 'svelte', label: 'Svelte', route: 'demo-svelte' },
+	{ id: 'vanilla', label: 'Vanilla JS', route: 'demo' },
+	{ id: 'solid', label: 'Solid', route: 'demo-solid' },
+];
+
 /**
  * @typedef {{ id: string, label: string, route: string }} Framework
  * @typedef {{
@@ -73,7 +83,7 @@ export const APPS = [
 		tag: { label: 'Beta', tone: 'beta' },
 		repo: 'visio-viewer',
 		docs: `${PAGES}/visio-viewer/`,
-		frameworks: [{ id: 'vanilla', label: 'Vanilla JS', route: 'demo' }],
+		frameworks: VISIO_FRAMEWORKS,
 	},
 ];
 
