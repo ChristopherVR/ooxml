@@ -76,3 +76,34 @@ describe('shadow styles', () => {
 		}
 	});
 });
+
+describe('framework property assignment', () => {
+	it('never shadows an observed attribute with an internal field', () => {
+		// React 19 assigns `element.foo = value` when `foo in element`; an internal field of that
+		// name would be overwritten. Only deliberate public accessors may share an attribute's name.
+		registerOfficeUi();
+		const camel = (name: string) => name.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
+		const collisions: string[] = [];
+		for (const tag of OFFICE_UI_TAGS) {
+			const Ctor = customElements.get(tag) as CustomElementConstructor & {
+				observedAttributes?: string[];
+			};
+			const el = document.createElement(tag);
+			for (const attribute of Ctor.observedAttributes ?? []) {
+				const name = camel(attribute);
+				if (!(name in el)) continue;
+				let owner: object | null = el;
+				let descriptor: PropertyDescriptor | undefined;
+				while (owner && !(descriptor = Object.getOwnPropertyDescriptor(owner, name)))
+					owner = Object.getPrototypeOf(owner);
+				const native =
+					owner === HTMLElement.prototype ||
+					owner === Element.prototype ||
+					owner === Node.prototype;
+				if (!native && descriptor && !descriptor.get && !descriptor.set)
+					collisions.push(`${tag}.${name}`);
+			}
+		}
+		expect(collisions).toEqual([]);
+	});
+});

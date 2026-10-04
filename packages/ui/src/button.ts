@@ -91,8 +91,8 @@ export const defineButton = definer('office-ui-button', () => {
 		private readonly button: HTMLButtonElement;
 		private readonly svg: SVGSVGElement;
 		private readonly text: HTMLSpanElement;
-		private readonly caret: SVGSVGElement;
-		private readonly badge: HTMLSpanElement;
+		#caret: SVGSVGElement;
+		#badge: HTMLSpanElement;
 		constructor() {
 			super();
 			const doc = this.ownerDocument;
@@ -105,13 +105,13 @@ export const defineButton = definer('office-ui-button', () => {
 			this.svg.classList.add('glyph');
 			this.text = doc.createElement('span');
 			this.text.className = 'label';
-			this.caret = createIconSvg(doc);
-			this.caret.classList.add('caret');
-			paintIcon(this.caret, 'chevronDown');
-			this.badge = doc.createElement('span');
-			this.badge.className = 'badge';
-			this.badge.setAttribute('aria-hidden', 'true');
-			this.button.append(this.svg, this.text, this.badge);
+			this.#caret = createIconSvg(doc);
+			this.#caret.classList.add('caret');
+			paintIcon(this.#caret, 'chevronDown');
+			this.#badge = doc.createElement('span');
+			this.#badge.className = 'badge';
+			this.#badge.setAttribute('aria-hidden', 'true');
+			this.button.append(this.svg, this.text, this.#badge);
 			root.append(this.button);
 			this.button.addEventListener('keydown', (event) => {
 				// Keep native activation out of the host's own shortcut handlers.
@@ -160,6 +160,10 @@ export const defineButton = definer('office-ui-button', () => {
 		protected iconName(): string | null {
 			return this.getAttribute('icon');
 		}
+		/** The tooltip: `title`, else the label of an icon-only button; a product may always show it. */
+		protected tooltip(label: string, iconOnly: boolean): string {
+			return this.getAttribute('title') ?? (iconOnly ? label : '');
+		}
 		/** Whether the trailing menu chevron shows. */
 		protected showsCaret(): boolean {
 			const caret = this.getAttribute('caret');
@@ -170,20 +174,20 @@ export const defineButton = definer('office-ui-button', () => {
 			const iconOnly = this.hasAttribute('icon-only');
 			this.text.textContent = label;
 			// The chevron trails the last line of the label.
-			this.text.append(this.caret);
-			this.caret.toggleAttribute('hidden', !this.showsCaret());
+			this.text.append(this.#caret);
+			this.#caret.toggleAttribute('hidden', !this.showsCaret());
 			this.text.hidden = iconOnly;
 			if (iconOnly && label) this.button.setAttribute('aria-label', label);
 			else this.button.removeAttribute('aria-label');
-			this.button.title = this.getAttribute('title') ?? (iconOnly ? label : '');
+			this.button.title = this.tooltip(label, iconOnly);
 			this.button.disabled = this.disabled;
 			const shortcuts = this.getAttribute('keyshortcuts');
 			if (shortcuts) this.button.setAttribute('aria-keyshortcuts', shortcuts);
 			else this.button.removeAttribute('aria-keyshortcuts');
 			if (paintIcon(this.svg, this.iconName())) this.svg.setAttribute('data-painted', '');
 			else this.svg.removeAttribute('data-painted');
-			this.badge.textContent = this.getAttribute('badge') ?? '';
-			this.badge.hidden = !this.badge.textContent;
+			this.#badge.textContent = this.getAttribute('badge') ?? '';
+			this.#badge.hidden = !this.#badge.textContent;
 			for (const attr of ['pressed', 'expanded'] as const) {
 				const value = this.getAttribute(attr);
 				if (value === null) this.button.removeAttribute(`aria-${attr}`);

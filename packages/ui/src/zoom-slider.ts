@@ -45,7 +45,7 @@ export const defineZoomSlider = definer('office-ui-zoom-slider', () => {
 		private readonly in: HTMLButtonElement;
 		private readonly range: HTMLInputElement;
 		private readonly output: HTMLOutputElement;
-		private readonly fit: HTMLButtonElement;
+		#fit: HTMLButtonElement;
 		constructor() {
 			super();
 			const doc = this.ownerDocument;
@@ -65,19 +65,19 @@ export const defineZoomSlider = definer('office-ui-zoom-slider', () => {
 			this.range.type = 'range';
 			this.range.setAttribute('aria-label', 'Zoom');
 			this.output = doc.createElement('output');
-			this.fit = button('Fit', '');
-			this.fit.className = 'fit';
+			this.#fit = button('Fit', '');
+			this.#fit.className = 'fit';
 			const svg = createIconSvg(doc);
 			paintIcon(svg, 'fitPage');
-			this.fit.append(svg);
-			root.append(this.out, this.range, this.in, this.output, this.fit);
+			this.#fit.append(svg);
+			root.append(this.out, this.range, this.in, this.output, this.#fit);
 			this.out.addEventListener('click', () => this.stepBy(-1));
 			this.in.addEventListener('click', () => this.stepBy(1));
 			this.range.addEventListener('input', () => this.commit(this.range.valueAsNumber, 'input'));
 			this.range.addEventListener('change', () =>
 				this.dispatchEvent(new Event('change', { bubbles: true, composed: true })),
 			);
-			this.fit.addEventListener('click', () =>
+			this.#fit.addEventListener('click', () =>
 				emit(this, 'office-command', { command: 'zoom-fit' }),
 			);
 		}
@@ -137,9 +137,9 @@ export const defineZoomSlider = definer('office-ui-zoom-slider', () => {
 			this.in.disabled = disabled || value >= max;
 			this.range.disabled = disabled;
 			const fit = this.getAttribute('fit');
-			this.fit.disabled = disabled;
-			this.fit.setAttribute('aria-label', fit || 'Fit');
-			this.fit.title = fit || 'Fit';
+			this.#fit.disabled = disabled;
+			this.#fit.setAttribute('aria-label', fit || 'Fit');
+			this.#fit.title = fit || 'Fit';
 		}
 	}
 	return OfficeUiZoomSlider;

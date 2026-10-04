@@ -42,7 +42,7 @@ export const defineDialog = definer('office-ui-dialog', () => {
 	class OfficeUiDialog extends HTMLElement {
 		static observedAttributes = ['open', 'heading'];
 		private readonly box: HTMLDivElement;
-		private readonly heading: HTMLHeadingElement;
+		#heading: HTMLHeadingElement;
 		private readonly closeButton: HTMLButtonElement;
 		private readonly footer: HTMLElement;
 		private returnFocus: Element | null = null;
@@ -59,8 +59,8 @@ export const defineDialog = definer('office-ui-dialog', () => {
 			this.box.setAttribute('aria-modal', 'true');
 			this.box.tabIndex = -1;
 			const header = doc.createElement('header');
-			this.heading = doc.createElement('h2');
-			this.heading.id = 'title';
+			this.#heading = doc.createElement('h2');
+			this.#heading.id = 'title';
 			this.box.setAttribute('aria-labelledby', 'title');
 			this.closeButton = doc.createElement('button');
 			this.closeButton.type = 'button';
@@ -69,7 +69,7 @@ export const defineDialog = definer('office-ui-dialog', () => {
 			const icon = createIconSvg(doc);
 			paintIcon(icon, 'close');
 			this.closeButton.append(icon);
-			header.append(this.heading, this.closeButton);
+			header.append(this.#heading, this.closeButton);
 			const body = doc.createElement('div');
 			body.className = 'body';
 			body.append(doc.createElement('slot'));
@@ -84,14 +84,14 @@ export const defineDialog = definer('office-ui-dialog', () => {
 			this.addEventListener('keydown', (event) => this.onKey(event));
 		}
 		attributeChangedCallback(name: string, old: string | null, value: string | null): void {
-			if (name === 'heading') this.heading.textContent = value ?? '';
+			if (name === 'heading') this.#heading.textContent = value ?? '';
 			if (name === 'open' && (old === null) !== (value === null)) {
 				if (value !== null) this.onOpen();
 				else this.onClose();
 			}
 		}
 		connectedCallback(): void {
-			this.heading.textContent = this.getAttribute('heading') ?? '';
+			this.#heading.textContent = this.getAttribute('heading') ?? '';
 			if (this.open) this.onOpen();
 		}
 		get open(): boolean {

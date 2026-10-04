@@ -86,13 +86,13 @@ export const defineRibbonGroup = definer('office-ui-ribbon-group', () => {
 			'icon',
 			'data-open',
 		];
-		private readonly caption: HTMLSpanElement;
-		private readonly launcher: HTMLButtonElement;
-		private readonly face: HTMLButtonElement;
-		private readonly faceIcon: SVGSVGElement;
-		private readonly faceLabel: HTMLSpanElement;
-		private readonly slotEl: HTMLSlotElement;
-		private observer: ResizeObserver | undefined;
+		#caption: HTMLSpanElement;
+		#launcher: HTMLButtonElement;
+		#face: HTMLButtonElement;
+		#faceIcon: SVGSVGElement;
+		#faceLabel: HTMLSpanElement;
+		#slotEl: HTMLSlotElement;
+		#observer: ResizeObserver | undefined;
 		constructor() {
 			super();
 			const doc = this.ownerDocument;
@@ -103,19 +103,19 @@ export const defineRibbonGroup = definer('office-ui-ribbon-group', () => {
 			group.className = 'group';
 			const row = doc.createElement('div');
 			row.className = 'row';
-			this.slotEl = doc.createElement('slot');
-			this.slotEl.addEventListener('slotchange', () => this.observe());
-			row.append(this.slotEl);
-			this.caption = doc.createElement('span');
-			this.caption.className = 'caption';
-			this.launcher = doc.createElement('button');
-			this.launcher.type = 'button';
-			this.launcher.className = 'launcher';
+			this.#slotEl = doc.createElement('slot');
+			this.#slotEl.addEventListener('slotchange', () => this.#observe());
+			row.append(this.#slotEl);
+			this.#caption = doc.createElement('span');
+			this.#caption.className = 'caption';
+			this.#launcher = doc.createElement('button');
+			this.#launcher.type = 'button';
+			this.#launcher.className = 'launcher';
 			const glyph = createIconSvg(doc);
 			paintIcon(glyph, 'launcher');
-			this.launcher.append(glyph);
-			this.launcher.addEventListener('click', () => {
-				if (this.launcher.disabled) return;
+			this.#launcher.append(glyph);
+			this.#launcher.addEventListener('click', () => {
+				if (this.#launcher.disabled) return;
 				const detail = this.launcherDetail();
 				if (detail)
 					this.dispatchEvent(
@@ -124,36 +124,36 @@ export const defineRibbonGroup = definer('office-ui-ribbon-group', () => {
 			});
 			const foot = doc.createElement('div');
 			foot.className = 'foot';
-			foot.append(this.caption, this.launcher);
-			this.face = doc.createElement('button');
-			this.face.type = 'button';
-			this.face.className = 'face';
-			this.face.setAttribute('aria-haspopup', 'true');
-			this.faceIcon = createIconSvg(doc);
-			this.faceLabel = doc.createElement('span');
+			foot.append(this.#caption, this.#launcher);
+			this.#face = doc.createElement('button');
+			this.#face.type = 'button';
+			this.#face.className = 'face';
+			this.#face.setAttribute('aria-haspopup', 'true');
+			this.#faceIcon = createIconSvg(doc);
+			this.#faceLabel = doc.createElement('span');
 			const chevron = createIconSvg(doc);
 			chevron.classList.add('chev');
 			paintIcon(chevron, 'chevronDown');
-			this.face.append(this.faceIcon, this.faceLabel, chevron);
+			this.#face.append(this.#faceIcon, this.#faceLabel, chevron);
 			// The overflow controller listens for this and owns which popup is open.
-			this.face.addEventListener('click', () =>
+			this.#face.addEventListener('click', () =>
 				this.dispatchEvent(
 					new CustomEvent(config().collapseEvent, { bubbles: true, composed: true }),
 				),
 			);
-			group.append(this.face, row, foot);
+			group.append(this.#face, row, foot);
 			root.append(group);
 		}
 		connectedCallback(): void {
 			this.setAttribute('role', 'group');
-			this.sync();
-			this.observe();
+			this.#sync();
+			this.#observe();
 		}
 		disconnectedCallback(): void {
-			this.observer?.disconnect();
+			this.#observer?.disconnect();
 		}
 		attributeChangedCallback(): void {
-			this.sync();
+			this.#sync();
 		}
 		/** The launcher's event detail; null emits nothing. */
 		protected launcherDetail(): Record<string, unknown> | null {
@@ -164,17 +164,17 @@ export const defineRibbonGroup = definer('office-ui-ribbon-group', () => {
 		protected iconName(): string {
 			return this.getAttribute('icon') ?? 'grid';
 		}
-		private observe(): void {
-			this.observer?.disconnect();
+		#observe(): void {
+			this.#observer?.disconnect();
 			// `slotchange` is asynchronous and can fire after removal: observing then would pin the
 			// detached subtree (a ResizeObserver holds its targets), so never re-arm.
 			if (!this.isConnected) return;
 			const Observer = this.ownerDocument.defaultView?.ResizeObserver;
-			if (Observer) this.observer ??= new Observer(() => this.measure());
-			for (const el of this.slotEl.assignedElements()) this.observer?.observe(el);
-			this.measure();
+			if (Observer) this.#observer ??= new Observer(() => this.#measure());
+			for (const el of this.#slotEl.assignedElements()) this.#observer?.observe(el);
+			this.#measure();
 		}
-		private measure(): void {
+		#measure(): void {
 			const children = [...this.children];
 			const stackable = children.filter((el) => {
 				const gallery = el.matches('[mode="dropdown"]')
@@ -193,20 +193,20 @@ export const defineRibbonGroup = definer('office-ui-ribbon-group', () => {
 					tallest <= tokenPx(this, '--office-ribbon-compact-row-max', 36),
 				);
 		}
-		private sync(): void {
+		#sync(): void {
 			const label = this.getAttribute('label') ?? '';
-			this.caption.textContent = label;
+			this.#caption.textContent = label;
 			this.setAttribute('aria-label', label);
 			const launcherLabel = this.getAttribute('launcher-label') ?? `${label} options`;
-			this.launcher.hidden = !this.hasAttribute('launcher');
-			this.launcher.disabled = this.hasAttribute('launcher-disabled');
-			this.launcher.setAttribute('aria-label', launcherLabel);
-			this.launcher.title = launcherLabel;
-			this.faceLabel.textContent = label;
-			this.face.title = label;
-			this.face.setAttribute('aria-label', label);
-			this.face.setAttribute('aria-expanded', String(this.hasAttribute('data-open')));
-			paintIcon(this.faceIcon, this.iconName());
+			this.#launcher.hidden = !this.hasAttribute('launcher');
+			this.#launcher.disabled = this.hasAttribute('launcher-disabled');
+			this.#launcher.setAttribute('aria-label', launcherLabel);
+			this.#launcher.title = launcherLabel;
+			this.#faceLabel.textContent = label;
+			this.#face.title = label;
+			this.#face.setAttribute('aria-label', label);
+			this.#face.setAttribute('aria-expanded', String(this.hasAttribute('data-open')));
+			paintIcon(this.#faceIcon, this.iconName());
 		}
 	}
 	return OfficeUiRibbonGroup;
