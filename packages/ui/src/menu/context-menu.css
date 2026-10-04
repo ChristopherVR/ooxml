@@ -97,6 +97,11 @@
 	width: var(--office-icon-size);
 	text-align: center;
 }
+.shortcut {
+	margin-inline-start: auto;
+	padding-inline-start: var(--office-space-4);
+	color: var(--office-muted-foreground);
+}
 .separator {
 	height: var(--office-border-width);
 	margin: var(--office-space-1) 0;

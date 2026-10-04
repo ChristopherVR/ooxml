@@ -246,3 +246,12 @@ describe('row tooltip', () => {
 		expect(host.shadowRoot?.querySelector('button')?.title).toBe('Clipboard access was denied');
 	});
 });
+
+describe('row shortcut', () => {
+	it('shows a trailing shortcut hint and exposes it to assistive technology', () => {
+		const host = mount({ items: [{ id: 'copy', label: 'Copy', shortcut: 'Ctrl+C' }] });
+		const row = host.shadowRoot?.querySelector('button');
+		expect(row?.getAttribute('aria-keyshortcuts')).toBe('Ctrl+C');
+		expect(row?.querySelector('.shortcut')?.textContent).toBe('Ctrl+C');
+	});
+});

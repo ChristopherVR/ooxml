@@ -23,6 +23,8 @@ export interface OfficeMenuItem {
 	icon?: string;
 	/** Tooltip, for example why a disabled row is unavailable. */
 	title?: string;
+	/** Shortcut hint shown at the trailing edge (Ctrl+C); also its `aria-keyshortcuts`. */
+	shortcut?: string;
 }
 
 /** Everything a controlled menu needs to draw. */

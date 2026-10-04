@@ -369,13 +369,14 @@ export class OfficeUiContextMenu extends OfficeElement {
 			class=${item.danger ? 'item danger' : 'item'}
 			data-item-id=${item.id}
 			title=${ifDefined(item.title)}
+			aria-keyshortcuts=${ifDefined(item.shortcut)}
 			role=${checkable ? 'menuitemcheckbox' : 'menuitem'}
 			aria-checked=${ifDefined(checkable ? String(item.checked) : undefined)}
 			aria-disabled=${ifDefined(item.disabled ? 'true' : undefined)}
 			tabindex=${index === this.active ? 0 : -1}
 			?disabled=${Boolean(item.disabled)}
 			@click=${() => this.fire(this.config().requestEvent, { id: item.id })}
-			>${checkable ? html`<span class="check" aria-hidden="true">${item.checked ? '✓' : ''}</span>` : ''}${item.icon ? glyph(item.icon, 'icon') : ''}${item.label}</button
+			>${checkable ? html`<span class="check" aria-hidden="true">${item.checked ? '✓' : ''}</span>` : ''}${item.icon ? glyph(item.icon, 'icon') : ''}${item.label}${item.shortcut ? html`<span class="shortcut" aria-hidden="true">${item.shortcut}</span>` : ''}</button
 		>`;
 	}
 
