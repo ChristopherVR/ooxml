@@ -38,8 +38,8 @@
 	},
 	"dependencies": {
 		"@christophervr/xlsx-core": "^0.2.1",
-		"ooxml-core": "^0.10.0",
-		"ooxml-ui": "^0.1.9"
+		"ooxml-core": "^0.14.1",
+		"ooxml-ui": "^0.20.0"
 	},
 	"peerDependencies": {
 		"@angular/core": ">=19"
