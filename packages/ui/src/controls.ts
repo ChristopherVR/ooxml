@@ -62,7 +62,12 @@ export {
 export type { OfficeCommandEvent } from './button.js';
 export type { OfficeDialogCloseEvent, OfficeDialogCloseReason } from './dialog.js';
 export type { OfficeSelectOption } from './select.js';
-export type { OfficeStatusActivateEvent } from './status-bar.js';
+export type {
+	OfficeStatusActivateEvent,
+	OfficeStatusBarState,
+	OfficeStatusButton,
+	OfficeStatusText,
+} from './status-bar.js';
 export type { OfficeTab, OfficeTabSelectEvent } from './tab-strip.js';
 export type { OfficeSearchCommand } from './command-search.js';
 export {

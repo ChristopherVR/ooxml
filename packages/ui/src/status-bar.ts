@@ -1,4 +1,5 @@
-import { tok } from './tokens.js';
+import { COMPACT, tok } from './tokens.js';
+import { createStatusBarView, type OfficeStatusBarState } from './status-bar-view.js';
 import { definer, emit } from './registry.js';
 import { attachStyles, controlCss } from './styles.js';
 
@@ -9,22 +10,75 @@ const BAR_CSS = `
 	background: ${tok('--office-surface')}; color: ${tok('--office-foreground')};
 	border-top: ${tok('--office-border-width')} solid ${tok('--office-border')}; font-family: ${tok('--office-font')}; }
 ::slotted([slot="end"]) { margin-inline-start: auto; }
-@media (forced-colors: active) { :host { background: Canvas; color: CanvasText; border-top-color: CanvasText; } }
+.bar { display: contents; }
+[hidden] { display: none !important; }
+:host([data-controlled]) { display: block; flex: none; padding: 0; gap: 0; }
+:host([data-controlled]) .bar { box-sizing: border-box; display: flex; align-items: center; gap: ${tok('--office-space-1')}; width: 100%;
+	min-height: ${tok('--office-status-bar-height')}; padding: ${tok('--office-space-0')} ${tok('--office-space-2')}; color: ${tok('--office-muted-foreground')}; }
+:host([data-controlled]) ::slotted([slot="end"]) { margin-inline-start: 0; }
+.items { display: flex; align-items: center; min-width: 0; }
+.item { flex: none; white-space: nowrap; }
+.item + .item::before { content: ""; display: inline-block; width: ${tok('--office-border-width')}; height: ${tok('--office-space-3')};
+	margin: 0 ${tok('--office-space-2')}; vertical-align: middle; background: ${tok('--office-border')}; }
+.item.saving { color: ${tok('--office-warning')}; }
+.item.error { color: ${tok('--office-danger')}; }
+.spacer { flex: 1; }
+.toggles, .group { display: flex; align-items: center; gap: ${tok('--office-space-0')}; }
+.sep { flex: none; width: ${tok('--office-border-width')}; height: ${tok('--office-space-3')}; margin: 0 ${tok('--office-space-0')}; background: ${tok('--office-border')}; }
+.bar button { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; gap: ${tok('--office-space-1')};
+	min-width: ${tok('--office-control-height-xs')}; min-height: ${tok('--office-control-height-xs')}; padding: ${tok('--office-space-1')}; border: 0; border-radius: ${tok('--office-radius-sm')};
+	background: transparent; color: inherit; font: inherit; cursor: pointer; touch-action: manipulation; }
+.bar button:hover { background: ${tok('--office-selected')}; color: ${tok('--office-foreground')}; }
+.bar button[aria-pressed="true"] { color: ${tok('--office-accent')}; }
+.bar button:active { opacity: .8; }
+.bar button:focus-visible { outline: ${tok('--office-focus-width')} solid ${tok('--office-ring')}; outline-offset: ${tok('--office-focus-offset')}; }
+.bar svg { flex: none; width: ${tok('--office-icon-size')}; height: ${tok('--office-icon-size')}; fill: none; stroke: currentColor;
+	stroke-width: ${tok('--office-icon-stroke')}; stroke-linecap: round; stroke-linejoin: round; }
+.toggle svg, .zoom-step svg { width: ${tok('--office-icon-size-sm')}; height: ${tok('--office-icon-size-sm')}; }
+.zoom-fit { min-width: ${tok('--office-zoom-value-width')}; font-variant-numeric: tabular-nums; }
+@media ${COMPACT} { .narrow-hide, .toggle .label { display: none !important; } }
+@media (pointer: coarse) { .bar button { min-width: ${tok('--office-target-size-touch')}; min-height: ${tok('--office-target-size-touch')}; } }
+@media (forced-colors: active) {
+	:host { background: Canvas; color: CanvasText; border-top-color: CanvasText; }
+	.bar button { color: ButtonText; } .bar button:hover { background: Highlight; color: HighlightText; }
+	.bar button[aria-pressed="true"] { border: ${tok('--office-border-width')} solid Highlight; }
+	.bar button:focus-visible { outline-color: Highlight; }
+	.sep, .item + .item::before { background: CanvasText; }
+}
 `;
 
 /**
- * Status bar container: `role="group"` named by its `label` attribute (default "Status").
- * Children with `slot="end"` are pushed to the trailing edge (zoom, view switches).
+ * Status bar: `role="group"` named by its `label` attribute (default "Status"). Two ways to fill
+ * it. Composed: children, with `slot="end"` pushed to the trailing edge (zoom, view switches).
+ * Controlled: set `state` (`OfficeStatusBarState`: start texts, toggles, view switches and a zoom
+ * cluster, all translated); every button emits `office-status-activate` `{ id }` (static
+ * `activateEvent` lets a product subclass keep its published name). Slots stay available in
+ * controlled mode: the default after the texts, `collaboration` and `end` before the zoom.
  */
 export const defineStatusBar = definer('office-ui-status-bar', () => {
 	class OfficeUiStatusBar extends HTMLElement {
+		static activateEvent = 'office-status-activate';
+		#state: OfficeStatusBarState | undefined;
+		readonly #view;
 		constructor() {
 			super();
 			const root = this.attachShadow({ mode: 'open' });
 			attachStyles(root, controlCss(BAR_CSS));
-			const end = this.ownerDocument.createElement('slot');
-			end.name = 'end';
-			root.append(this.ownerDocument.createElement('slot'), end);
+			this.#view = createStatusBarView(this.ownerDocument, (id) =>
+				emit(this, (this.constructor as unknown as { activateEvent: string }).activateEvent, {
+					id,
+				}),
+			);
+			root.append(this.#view.bar);
+			this.#view.render(undefined);
+		}
+		get state(): OfficeStatusBarState | undefined {
+			return this.#state;
+		}
+		set state(value: OfficeStatusBarState | null | undefined) {
+			this.#state = value ?? undefined;
+			this.toggleAttribute('data-controlled', this.#state !== undefined);
+			this.#view.render(this.#state);
 		}
 		connectedCallback(): void {
 			this.setAttribute('role', 'group');
@@ -106,3 +160,9 @@ export const defineStatusItem = definer('office-ui-status-item', () => {
 	}
 	return OfficeUiStatusItem;
 });
+
+export type {
+	OfficeStatusBarState,
+	OfficeStatusButton,
+	OfficeStatusText,
+} from './status-bar-view.js';

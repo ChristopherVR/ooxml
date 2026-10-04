@@ -30,6 +30,8 @@ const BUILT_IN: Readonly<Record<string, string>> = {
 	settings: 'M3 5h14M6 10h8M8 15h4M6 3v4M12 8v4M10 13v4',
 	clock: 'M3 10a7 7 0 1 0 14 0 7 7 0 1 0-14 0M10 6v4l3 2',
 	reset: 'M4 10a6 6 0 1 1 1.8 4.2M4 6v4h4',
+	plus: 'M10 4v12M4 10h12',
+	minus: 'M4 10h12',
 	search: 'M3 8.5a5.5 5.5 0 1 0 11 0 5.5 5.5 0 1 0-11 0M13 13l4 4',
 	undo: 'M7.5 11.5 3.5 7.5l4-4M3.5 7.5h9a4 4 0 0 1 0 8H10',
 	save: 'M3.5 3h10.5l2.5 2.5V17h-13ZM6 3v5h7V3M6 17v-5.5h8V17',
