@@ -29,6 +29,8 @@ export interface OfficeStatusButton {
 	text?: string | undefined;
 	pressed?: boolean | undefined;
 	hidden?: boolean | undefined;
+	/** Offered but unavailable (a view the product does not provide yet). */
+	disabled?: boolean | undefined;
 }
 
 /** Everything the controlled bar shows, already translated. Absent parts are not rendered. */
@@ -114,6 +116,7 @@ export class OfficeUiStatusBar extends OfficeElement {
 			aria-label=${spec.label}
 			aria-pressed=${ifDefined(spec.pressed === undefined ? undefined : String(spec.pressed))}
 			?hidden=${spec.hidden === true}
+			?disabled=${spec.disabled === true}
 			@click=${() => this.activate(spec.id)}
 			@keydown=${this.onKeydown}
 			>${glyph(spec.icon, 'icon')}${spec.text ? html`<span class="label">${spec.text}</span>` : ''}</button

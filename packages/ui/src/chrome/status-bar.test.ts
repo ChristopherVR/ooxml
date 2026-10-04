@@ -106,6 +106,21 @@ describe('office-ui-status-bar (controlled)', () => {
 		expect(bar.shadowRoot!.querySelector('slot[name="end"]')).not.toBeNull();
 	});
 
+	it('draws an unavailable view disabled and does not activate it', () => {
+		const bar = make({
+			...STATE,
+			views: [
+				{ id: 'normal', icon: 'rectangle', label: 'Normal', pressed: true },
+				{ id: 'layout', icon: 'grid', label: 'Page Layout', disabled: true },
+			],
+		});
+		const seen = vi.fn();
+		bar.addEventListener('office-status-activate', (e) => seen((e as CustomEvent).detail));
+		expect(button(bar, 'Page Layout').disabled).toBe(true);
+		button(bar, 'Page Layout').click();
+		expect(seen).not.toHaveBeenCalled();
+	});
+
 	it('lets a product subclass rename the activation event', () => {
 		const Base = customElements.get('office-ui-status-bar') as unknown as { new (): Bar };
 		class Product extends Base {
