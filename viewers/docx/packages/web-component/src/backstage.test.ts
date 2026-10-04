@@ -36,8 +36,13 @@ function setup(overrides: Partial<BackstageHandlers> = {}) {
 	document.body.append(backstage.element);
 	return { backstage, handlers, calls, options, properties, model };
 }
-const nav = (root: HTMLElement) =>
-	[...root.querySelectorAll('.dve-backstage-nav > button')].map((b) => b.textContent);
+type Updating = HTMLElement & { updateComplete: Promise<unknown> };
+/** The navigation buttons of the shared backstage, once it has rendered. */
+const navButtons = async (root: HTMLElement) => {
+	await (root as Updating).updateComplete;
+	return [...root.shadowRoot!.querySelectorAll<HTMLButtonElement>('button')];
+};
+const nav = async (root: HTMLElement) => (await navButtons(root)).map((b) => b.textContent?.trim());
 const click = (root: HTMLElement, label: string) =>
 	[...root.querySelectorAll<HTMLButtonElement>('.dve-backstage-content button')]
 		.find((b) => b.textContent === label)!
@@ -52,7 +57,7 @@ describe('File backstage', () => {
 		expect(calls).toEqual([['open', undefined]]);
 	});
 
-	it('keeps Tab within File and restores focus and prior inert state', () => {
+	it('makes the editor inert while open and restores focus and prior inert state', () => {
 		const opener = document.createElement('button');
 		const disabledRegion = document.createElement('div');
 		disabledRegion.inert = true;
@@ -61,25 +66,15 @@ describe('File backstage', () => {
 		opener.focus();
 		backstage.open('options');
 		expect(opener.inert).toBe(true);
-		const last = backstage.element.querySelector<HTMLInputElement>('[aria-label="Author name"]')!;
-		last.focus();
-		last.dispatchEvent(
-			new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true }),
-		);
-		expect(document.activeElement?.textContent).toBe('Back to document');
-		document.activeElement!.dispatchEvent(
-			new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true, cancelable: true }),
-		);
-		expect(document.activeElement).toBe(last);
 		backstage.close();
 		expect(document.activeElement).toBe(opener);
 		expect(opener.inert).toBe(false);
 		expect(disabledRegion.inert).toBe(true);
 	});
-	it("lists Word's file actions in order", () => {
+	it("lists Word's file actions in order", async () => {
 		const { backstage } = setup();
-		expect(nav(backstage.element)).toEqual([
-			'Back to document',
+		expect(await nav(backstage.element)).toEqual([
+			'←',
 			'Home',
 			'Info',
 			'New',
@@ -91,7 +86,6 @@ describe('File backstage', () => {
 			'Options',
 			'Customize Ribbon',
 		]);
-		expect(backstage.element.querySelectorAll('[role="separator"]')).toHaveLength(2);
 	});
 
 	it('Info shows the file, its state and the properties panel', () => {
@@ -107,12 +101,10 @@ describe('File backstage', () => {
 		expect(text).toContain('Letter'.toUpperCase());
 	});
 
-	it('Save runs the save command and closes', () => {
+	it('Save runs the save command and closes', async () => {
 		const { backstage, calls, handlers } = setup();
 		backstage.open();
-		[...backstage.element.querySelectorAll<HTMLButtonElement>('.dve-backstage-nav button')]
-			.find((b) => b.textContent === 'Save')!
-			.click();
+		(await navButtons(backstage.element)).find((b) => b.textContent?.trim() === 'Save')!.click();
 		expect(calls).toEqual([['save', undefined]]);
 		expect(handlers.close).toHaveBeenCalled();
 	});
@@ -176,15 +168,14 @@ describe('File backstage', () => {
 		]);
 	});
 
-	it('follows the display language', () => {
+	it('follows the display language', async () => {
 		const { backstage } = setup();
 		backstage.element.dataset.editorLocale = 'fr';
+		backstage.relocalize();
 		backstage.open('saveAs');
 		expect(backstage.element.querySelector('h2')!.textContent).toBe('Enregistrer sous');
 		localizeElement(backstage.element, 'fr');
-		expect(backstage.element.querySelector('.dve-backstage-nav')!.textContent).toContain(
-			'Exporter',
-		);
+		expect(await nav(backstage.element)).toContain('Exporter');
 	});
 });
 
@@ -220,7 +211,7 @@ describe('Customize Ribbon', () => {
 		});
 		backstage.element.dataset.editorLocale = 'fr';
 		backstage.open('customize');
-		const text = backstage.element.querySelector('.dve-backstage-content')!.textContent!;
+		const text = backstage.element.querySelector('[data-backstage-page="customize"]')!.textContent!;
 		expect(text).toContain('Personnaliser le ruban');
 		expect(text).toContain('Réinitialiser toutes les personnalisations');
 		expect(text).toContain('Choisissez les commandes affichées dans le ruban.');

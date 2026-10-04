@@ -29,8 +29,8 @@ describe('Word window chrome', () => {
 		const editor = mount();
 		const r = root(editor);
 		r.querySelector<HTMLButtonElement>('.dve-file-tab')!.click();
-		[...r.querySelectorAll<HTMLButtonElement>('.dve-backstage-nav-item')]
-			.find((button) => button.textContent === 'Options')!
+		(await inner(editor, 'office-ui-backstage'))
+			.querySelector<HTMLButtonElement>('[data-backstage-item="options"]')!
 			.click();
 		const toggle = async (label: string) => {
 			r.querySelector<HTMLInputElement>(
@@ -74,7 +74,7 @@ describe('Word window chrome', () => {
 		expect(editor.documentModel!.blocks[0]).toMatchObject({ numbering: { level: 0 } });
 	});
 
-	it('lets hosts take over file commands by cancelling the file-command event', () => {
+	it('lets hosts take over file commands by cancelling the file-command event', async () => {
 		const editor = mount();
 		const seen: string[] = [];
 		editor.addEventListener('file-command', (event) => {
@@ -83,11 +83,12 @@ describe('Word window chrome', () => {
 		});
 		const click = vi.spyOn(HTMLInputElement.prototype, 'click');
 		root(editor).querySelector<HTMLButtonElement>('.dve-file-tab')!.click();
-		const openPage = [
-			...root(editor).querySelectorAll<HTMLButtonElement>('.dve-backstage-nav-item'),
-		].find((item) => item.textContent === 'Open')!;
-		openPage.click();
-		root(editor).querySelector<HTMLButtonElement>('.dve-backstage-primary')!.click();
+		(await inner(editor, 'office-ui-backstage'))
+			.querySelector<HTMLButtonElement>('[data-backstage-item="open"]')!
+			.click();
+		root(editor)
+			.querySelector<HTMLButtonElement>('[data-backstage-page="open"] .dve-backstage-primary')!
+			.click();
 		expect(seen).toEqual(['open']);
 		expect(click).not.toHaveBeenCalled();
 		click.mockRestore();

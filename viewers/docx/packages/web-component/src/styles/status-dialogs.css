@@ -13,15 +13,6 @@
 	.dve-tellme {
 		display: none;
 	}
-	.dve-backstage {
-		grid-template-columns: 1fr;
-		grid-template-rows: auto minmax(0, 1fr);
-	}
-	.dve-backstage-nav {
-		flex-direction: row;
-		overflow-x: auto;
-		padding: 0;
-	}
 	.dve-backstage-content {
 		padding: 20px;
 	}

@@ -16,47 +16,14 @@
 	background: var(--word-soft);
 }
 
-/* Backstage */
+/* Backstage: the shared office-ui-backstage draws the frame; these colour it and style the pages. */
 .dve-backstage {
-	position: absolute;
+	--office-backstage-nav-width: 220px;
+	--office-backstage-nav-background: var(--word);
+	--office-backstage-nav-foreground: var(--dve-primary-foreground);
+	--office-backstage-item-hover: var(--word-strong);
 	z-index: 40;
-	inset: 0;
-	display: grid;
-	grid-template-columns: 220px minmax(0, 1fr);
 	background: var(--surface);
-}
-.dve-backstage[hidden] {
-	display: none;
-}
-.dve-backstage-nav {
-	display: flex;
-	flex-direction: column;
-	gap: 2px;
-	padding: 12px 0;
-	background: var(--word);
-	color: var(--dve-primary-foreground);
-}
-.dve-backstage-nav-item {
-	display: flex;
-	align-items: center;
-	gap: 10px;
-	padding: 10px 22px;
-	border: 0;
-	background: none;
-	color: inherit;
-	font:
-		14px 'Segoe UI',
-		Arial,
-		sans-serif;
-	text-align: left;
-	cursor: pointer;
-}
-.dve-backstage-nav-item:hover,
-.dve-backstage-nav-item[aria-current='true'] {
-	background: var(--word-strong);
-}
-.dve-backstage-back {
-	margin-bottom: 12px;
 }
 .dve-backstage-content {
 	overflow: auto;
@@ -142,11 +109,6 @@
 	color: var(--muted);
 }
 
-.dve-backstage-separator {
-	height: 1px;
-	margin: 8px 22px;
-	background: color-mix(in srgb, var(--dve-primary-foreground) 35%, transparent);
-}
 .dve-backstage-title {
 	margin: 0 0 4px;
 	font-size: 26px;
@@ -220,29 +182,6 @@
 	height: 18px;
 }
 @media (max-width: 760px) {
-	.dve-backstage {
-		grid-template-columns: minmax(0, 1fr);
-		grid-template-rows: auto minmax(0, 1fr);
-	}
-	.dve-backstage-nav {
-		flex-direction: row;
-		overflow-x: auto;
-		padding: 4px;
-	}
-	.dve-backstage-nav-item {
-		flex: none;
-		padding: 12px;
-		white-space: nowrap;
-	}
-	.dve-backstage-back {
-		margin-bottom: 0;
-	}
-	.dve-backstage-separator {
-		width: 1px;
-		height: auto;
-		margin: 4px;
-		flex: none;
-	}
 	.dve-backstage-content {
 		padding: 20px;
 	}

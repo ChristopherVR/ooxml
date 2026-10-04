@@ -1,6 +1,7 @@
-import { icon, type ChromeIcon } from './chrome-icons';
+import { defineBackstage } from 'ooxml-ui/controls';
+import type { OfficeBackstageItem } from 'ooxml-ui/controls';
 import type { FileCommand } from './file-commands';
-import { translateUiText } from './localization';
+import { normalizeEditorLocale, translate, translateUiText } from './localization';
 import { renderHome } from './backstage-home';
 import { backstageFocus } from './backstage-focus';
 import {
@@ -33,29 +34,30 @@ export interface Backstage {
 	open(page?: BackstagePage): void;
 	close(): void;
 	readonly isOpen: boolean;
+	/** Retranslates the navigation after the editor locale changed, and redraws the open page. */
+	relocalize(): void;
 }
 
-function navButton(iconName: ChromeIcon, label: string): HTMLButtonElement {
-	const button = document.createElement('button');
-	button.type = 'button';
-	button.className = 'dve-backstage-nav-item';
-	const text = document.createElement('span');
-	text.textContent = label;
-	button.append(icon(iconName), text);
-	return button;
-}
+type BackstageElement = HTMLElement & {
+	items: readonly OfficeBackstageItem[];
+	open: boolean;
+	show(page?: string): void;
+};
 
-const PAGES: Array<[BackstagePage, ChromeIcon, string]> = [
-	['home', 'file', 'Home'],
-	['info', 'info', 'Info'],
-	['new', 'file', 'New'],
-	['open', 'folder', 'Open'],
-	['saveAs', 'copy', 'Save As'],
-	['print', 'print', 'Print'],
-	['export', 'file', 'Export'],
-	['options', 'settings', 'Options'],
-	['customize', 'settings', 'Customize Ribbon'],
+/** Navigation order. Save sits among the file actions and has no page of its own. */
+const NAV: Array<{ id: BackstagePage | 'save'; label: string; footer?: boolean }> = [
+	{ id: 'home', label: 'Home' },
+	{ id: 'info', label: 'Info' },
+	{ id: 'new', label: 'New' },
+	{ id: 'open', label: 'Open' },
+	{ id: 'save', label: 'Save' },
+	{ id: 'saveAs', label: 'Save As' },
+	{ id: 'print', label: 'Print' },
+	{ id: 'export', label: 'Export' },
+	{ id: 'options', label: 'Options', footer: true },
+	{ id: 'customize', label: 'Customize Ribbon', footer: true },
 ];
+
 const RENDERERS: Record<BackstagePage, (context: PageContext) => void> = {
 	home: renderHome,
 	info: renderInfo,
@@ -75,28 +77,28 @@ const RENDERERS: Record<BackstagePage, (context: PageContext) => void> = {
  * the editor's language, theme and review author.
  */
 export function createBackstage(handlers: BackstageHandlers): Backstage {
-	const element = document.createElement('section');
+	defineBackstage();
+	const element = document.createElement('office-ui-backstage') as BackstageElement;
 	element.className = 'dve-backstage';
-	element.setAttribute('role', 'dialog');
-	element.setAttribute('aria-modal', 'true');
-	element.hidden = true;
 	const focus = backstageFocus(element);
-	const nav = document.createElement('nav');
-	nav.className = 'dve-backstage-nav';
-	const content = document.createElement('div');
-	content.className = 'dve-backstage-content';
 	const t = (text: string) => translateUiText(element, text);
-	element.setAttribute('aria-label', t('File'));
+	const pages = new Map<BackstagePage, HTMLElement>();
+	for (const { id } of NAV) {
+		if (id === 'save') continue;
+		const page = document.createElement('div');
+		page.className = 'dve-backstage-content';
+		page.dataset.backstagePage = id;
+		page.hidden = true;
+		pages.set(id, page);
+		element.append(page);
+	}
 
-	const back = navButton('back', 'Back to document');
-	back.classList.add('dve-backstage-back');
-	back.addEventListener('click', () => handlers.close());
-	const buttons = new Map<BackstagePage, HTMLButtonElement>();
 	let current: BackstagePage = 'info';
 	// A changed language or theme re-renders the open page so its text follows.
 	const pageHandlers: BackstageHandlers = {
 		...handlers,
 		setOption(key, value) {
+			const content = pages.get(current)!;
 			const active = (element.getRootNode() as Document | ShadowRoot).activeElement;
 			const label =
 				active instanceof HTMLElement && content.contains(active)
@@ -104,8 +106,8 @@ export function createBackstage(handlers: BackstageHandlers): Backstage {
 					: null;
 			handlers.setOption(key, value);
 			queueMicrotask(() => {
-				if (element.hidden) return;
-				show(current);
+				if (!element.open) return;
+				draw(current);
 				if (label)
 					[...content.querySelectorAll<HTMLElement>('[aria-label]')]
 						.find((control) => control.getAttribute('aria-label') === label)
@@ -113,50 +115,54 @@ export function createBackstage(handlers: BackstageHandlers): Backstage {
 			});
 		},
 	};
-	const show = (page: BackstagePage) => {
+	const draw = (page: BackstagePage) => {
 		current = page;
-		for (const [key, button] of buttons) button.setAttribute('aria-current', String(key === page));
-		RENDERERS[page]({ handlers: pageHandlers, t, content });
+		const content = pages.get(page)!;
+		RENDERERS[page]({ handlers: pageHandlers, t, content } satisfies PageContext);
 	};
-	const separator = () => {
-		const line = document.createElement('div');
-		line.className = 'dve-backstage-separator';
-		line.setAttribute('role', 'separator');
-		return line;
+	const localize = () => {
+		const locale = normalizeEditorLocale(element.dataset.editorLocale);
+		element.setAttribute('label', translate(locale, 'File'));
+		element.setAttribute('back-label', translate(locale, 'Back to document'));
+		element.items = NAV.map(({ id, label, footer }) => ({
+			id,
+			label: t(label),
+			...(footer ? { group: 'footer' as const } : {}),
+		}));
 	};
-	const save = navButton('save', 'Save');
-	save.addEventListener('click', () => {
+	localize();
+
+	element.addEventListener('office-backstage-select', (event) => {
+		const { id } = (event as CustomEvent<{ id: string }>).detail;
+		if (id === 'save') {
+			event.preventDefault();
+			handlers.close();
+			handlers.fileCommand('save' satisfies FileCommand);
+		} else draw(id as BackstagePage);
+	});
+	// Back and Escape: the editor decides what closing means (it also closes via `close()`).
+	element.addEventListener('office-backstage-close', (event) => {
+		if ((event as CustomEvent<{ reason: string }>).detail.reason === 'api') return;
+		event.preventDefault();
 		handlers.close();
-		handlers.fileCommand('save' satisfies FileCommand);
 	});
-	nav.append(back);
-	for (const [page, iconName, label] of PAGES) {
-		const button = navButton(iconName, label);
-		button.addEventListener('click', () => show(page));
-		buttons.set(page, button);
-		nav.append(button);
-		// Save sits with Save As, Print and Export as in Word's list of file actions.
-		if (page === 'open') nav.append(separator(), save);
-		if (page === 'export') nav.append(separator());
-	}
-	element.addEventListener('keydown', (event) => {
-		if (event.key === 'Escape') handlers.close();
-	});
-	element.append(nav, content);
 	return {
 		element,
 		open(page = 'home') {
 			focus.open();
-			element.hidden = false;
-			show(page);
-			back.focus();
+			draw(page);
+			element.show(page);
 		},
 		close() {
-			element.hidden = true;
+			if (element.open) element.open = false;
 			focus.close();
 		},
 		get isOpen() {
-			return !element.hidden;
+			return element.open;
+		},
+		relocalize() {
+			localize();
+			if (element.open) draw(current);
 		},
 	};
 }
