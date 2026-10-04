@@ -7,6 +7,15 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.16.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@0.16.0) - 2026-10-04
+
+### Features
+
+- **xlsx:** Add F, beta and gamma inverses and the legacy distribution names (by @ChristopherVR) ([7218339](https://github.com/ChristopherVR/ooxml/commit/721833979bb5b9c939e08a29a1694251bb212e70))
+- **xlsx:** Add Z.TEST, T.TEST, F.TEST, CHISQ.TEST and PROB (by @ChristopherVR) ([f86c3d9](https://github.com/ChristopherVR/ooxml/commit/f86c3d9cee3bf6d99c99e9d294ee19147fb9255c))
+- **xlsx:** Add LINEST, LOGEST, TREND and GROWTH (by @ChristopherVR) ([d61c910](https://github.com/ChristopherVR/ooxml/commit/d61c9105d7b2ffd14426ae1e4f1a18d5da7d51f8))
+- **xlsx:** Add the database functions (DSUM, DCOUNT, DGET and the rest) (by @ChristopherVR) ([8062b9d](https://github.com/ChristopherVR/ooxml/commit/8062b9d38729d74ae9e10ea279963e5d21fa03f4))
+
 ## [0.15.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@0.15.0) - 2026-10-04
 
 ### Features

@@ -7,6 +7,13 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.24.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.24.0) - 2026-10-04
+
+### Features
+
+- **ui:** Let products name the dialog close button (by @ChristopherVR) ([741bdcc](https://github.com/ChristopherVR/ooxml/commit/741bdcc2966d7ee1ad0718b96e49cacdbd44f8e5))
+- **ui:** Let a status-bar button be disabled (by @ChristopherVR) ([2061ac6](https://github.com/ChristopherVR/ooxml/commit/2061ac613333a02f1eda16643c8cdb988832c29f))
+
 ## [0.23.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.23.0) - 2026-10-04
 
 ### Features
