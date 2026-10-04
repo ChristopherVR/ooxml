@@ -2,7 +2,6 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import ts from 'typescript';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const DEPENDENCY_FIELDS = [
@@ -23,36 +22,110 @@ function* sourceFiles(directory) {
 	}
 }
 
-function importSpecifiers(source) {
-	const specifiers = [];
-	const add = (node) => {
-		if (node && ts.isStringLiteralLike(node) && isUi(node.text)) specifiers.push(node);
+/**
+ * Module specifiers of a source file, found with a small tokenizer: strings, templates, regular
+ * expressions and comments are skipped, so only real `import`, `export ... from`, `import(...)`,
+ * `require(...)` and `require.resolve(...)` positions count. (The TypeScript compiler API is not
+ * available from TypeScript 7, and a boundary check should not need a compiler anyway.)
+ */
+function tokens(text) {
+	const out = [];
+	let i = 0;
+	let line = 1;
+	let lineStart = 0;
+	const newline = (at) => {
+		line += 1;
+		lineStart = at + 1;
 	};
-	const visit = (node) => {
-		if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) add(node.moduleSpecifier);
-		else if (
-			ts.isImportEqualsDeclaration(node) &&
-			ts.isExternalModuleReference(node.moduleReference)
-		) {
-			add(node.moduleReference.expression);
-		} else if (ts.isImportTypeNode(node) && ts.isLiteralTypeNode(node.argument)) {
-			add(node.argument.literal);
-		} else if (ts.isCallExpression(node)) {
-			const callee = node.expression;
-			if (
-				callee.kind === ts.SyntaxKind.ImportKeyword ||
-				(ts.isIdentifier(callee) && callee.text === 'require') ||
-				(ts.isPropertyAccessExpression(callee) &&
-					ts.isIdentifier(callee.expression) &&
-					callee.expression.text === 'require' &&
-					callee.name.text === 'resolve')
-			)
-				add(node.arguments[0]);
+	const previous = () => out.at(-1);
+	const regexAllowed = () => {
+		const last = previous();
+		if (!last) return true;
+		if (last.type === 'word')
+			return /^(?:return|typeof|case|in|of|delete|void|throw|new|else|do)$/.test(last.text);
+		return last.type === 'punct' && !/^[)\]}]$/.test(last.text);
+	};
+	while (i < text.length) {
+		const ch = text[i];
+		if (ch === '\n') {
+			newline(i);
+			i += 1;
+		} else if (/\s/.test(ch)) i += 1;
+		else if (ch === '/' && text[i + 1] === '/') {
+			while (i < text.length && text[i] !== '\n') i += 1;
+		} else if (ch === '/' && text[i + 1] === '*') {
+			i += 2;
+			while (i < text.length && !(text[i] === '*' && text[i + 1] === '/')) {
+				if (text[i] === '\n') newline(i);
+				i += 1;
+			}
+			i += 2;
+		} else if (ch === '"' || ch === "'" || ch === '`') {
+			const start = i;
+			const startLine = line;
+			const startColumn = i - lineStart + 1;
+			let value = '';
+			let plain = true;
+			i += 1;
+			while (i < text.length && text[i] !== ch) {
+				if (text[i] === '\\') {
+					value += text[i + 1] ?? '';
+					i += 2;
+					continue;
+				}
+				if (ch === '`' && text[i] === '$' && text[i + 1] === '{') plain = false;
+				if (text[i] === '\n') newline(i);
+				value += text[i];
+				i += 1;
+			}
+			i += 1;
+			out.push({ type: 'string', text: value, plain, line: startLine, column: startColumn, start });
+		} else if (ch === '/' && regexAllowed()) {
+			i += 1;
+			let inClass = false;
+			while (i < text.length && (text[i] !== '/' || inClass) && text[i] !== '\n') {
+				if (text[i] === '\\') i += 1;
+				else if (text[i] === '[') inClass = true;
+				else if (text[i] === ']') inClass = false;
+				i += 1;
+			}
+			i += 1;
+			out.push({ type: 'regex', text: '' });
+		} else if (/[\w$]/.test(ch)) {
+			const start = i;
+			while (i < text.length && /[\w$]/.test(text[i])) i += 1;
+			out.push({ type: 'word', text: text.slice(start, i) });
+		} else {
+			out.push({ type: 'punct', text: ch });
+			i += 1;
 		}
-		ts.forEachChild(node, visit);
-	};
-	visit(source);
-	return specifiers;
+	}
+	return out;
+}
+
+function importSpecifiers(text) {
+	const found = [];
+	const list = tokens(text);
+	const word = (token, value) => token?.type === 'word' && token.text === value;
+	const punct = (token, value) => token?.type === 'punct' && token.text === value;
+	list.forEach((token, index) => {
+		if (token.type !== 'string' || !token.plain || !isUi(token.text)) return;
+		const [one, two, three, four] = [1, 2, 3, 4].map((back) => list[index - back]);
+		const isSpecifier =
+			word(one, 'from') ||
+			word(one, 'import') ||
+			(punct(one, '(') && (word(two, 'import') || word(two, 'require'))) ||
+			(punct(one, '(') && word(two, 'resolve') && punct(three, '.') && word(four, 'require'));
+		if (isSpecifier) found.push(token);
+	});
+	return found;
+}
+
+/** `/// <reference types="..." />` directives, which live in comments. */
+function referenceTypes(text) {
+	return [...text.matchAll(/^\s*\/\/\/\s*<reference\s+types\s*=\s*["']([^"']+)["']/gm)]
+		.map((match) => match[1])
+		.filter(isUi);
 }
 
 export function checkCoreUiBoundary(root = ROOT) {
@@ -66,22 +139,11 @@ export function checkCoreUiBoundary(root = ROOT) {
 		}
 	}
 	for (const path of sourceFiles(join(root, 'src'))) {
-		const source = ts.createSourceFile(
-			path,
-			readFileSync(path, 'utf8'),
-			ts.ScriptTarget.Latest,
-			true,
-		);
-		for (const node of importSpecifiers(source)) {
-			const position = source.getLineAndCharacterOfPosition(node.getStart(source));
-			problems.push(
-				`${relative(root, path)}:${position.line + 1}:${position.character + 1}: imports ${node.text}`,
-			);
-		}
-		for (const reference of source.typeReferenceDirectives) {
-			if (isUi(reference.fileName))
-				problems.push(`${relative(root, path)}: references types from ${reference.fileName}`);
-		}
+		const text = readFileSync(path, 'utf8');
+		for (const token of importSpecifiers(text))
+			problems.push(`${relative(root, path)}:${token.line}:${token.column}: imports ${token.text}`);
+		for (const name of referenceTypes(text))
+			problems.push(`${relative(root, path)}: references types from ${name}`);
 	}
 	return problems;
 }
