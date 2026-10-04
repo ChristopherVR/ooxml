@@ -126,3 +126,16 @@ describe('boolean properties', () => {
 		}
 	});
 });
+
+describe('switch knob', () => {
+	it('is a real, measurable element', () => {
+		registerOfficeUi();
+		const toggle = document.createElement('office-ui-switch');
+		document.body.append(toggle);
+		const knob = toggle.shadowRoot!.querySelector('.knob');
+		expect(knob?.getAttribute('part')).toBe('knob');
+		expect(
+			document.createElement('office-ui-checkbox').shadowRoot!.querySelector('.knob'),
+		).toBeNull();
+	});
+});

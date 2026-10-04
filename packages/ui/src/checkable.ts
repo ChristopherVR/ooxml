@@ -37,12 +37,12 @@ const SWITCH_CSS = `
 	flex: none; border: var(--_b) solid ${tok('--office-switch-border')}; border-radius: ${tok('--office-radius-full')};
 	background: ${tok('--office-switch-track')}; cursor: pointer; vertical-align: middle;
 	touch-action: manipulation; transition: background-color ${tok('--office-duration')}; }
-:host::after { content: ""; position: absolute; top: calc((var(--_h) - 2 * var(--_b) - var(--_k)) / 2); left: var(--_o);
+.knob { display: block; position: absolute; top: calc((var(--_h) - 2 * var(--_b) - var(--_k)) / 2); left: var(--_o);
 	width: var(--_k); height: var(--_k); border-radius: 50%; background: ${tok('--office-switch-thumb')};
 	box-shadow: ${tok('--office-shadow-sm')}; transition: transform ${tok('--office-duration')}; }
 :host([checked]) { border-color: ${tok('--office-switch-track-on')};
 	background: ${tok('--office-switch-track-on')}; }
-:host([checked])::after { transform: translateX(var(--office-switch-knob-travel, calc(var(--_w) - var(--_k) - 2 * var(--_o) - 2 * var(--_b))));
+:host([checked]) .knob { transform: translateX(var(--office-switch-knob-travel, calc(var(--_w) - var(--_k) - 2 * var(--_o) - 2 * var(--_b))));
 	background: ${tok('--office-switch-thumb-on')}; }
 :host(:focus-visible) { outline: ${tok('--office-focus-width')} solid ${tok('--office-ring')}; outline-offset: ${tok('--office-focus-offset')}; }
 :host([disabled]) { opacity: .5; cursor: not-allowed; }
@@ -50,9 +50,9 @@ svg { display: none; }
 @media (pointer: coarse), (max-width: 767px) { :host { --_w: ${tok('--office-switch-width-touch')}; --_h: ${tok('--office-switch-height-touch')}; --_k: ${tok('--office-switch-knob-size-touch')}; } }
 @media (forced-colors: active) {
 	:host { border-color: CanvasText; background: Canvas; forced-color-adjust: none; }
-	:host::after { background: CanvasText; }
+	.knob { background: CanvasText; }
 	:host([checked]) { border-color: Highlight; background: Highlight; }
-	:host([checked])::after { background: HighlightText; }
+	:host([checked]) .knob { background: HighlightText; }
 }
 `;
 
@@ -80,6 +80,13 @@ function makeCheckable(role: 'checkbox' | 'switch', css: string): () => CustomEl
 				const template = this.ownerDocument.createElement('template');
 				template.innerHTML = CHECK_SVG;
 				root.append(template.content.cloneNode(true));
+				// The switch draws a real knob element, so hosts and tests can measure and style it.
+				if (role === 'switch') {
+					const knob = this.ownerDocument.createElement('span');
+					knob.className = 'knob';
+					knob.setAttribute('part', 'knob');
+					root.append(knob);
+				}
 				this.addEventListener('click', (event) => {
 					if (this.disabled) event.preventDefault();
 					else this.toggle();

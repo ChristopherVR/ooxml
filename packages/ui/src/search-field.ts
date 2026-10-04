@@ -20,7 +20,10 @@ const CSS = `
 :host(:focus-within) { border-color: ${tok('--office-field-border-focus')}; }
 :host([variant="titlebar"]) { height: ${tok('--office-field-height')}; gap: ${tok('--office-space-1-5')}; padding-inline: ${tok('--office-space-3-5')};
 	border-color: ${tok('--office-border')}; border-radius: ${tok('--office-radius-md')}; background: ${tok('--office-background')}; }
-:host([variant="titlebar"]:focus-within) { color: ${tok('--office-foreground')}; }
+:host([variant="titlebar"]:focus-within) {
+	border-color: ${tok('--office-field-border-focus')};
+	color: ${tok('--office-foreground')};
+}
 :host([disabled]) { opacity: .5; cursor: not-allowed; }
 svg { width: ${tok('--office-icon-size-md')}; height: ${tok('--office-icon-size-md')}; flex: none; }
 :host([variant="titlebar"]) svg { width: ${tok('--office-icon-size')}; height: ${tok('--office-icon-size')}; }
