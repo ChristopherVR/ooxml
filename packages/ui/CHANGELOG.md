@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.16.2](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.16.2) - 2026-10-04
+
+### Bug Fixes
+
+- **ui:** Read an empty string as true in boolean properties (by @ChristopherVR) ([236cdce](https://github.com/ChristopherVR/ooxml/commit/236cdce367e911c8a826e0299e3e7048a59d8e81))
+
 ## [0.16.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.16.1) - 2026-10-04
 
 ### Bug Fixes
