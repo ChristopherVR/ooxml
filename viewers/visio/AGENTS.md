@@ -212,7 +212,9 @@ otherwise install Playwright Chromium.
 ## GitHub Pages
 
 `https://christophervr.github.io/visio-viewer/` is the public beta docs site and
-`/demo/` is the playground. `.github/workflows/pages.yml` builds the pinned
+`/demo/` is the vanilla playground; `/demo-react/`, `/demo-vue/`, `/demo-angular/`,
+`/demo-svelte/` and `/demo-solid/` mount the same workspace (`demo/workspace.ts`) through each
+framework binding (`packages/bindings/demos`, built by `scripts/build-demos.mjs`). `.github/workflows/pages.yml` builds the pinned
 core and viewer, runs full checks and browser tests, and deploys `site-dist/`
 on pushes to `main`. The OOXML launcher embeds the demo; update its registry
 when a public demo route changes. Embedded theme follows the shared

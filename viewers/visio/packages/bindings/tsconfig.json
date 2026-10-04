@@ -10,6 +10,8 @@
 		"src/**/*.ts",
 		"src/**/*.tsx",
 		"tests/**/*.ts",
+		"demos/**/*.ts",
+		"demos/**/*.tsx",
 		"vitest.config.ts",
 		"vitest.ssr.config.ts"
 	],

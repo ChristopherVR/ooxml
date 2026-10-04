@@ -1,3 +1,4 @@
+import { FRAMEWORK_DEMOS } from '../scripts/framework-demos.mjs';
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
@@ -59,6 +60,15 @@ describe('static documentation contracts', () => {
 					element.getAttribute('data-src');
 				if (/^(https?:|mailto:|#)/.test(value)) continue;
 				assert.ok(!value.startsWith('/'), `Root-absolute URL breaks repository hosting: ${value}`);
+				// Framework demos are built (scripts/build-demos.mjs); only their known routes are allowed.
+				const built = /^(?:\.\.\/)?demo-([a-z]+)\/$/.exec(value.split(/[?#]/)[0]);
+				if (built) {
+					assert.ok(
+						FRAMEWORK_DEMOS.some((demo) => demo.id === built[1]),
+						`Unknown framework demo: ${value}`,
+					);
+					continue;
+				}
 				const target = resolve(root, dirname(page), decodeURIComponent(value.split(/[?#]/)[0]));
 				assert.ok(existsSync(target), `Missing local target: ${value}`);
 			}

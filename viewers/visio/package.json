@@ -17,7 +17,7 @@
 	},
 	"scripts": {
 		"dev": "vite --host 127.0.0.1",
-		"build": "vite build --config vite.lib.config.ts && tsc -p tsconfig.build.json --emitDeclarationOnly && vite build",
+		"build": "vite build --config vite.lib.config.ts && tsc -p tsconfig.build.json --emitDeclarationOnly && vite build && node scripts/build-demos.mjs",
 		"typecheck": "tsc --noEmit",
 		"test": "vitest run",
 		"test:browser": "playwright test && node scripts/test-packages-browser.mjs",

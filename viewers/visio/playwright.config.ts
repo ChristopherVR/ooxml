@@ -10,7 +10,7 @@ export default defineConfig({
 	},
 	webServer: {
 		command:
-			'npm exec vite build -- --mode browser-tests && npm exec vite preview -- --outDir .browser-test-dist --host 127.0.0.1 --port 4173',
+			'npm exec vite build -- --mode browser-tests && node scripts/build-demos.mjs .browser-test-dist && npm exec vite preview -- --outDir .browser-test-dist --host 127.0.0.1 --port 4173',
 		url: 'http://127.0.0.1:4173/demo/',
 		reuseExistingServer: false,
 	},

@@ -10,3 +10,6 @@ release-notes/
 
 .package-build/
 .browser-test-dist/
+
+# Framework demo pages, generated from demo/index.html by scripts/build-demos.mjs
+packages/bindings/demos/*/index.html
