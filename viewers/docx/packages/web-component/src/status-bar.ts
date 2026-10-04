@@ -1,5 +1,7 @@
-import { icon, iconButton } from './chrome-icons';
-import { translateUiText } from './localization';
+import { defineStatusBar, defineZoomSlider } from 'ooxml-ui/controls';
+import type { OfficeStatusBarState } from 'ooxml-ui/controls';
+import { registerIcon } from 'ooxml-ui/icons';
+import { normalizeEditorLocale, translate } from './localization';
 
 export interface StatusBarHandlers {
 	setViewMode(mode: 'draft' | 'print'): void;
@@ -14,86 +16,112 @@ export interface StatusBar {
 	setNoteCount(count: number): void;
 	setViewMode(mode: 'draft' | 'print'): void;
 	setZoom(percent: number): void;
+	/** Redraws every label after the editor locale changed. */
+	relocalize(): void;
 }
 
 export const ZOOM_MIN = 50;
 export const ZOOM_MAX = 200;
 
-/** Word-style status bar: page/words/language on the left, views and zoom on the right. */
+type StatusBarElement = HTMLElement & { state: OfficeStatusBarState };
+type ZoomSliderElement = HTMLElement & { value: number };
+
+/** Word's layout switches, drawn on the shared 20px grid; product icons stay with the product. */
+const LAYOUT_ICONS = {
+	webLayout: 'M3 5h14v10H3z M3 8h14',
+	printLayout: 'M5 3h10v14H5z M8 7h4 M8 10h4',
+};
+
+/**
+ * Word-style status bar: page/words/language on the left, views and zoom on the right. The shared
+ * `office-ui-status-bar` draws it from translated state and `office-ui-zoom-slider` supplies the zoom
+ * controls; this module only holds the model and routes the activations to the editor.
+ */
 export function createStatusBar(handlers: StatusBarHandlers): StatusBar {
-	const element = document.createElement('footer');
+	defineStatusBar();
+	defineZoomSlider();
+	for (const [name, d] of Object.entries(LAYOUT_ICONS)) registerIcon(name, d);
+
+	const element = document.createElement('office-ui-status-bar') as StatusBarElement;
 	element.className = 'dve-status';
-	const left = document.createElement('div');
-	left.className = 'dve-status-left';
-	const page = document.createElement('span');
-	page.className = 'dve-status-page';
-	const words = document.createElement('span');
-	words.className = 'dve-status-words';
-	const language = document.createElement('span');
-	language.className = 'dve-status-language';
-	const notes = document.createElement('button');
-	notes.type = 'button';
-	notes.className = 'dve-status-notes';
-	notes.hidden = true;
-	const notesText = document.createElement('span');
-	notes.append(icon('warning'), notesText);
-	notes.addEventListener('click', () => handlers.showCompatibilityNotes());
-	left.append(page, words, language, notes);
+	const slider = document.createElement('office-ui-zoom-slider') as ZoomSliderElement;
+	slider.slot = 'end';
+	slider.setAttribute('min', String(ZOOM_MIN));
+	slider.setAttribute('max', String(ZOOM_MAX));
+	slider.className = 'dve-zoom';
+	element.append(slider);
 
-	const right = document.createElement('div');
-	right.className = 'dve-status-right';
-	const webView = iconButton('webView', 'Web Layout');
-	const printView = iconButton('pageView', 'Print Layout');
-	webView.addEventListener('click', () => handlers.setViewMode('draft'));
-	printView.addEventListener('click', () => handlers.setViewMode('print'));
-	const zoomOut = iconButton('minus', 'Zoom out');
-	const zoomIn = iconButton('plus', 'Zoom in');
-	const slider = document.createElement('input');
-	slider.type = 'range';
-	slider.className = 'dve-zoom-slider';
-	slider.min = String(ZOOM_MIN);
-	slider.max = String(ZOOM_MAX);
-	slider.step = '10';
-	slider.setAttribute('aria-label', 'Zoom level');
-	const percent = document.createElement('button');
-	percent.type = 'button';
-	percent.className = 'dve-zoom-percent';
-	percent.setAttribute('aria-label', 'Reset zoom');
-	percent.title = 'Reset zoom';
-	const clamp = (value: number) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, value));
-	zoomOut.addEventListener('click', () => handlers.setZoom(clamp(Number(slider.value) - 10)));
-	zoomIn.addEventListener('click', () => handlers.setZoom(clamp(Number(slider.value) + 10)));
-	slider.addEventListener('input', () => handlers.setZoom(clamp(Number(slider.value))));
-	percent.addEventListener('click', () => handlers.setZoom(100));
-	right.append(webView, printView, zoomOut, slider, zoomIn, percent);
-	element.append(left, right);
+	const model = { page: '', words: '', language: '', notes: 0, mode: 'draft', zoom: 100 };
+	const locale = () => normalizeEditorLocale(element.dataset.editorLocale);
 
+	const render = () => {
+		const t = locale();
+		const noteKey = model.notes === 1 ? 'status.note' : 'status.notes';
+		const layout = (mode: 'draft' | 'print', key: 'Web Layout' | 'Print Layout') => ({
+			id: mode,
+			icon: mode === 'draft' ? 'webLayout' : 'printLayout',
+			label: translate(t, key),
+			pressed: model.mode === mode,
+		});
+		element.state = {
+			items: [
+				{
+					id: 'page',
+					text: model.page,
+					title: translate(t, 'nav.approximate'),
+					live: true,
+				},
+				{ id: 'words', text: model.words },
+				...(model.language ? [{ id: 'language', text: model.language, narrowHide: true }] : []),
+			],
+			toggles: [
+				{
+					id: 'notes',
+					icon: 'warning',
+					label: translate(t, noteKey).replace('{count}', String(model.notes)),
+					text: translate(t, noteKey).replace('{count}', String(model.notes)),
+					hidden: model.notes === 0,
+				},
+			],
+			views: [layout('draft', 'Web Layout'), layout('print', 'Print Layout')],
+		};
+		slider.setAttribute('out-label', translate(t, 'Zoom out'));
+		slider.setAttribute('in-label', translate(t, 'Zoom in'));
+		slider.setAttribute('slider-label', translate(t, 'Zoom level'));
+		slider.value = model.zoom;
+	};
+
+	element.addEventListener('office-status-activate', (event) => {
+		const { id } = (event as CustomEvent<{ id: string }>).detail;
+		if (id === 'notes') handlers.showCompatibilityNotes();
+		else if (id === 'draft' || id === 'print') handlers.setViewMode(id);
+	});
+	slider.addEventListener('input', () => handlers.setZoom(slider.value));
+
+	render();
 	return {
 		element,
 		setPageAndWords(pageText, wordText) {
-			page.textContent = pageText;
-			// Pagination comes from this editor's own layout engine, so say it is not Word's.
-			page.title = translateUiText(element, 'nav.approximate');
-			words.textContent = wordText;
+			model.page = pageText;
+			model.words = wordText;
+			render();
 		},
 		setLanguage(value) {
-			language.textContent = value;
-			language.hidden = !value;
+			model.language = value;
+			render();
 		},
 		setNoteCount(count) {
-			notes.hidden = count === 0;
-			notesText.textContent = translateUiText(
-				element,
-				count === 1 ? 'status.note' : 'status.notes',
-			).replace('{count}', String(count));
+			model.notes = count;
+			render();
 		},
 		setViewMode(mode) {
-			webView.setAttribute('aria-pressed', String(mode === 'draft'));
-			printView.setAttribute('aria-pressed', String(mode === 'print'));
+			model.mode = mode;
+			render();
 		},
 		setZoom(value) {
-			slider.value = String(value);
-			percent.textContent = `${value}%`;
+			model.zoom = value;
+			render();
 		},
+		relocalize: render,
 	};
 }

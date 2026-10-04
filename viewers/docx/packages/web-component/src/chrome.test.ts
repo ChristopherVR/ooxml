@@ -16,6 +16,13 @@ function mount(): DocxEditorElement {
 	return editor;
 }
 const root = (editor: DocxEditorElement) => editor.shadowRoot!;
+type Updating = HTMLElement & { updateComplete: Promise<unknown> };
+/** The shadow root of a shared element inside the editor, once it has rendered. */
+const inner = async (editor: DocxEditorElement, tag: string) => {
+	const element = root(editor).querySelector<Updating>(tag)!;
+	await element.updateComplete;
+	return element.shadowRoot!;
+};
 
 describe('Word window chrome', () => {
 	it('File Options changes live view and spelling preferences without editing the document', async () => {
@@ -86,11 +93,13 @@ describe('Word window chrome', () => {
 		click.mockRestore();
 	});
 
-	it('lists compatibility notes in File > Info and from the status bar', () => {
+	it('lists compatibility notes in File > Info and from the status bar', async () => {
 		const editor = mount();
-		const notes = root(editor).querySelector<HTMLButtonElement>('.dve-status-notes')!;
+		const notes = (await inner(editor, 'office-ui-status-bar')).querySelector<HTMLButtonElement>(
+			'[data-id="notes"]',
+		)!;
 		expect(notes.hidden).toBe(false);
-		expect(notes.textContent).toBe('1 compatibility note');
+		expect(notes.textContent?.trim()).toBe('1 compatibility note');
 		notes.click();
 		const backstage = root(editor).querySelector<HTMLElement>('.dve-backstage')!;
 		expect(backstage.hidden).toBe(false);
@@ -98,10 +107,12 @@ describe('Word window chrome', () => {
 		expect(backstage.textContent).toContain('Report.docx');
 	});
 
-	it('zooms from the status bar and switches to viewing mode from the title bar', () => {
+	it('zooms from the status bar and switches to viewing mode from the title bar', async () => {
 		const editor = mount();
-		root(editor).querySelector<HTMLButtonElement>('[aria-label="Zoom in"]')!.click();
-		expect(root(editor).querySelector('.dve-zoom-percent')?.textContent).toBe('110%');
+		const zoom = await inner(editor, 'office-ui-zoom-slider');
+		zoom.querySelector<HTMLButtonElement>('[aria-label="Zoom in"]')!.click();
+		await root(editor).querySelector<Updating>('office-ui-zoom-slider')!.updateComplete;
+		expect(zoom.querySelector('output')?.textContent).toBe('110%');
 		const mode = root(editor).querySelector<HTMLSelectElement>('.dve-mode-select')!;
 		mode.value = 'viewing';
 		mode.dispatchEvent(new Event('change'));

@@ -138,6 +138,7 @@ export class EditorChrome {
 			element.dataset.editorLocale = locale;
 			localizeElement(element, locale);
 		}
+		this.statusBar.relocalize();
 		const fileTab = this.host.ribbon()?.querySelector('.dve-file-tab');
 		if (fileTab) fileTab.textContent = translate(locale, 'File');
 		this.fileInput.setAttribute('aria-label', translate(locale, 'Open'));

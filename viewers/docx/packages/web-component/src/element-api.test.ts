@@ -222,7 +222,7 @@ describe('page rail in Print Layout', () => {
 		vi.useRealTimers();
 	});
 
-	it('lists a thumbnail per laid-out page and emits page-change', () => {
+	it('lists a thumbnail per laid-out page and emits page-change', async () => {
 		vi.useFakeTimers();
 		const editor = mount(paragraphs(40));
 		const events: { page: number; pageCount: number }[] = [];
@@ -237,10 +237,13 @@ describe('page rail in Print Layout', () => {
 		const options = shell(editor).querySelectorAll('.dve-pages-rail [role="option"]');
 		expect(options).toHaveLength(pages);
 		expect(events.at(-1)).toEqual({ page: 1, pageCount: pages });
-		expect(shell(editor).querySelector('.dve-status-page')!.textContent).toBe(`Page 1 of ${pages}`);
-		expect(shell(editor).querySelector<HTMLElement>('.dve-status-page')!.title).toContain(
-			'approximation',
-		);
+		const bar = shell(editor).querySelector('office-ui-status-bar') as HTMLElement & {
+			updateComplete: Promise<unknown>;
+		};
+		await bar.updateComplete;
+		const page = bar.shadowRoot!.querySelector<HTMLElement>('[data-item="page"]')!;
+		expect(page.textContent).toBe(`Page 1 of ${pages}`);
+		expect(page.title).toContain('approximation');
 	});
 });
 

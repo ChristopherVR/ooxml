@@ -234,17 +234,6 @@
 .ribbon-group select.line-spacing-select {
 	width: 112px;
 }
-.dve-status {
-	display: block;
-	flex: none;
-	min-width: 0;
-	padding: 6px 14px;
-	border-bottom: 1px solid var(--line);
-	border-top: 1px solid var(--line);
-	background: var(--surface);
-	color: var(--muted);
-	font-size: 11px;
-}
 .dve-body {
 	display: flex;
 	flex: 1;

@@ -174,9 +174,6 @@
 	.ribbon-group select.line-spacing-select {
 		width: min(112px, 32vw);
 	}
-	.dve-status {
-		padding: 5px 8px;
-	}
 }
 .dve-break-marker {
 	display: block;

@@ -1,69 +1,16 @@
-/* Status bar */
+/* Status bar: drawn by the shared office-ui-status-bar; this only places it in the frame. */
 .dve-status {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 12px;
-	min-height: 26px;
-	padding: 0 10px;
-	border-bottom: 0;
-	background: var(--chrome);
-	font-size: 11px;
-}
-.dve-status-left,
-.dve-status-right {
-	display: flex;
+	display: block;
+	flex: none;
 	min-width: 0;
-	align-items: center;
-	gap: 14px;
-	white-space: nowrap;
-}
-.dve-status-right {
-	gap: 2px;
-}
-.dve-status-notes {
-	display: inline-flex;
-	align-items: center;
-	gap: 4px;
-	padding: 2px 6px;
-	border: 0;
-	border-radius: 4px;
-	background: none;
-	color: inherit;
-	font: inherit;
-	cursor: pointer;
-}
-.dve-status-notes:hover {
-	background: var(--word-soft);
-}
-.dve-status-notes[hidden],
-.dve-status-language[hidden] {
-	display: none;
-}
-.dve-status .dve-icon-button {
-	min-width: 24px;
-	height: 22px;
-}
-.dve-zoom-slider {
-	width: 110px;
-	accent-color: var(--word);
-}
-.dve-zoom-percent {
-	min-width: 44px;
-	border: 0;
-	background: none;
-	color: inherit;
-	font: inherit;
-	cursor: pointer;
+	border-top: 1px solid var(--line);
 }
 
 @media (max-width: 760px) {
 	.dve-titlebar {
 		grid-template-columns: minmax(0, 1fr) auto;
 	}
-	.dve-tellme,
-	.dve-status-language,
-	.dve-zoom-slider {
+	.dve-tellme {
 		display: none;
 	}
 	.dve-backstage {
