@@ -1,3 +1,4 @@
+import { HYPOTHESIS_TESTS } from './hypothesis-tests.js';
 import { ERR, fail, type Scalar } from '../values.js';
 import { criteriaPairs, liftCriteria, matchingValues } from './criteria.js';
 import { all, collectNumbers, num, spec } from './helpers.js';
@@ -15,6 +16,7 @@ const numbersOf = (values: Scalar[]): number[] =>
 const extreme = S.extreme;
 
 export const STATISTICAL_FUNCTIONS: FunctionSpec[] = [
+	...HYPOTHESIS_TESTS,
 	...STATISTICAL_SPREAD,
 	...STATISTICAL_MORE,
 	...COUNT_FUNCTIONS,
