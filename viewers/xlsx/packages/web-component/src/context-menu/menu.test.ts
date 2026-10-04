@@ -10,42 +10,32 @@ const entries: MenuEntry[] = [
 	{ id: 'three', label: 'Three', action: () => {}, separatorBefore: true },
 ];
 
-const key = (target: Element, k: string) =>
-	target.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true }));
+type Menu = HTMLElement & { updateComplete: Promise<unknown> };
+/** The rows the shared element drew, once it has rendered. */
+const rowsOf = async (menu: { element: HTMLElement }) => {
+	await (menu.element as Menu).updateComplete;
+	return [...menu.element.shadowRoot!.querySelectorAll<HTMLButtonElement>('[role="menuitem"]')];
+};
+const request = (menu: { element: HTMLElement }, id: string) =>
+	menu.element.dispatchEvent(new CustomEvent('office-menu-request', { detail: { id } }));
 
 afterEach(() => document.body.replaceChildren());
 
-describe('context menu DOM', () => {
-	it('renders menu items, disables unknown commands and shows shortcuts', () => {
+describe('context menu', () => {
+	it('draws the entries with the shared element, disabling unknown commands', async () => {
 		const ctx = createTestContext();
 		ctx.commands.register({ id: 'test.one', label: 'One', run() {} });
-		const { element } = openContextMenu(ctx, entries, 20, 30);
-		expect(element.getAttribute('role')).toBe('menu');
-		expect(ctx.root.contains(element)).toBe(true);
-		const items = [...element.querySelectorAll('[role="menuitem"]')];
-		expect(items.map((i) => i.getAttribute('data-item'))).toEqual(['one', 'two', 'three']);
-		expect(items[1]?.getAttribute('aria-disabled')).toBe('true');
-		expect(element.querySelector('.xcm-shortcut')?.textContent).toBe('Ctrl+1');
-		expect(element.querySelectorAll('[role="separator"]').length).toBe(1);
-		expect(ctx.root.activeElement).toBe(items[0]);
+		const menu = openContextMenu(ctx, entries, 20, 30);
+		expect(menu.element.localName).toBe('office-ui-context-menu');
+		expect(ctx.root.contains(menu.element)).toBe(true);
+		const rows = await rowsOf(menu);
+		expect(rows.map((row) => row.dataset.itemId)).toEqual(['one', 'two', 'three']);
+		expect(rows.map((row) => row.disabled)).toEqual([false, true, false]);
+		expect(rows[0]?.querySelector('.shortcut')?.textContent).toBe('Ctrl+1');
+		expect(menu.element.shadowRoot!.querySelectorAll('[role="separator"]')).toHaveLength(1);
 	});
 
-	it('moves focus with the keyboard, skipping disabled items', () => {
-		const ctx = createTestContext();
-		ctx.commands.register({ id: 'test.one', label: 'One', run() {} });
-		const { element } = openContextMenu(ctx, entries, 0, 0);
-		const items = [...element.querySelectorAll<HTMLElement>('[role="menuitem"]')];
-		key(items[0]!, 'ArrowDown');
-		expect(ctx.root.activeElement).toBe(items[2]);
-		key(items[2]!, 'ArrowDown');
-		expect(ctx.root.activeElement).toBe(items[0]);
-		key(items[0]!, 'End');
-		expect(ctx.root.activeElement).toBe(items[2]);
-		key(items[2]!, 'Home');
-		expect(ctx.root.activeElement).toBe(items[0]);
-	});
-
-	it('runs the command with its argument and closes', async () => {
+	it('runs the command with its argument, closes and restores focus', async () => {
 		const ctx = createTestContext();
 		const ran: unknown[] = [];
 		ctx.commands.register({ id: 'test.one', label: 'One', run: (_c, arg) => void ran.push(arg) });
@@ -57,7 +47,7 @@ describe('context menu DOM', () => {
 			0,
 			{ restoreFocus: () => void focused++ },
 		);
-		key(menu.element.querySelector('[data-item="one"]')!, 'Enter');
+		request(menu, 'one');
 		await Promise.resolve();
 		expect(ran).toEqual([7]);
 		expect(menu.element.isConnected).toBe(false);
@@ -69,11 +59,11 @@ describe('context menu DOM', () => {
 		const ctx = createTestContext();
 		let ran = 0;
 		const menu = openContextMenu(ctx, [{ id: 'a', label: 'A', action: () => void ran++ }], 0, 0);
-		menu.element.querySelector<HTMLElement>('[data-item="a"]')!.click();
+		request(menu, 'a');
 		expect(ran).toBe(1);
 	});
 
-	it('closes on Escape and keeps one menu per context', () => {
+	it('keeps one menu per context and closes on a dismissal event', () => {
 		const ctx = createTestContext();
 		let closed = 0;
 		const first = openContextMenu(ctx, entries, 0, 0, { onClose: () => void closed++ });
@@ -81,24 +71,32 @@ describe('context menu DOM', () => {
 		expect(first.element.isConnected).toBe(false);
 		expect(closed).toBe(1);
 		expect(currentContextMenu(ctx)).toBe(second);
-		key(second.element, 'Escape');
+		second.element.dispatchEvent(
+			new CustomEvent('office-menu-close', { detail: { reason: 'escape' } }),
+		);
 		expect(second.element.isConnected).toBe(false);
 	});
 
-	it('dismisses on an outside pointerdown', async () => {
+	it('restores focus after Escape but not after an outside click', () => {
 		const ctx = createTestContext();
-		const menu = openContextMenu(ctx, entries, 0, 0);
-		await new Promise((resolve) => setTimeout(resolve, 0));
-		menu.element.dispatchEvent(new Event('pointerdown', { bubbles: true, composed: true }));
-		expect(menu.element.isConnected).toBe(true);
-		document.body.dispatchEvent(new Event('pointerdown', { bubbles: true }));
-		expect(menu.element.isConnected).toBe(false);
+		let focused = 0;
+		const restoreFocus = () => void focused++;
+		const escaped = openContextMenu(ctx, entries, 0, 0, { restoreFocus });
+		escaped.element.dispatchEvent(
+			new CustomEvent('office-menu-close', { detail: { reason: 'escape' } }),
+		);
+		expect(focused).toBe(1);
+		const outside = openContextMenu(ctx, entries, 0, 0, { restoreFocus });
+		outside.element.dispatchEvent(
+			new CustomEvent('office-menu-close', { detail: { reason: 'outside' } }),
+		);
+		expect(focused).toBe(1);
 	});
 
-	it('translates labels through ctx.t', () => {
+	it('translates labels through ctx.t', async () => {
 		const ctx = createTestContext();
 		Object.assign(ctx, { t: (k: string) => `[${k}]` });
 		const menu = openContextMenu(ctx, entries, 0, 0);
-		expect(menu.element.querySelector('.xcm-label')?.textContent).toBe('[One]');
+		expect((await rowsOf(menu))[0]?.textContent).toContain('[One]');
 	});
 });

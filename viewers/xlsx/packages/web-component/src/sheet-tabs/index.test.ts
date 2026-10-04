@@ -137,7 +137,7 @@ describe('sheet tabs', () => {
 		expect(ctx.activeSheet()).toBe(3);
 	});
 
-	it('opens the tab menu on right click and renames from it', () => {
+	it('opens the tab menu on right click and renames from it', async () => {
 		const { ctx, container } = mount();
 		tab(container, 'Last').dispatchEvent(
 			new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: 5, clientY: 5 }),
@@ -145,10 +145,12 @@ describe('sheet tabs', () => {
 		expect(ctx.activeSheet()).toBe(3);
 		const menu = currentContextMenu(ctx)!;
 		expect(menu).toBeDefined();
-		const unhide = menu.element.querySelector('[data-item="unhide"]');
+		await (menu.element as HTMLElement & { updateComplete: Promise<unknown> }).updateComplete;
+		const row = (id: string) =>
+			menu.element.shadowRoot!.querySelector<HTMLButtonElement>(`[data-item-id="${id}"]`);
 		// No `sheet.unhide` command is registered in this test context.
-		expect(unhide?.getAttribute('aria-disabled')).toBe('true');
-		menu.element.querySelector<HTMLElement>('[data-item="rename"]')!.click();
+		expect(row('unhide')?.getAttribute('aria-disabled')).toBe('true');
+		row('rename')!.click();
 		expect(container.querySelector('.xst-rename')).not.toBeNull();
 	});
 

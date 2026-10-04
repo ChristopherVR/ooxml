@@ -39,6 +39,6 @@
 	"dependencies": {
 		"@christophervr/xlsx-core": "^0.2.1",
 		"ooxml-core": "^0.15.0",
-		"ooxml-ui": "^0.21.0"
+		"ooxml-ui": "^0.23.0"
 	}
 }

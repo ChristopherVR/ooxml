@@ -1,12 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-	cellMenu,
-	clampToViewport,
-	columnHeaderMenu,
-	rowHeaderMenu,
-	tabMenu,
-	type MenuEntry,
-} from './items';
+import { cellMenu, columnHeaderMenu, rowHeaderMenu, tabMenu, type MenuEntry } from './items';
 
 const ids = (entries: MenuEntry[]) => entries.map((e) => e.id);
 const disabled = (entries: MenuEntry[]) => entries.filter((e) => e.disabled).map((e) => e.id);
@@ -110,19 +103,5 @@ describe('tab menu', () => {
 		expect(locked.find((e) => e.id === 'protect')?.label).toBe('Unprotect Sheet');
 		const readOnly = tabMenu({ ...state, readOnly: true }, { rename() {} });
 		expect(readOnly.every((e) => e.disabled)).toBe(true);
-	});
-});
-
-describe('clampToViewport', () => {
-	it('keeps the menu inside the viewport', () => {
-		const viewport = { width: 1000, height: 800 };
-		expect(clampToViewport(990, 750, { width: 200, height: 100 }, viewport)).toEqual({
-			left: 796,
-			top: 696,
-		});
-		expect(clampToViewport(10, 10, { width: 50, height: 50 }, viewport)).toEqual({
-			left: 10,
-			top: 10,
-		});
 	});
 });

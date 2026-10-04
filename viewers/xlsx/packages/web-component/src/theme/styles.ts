@@ -1,6 +1,7 @@
 import { darkTheme, lightTheme } from './defaults';
 import { themeToCssVars } from './css-vars';
 import type { XlsxTheme } from './types';
+import officeBridge from './office-bridge.css?inline';
 import shell from './shell.css?inline';
 import ribbon from './ribbon.css?inline';
 import popups from './popups.css?inline';
@@ -21,4 +22,11 @@ export const themeTokenText = `:host{${declarations(lightTheme, 'light')}}
 :host([theme="light"]){${declarations(lightTheme, 'light')}}`;
 
 /** The shell stylesheet (tokens, chrome, ribbon, popups, backstage) for the shadow root. */
-export const editorStyleText = [themeTokenText, shell, ribbon, popups, backstage].join('\n');
+export const editorStyleText = [
+	themeTokenText,
+	officeBridge,
+	shell,
+	ribbon,
+	popups,
+	backstage,
+].join('\n');
