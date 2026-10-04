@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.18.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.18.1) - 2026-10-04
+
+### Bug Fixes
+
+- **ui:** Keep status bar clusters named while hidden (by @ChristopherVR) ([a60a0cf](https://github.com/ChristopherVR/ooxml/commit/a60a0cfef12cdaf131dfe19365b00583c22249d6))
+
 ## [0.18.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.18.0) - 2026-10-04
 
 ### Features
