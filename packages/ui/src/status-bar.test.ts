@@ -50,9 +50,15 @@ describe('office-ui-status-bar (controlled)', () => {
 	it('hides absent parts and patches buttons in place', () => {
 		const bar = make();
 		const normal = button(bar, 'Normal');
-		bar.state = { ...STATE, views: [{ ...(STATE.views as OfficeStatusButton[])[0]!, hidden: true }] };
+		bar.state = {
+			...STATE,
+			views: [{ ...(STATE.views as OfficeStatusButton[])[0]!, hidden: true }],
+		};
 		expect(button(bar, 'Normal')).toBe(normal);
 		expect(normal.hidden).toBe(true);
+		expect(bar.shadowRoot!.querySelector<HTMLElement>('.views')!.hidden).toBe(true);
+		bar.state = { ...STATE, zoom: { ...STATE.zoom!, hidden: true } };
+		expect(button(bar, 'Zoom in').closest<HTMLElement>('.group')!.hidden).toBe(true);
 		bar.state = { items: STATE.items! };
 		const groups = bar.shadowRoot!.querySelectorAll<HTMLElement>('.group');
 		expect([...groups].map((g) => g.hidden)).toEqual([true, true]);

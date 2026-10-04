@@ -27,7 +27,7 @@ export interface OfficeStatusButton {
 export interface OfficeStatusBarState {
 	items?: readonly OfficeStatusText[] | undefined;
 	toggles?: readonly OfficeStatusButton[] | undefined;
-	/** The view switches (Normal, Sorter, Reading); hidden while empty or `false`. */
+	/** The view switches (Normal, Sorter, Reading); hidden while empty, all hidden or `false`. */
 	views?: readonly OfficeStatusButton[] | false | undefined;
 	/** Zoom out, percentage (zoom to fit) and zoom in; emits `zoomOut`, `zoomFit`, `zoomIn`. */
 	zoom?:
@@ -36,6 +36,8 @@ export interface OfficeStatusBarState {
 				outLabel: string;
 				fitLabel: string;
 				inLabel: string;
+				/** Keeps the named buttons but hides the cluster. */
+				hidden?: boolean | undefined;
 				/** Glyphs; default `minus` and `plus`. */
 				outIcon?: string | undefined;
 				inIcon?: string | undefined;
@@ -201,14 +203,14 @@ export function createStatusBarView(doc: Document, activate: (id: string) => voi
 			items.hidden = itemSpecs.length === 0;
 			const toggleSpecs = state?.toggles ?? [];
 			renderToggles(toggleSpecs);
-			toggles.hidden = toggleSpecs.length === 0;
+			toggles.hidden = toggleSpecs.every((spec) => spec.hidden === true);
 			const viewSpecs = state?.views || [];
 			renderViews(viewSpecs);
-			views.hidden = viewSpecs.length === 0;
+			views.hidden = viewSpecs.every((spec) => spec.hidden === true);
 			viewSep.hidden = views.hidden || toggles.hidden;
 			spacer.hidden = !state;
 			const z = state?.zoom;
-			zoomSep.hidden = zoom.hidden = !z;
+			zoomSep.hidden = zoom.hidden = !z || z.hidden === true;
 			if (z) {
 				name(zoomOut, z.outLabel);
 				name(zoomFit, z.fitLabel);
