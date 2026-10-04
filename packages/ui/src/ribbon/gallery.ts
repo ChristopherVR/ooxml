@@ -326,6 +326,11 @@ export class OfficeUiGallery extends OfficeElement {
 		</section>`;
 	}
 
+	/** The tiles are light-DOM children of the host, shown through this slot. */
+	protected override render() {
+		return html`<slot></slot>`;
+	}
+
 	protected override updated(): void {
 		const state = this.model;
 		if (state && this.unavailable() && this.opened) this.close();
