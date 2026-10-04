@@ -127,8 +127,14 @@ describe('teams client', () => {
 		expect(a.getState().call).toBeNull();
 	});
 
-	it('appends the access token only to files on the configured server', () => {
+	it('asks the server for a signed link and never puts the token in a URL', async () => {
+		const calls: { url: string; auth: string | undefined }[] = [];
+		const fetchStub = (async (url: string, init?: { headers?: Record<string, string> }) => {
+			calls.push({ url, auth: init?.headers?.Authorization });
+			return { ok: true, json: async () => ({ url: '/files/x/a.docx?sig=abc&exp=9' }) };
+		}) as unknown as typeof fetch;
 		const a = make('ada', 'store-token', {
+			fetch: fetchStub,
 			config: {
 				mode: 'server',
 				syncUrl: 'ws://127.0.0.1:1/sync',
@@ -136,13 +142,21 @@ describe('teams client', () => {
 				token: 'sek ret',
 			},
 		});
-		expect(a.fileUrl({ url: 'http://127.0.0.1:1/files/x/a.docx' })).toBe(
-			'http://127.0.0.1:1/files/x/a.docx?token=sek+ret',
+		expect(await a.fileUrl({ url: 'http://127.0.0.1:1/files/x/a.docx' })).toBe(
+			'http://127.0.0.1:1/files/x/a.docx?sig=abc&exp=9',
 		);
-		expect(a.fileUrl({ url: 'https://elsewhere.example/a.docx' })).toBe(
+		expect(calls).toEqual([
+			{ url: 'http://127.0.0.1:1/files/link/x/a.docx', auth: 'Bearer sek ret' },
+		]);
+		// Foreign origins and other paths are returned as they are, and no request is made.
+		expect(await a.fileUrl({ url: 'https://elsewhere.example/a.docx' })).toBe(
 			'https://elsewhere.example/a.docx',
 		);
-		expect(a.fileUrl({})).toBeUndefined();
+		expect(await a.fileUrl({ url: 'http://127.0.0.1:1.evil.example/files/x/a.docx' })).toBe(
+			'http://127.0.0.1:1.evil.example/files/x/a.docx',
+		);
+		expect(await a.fileUrl({})).toBeUndefined();
+		expect(calls).toHaveLength(1);
 	});
 });
 

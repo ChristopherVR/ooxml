@@ -36,7 +36,7 @@ unread counts and a `live` flag), the selected channel with its `messages` and `
 preview). Every button is an action: `select`, `createChannel`, `send` (with file uploads),
 `startReply`, `startEdit`, `deleteMessage`, `toggleReaction`, `notifyTyping`, `setAvailability`,
 `search`, `openCall`, `setPrejoin`, `joinCall`, `leaveCall`, `toggleMic`, `toggleCamera`,
-`toggleScreenShare`, `toggleHand`, `fileUrl`, `destroy`. Errors a user should see arrive as
+`toggleScreenShare`, `toggleHand`, `fileUrl` (async: a short-lived signed link, never the token), `destroy`. Errors a user should see arrive as
 `on('notice', ...)`.
 
 This is the shape every binding exposes as a raw hook (`useTeams` in React and Vue,
@@ -91,10 +91,14 @@ throws):
    sockets of the room, and sends `{ "type": "bye", "from": <id> }` to them when a socket closes. A
    socket speaks for one peer id (the first `from` it uses). It does not need to understand the
    messages (`signaling.ts` defines them).
-3. **Files** (optional): `POST|GET <origin>/files/<workspace>/<name>`.
+3. **Files** (optional): `POST|GET <origin>/files/<workspace>/<name>`, with the token in an
+   `Authorization: Bearer` header. To open a file in a browser tab the client calls
+   `POST <origin>/files/link/<workspace>/<name>` (same header) and gets `{ url }` back: a link
+   signed for that one file, valid for a few minutes (`?sig=...&exp=...`), so the token never
+   appears in a URL.
 
-Both sockets receive `?token=<token>` when a token is configured; enforce it, and an origin
-allowlist, on the server. Validate room names (`^[\w-]{1,128}$`) and cap message sizes.
+Both sockets receive `?token=<token>` when a token is configured (a browser cannot set headers on
+a WebSocket); enforce it, and an origin allowlist, on the server. Validate room names (`^[\w-]{1,128}$`) and cap message sizes.
 
 ### STUN and TURN
 

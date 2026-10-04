@@ -107,8 +107,12 @@ export interface TeamsClient {
 	notifyTyping: () => void;
 	setAvailability: (value: Availability) => void;
 	search: (query: string) => void;
-	/** The URL to open for an attachment, with the access token appended for your own server. */
-	fileUrl: (attachment: { url?: string | undefined }) => string | undefined;
+	/**
+	 * The URL to open for an attachment. On your own server it asks for a short-lived link signed
+	 * for that one file (`POST /files/link/<id>/<name>` with the token in the Authorization header),
+	 * so the long-lived token never appears in a URL. Other URLs come back unchanged.
+	 */
+	fileUrl: (attachment: { url?: string | undefined }) => Promise<string | undefined>;
 	openCall: (channelId?: string) => Promise<void>;
 	setPrejoin: (next: Partial<{ audio: boolean; video: boolean }>) => Promise<void>;
 	joinCall: () => Promise<void>;
@@ -423,7 +427,7 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 		search: act((q) => {
 			query = q;
 		}),
-		fileUrl(attachment) {
+		async fileUrl(attachment) {
 			const target = server();
 			const raw = attachment.url;
 			if (!raw || !target?.token) return raw;
@@ -438,8 +442,22 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			}
 			if (url.origin !== target.base || url.username || url.password) return raw;
 			if (!url.pathname.startsWith('/files/')) return raw;
-			url.searchParams.set('token', target.token);
-			return url.toString();
+			try {
+				const doFetch = options.fetch ?? globalThis.fetch;
+				const res = await doFetch(
+					`${target.base}/files/link${url.pathname.slice('/files'.length)}`,
+					{
+						method: 'POST',
+						headers: { Authorization: `Bearer ${target.token}` },
+					},
+				);
+				if (!res.ok) throw new Error(`Link failed (${res.status})`);
+				const { url: signed } = (await res.json()) as { url: string };
+				return `${target.base}${signed}`;
+			} catch (error) {
+				notice(error instanceof Error ? error.message : 'Could not open the file');
+				return undefined;
+			}
 		},
 		async openCall(channelId = selected) {
 			if (!channelId) return;
