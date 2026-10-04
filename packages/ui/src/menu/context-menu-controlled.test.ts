@@ -235,3 +235,14 @@ describe('office-ui-context-menu controlled mode', () => {
 		expect(host.shadowRoot!.querySelectorAll('[role="separator"]')).toHaveLength(2);
 	});
 });
+
+describe('row tooltip', () => {
+	it('shows an item title, for example why a row is unavailable', () => {
+		const host = mount({
+			items: [
+				{ id: 'paste', label: 'Paste', disabled: true, title: 'Clipboard access was denied' },
+			],
+		});
+		expect(host.shadowRoot?.querySelector('button')?.title).toBe('Clipboard access was denied');
+	});
+});

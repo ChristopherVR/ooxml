@@ -368,6 +368,7 @@ export class OfficeUiContextMenu extends OfficeElement {
 			type="button"
 			class=${item.danger ? 'item danger' : 'item'}
 			data-item-id=${item.id}
+			title=${ifDefined(item.title)}
 			role=${checkable ? 'menuitemcheckbox' : 'menuitem'}
 			aria-checked=${ifDefined(checkable ? String(item.checked) : undefined)}
 			aria-disabled=${ifDefined(item.disabled ? 'true' : undefined)}

@@ -21,6 +21,8 @@ export interface OfficeMenuItem {
 	checked?: boolean;
 	/** A registered icon drawn before the label. */
 	icon?: string;
+	/** Tooltip, for example why a disabled row is unavailable. */
+	title?: string;
 }
 
 /** Everything a controlled menu needs to draw. */
