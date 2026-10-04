@@ -23,7 +23,10 @@ function square(m: number[][]): number {
 }
 
 /** Gaussian elimination with partial pivoting; returns the determinant and, optionally, the inverse. */
-function eliminate(input: number[][], invert: boolean): { det: number; inverse?: number[][] } {
+export function eliminate(
+	input: number[][],
+	invert: boolean,
+): { det: number; inverse?: number[][] } {
 	const n = square(input);
 	const a = input.map((row) => [...row]);
 	const inv: number[][] = Array.from({ length: n }, (_, i) =>
