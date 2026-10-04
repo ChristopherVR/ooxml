@@ -16,8 +16,6 @@ export class OfficeUiPrintPreview extends OfficeElement {
 	static override styles = controlStyles(css);
 	static override properties = {
 		// `pages` clamps the index and `index` clamps itself to the pages, so both have accessors.
-		pages: { attribute: false, noAccessor: true },
-		index: { attribute: false, noAccessor: true },
 		label: { type: String },
 		emptyLabel: { attribute: 'empty-label', type: String },
 	};

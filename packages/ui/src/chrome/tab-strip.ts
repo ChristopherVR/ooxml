@@ -33,7 +33,6 @@ export class OfficeUiTabStrip extends OfficeElement {
 	static override styles = controlStyles(css);
 	static override properties = {
 		// `tabs` is sanitised and copied, `selected` reads as '' when unset: both have accessors.
-		tabs: { attribute: false, noAccessor: true },
 		selected: { type: String, noAccessor: true },
 		label: { type: String },
 		previousLabel: { attribute: 'previous-label', type: String },

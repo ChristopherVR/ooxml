@@ -186,7 +186,7 @@ export class OfficeUiRadio extends OfficeElement {
 				for (const peer of this.peers())
 					if (peer !== this && present(peer.checked)) peer.checked = false;
 			refreshTabStops(this.peers());
-		} else this.tabIndex = disabled ? -1 : 0;
+		} else this.setAttribute('tabindex', disabled ? '-1' : '0');
 	}
 
 	protected override render() {

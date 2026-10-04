@@ -103,6 +103,15 @@ describe('subclassing the elements', () => {
 		expect(button.shadowRoot!.querySelector('svg path')).not.toBeNull();
 	});
 
+	it('shows the shadow DOM of an element that was never connected, and applies host attributes on connect', () => {
+		const slider = document.createElement('office-ui-zoom-slider');
+		expect(slider.shadowRoot!.querySelector('[aria-label="Zoom in"]')).not.toBeNull();
+		// Host attributes wait for the element to connect (a constructor may not add them).
+		expect(slider.getAttribute('role')).toBeNull();
+		document.body.append(slider);
+		expect(slider.getAttribute('role')).toBe('group');
+	});
+
 	it('keeps a controlled toggle controlled until the host commits', () => {
 		const toggle = document.createElement('office-ui-ribbon-toggle') as HTMLElement & {
 			checked: boolean;

@@ -48,7 +48,6 @@ export class OfficeUiTitleBar extends OfficeElement {
 	static searchTag = 'office-ui-search';
 	static override styles = controlStyles(css);
 	static override properties = {
-		state: { attribute: false, noAccessor: true },
 		placement: { type: String, noAccessor: true },
 		stop: { state: true },
 		found: { state: true },
@@ -62,8 +61,6 @@ export class OfficeUiTitleBar extends OfficeElement {
 	declare resultsOpen: boolean;
 	declare live: string;
 	private model: OfficeTitleBarState = EMPTY;
-	private skipRendered = false;
-	private renderedOwed = false;
 
 	constructor() {
 		super();
@@ -93,11 +90,8 @@ export class OfficeUiTitleBar extends OfficeElement {
 
 	/** The search field inside the bar, for hosts that move focus to it (Alt+Q). */
 	get searchField(): HTMLElement {
-		// A subclass reads this in its constructor, which may not add host attributes, so that
-		// first render skips `rendered()` (it runs when the element connects instead).
-		this.skipRendered = true;
+		// A subclass reads this in its constructor: the first render queues its host writes.
 		this.ensureRendered();
-		this.skipRendered = false;
 		return this.renderRoot.querySelector<HTMLElement>('[part="search"]') as HTMLElement;
 	}
 
@@ -326,17 +320,8 @@ export class OfficeUiTitleBar extends OfficeElement {
 		if (changed.has('state' as never) && this.resultsOpen) this.openResults();
 	}
 
-	override connectedCallback(): void {
-		super.connectedCallback();
-		if (this.renderedOwed) {
-			this.renderedOwed = false;
-			this.rendered();
-		}
-	}
-
 	protected override updated(): void {
-		if (this.skipRendered) this.renderedOwed = true;
-		else this.rendered();
+		this.rendered();
 	}
 
 	protected override render() {

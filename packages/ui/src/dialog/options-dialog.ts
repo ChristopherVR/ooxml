@@ -78,8 +78,6 @@ export class OfficeUiOptionsDialog extends OfficeElement {
 		heading: { type: String },
 		categories: { attribute: false },
 		// `values` keeps a private copy and `category` validates its id, so both have accessors.
-		values: { attribute: false, noAccessor: true },
-		category: { attribute: false, noAccessor: true },
 		active: { state: true },
 	};
 	declare open: boolean;

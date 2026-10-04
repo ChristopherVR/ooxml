@@ -51,8 +51,6 @@ export class OfficeUiContextMenu extends OfficeElement {
 	static override properties = {
 		label: { type: String },
 		open: { attribute: 'data-open', ...flag },
-		// Setting `state` switches the menu to controlled mode, so it has an accessor below.
-		state: { attribute: false, noAccessor: true, hasChanged: stateChanged },
 	};
 	declare label: string | null;
 	declare open: boolean;
@@ -226,7 +224,7 @@ export class OfficeUiContextMenu extends OfficeElement {
 			this.toggleAttribute('data-controlled', true);
 			if (this.isConnected) this.opener = this.deepActive();
 		}
-		this.requestUpdate('state', old);
+		if (stateChanged(value, old)) this.requestUpdate('state', old);
 	}
 
 	private deepActive(): HTMLElement | null {
@@ -239,10 +237,12 @@ export class OfficeUiContextMenu extends OfficeElement {
 		if (!this.controlled) return;
 		if (changed.has('state' as never)) {
 			const { items, markers, zIndex } = this.model;
-			this.hidden = items.length === 0;
+			this.toggleAttribute('hidden', items.length === 0);
 			this.applyMarkers(markers ?? []);
-			if (zIndex !== undefined) this.style.zIndex = String(zIndex);
-			else this.style.removeProperty('z-index');
+			this.hostWrite(() => {
+				if (zIndex !== undefined) this.style.zIndex = String(zIndex);
+				else this.style.removeProperty('z-index');
+			});
 			const same = items[this.active];
 			this.active = same && !same.disabled ? this.active : nextEnabledIndex(items, -1, 1);
 		}

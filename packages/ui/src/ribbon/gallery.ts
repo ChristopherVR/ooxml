@@ -334,7 +334,8 @@ export class OfficeUiGallery extends OfficeElement {
 	protected override updated(): void {
 		const state = this.model;
 		if (state && this.unavailable() && this.opened) this.close();
-		// The tiles live in the light DOM, rendered into the host itself.
+		// The tiles live in the light DOM, rendered into the host itself (not from a constructor).
+		if (this.detachedFirstRender) return;
 		render(this.lightTemplate(), this, { host: this });
 		this.markHost();
 		if (this.opened) this.position();

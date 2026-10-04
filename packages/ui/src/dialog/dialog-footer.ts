@@ -39,8 +39,8 @@ export class OfficeUiDialogFooter extends OfficeElement {
 	static requestEvent = 'office-dialog-footer-request';
 	static testIdPrefix = 'office-dialog-footer';
 	static override styles = controlStyles(css);
-	// A product subclass overrides `state`, so the model lives in a private field behind it.
-	static override properties = { state: { attribute: false, noAccessor: true } };
+	// A product subclass overrides `state` with its own accessor, so Lit is not told about it: its
+	// first update would read the property before the subclass's fields exist.
 	private model: OfficeDialogFooterState = { actions: [] };
 
 	get state(): OfficeDialogFooterState {

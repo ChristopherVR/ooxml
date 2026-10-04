@@ -71,7 +71,7 @@ export abstract class OfficeUiCheckable extends OfficeElement {
 		this.setAttribute('role', this.semantics);
 		this.setAttribute('aria-checked', String(checked));
 		this.setAttribute('aria-disabled', String(disabled));
-		this.tabIndex = disabled ? -1 : 0;
+		this.setAttribute('tabindex', disabled ? '-1' : '0');
 		this.internals?.setFormValue?.(checked && !disabled ? this.value : null);
 	}
 

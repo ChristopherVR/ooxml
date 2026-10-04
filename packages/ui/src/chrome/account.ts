@@ -17,8 +17,6 @@ import css from './account.css?raw';
  */
 export class OfficeUiAccount extends OfficeElement {
 	static override styles = controlStyles(css);
-	// `profile` is validated on the way in and copied on the way out, so it has an accessor.
-	static override properties = { profile: { attribute: false, noAccessor: true } };
 	private current: OfficeProfile = { ...DEFAULT_OFFICE_PROFILE };
 
 	get profile(): OfficeProfile {

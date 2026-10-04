@@ -41,7 +41,6 @@ export class OfficeUiSelect extends OfficeElement {
 	static override properties = {
 		// `value` and `options` are derived from the `<option>` children, so they have accessors.
 		value: { type: String, reflect: true, noAccessor: true },
-		options: { attribute: false, noAccessor: true },
 		disabled: flag,
 		open: flag,
 		active: { state: true },

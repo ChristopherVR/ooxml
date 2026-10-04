@@ -67,7 +67,6 @@ export class OfficeUiStatusBar extends OfficeElement {
 	static override styles = controlStyles(css);
 	static override properties = {
 		// Setting `state` marks the bar controlled, so it has an accessor below.
-		state: { attribute: false, noAccessor: true },
 		label: { type: String },
 		hasCollaboration: { state: true },
 	};

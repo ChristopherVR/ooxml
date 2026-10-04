@@ -35,8 +35,8 @@ export class OfficeUiPasteOptions extends OfficeElement {
 	static dismissEvent = 'office-paste-options-dismiss';
 	static testIdPrefix = 'office-paste-options';
 	static override styles = controlStyles(css);
-	// A product subclass overrides `state`, so the model lives in a private field behind it.
-	static override properties = { state: { attribute: false, noAccessor: true } };
+	// A product subclass overrides `state` with its own accessor, so Lit is not told about it: its
+	// first update would read the property before the subclass's fields exist.
 	private model: OfficePasteOptionsState = { left: 0, top: 0, options: [] };
 
 	get state(): OfficePasteOptionsState {
@@ -92,8 +92,11 @@ export class OfficeUiPasteOptions extends OfficeElement {
 	}
 
 	protected override willUpdate(): void {
-		this.style.left = `calc(${this.model.left}px + ${tok('--office-space-1')})`;
-		this.style.top = `calc(${this.model.top}px + ${tok('--office-space-1')})`;
+		const { left, top } = this.model;
+		this.hostWrite(() => {
+			this.style.left = `calc(${left}px + ${tok('--office-space-1')})`;
+			this.style.top = `calc(${top}px + ${tok('--office-space-1')})`;
+		});
 	}
 
 	protected override render() {

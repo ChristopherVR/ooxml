@@ -35,8 +35,8 @@ export class OfficeUiToasts extends OfficeElement {
 	static requestEvent = 'office-toasts-request';
 	static testIdPrefix = 'office-toast';
 	static override styles = controlStyles(css);
-	// A product subclass overrides `state`, so the model lives in a private field behind it.
-	static override properties = { state: { attribute: false, noAccessor: true } };
+	// A product subclass overrides `state` with its own accessor, so Lit is not told about it: its
+	// first update would read the property before the subclass's fields exist.
 	private model: OfficeToastsState = { toasts: [] };
 
 	get state(): OfficeToastsState {
@@ -49,8 +49,8 @@ export class OfficeUiToasts extends OfficeElement {
 
 	protected override willUpdate(_changed: PropertyValues<this>): void {
 		const { testIdPrefix } = this.constructor as typeof OfficeUiToasts;
-		this.dataset.testid = `${testIdPrefix}s`;
-		this.hidden = this.model.toasts.length === 0;
+		this.setAttribute('data-testid', `${testIdPrefix}s`);
+		this.toggleAttribute('hidden', this.model.toasts.length === 0);
 	}
 
 	protected override render() {

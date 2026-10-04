@@ -42,8 +42,8 @@ export class OfficeUiReadOnlyBanner extends OfficeElement {
 	static requestEvent = 'office-read-only-request';
 	static testIdPrefix = 'office-readonly';
 	static override styles = controlStyles(css);
-	// A product subclass overrides `state`, so the model lives in a private field behind it.
-	static override properties = { state: { attribute: false, noAccessor: true } };
+	// A product subclass overrides `state` with its own accessor, so Lit is not told about it: its
+	// first update would read the property before the subclass's fields exist.
 	private model: OfficeReadOnlyBannerState = { kind: null, message: '' };
 
 	get state(): OfficeReadOnlyBannerState {
@@ -70,9 +70,9 @@ export class OfficeUiReadOnlyBanner extends OfficeElement {
 
 	protected override willUpdate(): void {
 		const { testIdPrefix } = this.constructor as typeof OfficeUiReadOnlyBanner;
-		this.dataset.testid = `${testIdPrefix}-banner`;
-		if (this.model.kind) this.dataset.kind = this.model.kind;
-		else delete this.dataset.kind;
+		this.setAttribute('data-testid', `${testIdPrefix}-banner`);
+		if (this.model.kind) this.setAttribute('data-kind', this.model.kind);
+		else this.removeAttribute('data-kind');
 	}
 
 	/** The password field takes focus when the prompt opens and is cleared when it closes. */

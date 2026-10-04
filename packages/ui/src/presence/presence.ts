@@ -60,7 +60,6 @@ export class OfficeUiPresence extends OfficeElement {
 	static override styles = controlStyles(css);
 	static override properties = {
 		// `participants` keeps the local user first, so it has an accessor.
-		participants: { attribute: false, noAccessor: true },
 		max: { type: String },
 		label: { type: String },
 	};

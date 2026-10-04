@@ -79,8 +79,9 @@ export type OfficeProperties = PropertyDeclarations;
  *
  * - The shadow root exists as soon as the constructor returns, so a subclass can attach its own
  *   styles there.
- * - Reading `shadowRoot` of a connected element that has not rendered yet renders it first, so a
- *   subclass that inspects the shadow DOM before calling `super.connectedCallback()` finds it. A
+ * - Reading `shadowRoot` of an element that has not rendered yet renders it first (host writes
+ *   are held back until it connects and the element re-renders), so a subclass or a host that inspects the shadow DOM right
+ *   after construction, or before connecting, finds it. A
  *   microtask renders a connected element that nothing else rendered, for a subclass that
  *   overrides `connectedCallback` without calling `super`.
  * - Updates are synchronous: setting a property or attribute has redrawn the shadow DOM before
@@ -107,16 +108,72 @@ export class OfficeElement extends LitElement {
 			});
 	}
 
-	/** Render now if the element has never rendered; a no-op afterwards or while rendering. */
+	/**
+	 * Render now if the element has never rendered; a no-op afterwards or while rendering. A
+	 * disconnected element may be rendered here from inside a constructor (a subclass reading
+	 * `shadowRoot`), and a constructor may not add host attributes, so while it renders its host
+	 * writes are queued and applied before the next write or update, or on connection.
+	 */
 	ensureRendered(): void {
 		if (
-			this._ready &&
-			!this._rendering &&
-			!this.hasUpdated &&
-			this.isUpdatePending &&
-			(this.constructor as typeof OfficeElement).syncUpdates
+			!this._ready ||
+			this._rendering ||
+			this.hasUpdated ||
+			!this.isUpdatePending ||
+			!(this.constructor as typeof OfficeElement).syncUpdates
 		)
+			return;
+		this._deferring = !this.isConnected;
+		this._detachedRender ||= this._deferring;
+		try {
 			this.performUpdate();
+		} finally {
+			this._deferring = false;
+		}
+	}
+
+	private _detachedRender?: boolean;
+
+	/** True while a detached first render runs (inside a constructor, maybe): no children may be added. */
+	protected get detachedFirstRender(): boolean {
+		return this._deferring === true;
+	}
+
+	private _queue: (() => void)[] | undefined;
+	private _deferring?: boolean;
+
+	/** Write to the host element: queued (and dropped) during a detached first render, else applied at once. */
+	protected hostWrite(write: () => void): void {
+		if (this._deferring) (this._queue ??= []).push(write);
+		else {
+			this.flushHost();
+			write();
+		}
+	}
+
+	/**
+	 * Forget the host writes a detached first render queued. They are stale by the time anything
+	 * else happens (replaying one would fire an attribute change that overwrites a newer property),
+	 * and the render that follows connecting recomputes every host write from the current state.
+	 */
+	protected flushHost(): void {
+		this._queue = undefined;
+	}
+
+	override setAttribute(name: string, value: string): void {
+		this.hostWrite(() => super.setAttribute(name, value));
+	}
+	override removeAttribute(name: string): void {
+		this.hostWrite(() => super.removeAttribute(name));
+	}
+	override toggleAttribute(name: string, force?: boolean): boolean {
+		if (!this._deferring) {
+			this.flushHost();
+			return super.toggleAttribute(name, force as boolean);
+		}
+		const on = force ?? !this.hasAttribute(name);
+		this.hostWrite(() => super.toggleAttribute(name, on));
+		return on;
 	}
 
 	/**
@@ -210,11 +267,18 @@ export class OfficeElement extends LitElement {
 	}
 
 	override connectedCallback(): void {
+		this.flushHost();
 		super.connectedCallback();
+		// A render made before connecting could not see the connected state: redo it once.
+		if (this._detachedRender) {
+			this._detachedRender = false;
+			this.requestUpdate();
+		}
 		if (this.immediate && !this.hasUpdated && this.isUpdatePending) this.performUpdate();
 	}
 
 	protected override performUpdate(): void | Promise<unknown> {
+		if (!this._deferring) this.flushHost();
 		this._rendering = true;
 		try {
 			return super.performUpdate();
@@ -260,8 +324,7 @@ function inheritedShadowRoot(): (() => ShadowRoot | null) | undefined {
 Object.defineProperty(OfficeElement.prototype, 'shadowRoot', {
 	configurable: true,
 	get(this: OfficeElement): ShadowRoot | null {
-		// Connected only: `document.createElement` forbids a constructor from adding host attributes.
-		if (this.isConnected) this.ensureRendered();
+		this.ensureRendered();
 		return inheritedShadowRoot()?.call(this) ?? null;
 	},
 });
