@@ -7,6 +7,20 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.15.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@0.15.0) - 2026-10-04
+
+### Features
+
+- **teams:** Add the team-workspace logic area (by @ChristopherVR) ([c3cca75](https://github.com/ChristopherVR/ooxml/commit/c3cca752c7833b1e1f318c0c67287c5d0bff3a9e))
+
+### Bug Fixes
+
+- **teams:** Open files through short-lived signed links, not the token (by @ChristopherVR) ([5dcbc38](https://github.com/ChristopherVR/ooxml/commit/5dcbc38076192690018d1b37cc17fc042dfc4b6c))
+
+### Dependencies
+
+- **deps:** Update all dependencies (by @ChristopherVR) ([d13b03a](https://github.com/ChristopherVR/ooxml/commit/d13b03ad9cb10c74655d699e7799d11aca4b30a0))
+
 ## [0.14.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@0.14.1) - 2026-10-03
 
 ### Bug Fixes

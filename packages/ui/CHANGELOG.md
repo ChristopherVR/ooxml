@@ -7,6 +7,23 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.21.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.21.0) - 2026-10-04
+
+### Features
+
+- **teams:** Add the team-workspace logic area (by @ChristopherVR) ([c3cca75](https://github.com/ChristopherVR/ooxml/commit/c3cca752c7833b1e1f318c0c67287c5d0bff3a9e))
+- **ui:** Build every element as a Lit class with a sibling stylesheet (by @ChristopherVR) ([9e64958](https://github.com/ChristopherVR/ooxml/commit/9e6495863fbd50fb4be5e15dd1f3322bcab74e39))
+
+### Bug Fixes
+
+- **ui:** Keep attribute-only inputs and the popup contract of the viewers (by @ChristopherVR) ([21dcd34](https://github.com/ChristopherVR/ooxml/commit/21dcd34580d74fd1be06dc654b9a024522c7018d))
+- **ui:** Give the gallery a slot for its light-DOM tiles (by @ChristopherVR) ([829270a](https://github.com/ChristopherVR/ooxml/commit/829270a845229b82f0bc00b067142de3d30d3813))
+- **ui:** Render detached elements safely and keep subclass accessors out of Lit (by @ChristopherVR) ([36bcb29](https://github.com/ChristopherVR/ooxml/commit/36bcb296d565dde79a57c9cfb0d13b01cf78b7b1))
+
+### Dependencies
+
+- **deps:** Update all dependencies (by @ChristopherVR) ([d13b03a](https://github.com/ChristopherVR/ooxml/commit/d13b03ad9cb10c74655d699e7799d11aca4b30a0))
+
 ## [0.20.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.20.0) - 2026-10-04
 
 ### Features
