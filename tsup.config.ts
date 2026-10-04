@@ -22,6 +22,7 @@ export default defineConfig({
 		'docx/layout/index': 'src/docx/layout/index.ts',
 		'docx/load/index': 'src/docx/load/index.ts',
 		'collab/index': 'src/collab/index.ts',
+		'teams/index': 'src/teams/index.ts',
 		'visio/index': 'src/visio/index.ts',
 		'xlsx/index': 'src/xlsx/index.ts',
 		'xlsx/load/index': 'src/xlsx/load/index.ts',

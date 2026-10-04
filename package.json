@@ -106,6 +106,11 @@
 			"import": "./dist/collab/index.mjs",
 			"require": "./dist/collab/index.cjs"
 		},
+		"./teams": {
+			"types": "./dist/teams/index.d.ts",
+			"import": "./dist/teams/index.mjs",
+			"require": "./dist/teams/index.cjs"
+		},
 		"./docx": {
 			"types": "./dist/docx/index.d.ts",
 			"import": "./dist/docx/index.mjs",

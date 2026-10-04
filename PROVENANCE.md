@@ -355,3 +355,7 @@ so every pptx importer and the Node verifier (`src/pptx/signature-node`) are unc
 
 Moved from ChristopherVR/pptx-viewer at 7a27232ea0461c78df8c1ed9dd11636044d7c818:
 packages/tools/src/tools (28 implementation modules), packages/tools/src/execution.ts, packages/tools/src/types.ts and packages/tools/src/codec (2 implementation modules), with their tool, execution and codec regression tests and Word fixture. Destination: src/pptx/automation. Apache-2.0 license retained. Imports of pptx-viewer-core now resolve to the local pptx entry. Model operations are unchanged; viewer modules are compatibility exports of the core namespace. Schemas, MCP registration, filesystem transport and CLI stay in the viewer repository. Yjs remains an external dependency to preserve constructor identity across the codec and its host.
+
+## `teams` area (2026-10-04)
+
+New code, nothing moved. `src/teams` (model, chat, signaling, peer, call, server-config, workspace, store, view) is written for this repository on top of the `collab` area; the Lit elements in `packages/ui/src/teams` are new. The y-websocket wire format it speaks is the one documented in `src/collab/transport-provider.ts`. See `docs/teams-area.md`.
