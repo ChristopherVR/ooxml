@@ -16,12 +16,14 @@ import {
 import { numeric } from './helpers.js';
 import { gammaLn } from './stats-core.js';
 import type { FunctionSpec } from './types.js';
+import { DISTRIBUTION_F } from './distributions-f.js';
 import { DISTRIBUTION_MORE } from './distributions-more.js';
 
 const C = 'Statistical';
 
 export const DISTRIBUTION_FUNCTIONS: FunctionSpec[] = [
 	...DISTRIBUTION_MORE,
+	...DISTRIBUTION_F,
 	numeric(
 		'NORM.DIST',
 		C,
