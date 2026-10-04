@@ -1,3 +1,4 @@
+import { present } from './registry.js';
 import { tok } from './tokens.js';
 import { createIconSvg, paintIcon } from './icons.js';
 import { definer } from './registry.js';
@@ -146,7 +147,7 @@ export const defineButton = definer('office-ui-button', () => {
 			return this.hasAttribute('disabled');
 		}
 		set disabled(value: boolean) {
-			this.toggleAttribute('disabled', Boolean(value));
+			this.toggleAttribute('disabled', present(value));
 		}
 		get pressed(): boolean | undefined {
 			const value = this.getAttribute('pressed');

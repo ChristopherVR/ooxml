@@ -1,3 +1,4 @@
+import { present } from './registry.js';
 import { tok } from './tokens.js';
 import { definer } from './registry.js';
 import { attachStyles, controlCss } from './styles.js';
@@ -140,13 +141,13 @@ export const defineRadio = definer('office-ui-radio', () => {
 			return this.hasAttribute('checked');
 		}
 		set checked(next: boolean) {
-			this.toggleAttribute('checked', Boolean(next));
+			this.toggleAttribute('checked', present(next));
 		}
 		get disabled(): boolean {
 			return this.hasAttribute('disabled');
 		}
 		set disabled(next: boolean) {
-			this.toggleAttribute('disabled', Boolean(next));
+			this.toggleAttribute('disabled', present(next));
 		}
 		get value(): string {
 			return this.getAttribute('value') ?? 'on';

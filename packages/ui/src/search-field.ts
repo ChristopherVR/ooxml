@@ -1,3 +1,4 @@
+import { present } from './registry.js';
 import { tok } from './tokens.js';
 import { definer } from './registry.js';
 import { attachStyles, controlCss } from './styles.js';
@@ -99,7 +100,7 @@ export const defineSearchField = definer('office-ui-search', () => {
 			return this.hasAttribute('disabled');
 		}
 		set disabled(next: boolean) {
-			this.toggleAttribute('disabled', Boolean(next));
+			this.toggleAttribute('disabled', present(next));
 		}
 		override focus(options?: FocusOptions): void {
 			this.input.focus(options);

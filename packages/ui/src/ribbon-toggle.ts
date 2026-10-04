@@ -1,3 +1,4 @@
+import { present } from './registry.js';
 import { tok } from './tokens.js';
 import { definer } from './registry.js';
 import { attachStyles, controlCss } from './styles.js';
@@ -74,7 +75,7 @@ export const defineRibbonToggle = definer('office-ui-ribbon-toggle', () => {
 			return this.hasAttribute('checked');
 		}
 		set checked(value: boolean) {
-			this.toggleAttribute('checked', Boolean(value));
+			this.toggleAttribute('checked', present(value));
 		}
 		private sync(): void {
 			const label = this.getAttribute('label') ?? '';

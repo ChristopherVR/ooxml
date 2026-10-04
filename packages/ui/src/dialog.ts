@@ -1,3 +1,4 @@
+import { present } from './registry.js';
 import { tok } from './tokens.js';
 import { createIconSvg, paintIcon } from './icons.js';
 import { definer, emit } from './registry.js';
@@ -98,7 +99,7 @@ export const defineDialog = definer('office-ui-dialog', () => {
 			return this.hasAttribute('open');
 		}
 		set open(value: boolean) {
-			this.toggleAttribute('open', Boolean(value));
+			this.toggleAttribute('open', present(value));
 		}
 		show(): void {
 			this.open = true;

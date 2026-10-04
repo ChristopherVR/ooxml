@@ -1,3 +1,4 @@
+import { present } from './registry.js';
 import { tok } from './tokens.js';
 import { createIconSvg, paintIcon } from './icons.js';
 import { definer, emit } from './registry.js';
@@ -93,7 +94,7 @@ export const defineMenuItem = definer('office-ui-menu-item', () => {
 			return this.hasAttribute('disabled');
 		}
 		set disabled(value: boolean) {
-			this.toggleAttribute('disabled', Boolean(value));
+			this.toggleAttribute('disabled', present(value));
 		}
 		/** Focus the menuitem itself, so arrow navigation never depends on delegatesFocus. */
 		override focus(options?: FocusOptions): void {
@@ -212,7 +213,7 @@ export const defineMenuButton = definer('office-ui-menu-button', () => {
 			return this.hasAttribute('disabled');
 		}
 		set disabled(value: boolean) {
-			this.toggleAttribute('disabled', Boolean(value));
+			this.toggleAttribute('disabled', present(value));
 		}
 		get open(): boolean {
 			return this.caret.getAttribute('aria-expanded') === 'true';

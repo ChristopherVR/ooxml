@@ -1,3 +1,4 @@
+import { present } from './registry.js';
 import { tok } from './tokens.js';
 import { createIconSvg, paintIcon } from './icons.js';
 import { definer, emit } from './registry.js';
@@ -104,7 +105,7 @@ export const defineZoomSlider = definer('office-ui-zoom-slider', () => {
 			return this.hasAttribute('disabled');
 		}
 		set disabled(value: boolean) {
-			this.toggleAttribute('disabled', Boolean(value));
+			this.toggleAttribute('disabled', present(value));
 		}
 		/** Office buttons snap to the next multiple of `step`, so 67% steps to 70%, not 77%. */
 		private stepBy(direction: 1 | -1): void {

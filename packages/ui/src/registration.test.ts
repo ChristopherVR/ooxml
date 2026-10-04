@@ -107,3 +107,22 @@ describe('framework property assignment', () => {
 		expect(collisions).toEqual([]);
 	});
 });
+
+describe('boolean properties', () => {
+	it('read an empty string as present, like the attribute', () => {
+		registerOfficeUi();
+		for (const [tag, name] of [
+			['office-ui-button', 'disabled'],
+			['office-ui-checkbox', 'checked'],
+			['office-ui-ribbon-toggle', 'checked'],
+			['office-ui-radio', 'checked'],
+			['office-ui-select', 'disabled'],
+		] as const) {
+			const el = document.createElement(tag) as HTMLElement & Record<string, unknown>;
+			el[name] = '';
+			expect(el.hasAttribute(name), `${tag}.${name}`).toBe(true);
+			el[name] = undefined;
+			expect(el.hasAttribute(name), `${tag}.${name}`).toBe(false);
+		}
+	});
+});

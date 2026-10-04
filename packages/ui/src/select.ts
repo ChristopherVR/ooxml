@@ -1,3 +1,4 @@
+import { present } from './registry.js';
 import { definer } from './registry.js';
 import {
 	collectSelectChoices,
@@ -157,7 +158,7 @@ export const defineSelect = definer('office-ui-select', () => {
 			return this.hasAttribute('disabled');
 		}
 		set disabled(next: boolean) {
-			this.toggleAttribute('disabled', Boolean(next));
+			this.toggleAttribute('disabled', present(next));
 		}
 		override focus(options?: FocusOptions): void {
 			this.trigger.focus(options);

@@ -1,3 +1,4 @@
+import { present } from './registry.js';
 import { tok } from './tokens.js';
 import { definer, emit } from './registry.js';
 import { attachStyles, controlCss } from './styles.js';
@@ -122,7 +123,7 @@ export const defineBackstage = definer('office-ui-backstage', () => {
 			return this.hasAttribute('open');
 		}
 		set open(value: boolean) {
-			this.toggleAttribute('open', Boolean(value));
+			this.toggleAttribute('open', present(value));
 		}
 		get selected(): string {
 			return this.getAttribute('selected') ?? '';

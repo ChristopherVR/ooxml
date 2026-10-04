@@ -1,3 +1,4 @@
+import { present } from './registry.js';
 import { tok } from './tokens.js';
 import { definer } from './registry.js';
 import { attachStyles, controlCss } from './styles.js';
@@ -101,13 +102,13 @@ function makeCheckable(role: 'checkbox' | 'switch', css: string): () => CustomEl
 				return this.hasAttribute('checked');
 			}
 			set checked(value: boolean) {
-				this.toggleAttribute('checked', Boolean(value));
+				this.toggleAttribute('checked', present(value));
 			}
 			get disabled(): boolean {
 				return this.hasAttribute('disabled');
 			}
 			set disabled(value: boolean) {
-				this.toggleAttribute('disabled', Boolean(value));
+				this.toggleAttribute('disabled', present(value));
 			}
 			get value(): string {
 				return this.getAttribute('value') ?? 'on';

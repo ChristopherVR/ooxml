@@ -51,3 +51,12 @@ export function emit<T>(host: HTMLElement, type: string, detail: T, cancelable =
 		new CustomEvent<T>(type, { detail, bubbles: true, composed: true, cancelable }),
 	);
 }
+
+/**
+ * A boolean property value as its attribute would read it: `''` means present, as in
+ * `checked=""`. Frameworks that pass attribute idioms through properties (Svelte's
+ * `checked={on ? '' : undefined}`) therefore keep working.
+ */
+export function present(value: unknown): boolean {
+	return value === '' || Boolean(value);
+}
