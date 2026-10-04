@@ -1,6 +1,6 @@
 {
 	"name": "visio-vanilla-viewer",
-	"version": "0.5.1",
+	"version": "0.5.2",
 	"description": "Local-first Visio viewer for vanilla",
 	"homepage": "https://christophervr.github.io/visio-viewer/",
 	"license": "Apache-2.0",

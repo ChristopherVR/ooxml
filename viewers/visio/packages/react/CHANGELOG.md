@@ -1,3 +1,10 @@
+## 0.5.2
+
+### Changes
+
+- build(viewer): adopt ooxml-ui 0.18.2 (44f44e2)
+- build(viewer): adopt ooxml-ui 0.17 (2e19d89)
+
 ## 0.5.1
 
 ### Changes
