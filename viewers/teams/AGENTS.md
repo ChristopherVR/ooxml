@@ -11,7 +11,7 @@ CRDT, presence, calls, signaling, server configuration and the `createTeamsClien
 **visual primitives** (avatar, app rail, channel list, chat list, composer, pre-join, call grid and
 controls) live in `ooxml-ui` (`packages/ui/src/teams`). This repository holds:
 
-- `packages/web-component`: `<teams-app>`, the app that composes those primitives over the store
+- `packages/web-component`: a re-export of `ooxml-ui/teams`, where `<teams-app>` (the app that composes those primitives over the store) now lives
   (the private workspace package `teams-viewer`, never published, inlined into every binding).
 - `packages/{react,vue,solid,svelte,angular,vanilla}`: thin bindings, published as
   `openteams-<framework>-viewer`.
