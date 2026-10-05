@@ -48,9 +48,9 @@
       "name": "docx-angular-viewer",
       "version": "0.4.2",
       "dependencies": {
-        "docx-core": "^0.1.4",
-        "ooxml-core": "^0.16.0",
-        "ooxml-ui": "^0.24.0",
+        "docx-core": "^0.1.5",
+        "ooxml-core": "^0.17.0",
+        "ooxml-ui": "^0.26.0",
         "prosemirror-collab": "^1.3.1",
         "prosemirror-commands": "^1.7.2",
         "prosemirror-history": "^1.5.1",
@@ -70,7 +70,7 @@
       "dependencies": {
         "docx-core": "workspace:*",
         "docx-web-component": "workspace:*",
-        "ooxml-core": "^0.16.0",
+        "ooxml-core": "^0.17.0",
       },
       "peerDependencies": {
         "@angular/core": ">=19",
@@ -91,16 +91,16 @@
       "name": "docx-core",
       "version": "0.1.5",
       "dependencies": {
-        "ooxml-core": "^0.16.0",
+        "ooxml-core": "^0.17.0",
       },
     },
     "packages/react": {
       "name": "docx-react-viewer",
       "version": "0.4.2",
       "dependencies": {
-        "docx-core": "^0.1.4",
-        "ooxml-core": "^0.16.0",
-        "ooxml-ui": "^0.24.0",
+        "docx-core": "^0.1.5",
+        "ooxml-core": "^0.17.0",
+        "ooxml-ui": "^0.26.0",
         "prosemirror-collab": "^1.3.1",
         "prosemirror-commands": "^1.7.2",
         "prosemirror-history": "^1.5.1",
@@ -118,9 +118,9 @@
       "name": "docx-solid-viewer",
       "version": "0.4.2",
       "dependencies": {
-        "docx-core": "^0.1.4",
-        "ooxml-core": "^0.16.0",
-        "ooxml-ui": "^0.24.0",
+        "docx-core": "^0.1.5",
+        "ooxml-core": "^0.17.0",
+        "ooxml-ui": "^0.26.0",
         "prosemirror-collab": "^1.3.1",
         "prosemirror-commands": "^1.7.2",
         "prosemirror-history": "^1.5.1",
@@ -138,9 +138,9 @@
       "name": "docx-svelte-viewer",
       "version": "0.4.2",
       "dependencies": {
-        "docx-core": "^0.1.4",
-        "ooxml-core": "^0.16.0",
-        "ooxml-ui": "^0.24.0",
+        "docx-core": "^0.1.5",
+        "ooxml-core": "^0.17.0",
+        "ooxml-ui": "^0.26.0",
         "prosemirror-collab": "^1.3.1",
         "prosemirror-commands": "^1.7.2",
         "prosemirror-history": "^1.5.1",
@@ -158,9 +158,9 @@
       "name": "docx-vanilla-viewer",
       "version": "0.4.2",
       "dependencies": {
-        "docx-core": "^0.1.4",
-        "ooxml-core": "^0.16.0",
-        "ooxml-ui": "^0.24.0",
+        "docx-core": "^0.1.5",
+        "ooxml-core": "^0.17.0",
+        "ooxml-ui": "^0.26.0",
         "prosemirror-collab": "^1.3.1",
         "prosemirror-commands": "^1.7.2",
         "prosemirror-history": "^1.5.1",
@@ -175,9 +175,9 @@
       "name": "docx-vue-viewer",
       "version": "0.4.2",
       "dependencies": {
-        "docx-core": "^0.1.4",
-        "ooxml-core": "^0.16.0",
-        "ooxml-ui": "^0.24.0",
+        "docx-core": "^0.1.5",
+        "ooxml-core": "^0.17.0",
+        "ooxml-ui": "^0.26.0",
         "prosemirror-collab": "^1.3.1",
         "prosemirror-commands": "^1.7.2",
         "prosemirror-history": "^1.5.1",
@@ -196,8 +196,8 @@
       "version": "0.1.0",
       "dependencies": {
         "docx-core": "workspace:*",
-        "ooxml-core": "^0.16.0",
-        "ooxml-ui": "^0.24.0",
+        "ooxml-core": "^0.17.0",
+        "ooxml-ui": "^0.26.0",
         "prosemirror-collab": "^1.3.1",
         "prosemirror-commands": "^1.7.2",
         "prosemirror-history": "^1.5.1",
@@ -618,9 +618,9 @@
 
     "obug": ["obug@2.2.1", "", {}, "sha512-XrsrhT5sybtKI6wakr2SPOlGZWWYbUXZ7a0jT8/QOeAPau+1X/bSegNe5YR75oJmEZQbKningirmGOEJCIk61Q=="],
 
-    "ooxml-core": ["ooxml-core@0.16.0", "", { "dependencies": { "@xmldom/xmldom": "^0.9.12", "emf-converter": "^4.8.19", "fast-xml-parser": "^5.11.2", "jszip": "^3.10.2", "lib0": "^0.2.119", "mtx-decompressor": "^1.8.0", "utif": "3.1.0", "y-protocols": "^1.0.7", "yjs": "^13.6.33" }, "peerDependencies": { "@napi-rs/canvas": "^1.0.9", "node-forge": "^1.3.0", "xml-crypto": "^6.0.0" }, "optionalPeers": ["@napi-rs/canvas", "node-forge", "xml-crypto"], "bin": { "pptx": "dist/pptx/cli/index.mjs" } }, "sha512-OcS8nC2DvYDPqff6UF1wWC+fIjxcy4UDNrI6MpVI8U422jy3LVofGSBqAHIRtad9Q2CD4ztfepVRKlHBvMsp5A=="],
+    "ooxml-core": ["ooxml-core@0.17.0", "", { "dependencies": { "@xmldom/xmldom": "^0.9.12", "emf-converter": "^4.8.19", "fast-xml-parser": "^5.11.2", "jszip": "^3.10.2", "lib0": "^0.2.119", "mtx-decompressor": "^1.8.0", "utif": "3.1.0", "y-protocols": "^1.0.7", "yjs": "^13.6.33" }, "peerDependencies": { "@napi-rs/canvas": "^1.0.9", "node-forge": "^1.3.0", "xml-crypto": "^6.0.0" }, "optionalPeers": ["@napi-rs/canvas", "node-forge", "xml-crypto"], "bin": { "pptx": "dist/pptx/cli/index.mjs" } }, "sha512-UwitKtW2gjEARZG7Sy3U37C90H7nsg44s0C8ON8YgQQ1iqEJjk26JEyA/7JNmMCl8uIBsflaKz7S6hyVQuecZQ=="],
 
-    "ooxml-ui": ["ooxml-ui@0.24.0", "", { "dependencies": { "lit": "^3.3.3", "ooxml-core": "^0.16.0" } }, "sha512-ZfVUcBgcU80dRiyEGhwfx5eMc6n+c7qYmK6V9hJgTtye5Jyf1kIk5GkmP4rhknUf5BR8EiWsZPwhlsX1luzuBA=="],
+    "ooxml-ui": ["ooxml-ui@0.26.0", "", { "dependencies": { "lit": "^3.3.3", "ooxml-core": "^0.17.0" } }, "sha512-X9w5DGr1EE/1jKuwKlV0FCN2kWg1kRa4sQ0UuDLAcee4U+2sS3xg7JOF54FQhKa0MHjHI62lsQ1rjUxoNd+5rg=="],
 
     "orderedmap": ["orderedmap@2.1.1", "", {}, "sha512-TvAWxi0nDe1j/rtMcWcIj94+Ffe6n7zhow33h40SKxmsmozs6dz/e+EajymfoFcHd7sxNn8yHM8839uixMOV6g=="],
 

@@ -19,7 +19,9 @@ export function panelOf(ribbon: ParentNode, key: string): HTMLElement | null {
 
 /** Every panel, in tab order. */
 export function panelsOf(ribbon: ParentNode): HTMLElement[] {
-	return [...ribbon.querySelectorAll<HTMLElement>(':scope > [data-ribbon-tab]')];
+	return [...ribbon.children].filter(
+		(child): child is HTMLElement => child instanceof HTMLElement && !!child.dataset.ribbonTab,
+	);
 }
 
 /** The key of the tab that is showing. */
