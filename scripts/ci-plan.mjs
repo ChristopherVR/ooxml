@@ -52,7 +52,8 @@ export const CONSUMERS = {
 		name: 'teams-viewer',
 		repo: 'ChristopherVR/teams-viewer',
 		install: 'bun install',
-		verify: 'bun run typecheck && bunx vitest run',
+		// The demos resolve the framework packages through their built dist.
+		verify: 'bun run build:packages && bun run typecheck && bunx vitest run',
 	},
 };
 const ALL_CONSUMERS = Object.keys(CONSUMERS);

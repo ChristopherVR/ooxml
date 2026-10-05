@@ -10,7 +10,7 @@
 // `.ooxml-link.json` in the viewer. Run `bun install --force` there afterwards. Never commit a
 // linked manifest: the viewers' `check:published` and the sync workflow both refuse `file:` ranges.
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -54,6 +54,19 @@ const write = (path, raw, value) => {
 	writeFileSync(path, JSON.stringify(value, null, indent).replace(/\n/g, eol) + eol);
 };
 
+/**
+ * `ooxml-ui` declares `ooxml-core` with a bare range, so its own install may hold an old published
+ * copy. A viewer that links `ooxml-ui` by path resolves types through it, so an old copy turns
+ * every new core export into `any`. Point it at this checkout instead (`bun install` here undoes it).
+ */
+function pointUiAtThisCheckout() {
+	const modules = resolve(here, 'packages/ui/node_modules');
+	if (!existsSync(modules)) return;
+	const link = resolve(modules, 'ooxml-core');
+	rmSync(link, { recursive: true, force: true });
+	symlinkSync(here, link, 'junction');
+}
+
 function main() {
 	const args = process.argv.slice(2);
 	const dir = args.find((arg) => !arg.startsWith('--'));
@@ -90,6 +103,7 @@ function main() {
 		write(path, raw, manifest);
 	}
 	writeFileSync(backupPath, JSON.stringify(backup, null, 2));
+	pointUiAtThisCheckout();
 	console.log(
 		`Linked ${Object.keys(backup).length} manifests. Run \`bun install --force\` in the viewer.`,
 	);
