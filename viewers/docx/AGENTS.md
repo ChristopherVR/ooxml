@@ -56,9 +56,21 @@ the element, forward props and options, and re-emit its events.
   `bun run check:published` and `bun run pack:smoke` enforce it.
 - `docx-core` (`packages/core`) is only a thin re-export of `ooxml-core/docx`
   and `ooxml-core/docx/embedded`; `bun run check:shared` keeps it logic-free.
-- `ooxml-ui` (the shared `office-ui-*` custom elements, for example the SmartArt
-  drawing) is a real registry dependency of every framework package, never
-  bundled. Its element tag names keep the `office-ui-` prefix.
+- `ooxml-ui` (the shared `office-ui-*` custom elements) is a real registry
+  dependency of every framework package, never bundled. Its element tag names
+  keep the `office-ui-` prefix. Generic chrome is drawn by it: the context menu,
+  status bar and zoom slider, title bar, File view (backstage) and the modal
+  shell of every format dialog (`dialog-shell.ts`), plus SmartArt. This
+  repository holds only the docx content inside them (dialog fields, File pages,
+  ribbon commands) and feeds them translated state. The shared elements read
+  `--office-*` tokens; `styles/office-bridge.css` maps the editor's `--dve-*`
+  theme onto them, so never hard-code colours for them here. A generic element
+  that is missing something (a translatable label, a tooltip) gets an additive
+  option in `ooxml`, not a copy here.
+- Still hand-built here, pending a move to `ooxml-ui`: the Word ribbon (native
+  controls and its own overflow folding), the indent ruler (draggable markers;
+  the shared ruler is decorative) and the comments panel. Move one only when
+  `ooxml-ui` can carry its behaviour without a test-visible regression.
 - `ole2` (legacy compound-file codecs) reaches this repository only through
   `ooxml-core/docx/load`, which inlines it. Never add `@christophervr/ole2` or an
   internal package to a manifest here, and never fork its code.

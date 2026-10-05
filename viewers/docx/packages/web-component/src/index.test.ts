@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createDocument } from 'docx-core';
 import { TextSelection } from 'prosemirror-state';
 import { DocxEditorElement, registerDocxEditor } from './index';
-import { at, paragraphAt } from './test-support';
+import { at, paragraphAt, quickAccessButton } from './test-support';
 
 vi.mock('ooxml-core/docx/load', () => ({ loadDocument: vi.fn() }));
 
@@ -124,7 +124,7 @@ describe('DocxEditorElement', () => {
 		});
 	});
 
-	it('applies font, color, alignment, table, and page ribbon actions to the shared model', () => {
+	it('applies font, color, alignment, table, and page ribbon actions to the shared model', async () => {
 		const editor = document.createElement('docx-editor') as DocxEditorElement;
 		const model = createDocument();
 		model.blocks = [
@@ -180,7 +180,7 @@ describe('DocxEditorElement', () => {
 		orientation.value = 'landscape';
 		orientation.dispatchEvent(new Event('change', { bubbles: true }));
 		expect(editor.documentModel.page.width).toBeGreaterThan(editor.documentModel.page.height);
-		root.querySelector<HTMLButtonElement>('[aria-label="Undo"]')!.click();
+		(await quickAccessButton(editor, 'Undo')).click();
 		expect(editor.documentModel.page.width).toBeLessThan(editor.documentModel.page.height);
 		editor.remove();
 	});

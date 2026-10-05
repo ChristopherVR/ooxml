@@ -6,7 +6,7 @@ import { TextSelection } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import { DocxEditorElement, registerDocxEditor } from './index';
 import { lineSpacingLabel, lineSpacingValue } from './line-spacing';
-import { at, tableAt } from './test-support';
+import { at, quickAccessButton, tableAt } from './test-support';
 
 afterEach(() => document.body.replaceChildren());
 
@@ -109,7 +109,7 @@ describe('line spacing ribbon control', () => {
 		editor.remove();
 	});
 
-	it('updates every selected table-cell paragraph, preserves other attrs, supports undo and redo, and clears to inherit', () => {
+	it('updates every selected table-cell paragraph, preserves other attrs, supports undo and redo, and clears to inherit', async () => {
 		const { editor, view, textRanges } = mountTableEditor();
 		view.dispatch(
 			view.state.tr.setSelection(
@@ -133,7 +133,7 @@ describe('line spacing ribbon control', () => {
 		});
 
 		chooseSpacing(editor, 'auto:480');
-		editor.shadowRoot!.querySelector<HTMLButtonElement>('[aria-label="Undo"]')!.click();
+		(await quickAccessButton(editor, 'Undo')).click();
 		expect(documentModel(editor).blocks[0]).toMatchObject({
 			rows: [
 				[
@@ -142,7 +142,7 @@ describe('line spacing ribbon control', () => {
 				],
 			],
 		});
-		editor.shadowRoot!.querySelector<HTMLButtonElement>('[aria-label="Redo"]')!.click();
+		(await quickAccessButton(editor, 'Redo')).click();
 		expect(documentModel(editor).blocks[0]).toMatchObject({
 			rows: [
 				[

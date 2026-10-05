@@ -1,3 +1,10 @@
+import {
+	createDialogShell,
+	dialogActions,
+	isDialogOpen,
+	onDialogDismiss,
+	setDialogOpen,
+} from './dialog-shell';
 /** The keyboard shortcut help dialog: lists the shortcut registry plus the editor's own key bindings. */
 import { EDITOR_BINDING_LABELS } from './binding-labels';
 import { editorBindings } from './editor-commands';
@@ -39,49 +46,34 @@ export interface ShortcutHelp {
 }
 
 export function createShortcutHelp(onClose: () => void): ShortcutHelp {
-	const element = document.createElement('section');
-	element.className = 'dve-dialog dve-shortcut-help';
-	element.setAttribute('role', 'dialog');
-	element.setAttribute('aria-modal', 'true');
-	element.hidden = true;
-	const heading = document.createElement('h2');
-	heading.id = 'dve-shortcut-help-title';
-	element.setAttribute('aria-labelledby', heading.id);
+	const element = createDialogShell('', 'dve-shortcut-help');
 	const note = document.createElement('p');
 	note.className = 'dve-shortcut-note';
 	const table = document.createElement('table');
 	const closeButton = document.createElement('button');
 	closeButton.type = 'button';
 	closeButton.className = 'dve-dialog-primary';
-	const actions = document.createElement('div');
-	actions.className = 'dve-dialog-actions';
-	actions.append(closeButton);
-	element.append(heading, note, table, actions);
+	element.append(note, table, dialogActions(closeButton));
 
 	const close = () => {
-		if (element.hidden) return;
-		element.hidden = true;
+		if (!isDialogOpen(element)) return;
+		setDialogOpen(element, false);
 		onClose();
 	};
 	closeButton.addEventListener('click', close);
-	element.addEventListener('keydown', (event) => {
-		if (event.key === 'Escape') {
-			event.preventDefault();
-			close();
-		} else if (event.key === 'Tab') {
-			// The dialog is modal and has a single control: keep focus inside it.
-			event.preventDefault();
-			closeButton.focus();
-		}
-	});
+	onDialogDismiss(element, close);
 
 	return {
 		element,
 		get isOpen() {
-			return !element.hidden;
+			return isDialogOpen(element);
 		},
 		open(rows, locale) {
-			heading.textContent = translate(locale, 'shortcut.dialogTitle');
+			(element as HTMLElement & { heading: string }).heading = translate(
+				locale,
+				'shortcut.dialogTitle',
+			);
+			element.setAttribute('close-label', translate(locale, 'Close'));
 			note.textContent = translate(locale, 'shortcut.dialogNote');
 			closeButton.textContent = translate(locale, 'shortcut.close');
 			table.replaceChildren();
@@ -100,7 +92,7 @@ export function createShortcutHelp(onClose: () => void): ShortcutHelp {
 				kbd.textContent = row.keys;
 				tr.insertCell().append(kbd);
 			}
-			element.hidden = false;
+			setDialogOpen(element, true);
 			closeButton.focus();
 		},
 		close,

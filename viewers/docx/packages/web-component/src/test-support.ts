@@ -24,3 +24,24 @@ export function tableAt(blocks: readonly Block[], index: number): Table {
 	if (block.type !== 'table') throw new Error(`Expected block ${index} to be a table.`);
 	return block;
 }
+
+/**
+ * A button of the title bar's Quick Access strip ("Save", "Undo", "Redo"). The strip is drawn by
+ * the shared `office-ui-title-bar`, inside its own shadow root, once that element has rendered.
+ */
+export async function quickAccessButton(
+	editor: { shadowRoot: ShadowRoot | null },
+	label: string,
+): Promise<HTMLButtonElement> {
+	const bar = must(
+		editor.shadowRoot?.querySelector<HTMLElement & { updateComplete: Promise<unknown> }>(
+			'office-ui-title-bar',
+		),
+		'title bar',
+	);
+	await bar.updateComplete;
+	return must(
+		bar.shadowRoot?.querySelector<HTMLButtonElement>(`[aria-label="${label}"]`),
+		`quick access button ${label}`,
+	);
+}

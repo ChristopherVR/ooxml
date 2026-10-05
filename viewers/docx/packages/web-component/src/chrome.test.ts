@@ -54,23 +54,29 @@ describe('Word window chrome', () => {
 	});
 	afterEach(() => document.body.replaceChildren());
 
-	it('shows the file name and tracks unsaved changes in the title bar', () => {
+	it('shows the file name and tracks unsaved changes in the title bar', async () => {
 		const editor = mount();
-		expect(root(editor).querySelector('.dve-filename')?.textContent).toBe('Report.docx');
-		expect(root(editor).querySelector('.dve-save-state')?.textContent).toBe('Saved');
+		const bar = await inner(editor, 'office-ui-title-bar');
+		expect(bar.querySelector('.name')?.textContent).toBe('Report.docx');
+		expect(bar.querySelector('.status')?.textContent).toBe('Saved');
 		const view = (editor as unknown as { view: import('prosemirror-view').EditorView }).view;
 		view.dispatch(view.state.tr.insertText('!', 13));
-		expect(root(editor).querySelector('.dve-save-state')?.textContent).toBe('Unsaved changes');
+		await root(editor).querySelector<Updating>('office-ui-title-bar')!.updateComplete;
+		expect(bar.querySelector('.status')?.textContent).toBe('Unsaved changes');
 	});
 
-	it('runs a ribbon command found through "Tell me what you want to do"', () => {
+	it('runs a ribbon command found through "Tell me what you want to do"', async () => {
 		const editor = mount();
-		const input = root(editor).querySelector<HTMLInputElement>('.dve-tellme input')!;
-		input.value = 'bulleted';
-		input.dispatchEvent(new Event('input'));
-		const options = [...root(editor).querySelectorAll('.dve-tellme-results [role=option]')];
-		expect(options.map((option) => option.textContent)).toEqual(['Bulleted list']);
-		input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+		const bar = await inner(editor, 'office-ui-title-bar');
+		const search = bar.querySelector<HTMLElement & { value: string }>('office-ui-search')!;
+		search.value = 'bulleted';
+		search.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+		await root(editor).querySelector<Updating>('office-ui-title-bar')!.updateComplete;
+		const options = [...bar.querySelectorAll('[role=option]')];
+		expect(options.map((option) => option.textContent?.trim())).toEqual(['Bulleted list']);
+		search.dispatchEvent(
+			new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, composed: true }),
+		);
 		expect(editor.documentModel!.blocks[0]).toMatchObject({ numbering: { level: 0 } });
 	});
 

@@ -10,7 +10,7 @@ import {
 } from './ribbon-action-ids';
 import { createRibbon } from './ribbon';
 import { ribbonControlId } from './ribbon-visibility';
-import { paragraphAt } from './test-support';
+import { paragraphAt, quickAccessButton } from './test-support';
 
 registerDocxEditor();
 
@@ -53,7 +53,7 @@ const shell = (editor: DocxEditorElement) => editor.shadowRoot!;
 describe('dirty tracking and save API', () => {
 	afterEach(() => document.body.replaceChildren());
 
-	it('is clean at first, dirty after an edit, and clean after markClean()', () => {
+	it('is clean at first, dirty after an edit, and clean after markClean()', async () => {
 		const editor = mount();
 		const changes: boolean[] = [];
 		editor.addEventListener('dirty-change', (event) => changes.push(event.detail));
@@ -65,9 +65,11 @@ describe('dirty tracking and save API', () => {
 		editor.markClean();
 		expect(editor.dirty).toBe(false);
 		expect(changes).toEqual([true, false]);
-		expect(shell(editor).querySelector('.dve-save-state')?.textContent ?? '').not.toContain(
-			'Unsaved',
-		);
+		const bar = shell(editor).querySelector('office-ui-title-bar') as HTMLElement & {
+			updateComplete: Promise<unknown>;
+		};
+		await bar.updateComplete;
+		expect(bar.shadowRoot!.querySelector('.status')?.textContent ?? '').not.toContain('Unsaved');
 	});
 
 	it('becomes clean when a document is loaded or replaced', () => {
@@ -125,7 +127,7 @@ describe('dirty tracking and save API', () => {
 		URL.createObjectURL = vi.fn(() => 'blob:test');
 		URL.revokeObjectURL = vi.fn();
 		vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
-		shell(editor).querySelector<HTMLButtonElement>('[aria-label="Save"]')!.click();
+		(await quickAccessButton(editor, 'Save')).click();
 		await vi.waitFor(() => expect(editor.dirty).toBe(false));
 		vi.restoreAllMocks();
 	});

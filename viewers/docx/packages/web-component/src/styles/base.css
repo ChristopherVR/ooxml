@@ -28,8 +28,7 @@
 	outline: 2px solid var(--dve-ring);
 	outline-offset: 1px;
 }
-.dve-paper .ProseMirror:focus-visible,
-.dve-tellme input:focus-visible {
+.dve-paper .ProseMirror:focus-visible {
 	outline: none;
 }
 /* Only the chrome follows the theme; document pages stay white like Word's. */
