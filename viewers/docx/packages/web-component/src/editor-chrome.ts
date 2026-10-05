@@ -9,7 +9,7 @@ import {
 	withExtension,
 	type FileCommand,
 } from './file-commands';
-import { documentStats, plainText } from './document-stats';
+import { documentStats, plainText } from 'docx-core';
 import { localizeElement, translate, type EditorLocale } from './localization';
 import { createStatusBar, type StatusBar } from './status-bar';
 import { createTitleBar, type SaveState, type TitleBar } from './title-bar';

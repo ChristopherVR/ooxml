@@ -3,7 +3,7 @@ import { createDocument } from 'docx-core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createRibbon } from './ribbon';
 import { createBackstage, type BackstageHandlers } from './backstage';
-import { documentStats } from './document-stats';
+import { documentStats } from 'docx-core';
 import { localizeElement } from './localization';
 
 afterEach(() => (document.body.innerHTML = ''));

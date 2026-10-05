@@ -1,7 +1,7 @@
 import { panelsOf } from './ribbon-tab-api';
 import { PROPERTY_FIELDS, type DocumentModel } from 'docx-core';
 import { icon } from './chrome-icons';
-import type { DocumentStats } from './document-stats';
+import type { DocumentStats } from 'docx-core';
 import type { FileCommand } from './file-commands';
 import { pageSizeOf } from './page-size';
 import { sectionsOf } from './section-commands';
