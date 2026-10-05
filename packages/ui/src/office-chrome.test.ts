@@ -23,6 +23,9 @@ function ribbon() {
 	const el = document.createElement('office-ui-ribbon') as HTMLElement & {
 		selected: string;
 		focusFile(): void;
+		setTabHidden(tab: string, reason: string, hidden: boolean): void;
+		tabButton(tab: string): HTMLButtonElement | null;
+		fileButton(): HTMLButtonElement | null;
 	};
 	el.setAttribute('label', 'Ribbon');
 	el.innerHTML =
@@ -97,6 +100,26 @@ describe('office-ui-ribbon', () => {
 		await new Promise((resolve) => setTimeout(resolve, 0));
 		await Promise.resolve();
 		expect(tabs().map((tab) => tab.textContent)).toEqual(['Home', 'View']);
+	});
+
+	it('hides a tab until every reason that hides it is lifted', async () => {
+		const { el, tabs } = ribbon();
+		const settle = async () => {
+			await new Promise((resolve) => setTimeout(resolve, 0));
+			await Promise.resolve();
+		};
+		el.setTabHidden('view', 'contextual', true);
+		el.setTabHidden('view', 'custom', true);
+		await settle();
+		expect(tabs().map((tab) => tab.textContent)).toEqual(['Home']);
+		el.setTabHidden('view', 'contextual', false);
+		await settle();
+		expect(tabs().map((tab) => tab.textContent)).toEqual(['Home']);
+		el.setTabHidden('view', 'custom', false);
+		await settle();
+		expect(tabs().map((tab) => tab.textContent)).toEqual(['Home', 'View']);
+		expect(el.tabButton('view')?.textContent).toBe('View');
+		expect(el.fileButton()).not.toBeNull();
 	});
 
 	it('marks the tab of a contextual panel so it can be tinted', async () => {

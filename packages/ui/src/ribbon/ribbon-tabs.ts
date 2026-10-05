@@ -78,6 +78,31 @@ export class OfficeUiRibbon extends OfficeElement {
 		this.renderRoot.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]')?.focus();
 	}
 
+	/** The rendered tab button of `tab`, or null before the first render. */
+	tabButton(tab: string): HTMLButtonElement | null {
+		return this.renderRoot.querySelector<HTMLButtonElement>(`[role="tab"][data-tab="${tab}"]`);
+	}
+
+	/** The rendered File button, or null before the first render. */
+	fileButton(): HTMLButtonElement | null {
+		return this.renderRoot.querySelector<HTMLButtonElement>('.file');
+	}
+
+	/**
+	 * Hide or show the tab of panel `tab` for one reason (`contextual`, `custom`, ...). The tab shows
+	 * only while no reason hides it, so a table's tools and a customisation do not undo each other.
+	 */
+	setTabHidden(tab: string, reason: string, hidden: boolean): void {
+		const panel = this.panels().find((item) => item.dataset.ribbonTab === tab);
+		if (!panel) return;
+		const reasons = new Set((panel.dataset.tabHiddenBy ?? '').split(' ').filter(Boolean));
+		if (hidden) reasons.add(reason);
+		else reasons.delete(reason);
+		if (reasons.size) panel.dataset.tabHiddenBy = [...reasons].join(' ');
+		else delete panel.dataset.tabHiddenBy;
+		panel.toggleAttribute('data-tab-hidden', reasons.size > 0);
+	}
+
 	private panels(): HTMLElement[] {
 		return [...this.children].filter(
 			(child): child is HTMLElement => child instanceof HTMLElement && !!child.dataset.ribbonTab,
