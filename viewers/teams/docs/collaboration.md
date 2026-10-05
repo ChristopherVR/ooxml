@@ -9,9 +9,11 @@ Collaboration is what OpenTeams is: every channel, message, reaction and presenc
 - **Calls are WebRTC.** Signaling travels through your server (or `BroadcastChannel` in local mode); media goes peer to peer in a full mesh, so calls suit a handful of people.
 - **The transport is pluggable.** Two modes exist: `server` (your server speaks the y-websocket sync protocol, relays call signaling and optionally stores files) and `local` (tabs of one browser share everything over `BroadcastChannel`).
 
-## Live demo: two people, one room
+## Live demo: two people, one room, any framework
 
-The two panes below are two separate instances of the demo app in one local room. They run in local mode, so they talk to each other through your browser only. Type a message as Ada and watch it appear for Bob.
+The two panes below are two separate demo apps in one local room. Ada runs the vanilla `<teams-app>` and Bob runs the React binding, yet they share one workspace: a room is just a name (`?room=`), and every binding speaks the same core protocol. They run in local mode, so they talk to each other through your browser only. Type a message as Ada and watch it appear for Bob.
+
+On the home page [live demo](/#live-demo) each pane has its own framework picker, so you can pair any two of Vanilla, React, Vue, Angular, Svelte and Solid.
 
 <iframe
 	src="/teams-viewer/demo/?name=Ada&room=docs-collab"
@@ -22,14 +24,14 @@ The two panes below are two separate instances of the demo app in one local room
 ></iframe>
 
 <iframe
-	src="/teams-viewer/demo/?name=Bob&room=docs-collab"
-	title="OpenTeams demo as Bob"
+	src="/teams-viewer/demo-react/?name=Bob&room=docs-collab"
+	title="OpenTeams React demo as Bob"
 	loading="lazy"
 	allow="clipboard-read; clipboard-write"
 	style="width: 100%; height: 560px; border: 1px solid var(--vp-c-divider); border-radius: 8px; margin-top: 1rem"
 ></iframe>
 
-The same works across real tabs: open [the demo as Ada](/demo/?name=Ada&room=docs-collab){target="_self"} and [as Bob](/demo/?name=Bob&room=docs-collab){target="_self"} in two tabs.
+The same works across real tabs, in any pairing: open [the vanilla demo as Ada](/demo/?name=Ada&room=docs-collab){target="_self"} and, for example, [the Vue demo as Bob](/demo-vue/?name=Bob&room=docs-collab){target="_self"}. Every demo takes the same `name` and `room` parameters; only frames and tabs of the same browser can meet in local mode, so for people on different machines you point every binding at your own server instead (see below).
 
 ## What is and is not supported
 

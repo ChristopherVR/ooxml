@@ -22,6 +22,8 @@ const section = ref<HTMLElement | null>(null);
 const started = ref(false);
 const mode = ref<'solo' | 'duo'>('solo');
 const activeKey = ref('vanilla');
+/** Bob's app. Each pane picks its own framework; both join the same room. */
+const guestKey = ref('react');
 const room = ref(randomRoom());
 
 function randomRoom(): string {
@@ -31,12 +33,17 @@ function randomRoom(): string {
 const active = computed(() => demos.find((d) => d.key === activeKey.value) ?? demos[0]);
 const base = computed(() => withBase(active.value.path));
 const soloSrc = computed(() => `${base.value}?name=Ada&room=${room.value}`);
+const guest = computed(() => demos.find((d) => d.key === guestKey.value) ?? demos[1]);
 const adaSrc = computed(() => `${base.value}?name=Ada&room=${room.value}`);
-const bobSrc = computed(() => `${base.value}?name=Bob&room=${room.value}`);
+const bobSrc = computed(() => `${withBase(guest.value.path)}?name=Bob&room=${room.value}`);
 
 function select(key: string): void {
 	activeKey.value = key;
-	room.value = randomRoom();
+	if (mode.value === 'solo') room.value = randomRoom();
+}
+
+function selectGuest(key: string): void {
+	guestKey.value = key;
 }
 
 function setMode(next: 'solo' | 'duo'): void {
@@ -70,12 +77,13 @@ onBeforeUnmount(() => observer?.disconnect());
 		<p class="ot-copy">
 			This is the real app running in your browser, with no server behind it: chat, presence and
 			calls travel only between frames and tabs of this browser (BroadcastChannel). Switch to two
-			people to put Ada and Bob in one room and watch a message cross from one pane to the other.
-			Real use needs a server; see <a :href="withBase('/server')">bring your own server</a>.
+			people to put Ada and Bob in one room, each in the framework you choose (for example React for
+			Ada and Vue for Bob), and watch a message cross from one pane to the other. Real use needs a
+			server; see <a :href="withBase('/server')">bring your own server</a>.
 		</p>
 
 		<div class="ot-live__controls">
-			<div class="ot-live__tabs" role="tablist" aria-label="Demo app">
+			<div class="ot-live__tabs" role="tablist" aria-label="Ada's framework">
 				<button
 					v-for="d in demos"
 					:key="d.key"
@@ -107,6 +115,12 @@ onBeforeUnmount(() => observer?.disconnect());
 					Two people
 				</button>
 			</div>
+			<label v-if="mode === 'duo'" class="ot-live__guestpick">
+				<span>Bob's framework</span>
+				<select :value="guestKey" @change="selectGuest(($event.target as HTMLSelectElement).value)">
+					<option v-for="d in demos" :key="d.key" :value="d.key">{{ d.label }}</option>
+				</select>
+			</label>
 		</div>
 
 		<div v-if="!started" class="ot-live__poster">
@@ -143,7 +157,7 @@ onBeforeUnmount(() => observer?.disconnect());
 			</figure>
 			<figure class="ot-live__pane">
 				<figcaption>
-					<span>{{ active.label }} &middot; Bob</span>
+					<span>{{ guest.label }} &middot; Bob</span>
 					<a :href="bobSrc" target="_blank" rel="noopener">Open full app &rarr;</a>
 				</figcaption>
 				<iframe
@@ -157,7 +171,7 @@ onBeforeUnmount(() => observer?.disconnect());
 		<p v-if="started" class="ot-live__hint">
 			{{
 				mode === 'duo'
-					? 'Two separate app instances share one local room through BroadcastChannel. This is the local mode of the core, not a hosted service: with your own server, the same two people can be on different machines.'
+					? 'Two separate apps, each built from its own framework binding, join one room by its name and share it through BroadcastChannel. The framework does not matter: they speak the same core protocol. This is the local mode of the core, not a hosted service: with your own server, the same two people can be on different machines.'
 					: 'Everything runs client-side and stays in this browser. Open the full app, or switch to two people to see presence and chat between two users.'
 			}}
 		</p>
@@ -265,6 +279,26 @@ onBeforeUnmount(() => observer?.disconnect());
 	height: 640px;
 	border: 0;
 	background: var(--ot-surface);
+}
+
+.ot-live__guestpick {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.6rem;
+	font-family: var(--ot-mono);
+	font-size: 0.72rem;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--ot-ink-soft);
+}
+
+.ot-live__guestpick select {
+	font: inherit;
+	color: var(--ot-ink);
+	background: var(--ot-surface);
+	border: 1px solid var(--ot-line);
+	border-radius: 4px;
+	padding: 0.45rem 0.6rem;
 }
 
 .ot-live__hint {
