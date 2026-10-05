@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.27.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.27.0) - 2026-10-05
+
+### Features
+
+- **ui:** Share KeyTip assignment and badges between products (by @ChristopherVR) ([5204d67](https://github.com/ChristopherVR/ooxml/commit/5204d676299c743b3aff21cceeb6ab1eb5fb0888))
+
 ## [0.26.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.26.0) - 2026-10-05
 
 ### Features
