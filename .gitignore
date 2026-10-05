@@ -17,3 +17,6 @@ release-plan.json
 CLAUDE.local.md
 scripts/fleet.local.json
 .playwright-mcp/
+
+# Session handover notes stay local, never committed
+docs/handover-*.md
