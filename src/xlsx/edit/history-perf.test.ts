@@ -53,12 +53,13 @@ describe('undo history size and speed on large sheets', () => {
 		expect(wb.sheets[0]?.tables[0]?.columns[0]?.name).toBe('0');
 	});
 
-	it('10 row inserts on a 500k-cell sheet take under two seconds and copy no moved cells', () => {
+	it('10 row inserts on a 500k-cell sheet take under five seconds and copy no moved cells', () => {
 		const wb = bigWorkbook(50_000);
 		const s = createEditSession(wb, { recalc: false, autoRowHeight: false });
 		const start = performance.now();
 		for (let i = 0; i < 10; i++) s.insertRows(1, 0, 1);
-		expect(performance.now() - start).toBeLessThan(2000);
+		// A regression copies every moved cell (tens of seconds); the margin keeps a busy shared runner green.
+		expect(performance.now() - start).toBeLessThan(5000);
 		const ctx = testContext(wb);
 		insertRows(ctx, 1, 0, 1);
 		// Only the inserted (empty) row's cells could be recorded; the 500k moved cells are not.
