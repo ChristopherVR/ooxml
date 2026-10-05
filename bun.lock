@@ -55,7 +55,7 @@
     },
     "packages/ui": {
       "name": "ooxml-ui",
-      "version": "0.27.2",
+      "version": "0.28.0",
       "dependencies": {
         "emf-converter": "4.8.9",
         "lit": "^3.3.3",

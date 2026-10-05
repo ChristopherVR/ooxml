@@ -7,6 +7,23 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.20.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@0.20.0) - 2026-10-05
+
+### Features
+
+- **docx:** Move section edits, page setup, unit attrs and case into core (by @ChristopherVR) ([5e668b7](https://github.com/ChristopherVR/ooxml/commit/5e668b767189c06a2d739cd5809099643939ef9e))
+- **xlsx:** Move the DOM-free editor logic into core (by @ChristopherVR) ([d6c6be1](https://github.com/ChristopherVR/ooxml/commit/d6c6be13ec5a1aa5826ca810a8a98b020d5c0878))
+- **docx:** Move the DOM-free editor modules into core (by @ChristopherVR) ([e3bd270](https://github.com/ChristopherVR/ooxml/commit/e3bd2705501d0d30c715878ff2da87ff407fb961))
+- **visio:** Move the DOM-free viewer modules into core (by @ChristopherVR) ([956cb90](https://github.com/ChristopherVR/ooxml/commit/956cb90371477a2e97e9036caf6f7b562d2a598b))
+
+### Testing
+
+- **xlsx:** Give the row-insert timing test headroom on shared runners (by @ChristopherVR) ([9c81002](https://github.com/ChristopherVR/ooxml/commit/9c81002188098eb8ad6230da1f80f339ea1fb8f1))
+
+### Chores
+
+- Lint with oxlint and pin oxfmt (by @ChristopherVR) ([e6e9aad](https://github.com/ChristopherVR/ooxml/commit/e6e9aade4bd74b3587acb80bd341b3e9505caf0b))
+
 ## [0.19.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@0.19.0) - 2026-10-05
 
 ### Features

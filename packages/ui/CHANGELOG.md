@@ -7,6 +7,21 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.28.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.28.0) - 2026-10-05
+
+### Features
+
+- **ui:** Move the xlsx editor element into ooxml-ui/xlsx (by @ChristopherVR) ([cdf0be0](https://github.com/ChristopherVR/ooxml/commit/cdf0be0f8f106deb356ddaca6a797ed0f0b1ec71))
+- **ui:** Move the docx editor element into ooxml-ui/docx (by @ChristopherVR) ([680cc07](https://github.com/ChristopherVR/ooxml/commit/680cc07b085729b9d9b6e2fed65133ff275805da))
+- **ui:** Move the visio viewer and the teams app into ooxml-ui (by @ChristopherVR) ([2b8605a](https://github.com/ChristopherVR/ooxml/commit/2b8605a4bcf750ecc84758091160ca9b7f490b1d))
+- **xlsx:** Move the DOM-free editor logic into core (by @ChristopherVR) ([d6c6be1](https://github.com/ChristopherVR/ooxml/commit/d6c6be13ec5a1aa5826ca810a8a98b020d5c0878))
+- **docx:** Move the DOM-free editor modules into core (by @ChristopherVR) ([e3bd270](https://github.com/ChristopherVR/ooxml/commit/e3bd2705501d0d30c715878ff2da87ff407fb961))
+- **visio:** Move the DOM-free viewer modules into core (by @ChristopherVR) ([956cb90](https://github.com/ChristopherVR/ooxml/commit/956cb90371477a2e97e9036caf6f7b562d2a598b))
+
+### Chores
+
+- Lint with oxlint and pin oxfmt (by @ChristopherVR) ([e6e9aad](https://github.com/ChristopherVR/ooxml/commit/e6e9aade4bd74b3587acb80bd341b3e9505caf0b))
+
 ## [0.27.2](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.27.2) - 2026-10-05
 
 ## [0.27.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.27.1) - 2026-10-05
