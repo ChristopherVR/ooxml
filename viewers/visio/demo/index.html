@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<meta name="description" content="Public beta, local-first Visio diagram viewer" />
+		<meta name="theme-color" content="#f3f2f1" />
+		<title>Visio Viewer · Workspace</title>
+		<script>
+			try {
+				const theme =
+					localStorage.getItem('vitepress-theme-appearance') ??
+					localStorage.getItem('visio-docs-theme');
+				if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
+			} catch {
+				// Keep the default appearance when preference storage is unavailable.
+			}
+		</script>
+		<link rel="stylesheet" href="./workspace.css" />
+	</head>
+	<body>
+		<section id="start-screen" class="start-screen" aria-labelledby="start-title">
+			<div
+				id="start-dropzone"
+				class="start-dropzone"
+				tabindex="0"
+				role="button"
+				aria-describedby="start-note"
+			>
+				<span class="start-badge" aria-hidden="true">V</span>
+				<p id="start-title">Drop a .vsdx or .vsd file here or click to browse</p>
+				<p id="start-note">The file is processed entirely in the browser</p>
+				<div class="start-actions">
+					<button id="start-browse" class="primary" type="button">Browse files</button>
+				</div>
+				<button id="start-sample" class="start-link" type="button">Open the sample drawing</button>
+				<p class="start-limit">
+					Public beta. Supported edits only; native Visio compatibility is not verified.
+				</p>
+			</div>
+		</section>
+		<a class="skip" href="#viewer">Skip to diagram</a>
+		<header class="topbar" aria-label="Document workspace">
+			<a class="brand" href="../" aria-label="Visio Viewer home"
+				><span class="brand-mark" aria-hidden="true">V</span
+				><span class="brand-name">visio-viewer</span></a
+			>
+			<div class="document-title">
+				<span id="file-name">Sample workflow</span
+				><span class="title-divider" aria-hidden="true">·</span
+				><small id="file-state">Original sample scene</small>
+			</div>
+			<input id="file" type="file" accept=".vsdx,.vsd" hidden />
+			<div class="workspace-links">
+				<a href="../docs/index.html">Guide</a
+				><button
+					id="theme-toggle"
+					type="button"
+					aria-label="Switch to light theme"
+					title="Switch to light theme"
+				>
+					◐
+				</button>
+			</div>
+		</header>
+		<main class="stage" aria-label="Viewer workspace">
+			<div id="viewer" tabindex="-1"></div>
+			<div id="drop-overlay" hidden>Drop a .vsdx or .vsd file to open it</div>
+		</main>
+		<div class="notices">
+			<p id="error" role="alert" hidden></p>
+			<p id="export-status" role="status"></p>
+		</div>
+		<footer class="workspace-footer">
+			<details class="document-report">
+				<summary>Document report <span id="note-count">0</span></summary>
+				<div class="report-body">
+					<div class="report-heading">
+						<h1 id="diagram-label">Release workflow</h1>
+						<span class="pill" id="edit-label">MODEL PREVIEW</span>
+					</div>
+					<h2>Selected shape</h2>
+					<p id="selection">Select a shape on the canvas to inspect it.</p>
+					<h2>Compatibility notes</h2>
+					<ul id="notes"></ul>
+					<p>
+						Text editing is experimental. Formulas are not recalculated. Native Visio compatibility
+						is not verified. Keep the original and review downloaded copies in Visio.
+					</p>
+					<a href="../docs/parity.html">Full capability ledger →</a>
+				</div>
+			</details>
+			<span class="privacy-note">Files stay in your browser · Preview</span>
+		</footer>
+		<script type="module" src="./main.ts"></script>
+	</body>
+</html>

@@ -1,0 +1,9 @@
+* text=auto eol=lf
+*.png -text
+*.jpg -text
+*.gif -text
+*.vsdx -text
+*.zip -text
+
+# Patch context intentionally prefixes tab-indented source with a space.
+*.patch -whitespace

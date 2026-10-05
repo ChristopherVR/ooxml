@@ -1,0 +1,10 @@
+visio-viewer
+Copyright 2026 ChristopherVR
+https://github.com/ChristopherVR/visio-viewer
+
+Licensed under the Apache License, Version 2.0. The license text is included
+in LICENSE.
+
+The viewer depends on ooxml-core and emf-converter. Their license and
+attribution notices remain with those dependencies. This license does not
+replace third-party licenses or apply to user-provided documents.

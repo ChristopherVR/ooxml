@@ -1,0 +1,16 @@
+{
+	"name": "visio-viewer-docs",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"docs:dev": "vitepress dev .",
+		"docs:build": "node ../scripts/build-pages.mjs",
+		"docs:preview": "vitepress preview ."
+	},
+	"dependencies": {
+		"@christophervr/visio-viewer": "file:.."
+	},
+	"devDependencies": {
+		"vitepress": "^1.6.4"
+	}
+}

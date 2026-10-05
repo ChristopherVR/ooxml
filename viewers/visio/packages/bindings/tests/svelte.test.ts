@@ -1,0 +1,57 @@
+import { beforeEach, expect, it, vi } from 'vitest';
+import { current, emit, reset } from './mock-binding.js';
+import { mount, unmount, tick, flushSync } from 'svelte';
+import Harness from './SvelteHarness.svelte';
+beforeEach(reset);
+it('Svelte action receives reactive props and callbacks and disposes on native unmount', async () => {
+	const host = document.createElement('div');
+	document.body.append(host);
+	const first = vi.fn();
+	const latest = vi.fn();
+	const harness = mount(Harness, {
+		target: host,
+		props: { initialEvents: { 'zoom-change': first } },
+	});
+	flushSync();
+	await tick();
+	const live = current();
+	const retained = harness.getHandle();
+	const viewer = harness.getViewer();
+	await viewer.replacePlainText('page', 'shape', 'Changed');
+	expect(live.binding.replacePlainText).toHaveBeenCalledWith('page', 'shape', 'Changed');
+	await viewer.undo();
+	await viewer.redo();
+	viewer.cancelEdit();
+	expect(live.binding.undo).toHaveBeenCalledOnce();
+	expect(live.binding.redo).toHaveBeenCalledOnce();
+	expect(live.binding.cancelEdit).toHaveBeenCalledOnce();
+	expect(viewer.exportVsdx().dirty).toBe(true);
+	viewer.setLayerVisibility('background', '0', true);
+	expect(live.binding.setLayerVisibility).toHaveBeenCalledWith('background', '0', true);
+	viewer.setLayerVisibility('background', '0', null);
+	expect(live.binding.setLayerVisibility).toHaveBeenLastCalledWith('background', '0', null);
+	viewer.resetLayerVisibility('background');
+	expect(live.binding.resetLayerVisibility).toHaveBeenLastCalledWith('background');
+	viewer.resetLayerVisibility();
+	expect(live.binding.resetLayerVisibility).toHaveBeenLastCalledWith(undefined);
+	expect(live.options).toMatchObject({ document: null, pageIndex: 0, zoom: 2, showToolbar: false });
+	harness.update(3, { 'zoom-change': latest });
+	flushSync();
+	await tick();
+	emit('zoom-change', 3);
+	expect(current()).toBe(live);
+	expect(live.options.zoom).toBe(3);
+	expect(first).not.toHaveBeenCalled();
+	expect(latest).toHaveBeenCalledWith(3);
+	harness.update(4);
+	flushSync();
+	await tick();
+	expect(live.options.events).toEqual({});
+	await unmount(harness);
+	expect(live.destroy).toHaveBeenCalledOnce();
+	expect(host.children).toHaveLength(0);
+	expect(() => retained.fit()).toThrow('not mounted');
+	expect(() => viewer.setLayerVisibility('background', '0', false)).toThrow('not mounted');
+	expect(() => viewer.resetLayerVisibility()).toThrow('not mounted');
+	host.remove();
+});
