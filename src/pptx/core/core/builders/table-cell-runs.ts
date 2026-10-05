@@ -80,6 +80,11 @@ function applyRunProperties(
 	if (fontFamily) {
 		run.fontFamily = fontFamily;
 	}
+	// Superscript / subscript, such as the 2 in CO2. Raw attribute value.
+	const baseline = parseInt(String(runProperties['@_baseline'] ?? ''), 10);
+	if (Number.isFinite(baseline) && baseline !== 0) {
+		run.baseline = baseline;
+	}
 }
 
 /**

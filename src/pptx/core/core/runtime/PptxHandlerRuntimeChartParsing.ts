@@ -14,6 +14,7 @@
  *   `PptxHandlerRuntimeChartColorStyle` → **this** → `PptxHandlerRuntimePresentationStructure`
  */
 
+import { EMU_PER_POINT } from '../../../../units/index.js';
 import { XmlObject } from '../../types';
 import type { PptxChartData, PptxChartScatterStyle, PptxChartType } from '../../types';
 import {
@@ -917,6 +918,18 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					)
 				: false;
 
+			// c:ser/c:spPr/a:ln width (EMU -> pt) and preset dash.
+			const lineWidthEmu = Number(seriesLine?.['@_w']);
+			const lineWidth =
+				Number.isFinite(lineWidthEmu) && lineWidthEmu > 0
+					? lineWidthEmu / EMU_PER_POINT
+					: undefined;
+			const lineDashRaw = this.xmlLookupService.getChildByLocalName(seriesLine, 'prstDash')?.[
+				'@_val'
+			];
+			const lineDashStyle =
+				typeof lineDashRaw === 'string' && lineDashRaw.length > 0 ? lineDashRaw : undefined;
+
 			// Parse bezier smoothing flag (c:smooth for line/scatter series).
 			const smoothNode = this.xmlLookupService.getChildByLocalName(seriesNode, 'smooth');
 			const smooth = smoothNode
@@ -952,6 +965,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					? { dataLabelOptions }
 					: {}),
 				...(lineNoFill ? { lineNoFill } : {}),
+				...(lineWidth !== undefined ? { lineWidth } : {}),
+				...(lineDashStyle ? { lineDashStyle } : {}),
 				...(seriesNumberFormat ? { numberFormat: seriesNumberFormat } : {}),
 				color: seriesColor,
 				...(this.colorStyleCodec

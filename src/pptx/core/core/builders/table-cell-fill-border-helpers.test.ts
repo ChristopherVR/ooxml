@@ -299,10 +299,26 @@ describe('applyCellBorderStyle', () => {
 		const style: PptxTableCellStyle = {};
 		const result = applyCellBorderStyle(cellProps, style, makeContext());
 		expect(result).toBeTruthy();
-		// 12700 / 9525 ≈ 1.33 → Math.round = 1
-		expect(style.borderTopWidth).toBe(1);
+		// 12700 / 9525 = 4/3 px (1pt)
+		expect(style.borderTopWidth).toBeCloseTo(4 / 3);
 		expect(style.borderTopColor).toBe('#000000');
 		expect(style.borderColor).toBe('#000000');
+	});
+
+	it('keeps hairline borders fractional', () => {
+		const cellProps: XmlObject = {
+			'a:lnT': { '@_w': '3175' },
+			'a:lnB': { '@_w': '6350' },
+			'a:lnTlToBr': { '@_w': '3175' },
+			'a:lnBlToTr': { '@_w': '6350' },
+		};
+		const style: PptxTableCellStyle = {};
+		applyCellBorderStyle(cellProps, style, makeContext());
+		// 3175 EMU = 0.25pt = 1/3px
+		expect(style.borderTopWidth).toBeCloseTo(1 / 3);
+		expect(style.borderBottomWidth).toBeCloseTo(2 / 3);
+		expect(style.borderDiagDownWidth).toBeCloseTo(1 / 3);
+		expect(style.borderDiagUpWidth).toBeCloseTo(2 / 3);
 	});
 
 	it('applies all four border sides', () => {
@@ -391,12 +407,12 @@ describe('applyCellMarginStyle', () => {
 		const style: PptxTableCellStyle = {};
 		const result = applyCellMarginStyle(cellProps, style, makeContext());
 		expect(result).toBeTruthy();
-		// 91440 / 9525 ≈ 9.6 → Math.round = 10
-		expect(style.marginLeft).toBe(10);
-		expect(style.marginRight).toBe(10);
-		// 45720 / 9525 ≈ 4.8 → Math.round = 5
-		expect(style.marginTop).toBe(5);
-		expect(style.marginBottom).toBe(5);
+		// 91440 / 9525 = 9.6 px (0.1in)
+		expect(style.marginLeft).toBeCloseTo(9.6);
+		expect(style.marginRight).toBeCloseTo(9.6);
+		// 45720 / 9525 = 4.8 px (0.05in)
+		expect(style.marginTop).toBeCloseTo(4.8);
+		expect(style.marginBottom).toBeCloseTo(4.8);
 	});
 
 	it('applies direct margin attributes as fallback', () => {
@@ -422,8 +438,8 @@ describe('applyCellMarginStyle', () => {
 		};
 		const style: PptxTableCellStyle = {};
 		applyCellMarginStyle(cellProps, style, makeContext());
-		// a:tcMar value (10) should win over direct (20)
-		expect(style.marginLeft).toBe(10);
+		// a:tcMar value (9.6) should win over direct (20)
+		expect(style.marginLeft).toBeCloseTo(9.6);
 	});
 
 	it('returns false when a:tcMar has no children at all', () => {
