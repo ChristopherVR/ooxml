@@ -154,69 +154,6 @@
 	pointer-events: none;
 }
 
-/* Tell me */
-.xve-tellme {
-	position: relative;
-	display: flex;
-	align-items: center;
-	gap: 6px;
-	height: 28px;
-	padding: 0 10px;
-	border: 1px solid var(--line);
-	border-radius: 6px;
-	background: var(--surface);
-	color: var(--muted);
-}
-.xve-tellme:focus-within {
-	border-color: var(--xl);
-	box-shadow: 0 0 0 1px var(--xl);
-}
-.xve-tellme input {
-	flex: 1;
-	min-width: 0;
-	border: 0;
-	outline: 0;
-	background: none;
-	color: var(--ink);
-	font: inherit;
-}
-.xve-tellme-results {
-	position: absolute;
-	z-index: 80;
-	top: calc(100% + 4px);
-	right: 0;
-	left: 0;
-	margin: 0;
-	padding: 4px;
-	border: 1px solid var(--line);
-	border-radius: 6px;
-	background: var(--xve-popover);
-	box-shadow: 0 8px 24px #0002;
-	list-style: none;
-}
-.xve-tellme-results li {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	padding: 6px 8px;
-	border-radius: 4px;
-	color: var(--ink);
-	cursor: pointer;
-}
-.xve-tellme-results li[aria-selected='true'],
-.xve-tellme-results li[role='option']:hover {
-	background: var(--xl-soft);
-}
-.xve-tellme-results .xve-tellme-hint {
-	margin-left: auto;
-	color: var(--muted);
-	font-size: 11px;
-}
-.xve-tellme-results .xve-tellme-empty {
-	color: var(--muted);
-	cursor: default;
-}
-
 /* Toasts */
 .xve-toasts {
 	position: absolute;

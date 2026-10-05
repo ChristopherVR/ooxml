@@ -149,6 +149,7 @@ export const NAVIGATION_STRINGS: Translations = {
 	Statistical: ['Statistiques', 'Statistik', 'Estadísticas', '统计'],
 	Engineering: ['Ingénierie', 'Konstruktion', 'Ingeniería', '工程'],
 	Information: ['Information', 'Information', 'Información', '信息'],
+	Database: ['Base de données', 'Datenbank', 'Base de datos', '数据库'],
 	'Select a function:': [
 		'Sélectionnez une fonction :',
 		'Funktion auswählen:',

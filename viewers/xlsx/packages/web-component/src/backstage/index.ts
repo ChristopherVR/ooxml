@@ -1,8 +1,10 @@
 /**
- * Excel's File view. Left: Back, Info, New, Open, Save and its siblings (Save As, Print, Export)
- * and Options with Customize Ribbon; right: the selected page. Mirrors docx-viewer's backstage.ts.
+ * Excel's File view. The shared `office-ui-backstage` draws the navigation column (Back, Info, New,
+ * Open, Save and its siblings, Options with Customize Ribbon) and shows one page at a time; each
+ * page is a light-DOM child that this module renders with its own content.
  */
-import { ribbonIcon } from '../ribbon/icons';
+import { defineBackstage } from 'ooxml-ui/controls';
+import type { OfficeBackstageItem } from 'ooxml-ui/controls';
 import type { BackstageHost, PageContext } from './parts';
 import { renderInfo } from './pages-info';
 import { renderExport, renderNew, renderOpen, renderPrint, renderSaveAs } from './pages-file';
@@ -31,15 +33,23 @@ export interface Backstage {
 	relocalize(): void;
 }
 
-const PAGES: Array<[BackstagePage, string, string]> = [
-	['info', 'info', 'Info'],
-	['new', 'newFile', 'New'],
-	['open', 'open', 'Open'],
-	['saveAs', 'copy', 'Save As'],
-	['print', 'print', 'Print'],
-	['export', 'export', 'Export'],
-	['options', 'settings', 'Options'],
-	['customize', 'settings', 'Customize Ribbon'],
+type BackstageElement = HTMLElement & {
+	items: readonly OfficeBackstageItem[];
+	open: boolean;
+	show(page?: string): void;
+	close(): void;
+};
+
+/** Pages in navigation order; Save has no page of its own and Options sit in the footer group. */
+const PAGES: Array<[BackstagePage, string]> = [
+	['info', 'Info'],
+	['new', 'New'],
+	['open', 'Open'],
+	['saveAs', 'Save As'],
+	['print', 'Print'],
+	['export', 'Export'],
+	['options', 'Options'],
+	['customize', 'Customize Ribbon'],
 ];
 const RENDERERS: Record<BackstagePage, (page: PageContext) => void> = {
 	info: renderInfo,
@@ -55,28 +65,20 @@ const RENDERERS: Record<BackstagePage, (page: PageContext) => void> = {
 export function createBackstage(host: BackstageHost): Backstage {
 	const { ctx } = host;
 	const doc = ctx.host.ownerDocument;
-	const element = doc.createElement('section');
+	defineBackstage();
+	const element = doc.createElement('office-ui-backstage') as BackstageElement;
 	element.className = 'xve-backstage';
 	element.setAttribute('part', 'backstage');
-	element.setAttribute('role', 'dialog');
-	element.setAttribute('aria-modal', 'true');
-	element.hidden = true;
-	const nav = doc.createElement('nav');
-	nav.className = 'xve-backstage-nav';
-	const content = doc.createElement('div');
-	content.className = 'xve-backstage-content';
-	const navButton = (icon: string) => {
-		const button = doc.createElement('button');
-		button.type = 'button';
-		button.className = 'xve-backstage-nav-item';
-		button.append(ribbonIcon(doc, icon, 16), doc.createElement('span'));
-		return button;
-	};
-	const setText = (button: HTMLButtonElement, text: string) => {
-		button.querySelector('span')!.textContent = ctx.t(text);
-	};
+	const contents = new Map<BackstagePage, HTMLElement>();
+	for (const [page] of PAGES) {
+		const content = doc.createElement('div');
+		content.className = 'xve-backstage-content';
+		content.dataset.backstagePage = page;
+		content.hidden = true;
+		contents.set(page, content);
+		element.append(content);
+	}
 	let current: BackstagePage = 'info';
-	const buttons = new Map<BackstagePage, HTMLButtonElement>();
 	// A changed language or theme re-renders the open page so its text follows.
 	const pageHost: BackstageHost = {
 		...host,
@@ -84,65 +86,60 @@ export function createBackstage(host: BackstageHost): Backstage {
 		setOption(key, value) {
 			host.setOption(key, value);
 			queueMicrotask(() => {
-				if (!element.hidden) show(current);
+				if (element.open) show(current);
 			});
 		},
 	};
 	const show = (page: BackstagePage) => {
 		current = page;
-		for (const [key, button] of buttons) button.setAttribute('aria-current', String(key === page));
-		RENDERERS[page]({ host: pageHost, content, t: ctx.t, doc });
+		RENDERERS[page]({ host: pageHost, content: contents.get(page)!, t: ctx.t, doc });
 	};
-	const back = navButton('back');
-	back.classList.add('xve-backstage-back');
-	back.addEventListener('click', () => host.close());
-	const save = navButton('save');
-	save.addEventListener('click', () => {
-		host.close();
-		host.fileCommand('save');
-	});
-	const separator = () => {
-		const line = doc.createElement('div');
-		line.className = 'xve-backstage-separator';
-		line.setAttribute('role', 'separator');
-		return line;
-	};
-	nav.append(back);
-	for (const [page, icon] of PAGES) {
-		const button = navButton(icon);
-		button.addEventListener('click', () => show(page));
-		buttons.set(page, button);
-		nav.append(button);
-		if (page === 'open') nav.append(separator(), save);
-		if (page === 'export') nav.append(separator());
-	}
-	element.addEventListener('keydown', (event) => {
-		if (event.key === 'Escape') {
-			event.stopPropagation();
+	element.addEventListener('office-backstage-select', (event) => {
+		const id = (event as CustomEvent<{ id: string }>).detail.id;
+		if (id === 'save') {
 			host.close();
-		}
+			host.fileCommand('save');
+		} else if (contents.has(id as BackstagePage)) show(id as BackstagePage);
+	});
+	// Back and Escape close the element itself; the host restores focus and tracks the state.
+	element.addEventListener('office-backstage-close', (event) => {
+		if ((event as CustomEvent<{ reason: string }>).detail.reason !== 'api') host.close();
 	});
 	const relocalize = () => {
-		element.setAttribute('aria-label', ctx.t('File'));
-		setText(back, 'Back to workbook');
-		setText(save, 'Save');
-		for (const [page, , label] of PAGES) setText(buttons.get(page)!, label);
-		if (!element.hidden) show(current);
+		element.setAttribute('label', ctx.t('File'));
+		element.setAttribute('back-label', ctx.t('Back to workbook'));
+		const item = (id: string, label: string, group?: 'footer'): OfficeBackstageItem => ({
+			id,
+			label: ctx.t(label),
+			...(group ? { group } : {}),
+		});
+		const label = new Map(PAGES);
+		const page = (id: BackstagePage, group?: 'footer') => item(id, label.get(id)!, group);
+		element.items = [
+			page('info'),
+			page('new'),
+			page('open'),
+			item('save', 'Save'),
+			page('saveAs'),
+			page('print'),
+			page('export'),
+			page('options', 'footer'),
+			page('customize', 'footer'),
+		];
+		if (element.open) show(current);
 	};
 	relocalize();
-	element.append(nav, content);
 	return {
 		element,
 		open(page = 'info') {
-			element.hidden = false;
 			show(page);
-			back.focus();
+			element.show(page);
 		},
 		close() {
-			element.hidden = true;
+			element.close();
 		},
 		get isOpen() {
-			return !element.hidden;
+			return element.open;
 		},
 		relocalize,
 	};

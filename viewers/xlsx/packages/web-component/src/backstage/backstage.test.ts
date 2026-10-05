@@ -135,6 +135,35 @@ describe('File backstage', () => {
 		backstage.relocalize();
 		backstage.open();
 		expect(el.querySelector('h2')!.textContent).toBe('Informations');
-		expect(el.querySelector('.xve-backstage-back')!.textContent).toBe('Retour au classeur');
+		expect(el.getAttribute('back-label')).toBe('Retour au classeur');
+	});
+
+	it('draws the navigation with the shared element and routes its events', async () => {
+		const { backstage, el, calls } = setup();
+		backstage.open();
+		await (el as HTMLElement & { updateComplete: Promise<unknown> }).updateComplete;
+		const nav = [...el.shadowRoot!.querySelectorAll<HTMLButtonElement>('[data-backstage-item]')];
+		expect(nav.map((item) => item.dataset.backstageItem)).toEqual([
+			'info',
+			'new',
+			'open',
+			'save',
+			'saveAs',
+			'print',
+			'export',
+			'options',
+			'customize',
+		]);
+		expect(backstage.isOpen).toBe(true);
+		nav.find((item) => item.dataset.backstageItem === 'options')!.click();
+		expect(el.querySelector<HTMLElement>('[data-backstage-page="options"]')!.hidden).toBe(false);
+		expect(el.querySelector<HTMLElement>('[data-backstage-page="info"]')!.hidden).toBe(true);
+		nav.find((item) => item.dataset.backstageItem === 'save')!.click();
+		expect(calls).toContainEqual(['close']);
+		expect(calls).toContainEqual(['file', 'save']);
+		calls.length = 0;
+		el.shadowRoot!.querySelector<HTMLButtonElement>('[data-backstage="back"]')!.click();
+		expect(calls).toEqual([['close']]);
+		expect(backstage.isOpen).toBe(false);
 	});
 });

@@ -31,24 +31,38 @@ describe('status bar', () => {
 		expect(statisticsText(core.ctx, new Set(['sum']))).toBe('');
 	});
 
-	it('shows the mode, read-only badge, notes button and zoom', () => {
+	it('shows the mode, read-only badge, notes button and zoom', async () => {
 		const { core } = shellFixture(numbers());
 		const notes: string[] = [];
 		const bar = createStatusBar(core.ctx, {
 			showNotes: () => notes.push('open'),
 			setZoom: () => undefined,
 		});
+		document.body.append(bar.element);
+		type Updating = HTMLElement & { updateComplete: Promise<unknown> };
+		const drawn = async () => {
+			await (bar.element as Updating).updateComplete;
+			return bar.element.shadowRoot!;
+		};
 		expect(bar.element.getAttribute('part')).toBe('status-bar');
-		expect(bar.element.querySelector('.xve-status-mode')!.textContent).toBe('Ready');
+		expect((await drawn()).querySelector('[data-item="mode"]')!.textContent).toBe('Ready');
 		core.workbook!.warnings.push('Pivot tables are not shown');
 		core.setReadOnly(true);
 		bar.refresh();
-		expect((bar.element.querySelector('.xve-status-badge') as HTMLElement).hidden).toBe(false);
-		const button = bar.element.querySelector<HTMLButtonElement>('.xve-status-notes')!;
-		expect(button.textContent).toBe('1 compatibility note');
+		const root = await drawn();
+		expect(root.querySelector('[data-item="readonly"]')!.textContent).toBe('Read-only');
+		const button = root.querySelector<HTMLButtonElement>('[data-id="notes"]')!;
+		expect(button.hidden).toBe(false);
+		expect(button.textContent?.trim()).toBe('1 compatibility note');
 		button.click();
 		expect(notes).toEqual(['open']);
-		expect(bar.element.querySelector('.xve-zoom-percent')!.textContent).toBe('100%');
+		const slider = bar.element.querySelector<Updating & { value: number }>(
+			'office-ui-zoom-slider',
+		)!;
+		await slider.updateComplete;
+		expect(slider.value).toBe(100);
+		expect(slider.shadowRoot!.querySelector('output')!.textContent).toBe('100%');
+		expect(root.querySelector<HTMLButtonElement>('[data-id="pageLayout"]')!.disabled).toBe(true);
 	});
 });
 
@@ -64,20 +78,45 @@ describe('title bar', () => {
 			isHidden: () => false,
 			revealControl: () => false,
 		});
+		document.body.append(bar.element);
+		const drawn = async () => {
+			await (bar.element as HTMLElement & { updateComplete: Promise<unknown> }).updateComplete;
+			return bar.element.shadowRoot!;
+		};
 		bar.setFileName('Budget.xlsx');
 		bar.setSaveState('dirty');
-		expect(bar.element.querySelector('.xve-filename')!.textContent).toBe('Budget.xlsx');
-		expect(bar.element.querySelector('.xve-save-state')!.textContent).toBe('Unsaved changes');
+		let root = await drawn();
+		expect(root.querySelector('.name')!.textContent).toBe('Budget.xlsx');
+		expect(root.querySelector('.status')!.textContent).toBe('Unsaved changes');
 		const select = bar.element.querySelector<HTMLSelectElement>('.xve-mode-select')!;
 		select.value = 'viewing';
 		select.dispatchEvent(new Event('change'));
 		expect(modes).toEqual([true]);
-		bar.element.querySelector<HTMLButtonElement>('[aria-label="Undo"]')!.click();
+		root.querySelector<HTMLButtonElement>('[aria-label="Undo"]')!.click();
 		await flush();
 		expect(undo.runs).toHaveLength(1);
 		core.setLocale('es');
 		bar.relocalize();
-		expect(bar.element.querySelector('.xve-save-state')!.textContent).toBe('Cambios sin guardar');
+		root = await drawn();
+		expect(root.querySelector('.status')!.textContent).toBe('Cambios sin guardar');
+	});
+
+	it('searches commands from the shared search and runs the chosen one', async () => {
+		const { core } = shellFixture();
+		const undo = spyCommand('edit.undo');
+		core.commands.register(undo);
+		const bar = createTitleBar(core.ctx, {
+			save: () => undefined,
+			setReadOnly: () => undefined,
+			isHidden: () => false,
+			revealControl: () => false,
+		});
+		document.body.append(bar.element);
+		bar.element.dispatchEvent(
+			new CustomEvent('office-command-search', { detail: { query: 'undo', command: 'edit.undo' } }),
+		);
+		await flush();
+		expect(undo.runs).toHaveLength(1);
 	});
 });
 

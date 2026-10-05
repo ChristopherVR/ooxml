@@ -1,15 +1,25 @@
 /**
  * Excel-style status bar. Left: the cell mode (Ready / Edit), a read-only badge and the
  * compatibility notes button. Right: selection statistics from the core's `selectionStats`
- * (right-click to choose which, like Excel), the view buttons and the zoom controls. Layout
- * mirrors docx-viewer's status-bar.ts.
+ * (right-click to choose which, like Excel), the view buttons and the zoom controls. The shared
+ * `office-ui-status-bar` and `office-ui-zoom-slider` draw it from translated state; this module
+ * holds the model and routes activations to the editor.
  */
 import { selectionStats } from '@christophervr/xlsx-core';
+import { defineStatusBar, defineZoomSlider } from 'ooxml-ui/controls';
+import type { OfficeStatusBarState } from 'ooxml-ui/controls';
+import { registerIcon } from 'ooxml-ui/icons';
 import type { EditorContext } from './context';
 import { formatNumber, normalizeEditorLocale } from './localization';
 import { el } from './ribbon/controls';
-import { ribbonIcon } from './ribbon/icons';
 import { openMenu } from './ribbon/popover';
+
+/** Excel's three workbook views on the shared 20px icon grid. */
+const VIEW_ICONS = {
+	normalView: 'M3 3h14v14H3z M3 8h14 M8 3v14',
+	pageLayoutView: 'M5 2h10v16H5z M7.5 6h5 M7.5 9.5h5 M7.5 13h3',
+	pageBreakView: 'M5 2h10v16H5z M2 10h3 M7.5 10h2 M11 10h2 M15 10h3',
+};
 
 export const ZOOM_MIN = 10;
 export const ZOOM_MAX = 400;
@@ -76,22 +86,20 @@ export function statisticsText(ctx: EditorContext, shown: ReadonlySet<StatKey>):
 }
 
 export function createStatusBar(ctx: EditorContext, handlers: StatusBarHandlers): StatusBar {
+	defineStatusBar();
+	defineZoomSlider();
+	for (const [name, d] of Object.entries(VIEW_ICONS)) registerIcon(name, d);
 	const doc = ctx.host.ownerDocument;
-	const element = el(doc, 'footer', 'xve-status');
+	const element = doc.createElement('office-ui-status-bar') as HTMLElement & {
+		state: OfficeStatusBarState;
+	};
+	element.className = 'xve-status';
 	element.setAttribute('part', 'status-bar');
 	element.setAttribute('role', 'status');
-	const left = el(doc, 'div', 'xve-status-left');
-	const mode = el(doc, 'span', 'xve-status-mode');
-	const readOnly = el(doc, 'span', 'xve-status-badge');
-	const notes = el(doc, 'button', 'xve-status-notes');
-	notes.type = 'button';
-	const notesText = el(doc, 'span');
-	notes.append(ribbonIcon(doc, 'warning', 14), notesText);
-	notes.addEventListener('click', () => handlers.showNotes());
-	left.append(mode, readOnly, notes);
 
-	const right = el(doc, 'div', 'xve-status-right');
+	// Statistics sit in the trailing slot, before the views, as in Excel; right-click picks them.
 	const stats = el(doc, 'span', 'xve-status-stats');
+	stats.slot = 'end';
 	const shown = new Set<StatKey>(['average', 'count', 'sum']);
 	stats.addEventListener('contextmenu', (event) => {
 		event.preventDefault();
@@ -109,66 +117,58 @@ export function createStatusBar(ctx: EditorContext, handlers: StatusBarHandlers)
 			ctx.t('Customize Status Bar'),
 		);
 	});
-	const button = (icon: string) => {
-		const node = el(doc, 'button', 'xve-icon-button');
-		node.type = 'button';
-		node.append(ribbonIcon(doc, icon, 16));
-		return node;
-	};
-	const normal = button('normalView');
-	normal.setAttribute('aria-pressed', 'true');
-	const pageLayout = button('pageLayoutView');
-	const pageBreak = button('pageBreakView');
-	pageLayout.disabled = true;
-	pageBreak.disabled = true;
-	const zoomOut = button('minus');
-	const zoomIn = button('plus');
-	const slider = el(doc, 'input', 'xve-zoom-slider');
-	slider.type = 'range';
-	slider.min = String(ZOOM_MIN);
-	slider.max = String(ZOOM_MAX);
-	slider.step = '10';
-	const percent = el(doc, 'button', 'xve-zoom-percent');
-	percent.type = 'button';
-	const zoom = () => ctx.grid()?.zoom() ?? 100;
-	const clamp = (value: number) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round(value)));
-	zoomOut.addEventListener('click', () => handlers.setZoom(clamp(zoom() - 10)));
-	zoomIn.addEventListener('click', () => handlers.setZoom(clamp(zoom() + 10)));
-	slider.addEventListener('input', () => handlers.setZoom(clamp(Number(slider.value))));
-	percent.addEventListener('click', () => {
-		if (ctx.commands.get('view.zoom')) void ctx.commands.run('view.zoom');
-		else handlers.setZoom(100);
-	});
-	right.append(stats, normal, pageLayout, pageBreak, zoomOut, slider, zoomIn, percent);
-	element.append(left, right);
+	const slider = doc.createElement('office-ui-zoom-slider') as HTMLElement & { value: number };
+	slider.slot = 'end';
+	slider.setAttribute('min', String(ZOOM_MIN));
+	slider.setAttribute('max', String(ZOOM_MAX));
+	element.append(stats, slider);
 
-	const label = (node: HTMLElement, text: string) => {
-		node.setAttribute('aria-label', ctx.t(text));
-		node.title = ctx.t(text);
-	};
-	const refresh = () => {
-		mode.textContent = ctx.t(MODE_LABELS[cellMode(ctx)]);
-		readOnly.hidden = !ctx.readOnly();
+	const zoom = () => ctx.grid()?.zoom() ?? 100;
+	slider.addEventListener('input', () => handlers.setZoom(slider.value));
+	element.addEventListener('office-status-activate', (event) => {
+		if ((event as CustomEvent<{ id: string }>).detail.id === 'notes') handlers.showNotes();
+	});
+
+	const render = () => {
 		const count = ctx.workbook()?.warnings.length ?? 0;
-		notes.hidden = count === 0;
-		notesText.textContent = ctx.t(
+		const notesText = ctx.t(
 			count === 1 ? '{count} compatibility note' : '{count} compatibility notes',
 			{ count },
 		);
+		element.state = {
+			items: [
+				{ id: 'mode', text: ctx.t(MODE_LABELS[cellMode(ctx)]) },
+				...(ctx.readOnly() ? [{ id: 'readonly', text: ctx.t('Read-only') }] : []),
+			],
+			toggles: [
+				{ id: 'notes', icon: 'warning', label: notesText, text: notesText, hidden: count === 0 },
+			],
+			views: [
+				{ id: 'normal', icon: 'normalView', label: ctx.t('Normal'), pressed: true },
+				{
+					id: 'pageLayout',
+					icon: 'pageLayoutView',
+					label: ctx.t('Page Layout (not available)'),
+					disabled: true,
+				},
+				{
+					id: 'pageBreak',
+					icon: 'pageBreakView',
+					label: ctx.t('Page Break Preview (not available)'),
+					disabled: true,
+				},
+			],
+		};
+	};
+	const refresh = () => {
+		render();
 		stats.textContent = statisticsText(ctx, shown);
-		const value = zoom();
-		slider.value = String(value);
-		percent.textContent = `${value}%`;
+		slider.value = zoom();
 	};
 	const relocalize = () => {
-		readOnly.textContent = ctx.t('Read-only');
-		label(normal, 'Normal');
-		label(pageLayout, 'Page Layout (not available)');
-		label(pageBreak, 'Page Break Preview (not available)');
-		label(zoomOut, 'Zoom out');
-		label(zoomIn, 'Zoom in');
-		label(slider, 'Zoom level');
-		label(percent, 'Zoom');
+		slider.setAttribute('out-label', ctx.t('Zoom out'));
+		slider.setAttribute('in-label', ctx.t('Zoom in'));
+		slider.setAttribute('slider-label', ctx.t('Zoom level'));
 		stats.title = ctx.t('Right-click to choose which statistics to show');
 		refresh();
 	};

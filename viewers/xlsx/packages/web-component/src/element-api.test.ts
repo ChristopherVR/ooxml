@@ -99,7 +99,11 @@ describe('<xlsx-editor> shell', () => {
 		expect(element.fileName).toBe('Report.xlsx');
 		expect(element.dirty).toBe(false);
 		expect(of('workbook-change')).toHaveLength(1);
-		expect(element.shadowRoot!.querySelector('.xve-filename')!.textContent).toBe('Report.xlsx');
+		const bar = element.shadowRoot!.querySelector('office-ui-title-bar') as HTMLElement & {
+			updateComplete: Promise<unknown>;
+		};
+		await bar.updateComplete;
+		expect(bar.shadowRoot!.querySelector('.name')!.textContent).toBe('Report.xlsx');
 	});
 
 	it('loads CSV and legacy .xls files, telling the user that Save writes .xlsx', async () => {
@@ -176,9 +180,11 @@ describe('<xlsx-editor> shell', () => {
 		element.addEventListener('file-command', (event) => event.preventDefault());
 		const newWorkbook = element.workbook;
 		await flush();
-		element
-			.shadowRoot!.querySelector<HTMLButtonElement>('.xve-quick-access [aria-label="Save"]')!
-			.click();
+		const bar = element.shadowRoot!.querySelector('office-ui-title-bar') as HTMLElement & {
+			updateComplete: Promise<unknown>;
+		};
+		await bar.updateComplete;
+		bar.shadowRoot!.querySelector<HTMLButtonElement>('[aria-label="Save"]')!.click();
 		await flush();
 		expect(of('file-command').at(-1)?.detail).toEqual({ command: 'save' });
 		expect(element.workbook).toBe(newWorkbook);
@@ -205,10 +211,10 @@ describe('<xlsx-editor> shell', () => {
 		const root = element.shadowRoot!;
 		root.querySelector<HTMLButtonElement>('.xve-file-tab')!.click();
 		const backstage = root.querySelector<HTMLElement>('[part="backstage"]')!;
-		expect(backstage.hidden).toBe(false);
+		expect(backstage.hasAttribute('open')).toBe(true);
 		expect(backstage.querySelector('h2')!.textContent).toBe('Info');
 		backstage.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-		expect(backstage.hidden).toBe(true);
+		expect(backstage.hasAttribute('open')).toBe(false);
 	});
 });
 

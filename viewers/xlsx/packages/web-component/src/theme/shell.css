@@ -37,9 +37,6 @@
 	outline: 2px solid var(--xve-ring);
 	outline-offset: 1px;
 }
-.xve-tellme input:focus-visible {
-	outline: none;
-}
 [hidden],
 [data-xve-hidden] {
 	display: none !important;
@@ -120,67 +117,20 @@
 	display: none;
 }
 
-/* Title bar */
+/* Title bar: drawn by the shared office-ui-title-bar; the mark, background and borders come from its tokens. */
 .xve-titlebar {
-	display: grid;
+	display: block;
 	flex: none;
-	grid-template-columns: minmax(0, 1fr) minmax(180px, 460px) minmax(0, 1fr);
-	align-items: center;
-	gap: 12px;
-	min-height: 40px;
-	padding: 0 10px;
-	background: var(--chrome);
-	border-bottom: 1px solid var(--line);
-	font-size: 12px;
+	--office-title-bar-background: var(--chrome);
+	--office-title-bar-foreground: var(--ink);
+	--office-title-bar-border: var(--line);
+	--office-title-bar-mark-background: var(--xl);
+	--office-title-bar-mark-foreground: var(--xve-primary-foreground);
 }
-.xve-titlebar-start {
-	display: flex;
-	min-width: 0;
-	align-items: center;
-	gap: 12px;
-}
-.xve-quick-access,
 .xve-title-actions {
 	display: flex;
 	align-items: center;
 	gap: 2px;
-}
-.xve-title-actions {
-	justify-self: end;
-}
-.xve-app-badge {
-	display: inline-grid;
-	width: 22px;
-	height: 22px;
-	margin-right: 6px;
-	place-items: center;
-	border-radius: 4px;
-	background: var(--xl);
-	color: var(--xve-primary-foreground);
-	font:
-		700 13px 'Segoe UI',
-		Arial,
-		sans-serif;
-}
-.xve-document-title {
-	display: flex;
-	min-width: 0;
-	align-items: baseline;
-	gap: 6px;
-	white-space: nowrap;
-}
-.xve-filename {
-	overflow: hidden;
-	color: var(--ink);
-	font-weight: 600;
-	text-overflow: ellipsis;
-}
-.xve-title-separator,
-.xve-save-state {
-	color: var(--muted);
-}
-.xve-save-state[data-state='dirty'] {
-	color: var(--ink);
 }
 .xve-mode-select {
 	height: 28px;
@@ -193,84 +143,22 @@
 	font: inherit;
 }
 
-/* Status bar */
+/* Status bar: drawn by the shared office-ui-status-bar; this places it and styles the slotted stats. */
 .xve-status {
-	display: flex;
+	display: block;
 	flex: none;
-	align-items: center;
-	justify-content: space-between;
-	gap: 12px;
-	min-height: 26px;
 	min-width: 0;
-	padding: 0 10px;
 	border-top: 1px solid var(--line);
-	background: var(--chrome);
-	color: var(--muted);
-	font-size: 11px;
-}
-.xve-status-left,
-.xve-status-right,
-.xve-status-stats {
-	display: flex;
-	min-width: 0;
-	align-items: center;
-	gap: 14px;
-	white-space: nowrap;
-}
-.xve-status-right {
-	gap: 2px;
 }
 .xve-status-stats {
-	margin-right: 10px;
+	margin-inline-end: 10px;
 	overflow: hidden;
 	color: var(--ink);
-}
-.xve-status-badge {
-	padding: 1px 6px;
-	border: 1px solid var(--line);
-	border-radius: 3px;
-}
-.xve-status-notes {
-	display: inline-flex;
-	align-items: center;
-	gap: 4px;
-	padding: 2px 6px;
-	border: 0;
-	border-radius: 4px;
-	background: none;
-	color: inherit;
-	font: inherit;
-	cursor: pointer;
-}
-.xve-status-notes:hover {
-	background: var(--xl-soft);
-}
-.xve-status-notes .xve-icon {
-	color: #b7791f;
-}
-.xve-status .xve-icon-button {
-	min-width: 24px;
-	height: 22px;
-}
-.xve-zoom-slider {
-	width: 110px;
-	accent-color: var(--xl);
-}
-.xve-zoom-percent {
-	min-width: 44px;
-	border: 0;
-	background: none;
-	color: inherit;
-	font: inherit;
-	cursor: pointer;
+	font-size: 11px;
+	white-space: nowrap;
 }
 
 @media (max-width: 760px) {
-	.xve-titlebar {
-		grid-template-columns: minmax(0, 1fr) auto;
-	}
-	.xve-tellme,
-	.xve-zoom-slider,
 	.xve-status-stats {
 		display: none;
 	}

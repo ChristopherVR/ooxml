@@ -1,47 +1,10 @@
-/* File backstage, after docx-viewer's styles/backstage.css. */
+/* File backstage: the shared office-ui-backstage draws the navigation; these style the page content.
+   The nav colours come from its tokens. */
 .xve-backstage {
-	position: absolute;
 	z-index: 40;
-	inset: 0;
-	display: grid;
-	grid-template-columns: 220px minmax(0, 1fr);
-	background: var(--surface);
-}
-.xve-backstage-nav {
-	display: flex;
-	flex-direction: column;
-	gap: 2px;
-	padding: 12px 0;
-	overflow-y: auto;
-	background: var(--xl);
-	color: var(--xve-primary-foreground);
-}
-.xve-backstage-nav-item {
-	display: flex;
-	align-items: center;
-	gap: 10px;
-	padding: 10px 22px;
-	border: 0;
-	background: none;
-	color: inherit;
-	font:
-		14px 'Segoe UI',
-		Arial,
-		sans-serif;
-	text-align: left;
-	cursor: pointer;
-}
-.xve-backstage-nav-item:hover,
-.xve-backstage-nav-item[aria-current='true'] {
-	background: var(--xl-strong);
-}
-.xve-backstage-back {
-	margin-bottom: 12px;
-}
-.xve-backstage-separator {
-	height: 1px;
-	margin: 8px 22px;
-	background: color-mix(in srgb, var(--xve-primary-foreground) 35%, transparent);
+	--office-background: var(--surface);
+	--office-backstage-nav-background: var(--xl);
+	--office-backstage-nav-foreground: var(--xve-primary-foreground);
 }
 .xve-backstage-content {
 	overflow: auto;
@@ -227,15 +190,6 @@
 	font-size: 13px;
 }
 @media (max-width: 760px) {
-	.xve-backstage {
-		grid-template-columns: 1fr;
-		grid-template-rows: auto minmax(0, 1fr);
-	}
-	.xve-backstage-nav {
-		flex-direction: row;
-		overflow-x: auto;
-		padding: 0;
-	}
 	.xve-backstage-content {
 		padding: 20px;
 	}
