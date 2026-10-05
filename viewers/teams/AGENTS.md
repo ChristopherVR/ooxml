@@ -11,10 +11,16 @@ CRDT, presence, calls, signaling, server configuration and the `createTeamsClien
 **visual primitives** (avatar, app rail, channel list, chat list, composer, pre-join, call grid and
 controls) live in `ooxml-ui` (`packages/ui/src/teams`). This repository holds:
 
-- `packages/web-component`: `<teams-app>`, the app that composes those primitives over the store.
-- `packages/{react,vue,solid,svelte,angular,vanilla}`: thin bindings.
-- `server/`: the reference bring-your-own server (sync, signaling relay, file storage).
-- `demos/`: runnable demos.
+- `packages/web-component`: `<teams-app>`, the app that composes those primitives over the store
+  (the private workspace package `teams-viewer`, never published, inlined into every binding).
+- `packages/{react,vue,solid,svelte,angular,vanilla}`: thin bindings, published as
+  `openteams-<framework>-viewer`.
+- `server/`: the reference bring-your-own server (sync, signaling relay, file storage), published as
+  `openteams-server` (command `openteams-server`).
+- `demos/`: runnable demos (private).
+
+The product name is **OpenTeams**. The plain `openteams` npm name belongs to an unrelated project,
+so never publish or document that name.
 
 Never add or fork logic here that belongs in the core. If the core lacks something, change it there
 (the sibling `../ooxml-core` checkout), then use it here.
@@ -39,19 +45,38 @@ Never add or fork logic here that belongs in the core. If the core lacks somethi
 ## Commands
 
 ```bash
-bun install          # ../ooxml-core must be built (bun run build there); file: dependencies are COPIES,
-                     # so after changing it run `bun install --force` here (demos and tests alias to its source)
-bun run dev          # reference server :8787, vanilla demo :5173, React demo :5174
-bun run typecheck    # strict; React, Vue, Solid, vanilla and the web component (Svelte/Angular are source-only)
-bun run test         # vitest (jsdom) then the server's node:test suite
+bun install            # ooxml-core and ooxml-ui come from npm (caret ranges, moved by sync-ooxml.yml);
+                       # tests and demos alias to the sibling ../ooxml-core source when it exists
+bun run dev            # reference server :8787, vanilla demo :5173, React demo :5174
+bun run typecheck      # strict; the web component and all six bindings (.svelte files excepted)
+bun run test           # vitest (jsdom) then the server's node:test suite
+bun run test:scripts   # release planner, publish guards, publish:local, commit and changelog checks
+bun run build:packages # dist/ for the six bindings (web component inlined); the server needs no build
+bun run check:published && bun run pack:smoke   # what the tarballs import; install and import them
+bun run release:plan   # which packages the next release would publish
 ```
+
+## Releases
+
+Seven packages are published, each with its own version and tag `<npm-name>@<version>`:
+`openteams-{react,vue,angular,svelte,solid,vanilla}-viewer` and `openteams-server`. The hourly
+`release.yml` workflow plans from Conventional Commits (`scripts/release-plan.mjs`), writes the
+changelogs, tags, and publishes through npm trusted publishing; `--provenance` is added only once
+the repository is public. `bun run publish:local` is the maintainer's manual path (first publish of
+a name, for example): it logs in with `npm login --auth-type=web` when needed, runs the same checks,
+asks for `yes`, and never prompts for or accepts a one-time password. Details: `docs/releasing.md`.
+
+Never run `npm publish` by hand, never bump versions or edit `CHANGELOG.md` files by hand (the
+release commit does), and never add `file:` or `workspace:` ranges, or a `teams-viewer` dependency,
+to a published manifest (`check:published` and `pack:smoke` fail on them).
 
 ## Style and commits
 
 TypeScript strict (`exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`), tabs, single quotes.
 **No em-dashes** (U+2014) anywhere: source, comments, docs, commits, UI copy. Commits follow
-Conventional Commits with the area as scope (`web-component`, `react`, `server`, `demo`, `docs`).
-Trunk-based: commit to `main`. Do not publish packages by hand; nothing here is published yet.
+Conventional Commits with the area as scope (`web-component`, `react`, `server`, `demo`, `docs`,
+`ci`, `release`, `deps`); the type sets the version bump, so see `CONTRIBUTING.md`. Trunk-based:
+commit to `main`.
 
 ## Honesty
 
