@@ -16,3 +16,4 @@ release-plan.json
 # Machine-specific agent notes (checkout paths and the like); see AGENTS.md
 CLAUDE.local.md
 scripts/fleet.local.json
+.playwright-mcp/
