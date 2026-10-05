@@ -1,83 +1,54 @@
-import { ribbonIcon } from './ribbon-icons';
 import { showCommandTips } from './ribbon-keytips';
+import { fileButton, panelOf, tabButtons } from './ribbon-tab-api';
 
-/** Word's tab KeyTips (Alt, then a letter). File is handled by the chrome's own tab. */
+/** Word's tab KeyTips (Alt, then a letter), by tab key. File is `F`. */
 const KEY_TIPS: Record<string, string> = {
-	'dve-tab-home': 'H',
-	'dve-tab-insert': 'N',
-	'dve-tab-layout': 'P',
-	'dve-tab-references': 'S',
-	'dve-tab-review': 'R',
-	'dve-tab-view': 'W',
-	'dve-tab-table': 'T',
-	'dve-tab-header-footer': 'J',
+	home: 'H',
+	insert: 'N',
+	layout: 'P',
+	references: 'S',
+	review: 'R',
+	view: 'W',
+	table: 'T',
+	'header-footer': 'J',
 };
 
+/** The badge style. The tabs live in the shared ribbon's shadow root, which editor CSS cannot reach. */
+const BADGE_STYLE =
+	'position:absolute;bottom:-2px;left:50%;z-index:70;transform:translateX(-50%);min-width:16px;' +
+	'padding:1px 4px;border:1px solid var(--office-border,#ccc);border-radius:3px;background:#1f1f1f;' +
+	"color:#fff;font:600 11px/14px 'Segoe UI',Arial,sans-serif;text-align:center;pointer-events:none";
+
 /**
- * Ribbon collapse and KeyTips.
- *
- * Collapse: double-clicking the selected tab, Ctrl+F1 or the collapse button hides the panels; a
- * click on a tab then shows its panel over the document until Escape, a command, or a click
- * elsewhere. KeyTips: when the ribbon is focused with Alt or F10 (the host fires `dve-keytips`),
- * tab badges appear and the matching letter opens that tab (`F` opens File); the tab's commands
- * then show their own tips (see ribbon-keytips.ts).
+ * Ribbon KeyTips. The shared ribbon owns collapse and peek (`collapsible`); here, when the ribbon
+ * is focused with Alt or F10 (the host fires `dve-keytips`), tab badges appear and the matching
+ * letter opens that tab (`F` opens File); the tab's commands then show their own tips (see
+ * ribbon-keytips.ts).
  */
-export function attachRibbonBehavior(root: HTMLElement, tabs: HTMLElement): void {
-	const collapse = document.createElement('button');
-	collapse.type = 'button';
-	collapse.className = 'ribbon-collapse';
-	collapse.setAttribute('aria-label', 'Collapse the ribbon');
-	collapse.title = 'Collapse the ribbon';
-	collapse.setAttribute('aria-pressed', 'false');
-	collapse.append(ribbonIcon('previous', 14));
-	tabs.append(collapse);
-
-	const outside = (event: Event) => {
-		if (!event.composedPath().includes(root)) peek(false);
-	};
-	/** Shows or hides the overlaid panel of a collapsed ribbon; listens outside only while shown. */
-	const peek = (on: boolean) => {
-		root.toggleAttribute('data-peek', on);
-		if (on) document.addEventListener('pointerdown', outside, true);
-		else document.removeEventListener('pointerdown', outside, true);
-	};
-	const setCollapsed = (value: boolean) => {
-		root.toggleAttribute('data-collapsed', value);
-		peek(false);
-		collapse.setAttribute('aria-pressed', String(value));
-	};
-	const toggle = () => setCollapsed(!root.hasAttribute('data-collapsed'));
-	collapse.addEventListener('click', toggle);
-	root.addEventListener('keydown', (event) => {
-		if (event.key === 'F1' && event.ctrlKey) {
-			event.preventDefault();
-			toggle();
-		} else if (event.key === 'Escape' && root.hasAttribute('data-peek')) peek(false);
-	});
-
-	for (const tab of tabs.querySelectorAll<HTMLElement>('[role="tab"]')) {
-		tab.addEventListener('dblclick', toggle);
-		tab.addEventListener('click', () => {
-			if (root.hasAttribute('data-collapsed')) peek(true);
-		});
-	}
-	root.addEventListener('ribbon-action', () => peek(false));
-
+export function attachRibbonBehavior(root: HTMLElement): void {
+	root.toggleAttribute('collapsible', true);
 	let hideTips: (() => void) | undefined;
 	root.addEventListener('dve-keytips', () => {
 		hideTips?.();
-		const badges = [...tabs.querySelectorAll<HTMLElement>('[role="tab"], .dve-file-tab')].flatMap(
-			(tab) => {
-				const key = tab.classList.contains('dve-file-tab') ? 'F' : KEY_TIPS[tab.id];
-				if (!key || tab.hidden || tab.hasAttribute('data-dve-hidden')) return [];
-				const badge = document.createElement('span');
-				badge.className = 'dve-keytip';
-				badge.textContent = key;
-				badge.setAttribute('aria-hidden', 'true');
-				tab.append(badge);
-				return [{ badge, key, tab }];
-			},
-		);
+		const targets: Array<{ tab: HTMLElement; key: string | undefined; panel: string | undefined }> =
+			[
+				...(fileButton(root) ? [{ tab: fileButton(root)!, key: 'F', panel: undefined }] : []),
+				...tabButtons(root).map((tab) => ({
+					tab,
+					key: KEY_TIPS[tab.dataset.tab ?? ''],
+					panel: tab.dataset.tab,
+				})),
+			];
+		const badges = targets.flatMap(({ tab, key, panel }) => {
+			if (!key) return [];
+			const badge = document.createElement('span');
+			badge.className = 'dve-keytip';
+			badge.style.cssText = BADGE_STYLE;
+			badge.textContent = key;
+			badge.setAttribute('aria-hidden', 'true');
+			tab.append(badge);
+			return [{ badge, key, tab, panel }];
+		});
 		const stop = () => {
 			for (const { badge } of badges) badge.remove();
 			root.removeEventListener('keydown', onKey, true);
@@ -95,7 +66,7 @@ export function attachRibbonBehavior(root: HTMLElement, tabs: HTMLElement): void
 			match.tab.click();
 			match.tab.focus();
 			// Word's second level: the tab's commands get their own tips.
-			const panel = root.querySelector<HTMLElement>(`#${match.tab.getAttribute('aria-controls')}`);
+			const panel = match.panel ? panelOf(root, match.panel) : null;
 			if (panel) showCommandTips(root, panel, () => match.tab.focus());
 		};
 		const onFocusOut = (event: FocusEvent) => {

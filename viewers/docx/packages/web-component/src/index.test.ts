@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createDocument } from 'docx-core';
 import { TextSelection } from 'prosemirror-state';
 import { DocxEditorElement, registerDocxEditor } from './index';
-import { at, paragraphAt, quickAccessButton } from './test-support';
+import { at, paragraphAt, quickAccessButton, ribbonTab, ribbonTabs } from './test-support';
 
 vi.mock('ooxml-core/docx/load', () => ({ loadDocument: vi.fn() }));
 
@@ -23,7 +23,7 @@ describe('DocxEditorElement', () => {
 		expect(editor.shadowRoot?.querySelector('.ProseMirror')).not.toBeNull();
 	});
 
-	it('registers idempotently and mounts an accessible, model-backed editor', () => {
+	it('registers idempotently and mounts an accessible, model-backed editor', async () => {
 		registerDocxEditor();
 		registerDocxEditor();
 		const editor = document.createElement('docx-editor') as DocxEditorElement;
@@ -41,9 +41,7 @@ describe('DocxEditorElement', () => {
 		expect(
 			editor.shadowRoot?.querySelector<HTMLButtonElement>('[aria-label="Bold"]')?.disabled,
 		).toBe(true);
-		expect(editor.shadowRoot?.querySelector<HTMLButtonElement>('[role="tab"]')?.disabled).toBe(
-			false,
-		);
+		expect((await ribbonTabs(editor.shadowRoot!))[0]?.disabled).toBe(false);
 		expect(
 			editor.shadowRoot?.querySelector<HTMLSelectElement>('[aria-label="Zoom"]')?.disabled,
 		).toBe(false);
@@ -222,18 +220,16 @@ describe('DocxEditorElement', () => {
 		editor.remove();
 	});
 
-	it('exposes linked tab panels and reflows zoom without transform clipping', () => {
+	it('exposes linked tab panels and reflows zoom without transform clipping', async () => {
 		const editor = document.createElement('docx-editor') as DocxEditorElement;
 		document.body.append(editor);
 		const root = editor.shadowRoot!;
-		const tablist = root.querySelector('[role="tablist"]')!;
-		const tab = root.querySelector<HTMLButtonElement>(
-			'[role="tab"][aria-controls="dve-panel-view"]',
-		)!;
+		const tab = await ribbonTab(root, 'view');
 		const panel = root.querySelector<HTMLElement>('[id="dve-panel-view"]')!;
-		expect(tablist).not.toBeNull();
-		expect(panel.getAttribute('aria-labelledby')).toBe(tab.id);
+		expect(tab.closest('[role="tablist"]')).not.toBeNull();
+		expect(panel.getAttribute('role')).toBe('tabpanel');
 		tab.click();
+		await ribbonTab(root, 'view');
 		expect(tab.getAttribute('aria-selected')).toBe('true');
 		expect(panel.hidden).toBe(false);
 		const zoom = root.querySelector<HTMLSelectElement>('[aria-label="Zoom"]')!;

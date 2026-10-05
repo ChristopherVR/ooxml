@@ -6,44 +6,23 @@
 	background: var(--surface);
 	border-bottom: 1px solid var(--line);
 }
-.ribbon-tabs {
-	display: flex;
-	flex: none;
-	min-width: 0;
-	gap: 4px;
-	min-height: 39px;
-	padding: 0 14px;
-	border-bottom: 1px solid var(--line);
-	overflow-x: auto;
-	overscroll-behavior-x: contain;
-	scrollbar-width: thin;
+/* The tab row is drawn by the shared office-ui-ribbon; these colour and size it. */
+.dve-ribbon {
+	--office-ribbon-tab-height: 39px;
+	--office-ribbon-contextual: #0f7b6c;
+	--office-tab-indicator-width: 3px;
 }
-.ribbon-tabs [role='tab'] {
-	position: relative;
-	border: 0;
+/* Word's File tab is text, not a filled button. */
+.dve-ribbon::part(file) {
 	background: none;
-	padding: 0 13px;
-	flex: none;
-	white-space: nowrap;
-	color: var(--muted);
-	font:
-		500 13px 'Segoe UI',
-		Arial,
-		sans-serif;
-	cursor: pointer;
+	color: var(--word);
+	font-weight: 600;
 }
-.ribbon-tabs [aria-selected='true'] {
-	color: var(--blue);
+.dve-ribbon::part(file):hover {
+	background: var(--word-soft);
 }
-.ribbon-tabs [aria-selected='true']:after {
-	position: absolute;
-	right: 8px;
-	bottom: 0;
-	left: 8px;
-	height: 3px;
-	border-radius: 3px 3px 0 0;
-	background: var(--blue);
-	content: '';
+.dve-ribbon::part(head) {
+	padding: 0 14px;
 }
 .ribbon-panel {
 	flex: none;

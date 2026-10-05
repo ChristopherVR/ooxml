@@ -1,9 +1,9 @@
+import { shadcnBridge } from 'ooxml-ui/theme';
 import { darkTheme, lightTheme } from '../theme/defaults';
 import { themeToCssVars } from '../theme/css-vars';
 import type { EditorTheme } from '../theme/types';
 import aliases from './aliases.css?inline';
 import base from './base.css?inline';
-import officeBridge from './office-bridge.css?inline';
 import ribbon from './ribbon.css?inline';
 import ribbonButtons from './ribbon-buttons.css?inline';
 import ribbonGallery from './ribbon-gallery.css?inline';
@@ -38,7 +38,8 @@ export const themeTokenText = `:host{${declarations(lightTheme, 'light')}}
 export const editorStyleText = [
 	themeTokenText,
 	aliases,
-	officeBridge,
+	// The shared elements read --office-*; feed them from the editor's --dve-* theme.
+	shadcnBridge(':host', '--dve-', { extra: { '--office-font': "'Segoe UI', Arial, sans-serif" } }),
 	base,
 	ribbon,
 	ribbonButtons,

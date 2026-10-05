@@ -1,25 +1,33 @@
+import { defineRibbon } from 'ooxml-ui/controls';
 import { shortcutHint } from './binding-labels';
 import { emit } from './events';
 import { setComboValue, type ComboInput } from './ribbon-combo';
-import { localizeElement, normalizeEditorLocale } from './localization';
+import {
+	localizeElement,
+	normalizeEditorLocale,
+	translate,
+	type LocalizationKey,
+} from './localization';
 import type { RibbonAction } from './ribbon-action';
 import { buildHomePanel } from './ribbon-home';
 import { attachRibbonBehavior } from './ribbon-behavior';
 import { attachRibbonOverflow, fitPanel, refitRibbon } from './ribbon-overflow';
 import { buildOtherPanels } from './ribbon-tabs';
 import { buildHeaderFooterPanel } from './header-footer-ribbon';
+import { panelsOf, setTabHidden } from './ribbon-tab-api';
 
 export type { RibbonAction } from './ribbon-action';
 
 export function createRibbon(locale: string = 'en'): HTMLElement {
-	const root = document.createElement('div');
+	defineRibbon();
+	const root = document.createElement('office-ui-ribbon');
 	root.className = 'dve-ribbon';
 	root.setAttribute('role', 'toolbar');
 	root.setAttribute('aria-label', 'Document formatting');
-	const tabs = document.createElement('nav');
-	tabs.className = 'ribbon-tabs';
-	tabs.setAttribute('role', 'tablist');
-	tabs.setAttribute('aria-label', 'Ribbon tabs');
+	root.setAttribute('label', 'Ribbon tabs');
+	root.setAttribute('file-label', 'File');
+	root.setAttribute('file-expanded', 'false');
+	root.setAttribute('collapse-label', 'Collapse the ribbon');
 	const panels = new Map<string, HTMLElement>();
 	for (const name of [
 		'Home',
@@ -32,75 +40,27 @@ export function createRibbon(locale: string = 'en'): HTMLElement {
 		'Header & Footer',
 	]) {
 		const key = name === 'Header & Footer' ? 'header-footer' : name.toLowerCase();
-		const id = `dve-tab-${key}`;
-		const tab = document.createElement('button');
-		tab.type = 'button';
-		tab.id = id;
-		tab.dataset.tabKey = `tab.${key}`;
-		tab.textContent = name;
-		tab.setAttribute('role', 'tab');
-		tab.setAttribute('aria-selected', String(name === 'Home'));
-		tab.setAttribute('aria-controls', `dve-panel-${key}`);
-		tab.tabIndex = name === 'Home' ? 0 : -1;
 		const panel = document.createElement('div');
 		panel.className = 'ribbon-panel';
+		panel.dataset.ribbonTab = key;
+		panel.dataset.label = name;
 		panel.dataset.panel = name;
 		panel.id = `dve-panel-${key}`;
-		panel.setAttribute('role', 'tabpanel');
-		panel.setAttribute('aria-labelledby', id);
 		panel.tabIndex = 0;
-		panel.hidden = name !== 'Home';
-		// Table tools are contextual: the tab appears only while the selection is in a table.
-		if (name === 'Table' || name === 'Header & Footer') {
-			tab.hidden = true;
-			tab.dataset.contextual = '';
-		}
-		tab.addEventListener('click', () => {
-			tabs.querySelectorAll('[role=tab]').forEach((item) => {
-				item.setAttribute('aria-selected', String(item === tab));
-				(item as HTMLButtonElement).tabIndex = item === tab ? 0 : -1;
-			});
-			panels.forEach((item, key) => {
-				item.hidden = key !== name;
-			});
-			// Fold groups now, so the new tab never shows a frame of clipped controls.
-			fitPanel(panel);
-		});
-		tab.addEventListener('keydown', (event) => {
-			const tabsList = [...tabs.querySelectorAll<HTMLButtonElement>('[role=tab]')].filter(
-				(item) => !item.hidden && !item.hasAttribute('data-dve-hidden'),
-			);
-			const current = tabsList.indexOf(tab);
-			const next =
-				event.key === 'ArrowRight'
-					? (current + 1) % tabsList.length
-					: event.key === 'ArrowLeft'
-						? (current + tabsList.length - 1) % tabsList.length
-						: event.key === 'Home'
-							? 0
-							: event.key === 'End'
-								? tabsList.length - 1
-								: -1;
-			if (next < 0) return;
-			event.preventDefault();
-			const target = tabsList[next];
-			if (!target) return;
-			target.focus();
-			target.click();
-		});
-		tabs.append(tab);
+		if (name === 'Table' || name === 'Header & Footer') panel.dataset.contextual = '';
 		panels.set(name, panel);
 	}
 	buildHomePanel(panels);
 	buildOtherPanels(panels);
 	buildHeaderFooterPanel(panels.get('Header & Footer')!);
 	for (const panel of panels.values()) root.append(panel);
+	// Table tools are contextual: the tab appears only while the selection is in a table.
+	for (const key of ['table', 'header-footer']) setTabHidden(root, key, 'contextual', true);
 	setComboValue(root.querySelector<ComboInput>('[aria-label="Font family"]')!, 'Calibri');
 	setComboValue(root.querySelector<ComboInput>('[aria-label="Font size"]')!, '11');
 	root.querySelector<HTMLSelectElement>('[aria-label="Zoom"]')!.value = '100';
 	root.querySelector<HTMLSelectElement>('[aria-label="Layout view"]')!.value = 'draft';
-	root.prepend(tabs);
-	attachRibbonBehavior(root, tabs);
+	attachRibbonBehavior(root);
 	attachRibbonOverflow(root);
 	root.addEventListener('click', (event) => {
 		const target = (event.target as HTMLElement).closest<HTMLButtonElement>('button[data-action]');
@@ -138,6 +98,11 @@ export function setRibbonLocale(root: HTMLElement, value: string): void {
 	const locale = normalizeEditorLocale(value);
 	root.dataset.editorLocale = locale;
 	localizeElement(root, locale);
+	// The tab row is drawn by the shared ribbon from the panels' labels, so translate those.
+	for (const panel of panelsOf(root))
+		panel.dataset.label = translate(locale, `tab.${panel.dataset.ribbonTab}` as LocalizationKey);
+	root.setAttribute('file-label', translate(locale, 'File'));
+	root.setAttribute('collapse-label', translate(locale, 'Collapse the ribbon'));
 	syncSelectTitles(root);
 	syncButtonTitles(root);
 	refitRibbon(root);

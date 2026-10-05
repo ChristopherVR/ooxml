@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { panelOf } from './ribbon-tab-api';
 import { describe, expect, it } from 'vitest';
 import { EditorState } from 'prosemirror-state';
 import { schema } from './schema';
@@ -22,7 +23,7 @@ describe('shared editor localization', () => {
 		zoom.value = '125';
 		setRibbonLocale(ribbon, 'fr');
 		expect(ribbon.getAttribute('aria-label')).toBe('Mise en forme du document');
-		expect(ribbon.querySelector('[role="tab"]')?.textContent).toBe('Accueil');
+		expect(panelOf(ribbon, 'home')?.dataset.label).toBe('Accueil');
 		expect(format.getAttribute('aria-label')).toBe('Gras');
 		expect(ribbon.querySelector<HTMLButtonElement>('[aria-label="Liste à puces"]')).not.toBeNull();
 		expect(ribbon.querySelector<HTMLElement>('[data-label="Font"]')?.dataset.caption).toBe(

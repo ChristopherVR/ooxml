@@ -1,3 +1,4 @@
+import type { RibbonElement } from './ribbon-tab-api';
 import { saveDocx, type DocumentModel } from 'docx-core';
 import { createBackstage, type Backstage } from './backstage';
 import type { BackstageOptions, BackstageOptionKey } from './backstage-options';
@@ -48,6 +49,7 @@ export class EditorChrome {
 	readonly backstage: Backstage;
 	readonly statusBar: StatusBar;
 	readonly fileInput: HTMLInputElement;
+	private ribbon: RibbonElement | undefined;
 	private _fileName = DEFAULT_FILE_NAME;
 	private state: SaveState = 'saved';
 
@@ -106,14 +108,9 @@ export class EditorChrome {
 	mount(frame: HTMLElement, ribbon: HTMLElement): void {
 		frame.prepend(this.titleBar.element);
 		frame.append(this.statusBar.element, this.backstage.element, this.fileInput);
-		const tabs = ribbon.querySelector('.ribbon-tabs');
-		const fileTab = document.createElement('button');
-		fileTab.type = 'button';
-		fileTab.className = 'dve-file-tab';
-		fileTab.textContent = 'File';
-		fileTab.setAttribute('aria-haspopup', 'dialog');
-		fileTab.addEventListener('click', () => this.backstage.open('home'));
-		tabs?.prepend(fileTab);
+		this.ribbon = ribbon as RibbonElement;
+		// The File button belongs to the shared ribbon; it asks for the File view with this event.
+		ribbon.addEventListener('office-ribbon-file', () => this.backstage.open('home'));
 	}
 
 	get fileName(): string {
@@ -157,6 +154,7 @@ export class EditorChrome {
 
 	closeBackstage(): void {
 		this.backstage.close();
+		this.ribbon?.focusFile?.();
 	}
 
 	/** Runs a file command unless a host cancels the `file-command` event to handle it itself. */

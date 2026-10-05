@@ -1,3 +1,4 @@
+import { panelsOf, setTabHidden } from './ribbon-tab-api';
 import { ribbonActionIdForLabel, type RibbonActionId } from './ribbon-action-ids';
 
 const HIDDEN = 'data-dve-hidden';
@@ -37,11 +38,6 @@ export function applyRibbonVisibility(
 			?.toggleAttribute(HIDDEN, Boolean(split.querySelector(`button[${HIDDEN}]`)));
 	for (const group of toolbar.querySelectorAll('.ribbon-group'))
 		group.toggleAttribute(HIDDEN, allHidden(group));
-	const tabs = [...toolbar.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
-	for (const tab of tabs) {
-		const panel = toolbar.querySelector(`#${tab.getAttribute('aria-controls')}`);
-		tab.toggleAttribute(HIDDEN, Boolean(panel) && allHidden(panel!));
-	}
-	const selected = tabs.find((tab) => tab.getAttribute('aria-selected') === 'true');
-	if (selected?.hasAttribute(HIDDEN)) tabs.find((tab) => !tab.hasAttribute(HIDDEN))?.click();
+	for (const panel of panelsOf(toolbar))
+		setTabHidden(toolbar, panel.dataset.ribbonTab!, 'custom', allHidden(panel));
 }

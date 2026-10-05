@@ -6,6 +6,7 @@ import { docToModel, modelToDoc } from './model-adapter';
 import { createRibbon, type RibbonAction } from './ribbon';
 import { syncMultilingualControls } from './multilingual-ribbon';
 import { schema } from './schema';
+import { ribbonTab } from './test-support';
 
 describe('multilingual editor metadata', () => {
 	it('roundtrips script language tags, direct run direction, paragraph direction and Unicode', () => {
@@ -38,11 +39,10 @@ describe('multilingual editor metadata', () => {
 		expect(String((paragraphDom[1] as { style: string }).style)).not.toContain('text-align:left');
 	});
 
-	it('exposes accessible language and direction controls with BCP 47 presets', () => {
+	it('exposes accessible language and direction controls with BCP 47 presets', async () => {
 		const ribbon = createRibbon();
-		ribbon
-			.querySelector<HTMLButtonElement>('[role="tab"][aria-controls="dve-panel-review"]')!
-			.click();
+		document.body.append(ribbon);
+		(await ribbonTab(ribbon, 'review')).click();
 		const labels = [
 			'Paragraph direction',
 			'Text language',
@@ -60,7 +60,7 @@ describe('multilingual editor metadata', () => {
 		expect(ribbon.querySelector('[aria-label="Find and replace"]')).toBeTruthy();
 	});
 
-	it('syncs direction, language, and explicit run RTL values from editor selection', () => {
+	it('syncs direction, language, and explicit run RTL values from editor selection', async () => {
 		const model = createDocument();
 		model.blocks = [
 			{
@@ -72,9 +72,8 @@ describe('multilingual editor metadata', () => {
 		];
 		const state = EditorState.create({ doc: modelToDoc(model) });
 		const ribbon = createRibbon();
-		ribbon
-			.querySelector<HTMLButtonElement>('[role="tab"][aria-controls="dve-panel-review"]')!
-			.click();
+		document.body.append(ribbon);
+		(await ribbonTab(ribbon, 'review')).click();
 		syncMultilingualControls(ribbon, state);
 		expect(
 			ribbon.querySelector<HTMLSelectElement>('[aria-label="Paragraph direction"]')!.value,
@@ -87,11 +86,10 @@ describe('multilingual editor metadata', () => {
 		);
 	});
 
-	it('dispatches typed multilingual and search actions', () => {
+	it('dispatches typed multilingual and search actions', async () => {
 		const ribbon = createRibbon();
-		ribbon
-			.querySelector<HTMLButtonElement>('[role="tab"][aria-controls="dve-panel-review"]')!
-			.click();
+		document.body.append(ribbon);
+		(await ribbonTab(ribbon, 'review')).click();
 		const actions: RibbonAction[] = [];
 		ribbon.addEventListener('ribbon-action', (event) =>
 			actions.push((event as CustomEvent<RibbonAction>).detail),

@@ -45,3 +45,34 @@ export async function quickAccessButton(
 		`quick access button ${label}`,
 	);
 }
+
+type Updating = HTMLElement & { updateComplete: Promise<unknown> };
+
+/** The shadow root of the shared ribbon in `scope`, after it has rendered its tabs. */
+export async function ribbonShadow(scope: ParentNode): Promise<ShadowRoot> {
+	const ribbon =
+		scope instanceof HTMLElement && scope.localName === 'office-ui-ribbon'
+			? (scope as Updating)
+			: must(scope.querySelector<Updating>('office-ui-ribbon'), 'ribbon');
+	await ribbon.updateComplete;
+	return must(ribbon.shadowRoot, 'ribbon shadow root');
+}
+
+/** The rendered button of ribbon tab `key` ("home", "insert", "table"...). */
+export async function ribbonTab(scope: ParentNode, key: string): Promise<HTMLButtonElement> {
+	const root = await ribbonShadow(scope);
+	return must(
+		root.querySelector<HTMLButtonElement>(`[role="tab"][data-tab="${key}"]`),
+		`tab ${key}`,
+	);
+}
+
+/** The tab buttons, in order. */
+export async function ribbonTabs(scope: ParentNode): Promise<HTMLButtonElement[]> {
+	return [...(await ribbonShadow(scope)).querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+}
+
+/** The File button of the shared ribbon. */
+export async function ribbonFile(scope: ParentNode): Promise<HTMLButtonElement> {
+	return must((await ribbonShadow(scope)).querySelector<HTMLButtonElement>('.file'), 'File button');
+}

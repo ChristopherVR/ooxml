@@ -1,3 +1,4 @@
+import { panelsOf } from './ribbon-tab-api';
 import { PROPERTY_FIELDS, type DocumentModel } from 'docx-core';
 import { icon } from './chrome-icons';
 import type { DocumentStats } from './document-stats';
@@ -304,12 +305,10 @@ export function renderCustomize({ handlers, t, content }: PageContext): void {
 	const commit = () =>
 		handlers.setHiddenActions(boxes.filter((b) => !b.input.checked).map((b) => b.id));
 	const sections: HTMLElement[] = [];
-	for (const tab of ribbon?.querySelectorAll<HTMLElement>('[role="tab"]') ?? []) {
-		const panel = ribbon?.querySelector(`#${tab.getAttribute('aria-controls')}`);
-		if (!panel) continue;
+	for (const panel of ribbon ? panelsOf(ribbon) : []) {
 		const tabSection = document.createElement('section');
 		tabSection.className = 'dve-customize-tab';
-		tabSection.append(heading(tab.textContent?.trim() ?? '', 'h3'));
+		tabSection.append(heading(panel.dataset.label ?? '', 'h3'));
 		for (const group of panel.querySelectorAll<HTMLElement>('.ribbon-group')) {
 			const list = document.createElement('fieldset');
 			list.className = 'dve-customize-group';

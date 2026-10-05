@@ -1,4 +1,6 @@
 // @vitest-environment jsdom
+import { panelOf, panelsOf } from './ribbon-tab-api';
+import { ribbonFile } from './test-support';
 import { describe, expect, it } from 'vitest';
 import { createDocument } from 'docx-core';
 import { DocxEditorElement, registerDocxEditor } from './index';
@@ -129,12 +131,12 @@ describe('localized rendering', () => {
 		editor.remove();
 	});
 
-	it('localizes the File tab and file inputs when the locale is set before connecting', () => {
+	it('localizes the File tab and file inputs when the locale is set before connecting', async () => {
 		const editor = document.createElement('docx-editor') as DocxEditorElement;
 		editor.locale = 'es-MX';
 		document.body.append(editor);
 		const root = editor.shadowRoot!;
-		expect(root.querySelector('.dve-file-tab')!.textContent).toBe('Archivo');
+		expect((await ribbonFile(root)).textContent).toBe('Archivo');
 		expect(root.querySelector('.dve-picture-input')!.getAttribute('aria-label')).toBe(
 			'Insertar imagen',
 		);
@@ -174,16 +176,17 @@ describe('localized rendering', () => {
 		} as const;
 		for (const locale of EDITOR_LOCALES) {
 			const ribbon = createRibbon(locale);
-			const names = [...ribbon.querySelectorAll('[role=tab]')].map((tab) => tab.textContent);
+			// Header & Footer is contextual: its tab shows only inside a header or footer.
+			const names = panelsOf(ribbon).map((panel) => panel.dataset.label);
 			expect(names, locale).toEqual([...expected[locale], strings[locale]['tab.header-footer']]);
 		}
 		expect(strings.fr['tab.insert']).toBe('Insertion');
 		expect(strings.fr.Insert).toBe('Insérer');
 		const french = createRibbon('en');
 		setRibbonLocale(french, 'fr');
-		expect(french.querySelector('#dve-tab-insert')?.textContent).toBe('Insertion');
+		expect(panelOf(french, 'insert')?.dataset.label).toBe('Insertion');
 		setRibbonLocale(french, 'en');
-		expect(french.querySelector('#dve-tab-insert')?.textContent).toBe('Insert');
+		expect(panelOf(french, 'insert')?.dataset.label).toBe('Insert');
 	});
 
 	it('translates dynamic line-spacing labels and templates in every locale', () => {

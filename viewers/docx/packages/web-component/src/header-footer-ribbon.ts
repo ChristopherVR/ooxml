@@ -1,3 +1,4 @@
+import { isTabHidden, panelOf, selectTab, setTabHidden } from './ribbon-tab-api';
 import type { DocumentModel } from 'docx-core';
 import { group, stack, tool, spinner } from './ribbon-parts';
 import type { HeaderFooterKind, HeaderFooterSlot } from './header-footer-commands';
@@ -86,13 +87,12 @@ export function syncHeaderFooterRibbon(
 	model: DocumentModel,
 	editable: boolean,
 ): void {
-	const tab = toolbar.querySelector<HTMLButtonElement>('#dve-tab-header-footer');
-	if (tab) {
-		const entering = tab.hidden && !!context;
-		tab.hidden = !context;
-		if (entering) tab.click();
-		else if (!context && tab.getAttribute('aria-selected') === 'true')
-			toolbar.querySelector<HTMLButtonElement>('#dve-tab-home')?.click();
+	const panel = panelOf(toolbar, 'header-footer');
+	if (panel) {
+		const entering = isTabHidden(panel) && !!context;
+		setTabHidden(toolbar, 'header-footer', 'contextual', !context);
+		// The shared ribbon falls back to the first tab when the selected one goes away.
+		if (entering) selectTab(toolbar, 'header-footer');
 	}
 	for (const button of toolbar.querySelectorAll<HTMLButtonElement>('button[data-action]')) {
 		const action = JSON.parse(button.dataset.action!);

@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { ribbonFile } from './test-support';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createDocument } from 'docx-core';
 import { DocxEditorElement, registerDocxEditor } from './index';
@@ -28,7 +29,7 @@ describe('Word window chrome', () => {
 	it('File Options changes live view and spelling preferences without editing the document', async () => {
 		const editor = mount();
 		const r = root(editor);
-		r.querySelector<HTMLButtonElement>('.dve-file-tab')!.click();
+		(await ribbonFile(root(editor))).click();
 		(await inner(editor, 'office-ui-backstage'))
 			.querySelector<HTMLButtonElement>('[data-backstage-item="options"]')!
 			.click();
@@ -88,7 +89,7 @@ describe('Word window chrome', () => {
 			event.preventDefault();
 		});
 		const click = vi.spyOn(HTMLInputElement.prototype, 'click');
-		root(editor).querySelector<HTMLButtonElement>('.dve-file-tab')!.click();
+		(await ribbonFile(root(editor))).click();
 		(await inner(editor, 'office-ui-backstage'))
 			.querySelector<HTMLButtonElement>('[data-backstage-item="open"]')!
 			.click();

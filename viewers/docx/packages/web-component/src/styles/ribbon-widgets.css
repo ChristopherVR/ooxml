@@ -1,39 +1,3 @@
-/* Collapse: panels hide; a click on a tab overlays its panel until dismissed. */
-.ribbon-tabs .ribbon-collapse {
-	flex: none;
-	align-self: center;
-	margin-left: auto;
-	width: 26px;
-	height: 26px;
-	padding: 0;
-	border: 0;
-	border-radius: 4px;
-	background: none;
-	color: var(--muted);
-	cursor: pointer;
-}
-.ribbon-tabs .ribbon-collapse:hover {
-	background: var(--accent-soft);
-}
-.ribbon-tabs .ribbon-collapse[aria-pressed='true'] svg {
-	transform: rotate(180deg);
-}
-.dve-ribbon[data-collapsed] {
-	position: relative;
-}
-.dve-ribbon[data-collapsed]:not([data-peek]) .ribbon-panel {
-	display: none;
-}
-.dve-ribbon[data-collapsed][data-peek] .ribbon-panel:not([hidden]) {
-	position: absolute;
-	top: 100%;
-	right: 0;
-	left: 0;
-	z-index: 60;
-	border-bottom: 1px solid var(--line);
-	background: var(--surface);
-	box-shadow: 0 6px 16px rgb(0 0 0 / 0.15);
-}
 .dve-keytip {
 	position: absolute;
 	bottom: -2px;
@@ -52,9 +16,6 @@
 		sans-serif;
 	text-align: center;
 	pointer-events: none;
-}
-.dve-file-tab {
-	position: relative;
 }
 
 .ribbon-popover.dve-word-count {
@@ -213,28 +174,13 @@
 	border-color: transparent;
 	background: none;
 }
-.ribbon-group button:focus-visible,
-.ribbon-tabs button:focus-visible {
+.ribbon-group button:focus-visible {
 	outline: 2px solid var(--blue);
 	outline-offset: -2px;
 }
 .ribbon-menu:has(select:disabled) select,
 .ribbon-split:has(button:disabled) button:disabled {
 	opacity: 1;
-}
-
-/* A contextual tab (Table) is tinted so it reads as tools for the selection, as in Word. */
-.ribbon-tabs [role='tab'][data-contextual] {
-	color: #0f7b6c;
-}
-.ribbon-tabs [role='tab'][data-contextual][aria-selected='true'] {
-	color: #0f7b6c;
-}
-.ribbon-tabs [role='tab'][data-contextual][aria-selected='true']:after {
-	background: #0f7b6c;
-}
-.ribbon-tabs [role='tab'][hidden] {
-	display: none;
 }
 
 /* Dialog launcher: the small corner button of a group, as in Word. */

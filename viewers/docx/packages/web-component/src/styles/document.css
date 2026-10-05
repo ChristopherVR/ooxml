@@ -125,14 +125,6 @@
 	font-size: 11px;
 }
 @media (max-width: 650px) {
-	.ribbon-tabs {
-		gap: 0;
-		padding-inline: 6px;
-	}
-	.ribbon-tabs [role='tab'] {
-		min-height: 40px;
-		padding-inline: 11px;
-	}
 	.ribbon-panel {
 		min-height: 96px;
 		padding: 6px;

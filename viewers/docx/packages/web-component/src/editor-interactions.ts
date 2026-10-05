@@ -3,6 +3,7 @@
  * editor. Everything dispatches through the existing controllers (`routeRibbonAction`, the chrome's
  * file commands, the search panel); this module holds only the focus and layer bookkeeping.
  */
+import type { RibbonElement } from './ribbon-tab-api';
 import type { EditorCore } from './editor-core';
 import { emit } from './events';
 import { focusView } from './focus-view';
@@ -67,11 +68,8 @@ export function attachEditorInteractions(core: EditorCore, frame: HTMLElement): 
 	const focusRegion = (region: Region) => {
 		if (region === 'document') return toDocument();
 		const root = regionElement(region);
-		const target =
-			region === 'ribbon'
-				? root?.querySelector<HTMLElement>('[role="tab"][tabindex="0"], [role="tab"]')
-				: root?.querySelector<HTMLElement>('button:not([hidden])');
-		(target ?? root)?.focus();
+		if (region === 'ribbon' && root) return (root as RibbonElement).focusTab();
+		(root?.querySelector<HTMLElement>('button:not([hidden])') ?? root)?.focus();
 	};
 
 	const layers: Layer[] = [

@@ -158,15 +158,15 @@ describe('UI customisation', () => {
 			shell(editor).querySelector(`[aria-label="${label}"]`)!.hasAttribute('data-dve-hidden');
 		expect(hidden('Bold')).toBe(true);
 		expect(hidden('Italic')).toBe(false);
-		expect(shell(editor).querySelector('#dve-tab-view')!.hasAttribute('data-dve-hidden')).toBe(
+		expect(shell(editor).querySelector('#dve-panel-view')!.hasAttribute('data-tab-hidden')).toBe(
 			true,
 		);
-		expect(shell(editor).querySelector('#dve-tab-home')!.hasAttribute('data-dve-hidden')).toBe(
+		expect(shell(editor).querySelector('#dve-panel-home')!.hasAttribute('data-tab-hidden')).toBe(
 			false,
 		);
 		editor.hiddenActions = [];
 		expect(hidden('Bold')).toBe(false);
-		expect(shell(editor).querySelector('#dve-tab-view')!.hasAttribute('data-dve-hidden')).toBe(
+		expect(shell(editor).querySelector('#dve-panel-view')!.hasAttribute('data-tab-hidden')).toBe(
 			false,
 		);
 	});

@@ -1,76 +1,55 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from 'vitest';
-import { createRibbon } from './ribbon';
+import { createRibbon, setRibbonLocale } from './ribbon';
+import { ribbonFile, ribbonTab, ribbonTabs } from './test-support';
 
 const mount = () => {
 	const ribbon = createRibbon();
 	document.body.append(ribbon);
 	return ribbon;
 };
-const tab = (ribbon: HTMLElement, name: string) =>
-	ribbon.querySelector<HTMLButtonElement>(`#dve-tab-${name}`)!;
 
 afterEach(() => (document.body.innerHTML = ''));
 
 describe('ribbon collapse', () => {
-	it('toggles from the button, a double-click on a tab and Ctrl+F1', () => {
+	it('uses the shared ribbon collapse, named in the display language', async () => {
 		const ribbon = mount();
-		const button = ribbon.querySelector<HTMLButtonElement>('.ribbon-collapse')!;
+		await ribbonTab(ribbon, 'home');
+		expect(ribbon.hasAttribute('collapsible')).toBe(true);
+		const button = ribbon.shadowRoot!.querySelector<HTMLButtonElement>('.collapse')!;
+		expect(button.getAttribute('aria-label')).toBe('Collapse the ribbon');
 		button.click();
-		expect(ribbon.hasAttribute('data-collapsed')).toBe(true);
-		expect(button.getAttribute('aria-pressed')).toBe('true');
-		tab(ribbon, 'home').dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
-		expect(ribbon.hasAttribute('data-collapsed')).toBe(false);
-		tab(ribbon, 'home').dispatchEvent(
-			new KeyboardEvent('keydown', { key: 'F1', ctrlKey: true, bubbles: true }),
-		);
-		expect(ribbon.hasAttribute('data-collapsed')).toBe(true);
-	});
-
-	it('peeks a panel on tab click and dismisses on Escape, a command or an outside click', () => {
-		const ribbon = mount();
-		ribbon.querySelector<HTMLButtonElement>('.ribbon-collapse')!.click();
-		tab(ribbon, 'insert').click();
-		expect(ribbon.hasAttribute('data-peek')).toBe(true);
-		tab(ribbon, 'insert').dispatchEvent(
-			new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }),
-		);
-		expect(ribbon.hasAttribute('data-peek')).toBe(false);
-		tab(ribbon, 'insert').click();
-		ribbon.querySelector<HTMLButtonElement>('[aria-label="Insert page break"]')!.click();
-		expect(ribbon.hasAttribute('data-peek')).toBe(false);
-		tab(ribbon, 'view').click();
-		document.body.dispatchEvent(new Event('pointerdown', { bubbles: true }));
-		expect(ribbon.hasAttribute('data-peek')).toBe(false);
-	});
-
-	it('expanding clears any peek', () => {
-		const ribbon = mount();
-		const button = ribbon.querySelector<HTMLButtonElement>('.ribbon-collapse')!;
-		button.click();
-		tab(ribbon, 'layout').click();
-		button.click();
-		expect(ribbon.hasAttribute('data-collapsed')).toBe(false);
-		expect(ribbon.hasAttribute('data-peek')).toBe(false);
+		expect(ribbon.hasAttribute('collapsed')).toBe(true);
+		setRibbonLocale(ribbon, 'fr');
+		await ribbonTab(ribbon, 'home');
+		expect(button.getAttribute('aria-label')).toBe('Réduire le ruban');
 	});
 });
 
+/** The badges the key tips put on the tab row, which lives in the shared ribbon's shadow root. */
+const badges = async (ribbon: HTMLElement) =>
+	[...(await ribbonTabs(ribbon))]
+		.flatMap((tab) => [...tab.querySelectorAll('.dve-keytip')])
+		.map((badge) => badge.textContent);
+
 describe('tab KeyTips', () => {
-	it('shows a badge per tab and opens the tab for its letter', () => {
+	it('shows a badge per tab and opens the tab for its letter', async () => {
 		const ribbon = mount();
+		await ribbonTab(ribbon, 'home');
 		ribbon.dispatchEvent(new CustomEvent('dve-keytips'));
-		const badges = [...ribbon.querySelectorAll('.dve-keytip')].map((badge) => badge.textContent);
-		expect(badges).toEqual(['H', 'N', 'P', 'S', 'R', 'W']);
+		expect(await badges(ribbon)).toEqual(['H', 'N', 'P', 'S', 'R', 'W']);
+		expect((await ribbonFile(ribbon)).querySelector('.dve-keytip')?.textContent).toBe('F');
 		ribbon.dispatchEvent(new KeyboardEvent('keydown', { key: 'n' }));
-		expect(tab(ribbon, 'insert').getAttribute('aria-selected')).toBe('true');
-		expect(ribbon.querySelector('.dve-keytip')).toBeNull();
+		expect((await ribbonTab(ribbon, 'insert')).getAttribute('aria-selected')).toBe('true');
+		expect(await badges(ribbon)).toEqual([]);
 	});
 
-	it('hides the badges on an unmatched key or Escape without changing tabs', () => {
+	it('hides the badges on an unmatched key or Escape without changing tabs', async () => {
 		const ribbon = mount();
+		await ribbonTab(ribbon, 'home');
 		ribbon.dispatchEvent(new CustomEvent('dve-keytips'));
 		ribbon.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
-		expect(ribbon.querySelector('.dve-keytip')).toBeNull();
-		expect(tab(ribbon, 'home').getAttribute('aria-selected')).toBe('true');
+		expect(await badges(ribbon)).toEqual([]);
+		expect((await ribbonTab(ribbon, 'home')).getAttribute('aria-selected')).toBe('true');
 	});
 });
