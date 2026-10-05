@@ -83,7 +83,7 @@ Still missing:
 - Ctrl+Alt+F / Ctrl+Alt+D (insert footnote/endnote) are bound, but Windows browsers can report
   Ctrl+Alt as AltGr and not deliver them; the References ribbon buttons always work.
 - Table of contents entries link to `_Toc` bookmarks on their headings with `PAGEREF` page numbers,
-  as Word writes them. TC fields and custom style mappings (`\t`) are not collected. Tab stops
+  as Word writes them. Update Table collects paragraphs by heading level, outline level (`\u`) and custom style mappings (`\t "Style,level"`); TC fields are not collected. Tab stops
   are saved and honored in Print Layout and on the editing surface (measured after rendering, with
   leaders); the implicit hanging-indent stop is applied in Print Layout only.
 - Pictures and links in headers, footers and notes are resolved, shown and saved with each part's own
