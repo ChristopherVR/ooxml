@@ -9,7 +9,14 @@ import postcss from 'postcss';
 import { initVisioTheme } from './assets/theme.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const pages = ['index.html', 'docs/index.html', 'docs/parity.html', 'docs/architecture.html'];
+const pages = [
+	'index.html',
+	'docs/index.html',
+	'docs/parity.html',
+	'docs/architecture.html',
+	'docs/collaboration.html',
+	'docs/demos.html',
+];
 const read = (path) => readFileSync(resolve(root, path), 'utf8');
 const dom = (path) => new JSDOM(read(path), { url: `https://example.test/visio-viewer/${path}` });
 const css = postcss.parse(read('docs/assets/site.css'));

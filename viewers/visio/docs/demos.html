@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<meta
+			name="description"
+			content="The playground built for each framework adapter, theme sync and how to run them locally."
+		/>
+		<meta name="theme-color" content="#fbfaf7" />
+		<title>Live demos · visio-viewer</title>
+		<script>
+			// Resolve the shared preference before the first paint; storage is optional.
+			try {
+				const saved =
+					localStorage.getItem('vitepress-theme-appearance') ??
+					localStorage.getItem('visio-docs-theme');
+				if (saved === 'light' || saved === 'dark') document.documentElement.dataset.theme = saved;
+			} catch {
+				// CSS follows the system preference when storage is unavailable.
+			}
+		</script>
+		<link rel="stylesheet" href="../docs/assets/site.css" />
+		<script type="module" src="../docs/assets/site.js"></script>
+	</head>
+	<body class="docs-page">
+		<a class="skip" href="#main">Skip to content</a>
+		<header class="site-header">
+			<div class="wrap header-inner">
+				<a class="brand" href="../index.html">visio-viewer</a>
+				<button class="site-search-toggle" type="button" aria-haspopup="dialog">
+					Search <kbd>Ctrl K</kbd>
+				</button>
+				<button
+					class="menu-toggle"
+					type="button"
+					aria-expanded="false"
+					aria-controls="site-navigation"
+				>
+					Menu <span aria-hidden="true">☰</span>
+				</button>
+				<nav id="site-navigation" class="site-nav" aria-label="Main navigation">
+					<a href="../docs/index.html#frameworks">Developer Guide</a>
+					<a href="../docs/index.html#playground">User Guide</a>
+					<details class="nav-resources">
+						<summary>Packages</summary>
+						<div>
+							<a href="../docs/index.html#frameworks">Six source bindings</a
+							><a href="../docs/index.html#local-setup">Local setup</a>
+						</div>
+					</details>
+					<a href="https://github.com/ChristopherVR/visio-viewer/releases">Releases</a>
+					<details class="nav-resources">
+						<summary>Resources</summary>
+						<div>
+							<a href="../docs/parity.html">Compatibility</a>
+							<a href="../docs/architecture.html">Architecture</a>
+							<a href="../docs/collaboration.html">Collaboration</a>
+							<a href="../docs/demos.html">Live demos</a>
+							<a href="../demo/index.html">Live demo</a
+							><a href="https://github.com/ChristopherVR/visio-viewer">GitHub</a>
+						</div>
+					</details>
+					<span class="nav-divider" aria-hidden="true"></span>
+					<button class="theme-toggle" type="button" aria-label="Switch color theme">
+						<span aria-hidden="true">☼</span>
+					</button>
+					<a
+						class="github-link"
+						href="https://github.com/ChristopherVR/visio-viewer"
+						aria-label="GitHub repository"
+						>GitHub</a
+					>
+				</nav>
+			</div>
+		</header>
+		<main id="main" class="wrap doc-layout">
+			<aside class="doc-sidebar">
+				<details class="doc-mobile-menu" open>
+					<summary>Menu <span aria-hidden="true">⌄</span></summary>
+					<nav aria-label="Documentation">
+						<p class="eyebrow">Start here</p>
+						<a href="index.html#playground">Open a drawing</a
+						><a href="index.html#local-setup">Local setup</a
+						><a href="index.html#frameworks">Framework bindings</a>
+						<p class="eyebrow sidebar-section">Concepts</p>
+						<a href="index.html">Getting started</a><a href="parity.html">Capability ledger</a
+						><a href="architecture.html">Architecture</a
+						><a href="collaboration.html">Collaboration</a
+						><a href="demos.html" aria-current="page">Live demos</a
+						><a href="../demo/index.html">Open playground</a>
+					</nav>
+				</details>
+			</aside>
+			<article class="doc-content">
+				<h1>Live demos</h1>
+				<p class="lead">
+					The same playground is built once per framework adapter and published next to these docs.
+				</p>
+				<p>
+					Each demo runs entirely in your browser: drawings are parsed and rendered locally and
+					nothing is uploaded. They open an original sample drawing, or a local
+					<code>.vsdx</code> file you choose. This is a public beta; a demo opening a file is not
+					evidence of Visio fidelity.
+				</p>
+				<div class="table-scroll" role="region" aria-label="Framework demos" tabindex="0">
+					<table>
+						<thead>
+							<tr>
+								<th>Demo</th>
+								<th>Adapter</th>
+								<th>Route</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td><a href="../demo/index.html">Vanilla JS</a></td>
+								<td><code>visio-vanilla-viewer</code></td>
+								<td><code>demo/</code></td>
+							</tr>
+							<tr>
+								<td><a href="../demo-react/">React</a></td>
+								<td><code>visio-react-viewer</code></td>
+								<td><code>demo-react/</code></td>
+							</tr>
+							<tr>
+								<td><a href="../demo-vue/">Vue 3</a></td>
+								<td><code>visio-vue-viewer</code></td>
+								<td><code>demo-vue/</code></td>
+							</tr>
+							<tr>
+								<td><a href="../demo-angular/">Angular</a></td>
+								<td><code>visio-angular-viewer</code></td>
+								<td><code>demo-angular/</code></td>
+							</tr>
+							<tr>
+								<td><a href="../demo-svelte/">Svelte 5</a></td>
+								<td><code>visio-svelte-viewer</code></td>
+								<td><code>demo-svelte/</code></td>
+							</tr>
+							<tr>
+								<td><a href="../demo-solid/">Solid</a></td>
+								<td><code>visio-solid-viewer</code></td>
+								<td><code>demo-solid/</code></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<h2 id="theme">Theme</h2>
+				<p>
+					The docs and the demos share one appearance preference. It is stored in
+					<code>localStorage</code> under the VitePress key
+					<code>vitepress-theme-appearance</code> (<code>light</code> or <code>dark</code>; no value
+					follows the system). The home page applies it to the embedded viewer when the viewer
+					reports ready.
+				</p>
+				<h2 id="collaboration">Collaboration</h2>
+				<p>
+					To try live sharing, open a demo in two windows of the same browser and use File &gt;
+					Share. See <a href="collaboration.html">Collaboration</a> for what is and is not
+					supported.
+				</p>
+				<h2 id="run-locally">Run them locally</h2>
+				<div class="code-card">
+					<pre><code>npm ci --ignore-scripts
+npm ci --prefix packages/bindings --ignore-scripts
+npm run dev</code></pre>
+				</div>
+				<div class="doc-next">
+					<a href="collaboration.html">Next: collaboration →</a
+					><a href="index.html">Getting started →</a>
+				</div>
+			</article>
+		</main>
+		<footer class="footer">
+			<div class="wrap footer-inner">
+				<p>visio-viewer <span aria-hidden="true">/</span> Public beta</p>
+				<nav aria-label="Footer">
+					<a href="../docs/architecture.html">Architecture</a
+					><a href="../docs/parity.html">Known limits</a
+					><a href="https://github.com/ChristopherVR/pptx-viewer">Design reference ↗</a>
+				</nav>
+			</div>
+		</footer>
+		<dialog class="site-search" aria-labelledby="site-search-title">
+			<div class="search-heading">
+				<h2 id="site-search-title">Search documentation</h2>
+				<button type="button" data-search-close aria-label="Close search">Close</button>
+			</div>
+			<label for="site-search-input">Search guides, capabilities, and architecture</label>
+			<input
+				id="site-search-input"
+				type="search"
+				autocomplete="off"
+				placeholder="Search documentation"
+			/>
+			<p class="site-search-status" role="status">Type to find a topic.</p>
+			<ul class="site-search-results"></ul>
+		</dialog>
+	</body>
+</html>

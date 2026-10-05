@@ -13,6 +13,8 @@ export default defineConfig(({ mode }) => ({
 				docs: resolve('docs/index.html'),
 				parity: resolve('docs/parity.html'),
 				architecture: resolve('docs/architecture.html'),
+				collaboration: resolve('docs/collaboration.html'),
+				demos: resolve('docs/demos.html'),
 			},
 			output: {
 				entryFileNames: (chunk) =>

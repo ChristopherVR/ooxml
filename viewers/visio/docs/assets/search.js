@@ -9,20 +9,22 @@ let indexPromise;
 let request = 0;
 function index() {
 	return (indexPromise ??= Promise.all(
-		['index.html', 'parity.html', 'architecture.html'].map(async (name) => {
-			const url = new URL(name, docs);
-			const response = await fetch(url);
-			if (!response.ok) throw new Error('Documentation is unavailable.');
-			const page = new DOMParser().parseFromString(await response.text(), 'text/html');
-			return [...page.querySelectorAll('.doc-content h1, .doc-content h2, .doc-content h3')].map(
-				(heading) => ({
-					title: heading.textContent.trim(),
-					page: page.querySelector('h1')?.textContent.trim() ?? name,
-					url: url.href + (heading.id ? `#${encodeURIComponent(heading.id)}` : ''),
-					text: `${heading.textContent} ${heading.nextElementSibling?.textContent ?? ''}`,
-				}),
-			);
-		}),
+		['index.html', 'parity.html', 'architecture.html', 'collaboration.html', 'demos.html'].map(
+			async (name) => {
+				const url = new URL(name, docs);
+				const response = await fetch(url);
+				if (!response.ok) throw new Error('Documentation is unavailable.');
+				const page = new DOMParser().parseFromString(await response.text(), 'text/html');
+				return [...page.querySelectorAll('.doc-content h1, .doc-content h2, .doc-content h3')].map(
+					(heading) => ({
+						title: heading.textContent.trim(),
+						page: page.querySelector('h1')?.textContent.trim() ?? name,
+						url: url.href + (heading.id ? `#${encodeURIComponent(heading.id)}` : ''),
+						text: `${heading.textContent} ${heading.nextElementSibling?.textContent ?? ''}`,
+					}),
+				);
+			},
+		),
 	).then((pages) => pages.flat()));
 }
 function open() {

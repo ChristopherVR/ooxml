@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<meta
+			name="description"
+			content="What live sharing exists in the Visio viewer today, how to try it, and what is not supported."
+		/>
+		<meta name="theme-color" content="#fbfaf7" />
+		<title>Collaboration · visio-viewer</title>
+		<script>
+			// Resolve the shared preference before the first paint; storage is optional.
+			try {
+				const saved =
+					localStorage.getItem('vitepress-theme-appearance') ??
+					localStorage.getItem('visio-docs-theme');
+				if (saved === 'light' || saved === 'dark') document.documentElement.dataset.theme = saved;
+			} catch {
+				// CSS follows the system preference when storage is unavailable.
+			}
+		</script>
+		<link rel="stylesheet" href="../docs/assets/site.css" />
+		<script type="module" src="../docs/assets/site.js"></script>
+	</head>
+	<body class="docs-page">
+		<a class="skip" href="#main">Skip to content</a>
+		<header class="site-header">
+			<div class="wrap header-inner">
+				<a class="brand" href="../index.html">visio-viewer</a>
+				<button class="site-search-toggle" type="button" aria-haspopup="dialog">
+					Search <kbd>Ctrl K</kbd>
+				</button>
+				<button
+					class="menu-toggle"
+					type="button"
+					aria-expanded="false"
+					aria-controls="site-navigation"
+				>
+					Menu <span aria-hidden="true">☰</span>
+				</button>
+				<nav id="site-navigation" class="site-nav" aria-label="Main navigation">
+					<a href="../docs/index.html#frameworks">Developer Guide</a>
+					<a href="../docs/index.html#playground">User Guide</a>
+					<details class="nav-resources">
+						<summary>Packages</summary>
+						<div>
+							<a href="../docs/index.html#frameworks">Six source bindings</a
+							><a href="../docs/index.html#local-setup">Local setup</a>
+						</div>
+					</details>
+					<a href="https://github.com/ChristopherVR/visio-viewer/releases">Releases</a>
+					<details class="nav-resources">
+						<summary>Resources</summary>
+						<div>
+							<a href="../docs/parity.html">Compatibility</a>
+							<a href="../docs/architecture.html">Architecture</a>
+							<a href="../docs/collaboration.html">Collaboration</a>
+							<a href="../docs/demos.html">Live demos</a>
+							<a href="../demo/index.html">Live demo</a
+							><a href="https://github.com/ChristopherVR/visio-viewer">GitHub</a>
+						</div>
+					</details>
+					<span class="nav-divider" aria-hidden="true"></span>
+					<button class="theme-toggle" type="button" aria-label="Switch color theme">
+						<span aria-hidden="true">☼</span>
+					</button>
+					<a
+						class="github-link"
+						href="https://github.com/ChristopherVR/visio-viewer"
+						aria-label="GitHub repository"
+						>GitHub</a
+					>
+				</nav>
+			</div>
+		</header>
+		<main id="main" class="wrap doc-layout">
+			<aside class="doc-sidebar">
+				<details class="doc-mobile-menu" open>
+					<summary>Menu <span aria-hidden="true">⌄</span></summary>
+					<nav aria-label="Documentation">
+						<p class="eyebrow">Start here</p>
+						<a href="index.html#playground">Open a drawing</a
+						><a href="index.html#local-setup">Local setup</a
+						><a href="index.html#frameworks">Framework bindings</a>
+						<p class="eyebrow sidebar-section">Concepts</p>
+						<a href="index.html">Getting started</a><a href="parity.html">Capability ledger</a
+						><a href="architecture.html">Architecture</a
+						><a href="collaboration.html" aria-current="page">Collaboration</a
+						><a href="demos.html">Live demos</a><a href="../demo/index.html">Open playground</a>
+					</nav>
+				</details>
+			</aside>
+			<article class="doc-content">
+				<h1>Collaboration</h1>
+				<p class="lead">
+					File &gt; Share starts a live session between windows of one browser. Sharing across
+					devices is not available yet.
+				</p>
+				<div class="callout">
+					<strong>Partial, same-browser only</strong>
+					<p>
+						There is no hosted service and no server transport in this build. Nothing leaves your
+						browser, and no document is uploaded.
+					</p>
+				</div>
+				<h2 id="how-it-works">What exists today</h2>
+				<ul>
+					<li>
+						A live session built on <code>ooxml-core/collab</code> (Yjs) over a
+						<code>BroadcastChannel</code>, so windows and tabs of the same browser can share a
+						drawing.
+					</li>
+					<li>
+						The whole VSDX package is shared, and the collab runtime loads only when sharing starts.
+					</li>
+					<li>
+						Remote changes arrive as one undoable history step, and collaborators appear through the
+						shared presence element.
+					</li>
+					<li>
+						The session name is 1 to 64 letters, digits, hyphens or underscores. A window joining a
+						session whose room already holds a drawing adopts it; otherwise it seeds the room.
+					</li>
+				</ul>
+				<h2 id="try-it">Try it</h2>
+				<ol>
+					<li>Open the <a href="../demo/index.html">playground</a> in two windows or tabs.</li>
+					<li>Open the sample drawing in one window.</li>
+					<li>
+						In both windows choose <strong>File</strong>, then <strong>Share</strong>, enter the
+						same session name and start sharing.
+					</li>
+					<li>
+						Edit shape text in one window and watch the other follow. Undo reverts the remote step.
+					</li>
+				</ol>
+				<h2 id="limits">What is not supported</h2>
+				<div class="table-scroll" role="region" aria-label="Collaboration limits" tabindex="0">
+					<table>
+						<thead>
+							<tr>
+								<th>Area</th>
+								<th>Status</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>Sharing across devices</td>
+								<td>Needs a host-provided server transport; none ships with this build</td>
+							</tr>
+							<tr>
+								<td>Merging concurrent edits</td>
+								<td>
+									Whole-package sharing: concurrent changes are not merged field by field, the last
+									package wins
+								</td>
+							</tr>
+							<tr>
+								<td>Comments, authentication and roles</td>
+								<td>Not implemented</td>
+							</tr>
+							<tr>
+								<td>Embedding API for custom transports</td>
+								<td>Not documented here; File &gt; Share is the supported entry point</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<p>
+					The evidence is recorded in the <a href="parity.html">capability ledger</a> under
+					&ldquo;Collaboration and comments&rdquo;.
+				</p>
+				<div class="doc-next">
+					<a href="demos.html">Next: live demos →</a><a href="parity.html">Capability ledger →</a>
+				</div>
+			</article>
+		</main>
+		<footer class="footer">
+			<div class="wrap footer-inner">
+				<p>visio-viewer <span aria-hidden="true">/</span> Public beta</p>
+				<nav aria-label="Footer">
+					<a href="../docs/architecture.html">Architecture</a
+					><a href="../docs/parity.html">Known limits</a
+					><a href="https://github.com/ChristopherVR/pptx-viewer">Design reference ↗</a>
+				</nav>
+			</div>
+		</footer>
+		<dialog class="site-search" aria-labelledby="site-search-title">
+			<div class="search-heading">
+				<h2 id="site-search-title">Search documentation</h2>
+				<button type="button" data-search-close aria-label="Close search">Close</button>
+			</div>
+			<label for="site-search-input">Search guides, capabilities, and architecture</label>
+			<input
+				id="site-search-input"
+				type="search"
+				autocomplete="off"
+				placeholder="Search documentation"
+			/>
+			<p class="site-search-status" role="status">Type to find a topic.</p>
+			<ul class="site-search-results"></ul>
+		</dialog>
+	</body>
+</html>
