@@ -1,3 +1,5 @@
+import { assignKeyTips, runKeyTips, type KeyTipTarget } from 'ooxml-ui/controls';
+
 /** Word's own KeyTips for the commands this ribbon shares with it, by the control's English label. */
 const WORD_KEYS: Record<string, string> = {
 	Paste: 'V',
@@ -55,13 +57,6 @@ const WORD_KEYS: Record<string, string> = {
 	Zoom: 'Q',
 };
 
-export interface KeyTipTarget {
-	key: string;
-	element: HTMLElement;
-	/** What pressing the tip does: open the control, or click it. */
-	activate: () => void;
-}
-
 const nameOf = (el: HTMLElement) =>
 	el.dataset.localearialabel ?? el.getAttribute('aria-label') ?? '';
 
@@ -87,8 +82,7 @@ function targetOf(el: HTMLElement): KeyTipTarget | null {
 
 /**
  * KeyTips for the visible controls of `panel`: Word's own where this ribbon has the same command,
- * otherwise two letters from the label. No tip is the start of another, so typing one is never
- * ambiguous.
+ * otherwise two letters from the label (see `assignKeyTips`).
  */
 export function collectKeyTips(panel: HTMLElement): KeyTipTarget[] {
 	const seen = new Set<HTMLElement>();
@@ -102,28 +96,10 @@ export function collectKeyTips(panel: HTMLElement): KeyTipTarget[] {
 		seen.add(target.element);
 		targets.push(target);
 	}
-	// Explicit keys may collide with each other (Word's differ per tab); the later one is re-derived.
-	const used: string[] = [];
-	for (const target of targets) {
-		if (target.key && !used.some((u) => u.startsWith(target.key) || target.key.startsWith(u))) {
-			used.push(target.key);
-		} else target.key = '';
-	}
-	for (const target of targets.filter((t) => !t.key)) {
-		const label = nameOf(target.element.querySelector('[aria-label]') ?? target.element)
-			.toUpperCase()
-			.replace(/[^A-Z0-9]/g, '');
-		const source = label || 'ZZ';
-		let key = '';
-		for (let a = 0; a < source.length && !key; a++)
-			for (let b = a + 1; b < source.length && !key; b++) {
-				const candidate = source[a]! + source[b]!;
-				if (!used.some((u) => u.startsWith(candidate) || candidate.startsWith(u))) key = candidate;
-			}
-		for (let n = 10; !key; n++) if (!used.includes(String(n))) key = String(n);
-		used.push(key);
-		target.key = key;
-	}
+	// Word's keys differ per tab, so two commands can share one; the later one is re-derived.
+	assignKeyTips(targets, (target) =>
+		nameOf(target.element.querySelector('[aria-label]') ?? target.element),
+	);
 	return targets;
 }
 
@@ -132,42 +108,5 @@ export function collectKeyTips(panel: HTMLElement): KeyTipTarget[] {
  * key with no match) ends it; `onDone` runs after any end. Returns a function that stops it.
  */
 export function showCommandTips(root: HTMLElement, panel: HTMLElement, onDone: () => void) {
-	const targets = collectKeyTips(panel);
-	const badges = targets.map((target) => {
-		const badge = document.createElement('span');
-		badge.className = 'dve-keytip dve-keytip-command';
-		badge.textContent = target.key;
-		badge.setAttribute('aria-hidden', 'true');
-		const box = target.element.getBoundingClientRect();
-		badge.style.position = 'fixed';
-		badge.style.left = `${box.left + box.width / 2}px`;
-		badge.style.top = `${box.bottom - 10}px`;
-		root.append(badge);
-		return { badge, target };
-	});
-	let typed = '';
-	const stop = () => {
-		for (const { badge } of badges) badge.remove();
-		root.removeEventListener('keydown', onKey, true);
-		root.removeEventListener('pointerdown', stop, true);
-		onDone();
-	};
-	function onKey(event: KeyboardEvent) {
-		if (event.key === 'Alt' || event.key === 'Shift') return;
-		event.preventDefault();
-		event.stopPropagation();
-		if (event.key === 'Escape' || event.ctrlKey || event.metaKey) return stop();
-		typed += event.key.toUpperCase();
-		const matches = badges.filter(({ target }) => target.key.startsWith(typed));
-		const exact = matches.find(({ target }) => target.key === typed);
-		if (!matches.length) return stop();
-		for (const { badge, target } of badges) badge.hidden = !target.key.startsWith(typed);
-		if (exact) {
-			stop();
-			exact.target.activate();
-		}
-	}
-	root.addEventListener('keydown', onKey, true);
-	root.addEventListener('pointerdown', stop, true);
-	return stop;
+	return runKeyTips(root, collectKeyTips(panel), onDone, 'dve-keytip dve-keytip-command');
 }
