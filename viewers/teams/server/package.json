@@ -1,0 +1,53 @@
+{
+	"name": "openteams-server",
+	"version": "0.1.0",
+	"description": "Reference bring-your-own server for OpenTeams: Yjs sync, WebRTC signaling relay and file storage in one small Node process.",
+	"keywords": [
+		"openteams",
+		"signaling",
+		"team-workspace",
+		"webrtc",
+		"websocket",
+		"y-websocket",
+		"yjs"
+	],
+	"license": "Apache-2.0",
+	"author": "ChristopherVR",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/ChristopherVR/teams-viewer.git",
+		"directory": "server"
+	},
+	"homepage": "https://github.com/ChristopherVR/teams-viewer/tree/main/server#readme",
+	"bugs": {
+		"url": "https://github.com/ChristopherVR/teams-viewer/issues"
+	},
+	"files": [
+		"index.mjs",
+		"bin.mjs",
+		"README.md",
+		"LICENSE",
+		"NOTICE"
+	],
+	"type": "module",
+	"main": "./index.mjs",
+	"exports": {
+		".": "./index.mjs",
+		"./package.json": "./package.json"
+	},
+	"bin": {
+		"openteams-server": "bin.mjs"
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"dependencies": {
+		"lib0": "^0.2.119",
+		"ws": "^8.22.0",
+		"y-protocols": "^1.0.7",
+		"yjs": "^13.6.33"
+	},
+	"engines": {
+		"node": ">=22"
+	}
+}

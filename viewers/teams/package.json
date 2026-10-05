@@ -1,0 +1,59 @@
+{
+	"name": "teams-viewer-workspace",
+	"version": "0.0.0",
+	"private": true,
+	"description": "OpenTeams: an open-source, bring-your-own-server team workspace (chat, calls, shared Office files) built on ooxml-core",
+	"license": "Apache-2.0",
+	"workspaces": [
+		"packages/*",
+		"server",
+		"demos/*"
+	],
+	"type": "module",
+	"scripts": {
+		"dev": "node scripts/dev.mjs",
+		"server": "node server/index.mjs",
+		"typecheck": "tsc --noEmit",
+		"test": "vitest run --passWithNoTests && npm run test:server",
+		"test:server": "node --test server/server.test.mjs",
+		"build:packages": "node scripts/build-packages.mjs",
+		"docs:dev": "bun run --cwd docs docs:dev",
+		"docs:build": "bun run --cwd docs docs:build",
+		"build:pages": "node scripts/build-pages.mjs",
+		"pack:smoke": "node scripts/pack-smoke.mjs",
+		"release:plan": "node scripts/release-plan.mjs",
+		"release:publish": "node scripts/publish-released.mjs",
+		"publish:local": "node scripts/publish-local.mjs",
+		"check:published": "node scripts/check-published-refs.mjs",
+		"check:changelog": "node scripts/check-changelog-sections.mjs",
+		"test:scripts": "node --test 'scripts/*.test.mjs'",
+		"fmt": "oxfmt",
+		"fmt:check": "oxfmt --check",
+		"changelog:unreleased": "bunx git-cliff --config cliff-root.toml --unreleased",
+		"changelog:latest": "bunx git-cliff --config cliff-root.toml --latest --strip header",
+		"lint": "oxlint",
+		"lint:fix": "oxlint --fix"
+	},
+	"dependencies": {
+		"lib0": "^0.2.119",
+		"lit": "^3.3.3",
+		"ooxml-core": "^0.20.0",
+		"ooxml-ui": "^0.28.0",
+		"y-protocols": "^1.0.7",
+		"yjs": "^13.6.33"
+	},
+	"devDependencies": {
+		"@angular/core": "^22.2.1",
+		"@types/node": "^22.20.5",
+		"@typescript/typescript6": "^6.0.2",
+		"jsdom": "^30.1.2",
+		"oxfmt": "0.71.0",
+		"oxlint": "^1.86.0",
+		"rollup": "^4.64.0",
+		"rollup-plugin-dts": "^6.5.1",
+		"svelte": "^5.57.1",
+		"typescript": "^7.0.2",
+		"vite": "^8.3.2",
+		"vitest": "^5.0.3"
+	}
+}

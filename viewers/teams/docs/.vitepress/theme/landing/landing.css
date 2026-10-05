@@ -1,0 +1,204 @@
+/**
+ * Token system and shared utilities for the landing page (LandingHome layout), adapted from
+ * ChristopherVR/docx-viewer. Everything is scoped under .ot-landing so it cannot leak into docs
+ * pages. The accent is a neutral teal: OpenTeams does not use Microsoft's brand colours.
+ */
+
+.ot-landing {
+	--ot-canvas: #fbfaf7;
+	--ot-surface: #ffffff;
+	--ot-ink: #1a1d21;
+	--ot-ink-soft: #5a626e;
+	--ot-line: #e6e2d9;
+	--ot-accent: #0e8f8f;
+	--ot-accent-deep: #085c5c;
+	--ot-accent-soft: rgba(14, 143, 143, 0.08);
+	--ot-shadow: 0 24px 60px -24px rgba(26, 29, 33, 0.25);
+
+	--ot-display: 'Bricolage Grotesque', var(--vp-font-family-base);
+	--ot-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', monospace;
+
+	background: var(--ot-canvas);
+	color: var(--ot-ink);
+	font-family: var(--vp-font-family-base);
+	overflow-x: clip;
+}
+
+.dark .ot-landing {
+	--ot-canvas: #0f1113;
+	--ot-surface: #171a1e;
+	--ot-ink: #f0efec;
+	--ot-ink-soft: #9aa1ab;
+	--ot-line: #272c33;
+	--ot-accent: #3bb8b8;
+	--ot-accent-deep: #0e8f8f;
+	--ot-accent-soft: rgba(59, 184, 184, 0.1);
+	--ot-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.7);
+}
+
+.ot-section {
+	max-width: 84rem;
+	margin: 0 auto;
+	padding: clamp(3.5rem, 9vh, 7rem) clamp(1rem, 5vw, 4.5rem);
+}
+
+.ot-kicker {
+	font-family: var(--ot-mono);
+	font-size: 0.72rem;
+	font-weight: 500;
+	letter-spacing: 0.32em;
+	text-transform: uppercase;
+	color: var(--ot-accent);
+	margin: 0;
+}
+
+.ot-h2 {
+	font-family: var(--ot-display);
+	font-size: clamp(2rem, 4.4vw, 3.4rem);
+	font-weight: 640;
+	line-height: 1.06;
+	letter-spacing: -0.02em;
+	margin: 1rem 0 1.1rem;
+}
+
+.ot-copy {
+	font-size: 1.02rem;
+	line-height: 1.75;
+	color: var(--ot-ink-soft);
+	max-width: 40rem;
+	margin: 0;
+}
+
+.ot-btn {
+	display: inline-block;
+	font-family: var(--ot-mono);
+	font-size: 0.8rem;
+	font-weight: 500;
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+	padding: 0.95rem 2rem;
+	border-radius: 3px;
+	transition:
+		background-color 0.3s ease,
+		color 0.3s ease,
+		border-color 0.3s ease;
+}
+
+.ot-btn--solid {
+	background: var(--ot-accent);
+	color: #fff;
+	border: 1px solid var(--ot-accent);
+}
+
+.ot-btn--solid:hover {
+	background: var(--ot-accent-deep);
+	border-color: var(--ot-accent-deep);
+}
+
+.ot-btn--ghost {
+	border: 1px solid var(--ot-line);
+	color: var(--ot-ink);
+}
+
+.ot-btn--ghost:hover {
+	border-color: var(--ot-ink);
+}
+
+.ot-grid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 1px;
+	background: var(--ot-line);
+	border: 1px solid var(--ot-line);
+	border-radius: 8px;
+	overflow: hidden;
+	margin-top: 2.2rem;
+}
+
+.ot-card {
+	display: flex;
+	flex-direction: column;
+	gap: 0.7rem;
+	background: var(--ot-surface);
+	padding: 1.6rem 1.5rem 1.8rem;
+	transition: background-color 0.25s ease;
+}
+
+.ot-card:hover {
+	background: var(--ot-accent-soft);
+}
+
+.ot-card h3 {
+	font-family: var(--ot-display);
+	font-size: 1.08rem;
+	font-weight: 640;
+	letter-spacing: -0.01em;
+	line-height: 1.25;
+	margin: 0;
+}
+
+.ot-card p {
+	flex: 1;
+	font-size: 0.9rem;
+	line-height: 1.7;
+	color: var(--ot-ink-soft);
+	margin: 0;
+}
+
+.ot-card a.ot-more {
+	font-family: var(--ot-mono);
+	font-size: 0.68rem;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--ot-ink);
+}
+
+.ot-card a.ot-more:hover {
+	color: var(--ot-accent);
+}
+
+.ot-card a.ot-more i {
+	font-style: normal;
+	color: var(--ot-accent);
+}
+
+.ot-enter {
+	opacity: 0;
+	transform: translateY(20px);
+	animation: ot-enter 0.8s cubic-bezier(0.25, 0.4, 0.25, 1) forwards;
+}
+
+.ot-enter--2 {
+	animation-delay: 0.12s;
+}
+
+.ot-enter--3 {
+	animation-delay: 0.24s;
+}
+
+@keyframes ot-enter {
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+@media (max-width: 1000px) {
+	.ot-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media (max-width: 600px) {
+	.ot-grid {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.ot-enter {
+		opacity: 1;
+		transform: none;
+		animation: none;
+	}
+}

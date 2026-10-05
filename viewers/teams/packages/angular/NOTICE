@@ -1,0 +1,5 @@
+teams-viewer
+Copyright ChristopherVR. Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+This repository consumes ooxml-core and ooxml-ui (Apache-2.0, ChristopherVR/ooxml) and, at runtime,
+Lit (BSD-3-Clause), Yjs, y-protocols and lib0 (MIT). The reference server additionally uses ws (MIT).

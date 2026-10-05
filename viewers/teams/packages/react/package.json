@@ -1,0 +1,59 @@
+{
+	"name": "openteams-react-viewer",
+	"version": "0.1.0",
+	"description": "React component and hooks for OpenTeams, the open-source bring-your-own-server team workspace. Self-contained: includes the <teams-app> UI.",
+	"keywords": [
+		"chat",
+		"collaboration",
+		"openteams",
+		"react",
+		"team-workspace",
+		"webrtc",
+		"yjs"
+	],
+	"license": "Apache-2.0",
+	"author": "ChristopherVR",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/ChristopherVR/teams-viewer.git",
+		"directory": "packages/react"
+	},
+	"homepage": "https://github.com/ChristopherVR/teams-viewer/tree/main/packages/react#readme",
+	"bugs": {
+		"url": "https://github.com/ChristopherVR/teams-viewer/issues"
+	},
+	"files": [
+		"dist",
+		"README.md",
+		"LICENSE",
+		"NOTICE"
+	],
+	"type": "module",
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		},
+		"./package.json": "./package.json"
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"engines": {
+		"node": ">=20"
+	},
+	"dependencies": {
+		"lit": "^3.3.3",
+		"ooxml-core": "^0.20.0",
+		"ooxml-ui": "^0.28.0"
+	},
+	"peerDependencies": {
+		"react": ">=18"
+	},
+	"devDependencies": {
+		"@types/react": "^19.3.0",
+		"react": "^19.3.0"
+	}
+}
