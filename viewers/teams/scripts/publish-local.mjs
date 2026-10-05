@@ -12,8 +12,8 @@
  *   bun run publish:local -- --skip-build    reuse the dist/ folders already built
  *
  * It NEVER asks for or accepts a one-time password: there is no `--otp` and no OTP prompt. Publishing
- * uses `--auth-type=web`, so when the account needs 2FA npm prints a sign-in URL and opens your
- * browser; approve it there. If npm still insists on a code, the script stops and says so; publish with a granular access
+ * uses `--auth-type=web`. If npm still wants a code, the script asks for a granular access token
+ * with "bypass 2FA" instead (hidden input, used for this run only, never saved); publish with a granular access
  * token that has "bypass 2FA" enabled, or through the CI trusted-publishing path. Login uses
  * `npm login --auth-type=web` (npm opens the browser); this script never reads, writes or prints a
  * token, and never passes `--provenance` (provenance needs GitHub Actions OIDC).
@@ -23,6 +23,8 @@
  * no dependency names a private workspace package, and versions already on npm are skipped.
  */
 import { spawn, spawnSync } from 'node:child_process';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { fileURLToPath } from 'node:url';
@@ -187,10 +189,11 @@ function ensureCleanMain({ allowDirty }) {
  * `--auth-type=web` is always passed, so npm never falls back to asking for a one-time code.
  * Without a terminal stdin is closed and npm can only fail.
  */
-function npmPublish(args, cwd) {
+function npmPublish(args, cwd, userconfig) {
 	return new Promise((resolve) => {
 		const stdin = process.stdin.isTTY ? 'inherit' : 'ignore';
-		const child = spawn('npm', [...args, '--auth-type=web'], {
+		const extra = userconfig ? ['--userconfig', userconfig] : [];
+		const child = spawn('npm', [...args, '--auth-type=web', ...extra], {
 			cwd,
 			shell,
 			stdio: [stdin, 'pipe', 'pipe'],
@@ -204,6 +207,40 @@ function npmPublish(args, cwd) {
 		child.stderr.on('data', forward(process.stderr));
 		child.on('close', (status) => resolve({ status, output }));
 	});
+}
+
+/** Reads a line without echoing it (for a token). Returns '' when there is no terminal. */
+async function promptSecret(question) {
+	if (!process.stdin.isTTY) return '';
+	const mute = { muted: false };
+	const output = {
+		write(chunk) {
+			if (!mute.muted) process.stdout.write(chunk);
+			return true;
+		},
+	};
+	const rl = createInterface({ input: process.stdin, output, terminal: true });
+	try {
+		const pending = rl.question(question);
+		mute.muted = true;
+		const answer = await pending;
+		process.stdout.write('\n');
+		return answer.trim();
+	} finally {
+		rl.close();
+	}
+}
+
+/**
+ * A throw-away npm config holding a token the maintainer pasted, used only for this run and
+ * deleted afterwards. The token is never printed, never put on a command line and never kept.
+ */
+function tokenConfig(token) {
+	const dir = mkdtempSync(join(tmpdir(), 'openteams-publish-'));
+	const file = join(dir, 'npmrc');
+	const host = new URL(REGISTRY).host;
+	writeFileSync(file, `//${host}/:_authToken=${token}\n`, { mode: 0o600 });
+	return { file, dispose: () => rmSync(dir, { recursive: true, force: true }) };
 }
 
 async function confirm({ yes }) {
@@ -269,28 +306,47 @@ async function main() {
 	}
 
 	const published = [];
-	for (const row of rows) {
-		if (row.onNpm) continue;
-		const args = publishArgs({
-			tag: distTag(row.npm, row.version),
-			provenance,
-			dryRun: options.dryRun,
-		});
-		console.log(`\n--- ${row.npm}@${row.version}: npm ${args.join(' ')} ---`);
-		const result = await npmPublish(args, join(ROOT, row.dir));
-		if (result.status === 0) {
-			published.push(row);
-			continue;
+	let session;
+	try {
+		for (const row of rows) {
+			if (row.onNpm) continue;
+			const args = publishArgs({
+				tag: distTag(row.npm, row.version),
+				provenance,
+				dryRun: options.dryRun,
+			});
+			console.log(`\n--- ${row.npm}@${row.version}: npm ${args.join(' ')} ---`);
+			let result = await npmPublish(args, join(ROOT, row.dir), session?.file);
+			if (result.status !== 0 && isOtpError(result.output) && !session) {
+				// npm will not sign this account in for a publish without a one-time code (web sign-in
+				// is not offered). Never ask for the code: ask for a token that does not need one.
+				console.log(
+					'\nnpm wants a one-time code for this account, and this script never asks for one.\n' +
+						'Create a granular access token on npmjs.com (Access Tokens > Generate New Token >\n' +
+						'Granular): read and write for packages, "Bypass two-factor authentication" ticked,\n' +
+						'short expiry. Paste it below (hidden). It is used for this run only and not saved.',
+				);
+				const token = await promptSecret('npm token: ');
+				if (token) {
+					session = tokenConfig(token);
+					result = await npmPublish(args, join(ROOT, row.dir), session.file);
+				}
+			}
+			if (result.status === 0) {
+				published.push(row);
+				continue;
+			}
+			if (isOtpError(result.output)) {
+				throw new Error(
+					`npm still wants a one-time password to publish ${row.npm}. Use a granular access token ` +
+						'with "Bypass two-factor authentication" enabled, or the CI trusted-publishing path ' +
+						'(release.yml) once the packages exist.',
+				);
+			}
+			throw new Error(`Publishing ${row.npm}@${row.version} failed (exit ${result.status}).`);
 		}
-		if (isOtpError(result.output)) {
-			throw new Error(
-				`npm still wants a one-time password to publish ${row.npm}, which publish:local never ` +
-					'asks for. Run `npm login --auth-type=web` again (finish the sign-in in the browser ' +
-					'before it times out), or publish with a granular access token that has "bypass 2FA" ' +
-					'enabled (npmjs.com, Access Tokens), or use the CI trusted-publishing path (release.yml).',
-			);
-		}
-		throw new Error(`Publishing ${row.npm}@${row.version} failed (exit ${result.status}).`);
+	} finally {
+		session?.dispose();
 	}
 	if (options.dryRun) {
 		console.log('\nDry run complete; nothing was published.');
