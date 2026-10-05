@@ -44,3 +44,6 @@ export { VIEWER_LAYER_LIMITS, type LayerVisibilityOverride } from './viewer-laye
 export type { ViewerEditState, VsdxExportResult } from 'ooxml-core/visio/ui';
 
 export type { VisioEdit, VisioGeometryEdit } from 'ooxml-core/visio';
+
+/** The built-in demo document, for the demo and tests. */
+export { demoDocument } from 'ooxml-core/visio/ui';
