@@ -1,23 +1,38 @@
+import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import type { UserConfig } from 'vite';
 
 // Local development against a sibling checkout of the ooxml repository. By default a demo
-// resolves ooxml-core and ooxml-ui from their SOURCE (instant reload when you edit either);
-// set TEAMS_USE_DIST=1 to use the built packages installed in node_modules instead.
+// resolves ooxml-core and ooxml-ui from their SOURCE when that checkout exists (instant reload when
+// you edit either; otherwise the published packages in node_modules), and the binding packages of
+// this repository from their source too. TEAMS_USE_DIST=1 uses the built packages for both (run
+// `bun run build:packages` first for this repository's own ones).
 const ooxml = fileURLToPath(new URL(process.env.OOXML_DIR ?? '../../ooxml-core/', import.meta.url));
-const useSource = process.env.TEAMS_USE_DIST !== '1';
+const useDist = process.env.TEAMS_USE_DIST === '1';
+const ooxmlSource = !useDist && existsSync(`${ooxml}src/teams/index.ts`);
+const local = (path: string): string =>
+	fileURLToPath(new URL(`../packages/${path}`, import.meta.url));
 
 export function sharedConfig(port: number): UserConfig {
 	return {
 		resolve: {
 			// Yjs and Lit break (instanceof, double registration) if two copies load: force one.
 			dedupe: ['yjs', 'lib0', 'y-protocols', 'lit', 'react', 'react-dom'],
-			alias: useSource
-				? [
-						{ find: /^ooxml-core\/(.+)$/, replacement: `${ooxml}src/$1/index.ts` },
-						{ find: /^ooxml-ui$/, replacement: `${ooxml}packages/ui/src/index.ts` },
-					]
-				: [],
+			alias: [
+				...(ooxmlSource
+					? [
+							{ find: /^ooxml-core\/(.+)$/, replacement: `${ooxml}src/$1/index.ts` },
+							{ find: /^ooxml-ui$/, replacement: `${ooxml}packages/ui/src/index.ts` },
+						]
+					: []),
+				// The bindings import the private web component by name; the build inlines it.
+				...(useDist
+					? []
+					: [
+							{ find: /^teams-viewer$/, replacement: local('web-component/src/index.ts') },
+							{ find: /^openteams-react-viewer$/, replacement: local('react/src/index.ts') },
+						]),
+			],
 		},
 		server: { port, strictPort: true, host: '127.0.0.1', fs: { allow: ['..', ooxml] } },
 	};

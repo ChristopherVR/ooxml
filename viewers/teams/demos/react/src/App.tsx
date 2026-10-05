@@ -1,7 +1,7 @@
 // Two ways to use the React binding on one page:
 //   left   <Teams />      the complete UI (the <teams-app> element)
 //   right  useTeams()     your own markup over the raw client: state in, actions out
-import { Teams, useTeams, type TeamsClientOptions } from 'teams-react-viewer';
+import { Teams, useTeams, type TeamsClientOptions } from 'openteams-react-viewer';
 import { useMemo, useState } from 'react';
 
 const params = new URLSearchParams(location.search);

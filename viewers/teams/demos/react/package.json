@@ -10,7 +10,7 @@
 	"dependencies": {
 		"react": "^19.3.0",
 		"react-dom": "^19.3.0",
-		"teams-react-viewer": "workspace:*"
+		"openteams-react-viewer": "workspace:*"
 	},
 	"devDependencies": {
 		"@types/react": "^19.3.0",

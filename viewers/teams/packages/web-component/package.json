@@ -10,10 +10,9 @@
 	"exports": {
 		".": "./src/index.ts"
 	},
-	"peerDependencies": {
-		"ooxml-core": "*",
-		"ooxml-ui": "*",
-		"lit": "^3.3.0",
-		"yjs": "^13.6.32"
+	"dependencies": {
+		"lit": "^3.3.3",
+		"ooxml-core": "^0.19.0",
+		"ooxml-ui": "^0.27.2"
 	}
 }

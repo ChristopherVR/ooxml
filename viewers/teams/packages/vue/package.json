@@ -1,11 +1,58 @@
 {
-	"name": "teams-vue-viewer",
-	"version": "0.0.0",
-	"private": true,
-	"description": "Vue 3 binding for the teams workspace",
+	"name": "openteams-vue-viewer",
+	"version": "0.1.0",
+	"description": "Vue 3 component and composable for OpenTeams, the open-source bring-your-own-server team workspace. Self-contained: includes the <teams-app> UI.",
+	"keywords": [
+		"chat",
+		"collaboration",
+		"openteams",
+		"team-workspace",
+		"vue",
+		"webrtc",
+		"yjs"
+	],
 	"license": "Apache-2.0",
+	"author": "ChristopherVR",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/ChristopherVR/teams-viewer.git",
+		"directory": "packages/vue"
+	},
+	"homepage": "https://github.com/ChristopherVR/teams-viewer/tree/main/packages/vue#readme",
+	"bugs": {
+		"url": "https://github.com/ChristopherVR/teams-viewer/issues"
+	},
+	"files": [
+		"dist",
+		"README.md",
+		"LICENSE",
+		"NOTICE"
+	],
 	"type": "module",
-	"exports": { ".": "./src/index.ts" },
-	"peerDependencies": { "vue": "^3.4.0", "teams-viewer": "*" },
-	"devDependencies": { "vue": "^3.5.43" }
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		},
+		"./package.json": "./package.json"
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"engines": {
+		"node": ">=20"
+	},
+	"dependencies": {
+		"lit": "^3.3.3",
+		"ooxml-core": "^0.19.0",
+		"ooxml-ui": "^0.27.2"
+	},
+	"peerDependencies": {
+		"vue": "^3.4.0"
+	},
+	"devDependencies": {
+		"vue": "^3.5.43"
+	}
 }

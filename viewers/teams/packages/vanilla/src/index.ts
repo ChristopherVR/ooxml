@@ -6,7 +6,17 @@ import {
 	type TeamsProps,
 } from 'teams-viewer';
 
-export type { TeamsProps } from 'teams-viewer';
+// The raw store and the element itself, for your own UI or plain `<teams-app>` markup: the private
+// `teams-viewer` package is inlined into this one when it is built, so re-export what users need.
+export {
+	TeamsApp,
+	createTeams,
+	defineTeamsApp,
+	type TeamsClient,
+	type TeamsClientOptions,
+	type TeamsProps,
+	type TeamsState,
+} from 'teams-viewer';
 
 export interface MountedTeams {
 	readonly element: TeamsApp;

@@ -20,7 +20,18 @@
 			"vitest/globals"
 		],
 		"jsx": "react-jsx",
-		"allowImportingTsExtensions": true
+		"allowImportingTsExtensions": true,
+		"experimentalDecorators": true,
+		"useDefineForClassFields": false,
+		"paths": {
+			"teams-viewer": ["./packages/web-component/src/index.ts"],
+			"openteams-react-viewer": ["./packages/react/src/index.ts"],
+			"openteams-vue-viewer": ["./packages/vue/src/index.ts"],
+			"openteams-solid-viewer": ["./packages/solid/src/index.ts"],
+			"openteams-angular-viewer": ["./packages/angular/src/index.ts"],
+			"openteams-vanilla-viewer": ["./packages/vanilla/src/index.ts"],
+			"openteams-svelte-viewer/runtime": ["./packages/svelte/src/runtime.ts"]
+		}
 	},
 	"include": [
 		"packages/web-component/src/**/*.ts",
@@ -29,6 +40,7 @@
 		"packages/vue/src/**/*.ts",
 		"packages/solid/src/**/*.ts",
 		"packages/svelte/src/**/*.ts",
+		"packages/angular/src/**/*.ts",
 		"demos/*/src/**/*.ts",
 		"demos/*/src/**/*.tsx",
 		"demos/*.ts"

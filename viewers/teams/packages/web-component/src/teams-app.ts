@@ -6,6 +6,7 @@ import {
 	type Attachment,
 	type FileUploader,
 	type OfficeKind,
+	type TeamsClient,
 	type TeamsServerConfig,
 	type TeamsState,
 	parseServerConfig,
@@ -91,7 +92,7 @@ export class TeamsApp extends LitElement {
 	}
 
 	/** The core client behind this element, for hosts that want the raw actions. */
-	get client() {
+	get client(): TeamsClient | null {
 		return this.teams.client;
 	}
 

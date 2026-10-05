@@ -4,3 +4,6 @@ data/
 *.log
 .DS_Store
 test-results/
+.release-types/
+release-plan.json
+*.tgz
