@@ -38,8 +38,8 @@
 	},
 	"dependencies": {
 		"@christophervr/xlsx-core": "^0.2.2",
-		"ooxml-core": "^0.15.0",
-		"ooxml-ui": "^0.23.0"
+		"ooxml-core": "^0.17.0",
+		"ooxml-ui": "^0.25.0"
 	},
 	"peerDependencies": {
 		"vue": "^3.5.0"
