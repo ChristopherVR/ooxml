@@ -31,8 +31,8 @@ type SearchField = HTMLElement & { value: string };
 
 /**
  * `<office-ui-title-bar>`: Office's title bar above the ribbon (app mark, AutoSave, Quick
- * Access Toolbar, file name and status, centred command search, `collaboration` and `account`
- * slots). Controlled: set `state` (`OfficeTitleBarState`, every string translated); the bar
+ * Access Toolbar, file name and status, centred command search, `actions`, `collaboration` and
+ * `account` slots). Controlled: set `state` (`OfficeTitleBarState`, every string translated); the bar
  * owns no effects. `placement="belowRibbon"` renders only the Quick Access row and hides
  * itself (`data-empty`) while that row is empty. Events (bubbling, composed; static names let a
  * product subclass keep its published ones): `office-autosave-toggle`, `office-command`
@@ -351,6 +351,7 @@ export class OfficeUiTitleBar extends OfficeElement {
 				</span>
 				${this.searchBox()}
 				<div class="end">
+					<slot name="actions"></slot>
 					<slot name="collaboration"></slot>
 					<slot name="account"></slot>
 				</div>

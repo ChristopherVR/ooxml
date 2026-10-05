@@ -178,3 +178,13 @@ describe('office-ui-title-bar', () => {
 		expect(toggle).toHaveBeenCalled();
 	});
 });
+
+describe('office-ui-title-bar actions slot', () => {
+	it('offers an actions slot for product controls before the collaboration slot', () => {
+		const bar = document.createElement('office-ui-title-bar') as TitleBar;
+		bar.state = STATE;
+		document.body.append(bar);
+		const slots = [...bar.shadowRoot!.querySelectorAll('slot')].map((slot) => slot.name);
+		expect(slots).toEqual(['actions', 'collaboration', 'account']);
+	});
+});
