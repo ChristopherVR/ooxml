@@ -13,6 +13,10 @@ import { tok } from './tokens.js';
 export interface KeyTipsHandle {
 	/** Whether badges are currently shown. */
 	readonly active: boolean;
+	/** Show the first level, as Alt does; for products that also start KeyTips from F10. */
+	start(): void;
+	/** Hide the badges. */
+	stop(): void;
 	dispose(): void;
 }
 
@@ -175,6 +179,12 @@ export function attachKeyTips(scope: Root): KeyTipsHandle {
 	view?.addEventListener('blur', onPointer);
 	const handle = {
 		active: false,
+		start() {
+			if (!handle.active) start();
+		},
+		stop() {
+			stop();
+		},
 		dispose() {
 			stop();
 			target.removeEventListener('keydown', onKeyDown, true);

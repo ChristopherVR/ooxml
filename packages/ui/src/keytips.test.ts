@@ -57,6 +57,16 @@ describe('attachKeyTips', () => {
 		expect(badges()).toEqual(['1', 'V', 'FP']);
 	});
 
+	it('starts and stops from code, for products that open the tips from F10', () => {
+		const { keytips, badges } = setup();
+		keytips.start();
+		expect(keytips.active).toBe(true);
+		expect(badges()).toEqual(['H']);
+		keytips.stop();
+		expect(keytips.active).toBe(false);
+		expect(badges()).toEqual([]);
+	});
+
 	it('runs shared controls, waits for multi-letter tips and ignores disabled ones', async () => {
 		const { keytips, press, bold, paste, painter } = setup();
 		const seen: string[] = [];
