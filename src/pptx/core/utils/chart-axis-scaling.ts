@@ -80,4 +80,33 @@ export function applyChartAxisScaling(
 	if (axis.orientation !== undefined) {
 		upsertChartAxisChild(scalingNode, 'orientation', axis.orientation, getLocalName);
 	}
+	orderScalingChildren(scalingNode, getLocalName);
+}
+
+/** `CT_Scaling` sequence; anything else (only `extLst` is legal) stays last. */
+const SCALING_ORDER = ['logBase', 'orientation', 'max', 'min'];
+
+/**
+ * Put `c:scaling` back in schema order. The upserts above append a missing
+ * child, which used to leave `c:min` before `c:max` (and `c:logBase` after
+ * `c:orientation`): XSD-invalid for any axis with both bounds set. A node
+ * already in order is left as it is.
+ */
+function orderScalingChildren(scalingNode: XmlObject, getLocalName: (key: string) => string): void {
+	const rank = (key: string) => {
+		const index = SCALING_ORDER.indexOf(getLocalName(key));
+		return index === -1 ? SCALING_ORDER.length : index;
+	};
+	const keys = Object.keys(scalingNode).filter((key) => !key.startsWith('@_'));
+	const sorted = [...keys].sort((a, b) => rank(a) - rank(b));
+	if (sorted.every((key, i) => key === keys[i])) {
+		return;
+	}
+	const entries = sorted.map((key) => [key, scalingNode[key]] as const);
+	for (const key of keys) {
+		delete scalingNode[key];
+	}
+	for (const [key, value] of entries) {
+		scalingNode[key] = value;
+	}
 }
