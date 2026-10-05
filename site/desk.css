@@ -7,7 +7,7 @@
 	container-type: inline-size;
 	position: relative;
 	width: 100%;
-	aspect-ratio: 1 / 0.95;
+	aspect-ratio: 1 / 1.04;
 }
 
 .paper {
@@ -301,6 +301,102 @@ a.paper:focus-visible {
 	height: 44%;
 	border-left: 0;
 	border-right: 0.35cqw solid color-mix(in srgb, var(--diagram) 60%, var(--paper));
+}
+
+/* ---- The chat: a channel with a few messages ------------------------ */
+
+.paper--chat {
+	--r: -2deg;
+	--app: var(--teams);
+	left: 54cqw;
+	top: 80cqw;
+	z-index: 5;
+	width: 40cqw;
+	aspect-ratio: 1 / 0.56;
+	animation-delay: 640ms;
+}
+
+.chat__rail {
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	width: 11%;
+	border-radius: 0.8cqw 0 0 0.8cqw;
+	background: color-mix(in srgb, var(--teams) 14%, var(--paper));
+}
+
+.chat__rail::before,
+.chat__rail::after {
+	content: '';
+	position: absolute;
+	left: 28%;
+	width: 44%;
+	aspect-ratio: 1;
+	border-radius: 30%;
+	background: var(--teams);
+}
+
+.chat__rail::before {
+	top: 14%;
+}
+
+.chat__rail::after {
+	top: 38%;
+	opacity: 0.35;
+}
+
+.chat__msg {
+	position: absolute;
+	height: 15%;
+	border-radius: 1.4cqw;
+	background: var(--paper-rule);
+}
+
+.chat__msg::before {
+	content: '';
+	position: absolute;
+	left: -9%;
+	top: 8%;
+	width: 7%;
+	aspect-ratio: 1;
+	border-radius: 50%;
+	background: color-mix(in srgb, var(--teams) 55%, var(--paper));
+}
+
+.chat__msg--a {
+	left: 21%;
+	top: 12%;
+	width: 52%;
+}
+
+.chat__msg--b {
+	left: 21%;
+	top: 34%;
+	width: 36%;
+}
+
+.chat__msg--c {
+	left: 38%;
+	top: 56%;
+	width: 52%;
+	background: color-mix(in srgb, var(--teams) 22%, var(--paper));
+}
+
+.chat__msg--c::before {
+	left: auto;
+	right: -9%;
+	background: var(--teams);
+}
+
+.chat__composer {
+	position: absolute;
+	left: 17%;
+	right: 5%;
+	bottom: 6%;
+	height: 12%;
+	border: 1px solid var(--paper-rule);
+	border-radius: 1cqw;
 }
 
 /* Apps that are not ready sit further back: faded, still recognisable. */
