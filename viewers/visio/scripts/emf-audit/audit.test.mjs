@@ -12,7 +12,7 @@ import { runIsolated } from './isolated.mjs';
 const cases = syntheticCases();
 
 before(() => {
-	const core = createRequire(new URL('../../../ooxml/package.json', import.meta.url));
+	const core = createRequire(new URL('../../../../package.json', import.meta.url));
 	const entry = core.resolve('emf-converter');
 	const metadata = JSON.parse(
 		readFileSync(new URL('../package.json', pathToFileURL(entry)), 'utf8'),

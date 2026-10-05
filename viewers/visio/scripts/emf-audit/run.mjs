@@ -11,7 +11,7 @@ const [corpus, output] = process.argv.slice(2);
 if (!corpus || !output || process.argv.length !== 4) {
 	throw new Error('Usage: node scripts/emf-audit/run.mjs <corpus-directory> <output-directory>');
 }
-const core = createRequire(new URL('../../../ooxml/package.json', import.meta.url));
+const core = createRequire(new URL('../../../../package.json', import.meta.url));
 const converterEntry = core.resolve('emf-converter');
 const packageDir = path.dirname(path.dirname(converterEntry));
 const manifest = JSON.parse(await readFile(path.join(packageDir, 'package.json'), 'utf8'));

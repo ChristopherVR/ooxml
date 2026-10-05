@@ -1,6 +1,6 @@
 import { readFile, readdir } from 'node:fs/promises';
 import assert from 'node:assert/strict';
-const root = new URL('../../pptx-viewer-new/packages/core/dist/', import.meta.url);
+const root = new URL('../../../../pptx-viewer-new/packages/core/dist/', import.meta.url);
 async function check(directory) {
 	for (const entry of await readdir(directory, { withFileTypes: true })) {
 		const file = new URL(entry.name + (entry.isDirectory() ? '/' : ''), directory);

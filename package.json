@@ -229,8 +229,8 @@
 		"release:publish": "node scripts/publish-released.mjs",
 		"changelog:unreleased": "bunx git-cliff --config cliff.toml --tag-pattern \"^ooxml-core@\" --unreleased",
 		"test:mcp": "node --test mcp/test/*.test.js",
-		"lint": "oxlint",
-		"lint:fix": "oxlint --fix"
+		"lint": "oxlint --ignore-pattern=viewers/",
+		"lint:fix": "oxlint --fix --ignore-pattern=viewers/"
 	},
 	"dependencies": {
 		"@xmldom/xmldom": "^0.9.12",

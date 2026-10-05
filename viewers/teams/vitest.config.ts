@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 // needed). Without it (CI, the sync-ooxml workflow) or with TEAMS_USE_DIST=1 they run against the
 // published ooxml-core and ooxml-ui installed in node_modules.
 const ooxml = fileURLToPath(
-	new URL(process.env.OOXML_DIR ?? '../ooxml-core/', import.meta.url),
+	new URL(process.env.OOXML_DIR ?? '../../', import.meta.url),
 ).replaceAll(String.fromCharCode(92), '/');
 const useSource = process.env.TEAMS_USE_DIST !== '1' && existsSync(`${ooxml}src/teams/index.ts`);
 

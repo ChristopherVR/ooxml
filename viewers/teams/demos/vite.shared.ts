@@ -7,7 +7,7 @@ import type { UserConfig } from 'vite';
 // you edit either; otherwise the published packages in node_modules), and the binding packages of
 // this repository from their source too. TEAMS_USE_DIST=1 uses the built packages for both (run
 // `bun run build:packages` first for this repository's own ones).
-const ooxml = fileURLToPath(new URL(process.env.OOXML_DIR ?? '../../ooxml-core/', import.meta.url));
+const ooxml = fileURLToPath(new URL(process.env.OOXML_DIR ?? '../../../', import.meta.url));
 const useDist = process.env.TEAMS_USE_DIST === '1';
 const ooxmlSource = !useDist && existsSync(`${ooxml}src/teams/index.ts`);
 const local = (path: string): string =>

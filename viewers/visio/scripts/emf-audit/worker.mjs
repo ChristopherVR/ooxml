@@ -5,7 +5,7 @@ import { LIMITS, preflight } from './preflight.mjs';
 import { sanitizeVectorTree } from './sanitize.mjs';
 
 // This is an audit harness for reviewed local test inputs, not an untrusted-code sandbox.
-const requireCore = createRequire(new URL('../../../ooxml/package.json', import.meta.url));
+const requireCore = createRequire(new URL('../../../../package.json', import.meta.url));
 const warnings = [];
 let warningCount = 0;
 console.warn = (...args) => {
