@@ -7,6 +7,16 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.18.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@0.18.0) - 2026-10-05
+
+### Features
+
+- **xlsx:** Move the formula editor text helpers into core (by @ChristopherVR) ([07e1108](https://github.com/ChristopherVR/ooxml/commit/07e110868a4287f529a87bf1e5147122f76d88df))
+
+### Build & CI
+
+- Add a script that reports dependency state across every repository (by @ChristopherVR) ([4b604ba](https://github.com/ChristopherVR/ooxml/commit/4b604ba58a472444eca8f77b3f0667c8a8f293b7))
+
 ## [0.17.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@0.17.0) - 2026-10-05
 
 ### Features
