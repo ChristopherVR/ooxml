@@ -194,7 +194,9 @@ export function npmVersion(name) {
 		if (/E404|404 Not Found|is not in this registry/iu.test(String(error.stderr ?? ''))) {
 			return null;
 		}
-		throw new Error(`Could not query npm for ${name}: ${error.stderr || error.message}`, { cause: error });
+		throw new Error(`Could not query npm for ${name}: ${error.stderr || error.message}`, {
+			cause: error,
+		});
 	}
 }
 
@@ -236,7 +238,7 @@ export function planRelease({ root, packages: all, globalTriggers = [], npm, npm
 	const scopeOf = (meta) => meta.paths ?? [meta.dir];
 	const triggersOf = (meta) => meta.triggers ?? [];
 	const globalsOf = (meta) => [...(meta.globals ?? []), ...globalTriggers];
-	const under =(file, target) =>
+	const under = (file, target) =>
 		file === target || file.startsWith(target.endsWith('/') ? target : `${target}/`);
 	const touches = (files, targets) => files.some((f) => targets.some((t) => under(f, t)));
 

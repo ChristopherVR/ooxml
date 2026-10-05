@@ -1,8 +1,10 @@
 name: Release
 
 # Adapted from ChristopherVR/pptx-viewer .github/workflows/release.yml (Apache-2.0). See
-# docs/releasing.md for the whole flow. Two packages (core at the root, ooxml-ui at packages/ui),
-# each with its own tag, changelog and npm publish.
+# docs/releasing.md for the whole flow. Every published package of this repository (core at the
+# root, ooxml-ui at packages/ui, the MCP server, and the packages of the viewers under viewers/,
+# listed in scripts/viewer-packages.mjs) has its own tag, changelog and npm publish, planned by
+# scripts/release-plan.mjs.
 
 on:
   # Hourly. The planner is cumulative (the package is diffed from its own last tag), so everything
