@@ -18,7 +18,7 @@ An early implementation: not Microsoft Word parity, and not lossless export.
 [**Getting started**](#getting-started) &nbsp;&middot;&nbsp;
 [**Packages**](#packages)
 
-![The docx-viewer editor showing a sample document with the Word-style ribbon](https://raw.githubusercontent.com/ChristopherVR/docx-viewer/main/.github/assets/editor.png)
+![The docx-viewer editor showing a sample document with the Word-style ribbon](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/docx/assets/editor.png)
 
 </div>
 

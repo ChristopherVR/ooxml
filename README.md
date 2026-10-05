@@ -24,7 +24,7 @@ One package, one XML model, every format: Word, PowerPoint, Excel and the shared
 
 ## Why ooxml-core?
 
-- **No UI, no framework.** Everything runs in browsers, Node.js, Bun, workers and serverless functions. The viewer apps ([docx-viewer](https://github.com/ChristopherVR/docx-viewer), [pptx-viewer](https://github.com/ChristopherVR/pptx-viewer)) are thin interfaces on top of it, and so can your application be.
+- **No UI, no framework.** Everything runs in browsers, Node.js, Bun, workers and serverless functions. The viewer apps ([docx](https://christophervr.github.io/ooxml/docx/), [xlsx](https://christophervr.github.io/ooxml/xlsx/), [visio](https://christophervr.github.io/ooxml/visio/), [teams](https://christophervr.github.io/ooxml/teams/) and [pptx-viewer](https://github.com/ChristopherVR/pptx-viewer)) are thin interfaces on top of it, and so can your application be.
 - **One package, one structure.** All formats share the same XML model, packaging layer, units, colours and geometry. Each format is an _area_ of this one package, not a separate dependency to keep in step.
 - **Round-trips without losing what it does not understand.** Documents are loaded into a model, edited, and written back. Untouched parts stay byte-for-byte, unknown markup is preserved, and edits that would damage unsupported content are rejected instead of silently dropped.
 - **Strict by default.** New code is strict TypeScript with branded measurement units, the shared `xml` area parses strictly (no DTD or entity expansion), and the `docx` area is checked against the ECMA-376 schemas in the test suite.
@@ -130,7 +130,7 @@ The working agreements are in [AGENTS.md](AGENTS.md), and [PROVENANCE.md](PROVEN
 
 ## Documentation and related projects
 
-- [docx-viewer](https://github.com/ChristopherVR/docx-viewer) and [pptx-viewer](https://github.com/ChristopherVR/pptx-viewer): the editors and viewers built on this package.
+- The viewers, in this repository under `viewers/` ([docx](https://christophervr.github.io/ooxml/docx/), [xlsx](https://christophervr.github.io/ooxml/xlsx/), [visio](https://christophervr.github.io/ooxml/visio/), [teams](https://christophervr.github.io/ooxml/teams/)) and [pptx-viewer](https://github.com/ChristopherVR/pptx-viewer): the editors and viewers built on this package.
 - [OOXML Office](https://christophervr.github.io/ooxml/): the suite's launcher page (`site/`), which opens the demos those viewers deploy to their own GitHub Pages sites.
 - [ole2](https://github.com/ChristopherVR/ole2): the compound-file container and legacy binary Office codecs.
 

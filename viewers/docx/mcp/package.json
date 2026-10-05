@@ -3,6 +3,10 @@
 	"version": "0.1.3",
 	"description": "Headless DOCX MCP tools backed only by OOXML core",
 	"license": "Apache-2.0",
+	"homepage": "https://christophervr.github.io/ooxml/docx/",
+	"bugs": {
+		"url": "https://github.com/ChristopherVR/ooxml/issues"
+	},
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/ChristopherVR/ooxml.git",

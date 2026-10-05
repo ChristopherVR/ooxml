@@ -10,6 +10,10 @@
 	],
 	"license": "Apache-2.0",
 	"author": "ChristopherVR",
+	"homepage": "https://christophervr.github.io/ooxml/xlsx/",
+	"bugs": {
+		"url": "https://github.com/ChristopherVR/ooxml/issues"
+	},
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/ChristopherVR/ooxml.git",

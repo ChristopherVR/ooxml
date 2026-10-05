@@ -2,9 +2,12 @@
 	"name": "visio-svelte-viewer",
 	"version": "0.5.3",
 	"description": "Local-first Visio viewer for svelte",
-	"homepage": "https://christophervr.github.io/ooxml/visio/",
 	"license": "Apache-2.0",
 	"author": "ChristopherVR",
+	"homepage": "https://christophervr.github.io/ooxml/visio/",
+	"bugs": {
+		"url": "https://github.com/ChristopherVR/ooxml/issues"
+	},
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/ChristopherVR/ooxml.git",
