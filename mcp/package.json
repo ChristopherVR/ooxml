@@ -28,7 +28,7 @@
 	},
 	"dependencies": {
 		"@modelcontextprotocol/sdk": "^1.32.0",
-		"ooxml-core": "f0.17.0"
+		"ooxml-core": "file:.."
 	},
 	"peerDependencies": {
 		"docx-viewer-mcp": "^0.1.0",
