@@ -12,8 +12,6 @@
 		"test": "vitest run",
 		"build:packages": "node scripts/build-packages.mjs",
 		"pack:smoke": "node scripts/pack-smoke.mjs",
-		"release:plan": "node scripts/release-plan.mjs",
-		"release:publish": "node scripts/publish-released.mjs",
 		"build": "vite build demos/demo-vanilla --config vite.config.ts",
 		"demo": "vite demos/demo-vanilla --config vite.config.ts --host 127.0.0.1",
 		"test:browser": "playwright test",
@@ -22,9 +20,6 @@
 		"fmt": "oxfmt",
 		"fmt:check": "oxfmt --check",
 		"test:scripts": "node --test 'scripts/*.test.mjs'",
-		"check:changelog": "node scripts/check-changelog-sections.mjs",
-		"changelog:unreleased": "bunx git-cliff --config cliff-root.toml --unreleased",
-		"changelog:latest": "bunx git-cliff --config cliff-root.toml --latest --strip header",
 		"lint": "oxlint",
 		"lint:fix": "oxlint --fix"
 	},

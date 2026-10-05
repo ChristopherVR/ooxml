@@ -21,7 +21,7 @@
 		"typecheck": "tsc --noEmit",
 		"test": "vitest run --passWithNoTests",
 		"test:browser": "playwright test && node scripts/test-packages-browser.mjs",
-		"check": "bun run fmt:check && bun run check:core && bun run check:converter && bun run typecheck && bun run test && bun run check:bindings && bun run test:docs && bun run build && bun run test:worker && bun run test:package && bun run test:scripts && bun run build:packages && bun run test:packages",
+		"check": "bun run fmt:check && bun run check:core && bun run check:converter && bun run typecheck && bun run test && bun run check:bindings && bun run test:docs && bun run build && bun run test:worker && bun run test:package && bun run build:packages && bun run test:packages",
 		"check:converter": "bun run test:converter-integration",
 		"check:bindings": "bun run --cwd packages/bindings check",
 		"test:docs": "node --test docs/site.test.mjs docs/theme.test.mjs",
@@ -38,7 +38,6 @@
 		"link:core": "node scripts/link-core.mjs",
 		"build:packages": "node scripts/build-packages.mjs",
 		"test:packages": "node scripts/test-packages.mjs",
-		"test:scripts": "node --test scripts/release-plan.test.mjs scripts/release-packages.test.mjs scripts/check-conventional-commits.test.mjs",
 		"lint": "oxlint",
 		"lint:fix": "oxlint --fix"
 	},

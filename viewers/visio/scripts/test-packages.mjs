@@ -6,8 +6,8 @@ import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { build } from 'vite';
-import { VIEWER_PACKAGES } from './release-plan.mjs';
-import { verifyManifest } from './publish-released.mjs';
+import { VIEWER_PACKAGES } from './viewer-packages.mjs';
+import { verifyManifest } from '../../../scripts/publish-released.mjs';
 import { runNpm } from './npm-command.mjs';
 import { createVsdxFixture } from '../tests/fixture.mjs';
 
@@ -17,7 +17,7 @@ const dependencies = {};
 for (const [, meta] of Object.entries(VIEWER_PACKAGES)) {
 	const directory = resolve(root, meta.dir);
 	const manifest = JSON.parse(readFileSync(resolve(directory, 'package.json')));
-	verifyManifest({ ...meta, version: manifest.version });
+	verifyManifest({ npm: meta.npm, dir: `viewers/visio/${meta.dir}`, version: manifest.version });
 	const [pack] = JSON.parse(
 		runNpm(['pack', '--json', '--ignore-scripts', '--pack-destination', consumer], {
 			cwd: directory,

@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
 import { build } from 'vite';
-import { VIEWER_PACKAGES } from './release-plan.mjs';
+import { VIEWER_PACKAGES } from './viewer-packages.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 const bindingsRequire = createRequire(resolve(root, 'packages/bindings/package.json'));

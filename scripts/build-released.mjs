@@ -46,21 +46,36 @@ function run(label, cwd, script) {
 	if (result.status !== 0) throw new Error(`${label}: bun run ${script} failed.`);
 }
 
+/** Builds a package's own `build` (and, when smoke-testing, `test:package`) scripts. */
+function buildPackage(pkg) {
+	const scripts = scriptsOf(pkg.manifest);
+	for (const script of smoke ? ['build', 'test:package'] : ['build']) {
+		if (scripts[script]) run(pkg.npm, pkg.dir, script);
+	}
+}
+
+// The viewers resolve `ooxml-ui` to the workspace copy, through its `dist`, so it has to be built
+// before the first viewer even when this release does not publish it.
+const ui = plan.packages.ui;
+let uiBuilt = false;
+
 const builtViewers = new Set();
 for (const key of plan.order) {
 	const pkg = plan.packages[key];
 	if (pkg.dir === '.' || !(pkg.release || argv.includes('--all'))) continue;
 	const viewer = viewerOf(pkg.dir);
+	if (key === 'ui') uiBuilt = true;
 	if (viewer) {
 		if (builtViewers.has(viewer)) continue;
 		builtViewers.add(viewer);
+		if (ui && !uiBuilt) {
+			buildPackage(ui);
+			uiBuilt = true;
+		}
 		const scripts = scriptsOf(`${viewer}/package.json`);
 		if (scripts['build:packages']) run(viewer, viewer, 'build:packages');
 		if (smoke && scripts['check:published']) run(viewer, viewer, 'check:published');
 		continue;
 	}
-	const scripts = scriptsOf(pkg.manifest);
-	for (const script of smoke ? ['build', 'test:package'] : ['build']) {
-		if (scripts[script]) run(pkg.npm, pkg.dir, script);
-	}
+	buildPackage(pkg);
 }
