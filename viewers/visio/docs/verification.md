@@ -255,6 +255,8 @@ These cases are excluded as authoritative fidelity oracles. A thumbnail mismatch
 
 Run `npm run check` after both root/binding installations. Run `npm run test:browser` only in a supported browser environment. The browser scenarios remain launch-blocked locally; published baseline remote evidence is linked above. `scripts/render-corpus.mjs INPUT_DIRECTORY OUTPUT_DIRECTORY` produces secondary-renderer diagnostic artifacts from an explicitly supplied local corpus.
 
+The Playwright config accepts `CHROMIUM_PATH`; install Playwright's Chromium or point it at a system Chromium. In one development environment the IPC policy blocked launching Chromium and the cloud browser blocked localhost, so browser screenshots and visual verification were not claimed there; source/static audits, DOM tests and production builds were performed instead.
+
 Use the capability ledger for remaining functionality. Passing generated-fixture tests, showing a drawing, or absence of warnings is not a parity guarantee.
 
 ## Initial converter package adapter checkpoint
