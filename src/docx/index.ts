@@ -90,3 +90,8 @@ export * from './document-stats.js';
 export * from './column-settings.js';
 export * from './line-spacing.js';
 export * from './section-layout.js';
+export * from './attr-units.js';
+export * from './case-transform.js';
+export * from './page-setup-model.js';
+export * from './page-size.js';
+export * from './section-edit.js';
