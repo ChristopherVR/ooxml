@@ -38,7 +38,7 @@
 	},
 	"dependencies": {
 		"docx-core": "^0.1.6",
-		"ooxml-core": "^0.20.0",
-		"ooxml-ui": "^0.28.0"
+		"ooxml-core": "*",
+		"ooxml-ui": "*"
 	}
 }

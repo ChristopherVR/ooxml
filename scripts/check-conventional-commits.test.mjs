@@ -89,7 +89,9 @@ test('the last 200 commits on this repo produce no hard errors', (t) => {
 		return;
 	}
 
-	const subjects = execFileSync('git', ['log', '-200', '--format=%s'], { encoding: 'utf8' })
+	// First parent only: the viewer repositories were imported with their own history, which keeps
+	// the conventions of the repository it came from; each import is one conforming merge commit here.
+	const subjects = execFileSync('git', ['log', '--first-parent', '-200', '--format=%s'], { encoding: 'utf8' })
 		.split('\n')
 		.filter(Boolean);
 

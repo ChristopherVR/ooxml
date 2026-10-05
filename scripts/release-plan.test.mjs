@@ -299,7 +299,7 @@ test('the release commit does not retrigger once both packages are tagged', () =
 	assert.equal(next.packages.core.currentVersion, '0.2.0');
 });
 
-test('satisfies handles caret, tilde, exact and wildcard ranges', () => {
+test('satisfies handles caret, tilde, exact, wildcard and comparator ranges', () => {
 	assert.equal(satisfies('^0.1.0', '0.1.9'), true);
 	assert.equal(satisfies('^0.1.0', '0.2.0'), false);
 	assert.equal(satisfies('^1.2.0', '1.9.0'), true);
@@ -310,7 +310,13 @@ test('satisfies handles caret, tilde, exact and wildcard ranges', () => {
 	assert.equal(satisfies('~1.2.0', '1.3.0'), false);
 	assert.equal(satisfies('1.2.3', '1.2.3'), true);
 	assert.equal(satisfies('*', '9.9.9'), true);
-	assert.equal(satisfies('>=1.0.0', '1.0.0'), false);
+	assert.equal(satisfies('>=1.0.0', '1.0.0'), true);
+	assert.equal(satisfies('>=0.20.0 <1', '0.21.3'), true);
+	assert.equal(satisfies('>=0.20.0 <1', '1.0.0'), false);
+	assert.equal(satisfies('>=0.20.0 <1', '0.19.9'), false);
+	assert.equal(satisfies('>1.0.0', '1.0.0'), false);
+	assert.equal(satisfies('<=1.2', '1.2.0'), true);
+	assert.equal(satisfies('^1.0.0 || ^2.0.0', '2.0.0'), false);
 });
 
 test('helpers', () => {
