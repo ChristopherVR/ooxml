@@ -13,3 +13,4 @@ release-notes/
 
 # Framework demo pages, generated from demo/index.html by scripts/build-demos.mjs
 packages/bindings/demos/*/index.html
+.claude/
