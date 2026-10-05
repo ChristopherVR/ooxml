@@ -18,18 +18,18 @@
 		"test:server": "node --test server/server.test.mjs"
 	},
 	"devDependencies": {
-		"@types/node": "^22.0.0",
-		"jsdom": "^26.1.0",
-		"typescript": "^5.9.3",
-		"vite": "^7.0.0",
-		"vitest": "^3.2.0"
+		"@types/node": "^22.20.5",
+		"jsdom": "^30.1.2",
+		"typescript": "^7.0.2",
+		"vite": "^8.3.2",
+		"vitest": "^5.0.3"
 	},
 	"dependencies": {
 		"ooxml-core": "*",
 		"ooxml-ui": "*",
-		"yjs": "^13.6.32",
-		"lit": "^3.3.0",
-		"lib0": "^0.2.117",
+		"yjs": "^13.6.33",
+		"lit": "^3.3.3",
+		"lib0": "^0.2.119",
 		"y-protocols": "^1.0.7"
 	},
 	"overrides": {
