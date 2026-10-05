@@ -11,8 +11,9 @@
  *   bun run publish:local -- --allow-dirty   allow uncommitted changes or a branch other than main
  *   bun run publish:local -- --skip-build    reuse the dist/ folders already built
  *
- * It NEVER asks for or accepts a one-time password: there is no `--otp` and no OTP prompt. If the
- * npm account requires a 2FA code to publish, it stops and says so; publish with a granular access
+ * It NEVER asks for or accepts a one-time password: there is no `--otp` and no OTP prompt. Publishing
+ * uses `--auth-type=web`, so when the account needs 2FA npm prints a sign-in URL and opens your
+ * browser; approve it there. If npm still insists on a code, the script stops and says so; publish with a granular access
  * token that has "bypass 2FA" enabled, or through the CI trusted-publishing path. Login uses
  * `npm login --auth-type=web` (npm opens the browser); this script never reads, writes or prints a
  * token, and never passes `--provenance` (provenance needs GitHub Actions OIDC).
@@ -180,10 +181,20 @@ function ensureCleanMain({ allowDirty }) {
 	);
 }
 
-/** Runs `npm publish` without a TTY on stdin, so npm can never prompt; returns status and output. */
+/**
+ * Runs `npm publish`; returns status and output. In a terminal npm keeps stdin so its browser
+ * (web) authentication can run: it prints a URL, opens the browser and waits for you to sign in.
+ * `--auth-type=web` is always passed, so npm never falls back to asking for a one-time code.
+ * Without a terminal stdin is closed and npm can only fail.
+ */
 function npmPublish(args, cwd) {
 	return new Promise((resolve) => {
-		const child = spawn('npm', args, { cwd, shell, stdio: ['ignore', 'pipe', 'pipe'] });
+		const stdin = process.stdin.isTTY ? 'inherit' : 'ignore';
+		const child = spawn('npm', [...args, '--auth-type=web'], {
+			cwd,
+			shell,
+			stdio: [stdin, 'pipe', 'pipe'],
+		});
 		let output = '';
 		const forward = (stream) => (chunk) => {
 			output += chunk;
@@ -270,9 +281,10 @@ async function main() {
 		}
 		if (isOtpError(result.output)) {
 			throw new Error(
-				`npm asked for a one-time password to publish ${row.npm}. publish:local never prompts for ` +
-					'one. Publish with a granular access token that has "bypass 2FA" enabled (npmjs.com, ' +
-					'Access Tokens), or through the CI trusted-publishing path (release.yml).',
+				`npm still wants a one-time password to publish ${row.npm}, which publish:local never ` +
+					'asks for. Run `npm login --auth-type=web` again (finish the sign-in in the browser ' +
+					'before it times out), or publish with a granular access token that has "bypass 2FA" ' +
+					'enabled (npmjs.com, Access Tokens), or use the CI trusted-publishing path (release.yml).',
 			);
 		}
 		throw new Error(`Publishing ${row.npm}@${row.version} failed (exit ${result.status}).`);
