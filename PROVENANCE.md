@@ -400,3 +400,7 @@ The DOM-free modules of `ooxml-ui/visio` (from visio-viewer `818f4a4`) moved to 
 ## `ooxml-core/chart` histogram binning
 
 `src/chart/histogram-binning.ts` moved from ChristopherVR/pptx-viewer `packages/shared/src/render/chart-histogram-binning.ts` at `15ed646e4`. Changes: the PowerPoint options type became the neutral `HistogramOptions`, bin edges are labelled through an injected formatter (default `String`) instead of the viewer's `formatAxisValue`, the indexed bin access is guarded for `noUncheckedIndexedAccess`, and it gained the unit tests the viewer lacked.
+
+## `ooxml-core/pptx/ui`
+
+`src/pptx/ui/theme-color-swatches.ts` and `theme-color-picker-state.ts`, with their tests, moved from ChristopherVR/pptx-viewer `packages/shared/src/render` at `15ed646e4`. Changes: `pptx-viewer-core` imports became relative imports of the pptx core and the shared `color` area. The new `ooxml-core/pptx/ui` subpath (dual ESM/CJS through the pptx tsup config) holds DOM-free PowerPoint editor logic; the popup UI stays in the viewer.

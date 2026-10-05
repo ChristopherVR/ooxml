@@ -191,6 +191,11 @@
 			"import": "./dist/pptx/automation/index.mjs",
 			"require": "./dist/pptx/automation/index.cjs"
 		},
+		"./pptx/ui": {
+			"types": "./dist/pptx/ui/index.d.ts",
+			"import": "./dist/pptx/ui/index.mjs",
+			"require": "./dist/pptx/ui/index.cjs"
+		},
 		"./docx/ui": {
 			"types": "./dist/docx/ui/index.d.ts",
 			"import": "./dist/docx/ui/index.mjs",
