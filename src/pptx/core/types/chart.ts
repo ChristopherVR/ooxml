@@ -482,7 +482,10 @@ export interface PptxChartAxisFormatting extends PptxChartAxisLabelFormatting {
 	max?: number;
 	/** Axis value direction (`c:scaling/c:orientation/@val`). */
 	orientation?: 'minMax' | 'maxMin';
-	/** Whether the axis is deleted/hidden (c:delete/@val). */
+	/**
+	 * Whether the axis is deleted/hidden (c:delete/@val). Written for generated
+	 * charts (absent means shown) and reconciled on save for loaded ones.
+	 */
 	deleted?: boolean;
 	/**
 	 * Display units for value axis (c:dispUnits/c:builtInUnit/@val).
@@ -1000,6 +1003,15 @@ export interface PptxChartStyle {
 	chartAreaGradient?: PptxChartGradientFill;
 	/** Plot-area gradient (`c:plotArea/c:spPr/a:gradFill`); wins over {@link plotAreaFill}. */
 	plotAreaGradient?: PptxChartGradientFill;
+	/**
+	 * Chart-area border from `c:chartSpace/c:spPr/a:ln`: a resolved colour, or
+	 * `'none'` for `a:ln/a:noFill`. Absent when the chart says nothing.
+	 * Written for generated charts and reconciled on save for loaded ones,
+	 * together with {@link chartAreaFill} and {@link chartAreaGradient}.
+	 */
+	chartAreaBorder?: string;
+	/** Plot-area border from `c:plotArea/c:spPr/a:ln`. See {@link chartAreaBorder}. */
+	plotAreaBorder?: string;
 	/** Whether data labels are shown. */
 	hasDataLabels?: boolean;
 	/** Chart-level data-label content/position options (when `hasDataLabels`). */
@@ -1264,12 +1276,16 @@ export interface PptxChartData {
 	varyColors?: boolean;
 	/**
 	 * Pie/doughnut start angle in degrees clockwise from 12 o'clock
-	 * (`c:firstSliceAng/@val`, 0 through 360). Absent uses the default 0.
+	 * (`c:firstSliceAng/@val`, `ST_FirstSliceAng`, 0 through 360). Absent uses
+	 * the default 0. Written for generated pie and doughnut charts and
+	 * reconciled on save for loaded ones (see `utils/chart-group-options.ts`).
 	 */
 	firstSliceAngle?: number;
 	/**
 	 * Doughnut hole diameter as a percentage of the outer diameter
-	 * (`c:holeSize/@val`, 10 through 90). Absent uses the renderer default.
+	 * (`c:holeSize/@val`, `ST_HoleSize`, 1 through 90). Absent uses the
+	 * renderer default; a generated doughnut writes 50. Reconciled on save for
+	 * loaded charts.
 	 */
 	doughnutHoleSize?: number;
 	/**
@@ -1325,12 +1341,16 @@ export interface PptxChartData {
 	scatterStyle?: PptxChartScatterStyle;
 	/**
 	 * Bar/column gap between category clusters as a percentage of bar width
-	 * (`c:gapWidth/@val`, 0 through 500). Absent uses the renderer default.
+	 * (`c:gapWidth/@val`, `ST_GapAmount`, 0 through 500). Absent uses the
+	 * renderer default; a generated bar chart writes 150. Reconciled on save
+	 * for loaded charts.
 	 */
 	barGapWidth?: number;
 	/**
 	 * Clustered bar/column overlap between series within a category as a
-	 * percentage (`c:overlap/@val`, -100 through 100). Absent uses 0.
+	 * percentage (`c:overlap/@val`, `ST_Overlap`, -100 through 100). Absent
+	 * uses 0. `c:bar3DChart` has no overlap. Written for generated charts and
+	 * reconciled on save for loaded ones.
 	 */
 	barOverlap?: number;
 	/** Internal: path to the chart XML part in the PPTX archive (for round-trip save). */
@@ -1488,8 +1508,10 @@ export interface PptxChartData {
 
 	/**
 	 * PowerPoint's "Rounded corners" chart-area option
-	 * (`c:chartSpace/c:roundedCorners/@val`, default `false`). Absent when the
-	 * source XML omits the element.
+	 * (`c:chartSpace/c:roundedCorners/@val`). Absent when the source XML omits
+	 * the element; PowerPoint then draws rounded corners, so square corners
+	 * need an explicit `false`. Written for generated charts when set, and
+	 * reconciled on save for loaded ones.
 	 */
 	roundedCorners?: boolean;
 
@@ -1497,8 +1519,8 @@ export interface PptxChartData {
 	 * 3-D chart depth/spacing along the series axis, as a percentage
 	 * (`c:gapDepth/@val`, `ST_GapAmount`, 0 through 500). Legal on
 	 * `bar3D`/`area3D`/`line3D`/`surface` chart-type containers only. Read-only
-	 * for rendering, matching {@link barGapWidth}/{@link barOverlap}: save
-	 * round-trips it via the preserved chart XML rather than a typed edit path.
+	 * for rendering: save round-trips it via the preserved chart XML rather
+	 * than a typed edit path.
 	 */
 	gapDepth?: number;
 

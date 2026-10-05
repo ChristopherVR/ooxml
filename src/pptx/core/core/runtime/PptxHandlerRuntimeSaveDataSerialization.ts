@@ -10,7 +10,10 @@ import type {
 import { applyChartAxisDisplayUnitsToXml } from '../../utils/chart-axis-dispunits-serializer';
 import { applyChartAxisGridlinesToXml } from '../../utils/chart-axis-gridlines-serializer';
 import { applyChartAxisLabelFormatting } from '../../utils/chart-axis-label-formatting';
+import { applyChartAxisDeletedToXml } from '../../utils/chart-axis-deleted';
 import { applyChartAxisScaling, upsertChartAxisChild } from '../../utils/chart-axis-scaling';
+import { applyChartGroupOptionsToXml } from '../../utils/chart-group-options';
+import { applyChartSpaceFormatToXml } from '../../utils/chart-space-format';
 import {
 	applyChartAxisTitleToXml,
 	applyChartAxisTitleStyleToXml,
@@ -406,6 +409,17 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				} else if (groupingKey) {
 					// Remove grouping if it was cleared (e.g. switching to pie)
 					delete chartTypeContainer[groupingKey];
+				}
+
+				// gapWidth / overlap / firstSliceAng / holeSize: rewritten only where
+				// the model disagrees with the authored element. Combo charts are
+				// consolidated into one container here and split again below
+				// (restoring each container's own values), so they stay as authored.
+				const singleContainer = (consolidation?.containerChildren.size ?? 1) <= 1;
+				if (singleContainer && chartData.chartType !== 'combo') {
+					applyChartGroupOptionsToXml(chartTypeContainer, containerLocalName, chartData, (key) =>
+						this.compatibilityService.getXmlLocalName(key),
+					);
 				}
 
 				// ── Update series data ────────────────────────────────────
@@ -962,6 +976,10 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 								continue;
 							}
 
+							applyChartAxisDeletedToXml(axisNode, matchingAxis.deleted, (key) =>
+								this.compatibilityService.getXmlLocalName(key),
+							);
+
 							const scalingNode = this.xmlLookupService.getChildByLocalName(axisNode, 'scaling');
 							if (scalingNode) {
 								applyChartAxisScaling(scalingNode, matchingAxis, (key) =>
@@ -1043,6 +1061,21 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 							}
 						}
 					}
+				}
+
+				// Chart-area / plot-area c:spPr and c:roundedCorners, reconciled
+				// against the authored XML (untouched charts are left as they are).
+				if (chartSpace) {
+					applyChartSpaceFormatToXml(
+						chartSpace,
+						plotArea,
+						chartData,
+						(key) => this.compatibilityService.getXmlLocalName(key),
+						{
+							...this.chartGradientWriteOptions(false),
+							resolveColor: (node) => this.parseColor(node),
+						},
+					);
 				}
 
 				// Every chart-group container is a CT_* SEQUENCE, and the mutations

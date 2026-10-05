@@ -17,6 +17,8 @@ import { applySeriesMarkerToXml } from './chart-marker-serializer';
 import { applySeriesDataLabelsToXml } from './chart-series-datalabel-serializer';
 import { applyGeneratedChartSpaceMetadata } from './chart-space-metadata';
 import { applySeriesTrendlinesToXml } from './chart-trendline-serializer';
+import { applyGeneratedChartGroupOptions } from './chart-group-options';
+import { applyGeneratedChartSpaceFormat } from './chart-space-format';
 import { applyChartUpDownBars } from './chart-up-down-bars';
 import { buildGeneratedChartAxis } from './chart-xml-axis-generator';
 import type { ChartFamily } from './chart-xml-container-map';
@@ -124,7 +126,11 @@ function axisFormatting(
 	);
 }
 
-function buildChartTypeContainer(chartData: PptxChartData, family: ChartFamily): XmlObject {
+function buildChartTypeContainer(
+	chartData: PptxChartData,
+	family: ChartFamily,
+	containerLocal: string,
+): XmlObject {
 	const container: XmlObject = {};
 	if (family === 'bar') {
 		container['c:barDir'] = { '@_val': chartData.barDirection === 'bar' ? 'bar' : 'col' };
@@ -169,9 +175,6 @@ function buildChartTypeContainer(chartData: PptxChartData, family: ChartFamily):
 		applyChartUpDownBars(container, chartData.upDownBars, (key) => key.replace(/^.*:/u, ''));
 	}
 
-	if (family === 'bar' || family === 'ofPie') {
-		container['c:gapWidth'] = { '@_val': '150' };
-	}
 	if (family === 'bar' && chartData.chartType === 'bar3D' && chartData.barShape) {
 		container['c:shape'] = { '@_val': chartData.barShape };
 	}
@@ -190,15 +193,14 @@ function buildChartTypeContainer(chartData: PptxChartData, family: ChartFamily):
 		family === 'surface'
 	) {
 		container['c:axId'] = [{ '@_val': String(CAT_AX_ID) }, { '@_val': String(VAL_AX_ID) }];
-	} else if (family === 'doughnut') {
-		container['c:holeSize'] = { '@_val': '50' };
 	}
+	applyGeneratedChartGroupOptions(container, containerLocal, chartData);
 	return container;
 }
 
 function buildPlotArea(chartData: PptxChartData, tag: string, family: ChartFamily): XmlObject {
 	const plotArea: XmlObject = { 'c:layout': {} };
-	plotArea[tag] = buildChartTypeContainer(chartData, family);
+	plotArea[tag] = buildChartTypeContainer(chartData, family, tag.replace(/^.*:/u, ''));
 	if (chartData.style) {
 		applyChartDataLabelsToXml(plotArea, chartData.style, (key) => key.replace(/^.*:/u, ''));
 	}
@@ -288,5 +290,6 @@ export function buildChartSpaceXml(chartData: PptxChartData): XmlObject {
 		},
 	};
 	applyGeneratedChartSpaceMetadata(result, chartData);
+	applyGeneratedChartSpaceFormat(result, chartData);
 	return result;
 }

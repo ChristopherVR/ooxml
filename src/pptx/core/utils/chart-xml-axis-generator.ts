@@ -15,7 +15,7 @@ export function buildGeneratedChartAxis(
 	const axis: XmlObject = {
 		'c:axId': { '@_val': String(axId) },
 		'c:scaling': { 'c:orientation': { '@_val': 'minMax' } },
-		'c:delete': { '@_val': '0' },
+		'c:delete': { '@_val': formatting?.deleted ? '1' : '0' },
 		'c:axPos': { '@_val': pos },
 		'c:crossAx': { '@_val': String(crossId) },
 	};

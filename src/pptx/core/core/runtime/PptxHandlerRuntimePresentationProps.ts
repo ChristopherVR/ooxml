@@ -1,5 +1,7 @@
 import { XmlObject } from '../../types';
 import type { PptxPresentationProperties, PptxChartStyle, PptxViewProperties } from '../../types';
+import type { ChartAreaFormat } from '../../utils/chart-area-format';
+import { parseChartAreaFormat } from '../../utils/chart-area-format';
 import { parseChartDataLabelOptions } from '../../utils/chart-data-label-parser';
 import {
 	dataLabelsGroupDeleted,
@@ -131,30 +133,18 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	}
 
 	/**
-	 * Resolve the `c:spPr` fill of a chart container (`c:chartSpace` or
-	 * `c:plotArea`) to a colour string, or the literal `'none'` for
-	 * `<a:noFill/>`. Returns `undefined` when the container declares no fill at
-	 * all, which leaves the choice to the renderer.
-	 *
-	 * `<a:noFill/>` parses to the empty STRING, so presence - not truthiness -
-	 * has to decide.
+	 * Resolve the `c:spPr` fill and border of a chart container
+	 * (`c:chartSpace` or `c:plotArea`) to a colour string, or the literal
+	 * `'none'` for `<a:noFill/>`; `undefined` when the container declares
+	 * nothing, which leaves the choice to the renderer. The save path reads it
+	 * back with the same function (`chart-area-format.ts`).
 	 */
-	private parseChartContainerFill(container: XmlObject | undefined): string | undefined {
-		const shapeProperties = this.xmlLookupService.getChildByLocalName(container, 'spPr');
-		if (!shapeProperties) {
-			return undefined;
-		}
-		// `getChildByLocalName` returns undefined for non-object values, and
-		// `<a:noFill/>` parses to the empty STRING, so presence has to be checked
-		// against the keys directly.
-		const hasNoFill = Object.keys(shapeProperties).some(
-			(key) => this.compatibilityService.getXmlLocalName(key) === 'noFill',
+	private parseChartContainerFormat(container: XmlObject | undefined): ChartAreaFormat {
+		return parseChartAreaFormat(
+			container,
+			(key) => this.compatibilityService.getXmlLocalName(key),
+			(node) => this.parseColor(node),
 		);
-		if (hasNoFill) {
-			return 'none';
-		}
-		const solidFill = this.xmlLookupService.getChildByLocalName(shapeProperties, 'solidFill');
-		return solidFill ? this.parseColor(solidFill) : undefined;
 	}
 
 	/**
@@ -180,9 +170,13 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		// Chart-area fill (`c:chartSpace/c:spPr`). `<a:noFill/>` is the common
 		// case and means the chart floats on the slide background; recording it as
 		// `'none'` stops renderers painting their own panel behind it.
-		const chartAreaFill = this.parseChartContainerFill(chartSpace);
-		if (chartAreaFill) {
-			style.chartAreaFill = chartAreaFill;
+		const chartArea = this.parseChartContainerFormat(chartSpace);
+		if (chartArea.fill) {
+			style.chartAreaFill = chartArea.fill;
+			hasStyle = true;
+		}
+		if (chartArea.border) {
+			style.chartAreaBorder = chartArea.border;
 			hasStyle = true;
 		}
 		const chartAreaGradient = parseChartGradientFill(
@@ -267,9 +261,13 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				if (plotAreaGradient) {
 					style.plotAreaGradient = plotAreaGradient;
 				}
-				const plotAreaFill = this.parseChartContainerFill(plotArea);
-				if (plotAreaFill) {
-					style.plotAreaFill = plotAreaFill;
+				const plotAreaFormat = this.parseChartContainerFormat(plotArea);
+				if (plotAreaFormat.fill) {
+					style.plotAreaFill = plotAreaFormat.fill;
+					hasStyle = true;
+				}
+				if (plotAreaFormat.border) {
+					style.plotAreaBorder = plotAreaFormat.border;
 					hasStyle = true;
 				}
 				const valAx = this.xmlLookupService.getChildByLocalName(plotArea, 'valAx');
