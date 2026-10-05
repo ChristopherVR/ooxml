@@ -105,6 +105,18 @@ describe('extractTableCellTextRuns', () => {
 		expect(extractTableCellTextRuns(cell, context)?.[0].fontFamily).toBe('Traditional Arabic');
 	});
 
+	it('reads a run baseline shift such as the subscript in CO2', () => {
+		const cell = parseCell(
+			'<a:tc><a:txBody><a:bodyPr/><a:p>' +
+				'<a:r><a:rPr lang="en-US"/><a:t>tCO</a:t></a:r>' +
+				'<a:r><a:rPr lang="en-US" baseline="-25000"/><a:t>2</a:t></a:r>' +
+				'</a:p></a:txBody></a:tc>',
+		);
+		const runs = extractTableCellTextRuns(cell, context);
+		expect(runs?.[0].baseline).toBeUndefined();
+		expect(runs?.[1].baseline).toBe(-25000);
+	});
+
 	it('marks paragraph boundaries between paragraphs', () => {
 		const cell = parseCell(
 			'<a:tc><a:txBody><a:bodyPr/>' +

@@ -267,6 +267,11 @@ export interface PptxTableCellTextRun {
 	fontSize?: number;
 	/** Run font family from `a:rPr/a:latin@typeface` (or `a:ea` / `a:cs`). */
 	fontFamily?: string;
+	/**
+	 * Run baseline shift from `a:rPr/@baseline`, in thousandths of a percent
+	 * (`-25000` is a 25% subscript). Positive raises the run, negative lowers it.
+	 */
+	baseline?: number;
 }
 
 /**
