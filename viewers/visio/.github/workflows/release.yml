@@ -22,11 +22,11 @@ jobs:
       any_released: ${{ steps.plan.outputs.any_changed }}
       release_sha: ${{ steps.tagged.outputs.release_sha }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           token: ${{ secrets.RELEASE_TOKEN || github.token }}
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '24'
       - run: npm ci --ignore-scripts
@@ -73,7 +73,7 @@ jobs:
             gh release create "$tag" --target "$COMMIT" --title "$tag" --notes-file "release-notes/$tag.md"
           done
           echo "release_sha=$COMMIT" >> "$GITHUB_OUTPUT"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: steps.plan.outputs.any_changed == 'true'
         with:
           name: release-plan-${{ github.run_id }}
@@ -92,16 +92,16 @@ jobs:
         env:
           ENABLED: ${{ vars.NPM_PUBLISH }}
         run: test "$ENABLED" = true
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           ref: ${{ inputs.tag != '' && format('refs/tags/{0}', inputs.tag) || needs.release.outputs.release_sha }}
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '24'
           registry-url: https://registry.npmjs.org
       - run: npm install --global npm@11.11.1
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         if: inputs.tag == ''
         with:
           name: release-plan-${{ github.run_id }}

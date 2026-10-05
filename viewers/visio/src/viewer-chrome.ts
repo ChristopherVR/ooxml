@@ -132,7 +132,7 @@ export class ViewerChrome {
 	togglePane(pane: TaskPane): void {
 		if (this.#compact?.matches) this.#tools.open = false;
 		this.#manual.add(pane);
-		this.#setPane(pane, this.#panes[pane].hidden);
+		this.#setPane(pane, Boolean(this.#panes[pane].hidden));
 	}
 	/** A ribbon command or menu item by its stable id (the first match wins). */
 	#command(name: string): HTMLElement & { disabled: boolean } {
@@ -227,7 +227,7 @@ export class ViewerChrome {
 			? `${page.shapes.length} top-level`
 			: 'No shapes';
 		this.#root.querySelector<HTMLElement>('.selection-hint')!.hidden = !!state.selectedShape;
-		const layers = this.#root.querySelector<HTMLDetailsElement>('.layer-controls')!.hidden;
+		const layers = Boolean(this.#root.querySelector<HTMLDetailsElement>('.layer-controls')!.hidden);
 		this.#command('shape-data').disabled = !state.selectedShape;
 		this.#command('layer-properties').disabled = layers;
 		this.#command('layers-pane').disabled = layers;
