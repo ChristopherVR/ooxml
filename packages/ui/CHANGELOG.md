@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.29.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.29.0) - 2026-10-05
+
+### Features
+
+- **ui:** Export the visio demo document from ooxml-ui/visio (by @ChristopherVR) ([0ea4098](https://github.com/ChristopherVR/ooxml/commit/0ea4098b294361f98b244788f3c833427bc3fe22))
+
 ## [0.28.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.28.0) - 2026-10-05
 
 ### Features
