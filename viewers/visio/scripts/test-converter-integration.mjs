@@ -1,4 +1,3 @@
-import './check-converter-release.mjs';
 import assert from 'node:assert/strict';
 import { Worker } from 'node:worker_threads';
 

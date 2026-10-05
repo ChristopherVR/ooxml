@@ -253,7 +253,7 @@ These cases are excluded as authoritative fidelity oracles. A thumbnail mismatch
 
 ## Re-run commands
 
-Run `npm run check` after `npm run setup:core` and both root/binding installations. Run `npm run test:browser` only in a supported browser environment. The browser scenarios remain launch-blocked locally; published baseline remote evidence is linked above. `scripts/render-corpus.mjs INPUT_DIRECTORY OUTPUT_DIRECTORY` produces secondary-renderer diagnostic artifacts from an explicitly supplied local corpus.
+Run `npm run check` after both root/binding installations. Run `npm run test:browser` only in a supported browser environment. The browser scenarios remain launch-blocked locally; published baseline remote evidence is linked above. `scripts/render-corpus.mjs INPUT_DIRECTORY OUTPUT_DIRECTORY` produces secondary-renderer diagnostic artifacts from an explicitly supplied local corpus.
 
 Use the capability ledger for remaining functionality. Passing generated-fixture tests, showing a drawing, or absence of warnings is not a parity guarantee.
 

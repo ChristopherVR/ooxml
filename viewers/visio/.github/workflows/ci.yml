@@ -18,7 +18,6 @@ jobs:
           cache-dependency-path: |
             package-lock.json
             packages/bindings/package-lock.json
-            integration/core-package-lock.json
       - run: npm ci --ignore-scripts
       - run: npm ci --prefix packages/bindings --ignore-scripts
       - run: npm run check

@@ -155,9 +155,7 @@ must update `PROVENANCE.md` and retain licenses.
 
 ### Core development bridge
 
-Normal builds use the released `ooxml-core/visio` dependency. Format conformance tests run in `ooxml`; viewer and packed-consumer tests exercise the released API here.
-
-For intentional core development, the legacy `scripts/setup-core.mjs` prepares `integration/core-revision.txt`, its lock and any explicit patch in an isolated checkout. `VISIO_CORE_DIR` and `npm run link:core` support local overrides. Never overwrite sibling edits. Restore published dependency ranges before committing.
+Normal builds use the released `ooxml-core/visio` dependency. Format conformance tests run in `ooxml`; viewer and packed-consumer tests exercise the released API here. For core development, `VISIO_CORE_DIR` and `npm run link:core` point this repository at a local checkout; restore the published dependency ranges before committing.
 
 ## Working agreements
 
@@ -186,7 +184,6 @@ For intentional core development, the legacy `scripts/setup-core.mjs` prepares `
 ## Commands
 
 ```sh
-node scripts/setup-core.mjs
 npm ci --ignore-scripts
 npm ci --prefix packages/bindings --ignore-scripts
 npm run dev                 # docs landing and /demo/ workspace

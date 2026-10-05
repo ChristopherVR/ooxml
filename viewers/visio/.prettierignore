@@ -3,7 +3,5 @@ dist/
 site-dist/
 playwright-report/
 test-results/
-integration/ooxml-visio.patch
-integration/core-package-lock.json
 package-lock.json
 packages/bindings/package-lock.json

@@ -38,7 +38,7 @@ browser. Call `viewer.destroy()` when removing the host.
 
 ## Development setup
 
-Node.js 22.12 or newer is required. The Visio area is published as `ooxml-core/visio`. The development checks also use a pinned core checkout for integration evidence.
+Node.js 22.12 or newer is required. The Visio area is published as `ooxml-core/visio`.
 
 ```sh
 npm ci --ignore-scripts
@@ -46,8 +46,6 @@ npm ci --prefix packages/bindings --ignore-scripts
 npm run check
 npm run dev
 ```
-
-The setup script clones the public core at the pinned revision in `integration/core-revision.txt`, installs dependencies from a pinned lock and builds only the Visio subpath. The current pin includes the published geometry commands and requires no integration patch. It refuses mismatched revisions, staged changes, different source edits or a different npm lock in an existing sibling checkout without overwriting them. The setup still supports an explicit temporary patch for development. Published packages use registry dependencies. Core changes are reviewed and released separately.
 
 Open the printed local URL for the documentation landing page or `/demo/` for the viewer workspace. `.vsdx` input stays in your browser; there are no uploads, telemetry, external fonts or document URL fetches.
 
