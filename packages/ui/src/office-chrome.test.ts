@@ -122,6 +122,43 @@ describe('office-ui-ribbon', () => {
 		expect(el.fileButton()).not.toBeNull();
 	});
 
+	it('collapses, peeks and closes the peek like Office', async () => {
+		const { el } = ribbon();
+		const changes: boolean[] = [];
+		el.addEventListener('office-ribbon-collapse', (event) =>
+			changes.push((event as CustomEvent<{ collapsed: boolean }>).detail.collapsed),
+		);
+		const home = el.querySelector<HTMLElement>('#home-panel')!;
+		const view = el.querySelector<HTMLElement>('#view-panel')!;
+		const collapse = () => el.shadowRoot!.querySelector<HTMLButtonElement>('.collapse')!;
+		await Promise.resolve();
+		expect(collapse().hidden).toBe(true);
+		el.toggleAttribute('collapsible', true);
+		await Promise.resolve();
+		expect(collapse().hidden).toBe(false);
+		collapse().click();
+		await Promise.resolve();
+		expect([el.hasAttribute('collapsed'), home.hidden, collapse().ariaPressed]).toEqual([
+			true,
+			true,
+			'true',
+		]);
+		el.tabButton('view')!.click();
+		await Promise.resolve();
+		expect([el.hasAttribute('peek'), view.hidden]).toEqual([true, false]);
+		el.dispatchEvent(
+			new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, composed: true }),
+		);
+		await Promise.resolve();
+		expect([el.hasAttribute('peek'), view.hidden]).toEqual([false, true]);
+		el.dispatchEvent(
+			new KeyboardEvent('keydown', { key: 'F1', ctrlKey: true, bubbles: true, composed: true }),
+		);
+		await Promise.resolve();
+		expect(el.hasAttribute('collapsed')).toBe(false);
+		expect(changes).toEqual([true, false]);
+	});
+
 	it('marks the tab of a contextual panel so it can be tinted', async () => {
 		const { el, tabs } = ribbon();
 		el.querySelector<HTMLElement>('#view-panel')!.dataset.contextual = '';

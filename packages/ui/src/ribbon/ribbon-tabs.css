@@ -78,6 +78,51 @@
 	align-self: center;
 }
 
+.collapse {
+	flex: none;
+	align-self: center;
+	width: var(--office-target-size);
+	height: var(--office-target-size);
+	margin-inline: auto var(--office-space-1);
+	padding: 0;
+	border: 0;
+	border-radius: var(--office-radius-sm);
+	background: none;
+	color: var(--office-muted-foreground);
+	cursor: pointer;
+}
+.collapse[hidden] {
+	display: none;
+}
+.collapse:hover {
+	background: var(--office-surface);
+}
+.collapse:focus-visible {
+	outline: var(--office-focus-width) solid var(--office-ring);
+}
+.collapse .glyph {
+	width: var(--office-icon-size);
+	height: var(--office-icon-size);
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.5;
+	transform: rotate(90deg);
+}
+.collapse[aria-pressed='true'] .glyph {
+	transform: rotate(-90deg);
+}
+:host([collapsed][peek]) {
+	position: relative;
+}
+:host([collapsed][peek]) ::slotted([data-ribbon-tab]:not([hidden])) {
+	position: absolute;
+	inset: 100% 0 auto;
+	z-index: 60;
+	border-bottom: var(--office-border-width) solid var(--office-border);
+	background: var(--office-background);
+	box-shadow: var(--office-shadow);
+}
+
 @media (max-width: 760px), (pointer: coarse) {
 	.file,
 	[role='tab'] {

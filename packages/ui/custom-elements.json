@@ -1865,8 +1865,17 @@
 					"name": "OfficeUiRibbon",
 					"tagName": "office-ui-ribbon",
 					"customElement": true,
-					"description": "`<office-ui-ribbon>`: the Office tab row (Quick Access Toolbar, File, tabs, search) over the tab panels. Panels are light-DOM children carrying `data-ribbon-tab` (id), `data-label` and optionally `data-tab-keytip`; the element builds the tabs from them, keeps exactly one panel visible and moves between tabs with the arrow keys, Home and End. Slots: `quick-access`, `search`, `end`. Attributes: `selected`, `label` (tab list name), `file-label` (default \"File\"), `no-file`, `file-expanded`, `file-keytip`. A panel with `data-tab-hidden` keeps its content but has no tab (a contextual tab, or one a customisation removed); if it was selected, the first remaining tab takes over. `data-contextual` on a panel tints its tab (`--office-ribbon-contextual`), for tools that apply to the selection, such as a table's. Events: `office-ribbon-select` `{ tab }` (cancelable) and `office-ribbon-file` when File is activated.",
+					"description": "`<office-ui-ribbon>`: the Office tab row (Quick Access Toolbar, File, tabs, search) over the tab panels. Panels are light-DOM children carrying `data-ribbon-tab` (id), `data-label` and optionally `data-tab-keytip`; the element builds the tabs from them, keeps exactly one panel visible and moves between tabs with the arrow keys, Home and End. Slots: `quick-access`, `search`, `end`. Attributes: `selected`, `label` (tab list name), `file-label` (default \"File\"), `no-file`, `file-expanded`, `file-keytip`. A panel with `data-tab-hidden` keeps its content but has no tab (a contextual tab, or one a customisation removed); if it was selected, the first remaining tab takes over. `data-contextual` on a panel tints its tab (`--office-ribbon-contextual`), for tools that apply to the selection, such as a table's. Events: `office-ribbon-select` `{ tab }` (cancelable) and `office-ribbon-file` when File is activated. `collapsible` adds Office's collapse button: `collapsed` hides the panels, a click on a tab then shows its panel over the content (`peek`) until Escape, a command or a click elsewhere. Ctrl+F1 and a double click on a tab toggle it. `collapse-label` names the button. Event: `office-ribbon-collapse` `{ collapsed }`.",
 					"attributes": [
+						{
+							"name": "collapse-label"
+						},
+						{
+							"name": "collapsed"
+						},
+						{
+							"name": "collapsible"
+						},
 						{
 							"name": "file-expanded"
 						},
@@ -1883,10 +1892,35 @@
 							"name": "no-file"
 						},
 						{
+							"name": "peek"
+						},
+						{
 							"name": "selected"
 						}
 					],
 					"members": [
+						{
+							"kind": "field",
+							"name": "collapsed",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "collapseLabel",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "collapse-label"
+						},
+						{
+							"kind": "field",
+							"name": "collapsible",
+							"type": {
+								"text": "boolean"
+							}
+						},
 						{
 							"kind": "field",
 							"name": "fileExpanded",
@@ -1928,6 +1962,13 @@
 						},
 						{
 							"kind": "field",
+							"name": "peek",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
 							"name": "selected",
 							"type": {
 								"text": "string"
@@ -1939,6 +1980,9 @@
 						}
 					],
 					"events": [
+						{
+							"name": "office-ribbon-collapse"
+						},
 						{
 							"name": "office-ribbon-file"
 						},

@@ -1,6 +1,7 @@
 import { html } from 'lit';
 import { ifDefined } from 'lit/directives/if-defined.js';
 import { OfficeElement, controlStyles, flag } from '../base.js';
+import { glyph } from '../glyph.js';
 import { definer, present } from '../registry.js';
 import css from './ribbon-tabs.css?raw';
 
@@ -26,6 +27,11 @@ interface RibbonTab {
  * remaining tab takes over. `data-contextual` on a panel tints its tab (`--office-ribbon-contextual`),
  * for tools that apply to the selection, such as a table's. Events: `office-ribbon-select` `{ tab }`
  * (cancelable) and `office-ribbon-file` when File is activated.
+ *
+ * `collapsible` adds Office's collapse button: `collapsed` hides the panels, a click on a tab then
+ * shows its panel over the content (`peek`) until Escape, a command or a click elsewhere. Ctrl+F1 and
+ * a double click on a tab toggle it. `collapse-label` names the button. Event:
+ * `office-ribbon-collapse` `{ collapsed }`.
  */
 export class OfficeUiRibbon extends OfficeElement {
 	static override styles = controlStyles(css);
@@ -37,6 +43,10 @@ export class OfficeUiRibbon extends OfficeElement {
 		noFile: { attribute: 'no-file', ...flag },
 		fileExpanded: { attribute: 'file-expanded', type: String },
 		fileKeytip: { attribute: 'file-keytip', type: String },
+		collapsible: flag,
+		collapsed: flag,
+		peek: flag,
+		collapseLabel: { attribute: 'collapse-label', type: String },
 		tabs: { state: true },
 	};
 	declare label: string | null;
@@ -44,6 +54,10 @@ export class OfficeUiRibbon extends OfficeElement {
 	declare noFile: boolean;
 	declare fileExpanded: string | null;
 	declare fileKeytip: string | null;
+	declare collapsible: boolean;
+	declare collapsed: boolean;
+	declare peek: boolean;
+	declare collapseLabel: string | null;
 	declare tabs: RibbonTab[];
 	private chosen: string | null = null;
 
@@ -54,6 +68,10 @@ export class OfficeUiRibbon extends OfficeElement {
 		this.noFile = false;
 		this.fileExpanded = null;
 		this.fileKeytip = null;
+		this.collapsible = false;
+		this.collapsed = false;
+		this.peek = false;
+		this.collapseLabel = null;
 		this.tabs = [];
 	}
 
@@ -134,7 +152,40 @@ export class OfficeUiRibbon extends OfficeElement {
 		});
 	}
 
+	private setCollapsed(value: boolean): void {
+		if (value === this.collapsed) return;
+		this.collapsed = value;
+		this.peek = false;
+		this.fire('office-ribbon-collapse', { collapsed: value });
+	}
+
+	private onOutside = (event: Event): void => {
+		if (!event.composedPath().includes(this)) this.peek = false;
+	};
+
+	private onTabDoubleClick(event: Event): void {
+		if (this.collapsible && (event.target as Element).closest?.('[role="tab"]'))
+			this.setCollapsed(!this.collapsed);
+	}
+
+	/** A command run from an overlaid panel closes it; a menu opener keeps it open. */
+	private onPanelClick(event: Event): void {
+		if (!this.collapsed || !this.peek) return;
+		const button = (event.target as Element).closest?.('button');
+		if (button && !button.hasAttribute('aria-haspopup') && !button.closest('[role="tablist"]'))
+			this.peek = false;
+	}
+
+	protected override willUpdate(changed: Map<PropertyKey, unknown>): void {
+		if (changed.has('peek')) {
+			const doc = this.ownerDocument;
+			if (this.peek) doc.addEventListener('pointerdown', this.onOutside, true);
+			else doc.removeEventListener('pointerdown', this.onOutside, true);
+		}
+	}
+
 	private choose(tab: string): void {
+		if (this.collapsible && this.collapsed) this.peek = true;
 		if (tab === this.selected) return;
 		if (this.fire('office-ribbon-select', { tab }, true)) this.selected = tab;
 	}
@@ -143,6 +194,14 @@ export class OfficeUiRibbon extends OfficeElement {
 		const tab = (event.target as Element).closest?.<HTMLElement>('[role="tab"]');
 		if (tab) this.choose(tab.dataset.tab!);
 	}
+
+	/** Ctrl+F1 and Escape work from anywhere in the ribbon, panels included. */
+	private onHostKey = (event: KeyboardEvent): void => {
+		if (this.collapsible && event.key === 'F1' && event.ctrlKey) {
+			event.preventDefault();
+			this.setCollapsed(!this.collapsed);
+		} else if (event.key === 'Escape' && this.peek) this.peek = false;
+	};
 
 	private onKey(event: KeyboardEvent): void {
 		const tabs = [...this.renderRoot.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
@@ -172,6 +231,7 @@ export class OfficeUiRibbon extends OfficeElement {
 	override connectedCallback(): void {
 		this.build();
 		super.connectedCallback();
+		this.addEventListener('keydown', this.onHostKey);
 		const Observer = this.ownerDocument.defaultView?.MutationObserver;
 		this.watcher = Observer ? new Observer(() => this.build()) : undefined;
 		this.watcher?.observe(this, {
@@ -183,14 +243,18 @@ export class OfficeUiRibbon extends OfficeElement {
 
 	override disconnectedCallback(): void {
 		super.disconnectedCallback();
+		this.removeEventListener('keydown', this.onHostKey);
 		this.watcher?.disconnect();
+		this.ownerDocument.removeEventListener('pointerdown', this.onOutside, true);
 		this.watcher = undefined;
 	}
 
 	/** Exactly one panel shows. */
 	protected override updated(): void {
 		const selected = this.selected;
-		for (const panel of this.panels()) panel.hidden = panel.dataset.ribbonTab !== selected;
+		const hideAll = this.collapsed && !this.peek;
+		for (const panel of this.panels())
+			panel.hidden = hideAll || panel.dataset.ribbonTab !== selected;
 	}
 
 	protected override render() {
@@ -215,6 +279,7 @@ export class OfficeUiRibbon extends OfficeElement {
 					aria-label=${this.label ?? 'Ribbon'}
 					@click=${this.onTabClick}
 					@keydown=${this.onKey}
+					@dblclick=${this.onTabDoubleClick}
 				>
 					${this.tabs.map(
 						(tab) => html`<button
@@ -233,8 +298,20 @@ export class OfficeUiRibbon extends OfficeElement {
 				</div>
 				<slot name="search"></slot>
 				<slot name="end"></slot>
+				<button
+					class="collapse"
+					part="collapse"
+					type="button"
+					aria-pressed=${String(this.collapsed)}
+					aria-label=${this.collapseLabel ?? 'Collapse the ribbon'}
+					title=${this.collapseLabel ?? 'Collapse the ribbon'}
+					?hidden=${!this.collapsible}
+					@click=${() => this.setCollapsed(!this.collapsed)}
+				>
+					${glyph('chevronLeft', 'glyph')}
+				</button>
 			</div>
-			<slot @slotchange=${this.build}></slot>
+			<slot @slotchange=${this.build} @click=${this.onPanelClick}></slot>
 		`;
 	}
 }
