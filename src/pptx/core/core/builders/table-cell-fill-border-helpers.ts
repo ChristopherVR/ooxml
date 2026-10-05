@@ -171,11 +171,10 @@ export function applyCellBorderStyle(
 			continue;
 		}
 
+		// Fractional px: a 0.25pt rule is 1/3px.
 		const widthEmu = parseInt(String(node['@_w'] || '0'), 10);
 		if (widthEmu > 0) {
-			(style as Record<string, unknown>)[`${prefix}Width`] = Math.round(
-				widthEmu / context.emuPerPx,
-			);
+			(style as Record<string, unknown>)[`${prefix}Width`] = widthEmu / context.emuPerPx;
 			hasStyle = true;
 		}
 
@@ -215,7 +214,7 @@ export function applyCellBorderStyle(
 			hasStyle = true;
 		}
 		if (w > 0) {
-			style.borderDiagDownWidth = Math.round(w / context.emuPerPx);
+			style.borderDiagDownWidth = w / context.emuPerPx;
 			hasStyle = true;
 		}
 	}
@@ -228,7 +227,7 @@ export function applyCellBorderStyle(
 			hasStyle = true;
 		}
 		if (w > 0) {
-			style.borderDiagUpWidth = Math.round(w / context.emuPerPx);
+			style.borderDiagUpWidth = w / context.emuPerPx;
 			hasStyle = true;
 		}
 	}
@@ -259,7 +258,7 @@ export function applyCellMarginStyle(
 				return undefined;
 			}
 			const w = parseInt(String(node['@_w']), 10);
-			return Number.isFinite(w) && w >= 0 ? Math.round(w / context.emuPerPx) : undefined;
+			return Number.isFinite(w) && w >= 0 ? w / context.emuPerPx : undefined;
 		};
 		const ml = parseMargin(tcMar['a:marL'] as XmlObject | undefined);
 		const mr = parseMargin(tcMar['a:marR'] as XmlObject | undefined);
@@ -297,7 +296,7 @@ export function applyCellMarginStyle(
 			// An explicit `0` is a deliberately zeroed margin, not "unset"; see
 			// the `a:tcMar` `parseMargin` helper above for the same distinction.
 			if (Number.isFinite(v) && v >= 0) {
-				style[key] = Math.round(v / context.emuPerPx);
+				style[key] = v / context.emuPerPx;
 				hasStyle = true;
 			}
 		}

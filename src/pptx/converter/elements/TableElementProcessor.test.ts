@@ -246,6 +246,33 @@ describe('tableElementProcessor', () => {
 		expect(result).toContain('padding:5px 10px 5px 10px');
 	});
 
+	it('keeps a hairline border at 1px and rounds fractional padding', async () => {
+		const tableData = {
+			firstRowHeader: false,
+			rows: [
+				{
+					cells: [
+						{
+							text: 'Hairline',
+							style: {
+								// 3175 EMU = 0.25pt = 1/3px
+								borderTopWidth: 3175 / 9525,
+								borderTopColor: '#000',
+								marginTop: 45720 / 9525,
+								marginRight: 91440 / 9525,
+								marginBottom: 45720 / 9525,
+								marginLeft: 91440 / 9525,
+							},
+						},
+					],
+				},
+			],
+		};
+		const result = await processor.process(makeTableElement(tableData), makeCtx());
+		expect(result).toContain('border-top:1px solid #000');
+		expect(result).toContain('padding:5px 10px 5px 10px');
+	});
+
 	it('renders cell text segments with per-run styling', async () => {
 		const tableData = {
 			firstRowHeader: false,

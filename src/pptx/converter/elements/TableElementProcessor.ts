@@ -59,6 +59,11 @@ function cssColorSafe(value: string | undefined | null): string | undefined {
 	return undefined;
 }
 
+/** Whole px for a cell border, never below 1px so a hairline still shows. */
+function cssBorderPx(width: number): number {
+	return Math.max(1, Math.round(width));
+}
+
 /**
  * Returns the value untouched if it is a safe CSS font-family declaration,
  * otherwise undefined. Permits letters, digits, spaces, common punctuation
@@ -215,19 +220,19 @@ export class TableElementProcessor implements ElementProcessor {
 		const edges: string[] = [];
 		const topColor = cssColorSafe(style.borderTopColor);
 		if (style.borderTopWidth && topColor) {
-			edges.push(`border-top:${Math.round(style.borderTopWidth)}px solid ${topColor}`);
+			edges.push(`border-top:${cssBorderPx(style.borderTopWidth)}px solid ${topColor}`);
 		}
 		const bottomColor = cssColorSafe(style.borderBottomColor);
 		if (style.borderBottomWidth && bottomColor) {
-			edges.push(`border-bottom:${Math.round(style.borderBottomWidth)}px solid ${bottomColor}`);
+			edges.push(`border-bottom:${cssBorderPx(style.borderBottomWidth)}px solid ${bottomColor}`);
 		}
 		const leftColor = cssColorSafe(style.borderLeftColor);
 		if (style.borderLeftWidth && leftColor) {
-			edges.push(`border-left:${Math.round(style.borderLeftWidth)}px solid ${leftColor}`);
+			edges.push(`border-left:${cssBorderPx(style.borderLeftWidth)}px solid ${leftColor}`);
 		}
 		const rightColor = cssColorSafe(style.borderRightColor);
 		if (style.borderRightWidth && rightColor) {
-			edges.push(`border-right:${Math.round(style.borderRightWidth)}px solid ${rightColor}`);
+			edges.push(`border-right:${cssBorderPx(style.borderRightWidth)}px solid ${rightColor}`);
 		}
 		const fallback = cssColorSafe(style.borderColor);
 		if (edges.length === 0 && fallback) {
@@ -248,7 +253,7 @@ export class TableElementProcessor implements ElementProcessor {
 		if (t === 0 && r === 0 && b === 0 && l === 0) {
 			return '';
 		}
-		return `padding:${t}px ${r}px ${b}px ${l}px`;
+		return `padding:${Math.round(t)}px ${Math.round(r)}px ${Math.round(b)}px ${Math.round(l)}px`;
 	}
 
 	/**
