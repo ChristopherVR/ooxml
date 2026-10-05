@@ -20,6 +20,7 @@ jobs:
             packages/bindings/package-lock.json
       - run: npm ci --ignore-scripts
       - run: npm ci --prefix packages/bindings --ignore-scripts
+      - run: npm ci --prefix docs --ignore-scripts
       - run: npm run check
       - name: Verify standalone MCP
         working-directory: mcp

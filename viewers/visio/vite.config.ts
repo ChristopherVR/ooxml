@@ -1,20 +1,19 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'node:path';
+
+// The site is VitePress (docs/); Vite builds only the playground at /demo/ and the browser-test API.
+// scripts/build-pages.mjs sets PAGES_OUT so the playground lands inside the documentation output.
 export default defineConfig(({ mode }) => ({
 	base: './',
 	build: {
-		outDir: mode === 'browser-tests' ? '.browser-test-dist' : 'site-dist',
+		outDir:
+			process.env.PAGES_OUT ?? (mode === 'browser-tests' ? '.browser-test-dist' : 'site-dist'),
+		emptyOutDir: !process.env.PAGES_OUT,
 		rollupOptions: {
 			preserveEntrySignatures: 'strict',
 			input: {
 				...(mode === 'browser-tests' ? { 'test-api': resolve('tests/browser-api.ts') } : {}),
-				home: resolve('index.html'),
 				demo: resolve('demo/index.html'),
-				docs: resolve('docs/index.html'),
-				parity: resolve('docs/parity.html'),
-				architecture: resolve('docs/architecture.html'),
-				collaboration: resolve('docs/collaboration.html'),
-				demos: resolve('docs/demos.html'),
 			},
 			output: {
 				entryFileNames: (chunk) =>

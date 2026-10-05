@@ -177,8 +177,10 @@ Normal builds use the released `ooxml-core/visio` dependency. Format conformance
 - Report unsupported features honestly. Plain-text editing does not establish
   rich-text, formula recalculation or native Visio save/reopen fidelity.
   Generated fixtures alone do not establish native visual parity.
-- `docs/parity.html` is the canonical capability table; run `npm run docs:sync`
-  for `docs/parity.md`. Update evidence and limits when behavior changes.
+- `docs/parity.md` is the canonical capability table (the documentation site is
+  VitePress, like pptx-viewer's). `npm run test:docs` builds the site and checks
+  the ledger's inventory and the honesty statements. Update evidence and limits
+  when behavior changes.
 - Do not commit generated output, credentials or user documents.
 
 ## Commands
@@ -191,9 +193,9 @@ npm run typecheck           # viewer and demo TypeScript
 npm test                    # viewer unit and DOM tests
 npm run check:bindings      # native adapter types, lifecycle and SSR
 npm run check:core          # core TypeScript and focused Visio tests
-npm run test:docs           # parity synchronization and site tests
-npm run docs:sync           # regenerate the Markdown capability table
-npm run build              # ESM/declarations and site-dist/
+npm run test:docs           # VitePress docs build, ledger and theme tests
+npm run docs:build          # VitePress docs plus every demo into docs/.vitepress/dist
+npm run build              # ESM/declarations and the playground in site-dist/
 npm run check              # all non-browser checks and production build
 npm run test:browser        # production browser interaction and landing tests
 npm run fmt                # oxfmt
@@ -209,10 +211,10 @@ otherwise install Playwright Chromium.
 ## GitHub Pages
 
 `https://christophervr.github.io/visio-viewer/` is the public beta docs site and
-`/demo/` is the vanilla playground; `/demo-react/`, `/demo-vue/`, `/demo-angular/`,
+`/demo/` is the vanilla playground (also at `/demo-vanilla/`); `/demo-react/`, `/demo-vue/`, `/demo-angular/`,
 `/demo-svelte/` and `/demo-solid/` mount the same workspace (`demo/workspace.ts`) through each
 framework binding (`packages/bindings/demos`, built by `scripts/build-demos.mjs`). `.github/workflows/pages.yml` builds the pinned
-core and viewer, runs full checks and browser tests, and deploys `site-dist/`
+core and viewer, runs full checks and browser tests, and deploys `docs/.vitepress/dist/` (the VitePress docs plus every demo, built by `scripts/build-pages.mjs`)
 on pushes to `main`. The OOXML launcher embeds the demo; update its registry
 when a public demo route changes. Embedded theme follows the shared
 `vitepress-theme-appearance` preference on the GitHub Pages origin.

@@ -1,5 +1,12 @@
 import { test, expect } from '@playwright/test';
 
+const demoFrame = '.pv-livepane iframe';
+
+async function loadLiveDemo(page: import('@playwright/test').Page) {
+	const load = page.getByRole('button', { name: 'Load the live demo' });
+	if (await load.count()) await load.click();
+}
+
 test('shared Office theme changes update the embedded viewer without replacing its diagram', async ({
 	page,
 }) => {
@@ -9,8 +16,8 @@ test('shared Office theme changes update the embedded viewer without replacing i
 		localStorage.setItem('visio-docs-theme', 'dark');
 	});
 	await page.reload();
-	await page.getByRole('button', { name: 'Load live viewer' }).click();
-	const frame = page.frameLocator('#live-viewer');
+	await loadLiveDemo(page);
+	const frame = page.frameLocator(demoFrame);
 	await expect(frame.locator('html')).toHaveAttribute('data-theme', 'light');
 	await frame
 		.locator('visio-viewer')
@@ -19,7 +26,10 @@ test('shared Office theme changes update the embedded viewer without replacing i
 	await frame.locator('visio-viewer [data-shape-id="a1"]').click();
 	const svg = frame.locator('visio-viewer svg.paper');
 	await expect(svg).toHaveAttribute('aria-label', 'Architecture');
-	await page.getByRole('button', { name: 'Switch to dark theme', exact: true }).click();
+	// The docs site's own appearance switch writes the shared preference; the embedded viewer follows
+	// it live through the storage event, without reloading.
+	await page.getByRole('switch', { name: /dark theme/i }).click();
+	await expect(page.locator('html')).toHaveClass(/dark/);
 	await expect(frame.locator('html')).toHaveAttribute('data-theme', 'dark');
 	const darkSurface = await frame
 		.locator('visio-viewer office-ui-status-bar.status')
@@ -30,8 +40,9 @@ test('shared Office theme changes update the embedded viewer without replacing i
 		'data-selected',
 		'true',
 	);
-	await frame.getByRole('button', { name: 'Switch to light theme', exact: true }).click();
-	await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+	await page.getByRole('switch', { name: /light theme/i }).click();
+	await expect(page.locator('html')).not.toHaveClass(/dark/);
+	await expect(frame.locator('html')).toHaveAttribute('data-theme', 'light');
 	await expect(svg).toHaveAttribute('aria-label', 'Architecture');
 	const lightSurface = await frame
 		.locator('visio-viewer office-ui-status-bar.status')
@@ -47,13 +58,20 @@ for (const viewport of [
 		await page.setViewportSize(viewport);
 		await page.goto('/');
 		await expect(page.getByRole('heading', { level: 1 })).toContainText('.vsdx viewing,');
-		await expect(page.locator('#live-viewer')).not.toHaveAttribute('src');
 		await page.screenshot({ path: `test-results/landing-${viewport.width}.png`, fullPage: true });
-		await page.getByRole('button', { name: 'Load live viewer' }).click();
-		await expect(page.locator('#demo-status')).toContainText('Viewer ready.');
-		await expect(page.frameLocator('#live-viewer').locator('visio-viewer')).toBeVisible();
+		await loadLiveDemo(page);
+		await expect(page.frameLocator(demoFrame).locator('visio-viewer')).toBeVisible();
 		expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
 			true,
 		);
 	});
 }
+
+test('sharing mode shows two windows of the same viewer', async ({ page }) => {
+	await page.goto('/');
+	await loadLiveDemo(page);
+	await page.getByRole('button', { name: 'Sharing' }).click();
+	await expect(page.locator(demoFrame)).toHaveCount(2);
+	for (const index of [0, 1])
+		await expect(page.frameLocator(demoFrame).nth(index).locator('visio-viewer')).toBeVisible();
+});

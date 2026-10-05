@@ -1,4 +1,4 @@
-import { initVisioTheme } from '../docs/assets/theme.js';
+import { initVisioTheme } from './suite-theme.js';
 
 /** The docs, Office launcher and workspace share the same appearance preference. */
 export function wireWorkspaceTheme(doc: Document): () => void {

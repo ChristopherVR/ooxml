@@ -21,13 +21,15 @@ jobs:
           node-version: '24'
       - run: npm ci --ignore-scripts
       - run: npm ci --prefix packages/bindings --ignore-scripts
+      - run: npm ci --prefix docs --ignore-scripts
       - run: npm run check
       - run: npx playwright install --with-deps chromium
       - run: npm run test:browser
+      - run: npm run docs:build
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: site-dist
+          path: docs/.vitepress/dist
   deploy:
     needs: build
     runs-on: ubuntu-latest

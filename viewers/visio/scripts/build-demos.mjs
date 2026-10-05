@@ -1,5 +1,5 @@
 /**
- * Build the framework demos into site-dist/demo-<framework>/ for GitHub Pages. The vanilla demo is
+ * Build the framework demos into <outDir>/demo-<framework>/ for GitHub Pages. The vanilla demo is
  * the main site build's /demo/. Each framework page is generated from demo/index.html (one source
  * for the workspace shell) with its own entry, and built separately with only its framework's
  * plugins, as scripts/build-packages.mjs does for the packages.
@@ -62,5 +62,5 @@ for (const demo of FRAMEWORK_DEMOS) {
 			chunkSizeWarningLimit: 4096,
 		},
 	});
-	console.log(`Built the ${demo.label} demo into site-dist/demo-${demo.id}/.`);
+	console.log(`Built the ${demo.label} demo into ${outRoot}/demo-${demo.id}/.`);
 }

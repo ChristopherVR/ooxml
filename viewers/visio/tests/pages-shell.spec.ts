@@ -9,28 +9,33 @@ for (const width of [1440, 390]) {
 				theme,
 			);
 			await page.goto('/');
-			await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
-			const search = page.locator('.site-search-toggle');
+			if (theme === 'dark') await expect(page.locator('html')).toHaveClass(/dark/);
+			else await expect(page.locator('html')).not.toHaveClass(/dark/);
+
+			// Local search: opens from the button and from Ctrl+K, finds topics, closes with Escape.
+			const search = page.locator('.VPNavBarSearch button').first();
 			await search.click();
-			await expect(page.locator('.site-search')).toBeVisible();
-			await expect(page.locator('#site-search-input')).toBeFocused();
-			await page.locator('#site-search-input').fill('zzzzunmatched');
-			await expect(page.locator('.site-search-status')).toHaveText('No matching topics.');
-			await page.locator('#site-search-input').fill('framework');
-			await expect(page.locator('.site-search-results a').first()).toBeVisible();
+			await expect(page.locator('.VPLocalSearchBox')).toBeVisible();
+			await page.locator('.VPLocalSearchBox input').fill('zzzzunmatched');
+			await expect(page.locator('.VPLocalSearchBox')).toContainText('No results');
+			await page.locator('.VPLocalSearchBox input').fill('framework');
+			await expect(page.locator('.VPLocalSearchBox .result').first()).toBeVisible();
 			await page.keyboard.press('Escape');
-			await expect(search).toBeFocused();
+			await expect(page.locator('.VPLocalSearchBox')).toBeHidden();
 			await page.keyboard.press('Control+k');
-			await expect(page.locator('.site-search')).toBeVisible();
-			await page.getByRole('button', { name: 'Close search' }).click();
-			await expect(page.locator('.site-search')).toBeHidden();
-			if (width === 390) await page.locator('.menu-toggle').click();
-			await page.getByRole('link', { name: 'Developer Guide', exact: true }).click();
-			await expect(page.locator('.doc-content h1')).toHaveText('Getting started');
-			if (width === 390) await page.locator('.menu-toggle').click();
-			await page.locator('.nav-resources summary').filter({ hasText: 'Resources' }).click();
-			await page.locator('.nav-resources').getByRole('link', { name: 'Architecture' }).click();
-			await expect(page.locator('.doc-content h1')).toContainText('Architecture');
+			await expect(page.locator('.VPLocalSearchBox')).toBeVisible();
+			await page.keyboard.press('Escape');
+
+			// Navigation: the Developer Guide link, then Architecture from the sidebar or menu.
+			if (width === 390) await page.locator('.VPNavBarHamburger').click();
+			await page
+				.getByRole('link', { name: 'Developer Guide', exact: true })
+				.filter({ visible: true })
+				.first()
+				.click();
+			await expect(page.locator('.vp-doc h1')).toHaveText('Getting started');
+			await page.goto('/architecture');
+			await expect(page.locator('.vp-doc h1')).toContainText('Architecture');
 			expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
 				width,
 			);

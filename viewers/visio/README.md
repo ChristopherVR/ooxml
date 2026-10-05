@@ -247,9 +247,9 @@ npm run typecheck           # viewer and demo TypeScript
 npm test                    # controller, renderer, scene safety and binding tests
 npm run check:bindings      # native adapter types, lifecycle and SSR
 npm run check:core          # core TypeScript and focused Visio tests
-npm run test:docs           # parity synchronization and site tests
-npm run docs:sync           # regenerate docs/parity.md from docs/parity.html
-npm run build               # ESM/declarations and the static site in site-dist/
+npm run test:docs           # VitePress docs build, ledger and theme tests
+npm run docs:build          # the VitePress docs and every demo in docs/.vitepress/dist
+npm run build               # ESM/declarations and the playground in site-dist/
 npm run check               # all non-browser checks and production build
 npm run test:browser        # Playwright Chromium workflows
 npm run fmt                 # oxfmt

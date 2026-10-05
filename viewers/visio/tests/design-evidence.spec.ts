@@ -9,14 +9,20 @@ for (const theme of ['light', 'dark'] as const) {
 			page,
 		}, testInfo) => {
 			await page.setViewportSize({ width: size.width, height: size.height });
-			await page.addInitScript((value) => localStorage.setItem('visio-docs-theme', value), theme);
+			await page.addInitScript(
+				(value) => localStorage.setItem('vitepress-theme-appearance', value),
+				theme,
+			);
 			for (const route of [
 				{ name: 'workspace', url: '/demo/?sample=1' },
 				{ name: 'landing', url: '/' },
-				{ name: 'guide', url: '/docs/index.html' },
+				{ name: 'guide', url: '/getting-started' },
 			]) {
 				await page.goto(route.url);
-				await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+				if (route.name === 'workspace')
+					await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+				else
+					await expect(page.locator('html')).toHaveClass(theme === 'dark' ? /dark/ : /^(?!.*dark)/);
 				if (route.name === 'workspace')
 					await expect(page.locator('visio-viewer .viewport > svg')).toBeVisible();
 				await page.evaluate(() => document.fonts.ready);
@@ -28,8 +34,9 @@ for (const theme of ['light', 'dark'] as const) {
 					fullPage: true,
 				});
 				if (route.name === 'landing') {
-					await page.locator('#load-demo').click();
-					const embedded = page.frameLocator('#live-viewer');
+					const load = page.getByRole('button', { name: 'Load the live demo' });
+					if (await load.count()) await load.click();
+					const embedded = page.frameLocator('.pv-livepane iframe');
 					await expect(embedded.locator('visio-viewer .viewport > svg')).toBeVisible();
 					await expect(embedded.locator('html')).toHaveAttribute('data-theme', theme);
 					await page
