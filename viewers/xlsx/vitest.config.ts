@@ -6,8 +6,8 @@ import { localCoreAliases } from './scripts/local-core-aliases';
 const local = (path: string) => fileURLToPath(new URL(path, import.meta.url));
 
 export default defineConfig({
-	// Compiles `XlsxEditor.svelte` for the Svelte binding contract test (client build, no HMR).
-	plugins: [svelte({ hot: false, compilerOptions: { css: 'injected' } })],
+	// Compiles `XlsxEditor.svelte` for the Svelte binding contract test.
+	plugins: [svelte({ compilerOptions: { css: 'injected' } })],
 	resolve: {
 		// Svelte 5's `mount` exists only in its browser build.
 		conditions: ['browser'],

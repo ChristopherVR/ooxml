@@ -24,7 +24,7 @@ the core's layout functions return and routes input to the core's edit session.
 
 ### One editor, six thin bindings
 
-There is **one** editor: the web component in `packages/web-component`. The
+There is **one** editor: the `<xlsx-editor>` web component, which lives in `ooxml-ui/xlsx` (ooxml repository, `packages/ui/src/xlsx`); `packages/web-component` only re-exports it. The
 bindings in `packages/bindings` (`react.tsx`, `vue.ts`, `angular.ts`, `solid.ts`,
 `XlsxEditor.svelte`, and the framework-neutral `index.ts` that Vanilla and the
 others build on) are lifecycle and event adapters only: they create the
@@ -92,7 +92,7 @@ re-emit its events as callbacks.
 | Directory                | npm name                           | Published | What it is                                                                    |
 | ------------------------ | ---------------------------------- | --------- | ----------------------------------------------------------------------------- |
 | `packages/core`          | `@christophervr/xlsx-core`         | yes       | Re-export of `ooxml-core/xlsx` and `/xlsx/load`.                              |
-| `packages/web-component` | `xlsx-web-component`               | internal  | The `<xlsx-editor>` element: grid, ribbon, formula bar, sheet tabs, dialogs.  |
+| `packages/web-component` | `xlsx-web-component`               | internal  | One-line re-export of `ooxml-ui/xlsx`, the `<xlsx-editor>` element.           |
 | `packages/bindings`      | `xlsx-bindings`                    | internal  | Framework adapters over one framework-neutral core (`index.ts`, `common.ts`). |
 | `packages/react`         | `@christophervr/xlsx-react-viewer` | yes       | React entry (`SpreadsheetEditor`).                                            |
 | `packages/vue`           | `xlsx-vue-viewer`                  | yes       | Vue 3 entry (`SpreadsheetEditor`).                                            |
@@ -135,7 +135,7 @@ ranges before committing.
 | `.xls` loading, CSV, format detection                                                 | `ooxml` (`xlsx/load`)                           |
 | A control shared by Excel, Word and PowerPoint (shared ribbon controls, dialogs)      | `ooxml-ui` in `ooxml` (`packages/ui`)           |
 | `.xls` / `.doc` / `.ppt` binary codecs, CFB containers                                | `ole2`                                          |
-| Ribbon, dialogs, panels, painting the grid, input handling, styling, locales          | `packages/web-component` here                   |
+| Ribbon, dialogs, panels, painting the grid, input handling, styling, locales          | `packages/ui/src/xlsx` in the ooxml repository  |
 | Framework wiring (props, events, lifecycle)                                           | `packages/bindings` here (all adapters at once) |
 | Demos, docs site, browser tests, packaging and release scripts                        | here                                            |
 

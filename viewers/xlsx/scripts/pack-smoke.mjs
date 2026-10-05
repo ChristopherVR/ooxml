@@ -240,9 +240,14 @@ try {
 	await checkSvelte(inspected, installed);
 	for (const name of FRAMEWORKS) {
 		const bundle = await readFile(path.join(inspected, name, entryOf(name)), 'utf8');
+		// The element lives in ooxml-ui; the package imports it instead of bundling a copy.
 		assert(
-			bundle.includes('xlsx-editor') && bundle.includes('--xve-'),
-			`${name}: the <xlsx-editor> element and its theme CSS must be bundled as runtime text`,
+			bundle.includes('ooxml-ui/xlsx'),
+			`${name}: the <xlsx-editor> element must come from the ooxml-ui/xlsx dependency`,
+		);
+		assert(
+			!bundle.includes('--xve-'),
+			`${name}: the editor's theme CSS must not be bundled into the package`,
 		);
 	}
 	console.log(
