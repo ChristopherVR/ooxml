@@ -1,0 +1,44 @@
+{
+	"name": "docx-vanilla-viewer",
+	"version": "0.4.3",
+	"description": "The plain <docx-editor> web component and mountEditor() for the DOCX editor, with no framework. Self-contained: includes the editor, layout engine and legacy .doc reader.",
+	"keywords": [
+		"custom-element",
+		"doc",
+		"docx",
+		"editor",
+		"web-component",
+		"word"
+	],
+	"license": "Apache-2.0",
+	"author": "ChristopherVR",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/ChristopherVR/docx-viewer.git",
+		"directory": "packages/vanilla"
+	},
+	"files": [
+		"dist",
+		"README.md",
+		"LICENSE",
+		"NOTICE"
+	],
+	"type": "module",
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		},
+		"./package.json": "./package.json"
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"dependencies": {
+		"docx-core": "^0.1.6",
+		"ooxml-core": "^0.20.0",
+		"ooxml-ui": "^0.28.0"
+	}
+}

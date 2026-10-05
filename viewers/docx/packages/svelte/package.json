@@ -1,0 +1,51 @@
+{
+	"name": "docx-svelte-viewer",
+	"version": "0.4.3",
+	"description": "Svelte 5 component for the DOCX editor. Self-contained: includes the editor, layout engine and legacy .doc reader.",
+	"keywords": [
+		"doc",
+		"docx",
+		"editor",
+		"svelte",
+		"word"
+	],
+	"license": "Apache-2.0",
+	"author": "ChristopherVR",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/ChristopherVR/docx-viewer.git",
+		"directory": "packages/svelte"
+	},
+	"files": [
+		"dist",
+		"README.md",
+		"LICENSE",
+		"NOTICE"
+	],
+	"type": "module",
+	"main": "./dist/runtime.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"svelte": "./dist/WordEditor.svelte",
+			"default": "./dist/WordEditor.svelte"
+		},
+		"./runtime": {
+			"types": "./dist/runtime.d.ts",
+			"import": "./dist/runtime.js"
+		},
+		"./package.json": "./package.json"
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"dependencies": {
+		"docx-core": "^0.1.6",
+		"ooxml-core": "^0.20.0",
+		"ooxml-ui": "^0.28.0"
+	},
+	"peerDependencies": {
+		"svelte": "^5.0.0"
+	}
+}

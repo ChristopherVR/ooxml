@@ -1,0 +1,39 @@
+{
+	"compilerOptions": {
+		"target": "ES2022",
+		"module": "ESNext",
+		"moduleResolution": "Bundler",
+		"lib": ["ES2022", "DOM", "DOM.Iterable"],
+		"strict": true,
+		"exactOptionalPropertyTypes": true,
+		"noUncheckedIndexedAccess": true,
+		"noImplicitOverride": true,
+		"skipLibCheck": true,
+		"esModuleInterop": true,
+		"resolveJsonModule": true,
+		"jsx": "react-jsx",
+		"experimentalDecorators": true,
+		"useDefineForClassFields": false,
+		"paths": {
+			"docx-core": ["./packages/core/src/index.ts"],
+			"docx-core/embedded": ["./packages/core/src/embedded.ts"],
+			"docx-web-component": ["./packages/web-component/src/index.ts"],
+			"docx-bindings": ["./packages/bindings/src/index.ts"],
+			"docx-bindings/react": ["./packages/bindings/src/react.tsx"],
+			"docx-bindings/vue": ["./packages/bindings/src/vue.ts"],
+			"docx-bindings/angular": ["./packages/bindings/src/angular.ts"],
+			"docx-bindings/solid": ["./packages/bindings/src/solid.ts"],
+			"docx-bindings/common": ["./packages/bindings/src/common.ts"]
+		},
+		"types": ["node", "vitest/globals", "vite/client"]
+	},
+	"include": [
+		"packages/**/*.ts",
+		"packages/**/*.tsx",
+		"packages/**/*.svelte",
+		"demos/**/*.ts",
+		"tests/**/*.ts",
+		"*.ts"
+	],
+	"exclude": ["./packages/**/dist/**", "**/node_modules/**"]
+}
