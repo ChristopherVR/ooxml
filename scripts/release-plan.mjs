@@ -74,7 +74,8 @@ export const PACKAGES = {
 		// ooxml-ui sits inside src/ but is its own package: its changes never release the core.
 		exclude: ['src/ui/'],
 	},
-	ui: { dir: 'src/ui', npm: 'ooxml-ui' },
+	// previousDirs: where it lived at earlier releases, so a tag from before the move still resolves.
+	ui: { dir: 'src/ui', npm: 'ooxml-ui', previousDirs: ['packages/ui'] },
 	mcp: { dir: 'mcp', npm: 'ooxml-mcp' },
 	...VIEWER_PACKAGES,
 };
@@ -357,15 +358,17 @@ export function planRelease({ root, packages: all, globalTriggers = [], npm, npm
 			Boolean,
 		);
 		if (declared && !isWorkspaceRange(declared)) return declared;
-		// A workspace range is published as `^<dependency version at publish time>`.
-		try {
-			const version = JSON.parse(
-				git(['show', `${base}:${posix(depMeta.dir)}package.json`]),
-			).version;
-			return SEMVER.test(version) ? `^${version}` : null;
-		} catch {
-			return null;
+		// A workspace range is published as `^<dependency version at publish time>`. The dependency
+		// may have lived elsewhere at `base` (see `previousDirs`), so try each place it has been.
+		for (const dir of [depMeta.dir, ...(depMeta.previousDirs ?? [])]) {
+			try {
+				const version = JSON.parse(git(['show', `${base}:${posix(dir)}package.json`])).version;
+				return SEMVER.test(version) ? `^${version}` : null;
+			} catch {
+				// Not there at `base`; try the next place.
+			}
 		}
+		return null;
 	};
 
 	const plan = {};
@@ -450,7 +453,9 @@ export function planRelease({ root, packages: all, globalTriggers = [], npm, npm
 				...globalsOf(meta),
 			],
 			// Paths inside the package's own that belong to another package, for the changelog.
-			excludePaths: excludesOf(meta).map((target) => (target.endsWith('/') ? `${target}**` : `${target}/**`)),
+			excludePaths: excludesOf(meta).map((target) =>
+				target.endsWith('/') ? `${target}**` : `${target}/**`,
+			),
 		};
 	}
 	return { anyChanged: Object.values(plan).some((p) => p.release), order, packages: plan };
