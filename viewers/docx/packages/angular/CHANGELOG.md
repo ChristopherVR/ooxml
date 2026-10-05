@@ -7,6 +7,24 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs re-releases a package whenever any of its files, or an internal
 dependency it ships against, changes, not only on conventional commits.
 
+## [0.4.3](https://github.com/ChristopherVR/docx-viewer/releases/tag/docx-angular-viewer@0.4.3) - 2026-10-05
+
+### Refactor
+
+- **web-component:** Draw the ribbon tab row, collapse and overflow with shared elements (by @ChristopherVR) ([cc57cd9](https://github.com/ChristopherVR/docx-viewer/commit/cc57cd97e602d6f7614d0b1308db895f390ce4c7))
+- **web-component:** Use the shared KeyTip assignment and badges (by @ChristopherVR) ([c540a20](https://github.com/ChristopherVR/docx-viewer/commit/c540a20fba0a7a68996eaacd8ee9013bfe1e0456))
+- **web-component:** Import the document statistics from ooxml-core (by @ChristopherVR) ([172e87d](https://github.com/ChristopherVR/docx-viewer/commit/172e87df2ac0bb633e5c1c77f674c9da82f3d455))
+- **web-component:** Import column, line spacing and section helpers from ooxml-core (by @ChristopherVR) ([77f820f](https://github.com/ChristopherVR/docx-viewer/commit/77f820f3e802ed4f3711c5b9a956265969eb4f5d))
+- **web-component:** Take the editor from ooxml-ui/docx and update the toolchain (by @ChristopherVR) ([3cd4d87](https://github.com/ChristopherVR/docx-viewer/commit/3cd4d876838421743fca9d7fa0666d775d597207))
+
+### Build & CI
+
+- **deps:** Adopt ooxml-ui 0.26.0 (by @ChristopherVR) ([5a3bde4](https://github.com/ChristopherVR/docx-viewer/commit/5a3bde4e165a9dd71c95416328df79675e220122))
+- **deps:** Adopt ooxml-ui 0.27.0 (by @ChristopherVR) ([7db5d6e](https://github.com/ChristopherVR/docx-viewer/commit/7db5d6ea9e836d05a4a089055855f92c7a48c5f9))
+- **deps:** Adopt ooxml-core 0.18.0 and ooxml-ui 0.27.1 (by @ChristopherVR) ([a020eb9](https://github.com/ChristopherVR/docx-viewer/commit/a020eb9bd5a7b8fdeebb816d3ec3c78c9c56a3da))
+- **deps:** Adopt ooxml-core 0.19.0 and ooxml-ui 0.27.1 (by @ChristopherVR) ([3049491](https://github.com/ChristopherVR/docx-viewer/commit/3049491c83cfd55036cd794c31f4a1ba57219515))
+- **deps:** Adopt ooxml-ui 0.27.2 (by @github-actions[bot]) ([14b579f](https://github.com/ChristopherVR/docx-viewer/commit/14b579fd9737e7d0f43a9e61beb43150de7d2186))
+
 ## [0.4.2](https://github.com/ChristopherVR/docx-viewer/releases/tag/docx-angular-viewer@0.4.2) - 2026-10-05
 
 ### Refactor
