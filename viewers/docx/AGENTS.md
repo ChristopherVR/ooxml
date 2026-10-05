@@ -21,7 +21,7 @@ there, release it, and bump the range here.
 
 ### One editor, six thin bindings
 
-There is **one** editor: the web component in `packages/web-component`. The
+There is **one** editor: the `<docx-editor>` web component, which lives in `ooxml-ui/docx` (ooxml repository, `packages/ui/src/docx`); `packages/web-component` only re-exports it. The
 bindings in `packages/bindings` (`react.tsx`, `vue.ts`, `angular.ts`, `solid.ts`,
 `WordEditor.svelte`, and the framework-neutral `index.ts` that Vanilla and the
 others build on) are lifecycle and event adapters only: they create
@@ -91,7 +91,7 @@ the element, forward props and options, and re-emit its events.
 | Directory                | npm name              | Published | What it is                                                                    |
 | ------------------------ | --------------------- | --------- | ----------------------------------------------------------------------------- |
 | `packages/core`          | `docx-core`           | yes       | Re-export of `ooxml-core/docx` and `/docx/embedded`.                          |
-| `packages/web-component` | `docx-web-component`  | internal  | The `<docx-editor>` element: ProseMirror editor, ribbon, dialogs, panels.     |
+| `packages/web-component` | `docx-web-component`  | internal  | One-line re-export of `ooxml-ui/docx`, the `<docx-editor>` element.           |
 | `packages/bindings`      | `docx-bindings`       | internal  | Framework adapters over one framework-neutral core (`index.ts`, `common.ts`). |
 | `packages/react`         | `docx-react-viewer`   | yes       | React entry (`WordEditor`).                                                   |
 | `packages/vue`           | `docx-vue-viewer`     | yes       | Vue 3 entry (`WordEditor`).                                                   |
@@ -132,7 +132,7 @@ into the core.
 | Pagination, line breaking, page layout, `.doc` loading, collaboration sync          | `ooxml` (`docx/layout`, `docx/load`, `collab`)  |
 | A control shared by Word and PowerPoint (SmartArt drawing, shared ribbon controls)  | `ooxml-ui` in `ooxml` (`packages/ui`)           |
 | `.doc` / `.xls` / `.ppt` binary codecs, CFB containers                              | `ole2`                                          |
-| Ribbon, dialogs, panels, keyboard, how the editor shows the model, styling, locales | `packages/web-component` here                   |
+| Ribbon, dialogs, panels, keyboard, how the editor shows the model, styling, locales | `packages/ui/src/docx` in the ooxml repository  |
 | Framework wiring (props, events, lifecycle)                                         | `packages/bindings` here (all adapters at once) |
 | Demos, docs site, browser tests, packaging and release scripts                      | here                                            |
 
