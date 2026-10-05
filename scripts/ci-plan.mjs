@@ -43,8 +43,10 @@ export const CONSUMERS = {
 		repo: 'ChristopherVR/pptx-viewer',
 		install: 'bun install',
 		// The shared package holds the pptx-ui-* subclasses of the ooxml-ui elements: the contract
-		// that broke first every time an element changed. The full suite is the viewer's own CI.
-		verify: 'cd packages/shared && bunx vitest run src/web-components',
+		// that broke first every time an element changed. The core package is built first because shared
+		// imports its dist. The full suite is the viewer's own CI.
+		verify:
+			'cd packages/core && bun run build && cd ../shared && bunx vitest run src/web-components',
 	},
 	teams: {
 		name: 'teams-viewer',
