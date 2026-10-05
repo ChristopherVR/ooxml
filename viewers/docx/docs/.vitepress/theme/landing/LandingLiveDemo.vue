@@ -18,7 +18,9 @@ const {
 	activeKey,
 	guestKey,
 	src,
+	guestSrc,
 	activeLabel,
+	guestLabel,
 	start,
 	selectFramework,
 	selectGuest,
@@ -68,12 +70,7 @@ const {
 			<label v-if="mode === 'collab'" class="pv-live__guestpick">
 				<span>{{ copy.demos.guestPicker }}</span>
 				<select :value="guestKey" @change="selectGuest(($event.target as HTMLSelectElement).value)">
-					<option
-						v-for="f in DEMO_FRAMEWORKS"
-						:key="f.key"
-						:value="f.key"
-						:disabled="f.key === activeKey"
-					>
+					<option v-for="f in DEMO_FRAMEWORKS" :key="f.key" :value="f.key">
 						{{ f.label }}
 					</option>
 				</select>
@@ -88,14 +85,23 @@ const {
 		<template v-else>
 			<div class="pv-live__stage">
 				<LiveDemoPane
-					:key="src"
+					:key="`a-${src}`"
 					:src="src"
 					:title="`${activeLabel} · docx-viewer ${copy.demos.kicker}`"
 					:caption="
 						mode === 'collab'
-							? `${activeLabel} · ${copy.demos.hostLabel} + ${copy.demos.guestLabel}`
+							? `${activeLabel} · ${copy.demos.hostLabel}`
 							: `${activeLabel} · Sample document.docx`
 					"
+					:open-label="copy.demos.openFull"
+					:loading-label="copy.demos.loading"
+				/>
+				<LiveDemoPane
+					v-if="mode === 'collab'"
+					:key="`b-${guestSrc}`"
+					:src="guestSrc"
+					:title="`${guestLabel} · docx-viewer ${copy.demos.guestLabel}`"
+					:caption="`${guestLabel} · ${copy.demos.guestLabel}`"
 					:open-label="copy.demos.openFull"
 					:loading-label="copy.demos.loading"
 				/>
@@ -188,7 +194,8 @@ const {
 
 .pv-live__stage {
 	display: grid;
-	grid-template-columns: minmax(0, 1fr);
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 28rem), 1fr));
+	gap: 1rem;
 	height: clamp(480px, 72vh, 760px);
 	margin-top: 1.4rem;
 }

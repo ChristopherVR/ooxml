@@ -29,6 +29,8 @@ export interface LiveDemoState {
 	activeKey: Ref<string>;
 	guestKey: Ref<string>;
 	src: ComputedRef<string>;
+	guestSrc: ComputedRef<string>;
+	guestLabel: ComputedRef<string>;
 	activeLabel: ComputedRef<string>;
 	start: () => void;
 	selectFramework: (key: string) => void;
@@ -40,16 +42,15 @@ function frameworkByKey(key: string): DemoFramework {
 	return DEMO_FRAMEWORKS.find((f) => f.key === key) ?? DEMO_FRAMEWORKS[0];
 }
 
-/** Pick a guest framework different from the host so the pairing shows cross-adapter use. */
-function fallbackGuest(hostKey: string): string {
-	return DEMO_FRAMEWORKS.find((f) => f.key !== hostKey)?.key ?? hostKey;
+function randomRoom(): string {
+	return `landing-${Math.random().toString(36).slice(2, 10)}`;
 }
 
 /**
  * State for the landing page's embedded live demo: a framework switcher over
- * the demo apps deployed beside the docs. Collaboration mode loads the demo's
- * local two-peer page (`collaboration.html`, in-memory authority, no network),
- * where the guest editor can use a different framework adapter.
+ * the demo apps deployed beside the docs. Collaboration mode shows two windows,
+ * each in a framework of its own, that join one session by name (a
+ * BroadcastChannel of this browser, no network).
  *
  * The iframe only loads once the section scrolls near the viewport (or the
  * visitor clicks the load button), so visitors who never reach the section
@@ -61,14 +62,23 @@ export function useLiveDemo(section: Ref<HTMLElement | null>): LiveDemoState {
 	const activeKey = ref('react');
 	const guestKey = ref('vue');
 
+	/** The session name both windows join. A new one for every sharing session. */
+	const room = ref(randomRoom());
+	// Window A opens the sample and hosts the session; window B joins it by name and receives the
+	// document. Each window picks its own framework: the session is a BroadcastChannel named after
+	// the room, nothing more.
 	const src = computed(() => {
 		const { route } = frameworkByKey(activeKey.value);
 		return withBase(
 			mode.value === 'collab'
-				? `/${route}/collaboration.html?guest=${guestKey.value}`
+				? `/${route}/?sample=1&room=${room.value}&name=Ada`
 				: `/${route}/?sample=1`,
 		);
 	});
+	const guestSrc = computed(() =>
+		withBase(`/${frameworkByKey(guestKey.value).route}/?room=${room.value}&name=Grace`),
+	);
+	const guestLabel = computed(() => frameworkByKey(guestKey.value).label);
 	const activeLabel = computed(() => frameworkByKey(activeKey.value).label);
 
 	function start(): void {
@@ -77,18 +87,16 @@ export function useLiveDemo(section: Ref<HTMLElement | null>): LiveDemoState {
 
 	function selectFramework(key: string): void {
 		activeKey.value = key;
-		if (guestKey.value === key) {
-			guestKey.value = fallbackGuest(key);
-		}
 		started.value = true;
 	}
 
 	function selectGuest(key: string): void {
-		guestKey.value = key === activeKey.value ? fallbackGuest(activeKey.value) : key;
+		guestKey.value = key;
 	}
 
 	function setMode(next: LiveDemoMode): void {
 		mode.value = next;
+		room.value = randomRoom();
 		started.value = true;
 	}
 
@@ -120,6 +128,8 @@ export function useLiveDemo(section: Ref<HTMLElement | null>): LiveDemoState {
 		activeKey,
 		guestKey,
 		src,
+		guestSrc,
+		guestLabel,
 		activeLabel,
 		start,
 		selectFramework,

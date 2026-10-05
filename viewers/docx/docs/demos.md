@@ -21,7 +21,7 @@ The home page embeds them with a framework switcher: [open the live demo section
 
 ## Collaboration demo
 
-The [two-peer coauthoring demo](/demo/collaboration.html){target="_self"} puts two editors on one document through a local, in-memory authority. It is the reference for the host-owned protocol described in [collaboration](/collaboration), and it is not a hosted service. Add `?guest=vue` (or another framework key) to run the second editor in a different adapter.
+Add `?room=<session>` to a demo URL to join a shared session of the same browser. The window that also has `sample=1` hosts it; the others join by name, in any framework: for example `/demo-vue/?sample=1&room=my-room` and `/demo-solid/?room=my-room` in two tabs. The home page shows two panes with a framework picker for each. The [two-peer page](/demo/collaboration.html){target="_self"} adds a Pause delivery button for concurrent edits. See [collaboration](/collaboration) for what is and is not supported.
 
 ## Embedded here
 

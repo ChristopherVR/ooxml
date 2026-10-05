@@ -2,18 +2,33 @@
 
 The web component provides a transport-neutral collaborative editing foundation built on `prosemirror-collab`. It exchanges validated ProseMirror steps through an authority that assigns a single ordered version stream. It does not connect to a network or provide authentication, persistence, or availability guarantees; transient presence is a separate channel (below).
 
-## Live demo
+## Live demo: two windows, any framework
 
-Two editors, one document, one local in-memory authority. Pause delivery to type in both at once, then resume to see the edits merge. Nothing leaves your browser.
+A session is just a name. The two panes below are separate demo apps built from different framework adapters (React and Vue) that join the session `docs-collab`: the first pane opens the sample document and hosts the session, the second joins by name and receives the document, every edit and the other person's cursor. Type in either pane.
 
 <iframe
-	src="/docx-viewer/demo/collaboration.html"
-	title="docx-viewer two-peer collaboration demo"
+	src="/docx-viewer/demo/?sample=1&room=docs-collab&name=Ada"
+	title="docx-viewer session host (React)"
 	loading="lazy"
-	style="width: 100%; height: 720px; border: 1px solid var(--vp-c-divider); border-radius: 8px"
+	style="width: 100%; height: 640px; border: 1px solid var(--vp-c-divider); border-radius: 8px"
 ></iframe>
 
-[Open the demo full size](/demo/collaboration.html){target="_self"}, or run the second editor in another framework with `?guest=vue`.
+<iframe
+	src="/docx-viewer/demo-vue/?room=docs-collab&name=Grace"
+	title="docx-viewer session guest (Vue)"
+	loading="lazy"
+	style="width: 100%; height: 640px; border: 1px solid var(--vp-c-divider); border-radius: 8px; margin-top: 1rem"
+></iframe>
+
+### Pair any two frameworks
+
+Every demo accepts `?room=<session>`. The window that also asks for `sample=1` hosts the session; any other window with the same `room` joins it, in whichever framework it was built with. The home page [live demo](/#live-demo) has a framework picker for each window, and in two tabs you can open, for example, `/demo-angular/?sample=1&room=my-room` and `/demo-svelte/?room=my-room`.
+
+### How the demo does it, and why it is same-browser only
+
+The editor's protocol is transport-neutral, so the demo supplies the transport: a `BroadcastChannel` named after the session. The host window runs the in-memory reference authority (`createCollaborationAuthority`), orders everybody's step batches and broadcasts the accepted ones; a guest starts from the host's starting document and replays the accepted batches, so the framework of each window does not matter. A `BroadcastChannel` connects windows, tabs and frames of one browser profile and nothing else, the session ends when its host window closes, and nothing is persisted. For people on different machines your application must provide the transport, authority, identity and storage (see below).
+
+There is also a [single-page demo](/demo/collaboration.html){target="_self"} with two editors in one page and a **Pause delivery** button for trying concurrent edits; add `?guest=vue` to run its second editor in another framework.
 
 ## What is and is not supported
 

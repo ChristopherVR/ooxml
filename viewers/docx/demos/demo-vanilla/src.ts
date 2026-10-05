@@ -87,7 +87,27 @@ get('sample').addEventListener('click', (event) => {
 	void openModel(createSampleDocument(), 'Sample document.docx');
 });
 // `?sample=1` opens the sample document immediately (used by the docs site's embedded demo).
-if (new URLSearchParams(location.search).get('sample') === '1') {
+// `?room=<session>` joins a shared session of this browser: the window that also asks for the sample
+// hosts it, the others join by name and receive the document. The editor's framework does not matter,
+// so the React demo can join a session started in the Vue demo (see session.ts).
+const query = new URLSearchParams(location.search);
+const room = query.get('room');
+if (room && /^[A-Za-z0-9_-]{1,64}$/.test(room)) {
+	const host = query.get('sample') === '1';
+	void (async () => {
+		if (host) await openModel(createSampleDocument(), 'Sample document.docx');
+		else await showEditor();
+		const { runSession } = await import('./session');
+		runSession((await showEditor()).element, {
+			room,
+			host,
+			name: query.get('name') || (host ? 'Ada' : 'Grace'),
+			onStatus: (text) => {
+				get('build-stamp').textContent = `docx-viewer demo · ${framework} · ${text}`;
+			},
+		});
+	})();
+} else if (query.get('sample') === '1') {
 	void openModel(createSampleDocument(), 'Sample document.docx');
 }
 const dropzone = get('dropzone');

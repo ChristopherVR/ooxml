@@ -91,16 +91,16 @@ export const en: LandingCopy = {
 		frameworkLabel: 'Framework',
 		soloTab: 'Editor',
 		collabTab: 'Collaboration',
-		guestPicker: 'Guest',
+		guestPicker: 'Window B framework',
 		load: 'Load the live demo',
 		loading: 'Loading the live editor',
 		openFull: 'Open full app',
-		hostLabel: 'Host',
-		guestLabel: 'Guest',
+		hostLabel: 'Host (opens the sample)',
+		guestLabel: 'Joins by session name',
 		soloHint:
 			'Use “Open the sample document” in the demo, or drop in a DOCX or DOC file of your own. Switching frameworks starts a fresh editor.',
 		collabHint:
-			'Two local peers share an in-memory authority. Pause delivery to try concurrent edits. This demo has no network backend; production transport is the host application’s job.',
+			'Two windows, each in the framework you pick, join one session by name. The host window runs the in-memory reference authority; the other receives the document and every edit, with each other’s cursors. The session is a BroadcastChannel, so it works only between windows of this browser; there is no network backend, and production transport is the host application’s job.',
 	},
 	faq: {
 		kicker: 'FAQ',
