@@ -396,3 +396,7 @@ The DOM-free modules of `ooxml-ui/visio` (from visio-viewer `818f4a4`) moved to 
 ## `ooxml-core/chart` automatic value axis
 
 `src/chart/axis-nice.ts` and its test moved from ChristopherVR/pptx-viewer `packages/shared/src/render/chart-axis-nice.ts` at `15ed646e4`, unchanged apart from the test import path. The scale is PowerPoint's automatic-axis policy (zero anchor, 5% headroom, 1/2/2.5/5 steps, interval count from plot height); Excel uses a different interval policy, so `xlsx` keeps its own.
+
+## `ooxml-core/chart` histogram binning
+
+`src/chart/histogram-binning.ts` moved from ChristopherVR/pptx-viewer `packages/shared/src/render/chart-histogram-binning.ts` at `15ed646e4`. Changes: the PowerPoint options type became the neutral `HistogramOptions`, bin edges are labelled through an injected formatter (default `String`) instead of the viewer's `formatAxisValue`, the indexed bin access is guarded for `noUncheckedIndexedAccess`, and it gained the unit tests the viewer lacked.
