@@ -69,6 +69,11 @@
 			"import": "./dist/teams.js",
 			"default": "./dist/teams.js"
 		},
+		"./xlsx": {
+			"types": "./dist/xlsx/index.d.ts",
+			"import": "./dist/xlsx.js",
+			"default": "./dist/xlsx.js"
+		},
 		"./package.json": "./package.json",
 		"./custom-elements.json": "./custom-elements.json"
 	},
