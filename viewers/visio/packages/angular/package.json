@@ -1,6 +1,6 @@
 {
 	"name": "visio-angular-viewer",
-	"version": "0.5.3",
+	"version": "0.5.4",
 	"description": "Local-first Visio viewer for angular",
 	"license": "Apache-2.0",
 	"author": "ChristopherVR",
@@ -33,7 +33,7 @@
 		"emf-converter": "4.8.9",
 		"ooxml-core": "*",
 		"ooxml-ui": "*",
-		"visio-core": "^0.3.1"
+		"visio-core": "^0.3.2"
 	},
 	"peerDependencies": {
 		"@angular/core": "^21.0.0"

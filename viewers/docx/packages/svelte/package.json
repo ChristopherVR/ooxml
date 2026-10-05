@@ -1,6 +1,6 @@
 {
 	"name": "docx-svelte-viewer",
-	"version": "0.4.3",
+	"version": "0.4.4",
 	"description": "Svelte 5 component for the DOCX editor. Self-contained: includes the editor, layout engine and legacy .doc reader.",
 	"keywords": [
 		"doc",
@@ -45,7 +45,7 @@
 		"access": "public"
 	},
 	"dependencies": {
-		"docx-core": "^0.1.6",
+		"docx-core": "^0.1.7",
 		"ooxml-core": "*",
 		"ooxml-ui": "*"
 	},

@@ -7,6 +7,15 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.29.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.29.1) - 2026-10-05
+
+### Bug Fixes
+
+- **ui:** Keep the popup hook on a closed gallery's placeholder (by @ChristopherVR) ([44f0060](https://github.com/ChristopherVR/ooxml/commit/44f0060aca918d9153f608e7c0d4d9fa999cbb11))
+- **ui:** Repaint the select trigger when aria-label changes (by @ChristopherVR) ([50c38ff](https://github.com/ChristopherVR/ooxml/commit/50c38ff583b52991aaec9a81b3241396c714d28a))
+- **ui:** Repaint the select trigger when aria-label changes (by @ChristopherVR) ([4a17d1c](https://github.com/ChristopherVR/ooxml/commit/4a17d1c2c5291f2b56057443151fba69ce072871))
+- **ui:** Keep Tab inside the open File view and let F6 reach the status bar (by @ChristopherVR) ([7930c2a](https://github.com/ChristopherVR/ooxml/commit/7930c2ad2114a31652c3dc5966f56f81336e0579))
+
 ## [0.29.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.29.0) - 2026-10-05
 
 ### Features
