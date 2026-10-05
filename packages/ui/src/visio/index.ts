@@ -26,21 +26,21 @@ export {
 	type ViewerCallbacks,
 	type ViewerOptions,
 	type VsdxSource,
-} from './contract.js';
+} from 'ooxml-core/visio/ui';
 export type { VisioDocument, VisioPage, VisioShape, VisioDiagnostic } from 'ooxml-core/visio';
 
 export { createWorkerParser, type CancellableParser } from './worker-parser.js';
 
-export { compatibilityNotes, compatibilityText, type CompatibilityNote } from './diagnostics.js';
+export { compatibilityNotes, compatibilityText, type CompatibilityNote } from 'ooxml-core/visio/ui';
 
 export {
 	TEXT_SEARCH_LIMITS,
 	type TextSearchResult,
 	type TextSearchState,
-} from './document-text-search.js';
+} from 'ooxml-core/visio/ui';
 
 export { VIEWER_LAYER_LIMITS, type LayerVisibilityOverride } from './viewer-layers.js';
 
-export type { ViewerEditState, VsdxExportResult } from './document-history.js';
+export type { ViewerEditState, VsdxExportResult } from 'ooxml-core/visio/ui';
 
 export type { VisioEdit, VisioGeometryEdit } from 'ooxml-core/visio';

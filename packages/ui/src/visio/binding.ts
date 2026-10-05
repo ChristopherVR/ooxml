@@ -1,11 +1,11 @@
 import type { VisioEdit } from 'ooxml-core/visio';
-import type { ViewerOptions, ViewerCallbacks, VsdxSource } from './contract.js';
-import { eventKeys, propertyKeys } from './contract.js';
+import type { ViewerOptions, ViewerCallbacks, VsdxSource } from 'ooxml-core/visio/ui';
+import { eventKeys, propertyKeys } from 'ooxml-core/visio/ui';
 import { registerVisioViewer, type VisioViewerElement } from './viewer-element.js';
 import type { ViewerController } from './controller.js';
 import type { SvgExportOptions, SvgExportResult } from './export-svg.js';
 import type { CurrentPagePrintSnapshotOptions, PrintSnapshot } from './print-snapshot.js';
-import type { VsdxExportResult } from './document-history.js';
+import type { VsdxExportResult } from 'ooxml-core/visio/ui';
 
 export interface MountedViewer {
 	readonly element: VisioViewerElement;

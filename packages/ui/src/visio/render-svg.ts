@@ -15,10 +15,10 @@ import {
 import { fillPaint } from './render-fill.js';
 import { renderImage } from './render-image.js';
 import { renderForeignVectorShape } from './render-foreign-vector-shape.js';
-import { ForeignVectorBudget } from './foreign-vector-budget.js';
+import { ForeignVectorBudget } from 'ooxml-core/visio/ui';
 import { RenderResources } from './render-resources.js';
 import { applyArrowheads } from './arrowheads.js';
-import { assertViewableDocument } from './scene-validation.js';
+import { assertViewableDocument } from 'ooxml-core/visio/ui';
 import { createTextLayoutBudget, type TextLayoutBudget } from './text-layout.js';
 import { renderText } from './render-text.js';
 

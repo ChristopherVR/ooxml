@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { demoDocument } from './demo-document.js';
+import { demoDocument } from 'ooxml-core/visio/ui';
 import { layoutParagraphs } from './paragraph-layout.js';
 import type { VisioParagraph } from 'ooxml-core/visio';
 const paragraph: VisioParagraph = {

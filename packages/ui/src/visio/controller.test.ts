@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { ViewerController } from './controller.js';
-import { demoDocument } from './demo-document.js';
+import { demoDocument } from 'ooxml-core/visio/ui';
 import type { VisioDocument } from 'ooxml-core/visio';
 
 function pending<T>() {

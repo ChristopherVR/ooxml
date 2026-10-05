@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { VisioDocument } from 'ooxml-core/visio';
-import { demoDocument } from './demo-document.js';
+import { demoDocument } from 'ooxml-core/visio/ui';
 import { exportPageSvg } from './export-svg.js';
 import * as exporter from './export-svg.js';
 import {

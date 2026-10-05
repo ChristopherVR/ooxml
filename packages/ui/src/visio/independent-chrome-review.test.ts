@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { mountViewer, type MountedViewer } from './binding.js';
-import { demoDocument } from './demo-document.js';
+import { demoDocument } from 'ooxml-core/visio/ui';
 
 const mounted: MountedViewer[] = [];
 afterEach(() => {

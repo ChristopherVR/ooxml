@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ViewerController, type ViewerState } from './controller.js';
 import { ViewerEditControls, editControlsTemplate } from './viewer-edit-controls.js';
-import { demoDocument } from './demo-document.js';
+import { demoDocument } from 'ooxml-core/visio/ui';
 
 function setup() {
 	const host = document.createElement('div');

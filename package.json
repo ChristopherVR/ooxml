@@ -195,6 +195,11 @@
 			"types": "./dist/docx/ui/index.d.ts",
 			"import": "./dist/docx/ui/index.mjs",
 			"require": "./dist/docx/ui/index.cjs"
+		},
+		"./visio/ui": {
+			"types": "./dist/visio/ui/index.d.ts",
+			"import": "./dist/visio/ui/index.mjs",
+			"require": "./dist/visio/ui/index.cjs"
 		}
 	},
 	"publishConfig": {

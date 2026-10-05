@@ -4,10 +4,10 @@ import {
 	type VisioPage,
 	type VisioShape,
 } from 'ooxml-core/visio';
-import { compatibilityNotes, compatibilityText, type CompatibilityNote } from './diagnostics.js';
+import { compatibilityNotes, compatibilityText, type CompatibilityNote } from 'ooxml-core/visio/ui';
 import { renderPage, svgElement } from './render-svg.js';
-import { assertViewableDocument } from './scene-validation.js';
-import { inspectForeignVectorResource } from './foreign-vector-budget.js';
+import { assertViewableDocument } from 'ooxml-core/visio/ui';
+import { inspectForeignVectorResource } from 'ooxml-core/visio/ui';
 
 export const MAX_SVG_EXPORT_BYTES = 16 * 1024 * 1024;
 export interface SvgExportOptions {

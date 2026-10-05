@@ -1,6 +1,6 @@
 import type { VisioPage, VisioShape } from 'ooxml-core/visio';
 import type { ViewerController } from './controller.js';
-import { editErrorMessage, isEditCancellation } from './edit-error.js';
+import { editErrorMessage, isEditCancellation } from 'ooxml-core/visio/ui';
 
 /** Visio snaps new geometry to ruler subdivisions; 1/16 inch matches its default fine grid. */
 const SNAP = 1 / 16;

@@ -1,12 +1,12 @@
 import { getVisioPageLayers, type VisioDocument, type VisioShape } from 'ooxml-core/visio';
-import type { CompatibilityNote } from './diagnostics.js';
+import type { CompatibilityNote } from 'ooxml-core/visio/ui';
 import { estimatePageSvgBytes, exportPageSvg, MAX_SVG_EXPORT_BYTES } from './export-svg.js';
-import { assertViewableDocument } from './scene-validation.js';
-import { copySnapshotScene } from './snapshot-scene.js';
+import { assertViewableDocument } from 'ooxml-core/visio/ui';
+import { copySnapshotScene } from 'ooxml-core/visio/ui';
 import {
 	FOREIGN_VECTOR_SCENE_LIMITS,
 	inspectForeignVectorResource,
-} from './foreign-vector-budget.js';
+} from 'ooxml-core/visio/ui';
 
 /** Application guardrails, not printer capabilities or Microsoft Visio limits. */
 export const PRINT_SNAPSHOT_LIMITS = Object.freeze({

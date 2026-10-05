@@ -1,8 +1,8 @@
-import { snapshotEdits } from './edit-commands.js';
-export { snapshotEdits } from './edit-commands.js';
+import { snapshotEdits } from 'ooxml-core/visio/ui';
+export { snapshotEdits } from 'ooxml-core/visio/ui';
 import type { VisioDocument, VisioEdit } from 'ooxml-core/visio';
-import type { EditDiagnostic } from './document-history.js';
-import { MAX_INPUT_BYTES } from './scene-validation.js';
+import type { EditDiagnostic } from 'ooxml-core/visio/ui';
+import { MAX_INPUT_BYTES } from 'ooxml-core/visio/ui';
 export interface EditWorkerRequest {
 	bytes: ArrayBuffer;
 	edits: readonly VisioEdit[];

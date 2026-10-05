@@ -1,8 +1,8 @@
 import type { VisioDocument, VisioEdit } from 'ooxml-core/visio';
-import type { VsdxSource } from './contract.js';
+import type { VsdxSource } from 'ooxml-core/visio/ui';
 import { createWorkerParser } from './worker-parser.js';
 import { ViewerController, type ViewerState } from './controller.js';
-import { MAX_INPUT_BYTES } from './scene-validation.js';
+import { MAX_INPUT_BYTES } from 'ooxml-core/visio/ui';
 import { selectedShape } from './shape-inspector.js';
 import { wireViewerInputs } from './viewer-input.js';
 import { renderLayerControls, wireLayerControls } from './viewer-layer-controls.js';
@@ -28,7 +28,7 @@ import { ViewerEditControls } from './viewer-edit-controls.js';
 import { ViewerChrome, viewerChromeTemplate } from './viewer-chrome.js';
 import { ViewerCanvas } from './viewer-canvas.js';
 import { ViewerCommands } from './viewer-commands.js';
-import { editErrorMessage } from './edit-error.js';
+import { editErrorMessage } from 'ooxml-core/visio/ui';
 import { registerViewerControls } from './office-ui.js';
 import { exportPageSvg, type SvgExportOptions, type SvgExportResult } from './export-svg.js';
 import {

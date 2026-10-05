@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import type { VisioEdit } from 'ooxml-core/visio';
 import { ViewerController } from './controller.js';
-import { demoDocument } from './demo-document.js';
+import { demoDocument } from 'ooxml-core/visio/ui';
 import { BASIC_SHAPES, createShapesWindow } from './shapes-window.js';
 import { wireStencil } from './viewer-stencil.js';
 import type { CancellableEditor } from './worker-editor.js';

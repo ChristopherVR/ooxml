@@ -1,4 +1,4 @@
-import type { VisioShape } from 'ooxml-core/visio';
+import type { VisioShape } from '../index.js';
 
 export interface DetailBudget {
 	rows: number;

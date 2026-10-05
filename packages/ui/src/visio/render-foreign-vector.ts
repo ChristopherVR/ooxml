@@ -4,7 +4,7 @@ import {
 	type VisioForeignVectorNode,
 	type VisioForeignVectorCommand,
 } from 'ooxml-core/visio';
-import { ForeignVectorBudget } from './foreign-vector-budget.js';
+import { ForeignVectorBudget } from 'ooxml-core/visio/ui';
 
 const NS = 'http://www.w3.org/2000/svg';
 let nextResource = 0;

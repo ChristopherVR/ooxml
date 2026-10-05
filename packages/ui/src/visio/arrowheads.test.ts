@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { parseVsdx } from 'ooxml-core/visio';
-import { demoDocument } from './demo-document.js';
+import { demoDocument } from 'ooxml-core/visio/ui';
 import { renderPage } from './render-svg.js';
 import { exportPageSvg } from './export-svg.js';
 

@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import type { VisioEdit } from 'ooxml-core/visio';
 import { ViewerController } from './controller.js';
-import { demoDocument } from './demo-document.js';
+import { demoDocument } from 'ooxml-core/visio/ui';
 import { registerViewerControls } from './office-ui.js';
 import { ViewerCommands } from './viewer-commands.js';
 import { nextShapeId } from './viewer-draw-tool.js';

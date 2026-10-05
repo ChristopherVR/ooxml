@@ -3,9 +3,9 @@ import {
 	EMPTY_EDIT_STATE,
 	type ViewerEditState,
 	type VsdxExportResult,
-} from './document-history.js';
+} from 'ooxml-core/visio/ui';
 import { createWorkerEditor, snapshotEdits, type CancellableEditor } from './worker-editor.js';
-import { MAX_INPUT_BYTES } from './scene-validation.js';
+import { MAX_INPUT_BYTES } from 'ooxml-core/visio/ui';
 import { loadVisio, type VisioDocument, type VisioEdit } from 'ooxml-core/visio';
 import {
 	EMPTY_LAYER_OVERRIDES,
@@ -13,9 +13,9 @@ import {
 	visibleSelection,
 	type LayerVisibilityOverride,
 } from './viewer-layers.js';
-import { assertViewableDocument } from './scene-validation.js';
+import { assertViewableDocument } from 'ooxml-core/visio/ui';
 import type { CancellableParser } from './worker-parser.js';
-import type { ViewerEvents } from './contract.js';
+import type { ViewerEvents } from 'ooxml-core/visio/ui';
 import {
 	EMPTY_TEXT_SEARCH,
 	indexDocumentText,
@@ -23,7 +23,7 @@ import {
 	validateSearchQuery,
 	type DocumentTextIndex,
 	type TextSearchState,
-} from './document-text-search.js';
+} from 'ooxml-core/visio/ui';
 
 export interface ViewerState {
 	readonly document: VisioDocument | null;

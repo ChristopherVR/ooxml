@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { mountViewer } from './binding.js';
-import { demoDocument } from './demo-document.js';
+import { demoDocument } from 'ooxml-core/visio/ui';
 import { createVsdxFixture } from './__fixtures__/fixture.mjs';
 
 afterEach(() => document.body.replaceChildren());

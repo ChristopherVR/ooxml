@@ -1,6 +1,6 @@
 import { expect, it, vi } from 'vitest';
 import { ViewerController } from './controller.js';
-import { demoDocument } from './demo-document.js';
+import { demoDocument } from 'ooxml-core/visio/ui';
 import type { EditTransactionResult, CancellableEditor } from './worker-editor.js';
 import { editVsdx, parseVsdx } from 'ooxml-core/visio';
 import { createVsdxFixture } from './__fixtures__/fixture.mjs';

@@ -1,4 +1,4 @@
-import type { VisioEdit } from 'ooxml-core/visio';
+import type { VisioEdit } from '../index.js';
 
 /** Bound cloning and strip arbitrary host properties. Semantic validation belongs to core. */
 export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {

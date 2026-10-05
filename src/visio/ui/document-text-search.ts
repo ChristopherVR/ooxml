@@ -1,4 +1,4 @@
-import type { VisioDocument, VisioShape } from 'ooxml-core/visio';
+import type { VisioDocument, VisioShape } from '../index.js';
 
 /** UTF-16 character bounds, applied before copying or case conversion. */
 export const TEXT_SEARCH_LIMITS = Object.freeze({

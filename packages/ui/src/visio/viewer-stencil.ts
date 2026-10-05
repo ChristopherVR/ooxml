@@ -1,5 +1,5 @@
 import type { ViewerController } from './controller.js';
-import { editErrorMessage, isEditCancellation } from './edit-error.js';
+import { editErrorMessage, isEditCancellation } from 'ooxml-core/visio/ui';
 import { MASTER_MIME, masterSize } from './shapes-window.js';
 import { insertRectangle, pagePoint } from './viewer-draw-tool.js';
 

@@ -4,7 +4,7 @@ import {
 	type VisioDocument,
 	type VisioShape,
 	type VisioImage,
-} from 'ooxml-core/visio';
+} from '../index.js';
 import { assertShapeDetails } from './scene-details.js';
 import { ForeignVectorBudget } from './foreign-vector-budget.js';
 

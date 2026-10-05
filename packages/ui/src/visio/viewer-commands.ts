@@ -1,5 +1,5 @@
 import type { ViewerController, ViewerState } from './controller.js';
-import { editErrorMessage, isEditCancellation } from './edit-error.js';
+import { editErrorMessage, isEditCancellation } from 'ooxml-core/visio/ui';
 import { RIBBON_ACTION_EVENT, type VisioRibbonAction } from './ribbon-action.js';
 import type { RibbonCommand } from './ribbon-parts.js';
 import { routeRibbonAction, type RibbonTargets } from './ribbon-router.js';

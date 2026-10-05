@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { demoDocument } from './demo-document.js';
+import { demoDocument } from 'ooxml-core/visio/ui';
 import { renderPage } from './render-svg.js';
 import { mountViewer } from './binding.js';
 import { rasterFixture } from './__fixtures__/raster-fixtures.mjs';

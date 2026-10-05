@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import type { VisioDocument } from 'ooxml-core/visio';
 import { ViewerController } from './controller.js';
-import { demoDocument } from './demo-document.js';
-import { assertViewableDocument } from './scene-validation.js';
+import { demoDocument } from 'ooxml-core/visio/ui';
+import { assertViewableDocument } from 'ooxml-core/visio/ui';
 
 describe('legacy VSD preview routing', () => {
 	it('accepts a bounded legacy scene while retaining the shared scene guards', () => {

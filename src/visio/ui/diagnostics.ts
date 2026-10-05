@@ -1,4 +1,4 @@
-import type { VisioDiagnostic } from 'ooxml-core/visio';
+import type { VisioDiagnostic } from '../index.js';
 export interface CompatibilityNote {
 	message: string;
 	count: number;

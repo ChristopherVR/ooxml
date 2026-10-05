@@ -1,7 +1,7 @@
 import type { VisioDocument, VisioShape } from 'ooxml-core/visio';
 import type { ViewerState } from './controller.js';
-import { compatibilityNotes, compatibilityText } from './diagnostics.js';
-import type { TextSearchResult } from './document-text-search.js';
+import { compatibilityNotes, compatibilityText } from 'ooxml-core/visio/ui';
+import type { TextSearchResult } from 'ooxml-core/visio/ui';
 import { renderPage } from './render-svg.js';
 import { selectedShape, shapeDetails } from './shape-inspector.js';
 

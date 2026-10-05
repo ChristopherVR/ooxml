@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import type { VisioDocument, VisioShape } from 'ooxml-core/visio';
-import { demoDocument } from './demo-document.js';
+import { demoDocument } from 'ooxml-core/visio/ui';
 import {
 	EMPTY_TEXT_SEARCH,
 	TEXT_SEARCH_LIMITS,
 	indexDocumentText,
 	searchDocumentText,
 	textSearchStatus,
-} from './document-text-search.js';
+} from 'ooxml-core/visio/ui';
 
 const shape = (id: string, text: string): VisioShape => ({
 	...demoDocument.pages[0]!.shapes[0]!,

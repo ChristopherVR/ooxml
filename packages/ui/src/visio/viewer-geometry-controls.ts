@@ -1,4 +1,4 @@
-import { editErrorMessage, isEditCancellation } from './edit-error.js';
+import { editErrorMessage, isEditCancellation } from 'ooxml-core/visio/ui';
 import type { VisioGeometryEdit } from 'ooxml-core/visio';
 import type { ViewerController, ViewerState } from './controller.js';
 

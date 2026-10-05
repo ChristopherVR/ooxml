@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { demoDocument } from './demo-document.js';
-import { copySnapshotScene } from './snapshot-scene.js';
-import { assertViewableDocument } from './scene-validation.js';
+import { demoDocument } from 'ooxml-core/visio/ui';
+import { copySnapshotScene } from 'ooxml-core/visio/ui';
+import { assertViewableDocument } from 'ooxml-core/visio/ui';
 import { createPrintSnapshot } from './print-snapshot.js';
 import { rasterFixture } from './__fixtures__/raster-fixtures.mjs';
 

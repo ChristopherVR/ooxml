@@ -388,3 +388,7 @@ The DOM-free modules of the xlsx editor moved from `packages/ui/src/xlsx` (itsel
 ## `ooxml-core/docx/ui`
 
 The editor modules of `ooxml-ui/docx` (from docx-viewer `77f820f`) that need no DOM and no `prosemirror-view` value import moved to `src/docx/ui/`: the ProseMirror node and mark schema parts for breaks, notes, review and inline content, run properties and numbering helpers, the collaboration authority, identity, protocol and session ordering, header/footer history, table visuals, word count, zoom fit, ribbon action ids and colours, and the theme tokens. Core now depends on the headless ProseMirror packages (`prosemirror-model`, `-state`, `-transform`, `-commands`, `-history`, `-keymap`, `-collab`) and the `prosemirror-view` types.
+
+## `ooxml-core/visio/ui`
+
+The DOM-free modules of `ooxml-ui/visio` (from visio-viewer `818f4a4`) moved to `src/visio/ui/` with their tests: the viewer contract, diagnostics, document history, text search, edit commands and errors, foreign-vector budget, scene validation and snapshot scene. The workers and everything that renders or touches the DOM stay in `packages/ui/src/visio`.

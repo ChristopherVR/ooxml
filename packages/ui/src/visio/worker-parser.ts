@@ -1,4 +1,4 @@
-import { MAX_INPUT_BYTES } from './scene-validation.js';
+import { MAX_INPUT_BYTES } from 'ooxml-core/visio/ui';
 import { loadVisio, type VisioDocument } from 'ooxml-core/visio';
 export type CancellableParser = ((bytes: Uint8Array | ArrayBuffer) => Promise<VisioDocument>) & {
 	cancel?: () => void;

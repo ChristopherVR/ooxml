@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { mountViewer } from './binding.js';
-import { demoDocument } from './demo-document.js';
+import { demoDocument } from 'ooxml-core/visio/ui';
 
 afterEach(() => document.body.replaceChildren());
 describe('shared lifecycle binding', () => {

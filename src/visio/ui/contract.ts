@@ -1,4 +1,4 @@
-import type { VisioDocument } from 'ooxml-core/visio';
+import type { VisioDocument } from '../index.js';
 
 export interface ViewerProperties {
 	document: VisioDocument | null;

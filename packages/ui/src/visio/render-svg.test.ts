@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { renderPage, safeColor } from './render-svg.js';
-import { demoDocument } from './demo-document.js';
+import { demoDocument } from 'ooxml-core/visio/ui';
 
 describe('SVG renderer', () => {
 	it('renders groups, paths and text without injecting document markup', () => {

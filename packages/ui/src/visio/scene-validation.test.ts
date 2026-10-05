@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { assertViewableDocument } from './scene-validation.js';
-import { demoDocument } from './demo-document.js';
+import { assertViewableDocument } from 'ooxml-core/visio/ui';
+import { demoDocument } from 'ooxml-core/visio/ui';
 import { renderText } from './render-text.js';
 import { rasterFixture } from './__fixtures__/raster-fixtures.mjs';
 

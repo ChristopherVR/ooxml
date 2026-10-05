@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { exportPageSvg, MAX_SVG_EXPORT_BYTES } from './export-svg.js';
-import { demoDocument } from './demo-document.js';
+import { demoDocument } from 'ooxml-core/visio/ui';
 import { mountViewer } from './binding.js';
 import { RenderResources } from './render-resources.js';
 import { renderPage } from './render-svg.js';

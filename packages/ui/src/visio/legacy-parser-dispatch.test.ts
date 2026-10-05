@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { VisioDocument } from 'ooxml-core/visio';
 import { ViewerController } from './controller.js';
 import { createWorkerParser } from './worker-parser.js';
-import { demoDocument } from './demo-document.js';
+import { demoDocument } from 'ooxml-core/visio/ui';
 
 const { loadVisio, convertMetafileToSvgTree } = vi.hoisted(() => ({
 	loadVisio: vi.fn(),

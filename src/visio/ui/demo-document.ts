@@ -1,4 +1,4 @@
-import type { VisioDocument, VisioShape } from 'ooxml-core/visio';
+import type { VisioDocument, VisioShape } from '../index.js';
 
 function box(
 	id: string,

@@ -1,5 +1,5 @@
 import type { VisioShape } from 'ooxml-core/visio';
-import type { ForeignVectorBudget } from './foreign-vector-budget.js';
+import type { ForeignVectorBudget } from 'ooxml-core/visio/ui';
 import { renderForeignVector } from './render-foreign-vector.js';
 import { svgElement } from './render-svg.js';
 

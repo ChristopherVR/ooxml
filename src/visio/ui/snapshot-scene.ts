@@ -6,7 +6,7 @@ import type {
 	VisioShape,
 	VisioStyle,
 	VisioText,
-} from 'ooxml-core/visio';
+} from '../index.js';
 import { ForeignVectorBudget } from './foreign-vector-budget.js';
 
 /** Copy only named scalar fields, never arbitrary host properties or their getters. */
