@@ -111,7 +111,8 @@ function askPassword(
 export async function unprotectSheet(ctx: EditorContext): Promise<boolean> {
 	const t = target(ctx);
 	if (!t?.ws.protection?.sheet) return false;
-	if (!t.ws.protection.passwordHash) {
+	// Excel's newer SHA-512 hash can be the only one a file carries; it needs the password too.
+	if (!t.ws.protection.passwordHash && !t.ws.protection.modernHash) {
 		t.session.setSheetProtection(t.sheet, undefined);
 		return true;
 	}
@@ -129,7 +130,7 @@ export async function toggleWorkbookProtection(ctx: EditorContext): Promise<bool
 	if (!session) return false;
 	const workbook = session.workbook;
 	if (workbook.structureLocked) {
-		if (!workbook.workbookPasswordHash) {
+		if (!workbook.workbookPasswordHash && !workbook.workbookModernHash) {
 			session.setWorkbookProtection(false);
 			return true;
 		}
