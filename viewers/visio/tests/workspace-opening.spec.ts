@@ -27,30 +27,19 @@ test('mobile Tools exposes Visio groups, opens Find and edits text with F2', asy
 	await viewer.getByRole('button', { name: 'Close inspector' }).click();
 });
 
-test('mobile documentation menus keep the heading near the suite position and navigate sections', async ({
+test('mobile documentation menu keeps the heading near the top and navigates sections', async ({
 	page,
 }) => {
 	await page.setViewportSize({ width: 390, height: 844 });
-	await page.goto('/docs/index.html');
-	const title = await page.locator('.doc-content h1').boundingBox();
-	expect(title!.y).toBeLessThan(170);
-	await page.locator('.doc-mobile-menu>summary').click();
-	await expect(page.getByRole('link', { name: 'Framework bindings', exact: true })).toBeVisible();
-	await page.keyboard.press('Escape');
-	await expect(page.locator('.doc-mobile-menu>summary')).toBeFocused();
-	await page.locator('.doc-mobile-outline>summary').click();
+	await page.goto('/getting-started.html');
+	const title = await page.locator('.vp-doc h1').boundingBox();
+	expect(title!.y).toBeLessThan(260);
+	await page.getByRole('button', { name: 'Menu', exact: true }).click();
 	await page
-		.locator('.doc-mobile-outline')
-		.getByRole('link', { name: 'Try the local playground', exact: true })
-		.click();
-	await expect(page.locator('.doc-mobile-outline')).not.toHaveAttribute('open');
-	await expect(page.locator('#playground')).toBeInViewport();
-	await page.locator('.doc-mobile-menu>summary').click();
-	await page
-		.locator('.doc-mobile-menu')
+		.getByRole('navigation', { name: 'Sidebar Navigation' })
 		.getByRole('link', { name: 'Architecture', exact: true })
 		.click();
-	await expect(page.locator('.doc-content h1')).toContainText('Architecture');
+	await expect(page.locator('.vp-doc h1')).toContainText('Architecture');
 });
 
 test('opening screen supports browse cancellation, rejected input and repeated sample entry', async ({
