@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import type { RibbonElement } from './ribbon/tab-api';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
@@ -205,11 +206,13 @@ describe('<xlsx-editor> shell', () => {
 		expect(element.shadowRoot!.activeElement).not.toBeNull();
 	});
 
-	it('opens the backstage from the File tab and closes it with Escape', () => {
+	it('opens the backstage from the File tab and closes it with Escape', async () => {
 		const { element } = editor();
 		element.newWorkbook();
 		const root = element.shadowRoot!;
-		root.querySelector<HTMLButtonElement>('.xve-file-tab')!.click();
+		const ribbon = root.querySelector<RibbonElement>('office-ui-ribbon')!;
+		await ribbon.updateComplete;
+		ribbon.fileButton()!.click();
 		const backstage = root.querySelector<HTMLElement>('[part="backstage"]')!;
 		expect(backstage.hasAttribute('open')).toBe(true);
 		expect(backstage.querySelector('h2')!.textContent).toBe('Info');
@@ -219,11 +222,13 @@ describe('<xlsx-editor> shell', () => {
 });
 
 describe('attributes and properties', () => {
-	it('reflects attributes both ways without ping-pong and keeps defaults', () => {
+	it('reflects attributes both ways without ping-pong and keeps defaults', async () => {
 		const { element } = editor();
 		element.setAttribute('locale', 'fr-CA');
 		expect(element.locale).toBe('fr');
-		expect(element.shadowRoot!.querySelector('.xve-file-tab')!.textContent).toBe('Fichier');
+		const ribbon = element.shadowRoot!.querySelector<RibbonElement>('office-ui-ribbon')!;
+		await ribbon.updateComplete;
+		expect(ribbon.fileButton()!.textContent).toBe('Fichier');
 		element.showFormulaBar = false;
 		expect(element.getAttribute('show-formula-bar')).toBe('false');
 		element.setAttribute('show-toolbar', 'false');

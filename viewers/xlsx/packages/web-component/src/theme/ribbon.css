@@ -8,95 +8,12 @@
 	background: var(--surface);
 	border-bottom: 1px solid var(--line);
 }
-.ribbon-tabs {
-	display: flex;
-	flex: none;
-	min-width: 0;
-	gap: 4px;
-	min-height: 39px;
-	padding: 0 14px;
-	border-bottom: 1px solid var(--line);
-	overflow-x: auto;
-	scrollbar-width: thin;
+/* The tab row, File button and collapse button are the shared office-ui-ribbon; these colour it. */
+.xve-ribbon {
+	--office-ribbon-contextual: #0f7b6c;
 }
-.ribbon-tabs [role='tab'],
-.ribbon-tabs .xve-file-tab {
-	position: relative;
-	flex: none;
-	padding: 0 13px;
-	border: 0;
-	background: none;
-	color: var(--muted);
-	font:
-		500 13px 'Segoe UI',
-		Arial,
-		sans-serif;
-	white-space: nowrap;
-	cursor: pointer;
-}
-.ribbon-tabs .xve-file-tab {
-	margin-right: 6px;
-	color: var(--xl);
+.xve-ribbon::part(file) {
 	font-weight: 600;
-}
-.ribbon-tabs .xve-file-tab:hover {
-	background: var(--xl-soft);
-}
-.ribbon-tabs [aria-selected='true'] {
-	color: var(--xl);
-}
-.ribbon-tabs [aria-selected='true']::after {
-	position: absolute;
-	right: 8px;
-	bottom: 0;
-	left: 8px;
-	height: 3px;
-	border-radius: 3px 3px 0 0;
-	background: var(--xl);
-	content: '';
-}
-.ribbon-tabs [role='tab'][data-contextual],
-.ribbon-tabs [role='tab'][data-contextual][aria-selected='true'] {
-	color: #0f7b6c;
-}
-.ribbon-tabs [role='tab'][data-contextual][aria-selected='true']::after {
-	background: #0f7b6c;
-}
-.ribbon-tabs button:focus-visible {
-	outline: 2px solid var(--xl);
-	outline-offset: -2px;
-}
-.ribbon-tabs .ribbon-collapse {
-	flex: none;
-	align-self: center;
-	width: 26px;
-	height: 26px;
-	margin-left: auto;
-	padding: 0;
-	border: 0;
-	border-radius: 4px;
-	background: none;
-	color: var(--muted);
-	cursor: pointer;
-}
-.ribbon-tabs .ribbon-collapse:hover {
-	background: var(--accent-soft);
-}
-.ribbon-tabs .ribbon-collapse[aria-pressed='true'] svg {
-	transform: rotate(180deg);
-}
-.xve-ribbon[data-collapsed]:not([data-peek]) .ribbon-panel {
-	display: none;
-}
-.xve-ribbon[data-collapsed][data-peek] .ribbon-panel:not([hidden]) {
-	position: absolute;
-	top: 100%;
-	right: 0;
-	left: 0;
-	z-index: 60;
-	border-bottom: 1px solid var(--line);
-	background: var(--surface);
-	box-shadow: 0 6px 16px rgb(0 0 0 / 0.15);
 }
 .ribbon-panel {
 	display: flex;

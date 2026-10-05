@@ -2,6 +2,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { flush, shellFixture, spyCommand } from '../test-support/shell';
 import { createRibbon } from './ribbon';
+import { tabButton, type RibbonElement } from './tab-api';
 import { registerRibbonTabs, resetRibbonTabs, type RibbonTab } from './parts';
 import { collectKeyTips } from './keytips';
 import { closeRibbonPopover } from './popover';
@@ -157,12 +158,12 @@ afterEach(() => {
 });
 
 describe('ribbon renderer', () => {
-	it('renders File, the tabs and one panel per tab with labelled groups and a launcher', () => {
+	it('renders File, the tabs and one panel per tab with labelled groups and a launcher', async () => {
 		const { ribbon } = setup();
-		const tabs = [...ribbon.element.querySelectorAll('.ribbon-tabs button')].map(
-			(b) => b.textContent,
-		);
-		expect(tabs.slice(0, 2)).toEqual(['File', 'Home']);
+		const element = ribbon.element as RibbonElement;
+		await element.updateComplete;
+		expect(element.fileButton()?.textContent).toBe('File');
+		expect(tabButton(element, 'home')?.textContent).toBe('Home');
 		expect(ribbon.element.getAttribute('part')).toBe('ribbon');
 		const groups = [...ribbon.element.querySelectorAll('#xve-panel-home .ribbon-group')].map((g) =>
 			g.getAttribute('aria-label'),
@@ -267,13 +268,17 @@ describe('ribbon renderer', () => {
 		expect($(ribbon.element, '[data-group="font"]').hasAttribute('data-xve-hidden')).toBe(false);
 	});
 
-	it('shows contextual tabs only while their test passes', () => {
+	it('shows contextual tabs only while their test passes', async () => {
 		const { ribbon } = setup();
-		const tab = $(ribbon.element, '[data-tab="table-design"]') as HTMLButtonElement;
-		expect(tab.hidden).toBe(true);
+		const element = ribbon.element as RibbonElement;
+		const tab = () => tabButton(element, 'table-design');
+		await element.updateComplete;
+		expect(tab()).toBeNull();
 		contextual = true;
 		ribbon.refresh();
-		expect(tab.hidden).toBe(false);
+		await new Promise((resolve) => setTimeout(resolve, 0));
+		await element.updateComplete;
+		expect(tab()?.hasAttribute('data-contextual')).toBe(true);
 		ribbon.selectTab('table-design');
 		expect(ribbon.activeTab()).toBe('table-design');
 		contextual = false;
@@ -281,15 +286,15 @@ describe('ribbon renderer', () => {
 		expect(ribbon.activeTab()).toBe('home');
 	});
 
-	it('opens the backstage from File, collapses on demand and switches tabs with arrows', () => {
+	it('opens the backstage from File and collapses with the shared ribbon', async () => {
 		const { ribbon, opened } = setup();
-		$(ribbon.element, '.xve-file-tab').click();
+		const element = ribbon.element as RibbonElement;
+		await element.updateComplete;
+		element.fileButton()!.click();
 		expect(opened()).toBe(true);
-		$(ribbon.element, '.ribbon-collapse').click();
-		expect(ribbon.element.hasAttribute('data-collapsed')).toBe(true);
-		const home = $(ribbon.element, '[data-tab="home"]');
-		home.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
-		expect(ribbon.activeTab()).toBe('home');
+		expect(element.hasAttribute('collapsible')).toBe(true);
+		element.shadowRoot!.querySelector<HTMLButtonElement>('.collapse')!.click();
+		expect(element.hasAttribute('collapsed')).toBe(true);
 	});
 
 	it('relocalizes tab and group captions on rebuild', async () => {
@@ -297,7 +302,10 @@ describe('ribbon renderer', () => {
 		core.setLocale('fr');
 		ribbon.rebuild();
 		await flush();
-		expect($(ribbon.element, '.xve-file-tab').textContent).toBe('Fichier');
+		const element = ribbon.element as RibbonElement;
+		await element.updateComplete;
+		expect(element.fileButton()?.textContent).toBe('Fichier');
+		expect(element.getAttribute('collapse-label')).toBe('Réduire le ruban');
 	});
 });
 
@@ -314,6 +322,24 @@ describe('KeyTips and Tell me', () => {
 		expect(new Set(keys).size).toBe(keys.length);
 		for (const key of keys)
 			expect(keys.filter((other) => other !== key && other.startsWith(key))).toEqual([]);
+	});
+
+	it('shows a badge on File and each tab and opens the tab for its letter', async () => {
+		const { ribbon, opened } = setup();
+		const element = ribbon.element as RibbonElement;
+		await element.updateComplete;
+		ribbon.showKeyTips();
+		const badges = () =>
+			[...element.querySelectorAll('.xve-keytip')].map((badge) => badge.textContent);
+		expect(badges().slice(0, 2)).toEqual(['F', 'H']);
+		element.dispatchEvent(new KeyboardEvent('keydown', { key: 'h', bubbles: true }));
+		await element.updateComplete;
+		expect(ribbon.activeTab()).toBe('home');
+		element.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+		expect(badges()).toEqual([]);
+		ribbon.showKeyTips();
+		element.dispatchEvent(new KeyboardEvent('keydown', { key: 'f', bubbles: true }));
+		expect(opened()).toBe(true);
 	});
 
 	it('searches enabled, visible commands by translated or English label', () => {

@@ -2,6 +2,8 @@
  * Applies `hiddenActions` (command ids) to the rendered ribbon: hidden controls disappear, and so
  * do menus whose every command is hidden, groups and tabs left empty.
  */
+import { setTabHidden } from './tab-api';
+
 const HIDDEN = 'data-xve-hidden';
 const CONTROLS = '[data-command], .ribbon-menu-button';
 
@@ -25,8 +27,6 @@ export function applyRibbonVisibility(root: HTMLElement, isHidden: (id: string) 
 		stack.toggleAttribute(HIDDEN, empty(stack));
 	for (const group of root.querySelectorAll('.ribbon-group'))
 		group.toggleAttribute(HIDDEN, empty(group));
-	for (const tab of root.querySelectorAll<HTMLElement>('[role="tab"]')) {
-		const panel = root.querySelector(`#${tab.getAttribute('aria-controls') ?? ''}`);
-		tab.toggleAttribute(HIDDEN, Boolean(panel) && empty(panel!));
-	}
+	for (const panel of root.querySelectorAll<HTMLElement>(':scope > .ribbon-panel'))
+		setTabHidden(root, panel.dataset.tab ?? '', 'custom', empty(panel));
 }

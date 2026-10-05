@@ -66,6 +66,8 @@ const COMMAND_KEYS: Record<string, string> = {
 	'Find & Select': 'FD',
 };
 
+import { isTabHidden, tabButton, type RibbonElement } from './tab-api';
+
 interface Target {
 	key: string;
 	element: HTMLElement;
@@ -136,21 +138,15 @@ export function collectKeyTips(panel: HTMLElement): Target[] {
  * Shows badges over `targets` and runs the one whose letters are typed; Escape, a pointer press
  * or a key with no match ends it. Returns a function that stops it.
  */
-function runTips(
-	root: HTMLElement,
-	targets: Target[],
-	fixed: boolean,
-	onDone: () => void,
-): () => void {
+function runTips(root: HTMLElement, targets: Target[], onDone: () => void): () => void {
 	const doc = root.ownerDocument;
 	const shown = targets.map((target) => {
-		const node = badge(doc, target.key, fixed ? 'xve-keytip xve-keytip-command' : 'xve-keytip');
-		if (fixed) {
-			const box = target.element.getBoundingClientRect();
-			node.style.left = `${box.left + box.width / 2}px`;
-			node.style.top = `${box.bottom - 10}px`;
-			root.append(node);
-		} else target.element.append(node);
+		// Fixed badges sit in the light DOM, so the tabs inside the ribbon's shadow root need no styles.
+		const node = badge(doc, target.key, 'xve-keytip xve-keytip-command');
+		const box = target.element.getBoundingClientRect();
+		node.style.left = `${box.left + box.width / 2}px`;
+		node.style.top = `${box.bottom - 10}px`;
+		root.append(node);
 		return { node, target };
 	});
 	let typed = '';
@@ -183,17 +179,14 @@ function runTips(
 let active: (() => void) | undefined;
 
 /** Level one: tab badges; picking a tab opens it and shows its command badges (level two). */
-export function showTabKeyTips(
-	root: HTMLElement,
-	tabsBar: HTMLElement,
-	fileTab: HTMLElement,
-	select: (id: string) => void,
-): void {
+export function showTabKeyTips(root: HTMLElement, select: (id: string) => void): void {
 	active?.();
-	const targets: Target[] = [{ key: 'F', element: fileTab, activate: () => fileTab.click() }];
-	for (const tab of tabsBar.querySelectorAll<HTMLElement>('[role="tab"]')) {
-		const id = tab.dataset.tab ?? '';
-		if (tab.hidden || tab.hasAttribute('data-xve-hidden')) continue;
+	const file = (root as RibbonElement).fileButton();
+	const targets: Target[] = file ? [{ key: 'F', element: file, activate: () => file.click() }] : [];
+	for (const panel of root.querySelectorAll<HTMLElement>(':scope > .ribbon-panel')) {
+		const id = panel.dataset.tab ?? '';
+		const tab = tabButton(root, id);
+		if (!tab || isTabHidden(panel)) continue;
 		const used = targets.map((target) => target.key);
 		let key = TAB_KEYS[id] ?? '';
 		if (!key || used.includes(key))
@@ -207,14 +200,11 @@ export function showTabKeyTips(
 			activate: () => {
 				select(id);
 				tab.focus();
-				const panel = root.querySelector<HTMLElement>(
-					`#${tab.getAttribute('aria-controls') ?? ''}`,
-				);
-				if (panel) active = runTips(root, collectKeyTips(panel), true, () => (active = undefined));
+				active = runTips(root, collectKeyTips(panel), () => (active = undefined));
 			},
 		});
 	}
-	active = runTips(root, targets, false, () => (active = undefined));
+	active = runTips(root, targets, () => (active = undefined));
 }
 
 export function hideKeyTips(): void {
