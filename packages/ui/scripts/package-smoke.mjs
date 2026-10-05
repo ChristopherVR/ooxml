@@ -76,7 +76,8 @@ try {
 		work,
 	);
 
-	const entries = Object.keys(manifest.exports).filter((entry) => entry !== './package.json');
+	// Data files (package.json, the Custom Elements Manifest) are not modules; they are read below.
+	const entries = Object.keys(manifest.exports).filter((entry) => !entry.endsWith('.json'));
 	const specifiers = entries.map((entry) =>
 		path.posix.join(manifest.name, entry === '.' ? '' : entry),
 	);
@@ -87,6 +88,9 @@ try {
 		`import assert from 'node:assert/strict';
 const specifiers = ${JSON.stringify(specifiers)};
 for (const s of specifiers) assert.ok(Object.keys(await import(s)).length > 0, s + ' has no exports');
+import { createRequire } from 'node:module';
+const cem = createRequire(import.meta.url)('${manifest.name}/custom-elements.json');
+assert.ok(cem.modules.length > 0, 'the Custom Elements Manifest is empty');
 const { registerOfficeUi } = await import('${manifest.name}');
 registerOfficeUi();
 console.log('ssr import ok: ' + specifiers.length + ' entries');
