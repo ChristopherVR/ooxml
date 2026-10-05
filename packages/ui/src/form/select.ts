@@ -53,9 +53,8 @@ export class OfficeUiSelect extends OfficeElement {
 	declare choices: SelectChoice[];
 	declare opened: boolean;
 
-	static override get observedAttributes(): string[] {
-		return [...super.observedAttributes, 'aria-label', 'variant', 'data-font-picker'];
-	}
+	/** Attributes the trigger renders from: a change repaints it (a relabel on a language switch). */
+	static override watched = ['aria-label', 'variant', 'data-font-picker'];
 
 	private readonly internals: ElementInternals | undefined;
 	private readonly observer: MutationObserver | undefined;
