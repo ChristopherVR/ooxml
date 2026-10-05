@@ -1,0 +1,54 @@
+name: Feature request
+description: Suggest a capability ooxml-core or ooxml-ui does not have yet
+labels: ['enhancement']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing: if Office does it and we do not, that is usually a
+        **bug** in fidelity rather than a feature request. Either is fine, we
+        will re-label if needed. Unsupported features are reported honestly here,
+        never claimed as parity.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the use case, not just the proposed API.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like it to do?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Where does this live?
+      options:
+        - Parsing or saving (round-trip fidelity)
+        - Document model or editing commands
+        - Layout or rendering logic
+        - A shared area (xml, opc, units, color, geometry, chart, diagram)
+        - ooxml-ui (a custom element)
+        - Collaboration or teams
+        - Tooling (MCP, automation, release, CI)
+        - Not sure
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Would you like to implement this?
+      options:
+        - label: I am willing to open a PR
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives or workarounds you have tried

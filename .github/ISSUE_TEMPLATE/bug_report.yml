@@ -1,0 +1,79 @@
+name: Bug report
+description: Parsing, the document model, editing, saving, layout, or a ooxml-ui element misbehaves
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. The single most useful thing you can give us is
+        **a file that reproduces it** (or the smallest code snippet) plus **the area it happens in**.
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happens
+      description: What did you see, and what did you expect instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open the attached file with `ooxml-core/xlsx`
+        2. Save it again
+        3. ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which area?
+      options:
+        - xml / opc / units / color / geometry (shared)
+        - docx
+        - pptx
+        - xlsx
+        - visio
+        - chart / diagram / math / drawingml
+        - collab / teams
+        - crypto / digest / signatures
+        - ooxml-ui (a custom element)
+        - mcp / automation
+        - Not sure
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Package version(s)
+      placeholder: 'ooxml-core@0.20.0, ooxml-ui@0.28.0'
+    validations:
+      required: true
+
+  - type: textarea
+    id: file
+    attributes:
+      label: Sample file
+      description: >-
+        Drag the file in to attach it (zip it if GitHub rejects the extension).
+        If the file is confidential, the relevant part XML also works. Without a
+        repro file, most fidelity bugs cannot be fixed.
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: |
+        Runtime: Node 24 / Chrome 141
+        OS: Windows 11
+        Which viewer, if any, you saw it through
+
+  - type: textarea
+    id: console
+    attributes:
+      label: Console errors
+      render: text
