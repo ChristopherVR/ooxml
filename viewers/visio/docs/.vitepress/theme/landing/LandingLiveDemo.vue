@@ -8,12 +8,24 @@ import { DEMO_FRAMEWORKS, useLiveDemo } from './useLiveDemo';
 /**
  * Live, embedded demo section: the demo apps built from this repository run
  * inside the landing page with a framework switcher. Sharing mode shows two
- * windows of the same demo to try File > Share between them.
+ * windows, each in a framework of its own, that join one File > Share session by name.
  */
 const copy = useLandingCopy();
 const section = ref<HTMLElement | null>(null);
-const { started, mode, activeKey, src, activeLabel, start, selectFramework, setMode } =
-	useLiveDemo(section);
+const {
+	started,
+	mode,
+	activeKey,
+	guestKey,
+	src,
+	guestSrc,
+	activeLabel,
+	guestLabel,
+	start,
+	selectFramework,
+	selectGuest,
+	setMode,
+} = useLiveDemo(section);
 </script>
 
 <template>
@@ -55,6 +67,12 @@ const { started, mode, activeKey, src, activeLabel, start, selectFramework, setM
 					{{ copy.demos.collabTab }}
 				</button>
 			</div>
+			<label v-if="mode === 'collab'" class="pv-live__guestpick">
+				<span>{{ copy.demos.guestPicker }}</span>
+				<select :value="guestKey" @change="selectGuest(($event.target as HTMLSelectElement).value)">
+					<option v-for="f in DEMO_FRAMEWORKS" :key="f.key" :value="f.key">{{ f.label }}</option>
+				</select>
+			</label>
 		</div>
 
 		<div v-if="!started" class="pv-live__poster" data-reveal="4">
@@ -78,10 +96,10 @@ const { started, mode, activeKey, src, activeLabel, start, selectFramework, setM
 				/>
 				<LiveDemoPane
 					v-if="mode === 'collab'"
-					:key="`b-${src}`"
-					:src="src"
-					:title="`${activeLabel} · visio-viewer ${copy.demos.guestLabel}`"
-					:caption="`${activeLabel} · ${copy.demos.guestLabel}`"
+					:key="`b-${guestSrc}`"
+					:src="guestSrc"
+					:title="`${guestLabel} · visio-viewer ${copy.demos.guestLabel}`"
+					:caption="`${guestLabel} · ${copy.demos.guestLabel}`"
 					:open-label="copy.demos.openFull"
 					:loading-label="copy.demos.loading"
 				/>

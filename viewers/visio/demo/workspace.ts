@@ -3,6 +3,7 @@ import type { ViewerCallbacks } from '../src/contract.js';
 import type { MountedViewer } from '../src/binding.js';
 import type { VisioDocument } from 'ooxml-core/visio';
 import { demoDocument } from '../src/demo-document.js';
+import { sharedSampleBytes } from './shared-sample.js';
 import { wireWorkspaceShell } from './workspace-shell.js';
 import { wireWorkspaceTheme } from './workspace-theme.js';
 
@@ -172,6 +173,20 @@ export function createWorkspace(doc: Document = document): Workspace {
 		});
 		wireDrop((file) => void openFile(file));
 		const view = doc.defaultView!;
+		// `?share=<session>` presses File > Share > Start sharing on load, so frames built from different
+		// framework demos can join one session by name. The panel is the viewer's own; this only fills
+		// in the session name and starts it. Same-browser only: the session runs over a BroadcastChannel.
+		const shareRoom = new URL(view.location.href).searchParams.get('share');
+		const shareRoot = mounted.element.shadowRoot;
+		const shareField = shareRoot?.querySelector<HTMLInputElement>('.share-room');
+		if (shareRoom && shareField) {
+			shareField.value = shareRoom;
+			shareRoot?.querySelector<HTMLButtonElement>('[data-share="start"]')?.click();
+			// The built-in sample is a model without package bytes, which a session cannot share, so the
+			// window that asks for the sample opens a small real VSDX instead and the others adopt it.
+			if (new URL(view.location.href).searchParams.get('sample') === '1')
+				void openFile(new File([sharedSampleBytes()], 'shared-sample.vsdx'));
+		}
 		view.addEventListener('pagehide', (event) => {
 			if (event.persisted) {
 				mounted.controller.cancelLoad();

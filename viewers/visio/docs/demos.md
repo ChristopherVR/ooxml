@@ -21,7 +21,7 @@ The vanilla playground is also served at [/demo-vanilla/](/demo-vanilla/){target
 
 ## Collaboration demo
 
-Open a demo in two windows of the same browser and use File, then Share, with the same session name. The home page shows two panes side by side for this. See [collaboration](/collaboration) for what is and is not supported.
+Add `?share=<session>` to any demo URL to join a File > Share session on load. Two demos built from different frameworks that use the same session name share one drawing, for example `/demo-vue/?sample=1&share=my-room` and `/demo-angular/?share=my-room` in two tabs of one browser. The home page shows two panes with a framework picker for each. See [collaboration](/collaboration) for what is and is not supported.
 
 ## Embedded here
 

@@ -92,7 +92,7 @@ export const en: LandingCopy = {
 		frameworkLabel: 'Framework',
 		soloTab: 'Viewer',
 		collabTab: 'Sharing',
-		guestPicker: 'Guest',
+		guestPicker: 'Window B framework',
 		load: 'Load the live demo',
 		loading: 'Loading the live viewer',
 		openFull: 'Open full app',
@@ -101,7 +101,7 @@ export const en: LandingCopy = {
 		soloHint:
 			'Use the sample drawing, or open a .vsdx file of your own. Switching frameworks starts a fresh viewer.',
 		collabHint:
-			'Two windows of one browser. In both, choose File, then Share, and start the same session name: edits to shape text in one appear in the other. It uses a BroadcastChannel; there is no server and nothing leaves your browser.',
+			'Two windows of one browser, each in the framework you pick, already joined to one File > Share session by name. Window A opens the sample and Window B receives it. Edit shape text in one and it appears in the other. It uses a BroadcastChannel keyed by the session name; there is no server, it only works inside this browser, and nothing is uploaded.',
 	},
 	faq: {
 		kicker: 'FAQ',

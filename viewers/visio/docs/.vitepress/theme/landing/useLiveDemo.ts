@@ -29,6 +29,8 @@ export interface LiveDemoState {
 	activeKey: Ref<string>;
 	guestKey: Ref<string>;
 	src: ComputedRef<string>;
+	guestSrc: ComputedRef<string>;
+	guestLabel: ComputedRef<string>;
 	activeLabel: ComputedRef<string>;
 	start: () => void;
 	selectFramework: (key: string) => void;
@@ -40,9 +42,8 @@ function frameworkByKey(key: string): DemoFramework {
 	return DEMO_FRAMEWORKS.find((f) => f.key === key) ?? DEMO_FRAMEWORKS[0];
 }
 
-/** Pick a guest framework different from the host so the pairing shows cross-adapter use. */
-function fallbackGuest(hostKey: string): string {
-	return DEMO_FRAMEWORKS.find((f) => f.key !== hostKey)?.key ?? hostKey;
+function randomRoom(): string {
+	return `landing-${Math.random().toString(36).slice(2, 10)}`;
 }
 
 /**
@@ -59,9 +60,22 @@ export function useLiveDemo(section: Ref<HTMLElement | null>): LiveDemoState {
 	const started = ref(false);
 	const mode = ref<LiveDemoMode>('solo');
 	const activeKey = ref('vanilla');
-	const guestKey = ref('vue');
+	const guestKey = ref('react');
 
-	const src = computed(() => withBase(`/${frameworkByKey(activeKey.value).route}/?sample=1`));
+	/** The session name both windows join. A new one for every sharing session. */
+	const room = ref(randomRoom());
+	const soloSrc = computed(() => withBase(`/${frameworkByKey(activeKey.value).route}/?sample=1`));
+	// Window A opens the sample and shares it; window B starts empty and joins by name. Each window
+	// picks its own framework: the session is a BroadcastChannel keyed by the name, nothing more.
+	const src = computed(() =>
+		mode.value === 'collab'
+			? withBase(`/${frameworkByKey(activeKey.value).route}/?embed=1&sample=1&share=${room.value}`)
+			: soloSrc.value,
+	);
+	const guestSrc = computed(() =>
+		withBase(`/${frameworkByKey(guestKey.value).route}/?embed=1&share=${room.value}`),
+	);
+	const guestLabel = computed(() => frameworkByKey(guestKey.value).label);
 	const activeLabel = computed(() => frameworkByKey(activeKey.value).label);
 
 	function start(): void {
@@ -70,18 +84,16 @@ export function useLiveDemo(section: Ref<HTMLElement | null>): LiveDemoState {
 
 	function selectFramework(key: string): void {
 		activeKey.value = key;
-		if (guestKey.value === key) {
-			guestKey.value = fallbackGuest(key);
-		}
 		started.value = true;
 	}
 
 	function selectGuest(key: string): void {
-		guestKey.value = key === activeKey.value ? fallbackGuest(activeKey.value) : key;
+		guestKey.value = key;
 	}
 
 	function setMode(next: LiveDemoMode): void {
 		mode.value = next;
+		room.value = randomRoom();
 		started.value = true;
 	}
 
@@ -113,6 +125,8 @@ export function useLiveDemo(section: Ref<HTMLElement | null>): LiveDemoState {
 		activeKey,
 		guestKey,
 		src,
+		guestSrc,
+		guestLabel,
 		activeLabel,
 		start,
 		selectFramework,
