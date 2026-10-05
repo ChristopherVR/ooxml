@@ -130,7 +130,8 @@ export function attachKeyTips(scope: Root): KeyTipsHandle {
 		if (next) {
 			levels.push(next);
 			// Let the newly shown panel lay out before measuring its controls.
-			view?.requestAnimationFrame ? view.requestAnimationFrame(render) : render();
+			if (view?.requestAnimationFrame) view.requestAnimationFrame(render);
+			else render();
 		} else stop();
 	};
 	const onKeyDown = (event: Event) => {

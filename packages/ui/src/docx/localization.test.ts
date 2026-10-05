@@ -6,7 +6,6 @@ import { schema } from './schema';
 import { createRibbon, setRibbonLocale } from './ribbon';
 import { createSearchPanel } from './search-panel';
 import { normalizeEditorLocale, translate } from './localization';
-import { at } from './test-support';
 
 describe('shared editor localization', () => {
 	it('normalizes display locale with English fallback and dictionary coverage', () => {

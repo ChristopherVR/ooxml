@@ -1,6 +1,5 @@
 import type { EditorState } from 'prosemirror-state';
 import type { Mark } from 'prosemirror-model';
-import { schema } from './schema';
 import { lineSpacingLabel, lineSpacingValue } from 'ooxml-core/docx';
 import { findLocalizedControl } from './localization';
 import { selectionScript } from './script-state';

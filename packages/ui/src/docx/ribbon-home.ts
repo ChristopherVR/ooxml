@@ -13,7 +13,6 @@ import {
 	launcher,
 	menuSelect,
 	row,
-	select,
 	spinner,
 	splitInline,
 	stack,

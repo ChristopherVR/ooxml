@@ -49,6 +49,15 @@ jobs:
           base="${{ github.event.pull_request.base.sha || github.event.before }}"
           node scripts/ci-plan.mjs --event "${{ github.event_name }}" --base "$base"
 
+  lint:
+    needs: plan
+    if: fromJSON(needs.plan.outputs.plan).typecheck.ui
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: bun run lint
+
   typecheck-strict:
     needs: plan
     if: fromJSON(needs.plan.outputs.plan).typecheck.strict
@@ -223,7 +232,7 @@ jobs:
   ci-success:
     name: ci-success
     if: always()
-    needs: [plan, typecheck-strict, typecheck-pptx, typecheck-ui, test, build, ui, scripts, mcp]
+    needs: [plan, lint, typecheck-strict, typecheck-pptx, typecheck-ui, test, build, ui, scripts, mcp]
     runs-on: ubuntu-latest
     steps:
       - name: Check every required job succeeded or was skipped by the plan

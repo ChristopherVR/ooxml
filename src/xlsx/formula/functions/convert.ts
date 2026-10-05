@@ -110,7 +110,7 @@ add('volume', ['MTON'], 1.13267386368);
 add('volume', ['in3', 'in^3'], 1.6387064e-5);
 add('volume', ['ft3', 'ft^3'], 0.028316846592);
 add('volume', ['yd3', 'yd^3'], 0.764554857984);
-add('volume', ['mi3', 'mi^3'], 4168181825.440579584);
+add('volume', ['mi3', 'mi^3'], 4168181825.4405794);
 add('volume', ['Nmi3', 'Nmi^3'], 6352182208);
 add('volume', ['ly3', 'ly^3'], 8.46786664623715e47);
 // Area, base square metre.

@@ -208,7 +208,9 @@
 		"release:plan": "node scripts/release-plan.mjs",
 		"release:publish": "node scripts/publish-released.mjs",
 		"changelog:unreleased": "bunx git-cliff --config cliff.toml --tag-pattern \"^ooxml-core@\" --unreleased",
-		"test:mcp": "node --test mcp/test/*.test.js"
+		"test:mcp": "node --test mcp/test/*.test.js",
+		"lint": "oxlint",
+		"lint:fix": "oxlint --fix"
 	},
 	"dependencies": {
 		"@xmldom/xmldom": "^0.9.12",
@@ -229,7 +231,8 @@
 		"@types/node-forge": "^1.3.14",
 		"@types/utif": "3.0.6",
 		"node-forge": "^1.4.0",
-		"oxfmt": "*",
+		"oxfmt": "0.71.0",
+		"oxlint": "^1.86.0",
 		"tsdown": "^0.23.0",
 		"tsup": "^8.5.1",
 		"typescript": "^7.0.2",

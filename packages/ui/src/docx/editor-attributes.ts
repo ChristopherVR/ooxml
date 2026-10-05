@@ -74,7 +74,8 @@ export function reflectAttribute(
 	if (name === 'show-toolbar' && typeof value === 'boolean') {
 		// Default true: the attribute only appears to opt out.
 		if (element.getAttribute(name) !== (value ? null : 'false'))
-			value ? element.removeAttribute(name) : element.setAttribute(name, 'false');
+			if (value) element.removeAttribute(name);
+			else element.setAttribute(name, 'false');
 		return;
 	}
 	if (typeof value === 'boolean') {

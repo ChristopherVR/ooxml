@@ -8,7 +8,6 @@ import { parseSignedTwips } from './simple-types.js';
 import {
 	children,
 	getW,
-	isElement,
 	makeW,
 	WORD_NS,
 	type XmlDocument,

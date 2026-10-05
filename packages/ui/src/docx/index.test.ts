@@ -262,7 +262,7 @@ describe('DocxEditorElement', () => {
 		view.dispatch(view.state.tr.insertText('!', view.state.doc.content.size - 1));
 		expect(editor.documentModel?.blocks[0]).toBe(before);
 		expect(
-			(editor.documentModel?.blocks[0] as Extract<typeof before, { type: 'paragraph' }>).runs,
+			(editor.documentModel!.blocks[0] as Extract<typeof before, { type: 'paragraph' }>).runs,
 		).toEqual([
 			{ text: 'same ', bold: true },
 			{ text: 'style', bold: true },

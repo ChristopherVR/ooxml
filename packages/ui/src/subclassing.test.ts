@@ -76,6 +76,7 @@ describe('subclassing the elements', () => {
 				this.searchField.setAttribute('data-product', '');
 			}
 			attributeChangedCallback(): void {
+				// oxlint-disable-next-line no-self-assign -- re-runs the property setter
 				this.state = this.state;
 			}
 		}

@@ -1,5 +1,4 @@
 import { Plugin } from 'prosemirror-state';
-import type { EditorView } from 'prosemirror-view';
 import { Decoration, DecorationSet } from 'prosemirror-view';
 import {
 	resolveParagraphFormatting,
@@ -9,9 +8,6 @@ import {
 	type Paragraph,
 } from 'ooxml-core/docx';
 import { paragraphStyle } from './schema';
-import { translate, translateTemplate, type EditorLocale } from './localization';
-import { menuAround, row, stack } from './ribbon-parts';
-import { syncStyleGallery } from './style-gallery';
 import { listMarkerDisplay } from './list-marker-display';
 import { scaleMeasurer } from './run-scale';
 

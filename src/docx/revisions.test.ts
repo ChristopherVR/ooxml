@@ -102,9 +102,9 @@ describe('tracked-change revisions', () => {
 		const loaded = await loadDocx(bytes);
 		const revision = at(listRevisions(loaded.model), 0);
 		const accepted = acceptRevision(loaded.model, revision.id);
-		expect((accepted.blocks[0] as any).runs.map((r: any) => r.text).join('')).toBe('Hello world');
+		expect((accepted.blocks[0] as { runs: { text: string }[] }).runs.map((r) => r.text).join('')).toBe('Hello world');
 		const rejected = rejectRevision(loaded.model, revision.id);
-		expect((rejected.blocks[0] as any).runs.map((r: any) => r.text).join('')).toBe(
+		expect((rejected.blocks[0] as { runs: { text: string }[] }).runs.map((r) => r.text).join('')).toBe(
 			'Hello old world',
 		);
 		const savedRejected = await JSZip.loadAsync(await loaded.save(rejected));

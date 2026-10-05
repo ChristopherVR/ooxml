@@ -87,6 +87,6 @@ describe('charts and pictures', () => {
 		// A type change regenerates the part under the same name.
 		s.updateChart(sheetIndex, index, { chartType: 'line' });
 		const line = await loadXlsx(await saveXlsx(wb));
-		expect((line.sheets[sheetIndex]?.drawings[index] as ChartObject).chartType).toBe('line');
+		expect((line.sheets[sheetIndex]!.drawings[index] as ChartObject).chartType).toBe('line');
 	});
 });

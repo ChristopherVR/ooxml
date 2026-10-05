@@ -11,7 +11,7 @@ import {
 import type { RibbonAction } from './ribbon-action';
 import { buildHomePanel } from './ribbon-home';
 import { attachRibbonBehavior } from './ribbon-behavior';
-import { attachRibbonOverflow, fitPanel, refitRibbon } from './ribbon-overflow';
+import { attachRibbonOverflow, refitRibbon } from './ribbon-overflow';
 import { buildOtherPanels } from './ribbon-tabs';
 import { buildHeaderFooterPanel } from './header-footer-ribbon';
 import { panelsOf, setTabHidden } from './ribbon-tab-api';

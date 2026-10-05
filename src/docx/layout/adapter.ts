@@ -3,7 +3,6 @@ import type {
 	DocumentModel,
 	Paragraph,
 	SectionProperties,
-	Table,
 	TextRun,
 } from '../index.js';
 import {
@@ -31,7 +30,6 @@ import type {
 	LayoutParagraphBorders,
 	LayoutRun,
 	LayoutSection,
-	LayoutTable,
 } from './input.js';
 
 const TABLE_ROW_NOTE =

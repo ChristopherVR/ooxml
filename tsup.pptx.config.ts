@@ -3,7 +3,7 @@ import { defineConfig } from 'tsup';
 // The pptx area is bundled separately from the tsc build of the other areas: consumers
 // (pptx-viewer-core and the CLI `bin`) need dual ESM/CJS output with the legacy Office codecs
 // (`@christophervr/ole2`) inlined, which a plain tsc build cannot produce.
-export default defineConfig((options) => ({
+export default defineConfig(() => ({
 	entry: {
 		'pptx/automation/index': 'src/pptx/automation/index.ts',
 		'pptx/index': 'src/pptx/index.ts',

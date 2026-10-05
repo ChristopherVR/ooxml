@@ -13,7 +13,7 @@ import {
 } from './generated/wml-simple-types.js';
 import type { Paragraph, Revision, TabStop, TextRun } from './model.js';
 import type { ThemeColorReference } from './theme-model.js';
-import { Checker, show } from './validate-issues.js';
+import { Checker } from './validate-issues.js';
 import { isLigatures } from './ligatures.js';
 
 const isFraction = (value: unknown): boolean =>

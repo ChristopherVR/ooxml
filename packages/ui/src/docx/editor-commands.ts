@@ -19,7 +19,6 @@ import { setIndent } from './indent-commands';
 import { sortParagraphs } from './sort-commands';
 import { setBorders, setShading } from './paragraph-decoration';
 import { formatDateTime, insertPlainText } from './insert-text-commands';
-import { selectAll } from 'prosemirror-commands';
 import { exitListOnEmptyEnter, indentListItem, outdentListItem } from './list-commands';
 import {
 	setCellBorders,

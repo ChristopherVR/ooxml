@@ -37,7 +37,7 @@ const PAGE_NUMBER_OPTIONS: Array<[string, string]> = [
 	['bottom:right:pageOfTotal', 'Bottom right — Page X of Y'],
 ];
 import { menuGallery } from './ribbon-gallery-menu';
-import { colorSplit, group, launcher, menuSelect, select, stack, tool } from './ribbon-parts';
+import { colorSplit, group, launcher, menuSelect, stack, tool } from './ribbon-parts';
 
 /** The Insert, Layout, References, Review and View tabs. */
 export function buildOtherPanels(panels: Map<string, HTMLElement>): void {

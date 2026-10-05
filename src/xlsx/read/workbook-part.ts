@@ -3,7 +3,7 @@ import {
 	parseCoreProperties,
 	parseCustomProperties,
 } from '../../opc/properties/index.js';
-import { NS, first, parseXml, relAttr } from '../../xml/index.js';
+import { parseXml, relAttr } from '../../xml/index.js';
 import type { DefinedName, ModernPasswordHash, SheetState, WorkbookProperties } from '../model.js';
 import { stripFuturePrefixes } from './formula-text.js';
 import { readModernHash } from './password-hash.js';

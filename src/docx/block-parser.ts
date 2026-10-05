@@ -1,18 +1,15 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Paragraph/table/run parsing shared by the main document body, headers, footers, footnotes and
 // endnotes (moved out of parse.ts so every container can reuse the identical parser).
-import type { Block, Paragraph, Revision, Table, TableCell, TextRun } from './model.js';
+import type { Block, Paragraph, Revision, Table, TextRun } from './model.js';
 import {
-	children,
 	first,
 	getW,
 	isElement,
 	named,
 	textContent,
 	type XmlElement,
-	WORD_NS,
 } from './xml.js';
-import { canEditTableStructure } from './write-table.js';
 import { classifyBreak } from './breaks.js';
 import { parseRunProperties } from './run-properties.js';
 import { parseTable as parseTableWithFidelity } from './parse-table.js';
