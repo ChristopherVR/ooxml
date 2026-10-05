@@ -1,0 +1,100 @@
+import {
+	createDialogShell,
+	dialogActions,
+	isDialogOpen,
+	onDialogDismiss,
+	setDialogOpen,
+} from './dialog-shell';
+/** The keyboard shortcut help dialog: lists the shortcut registry plus the editor's own key bindings. */
+import { EDITOR_BINDING_LABELS } from './binding-labels';
+import { editorBindings } from './editor-commands';
+import { formatKeys, type ShortcutRegistry } from './keyboard';
+import { translate, type EditorLocale, type LocalizationKey } from './localization';
+
+export interface ShortcutRow {
+	keys: string;
+	label: LocalizationKey;
+}
+
+/** Only bindings that exist in the editor's keymap are listed, grouped by action. */
+export function editorShortcutRows(
+	mac: boolean,
+	bindings: Record<string, unknown> = editorBindings,
+): ShortcutRow[] {
+	const rows = new Map<LocalizationKey, string[]>();
+	for (const [binding, label] of Object.entries(EDITOR_BINDING_LABELS)) {
+		if (!(binding in bindings)) continue;
+		const keys = formatKeys(binding.replaceAll('-', '+'), mac);
+		rows.set(label, [...(rows.get(label) ?? []), keys]);
+	}
+	return [...rows].map(([label, keys]) => ({ label, keys: keys.join(' / ') }));
+}
+
+export function shortcutRows(registry: ShortcutRegistry, mac: boolean): ShortcutRow[] {
+	const general = registry.shortcuts.map((shortcut) => ({
+		label: shortcut.label,
+		keys: registry.keysFor(shortcut.id, mac).join(' / '),
+	}));
+	return [...general, ...editorShortcutRows(mac)].filter((row) => row.keys);
+}
+
+export interface ShortcutHelp {
+	element: HTMLElement;
+	readonly isOpen: boolean;
+	open(rows: ShortcutRow[], locale: EditorLocale): void;
+	close(): void;
+}
+
+export function createShortcutHelp(onClose: () => void): ShortcutHelp {
+	const element = createDialogShell('', 'dve-shortcut-help');
+	const note = document.createElement('p');
+	note.className = 'dve-shortcut-note';
+	const table = document.createElement('table');
+	const closeButton = document.createElement('button');
+	closeButton.type = 'button';
+	closeButton.className = 'dve-dialog-primary';
+	element.append(note, table, dialogActions(closeButton));
+
+	const close = () => {
+		if (!isDialogOpen(element)) return;
+		setDialogOpen(element, false);
+		onClose();
+	};
+	closeButton.addEventListener('click', close);
+	onDialogDismiss(element, close);
+
+	return {
+		element,
+		get isOpen() {
+			return isDialogOpen(element);
+		},
+		open(rows, locale) {
+			(element as HTMLElement & { heading: string }).heading = translate(
+				locale,
+				'shortcut.dialogTitle',
+			);
+			element.setAttribute('close-label', translate(locale, 'Close'));
+			note.textContent = translate(locale, 'shortcut.dialogNote');
+			closeButton.textContent = translate(locale, 'shortcut.close');
+			table.replaceChildren();
+			const head = table.createTHead().insertRow();
+			for (const key of ['shortcut.columnAction', 'shortcut.columnKeys'] as const) {
+				const cell = document.createElement('th');
+				cell.scope = 'col';
+				cell.textContent = translate(locale, key);
+				head.append(cell);
+			}
+			const body = table.createTBody();
+			for (const row of rows) {
+				const tr = body.insertRow();
+				tr.insertCell().textContent = translate(locale, row.label);
+				const kbd = document.createElement('kbd');
+				kbd.textContent = row.keys;
+				tr.insertCell().append(kbd);
+			}
+			setDialogOpen(element, true);
+			closeButton.focus();
+		},
+		close,
+	};
+}

@@ -1,0 +1,58 @@
+/* Status bar: drawn by the shared office-ui-status-bar; this only places it in the frame. */
+.dve-status {
+	display: block;
+	flex: none;
+	min-width: 0;
+	border-top: 1px solid var(--line);
+}
+
+@media (max-width: 760px) {
+	.dve-backstage-content {
+		padding: 20px;
+	}
+}
+
+/* Dialogs: the shared office-ui-dialog draws the modal frame; these style the fields inside it. */
+.dve-dialog {
+	--office-dialog-width: min(440px, calc(100vw - 32px));
+}
+/* The fields are the dialog's light-DOM children, laid out in the shared body. */
+.dve-dialog > :not([slot]) + :not([slot]) {
+	margin-top: 10px;
+}
+.dve-dialog label {
+	display: grid;
+	gap: 4px;
+	color: var(--muted);
+	font-size: 12px;
+}
+.dve-dialog input,
+.dve-dialog select {
+	height: 30px;
+	padding: 0 8px;
+	border: 1px solid var(--line);
+	border-radius: 4px;
+	background: var(--surface);
+	color: var(--ink);
+	font: inherit;
+}
+.dve-dialog-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+}
+.dve-dialog-actions button {
+	min-height: 30px;
+	padding: 0 14px;
+	border: 1px solid var(--line);
+	border-radius: 4px;
+	background: var(--surface);
+	color: var(--ink);
+	font: inherit;
+	cursor: pointer;
+}
+.dve-dialog-actions .dve-dialog-primary {
+	border-color: var(--word);
+	background: var(--word);
+	color: var(--dve-primary-foreground);
+}

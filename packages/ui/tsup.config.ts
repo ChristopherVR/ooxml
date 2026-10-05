@@ -34,6 +34,7 @@ export default defineConfig({
 		smartart: 'src/smartart.ts',
 		teams: 'src/teams/index.ts',
 		xlsx: 'src/xlsx/index.ts',
+		docx: 'src/docx/index.ts',
 	},
 	outDir: 'dist',
 	tsconfig: 'tsconfig.build.json',

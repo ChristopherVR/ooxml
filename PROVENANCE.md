@@ -372,3 +372,7 @@ New code, nothing moved. `src/teams` (model, chat, signaling, peer, call, server
 ## `ooxml-ui/xlsx`
 
 The whole `<xlsx-editor>` element (`packages/ui/src/xlsx/`, with its tests) moved from ChristopherVR/xlsx-viewer `packages/web-component/src` at `d981768`. Changes: imports of `@christophervr/xlsx-core` point at `ooxml-core/xlsx`, `ooxml-ui` self-imports became relative, `.css?inline` became `.css?raw`, the locale `import.meta.glob` became explicit imports, `:scope >` child queries became `children` filters (jsdom 30), and the legacy `.xls` fixture moved to `src/xlsx/__fixtures__/`.
+
+## `ooxml-ui/docx`
+
+The whole `<docx-editor>` element (`packages/ui/src/docx/`, with its tests) moved from ChristopherVR/docx-viewer `packages/web-component/src` at `77f820f`. Changes: `docx-core` imports point at `ooxml-core/docx`, `ooxml-ui` self-imports became relative, `.css?inline` became `.css?raw`, the SmartArt fixture moved to `src/docx/__fixtures__/`, and `attr-units`, `page-size`, `page-setup-model`, the pure section setters and `transformCase` are imported from `ooxml-core/docx` instead of kept as copies.
