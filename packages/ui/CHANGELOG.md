@@ -7,6 +7,22 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.26.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.26.0) - 2026-10-05
+
+### Features
+
+- **ui:** Publish a Custom Elements Manifest (by @ChristopherVR) ([2b00265](https://github.com/ChristopherVR/ooxml/commit/2b002654a786c6f1eb945e2ad2d19ab304d85e48))
+- **ui:** Let KeyTips start and stop from code (by @ChristopherVR) ([88d8016](https://github.com/ChristopherVR/ooxml/commit/88d8016a9d7f2205471a71fb0e4465d51723f70a))
+- **ui:** Tint the tab of a contextual ribbon panel (by @ChristopherVR) ([5e5d75c](https://github.com/ChristopherVR/ooxml/commit/5e5d75c115c4d626d59f046b2b3567c2345c4309))
+- **ui:** Let a ribbon hide tabs by reason and expose its tab buttons (by @ChristopherVR) ([ba38042](https://github.com/ChristopherVR/ooxml/commit/ba38042dd99b26cd2c6d4f1183b3e1b5badd9789))
+- **ui:** Add collapse and peek to the ribbon (by @ChristopherVR) ([4b187a0](https://github.com/ChristopherVR/ooxml/commit/4b187a06137caf760ded1c0ce86a970b2314eb50))
+- **ui:** Share the ribbon overflow folding between products (by @ChristopherVR) ([c0a5aab](https://github.com/ChristopherVR/ooxml/commit/c0a5aab96b2fe533c531e3edcb4feb0ba5d9c013))
+
+### Bug Fixes
+
+- **ui:** Keep the manifest tooling out of the declaration build (by @ChristopherVR) ([4d2499f](https://github.com/ChristopherVR/ooxml/commit/4d2499fea7f523c507ea558bd570805555b0f283))
+- **ui:** Read the Custom Elements Manifest in the package smoke test (by @ChristopherVR) ([15094ec](https://github.com/ChristopherVR/ooxml/commit/15094ecfe9fb69241d834932c2fd185668df193e))
+
 ## [0.25.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.25.0) - 2026-10-05
 
 ### Features

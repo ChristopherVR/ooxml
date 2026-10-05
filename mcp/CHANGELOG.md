@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.1.2](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-mcp@0.1.2) - 2026-10-05
+
+### Build & CI
+
+- **deps:** Update the MCP SDK and the CI toolchain pins (by @ChristopherVR) ([67aedfe](https://github.com/ChristopherVR/ooxml/commit/67aedfe96f6ce6acacf62b5d27196b7b9d3247e4))
+
 ## [0.1.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-mcp@0.1.1) - 2026-10-03
 
 ### Features
