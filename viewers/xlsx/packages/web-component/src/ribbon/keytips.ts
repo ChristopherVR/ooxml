@@ -66,24 +66,11 @@ const COMMAND_KEYS: Record<string, string> = {
 	'Find & Select': 'FD',
 };
 
+import { assignKeyTips, runKeyTips, type KeyTipTarget as Target } from 'ooxml-ui/controls';
 import { isTabHidden, tabButton, type RibbonElement } from './tab-api';
-
-interface Target {
-	key: string;
-	element: HTMLElement;
-	activate(): void;
-}
 
 const labelOf = (node: HTMLElement) =>
 	node.dataset.labelKey ?? node.getAttribute('aria-label') ?? '';
-
-function badge(doc: Document, key: string, className: string): HTMLSpanElement {
-	const node = doc.createElement('span');
-	node.className = className;
-	node.textContent = key;
-	node.setAttribute('aria-hidden', 'true');
-	return node;
-}
 
 /** Tips for the visible controls of `panel`. */
 export function collectKeyTips(panel: HTMLElement): Target[] {
@@ -111,70 +98,13 @@ export function collectKeyTips(panel: HTMLElement): Target[] {
 		};
 		targets.push({ key: COMMAND_KEYS[labelOf(control)] ?? '', element: control, activate });
 	}
-	const used: string[] = [];
-	const clash = (key: string) => used.some((u) => u.startsWith(key) || key.startsWith(u));
-	for (const target of targets) {
-		if (target.key && !clash(target.key)) used.push(target.key);
-		else target.key = '';
-	}
-	for (const target of targets.filter((item) => !item.key)) {
-		const source =
-			(target.element.getAttribute('aria-label') ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '') ||
-			'ZZ';
-		let key = '';
-		for (let a = 0; a < source.length && !key; a++)
-			for (let b = a + 1; b < source.length && !key; b++) {
-				const candidate = source[a]! + source[b]!;
-				if (!clash(candidate)) key = candidate;
-			}
-		for (let n = 10; !key; n++) if (!clash(String(n))) key = String(n);
-		used.push(key);
-		target.key = key;
-	}
+	assignKeyTips(targets, (target) => target.element.getAttribute('aria-label') ?? '');
 	return targets;
 }
 
-/**
- * Shows badges over `targets` and runs the one whose letters are typed; Escape, a pointer press
- * or a key with no match ends it. Returns a function that stops it.
- */
-function runTips(root: HTMLElement, targets: Target[], onDone: () => void): () => void {
-	const doc = root.ownerDocument;
-	const shown = targets.map((target) => {
-		// Fixed badges sit in the light DOM, so the tabs inside the ribbon's shadow root need no styles.
-		const node = badge(doc, target.key, 'xve-keytip xve-keytip-command');
-		const box = target.element.getBoundingClientRect();
-		node.style.left = `${box.left + box.width / 2}px`;
-		node.style.top = `${box.bottom - 10}px`;
-		root.append(node);
-		return { node, target };
-	});
-	let typed = '';
-	const stop = () => {
-		for (const { node } of shown) node.remove();
-		root.removeEventListener('keydown', onKey, true);
-		root.removeEventListener('pointerdown', stop, true);
-		onDone();
-	};
-	function onKey(event: KeyboardEvent) {
-		if (event.key === 'Alt' || event.key === 'Shift') return;
-		event.preventDefault();
-		event.stopPropagation();
-		if (event.key === 'Escape' || event.ctrlKey || event.metaKey) return stop();
-		typed += event.key.toUpperCase();
-		const matches = shown.filter(({ target }) => target.key.startsWith(typed));
-		if (!matches.length) return stop();
-		for (const { node, target } of shown) node.hidden = !target.key.startsWith(typed);
-		const exact = matches.find(({ target }) => target.key === typed);
-		if (exact) {
-			stop();
-			exact.target.activate();
-		}
-	}
-	root.addEventListener('keydown', onKey, true);
-	root.addEventListener('pointerdown', stop, true);
-	return stop;
-}
+const runTips = (root: HTMLElement, targets: Target[], onDone: () => void) =>
+	// Fixed badges sit in the light DOM, so the tabs inside the ribbon's shadow root need no styles.
+	runKeyTips(root, targets, onDone, 'xve-keytip xve-keytip-command');
 
 let active: (() => void) | undefined;
 
