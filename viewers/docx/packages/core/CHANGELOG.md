@@ -7,6 +7,13 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs re-releases a package whenever any of its files, or an internal
 dependency it ships against, changes, not only on conventional commits.
 
+## [0.1.5](https://github.com/ChristopherVR/docx-viewer/releases/tag/docx-core@0.1.5) - 2026-10-05
+
+### Build & CI
+
+- **deps:** Adopt ooxml-core 0.15.0 and ooxml-ui 0.21.0 (by @ChristopherVR) ([91eac57](https://github.com/ChristopherVR/docx-viewer/commit/91eac573a278cc9a2f23e4a85871ddc6eb33d9c6))
+- **deps:** Update all dependencies to latest (by @ChristopherVR) ([b0fd02d](https://github.com/ChristopherVR/docx-viewer/commit/b0fd02decdbcdca871d4ac8b21967c6a24d4cbbf))
+
 ## [0.1.4](https://github.com/ChristopherVR/docx-viewer/releases/tag/docx-core@0.1.4) - 2026-10-03
 
 ### Documentation

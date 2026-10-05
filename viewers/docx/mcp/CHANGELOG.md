@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs re-releases a package whenever any of its files, or an internal
 dependency it ships against, changes, not only on conventional commits.
 
+## [0.1.3](https://github.com/ChristopherVR/docx-viewer/releases/tag/docx-viewer-mcp@0.1.3) - 2026-10-05
+
+### Build & CI
+
+- **deps:** Update all dependencies to latest (by @ChristopherVR) ([b0fd02d](https://github.com/ChristopherVR/docx-viewer/commit/b0fd02decdbcdca871d4ac8b21967c6a24d4cbbf))
+
 ## [0.1.2](https://github.com/ChristopherVR/docx-viewer/releases/tag/docx-viewer-mcp@0.1.2) - 2026-10-03
 
 ### Documentation

@@ -7,6 +7,21 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs re-releases a package whenever any of its files, or an internal
 dependency it ships against, changes, not only on conventional commits.
 
+## [0.4.2](https://github.com/ChristopherVR/docx-viewer/releases/tag/docx-angular-viewer@0.4.2) - 2026-10-05
+
+### Refactor
+
+- **web-component:** Use the shared office-ui-context-menu (by @ChristopherVR) ([4a5a4a3](https://github.com/ChristopherVR/docx-viewer/commit/4a5a4a37e50f51a5cd3b9e595323d78421a274b8))
+- **web-component:** Draw the status bar with shared ooxml-ui elements (by @ChristopherVR) ([70871a8](https://github.com/ChristopherVR/docx-viewer/commit/70871a84308d14df45b0787cc88a6a35ab2158a4))
+- **web-component:** Build the format dialogs on the shared office-ui-dialog (by @ChristopherVR) ([a273ad8](https://github.com/ChristopherVR/docx-viewer/commit/a273ad8d97a800b73594bd204b8545dc5b069a1b))
+- **web-component:** Build the File view on the shared office-ui-backstage (by @ChristopherVR) ([93ee934](https://github.com/ChristopherVR/docx-viewer/commit/93ee9341f451d3d593b241b39acc38c982a325f7))
+- **web-component:** Draw the title bar and shortcut help with shared elements (by @ChristopherVR) ([a45dd66](https://github.com/ChristopherVR/docx-viewer/commit/a45dd66883f3fd7cbe1d89fad1eb8326f601d786))
+
+### Build & CI
+
+- **deps:** Adopt ooxml-core 0.15.0 and ooxml-ui 0.21.0 (by @ChristopherVR) ([91eac57](https://github.com/ChristopherVR/docx-viewer/commit/91eac573a278cc9a2f23e4a85871ddc6eb33d9c6))
+- **deps:** Update all dependencies to latest (by @ChristopherVR) ([b0fd02d](https://github.com/ChristopherVR/docx-viewer/commit/b0fd02decdbcdca871d4ac8b21967c6a24d4cbbf))
+
 ## [0.4.1](https://github.com/ChristopherVR/docx-viewer/releases/tag/docx-angular-viewer@0.4.1) - 2026-10-03
 
 ### Documentation

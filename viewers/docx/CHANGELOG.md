@@ -7,6 +7,28 @@ by [git-cliff](https://git-cliff.org); do not edit it by hand.
 Each dated section below names the per-package releases cut in that run; the per-package
 history lives in `packages/<name>/CHANGELOG.md`. Nothing has been published yet, so there are no
 sections: the first release run writes them.
+## 2026-10-05
+
+_Releases: docx-viewer-mcp@0.1.3, docx-core@0.1.5, docx-react-viewer@0.4.2, docx-vue-viewer@0.4.2, docx-angular-viewer@0.4.2, docx-svelte-viewer@0.4.2, docx-solid-viewer@0.4.2, docx-vanilla-viewer@0.4.2_
+
+### Refactor
+
+- **web-component:** Use the shared office-ui-context-menu (by @ChristopherVR) ([4a5a4a3](https://github.com/ChristopherVR/docx-viewer/commit/4a5a4a37e50f51a5cd3b9e595323d78421a274b8))
+- **web-component:** Draw the status bar with shared ooxml-ui elements (by @ChristopherVR) ([70871a8](https://github.com/ChristopherVR/docx-viewer/commit/70871a84308d14df45b0787cc88a6a35ab2158a4))
+- **web-component:** Build the format dialogs on the shared office-ui-dialog (by @ChristopherVR) ([a273ad8](https://github.com/ChristopherVR/docx-viewer/commit/a273ad8d97a800b73594bd204b8545dc5b069a1b))
+- **web-component:** Build the File view on the shared office-ui-backstage (by @ChristopherVR) ([93ee934](https://github.com/ChristopherVR/docx-viewer/commit/93ee9341f451d3d593b241b39acc38c982a325f7))
+- **web-component:** Draw the title bar and shortcut help with shared elements (by @ChristopherVR) ([a45dd66](https://github.com/ChristopherVR/docx-viewer/commit/a45dd66883f3fd7cbe1d89fad1eb8326f601d786))
+
+### Documentation
+
+- Record that Update Table honours outline levels and style mappings (by @ChristopherVR) ([a72f8e2](https://github.com/ChristopherVR/docx-viewer/commit/a72f8e27f9c7dfce6d4a0ed3239f81a0bedce951))
+
+### Build & CI
+
+- **deps:** Adopt ooxml-core 0.15.0 and ooxml-ui 0.21.0 (by @ChristopherVR) ([91eac57](https://github.com/ChristopherVR/docx-viewer/commit/91eac573a278cc9a2f23e4a85871ddc6eb33d9c6))
+- Follow ooxml-core and ooxml-ui releases automatically (by @ChristopherVR) ([d3d3209](https://github.com/ChristopherVR/docx-viewer/commit/d3d3209f24ec66c615f3091e0f07f8993a0fac79))
+- **deps:** Update all dependencies to latest (by @ChristopherVR) ([b0fd02d](https://github.com/ChristopherVR/docx-viewer/commit/b0fd02decdbcdca871d4ac8b21967c6a24d4cbbf))
+
 ## 2026-10-03
 
 _Releases: docx-viewer-mcp@0.1.2, docx-core@0.1.4, docx-react-viewer@0.4.1, docx-vue-viewer@0.4.1, docx-angular-viewer@0.4.1, docx-svelte-viewer@0.4.1, docx-solid-viewer@0.4.1, docx-vanilla-viewer@0.4.1_

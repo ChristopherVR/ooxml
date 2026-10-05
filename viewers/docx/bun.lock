@@ -46,7 +46,7 @@
     },
     "packages/angular": {
       "name": "docx-angular-viewer",
-      "version": "0.4.1",
+      "version": "0.4.2",
       "dependencies": {
         "docx-core": "^0.1.4",
         "ooxml-core": "^0.16.0",
@@ -89,14 +89,14 @@
     },
     "packages/core": {
       "name": "docx-core",
-      "version": "0.1.4",
+      "version": "0.1.5",
       "dependencies": {
         "ooxml-core": "^0.16.0",
       },
     },
     "packages/react": {
       "name": "docx-react-viewer",
-      "version": "0.4.1",
+      "version": "0.4.2",
       "dependencies": {
         "docx-core": "^0.1.4",
         "ooxml-core": "^0.16.0",
@@ -116,7 +116,7 @@
     },
     "packages/solid": {
       "name": "docx-solid-viewer",
-      "version": "0.4.1",
+      "version": "0.4.2",
       "dependencies": {
         "docx-core": "^0.1.4",
         "ooxml-core": "^0.16.0",
@@ -136,7 +136,7 @@
     },
     "packages/svelte": {
       "name": "docx-svelte-viewer",
-      "version": "0.4.1",
+      "version": "0.4.2",
       "dependencies": {
         "docx-core": "^0.1.4",
         "ooxml-core": "^0.16.0",
@@ -156,7 +156,7 @@
     },
     "packages/vanilla": {
       "name": "docx-vanilla-viewer",
-      "version": "0.4.1",
+      "version": "0.4.2",
       "dependencies": {
         "docx-core": "^0.1.4",
         "ooxml-core": "^0.16.0",
@@ -173,7 +173,7 @@
     },
     "packages/vue": {
       "name": "docx-vue-viewer",
-      "version": "0.4.1",
+      "version": "0.4.2",
       "dependencies": {
         "docx-core": "^0.1.4",
         "ooxml-core": "^0.16.0",
