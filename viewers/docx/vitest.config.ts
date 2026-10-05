@@ -32,5 +32,8 @@ export default defineConfig({
 	test: {
 		include: ['packages/**/*.test.ts', 'packages/**/*.test.tsx', 'scripts/**/*.test.ts'],
 		environment: 'node',
+		// Editor-mounting tests build a full ProseMirror view; under the parallel full run (vitest 5,
+		// jsdom 30) a few took 5 to 7 s. They pass alone in about 1 s, so this is load, not a hang.
+		testTimeout: 20_000,
 	},
 });

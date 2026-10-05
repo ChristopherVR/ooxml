@@ -65,7 +65,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.3.5
+          bun-version: 1.4.2
 
       # Plan FIRST (before installing or building): it only reads git history and the npm registry.
       # It is the first of two early-exit gates, so a quiet hour is a cheap no-op.
@@ -317,7 +317,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.3.5
+          bun-version: 1.4.2
 
       - run: bun install --frozen-lockfile
 

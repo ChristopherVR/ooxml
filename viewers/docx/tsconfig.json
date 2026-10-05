@@ -14,17 +14,16 @@
 		"jsx": "react-jsx",
 		"experimentalDecorators": true,
 		"useDefineForClassFields": false,
-		"baseUrl": ".",
 		"paths": {
-			"docx-core": ["packages/core/src/index.ts"],
-			"docx-core/embedded": ["packages/core/src/embedded.ts"],
-			"docx-web-component": ["packages/web-component/src/index.ts"],
-			"docx-bindings": ["packages/bindings/src/index.ts"],
-			"docx-bindings/react": ["packages/bindings/src/react.tsx"],
-			"docx-bindings/vue": ["packages/bindings/src/vue.ts"],
-			"docx-bindings/angular": ["packages/bindings/src/angular.ts"],
-			"docx-bindings/solid": ["packages/bindings/src/solid.ts"],
-			"docx-bindings/common": ["packages/bindings/src/common.ts"]
+			"docx-core": ["./packages/core/src/index.ts"],
+			"docx-core/embedded": ["./packages/core/src/embedded.ts"],
+			"docx-web-component": ["./packages/web-component/src/index.ts"],
+			"docx-bindings": ["./packages/bindings/src/index.ts"],
+			"docx-bindings/react": ["./packages/bindings/src/react.tsx"],
+			"docx-bindings/vue": ["./packages/bindings/src/vue.ts"],
+			"docx-bindings/angular": ["./packages/bindings/src/angular.ts"],
+			"docx-bindings/solid": ["./packages/bindings/src/solid.ts"],
+			"docx-bindings/common": ["./packages/bindings/src/common.ts"]
 		},
 		"types": ["node", "vitest/globals", "vite/client"]
 	},
@@ -36,5 +35,5 @@
 		"tests/**/*.ts",
 		"*.ts"
 	],
-	"exclude": ["packages/**/dist/**", "**/node_modules/**"]
+	"exclude": ["./packages/**/dist/**", "**/node_modules/**"]
 }

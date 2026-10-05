@@ -28,9 +28,10 @@
 		"test": "node --test test/*.test.js"
 	},
 	"dependencies": {
-		"@modelcontextprotocol/sdk": "^1.30.0",
-		"ooxml-core": ">=0.11.0 <1",
-		"zod": "^4.4.3"
+		"@modelcontextprotocol/sdk": "^1.32.0",
+		"docx-viewer-workspace": "file:..",
+		"ooxml-core": "^0",
+		"zod": "^4.6.5"
 	},
 	"engines": {
 		"node": ">=22"
