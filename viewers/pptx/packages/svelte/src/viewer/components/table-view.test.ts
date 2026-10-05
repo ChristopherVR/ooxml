@@ -224,6 +224,34 @@ describe('tableView', () => {
 		expect(td.style.paddingTop).toBe('0px');
 	});
 
+	it('takes half of the border width out of the cell padding', () => {
+		const tableData: PptxTableData = {
+			columnWidths: [1],
+			rows: [{ cells: [{ text: '42', style: { marginRight: 6, borderRightWidth: 2 } }] }],
+		};
+		const td = mountEl(buildTableElement(tableData)).querySelector('td') as HTMLElement;
+		expect(td.style.paddingRight).toBe('5px');
+	});
+
+	it('lowers and shrinks a subscript run', () => {
+		const tableData: PptxTableData = {
+			columnWidths: [1],
+			rows: [
+				{
+					cells: [
+						richCell('CO2', [
+							{ text: 'CO', fontSize: 10 },
+							{ text: '2', fontSize: 10, baseline: -25000 },
+						]),
+					],
+				},
+			],
+		};
+		const spans = mountEl(buildTableElement(tableData)).querySelectorAll<HTMLElement>('td span');
+		expect(spans[1].style.fontSize).toBe('6.5pt');
+		expect(spans[1].style.verticalAlign).toBe('sub');
+	});
+
 	// G8 (OpenXML parity audit, D3): a:graphicFrameLocks/@noDrilldown was
 	// parsed but never enforced - a cell was still double-click editable on a
 	// locked table.
