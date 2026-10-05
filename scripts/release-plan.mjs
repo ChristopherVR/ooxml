@@ -127,13 +127,14 @@ export function satisfies(range, version) {
 }
 
 /**
- * A range that tracks the sibling in this repository: `workspace:*`, or `*` where Bun cannot link
+ * A range that tracks the sibling in this repository: `workspace:*`, a `file:` link (the MCP package
+ * links the core by path), or `*` where Bun cannot link
  * the sibling (the repository root is the core and cannot be a member of its own workspace, so the
  * UI declares `*` and tsconfig paths point at the core source). Either is published as a caret
  * range on the sibling's version at publish time and is never rewritten in the repository, so
  * `bun install` never has to resolve a version that is only published later in the same release.
  */
-export const isWorkspaceRange = (range) => /^(?:workspace:|\*$)/u.test(range);
+export const isWorkspaceRange = (range) => /^(?:workspace:|file:|\*$)/u.test(range);
 
 /** The packages of `table` whose manifest exists in `root` (a package may not be merged yet). */
 export function presentPackages(root, table) {
@@ -425,7 +426,7 @@ export function applyPlan({ root, packages: all }, plan) {
 			for (const dep of Object.keys(data[field] ?? {})) {
 				const target = Object.values(plan.packages).find((p) => p.npm === dep);
 				if (!target || isWorkspaceRange(data[field][dep])) continue;
-				const prefix = /^[^~]/u.exec(data[field][dep])?.[0] ?? '';
+				const prefix = /^[\^~]/u.exec(data[field][dep])?.[0] ?? '';
 				if (data[field][dep] !== `${prefix}${target.version}`) {
 					data[field][dep] = `${prefix}${target.version}`;
 					changed = true;

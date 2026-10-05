@@ -76,6 +76,11 @@ test('a `*` range on a sibling (the UI on the core) is published as a caret rang
 	});
 });
 
+test('a `file:` link on a sibling (the MCP package on the core) is published as a caret range', () => {
+	writeUi({ '@x/core': 'file:..' });
+	assert.deepEqual(publishManifest(ui, versions, temp).dependencies, { '@x/core': '^0.4.2' });
+});
+
 test('a workspace range on anything but a sibling cannot be published', () => {
 	writeUi({ '@x/other': 'workspace:*' });
 	assert.throws(() => verifyManifest(ui, versions, temp), /cannot be installed/);
