@@ -7,6 +7,13 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.25.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.25.0) - 2026-10-05
+
+### Features
+
+- **ui:** Let a ribbon panel hide its tab with data-tab-hidden (by @ChristopherVR) ([3bd9325](https://github.com/ChristopherVR/ooxml/commit/3bd9325e920e8049774a4b0894a7736ec244cdaf))
+- **ui:** Add an actions slot to the title bar (by @ChristopherVR) ([65f1fea](https://github.com/ChristopherVR/ooxml/commit/65f1feac6dcb5cf7200247cfff28180c2bb36d38))
+
 ## [0.24.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.24.0) - 2026-10-04
 
 ### Features

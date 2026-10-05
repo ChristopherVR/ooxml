@@ -7,6 +7,14 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.17.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@0.17.0) - 2026-10-05
+
+### Features
+
+- **xlsx:** Add bond, coupon, discount-security and Treasury bill functions (by @ChristopherVR) ([761673c](https://github.com/ChristopherVR/ooxml/commit/761673c65671f8e802c69289160ace8b95bc76cb))
+- **xlsx:** Add VDB, ENCODEURL, REGEXTEST, REGEXEXTRACT and REGEXREPLACE (by @ChristopherVR) ([c2c3eac](https://github.com/ChristopherVR/ooxml/commit/c2c3eacd6bd7f67a2dfa2657d5bb81b6c1a866fa))
+- **xlsx:** Support iterative calculation for circular references (by @ChristopherVR) ([25c9307](https://github.com/ChristopherVR/ooxml/commit/25c930726dbbcbc8d692662347be89e786eb8452))
+
 ## [0.16.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@0.16.0) - 2026-10-04
 
 ### Features
