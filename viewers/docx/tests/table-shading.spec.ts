@@ -1,7 +1,14 @@
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
-import { fileInput, insertTableOfSize, newDocument, reveal, saveButton } from './helpers';
+import {
+	fileInput,
+	insertTableOfSize,
+	newDocument,
+	reveal,
+	saveButton,
+	dialogByHeading,
+} from './helpers';
 
 for (const framework of ['react', 'vue', 'angular', 'svelte', 'solid', 'vanilla']) {
 	test(`${framework}: cell shading edits, undoes and survives DOCX reload`, async ({ page }) => {
@@ -19,7 +26,7 @@ for (const framework of ['react', 'vue', 'angular', 'svelte', 'solid', 'vanilla'
 			await menu.focus();
 			await menu.press('Enter');
 			await editor.getByRole('menuitem', { name: 'Borders and Shading…' }).click();
-			return editor.getByRole('dialog', { name: 'Borders and Shading', exact: true });
+			return dialogByHeading(editor, 'Borders and Shading');
 		};
 		let dialog = await open();
 		await dialog.getByRole('checkbox', { name: 'No Color', exact: true }).uncheck();

@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
-import { newDocument, reveal, saveButton } from './helpers';
+import { newDocument, reveal, saveButton, dialogByHeading } from './helpers';
 
 test('Drop Cap Options apply, undo, cancel and export the frame font and distance', async ({
 	page,
@@ -16,7 +16,7 @@ test('Drop Cap Options apply, undo, cancel and export the frame font and distanc
 	const menu = editor.getByRole('combobox', { name: 'Drop cap', exact: true });
 	await reveal(editor, menu);
 	await menu.selectOption('options');
-	const dialog = editor.getByRole('dialog', { name: 'Drop Cap Options', exact: true });
+	const dialog = dialogByHeading(editor, 'Drop Cap Options');
 	await dialog.getByRole('combobox', { name: 'Position', exact: true }).selectOption('drop');
 	await dialog.getByRole('textbox', { name: 'Font family', exact: true }).fill('Georgia');
 	await dialog.getByRole('spinbutton', { name: 'Lines to drop', exact: true }).fill('1.5');

@@ -127,7 +127,7 @@ test('ribbon edits preserve font properties and save table and page settings', a
 	await expect(surface.locator('table')).toHaveCount(1);
 	await setReadOnly(page, true);
 	await editor.getByRole('tab', { name: 'View', exact: true }).click();
-	await editor.getByLabel('Zoom', { exact: true }).selectOption('75');
+	await editor.getByRole('combobox', { name: 'Zoom', exact: true }).selectOption('75');
 	await expect(surface).toHaveAttribute('contenteditable', 'false');
 	await expect(editor.getByLabel('Document page', { exact: true })).toHaveCSS('zoom', '0.75');
 	const pending = page.waitForEvent('download');

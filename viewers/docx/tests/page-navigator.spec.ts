@@ -53,7 +53,9 @@ test.describe('page thumbnail rail', () => {
 		await expect.poll(() => options.count()).toBeGreaterThan(2);
 		const total = await options.count();
 		await expect(options.first()).toHaveAttribute('aria-selected', 'true');
-		await expect(editor(page).locator('.dve-status-page')).toHaveText(`Page 1 of ${total}`);
+		await expect(editor(page).locator('.dve-status [data-item="page"]')).toHaveText(
+			`Page 1 of ${total}`,
+		);
 		// Lazy thumbnails: the visible ones are drawn.
 		await expect(options.first().locator('.dve-print-page')).toHaveCount(1);
 
@@ -66,7 +68,9 @@ test.describe('page thumbnail rail', () => {
 					.evaluate((node) => node.scrollTop),
 			)
 			.toBeGreaterThan(500);
-		await expect(editor(page).locator('.dve-status-page')).toHaveText(`Page 3 of ${total}`);
+		await expect(editor(page).locator('.dve-status [data-item="page"]')).toHaveText(
+			`Page 3 of ${total}`,
+		);
 		await expect
 			.poll(async () => (await pageEvents(page)).at(-1))
 			.toEqual({

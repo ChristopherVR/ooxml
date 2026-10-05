@@ -19,6 +19,8 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		const editor = page.locator('docx-editor');
 		const surface = editor.locator('.ProseMirror');
 		await expect(surface).toContainText('Document title');
+		// Wide enough that the Review ribbon keeps its language controls out of the overflow menus.
+		await page.setViewportSize({ width: 1600, height: 900 });
 		await newDocument(page);
 		await surface.click();
 		const text = 'مرحبا بالعالم שלום עולם 日本語 cafe\u0301 👩🏽‍💻';
@@ -28,8 +30,12 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		// Multilingual controls are shared by every framework adapter.
 		await reveal(editor, editor.getByLabel('Paragraph direction', { exact: true }));
 		await editor.getByLabel('Paragraph direction', { exact: true }).selectOption('rtl');
-		await editor.getByLabel('Text language', { exact: true }).selectOption('ar-SA');
-		await editor.getByLabel('Run direction', { exact: true }).selectOption('on');
+		await reveal(editor, editor.getByLabel('Text language', { exact: true }));
+		await editor
+			.getByLabel('Text language', { exact: true })
+			.selectOption('ar-SA', { force: true });
+		await reveal(editor, editor.getByLabel('Run direction', { exact: true }));
+		await editor.getByLabel('Run direction', { exact: true }).selectOption('on', { force: true });
 		await expect(surface.locator('p')).toHaveAttribute('dir', 'rtl');
 		await expect(surface.locator('[lang="ar-SA"]').first()).toContainText('مرحبا');
 		const pending = page.waitForEvent('download');

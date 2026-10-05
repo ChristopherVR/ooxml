@@ -3,7 +3,7 @@ import JSZip from 'jszip';
 import { readFile } from 'node:fs/promises';
 import { computeListLabels, loadDocx } from '../packages/core/src/index';
 import { restartFixture } from './support/restart-fixture';
-import { fileInput, reveal, saveButton } from './helpers';
+import { fileInput, reveal, saveButton, dialogByHeading } from './helpers';
 
 for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
 	test(`${framework}: define a multilevel list, undo, redo and export its restart and position settings`, async ({
@@ -25,7 +25,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		const menu = editor.getByRole('combobox', { name: 'Multilevel list', exact: true });
 		await reveal(editor, menu);
 		await menu.selectOption('define');
-		const dialog = editor.getByRole('dialog', { name: 'Define New Multilevel List', exact: true });
+		const dialog = dialogByHeading(editor, 'Define New Multilevel List');
 		await expect(dialog).toBeVisible();
 		await dialog.getByLabel('Start at', { exact: true }).fill('2');
 		await dialog.getByLabel('Level to modify', { exact: true }).selectOption({ value: '2' });
@@ -52,12 +52,12 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		const expected = ['2.', '1.', '2.4.', '2.5.', '3.', '3.6.', '2.', '3.7.'];
 		await expect.poll(labels).toEqual(expected);
 		await editor
-			.locator('.dve-quick-access')
+			.locator('.dve-titlebar .qat')
 			.getByRole('button', { name: 'Undo', exact: true })
 			.click();
 		await expect.poll(labels).toEqual(['1.', '1.', '1.', '2.', '2.', '1.', '2.', '2.']);
 		await editor
-			.locator('.dve-quick-access')
+			.locator('.dve-titlebar .qat')
 			.getByRole('button', { name: 'Redo', exact: true })
 			.click();
 		await expect.poll(labels).toEqual(expected);

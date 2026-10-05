@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
-import { newDocument, reveal, saveButton } from './helpers';
+import { newDocument, reveal, saveButton, dialogByHeading } from './helpers';
 
 test('More Columns applies spacing and separator with undo and export', async ({ page }) => {
 	await page.goto('/?framework=vanilla');
@@ -15,7 +15,7 @@ test('More Columns applies spacing and separator with undo and export', async ({
 	await reveal(editor, columns);
 	await columns.press('Alt+ArrowDown');
 	await editor.getByRole('menuitem', { name: 'More Columns…', exact: true }).click();
-	const dialog = editor.getByRole('dialog', { name: 'Columns', exact: true });
+	const dialog = dialogByHeading(editor, 'Columns');
 	await dialog.getByRole('spinbutton', { name: 'Number of columns', exact: true }).fill('3');
 	await dialog.getByRole('spinbutton', { name: 'Column spacing (inches)', exact: true }).fill('5');
 	await expect(dialog.getByRole('button', { name: 'OK', exact: true })).toBeDisabled();
@@ -70,7 +70,7 @@ test('Left and Right presets render unequal widths and More Columns edits them',
 	await expect(columns).toHaveValue('right');
 	await columns.press('Alt+ArrowDown');
 	await editor.getByRole('menuitem', { name: 'More Columns…', exact: true }).click();
-	const dialog = editor.getByRole('dialog', { name: 'Columns', exact: true });
+	const dialog = dialogByHeading(editor, 'Columns');
 	await expect(
 		dialog.getByRole('checkbox', { name: 'Equal column width', exact: true }),
 	).not.toBeChecked();

@@ -76,20 +76,23 @@ test.describe('Word-style ribbon', () => {
 		const editor = page.locator('docx-editor');
 		const panel = editor.locator('.ribbon-panel:not([hidden])');
 		await expect(panel).toBeVisible();
-		await editor.locator('.ribbon-collapse').click();
+		await editor.locator('.dve-ribbon .collapse').click();
 		await expect(panel).toBeHidden();
-		await editor.locator('#dve-tab-insert').click();
-		await expect(editor.locator('#dve-panel-insert')).toBeVisible();
+		await editor.locator('[role="tab"][data-tab="insert"]').click();
+		await expect(editor.locator('[data-ribbon-tab="insert"]')).toBeVisible();
 		await page.keyboard.press('Escape');
-		await expect(editor.locator('#dve-panel-insert')).toBeHidden();
-		await editor.locator('.ribbon-collapse').click();
-		await expect(editor.locator('#dve-panel-insert')).toBeVisible();
+		await expect(editor.locator('[data-ribbon-tab="insert"]')).toBeHidden();
+		await editor.locator('.dve-ribbon .collapse').click();
+		await expect(editor.locator('[data-ribbon-tab="insert"]')).toBeVisible();
 
 		await editor.locator('.ProseMirror').click();
 		await page.keyboard.press('Alt');
 		await expect(editor.locator('.dve-keytip').first()).toBeVisible();
 		await page.keyboard.press('r');
-		await expect(editor.locator('#dve-tab-review')).toHaveAttribute('aria-selected', 'true');
+		await expect(editor.locator('[role="tab"][data-tab="review"]')).toHaveAttribute(
+			'aria-selected',
+			'true',
+		);
 	});
 
 	test('Insert, Review, View and Layout commands act on the document', async ({ page }) => {
@@ -100,24 +103,24 @@ test.describe('Word-style ribbon', () => {
 		await surface.click();
 		await page.keyboard.type('one two three');
 
-		await editor.locator('#dve-tab-insert').click();
+		await editor.locator('[role="tab"][data-tab="insert"]').click();
 		await editor.getByRole('combobox', { name: 'Symbol' }).selectOption('©');
 		await expect(surface).toContainText('one two three©');
 
-		await editor.locator('#dve-tab-review').click();
+		await editor.locator('[role="tab"][data-tab="review"]').click();
 		await editor.getByRole('button', { name: 'Word count', exact: true }).click();
 		await expect(editor.locator('.dve-word-count')).toContainText('3');
 		await page.keyboard.press('Escape');
 		await expect(editor.locator('.dve-word-count')).toHaveCount(0);
 
-		await editor.locator('#dve-tab-layout').click();
+		await editor.locator('[role="tab"][data-tab="layout"]').click();
 		const left = editor.getByLabel('Indent left', { exact: true });
 		await reveal(editor, left);
 		await left.fill('0.5');
 		await left.dispatchEvent('change');
 		await expect(surface.locator('p').first()).toHaveCSS('margin-left', '48px');
 
-		await editor.locator('#dve-tab-view').click();
+		await editor.locator('[role="tab"][data-tab="view"]').click();
 		await editor.getByRole('button', { name: 'Page width', exact: true }).click();
 		const zoom = await editor
 			.getByLabel('Document page', { exact: true })
@@ -187,10 +190,10 @@ test.describe('Word-style ribbon', () => {
 	test('the Table tab is contextual', async ({ page }) => {
 		const editor = page.locator('docx-editor');
 		await editor.locator('.ProseMirror').first().click();
-		await expect(editor.locator('#dve-tab-table')).toBeHidden();
+		await expect(editor.locator('[role="tab"][data-tab="table"]')).toBeHidden();
 		await insertTableOfSize(page);
 		await editor.locator('.ProseMirror td').first().click();
-		await expect(editor.locator('#dve-tab-table')).toBeVisible();
+		await expect(editor.locator('[role="tab"][data-tab="table"]')).toBeVisible();
 		await editor.locator('.ProseMirror').first().locator('p').first().click();
 	});
 
@@ -198,7 +201,7 @@ test.describe('Word-style ribbon', () => {
 		const editor = page.locator('docx-editor');
 		await editor.locator('.ProseMirror').first().click();
 		await page.keyboard.type('Body text');
-		await editor.locator('#dve-tab-insert').click();
+		await editor.locator('[role="tab"][data-tab="insert"]').click();
 		await editor.getByRole('combobox', { name: 'Page number' }).selectOption('bottom:center');
 		const footer = editor
 			.locator('.dve-footer, [data-slot="footer"], .dve-header-footer-slot')
@@ -219,7 +222,7 @@ test.describe('Word-style ribbon', () => {
 		const editor = page.locator('docx-editor');
 		await editor.locator('.ProseMirror').first().click();
 		await page.keyboard.type('Body text');
-		await editor.locator('#dve-tab-insert').click();
+		await editor.locator('[role="tab"][data-tab="insert"]').click();
 		await editor.getByRole('combobox', { name: 'Page number' }).selectOption('bottom:right');
 		await editor.locator('.ProseMirror').first().click();
 		await page.keyboard.press('End');
@@ -309,7 +312,7 @@ test.describe('Word-style ribbon', () => {
 		const surface = editor.locator('.ProseMirror').first();
 		await surface.click();
 		await page.keyboard.type('Body paragraph');
-		await editor.locator('#dve-tab-insert').click();
+		await editor.locator('[role="tab"][data-tab="insert"]').click();
 		await editor.getByRole('button', { name: 'Bookmark', exact: true }).click();
 		await editor.getByLabel('Bookmark name', { exact: true }).fill('KeyPoint');
 		await editor.locator('.dve-bookmark-dialog').getByRole('button', { name: 'Add' }).click();
@@ -329,7 +332,7 @@ test.describe('Word-style ribbon', () => {
 		const editor = page.locator('docx-editor');
 		await editor.locator('.ProseMirror').first().click();
 		await page.keyboard.type('Page setup text');
-		await editor.locator('#dve-tab-layout').click();
+		await editor.locator('[role="tab"][data-tab="layout"]').click();
 		await editor.getByRole('button', { name: 'Page setup settings' }).click();
 		const dialog = editor.locator('.dve-page-setup-dialog');
 		await expect(dialog).toBeVisible();
@@ -353,13 +356,13 @@ test.describe('Word-style ribbon', () => {
 		const editor = page.locator('docx-editor');
 		await editor.locator('.ProseMirror').first().click();
 		await page.keyboard.type('Indented paragraph');
-		await editor.locator('#dve-tab-view').click();
+		await editor.locator('[role="tab"][data-tab="view"]').click();
 		await editor.getByRole('button', { name: 'Ruler', exact: true }).click();
 		const ruler = editor.locator('.dve-ruler');
 		await expect(ruler).toBeVisible();
 		const left = ruler.locator('.dve-ruler-marker-left');
 		const before = await left.evaluate((el) => parseFloat((el as HTMLElement).style.left));
-		await editor.locator('#dve-tab-layout').click();
+		await editor.locator('[role="tab"][data-tab="layout"]').click();
 		const spinner = editor.getByLabel('Indent left', { exact: true });
 		await reveal(editor, spinner);
 		await spinner.fill('1');
@@ -367,7 +370,7 @@ test.describe('Word-style ribbon', () => {
 		await expect
 			.poll(() => left.evaluate((el) => parseFloat((el as HTMLElement).style.left)))
 			.toBe(before + 96);
-		await editor.locator('#dve-tab-view').click();
+		await editor.locator('[role="tab"][data-tab="view"]').click();
 		await editor.getByRole('button', { name: 'Ruler', exact: true }).click();
 		await expect(ruler).toHaveCount(0);
 	});

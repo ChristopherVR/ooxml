@@ -37,12 +37,12 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await page.keyboard.type(' changed');
 		await expect(body).toHaveText('Advanced changed');
 		await editor
-			.locator('.dve-quick-access')
+			.locator('.dve-titlebar .qat')
 			.getByRole('button', { name: 'Undo', exact: true })
 			.click();
 		await expect(body).toHaveText('Advanced');
 		await editor
-			.locator('.dve-quick-access')
+			.locator('.dve-titlebar .qat')
 			.getByRole('button', { name: 'Redo', exact: true })
 			.click();
 		await expect(body).toHaveText('Advanced changed');

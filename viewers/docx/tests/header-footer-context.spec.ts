@@ -119,6 +119,8 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 				(el as DocxEditorElement).documentModel!.sections!.map((s) => !!s.footers?.default),
 			),
 		).toEqual([false, true]);
+		// Saving leaves the footer editor, so open it again; undo history is the document's.
+		await editor.locator('.dve-footer [data-slot=default]').dblclick();
 		await page.keyboard.press('Control+z');
 		await expect(editor.locator('.dve-footer .ProseMirror')).toHaveText('');
 		expect(

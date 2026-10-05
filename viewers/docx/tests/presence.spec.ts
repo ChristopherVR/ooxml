@@ -22,7 +22,7 @@ for (const guest of ['vue', 'solid']) {
 			(element as unknown as { leavePresence: () => unknown }).leavePresence(),
 		);
 		await expect(peerA.getByRole('img', { name: "Grace Hopper's cursor" })).toHaveCount(0);
-		await expect(page.getByRole('status')).toContainText('Synced');
+		await expect(page.getByRole('status').filter({ hasText: 'Synced' })).toBeVisible();
 		await expect(errors).toEqual([]);
 	});
 }

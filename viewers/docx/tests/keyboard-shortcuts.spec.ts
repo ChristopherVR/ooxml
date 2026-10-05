@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { newDocument, openSample, reveal, setReadOnly } from './helpers';
+import { newDocument, openSample, reveal, setReadOnly, dialogByHeading } from './helpers';
 
 const editor = (page: Page) => page.locator('docx-editor');
 const surface = (page: Page) => editor(page).locator('.ProseMirror');
@@ -68,7 +68,7 @@ test('F6 and Shift+F6 cycle ribbon, document and status bar; Alt and F10 focus t
 }) => {
 	await startTyping(page);
 	const ribbonTab = editor(page).locator('[role="tab"][aria-selected="true"]');
-	const statusButton = editor(page).locator('.dve-status button:not([hidden])').first();
+	const statusButton = editor(page).locator('.dve-status button:visible').first();
 	await page.keyboard.press('F6');
 	await expect(statusButton).toBeFocused();
 	await page.keyboard.press('F6');
@@ -90,14 +90,15 @@ test('F6 and Shift+F6 cycle ribbon, document and status bar; Alt and F10 focus t
 
 test('Ctrl+/ and F1 open a localized shortcut help dialog that Escape closes', async ({ page }) => {
 	await startTyping(page);
-	const dialog = editor(page).getByRole('dialog', { name: 'Keyboard shortcuts' });
+	const dialog = dialogByHeading(editor(page), 'Keyboard shortcuts');
 	await page.keyboard.press('Control+/');
 	await expect(dialog).toBeVisible();
 	await expect(dialog.getByRole('cell', { name: 'Find', exact: true })).toBeVisible();
 	await expect(dialog.getByText('Ctrl+F', { exact: true })).toBeVisible();
 	// ProseMirror's own formatting keys are listed because they exist.
 	await expect(dialog.getByText('Ctrl+B', { exact: true })).toBeVisible();
-	await expect(dialog.getByRole('button', { name: 'Close' })).toBeFocused();
+	// Focus moves into the shared dialog on open (its box when nothing inside can take it).
+	expect(await dialog.evaluate((element) => element.matches(':focus-within'))).toBe(true);
 	await page.keyboard.press('Escape');
 	await expect(dialog).toBeHidden();
 	await expect(surface(page)).toBeFocused();
@@ -105,12 +106,14 @@ test('Ctrl+/ and F1 open a localized shortcut help dialog that Escape closes', a
 		(element as HTMLElement & { locale: string }).locale = 'fr';
 	});
 	await page.keyboard.press('F1');
-	await expect(editor(page).getByRole('dialog', { name: 'Raccourcis clavier' })).toBeVisible();
+	await expect(dialogByHeading(editor(page), 'Raccourcis clavier')).toBeVisible();
 	await page.keyboard.press('Escape');
 });
 
 test('Escape closes the comments panel and returns focus to the document', async ({ page }) => {
 	await startTyping(page);
+	// Wide enough that the Review ribbon keeps the Comments button out of the overflow menus.
+	await page.setViewportSize({ width: 1600, height: 900 });
 	await editor(page).getByRole('tab', { name: 'Review', exact: true }).click();
 	const comments = editor(page)
 		.locator('button[aria-label="Comments"]:not(.ribbon-overflow-button)')

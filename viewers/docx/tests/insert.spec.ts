@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
-import { newDocument, saveButton } from './helpers';
+import { newDocument, saveButton, dialogByHeading } from './helpers';
 
 test('inserts a picture and a hyperlink from the ribbon and saves both to DOCX', async ({
 	page,
@@ -39,7 +39,7 @@ test('inserts a picture and a hyperlink from the ribbon and saves both to DOCX',
 	await page.keyboard.press('Home');
 	await page.keyboard.press('Shift+End');
 	await page.keyboard.press('Control+k');
-	const dialog = editor.getByRole('dialog', { name: 'Insert link' });
+	const dialog = dialogByHeading(editor, 'Insert link');
 	await expect(dialog).toBeVisible();
 	await dialog.getByLabel('Address', { exact: true }).fill('https://example.com/guide');
 	await dialog.getByRole('button', { name: 'Insert', exact: true }).click();

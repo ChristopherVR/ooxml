@@ -44,7 +44,9 @@ test('all bindings keep the shared ribbon, canvas, and status within their host'
 			const host = node as HTMLElement;
 			host.style.width = '48%';
 			const root = host.shadowRoot!;
-			const tabs = root.querySelector<HTMLElement>('.ribbon-tabs')!;
+			const tabs = root
+				.querySelector('.dve-ribbon')!
+				.shadowRoot!.querySelector<HTMLElement>('[role="tablist"]')!;
 			const panel = root.querySelector<HTMLElement>('.ribbon-panel[data-panel="Home"]')!;
 			const canvas = root.querySelector<HTMLElement>('.dve-canvas')!;
 			const status = root.querySelector<HTMLElement>('.dve-status')!;

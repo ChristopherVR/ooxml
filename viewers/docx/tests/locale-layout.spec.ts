@@ -11,7 +11,7 @@ const TABS = ['home', 'insert'] as const;
 async function clippedControls(page: Page, tab: string): Promise<string[]> {
 	return page.evaluate((tabId) => {
 		const root = document.querySelector('docx-editor')!.shadowRoot!;
-		const panel = root.querySelector<HTMLElement>(`#dve-panel-${tabId}`)!;
+		const panel = root.querySelector<HTMLElement>(`[data-ribbon-tab="${tabId}"]`)!;
 		const canvas = document.createElement('canvas').getContext('2d')!;
 		const bad: string[] = [];
 		const name = (el: HTMLElement) =>
@@ -57,14 +57,14 @@ for (const locale of LOCALES)
 		await expect(editor).toHaveAttribute('locale', locale);
 		await expect(editor.locator('.ProseMirror')).toContainText('Document title');
 		for (const tab of TABS) {
-			await editor.locator(`#dve-tab-${tab}`).click();
+			await editor.locator(`[role="tab"][data-tab="${tab}"]`).click();
 			expect(await clippedControls(page, tab), `${locale} ${tab}`).toEqual([]);
 			if (tab === 'home') await page.screenshot({ path: `${SHOTS}/locale-${locale}.png` });
 		}
 		for (const width of [900, 760, 480]) {
 			await page.setViewportSize({ width, height: 900 });
 			for (const tab of TABS) {
-				await editor.locator(`#dve-tab-${tab}`).click();
+				await editor.locator(`[role="tab"][data-tab="${tab}"]`).click();
 				expect(await clippedControls(page, tab), `${locale} ${tab} @${width}`).toEqual([]);
 			}
 		}

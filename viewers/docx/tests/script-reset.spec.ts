@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
 import { loadDocx } from '../packages/core/src/index';
 import type { DocxEditorElement } from '../packages/web-component/src';
-import { fileInput, reveal, saveButton } from './helpers';
+import { fileInput, reveal, saveButton, dialogByHeading } from './helpers';
 
 const w = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 const rel = 'http://schemas.openxmlformats.org/package/2006/relationships';
@@ -64,18 +64,18 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await expect(superscript).toHaveAttribute('aria-pressed', 'false');
 		expect(await size()).toBeCloseTo(scriptSize / 0.65, 3);
 		await editor
-			.locator('.dve-quick-access')
+			.locator('.dve-titlebar .qat')
 			.getByRole('button', { name: 'Undo', exact: true })
 			.click();
 		await expect(superscript).toHaveAttribute('aria-pressed', 'true');
 		await editor
-			.locator('.dve-quick-access')
+			.locator('.dve-titlebar .qat')
 			.getByRole('button', { name: 'Redo', exact: true })
 			.click();
 		const launcher = editor.getByRole('button', { name: 'Font settings', exact: true });
 		await reveal(editor, launcher);
 		await launcher.click();
-		const dialog = editor.getByRole('dialog', { name: 'Font', exact: true });
+		const dialog = dialogByHeading(editor, 'Font');
 		await expect(
 			dialog.getByRole('checkbox', { name: 'Superscript', exact: true }),
 		).not.toBeChecked();

@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
-import { newDocument, saveButton } from './helpers';
+import { newDocument, saveButton, dialogByHeading } from './helpers';
 
 test('Layout > Watermark prints behind the text in Print Layout, undoes and exports VML', async ({
 	page,
@@ -14,7 +14,7 @@ test('Layout > Watermark prints behind the text in Print Layout, undoes and expo
 	await page.keyboard.type('Body text');
 	await editor.getByRole('tab', { name: 'Layout', exact: true }).click();
 	await editor.getByRole('button', { name: 'Watermark', exact: true }).click();
-	const dialog = editor.getByRole('dialog', { name: 'Printed watermark', exact: true });
+	const dialog = dialogByHeading(editor, 'Printed watermark');
 	await expect(dialog).toBeVisible();
 	await dialog.getByRole('combobox', { name: 'Setting', exact: true }).selectOption('text');
 	await dialog.getByRole('combobox', { name: 'Text', exact: true }).fill('CONFIDENTIAL');
@@ -25,7 +25,7 @@ test('Layout > Watermark prints behind the text in Print Layout, undoes and expo
 	).toBe(true);
 	await dialog.getByRole('button', { name: 'OK', exact: true }).click();
 	await expect(dialog).toBeHidden();
-	await editor.locator('#dve-tab-view').click();
+	await editor.locator('[role="tab"][data-tab="view"]').click();
 	await editor.getByRole('button', { name: 'Print Layout' }).click();
 	const mark = editor.locator('.dve-print-page .dve-print-watermark');
 	await expect(mark).toHaveCount(1);

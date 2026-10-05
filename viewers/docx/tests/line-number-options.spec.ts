@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
 import type { EditorView } from 'prosemirror-view';
 import type { DocumentModel } from 'docx-core';
-import { newDocument, reveal, saveButton } from './helpers';
+import { newDocument, reveal, saveButton, dialogByHeading } from './helpers';
 
 test('Line Numbering Options, paragraph suppression, undo and DOCX export agree', async ({
 	page,
@@ -22,7 +22,7 @@ test('Line Numbering Options, paragraph suppression, undo and DOCX export agree'
 	const menu = editor.getByRole('combobox', { name: 'Line numbers', exact: true });
 	await reveal(editor, menu);
 	await menu.selectOption('options');
-	const dialog = editor.getByRole('dialog', { name: 'Line numbers', exact: true });
+	const dialog = dialogByHeading(editor, 'Line numbers');
 	await dialog.getByRole('checkbox', { name: 'Add line numbering', exact: true }).check();
 	await dialog.getByRole('spinbutton', { name: 'Start at', exact: true }).fill('3');
 	await dialog.getByRole('spinbutton', { name: 'Count by', exact: true }).fill('0');
