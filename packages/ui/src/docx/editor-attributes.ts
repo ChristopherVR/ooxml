@@ -1,5 +1,5 @@
 import { normalizeEditorLocale } from './localization';
-import { normalizeThemeMode, type EditorThemeMode } from './theme';
+import { normalizeThemeMode, type EditorThemeMode } from 'ooxml-core/docx/ui';
 
 /**
  * Attribute <-> property mapping for `<docx-editor>`. Properties stay the source of truth: an

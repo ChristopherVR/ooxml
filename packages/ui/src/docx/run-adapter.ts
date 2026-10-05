@@ -1,7 +1,7 @@
 import type { TextRun } from 'ooxml-core/docx';
 import type { Node as ProseMirrorNode, Mark } from 'prosemirror-model';
 import { schema } from './schema';
-import { explicitOffFields, extraRunProperties } from './run-extra-mark';
+import { explicitOffFields, extraRunProperties } from 'ooxml-core/docx/ui';
 import { marksForRun } from './run-marks';
 
 /** A note reference's number in document order and its label in the document's number format. */

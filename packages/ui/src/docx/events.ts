@@ -1,5 +1,5 @@
 import type { DocumentModel } from 'ooxml-core/docx';
-import type { StepBatch } from './collaboration';
+import type { StepBatch } from 'ooxml-core/docx/ui';
 import type { FileCommandDetail } from './file-commands';
 import type { PageChangeDetail } from './page-sync';
 import type { PresenceMessage } from './presence';

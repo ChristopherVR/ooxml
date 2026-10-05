@@ -2,7 +2,7 @@ import { closeHistory } from 'prosemirror-history';
 import { Fragment, type Mark, type Node as ProseMirrorNode } from 'prosemirror-model';
 import { TextSelection } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
-import { expectDefined } from './defined';
+import { expectDefined } from 'ooxml-core/docx/ui';
 
 export interface SearchMatch {
 	from: number;

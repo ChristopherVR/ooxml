@@ -3,7 +3,7 @@ import { EditorState, TextSelection } from 'prosemirror-state';
 import {
 	createCollaborationIdGenerator,
 	repairCollaborativeDocumentIds,
-} from './collaboration-identity';
+} from 'ooxml-core/docx/ui';
 import { schema } from './schema';
 
 describe('collaboration document identities', () => {

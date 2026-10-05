@@ -1,4 +1,4 @@
-import { expectDefined } from './defined';
+import { expectDefined } from 'ooxml-core/docx/ui';
 import { Plugin, PluginKey, type Transaction } from 'prosemirror-state';
 import { Mapping, ReplaceStep, Transform } from 'prosemirror-transform';
 import { Fragment, Slice, type Mark, type Node as ProseMirrorNode } from 'prosemirror-model';

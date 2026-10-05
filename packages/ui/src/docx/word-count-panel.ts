@@ -1,5 +1,5 @@
 import type { EditorView } from 'prosemirror-view';
-import { countWords } from './word-count';
+import { countWords } from 'ooxml-core/docx/ui';
 import { localeOf, translate, type EditorLocale } from './localization';
 
 export interface DocumentCounts {

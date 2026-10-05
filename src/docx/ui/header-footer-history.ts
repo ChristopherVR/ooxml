@@ -1,5 +1,5 @@
-import type { Block, SectionProperties } from 'ooxml-core/docx';
-import { sectionLayoutJson, sectionsFromLayout } from 'ooxml-core/docx';
+import type { Block, SectionProperties } from '../index.js';
+import { sectionLayoutJson, sectionsFromLayout } from '../index.js';
 import { DocAttrStep, StepMap } from 'prosemirror-transform';
 import type { Node } from 'prosemirror-model';
 

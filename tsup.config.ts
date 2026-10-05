@@ -21,6 +21,7 @@ export default defineConfig({
 		'docx/embedded': 'src/docx/embedded.ts',
 		'docx/layout/index': 'src/docx/layout/index.ts',
 		'docx/load/index': 'src/docx/load/index.ts',
+		'docx/ui/index': 'src/docx/ui/index.ts',
 		'collab/index': 'src/collab/index.ts',
 		'teams/index': 'src/teams/index.ts',
 		'visio/index': 'src/visio/index.ts',

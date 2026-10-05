@@ -3,7 +3,7 @@ import { history } from 'prosemirror-history';
 import { keymap } from 'prosemirror-keymap';
 import type { Plugin } from 'prosemirror-state';
 import { editorKeymap } from './editor-commands';
-import { fieldGuardPlugin } from './field-guard';
+import { fieldGuardPlugin } from 'ooxml-core/docx/ui';
 import { tabStopsPlugin } from './tab-stops-view';
 import { noteNumberingPlugin } from './note-commands';
 import { paragraphStylesPlugin } from './paragraph-styles';

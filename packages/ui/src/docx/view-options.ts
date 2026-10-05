@@ -1,6 +1,6 @@
 import type { EditorCore } from './editor-core';
 import { findLocalizedControl } from './localization';
-import type { RibbonActionId } from './ribbon-action-ids';
+import type { RibbonActionId } from 'ooxml-core/docx/ui';
 import { applyRibbonVisibility } from './ribbon-visibility';
 
 /** Host-controlled UI customisation; each value maps to one element property and attribute. */

@@ -1,11 +1,11 @@
 import { Schema, type DOMOutputSpec } from 'prosemirror-model';
-import { fieldMarkerNodeSpec, noteReferenceNodeSpec, pageBreakNodeSpec } from './break-note-schema';
-import { paragraphBoxCss, tableStyle, tableCellStyle } from './table-render';
-import { imageNodeSpec } from './inline-content-schema';
-import { markSpecs } from './schema-marks';
+import { fieldMarkerNodeSpec, noteReferenceNodeSpec, pageBreakNodeSpec } from 'ooxml-core/docx/ui';
+import { paragraphBoxCss, tableStyle, tableCellStyle } from 'ooxml-core/docx/ui';
+import { imageNodeSpec } from 'ooxml-core/docx/ui';
+import { markSpecs } from 'ooxml-core/docx/ui';
 import { equationNodeSpec } from './equation-schema';
 
-export { wordHighlightColors } from './schema-marks';
+export { wordHighlightColors } from 'ooxml-core/docx/ui';
 
 /** Single line spacing as a multiple of the font size, close to Calibri's and Arial's metrics. */
 export const NATURAL_LINE_HEIGHT = 1.2;

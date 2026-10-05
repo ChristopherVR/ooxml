@@ -1,5 +1,5 @@
-import { EDITOR_THEME_MODES, type EditorTheme, type EditorThemeMode } from './types';
-import { themeToCssVars } from './css-vars';
+import { EDITOR_THEME_MODES, type EditorTheme, type EditorThemeMode } from './types.js';
+import { themeToCssVars } from './css-vars.js';
 
 /** Unknown values fall back to `auto`, which follows the OS color scheme. */
 export function normalizeThemeMode(value: unknown): EditorThemeMode {

@@ -5,7 +5,7 @@
 import type { Node as ProseMirrorNode } from 'prosemirror-model';
 import type { Paragraph, Table, TableCell, TableStyleCatalog } from 'ooxml-core/docx';
 import { schema } from './schema';
-import { resolveCellVisuals } from './table-visuals';
+import { resolveCellVisuals } from 'ooxml-core/docx/ui';
 
 function cellKey(cell: TableCell): string {
 	return cell.paragraphs[0]?.id ?? '';

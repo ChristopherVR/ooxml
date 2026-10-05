@@ -7,7 +7,7 @@ import {
 	RIBBON_ACTION_LABELS,
 	ribbonActionIdForLabel,
 	type LegacyRibbonLabel,
-} from './ribbon-action-ids';
+} from 'ooxml-core/docx/ui';
 import { createRibbon } from './ribbon';
 import { ribbonControlId } from './ribbon-visibility';
 import { paragraphAt, quickAccessButton } from './test-support';

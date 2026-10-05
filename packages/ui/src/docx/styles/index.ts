@@ -1,7 +1,7 @@
 import { shadcnBridge } from '../../theme';
-import { darkTheme, lightTheme } from '../theme/defaults';
-import { themeToCssVars } from '../theme/css-vars';
-import type { EditorTheme } from '../theme/types';
+import { darkTheme, lightTheme } from 'ooxml-core/docx/ui';
+import { themeToCssVars } from 'ooxml-core/docx/ui';
+import type { EditorTheme } from 'ooxml-core/docx/ui';
 import aliases from './aliases.css?raw';
 import base from './base.css?raw';
 import ribbon from './ribbon.css?raw';

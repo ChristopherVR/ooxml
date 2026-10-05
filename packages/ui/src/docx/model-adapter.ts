@@ -9,7 +9,7 @@ import {
 } from 'ooxml-core/docx';
 import { schema } from './schema';
 import { paragraphTwipsFromAttrs } from 'ooxml-core/docx';
-import { sameJson, sameRuns } from './run-compare';
+import { sameJson, sameRuns } from 'ooxml-core/docx/ui';
 import { appendInlineNode, runToInlineNodes, type NoteNumberLookup } from './run-adapter';
 import {
 	convertMergedTable,
@@ -17,10 +17,10 @@ import {
 	tableNode,
 	tableFormattingFromNode,
 } from './table-model-adapter';
-import { parseBordersJson } from './table-render';
+import { parseBordersJson } from 'ooxml-core/docx/ui';
 import { sectionLayoutJson, sectionsFromLayout } from 'ooxml-core/docx';
 import { sectionsOf } from './section-commands';
-import { sectionPartsJson, restoreSectionParts } from './header-footer-history';
+import { sectionPartsJson, restoreSectionParts } from 'ooxml-core/docx/ui';
 
 type ListLabels = ReturnType<typeof computeListLabels>;
 

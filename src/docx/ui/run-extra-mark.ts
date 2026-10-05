@@ -1,6 +1,6 @@
-import type { TextRun } from 'ooxml-core/docx';
+import type { TextRun } from '../index.js';
 import type { MarkSpec } from 'prosemirror-model';
-import { ligatureStyle } from './ligature-style';
+import { ligatureStyle } from './ligature-style.js';
 
 /**
  * Run properties modeled by docx-core that have no dedicated editor control yet. They travel

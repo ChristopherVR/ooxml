@@ -1,5 +1,5 @@
 import { panelsOf, setTabHidden } from './ribbon-tab-api';
-import { ribbonActionIdForLabel, type RibbonActionId } from './ribbon-action-ids';
+import { ribbonActionIdForLabel, type RibbonActionId } from 'ooxml-core/docx/ui';
 
 const HIDDEN = 'data-dve-hidden';
 const CONTROLS = 'button[aria-label], select[aria-label], input[aria-label]';

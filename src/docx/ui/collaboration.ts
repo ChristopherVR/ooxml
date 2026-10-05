@@ -1,15 +1,15 @@
 import { collab, getVersion, receiveTransaction, sendableSteps } from 'prosemirror-collab';
 import { Plugin, type EditorState, type Transaction } from 'prosemirror-state';
-import { IdempotencyCache, classifyVersion, isValidId } from 'ooxml-core/collab';
+import { IdempotencyCache, classifyVersion, isValidId } from '../../collab/index.js';
 import {
 	freezeBatch,
 	parseBatch,
 	type CollaborationConfig,
 	type StepBatch,
-} from './collaboration-protocol';
-export type { CollaborationConfig, StepBatch } from './collaboration-protocol';
-export { CollaborationAuthority } from './collaboration-authority';
-export type { CollaborationAuthorityConfig, AuthorityResult } from './collaboration-authority';
+} from './collaboration-protocol.js';
+export type { CollaborationConfig, StepBatch } from './collaboration-protocol.js';
+export { CollaborationAuthority } from './collaboration-authority.js';
+export type { CollaborationAuthorityConfig, AuthorityResult } from './collaboration-authority.js';
 
 export type ClientReceiveResult =
 	| { status: 'applied'; transaction: Transaction }

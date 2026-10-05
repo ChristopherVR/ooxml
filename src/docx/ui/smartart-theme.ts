@@ -1,5 +1,5 @@
-import { diagramColorTheme, resolveDiagramColor, type DocxDiagram } from 'ooxml-core/docx';
-import type { ThemeCatalog } from 'ooxml-core/docx';
+import { diagramColorTheme, resolveDiagramColor, type DocxDiagram } from '../index.js';
+import type { ThemeCatalog } from '../index.js';
 
 type Drawing = NonNullable<DocxDiagram['drawing']>;
 

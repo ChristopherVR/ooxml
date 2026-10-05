@@ -15,7 +15,7 @@ import { imageNodeView, type ImageMediaCache } from './image-media';
 import { buildNotesElement } from './notes-view';
 import { attachNoteEditing } from './note-editor';
 import { insertNote, type NoteKind } from './note-commands';
-import { sectionPartsJson, HEADER_FOOTER_INPUT, SectionPartsStep } from './header-footer-history';
+import { sectionPartsJson, HEADER_FOOTER_INPUT, SectionPartsStep } from 'ooxml-core/docx/ui';
 import { effectiveHeaderFooter, withHeaderFooterLink } from './header-footer-link';
 import type { HeaderFooterContext } from './header-footer-ribbon';
 import { storyPreview, selectSectionStart } from './header-footer-navigation';

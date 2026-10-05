@@ -19,9 +19,9 @@ import { pageSizeOf } from 'ooxml-core/docx';
 import { columnPreset } from 'ooxml-core/docx';
 import type { RibbonAction } from './ribbon';
 import { sectionLayoutJson } from 'ooxml-core/docx';
-import { sectionPartsJson } from './header-footer-history';
+import { sectionPartsJson } from 'ooxml-core/docx/ui';
 import type { StatusBar } from './status-bar';
-import { fitZoomPercent, type ZoomFit } from './zoom-fit';
+import { fitZoomPercent, type ZoomFit } from 'ooxml-core/docx/ui';
 
 export interface PageControllerHost extends EditorHost {
 	paper(): HTMLElement | undefined;

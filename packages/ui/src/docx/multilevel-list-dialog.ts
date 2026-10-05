@@ -9,7 +9,7 @@ import {
 } from 'ooxml-core/docx';
 import type { EditorView } from 'prosemirror-view';
 import { applyCustomList } from './list-commands';
-import { nodeNumbering } from './node-numbering';
+import { nodeNumbering } from 'ooxml-core/docx/ui';
 import {
 	checkbox,
 	dialogButton,

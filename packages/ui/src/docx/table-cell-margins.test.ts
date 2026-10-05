@@ -7,7 +7,7 @@ import { EditorView } from 'prosemirror-view';
 import { createTablePropertiesDialog } from './table-properties-dialog';
 import { applyTableProperties } from './table-properties';
 import { modelToDoc, docToModel } from './model-adapter';
-import { tableCellStyle, tableStyle } from './table-render';
+import { tableCellStyle, tableStyle } from 'ooxml-core/docx/ui';
 
 const views: EditorView[] = [];
 afterEach(() => {

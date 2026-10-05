@@ -2,8 +2,8 @@ import type { DocxDiagram, ThemeCatalog } from 'ooxml-core/docx';
 import type { Node as ProseMirrorNode } from 'prosemirror-model';
 import type { NodeView } from 'prosemirror-view';
 import { defineSmartArt } from '../smartart';
-import { placementClass } from './inline-content-schema';
-import { themeDrawing } from './smartart-theme';
+import { placementClass } from 'ooxml-core/docx/ui';
+import { themeDrawing } from 'ooxml-core/docx/ui';
 
 const EMU_PER_PX = 9525;
 

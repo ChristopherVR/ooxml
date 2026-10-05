@@ -1,7 +1,7 @@
 import { emit } from './events';
 import type { EditorView } from 'prosemirror-view';
-import { CollaborationClient, type CollaborationConfig, type StepBatch } from './collaboration';
-import { createCollaborationIdGenerator } from './collaboration-identity';
+import { CollaborationClient, type CollaborationConfig, type StepBatch } from 'ooxml-core/docx/ui';
+import { createCollaborationIdGenerator } from 'ooxml-core/docx/ui';
 import { EditorPresence } from './editor-presence';
 
 /** One editor's collaboration state: step client, presence and collaborative id generator. */

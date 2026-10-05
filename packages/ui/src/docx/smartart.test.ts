@@ -8,7 +8,7 @@ import { docToModel, modelToDoc } from './model-adapter';
 import { appendInlineNode, runToInlineNodes } from './run-adapter';
 import { schema } from './schema';
 import { diagramLabel, diagramNotes, parseDiagram, smartArtNodeView } from './smartart-node-view';
-import { themeDrawing } from './smartart-theme';
+import { themeDrawing } from 'ooxml-core/docx/ui';
 
 // Built by ooxml-core (see src/docx/__fixtures__/smartart-fixture.md for provenance).
 const fixture = () =>

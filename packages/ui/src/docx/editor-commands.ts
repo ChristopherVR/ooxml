@@ -3,7 +3,7 @@ import type { Command } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import { undo, redo } from 'prosemirror-history';
 import { baseKeymap, chainCommands } from 'prosemirror-commands';
-import { expectDefined } from './defined';
+import { expectDefined } from 'ooxml-core/docx/ui';
 import { toggleFormat } from './toggle-commands';
 import { keymap } from 'prosemirror-keymap';
 import type { RibbonAction } from './ribbon';

@@ -14,7 +14,7 @@ import {
 	type LocalizationKey,
 } from './localization';
 import { strings } from './localization-strings';
-import { RIBBON_ACTION_LABELS } from './ribbon-action-ids';
+import { RIBBON_ACTION_LABELS } from 'ooxml-core/docx/ui';
 import { createRibbon, setRibbonLocale } from './ribbon';
 
 registerDocxEditor();

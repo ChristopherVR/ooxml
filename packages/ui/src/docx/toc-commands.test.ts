@@ -4,7 +4,7 @@ import { createDocument, type DocumentModel, type Paragraph } from 'ooxml-core/d
 import { createFakeMeasurer } from 'ooxml-core/docx/layout';
 import { EditorState, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
-import { fieldsBalanced } from './field-guard';
+import { fieldsBalanced } from 'ooxml-core/docx/ui';
 import { docToModel, modelToDoc } from './model-adapter';
 import {
 	blockPageNumbers,

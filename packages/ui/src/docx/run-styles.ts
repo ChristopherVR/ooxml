@@ -11,7 +11,7 @@ import {
 	type TextRun,
 } from 'ooxml-core/docx';
 import { appendInlineNode } from './run-adapter';
-import { ligatureStyle } from './ligature-style';
+import { ligatureStyle } from 'ooxml-core/docx/ui';
 import { scaledSegments, scaleMeasurer } from './run-scale';
 import { scaledParagraphBreaks } from './scaled-paragraph-breaks';
 

@@ -2,7 +2,7 @@ import { TextSelection } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import { closeHistory } from 'prosemirror-history';
 import { schema } from './schema';
-import { moveName } from './review-schema';
+import { moveName } from 'ooxml-core/docx/ui';
 
 export interface RevisionRange {
 	id: string;

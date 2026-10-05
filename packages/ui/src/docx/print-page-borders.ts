@@ -1,5 +1,5 @@
 import type { PageBorders } from 'ooxml-core/docx';
-import { cssBorderSide } from './table-render';
+import { cssBorderSide } from 'ooxml-core/docx/ui';
 
 /** The page geometry the border box is measured from (pixels at 96 DPI). */
 export interface BorderPage {

@@ -2,8 +2,8 @@
 import { describe, expect, it } from 'vitest';
 import { DocxEditorElement, registerDocxEditor } from '../index';
 import { themeTokenText } from '../styles';
-import { darkTheme, lightTheme } from './defaults';
-import { THEME_KEYS, themeToCssVars } from './css-vars';
+import { darkTheme, lightTheme } from 'ooxml-core/docx/ui';
+import { THEME_KEYS, themeToCssVars } from 'ooxml-core/docx/ui';
 
 describe('theme tokens', () => {
 	it('mirrors pptx-viewer semantics: 19 color tokens plus radius, set in both presets', () => {

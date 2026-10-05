@@ -3,7 +3,7 @@ import type { OfficeBackstageItem } from '../controls';
 import type { FileCommand } from './file-commands';
 import { normalizeEditorLocale, translate, translateUiText } from './localization';
 import { renderHome } from './backstage-home';
-import { backstageFocus } from './backstage-focus';
+import { backstageFocus } from 'ooxml-core/docx/ui';
 import {
 	renderExport,
 	renderInfo,

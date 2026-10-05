@@ -1,5 +1,5 @@
 import type { EditorState, Transaction } from 'prosemirror-state';
-import { createIdGenerator } from 'ooxml-core/collab';
+import { createIdGenerator } from '../../collab/index.js';
 
 /** Generates collision-resistant document IDs within one unique client session. */
 export function createCollaborationIdGenerator(clientId: string): (kind: string) => string {

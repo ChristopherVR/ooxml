@@ -4,7 +4,7 @@ import { EditorState } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { closeHistory, history, undo, redo } from 'prosemirror-history';
 import { describe, expect, it } from 'vitest';
-import { sectionPartsJson, SectionPartsStep } from './header-footer-history';
+import { sectionPartsJson, SectionPartsStep } from 'ooxml-core/docx/ui';
 import { modelToDoc, docToModel } from './model-adapter';
 import { withPageNumber } from './header-footer-commands';
 

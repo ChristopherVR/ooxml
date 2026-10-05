@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { countWords } from './word-count';
+import { countWords } from './word-count.js';
 
 describe('Unicode word counts', () => {
 	it('counts words rather than punctuation or emoji', () => {

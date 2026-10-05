@@ -3,7 +3,7 @@ import { signedTwips, twips } from 'ooxml-core/docx';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createDocument } from 'ooxml-core/docx';
 import { DocxEditorElement, registerDocxEditor } from './index';
-import { placementClass } from './inline-content-schema';
+import { placementClass } from 'ooxml-core/docx/ui';
 import { at } from './test-support';
 
 registerDocxEditor();

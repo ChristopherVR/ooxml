@@ -2,7 +2,7 @@ import { Plugin } from 'prosemirror-state';
 import { Decoration, DecorationSet } from 'prosemirror-view';
 import type { EditorView } from 'prosemirror-view';
 import { type DocumentModel, type SectionProperties, sectionsOf } from 'ooxml-core/docx';
-import { expectDefined } from './defined';
+import { expectDefined } from 'ooxml-core/docx/ui';
 
 // Kept here so the editor's section modules have one place to import it from.
 export { sectionsOf };

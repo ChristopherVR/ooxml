@@ -1,4 +1,4 @@
-import { expectDefined } from './defined';
+import { expectDefined } from 'ooxml-core/docx/ui';
 import { Fragment, type Node as ProseMirrorNode } from 'prosemirror-model';
 import { closeHistory } from 'prosemirror-history';
 import { Selection } from 'prosemirror-state';

@@ -10,7 +10,7 @@ import { syncStylePicker } from './paragraph-styles';
 import { syncCharacterStylePicker } from './character-style-picker';
 import { canExecuteTableCommand } from './table-commands';
 import type { RibbonAction } from './ribbon';
-import { countWords } from './word-count';
+import { countWords } from 'ooxml-core/docx/ui';
 import { syncSpellingButton } from './spelling';
 import { syncIndentInputs } from './indent-commands';
 import { syncParagraphToggles } from './paragraph-toggle-sync';

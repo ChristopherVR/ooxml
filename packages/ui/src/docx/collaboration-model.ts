@@ -1,5 +1,5 @@
 import type { DocumentModel } from 'ooxml-core/docx';
-import { CollaborationAuthority, type CollaborationAuthorityConfig } from './collaboration';
+import { CollaborationAuthority, type CollaborationAuthorityConfig } from 'ooxml-core/docx/ui';
 import { modelToDoc } from './model-adapter';
 
 /** Build a reference authority using exactly the shared editor's document schema. */

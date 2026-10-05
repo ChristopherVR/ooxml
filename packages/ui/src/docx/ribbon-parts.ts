@@ -3,7 +3,7 @@ import type { RibbonAction } from './ribbon-action';
 import { ribbonIcon, type RibbonIcon } from './ribbon-icons';
 import { openColorGridPopover } from './ribbon-color-grid';
 import { openSwatchPopover } from './ribbon-popover';
-import { swatchColor } from './ribbon-colors';
+import { swatchColor } from 'ooxml-core/docx/ui';
 
 /** Building blocks for ribbon tabs: buttons, selects, labelled groups and rows. */
 export const button = (label: string, text: string, action: RibbonAction, className = '') => {

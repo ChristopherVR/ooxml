@@ -1,7 +1,7 @@
 import { dialogButton, fieldset, labelled, numberInput } from './dialog-fields';
 import type { FormatDialog } from './font-dialog';
 import { type EditorLocale } from './localization';
-import type { ZoomFit } from './zoom-fit';
+import type { ZoomFit } from 'ooxml-core/docx/ui';
 import {
 	createDialogShell,
 	dialogActions,

@@ -384,3 +384,7 @@ The whole `<docx-editor>` element (`packages/ui/src/docx/`, with its tests) move
 ## `ooxml-core/xlsx/ui`
 
 The DOM-free modules of the xlsx editor moved from `packages/ui/src/xlsx` (itself from xlsx-viewer `d981768`) to `src/xlsx/ui/` with their tests: the editor context, command registry and every command, the dialog registry, selection model, localization and string tables, grid geometry, paint, icon-set and cell-item logic, theme tokens, formula-bar name resolution, backstage templates and the context-menu items. `commands/icons.ts` was split (glyph data stays pure, registration stays in the UI package) and `dialogHost` moved to `dialogs/host.ts`. The one name clash (`cssFont`) is `styleCssFont` for cell styles. The UI package imports the lot from `ooxml-core/xlsx/ui`.
+
+## `ooxml-core/docx/ui`
+
+The editor modules of `ooxml-ui/docx` (from docx-viewer `77f820f`) that need no DOM and no `prosemirror-view` value import moved to `src/docx/ui/`: the ProseMirror node and mark schema parts for breaks, notes, review and inline content, run properties and numbering helpers, the collaboration authority, identity, protocol and session ordering, header/footer history, table visuals, word count, zoom fit, ribbon action ids and colours, and the theme tokens. Core now depends on the headless ProseMirror packages (`prosemirror-model`, `-state`, `-transform`, `-commands`, `-history`, `-keymap`, `-collab`) and the `prosemirror-view` types.

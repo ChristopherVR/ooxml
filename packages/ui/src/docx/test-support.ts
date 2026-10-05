@@ -1,5 +1,5 @@
 import type { Block, Paragraph, Table } from 'ooxml-core/docx';
-import { expectDefined } from './defined';
+import { expectDefined } from 'ooxml-core/docx/ui';
 
 /** The element at `index`, failing the test with a clear message when the list is too short. */
 export function at<T>(list: ArrayLike<T>, index: number): T {

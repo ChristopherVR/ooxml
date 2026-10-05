@@ -1,7 +1,7 @@
 import { DOMSerializer, type Node as ProseMirrorNode } from 'prosemirror-model';
 import type { EditorView, NodeView } from 'prosemirror-view';
 import { schema } from './schema';
-import { placementClass } from './inline-content-schema';
+import { placementClass } from 'ooxml-core/docx/ui';
 import { parseDiagram, smartArtNodeView } from './smartart-node-view';
 import type { ThemeCatalog } from 'ooxml-core/docx';
 

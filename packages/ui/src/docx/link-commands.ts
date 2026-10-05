@@ -1,7 +1,7 @@
 import type { EditorView } from 'prosemirror-view';
 import type { Mark } from 'prosemirror-model';
 import { schema } from './schema';
-import { isNavigableHref } from './inline-content-schema';
+import { isNavigableHref } from 'ooxml-core/docx/ui';
 
 export interface LinkTarget {
 	href?: string;

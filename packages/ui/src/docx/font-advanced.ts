@@ -9,7 +9,7 @@ import {
 } from './dialog-fields';
 import type { FontFormat, FontFormatState } from './font-format';
 import { LIGATURE_VALUES, isLigatures } from 'ooxml-core/docx';
-import { ligatureCss } from './ligature-style';
+import { ligatureCss } from 'ooxml-core/docx/ui';
 
 /** Word's Advanced character spacing controls. Untouched mixed values stay mixed. */
 export function createFontAdvanced(mark: (...fields: Array<keyof FontFormat>) => void) {

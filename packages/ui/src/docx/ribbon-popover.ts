@@ -1,5 +1,5 @@
 import { localeOf, translate } from './localization';
-import { swatchColor } from './ribbon-colors';
+import { swatchColor } from 'ooxml-core/docx/ui';
 
 let close: (() => void) | undefined;
 

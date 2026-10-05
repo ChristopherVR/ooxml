@@ -2,7 +2,7 @@
 import { EditorState, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { afterEach, describe, expect, it } from 'vitest';
-import { fitZoomPercent } from './zoom-fit';
+import { fitZoomPercent } from 'ooxml-core/docx/ui';
 import { formatDateTime, insertPlainText, SYMBOLS } from './insert-text-commands';
 import { documentCounts, showWordCount } from './word-count-panel';
 import { createRibbon } from './ribbon';

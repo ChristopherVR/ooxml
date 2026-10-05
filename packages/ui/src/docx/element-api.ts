@@ -6,7 +6,7 @@ import {
 	normalizeRibbonActions,
 	type RibbonActionId,
 	type RibbonActionInput,
-} from './ribbon-action-ids';
+} from 'ooxml-core/docx/ui';
 import { emit } from './events';
 import { applyViewOptions } from './view-options';
 

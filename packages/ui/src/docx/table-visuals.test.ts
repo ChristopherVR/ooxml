@@ -13,7 +13,7 @@ import {
 import type { EditorView } from 'prosemirror-view';
 import { DocxEditorElement, registerDocxEditor } from './index';
 import { insertTable } from './ribbon-commands';
-import { tableCellStyle, tableStyle } from './table-render';
+import { tableCellStyle, tableStyle } from 'ooxml-core/docx/ui';
 import { at } from './test-support';
 
 registerDocxEditor();

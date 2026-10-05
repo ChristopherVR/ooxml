@@ -4,14 +4,14 @@ import type { DocumentModel } from 'ooxml-core/docx';
 import { createDocument } from 'ooxml-core/docx';
 import { loadDocument } from 'ooxml-core/docx/load';
 import { setRibbonLocale } from './ribbon';
-import type { CollaborationConfig, ClientReceiveResult, StepBatch } from './collaboration';
+import type { CollaborationConfig, ClientReceiveResult, StepBatch } from 'ooxml-core/docx/ui';
 import { normalizeEditorLocale } from './localization';
 import {
 	applyThemeColors,
 	normalizeThemeMode,
 	type EditorTheme,
 	type EditorThemeMode,
-} from './theme';
+} from 'ooxml-core/docx/ui';
 import { EditorCore, type LoadedDocument } from './editor-core';
 import { buildShell, type ShellApi } from './editor-shell';
 import { renderDocument } from './editor-render';

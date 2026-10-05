@@ -6,21 +6,21 @@ export {
 	RIBBON_ACTION_LABELS,
 	normalizeRibbonActions,
 	isRibbonActionId,
-} from './ribbon-action-ids';
-export type { LegacyRibbonLabel, RibbonActionId, RibbonActionInput } from './ribbon-action-ids';
+} from 'ooxml-core/docx/ui';
+export type { LegacyRibbonLabel, RibbonActionId, RibbonActionInput } from 'ooxml-core/docx/ui';
 export type { PageChangeDetail } from './page-sync';
 export type { FileCommand, FileCommandDetail } from './file-commands';
 export type { DocxEditorEventMap, DocxEditorEventName, DocxEditorEventDetail } from './events';
 export { DOCX_EDITOR_ATTRIBUTES } from './editor-attributes';
 export type { DocxEditorAttribute } from './editor-attributes';
-export { CollaborationClient, CollaborationAuthority } from './collaboration';
+export { CollaborationClient, CollaborationAuthority } from 'ooxml-core/docx/ui';
 export type {
 	CollaborationConfig,
 	StepBatch,
 	ClientReceiveResult,
 	AuthorityResult,
-} from './collaboration';
-export type { CollaborationAuthorityConfig } from './collaboration';
+} from 'ooxml-core/docx/ui';
+export type { CollaborationAuthorityConfig } from 'ooxml-core/docx/ui';
 export { createCollaborationAuthority } from './collaboration-model';
 export { PresenceClient, PRESENCE_PALETTE } from './presence';
 export type { PresenceMessage, PresenceConfig, PresenceReceiveResult } from './presence';
@@ -29,8 +29,8 @@ export type { EditorLocale, EditorLocaleInput } from './localization';
 export {
 	createCollaborationIdGenerator,
 	repairCollaborativeDocumentIds,
-} from './collaboration-identity';
+} from 'ooxml-core/docx/ui';
 export type { ReviewDisplayMode } from './review-display';
 export type { RevisionRange } from './review-commands';
-export { lightTheme, darkTheme, themeToCssVars } from './theme';
-export type { EditorTheme, EditorThemeMode } from './theme';
+export { lightTheme, darkTheme, themeToCssVars } from 'ooxml-core/docx/ui';
+export type { EditorTheme, EditorThemeMode } from 'ooxml-core/docx/ui';

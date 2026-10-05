@@ -1,7 +1,7 @@
 import type { TextRun } from 'ooxml-core/docx';
 import type { Mark } from 'prosemirror-model';
 import { schema } from './schema';
-import { extraRunProperties } from './run-extra-mark';
+import { extraRunProperties } from 'ooxml-core/docx/ui';
 
 /** ProseMirror marks carrying a text run's character formatting, links, fields and revisions. */
 export function marksForRun(run: TextRun): Mark[] {

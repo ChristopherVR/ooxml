@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { history } from 'prosemirror-history';
 import { EditorState, TextSelection, type Transaction } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
-import { CollaborationAuthority, CollaborationClient, type StepBatch } from './collaboration';
+import { CollaborationAuthority, CollaborationClient, type StepBatch } from 'ooxml-core/docx/ui';
 import { schema } from './schema';
 import { at } from './test-support';
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createDocument, type Paragraph } from 'ooxml-core/docx';
 import { modelToDoc, docToModel } from './model-adapter';
-import { sameRuns } from './run-compare';
+import { sameRuns } from 'ooxml-core/docx/ui';
 import { schema } from './schema';
 
 const equation = {

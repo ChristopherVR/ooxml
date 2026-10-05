@@ -7,7 +7,7 @@ import {
 	fieldGuardPlugin,
 	fieldsBalanced,
 	replaceAroundMarkers,
-} from './field-guard';
+} from 'ooxml-core/docx/ui';
 import { docToModel, modelToDoc } from './model-adapter';
 
 const fieldRuns: TextRun[] = [
