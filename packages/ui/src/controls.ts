@@ -101,6 +101,8 @@ export type {
 } from './chrome/backstage.js';
 export type { OfficeFindInputEvent, OfficeFindStepEvent } from './chrome/find-bar.js';
 export type { OfficePrintPreviewPageEvent } from './chrome/print-preview.js';
+export { assignKeyTips, runKeyTips } from './ribbon/keytip-run.js';
+export type { KeyTipTarget } from './ribbon/keytip-run.js';
 export { createRibbonOverflow } from './ribbon/overflow.js';
 export type { RibbonOverflow, RibbonOverflowOptions } from './ribbon/overflow.js';
 export type { OfficeRibbonSelectEvent } from './ribbon/ribbon-tabs.js';
