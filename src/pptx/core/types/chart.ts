@@ -712,6 +712,17 @@ export interface PptxChartSeries {
 	 */
 	lineNoFill?: boolean;
 	/**
+	 * Series line width in points (`c:ser/c:spPr/a:ln/@w`, EMU / 12700).
+	 * `undefined` when the series authors none; the renderer then keeps its
+	 * own default width.
+	 */
+	lineWidth?: number;
+	/**
+	 * Series line preset dash (`c:ser/c:spPr/a:ln/a:prstDash/@val`, e.g.
+	 * `sysDot`, `dash`). `undefined` (or `solid`) draws a solid line.
+	 */
+	lineDashStyle?: string;
+	/**
 	 * Blank-value mask aligned index-for-index with {@link values}: `true` marks
 	 * a category whose numeric cache point (`c:numCache/c:pt`) was absent or
 	 * empty, i.e. a genuine blank rather than a real `0`. Present only when the

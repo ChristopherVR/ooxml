@@ -8,6 +8,8 @@
  *   `barGapWidth`/`barOverlap`).
  * - the Office 2013+ chart-style part (`style1.xml`, `cs:chartStyle`) is
  *   parsed into `PptxChartData.chartStyleDefinition`.
+ * - a series' own line width and preset dash (`c:ser/c:spPr/a:ln`) reach
+ *   `PptxChartSeries.lineWidth` / `lineDashStyle`.
  *
  * Uses a real `PptxHandler.load()` over a hand-built in-memory package
  * (JSZip) rather than binding protected methods, since these fields are
@@ -95,13 +97,13 @@ function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
 	return bytes.slice().buffer as ArrayBuffer;
 }
 
-async function buildDeck(): Promise<ArrayBuffer> {
+async function buildDeck(chartXml = CHART_XML): Promise<ArrayBuffer> {
 	const { handler, data, createSlide } = await PresentationBuilder.create();
 	data.slides.push(createSlide('Blank').build());
 	const zip = await JSZip.loadAsync(await handler.save(data.slides));
 	zip.file('ppt/slides/slide1.xml', SLIDE_XML);
 	zip.file('ppt/slides/_rels/slide1.xml.rels', SLIDE_RELS_XML);
-	zip.file('ppt/charts/chart1.xml', CHART_XML);
+	zip.file('ppt/charts/chart1.xml', chartXml);
 	zip.file('ppt/charts/_rels/chart1.xml.rels', CHART_RELS_XML);
 	zip.file('ppt/charts/style1.xml', CHART_STYLE_XML);
 	return toArrayBuffer(await zip.generateAsync({ type: 'uint8array' }));
@@ -352,5 +354,46 @@ describe('scatter c:xVal falls back to the embedded workbook when cache-less', (
 		// c:xVal has no numCache either; only the embedded-workbook fallback
 		// added here can produce this.
 		expect(series.xValues).toStrictEqual([1, 2, 3]);
+	});
+});
+
+const LINE_CHART_XML = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart"
+ xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
+ xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+ <c:chart>
+  <c:plotArea>
+   <c:lineChart>
+    <c:grouping val="standard"/>
+    <c:ser>
+     <c:idx val="0"/><c:order val="0"/>
+     <c:spPr><a:ln w="12700"><a:solidFill><a:srgbClr val="05507D"/></a:solidFill><a:prstDash val="sysDot"/></a:ln></c:spPr>
+     <c:cat><c:strRef><c:strCache><c:pt idx="0"><c:v>Q1</c:v></c:pt></c:strCache></c:strRef></c:cat>
+     <c:val><c:numRef><c:numCache><c:pt idx="0"><c:v>10</c:v></c:pt></c:numCache></c:numRef></c:val>
+    </c:ser>
+    <c:ser>
+     <c:idx val="1"/><c:order val="1"/>
+     <c:cat><c:strRef><c:strCache><c:pt idx="0"><c:v>Q1</c:v></c:pt></c:strCache></c:strRef></c:cat>
+     <c:val><c:numRef><c:numCache><c:pt idx="0"><c:v>20</c:v></c:pt></c:numCache></c:numRef></c:val>
+    </c:ser>
+   </c:lineChart>
+   <c:catAx><c:axId val="1"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:crossAx val="2"/></c:catAx>
+   <c:valAx><c:axId val="2"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:crossAx val="1"/></c:valAx>
+  </c:plotArea>
+ </c:chart>
+</c:chartSpace>`;
+
+describe('series line width and dash (c:ser/c:spPr/a:ln)', () => {
+	it('converts @w to points, reads the preset dash, and leaves an unstyled series unset', async () => {
+		const handler = new PptxHandler();
+		const data = await handler.load(await buildDeck(LINE_CHART_XML));
+		const element = data.slides[0].elements.find(
+			(candidate) => candidate.type === 'chart',
+		) as ChartPptxElement;
+		const [styled, plain] = element.chartData!.series;
+		expect(styled.lineWidth).toBe(1);
+		expect(styled.lineDashStyle).toBe('sysDot');
+		expect(plain.lineWidth).toBeUndefined();
+		expect(plain.lineDashStyle).toBeUndefined();
 	});
 });
