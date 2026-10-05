@@ -97,9 +97,9 @@
 			     own, so a region map without it announces nothing at all. -->
 			<path d={prim.d} fill={prim.fill} stroke={prim.stroke ?? 'none'} stroke-width={prim.strokeWidth ?? 0} stroke-dasharray={prim.dashArray} fill-opacity={prim.opacity ?? 1} {...partAttrs(prim.part)}>{#if prim.title !== undefined}<title>{prim.title}</title>{/if}</path>
 		{:else if prim.kind === 'polyline'}
-			<polyline points={prim.points} stroke={prim.stroke} stroke-width={prim.strokeWidth} fill={prim.fill} opacity={prim.opacity ?? 1} {...partAttrs(prim.part)}>{#if prim.title !== undefined}<title>{prim.title}</title>{/if}</polyline>
+			<polyline points={prim.points} stroke={prim.stroke} stroke-width={prim.strokeWidth} stroke-dasharray={prim.dashArray} fill={prim.fill} opacity={prim.opacity ?? 1} {...partAttrs(prim.part)}>{#if prim.title !== undefined}<title>{prim.title}</title>{/if}</polyline>
 		{:else if prim.kind === 'circle'}
-			<circle cx={prim.cx} cy={prim.cy} r={prim.r} fill={prim.fill} opacity={prim.opacity ?? 1} {...partAttrs(prim.part)}>{#if prim.title !== undefined}<title>{prim.title}</title>{/if}</circle>
+			<circle cx={prim.cx} cy={prim.cy} r={prim.r} fill={prim.fill} stroke={prim.stroke} stroke-width={prim.strokeWidth} opacity={prim.opacity ?? 1} {...partAttrs(prim.part)}>{#if prim.title !== undefined}<title>{prim.title}</title>{/if}</circle>
 		{:else if prim.kind === 'line'}
 			<line x1={prim.x1} y1={prim.y1} x2={prim.x2} y2={prim.y2} stroke={prim.stroke} stroke-width={prim.strokeWidth} stroke-dasharray={prim.dashArray} opacity={prim.opacity ?? 1} transform={prim.transform}>{#if prim.title !== undefined}<title>{prim.title}</title>{/if}</line>
 		{:else if prim.kind === 'polygon'}
