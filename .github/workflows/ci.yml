@@ -16,8 +16,9 @@ permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: ci-${{ (github.event_name == 'push' || github.event_name == 'pull_request') && (github.event.pull_request.number || github.ref) || github.run_id }}
+  # A newer push or PR update supersedes the run in flight; scheduled and manual runs always finish.
+  cancel-in-progress: ${{ github.event_name == 'push' || github.event_name == 'pull_request' }}
 
 env:
   BUN_VERSION: 1.4.2
@@ -232,7 +233,8 @@ jobs:
   ci-success:
     name: ci-success
     if: always()
-    needs: [plan, lint, typecheck-strict, typecheck-pptx, typecheck-ui, test, build, ui, scripts, mcp]
+    needs:
+      [plan, lint, typecheck-strict, typecheck-pptx, typecheck-ui, test, build, ui, scripts, mcp]
     runs-on: ubuntu-latest
     steps:
       - name: Check every required job succeeded or was skipped by the plan
