@@ -41,3 +41,5 @@ export function registerTeams(): void {
 	defineCallGrid();
 	defineCallControls();
 }
+
+export * from './app/index.js';

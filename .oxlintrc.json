@@ -1,6 +1,11 @@
 {
 	"$schema": "./node_modules/oxlint/configuration_schema.json",
-	"plugins": ["typescript", "import", "promise", "vitest"],
+	"plugins": [
+		"typescript",
+		"import",
+		"promise",
+		"vitest"
+	],
 	"categories": {
 		"correctness": "error",
 		"suspicious": "warn"
@@ -23,7 +28,8 @@
 		"promise/always-return": "off",
 		"typescript/no-extraneous-class": "off",
 		"typescript/no-unsafe-declaration-merging": "off",
-		"typescript/no-this-alias": "off"
+		"typescript/no-this-alias": "off",
+		"promise/no-callback-in-promise": "off"
 	},
 	"ignorePatterns": [
 		"dist/",

@@ -376,3 +376,7 @@ The whole `<xlsx-editor>` element (`packages/ui/src/xlsx/`, with its tests) move
 ## `ooxml-ui/docx`
 
 The whole `<docx-editor>` element (`packages/ui/src/docx/`, with its tests) moved from ChristopherVR/docx-viewer `packages/web-component/src` at `77f820f`. Changes: `docx-core` imports point at `ooxml-core/docx`, `ooxml-ui` self-imports became relative, `.css?inline` became `.css?raw`, the SmartArt fixture moved to `src/docx/__fixtures__/`, and `attr-units`, `page-size`, `page-setup-model`, the pure section setters and `transformCase` are imported from `ooxml-core/docx` instead of kept as copies.
+
+## `ooxml-ui/visio` and `ooxml-ui/teams` app
+
+`packages/ui/src/visio/` is the whole root `src/` of ChristopherVR/visio-viewer at `818f4a4` (the `<visio-viewer>` element, renderer, workers, ribbon, print snapshot and their tests). Changes: `ooxml-ui` self-imports became relative, `.css?inline` became `.css?raw`, the two test fixtures it shared with the browser suite were copied to `src/visio/__fixtures__/`, and the demo-only `workspace-theme.test.ts` stayed in the viewer. The edit and parse workers are separate `ooxml-ui` build entries (`dist/edit-worker.js`, `dist/parse-worker.js`) next to the chunk that starts them. `packages/ui/src/teams/app/` is `packages/web-component/src` of ChristopherVR/teams-viewer at `e410d9b` (`<teams-app>`, settings, controller, bindings contract, store, storage), exported from `ooxml-ui/teams`.
