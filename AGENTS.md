@@ -72,6 +72,9 @@ change may rely on something not released yet only if it also works on the last 
 what you need yourself, as docx does for the title bar's search field). Commits to another repository
 follow that repository's own `AGENTS.md`.
 
+A change that needs both this package and a viewer lands here first, is released, and only then
+lands in the viewer; see `docs/linked-changes.md` for the order and how to link the two pull requests.
+
 ### Where does my change go?
 
 | The change is about...                                                                   | Make it in                                                      |
