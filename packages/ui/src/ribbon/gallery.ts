@@ -129,7 +129,14 @@ export class OfficeUiGallery extends OfficeElement {
 	/** The open popup; while closed it is not in the DOM, so this is a detached hidden placeholder. */
 	get popup(): HTMLElement {
 		this.ensureRendered();
-		return this.querySelector<HTMLElement>('.popup') ?? this.closedPopup;
+		const open = this.querySelector<HTMLElement>('.popup');
+		if (open) return open;
+		// Keep the host's popup hook on the placeholder so callers can read it while closed.
+		const attribute = (this.constructor as unknown as Statics).popupAttribute;
+		const id = this.state?.id;
+		if (id === undefined) this.closedPopup.removeAttribute(attribute);
+		else this.closedPopup.setAttribute(attribute, id);
+		return this.closedPopup;
 	}
 	private readonly closedPopup = Object.assign(this.ownerDocument.createElement('div'), {
 		className: 'popup',

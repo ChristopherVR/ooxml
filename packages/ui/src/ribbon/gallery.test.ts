@@ -46,6 +46,12 @@ function mount(state: OfficeGalleryState = STYLES, inline = true): Gallery {
 }
 
 describe('office-ui-gallery', () => {
+	it('stamps the popup hook on the closed placeholder', () => {
+		const gallery = mount();
+		expect(gallery.contains(gallery.popup)).toBe(false);
+		expect(gallery.popup.getAttribute('data-gallery-popup')).toBe('shapeStyles');
+	});
+
 	it('renders inline previews and emits one pick from the popup', () => {
 		const gallery = mount();
 		const pick = vi.fn();
