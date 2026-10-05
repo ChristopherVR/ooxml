@@ -25,6 +25,6 @@ const ENVIRONMENT = 'npm';
 
 for (const meta of Object.values(PACKAGES)) {
 	console.log(
-		`npm trust github ${meta.npm} --repo ${REPOSITORY} --file ${WORKFLOW} --env ${ENVIRONMENT} --yes`,
+		`npm trust github ${meta.npm} --repo ${REPOSITORY} --file ${WORKFLOW} --env ${ENVIRONMENT} --allow-publish --yes`,
 	);
 }
