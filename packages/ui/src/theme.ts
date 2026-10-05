@@ -1,5 +1,11 @@
 import { OFFICE_TOKENS, TOUCH } from './tokens.js';
 
+export {
+	shadcnBridge,
+	themeBridge,
+	type ShadcnBridgeOptions,
+	type ThemeBridgeMap,
+} from './theme-bridge.js';
 export { COMPACT, FOCUS_RING, OFFICE_TOKENS, tok, TOUCH, type OfficeToken } from './tokens.js';
 
 /**
