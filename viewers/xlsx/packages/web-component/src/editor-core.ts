@@ -276,6 +276,39 @@ export class EditorCore {
 		return grid.measureText(text, css);
 	}
 
+	/** Iterative calculation as the workbook stores it (`calcPr iterate`); undefined when off. */
+	get iteration(): { count: number; delta: number } | undefined {
+		const iterate = this.workbook?.iterate;
+		return iterate ? { count: iterate.count, delta: iterate.delta } : undefined;
+	}
+
+	/**
+	 * Turns iterative calculation on (with its maximum iterations and maximum change) or off
+	 * (`undefined`) and recalculates, so circular references settle or are reported again. The core
+	 * session has no undoable setter for this yet, so it is not an undo step; it marks the workbook
+	 * as changed so it is saved.
+	 */
+	setIterativeCalculation(next: { count: number; delta: number } | undefined): void {
+		const workbook = this.workbook;
+		if (!workbook || this.readOnly) return;
+		const clean = next
+			? {
+					count: Math.min(32767, Math.max(1, Math.round(Number(next.count)) || 100)),
+					delta:
+						Number.isFinite(Number(next.delta)) && Number(next.delta) >= 0
+							? Number(next.delta)
+							: 0.001,
+				}
+			: undefined;
+		const current = workbook.iterate;
+		if (clean?.count === current?.count && clean?.delta === current?.delta) return;
+		if (clean) workbook.iterate = clean;
+		else delete workbook.iterate;
+		this.session?.calculateNow();
+		this.dirty.set(true);
+		this.notifyModel({ kind: 'calculation' });
+	}
+
 	/** Switches automatic or manual calculation on the live session (one undo step, saved). */
 	setCalculation(mode: CalculationMode): void {
 		if (mode === this.calculation) return;

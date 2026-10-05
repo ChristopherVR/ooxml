@@ -3,7 +3,12 @@
  * bar, backstage, shortcut help and toasts; installs the commands and mounts the grid modules.
  * Mirrors docx-viewer's editor-shell.ts.
  */
-import { createBackstage, type Backstage, type BackstageHost } from './backstage';
+import {
+	createBackstage,
+	type Backstage,
+	type BackstageHost,
+	type IterationSettings,
+} from './backstage';
 import type { EditorCore } from './editor-core';
 import { runFileCommand, templateInto, type FileChrome } from './editor-files';
 import { emit, type FileCommand } from './events';
@@ -85,8 +90,10 @@ export function buildShell(core: EditorCore): Shell {
 			theme: core.theme,
 			author: core.authorName,
 			calculation: core.calculation,
+			iteration: core.iteration,
 		}),
 		setOption(key, raw) {
+			if (key === 'iteration') return core.setIterativeCalculation(raw as IterationSettings);
 			const value = String(raw);
 			if (key === 'locale') element.locale = value;
 			else if (key === 'theme')

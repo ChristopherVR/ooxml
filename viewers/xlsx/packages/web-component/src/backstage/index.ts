@@ -10,7 +10,7 @@ import { renderInfo } from './pages-info';
 import { renderExport, renderNew, renderOpen, renderPrint, renderSaveAs } from './pages-file';
 import { renderCustomize, renderOptions } from './pages-options';
 
-export type { BackstageHost, EditorOptions, CalculationMode } from './parts';
+export type { BackstageHost, EditorOptions, CalculationMode, IterationSettings } from './parts';
 export { compatibilityNotes, formatNotes } from './pages-info';
 export { createTemplateWorkbook, TEMPLATES, type TemplateId } from './templates';
 

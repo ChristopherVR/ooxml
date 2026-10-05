@@ -1,7 +1,15 @@
 /** File > Options (General, Formulas) and Customize Ribbon. */
+import { defineCheckbox } from 'ooxml-ui/controls';
 import type { RibbonControl } from '../ribbon/parts';
 import { isMenuSeparator, ribbonTabs } from '../ribbon/parts';
-import { heading, labelled, paragraph, primary, type PageContext } from './parts';
+import {
+	heading,
+	labelled,
+	paragraph,
+	primary,
+	type IterationSettings,
+	type PageContext,
+} from './parts';
 
 const LANGUAGES: Array<[string, string]> = [
 	['en', 'English'],
@@ -10,6 +18,66 @@ const LANGUAGES: Array<[string, string]> = [
 	['es', 'Español'],
 	['zh-CN', '简体中文'],
 ];
+
+const DEFAULT_ITERATIONS = 100;
+const DEFAULT_MAX_CHANGE = 0.001;
+
+/**
+ * Iterative calculation (Excel's "Enable iterative calculation" with Maximum Iterations and Maximum
+ * Change), bound to the workbook's `calcPr iterate`. The two fields only apply while it is on.
+ */
+function iterationControls(page: PageContext, current: IterationSettings): HTMLElement[] {
+	const { t, host, doc } = page;
+	defineCheckbox(doc.defaultView?.customElements);
+	const toggle = doc.createElement('office-ui-checkbox') as HTMLElement & { checked: boolean };
+	toggle.setAttribute('aria-label', t('Enable iterative calculation'));
+	toggle.checked = Boolean(current);
+	const row = doc.createElement('div');
+	row.className = 'xve-backstage-check';
+	const text = doc.createElement('span');
+	text.textContent = t('Enable iterative calculation');
+	row.append(toggle, text);
+	text.addEventListener('click', () => toggle.click());
+
+	const number = (value: number, min: number, step: string) => {
+		const input = doc.createElement('input');
+		input.type = 'number';
+		input.min = String(min);
+		input.step = step;
+		input.value = String(value);
+		input.disabled = !current;
+		return input;
+	};
+	const count = number(current?.count ?? DEFAULT_ITERATIONS, 1, '1');
+	const delta = number(current?.delta ?? DEFAULT_MAX_CHANGE, 0, 'any');
+	const apply = () => {
+		count.disabled = delta.disabled = !toggle.checked;
+		host.setOption(
+			'iteration',
+			toggle.checked
+				? {
+						count: Number(count.value) || DEFAULT_ITERATIONS,
+						delta: delta.value === '' ? DEFAULT_MAX_CHANGE : Number(delta.value),
+					}
+				: undefined,
+		);
+	};
+	toggle.addEventListener('change', apply);
+	count.addEventListener('change', apply);
+	delta.addEventListener('change', apply);
+	return [
+		row,
+		labelled(page, t('Maximum iterations'), count),
+		labelled(page, t('Maximum change'), delta),
+		paragraph(
+			page,
+			t(
+				'Circular references are recalculated up to the maximum iterations, stopping once no cell changes by more than the maximum change.',
+			),
+			'xve-backstage-muted',
+		),
+	];
+}
 
 export function renderOptions(page: PageContext): void {
 	const { t, host, doc } = page;
@@ -37,6 +105,7 @@ export function renderOptions(page: PageContext): void {
 	calculation.addEventListener('change', () =>
 		host.setOption('calculation', calculation.value === 'manual' ? 'manual' : 'automatic'),
 	);
+	const iteration = iterationControls(page, current.iteration);
 	const r1c1 = doc.createElement('label');
 	r1c1.className = 'xve-backstage-check';
 	const box = doc.createElement('input');
@@ -58,6 +127,7 @@ export function renderOptions(page: PageContext): void {
 			t('Manual: formulas recalculate when you press F9 (Calculate Now).'),
 			'xve-backstage-muted',
 		),
+		...iteration,
 		r1c1,
 		paragraph(
 			page,

@@ -30,7 +30,11 @@ The workbook engine in `ooxml-core` and the `<xlsx-editor>` component are young.
 
 ## Formulas
 
-The calculation engine lives in `ooxml-core` and recalculates dependents after each edit. It implements a large set of functions (math, statistics, logic, text, dates, lookup including `XLOOKUP` and dynamic arrays such as `FILTER`, `SORT`, `UNIQUE`, `SEQUENCE`, information and basic financial functions). Not every Excel function exists: an unknown one shows `#NAME?`. Circular references are reported and left at 0; iterative calculation is not supported. External workbook references are kept but not resolved.
+The calculation engine lives in `ooxml-core` and recalculates dependents after each edit. Its catalogue holds about 480 functions across math and trigonometry, statistics (including the inverse distributions and the `LINEST`, `LOGEST`, `TREND` and `GROWTH` family), logic, text (including `REGEXTEST`, `REGEXEXTRACT` and `REGEXREPLACE`), dates, lookup (including `XLOOKUP` and dynamic arrays such as `FILTER`, `SORT`, `UNIQUE` and `SEQUENCE`), information, financial (including the bond, coupon, discount-security and Treasury bill functions, `VDB` and `XIRR`), engineering (including `COMPLEX`, the `IM` functions and `CONVERT`) and database (`DSUM`, `DCOUNT`, `DGET` and the rest). Insert Function lists them by category.
+
+Not every Excel function exists: an unknown one shows `#NAME?`. These are not implemented: `ODDFPRICE`, `ODDFYIELD`, `ODDLPRICE`, `ODDLYIELD`, `AMORDEGRC`, `AMORLINC`, `BESSELI`, `BESSELJ`, `BESSELK`, `BESSELY`, `FORECAST.ETS`, `ASC`, `DBCS`, `JIS`, `PHONETIC`, `BAHTTEXT`, `INFO`, `GETPIVOTDATA`, `ISOMITTED` and `WEBSERVICE`. External workbook references are kept but not resolved.
+
+Circular references are reported and left at 0 unless iterative calculation is on. Turn it on in File > Options > Formulas (Enable iterative calculation, with Maximum iterations and Maximum change); the setting is saved with the workbook (`calcPr iterate`, `iterateCount`, `iterateDelta`). A circular group is then recalculated up to the maximum iterations and stops once no cell changes by more than the maximum change. Turning it on or off is not an undo step.
 
 Calculation can be switched between Automatic and Manual (Formulas > Calculation Options, or File > Options); the mode is saved with the workbook. Calculate Now (F9) and Calculate Sheet (Shift+F9) recalculate on demand. Show Formulas (Ctrl+\`) displays formula text instead of results.
 
@@ -38,7 +42,7 @@ Calculation can be switched between Automatic and Manual (Formulas > Calculation
 
 Typing into cells (values and formulas), the formula bar and name box, Ctrl+; and Ctrl+Shift+; for the current date and time, fill, copy and paste (with the system clipboard as text and HTML), insert and delete rows, columns and cells, sorting, filtering, remove duplicates, find and replace, sheet management (add, rename, move, hide, colour; new sheets are named in the interface language, for example `Tabelle2` in German), the built-in cell styles, tables (style options, header and total rows, resize, convert to range), row and column outline groups, page setup and print options (gridlines, headings, centring), undo and redo with meaningful step names. Formula references follow structural edits.
 
-Sheet and workbook-structure protection can carry a password. It is Excel's legacy 16-bit password hash: it stops accidental edits, it is not security. A file whose sheet is protected only with Excel's newer SHA-512 hash (no legacy hash) is a known gap: the core does not expose that hash, so Unprotect Sheet removes such protection without asking for the password.
+Sheet and workbook-structure protection can carry a password. It stops accidental edits; it is not security. The editor reads and checks both Excel's legacy 16-bit hash and its newer SHA-512 (also SHA-1, SHA-256 and SHA-384) hash, so Unprotect Sheet and Unprotect Workbook ask for the password whichever hash the file carries. A password set in the editor is written as the legacy hash. A protection whose hash uses a digest the core cannot compute is never unlocked by a password.
 
 Pictures and charts are selected by clicking them: they move and resize with the mouse, nudge with the arrow keys and are removed with Delete; a selected chart shows the Chart Design tab.
 

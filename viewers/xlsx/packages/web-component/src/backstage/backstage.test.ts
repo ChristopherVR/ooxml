@@ -14,6 +14,7 @@ function setup(workbook = createWorkbook()) {
 		theme: 'auto',
 		author: 'Ada',
 		calculation: 'automatic',
+		iteration: undefined,
 	};
 	const host: BackstageHost = {
 		ctx: core.ctx,
@@ -127,6 +128,31 @@ describe('File backstage', () => {
 		boxes[0]!.checked = false;
 		boxes[0]!.dispatchEvent(new Event('change'));
 		expect(calls).toContainEqual(['hidden', ['home.bold']]);
+	});
+
+	it('turns iterative calculation on and off from the Formulas options', async () => {
+		const { backstage, el, calls } = setup();
+		backstage.open('options');
+		const toggle = el.querySelector<HTMLElement & { checked: boolean }>(
+			'[data-backstage-page="options"] office-ui-checkbox',
+		)!;
+		const [count, delta] = [
+			...el.querySelectorAll<HTMLInputElement>(
+				'[data-backstage-page="options"] input[type="number"]',
+			),
+		];
+		expect(toggle.checked).toBe(false);
+		expect([count!.disabled, delta!.disabled]).toEqual([true, true]);
+		toggle.click();
+		expect(calls).toContainEqual(['option', 'iteration', { count: 100, delta: 0.001 }]);
+		expect(count!.disabled).toBe(false);
+		count!.value = '50';
+		count!.dispatchEvent(new Event('change'));
+		delta!.value = '0.01';
+		delta!.dispatchEvent(new Event('change'));
+		expect(calls.at(-1)).toEqual(['option', 'iteration', { count: 50, delta: 0.01 }]);
+		toggle.click();
+		expect(calls.at(-1)).toEqual(['option', 'iteration', undefined]);
 	});
 
 	it('follows the display language', () => {

@@ -7,11 +7,14 @@ import type { SaveState } from '../title-bar';
 import type { TemplateId } from './templates';
 
 export type CalculationMode = 'automatic' | 'manual';
+/** Iterative calculation: maximum iterations and maximum change; undefined when off. */
+export type IterationSettings = { count: number; delta: number } | undefined;
 export interface EditorOptions {
 	locale: string;
 	theme: string;
 	author: string;
 	calculation: CalculationMode;
+	iteration: IterationSettings;
 }
 
 /** What the File view needs from the editor; every value is read when a page opens. */

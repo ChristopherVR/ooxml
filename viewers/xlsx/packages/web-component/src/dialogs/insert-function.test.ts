@@ -40,6 +40,20 @@ describe('insert function dialog', () => {
 		expect(cell?.value).toBe(3);
 	});
 
+	it('offers the Database category with its functions, translated', async () => {
+		const ctx = createTestContext(createWorkbook());
+		registerNavigationDialogs(ctx);
+		void ctx.dialogs.open('insert-function');
+		const dialog = dialogEl(ctx, 'insert-function');
+		const category = inputByLabel<HTMLSelectElement>(dialog, 'Or select a category:');
+		expect([...category.options].map((option) => option.value)).toContain('Database');
+		setValue(category, 'Database');
+		const names = [...dialog.querySelectorAll<HTMLElement>('[role="option"]')].map(
+			(option) => option.dataset.value,
+		);
+		expect(names).toEqual(expect.arrayContaining(['DSUM', 'DCOUNT', 'DGET']));
+	});
+
 	it('starts the cell editor with =NAME( when a grid is mounted', async () => {
 		const beginEdit = vi.fn();
 		const ctx = createTestContext(createWorkbook(), { grid: { beginEdit } });
