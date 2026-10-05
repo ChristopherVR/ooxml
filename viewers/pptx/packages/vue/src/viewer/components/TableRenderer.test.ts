@@ -350,6 +350,30 @@ describe('tableRenderer', () => {
 		expect(span.attributes('style')).toContain('font-family: Arial');
 	});
 
+	it('lowers and shrinks a subscript run', () => {
+		const runs: CellTextRun[] = [
+			{ text: 'CO', fontSize: 10 },
+			{ text: '2', fontSize: 10, baseline: -25000 },
+		];
+		const data: PptxTableData = {
+			columnWidths: [1],
+			rows: [{ cells: [richCell({ text: 'CO2' }, runs)] }],
+		};
+		const wrapper = mount(TableRenderer, { props: { element: table(data), zIndex: 0 } });
+		const style = wrapper.findAll('td span.pptx-vue-table__run')[1].attributes('style');
+		expect(style).toContain('font-size: 6.5pt');
+		expect(style).toContain('vertical-align: sub');
+	});
+
+	it('takes half of the border width out of the cell padding', () => {
+		const data: PptxTableData = {
+			columnWidths: [1],
+			rows: [{ cells: [{ text: '42', style: { marginRight: 6, borderRightWidth: 2 } }] }],
+		};
+		const wrapper = mount(TableRenderer, { props: { element: table(data), zIndex: 0 } });
+		expect(wrapper.get('td').attributes('style')).toContain('padding-right: 5px');
+	});
+
 	it('renders strikethrough run with text-decoration: line-through', () => {
 		const runs: CellTextRun[] = [{ text: 'Strike', strikethrough: true }];
 		const data: PptxTableData = {
