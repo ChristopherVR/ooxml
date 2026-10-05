@@ -118,9 +118,10 @@ What it does, in order:
    scheduled run would see an untagged, already-published package and release it again as a patch.
 
 **It never asks for or accepts a one-time password** (there is no `--otp`). If npm answers that the
-publish needs a 2FA code (`EOTP`), it stops with a non-zero exit. Publish with a granular access
-token that has "bypass 2FA" enabled (log in with it, or put it in your user `.npmrc` yourself), or
-through the CI trusted-publishing path. The script itself never reads, writes or prints a token;
+publish needs a 2FA code (`EOTP`), it asks for a granular access token instead (npmjs.com, Access
+Tokens, Granular: read and write for packages, "Bypass two-factor authentication", short expiry).
+The paste is hidden, kept in a temporary npm config for that run only and deleted afterwards; it is
+never printed or saved. Without a token (or without a terminal) it stops with a non-zero exit.
 `npm login` stores its own credentials in your user `.npmrc` as usual.
 
 ## One-time setup (by hand)
