@@ -26,6 +26,7 @@ import type { ShapeStyle } from '../../types/shape-style';
 import type { PptxTableData, PptxTableRow, PptxTableCell } from '../../types/table';
 import type { TextStyle, TextSegment } from '../../types/text';
 import { chartSeriesGradientFromInput } from './chart-gradient-input';
+import { applyChartInputLayout } from './chart-layout-operations';
 import type {
 	TextOptions,
 	TextSegmentInput,
@@ -553,12 +554,14 @@ export function createChartElement(
 		},
 	};
 
-	return {
+	const element: ChartPptxElement = {
 		type: 'chart',
 		id: generateId('cht'),
 		...p,
 		chartData,
 	};
+	applyChartInputLayout(element, input);
+	return element;
 }
 
 /**
