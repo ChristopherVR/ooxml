@@ -1,8 +1,31 @@
 # Collaboration protocol
 
-The web component provides a transport-neutral collaborative editing foundation built on `prosemirror-collab`. It exchanges validated ProseMirror steps through an authority that assigns a single ordered version stream. It does not connect to a network or provide authentication, persistence, presence, or availability guarantees.
+The web component provides a transport-neutral collaborative editing foundation built on `prosemirror-collab`. It exchanges validated ProseMirror steps through an authority that assigns a single ordered version stream. It does not connect to a network or provide authentication, persistence, or availability guarantees; transient presence is a separate channel (below).
 
-Try the [two-peer local collaboration demo](/demo/collaboration.html). The web component exposes `startCollaboration`, `getPendingCollaboration`, `receiveCollaboration`, and `stopCollaboration`. Hosts can use `createCollaborationAuthority(model, options)` to create the in-memory reference authority with the same schema and model conversion as the editor.
+## Live demo
+
+Two editors, one document, one local in-memory authority. Pause delivery to type in both at once, then resume to see the edits merge. Nothing leaves your browser.
+
+<iframe
+	src="/docx-viewer/demo/collaboration.html"
+	title="docx-viewer two-peer collaboration demo"
+	loading="lazy"
+	style="width: 100%; height: 720px; border: 1px solid var(--vp-c-divider); border-radius: 8px"
+></iframe>
+
+[Open the demo full size](/demo/collaboration.html){target="_self"}, or run the second editor in another framework with `?guest=vue`.
+
+## What is and is not supported
+
+| Supported                                                        | Not supported                                                                    |
+| ---------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Ordered, validated ProseMirror step batches through an authority | A hosted server, networking, authentication or persistence (the host owns these) |
+| Transient presence: names, colors, cursors, selections           | Yjs/CRDT merging for Word documents (PowerPoint uses a Yjs CRDT, Word does not)  |
+| A reference in-memory authority for tests and the local demo     | Structural table commands while collaborating                                    |
+
+## Protocol
+
+The web component exposes `startCollaboration`, `getPendingCollaboration`, `receiveCollaboration`, and `stopCollaboration`. Hosts can use `createCollaborationAuthority(model, options)` to create the in-memory reference authority with the same schema and model conversion as the editor.
 
 ## Client and host flow
 

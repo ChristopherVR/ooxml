@@ -15,7 +15,7 @@ function select(id: string): void {
 
 async function copyCommand(): Promise<void> {
 	try {
-		await navigator.clipboard.writeText(active.value.entry);
+		await navigator.clipboard.writeText(`npm install ${active.value.entry}`);
 		copied.value = true;
 		clearTimeout(timer);
 		timer = setTimeout(() => (copied.value = false), 1600);
@@ -42,7 +42,7 @@ async function copyCommand(): Promise<void> {
 		</div>
 		<div class="pv-install__row">
 			<span class="pv-install__label">{{ copy.hero.entryLabel }}</span>
-			<code class="pv-install__cmd">{{ active.entry }}</code>
+			<code class="pv-install__cmd">npm install {{ active.entry }}</code>
 			<button type="button" class="pv-install__copy" @click="copyCommand">
 				{{ copied ? copy.hero.copiedLabel : copy.hero.copyLabel }}
 			</button>

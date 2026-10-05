@@ -37,10 +37,11 @@ export default defineConfig({
 		nav: [
 			{
 				text: 'Developer Guide',
-				link: '/architecture',
-				activeMatch: '/(architecture|bindings|model-units)',
+				link: '/getting-started',
+				activeMatch: '/(getting-started|architecture|bindings|model-units|api|theming)',
 			},
 			{ text: 'User Guide', link: '/editing', activeMatch: '/(editing|collaboration)' },
+			{ text: 'Demos', link: '/demos', activeMatch: '/demos' },
 			{
 				text: 'Packages',
 				items: [
@@ -57,7 +58,9 @@ export default defineConfig({
 			{
 				text: 'Resources',
 				items: [
-					{ text: 'Live demos', link: '/#live-demo' },
+					{ text: 'Live demos', link: '/demos' },
+					{ text: 'Element API', link: '/api' },
+					{ text: 'Theming', link: '/theming' },
 					{ text: 'Support roadmap', link: '/parity-roadmap' },
 					{ text: 'Outstanding work', link: '/outstanding-work' },
 					{ text: 'ooxml-core plan', link: '/ooxml-core-plan' },
@@ -72,16 +75,25 @@ export default defineConfig({
 				text: 'Start Here',
 				items: [
 					{ text: 'Overview', link: '/' },
+					{ text: 'Getting started', link: '/getting-started' },
+					{ text: 'The live demos', link: '/demos' },
 					{ text: 'Architecture', link: '/architecture' },
 					{ text: 'Framework bindings', link: '/bindings' },
 					{ text: 'Model units', link: '/model-units' },
 				],
 			},
 			{
+				text: 'Reference',
+				items: [
+					{ text: 'Element API and events', link: '/api' },
+					{ text: 'Theming', link: '/theming' },
+				],
+			},
+			{
 				text: 'Using the Editor',
 				items: [
 					{ text: 'Editing text', link: '/editing' },
-					{ text: 'Collaboration', link: '/collaboration' },
+					{ text: 'Collaboration (live demo)', link: '/collaboration' },
 				],
 			},
 			{

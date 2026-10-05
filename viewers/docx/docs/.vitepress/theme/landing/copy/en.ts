@@ -6,7 +6,7 @@ export const en: LandingCopy = {
 		titleTop: '.docx editing,',
 		titleAccent: 'made embeddable.',
 		sub: 'A browser Word editor for React, Vue, Angular, Svelte, Solid, and vanilla JavaScript. One document model and one ProseMirror-backed <docx-editor> web component do the work; the framework adapters only wire up lifecycle and events.',
-		start: { text: 'Get started', href: '/architecture' },
+		start: { text: 'Get started', href: '/getting-started' },
 		demo: 'Live demo',
 		scroll: 'Scroll',
 		frameCaption: 'Sample document.docx · live in the browser',
@@ -14,9 +14,9 @@ export const en: LandingCopy = {
 		frameAlt: 'The docx-viewer editor showing a sample document with the Word-style ribbon',
 		copyLabel: 'Copy',
 		copiedLabel: 'Copied',
-		entryLabel: 'import from',
+		entryLabel: 'install',
 		notPublished:
-			'Not on npm yet. The Word packages are unpublished, so these are the intended import paths. Build from the repository to try them today.',
+			'Published to npm. Each framework package is self-contained: it bundles the editor and brings docx-core with it.',
 	},
 	features: {
 		kicker: 'Features',
@@ -77,11 +77,11 @@ export const en: LandingCopy = {
 	quickstart: {
 		kicker: 'Getting started',
 		title: 'Mount an editor in a few lines.',
-		copy: 'Every adapter mounts the same <docx-editor>. Pass a document model, listen for changes, and give the container a height. The snippets show the intended API.',
+		copy: 'Every adapter mounts the same <docx-editor>. Pass a document model, listen for changes, and give the container a height.',
 		docsLabel: 'Framework guide',
 		buildTitle: 'Build from source',
 		buildCopy:
-			'The Word packages are not published to npm yet, so clone the repository and run the demo or the packages from there. Bun is required.',
+			'To run the demos or work on the editor itself, clone the repository. Bun is required.',
 		buildCommands: 'bun install\nbun run demo',
 	},
 	demos: {
@@ -108,7 +108,7 @@ export const en: LandingCopy = {
 		items: [
 			{
 				q: 'Can I install it from npm?',
-				a: 'Not yet. The Word packages are not published, and the release workflow is deliberately not being run. Clone the repository and build it; the import paths shown on this site are the intended API.',
+				a: 'Yes. docx-core and one self-contained editor package per framework are on npm, for example npm install docx-react-viewer. Each package is versioned on its own.',
 				link: { text: 'Release policy', href: '/releasing' },
 			},
 			{
@@ -149,7 +149,7 @@ export const en: LandingCopy = {
 		kicker: 'Get started',
 		title: '.docx in. .docx out.',
 		sub: 'Read the architecture, pick your framework guide, and try the demo with a document of your own. Apache-2.0 licensed, strict TypeScript, and honest about the gaps.',
-		quick: { text: 'Read the guide', href: '/architecture' },
+		quick: { text: 'Read the guide', href: '/getting-started' },
 		github: 'View on GitHub',
 		columns: [
 			{
@@ -168,6 +168,7 @@ export const en: LandingCopy = {
 			{
 				title: 'Docs',
 				links: [
+					{ text: 'Getting started', href: '/getting-started' },
 					{ text: 'Architecture', href: '/architecture' },
 					{ text: 'Editing text', href: '/editing' },
 					{ text: 'Support roadmap', href: '/parity-roadmap' },
