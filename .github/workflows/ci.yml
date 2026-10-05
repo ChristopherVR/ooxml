@@ -1,91 +1,233 @@
 name: CI
+
+# What runs is decided by scripts/ci-plan.mjs from the files the change touched: a docs edit runs
+# nothing, a docx change tests the affected files on as many runners as they need and checks only
+# docx-viewer, and a dependency or CI-config change (or the nightly run) runs everything. Pushes to
+# main are never cancelled by a later push: every commit gets its own verdict.
 on:
   push:
     branches: [main]
   pull_request:
   workflow_dispatch:
+  schedule:
+    - cron: '17 3 * * *' # nightly full run: the safety net for `vitest --changed`
+
 permissions:
   contents: read
+
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: ci-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  BUN_VERSION: 1.3.5
+  NODE_VERSION: 24
+
 jobs:
-  typecheck:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      plan: ${{ steps.plan.outputs.plan }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - uses: actions/cache@v6
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
+      - run: bun install --frozen-lockfile
+      - id: plan
+        run: |
+          base="${{ github.event.pull_request.base.sha || github.event.before }}"
+          node scripts/ci-plan.mjs --event "${{ github.event_name }}" --base "$base"
+
+  typecheck-strict:
+    needs: plan
+    if: fromJSON(needs.plan.outputs.plan).typecheck.strict
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 24
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.3.5
-      - run: bun install --frozen-lockfile
-      - run: bun run typecheck
+      - uses: ./.github/actions/setup
+      - run: bun run typecheck:strict
+
+  typecheck-pptx:
+    needs: plan
+    if: fromJSON(needs.plan.outputs.plan).typecheck.pptx
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: bun run typecheck:pptx
+
+  typecheck-ui:
+    needs: plan
+    if: fromJSON(needs.plan.outputs.plan).typecheck.ui
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
       - run: bun run --cwd packages/ui typecheck
 
   # The unit suite is ~1,200 files and most of its time is spent importing the pptx area into each
-  # file, so it is split across parallel runners by file (`vitest --shard`). The floor is the
+  # file, so it is split across parallel runners by file (`vitest --shard`). The planner sizes the
+  # matrix: one runner per ~60 affected test files on a change, six for a full run. The floor is the
   # slowest single file (the salt-less WHIRLPOOL modifyVerifier fixture, ~80s), not the shard count.
   test:
     name: test (shard ${{ matrix.shard }}/${{ strategy.job-total }})
+    needs: plan
+    if: fromJSON(needs.plan.outputs.plan).test.run && toJSON(fromJSON(needs.plan.outputs.plan).test.shards) != '[]'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4, 5, 6]
+        shard: ${{ fromJSON(needs.plan.outputs.plan).test.shards }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
         with:
-          node-version: 24
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.3.5
-      - run: bun install --frozen-lockfile
-      - run: bun run test --shard=${{ matrix.shard }}/${{ strategy.job-total }}
+          fetch-depth: 0
+      - uses: ./.github/actions/setup
+      - name: Run the affected tests
+        env:
+          PLAN: ${{ needs.plan.outputs.plan }}
+        run: |
+          mode=$(node -p "JSON.parse(process.env.PLAN).test.mode")
+          base=$(node -p "JSON.parse(process.env.PLAN).base")
+          shard="--shard=${{ matrix.shard }}/${{ strategy.job-total }}"
+          if [ "$mode" = "changed" ] && [ -n "$base" ]; then
+            bun run test --changed="$base" $shard --passWithNoTests
+          else
+            bun run test $shard
+          fi
 
-  package:
+  # Build once; the package checks and the viewer checks below reuse the output.
+  build:
+    needs: plan
+    if: fromJSON(needs.plan.outputs.plan).build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 24
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.3.5
-      - run: bun install --frozen-lockfile
-      # Release machinery: planner, publish guards, commit and changelog checks.
-      - run: bun run test:scripts
-      - run: bun run test:mcp
-      - run: bun run check:changelog
+      - uses: ./.github/actions/setup
       - run: bun run build
       - run: bun run test:package
-      # The shared UI package (packages/ui): tests, build and a packed-tarball import check.
+      - run: node scripts/check-core-ui-boundary.mjs
+      - uses: actions/upload-artifact@v7
+        with:
+          name: core-dist
+          path: dist
+          retention-days: 1
+
+  ui:
+    needs: plan
+    if: fromJSON(needs.plan.outputs.plan).ui
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
       - run: bun run --cwd packages/ui test
       - run: bun run --cwd packages/ui build
       - run: bun run --cwd packages/ui test:package
-      - name: The core never imports the UI package
-        run: node scripts/check-core-ui-boundary.mjs
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ui-dist
+          path: packages/ui/dist
+          retention-days: 1
+
+  # Release machinery: planner, publish guards, commit and changelog checks, the launcher and CI planner.
+  scripts:
+    needs: plan
+    if: fromJSON(needs.plan.outputs.plan).scripts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: bun run test:scripts
+      - run: bun run check:changelog
+
+  mcp:
+    needs: plan
+    if: fromJSON(needs.plan.outputs.plan).mcp
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: bun run test:mcp
+
+  # Each viewer repository, linked to this change: the contract the shared elements and the format
+  # logic have to keep. It reports failures on the run but is not part of `ci-success`: a viewer
+  # that is red for its own reasons must not block this repository.
+  consumers:
+    name: viewer (${{ matrix.name }})
+    needs: [plan, build, ui]
+    if: |
+      !cancelled() && needs.build.result != 'failure' && needs.ui.result != 'failure' &&
+      toJSON(fromJSON(needs.plan.outputs.plan).consumers) != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.plan).consumers }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          path: ooxml
+      - uses: actions/checkout@v7
+        with:
+          repository: ${{ matrix.repo }}
+          path: viewer
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - run: bun install --frozen-lockfile
+        working-directory: ooxml
+      - uses: actions/download-artifact@v8
+        with:
+          name: core-dist
+          path: ooxml/dist
+        continue-on-error: true
+      - uses: actions/download-artifact@v8
+        with:
+          name: ui-dist
+          path: ooxml/packages/ui/dist
+        continue-on-error: true
+      - name: Build what this change did not
+        run: |
+          [ -d ooxml/dist ] || (cd ooxml && bun run build)
+          [ -d ooxml/packages/ui/dist ] || (cd ooxml/packages/ui && bun run build)
+      - name: Link the viewer to this checkout
+        run: node ooxml/scripts/link-local.mjs viewer --no-build
+      - run: ${{ matrix.install }}
+        working-directory: viewer
+      - run: ${{ matrix.verify }}
+        working-directory: viewer
 
   # The single check the `main` ruleset requires. Funnelling through one job keeps branch
   # protection stable when jobs are added or renamed (a required check that no longer exists blocks
   # every PR silently). `always()` plus the explicit result test is deliberate: without it a
-  # cancelled or skipped dependency would let this pass.
+  # cancelled or failed dependency would let this pass. A job the planner skipped is fine.
   ci-success:
     name: ci-success
     if: always()
-    needs: [typecheck, test, package]
+    needs: [plan, typecheck-strict, typecheck-pptx, typecheck-ui, test, build, ui, scripts, mcp]
     runs-on: ubuntu-latest
     steps:
-      - name: Check every required job succeeded
+      - name: Check every required job succeeded or was skipped by the plan
         run: |
           results="${{ join(needs.*.result, ' ') }}"
           echo "Upstream results: $results"
           for result in $results; do
             case "$result" in
-              success) ;;
+              success|skipped) ;;
               *)
                 echo "::error::A required CI job did not succeed (got: $results)."
                 exit 1

@@ -1,0 +1,25 @@
+name: Set up the workspace
+description: Node, Bun, a cached Bun install and a frozen-lockfile install. Run after actions/checkout.
+inputs:
+  bun-version:
+    description: Bun version
+    default: '1.3.5'
+  node-version:
+    description: Node version
+    default: '24'
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v7
+      with:
+        node-version: ${{ inputs.node-version }}
+    - uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: ${{ inputs.bun-version }}
+    - uses: actions/cache@v6
+      with:
+        path: ~/.bun/install/cache
+        key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+        restore-keys: bun-${{ runner.os }}-
+    - run: bun install --frozen-lockfile
+      shell: bash
