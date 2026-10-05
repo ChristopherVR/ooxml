@@ -17,6 +17,12 @@ import { ERR, ErrorSignal, type Matrix, type Scalar } from './values.js';
 
 const MAX_ROUNDS = 8;
 
+/** How far a cell moved between two iteration passes; a change of kind or text is unbounded. */
+function valueChange(before: unknown, after: unknown): number {
+	if (typeof before === 'number' && typeof after === 'number') return Math.abs(after - before);
+	return before === after ? 0 : Number.POSITIVE_INFINITY;
+}
+
 export abstract class EngineCore extends EngineHost {
 	protected releaseAllSpills(): void {
 		for (const sheet of this.workbook.sheets) {
@@ -107,7 +113,9 @@ export abstract class EngineCore extends EngineHost {
 			for (const component of order.components) {
 				const first = component.nodes[0] as FormulaNode;
 				if (component.cyclic) {
-					for (const node of component.nodes) this.markCycle(node);
+					const iterate = this.workbook.iterate;
+					if (iterate) this.iterateGroup(component.nodes, iterate);
+					else for (const node of component.nodes) this.markCycle(node);
 				} else if (this.pending.has(first)) {
 					this.computeFrom(first);
 				}
@@ -149,6 +157,32 @@ export abstract class EngineCore extends EngineHost {
 					if (member === e.node) break;
 				}
 			}
+		}
+	}
+
+	/**
+	 * Iterative calculation of a circular group (`calcPr iterate`): every member is recomputed in
+	 * turn, reading the others' values from the previous step, until the largest change is within
+	 * `delta` or `count` passes have run. The group starts from the values the cells hold.
+	 */
+	protected iterateGroup(nodes: FormulaNode[], limits: { count: number; delta: number }): void {
+		for (const node of nodes) this.pending?.delete(node);
+		const cellOf = (node: FormulaNode) =>
+			this.workbook.sheets[node.sheet]?.rows.get(node.row)?.get(node.col);
+		this.iterating = true;
+		try {
+			for (let pass = 0; pass < limits.count; pass++) {
+				let change = 0;
+				for (const node of nodes) {
+					const before = cellOf(node)?.value ?? null;
+					this.compute(node);
+					const after = cellOf(node)?.value ?? null;
+					change = Math.max(change, valueChange(before, after));
+				}
+				if (change <= limits.delta) break;
+			}
+		} finally {
+			this.iterating = false;
 		}
 	}
 

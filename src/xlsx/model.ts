@@ -783,6 +783,12 @@ export interface Workbook {
 	/** Calculation mode (`calcPr calcMode`); absent means automatic. */
 	calcMode?: 'auto' | 'manual';
 	/**
+	 * Iterative calculation (`calcPr iterate`, `iterateCount`, `iterateDelta`). Present when
+	 * enabled: a circular reference is then recalculated up to `count` times, stopping once no cell
+	 * in it changes by more than `delta`, instead of being reported and left at 0.
+	 */
+	iterate?: { count: number; delta: number };
+	/**
 	 * The package the workbook was loaded from, kept so parts the model does not represent
 	 * (charts' full detail, VBA, pivot caches, custom XML) survive a save. Absent for new workbooks.
 	 */

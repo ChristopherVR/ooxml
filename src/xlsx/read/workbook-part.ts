@@ -29,6 +29,8 @@ export interface WorkbookPart {
 	workbookModernHash?: ModernPasswordHash;
 	/** `calcPr calcMode`: `manual` (and `autoNoTable`, read as automatic). */
 	calcMode?: 'auto' | 'manual';
+	/** `calcPr iterate` with its count (default 100) and maximum change (default 0.001). */
+	iterate?: { count: number; delta: number };
 }
 
 export function parseWorkbookPart(xml: string): WorkbookPart {
@@ -60,8 +62,16 @@ export function parseWorkbookPart(xml: string): WorkbookPart {
 	const protection = xFirst(root, 'workbookProtection');
 	const password = att(protection, 'workbookPassword');
 	const modernHash = readModernHash(protection, 'workbook');
-	const calcMode = att(xFirst(root, 'calcPr'), 'calcMode');
+	const calcPr = xFirst(root, 'calcPr');
+	const calcMode = att(calcPr, 'calcMode');
+	const iterate = boolAttr(calcPr, 'iterate', false)
+		? {
+				count: numAttr(calcPr, 'iterateCount') ?? 100,
+				delta: numAttr(calcPr, 'iterateDelta') ?? 0.001,
+			}
+		: undefined;
 	return {
+		...(iterate ? { iterate } : {}),
 		...(password ? { workbookPasswordHash: password } : {}),
 		...(modernHash ? { workbookModernHash: modernHash } : {}),
 		...(calcMode === 'manual' ? { calcMode: 'manual' as const } : {}),

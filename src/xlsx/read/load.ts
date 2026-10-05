@@ -120,6 +120,7 @@ export async function loadXlsx(input: Uint8Array | ArrayBuffer): Promise<Workboo
 	if (book.workbookPasswordHash) workbook.workbookPasswordHash = book.workbookPasswordHash;
 	if (book.workbookModernHash) workbook.workbookModernHash = book.workbookModernHash;
 	if (book.calcMode) workbook.calcMode = book.calcMode;
+	if (book.iterate) workbook.iterate = book.iterate;
 	if (signatures.hasSignatures)
 		workbook.signatures = { count: signatures.signatureCount, parts: signatures.signaturePaths };
 	if (!sheets.length) throw new Error('XLSX workbook has no sheets');

@@ -33,6 +33,8 @@ export abstract class EngineHost implements EvalHost {
 	protected readonly inProgress = new Set<FormulaNode>();
 	protected cycles = new Set<FormulaNode>();
 	protected dynamicCycleHits = new Set<FormulaNode>();
+	/** Set while a circular group is iterated: reads of a formula in progress see its stored value. */
+	protected iterating = false;
 	protected pending: Set<FormulaNode> | undefined;
 	protected columnIndex: ColumnIndex | undefined;
 	protected reverseIndex: ReverseIndex | undefined;
@@ -83,6 +85,7 @@ export abstract class EngineHost implements EvalHost {
 		const node = this.nodes.get(sheet)?.get(cellKey(row, col));
 		if (!node) return;
 		if (this.inProgress.has(node)) {
+			if (this.iterating) return;
 			this.dynamicCycleHits.add(node);
 			this.dynamicCycleHit = true;
 			this.cycleReads++;

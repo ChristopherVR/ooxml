@@ -129,7 +129,11 @@ export function workbookXml(
 			.join('')}</definedNames>`;
 	const calc = kept.get('calcPr');
 	const mode = workbook.calcMode === 'manual' ? ' calcMode="manual"' : '';
-	out += `<calcPr${copyAttrs(calc, ['fullCalcOnLoad', 'calcId', 'calcMode'])} calcId="191029"${mode} fullCalcOnLoad="1"/>`;
+	const iterate = workbook.iterate
+		? ` iterate="1" iterateCount="${workbook.iterate.count}" iterateDelta="${workbook.iterate.delta}"`
+		: '';
+	const owned = ['fullCalcOnLoad', 'calcId', 'calcMode', 'iterate', 'iterateCount', 'iterateDelta'];
+	out += `<calcPr${copyAttrs(calc, owned)} calcId="191029"${mode}${iterate} fullCalcOnLoad="1"/>`;
 	out += raw(KEPT_TAIL);
 	return `${out}</workbook>`;
 }
