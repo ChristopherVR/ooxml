@@ -61,12 +61,14 @@ when the checks fail). From a viewer's root, `node <ooxml checkout>/scripts/sync
 it is behind. A breaking change here therefore reaches every viewer within hours; make it deliberately and
 note it in the commit.
 
-The viewers depend on the **published** version of this package. To try a
-change in a viewer before it is released, build here (`bun run build`), point
-the viewer's core package at this checkout with a `file:` dependency, run
-`bun install --force` there, and restore the version range before committing
-in that repository. Commits to another repository follow that repository's own
-`AGENTS.md`.
+The viewers depend on the **published** version of this package, but never wait for a release
+to work on them. From this checkout, `node scripts/link-local.mjs <viewer dir>` builds core and ui and
+points the viewer's manifests at them (`file:`), then `bun install --force` there; the same command
+with `--restore` puts the ranges back (the original ranges are kept in `.ooxml-link.json`). Restore
+before committing: `check:published` and the sync workflow both reject `file:` ranges. A viewer
+change may rely on something not released yet only if it also works on the last release (register
+what you need yourself, as docx does for the title bar's search field). Commits to another repository
+follow that repository's own `AGENTS.md`.
 
 ### Where does my change go?
 
