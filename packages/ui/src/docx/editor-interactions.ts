@@ -69,7 +69,11 @@ export function attachEditorInteractions(core: EditorCore, frame: HTMLElement): 
 		if (region === 'document') return toDocument();
 		const root = regionElement(region);
 		if (region === 'ribbon' && root) return (root as RibbonElement).focusTab();
-		(root?.querySelector<HTMLElement>('button:not([hidden])') ?? root)?.focus();
+		// The shared status bar draws its buttons in its shadow root; focus the first one on screen.
+		const buttons = [
+			...((root?.shadowRoot ?? root)?.querySelectorAll<HTMLElement>('button:not([hidden])') ?? []),
+		];
+		(buttons.find((button) => button.getClientRects().length > 0) ?? root)?.focus();
 	};
 
 	const layers: Layer[] = [

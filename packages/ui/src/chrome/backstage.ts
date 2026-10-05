@@ -52,11 +52,40 @@ export class OfficeUiBackstage extends OfficeElement {
 		this.label = null;
 		this.backLabel = null;
 		this.addEventListener('keydown', (event) => {
-			if (event.key !== 'Escape' || !present(this.open)) return;
+			if (!present(this.open)) return;
+			if (event.key === 'Tab') return this.trapTab(event);
+			if (event.key !== 'Escape') return;
 			event.preventDefault();
 			event.stopPropagation();
 			this.requestClose('escape');
 		});
+	}
+
+	/** The controls Tab visits while open, in order: back, the navigation, then the shown page. */
+	private tabStops(): HTMLElement[] {
+		const chrome = [...this.renderRoot.querySelectorAll<HTMLElement>('button:not([disabled])')];
+		const page = [...this.children]
+			.filter((child): child is HTMLElement => child instanceof HTMLElement && !child.hidden)
+			.flatMap((child) => [
+				...child.querySelectorAll<HTMLElement>(
+					'a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])',
+				),
+			])
+			.filter((control) => !(control as HTMLButtonElement).disabled);
+		return [...chrome, ...page].filter((control) => control.getClientRects().length > 0);
+	}
+
+	/** Keeps Tab inside the open File view: past the last control it returns to the first. */
+	private trapTab(event: KeyboardEvent): void {
+		const stops = this.tabStops();
+		if (stops.length === 0) return;
+		const root = this.getRootNode() as Document | ShadowRoot;
+		const current = this.shadowRoot?.activeElement ?? root.activeElement;
+		const index = stops.findIndex((control) => control === current || control.contains(current));
+		const last = stops.length - 1;
+		if (event.shiftKey ? index > 0 : index < last) return;
+		event.preventDefault();
+		stops[event.shiftKey ? last : 0]?.focus();
 	}
 
 	get selected(): string {
