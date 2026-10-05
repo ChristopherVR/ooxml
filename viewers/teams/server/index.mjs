@@ -338,10 +338,16 @@ export function createTeamsServer(options = {}) {
 	};
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+/** Start a server configured from the environment and log where it listens (the CLI entry). */
+export async function runTeamsServer() {
 	const server = createTeamsServer({ log: (m) => console.log(m) });
 	const addr = await server.listen();
 	const auth = process.env.TEAMS_TOKEN ? 'token required' : 'no token (set TEAMS_TOKEN for anything but localhost)';
 	console.log(`teams server on http://${addr.address}:${addr.port}  [${auth}]`);
 	console.log('  ws://%s:%d/sync/<room>   ws://%s:%d/signal/<room>   /files/<id>/<name>', addr.address, addr.port, addr.address, addr.port);
+	return server;
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+	await runTeamsServer();
 }
