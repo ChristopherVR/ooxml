@@ -87,3 +87,6 @@ export {
 	tocCaptionLabel,
 } from './table-of-figures.js';
 export * from './document-stats.js';
+export * from './column-settings.js';
+export * from './line-spacing.js';
+export * from './section-layout.js';

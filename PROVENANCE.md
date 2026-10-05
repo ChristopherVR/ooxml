@@ -362,7 +362,8 @@ New code, nothing moved. `src/teams` (model, chat, signaling, peer, call, server
 
 ## Editor logic moved out of the viewers (2026-10-05)
 
-| Area           | Module                                        | Source                                                                                | Changed                                                        |
-| -------------- | --------------------------------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| `xlsx/formula` | `editor-text.ts`, `editor-text.test.ts`       | ChristopherVR/xlsx-viewer `packages/web-component/src/grid/formula-text.ts` (408fe71) | Imports point at core modules; the test moved with the code.   |
-| `docx`         | `document-stats.ts`, `document-stats.test.ts` | ChristopherVR/docx-viewer `packages/web-component/src/document-stats.ts` (44b369f)    | Imports point at core modules; exported from the `docx` entry. |
+| Area           | Module                                                                                                      | Source                                                                                                       | Changed                                                             |
+| -------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------- |
+| `xlsx/formula` | `editor-text.ts`, `editor-text.test.ts`                                                                     | ChristopherVR/xlsx-viewer `packages/web-component/src/grid/formula-text.ts` (408fe71)                        | Imports point at core modules; the test moved with the code.        |
+| `docx`         | `document-stats.ts`, `document-stats.test.ts`                                                               | ChristopherVR/docx-viewer `packages/web-component/src/document-stats.ts` (44b369f)                           | Imports point at core modules; exported from the `docx` entry.      |
+| `docx`         | `column-settings.ts`, `line-spacing.ts`, `section-layout.ts` (with `sectionsOf`), `column-settings.test.ts` | ChristopherVR/docx-viewer `packages/web-component/src` (same names; `sectionsOf` from `section-commands.ts`) | Imports point at core modules; the test no longer needs the editor. |
