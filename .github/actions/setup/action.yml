@@ -3,7 +3,7 @@ description: Node, Bun, a cached Bun install and a frozen-lockfile install. Run 
 inputs:
   bun-version:
     description: Bun version
-    default: '1.3.5'
+    default: '1.4.2'
   node-version:
     description: Node version
     default: '24'
