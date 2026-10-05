@@ -238,6 +238,36 @@ describe('renderTableElement', () => {
 		expect(td.style.paddingLeft).toBe('0px');
 		expect(td.style.paddingTop).toBe('0px');
 	});
+
+	it('takes half of the border width out of the cell padding', () => {
+		const tableData: PptxTableData = {
+			columnWidths: [1],
+			rows: [{ cells: [{ text: '42', style: { marginRight: 6, borderRightWidth: 2 } }] }],
+		};
+		const td = renderTable(buildTableElement(tableData)).querySelector('td') as HTMLElement;
+		expect(td.style.paddingRight).toBe('5px');
+	});
+
+	it('lowers and shrinks a subscript run', () => {
+		const tableData: PptxTableData = {
+			columnWidths: [1],
+			rows: [
+				{
+					cells: [
+						richCell('CO2', [
+							{ text: 'CO', fontSize: 10 },
+							{ text: '2', fontSize: 10, baseline: -25000 },
+						]),
+					],
+				},
+			],
+		};
+		const spans = renderTable(buildTableElement(tableData)).querySelectorAll<HTMLElement>(
+			'td span',
+		);
+		expect(spans[1].style.fontSize).toBe('6.5pt');
+		expect(spans[1].style.verticalAlign).toBe('sub');
+	});
 });
 
 describe('renderTableElement cell borders', () => {
