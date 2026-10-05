@@ -1,0 +1,61 @@
+name: Feature request
+description: Suggest a capability the viewer or editor does not have yet
+labels: ['enhancement']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing: if it already works in another client and not here, that is usually a
+        **bug** rather than a feature request. Either is fine, we
+        will re-label if needed.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the use case, not just the proposed control.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like it to do?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Where does this live?
+      options:
+        - UI (a control, dialog, panel, gesture, shortcut)
+        - Protocol or data model (sync, storage, presence, calls)
+        - API surface (props, methods, events)
+        - Tooling (MCP server, release, CI)
+        - Not sure
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ### A note on where features land
+
+        The editor logic lives in [`ooxml-core`](https://github.com/ChristopherVR/ooxml) and the
+        `<teams-app>` element in `ooxml-ui/teams`, so most features are built there once and reach
+        every binding together. This repository holds only the framework bindings, demos and docs,
+        so a feature request may be moved to the `ooxml` repository. See
+        [CONTRIBUTING.md](https://github.com/ChristopherVR/teams-viewer/blob/main/CONTRIBUTING.md).
+
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Would you like to implement this?
+      options:
+        - label: I am willing to open a PR (we will help find the right repository)
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives or workarounds you have tried
