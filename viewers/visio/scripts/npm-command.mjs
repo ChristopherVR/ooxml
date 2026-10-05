@@ -5,7 +5,9 @@ import { delimiter, dirname, resolve } from 'node:path';
 // npm.cmd is not executable by execFileSync on Windows. Run npm's JavaScript
 // entry through Node, retaining argument boundaries without invoking a shell.
 export function npmCliPath(env = process.env) {
-	if (env.npm_execpath && existsSync(env.npm_execpath)) return env.npm_execpath;
+	// Bun sets npm_execpath too; only an npm CLI entry can run these npm commands.
+	if (env.npm_execpath && /npm-cli\.js$/u.test(env.npm_execpath) && existsSync(env.npm_execpath))
+		return env.npm_execpath;
 	const nodeDirectory = dirname(process.execPath);
 	const directories = [nodeDirectory, ...(env.PATH ?? env.Path ?? '').split(delimiter)];
 	for (const directory of directories) {

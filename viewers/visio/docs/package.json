@@ -8,7 +8,7 @@
 		"docs:preview": "vitepress preview ."
 	},
 	"dependencies": {
-		"@christophervr/visio-viewer": "file:.."
+		"@christophervr/visio-viewer": "workspace:*"
 	},
 	"devDependencies": {
 		"vitepress": "^1.6.4"

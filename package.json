@@ -31,7 +31,13 @@
 		"pptx": "./dist/pptx/cli/index.mjs"
 	},
 	"workspaces": [
-		"packages/*"
+		"packages/*",
+		"viewers/*",
+		"viewers/*/packages/*",
+		"viewers/*/mcp",
+		"viewers/*/docs",
+		"viewers/teams/server",
+		"viewers/teams/demos/*"
 	],
 	"files": [
 		"dist",

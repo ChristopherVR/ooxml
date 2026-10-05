@@ -19,7 +19,7 @@
 	"scripts": {
 		"typecheck": "tsc --noEmit -p tsconfig.json && svelte-check --tsconfig tsconfig.svelte.json",
 		"test": "vitest run --config vitest.config.ts && vitest run --config vitest.ssr.config.ts",
-		"check": "npm run typecheck && npm test"
+		"check": "bun run typecheck && bun run test"
 	},
 	"devDependencies": {
 		"@angular/common": "^22.2.1",
@@ -29,6 +29,7 @@
 		"@sveltejs/vite-plugin-svelte": "^7.3.1",
 		"@types/react": "^19.3.0",
 		"@types/react-dom": "^19.3.0",
+		"@vue/server-renderer": "^3.5.43",
 		"react": "^19.3.0",
 		"react-dom": "^19.3.0",
 		"rxjs": "^7.8.2",
