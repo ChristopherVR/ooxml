@@ -2,6 +2,7 @@ import { toText } from '../coerce.js';
 import type { CallContext } from '../context.js';
 import { ERR, fail, isError, Matrix, type Scalar, type Value } from '../values.js';
 import { optBool, optNum, scalar, spec, str } from './helpers.js';
+import { TEXT_REGEX_FUNCTIONS } from './text-regex.js';
 import type { FunctionSpec } from './types.js';
 
 const C = 'Text';
@@ -89,6 +90,7 @@ function valueToText(value: Scalar, strict: boolean): string {
 }
 
 export const TEXT_EXTRA_FUNCTIONS: FunctionSpec[] = [
+	...TEXT_REGEX_FUNCTIONS,
 	spec(
 		'TEXTBEFORE',
 		C,

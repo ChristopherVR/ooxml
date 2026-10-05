@@ -1,5 +1,5 @@
 import { ERR, fail } from '../values.js';
-import { collectNumbers, num, numeric, spec } from './helpers.js';
+import { bool, collectNumbers, num, numeric, spec } from './helpers.js';
 import type { FunctionSpec } from './types.js';
 
 import { cumulative } from './financial-core.js';
@@ -7,6 +7,34 @@ import { cumulative } from './financial-core.js';
 const C = 'Financial';
 
 /** Depreciation, rate conversion and price-format functions. */
+/**
+ * Declining-balance depreciation over `[start, end]`, taking each whole period in turn and weighting
+ * it by how much of it the span covers. Unless `noSwitch`, a period uses straight-line depreciation
+ * of the remaining book value once that exceeds the declining-balance amount.
+ */
+function variableDeclining(
+	cost: number,
+	salvage: number,
+	life: number,
+	start: number,
+	end: number,
+	factor: number,
+	noSwitch: boolean,
+): number {
+	let book = cost;
+	let total = 0;
+	for (let period = 1; period - 1 < end; period++) {
+		const declining = (book * factor) / life;
+		const straight = (book - salvage) / Math.max(life - (period - 1), 1);
+		const wanted = noSwitch ? declining : Math.max(declining, straight);
+		const dep = Math.max(0, Math.min(wanted, book - salvage));
+		const covered = Math.min(end, period) - Math.max(start, period - 1);
+		if (covered > 0) total += dep * Math.min(covered, 1);
+		book -= dep;
+	}
+	return total;
+}
+
 export const DEPRECIATION_FUNCTIONS: FunctionSpec[] = [
 	numeric('SLN', C, 'SLN(cost, salvage, life)', 'Straight-line depreciation.', 3, 3, (c, s, l) =>
 		l === 0 ? fail(ERR.DIV0) : (c - (s ?? 0)) / (l ?? 1),
@@ -39,6 +67,39 @@ export const DEPRECIATION_FUNCTIONS: FunctionSpec[] = [
 				total += dep;
 			}
 			return dep;
+		},
+	),
+	spec(
+		'VDB',
+		C,
+		'VDB(cost, salvage, life, start_period, end_period, [factor], [no_switch])',
+		'Depreciation over any span of periods, switching to straight-line when that is larger.',
+		5,
+		7,
+		(args) => {
+			const [cost, salvage, life, start, end] = [0, 1, 2, 3, 4].map((i) => num(args[i]));
+			const factor = args.length > 5 && args[5] !== null ? num(args[5]) : 2;
+			const noSwitch = args.length > 6 && args[6] !== null ? bool(args[6]) : false;
+			if (
+				[cost, salvage, life, start, end, factor].some((v) => v === undefined || Number.isNaN(v)) ||
+				(cost as number) < 0 ||
+				(salvage as number) < 0 ||
+				(life as number) <= 0 ||
+				(start as number) < 0 ||
+				(end as number) < (start as number) ||
+				(end as number) > (life as number) ||
+				factor <= 0
+			)
+				fail(ERR.NUM);
+			return variableDeclining(
+				cost as number,
+				salvage as number,
+				life as number,
+				start as number,
+				end as number,
+				factor,
+				noSwitch,
+			);
 		},
 	),
 	numeric(
