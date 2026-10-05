@@ -27,6 +27,12 @@ const VISIO_FRAMEWORKS = [
 	{ id: 'solid', label: 'Solid', route: 'demo-solid' },
 ];
 
+/** OpenTeams deploys two demos, both running in the browser with no server (see its docs). */
+const TEAMS_FRAMEWORKS = [
+	{ id: 'vanilla', label: 'Vanilla JS', route: 'demo' },
+	{ id: 'react', label: 'React', route: 'demo-react' },
+];
+
 /**
  * @typedef {{ id: string, label: string, route: string }} Framework
  * @typedef {{
@@ -84,6 +90,18 @@ export const APPS = [
 		repo: 'visio-viewer',
 		docs: `${PAGES}/visio-viewer/`,
 		frameworks: VISIO_FRAMEWORKS,
+	},
+	{
+		id: 'teams',
+		name: 'OpenTeams',
+		letter: 'T',
+		color: '#0e8f8f',
+		format: 'chat',
+		description: 'Channels, chat and meetings on your own server.',
+		tag: { label: 'Beta', tone: 'beta' },
+		repo: 'teams-viewer',
+		docs: `${PAGES}/teams-viewer/`,
+		frameworks: TEAMS_FRAMEWORKS,
 	},
 ];
 

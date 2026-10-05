@@ -1,4 +1,4 @@
-import { APPS, appIcon, demoUrl, isLive } from './apps.js?v=excel-live-20261003';
+import { APPS, appIcon, demoUrl, isLive } from './apps.js?v=teams-20261005';
 import { initChungus } from './chungus.js';
 import { currentTheme, initTheme, shareTheme } from './theme.js';
 
