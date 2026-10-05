@@ -2,6 +2,16 @@ name: Verify viewer packages
 on:
   push:
     branches: [main]
+    # Community health files change nothing CI checks. Pull requests are never filtered because
+    # `ci-success` is a required check.
+    paths-ignore:
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/PULL_REQUEST_TEMPLATE.md'
+      - 'CONTRIBUTING.md'
+      - 'CODE_OF_CONDUCT.md'
+      - 'SECURITY.md'
+      - 'LICENSE'
+      - 'NOTICE'
   pull_request:
 permissions:
   contents: read
