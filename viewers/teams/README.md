@@ -26,7 +26,7 @@ An early implementation: not Microsoft Teams, not affiliated with Microsoft, and
 
 - **Your server, your data.** No hosted service: run the small reference server (`openteams-server`) or any server that speaks three documented contracts (y-websocket sync, a JSON signaling relay, optional file storage).
 - **One app, every framework.** A Lit `<teams-app>` element owns the UI. React, Vue, Angular, Svelte, Solid and vanilla bindings only handle lifecycle and events, and each also exposes a raw hook so you can build your own UI.
-- **Logic in one place.** Chat, presence, calls and the client store live in [`ooxml-core/teams`](https://github.com/ChristopherVR/ooxml/blob/main/docs/teams-area.md), the visual primitives in [`ooxml-ui`](https://github.com/ChristopherVR/ooxml/tree/main/packages/ui). This repository holds the app, the bindings, the reference server and the demos.
+- **Logic in one place.** Chat, presence, calls and the client store live in [`ooxml-core/teams`](https://github.com/ChristopherVR/ooxml/blob/main/docs/teams-area.md), the visual primitives in [`ooxml-ui`](https://github.com/ChristopherVR/ooxml/tree/main/src/ui). This repository holds the app, the bindings, the reference server and the demos.
 - **Honest limits.** What is not supported is written down, not hidden. See [limitations](https://christophervr.github.io/ooxml/teams/limitations).
 
 ## Features and limitations

@@ -10,7 +10,7 @@ on:
     paths:
       - 'site/**'
       - 'viewers/**'
-      - 'packages/ui/**'
+      - 'src/ui/**'
       - 'scripts/build-pages.mjs'
       - 'bun.lock'
       - '.github/workflows/pages.yml'
@@ -38,7 +38,7 @@ jobs:
       - name: Build the core and the shared UI
         run: |
           bun run build
-          bun run --cwd packages/ui build
+          bun run --cwd src/ui build
       - name: Build the site
         run: node scripts/build-pages.mjs
       - name: Configure Pages

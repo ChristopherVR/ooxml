@@ -5,7 +5,7 @@ This repository publishes two packages to npm, each with its own version line, t
 | Key    | npm name     | Directory     | Changelog                  | Depends on |
 | ------ | ------------ | ------------- | -------------------------- | ---------- |
 | `core` | `ooxml-core` | `.` (root)    | `CHANGELOG.md`             | nothing    |
-| `ui`   | `ooxml-ui`   | `packages/ui` | `packages/ui/CHANGELOG.md` | `core`     |
+| `ui`   | `ooxml-ui`   | `src/ui` | `src/ui/CHANGELOG.md` | `core`     |
 
 The UI package depends on the core, never the reverse. Viewers depend on both, so users never install the UI separately.
 
@@ -26,7 +26,7 @@ A package whose `package.json` does not exist yet (the UI before it is merged) i
 Each package's baseline is the newest tag `<npm-name>@x.y.z` that is an ancestor of `HEAD` (`ooxml-core@0.1.0`, `ooxml-ui@0.1.0`). A tag on `HEAD` yields an empty diff, so an already released `HEAD` is a no-op. A package releases when one of **its published files** changed since its baseline:
 
 - core: `src/` except tests (`*.test.ts`, `__tests__/`, fixtures), `scripts/pptx/merge-declarations.mjs`, `tsconfig*.json`, `tsup*.config.ts`, `tsdown.pptx.config.ts`, `package.json`, `LICENSE`, `NOTICE`, `THIRD-PARTY-LICENSES`. Nothing under `packages/` counts for core.
-- ui: everything under `packages/ui/` except tests and its `CHANGELOG.md`, including its `package.json`.
+- ui: everything under `src/ui/` except tests and its `CHANGELOG.md`, including its `package.json`.
 
 `package.json` changes are ignored when they only touch `version`, `scripts`, `devDependencies`, `workspaces` or the range on the other package. Docs, CI, tests, `README.md`, `CHANGELOG.md` and the build orchestration scripts never release anything, and neither does the release commit itself.
 
@@ -112,13 +112,13 @@ Trusted publishing cannot create a package. Either publish the first version by 
 git pull
 bun install
 bun run build                         # core first: the UI resolves it through dist
-bun run --cwd packages/ui build
+bun run --cwd src/ui build
 npm login                             # 2FA
 node scripts/publish-released.mjs --tag ooxml-core@<version> --manual
 node scripts/publish-released.mjs --tag ooxml-ui@<version> --manual
 ```
 
-(`publish-released.mjs` does what the workflow does: it rewrites the ui manifest's `*` on core to `^<core version on disk>` for the upload only and restores the file, refuses to publish unless that core version is already on npm, and publishes from `packages/ui`. `--manual` only omits provenance, which needs a CI OIDC token; that is expected for the first publish. `--dry-run` prints the command first.)
+(`publish-released.mjs` does what the workflow does: it rewrites the ui manifest's `*` on core to `^<core version on disk>` for the upload only and restores the file, refuses to publish unless that core version is already on npm, and publishes from `src/ui`. `--manual` only omits provenance, which needs a CI OIDC token; that is expected for the first publish. `--dry-run` prints the command first.)
 
 Then configure the trusted publisher (table above) on npmjs.com. Nothing else is needed: the next scheduled run sees `ooxml-core@<version>` and `ooxml-ui@<version>` on npm with no tag, treats it as the baseline (see "First release and baselines"), pushes the tag, and later UI changes release normally. If you want the tag immediately: `git tag ooxml-ui@<version> <commit> && git push origin ooxml-ui@<version>`.
 

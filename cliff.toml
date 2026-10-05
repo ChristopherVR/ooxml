@@ -2,7 +2,7 @@
 #
 # Adapted from ChristopherVR/pptx-viewer cliff.toml (Apache-2.0). This repository publishes TWO
 # packages, ooxml-core (CHANGELOG.md at the root) and ooxml-ui
-# (packages/ui/CHANGELOG.md), each tagged `<npm-name>@<version>` (`ooxml-core@0.2.0`).
+# (src/ui/CHANGELOG.md), each tagged `<npm-name>@<version>` (`ooxml-core@0.2.0`).
 # The Release workflow runs git-cliff once per released package with
 # `--tag-pattern "^<npm-name>@"` and that package's `includePaths` from release-plan.json (only
 # commits touching its published files), PREPENDING the new release section to its changelog (never

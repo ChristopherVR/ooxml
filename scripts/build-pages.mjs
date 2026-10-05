@@ -12,7 +12,7 @@
  *   node scripts/build-pages.mjs [--only docx,teams] [--out pages-dist]
  *
  * Needs `bun install`, the core built (`bun run build`) and `ooxml-ui` built
- * (`bun run --cwd packages/ui build`), because the demos resolve both through their `dist`.
+ * (`bun run --cwd src/ui build`), because the demos resolve both through their `dist`.
  */
 
 import { spawnSync } from 'node:child_process';

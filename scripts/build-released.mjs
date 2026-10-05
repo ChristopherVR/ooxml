@@ -11,7 +11,7 @@
  *     `check:published` script (a static scan of what the tarballs import) runs afterwards. The
  *     viewers' `pack:smoke` / `test:packages` are not run here: they install the packed tarballs
  *     from the registry, and a dependency released in the same run is not on npm yet.
- *   - any other package (today `packages/ui`) runs its own `build` (and, with `--smoke`,
+ *   - any other package (today `src/ui`) runs its own `build` (and, with `--smoke`,
  *     `test:package`) script when it defines one. It runs after core is built because a workspace
  *     package resolves core through its `dist`.
  *

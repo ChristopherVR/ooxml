@@ -2,7 +2,7 @@ name: Release
 
 # Adapted from ChristopherVR/pptx-viewer .github/workflows/release.yml (Apache-2.0). See
 # docs/releasing.md for the whole flow. Every published package of this repository (core at the
-# root, ooxml-ui at packages/ui, the MCP server, and the packages of the viewers under viewers/,
+# root, ooxml-ui at src/ui, the MCP server, and the packages of the viewers under viewers/,
 # listed in scripts/viewer-packages.mjs) has its own tag, changelog and npm publish, planned by
 # scripts/release-plan.mjs.
 
@@ -134,7 +134,7 @@ jobs:
             npm=$(field "$key" .npm)
             tag=$(field "$key" .tag)
             changelog=$(field "$key" .changelog)
-            inc=$(node -e "console.log(require('./release-plan.json').packages['$key'].includePaths.map(p => '--include-path ' + p).join(' '))")
+            inc=$(node -e "const p=require('./release-plan.json').packages['$key'];console.log([...p.includePaths.map(x => '--include-path ' + x), ...(p.excludePaths ?? []).map(x => '--exclude-path ' + x)].join(' '))")
             echo "Changelog for $npm -> $tag ($changelog)"
             if [ -f "$changelog" ]; then
               bunx git-cliff --config cliff.toml --tag-pattern "^${npm}@" $inc --unreleased --tag "$tag" --prepend "$changelog"

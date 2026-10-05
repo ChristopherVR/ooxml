@@ -45,7 +45,7 @@ test('a shared area can break every viewer', () => {
 });
 
 test('a ui change checks the ui package and every viewer, but not the unit suite', () => {
-	const result = plan(['packages/ui/src/menu/context-menu.ts']);
+	const result = plan(['src/ui/src/menu/context-menu.ts']);
 	assert.equal(result.ui, true);
 	assert.equal(result.test.run, false);
 	assert.equal(result.consumers.length, Object.keys(CONSUMERS).length);

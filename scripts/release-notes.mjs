@@ -45,7 +45,10 @@ function loadPackage(key) {
  * mirrors the workflow's `bunx git-cliff` invocation without a shell string.
  */
 function cliffSection(pkg) {
-	const includeArgs = pkg.includePaths.flatMap((p) => ['--include-path', p]);
+	const includeArgs = [
+		...pkg.includePaths.flatMap((p) => ['--include-path', p]),
+		...(pkg.excludePaths ?? []).flatMap((p) => ['--exclude-path', p]),
+	];
 	const args = [
 		'x',
 		'git-cliff',

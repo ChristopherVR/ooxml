@@ -23,7 +23,7 @@ after(() => roots.forEach((r) => rmSync(r, { recursive: true, force: true })));
 const json = (data) => `${JSON.stringify(data, null, '\t')}\n`;
 
 /**
- * A throwaway repository shaped like this one: core at the root (0.1.0), ooxml-ui at packages/ui
+ * A throwaway repository shaped like this one: core at the root (0.1.0), ooxml-ui at src/ui
  * (0.1.0, `workspace:*` on core). `tagged` lists the packages whose baseline tag is set.
  */
 function repo({ ui = true, tagged = ['core', 'ui'], uiRange = 'workspace:*' } = {}) {
@@ -55,12 +55,12 @@ function repo({ ui = true, tagged = ['core', 'ui'], uiRange = 'workspace:*' } = 
 		...touch('src/index.ts'),
 	};
 	if (ui) {
-		files['packages/ui/package.json'] = json({
+		files['src/ui/package.json'] = json({
 			name: UI,
 			version: '0.1.0',
 			dependencies: { [CORE]: uiRange },
 		});
-		Object.assign(files, touch('packages/ui/src/index.ts'));
+		Object.assign(files, touch('src/ui/src/index.ts'));
 	}
 	commit('feat: initial', files);
 	for (const key of tagged) git('tag', `${PACKAGES[key].npm}@0.1.0`);
@@ -77,8 +77,8 @@ test('core is ordered before ui and a tagged HEAD releases nothing', () => {
 	const p = r.plan(bothPublished);
 	assert.deepEqual(p.order, ['core', 'ui']);
 	assert.equal(p.anyChanged, false);
-	assert.equal(p.packages.ui.dir, 'packages/ui');
-	assert.equal(p.packages.ui.changelog, 'packages/ui/CHANGELOG.md');
+	assert.equal(p.packages.ui.dir, 'src/ui');
+	assert.equal(p.packages.ui.changelog, 'src/ui/CHANGELOG.md');
 	assert.equal(p.packages.core.changelog, 'CHANGELOG.md');
 	assert.deepEqual(p.packages.ui.dependsOn, ['core']);
 });
@@ -107,7 +107,7 @@ test('a core minor at >=1.0 stays inside ^1.x, so ui is not forced to release', 
 	const r = repo();
 	r.commit('chore: 1.0', {
 		'package.json': json({ name: CORE, version: '1.0.0' }),
-		'packages/ui/package.json': json({
+		'src/ui/package.json': json({
 			name: UI,
 			version: '1.0.0',
 			dependencies: { [CORE]: 'workspace:*' },
@@ -125,7 +125,7 @@ test('a core major forces a ui release', () => {
 	const r = repo();
 	r.commit('chore: 1.0', {
 		'package.json': json({ name: CORE, version: '1.0.0' }),
-		'packages/ui/package.json': json({
+		'src/ui/package.json': json({
 			name: UI,
 			version: '1.0.0',
 			dependencies: { [CORE]: 'workspace:*' },
@@ -142,7 +142,7 @@ test('a core major forces a ui release', () => {
 
 test('ui-only change releases ui at its own level and leaves core alone', () => {
 	const r = repo();
-	r.commit('feat(ui): add a toolbar', r.touch('packages/ui/src/index.ts'));
+	r.commit('feat(ui): add a toolbar', r.touch('src/ui/src/index.ts'));
 	const p = r.plan(bothPublished);
 	assert.deepEqual(released(p), ['ui']);
 	assert.equal(p.packages.ui.bump, 'minor');
@@ -150,10 +150,16 @@ test('ui-only change releases ui at its own level and leaves core alone', () => 
 	assert.equal(p.packages.ui.reason, 'own files changed');
 });
 
+test('core excludes the ui package that sits inside its src/ tree', () => {
+	const p = repo().plan(bothPublished);
+	assert.deepEqual(p.packages.core.excludePaths, ['src/ui/**']);
+	assert.deepEqual(p.packages.ui.excludePaths, []);
+});
+
 test('both packages changed release together with independent levels', () => {
 	const r = repo();
 	r.commit('fix(core): a bug', r.touch('src/index.ts'));
-	r.commit('feat(ui): a button', r.touch('packages/ui/src/index.ts'));
+	r.commit('feat(ui): a button', r.touch('src/ui/src/index.ts'));
 	const p = r.plan(bothPublished);
 	assert.deepEqual(released(p), ['core', 'ui']);
 	assert.equal(p.packages.core.version, '0.1.1');
@@ -193,7 +199,7 @@ test('a hand-published, untagged ui is a baseline, not a spurious bump', () => {
 test('a hand-published ui is baselined at the commit npm recorded, so later changes release', () => {
 	const r = repo({ tagged: ['core'] });
 	const published = r.head();
-	r.commit('feat(ui): add a toolbar', r.touch('packages/ui/src/index.ts'));
+	r.commit('feat(ui): add a toolbar', r.touch('src/ui/src/index.ts'));
 	const p = r.plan(bothPublished, (name) => (name === UI ? published : null));
 	assert.deepEqual(released(p), ['ui']);
 	assert.equal(p.packages.ui.adopt.sha, published);
@@ -219,8 +225,8 @@ test('a package that is not merged yet is left out of the plan', () => {
 test('tests, changelogs, docs and workspace wiring release nothing', () => {
 	const r = repo();
 	r.commit('feat(ui): add tests', {
-		'packages/ui/src/index.test.ts': 'test\n',
-		'packages/ui/CHANGELOG.md': '# Changelog\n',
+		'src/ui/src/index.test.ts': 'test\n',
+		'src/ui/CHANGELOG.md': '# Changelog\n',
 		'CHANGELOG.md': '# Changelog\n',
 		'docs/releasing.md': 'x\n',
 	});
@@ -228,18 +234,18 @@ test('tests, changelogs, docs and workspace wiring release nothing', () => {
 	r.commit('build: declare the workspace', {
 		'package.json': json({ ...manifest, workspaces: ['packages/*'], scripts: { y: 'z' } }),
 	});
-	const ui = JSON.parse(readFileSync(join(r.root, 'packages/ui/package.json'), 'utf8'));
+	const ui = JSON.parse(readFileSync(join(r.root, 'src/ui/package.json'), 'utf8'));
 	r.commit('chore(ui): reorder the manifest', {
-		'packages/ui/package.json': json(Object.fromEntries(Object.entries(ui).reverse())),
+		'src/ui/package.json': json(Object.fromEntries(Object.entries(ui).reverse())),
 	});
 	assert.equal(r.plan(bothPublished).anyChanged, false);
 });
 
 test('a ui dependency edit other than the sibling range is a release trigger', () => {
 	const r = repo();
-	const ui = JSON.parse(readFileSync(join(r.root, 'packages/ui/package.json'), 'utf8'));
+	const ui = JSON.parse(readFileSync(join(r.root, 'src/ui/package.json'), 'utf8'));
 	r.commit('fix(ui): depend on lit', {
-		'packages/ui/package.json': json({
+		'src/ui/package.json': json({
 			...ui,
 			dependencies: { ...ui.dependencies, lit: '^3.0.0' },
 		}),
@@ -254,15 +260,15 @@ test('applyPlan stamps versions and keeps workspace ranges for Bun', () => {
 	applyPlan({ root: r.root, packages: PACKAGES }, p);
 	const read = (file) => JSON.parse(readFileSync(join(r.root, file), 'utf8'));
 	assert.equal(read('package.json').version, '0.2.0');
-	assert.equal(read('packages/ui/package.json').version, '0.1.1');
-	assert.deepEqual(read('packages/ui/package.json').dependencies, { [CORE]: 'workspace:*' });
+	assert.equal(read('src/ui/package.json').version, '0.1.1');
+	assert.deepEqual(read('src/ui/package.json').dependencies, { [CORE]: 'workspace:*' });
 });
 
 test('applyPlan keeps a `file:` sibling range untouched instead of stamping it', () => {
 	const r = repo({ uiRange: 'file:..' });
 	r.commit('feat(core): add a parser', r.touch('src/index.ts'));
 	applyPlan({ root: r.root, packages: PACKAGES }, r.plan(bothPublished));
-	const ui = JSON.parse(readFileSync(join(r.root, 'packages/ui/package.json'), 'utf8'));
+	const ui = JSON.parse(readFileSync(join(r.root, 'src/ui/package.json'), 'utf8'));
 	assert.deepEqual(ui.dependencies, { [CORE]: 'file:..' });
 });
 
@@ -270,7 +276,7 @@ test('applyPlan keeps a `*` sibling range (published as a caret range later)', (
 	const r = repo({ uiRange: '*' });
 	r.commit('feat(core): add a parser', r.touch('src/index.ts'));
 	applyPlan({ root: r.root, packages: PACKAGES }, r.plan(bothPublished));
-	const ui = JSON.parse(readFileSync(join(r.root, 'packages/ui/package.json'), 'utf8'));
+	const ui = JSON.parse(readFileSync(join(r.root, 'src/ui/package.json'), 'utf8'));
 	assert.deepEqual(ui.dependencies, { [CORE]: '*' });
 });
 
@@ -280,7 +286,7 @@ test('applyPlan repoints a plain range only for a released dependent', () => {
 	const p = r.plan(bothPublished);
 	assert.equal(p.packages.ui.release, true, 'the 0.x minor leaves ^0.1.0');
 	applyPlan({ root: r.root, packages: PACKAGES }, p);
-	const ui = JSON.parse(readFileSync(join(r.root, 'packages/ui/package.json'), 'utf8'));
+	const ui = JSON.parse(readFileSync(join(r.root, 'src/ui/package.json'), 'utf8'));
 	assert.deepEqual(ui.dependencies, { [CORE]: '^0.2.0' });
 });
 
@@ -291,7 +297,7 @@ test('the release commit does not retrigger once both packages are tagged', () =
 	applyPlan({ root: r.root, packages: PACKAGES }, p);
 	r.commit('chore(release): bump versions and update changelogs [skip ci]', {
 		'CHANGELOG.md': '# Changelog\n',
-		'packages/ui/CHANGELOG.md': '# Changelog\n',
+		'src/ui/CHANGELOG.md': '# Changelog\n',
 	});
 	for (const key of ['core', 'ui']) r.git('tag', p.packages[key].tag);
 	const next = r.plan(registry({ [CORE]: '0.2.0', [UI]: '0.1.1' }));
@@ -324,6 +330,6 @@ test('helpers', () => {
 	assert.equal(commitLevel('fix: x', 'BREAKING CHANGE: y'), 'major');
 	assert.equal(commitLevel('feat(core): x'), 'minor');
 	assert.equal(commitLevel('docs: x'), 'patch');
-	assert.equal(isPublishedFile('packages/ui/src/a.test.ts'), false);
-	assert.equal(isPublishedFile('packages/ui/src/a.ts'), true);
+	assert.equal(isPublishedFile('src/ui/src/a.test.ts'), false);
+	assert.equal(isPublishedFile('src/ui/src/a.ts'), true);
 });

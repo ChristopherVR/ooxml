@@ -9,7 +9,7 @@ composes them, the framework bindings, a reference server and the demos.
 | -------------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
 | Logic                | `ooxml-core/teams` (`src/teams` in the ooxml repository)              | the chat CRDT, presence, calls, signaling, server configuration, the `createTeamsClient` store |
 | Collaboration        | `ooxml-core/collab`                                                   | Yjs sessions and transports (WebSocket, `BroadcastChannel`), format-neutral                |
-| Visual primitives    | `ooxml-ui` (`packages/ui/src/teams`)                                  | avatar, app rail, channel list, chat list, composer, pre-join, call grid and controls     |
+| Visual primitives    | `ooxml-ui` (`src/ui/src/teams`)                                  | avatar, app rail, channel list, chat list, composer, pre-join, call grid and controls     |
 | App                  | `packages/web-component` here (private `teams-viewer`, never published) | `<teams-app>`: composes the primitives over the store, settings dialog, raw store helpers |
 | Bindings             | `packages/{react,vue,angular,svelte,solid,vanilla}` here              | lifecycle adapters plus a raw hook each, published as `openteams-<framework>-viewer`      |
 | Reference server     | `server/` here                                                        | Yjs sync, signaling relay, file storage, published as `openteams-server`                  |

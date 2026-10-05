@@ -151,9 +151,10 @@ export function plan(changed, { full = false, testFiles } = {}) {
 	const files = changed.filter(Boolean);
 	const everything = full || files.some((file) => EVERYTHING.test(file));
 	const live = files.filter((file) => !INERT.test(file) && !VIEWER_INERT.test(file));
-	const src = live.filter((file) => file.startsWith('src/'));
+	// src/ui is ooxml-ui, its own package: it is not an area of the core.
+	const src = live.filter((file) => file.startsWith('src/') && !file.startsWith('src/ui/'));
 	const areas = new Set(src.map((file) => file.split('/')[1]));
-	const ui = live.some((file) => file.startsWith('packages/ui/'));
+	const ui = live.some((file) => file.startsWith('src/ui/'));
 	const scripts = live.some((file) => /^(scripts|\.github|site)\//.test(file));
 	const mcp = live.some((file) => file.startsWith('mcp/') || file.startsWith('src/automation/'));
 	const core = src.length > 0;

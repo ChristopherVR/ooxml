@@ -1,6 +1,6 @@
 /** Core must never depend on the UI. Usage: node scripts/check-core-ui-boundary.mjs [root] */
 import { readdirSync, readFileSync } from 'node:fs';
-import { dirname, join, relative, resolve } from 'node:path';
+import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -139,6 +139,8 @@ export function checkCoreUiBoundary(root = ROOT) {
 		}
 	}
 	for (const path of sourceFiles(join(root, 'src'))) {
+		// src/ui is ooxml-ui itself, a separate package that sits in this tree.
+		if (relative(root, path).split(sep).slice(0, 2).join('/') === 'src/ui') continue;
 		const text = readFileSync(path, 'utf8');
 		for (const token of importSpecifiers(text))
 			problems.push(`${relative(root, path)}:${token.line}:${token.column}: imports ${token.text}`);

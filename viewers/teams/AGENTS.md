@@ -9,7 +9,7 @@ All team-workspace **logic** lives in the `teams` area of `ooxml-core` (source i
 `ChristopherVR/ooxml` repository, `src/teams`, documented in its `docs/teams-area.md`): the chat
 CRDT, presence, calls, signaling, server configuration and the `createTeamsClient` store. The
 **visual primitives** (avatar, app rail, channel list, chat list, composer, pre-join, call grid and
-controls) live in `ooxml-ui` (`packages/ui/src/teams`). This repository holds:
+controls) live in `ooxml-ui` (`src/ui/src/teams`). This repository holds:
 
 - `packages/web-component`: a re-export of `ooxml-ui/teams`, where `<teams-app>` (the app that composes those primitives over the store) now lives
   (the private workspace package `teams-viewer`, never published, inlined into every binding).

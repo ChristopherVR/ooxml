@@ -17,7 +17,7 @@ export function localCoreAliases(root: string): { find: RegExp; replacement: str
 		{ find: /^ooxml-core\/xlsx\/load$/, replacement: resolve(base, 'src/xlsx/load/index.ts') },
 		{ find: /^ooxml-core\/([a-z]+)$/, replacement: resolve(base, 'src/$1/index.ts') },
 		{ find: /^ooxml-core$/, replacement: resolve(base, 'src/index.ts') },
-		{ find: /^ooxml-ui\/([a-z]+)$/, replacement: resolve(base, 'packages/ui/src/$1.ts') },
-		{ find: /^ooxml-ui$/, replacement: resolve(base, 'packages/ui/src/index.ts') },
+		{ find: /^ooxml-ui\/([a-z]+)$/, replacement: resolve(base, 'src/ui/src/$1.ts') },
+		{ find: /^ooxml-ui$/, replacement: resolve(base, 'src/ui/src/index.ts') },
 	];
 }

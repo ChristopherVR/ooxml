@@ -94,7 +94,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
-      - run: bun run --cwd packages/ui typecheck
+      - run: bun run --cwd src/ui typecheck
 
   # The unit suite is ~1,200 files and most of its time is spent importing the pptx area into each
   # file, so it is split across parallel runners by file (`vitest --shard`). The planner sizes the
@@ -156,13 +156,13 @@ jobs:
         with:
           name: core-dist
           path: dist
-      - run: bun run --cwd packages/ui test
-      - run: bun run --cwd packages/ui build
-      - run: bun run --cwd packages/ui test:package
+      - run: bun run --cwd src/ui test
+      - run: bun run --cwd src/ui build
+      - run: bun run --cwd src/ui test:package
       - uses: actions/upload-artifact@v7
         with:
           name: ui-dist
-          path: packages/ui/dist
+          path: src/ui/dist
           retention-days: 1
 
   # Release machinery: planner, publish guards, commit and changelog checks, the launcher and CI planner.
@@ -211,7 +211,7 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           name: ui-dist
-          path: packages/ui/dist
+          path: src/ui/dist
       - name: Verify the viewer
         working-directory: ${{ matrix.dir }}
         env:
@@ -270,12 +270,12 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           name: ui-dist
-          path: ooxml/packages/ui/dist
+          path: ooxml/src/ui/dist
         continue-on-error: true
       - name: Build what this change did not
         run: |
           [ -d ooxml/dist ] || (cd ooxml && bun run build)
-          [ -d ooxml/packages/ui/dist ] || (cd ooxml/packages/ui && bun run build)
+          [ -d ooxml/src/ui/dist ] || (cd ooxml/src/ui && bun run build)
       - name: Link the viewer to this checkout
         run: node ooxml/scripts/link-local.mjs viewer --no-build
       - run: ${{ matrix.install }}

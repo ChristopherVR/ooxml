@@ -16,6 +16,7 @@
 		"src/visio/*-fixtures.ts",
 		"src/xlsx/**/*-fixtures.ts",
 		"src/pptx",
+		"src/ui",
 		"dist"
 	]
 }

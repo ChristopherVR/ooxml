@@ -1,6 +1,6 @@
 # Office UI package plan
 
-`ooxml-ui` (`packages/ui`) is the second published package of this repository
+`ooxml-ui` (`src/ui`) is the second published package of this repository
 (section 6 of `agnostic-core-plan.md` proposed the idea; this file is the working plan and
 supersedes its layout). It holds the web components every Office product needs, and nothing
 product-specific.
@@ -8,7 +8,7 @@ product-specific.
 ## Decisions
 
 - **Layout.** The repository root stays the published `ooxml-core`; `src/` and
-  its paths do not move. `package.json` lists `"workspaces": ["packages/*"]`, so `packages/ui` is
+  its paths do not move. `package.json` lists `"workspaces": ["packages/*"]`, so `src/ui` is
   a Bun workspace next to it. The root is not a workspace member (a package cannot be its own
   workspace), so the UI declares `"ooxml-core": "^0.1.0"` as an ordinary semver
   dependency and development resolves the core **from source** (tsconfig `paths` and a vitest
@@ -111,10 +111,10 @@ diagrams that have a cached drawing, behind a parity test.
 ## Release
 
 Independent versions per package (as proposed in `agnostic-core-plan.md` 6.2): tag
-`ooxml-ui@<version>`, changelog from commits touching `packages/ui`. The release
+`ooxml-ui@<version>`, changelog from commits touching `src/ui`. The release
 scripts and CI are owned by the release-tooling work; they must (a) plan and publish
-`packages/ui` separately, (b) rewrite nothing (the dependency range is already a plain `^`
-range), (c) run `bun run --cwd packages/ui typecheck|test`, then root `build`, `packages/ui`
+`src/ui` separately, (b) rewrite nothing (the dependency range is already a plain `^`
+range), (c) run `bun run --cwd src/ui typecheck|test`, then root `build`, `src/ui`
 `build` and `test:package` before publishing. Core must be built before the UI (declarations
 read `../../dist`).
 
@@ -127,10 +127,10 @@ maintainer account (`npm login`, 2FA), then trusted publishing takes over:
 ```
 bun install
 bun run build                       # core declarations/bundles (the UI reads ../../dist)
-bun run --cwd packages/ui typecheck && bun run --cwd packages/ui test
-bun run --cwd packages/ui build
-bun run --cwd packages/ui test:package   # packs core + UI, installs, imports every entry (Node + jsdom)
-cd packages/ui
+bun run --cwd src/ui typecheck && bun run --cwd src/ui test
+bun run --cwd src/ui build
+bun run --cwd src/ui test:package   # packs core + UI, installs, imports every entry (Node + jsdom)
+cd src/ui
 npm pack --dry-run                  # inspect: dist/, LICENSE, NOTICE, README.md, package.json only
 npm login                           # manual, with 2FA
 npm publish --access public
@@ -144,7 +144,7 @@ Do not tag by hand. The core `^0.1.0` range must resolve on the registry at firs
 
 ## Tests
 
-`packages/ui` runs Vitest in jsdom: registration (idempotence, contract mismatch, prefix),
+`src/ui` runs Vitest in jsdom: registration (idempotence, contract mismatch, prefix),
 SSR import under Node, property/attribute contracts, events and their order, ARIA roles and
 states, keyboard (select, toolbar, switch, dialog Tab trap and Escape), forced-colors,
 dark-mode and coarse-pointer CSS presence, presence overflow, and the SmartArt render report.

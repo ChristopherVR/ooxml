@@ -25,7 +25,7 @@ The logic of every Office product lives in this repository, and so do the interf
 | Path            | Published as                                                             | What it is                                                                                                                                                                                                                    |
 | --------------- | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `src/`          | [`ooxml-core`](https://www.npmjs.com/package/ooxml-core)                 | The library: every format's model, parser, writer, editing commands, layout and the shared areas under them (see below). No UI.                                                                                               |
-| `packages/ui`   | [`ooxml-ui`](https://www.npmjs.com/package/ooxml-ui)                     | The shared browser elements (Lit web components): ribbons, dialogs, menus, the title and status bars, and the Word, Excel, Visio and OpenTeams editors as `ooxml-ui/<product>` subpaths. DOM only; the core never imports it. |
+| `src/ui`   | [`ooxml-ui`](https://www.npmjs.com/package/ooxml-ui)                     | The shared browser elements (Lit web components): ribbons, dialogs, menus, the title and status bars, and the Word, Excel, Visio and OpenTeams editors as `ooxml-ui/<product>` subpaths. DOM only; the core never imports it. |
 | `mcp/`          | [`ooxml-mcp`](https://www.npmjs.com/package/ooxml-mcp)                   | The combined MCP server that lets an AI assistant work with Office documents.                                                                                                                                                 |
 | `viewers/docx`  | `docx-core`, `docx-<framework>-viewer`, `docx-viewer-mcp`                | The Word editor and its bindings for React, Vue, Angular, Svelte, Solid and vanilla JavaScript.                                                                                                                               |
 | `viewers/xlsx`  | `@christophervr/xlsx-core`, `xlsx-<framework>-viewer`, `xlsx-viewer-mcp` | The Excel editor and its bindings.                                                                                                                                                                                            |
@@ -66,7 +66,7 @@ bun run test:package   # packs the build and imports every entry point from a cl
 The viewers resolve `ooxml-ui` to the copy in this workspace through its built `dist`, so build the library and the UI before working on one:
 
 ```bash
-bun run build && bun run --cwd packages/ui build
+bun run build && bun run --cwd src/ui build
 cd viewers/docx        # or xlsx, visio, teams
 bun run typecheck && bun run test
 bun run demo           # docx, xlsx: the demo app (visio, teams: bun run dev)

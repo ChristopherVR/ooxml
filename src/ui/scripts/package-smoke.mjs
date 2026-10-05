@@ -1,7 +1,7 @@
 // Packs the built UI package AND the core package, installs both tarballs into a clean project
 // and imports every entry point the way a consumer would: once under plain Node (SSR: must import
 // and register as a no-op) and once inside a jsdom window (elements actually register).
-// Run after `bun run build` in the repository root and in packages/ui.
+// Run after `bun run build` in the repository root and in src/ui.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';

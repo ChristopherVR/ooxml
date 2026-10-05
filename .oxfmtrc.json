@@ -4,8 +4,8 @@
 	"printWidth": 100,
 	"overrides": [
 		{
-			"files": ["packages/ui/src/*.ts", "packages/ui/src/**/*.ts"],
-			"excludeFiles": ["packages/ui/src/teams/**"],
+			"files": ["src/ui/src/*.ts", "src/ui/src/**/*.ts"],
+			"excludeFiles": ["src/ui/src/teams/**"],
 			"options": { "htmlWhitespaceSensitivity": "strict" }
 		}
 	]

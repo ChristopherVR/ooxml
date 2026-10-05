@@ -13,7 +13,7 @@
 		"declaration": true,
 		"types": ["vitest/globals"],
 		"paths": {
-			"ooxml-core/*": ["../../src/*/index.ts"]
+			"ooxml-core/*": ["../*/index.ts"]
 		}
 	},
 	"include": ["src/**/*.ts"],

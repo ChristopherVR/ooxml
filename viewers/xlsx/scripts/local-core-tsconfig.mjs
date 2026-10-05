@@ -17,8 +17,8 @@ const paths = {
 	'ooxml-core/xlsx/load': [rel('src/xlsx/load/index.ts')],
 	'ooxml-core/*': [rel('src/*/index.ts')],
 	'ooxml-core': [rel('src/index.ts')],
-	'ooxml-ui/*': [rel('packages/ui/src/*.ts')],
-	'ooxml-ui': [rel('packages/ui/src/index.ts')],
+	'ooxml-ui/*': [rel('src/ui/src/*.ts')],
+	'ooxml-ui': [rel('src/ui/src/index.ts')],
 };
 writeFileSync(
 	resolve(root, 'tsconfig.local.json'),

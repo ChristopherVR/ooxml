@@ -21,7 +21,7 @@ there, release it, and bump the range here.
 
 ### One editor, six thin bindings
 
-There is **one** editor: the `<docx-editor>` web component, which lives in `ooxml-ui/docx` (ooxml repository, `packages/ui/src/docx`); `packages/web-component` only re-exports it. The
+There is **one** editor: the `<docx-editor>` web component, which lives in `ooxml-ui/docx` (ooxml repository, `src/ui/src/docx`); `packages/web-component` only re-exports it. The
 bindings in `packages/bindings` (`react.tsx`, `vue.ts`, `angular.ts`, `solid.ts`,
 `WordEditor.svelte`, and the framework-neutral `index.ts` that Vanilla and the
 others build on) are lifecycle and event adapters only: they create
@@ -130,9 +130,9 @@ into the core.
 | ----------------------------------------------------------------------------------- | ----------------------------------------------- |
 | Parsing, the document model, editing commands, saving or round-trip loss            | `src/docx/` in `ooxml`, with a round-trip test  |
 | Pagination, line breaking, page layout, `.doc` loading, collaboration sync          | `ooxml` (`docx/layout`, `docx/load`, `collab`)  |
-| A control shared by Word and PowerPoint (SmartArt drawing, shared ribbon controls)  | `ooxml-ui` in `ooxml` (`packages/ui`)           |
+| A control shared by Word and PowerPoint (SmartArt drawing, shared ribbon controls)  | `ooxml-ui` in `ooxml` (`src/ui`)           |
 | `.doc` / `.xls` / `.ppt` binary codecs, CFB containers                              | `ole2`                                          |
-| Ribbon, dialogs, panels, keyboard, how the editor shows the model, styling, locales | `packages/ui/src/docx` in the ooxml repository  |
+| Ribbon, dialogs, panels, keyboard, how the editor shows the model, styling, locales | `src/ui/src/docx` in the ooxml repository  |
 | Framework wiring (props, events, lifecycle)                                         | `packages/bindings` here (all adapters at once) |
 | Demos, docs site, browser tests, packaging and release scripts                      | here                                            |
 

@@ -16,7 +16,7 @@ export default {
 			...(useSource
 				? [
 						{ find: /^ooxml-core\/(.+)$/, replacement: `${ooxml}src/$1/index.ts` },
-						{ find: /^ooxml-ui$/, replacement: `${ooxml}packages/ui/src/index.ts` },
+						{ find: /^ooxml-ui$/, replacement: `${ooxml}src/ui/src/index.ts` },
 					]
 				: []),
 			{

@@ -46,7 +46,7 @@ strip, backstage, account, find bar, print preview, ruler), `presence/`, `smarta
   private field behind a hand-written accessor.
 - **Text is exact.** Text-bearing elements are written without whitespace between nodes, because
   consumers compare `textContent`. `oxfmt` is set to `htmlWhitespaceSensitivity: "strict"` for
-  `packages/ui/src` (not `teams/`) so it never adds whitespace to a template; `glyph.ts` opts out of
+  `src/ui/src` (not `teams/`) so it never adds whitespace to a template; `glyph.ts` opts out of
   the formatter with `// prettier-ignore` because it reflows `<svg>` regardless.
 - **`ribbon-section` and `keytips`** keep imperative DOM on purpose: the section patches light-DOM
   children keyed by id (so focus and a product's tags survive), and keytips attaches a badge layer to
@@ -194,7 +194,7 @@ a dark scheme keeps working.
 for framework bindings and editor tooling. Properties and attributes are read from the live classes;
 events are the names each element fires, taken from its source, so an event dispatched under a name
 built at run time would be missing. A test fails while the file is out of date: run
-`bun run --cwd packages/ui gen:manifest` after changing an element.
+`bun run --cwd src/ui gen:manifest` after changing an element.
 
 `office-ui-smartart` shows the drawing the producing application cached; it never lays out a
 diagram itself. Preset outlines it cannot draw are rendered as rectangles, gradient and pattern
@@ -212,10 +212,10 @@ become aliases of `office-ui-*`.
 
 ```
 bun install
-bun run --cwd packages/ui typecheck
-bun run --cwd packages/ui test
-bun run build && bun run --cwd packages/ui build   # core first: the declarations read ../../dist
-bun run --cwd packages/ui test:package
+bun run --cwd src/ui typecheck
+bun run --cwd src/ui test
+bun run build && bun run --cwd src/ui build   # core first: the declarations read ../../dist
+bun run --cwd src/ui test:package
 ```
 
 ## Documentation

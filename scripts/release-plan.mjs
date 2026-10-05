@@ -46,7 +46,8 @@ import { VIEWER_PACKAGES } from './viewer-packages.mjs';
  * its npm tarball or decides its contents: the sources, the bundler and declaration configs, the
  * manifest (see IGNORED_MANIFEST_FIELDS) and the licence files. Docs, CI, tests and the build
  * orchestration scripts (scripts/build.mjs, scripts/ensure-built.mjs) do not release anything.
- * `ui` is a Bun workspace at packages/ui and depends on core; core never depends on it. A package
+ * `ui` is a Bun workspace at src/ui and depends on core; core never depends on it. It sits inside
+ * the core's `src/` tree, so the core lists it under `exclude` (paths another package owns). A package
  * whose manifest does not exist yet is left out of the plan (see `presentPackages`).
  * The viewers imported under `viewers/` are listed in `viewer-packages.mjs`. Two more optional keys
  * serve them: `triggers` are other directories whose published files are inlined into the package
@@ -70,8 +71,10 @@ export const PACKAGES = {
 			'NOTICE',
 			'THIRD-PARTY-LICENSES',
 		],
+		// ooxml-ui sits inside src/ but is its own package: its changes never release the core.
+		exclude: ['src/ui/'],
 	},
-	ui: { dir: 'packages/ui', npm: 'ooxml-ui' },
+	ui: { dir: 'src/ui', npm: 'ooxml-ui' },
 	mcp: { dir: 'mcp', npm: 'ooxml-mcp' },
 	...VIEWER_PACKAGES,
 };
@@ -175,7 +178,7 @@ const canonical = (value) =>
 			: v,
 	);
 
-/** `dir` as a prefix for a repo-relative path: '' for the root, 'packages/ui/' otherwise. */
+/** `dir` as a prefix for a repo-relative path: '' for the root, 'src/ui/' otherwise. */
 const posix = (dir) => (dir === '.' ? '' : `${dir.replace(/\/$/u, '')}/`);
 
 const readJson = (path) => JSON.parse(readFileSync(path, 'utf8'));
@@ -238,8 +241,12 @@ export function planRelease({ root, packages: all, globalTriggers = [], npm, npm
 	const scopeOf = (meta) => meta.paths ?? [meta.dir];
 	const triggersOf = (meta) => meta.triggers ?? [];
 	const globalsOf = (meta) => [...(meta.globals ?? []), ...globalTriggers];
+	const excludesOf = (meta) => meta.exclude ?? [];
 	const under = (file, target) =>
 		file === target || file.startsWith(target.endsWith('/') ? target : `${target}/`);
+	/** The files of `files` that belong to `meta`: not under a path another package owns. */
+	const owned = (meta, files) =>
+		files.filter((file) => !excludesOf(meta).some((target) => under(file, target)));
 	const touches = (files, targets) => files.some((f) => targets.some((t) => under(f, t)));
 
 	/** Internal dependencies (package keys) of one package, from its manifest at HEAD. */
@@ -313,9 +320,16 @@ export function planRelease({ root, packages: all, globalTriggers = [], npm, npm
 			.filter((f) => f && isPublishedFile(f) && !isReleaseArtifact(f, base));
 
 	/** Highest bump level among commits since `base` that touch published files in `scope`. */
-	const bumpLevel = (base, scope) => {
+	const bumpLevel = (base, scope, exclude = []) => {
 		if (!base) return 'patch';
-		const raw = git(['log', '--format=%H%x1f%s%x1f%b%x1e', `${base}..HEAD`, '--', ...scope]);
+		const raw = git([
+			'log',
+			'--format=%H%x1f%s%x1f%b%x1e',
+			`${base}..HEAD`,
+			'--',
+			...scope,
+			...exclude.map((target) => `:(exclude)${target}`),
+		]);
 		let best = 'patch';
 		for (const record of raw.split('\x1e')) {
 			const [hash, subject = '', body = ''] = record.trim().split('\x1f');
@@ -324,7 +338,13 @@ export function planRelease({ root, packages: all, globalTriggers = [], npm, npm
 			if (BUMP_RANK[level] <= BUMP_RANK[best]) continue;
 			const files = git(['show', hash, '--name-only', '--format='])
 				.split('\n')
-				.filter((f) => f && isPublishedFile(f) && touches([f], scope));
+				.filter(
+					(f) =>
+						f &&
+						isPublishedFile(f) &&
+						touches([f], scope) &&
+						!exclude.some((target) => under(f, target)),
+				);
 			if (files.length > 0) best = level;
 			if (best === 'major') break;
 		}
@@ -382,7 +402,7 @@ export function planRelease({ root, packages: all, globalTriggers = [], npm, npm
 				fromRegistryHead: sha !== git(['rev-parse', 'HEAD']),
 			};
 		}
-		const files = changedFiles(base);
+		const files = owned(meta, changedFiles(base));
 		const deps = internalDeps(meta);
 		// Bump level comes from this package's own files only: a dependency's commits do not raise it.
 		const scope = [...scopeOf(meta), ...triggersOf(meta), ...globalsOf(meta)];
@@ -405,7 +425,7 @@ export function planRelease({ root, packages: all, globalTriggers = [], npm, npm
 		const current = maxSemver([tagged, published ?? '0.0.0', manifestVersion]);
 		// Never published and never tagged: the manifest version IS the first release.
 		const initial = release && !base && published === null && tagged === '0.0.0';
-		const bump = !release ? null : initial ? 'initial' : bumpLevel(base, scope);
+		const bump = !release ? null : initial ? 'initial' : bumpLevel(base, scope, excludesOf(meta));
 		const version = !release ? current : initial ? manifestVersion : bumpVersion(current, bump);
 		plan[key] = {
 			npm: meta.npm,
@@ -429,6 +449,8 @@ export function planRelease({ root, packages: all, globalTriggers = [], npm, npm
 				...triggersOf(meta).map((dir) => `${dir}/**`),
 				...globalsOf(meta),
 			],
+			// Paths inside the package's own that belong to another package, for the changelog.
+			excludePaths: excludesOf(meta).map((target) => (target.endsWith('/') ? `${target}**` : `${target}/**`)),
 		};
 	}
 	return { anyChanged: Object.values(plan).some((p) => p.release), order, packages: plan };

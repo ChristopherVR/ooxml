@@ -6,7 +6,7 @@ The viewers depend on the **published** `ooxml-core` and `ooxml-ui`, so the orde
 ## The order
 
 1. **Land the `ooxml` change first**, with its own tests, as a conventional commit whose type and
-   paths release (`feat` or `fix` under `src/` or `packages/ui/src`). A pull request here is fine
+   paths release (`feat` or `fix` under `src/` or `src/ui/src`). A pull request here is fine
    for outside contributors; maintainers commit straight to `main`.
 2. **Release it.** Run `gh workflow run release.yml -R ChristopherVR/ooxml` (or wait for the
    schedule). Do not start the viewer change by assuming the release exists.

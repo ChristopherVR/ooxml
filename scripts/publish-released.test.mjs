@@ -48,7 +48,7 @@ test('the manifest on disk must be the version being published', () => {
 
 const temp = mkdtempSync(join(tmpdir(), 'publish-released-'));
 after(() => rmSync(temp, { recursive: true, force: true }));
-const ui = { npm: '@x/ui', dir: 'packages/ui', version: '1.0.0' };
+const ui = { npm: '@x/ui', dir: 'src/ui', version: '1.0.0' };
 const versions = new Map([['@x/core', '0.4.2']]);
 const writeUi = (dependencies, extra = {}) => {
 	mkdirSync(join(temp, ui.dir), { recursive: true });
