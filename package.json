@@ -204,6 +204,7 @@
 		"test:package": "node scripts/package-smoke.mjs",
 		"test:scripts": "node --test 'scripts/*.test.mjs'",
 		"check:changelog": "node scripts/check-changelog-sections.mjs",
+		"fleet": "node scripts/fleet.mjs",
 		"release:plan": "node scripts/release-plan.mjs",
 		"release:publish": "node scripts/publish-released.mjs",
 		"changelog:unreleased": "bunx git-cliff --config cliff.toml --tag-pattern \"^ooxml-core@\" --unreleased",

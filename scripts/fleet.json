@@ -1,0 +1,10 @@
+{
+	"repos": [
+		{ "name": "ooxml", "dir": "ooxml-core" },
+		{ "name": "docx-viewer", "dir": "docx-viewer" },
+		{ "name": "xlsx-viewer", "dir": "xlsx-viewer" },
+		{ "name": "pptx-viewer", "dir": "pptx-viewer" },
+		{ "name": "visio-viewer", "dir": "visio-viewer" },
+		{ "name": "teams-viewer", "dir": "teams-viewer" }
+	]
+}
