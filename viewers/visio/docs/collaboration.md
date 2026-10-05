@@ -18,7 +18,7 @@ There is no hosted service and no server transport in this build. Nothing leaves
 A sharing session is just a name. Both panes below are separate playgrounds, built from different framework bindings, that join the session `docs-collab` on load: window A is the vanilla playground and opens the sample, window B is the React playground and receives the drawing from the room. Edit shape text in one pane and watch the other follow; undo reverts the remote step.
 
 <iframe
-	src="/visio-viewer/demo/?embed=1&sample=1&share=docs-collab"
+	src="/ooxml/visio/demo/?embed=1&sample=1&share=docs-collab"
 	title="visio-viewer window A (vanilla)"
 	loading="lazy"
 	allow="clipboard-read; clipboard-write; fullscreen"
@@ -26,7 +26,7 @@ A sharing session is just a name. Both panes below are separate playgrounds, bui
 ></iframe>
 
 <iframe
-	src="/visio-viewer/demo-react/?embed=1&share=docs-collab"
+	src="/ooxml/visio/demo-react/?embed=1&share=docs-collab"
 	title="visio-viewer window B (React)"
 	loading="lazy"
 	allow="clipboard-read; clipboard-write; fullscreen"

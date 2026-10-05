@@ -3,18 +3,18 @@
 # docx-viewer
 
 [![npm version](https://img.shields.io/npm/v/docx-react-viewer.svg)](https://www.npmjs.com/package/docx-react-viewer)
-[![license](https://img.shields.io/npm/l/docx-react-viewer.svg)](https://github.com/ChristopherVR/docx-viewer/blob/main/LICENSE)
+[![license](https://img.shields.io/npm/l/docx-react-viewer.svg)](https://github.com/ChristopherVR/ooxml/blob/main/viewers/docx/LICENSE)
 [![types](https://img.shields.io/npm/types/docx-react-viewer.svg)](https://www.npmjs.com/package/docx-react-viewer)
 
 **A browser Word document editor with one document model, one web component and thin adapters for your framework.**
 An early implementation: not Microsoft Word parity, and not lossless export.
 
-[![docs](https://img.shields.io/badge/docs-christophervr.github.io-6366f1.svg)](https://christophervr.github.io/docx-viewer/)
+[![docs](https://img.shields.io/badge/docs-christophervr.github.io-6366f1.svg)](https://christophervr.github.io/ooxml/docx/)
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
-[![CI](https://github.com/ChristopherVR/docx-viewer/actions/workflows/ci.yml/badge.svg)](https://github.com/ChristopherVR/docx-viewer/actions/workflows/ci.yml)
+[![CI](https://github.com/ChristopherVR/ooxml/actions/workflows/ci.yml/badge.svg)](https://github.com/ChristopherVR/ooxml/actions/workflows/ci.yml)
 
-[**Live demo**](https://christophervr.github.io/docx-viewer/demo/) &nbsp;&middot;&nbsp;
-[**Documentation**](https://christophervr.github.io/docx-viewer/) &nbsp;&middot;&nbsp;
+[**Live demo**](https://christophervr.github.io/ooxml/docx/demo/) &nbsp;&middot;&nbsp;
+[**Documentation**](https://christophervr.github.io/ooxml/docx/) &nbsp;&middot;&nbsp;
 [**Getting started**](#getting-started) &nbsp;&middot;&nbsp;
 [**Packages**](#packages)
 

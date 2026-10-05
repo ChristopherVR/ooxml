@@ -6,8 +6,8 @@ export default defineConfig({
 		'A browser-based Word document editing foundation with one document model, one web-component editor, and adapters for React, Vue, Angular, Svelte, Solid, and vanilla JavaScript.',
 	lang: 'en-US',
 
-	// Deployed to https://christophervr.github.io/docx-viewer/
-	base: '/docx-viewer/',
+	// Deployed to https://christophervr.github.io/ooxml/docx/
+	base: '/ooxml/docx/',
 	cleanUrls: true,
 	lastUpdated: true,
 	ignoreDeadLinks: true,
@@ -119,10 +119,10 @@ export default defineConfig({
 			},
 		],
 
-		socialLinks: [{ icon: 'github', link: 'https://github.com/ChristopherVR/docx-viewer' }],
+		socialLinks: [{ icon: 'github', link: 'https://github.com/ChristopherVR/ooxml/tree/main/viewers/docx' }],
 
 		editLink: {
-			pattern: 'https://github.com/ChristopherVR/docx-viewer/edit/main/docs/:path',
+			pattern: 'https://github.com/ChristopherVR/ooxml/edit/main/viewers/docx/docs/:path',
 			text: 'Edit this page on GitHub',
 		},
 

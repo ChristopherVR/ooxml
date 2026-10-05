@@ -23,15 +23,15 @@ const columns = [
 	{
 		title: 'Community',
 		links: [
-			{ text: 'GitHub', href: 'https://github.com/ChristopherVR/teams-viewer', external: true },
+			{ text: 'GitHub', href: 'https://github.com/ChristopherVR/ooxml/tree/main/viewers/teams', external: true },
 			{
 				text: 'Issues',
-				href: 'https://github.com/ChristopherVR/teams-viewer/issues',
+				href: 'https://github.com/ChristopherVR/ooxml/issues',
 				external: true,
 			},
 			{
 				text: 'License',
-				href: 'https://github.com/ChristopherVR/teams-viewer/blob/main/LICENSE',
+				href: 'https://github.com/ChristopherVR/ooxml/blob/main/viewers/teams/LICENSE',
 				external: true,
 			},
 		],
@@ -51,7 +51,7 @@ const columns = [
 			<a class="ot-btn ot-btn--solid" :href="withBase('/getting-started')">Get started</a>
 			<a
 				class="ot-btn ot-btn--ghost"
-				href="https://github.com/ChristopherVR/teams-viewer"
+				href="https://github.com/ChristopherVR/ooxml/tree/main/viewers/teams"
 				target="_blank"
 				rel="noopener"
 				>View on GitHub</a

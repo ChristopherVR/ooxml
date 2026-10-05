@@ -138,7 +138,7 @@ into the core.
 
 ### GitHub Pages
 
-`https://christophervr.github.io/docx-viewer/` is the docs site (VitePress in
+`https://christophervr.github.io/ooxml/docx/` is the docs site (VitePress in
 `docs/`), deployed by `.github/workflows/docs.yml` on pushes to `main` that touch
 `docs/`, `demos/`, `packages/` or the build. `scripts/build-pages.mjs` also
 builds the demo once per framework at `/demo/` (React), `/demo-vue/`,

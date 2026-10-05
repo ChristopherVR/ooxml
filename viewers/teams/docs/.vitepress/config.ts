@@ -1,6 +1,6 @@
 import { defineConfig } from 'vitepress';
 
-// Adapted from ChristopherVR/docx-viewer docs/.vitepress/config.ts. The accent is a neutral teal on
+// Adapted from ChristopherVR/ooxml/tree/main/viewers/docx docs/.vitepress/config.ts. The accent is a neutral teal on
 // purpose: OpenTeams is not Microsoft Teams and does not borrow its brand colours.
 export default defineConfig({
 	title: 'OpenTeams',
@@ -8,8 +8,8 @@ export default defineConfig({
 		'An open-source, bring-your-own-server team workspace: channels and chat, presence and WebRTC calls, with bindings for React, Vue, Angular, Svelte, Solid and vanilla JavaScript.',
 	lang: 'en-US',
 
-	// Deployed to https://christophervr.github.io/teams-viewer/
-	base: '/teams-viewer/',
+	// Deployed to https://christophervr.github.io/ooxml/teams/
+	base: '/ooxml/teams/',
 	cleanUrls: true,
 	lastUpdated: true,
 	// The demos are built into /demo/ and /demo-react/ after VitePress runs, so links to them are
@@ -117,10 +117,10 @@ export default defineConfig({
 			},
 		],
 
-		socialLinks: [{ icon: 'github', link: 'https://github.com/ChristopherVR/teams-viewer' }],
+		socialLinks: [{ icon: 'github', link: 'https://github.com/ChristopherVR/ooxml/tree/main/viewers/teams' }],
 
 		editLink: {
-			pattern: 'https://github.com/ChristopherVR/teams-viewer/edit/main/docs/:path',
+			pattern: 'https://github.com/ChristopherVR/ooxml/edit/main/viewers/teams/docs/:path',
 			text: 'Edit this page on GitHub',
 		},
 

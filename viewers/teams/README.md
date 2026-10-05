@@ -3,18 +3,18 @@
 # OpenTeams
 
 [![npm version](https://img.shields.io/npm/v/openteams-react-viewer.svg)](https://www.npmjs.com/package/openteams-react-viewer)
-[![license](https://img.shields.io/npm/l/openteams-react-viewer.svg)](https://github.com/ChristopherVR/teams-viewer/blob/main/LICENSE)
+[![license](https://img.shields.io/npm/l/openteams-react-viewer.svg)](https://github.com/ChristopherVR/ooxml/blob/main/viewers/teams/LICENSE)
 [![types](https://img.shields.io/npm/types/openteams-react-viewer.svg)](https://www.npmjs.com/package/openteams-react-viewer)
 
 **An open-source, bring-your-own-server team workspace: channels and chat, presence and WebRTC meetings, one web component and thin adapters for your framework.**
 An early implementation: not Microsoft Teams, not affiliated with Microsoft, and no end-to-end encryption.
 
-[![docs](https://img.shields.io/badge/docs-christophervr.github.io-0e8f8f.svg)](https://christophervr.github.io/teams-viewer/)
+[![docs](https://img.shields.io/badge/docs-christophervr.github.io-0e8f8f.svg)](https://christophervr.github.io/ooxml/teams/)
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
-[![CI](https://github.com/ChristopherVR/teams-viewer/actions/workflows/ci.yml/badge.svg)](https://github.com/ChristopherVR/teams-viewer/actions/workflows/ci.yml)
+[![CI](https://github.com/ChristopherVR/ooxml/actions/workflows/ci.yml/badge.svg)](https://github.com/ChristopherVR/ooxml/actions/workflows/ci.yml)
 
-[**Live demo**](https://christophervr.github.io/teams-viewer/demo/) &nbsp;&middot;&nbsp;
-[**Documentation**](https://christophervr.github.io/teams-viewer/) &nbsp;&middot;&nbsp;
+[**Live demo**](https://christophervr.github.io/ooxml/teams/demo/) &nbsp;&middot;&nbsp;
+[**Documentation**](https://christophervr.github.io/ooxml/teams/) &nbsp;&middot;&nbsp;
 [**Getting started**](#getting-started) &nbsp;&middot;&nbsp;
 [**Packages**](#packages)
 
@@ -27,7 +27,7 @@ An early implementation: not Microsoft Teams, not affiliated with Microsoft, and
 - **Your server, your data.** No hosted service: run the small reference server (`openteams-server`) or any server that speaks three documented contracts (y-websocket sync, a JSON signaling relay, optional file storage).
 - **One app, every framework.** A Lit `<teams-app>` element owns the UI. React, Vue, Angular, Svelte, Solid and vanilla bindings only handle lifecycle and events, and each also exposes a raw hook so you can build your own UI.
 - **Logic in one place.** Chat, presence, calls and the client store live in [`ooxml-core/teams`](https://github.com/ChristopherVR/ooxml/blob/main/docs/teams-area.md), the visual primitives in [`ooxml-ui`](https://github.com/ChristopherVR/ooxml/tree/main/packages/ui). This repository holds the app, the bindings, the reference server and the demos.
-- **Honest limits.** What is not supported is written down, not hidden. See [limitations](https://christophervr.github.io/teams-viewer/limitations).
+- **Honest limits.** What is not supported is written down, not hidden. See [limitations](https://christophervr.github.io/ooxml/teams/limitations).
 
 ## Features and limitations
 
@@ -43,7 +43,7 @@ An early implementation: not Microsoft Teams, not affiliated with Microsoft, and
 
 ## How it works
 
-1. **Start a workspace.** Open the [in-browser demo](https://christophervr.github.io/teams-viewer/demo/) (no server: it says so at the top), or run `npx openteams-server` and point the app at `ws://127.0.0.1:8787/sync` and `/signal`.
+1. **Start a workspace.** Open the [in-browser demo](https://christophervr.github.io/ooxml/teams/demo/) (no server: it says so at the top), or run `npx openteams-server` and point the app at `ws://127.0.0.1:8787/sync` and `/signal`.
 
    ![The vanilla demo on GitHub Pages with its notice: this demo runs entirely in your browser](docs/public/in-browser-demo.png)
 
@@ -123,7 +123,7 @@ Or plain markup after `defineTeamsApp()`:
 | Angular  | `<teams-workspace>`             | `TeamsService` (signals)                                 |
 | Vanilla  | `mountTeams(el, props)`         | `createTeams(options)`                                   |
 
-See the [framework guides](https://christophervr.github.io/teams-viewer/frameworks/react) and `demos/react/src/App.tsx` for both styles side by side.
+See the [framework guides](https://christophervr.github.io/ooxml/teams/frameworks/react) and `demos/react/src/App.tsx` for both styles side by side.
 
 ### 3. Run the reference server
 
@@ -132,7 +132,7 @@ npx openteams-server
 TEAMS_TOKEN=change-me TEAMS_ORIGINS=https://app.example.com TEAMS_DATA=/var/lib/openteams npx openteams-server
 ```
 
-It is configured by environment only (`PORT`, `HOST`, `TEAMS_TOKEN`, `TEAMS_ORIGINS`, `TEAMS_DATA`) and serves `ws /sync/<room>`, `ws /signal/<room>`, `POST|GET /files/<workspace>/<name>`, `POST /files/link/<workspace>/<name>` and `GET /health`. Put it behind TLS. See [bring your own server](https://christophervr.github.io/teams-viewer/server) for the contracts and what it does not do, and [docs/deploy.md](docs/deploy.md) for TLS, tokens, TURN and Docker.
+It is configured by environment only (`PORT`, `HOST`, `TEAMS_TOKEN`, `TEAMS_ORIGINS`, `TEAMS_DATA`) and serves `ws /sync/<room>`, `ws /signal/<room>`, `POST|GET /files/<workspace>/<name>`, `POST /files/link/<workspace>/<name>` and `GET /health`. Put it behind TLS. See [bring your own server](https://christophervr.github.io/ooxml/teams/server) for the contracts and what it does not do, and [docs/deploy.md](docs/deploy.md) for TLS, tokens, TURN and Docker.
 
 ## Packages
 
@@ -182,7 +182,7 @@ Releases are automated from Conventional Commits: each package has its own versi
 
 ## Documentation
 
-[Getting started](https://christophervr.github.io/teams-viewer/getting-started) &middot; [Architecture](https://christophervr.github.io/teams-viewer/architecture) &middot; [Framework guides](https://christophervr.github.io/teams-viewer/frameworks/react) &middot; [Bring your own server](https://christophervr.github.io/teams-viewer/server) &middot; [Deploying](https://christophervr.github.io/teams-viewer/deploy) &middot; [Limitations](https://christophervr.github.io/teams-viewer/limitations) &middot; [Live demos](https://christophervr.github.io/teams-viewer/demos)
+[Getting started](https://christophervr.github.io/ooxml/teams/getting-started) &middot; [Architecture](https://christophervr.github.io/ooxml/teams/architecture) &middot; [Framework guides](https://christophervr.github.io/ooxml/teams/frameworks/react) &middot; [Bring your own server](https://christophervr.github.io/ooxml/teams/server) &middot; [Deploying](https://christophervr.github.io/ooxml/teams/deploy) &middot; [Limitations](https://christophervr.github.io/ooxml/teams/limitations) &middot; [Live demos](https://christophervr.github.io/ooxml/teams/demos)
 
 ## Contributing and license
 

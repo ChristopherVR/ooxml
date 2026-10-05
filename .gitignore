@@ -20,3 +20,6 @@ scripts/fleet.local.json
 
 # Session handover notes stay local, never committed
 docs/handover-*.md
+
+# Combined GitHub Pages site (scripts/build-pages.mjs)
+pages-dist/

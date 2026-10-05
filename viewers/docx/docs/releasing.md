@@ -50,7 +50,7 @@ The bump level is the highest Conventional Commit level among commits since the 
 
 ## Commit conventions
 
-The bump level comes from the commit type, so conforming commits are enforced. Rules and examples are in [CONTRIBUTING.md](https://github.com/ChristopherVR/docx-viewer/blob/main/CONTRIBUTING.md#commit-conventions). The `PR hygiene / Conventional Commits` workflow validates the PR title and every commit subject (`scripts/check-conventional-commits.mjs`): a missing or unknown type fails; header length, casing and a trailing period only warn. Make that check required in the ruleset.
+The bump level comes from the commit type, so conforming commits are enforced. Rules and examples are in [CONTRIBUTING.md](https://github.com/ChristopherVR/ooxml/blob/main/CONTRIBUTING.md#commit-conventions). The `PR hygiene / Conventional Commits` workflow validates the PR title and every commit subject (`scripts/check-conventional-commits.mjs`): a missing or unknown type fails; header length, casing and a trailing period only warn. Make that check required in the ruleset.
 
 ## The release workflow
 

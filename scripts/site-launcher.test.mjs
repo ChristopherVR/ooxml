@@ -8,18 +8,18 @@ test('Excel beta launches the six deployed viewer routes', () => {
 	assert(excel);
 	assert(isLive(excel));
 	assert.equal(excel.tag.label, 'Beta');
-	assert.equal(excel.docs, 'https://christophervr.github.io/xlsx-viewer/');
+	assert.equal(excel.docs, 'https://christophervr.github.io/ooxml/xlsx/');
 	assert.deepEqual(
 		Object.fromEntries(
 			excel.frameworks.map((framework) => [framework.id, demoUrl(excel, framework)]),
 		),
 		{
-			react: 'https://christophervr.github.io/xlsx-viewer/demo/',
-			vue: 'https://christophervr.github.io/xlsx-viewer/demo-vue/',
-			angular: 'https://christophervr.github.io/xlsx-viewer/demo-angular/',
-			svelte: 'https://christophervr.github.io/xlsx-viewer/demo-svelte/',
-			vanilla: 'https://christophervr.github.io/xlsx-viewer/demo-vanilla/',
-			solid: 'https://christophervr.github.io/xlsx-viewer/demo-solid/',
+			react: 'https://christophervr.github.io/ooxml/xlsx/demo/',
+			vue: 'https://christophervr.github.io/ooxml/xlsx/demo-vue/',
+			angular: 'https://christophervr.github.io/ooxml/xlsx/demo-angular/',
+			svelte: 'https://christophervr.github.io/ooxml/xlsx/demo-svelte/',
+			vanilla: 'https://christophervr.github.io/ooxml/xlsx/demo-vanilla/',
+			solid: 'https://christophervr.github.io/ooxml/xlsx/demo-solid/',
 		},
 	);
 });

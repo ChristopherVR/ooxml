@@ -1,12 +1,12 @@
 # @christophervr/xlsx-react-viewer
 
 [![npm version](https://img.shields.io/npm/v/%40christophervr%2Fxlsx-react-viewer.svg)](https://www.npmjs.com/package/@christophervr/xlsx-react-viewer)
-[![license](https://img.shields.io/npm/l/%40christophervr%2Fxlsx-react-viewer.svg)](https://github.com/ChristopherVR/xlsx-viewer/blob/main/LICENSE)
+[![license](https://img.shields.io/npm/l/%40christophervr%2Fxlsx-react-viewer.svg)](https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/LICENSE)
 [![types](https://img.shields.io/npm/types/%40christophervr%2Fxlsx-react-viewer.svg)](https://www.npmjs.com/package/@christophervr/xlsx-react-viewer)
 
 > A browser Excel spreadsheet editor for React, using one shared editor and the canonical OOXML document engine.
 
-[Live demo](https://christophervr.github.io/xlsx-viewer/demo/) | [npm](https://www.npmjs.com/package/@christophervr/xlsx-react-viewer) | [Full docs](https://christophervr.github.io/xlsx-viewer/) | [Source](https://github.com/ChristopherVR/xlsx-viewer)
+[Live demo](https://christophervr.github.io/ooxml/xlsx/demo/) | [npm](https://www.npmjs.com/package/@christophervr/xlsx-react-viewer) | [Full docs](https://christophervr.github.io/ooxml/xlsx/) | [Source](https://github.com/ChristopherVR/ooxml/tree/main/viewers/xlsx)
 
 ## Install
 
@@ -61,8 +61,8 @@ diagnostics and the feature guide before relying on preservation.
 
 ## Documentation
 
-[Framework guide](https://christophervr.github.io/xlsx-viewer/frameworks/react) |
-[Bindings](https://christophervr.github.io/xlsx-viewer/bindings)
+[Framework guide](https://christophervr.github.io/ooxml/xlsx/frameworks/react) |
+[Bindings](https://christophervr.github.io/ooxml/xlsx/bindings)
 
 ## License
 

@@ -211,7 +211,7 @@ otherwise install Playwright Chromium.
 
 ## GitHub Pages
 
-`https://christophervr.github.io/visio-viewer/` is the public beta docs site and
+`https://christophervr.github.io/ooxml/visio/` is the public beta docs site and
 `/demo/` is the vanilla playground (also at `/demo-vanilla/`); `/demo-react/`, `/demo-vue/`, `/demo-angular/`,
 `/demo-svelte/` and `/demo-solid/` mount the same workspace (`demo/workspace.ts`) through each
 framework binding (`packages/bindings/demos`, built by `scripts/build-demos.mjs`). `.github/workflows/pages.yml` builds the pinned

@@ -1,12 +1,18 @@
-name: Deploy Office suite site to GitHub Pages
+name: Deploy the site to GitHub Pages
 
-# The site is static (site/): a launcher that embeds the demos the viewer
-# repositories deploy to their own Pages sites. There is no build step.
+# One site serves https://christophervr.github.io/ooxml/: the Office-suite launcher (site/) at the
+# root and each imported viewer's documentation and demos under /docx/, /xlsx/, /visio/ and /teams/
+# (scripts/build-pages.mjs assembles it). The pptx viewer is still its own repository and its own
+# site; the launcher links to it.
 on:
   push:
     branches: [main]
     paths:
       - 'site/**'
+      - 'viewers/**'
+      - 'packages/ui/**'
+      - 'scripts/build-pages.mjs'
+      - 'bun.lock'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
@@ -25,12 +31,22 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup
+      # The demos resolve ooxml-ui, and through it ooxml-core, from their built output.
+      - name: Build the core and the shared UI
+        run: |
+          bun run build
+          bun run --cwd packages/ui build
+      - name: Build the site
+        run: node scripts/build-pages.mjs
       - name: Configure Pages
         uses: actions/configure-pages@v6
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
         with:
-          path: site
+          path: pages-dist
 
   deploy:
     needs: build

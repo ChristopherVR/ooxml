@@ -1,12 +1,12 @@
 # xlsx-solid-viewer
 
 [![npm version](https://img.shields.io/npm/v/xlsx-solid-viewer.svg)](https://www.npmjs.com/package/xlsx-solid-viewer)
-[![license](https://img.shields.io/npm/l/xlsx-solid-viewer.svg)](https://github.com/ChristopherVR/xlsx-viewer/blob/main/LICENSE)
+[![license](https://img.shields.io/npm/l/xlsx-solid-viewer.svg)](https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/LICENSE)
 [![types](https://img.shields.io/npm/types/xlsx-solid-viewer.svg)](https://www.npmjs.com/package/xlsx-solid-viewer)
 
 > A browser Excel spreadsheet editor for Solid, using one shared editor and the canonical OOXML document engine.
 
-[Live demo](https://christophervr.github.io/xlsx-viewer/demo/) | [npm](https://www.npmjs.com/package/xlsx-solid-viewer) | [Full docs](https://christophervr.github.io/xlsx-viewer/) | [Source](https://github.com/ChristopherVR/xlsx-viewer)
+[Live demo](https://christophervr.github.io/ooxml/xlsx/demo/) | [npm](https://www.npmjs.com/package/xlsx-solid-viewer) | [Full docs](https://christophervr.github.io/ooxml/xlsx/) | [Source](https://github.com/ChristopherVR/ooxml/tree/main/viewers/xlsx)
 
 ## Install
 
@@ -61,8 +61,8 @@ diagnostics and the feature guide before relying on preservation.
 
 ## Documentation
 
-[Framework guide](https://christophervr.github.io/xlsx-viewer/frameworks/solid) |
-[Bindings](https://christophervr.github.io/xlsx-viewer/bindings)
+[Framework guide](https://christophervr.github.io/ooxml/xlsx/frameworks/solid) |
+[Bindings](https://christophervr.github.io/ooxml/xlsx/bindings)
 
 ## License
 

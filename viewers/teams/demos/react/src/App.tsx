@@ -57,7 +57,7 @@ function StaticNotice() {
 				page: the full UI on the left and the <code>useTeams()</code> panel on the right are two
 				clients that sync over BroadcastChannel, and nothing leaves this browser. Real use needs a
 				server:{' '}
-				<a href="/teams-viewer/server" target="_top">
+				<a href="/ooxml/teams/server" target="_top">
 					run your own
 				</a>
 				.

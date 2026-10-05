@@ -12,7 +12,7 @@ import { JSDOM } from 'jsdom';
 import { FRAMEWORK_DEMOS } from '../scripts/framework-demos.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const BASE = '/visio-viewer/';
+const BASE = '/ooxml/visio/';
 const out = mkdtempSync(join(tmpdir(), 'visio-docs-'));
 const read = (path) => readFileSync(resolve(root, path), 'utf8');
 const frameworks = ['react', 'vue', 'angular', 'svelte', 'solid', 'vanilla'];

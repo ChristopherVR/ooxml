@@ -26,7 +26,7 @@ Add `?share=<session>` to any demo URL to join a File > Share session on load. T
 ## Embedded here
 
 <iframe
-	src="/visio-viewer/demo/?embed=1&sample=1"
+	src="/ooxml/visio/demo/?embed=1&sample=1"
 	title="visio-viewer live demo"
 	loading="lazy"
 	allow="clipboard-read; clipboard-write; fullscreen"

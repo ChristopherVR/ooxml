@@ -158,7 +158,7 @@ export const en: LandingCopy = {
 				links: [
 					{
 						text: 'Live demo',
-						href: 'https://christophervr.github.io/visio-viewer/demo/',
+						href: 'https://christophervr.github.io/ooxml/visio/demo/',
 						external: true,
 					},
 					{ text: 'Live demos', href: '/demos' },
@@ -178,15 +178,15 @@ export const en: LandingCopy = {
 			{
 				title: 'Community',
 				links: [
-					{ text: 'GitHub', href: 'https://github.com/ChristopherVR/visio-viewer', external: true },
+					{ text: 'GitHub', href: 'https://github.com/ChristopherVR/ooxml/tree/main/viewers/visio', external: true },
 					{
 						text: 'Issues',
-						href: 'https://github.com/ChristopherVR/visio-viewer/issues',
+						href: 'https://github.com/ChristopherVR/ooxml/issues',
 						external: true,
 					},
 					{
 						text: 'License',
-						href: 'https://github.com/ChristopherVR/visio-viewer/blob/main/LICENSE',
+						href: 'https://github.com/ChristopherVR/ooxml/blob/main/viewers/visio/LICENSE',
 						external: true,
 					},
 				],

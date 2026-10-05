@@ -1,12 +1,12 @@
 # visio-react-viewer
 
 [![npm version](https://img.shields.io/npm/v/visio-react-viewer.svg)](https://www.npmjs.com/package/visio-react-viewer)
-[![license](https://img.shields.io/npm/l/visio-react-viewer.svg)](https://github.com/ChristopherVR/visio-viewer/blob/main/LICENSE)
+[![license](https://img.shields.io/npm/l/visio-react-viewer.svg)](https://github.com/ChristopherVR/ooxml/blob/main/viewers/visio/LICENSE)
 [![types](https://img.shields.io/npm/types/visio-react-viewer.svg)](https://www.npmjs.com/package/visio-react-viewer)
 
 > A browser Visio `.vsdx` viewer for React 18 or later. This package ships the functional viewer and its framework adapter.
 
-[Live demo](https://christophervr.github.io/visio-viewer/demo/) | [npm](https://www.npmjs.com/package/visio-react-viewer) | [Full docs](https://christophervr.github.io/visio-viewer/) | [Source](https://github.com/ChristopherVR/visio-viewer)
+[Live demo](https://christophervr.github.io/ooxml/visio/demo/) | [npm](https://www.npmjs.com/package/visio-react-viewer) | [Full docs](https://christophervr.github.io/ooxml/visio/) | [Source](https://github.com/ChristopherVR/ooxml/tree/main/viewers/visio)
 
 ## Install
 
@@ -75,9 +75,9 @@ Files stay in the browser unless your application sends them elsewhere.
 
 ## Documentation
 
-[Viewer guide](https://christophervr.github.io/visio-viewer/docs/) |
-[Demo](https://christophervr.github.io/visio-viewer/demo/) |
-[Source](https://github.com/ChristopherVR/visio-viewer)
+[Viewer guide](https://christophervr.github.io/ooxml/visio/docs/) |
+[Demo](https://christophervr.github.io/ooxml/visio/demo/) |
+[Source](https://github.com/ChristopherVR/ooxml/tree/main/viewers/visio)
 
 ## License
 

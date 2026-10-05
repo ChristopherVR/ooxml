@@ -4,7 +4,7 @@ The framework-free binding for **OpenTeams**, an open-source, bring-your-own-ser
 channels and chat, presence, meetings with video and screen share (WebRTC), and Office files shared
 in the conversation. It contains the `<teams-app>` web component and `mountTeams()`.
 
-[Source](https://github.com/ChristopherVR/teams-viewer) | [Server](https://www.npmjs.com/package/openteams-server)
+[Source](https://github.com/ChristopherVR/ooxml/tree/main/viewers/teams) | [Server](https://www.npmjs.com/package/openteams-server)
 
 ## Install
 

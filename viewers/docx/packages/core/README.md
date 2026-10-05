@@ -1,12 +1,12 @@
 # docx-core
 
 [![npm version](https://img.shields.io/npm/v/docx-core.svg)](https://www.npmjs.com/package/docx-core)
-[![license](https://img.shields.io/npm/l/docx-core.svg)](https://github.com/ChristopherVR/docx-viewer/blob/main/LICENSE)
+[![license](https://img.shields.io/npm/l/docx-core.svg)](https://github.com/ChristopherVR/ooxml/blob/main/viewers/docx/LICENSE)
 [![types](https://img.shields.io/npm/types/docx-core.svg)](https://www.npmjs.com/package/docx-core)
 
 > The DOM-free document model and file API, re-exported from the canonical OOXML core.
 
-[Live demo](https://christophervr.github.io/docx-viewer/demo/) | [npm](https://www.npmjs.com/package/docx-core) | [Full docs](https://christophervr.github.io/docx-viewer/) | [Source](https://github.com/ChristopherVR/docx-viewer)
+[Live demo](https://christophervr.github.io/ooxml/docx/demo/) | [npm](https://www.npmjs.com/package/docx-core) | [Full docs](https://christophervr.github.io/ooxml/docx/) | [Source](https://github.com/ChristopherVR/ooxml/tree/main/viewers/docx)
 
 The framework-neutral DOCX document model, parser and preserving serializer. A thin entry point: `docx-core` re-exports `ooxml-core/docx` and `docx-core/embedded` re-exports `ooxml-core/docx/embedded`; the logic lives in [ooxml-core](https://github.com/ChristopherVR/ooxml).
 
@@ -32,7 +32,7 @@ It handles modern `.docx` only. To open legacy `.doc` files use one of the edito
 
 ## Documentation
 
-[Full docs](https://christophervr.github.io/docx-viewer/) | [Core source](https://github.com/ChristopherVR/ooxml)
+[Full docs](https://christophervr.github.io/ooxml/docx/) | [Core source](https://github.com/ChristopherVR/ooxml)
 
 ## License
 

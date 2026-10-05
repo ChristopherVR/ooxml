@@ -26,7 +26,7 @@ Add `?room=<session>` to a demo URL to join a shared session of the same browser
 ## Embedded here
 
 <iframe
-	src="/docx-viewer/demo/?sample=1"
+	src="/ooxml/docx/demo/?sample=1"
 	title="docx-viewer live demo"
 	loading="lazy"
 	allow="clipboard-read; clipboard-write; fullscreen"

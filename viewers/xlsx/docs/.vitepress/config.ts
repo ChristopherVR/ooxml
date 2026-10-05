@@ -6,8 +6,8 @@ export default defineConfig({
 		'A browser-based Excel spreadsheet editor with one workbook model, one web-component editor, and adapters for React, Vue, Angular, Svelte, Solid, and vanilla JavaScript.',
 	lang: 'en-US',
 
-	// Deployed to https://christophervr.github.io/xlsx-viewer/
-	base: '/xlsx-viewer/',
+	// Deployed to https://christophervr.github.io/ooxml/xlsx/
+	base: '/ooxml/xlsx/',
 	cleanUrls: true,
 	lastUpdated: true,
 	ignoreDeadLinks: true,
@@ -63,7 +63,7 @@ export default defineConfig({
 					{ text: 'Release policy', link: '/releasing' },
 					{
 						text: 'Changelog',
-						link: 'https://github.com/ChristopherVR/xlsx-viewer/blob/main/CHANGELOG.md',
+						link: 'https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/CHANGELOG.md',
 					},
 				],
 			},
@@ -107,16 +107,16 @@ export default defineConfig({
 					{ text: 'Package releases', link: '/releasing' },
 					{
 						text: 'Changelog',
-						link: 'https://github.com/ChristopherVR/xlsx-viewer/blob/main/CHANGELOG.md',
+						link: 'https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/CHANGELOG.md',
 					},
 				],
 			},
 		],
 
-		socialLinks: [{ icon: 'github', link: 'https://github.com/ChristopherVR/xlsx-viewer' }],
+		socialLinks: [{ icon: 'github', link: 'https://github.com/ChristopherVR/ooxml/tree/main/viewers/xlsx' }],
 
 		editLink: {
-			pattern: 'https://github.com/ChristopherVR/xlsx-viewer/edit/main/docs/:path',
+			pattern: 'https://github.com/ChristopherVR/ooxml/edit/main/viewers/xlsx/docs/:path',
 			text: 'Edit this page on GitHub',
 		},
 

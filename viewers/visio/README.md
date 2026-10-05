@@ -3,18 +3,18 @@
 # visio-viewer
 
 [![npm version](https://img.shields.io/npm/v/visio-react-viewer.svg)](https://www.npmjs.com/package/visio-react-viewer)
-[![license](https://img.shields.io/npm/l/visio-react-viewer.svg)](https://github.com/ChristopherVR/visio-viewer/blob/main/LICENSE)
+[![license](https://img.shields.io/npm/l/visio-react-viewer.svg)](https://github.com/ChristopherVR/ooxml/blob/main/viewers/visio/LICENSE)
 [![types](https://img.shields.io/npm/types/visio-react-viewer.svg)](https://www.npmjs.com/package/visio-react-viewer)
 
 **A local-first browser Visio diagram viewer with one SVG renderer, one web component and thin adapters for your framework.**
 A public beta: not Microsoft Visio parity, and not lossless export.
 
-[![docs](https://img.shields.io/badge/docs-christophervr.github.io-2b579a.svg)](https://christophervr.github.io/visio-viewer/)
+[![docs](https://img.shields.io/badge/docs-christophervr.github.io-2b579a.svg)](https://christophervr.github.io/ooxml/visio/)
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
-[![CI](https://github.com/ChristopherVR/visio-viewer/actions/workflows/ci.yml/badge.svg)](https://github.com/ChristopherVR/visio-viewer/actions/workflows/ci.yml)
+[![CI](https://github.com/ChristopherVR/ooxml/actions/workflows/ci.yml/badge.svg)](https://github.com/ChristopherVR/ooxml/actions/workflows/ci.yml)
 
-[**Live demo**](https://christophervr.github.io/visio-viewer/demo/) &nbsp;&middot;&nbsp;
-[**Documentation**](https://christophervr.github.io/visio-viewer/) &nbsp;&middot;&nbsp;
+[**Live demo**](https://christophervr.github.io/ooxml/visio/demo/) &nbsp;&middot;&nbsp;
+[**Documentation**](https://christophervr.github.io/ooxml/visio/) &nbsp;&middot;&nbsp;
 [**Getting started**](#getting-started) &nbsp;&middot;&nbsp;
 [**Packages**](#packages)
 
@@ -209,12 +209,12 @@ saving or downloading exported bytes is the application's responsibility. See
 the [viewer API](docs/api.md) for search, layers, export and editing, and the
 [bindings guide](packages/bindings/README.md) for each framework's props, events
 and lifecycle. Every framework demo runs the same workspace:
-[React](https://christophervr.github.io/visio-viewer/demo-react/),
-[Vue](https://christophervr.github.io/visio-viewer/demo-vue/),
-[Angular](https://christophervr.github.io/visio-viewer/demo-angular/),
-[Svelte](https://christophervr.github.io/visio-viewer/demo-svelte/),
-[Solid](https://christophervr.github.io/visio-viewer/demo-solid/) and
-[vanilla](https://christophervr.github.io/visio-viewer/demo/).
+[React](https://christophervr.github.io/ooxml/visio/demo-react/),
+[Vue](https://christophervr.github.io/ooxml/visio/demo-vue/),
+[Angular](https://christophervr.github.io/ooxml/visio/demo-angular/),
+[Svelte](https://christophervr.github.io/ooxml/visio/demo-svelte/),
+[Solid](https://christophervr.github.io/ooxml/visio/demo-solid/) and
+[vanilla](https://christophervr.github.io/ooxml/visio/demo/).
 
 ## Packages
 
@@ -259,7 +259,7 @@ npm run fmt                 # oxfmt
 
 ## Documentation
 
-[Guide](https://christophervr.github.io/visio-viewer/docs/) &middot; [Viewer API](docs/api.md) &middot; [Architecture](docs/architecture.md) &middot; [Capability ledger](docs/parity.md) &middot; [Verification record](docs/verification.md) &middot; [Corpus setup](docs/corpus.md) &middot; [Framework bindings](packages/bindings/README.md) &middot; [EMF adoption review](docs/research/emf-adoption-review.md)
+[Guide](https://christophervr.github.io/ooxml/visio/docs/) &middot; [Viewer API](docs/api.md) &middot; [Architecture](docs/architecture.md) &middot; [Capability ledger](docs/parity.md) &middot; [Verification record](docs/verification.md) &middot; [Corpus setup](docs/corpus.md) &middot; [Framework bindings](packages/bindings/README.md) &middot; [EMF adoption review](docs/research/emf-adoption-review.md)
 
 ## Releasing
 

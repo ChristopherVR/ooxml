@@ -1,6 +1,7 @@
 /**
- * The apps the suite launches. Each live app embeds the demo its viewer
- * repository deploys to GitHub Pages; this site holds no Office logic.
+ * The apps the suite launches. Each live app embeds the demos its viewer deploys to GitHub Pages
+ * (the pptx viewer from its own repository, the others under this site); this site holds no Office
+ * logic.
  */
 
 const PAGES = 'https://christophervr.github.io';
@@ -67,8 +68,8 @@ export const APPS = [
 		format: '.docx',
 		description: 'Write and edit documents.',
 		tag: { label: 'Beta', tone: 'beta' },
-		repo: 'docx-viewer',
-		docs: `${PAGES}/docx-viewer/`,
+		repo: 'docx',
+		docs: `${PAGES}/ooxml/docx/`,
 		frameworks: DOCX_FRAMEWORKS,
 	},
 	{
@@ -79,8 +80,8 @@ export const APPS = [
 		format: '.xlsx',
 		description: 'Open, edit and calculate spreadsheets, with charts.',
 		tag: { label: 'Beta', tone: 'beta' },
-		repo: 'xlsx-viewer',
-		docs: `${PAGES}/xlsx-viewer/`,
+		repo: 'xlsx',
+		docs: `${PAGES}/ooxml/xlsx/`,
 		frameworks: DOCX_FRAMEWORKS,
 	},
 	{
@@ -91,8 +92,8 @@ export const APPS = [
 		format: '.vsdx',
 		description: 'Diagrams and flowcharts.',
 		tag: { label: 'Beta', tone: 'beta' },
-		repo: 'visio-viewer',
-		docs: `${PAGES}/visio-viewer/`,
+		repo: 'visio',
+		docs: `${PAGES}/ooxml/visio/`,
 		frameworks: VISIO_FRAMEWORKS,
 	},
 	{
@@ -103,8 +104,8 @@ export const APPS = [
 		format: 'chat',
 		description: 'Channels, chat and meetings on your own server.',
 		tag: { label: 'Beta', tone: 'beta' },
-		repo: 'teams-viewer',
-		docs: `${PAGES}/teams-viewer/`,
+		repo: 'teams',
+		docs: `${PAGES}/ooxml/teams/`,
 		frameworks: TEAMS_FRAMEWORKS,
 	},
 ];
@@ -116,7 +117,7 @@ export function isLive(app) {
 
 /** @param {App} app @param {Framework} framework */
 export function demoUrl(app, framework) {
-	return `${PAGES}/${app.repo}/${framework.route}/`;
+	return `${app.docs}${framework.route}/`;
 }
 
 /**

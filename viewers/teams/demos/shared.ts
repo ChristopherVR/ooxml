@@ -37,7 +37,7 @@ export function showStaticNotice(): void {
 	const strong = document.createElement('strong');
 	strong.textContent = 'This demo runs entirely in your browser.';
 	const link = document.createElement('a');
-	link.href = '/teams-viewer/server';
+	link.href = '/ooxml/teams/server';
 	link.target = '_top';
 	link.textContent = 'run your own';
 	text.append(

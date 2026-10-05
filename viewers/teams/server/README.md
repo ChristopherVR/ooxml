@@ -38,7 +38,7 @@ await server.listen(8787, '127.0.0.1');
 
 Put it behind TLS (browsers refuse `ws://` from an `https://` page), and add a TURN server for calls
 across NATs. The full deployment guide is
-[docs/deploy.md](https://github.com/ChristopherVR/teams-viewer/blob/main/docs/deploy.md).
+[docs/deploy.md](https://github.com/ChristopherVR/ooxml/blob/main/viewers/teams/docs/deploy.md).
 
 ## Honest limits
 

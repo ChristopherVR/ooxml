@@ -98,8 +98,8 @@ lands in the viewer; see `docs/linked-changes.md` for the order and how to link 
   (`site/`, deployed by `.github/workflows/pages.yml` on pushes to `main` that
   touch `site/`).
 - `https://christophervr.github.io/pptx-viewer/`,
-  `https://christophervr.github.io/docx-viewer/` and
-  `https://christophervr.github.io/xlsx-viewer/` are the viewers' docs sites;
+  `https://christophervr.github.io/ooxml/docx/` and
+  `https://christophervr.github.io/ooxml/xlsx/` are the viewers' docs sites;
   each serves its framework demos at `/demo/` (React), `/demo-vue/`,
   `/demo-angular/`, `/demo-svelte/`, `/demo-vanilla/` and, for Word and Excel,
   `/demo-solid/`. The launcher embeds those URLs (see `site/apps.js`), so a demo

@@ -4,7 +4,7 @@ Seven unscoped packages are published to npm under the product name **OpenTeams*
 itself belongs to an unrelated project, so every name is longer). Each has its **own version
 line**, bumped only when it actually changes, and its own git tag `<npm-name>@<version>` (for
 example `openteams-server@0.2.0`). The flow, the scripts and the workflows are ported from
-[docx-viewer](https://github.com/ChristopherVR/docx-viewer) (itself adapted from pptx-viewer); each
+[docx-viewer](https://github.com/ChristopherVR/ooxml/tree/main/viewers/docx) (itself adapted from pptx-viewer); each
 ported file says so in its header, and the deviations are listed at the end.
 
 | Package                    | Dir                | Depends on (registry)                               | Bundled in               |
