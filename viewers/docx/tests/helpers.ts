@@ -77,12 +77,20 @@ export async function insertTableOfSize(page: Page, rows = 2, columns = 2) {
  * `target` (a no-op when it is already on the ribbon) so the test can use the control.
  */
 export async function reveal(editor: Locator, target: Locator) {
-	if (await target.first().isVisible()) return;
+	const page = editor.page();
+	// The ribbon re-fits its groups after fonts load or the viewport changes, folding a control it
+	// has just shown into an overflow menu. A control counts as on the ribbon only if it stays visible.
+	const stablyVisible = async () => {
+		if (!(await target.first().isVisible())) return false;
+		await page.waitForTimeout(250);
+		return target.first().isVisible();
+	};
+	if (await stablyVisible()) return;
 	const buttons = editor.locator('.ribbon-panel:not([hidden]) .ribbon-overflow-button');
 	for (let index = 0; index < (await buttons.count()); index++) {
 		await buttons.nth(index).click();
-		if (await target.first().isVisible()) return;
-		await editor.page().keyboard.press('Escape');
+		if (await stablyVisible()) return;
+		await page.keyboard.press('Escape');
 	}
 }
 
