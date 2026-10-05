@@ -13,10 +13,9 @@
  *
  * It NEVER asks for or accepts a one-time password: there is no `--otp` and no OTP prompt. Publishing
  * uses `--auth-type=web`. If npm still wants a code, the script asks for a granular access token
- * with "bypass 2FA" instead (hidden input, used for this run only, never saved); publish with a granular access
- * token that has "bypass 2FA" enabled, or through the CI trusted-publishing path. Login uses
- * `npm login --auth-type=web` (npm opens the browser); this script never reads, writes or prints a
- * token, and never passes `--provenance` (provenance needs GitHub Actions OIDC).
+ * with "bypass 2FA" instead (hidden input, kept in a temporary npm config for this run only and
+ * deleted afterwards, never printed or saved). Login uses `npm login --auth-type=web` (npm opens
+ * the browser). It never passes `--provenance` (provenance needs GitHub Actions OIDC).
  *
  * Safety checks are the ones `publish-released.mjs` runs in CI, reused from it: each manifest on
  * disk is the version the release plan computes, no range uses `workspace:` / `file:` / `link:`,
