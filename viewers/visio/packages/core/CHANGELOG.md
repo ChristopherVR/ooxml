@@ -1,3 +1,9 @@
+## 0.3.1
+
+### Changes
+
+- build(deps): adopt ooxml-core 0.15.0 and ooxml-ui 0.21.0 (818f4a4)
+
 ## 0.3.0
 
 ### Changes
