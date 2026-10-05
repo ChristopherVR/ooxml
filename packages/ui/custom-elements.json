@@ -1,0 +1,2958 @@
+{
+	"schemaVersion": "2.1.0",
+	"readme": "README.md",
+	"modules": [
+		{
+			"kind": "javascript-module",
+			"path": "chrome/account.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiAccount",
+					"tagName": "office-ui-account",
+					"customElement": true,
+					"description": "`<office-ui-account>`: User Information with avatar, display name and avatar colour. Set or read `profile`; edits emit `office-profile-change`. `slot=\"sign-in\"` hosts a product sign-in flow; the default slot holds product sections (theme, product information).",
+					"attributes": [],
+					"members": [
+						{
+							"kind": "field",
+							"name": "profile"
+						}
+					],
+					"events": [
+						{
+							"name": "office-profile-change"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-account",
+					"declaration": {
+						"name": "OfficeUiAccount"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "teams/app-rail.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiAppRail",
+					"tagName": "office-ui-app-rail",
+					"customElement": true,
+					"description": "The narrow app bar on the far left (Chat, Teams, Calls, Files). Properties: `items`, `selected`. Emits `office-rail-select` `{ id }`.",
+					"attributes": [
+						{
+							"name": "selected"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "items"
+						},
+						{
+							"kind": "field",
+							"name": "selected",
+							"type": {
+								"text": "string"
+							}
+						}
+					],
+					"events": [
+						{
+							"name": "office-rail-select"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-app-rail",
+					"declaration": {
+						"name": "OfficeUiAppRail"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "teams/avatar.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiAvatar",
+					"tagName": "office-ui-avatar",
+					"customElement": true,
+					"description": "Round avatar with initials and an optional presence badge, like the Teams persona. Attributes: `name`, `color` (default derived from `seed`/`name`), `size` (`sm` | `md` | `lg` | `xl`), `presence` (`available` | `busy` | `away` | `offline`, absent = no badge).",
+					"attributes": [
+						{
+							"name": "color"
+						},
+						{
+							"name": "name"
+						},
+						{
+							"name": "presence"
+						},
+						{
+							"name": "seed"
+						},
+						{
+							"name": "size"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "color",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "name",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "presence",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "seed",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "size",
+							"type": {
+								"text": "string"
+							}
+						}
+					],
+					"events": []
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-avatar",
+					"declaration": {
+						"name": "OfficeUiAvatar"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "chrome/backstage.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiBackstage",
+					"tagName": "office-ui-backstage",
+					"customElement": true,
+					"description": "`<office-ui-backstage>`: set `items`, put one light-DOM child per page with `data-backstage-page=\"<id>\"`, then `show(id)`. Choosing an item emits `office-backstage-select` and, unless prevented, shows its page; items without a page (Save, Close) only emit. Back and Escape emit a cancelable `office-backstage-close` and close. Attributes: `open`, `selected`, `label` (default \"File\"), `back-label`. Nav buttons carry `data-backstage-item`.",
+					"attributes": [
+						{
+							"name": "back-label"
+						},
+						{
+							"name": "label"
+						},
+						{
+							"name": "open"
+						},
+						{
+							"name": "selected"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "backLabel",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "back-label"
+						},
+						{
+							"kind": "field",
+							"name": "items"
+						},
+						{
+							"kind": "field",
+							"name": "label",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "open",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "selected",
+							"type": {
+								"text": "string"
+							}
+						}
+					],
+					"events": [
+						{
+							"name": "office-backstage-close"
+						},
+						{
+							"name": "office-backstage-select"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-backstage",
+					"declaration": {
+						"name": "OfficeUiBackstage"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "ribbon/button.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiButton",
+					"tagName": "office-ui-button",
+					"customElement": true,
+					"description": "Command button. Attributes: `label`, `icon`, `command`, `disabled`, `pressed` (aria-pressed), `expanded` (aria-expanded), `icon-only`, `variant=\"stacked\"`, `size=\"large|small\"` (ribbon large and small commands), `tall` (with `icon-only`: a tool tile), `active`, `badge`, `caret` (a trailing menu chevron), `title`, `keyshortcuts` (forwarded as aria-keyshortcuts). Activation (pointer, Enter, Space) emits one bubbling, composed `office-command` `{ command }`; Enter and Space never reach the host's own key handlers. Nothing happens when disabled. Static `requestEvent`, `idAttribute` and `detailKey`, and the `iconName()` and `showsCaret()` methods, let a product subclass keep its published contract and glyph set.",
+					"attributes": [
+						{
+							"name": "active"
+						},
+						{
+							"name": "badge"
+						},
+						{
+							"name": "caret"
+						},
+						{
+							"name": "command"
+						},
+						{
+							"name": "disabled"
+						},
+						{
+							"name": "expanded"
+						},
+						{
+							"name": "icon"
+						},
+						{
+							"name": "icon-only"
+						},
+						{
+							"name": "keyshortcuts"
+						},
+						{
+							"name": "label"
+						},
+						{
+							"name": "pressed"
+						},
+						{
+							"name": "size"
+						},
+						{
+							"name": "tall"
+						},
+						{
+							"name": "title"
+						},
+						{
+							"name": "variant"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "disabled",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "pressed"
+						}
+					],
+					"events": [
+						{
+							"name": "office-command"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-button",
+					"declaration": {
+						"name": "OfficeUiButton"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "teams/call-controls.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiCallControls",
+					"tagName": "office-ui-call-controls",
+					"customElement": true,
+					"description": "The meeting bar: elapsed time on the left, the controls in the middle (Chat, People, Raise hand, Camera, Mic, Share, Leave). Properties: `title`, `startedAt` (epoch ms), `mic`, `camera`, `screen`, `hand`, `panel` (`'chat' | 'people' | ''`), `shareUnavailable`. Emits `office-call-action` `{ action }`.",
+					"attributes": [
+						{
+							"name": "camera"
+						},
+						{
+							"name": "hand"
+						},
+						{
+							"name": "heading"
+						},
+						{
+							"name": "mic"
+						},
+						{
+							"name": "panel"
+						},
+						{
+							"name": "screen"
+						},
+						{
+							"name": "share-unavailable"
+						},
+						{
+							"name": "started-at"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "camera",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "hand",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "heading",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "mic",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "now"
+						},
+						{
+							"kind": "field",
+							"name": "panel",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "screen",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "shareUnavailable",
+							"type": {
+								"text": "boolean"
+							},
+							"attribute": "share-unavailable"
+						},
+						{
+							"kind": "field",
+							"name": "startedAt",
+							"type": {
+								"text": "number"
+							},
+							"attribute": "started-at"
+						}
+					],
+					"events": [
+						{
+							"name": "office-call-action"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-call-controls",
+					"declaration": {
+						"name": "OfficeUiCallControls"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "teams/call-grid.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiCallGrid",
+					"tagName": "office-ui-call-grid",
+					"customElement": true,
+					"description": "The meeting stage. Property `participants` (`CallTile[]`). Someone sharing their screen is spotlighted with everyone else in a side strip. Your own tile is muted (no echo) and mirrored unless it shows a screen; tiles without video show the avatar. The grid only attaches the streams it is handed; capture and connections belong to the host.",
+					"attributes": [],
+					"members": [
+						{
+							"kind": "field",
+							"name": "participants"
+						}
+					],
+					"events": []
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-call-grid",
+					"declaration": {
+						"name": "OfficeUiCallGrid"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "teams/channel-list.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiChannelList",
+					"tagName": "office-ui-channel-list",
+					"customElement": true,
+					"description": "The team and its channels, like the Teams navigation tree. Properties: `heading` (the team name), `channels`, `selectedId`. Emits `office-channel-select` `{ id }` and `office-channel-create` `{}` (the host asks for a name). Unread channels are bold with a count.",
+					"attributes": [
+						{
+							"name": "heading"
+						},
+						{
+							"name": "selected-id"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "channels"
+						},
+						{
+							"kind": "field",
+							"name": "collapsed"
+						},
+						{
+							"kind": "field",
+							"name": "heading",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "selectedId",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "selected-id"
+						}
+					],
+					"events": [
+						{
+							"name": "office-channel-create"
+						},
+						{
+							"name": "office-channel-select"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-channel-list",
+					"declaration": {
+						"name": "OfficeUiChannelList"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "teams/chat-composer.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiChatComposer",
+					"tagName": "office-ui-chat-composer",
+					"customElement": true,
+					"description": "The compose box: a growing text area, attach and emoji buttons, reply or edit banner and a typing line. Enter sends, Shift+Enter adds a line. Properties: `typing` (names), `replyingTo` (a label or null), `editing` (true while editing), `disabled`, `placeholder`, and `value`. Events: `office-chat-send` `{ text, files }`, `office-chat-typing` `{}` (throttled) and `office-chat-cancel` `{}` (the banner's close button or Escape). File bytes are never read here: the host stores them wherever its server says and posts a link.",
+					"attributes": [
+						{
+							"name": "disabled"
+						},
+						{
+							"name": "editing"
+						},
+						{
+							"name": "placeholder"
+						},
+						{
+							"name": "value"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "disabled",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "editing",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "emojiOpen"
+						},
+						{
+							"kind": "field",
+							"name": "files"
+						},
+						{
+							"kind": "field",
+							"name": "placeholder",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "replyingTo"
+						},
+						{
+							"kind": "field",
+							"name": "typing"
+						},
+						{
+							"kind": "field",
+							"name": "value",
+							"type": {
+								"text": "string"
+							}
+						}
+					],
+					"events": [
+						{
+							"name": "office-chat-cancel"
+						},
+						{
+							"name": "office-chat-send"
+						},
+						{
+							"name": "office-chat-typing"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-chat-composer",
+					"declaration": {
+						"name": "OfficeUiChatComposer"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "teams/chat-list.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiChatList",
+					"tagName": "office-ui-chat-list",
+					"customElement": true,
+					"description": "The conversation: messages as Teams-style bubbles with day separators, quoted replies, reaction pills, Office file cards and a hover toolbar. Properties: `messages`, `selfId`. Events (bubbling, composed): `office-chat-react` `{ messageId, emoji }` (toggle), `office-chat-reply` / `office-chat-edit` / `office-chat-delete` `{ messageId }` and `office-chat-open-file` `{ attachment }`. Message text is always rendered as text.",
+					"attributes": [
+						{
+							"name": "self-id"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "messages"
+						},
+						{
+							"kind": "field",
+							"name": "selfId",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "self-id"
+						}
+					],
+					"events": [
+						{
+							"name": "office-chat-delete"
+						},
+						{
+							"name": "office-chat-edit"
+						},
+						{
+							"name": "office-chat-open-file"
+						},
+						{
+							"name": "office-chat-react"
+						},
+						{
+							"name": "office-chat-reply"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-chat-list",
+					"declaration": {
+						"name": "OfficeUiChatList"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "form/checkbox.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiCheckbox",
+					"tagName": "office-ui-checkbox",
+					"customElement": true,
+					"description": "`<office-ui-checkbox checked disabled value aria-label>`.",
+					"attributes": [
+						{
+							"name": "checked"
+						},
+						{
+							"name": "disabled"
+						},
+						{
+							"name": "value"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "checked",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "disabled",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "value",
+							"type": {
+								"text": "string"
+							}
+						}
+					],
+					"events": []
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-checkbox",
+					"declaration": {
+						"name": "OfficeUiCheckbox"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "menu/command-search.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiCommandSearch",
+					"tagName": "office-ui-command-search",
+					"customElement": true,
+					"description": "Office's \"Tell me what you want to do\" box. Set `commands` (`OfficeSearchCommand[]`); typing lists up to `limit` (default 8) matches by label or keywords in a top-layer listbox. ArrowUp/Down move, Enter or click run an enabled match (`office-command` `{ command }`), Escape closes then clears. Disabled matches stay visible with their reason. Attributes: `placeholder`, `label` (accessible name), `limit`. Setting `commands` never emits.",
+					"attributes": [
+						{
+							"name": "label"
+						},
+						{
+							"name": "limit"
+						},
+						{
+							"name": "placeholder"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "active"
+						},
+						{
+							"kind": "field",
+							"name": "commands"
+						},
+						{
+							"kind": "field",
+							"name": "found"
+						},
+						{
+							"kind": "field",
+							"name": "isOpen"
+						},
+						{
+							"kind": "field",
+							"name": "label",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "limit",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "placeholder",
+							"type": {
+								"text": "string"
+							}
+						}
+					],
+					"events": [
+						{
+							"name": "office-command"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-command-search",
+					"declaration": {
+						"name": "OfficeUiCommandSearch"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "menu/context-menu.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiContextMenu",
+					"tagName": "office-ui-context-menu",
+					"customElement": true,
+					"description": "Office's right-click menu, in two modes sharing keyboard, type-ahead and dismissal: - **Children** (self-managed): `office-ui-menu-item` and `office-ui-menu-separator` children. `openAt(x, y)` shows it in the popover top layer, kept inside the viewport; `close()` hides it. Choosing an item closes the menu and its `office-command` bubbles to the host. - **Controlled** (moved from pptx-viewer `pptx-ui-context-menu`): set `state` (`{ x, y, label, items: [{ id, label, separatorBefore?, heading?, danger?, disabled?, checked?, icon? }], markers?, zIndex?, autoFocus? }`). The host is the fixed box at the pointer, clamped into the window. It emits `office-menu-request` `{ id }` when a row is chosen and `office-menu-close` `{ reason: 'escape' | 'outside' | 'tab' }` when dismissed, and never closes itself: the host removes it or clears its items. While open it takes focus on the first enabled row and returns focus to the opener when it goes away, unless something else took it. Arrow keys, Home, End and type-ahead (repeating a letter cycles) move between enabled rows. Static `requestEvent`, `closeEvent` and `markerPattern` let a product keep its published names.",
+					"attributes": [
+						{
+							"name": "data-open"
+						},
+						{
+							"name": "label"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "label",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "open",
+							"type": {
+								"text": "boolean"
+							},
+							"attribute": "data-open"
+						},
+						{
+							"kind": "field",
+							"name": "state"
+						}
+					],
+					"events": [
+						{
+							"name": "office-menu-close"
+						},
+						{
+							"name": "office-menu-request"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-context-menu",
+					"declaration": {
+						"name": "OfficeUiContextMenu"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "dialog/dialog.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiDialog",
+					"tagName": "office-ui-dialog",
+					"customElement": true,
+					"description": "Modal dialog shell. `open` and `heading` attributes, `dismissible` (default true; set `dismissible=\"false\"` to ignore Escape and backdrop). Default slot is the body, `slot=\"footer\"` holds actions. `role=\"dialog\"`, `aria-modal`, labelled by the heading. Escape, the close button and the backdrop emit a cancelable `office-dialog-close` and close unless prevented; focus moves in on open, is trapped with Tab, and returns to the previously focused element on close.",
+					"attributes": [
+						{
+							"name": "close-label"
+						},
+						{
+							"name": "dismissible"
+						},
+						{
+							"name": "heading"
+						},
+						{
+							"name": "open"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "closeLabel",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "close-label"
+						},
+						{
+							"kind": "field",
+							"name": "dismissible",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "heading",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "open",
+							"type": {
+								"text": "boolean"
+							}
+						}
+					],
+					"events": [
+						{
+							"name": "office-dialog-close"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-dialog",
+					"declaration": {
+						"name": "OfficeUiDialog"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "dialog/dialog-footer.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiDialogFooter",
+					"tagName": "office-ui-dialog-footer",
+					"customElement": true,
+					"description": "`<office-ui-dialog-footer>`: a dialog's action row (Cancel, OK, Apply...). Not a dialog shell. Set `state`; each button emits `office-dialog-footer-request` `{ id }`. Buttons are keyed by action id and patched in place, so focus survives state changes. `focusAction(id)`. Text arrives already translated; the event name is a static field a product subclass may override.",
+					"attributes": [],
+					"members": [
+						{
+							"kind": "field",
+							"name": "state"
+						}
+					],
+					"events": [
+						{
+							"name": "office-dialog-footer-request"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-dialog-footer",
+					"declaration": {
+						"name": "OfficeUiDialogFooter"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "chrome/find-bar.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiFindBar",
+					"tagName": "office-ui-find-bar",
+					"customElement": true,
+					"description": "`<office-ui-find-bar>`: Office's on-demand Find bar under the ribbon. Shown while `open`; `show()` opens it and selects the query. Enter steps to the next result, Shift+Enter to the previous; Escape clears a query, or closes the bar when it is already empty. Attributes: `open`, `label`, `input-label`, `placeholder`, `maxlength`, `disabled`, `navigation-disabled`, `previous-label`, `next-label`, `close-label`. Properties: `value`, `status`, `statusTitle`. Events: `office-find-input` `{ query }`, `office-find-step` `{ direction }`, `office-find-close`.",
+					"attributes": [
+						{
+							"name": "close-label"
+						},
+						{
+							"name": "disabled"
+						},
+						{
+							"name": "input-label"
+						},
+						{
+							"name": "label"
+						},
+						{
+							"name": "maxlength"
+						},
+						{
+							"name": "navigation-disabled"
+						},
+						{
+							"name": "next-label"
+						},
+						{
+							"name": "open"
+						},
+						{
+							"name": "placeholder"
+						},
+						{
+							"name": "previous-label"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "closeLabel",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "close-label"
+						},
+						{
+							"kind": "field",
+							"name": "disabled",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "inputLabel",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "input-label"
+						},
+						{
+							"kind": "field",
+							"name": "label",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "maxlength",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "navigationDisabled",
+							"type": {
+								"text": "boolean"
+							},
+							"attribute": "navigation-disabled"
+						},
+						{
+							"kind": "field",
+							"name": "nextLabel",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "next-label"
+						},
+						{
+							"kind": "field",
+							"name": "open",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "placeholder",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "previousLabel",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "previous-label"
+						},
+						{
+							"kind": "field",
+							"name": "status"
+						},
+						{
+							"kind": "field",
+							"name": "statusTitle"
+						},
+						{
+							"kind": "field",
+							"name": "value"
+						}
+					],
+					"events": [
+						{
+							"name": "office-find-close"
+						},
+						{
+							"name": "office-find-input"
+						},
+						{
+							"name": "office-find-step"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-find-bar",
+					"declaration": {
+						"name": "OfficeUiFindBar"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "ribbon/gallery.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiGallery",
+					"tagName": "office-ui-gallery",
+					"customElement": true,
+					"description": "`<office-ui-gallery>`: Office's ribbon gallery (Shape Styles, Themes, Table Styles). Set `state` (`OfficeGalleryState`, translated). `mode=\"inline\"` shows a strip of tiles beside a More button; otherwise the trigger is a labelled dropdown (`chevron-only` keeps just the chevron, `icon` names its glyph). The popup opens below the trigger, keeps inside the window and closes on Escape, an outside press or a pick. ArrowDown on the trigger opens it and focuses the first tile. A pick emits `office-gallery-pick` `{ gallery, itemId }`. Tiles render in the light DOM beside the host's children (Lit renders the template into the host itself) so products can query them (`data-gallery-item`); the rules join the host's root once. Static `pickEvent`, `triggerAttribute`, `popupAttribute`, `itemAttribute` and `compactAttribute` keep a product's published names; override `triggerIcon()` to draw a product glyph.",
+					"attributes": [
+						{
+							"name": "chevron-only"
+						},
+						{
+							"name": "icon"
+						},
+						{
+							"name": "mode"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "disabled"
+						},
+						{
+							"kind": "field",
+							"name": "open"
+						},
+						{
+							"kind": "field",
+							"name": "state"
+						}
+					],
+					"events": [
+						{
+							"name": "office-gallery-pick"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-gallery",
+					"declaration": {
+						"name": "OfficeUiGallery"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "icon.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiIcon",
+					"tagName": "office-ui-icon",
+					"customElement": true,
+					"description": "`<office-ui-icon name=\"check\" label=\"Done\">`: decorative unless `label` is set.",
+					"attributes": [
+						{
+							"name": "label"
+						},
+						{
+							"name": "name"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "label",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "name",
+							"type": {
+								"text": "string"
+							}
+						}
+					],
+					"events": []
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-icon",
+					"declaration": {
+						"name": "OfficeUiIcon"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "menu/menu-button.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiMenuButton",
+					"tagName": "office-ui-menu-button",
+					"customElement": true,
+					"description": "Dropdown command with a menu of `office-ui-menu-item` children (Office's Find, Layers, Align). With a `command` attribute it is a split button: the main part emits that command and the caret opens the menu. Attributes: `label`, `icon`, `command`, `variant=\"stacked\"`, `icon-only`, `disabled`, `title`, `keyshortcuts`. The menu uses the top layer (`popover`) so ribbon overflow never clips it. Keyboard: Enter, Space or ArrowDown open; arrows, Home and End move; Escape and Tab close; focus returns to the trigger. Choosing an item closes the menu; its `office-command` bubbles to the host.",
+					"attributes": [
+						{
+							"name": "command"
+						},
+						{
+							"name": "disabled"
+						},
+						{
+							"name": "icon"
+						},
+						{
+							"name": "icon-only"
+						},
+						{
+							"name": "keyshortcuts"
+						},
+						{
+							"name": "label"
+						},
+						{
+							"name": "title"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "command",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "disabled",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "icon",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "iconOnly",
+							"type": {
+								"text": "boolean"
+							},
+							"attribute": "icon-only"
+						},
+						{
+							"kind": "field",
+							"name": "keyshortcuts",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "label",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "open"
+						}
+					],
+					"events": [
+						{
+							"name": "office-command"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-menu-button",
+					"declaration": {
+						"name": "OfficeUiMenuButton"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "menu/menu-item.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiMenuItem",
+					"tagName": "office-ui-menu-item",
+					"customElement": true,
+					"description": "One menu entry: `command`, `label`, `icon`, `disabled`, `checked` (renders a `menuitemcheckbox`), `title`. Activation emits `office-command` `{ command }`.",
+					"attributes": [
+						{
+							"name": "checked"
+						},
+						{
+							"name": "command"
+						},
+						{
+							"name": "disabled"
+						},
+						{
+							"name": "icon"
+						},
+						{
+							"name": "label"
+						},
+						{
+							"name": "title"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "checked",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "command",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "disabled",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "icon",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "label",
+							"type": {
+								"text": "string"
+							}
+						}
+					],
+					"events": [
+						{
+							"name": "office-command"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-menu-item",
+					"declaration": {
+						"name": "OfficeUiMenuItem"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "menu/menu-separator.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiMenuSeparator",
+					"tagName": "office-ui-menu-separator",
+					"customElement": true,
+					"description": "A `role=\"separator\"` rule between groups of menu items.",
+					"attributes": [],
+					"members": [],
+					"events": []
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-menu-separator",
+					"declaration": {
+						"name": "OfficeUiMenuSeparator"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "dialog/options-dialog.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiOptionsDialog",
+					"tagName": "office-ui-options-dialog",
+					"customElement": true,
+					"description": "`<office-ui-options-dialog>`: set `categories` and `values`, then `show()` (or the `open` attribute). Edits stay in a draft until OK, which emits `office-options-change` and closes; Cancel, Escape and the close button discard them. `heading` defaults to \"Options\".",
+					"attributes": [
+						{
+							"name": "heading"
+						},
+						{
+							"name": "open"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "active"
+						},
+						{
+							"kind": "field",
+							"name": "categories"
+						},
+						{
+							"kind": "field",
+							"name": "category"
+						},
+						{
+							"kind": "field",
+							"name": "heading",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "open",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "values"
+						}
+					],
+					"events": [
+						{
+							"name": "office-options-change"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-options-dialog",
+					"declaration": {
+						"name": "OfficeUiOptionsDialog"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "notices/paste-options.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiPasteOptions",
+					"tagName": "office-ui-paste-options",
+					"customElement": true,
+					"description": "`<office-ui-paste-options>`: the Paste Options strip Word, Excel and PowerPoint offer after a paste, anchored one `--office-space-1` step past the pasted object's bottom-right corner (the host is the fixed box). A choice emits `office-paste-options-request` `{ format }` then `office-paste-options-dismiss`; the first pointerdown or keydown outside (Escape inside too) dismisses, armed one task after connecting so the paste gesture does not. Text arrives translated; event names and the test id prefix are static fields a product subclass may override.",
+					"attributes": [],
+					"members": [
+						{
+							"kind": "field",
+							"name": "state"
+						}
+					],
+					"events": [
+						{
+							"name": "office-paste-options-dismiss"
+						},
+						{
+							"name": "office-paste-options-request"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-paste-options",
+					"declaration": {
+						"name": "OfficeUiPasteOptions"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "teams/prejoin.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiPrejoin",
+					"tagName": "office-ui-prejoin",
+					"customElement": true,
+					"description": "The pre-join screen: a camera preview and the audio/video switches, then \"Join now\". Properties: `heading`, `name` (you), `preview` (a `MediaStream` or null), `audio`, `video`, `busy` (joining). Events: `office-prejoin-change` `{ audio?, video? }`, `office-prejoin-join` and `office-prejoin-cancel`.",
+					"attributes": [
+						{
+							"name": "audio"
+						},
+						{
+							"name": "busy"
+						},
+						{
+							"name": "heading"
+						},
+						{
+							"name": "name"
+						},
+						{
+							"name": "video"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "audio",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "busy",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "heading",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "name",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "preview"
+						},
+						{
+							"kind": "field",
+							"name": "video",
+							"type": {
+								"text": "boolean"
+							}
+						}
+					],
+					"events": [
+						{
+							"name": "office-prejoin-cancel"
+						},
+						{
+							"name": "office-prejoin-change"
+						},
+						{
+							"name": "office-prejoin-join"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-prejoin",
+					"declaration": {
+						"name": "OfficeUiPrejoin"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "presence/presence.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiPresence",
+					"tagName": "office-ui-presence",
+					"customElement": true,
+					"description": "Presence avatar stack. `participants` property (array of `PresenceParticipant`), `max` attribute (visible avatars, default 4; the rest collapse into a \"+N\" chip). `role=\"list\"` with one button per person (accessible name = name, status and \"(you)\"); activating one emits `office-presence-select` `{ id }` so the host can follow that user. Rendering carries no identity beyond what the host passes in.",
+					"attributes": [
+						{
+							"name": "label"
+						},
+						{
+							"name": "max"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "label",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "max",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "participants"
+						}
+					],
+					"events": [
+						{
+							"name": "office-presence-select"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-presence",
+					"declaration": {
+						"name": "OfficeUiPresence"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "chrome/print-preview.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiPrintPreview",
+					"tagName": "office-ui-print-preview",
+					"customElement": true,
+					"description": "`<office-ui-print-preview>`: the Print page's paper preview with page navigation. Set `pages` to rendered nodes (for example the SVG of each page); the element shows a deep clone of the current one with `tabindex` and inline `style` removed, so the preview is inert and never parses markup. `index` selects the page; the arrows emit `office-print-preview-page`. Attributes: `label` (default \"Print preview\"), `empty-label`.",
+					"attributes": [
+						{
+							"name": "empty-label"
+						},
+						{
+							"name": "label"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "emptyLabel",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "empty-label"
+						},
+						{
+							"kind": "field",
+							"name": "index"
+						},
+						{
+							"kind": "field",
+							"name": "label",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "pages"
+						}
+					],
+					"events": [
+						{
+							"name": "office-print-preview-page"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-print-preview",
+					"declaration": {
+						"name": "OfficeUiPrintPreview"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "form/radio.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiRadio",
+					"tagName": "office-ui-radio",
+					"customElement": true,
+					"description": "Radio button with a native-like contract. Moved from pptx-viewer `pptx-ui-radio`. Radios sharing a `name` in one tree and form are a WAI-ARIA radiogroup with one roving tab stop (the checked radio, else the first enabled one). Arrows move, select and focus the next enabled radio (wrapping), Home and End jump to the ends, Space selects. Checking programmatically silently unchecks peers; only user activation emits `input` then `change`, on the radio that becomes checked. Disabled radios are inert.",
+					"attributes": [
+						{
+							"name": "checked"
+						},
+						{
+							"name": "disabled"
+						},
+						{
+							"name": "name"
+						},
+						{
+							"name": "value"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "checked",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "disabled",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "name",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "value",
+							"type": {
+								"text": "string"
+							}
+						}
+					],
+					"events": []
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-radio",
+					"declaration": {
+						"name": "OfficeUiRadio"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "notices/read-only-banner.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiReadOnlyBanner",
+					"tagName": "office-ui-read-only-banner",
+					"customElement": true,
+					"description": "`<office-ui-read-only-banner>`: controlled banner for \"read-only recommended\", which Word, Excel and PowerPoint all show. The host owns the lock (Edit anyway, Dismiss, the password check); the element owns the markup, the password form and its focus. Each activation emits `office-read-only-request` with an {@link OfficeReadOnlyBannerIntent}. Text arrives translated; the event name and test id prefix are static fields a product subclass may override.",
+					"attributes": [],
+					"members": [
+						{
+							"kind": "field",
+							"name": "state"
+						}
+					],
+					"events": [
+						{
+							"name": "office-read-only-request"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-read-only-banner",
+					"declaration": {
+						"name": "OfficeUiReadOnlyBanner"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "ribbon/ribbon-tabs.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiRibbon",
+					"tagName": "office-ui-ribbon",
+					"customElement": true,
+					"description": "`<office-ui-ribbon>`: the Office tab row (Quick Access Toolbar, File, tabs, search) over the tab panels. Panels are light-DOM children carrying `data-ribbon-tab` (id), `data-label` and optionally `data-tab-keytip`; the element builds the tabs from them, keeps exactly one panel visible and moves between tabs with the arrow keys, Home and End. Slots: `quick-access`, `search`, `end`. Attributes: `selected`, `label` (tab list name), `file-label` (default \"File\"), `no-file`, `file-expanded`, `file-keytip`. A panel with `data-tab-hidden` keeps its content but has no tab (a contextual tab, or one a customisation removed); if it was selected, the first remaining tab takes over. Events: `office-ribbon-select` `{ tab }` (cancelable) and `office-ribbon-file` when File is activated.",
+					"attributes": [
+						{
+							"name": "file-expanded"
+						},
+						{
+							"name": "file-keytip"
+						},
+						{
+							"name": "file-label"
+						},
+						{
+							"name": "label"
+						},
+						{
+							"name": "no-file"
+						},
+						{
+							"name": "selected"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "fileExpanded",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "file-expanded"
+						},
+						{
+							"kind": "field",
+							"name": "fileKeytip",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "file-keytip"
+						},
+						{
+							"kind": "field",
+							"name": "fileLabel",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "file-label"
+						},
+						{
+							"kind": "field",
+							"name": "label",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "noFile",
+							"type": {
+								"text": "boolean"
+							},
+							"attribute": "no-file"
+						},
+						{
+							"kind": "field",
+							"name": "selected",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "tabs"
+						}
+					],
+					"events": [
+						{
+							"name": "office-ribbon-file"
+						},
+						{
+							"name": "office-ribbon-select"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-ribbon",
+					"declaration": {
+						"name": "OfficeUiRibbon"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "ribbon/ribbon-group.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiRibbonGroup",
+					"tagName": "office-ui-ribbon-group",
+					"customElement": true,
+					"description": "Labelled group of ribbon commands: `role=\"group\"`, `label` is the caption and name. `launcher` adds Office's corner dialog launcher (`launcher=\"<command>\"` emits `office-command` `{ command }`; `launcher-label` names it; `launcher-disabled` disables it). For narrow windows an overflow controller sets `data-collapsed` (the group becomes one button showing `icon` and the label; activating it emits `office-ribbon-collapse-toggle`) and `data-open` (its commands open in a popup at `--office-ribbon-collapse-x/-y`). The group marks itself `data-compact-row` when every command is one line tall (they centre vertically) and `data-stack` when it holds only small drop-down galleries (`[mode=\"dropdown\"]` without `data-command-large`), which stack in columns. Static `launcherEvent`/`collapseEvent` and `launcherDetail()` let a product subclass keep its published events.",
+					"attributes": [
+						{
+							"name": "data-open"
+						},
+						{
+							"name": "icon"
+						},
+						{
+							"name": "label"
+						},
+						{
+							"name": "launcher"
+						},
+						{
+							"name": "launcher-disabled"
+						},
+						{
+							"name": "launcher-label"
+						}
+					],
+					"members": [],
+					"events": [
+						{
+							"name": "office-command"
+						},
+						{
+							"name": "office-ribbon-collapse-toggle"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-ribbon-group",
+					"declaration": {
+						"name": "OfficeUiRibbonGroup"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "ribbon/ribbon-section.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiRibbonSection",
+					"tagName": "office-ui-ribbon-section",
+					"customElement": true,
+					"description": "`<office-ui-ribbon-section>`: a run of ribbon groups from data. Set `groups` (`OfficeRibbonGroupView[]`); groups and commands are keyed by id and patched in place, so a focused command and every customization id survive updates. Commands with a `column` stack vertically. Children are real `office-ui-ribbon-group` and `office-ui-button` elements in the light DOM, so their events (`office-command` and so on) bubble as usual. Static `groupTag`, `commandTag`, `groupIdAttribute` and `commandIdAttribute` let a product keep its aliases.",
+					"attributes": [],
+					"members": [
+						{
+							"kind": "field",
+							"name": "groups"
+						}
+					],
+					"events": []
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-ribbon-section",
+					"declaration": {
+						"name": "OfficeUiRibbonSection"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "ribbon/ribbon-stack.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiRibbonStack",
+					"tagName": "office-ui-ribbon-stack",
+					"customElement": true,
+					"description": "Layout for small ribbon commands: a column (Office's three-row stack of Cut, Copy and Format Painter) or, with `orientation=\"horizontal\"`, a row (Bold, Italic, Underline). Not a group.",
+					"attributes": [],
+					"members": [],
+					"events": []
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-ribbon-stack",
+					"declaration": {
+						"name": "OfficeUiRibbonStack"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "ribbon/ribbon-toggle.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiRibbonToggle",
+					"tagName": "office-ui-ribbon-toggle",
+					"customElement": true,
+					"description": "A ribbon checkbox row (View > Ruler, Gridlines): a labelled `office-ui-checkbox` sharing its keyboard and focus behaviour. Moved from pptx-viewer `pptx-ui-ribbon-toggle`. Controlled: `label`, `checked`, `disabled`, `title` and `command` attributes; user activation emits `office-toggle` `{ command, checked }` (static `requestEvent`, `idAttribute` and `detailKey` let a product subclass keep its published names). The host reflects the new state.",
+					"attributes": [
+						{
+							"name": "checked"
+						},
+						{
+							"name": "disabled"
+						},
+						{
+							"name": "label"
+						},
+						{
+							"name": "title"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "checked",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "disabled",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "label",
+							"type": {
+								"text": "string"
+							}
+						}
+					],
+					"events": [
+						{
+							"name": "office-toggle"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-ribbon-toggle",
+					"declaration": {
+						"name": "OfficeUiRibbonToggle"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "chrome/ruler.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiRuler",
+					"tagName": "office-ui-ruler",
+					"customElement": true,
+					"description": "`<office-ui-ruler>`: a decorative Office ruler (inches by default). The product positions it and says where zero is: `origin` is the CSS-pixel offset of zero from the ruler's start edge, `scale` the CSS pixels per unit (96 at 100% for inches). `orientation=\"vertical\"` draws a side ruler; `direction=\"reverse\"` makes values grow toward the start edge, as Visio's vertical ruler grows upward from the page bottom. Hidden from assistive technology.",
+					"attributes": [
+						{
+							"name": "direction"
+						},
+						{
+							"name": "orientation"
+						},
+						{
+							"name": "origin"
+						},
+						{
+							"name": "scale"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "direction",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "orientation",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "origin",
+							"type": {
+								"text": "number"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "scale",
+							"type": {
+								"text": "number"
+							}
+						}
+					],
+					"events": []
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-ruler",
+					"declaration": {
+						"name": "OfficeUiRuler"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "form/search-field.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiSearch",
+					"tagName": "office-ui-search",
+					"customElement": true,
+					"description": "A single styled search input (title bar, recent files, panel filters). Moved from pptx-viewer `pptx-ui-search`. `value`, `placeholder`, `disabled`, `aria-label` (defaults to the placeholder) and `variant=\"titlebar\"` (compact). `input` and `change` bubble from the host; setting `value` is silent. Tokens: `--office-field-*`.",
+					"attributes": [
+						{
+							"name": "aria-label"
+						},
+						{
+							"name": "disabled"
+						},
+						{
+							"name": "placeholder"
+						},
+						{
+							"name": "value"
+						},
+						{
+							"name": "variant"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "disabled",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "placeholder",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "value",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "variant",
+							"type": {
+								"text": "string"
+							}
+						}
+					],
+					"events": []
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-search",
+					"declaration": {
+						"name": "OfficeUiSearch"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "form/select.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiSelect",
+					"tagName": "office-ui-select",
+					"customElement": true,
+					"description": "Single-select combobox. Moved from pptx-viewer `pptx-ui-select` (the declarative, most complete implementation). Choices come from `<option>` / `<optgroup>` children (with `data-display-label`, `data-description` and font previews through `style=\"font-family\"`), or from the `options` property when there are none. `value`, `disabled`, `selectedIndex`, `aria-label`; `variant=\"ribbon-font\"` (compact ribbon combo that accepts unlisted values, such as a typed font size) or `\"ribbon-icon\"`; `data-font-picker=\"family|size\"`; an `icon` slot and a `custom` slot at the top of the popup. Keyboard: arrows, Home, End, PageUp/PageDown (8 options), typeahead, Enter/Space, Escape, Tab; disabled and hidden choices are skipped. The popup is a top-layer `popover`, flipped above the trigger when there is more room. `input` then `change` bubble on a user choice; setting a property is silent. Form-associated.",
+					"attributes": [
+						{
+							"name": "aria-label"
+						},
+						{
+							"name": "data-font-picker"
+						},
+						{
+							"name": "disabled"
+						},
+						{
+							"name": "open"
+						},
+						{
+							"name": "value"
+						},
+						{
+							"name": "variant"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "active"
+						},
+						{
+							"kind": "field",
+							"name": "choices"
+						},
+						{
+							"kind": "field",
+							"name": "disabled",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "open",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "opened"
+						},
+						{
+							"kind": "field",
+							"name": "options"
+						},
+						{
+							"kind": "field",
+							"name": "selectedIndex"
+						},
+						{
+							"kind": "field",
+							"name": "value",
+							"type": {
+								"text": "string"
+							}
+						}
+					],
+					"events": []
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-select",
+					"declaration": {
+						"name": "OfficeUiSelect"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "smartart/smartart.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiSmartArt",
+					"tagName": "office-ui-smartart",
+					"customElement": true,
+					"description": "`<office-ui-smartart>` draws the cached drawing of a SmartArt diagram (core `DiagramDrawing`, from `ooxml-core/diagram`) as SVG. Set `drawing` (and optionally `schemeColors`, resolved theme colours such as `{ accent1: '#4472c4' }`); `label` becomes the accessible name (`role=\"img\"`). It never re-lays-out a diagram: it shows what the producing application last computed. Approximations (preset outlines drawn as rectangles, gradient and pattern fills, 3D) are reported honestly in the `office-smartart-render` event detail and in `data-approximated` attributes, never hidden.",
+					"attributes": [
+						{
+							"name": "label"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "drawing"
+						},
+						{
+							"kind": "field",
+							"name": "label",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "schemeColors"
+						}
+					],
+					"events": [
+						{
+							"name": "office-smartart-render"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-smartart",
+					"declaration": {
+						"name": "OfficeUiSmartArt"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "chrome/status-bar.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiStatusBar",
+					"tagName": "office-ui-status-bar",
+					"customElement": true,
+					"description": "Status bar: `role=\"group\"` named by its `label` attribute (default \"Status\"). Two ways to fill it. Composed: children, with `slot=\"end\"` pushed to the trailing edge (zoom, view switches). Controlled: set `state` (`OfficeStatusBarState`: start texts, toggles, view switches and a zoom cluster, all translated); every button emits `office-status-activate` `{ id }` (static `activateEvent` lets a product subclass keep its published name). Slots stay available in controlled mode: the default after the texts, `collaboration` and `end` before the zoom. Keyed children are patched in place, so a focused button survives updates.",
+					"attributes": [
+						{
+							"name": "label"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "hasCollaboration"
+						},
+						{
+							"kind": "field",
+							"name": "label",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "state"
+						}
+					],
+					"events": [
+						{
+							"name": "office-status-activate"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-status-bar",
+					"declaration": {
+						"name": "OfficeUiStatusBar"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "chrome/status-item.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiStatusItem",
+					"tagName": "office-ui-status-item",
+					"customElement": true,
+					"description": "One status entry: `label` and `value` attributes (textual, so assistive tech reads both). With the `interactive` attribute it renders a button and emits `office-status-activate` `{ id }` (`id` attribute) on click, Enter or Space; zoom or language pickers are examples.",
+					"attributes": [
+						{
+							"name": "interactive"
+						},
+						{
+							"name": "label"
+						},
+						{
+							"name": "value"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "interactive",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "label",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "value",
+							"type": {
+								"text": "string"
+							}
+						}
+					],
+					"events": [
+						{
+							"name": "office-status-activate"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-status-item",
+					"declaration": {
+						"name": "OfficeUiStatusItem"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "form/switch.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiSwitch",
+					"tagName": "office-ui-switch",
+					"customElement": true,
+					"description": "`<office-ui-switch>`: same contract as the checkbox with `role=\"switch\"`. It draws a real knob element, so hosts and tests can measure and style it.",
+					"attributes": [
+						{
+							"name": "checked"
+						},
+						{
+							"name": "disabled"
+						},
+						{
+							"name": "value"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "checked",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "disabled",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "value",
+							"type": {
+								"text": "string"
+							}
+						}
+					],
+					"events": []
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-switch",
+					"declaration": {
+						"name": "OfficeUiSwitch"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "chrome/tab-strip.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiTabStrip",
+					"tagName": "office-ui-tab-strip",
+					"customElement": true,
+					"description": "Bottom document tabs (Visio pages, Excel sheets). Set `tabs` (`OfficeTab[]`) and `selected` (a tab id). Labels are inserted as text. The previous/next buttons and arrow, Home and End keys move the selection; the tab list uses a roving tabindex. User selection emits `office-tab-select` `{ id }` (cancelable); setting properties never emits. Attributes: `label` (tab list name, default \"Tabs\"), `previous-label` and `next-label` (step button names, default \"Previous\" and \"Next\"), `disabled`, and `add-label` to show an add button after the tabs (Insert Page, New Sheet) that emits `office-command` `{ command: 'tab-add' }`; `add-disabled` and `add-title` disable and explain it.",
+					"attributes": [
+						{
+							"name": "add-disabled"
+						},
+						{
+							"name": "add-label"
+						},
+						{
+							"name": "add-title"
+						},
+						{
+							"name": "disabled"
+						},
+						{
+							"name": "label"
+						},
+						{
+							"name": "next-label"
+						},
+						{
+							"name": "previous-label"
+						},
+						{
+							"name": "selected"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "addDisabled",
+							"type": {
+								"text": "boolean"
+							},
+							"attribute": "add-disabled"
+						},
+						{
+							"kind": "field",
+							"name": "addLabel",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "add-label"
+						},
+						{
+							"kind": "field",
+							"name": "addTitle",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "add-title"
+						},
+						{
+							"kind": "field",
+							"name": "disabled",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "label",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "nextLabel",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "next-label"
+						},
+						{
+							"kind": "field",
+							"name": "previousLabel",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "previous-label"
+						},
+						{
+							"kind": "field",
+							"name": "selected",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "tabs"
+						}
+					],
+					"events": [
+						{
+							"name": "office-command"
+						},
+						{
+							"name": "office-tab-select"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-tab-strip",
+					"declaration": {
+						"name": "OfficeUiTabStrip"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "chrome/title-bar.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiTitleBar",
+					"tagName": "office-ui-title-bar",
+					"customElement": true,
+					"description": "`<office-ui-title-bar>`: Office's title bar above the ribbon (app mark, AutoSave, Quick Access Toolbar, file name and status, centred command search, `actions`, `collaboration` and `account` slots). Controlled: set `state` (`OfficeTitleBarState`, every string translated); the bar owns no effects. `placement=\"belowRibbon\"` renders only the Quick Access row and hides itself (`data-empty`) while that row is empty. Events (bubbling, composed; static names let a product subclass keep its published ones): `office-autosave-toggle`, `office-command` `{ command }` from a Quick Access button and `office-command-search` `{ query, command? }`. Override `activate(id)` to route Quick Access buttons differently and `rendered()` to mirror state onto the host. Tokens: `--office-title-bar-*`. The search query stays local to the bar, so hosts never round-trip keystrokes; they receive one request per commit.",
+					"attributes": [
+						{
+							"name": "placement"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "active"
+						},
+						{
+							"kind": "field",
+							"name": "found"
+						},
+						{
+							"kind": "field",
+							"name": "live"
+						},
+						{
+							"kind": "field",
+							"name": "placement",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "resultsOpen"
+						},
+						{
+							"kind": "field",
+							"name": "state"
+						},
+						{
+							"kind": "field",
+							"name": "stop"
+						}
+					],
+					"events": [
+						{
+							"name": "office-autosave-toggle"
+						},
+						{
+							"name": "office-command"
+						},
+						{
+							"name": "office-command-search"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-title-bar",
+					"declaration": {
+						"name": "OfficeUiTitleBar"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "notices/toasts.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiToasts",
+					"tagName": "office-ui-toasts",
+					"customElement": true,
+					"description": "`<office-ui-toasts>`: a stack of load or compatibility notices. Toasts never auto-hide; dismissal is the host's decision through `office-toasts-request` `{ id: 'dismissAll' }` or `{ id: 'dismiss', toastId }`. The host positions the element. Hidden when empty. Text arrives already translated; the event name and test id prefix are static fields a product subclass may override.",
+					"attributes": [],
+					"members": [
+						{
+							"kind": "field",
+							"name": "state"
+						}
+					],
+					"events": [
+						{
+							"name": "office-toasts-request"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-toasts",
+					"declaration": {
+						"name": "OfficeUiToasts"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "ribbon/ribbon-toolbar.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiToolbar",
+					"tagName": "office-ui-toolbar",
+					"customElement": true,
+					"description": "`role=\"toolbar\"` container. Left/Right/Home/End move focus between enabled direct or group-nested controls (Up/Down instead when `aria-orientation=\"vertical\"`). All items stay in the tab order: roving tabindex is not implemented yet.",
+					"attributes": [],
+					"members": [],
+					"events": []
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-toolbar",
+					"declaration": {
+						"name": "OfficeUiToolbar"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
+			"path": "form/zoom-slider.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiZoomSlider",
+					"tagName": "office-ui-zoom-slider",
+					"customElement": true,
+					"description": "Office status-bar zoom: zoom out, slider, zoom in, percentage and an optional fit button. Attributes: `value` (percent, default 100), `min` (10), `max` (400), `step` (10, for the buttons), `disabled`, `fit` (shows the fit button; its value is the button's name, e.g. \"Fit page to current window\"), `label` (group name, default \"Zoom\"). `out-label`, `in-label` and `slider-label` name the zoom-out button, zoom-in button and slider (English by default), so a product can translate them. User changes emit native `input` (slider drag) and `change` events with `value` updated; the fit button emits `office-command` `{ command: 'zoom-fit' }`. Setting `value` never emits.",
+					"attributes": [
+						{
+							"name": "disabled"
+						},
+						{
+							"name": "fit"
+						},
+						{
+							"name": "in-label"
+						},
+						{
+							"name": "label"
+						},
+						{
+							"name": "max"
+						},
+						{
+							"name": "min"
+						},
+						{
+							"name": "out-label"
+						},
+						{
+							"name": "slider-label"
+						},
+						{
+							"name": "step"
+						},
+						{
+							"name": "value"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "disabled",
+							"type": {
+								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "fit",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "inLabel",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "in-label"
+						},
+						{
+							"kind": "field",
+							"name": "label",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "max",
+							"type": {
+								"text": "number"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "min",
+							"type": {
+								"text": "number"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "outLabel",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "out-label"
+						},
+						{
+							"kind": "field",
+							"name": "sliderLabel",
+							"type": {
+								"text": "string"
+							},
+							"attribute": "slider-label"
+						},
+						{
+							"kind": "field",
+							"name": "step",
+							"type": {
+								"text": "number"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "value",
+							"type": {
+								"text": "number"
+							}
+						}
+					],
+					"events": [
+						{
+							"name": "office-command"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-zoom-slider",
+					"declaration": {
+						"name": "OfficeUiZoomSlider"
+					}
+				}
+			]
+		}
+	]
+}

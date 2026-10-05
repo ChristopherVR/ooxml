@@ -178,6 +178,24 @@ Only the two layout breakpoints (`COMPACT`, `TOUCH`) are literal, because CSS do
 custom properties in media queries. A test fails when any control's stylesheet contains a raw
 colour or length outside a token, or references an undeclared token.
 
+### Theming a product
+
+A product whose theme variables follow the shadcn names (`--<prefix>foreground`,
+`-muted-foreground`, `-card`, `-primary`, `-destructive`, ...) bridges it in one line:
+`shadcnBridge(':host', '--dve-')` (from `ooxml-ui/theme`) returns the CSS that feeds every
+`--office-*` colour from it. `themeBridge(selector, map)` takes any mapping. Declare the result on
+the product's root (or `:host` inside its shadow root) rather than `:root`, so a nested theme or
+a dark scheme keeps working.
+
+## Custom Elements Manifest
+
+`custom-elements.json` (the package's `customElements` field, also exported as
+`ooxml-ui/custom-elements.json`) lists every element with its attributes, properties and events,
+for framework bindings and editor tooling. Properties and attributes are read from the live classes;
+events are the names each element fires, taken from its source, so an event dispatched under a name
+built at run time would be missing. A test fails while the file is out of date: run
+`bun run --cwd packages/ui gen:manifest` after changing an element.
+
 `office-ui-smartart` shows the drawing the producing application cached; it never lays out a
 diagram itself. Preset outlines it cannot draw are rendered as rectangles, gradient and pattern
 fills are approximated, and 3D is flattened. All of that is listed in the `office-smartart-render`

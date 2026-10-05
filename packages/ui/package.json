@@ -23,6 +23,7 @@
 	},
 	"files": [
 		"dist",
+		"custom-elements.json",
 		"LICENSE",
 		"NOTICE",
 		"README.md"
@@ -68,7 +69,8 @@
 			"import": "./dist/teams.js",
 			"default": "./dist/teams.js"
 		},
-		"./package.json": "./package.json"
+		"./package.json": "./package.json",
+		"./custom-elements.json": "./custom-elements.json"
 	},
 	"publishConfig": {
 		"access": "public"
@@ -78,7 +80,8 @@
 		"prepack": "node scripts/ensure-built.mjs",
 		"typecheck": "tsc -p tsconfig.json --noEmit",
 		"test": "vitest run",
-		"test:package": "node scripts/package-smoke.mjs"
+		"test:package": "node scripts/package-smoke.mjs",
+		"gen:manifest": "node scripts/gen-manifest.mjs"
 	},
 	"dependencies": {
 		"lit": "^3.3.3",
@@ -93,5 +96,6 @@
 	},
 	"engines": {
 		"node": ">=22"
-	}
+	},
+	"customElements": "custom-elements.json"
 }
