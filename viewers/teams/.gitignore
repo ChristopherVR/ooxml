@@ -7,3 +7,4 @@ test-results/
 .release-types/
 release-plan.json
 *.tgz
+docs/.vitepress/cache/
