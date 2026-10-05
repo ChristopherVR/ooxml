@@ -27,12 +27,13 @@ jobs:
         with:
           bun-version: 1.4.2
       - run: bun install --frozen-lockfile
+      # The Svelte demo resolves its package through dist, so build before type-checking.
+      - run: bun run build:packages
       - run: bun run typecheck
       - run: bun run test
       # Release machinery: planner, publish guards, local publish helper, commit and changelog checks.
       - run: bun run test:scripts
       - run: bun run check:changelog
-      - run: bun run build:packages
       # No published tarball may import the private web component or anything undeclared.
       - run: bun run check:published
       - run: bun run pack:smoke
