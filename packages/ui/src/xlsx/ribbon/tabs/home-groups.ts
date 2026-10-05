@@ -1,5 +1,5 @@
 // Home tab groups Styles, Cells and Editing, plus the menu helpers the other tabs share.
-import type { RibbonGroup, RibbonMenuItem } from '../parts.js';
+import type { RibbonGroup, RibbonMenuItem } from 'ooxml-core/xlsx/ui';
 import {
 	COLOR_SCALES,
 	DATA_BAR_COLORS,
@@ -8,7 +8,7 @@ import {
 	cellStyleGalleryItems,
 	tableStyleGalleryItems,
 } from '../../commands/styles.js';
-import { AUTOSUM_FUNCTIONS } from '../../commands/editing.js';
+import { AUTOSUM_FUNCTIONS } from 'ooxml-core/xlsx/ui';
 
 export const sep: RibbonMenuItem = { separator: true };
 export const items = (...ids: string[]): RibbonMenuItem[] =>

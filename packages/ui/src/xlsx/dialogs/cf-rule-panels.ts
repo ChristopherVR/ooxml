@@ -5,7 +5,7 @@ import type {
 	ConditionalRule,
 	DifferentialStyle,
 } from 'ooxml-core/xlsx';
-import type { EditorContext } from '../context.js';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { OPERATORS, TIME_PERIOD_LABELS, operand, operandText } from './cf-common.js';
 import { checkbox, el, field, numberInput, row, select, textInput } from './fields.js';
 

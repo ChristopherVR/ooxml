@@ -1,5 +1,5 @@
 // Small DOM builders for dialog forms. Every label is an English key translated through ctx.t.
-import type { EditorContext } from '../context.js';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 
 type El = HTMLElement;
 

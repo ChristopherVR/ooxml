@@ -1,6 +1,6 @@
 // Zoom: preset magnifications, Fit selection or a custom percentage (10 to 400).
 import { currentZoom, setZoom, zoomToFit } from '../commands/view.js';
-import type { EditorContext } from '../context.js';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { field, numberInput, radios } from './fields.js';
 import { showDialog } from './frame.js';
 

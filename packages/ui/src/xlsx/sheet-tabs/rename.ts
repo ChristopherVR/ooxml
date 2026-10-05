@@ -1,7 +1,7 @@
 // Inline sheet rename: an input replaces the tab label. Enter or blur commits through the core's
 // `validateSheetName` and `renameSheet`; an invalid name shows a toast and keeps editing; Escape cancels.
 import { validateSheetName } from 'ooxml-core/xlsx';
-import type { EditorContext } from '../context.js';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { h } from '../grid/dom.js';
 
 export interface RenameHandle {

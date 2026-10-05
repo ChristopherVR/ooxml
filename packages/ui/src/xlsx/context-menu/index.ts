@@ -8,7 +8,7 @@ export {
 	type HeaderMenuState,
 	type MenuEntry,
 	type TabMenuState,
-} from './items.js';
+} from 'ooxml-core/xlsx/ui';
 export {
 	currentContextMenu,
 	openContextMenu,

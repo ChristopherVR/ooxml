@@ -3,7 +3,7 @@
  * tab with labelled groups and dialog launchers, KeyTips, hidden actions and overflow folding. The tab
  * row, File button, collapse and peek belong to the shared `office-ui-ribbon`. Structure and look follow docx-viewer's ribbon.ts.
  */
-import type { EditorContext } from '../context';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { defineRibbon } from '../../controls';
 import { commandButton, el, renderControl, type RenderScope } from './controls';
 import { ribbonIcon } from './icons';
@@ -14,10 +14,10 @@ import {
 	type RibbonControl,
 	type RibbonGroup,
 	type RibbonTab,
-} from './parts';
+} from 'ooxml-core/xlsx/ui';
 import { closeRibbonPopover } from './popover';
 import { showTabKeyTips } from './keytips';
-import { isTabHidden, selectTab, setTabHidden, type RibbonElement } from './tab-api';
+import { isTabHidden, selectTab, setTabHidden, type RibbonElement } from 'ooxml-core/xlsx/ui';
 import { applyRibbonVisibility } from './visibility';
 
 export interface RibbonHandlers {

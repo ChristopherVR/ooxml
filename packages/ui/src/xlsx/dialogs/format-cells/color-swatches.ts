@@ -2,7 +2,7 @@
 // an Automatic / No Color button, the theme colours with their tint rows and the standard colours.
 import type { Color } from 'ooxml-core/xlsx';
 import { resolveColor } from 'ooxml-core/xlsx';
-import type { EditorContext } from '../../context.js';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { STANDARD_COLORS, themeTints } from '../../ribbon/color-grid.js';
 import { el } from '../fields.js';
 

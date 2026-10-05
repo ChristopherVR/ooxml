@@ -5,12 +5,12 @@
  */
 import { setLargeCaption } from './caption.js';
 import type { Color } from 'ooxml-core/xlsx';
-import type { Command } from '../commands';
-import type { EditorContext } from '../context';
+import type { Command } from 'ooxml-core/xlsx/ui';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { cssColor, openColorGrid } from './color-grid';
 import { renderSelect, renderGallery } from './controls-input';
 import { ribbonIcon } from './icons';
-import { isMenuSeparator, type RibbonControl, type RibbonMenuItem } from './parts';
+import { isMenuSeparator, type RibbonControl, type RibbonMenuItem } from 'ooxml-core/xlsx/ui';
 import { openMenu, type MenuEntry } from './popover';
 
 export interface RenderScope {

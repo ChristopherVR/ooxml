@@ -1,7 +1,7 @@
 // Create Table (Insert > Table, Format as Table, Ctrl+T): the data range and the header flag.
 import { type Table, formatRange, parseRange } from 'ooxml-core/xlsx';
-import { guessHeader, regionOf, target } from '../commands/util.js';
-import type { EditorContext } from '../context.js';
+import { guessHeader, regionOf, target } from 'ooxml-core/xlsx/ui';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { checkbox, field, textInput } from './fields.js';
 import { showDialog } from './frame.js';
 

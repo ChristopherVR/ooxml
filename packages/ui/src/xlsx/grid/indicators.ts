@@ -9,7 +9,7 @@ import { h, viewOf } from './dom.js';
 import { referenceTarget } from 'ooxml-core/xlsx';
 import type { GridSelection } from './grid-selection.js';
 import type { GridView } from './grid-view.js';
-import { selectCell } from './selection-ops.js';
+import { selectCell } from 'ooxml-core/xlsx/ui';
 
 const HOVER_MS = 350;
 

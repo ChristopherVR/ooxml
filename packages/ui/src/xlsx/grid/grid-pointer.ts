@@ -3,11 +3,11 @@
 // border resizing and double-click autofit, hyperlink Ctrl+click, and touch tap-to-select.
 import { normalizeRange, type CellAddress, type CellRange } from 'ooxml-core/xlsx';
 import type { CellEditor } from './cell-editor.js';
-import type { Hit } from './geometry.js';
+import type { Hit } from 'ooxml-core/xlsx/ui';
 import type { GridSelection } from './grid-selection.js';
 import type { GridView } from './grid-view.js';
 import { startHeaderResize, autoFit } from './header-resize.js';
-import { addRange, extendSelection, selectCell, spanRange } from './selection-ops.js';
+import { addRange, extendSelection, selectCell, spanRange } from 'ooxml-core/xlsx/ui';
 
 export interface PointerHost {
 	view: GridView;

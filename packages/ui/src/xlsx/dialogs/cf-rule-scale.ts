@@ -1,8 +1,8 @@
 // "Format all cells based on their values": 2- and 3-color scales, data bars and icon sets, with
 // threshold types (lowest / highest value, number, percent, percentile, formula) and colours.
 import type { CfvoThreshold, Color, ConditionalRule } from 'ooxml-core/xlsx';
-import { ICON_SETS, iconCount, iconThresholds } from '../commands/cf-presets.js';
-import type { EditorContext } from '../context.js';
+import { ICON_SETS, iconCount, iconThresholds } from 'ooxml-core/xlsx/ui';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import type { PanelRead, RulePanel } from './cf-rule-panels.js';
 import { checkbox, el, field, row, select, textInput } from './fields.js';
 

@@ -1,6 +1,6 @@
 // Help tab dialogs: the keyboard shortcut list (fallback when the shell has no help command) and
 // an honest About and Feature Status page.
-import type { EditorContext } from '../context.js';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { shortcutRows } from '../shortcut-help.js';
 import { el, fieldset, text } from './fields.js';
 import { showDialog } from './frame.js';

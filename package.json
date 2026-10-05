@@ -141,6 +141,11 @@
 			"import": "./dist/xlsx/index.mjs",
 			"require": "./dist/xlsx/index.cjs"
 		},
+		"./xlsx/ui": {
+			"types": "./dist/xlsx/ui/index.d.ts",
+			"import": "./dist/xlsx/ui/index.mjs",
+			"require": "./dist/xlsx/ui/index.cjs"
+		},
 		"./xlsx/load": {
 			"types": "./dist/xlsx/load/index.d.ts",
 			"import": "./dist/xlsx/load/index.mjs",
@@ -236,6 +241,7 @@
 		"tsdown": "^0.23.0",
 		"tsup": "^8.5.1",
 		"typescript": "^7.0.2",
+		"unrun": "^0.3.1",
 		"vitest": "^5.0.3",
 		"xml-crypto": "^6.3.2",
 		"xmllint-wasm": "5.3.0",

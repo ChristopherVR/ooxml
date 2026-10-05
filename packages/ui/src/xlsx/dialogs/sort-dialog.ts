@@ -1,8 +1,8 @@
 // Data > Sort: several sort levels (column, sort on cell values, order) over the selection or
 // its current region, with the "My data has headers" switch.
 import { type CellRange, columnLabel, getCell } from 'ooxml-core/xlsx';
-import { guessHeader, regionOf, target } from '../commands/util.js';
-import type { EditorContext } from '../context.js';
+import { guessHeader, regionOf, target } from 'ooxml-core/xlsx/ui';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { checkbox, el, row, select } from './fields.js';
 import { button, showDialog } from './frame.js';
 

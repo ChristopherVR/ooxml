@@ -4,8 +4,8 @@
  * `installCommands` and the grid, so a command module that registers the same id replaces them.
  */
 import { MAX_COL, MAX_ROW } from 'ooxml-core/xlsx';
-import type { Command } from './commands';
-import type { EditorContext } from './context';
+import type { Command } from 'ooxml-core/xlsx/ui';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import type { FileCommand } from './events';
 
 export interface ShellCommandHandlers {

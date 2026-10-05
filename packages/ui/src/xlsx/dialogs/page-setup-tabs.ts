@@ -1,8 +1,8 @@
 // The four Page Setup tabs. Each returns its panel and a `read()` that turns the fields into a
 // PageSetup patch (or an English error message).
 import { type PageSetup, type Worksheet, formatRange, parseRange } from 'ooxml-core/xlsx';
-import { PAPER_SIZES } from '../commands/page-layout.js';
-import type { EditorContext } from '../context.js';
+import { PAPER_SIZES } from 'ooxml-core/xlsx/ui';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import {
 	checkbox,
 	field,

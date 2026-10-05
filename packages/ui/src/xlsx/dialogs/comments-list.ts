@@ -1,6 +1,6 @@
 // Show Comments: the sheet's comments (cell, author, text); activating one selects its cell.
 import { formatAddress } from 'ooxml-core/xlsx';
-import type { EditorContext } from '../context.js';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { listBox, text } from './fields.js';
 import { showDialog } from './frame.js';
 import { selectOn } from './go-to.js';

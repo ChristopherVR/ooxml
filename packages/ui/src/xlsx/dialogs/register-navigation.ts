@@ -1,5 +1,5 @@
 // Registers the navigation, names and information dialogs.
-import type { EditorContext } from '../context.js';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { openCommentsList } from './comments-list.js';
 import { openCreateNames } from './create-names.js';
 import { type DefineNameProps, openDefineName } from './define-name.js';

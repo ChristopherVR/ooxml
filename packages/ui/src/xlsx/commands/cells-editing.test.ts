@@ -1,10 +1,10 @@
 import { createWorkbook, getCell } from 'ooxml-core/xlsx';
 import { describe, expect, it, vi } from 'vitest';
-import { autoSumRange, fillSource } from './editing.js';
+import { autoSumRange, fillSource } from 'ooxml-core/xlsx/ui';
 import { allCommands } from './index.js';
-import { findSpecial } from './select-special.js';
+import { findSpecial } from 'ooxml-core/xlsx/ui';
 import { createTestContext } from './test-support.js';
-import { target } from './util.js';
+import { target } from 'ooxml-core/xlsx/ui';
 
 function setup(sheets = ['Sheet1']) {
 	const ctx = createTestContext(createWorkbook({ sheets }));

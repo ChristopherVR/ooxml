@@ -1,7 +1,7 @@
 // Contextual tabs: Table Design (active cell inside a table) and Chart Design (active cell under
 // a chart).
-import type { RibbonTab } from '../parts.js';
-import { activeChart, activeTable } from '../../commands/contextual.js';
+import type { RibbonTab } from 'ooxml-core/xlsx/ui';
+import { activeChart, activeTable } from 'ooxml-core/xlsx/ui';
 import { CHART_TYPES } from '../../commands/insert.js';
 import { tableStyleGalleryItems } from '../../commands/styles.js';
 

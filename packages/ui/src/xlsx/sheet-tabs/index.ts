@@ -1,8 +1,8 @@
 // The sheet tab bar under the grid: scroll arrows, "+" new sheet and one tab per visible sheet
 // (activate, rename by double-click, drag to reorder, context menu).
 import { nextSheetName } from 'ooxml-core/xlsx';
-import { sheetBaseName } from '../localization.js';
-import type { EditorContext } from '../context.js';
+import { sheetBaseName } from 'ooxml-core/xlsx/ui';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { openContextMenu, tabMenu } from '../context-menu/index.js';
 import { ensureStyle, h } from '../grid/dom.js';
 import { wireTabDrag } from './drag.js';

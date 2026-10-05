@@ -1,10 +1,10 @@
 // Accessibility: the grid role and counts, the focus sink's label (active cell reference and
 // value) and a polite live region announcing selection changes.
 import { formatAddress, MAX_COL, MAX_ROW } from 'ooxml-core/xlsx';
-import type { Selection } from '../context.js';
+import type { Selection } from 'ooxml-core/xlsx/ui';
 import { h } from './dom.js';
 import type { GridView } from './grid-view.js';
-import { selectionCellCount, selectionRef } from './selection-ops.js';
+import { selectionCellCount, selectionRef } from 'ooxml-core/xlsx/ui';
 
 export function describeSelection(view: GridView, selection: Selection): string {
 	const t = view.ctx.t;

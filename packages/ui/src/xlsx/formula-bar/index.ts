@@ -1,5 +1,5 @@
 // The formula bar: Name Box, cancel / enter / fx buttons and the expandable formula input.
-import type { EditorContext } from '../context.js';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { ensureStyle, h } from '../grid/dom.js';
 import { createFormulaInput } from './formula-input.js';
 import { createNameBox } from './name-box.js';
@@ -10,7 +10,7 @@ export {
 	nameForRange,
 	parseSheetReference,
 	resolveNameBox,
-} from './name-resolve.js';
+} from 'ooxml-core/xlsx/ui';
 
 export function mountFormulaBar(ctx: EditorContext, container: HTMLElement): () => void {
 	const doc = container.ownerDocument;

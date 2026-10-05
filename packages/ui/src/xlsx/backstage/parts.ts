@@ -1,10 +1,10 @@
 /** Shared building blocks and the host interface of the File backstage pages. */
 import type { WorkbookProperties } from 'ooxml-core/xlsx';
-import type { EditorContext } from '../context';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import type { FileCommand } from '../events';
 import { ribbonIcon } from '../ribbon/icons';
 import type { SaveState } from '../title-bar';
-import type { TemplateId } from './templates';
+import type { TemplateId } from 'ooxml-core/xlsx/ui';
 
 export type CalculationMode = 'automatic' | 'manual';
 /** Iterative calculation: maximum iterations and maximum change; undefined when off. */

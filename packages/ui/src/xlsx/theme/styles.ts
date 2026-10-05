@@ -1,6 +1,6 @@
-import { darkTheme, lightTheme } from './defaults';
-import { themeToCssVars } from './css-vars';
-import type { XlsxTheme } from './types';
+import { darkTheme, lightTheme } from 'ooxml-core/xlsx/ui';
+import { themeToCssVars } from 'ooxml-core/xlsx/ui';
+import type { XlsxTheme } from 'ooxml-core/xlsx/ui';
 import officeBridge from './office-bridge.css?raw';
 import shell from './shell.css?raw';
 import ribbon from './ribbon.css?raw';

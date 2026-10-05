@@ -14,7 +14,7 @@ import {
 import { buildShell, type Shell } from './editor-shell';
 import { XlsxEditorApi } from './element-api';
 import type { XlsxEditorEventMap } from './events';
-import type { EditorLocale, EditorLocaleInput } from './localization';
+import type { EditorLocale, EditorLocaleInput } from 'ooxml-core/xlsx/ui';
 import {
 	applyThemeColors,
 	normalizeThemeMode,

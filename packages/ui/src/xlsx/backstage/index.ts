@@ -12,7 +12,7 @@ import { renderCustomize, renderOptions } from './pages-options';
 
 export type { BackstageHost, EditorOptions, CalculationMode, IterationSettings } from './parts';
 export { compatibilityNotes, formatNotes } from './pages-info';
-export { createTemplateWorkbook, TEMPLATES, type TemplateId } from './templates';
+export { createTemplateWorkbook, TEMPLATES, type TemplateId } from 'ooxml-core/xlsx/ui';
 
 export type BackstagePage =
 	| 'info'

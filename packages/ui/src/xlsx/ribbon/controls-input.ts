@@ -1,10 +1,10 @@
 /** Value controls of the ribbon: drop-down selects, editable combo boxes and galleries. */
 import { setLargeCaption } from './caption.js';
-import type { Command } from '../commands';
-import type { EditorContext } from '../context';
+import type { Command } from 'ooxml-core/xlsx/ui';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { el, tagCommand, tooltip, type RenderScope } from './controls';
 import { ribbonIcon } from './icons';
-import type { RibbonControl, RibbonOption } from './parts';
+import type { RibbonControl, RibbonOption } from 'ooxml-core/xlsx/ui';
 import { arrowNavigation, closeRibbonPopover, mountPopover, openList } from './popover';
 
 type SelectControl = Extract<RibbonControl, { kind: 'select' }>;

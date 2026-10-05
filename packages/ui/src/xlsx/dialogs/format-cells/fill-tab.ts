@@ -4,7 +4,7 @@ import type { Color, Fill, PatternType } from 'ooxml-core/xlsx';
 import { resolveColor } from 'ooxml-core/xlsx';
 import { el, field, fieldset, row, select } from '../fields.js';
 import { swatchGrid } from './color-swatches.js';
-import type { FormatTab, TabInit } from './types.js';
+import type { FormatTab, TabInit } from 'ooxml-core/xlsx/ui';
 
 export const PATTERNS: ReadonlyArray<readonly [PatternType, string]> = [
 	['none', 'None'],

@@ -2,7 +2,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { createWorkbook } from 'ooxml-core/xlsx';
 import { createBackstage, type BackstageHost, type EditorOptions } from './index';
-import { registerRibbonTabs, resetRibbonTabs } from '../ribbon/parts';
+import { registerRibbonTabs, resetRibbonTabs } from 'ooxml-core/xlsx/ui';
 import { shellFixture, spyCommand } from '../test-support/shell';
 
 function setup(workbook = createWorkbook()) {

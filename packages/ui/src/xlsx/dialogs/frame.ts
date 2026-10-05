@@ -2,8 +2,8 @@
 // return focus) with OK / Cancel in its footer, Enter to confirm from a field, and a promise that
 // resolves with the dialog's result or undefined when it is cancelled.
 import { defineDialog } from '../../index';
-import type { EditorContext } from '../context.js';
-import { dialogHost } from '../dialogs.js';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
+import { dialogHost } from './host.js';
 import { DIALOG_CSS } from './styles.js';
 
 export interface DialogSpec<T> {

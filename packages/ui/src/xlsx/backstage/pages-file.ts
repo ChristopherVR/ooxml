@@ -11,7 +11,7 @@ import {
 	runFile,
 	type PageContext,
 } from './parts';
-import { TEMPLATES } from './templates';
+import { TEMPLATES } from 'ooxml-core/xlsx/ui';
 import { formatRange } from 'ooxml-core/xlsx';
 
 function tile(

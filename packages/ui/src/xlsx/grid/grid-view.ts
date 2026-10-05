@@ -14,9 +14,9 @@ import {
 	type Workbook,
 	type Worksheet,
 } from 'ooxml-core/xlsx';
-import type { EditorContext } from '../context.js';
-import { buildItems } from './cell-items.js';
-import { fitNumber } from './number-fit.js';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
+import { buildItems } from 'ooxml-core/xlsx/ui';
+import { fitNumber } from 'ooxml-core/xlsx/ui';
 import { CellLayer } from './cell-layer.js';
 import { h, nextFrame, place } from './dom.js';
 import {
@@ -27,14 +27,14 @@ import {
 	scrollToReveal,
 	type Hit,
 	type Quadrant,
-} from './geometry.js';
+} from 'ooxml-core/xlsx/ui';
 import { GridlineLayer } from './gridlines.js';
 import { paintChrome, type HeaderPane } from './pane-chrome.js';
-import { CellViewCache } from './view-cache.js';
+import { CellViewCache } from 'ooxml-core/xlsx/ui';
 import { HeaderLayer } from './headers.js';
 import { createTextMeasurer, type TextMeasurer } from './measure.js';
 import { SelectionLayer, type OverlayState } from './selection-layer.js';
-import { cellRange } from './selection-ops.js';
+import { cellRange } from 'ooxml-core/xlsx/ui';
 
 interface QuadrantNodes {
 	box: HTMLDivElement;

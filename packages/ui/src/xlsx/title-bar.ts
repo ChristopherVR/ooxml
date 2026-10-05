@@ -6,10 +6,10 @@
  */
 import { defineTitleBar } from '../controls';
 import type { OfficeTitleBarState } from '../controls';
-import type { EditorContext } from './context';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { el } from './ribbon/controls';
 import { ribbonIcon } from './ribbon/icons';
-import { searchCommands, type TellMeHandlers } from './ribbon/tell-me';
+import { searchCommands, type TellMeHandlers } from 'ooxml-core/xlsx/ui';
 
 export type SaveState = 'saved' | 'dirty' | 'saving' | 'saved-local';
 

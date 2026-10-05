@@ -21,7 +21,7 @@ export {
 	normalizeEditorLocale,
 	type EditorLocale,
 	type EditorLocaleInput,
-} from './localization';
+} from 'ooxml-core/xlsx/ui';
 export {
 	THEME_KEYS,
 	darkTheme as xlsxDarkTheme,
@@ -31,19 +31,19 @@ export {
 	type XlsxTheme,
 } from './theme';
 // Extension points: commands, dialogs and ribbon tabs added by a host.
-export type { Command as EditorCommand, CommandRegistry } from './commands';
+export type { Command as EditorCommand, CommandRegistry } from 'ooxml-core/xlsx/ui';
 export type {
 	EditorContext,
 	GridController,
 	Selection as EditorSelection,
 	SelectionModel,
-} from './context';
-export type { DialogRegistry } from './dialogs';
+} from 'ooxml-core/xlsx/ui';
+export type { DialogRegistry } from 'ooxml-core/xlsx/ui';
 export {
 	registerRibbonTabs,
 	type RibbonControl,
 	type RibbonGroup,
 	type RibbonMenuItem,
 	type RibbonTab,
-} from './ribbon/parts';
+} from 'ooxml-core/xlsx/ui';
 export { registerRibbonIcon } from './ribbon/icons';

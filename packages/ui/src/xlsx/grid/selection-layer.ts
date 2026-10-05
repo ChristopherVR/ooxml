@@ -2,9 +2,9 @@
 // out, the green outline and fill handle, the copy marquee (marching ants), the coloured
 // reference boxes of the formula being edited and the fill-drag preview.
 import type { CellRange, GridMetrics } from 'ooxml-core/xlsx';
-import type { Selection } from '../context.js';
+import type { Selection } from 'ooxml-core/xlsx/ui';
 import { h, place } from './dom.js';
-import { isSingleCell } from './selection-ops.js';
+import { isSingleCell } from 'ooxml-core/xlsx/ui';
 
 export interface OverlayState {
 	selection: Selection | undefined;

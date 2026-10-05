@@ -12,7 +12,7 @@ import {
 	type DrawingObject,
 } from 'ooxml-core/xlsx';
 import { h, place, svgNode, viewOf } from './dom.js';
-import { QUADRANTS, type Box } from './geometry.js';
+import { QUADRANTS, type Box } from 'ooxml-core/xlsx/ui';
 import type { GridView } from './grid-view.js';
 import { paintSmartArt } from './smartart.js';
 

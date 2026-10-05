@@ -1,9 +1,9 @@
 // Home > Conditional Formatting > Highlight Cells Rules and Top/Bottom Rules: Excel's small
 // one-line rule dialogs ("Format cells that are GREATER THAN: [value] with [format]").
 import type { ConditionalRule, DifferentialStyle, TimePeriod } from 'ooxml-core/xlsx';
-import { HIGHLIGHT_STYLES } from '../commands/cf-presets.js';
-import { target } from '../commands/util.js';
-import type { EditorContext } from '../context.js';
+import { HIGHLIGHT_STYLES } from 'ooxml-core/xlsx/ui';
+import { target } from 'ooxml-core/xlsx/ui';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { TIME_PERIOD_LABELS, customFormat, operand } from './cf-common.js';
 import { field, invalid, numberInput, row, select, text, textInput } from './fields.js';
 import { showDialog } from './frame.js';

@@ -1,8 +1,8 @@
 // New / Edit Formatting Rule: pick a rule type, describe it, choose the format. `editRuleDialog`
 // only returns the rule (the Rules Manager stages it); the 'cf-rule' dialog applies it.
 import type { CellRange, ConditionalRule, DifferentialStyle } from 'ooxml-core/xlsx';
-import { target } from '../commands/util.js';
-import type { EditorContext } from '../context.js';
+import { target } from 'ooxml-core/xlsx/ui';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { customFormat, hasStyle, previewBox } from './cf-common.js';
 import {
 	type RulePanel,

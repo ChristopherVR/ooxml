@@ -1,8 +1,8 @@
 // Symbol: a grid of common characters by subset with a recently used row; Insert adds the
 // character to the active cell (through the in-cell editor when the grid is mounted).
 import { getCell } from 'ooxml-core/xlsx';
-import { target } from '../commands/util.js';
-import type { EditorContext } from '../context.js';
+import { target } from 'ooxml-core/xlsx/ui';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { el, field, select, text } from './fields.js';
 import { showDialog } from './frame.js';
 

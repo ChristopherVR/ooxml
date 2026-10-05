@@ -3,7 +3,7 @@
  * the behaviour lives in the commands. Grid navigation and in-cell editing keys belong to the grid,
  * which handles them first (a handled event is `defaultPrevented` and left alone here).
  */
-import type { EditorContext } from './context';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 
 /** `Mod` is Cmd on Apple platforms and Ctrl elsewhere; `code:` matches `KeyboardEvent.code`. */
 export type KeySpec = string;

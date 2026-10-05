@@ -67,7 +67,7 @@ const COMMAND_KEYS: Record<string, string> = {
 };
 
 import { assignKeyTips, runKeyTips, type KeyTipTarget as Target } from '../../controls';
-import { isTabHidden, tabButton, type RibbonElement } from './tab-api';
+import { isTabHidden, tabButton, type RibbonElement } from 'ooxml-core/xlsx/ui';
 
 const labelOf = (node: HTMLElement) =>
 	node.dataset.labelKey ?? node.getAttribute('aria-label') ?? '';

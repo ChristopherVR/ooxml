@@ -8,8 +8,8 @@ import {
 	parseCellInput,
 	validationAt,
 } from 'ooxml-core/xlsx';
-import { target } from '../commands/util.js';
-import type { EditorContext } from '../context.js';
+import { target } from 'ooxml-core/xlsx/ui';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { OPERATORS } from './cf-common.js';
 import { checkbox, field, invalid, panel, select, tabs, textArea, textInput } from './fields.js';
 import { button, showDialog } from './frame.js';

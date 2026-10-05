@@ -1,9 +1,9 @@
 // Insert tab: Table, Pictures, Charts, Link, Comment and Symbol.
 import { IMAGE_EXTENSIONS, pictureAnchorAt, type ChartType } from 'ooxml-core/xlsx';
-import type { Command } from '../commands.js';
-import type { EditorContext } from '../context.js';
-import { icon } from './icons.js';
-import { editing, target } from './util.js';
+import type { Command } from 'ooxml-core/xlsx/ui';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
+import { icon } from 'ooxml-core/xlsx/ui';
+import { editing, target } from 'ooxml-core/xlsx/ui';
 
 /** Picture types the core stores that a browser can also paint. */
 const PICTURE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/bmp', 'image/webp'].filter(

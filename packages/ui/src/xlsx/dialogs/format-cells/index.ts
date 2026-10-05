@@ -2,8 +2,8 @@
 // dxf mode (`{ dxf }`) it edits a conditional-format style and resolves with it instead.
 import type { CellStyle, DifferentialStyle } from 'ooxml-core/xlsx';
 import { getCell } from 'ooxml-core/xlsx';
-import { activeStyle, target } from '../../commands/util.js';
-import type { EditorContext } from '../../context.js';
+import { activeStyle, target } from 'ooxml-core/xlsx/ui';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { tabs } from '../fields.js';
 import { showDialog } from '../frame.js';
 import { alignmentTab } from './alignment-tab.js';
@@ -13,9 +13,9 @@ import { fontTab } from './font-tab.js';
 import { numberTab } from './number-tab.js';
 import { protectionTab } from './protection-tab.js';
 import { openTabColorDialog } from './tab-color.js';
-import type { FormatCellsProps, FormatTab, TabInit } from './types.js';
+import type { FormatCellsProps, FormatTab, TabInit } from 'ooxml-core/xlsx/ui';
 
-export type { FormatCellsProps, FormatTabId } from './types.js';
+export type { FormatCellsProps, FormatTabId } from 'ooxml-core/xlsx/ui';
 
 const dxfAsStyle = (dxf: DifferentialStyle): CellStyle => ({
 	font: dxf.font ?? {},

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from 'vitest';
 import { createTestContext } from '../grid/test-context';
-import type { MenuEntry } from './items';
+import type { MenuEntry } from 'ooxml-core/xlsx/ui';
 import { currentContextMenu, openContextMenu } from './menu';
 
 const entries: MenuEntry[] = [

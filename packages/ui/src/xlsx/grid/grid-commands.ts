@@ -8,8 +8,8 @@ import {
 	type Worksheet,
 } from 'ooxml-core/xlsx';
 import type { GridClipboard } from '../clipboard.js';
-import type { Command } from '../commands.js';
-import type { EditorContext, Selection } from '../context.js';
+import type { Command } from 'ooxml-core/xlsx/ui';
+import type { EditorContext, Selection } from 'ooxml-core/xlsx/ui';
 
 export interface CommandHost {
 	clipboard: GridClipboard;

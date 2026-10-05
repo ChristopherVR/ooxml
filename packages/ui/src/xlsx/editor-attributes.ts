@@ -1,4 +1,4 @@
-import { normalizeEditorLocale } from './localization';
+import { normalizeEditorLocale } from 'ooxml-core/xlsx/ui';
 import { normalizeThemeMode, type EditorThemeMode } from './theme';
 
 /**

@@ -2,7 +2,7 @@
 // context with a width cache, injected into the core's overflow and auto-fit functions. Without a
 // canvas (SSR, jsdom) it falls back to an average-character estimate so callers never branch.
 import type { FontView } from 'ooxml-core/xlsx';
-import { cssFont } from './cell-paint.js';
+import { cssFont } from 'ooxml-core/xlsx/ui';
 
 export interface TextMeasurer {
 	/** Width in CSS pixels of `text` in a CSS font shorthand. */

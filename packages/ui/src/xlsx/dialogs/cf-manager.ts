@@ -2,8 +2,8 @@
 // in priority order, with Applies to and Stop If True. Edits are staged and written with one
 // undo step on OK or Apply.
 import { type ConditionalFormat, rangesIntersect } from 'ooxml-core/xlsx';
-import { target } from '../commands/util.js';
-import type { EditorContext } from '../context.js';
+import { target } from 'ooxml-core/xlsx/ui';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { describeRule, formatRefs, hasStopIfTrue, parseRefs, previewBox } from './cf-common.js';
 import { type RuleEdit, editRuleDialog } from './cf-rule.js';
 import { el, field, invalid, row, select } from './fields.js';

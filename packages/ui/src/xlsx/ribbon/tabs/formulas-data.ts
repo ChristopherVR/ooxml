@@ -1,6 +1,6 @@
 // Formulas and Data tabs. The Function Library menus list the core FUNCTION_CATALOG by category.
-import type { RibbonMenuItem, RibbonTab } from '../parts.js';
-import { FUNCTION_MENUS, MORE_FUNCTION_CATEGORIES, functionsIn } from '../../commands/formulas.js';
+import type { RibbonMenuItem, RibbonTab } from 'ooxml-core/xlsx/ui';
+import { FUNCTION_MENUS, MORE_FUNCTION_CATEGORIES, functionsIn } from 'ooxml-core/xlsx/ui';
 import { AUTOSUM_MENU } from './home.js';
 
 const fnItems = (category: string): RibbonMenuItem[] => [

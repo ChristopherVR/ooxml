@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { createWorkbook, getCell } from 'ooxml-core/xlsx';
 import { afterEach, describe, expect, it } from 'vitest';
-import { clipState } from '../commands/clipboard.js';
+import { clipState } from 'ooxml-core/xlsx/ui';
 import {
 	clickButton,
 	createTestContext,

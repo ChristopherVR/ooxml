@@ -1,5 +1,5 @@
 import { getIcon } from '../../index';
-import { ICON_ACCENTS, ICON_PATHS } from './icon-paths';
+import { ICON_ACCENTS, ICON_PATHS } from 'ooxml-core/xlsx/ui';
 
 const NS = 'http://www.w3.org/2000/svg';
 const STROKE = 1.7;

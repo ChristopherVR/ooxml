@@ -2,9 +2,9 @@
 // merge and text direction. Only the fields the user changed are applied.
 import type { Alignment, HorizontalAlignment, VerticalAlignment } from 'ooxml-core/xlsx';
 import { rangesIntersect } from 'ooxml-core/xlsx';
-import { UNSET } from '../../commands/util.js';
+import { UNSET } from 'ooxml-core/xlsx/ui';
 import { checkbox, el, field, fieldset, numberInput, row, select } from '../fields.js';
-import type { FormatTab, TabInit } from './types.js';
+import type { FormatTab, TabInit } from 'ooxml-core/xlsx/ui';
 
 const HORIZONTAL: ReadonlyArray<readonly [HorizontalAlignment, string]> = [
 	['general', 'General'],

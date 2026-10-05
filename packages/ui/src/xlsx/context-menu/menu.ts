@@ -4,8 +4,8 @@
 // offered).
 import { defineContextMenu } from '../../controls';
 import type { OfficeMenuItem, OfficeMenuState } from '../../controls';
-import type { EditorContext } from '../context.js';
-import type { MenuEntry } from './items.js';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
+import type { MenuEntry } from 'ooxml-core/xlsx/ui';
 
 export interface ContextMenuHandle {
 	close(): void;

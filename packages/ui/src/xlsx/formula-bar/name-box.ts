@@ -1,9 +1,9 @@
 // The Name Box: shows the active cell (or the defined name of the selection); typing a reference
 // or name and pressing Enter goes there; an unused valid name defines it for the selection.
 import { formatAddress, type CellRange } from 'ooxml-core/xlsx';
-import type { EditorContext } from '../context.js';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { h } from '../grid/dom.js';
-import { absoluteReference, nameForRange, resolveNameBox } from './name-resolve.js';
+import { absoluteReference, nameForRange, resolveNameBox } from 'ooxml-core/xlsx/ui';
 
 export interface NameBox {
 	readonly root: HTMLElement;

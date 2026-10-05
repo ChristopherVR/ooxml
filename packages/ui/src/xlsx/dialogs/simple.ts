@@ -8,9 +8,9 @@ import {
 	validateTableName,
 	validateSheetName,
 } from 'ooxml-core/xlsx';
-import { UNSET, colsOf, rowsOf, target } from '../commands/util.js';
-import { activeChart, activeTable, editChart } from '../commands/contextual.js';
-import type { EditorContext } from '../context.js';
+import { UNSET, colsOf, rowsOf, target } from 'ooxml-core/xlsx/ui';
+import { activeChart, activeTable, editChart } from 'ooxml-core/xlsx/ui';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import {
 	type ConfirmProps,
 	confirmDialog,

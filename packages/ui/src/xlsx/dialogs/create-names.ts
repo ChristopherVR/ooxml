@@ -8,8 +8,8 @@ import {
 	quoteSheetName,
 	validateDefinedName,
 } from 'ooxml-core/xlsx';
-import { guessHeader, target } from '../commands/util.js';
-import type { EditorContext } from '../context.js';
+import { guessHeader, target } from 'ooxml-core/xlsx/ui';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { checkbox, fieldset } from './fields.js';
 import { showDialog } from './frame.js';
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { RibbonControl, RibbonMenuItem } from '../ribbon/parts.js';
-import { COMMAND_TABLES, commandStrings } from './i18n/index.js';
+import type { RibbonControl, RibbonMenuItem } from 'ooxml-core/xlsx/ui';
+import { COMMAND_TABLES, commandStrings } from 'ooxml-core/xlsx/ui';
 import { allCommands, commandTabs } from './index.js';
 import { BUILTIN_CELL_STYLES } from 'ooxml-core/xlsx';
 

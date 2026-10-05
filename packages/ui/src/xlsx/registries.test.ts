@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
 import { flush, shellFixture, spyCommand } from './test-support/shell';
-import { dialogHost } from './dialogs';
+import { dialogHost } from './dialogs/host';
 
 describe('command registry', () => {
 	it('runs a registered command with its argument and announces ribbon-action', async () => {

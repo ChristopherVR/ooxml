@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
-import { darkTheme, lightTheme } from './defaults';
-import { THEME_KEYS, themeToCssVars } from './css-vars';
+import { darkTheme, lightTheme } from 'ooxml-core/xlsx/ui';
+import { THEME_KEYS, themeToCssVars } from 'ooxml-core/xlsx/ui';
 import { themeTokenText } from './styles';
-import { normalizeThemeMode } from './element';
+import { normalizeThemeMode } from 'ooxml-core/xlsx/ui';
 
 describe('theme tokens', () => {
 	it('defines the docx token set plus the grid tokens in both presets', () => {

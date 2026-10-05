@@ -2,9 +2,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createWorkbook, createWorksheet, putCell, type Workbook } from 'ooxml-core/xlsx';
 import { createTestContext, type TestContext } from '../grid/test-context.js';
-import { editBridge, type BeginOptions, type EditDriver } from '../grid/edit-bridge.js';
+import { editBridge, type BeginOptions, type EditDriver } from 'ooxml-core/xlsx/ui';
 import { mountFormulaBar } from './index.js';
-import { absoluteReference, resolveNameBox } from './name-resolve.js';
+import { absoluteReference, resolveNameBox } from 'ooxml-core/xlsx/ui';
 
 const disposers: (() => void)[] = [];
 afterEach(() => {

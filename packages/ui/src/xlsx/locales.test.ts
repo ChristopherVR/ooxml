@@ -5,11 +5,11 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { EDITOR_LOCALES, STRINGS, normalizeEditorLocale } from './localization';
+import { EDITOR_LOCALES, STRINGS, normalizeEditorLocale } from 'ooxml-core/xlsx/ui';
 import { SHORTCUTS } from './keyboard';
 import { shellCommands } from './shell-commands';
 import { allCommands, commandTabs } from './commands/index';
-import type { RibbonControl } from './ribbon/parts';
+import type { RibbonControl } from 'ooxml-core/xlsx/ui';
 
 const SRC = join(process.cwd(), 'src/xlsx');
 const english = STRINGS.en;

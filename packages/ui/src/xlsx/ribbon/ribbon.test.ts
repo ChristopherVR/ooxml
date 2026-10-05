@@ -2,11 +2,11 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { flush, shellFixture, spyCommand } from '../test-support/shell';
 import { createRibbon } from './ribbon';
-import { tabButton, type RibbonElement } from './tab-api';
-import { registerRibbonTabs, resetRibbonTabs, type RibbonTab } from './parts';
+import { tabButton, type RibbonElement } from 'ooxml-core/xlsx/ui';
+import { registerRibbonTabs, resetRibbonTabs, type RibbonTab } from 'ooxml-core/xlsx/ui';
 import { collectKeyTips } from './keytips';
 import { closeRibbonPopover } from './popover';
-import { searchCommands } from './tell-me';
+import { searchCommands } from 'ooxml-core/xlsx/ui';
 
 const HOME: RibbonTab = {
 	id: 'home',

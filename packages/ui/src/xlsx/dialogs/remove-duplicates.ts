@@ -1,7 +1,7 @@
 // Remove Duplicates: choose the key columns and whether the first row is a header.
 import { columnLabel, getCell } from 'ooxml-core/xlsx';
-import { guessHeader, regionOf, target } from '../commands/util.js';
-import type { EditorContext } from '../context.js';
+import { guessHeader, regionOf, target } from 'ooxml-core/xlsx/ui';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { checkbox, el, fieldset, row } from './fields.js';
 import { button, showDialog } from './frame.js';
 

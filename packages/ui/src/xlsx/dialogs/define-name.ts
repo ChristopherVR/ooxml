@@ -5,7 +5,7 @@ import {
 	quoteSheetName,
 	validateDefinedName,
 } from 'ooxml-core/xlsx';
-import type { EditorContext } from '../context.js';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { field, invalid, select, textArea, textInput } from './fields.js';
 import { showDialog } from './frame.js';
 

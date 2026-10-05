@@ -9,7 +9,7 @@ import {
 } from 'ooxml-core/xlsx';
 import { acceptsReference, isFormulaText, splice } from 'ooxml-core/xlsx';
 import type { GridView } from './grid-view.js';
-import { spanRange } from './selection-ops.js';
+import { spanRange } from 'ooxml-core/xlsx/ui';
 
 export interface PointEditor {
 	readonly bridge: {

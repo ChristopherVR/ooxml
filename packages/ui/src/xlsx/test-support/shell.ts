@@ -1,7 +1,7 @@
 // Shell test support (imported by *.test.ts only): a real EditorCore on a detached host with an
 // open shadow root, so registry, ribbon and chrome tests run against the shell's own context.
 import { createWorkbook, type Workbook } from 'ooxml-core/xlsx';
-import type { Command } from '../commands';
+import type { Command } from 'ooxml-core/xlsx/ui';
 import { EditorCore } from '../editor-core';
 
 export interface ShellFixture {

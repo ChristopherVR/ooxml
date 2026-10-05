@@ -10,8 +10,8 @@ import {
 	rangesIntersect,
 } from 'ooxml-core/xlsx';
 import { hyperlinkPolicy, type HyperlinkRejection } from 'ooxml-core/opc';
-import { target } from '../commands/util.js';
-import type { EditorContext } from '../context.js';
+import { target } from 'ooxml-core/xlsx/ui';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { field, invalid, panel, radios, select, textInput } from './fields.js';
 import { button, showDialog } from './frame.js';
 

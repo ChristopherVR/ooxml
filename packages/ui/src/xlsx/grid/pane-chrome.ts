@@ -1,11 +1,11 @@
 // Paints the row / column headers (frozen and scrolling parts), the select-all corner and the
 // freeze-pane lines for one frame.
 import type { GridMetrics, VisibleCells } from 'ooxml-core/xlsx';
-import type { Selection } from '../context.js';
+import type { Selection } from 'ooxml-core/xlsx/ui';
 import { place } from './dom.js';
-import type { GridGeometry } from './geometry.js';
+import type { GridGeometry } from 'ooxml-core/xlsx/ui';
 import type { HeaderLayer } from './headers.js';
-import { colSelected, rowSelected } from './selection-ops.js';
+import { colSelected, rowSelected } from 'ooxml-core/xlsx/ui';
 
 export interface HeaderPane {
 	box: HTMLDivElement;

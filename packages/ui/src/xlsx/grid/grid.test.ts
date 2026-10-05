@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { createWorkbook, getCell, putCell, type Workbook } from 'ooxml-core/xlsx';
 import { afterEach, describe, expect, it } from 'vitest';
-import { editBridge } from './edit-bridge.js';
+import { editBridge } from 'ooxml-core/xlsx/ui';
 import { mountGrid } from './index.js';
 import { createTestContext, type TestContext } from './test-context.js';
 

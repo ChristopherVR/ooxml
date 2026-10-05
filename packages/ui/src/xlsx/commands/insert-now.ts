@@ -2,9 +2,9 @@
 // gets the value (with a date or time format when it has none); while editing, the text goes in
 // at the caret, as in Excel.
 import { dateToSerial, formatValue, isDateFormat } from 'ooxml-core/xlsx';
-import type { Command } from '../commands.js';
-import type { EditorContext } from '../context.js';
-import { activeStyle, editing, target } from './util.js';
+import type { Command } from 'ooxml-core/xlsx/ui';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
+import { activeStyle, editing, target } from 'ooxml-core/xlsx/ui';
 
 const FORMATS = { date: 'm/d/yyyy', time: 'h:mm AM/PM' } as const;
 

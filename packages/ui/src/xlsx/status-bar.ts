@@ -9,8 +9,8 @@ import { selectionStats } from 'ooxml-core/xlsx';
 import { defineStatusBar, defineZoomSlider } from '../controls';
 import type { OfficeStatusBarState } from '../controls';
 import { registerIcon } from '../icons';
-import type { EditorContext } from './context';
-import { formatNumber, normalizeEditorLocale } from './localization';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
+import { formatNumber, normalizeEditorLocale } from 'ooxml-core/xlsx/ui';
 import { el } from './ribbon/controls';
 import { openMenu } from './ribbon/popover';
 

@@ -1,6 +1,6 @@
 // Registers the tool dialogs: charts, paste special, page setup, zoom, sheets, protection, cell
 // shifting, data tools, symbols, series and tables.
-import type { EditorContext } from '../context.js';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { openCellShift, openOutlineAxis } from './cell-shift.js';
 import { type CreateTableProps, openCreateTable } from './create-table.js';
 import { openFillSeries } from './fill-series.js';

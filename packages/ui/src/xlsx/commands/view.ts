@@ -1,10 +1,10 @@
 // View tab: Normal view, Show (formula bar, gridlines, headings), Zoom and Freeze Panes. Also the
 // Help tab commands (keyboard shortcuts, feature status).
 import { createGridMetrics } from 'ooxml-core/xlsx';
-import type { Command } from '../commands.js';
-import type { EditorContext } from '../context.js';
-import { icon } from './icons.js';
-import { target, viewing } from './util.js';
+import type { Command } from 'ooxml-core/xlsx/ui';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
+import { icon } from 'ooxml-core/xlsx/ui';
+import { target, viewing } from 'ooxml-core/xlsx/ui';
 
 export const currentZoom = (ctx: EditorContext): number =>
 	ctx.grid()?.zoom() ?? target(ctx)?.ws.view.zoom ?? 100;

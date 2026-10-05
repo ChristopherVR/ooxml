@@ -1,8 +1,8 @@
 // Home > Styles: Conditional Formatting (quick rules, data bars, colour scales, icon sets, new,
 // clear and manage), Format as Table and Cell Styles.
 import type { ConditionalRule } from 'ooxml-core/xlsx';
-import type { Command } from '../commands.js';
-import type { EditorContext } from '../context.js';
+import type { Command } from 'ooxml-core/xlsx/ui';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import {
 	COLOR_SCALES,
 	DATA_BAR_COLORS,
@@ -10,10 +10,10 @@ import {
 	colorScaleRule,
 	dataBarRule,
 	iconSetRule,
-} from './cf-presets.js';
-import { icon } from './icons.js';
-import { TABLE_STYLES, cellStyleItems, tableStylePreview } from './style-presets.js';
-import { editing, tableAt, target } from './util.js';
+} from 'ooxml-core/xlsx/ui';
+import { icon } from 'ooxml-core/xlsx/ui';
+import { TABLE_STYLES, cellStyleItems, tableStylePreview } from 'ooxml-core/xlsx/ui';
+import { editing, tableAt, target } from 'ooxml-core/xlsx/ui';
 
 /** Quick rule kinds opened by the Highlight Cells and Top / Bottom menus. */
 export const QUICK_RULES: ReadonlyArray<readonly [kind: string, label: string]> = [

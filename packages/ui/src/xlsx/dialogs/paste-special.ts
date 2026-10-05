@@ -1,8 +1,8 @@
 // Paste Special: what to paste (all, formulas, values, formats) and Transpose. Operations, Skip
 // blanks, All except borders and Column widths are shown disabled: the core paste has no such modes.
 import type { PasteMode } from 'ooxml-core/xlsx';
-import { pasteWith } from '../commands/clipboard.js';
-import type { EditorContext } from '../context.js';
+import { pasteWith } from 'ooxml-core/xlsx/ui';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { checkbox, radios, row, text } from './fields.js';
 import { showDialog } from './frame.js';
 

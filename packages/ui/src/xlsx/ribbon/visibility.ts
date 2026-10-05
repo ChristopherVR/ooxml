@@ -2,7 +2,7 @@
  * Applies `hiddenActions` (command ids) to the rendered ribbon: hidden controls disappear, and so
  * do menus whose every command is hidden, groups and tabs left empty.
  */
-import { setTabHidden } from './tab-api';
+import { setTabHidden } from 'ooxml-core/xlsx/ui';
 
 const HIDDEN = 'data-xve-hidden';
 const CONTROLS = '[data-command], .ribbon-menu-button';

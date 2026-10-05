@@ -25,8 +25,8 @@ import {
 	buildCode,
 	detectCategory,
 	negativeCodes,
-} from './number-categories.js';
-import type { FormatTab, TabInit } from './types.js';
+} from 'ooxml-core/xlsx/ui';
+import type { FormatTab, TabInit } from 'ooxml-core/xlsx/ui';
 
 const NOTES: Partial<Record<CategoryId, string>> = {
 	general: 'General format cells have no specific number format.',

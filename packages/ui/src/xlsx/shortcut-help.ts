@@ -1,5 +1,5 @@
 /** The keyboard shortcut help dialog (Ctrl+/ or F1): the global map plus every command's shortcut. */
-import type { EditorContext } from './context';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { displayKeys, isMacPlatform, SHORTCUTS } from './keyboard';
 import { el } from './ribbon/controls';
 

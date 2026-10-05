@@ -1,7 +1,7 @@
 // Name Manager: the workbook's defined names with value, reference, scope and comment, a filter,
 // and New / Edit / Delete.
 import { type CellValue, type DefinedName, isCellError } from 'ooxml-core/xlsx';
-import type { EditorContext } from '../context.js';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { el, field, select } from './fields.js';
 import { button, showDialog } from './frame.js';
 

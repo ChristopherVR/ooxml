@@ -7,7 +7,7 @@ import {
 	type CellRange,
 	type NavigationKey,
 } from 'ooxml-core/xlsx';
-import type { Selection } from '../context.js';
+import type { Selection } from 'ooxml-core/xlsx/ui';
 import type { GridView } from './grid-view.js';
 import {
 	ALL_RANGE,
@@ -18,7 +18,7 @@ import {
 	movingEnd,
 	rowsRange,
 	selectCell,
-} from './selection-ops.js';
+} from 'ooxml-core/xlsx/ui';
 
 export class GridSelection {
 	#view: GridView;

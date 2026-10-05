@@ -4,7 +4,7 @@
 // notice says. Without a cached drawing a placeholder lists the diagram's text nodes.
 import { THEME_SLOTS, type SmartArtObject, type ThemePalette } from 'ooxml-core/xlsx';
 import { defineSmartArt, type SchemeColors } from '../../index';
-import type { EditorContext } from '../context.js';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { h } from './dom.js';
 
 const ALIASES: Readonly<Record<string, string>> = {

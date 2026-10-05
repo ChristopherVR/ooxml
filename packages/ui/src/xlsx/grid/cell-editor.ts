@@ -10,7 +10,7 @@ import {
 	type CellRange,
 } from 'ooxml-core/xlsx';
 import { showValidationAlert } from './alert.js';
-import { cssFont } from './cell-paint.js';
+import { cssFont } from 'ooxml-core/xlsx/ui';
 import { h, place } from './dom.js';
 import {
 	editBridge,
@@ -18,7 +18,7 @@ import {
 	type CommitMove,
 	type EditBridge,
 	type EditDriver,
-} from './edit-bridge.js';
+} from 'ooxml-core/xlsx/ui';
 import { createFormulaField, type FormulaField } from './formula-field.js';
 import { closeParens, isFormulaText, referenceTarget } from 'ooxml-core/xlsx';
 import { createFunctionAssist, type FunctionAssist } from './function-assist.js';

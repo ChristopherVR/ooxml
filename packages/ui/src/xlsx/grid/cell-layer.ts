@@ -12,10 +12,10 @@ import {
 	justify,
 	textAlign,
 	textDecoration,
-} from './cell-paint.js';
-import type { CellItem } from './cell-items.js';
+} from 'ooxml-core/xlsx/ui';
+import type { CellItem } from 'ooxml-core/xlsx/ui';
 import { h, svgNode } from './dom.js';
-import { iconSvg } from './icon-sets.js';
+import { iconSvg } from 'ooxml-core/xlsx/ui';
 
 interface CellNode extends HTMLDivElement {
 	xgSig?: string | undefined;

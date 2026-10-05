@@ -8,7 +8,7 @@ import {
 	type ClipboardPayload,
 	type PasteMode,
 } from 'ooxml-core/xlsx';
-import type { EditorContext } from './context.js';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 
 export interface ClipboardHost {
 	ctx: EditorContext;

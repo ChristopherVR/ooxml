@@ -1,7 +1,7 @@
 // Find and Replace: Find / Replace tabs, options, Find All results, Find Next, Replace and
 // Replace All, all through the core session's find API.
 import { type FindMatch, type FindQuery, formatAddress, getCell } from 'ooxml-core/xlsx';
-import type { EditorContext } from '../context.js';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { checkbox, el, field, row, select, tabs, textInput } from './fields.js';
 import { button, showDialog } from './frame.js';
 import { selectOn } from './go-to.js';

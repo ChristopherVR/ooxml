@@ -10,7 +10,7 @@ import {
 	setValue,
 } from '../../commands/test-support.js';
 import { registerFormatCellsDialogs } from './index.js';
-import { detectCategory, buildCode, DEFAULT_OPTIONS } from './number-categories.js';
+import { detectCategory, buildCode, DEFAULT_OPTIONS } from 'ooxml-core/xlsx/ui';
 
 afterEach(() => (document.body.innerHTML = ''));
 

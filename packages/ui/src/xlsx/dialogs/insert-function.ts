@@ -1,8 +1,8 @@
 // Insert Function: search, category filter, the function list and its syntax and description
 // from the core FUNCTION_CATALOG, and optional arguments.
 import { FUNCTION_CATALOG, type FunctionInfo } from 'ooxml-core/xlsx';
-import { insertFunctionCall, recentFunctions } from '../commands/formulas.js';
-import type { EditorContext } from '../context.js';
+import { insertFunctionCall, recentFunctions } from 'ooxml-core/xlsx/ui';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { el, field, listBox, row, select, text, textInput } from './fields.js';
 import { button, showDialog } from './frame.js';
 

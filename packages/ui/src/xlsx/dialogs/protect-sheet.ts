@@ -6,8 +6,8 @@ import {
 	verifySheetPassword,
 	verifyWorkbookPassword,
 } from 'ooxml-core/xlsx';
-import { target } from '../commands/util.js';
-import type { EditorContext } from '../context.js';
+import { target } from 'ooxml-core/xlsx/ui';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { checkbox, field, fieldset, invalid, textInput } from './fields.js';
 import { showDialog } from './frame.js';
 

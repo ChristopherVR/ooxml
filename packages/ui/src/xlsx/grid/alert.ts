@@ -1,6 +1,6 @@
 // The data-validation error alert (Stop / Warning / Information), a small modal inside the
 // shadow root. Resolves with the button the user chose; Escape is Cancel.
-import type { EditorContext } from '../context.js';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { h } from './dom.js';
 
 export type AlertStyle = 'stop' | 'warning' | 'information';

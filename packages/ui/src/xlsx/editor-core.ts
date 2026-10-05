@@ -12,10 +12,10 @@ import {
 	type Workbook,
 	type Worksheet,
 } from 'ooxml-core/xlsx';
-import { createCommandRegistry, type CommandRegistry } from './commands';
-import type { EditorContext, GridController, SelectionModel } from './context';
-import { createDialogRegistry, type DialogRegistry } from './dialogs';
-import { DirtyState } from './dirty-state';
+import { createCommandRegistry, type CommandRegistry } from 'ooxml-core/xlsx/ui';
+import type { EditorContext, GridController, SelectionModel } from 'ooxml-core/xlsx/ui';
+import { createDialogRegistry, type DialogRegistry } from 'ooxml-core/xlsx/ui';
+import { DirtyState } from 'ooxml-core/xlsx/ui';
 import { emit, emitEvent } from './events';
 import { DEFAULT_AUTHOR_NAME, DEFAULT_FILE_NAME } from './editor-attributes';
 import {
@@ -23,14 +23,14 @@ import {
 	sheetBaseName,
 	translator,
 	type EditorLocale,
-} from './localization';
+} from 'ooxml-core/xlsx/ui';
 import {
 	activeRef,
 	createSelectionModel,
 	initialSelection,
 	selectionRef,
 	SheetSelections,
-} from './selection';
+} from 'ooxml-core/xlsx/ui';
 import type { CalculationMode } from './backstage';
 import type { EditorThemeMode, XlsxTheme } from './theme';
 

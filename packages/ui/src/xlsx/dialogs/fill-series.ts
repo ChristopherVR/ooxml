@@ -1,8 +1,8 @@
 // Fill > Series: linear, growth and date series from the first cell of each row or column of the
 // selection, with a step and an optional stop value. Trend fitting is not offered.
 import { dateToSerial, getCell, serialToDate, styleAt } from 'ooxml-core/xlsx';
-import { target } from '../commands/util.js';
-import type { EditorContext } from '../context.js';
+import { target } from 'ooxml-core/xlsx/ui';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { checkbox, field, radios, row, textInput } from './fields.js';
 import { showDialog } from './frame.js';
 

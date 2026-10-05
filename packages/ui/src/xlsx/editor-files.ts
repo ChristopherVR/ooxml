@@ -15,7 +15,7 @@ import {
 	saveExtension,
 	withExtension,
 } from './file-commands';
-import { sheetBaseName } from './localization';
+import { sheetBaseName } from 'ooxml-core/xlsx/ui';
 import { printWorkbook } from './print';
 import { packagePassword } from './dialogs/package-password';
 import type { SaveState } from './title-bar';

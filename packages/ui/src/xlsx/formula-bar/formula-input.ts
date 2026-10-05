@@ -2,9 +2,9 @@
 // shared edit bridge (so the in-cell editor follows), offers function autocomplete and expands
 // to several lines.
 import { cellInputText } from 'ooxml-core/xlsx';
-import type { EditorContext } from '../context.js';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { h } from '../grid/dom.js';
-import { editBridge, type EditState } from '../grid/edit-bridge.js';
+import { editBridge, type EditState } from 'ooxml-core/xlsx/ui';
 import { createFormulaField, type FormulaField } from '../grid/formula-field.js';
 import { createFunctionAssist, type FunctionAssist } from '../grid/function-assist.js';
 import { splice } from 'ooxml-core/xlsx';

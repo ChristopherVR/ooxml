@@ -1,8 +1,8 @@
 // Text to Columns (delimited): splits the first selected column at the chosen delimiters into
 // the columns starting at the destination. Fixed-width splitting is not offered.
 import { type CellAddress, formatAddress, getCell, parseAddress } from 'ooxml-core/xlsx';
-import { target } from '../commands/util.js';
-import type { EditorContext } from '../context.js';
+import { target } from 'ooxml-core/xlsx/ui';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { checkbox, el, field, fieldset, row, select, text, textInput } from './fields.js';
 import { showDialog } from './frame.js';
 

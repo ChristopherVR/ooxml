@@ -1,6 +1,6 @@
 // Registers the rule dialogs: conditional formatting (quick rules, rule editor, manager), data
 // validation, sort and hyperlink.
-import type { EditorContext } from '../context.js';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { cfManagerDialog } from './cf-manager.js';
 import { cfQuickDialog } from './cf-quick.js';
 import { cfRuleDialog } from './cf-rule.js';

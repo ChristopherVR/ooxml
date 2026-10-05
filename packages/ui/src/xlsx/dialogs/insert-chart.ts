@@ -7,13 +7,13 @@ import {
 	chartView,
 	renderChartSvg,
 } from 'ooxml-core/xlsx';
-import { activeChart, editChart } from '../commands/contextual.js';
+import { activeChart, editChart } from 'ooxml-core/xlsx/ui';
 import { CHART_TYPES } from '../commands/insert.js';
-import { regionOf, target } from '../commands/util.js';
-import type { EditorContext } from '../context.js';
+import { regionOf, target } from 'ooxml-core/xlsx/ui';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { el, field, select, text, textInput } from './fields.js';
 import { showDialog } from './frame.js';
-import { buildChart, evaluateRef } from './insert-chart-model.js';
+import { buildChart, evaluateRef } from 'ooxml-core/xlsx/ui';
 
 export interface InsertChartProps {
 	type?: ChartType;

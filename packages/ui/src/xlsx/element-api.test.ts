@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
-import type { RibbonElement } from './ribbon/tab-api';
+import type { RibbonElement } from 'ooxml-core/xlsx/ui';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { createEditSession, createWorkbook, saveXlsx } from 'ooxml-core/xlsx';
-import type { EditorContext, GridController } from './context';
+import type { EditorContext, GridController } from 'ooxml-core/xlsx/ui';
 
 // The feature modules have their own tests; here they are doubles so the element is tested alone.
 const mounted: string[] = [];

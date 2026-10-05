@@ -2,9 +2,9 @@
 // Every string the tool dialogs translate has an entry in TOOLS_STRINGS.
 import { createWorkbook } from 'ooxml-core/xlsx';
 import { afterEach, describe, expect, it } from 'vitest';
-import { TOOLS_STRINGS } from '../commands/i18n/tools.js';
+import { TOOLS_STRINGS } from 'ooxml-core/xlsx/ui';
 import { createTestContext } from '../commands/test-support.js';
-import { buildChart } from './insert-chart-model.js';
+import { buildChart } from 'ooxml-core/xlsx/ui';
 import { registerToolDialogs } from './register-tools.js';
 
 afterEach(() => (document.body.innerHTML = ''));

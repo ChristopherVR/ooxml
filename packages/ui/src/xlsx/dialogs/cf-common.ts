@@ -9,8 +9,8 @@ import {
 	formatRange,
 	parseRange,
 } from 'ooxml-core/xlsx';
-import { dxfCss } from '../commands/cf-presets.js';
-import type { EditorContext } from '../context.js';
+import { dxfCss } from 'ooxml-core/xlsx/ui';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { el } from './fields.js';
 
 /** A rule operand as typed: `=...` is a formula, a number stays, other text becomes a literal. */

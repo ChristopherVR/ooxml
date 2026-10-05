@@ -1,5 +1,5 @@
 // Move or Copy: reorder the active sheet within this workbook, optionally as a copy.
-import type { EditorContext } from '../context.js';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { checkbox, field, listBox, select, text } from './fields.js';
 import { showDialog } from './frame.js';
 

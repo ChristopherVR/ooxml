@@ -1,8 +1,8 @@
 // Home tab, in Excel's group order: Clipboard, Font, Alignment, Number, Styles, Cells, Editing.
-import type { RibbonTab } from '../parts.js';
-import { FONT_NAMES, FONT_SIZES, BORDER_PRESETS } from '../../commands/font.js';
-import { ORIENTATIONS } from '../../commands/alignment.js';
-import { ACCOUNTING_FORMATS, numberFormatOptions } from '../../commands/number.js';
+import type { RibbonTab } from 'ooxml-core/xlsx/ui';
+import { FONT_NAMES, FONT_SIZES, BORDER_PRESETS } from 'ooxml-core/xlsx/ui';
+import { ORIENTATIONS } from 'ooxml-core/xlsx/ui';
+import { ACCOUNTING_FORMATS, numberFormatOptions } from 'ooxml-core/xlsx/ui';
 import { homeStyleGroups, items, sep } from './home-groups.js';
 
 export { AUTOSUM_MENU, SORT_FILTER_MENU } from './home-groups.js';

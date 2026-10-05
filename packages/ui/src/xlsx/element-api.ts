@@ -6,7 +6,7 @@
 import { EditorCore } from './editor-core';
 import { loadInto, newInto, saveBlob, saveBytes, type FileChrome } from './editor-files';
 import { downloadBytes, saveExtension, withExtension } from './file-commands';
-import { parseSelectionRef, selectionRef } from './selection';
+import { parseSelectionRef, selectionRef } from 'ooxml-core/xlsx/ui';
 
 /** Server rendering has no HTMLElement; the class still has to be definable there. */
 export const HTMLElementBase = (

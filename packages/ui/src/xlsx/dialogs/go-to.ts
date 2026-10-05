@@ -1,7 +1,7 @@
 // Go To (names and references) and Go To Special (cells of a kind).
 import { type CellRange, parseRange, sheetByName } from 'ooxml-core/xlsx';
-import { type SpecialKind, selectSpecial } from '../commands/select-special.js';
-import type { EditorContext } from '../context.js';
+import { type SpecialKind, selectSpecial } from 'ooxml-core/xlsx/ui';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { checkbox, field, invalid, listBox, radios, text, textInput } from './fields.js';
 import { button, showDialog } from './frame.js';
 

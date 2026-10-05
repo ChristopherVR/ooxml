@@ -9,9 +9,9 @@ import {
 	createWorkbook,
 	parseRange,
 } from 'ooxml-core/xlsx';
-import { createCommandRegistry } from '../commands.js';
-import type { EditorContext, GridController, Selection } from '../context.js';
-import { createDialogRegistry } from '../dialogs.js';
+import { createCommandRegistry } from 'ooxml-core/xlsx/ui';
+import type { EditorContext, GridController, Selection } from 'ooxml-core/xlsx/ui';
+import { createDialogRegistry } from 'ooxml-core/xlsx/ui';
 
 export interface TestContext extends EditorContext {
 	select(ref: string): void;

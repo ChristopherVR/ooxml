@@ -1,7 +1,7 @@
 /** File > Options (General, Formulas) and Customize Ribbon. */
 import { defineCheckbox } from '../../controls';
-import type { RibbonControl } from '../ribbon/parts';
-import { isMenuSeparator, ribbonTabs } from '../ribbon/parts';
+import type { RibbonControl } from 'ooxml-core/xlsx/ui';
+import { isMenuSeparator, ribbonTabs } from 'ooxml-core/xlsx/ui';
 import {
 	heading,
 	labelled,

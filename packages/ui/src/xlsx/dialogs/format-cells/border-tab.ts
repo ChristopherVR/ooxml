@@ -3,10 +3,10 @@
 // four outer edges of the differential style.
 import type { Border, BorderEdge, BorderStyle, CellRange } from 'ooxml-core/xlsx';
 import { resolveColor } from 'ooxml-core/xlsx';
-import { type Target, UNSET } from '../../commands/util.js';
+import { type Target, UNSET } from 'ooxml-core/xlsx/ui';
 import { el, fieldset, row } from '../fields.js';
 import { swatchGrid } from './color-swatches.js';
-import type { FormatTab, TabInit } from './types.js';
+import type { FormatTab, TabInit } from 'ooxml-core/xlsx/ui';
 
 type EdgeId =
 	| 'top'

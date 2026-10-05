@@ -1,11 +1,11 @@
 // Review tab: Workbook Statistics, comments (new / edit, delete, previous, next, show all) and
 // Protect Sheet / Protect Workbook.
 import type { Comment } from 'ooxml-core/xlsx';
-import type { Command } from '../commands.js';
-import type { EditorContext } from '../context.js';
+import type { Command } from 'ooxml-core/xlsx/ui';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { toggleWorkbookProtection, unprotectSheet } from '../dialogs/protect-sheet.js';
-import { icon } from './icons.js';
-import { editing, target, viewing } from './util.js';
+import { icon } from 'ooxml-core/xlsx/ui';
+import { editing, target, viewing } from 'ooxml-core/xlsx/ui';
 
 const commentAt = (ctx: EditorContext): Comment | undefined => {
 	const t = target(ctx);

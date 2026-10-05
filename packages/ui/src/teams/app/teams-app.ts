@@ -10,7 +10,12 @@ import {
 	type TeamsState,
 	parseServerConfig,
 } from 'ooxml-core/teams';
-import { registerOfficeUi } from '../../index';
+// Registered from the leaf modules, not the package root: the root imports this folder through
+// `teams/index`, so importing it back would make `OFFICE_UI_TAGS` read `TEAMS_TAGS` too early.
+import { registerControls } from '../../controls.js';
+import { definePresence } from '../../presence.js';
+import { installOfficeUiTheme } from '../../theme.js';
+import { registerTeams } from '../index.js';
 import { TeamsController } from './controller.js';
 import { defineTeamsSettings } from './teams-settings.js';
 import { loadConfig, loadIdentity, safeStorage, saveConfig, saveIdentity, type Identity } from './storage.js';
@@ -96,7 +101,10 @@ export class TeamsApp extends LitElement {
 	}
 
 	override connectedCallback(): void {
-		registerOfficeUi();
+		installOfficeUiTheme();
+		registerControls();
+		definePresence();
+		registerTeams();
 		defineTeamsSettings();
 		super.connectedCallback();
 	}

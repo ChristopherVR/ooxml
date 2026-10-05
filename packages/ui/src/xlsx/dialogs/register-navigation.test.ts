@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { createWorkbook } from 'ooxml-core/xlsx';
 import { afterEach, describe, expect, it } from 'vitest';
-import { NAVIGATION_STRINGS } from '../commands/i18n/navigation.js';
+import { NAVIGATION_STRINGS } from 'ooxml-core/xlsx/ui';
 import { SHORTCUTS } from '../keyboard.js';
 import { clickButton, createTestContext, dialogEl } from '../commands/test-support.js';
 import { registerNavigationDialogs } from './register-navigation.js';

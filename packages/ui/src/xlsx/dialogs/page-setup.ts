@@ -1,7 +1,7 @@
 // Page Setup: Page, Margins, Header/Footer and Sheet tabs. OK applies every tab in one undo step.
 import type { PageSetup, PrintOptions } from 'ooxml-core/xlsx';
-import { target } from '../commands/util.js';
-import type { EditorContext } from '../context.js';
+import { target } from 'ooxml-core/xlsx/ui';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { tabs } from './fields.js';
 import { showDialog } from './frame.js';
 import { headerTab, marginsTab, pageTab, sheetTab } from './page-setup-tabs.js';

@@ -3,7 +3,7 @@
 // registers the grid's `edit.*` commands and attaches the GridController to the context.
 import type { CellRange } from 'ooxml-core/xlsx';
 import { createGridClipboard } from '../clipboard.js';
-import type { EditorContext, GridController, Selection } from '../context.js';
+import type { EditorContext, GridController, Selection } from 'ooxml-core/xlsx/ui';
 import { CellEditor } from './cell-editor.js';
 import { ensureStyle } from './dom.js';
 import { drawingKeyDown } from './drawing-keys.js';
@@ -16,11 +16,11 @@ import { wirePointer } from './grid-pointer.js';
 import { GridSelection } from './grid-selection.js';
 import { GridView } from './grid-view.js';
 import { followLink, wireTooltips } from './indicators.js';
-import { selectCell } from './selection-ops.js';
+import { selectCell } from 'ooxml-core/xlsx/ui';
 import { GRID_CSS } from './styles.js';
 import { ValidationList } from './validation-list.js';
 
-export { editBridge, type EditBridge, type EditMode, type EditState } from './edit-bridge.js';
+export { editBridge, type EditBridge, type EditMode, type EditState } from 'ooxml-core/xlsx/ui';
 
 /** The GridController plus the grid's status-bar mode. */
 export interface GridControllerExt extends GridController {

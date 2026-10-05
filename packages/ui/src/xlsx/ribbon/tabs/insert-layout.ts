@@ -1,8 +1,8 @@
 // Insert and Page Layout tabs.
-import type { RibbonMenuItem, RibbonTab } from '../parts.js';
+import type { RibbonMenuItem, RibbonTab } from 'ooxml-core/xlsx/ui';
 import { CHART_TYPES } from '../../commands/insert.js';
-import { MARGIN_PRESETS, PAPER_SIZES } from '../../commands/page-layout.js';
-import { themePaletteItems } from './theme-palette.js';
+import { MARGIN_PRESETS, PAPER_SIZES } from 'ooxml-core/xlsx/ui';
+import { themePaletteItems } from 'ooxml-core/xlsx/ui';
 
 const sep: RibbonMenuItem = { separator: true };
 

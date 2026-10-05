@@ -9,7 +9,7 @@ import {
 	pressKey,
 	setValue,
 } from '../commands/test-support.js';
-import { buildChart } from './insert-chart-model.js';
+import { buildChart } from 'ooxml-core/xlsx/ui';
 import { registerToolDialogs } from './register-tools.js';
 
 afterEach(() => (document.body.innerHTML = ''));

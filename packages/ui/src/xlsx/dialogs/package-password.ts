@@ -1,4 +1,4 @@
-import type { EditorContext } from '../context.js';
+import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { field, invalid, textInput } from './fields.js';
 import { showDialog } from './frame.js';
 
