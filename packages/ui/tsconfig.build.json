@@ -9,5 +9,5 @@
 			"ooxml-core/*": ["../../dist/*/index.d.ts"]
 		}
 	},
-	"exclude": ["src/**/*.test.ts", "dist", "node_modules"]
+	"exclude": ["src/manifest.ts", "src/**/*.test.ts", "dist", "node_modules"]
 }
