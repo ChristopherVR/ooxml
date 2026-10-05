@@ -33,8 +33,7 @@ async function verify(beforeBytes: Uint8Array, afterBytes: Uint8Array) {
 	const newPage = parseXml(await after.file(path)!.async('string')).documentElement;
 	const shapes = (root: Element) => children(children(root, 'Shapes')[0], 'Shape');
 	const target = (root: Element) => shapes(root).find((shape) => shape.getAttribute('ID') === '3')!;
-	const saved = target(newPage),
-		original = target(oldPage);
+	const saved = target(newPage);
 	expect(saved.getAttribute('Master')).toBe('4');
 	const pinned = (node: Element) =>
 		children(node, 'Cell').filter((cell) => ['PinX', 'PinY'].includes(cell.getAttribute('N')!));

@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
 import { loadDocx } from './parse.js';
-import type { Paragraph } from './model.js';
 import { expectParagraph } from './test-support/access.js';
 
 const NS = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"';

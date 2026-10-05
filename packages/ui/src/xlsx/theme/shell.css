@@ -1,0 +1,165 @@
+/* Frame, title bar and status bar. Mirrors docx-viewer's chrome (styles/base.css,
+   chrome-titlebar.css, status-dialogs.css) with --xve-* tokens. */
+:host {
+	--xl: var(--xve-primary);
+	--xl-strong: color-mix(in srgb, var(--xve-primary) 70%, #000);
+	--xl-soft: color-mix(in srgb, var(--xve-primary) 12%, transparent);
+	--accent-soft: var(--xl-soft);
+	--ink: var(--xve-foreground);
+	--muted: var(--xve-muted-foreground);
+	--line: var(--xve-border);
+	--surface: var(--xve-card);
+	--chrome: var(--xve-background);
+	display: block;
+	box-sizing: border-box;
+	width: 100%;
+	height: 100%;
+	min-height: 0;
+	color: var(--ink);
+	font:
+		13px/1.35 'Segoe UI',
+		Arial,
+		sans-serif;
+}
+.xve-frame {
+	position: relative;
+	display: flex;
+	box-sizing: border-box;
+	width: 100%;
+	height: 100%;
+	min-height: 0;
+	min-width: 0;
+	flex-direction: column;
+	overflow: hidden;
+	background: var(--surface);
+}
+:focus-visible {
+	outline: 2px solid var(--xve-ring);
+	outline-offset: 1px;
+}
+[hidden],
+[data-xve-hidden] {
+	display: none !important;
+}
+.xve-icon {
+	flex: none;
+}
+.xve-icon-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 28px;
+	height: 28px;
+	padding: 0 6px;
+	border: 0;
+	border-radius: 4px;
+	background: none;
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+}
+.xve-icon-button:hover:not(:disabled),
+.xve-icon-button[aria-pressed='true'] {
+	background: var(--xl-soft);
+}
+.xve-icon-button:disabled {
+	opacity: 0.4;
+	cursor: default;
+}
+
+/* Workspace: formula bar, grid and sheet tabs between the ribbon and the status bar. */
+.xve-workspace {
+	position: relative;
+	display: flex;
+	flex: 1;
+	min-height: 0;
+	min-width: 0;
+	flex-direction: column;
+	background: var(--xve-sheet-bg);
+}
+.xve-formula-row {
+	flex: none;
+	min-width: 0;
+	border-bottom: 1px solid var(--line);
+	background: var(--surface);
+}
+.xve-grid-host {
+	position: relative;
+	display: flex;
+	flex: 1;
+	min-height: 0;
+	min-width: 0;
+	overflow: hidden;
+	background: var(--xve-sheet-bg);
+	color-scheme: light;
+}
+.xve-grid-host > * {
+	flex: 1;
+	min-width: 0;
+}
+.xve-tabs-row {
+	flex: none;
+	min-width: 0;
+	border-top: 1px solid var(--line);
+	background: var(--chrome);
+}
+.xve-empty {
+	position: absolute;
+	z-index: 5;
+	inset: 0;
+	display: grid;
+	place-items: center;
+	color: var(--muted);
+	background: var(--chrome);
+}
+:host([show-formula-bar='false']) .xve-formula-row,
+:host([show-toolbar='false']) .xve-ribbon {
+	display: none;
+}
+
+/* Title bar: drawn by the shared office-ui-title-bar; the mark, background and borders come from its tokens. */
+.xve-titlebar {
+	display: block;
+	flex: none;
+	--office-title-bar-background: var(--chrome);
+	--office-title-bar-foreground: var(--ink);
+	--office-title-bar-border: var(--line);
+	--office-title-bar-mark-background: var(--xl);
+	--office-title-bar-mark-foreground: var(--xve-primary-foreground);
+}
+.xve-title-actions {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+}
+.xve-mode-select {
+	height: 28px;
+	margin-left: 4px;
+	padding: 0 6px;
+	border: 1px solid var(--line);
+	border-radius: 4px;
+	background: var(--surface);
+	color: var(--ink);
+	font: inherit;
+}
+
+/* Status bar: drawn by the shared office-ui-status-bar; this places it and styles the slotted stats. */
+.xve-status {
+	display: block;
+	flex: none;
+	min-width: 0;
+	border-top: 1px solid var(--line);
+}
+.xve-status-stats {
+	margin-inline-end: 10px;
+	overflow: hidden;
+	color: var(--ink);
+	font-size: 11px;
+	white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+	.xve-status-stats {
+		display: none;
+	}
+}

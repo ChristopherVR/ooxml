@@ -1,0 +1,281 @@
+/*
+ * Microsoft Visio ribbon layout on the shared ooxml-ui controls. Viewer theme tokens feed the
+ * shared --office-* tokens, so host themes still apply. Loaded after the legacy styles.ts.
+ */
+:host {
+	--office-foreground: var(--_vv-ink);
+	--office-muted-foreground: var(--_vv-muted);
+	--office-background: var(--_vv-surface);
+	--office-surface: var(--_vv-accent-soft);
+	--office-border: var(--_vv-border);
+	--office-accent: var(--_vv-accent);
+	--office-accent-foreground: var(--vv-accent-ink, #fff);
+	--office-ring: var(--vv-focus, var(--_vv-accent));
+	--office-font: 'Segoe UI', Arial, sans-serif;
+}
+
+/* Tab row: Quick Access Toolbar, then Visio's tabs. */
+.ribbon-head {
+	display: flex;
+	align-items: stretch;
+	min-width: 0;
+	border-bottom: 1px solid var(--_vv-border);
+}
+.qat {
+	display: flex;
+	align-items: center;
+	gap: 0;
+	padding: 0 6px;
+	border-right: 1px solid var(--_vv-border);
+}
+.qat office-ui-button {
+	--office-target-size: 30px;
+}
+.ribbon-head .ribbon-tabs {
+	flex: 0 1 auto;
+	min-width: 0;
+	height: 36px;
+	border-bottom: 0;
+	overflow-x: auto;
+	scrollbar-width: none;
+}
+.ribbon-head .ribbon-tabs button {
+	flex: none;
+	min-height: 35px;
+	padding: 6px 12px;
+	font-size: 13px;
+}
+
+/* Panels: groups of large commands and three-row stacks, as dense as Visio's. */
+.ribbon-content {
+	min-height: 96px;
+	padding: 2px 2px 0;
+}
+.ribbon-row {
+	display: flex;
+	flex-wrap: nowrap;
+	align-items: stretch;
+	gap: 0;
+	padding: 0;
+	border: 0;
+	background: transparent;
+}
+.ribbon-row office-ui-ribbon-group,
+.tools-content office-ui-ribbon-group {
+	min-width: 0;
+}
+office-ui-ribbon-group office-ui-button,
+office-ui-ribbon-group office-ui-menu-button {
+	--office-target-size: 24px;
+}
+office-ui-ribbon-group [data-size='large'] {
+	--office-target-size: 30px;
+}
+office-ui-button[variant='stacked']::part(button) {
+	min-width: 48px;
+	min-height: 66px;
+	padding: 2px 6px;
+	font-size: 12px;
+}
+office-ui-menu-button[variant='stacked']::part(button) {
+	min-width: 48px;
+	min-height: 50px;
+	font-size: 12px;
+}
+office-ui-ribbon-group [data-size='small']::part(button) {
+	justify-content: flex-start;
+	font-size: 12px;
+}
+office-ui-ribbon-stack:not([orientation]) {
+	justify-content: flex-start;
+	padding-top: 2px;
+}
+office-ui-ribbon-stack:not([orientation]) > * {
+	min-height: 24px;
+}
+office-ui-ribbon-group > office-ui-ribbon-stack > office-ui-ribbon-stack[orientation] {
+	min-height: 32px;
+}
+office-ui-select[data-combo] {
+	--office-target-size: 24px;
+}
+office-ui-menu-button[data-active]::part(button) {
+	background: var(--_vv-accent-soft);
+	box-shadow: inset 0 0 0 1px var(--_vv-accent);
+}
+[data-unsupported] {
+	cursor: not-allowed;
+}
+.ribbon-check {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	min-height: 24px;
+	padding: 0 6px;
+	font-size: 12px;
+	white-space: nowrap;
+	cursor: pointer;
+}
+.ribbon-check[data-unsupported] {
+	color: var(--_vv-muted);
+	opacity: 0.6;
+}
+.ribbon-hint {
+	display: none;
+}
+
+/* Drawing window with optional rulers. */
+.canvas-area {
+	display: grid;
+	flex: 1;
+	min-width: 0;
+	min-height: 0;
+	grid-template-columns: 0 1fr;
+	grid-template-rows: 0 1fr;
+}
+.canvas-area[data-ruler='true'] {
+	grid-template-columns: 18px 1fr;
+	grid-template-rows: 18px 1fr;
+}
+.canvas-area > .viewport {
+	grid-column: 2;
+	grid-row: 2;
+}
+.ruler,
+.ruler-corner {
+	display: none;
+	background: var(--_vv-surface);
+}
+.canvas-area[data-ruler='true'] > .ruler,
+.canvas-area[data-ruler='true'] > .ruler-corner {
+	display: block;
+}
+.ruler-corner {
+	grid-column: 1;
+	grid-row: 1;
+	border-right: 1px solid var(--_vv-border);
+	border-bottom: 1px solid var(--_vv-border);
+}
+/* The shared office-ui-ruler draws ticks, labels and its own edge. */
+.ruler-h {
+	grid-column: 2;
+	grid-row: 1;
+}
+.ruler-v {
+	grid-column: 1;
+	grid-row: 2;
+}
+
+.page-bar {
+	display: flex;
+	flex: none;
+	align-items: stretch;
+	min-width: 0;
+	border-top: 1px solid var(--_vv-border);
+	background: var(--_vv-secondary);
+}
+.page-bar office-ui-menu-button {
+	--office-target-size: 28px;
+	flex: none;
+	padding: 0 2px;
+}
+.page-tabs {
+	flex: 1;
+	min-width: 0;
+	border-top: 0;
+}
+office-ui-status-bar.status {
+	gap: 16px;
+	min-height: 29px;
+	padding: 0 8px 0 12px;
+	font-size: 11px;
+	background: var(--_vv-surface);
+	color: var(--_vv-muted);
+}
+office-ui-status-item[value=''] {
+	display: none;
+}
+office-ui-status-item[data-page-status] {
+	color: var(--_vv-ink);
+}
+.status-message {
+	flex: 1;
+	min-width: 0;
+}
+.viewport[data-tool='rectangle'],
+.viewport[data-tool='rectangle'] .paper [data-shape-id] {
+	cursor: crosshair;
+}
+.viewport[data-tool='rectangle'] {
+	touch-action: none;
+}
+.draw-preview {
+	fill: var(--_vv-accent-soft);
+	stroke: var(--_vv-accent);
+	stroke-width: 1.5px;
+	stroke-dasharray: 4 3;
+	pointer-events: none;
+}
+.viewport[data-grid='true'] .paper {
+	--_vv-grid-minor: rgb(0 0 0 / 7%);
+	--_vv-grid-major: rgb(0 0 0 / 16%);
+	background-image:
+		linear-gradient(to right, var(--_vv-grid-major) 1px, transparent 1px),
+		linear-gradient(to top, var(--_vv-grid-major) 1px, transparent 1px),
+		linear-gradient(to right, var(--_vv-grid-minor) 1px, transparent 1px),
+		linear-gradient(to top, var(--_vv-grid-minor) 1px, transparent 1px);
+	background-size:
+		var(--vv-inch, 96px) var(--vv-inch, 96px),
+		var(--vv-inch, 96px) var(--vv-inch, 96px),
+		calc(var(--vv-inch, 96px) / 4) calc(var(--vv-inch, 96px) / 4),
+		calc(var(--vv-inch, 96px) / 4) calc(var(--vv-inch, 96px) / 4);
+	background-position: left bottom;
+}
+:host(:fullscreen) {
+	width: 100vw;
+	height: 100vh;
+}
+
+@media (max-width: 760px) {
+	.ribbon-row {
+		flex: 1;
+		min-width: 0;
+	}
+	.qat office-ui-button {
+		--office-target-size: 44px;
+	}
+	.ribbon-tools .tools-content office-ui-ribbon-group {
+		width: 100%;
+	}
+	office-ui-status-bar.status {
+		gap: 4px;
+		min-height: 48px;
+	}
+	office-ui-status-bar .notes-strip,
+	office-ui-status-bar .status-message,
+	office-ui-status-item[data-shape-status],
+	office-ui-status-item[data-page-status] {
+		display: none;
+	}
+	.zoom-controls {
+		flex: 1;
+		min-width: 0;
+		--office-zoom-slider-width: 0;
+	}
+}
+
+/* Visio's Tell me box sits right after the tabs. */
+.tell-me {
+	flex: 0 1 280px;
+	min-width: 140px;
+	margin: 0 8px;
+	--office-target-size: 28px;
+}
+.presentation-mode {
+	--office-target-size: 24px;
+}
+@media (max-width: 760px) {
+	.tell-me {
+		display: none;
+	}
+}

@@ -1,0 +1,51 @@
+/* Keyboard shortcut help. The context menu is the shared office-ui-context-menu element. */
+.dve-shortcut-help {
+	max-height: calc(100% - 180px);
+	overflow: auto;
+	width: min(560px, calc(100% - 32px));
+}
+.dve-shortcut-help .dve-shortcut-note {
+	margin: 0;
+	color: var(--muted);
+	font-size: 12px;
+}
+.dve-shortcut-help table {
+	width: 100%;
+	border-collapse: collapse;
+}
+.dve-shortcut-help th,
+.dve-shortcut-help td {
+	padding: 5px 8px;
+	border-bottom: 1px solid var(--dve-border);
+	text-align: left;
+	vertical-align: top;
+}
+.dve-shortcut-help th {
+	color: var(--muted);
+	font-size: 12px;
+	font-weight: 600;
+}
+.dve-shortcut-help kbd {
+	padding: 1px 6px;
+	border: 1px solid var(--dve-border);
+	border-radius: 4px;
+	background: var(--surface);
+	font:
+		12px/1.4 ui-monospace,
+		'SFMono-Regular',
+		Consolas,
+		monospace;
+	white-space: nowrap;
+}
+.dve-canvas:focus-visible {
+	outline-offset: -2px;
+}
+
+/* Command-level KeyTips sit on the control itself, fixed to the viewport. */
+.dve-keytip-command {
+	position: fixed;
+	bottom: auto;
+}
+.dve-keytip[hidden] {
+	display: none;
+}

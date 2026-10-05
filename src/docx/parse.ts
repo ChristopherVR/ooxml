@@ -8,7 +8,6 @@ import {
 	getW,
 	parseXml,
 	type XmlDocument,
-	type XmlElement,
 	WORD_NS,
 } from './xml.js';
 import { remember, saveDocx } from './save.js';
@@ -51,7 +50,7 @@ export async function readPackage(input: Uint8Array | ArrayBuffer): Promise<{
 	const entries = Object.values(zip.files);
 	if (entries.length > 5000) throw new Error('DOCX package exceeds the 5,000 part limit');
 	const totalSize = entries.reduce(
-		(sum, entry) => sum + Number((entry as any)._data?.uncompressedSize ?? 0),
+		(sum, entry) => sum + Number((entry as { _data?: { uncompressedSize?: number } })._data?.uncompressedSize ?? 0),
 		0,
 	);
 	if (totalSize > 200 * 1024 * 1024)

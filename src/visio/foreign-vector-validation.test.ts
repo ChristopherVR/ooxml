@@ -1,3 +1,4 @@
+/* oxlint-disable typescript/no-explicit-any -- the test mutates untrusted scene shapes on purpose */
 import { describe, expect, it, vi } from 'vitest';
 import {
 	sanitizeVisioForeignVectorTree as sanitize,

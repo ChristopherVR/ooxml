@@ -53,7 +53,7 @@ function replaceSlots(
 	parent: XmlElement,
 	oldNodes: XmlElement[],
 	nextNodes: XmlElement[],
-	insertionAnchor: any = null,
+	insertionAnchor: XmlElement | null = null,
 ): void {
 	const placeholders = oldNodes.map((old) => {
 		const marker = doc.createComment('docx-block-slot');
@@ -74,7 +74,7 @@ function baseMap(blocks: Block[]): Map<string, Block> {
 }
 function originalNodes(body: XmlElement): XmlElement[] {
 	return Array.from(body.childNodes).filter(
-		(node: any) =>
+		(node: ChildNode) =>
 			node.nodeType === 1 &&
 			(node as XmlElement).namespaceURI === WORD_NS &&
 			['p', 'tbl'].includes((node as XmlElement).localName),

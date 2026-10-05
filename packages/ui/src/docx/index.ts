@@ -1,0 +1,36 @@
+export { DocxEditorElement, registerDocxEditor } from './component';
+export { DOCX_EDITOR_EVENTS } from './events';
+export type { RibbonAction } from './ribbon';
+export {
+	RIBBON_ACTION_IDS,
+	RIBBON_ACTION_LABELS,
+	normalizeRibbonActions,
+	isRibbonActionId,
+} from 'ooxml-core/docx/ui';
+export type { LegacyRibbonLabel, RibbonActionId, RibbonActionInput } from 'ooxml-core/docx/ui';
+export type { PageChangeDetail } from './page-sync';
+export type { FileCommand, FileCommandDetail } from './file-commands';
+export type { DocxEditorEventMap, DocxEditorEventName, DocxEditorEventDetail } from './events';
+export { DOCX_EDITOR_ATTRIBUTES } from './editor-attributes';
+export type { DocxEditorAttribute } from './editor-attributes';
+export { CollaborationClient, CollaborationAuthority } from 'ooxml-core/docx/ui';
+export type {
+	CollaborationConfig,
+	StepBatch,
+	ClientReceiveResult,
+	AuthorityResult,
+} from 'ooxml-core/docx/ui';
+export type { CollaborationAuthorityConfig } from 'ooxml-core/docx/ui';
+export { createCollaborationAuthority } from './collaboration-model';
+export { PresenceClient, PRESENCE_PALETTE } from './presence';
+export type { PresenceMessage, PresenceConfig, PresenceReceiveResult } from './presence';
+export { EDITOR_LOCALES, normalizeEditorLocale } from './localization';
+export type { EditorLocale, EditorLocaleInput } from './localization';
+export {
+	createCollaborationIdGenerator,
+	repairCollaborativeDocumentIds,
+} from 'ooxml-core/docx/ui';
+export type { ReviewDisplayMode } from './review-display';
+export type { RevisionRange } from './review-commands';
+export { lightTheme, darkTheme, themeToCssVars } from 'ooxml-core/docx/ui';
+export type { EditorTheme, EditorThemeMode } from 'ooxml-core/docx/ui';

@@ -18,6 +18,7 @@
 	--page: #3d6bf0;
 	--sheet: #1f9d63;
 	--diagram: #8a6cf0;
+	--teams: #0e8f8f;
 
 	--font: 'Schibsted Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
 	--topbar: 3.5rem;
@@ -477,6 +478,10 @@ a.app:hover .app-icon {
 }
 .button--excel {
 	background: #167848;
+	color: white;
+}
+.button--teams {
+	background: #0e8f8f;
 	color: white;
 }
 

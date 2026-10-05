@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
 	sanitizeVisioForeignVectorTree as sanitize,
-	validateVisioForeignVector as validate,
 	VisioForeignVectorError,
 } from './foreign-vector.js';
 import { root, path, group, clip, defs } from './foreign-vector-test-fixtures.js';
@@ -135,6 +134,7 @@ describe('fail-closed converter tree boundary', () => {
 		expect(getter).not.toHaveBeenCalled();
 		rejected(root(new Array(5)));
 		rejected(root(Object.assign([path()], { unwanted: true })));
+		// oxlint-disable-next-line no-sparse-arrays -- the hole is the case under test
 		const sparse = [path(), , path()];
 		rejected(root(sparse));
 	});

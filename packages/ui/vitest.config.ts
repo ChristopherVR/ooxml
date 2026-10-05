@@ -10,6 +10,8 @@ export default {
 	},
 	test: {
 		globals: true,
+		// Editor-mounting tests build a full ProseMirror view; under a parallel run they can take 5s+.
+		testTimeout: 20_000,
 		// Component styles are `.css?raw` text; return the real CSS so tests can read it.
 		css: { include: [/\.css\?raw$/] },
 		environment: 'jsdom',

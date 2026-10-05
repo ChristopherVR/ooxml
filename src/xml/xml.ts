@@ -29,7 +29,7 @@ export function parseXml(xml: string, options: ParseOptions = {}): XmlDocument {
 		}).parseFromString(xml, 'application/xml') as unknown as XmlDocument;
 	} catch (error) {
 		throw new Error(
-			`Invalid ${label} XML: ${error instanceof Error ? error.message : String(error)}`,
+			`Invalid ${label} XML: ${error instanceof Error ? error.message : String(error)}`, { cause: error },
 		);
 	}
 	if (parseError || !parsed.documentElement)

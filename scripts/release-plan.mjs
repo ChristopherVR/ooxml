@@ -176,7 +176,7 @@ export function npmVersion(name) {
 		if (/E404|404 Not Found|is not in this registry/iu.test(String(error.stderr ?? ''))) {
 			return null;
 		}
-		throw new Error(`Could not query npm for ${name}: ${error.stderr || error.message}`);
+		throw new Error(`Could not query npm for ${name}: ${error.stderr || error.message}`, { cause: error });
 	}
 }
 
