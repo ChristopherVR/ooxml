@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import type { DocxEditorElement } from '../packages/web-component/src/component';
+import type { DocxEditorElement } from '../packages/web-component/src';
 import { newDocument, reveal } from './helpers';
 
 test('ligatures render inherited and explicit-off features and use matching Print Layout advances', async ({

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import type { DocxEditorElement } from '../packages/web-component/src/component';
+import type { DocxEditorElement } from '../packages/web-component/src';
 import { newDocument } from './helpers';
 
 test('scaled glyphs reserve their advances, add spacing after scaling, and wrap at words', async ({

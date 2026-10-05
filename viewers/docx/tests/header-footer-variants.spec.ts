@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import type { DocxEditorElement } from '../packages/web-component/src/component';
+import type { DocxEditorElement } from '../packages/web-component/src';
 import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
 import { newDocument, reveal, saveButton } from './helpers';

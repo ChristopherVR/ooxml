@@ -239,9 +239,14 @@ try {
 	await checkSvelte(inspected, installed);
 	for (const name of FRAMEWORKS) {
 		const bundle = await readFile(path.join(inspected, name, entryOf(name)), 'utf8');
+		// The element lives in ooxml-ui; the package imports it instead of bundling a copy.
 		assert(
-			bundle.includes('.dve-frame') && bundle.includes('--blue'),
-			`${name}: web component CSS must be bundled as runtime text`,
+			bundle.includes('ooxml-ui/docx'),
+			`${name}: the <docx-editor> element must come from the ooxml-ui/docx dependency`,
+		);
+		assert(
+			!bundle.includes('.dve-frame'),
+			`${name}: the editor's CSS must not be bundled into the package`,
 		);
 	}
 	console.log(

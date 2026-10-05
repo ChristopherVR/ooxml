@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
 import { loadDocx } from '../packages/core/src/index';
-import type { DocxEditorElement } from '../packages/web-component/src/component';
+import type { DocxEditorElement } from '../packages/web-component/src';
 import { fileInput, reveal, saveButton } from './helpers';
 
 const w = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';

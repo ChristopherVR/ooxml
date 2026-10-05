@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import type { DocxEditorElement } from '../packages/web-component/src/component';
+import type { DocxEditorElement } from '../packages/web-component/src';
 import type { SignedTwips, Twips } from '../packages/core/src/index';
 import { newDocument, reveal } from './helpers';
 

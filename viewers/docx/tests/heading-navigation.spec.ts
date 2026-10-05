@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import type { DocxEditorElement } from '../packages/web-component/src/component';
+import type { DocxEditorElement } from '../packages/web-component/src';
 import { openSample, reveal } from './helpers';
 
 for (const framework of ['vanilla', 'react', 'vue', 'svelte', 'angular', 'jquery']) {
