@@ -13,10 +13,10 @@ function fixture(t, files, manifest = {}) {
 	const root = mkdtempSync(join(tmpdir(), 'ooxml-core-ui-boundary-'));
 	// The target is the unique temporary directory created above.
 	t.after(() => rmSync(root, { recursive: true, force: true }));
-	mkdirSync(join(root, 'src'));
+	mkdirSync(join(root, 'src', 'core'), { recursive: true });
 	writeFileSync(join(root, 'package.json'), JSON.stringify(manifest));
 	for (const [name, source] of Object.entries(files))
-		writeFileSync(join(root, 'src', name), source);
+		writeFileSync(join(root, 'src', 'core', name), source);
 	return root;
 }
 

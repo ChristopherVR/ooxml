@@ -4,7 +4,7 @@ Thanks for wanting to help. Please read the [Code of Conduct](CODE_OF_CONDUCT.md
 
 ## What belongs here
 
-This repository is the single package `ooxml-core`: all the logic behind the Office viewers (`docx-viewer`, `pptx-viewer`, `xlsx-viewer`), organised as **areas** under `src/<area>/`, each a subpath export (`ooxml-core/xml`). The viewers keep only their UI.
+This repository is the single package `ooxml-core`: all the logic behind the Office viewers (`docx-viewer`, `pptx-viewer`, `xlsx-viewer`), organised as **areas** under `src/core/<area>/`, each a subpath export (`ooxml-core/xml`). The viewers keep only their UI.
 
 - Shared modern OOXML (units, colour, geometry, XML, OPC, and later DrawingML, charts, diagrams) goes in its own area.
 - Format-specific code goes in `docx`, `pptx` or `xlsx`.
@@ -26,11 +26,11 @@ bun run build
 bun run test:package   # packs the build and imports every entry point from a clean install
 ```
 
-The pptx tests read real decks from `src/pptx/__tests__/fixtures`, including a committed snapshot of the pptx-viewer end-to-end decks under `fixtures/e2e`; everything needed is in this repository.
+The pptx tests read real decks from `src/core/pptx/__tests__/fixtures`, including a committed snapshot of the pptx-viewer end-to-end decks under `fixtures/e2e`; everything needed is in this repository.
 
 ## Code rules
 
-- TypeScript is **strict**, including `exactOptionalPropertyTypes` and `noUncheckedIndexedAccess`. The `src/pptx` area is compiled with relaxed flags while it is tightened; new code anywhere else must pass the strict project.
+- TypeScript is **strict**, including `exactOptionalPropertyTypes` and `noUncheckedIndexedAccess`. The `src/core/pptx` area is compiled with relaxed flags while it is tightened; new code anywhere else must pass the strict project.
 - Keep modules under about 300 lines. Tests live next to the code (`*.test.ts`).
 - Add a regression test for every parsing, preservation, round-trip or editing change. Real-file fixtures beat hand-built XML.
 - Unsupported features must be reported, never silently dropped, and nothing may claim Office parity or lossless export without evidence.
@@ -53,7 +53,7 @@ Commits **must** follow [Conventional Commits](https://www.conventionalcommits.o
 - **scope**: the area: `units`, `color`, `geometry`, `xml`, `opc`, `docx`, `pptx`, `ci`, `deps`, `docs`.
 - **subject**: imperative, lower-case, no trailing period, header at most 72 characters.
 
-Whether a commit releases at all is decided by the **paths it touches**, not its type: only changes to a package's published files release a new version of that package (for `ooxml-core`: `src/` outside tests, the bundler and declaration configs, the manifest's shipping fields, the licence files; for `ooxml-ui`: everything under `src/ui/` outside tests). Tests, docs, CI and fixtures never do, whatever their type, and a test-only `feat` does not raise the bump level. See [docs/releasing.md](docs/releasing.md).
+Whether a commit releases at all is decided by the **paths it touches**, not its type: only changes to a package's published files release a new version of that package (for `ooxml-core`: `src/core/` outside tests, the bundler and declaration configs, the manifest's shipping fields, the licence files; for `ooxml-ui`: everything under `src/ui/` outside tests). Tests, docs, CI and fixtures never do, whatever their type, and a test-only `feat` does not raise the bump level. See [docs/releasing.md](docs/releasing.md).
 
 Examples: `feat(xml): add a streaming serializer`, `fix(opc): resolve relative part names`, `feat(docx)!: rename the section model`.
 

@@ -24,7 +24,7 @@ The logic of every Office product lives in this repository, and so do the interf
 
 | Folder                                     | Published as                                             | What it is                                                                                                                                                                                                                    |
 | ------------------------------------------ | -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`src/`](../README.md)                     | [`ooxml-core`](https://www.npmjs.com/package/ooxml-core) | The library: every format's model, parser, writer, editing commands, layout and the shared areas under them. No UI. Its README is the package's npm page.                                                                     |
+| [`src/core`](../README.md)                     | [`ooxml-core`](https://www.npmjs.com/package/ooxml-core) | The library: every format's model, parser, writer, editing commands, layout and the shared areas under them. No UI. Its README is the package's npm page.                                                                     |
 | [`src/ui`](../src/ui#readme)               | [`ooxml-ui`](https://www.npmjs.com/package/ooxml-ui)     | The shared browser elements (Lit web components): ribbons, dialogs, menus, the title and status bars, and the Word, Excel, Visio and OpenTeams editors as `ooxml-ui/<product>` subpaths. DOM only; the core never imports it. |
 | [`mcp/`](../mcp#readme)                    | [`ooxml-mcp`](https://www.npmjs.com/package/ooxml-mcp)   | The combined MCP server that lets an AI assistant work with Office documents.                                                                                                                                                 |
 | [`viewers/docx`](../viewers/docx#readme)   | Word packages (below)                                    | The Word editor (`<docx-editor>`) and its bindings for React, Vue, Angular, Svelte, Solid and vanilla JavaScript. [Docs and demos](https://christophervr.github.io/ooxml/docx/).                                              |
@@ -41,7 +41,7 @@ The logic of every Office product lives in this repository, and so do the interf
 - **OpenTeams**: [`openteams-react-viewer`](../viewers/teams/packages/react#readme), [`openteams-vue-viewer`](../viewers/teams/packages/vue#readme), [`openteams-angular-viewer`](../viewers/teams/packages/angular#readme), [`openteams-svelte-viewer`](../viewers/teams/packages/svelte#readme), [`openteams-solid-viewer`](../viewers/teams/packages/solid#readme), [`openteams-vanilla-viewer`](../viewers/teams/packages/vanilla#readme), [`openteams-server`](../viewers/teams/server#readme)
 - **Library and shared**: [`ooxml-core`](../README.md), [`ooxml-ui`](../src/ui#readme), [`ooxml-mcp`](../mcp#readme)
 
-The viewers keep only what is specific to a framework: the bindings, demos, end-to-end tests and docs. Format logic stays in `src/`, and a viewer must not copy it.
+The viewers keep only what is specific to a framework: the bindings, demos, end-to-end tests and docs. Format logic stays in `src/core/`, and a viewer must not copy it.
 
 ### pptx-viewer
 

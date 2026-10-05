@@ -21,7 +21,7 @@ test('a docs-only change runs nothing', () => {
 });
 
 test('a docx change tests the changed files, typechecks and checks only the docx viewer', () => {
-	const result = plan(['src/docx/block-parser.ts'], { testFiles: 20 });
+	const result = plan(['src/core/docx/block-parser.ts'], { testFiles: 20 });
 	assert.equal(result.test.mode, 'changed');
 	assert.deepEqual(result.test.shards, [1]);
 	assert.equal(result.typecheck.strict, true);
@@ -30,7 +30,7 @@ test('a docx change tests the changed files, typechecks and checks only the docx
 });
 
 test('a pptx-only change skips the strict typecheck and checks only the external pptx viewer', () => {
-	const result = plan(['src/pptx/converter/index.ts'], { testFiles: 5 });
+	const result = plan(['src/core/pptx/converter/index.ts'], { testFiles: 5 });
 	assert.equal(result.typecheck.strict, false);
 	assert.equal(result.typecheck.pptx, true);
 	assert.deepEqual(names(result), ['pptx-viewer']);
@@ -38,7 +38,7 @@ test('a pptx-only change skips the strict typecheck and checks only the external
 });
 
 test('a shared area can break every viewer', () => {
-	const result = plan(['src/xml/parse.ts'], { testFiles: 300 });
+	const result = plan(['src/core/xml/parse.ts'], { testFiles: 300 });
 	assert.equal(result.consumers.length, Object.keys(CONSUMERS).length);
 	assert.deepEqual(viewers(result), ALL_VIEWERS);
 	assert.deepEqual(result.test.shards, [1, 2, 3, 4, 5]);

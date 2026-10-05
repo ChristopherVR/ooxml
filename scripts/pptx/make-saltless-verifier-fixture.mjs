@@ -1,7 +1,7 @@
 /**
  * Generates the salt-less `p:modifyVerifier` fixtures behind the "Restricted
  * editing" limitation-row removal (w6-f): nothing in `e2e/fixtures/` or
- * `src/pptx/__tests__/fixtures/` exercised a `p:modifyVerifier` with
+ * `src/core/pptx/__tests__/fixtures/` exercised a `p:modifyVerifier` with
  * no `saltData` attribute at all before this wave (`saltData` is optional per
  * ECMA-376 19.2.1.22; core's `verifyModifyPassword` now treats an absent salt
  * as a zero-length one, see that module's doc comment).
@@ -12,10 +12,10 @@
  * genuine SDK output, not hand-authored markup.
  *
  * Writes:
- *   - src/pptx/__tests__/fixtures/modify-verifier-saltless.pptx
+ *   - src/core/pptx/__tests__/fixtures/modify-verifier-saltless.pptx
  *     (password "open sesame", SHA-512, spinCount 100000: the primary fixture
  *     named in the wave-6 brief)
- *   - src/pptx/__tests__/fixtures/modify-verifier-saltless-<algo>.pptx
+ *   - src/core/pptx/__tests__/fixtures/modify-verifier-saltless-<algo>.pptx
  *     for every other algorithm family this codebase implements a digest for
  *     (SHA-1/256/384, MD5, RIPEMD-160, WHIRLPOOL), same password
  *   - e2e/fixtures/modify-password-saltless.pptx: the SHA-512 fixture again,
@@ -31,12 +31,12 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { createSaltlessModifyVerifierForTesting, PptxHandler } from '../../src/pptx/index.ts';
+import { createSaltlessModifyVerifierForTesting, PptxHandler } from '../../src/core/pptx/index.ts';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '../..');
-const coreFixtureDir = resolve(root, 'src/pptx/__tests__/fixtures');
-const e2eFixtureDir = resolve(root, 'src/pptx/__tests__/fixtures/e2e');
+const coreFixtureDir = resolve(root, 'src/core/pptx/__tests__/fixtures');
+const e2eFixtureDir = resolve(root, 'src/core/pptx/__tests__/fixtures/e2e');
 
 const PASSWORD = 'open sesame';
 const SPIN_COUNT = 100000;

@@ -2,12 +2,12 @@
 	"name": "docx-core",
 	"version": "0.1.7",
 	"description": "Framework-neutral DOCX document model, parser and serializer (thin entry point over ooxml-core/docx)",
-	"license": "Apache-2.0",
-	"author": "ChristopherVR",
 	"homepage": "https://christophervr.github.io/ooxml/docx/",
 	"bugs": {
 		"url": "https://github.com/ChristopherVR/ooxml/issues"
 	},
+	"license": "Apache-2.0",
+	"author": "ChristopherVR",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/ChristopherVR/ooxml.git",

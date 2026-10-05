@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 const ooxml = fileURLToPath(
 	new URL(process.env.OOXML_DIR ?? '../../', import.meta.url),
 ).replaceAll(String.fromCharCode(92), '/');
-const useSource = process.env.TEAMS_USE_DIST !== '1' && existsSync(`${ooxml}src/teams/index.ts`);
+const useSource = process.env.TEAMS_USE_DIST !== '1' && existsSync(`${ooxml}src/core/teams/index.ts`);
 
 export default {
 	resolve: {
@@ -15,7 +15,7 @@ export default {
 		alias: [
 			...(useSource
 				? [
-						{ find: /^ooxml-core\/(.+)$/, replacement: `${ooxml}src/$1/index.ts` },
+						{ find: /^ooxml-core\/(.+)$/, replacement: `${ooxml}src/core/$1/index.ts` },
 						{ find: /^ooxml-ui$/, replacement: `${ooxml}src/ui/src/index.ts` },
 					]
 				: []),

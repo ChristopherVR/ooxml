@@ -129,7 +129,7 @@ ranges before committing.
 
 | The change is about...                                                                | Make it in                                      |
 | ------------------------------------------------------------------------------------- | ----------------------------------------------- |
-| Parsing, the workbook model, saving or round-trip loss                                | `src/xlsx/` in `ooxml`, with a round-trip test  |
+| Parsing, the workbook model, saving or round-trip loss                                | `src/core/xlsx/` in `ooxml`, with a round-trip test  |
 | Formulas, functions, recalculation, number formats, editing commands, undo            | `ooxml` (`xlsx/formula`, `numfmt`, `edit`)      |
 | Grid metrics, cell views, conditional formats, chart view models, keyboard navigation | `ooxml` (`xlsx/layout`)                         |
 | `.xls` loading, CSV, format detection                                                 | `ooxml` (`xlsx/load`)                           |

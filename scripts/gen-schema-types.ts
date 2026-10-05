@@ -1,4 +1,4 @@
-// Generates src/docx/generated/wml-simple-types.ts from the ECMA-376 Transitional XSDs in ../schemas.
+// Generates src/core/docx/generated/wml-simple-types.ts from the ECMA-376 Transitional XSDs in ../schemas.
 // Run with `bun run gen:schema-types`; a Vitest drift check fails when the checked-in file is stale.
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -6,7 +6,7 @@ import { DOMParser } from '@xmldom/xmldom';
 
 const XSD_NS = 'http://www.w3.org/2001/XMLSchema';
 const SCHEMA_DIR = new URL('../schemas/ecma-376-transitional/', import.meta.url);
-export const OUTPUT_PATH = new URL('../src/docx/generated/wml-simple-types.ts', import.meta.url);
+export const OUTPUT_PATH = new URL('../src/core/docx/generated/wml-simple-types.ts', import.meta.url);
 
 interface Source {
 	file: string;

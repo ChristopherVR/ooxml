@@ -20,7 +20,7 @@
  *
  *   bun scripts/pptx/gen-test-fixture.mjs
  *
- * Output: src/pptx/__tests__/fixtures/embedded-assets-sample.pptx
+ * Output: src/core/pptx/__tests__/fixtures/embedded-assets-sample.pptx
  */
 
 import { promises as fs } from 'node:fs';
@@ -35,7 +35,7 @@ const JSZip = require('jszip');
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OUT_PATH = path.resolve(
 	__dirname,
-	'../../src/pptx/__tests__/fixtures/embedded-assets-sample.pptx',
+	'../../src/core/pptx/__tests__/fixtures/embedded-assets-sample.pptx',
 );
 
 /** Number of embedded fonts to generate (non-GUID font1..fontN.fntdata). */

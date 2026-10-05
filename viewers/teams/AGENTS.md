@@ -6,7 +6,7 @@ canonical: `CLAUDE.md` only imports it, so edit this file and never fork the two
 ## READ FIRST: this repository is UI, bindings and a reference server
 
 All team-workspace **logic** lives in the `teams` area of `ooxml-core` (source in the
-`ChristopherVR/ooxml` repository, `src/teams`, documented in its `docs/teams-area.md`): the chat
+`ChristopherVR/ooxml` repository, `src/core/teams`, documented in its `docs/teams-area.md`): the chat
 CRDT, presence, calls, signaling, server configuration and the `createTeamsClient` store. The
 **visual primitives** (avatar, app rail, channel list, chat list, composer, pre-join, call grid and
 controls) live in `ooxml-ui` (`src/ui/src/teams`). This repository holds:

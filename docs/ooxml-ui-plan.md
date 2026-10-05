@@ -7,15 +7,15 @@ product-specific.
 
 ## Decisions
 
-- **Layout.** The repository root stays the published `ooxml-core`; `src/` and
-  its paths do not move. `package.json` lists `"workspaces": ["packages/*"]`, so `src/ui` is
-  a Bun workspace next to it. The root is not a workspace member (a package cannot be its own
+- **Layout.** The repository root stays the published `ooxml-core`, whose sources are `src/core/`.
+  `src/ui` sits next to it as its own package, and `package.json` lists it in `"workspaces"`, so it
+  is a Bun workspace. The root is not a workspace member (a package cannot be its own
   workspace), so the UI declares `"ooxml-core": "^0.1.0"` as an ordinary semver
   dependency and development resolves the core **from source** (tsconfig `paths` and a vitest
-  alias to `../../src/<area>/index.ts`; declaration builds read `../../dist`). Keep that range
+  alias to `../core/<area>/index.ts`; declaration builds read `../../dist`). Keep that range
   in step with the core when it reaches 0.2.0 (release tooling: see "Release").
 - **Direction.** UI may import core types and pure helpers; core never imports the UI (nothing in
-  `src/` references `packages/`). Add a CI check next to the other release checks.
+  `src/core/` references `src/ui`). Add a CI check next to the other release checks.
 - **Style.** Lit-free vanilla custom elements built lazily inside `define*` functions, so
   importing a module never touches `HTMLElement` (SSR-safe). Shadow-root CSS with `--office-*`
   tokens that all have fallbacks; each control ships forced-colors and coarse-pointer rules.

@@ -7,7 +7,7 @@ composes them, the framework bindings, a reference server and the demos.
 
 | Layer                | Where                                                                 | Owns                                                                                     |
 | -------------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| Logic                | `ooxml-core/teams` (`src/teams` in the ooxml repository)              | the chat CRDT, presence, calls, signaling, server configuration, the `createTeamsClient` store |
+| Logic                | `ooxml-core/teams` (`src/core/teams` in the ooxml repository)              | the chat CRDT, presence, calls, signaling, server configuration, the `createTeamsClient` store |
 | Collaboration        | `ooxml-core/collab`                                                   | Yjs sessions and transports (WebSocket, `BroadcastChannel`), format-neutral                |
 | Visual primitives    | `ooxml-ui` (`src/ui/src/teams`)                                  | avatar, app rail, channel list, chat list, composer, pre-join, call grid and controls     |
 | App                  | `packages/web-component` here (private `teams-viewer`, never published) | `<teams-app>`: composes the primitives over the store, settings dialog, raw store helpers |

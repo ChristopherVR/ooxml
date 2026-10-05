@@ -25,7 +25,7 @@ A package whose `package.json` does not exist yet (the UI before it is merged) i
 
 Each package's baseline is the newest tag `<npm-name>@x.y.z` that is an ancestor of `HEAD` (`ooxml-core@0.1.0`, `ooxml-ui@0.1.0`). A tag on `HEAD` yields an empty diff, so an already released `HEAD` is a no-op. A package releases when one of **its published files** changed since its baseline:
 
-- core: `src/` except tests (`*.test.ts`, `__tests__/`, fixtures), `scripts/pptx/merge-declarations.mjs`, `tsconfig*.json`, `tsup*.config.ts`, `tsdown.pptx.config.ts`, `package.json`, `LICENSE`, `NOTICE`, `THIRD-PARTY-LICENSES`. Nothing under `packages/` counts for core.
+- core: `src/core/` except tests (`*.test.ts`, `__tests__/`, fixtures), `scripts/pptx/merge-declarations.mjs`, `tsconfig*.json`, `tsup*.config.ts`, `tsdown.pptx.config.ts`, `package.json`, `LICENSE`, `NOTICE`, `THIRD-PARTY-LICENSES`. Nothing under `src/ui/` or `viewers/` counts for core.
 - ui: everything under `src/ui/` except tests and its `CHANGELOG.md`, including its `package.json`.
 
 `package.json` changes are ignored when they only touch `version`, `scripts`, `devDependencies`, `workspaces` or the range on the other package. Docs, CI, tests, `README.md`, `CHANGELOG.md` and the build orchestration scripts never release anything, and neither does the release commit itself.

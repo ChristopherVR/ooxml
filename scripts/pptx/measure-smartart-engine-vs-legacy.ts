@@ -35,16 +35,16 @@ import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { PptxHandler } from '../../src/pptx/core/PptxHandler';
-import type { PptxElement, SmartArtPptxElement } from '../../src/pptx/core/types/elements';
-import { decomposeSmartArt } from '../../src/pptx/core/utils';
-import { runEngineLayout } from '../../src/pptx/core/utils/smartart-engine/engine-to-result';
-import { interpretedLayoutToElements } from '../../src/pptx/core/utils/smartart-interpreter-drawing-bridge';
-import { interpretSmartArtLayout } from '../../src/pptx/core/utils/smartart-layout-interpreter';
-import { flattenNodes } from '../../src/pptx/core/utils/smartart-layout-style-helpers';
+import { PptxHandler } from '../../src/core/pptx/core/PptxHandler';
+import type { PptxElement, SmartArtPptxElement } from '../../src/core/pptx/core/types/elements';
+import { decomposeSmartArt } from '../../src/core/pptx/core/utils';
+import { runEngineLayout } from '../../src/core/pptx/core/utils/smartart-engine/engine-to-result';
+import { interpretedLayoutToElements } from '../../src/core/pptx/core/utils/smartart-interpreter-drawing-bridge';
+import { interpretSmartArtLayout } from '../../src/core/pptx/core/utils/smartart-layout-interpreter';
+import { flattenNodes } from '../../src/core/pptx/core/utils/smartart-layout-style-helpers';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const GALLERY_DIR = path.resolve(HERE, '../../src/pptx/__tests__/fixtures/smartart-gallery');
+const GALLERY_DIR = path.resolve(HERE, '../../src/core/pptx/__tests__/fixtures/smartart-gallery');
 
 interface ManifestEntry {
 	file: string;

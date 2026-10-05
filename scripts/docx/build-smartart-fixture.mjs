@@ -1,7 +1,7 @@
-// Builds src/docx/__fixtures__/smartart.docx: a Word package carrying two SmartArt diagrams.
+// Builds src/core/docx/__fixtures__/smartart.docx: a Word package carrying two SmartArt diagrams.
 //
 // Provenance: the five parts of each diagram (data, layout, quickStyle, colors, drawing) are
-// copied byte for byte from src/pptx/__tests__/fixtures/corpus/smartart-orgchart-assistants.pptx
+// copied byte for byte from src/core/pptx/__tests__/fixtures/corpus/smartart-orgchart-assistants.pptx
 // (slides 1 and 2; org charts produced by PowerPoint, committed with the pptx tests) with ONE
 // change: the `relId` of `dsp:dataModelExt` in each data part, which names the cached drawing's
 // relationship in the host part, is rewritten to the relationship id used in document.xml.rels
@@ -19,9 +19,9 @@ import JSZip from 'jszip';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const source = path.join(
 	root,
-	'src/pptx/__tests__/fixtures/corpus/smartart-orgchart-assistants.pptx',
+	'src/core/pptx/__tests__/fixtures/corpus/smartart-orgchart-assistants.pptx',
 );
-const output = path.join(root, 'src/docx/__fixtures__/smartart.docx');
+const output = path.join(root, 'src/core/docx/__fixtures__/smartart.docx');
 
 const pptx = await JSZip.loadAsync(await readFile(source));
 const text = async (name) => {

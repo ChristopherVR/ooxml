@@ -52,7 +52,7 @@ function repo({ ui = true, tagged = ['core', 'ui'], uiRange = 'workspace:*' } = 
 	}
 	const files = {
 		'package.json': json({ name: CORE, version: '0.1.0', scripts: { build: 'x' } }),
-		...touch('src/index.ts'),
+		...touch('src/core/index.ts'),
 	};
 	if (ui) {
 		files['src/ui/package.json'] = json({
@@ -85,7 +85,7 @@ test('core is ordered before ui and a tagged HEAD releases nothing', () => {
 
 test('core-only change releases core as a patch and leaves ui alone', () => {
 	const r = repo();
-	r.commit('fix(core): handle empty input', r.touch('src/index.ts'));
+	r.commit('fix(core): handle empty input', r.touch('src/core/index.ts'));
 	const p = r.plan(bothPublished);
 	assert.deepEqual(released(p), ['core']);
 	assert.equal(p.packages.core.version, '0.1.1');
@@ -94,7 +94,7 @@ test('core-only change releases core as a patch and leaves ui alone', () => {
 
 test('a core minor at 0.x leaves the ui caret range, so ui is re-released (patch)', () => {
 	const r = repo();
-	r.commit('feat(core): add a parser', r.touch('src/index.ts'));
+	r.commit('feat(core): add a parser', r.touch('src/core/index.ts'));
 	const p = r.plan(bothPublished);
 	assert.deepEqual(released(p), ['core', 'ui']);
 	assert.equal(p.packages.core.version, '0.2.0');
@@ -115,7 +115,7 @@ test('a core minor at >=1.0 stays inside ^1.x, so ui is not forced to release', 
 	});
 	r.git('tag', '-f', `${CORE}@1.0.0`);
 	r.git('tag', '-f', `${UI}@1.0.0`);
-	r.commit('feat(core): add a parser', r.touch('src/index.ts'));
+	r.commit('feat(core): add a parser', r.touch('src/core/index.ts'));
 	const p = r.plan(registry({ [CORE]: '1.0.0', [UI]: '1.0.0' }));
 	assert.deepEqual(released(p), ['core']);
 	assert.equal(p.packages.core.version, '1.1.0');
@@ -133,7 +133,7 @@ test('a core major forces a ui release', () => {
 	});
 	r.git('tag', '-f', `${CORE}@1.0.0`);
 	r.git('tag', '-f', `${UI}@1.0.0`);
-	r.commit('feat(core)!: drop the legacy entry', r.touch('src/index.ts'));
+	r.commit('feat(core)!: drop the legacy entry', r.touch('src/core/index.ts'));
 	const p = r.plan(registry({ [CORE]: '1.0.0', [UI]: '1.0.0' }));
 	assert.deepEqual(released(p), ['core', 'ui']);
 	assert.equal(p.packages.core.version, '2.0.0');
@@ -150,15 +150,9 @@ test('ui-only change releases ui at its own level and leaves core alone', () => 
 	assert.equal(p.packages.ui.reason, 'own files changed');
 });
 
-test('core excludes the ui package that sits inside its src/ tree', () => {
-	const p = repo().plan(bothPublished);
-	assert.deepEqual(p.packages.core.excludePaths, ['src/ui/**']);
-	assert.deepEqual(p.packages.ui.excludePaths, []);
-});
-
 test('both packages changed release together with independent levels', () => {
 	const r = repo();
-	r.commit('fix(core): a bug', r.touch('src/index.ts'));
+	r.commit('fix(core): a bug', r.touch('src/core/index.ts'));
 	r.commit('feat(ui): a button', r.touch('src/ui/src/index.ts'));
 	const p = r.plan(bothPublished);
 	assert.deepEqual(released(p), ['core', 'ui']);
@@ -255,7 +249,7 @@ test('a ui dependency edit other than the sibling range is a release trigger', (
 
 test('applyPlan stamps versions and keeps workspace ranges for Bun', () => {
 	const r = repo();
-	r.commit('feat(core): add a parser', r.touch('src/index.ts'));
+	r.commit('feat(core): add a parser', r.touch('src/core/index.ts'));
 	const p = r.plan(bothPublished);
 	applyPlan({ root: r.root, packages: PACKAGES }, p);
 	const read = (file) => JSON.parse(readFileSync(join(r.root, file), 'utf8'));
@@ -266,7 +260,7 @@ test('applyPlan stamps versions and keeps workspace ranges for Bun', () => {
 
 test('applyPlan keeps a `file:` sibling range untouched instead of stamping it', () => {
 	const r = repo({ uiRange: 'file:..' });
-	r.commit('feat(core): add a parser', r.touch('src/index.ts'));
+	r.commit('feat(core): add a parser', r.touch('src/core/index.ts'));
 	applyPlan({ root: r.root, packages: PACKAGES }, r.plan(bothPublished));
 	const ui = JSON.parse(readFileSync(join(r.root, 'src/ui/package.json'), 'utf8'));
 	assert.deepEqual(ui.dependencies, { [CORE]: 'file:..' });
@@ -274,7 +268,7 @@ test('applyPlan keeps a `file:` sibling range untouched instead of stamping it',
 
 test('applyPlan keeps a `*` sibling range (published as a caret range later)', () => {
 	const r = repo({ uiRange: '*' });
-	r.commit('feat(core): add a parser', r.touch('src/index.ts'));
+	r.commit('feat(core): add a parser', r.touch('src/core/index.ts'));
 	applyPlan({ root: r.root, packages: PACKAGES }, r.plan(bothPublished));
 	const ui = JSON.parse(readFileSync(join(r.root, 'src/ui/package.json'), 'utf8'));
 	assert.deepEqual(ui.dependencies, { [CORE]: '*' });
@@ -282,7 +276,7 @@ test('applyPlan keeps a `*` sibling range (published as a caret range later)', (
 
 test('applyPlan repoints a plain range only for a released dependent', () => {
 	const r = repo({ uiRange: '^0.1.0' });
-	r.commit('feat(core): add a parser', r.touch('src/index.ts'));
+	r.commit('feat(core): add a parser', r.touch('src/core/index.ts'));
 	const p = r.plan(bothPublished);
 	assert.equal(p.packages.ui.release, true, 'the 0.x minor leaves ^0.1.0');
 	applyPlan({ root: r.root, packages: PACKAGES }, p);
@@ -292,7 +286,7 @@ test('applyPlan repoints a plain range only for a released dependent', () => {
 
 test('the release commit does not retrigger once both packages are tagged', () => {
 	const r = repo();
-	r.commit('feat(core): add a parser', r.touch('src/index.ts'));
+	r.commit('feat(core): add a parser', r.touch('src/core/index.ts'));
 	const p = r.plan(bothPublished);
 	applyPlan({ root: r.root, packages: PACKAGES }, p);
 	r.commit('chore(release): bump versions and update changelogs [skip ci]', {

@@ -124,12 +124,12 @@ const AREA_VIEWERS = {
 	pptx: [],
 };
 
-/** Which external viewers a change under `src/<area>/` can break. Shared areas can break all of them. */
+/** Which external viewers a change under `src/core/<area>/` can break. Shared areas can break all of them. */
 export function consumersOfArea(area) {
 	return AREA_CONSUMERS[area] ?? ALL_CONSUMERS;
 }
 
-/** Which in-repo viewers a change under `src/<area>/` can break. Shared areas can break all of them. */
+/** Which in-repo viewers a change under `src/core/<area>/` can break. Shared areas can break all of them. */
 export function viewersOfArea(area) {
 	return AREA_VIEWERS[area] ?? ALL_VIEWERS;
 }
@@ -151,12 +151,14 @@ export function plan(changed, { full = false, testFiles } = {}) {
 	const files = changed.filter(Boolean);
 	const everything = full || files.some((file) => EVERYTHING.test(file));
 	const live = files.filter((file) => !INERT.test(file) && !VIEWER_INERT.test(file));
-	// src/ui is ooxml-ui, its own package: it is not an area of the core.
-	const src = live.filter((file) => file.startsWith('src/') && !file.startsWith('src/ui/'));
-	const areas = new Set(src.map((file) => file.split('/')[1]));
+	// src/core is the library, one folder per area; src/ui is ooxml-ui, a package of its own.
+	const src = live.filter((file) => file.startsWith('src/core/'));
+	const areas = new Set(src.map((file) => file.split('/')[2]));
 	const ui = live.some((file) => file.startsWith('src/ui/'));
 	const scripts = live.some((file) => /^(scripts|\.github|site)\//.test(file));
-	const mcp = live.some((file) => file.startsWith('mcp/') || file.startsWith('src/automation/'));
+	const mcp = live.some(
+		(file) => file.startsWith('mcp/') || file.startsWith('src/core/automation/'),
+	);
 	const core = src.length > 0;
 
 	const consumers = new Set();
@@ -179,7 +181,7 @@ export function plan(changed, { full = false, testFiles } = {}) {
 	return {
 		full: everything,
 		typecheck: {
-			strict: everything || src.some((file) => !file.startsWith('src/pptx/')),
+			strict: everything || src.some((file) => !file.startsWith('src/core/pptx/')),
 			pptx: everything || core,
 			ui: everything || ui || core,
 		},

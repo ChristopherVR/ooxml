@@ -128,7 +128,7 @@ into the core.
 
 | The change is about...                                                              | Make it in                                      |
 | ----------------------------------------------------------------------------------- | ----------------------------------------------- |
-| Parsing, the document model, editing commands, saving or round-trip loss            | `src/docx/` in `ooxml`, with a round-trip test  |
+| Parsing, the document model, editing commands, saving or round-trip loss            | `src/core/docx/` in `ooxml`, with a round-trip test  |
 | Pagination, line breaking, page layout, `.doc` loading, collaboration sync          | `ooxml` (`docx/layout`, `docx/load`, `collab`)  |
 | A control shared by Word and PowerPoint (SmartArt drawing, shared ribbon controls)  | `ooxml-ui` in `ooxml` (`src/ui`)           |
 | `.doc` / `.xls` / `.ppt` binary codecs, CFB containers                              | `ole2`                                          |

@@ -9,7 +9,7 @@ import type { UserConfig } from 'vite';
 // `bun run build:packages` first for this repository's own ones).
 const ooxml = fileURLToPath(new URL(process.env.OOXML_DIR ?? '../../../', import.meta.url));
 const useDist = process.env.TEAMS_USE_DIST === '1';
-const ooxmlSource = !useDist && existsSync(`${ooxml}src/teams/index.ts`);
+const ooxmlSource = !useDist && existsSync(`${ooxml}src/core/teams/index.ts`);
 const local = (path: string): string =>
 	fileURLToPath(new URL(`../packages/${path}`, import.meta.url));
 
@@ -31,7 +31,7 @@ export function sharedConfig(port: number): UserConfig {
 			alias: [
 				...(ooxmlSource
 					? [
-							{ find: /^ooxml-core\/(.+)$/, replacement: `${ooxml}src/$1/index.ts` },
+							{ find: /^ooxml-core\/(.+)$/, replacement: `${ooxml}src/core/$1/index.ts` },
 							{ find: /^ooxml-ui$/, replacement: `${ooxml}src/ui/src/index.ts` },
 						]
 					: []),

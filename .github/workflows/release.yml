@@ -134,7 +134,7 @@ jobs:
             npm=$(field "$key" .npm)
             tag=$(field "$key" .tag)
             changelog=$(field "$key" .changelog)
-            inc=$(node -e "const p=require('./release-plan.json').packages['$key'];console.log([...p.includePaths.map(x => '--include-path ' + x), ...(p.excludePaths ?? []).map(x => '--exclude-path ' + x)].join(' '))")
+            inc=$(node -e "console.log(require('./release-plan.json').packages['$key'].includePaths.map(p => '--include-path ' + p).join(' '))")
             echo "Changelog for $npm -> $tag ($changelog)"
             if [ -f "$changelog" ]; then
               bunx git-cliff --config cliff.toml --tag-pattern "^${npm}@" $inc --unreleased --tag "$tag" --prepend "$changelog"

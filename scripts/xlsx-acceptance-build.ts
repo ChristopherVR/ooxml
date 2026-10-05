@@ -6,18 +6,18 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { deflateSync } from 'node:zlib';
-import { cellError, type CellStyle, type Workbook } from '../src/xlsx/model.js';
-import { putCell } from '../src/xlsx/cells.js';
-import { internStyle } from '../src/xlsx/styles.js';
-import { createWorkbook, createWorksheet, defaultCellStyle } from '../src/xlsx/workbook.js';
-import { loadXlsx } from '../src/xlsx/read/index.js';
-import { saveXlsx } from '../src/xlsx/write/index.js';
+import { cellError, type CellStyle, type Workbook } from '../src/core/xlsx/model.js';
+import { putCell } from '../src/core/xlsx/cells.js';
+import { internStyle } from '../src/core/xlsx/styles.js';
+import { createWorkbook, createWorksheet, defaultCellStyle } from '../src/core/xlsx/workbook.js';
+import { loadXlsx } from '../src/core/xlsx/read/index.js';
+import { saveXlsx } from '../src/core/xlsx/write/index.js';
 import { type CellCheck, sessionBuilds } from './xlsx-acceptance-session.js';
 
 const out = process.argv[2];
 if (!out) throw new Error('usage: bun scripts/xlsx-acceptance-build.ts <output folder>');
 mkdirSync(out, { recursive: true });
-const fixtures = join(import.meta.dir, '..', 'src', 'xlsx', '__fixtures__');
+const fixtures = join(import.meta.dir, '..', 'src', 'core', 'xlsx', '__fixtures__');
 const range = (a: [number, number], b: [number, number]) => ({
 	start: { row: a[0], col: a[1] },
 	end: { row: b[0], col: b[1] },

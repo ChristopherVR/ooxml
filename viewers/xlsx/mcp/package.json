@@ -2,11 +2,11 @@
 	"name": "xlsx-viewer-mcp",
 	"version": "0.1.4",
 	"description": "Headless XLSX MCP tools backed only by OOXML core",
-	"license": "Apache-2.0",
 	"homepage": "https://christophervr.github.io/ooxml/xlsx/",
 	"bugs": {
 		"url": "https://github.com/ChristopherVR/ooxml/issues"
 	},
+	"license": "Apache-2.0",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/ChristopherVR/ooxml.git",

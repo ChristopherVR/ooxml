@@ -122,17 +122,17 @@ belong in an untracked, git-ignored `CLAUDE.local.md`, never in this file.
 
 ### Where does my change go?
 
-| The change is about...                                                          | Make it in                                          |
-| ------------------------------------------------------------------------------- | --------------------------------------------------- |
-| VSDX parsing, ShapeSheet, model, editing, saving or preservation                | `src/visio/` in `ooxml`, with core regression tests |
-| XML, OPC, units, color, geometry, DrawingML or SmartArt reusable across formats | The appropriate shared area in `ooxml`              |
-| DOM-only controls shared by Office viewers                                      | `src/ui` in `ooxml` (`ooxml-ui`)               |
-| Legacy binary codecs or CFB                                                     | `ole2`                                              |
-| Metafile conversion                                                             | `emf-converter`                                     |
-| SVG presentation, browser text measurement, controls or view state              | `src/ui/src/visio/` in `ooxml`                 |
-| Framework properties, events and lifecycle                                      | `packages/bindings/src`, across affected adapters   |
-| Docs, demos, packaging, release scripts and browser tests                       | Here                                                |
-| Office-suite launch routes                                                      | `site/apps.js` in `ooxml`                           |
+| The change is about...                                                          | Make it in                                               |
+| ------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| VSDX parsing, ShapeSheet, model, editing, saving or preservation                | `src/core/visio/` in `ooxml`, with core regression tests |
+| XML, OPC, units, color, geometry, DrawingML or SmartArt reusable across formats | The appropriate shared area in `ooxml`                   |
+| DOM-only controls shared by Office viewers                                      | `src/ui` in `ooxml` (`ooxml-ui`)                         |
+| Legacy binary codecs or CFB                                                     | `ole2`                                                   |
+| Metafile conversion                                                             | `emf-converter`                                          |
+| SVG presentation, browser text measurement, controls or view state              | `src/ui/src/visio/` in `ooxml`                           |
+| Framework properties, events and lifecycle                                      | `packages/bindings/src`, across affected adapters        |
+| Docs, demos, packaging, release scripts and browser tests                       | Here                                                     |
+| Office-suite launch routes                                                      | `site/apps.js` in `ooxml`                                |
 
 Extract reusable logic when touching it instead of introducing another copy.
 Separate browser rendering decisions from document semantics. Record source
