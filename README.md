@@ -110,7 +110,7 @@ const part = resolvePartPath('word/document.xml', rels.get('rId5')!.target);
 
 ## Contributing and roadmap
 
-`ooxml-core` is developed in the [ChristopherVR/ooxml](https://github.com/ChristopherVR/ooxml) repository, which also holds [`ooxml-ui`](https://www.npmjs.com/package/ooxml-ui), the MCP servers and the Word, Excel, Visio and OpenTeams viewers. Its README covers the repository layout, the development workflow, releases and the roadmap; the working agreements are in [AGENTS.md](AGENTS.md) and [CONTRIBUTING.md](CONTRIBUTING.md), and [PROVENANCE.md](PROVENANCE.md) records where each module came from.
+`ooxml-core` is developed in the [ChristopherVR/ooxml](https://github.com/ChristopherVR/ooxml) repository, which also holds [`ooxml-ui`](https://www.npmjs.com/package/ooxml-ui), the MCP servers and the Word, Excel, Visio and OpenTeams viewers. Its README covers the repository layout, the development workflow and releases, and the [roadmap](https://github.com/ChristopherVR/ooxml/blob/main/docs/roadmap.md) says what comes next; the working agreements are in [AGENTS.md](AGENTS.md) and [CONTRIBUTING.md](CONTRIBUTING.md), and [PROVENANCE.md](PROVENANCE.md) records where each module came from.
 
 ## License
 
