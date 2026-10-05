@@ -124,13 +124,18 @@ jobs:
           path: dist
           retention-days: 1
 
+  # The UI is typed and packed against the core's built output (`dist`), so it reuses the build job's.
   ui:
-    needs: plan
+    needs: [plan, build]
     if: fromJSON(needs.plan.outputs.plan).ui
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
+      - uses: actions/download-artifact@v8
+        with:
+          name: core-dist
+          path: dist
       - run: bun run --cwd packages/ui test
       - run: bun run --cwd packages/ui build
       - run: bun run --cwd packages/ui test:package
