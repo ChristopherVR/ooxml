@@ -372,12 +372,14 @@ export interface ChartAxisEdit {
 	displayUnitsValue?: number | null;
 	/** Display-unit label text/layout/shape options. `null` removes the label. */
 	displayUnitsLabel?: PptxChartAxisFormatting['displayUnitsLabel'];
+	/** Show or hide (`c:delete`) the axis. */
+	visible?: boolean;
 }
 
 /**
  * Edit value/category axis formatting that round-trips to the saved `.pptx`
  * (`c:min`/`c:max` scaling, `c:majorUnit`/`c:minorUnit`, `c:numFmt`,
- * `c:tickLblPos`).
+ * `c:tickLblPos`, `c:delete` via `visible`).
  *
  * Finds the first axis of `axisType` in `chartData.axes`, creating an entry
  * if none exists. Note that newly created axes only serialize for charts that
@@ -388,6 +390,7 @@ export interface ChartAxisEdit {
  * ```ts
  * setChartAxis(chartEl, "valAx", { min: 0, max: 100, majorUnit: 20 });
  * setChartAxis(chartEl, "valAx", { min: null }); // clear the override
+ * setChartAxis(chartEl, "catAx", { visible: false }); // hide the axis
  * ```
  */
 export function setChartAxis(
@@ -443,6 +446,9 @@ export function setChartAxis(
 	}
 	if (edit.displayUnitsLabel !== undefined) {
 		axis.displayUnitsLabel = edit.displayUnitsLabel;
+	}
+	if (edit.visible !== undefined) {
+		axis.deleted = !edit.visible;
 	}
 }
 

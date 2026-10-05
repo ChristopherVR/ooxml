@@ -22,6 +22,8 @@ import type { PptxThemeColorRef } from '../../types/color-ref';
 import type { StrokeDashType, ConnectorArrowType } from '../../types/common';
 import type { PptxTransitionType } from '../../types/transition';
 import type { ChartGradientInput } from './chart-gradient-input';
+import type { ChartAreaFormatInput } from './chart-layout-input';
+import type { ChartAxisEdit, PptxChartAxisType } from './chart-operations';
 
 export type { ChartGradientInput, ChartGradientStopInput } from './chart-gradient-input';
 
@@ -226,6 +228,20 @@ export interface ChartInput {
 	grouping?: 'clustered' | 'stacked' | 'percentStacked';
 	/** Bar series direction (`c:barDir`): vertical columns (default) or horizontal bars. */
 	barDirection?: 'col' | 'bar';
+	/** Bar cluster gap, % of bar width (`c:gapWidth`, 0..500; default 150). Bar, bar3D, ofPie. */
+	gapWidth?: number;
+	/** Bar overlap within a cluster, % (`c:overlap`, -100..100). 2-D bar only. */
+	overlap?: number;
+	/** First slice angle in degrees (`c:firstSliceAng`, 0..360). Pie, doughnut. */
+	firstSliceAngle?: number;
+	/** Doughnut hole size, % (`c:holeSize`, 1..90; default 50). Doughnut only. */
+	holeSize?: number;
+	/** Chart-area fill, border and rounded corners (`c:chartSpace/c:spPr`, `c:roundedCorners`). */
+	chartArea?: ChartAreaFormatInput;
+	/** Plot-area fill and border (`c:plotArea/c:spPr`). */
+	plotArea?: ChartAreaFormatInput;
+	/** Axis edits by axis type, as `setChartAxis` takes them (e.g. `{ valAx: { visible: false } }`). */
+	axes?: Partial<Record<PptxChartAxisType, ChartAxisEdit>>;
 }
 
 export interface ChartOptions extends Partial<ElementPosition> {}

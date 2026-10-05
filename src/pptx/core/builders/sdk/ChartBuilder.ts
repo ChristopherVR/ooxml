@@ -22,6 +22,8 @@
 import type { PptxChartType } from '../../types/chart';
 import type { ChartPptxElement } from '../../types/elements';
 import { createChartElement } from './ElementFactory';
+import type { ChartAreaFormatInput } from './chart-layout-input';
+import type { ChartAxisEdit, PptxChartAxisType } from './chart-operations';
 import type { ChartGradientInput, ChartInput, ChartOptions } from './types';
 
 /**
@@ -186,6 +188,61 @@ export class ChartBuilder {
 	 */
 	grouping(mode: 'clustered' | 'stacked' | 'percentStacked'): this {
 		this._input.grouping = mode;
+		return this;
+	}
+
+	// -- Spacing, geometry and areas (validated by build()) -----------------
+
+	/** Gap between bar clusters, % of bar width (`c:gapWidth`, 0..500). Bar, bar3D, ofPie. */
+	gapWidth(percent: number): this {
+		this._input.gapWidth = percent;
+		return this;
+	}
+
+	/** Overlap of bars within a cluster, % (`c:overlap`, -100..100). 2-D bar only. */
+	overlap(percent: number): this {
+		this._input.overlap = percent;
+		return this;
+	}
+
+	/** Angle of the first slice, degrees clockwise from 12 o'clock (`c:firstSliceAng`, 0..360). */
+	firstSliceAngle(degrees: number): this {
+		this._input.firstSliceAngle = degrees;
+		return this;
+	}
+
+	/** Doughnut hole size, % of the diameter (`c:holeSize`, 1..90). */
+	holeSize(percent: number): this {
+		this._input.holeSize = percent;
+		return this;
+	}
+
+	/**
+	 * Chart-area fill, border and rounded corners.
+	 *
+	 * @example
+	 * ```ts
+	 * builder.chartArea({ fill: "none", border: "none", roundedCorners: false });
+	 * ```
+	 */
+	chartArea(format: ChartAreaFormatInput): this {
+		this._input.chartArea = format;
+		return this;
+	}
+
+	/** Plot-area fill and border. */
+	plotArea(format: ChartAreaFormatInput): this {
+		this._input.plotArea = format;
+		return this;
+	}
+
+	/**
+	 * Edit an axis, e.g. `.axis("catAx", { visible: false })` to hide it.
+	 * Merges with earlier edits of the same axis.
+	 */
+	axis(axisType: PptxChartAxisType, edit: ChartAxisEdit): this {
+		const axes = (this._input.axes ??= {});
+		axes[axisType] = { ...axes[axisType], ...edit };
 		return this;
 	}
 

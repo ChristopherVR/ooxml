@@ -75,6 +75,8 @@ export {
 } from './chart-formatting-operations';
 export { setChartSeriesGradient, setChartDataPointGradient } from './chart-gradient-operations';
 export { toChartGradientFill } from './chart-gradient-input';
+export { setChartGroupOptions, setChartAreaFormat } from './chart-layout-operations';
+export type { ChartGroupOptionsInput, ChartAreaFormatInput } from './chart-layout-input';
 
 // Chart drawing-overlay (c:userShapes) operations
 export {
