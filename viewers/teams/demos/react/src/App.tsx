@@ -2,24 +2,72 @@
 //   left   <Teams />      the complete UI (the <teams-app> element)
 //   right  useTeams()     your own markup over the raw client: state in, actions out
 import { Teams, useTeams, type TeamsClientOptions } from 'openteams-react-viewer';
+import type { TeamsServerConfig } from 'ooxml-core/teams';
 import { useMemo, useState } from 'react';
 
 const params = new URLSearchParams(location.search);
 const name = params.get('name') ?? 'Ada';
 const userId = params.get('id') ?? `demo-${name.toLowerCase()}`;
 const workspaceId = params.get('room') ?? 'react-demo';
-const config = {
-	mode: 'server' as const,
-	syncUrl: 'ws://127.0.0.1:8787/sync',
-	signalingUrl: 'ws://127.0.0.1:8787/signal',
-	iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
-};
+const iceServers = [{ urls: 'stun:stun.l.google.com:19302' }];
+// The GitHub Pages build (VITE_TEAMS_STATIC=1) has no server behind it: it runs in local mode, where
+// tabs of this browser (and the two clients on this page) share state over BroadcastChannel.
+const staticSite = import.meta.env.VITE_TEAMS_STATIC === '1';
+const config: TeamsServerConfig =
+	staticSite || params.get('local')
+		? { mode: 'local', iceServers }
+		: {
+				mode: 'server',
+				syncUrl: 'ws://127.0.0.1:8787/sync',
+				signalingUrl: 'ws://127.0.0.1:8787/signal',
+				iceServers,
+			};
 
 export function App() {
 	return (
-		<div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 22em', height: '100%' }}>
-			<Teams workspaceId={workspaceId} userName={name} userId={userId} config={config} />
-			<CustomPanel />
+		<div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+			{staticSite ? <StaticNotice /> : null}
+			<div
+				style={{
+					display: 'grid',
+					gridTemplateColumns: 'minmax(0, 1fr) 22em',
+					flex: 1,
+					minHeight: 0,
+				}}
+			>
+				<Teams workspaceId={workspaceId} userName={name} userId={userId} config={config} />
+				<CustomPanel />
+			</div>
+		</div>
+	);
+}
+
+/** Shown on the Pages build only: what runs where, and how to try two people. */
+function StaticNotice() {
+	const [open, setOpen] = useState(true);
+	if (!open) return null;
+	const other = name.toLowerCase() === 'bob' ? 'Ada' : 'Bob';
+	const next = new URLSearchParams(params);
+	next.set('name', other);
+	next.delete('id');
+	return (
+		<div className="static-notice" role="note">
+			<p>
+				<strong>This demo runs entirely in your browser.</strong> There is no server behind this
+				page: the full UI on the left and the <code>useTeams()</code> panel on the right are two
+				clients that sync over BroadcastChannel, and nothing leaves this browser. Real use needs a
+				server:{' '}
+				<a href="/teams-viewer/server" target="_top">
+					run your own
+				</a>
+				.
+			</p>
+			<a href={`?${next.toString()}`} target="_blank" rel="noopener">
+				Open a second tab as {other}
+			</a>
+			<button type="button" onClick={() => setOpen(false)}>
+				Dismiss
+			</button>
 		</div>
 	);
 }

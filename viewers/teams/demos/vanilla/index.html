@@ -3,13 +3,42 @@
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<title>Teams: vanilla demo</title>
+		<title>OpenTeams: vanilla demo</title>
+		<link rel="icon" href="data:," />
 		<style>
 			html, body { margin: 0; height: 100%; }
-			teams-app { height: 100vh; }
+			body { display: flex; flex-direction: column; font-family: system-ui, sans-serif; }
+			teams-app { flex: 1; min-height: 0; }
+			.static-notice {
+				display: flex; flex-wrap: wrap; align-items: center; gap: 0.4em 1em;
+				padding: 0.55em 1em; font-size: 0.875rem; line-height: 1.45;
+				background: #e6f4f4; color: #0b3d3d; border-bottom: 1px solid #b5dcdc;
+			}
+			.static-notice[hidden] { display: none; }
+			.static-notice p { margin: 0; flex: 1 1 32em; }
+			.static-notice a { color: #075e5e; font-weight: 600; }
+			.static-notice button {
+				font: inherit; background: none; border: 1px solid #8cc6c6; border-radius: 4px;
+				color: inherit; padding: 0.15em 0.7em; cursor: pointer;
+			}
+			@media (prefers-color-scheme: dark) {
+				.static-notice { background: #0f2e2e; color: #d5eeee; border-color: #1f5252; }
+				.static-notice a { color: #7fd6d6; }
+				.static-notice button { border-color: #2f6b6b; }
+			}
 		</style>
 	</head>
 	<body>
+		<div id="static-notice" class="static-notice" role="note" hidden>
+			<p>
+				<strong>This demo runs entirely in your browser.</strong> There is no server behind
+				this page: chat, presence and calls travel only between tabs of this browser
+				(BroadcastChannel) and are kept in its local storage. Real use needs a server:
+				<a href="/teams-viewer/server" target="_top">run your own</a>.
+			</p>
+			<a data-second-tab target="_blank" rel="noopener" href="?name=Bob">Open a second tab as Bob</a>
+			<button type="button" data-dismiss>Dismiss</button>
+		</div>
 		<teams-app workspace-id="demo"></teams-app>
 		<script type="module" src="./src/main.ts"></script>
 	</body>
