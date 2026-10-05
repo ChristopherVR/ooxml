@@ -12,6 +12,11 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ (github.event_name == 'push' || github.event_name == 'pull_request') && (github.event.pull_request.number || github.ref) || github.run_id }}
+  # A newer push or PR update supersedes the run in flight; scheduled and manual runs always finish.
+  cancel-in-progress: ${{ github.event_name == 'push' || github.event_name == 'pull_request' }}
+
 jobs:
   verify:
     runs-on: ubuntu-latest
