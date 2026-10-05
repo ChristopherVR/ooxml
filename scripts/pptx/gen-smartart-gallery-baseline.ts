@@ -1,5 +1,5 @@
 /**
- * Regenerate `src/pptx/__tests__/fixtures/smartart-gallery/baseline.json`,
+ * Regenerate `src/core/pptx/__tests__/fixtures/smartart-gallery/baseline.json`,
  * the per-fixture progress log for the DiagramML layout engine.
  *
  * Mirrors `smartart-gallery-ground-truth.test.ts` exactly: shapes are keyed
@@ -24,12 +24,12 @@ import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { PptxHandler } from '../../src/pptx/core/PptxHandler';
-import type { PptxElement, SmartArtPptxElement } from '../../src/pptx/core/types/elements';
-import { computeSmartArtElementsWithoutCache, decomposeSmartArt } from '../../src/pptx/core/utils';
+import { PptxHandler } from '../../src/core/pptx/core/PptxHandler';
+import type { PptxElement, SmartArtPptxElement } from '../../src/core/pptx/core/types/elements';
+import { computeSmartArtElementsWithoutCache, decomposeSmartArt } from '../../src/core/pptx/core/utils';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const GALLERY_DIR = path.resolve(HERE, '../../src/pptx/__tests__/fixtures/smartart-gallery');
+const GALLERY_DIR = path.resolve(HERE, '../../src/core/pptx/__tests__/fixtures/smartart-gallery');
 
 interface ManifestEntry {
 	file: string;

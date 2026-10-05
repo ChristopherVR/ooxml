@@ -36,7 +36,7 @@
 
 .PARAMETER OutFile
   Destination .ts file. Defaults to
-  src/pptx/core/utils/font-advance-widths.generated.ts.
+  src/core/pptx/core/utils/font-advance-widths.generated.ts.
 
 .PARAMETER Fonts
   Fonts to measure. Defaults to the Office theme's default minor font
@@ -208,7 +208,7 @@ try {
   # (see smartart-text-wrap-fit.ts) comes from the SAVED FILE's `a:rPr/@sz`
   # after PowerPoint's OWN autofit picks a size, not from an API restriction;
   # this script cannot re-derive that without a full SmartArt autofit corpus,
-  # which `src/pptx/__tests__/fixtures/smartart-gallery/` already
+  # which `src/core/pptx/__tests__/fixtures/smartart-gallery/` already
   # provides (see the baseline the interpreter itself is measured against).
   "API accepts fractional sizes directly: $($observedNonIntegerPt) of $($Fonts.Count) fonts read back non-integer (informational only)." | Write-Host
 

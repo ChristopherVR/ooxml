@@ -24,7 +24,7 @@ the core's layout functions return and routes input to the core's edit session.
 
 ### One editor, six thin bindings
 
-There is **one** editor: the `<xlsx-editor>` web component, which lives in `ooxml-ui/xlsx` (ooxml repository, `packages/ui/src/xlsx`); `packages/web-component` only re-exports it. The
+There is **one** editor: the `<xlsx-editor>` web component, which lives in `ooxml-ui/xlsx` (ooxml repository, `src/ui/src/xlsx`); `packages/web-component` only re-exports it. The
 bindings in `packages/bindings` (`react.tsx`, `vue.ts`, `angular.ts`, `solid.ts`,
 `XlsxEditor.svelte`, and the framework-neutral `index.ts` that Vanilla and the
 others build on) are lifecycle and event adapters only: they create the
@@ -129,19 +129,19 @@ ranges before committing.
 
 | The change is about...                                                                | Make it in                                      |
 | ------------------------------------------------------------------------------------- | ----------------------------------------------- |
-| Parsing, the workbook model, saving or round-trip loss                                | `src/xlsx/` in `ooxml`, with a round-trip test  |
+| Parsing, the workbook model, saving or round-trip loss                                | `src/core/xlsx/` in `ooxml`, with a round-trip test  |
 | Formulas, functions, recalculation, number formats, editing commands, undo            | `ooxml` (`xlsx/formula`, `numfmt`, `edit`)      |
 | Grid metrics, cell views, conditional formats, chart view models, keyboard navigation | `ooxml` (`xlsx/layout`)                         |
 | `.xls` loading, CSV, format detection                                                 | `ooxml` (`xlsx/load`)                           |
-| A control shared by Excel, Word and PowerPoint (shared ribbon controls, dialogs)      | `ooxml-ui` in `ooxml` (`packages/ui`)           |
+| A control shared by Excel, Word and PowerPoint (shared ribbon controls, dialogs)      | `ooxml-ui` in `ooxml` (`src/ui`)           |
 | `.xls` / `.doc` / `.ppt` binary codecs, CFB containers                                | `ole2`                                          |
-| Ribbon, dialogs, panels, painting the grid, input handling, styling, locales          | `packages/ui/src/xlsx` in the ooxml repository  |
+| Ribbon, dialogs, panels, painting the grid, input handling, styling, locales          | `src/ui/src/xlsx` in the ooxml repository  |
 | Framework wiring (props, events, lifecycle)                                           | `packages/bindings` here (all adapters at once) |
 | Demos, docs site, browser tests, packaging and release scripts                        | here                                            |
 
 ### GitHub Pages
 
-`https://christophervr.github.io/xlsx-viewer/` is the docs site (VitePress in
+`https://christophervr.github.io/ooxml/xlsx/` is the docs site (VitePress in
 `docs/`), deployed by `.github/workflows/docs.yml` on pushes to `main` that touch
 `docs/`, `demos/`, `packages/` or the build. `scripts/build-pages.mjs` also
 builds the demo once per framework at `/demo/` (React), `/demo-vue/`,

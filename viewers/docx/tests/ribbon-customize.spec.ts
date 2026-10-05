@@ -15,8 +15,8 @@ test('File > Customize Ribbon hides and restores commands', async ({ page }) => 
 		return true;
 	});
 	expect(events).toBe(true);
-	await editor.locator('.dve-file-tab').click();
-	await editor.locator('.dve-backstage-nav-item', { hasText: 'Customize Ribbon' }).click();
+	await editor.locator('.dve-ribbon .file').click();
+	await editor.locator('.dve-backstage .item', { hasText: 'Customize Ribbon' }).click();
 	await editor
 		.locator('.dve-customize-row', { hasText: /^Bold$/ })
 		.locator('input')
@@ -26,8 +26,8 @@ test('File > Customize Ribbon hides and restores commands', async ({ page }) => 
 	expect(
 		await page.evaluate(() => (window as unknown as { seen: string[][] }).seen.at(-1)),
 	).toEqual(['bold']);
-	await editor.locator('.dve-file-tab').click();
-	await editor.locator('.dve-backstage-nav-item', { hasText: 'Customize Ribbon' }).click();
+	await editor.locator('.dve-ribbon .file').click();
+	await editor.locator('.dve-backstage .item', { hasText: 'Customize Ribbon' }).click();
 	await editor.getByRole('button', { name: 'Reset all customizations' }).click();
 	await editor.getByRole('button', { name: 'Back to document' }).click();
 	await expect(editor.getByRole('button', { name: 'Bold', exact: true })).toBeVisible();

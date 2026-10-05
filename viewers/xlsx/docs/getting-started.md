@@ -5,8 +5,8 @@
 You need [Bun](https://bun.sh/) 1.3 and Node.js 24.
 
 ```bash
-git clone https://github.com/ChristopherVR/xlsx-viewer.git
-cd xlsx-viewer
+git clone https://github.com/ChristopherVR/ooxml.git
+cd ooxml/viewers/xlsx
 bun install
 bun run demo   # vanilla demo; add ?framework=react|vue|angular|svelte|solid
 ```

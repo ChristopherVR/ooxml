@@ -2,15 +2,15 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { PptxHandler } from '../../src/pptx/core/PptxHandler';
-import type { SmartArtPptxElement } from '../../src/pptx/core/types/elements';
-import { decomposeSmartArt } from '../../src/pptx/core/utils';
-import { runEngineLayout } from '../../src/pptx/core/utils/smartart-engine/engine-to-result';
-import { interpretedLayoutToElements } from '../../src/pptx/core/utils/smartart-interpreter-drawing-bridge';
+import { PptxHandler } from '../../src/core/pptx/core/PptxHandler';
+import type { SmartArtPptxElement } from '../../src/core/pptx/core/types/elements';
+import { decomposeSmartArt } from '../../src/core/pptx/core/utils';
+import { runEngineLayout } from '../../src/core/pptx/core/utils/smartart-engine/engine-to-result';
+import { interpretedLayoutToElements } from '../../src/core/pptx/core/utils/smartart-interpreter-drawing-bridge';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const file = process.argv[2] ?? 'basic-pyramid--hier5.pptx';
-const fixturePath = path.resolve(HERE, '../../src/pptx/__tests__/fixtures/smartart-gallery', file);
+const fixturePath = path.resolve(HERE, '../../src/core/pptx/__tests__/fixtures/smartart-gallery', file);
 
 async function main(): Promise<void> {
 	const buf = readFileSync(fixturePath);

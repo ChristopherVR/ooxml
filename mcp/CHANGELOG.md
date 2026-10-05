@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.1.7](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-mcp@0.1.7) - 2026-10-05
+
+### Bug Fixes
+
+- **viewers:** Point every package's homepage, bugs and README links at ooxml (by @ChristopherVR) ([e40592e](https://github.com/ChristopherVR/ooxml/commit/e40592e1cc1331c8223e8fcc366041a933435dee))
+
 ## [0.1.6](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-mcp@0.1.6) - 2026-10-05
 
 ## [0.1.5](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-mcp@0.1.5) - 2026-10-05

@@ -44,6 +44,6 @@ new automation entry before that release. Temporary local core links are for
 verification only and must not be committed.
 Tests are excluded from npm tarballs. Install a standalone package's dependencies
 and run `npm test` inside its `mcp/` directory to exercise protocol contracts.
-Core round-trip, edit and filesystem tests live in `src/automation/`.
+Core round-trip, edit and filesystem tests live in `src/core/automation/`.
 
 See [combined server usage](../mcp/README.md) for installation and selection.

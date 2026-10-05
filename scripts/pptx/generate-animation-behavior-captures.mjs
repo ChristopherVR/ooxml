@@ -1,6 +1,6 @@
 // @ts-nocheck
 /**
- * Generate `src/pptx/core/services/animation-behavior-captures.json`: PowerPoint's
+ * Generate `src/core/pptx/core/services/animation-behavior-captures.json`: PowerPoint's
  * own behaviour tree for every entrance/exit preset id and presetSubtype.
  *
  * Input: two decks written by retail PowerPoint through COM with

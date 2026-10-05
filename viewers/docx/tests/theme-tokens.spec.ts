@@ -3,7 +3,7 @@ import { openSample } from './helpers';
 
 const bg = (page: Page, selector: string) =>
 	page.locator(selector).evaluate((el) => getComputedStyle(el).backgroundColor);
-const chromeBackground = (page: Page) => bg(page, 'docx-editor .dve-titlebar');
+const chromeBackground = (page: Page) => bg(page, 'docx-editor .dve-titlebar .bar');
 const paperBackground = (page: Page) => bg(page, 'docx-editor .dve-paper');
 const setTheme = (page: Page, theme: string) =>
 	page.locator('docx-editor').evaluate((el, value) => {
@@ -43,7 +43,7 @@ test('auto follows the OS scheme and themeColors override the preset', async ({ 
 
 test('keyboard focus shows the ring on ribbon tabs', async ({ page }) => {
 	await openSample(page);
-	const tab = page.locator('docx-editor .ribbon-tabs [role="tab"]').first();
+	const tab = page.locator('docx-editor .dve-ribbon [role="tab"]').first();
 	await tab.focus();
 	await page.keyboard.press('Tab');
 	await page.keyboard.press('Shift+Tab');

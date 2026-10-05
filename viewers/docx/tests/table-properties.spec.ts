@@ -1,7 +1,13 @@
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
-import { insertTableOfSize, newDocument, saveButton, setReadOnly } from './helpers';
+import {
+	insertTableOfSize,
+	newDocument,
+	saveButton,
+	setReadOnly,
+	dialogByHeading,
+} from './helpers';
 
 test('Table Properties edits, undoes, validates and exports Word row settings', async ({
 	page,
@@ -15,7 +21,7 @@ test('Table Properties edits, undoes, validates and exports Word row settings', 
 	await editor.getByRole('tab', { name: 'Table', exact: true }).click();
 	const properties = editor.getByRole('button', { name: 'Table properties', exact: true });
 	await properties.click();
-	const dialog = editor.getByRole('dialog', { name: 'Table properties', exact: true });
+	const dialog = dialogByHeading(editor, 'Table properties');
 	await dialog.getByRole('checkbox', { name: 'Specify height', exact: true }).check();
 	await dialog.getByRole('spinbutton', { name: 'Height (inches)', exact: true }).fill('0.4');
 	await dialog.getByRole('combobox', { name: 'Row height is', exact: true }).selectOption('exact');
@@ -69,12 +75,12 @@ test('Table Properties stays usable on a narrow ribbon and localizes the dialog'
 	await editor.locator('.ProseMirror td').first().click();
 	await editor.getByRole('tab', { name: 'Table', exact: true }).click();
 	await editor.getByRole('button', { name: 'Table properties', exact: true }).click();
-	await expect(editor.getByRole('dialog', { name: 'Table properties' })).toBeVisible();
+	await expect(dialogByHeading(editor, 'Table properties')).toBeVisible();
 	await page.keyboard.press('Escape');
 	await editor.evaluate((element) => {
 		element.setAttribute('locale', 'de');
 	});
 	await editor.getByRole('button', { name: 'Tabelleneigenschaften', exact: true }).click();
-	await expect(editor.getByRole('dialog', { name: 'Tabelleneigenschaften' })).toBeVisible();
+	await expect(dialogByHeading(editor, 'Tabelleneigenschaften')).toBeVisible();
 	await expect(editor.getByRole('checkbox', { name: 'Höhe angeben' })).toBeVisible();
 });

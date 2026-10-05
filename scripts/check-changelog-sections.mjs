@@ -98,15 +98,20 @@ export function checkChangelog(text, { requireReleases = false } = {}) {
 	);
 }
 
-/** Root changelog plus every packages/<pkg>/CHANGELOG.md that exists. */
+/**
+ * Root changelog plus every packages/<pkg>/CHANGELOG.md that exists, and the same for each
+ * imported viewer (viewers/<name>/packages/<pkg>, mcp and server).
+ */
 export function changelogFiles(root = ROOT) {
 	const files = [];
 	const rootChangelog = join(root, 'CHANGELOG.md');
 	if (existsSync(rootChangelog)) {
 		files.push(rootChangelog);
 	}
-	const packagesDir = join(root, 'packages');
-	if (existsSync(packagesDir)) {
+	const scan = (packagesDir) => {
+		if (!existsSync(packagesDir)) {
+			return;
+		}
 		for (const entry of readdirSync(packagesDir, { withFileTypes: true })) {
 			if (!entry.isDirectory()) {
 				continue;
@@ -114,6 +119,22 @@ export function changelogFiles(root = ROOT) {
 			const candidate = join(packagesDir, entry.name, 'CHANGELOG.md');
 			if (existsSync(candidate)) {
 				files.push(candidate);
+			}
+		}
+	};
+	scan(join(root, 'packages'));
+	const viewersDir = join(root, 'viewers');
+	if (existsSync(viewersDir)) {
+		for (const viewer of readdirSync(viewersDir, { withFileTypes: true })) {
+			if (!viewer.isDirectory()) {
+				continue;
+			}
+			scan(join(viewersDir, viewer.name, 'packages'));
+			for (const single of ['mcp', 'server']) {
+				const candidate = join(viewersDir, viewer.name, single, 'CHANGELOG.md');
+				if (existsSync(candidate)) {
+					files.push(candidate);
+				}
 			}
 		}
 	}

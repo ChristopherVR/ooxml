@@ -162,7 +162,7 @@ connectors/glue, unsafe protection/redirection, unsupported affected formulas,
 ambiguous package dependencies and referenced deletion fail with a visible
 error. Relative line geometry scales; absolute line geometry needs a supported
 dimension dependency. See the core
-[`src/visio/README.md`](https://github.com/ChristopherVR/ooxml/blob/main/src/visio/README.md)
+[`src/core/visio/README.md`](https://github.com/ChristopherVR/ooxml/blob/main/src/visio/README.md)
 for the command contract, numeric limits, exclusion reasons and next expansions.
 The [capability ledger](parity.md) records the current admitted set, which now
 also includes bounded primitive master-instance moves with explicit local pins.

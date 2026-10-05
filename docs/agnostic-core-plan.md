@@ -4,15 +4,15 @@ Status: proposal plus first slice (the `diagram` area), 2026-10-02. Counts below
 
 Goal: everything that is not specific to one Office format lives in a format-neutral area with a neutral public model, and `docx`, `pptx` (later `xlsx`) are thin adapters over it. Word can then use what only PowerPoint has today: SmartArt first, then charts, then DrawingML primitives (fills, lines, effects, text bodies, theme).
 
-## 1. Where the shared logic lives today (`src/pptx`)
+## 1. Where the shared logic lives today (`src/core/pptx`)
 
-`src/pptx/core` is 79,630 lines of SmartArt, chart and DrawingML code mixed with slide code in flat folders (`core/utils` ~1,700 files, `core/core/runtime`, `core/core/builders`, `core/types`). Only file names separate generic DrawingML from slide logic.
+`src/core/pptx/core` is 79,630 lines of SmartArt, chart and DrawingML code mixed with slide code in flat folders (`core/utils` ~1,700 files, `core/core/runtime`, `core/core/builders`, `core/types`). Only file names separate generic DrawingML from slide logic.
 
 ### 1.1 The coupling, in four layers
 
 | Layer                               | What it is                                                                                                                                                                                                                                                                                                       | Why it is not portable as is                                                                                                                                                                                            |
 | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| XML model                           | `XmlObject` (`types/common.ts`): `fast-xml-parser` trees, attributes as `@_name`, same-name siblings grouped into arrays, prefixes in keys (`a:solidFill`) looked up by local name through `xmlLookupService`.                                                                                                   | docx and `src/xml` use a namespace-aware DOM (`@xmldom/xmldom`). Every pptx parser reads `node['@_x']`. 87 of 162 `utils/chart-*` files and nearly every smartart file take `XmlObject`.                                |
+| XML model                           | `XmlObject` (`types/common.ts`): `fast-xml-parser` trees, attributes as `@_name`, same-name siblings grouped into arrays, prefixes in keys (`a:solidFill`) looked up by local name through `xmlLookupService`.                                                                                                   | docx and `src/core/xml` use a namespace-aware DOM (`@xmldom/xmldom`). Every pptx parser reads `node['@_x']`. 87 of 162 `utils/chart-*` files and nearly every smartart file take `XmlObject`.                                |
 | Handler runtime (`this`)            | A mixin chain `PptxHandlerRuntime` (`core/core/runtime/*`): `parseSmartArtDrawingShapes`, `parseDrawingShape`, `parseSmartArtQuickStyle`, chart parsing all call `this.parseColor`, `this.resolveThemeFillRef`, `this.readXmlPartByRelationshipId(slidePath, relId)`, `this.compatibilityService.reportWarning`. | The base class owns the JSZip instance, the theme maps, the rels maps and the slide being loaded. Colour, gradient, shadow and theme resolution are methods of it, so a shape parser cannot run without a presentation. |
 | Types                               | `PptxSmartArtDrawingShape extends PptxCustomPathProperties`, `PptxSmartArtData` embeds `TextSegment`, `Pptx3DScene`, `PptxSmartArtChrome`; `PptxElement`/`PptxSlide` appear in `smartart-decompose-*` (SmartArt to slide elements) and the chart builders.                                                       | Public types are named and shaped for PowerPoint; the pure data (nodes, connections, colours, quick style) is tangled with slide editing fields.                                                                        |
 | Pure algorithms (no XML, no `this`) | `smartart-engine/` (layout algorithms, constraint solver, text fit, font metrics tables), `smartart-layout-interpreter-*`, `smartart-hierarchy-*`, `smartart-editing-*` (reflow, node ops) over typed `PptxSmartArt*` models; chart data utils; `color/`, `geometry/` (already moved).                           | These are the cleanest to move, but they import the pptx types barrel (`from '../types'`). Moving them needs the typed model to move first.                                                                             |
@@ -53,7 +53,7 @@ Every area is a subpath of the single package, strict TypeScript, written agains
 A neutral area exposes **parsers over DOM elements or part text plus small injected interfaces**; a format area supplies the host:
 
 - `PartHost`: `readText(partName)`, `resolve(basePart, target)`, relationships by part. The pptx adapter implements it over its JSZip and `slideRelationships`; the docx adapter over the document package. This replaces `this.readXmlPartByRelationshipId(slidePath, relId)`.
-- `ColorResolver`: `(DrawingColor) => hex | undefined`. pptx binds its theme maps; docx binds `src/docx/theme.ts`.
+- `ColorResolver`: `(DrawingColor) => hex | undefined`. pptx binds its theme maps; docx binds `src/core/docx/theme.ts`.
 - Diagnostics: parsers return `issues: {code, message}[]` instead of calling a compatibility service.
 - pptx adapter also converts between the neutral model and its legacy `Pptx*` types (aliases where shapes are identical, mappers where not) so the public pptx API does not change.
 - docx adapter owns the host markup (`w:drawing`/`wp:inline`/`wp:anchor`, extent, wrap, alt text) and calls the neutral area for the graphic part.
@@ -70,7 +70,7 @@ For code that still takes `XmlObject`, a neutral parser may be driven through a 
 6. **Port pptx area by area from `XmlObject` to the DOM** (charts and SmartArt first, slides, text and tables last), deleting `xml-reorder`/`ordered-xml-merge` as each area is ported, then drop `fast-xml-parser`. This is the dominant cost in the whole programme and is the existing plan in `docx-viewer/docs/ooxml-core-plan.md`.
 7. **Rendering view-models** (chart 2D/3D, SmartArt 3D) are UI/render code and stay in the viewer repos or the UI package (section 5); they consume only the neutral models.
 
-Each step ships independently; after each, `src/pptx` tests must pass unchanged (byte-identical output is the acceptance bar) and the area has its own tests plus real parts from `src/pptx/__tests__/fixtures`.
+Each step ships independently; after each, `src/core/pptx` tests must pass unchanged (byte-identical output is the acceptance bar) and the area has its own tests plus real parts from `src/core/pptx/__tests__/fixtures`.
 
 ## 4. Risks
 
@@ -129,4 +129,4 @@ Nothing in section 6 is implemented in this PR.
 
 ## 7. First slice delivered (this PR)
 
-See `PROVENANCE.md` ("diagram area"): `src/diagram` and `src/docx/diagram*.ts`. Not moved yet, on purpose: layout engine, interpreters, fabrication, the typed layout-definition tree, 3D, and everything in steps 2-6 above.
+See `PROVENANCE.md` ("diagram area"): `src/core/diagram` and `src/core/docx/diagram*.ts`. Not moved yet, on purpose: layout engine, interpreters, fabrication, the typed layout-definition tree, 3D, and everything in steps 2-6 above.

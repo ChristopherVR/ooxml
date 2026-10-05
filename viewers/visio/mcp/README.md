@@ -1,12 +1,12 @@
 # visio-viewer-mcp
 
 [![npm version](https://img.shields.io/npm/v/visio-viewer-mcp.svg)](https://www.npmjs.com/package/visio-viewer-mcp)
-[![license](https://img.shields.io/npm/l/visio-viewer-mcp.svg)](https://github.com/ChristopherVR/visio-viewer/blob/main/LICENSE)
+[![license](https://img.shields.io/npm/l/visio-viewer-mcp.svg)](https://github.com/ChristopherVR/ooxml/blob/main/viewers/visio/LICENSE)
 [![types](https://img.shields.io/npm/types/visio-viewer-mcp.svg)](https://www.npmjs.com/package/visio-viewer-mcp)
 
 > Headless MCP access to document operations owned by OOXML core.
 
-[Live demo](https://christophervr.github.io/visio-viewer/demo/) | [npm](https://www.npmjs.com/package/visio-viewer-mcp) | [Full docs](https://christophervr.github.io/visio-viewer/) | [Source](https://github.com/ChristopherVR/visio-viewer)
+[Live demo](https://christophervr.github.io/ooxml/visio/demo/) | [npm](https://www.npmjs.com/package/visio-viewer-mcp) | [Full docs](https://christophervr.github.io/ooxml/visio/) | [Source](https://github.com/ChristopherVR/ooxml/tree/main/viewers/visio)
 
 Repository-owned MCP schemas and server wiring. All document loading, editing
 and serialization delegate to `ooxml-core/automation`.
@@ -62,7 +62,7 @@ and edit results include diagnostics about fidelity limits.
 
 ## Documentation
 
-[Source and tools](https://github.com/ChristopherVR/visio-viewer/tree/main/mcp) |
+[Source and tools](https://github.com/ChristopherVR/ooxml/tree/main/viewers/visio/mcp) |
 [Core automation](https://github.com/ChristopherVR/ooxml/blob/main/docs/mcp.md)
 
 ## License

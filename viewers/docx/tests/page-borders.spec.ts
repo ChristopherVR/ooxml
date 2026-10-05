@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
-import { newDocument, saveButton } from './helpers';
+import { newDocument, saveButton, dialogByHeading } from './helpers';
 
 test('Layout > Page Borders draws a box in Print Layout, undoes and exports pgBorders', async ({
 	page,
@@ -14,7 +14,7 @@ test('Layout > Page Borders draws a box in Print Layout, undoes and exports pgBo
 	await page.keyboard.type('Bordered page');
 	await editor.getByRole('tab', { name: 'Layout', exact: true }).click();
 	await editor.getByRole('button', { name: 'Page borders', exact: true }).click();
-	const dialog = editor.getByRole('dialog', { name: 'Page borders', exact: true });
+	const dialog = dialogByHeading(editor, 'Page borders');
 	await expect(dialog).toBeVisible();
 	await dialog.getByRole('combobox', { name: 'Setting', exact: true }).selectOption('box');
 	await dialog.getByRole('combobox', { name: 'Style', exact: true }).selectOption('double');
@@ -27,7 +27,7 @@ test('Layout > Page Borders draws a box in Print Layout, undoes and exports pgBo
 	).toBe(true);
 	await dialog.getByRole('button', { name: 'OK', exact: true }).click();
 	await expect(dialog).toBeHidden();
-	await editor.locator('#dve-tab-view').click();
+	await editor.locator('[role="tab"][data-tab="view"]').click();
 	await editor.getByRole('button', { name: 'Print Layout' }).click();
 	const border = editor.locator('.dve-print-page .dve-print-page-border');
 	await expect(border).toHaveCount(1);

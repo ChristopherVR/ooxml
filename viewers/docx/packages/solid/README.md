@@ -1,12 +1,12 @@
 # docx-solid-viewer
 
 [![npm version](https://img.shields.io/npm/v/docx-solid-viewer.svg)](https://www.npmjs.com/package/docx-solid-viewer)
-[![license](https://img.shields.io/npm/l/docx-solid-viewer.svg)](https://github.com/ChristopherVR/docx-viewer/blob/main/LICENSE)
+[![license](https://img.shields.io/npm/l/docx-solid-viewer.svg)](https://github.com/ChristopherVR/ooxml/blob/main/viewers/docx/LICENSE)
 [![types](https://img.shields.io/npm/types/docx-solid-viewer.svg)](https://www.npmjs.com/package/docx-solid-viewer)
 
 > A browser Word document editor for Solid, using one shared editor and the canonical OOXML document engine.
 
-[Live demo](https://christophervr.github.io/docx-viewer/demo/) | [npm](https://www.npmjs.com/package/docx-solid-viewer) | [Full docs](https://christophervr.github.io/docx-viewer/) | [Source](https://github.com/ChristopherVR/docx-viewer)
+[Live demo](https://christophervr.github.io/ooxml/docx/demo/) | [npm](https://www.npmjs.com/package/docx-solid-viewer) | [Full docs](https://christophervr.github.io/ooxml/docx/) | [Source](https://github.com/ChristopherVR/ooxml/tree/main/viewers/docx)
 
 ## Install
 
@@ -61,8 +61,8 @@ charts render as placeholders.
 
 ## Documentation
 
-[Framework guide](https://christophervr.github.io/docx-viewer/frameworks/solid) |
-[Bindings](https://christophervr.github.io/docx-viewer/bindings)
+[Framework guide](https://christophervr.github.io/ooxml/docx/frameworks/solid) |
+[Bindings](https://christophervr.github.io/ooxml/docx/bindings)
 
 ## License
 

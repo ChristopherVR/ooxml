@@ -45,14 +45,14 @@ for (const { framework, route } of demos) {
 			'--config',
 			'vite.config.ts',
 			'--base',
-			`/docx-viewer/${route}/`,
+			`/ooxml/docx/${route}/`,
 			'--outDir',
 			outDir,
 			'--emptyOutDir',
 		],
 		{
 			...process.env,
-			DEMO_BASE: `/docx-viewer/${route}/`,
+			DEMO_BASE: `/ooxml/docx/${route}/`,
 			VITE_DEMO_FRAMEWORK: framework,
 		},
 	);

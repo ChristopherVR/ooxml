@@ -7,14 +7,14 @@ The web component provides a transport-neutral collaborative editing foundation 
 A session is just a name. The two panes below are separate demo apps built from different framework adapters (React and Vue) that join the session `docs-collab`: the first pane opens the sample document and hosts the session, the second joins by name and receives the document, every edit and the other person's cursor. Type in either pane.
 
 <iframe
-	src="/docx-viewer/demo/?sample=1&room=docs-collab&name=Ada"
+	src="/ooxml/docx/demo/?sample=1&room=docs-collab&name=Ada"
 	title="docx-viewer session host (React)"
 	loading="lazy"
 	style="width: 100%; height: 640px; border: 1px solid var(--vp-c-divider); border-radius: 8px"
 ></iframe>
 
 <iframe
-	src="/docx-viewer/demo-vue/?room=docs-collab&name=Grace"
+	src="/ooxml/docx/demo-vue/?room=docs-collab&name=Grace"
 	title="docx-viewer session guest (Vue)"
 	loading="lazy"
 	style="width: 100%; height: 640px; border: 1px solid var(--vp-c-divider); border-radius: 8px; margin-top: 1rem"

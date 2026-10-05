@@ -10,7 +10,7 @@ test('View > Multiple pages shows Print Layout pages side by side', async ({ pag
 	await page.keyboard.type('First page');
 	await page.keyboard.press('Control+Enter');
 	await page.keyboard.type('Second page');
-	await editor.locator('#dve-tab-view').click();
+	await editor.locator('[role="tab"][data-tab="view"]').click();
 	await editor.getByRole('button', { name: 'Multiple pages' }).click();
 	const pages = editor.locator('.dve-print-page');
 	await expect(pages).toHaveCount(2);

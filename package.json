@@ -1,6 +1,6 @@
 {
 	"name": "ooxml-core",
-	"version": "0.20.0",
+	"version": "0.21.0",
 	"description": "Shared OOXML logic for the Word, PowerPoint and Excel viewers: everything except the UI",
 	"keywords": [
 		"charts",
@@ -31,7 +31,13 @@
 		"pptx": "./dist/pptx/cli/index.mjs"
 	},
 	"workspaces": [
-		"packages/*"
+		"src/ui",
+		"viewers/*",
+		"viewers/*/packages/*",
+		"viewers/*/mcp",
+		"viewers/*/docs",
+		"viewers/teams/server",
+		"viewers/teams/demos/*"
 	],
 	"files": [
 		"dist",

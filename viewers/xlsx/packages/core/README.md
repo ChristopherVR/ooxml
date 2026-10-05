@@ -1,12 +1,12 @@
 # @christophervr/xlsx-core
 
 [![npm version](https://img.shields.io/npm/v/%40christophervr%2Fxlsx-core.svg)](https://www.npmjs.com/package/@christophervr/xlsx-core)
-[![license](https://img.shields.io/npm/l/%40christophervr%2Fxlsx-core.svg)](https://github.com/ChristopherVR/xlsx-viewer/blob/main/LICENSE)
+[![license](https://img.shields.io/npm/l/%40christophervr%2Fxlsx-core.svg)](https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/LICENSE)
 [![types](https://img.shields.io/npm/types/%40christophervr%2Fxlsx-core.svg)](https://www.npmjs.com/package/@christophervr/xlsx-core)
 
 > The DOM-free document model and file API, re-exported from the canonical OOXML core.
 
-[Live demo](https://christophervr.github.io/xlsx-viewer/demo/) | [npm](https://www.npmjs.com/package/@christophervr/xlsx-core) | [Full docs](https://christophervr.github.io/xlsx-viewer/) | [Source](https://github.com/ChristopherVR/xlsx-viewer)
+[Live demo](https://christophervr.github.io/ooxml/xlsx/demo/) | [npm](https://www.npmjs.com/package/@christophervr/xlsx-core) | [Full docs](https://christophervr.github.io/ooxml/xlsx/) | [Source](https://github.com/ChristopherVR/ooxml/tree/main/viewers/xlsx)
 
 The framework-neutral Excel workbook model, parser, formula engine and serializer. A thin entry point: `@christophervr/xlsx-core` re-exports `ooxml-core/xlsx` and `@christophervr/xlsx-core/load` re-exports `ooxml-core/xlsx/load`; the logic lives in [ooxml-core](https://github.com/ChristopherVR/ooxml).
 
@@ -33,7 +33,7 @@ The main entry handles `.xlsx`, `.xlsm` and `.xltx`. The `/load` entry also open
 
 ## Documentation
 
-[Full docs](https://christophervr.github.io/xlsx-viewer/) | [Core source](https://github.com/ChristopherVR/ooxml)
+[Full docs](https://christophervr.github.io/ooxml/xlsx/) | [Core source](https://github.com/ChristopherVR/ooxml)
 
 ## License
 

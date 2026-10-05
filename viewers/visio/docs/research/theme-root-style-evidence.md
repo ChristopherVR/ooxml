@@ -18,7 +18,7 @@ The optional external tests use Apache POI commit `732120980140d5ed64b482c470e0b
 - `60489.vsdx`, SHA-256 `15494702ecb5554c1dfaee2c09ac35e2ea656e2eed7ba4ba0cf1039e6125fbe1`: shape 16 resolves the root width `0.01041666666666667`, round cap and solid pattern. Shape 2 retains its literal width `0.006944444444444444`; group 111 retains its independently selected theme fill `#5b9bd5` and its unresolved text-color diagnostic.
 - `60973.vsdx`, SHA-256 `c61ca252ea251262f81b18fb0e461c50797bf4b148b2c01448792447ada51f03`: shape 11 resolves the same saved root width, round cap and solid pattern. Unrelated formula, media and rendering limitations remain diagnosed.
 
-From the core checkout, run `VISIO_THEME_CORPUS_DIR=/path/to/apache-poi/fixtures node_modules/.bin/vitest run src/visio`. The final local run passed 967 tests, including both hash-pinned root corpus tests; two separate opt-in EMF tests were skipped. Strict TypeScript and scoped formatting passed. Thirty independent root-selection, dash and error-propagation review checks also passed.
+From the core checkout, run `VISIO_THEME_CORPUS_DIR=/path/to/apache-poi/fixtures node_modules/.bin/vitest run src/core/visio`. The final local run passed 967 tests, including both hash-pinned root corpus tests; two separate opt-in EMF tests were skipped. Strict TypeScript and scoped formatting passed. Thirty independent root-selection, dash and error-propagation review checks also passed.
 
 A 19-file corpus diagnostic pass reported eight unresolved colors and no unresolved caps/patterns after this slice. This is diagnostic coverage, not visual equivalence. The earlier 60973 pass hit the diagnostic limit, so total warning counts before/after are not directly comparable.
 

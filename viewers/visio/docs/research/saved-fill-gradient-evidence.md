@@ -26,6 +26,6 @@ Core regressions: `saved-fill-gradient.test.ts`, `theme-root-gradient.test.ts`, 
 
 The optional corpus check reads Apache POI commit `732120980140d5ed64b482c470e0b625cdb1ab15`, `test-data/diagram/60973.vsdx`, SHA-256 `c61ca252ea251262f81b18fb0e461c50797bf4b148b2c01448792447ada51f03`. Style 8 contains enabled linear stops and angle `4.7123889803847`; this is evidence of a remaining saved-angle gap, not support for its direction. Page ID 10 shapes 2-6 retain their unsupported saved-gradient diagnostics. No fixture bytes are redistributed.
 
-Run `VISIO_THEME_CORPUS_DIR=/path/to/apache-poi/fixtures node_modules/.bin/vitest run src/visio/saved-fill-gradient*.test.ts src/visio/theme-root-gradient.test.ts` in the core checkout. Run `npm test -- src/render-saved-fill.test.ts` in the viewer after rebuilding and linking the core.
+Run `VISIO_THEME_CORPUS_DIR=/path/to/apache-poi/fixtures node_modules/.bin/vitest run src/core/visio/saved-fill-gradient*.test.ts src/core/visio/theme-root-gradient.test.ts` in the core checkout. Run `npm test -- src/render-saved-fill.test.ts` in the viewer after rebuilding and linking the core.
 
 No positive real-corpus visual improvement or native-reference equivalence is claimed for this horizontal slice. The corpus's cached 270-degree gradients, radial/rectangular/path fills, group gradients, canvas-fixed gradients, arbitrary formulas, hatch/custom fills and incomplete theme stop mixing remain outside the supported contract.

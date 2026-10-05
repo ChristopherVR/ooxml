@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { headingLabels, headingNumberingFixture } from './support/heading-numbering-fixture';
-import { fileInput } from './helpers';
+import { fileInput, dialogByHeading } from './helpers';
 
 for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
 	test(`${framework}: heading-linked outline markers retain their levels after editing`, async ({
@@ -29,7 +29,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await page
 			.getByRole('combobox', { name: 'Multilevel list', exact: true })
 			.selectOption('define');
-		const dialog = page.getByRole('dialog', { name: 'Define New Multilevel List', exact: true });
+		const dialog = dialogByHeading(page, 'Define New Multilevel List');
 		await expect(
 			dialog.getByRole('combobox', { name: 'Level to modify', exact: true }),
 		).toHaveValue('1');

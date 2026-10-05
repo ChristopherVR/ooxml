@@ -3,18 +3,18 @@
 # xlsx-viewer
 
 [![npm version](https://img.shields.io/npm/v/%40christophervr%2Fxlsx-react-viewer.svg)](https://www.npmjs.com/package/@christophervr/xlsx-react-viewer)
-[![license](https://img.shields.io/npm/l/%40christophervr%2Fxlsx-react-viewer.svg)](https://github.com/ChristopherVR/xlsx-viewer/blob/main/LICENSE)
+[![license](https://img.shields.io/npm/l/%40christophervr%2Fxlsx-react-viewer.svg)](https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/LICENSE)
 [![types](https://img.shields.io/npm/types/%40christophervr%2Fxlsx-react-viewer.svg)](https://www.npmjs.com/package/@christophervr/xlsx-react-viewer)
 
 **A browser Excel spreadsheet editor with one workbook model, one web component and thin adapters for your framework.**
 An early implementation: not Microsoft Excel parity, and not lossless export.
 
-[![docs](https://img.shields.io/badge/docs-christophervr.github.io-1f9d63.svg)](https://christophervr.github.io/xlsx-viewer/)
+[![docs](https://img.shields.io/badge/docs-christophervr.github.io-1f9d63.svg)](https://christophervr.github.io/ooxml/xlsx/)
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
-[![CI](https://github.com/ChristopherVR/xlsx-viewer/actions/workflows/ci.yml/badge.svg)](https://github.com/ChristopherVR/xlsx-viewer/actions/workflows/ci.yml)
+[![CI](https://github.com/ChristopherVR/ooxml/actions/workflows/ci.yml/badge.svg)](https://github.com/ChristopherVR/ooxml/actions/workflows/ci.yml)
 
-[**Live demo**](https://christophervr.github.io/xlsx-viewer/demo/) &nbsp;&middot;&nbsp;
-[**Documentation**](https://christophervr.github.io/xlsx-viewer/) &nbsp;&middot;&nbsp;
+[**Live demo**](https://christophervr.github.io/ooxml/xlsx/demo/) &nbsp;&middot;&nbsp;
+[**Documentation**](https://christophervr.github.io/ooxml/xlsx/) &nbsp;&middot;&nbsp;
 [**Getting started**](#getting-started) &nbsp;&middot;&nbsp;
 [**Packages**](#packages)
 
@@ -25,7 +25,7 @@ An early implementation: not Microsoft Excel parity, and not lossless export.
 - **One editor, every framework.** An `<xlsx-editor>` web component owns the grid, ribbon, formula bar, sheet tabs, selection, commands, history and styling. React, Vue, Angular, Svelte, Solid and vanilla adapters only handle lifecycle and events.
 - **One workbook model.** A framework-neutral model, formula engine, parser and serializer sit under the editor, in the `xlsx` area of [`ooxml-core`](https://github.com/ChristopherVR/ooxml). This repository is UI only.
 - **Careful preservation.** Parts the model does not cover (VBA, pivot caches, chart detail, custom XML) are carried through on save where the sheet still exists.
-- **Honest limits.** Unsupported features are reported, not hidden. See [features and limitations](https://christophervr.github.io/xlsx-viewer/features).
+- **Honest limits.** Unsupported features are reported, not hidden. See [features and limitations](https://christophervr.github.io/ooxml/xlsx/features).
 
 ## Features and limitations
 
@@ -149,7 +149,7 @@ editor.destroy();
 
 </details>
 
-See the [bindings guide](https://christophervr.github.io/xlsx-viewer/bindings) for props, events and the handle, and the [element API](https://christophervr.github.io/xlsx-viewer/api) for `<xlsx-editor>` itself.
+See the [bindings guide](https://christophervr.github.io/ooxml/xlsx/bindings) for props, events and the handle, and the [element API](https://christophervr.github.io/ooxml/xlsx/api) for `<xlsx-editor>` itself.
 
 ## Packages
 
@@ -185,11 +185,11 @@ bun run fmt:check       # oxfmt
 bun install --cwd docs && bun run --cwd docs docs:build   # site and all demos
 ```
 
-`PLAYWRIGHT_CHROMIUM_EXECUTABLE` selects an explicit Chromium and `PLAYWRIGHT_PORT` (default 4180) the preview port. See the [release policy](https://christophervr.github.io/xlsx-viewer/releasing).
+`PLAYWRIGHT_CHROMIUM_EXECUTABLE` selects an explicit Chromium and `PLAYWRIGHT_PORT` (default 4180) the preview port. See the [release policy](https://christophervr.github.io/ooxml/xlsx/releasing).
 
 ## Documentation
 
-[Getting started](https://christophervr.github.io/xlsx-viewer/getting-started) &middot; [Architecture](https://christophervr.github.io/xlsx-viewer/architecture) &middot; [Framework bindings](https://christophervr.github.io/xlsx-viewer/bindings) &middot; [Element API](https://christophervr.github.io/xlsx-viewer/api) &middot; [Theming](https://christophervr.github.io/xlsx-viewer/theming) &middot; [Localization](https://christophervr.github.io/xlsx-viewer/localization) &middot; [Features and limitations](https://christophervr.github.io/xlsx-viewer/features)
+[Getting started](https://christophervr.github.io/ooxml/xlsx/getting-started) &middot; [Architecture](https://christophervr.github.io/ooxml/xlsx/architecture) &middot; [Framework bindings](https://christophervr.github.io/ooxml/xlsx/bindings) &middot; [Element API](https://christophervr.github.io/ooxml/xlsx/api) &middot; [Theming](https://christophervr.github.io/ooxml/xlsx/theming) &middot; [Localization](https://christophervr.github.io/ooxml/xlsx/localization) &middot; [Features and limitations](https://christophervr.github.io/ooxml/xlsx/features)
 
 ## License
 

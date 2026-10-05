@@ -32,6 +32,8 @@ import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { VIEWER_PACKAGES } from './viewer-packages.mjs';
+
 /**
  * Publishable packages, in the order the planner reports them. `dir` is the source directory
  * and `npm` the published name. Dependencies between these packages are NOT listed here: any
@@ -44,15 +46,18 @@ import { fileURLToPath } from 'node:url';
  * its npm tarball or decides its contents: the sources, the bundler and declaration configs, the
  * manifest (see IGNORED_MANIFEST_FIELDS) and the licence files. Docs, CI, tests and the build
  * orchestration scripts (scripts/build.mjs, scripts/ensure-built.mjs) do not release anything.
- * `ui` is a Bun workspace at packages/ui and depends on core; core never depends on it. A package
+ * `ui` is a Bun workspace at src/ui and depends on core; core never depends on it. A package
  * whose manifest does not exist yet is left out of the plan (see `presentPackages`).
+ * The viewers imported under `viewers/` are listed in `viewer-packages.mjs`. Two more optional keys
+ * serve them: `triggers` are other directories whose published files are inlined into the package
+ * (a change there releases it), and `globals` are shared build files that release it too.
  */
 export const PACKAGES = {
 	core: {
 		dir: '.',
 		npm: 'ooxml-core',
 		paths: [
-			'src/',
+			'src/core/',
 			'scripts/pptx/merge-declarations.mjs',
 			'tsconfig.json',
 			'tsconfig.build.json',
@@ -66,8 +71,10 @@ export const PACKAGES = {
 			'THIRD-PARTY-LICENSES',
 		],
 	},
-	ui: { dir: 'packages/ui', npm: 'ooxml-ui' },
+	// previousDirs: where it lived at earlier releases, so a tag from before the move still resolves.
+	ui: { dir: 'src/ui', npm: 'ooxml-ui', previousDirs: ['packages/ui'] },
 	mcp: { dir: 'mcp', npm: 'ooxml-mcp' },
+	...VIEWER_PACKAGES,
 };
 
 /** Paths outside any package that still change every published artifact: none for one package. */
@@ -108,12 +115,24 @@ export function commitLevel(subject, body = '') {
 }
 
 /**
- * Whether `version` satisfies a plain `x.y.z`, `^x.y.z`, `~x.y.z` or `*` range. Anything else
- * (comparators, unions) is reported as unsatisfied, which errs towards re-releasing.
+ * Whether `version` satisfies a plain `x.y.z`, `^x.y.z`, `~x.y.z` or `*` range, or a set of
+ * `>`, `>=`, `<`, `<=` comparators (`>=0.20.0 <1`, as the viewers' MCP servers declare). Anything
+ * else (unions, x-ranges) is reported as unsatisfied, which errs towards re-releasing.
  */
 export function satisfies(range, version) {
 	const text = range.trim();
 	if (text === '*' || text === '') return true;
+	if (/^(?:[<>]=?\d+(?:\.\d+){0,2}\s*)+$/u.test(text)) {
+		return text.split(/\s+/u).every((comparator) => {
+			const [, op, bound] = /^([<>]=?)(.+)$/u.exec(comparator);
+			const parts = bound.split('.').map(Number);
+			while (parts.length < 3) parts.push(0);
+			const order = cmpSemver(version, parts.join('.'));
+			if (op === '>=') return order >= 0;
+			if (op === '>') return order > 0;
+			return op === '<=' ? order <= 0 : order < 0;
+		});
+	}
 	const m = /^([\^~]?)(\d+)\.(\d+)\.(\d+)$/u.exec(text);
 	if (!m) return false;
 	const low = [m[2], m[3], m[4]].map(Number);
@@ -157,7 +176,7 @@ const canonical = (value) =>
 			: v,
 	);
 
-/** `dir` as a prefix for a repo-relative path: '' for the root, 'packages/ui/' otherwise. */
+/** `dir` as a prefix for a repo-relative path: '' for the root, 'src/ui/' otherwise. */
 const posix = (dir) => (dir === '.' ? '' : `${dir.replace(/\/$/u, '')}/`);
 
 const readJson = (path) => JSON.parse(readFileSync(path, 'utf8'));
@@ -176,7 +195,9 @@ export function npmVersion(name) {
 		if (/E404|404 Not Found|is not in this registry/iu.test(String(error.stderr ?? ''))) {
 			return null;
 		}
-		throw new Error(`Could not query npm for ${name}: ${error.stderr || error.message}`, { cause: error });
+		throw new Error(`Could not query npm for ${name}: ${error.stderr || error.message}`, {
+			cause: error,
+		});
 	}
 }
 
@@ -206,10 +227,18 @@ export function npmGitHead(name, version) {
  */
 export function planRelease({ root, packages: all, globalTriggers = [], npm, npmHead }) {
 	const table = presentPackages(root, all);
-	const git = (args) => execFileSync('git', args, { cwd: root, encoding: 'utf8' }).trim();
+	const git = (args) =>
+		execFileSync('git', args, {
+			cwd: root,
+			encoding: 'utf8',
+			stdio: ['ignore', 'pipe', 'ignore'],
+			maxBuffer: 64 * 1024 * 1024,
+		}).trim();
 	const manifestPath = (meta) => join(root, meta.dir, 'package.json');
 	const names = new Set(Object.values(table).map((m) => m.npm));
 	const scopeOf = (meta) => meta.paths ?? [meta.dir];
+	const triggersOf = (meta) => meta.triggers ?? [];
+	const globalsOf = (meta) => [...(meta.globals ?? []), ...globalTriggers];
 	const under = (file, target) =>
 		file === target || file.startsWith(target.endsWith('/') ? target : `${target}/`);
 	const touches = (files, targets) => files.some((f) => targets.some((t) => under(f, t)));
@@ -309,15 +338,17 @@ export function planRelease({ root, packages: all, globalTriggers = [], npm, npm
 			Boolean,
 		);
 		if (declared && !isWorkspaceRange(declared)) return declared;
-		// A workspace range is published as `^<dependency version at publish time>`.
-		try {
-			const version = JSON.parse(
-				git(['show', `${base}:${posix(depMeta.dir)}package.json`]),
-			).version;
-			return SEMVER.test(version) ? `^${version}` : null;
-		} catch {
-			return null;
+		// A workspace range is published as `^<dependency version at publish time>`. The dependency
+		// may have lived elsewhere at `base` (see `previousDirs`), so try each place it has been.
+		for (const dir of [depMeta.dir, ...(depMeta.previousDirs ?? [])]) {
+			try {
+				const version = JSON.parse(git(['show', `${base}:${posix(dir)}package.json`])).version;
+				return SEMVER.test(version) ? `^${version}` : null;
+			} catch {
+				// Not there at `base`; try the next place.
+			}
 		}
+		return null;
 	};
 
 	const plan = {};
@@ -357,7 +388,7 @@ export function planRelease({ root, packages: all, globalTriggers = [], npm, npm
 		const files = changedFiles(base);
 		const deps = internalDeps(meta);
 		// Bump level comes from this package's own files only: a dependency's commits do not raise it.
-		const scope = [...scopeOf(meta), ...globalTriggers];
+		const scope = [...scopeOf(meta), ...triggersOf(meta), ...globalsOf(meta)];
 		const staleDep = deps.find((d) => {
 			if (!plan[d].release || !base) return false;
 			if (plan[d].bump === 'major') return true;
@@ -368,8 +399,9 @@ export function planRelease({ root, packages: all, globalTriggers = [], npm, npm
 		const reason =
 			via(!base, 'no previous tag') ||
 			via(touches(files, scopeOf(meta)), 'own files changed') ||
+			via(touches(files, triggersOf(meta)), 'bundled internal package changed') ||
 			via(staleDep, 'dependency range needs bump (major or out of range)') ||
-			via(touches(files, globalTriggers), 'shared build pipeline changed');
+			via(touches(files, globalsOf(meta)), 'shared build pipeline changed');
 		const release = Boolean(reason);
 
 		const manifestVersion = readJson(manifestPath(meta)).version || '0.0.0';
@@ -397,7 +429,8 @@ export function planRelease({ root, packages: all, globalTriggers = [], npm, npm
 				...(meta.paths
 					? meta.paths.map((p) => (p.endsWith('/') ? `${p}**` : p))
 					: [`${meta.dir}/**`]),
-				...globalTriggers,
+				...triggersOf(meta).map((dir) => `${dir}/**`),
+				...globalsOf(meta),
 			],
 		};
 	}
@@ -425,7 +458,9 @@ export function applyPlan({ root, packages: all }, plan) {
 		for (const field of own.release ? DEP_FIELDS : []) {
 			for (const dep of Object.keys(data[field] ?? {})) {
 				const target = Object.values(plan.packages).find((p) => p.npm === dep);
-				if (!target || isWorkspaceRange(data[field][dep])) continue;
+				// Only a plain `x.y.z`, `^x.y.z` or `~x.y.z` is a pin to move; a comparator range such as the
+				// MCP servers' `>=0.20.0 <1` is a deliberate floor and stays as written.
+				if (!target || !/^[\^~]?\d+\.\d+\.\d+$/u.test(data[field][dep])) continue;
 				const prefix = /^[\^~]/u.exec(data[field][dep])?.[0] ?? '';
 				if (data[field][dep] !== `${prefix}${target.version}`) {
 					data[field][dep] = `${prefix}${target.version}`;

@@ -1,7 +1,11 @@
 {
 	"name": "ooxml-mcp",
-	"version": "0.1.6",
+	"version": "0.1.7",
 	"license": "Apache-2.0",
+	"homepage": "https://github.com/ChristopherVR/ooxml/tree/main/mcp#readme",
+	"bugs": {
+		"url": "https://github.com/ChristopherVR/ooxml/issues"
+	},
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/ChristopherVR/ooxml.git",
@@ -31,10 +35,10 @@
 		"ooxml-core": "file:.."
 	},
 	"peerDependencies": {
-		"docx-viewer-mcp": "^0.1.0",
+		"docx-viewer-mcp": "^0.1.4",
 		"pptx-viewer-mcp": ">=2.6.0 <3",
-		"visio-viewer-mcp": "^0.1.0",
-		"xlsx-viewer-mcp": "^0.1.0"
+		"visio-viewer-mcp": "^0.2.1",
+		"xlsx-viewer-mcp": "^0.1.4"
 	},
 	"peerDependenciesMeta": {
 		"docx-viewer-mcp": {

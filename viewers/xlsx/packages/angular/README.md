@@ -1,12 +1,12 @@
 # xlsx-angular-viewer
 
 [![npm version](https://img.shields.io/npm/v/xlsx-angular-viewer.svg)](https://www.npmjs.com/package/xlsx-angular-viewer)
-[![license](https://img.shields.io/npm/l/xlsx-angular-viewer.svg)](https://github.com/ChristopherVR/xlsx-viewer/blob/main/LICENSE)
+[![license](https://img.shields.io/npm/l/xlsx-angular-viewer.svg)](https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/LICENSE)
 [![types](https://img.shields.io/npm/types/xlsx-angular-viewer.svg)](https://www.npmjs.com/package/xlsx-angular-viewer)
 
 > A browser Excel spreadsheet editor for Angular, using one shared editor and the canonical OOXML document engine.
 
-[Live demo](https://christophervr.github.io/xlsx-viewer/demo/) | [npm](https://www.npmjs.com/package/xlsx-angular-viewer) | [Full docs](https://christophervr.github.io/xlsx-viewer/) | [Source](https://github.com/ChristopherVR/xlsx-viewer)
+[Live demo](https://christophervr.github.io/ooxml/xlsx/demo/) | [npm](https://www.npmjs.com/package/xlsx-angular-viewer) | [Full docs](https://christophervr.github.io/ooxml/xlsx/) | [Source](https://github.com/ChristopherVR/ooxml/tree/main/viewers/xlsx)
 
 ## Install
 
@@ -65,8 +65,8 @@ diagnostics and the feature guide before relying on preservation.
 
 ## Documentation
 
-[Framework guide](https://christophervr.github.io/xlsx-viewer/frameworks/angular) |
-[Bindings](https://christophervr.github.io/xlsx-viewer/bindings)
+[Framework guide](https://christophervr.github.io/ooxml/xlsx/frameworks/angular) |
+[Bindings](https://christophervr.github.io/ooxml/xlsx/bindings)
 
 ## License
 

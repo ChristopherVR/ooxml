@@ -94,7 +94,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
-      - run: bun run --cwd packages/ui typecheck
+      - run: bun run --cwd src/ui typecheck
 
   # The unit suite is ~1,200 files and most of its time is spent importing the pptx area into each
   # file, so it is split across parallel runners by file (`vitest --shard`). The planner sizes the
@@ -156,13 +156,13 @@ jobs:
         with:
           name: core-dist
           path: dist
-      - run: bun run --cwd packages/ui test
-      - run: bun run --cwd packages/ui build
-      - run: bun run --cwd packages/ui test:package
+      - run: bun run --cwd src/ui test
+      - run: bun run --cwd src/ui build
+      - run: bun run --cwd src/ui test:package
       - uses: actions/upload-artifact@v7
         with:
           name: ui-dist
-          path: packages/ui/dist
+          path: src/ui/dist
           retention-days: 1
 
   # Release machinery: planner, publish guards, commit and changelog checks, the launcher and CI planner.
@@ -185,11 +185,58 @@ jobs:
       - uses: ./.github/actions/setup
       - run: bun run test:mcp
 
-  # Each viewer repository, linked to this change: the contract the shared elements and the format
-  # logic have to keep. It reports failures on the run but is not part of `ci-success`: a viewer
-  # that is red for its own reasons must not block this repository.
-  consumers:
+  # The viewers that live in this repository (viewers/<name>), each verified the way it was when it
+  # was a repository of its own. They resolve ooxml-ui to the workspace copy through its dist, so
+  # they run on the core and ui built above. scripts/ci-plan.mjs picks the viewers a change can
+  # affect and the commands for each.
+  viewers:
     name: viewer (${{ matrix.name }})
+    needs: [plan, build, ui]
+    if: |
+      !cancelled() && needs.build.result == 'success' && needs.ui.result == 'success' &&
+      toJSON(fromJSON(needs.plan.outputs.plan).viewers) != '[]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.plan).viewers }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - uses: actions/download-artifact@v8
+        with:
+          name: core-dist
+          path: dist
+      - uses: actions/download-artifact@v8
+        with:
+          name: ui-dist
+          path: src/ui/dist
+      - name: Verify the viewer
+        working-directory: ${{ matrix.dir }}
+        env:
+          VERIFY: ${{ matrix.verify }}
+        run: |
+          while IFS= read -r command; do
+            echo "::group::$command"
+            bash -e -o pipefail -c "$command"
+            echo "::endgroup::"
+          done <<< "$VERIFY"
+      - name: Preserve browser test evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: browser-test-results-${{ matrix.name }}
+          path: ${{ matrix.dir }}/test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  # The viewers that are still their own repository (pptx-viewer), linked to this change: the
+  # contract the shared elements and the format logic have to keep. It reports failures on the run
+  # but is not part of `ci-success`: a viewer that is red for its own reasons must not block this
+  # repository.
+  consumers:
+    name: external viewer (${{ matrix.name }})
     needs: [plan, build, ui]
     if: |
       !cancelled() && needs.build.result != 'failure' && needs.ui.result != 'failure' &&
@@ -223,12 +270,12 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           name: ui-dist
-          path: ooxml/packages/ui/dist
+          path: ooxml/src/ui/dist
         continue-on-error: true
       - name: Build what this change did not
         run: |
           [ -d ooxml/dist ] || (cd ooxml && bun run build)
-          [ -d ooxml/packages/ui/dist ] || (cd ooxml/packages/ui && bun run build)
+          [ -d ooxml/src/ui/dist ] || (cd ooxml/src/ui && bun run build)
       - name: Link the viewer to this checkout
         run: node ooxml/scripts/link-local.mjs viewer --no-build
       - run: ${{ matrix.install }}
@@ -244,7 +291,19 @@ jobs:
     name: ci-success
     if: always()
     needs:
-      [plan, lint, typecheck-strict, typecheck-pptx, typecheck-ui, test, build, ui, scripts, mcp]
+      [
+        plan,
+        lint,
+        typecheck-strict,
+        typecheck-pptx,
+        typecheck-ui,
+        test,
+        build,
+        ui,
+        scripts,
+        mcp,
+        viewers,
+      ]
     runs-on: ubuntu-latest
     steps:
       - name: Check every required job succeeded or was skipped by the plan

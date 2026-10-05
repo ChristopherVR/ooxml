@@ -15,12 +15,12 @@
 		"noUnusedParameters": false,
 		"noEmit": true
 	},
-	"include": ["src/pptx/**/*.ts", "src/pptx/**/*.tsx"],
+	"include": ["src/core/pptx/**/*.ts", "src/core/pptx/**/*.tsx"],
 	"exclude": [
 		"**/dist/**",
 		"**/node_modules/**",
-		"src/pptx/**/*.test.ts",
-		"src/pptx/**/*.test.tsx",
-		"src/pptx/__tests__/fixtures/e2e/**"
+		"src/core/pptx/**/*.test.ts",
+		"src/core/pptx/**/*.test.tsx",
+		"src/core/pptx/__tests__/fixtures/e2e/**"
 	]
 }

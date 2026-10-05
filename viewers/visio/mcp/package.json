@@ -1,12 +1,16 @@
 {
 	"name": "visio-viewer-mcp",
-	"version": "0.2.0",
+	"version": "0.2.1",
 	"description": "Headless VISIO MCP tools backed only by OOXML core",
+	"homepage": "https://christophervr.github.io/ooxml/visio/",
+	"bugs": {
+		"url": "https://github.com/ChristopherVR/ooxml/issues"
+	},
 	"license": "Apache-2.0",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/ChristopherVR/visio-viewer.git",
-		"directory": "mcp"
+		"url": "git+https://github.com/ChristopherVR/ooxml.git",
+		"directory": "viewers/visio/mcp"
 	},
 	"bin": {
 		"visio-tools": "src/cli.js"

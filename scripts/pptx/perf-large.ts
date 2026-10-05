@@ -6,7 +6,7 @@
  * (round-trip serialize) performance, peak memory, and document
  * statistics (slide / element counts).
  *
- * The script imports directly from the package source (`src/pptx`) so it can
+ * The script imports directly from the package source (`src/core/pptx`) so it can
  * be run with `bun` without a prior build:
  *
  *   bun scripts/pptx/perf-large.ts
@@ -23,9 +23,9 @@ import { mkdir, rm, stat, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { PptxHandler } from '../../src/pptx/core/PptxHandler';
-import type { PptxElement } from '../../src/pptx/core/types/elements';
-import type { PptxData, PptxSlide } from '../../src/pptx/core/types/presentation';
+import { PptxHandler } from '../../src/core/pptx/core/PptxHandler';
+import type { PptxElement } from '../../src/core/pptx/core/types/elements';
+import type { PptxData, PptxSlide } from '../../src/core/pptx/core/types/presentation';
 
 // ---------------------------------------------------------------------------
 // CLI args

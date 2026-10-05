@@ -13,6 +13,6 @@
 		"declaration": true,
 		"types": ["node", "vitest/globals"]
 	},
-	"include": ["src/**/*.ts"],
-	"exclude": ["**/dist/**", "**/node_modules/**", "src/pptx/**"]
+	"include": ["src/core/**/*.ts"],
+	"exclude": ["**/dist/**", "**/node_modules/**", "src/core/pptx/**"]
 }

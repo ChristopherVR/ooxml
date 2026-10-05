@@ -1,8 +1,10 @@
 name: Release
 
 # Adapted from ChristopherVR/pptx-viewer .github/workflows/release.yml (Apache-2.0). See
-# docs/releasing.md for the whole flow. Two packages (core at the root, ooxml-ui at packages/ui),
-# each with its own tag, changelog and npm publish.
+# docs/releasing.md for the whole flow. Every published package of this repository (core at the
+# root, ooxml-ui at src/ui, the MCP server, and the packages of the viewers under viewers/,
+# listed in scripts/viewer-packages.mjs) has its own tag, changelog and npm publish, planned by
+# scripts/release-plan.mjs.
 
 on:
   # Hourly. The planner is cumulative (the package is diffed from its own last tag), so everything
@@ -47,16 +49,14 @@ jobs:
       any_released: ${{ steps.tagged.outputs.any_released || 'false' }}
       release_sha: ${{ steps.tagged.outputs.release_sha || '' }}
     steps:
-      # This job pushes a version-bump commit straight to `main`, so it needs credentials that can
-      # get past the branch ruleset (which requires `ci-success`, and applies to direct pushes
-      # too). The default GITHUB_TOKEN cannot: GitHub refuses to let `github-actions[bot]` be
-      # granted ruleset bypass. RELEASE_TOKEN must be a fine-grained PAT with `Contents: Read and
-      # write` on this repo, owned by a repository admin (the Admin role is on the ruleset's bypass
-      # list). Without it everything up to the push still works and the push fails with an explicit
-      # diagnostic.
-      #
-      # Unlike GITHUB_TOKEN, a PAT push DOES trigger workflows; the release commit carries
-      # `[skip ci]`, which GitHub honours natively, so it does not start a CI run.
+      # This job pushes a version-bump commit straight to `main` with the workflow's own
+      # GITHUB_TOKEN (the workflow has `contents: write`), so no secret is needed while `main` has
+      # no ruleset or branch protection. If protection that direct pushes cannot satisfy is ever
+      # added (GitHub will not let `github-actions[bot]` bypass a ruleset), set RELEASE_TOKEN to a
+      # fine-grained PAT with `Contents: Read and write` on this repo, owned by a repository admin
+      # on the bypass list; it is used in place of GITHUB_TOKEN when present. A PAT push, unlike a
+      # GITHUB_TOKEN one, triggers workflows, but the release commit carries `[skip ci]`, which
+      # GitHub honours natively.
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0

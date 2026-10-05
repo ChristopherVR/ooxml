@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
-import { newDocument, saveButton } from './helpers';
+import { newDocument, saveButton, dialogByHeading } from './helpers';
 
 test('Insert > Text Box inserts, edits and exports an inline text box', async ({ page }) => {
 	await page.setViewportSize({ width: 1700, height: 720 });
@@ -12,7 +12,7 @@ test('Insert > Text Box inserts, edits and exports an inline text box', async ({
 	await page.keyboard.type('Before ');
 	await editor.getByRole('tab', { name: 'Insert', exact: true }).click();
 	await editor.getByRole('button', { name: 'Text box', exact: true }).click();
-	const dialog = editor.getByRole('dialog', { name: 'Text box', exact: true });
+	const dialog = dialogByHeading(editor, 'Text box');
 	await expect(dialog).toBeVisible();
 	await dialog.getByRole('textbox', { name: 'Text', exact: true }).fill('Hello box\nSecond line');
 	await dialog.getByRole('spinbutton', { name: 'Width (inches)', exact: true }).fill('0');

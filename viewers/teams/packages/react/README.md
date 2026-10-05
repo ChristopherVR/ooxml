@@ -4,7 +4,7 @@ React binding for **OpenTeams**, an open-source, bring-your-own-server team work
 and chat, presence, meetings with video and screen share (WebRTC), and Office files shared in the
 conversation. It gives you the complete UI as a component **and** raw hooks to build your own.
 
-[Source](https://github.com/ChristopherVR/teams-viewer) | [Server](https://www.npmjs.com/package/openteams-server)
+[Source](https://github.com/ChristopherVR/ooxml/tree/main/viewers/teams) | [Server](https://www.npmjs.com/package/openteams-server)
 
 ## Install
 
@@ -27,7 +27,11 @@ import { Teams } from 'openteams-react-viewer';
 <Teams
 	workspaceId="acme"
 	userName="Ada"
-	config={{ mode: 'server', syncUrl: 'wss://teams.example.com/sync', signalingUrl: 'wss://teams.example.com/signal' }}
+	config={{
+		mode: 'server',
+		syncUrl: 'wss://teams.example.com/sync',
+		signalingUrl: 'wss://teams.example.com/signal',
+	}}
 	onOpenFile={(detail) => window.open(detail.url)}
 />;
 ```
@@ -37,7 +41,11 @@ Or your own markup over the raw client (state in, plain actions out):
 ```tsx
 import { useTeams } from 'openteams-react-viewer';
 
-const { client, state } = useTeams({ workspaceId: 'acme', user: { id: 'ada', name: 'Ada' }, config });
+const { client, state } = useTeams({
+	workspaceId: 'acme',
+	user: { id: 'ada', name: 'Ada' },
+	config,
+});
 state?.channels.map((c) => <button onClick={() => client?.select(c.id)}>{c.name}</button>);
 ```
 

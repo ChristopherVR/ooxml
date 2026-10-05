@@ -4,13 +4,13 @@
 // against Excel over COM (values, formulas and dynamic-array spills).
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { formatAddress } from '../src/xlsx/address.js';
-import { getCell } from '../src/xlsx/cells.js';
-import { createEditSession, type EditSession } from '../src/xlsx/edit/index.js';
-import type { CellValue, Workbook } from '../src/xlsx/model.js';
-import { isCellError } from '../src/xlsx/model.js';
-import { loadXlsx } from '../src/xlsx/read/index.js';
-import { createWorkbook } from '../src/xlsx/workbook.js';
+import { formatAddress } from '../src/core/xlsx/address.js';
+import { getCell } from '../src/core/xlsx/cells.js';
+import { createEditSession, type EditSession } from '../src/core/xlsx/edit/index.js';
+import type { CellValue, Workbook } from '../src/core/xlsx/model.js';
+import { isCellError } from '../src/core/xlsx/model.js';
+import { loadXlsx } from '../src/core/xlsx/read/index.js';
+import { createWorkbook } from '../src/core/xlsx/workbook.js';
 
 /** One cell Excel must agree on after opening (and recalculating) the saved file. */
 export interface CellCheck {

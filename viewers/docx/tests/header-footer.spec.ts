@@ -55,14 +55,14 @@ test('edits a header in place by double-clicking it and saves the header part', 
 	await page.keyboard.type(' Confidential');
 	await page.keyboard.press('Escape');
 	await expect(header).toContainText('Company Confidential');
-	await expect(editor.locator('.dve-save-state')).toHaveText('Unsaved changes');
+	await expect(editor.locator('.dve-titlebar .file .status')).toHaveText('Unsaved changes');
 
 	const pending = page.waitForEvent('download');
 	await saveButton(page).click();
 	const zip = await JSZip.loadAsync(await readFile((await (await pending).path())!));
 	expect(await zip.file('word/header1.xml')!.async('string')).toContain('Company Confidential');
 	expect(await zip.file('word/document.xml')!.async('string')).toContain('Body text');
-	await expect(editor.locator('.dve-save-state')).toHaveText('Saved to this PC');
+	await expect(editor.locator('.dve-titlebar .file .status')).toHaveText('Saved to this PC');
 	expect(errors).toEqual([]);
 });
 

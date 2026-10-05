@@ -15,7 +15,7 @@ const dist = resolve(docs, '.vitepress', 'dist');
 const node = process.execPath;
 const vitepressCli = resolve(docs, 'node_modules', 'vitepress', 'bin', 'vitepress.js');
 const viteCli = resolve(root, 'node_modules', 'vite', 'bin', 'vite.js');
-const base = '/teams-viewer/';
+const base = '/ooxml/teams/';
 // `/demo/` is the long-standing route of the vanilla demo (the launcher embeds it), and every
 // binding has its own `/demo-<framework>/` route like the other viewers' sites; `/demo-vanilla/`
 // is the same vanilla demo built under the standard name.

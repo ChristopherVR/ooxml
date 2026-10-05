@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const TARGET = path.resolve(
 	HERE,
-	'../../src/pptx/core/utils/smartart-engine/engine-first-allowlist.ts',
+	'../../src/core/pptx/core/utils/smartart-engine/engine-first-allowlist.ts',
 );
 
 const measured = readFileSync(process.argv[2], 'utf-8');

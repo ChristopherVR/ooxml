@@ -1,12 +1,12 @@
 # docx-viewer-mcp
 
 [![npm version](https://img.shields.io/npm/v/docx-viewer-mcp.svg)](https://www.npmjs.com/package/docx-viewer-mcp)
-[![license](https://img.shields.io/npm/l/docx-viewer-mcp.svg)](https://github.com/ChristopherVR/docx-viewer/blob/main/LICENSE)
+[![license](https://img.shields.io/npm/l/docx-viewer-mcp.svg)](https://github.com/ChristopherVR/ooxml/blob/main/viewers/docx/LICENSE)
 [![types](https://img.shields.io/npm/types/docx-viewer-mcp.svg)](https://www.npmjs.com/package/docx-viewer-mcp)
 
 > Headless MCP access to document operations owned by OOXML core.
 
-[Live demo](https://christophervr.github.io/docx-viewer/demo/) | [npm](https://www.npmjs.com/package/docx-viewer-mcp) | [Full docs](https://christophervr.github.io/docx-viewer/) | [Source](https://github.com/ChristopherVR/docx-viewer)
+[Live demo](https://christophervr.github.io/ooxml/docx/demo/) | [npm](https://www.npmjs.com/package/docx-viewer-mcp) | [Full docs](https://christophervr.github.io/ooxml/docx/) | [Source](https://github.com/ChristopherVR/ooxml/tree/main/viewers/docx)
 
 Repository-owned MCP schemas and server wiring. All document loading, editing
 and serialization delegate to `ooxml-core/automation`.
@@ -58,7 +58,7 @@ Package releases use npm trusted publishing with provenance.
 
 ## Documentation
 
-[Source and tools](https://github.com/ChristopherVR/docx-viewer/tree/main/mcp) |
+[Source and tools](https://github.com/ChristopherVR/ooxml/tree/main/viewers/docx/mcp) |
 [Core automation](https://github.com/ChristopherVR/ooxml/blob/main/docs/mcp.md)
 
 ## License

@@ -23,8 +23,8 @@ export async function newDocument(page: Page) {
 		await demoReady(page);
 		await page.locator('#blank').click();
 	} else {
-		await editor(page).locator('.dve-file-tab').click();
-		await editor(page).locator('.dve-backstage-nav-item', { hasText: 'New' }).click();
+		await editor(page).locator('.dve-ribbon .file').click();
+		await editor(page).locator('.dve-backstage .item', { hasText: 'New' }).click();
 		await editor(page).getByRole('button', { name: 'Blank document' }).click();
 	}
 	await expect(editor(page).locator('.ProseMirror')).toBeVisible();
@@ -39,20 +39,20 @@ export async function fileInput(page: Page) {
 }
 
 export const saveButton = (page: Page) =>
-	editor(page).locator('.dve-quick-access').getByRole('button', { name: 'Save', exact: true });
+	editor(page).locator('.dve-titlebar .qat').getByRole('button', { name: 'Save', exact: true });
 
 /** File > Export > Save a copy as DOCX. */
 export async function saveCopyAsDocx(page: Page) {
-	await editor(page).locator('.dve-file-tab').click();
-	await editor(page).locator('.dve-backstage-nav-item', { hasText: 'Export' }).click();
+	await editor(page).locator('.dve-ribbon .file').click();
+	await editor(page).locator('.dve-backstage .item', { hasText: 'Export' }).click();
 	await editor(page)
 		.locator('.dve-backstage-content')
 		.getByRole('button', { name: 'Save a copy as DOCX' })
 		.click();
 }
 
-export const fileNameLabel = (page: Page) => editor(page).locator('.dve-filename');
-export const saveStateLabel = (page: Page) => editor(page).locator('.dve-save-state');
+export const fileNameLabel = (page: Page) => editor(page).locator('.dve-titlebar .file .name');
+export const saveStateLabel = (page: Page) => editor(page).locator('.dve-titlebar .file .status');
 
 /** Switches the title bar's Editing/Viewing mode. */
 export async function setReadOnly(page: Page, readOnly: boolean) {
@@ -65,7 +65,7 @@ export async function setReadOnly(page: Page, readOnly: boolean) {
 /** Insert > Table: opens the size picker and picks `columns` x `rows` from its grid. */
 export async function insertTableOfSize(page: Page, rows = 2, columns = 2) {
 	const editor = page.locator('docx-editor');
-	await editor.locator('#dve-tab-insert').click();
+	await editor.locator('[role="tab"][data-tab="insert"]').click();
 	await editor.getByRole('button', { name: 'Insert table', exact: true }).click();
 	await editor
 		.locator(`.table-picker [role="gridcell"][data-rows="${rows}"][data-columns="${columns}"]`)
@@ -77,11 +77,31 @@ export async function insertTableOfSize(page: Page, rows = 2, columns = 2) {
  * `target` (a no-op when it is already on the ribbon) so the test can use the control.
  */
 export async function reveal(editor: Locator, target: Locator) {
-	if (await target.first().isVisible()) return;
+	const page = editor.page();
+	// The ribbon re-fits its groups after fonts load or the viewport changes, folding a control it
+	// has just shown into an overflow menu. A control counts as on the ribbon only if it stays visible.
+	const stablyVisible = async () => {
+		if (!(await target.first().isVisible())) return false;
+		await page.waitForTimeout(250);
+		return target.first().isVisible();
+	};
+	if (await stablyVisible()) return;
 	const buttons = editor.locator('.ribbon-panel:not([hidden]) .ribbon-overflow-button');
 	for (let index = 0; index < (await buttons.count()); index++) {
 		await buttons.nth(index).click();
-		if (await target.first().isVisible()) return;
-		await editor.page().keyboard.press('Escape');
+		if (await stablyVisible()) return;
+		await page.keyboard.press('Escape');
 	}
 }
+
+/**
+ * The `office-ui-dialog` host whose heading is `name`. The dialog's controls are slotted into the
+ * host, so they are descendants of the host and not of the shadow `role="dialog"` box that
+ * `getByRole('dialog')` finds.
+ */
+export const dialogByHeading = (scope: Page | Locator, name: string | RegExp) => {
+	const page = 'goto' in scope ? scope : scope.page();
+	return scope.locator('office-ui-dialog').filter({
+		has: page.getByRole('heading', typeof name === 'string' ? { name, exact: true } : { name }),
+	});
+};

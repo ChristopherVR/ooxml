@@ -7,7 +7,9 @@ const require = createRequire(import.meta.url);
 const directory = resolve(dirname(require.resolve('ooxml-core/visio')), '../..');
 const manifest = JSON.parse(readFileSync(resolve(directory, 'package.json'), 'utf8'));
 const viewer = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
-assert.equal(manifest.version, viewer.dependencies['ooxml-core']);
+// `*` follows the latest release (the lockfile pins what is installed); a pinned version must match.
+if (viewer.dependencies['ooxml-core'] !== '*')
+	assert.equal(manifest.version, viewer.dependencies['ooxml-core']);
 for (const name of [
 	'parseVsdx',
 	'loadVisio',

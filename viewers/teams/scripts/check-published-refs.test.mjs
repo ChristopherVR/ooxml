@@ -65,7 +65,7 @@ test('rejects internal, ole2, file: and workspace: entries in a published manife
 				'teams-react-viewer': '^0.1.0',
 				'ooxml-legacy': '^0.1.0',
 				'ooxml-core': 'workspace:*',
-				'ooxml-ui': 'file:../../ooxml-core/packages/ui',
+				'ooxml-ui': 'file:../../ooxml-core/src/ui',
 			},
 			peerDependencies: { 'teams-server': '*' },
 		}),

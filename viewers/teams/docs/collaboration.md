@@ -16,7 +16,7 @@ The two panes below are two separate demo apps in one local room. Ada runs the v
 On the home page [live demo](/#live-demo) each pane has its own framework picker, so you can pair any two of Vanilla, React, Vue, Angular, Svelte and Solid.
 
 <iframe
-	src="/teams-viewer/demo/?name=Ada&room=docs-collab"
+	src="/ooxml/teams/demo/?name=Ada&room=docs-collab"
 	title="OpenTeams demo as Ada"
 	loading="lazy"
 	allow="clipboard-read; clipboard-write"
@@ -24,7 +24,7 @@ On the home page [live demo](/#live-demo) each pane has its own framework picker
 ></iframe>
 
 <iframe
-	src="/teams-viewer/demo-react/?name=Bob&room=docs-collab"
+	src="/ooxml/teams/demo-react/?name=Bob&room=docs-collab"
 	title="OpenTeams React demo as Bob"
 	loading="lazy"
 	allow="clipboard-read; clipboard-write"

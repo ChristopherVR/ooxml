@@ -5,11 +5,11 @@ import { fileNameLabel, newDocument } from './helpers';
 
 const openFile = async (page: import('@playwright/test').Page) => {
 	const editor = page.locator('docx-editor');
-	await editor.locator('.dve-file-tab').click();
+	await editor.locator('.dve-ribbon .file').click();
 	return editor;
 };
 const navigate = (editor: import('@playwright/test').Locator, name: string) =>
-	editor.locator('.dve-backstage-nav-item', { hasText: name }).click();
+	editor.locator('.dve-backstage .item', { hasText: name }).click();
 
 test.describe('File tab', () => {
 	test.beforeEach(async ({ page }) => {
@@ -22,7 +22,7 @@ test.describe('File tab', () => {
 	test('Info reports the document and its properties', async ({ page }) => {
 		const editor = await openFile(page);
 		await navigate(editor, 'Info');
-		const content = editor.locator('.dve-backstage-content');
+		const content = editor.locator('.dve-backstage-content:not([hidden])');
 		await expect(content).toContainText('Document1.docx');
 		await expect(content).toContainText('Unsaved changes');
 		await expect(editor.locator('.dve-backstage-properties')).toContainText('3');
@@ -31,7 +31,7 @@ test.describe('File tab', () => {
 	test('Home and Options work on a narrow screen and contain keyboard focus', async ({ page }) => {
 		await page.setViewportSize({ width: 390, height: 844 });
 		const editor = await openFile(page);
-		await expect(editor.locator('.dve-backstage-content h2')).toHaveText('Home');
+		await expect(editor.locator('.dve-backstage-content:not([hidden]) h2')).toHaveText('Home');
 		await navigate(editor, 'Options');
 		await editor.getByRole('checkbox', { name: 'Ruler', exact: true }).check();
 		await expect(editor.locator('.dve-ruler')).toBeAttached();
@@ -46,11 +46,11 @@ test.describe('File tab', () => {
 		await page.keyboard.press('Shift+Tab');
 		await expect(last).toBeFocused();
 		const overflow = await editor
-			.locator('.dve-backstage-content')
+			.locator('.dve-backstage-content:not([hidden])')
 			.evaluate((el) => el.scrollWidth > el.clientWidth);
 		expect(overflow).toBe(false);
 		await page.keyboard.press('Escape');
-		await expect(editor.locator('.dve-file-tab')).toBeFocused();
+		await expect(editor.locator('.dve-ribbon .file')).toBeFocused();
 	});
 
 	test('Save As renames the document and downloads it', async ({ page }) => {
@@ -58,7 +58,10 @@ test.describe('File tab', () => {
 		await navigate(editor, 'Save As');
 		await editor.getByLabel('File name', { exact: true }).fill('Quarterly report');
 		const pending = page.waitForEvent('download');
-		await editor.locator('.dve-backstage-content').getByRole('button', { name: 'Save' }).click();
+		await editor
+			.locator('.dve-backstage-content:not([hidden])')
+			.getByRole('button', { name: 'Save' })
+			.click();
 		const download = await pending;
 		expect(download.suggestedFilename()).toBe('Quarterly report.docx');
 		await expect(fileNameLabel(page)).toHaveText('Quarterly report.docx');
@@ -71,7 +74,7 @@ test.describe('File tab', () => {
 		await navigate(editor, 'Export');
 		const pending = page.waitForEvent('download');
 		await editor
-			.locator('.dve-backstage-content')
+			.locator('.dve-backstage-content:not([hidden])')
 			.getByRole('button', { name: 'Export as plain text' })
 			.click();
 		const download = await pending;
@@ -87,8 +90,8 @@ test.describe('File tab', () => {
 		await expect(editor).toHaveAttribute('review-author', 'Dana');
 		await editor.getByLabel('Display language', { exact: true }).selectOption('fr');
 		await expect(editor).toHaveAttribute('locale', 'fr');
-		await expect(editor.locator('.dve-backstage-content h2')).toHaveText('Options');
-		await expect(editor.locator('.dve-backstage-nav-item', { hasText: 'Exporter' })).toBeVisible();
+		await expect(editor.locator('.dve-backstage-content:not([hidden]) h2')).toHaveText('Options');
+		await expect(editor.locator('.dve-backstage .item', { hasText: 'Exporter' })).toBeVisible();
 	});
 
 	test('Escape closes the backstage and returns to the document', async ({ page }) => {

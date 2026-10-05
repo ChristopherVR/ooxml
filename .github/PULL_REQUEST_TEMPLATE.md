@@ -27,7 +27,7 @@ docs/linked-changes.md. Delete if none. -->
 <!-- e.g. xml, opc, docx, pptx, xlsx, visio, chart, ooxml-ui/xlsx. -->
 
 - [ ] The change is made once in the area that owns it, not copied per format
-- [ ] DOM-free logic stays in `src/<area>/`; custom elements stay in `packages/ui`
+- [ ] DOM-free logic stays in `src/core/<area>/`; custom elements stay in `src/ui`
 - [ ] Unsupported behaviour is reported honestly (no claim of Office parity without evidence)
 - [ ] Extraction provenance is recorded in `PROVENANCE.md` for any module moved here
 
@@ -56,4 +56,4 @@ bump patch, `!` or a `BREAKING CHANGE:` footer bumps major.
 
 ## Screenshots / recordings
 
-<!-- For UI changes in packages/ui, a screenshot helps. -->
+<!-- For UI changes in src/ui, a screenshot helps. -->

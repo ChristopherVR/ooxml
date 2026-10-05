@@ -73,6 +73,8 @@ test('inherited headers edit together, unlink independently, relink and undo', a
 	const linkedDownload = page.waitForEvent('download');
 	await saveButton(page).click();
 	await (await linkedDownload).saveAs('test-results/header-footer-linked.docx');
+	// Saving leaves the header editor, so open it again; undo history is the document's.
+	await editor.locator('.dve-header [data-slot=default]').dblclick();
 	await editor.locator('.dve-header .ProseMirror').press('Control+z');
 	await expect(editor.locator('.dve-header')).toContainText('separate');
 	await expect(link).toHaveAttribute('aria-pressed', 'false');

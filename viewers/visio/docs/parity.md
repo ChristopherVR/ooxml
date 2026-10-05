@@ -54,5 +54,5 @@ Warnings are useful but not comprehensive. Absence of diagnostics is not a fidel
 - [Microsoft file format reference](https://learn.microsoft.com/en-us/office/client-developer/visio/visio-file-format-reference)
 - [Introduction to VSDX](https://learn.microsoft.com/en-us/office/client-developer/visio/introduction-to-the-visio-file-formatvsdx)
 - [MS-VSDX](https://learn.microsoft.com/en-us/openspecs/sharepoint_protocols/ms-vsdx/50c23601-c943-4ff2-b4a1-02445f52daf0)
-- [Engine repository](https://github.com/ChristopherVR/ooxml), local implementation under src/visio. Unpublished changes may not be on the remote.
+- [Engine repository](https://github.com/ChristopherVR/ooxml), local implementation under src/core/visio. Unpublished changes may not be on the remote.
 - [Viewer design reference](https://github.com/ChristopherVR/pptx-viewer)

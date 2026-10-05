@@ -45,14 +45,14 @@ for (const { framework, route } of demos) {
 			'--config',
 			'vite.config.ts',
 			'--base',
-			`/xlsx-viewer/${route}/`,
+			`/ooxml/xlsx/${route}/`,
 			'--outDir',
 			outDir,
 			'--emptyOutDir',
 		],
 		{
 			...process.env,
-			DEMO_BASE: `/xlsx-viewer/${route}/`,
+			DEMO_BASE: `/ooxml/xlsx/${route}/`,
 			VITE_DEMO_FRAMEWORK: framework,
 		},
 	);

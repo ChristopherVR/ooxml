@@ -1,14 +1,17 @@
 {
 	"name": "visio-svelte-viewer",
-	"version": "0.5.3",
+	"version": "0.5.4",
 	"description": "Local-first Visio viewer for svelte",
-	"homepage": "https://christophervr.github.io/visio-viewer/",
+	"homepage": "https://christophervr.github.io/ooxml/visio/",
+	"bugs": {
+		"url": "https://github.com/ChristopherVR/ooxml/issues"
+	},
 	"license": "Apache-2.0",
 	"author": "ChristopherVR",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/ChristopherVR/visio-viewer.git",
-		"directory": "packages/svelte"
+		"url": "git+https://github.com/ChristopherVR/ooxml.git",
+		"directory": "viewers/visio/packages/svelte"
 	},
 	"files": [
 		"dist",
@@ -35,9 +38,9 @@
 	},
 	"dependencies": {
 		"emf-converter": "4.8.9",
-		"ooxml-core": "^0.20.0",
-		"ooxml-ui": "^0.28.0",
-		"visio-core": "^0.3.1"
+		"ooxml-core": "*",
+		"ooxml-ui": "*",
+		"visio-core": "^0.3.2"
 	},
 	"peerDependencies": {
 		"svelte": "^5.0.0"

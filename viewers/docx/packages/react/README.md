@@ -1,12 +1,12 @@
 # docx-react-viewer
 
 [![npm version](https://img.shields.io/npm/v/docx-react-viewer.svg)](https://www.npmjs.com/package/docx-react-viewer)
-[![license](https://img.shields.io/npm/l/docx-react-viewer.svg)](https://github.com/ChristopherVR/docx-viewer/blob/main/LICENSE)
+[![license](https://img.shields.io/npm/l/docx-react-viewer.svg)](https://github.com/ChristopherVR/ooxml/blob/main/viewers/docx/LICENSE)
 [![types](https://img.shields.io/npm/types/docx-react-viewer.svg)](https://www.npmjs.com/package/docx-react-viewer)
 
 > A browser Word document editor for React, using one shared editor and the canonical OOXML document engine.
 
-[Live demo](https://christophervr.github.io/docx-viewer/demo/) | [npm](https://www.npmjs.com/package/docx-react-viewer) | [Full docs](https://christophervr.github.io/docx-viewer/) | [Source](https://github.com/ChristopherVR/docx-viewer)
+[Live demo](https://christophervr.github.io/ooxml/docx/demo/) | [npm](https://www.npmjs.com/package/docx-react-viewer) | [Full docs](https://christophervr.github.io/ooxml/docx/) | [Source](https://github.com/ChristopherVR/ooxml/tree/main/viewers/docx)
 
 ## Install
 
@@ -61,8 +61,8 @@ charts render as placeholders.
 
 ## Documentation
 
-[Framework guide](https://christophervr.github.io/docx-viewer/frameworks/react) |
-[Bindings](https://christophervr.github.io/docx-viewer/bindings)
+[Framework guide](https://christophervr.github.io/ooxml/docx/frameworks/react) |
+[Bindings](https://christophervr.github.io/ooxml/docx/bindings)
 
 ## License
 

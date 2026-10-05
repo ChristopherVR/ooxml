@@ -8,8 +8,8 @@ export default defineConfig({
 		'A browser Visio diagram viewer with one shared web component, one SVG renderer and thin adapters for React, Vue, Angular, Svelte, Solid, and vanilla JavaScript.',
 	lang: 'en-US',
 
-	// Deployed to https://christophervr.github.io/visio-viewer/
-	base: process.env.DOCS_BASE ?? '/visio-viewer/',
+	// Deployed to https://christophervr.github.io/ooxml/visio/
+	base: process.env.DOCS_BASE ?? '/ooxml/visio/',
 	outDir: process.env.DOCS_OUT ?? undefined,
 	cleanUrls: true,
 	lastUpdated: true,
@@ -119,10 +119,12 @@ export default defineConfig({
 			},
 		],
 
-		socialLinks: [{ icon: 'github', link: 'https://github.com/ChristopherVR/visio-viewer' }],
+		socialLinks: [
+			{ icon: 'github', link: 'https://github.com/ChristopherVR/ooxml/tree/main/viewers/visio' },
+		],
 
 		editLink: {
-			pattern: 'https://github.com/ChristopherVR/visio-viewer/edit/main/docs/:path',
+			pattern: 'https://github.com/ChristopherVR/ooxml/edit/main/viewers/visio/docs/:path',
 			text: 'Edit this page on GitHub',
 		},
 

@@ -4,7 +4,7 @@ Angular binding for **OpenTeams**, an open-source, bring-your-own-server team wo
 and chat, presence, meetings with video and screen share (WebRTC), and Office files shared in the
 conversation. It gives you a standalone component **and** a raw service with signals.
 
-[Source](https://github.com/ChristopherVR/teams-viewer) | [Server](https://www.npmjs.com/package/openteams-server)
+[Source](https://github.com/ChristopherVR/ooxml/tree/main/viewers/teams) | [Server](https://www.npmjs.com/package/openteams-server)
 
 ## Install
 
@@ -31,7 +31,11 @@ import { TeamsWorkspaceComponent, TeamsService } from 'openteams-angular-viewer'
 	template: `<teams-workspace workspaceId="acme" userName="Ada" [config]="config" />`,
 })
 export class AppComponent {
-	config = { mode: 'server' as const, syncUrl: 'wss://teams.example.com/sync', signalingUrl: 'wss://teams.example.com/signal' };
+	config = {
+		mode: 'server' as const,
+		syncUrl: 'wss://teams.example.com/sync',
+		signalingUrl: 'wss://teams.example.com/signal',
+	};
 }
 ```
 

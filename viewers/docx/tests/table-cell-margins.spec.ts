@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import JSZip from 'jszip';
 import { readFile } from 'node:fs/promises';
-import { fileInput, saveButton } from './helpers';
+import { fileInput, saveButton, dialogByHeading } from './helpers';
 
 async function fixture() {
 	const zip = new JSZip();
@@ -36,7 +36,7 @@ for (const framework of ['react', 'vue', 'angular', 'svelte', 'solid', 'vanilla'
 			await cells.first().click();
 			await editor.getByRole('tab', { name: 'Table', exact: true }).click();
 			await editor.getByRole('button', { name: 'Table properties', exact: true }).click();
-			return editor.getByRole('dialog', { name: 'Table properties', exact: true });
+			return dialogByHeading(editor, 'Table properties');
 		};
 		let dialog = await open();
 		await expect(dialog.getByRole('spinbutton', { name: 'Cell top', exact: true })).toHaveValue(

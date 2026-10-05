@@ -1,6 +1,6 @@
 {
 	"name": "openteams-vanilla-viewer",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "The <teams-app> web component and mountTeams() for OpenTeams, the open-source bring-your-own-server team workspace. Self-contained: includes the <teams-app> UI.",
 	"keywords": [
 		"chat",
@@ -12,16 +12,16 @@
 		"webrtc",
 		"yjs"
 	],
+	"homepage": "https://christophervr.github.io/ooxml/teams/",
+	"bugs": {
+		"url": "https://github.com/ChristopherVR/ooxml/issues"
+	},
 	"license": "Apache-2.0",
 	"author": "ChristopherVR",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/ChristopherVR/teams-viewer.git",
-		"directory": "packages/vanilla"
-	},
-	"homepage": "https://github.com/ChristopherVR/teams-viewer/tree/main/packages/vanilla#readme",
-	"bugs": {
-		"url": "https://github.com/ChristopherVR/teams-viewer/issues"
+		"url": "git+https://github.com/ChristopherVR/ooxml.git",
+		"directory": "viewers/teams/packages/vanilla"
 	},
 	"files": [
 		"dist",
@@ -42,12 +42,12 @@
 	"publishConfig": {
 		"access": "public"
 	},
-	"engines": {
-		"node": ">=20"
-	},
 	"dependencies": {
 		"lit": "^3.3.3",
-		"ooxml-core": "^0.20.0",
-		"ooxml-ui": "^0.28.0"
+		"ooxml-core": "*",
+		"ooxml-ui": "*"
+	},
+	"engines": {
+		"node": ">=20"
 	}
 }

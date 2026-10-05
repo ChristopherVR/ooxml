@@ -11,7 +11,7 @@ const manifest = {
 test('links the known packages to file paths and records the ranges', () => {
 	const { manifest: linked, saved } = linkManifest(manifest, '/v/packages/react', '/o');
 	assert.match(linked.dependencies['ooxml-core'], /^file:.*o$/);
-	assert.match(linked.peerDependencies['ooxml-ui'], /^file:.*o\/packages\/ui$/);
+	assert.match(linked.peerDependencies['ooxml-ui'], /^file:.*o\/src\/ui$/);
 	assert.equal(linked.dependencies.lit, '^3.0.0');
 	assert.equal(saved.length, 2);
 });

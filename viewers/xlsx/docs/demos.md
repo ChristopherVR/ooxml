@@ -26,7 +26,7 @@ There is no collaboration demo for Excel because co-authoring is not implemented
 ## Embedded here
 
 <iframe
-	src="/xlsx-viewer/demo/?sample=1"
+	src="/ooxml/xlsx/demo/?sample=1"
 	title="xlsx-viewer live demo"
 	loading="lazy"
 	allow="clipboard-read; clipboard-write; fullscreen"

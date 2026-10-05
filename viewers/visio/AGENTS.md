@@ -18,7 +18,7 @@ not a description of the current beta.
 ### Shared Office UI lives in `ooxml-ui`
 
 Any UI control another Office product could use belongs in `ooxml-ui`
-(`packages/ui` in `ooxml`) as an `office-ui-*` web component, never as a
+(`src/ui` in `ooxml`) as an `office-ui-*` web component, never as a
 Visio-only copy. Examples: the ribbon tab row, ribbon buttons and groups,
 toolbars, the File backstage and print preview, Find bar, rulers, status bar,
 zoom slider, bottom page/sheet tab strip, dialogs (Options), Account profile,
@@ -44,7 +44,7 @@ element is built. New and touched UI code follows it; older template-string
 code migrates when it is next changed.
 
 - **Package layout.** The element, controller and renderer live in
-  `ooxml-ui/visio` (`packages/ui/src/visio` in the `ooxml` repository); every
+  `ooxml-ui/visio` (`src/ui/src/visio` in the `ooxml` repository); every
   framework package depends on it. Root `src/index.ts` only re-exports it, and
   `packages/bindings` (framework lifecycle adapters) is the only private input
   bundled into each framework package.
@@ -96,7 +96,7 @@ integrate.
 
 1. Diagnose whether a bug comes from document logic, shared view behavior or
    framework wiring before choosing a file to change.
-2. Fix rendering, selection, controls, keyboard and view state once in `packages/ui/src/visio/` of the `ooxml` repository (shipped as `ooxml-ui/visio`).
+2. Fix rendering, selection, controls, keyboard and view state once in `src/ui/src/visio/` of the `ooxml` repository (shipped as `ooxml-ui/visio`).
 3. For adapter changes, search all six for the same pattern and fix every
    affected adapter together. Shared helpers belong in `common.ts`.
 4. Add regression coverage at the owning layer. Check actual native adapter
@@ -122,17 +122,17 @@ belong in an untracked, git-ignored `CLAUDE.local.md`, never in this file.
 
 ### Where does my change go?
 
-| The change is about...                                                          | Make it in                                          |
-| ------------------------------------------------------------------------------- | --------------------------------------------------- |
-| VSDX parsing, ShapeSheet, model, editing, saving or preservation                | `src/visio/` in `ooxml`, with core regression tests |
-| XML, OPC, units, color, geometry, DrawingML or SmartArt reusable across formats | The appropriate shared area in `ooxml`              |
-| DOM-only controls shared by Office viewers                                      | `packages/ui` in `ooxml` (`ooxml-ui`)               |
-| Legacy binary codecs or CFB                                                     | `ole2`                                              |
-| Metafile conversion                                                             | `emf-converter`                                     |
-| SVG presentation, browser text measurement, controls or view state              | `packages/ui/src/visio/` in `ooxml`                 |
-| Framework properties, events and lifecycle                                      | `packages/bindings/src`, across affected adapters   |
-| Docs, demos, packaging, release scripts and browser tests                       | Here                                                |
-| Office-suite launch routes                                                      | `site/apps.js` in `ooxml`                           |
+| The change is about...                                                          | Make it in                                               |
+| ------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| VSDX parsing, ShapeSheet, model, editing, saving or preservation                | `src/core/visio/` in `ooxml`, with core regression tests |
+| XML, OPC, units, color, geometry, DrawingML or SmartArt reusable across formats | The appropriate shared area in `ooxml`                   |
+| DOM-only controls shared by Office viewers                                      | `src/ui` in `ooxml` (`ooxml-ui`)                         |
+| Legacy binary codecs or CFB                                                     | `ole2`                                                   |
+| Metafile conversion                                                             | `emf-converter`                                          |
+| SVG presentation, browser text measurement, controls or view state              | `src/ui/src/visio/` in `ooxml`                           |
+| Framework properties, events and lifecycle                                      | `packages/bindings/src`, across affected adapters        |
+| Docs, demos, packaging, release scripts and browser tests                       | Here                                                     |
+| Office-suite launch routes                                                      | `site/apps.js` in `ooxml`                                |
 
 Extract reusable logic when touching it instead of introducing another copy.
 Separate browser rendering decisions from document semantics. Record source
@@ -211,7 +211,7 @@ otherwise install Playwright Chromium.
 
 ## GitHub Pages
 
-`https://christophervr.github.io/visio-viewer/` is the public beta docs site and
+`https://christophervr.github.io/ooxml/visio/` is the public beta docs site and
 `/demo/` is the vanilla playground (also at `/demo-vanilla/`); `/demo-react/`, `/demo-vue/`, `/demo-angular/`,
 `/demo-svelte/` and `/demo-solid/` mount the same workspace (`demo/workspace.ts`) through each
 framework binding (`packages/bindings/demos`, built by `scripts/build-demos.mjs`). `.github/workflows/pages.yml` builds the pinned

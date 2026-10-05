@@ -7,6 +7,33 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.21.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@0.21.0) - 2026-10-05
+
+### Features
+
+- **chart:** Add the automatic value-axis scale (by @ChristopherVR) ([007f5b7](https://github.com/ChristopherVR/ooxml/commit/007f5b77507f99b8caf837fe0c82ea12d10465d6))
+- **chart:** Add histogram and category binning (by @ChristopherVR) ([f3d564c](https://github.com/ChristopherVR/ooxml/commit/f3d564c705dc2f2ab6da4df4dcf590bd0c2df023))
+- **pptx:** Add the pptx/ui subpath with the theme colour palette (by @ChristopherVR) ([0b7cde2](https://github.com/ChristopherVR/ooxml/commit/0b7cde28ecacc39bb80fbbebe1e6e9cb84e24634))
+- **pptx:** Write chart spacing, axis visibility and area format (by @sedrew) ([5db45d5](https://github.com/ChristopherVR/ooxml/commit/5db45d573f28986acb8116f615ac0807a11afc91))
+- **pptx:** Add chart spacing and area options to the chart SDK (by @sedrew) ([0e3e4ed](https://github.com/ChristopherVR/ooxml/commit/0e3e4ed0689e1ddfde5fdf1d0946ea60fb4bfe34))
+
+### Bug Fixes
+
+- **pptx:** Read series line style, keep table cell geometry fractional ([#6](https://github.com/ChristopherVR/ooxml/issues/6)) (by @IHAGI-c) ([f731f59](https://github.com/ChristopherVR/ooxml/commit/f731f59d5fc48c13e2a3032bc1566f10bae917af))
+- **pptx:** Write c:scaling children in schema order (by @sedrew) ([a530d5b](https://github.com/ChristopherVR/ooxml/commit/a530d5b3f37badd4e6b12a6e7b387c23f28d84bb))
+
+### Testing
+
+- **pptx:** Cover chart spacing, axis visibility and area format (by @sedrew) ([5b912b7](https://github.com/ChristopherVR/ooxml/commit/5b912b7da0db97c58d56e3d9403a93a52e9408a7))
+
+### Build & CI
+
+- **viewers:** Make the viewers root workspaces with one lockfile (by @ChristopherVR) ([129c615](https://github.com/ChristopherVR/ooxml/commit/129c615fcf49bb15e25b136019be5425f6c36bd1))
+
+### Chores
+
+- **viewers:** Resolve imported viewers against this checkout (by @ChristopherVR) ([fc79891](https://github.com/ChristopherVR/ooxml/commit/fc798917be9668674973df731e56263ab063af4a))
+
 ## [0.20.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@0.20.0) - 2026-10-05
 
 ### Features

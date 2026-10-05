@@ -11,7 +11,7 @@ test('Layout > Page Color paints the page, saves w:background and undoes', async
 	const paper = editor.getByLabel('Document page', { exact: true });
 	await editor.locator('.ProseMirror').click();
 	await page.keyboard.type('Tinted page');
-	await editor.locator('#dve-tab-layout').click();
+	await editor.locator('[role="tab"][data-tab="layout"]').click();
 	const caret = editor.locator('[aria-label="Page color"] + [data-split-caret]');
 	await reveal(editor, caret);
 	await caret.click();
@@ -43,7 +43,7 @@ test('Layout > Hyphenation turns automatic hyphenation on, saves it and undoes',
 	const paper = editor.getByLabel('Document page', { exact: true });
 	await editor.locator('.ProseMirror').click();
 	await page.keyboard.type('Hyphenate me');
-	await editor.locator('#dve-tab-layout').click();
+	await editor.locator('[role="tab"][data-tab="layout"]').click();
 	const select = editor.getByLabel('Hyphenation', { exact: true });
 	await reveal(editor, select);
 	await select.selectOption('auto');

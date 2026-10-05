@@ -21,15 +21,15 @@
 		"typecheck": "tsc --noEmit",
 		"test": "vitest run --passWithNoTests",
 		"test:browser": "playwright test && node scripts/test-packages-browser.mjs",
-		"check": "npm run fmt:check && npm run check:core && npm run check:converter && npm run typecheck && npm test && npm run check:bindings && npm run test:docs && npm run build && npm run test:worker && npm run test:package && npm run test:scripts && npm run build:packages && npm run test:packages",
-		"check:converter": "npm run test:converter-integration",
-		"check:bindings": "npm --prefix packages/bindings run check",
+		"check": "bun run fmt:check && bun run check:core && bun run check:converter && bun run typecheck && bun run test && bun run check:bindings && bun run test:docs && bun run build && bun run test:worker && bun run test:package && bun run build:packages && bun run test:packages",
+		"check:converter": "bun run test:converter-integration",
+		"check:bindings": "bun run --cwd packages/bindings check",
 		"test:docs": "node --test docs/site.test.mjs docs/theme.test.mjs",
 		"test:worker": "node scripts/test-worker-bundle.mjs",
 		"fmt": "oxfmt",
 		"fmt:check": "oxfmt --check",
 		"test:package": "node scripts/test-package.mjs",
-		"docs:dev": "npm --prefix docs run docs:dev",
+		"docs:dev": "bun run --cwd docs docs:dev",
 		"docs:build": "node scripts/build-pages.mjs",
 		"check:core": "node scripts/check-core.mjs",
 		"test:corpus": "node scripts/test-corpus.mjs",
@@ -38,14 +38,13 @@
 		"link:core": "node scripts/link-core.mjs",
 		"build:packages": "node scripts/build-packages.mjs",
 		"test:packages": "node scripts/test-packages.mjs",
-		"test:scripts": "node --test scripts/release-plan.test.mjs scripts/release-packages.test.mjs scripts/check-conventional-commits.test.mjs",
 		"lint": "oxlint",
 		"lint:fix": "oxlint --fix"
 	},
 	"dependencies": {
 		"emf-converter": "4.8.9",
-		"ooxml-core": "0.20.0",
-		"ooxml-ui": "0.28.0"
+		"ooxml-core": "*",
+		"ooxml-ui": "*"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.63.0",

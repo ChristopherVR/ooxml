@@ -138,7 +138,7 @@ export function checkCoreUiBoundary(root = ROOT) {
 			}
 		}
 	}
-	for (const path of sourceFiles(join(root, 'src'))) {
+	for (const path of sourceFiles(join(root, 'src', 'core'))) {
 		const text = readFileSync(path, 'utf8');
 		for (const token of importSpecifiers(text))
 			problems.push(`${relative(root, path)}:${token.line}:${token.column}: imports ${token.text}`);

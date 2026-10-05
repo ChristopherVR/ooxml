@@ -4,7 +4,7 @@ Vue 3 binding for **OpenTeams**, an open-source, bring-your-own-server team work
 and chat, presence, meetings with video and screen share (WebRTC), and Office files shared in the
 conversation. It gives you the complete UI as a component **and** a raw composable.
 
-[Source](https://github.com/ChristopherVR/teams-viewer) | [Server](https://www.npmjs.com/package/openteams-server)
+[Source](https://github.com/ChristopherVR/ooxml/tree/main/viewers/teams) | [Server](https://www.npmjs.com/package/openteams-server)
 
 ## Install
 
@@ -20,7 +20,11 @@ npm install openteams-vue-viewer
 ```vue
 <script setup lang="ts">
 import { Teams, useTeams } from 'openteams-vue-viewer';
-const config = { mode: 'server', syncUrl: 'wss://teams.example.com/sync', signalingUrl: 'wss://teams.example.com/signal' };
+const config = {
+	mode: 'server',
+	syncUrl: 'wss://teams.example.com/sync',
+	signalingUrl: 'wss://teams.example.com/signal',
+};
 // Raw composable: shallow refs over the core client.
 const { client, state } = useTeams(() => ({ workspaceId: 'acme', user: { name: 'Ada' }, config }));
 </script>

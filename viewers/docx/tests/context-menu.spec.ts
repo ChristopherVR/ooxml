@@ -1,5 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
-import { newDocument, openSample, setReadOnly, insertTableOfSize } from './helpers';
+import {
+	newDocument,
+	openSample,
+	setReadOnly,
+	insertTableOfSize,
+	dialogByHeading,
+} from './helpers';
 
 const editor = (page: Page) => page.locator('docx-editor');
 const surface = (page: Page) => editor(page).locator('.ProseMirror');
@@ -88,7 +94,7 @@ test('Shift+F10 and the ContextMenu key open it; arrows, Home and End navigate',
 	await page.keyboard.press('ArrowDown');
 	await page.keyboard.press('Enter');
 	await expect(menu(page)).toBeHidden();
-	await expect(editor(page).getByRole('dialog', { name: /link/i })).toBeVisible();
+	await expect(dialogByHeading(editor(page), /link/i)).toBeVisible();
 });
 
 test('table actions appear only in a table and edit it', async ({ page }) => {

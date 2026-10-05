@@ -157,7 +157,7 @@ export const en: LandingCopy = {
 				links: [
 					{
 						text: 'Live demo',
-						href: 'https://christophervr.github.io/docx-viewer/demo/',
+						href: 'https://christophervr.github.io/ooxml/docx/demo/',
 						external: true,
 					},
 					{ text: 'Framework bindings', href: '/bindings' },
@@ -178,15 +178,19 @@ export const en: LandingCopy = {
 			{
 				title: 'Community',
 				links: [
-					{ text: 'GitHub', href: 'https://github.com/ChristopherVR/docx-viewer', external: true },
+					{
+						text: 'GitHub',
+						href: 'https://github.com/ChristopherVR/ooxml/tree/main/viewers/docx',
+						external: true,
+					},
 					{
 						text: 'Issues',
-						href: 'https://github.com/ChristopherVR/docx-viewer/issues',
+						href: 'https://github.com/ChristopherVR/ooxml/issues',
 						external: true,
 					},
 					{
 						text: 'License',
-						href: 'https://github.com/ChristopherVR/docx-viewer/blob/main/LICENSE',
+						href: 'https://github.com/ChristopherVR/ooxml/blob/main/viewers/docx/LICENSE',
 						external: true,
 					},
 				],

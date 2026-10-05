@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { loadDocx } from '../packages/core/src/index';
 import type { DocxEditorElement } from '../packages/web-component/src';
-import { newDocument, reveal, saveButton } from './helpers';
+import { newDocument, reveal, saveButton, dialogByHeading } from './helpers';
 
 for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
 	test(`${framework}: Advanced Font controls apply, undo and export`, async ({ page }) => {
@@ -30,7 +30,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		const launcher = editor.getByRole('button', { name: 'Font settings', exact: true });
 		await reveal(editor, launcher);
 		await launcher.click();
-		const dialog = editor.getByRole('dialog', { name: 'Font', exact: true });
+		const dialog = dialogByHeading(editor, 'Font');
 		await dialog
 			.getByRole('combobox', { name: 'Font style', exact: true })
 			.selectOption('boldItalic');
@@ -66,14 +66,14 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		};
 		expect(await properties()).toMatchObject(expected);
 		await editor
-			.locator('.dve-quick-access')
+			.locator('.dve-titlebar .qat')
 			.getByRole('button', { name: 'Undo', exact: true })
 			.click();
 		expect((await properties()).textScalePercent).toBeUndefined();
 		expect((await properties()).bold).toBeUndefined();
 		await expect(body).toHaveText('Advanced text changed');
 		await editor
-			.locator('.dve-quick-access')
+			.locator('.dve-titlebar .qat')
 			.getByRole('button', { name: 'Redo', exact: true })
 			.click();
 		expect(await properties()).toMatchObject(expected);
@@ -137,7 +137,7 @@ test('header Font changes use one global undo without undoing earlier header typ
 	const launcher = editor.getByRole('button', { name: 'Font settings', exact: true });
 	await reveal(editor, launcher);
 	await launcher.click();
-	const dialog = editor.getByRole('dialog', { name: 'Font', exact: true });
+	const dialog = dialogByHeading(editor, 'Font');
 	await dialog
 		.getByRole('combobox', { name: 'Font style', exact: true })
 		.selectOption('boldItalic');
@@ -153,7 +153,7 @@ test('header Font changes use one global undo without undoing earlier header typ
 		});
 	expect(await run()).toMatchObject({ bold: true, italic: true, textScalePercent: 125 });
 	await editor
-		.locator('.dve-quick-access')
+		.locator('.dve-titlebar .qat')
 		.getByRole('button', { name: 'Undo', exact: true })
 		.click();
 	expect((await run()).bold).toBeUndefined();
