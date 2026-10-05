@@ -99,6 +99,15 @@ describe('office-ui-ribbon', () => {
 		expect(tabs().map((tab) => tab.textContent)).toEqual(['Home', 'View']);
 	});
 
+	it('marks the tab of a contextual panel so it can be tinted', async () => {
+		const { el, tabs } = ribbon();
+		el.querySelector<HTMLElement>('#view-panel')!.dataset.contextual = '';
+		el.append(document.createElement('div'));
+		await new Promise((resolve) => setTimeout(resolve, 0));
+		await Promise.resolve();
+		expect(tabs().map((tab) => tab.hasAttribute('data-contextual'))).toEqual([false, true]);
+	});
+
 	it('has a File button that reports activation and expansion', () => {
 		const { el, file } = ribbon();
 		const opened = vi.fn();

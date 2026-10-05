@@ -62,6 +62,13 @@
 	height: var(--office-tab-indicator-width);
 	background: var(--office-accent);
 }
+[role='tab'][data-contextual],
+[role='tab'][data-contextual][aria-selected='true'] {
+	color: var(--office-ribbon-contextual);
+}
+[role='tab'][data-contextual][aria-selected='true']::after {
+	background: var(--office-ribbon-contextual);
+}
 .file:focus-visible,
 [role='tab']:focus-visible {
 	outline: var(--office-focus-width) solid var(--office-ring);

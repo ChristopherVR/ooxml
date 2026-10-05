@@ -133,6 +133,7 @@ export const OFFICE_TOKENS = {
 	'--office-switch-thumb-on': 'var(--office-accent-foreground, #ffffff)',
 	// Component: ribbon, status bar, tabs
 	'--office-ribbon-tab-height': '35px',
+	'--office-ribbon-contextual': 'var(--office-accent, #2563eb)',
 	'--office-ribbon-group-gap': '2px',
 	'--office-ribbon-group-height': '78px',
 	'--office-ribbon-group-padding': '4px 8px 2px',

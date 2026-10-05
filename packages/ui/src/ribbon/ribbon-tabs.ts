@@ -10,6 +10,7 @@ export type OfficeRibbonSelectEvent = CustomEvent<{ tab: string }>;
 interface RibbonTab {
 	id: string;
 	label: string;
+	contextual: boolean;
 	keytip?: string;
 	keytipPanel?: string;
 }
@@ -22,7 +23,8 @@ interface RibbonTab {
  * `search`, `end`. Attributes: `selected`, `label` (tab list name), `file-label` (default "File"),
  * `no-file`, `file-expanded`, `file-keytip`. A panel with `data-tab-hidden` keeps its content but has
  * no tab (a contextual tab, or one a customisation removed); if it was selected, the first
- * remaining tab takes over. Events: `office-ribbon-select` `{ tab }`
+ * remaining tab takes over. `data-contextual` on a panel tints its tab (`--office-ribbon-contextual`),
+ * for tools that apply to the selection, such as a table's. Events: `office-ribbon-select` `{ tab }`
  * (cancelable) and `office-ribbon-file` when File is activated.
  */
 export class OfficeUiRibbon extends OfficeElement {
@@ -96,6 +98,7 @@ export class OfficeUiRibbon extends OfficeElement {
 			return {
 				id,
 				label: panel.dataset.label ?? id,
+				contextual: panel.dataset.contextual !== undefined,
 				...(panel.dataset.tabKeytip
 					? {
 							keytip: panel.dataset.tabKeytip,
@@ -194,6 +197,7 @@ export class OfficeUiRibbon extends OfficeElement {
 							role="tab"
 							id="tab-${tab.id}"
 							data-tab=${tab.id}
+							data-contextual=${ifDefined(tab.contextual ? '' : undefined)}
 							data-keytip=${ifDefined(tab.keytip)}
 							data-keytip-panel=${ifDefined(tab.keytipPanel)}
 							aria-selected=${String(tab.id === selected)}
