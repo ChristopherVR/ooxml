@@ -292,6 +292,7 @@ const legendItems = computed(() => computeChartLegendLayout(props.vm));
 				:points="prim.points"
 				:stroke="prim.stroke"
 				:stroke-width="prim.strokeWidth"
+				:stroke-dasharray="prim.dashArray"
 				:fill="prim.fill"
 				:opacity="prim.opacity ?? 1"
 				v-bind="partAttrs(prim.part)"
@@ -304,6 +305,8 @@ const legendItems = computed(() => computeChartLegendLayout(props.vm));
 				:cy="prim.cy"
 				:r="prim.r"
 				:fill="prim.fill"
+				:stroke="prim.stroke"
+				:stroke-width="prim.strokeWidth"
 				:opacity="prim.opacity ?? 1"
 				v-bind="partAttrs(prim.part)"
 			>
