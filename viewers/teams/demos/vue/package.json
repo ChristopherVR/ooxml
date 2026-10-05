@@ -1,0 +1,14 @@
+{
+	"name": "teams-demo-vue",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "vite --host 127.0.0.1",
+		"build": "vite build"
+	},
+	"dependencies": {
+		"openteams-vue-viewer": "workspace:*",
+		"vue": "^3.5.43"
+	}
+}

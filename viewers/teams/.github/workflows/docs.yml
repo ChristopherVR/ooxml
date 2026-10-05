@@ -1,7 +1,7 @@
 name: Deploy Docs and Demos to GitHub Pages
 
 # Adapted from ChristopherVR/docx-viewer .github/workflows/docs.yml. Builds the VitePress site in
-# docs/ (its own install) and the vanilla and React demos into /demo/ and /demo-react/. Pages is
+# docs/ (its own install) and every binding demo into /demo/ (vanilla), /demo-react/, /demo-vue/, /demo-angular/, /demo-svelte/, /demo-solid/ and /demo-vanilla/. Pages is
 # static: the demos run in the core's local mode (BroadcastChannel between tabs of one browser) and
 # say so on the page. The demos alias the bindings to their source, so no package build is needed;
 # without the sibling ooxml checkout they use the published ooxml-core and ooxml-ui.

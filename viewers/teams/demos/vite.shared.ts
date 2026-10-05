@@ -17,7 +17,17 @@ export function sharedConfig(port: number): UserConfig {
 	return {
 		resolve: {
 			// Yjs and Lit break (instanceof, double registration) if two copies load: force one.
-			dedupe: ['yjs', 'lib0', 'y-protocols', 'lit', 'react', 'react-dom'],
+			dedupe: [
+				'yjs',
+				'lib0',
+				'y-protocols',
+				'lit',
+				'react',
+				'react-dom',
+				'vue',
+				'solid-js',
+				'svelte',
+			],
 			alias: [
 				...(ooxmlSource
 					? [
@@ -31,6 +41,10 @@ export function sharedConfig(port: number): UserConfig {
 					: [
 							{ find: /^teams-viewer$/, replacement: local('web-component/src/index.ts') },
 							{ find: /^openteams-react-viewer$/, replacement: local('react/src/index.ts') },
+							{ find: /^openteams-vue-viewer$/, replacement: local('vue/src/index.ts') },
+							{ find: /^openteams-solid-viewer$/, replacement: local('solid/src/index.ts') },
+							{ find: /^openteams-angular-viewer$/, replacement: local('angular/src/index.ts') },
+							{ find: /^openteams-svelte-viewer$/, replacement: local('svelte/src/Teams.svelte') },
 						]),
 			],
 		},

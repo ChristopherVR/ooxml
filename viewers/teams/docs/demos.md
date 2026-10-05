@@ -1,11 +1,17 @@
 # The live demos
 
-Two demos are published with this site:
+One demo per binding is published with this site. All of them run the same workspace and take the same query parameters (`?name=Ada&room=acme`).
 
-| Demo                                              | What it shows                                                                                         | Source         |
-| ------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | -------------- |
-| [Vanilla](/demo/){target="_self"}                 | The whole app: one `<teams-app>` element.                                                              | `demos/vanilla` |
-| [React](/demo-react/){target="_self"}             | `<Teams />` on the left and a hand-written panel over the `useTeams()` hook on the right.              | `demos/react`   |
+| Demo                                                                                         | What it shows                                                                             | Source          |
+| -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | --------------- |
+| [Vanilla](/demo/){target="_self"} (also at [/demo-vanilla/](/demo-vanilla/){target="_self"}) | The whole app: one `<teams-app>` element.                                                 | `demos/vanilla` |
+| [React](/demo-react/){target="_self"}                                                        | `<Teams />` on the left and a hand-written panel over the `useTeams()` hook on the right. | `demos/react`   |
+| [Vue](/demo-vue/){target="_self"}                                                            | The `<Teams>` component of `openteams-vue-viewer`.                                        | `demos/vue`     |
+| [Angular](/demo-angular/){target="_self"}                                                    | `<teams-workspace>` of `openteams-angular-viewer`.                                        | `demos/angular` |
+| [Svelte](/demo-svelte/){target="_self"}                                                      | `Teams.svelte` of `openteams-svelte-viewer`.                                              | `demos/svelte`  |
+| [Solid](/demo-solid/){target="_self"}                                                        | `Teams()` of `openteams-solid-viewer`.                                                    | `demos/solid`   |
+
+Because they share one origin and one local room name, a demo in one framework can talk to a demo in another: open `/demo-vue/?name=Ada&room=x` and `/demo-svelte/?name=Bob&room=x` in two tabs.
 
 ## They run without a server
 

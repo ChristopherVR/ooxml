@@ -12,6 +12,10 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 const demos = [
 	{ key: 'vanilla', label: 'Vanilla', path: '/demo/' },
 	{ key: 'react', label: 'React', path: '/demo-react/' },
+	{ key: 'vue', label: 'Vue', path: '/demo-vue/' },
+	{ key: 'angular', label: 'Angular', path: '/demo-angular/' },
+	{ key: 'svelte', label: 'Svelte', path: '/demo-svelte/' },
+	{ key: 'solid', label: 'Solid', path: '/demo-solid/' },
 ];
 
 const section = ref<HTMLElement | null>(null);

@@ -16,10 +16,17 @@ const node = process.execPath;
 const vitepressCli = resolve(docs, 'node_modules', 'vitepress', 'bin', 'vitepress.js');
 const viteCli = resolve(root, 'node_modules', 'vite', 'bin', 'vite.js');
 const base = '/teams-viewer/';
-// `/demo/` is the long-standing route for the primary demo in every viewer's Pages site.
+// `/demo/` is the long-standing route of the vanilla demo (the launcher embeds it), and every
+// binding has its own `/demo-<framework>/` route like the other viewers' sites; `/demo-vanilla/`
+// is the same vanilla demo built under the standard name.
 const demos = [
 	{ dir: 'vanilla', route: 'demo' },
 	{ dir: 'react', route: 'demo-react' },
+	{ dir: 'vue', route: 'demo-vue' },
+	{ dir: 'angular', route: 'demo-angular' },
+	{ dir: 'svelte', route: 'demo-svelte' },
+	{ dir: 'solid', route: 'demo-solid' },
+	{ dir: 'vanilla', route: 'demo-vanilla' },
 ];
 
 function run(script, args, cwd, env = process.env) {

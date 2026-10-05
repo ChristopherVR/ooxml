@@ -64,6 +64,10 @@ export default defineConfig({
 					// `target` keeps the VitePress router from handling these as missing pages.
 					{ text: 'Vanilla demo', link: '/demo/', target: '_self' },
 					{ text: 'React demo', link: '/demo-react/', target: '_self' },
+					{ text: 'Vue demo', link: '/demo-vue/', target: '_self' },
+					{ text: 'Angular demo', link: '/demo-angular/', target: '_self' },
+					{ text: 'Svelte demo', link: '/demo-svelte/', target: '_self' },
+					{ text: 'Solid demo', link: '/demo-solid/', target: '_self' },
 					{ text: 'About the demos', link: '/demos' },
 				],
 			},
