@@ -40,6 +40,7 @@ export default defineConfig({
 				link: '/getting-started',
 				activeMatch: '/(getting-started|architecture|bindings|api|theming|localization)',
 			},
+			{ text: 'Demos', link: '/demos', activeMatch: '/demos' },
 			{
 				text: 'Packages',
 				items: [
@@ -56,7 +57,7 @@ export default defineConfig({
 			{
 				text: 'Resources',
 				items: [
-					{ text: 'Live demos', link: '/#live-demo' },
+					{ text: 'Live demos', link: '/demos' },
 					{ text: 'Features and limitations', link: '/features' },
 					{ text: 'Collaboration', link: '/collaboration' },
 					{ text: 'Release policy', link: '/releasing' },
@@ -74,6 +75,7 @@ export default defineConfig({
 				items: [
 					{ text: 'Overview', link: '/' },
 					{ text: 'Getting started', link: '/getting-started' },
+					{ text: 'The live demos', link: '/demos' },
 					{ text: 'Architecture', link: '/architecture' },
 					{ text: 'Framework bindings', link: '/bindings' },
 				],
@@ -101,7 +103,7 @@ export default defineConfig({
 				text: 'Project Status',
 				items: [
 					{ text: 'Features and limitations', link: '/features' },
-					{ text: 'Collaboration', link: '/collaboration' },
+					{ text: 'Collaboration (not supported)', link: '/collaboration' },
 					{ text: 'Package releases', link: '/releasing' },
 					{
 						text: 'Changelog',

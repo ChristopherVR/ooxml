@@ -2,14 +2,14 @@
  * Framework metadata + code samples for the landing page. None of this is
  * localized: package names, entry points and code are identical in every
  * locale. Samples mirror docs/bindings.md and the per-framework guides; keep
- * them in sync with those pages. The Excel packages are not published to npm
- * yet, so `entry` is the intended import path, not an install command.
+ * them in sync with those pages. `entry` is the npm package name of each
+ * framework adapter.
  */
 
 export interface FrameworkSample {
 	id: string;
 	label: string;
-	/** Intended import path of the adapter (API preview, not yet on npm). */
+	/** npm package name of the adapter. */
 	entry: string;
 	file: string;
 	docsHref: string;

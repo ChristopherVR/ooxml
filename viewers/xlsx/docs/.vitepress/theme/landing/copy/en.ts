@@ -14,9 +14,9 @@ export const en: LandingCopy = {
 		frameAlt: 'An illustration of the xlsx-viewer grid with a ribbon, formula bar and sheet tabs',
 		copyLabel: 'Copy',
 		copiedLabel: 'Copied',
-		entryLabel: 'import from',
+		entryLabel: 'install',
 		notPublished:
-			'Not on npm yet. The Excel packages are unpublished, so these are the intended import paths. Build from the repository to try them today.',
+			'Published to npm. Each framework package is self-contained: it bundles the editor and brings the workbook model with it.',
 	},
 	features: {
 		kicker: 'Features',
@@ -77,11 +77,11 @@ export const en: LandingCopy = {
 	quickstart: {
 		kicker: 'Getting started',
 		title: 'Mount an editor in a few lines.',
-		copy: 'Every adapter mounts the same <xlsx-editor>. Pass a workbook or file bytes, listen for changes, and give the container a height. The snippets show the intended API.',
+		copy: 'Every adapter mounts the same <xlsx-editor>. Pass a workbook or file bytes, listen for changes, and give the container a height.',
 		docsLabel: 'Framework guide',
 		buildTitle: 'Build from source',
 		buildCopy:
-			'The Excel packages are not published to npm yet, so clone the repository and run the demo or the packages from there. Bun is required.',
+			'To run the demos or work on the editor itself, clone the repository. Bun is required.',
 		buildCommands: 'bun install\nbun run demo',
 	},
 	demos: {
@@ -100,7 +100,7 @@ export const en: LandingCopy = {
 		items: [
 			{
 				q: 'Can I install it from npm?',
-				a: 'Not yet. The Excel packages are not published. Clone the repository and build it; the import paths shown on this site are the intended API.',
+				a: 'Yes. One self-contained editor package per framework is on npm, for example npm install @christophervr/xlsx-react-viewer. Each package is versioned on its own.',
 				link: { text: 'Release policy', href: '/releasing' },
 			},
 			{
@@ -161,6 +161,7 @@ export const en: LandingCopy = {
 				title: 'Docs',
 				links: [
 					{ text: 'Getting started', href: '/getting-started' },
+					{ text: 'Live demos', href: '/demos' },
 					{ text: 'Architecture', href: '/architecture' },
 					{ text: 'Theming', href: '/theming' },
 					{ text: 'Features and limitations', href: '/features' },
