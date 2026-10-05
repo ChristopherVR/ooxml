@@ -113,7 +113,9 @@ export default defineConfig({
 			},
 		],
 
-		socialLinks: [{ icon: 'github', link: 'https://github.com/ChristopherVR/ooxml/tree/main/viewers/xlsx' }],
+		socialLinks: [
+			{ icon: 'github', link: 'https://github.com/ChristopherVR/ooxml/tree/main/viewers/xlsx' },
+		],
 
 		editLink: {
 			pattern: 'https://github.com/ChristopherVR/ooxml/edit/main/viewers/xlsx/docs/:path',

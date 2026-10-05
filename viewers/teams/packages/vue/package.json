@@ -11,16 +11,16 @@
 		"webrtc",
 		"yjs"
 	],
+	"homepage": "https://github.com/ChristopherVR/ooxml/tree/main/viewers/teams/packages/vue#readme",
+	"bugs": {
+		"url": "https://github.com/ChristopherVR/ooxml/issues"
+	},
 	"license": "Apache-2.0",
 	"author": "ChristopherVR",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/ChristopherVR/ooxml.git",
 		"directory": "viewers/teams/packages/vue"
-	},
-	"homepage": "https://github.com/ChristopherVR/ooxml/tree/main/viewers/teams/packages/vue#readme",
-	"bugs": {
-		"url": "https://github.com/ChristopherVR/ooxml/issues"
 	},
 	"files": [
 		"dist",
@@ -41,18 +41,18 @@
 	"publishConfig": {
 		"access": "public"
 	},
-	"engines": {
-		"node": ">=20"
-	},
 	"dependencies": {
 		"lit": "^3.3.3",
 		"ooxml-core": "*",
 		"ooxml-ui": "*"
 	},
+	"devDependencies": {
+		"vue": "^3.5.43"
+	},
 	"peerDependencies": {
 		"vue": "^3.4.0"
 	},
-	"devDependencies": {
-		"vue": "^3.5.43"
+	"engines": {
+		"node": ">=20"
 	}
 }

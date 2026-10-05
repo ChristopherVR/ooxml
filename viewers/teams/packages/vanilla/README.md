@@ -23,7 +23,11 @@ import { mountTeams } from 'openteams-vanilla-viewer';
 const teams = mountTeams(document.querySelector('#teams')!, {
 	workspaceId: 'acme',
 	userName: 'Ada',
-	config: { mode: 'server', syncUrl: 'wss://teams.example.com/sync', signalingUrl: 'wss://teams.example.com/signal' },
+	config: {
+		mode: 'server',
+		syncUrl: 'wss://teams.example.com/sync',
+		signalingUrl: 'wss://teams.example.com/signal',
+	},
 });
 teams.update({ workspaceId: 'acme', userName: 'Ada Lovelace' });
 // teams.destroy();

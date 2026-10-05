@@ -119,7 +119,9 @@ export default defineConfig({
 			},
 		],
 
-		socialLinks: [{ icon: 'github', link: 'https://github.com/ChristopherVR/ooxml/tree/main/viewers/docx' }],
+		socialLinks: [
+			{ icon: 'github', link: 'https://github.com/ChristopherVR/ooxml/tree/main/viewers/docx' },
+		],
 
 		editLink: {
 			pattern: 'https://github.com/ChristopherVR/ooxml/edit/main/viewers/docx/docs/:path',

@@ -178,7 +178,11 @@ export const en: LandingCopy = {
 			{
 				title: 'Community',
 				links: [
-					{ text: 'GitHub', href: 'https://github.com/ChristopherVR/ooxml/tree/main/viewers/docx', external: true },
+					{
+						text: 'GitHub',
+						href: 'https://github.com/ChristopherVR/ooxml/tree/main/viewers/docx',
+						external: true,
+					},
 					{
 						text: 'Issues',
 						href: 'https://github.com/ChristopherVR/ooxml/issues',

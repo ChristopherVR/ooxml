@@ -31,15 +31,15 @@ An early implementation: not Microsoft Teams, not affiliated with Microsoft, and
 
 ## Features and limitations
 
-|                          |                                                                                                                                                                                                                           |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Channels and chat**    | Channels, posts with replies, reactions, author-only edit and delete, search and unread counts, in one Yjs document that merges concurrent edits. Everything a peer sends is re-validated and rendered as text, never markup. |
-| **Presence**             | Who is online, typing, and an availability you set (available, busy, away). Advisory and unauthenticated, like any Yjs awareness.                                                                                         |
-| **Calls**                | Meetings in a channel over WebRTC: pre-join screen, audio, video, screen share and raise hand. Full mesh with a signaling relay, no media server: honest up to about a dozen people. TURN for strict NATs is yours to run. |
-| **Files in conversation**| Attachments go to your server's `/files` endpoint or your own `uploadFile` function and are posted as links; Word, Excel, PowerPoint and Visio files are recognised so a host can open them. Without a file server, files are shared by name only. |
-| **Server**               | Bring your own. The reference `openteams-server` (one Node process, about 300 lines) does sync, signaling and file storage with an optional shared token, an origin allowlist and short-lived signed download links. |
-| **Local mode**           | `mode: 'local'` needs no server: tabs of one browser share chat, presence and calls over `BroadcastChannel`. The live demos run this way.                                                                                  |
-| **Not supported**        | No end-to-end encryption (your server can read chat and files). No user accounts in the reference server (one shared token); authorization is the server's job. No 1:1 chats, notifications, calendar, recording, background blur or live captions. No localization yet: the UI is English only. |
+|                           |                                                                                                                                                                                                                                                                                                  |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Channels and chat**     | Channels, posts with replies, reactions, author-only edit and delete, search and unread counts, in one Yjs document that merges concurrent edits. Everything a peer sends is re-validated and rendered as text, never markup.                                                                    |
+| **Presence**              | Who is online, typing, and an availability you set (available, busy, away). Advisory and unauthenticated, like any Yjs awareness.                                                                                                                                                                |
+| **Calls**                 | Meetings in a channel over WebRTC: pre-join screen, audio, video, screen share and raise hand. Full mesh with a signaling relay, no media server: honest up to about a dozen people. TURN for strict NATs is yours to run.                                                                       |
+| **Files in conversation** | Attachments go to your server's `/files` endpoint or your own `uploadFile` function and are posted as links; Word, Excel, PowerPoint and Visio files are recognised so a host can open them. Without a file server, files are shared by name only.                                               |
+| **Server**                | Bring your own. The reference `openteams-server` (one Node process, about 300 lines) does sync, signaling and file storage with an optional shared token, an origin allowlist and short-lived signed download links.                                                                             |
+| **Local mode**            | `mode: 'local'` needs no server: tabs of one browser share chat, presence and calls over `BroadcastChannel`. The live demos run this way.                                                                                                                                                        |
+| **Not supported**         | No end-to-end encryption (your server can read chat and files). No user accounts in the reference server (one shared token); authorization is the server's job. No 1:1 chats, notifications, calendar, recording, background blur or live captions. No localization yet: the UI is English only. |
 
 ## How it works
 
@@ -109,7 +109,11 @@ teams.destroy();
 Or plain markup after `defineTeamsApp()`:
 
 ```html
-<teams-app workspace-id="acme" user-name="Ada" server-config='{"mode":"server","syncUrl":"wss://teams.example.com/sync","signalingUrl":"wss://teams.example.com/signal","iceServers":[{"urls":"stun:stun.example.com:3478"}]}'></teams-app>
+<teams-app
+	workspace-id="acme"
+	user-name="Ada"
+	server-config='{"mode":"server","syncUrl":"wss://teams.example.com/sync","signalingUrl":"wss://teams.example.com/signal","iceServers":[{"urls":"stun:stun.example.com:3478"}]}'
+></teams-app>
 ```
 
 </details>
@@ -138,15 +142,15 @@ It is configured by environment only (`PORT`, `HOST`, `TEAMS_TOKEN`, `TEAMS_ORIG
 
 Seven packages are published on npm, each versioned independently. The names are `openteams-*` because the plain `openteams` name on npm belongs to an unrelated project.
 
-| Package                    | What it is                                                        | Peer dependency |
-| -------------------------- | ----------------------------------------------------------------- | --------------- |
-| `openteams-react-viewer`   | React 18+ component and hooks (`packages/react`).                 | `react`         |
-| `openteams-vue-viewer`     | Vue 3.4+ component and composable (`packages/vue`).               | `vue`           |
-| `openteams-angular-viewer` | Angular 17+ standalone component and service (`packages/angular`). | `@angular/core` |
-| `openteams-svelte-viewer`  | Svelte 5 component and store (`packages/svelte`).                 | `svelte`        |
-| `openteams-solid-viewer`   | SolidJS 1.9 component and primitive (`packages/solid`).           | `solid-js`      |
-| `openteams-vanilla-viewer` | `mountTeams` and the plain `<teams-app>` element (`packages/vanilla`). | none        |
-| `openteams-server`         | The reference server and its `openteams-server` command (`server`). | none (Node 22+) |
+| Package                    | What it is                                                             | Peer dependency |
+| -------------------------- | ---------------------------------------------------------------------- | --------------- |
+| `openteams-react-viewer`   | React 18+ component and hooks (`packages/react`).                      | `react`         |
+| `openteams-vue-viewer`     | Vue 3.4+ component and composable (`packages/vue`).                    | `vue`           |
+| `openteams-angular-viewer` | Angular 17+ standalone component and service (`packages/angular`).     | `@angular/core` |
+| `openteams-svelte-viewer`  | Svelte 5 component and store (`packages/svelte`).                      | `svelte`        |
+| `openteams-solid-viewer`   | SolidJS 1.9 component and primitive (`packages/solid`).                | `solid-js`      |
+| `openteams-vanilla-viewer` | `mountTeams` and the plain `<teams-app>` element (`packages/vanilla`). | none            |
+| `openteams-server`         | The reference server and its `openteams-server` command (`server`).    | none (Node 22+) |
 
 The workspace also holds **private** packages that are never published: `teams-viewer` (`packages/web-component`, the `<teams-app>` element, inlined into every binding at build time) and the demos.
 

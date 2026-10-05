@@ -31,7 +31,11 @@ import { TeamsWorkspaceComponent, TeamsService } from 'openteams-angular-viewer'
 	template: `<teams-workspace workspaceId="acme" userName="Ada" [config]="config" />`,
 })
 export class AppComponent {
-	config = { mode: 'server' as const, syncUrl: 'wss://teams.example.com/sync', signalingUrl: 'wss://teams.example.com/signal' };
+	config = {
+		mode: 'server' as const,
+		syncUrl: 'wss://teams.example.com/sync',
+		signalingUrl: 'wss://teams.example.com/signal',
+	};
 }
 ```
 

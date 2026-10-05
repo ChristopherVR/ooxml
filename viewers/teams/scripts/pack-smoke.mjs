@@ -82,8 +82,9 @@ async function inspectTarball(name, packed, directory) {
 			['ooxml-core', 'ooxml-ui'],
 			`${packed.name} may depend on no project package but ooxml-core and ooxml-ui`,
 		);
+		// `*` tracks the latest release in this repository; the publish step rewrites it to a caret.
 		for (const dep of ['ooxml-core', 'ooxml-ui'])
-			assert.match(manifest.dependencies[dep], /^\^\d+\.\d+\.\d+$/u, `${packed.name} ${dep}`);
+			assert.match(manifest.dependencies[dep], /^(?:\*|\^\d+\.\d+\.\d+)$/u, `${packed.name} ${dep}`);
 	} else {
 		assert.equal(manifest.bin['openteams-server'], 'bin.mjs');
 	}

@@ -11,6 +11,10 @@
 		"y-websocket",
 		"yjs"
 	],
+	"homepage": "https://github.com/ChristopherVR/ooxml/tree/main/viewers/teams/server#readme",
+	"bugs": {
+		"url": "https://github.com/ChristopherVR/ooxml/issues"
+	},
 	"license": "Apache-2.0",
 	"author": "ChristopherVR",
 	"repository": {
@@ -18,9 +22,8 @@
 		"url": "git+https://github.com/ChristopherVR/ooxml.git",
 		"directory": "viewers/teams/server"
 	},
-	"homepage": "https://github.com/ChristopherVR/ooxml/tree/main/viewers/teams/server#readme",
-	"bugs": {
-		"url": "https://github.com/ChristopherVR/ooxml/issues"
+	"bin": {
+		"openteams-server": "bin.mjs"
 	},
 	"files": [
 		"index.mjs",
@@ -34,9 +37,6 @@
 	"exports": {
 		".": "./index.mjs",
 		"./package.json": "./package.json"
-	},
-	"bin": {
-		"openteams-server": "bin.mjs"
 	},
 	"publishConfig": {
 		"access": "public"

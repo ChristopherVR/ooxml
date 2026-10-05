@@ -7,15 +7,15 @@ example `openteams-server@0.2.0`). The flow, the scripts and the workflows are p
 [docx-viewer](https://github.com/ChristopherVR/ooxml/tree/main/viewers/docx) (itself adapted from pptx-viewer); each
 ported file says so in its header, and the deviations are listed at the end.
 
-| Package                    | Dir                | Depends on (registry)                               | Bundled in               |
-| -------------------------- | ------------------ | --------------------------------------------------- | ------------------------ |
-| `openteams-react-viewer`   | `packages/react`   | `ooxml-core`, `ooxml-ui`, `lit`; peer `react`       | `packages/web-component` |
-| `openteams-vue-viewer`     | `packages/vue`     | `ooxml-core`, `ooxml-ui`, `lit`; peer `vue`         | `packages/web-component` |
-| `openteams-angular-viewer` | `packages/angular` | `ooxml-core`, `ooxml-ui`, `lit`; peer `@angular/core` | `packages/web-component` |
-| `openteams-svelte-viewer`  | `packages/svelte`  | `ooxml-core`, `ooxml-ui`, `lit`; peer `svelte`      | `packages/web-component` |
-| `openteams-solid-viewer`   | `packages/solid`   | `ooxml-core`, `ooxml-ui`, `lit`; peer `solid-js`    | `packages/web-component` |
-| `openteams-vanilla-viewer` | `packages/vanilla` | `ooxml-core`, `ooxml-ui`, `lit`                     | `packages/web-component` |
-| `openteams-server`         | `server`           | `ws`, `yjs`, `y-protocols`, `lib0`                  | nothing (ships its source) |
+| Package                    | Dir                | Depends on (registry)                                 | Bundled in                 |
+| -------------------------- | ------------------ | ----------------------------------------------------- | -------------------------- |
+| `openteams-react-viewer`   | `packages/react`   | `ooxml-core`, `ooxml-ui`, `lit`; peer `react`         | `packages/web-component`   |
+| `openteams-vue-viewer`     | `packages/vue`     | `ooxml-core`, `ooxml-ui`, `lit`; peer `vue`           | `packages/web-component`   |
+| `openteams-angular-viewer` | `packages/angular` | `ooxml-core`, `ooxml-ui`, `lit`; peer `@angular/core` | `packages/web-component`   |
+| `openteams-svelte-viewer`  | `packages/svelte`  | `ooxml-core`, `ooxml-ui`, `lit`; peer `svelte`        | `packages/web-component`   |
+| `openteams-solid-viewer`   | `packages/solid`   | `ooxml-core`, `ooxml-ui`, `lit`; peer `solid-js`      | `packages/web-component`   |
+| `openteams-vanilla-viewer` | `packages/vanilla` | `ooxml-core`, `ooxml-ui`, `lit`                       | `packages/web-component`   |
+| `openteams-server`         | `server`           | `ws`, `yjs`, `y-protocols`, `lib0`                    | nothing (ships its source) |
 
 `teams-viewer` (`packages/web-component`, the `<teams-app>` element) and the demos are `private`
 and never published. `scripts/build-packages.mjs` inlines the web component, CSS included, into

@@ -27,7 +27,11 @@ import { Teams } from 'openteams-react-viewer';
 <Teams
 	workspaceId="acme"
 	userName="Ada"
-	config={{ mode: 'server', syncUrl: 'wss://teams.example.com/sync', signalingUrl: 'wss://teams.example.com/signal' }}
+	config={{
+		mode: 'server',
+		syncUrl: 'wss://teams.example.com/sync',
+		signalingUrl: 'wss://teams.example.com/signal',
+	}}
 	onOpenFile={(detail) => window.open(detail.url)}
 />;
 ```
@@ -37,7 +41,11 @@ Or your own markup over the raw client (state in, plain actions out):
 ```tsx
 import { useTeams } from 'openteams-react-viewer';
 
-const { client, state } = useTeams({ workspaceId: 'acme', user: { id: 'ada', name: 'Ada' }, config });
+const { client, state } = useTeams({
+	workspaceId: 'acme',
+	user: { id: 'ada', name: 'Ada' },
+	config,
+});
 state?.channels.map((c) => <button onClick={() => client?.select(c.id)}>{c.name}</button>);
 ```
 

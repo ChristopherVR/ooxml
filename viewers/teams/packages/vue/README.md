@@ -20,7 +20,11 @@ npm install openteams-vue-viewer
 ```vue
 <script setup lang="ts">
 import { Teams, useTeams } from 'openteams-vue-viewer';
-const config = { mode: 'server', syncUrl: 'wss://teams.example.com/sync', signalingUrl: 'wss://teams.example.com/signal' };
+const config = {
+	mode: 'server',
+	syncUrl: 'wss://teams.example.com/sync',
+	signalingUrl: 'wss://teams.example.com/signal',
+};
 // Raw composable: shallow refs over the core client.
 const { client, state } = useTeams(() => ({ workspaceId: 'acme', user: { name: 'Ada' }, config }));
 </script>
