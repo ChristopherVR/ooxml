@@ -86,3 +86,4 @@ export {
 	tableOfFiguresInstruction,
 	tocCaptionLabel,
 } from './table-of-figures.js';
+export * from './document-stats.js';

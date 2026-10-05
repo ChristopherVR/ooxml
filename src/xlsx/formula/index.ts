@@ -35,3 +35,4 @@ export { deleteSheetInFormula, moveReferencesInFormula, type MoveSpec } from './
 export { renameTableInFormula } from './table-refs.js';
 export { structuredToA1, type StructuredTarget } from './structured-to-a1.js';
 export { needsArrayEvaluation } from './array-context.js';
+export * from './editor-text.js';

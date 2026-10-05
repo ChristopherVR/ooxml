@@ -359,3 +359,10 @@ packages/tools/src/tools (28 implementation modules), packages/tools/src/executi
 ## `teams` area (2026-10-04)
 
 New code, nothing moved. `src/teams` (model, chat, signaling, peer, call, server-config, workspace, store, view) is written for this repository on top of the `collab` area; the Lit elements in `packages/ui/src/teams` are new. The y-websocket wire format it speaks is the one documented in `src/collab/transport-provider.ts`. See `docs/teams-area.md`.
+
+## Editor logic moved out of the viewers (2026-10-05)
+
+| Area           | Module                                        | Source                                                                                | Changed                                                        |
+| -------------- | --------------------------------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `xlsx/formula` | `editor-text.ts`, `editor-text.test.ts`       | ChristopherVR/xlsx-viewer `packages/web-component/src/grid/formula-text.ts` (408fe71) | Imports point at core modules; the test moved with the code.   |
+| `docx`         | `document-stats.ts`, `document-stats.test.ts` | ChristopherVR/docx-viewer `packages/web-component/src/document-stats.ts` (44b369f)    | Imports point at core modules; exported from the `docx` entry. |
