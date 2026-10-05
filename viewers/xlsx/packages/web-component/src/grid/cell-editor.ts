@@ -20,7 +20,7 @@ import {
 	type EditDriver,
 } from './edit-bridge.js';
 import { createFormulaField, type FormulaField } from './formula-field.js';
-import { closeParens, isFormulaText, referenceTarget } from './formula-text.js';
+import { closeParens, isFormulaText, referenceTarget } from '@christophervr/xlsx-core';
 import { createFunctionAssist, type FunctionAssist } from './function-assist.js';
 import type { GridView } from './grid-view.js';
 import { PointMode } from './point-mode.js';

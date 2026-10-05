@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { drawingKeyDown } from './drawing-keys.js';
 import type { DrawingLayer } from './drawings.js';
 import { createTestContext } from './test-context.js';
-import { closeParens } from './formula-text.js';
+import { closeParens } from '@christophervr/xlsx-core';
 import { currentRegionOrAll, fillPlan } from './grid-commands.js';
 import { fillTarget } from './grid-pointer.js';
 

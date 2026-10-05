@@ -6,7 +6,7 @@ import type { CellEditor } from './cell-editor.js';
 import { currentRegionOrAll } from './grid-commands.js';
 import type { GridSelection } from './grid-selection.js';
 import type { GridView } from './grid-view.js';
-import { toggleAbsolute } from './formula-text.js';
+import { toggleAbsolute } from '@christophervr/xlsx-core';
 
 export interface KeyHost {
 	view: GridView;

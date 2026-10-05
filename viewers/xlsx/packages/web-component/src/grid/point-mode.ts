@@ -7,7 +7,7 @@ import {
 	type CellAddress,
 	type NavigationKey,
 } from '@christophervr/xlsx-core';
-import { acceptsReference, isFormulaText, splice } from './formula-text.js';
+import { acceptsReference, isFormulaText, splice } from '@christophervr/xlsx-core';
 import type { GridView } from './grid-view.js';
 import { spanRange } from './selection-ops.js';
 

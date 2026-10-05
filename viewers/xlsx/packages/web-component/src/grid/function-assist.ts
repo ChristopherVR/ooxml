@@ -1,5 +1,5 @@
 // Function autocomplete list and argument tooltip, shared by the in-cell editor and the formula
-// bar. Pure text logic lives in formula-text.ts; this module owns the popup DOM and its keys.
+// bar. Pure text logic lives in ooxml-core (xlsx/formula/editor-text); this module owns the popup DOM and its keys.
 import { FUNCTION_CATALOG, type FunctionInfo } from '@christophervr/xlsx-core';
 import { ensureStyle, h } from './dom.js';
 import type { FormulaField } from './formula-field.js';
@@ -10,7 +10,7 @@ import {
 	nameAtCaret,
 	splice,
 	syntaxParams,
-} from './formula-text.js';
+} from '@christophervr/xlsx-core';
 
 export interface FunctionAssist {
 	update(field: FormulaField, anchor: { left: number; top: number }): void;

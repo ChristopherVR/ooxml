@@ -6,7 +6,7 @@
 import { rangeContains, sheetByName, type CellAddress } from '@christophervr/xlsx-core';
 import { hyperlinkPolicy } from 'ooxml-core/opc';
 import { h, viewOf } from './dom.js';
-import { referenceTarget } from './formula-text.js';
+import { referenceTarget } from '@christophervr/xlsx-core';
 import type { GridSelection } from './grid-selection.js';
 import type { GridView } from './grid-view.js';
 import { selectCell } from './selection-ops.js';

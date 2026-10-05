@@ -1,7 +1,7 @@
 // A text field that colours the references of a formula, used by the in-cell editor and the
 // formula bar. A transparent <textarea> (which owns the caret, IME and native undo) sits over a
 // backdrop that paints the same text with coloured reference spans.
-import { coloredReferences, isFormulaText, type ColoredReference } from './formula-text.js';
+import { coloredReferences, isFormulaText, type ColoredReference } from '@christophervr/xlsx-core';
 import { h } from './dom.js';
 
 export interface FormulaField {

@@ -7,7 +7,7 @@ import { h } from '../grid/dom.js';
 import { editBridge, type EditState } from '../grid/edit-bridge.js';
 import { createFormulaField, type FormulaField } from '../grid/formula-field.js';
 import { createFunctionAssist, type FunctionAssist } from '../grid/function-assist.js';
-import { splice } from '../grid/formula-text.js';
+import { splice } from '@christophervr/xlsx-core';
 
 export interface FormulaInput {
 	readonly field: FormulaField;
