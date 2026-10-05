@@ -1,0 +1,78 @@
+name: Bug report
+description: Something renders, edits, or saves incorrectly
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. The single most useful thing you can give us is
+        **a .vsdx that reproduces it** plus **which bindings you checked**.
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happens
+      description: What did you see, and what did you expect instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open the attached file
+        2. ...
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: bindings-affected
+    attributes:
+      label: Which bindings did you see this in?
+      description: >-
+        Tick only what you actually tried. This project ships the same
+        `<visio-viewer>` element through six bindings, and a bug present in more
+        than one usually comes from shared code (`ooxml-ui/visio` or `ooxml-core/visio`),
+        which changes where we fix it. "I only tried one" is a perfectly fine answer.
+      options:
+        - label: React (`visio-react-viewer`)
+        - label: Vue (`visio-vue-viewer`)
+        - label: Angular (`visio-angular-viewer`)
+        - label: Svelte (`visio-svelte-viewer`)
+        - label: Solid (`visio-solid-viewer`)
+        - label: Vanilla (`visio-vanilla-viewer`)
+        - label: The `<visio-viewer>` element on its own (no framework)
+        - label: I did not check the others
+
+  - type: input
+    id: version
+    attributes:
+      label: Package version(s)
+      placeholder: 'visio-react-viewer@1.0.0'
+    validations:
+      required: true
+
+  - type: textarea
+    id: file
+    attributes:
+      label: Sample .vsdx or .vsd
+      description: >-
+        Drag the file in to attach it (zip it if GitHub rejects the extension).
+        If the file is confidential, a screenshot plus the relevant part XML
+        also works. Without a repro file, most rendering bugs cannot be fixed.
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: |
+        Browser: Chrome 141
+        OS: Windows 11
+        Framework version: React 19.2
+
+  - type: textarea
+    id: console
+    attributes:
+      label: Console errors
+      render: text
