@@ -113,7 +113,10 @@ describe('documentation site build', () => {
 		for (const script of document.querySelectorAll('script[src]'))
 			assert.ok(!/^(https?:)?\/\//.test(script.getAttribute('src')), 'No remote scripts');
 		for (const file of readdirSync(resolve(root, 'docs')).filter((f) => f.endsWith('.md')))
-			assert.ok(!read(`docs/${file}`).includes(String.fromCharCode(0x2014)), `${file} contains an em dash`);
+			assert.ok(
+				!read(`docs/${file}`).includes(String.fromCharCode(0x2014)),
+				`${file} contains an em dash`,
+			);
 	});
 });
 

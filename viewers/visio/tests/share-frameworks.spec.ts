@@ -25,6 +25,7 @@ for (const [host, guest] of [
 		await expect(viewerB.locator('svg.paper')).toContainText('Edit this text in either window');
 
 		// A text edit in one framework's window arrives in the other's.
+		// oxlint-disable-next-line typescript/no-explicit-any -- page.evaluate reads an untyped element handle
 		await viewerA.evaluate(async (element: any) => {
 			const page = element.document.pages[0];
 			const shape = page.shapes.find((s: { text?: string }) => s.text);

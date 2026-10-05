@@ -1,6 +1,6 @@
 import { vi } from 'vitest';
-import type { ViewerOptions, ViewerEvents } from '../../../src/contract.js';
-import type { MountedViewer } from '../../../src/binding.js';
+import type { ViewerOptions, ViewerEvents } from 'ooxml-ui/visio';
+import type { MountedViewer } from 'ooxml-ui/visio';
 export interface FakeBinding {
 	binding: MountedViewer;
 	options: ViewerOptions;
@@ -12,7 +12,9 @@ export interface FakeBinding {
 	state: Record<string, unknown>;
 }
 const mocks = vi.hoisted(() => ({ instances: [] as FakeBinding[], mount: vi.fn() }));
-vi.mock('../../../src/binding.js', () => ({
+vi.mock('ooxml-ui/visio', async (importOriginal) => ({
+	...(await importOriginal<typeof import('ooxml-ui/visio')>()),
+	ViewerController: class ViewerController {},
 	mountViewer: mocks.mount.mockImplementation((host: HTMLElement, initial: ViewerOptions) => {
 		const element = document.createElement('section');
 		element.dataset.testViewer = '';
@@ -96,7 +98,6 @@ vi.mock('../../../src/binding.js', () => ({
 		return instance.binding;
 	}),
 }));
-vi.mock('../../../src/controller.js', () => ({ ViewerController: class ViewerController {} }));
 export function current(): FakeBinding {
 	return mocks.instances.at(-1)!;
 }

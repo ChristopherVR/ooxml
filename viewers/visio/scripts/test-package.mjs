@@ -21,13 +21,10 @@ const packed = JSON.parse(
 		encoding: 'utf8',
 	}),
 )[0];
+// The viewer, its renderer and both workers ship in ooxml-ui/visio; this package re-exports them.
 assert.ok(
-	packed.files.some((file) => /^dist\/assets\/parse-worker-[\w-]+\.js$/.test(file.path)),
-	'Worker entry must ship in the actual npm artifact',
-);
-assert.ok(
-	packed.files.some((file) => /^dist\/assets\/edit-worker-[\w-]+\.js$/.test(file.path)),
-	'Edit worker entry must ship in the actual npm artifact',
+	!packed.files.some((file) => /^dist\/assets\/(?:parse|edit)-worker-/.test(file.path)),
+	'The workers must come from ooxml-ui, not be bundled again',
 );
 assert.ok(
 	!packed.files.some((file) => /\.test\.|test-fixture|integration\//.test(file.path)),

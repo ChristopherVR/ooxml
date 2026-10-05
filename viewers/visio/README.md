@@ -233,7 +233,7 @@ Eight packages are published on npm, each versioned independently:
 
 Each `*-viewer` package is self-contained: it ships the shared viewer, its adapter and both browser workers, and re-exports the `visio-core` document API. A package depends on `visio-core`, `ooxml-core`, `ooxml-ui` (the shared `office-ui-*` web components; installed for you, never imported by your code), `emf-converter` and its framework peer, so `@christophervr/ole2` does not need to be installed.
 
-The root viewer implementation (`src/`) and `packages/bindings` (framework lifecycle and event adapters) are **private** build inputs that are never published; they are bundled into each viewer package at build time.
+The viewer implementation lives in `ooxml-ui/visio` (the `ooxml` repository), which every viewer package depends on. `src/` here only re-exports it, and `packages/bindings` (framework lifecycle and event adapters) is a **private** build input that is never published; it is bundled into each viewer package at build time.
 
 ## Development
 

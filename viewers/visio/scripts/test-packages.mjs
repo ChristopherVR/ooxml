@@ -14,7 +14,7 @@ import { createVsdxFixture } from '../tests/fixture.mjs';
 const root = resolve(import.meta.dirname, '..');
 const consumer = mkdtempSync(resolve(tmpdir(), 'visio-published-consumer-'));
 const dependencies = {};
-for (const [key, meta] of Object.entries(VIEWER_PACKAGES)) {
+for (const [, meta] of Object.entries(VIEWER_PACKAGES)) {
 	const directory = resolve(root, meta.dir);
 	const manifest = JSON.parse(readFileSync(resolve(directory, 'package.json')));
 	verifyManifest({ ...meta, version: manifest.version });
@@ -31,13 +31,12 @@ for (const [key, meta] of Object.entries(VIEWER_PACKAGES)) {
 		!files.some((file) => /\.test\.|integration\/|node_modules\//.test(file)),
 		'No development artifacts',
 	);
-	if (key !== 'core') {
-		for (const worker of ['parse-worker-', 'edit-worker-'])
-			assert.ok(
-				files.some((file) => file.startsWith('dist/assets/' + worker)),
-				`${meta.npm}: ${worker}`,
-			);
-	}
+	// The viewer and its workers ship in ooxml-ui/visio, so no package bundles a worker of its own.
+	for (const worker of ['parse-worker-', 'edit-worker-'])
+		assert.ok(
+			!files.some((file) => file.startsWith('dist/assets/' + worker)),
+			`${meta.npm}: ${worker} must come from ooxml-ui`,
+		);
 	dependencies[manifest.name] = `file:${resolve(consumer, pack.filename)}`;
 	Object.assign(dependencies, manifest.peerDependencies);
 }

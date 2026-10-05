@@ -1,8 +1,8 @@
 import { compatibilityNotes, compatibilityText } from '../src/index.js';
-import type { ViewerCallbacks } from '../src/contract.js';
-import type { MountedViewer } from '../src/binding.js';
+import type { ViewerCallbacks } from 'ooxml-ui/visio';
+import type { MountedViewer } from 'ooxml-ui/visio';
 import type { VisioDocument } from 'ooxml-core/visio';
-import { demoDocument } from '../src/demo-document.js';
+import { demoDocument } from 'ooxml-core/visio/ui';
 import { sharedSampleBytes } from './shared-sample.js';
 import { wireWorkspaceShell } from './workspace-shell.js';
 import { wireWorkspaceTheme } from './workspace-theme.js';
@@ -185,7 +185,7 @@ export function createWorkspace(doc: Document = document): Workspace {
 			// The built-in sample is a model without package bytes, which a session cannot share, so the
 			// window that asks for the sample opens a small real VSDX instead and the others adopt it.
 			if (new URL(view.location.href).searchParams.get('sample') === '1')
-				void openFile(new File([sharedSampleBytes()], 'shared-sample.vsdx'));
+				void openFile(new File([sharedSampleBytes() as BlobPart], 'shared-sample.vsdx'));
 		}
 		view.addEventListener('pagehide', (event) => {
 			if (event.persisted) {

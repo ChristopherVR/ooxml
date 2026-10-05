@@ -1,4 +1,4 @@
-export { demoDocument } from '../src/demo-document.js';
-export { renderPage } from '../src/render-svg.js';
-export { exportPageSvg } from '../src/export-svg.js';
-export { createPrintSnapshot } from '../src/print-snapshot.js';
+export { demoDocument } from 'ooxml-core/visio/ui';
+export { renderPage } from 'ooxml-ui/visio';
+export { exportPageSvg } from 'ooxml-ui/visio';
+export { createPrintSnapshot } from 'ooxml-ui/visio';

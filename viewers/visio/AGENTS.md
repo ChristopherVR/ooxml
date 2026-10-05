@@ -43,11 +43,11 @@ pptx-viewer, docx-viewer or xlsx-viewer has one; if so it belongs in ooxml-ui.
 element is built. New and touched UI code follows it; older template-string
 code migrates when it is next changed.
 
-- **Package layout (target).** The element lives in a private workspace
-  package, `packages/web-component` (`visio-web-component`). It is bundled into
-  every framework package beside `packages/bindings`, as `docx-web-component`
-  is. Root `src/` is the current location; move modules there instead of adding
-  new top-level layers.
+- **Package layout.** The element, controller and renderer live in
+  `ooxml-ui/visio` (`packages/ui/src/visio` in the `ooxml` repository); every
+  framework package depends on it. Root `src/index.ts` only re-exports it, and
+  `packages/bindings` (framework lifecycle adapters) is the only private input
+  bundled into each framework package.
 - **DOM is built by typed builder functions**, never HTML template strings.
   Builders live in `ribbon-parts.ts` (`group`, `tool` and similar) and create
   elements with `createElement`, composing `office-ui-*` controls. Document
@@ -96,7 +96,7 @@ integrate.
 
 1. Diagnose whether a bug comes from document logic, shared view behavior or
    framework wiring before choosing a file to change.
-2. Fix rendering, selection, controls, keyboard and view state once in `src/`.
+2. Fix rendering, selection, controls, keyboard and view state once in `packages/ui/src/visio/` of the `ooxml` repository (shipped as `ooxml-ui/visio`).
 3. For adapter changes, search all six for the same pattern and fix every
    affected adapter together. Shared helpers belong in `common.ts`.
 4. Add regression coverage at the owning layer. Check actual native adapter
@@ -129,7 +129,7 @@ belong in an untracked, git-ignored `CLAUDE.local.md`, never in this file.
 | DOM-only controls shared by Office viewers                                      | `packages/ui` in `ooxml` (`ooxml-ui`)               |
 | Legacy binary codecs or CFB                                                     | `ole2`                                              |
 | Metafile conversion                                                             | `emf-converter`                                     |
-| SVG presentation, browser text measurement, controls or view state              | `src/` here                                         |
+| SVG presentation, browser text measurement, controls or view state              | `packages/ui/src/visio/` in `ooxml`                 |
 | Framework properties, events and lifecycle                                      | `packages/bindings/src`, across affected adapters   |
 | Docs, demos, packaging, release scripts and browser tests                       | Here                                                |
 | Office-suite launch routes                                                      | `site/apps.js` in `ooxml`                           |
@@ -141,11 +141,12 @@ must update `PROVENANCE.md` and retain licenses.
 
 ## Current structure and package status
 
-- `src/controller.ts`: shared view state, selection, events and edit orchestration.
-- `src/contract.ts` and `src/binding.ts`: common properties/events and lifecycle.
-- `src/viewer-element.ts`: shared browser surface.
-- `src/render-*.ts` and browser text layout: SVG presentation.
-- `src/document-history.ts`: bounded source-backed history orchestration.
+- `src/index.ts`: a re-export of `ooxml-ui/visio`, where the viewer lives. In that package:
+- `controller.ts`: shared view state, selection, events and edit orchestration.
+- `contract.ts` and `binding.ts`: common properties/events and lifecycle.
+- `viewer-element.ts`: shared browser surface.
+- `render-*.ts` and browser text layout: SVG presentation.
+- `document-history.ts`: bounded source-backed history orchestration.
   XML/package mutation remains in core through an isolated editing worker.
 - Cancellation and replacement must prevent stale worker results updating UI.
 - `packages/bindings` is private source. Use explicit framework entry points

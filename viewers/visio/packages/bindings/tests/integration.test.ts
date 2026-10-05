@@ -13,7 +13,7 @@ import { VisioViewer as VueViewer } from '../src/vue.js';
 import { VisioViewerComponent } from '../src/angular.js';
 import { VisioViewer as SolidViewer } from '../src/solid.jsx';
 import SvelteHarness from './IntegrationHarness.svelte';
-import { demoDocument } from '../../../src/demo-document.js';
+import { demoDocument } from 'ooxml-core/visio/ui';
 import { mountViewer } from '../src/vanilla.js';
 import {
 	eventKeys,

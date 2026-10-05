@@ -1,12 +1,12 @@
-import { mountViewer, type MountedViewer } from '../../../src/binding.js';
-import type { ViewerState } from '../../../src/controller.js';
+import { mountViewer, type MountedViewer } from 'ooxml-ui/visio';
+import type { ViewerState } from 'ooxml-ui/visio';
 import {
 	eventKeys,
 	propertyKeys,
 	type ViewerCallbacks,
 	type ViewerOptions,
 	type ViewerProperties,
-} from '../../../src/contract.js';
+} from 'ooxml-ui/visio';
 
 /** Framework props permit undefined; omitted values preserve the shared binding's state. */
 export type ViewerProps = { [K in keyof ViewerProperties]?: ViewerProperties[K] | undefined } & {
@@ -191,9 +191,9 @@ export function withEventEmitter(
 export { mountViewer };
 export type { MountedViewer, ViewerCallbacks, ViewerOptions, ViewerProperties };
 export { eventKeys, propertyKeys };
-export type { ViewerEvents, VsdxSource } from '../../../src/contract.js';
-export { ViewerController, type ViewerState } from '../../../src/controller.js';
-export type { SvgExportOptions, SvgExportResult } from '../../../src/export-svg.js';
+export type { ViewerEvents, VsdxSource } from 'ooxml-ui/visio';
+export { ViewerController, type ViewerState } from 'ooxml-ui/visio';
+export type { SvgExportOptions, SvgExportResult } from 'ooxml-ui/visio';
 export type {
 	CurrentPagePrintSnapshotOptions,
 	PrintSnapshot,
@@ -201,8 +201,8 @@ export type {
 	PrintSnapshotOptions,
 	PrintSnapshotLimits,
 	PrintSnapshotUsage,
-} from '../../../src/print-snapshot.js';
+} from 'ooxml-ui/visio';
 
-export type { ViewerEditState, VsdxExportResult } from '../../../src/document-history.js';
+export type { ViewerEditState, VsdxExportResult } from 'ooxml-ui/visio';
 
 export type { VisioEdit, VisioGeometryEdit } from 'ooxml-core/visio';

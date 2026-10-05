@@ -15,7 +15,9 @@ import SvelteViewer from '../src/VisioViewer.svelte';
 import { mountViewer } from '../src/vanilla.js';
 it('all six entry points import with no browser globals or element registration', () => {
 	expect(typeof globalThis.document).toBe('undefined');
-	expect(typeof globalThis.customElements).toBe('undefined');
+	// ooxml-ui builds on Lit, whose server build installs an inert customElements stub: what matters is that
+	// importing registers nothing.
+	expect(globalThis.customElements?.get?.('visio-viewer')).toBeUndefined();
 	expect(ReactViewer).toBeDefined();
 	expect(VueViewer).toBeDefined();
 	expect(VisioViewerComponent).toBeTypeOf('function');
