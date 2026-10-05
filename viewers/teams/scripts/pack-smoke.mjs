@@ -260,9 +260,14 @@ try {
 	await checkServerBin(installed);
 	for (const name of FRAMEWORKS) {
 		const bundle = await readFile(path.join(inspected, name, entryOf(name)), 'utf8');
+		// The element lives in ooxml-ui; the package imports it instead of bundling a copy.
 		assert(
-			bundle.includes('customElements') && bundle.includes('--office-teams-brand'),
-			`${name}: the <teams-app> element and its CSS must be bundled`,
+			bundle.includes('ooxml-ui/teams'),
+			`${name}: the <teams-app> element must come from the ooxml-ui/teams dependency`,
+		);
+		assert(
+			!bundle.includes('--office-teams-brand'),
+			`${name}: the element's CSS must not be bundled into the package`,
 		);
 	}
 	console.log(
