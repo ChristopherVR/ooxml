@@ -7,6 +7,17 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs re-releases a package whenever any of its files, or an internal
 dependency it ships against, changes, not only on conventional commits.
 
+## [0.3.4](https://github.com/ChristopherVR/xlsx-viewer/releases/tag/xlsx-vanilla-viewer@0.3.4) - 2026-10-05
+
+### Refactor
+
+- **web-component:** Use the shared office-ui-context-menu (by @ChristopherVR) ([6aa323c](https://github.com/ChristopherVR/xlsx-viewer/commit/6aa323ce664715552c7e35da4c8ef6611b1d1bc4))
+
+### Build & CI
+
+- **deps:** Adopt ooxml-core 0.14.1 and ooxml-ui 0.20 (by @ChristopherVR) ([2da396d](https://github.com/ChristopherVR/xlsx-viewer/commit/2da396d66cad5cb74915d665258ac8216c3cd602))
+- **deps:** Adopt ooxml-core 0.15.0 and ooxml-ui 0.21.0 (by @ChristopherVR) ([6cbd2b5](https://github.com/ChristopherVR/xlsx-viewer/commit/6cbd2b5ad65734a3d9ce7f2c8feff93d975eafe5))
+
 ## [0.3.3](https://github.com/ChristopherVR/xlsx-viewer/releases/tag/xlsx-vanilla-viewer@0.3.3) - 2026-10-03
 
 ### Documentation

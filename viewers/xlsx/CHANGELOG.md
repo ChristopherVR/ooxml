@@ -7,6 +7,20 @@ by [git-cliff](https://git-cliff.org); do not edit it by hand.
 Each dated section below names the per-package releases cut in that run; the per-package
 history lives in `packages/<name>/CHANGELOG.md`. Nothing has been published yet, so there are no
 sections: the first release run writes them.
+## 2026-10-05
+
+_Releases: @christophervr/xlsx-core@0.2.2, @christophervr/xlsx-react-viewer@0.3.4, xlsx-vue-viewer@0.3.4, xlsx-angular-viewer@0.3.4, xlsx-svelte-viewer@0.3.4, xlsx-solid-viewer@0.3.4, xlsx-vanilla-viewer@0.3.4_
+
+### Refactor
+
+- **web-component:** Use the shared office-ui-context-menu (by @ChristopherVR) ([6aa323c](https://github.com/ChristopherVR/xlsx-viewer/commit/6aa323ce664715552c7e35da4c8ef6611b1d1bc4))
+
+### Build & CI
+
+- **deps:** Adopt ooxml-core 0.14.1 and ooxml-ui 0.20 (by @ChristopherVR) ([2da396d](https://github.com/ChristopherVR/xlsx-viewer/commit/2da396d66cad5cb74915d665258ac8216c3cd602))
+- **deps:** Adopt ooxml-core 0.15.0 and ooxml-ui 0.21.0 (by @ChristopherVR) ([6cbd2b5](https://github.com/ChristopherVR/xlsx-viewer/commit/6cbd2b5ad65734a3d9ce7f2c8feff93d975eafe5))
+- Follow ooxml-core and ooxml-ui releases automatically (by @ChristopherVR) ([41a587d](https://github.com/ChristopherVR/xlsx-viewer/commit/41a587d0d4b607734b67c9cc87351524d40957e1))
+
 ## 2026-10-03
 
 _Releases: xlsx-viewer-mcp@0.1.3, @christophervr/xlsx-core@0.2.1, @christophervr/xlsx-react-viewer@0.3.3, xlsx-vue-viewer@0.3.3, xlsx-angular-viewer@0.3.3, xlsx-svelte-viewer@0.3.3, xlsx-solid-viewer@0.3.3, xlsx-vanilla-viewer@0.3.3_
