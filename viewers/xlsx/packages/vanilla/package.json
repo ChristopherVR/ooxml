@@ -38,7 +38,7 @@
 	},
 	"dependencies": {
 		"@christophervr/xlsx-core": "^0.2.2",
-		"ooxml-core": "^0.18.0",
-		"ooxml-ui": "^0.27.1"
+		"ooxml-core": "^0.19.0",
+		"ooxml-ui": "^0.27.2"
 	}
 }
