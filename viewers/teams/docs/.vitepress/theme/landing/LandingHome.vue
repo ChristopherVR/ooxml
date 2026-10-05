@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { withBase } from 'vitepress';
 
+import LandingFaq from './LandingFaq.vue';
+import LandingFinale from './LandingFinale.vue';
 import LandingHero from './LandingHero.vue';
+import LandingLiveDemo from './LandingLiveDemo.vue';
+import LandingQuickstart from './LandingQuickstart.vue';
 
 const demos = [
 	{
@@ -68,19 +72,18 @@ const limits = [
 	<div class="ot-landing">
 		<LandingHero />
 
-		<section id="live-demo" class="ot-section">
-			<p class="ot-kicker">Live demos</p>
-			<h2 class="ot-h2">Try it without installing anything</h2>
-			<p class="ot-copy">
-				These pages have no server behind them. The demos start in local mode: chat, presence
-				and calls travel only between tabs of your browser (BroadcastChannel) and stay in its
-				storage. Real use needs a server; see <a :href="withBase('/server')">bring your own server</a>.
-			</p>
+		<LandingLiveDemo />
+
+		<section class="ot-section">
+			<p class="ot-kicker">Demo apps</p>
+			<h2 class="ot-h2">Two ways to embed it</h2>
 			<div class="ot-grid ot-grid--two">
 				<article v-for="demo in demos" :key="demo.href" class="ot-card">
 					<h3>{{ demo.title }}</h3>
 					<p>{{ demo.copy }}</p>
-					<a class="ot-more" :href="withBase(demo.href)" target="_self">Open the demo <i>&rarr;</i></a>
+					<a class="ot-more" :href="withBase(demo.href)" target="_self"
+						>Open the demo <i>&rarr;</i></a
+					>
 				</article>
 			</div>
 		</section>
@@ -105,6 +108,10 @@ const limits = [
 			</ul>
 			<a class="ot-btn ot-btn--ghost" :href="withBase('/limitations')">All limitations</a>
 		</section>
+
+		<LandingQuickstart />
+		<LandingFaq />
+		<LandingFinale />
 	</div>
 </template>
 

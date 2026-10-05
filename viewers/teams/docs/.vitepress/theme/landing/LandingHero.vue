@@ -12,10 +12,10 @@ import { withBase } from 'vitepress';
 					<em>on a server you run.</em>
 				</h1>
 				<p class="ot-hero__sub ot-enter ot-enter--3">
-					OpenTeams is a team workspace for the web: channels and chat, presence, WebRTC
-					meetings and Office files shared in the conversation. One web component, thin
-					bindings for six frameworks, and a small reference server. An early implementation:
-					not Microsoft Teams, and no end-to-end encryption.
+					OpenTeams is a team workspace for the web: channels and chat, presence, WebRTC meetings
+					and Office files shared in the conversation. One web component, thin bindings for six
+					frameworks, and a small reference server. An early implementation: not Microsoft Teams,
+					and no end-to-end encryption.
 				</p>
 				<div class="ot-hero__actions ot-enter ot-enter--3">
 					<a class="ot-btn ot-btn--solid" :href="withBase('/getting-started')">Get started</a>

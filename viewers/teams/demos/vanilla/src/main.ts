@@ -1,3 +1,4 @@
+import '../../theme-sync';
 import { defineTeamsApp, type TeamsApp } from 'teams-viewer';
 
 defineTeamsApp();

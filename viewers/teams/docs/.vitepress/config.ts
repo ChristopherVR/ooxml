@@ -43,8 +43,9 @@ export default defineConfig({
 			{
 				text: 'Guide',
 				link: '/getting-started',
-				activeMatch: '/(getting-started|architecture|limitations)',
+				activeMatch: '/(getting-started|architecture|limitations|api|theming)',
 			},
+			{ text: 'Collaboration', link: '/collaboration', activeMatch: '/collaboration' },
 			{
 				text: 'Frameworks',
 				items: [
@@ -76,8 +77,16 @@ export default defineConfig({
 					{ text: 'Overview', link: '/' },
 					{ text: 'Getting started', link: '/getting-started' },
 					{ text: 'The live demos', link: '/demos' },
+					{ text: 'Collaboration (live demo)', link: '/collaboration' },
 					{ text: 'Architecture', link: '/architecture' },
 					{ text: 'Limitations', link: '/limitations' },
+				],
+			},
+			{
+				text: 'Reference',
+				items: [
+					{ text: 'Element API and events', link: '/api' },
+					{ text: 'Theming', link: '/theming' },
 				],
 			},
 			{
