@@ -19,6 +19,9 @@ import { automaticMarkerSymbol } from './chart-marker-shape';
 /** Minimal shape props subset needed to resolve a point fill. */
 interface PointShapeProps {
 	fillColor?: string;
+	strokeColor?: string;
+	/** Outline width in points. */
+	strokeWidth?: number;
 }
 
 /** Minimal marker shape consumed here (mirrors `PptxChartMarker`). */
@@ -76,6 +79,10 @@ export interface ResolvedPointMarker {
 	size: number | undefined;
 	/** Marker-specific fill, when the point or series pins one. */
 	fill: string | undefined;
+	/** Marker outline colour (`c:marker/c:spPr/a:ln`), when the point or series pins one. */
+	stroke: string | undefined;
+	/** Marker outline width in points. */
+	strokeWidth: number | undefined;
 }
 
 /** Look up the `c:dPt` override for a point index, if any. */
@@ -169,6 +176,8 @@ export function resolveDataPointMarker(
 		symbol,
 		size: point?.size ?? series.marker?.size,
 		fill: point?.spPr?.fillColor ?? series.marker?.spPr?.fillColor,
+		stroke: point?.spPr?.strokeColor ?? series.marker?.spPr?.strokeColor,
+		strokeWidth: point?.spPr?.strokeWidth ?? series.marker?.spPr?.strokeWidth,
 	};
 }
 

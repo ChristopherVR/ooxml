@@ -21,7 +21,7 @@ import {
 import { resolveDataPointFill, resolveDataPointMarker } from './chart-datapoint-style';
 import { DEFAULT_CHART_DATA_LABEL_PX } from './chart-font';
 import { smoothLinePath } from './chart-line-path';
-import { buildMarkerPrimitive } from './chart-marker-shape';
+import { buildMarkerPrimitive, markerOutline } from './chart-marker-shape';
 import { buildScatterXAxisPlan } from './chart-scatter-x-axis';
 import type {
 	ChartPartRef,
@@ -105,6 +105,7 @@ export function pushMarker(
 			fill: marker.fill ?? fill,
 			defaultRadius,
 			part,
+			...markerOutline(marker),
 		});
 	if (!m) {
 		return;

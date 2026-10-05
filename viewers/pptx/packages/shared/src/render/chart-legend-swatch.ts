@@ -27,9 +27,10 @@
 import type { PptxChartSeries } from 'pptx-viewer-core';
 
 import { resolveDataPointMarker } from './chart-datapoint-style';
-import { buildMarkerPrimitive } from './chart-marker-shape';
+import { buildMarkerPrimitive, markerOutline } from './chart-marker-shape';
 import type { SvgPrimitive } from './chart-svg-primitives';
 import type { SupportedChartKind } from './chart-view-model-kinds';
+import { buildDashArray } from './connector-dash';
 
 /** Which shape a binding draws for one legend entry's colour swatch. */
 export type LegendSwatchKind = 'rect' | 'line';
@@ -82,13 +83,18 @@ export function resolveLegendSwatchKind(kind: SupportedChartKind): LegendSwatchK
  * regardless of how large the plotted markers are.
  */
 export function buildLineLegendSwatch(
-	series: Pick<PptxChartSeries, 'marker' | 'color' | 'lineNoFill' | 'dataPoints' | 'idx'>,
+	series: Pick<
+		PptxChartSeries,
+		'marker' | 'color' | 'lineNoFill' | 'dataPoints' | 'idx' | 'lineDashStyle'
+	>,
 	color: string,
 	seriesPosition = 0,
 ): LegendLineSwatch {
 	const resolved = resolveDataPointMarker(series, -1, seriesPosition),
 		primitives: SvgPrimitive[] = [];
 	if (!series.lineNoFill) {
+		// Fixed icon width, series dash.
+		const dashArray = buildDashArray(series.lineDashStyle, LEGEND_LINE_SWATCH_WIDTH);
 		primitives.push({
 			kind: 'line',
 			x1: 0,
@@ -97,6 +103,7 @@ export function buildLineLegendSwatch(
 			y2: SWATCH_CENTER_Y,
 			stroke: color,
 			strokeWidth: LEGEND_LINE_SWATCH_WIDTH,
+			...(dashArray ? { dashArray } : {}),
 		});
 	}
 	const marker = buildMarkerPrimitive({
@@ -107,6 +114,7 @@ export function buildLineLegendSwatch(
 		cy: SWATCH_CENTER_Y,
 		fill: resolved.fill ?? color,
 		defaultRadius: LEGEND_MARKER_RADIUS,
+		...markerOutline(resolved),
 	});
 	if (marker) {
 		primitives.push(marker);

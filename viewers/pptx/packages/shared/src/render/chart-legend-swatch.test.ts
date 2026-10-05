@@ -3,8 +3,10 @@ import { describe, expect, it } from 'vitest';
 import {
 	buildLineLegendSwatch,
 	buildTrendlineLegendSwatch,
+	LEGEND_LINE_SWATCH_WIDTH,
 	resolveLegendSwatchKind,
 } from './chart-legend-swatch';
+import { buildDashArray } from './connector-dash';
 
 describe('resolveLegendSwatchKind', () => {
 	it('gives line/scatter a line-style swatch', () => {
@@ -73,6 +75,29 @@ describe('buildLineLegendSwatch', () => {
 		// eslint-disable-next-line one-var -- pre-existing pattern in this suite
 		const rect = swatch.primitives.find((p) => p.kind === 'rect');
 		expect(rect?.kind === 'rect' && rect.fill).toBe('#FF0000');
+	});
+
+	it('dashes the sample like the series line but keeps the icon width', () => {
+		const swatch = buildLineLegendSwatch({ lineDashStyle: 'sysDot' }, '#05507D');
+		const line = swatch.primitives.find((p) => p.kind === 'line');
+		expect(line).toMatchObject({
+			strokeWidth: LEGEND_LINE_SWATCH_WIDTH,
+			dashArray: buildDashArray('sysDot', LEGEND_LINE_SWATCH_WIDTH),
+		});
+	});
+
+	it('outlines the marker when the series marker has an a:ln colour', () => {
+		const swatch = buildLineLegendSwatch(
+			{
+				marker: {
+					symbol: 'circle',
+					spPr: { fillColor: '#FFFFFF', strokeColor: '#05507D', strokeWidth: 0.75 },
+				},
+			},
+			'#05507D',
+		);
+		const circle = swatch.primitives.find((p) => p.kind === 'circle');
+		expect(circle).toMatchObject({ fill: '#FFFFFF', stroke: '#05507D', strokeWidth: 1 });
 	});
 });
 
