@@ -1,4 +1,4 @@
-import { lineSpacingOptions } from './line-spacing';
+import { lineSpacingOptions } from 'docx-core';
 import { menuGallery } from './ribbon-gallery-menu';
 import {
 	comboBox,

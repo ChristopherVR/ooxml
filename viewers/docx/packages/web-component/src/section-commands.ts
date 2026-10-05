@@ -9,33 +9,14 @@ import {
 	type DocumentModel,
 	type SectionProperties,
 	type Twips,
+	sectionsOf,
 } from 'docx-core';
 import { expectDefined } from './defined';
 
 const px = twipsToPixels;
 
-/** The document's sections, creating one from the page settings for documents without any. */
-export function sectionsOf(model: DocumentModel): SectionProperties[] {
-	if (model.sections?.length) return model.sections;
-	const { page } = model;
-	return [
-		{
-			endsAtBlockId: model.blocks.at(-1)?.id ?? '',
-			type: 'nextPage',
-			pageWidthTwips: twipsFromPixels(page.width),
-			pageHeightTwips: twipsFromPixels(page.height),
-			orientation: page.width > page.height ? 'landscape' : 'portrait',
-			marginTopTwips: signedTwipsFromPixels(page.marginTop),
-			marginRightTwips: twipsFromPixels(page.marginRight),
-			marginBottomTwips: signedTwipsFromPixels(page.marginBottom),
-			marginLeftTwips: twipsFromPixels(page.marginLeft),
-			headerDistanceTwips: twips(720),
-			footerDistanceTwips: twips(720),
-			gutterTwips: twips(0),
-			columns: { count: 1, spacingTwips: twips(720), equalWidth: true },
-		},
-	];
-}
+// Kept here so the editor's section modules have one place to import it from.
+export { sectionsOf };
 
 /** Index of the top-level block holding the selection start. */
 function selectedBlockIndex(view: EditorView): number {

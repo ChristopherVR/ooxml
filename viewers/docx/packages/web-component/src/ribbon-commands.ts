@@ -3,7 +3,7 @@ import type { EditorView } from 'prosemirror-view';
 import { closeHistory } from 'prosemirror-history';
 import { DEFAULT_TABLE_BORDERS } from 'docx-core';
 import { schema } from './schema';
-import { parseLineSpacingValue } from './line-spacing';
+import { parseLineSpacingValue } from 'docx-core';
 import { twipsAttr } from './attr-units';
 
 export function applyFont(view: EditorView, key: 'family' | 'size' | 'color', value: string) {

@@ -20,7 +20,7 @@ import { effectiveHeaderFooter, withHeaderFooterLink } from './header-footer-lin
 import type { HeaderFooterContext } from './header-footer-ribbon';
 import { storyPreview, selectSectionStart } from './header-footer-navigation';
 import { withBlankHeaderFooter, newHeaderFooterId } from './header-footer-commands';
-import { sectionLayoutJson } from './section-layout';
+import { sectionLayoutJson } from 'docx-core';
 
 export interface PartsControllerHost extends EditorHost {
 	images(): ImageMediaCache;

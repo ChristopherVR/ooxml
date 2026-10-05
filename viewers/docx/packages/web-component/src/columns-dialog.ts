@@ -8,7 +8,7 @@ import {
 	readColumnDraft,
 	validColumnDraft,
 	type ColumnDraft,
-} from './column-settings';
+} from 'docx-core';
 import type { FormatDialog } from './font-dialog';
 import { localizeElement, translate, type EditorLocale } from './localization';
 import {

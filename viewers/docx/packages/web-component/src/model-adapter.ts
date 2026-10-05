@@ -18,7 +18,7 @@ import {
 	tableFormattingFromNode,
 } from './table-model-adapter';
 import { parseBordersJson } from './table-render';
-import { sectionLayoutJson, sectionsFromLayout } from './section-layout';
+import { sectionLayoutJson, sectionsFromLayout } from 'docx-core';
 import { sectionsOf } from './section-commands';
 import { sectionPartsJson, restoreSectionParts } from './header-footer-history';
 

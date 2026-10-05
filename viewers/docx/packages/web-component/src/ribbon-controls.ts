@@ -1,7 +1,7 @@
 import type { EditorState } from 'prosemirror-state';
 import type { Mark } from 'prosemirror-model';
 import { schema } from './schema';
-import { lineSpacingLabel, lineSpacingValue } from './line-spacing';
+import { lineSpacingLabel, lineSpacingValue } from 'docx-core';
 import { findLocalizedControl } from './localization';
 import { selectionScript } from './script-state';
 

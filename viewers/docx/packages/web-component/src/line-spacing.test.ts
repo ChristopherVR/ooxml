@@ -5,7 +5,7 @@ import { createDocument } from 'docx-core';
 import { TextSelection } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import { DocxEditorElement, registerDocxEditor } from './index';
-import { lineSpacingLabel, lineSpacingValue } from './line-spacing';
+import { lineSpacingLabel, lineSpacingValue } from 'docx-core';
 import { at, quickAccessButton, tableAt } from './test-support';
 
 afterEach(() => document.body.replaceChildren());

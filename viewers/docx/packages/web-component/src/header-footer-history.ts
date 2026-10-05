@@ -1,5 +1,5 @@
 import type { Block, SectionProperties } from 'docx-core';
-import { sectionLayoutJson, sectionsFromLayout } from './section-layout';
+import { sectionLayoutJson, sectionsFromLayout } from 'docx-core';
 import { DocAttrStep, StepMap } from 'prosemirror-transform';
 import type { Node } from 'prosemirror-model';
 

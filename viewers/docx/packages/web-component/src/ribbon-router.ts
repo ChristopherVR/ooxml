@@ -20,7 +20,7 @@ import { selectAll } from 'prosemirror-commands';
 import { toggleFormatPainter } from './format-painter';
 import { withHeaderFooterDistance } from './header-footer-position';
 import { closeHistory } from 'prosemirror-history';
-import { sectionLayoutJson } from './section-layout';
+import { sectionLayoutJson } from 'docx-core';
 
 /** Routes a ribbon action to the controller that owns it. */
 export function routeRibbonAction(core: EditorCore, action: RibbonAction): void {
