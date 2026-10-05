@@ -392,3 +392,7 @@ The editor modules of `ooxml-ui/docx` (from docx-viewer `77f820f`) that need no 
 ## `ooxml-core/visio/ui`
 
 The DOM-free modules of `ooxml-ui/visio` (from visio-viewer `818f4a4`) moved to `src/visio/ui/` with their tests: the viewer contract, diagnostics, document history, text search, edit commands and errors, foreign-vector budget, scene validation and snapshot scene. The workers and everything that renders or touches the DOM stay in `packages/ui/src/visio`.
+
+## `ooxml-core/chart` automatic value axis
+
+`src/chart/axis-nice.ts` and its test moved from ChristopherVR/pptx-viewer `packages/shared/src/render/chart-axis-nice.ts` at `15ed646e4`, unchanged apart from the test import path. The scale is PowerPoint's automatic-axis policy (zero anchor, 5% headroom, 1/2/2.5/5 steps, interval count from plot height); Excel uses a different interval policy, so `xlsx` keeps its own.
