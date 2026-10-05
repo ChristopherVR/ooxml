@@ -260,7 +260,10 @@ async function main() {
 	console.log(`\nPublish plan (registry ${REGISTRY}, provenance ${provenance ? 'on' : 'off'}):`);
 	console.log(formatPlan(rows));
 	if (!options.dryRun && !(await confirm(options))) {
-		console.log('Not confirmed; nothing was published.');
+		console.log(
+			'Not confirmed; nothing was published. If the prompt closed without letting you type, ' +
+				'run it again with: bun run publish:local -- --yes --skip-build',
+		);
 		process.exitCode = 1;
 		return;
 	}
