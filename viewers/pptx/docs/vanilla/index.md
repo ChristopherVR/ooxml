@@ -11,7 +11,7 @@ function `createPptxViewer(container, options)` returns a viewer instance with a
 The parsing engine ([`pptx-viewer-core`](/core/)) and the shared render logic
 (`pptx-viewer-shared`) are bundled in, so the package is self-contained.
 
-The live [vanilla demo](https://christophervr.github.io/pptx-viewer/demo-vanilla/) is this
+The live [vanilla demo](https://christophervr.github.io/ooxml/pptx/demo-vanilla/) is this
 package running without a framework.
 
 ## What it provides

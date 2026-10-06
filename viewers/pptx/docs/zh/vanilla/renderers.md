@@ -162,4 +162,4 @@ const viewer = createPptxViewer(host, { source, registry });
 ## 注意事项 {#notes}
 
 - 导航、缩放、主题和语言变化会自动重新渲染；注册表变化从下次渲染开始生效，可以切换幻灯片，或调用 `goToSlide(getCurrentSlide())` 强制渲染。
-- 请复用 `pptx-viewer-shared` 辅助函数，不要重复实现几何和样式计算。[`packages/vanilla/src/viewer/render/elements/`](https://github.com/ChristopherVR/pptx-viewer/tree/main/packages/vanilla/src/viewer/render/elements) 中的内置渲染器可作为参考，其 `README.md` 记录了项目约定。
+- 请复用 `pptx-viewer-shared` 辅助函数，不要重复实现几何和样式计算。[`packages/vanilla/src/viewer/render/elements/`](https://github.com/ChristopherVR/ooxml/tree/main/viewers/pptx/packages/vanilla/src/viewer/render/elements) 中的内置渲染器可作为参考，其 `README.md` 记录了项目约定。

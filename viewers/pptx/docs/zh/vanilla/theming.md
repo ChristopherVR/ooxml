@@ -124,7 +124,7 @@ for (const [key, value] of Object.entries(themeToCssVars(theme))) {
 }
 ```
 
-之后，你自己的元素可以使用 `var(--pptx-background)`、`var(--pptx-primary)` 等变量，[演示应用](https://christophervr.github.io/pptx-viewer/demo-vanilla/)的起始页面和悬浮选择器也采用相同方式。
+之后，你自己的元素可以使用 `var(--pptx-background)`、`var(--pptx-primary)` 等变量，[演示应用](https://christophervr.github.io/ooxml/pptx/demo-vanilla/)的起始页面和悬浮选择器也采用相同方式。
 
 默认情况下，`themeToCssVars` 输出主题设置的每个值；将 `omitDefaults: true` 作为第二个参数传入，则只输出与内置默认值不同的部分。
 

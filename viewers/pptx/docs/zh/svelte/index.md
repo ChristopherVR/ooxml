@@ -7,7 +7,7 @@ description: pptx-svelte-viewer 是 Svelte 5 PowerPoint 查看器组件，与 Re
 
 `pptx-svelte-viewer` 是用于 `.pptx` 文件的 **Svelte 5** 查看器和编辑器组件。其 `<PowerPointViewer>` 组件使用与 React、Vue、Angular 和原生 JavaScript 绑定相同的共享渲染逻辑及主题系统渲染 `.pptx` 幻灯片。解析引擎（[`pptx-viewer-core`](/zh/core/)）和共享渲染层都打包在组件包中。
 
-可以体验在线 [Svelte 演示](https://christophervr.github.io/pptx-viewer/demo-svelte/)。
+可以体验在线 [Svelte 演示](https://christophervr.github.io/ooxml/pptx/demo-svelte/)。
 
 ## 提供的能力 {#what-it-provides}
 

@@ -95,7 +95,7 @@ for (const [key, value] of Object.entries(themeToCssVars(vermilionDarkTheme))) {
 }
 ```
 
-之后，你自己的元素就可以使用 `var(--pptx-background)`、`var(--pptx-primary)` 等变量，[Svelte 演示](https://christophervr.github.io/pptx-viewer/demo-svelte/)的起始页面也采用相同方式。
+之后，你自己的元素就可以使用 `var(--pptx-background)`、`var(--pptx-primary)` 等变量，[Svelte 演示](https://christophervr.github.io/ooxml/pptx/demo-svelte/)的起始页面也采用相同方式。
 
 ## 查看器 CSS {#viewer-css}
 

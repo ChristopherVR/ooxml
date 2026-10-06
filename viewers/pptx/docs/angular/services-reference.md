@@ -220,6 +220,6 @@ Not part of the curated root export, but composed directly by `PowerPointViewerC
 | `animation-author-helpers` exports                       | Helpers backing `AnimationAuthorPanelComponent`.                             |
 
 This list is generated from `packages/angular/src/viewer/**/*.ts` and re-exported in full from
-[`pptx-angular-viewer/src/internals.ts`](https://github.com/ChristopherVR/pptx-viewer/blob/main/packages/angular/src/internals.ts),
+[`pptx-angular-viewer/src/internals.ts`](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/packages/angular/src/internals.ts),
 itself re-exported from the package root via `public-api.ts`. If you add or rename a building block
 there, update this page in the same change.

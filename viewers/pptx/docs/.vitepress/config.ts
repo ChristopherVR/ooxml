@@ -10,8 +10,8 @@ export default defineConfig({
 		'Parse, edit, render, and convert Microsoft PowerPoint (.pptx) files in the browser and Node.js - a TypeScript SDK with viewer components for React, Vue 3, Angular, Svelte, and vanilla JavaScript.',
 	lang: 'en-US',
 
-	// Deployed to https://christophervr.github.io/pptx-viewer/
-	base: '/pptx-viewer/',
+	// Deployed to https://christophervr.github.io/ooxml/pptx/
+	base: '/ooxml/pptx/',
 
 	lastUpdated: true,
 	cleanUrls: true,
@@ -474,10 +474,10 @@ export default defineConfig({
 			],
 		},
 
-		socialLinks: [{ icon: 'github', link: 'https://github.com/ChristopherVR/pptx-viewer' }],
+		socialLinks: [{ icon: 'github', link: 'https://github.com/ChristopherVR/ooxml/tree/main/viewers/pptx' }],
 
 		editLink: {
-			pattern: 'https://github.com/ChristopherVR/pptx-viewer/edit/main/docs/:path',
+			pattern: 'https://github.com/ChristopherVR/ooxml/edit/main/viewers/pptx/docs/:path',
 			text: 'Edit this page on GitHub',
 		},
 

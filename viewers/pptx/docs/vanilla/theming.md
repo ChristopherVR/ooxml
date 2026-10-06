@@ -142,7 +142,7 @@ for (const [key, value] of Object.entries(themeToCssVars(theme))) {
 ```
 
 Your own elements can then use `var(--pptx-background)`, `var(--pptx-primary)`, and friends,
-exactly as the [demo app](https://christophervr.github.io/pptx-viewer/demo-vanilla/) does for
+exactly as the [demo app](https://christophervr.github.io/ooxml/pptx/demo-vanilla/) does for
 its landing screen and floating pickers.
 
 By default `themeToCssVars` emits every value the theme sets; pass `omitDefaults: true`

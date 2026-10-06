@@ -143,7 +143,7 @@ export const zh: LandingCopy = {
 				links: [
 					{
 						text: '在线演示',
-						href: 'https://christophervr.github.io/pptx-viewer/demo/',
+						href: 'https://christophervr.github.io/ooxml/pptx/demo/',
 						external: true,
 					},
 					{ text: '核心引擎', href: '/zh/core/' },
@@ -163,7 +163,7 @@ export const zh: LandingCopy = {
 			{
 				title: '社区',
 				links: [
-					{ text: 'GitHub', href: 'https://github.com/ChristopherVR/pptx-viewer', external: true },
+					{ text: 'GitHub', href: 'https://github.com/ChristopherVR/ooxml/tree/main/viewers/pptx', external: true },
 					{
 						text: 'npm',
 						href: 'https://www.npmjs.com/package/pptx-react-viewer',
@@ -171,12 +171,12 @@ export const zh: LandingCopy = {
 					},
 					{
 						text: '问题反馈',
-						href: 'https://github.com/ChristopherVR/pptx-viewer/issues',
+						href: 'https://github.com/ChristopherVR/ooxml/issues',
 						external: true,
 					},
 					{
 						text: '许可证',
-						href: 'https://github.com/ChristopherVR/pptx-viewer/blob/main/LICENSE',
+						href: 'https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/LICENSE',
 						external: true,
 					},
 				],

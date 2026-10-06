@@ -203,4 +203,4 @@ import { AutosaveService, ViewerExportService } from 'pptx-angular-viewer/intern
 | `slide-sorter-overlay-helpers` 的导出                   | 为精选组件 `SlideSorterOverlayComponent` 提供支持的辅助函数。  |
 | `animation-author-helpers` 的导出                       | 为 `AnimationAuthorPanelComponent` 提供支持的辅助函数。        |
 
-此列表根据 `packages/angular/src/viewer/**/*.ts` 整理，所有内容均由 [`pptx-angular-viewer/src/internals.ts`](https://github.com/ChristopherVR/pptx-viewer/blob/main/packages/angular/src/internals.ts) 完整重新导出，再通过 `public-api.ts` 从包根入口重新导出。在其中新增或重命名构建模块时，请在同一变更中更新本页。
+此列表根据 `packages/angular/src/viewer/**/*.ts` 整理，所有内容均由 [`pptx-angular-viewer/src/internals.ts`](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/packages/angular/src/internals.ts) 完整重新导出，再通过 `public-api.ts` 从包根入口重新导出。在其中新增或重命名构建模块时，请在同一变更中更新本页。

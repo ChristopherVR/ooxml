@@ -298,7 +298,7 @@ export const translationsFr: Record<TranslationKey, string> = {
 
 ## 在演示应用中体验 {#try-it-in-the-demos}
 
-[React](https://christophervr.github.io/pptx-viewer/demo/)、[Vue](https://christophervr.github.io/pptx-viewer/demo-vue/)、[Angular](https://christophervr.github.io/pptx-viewer/demo-angular/)、Vanilla 和 Svelte 演示应用都包含语言选择器，可以切换英文、法语、西班牙语、德语和简体中文。四种非英文字典均通过仓库的私有语言工作区覆盖全部标准界面键。
+[React](https://christophervr.github.io/ooxml/pptx/demo/)、[Vue](https://christophervr.github.io/ooxml/pptx/demo-vue/)、[Angular](https://christophervr.github.io/ooxml/pptx/demo-angular/)、Vanilla 和 Svelte 演示应用都包含语言选择器，可以切换英文、法语、西班牙语、德语和简体中文。四种非英文字典均通过仓库的私有语言工作区覆盖全部标准界面键。
 
 选择器的接入属于演示代码，字典通过 Bun 工作区从 `packages/locales` 引用：
 

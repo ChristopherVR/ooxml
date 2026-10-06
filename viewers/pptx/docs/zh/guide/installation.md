@@ -281,7 +281,7 @@ bun add three yjs y-websocket
 
 ```bash
 # Clone the repository
-git clone https://github.com/ChristopherVR/pptx-viewer
+git clone https://github.com/ChristopherVR/ooxml/tree/main/viewers/pptx
 cd pptx-viewer
 
 # Install all workspace dependencies

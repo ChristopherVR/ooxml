@@ -46,7 +46,7 @@ presence overlays' `zoom`, so each overlay converts slide coordinates once.
 The factory's existing controller publishes cursor, selection and active-slide
 presence and retires the inline draft when editing becomes unavailable.
 
-The [custom-shell demo source](https://github.com/ChristopherVR/pptx-viewer/blob/main/demos/demo-svelte/src/HostOwnedHeadlessEditor.svelte)
+The [custom-shell demo source](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/demos/demo-svelte/src/HostOwnedHeadlessEditor.svelte)
 shows a complete custom canvas with the native editing layer and export API,
 without rendering `PowerPointViewer`.
 

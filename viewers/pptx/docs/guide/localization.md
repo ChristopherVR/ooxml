@@ -319,7 +319,7 @@ enforced by `packages/locales/src/locales.test.ts`.
 
 ## Try it in the demos
 
-The [React](https://christophervr.github.io/pptx-viewer/demo/), [Vue](https://christophervr.github.io/pptx-viewer/demo-vue/), [Angular](https://christophervr.github.io/pptx-viewer/demo-angular/), Vanilla, and Svelte demos each include a language picker that switches between English, French, Spanish, German, and Simplified Chinese. All four non-English dictionaries cover every canonical viewer key through the repository's private locale workspace.
+The [React](https://christophervr.github.io/ooxml/pptx/demo/), [Vue](https://christophervr.github.io/ooxml/pptx/demo-vue/), [Angular](https://christophervr.github.io/ooxml/pptx/demo-angular/), Vanilla, and Svelte demos each include a language picker that switches between English, French, Spanish, German, and Simplified Chinese. All four non-English dictionaries cover every canonical viewer key through the repository's private locale workspace.
 
 The picker wiring is demo code; the dictionaries are referenced from `packages/locales` through the Bun workspace:
 

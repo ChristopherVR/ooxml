@@ -153,5 +153,5 @@ See [Collaboration](/react/collaboration) for the curated public subset. The ful
 | `useReducedMotion`   | Respects `prefers-reduced-motion` for animations/transitions. |
 
 This list is generated from `packages/react/src/viewer/hooks/**/*.ts` and re-exported in full from
-[`pptx-react-viewer/internals`](https://github.com/ChristopherVR/pptx-viewer/blob/main/packages/react/src/internals.ts).
+[`pptx-react-viewer/internals`](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/packages/react/src/internals.ts).
 If you add or rename a hook there, update this page in the same change.

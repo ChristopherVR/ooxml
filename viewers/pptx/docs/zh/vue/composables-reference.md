@@ -160,7 +160,7 @@ import { useEditorHistory, useAlignGroup } from 'pptx-vue-viewer/internals';
 | ------------------ | ------------------------------------------------ |
 | `useAccessibility` | 无障碍检查器，检查替代文本、对比度、阅读顺序等。 |
 
-此列表根据 `packages/vue/src/viewer/composables/**/*.ts` 中导出 `use*()` 组合式函数的文件整理，所有函数均由 [`pptx-vue-viewer/internals`](https://github.com/ChristopherVR/pptx-viewer/blob/main/packages/vue/src/internals.ts) 完整重新导出。只导出纯辅助函数、provide/inject 键或常量而没有 `use*()` 函数的文件属于内部实现细节，不在此接口范围内。新增或重命名组合式函数时，请在同一变更中更新本页。
+此列表根据 `packages/vue/src/viewer/composables/**/*.ts` 中导出 `use*()` 组合式函数的文件整理，所有函数均由 [`pptx-vue-viewer/internals`](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/packages/vue/src/internals.ts) 完整重新导出。只导出纯辅助函数、provide/inject 键或常量而没有 `use*()` 函数的文件属于内部实现细节，不在此接口范围内。新增或重命名组合式函数时，请在同一变更中更新本页。
 
 ::: info `RasterizeSlide`
 `useExport`、`useMediaExport` 和 `usePrint` 各自声明了相同的 `RasterizeSlide` 类型（`(index: number) => Promise<HTMLCanvasElement>`）。为避免重新导出产生歧义，`pptx-vue-viewer/internals` 只重新导出 `useExport` 中的定义。如果需要通过这个确切名称使用其他模块中的类型，请直接从其源文件导入。

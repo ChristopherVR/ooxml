@@ -15,7 +15,7 @@ bun run docs:preview # previews the built site
 
 For development without a production build first, run `bun install` in `docs/`,
 then return to the root and run `bun run docs:dev`. Output goes to
-`docs/.vitepress/dist/`. The deployed base path is `/pptx-viewer/`.
+`docs/.vitepress/dist/`. The deployed base path is `/ooxml/pptx/`.
 
 ## Where to update content
 

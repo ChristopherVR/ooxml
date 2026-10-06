@@ -11,7 +11,7 @@ export interface DemoFramework {
 	path: string;
 }
 
-export const DEMO_ROOT = 'https://christophervr.github.io/pptx-viewer/';
+export const DEMO_ROOT = 'https://christophervr.github.io/ooxml/pptx/';
 
 export const DEMO_FRAMEWORKS: DemoFramework[] = [
 	{ key: 'react', label: 'React', path: 'demo/' },

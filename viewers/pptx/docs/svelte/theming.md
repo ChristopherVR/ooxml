@@ -104,7 +104,7 @@ for (const [key, value] of Object.entries(themeToCssVars(vermilionDarkTheme))) {
 ```
 
 Your own elements can then use `var(--pptx-background)`, `var(--pptx-primary)`, and friends,
-exactly as the [Svelte demo](https://christophervr.github.io/pptx-viewer/demo-svelte/) does for
+exactly as the [Svelte demo](https://christophervr.github.io/ooxml/pptx/demo-svelte/) does for
 its landing screen.
 
 ## Viewer CSS

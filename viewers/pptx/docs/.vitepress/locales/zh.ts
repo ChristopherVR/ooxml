@@ -20,7 +20,7 @@ export const zh = {
 		docFooter: { prev: '上一页', next: '下一页' },
 		lastUpdated: { text: '最后更新' },
 		editLink: {
-			pattern: 'https://github.com/ChristopherVR/pptx-viewer/edit/main/docs/:path',
+			pattern: 'https://github.com/ChristopherVR/ooxml/edit/main/viewers/pptx/docs/:path',
 			text: '在 GitHub 上编辑此页',
 		},
 		footer: {

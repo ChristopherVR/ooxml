@@ -162,7 +162,7 @@ El monorepo usa **Bun** como gestor de paquetes. Los paquetes se referencian mut
 
 ```bash
 # Clonar el repositorio
-git clone https://github.com/ChristopherVR/pptx-viewer
+git clone https://github.com/ChristopherVR/ooxml/tree/main/viewers/pptx
 cd pptx-viewer
 
 # Instalar todas las dependencias

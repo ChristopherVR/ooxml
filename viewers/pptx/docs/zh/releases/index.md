@@ -19,6 +19,6 @@ monorepo 中每个已发布的包都独立管理版本和发布：只有自身�
 | `pptx-viewer-mcp` (MCP 服务器与工具)    | [更新日志](/releases/mcp)     | [![npm](https://img.shields.io/npm/v/pptx-viewer-mcp)](https://www.npmjs.com/package/pptx-viewer-mcp)                           |
 | `@christophervr/pptx-viewer` (CLI)      | [更新日志](/releases/cli)     | [![npm](https://img.shields.io/npm/v/%40christophervr%2Fpptx-viewer)](https://www.npmjs.com/package/@christophervr/pptx-viewer) |
 
-仓库根目录的 [CHANGELOG.md](https://github.com/ChristopherVR/pptx-viewer/blob/main/CHANGELOG.md) 提供跨包的汇总视图，每次发布也会出现在 [GitHub Releases 页面](https://github.com/ChristopherVR/pptx-viewer/releases)。
+仓库根目录的 [CHANGELOG.md](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/CHANGELOG.md) 提供跨包的汇总视图，每次发布也会出现在 [GitHub Releases 页面](https://github.com/ChristopherVR/ooxml/releases)。
 
 这些页面由 `docs/sync-changelogs.mjs` 在文档构建前，根据各包的历史 `CHANGELOG.md` 生成。当前 API 用法应在对应包的文档中修改，不要重写历史版本说明来描述今天的实现。`shared`、`locales` 和 `react-compat` 等内部包没有独立对外发布的版本。

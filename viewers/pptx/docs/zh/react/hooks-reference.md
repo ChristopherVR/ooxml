@@ -142,4 +142,4 @@ import { useViewerState, useEditorHistory } from 'pptx-react-viewer/internals';
 | `useSwipeNavigation` | 移动端滑动翻页。                          |
 | `useReducedMotion`   | 动画和切换遵循 `prefers-reduced-motion`。 |
 
-列表来自 `packages/react/src/viewer/hooks/**/*.ts`，全部从 [`pptx-react-viewer/internals`](https://github.com/ChristopherVR/pptx-viewer/blob/main/packages/react/src/internals.ts) 重新导出。在该目录新增或重命名 hook 时，请同步更新本页。
+列表来自 `packages/react/src/viewer/hooks/**/*.ts`，全部从 [`pptx-react-viewer/internals`](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/packages/react/src/internals.ts) 重新导出。在该目录新增或重命名 hook 时，请同步更新本页。

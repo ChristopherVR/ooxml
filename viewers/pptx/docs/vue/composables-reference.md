@@ -173,7 +173,7 @@ See [Collaboration](/vue/collaboration) for the prop-driven flow. The full inter
 
 This list is generated from `packages/vue/src/viewer/composables/**/*.ts` (files that export a
 `use*()` composable function) and re-exported in full from
-[`pptx-vue-viewer/internals`](https://github.com/ChristopherVR/pptx-viewer/blob/main/packages/vue/src/internals.ts).
+[`pptx-vue-viewer/internals`](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/packages/vue/src/internals.ts).
 Files that only export pure helper functions, provide/inject keys, or constants (no `use*()`
 function) are internal implementation detail and are not part of this surface. If you add or
 rename a composable, update this page in the same change.

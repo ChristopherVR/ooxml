@@ -4,10 +4,9 @@
  *
  * One site serves https://christophervr.github.io/ooxml/: the Office-suite launcher (`site/`, static)
  * at the root, and each imported viewer's documentation and framework demos under `/<viewer>/`
- * (docx, xlsx, visio, teams). Every viewer builds itself with its own `scripts/build-pages.mjs`,
+ * (pptx, docx, xlsx, visio, teams). Every viewer builds itself with its own `scripts/build-pages.mjs`,
  * whose VitePress `base` and demo routes already live under `/ooxml/<viewer>/`; this script only
- * runs them and assembles the output. The pptx viewer is still its own repository and its own site;
- * the launcher links to it.
+ * runs them and assembles the output.
  *
  *   node scripts/build-pages.mjs [--only docx,teams] [--out pages-dist]
  *
@@ -26,6 +25,7 @@ const value = (flag) => (argv.includes(flag) ? argv[argv.indexOf(flag) + 1] : un
 
 /** The viewers on the site, and what each needs before its own page build. */
 export const VIEWERS = {
+	pptx: { prepare: ['build:packages'] },
 	docx: { prepare: ['build:packages'] },
 	xlsx: { prepare: ['build:packages'] },
 	visio: { prepare: [] },

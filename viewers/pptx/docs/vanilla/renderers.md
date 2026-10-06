@@ -191,5 +191,5 @@ thumbnails both do).
   changes apply from the next render (navigate or call `goToSlide(getCurrentSlide())` to force).
 - Reuse `pptx-viewer-shared` helpers rather than reimplementing geometry/style math; the
   built-in renderers in
-  [`packages/vanilla/src/viewer/render/elements/`](https://github.com/ChristopherVR/pptx-viewer/tree/main/packages/vanilla/src/viewer/render/elements)
+  [`packages/vanilla/src/viewer/render/elements/`](https://github.com/ChristopherVR/ooxml/tree/main/viewers/pptx/packages/vanilla/src/viewer/render/elements)
   are the reference implementations, and their `README.md` documents the house contract.

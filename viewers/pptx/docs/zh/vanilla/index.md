@@ -7,7 +7,7 @@ description: pptx-vanilla-viewer 是无需框架的浏览器 PowerPoint 查看�
 
 `pptx-vanilla-viewer` 是**不依赖框架**的 PowerPoint 查看器，使用普通 DOM 在浏览器中渲染 `.pptx` 幻灯片，不依赖 React、Vue 或 Angular。调用工厂函数 `createPptxViewer(container, options)`，会返回具有命令式 API 的查看器实例。解析引擎（[`pptx-viewer-core`](/zh/core/)）和共享渲染逻辑（`pptx-viewer-shared`）已经打包在内，因此该包可以独立使用。
 
-在线[原生 JavaScript 演示](https://christophervr.github.io/pptx-viewer/demo-vanilla/)展示了此包在没有框架时的运行效果。
+在线[原生 JavaScript 演示](https://christophervr.github.io/ooxml/pptx/demo-vanilla/)展示了此包在没有框架时的运行效果。
 
 ## 提供的能力 {#what-it-provides}
 

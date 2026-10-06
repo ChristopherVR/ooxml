@@ -144,7 +144,7 @@ export const fr: LandingCopy = {
 				links: [
 					{
 						text: 'Demo en direct',
-						href: 'https://christophervr.github.io/pptx-viewer/demo/',
+						href: 'https://christophervr.github.io/ooxml/pptx/demo/',
 						external: true,
 					},
 					{ text: 'Moteur core', href: '/core/' },
@@ -164,7 +164,7 @@ export const fr: LandingCopy = {
 			{
 				title: 'Communaute',
 				links: [
-					{ text: 'GitHub', href: 'https://github.com/ChristopherVR/pptx-viewer', external: true },
+					{ text: 'GitHub', href: 'https://github.com/ChristopherVR/ooxml/tree/main/viewers/pptx', external: true },
 					{
 						text: 'npm',
 						href: 'https://www.npmjs.com/package/pptx-react-viewer',
@@ -172,12 +172,12 @@ export const fr: LandingCopy = {
 					},
 					{
 						text: 'Issues',
-						href: 'https://github.com/ChristopherVR/pptx-viewer/issues',
+						href: 'https://github.com/ChristopherVR/ooxml/issues',
 						external: true,
 					},
 					{
 						text: 'Licence',
-						href: 'https://github.com/ChristopherVR/pptx-viewer/blob/main/LICENSE',
+						href: 'https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/LICENSE',
 						external: true,
 					},
 				],

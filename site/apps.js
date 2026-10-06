@@ -1,7 +1,6 @@
 /**
  * The apps the suite launches. Each live app embeds the demos its viewer deploys to GitHub Pages
- * (the pptx viewer from its own repository, the others under this site); this site holds no Office
- * logic.
+ * under this site; this site holds no Office logic.
  */
 
 const PAGES = 'https://christophervr.github.io';
@@ -56,8 +55,8 @@ export const APPS = [
 		color: '#e2552d',
 		format: '.pptx',
 		description: 'Build, edit and present slide decks.',
-		repo: 'pptx-viewer',
-		docs: `${PAGES}/pptx-viewer/`,
+		repo: 'pptx',
+		docs: `${PAGES}/ooxml/pptx/`,
 		frameworks: PPTX_FRAMEWORKS,
 	},
 	{

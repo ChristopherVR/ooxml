@@ -162,7 +162,7 @@ Das Monorepo verwendet **Bun** als Paketmanager. Pakete referenzieren sich gegen
 
 ```bash
 # Repository klonen
-git clone https://github.com/ChristopherVR/pptx-viewer
+git clone https://github.com/ChristopherVR/ooxml/tree/main/viewers/pptx
 cd pptx-viewer
 
 # Alle Workspace-Abhangigkeiten installieren
