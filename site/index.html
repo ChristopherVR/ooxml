@@ -55,7 +55,30 @@
 				</svg>
 			</a>
 			<a class="topbar__brand" href="#/">OOXML Office</a>
-			<div class="topbar__app" id="topbar-app" hidden></div>
+			<div class="tabs">
+				<div class="tabstrip" id="tabstrip" role="tablist" aria-label="Open apps"></div>
+				<div class="newtab">
+					<button
+						class="newtab__button"
+						id="new-tab"
+						type="button"
+						aria-haspopup="menu"
+						aria-expanded="false"
+						aria-label="New tab"
+						title="New tab"
+					>
+						<svg viewBox="0 0 14 14" aria-hidden="true">
+							<path
+								d="M7 2v10M2 7h10"
+								stroke="currentColor"
+								stroke-width="1.6"
+								stroke-linecap="round"
+							/>
+						</svg>
+					</button>
+					<div class="newtab__menu" id="new-menu" role="menu" hidden></div>
+				</div>
+			</div>
 			<nav class="topbar__links">
 				<button
 					class="topbar__theme topbar__chungus"
@@ -167,9 +190,9 @@
 			<section class="core" aria-labelledby="core-title">
 				<h2 id="core-title">One core under every app</h2>
 				<p class="core__lede">
-					OOXML owns the format logic. Each viewer owns its browser interface and
-					framework bindings, with shared controls and supporting codecs underneath. Coverage varies
-					by format; the beta apps document their current limits.
+					OOXML owns the format logic. Each viewer owns its browser interface and framework
+					bindings, with shared controls and supporting codecs underneath. Coverage varies by
+					format; the beta apps document their current limits.
 				</p>
 				<dl class="core__list">
 					<div>
@@ -185,10 +208,7 @@
 					</div>
 					<div>
 						<dt>
-							<a
-								href="https://christophervr.github.io/ooxml/pptx/"
-								target="_blank"
-								rel="noreferrer"
+							<a href="https://christophervr.github.io/ooxml/pptx/" target="_blank" rel="noreferrer"
 								>pptx-viewer</a
 							>
 						</dt>
@@ -196,10 +216,7 @@
 					</div>
 					<div>
 						<dt>
-							<a
-								href="https://christophervr.github.io/ooxml/docx/"
-								target="_blank"
-								rel="noreferrer"
+							<a href="https://christophervr.github.io/ooxml/docx/" target="_blank" rel="noreferrer"
 								>docx-viewer</a
 							>
 						</dt>
@@ -237,10 +254,7 @@
 					</div>
 					<div>
 						<dt>
-							<a
-								href="https://christophervr.github.io/ooxml/xlsx/"
-								target="_blank"
-								rel="noreferrer"
+							<a href="https://christophervr.github.io/ooxml/xlsx/" target="_blank" rel="noreferrer"
 								>xlsx-viewer</a
 							>
 						</dt>
@@ -307,15 +321,13 @@
 		</main>
 
 		<section id="workspace" class="workspace" hidden>
-			<div class="workspace__loading" id="workspace-loading">
-				<i class="spinner" aria-hidden="true"></i>
-				<span id="workspace-loading-label">Loading</span>
+			<div class="appbar" id="appbar" hidden></div>
+			<div class="workspace__frames" id="workspace-frames">
+				<div class="workspace__loading" id="workspace-loading">
+					<i class="spinner" aria-hidden="true"></i>
+					<span id="workspace-loading-label">Loading</span>
+				</div>
 			</div>
-			<iframe
-				id="workspace-frame"
-				title="App"
-				allow="clipboard-read; clipboard-write; fullscreen"
-			></iframe>
 		</section>
 	</body>
 </html>

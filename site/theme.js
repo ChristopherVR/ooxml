@@ -66,8 +66,8 @@ function refreshFrame(frame) {
 	} catch {}
 }
 
-/** @param {HTMLIFrameElement} frame */
-export function initTheme(frame) {
+/** @param {() => Iterable<HTMLIFrameElement>} frames every tab's frame, read when the theme changes */
+export function initTheme(frames) {
 	document.getElementById('theme-toggle')?.addEventListener('click', () => {
 		const next = currentTheme() === 'dark' ? 'light' : 'dark';
 		applyTheme(next);
@@ -75,7 +75,7 @@ export function initTheme(frame) {
 		// page keeps following the system setting.
 		write(SHELL_KEY, next);
 		shareTheme(next);
-		refreshFrame(frame);
+		for (const frame of frames()) refreshFrame(frame);
 	});
 	// A docs site or another tab changed the shared preference.
 	window.addEventListener('storage', (event) => {

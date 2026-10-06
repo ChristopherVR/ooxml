@@ -69,6 +69,11 @@
 			"import": "./dist/teams.js",
 			"default": "./dist/teams.js"
 		},
+		"./suite": {
+			"types": "./dist/suite/index.d.ts",
+			"import": "./dist/suite.js",
+			"default": "./dist/suite.js"
+		},
 		"./docx": {
 			"types": "./dist/docx/index.d.ts",
 			"import": "./dist/docx.js",
