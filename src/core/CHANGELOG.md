@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.22.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@0.22.1) - 2026-10-06
+
+### Bug Fixes
+
+- **xlsx:** Remove polynomial regexes and harden local scripts ([e08d75a](https://github.com/ChristopherVR/ooxml/commit/e08d75a000f813b6d7a77a58adeccf6c0325e390))
+
 ## [0.22.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@0.22.0) - 2026-10-06
 
 ### Features
