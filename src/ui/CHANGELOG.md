@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.29.3](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.29.3) - 2026-10-06
+
+### Refactor
+
+- Make src/core a workspace package (by @ChristopherVR) ([d5b8d6d](https://github.com/ChristopherVR/ooxml/commit/d5b8d6d91161c9ae631aa84436afb35105ac9517))
+
 ## [0.29.2](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.29.2) - 2026-10-05
 
 ### Refactor
