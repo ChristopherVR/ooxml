@@ -11,7 +11,11 @@ import {
 	insertTableOfSize,
 } from './helpers';
 import { readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
 import JSZip from 'jszip';
+
+const LEGACY_DOC = fileURLToPath(new URL('./support/ole-word-97.doc', import.meta.url));
+
 for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
 	test(`${framework}: shared editor edits, formats, saves, reloads, and respects read-only`, async ({
 		page,
@@ -59,9 +63,9 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 }
 test('imports and saves legacy DOC as DOC and exports visible text as DOCX', async ({ page }) => {
 	await page.goto('/');
-	await (await fileInput(page)).setInputFiles('tests/support/ole-word-97.doc');
+	await (await fileInput(page)).setInputFiles(LEGACY_DOC);
 	await expect(fileNameLabel(page)).toHaveText('ole-word-97.doc');
-	const original = await readFile('tests/support/ole-word-97.doc');
+	const original = await readFile(LEGACY_DOC);
 	const pending = page.waitForEvent('download');
 	await saveButton(page).click();
 	const download = await pending;

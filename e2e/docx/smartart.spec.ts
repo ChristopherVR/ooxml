@@ -1,9 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
 import JSZip from 'jszip';
 import { fileInput } from './helpers';
 
-const FIXTURE = 'tests/support/smartart.docx';
+const FIXTURE = fileURLToPath(new URL('./support/smartart.docx', import.meta.url));
 const DIAGRAM_PARTS = ['data', 'layout', 'quickStyle', 'colors', 'drawing'].flatMap((stem) =>
 	[1, 2].map((index) => `word/diagrams/${stem}${index}.xml`),
 );

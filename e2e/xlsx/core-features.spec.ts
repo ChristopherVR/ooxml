@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
 	editor,
 	editorProperty,
@@ -13,7 +13,7 @@ test('Excel encrypted workbook prompts, retries and opens', async ({ page }) => 
 	await newWorkbook(page);
 	// Use the public load API so the current workbook remains visible behind the password prompt.
 	const bytes = await import('node:fs').then((fs) => [
-		...fs.readFileSync(resolve('tests/support/excel-encrypted.xlsx')),
+		...fs.readFileSync(fileURLToPath(new URL('./support/excel-encrypted.xlsx', import.meta.url))),
 	]);
 	const loading = editor(page).evaluate(async (node, data) => {
 		await (node as unknown as { load(bytes: Uint8Array, name: string): Promise<void> }).load(
@@ -38,7 +38,9 @@ test('Excel SmartArt uses the shared renderer and declares display-only support'
 	page,
 }) => {
 	await openLanding(page);
-	await (await landingFileInput(page)).setInputFiles(resolve('tests/support/excel-smartart.xlsx'));
+	await (
+		await landingFileInput(page)
+	).setInputFiles(fileURLToPath(new URL('./support/excel-smartart.xlsx', import.meta.url)));
 	await expect(grid(page)).toContainText('SmartArt below');
 	const drawing = editor(page).locator('office-ui-smartart').first();
 	await expect(drawing.locator('svg')).toBeVisible();
