@@ -248,7 +248,7 @@ export function setTabColor(ctx: EditContext, index: number, color?: Color): voi
 		[{ kind: 'sheet', sheet: index }],
 		() => {
 			if (color) sheet.tabColor = { ...color };
-			else delete sheet.tabColor;
+			else Reflect.deleteProperty(sheet, 'tabColor');
 		},
 		{ sheet: index },
 	);

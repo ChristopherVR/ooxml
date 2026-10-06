@@ -55,7 +55,7 @@ export function setChartSeriesGradient(
 	validateSeriesIndex(element, seriesIndex);
 	const series = element.chartData!.series[seriesIndex];
 	if (gradient === null) {
-		delete series.gradientFill;
+		Reflect.deleteProperty(series, 'gradientFill');
 		return;
 	}
 	assertChartGradientSupported(seriesChartType(element, seriesIndex), `series ${seriesIndex}`);

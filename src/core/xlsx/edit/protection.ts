@@ -106,7 +106,7 @@ export function setSheetProtection(
 		[{ kind: 'sheet', sheet: s }],
 		() => {
 			if (!protection) {
-				delete sheet.protection;
+				Reflect.deleteProperty(sheet, 'protection');
 				return;
 			}
 			const next = structuredClone(protection);

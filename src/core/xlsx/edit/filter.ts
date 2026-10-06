@@ -77,7 +77,7 @@ export function setAutoFilter(ctx: EditContext, s: number, range: CellRange | un
 			const old = sheet.autoFilter;
 			if (old) applyFilter(ctx, sheet, { range: old.range });
 			if (r) sheet.autoFilter = { range: r };
-			else delete sheet.autoFilter;
+			else Reflect.deleteProperty(sheet, 'autoFilter');
 		},
 		{ sheet: s, structural: true },
 	);

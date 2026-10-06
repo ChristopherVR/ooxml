@@ -125,7 +125,7 @@ export function createViewerOptionsStore(init?: ViewerOptionsStoreInit): ViewerO
 				return;
 			}
 			const next = cloneViewerOptions(options());
-			(next[group] as unknown as Record<string, unknown>)[key] = value;
+			Reflect.set(next[group] as object, key, value);
 			commit(next);
 		},
 		getValue: (group, key) => {

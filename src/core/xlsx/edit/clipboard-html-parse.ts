@@ -148,7 +148,18 @@ function stripTags(markup: string): string {
 		previous = text;
 		text = text.replace(/<!--[\s\S]*?-->/g, '').replace(/<[^<>]*>/g, '');
 	} while (text !== previous);
-	return text.split('<!--').join('').split('-->').join('');
+	return removeAll(text, ['<!--', '-->']);
+}
+
+/** Deletes every occurrence of each token, repeating until none can reassemble. */
+function removeAll(text: string, tokens: string[]): string {
+	let current = text;
+	let previous: string;
+	do {
+		previous = current;
+		for (const token of tokens) current = current.split(token).join('');
+	} while (current !== previous);
+	return current;
 }
 
 function cellText(inner: string): string {
@@ -171,12 +182,9 @@ export function parseHtmlTable(html: string, base: CellStyle): ClipboardCells | 
 	if (table === undefined) return undefined;
 	const classes = new Map<string, string>();
 	for (const block of html.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/gi))
-		for (const rule of (block[1] ?? '')
-			.split('<!--')
-			.join('')
-			.split('-->')
-			.join('')
-			.matchAll(/\.([\w-]+)\s*\{([^}]*)\}/g))
+		for (const rule of removeAll(block[1] ?? '', ['<!--', '-->']).matchAll(
+			/\.([\w-]+)\s*\{([^}]*)\}/g,
+		))
 			classes.set(rule[1] ?? '', rule[2] ?? '');
 	const grid: (ClipboardCell | null)[][] = [];
 	const taken = new Set<string>();

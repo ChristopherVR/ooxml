@@ -90,7 +90,7 @@ export function setDefaultColumnWidth(
 		'format',
 		[{ kind: 'sheet', sheet: s }],
 		() => {
-			if (width === undefined) delete sheet.defaultColWidth;
+			if (width === undefined) Reflect.deleteProperty(sheet, 'defaultColWidth');
 			else sheet.defaultColWidth = width;
 		},
 		{ sheet: s, structural: true },

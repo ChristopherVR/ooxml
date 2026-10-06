@@ -130,7 +130,7 @@ export async function writeOleDocumentParagraphEdit(
 			if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
 				continue;
 			}
-			delete paragraph[key];
+			Reflect.deleteProperty(paragraph, key);
 		}
 		if (pPr) {
 			paragraph['w:pPr'] = pPr;

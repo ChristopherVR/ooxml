@@ -558,7 +558,7 @@ export function setChartSeriesColor(
 	validateSeriesIndex(element, seriesIndex);
 	const series = element.chartData!.series[seriesIndex];
 	// A solid colour and a gradient are one fill choice: the last call wins.
-	delete series.gradientFill;
+	Reflect.deleteProperty(series, 'gradientFill');
 	if (!color) {
 		series.color = undefined;
 		return;

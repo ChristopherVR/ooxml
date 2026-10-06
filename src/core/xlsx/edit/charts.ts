@@ -53,8 +53,8 @@ export function updateChart(ctx: EditContext, s: number, index: number, patch: C
 			for (const [key, value] of Object.entries(structuredClone(patch))) {
 				if (key === 'kind' || key === 'partName' || key === '__proto__') continue;
 				if (key === 'constructor' || key === 'prototype') continue;
-				if (value === undefined) delete (live as unknown as Record<string, unknown>)[key];
-				else (live as unknown as Record<string, unknown>)[key] = value;
+				if (value === undefined) Reflect.deleteProperty(live, key);
+				else Reflect.set(live, key, value);
 			}
 		},
 		{ sheet: s },

@@ -21,7 +21,7 @@ export function setPageSetup(ctx: EditContext, s: number, patch: PageSetupPatch)
 		() => {
 			const next = compact({ ...sheet.pageSetup, ...structuredClone(patch) }) as PageSetup;
 			if (Object.keys(next).length) sheet.pageSetup = next;
-			else delete sheet.pageSetup;
+			else Reflect.deleteProperty(sheet, 'pageSetup');
 		},
 		{ sheet: s },
 	);
@@ -39,7 +39,7 @@ export function setPrintOptions(ctx: EditContext, s: number, patch: Partial<Prin
 			for (const key of Object.keys(next) as (keyof PrintOptions)[])
 				if (!next[key]) delete next[key];
 			if (Object.keys(next).length) sheet.printOptions = next;
-			else delete sheet.printOptions;
+			else Reflect.deleteProperty(sheet, 'printOptions');
 			// The model now owns the element; never write a stale verbatim copy as well.
 			sheet.preserved.delete('printOptions');
 		},
