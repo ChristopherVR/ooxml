@@ -231,11 +231,184 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
+  # The PowerPoint viewer has more to check than the viewers job's ceiling fits: a ~20-minute unit
+  # suite and a browser suite worth hours of runner time. So it gets its own jobs, laid out the way
+  # pptx-viewer ran them: one build whose output the others download, a unit job per package, the
+  # browser suite split by framework and shard, and the packaged-build smoke (see VIEWERS.pptx in
+  # scripts/ci-plan.mjs).
+  pptx-build:
+    name: pptx build and checks
+    needs: [plan, build, ui]
+    if: |
+      !cancelled() && needs.build.result == 'success' && needs.ui.result == 'success' &&
+      fromJSON(needs.plan.outputs.plan).pptx
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - uses: actions/download-artifact@v8
+        with:
+          name: core-dist
+          path: src/core/dist
+      - uses: actions/download-artifact@v8
+        with:
+          name: ui-dist
+          path: src/ui/dist
+      - name: Build the packages, typecheck and check the packed bindings
+        working-directory: viewers/pptx
+        run: |
+          bun run build:packages
+          bun run typecheck
+          bun run e2e:contract
+          bun run test:binding-packages
+      # Every package's dist, and the sources the Angular build generates, for the jobs below.
+      - uses: actions/upload-artifact@v7
+        with:
+          name: pptx-dist
+          path: |
+            viewers/pptx/packages/*/dist/
+            viewers/pptx/packages/angular/src/internal/
+          retention-days: 1
+
+  pptx-test:
+    name: pptx test (${{ matrix.leg }})
+    needs: [plan, pptx-build]
+    if: ${{ !cancelled() && needs.pptx-build.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        leg: [core, tools, shared, locales, react, react18, vue, angular, vanilla, svelte, cli]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - uses: actions/download-artifact@v8
+        with:
+          name: core-dist
+          path: src/core/dist
+      - uses: actions/download-artifact@v8
+        with:
+          name: ui-dist
+          path: src/ui/dist
+      - uses: actions/download-artifact@v8
+        with:
+          name: pptx-dist
+          path: viewers/pptx/packages
+      - name: Test ${{ matrix.leg }}
+        working-directory: viewers/pptx/packages
+        env:
+          LEG: ${{ matrix.leg }}
+        run: |
+          case "$LEG" in
+            # The React package again, under React 18 (the published range is ^18 || ^19).
+            react18) cd react && bun run test:react18 && bun run typecheck:react18 ;;
+            *) cd "$LEG" && bun run test ;;
+          esac
+
+  pptx-e2e:
+    name: pptx e2e (${{ matrix.project }} ${{ matrix.shard }}/10)
+    needs: [plan, pptx-build]
+    if: ${{ !cancelled() && needs.pptx-build.result == 'success' }}
+    runs-on: ubuntu-latest
+    # Per shard. The lever for a suite that outgrows it is the shard count, not this ceiling (see
+    # the history in viewers/pptx/.github/workflows/ci.yml, which ran this suite before the move).
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [react, vue, angular, vanilla, svelte]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - uses: actions/download-artifact@v8
+        with:
+          name: core-dist
+          path: src/core/dist
+      - uses: actions/download-artifact@v8
+        with:
+          name: ui-dist
+          path: src/ui/dist
+      - uses: actions/download-artifact@v8
+        with:
+          name: pptx-dist
+          path: viewers/pptx/packages
+      - name: Install Chromium
+        working-directory: viewers/pptx
+        run: bun x playwright install --with-deps chromium
+      # Two attempts, as pptx-viewer ran it: a runner-level browser crash should not fail the run.
+      - name: Run the browser suite
+        working-directory: viewers/pptx
+        env:
+          PROJECT: ${{ matrix.project }}
+          SHARD: ${{ matrix.shard }}
+        run: |
+          for attempt in 1 2; do
+            bun run e2e -- --project="$PROJECT" --project="$PROJECT-headless" --shard="$SHARD/10" \
+              --workers=2 --reporter=list,html,github && exit 0
+            status=$?
+            echo "::warning::attempt $attempt of $PROJECT shard $SHARD/10 failed (exit $status)"
+            sleep 15
+          done
+          exit $status
+      - name: Preserve the report
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: pptx-playwright-${{ matrix.project }}-${{ matrix.shard }}
+          path: |
+            viewers/pptx/playwright-report/
+            viewers/pptx/test-results/
+          retention-days: 7
+
+  pptx-e2e-packaged:
+    name: pptx e2e (packaged builds)
+    needs: [plan, pptx-build]
+    if: ${{ !cancelled() && needs.pptx-build.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - uses: actions/download-artifact@v8
+        with:
+          name: core-dist
+          path: src/core/dist
+      - uses: actions/download-artifact@v8
+        with:
+          name: ui-dist
+          path: src/ui/dist
+      - uses: actions/download-artifact@v8
+        with:
+          name: pptx-dist
+          path: viewers/pptx/packages
+      - name: Build the demo bundles
+        run: |
+          for demo in react vue angular vanilla svelte; do
+            (cd "demos/pptx/demo-$demo" && bun run build)
+          done
+      - name: Install Chromium
+        working-directory: viewers/pptx
+        run: bun x playwright install --with-deps chromium
+      - name: Run the packaged-build smoke
+        working-directory: viewers/pptx
+        run: bun run e2e:packaged -- --workers=2 --reporter=list,html,github
+      - name: Preserve the report
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: pptx-playwright-packaged
+          path: |
+            viewers/pptx/playwright-report/
+            viewers/pptx/test-results/
+          retention-days: 7
+
   # The viewers that are still their own repository (none today; see CONSUMERS in ci-plan.mjs),
-  # linked to this change: the
-  # contract the shared elements and the format logic have to keep. It reports failures on the run
-  # but is not part of `ci-success`: a viewer that is red for its own reasons must not block this
-  # repository.
+  # linked to this change: the contract the shared elements and the format logic have to keep. It
+  # reports failures on the run but is not part of `ci-success`: a viewer that is red for its own
+  # reasons must not block this repository.
   consumers:
     name: external viewer (${{ matrix.name }})
     needs: [plan, build, ui]
@@ -304,6 +477,10 @@ jobs:
         scripts,
         mcp,
         viewers,
+        pptx-build,
+        pptx-test,
+        pptx-e2e,
+        pptx-e2e-packaged,
       ]
     runs-on: ubuntu-latest
     steps:

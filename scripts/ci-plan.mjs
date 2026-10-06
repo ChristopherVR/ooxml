@@ -32,12 +32,16 @@ export const VIEWERS = {
 	pptx: {
 		name: 'pptx',
 		dir: 'viewers/pptx',
-		// The bindings inline core, shared and locales, so build before types and tests. Its
-		// `test:scripts` stays out: those scripts ran the CI and releases of its own repository.
+		// More than one runner fits in the viewers job's ceiling (a ~20-minute unit suite and a
+		// browser suite of hours of runner time), so pptx has its own jobs in ci.yml (`pptx-*`):
+		// one build whose output the rest share, a unit job per package, the browser suite by
+		// framework and shard, and the packaged-build smoke. `ownJobs` keeps it out of `viewers`;
+		// `verify` is what its build job runs. Its `test:scripts` stays out: those scripts ran the
+		// CI and releases of its own repository.
+		ownJobs: true,
 		verify: [
 			'bun run build:packages',
 			'bun run typecheck',
-			'bun run test',
 			'bun run e2e:contract',
 			'bun run test:binding-packages',
 		],
@@ -207,7 +211,11 @@ export function plan(changed, { full = false, testFiles } = {}) {
 		build: everything || core || ui || viewerList.length > 0,
 		scripts: everything || scripts,
 		mcp: everything || mcp,
-		viewers: viewerList.map(({ name, dir, verify }) => ({ name, dir, verify: verify.join('\n') })),
+		viewers: viewerList
+			.filter((viewer) => !viewer.ownJobs)
+			.map(({ name, dir, verify }) => ({ name, dir, verify: verify.join('\n') })),
+		// The pptx jobs in ci.yml run (see VIEWERS.pptx).
+		pptx: viewerList.some((viewer) => viewer.name === 'pptx'),
 		consumers: ALL_CONSUMERS.filter((key) => consumers.has(key)).map((key) => CONSUMERS[key]),
 	};
 }

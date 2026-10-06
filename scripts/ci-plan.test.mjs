@@ -7,6 +7,8 @@ import { CONSUMERS, VIEWERS, consumersOfArea, plan, shardsFor, viewersOfArea } f
 
 const viewers = (result) => result.viewers.map((viewer) => viewer.name);
 const ALL_VIEWERS = Object.keys(VIEWERS);
+/** The viewers checked in the shared `viewers` job; pptx has its own jobs (`plan.pptx`). */
+const MATRIX_VIEWERS = ALL_VIEWERS.filter((key) => !VIEWERS[key].ownJobs);
 
 test('a docs-only change runs nothing', () => {
 	const result = plan(['docs/releasing.md', 'AGENTS.md']);
@@ -32,20 +34,30 @@ test('a pptx-only change skips the strict typecheck and checks only the pptx vie
 	const result = plan(['src/core/pptx/converter/index.ts'], { testFiles: 5 });
 	assert.equal(result.typecheck.strict, false);
 	assert.equal(result.typecheck.pptx, true);
-	assert.deepEqual(viewers(result), ['pptx']);
+	assert.equal(result.pptx, true);
+	assert.deepEqual(viewers(result), []);
 	assert.deepEqual(result.consumers, []);
 });
 
-test('a change inside viewers/pptx checks the pptx viewer', () => {
-	const result = plan(['viewers/pptx/packages/react/src/index.ts'], { testFiles: 0 });
-	assert.deepEqual(viewers(result), ['pptx']);
-	assert.equal(result.viewers[0].dir, 'viewers/pptx');
+test('the pptx viewer runs in its own jobs, also for its demos and browser tests at the root', () => {
+	for (const file of [
+		'viewers/pptx/packages/react/src/index.ts',
+		'demos/pptx/demo-vue/src/App.vue',
+		'e2e/pptx/viewer-basics.spec.ts',
+	]) {
+		const result = plan([file], { testFiles: 0 });
+		assert.equal(result.pptx, true, file);
+		assert.deepEqual(viewers(result), [], file);
+		assert.equal(result.build, true, file);
+	}
+	assert.equal(plan(['viewers/docx/src/index.ts'], { testFiles: 0 }).pptx, false);
 });
 
 test('a shared area can break every viewer', () => {
 	const result = plan(['src/core/xml/parse.ts'], { testFiles: 300 });
 	assert.equal(result.consumers.length, Object.keys(CONSUMERS).length);
-	assert.deepEqual(viewers(result), ALL_VIEWERS);
+	assert.deepEqual(viewers(result), MATRIX_VIEWERS);
+	assert.equal(result.pptx, true);
 	assert.deepEqual(result.test.shards, [1, 2, 3, 4, 5]);
 });
 
@@ -54,7 +66,8 @@ test('a ui change checks the ui package and every viewer, but not the unit suite
 	assert.equal(result.ui, true);
 	assert.equal(result.test.run, false);
 	assert.equal(result.consumers.length, Object.keys(CONSUMERS).length);
-	assert.deepEqual(viewers(result), ALL_VIEWERS);
+	assert.deepEqual(viewers(result), MATRIX_VIEWERS);
+	assert.equal(result.pptx, true);
 });
 
 test('a change inside one viewer checks only that viewer, on a built core and ui', () => {
@@ -117,7 +130,8 @@ test('dependency, compiler and CI configuration runs everything', () => {
 		assert.equal(result.full, true, file);
 		assert.equal(result.test.mode, 'all', file);
 		assert.equal(result.test.shards.length, 6, file);
-		assert.deepEqual(viewers(result), ALL_VIEWERS, file);
+		assert.deepEqual(viewers(result), MATRIX_VIEWERS, file);
+		assert.equal(result.pptx, true, file);
 	}
 });
 
@@ -125,7 +139,8 @@ test('a manual or scheduled run is always full', () => {
 	const result = plan([], { full: true });
 	assert.equal(result.full, true);
 	assert.equal(result.consumers.length, Object.keys(CONSUMERS).length);
-	assert.deepEqual(viewers(result), ALL_VIEWERS);
+	assert.deepEqual(viewers(result), MATRIX_VIEWERS);
+	assert.equal(result.pptx, true);
 });
 
 test('shards grow with the number of test files, to a cap of six', () => {
