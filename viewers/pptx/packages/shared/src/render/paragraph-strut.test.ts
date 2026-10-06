@@ -31,11 +31,31 @@ describe('resolveParagraphStrutFontSize', () => {
 	});
 
 	it('ignores bullet segments when finding the smallest run', () => {
-		const bulletSeg = { style: { fontSize: 1 }, bulletInfo: {}, text: '•' } as Pick<
-			TextSegment,
-			'style' | 'bulletInfo' | 'text'
-		>;
+		const bulletSeg = {
+			style: { fontSize: 1 },
+			bulletInfo: { char: '•' },
+			text: '• ',
+		} as Pick<TextSegment, 'style' | 'bulletInfo' | 'text'>;
 		expect(resolveParagraphStrutFontSize([bulletSeg, segment(14)], 16)).toBe(14);
+	});
+
+	it('counts the first run of an a:buNone paragraph', () => {
+		const noBullet = {
+			style: { fontSize: 12 },
+			bulletInfo: { none: true, ownedByParagraph: true },
+			text: 'body',
+		} as Pick<TextSegment, 'style' | 'bulletInfo' | 'text'>;
+		expect(resolveParagraphStrutFontSize([noBullet], 17)).toBe(12);
+	});
+
+	it('counts a text run that carries a bullet set in the editor', () => {
+		// List commands put `bulletInfo` on the paragraph's first text run.
+		const bulleted = {
+			style: { fontSize: 12 },
+			bulletInfo: { char: '•' },
+			text: 'body',
+		} as Pick<TextSegment, 'style' | 'bulletInfo' | 'text'>;
+		expect(resolveParagraphStrutFontSize([bulleted], 17)).toBe(12);
 	});
 
 	// Regression for audit-text/gen.py slide 16 ("small HUGE small wraps onto

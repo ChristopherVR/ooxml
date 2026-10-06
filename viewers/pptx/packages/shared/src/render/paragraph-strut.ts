@@ -1,5 +1,6 @@
 import type { TextSegment } from 'pptx-viewer-core';
 
+import { isBulletMarkerSegment } from './bullet-toggle';
 import { scaleFontSizeForAutoFit } from './text-style-helpers';
 
 /**
@@ -35,8 +36,10 @@ import { scaleFontSizeForAutoFit } from './text-style-helpers';
  * `audit-text/pp/s16.png` (`gen.py` slide 16): a paragraph of "small HUGE
  * small wraps onto the / second line of text" wraps into two lines, and
  * PowerPoint sizes line 2 (only the 12pt "small" text) tightly under line 1,
- * not with the airy gap a 48pt-based strut produces. Bullet segments are
- * excluded: a bullet glyph never drives the height of the line it marks.
+ * not with the airy gap a 48pt-based strut produces. Bullet marker segments
+ * are excluded: a bullet glyph never drives the height of the line it marks.
+ * Text runs count even when they carry `bulletInfo`, as the first run of an
+ * `a:buNone` paragraph or of a paragraph bulleted in the editor does.
  *
  * `fontScale` is `a:normAutofit/@fontScale` (see `resolveAutoFitFontScale`),
  * the same multiplier every run's own rendered size is scaled by. Segment
@@ -47,13 +50,15 @@ import { scaleFontSizeForAutoFit } from './text-style-helpers';
  * effectively every paragraph.
  */
 export function resolveParagraphStrutFontSize(
-	segments: ReadonlyArray<Pick<TextSegment, 'style' | 'bulletInfo' | 'text'>>,
+	segments: ReadonlyArray<
+		Pick<TextSegment, 'style' | 'bulletInfo' | 'text' | 'fieldType' | 'isLineBreak'>
+	>,
 	bodyFontSize: number | undefined,
 	fontScale = 1,
 ): number | undefined {
 	let smallest: number | undefined;
 	for (const segment of segments) {
-		if (segment.bulletInfo) {
+		if (isBulletMarkerSegment(segment)) {
 			continue;
 		}
 		const size = segment.style?.fontSize;
