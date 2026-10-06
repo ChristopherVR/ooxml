@@ -29,8 +29,10 @@ createServer(async (req, res) => {
 	const file = resolve(SITE, `.${path === '/' ? '/index.html' : path}`);
 	if (!file.startsWith(SITE)) return res.writeHead(403).end();
 	try {
+		// Read before writing the head, so a missing file is a clean 404 and not a crash.
+		const body = await readFile(file);
 		res.writeHead(200, { 'content-type': TYPES[extname(file)] ?? 'application/octet-stream' });
-		res.end(await readFile(file));
+		res.end(body);
 	} catch {
 		res.writeHead(404).end('Not found');
 	}
