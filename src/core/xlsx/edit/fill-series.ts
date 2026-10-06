@@ -63,7 +63,17 @@ function linearTrend(values: number[]): (k: number) => number {
 	return (k) => Number((meanY + slope * (k - meanX)).toPrecision(15));
 }
 
-const TEXT_NUMBER = /^(.*?)(\d+)(\D*)$/;
+const isDigit = (ch: string | undefined): boolean => ch !== undefined && ch >= '0' && ch <= '9';
+
+/** Splits `Item 12 x` into `[text, 'Item ', '12', ' x']` around its last digit run, in linear time. */
+function matchTextNumber(text: string): string[] | null {
+	let end = text.length;
+	while (end > 0 && !isDigit(text[end - 1])) end--;
+	if (end === 0) return null;
+	let start = end;
+	while (start > 0 && isDigit(text[start - 1])) start--;
+	return [text, text.slice(0, start), text.slice(start, end), text.slice(end)];
+}
 const QUARTER = /^(q|qtr|quarter)(\s?)([1-4])$/i;
 
 function textSeries(texts: string[]): SeriesGenerator | undefined {
@@ -86,7 +96,7 @@ function textSeries(texts: string[]): SeriesGenerator | undefined {
 		const step = q1 ? mod(Number(q1[3]) - 1 - start, 4) || 1 : 1;
 		return (k) => ({ kind: 'value', value: `${q0[1]}${q0[2]}${mod(start + step * k, 4) + 1}` });
 	}
-	const parts = texts.map((t) => TEXT_NUMBER.exec(t));
+	const parts = texts.map(matchTextNumber);
 	const p0 = parts[0];
 	if (!p0 || !parts.every((p) => p && p[1] === p0[1] && p[3] === p0[3])) return undefined;
 	const numbers = parts.map((p) => Number(p?.[2]));

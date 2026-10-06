@@ -102,7 +102,7 @@ function main() {
 		backup[file] = saved;
 		write(path, raw, manifest);
 	}
-	writeFileSync(backupPath, JSON.stringify(backup, null, 2));
+	writeFileSync(backupPath, JSON.stringify(backup, null, 2), { flag: 'wx' });
 	pointUiAtThisCheckout();
 	console.log(
 		`Linked ${Object.keys(backup).length} manifests. Run \`bun install --force\` in the viewer.`,

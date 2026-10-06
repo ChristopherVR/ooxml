@@ -150,7 +150,8 @@ function parseDay(text: string): DayInput | undefined {
 export function parseDateTimeInput(text: string, date1904: boolean): DateInput | undefined {
 	const time = parseTime(text);
 	if (time) return { value: time.fraction, numFmt: time.format };
-	const split = /^(.+?)(?:\s+|T)(\d{1,2}:\d{1,2}(?::\d{1,2})?(?:\s*(?:am|pm|a|p))?)$/i.exec(text);
+	const tail = /(?:\s{1,8}|T)(\d{1,2}:\d{1,2}(?::\d{1,2})?(?:\s{0,8}(?:am|pm|a|p))?)$/i.exec(text);
+	const split = tail && tail.index > 0 ? [tail[0], text.slice(0, tail.index), tail[1]] : null;
 	const dayText = split ? (split[1] ?? '') : text;
 	const day = parseDay(dayText);
 	if (!day) return undefined;

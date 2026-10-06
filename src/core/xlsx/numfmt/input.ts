@@ -51,10 +51,10 @@ export function parseNumberInput(text: string): NumberInput | undefined {
 		s = s.slice(lead[0].length);
 		if (!sign()) return undefined;
 	} else {
-		const trail = /\s*([€£])$/.exec(s);
-		if (trail) {
-			currency = trail[1] ?? '';
-			s = s.slice(0, -trail[0].length);
+		const last = s.slice(-1);
+		if (last === '€' || last === '£') {
+			currency = last;
+			s = s.slice(0, -1).trimEnd();
 		}
 	}
 	let percent = false;

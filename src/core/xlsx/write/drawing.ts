@@ -138,7 +138,10 @@ export function writeDrawing(
 		Math.max(
 			1,
 			...kept.flatMap((xml) =>
-				[...xml.matchAll(/cNvPr[^>]*\sid="(\d+)"/g)].map((m) => Number(m[1])),
+				[...xml.matchAll(/cNvPr([^>]*)/g)].flatMap((m) => {
+					const id = /\sid="(\d+)"/.exec(m[1] ?? '');
+					return id ? [Number(id[1])] : [];
+				}),
 			),
 		) + 1;
 	let body = '';

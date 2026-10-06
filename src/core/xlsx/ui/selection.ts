@@ -83,7 +83,8 @@ export const isWholeRows = (range: CellRange): boolean =>
 	range.start.col === 0 && range.end.col === MAX_COL;
 export const isWholeCols = (range: CellRange): boolean =>
 	range.start.row === 0 && range.end.row === MAX_ROW;
-const columnPart = (address: CellAddress): string => formatAddress(address).replace(/\d+$/u, '');
+const columnPart = (address: CellAddress): string =>
+	formatAddress(address).replace(/\d{1,10}$/u, '');
 
 /**
  * One range as Excel writes it: `B2:C5`, whole rows as `2:4` and whole columns as `A:C`. The

@@ -113,11 +113,13 @@ const INVALID_SHEET_CHARS = /[\\/?*[\]:]/g;
 /** A valid sheet name derived from a file name (`report.csv` -> `report`). */
 export function sheetNameFromFileName(fileName: string | undefined): string {
 	const base = (fileName ?? '').split(/[\\/]/).pop() ?? '';
-	const stem = base.replace(/\.[^.]*$/, '').replace(INVALID_SHEET_CHARS, '_');
-	const trimmed = stem
-		.replace(/^'+|'+$/g, '')
-		.slice(0, 31)
-		.trim();
+	const dot = base.lastIndexOf('.');
+	const stem = (dot < 0 ? base : base.slice(0, dot)).replace(INVALID_SHEET_CHARS, '_');
+	let start = 0;
+	let end = stem.length;
+	while (start < end && stem[start] === "'") start++;
+	while (end > start && stem[end - 1] === "'") end--;
+	const trimmed = stem.slice(start, end).slice(0, 31).trim();
 	return trimmed && trimmed.toLowerCase() !== 'history' ? trimmed : 'Sheet1';
 }
 

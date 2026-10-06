@@ -72,7 +72,9 @@ export function decodeEntities(text: string): string {
 
 function parseAttributes(text: string): Map<string, string> {
 	const attrs = new Map<string, string>();
-	for (const m of text.matchAll(/([\w:-]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/g))
+	for (const m of text.matchAll(
+		/([\w:-]{1,64})\s{0,16}=\s{0,16}(?:"([^"]*)"|'([^']*)'|([^\s>]+))/g,
+	))
 		attrs.set((m[1] ?? '').toLowerCase(), decodeEntities(m[2] ?? m[3] ?? m[4] ?? ''));
 	return attrs;
 }
@@ -140,13 +142,46 @@ function stylePatchFromCss(css: Map<string, string>, inner: string): StylePatch 
 	return patch;
 }
 
+/** Drops every `<!-- ... -->` span by index scanning (no backtracking). */
+function removeComments(text: string): string {
+	let out = '';
+	let from = 0;
+	for (;;) {
+		const open = text.indexOf('<!--', from);
+		const close = open < 0 ? -1 : text.indexOf('-->', open + 4);
+		if (close < 0) return out + text.slice(from);
+		out += text.slice(from, open);
+		from = close + 3;
+	}
+}
+
+/** Drops every `<...>` span that holds no inner `<` or `>`, in one linear pass. */
+function removeTags(text: string): string {
+	let out = '';
+	let i = 0;
+	while (i < text.length) {
+		const ch = text[i] as string;
+		if (ch === '<') {
+			let j = i + 1;
+			while (j < text.length && text[j] !== '<' && text[j] !== '>') j++;
+			if (text[j] === '>') {
+				i = j + 1;
+				continue;
+			}
+		}
+		out += ch;
+		i++;
+	}
+	return out;
+}
+
 /** Removes comments and tags, repeating until stable so nested fragments cannot reassemble. */
 function stripTags(markup: string): string {
 	let previous: string;
 	let text = markup;
 	do {
 		previous = text;
-		text = text.replace(/<!--[\s\S]*?-->/g, '').replace(/<[^<>]*>/g, '');
+		text = removeTags(removeComments(text));
 	} while (text !== previous);
 	return removeAll(text, ['<!--', '-->']);
 }

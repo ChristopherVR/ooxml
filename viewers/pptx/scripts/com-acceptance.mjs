@@ -105,7 +105,8 @@ const args = process.argv.slice(2);
 const keep = args.includes('--keep');
 const genuineOnly = args.includes('--genuine');
 const graftAt = args.indexOf('--graft');
-const graftPattern = graftAt >= 0 ? new RegExp(args[graftAt + 1], 'u') : undefined;
+const escapeRegExp = (text) => text.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
+const graftPattern = graftAt >= 0 ? new RegExp(escapeRegExp(args[graftAt + 1]), 'u') : undefined;
 const filters = args.filter((a, i) => !a.startsWith('--') && !(graftAt >= 0 && i === graftAt + 1));
 
 const selected = FIXTURE_MANIFEST.filter(
