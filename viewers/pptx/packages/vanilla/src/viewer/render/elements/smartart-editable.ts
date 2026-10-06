@@ -34,6 +34,9 @@ export function enableSmartArtEditing(
 
 	let editor: HTMLTextAreaElement | null = null;
 	let swatches: HTMLDivElement | null = null;
+	// Grace period so the pointer can cross the gap from a node to its swatches.
+	let hideTimer: ReturnType<typeof setTimeout> | undefined;
+	const cancelHide = (): void => clearTimeout(hideTimer);
 
 	const closeEditor = (input = editor): void => {
 		if (!input || input !== editor) {
@@ -109,6 +112,7 @@ export function enableSmartArtEditing(
 		if (!target || !nodeId || !context.onSmartArtNodeFillChange || editor) {
 			return;
 		}
+		cancelHide();
 		swatches?.remove();
 		const rect = measureSvgViewportRect(target);
 		if (!rect) {
@@ -151,10 +155,29 @@ export function enableSmartArtEditing(
 			});
 			swatches.appendChild(button);
 		}
+		swatches.addEventListener('mouseenter', cancelHide);
 		swatches.addEventListener('mouseleave', () => {
 			swatches?.remove();
 			swatches = null;
 		});
 		chrome.appendChild(swatches);
+	});
+
+	chrome.addEventListener('mouseout', (event) => {
+		const target = nodeTarget(event.target);
+		const to = event.relatedTarget;
+		// Moving within the node or onto its swatches keeps them.
+		if (
+			!target ||
+			!swatches ||
+			(to instanceof Node && (target.contains(to) || swatches.contains(to)))
+		) {
+			return;
+		}
+		cancelHide();
+		hideTimer = setTimeout(() => {
+			swatches?.remove();
+			swatches = null;
+		}, 150);
 	});
 }

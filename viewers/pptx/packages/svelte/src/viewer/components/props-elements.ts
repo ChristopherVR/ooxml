@@ -131,6 +131,8 @@ export interface SmartArtDrawingViewProps {
 	canEditNodeText: boolean;
 	onopeneditor: (event: MouseEvent, nodeId: string | undefined) => void;
 	onshowstyle: (event: MouseEvent, nodeId: string | undefined) => void;
+	/** The pointer left a node: hide its swatches after a short grace period. */
+	onhidestyle: () => void;
 }
 
 export interface TextBlockProps {

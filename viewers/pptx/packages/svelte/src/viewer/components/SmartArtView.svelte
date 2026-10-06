@@ -93,7 +93,18 @@
 		};
 	}
 
+	// Grace period so the pointer can cross the gap from a node to its swatches.
+	let hideTimer: ReturnType<typeof setTimeout> | undefined;
+	function cancelHide(): void {
+		clearTimeout(hideTimer);
+	}
+	function scheduleHide(): void {
+		cancelHide();
+		hideTimer = setTimeout(() => (hovered = null), 150);
+	}
+
 	function showStyle(event: MouseEvent, nodeId: string | undefined): void {
+		cancelHide();
 		if (!nodeId || !onsmartartnodefill || editing) {return;}
 		const rect = nodeRect(event.currentTarget as SVGGElement);
 		if (rect) {hovered = { nodeId, left: Math.max(0, rect.left), top: Math.max(0, rect.top - 26) };}
@@ -170,7 +181,7 @@
 			aria-label={ariaLabel}
 		>
 			{#if view.kind === 'drawing'}
-				<SmartArtDrawingView {view} canEditNodeText={Boolean(onsmartartnodecommit)} onopeneditor={openEditor} onshowstyle={showStyle} />
+				<SmartArtDrawingView {view} canEditNodeText={Boolean(onsmartartnodecommit)} onopeneditor={openEditor} onshowstyle={showStyle} onhidestyle={scheduleHide} />
 			{:else if view.kind === 'layout'}
 				<svg
 					class="pptx-svelte-smartart-svg"
@@ -192,6 +203,7 @@
 							aria-label={node.ariaLabel}
 							ondblclick={(event) => openEditor(event, node.nodeId)}
 							onmouseenter={(event) => showStyle(event, node.nodeId)}
+							onmouseleave={scheduleHide}
 						>
 							{#if node.ariaLabel}<title>{node.ariaLabel}</title>{/if}
 							{#if node.kind === 'circle'}
@@ -209,7 +221,7 @@
 				<div class="pptx-svelte-smartart-placeholder">{t('pptx.smartArt.placeholder')}</div>
 			{/if}
 			{#if hovered && !editing}
-				<div class="pptx-svelte-smartart-swatches" role="group" aria-label={t('pptx.smartArt.fillColor')} style={`left:${hovered.left}px;top:${hovered.top}px`} onmouseleave={() => (hovered = null)}>
+				<div class="pptx-svelte-smartart-swatches" role="group" aria-label={t('pptx.smartArt.fillColor')} style={`left:${hovered.left}px;top:${hovered.top}px`} onmouseenter={cancelHide} onmouseleave={() => (hovered = null)}>
 					{#each palette.slice(0, 6) as color (color)}
 						<button type="button" aria-label={`${t('pptx.smartArt.fillColor')} ${color}`} style={`background:${color}`} data-pptx-compact onclick={() => { if (smartArt) onsmartartnodefill?.(smartArt.id, hovered!.nodeId, color); hovered = null; }}></button>
 					{/each}
