@@ -140,6 +140,16 @@ describe('smartArtElement - inline node-text-edit overlay', () => {
 		expect(container.querySelector('.opacity-0')).not.toBeNull();
 	});
 
+	it('lays the overlay over the scene instead of after it in the flow', () => {
+		resolveSmartArtThreeViewSpec.mockReturnValue(SPEC);
+		render(true, { canEdit: true, onUpdateElement: vi.fn() });
+		const copy = container.querySelector('.opacity-0');
+		const layer = copy?.closest('.absolute.inset-0:not(.opacity-0)');
+		// A flow sibling lands below the scene, so its node groups never sit under the pointer.
+		expect(layer).not.toBeNull();
+		expect(layer?.parentElement?.contains(container.querySelector('pptx-three-view'))).toBe(true);
+	});
+
 	it('renders no edit overlay on a read-only mount', () => {
 		resolveSmartArtThreeViewSpec.mockReturnValue(SPEC);
 		render(true, { canEdit: false });

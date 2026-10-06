@@ -6,12 +6,12 @@
  *
  * @module render/ribbon-galleries/smartart-layouts-gallery
  */
-import { SWITCHABLE_LAYOUT_TYPES, switchSmartArtLayout } from 'pptx-viewer-core';
+import { SWITCHABLE_LAYOUT_TYPES } from 'pptx-viewer-core';
 
 import { SMARTART_LAYOUT_LABEL_KEYS } from '../schema-label-keys';
 import type { RibbonGalleryModule } from './gallery-module';
 import { galleryColorScheme } from './gallery-theme';
-import { smartArtElementPatch } from './smartart-gallery-patch';
+import { smartArtElementPatch, smartArtLayoutSwitchPatch } from './smartart-gallery-patch';
 import { smartArtLayoutTileSvg } from './smartart-layout-tiles';
 
 const TILE = { width: 56, height: 36 };
@@ -54,16 +54,11 @@ export const SMARTART_LAYOUTS_GALLERY: RibbonGalleryModule = {
 		if ((element.smartArtData.resolvedLayoutType ?? 'list') === type) {
 			return null;
 		}
-		const updated = switchSmartArtLayout(element.smartArtData, type);
 		// drawingShapes is forwarded (cleared) so the reflow regenerates the new layout.
-		const patch = smartArtElementPatch(element, {
-			layoutType: updated.layoutType,
-			resolvedLayoutType: updated.resolvedLayoutType,
-			layout: updated.layout,
-			layoutDirty: updated.layoutDirty,
-			drawingDirty: updated.drawingDirty,
-			drawingShapes: updated.drawingShapes,
-		});
+		const patch = smartArtElementPatch(
+			element,
+			smartArtLayoutSwitchPatch(element.smartArtData, type),
+		);
 		return patch ? { kind: 'element', ...patch } : null;
 	},
 };

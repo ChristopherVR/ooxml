@@ -4,7 +4,6 @@ import {
 	promoteSmartArtNode,
 	removeSmartArtNode,
 	setSmartArtNodeStyle,
-	switchSmartArtLayout,
 	updateSmartArtNodeText,
 } from 'pptx-viewer-core';
 import type {
@@ -16,7 +15,11 @@ import type {
 	SmartArtLayoutType,
 	SmartArtStyle,
 } from 'pptx-viewer-core';
-import { rebuildDrawingShapesIfCleared, resolvePalette } from 'pptx-viewer-shared';
+import {
+	rebuildDrawingShapesIfCleared,
+	resolvePalette,
+	smartArtLayoutSwitchPatch,
+} from 'pptx-viewer-shared';
 import type { BoundingBox } from 'pptx-viewer-shared';
 import { computed } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
@@ -298,16 +301,9 @@ export function useSmartArtEditing(input: UseSmartArtEditingInput): SmartArtEdit
 		if (layout === currentLayout.value) {
 			return;
 		}
-		const updated = switchSmartArtLayout(smartArtData.value, layout);
-		// drawingShapes must be forwarded (cleared to undefined) so the reflow
-		// pipeline regenerates shapes for the new layout instead of keeping the
-		// old layout's stale shapes.
-		patchData({
-			layoutType: updated.layoutType,
-			resolvedLayoutType: updated.resolvedLayoutType,
-			layout: updated.layout,
-			drawingShapes: updated.drawingShapes,
-		});
+		// Cleared fields (the old layoutDefinition, drawingShapes) must be forwarded
+		// too, or the old layout keeps driving the relayout.
+		patchData(smartArtLayoutSwitchPatch(smartArtData.value, layout));
 	}
 
 	return {

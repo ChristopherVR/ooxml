@@ -1,5 +1,6 @@
 import type { PptxSmartArtData, SmartArtLayoutType } from 'pptx-viewer-core';
-import { SWITCHABLE_LAYOUT_TYPES, switchSmartArtLayout } from 'pptx-viewer-core';
+import { SWITCHABLE_LAYOUT_TYPES } from 'pptx-viewer-core';
+import { smartArtLayoutSwitchPatch } from 'pptx-viewer-shared';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -57,18 +58,9 @@ export function SmartArtLayoutSwitcher({
 			return;
 		}
 
-		const updated = switchSmartArtLayout(smartArtData, newLayout);
-		// Only send the diff fields that changed. drawingShapes must be forwarded
-		// (cleared to undefined) so the reflow pipeline regenerates shapes for
-		// the new layout instead of keeping the old layout's stale shapes.
-		onUpdateSmartArt({
-			layoutType: updated.layoutType,
-			resolvedLayoutType: updated.resolvedLayoutType,
-			layout: updated.layout,
-			layoutDirty: updated.layoutDirty,
-			drawingDirty: updated.drawingDirty,
-			drawingShapes: updated.drawingShapes,
-		});
+		// Cleared fields (the old layoutDefinition, drawingShapes) must be forwarded
+		// too, or the old layout keeps driving the relayout.
+		onUpdateSmartArt(smartArtLayoutSwitchPatch(smartArtData, newLayout));
 	};
 
 	return (

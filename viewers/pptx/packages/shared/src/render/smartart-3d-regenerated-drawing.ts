@@ -15,6 +15,18 @@ import type { PptxSmartArtData } from 'pptx-viewer-core';
 import { relayoutSmartArt, smartArtQuickStyleHas3d } from 'pptx-viewer-core';
 
 /**
+ * Whether `data` still holds a drawing the producing application cached. Shapes
+ * the 2D reflow rebuilt after an edit (`reflow-` ids, flat fills, polygons
+ * reduced to chevrons) are not one: a layout or style change from the ribbon
+ * rebuilds them straight away, which would otherwise keep the 3D scene on the
+ * flat copy instead of the quick style's own 3D.
+ */
+function hasCachedDrawing(data: PptxSmartArtData): boolean {
+	const shapes = data.drawingShapes ?? [];
+	return shapes.length > 0 && !shapes.every((shape) => shape.id.startsWith('reflow-'));
+}
+
+/**
  * `data` with regenerated, 3D-styled `drawingShapes` when its cached drawing
  * is gone and its quick style carries 3D; otherwise `data` itself (an intact
  * drawing, or a flat style that keeps the existing layout-engine path).
@@ -23,7 +35,7 @@ export function withRegeneratedSmartArt3DDrawing(
 	data: PptxSmartArtData,
 	size: { width: number; height: number },
 ): PptxSmartArtData {
-	if ((data.drawingShapes?.length ?? 0) > 0 || !smartArtQuickStyleHas3d(data.quickStyle)) {
+	if (hasCachedDrawing(data) || !smartArtQuickStyleHas3d(data.quickStyle)) {
 		return data;
 	}
 	const drawingShapes = relayoutSmartArt(data, Math.max(size.width, 1), Math.max(size.height, 1));

@@ -104,3 +104,79 @@ export function smartArtNodeAtPoint(root: ParentNode, x: number, y: number): Ele
 	}
 	return best;
 }
+
+/** UI the layer hosts itself (editor, swatches): events on it are not routed to a node. */
+const LAYER_UI_SELECTOR = 'textarea, input, button, select, [role="group"]';
+
+/**
+ * Route a 3D edit layer's pointer input to the node under the pointer, found by
+ * geometry (`smartArtNodeAtPoint`) instead of by event target.
+ *
+ * The layer is an invisible copy under a perspective scene, and a node group is
+ * only hit where it paints (often its label alone), so a double-click or hover
+ * on the node's fill missed the group's own handlers. This forwards a
+ * double-click as `dblclick` and a change of hovered node as `mouseover` to the
+ * group, so each binding's existing editor and fill swatches run unchanged.
+ * Returns a function that removes the listeners.
+ */
+export function routeEditLayerPointerToNodes(layer: Element): () => void {
+	let forwarding = false;
+	let hovered: Element | null = null;
+
+	const forward = (node: Element, type: 'dblclick' | 'mouseover', source: MouseEvent): void => {
+		forwarding = true;
+		try {
+			node.dispatchEvent(
+				new MouseEvent(type, {
+					bubbles: true,
+					cancelable: true,
+					clientX: source.clientX,
+					clientY: source.clientY,
+				}),
+			);
+		} finally {
+			forwarding = false;
+		}
+	};
+	// Only UI inside the layer counts: an ancestor of the layer (the selected
+	// element's own `role="group"` wrapper, say) must not switch routing off.
+	const onUi = (event: Event): boolean => {
+		if (forwarding) {
+			return true;
+		}
+		const ui = event.target instanceof Element ? event.target.closest(LAYER_UI_SELECTOR) : null;
+		return ui !== null && ui !== layer && layer.contains(ui);
+	};
+
+	const onDblClick = (raw: Event): void => {
+		const event = raw as MouseEvent;
+		if (onUi(event)) {
+			return;
+		}
+		const node = smartArtNodeAtPoint(layer, event.clientX, event.clientY);
+		if (node) {
+			event.stopPropagation();
+			// Opening an editor hides the swatches; the next move over this node shows them again.
+			hovered = null;
+			forward(node, 'dblclick', event);
+		}
+	};
+	const onMouseMove = (raw: Event): void => {
+		const event = raw as MouseEvent;
+		if (onUi(event)) {
+			return;
+		}
+		const node = smartArtNodeAtPoint(layer, event.clientX, event.clientY);
+		if (node && node !== hovered) {
+			forward(node, 'mouseover', event);
+		}
+		hovered = node;
+	};
+
+	layer.addEventListener('dblclick', onDblClick, true);
+	layer.addEventListener('mousemove', onMouseMove, true);
+	return () => {
+		layer.removeEventListener('dblclick', onDblClick, true);
+		layer.removeEventListener('mousemove', onMouseMove, true);
+	};
+}

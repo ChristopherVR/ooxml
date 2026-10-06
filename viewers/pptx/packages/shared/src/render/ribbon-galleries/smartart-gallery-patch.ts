@@ -12,8 +12,10 @@
  *
  * @module render/ribbon-galleries/smartart-gallery-patch
  */
+import { switchSmartArtLayout } from 'pptx-viewer-core';
 import type {
 	PptxElement,
+	SmartArtLayoutType,
 	PptxSmartArtData,
 	PptxThemeColorScheme,
 	SmartArtColorScheme,
@@ -48,6 +50,31 @@ export function applySmartArtDataPatch(
 				box,
 			)
 		: next;
+}
+
+/**
+ * The fields a layout switch changes, for a binding that sends a patch rather
+ * than the whole data. A switch also CLEARS the previous layout's parsed
+ * `layoutDefinition` and `presLayoutVars`; a patch that leaves them out keeps
+ * them on the element, and the layout engine then runs the old definition ahead
+ * of the new family (the diagram keeps its old arrangement or breaks).
+ * `drawingShapes` is forwarded cleared so the shapes are rebuilt.
+ */
+export function smartArtLayoutSwitchPatch(
+	data: PptxSmartArtData,
+	layout: SmartArtLayoutType,
+): Partial<PptxSmartArtData> {
+	const updated = switchSmartArtLayout(data, layout);
+	return {
+		layoutType: updated.layoutType,
+		resolvedLayoutType: updated.resolvedLayoutType,
+		layout: updated.layout,
+		layoutDefinition: updated.layoutDefinition,
+		presLayoutVars: updated.presLayoutVars,
+		layoutDirty: updated.layoutDirty,
+		drawingDirty: updated.drawingDirty,
+		drawingShapes: updated.drawingShapes,
+	};
 }
 
 /** The element patch for a SmartArt style / colour change, or null for a non-SmartArt. */

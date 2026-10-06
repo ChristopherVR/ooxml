@@ -9,7 +9,7 @@
  * @module useSmartArtHoverState
  */
 
-import { computeInlineEditorRect } from 'pptx-viewer-shared';
+import { computeInlineEditorRect, smartArtNodeAtPoint } from 'pptx-viewer-shared';
 import type { InlineEditRect } from 'pptx-viewer-shared';
 import React from 'react';
 
@@ -39,6 +39,21 @@ export function findNodeIdFromEvent(target: EventTarget | null): Element | null 
 		el = el.parentElement;
 	}
 	return null;
+}
+
+/**
+ * The node under a mouse event: by geometry within `host` first, then by event
+ * target. The 3D edit layer is an invisible copy whose groups take no pointer
+ * events and sits under a perspective scene, so the target is often the layer
+ * itself rather than the node the pointer is over.
+ */
+export function findNodeFromMouseEvent(
+	e: { clientX: number; clientY: number; target: EventTarget | null },
+	host: Element | null,
+): Element | null {
+	return (
+		(host ? smartArtNodeAtPoint(host, e.clientX, e.clientY) : null) ?? findNodeIdFromEvent(e.target)
+	);
 }
 
 // ── Hook return type ──────────────────────────────────────────────────────────
@@ -95,7 +110,7 @@ export function useSmartArtHoverState(
 			e: React.MouseEvent<HTMLDivElement>,
 			ignoreRef?: React.RefObject<HTMLElement | null>,
 		): void => {
-			const nodeEl = findNodeIdFromEvent(e.target);
+			const nodeEl = findNodeFromMouseEvent(e, containerRef.current);
 			const container = containerRef.current;
 			if (nodeEl && container) {
 				cancelPendingHide();

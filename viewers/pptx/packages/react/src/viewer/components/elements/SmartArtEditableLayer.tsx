@@ -7,7 +7,7 @@ import { SmartArtInlineNodeEditor } from './SmartArtInlineNodeEditor';
 import { SmartArtNodeStyleBar } from './SmartArtNodeStyleBar';
 import {
 	NODE_ID_ATTR,
-	findNodeIdFromEvent,
+	findNodeFromMouseEvent,
 	measureScreenNodeRect,
 	useSmartArtHoverState,
 } from './useSmartArtHoverState';
@@ -88,8 +88,7 @@ export function SmartArtEditableLayer({
 	);
 
 	const openEditor = React.useCallback(
-		(target: EventTarget | null): void => {
-			const nodeEl = findNodeIdFromEvent(target);
+		(nodeEl: Element | null): void => {
 			const container = containerRef.current;
 			if (!nodeEl || !container) {
 				return;
@@ -153,10 +152,10 @@ export function SmartArtEditableLayer({
 			// Editing is a deliberate double-click; single clicks still select /
 			// drag the SmartArt element via the parent handlers.
 			onDoubleClick={(e) => {
-				const nodeEl = findNodeIdFromEvent(e.target);
+				const nodeEl = findNodeFromMouseEvent(e, containerRef.current);
 				if (nodeEl) {
 					e.stopPropagation();
-					openEditor(e.target);
+					openEditor(nodeEl);
 				}
 			}}
 		>

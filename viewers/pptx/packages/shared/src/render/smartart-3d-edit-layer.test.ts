@@ -1,7 +1,11 @@
 // @vitest-environment happy-dom
 import { describe, expect, it } from 'vitest';
 
-import { smartArtNodeAtPoint, stripEditLayerMarkers } from './smartart-3d-edit-layer';
+import {
+	routeEditLayerPointerToNodes,
+	smartArtNodeAtPoint,
+	stripEditLayerMarkers,
+} from './smartart-3d-edit-layer';
 
 describe('stripEditLayerMarkers', () => {
 	it('removes element markers but keeps node ids', () => {
@@ -75,5 +79,66 @@ describe('smartArtNodeAtPoint', () => {
 		expect(smartArtNodeAtPoint(root, 100, 100)?.getAttribute('data-smartart-node-id')).toBe('b');
 		expect(smartArtNodeAtPoint(root, 20, 20)?.getAttribute('data-smartart-node-id')).toBe('a');
 		expect(smartArtNodeAtPoint(root, 60, 60)).toBeNull();
+	});
+});
+
+describe('routeEditLayerPointerToNodes', () => {
+	function layerWithNode(): { layer: HTMLElement; node: Element } {
+		const layer = document.createElement('div');
+		const node = document.createElement('div');
+		node.setAttribute('data-smartart-node-id', 'n1');
+		node.getBoundingClientRect = () =>
+			({ left: 0, top: 0, width: 100, height: 100, right: 100, bottom: 100 }) as DOMRect;
+		layer.append(node);
+		document.body.append(layer);
+		return { layer, node };
+	}
+
+	it('forwards a double-click on the node fill to the node, once', () => {
+		const { layer, node } = layerWithNode();
+		const seen: string[] = [];
+		node.addEventListener('dblclick', () => seen.push('node'));
+		const stop = routeEditLayerPointerToNodes(layer);
+		// The pointer is on the layer, not on the node's own (unpainted) group.
+		layer.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, clientX: 10, clientY: 10 }));
+		expect(seen).toStrictEqual(['node']);
+		stop();
+		layer.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, clientX: 10, clientY: 10 }));
+		expect(seen).toStrictEqual(['node']);
+	});
+
+	it('forwards a hover only when the hovered node changes', () => {
+		const { layer, node } = layerWithNode();
+		let overs = 0;
+		node.addEventListener('mouseover', () => (overs += 1));
+		routeEditLayerPointerToNodes(layer);
+		for (const x of [5, 10, 20]) {
+			layer.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: x, clientY: 5 }));
+		}
+		expect(overs).toBe(1);
+	});
+
+	it("leaves the layer's own controls alone", () => {
+		const { layer, node } = layerWithNode();
+		const button = document.createElement('button');
+		layer.append(button);
+		let dbl = 0;
+		node.addEventListener('dblclick', () => (dbl += 1));
+		routeEditLayerPointerToNodes(layer);
+		button.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, clientX: 10, clientY: 10 }));
+		expect(dbl).toBe(0);
+	});
+
+	it('ignores a role=group ancestor of the layer', () => {
+		const { layer, node } = layerWithNode();
+		const wrapper = document.createElement('div');
+		wrapper.setAttribute('role', 'group');
+		document.body.append(wrapper);
+		wrapper.append(layer);
+		let dbl = 0;
+		node.addEventListener('dblclick', () => (dbl += 1));
+		routeEditLayerPointerToNodes(layer);
+		layer.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, clientX: 10, clientY: 10 }));
+		expect(dbl).toBe(1);
 	});
 });

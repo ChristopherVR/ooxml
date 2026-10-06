@@ -99,6 +99,21 @@ describe('useSmartArtEditing', () => {
 		expect(next.nodes).toHaveLength(3);
 	});
 
+	it('switchLayout drops the previous layout definition so the new layout is drawn', () => {
+		const { computed: data } = dataRef(
+			baseData({
+				layoutDefinition: { uniqueId: 'urn:test/layout/old' },
+				presLayoutVars: { direction: 'norm' },
+			} as Partial<PptxSmartArtData>),
+		);
+		const apply = vi.fn();
+		const api = useSmartArtEditing({ smartArtData: data, apply });
+		api.switchLayout('cycle');
+		const next = patchData(apply.mock.calls[0][0]);
+		expect(next.layoutDefinition).toBeUndefined();
+		expect(next.presLayoutVars).toBeUndefined();
+	});
+
 	it('never mutates the input data object', () => {
 		const initial = baseData();
 		const { computed: data } = dataRef(initial);

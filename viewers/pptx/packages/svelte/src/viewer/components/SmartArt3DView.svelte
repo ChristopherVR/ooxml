@@ -26,6 +26,7 @@
 		resolveSmartArtThreeViewSpec,
 		shouldRenderHitTarget,
 		stripEditLayerMarkers,
+		routeEditLayerPointerToNodes,
 	} from 'pptx-viewer-shared';
 
 	import { useRendering3DFlags } from '../state/rendering-3d-flags-context';
@@ -70,7 +71,13 @@
 		strip();
 		const observer = new MutationObserver(strip);
 		observer.observe(node, { subtree: true, childList: true, attributes: true, attributeFilter: [...EDIT_LAYER_MARKER_ATTRS] });
-		return { destroy: () => observer.disconnect() };
+		const unroute = routeEditLayerPointerToNodes(node);
+		return {
+			destroy: () => {
+				observer.disconnect();
+				unroute();
+			},
+		};
 	}
 </script>
 

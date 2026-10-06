@@ -9,14 +9,23 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 import type { PptxSlide, SmartArtPptxElement } from 'pptx-viewer-core';
-import { PptxHandler, addSmartArtNode, removeSmartArtNode } from 'pptx-viewer-core';
+import {
+	PptxHandler,
+	addSmartArtNode,
+	removeSmartArtNode,
+	switchSmartArtLayout,
+} from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 
+import { applySmartArtDataPatch } from './ribbon-galleries/smartart-gallery-patch';
 import { buildSmartArt3DSpecForElement } from './smartart-3d-element';
 import { withRegeneratedSmartArt3DDrawing } from './smartart-3d-regenerated-drawing';
 
 const fixture = fileURLToPath(
-	new URL('../../../../../../e2e/pptx/fixtures/three-d-parity/three-d-smartart.pptx', import.meta.url),
+	new URL(
+		'../../../../../../e2e/pptx/fixtures/three-d-parity/three-d-smartart.pptx',
+		import.meta.url,
+	),
 );
 
 async function loadDeck(): Promise<{ handler: PptxHandler; slides: PptxSlide[] }> {
@@ -82,5 +91,28 @@ describe('structurally edited SmartArt in the shared 3D scene', () => {
 		expect(withRegeneratedSmartArt3DDrawing(flat.smartArtData!, size)).toBe(flat.smartArtData);
 		const intact = smartArtOn(slides, 5).smartArtData!;
 		expect(withRegeneratedSmartArt3DDrawing(intact, size)).toBe(intact);
+	});
+	it('bevel (slide 6): a layout switch keeps the quick style 3D over the rebuilt flat shapes', async () => {
+		const { slides } = await loadDeck();
+		const element = smartArtOn(slides, 5);
+		const switched = switchSmartArtLayout(element.smartArtData!, 'cycle');
+		element.smartArtData = applySmartArtDataPatch(
+			element.smartArtData!,
+			{
+				layoutType: switched.layoutType,
+				resolvedLayoutType: switched.resolvedLayoutType,
+				layout: switched.layout,
+				layoutDefinition: switched.layoutDefinition,
+				presLayoutVars: switched.presLayoutVars,
+				drawingShapes: switched.drawingShapes,
+			},
+			{ width: element.width, height: element.height },
+			element.id,
+		);
+		const shapes = element.smartArtData.drawingShapes ?? [];
+		expect(shapes.length).toBeGreaterThan(0);
+		expect(shapes.every((shape) => shape.id.startsWith('reflow-'))).toBe(true);
+		const spec = buildSmartArt3DSpecForElement(element);
+		expect(spec?.styleCategory).toBe('bevel');
 	});
 });

@@ -1,4 +1,4 @@
-import { measureSvgViewportRect } from 'pptx-viewer-shared';
+import { measureSvgViewportRect, smartArtNodeAtPoint } from 'pptx-viewer-shared';
 import type { InlineEditRect } from 'pptx-viewer-shared';
 import { onUnmounted, ref } from 'vue';
 import type { Ref } from 'vue';
@@ -39,7 +39,13 @@ export function useSmartArtHoverRect(containerRef: Ref<HTMLElement | null>) {
 	 * state, since the popover would then unmount out from under the pointer.
 	 */
 	function onMouseMove(e: MouseEvent, ignoreEl?: HTMLElement | null): void {
-		const nodeEl = findNodeEl(e.target as EventTarget);
+		// By geometry first (the 3D hit-test overlay's groups take no pointer
+		// events and sit under a perspective scene), then by event target for the
+		// 2D diagram, whose groups do.
+		const host = e.currentTarget;
+		const nodeEl =
+			(host instanceof Element ? smartArtNodeAtPoint(host, e.clientX, e.clientY) : null) ??
+			findNodeEl(e.target as EventTarget);
 		const container = containerRef.value;
 		if (nodeEl && container) {
 			cancelPendingHide();

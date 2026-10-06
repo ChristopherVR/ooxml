@@ -25,6 +25,7 @@ import {
 	resolvePalette,
 	resolveSmartArtThreeViewSpec,
 	shouldCommitSmartArtNodeText,
+	smartArtNodeAtPoint,
 } from 'pptx-viewer-shared';
 import type { TextStyleAnimationDescriptor } from 'pptx-viewer-shared';
 import { computed, nextTick, ref } from 'vue';
@@ -151,25 +152,19 @@ function handleChangeNodeStyle(nodeId: string, fill: string): void {
 	}
 }
 
-/** Walk up from an event target to find the nearest element with data-node-id. */
-function findNodeEl(target: EventTarget | null): Element | null {
-	let el = target instanceof Element ? target : null;
-	while (el) {
-		if (el.hasAttribute('data-node-id')) {
-			return el;
-		}
-		el = el.parentElement;
-	}
-	return null;
-}
-
 function onOverlayDblClick(e: MouseEvent): void {
-	const nodeEl = findNodeEl(e.target);
+	// By geometry, not by event target: the overlay is invisible and the scene is
+	// drawn in perspective, so the pointer often lands on a gap in the overlay.
+	const overlay = e.currentTarget;
 	const container = containerRef.value;
-	if (!nodeEl || !container) {
+	if (!(overlay instanceof Element) || !container) {
 		return;
 	}
-	const nodeId = nodeEl.getAttribute('data-node-id');
+	const nodeEl = smartArtNodeAtPoint(overlay, e.clientX, e.clientY);
+	if (!nodeEl) {
+		return;
+	}
+	const nodeId = nodeEl.getAttribute('data-smartart-node-id');
 	if (!nodeId || !nodeEdit) {
 		return;
 	}

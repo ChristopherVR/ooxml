@@ -12,3 +12,4 @@ export * from './picture-adjust-tile-svg';
 export * from './picture-artistic-gallery';
 export * from './picture-color-gallery';
 export * from './picture-corrections-gallery';
+export { smartArtLayoutSwitchPatch } from './smartart-gallery-patch';

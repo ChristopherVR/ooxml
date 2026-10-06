@@ -2,6 +2,7 @@ import {
 	elementInLocalFrame,
 	resolveSmartArtThreeViewSpec,
 	stripEditLayerMarkers,
+	routeEditLayerPointerToNodes,
 } from 'pptx-viewer-shared';
 
 import type { ElementRenderer } from '../types';
@@ -52,6 +53,8 @@ export const renderSmartArt3DElement: ElementRenderer = (element, zIndex, contex
 				svg.style.opacity = '0';
 			}
 			wrapper.appendChild(layer);
+			// Nodes are hit by geometry: the copy is invisible under a perspective scene.
+			routeEditLayerPointerToNodes(layer);
 		}
 	}
 	return wrapper;

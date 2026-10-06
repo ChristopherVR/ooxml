@@ -100,21 +100,23 @@ export function SmartArt3DView({
 	return (
 		<div className='relative' style={{ width: element.width, height: element.height }}>
 			{sceneNode}
-			{/* Invisible SVG hit-test layer: pointer-events fire on tagged node groups */}
-			<SmartArtEditableLayer
-				smartArtData={smartArtData}
-				canEdit
-				onCommitNodeText={handleCommitNodeText}
-				palette={resolvePalette(smartArtData)}
-				onChangeNodeStyle={handleChangeNodeStyle}
-				// In the diagram's own SVG coordinates, as the 2D renderer measures:
-				// screen rects are wrong once the element is turned or the slide zoomed.
-				measureNodeRect={measureSvgViewportRect}
-			>
-				<div className='absolute inset-0 opacity-0'>
-					<SmartArtRenderer element={element} canEdit={false} />
-				</div>
-			</SmartArtEditableLayer>
+			{/* Invisible SVG hit-test layer, laid over the scene (not after it in flow). */}
+			<div className='absolute inset-0' style={{ zIndex: 1 }}>
+				<SmartArtEditableLayer
+					smartArtData={smartArtData}
+					canEdit
+					onCommitNodeText={handleCommitNodeText}
+					palette={resolvePalette(smartArtData)}
+					onChangeNodeStyle={handleChangeNodeStyle}
+					// In the diagram's own SVG coordinates, as the 2D renderer measures:
+					// screen rects are wrong once the element is turned or the slide zoomed.
+					measureNodeRect={measureSvgViewportRect}
+				>
+					<div className='absolute inset-0 opacity-0'>
+						<SmartArtRenderer element={element} canEdit={false} />
+					</div>
+				</SmartArtEditableLayer>
+			</div>
 		</div>
 	);
 }
