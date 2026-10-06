@@ -87,6 +87,7 @@ test.describe('field substitution', () => {
 	test('every binding resolves the slide-number field to its own slide', async ({
 		browser,
 	}, testInfo) => {
+		test.slow();
 		const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
 			await loadDeckAt(page, origin, DECK);
 			return textPerSlide(page);
@@ -125,6 +126,7 @@ test.describe('field substitution', () => {
 	test('an inline field stays in the position it was authored in', async ({
 		browser,
 	}, testInfo) => {
+		test.slow();
 		const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
 			await loadDeckAt(page, origin, DECK);
 			return textPerSlide(page);
@@ -149,6 +151,7 @@ test.describe('field substitution', () => {
 	test('thumbnails resolve their own slide number, not the active one', async ({
 		browser,
 	}, testInfo) => {
+		test.slow();
 		const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
 			await loadDeckAt(page, origin, DECK);
 			// Move off slide 1 first: a binding that resolves every stage against the
