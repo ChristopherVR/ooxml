@@ -15,9 +15,10 @@ import type * as THREE from 'three';
 
 import type { SmartArt3DTextBlock } from '../render/smartart-3d-types';
 import type { ThreeModule } from '../three-view/types';
+import { layoutTextBlock } from './text-block-layout';
 
-/** Supersampling factor for crisp text at any zoom. */
-const SUPERSAMPLE = 3;
+/** Anisotropic filtering for labels seen at a steep angle (three clamps it to the GPU's maximum). */
+const ANISOTROPY = 8;
 
 /** A built label texture plus the world-space plane size it should fill. */
 export interface TextBlockTexture {
@@ -34,11 +35,7 @@ export function buildTextBlockTexture(
 	if (typeof document === 'undefined' || block.lines.every((l) => l.text.length === 0)) {
 		return null;
 	}
-	const worldWidth = Math.max(1, block.maxWidth);
-	const worldHeight = Math.max(1, block.maxHeight);
 	const canvas = document.createElement('canvas');
-	canvas.width = Math.max(8, Math.round(worldWidth * SUPERSAMPLE));
-	canvas.height = Math.max(8, Math.round(worldHeight * SUPERSAMPLE));
 	const ctx2d = canvas.getContext('2d');
 	if (!ctx2d) {
 		return null;
@@ -49,7 +46,21 @@ export function buildTextBlockTexture(
 	const family = block.fontFamily
 		? `${block.fontFamily}, system-ui, sans-serif`
 		: 'system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
-	const px = Math.max(6, block.fontSize) * SUPERSAMPLE;
+	const fontSize = Math.max(6, block.fontSize);
+	const fontAt = (scale: number): string => `${italic}${weight} ${fontSize * scale}px ${family}`;
+
+	// Measure at a fixed 4x so the layout does not depend on the canvas it sizes.
+	const MEASURE = 4;
+	ctx2d.font = fontAt(MEASURE);
+	const layout = layoutTextBlock(
+		block,
+		(text) => ctx2d.measureText(text).width / MEASURE,
+		typeof window === 'undefined' ? 1 : window.devicePixelRatio,
+	);
+	const { worldWidth, worldHeight, scale } = layout;
+	// Resizing resets the context state, so every property is set after it.
+	canvas.width = layout.pixelWidth;
+	canvas.height = layout.pixelHeight;
 
 	ctx2d.clearRect(0, 0, canvas.width, canvas.height);
 	ctx2d.fillStyle = block.color;
@@ -57,7 +68,7 @@ export function buildTextBlockTexture(
 	// `dy` places each line's CENTRE (as `centeredSvgTextLines` lays it out,
 	// and the 2D renderers draw with `dominant-baseline: central`).
 	ctx2d.textBaseline = 'middle';
-	ctx2d.font = `${italic}${weight} ${px}px ${family}`;
+	ctx2d.font = fontAt(scale);
 	const centerX = canvas.width / 2;
 	const centerY = canvas.height / 2;
 	for (const line of block.lines) {
@@ -65,13 +76,16 @@ export function buildTextBlockTexture(
 			continue;
 		}
 		// `dy` is a y-up offset from the block centre; canvas y grows downward.
-		ctx2d.fillText(line.text, centerX, centerY - line.dy * SUPERSAMPLE);
+		ctx2d.fillText(line.text, centerX, centerY - line.dy * scale);
 	}
 
 	const texture = new three.CanvasTexture(canvas);
 	texture.colorSpace = three.SRGBColorSpace;
-	texture.minFilter = three.LinearFilter;
+	// Mipmaps and anisotropy keep a tilted or shrunk label smooth instead of shimmering.
+	texture.generateMipmaps = true;
+	texture.minFilter = three.LinearMipmapLinearFilter;
 	texture.magFilter = three.LinearFilter;
+	texture.anisotropy = ANISOTROPY;
 	// See `smartart-3d/text-texture.ts` for why flipY must stay false with a
 	// compensating UV flip: WebGL2 forbids UNPACK_FLIP_Y_WEBGL for some texture
 	// targets, and leaving it enabled pollutes global pixel-store state.
