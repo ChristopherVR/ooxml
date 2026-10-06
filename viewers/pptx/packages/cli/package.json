@@ -19,16 +19,16 @@
 		"slides",
 		"vue"
 	],
-	"homepage": "https://github.com/ChristopherVR/pptx-viewer",
+	"homepage": "https://christophervr.github.io/ooxml/pptx/",
 	"bugs": {
-		"url": "https://github.com/ChristopherVR/pptx-viewer/issues"
+		"url": "https://github.com/ChristopherVR/ooxml/issues"
 	},
 	"license": "Apache-2.0",
 	"author": "ChristopherVR",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/ChristopherVR/pptx-viewer.git",
-		"directory": "packages/cli"
+		"url": "git+https://github.com/ChristopherVR/ooxml.git",
+		"directory": "viewers/pptx/packages/cli"
 	},
 	"bin": {
 		"pptx-viewer": "./dist/cli.mjs"

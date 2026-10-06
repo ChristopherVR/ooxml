@@ -7,6 +7,11 @@
  * directory therefore releases every package marked `bundled`, and a change to one of the
  * viewer's shared build files (`globals`) releases every package of that viewer, except one
  * marked `global: false` (the teams server ships its own source).
+ *
+ * The pptx bindings also inline the core code they import (their bundles have no `ooxml-core`
+ * import), so `inlinedCore` lists those core paths, relative to the repository root, as further
+ * triggers of every bundled package. Before the viewer moved here, every core release reached
+ * them through a dependency bump instead.
  */
 
 const FRAMEWORKS = ['react', 'vue', 'angular', 'svelte', 'solid', 'vanilla'];
@@ -20,8 +25,11 @@ const frameworks = (name) =>
 		]),
 	);
 
-/** The entries of one viewer. `bundled` and `globals` are paths relative to `viewers/<viewer>`. */
-function viewer(name, { bundled, globals, packages }) {
+/**
+ * The entries of one viewer. `bundled` and `globals` are paths relative to `viewers/<viewer>`;
+ * `inlinedCore` is relative to the repository root.
+ */
+function viewer(name, { bundled, inlinedCore = [], globals, packages }) {
 	const at = (path) => `viewers/${name}/${path}`;
 	return Object.fromEntries(
 		Object.entries(packages).map(([key, meta]) => [
@@ -29,12 +37,28 @@ function viewer(name, { bundled, globals, packages }) {
 			{
 				dir: at(meta.dir),
 				npm: meta.npm,
-				...(meta.bundled ? { triggers: bundled.map(at) } : {}),
+				...(meta.bundled ? { triggers: [...bundled.map(at), ...inlinedCore] } : {}),
 				...(meta.global === false ? {} : { globals: globals.map(at) }),
 			},
 		]),
 	);
 }
+
+/**
+ * The core areas (and the pptx bundler configs) the pptx bindings inline: the `pptx` area, the
+ * areas it imports, and the subpaths the viewer imports directly.
+ */
+const PPTX_INLINED_CORE = [
+	...['pptx', 'automation', 'chart', 'color', 'crypto', 'diagram', 'geometry', 'math', 'opc'].map(
+		(area) => `src/core/${area}`,
+	),
+	...['text', 'units', 'xml'].map((area) => `src/core/${area}`),
+	'src/core/tsup.pptx.config.ts',
+	'src/core/tsdown.pptx.config.ts',
+];
+
+/** pptx publishes five bindings (no Solid) that each inline core, shared and locales. */
+const PPTX_FRAMEWORKS = ['react', 'vue', 'angular', 'svelte', 'vanilla'];
 
 export const VIEWER_PACKAGES = {
 	...viewer('docx', {
@@ -64,6 +88,22 @@ export const VIEWER_PACKAGES = {
 			mcp: { dir: 'mcp', npm: 'visio-viewer-mcp' },
 			core: { dir: 'packages/core', npm: 'visio-core' },
 			...frameworks((framework) => `visio-${framework}-viewer`),
+		},
+	}),
+	...viewer('pptx', {
+		bundled: ['packages/core', 'packages/shared', 'packages/locales'],
+		inlinedCore: PPTX_INLINED_CORE,
+		globals: ['tsconfig.json', 'scripts/bundle-declarations.mjs'],
+		packages: {
+			core: { dir: 'packages/core', npm: 'pptx-viewer-core' },
+			mcp: { dir: 'packages/tools', npm: 'pptx-viewer-mcp' },
+			cli: { dir: 'packages/cli', npm: '@christophervr/pptx-viewer' },
+			...Object.fromEntries(
+				PPTX_FRAMEWORKS.map((framework) => [
+					framework,
+					{ dir: `packages/${framework}`, npm: `pptx-${framework}-viewer`, bundled: true },
+				]),
+			),
 		},
 	}),
 	...viewer('teams', {
