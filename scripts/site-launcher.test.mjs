@@ -51,7 +51,7 @@ test('suite appearance writes the Excel shared preference without reloading its 
 		contentDocument: { querySelector: () => null },
 		contentWindow: { location: { reload: () => reloads++ } },
 	};
-	initTheme(frame);
+	initTheme(() => [frame]);
 	handlers.get('click')();
 	assert.equal(currentTheme(), 'dark');
 	assert.equal(store.get('vitepress-theme-appearance'), 'dark');
