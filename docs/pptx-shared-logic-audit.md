@@ -22,17 +22,27 @@ formats can consume these APIs directly; extraction does not itself add Word
 chart rendering, equation editing or font-slot behavior. Source paths, commits
 and changes are recorded in `../PROVENANCE.md`.
 
+## Extracted on 2026-10-06
+
+| Shared area | Capability                                                                                                   |
+| ----------- | ------------------------------------------------------------------------------------------------------------ |
+| `chart`     | Pie best-fit labels and outside-label collision, radar geometry, squarified treemap, trendline equation text |
+| `color`     | Readable text colour over a fill, hex to unit RGB                                                            |
+| `text`      | Tab leader characters and decimal-tab anchoring                                                              |
+| `geometry`  | Snap guides and grid snapping, align and distribute                                                          |
+
+The viewer copies of the automatic axis, histogram binning and theme swatch modules, which had been duplicated rather than moved, now forward to the core.
+
 ## Remaining candidates and prerequisites
 
-| Candidate in `pptx-viewer/packages/shared/src/render` | Destination                                      | Required separation                                                                               |
-| ----------------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
-| `chart-histogram-binning.ts`                          | `chart`                                          | Neutral histogram options; keep label formatting out of the chart view-model dependency           |
-| `chart-axis-nice.ts`                                  | `chart`                                          | Retain the PowerPoint-derived automatic-axis policy; Excel uses a different interval policy today |
-| `chart-date-format.ts` and chart number formatting    | Existing `xlsx/numfmt` plus shared chart adapter | Resolve Excel serial-60 behavior and format-code contracts before consolidation                   |
-| `theme-color-swatches.ts`                             | `color` for luminance/scheme descriptors         | Product-specific theme-reference serialization and popup UI remain separate                       |
-| `smartart-drawing-viewbox.ts`                         | `diagram`                                        | Adapt from the PowerPoint model to shared drawing bounds, including separate text frames          |
-| Remaining SmartArt family layout approximations       | Neutral core diagram model/engine first          | Avoid treating the viewer's approximate family rendering as a complete layout engine              |
-| Font-picker catalogs and grouping                     | `ooxml-ui`                                       | Inject localization keys, theme/embedded fonts and product defaults                               |
+| Candidate in `pptx-viewer/packages/shared/src/render`     | Destination                                      | Required separation                                                                      |
+| --------------------------------------------------------- | ------------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| `chart-date-format.ts` and chart number formatting        | Existing `xlsx/numfmt` plus shared chart adapter | Resolve Excel serial-60 behavior and format-code contracts before consolidation          |
+| `smartart-drawing-viewbox.ts`                             | `diagram`                                        | Adapt from the PowerPoint model to shared drawing bounds, including separate text frames |
+| Remaining SmartArt family layout approximations           | Neutral core diagram model/engine first          | Avoid treating the viewer's approximate family rendering as a complete layout engine     |
+| Font-picker catalogs and grouping                         | `ooxml-ui`                                       | Inject localization keys, theme/embedded fonts and product defaults                      |
+| `editor-history.ts`, `secure-random.ts`                   | a neutral editor area (to decide)                | Visio and xlsx keep their own history; agree one snapshot contract first                 |
+| `path-gradient-rect.ts`, `chart-number-format-pattern.ts` | `drawingml` / `xlsx/numfmt`                      | Emits SVG markup today; number formats must reconcile with `xlsx/numfmt` first           |
 
 OMML equation converters are already in `math`. Preset shape evaluators and
 boolean operations already live in `geometry`. SmartArt interpreter compatibility
