@@ -9,6 +9,7 @@ import * as ooxmlCore from 'ooxml-core/pptx';
 import * as ooxmlConverter from 'ooxml-core/pptx/converter';
 import * as ooxmlSignatureNode from 'ooxml-core/pptx/signature-node';
 import * as ooxmlText from 'ooxml-core/text';
+import * as ooxmlUi from 'ooxml-core/pptx/ui';
 import { describe, expect, it } from 'vitest';
 
 import * as chart from './chart';
@@ -19,6 +20,7 @@ import * as core from './index';
 import * as math from './math';
 import * as signatureNode from './signature-node';
 import * as text from './text';
+import * as ui from './ui';
 
 const manifest = JSON.parse(readFileSync(resolve(__dirname, '../package.json'), 'utf8')) as {
 	dependencies: Record<string, string>;
@@ -39,6 +41,7 @@ describe('pptx-viewer-core is a thin entry point over ooxml-core', () => {
 		['./text', text, ooxmlText],
 		['./geometry', geometry, ooxmlGeometry],
 		['./color', color, ooxmlColor],
+		['./ui', ui, ooxmlUi],
 	])('%s re-exports exactly the ooxml-core area', (_entry, local, area) => {
 		const names = Object.keys(area).sort();
 		expect(names.length).toBeGreaterThan(0);
@@ -59,6 +62,7 @@ describe('pptx-viewer-core is a thin entry point over ooxml-core', () => {
 			'./text',
 			'./geometry',
 			'./color',
+			'./ui',
 		]);
 		for (const entry of Object.keys(manifest.exports)) {
 			expect(ooxmlManifest.exports).toHaveProperty([

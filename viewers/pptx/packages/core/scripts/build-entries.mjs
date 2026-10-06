@@ -21,6 +21,7 @@ const entries = [
 	{ dir: 'text', target: 'ooxml-core/text' },
 	{ dir: 'geometry', target: 'ooxml-core/geometry' },
 	{ dir: 'color', target: 'ooxml-core/color' },
+	{ dir: 'ui', target: 'ooxml-core/pptx/ui' },
 ];
 
 await rm(dist, { recursive: true, force: true });

@@ -91,6 +91,11 @@
 			"types": "./dist/color/index.d.ts",
 			"import": "./dist/color/index.mjs",
 			"require": "./dist/color/index.js"
+		},
+		"./ui": {
+			"types": "./dist/ui/index.d.ts",
+			"import": "./dist/ui/index.mjs",
+			"require": "./dist/ui/index.js"
 		}
 	},
 	"scripts": {
@@ -107,7 +112,7 @@
 		"@types/node": "^26.6.4",
 		"@types/node-forge": "^1.3.14",
 		"@xmldom/xmldom": "^0.9.12",
-		"emf-converter": "^4.8.19",
+		"emf-converter": "^4.8.21",
 		"fast-xml-parser": "^5.11.2",
 		"jszip": "^3.10.2",
 		"node-forge": "^1.4.0",
