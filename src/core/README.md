@@ -9,7 +9,6 @@
 **Read, edit, validate and write Office Open XML documents in TypeScript.**
 One package, one XML model, every format: Word, PowerPoint, Excel and the shared building blocks beneath them. Visio VSDX parsing and bounded editing are available through `ooxml-core/visio`.
 
-[![license](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![CI](https://github.com/ChristopherVR/ooxml/actions/workflows/ci.yml/badge.svg)](https://github.com/ChristopherVR/ooxml/actions/workflows/ci.yml)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 
