@@ -6,6 +6,7 @@
  */
 export {
 	applyBuiltinSmartArtLayout,
+	defaultBuiltinSmartArtLayoutId,
 	findBuiltinSmartArtLayout,
 	listBuiltinSmartArtLayouts,
 	loadBuiltinSmartArtLayoutXml,

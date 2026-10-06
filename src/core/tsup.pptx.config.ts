@@ -28,6 +28,7 @@ export default defineConfig(() => ({
 		'mtx-decompressor',
 		'jszip',
 		'fast-xml-parser',
+		'fflate',
 		'fs',
 		'path',
 		'node-forge',

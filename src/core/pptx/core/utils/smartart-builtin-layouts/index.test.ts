@@ -9,6 +9,7 @@ import type { PptxElement, SmartArtPptxElement } from '../../types';
 import { computeSmartArtElementsWithoutCache, decomposeSmartArt } from '../index';
 import {
 	applyBuiltinSmartArtLayout,
+	defaultBuiltinSmartArtLayoutId,
 	findBuiltinSmartArtLayout,
 	listBuiltinSmartArtLayouts,
 	loadBuiltinSmartArtLayoutXml,
@@ -57,10 +58,10 @@ describe('built-in SmartArt layout catalogue', () => {
 		);
 	});
 
-	it('inflates a layout definition on demand and rejects an unknown id', async () => {
+	it('inflates a layout definition on demand and throws for an unknown id', () => {
 		const entry = listBuiltinSmartArtLayouts().find((layout) => layout.title === 'Basic Timeline')!;
-		expect(await loadBuiltinSmartArtLayoutXml(entry.id)).toMatch(/<[\w:]*layoutDef\b/u);
-		await expect(loadBuiltinSmartArtLayoutXml('urn:nope')).rejects.toThrow(/Unknown built-in/u);
+		expect(loadBuiltinSmartArtLayoutXml(entry.id)).toMatch(/<[\w:]*layoutDef\b/u);
+		expect(() => loadBuiltinSmartArtLayoutXml('urn:nope')).toThrow(/Unknown built-in/u);
 		expect(findBuiltinSmartArtLayout('urn:nope')).toBeUndefined();
 	});
 });
@@ -85,7 +86,7 @@ describe('swapping to a built-in layout runs the real engine', () => {
 				drawingShapes: [],
 			};
 			const entry = listBuiltinSmartArtLayouts().find((layout) => layout.title === title)!;
-			const swapped = await applyBuiltinSmartArtLayout(source, entry.id);
+			const swapped = applyBuiltinSmartArtLayout(source, entry.id);
 			expect(swapped.layoutDefinition?.uniqueId).toBe(entry.id);
 
 			const bounds = { x: target.x, y: target.y, width: target.width, height: target.height };
@@ -108,4 +109,53 @@ describe('swapping to a built-in layout runs the real engine', () => {
 			}
 		});
 	}
+});
+
+describe('category defaults', () => {
+	it('every mapped category resolves to a built-in layout of that family', () => {
+		for (const category of [
+			'list',
+			'process',
+			'cycle',
+			'hierarchy',
+			'relationship',
+			'matrix',
+			'pyramid',
+			'funnel',
+			'target',
+			'venn',
+			'timeline',
+			'chevron',
+			'bending',
+			'gear',
+		]) {
+			const id = defaultBuiltinSmartArtLayoutId(category);
+			expect(id, category).toBeDefined();
+			expect(findBuiltinSmartArtLayout(id!), category).toBeDefined();
+		}
+		expect(defaultBuiltinSmartArtLayoutId('nonsense')).toBeUndefined();
+	});
+});
+
+describe('saving a diagram swapped to a built-in layout', () => {
+	it('writes that layout as the layout part, so a reload runs the same definition', async () => {
+		const buf = readFileSync(path.join(GALLERY, 'basic-block-list--hier5.pptx'));
+		const handler = new PptxHandler();
+		const loaded = await handler.load(
+			buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer,
+		);
+		const element = loaded.slides
+			.flatMap((slide) => slide.elements)
+			.find((el): el is SmartArtPptxElement => el.type === 'smartArt')!;
+		const entry = listBuiltinSmartArtLayouts().find((layout) => layout.title === 'Basic Timeline')!;
+		element.smartArtData = applyBuiltinSmartArtLayout(element.smartArtData!, entry.id);
+
+		const saved = await handler.save(loaded.slides);
+		const reloaded = await new PptxHandler().load(saved.buffer as ArrayBuffer);
+		const after = reloaded.slides
+			.flatMap((slide) => slide.elements)
+			.find((el): el is SmartArtPptxElement => el.type === 'smartArt')!;
+		expect(after.smartArtData?.layoutDefinition?.uniqueId).toBe(entry.id);
+		expect(after.smartArtData?.layoutDefinition?.rawXmlText).toContain('layoutDef');
+	});
 });

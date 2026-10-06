@@ -404,6 +404,11 @@ export interface PptxSmartArtData {
 	colorsRelId?: string;
 	/** Relationship ID for the quick-styles part. */
 	styleRelId?: string;
+	/**
+	 * `uniqueId` of the built-in PowerPoint layout whose definition was applied by a layout swap
+	 * (`ooxml-core/pptx/smartart-layouts`). Save writes that definition as the layout part.
+	 */
+	builtinLayoutId?: string;
 	/** Internal save hint: the layout definition changed in the editor. */
 	layoutDirty?: boolean;
 	/** Internal save hint: typed layout-definition metadata changed. */

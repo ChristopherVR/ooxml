@@ -14,6 +14,15 @@ export interface SmartArtSaveLayout {
 
 /** Resolve the custom layout identity written for an edited or inserted diagram. */
 export function resolveSmartArtSaveLayout(data: PptxSmartArtData): SmartArtSaveLayout {
+	// A swap to a built-in layout keeps that layout's own definition rather than a fabricated one.
+	const raw = data.layoutDefinition?.rawXmlText;
+	if (data.builtinLayoutId && raw) {
+		return {
+			category: data.layoutDefinition?.categories?.[0]?.type ?? 'list',
+			uniqueId: data.builtinLayoutId,
+			xml: raw,
+		};
+	}
 	const family = resolveFabricatedLayoutFamily(data);
 	const identity = data.layout ?? data.resolvedLayoutType;
 	return {

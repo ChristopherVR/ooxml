@@ -63,6 +63,7 @@ export function switchSmartArtLayout(
 		// the nodes with the previous layout's algorithm (or a mismatch of the
 		// two), which is what broke a diagram after a layout change.
 		layoutDefinition: undefined,
+		builtinLayoutId: undefined,
 		presLayoutVars: undefined,
 		layoutDirty: true,
 		drawingDirty: true,
