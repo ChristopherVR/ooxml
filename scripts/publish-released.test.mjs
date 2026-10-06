@@ -112,3 +112,8 @@ test('a real sibling range must be satisfied by the sibling version', () => {
 	writeUi({ '@x/core': '^0.3.0' });
 	assert.throws(() => verifyManifest(ui, versions, temp), /but that package is at 0.4.2/);
 });
+
+test('a workspace devDependency on a private package is dropped from the published manifest', () => {
+	writeUi({ lit: '^3.0.0' }, { devDependencies: { '@x/private': 'workspace:*' } });
+	assert.deepEqual(publishManifest(ui, versions, temp).devDependencies, {});
+});

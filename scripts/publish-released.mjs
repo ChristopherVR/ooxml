@@ -101,6 +101,10 @@ export function publishManifest(target, versions = workspaceVersions(), root = R
 			const sibling = versions.get(dep);
 			if (isWorkspaceRange(range) && sibling) {
 				manifest[field][dep] = `^${sibling}`;
+			} else if (field === 'devDependencies' && isWorkspaceRange(range)) {
+				// Private workspace packages (the pptx viewers' `pptx-viewer-shared`) are bundled
+				// into dist; a consumer never installs devDependencies.
+				delete manifest[field][dep];
 			} else if (/^(?:workspace|file|link):/u.test(range)) {
 				throw new Error(
 					`${target.npm}: ${field}["${dep}"] is "${range}", which cannot be installed.`,
