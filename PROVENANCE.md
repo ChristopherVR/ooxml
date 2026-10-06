@@ -404,3 +404,7 @@ The DOM-free modules of `ooxml-ui/visio` (from visio-viewer `818f4a4`) moved to 
 ## `ooxml-core/pptx/ui`
 
 `src/core/pptx/ui/theme-color-swatches.ts` and `theme-color-picker-state.ts`, with their tests, moved from ChristopherVR/pptx-viewer `packages/shared/src/render` at `15ed646e4`. Changes: `pptx-viewer-core` imports became relative imports of the pptx core and the shared `color` area. The new `ooxml-core/pptx/ui` subpath (dual ESM/CJS through the pptx tsup config) holds DOM-free PowerPoint editor logic; the popup UI stays in the viewer.
+
+## `viewers/pptx` (2026-10-06)
+
+The whole ChristopherVR/pptx-viewer repository moved to `viewers/pptx` at `cd68df440` (its `main`), with its history rewritten under that path by `git filter-repo` and its 1,007 release tags kept; the merge is `dde62beb1`, and `viewers/pptx` at that commit has the same tree as pptx-viewer `main`. Nothing in the sources changed on import. Afterwards: its packages joined the root workspace and lockfile, `build:packages` and `scripts/build-pages.mjs` were added, its docs moved to `/ooxml/pptx/` on the shared Pages site, its package manifests name this repository, and CI and the release table list it. pptx-viewer now holds only a README pointing here, its licence files and a redirect from its old Pages site.
