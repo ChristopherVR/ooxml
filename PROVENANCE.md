@@ -421,3 +421,7 @@ Moved from `viewers/pptx/packages/shared/src/render` at `43e3e07e6`, with their 
 | `geometry` | `snap-guides.ts`, `align-distribute.ts`                                                                          | `snap-guides.ts`, `element-align.ts`                                                                                                                  | None. The `'slide'` align reference is the page or canvas the boxes sit on.              |
 
 The viewer copies of `chart-axis-nice.ts`, `chart-histogram-binning.ts`, `theme-color-swatches.ts` and `theme-color-picker-state.ts`, left behind when those modules moved earlier (see above), are now forwarders too and their duplicate tests were removed; the histogram forwarder only binds the viewer's axis number format. `pptx-viewer-core` gained a `./ui` entry over `ooxml-core/pptx/ui` for the theme modules.
+
+## Built-in SmartArt layout definitions (2026-10-07)
+
+`src/core/pptx/core/utils/smartart-builtin-layouts/{catalog,data}.ts` hold 176 `dgm:layoutDef` definitions, one per `uniqueId`, extracted by `src/core/scripts/pptx/gen-smartart-builtin-layouts.mjs` from the layout parts of the ground-truth gallery fixtures (`src/core/pptx/__tests__/fixtures/smartart-gallery`, produced by PowerPoint through COM; see its README). Whitespace between tags is removed; each definition is stored as its own gzip member. The definitions are Microsoft's, as PowerPoint embeds them in every document that uses the layout: confirm that redistributing them in the published package is acceptable before releasing.

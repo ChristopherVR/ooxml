@@ -11,6 +11,7 @@ export default defineConfig(() => ({
 		'pptx/converter/index': 'pptx/converter/index.ts',
 		'pptx/cli/index': 'pptx/cli/index.ts',
 		'pptx/signature-node/index': 'pptx/signature-node/index.ts',
+		'pptx/smartart-layouts/index': 'pptx/smartart-layouts/index.ts',
 	},
 	outDir: 'dist',
 	tsconfig: 'tsconfig.pptx.json',

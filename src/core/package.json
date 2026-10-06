@@ -169,6 +169,11 @@
 			"import": "./dist/pptx/signature-node/index.mjs",
 			"require": "./dist/pptx/signature-node/index.cjs"
 		},
+		"./pptx/smartart-layouts": {
+			"types": "./dist/pptx/smartart-layouts/index.d.ts",
+			"import": "./dist/pptx/smartart-layouts/index.mjs",
+			"require": "./dist/pptx/smartart-layouts/index.cjs"
+		},
 		"./math": {
 			"types": "./dist/math/index.d.ts",
 			"import": "./dist/math/index.mjs",
