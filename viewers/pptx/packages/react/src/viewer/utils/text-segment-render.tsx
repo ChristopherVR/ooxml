@@ -2,6 +2,7 @@ import { getSubstituteFontFamily, parsePanoseString } from 'pptx-viewer-core';
 import type { PptxElement, TextSegment, TextStyle } from 'pptx-viewer-core';
 import {
 	authoredLetterSpacingPx,
+	eastAsianBreaksForRun,
 	hollowTextFillStyle,
 	nestedTextDecorationStyle,
 	pieceLetterSpacing,
@@ -216,7 +217,8 @@ export function renderParagraphRun(
 		font: metricFont,
 		authoredPx: authoredLetterSpacing,
 		nestedStyle,
-		eastAsian: ctx.eastAsianBreaks,
+		// Resolved per run, so a Korean run keeps its Hangul words whole.
+		eastAsian: eastAsianBreaksForRun(ctx.eastAsianBreaks, segmentStyle.language),
 		following: ctx.eastAsianFollowing,
 	};
 
