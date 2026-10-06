@@ -5,7 +5,13 @@ import { join } from 'node:path';
 import { after, test } from 'node:test';
 
 import { PACKAGES } from './release-plan.mjs';
-import { publishManifest, resolveTargets, verifyManifest } from './publish-released.mjs';
+import {
+	groupOf,
+	groupsOf,
+	publishManifest,
+	resolveTargets,
+	verifyManifest,
+} from './publish-released.mjs';
 
 const [key, meta] = Object.entries(PACKAGES)[0];
 const version = JSON.parse(
@@ -36,6 +42,18 @@ test('a plan resolves to its released packages in plan order', () => {
 		resolveTargets({ plan }).map((t) => t.npm),
 		['@x/a', '@x/c'],
 	);
+});
+
+test('publish groups keep a viewer together and every other package alone', () => {
+	const targets = [
+		{ key: 'core', dir: 'src/core' },
+		{ key: 'ui', dir: 'src/ui' },
+		{ key: 'docx-react', dir: 'viewers/docx/packages/react' },
+		{ key: 'docx-vue', dir: 'viewers/docx/packages/vue' },
+		{ key: 'mcp', dir: 'mcp' },
+	];
+	assert.equal(groupOf(targets[2]), 'viewers/docx');
+	assert.deepEqual(groupsOf(targets), ['core', 'ui', 'viewers/docx', 'mcp']);
 });
 
 test('the manifest on disk must be the version being published', () => {

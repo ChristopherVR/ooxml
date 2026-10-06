@@ -17,7 +17,8 @@
  *
  *   node scripts/build-released.mjs [--smoke] [--all] [--plan release-plan.json]
  *
- * `--all` ignores the `release` flag (build every package present in the plan).
+ * `--group <name>` builds only that publish group (see publish-released.mjs): a viewer folder or a
+ * package key. `--all` ignores the `release` flag (build every package present in the plan).
  */
 
 import { spawnSync } from 'node:child_process';
@@ -25,11 +26,13 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { groupOf } from './publish-released.mjs';
 import { viewerOf } from './viewer-packages.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const argv = process.argv.slice(2);
 const smoke = argv.includes('--smoke');
+const group = argv.includes('--group') ? argv[argv.indexOf('--group') + 1] : null;
 const planPath = argv.includes('--plan') ? argv[argv.indexOf('--plan') + 1] : 'release-plan.json';
 const plan = JSON.parse(readFileSync(join(ROOT, planPath), 'utf8'));
 
@@ -64,6 +67,7 @@ for (const key of plan.order) {
 	const pkg = plan.packages[key];
 	// The core is built (and smoke-tested) by the workflow's own steps before this runs.
 	if (key === 'core' || !(pkg.release || argv.includes('--all'))) continue;
+	if (group && groupOf({ key, dir: pkg.dir }) !== group) continue;
 	const viewer = viewerOf(pkg.dir);
 	if (key === 'ui') uiBuilt = true;
 	if (viewer) {

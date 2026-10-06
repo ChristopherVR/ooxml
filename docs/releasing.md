@@ -2,10 +2,10 @@
 
 This repository publishes two packages to npm, each with its own version line, tag, changelog and GitHub release:
 
-| Key    | npm name     | Directory     | Changelog                  | Depends on |
-| ------ | ------------ | ------------- | -------------------------- | ---------- |
-| `core` | `ooxml-core` | `.` (root)    | `CHANGELOG.md`             | nothing    |
-| `ui`   | `ooxml-ui`   | `src/ui` | `src/ui/CHANGELOG.md` | `core`     |
+| Key    | npm name     | Directory  | Changelog             | Depends on |
+| ------ | ------------ | ---------- | --------------------- | ---------- |
+| `core` | `ooxml-core` | `.` (root) | `CHANGELOG.md`        | nothing    |
+| `ui`   | `ooxml-ui`   | `src/ui`   | `src/ui/CHANGELOG.md` | `core`     |
 
 The UI package depends on the core, never the reverse. Viewers depend on both, so users never install the UI separately.
 
@@ -61,9 +61,9 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md#commit-conventions). The `PR hygiene / 
 
 ## The release workflow
 
-`.github/workflows/release.yml` has two jobs and two ways to start (hourly schedule, manual dispatch).
+`.github/workflows/release.yml` has a release job, a publish stage and two ways to start (hourly schedule, manual dispatch).
 
-**Scheduled or manual run without input** (`release` job, then `publish` job):
+**Scheduled or manual run without input** (`release` job, then the publish stage):
 
 1. Check out `main` with full history using `RELEASE_TOKEN` and run the planner with `--write`. If nothing changed the run ends here, which is what a quiet hour looks like.
 2. Push the baseline tag of any package that was published by hand (see above).
@@ -72,7 +72,7 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md#commit-conventions). The `PR hygiene / 
 5. Prepend the new section to each released package's changelog with [git-cliff](https://git-cliff.org) (`cliff.toml`, scoped by `--include-path` to that package's published paths and by `--tag-pattern` to its tags). Changelogs are prepend-only: old tags and releases are pruned, so history is never regenerated.
 6. Commit `chore(release): bump versions and update changelogs [skip ci]` straight to `main` (released manifests, changelogs, lockfile), retrying with a rebase if `main` moved. `[skip ci]` keeps it from starting CI.
 7. Create each tag and GitHub release at that commit, core first (`scripts/release-notes.mjs <key>` writes the body), upload the plan, and prune superseded releases (`scripts/prune-releases.mjs --keep 1`; tags are kept).
-8. `publish` job (environment `npm`): check out the release commit, `bun install --frozen-lockfile`, `bun run build`, build the workspace packages, then `node scripts/publish-released.mjs --plan release-plan.json`.
+8. Publish, in parallel groups (`publish-plan`, `build-core`, then a `publish` matrix, environment `npm`). `scripts/publish-released.mjs --groups` splits the release into groups: `core`, `ui`, `mcp` and one group per viewer folder. The core is built once and its `dist` shared as an artifact; each group then builds only its own packages (`build-released.mjs --group <name>`) and runs `publish-released.mjs --group <name>`. A package whose sibling is released in the same run (ooxml-ui on ooxml-core) waits up to an hour for that sibling to appear on npm: the registry can take more than ten minutes to serve the 11 MB core tarball it has just accepted, which is what failed the run that published `ooxml-core@0.21.1` but not `ooxml-ui`. `fail-fast` is off, and a re-run (or `-f tag=...`) skips what is already published.
 
 **Manual dispatch with `tag`** re-publishes one existing tag of either package (skips the `release` job), for when a publish failed or was skipped:
 

@@ -23,6 +23,12 @@
  *   - a version older than the registry's `latest` is published under the `old` dist-tag so it
  *     cannot move `latest` backwards.
  *
+ * `--groups` prints the release's parallel publish groups as JSON (the workflow matrix) and
+ * `--group <name>` publishes only that group: a viewer's packages go together (they are built
+ * together), every other package is its own group. Groups run in separate jobs, so a package
+ * whose sibling is released in the same run (ooxml-ui on ooxml-core) waits for that sibling to
+ * appear on npm instead of relying on publish order.
+ *
  * `--manual` publishes without provenance, for the one-off first publish from a maintainer machine
  * (the manifest rewrite and every check still run).
  * `--dry-run` runs all the checks and prints the `npm publish` commands without running them.
@@ -41,6 +47,7 @@ import {
 	presentPackages,
 	satisfies,
 } from './release-plan.mjs';
+import { viewerOf } from './viewer-packages.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const packages = () => presentPackages(ROOT, PACKAGES);
@@ -69,6 +76,12 @@ export function resolveTargets({ plan, tag }) {
 		.filter((key) => plan.packages[key].release)
 		.map((key) => ({ key, ...pick(plan.packages[key]) }));
 }
+/** The parallel publish group of a package: its viewer folder, else the package key. */
+export const groupOf = (target) => viewerOf(target.dir) ?? target.key;
+
+/** Distinct groups of `targets`, in first-seen (dependency) order. */
+export const groupsOf = (targets) => [...new Set(targets.map(groupOf))];
+
 const pick = ({ npm: name, dir, version }) => ({ npm: name, dir, version });
 
 /**
@@ -133,7 +146,7 @@ function sleep(ms) {
  * takes a while to serve a version it has just accepted, and a dependent published straight after
  * it (ooxml-ui after ooxml-core) otherwise fails the installability check below.
  */
-function waitForRegistry(name, version, { attempts = 40, intervalMs = 15_000 } = {}) {
+function waitForRegistry(name, version, { attempts = 120, intervalMs = 30_000 } = {}) {
 	for (let attempt = 1; attempt <= attempts; attempt++) {
 		if (registryState(name, version) === 'exists') return true;
 		console.log(`waiting for ${name}@${version} to appear on npm (${attempt}/${attempts})`);
@@ -161,12 +174,19 @@ function main() {
 					),
 				},
 	);
-	if (targets.length === 0) {
+	if (argv.includes('--groups')) {
+		console.log(JSON.stringify(groupsOf(targets)));
+		return;
+	}
+	const group = argv.includes('--group') ? value('--group') : null;
+	const mine = group ? targets.filter((target) => groupOf(target) === group) : targets;
+	if (mine.length === 0) {
 		console.log('Nothing to publish.');
 		return;
 	}
-	const publishedNow = new Set();
-	for (const target of targets) {
+	// Siblings released in this same run, possibly by another job: wait for them on the registry.
+	const inRelease = new Set(targets.map((target) => `${target.npm}@${target.version}`));
+	for (const target of mine) {
 		console.log(`--- ${target.npm}@${target.version} ---`);
 		const manifest = publishManifest(target);
 		if (registryState(target.npm, target.version) === 'exists') {
@@ -180,7 +200,7 @@ function main() {
 				if (dryRun || !workspaceVersions().has(dep) || registryState(dep, version) === 'exists') {
 					continue;
 				}
-				if (!publishedNow.has(`${dep}@${version}`) || !waitForRegistry(dep, version)) {
+				if (!inRelease.has(`${dep}@${version}`) || !waitForRegistry(dep, version)) {
 					throw new Error(`${target.npm} needs ${dep}@${version}, which is not on npm yet.`);
 				}
 			}
@@ -210,7 +230,6 @@ function main() {
 			writeFileSync(manifestPath, original);
 		}
 		if (result.status !== 0) throw new Error(`Publishing ${target.npm}@${target.version} failed.`);
-		publishedNow.add(`${target.npm}@${target.version}`);
 	}
 }
 
