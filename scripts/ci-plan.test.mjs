@@ -3,7 +3,16 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 
-import { CONSUMERS, VIEWERS, consumersOfArea, plan, shardsFor, viewersOfArea } from './ci-plan.mjs';
+import {
+	CONSUMERS,
+	PPTX_BINDINGS,
+	PPTX_E2E_SHARDS,
+	VIEWERS,
+	consumersOfArea,
+	plan,
+	shardsFor,
+	viewersOfArea,
+} from './ci-plan.mjs';
 
 const viewers = (result) => result.viewers.map((viewer) => viewer.name);
 const ALL_VIEWERS = Object.keys(VIEWERS);
@@ -34,7 +43,7 @@ test('a pptx-only change skips the strict typecheck and checks only the pptx vie
 	const result = plan(['src/core/pptx/converter/index.ts'], { testFiles: 5 });
 	assert.equal(result.typecheck.strict, false);
 	assert.equal(result.typecheck.pptx, true);
-	assert.equal(result.pptx, true);
+	assert.equal(result.pptx.run, true);
 	assert.deepEqual(viewers(result), []);
 	assert.deepEqual(result.consumers, []);
 });
@@ -46,18 +55,18 @@ test('the pptx viewer runs in its own jobs, also for its demos and browser tests
 		'e2e/pptx/viewer-basics.spec.ts',
 	]) {
 		const result = plan([file], { testFiles: 0 });
-		assert.equal(result.pptx, true, file);
+		assert.equal(result.pptx.run, true, file);
 		assert.deepEqual(viewers(result), [], file);
 		assert.equal(result.build, true, file);
 	}
-	assert.equal(plan(['viewers/docx/src/index.ts'], { testFiles: 0 }).pptx, false);
+	assert.equal(plan(['viewers/docx/src/index.ts'], { testFiles: 0 }).pptx.run, false);
 });
 
 test('a shared area can break every viewer', () => {
 	const result = plan(['src/core/xml/parse.ts'], { testFiles: 300 });
 	assert.equal(result.consumers.length, Object.keys(CONSUMERS).length);
 	assert.deepEqual(viewers(result), MATRIX_VIEWERS);
-	assert.equal(result.pptx, true);
+	assert.equal(result.pptx.run, true);
 	assert.deepEqual(result.test.shards, [1, 2, 3, 4, 5]);
 });
 
@@ -67,7 +76,7 @@ test('a ui change checks the ui package and every viewer, but not the unit suite
 	assert.equal(result.test.run, false);
 	assert.equal(result.consumers.length, Object.keys(CONSUMERS).length);
 	assert.deepEqual(viewers(result), MATRIX_VIEWERS);
-	assert.equal(result.pptx, true);
+	assert.equal(result.pptx.run, true);
 });
 
 test('a change inside one viewer checks only that viewer, on a built core and ui', () => {
@@ -131,7 +140,7 @@ test('dependency, compiler and CI configuration runs everything', () => {
 		assert.equal(result.test.mode, 'all', file);
 		assert.equal(result.test.shards.length, 6, file);
 		assert.deepEqual(viewers(result), MATRIX_VIEWERS, file);
-		assert.equal(result.pptx, true, file);
+		assert.equal(result.pptx.run, true, file);
 	}
 });
 
@@ -140,7 +149,7 @@ test('a manual or scheduled run is always full', () => {
 	assert.equal(result.full, true);
 	assert.equal(result.consumers.length, Object.keys(CONSUMERS).length);
 	assert.deepEqual(viewers(result), MATRIX_VIEWERS);
-	assert.equal(result.pptx, true);
+	assert.equal(result.pptx.run, true);
 });
 
 test('shards grow with the number of test files, to a cap of six', () => {
@@ -158,4 +167,63 @@ test('only format areas narrow the viewers to check', () => {
 	assert.deepEqual(consumersOfArea('xlsx'), []);
 	assert.deepEqual(consumersOfArea('pptx'), []);
 	assert.equal(consumersOfArea('collab').length, Object.keys(CONSUMERS).length);
+});
+
+const pptx = (...files) => plan(files, { testFiles: 1 }).pptx;
+
+test('a pptx binding change tests that package and runs only its own browser project', () => {
+	const result = pptx('viewers/pptx/packages/vue/src/viewer/components/TableRenderer.vue');
+	assert.deepEqual(result.tests, ['vue']);
+	assert.deepEqual(result.e2e.projects, ['vue']);
+	assert.equal(result.e2e.total, PPTX_E2E_SHARDS);
+	assert.equal(result.e2e.specs, '');
+	assert.equal(result.packaged, true);
+});
+
+test('a pptx test-only change runs its unit leg and no browser suite', () => {
+	const result = pptx('viewers/pptx/packages/vue/src/viewer/table.test.ts');
+	assert.deepEqual(result.tests, ['vue']);
+	assert.deepEqual(result.e2e.projects, []);
+	assert.equal(result.packaged, false);
+});
+
+test('shared pptx code tests every dependent package and runs the parity reference project', () => {
+	const result = pptx('viewers/pptx/packages/shared/src/render/chart-axis.ts');
+	assert.ok(result.tests.includes('shared') && result.tests.includes('svelte'));
+	assert.ok(!result.tests.includes('core') && !result.tests.includes('tools'));
+	assert.deepEqual(result.e2e.projects, ['react']);
+});
+
+test('an engine change runs every pptx unit leg and the reference project; its tests run nothing', () => {
+	const result = pptx('src/core/pptx/core/core/runtime/PptxHandlerRuntimeSmartArt.ts');
+	assert.equal(result.tests.length, 11);
+	assert.deepEqual(result.e2e.projects, ['react']);
+	assert.equal(pptx('src/core/pptx/core/core/runtime/smartart.test.ts').run, false);
+	assert.equal(pptx('src/core/xlsx/model.ts').run, false);
+});
+
+test('changed spec files alone run just those specs, in every binding, on few shards', () => {
+	const result = pptx('e2e/pptx/viewer-basics.spec.ts', 'e2e/pptx/smartart-reload.spec.ts');
+	assert.deepEqual(result.tests, []);
+	assert.deepEqual(result.e2e.projects, PPTX_BINDINGS);
+	assert.equal(result.e2e.total, 1);
+	assert.equal(result.e2e.specs, 'smartart-reload.spec.ts viewer-basics.spec.ts');
+});
+
+test('a demo runs its own binding; pptx docs run nothing', () => {
+	assert.deepEqual(pptx('demos/pptx/demo-angular/src/app.component.ts').e2e.projects, ['angular']);
+	assert.equal(pptx('viewers/pptx/docs/guide/installation.md').run, false);
+});
+
+test('suite-wide pptx files and CI configuration run the whole browser suite', () => {
+	for (const file of [
+		'e2e/pptx/global-setup.ts',
+		'viewers/pptx/playwright.config.ts',
+		'.github/workflows/ci.yml',
+	]) {
+		const result = pptx(file);
+		assert.deepEqual(result.e2e.projects, PPTX_BINDINGS, file);
+		assert.equal(result.e2e.total, PPTX_E2E_SHARDS, file);
+		assert.equal(result.e2e.specs, '', file);
+	}
 });

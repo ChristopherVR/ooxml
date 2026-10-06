@@ -241,7 +241,7 @@ jobs:
     needs: [plan, build, ui]
     if: |
       !cancelled() && needs.build.result == 'success' && needs.ui.result == 'success' &&
-      fromJSON(needs.plan.outputs.plan).pptx
+      fromJSON(needs.plan.outputs.plan).pptx.run
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -262,25 +262,31 @@ jobs:
           bun run typecheck
           bun run e2e:contract
           bun run test:binding-packages
-      # Every package's dist, and the sources the Angular build generates, for the jobs below.
+      # Every package's dist, and the sources the Angular build generates, for the jobs below. Only
+      # the generated files: re-extracting a tracked source would make it newer than the build, and
+      # the e2e freshness guard (e2e/pptx/dist-freshness.ts) would then refuse to run.
       - uses: actions/upload-artifact@v7
         with:
           name: pptx-dist
           path: |
             viewers/pptx/packages/*/dist/
-            viewers/pptx/packages/angular/src/internal/
+            viewers/pptx/packages/angular/src/internal/shared-src/
+            viewers/pptx/packages/angular/src/internal/version.ts
           retention-days: 1
 
   pptx-test:
     name: pptx test (${{ matrix.leg }})
     needs: [plan, pptx-build]
-    if: ${{ !cancelled() && needs.pptx-build.result == 'success' }}
+    # The legs the change reaches: the changed packages and the ones depending on them (pptxPlan).
+    if: |
+      !cancelled() && needs.pptx-build.result == 'success' &&
+      toJSON(fromJSON(needs.plan.outputs.plan).pptx.tests) != '[]'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        leg: [core, tools, shared, locales, react, react18, vue, angular, vanilla, svelte, cli]
+        leg: ${{ fromJSON(needs.plan.outputs.plan).pptx.tests }}
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
@@ -308,9 +314,14 @@ jobs:
           esac
 
   pptx-e2e:
-    name: pptx e2e (${{ matrix.project }} ${{ matrix.shard }}/10)
+    name: pptx e2e (${{ matrix.project }} ${{ matrix.shard }}/${{ fromJSON(needs.plan.outputs.plan).pptx.e2e.total }})
     needs: [plan, pptx-build]
-    if: ${{ !cancelled() && needs.pptx-build.result == 'success' }}
+    # The frameworks the change reaches (pptxPlan): its own binding, the parity reference (react)
+    # for shared or engine code, all five for dependencies, CI and the nightly; or, when only spec
+    # files changed, just those specs on a few shards.
+    if: |
+      !cancelled() && needs.pptx-build.result == 'success' &&
+      toJSON(fromJSON(needs.plan.outputs.plan).pptx.e2e.projects) != '[]'
     runs-on: ubuntu-latest
     # Per shard. The lever for a suite that outgrows it is the shard count, not this ceiling (see
     # the history in viewers/pptx/.github/workflows/ci.yml, which ran this suite before the move).
@@ -318,8 +329,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        project: [react, vue, angular, vanilla, svelte]
-        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        project: ${{ fromJSON(needs.plan.outputs.plan).pptx.e2e.projects }}
+        shard: ${{ fromJSON(needs.plan.outputs.plan).pptx.e2e.shards }}
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
@@ -344,12 +355,17 @@ jobs:
         env:
           PROJECT: ${{ matrix.project }}
           SHARD: ${{ matrix.shard }}
+          TOTAL: ${{ fromJSON(needs.plan.outputs.plan).pptx.e2e.total }}
+          # The changed spec files when only specs changed; empty runs every spec.
+          SPECS: ${{ fromJSON(needs.plan.outputs.plan).pptx.e2e.specs }}
         run: |
           for attempt in 1 2; do
-            bun run e2e -- --project="$PROJECT" --project="$PROJECT-headless" --shard="$SHARD/10" \
-              --workers=2 --reporter=list,html,github && exit 0
+            # SPECS is a space-separated list of spec file names, split on purpose.
+            # shellcheck disable=SC2086
+            bun run e2e -- $SPECS --project="$PROJECT" --project="$PROJECT-headless" \
+              --shard="$SHARD/$TOTAL" --workers=2 --reporter=list,html,github && exit 0
             status=$?
-            echo "::warning::attempt $attempt of $PROJECT shard $SHARD/10 failed (exit $status)"
+            echo "::warning::attempt $attempt of $PROJECT shard $SHARD/$TOTAL failed (exit $status)"
             sleep 15
           done
           exit $status
@@ -366,7 +382,9 @@ jobs:
   pptx-e2e-packaged:
     name: pptx e2e (packaged builds)
     needs: [plan, pptx-build]
-    if: ${{ !cancelled() && needs.pptx-build.result == 'success' }}
+    if: |
+      !cancelled() && needs.pptx-build.result == 'success' &&
+      fromJSON(needs.plan.outputs.plan).pptx.packaged
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:

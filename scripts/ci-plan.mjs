@@ -157,6 +157,142 @@ export function shardsFor(count, full) {
 	return Array.from({ length: n }, (_, i) => i + 1);
 }
 
+/** The pptx viewer's packages and the ones each depends on, for the unit legs a change reaches. */
+const PPTX_DEPENDS_ON = {
+	core: [],
+	tools: ['core'],
+	shared: ['core', 'tools'],
+	locales: ['shared'],
+	react: ['core', 'shared', 'locales'],
+	react18: ['react'],
+	vue: ['core', 'shared', 'locales'],
+	angular: ['core', 'shared', 'locales'],
+	vanilla: ['core', 'shared', 'locales'],
+	svelte: ['core', 'shared', 'locales'],
+	cli: ['core', 'react'],
+};
+const PPTX_LEGS = Object.keys(PPTX_DEPENDS_ON);
+/** The five bindings, which are also the Playwright projects (one demo each). */
+export const PPTX_BINDINGS = ['react', 'vue', 'angular', 'vanilla', 'svelte'];
+/**
+ * The Playwright project a cross-binding change runs. React is the parity reference: its parity
+ * specs drive all five demos and diff them against it. The other four run for their own changes,
+ * and all five on the nightly and on changes to dependencies or CI.
+ */
+const PPTX_REFERENCE_PROJECT = 'react';
+/** Shards per Playwright project for a full run of the suite (pptx-viewer settled on ten). */
+export const PPTX_E2E_SHARDS = 10;
+/** Changed spec files one shard takes when only specs changed. */
+const PPTX_SPECS_PER_SHARD = 5;
+
+/** The legs that test `leg`'s code: itself and every leg depending on it, transitively. */
+function pptxDependents(leg) {
+	const out = new Set([leg]);
+	let grew = true;
+	while (grew) {
+		grew = false;
+		for (const [key, deps] of Object.entries(PPTX_DEPENDS_ON)) {
+			if (!out.has(key) && deps.some((dep) => out.has(dep))) {
+				out.add(key);
+				grew = true;
+			}
+		}
+	}
+	return out;
+}
+
+const isTestFile = (path) => /(\.test\.[cm]?[jt]sx?|\/__tests__\/)/.test(path);
+
+/**
+ * What the pptx jobs run for a change. `reaches` is true when the change reaches the viewer at all
+ * (its own files, an area of the core it reads, `ooxml-ui`, or everything). A change inside one
+ * package runs that package's unit leg and its dependents' and, unless it only touched tests, the
+ * browser suite for the binding it belongs to (the parity reference for shared packages). A change
+ * to spec files alone runs just those specs. Configuration, fixtures and support code the whole
+ * suite depends on run all of it.
+ */
+export function pptxPlan(files, { everything, reaches }) {
+	const none = {
+		run: false,
+		tests: [],
+		e2e: { projects: [], shards: [], total: 0, specs: '' },
+		packaged: false,
+	};
+	if (!reaches) return none;
+	const legs = new Set();
+	const projects = new Set();
+	const specs = new Set();
+	let allLegs = everything;
+	let allProjects = everything;
+	let packaged = everything;
+	for (const file of files) {
+		if (file.startsWith('src/core/') || file.startsWith('src/ui/')) {
+			// The engine or the shared elements: every package's tests, the parity reference's browser
+			// run. Their own tests change nothing the viewer runs.
+			if (isTestFile(file)) continue;
+			allLegs = true;
+			projects.add(PPTX_REFERENCE_PROJECT);
+			packaged = true;
+			continue;
+		}
+		let match;
+		if ((match = /^viewers\/pptx\/packages\/([^/]+)\//.exec(file))) {
+			const leg = match[1] === 'react-compat' ? 'react18' : match[1];
+			if (!PPTX_DEPENDS_ON[leg]) continue;
+			for (const dependent of pptxDependents(leg)) legs.add(dependent);
+			if (isTestFile(file) || leg === 'cli') continue;
+			projects.add(PPTX_BINDINGS.includes(leg) ? leg : PPTX_REFERENCE_PROJECT);
+			packaged = true;
+		} else if (/^viewers\/pptx\/(docs|\.github)\//.test(file)) {
+			// The docs site is built by the Pages workflow; the old repository's workflows are inert.
+		} else if ((match = /^demos\/pptx\/demo-([^/]+)\//.exec(file))) {
+			// Each demo is its binding's browser surface; the locale and vue/vanilla tests import demos.
+			if (PPTX_BINDINGS.includes(match[1])) projects.add(match[1]);
+			for (const leg of ['locales', 'vue', 'vanilla']) legs.add(leg);
+			packaged = true;
+		} else if (file.startsWith('demos/pptx/')) {
+			// Files every demo shares.
+			allProjects = true;
+			for (const leg of ['locales', 'vue', 'vanilla']) legs.add(leg);
+			packaged = true;
+		} else if (/^e2e\/pptx\/[^/]+\.spec\.ts$/.test(file)) {
+			specs.add(file.slice('e2e/pptx/'.length));
+		} else if (file.startsWith('e2e/pptx/fixtures/')) {
+			// The fixtures are the demos' public dir and several packages' test decks.
+			allProjects = true;
+			for (const leg of ['shared', 'react', 'react18', 'vue', 'angular', 'vanilla', 'svelte'])
+				legs.add(leg);
+		} else if (file.startsWith('e2e/pptx/') || file.startsWith('viewers/pptx/')) {
+			// Support code, configs, scripts and manifests the whole viewer depends on.
+			allLegs = true;
+			allProjects = true;
+			packaged = true;
+		}
+	}
+	const tests = allLegs ? PPTX_LEGS : PPTX_LEGS.filter((leg) => legs.has(leg));
+	let projectList = allProjects ? PPTX_BINDINGS : PPTX_BINDINGS.filter((p) => projects.has(p));
+	let total = projectList.length > 0 ? PPTX_E2E_SHARDS : 0;
+	let specFilter = '';
+	if (projectList.length === 0 && specs.size > 0) {
+		// Only specs changed: run just those, in every binding, on as few shards as they need.
+		projectList = PPTX_BINDINGS;
+		total = Math.min(PPTX_E2E_SHARDS, Math.ceil(specs.size / PPTX_SPECS_PER_SHARD));
+		specFilter = [...specs].sort().join(' ');
+	}
+	const run = tests.length > 0 || projectList.length > 0 || packaged;
+	return {
+		run,
+		tests,
+		e2e: {
+			projects: projectList,
+			shards: Array.from({ length: total }, (_, i) => i + 1),
+			total,
+			specs: specFilter,
+		},
+		packaged,
+	};
+}
+
 /**
  * The plan for a list of changed files. `full` runs everything (nightly, manual, or an unknown base).
  * `testFiles` is the number of test files `vitest --changed` selected, or undefined when it has not
@@ -214,8 +350,11 @@ export function plan(changed, { full = false, testFiles } = {}) {
 		viewers: viewerList
 			.filter((viewer) => !viewer.ownJobs)
 			.map(({ name, dir, verify }) => ({ name, dir, verify: verify.join('\n') })),
-		// The pptx jobs in ci.yml run (see VIEWERS.pptx).
-		pptx: viewerList.some((viewer) => viewer.name === 'pptx'),
+		// What the pptx jobs in ci.yml run (see VIEWERS.pptx and pptxPlan).
+		pptx: pptxPlan(live, {
+			everything,
+			reaches: viewerList.some((viewer) => viewer.name === 'pptx'),
+		}),
 		consumers: ALL_CONSUMERS.filter((key) => consumers.has(key)).map((key) => CONSUMERS[key]),
 	};
 }
