@@ -33,8 +33,10 @@ permissions:
   contents: write
 
 # One release at a time: two overlapping runs would race on the version-bump commit and the tags.
+# Re-publish dispatches (`tag` set) never touch the bump commit or tags, and get a group per tag:
+# one shared group keeps a single pending run, so dispatching several tags cancelled all but the last.
 concurrency:
-  group: release
+  group: release${{ inputs.tag != '' && format('-republish-{0}', inputs.tag) || '' }}
   cancel-in-progress: false
 
 jobs:
@@ -460,3 +462,20 @@ jobs:
           else
             node scripts/publish-released.mjs --plan release-plan.json --group "$GROUP"
           fi
+
+  # A package that was bumped and tagged but never published is skipped by every later planner
+  # run, so nothing retries it. Fail loudly (with the recovery command) whenever one exists.
+  verify-published:
+    needs: [release, publish]
+    if: always() && !cancelled()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag == '' && needs.release.outputs.release_sha || github.sha }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - run: node scripts/check-published.mjs --wait-minutes 20
