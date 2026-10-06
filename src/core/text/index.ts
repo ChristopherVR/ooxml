@@ -7,3 +7,5 @@ export {
 	type FontScriptCategory,
 	type ScriptRun,
 } from './unicode-script-detection.js';
+export * from './tab-leader.js';
+export * from './decimal-tab.js';
