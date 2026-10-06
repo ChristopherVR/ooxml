@@ -5,18 +5,18 @@
 **Open, render, edit, present and save PowerPoint files entirely in the browser (or Node.js).**
 One TypeScript engine, five UI bindings, zero servers.
 
-[![docs](https://img.shields.io/badge/docs-christophervr.github.io-6366f1.svg)](https://christophervr.github.io/pptx-viewer/)
+[![docs](https://img.shields.io/badge/docs-christophervr.github.io-6366f1.svg)](https://christophervr.github.io/ooxml/pptx/)
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
-[![CI](https://github.com/ChristopherVR/pptx-viewer/actions/workflows/ci.yml/badge.svg)](https://github.com/ChristopherVR/pptx-viewer/actions/workflows/ci.yml)
+[![CI](https://github.com/ChristopherVR/ooxml/actions/workflows/ci.yml/badge.svg)](https://github.com/ChristopherVR/ooxml/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/pptx-viewer-core?label=pptx-viewer-core)](https://www.npmjs.com/package/pptx-viewer-core)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 
-[**Live demo**](https://christophervr.github.io/pptx-viewer/demo/) &nbsp;&middot;&nbsp;
-[**Documentation**](https://christophervr.github.io/pptx-viewer/) &nbsp;&middot;&nbsp;
+[**Live demo**](https://christophervr.github.io/ooxml/pptx/demo/) &nbsp;&middot;&nbsp;
+[**Documentation**](https://christophervr.github.io/ooxml/pptx/) &nbsp;&middot;&nbsp;
 [**Quick start**](#quick-start) &nbsp;&middot;&nbsp;
 [**Packages**](#packages)
 
-![The pptx-viewer editor rendering a PowerPoint slide with ribbon toolbar and slide thumbnails](https://raw.githubusercontent.com/ChristopherVR/pptx-viewer/main/.github/assets/editor.png)
+![The pptx-viewer editor rendering a PowerPoint slide with ribbon toolbar and slide thumbnails](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/pptx/.github/assets/editor.png)
 
 </div>
 
@@ -154,7 +154,7 @@ const viewer = createPptxViewer(document.getElementById('host')!, {
 
 </details>
 
-For file loading, CSS setup and container sizing, follow the [getting-started guide](https://christophervr.github.io/pptx-viewer/guide/quick-start).
+For file loading, CSS setup and container sizing, follow the [getting-started guide](https://christophervr.github.io/ooxml/pptx/guide/quick-start).
 
 ## Headless: create, edit and convert decks in code
 
@@ -210,7 +210,7 @@ const markdown = await new PptxMarkdownConverter('./output', {
 }).convert(data);
 ```
 
-See the [core guide](https://christophervr.github.io/pptx-viewer/core/) for the data model, builders, encryption, and the [converter options](docs/core/converter.md).
+See the [core guide](https://christophervr.github.io/ooxml/pptx/core/) for the data model, builders, encryption, and the [converter options](docs/core/converter.md).
 
 ## AI agents and MCP
 
@@ -235,15 +235,15 @@ const { pptxData: updated } = replaceText(
 );
 ```
 
-The viewers also include an optional built-in [AI assistant](https://christophervr.github.io/pptx-viewer/guide/ai-assistant) panel that drives the same tools.
+The viewers also include an optional built-in [AI assistant](https://christophervr.github.io/ooxml/pptx/guide/ai-assistant) panel that drives the same tools.
 
 ## See it in each framework
 
 | React                                                                                                                    | Vue 3                                                                                                                      | Angular                                                                                                                    |
 | ------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| ![React demo](https://raw.githubusercontent.com/ChristopherVR/pptx-viewer/main/.github/assets/packages/react-demo.gif)   | ![Vue demo](https://raw.githubusercontent.com/ChristopherVR/pptx-viewer/main/.github/assets/packages/vue-demo.gif)         | ![Angular demo](https://raw.githubusercontent.com/ChristopherVR/pptx-viewer/main/.github/assets/packages/angular-demo.gif) |
+| ![React demo](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/pptx/.github/assets/packages/react-demo.gif)   | ![Vue demo](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/pptx/.github/assets/packages/vue-demo.gif)         | ![Angular demo](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/pptx/.github/assets/packages/angular-demo.gif) |
 | **Svelte 5**                                                                                                             | **Vanilla JS**                                                                                                             | **Installer**                                                                                                              |
-| ![Svelte demo](https://raw.githubusercontent.com/ChristopherVR/pptx-viewer/main/.github/assets/packages/svelte-demo.gif) | ![Vanilla demo](https://raw.githubusercontent.com/ChristopherVR/pptx-viewer/main/.github/assets/packages/vanilla-demo.gif) | ![Installer](https://raw.githubusercontent.com/ChristopherVR/pptx-viewer/main/.github/assets/packages/cli-installer.gif)   |
+| ![Svelte demo](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/pptx/.github/assets/packages/svelte-demo.gif) | ![Vanilla demo](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/pptx/.github/assets/packages/vanilla-demo.gif) | ![Installer](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/pptx/.github/assets/packages/cli-installer.gif)   |
 
 ## Packages
 
@@ -274,21 +274,26 @@ pptx-vanilla-viewer ┘
 - **Shared** holds everything a viewer needs that is not framework code: style and colour resolution, text layout, chart maths, connector routing, animation and Morph engines, export preparation.
 - **Bindings** are thin view layers that map the shared descriptors onto JSX, SFC templates, Angular templates, Svelte runes or plain DOM. That is why all five render identically and ship the same features.
 
-Read the [architecture guide](https://christophervr.github.io/pptx-viewer/guide/architecture) for the deep dive.
+Read the [architecture guide](https://christophervr.github.io/ooxml/pptx/guide/architecture) for the deep dive.
 
 ## Fidelity and compatibility
 
-pptx-viewer tracks its PowerPoint fidelity openly. Rendering is checked against real PowerPoint output, the [OpenXML conformance inventory](docs/architecture/openxml-conformance.md) grades every feature, and any construct that loads as an approximation is reported at runtime on `data.warnings`. The [known gaps](https://christophervr.github.io/pptx-viewer/guide/limitations) page lists what is still being worked on.
+pptx-viewer tracks its PowerPoint fidelity openly. Rendering is checked against real PowerPoint output, the [OpenXML conformance inventory](docs/architecture/openxml-conformance.md) grades every feature, and any construct that loads as an approximation is reported at runtime on `data.warnings`. The [known gaps](https://christophervr.github.io/ooxml/pptx/guide/limitations) page lists what is still being worked on.
 
 ## Contributing
 
+The viewer lives in `viewers/pptx` of [ChristopherVR/ooxml](https://github.com/ChristopherVR/ooxml), next to the `ooxml-core` engine it is built on; its demos are in `demos/pptx` and its browser tests in `e2e/pptx` at the repository root.
+
 ```bash
-git clone https://github.com/ChristopherVR/pptx-viewer.git
-cd pptx-viewer
-bun install
-bun run build      # core -> shared -> locales -> tools -> bindings -> cli -> demo
+git clone https://github.com/ChristopherVR/ooxml.git
+cd ooxml
+bun install                                  # one workspace for the whole repository
+bun run build && bun run --cwd src/ui build  # the engine and the shared UI the viewer reads
+cd viewers/pptx
+bun run build:packages   # core -> shared -> locales -> tools -> cli -> the five bindings
 bun run test
-bun run demo       # React demo on :4173 (also demo:vue, demo:angular, demo:svelte, demo:vanilla)
+bun run demo             # React demo on :4173 (also demo:vue, demo:angular, demo:svelte, demo:vanilla)
+bun run e2e              # Playwright across all five demos
 ```
 
 You will need [Bun](https://bun.sh/) and Node.js 22+. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a PR: it explains the **parity rule** (a UI change lands in all five bindings), Conventional Commits (they drive each package's version), and how the demos resolve packages. This project follows a [Code of Conduct](CODE_OF_CONDUCT.md); report vulnerabilities privately via [SECURITY.md](SECURITY.md).
@@ -297,4 +302,4 @@ You will need [Bun](https://bun.sh/) and Node.js 22+. Please read [CONTRIBUTING.
 
 ## License
 
-[Apache License 2.0](LICENSE): free to use, modify and distribute, including in commercial and closed-source products, with an explicit patent grant. When redistributing, keep the [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE) files and note any files you changed. Some bundled components carry their own licenses (for example, `mtx-decompressor` is MPL-2.0); see the `NOTICE` files. A link back to [this repository](https://github.com/ChristopherVR/pptx-viewer) is always appreciated.
+[Apache License 2.0](LICENSE): free to use, modify and distribute, including in commercial and closed-source products, with an explicit patent grant. When redistributing, keep the [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE) files and note any files you changed. Some bundled components carry their own licenses (for example, `mtx-decompressor` is MPL-2.0); see the `NOTICE` files. A link back to [this repository](https://github.com/ChristopherVR/ooxml/tree/main/viewers/pptx) is always appreciated.

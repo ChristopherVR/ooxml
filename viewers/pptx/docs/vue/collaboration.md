@@ -67,7 +67,7 @@ cancel active drags on readonly transitions or teardown. Publish local cursor
 coordinates divided by the stage scale, selection IDs and
 the active slide through `setCursor`, `setSelection` and `setActiveSlide`.
 
-The [custom-shell demo source](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/demos/demo-vue/src/HostOwnedHeadlessEditor.vue)
+The [custom-shell demo source](https://github.com/ChristopherVR/ooxml/blob/main/demos/pptx/demo-vue/src/HostOwnedHeadlessEditor.vue)
 shows the complete wiring without rendering `PowerPointViewer`.
 
 ## Built-in viewer

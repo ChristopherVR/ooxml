@@ -1,17 +1,17 @@
 # @christophervr/pptx-viewer
 
 [![npm version](https://img.shields.io/npm/v/%40christophervr%2Fpptx-viewer.svg)](https://www.npmjs.com/package/@christophervr/pptx-viewer)
-[![license](https://img.shields.io/npm/l/%40christophervr%2Fpptx-viewer.svg)](https://github.com/ChristopherVR/pptx-viewer/blob/main/LICENSE)
+[![license](https://img.shields.io/npm/l/%40christophervr%2Fpptx-viewer.svg)](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/LICENSE)
 
 > **Note:** This package is also the **interactive `npx` installer** for the whole pptx-viewer family. Run `npx @christophervr/pptx-viewer` (no install needed) to pick React, Vue, Angular, Svelte, vanilla JS, the core engine, and/or the MCP server, and it installs the right package(s) or scaffolds a brand-new starter app for you. Jump to [The `pptx-viewer` CLI, in full](#the-pptx-viewer-cli-in-full) at the bottom of this page.
 
 > A drop-in **React** component that turns a `.pptx` file into a fully interactive PowerPoint: **view, edit, present, collaborate, and export**, entirely in the browser. This package **re-exports [`pptx-react-viewer`](https://www.npmjs.com/package/pptx-react-viewer) directly**, since React is this project's primary/flagship binding, so installing and importing `@christophervr/pptx-viewer` works exactly like installing `pptx-react-viewer` on its own.
 
-![Selecting, dragging, and resizing a slide element in the React demo](https://raw.githubusercontent.com/ChristopherVR/pptx-viewer/main/.github/assets/packages/react-demo.gif)
+![Selecting, dragging, and resizing a slide element in the React demo](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/pptx/.github/assets/packages/react-demo.gif)
 
 Slides render with real **HTML/CSS** (not `<canvas>`), so text stays crisp at any zoom, is selectable and screen-reader accessible, and every element is directly editable. The parsing/editing engine ([`pptx-viewer-core`](https://www.npmjs.com/package/pptx-viewer-core)) is **bundled in**, so you install just one package.
 
-<samp>**[▶️ Try the live demo](https://christophervr.github.io/pptx-viewer/demo/)** · **[📦 npm](https://www.npmjs.com/package/@christophervr/pptx-viewer)** · **[📖 Full docs](https://christophervr.github.io/pptx-viewer/)** · **[🧩 Core SDK](https://www.npmjs.com/package/pptx-viewer-core)**</samp>
+<samp>**[▶️ Try the live demo](https://christophervr.github.io/ooxml/pptx/demo/)** · **[📦 npm](https://www.npmjs.com/package/@christophervr/pptx-viewer)** · **[📖 Full docs](https://christophervr.github.io/ooxml/pptx/)** · **[🧩 Core SDK](https://www.npmjs.com/package/pptx-viewer-core)**</samp>
 
 ---
 
@@ -87,7 +87,7 @@ const bytes = await viewerRef.current?.getContent(); // Uint8Array of a valid .p
 | **Accessibility**  | Keyboard navigation, alt-text audit panel, screen reader support                                                                       |
 | **3D**             | GLB/GLTF model rendering via Three.js, 3D surface charts, CSS 3D shape/text extrusion                                                  |
 
-See the [full docs](https://christophervr.github.io/pptx-viewer/) for the complete API reference (props, ref handle, hooks), styling/theming, and localization guides - they apply to `@christophervr/pptx-viewer` exactly as written, since it re-exports the same component.
+See the [full docs](https://christophervr.github.io/ooxml/pptx/) for the complete API reference (props, ref handle, hooks), styling/theming, and localization guides - they apply to `@christophervr/pptx-viewer` exactly as written, since it re-exports the same component.
 
 ---
 
@@ -115,17 +115,17 @@ If you're building for Vue, Angular, Svelte, or vanilla JS instead, use the matc
 | **Core only**  | [`pptx-viewer-core`](https://www.npmjs.com/package/pptx-viewer-core)       | The framework-agnostic parse/edit/save/convert SDK, no UI.                 |
 | **MCP server** | [`pptx-viewer-mcp`](https://www.npmjs.com/package/pptx-viewer-mcp)         | PowerPoint editing tools exposed to AI agents (Claude, Cursor, ...).       |
 
-See the [project README](https://github.com/ChristopherVR/pptx-viewer#readme) for the full monorepo overview, architecture, and a per-package documentation index.
+See the [project README](https://github.com/ChristopherVR/ooxml/tree/main/viewers/pptx#readme) for the full monorepo overview, architecture, and a per-package documentation index.
 
 ## License
 
-[Apache-2.0](https://github.com/ChristopherVR/pptx-viewer/blob/main/LICENSE). Please keep the [`NOTICE`](https://github.com/ChristopherVR/pptx-viewer/blob/main/NOTICE) file with redistributions.
+[Apache-2.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/LICENSE). Please keep the [`NOTICE`](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/NOTICE) file with redistributions.
 
 ---
 
 ## The `pptx-viewer` CLI, in full
 
-![The interactive installer selecting React and MCP, then scaffolding a starter app](https://raw.githubusercontent.com/ChristopherVR/pptx-viewer/main/.github/assets/packages/cli-installer.gif)
+![The interactive installer selecting React and MCP, then scaffolding a starter app](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/pptx/.github/assets/packages/cli-installer.gif)
 
 ```bash
 npx @christophervr/pptx-viewer@latest
@@ -168,7 +168,7 @@ If you picked React, Vue, Angular, or Svelte and a `package.json` already exists
 When exactly one UI framework is selected, an interactive session asks:
 
 - **Install here** adds the package(s) to the project in the current directory. A `package.json` must already exist - run `npm init -y` first if not.
-- **Scaffold a new project** bootstraps a brand-new starter app in its own folder using the framework's own official tool - [`create-vite`](https://www.npmjs.com/package/create-vite) for React/Vue/Svelte/Vanilla JS, [`@angular/cli`](https://www.npmjs.com/package/@angular/cli) for Angular - then overwrites the generated entry file (`src/App.tsx`, `src/App.vue`, `src/App.svelte`, `src/main.ts`, or Angular's `src/app/app.ts` / `app.component.ts`) with a working `PowerPointViewer` example: open an existing `.pptx`, or build a blank deck and start editing right away, the same pattern as the [live demos](https://christophervr.github.io/pptx-viewer/demo/). It then installs the viewer package, `pptx-viewer-core`, and each framework's companion packages (i18n bindings, icon packs, etc.) with your detected package manager, asks whether to add real-time collaboration (`yjs`, `y-websocket`, `y-webrtc`; defaults to yes), asks the same for 3D rendering support when scaffolding **Vanilla JS** (`three`; defaults to yes - the other four frameworks already pull it in automatically as an optional dependency of their viewer package), and finally starts the new project's dev server automatically, mirroring what `create-vite` does on its own.
+- **Scaffold a new project** bootstraps a brand-new starter app in its own folder using the framework's own official tool - [`create-vite`](https://www.npmjs.com/package/create-vite) for React/Vue/Svelte/Vanilla JS, [`@angular/cli`](https://www.npmjs.com/package/@angular/cli) for Angular - then overwrites the generated entry file (`src/App.tsx`, `src/App.vue`, `src/App.svelte`, `src/main.ts`, or Angular's `src/app/app.ts` / `app.component.ts`) with a working `PowerPointViewer` example: open an existing `.pptx`, or build a blank deck and start editing right away, the same pattern as the [live demos](https://christophervr.github.io/ooxml/pptx/demo/). It then installs the viewer package, `pptx-viewer-core`, and each framework's companion packages (i18n bindings, icon packs, etc.) with your detected package manager, asks whether to add real-time collaboration (`yjs`, `y-websocket`, `y-webrtc`; defaults to yes), asks the same for 3D rendering support when scaffolding **Vanilla JS** (`three`; defaults to yes - the other four frameworks already pull it in automatically as an optional dependency of their viewer package), and finally starts the new project's dev server automatically, mirroring what `create-vite` does on its own.
 - Scaffolding the **Angular** target checks your Node.js version first - `@angular/cli@latest` needs Node.js 22.22.0+, 24.13.1+, or 26.0.0+ - and fails fast with an upgrade link before asking anything else.
 
 Either way, it detects your package manager (`bun`, `pnpm`, `yarn`, or `npm`, from whichever lockfile is in the current directory, falling back to the manager that launched the command, then `npm`) and prints a ready-to-use quick-start snippet once it's done.

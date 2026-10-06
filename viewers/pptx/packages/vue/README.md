@@ -1,18 +1,18 @@
 # pptx-vue-viewer
 
 [![npm version](https://img.shields.io/npm/v/pptx-vue-viewer.svg)](https://www.npmjs.com/package/pptx-vue-viewer)
-[![license](https://img.shields.io/npm/l/pptx-vue-viewer.svg)](https://github.com/ChristopherVR/pptx-viewer/blob/main/LICENSE)
+[![license](https://img.shields.io/npm/l/pptx-vue-viewer.svg)](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/LICENSE)
 
 Show, edit, and present Microsoft PowerPoint (`.pptx`) files directly in a
 Vue 3 app: no server, no conversion step, no PowerPoint install required. Drop
 in a `<PowerPointViewer>` component, hand it the file's bytes, and it renders
 slides as real HTML and CSS with full editing and export support.
 
-![Navigating between slides in the Vue 3 demo](https://raw.githubusercontent.com/ChristopherVR/pptx-viewer/main/.github/assets/packages/vue-demo.gif)
+![Navigating between slides in the Vue 3 demo](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/pptx/.github/assets/packages/vue-demo.gif)
 
 The rendering is done by the framework-agnostic [`pptx-viewer-core`](https://www.npmjs.com/package/pptx-viewer-core) engine, which turns a `.pptx` file into a structured slide model. This package is the Vue layer that draws that model on screen, and the engine is **bundled in**, so you install just one package.
 
-<samp>**[▶️ Try the live demo](https://christophervr.github.io/pptx-viewer/demo-vue/)** · **[📦 npm](https://www.npmjs.com/package/pptx-vue-viewer)** · **[📖 Full docs](https://christophervr.github.io/pptx-viewer/)** · **[🧩 Core SDK](https://www.npmjs.com/package/pptx-viewer-core)**</samp>
+<samp>**[▶️ Try the live demo](https://christophervr.github.io/ooxml/pptx/demo-vue/)** · **[📦 npm](https://www.npmjs.com/package/pptx-vue-viewer)** · **[📖 Full docs](https://christophervr.github.io/ooxml/pptx/)** · **[🧩 Core SDK](https://www.npmjs.com/package/pptx-viewer-core)**</samp>
 
 ## Features
 
@@ -137,7 +137,7 @@ provideViewerTheme({ colors: { primary: '#6366f1' } });
 
 Two ready-made presets ship with the package: `vermilionLightTheme` (warm paper
 canvas) and `vermilionDarkTheme` (dimmed presenter room), the same vermilion
-brand look as the [documentation site](https://christophervr.github.io/pptx-viewer/):
+brand look as the [documentation site](https://christophervr.github.io/ooxml/pptx/):
 
 ```ts
 import { vermilionLightTheme } from 'pptx-vue-viewer';
@@ -197,7 +197,7 @@ See the [cross-binding defaults](../../docs/guide/viewport-fit.md).
 | `surfaceChart3D`, `barChart3D`, `lineChart3D`, `areaChart3D`, `pieChart3D` | `boolean`                            | `false`                | Independently opt in to interactive Three.js renderers for the matching 3D chart kinds; each falls back to SVG when WebGL is unavailable.                                                                                                                                                                                                                       |
 | `ai`                                                                       | `PptxAiConfig`                       | n/a                    | Optional AI assistant configuration. The SDK peers load only when its panel is opened.                                                                                                                                                                                                                                                                          |
 | `hiddenActions`                                                            | `ToolbarActionId[]`                  | n/a                    | Individual toolbar buttons and/or ribbon tabs to hide (e.g. `['share', 'broadcast', 'insert']`). Omit to show everything.                                                                                                                                                                                                                                       |
-| `customization`                                                            | `ViewerCustomization`                | -                      | Hide, lock or remap any part of the UI (ribbon tabs/buttons, File > Options pages/sections/settings, File tab, context menus, shortcuts, panels, AI/collaboration, dialogs); the same helpers (`hideRibbonTab`, `lockSetting`, ...) are on the template ref. See the [UI Customization guide](https://christophervr.github.io/pptx-viewer/guide/customization). |
+| `customization`                                                            | `ViewerCustomization`                | -                      | Hide, lock or remap any part of the UI (ribbon tabs/buttons, File > Options pages/sections/settings, File tab, context menus, shortcuts, panels, AI/collaboration, dialogs); the same helpers (`hideRibbonTab`, `lockSetting`, ...) are on the template ref. See the [UI Customization guide](https://christophervr.github.io/ooxml/pptx/guide/customization). |
 | `defaultThemeKey`                                                          | `string`                             | n/a                    | Initial File > Options > Appearance selection when no persisted preference exists.                                                                                                                                                                                                                                                                              |
 | `availableThemes`                                                          | `ThemeCatalogEntry[]`                | n/a                    | Theme choices offered by File > Options > Appearance (defaults to the built-in catalog).                                                                                                                                                                                                                                                                        |
 | `onThemeChange`                                                            | `(key: string) => void`              | n/a                    | Host hook for the appearance picker; when set, the host owns persisting the choice.                                                                                                                                                                                                                                                                             |
@@ -256,7 +256,7 @@ following slide/element manipulation methods are also available:
 `addElement(element)`, `updateElement(id, patch)`, `deleteElements(ids)`, and
 `duplicateElement(id)`.
 
-See [element insertion](https://christophervr.github.io/pptx-viewer/vue/handle#add-element)
+See [element insertion](https://christophervr.github.io/ooxml/pptx/vue/handle#add-element)
 for the `addElement` contract and a core-factory example.
 
 ### Exported components & helpers
@@ -272,7 +272,7 @@ getter or shallow ref and exposes `shellState`: effective `canEdit`, connection
 status, sanitized remote users and connected count. Use it for both custom controls
 and their edit handlers. The public `/viewer` entry also exports `InlineTextEditor`
 and `useInlineEditing` for reusing the native inline editing behavior.
-See the [custom-shell collaboration guide](https://christophervr.github.io/pptx-viewer/vue/collaboration#custom-host-chrome)
+See the [custom-shell collaboration guide](https://christophervr.github.io/ooxml/pptx/vue/collaboration#custom-host-chrome)
 and `demos/demo-vue/src/HostOwnedHeadlessEditor.vue` for complete wiring.
 
 `<PowerPointViewer>` bundles the slide canvas, ribbon, inspector, and every
@@ -340,7 +340,7 @@ const i18n = createI18n({
 });
 ```
 
-Switch languages with `i18n.global.locale.value = 'fr'`. `pptx-vue-viewer/i18n` also exports a `TranslationKey` type for type-checking a new locale dictionary (`Record<TranslationKey, string>`) at compile time. See the [Localization guide](https://christophervr.github.io/pptx-viewer/guide/localization) for the full picture across all five viewer bindings and how to contribute a translation upstream; the live demo's language picker is a working reference.
+Switch languages with `i18n.global.locale.value = 'fr'`. `pptx-vue-viewer/i18n` also exports a `TranslationKey` type for type-checking a new locale dictionary (`Record<TranslationKey, string>`) at compile time. See the [Localization guide](https://christophervr.github.io/ooxml/pptx/guide/localization) for the full picture across all five viewer bindings and how to contribute a translation upstream; the live demo's language picker is a working reference.
 
 ## Limitations
 
@@ -370,7 +370,7 @@ import { translationsZhCN } from 'pptx-vue-viewer/i18n/zh-CN';
 
 The other subpaths are `i18n/fr` (`translationsFr`), `i18n/es`
 (`translationsEs`), and `i18n/de` (`translationsDe`). See the
-[localization guide](https://christophervr.github.io/pptx-viewer/guide/localization)
+[localization guide](https://christophervr.github.io/ooxml/pptx/guide/localization)
 for registration and runtime switching. Existing English imports are unchanged.
 
 For Vue, convert the dictionary with `toVueI18nSyntax` from

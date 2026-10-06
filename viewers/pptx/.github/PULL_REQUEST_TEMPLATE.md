@@ -1,6 +1,6 @@
 <!--
 Thanks for contributing. Please read CONTRIBUTING.md if you have not already:
-https://github.com/ChristopherVR/pptx-viewer/blob/main/CONTRIBUTING.md
+https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/CONTRIBUTING.md
 
 Delete any section that genuinely does not apply.
 -->
@@ -32,7 +32,7 @@ serialization, docs, CI, tooling). Everything else must fill it in.
 This project ships the same viewer through five bindings. A user on Svelte is
 entitled to the feature set a user on React gets, so parity is a merge
 requirement. See
-[the parity rule](https://github.com/ChristopherVR/pptx-viewer/blob/main/CONTRIBUTING.md#the-parity-rule-read-this-before-writing-ui-code).
+[the parity rule](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/CONTRIBUTING.md#the-parity-rule-read-this-before-writing-ui-code).
 
 ### Which bindings did you check, and what did you find?
 

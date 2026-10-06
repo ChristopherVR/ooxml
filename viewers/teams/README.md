@@ -182,7 +182,7 @@ Open `http://127.0.0.1:5173/?name=Ada` and, in another tab, `...?name=Bob`: two 
 
 ## Releasing
 
-Releases are automated from Conventional Commits: each package has its own version and tag (`<npm-name>@<version>`), and the hourly release workflow plans, tags and publishes through npm trusted publishing. See [docs/releasing.md](docs/releasing.md) and [CONTRIBUTING.md](CONTRIBUTING.md).
+Releases are automated from Conventional Commits: each package has its own version and tag (`<npm-name>@<version>`), and the hourly release workflow plans, tags and publishes through npm trusted publishing. See [docs/releasing.md](docs/releasing.md) and [CONTRIBUTING.md](../../CONTRIBUTING.md).
 
 ## Documentation
 
@@ -190,4 +190,4 @@ Releases are automated from Conventional Commits: each package has its own versi
 
 ## Contributing and license
 
-Contributions follow [CONTRIBUTING.md](CONTRIBUTING.md). [Apache License 2.0](LICENSE); see [`NOTICE`](NOTICE) for attributions.
+Contributions follow [CONTRIBUTING.md](../../CONTRIBUTING.md). [Apache License 2.0](LICENSE); see [`NOTICE`](NOTICE) for attributions.

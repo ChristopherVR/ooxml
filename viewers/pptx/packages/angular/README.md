@@ -1,18 +1,18 @@
 # pptx-angular-viewer
 
 [![npm version](https://img.shields.io/npm/v/pptx-angular-viewer.svg)](https://www.npmjs.com/package/pptx-angular-viewer)
-[![license](https://img.shields.io/npm/l/pptx-angular-viewer.svg)](https://github.com/ChristopherVR/pptx-viewer/blob/main/LICENSE)
+[![license](https://img.shields.io/npm/l/pptx-angular-viewer.svg)](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/LICENSE)
 
 Show, edit, and present Microsoft PowerPoint (`.pptx`) files directly in an
 Angular app: no server, no conversion step, no PowerPoint install required. Drop
 in a `<pptx-viewer>` component, hand it the file's bytes, and it renders slides
 as real HTML and CSS with full editing and export support.
 
-![Exploring the Insert and View ribbon tabs in the Angular demo](https://raw.githubusercontent.com/ChristopherVR/pptx-viewer/main/.github/assets/packages/angular-demo.gif)
+![Exploring the Insert and View ribbon tabs in the Angular demo](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/pptx/.github/assets/packages/angular-demo.gif)
 
 The rendering is done by the framework-agnostic [`pptx-viewer-core`](https://www.npmjs.com/package/pptx-viewer-core) engine, which turns a `.pptx` file into a structured slide model. This package is the Angular layer that draws that model on screen, and the engine is **bundled in**, so you install just one package.
 
-<samp>**[▶️ Try the live demo](https://christophervr.github.io/pptx-viewer/demo-angular/)** · **[📦 npm](https://www.npmjs.com/package/pptx-angular-viewer)** · **[📖 Full docs](https://christophervr.github.io/pptx-viewer/)** · **[🧩 Core SDK](https://www.npmjs.com/package/pptx-viewer-core)**</samp>
+<samp>**[▶️ Try the live demo](https://christophervr.github.io/ooxml/pptx/demo-angular/)** · **[📦 npm](https://www.npmjs.com/package/pptx-angular-viewer)** · **[📖 Full docs](https://christophervr.github.io/ooxml/pptx/)** · **[🧩 Core SDK](https://www.npmjs.com/package/pptx-viewer-core)**</samp>
 
 ## Features
 
@@ -126,7 +126,7 @@ bootstrapApplication(AppComponent, {
 
 Two ready-made presets ship with the package: `vermilionLightTheme` (warm paper
 canvas) and `vermilionDarkTheme` (dimmed presenter room), the same vermilion
-brand look as the [documentation site](https://christophervr.github.io/pptx-viewer/):
+brand look as the [documentation site](https://christophervr.github.io/ooxml/pptx/):
 
 ```ts
 import { vermilionLightTheme } from 'pptx-angular-viewer';
@@ -244,7 +244,7 @@ geometry or user zoom. See the [cross-binding defaults](../../docs/guide/viewpor
 | `surfaceChart3D`, `barChart3D`, `lineChart3D`, `areaChart3D`, `pieChart3D` | `boolean`                            | `false` | Independently opt in to interactive Three.js renderers for the matching 3D chart kinds; each falls back to SVG when WebGL is unavailable.                                                                                                                                                                                                                             |
 | `ai`                                                                       | `PptxAiConfig`                       | n/a     | Optional AI assistant configuration. The SDK peer loads only when its panel is opened.                                                                                                                                                                                                                                                                                |
 | `hiddenActions`                                                            | `ToolbarActionId[]`                  | `[]`    | Toolbar buttons/ribbon tabs to hide individually (e.g. `['share', 'broadcast']`), instead of hiding the whole toolbar.                                                                                                                                                                                                                                                |
-| `customization`                                                            | `ViewerCustomization`                | -       | Hide, lock or remap any part of the UI (ribbon tabs/buttons, File > Options pages/sections/settings, File tab, context menus, shortcuts, panels, AI/collaboration, dialogs); the same helpers (`hideRibbonTab`, `lockSetting`, ...) are on the component instance. See the [UI Customization guide](https://christophervr.github.io/pptx-viewer/guide/customization). |
+| `customization`                                                            | `ViewerCustomization`                | -       | Hide, lock or remap any part of the UI (ribbon tabs/buttons, File > Options pages/sections/settings, File tab, context menus, shortcuts, panels, AI/collaboration, dialogs); the same helpers (`hideRibbonTab`, `lockSetting`, ...) are on the component instance. See the [UI Customization guide](https://christophervr.github.io/ooxml/pptx/guide/customization). |
 | `defaultThemeKey`                                                          | `string`                             | n/a     | Initial File > Options > Appearance selection when no persisted preference exists.                                                                                                                                                                                                                                                                                    |
 | `availableThemes`                                                          | `ThemeCatalogEntry[]`                | n/a     | Theme choices offered by File > Options > Appearance (defaults to the built-in catalog).                                                                                                                                                                                                                                                                              |
 | `onThemeChange`                                                            | `(key: string) => void`              | n/a     | Host hook for the appearance picker; when set, the host owns persisting the choice.                                                                                                                                                                                                                                                                                   |
@@ -303,7 +303,7 @@ following slide/element manipulation methods are also available:
 `addElement(element)`, `updateElement(id, patch)`, `deleteElements(ids)`, and
 `duplicateElement(id)`.
 
-See [element insertion](https://christophervr.github.io/pptx-viewer/angular/api#add-element)
+See [element insertion](https://christophervr.github.io/ooxml/pptx/angular/api#add-element)
 for the `addElement` contract and a core-factory example.
 
 ### Exported components & helpers
@@ -333,7 +333,7 @@ import {
 } from 'pptx-angular-viewer/internals';
 ```
 
-See the [services reference](https://christophervr.github.io/pptx-viewer/angular/services-reference)
+See the [services reference](https://christophervr.github.io/ooxml/pptx/angular/services-reference)
 for the full list.
 
 ## Localization (i18n)
@@ -351,7 +351,7 @@ inject(TranslateService).setTranslation('en', translationsEn);
 inject(TranslateService).use('fr');
 ```
 
-Unlike React/Vue, `translationsEn`, `keyToLabel`, and the `TranslationKey` type (for type-checking a new locale dictionary as `Record<TranslationKey, string>`) are exported from the package **root**, not an `/i18n` subpath. See the [Localization guide](https://christophervr.github.io/pptx-viewer/guide/localization) for the full picture across all five viewer bindings and how to contribute a translation upstream; the live demo's language picker is a working reference.
+Unlike React/Vue, `translationsEn`, `keyToLabel`, and the `TranslationKey` type (for type-checking a new locale dictionary as `Record<TranslationKey, string>`) are exported from the package **root**, not an `/i18n` subpath. See the [Localization guide](https://christophervr.github.io/ooxml/pptx/guide/localization) for the full picture across all five viewer bindings and how to contribute a translation upstream; the live demo's language picker is a working reference.
 
 ## Limitations
 
@@ -384,7 +384,7 @@ import { translationsZhCN } from 'pptx-angular-viewer/i18n/zh-CN';
 
 The other subpaths are `i18n/fr` (`translationsFr`), `i18n/es`
 (`translationsEs`), and `i18n/de` (`translationsDe`). See the
-[localization guide](https://christophervr.github.io/pptx-viewer/guide/localization)
+[localization guide](https://christophervr.github.io/ooxml/pptx/guide/localization)
 for registration and runtime switching. Existing English imports are unchanged.
 
 ## License

@@ -1,18 +1,18 @@
 # pptx-svelte-viewer
 
 [![npm version](https://img.shields.io/npm/v/pptx-svelte-viewer.svg)](https://www.npmjs.com/package/pptx-svelte-viewer)
-[![license](https://img.shields.io/npm/l/pptx-svelte-viewer.svg)](https://github.com/ChristopherVR/pptx-viewer/blob/main/LICENSE)
+[![license](https://img.shields.io/npm/l/pptx-svelte-viewer.svg)](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/LICENSE)
 
 Show, edit, and present Microsoft PowerPoint (`.pptx`) files directly in a
 Svelte 5 app: no server, no conversion step, no PowerPoint install required.
 Drop in a `<PowerPointViewer>` component (built with runes), hand it the
 file's bytes, and it renders slides as real HTML and CSS.
 
-![A PowerPoint deck rendered by the Svelte 5 viewer demo](https://raw.githubusercontent.com/ChristopherVR/pptx-viewer/main/.github/assets/packages/svelte-demo.gif)
+![A PowerPoint deck rendered by the Svelte 5 viewer demo](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/pptx/.github/assets/packages/svelte-demo.gif)
 
 The rendering is done by the framework-agnostic [`pptx-viewer-core`](https://www.npmjs.com/package/pptx-viewer-core) engine, which turns a `.pptx` file into a structured slide model. This package is the Svelte layer that draws that model on screen, and the engine is **bundled in**, so you install just one package.
 
-<samp>**[▶️ Try the live demo](https://christophervr.github.io/pptx-viewer/demo-svelte/)** · **[📦 npm](https://www.npmjs.com/package/pptx-svelte-viewer)** · **[📖 Full docs](https://christophervr.github.io/pptx-viewer/svelte/)** · **[🧩 Core SDK](https://www.npmjs.com/package/pptx-viewer-core)**</samp>
+<samp>**[▶️ Try the live demo](https://christophervr.github.io/ooxml/pptx/demo-svelte/)** · **[📦 npm](https://www.npmjs.com/package/pptx-svelte-viewer)** · **[📖 Full docs](https://christophervr.github.io/ooxml/pptx/svelte/)** · **[🧩 Core SDK](https://www.npmjs.com/package/pptx-viewer-core)**</samp>
 
 ## Features
 
@@ -113,7 +113,7 @@ or fullscreen fitting. See the [cross-binding defaults](../../docs/guide/viewpor
 | `showToolbar`                                                              | `boolean`                            | `true`                 | Navigation/zoom/fullscreen toolbar.                                                                                                                                                                                                                                                                                                                                     |
 | `showNotes`                                                                | `boolean`                            | `true`                 | Speaker-notes panel and its toolbar toggle.                                                                                                                                                                                                                                                                                                                             |
 | `hiddenActions`                                                            | `ToolbarActionId[]`                  | -                      | Toolbar buttons/ribbon tabs to hide individually (e.g. `['share', 'broadcast']`), instead of hiding the whole toolbar.                                                                                                                                                                                                                                                  |
-| `customization`                                                            | `ViewerCustomization`                | -                      | Hide, lock or remap any part of the UI (ribbon tabs/buttons, File > Options pages/sections/settings, File tab, context menus, shortcuts, panels, AI/collaboration, dialogs); the same helpers (`hideRibbonTab`, `lockSetting`, ...) are on the `bind:this` instance. See the [UI Customization guide](https://christophervr.github.io/pptx-viewer/guide/customization). |
+| `customization`                                                            | `ViewerCustomization`                | -                      | Hide, lock or remap any part of the UI (ribbon tabs/buttons, File > Options pages/sections/settings, File tab, context menus, shortcuts, panels, AI/collaboration, dialogs); the same helpers (`hideRibbonTab`, `lockSetting`, ...) are on the `bind:this` instance. See the [UI Customization guide](https://christophervr.github.io/ooxml/pptx/guide/customization). |
 | `editable`                                                                 | `boolean`                            | `false`                | Ribbon editing, insertion, arrange, and save.                                                                                                                                                                                                                                                                                                                           |
 | `smartArt3D`                                                               | `boolean`                            | `false`                | Opt-in Three.js 3D SmartArt renderer (needs the optional `three` peer; falls back to SVG without it).                                                                                                                                                                                                                                                                   |
 | `surfaceChart3D`, `barChart3D`, `lineChart3D`, `areaChart3D`, `pieChart3D` | `boolean`                            | `false`                | Independently opt in to interactive Three.js renderers for the matching 3D chart kinds; each falls back to SVG when WebGL is unavailable.                                                                                                                                                                                                                               |
@@ -188,10 +188,10 @@ editing and export methods (the `PowerPointViewerApi` type):
   `exportPdf(options?)`, `exportGif(options?)`, `exportVideo(options?)`,
   `print(options?)`.
 
-See [element insertion](https://christophervr.github.io/pptx-viewer/svelte/api#add-element)
+See [element insertion](https://christophervr.github.io/ooxml/pptx/svelte/api#add-element)
 for the `addElement` contract and a core-factory example.
 
-See the [full docs](https://christophervr.github.io/pptx-viewer/svelte/) for
+See the [full docs](https://christophervr.github.io/ooxml/pptx/svelte/) for
 the complete props/events contract, theming, and localization guides.
 
 ### Composing a custom viewer shell
@@ -202,7 +202,7 @@ keep a host-owned configuration reactive. Its `shellState` exposes effective
 uses the same editability rule as the native editor. `EditorLayer`,
 `CollaborationCursors`, `RemoteSelectionOverlay` and their prop types are exported
 from `/viewer` for composing the real editing and presence layers with `SlideCanvas`.
-See the [custom-shell collaboration guide](https://christophervr.github.io/pptx-viewer/svelte/collaboration#custom-host-chrome)
+See the [custom-shell collaboration guide](https://christophervr.github.io/ooxml/pptx/svelte/collaboration#custom-host-chrome)
 and `demos/demo-svelte/src/HostOwnedHeadlessEditor.svelte` for complete wiring.
 
 `<PowerPointViewer>` bundles the slide canvas, ribbon, thumbnail rail,
@@ -324,7 +324,7 @@ import { translationsZhCN } from 'pptx-svelte-viewer/i18n/zh-CN';
 
 The other subpaths are `i18n/fr` (`translationsFr`), `i18n/es`
 (`translationsEs`), and `i18n/de` (`translationsDe`). See the
-[localization guide](https://christophervr.github.io/pptx-viewer/guide/localization)
+[localization guide](https://christophervr.github.io/ooxml/pptx/guide/localization)
 for registration and runtime switching. Existing English imports are unchanged.
 
 ## License

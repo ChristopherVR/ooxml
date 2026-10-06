@@ -12,10 +12,10 @@ Release the core automation entry (0.11.0+) before publishing this change.
 
 Edit PowerPoint files from an AI agent. It ships a ready-to-run [MCP](https://modelcontextprotocol.io) server with 73 PowerPoint editing tools, including adding slides, replacing text, editing charts, and updating embedded objects. The same operations are available as plain functions you can call yourself, alongside their Zod input schemas and a codec for real-time collaboration (Y.Doc). The [`pptx-viewer-core`](https://www.npmjs.com/package/pptx-viewer-core) engine is a dependency, so one install provides the complete editing stack.
 
-![An AI agent calling validated MCP tools to edit and save a PowerPoint file](https://raw.githubusercontent.com/ChristopherVR/pptx-viewer/main/.github/assets/packages/mcp-tools.svg)
+![An AI agent calling validated MCP tools to edit and save a PowerPoint file](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/pptx/.github/assets/packages/mcp-tools.svg)
 
-- **Live demo:** https://christophervr.github.io/pptx-viewer/demo/
-- **Docs:** https://christophervr.github.io/pptx-viewer/
+- **Live demo:** https://christophervr.github.io/ooxml/pptx/demo/
+- **Docs:** https://christophervr.github.io/ooxml/pptx/
 
 ## Quick start
 

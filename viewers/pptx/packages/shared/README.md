@@ -23,7 +23,7 @@ canonical copy of cross-framework logic instead of five drifting duplicates.
 > package (see `scripts/check-published-shared-refs.mjs`, which fails a binding's build if one
 > ever does).
 
-![One framework-neutral rendering layer feeding React, Vue, Angular, Svelte, and Vanilla JavaScript](https://raw.githubusercontent.com/ChristopherVR/pptx-viewer/main/.github/assets/packages/shared-rendering.svg)
+![One framework-neutral rendering layer feeding React, Vue, Angular, Svelte, and Vanilla JavaScript](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/pptx/.github/assets/packages/shared-rendering.svg)
 
 ## What lives here
 

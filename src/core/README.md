@@ -16,7 +16,7 @@ One package, one XML model, every format: Word, PowerPoint, Excel and the shared
 [**Packages and areas**](#features-and-api-one-package-many-areas) &nbsp;&middot;&nbsp;
 [**Install**](#install) &nbsp;&middot;&nbsp;
 [**Examples**](#quick-start) &nbsp;&middot;&nbsp;
-[**Contributing**](CONTRIBUTING.md)
+[**Contributing**](../../CONTRIBUTING.md)
 
 </div>
 
@@ -62,7 +62,7 @@ The `chart` subpath provides shared chart data calculations (regression, quartil
 blank values and stacked series). The `text` subpath provides script-category
 segmentation primitives. These areas are DOM-free and do not import a product model.
 SVG curve flattening is available from `geometry`. See the
-[PowerPoint reuse audit](docs/pptx-shared-logic-audit.md) for extraction evidence
+[PowerPoint reuse audit](../../docs/pptx-shared-logic-audit.md) for extraction evidence
 and remaining candidates.
 
 ## Install
@@ -109,7 +109,7 @@ const part = resolvePartPath('word/document.xml', rels.get('rId5')!.target);
 
 ## Contributing and roadmap
 
-`ooxml-core` is developed in the [ChristopherVR/ooxml](https://github.com/ChristopherVR/ooxml) repository, which also holds [`ooxml-ui`](https://www.npmjs.com/package/ooxml-ui), the MCP servers and the Word, Excel, Visio and OpenTeams viewers. Its README covers the repository layout, the development workflow and releases, and the [roadmap](https://github.com/ChristopherVR/ooxml/blob/main/docs/roadmap.md) says what comes next; the working agreements are in [AGENTS.md](AGENTS.md) and [CONTRIBUTING.md](CONTRIBUTING.md), and [PROVENANCE.md](PROVENANCE.md) records where each module came from.
+`ooxml-core` is developed in the [ChristopherVR/ooxml](https://github.com/ChristopherVR/ooxml) repository, which also holds [`ooxml-ui`](https://www.npmjs.com/package/ooxml-ui), the MCP servers and the Word, Excel, Visio and OpenTeams viewers. Its README covers the repository layout, the development workflow and releases, and the [roadmap](https://github.com/ChristopherVR/ooxml/blob/main/docs/roadmap.md) says what comes next; the working agreements are in [AGENTS.md](../../AGENTS.md) and [CONTRIBUTING.md](../../CONTRIBUTING.md), and [PROVENANCE.md](../../PROVENANCE.md) records where each module came from.
 
 ## License
 

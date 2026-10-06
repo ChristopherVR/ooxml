@@ -99,7 +99,7 @@ Rectangle rounding preserves local coordinates and winding, and honors inherited
 cached line styles. Open orthogonal line chains also support the saved radius when
 every segment has enough room for adjacent tangent arcs, preserving endpoints.
 Short-segment clamping, duplicates, reversals, curves and mixed subpaths remain
-diagnosed and unchanged. See [connector rounding evidence](../../docs/visio-connector-rounding.md).
+diagnosed and unchanged. See [connector rounding evidence](../../../docs/visio-connector-rounding.md).
 Negative radii are ignored; radii below output precision are diagnosed.
 Shape Data dates remain serial days and durations remain days; formats are retained
 without locale-dependent evaluation. Raw hyperlink addresses are untrusted metadata.
@@ -194,7 +194,7 @@ Use it only inside a disposable worker with a parent-owned deadline; it neither
 loads Node codecs nor enables conversion by default. `parseVsdx` accepts an optional
 trusted `metafileConverter` callback for worker-only use. Per-document admission
 allows at most eight unique conversions and 1 MiB aggregate input. See
-[bounded conversion](../../docs/visio-metafile-conversion.md) for the exact subset. All format conversion remains in
+[bounded conversion](../../../docs/visio-metafile-conversion.md) for the exact subset. All format conversion remains in
 `emf-converter`; the adapter owns admission and the inert output boundary only.
 
 ## Experimental plain-text save

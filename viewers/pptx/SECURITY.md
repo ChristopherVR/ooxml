@@ -31,7 +31,7 @@ reporting a suspected vulnerability, in case it has already been fixed.
 **Please do not open a public GitHub issue for security vulnerabilities.**
 
 Report vulnerabilities privately using
-[GitHub's private vulnerability reporting](https://github.com/ChristopherVR/pptx-viewer/security/advisories/new)
+[GitHub's private vulnerability reporting](https://github.com/ChristopherVR/ooxml/security/advisories/new)
 (the "Report a vulnerability" button under this repository's **Security** tab).
 This opens a private advisory visible only to the maintainers until a fix is
 ready, and lets you attach a proof of concept without exposing it publicly.
@@ -89,6 +89,6 @@ Out of scope:
 Dependency update configuration lives in `.github/dependabot.yml`. Code-scanning alerts, when available, can be reviewed on GitHub; the checked-in workflows do not define a CodeQL job.
 Findings are triaged and fixed as part of normal development; you don't need
 to separately report something that's already visible in the repository's
-public [code scanning alerts](https://github.com/ChristopherVR/pptx-viewer/security/code-scanning),
+public [code scanning alerts](https://github.com/ChristopherVR/ooxml/security/code-scanning),
 though private vulnerability reporting is still preferred for anything with a
 working exploit.

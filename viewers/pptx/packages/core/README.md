@@ -1,7 +1,7 @@
 # pptx-viewer-core
 
 [![npm version](https://img.shields.io/npm/v/pptx-viewer-core.svg)](https://www.npmjs.com/package/pptx-viewer-core)
-[![license](https://img.shields.io/npm/l/pptx-viewer-core.svg)](https://github.com/ChristopherVR/pptx-viewer/blob/main/LICENSE)
+[![license](https://img.shields.io/npm/l/pptx-viewer-core.svg)](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/LICENSE)
 [![types](https://img.shields.io/npm/types/pptx-viewer-core.svg)](https://www.npmjs.com/package/pptx-viewer-core)
 
 > A TypeScript library that **reads, creates, edits, and saves** PowerPoint (`.pptx`) files. It runs in the browser and in Node.js, with no native or system dependencies.
@@ -12,9 +12,9 @@ For portable interchange, `PptxJsonConverter` exports that model as a versioned,
 
 There is no UI here: this is the engine on its own. Use it directly when you need to process `.pptx` files without a screen, for example on a server, in a script, or in a build step. The same engine powers the [React](https://www.npmjs.com/package/pptx-react-viewer), [Vue](https://www.npmjs.com/package/pptx-vue-viewer), [Angular](https://www.npmjs.com/package/pptx-angular-viewer), [Svelte](https://www.npmjs.com/package/pptx-svelte-viewer), and [Vanilla JavaScript](https://www.npmjs.com/package/pptx-vanilla-viewer) viewers.
 
-![The core engine loading a PPTX into a typed slide model, then saving or converting it](https://raw.githubusercontent.com/ChristopherVR/pptx-viewer/main/.github/assets/packages/core-engine.svg)
+![The core engine loading a PPTX into a typed slide model, then saving or converting it](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/pptx/.github/assets/packages/core-engine.svg)
 
-<samp>**[📦 npm](https://www.npmjs.com/package/pptx-viewer-core)** · **[📖 Full docs](https://christophervr.github.io/pptx-viewer/)** · **[▶️ Live demo](https://christophervr.github.io/pptx-viewer/demo/)** · **[Choose a viewer](https://christophervr.github.io/pptx-viewer/guide/installation)**</samp>
+<samp>**[📦 npm](https://www.npmjs.com/package/pptx-viewer-core)** · **[📖 Full docs](https://christophervr.github.io/ooxml/pptx/)** · **[▶️ Live demo](https://christophervr.github.io/ooxml/pptx/demo/)** · **[Choose a viewer](https://christophervr.github.io/ooxml/pptx/guide/installation)**</samp>
 
 ---
 
@@ -32,7 +32,7 @@ npm install pptx-viewer-core
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **Read**    | Open a `.pptx` and pull out slides, text, shapes, images, charts, tables, SmartArt, themes, comments, animations, transitions, and document info                                                                                                                                                                                                       |
 | **Import**  | Open a legacy binary `.ppt` (PowerPoint 97-2003) too: `load()` detects the compound file and converts it, so you get the same `PptxData`.                                                                                                                                                                                                              |
-| **Export**  | `save(slides, { outputFormat: 'ppt' })` writes a real binary `.ppt` (MS-PPT/OfficeArt records in an OLE2 container), optionally RC4-encrypted via `pptPassword`; see the [Limitations](https://christophervr.github.io/pptx-viewer/guide/limitations) page for current fidelity notes. Saving without an explicit `outputFormat` still writes `.pptx`. |
+| **Export**  | `save(slides, { outputFormat: 'ppt' })` writes a real binary `.ppt` (MS-PPT/OfficeArt records in an OLE2 container), optionally RC4-encrypted via `pptPassword`; see the [Limitations](https://christophervr.github.io/ooxml/pptx/guide/limitations) page for current fidelity notes. Saving without an explicit `outputFormat` still writes `.pptx`. |
 | **Edit**    | Change the data in memory: add, remove, or reorder slides; insert elements; edit text; restyle; switch themes                                                                                                                                                                                                                                          |
 | **Save**    | Write the changed data back to a valid `.pptx`, leaving everything you did not touch untouched                                                                                                                                                                                                                                                         |
 | **Convert** | Turn a deck into Markdown, optionally pulling the images out alongside it                                                                                                                                                                                                                                                                              |
@@ -106,7 +106,7 @@ The builder API comes in three levels, from highest to lowest:
 2. **Element builders**: one per element type, for fine-grained control: `TextBuilder`, `ShapeBuilder`, `ChartBuilder`, `TableBuilder`, `ImageBuilder`, `ConnectorBuilder`, `MediaBuilder`, `GroupBuilder`.
 3. **`PptxXmlBuilder`**: raw XML, for the rare cases the higher levels do not cover.
 
-It also ships unit helpers (`inches`, `cm`, `mm`, `pt`), common slide sizes (`SlideSizes`), and 8 ready-made themes (`ThemePresets`). The [full docs](https://christophervr.github.io/pptx-viewer/) cover every builder.
+It also ships unit helpers (`inches`, `cm`, `mm`, `pt`), common slide sizes (`SlideSizes`), and 8 ready-made themes (`ThemePresets`). The [full docs](https://christophervr.github.io/ooxml/pptx/) cover every builder.
 
 ### Turn a deck into Markdown
 
@@ -166,7 +166,7 @@ The JSON document has a `format: "pptx-viewer-json"` marker and version number. 
 | `applyTheme`               | `(colors, fonts, name?) => Promise<void>`               | Apply a complete theme                                                                                                                                                                                                                                                   |
 | `setPresentationTheme`     | `(path, applyToAll?) => Promise<void>`                  | Load a `.thmx` theme file                                                                                                                                                                                                                                                |
 
-The `PptxData` you get from `load()` exposes `slides`, `width` / `height` (and the exact `widthEmu` / `heightEmu`), `theme`, `slideMasters`, `slideLayouts`, `sections`, `coreProperties`, `embeddedFonts`, and more. See the [full docs](https://christophervr.github.io/pptx-viewer/) for the complete `PptxHandler`, chart/SmartArt, and theme APIs.
+The `PptxData` you get from `load()` exposes `slides`, `width` / `height` (and the exact `widthEmu` / `heightEmu`), `theme`, `slideMasters`, `slideLayouts`, `sections`, `coreProperties`, `embeddedFonts`, and more. See the [full docs](https://christophervr.github.io/ooxml/pptx/) for the complete `PptxHandler`, chart/SmartArt, and theme APIs.
 
 ## What's supported
 
@@ -194,7 +194,7 @@ A few things worth knowing as you use it:
 - **Shapes are drawn from a built-in catalogue** covering all 187 PowerPoint preset shapes, so curves, arrows, and callouts come out with the right outlines.
 - **Colours follow PowerPoint's theme rules**, so a colour defined as "accent 1, but 20% lighter" resolves to the correct final value for the active theme.
 
-Under the hood the engine is split into many small, focused modules. If you want the full load and save pipeline, the complete type system, and a module-by-module map, see the [full documentation](https://christophervr.github.io/pptx-viewer/).
+Under the hood the engine is split into many small, focused modules. If you want the full load and save pipeline, the complete type system, and a module-by-module map, see the [full documentation](https://christophervr.github.io/ooxml/pptx/).
 
 ## Limitations
 
@@ -202,7 +202,7 @@ Under the hood the engine is split into many small, focused modules. If you want
 - **Chart editing** covers data, categories, and chart type, plus legend, axes (scale, format, titles, gridlines, log/display units), data labels, trendlines, error bars, and per-series/per-point markers and fills. A handful of rarely-used chart properties remain read-only for display.
 - **Strict-format files** (ISO/IEC 29500 Strict) are converted to the more common Transitional form when opened and converted back when saved.
 
-See the [full docs](https://christophervr.github.io/pptx-viewer/) for the details behind each of these.
+See the [full docs](https://christophervr.github.io/ooxml/pptx/) for the details behind each of these.
 
 ## License
 

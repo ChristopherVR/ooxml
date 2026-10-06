@@ -24,8 +24,8 @@ file and never fork the two (the viewer repositories drifted that way once).
   `typecheck`, `test`, `fmt` and `lint` skip them: CI runs each viewer's own checks (`VIEWERS` in
   `scripts/ci-plan.mjs`), the release flow publishes their packages (`scripts/viewer-packages.mjs`) and
   the Pages build includes their sites (`scripts/build-pages.mjs`).
-- `demos/<product>/` (`docx`, `xlsx`, `visio`, `teams`) holds the demo apps of the viewers, at the root. The pptx demos still live in `viewers/pptx/demos/` until they move here. Each is a private workspace package declaring what its own files import; the demo is built and served by its viewer's scripts and vite config (`viewers/<product>`), so a viewer's `package.json` still owns `build`, `demo` and `test:browser`. A change under `demos/<product>/` checks that viewer in CI (`scripts/ci-plan.mjs`), and the Pages build reads it.
-- `e2e/<product>/` (`docx`, `xlsx`, `visio`, `teams`) holds the Playwright browser tests and their fixtures, at the root. The pptx browser tests still live in `viewers/pptx/e2e/` until they move here. Each is a private workspace package with its own `tsconfig.json` (extending the viewer's, for the path aliases). Playwright is still configured and run from the viewer (`cd viewers/<product> && bun run test:browser`), whose config points `testDir` here.
+- `demos/<product>/` (`pptx`, `docx`, `xlsx`, `visio`, `teams`) holds the demo apps of the viewers, at the root. Each is a private workspace package declaring what its own files import (pptx has one package per framework demo, `demos/pptx/demo-*`, plus `demos/pptx` for the files they share); the demo is built and served by its viewer's scripts and vite config (`viewers/<product>`), so a viewer's `package.json` still owns `build`, `demo` and `test:browser`. A change under `demos/<product>/` checks that viewer in CI (`scripts/ci-plan.mjs`), and the Pages build reads it.
+- `e2e/<product>/` (`pptx`, `docx`, `xlsx`, `visio`, `teams`) holds the Playwright browser tests and their fixtures, at the root. Each is a private workspace package declaring what its specs import (all but pptx also have a `tsconfig.json` extending the viewer's). Playwright is still configured and run from the viewer (`cd viewers/<product> && bun run test:browser`, `bun run e2e` for pptx), whose config points `testDir` here. The pptx browser suite is large, so CI runs it in its own jobs split by framework and shard (`pptx-*` in `.github/workflows/ci.yml`).
 - `site/` is the static Office-suite launcher deployed to GitHub Pages by `.github/workflows/pages.yml` (no build step, not published to npm). It embeds the viewers' demos, which the Pages build puts under the same site, and must hold no Office logic; add an app there by editing `site/apps.js`.
 - Bun, TypeScript strict (including `exactOptionalPropertyTypes` and `noUncheckedIndexedAccess`), Vitest with tests next to the code, ESM output (add CJS when a consumer needs it).
 - Keep source modules under 300 lines where practical. Add regression tests for parsing, preservation, round-trip and editing behaviour; move tests with the code they cover.
@@ -36,10 +36,45 @@ file and never fork the two (the viewer repositories drifted that way once).
 - The `xlsx` area is strict. Its modules: `model.ts` and helpers, `numfmt/`, `formula/`, `read/`, `write/`, `edit/`, `layout/` (the DOM-free view logic the Excel UI paints: grid metrics, colours, cell views, conditional formats, navigation, chart SVG), and `load/` (the `ooxml-core/xlsx/load` subpath: format detection, legacy `.xls` through ole2's `readXlsWorkbook`, CSV). The main `xlsx` entry never imports ole2. Document properties (core, app, custom) go through the shared `opc/properties` model; SmartArt frames load through `diagram` (`read/smart-art.ts`) and are saved verbatim. Fixtures and their generators (openpyxl and Excel COM) live in `src/core/xlsx/__fixtures__/`; `scripts/xlsx-excel-acceptance.ps1` (Windows, real Excel, manual) checks that saved workbooks open without repair.
 - **The `pptx` area is compiled with relaxed flags (temporary).** It was moved from the PowerPoint viewer and predates this repository's strict settings. `tsconfig.pptx.json` extends the base but turns off `exactOptionalPropertyTypes`, `noUncheckedIndexedAccess` and `noImplicitOverride`; `src/core/pptx` is excluded from the strict base project (`tsconfig.json`, `tsconfig.build.json`). `bun run typecheck` runs both. Tighten the pptx flags gradually, one directory at a time; new code elsewhere stays strict, and code moved out of `src/core/pptx` into a shared area must compile under the strict project.
 - The pptx area is bundled with tsup (ESM `.mjs` + CJS `.cjs`, legacy codecs from `@christophervr/ole2` inlined) and declarations from tsdown (`bun run build` runs the tsc declarations, both tsup bundles and the tsdown declarations in parallel via `scripts/build.mjs`; `prepack` only builds when `dist` is missing). Its subpaths are `./pptx`, `./pptx/converter`, `./pptx/cli`, `./pptx/signature-node`; the root entry does not re-export it, so importing another area never pulls the pptx bundle into the strict project. The pptx area keeps its own XML model (`fast-xml-parser` object trees); unifying it with the shared `xml` area is the next step.
-- pptx tests read decks from `src/core/pptx/__tests__/fixtures`, including a committed snapshot of `viewers/pptx/e2e/fixtures` under `fixtures/e2e` (the generator scripts are in `viewers/pptx/scripts`). Core tests never read from `viewers/`. The viewer's Playwright setup regenerates its own copies; refresh the snapshot here deliberately, never automatically.
+- pptx tests read decks from `src/core/pptx/__tests__/fixtures`, including a committed snapshot of `e2e/pptx/fixtures` under `fixtures/e2e` (the generator scripts are in `viewers/pptx/scripts`). Core tests never read from `viewers/`. The viewer's Playwright setup regenerates its own copies; refresh the snapshot here deliberately, never automatically.
 - `teams` is the logic of the open-source, bring-your-own-server team workspace (channels and chat on Yjs, presence, WebRTC calls with pluggable signaling, server configuration and the `createTeamsClient` store every UI binds to). It is built on `collab`, DOM-free and format-neutral. Its visual primitives are Lit elements in `src/ui/src/teams`; the app (`<teams-app>`), its framework bindings and the reference server live in `viewers/teams`. See `docs/teams-area.md`.
 - Every element in `src/ui` is a Lit class on `OfficeElement` (`src/ui/src/base.ts`): a `<name>.ts` with `declare`d properties and a `render()` template next to a real `<name>.css` (imported `?raw`, bare `var(--office-x)` tokens), grouped in a folder per kind (`form`, `ribbon`, `menu`, `dialog`, `notices`, `chrome`, `presence`, `smartart`, `teams`). Products subclass these elements, so read the "How the elements are built" section of `src/ui/README.md` before changing base behaviour: updates are synchronous, `textContent` of text elements is exact (the formatter runs in strict whitespace mode there), and a constructor never assigns an overridable accessor.
 - `collab` is the format-neutral collaboration area (Yjs, `y-protocols` and `lib0` are real dependencies). It must stay free of DOM, UI frameworks, ProseMirror and product document mapping: products implement `DocumentAdapter` and keep their model-to-Yjs code in the viewers until it moves into the product area. See `docs/collab-area.md`.
+
+## Working on a viewer
+
+The viewers ship one product to several frameworks, and almost every expensive bug in pptx-viewer's
+history came from breaking one of the rules below. They apply to every viewer here; each viewer's
+own `AGENTS.md` (`viewers/<name>/AGENTS.md`, read it before working there) has the details, and
+`viewers/pptx/AGENTS.md` keeps the concrete failures behind them.
+
+- **A fix or feature in one binding reaches all of them.** The bindings are ports of each other, so a
+  bug fixed in React is almost always present in the others. Find the root cause, grep every other
+  binding for the same pattern, fix them all in the same change, and add a regression test per
+  binding plus a framework-neutral browser spec when a demo can show it. If one binding is genuinely
+  blocked, say so and file an issue; silently fixing one is how bindings drift. "Framework-specific"
+  means change detection, runes, effect ordering and the like, not a wrong colour or a dialog that
+  does not open.
+- **Office logic goes to the core, view behaviour to the viewer's shared layer.** Document, chart,
+  colour, geometry and text algorithms belong in `src/core/<area>/`. Decisions every binding needs
+  belong in the viewer's framework-free layer (for pptx, `viewers/pptx/packages/shared/src/render/`) as a
+  pure function returning a descriptor the binding only maps onto its template. Making the same edit
+  in more than one binding, or finding a framework-free helper inside a binding, is the signal to
+  extract it.
+- **Normalise before you branch** (compare a shape through `getShapeType`, never the raw `shapeType`
+  string), and after adding a behaviour-bearing style in shared code, check that no binding spreads
+  and then overrides it.
+- **Unit tests passing does not mean a binding works.** Load the change in each framework demo. Know
+  how each demo resolves its packages (some read a package's `dist`, so a source edit is invisible
+  until that package is built), and suspect stale Vite caches (`node_modules/.vite`) and zombie dev
+  servers before your code when one demo disagrees with the others.
+- **Declare what you import.** The workspace uses Bun's isolated linker, so a package (a demo, a test
+  package, a script's package) sees only its declared dependencies. An import that only worked
+  because a parent folder's `node_modules` had it fails here.
+- **Every English UI string needs every locale.** A key added to a viewer's English dictionary needs
+  an entry in each locale; the locale tests enforce it.
+- **Browser tests that crash hosted runners** are tagged `@local-only` and excluded in CI; run them
+  yourself (`bun run e2e:local-only` in `viewers/pptx`) before pushing a change to what they cover.
 
 ## Where things live
 

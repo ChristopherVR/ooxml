@@ -1,8 +1,15 @@
 # AGENTS.md
 
-Guidance for coding agents (Claude Code, Codex, and others) working in this
-repository. This file is canonical: `CLAUDE.md` only imports it, so edit this
-file and never fork the two again (they drifted once already).
+Guidance for coding agents (Claude Code, Codex, and others) working on the
+PowerPoint viewer in `viewers/pptx` of ChristopherVR/ooxml. It moved here from
+the ChristopherVR/pptx-viewer repository with its history; that repository now
+holds only a pointer. The repository-wide rules (layout, releases, commits,
+style) are in the root [`AGENTS.md`](../../AGENTS.md) and apply here too; this
+file adds what is specific to the PowerPoint viewer. `CLAUDE.md` only imports
+it, so edit this file and never fork the two.
+
+Paths below are relative to `viewers/pptx` unless they start at the repository
+root (`src/core/...`, `demos/pptx/...`, `e2e/pptx/...`).
 
 ## READ FIRST: the two rules that govern every UI change
 
@@ -23,15 +30,15 @@ The required loop for **every** UI bug fix:
 1. **Diagnose the root cause**, not the symptom. Ask "where does this behaviour
    actually come from?" If the answer is a shared module, one edit fixes all
    five. If the answer is per-binding code, the bug exists five times. If the
-   answer is the parsed model itself, the fix belongs in `../ooxml-core` (see
-   [Where things live](#where-things-live)).
+   answer is the parsed model itself, the fix belongs in `src/core/pptx` at the
+   repository root (see [Where things live](#where-things-live)).
 2. **Grep the other four bindings for the same pattern** before declaring the
    fix scoped. Search for the property, class name, helper, or condition you just
    changed across `packages/{react,vue,angular,svelte,vanilla}`.
 3. **Fix every affected binding in the same change.** Do not defer four of them
    to "a follow-up"; the follow-up never happens and the drift becomes permanent.
-4. **Add a regression test per binding**, plus a framework-neutral spec in `e2e/`
-   when the behaviour is observable in a demo.
+4. **Add a regression test per binding**, plus a framework-neutral spec in
+   `e2e/pptx/` when the behaviour is observable in a demo.
 5. **Verify in the running demos**, not just the unit suites. All five suites
    have been green while a binding was visibly broken, because the defect lived
    in template wiring no unit test covered. See the demo-resolution table below
@@ -48,8 +55,8 @@ handle, or a dialog that will not open is almost never framework-specific.
 
 When you touch logic in a binding, **first decide whether it is Office logic or
 view behavior**. Pure document, chart-data, color, geometry and text algorithms
-belong in `ChristopherVR/ooxml`, under a neutral area when other formats can use
-them. Framework-independent view descriptors and editor interaction belong in
+belong in the core at `src/core/` of this repository, under a neutral area
+when other formats can use them. Framework-independent view descriptors and editor interaction belong in
 `packages/shared/src/render/`. Move the implementation to its owner. This is
 not a cleanup task to schedule later; it is how the parity rule above is made
 cheap. Logic that lives in shared is fixed once for all five bindings, and never
@@ -73,72 +80,60 @@ Both rules are expanded, with the concrete failures that motivated them, under
 
 ## Where things live
 
-This repository is **UI only**. The logic is split across sibling repositories,
-all expected to be checked out next to this one (`D:\Development\<name>` on the
-maintainer's machine, so `../<name>` from here):
+The viewer is UI only. Everything else is in this repository or a sibling one:
 
-| Repository (sibling path) | npm package                         | Owns                                                                                                                                                                                                                                                                                                                                                                                               |
-| ------------------------- | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pptx-viewer` (this one)  | `pptx-*-viewer`, `pptx-viewer-core` | The five bindings, the internal `shared` view logic, locales, MCP tools, installer, demos, e2e, docs site. `packages/core` is only a thin public entry point.                                                                                                                                                                                                                                      |
-| `../ooxml-core`           | `ooxml-core`                        | **All OOXML logic.** The PowerPoint engine (parse, edit, serialize, theme resolution, geometry, charts, SmartArt, animation model, converter, CLI, signatures) lives in its `src/pptx/` area. Shared areas: `units`, `color`, `geometry`, `xml`, `opc`, `diagram`, `docx`. Its own `AGENTS.md` has the rules (pptx area uses relaxed TS flags, provenance, release flow).                          |
-| `../ole2`                 | `@christophervr/ole2`               | **Legacy binary formats.** MS-CFB / OLE2 compound files (`ole2-parser-*`, `ole2-stream-edit`), Word 97-2003 `.doc` (`ole-document-doc-*`), Excel BIFF8 (`legacy-excel-*`), legacy PowerPoint `.ppt` record stream, RC4 CryptoAPI and the `.ppt` writer (`src/ppt/`, `src/ppt/writer/`), Publisher/Visio inspection, summary properties, plus shared digests, RC4 and a PNG encoder (`src/utils/`). |
-| `../emf-converter`        | `emf-converter`                     | EMF/WMF metafile rendering to PNG/SVG.                                                                                                                                                                                                                                                                                                                                                             |
-| `../mtx-decompressor`     | `mtx-decompressor`                  | MicroType Express (embedded EOT font) decompression.                                                                                                                                                                                                                                                                                                                                               |
-| `../docx-viewer`          | `docx-*`                            | The sibling Word viewer, built the same way (UI only over `ooxml-core/docx`). Not a dependency here.                                                                                                                                                                                                                                                                                               |
+| Where                                         | npm package                         | Owns                                                                                                                                                                                                          |
+| --------------------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `viewers/pptx` (this folder)                  | `pptx-*-viewer`, `pptx-viewer-core` | The five bindings, the internal `shared` view logic, locales, MCP tools, installer, docs site. `packages/core` is only a thin public entry point.                                                              |
+| `demos/pptx/`, `e2e/pptx/` (repository root)  | not published                       | The five framework demos (and the files they share) and the Playwright specs with their fixtures. Playwright is still configured and run from here.                                                           |
+| `src/core` (repository root)                  | `ooxml-core`                        | **All OOXML logic.** The PowerPoint engine (parse, edit, serialize, theme resolution, geometry, charts, SmartArt, animation model, converter, CLI, signatures) is its `pptx` area; shared areas sit beside it. |
+| `src/ui` (repository root)                    | `ooxml-ui`                          | The shared Lit elements (ribbon, dialogs, menus) the bindings subclass.                                                                                                                                       |
+| ChristopherVR/ole2                            | `@christophervr/ole2`               | **Legacy binary formats**: CFB/OLE2, `.doc`, `.xls`, `.ppt` reading and writing, RC4 CryptoAPI. A pinned dev dependency of the core whose codecs are inlined into its bundles.                                |
+| ChristopherVR/emf-converter, mtx-decompressor | `emf-converter`, `mtx-decompressor` | EMF/WMF rendering and embedded EOT font decompression.                                                                                                                                                        |
 
 How they connect:
 
-- `packages/core` (`pptx-viewer-core`) depends on the **published**
-  `ooxml-core` and re-exports
+- `packages/core` (`pptx-viewer-core`) depends on `ooxml-core` and re-exports
   `ooxml-core/pptx` (plus `/pptx/converter`, `/pptx/cli`,
   `/pptx/signature-node`) and the shared `/math`, `/chart`, `/text`,
   `/geometry` and `/color` APIs. Its `src/` holds thin entry files and an
-  entry-point contract test, nothing else.
-- `ooxml-core` depends on `emf-converter`, `mtx-decompressor`, `jszip` and
-  `fast-xml-parser`, and takes `@christophervr/ole2` as a **pinned development
-  dependency** whose codecs are **inlined** into the `pptx` bundle. Consumers of
-  this repo therefore never install ole2; `scripts/check-core-package.mjs`
-  fails the build if a published file leaks an `@christophervr/ole2` import.
-- Inside `ooxml-core/src/pptx/core/utils/ole2-parser-*.ts`,
-  `.../utils/ole-document-doc-*.ts` and most of `.../ppt/writer/*.ts` are
-  **one-line compatibility re-exports** of ole2. The implementation is in
-  `../ole2/src`. Model conversion (`ppt-to-pptx.ts`, `element-to-write-model.ts`,
-  `degrade-element.ts`, `master-roundtrip-*`) and modern OOXML packaging stay in
-  ooxml-core.
-- Modern DOCX never goes into ole2; binary codecs never go into ooxml-core;
-  engine logic never goes into this repo.
+  entry-point contract test, nothing else. In the workspace it links to
+  `src/core` itself, so it always sees the current engine.
+- The bindings bundle `pptx-viewer-core`, `pptx-viewer-shared`,
+  `pptx-viewer-locales` and the core code they reach; their packages declare
+  none of them. That is why a change to the core's `pptx` area (or a shared
+  area it uses) releases the bindings (`scripts/viewer-packages.mjs` at the
+  repository root).
+- Modern OOXML never goes into ole2; binary codecs never go into the core;
+  engine logic never goes into this viewer.
 
 ### Where does my change go?
 
 | The change is about...                                                                                                | Make it in                                                     |
 | --------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| Parsed model is wrong: a value missing/misread from the XML, theme/placeholder inheritance, save/round-trip loss      | `../ooxml-core/src/pptx/` (with a round-trip test there)       |
-| Unit, colour, geometry or preset-shape maths reused across Office formats                                             | `../ooxml-core/src/{units,color,geometry}/`                    |
-| `.ppt` / `.doc` / `.xls` binary reading or writing, CFB containers, RC4 encryption                                    | `../ole2/src/` (with a fixture-based test there)               |
-| EMF/WMF pictures or embedded EOT fonts render wrong                                                                   | `../emf-converter` / `../mtx-decompressor`                     |
-| How a correctly parsed element is drawn, laid out, hit-tested, animated or exported; any UI decision 2+ bindings need | `packages/shared/src/render/` (this repo)                      |
+| Parsed model is wrong: a value missing/misread from the XML, theme/placeholder inheritance, save/round-trip loss      | `src/core/pptx/` at the root (with a round-trip test there)    |
+| Unit, colour, geometry or preset-shape maths reused across Office formats                                             | `src/core/{units,color,geometry,chart,...}/` at the root       |
+| `.ppt` / `.doc` / `.xls` binary reading or writing, CFB containers, RC4 encryption                                    | ChristopherVR/ole2 (with a fixture-based test there)           |
+| EMF/WMF pictures or embedded EOT fonts render wrong                                                                   | ChristopherVR/emf-converter / mtx-decompressor                 |
+| How a correctly parsed element is drawn, laid out, hit-tested, animated or exported; any UI decision 2+ bindings need | `packages/shared/src/render/`                                  |
 | Template/JSX wiring, framework reactivity, binding-only chrome                                                        | `packages/{react,vue,angular,svelte,vanilla}/src/` (all five)  |
 | UI strings                                                                                                            | `packages/shared/src/i18n/` + `packages/locales/src/<locale>/` |
 | AI/MCP tool functions and schemas                                                                                     | `packages/tools/src/`                                          |
+| A demo app, or a browser test and its fixtures                                                                        | `demos/pptx/demo-*` / `e2e/pptx/` at the root                  |
 
-Never copy an implementation from ooxml-core or ole2 back into this repo (or
-between ooxml-core and ole2) to "fix it locally". To land an engine fix, change
-the sibling repo, release it through its own pipeline, then bump the range in
-`packages/core/package.json`.
+Never copy an implementation from the core or ole2 into this viewer to "fix it
+locally". An engine fix and the viewer change that uses it can land together
+here; the release planner releases the core and, because the bindings inline
+it, the bindings too.
 
-### Working against a local ooxml-core
+### Working on the engine and the viewer together
 
-To try engine changes before they are published: build `../ooxml-core`
-(`bun install && bun run build`; it needs `../ole2` only through its pinned npm
-version), switch `packages/core/package.json` to
-`"ooxml-core": "file:../../../ooxml-core"`, and run
-`bun install --force` here (again after every ooxml-core rebuild). **Restore the
-`^x.y.z` range before committing**; `scripts/publish-manifest.mjs` refuses a
-`file:` runtime dependency. `packages/core` keeps `jszip`, `fast-xml-parser` and
-`emf-converter` as devDependencies only so the e2e helpers (which resolve them
-from core's scope) and Vite's dev pre-bundle of the Angular demo still find them.
+There is nothing to link: the workspace resolves `ooxml-core` to `src/core`.
+After an engine edit run `bun run build` at the repository root (the bindings
+and the demos read the core's `dist`), then rebuild the pptx packages you need
+(`bun run build:packages` here builds all of them in order).
 
-### Map of this repository
+### Map of this viewer
 
 ```
 packages/
@@ -158,38 +153,42 @@ packages/
   svelte/           pptx-svelte-viewer   - Svelte 5 viewer component
   tools/            pptx-viewer-mcp      - MCP server / tooling (codec, schemas, tools)
   cli/              @christophervr/pptx-viewer - Installer and React compatibility re-export
-demos/demo-{react,vue,angular,vanilla,svelte}/   Vite demo apps (ports 4173/4175/4174/4176/4177)
-e2e/                Playwright specs (framework-neutral; `bun run e2e:contract` enforces it),
-                    e2e/support (cross-binding parity harness), e2e/fixtures (decks, also the demos' public dir)
-scripts/            build/release/check scripts, fixture generators (make-*.mjs/.ps1),
-                    COM acceptance against real PowerPoint (com-acceptance*.mjs, Windows + bun only,
-                    import ../ooxml-core/src/pptx directly)
-docs/               VitePress documentation site (installs separately)
+scripts/            build and check scripts, fixture generators (make-*.mjs/.ps1),
+                    COM acceptance against real PowerPoint (com-acceptance*.mjs, Windows + bun only)
+docs/               VitePress documentation site (built into the shared Pages site under /ooxml/pptx/)
+playwright*.config.ts  Playwright configs; testDir is ../../e2e/pptx
+
+At the repository root:
+demos/pptx/demo-{react,vue,angular,vanilla,svelte}/  Vite demo apps (ports 4173/4175/4174/4176/4177)
+demos/pptx/shared/  files every demo imports (the `pptx-demos` package declares their dependencies)
+e2e/pptx/           Playwright specs (framework-neutral; `bun run e2e:contract` enforces it),
+                    e2e/pptx/support (cross-binding parity harness), e2e/pptx/fixtures (decks, also the demos' public dir)
 ```
 
-`ooxml-core` keeps a committed snapshot of `e2e/fixtures` under
-`src/pptx/__tests__/fixtures/e2e` for its own tests. The generator scripts stay
-here; refresh that snapshot deliberately, never automatically.
+The core keeps a committed snapshot of `e2e/pptx/fixtures` under
+`src/core/pptx/__tests__/fixtures/e2e` for its own tests. The generator scripts
+stay here; refresh that snapshot deliberately, never automatically.
 
 ## Build & Development Commands
 
+Install once at the repository root (`bun install` there; it is one workspace).
+Build the core and `ooxml-ui` there first (`bun run build && bun run --cwd
+src/ui build`): the bindings and demos read their `dist`. Then, from this
+folder:
+
 ```bash
-bun install                  # Install all workspace dependencies
-bun run build                # Build core, shared, locales, tools, five bindings, installer, and React demo
+bun run build:packages       # Build core, shared, locales, tools, cli and the five bindings (what CI and releases run)
+bun run build                # The same plus the React demo
 bun run test                 # Run vitest across all packages (scripts/test-all.sh)
 bun run typecheck            # Type-check all packages
-bun run fmt                  # Format all files with oxfmt
-bun run fmt:check            # Check formatting (CI-safe, no writes)
+bun run fmt                  # Format with oxfmt (format only the files you changed)
 bun run lint                 # Lint with oxlint
-bun run lint:fix             # Auto-fix lint issues
-bun run e2e                  # Neutrality contract + Playwright
+bun run e2e                  # Neutrality contract + Playwright (all five demos; pass --project=react etc. to narrow)
 bun run demo                 # Start the React demo dev server (Vite, port 4173)
 bun run demo:vue             # Start the Vue demo dev server (Vite, port 4175)
 bun run demo:angular         # Start the Angular demo dev server (Vite, port 4174)
 bun run demo:vanilla         # Start the VanillaJS demo dev server (Vite, port 4176)
 bun run demo:svelte          # Start the Svelte demo dev server (Vite, port 4177)
-bun run changelog:unreleased # Preview changelog notes for commits since the last release run
-bun run release:plan         # Dry-run the release planner (per-package versions + bump levels)
 
 # Per-package (run from package directory)
 bun run build                # Run the package-specific build pipeline
@@ -198,10 +197,19 @@ bun run test                 # Run vitest
 bun run typecheck            # Type-check
 ```
 
-The root build runs **core -> shared -> locales -> tools -> react -> vue ->
-angular -> vanilla -> svelte -> cli -> React demo**. The engine's own test
-suite runs in `../ooxml-core`; `packages/core` here only runs entry-point
-contract tests.
+`build:packages` runs **core -> shared -> locales -> tools -> cli -> react ->
+vue -> angular -> vanilla -> svelte**. The engine's own test suite is the core's
+(`bun run test` at the repository root); `packages/core` here only runs
+entry-point contract tests. Releases and the changelog come from the root
+release flow (`scripts/release-plan.mjs`, `scripts/viewer-packages.mjs`); the
+old `release:plan` script here is unused.
+
+CI (`.github/workflows/ci.yml` at the root) runs this viewer in its own jobs
+whenever the core's pptx area, a shared core area, `ooxml-ui`, this folder or
+`demos/pptx`/`e2e/pptx` change: `pptx-build` (build, typecheck, e2e contract,
+packed-binding check), `pptx-test` (one job per package, plus React 18), the
+browser suite split by framework and shard (`pptx-e2e`), and the packaged-build
+smoke.
 
 ### `@local-only` e2e tests and the pre-push hook
 
@@ -209,11 +217,10 @@ A few e2e specs do real-time video capture and reliably crash the hosted CI
 runner rather than just failing (see `e2e/export-raster-tiling.spec.ts`), so
 they carry the Playwright tag `@local-only` and are excluded from CI via
 `grepInvert` in `playwright.config.ts`. Run them with `bun run
-e2e:local-only`. A `.husky/pre-push` hook (`scripts/pre-push-local-e2e.mjs`
-decides whether to run it, based on which paths a push touches) runs them
-automatically before a push that touches export-video code; skip a specific
-push with `PPTX_SKIP_PREPUSH=1` or `git push --no-verify`. See
-CONTRIBUTING.md for the full explanation.
+e2e:local-only` before pushing a change to export or video code. The
+`.husky/pre-push` hook that used to run them automatically
+(`scripts/pre-push-local-e2e.mjs`) is not installed in this repository, so
+nothing runs them for you any more.
 
 ## How the Demos Resolve Packages (read before debugging one)
 
@@ -230,10 +237,10 @@ difference decides whether your edit is live on reload or needs a build first.
 | `pptx-viewer-mcp`             | **`dist`** | **`dist`** | **`dist`**   | **`dist`** | **`dist`** |
 
 `pptx-viewer-core` "source" is only the thin entry file: the engine behind it
-always comes from the installed `ooxml-core` `dist` in
-`node_modules`, so an engine edit in `../ooxml-core` is invisible to every demo
-until you rebuild it and reinstall (see
-[Working against a local ooxml-core](#working-against-a-local-ooxml-core)).
+always comes from the core's `dist` (`src/core/dist`, linked by the
+workspace), so an engine edit is invisible to every demo until you run `bun
+run build` at the repository root (see
+[Working on the engine and the viewer together](#working-on-the-engine-and-the-viewer-together)).
 
 Anything marked `dist` resolves through the workspace `exports` field to built
 output, so **source edits are invisible until you build that package**:
@@ -247,13 +254,13 @@ output, so **source edits are invisible until you build that package**:
   `dist` too**: the demo never aliases core, unlike the other four, so a core
   change needs `bun run --filter pptx-viewer-core build` before this demo sees
   it at all. Core is also in the demo's `optimizeDeps.include`, so vite
-  pre-bundles it into `demos/demo-angular/node_modules/.vite/deps/pptx-viewer-core.js`;
+  pre-bundles it into `demos/pptx/demo-angular/node_modules/.vite/deps/pptx-viewer-core.js`;
   that copy normally re-optimises when core's dist changes, but it has been
   observed serving a stale core anyway (a long-running server on Windows, where
   the watcher does not always see writes through the workspace symlink). If
   Angular alone disagrees with the other four demos, delete that demo's
   `node_modules/.vite` and restart before suspecting your code.
-  `e2e/dist-freshness.ts` checks both axes before every e2e run.
+  `e2e/pptx/dist-freshness.ts` checks both axes before every e2e run.
 - **`pptx-viewer-mcp`** (`packages/tools`) is aliased by no demo. It is reachable
   from the browser because `packages/shared/src/ai/tools/mcp-registry.ts` imports
   it, so a **stale `packages/tools/dist` breaks all five demos at once** with
@@ -270,7 +277,7 @@ Other demo gotchas:
   behaviour contradicts the source, kill the PID and relaunch rather than
   debugging the code.
 - **Stale vite dep caches** cause bogus framework-internal crashes. A stale
-  `demos/demo-svelte/node_modules/.vite` threw a "Cannot read properties of
+  `demos/pptx/demo-svelte/node_modules/.vite` threw a "Cannot read properties of
   undefined" error from inside Svelte's own runtime and stopped decks rendering
   entirely. Delete the demo's `node_modules/.vite` and restart before believing
   a stack trace that points into a framework.
@@ -287,21 +294,31 @@ Other demo gotchas:
   failed" more than once; four of five demos being healthy is the clue.
 - **Rebuilding `packages/angular/dist` breaks the running Angular demo.** It
   starts 404-ing on its own CSS and its vite pre-bundle of core goes stale
-  (`e2e/dist-freshness.ts` checks that second axis separately and tells you to
+  (`e2e/pptx/dist-freshness.ts` checks that second axis separately and tells you to
   clear it). After any `bun run --filter pptx-angular-viewer build`, kill :4174,
-  `rm -rf demos/demo-angular/node_modules/.vite`, and restart before running
+  `rm -rf demos/pptx/demo-angular/node_modules/.vite` (from the repository root), and restart before running
   e2e.
-- The demos serve `e2e/fixtures` as their public dir, and the landing page's
+- The demos serve `e2e/pptx/fixtures` as their public dir, and the landing page's
   "or create a New Presentation" button gives an editable deck without a file.
+- **Every demo declares what it imports.** The root workspace uses Bun's
+  isolated linker, so a package sees only its own declared dependencies. A demo
+  (or `demos/pptx/shared`) that imports something it does not declare used to
+  work by accident through `viewers/pptx/node_modules` and now fails to resolve.
+  Add the dependency to that demo's `package.json` (or to `demos/pptx/package.json`
+  for the shared files).
+- **The Angular demo pins its own TypeScript for the Analog plugin.** The plugin
+  imports `typescript` without declaring it, which would resolve the core's
+  TypeScript 7 (no JS compiler API); `demos/pptx/demo-angular/vite.config.ts`
+  registers a resolve hook before loading the plugin. Keep that order.
 
 ## Architecture
 
-### Engine (`../ooxml-core/src/pptx/`, exposed by `packages/core`)
+### Engine (`src/core/pptx/` at the repository root, exposed by `packages/core`)
 
-Paths in this section are relative to `../ooxml-core/src/pptx/`. Do not add
-engine logic to this repository. The area is compiled with relaxed TypeScript
-flags for now (`tsconfig.pptx.json`), and its geometry, colour and unit
-primitives come from the `geometry`, `color` and `units` areas of ooxml-core.
+Paths in this section are relative to `src/core/pptx/`. Do not add engine
+logic to this viewer. The area is compiled with relaxed TypeScript flags for
+now (`src/core/tsconfig.pptx.json`), and its geometry, colour and unit
+primitives come from the `geometry`, `color` and `units` areas of the core.
 
 - **`PptxHandler`** (`core/PptxHandler.ts`) is the public facade. It wraps
   `PptxHandlerCore` -> `PptxHandlerRuntime` (`core/core/`).
@@ -355,13 +372,13 @@ primitives come from the `geometry`, `color` and `units` areas of ooxml-core.
 - **Type narrowing**: always use the `type` discriminant for `PptxElement`, e.g.
   `if (element.type === "image")`.
 - **EMU units**: PowerPoint uses English Metric Units internally. Conversion
-  constants are in ooxml-core `src/pptx/core/constants.ts` (`EMU_PER_INCH =
+  constants are in `src/core/pptx/core/constants.ts` (`EMU_PER_INCH =
 914400`, `EMU_PER_POINT = 12700`, `EMU_PER_PIXEL = 9525`).
 - **Service interfaces**: services define `I*` interfaces for DI/testability.
 - **File naming**: kebab-case for utilities, PascalCase for classes. Tests
   colocated with source (`.test.ts` suffix).
 - **No `any`.** Use concrete types, `unknown` plus narrowing, or the `XmlObject`
-  type (ooxml-core `core/types/common.ts`) for parsed XML.
+  type (`src/core/pptx/core/types/common.ts`) for parsed XML.
 - **File size: keep every source file <= 300 LOC.** No `.vue` / `.ts` / `.tsx`
   source file should exceed ~300 lines (tests excluded). When a file approaches
   the limit, **split it out** rather than letting it grow: extract pure logic into
@@ -376,7 +393,7 @@ primitives come from the `geometry`, `color` and `units` areas of ooxml-core.
   style/colour/gradient resolution, text/paragraph/bullet building, chart/axis
   maths, connector routing, animation, OMML/LaTeX, export data, etc. All of that
   belongs in **`pptx-viewer-shared`** (`packages/shared/src/render/...`),
-  consumed by every binding, or further down in ooxml-core when it is about the
+  consumed by every binding, or further down in the core when it is about the
   document model rather than its presentation. Only the actual view layer (SFC
   templates / JSX / Angular templates + the thin reactive wiring) should live in
   a binding. When porting or adding a feature, put the logic in shared **first**,
@@ -418,7 +435,7 @@ primitives come from the `geometry`, `color` and `units` areas of ooxml-core.
     entry, keyboard shortcut, gesture, on-canvas affordance) is not done when it
     works in React. Put the logic in `pptx-viewer-shared`, then implement the
     view layer in **react, vue, angular, svelte, and vanilla**, with unit tests
-    per binding and a framework-neutral spec in `e2e/`.
+    per binding and a framework-neutral spec in `e2e/pptx/`.
   - **A UI fix** must be checked against the other four bindings before it is
     called finished. Most UI bugs here are structural (they came from a shared
     module, or four bindings made the same porting mistake), so the same defect
@@ -445,87 +462,32 @@ primitives come from the `geometry`, `color` and `units` areas of ooxml-core.
   asserts that character (for example, a no-value marker or a placeholder
   option label). The pre-commit tooling does not catch em-dashes, so keeping
   them out is on you.
-- **The pre-commit lint hook skips `.vue` files.** Its glob covers only the
-  js/ts extensions, so an oxlint warning inside a `.vue` SFC sails through the
-  hook and fails `bun run lint` later. Lint Vue changes explicitly before
-  committing.
+- **Lint and format before committing.** There is no pre-commit hook in this
+  repository (pptx-viewer's husky hooks did not move), and the root `lint` and
+  `fmt` skip `viewers/`. Run `bun run lint` here, including on `.vue` files,
+  and `bunx oxfmt <the files you changed>`.
 - **Adding an English i18n key requires every locale too.** New entries in
   `packages/shared/src/i18n/translations-en.ts` need matching entries under
   `packages/locales/src/<locale>/`; `packages/locales/src/locales.test.ts`
   enforces that every locale covers every canonical key.
 
-## Branching & Git Workflow
+## Branching, commits and releases
 
-This repo uses **trunk-based development**: commit directly to `main`. **Do not
-create feature branches unless the user explicitly asks for one.** This overrides
-any default "branch before committing" assumption. Changes to `../ooxml-core`
-and `../ole2` are committed in those repositories and follow their own
-`AGENTS.md`.
+The root [`AGENTS.md`](../../AGENTS.md) governs these: trunk-based development
+on `main` (no feature branches unless asked), Conventional Commits, no em-dashes
+and no AI chat share links anywhere, and automated per-package releases. What
+is specific to this viewer:
 
-> The working tree is sometimes **shared by parallel agent sessions** (e.g.
-> the concurrent React / Vue / Angular ports). Another session may switch the
-> checkout to its own branch underneath you. Before committing, run
-> `git branch --show-current` and `git status` to confirm what you're on. To do
-> `main`-branch work without yanking the shared checkout out from under another
-> session, push `HEAD:main` (or use an isolated `git worktree`) rather than
-> `git checkout main`.
-
-## Commit Conventions
-
-Commits **must** follow [Conventional Commits](https://www.conventionalcommits.org).
-Each published package is versioned and released **independently**: the release
-pipeline (`scripts/release-plan.mjs`, run on a schedule / manual dispatch by
-`release.yml`, batching everything merged since the previous run) bumps a
-package only when files under its directory (or a bundled dependency) change
-since its own last `<npm-name>@<version>` tag. **The bump level comes from the
-commit types**: a breaking change (`!` or `BREAKING CHANGE:` footer) bumps
-major, `feat` bumps minor, everything else bumps patch. It then PREPENDS the
-new section to that package's `packages/<pkg>/CHANGELOG.md` with
-[git-cliff](https://git-cliff.org) (config: `cliff.toml`) scoped to the same
-paths, commits the version bumps + changelogs back to main, and cuts a
-`<npm-name>@<version>` tag + GitHub release that publishes just that package.
-Old tags/releases are culled weekly (`prune-releases.yml`), which is safe only
-because changelogs are prepend-only; never regenerate a CHANGELOG.md from tag
-history. Non-conforming commits are silently dropped from the changelog, and a
-mislabelled type now also mis-bumps the version, so the format is load-bearing,
-not cosmetic. Which package(s) a commit lands in is determined by the **paths**
-it touches, so keep a commit's changes within one package where practical.
-
-Format:
-
-```
-<type>(<scope>): <subject>
-
-<body>
-
-<footer>
-```
-
-- **type**: one of `feat`, `fix`, `perf`, `refactor`, `docs`, `test`,
-  `build`, `ci`, `style`, `chore`, `revert`. These map to changelog sections
-  (see `cliff.toml` -> `commit_parsers`). `feat`/`fix`/`perf`/`refactor` are
-  user-facing; `chore(deps)` groups dependency bumps.
-- **scope**: optional, the affected package/area: `core`, `react`, `vue`,
-  `shared`, `tools`, `ci`, `deps`, etc. Use it; the changelog bolds it.
-- **subject**: imperative mood, lower-case, no trailing period. Keep the first
-  line <= ~72 chars.
-- **breaking changes**: append `!` after the type/scope (`feat(core)!: ...`) or
-  add a `BREAKING CHANGE:` footer.
-
-Examples (from history): `feat(core): typed xml-access helpers`,
-`fix(react): remove dead table-cell comparisons`, `chore(deps): update all
-dependencies to latest`.
-
-**Authoring tip (tooling):** when committing via a multi-line message, use a
-real heredoc or `git commit -F <file>`; do **not** wrap the message in
-`@'...'@` (PowerShell here-string syntax); under `bash`/`sh` the stray `@`
-characters leak into the subject and break Conventional Commit parsing. Never
-add a Codex co-author trailer.
-
-**Never include an AI chat share link.** Do not add a `claude.ai/chat/...` (or
-any other assistant conversation) URL to a commit message, PR body, issue
-comment, changelog entry, code comment or doc. Those links are session-scoped
-and mean nothing to a reader of this repository.
+- **Scope** a commit by the package it touches (`react`, `vue`, `angular`,
+  `svelte`, `vanilla`, `shared`, `tools`, `locales`, `cli`), or `pptx` for
+  the engine. Keep a commit within one package where practical: the release
+  planner decides what to release from the **paths** a commit touches, and the
+  type sets the bump (`feat` minor, `!` or `BREAKING CHANGE:` major, anything
+  else patch).
+- The packages keep their own `CHANGELOG.md`, prepend-only. Never regenerate one
+  from tag history.
+- `.github/` in this folder is the old repository's CI and release setup. It is
+  inert here and kept for its history; the live workflows are at the root.
 
 ## Tech Stack
 
@@ -540,8 +502,8 @@ and mean nothing to a reader of this repository.
 
 ## Adding a New Element Type
 
-Engine steps happen in `../ooxml-core/src/pptx/` and ship in an ooxml-core
-release before the viewer steps can land here.
+Engine steps happen in `src/core/pptx/` at the repository root and can land in
+the same change as the viewer steps.
 
 1. Define the interface in `core/types/elements.ts` extending `PptxElementBase`.
 2. Add it to the `PptxElement` discriminated union.
@@ -549,7 +511,6 @@ release before the viewer steps can land here.
 4. Add a parsing module in `core/core/runtime/`.
 5. Add serialization in the `*SaveElementWriter.ts` modules.
 6. Add a converter processor in `converter/elements/`.
-7. Release ooxml-core and bump the range in `packages/core/package.json`.
-8. Add framework-independent rendering logic in `packages/shared/src/render/`,
+7. Add framework-independent rendering logic in `packages/shared/src/render/`,
    then wire renderers in all five bindings with per-binding and
    framework-neutral e2e coverage.

@@ -1,16 +1,16 @@
 # pptx-react-viewer
 
 [![npm version](https://img.shields.io/npm/v/pptx-react-viewer.svg)](https://www.npmjs.com/package/pptx-react-viewer)
-[![license](https://img.shields.io/npm/l/pptx-react-viewer.svg)](https://github.com/ChristopherVR/pptx-viewer/blob/main/LICENSE)
+[![license](https://img.shields.io/npm/l/pptx-react-viewer.svg)](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/LICENSE)
 [![types](https://img.shields.io/npm/types/pptx-react-viewer.svg)](https://www.npmjs.com/package/pptx-react-viewer)
 
 > A drop-in **React** component that turns a `.pptx` file into a fully interactive PowerPoint: **view, edit, present, collaborate, and export**, entirely in the browser.
 
-![Selecting, dragging, and resizing a slide element in the React demo](https://raw.githubusercontent.com/ChristopherVR/pptx-viewer/main/.github/assets/packages/react-demo.gif)
+![Selecting, dragging, and resizing a slide element in the React demo](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/pptx/.github/assets/packages/react-demo.gif)
 
 Slides render with real **HTML/CSS** (not `<canvas>`), so text stays crisp at any zoom, is selectable and screen-reader accessible, and every element is directly editable. The parsing/editing engine ([`pptx-viewer-core`](https://www.npmjs.com/package/pptx-viewer-core)) is **bundled in**, so you install just one package.
 
-<samp>**[▶️ Try the live demo](https://christophervr.github.io/pptx-viewer/demo/)** · **[📦 npm](https://www.npmjs.com/package/pptx-react-viewer)** · **[📖 Full docs](https://christophervr.github.io/pptx-viewer/)** · **[🧩 Core SDK](https://www.npmjs.com/package/pptx-viewer-core)**</samp>
+<samp>**[▶️ Try the live demo](https://christophervr.github.io/ooxml/pptx/demo/)** · **[📦 npm](https://www.npmjs.com/package/pptx-react-viewer)** · **[📖 Full docs](https://christophervr.github.io/ooxml/pptx/)** · **[🧩 Core SDK](https://www.npmjs.com/package/pptx-viewer-core)**</samp>
 
 ---
 
@@ -117,7 +117,7 @@ const bytes = await viewerRef.current?.getContent(); // Uint8Array of a valid .p
 | `onStopCollaboration`                                                      | `() => void`                            | n/a      | Called when the collaboration session stops                                                                                                                                                                                                                                                                                                                     |
 | `theme`                                                                    | `ViewerTheme`                           | n/a      | Theme configuration for customising colours, radius, and CSS vars                                                                                                                                                                                                                                                                                               |
 | `hiddenActions`                                                            | `ToolbarActionId[]`                     | n/a      | Hide individual toolbar buttons and/or ribbon tabs (e.g. `['share', 'broadcast']`) instead of the whole toolbar; omitted hides nothing                                                                                                                                                                                                                          |
-| `customization`                                                            | `ViewerCustomization`                   | -        | Hide, lock or remap any part of the UI (ribbon tabs/buttons, File > Options pages/sections/settings, File tab, context menus, shortcuts, panels, AI/collaboration, dialogs); the same helpers (`hideRibbonTab`, `lockSetting`, ...) are on the `ref` handle. See the [UI Customization guide](https://christophervr.github.io/pptx-viewer/guide/customization). |
+| `customization`                                                            | `ViewerCustomization`                   | -        | Hide, lock or remap any part of the UI (ribbon tabs/buttons, File > Options pages/sections/settings, File tab, context menus, shortcuts, panels, AI/collaboration, dialogs); the same helpers (`hideRibbonTab`, `lockSetting`, ...) are on the `ref` handle. See the [UI Customization guide](https://christophervr.github.io/ooxml/pptx/guide/customization). |
 | `defaultThemeKey`                                                          | `string`                                | n/a      | Initial File > Options > Appearance selection when no persisted preference exists                                                                                                                                                                                                                                                                               |
 | `availableThemes`                                                          | `ThemeCatalogEntry[]`                   | n/a      | Theme choices offered by File > Options > Appearance (defaults to the built-in catalog)                                                                                                                                                                                                                                                                         |
 | `onThemeChange`                                                            | `(key: string) => void`                 | n/a      | Host hook for the appearance picker; when set, the host owns persisting the choice                                                                                                                                                                                                                                                                              |
@@ -161,7 +161,7 @@ slide/element manipulation methods are also available:
 `addElement(element)`, `updateElement(id, patch)`, `deleteElements(ids)`, and
 `duplicateElement(id)`.
 
-See [element insertion](https://christophervr.github.io/pptx-viewer/react/handle#add-element)
+See [element insertion](https://christophervr.github.io/ooxml/pptx/react/handle#add-element)
 for the `addElement` contract, including the headless handle, and a core-factory example.
 
 ### `renderToCanvas`
@@ -243,9 +243,9 @@ Override specific values with the `theme` prop:
 />
 ```
 
-All `ViewerTheme.colors` keys are optional; override only what you need. Helpers `defaultThemeColors`, `defaultRadius`, `themeToCssVars`, `defaultCssVars`, `ViewerThemeProvider`, and `useViewerTheme` are exported for advanced use. See the [full docs](https://christophervr.github.io/pptx-viewer/) for the complete token list.
+All `ViewerTheme.colors` keys are optional; override only what you need. Helpers `defaultThemeColors`, `defaultRadius`, `themeToCssVars`, `defaultCssVars`, `ViewerThemeProvider`, and `useViewerTheme` are exported for advanced use. See the [full docs](https://christophervr.github.io/ooxml/pptx/) for the complete token list.
 
-Two ready-made presets ship with the package: `vermilionLightTheme` (warm paper canvas) and `vermilionDarkTheme` (dimmed presenter room), the same vermilion brand look as the [documentation site](https://christophervr.github.io/pptx-viewer/):
+Two ready-made presets ship with the package: `vermilionLightTheme` (warm paper canvas) and `vermilionDarkTheme` (dimmed presenter room), the same vermilion brand look as the [documentation site](https://christophervr.github.io/ooxml/pptx/):
 
 ```tsx
 import { PowerPointViewer, vermilionLightTheme } from 'pptx-react-viewer';
@@ -257,13 +257,13 @@ The underlying palettes (`vermilionLightColors`, `vermilionDarkColors`) and radi
 
 ## Localization (i18n)
 
-UI labels go through [i18next](https://www.i18next.com/) / [react-i18next](https://react.i18next.com/) with dotted keys such as `pptx.statusBar.allSaved`. Initialise an i18next instance and wrap your app in `I18nextProvider` (the demo's `demo/i18n.ts` shows a minimal config, including a `parseMissingKeyHandler` that derives Title Case labels for any key you don't explicitly translate). `pptx-react-viewer/i18n` exports `translationsEn` (the English dictionary), `keyToLabel` (the fallback), and a `TranslationKey` type you can use to type-check a new locale dictionary (`Record<TranslationKey, string>`) at compile time. Add a new language by supplying a resource bundle under its language code. See the [Localization guide](https://christophervr.github.io/pptx-viewer/guide/localization) for full wiring examples and how to contribute a translation upstream; the live demo's language picker is a working reference.
+UI labels go through [i18next](https://www.i18next.com/) / [react-i18next](https://react.i18next.com/) with dotted keys such as `pptx.statusBar.allSaved`. Initialise an i18next instance and wrap your app in `I18nextProvider` (the demo's `demo/i18n.ts` shows a minimal config, including a `parseMissingKeyHandler` that derives Title Case labels for any key you don't explicitly translate). `pptx-react-viewer/i18n` exports `translationsEn` (the English dictionary), `keyToLabel` (the fallback), and a `TranslationKey` type you can use to type-check a new locale dictionary (`Record<TranslationKey, string>`) at compile time. Add a new language by supplying a resource bundle under its language code. See the [Localization guide](https://christophervr.github.io/ooxml/pptx/guide/localization) for full wiring examples and how to contribute a translation upstream; the live demo's language picker is a working reference.
 
 ## How it's built
 
-You only need the `<PowerPointViewer>` component; everything else is internal. Behind it, the logic lives in many small, focused React hooks, and the components themselves just draw what those hooks produce. Slides are rendered as ordinary HTML and CSS (charts as inline SVG, tables as real `<table>` elements), which is why text stays sharp, selectable, and accessible. For the full component tree, the rendering pipeline, the animation and transition engine, connector routing, collaboration, and a file-by-file map, see the [full documentation](https://christophervr.github.io/pptx-viewer/).
+You only need the `<PowerPointViewer>` component; everything else is internal. Behind it, the logic lives in many small, focused React hooks, and the components themselves just draw what those hooks produce. Slides are rendered as ordinary HTML and CSS (charts as inline SVG, tables as real `<table>` elements), which is why text stays sharp, selectable, and accessible. For the full component tree, the rendering pipeline, the animation and transition engine, connector routing, collaboration, and a file-by-file map, see the [full documentation](https://christophervr.github.io/ooxml/pptx/).
 
-A small curated set of those hooks is exported from `pptx-react-viewer/viewer` with a stable API; the complete set (80+) is also importable from `pptx-react-viewer/internals` for advanced integrations. The `internals` subpath is **not covered by semver**: prefer the stable root exports. See the [Hooks reference](https://christophervr.github.io/pptx-viewer/react/hooks-reference) for the full list.
+A small curated set of those hooks is exported from `pptx-react-viewer/viewer` with a stable API; the complete set (80+) is also importable from `pptx-react-viewer/internals` for advanced integrations. The `internals` subpath is **not covered by semver**: prefer the stable root exports. See the [Hooks reference](https://christophervr.github.io/ooxml/pptx/react/hooks-reference) for the full list.
 
 The bulk of that cross-framework logic (colour/geometry/connector/animation/chart math, slide
 transitions, and more) actually lives in `pptx-viewer-shared`, an internal package that is
@@ -275,7 +275,7 @@ so you never need `pptx-viewer-shared` yourself.
 
 ## Limitations
 
-CSS-based rendering trades a few visual effects for crisp text, accessibility, and DOM interactivity: `backdrop-filter` becomes semi-transparent backgrounds and path gradients approximate as elliptical radials, while `mix-blend-mode` and CSS 3D transforms render natively on screen but flatten in raster export. Text uses fonts available in the browser (embedded fonts are injected when present). Media playback depends on browser codec support. SmartArt is decomposed into editable shapes with a live reflow engine for structural edits. Charts are editable directly on the canvas (hover a mark for its tooltip, click to select, drag it to a new value, double-click the title to rename), except for stacked/percent-stacked, pie, radar, surface and map kinds, which are click-to-select and edited in the inspector data grid. 3D models need the optional Three.js peer. See the [full docs](https://christophervr.github.io/pptx-viewer/) for the complete list.
+CSS-based rendering trades a few visual effects for crisp text, accessibility, and DOM interactivity: `backdrop-filter` becomes semi-transparent backgrounds and path gradients approximate as elliptical radials, while `mix-blend-mode` and CSS 3D transforms render natively on screen but flatten in raster export. Text uses fonts available in the browser (embedded fonts are injected when present). Media playback depends on browser codec support. SmartArt is decomposed into editable shapes with a live reflow engine for structural edits. Charts are editable directly on the canvas (hover a mark for its tooltip, click to select, drag it to a new value, double-click the title to rename), except for stacked/percent-stacked, pie, radar, surface and map kinds, which are click-to-select and edited in the inspector data grid. 3D models need the optional Three.js peer. See the [full docs](https://christophervr.github.io/ooxml/pptx/) for the complete list.
 
 ## Reference translations
 
@@ -288,7 +288,7 @@ import { translationsZhCN } from 'pptx-react-viewer/i18n/zh-CN';
 
 The other subpaths are `i18n/fr` (`translationsFr`), `i18n/es`
 (`translationsEs`), and `i18n/de` (`translationsDe`). See the
-[localization guide](https://christophervr.github.io/pptx-viewer/guide/localization)
+[localization guide](https://christophervr.github.io/ooxml/pptx/guide/localization)
 for registration and runtime switching. Existing English imports are unchanged.
 
 ## License

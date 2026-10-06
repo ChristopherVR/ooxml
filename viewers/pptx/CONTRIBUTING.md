@@ -29,7 +29,7 @@ vulnerability rather than a bug? Do **not** open a public issue: see
 Node.js 22+. On Windows, the root test runner also needs Bash (for example, Git Bash), including its standard Unix utilities.
 
 ```bash
-git clone https://github.com/ChristopherVR/pptx-viewer.git
+git clone https://github.com/ChristopherVR/ooxml.git
 cd pptx-viewer
 
 bun install
@@ -42,9 +42,12 @@ bun run fmt:check
 
 The root build runs `core -> shared -> locales -> tools -> react -> vue -> angular -> vanilla -> svelte -> cli -> React demo`. Vue, Angular, Vanilla, and Svelte demo production builds are separate scripts in their demo packages. `emf-converter` and `mtx-decompressor` are external npm dependencies.
 
-External contributors work on a fork: fork the repo, branch off `main`, and open
-a PR back to `ChristopherVR/pptx-viewer:main`. (Maintainers with write access
-commit directly to `main`; this repo is trunk-based internally.)
+External contributors work on a fork: fork ChristopherVR/ooxml, branch off
+`main`, and open a PR back to `ChristopherVR/ooxml:main`. (Maintainers with
+write access commit directly to `main`; the repository is trunk-based
+internally.) The PowerPoint viewer lives in `viewers/pptx` of that repository;
+the repository-wide rules are in its root [`CONTRIBUTING.md`](../../CONTRIBUTING.md),
+and this file adds what is specific to the viewer.
 
 ---
 
@@ -215,7 +218,7 @@ Colocated with source, `.test.ts` suffix. Vitest.
 
 ### e2e tests
 
-Playwright specs live in `e2e/`. **Product specs must be framework-neutral**:
+Playwright specs live in `e2e/pptx/` at the repository root. **Product specs must be framework-neutral**:
 one spec runs against all five demos, selected by Playwright project. This is
 enforced by a contract check that runs as part of `bun run e2e`:
 
@@ -225,7 +228,7 @@ bun run e2e:contract   # scripts/check-e2e-neutrality.mjs
 
 It rejects specs that hardcode a demo port (4173-4177) or a framework-specific
 selector (`pptx-react-*`, `pptx-ng-*`, `pptxv`, and so on) outside of a
-project-conditional branch. `e2e/ribbon-tab-parity.spec.ts` is the reference for
+project-conditional branch. `e2e/pptx/ribbon-tab-parity.spec.ts` is the reference for
 how a legitimately framework-aware comparison is written.
 
 Specs prefixed `capture-` are documentation asset generators, not product tests,
@@ -241,7 +244,7 @@ A small number of specs do real-time video capture (`MediaRecorder` over
 (exit 143, "the runner has received a shutdown signal") rather than merely
 failing, and cannot be reproduced outside that environment. Those tests carry
 the Playwright tag `{ tag: '@local-only' }` and are excluded from CI via
-`grepInvert` in `playwright.config.ts`; see `e2e/export-raster-tiling.spec.ts`
+`grepInvert` in `playwright.config.ts`; see `e2e/pptx/export-raster-tiling.spec.ts`
 for the current tagged tests and the incident history in their comments.
 
 They still run locally:
@@ -250,12 +253,10 @@ They still run locally:
 bun run e2e:local-only   # playwright test --grep @local-only --workers=1
 ```
 
-and a `.husky/pre-push` hook runs them automatically before a push that
-touches export-video-related paths (the shared export pipeline, each
-binding's export code, or the tagged spec itself), so CI's blind spot still
-has a gate. Set `PPTX_SKIP_PREPUSH=1` (or use `git push --no-verify`) to skip
-it for a given push. The hook also skips quietly when Playwright's browsers
-are not installed locally or when `CI` is set.
+Run them yourself before pushing a change to export-video-related paths (the
+shared export pipeline, each binding's export code, or the tagged spec itself):
+the `.husky/pre-push` hook that used to run them in the pptx-viewer repository
+is not installed here, so nothing else covers CI's blind spot.
 
 Do not add `@local-only` to a test unless it is genuinely unrunnable on the
 hosted runner, not merely slow; a normal slow test belongs in the regular
@@ -281,7 +282,7 @@ bun run demo:vanilla   # VanillaJS :4176
 bun run demo:svelte    # Svelte 5  :4177
 ```
 
-The Vanilla and Svelte demos serve `e2e/fixtures` as their public dir; the other demos use their default `public/` directory. The landing page's
+The Vanilla and Svelte demos serve `e2e/pptx/fixtures` as their public dir; the other demos use their default `public/` directory. The landing page's
 "or create a New Presentation" button gives you an editable deck without needing
 a file.
 

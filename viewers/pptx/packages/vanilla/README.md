@@ -1,7 +1,7 @@
 # pptx-vanilla-viewer
 
 [![npm version](https://img.shields.io/npm/v/pptx-vanilla-viewer.svg)](https://www.npmjs.com/package/pptx-vanilla-viewer)
-[![license](https://img.shields.io/npm/l/pptx-vanilla-viewer.svg)](https://github.com/ChristopherVR/pptx-viewer/blob/main/LICENSE)
+[![license](https://img.shields.io/npm/l/pptx-vanilla-viewer.svg)](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/LICENSE)
 
 Show, edit, and present Microsoft PowerPoint (`.pptx`) files directly in the
 browser with **zero framework**: no React, Vue, Angular, or Svelte required, no
@@ -9,11 +9,11 @@ server, no conversion step, no PowerPoint install. Call one factory function,
 `createPptxViewer(container, options)`, and slides render as real HTML and
 CSS.
 
-![Editing, undoing, and rendering a deck with the zero-framework Vanilla JavaScript demo](https://raw.githubusercontent.com/ChristopherVR/pptx-viewer/main/.github/assets/packages/vanilla-demo.gif)
+![Editing, undoing, and rendering a deck with the zero-framework Vanilla JavaScript demo](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/pptx/.github/assets/packages/vanilla-demo.gif)
 
 The rendering is done by the framework-agnostic [`pptx-viewer-core`](https://www.npmjs.com/package/pptx-viewer-core) engine, which turns a `.pptx` file into a structured slide model. This package is the plain-DOM layer that draws that model on screen, and the engine is **bundled in**, so you install just one package.
 
-<samp>**[▶️ Try the live demo](https://christophervr.github.io/pptx-viewer/demo-vanilla/)** · **[📦 npm](https://www.npmjs.com/package/pptx-vanilla-viewer)** · **[📖 Full docs](https://christophervr.github.io/pptx-viewer/vanilla/)** · **[🧩 Core SDK](https://www.npmjs.com/package/pptx-viewer-core)**</samp>
+<samp>**[▶️ Try the live demo](https://christophervr.github.io/ooxml/pptx/demo-vanilla/)** · **[📦 npm](https://www.npmjs.com/package/pptx-vanilla-viewer)** · **[📖 Full docs](https://christophervr.github.io/ooxml/pptx/vanilla/)** · **[🧩 Core SDK](https://www.npmjs.com/package/pptx-viewer-core)**</samp>
 
 ## Install
 
@@ -27,7 +27,7 @@ SVG when it is absent. Install `yjs` with `y-websocket` or `y-webrtc` only for c
 ## Usage
 
 For a copy-paste Vite project, including the `index.html`, `src/main.js`, and `public/` file
-layout, see [the Vanilla Getting Started guide](https://christophervr.github.io/pptx-viewer/vanilla/getting-started/).
+layout, see [the Vanilla Getting Started guide](https://christophervr.github.io/ooxml/pptx/vanilla/getting-started/).
 Place a local deck in `public/` and reference it with a root URL such as `/presentation.pptx`.
 The viewer opens a successfully loaded `source` automatically; `onLoad` is for your application
 code and does not need to click internal viewer controls.
@@ -117,7 +117,7 @@ shown above:
 | `showFormatToolbar`                                                        | `boolean`                                             | `true`                 | Editing format toolbar row (visible only while editing).                                                                                                                                                                                                                                                                                                           |
 | `showInspector`                                                            | `boolean`                                             | `true`                 | Property inspector panel (visible only while editing).                                                                                                                                                                                                                                                                                                             |
 | `hiddenActions`                                                            | `ToolbarActionId[]`                                   | -                      | Hide individual buttons/tabs (see [Toolbar customization](#toolbar-customization)).                                                                                                                                                                                                                                                                                |
-| `customization`                                                            | `ViewerCustomization`                                 | -                      | Hide, lock or remap any part of the UI (ribbon tabs/buttons, File > Options pages/sections/settings, File tab, context menus, shortcuts, panels, AI/collaboration, dialogs); the same helpers (`hideRibbonTab`, `lockSetting`, ...) are on the viewer instance. See the [UI Customization guide](https://christophervr.github.io/pptx-viewer/guide/customization). |
+| `customization`                                                            | `ViewerCustomization`                                 | -                      | Hide, lock or remap any part of the UI (ribbon tabs/buttons, File > Options pages/sections/settings, File tab, context menus, shortcuts, panels, AI/collaboration, dialogs); the same helpers (`hideRibbonTab`, `lockSetting`, ...) are on the viewer instance. See the [UI Customization guide](https://christophervr.github.io/ooxml/pptx/guide/customization). |
 | `registry`                                                                 | `ElementRendererRegistry`                             | -                      | Custom element-renderer registry (see [Element coverage](#element-coverage)).                                                                                                                                                                                                                                                                                      |
 | `smartArt3D`                                                               | `boolean`                                             | `false`                | Opt-in Three.js 3D SmartArt renderer (optional `three` peer, lazily imported).                                                                                                                                                                                                                                                                                     |
 | `surfaceChart3D`, `barChart3D`, `lineChart3D`, `areaChart3D`, `pieChart3D` | `boolean`                                             | `false`                | Independently opt in to interactive Three.js renderers for the matching 3D chart kinds; each falls back to SVG when WebGL is unavailable.                                                                                                                                                                                                                          |
@@ -146,7 +146,7 @@ setters, `getSlides`/`getSlide`/`getActiveSlide`, `addSlide`/`deleteSlides`/
 `getElementById`/`addElement`/`updateElement`/`deleteElements`/`duplicateElement`, and the
 selection methods).
 
-See [element insertion](https://christophervr.github.io/pptx-viewer/vanilla/api#add-element)
+See [element insertion](https://christophervr.github.io/ooxml/pptx/vanilla/api#add-element)
 for the `addElement` contract and a core-factory example.
 
 Additional vanilla-specific methods:
@@ -366,7 +366,7 @@ import { translationsZhCN } from 'pptx-vanilla-viewer/i18n/zh-CN';
 
 The other subpaths are `i18n/fr` (`translationsFr`), `i18n/es`
 (`translationsEs`), and `i18n/de` (`translationsDe`). See the
-[localization guide](https://christophervr.github.io/pptx-viewer/guide/localization)
+[localization guide](https://christophervr.github.io/ooxml/pptx/guide/localization)
 for registration and runtime switching. Existing English imports are unchanged.
 
 ## License
