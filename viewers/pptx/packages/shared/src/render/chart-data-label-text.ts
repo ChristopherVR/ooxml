@@ -254,7 +254,11 @@ export function resolveDataLabelTextStyle(
 	pointIndex: number,
 ): PptxChartLegendTextStyle | undefined {
 	const point = series.dataLabels?.find((label) => label.idx === pointIndex);
-	return point?.txPr ?? series.dataLabelOptions?.txPr ?? chartData.style?.dataLabels?.txPr;
+	const inherited =
+		point?.txPr ?? series.dataLabelOptions?.txPr ?? chartData.style?.dataLabels?.txPr;
+	// A rich-text label (`c:dLbl/c:tx/c:rich`) is drawn with its own run's font.
+	const rich = point?.text !== undefined ? point.richTextStyle : undefined;
+	return rich ? { ...inherited, ...rich } : inherited;
 }
 
 /**

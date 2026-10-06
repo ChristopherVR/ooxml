@@ -297,6 +297,44 @@ describe('resolveDataLabelTextStyle', () => {
 		};
 		expect(resolveDataLabelTextStyle(data, series, 0)).toStrictEqual({ fontSize: 14, bold: true });
 	});
+
+	it("draws a rich-text label (c:dLbl/c:tx/c:rich) with its run's own font", () => {
+		const data = chart({ style: { hasDataLabels: true, dataLabels: { txPr: { fontSize: 8 } } } });
+		const series: PptxChartSeries = {
+			...shareSeries,
+			dataLabels: [
+				{
+					idx: 0,
+					text: '1,444',
+					richTextStyle: { fontFamily: 'Pretendard', fontSize: 8, bold: true },
+				},
+			],
+		};
+		expect(resolveDataLabelTextStyle(data, series, 0)).toStrictEqual({
+			fontFamily: 'Pretendard',
+			fontSize: 8,
+			bold: true,
+		});
+	});
+
+	it('lets the rich run override only the fields it sets', () => {
+		const series: PptxChartSeries = {
+			...shareSeries,
+			dataLabels: [
+				{
+					idx: 0,
+					text: 'Note',
+					txPr: { fontSize: 14, color: '#112233' },
+					richTextStyle: { fontFamily: 'Georgia' },
+				},
+			],
+		};
+		expect(resolveDataLabelTextStyle(chart(), series, 0)).toStrictEqual({
+			fontSize: 14,
+			color: '#112233',
+			fontFamily: 'Georgia',
+		});
+	});
 });
 
 // C2-G1 (data-label half): resolveDataLabelTextStyle's font, converted to the
