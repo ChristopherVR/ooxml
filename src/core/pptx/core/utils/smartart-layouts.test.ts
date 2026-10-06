@@ -360,6 +360,17 @@ describe('switchSmartArtLayout', () => {
 		expect(result.nodes).toBe(baseData.nodes);
 	});
 
+	it('drops the previous layout definition so the new family lays the nodes out', () => {
+		const withDefinition: PptxSmartArtData = {
+			...baseData,
+			layoutDefinition: { uniqueId: 'urn:microsoft.com/office/officeart/2005/8/layout/chevron1' },
+			presLayoutVars: { direction: 'norm' },
+		} as PptxSmartArtData;
+		const result = switchSmartArtLayout(withDefinition, 'cycle');
+		expect(result.layoutDefinition).toBeUndefined();
+		expect(result.presLayoutVars).toBeUndefined();
+	});
+
 	it('marks stale pre-computed drawing shapes so the renderer reflows the new layout', () => {
 		const withShapes: PptxSmartArtData = {
 			...baseData,

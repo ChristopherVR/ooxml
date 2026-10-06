@@ -57,6 +57,13 @@ export function switchSmartArtLayout(
 		resolvedLayoutType: newLayoutType,
 		// Clear the named layout preset - switching category invalidates it
 		layout: undefined,
+		// The parsed `dgm:layoutDef` and its layout variables describe the OLD
+		// layout, and the DiagramML interpreter runs them ahead of the family
+		// layout for `resolvedLayoutType`. Left in place, the switch re-lays-out
+		// the nodes with the previous layout's algorithm (or a mismatch of the
+		// two), which is what broke a diagram after a layout change.
+		layoutDefinition: undefined,
+		presLayoutVars: undefined,
 		layoutDirty: true,
 		drawingDirty: true,
 		// Mark stale pre-computed drawing shapes from the old layout so the
