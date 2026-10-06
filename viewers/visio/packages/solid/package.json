@@ -31,7 +31,7 @@
 		"access": "public"
 	},
 	"dependencies": {
-		"emf-converter": "4.8.9",
+		"emf-converter": "4.8.21",
 		"ooxml-core": "*",
 		"ooxml-ui": "*",
 		"visio-core": "^0.3.2"
