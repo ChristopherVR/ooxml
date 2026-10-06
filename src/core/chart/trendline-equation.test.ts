@@ -11,7 +11,7 @@ import {
 	formatPolynomialEquation,
 	formatPowerEquation,
 	formatTrendlineCoefficient,
-} from './chart-trendline-equation-format';
+} from './trendline-equation.js';
 
 describe('formatTrendlineCoefficient', () => {
 	it('rounds to 4 significant digits, not 2 fixed decimals', () => {

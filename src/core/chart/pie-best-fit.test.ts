@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { BEST_FIT_OUTSIDE_GAP, BEST_FIT_RIM_INSET, placeBestFitLabel } from './chart-pie-best-fit';
+import { BEST_FIT_OUTSIDE_GAP, BEST_FIT_RIM_INSET, placeBestFitLabel } from './pie-best-fit.js';
 
 /** PowerPoint's small test pie (R = 89.625pt) in px, centred on the origin. */
 const R = 89.625 * (4 / 3);
@@ -36,10 +36,11 @@ describe('placeBestFitLabel', () => {
 
 	it('moves a label that does not fit outside, just beyond the rim (COM: 1% and 2% slices)', () => {
 		const narrow = 12.08 * (4 / 3);
-		for (const [from, to] of [
+		const slices: ReadonlyArray<readonly [number, number]> = [
 			[0, 1],
 			[1, 3],
-		]) {
+		];
+		for (const [from, to] of slices) {
 			const placed = placeBestFitLabel(slice(from, to), narrow, H);
 			expect(placed.inside).toBeFalsy();
 			// Pointing up: the box's lower edge sits the gap above the rim.
