@@ -6,7 +6,7 @@ const origin = `http://127.0.0.1:${port}`;
 const executablePath = resolveChromiumExecutable(chromium.executablePath());
 
 export default defineConfig({
-	testDir: './tests',
+	testDir: '../../e2e/xlsx',
 	fullyParallel: false,
 	workers: 1,
 	use: {

@@ -17,7 +17,7 @@ export default defineConfig(({ mode }) => ({
 		rollupOptions: {
 			preserveEntrySignatures: 'strict',
 			input: {
-				...(mode === 'browser-tests' ? { 'test-api': resolve('tests/browser-api.ts') } : {}),
+				...(mode === 'browser-tests' ? { 'test-api': resolve('../../e2e/visio/browser-api.ts') } : {}),
 				demo: resolve('../../demos/visio/demo/index.html'),
 			},
 			output: {

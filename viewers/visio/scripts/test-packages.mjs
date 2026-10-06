@@ -9,7 +9,7 @@ import { build } from 'vite';
 import { VIEWER_PACKAGES } from './viewer-packages.mjs';
 import { verifyManifest } from '../../../scripts/publish-released.mjs';
 import { runNpm } from './npm-command.mjs';
-import { createVsdxFixture } from '../tests/fixture.mjs';
+import { createVsdxFixture } from '../../../e2e/visio/fixture.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 const consumer = mkdtempSync(resolve(tmpdir(), 'visio-published-consumer-'));
@@ -49,7 +49,7 @@ runNpm(['install', '--ignore-scripts'], { cwd: consumer, stdio: 'inherit' });
 writeFileSync(resolve(consumer, 'fixture.vsdx'), await createVsdxFixture('Published consumer'));
 writeFileSync(
 	resolve(consumer, 'fixture.vsd'),
-	readFileSync(resolve(root, 'tests/fixtures/owned-v11.vsd')),
+	readFileSync(resolve(root, '../../e2e/visio/fixtures/owned-v11.vsd')),
 );
 const names = Object.values(VIEWER_PACKAGES).map((meta) => meta.npm);
 writeFileSync(

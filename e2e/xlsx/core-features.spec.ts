@@ -91,7 +91,7 @@ test('Info edits properties with undo and encrypts a downloaded workbook', async
 	);
 	const path = await (await download).path();
 	const { readFile } = await import('node:fs/promises');
-	const { loadWorkbook } = await import('../packages/core/src/load');
+	const { loadWorkbook } = await import('../../viewers/xlsx/packages/core/src/load');
 	const bytes = new Uint8Array(await readFile(path!));
 	await expect(loadWorkbook(bytes)).rejects.toMatchObject({ code: 'password-required' });
 	const saved = await loadWorkbook(bytes, { password: 'secret' });

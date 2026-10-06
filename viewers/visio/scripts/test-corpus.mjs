@@ -7,7 +7,7 @@ import { parseVsdx, VisioPackageError } from 'ooxml-core/visio';
 import { assertViewableDocument } from '../dist/scene-validation.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const baseline = JSON.parse(await readFile(resolve(root, 'tests/corpus-baseline.json'), 'utf8'));
+const baseline = JSON.parse(await readFile(resolve(root, '../../e2e/visio/corpus-baseline.json'), 'utf8'));
 if (![4, 5].includes(process.argv.length) || (process.argv[4] && process.argv[4] !== '--svg'))
 	throw new Error('Usage: node scripts/test-corpus.mjs LIBVISIO_CHECKOUT POI_CHECKOUT [--svg]');
 let exportPageSvg, dom;

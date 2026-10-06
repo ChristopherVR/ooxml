@@ -1,7 +1,7 @@
 import { defineConfig } from '@playwright/test';
 import { resolve } from 'node:path';
 export default defineConfig({
-	testDir: './tests',
+	testDir: '../../e2e/visio',
 	fullyParallel: true,
 	use: {
 		baseURL: 'http://127.0.0.1:4173',

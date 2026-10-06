@@ -1,6 +1,6 @@
 # Reproduce external corpus checks
 
-The optional corpus runner checks 19 real drawings and 10 malformed security inputs from two primary upstream repositories. It never downloads, uploads or redistributes fixture bytes. Each input must match the size and SHA-256 recorded in `tests/corpus-baseline.json`.
+The optional corpus runner checks 19 real drawings and 10 malformed security inputs from two primary upstream repositories. It never downloads, uploads or redistributes fixture bytes. Each input must match the size and SHA-256 recorded in `e2e/visio/corpus-baseline.json`.
 
 - [LibreOffice/libvisio](https://github.com/LibreOffice/libvisio/tree/49fb9d3a9d21d4374cad782925e48c577a41f5be/src/test/data), revision `49fb9d3a9d21d4374cad782925e48c577a41f5be`: 14 real VSDX files and two malformed inputs. The repository declares MPL-2.0 and includes the fixtures in its test distribution.
 - [Apache POI](https://github.com/apache/poi/tree/732120980140d5ed64b482c470e0b625cdb1ab15/test-data/diagram), revision `732120980140d5ed64b482c470e0b625cdb1ab15`: five real VSDX files and eight malformed inputs. The repository provides Apache-2.0 license and notice files.

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
-import type { DocxEditorElement } from '../packages/web-component/src';
-import type { SignedTwips, Twips } from '../packages/core/src/index';
+import type { DocxEditorElement } from '../../viewers/docx/packages/web-component/src';
+import type { SignedTwips, Twips } from '../../viewers/docx/packages/core/src/index';
 import { newDocument, reveal } from './helpers';
 
 for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {

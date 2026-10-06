@@ -81,10 +81,10 @@ the element, forward props and options, and re-emit its events.
   is display-only, charts render as placeholders). Never claim Word layout
   parity or lossless export.
 - Bun, TypeScript strict mode, Vitest (tests next to the code) and Playwright
-  browser tests (`tests/*.spec.ts`). Keep source modules under 300 lines where
+  browser tests (`e2e/docx/*.spec.ts`). Keep source modules under 300 lines where
   practical. Add regression tests for editing, preservation and binding
   contracts; parsing and round-trip tests belong in the core.
-- The Word fixtures used by the browser specs are copies in `tests/support`.
+- The Word fixtures used by the browser specs are copies in `e2e/docx/support`.
 
 ## Packages
 

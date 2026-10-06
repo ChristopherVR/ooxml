@@ -33,7 +33,7 @@ chrome is compact; mobile controls retain 44px touch targets.
 
 ## Visual evidence
 
-`tests/design-evidence.spec.ts` captures desktop/mobile and light/dark images of
+`e2e/visio/design-evidence.spec.ts` captures desktop/mobile and light/dark images of
 the workspace, landing page, loaded embedded demo and guide using synthetic sample
 content only. The verification workflow retains these images on success as well
 as failure. Passing DOM/source checks alone is not visual verification: review

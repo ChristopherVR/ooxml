@@ -221,7 +221,7 @@ try {
 	await mkdir(path.join(work, 'fixtures'));
 	await writeFile(
 		path.join(work, 'fixtures', 'ole-word-97.doc'),
-		await readFile(path.join(root, 'tests/support/ole-word-97.doc')),
+		await readFile(path.join(root, '../../e2e/docx/support/ole-word-97.doc')),
 	);
 	await writeFile(path.join(work, 'consumer.mjs'), consumerSource);
 	run('node', [path.join(work, 'consumer.mjs')], { cwd: work });

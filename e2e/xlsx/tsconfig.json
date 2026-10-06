@@ -1,0 +1,4 @@
+{
+	"extends": "../../viewers/xlsx/tsconfig.json",
+	"include": ["./**/*.ts", "./**/*.mjs", "./**/*.d.mts"]
+}

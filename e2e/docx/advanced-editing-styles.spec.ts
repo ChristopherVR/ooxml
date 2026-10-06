@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import type { DocxEditorElement } from '../packages/web-component/src';
+import type { DocxEditorElement } from '../../viewers/docx/packages/web-component/src';
 import { newDocument } from './helpers';
 import { fileInput } from './helpers';
 import JSZip from 'jszip';

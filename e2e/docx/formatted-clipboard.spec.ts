@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import JSZip from 'jszip';
-import type { DocxEditorElement } from '../packages/web-component/src';
+import type { DocxEditorElement } from '../../viewers/docx/packages/web-component/src';
 import { newDocument } from './helpers';
 
 for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {

@@ -80,10 +80,10 @@ re-emit its events as callbacks.
   Never claim Excel parity or lossless export.
 - Bun, TypeScript strict mode (with `exactOptionalPropertyTypes` and
   `noUncheckedIndexedAccess`, no `any`), Vitest (tests next to the code) and
-  Playwright browser tests (`tests/*.spec.ts`). Keep source modules under 300
+  Playwright browser tests (`e2e/xlsx/*.spec.ts`). Keep source modules under 300
   lines where practical. Add regression tests for editing, rendering and binding
   contracts; parsing, calculation and round-trip tests belong in the core.
-- The workbook fixtures used by the browser specs live in `tests/support` and
+- The workbook fixtures used by the browser specs live in `e2e/xlsx/support` and
   `demos/xlsx/demo-vanilla/public/sample.xlsx`; their generators are
   `scripts/sample-workbook.py` and `scripts/sample-workbook-excel.ps1`.
 

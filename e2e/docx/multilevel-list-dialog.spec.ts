@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import JSZip from 'jszip';
 import { readFile } from 'node:fs/promises';
-import { computeListLabels, loadDocx } from '../packages/core/src/index';
+import { computeListLabels, loadDocx } from '../../viewers/docx/packages/core/src/index';
 import { restartFixture } from './support/restart-fixture';
 import { fileInput, reveal, saveButton, dialogByHeading } from './helpers';
 

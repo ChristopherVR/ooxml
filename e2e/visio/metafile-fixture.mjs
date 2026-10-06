@@ -1,6 +1,6 @@
 import JSZip from 'jszip';
 import { createVsdxFixture } from './fixture.mjs';
-import { emf, record } from '../scripts/emf-audit/fixtures.mjs';
+import { emf, record } from '../../viewers/visio/scripts/emf-audit/fixtures.mjs';
 /** Original generated EMF primitives in a generated VSDX package. No corpus bytes. */
 export async function createMetafileFixture(unsupported = false) {
 	const zip = await JSZip.loadAsync(await createVsdxFixture('Embedded vector'));

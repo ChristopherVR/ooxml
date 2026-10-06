@@ -1,8 +1,8 @@
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
-import { loadDocx } from '../packages/core/src/index';
-import type { DocxEditorElement } from '../packages/web-component/src';
+import { loadDocx } from '../../viewers/docx/packages/core/src/index';
+import type { DocxEditorElement } from '../../viewers/docx/packages/web-component/src';
 import { fileInput, reveal, saveButton, dialogByHeading } from './helpers';
 
 const w = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';

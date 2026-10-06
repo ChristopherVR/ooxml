@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
-import { loadDocx } from '../packages/core/src/index';
-import type { DocxEditorElement } from '../packages/web-component/src';
+import { loadDocx } from '../../viewers/docx/packages/core/src/index';
+import type { DocxEditorElement } from '../../viewers/docx/packages/web-component/src';
 import { newDocument, saveButton } from './helpers';
 
 for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {

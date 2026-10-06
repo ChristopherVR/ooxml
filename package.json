@@ -21,6 +21,9 @@
 		"demos/xlsx",
 		"demos/visio",
 		"demos/teams",
+		"e2e/docx",
+		"e2e/xlsx",
+		"e2e/visio",
 		"demos/teams/*"
 	],
 	"type": "module",

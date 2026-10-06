@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { describe, expect, it } from 'vitest';
 import * as vanilla from './index';
 
-const legacyFixture = new URL('../../../tests/support/legacy-97.xls', import.meta.url);
+const legacyFixture = new URL('../../../../../e2e/xlsx/support/legacy-97.xls', import.meta.url);
 const sampleFixture = new URL('../../../../../demos/xlsx/demo-vanilla/public/sample.xlsx', import.meta.url);
 
 describe('xlsx-vanilla-viewer entry', () => {

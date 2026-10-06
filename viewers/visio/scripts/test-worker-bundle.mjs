@@ -3,8 +3,8 @@ import { readdir, readFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 import { resolve } from 'node:path';
 import assert from 'node:assert/strict';
-import { createMetafileFixture } from '../tests/metafile-fixture.mjs';
-import { createVsdxFixture } from '../tests/fixture.mjs';
+import { createMetafileFixture } from '../../../e2e/visio/metafile-fixture.mjs';
+import { createVsdxFixture } from '../../../e2e/visio/fixture.mjs';
 
 const assetDirectory = resolve(process.argv[2] ?? 'site-dist/assets');
 const assets = await readdir(assetDirectory);
@@ -56,7 +56,7 @@ try {
 		worker.once('message', resolve);
 		worker.once('error', reject);
 	});
-	const legacy = await readFile(new URL('../tests/fixtures/owned-v11.vsd', import.meta.url));
+	const legacy = await readFile(new URL('../../../e2e/visio/fixtures/owned-v11.vsd', import.meta.url));
 	worker.postMessage(Uint8Array.from(legacy).buffer);
 	const legacyResult = await legacyResponse;
 	assert.equal(legacyResult.ok, true, legacyResult.message);
