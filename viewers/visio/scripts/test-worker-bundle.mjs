@@ -56,7 +56,9 @@ try {
 		worker.once('message', resolve);
 		worker.once('error', reject);
 	});
-	const legacy = await readFile(new URL('../../../e2e/visio/fixtures/owned-v11.vsd', import.meta.url));
+	const legacy = await readFile(
+		new URL('../../../e2e/visio/fixtures/owned-v11.vsd', import.meta.url),
+	);
 	worker.postMessage(Uint8Array.from(legacy).buffer);
 	const legacyResult = await legacyResponse;
 	assert.equal(legacyResult.ok, true, legacyResult.message);
