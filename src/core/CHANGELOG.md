@@ -7,6 +7,31 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.22.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@0.22.0) - 2026-10-06
+
+### Features
+
+- **pptx:** Parse chart legend overlay from c:overlay ([dce36c6](https://github.com/ChristopherVR/ooxml/commit/dce36c6134cdaded271b73f541091b37223b6da2))
+- **chart:** Move pie, radar, treemap and trendline helpers from pptx viewer ([c08a02b](https://github.com/ChristopherVR/ooxml/commit/c08a02b91b210c0f99c8c2dfbde02c2e1329fc57))
+- **color:** Move text contrast and unit rgb helpers from pptx viewer ([2dcc341](https://github.com/ChristopherVR/ooxml/commit/2dcc341bd931610a9e9a8f4e8d53483cffbed8ec))
+- **text:** Move tab leader and decimal tab helpers from pptx viewer ([3a5bcf0](https://github.com/ChristopherVR/ooxml/commit/3a5bcf0f4675db3d6831430c37db0c66c6814ef3))
+- **geometry:** Move snap guides and align/distribute from pptx viewer ([3400e87](https://github.com/ChristopherVR/ooxml/commit/3400e8776661df9e2148e1be78819b1c12564b79))
+
+### Bug Fixes
+
+- **pptx:** Clear the old layout definition on a SmartArt layout switch ([086e06c](https://github.com/ChristopherVR/ooxml/commit/086e06cc28b0389da820f35b5fd4f482f2312de8))
+- **xlsx:** Harden code-scanning findings across areas ([90ee4b3](https://github.com/ChristopherVR/ooxml/commit/90ee4b33e1253f21cd0df299af468d550f85eddc))
+- **xlsx:** Use Reflect for dynamic property writes and tighten sanitizers ([b663413](https://github.com/ChristopherVR/ooxml/commit/b66341384d972d73182b06c6b4c706c0462f9364))
+
+### Documentation
+
+- **site:** Rewrite the repository README with hero, suite and quick start ([4c1f004](https://github.com/ChristopherVR/ooxml/commit/4c1f004423c92f043e8987db2c41b114d075c03c))
+- Bring the pptx docs and agent guide up to date with the move ([8cc3f5e](https://github.com/ChristopherVR/ooxml/commit/8cc3f5e364232d39d2a2286e25056fd67b594108))
+
+### Dependencies
+
+- **deps:** Align emf-converter on 4.8.21 ([3c2859d](https://github.com/ChristopherVR/ooxml/commit/3c2859d0a43e66666015debaeaa985888727db95))
+
 ## [0.21.2](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@0.21.2) - 2026-10-06
 
 ### Refactor

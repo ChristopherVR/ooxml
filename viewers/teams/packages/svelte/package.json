@@ -1,6 +1,6 @@
 {
 	"name": "openteams-svelte-viewer",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"description": "Svelte 5 component and store for OpenTeams, the open-source bring-your-own-server team workspace. Self-contained: includes the <teams-app> UI.",
 	"keywords": [
 		"chat",

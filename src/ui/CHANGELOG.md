@@ -7,6 +7,22 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.30.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.30.0) - 2026-10-06
+
+### Features
+
+- **ui:** Add the suite tab model and a tabbed launcher shell ([8ede628](https://github.com/ChristopherVR/ooxml/commit/8ede628c6421794f93ec281eeb7f0e163d574b14))
+- **ui:** Pin and drag suite tabs, and give the top bar one brand mark ([0a30d8a](https://github.com/ChristopherVR/ooxml/commit/0a30d8a4974d53eddedd896cf01b1820cee4a223))
+
+### Bug Fixes
+
+- **xlsx:** Harden code-scanning findings across areas ([90ee4b3](https://github.com/ChristopherVR/ooxml/commit/90ee4b33e1253f21cd0df299af468d550f85eddc))
+- **xlsx:** Use Reflect for dynamic property writes and tighten sanitizers ([b663413](https://github.com/ChristopherVR/ooxml/commit/b66341384d972d73182b06c6b4c706c0462f9364))
+
+### Dependencies
+
+- **deps:** Align emf-converter on 4.8.21 ([3c2859d](https://github.com/ChristopherVR/ooxml/commit/3c2859d0a43e66666015debaeaa985888727db95))
+
 ## [0.29.3](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.29.3) - 2026-10-06
 
 ### Refactor

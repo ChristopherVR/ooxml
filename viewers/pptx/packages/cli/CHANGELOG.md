@@ -4,6 +4,29 @@ All notable changes to this project are documented here.
 This file is generated from [Conventional Commits](https://www.conventionalcommits.org)
 by [git-cliff](https://git-cliff.org); do not edit it by hand.
 A release listed with no entries carried no Conventional Commit in this package's
+scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
+conventional commits.
+
+## [2.41.4](https://github.com/ChristopherVR/ooxml/releases/tag/@christophervr/pptx-viewer@2.41.4) - 2026-10-06
+
+### Documentation
+
+- Bring the pptx docs and agent guide up to date with the move ([8cc3f5e](https://github.com/ChristopherVR/ooxml/commit/8cc3f5e364232d39d2a2286e25056fd67b594108))
+
+### Build & CI
+
+- **release:** Publish the pptx viewer packages from this repository ([21e790f](https://github.com/ChristopherVR/ooxml/commit/21e790f582b3d7072f3770d7a1bd9fc2ad035e53))
+
+### Chores
+
+- **viewers:** Import the pptx-viewer repository with its history ([dde62be](https://github.com/ChristopherVR/ooxml/commit/dde62beb12d38f53fcddf016a4de243fe7151712))
+
+# Changelog
+
+All notable changes to this project are documented here.
+This file is generated from [Conventional Commits](https://www.conventionalcommits.org)
+by [git-cliff](https://git-cliff.org); do not edit it by hand.
+A release listed with no entries carried no Conventional Commit in this package's
 scope: scripts/release-plan.mjs re-releases a package whenever any of its files
 change, not only on conventional ones.
 

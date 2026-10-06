@@ -4,6 +4,53 @@ All notable changes to this project are documented here.
 This file is generated from [Conventional Commits](https://www.conventionalcommits.org)
 by [git-cliff](https://git-cliff.org); do not edit it by hand.
 A release listed with no entries carried no Conventional Commit in this package's
+scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
+conventional commits.
+
+## [4.25.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-svelte-viewer@4.25.0) - 2026-10-06
+
+### Features
+
+- **pptx:** Parse chart legend overlay from c:overlay ([dce36c6](https://github.com/ChristopherVR/ooxml/commit/dce36c6134cdaded271b73f541091b37223b6da2))
+- **chart:** Move pie, radar, treemap and trendline helpers from pptx viewer ([c08a02b](https://github.com/ChristopherVR/ooxml/commit/c08a02b91b210c0f99c8c2dfbde02c2e1329fc57))
+- **color:** Move text contrast and unit rgb helpers from pptx viewer ([2dcc341](https://github.com/ChristopherVR/ooxml/commit/2dcc341bd931610a9e9a8f4e8d53483cffbed8ec))
+- **text:** Move tab leader and decimal tab helpers from pptx viewer ([3a5bcf0](https://github.com/ChristopherVR/ooxml/commit/3a5bcf0f4675db3d6831430c37db0c66c6814ef3))
+- **geometry:** Move snap guides and align/distribute from pptx viewer ([3400e87](https://github.com/ChristopherVR/ooxml/commit/3400e8776661df9e2148e1be78819b1c12564b79))
+- **pptx:** Forward the viewer's duplicated chart and theme helpers ([c22b276](https://github.com/ChristopherVR/ooxml/commit/c22b2766272ec08218ea14fadfc3cafd3c2b9ff6))
+
+### Bug Fixes
+
+- **pptx:** Clear the old layout definition on a SmartArt layout switch ([086e06c](https://github.com/ChristopherVR/ooxml/commit/086e06cc28b0389da820f35b5fd4f482f2312de8))
+- **shared:** Make 3D SmartArt editing and layout switching reliable in every binding ([43e3e07](https://github.com/ChristopherVR/ooxml/commit/43e3e07e6f4996c9777d175ffd3536a341dadc86))
+- **shared:** Hide the fill swatches when the pointer leaves a 3D SmartArt node ([c718e77](https://github.com/ChristopherVR/ooxml/commit/c718e77bb15f7d74721c252189bf99b1f77a9d0d))
+- **ci:** Resolve pptx-viewer-core/ui in the binding test and demo configs ([dfffe69](https://github.com/ChristopherVR/ooxml/commit/dfffe6988b58d3765cf748df5adbd4c3b86b5fbe))
+- **xlsx:** Harden code-scanning findings across areas ([90ee4b3](https://github.com/ChristopherVR/ooxml/commit/90ee4b33e1253f21cd0df299af468d550f85eddc))
+- **xlsx:** Use Reflect for dynamic property writes and tighten sanitizers ([b663413](https://github.com/ChristopherVR/ooxml/commit/b66341384d972d73182b06c6b4c706c0462f9364))
+
+### Refactor
+
+- Move the library into src/core, next to src/ui ([3933a88](https://github.com/ChristopherVR/ooxml/commit/3933a88e36784ce5f4bfab0af1ca12eb65d3cd0c))
+
+### Documentation
+
+- Bring the pptx docs and agent guide up to date with the move ([8cc3f5e](https://github.com/ChristopherVR/ooxml/commit/8cc3f5e364232d39d2a2286e25056fd67b594108))
+
+### Build & CI
+
+- **deps:** Adopt ooxml-ui 0.29.1 and ooxml-core 0.21.1 ([56e1979](https://github.com/ChristopherVR/ooxml/commit/56e197912df02e3d6ce674025115dab206338138))
+- **pptx:** Move the pptx demos and browser tests to the repository root ([a23994d](https://github.com/ChristopherVR/ooxml/commit/a23994d534fc34721f182d5eba9cd4abb97e44f8))
+- **release:** Publish the pptx viewer packages from this repository ([21e790f](https://github.com/ChristopherVR/ooxml/commit/21e790f582b3d7072f3770d7a1bd9fc2ad035e53))
+
+### Chores
+
+- **viewers:** Import the pptx-viewer repository with its history ([dde62be](https://github.com/ChristopherVR/ooxml/commit/dde62beb12d38f53fcddf016a4de243fe7151712))
+
+# Changelog
+
+All notable changes to this project are documented here.
+This file is generated from [Conventional Commits](https://www.conventionalcommits.org)
+by [git-cliff](https://git-cliff.org); do not edit it by hand.
+A release listed with no entries carried no Conventional Commit in this package's
 scope: scripts/release-plan.mjs re-releases a package whenever any of its files
 change, not only on conventional ones.
 

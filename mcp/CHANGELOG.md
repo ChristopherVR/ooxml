@@ -7,6 +7,20 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.1.8](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-mcp@0.1.8) - 2026-10-06
+
+### Refactor
+
+- Make src/core a workspace package ([d5b8d6d](https://github.com/ChristopherVR/ooxml/commit/d5b8d6d91161c9ae631aa84436afb35105ac9517))
+
+### Build & CI
+
+- **deps:** Declare zod for the mcp contract test ([0fef32c](https://github.com/ChristopherVR/ooxml/commit/0fef32ca39d40bd4c1d032964eef6341df247ab4))
+
+### Chores
+
+- Merge the release commit into the restructure ([efdb30a](https://github.com/ChristopherVR/ooxml/commit/efdb30a34873f71211e11a39f315b5dc3c3cd82c))
+
 ## [0.1.7](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-mcp@0.1.7) - 2026-10-05
 
 ### Bug Fixes

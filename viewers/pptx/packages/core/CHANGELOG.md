@@ -4,6 +4,34 @@ All notable changes to this project are documented here.
 This file is generated from [Conventional Commits](https://www.conventionalcommits.org)
 by [git-cliff](https://git-cliff.org); do not edit it by hand.
 A release listed with no entries carried no Conventional Commit in this package's
+scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
+conventional commits.
+
+## [4.12.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-viewer-core@4.12.0) - 2026-10-06
+
+### Features
+
+- **pptx:** Forward the viewer's duplicated chart and theme helpers ([c22b276](https://github.com/ChristopherVR/ooxml/commit/c22b2766272ec08218ea14fadfc3cafd3c2b9ff6))
+
+### Documentation
+
+- Bring the pptx docs and agent guide up to date with the move ([8cc3f5e](https://github.com/ChristopherVR/ooxml/commit/8cc3f5e364232d39d2a2286e25056fd67b594108))
+
+### Build & CI
+
+- **deps:** Adopt ooxml-ui 0.29.1 and ooxml-core 0.21.1 ([56e1979](https://github.com/ChristopherVR/ooxml/commit/56e197912df02e3d6ce674025115dab206338138))
+- **release:** Publish the pptx viewer packages from this repository ([21e790f](https://github.com/ChristopherVR/ooxml/commit/21e790f582b3d7072f3770d7a1bd9fc2ad035e53))
+
+### Chores
+
+- **viewers:** Import the pptx-viewer repository with its history ([dde62be](https://github.com/ChristopherVR/ooxml/commit/dde62beb12d38f53fcddf016a4de243fe7151712))
+
+# Changelog
+
+All notable changes to this project are documented here.
+This file is generated from [Conventional Commits](https://www.conventionalcommits.org)
+by [git-cliff](https://git-cliff.org); do not edit it by hand.
+A release listed with no entries carried no Conventional Commit in this package's
 scope: scripts/release-plan.mjs re-releases a package whenever any of its files
 change, not only on conventional ones.
 
