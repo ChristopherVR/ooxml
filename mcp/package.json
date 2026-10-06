@@ -34,6 +34,9 @@
 		"@modelcontextprotocol/sdk": "^1.32.0",
 		"ooxml-core": "*"
 	},
+	"devDependencies": {
+		"zod": "^4.6.5"
+	},
 	"peerDependencies": {
 		"docx-viewer-mcp": "^0.1.4",
 		"pptx-viewer-mcp": ">=2.6.0 <3",
