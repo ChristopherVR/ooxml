@@ -7,6 +7,17 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.29.2](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.29.2) - 2026-10-05
+
+### Refactor
+
+- Move ooxml-ui from packages/ui to src/ui (by @ChristopherVR) ([86901f3](https://github.com/ChristopherVR/ooxml/commit/86901f3edaf0d74363d06488bd8f5724be9f807e))
+- Move the library into src/core, next to src/ui (by @ChristopherVR) ([3933a88](https://github.com/ChristopherVR/ooxml/commit/3933a88e36784ce5f4bfab0af1ca12eb65d3cd0c))
+
+### Chores
+
+- Merge the release commit into the restructure (by @ChristopherVR) ([efdb30a](https://github.com/ChristopherVR/ooxml/commit/efdb30a34873f71211e11a39f315b5dc3c3cd82c))
+
 ## [0.29.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.29.1) - 2026-10-05
 
 ### Bug Fixes
