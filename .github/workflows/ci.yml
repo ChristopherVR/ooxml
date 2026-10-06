@@ -136,8 +136,12 @@ jobs:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - run: bun run build
-      - run: bun run test:package
-      - run: node scripts/check-core-ui-boundary.mjs
+      # The package and boundary checks only matter when the core or the UI changed; a viewer-only
+      # change just needs the build output.
+      - if: fromJSON(needs.plan.outputs.plan).checks.core
+        run: bun run test:package
+      - if: fromJSON(needs.plan.outputs.plan).checks.core
+        run: node scripts/check-core-ui-boundary.mjs
       - uses: actions/upload-artifact@v7
         with:
           name: core-dist
@@ -156,9 +160,11 @@ jobs:
         with:
           name: core-dist
           path: src/core/dist
-      - run: bun run --cwd src/ui test
+      - if: fromJSON(needs.plan.outputs.plan).checks.ui
+        run: bun run --cwd src/ui test
       - run: bun run --cwd src/ui build
-      - run: bun run --cwd src/ui test:package
+      - if: fromJSON(needs.plan.outputs.plan).checks.ui
+        run: bun run --cwd src/ui test:package
       - uses: actions/upload-artifact@v7
         with:
           name: ui-dist

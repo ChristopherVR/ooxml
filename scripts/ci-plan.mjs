@@ -21,12 +21,18 @@ const ZERO_SHA = /^0+$/;
 /** A copy of a viewer's standalone MCP server, installed on its own from the registry as a user would. */
 const STANDALONE_MCP =
 	'tmp=$(mktemp -d) && cp -r mcp/. "$tmp" && (cd "$tmp" && npm install --ignore-scripts --no-package-lock && npm test)';
+const PLAYWRIGHT_INSTALL = 'bun x playwright install --with-deps chromium';
 
 /**
  * The viewers that live in this repository under `viewers/<name>`, and the commands that verify
  * each (run in order from the viewer's directory after the core and `ooxml-ui` are built, because
  * the viewers resolve `ooxml-ui` to the workspace copy through its `dist`). They replace the
  * CI each viewer had when it was a repository of its own.
+ *
+ * The commands are grouped by what can break them (see `viewerGroups`), so a change runs only the
+ * groups it reaches: a demo or a spec its browser tests, a test file its unit tests, the MCP server
+ * its own check. `before` lists commands a group needs first; `specFilter` says changed spec files
+ * can be handed to `test:browser` to run only those.
  */
 export const VIEWERS = {
 	pptx: {
@@ -49,63 +55,85 @@ export const VIEWERS = {
 	docx: {
 		name: 'docx',
 		dir: 'viewers/docx',
-		verify: [
-			'bun run typecheck',
-			'bun run test',
-			'bun run test:scripts',
-			STANDALONE_MCP,
-			'bun x playwright install --with-deps chromium',
-			'bun run test:browser',
-			'bun run build:packages',
-			'bun run check:published',
-			'bun run pack:smoke',
-			'bun run check:shared',
-		],
+		groups: {
+			types: ['bun run typecheck'],
+			unit: ['bun run test'],
+			scripts: ['bun run test:scripts'],
+			mcp: [STANDALONE_MCP],
+			browser: [PLAYWRIGHT_INSTALL, 'bun run test:browser'],
+			packages: [
+				'bun run build:packages',
+				'bun run check:published',
+				'bun run pack:smoke',
+				'bun run check:shared',
+			],
+		},
+		// `test:browser` is plain `playwright test`, so changed spec files can be passed through.
+		specFilter: true,
 	},
 	xlsx: {
 		name: 'xlsx',
 		dir: 'viewers/xlsx',
-		verify: [
-			'bun run typecheck',
-			'bun run test',
-			'bun run test:scripts',
-			STANDALONE_MCP,
-			'bun x playwright install --with-deps chromium',
-			'bun run test:browser',
-			'bun run build:packages',
-			'bun run check:published',
-			'bun run pack:smoke',
-			'bun run check:shared',
-		],
+		groups: {
+			types: ['bun run typecheck'],
+			unit: ['bun run test'],
+			scripts: ['bun run test:scripts'],
+			mcp: [STANDALONE_MCP],
+			browser: [PLAYWRIGHT_INSTALL, 'bun run test:browser'],
+			packages: [
+				'bun run build:packages',
+				'bun run check:published',
+				'bun run pack:smoke',
+				'bun run check:shared',
+			],
+		},
+		specFilter: true,
 	},
 	visio: {
 		name: 'visio',
 		dir: 'viewers/visio',
-		// `check` runs the formatter, the core and converter checks, types, tests, the bindings, the
-		// docs tests, both builds and the tarball tests.
-		verify: [
-			'bun run check',
-			STANDALONE_MCP,
-			'bun x playwright install --with-deps chromium',
-			'bun run test:browser',
-		],
+		// What `bun run check` runs, split by what each step can be broken by.
+		groups: {
+			format: ['bun run fmt:check'],
+			types: ['bun run typecheck'],
+			unit: [
+				'bun run check:core',
+				'bun run check:converter',
+				'bun run test',
+				'bun run check:bindings',
+			],
+			docs: ['bun run test:docs'],
+			mcp: [STANDALONE_MCP],
+			browser: [PLAYWRIGHT_INSTALL, 'bun run test:browser'],
+			packages: [
+				'bun run build',
+				'bun run test:worker',
+				'bun run test:package',
+				'bun run build:packages',
+				'bun run test:packages',
+			],
+		},
+		// Its `test:browser` also loads the built packages in a browser.
+		before: { browser: ['bun run build:packages'] },
 	},
 	teams: {
 		name: 'teams',
 		dir: 'viewers/teams',
-		// The demos resolve the framework packages through their built dist, so build before types.
-		verify: [
-			'bun run build:packages',
-			'bun run typecheck',
-			'bun run test',
-			'bun run test:scripts',
-			'bun x playwright install --with-deps chromium',
-			'bun run test:browser',
-			'bun run check:published',
-			'bun run pack:smoke',
-		],
+		groups: {
+			types: ['bun run typecheck'],
+			unit: ['bun run test'],
+			scripts: ['bun run test:scripts'],
+			browser: [PLAYWRIGHT_INSTALL, 'bun run test:browser'],
+			packages: ['bun run build:packages', 'bun run check:published', 'bun run pack:smoke'],
+		},
+		// The demos resolve the framework packages through their built dist.
+		before: { types: ['bun run build:packages'], browser: ['bun run build:packages'] },
+		specFilter: true,
 	},
 };
+/** The order a viewer's check groups run in. */
+const GROUP_ORDER = ['format', 'types', 'unit', 'scripts', 'docs', 'mcp', 'browser', 'packages'];
+const ALL_GROUPS = new Set(GROUP_ORDER);
 const ALL_VIEWERS = Object.keys(VIEWERS);
 
 /**
@@ -228,8 +256,9 @@ export function pptxPlan(files, { everything, reaches }) {
 	for (const file of files) {
 		if (file.startsWith('src/core/') || file.startsWith('src/ui/')) {
 			// The engine or the shared elements: every package's tests, the parity reference's browser
-			// run. Their own tests change nothing the viewer runs.
-			if (isTestFile(file)) continue;
+			// run. Their own tests, and the other products' editors in ooxml-ui, change nothing the
+			// viewer runs.
+			if (isTestFile(file) || UI_PRODUCT.test(file)) continue;
 			allLegs = true;
 			projects.add(PPTX_REFERENCE_PROJECT);
 			packaged = true;
@@ -293,6 +322,103 @@ export function pptxPlan(files, { everything, reaches }) {
 	};
 }
 
+/** The product editors in `src/ui/src/<product>/`; each belongs to one viewer only. */
+const UI_PRODUCT = /^src\/ui\/src\/(docx|xlsx|visio|teams)\//;
+/** The groups a change to a viewer's (or its engine's) source reaches. */
+const SOURCE_GROUPS = ['types', 'unit', 'browser', 'packages'];
+
+/**
+ * The check groups of viewer `name` (not pptx, which has its own jobs) that a change reaches, and
+ * the spec files to narrow its browser tests to when only specs reached them.
+ */
+export function viewerGroups(name, files, { everything }) {
+	const groups = new Set();
+	const specs = new Set();
+	let wholeBrowserSuite = false;
+	const add = (...list) => list.forEach((group) => groups.add(group));
+	if (everything) add(...ALL_GROUPS);
+	for (const file of everything ? [] : files) {
+		// Visio's package build reads the shared release table.
+		if (file === 'scripts/viewer-packages.mjs' && name === 'visio') add('packages');
+		if (file.startsWith('src/core/')) {
+			// The core's own tests change nothing a viewer runs.
+			if (isTestFile(file)) continue;
+			const area = file.split('/')[2];
+			if (!viewersOfArea(area).includes(name)) continue;
+			add(...SOURCE_GROUPS);
+			wholeBrowserSuite = true;
+			if (area === 'automation') add('mcp');
+			continue;
+		}
+		if (file.startsWith('src/ui/')) {
+			if (isTestFile(file)) continue;
+			// A product editor belongs to its own viewer; everything else in ooxml-ui is shared.
+			const product = UI_PRODUCT.exec(file)?.[1];
+			if (product && product !== name) continue;
+			add(...SOURCE_GROUPS);
+			wholeBrowserSuite = true;
+			continue;
+		}
+		if (viewerOfFile(file) !== name) continue;
+		if (file.startsWith(`demos/${name}/`)) {
+			// The demo is what the browser tests drive; the viewer's typecheck covers it.
+			add('types', 'browser');
+			wholeBrowserSuite = true;
+		} else if (file.startsWith(`e2e/${name}/`)) {
+			add('types', 'browser');
+			if (/^[^/]+\.spec\.ts$/.test(file.slice(`e2e/${name}/`.length))) {
+				specs.add(file.slice(`e2e/${name}/`.length));
+			} else {
+				wholeBrowserSuite = true;
+			}
+		} else {
+			const rel = file.slice(`viewers/${name}/`.length);
+			if (rel.startsWith('.github/')) {
+				// The old repository's workflows, inert here.
+			} else if (rel.startsWith('docs/')) {
+				// The docs site is built by the Pages workflow; visio also unit-tests its docs config.
+				add('docs');
+			} else if (rel.startsWith('mcp/')) {
+				add('mcp');
+			} else if (rel.startsWith('scripts/')) {
+				add('format', 'scripts', 'packages');
+			} else if (isTestFile(rel)) {
+				add('format', 'types', 'unit');
+			} else if (rel.includes('/')) {
+				// Package or application source.
+				add('format', ...SOURCE_GROUPS);
+				wholeBrowserSuite = true;
+			} else {
+				// The viewer's own manifests and configs: everything it checks.
+				add(...ALL_GROUPS);
+				wholeBrowserSuite = true;
+			}
+		}
+	}
+	const defined = new Set(Object.keys(VIEWERS[name].groups));
+	return {
+		groups: new Set([...groups].filter((group) => defined.has(group))),
+		specs: wholeBrowserSuite ? new Set() : specs,
+	};
+}
+
+/** The commands for the groups a change reaches, in order, each once. */
+function verifyCommands(name, { groups, specs }) {
+	const viewer = VIEWERS[name];
+	const commands = [];
+	for (const group of GROUP_ORDER) {
+		if (!groups.has(group)) continue;
+		for (const command of [...(viewer.before?.[group] ?? []), ...viewer.groups[group]]) {
+			const narrowed =
+				command === 'bun run test:browser' && specs.size > 0 && viewer.specFilter
+					? `bun run test:browser -- ${[...specs].sort().join(' ')}`
+					: command;
+			if (!commands.includes(narrowed)) commands.push(narrowed);
+		}
+	}
+	return commands;
+}
+
 /**
  * The plan for a list of changed files. `full` runs everything (nightly, manual, or an unknown base).
  * `testFiles` is the number of test files `vitest --changed` selected, or undefined when it has not
@@ -311,30 +437,42 @@ export function plan(changed, { full = false, testFiles } = {}) {
 		(file) => file.startsWith('mcp/') || file.startsWith('src/core/automation/'),
 	);
 	const core = src.length > 0;
+	// Shipped code, not tests: what the builds, the package checks and the UI typecheck depend on.
+	const coreCode = src.some((file) => !isTestFile(file));
+	const uiCode = live.some((file) => file.startsWith('src/ui/') && !isTestFile(file));
 
 	const consumers = new Set();
 	if (everything || ui) for (const key of ALL_CONSUMERS) consumers.add(key);
 	for (const area of areas) for (const key of consumersOfArea(area)) consumers.add(key);
 
-	// A viewer is checked when its own files change, when the shared UI or an area it reads changes,
-	// and on everything. Its scripts read the shared package table, so that file counts too (visio).
-	const viewers = new Set();
-	if (everything || ui) for (const key of ALL_VIEWERS) viewers.add(key);
-	for (const area of areas) for (const key of viewersOfArea(area)) viewers.add(key);
-	for (const file of live) {
-		const owner = viewerOfFile(file);
-		if (owner && VIEWERS[owner]) viewers.add(owner);
-		if (file === 'scripts/viewer-packages.mjs') viewers.add('visio');
-	}
-	const viewerList = ALL_VIEWERS.filter((key) => viewers.has(key)).map((key) => VIEWERS[key]);
+	// A viewer runs the check groups the change reaches (viewerGroups): its own files, the shared
+	// UI, a core area it reads (not the core's tests), its product editor in ooxml-ui, or everything.
+	const viewerList = ALL_VIEWERS.filter((key) => !VIEWERS[key].ownJobs)
+		.map((key) => ({
+			...VIEWERS[key],
+			verify: verifyCommands(key, viewerGroups(key, live, { everything })),
+		}))
+		.filter((viewer) => viewer.verify.length > 0);
+	// pptx is reached by its own files, the core areas it reads and the shared (non-product) UI.
+	const pptxReached =
+		everything ||
+		live.some(
+			(file) =>
+				viewerOfFile(file) === 'pptx' ||
+				(file.startsWith('src/ui/') && !UI_PRODUCT.test(file)) ||
+				(file.startsWith('src/core/') && viewersOfArea(file.split('/')[2]).includes('pptx')),
+		);
+	const pptx = pptxPlan(live, { everything, reaches: pptxReached });
+	// The pptx typecheck covers the pptx area and the shared areas it compiles against.
+	const pptxTypes = src.some((file) => viewersOfArea(file.split('/')[2]).includes('pptx'));
 
 	const testsNeeded = everything || core;
 	return {
 		full: everything,
 		typecheck: {
 			strict: everything || src.some((file) => !file.startsWith('src/core/pptx/')),
-			pptx: everything || core,
-			ui: everything || ui || core,
+			pptx: everything || pptxTypes,
+			ui: everything || ui || coreCode,
 		},
 		test: {
 			run: testsNeeded,
@@ -342,19 +480,17 @@ export function plan(changed, { full = false, testFiles } = {}) {
 			shards: testsNeeded ? shardsFor(testFiles ?? MAX_SHARDS, everything) : [],
 		},
 		// The viewers resolve ooxml-ui to the workspace copy through its `dist`, so any viewer run needs
-		// the core and the UI built.
-		ui: everything || ui || core || viewerList.length > 0,
-		build: everything || core || ui || viewerList.length > 0,
+		// the core and the UI built. Only a change to the core or the UI also re-checks them (the
+		// package smoke tests, the core/UI boundary and the UI's own tests); a viewer-only change just
+		// builds them.
+		ui: everything || ui || coreCode || viewerList.length > 0 || pptx.run,
+		build: everything || coreCode || ui || viewerList.length > 0 || pptx.run,
+		checks: { core: everything || coreCode || uiCode, ui: everything || ui || coreCode },
 		scripts: everything || scripts,
 		mcp: everything || mcp,
-		viewers: viewerList
-			.filter((viewer) => !viewer.ownJobs)
-			.map(({ name, dir, verify }) => ({ name, dir, verify: verify.join('\n') })),
+		viewers: viewerList.map(({ name, dir, verify }) => ({ name, dir, verify: verify.join('\n') })),
 		// What the pptx jobs in ci.yml run (see VIEWERS.pptx and pptxPlan).
-		pptx: pptxPlan(live, {
-			everything,
-			reaches: viewerList.some((viewer) => viewer.name === 'pptx'),
-		}),
+		pptx,
 		consumers: ALL_CONSUMERS.filter((key) => consumers.has(key)).map((key) => CONSUMERS[key]),
 	};
 }

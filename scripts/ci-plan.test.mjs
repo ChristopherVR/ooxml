@@ -108,9 +108,12 @@ test('the shared package table is read by the visio scripts', () => {
 test('every script a viewer verification runs exists in that viewer', () => {
 	for (const viewer of Object.values(VIEWERS)) {
 		const manifest = JSON.parse(readFileSync(join(viewer.dir, 'package.json'), 'utf8'));
-		assert.ok(viewer.verify.length > 0, viewer.name);
-		for (const command of viewer.verify) {
-			const script = /^bun run ([w:.-]+)/u.exec(command)?.[1];
+		const commands = viewer.ownJobs
+			? viewer.verify
+			: [...Object.values(viewer.groups), ...Object.values(viewer.before ?? {})].flat();
+		assert.ok(commands.length > 0, viewer.name);
+		for (const command of commands) {
+			const script = /^bun run ([\w:.-]+)/u.exec(command)?.[1];
 			if (script) assert.ok(manifest.scripts?.[script], `${viewer.name}: ${command}`);
 		}
 	}
@@ -226,4 +229,66 @@ test('suite-wide pptx files and CI configuration run the whole browser suite', (
 		assert.equal(result.e2e.total, PPTX_E2E_SHARDS, file);
 		assert.equal(result.e2e.specs, '', file);
 	}
+});
+
+const verifyOf = (name, ...files) =>
+	plan(files, { testFiles: 1 })
+		.viewers.find((viewer) => viewer.name === name)
+		?.verify.split('\n') ?? [];
+
+test('a demo change runs only its viewer typecheck and browser tests', () => {
+	const result = plan(['demos/docx/demo-vanilla/main.ts'], { testFiles: 1 });
+	assert.deepEqual(viewers(result), ['docx']);
+	assert.deepEqual(verifyOf('docx', 'demos/docx/demo-vanilla/main.ts'), [
+		'bun run typecheck',
+		'bun x playwright install --with-deps chromium',
+		'bun run test:browser',
+	]);
+	assert.equal(result.checks.core, false);
+	assert.equal(result.pptx.run, false);
+});
+
+test('changed spec files alone run only those specs; support code runs the whole suite', () => {
+	assert.ok(
+		verifyOf('docx', 'e2e/docx/editor.spec.ts').includes('bun run test:browser -- editor.spec.ts'),
+	);
+	assert.ok(verifyOf('docx', 'e2e/docx/helpers.ts').includes('bun run test:browser'));
+	// visio's test:browser also tests the packages, so it is never narrowed
+	assert.ok(verifyOf('visio', 'e2e/visio/viewer.spec.ts').includes('bun run test:browser'));
+});
+
+test('a viewer test file, its MCP server and its docs run only what they can break', () => {
+	assert.deepEqual(verifyOf('docx', 'viewers/docx/packages/react/src/a.test.ts'), [
+		'bun run typecheck',
+		'bun run test',
+	]);
+	const mcp = verifyOf('docx', 'viewers/docx/mcp/src/index.js');
+	assert.equal(mcp.length, 1);
+	assert.ok(mcp[0].includes('npm test'));
+	assert.deepEqual(verifyOf('docx', 'viewers/docx/docs/guide.md'), []);
+	assert.deepEqual(verifyOf('visio', 'viewers/visio/docs/site.test.mjs'), ['bun run test:docs']);
+});
+
+test('a product editor in ooxml-ui checks its own viewer; shared ui checks every viewer', () => {
+	const editor = plan(['src/ui/src/docx/model-adapter.ts'], { testFiles: 1 });
+	assert.deepEqual(viewers(editor), ['docx']);
+	assert.equal(editor.pptx.run, false);
+	const ribbon = plan(['src/ui/src/ribbon/ribbon.ts'], { testFiles: 1 });
+	assert.deepEqual(viewers(ribbon), MATRIX_VIEWERS);
+	assert.equal(ribbon.pptx.run, true);
+});
+
+test('a core test change runs the core tests and its typecheck, no viewer and no build', () => {
+	const result = plan(['src/core/docx/parse.test.ts'], { testFiles: 1 });
+	assert.equal(result.test.run, true);
+	assert.deepEqual(result.viewers, []);
+	assert.equal(result.pptx.run, false);
+	assert.equal(result.build, false);
+	assert.equal(result.typecheck.pptx, false);
+});
+
+test('teams builds its packages before its typecheck and browser tests', () => {
+	const verify = verifyOf('teams', 'demos/teams/react/main.tsx');
+	assert.equal(verify[0], 'bun run build:packages');
+	assert.ok(verify.indexOf('bun run typecheck') > 0);
 });
