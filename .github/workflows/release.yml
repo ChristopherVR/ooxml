@@ -331,7 +331,11 @@ jobs:
   # core through it, and the core group publishes it).
   build-core:
     needs: [release, publish-plan]
-    if: needs.publish-plan.result == 'success' && needs.publish-plan.outputs.groups != '[]'
+    # `always()`: `release` is skipped in re-publish mode, and a skipped need skips this job otherwise.
+    if: |
+      always() &&
+      needs.publish-plan.result == 'success' &&
+      needs.publish-plan.outputs.groups != '[]'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -372,7 +376,7 @@ jobs:
 
   publish:
     needs: [release, publish-plan, build-core]
-    if: needs.build-core.result == 'success'
+    if: always() && needs.build-core.result == 'success'
     runs-on: ubuntu-latest
     environment: npm
     permissions:
