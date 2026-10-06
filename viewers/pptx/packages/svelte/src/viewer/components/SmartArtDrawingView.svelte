@@ -2,7 +2,7 @@
 	import { SMARTART_SVG_STYLE } from '../render';
 	import type { SmartArtDrawingViewProps } from './props';
 
-	const { view, canEditNodeText, onopeneditor, onshowstyle }: SmartArtDrawingViewProps = $props();
+	const { view, canEditNodeText, onopeneditor, onshowstyle, onhidestyle }: SmartArtDrawingViewProps = $props();
 </script>
 
 <svg
@@ -19,6 +19,7 @@
 			aria-label={shape.ariaLabel}
 			ondblclick={(event) => onopeneditor(event, shape.nodeId)}
 			onmouseenter={(event) => onshowstyle(event, shape.nodeId)}
+			onmouseleave={onhidestyle}
 		>
 			{#if shape.ariaLabel}<title>{shape.ariaLabel}</title>{/if}
 			{#if shape.gradient}

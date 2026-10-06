@@ -56,6 +56,7 @@ export default defineConfig({
 				replacement: pkg('core', 'src', 'geometry', 'index.ts'),
 			},
 			{ find: 'pptx-viewer-core/color', replacement: pkg('core', 'src', 'color', 'index.ts') },
+			{ find: 'pptx-viewer-core/ui', replacement: pkg('core', 'src', 'ui', 'index.ts') },
 			{ find: 'pptx-viewer-core/math', replacement: pkg('core', 'src', 'math', 'index.ts') },
 			{ find: 'pptx-viewer-core', replacement: pkg('core', 'src', 'index.ts') },
 			{ find: 'pptx-viewer-locales', replacement: pkg('locales', 'src', 'index.ts') },

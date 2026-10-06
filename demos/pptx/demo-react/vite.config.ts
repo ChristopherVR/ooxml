@@ -63,6 +63,10 @@ export default defineConfig({
 				__dirname,
 				'../../../viewers/pptx/packages/core/src/color/index.ts',
 			),
+			'pptx-viewer-core/ui': path.resolve(
+				__dirname,
+				'../../../viewers/pptx/packages/core/src/ui/index.ts',
+			),
 			'pptx-viewer-core/math': path.resolve(
 				__dirname,
 				'../../../viewers/pptx/packages/core/src/math/index.ts',

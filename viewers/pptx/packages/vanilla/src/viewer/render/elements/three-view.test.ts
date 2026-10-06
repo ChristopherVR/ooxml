@@ -266,6 +266,26 @@ describe('<pptx-three-view> SmartArt (vanilla)', () => {
 		expect(layer?.querySelector('[data-element-id], [data-testid]')).toBeNull();
 	});
 
+	it('routes a double-click and hover on the fill of a node to it by geometry', () => {
+		const node = renderSmartArtElement(
+			smartArt,
+			1,
+			buildContext({ smartArt3D: true }, { interactive: true, onSmartArtNodeTextChange: vi.fn() }),
+		) as Element;
+		const layer = node.querySelector<HTMLElement>('[data-smartart-3d-edit-layer]');
+		const group = layer?.querySelector<SVGGElement>('[data-smartart-node-id]');
+		expect(group).not.toBeNull();
+		// A node group is only hit where it paints; the pointer here is on the layer.
+		group!.getBoundingClientRect = () =>
+			({ left: 0, top: 0, width: 100, height: 100, right: 100, bottom: 100 }) as DOMRect;
+		const seen: string[] = [];
+		group!.addEventListener('dblclick', () => seen.push('dblclick'));
+		group!.addEventListener('mouseenter', () => seen.push('mouseenter'));
+		layer!.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 10, clientY: 10 }));
+		layer!.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, clientX: 10, clientY: 10 }));
+		expect(seen).toStrictEqual(['mouseenter', 'dblclick']);
+	});
+
 	it('omits the edit layer on a read-only mount', () => {
 		const node = renderSmartArtElement(smartArt, 1, buildContext({ smartArt3D: true })) as Element;
 		expect(node.querySelector('[data-smartart-3d-edit-layer]')).toBeNull();

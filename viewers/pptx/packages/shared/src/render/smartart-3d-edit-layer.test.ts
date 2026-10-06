@@ -142,3 +142,45 @@ describe('routeEditLayerPointerToNodes', () => {
 		expect(dbl).toBe(1);
 	});
 });
+
+describe('routeEditLayerPointerToNodes hover lifecycle', () => {
+	function setup(): { layer: HTMLElement; node: Element } {
+		const layer = document.createElement('div');
+		const node = document.createElement('div');
+		node.setAttribute('data-smartart-node-id', 'n1');
+		node.getBoundingClientRect = () =>
+			({ left: 0, top: 0, width: 100, height: 100, right: 100, bottom: 100 }) as DOMRect;
+		layer.append(node);
+		document.body.append(layer);
+		return { layer, node };
+	}
+	const move = (layer: HTMLElement, x: number, y: number): void => {
+		layer.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: x, clientY: y }));
+	};
+
+	it('sends enter and leave as the pointer moves onto and off a node', () => {
+		const { layer, node } = setup();
+		const seen: string[] = [];
+		for (const type of ['mouseover', 'mouseenter', 'mouseout', 'mouseleave']) {
+			node.addEventListener(type, () => seen.push(type));
+		}
+		routeEditLayerPointerToNodes(layer);
+		move(layer, 5, 5);
+		expect(seen).toStrictEqual(['mouseover', 'mouseenter']);
+		// Off every node (the gap), then back on: left, then re-entered.
+		move(layer, 500, 500);
+		expect(seen.slice(2)).toStrictEqual(['mouseout', 'mouseleave']);
+		move(layer, 5, 5);
+		expect(seen.slice(4)).toStrictEqual(['mouseover', 'mouseenter']);
+	});
+
+	it('leaves the node when the pointer leaves the layer', () => {
+		const { layer, node } = setup();
+		let left = 0;
+		node.addEventListener('mouseleave', () => (left += 1));
+		routeEditLayerPointerToNodes(layer);
+		move(layer, 5, 5);
+		layer.dispatchEvent(new MouseEvent('mouseleave'));
+		expect(left).toBe(1);
+	});
+});

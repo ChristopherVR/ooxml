@@ -62,15 +62,21 @@ function nodeShapeContainsPoint(node: Element, x: number, y: number): boolean | 
 		if (!det) {
 			continue;
 		}
-		tested = true;
 		const dx = x - matrix.e;
 		const dy = y - matrix.f;
 		const local = {
 			x: (matrix.d * dx - matrix.c * dy) / det,
 			y: (matrix.a * dy - matrix.b * dx) / det,
 		};
-		if (geometry.isPointInFill(local) || geometry.isPointInStroke?.(local)) {
-			return true;
+		try {
+			const inside = geometry.isPointInFill(local) || geometry.isPointInStroke?.(local);
+			tested = true;
+			if (inside) {
+				return true;
+			}
+		} catch {
+			// A host that rejects a plain point (older DOM shims) cannot be asked; leave it
+			// to the bounding-box test below.
 		}
 	}
 	return tested ? false : null;
@@ -115,27 +121,39 @@ const LAYER_UI_SELECTOR = 'textarea, input, button, select, [role="group"]';
  * The layer is an invisible copy under a perspective scene, and a node group is
  * only hit where it paints (often its label alone), so a double-click or hover
  * on the node's fill missed the group's own handlers. This forwards a
- * double-click as `dblclick` and a change of hovered node as `mouseover` to the
- * group, so each binding's existing editor and fill swatches run unchanged.
+ * double-click as `dblclick` and a change of hovered node as enter / leave events
+ * (`mouseover`, `mouseenter`, `mouseout`, `mouseleave`) to the group, so each binding's existing editor and fill swatches run unchanged.
  * Returns a function that removes the listeners.
  */
 export function routeEditLayerPointerToNodes(layer: Element): () => void {
 	let forwarding = false;
 	let hovered: Element | null = null;
 
-	const forward = (node: Element, type: 'dblclick' | 'mouseover', source: MouseEvent): void => {
+	const forward = (node: Element, types: readonly string[], source: MouseEvent | null): void => {
 		forwarding = true;
 		try {
-			node.dispatchEvent(
-				new MouseEvent(type, {
-					bubbles: true,
-					cancelable: true,
-					clientX: source.clientX,
-					clientY: source.clientY,
-				}),
-			);
+			for (const type of types) {
+				node.dispatchEvent(
+					new MouseEvent(type, {
+						// enter / leave do not bubble, as for a real pointer.
+						bubbles: type !== 'mouseenter' && type !== 'mouseleave',
+						cancelable: true,
+						clientX: source?.clientX ?? 0,
+						clientY: source?.clientY ?? 0,
+					}),
+				);
+			}
 		} finally {
 			forwarding = false;
+		}
+	};
+	const ENTER = ['mouseover', 'mouseenter'] as const;
+	const LEAVE = ['mouseout', 'mouseleave'] as const;
+	const leaveHovered = (source: MouseEvent | null): void => {
+		if (hovered) {
+			const previous = hovered;
+			hovered = null;
+			forward(previous, LEAVE, source);
 		}
 	};
 	// Only UI inside the layer counts: an ancestor of the layer (the selected
@@ -158,7 +176,7 @@ export function routeEditLayerPointerToNodes(layer: Element): () => void {
 			event.stopPropagation();
 			// Opening an editor hides the swatches; the next move over this node shows them again.
 			hovered = null;
-			forward(node, 'dblclick', event);
+			forward(node, ['dblclick'], event);
 		}
 	};
 	const onMouseMove = (raw: Event): void => {
@@ -167,15 +185,21 @@ export function routeEditLayerPointerToNodes(layer: Element): () => void {
 			return;
 		}
 		const node = smartArtNodeAtPoint(layer, event.clientX, event.clientY);
-		if (node && node !== hovered) {
-			forward(node, 'mouseover', event);
+		if (node !== hovered) {
+			leaveHovered(event);
+			if (node) {
+				hovered = node;
+				forward(node, ENTER, event);
+			}
 		}
-		hovered = node;
 	};
 
 	layer.addEventListener('dblclick', onDblClick, true);
 	layer.addEventListener('mousemove', onMouseMove, true);
+	const onLayerLeave = (raw: Event): void => leaveHovered(raw as MouseEvent);
+	layer.addEventListener('mouseleave', onLayerLeave);
 	return () => {
+		layer.removeEventListener('mouseleave', onLayerLeave);
 		layer.removeEventListener('dblclick', onDblClick, true);
 		layer.removeEventListener('mousemove', onMouseMove, true);
 	};

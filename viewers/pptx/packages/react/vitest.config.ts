@@ -9,6 +9,7 @@ export default defineConfig({
 			'pptx-viewer-core/text': path.resolve(__dirname, '../core/src/text/index.ts'),
 			'pptx-viewer-core/geometry': path.resolve(__dirname, '../core/src/geometry/index.ts'),
 			'pptx-viewer-core/color': path.resolve(__dirname, '../core/src/color/index.ts'),
+			'pptx-viewer-core/ui': path.resolve(__dirname, '../core/src/ui/index.ts'),
 			'pptx-viewer-core/math': path.resolve(__dirname, '../core/src/math/index.ts'),
 			'pptx-viewer-core': path.resolve(__dirname, '../core/src/index.ts'),
 			'pptx-viewer-shared/i18n': path.resolve(__dirname, '../shared/src/i18n/index.ts'),

@@ -120,8 +120,8 @@ jobs:
       # corrupting changelog history.
       - name: Generate the changelog
         if: steps.plan.outputs.any_changed == 'true'
-        # `[remote.github]` in cliff.toml makes git-cliff call the GitHub API; authenticate it
-        # (5000/hour) or it panics on the unauthenticated 60/hour limit.
+        # cliff.toml has no `[remote.github]` block (it rate-limited the release), so git-cliff
+        # makes no GitHub API calls; the token is kept only for any future enrichment.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
