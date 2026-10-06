@@ -1,0 +1,4 @@
+{
+	"extends": "../../viewers/teams/tsconfig.json",
+	"include": ["./**/*.ts"]
+}

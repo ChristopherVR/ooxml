@@ -82,6 +82,8 @@ export const VIEWERS = {
 			'bun run typecheck',
 			'bun run test',
 			'bun run test:scripts',
+			'bun x playwright install --with-deps chromium',
+			'bun run test:browser',
 			'bun run check:published',
 			'bun run pack:smoke',
 		],

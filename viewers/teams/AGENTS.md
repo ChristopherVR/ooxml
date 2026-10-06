@@ -18,6 +18,7 @@ controls) live in `ooxml-ui` (`src/ui/src/teams`). This repository holds:
 - `server/`: the reference bring-your-own server (sync, signaling relay, file storage), published as
   `openteams-server` (command `openteams-server`).
 - `demos/teams/` at the repository root: runnable demos (private workspace packages).
+- `e2e/teams/` at the repository root: the browser tests (`bun run test:browser`, Playwright config in this folder), run against the vanilla demo in local mode. Add specs there.
 
 The product name is **OpenTeams**. The plain `openteams` npm name belongs to an unrelated project,
 so never publish or document that name.

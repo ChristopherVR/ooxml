@@ -25,7 +25,8 @@
 		"fmt": "oxfmt",
 		"fmt:check": "oxfmt --check",
 		"lint": "oxlint",
-		"lint:fix": "oxlint --fix"
+		"lint:fix": "oxlint --fix",
+		"test:browser": "playwright test"
 	},
 	"dependencies": {
 		"lib0": "^0.2.119",
@@ -37,6 +38,7 @@
 	},
 	"devDependencies": {
 		"@angular/core": "^22.2.1",
+		"@playwright/test": "^1.63.0",
 		"@types/node": "^22.20.5",
 		"@typescript/typescript6": "^6.0.2",
 		"jsdom": "^30.1.2",
