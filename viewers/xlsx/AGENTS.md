@@ -84,7 +84,7 @@ re-emit its events as callbacks.
   lines where practical. Add regression tests for editing, rendering and binding
   contracts; parsing, calculation and round-trip tests belong in the core.
 - The workbook fixtures used by the browser specs live in `tests/support` and
-  `demos/demo-vanilla/public/sample.xlsx`; their generators are
+  `demos/xlsx/demo-vanilla/public/sample.xlsx`; their generators are
   `scripts/sample-workbook.py` and `scripts/sample-workbook-excel.ps1`.
 
 ## Packages
@@ -101,8 +101,8 @@ re-emit its events as callbacks.
 | `packages/solid`         | `xlsx-solid-viewer`                | yes       | Solid entry (`SpreadsheetEditor`).                                            |
 | `packages/vanilla`       | `xlsx-vanilla-viewer`              | yes       | Plain `<xlsx-editor>` registration and `mountEditor`.                         |
 
-`demos/demo-vanilla` is the single demo app; `?framework=<name>` mounts the
-editor through that framework's adapter (`demos/demo-vanilla/framework.ts`), and
+`demos/xlsx/demo-vanilla` is the single demo app; `?framework=<name>` mounts the
+editor through that framework's adapter (`demos/xlsx/demo-vanilla/framework.ts`), and
 the browser tests run against its production build.
 
 ## Where things live

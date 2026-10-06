@@ -4,7 +4,7 @@ The same demo app is built once per framework adapter and published next to thes
 
 | Demo                                         | Adapter               | Source                                                      |
 | -------------------------------------------- | --------------------- | ----------------------------------------------------------- |
-| [React](/demo/){target="_self"}              | `docx-react-viewer`   | `demos/demo-vanilla` built with `VITE_DEMO_FRAMEWORK=react` |
+| [React](/demo/){target="_self"}              | `docx-react-viewer`   | `demos/docx/demo-vanilla` built with `VITE_DEMO_FRAMEWORK=react` |
 | [Vue](/demo-vue/){target="_self"}            | `docx-vue-viewer`     | same app, `vue`                                             |
 | [Angular](/demo-angular/){target="_self"}    | `docx-angular-viewer` | same app, `angular`                                         |
 | [Svelte](/demo-svelte/){target="_self"}      | `docx-svelte-viewer`  | same app, `svelte`                                          |

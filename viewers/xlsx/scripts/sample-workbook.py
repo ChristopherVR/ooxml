@@ -1,4 +1,4 @@
-"""Generates demos/demo-vanilla/public/sample.xlsx, the demo's sample workbook.
+"""Generates demos/xlsx/demo-vanilla/public/sample.xlsx, the demo's sample workbook.
 
     python scripts/sample-workbook.py          # needs openpyxl (3.1+)
     pwsh scripts/sample-workbook-excel.ps1     # optional: let Excel recalculate and re-save it,
@@ -19,7 +19,7 @@ from openpyxl.formatting.rule import CellIsRule, ColorScaleRule, DataBarRule
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.worksheet.datavalidation import DataValidation
 
-OUT = Path(__file__).resolve().parent.parent / 'demos' / 'demo-vanilla' / 'public' / 'sample.xlsx'
+OUT = Path(__file__).resolve().parent.parent.parent.parent / 'demos' / 'xlsx' / 'demo-vanilla' / 'public' / 'sample.xlsx'
 GREEN = '1F9D63'
 HEADER_FILL = PatternFill('solid', fgColor=GREEN)
 BAND_FILL = PatternFill('solid', fgColor='E8F5EE')

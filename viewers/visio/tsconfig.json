@@ -12,5 +12,5 @@
 		"noEmit": true,
 		"types": ["vite/client", "node"]
 	},
-	"include": ["src", "demo", "tests", "*.ts"]
+	"include": ["src", "../../demos/visio/demo", "tests", "*.ts"]
 }

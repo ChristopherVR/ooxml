@@ -17,7 +17,7 @@ controls) live in `ooxml-ui` (`src/ui/src/teams`). This repository holds:
   `openteams-<framework>-viewer`.
 - `server/`: the reference bring-your-own server (sync, signaling relay, file storage), published as
   `openteams-server` (command `openteams-server`).
-- `demos/`: runnable demos (private).
+- `demos/teams/` at the repository root: runnable demos (private workspace packages).
 
 The product name is **OpenTeams**. The plain `openteams` npm name belongs to an unrelated project,
 so never publish or document that name.

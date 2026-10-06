@@ -1,8 +1,11 @@
 /** @jsxImportSource react */
 import { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { VisioViewer, type ViewerHandle } from '../../src/react.js';
-import { createWorkspace } from '../../../../demo/workspace.js';
+import {
+	VisioViewer,
+	type ViewerHandle,
+} from '../../../viewers/visio/packages/bindings/src/react.js';
+import { createWorkspace } from '../demo/workspace.js';
 
 // The React demo: <VisioViewer> with a ref handle and the document as React state.
 const workspace = createWorkspace();

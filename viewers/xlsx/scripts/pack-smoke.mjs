@@ -220,7 +220,7 @@ try {
 
 	await mkdir(path.join(work, 'fixtures'));
 	for (const [name, source] of [
-		['sample.xlsx', 'demos/demo-vanilla/public/sample.xlsx'],
+		['sample.xlsx', '../../demos/xlsx/demo-vanilla/public/sample.xlsx'],
 		['legacy-97.xls', 'tests/support/legacy-97.xls'],
 	])
 		await writeFile(path.join(work, 'fixtures', name), await readFile(path.join(root, source)));

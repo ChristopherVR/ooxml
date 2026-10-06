@@ -1,4 +1,4 @@
-import { mountViewer } from '../src/index.js';
+import { mountViewer } from '../../../viewers/visio/src/index.js';
 import { createWorkspace } from './workspace.js';
 
 // The vanilla demo: the element through the browser binding. The React, Vue, Angular, Svelte and

@@ -1,8 +1,8 @@
 import '@angular/compiler';
 import { ChangeDetectorRef, Component, ViewChild, inject, type AfterViewInit } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
-import { VisioViewerComponent } from '../../src/angular.js';
-import { createWorkspace } from '../../../../demo/workspace.js';
+import { VisioViewerComponent } from '../../../viewers/visio/packages/bindings/src/angular.js';
+import { createWorkspace } from '../demo/workspace.js';
 
 // The Angular demo: <visio-viewer-host> with inputs, a @ViewChild handle and change detection.
 const workspace = createWorkspace();

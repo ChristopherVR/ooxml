@@ -2,7 +2,7 @@ import {
 	mountEditor,
 	type EditorOptions,
 	type EditorHandle,
-} from '../../packages/bindings/src/index';
+} from '../../../viewers/docx/packages/bindings/src/index';
 import type { DocxEditorElement } from 'docx-web-component';
 /** Demo-only harness: actual framework mounts exercise each public adapter. */
 export async function mountFramework(
@@ -19,20 +19,20 @@ export async function mountFramework(
 		const [{ createRoot }, { createElement }, { WordEditor }] = await Promise.all([
 			import('react-dom/client'),
 			import('react'),
-			import('../../packages/bindings/src/react'),
+			import('../../../viewers/docx/packages/bindings/src/react'),
 		]);
 		createRoot(host).render(createElement(WordEditor, options));
 	} else if (framework === 'solid') {
 		const [{ render }, { createComponent }, { WordEditor }] = await Promise.all([
 			import('solid-js/web'),
 			import('solid-js'),
-			import('../../packages/bindings/src/solid'),
+			import('../../../viewers/docx/packages/bindings/src/solid'),
 		]);
 		render(() => createComponent(WordEditor, options), host);
 	} else if (framework === 'vue') {
 		const [{ createApp, h }, { WordEditor }] = await Promise.all([
 			import('vue'),
-			import('../../packages/bindings/src/vue'),
+			import('../../../viewers/docx/packages/bindings/src/vue'),
 		]);
 		createApp({
 			render: () =>
@@ -47,7 +47,7 @@ export async function mountFramework(
 	} else if (framework === 'svelte') {
 		const [{ mount }, { default: WordEditor }] = await Promise.all([
 			import('svelte'),
-			import('../../packages/bindings/src/WordEditor.svelte'),
+			import('../../../viewers/docx/packages/bindings/src/WordEditor.svelte'),
 		]);
 		mount(WordEditor, {
 			target: host,
@@ -68,7 +68,7 @@ export async function mountFramework(
 		] = await Promise.all([
 			import('@angular/platform-browser'),
 			import('@angular/core'),
-			import('../../packages/bindings/src/angular'),
+			import('../../../viewers/docx/packages/bindings/src/angular'),
 		]);
 		const app = await createApplication({ providers: [provideZonelessChangeDetection()] });
 		const component = createComponent(WordEditorComponent, {

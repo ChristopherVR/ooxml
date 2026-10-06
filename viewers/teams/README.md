@@ -127,7 +127,7 @@ Or plain markup after `defineTeamsApp()`:
 | Angular  | `<teams-workspace>`             | `TeamsService` (signals)                                 |
 | Vanilla  | `mountTeams(el, props)`         | `createTeams(options)`                                   |
 
-See the [framework guides](https://christophervr.github.io/ooxml/teams/frameworks/react) and `demos/react/src/App.tsx` for both styles side by side.
+See the [framework guides](https://christophervr.github.io/ooxml/teams/frameworks/react) and `demos/teams/react/src/App.tsx` for both styles side by side.
 
 ### 3. Run the reference server
 

@@ -7,7 +7,7 @@
 # Manual (needs Excel on Windows); the outputs are committed, CI never runs this.
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
-$sample = Join-Path $root 'demos\demo-vanilla\public\sample.xlsx'
+$sample = Join-Path $root '..\..\demos\xlsx\demo-vanilla\public\sample.xlsx'
 $legacy = Join-Path $root 'tests\support\legacy-97.xls'
 $xlOpenXMLWorkbook = 51
 $xlExcel8 = 56

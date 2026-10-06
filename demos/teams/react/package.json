@@ -8,9 +8,9 @@
 		"build": "vite build"
 	},
 	"dependencies": {
+		"openteams-react-viewer": "workspace:*",
 		"react": "^19.3.0",
-		"react-dom": "^19.3.0",
-		"openteams-react-viewer": "workspace:*"
+		"react-dom": "^19.3.0"
 	},
 	"devDependencies": {
 		"@types/react": "^19.3.0",

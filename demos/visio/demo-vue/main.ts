@@ -1,7 +1,7 @@
 import { createApp, defineComponent, h, onMounted, shallowRef } from 'vue';
-import { VisioViewer } from '../../src/vue.js';
-import type { ViewerHandle } from '../../src/common.js';
-import { createWorkspace } from '../../../../demo/workspace.js';
+import { VisioViewer } from '../../../viewers/visio/packages/bindings/src/vue.js';
+import type { ViewerHandle } from '../../../viewers/visio/packages/bindings/src/common.js';
+import { createWorkspace } from '../demo/workspace.js';
 
 // The Vue demo: the VisioViewer component with its exposed handle and the document as a ref.
 const workspace = createWorkspace();

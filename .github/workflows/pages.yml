@@ -10,6 +10,8 @@ on:
     paths:
       - 'site/**'
       - 'viewers/**'
+      - 'demos/**'
+      - 'e2e/**'
       - 'src/ui/**'
       - 'scripts/build-pages.mjs'
       - 'bun.lock'

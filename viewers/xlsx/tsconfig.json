@@ -31,7 +31,7 @@
 		"packages/**/*.ts",
 		"packages/**/*.tsx",
 		"packages/**/*.svelte",
-		"demos/**/*.ts",
+		"../../demos/xlsx/**/*.ts",
 		"tests/**/*.ts",
 		"*.ts"
 	],

@@ -2,7 +2,7 @@ import {
 	mountEditor,
 	type EditorOptions,
 	type EditorHandle,
-} from '../../packages/bindings/src/index';
+} from '../../../viewers/xlsx/packages/bindings/src/index';
 import type { XlsxEditorElement } from 'xlsx-web-component';
 
 export const DEMO_FRAMEWORKS = ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'] as const;
@@ -64,20 +64,20 @@ export async function mountFramework(
 		const [{ createRoot }, { createElement }, { SpreadsheetEditor }] = await Promise.all([
 			import('react-dom/client'),
 			import('react'),
-			import('../../packages/bindings/src/react'),
+			import('../../../viewers/xlsx/packages/bindings/src/react'),
 		]);
 		createRoot(host).render(createElement(SpreadsheetEditor, options));
 	} else if (framework === 'solid') {
 		const [{ render }, { createComponent }, { SpreadsheetEditor }] = await Promise.all([
 			import('solid-js/web'),
 			import('solid-js'),
-			import('../../packages/bindings/src/solid'),
+			import('../../../viewers/xlsx/packages/bindings/src/solid'),
 		]);
 		render(() => createComponent(SpreadsheetEditor, options), host);
 	} else if (framework === 'vue') {
 		const [{ createApp, h }, { SpreadsheetEditor }] = await Promise.all([
 			import('vue'),
-			import('../../packages/bindings/src/vue'),
+			import('../../../viewers/xlsx/packages/bindings/src/vue'),
 		]);
 		createApp({
 			render: () =>
@@ -94,7 +94,7 @@ export async function mountFramework(
 	} else if (framework === 'svelte') {
 		const [{ mount }, { default: XlsxEditor }] = await Promise.all([
 			import('svelte'),
-			import('../../packages/bindings/src/XlsxEditor.svelte'),
+			import('../../../viewers/xlsx/packages/bindings/src/XlsxEditor.svelte'),
 		]);
 		mount(XlsxEditor, {
 			target: host,
@@ -117,7 +117,7 @@ export async function mountFramework(
 		] = await Promise.all([
 			import('@angular/platform-browser'),
 			import('@angular/core'),
-			import('../../packages/bindings/src/angular'),
+			import('../../../viewers/xlsx/packages/bindings/src/angular'),
 		]);
 		const app = await createApplication({ providers: [provideZonelessChangeDetection()] });
 		const component = createComponent(SpreadsheetEditorComponent, {

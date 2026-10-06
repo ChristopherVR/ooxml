@@ -1,7 +1,7 @@
 import { initTheme } from './theme';
 import './style.css';
 import { normalizeEditorLocale, type XlsxEditorElement } from 'xlsx-web-component';
-import type { EditorHandle } from '../../packages/bindings/src/index';
+import type { EditorHandle } from '../../../viewers/xlsx/packages/bindings/src/index';
 import { mountFramework } from './framework';
 
 const get = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;

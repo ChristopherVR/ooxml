@@ -41,9 +41,9 @@
 		"packages/solid/src/**/*.ts",
 		"packages/svelte/src/**/*.ts",
 		"packages/angular/src/**/*.ts",
-		"demos/*/src/**/*.ts",
-		"demos/*/src/**/*.tsx",
-		"demos/*.ts"
+		"../../demos/teams/*/src/**/*.ts",
+		"../../demos/teams/*/src/**/*.tsx",
+		"../../demos/teams/*.ts"
 	],
 	"exclude": [
 		"**/node_modules/**",

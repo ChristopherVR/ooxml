@@ -57,4 +57,4 @@ function Panel({ options }: { options: TeamsClientOptions }) {
 recreated when the workspace, user or server change and destroyed on unmount; keep `options`
 stable (`useMemo`).
 
-The [React demo](/demo-react/){target="_self"} uses both on one page: `demos/react/src/App.tsx`.
+The [React demo](/demo-react/){target="_self"} uses both on one page: `demos/teams/react/src/App.tsx`.

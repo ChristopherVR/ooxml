@@ -8,10 +8,6 @@
 		"type": "git",
 		"url": "git+https://github.com/ChristopherVR/ooxml.git"
 	},
-	"type": "module",
-	"engines": {
-		"node": ">=22"
-	},
 	"workspaces": [
 		"src/core",
 		"src/ui",
@@ -21,8 +17,13 @@
 		"viewers/*/mcp",
 		"viewers/*/docs",
 		"viewers/teams/server",
-		"viewers/teams/demos/*"
+		"demos/docx",
+		"demos/xlsx",
+		"demos/visio",
+		"demos/teams",
+		"demos/teams/*"
 	],
+	"type": "module",
 	"scripts": {
 		"build": "bun run --cwd src/core build",
 		"build:visio": "bun run --cwd src/core build:visio",
@@ -47,5 +48,8 @@
 	"devDependencies": {
 		"oxfmt": "0.71.0",
 		"oxlint": "^1.86.0"
+	},
+	"engines": {
+		"node": ">=22"
 	}
 }

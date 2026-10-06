@@ -54,7 +54,7 @@ for (const { dir, route } of demos) {
 	run(
 		viteCli,
 		['build', '--base', `${base}${route}/`, '--outDir', outDir, '--emptyOutDir'],
-		resolve(root, 'demos', dir),
+		resolve(root, '..', '..', 'demos', 'teams', dir),
 		{ ...process.env, VITE_TEAMS_STATIC: '1' },
 	);
 	const index = resolve(outDir, 'index.html');

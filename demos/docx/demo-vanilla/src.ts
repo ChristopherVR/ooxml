@@ -2,7 +2,7 @@ import { initTheme } from './theme';
 import './style.css';
 import { createDocument } from 'docx-core';
 import { normalizeEditorLocale, type DocxEditorElement } from 'docx-web-component';
-import type { EditorHandle } from '../../packages/bindings/src/index';
+import type { EditorHandle } from '../../../viewers/docx/packages/bindings/src/index';
 import { mountFramework } from './framework';
 import { createSampleDocument } from './sample-document';
 

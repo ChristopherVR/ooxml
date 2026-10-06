@@ -1,0 +1,25 @@
+{
+	"name": "visio-demos",
+	"version": "0.0.0",
+	"private": true,
+	"description": "The Visio demos. They build with the vite config and scripts of viewers/visio; these are the packages their own files import.",
+	"type": "module",
+	"dependencies": {
+		"@angular/common": "^22.2.1",
+		"@angular/compiler": "^22.2.1",
+		"@angular/core": "^22.2.1",
+		"@angular/platform-browser": "^22.2.1",
+		"ooxml-core": "*",
+		"ooxml-ui": "*",
+		"react": "^19.3.0",
+		"react-dom": "^19.3.0",
+		"rxjs": "^7.8.2",
+		"solid-js": "^1.9.15",
+		"svelte": "^5.57.1",
+		"vue": "^3.5.43"
+	},
+	"devDependencies": {
+		"@types/react": "^19.3.0",
+		"@types/react-dom": "^19.3.0"
+	}
+}

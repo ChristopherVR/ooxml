@@ -213,8 +213,8 @@ otherwise install Playwright Chromium.
 
 `https://christophervr.github.io/ooxml/visio/` is the public beta docs site and
 `/demo/` is the vanilla playground (also at `/demo-vanilla/`); `/demo-react/`, `/demo-vue/`, `/demo-angular/`,
-`/demo-svelte/` and `/demo-solid/` mount the same workspace (`demo/workspace.ts`) through each
-framework binding (`packages/bindings/demos`, built by `scripts/build-demos.mjs`). `.github/workflows/pages.yml` builds the pinned
+`/demo-svelte/` and `/demo-solid/` mount the same workspace (`demos/visio/demo/workspace.ts`) through each
+framework binding (`demos/visio/demo-*`, built by `scripts/build-demos.mjs`). `.github/workflows/pages.yml` builds the pinned
 core and viewer, runs full checks and browser tests, and deploys `docs/.vitepress/dist/` (the VitePress docs plus every demo, built by `scripts/build-pages.mjs`)
 on pushes to `main`. The OOXML launcher embeds the demo; update its registry
 when a public demo route changes. Embedded theme follows the shared

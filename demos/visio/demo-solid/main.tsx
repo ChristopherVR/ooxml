@@ -1,7 +1,7 @@
 import { createSignal } from 'solid-js';
 import { render } from 'solid-js/web';
-import { VisioViewer } from '../../src/solid.js';
-import { createWorkspace } from '../../../../demo/workspace.js';
+import { VisioViewer } from '../../../viewers/visio/packages/bindings/src/solid.js';
+import { createWorkspace } from '../demo/workspace.js';
 
 // The Solid demo: <VisioViewer> with a viewerRef callback and the document as a signal.
 const workspace = createWorkspace();

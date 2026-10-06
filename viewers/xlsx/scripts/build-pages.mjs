@@ -41,7 +41,7 @@ for (const { framework, route } of demos) {
 		viteCli,
 		[
 			'build',
-			'demos/demo-vanilla',
+			'../../demos/xlsx/demo-vanilla',
 			'--config',
 			'vite.config.ts',
 			'--base',

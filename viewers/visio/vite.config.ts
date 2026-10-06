@@ -5,15 +5,20 @@ import { resolve } from 'node:path';
 // scripts/build-pages.mjs sets PAGES_OUT so the playground lands inside the documentation output.
 export default defineConfig(({ mode }) => ({
 	base: './',
+	// The playground lives in demos/visio (the demos of every viewer are at the repository root); the
+	// page keeps its demo/index.html output path, and the config's own folder keeps `public` and the output.
+	root: resolve('../../demos/visio'),
+	publicDir: resolve('public'),
 	build: {
-		outDir:
+		outDir: resolve(
 			process.env.PAGES_OUT ?? (mode === 'browser-tests' ? '.browser-test-dist' : 'site-dist'),
+		),
 		emptyOutDir: !process.env.PAGES_OUT,
 		rollupOptions: {
 			preserveEntrySignatures: 'strict',
 			input: {
 				...(mode === 'browser-tests' ? { 'test-api': resolve('tests/browser-api.ts') } : {}),
-				demo: resolve('demo/index.html'),
+				demo: resolve('../../demos/visio/demo/index.html'),
 			},
 			output: {
 				entryFileNames: (chunk) =>

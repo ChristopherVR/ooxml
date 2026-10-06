@@ -25,3 +25,6 @@ docs/handover-*.md
 
 # Combined GitHub Pages site (scripts/build-pages.mjs)
 pages-dist/
+
+# Visio framework demo pages, generated from demos/visio/demo/index.html by viewers/visio/scripts/build-demos.mjs
+/demos/visio/demo-*/index.html

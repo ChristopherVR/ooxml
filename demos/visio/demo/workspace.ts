@@ -1,4 +1,4 @@
-import { compatibilityNotes, compatibilityText } from '../src/index.js';
+import { compatibilityNotes, compatibilityText } from '../../../viewers/visio/src/index.js';
 import type { ViewerCallbacks } from 'ooxml-ui/visio';
 import type { MountedViewer } from 'ooxml-ui/visio';
 import type { VisioDocument } from 'ooxml-core/visio';

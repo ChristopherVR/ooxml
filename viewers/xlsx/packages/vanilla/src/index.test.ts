@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import * as vanilla from './index';
 
 const legacyFixture = new URL('../../../tests/support/legacy-97.xls', import.meta.url);
-const sampleFixture = new URL('../../../demos/demo-vanilla/public/sample.xlsx', import.meta.url);
+const sampleFixture = new URL('../../../../../demos/xlsx/demo-vanilla/public/sample.xlsx', import.meta.url);
 
 describe('xlsx-vanilla-viewer entry', () => {
 	it('owns the web-component entry, the mount helper and the workbook loaders', () => {

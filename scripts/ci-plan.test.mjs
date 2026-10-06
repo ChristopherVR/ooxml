@@ -63,6 +63,11 @@ test('a change inside one viewer checks only that viewer, on a built core and ui
 	assert.deepEqual(result.consumers, []);
 });
 
+test('the root demos and browser tests of a viewer check that viewer', () => {
+	assert.deepEqual(viewers(plan(['demos/xlsx/demo-vanilla/src.ts'])), ['xlsx']);
+	assert.deepEqual(viewers(plan(['e2e/docx/editing.spec.ts'])), ['docx']);
+});
+
 test("a viewer's top-level notes and licence change nothing, its docs and scripts do", () => {
 	assert.deepEqual(plan(['viewers/docx/README.md', 'viewers/docx/LICENSE']).viewers, []);
 	assert.deepEqual(viewers(plan(['viewers/visio/docs/api.md'])), ['visio']);

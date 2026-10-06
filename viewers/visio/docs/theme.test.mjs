@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
-import { initVisioTheme } from '../demo/suite-theme.js';
+import { initVisioTheme } from '../../../demos/visio/demo/suite-theme.js';
 
 function setup(saved, systemDark = false) {
 	const dom = new JSDOM('<button class="theme-toggle"></button>', { url: 'https://example.test' });

@@ -111,8 +111,11 @@ const EVERYTHING =
 const INERT = /^(docs\/|[^/]+\.md$|LICENSE|NOTICE|\.gitignore|\.gitattributes|\.claude\/|memory\/)/;
 /** Top-level files of a viewer that change nothing CI checks (its docs are checked by its own tests). */
 const VIEWER_INERT = /^viewers\/[^/]+\/([^/]+\.md|LICENSE|NOTICE|\.gitignore|\.gitattributes)$/;
-/** The viewer a path under `viewers/` belongs to, or undefined. */
-const viewerOfFile = (file) => /^viewers\/([^/]+)\//.exec(file)?.[1];
+/**
+ * The viewer a path belongs to, or undefined: its own folder under `viewers/`, and the demos and
+ * browser tests the viewers keep at the root (`demos/<viewer>/`, `e2e/<viewer>/`).
+ */
+const viewerOfFile = (file) => /^(?:viewers|demos|e2e)\/([^/]+)\//.exec(file)?.[1];
 
 /** The area a format owns: only its own viewer (and, for pptx, the external consumer) can break. */
 const AREA_CONSUMERS = { docx: [], xlsx: [], visio: [], teams: [], pptx: ['pptx'] };

@@ -100,8 +100,8 @@ the element, forward props and options, and re-emit its events.
 | `packages/solid`         | `docx-solid-viewer`   | yes       | Solid entry (`WordEditor`).                                                   |
 | `packages/vanilla`       | `docx-vanilla-viewer` | yes       | Plain `<docx-editor>` registration and `mountEditor`.                         |
 
-`demos/demo-vanilla` is the single demo app; `?framework=<name>` mounts the
-editor through that framework's adapter (`demos/demo-vanilla/framework.ts`), and
+`demos/docx/demo-vanilla` is the single demo app; `?framework=<name>` mounts the
+editor through that framework's adapter (`demos/docx/demo-vanilla/framework.ts`), and
 the browser tests run against its production build.
 
 ## Where things live
