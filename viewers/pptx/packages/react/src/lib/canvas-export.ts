@@ -29,7 +29,7 @@ export { _testing };
  *
  * Usage:
  * ```ts
- * import { renderToCanvas } from "../lib/canvas-export";
+ * import { renderToCanvas } from "./canvas-export";
  * const canvas = await renderToCanvas(element, { scale: 2 });
  * ```
  */

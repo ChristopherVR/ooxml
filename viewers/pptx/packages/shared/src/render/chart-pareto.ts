@@ -19,8 +19,8 @@ export interface ParetoEntry {
  * the order given (no reordering). Rounded to 2 decimal places, matching how
  * PowerPoint labels a Pareto chart's cumulative line.
  *
- * Shared by the insert-chart "Pareto" default ({@link ../render/chart-ex-insert-defaults})
- * and the Change Chart Type "Pareto" conversion ({@link ../render/chart-editor-options})
+ * Shared by the insert-chart "Pareto" default ({@link ./chart-ex-insert-defaults})
+ * and the Change Chart Type "Pareto" conversion ({@link ./chart-editor-options})
  * so both build the same cumulative-percentage-of-total representation that
  * `docs/guide/limitations.md` documents: `chartType: "histogram"` with a
  * `clusteredColumn`-layout frequency series and a `paretoLine`-layout

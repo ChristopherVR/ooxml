@@ -18,7 +18,7 @@ import { buildOutline } from './outline-view';
 import { applyOutlineEdit } from './outline-view-edit';
 
 const fixture = fileURLToPath(
-	new URL('../../../../e2e/fixtures/sample-deck.pptx', import.meta.url),
+	new URL('../../../../../../e2e/pptx/fixtures/sample-deck.pptx', import.meta.url),
 );
 
 async function load(bytes: Uint8Array): Promise<{ handler: PptxHandler; slides: PptxSlide[] }> {

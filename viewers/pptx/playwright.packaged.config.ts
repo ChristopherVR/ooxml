@@ -38,11 +38,11 @@ const preview = (cwd: string, port: number) => ({
 });
 
 export default defineConfig({
-	testDir: './e2e',
+	testDir: '../../e2e/pptx',
 	testMatch: ['packaged-present.spec.ts'],
 	// Generates the synthetic fixtures (the transitions deck is one of them) and
 	// asserts the dists this run depends on are not stale.
-	globalSetup: './e2e/global-setup.ts',
+	globalSetup: '../../e2e/pptx/global-setup.ts',
 	timeout: 120_000,
 	expect: { timeout: 15_000 },
 	fullyParallel: false,
@@ -73,10 +73,10 @@ export default defineConfig({
 		},
 	],
 	webServer: [
-		preview('demos/demo-react', REACT_PORT),
-		preview('demos/demo-vue', VUE_PORT),
-		preview('demos/demo-angular', ANGULAR_PORT),
-		preview('demos/demo-vanilla', VANILLA_PORT),
-		preview('demos/demo-svelte', SVELTE_PORT),
+		preview('../../demos/pptx/demo-react', REACT_PORT),
+		preview('../../demos/pptx/demo-vue', VUE_PORT),
+		preview('../../demos/pptx/demo-angular', ANGULAR_PORT),
+		preview('../../demos/pptx/demo-vanilla', VANILLA_PORT),
+		preview('../../demos/pptx/demo-svelte', SVELTE_PORT),
 	],
 });

@@ -30,7 +30,7 @@ import JSZip from 'jszip';
 import { PptxHandler } from 'pptx-viewer-core';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const out = resolve(here, '../e2e/fixtures/shape-3d-compound.pptx');
+const out = resolve(here, '../../../e2e/pptx/fixtures/shape-3d-compound.pptx');
 
 /** EMU per pixel at the 96dpi the rest of the fixtures are authored in. */
 const PX = 9525;

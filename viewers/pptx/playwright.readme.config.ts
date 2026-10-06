@@ -1,17 +1,17 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const demos = [
-	['react', 4173, 'demos/demo-react'],
-	['vue', 4175, 'demos/demo-vue'],
-	['angular', 4174, 'demos/demo-angular'],
-	['vanilla', 4176, 'demos/demo-vanilla'],
-	['svelte', 4177, 'demos/demo-svelte'],
+	['react', 4173, '../../demos/pptx/demo-react'],
+	['vue', 4175, '../../demos/pptx/demo-vue'],
+	['angular', 4174, '../../demos/pptx/demo-angular'],
+	['vanilla', 4176, '../../demos/pptx/demo-vanilla'],
+	['svelte', 4177, '../../demos/pptx/demo-svelte'],
 ] as const;
 
 export default defineConfig({
-	testDir: './e2e',
+	testDir: '../../e2e/pptx',
 	testMatch: 'capture-package-readmes.spec.ts',
-	globalSetup: './e2e/global-setup.ts',
+	globalSetup: '../../e2e/pptx/global-setup.ts',
 	timeout: 90_000,
 	reporter: 'list',
 	workers: 1,

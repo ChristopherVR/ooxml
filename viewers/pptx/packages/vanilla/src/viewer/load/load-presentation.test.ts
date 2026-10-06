@@ -9,7 +9,7 @@ import { createDefaultRegistry, renderSlideStage } from '../render';
 import { loadPresentation, resolveMediaUrls } from './load-presentation';
 import { resolveSourceToBuffer } from './source';
 
-const FIXTURE = resolve(__dirname, '../../../../../e2e/fixtures/sample-deck.pptx');
+const FIXTURE = resolve(__dirname, '../../../../../../../e2e/pptx/fixtures/sample-deck.pptx');
 
 function readFixture(): ArrayBuffer {
 	const bytes = readFileSync(FIXTURE);

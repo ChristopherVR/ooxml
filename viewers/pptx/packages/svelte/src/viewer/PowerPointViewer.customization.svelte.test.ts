@@ -22,7 +22,7 @@ import type { PowerPointViewerProps } from './types';
  * the full viewer and a real deck: hidden ribbon tabs, live imperative edits,
  * prop-identity replacement, and the panel gates.
  */
-const FIXTURE = resolve(process.cwd(), '../../e2e/fixtures/sample-deck.pptx');
+const FIXTURE = resolve(process.cwd(), '../../../../e2e/pptx/fixtures/sample-deck.pptx');
 
 let cleanup: (() => void) | undefined;
 

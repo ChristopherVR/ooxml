@@ -12,7 +12,7 @@ import { PptxHandler } from 'pptx-viewer-core';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '..');
-const srcDeck = resolve(root, 'e2e/fixtures/sample-deck.pptx');
+const srcDeck = resolve(root, '../../e2e/pptx/fixtures/sample-deck.pptx');
 
 const bytes = new Uint8Array(await readFile(srcDeck));
 const handler = new PptxHandler();
@@ -102,6 +102,6 @@ const field = makeFeatureElement('feat-field', 820, 540, 120, 30, [
 slide.elements.push(vertical, underline, wavy, dist, field);
 
 const out = await handler.save(data.slides);
-const outPath = resolve(root, 'e2e/fixtures/text-features.pptx');
+const outPath = resolve(root, '../../e2e/pptx/fixtures/text-features.pptx');
 await writeFile(outPath, out);
 console.log('wrote', outPath, out.byteLength, 'bytes; elements on slide 1:', slide.elements.length);

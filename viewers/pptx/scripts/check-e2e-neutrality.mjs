@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
 
 const ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)));
-const E2E_DIR = resolve(ROOT, 'e2e');
+const E2E_DIR = resolve(ROOT, '..', '..', 'e2e', 'pptx');
 const REFERENCE_SPEC = 'ribbon-tab-parity.spec.ts';
 const PROJECT_IDENTIFIERS = new Set(['framework', 'project', 'projectName']);
 const DEMO_PORT_RE = /\b417[3-7]\b/u;

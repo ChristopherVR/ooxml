@@ -116,7 +116,7 @@ describe('computeObliqueBarLayout', () => {
 
 	it('matches PowerPoint on the ground-truth deck (gt/chart-01) within 3pt', async () => {
 		const buf = readFileSync(
-			new URL('../../../../e2e/fixtures/three-d-parity/three-d-charts.pptx', import.meta.url),
+			new URL('../../../../../../e2e/pptx/fixtures/three-d-parity/three-d-charts.pptx', import.meta.url),
 		);
 		const data = await new PptxHandler().load(
 			buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength),
@@ -145,7 +145,7 @@ describe('computeObliqueBarLayout', () => {
 
 	it('matches PowerPoint on gt/chart-04 (standard rows) within 5pt', async () => {
 		const buf = readFileSync(
-			new URL('../../../../e2e/fixtures/three-d-parity/three-d-charts.pptx', import.meta.url),
+			new URL('../../../../../../e2e/pptx/fixtures/three-d-parity/three-d-charts.pptx', import.meta.url),
 		);
 		const data = await new PptxHandler().load(
 			buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength),

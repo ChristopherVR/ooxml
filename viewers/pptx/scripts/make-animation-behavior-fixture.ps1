@@ -24,7 +24,7 @@
 .EXAMPLE
   powershell -File scripts/make-animation-behavior-fixture.ps1
 #>
-param([string]$Out = (Join-Path $PSScriptRoot '..\e2e\fixtures\animation-behavior-playback.pptx'))
+param([string]$Out = (Join-Path $PSScriptRoot '..\..\..\e2e\pptx\fixtures\animation-behavior-playback.pptx'))
 $ErrorActionPreference = 'Stop'
 $Out = [System.IO.Path]::GetFullPath($Out)
 $app = New-Object -ComObject PowerPoint.Application

@@ -25,7 +25,7 @@
   claim.
 #>
 param(
-  [string]$SourcePath = (Join-Path (Resolve-Path (Join-Path $PSScriptRoot '..')) 'e2e/fixtures/ink-contentpart.pptx')
+  [string]$SourcePath = (Join-Path (Resolve-Path (Join-Path $PSScriptRoot '..')) '../../e2e/pptx/fixtures/ink-contentpart.pptx')
 )
 
 $ErrorActionPreference = 'Stop'

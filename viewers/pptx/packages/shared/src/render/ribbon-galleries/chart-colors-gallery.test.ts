@@ -131,7 +131,7 @@ describe('chart Colors palettes', () => {
 });
 
 const FIXTURE = fileURLToPath(
-	new URL('../../../../../e2e/fixtures/chart-gallery.pptx', import.meta.url),
+	new URL('../../../../../../../e2e/pptx/fixtures/chart-gallery.pptx', import.meta.url),
 );
 
 describe('chart Colors round trip', () => {

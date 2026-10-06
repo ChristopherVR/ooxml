@@ -37,7 +37,7 @@ import JSZip from 'jszip';
 import { PptxHandler } from 'pptx-viewer-core';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const out = resolve(here, '../e2e/fixtures/shape-3d-camera-override.pptx');
+const out = resolve(here, '../../../e2e/pptx/fixtures/shape-3d-camera-override.pptx');
 
 const PX = 9525;
 const emu = (px) => Math.round(px * PX);

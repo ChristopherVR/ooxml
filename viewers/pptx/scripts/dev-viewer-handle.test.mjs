@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { installDevViewerHandle } from '../demos/dev-viewer-handle.ts';
+import { installDevViewerHandle } from '../../../demos/pptx/dev-viewer-handle.ts';
 
 test('development handles follow the current viewer and clean up their own installation', () => {
 	const previousWindow = globalThis.window;

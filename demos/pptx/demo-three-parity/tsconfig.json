@@ -1,0 +1,32 @@
+{
+	"compilerOptions": {
+		"target": "ES2022",
+		"module": "ESNext",
+		"moduleResolution": "bundler",
+		"lib": ["ES2022", "DOM", "DOM.Iterable"],
+		"strict": true,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"forceConsistentCasingInFileNames": true,
+		"noEmit": true,
+		"resolveJsonModule": true,
+		"isolatedModules": true,
+		"allowImportingTsExtensions": true,
+		"types": ["node", "vite/client"],
+		"paths": {
+			"pptx-vanilla-viewer": ["../../../viewers/pptx/packages/vanilla/src/index.ts"],
+			"pptx-viewer-core/converter": ["../../../viewers/pptx/packages/core/src/converter/index.ts"],
+			"pptx-viewer-core/chart": ["../../../viewers/pptx/packages/core/src/chart/index.ts"],
+			"pptx-viewer-core/color": ["../../../viewers/pptx/packages/core/src/color/index.ts"],
+			"pptx-viewer-core/geometry": ["../../../viewers/pptx/packages/core/src/geometry/index.ts"],
+			"pptx-viewer-core/math": ["../../../viewers/pptx/packages/core/src/math/index.ts"],
+			"pptx-viewer-core/text": ["../../../viewers/pptx/packages/core/src/text/index.ts"],
+			"pptx-viewer-core": ["../../../viewers/pptx/packages/core/src/index.ts"],
+			"pptx-viewer-shared": ["../../../viewers/pptx/packages/shared/src/index.ts"],
+			"pptx-viewer-shared/*": ["../../../viewers/pptx/packages/shared/src/*"],
+			"pptx-viewer-locales": ["../../../viewers/pptx/packages/locales/src/index.ts"],
+			"pptx-viewer-locales/*": ["../../../viewers/pptx/packages/locales/src/*"]
+		}
+	},
+	"include": ["src"]
+}

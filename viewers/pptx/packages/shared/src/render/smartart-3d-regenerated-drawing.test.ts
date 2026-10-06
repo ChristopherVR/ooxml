@@ -16,7 +16,7 @@ import { buildSmartArt3DSpecForElement } from './smartart-3d-element';
 import { withRegeneratedSmartArt3DDrawing } from './smartart-3d-regenerated-drawing';
 
 const fixture = fileURLToPath(
-	new URL('../../../../e2e/fixtures/three-d-parity/three-d-smartart.pptx', import.meta.url),
+	new URL('../../../../../../e2e/pptx/fixtures/three-d-parity/three-d-smartart.pptx', import.meta.url),
 );
 
 async function loadDeck(): Promise<{ handler: PptxHandler; slides: PptxSlide[] }> {

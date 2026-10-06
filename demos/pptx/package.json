@@ -1,0 +1,17 @@
+{
+	"name": "pptx-demos",
+	"version": "0.0.0",
+	"private": true,
+	"description": "Files the pptx framework demos share (demos/pptx/shared, the build stamp, the collaboration relay). Each demo under demo-* is its own package; these are the packages the shared files import.",
+	"type": "module",
+	"dependencies": {
+		"lib0": "^0.2.119",
+		"y-protocols": "^1.0.7",
+		"y-websocket": "^3.1.0",
+		"yjs": "^13.6.33"
+	},
+	"devDependencies": {
+		"@types/node": "^26.6.4",
+		"vite": "^8.3.2"
+	}
+}

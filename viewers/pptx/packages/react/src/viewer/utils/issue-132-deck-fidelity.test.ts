@@ -35,7 +35,7 @@ import { getResolvedShapeClipPath } from './resolved-shape-clip-path';
 import { getShapeVisualStyle } from './shape-visual-style';
 
 const fixture = fileURLToPath(
-	new URL('../../../../../e2e/fixtures/issue-132-gradient-fill.pptx', import.meta.url),
+	new URL('../../../../../../../e2e/pptx/fixtures/issue-132-gradient-fill.pptx', import.meta.url),
 );
 
 let cached: PptxData | undefined;

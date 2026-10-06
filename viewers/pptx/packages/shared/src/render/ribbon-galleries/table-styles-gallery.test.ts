@@ -119,7 +119,7 @@ describe('table Styles gallery', () => {
 });
 
 const FIXTURE = fileURLToPath(
-	new URL('../../../../../e2e/fixtures/table-styling.pptx', import.meta.url),
+	new URL('../../../../../../../e2e/pptx/fixtures/table-styling.pptx', import.meta.url),
 );
 
 describe('table Styles gallery round trip', () => {

@@ -5,8 +5,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { Awareness } from 'y-protocols/awareness';
 import * as Y from 'yjs';
 
-import HostOwnedHeadlessEditor from '../../../../demos/demo-vue/src/HostOwnedHeadlessEditor.vue';
-import type { HostOwnedDemo } from '../../../../demos/shared/host-owned-collaboration';
+import HostOwnedHeadlessEditor from '../../../../../../demos/pptx/demo-vue/src/HostOwnedHeadlessEditor.vue';
+import type { HostOwnedDemo } from '../../../../../../demos/pptx/shared/host-owned-collaboration';
 import {
 	CollaborationCursors,
 	CollaborationStatusIndicator,

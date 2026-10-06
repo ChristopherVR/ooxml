@@ -60,7 +60,7 @@
           e2e/fixtures/chart-ext-datalabels-range.pptx
 #>
 param(
-  [string]$OutDir = (Join-Path $PSScriptRoot '..\e2e\fixtures')
+  [string]$OutDir = (Join-Path $PSScriptRoot '..\..\..\e2e\pptx\fixtures')
 )
 
 $ErrorActionPreference = 'Stop'
@@ -116,7 +116,7 @@ function New-BaseColumnChartWithLinkedNames {
 }
 
 # ── Base A: reuse the existing genuine filteredBarSeries fixture ──────────
-$baseFilteredSeries = Join-Path $repoRoot 'e2e\fixtures\chart-filtered-series.pptx'
+$baseFilteredSeries = Join-Path $repoRoot '..\..\e2e\pptx\fixtures\chart-filtered-series.pptx'
 if (-not (Test-Path $baseFilteredSeries)) {
   throw "missing base fixture: $baseFilteredSeries"
 }

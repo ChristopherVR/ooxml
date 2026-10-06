@@ -6,7 +6,38 @@
 		{
 			"files": ["src/ui/src/*.ts", "src/ui/src/**/*.ts"],
 			"excludeFiles": ["src/ui/src/teams/**"],
-			"options": { "htmlWhitespaceSensitivity": "strict" }
+			"options": {
+				"htmlWhitespaceSensitivity": "strict"
+			}
+		},
+		{
+			"files": ["demos/pptx/**", "e2e/pptx/**"],
+			"options": {
+				"tabWidth": 2,
+				"semi": true,
+				"trailingComma": "all",
+				"bracketSpacing": true,
+				"arrowParens": "always",
+				"endOfLine": "lf",
+				"insertFinalNewline": true,
+				"bracketSameLine": false,
+				"jsxSingleQuote": true,
+				"quoteProps": "as-needed",
+				"proseWrap": "preserve",
+				"htmlWhitespaceSensitivity": "css",
+				"embeddedLanguageFormatting": "auto",
+				"sortImports": {
+					"groups": [
+						"builtin",
+						"external",
+						["internal", "subpath"],
+						["parent", "sibling", "index"],
+						"style",
+						"unknown"
+					]
+				},
+				"sortPackageJson": true
+			}
 		}
 	]
 }

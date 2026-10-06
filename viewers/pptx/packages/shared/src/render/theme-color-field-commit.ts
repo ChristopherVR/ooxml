@@ -7,7 +7,7 @@
  *
  * Every helper here is a trivial field rename: the interesting decision
  * logic (which swatch is selected, what a click vs. a custom hex commits)
- * already lives in {@link ../render/theme-color-picker-state}. This module
+ * already lives in {@link ./theme-color-picker-state}. This module
  * only exists so that decision's OUTPUT lands on the right property names
  * for each surface (gradient stop, table cell fill, table cell text).
  *

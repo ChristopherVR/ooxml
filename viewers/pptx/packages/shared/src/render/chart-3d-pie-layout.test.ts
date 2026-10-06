@@ -11,7 +11,7 @@ import { buildChartViewModel } from './chart-view-model-build';
 
 async function deckChart(slide: number): Promise<PptxElement> {
 	const buf = readFileSync(
-		new URL('../../../../e2e/fixtures/three-d-parity/three-d-charts.pptx', import.meta.url),
+		new URL('../../../../../../e2e/pptx/fixtures/three-d-parity/three-d-charts.pptx', import.meta.url),
 	);
 	const data = await new PptxHandler().load(
 		buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength),

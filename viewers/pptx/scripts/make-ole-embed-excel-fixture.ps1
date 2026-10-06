@@ -32,7 +32,7 @@
   pwsh -File scripts/make-ole-embed-excel-fixture.ps1
 #>
 param(
-  [string]$OutPath = (Join-Path (Resolve-Path (Join-Path $PSScriptRoot '..')) 'e2e/fixtures/ole-embed-excel.ppt')
+  [string]$OutPath = (Join-Path (Resolve-Path (Join-Path $PSScriptRoot '..')) '../../e2e/pptx/fixtures/ole-embed-excel.ppt')
 )
 
 $ErrorActionPreference = 'Stop'

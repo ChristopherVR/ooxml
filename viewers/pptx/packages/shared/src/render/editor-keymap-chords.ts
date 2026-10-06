@@ -1,5 +1,5 @@
 /**
- * The Ctrl/Cmd chord tables for {@link ../render/editor-keymap}: clipboard/history
+ * The Ctrl/Cmd chord tables for {@link ./editor-keymap}: clipboard/history
  * (undo, copy, paste, duplicate, group, new slide, ...) and PowerPoint's text
  * commands (paragraph alignment, font-size ladder, format painter, hyperlink
  * dialog, clear-character-formatting), plus Ctrl/Cmd+B/I/U.

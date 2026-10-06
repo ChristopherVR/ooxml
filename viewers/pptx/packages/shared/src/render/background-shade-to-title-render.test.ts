@@ -21,7 +21,7 @@ import { describe, expect, it } from 'vitest';
 import { getSlideBackgroundStyle } from './slide-background';
 
 const FIXTURE = fileURLToPath(
-	new URL('../../../../e2e/fixtures/sample-deck.pptx', import.meta.url),
+	new URL('../../../../../../e2e/pptx/fixtures/sample-deck.pptx', import.meta.url),
 );
 
 function fixtureBytes(): ArrayBuffer {

@@ -7,10 +7,10 @@ const REACT_PORT = 4173;
  * separate from the five-project, 26-file product test matrix.
  */
 export default defineConfig({
-	testDir: './e2e',
+	testDir: '../../e2e/pptx',
 	testMatch: 'capture-*.spec.ts',
 	testIgnore: ['**/fixtures/**', '**/global-setup.*'],
-	globalSetup: './e2e/global-setup.ts',
+	globalSetup: '../../e2e/pptx/global-setup.ts',
 	timeout: 60_000,
 	expect: { timeout: 10_000 },
 	reporter: 'list',
@@ -23,7 +23,7 @@ export default defineConfig({
 	],
 	webServer: {
 		command: `npx vite --port ${REACT_PORT} --strictPort`,
-		cwd: 'demos/demo-react',
+		cwd: '../../demos/pptx/demo-react',
 		url: `http://localhost:${REACT_PORT}`,
 		reuseExistingServer: true,
 		timeout: 120_000,

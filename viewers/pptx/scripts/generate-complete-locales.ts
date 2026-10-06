@@ -63,7 +63,7 @@ async function loadLiteralObject(
 }
 
 async function loadCurated(exportName: string): Promise<Record<string, string>> {
-	return loadLiteralObject(resolve(ROOT, 'demos', 'demo-react', 'i18n-locales.ts'), exportName);
+	return loadLiteralObject(resolve(ROOT, '..', '..', 'demos', 'pptx', 'demo-react', 'i18n-locales.ts'), exportName);
 }
 
 async function loadGenerated(locale: string): Promise<Record<string, string>> {

@@ -11,7 +11,7 @@
   Image.open(png).resize((960, 540)).save(webp, 'WEBP', quality=88).
   Requires a local PowerPoint (and Excel, for charts) install.
 #>
-param([string]$OutDir = "$PSScriptRoot\..\e2e\fixtures\three-d-parity")
+param([string]$OutDir = "$PSScriptRoot\..\..\..\e2e\pptx\fixtures\three-d-parity")
 $ErrorActionPreference = 'Stop'
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
 

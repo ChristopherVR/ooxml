@@ -39,7 +39,7 @@ const COLLAB_PORT = 1234 + PORT_OFFSET;
 const isCI = Boolean(process.env.CI);
 
 export default defineConfig({
-	testDir: './e2e',
+	testDir: '../../e2e/pptx',
 	// `packaged-present.spec.ts` is the production-BUILD smoke guard and needs
 	// `vite preview` over each demo's built dist, not these dev servers; it runs
 	// from `playwright.packaged.config.ts` instead.
@@ -49,7 +49,7 @@ export default defineConfig({
 		'**/capture-*.spec.ts',
 		'**/packaged-present.spec.ts',
 	],
-	globalSetup: './e2e/global-setup.ts',
+	globalSetup: '../../e2e/pptx/global-setup.ts',
 	timeout: 60_000,
 	expect: { timeout: 10_000 },
 	fullyParallel: false,
@@ -152,7 +152,7 @@ export default defineConfig({
 	webServer: [
 		{
 			// Host-owned collaboration tests use the real relay, not BroadcastChannel.
-			command: 'bun demos/demo-react/collab-server.mjs',
+			command: 'bun ../../demos/pptx/demo-react/collab-server.mjs',
 			env: { PORT: String(COLLAB_PORT) },
 			port: COLLAB_PORT,
 			reuseExistingServer: !isCI,
@@ -162,7 +162,7 @@ export default defineConfig({
 		},
 		{
 			command: `npx vite --force --port ${REACT_PORT} --strictPort`,
-			cwd: 'demos/demo-react',
+			cwd: '../../demos/pptx/demo-react',
 			url: `http://localhost:${REACT_PORT}`,
 			reuseExistingServer: !isCI,
 			timeout: 120_000,
@@ -171,7 +171,7 @@ export default defineConfig({
 		},
 		{
 			command: `npx vite --force --port ${VUE_PORT} --strictPort`,
-			cwd: 'demos/demo-vue',
+			cwd: '../../demos/pptx/demo-vue',
 			url: `http://localhost:${VUE_PORT}`,
 			reuseExistingServer: !isCI,
 			timeout: 120_000,
@@ -180,7 +180,7 @@ export default defineConfig({
 		},
 		{
 			command: `npx vite --force --port ${ANGULAR_PORT} --strictPort`,
-			cwd: 'demos/demo-angular',
+			cwd: '../../demos/pptx/demo-angular',
 			url: `http://localhost:${ANGULAR_PORT}`,
 			reuseExistingServer: !isCI,
 			timeout: 120_000,
@@ -189,7 +189,7 @@ export default defineConfig({
 		},
 		{
 			command: `npx vite --force --port ${VANILLA_PORT} --strictPort`,
-			cwd: 'demos/demo-vanilla',
+			cwd: '../../demos/pptx/demo-vanilla',
 			url: `http://localhost:${VANILLA_PORT}`,
 			reuseExistingServer: !isCI,
 			timeout: 120_000,
@@ -198,7 +198,7 @@ export default defineConfig({
 		},
 		{
 			command: `npx vite --force --port ${SVELTE_PORT} --strictPort`,
-			cwd: 'demos/demo-svelte',
+			cwd: '../../demos/pptx/demo-svelte',
 			url: `http://localhost:${SVELTE_PORT}`,
 			reuseExistingServer: !isCI,
 			timeout: 120_000,

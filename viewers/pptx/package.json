@@ -12,17 +12,16 @@
 		"url": "https://github.com/ChristopherVR/pptx-viewer.git"
 	},
 	"workspaces": [
-		"packages/*",
-		"demos/*"
+		"packages/*"
 	],
 	"scripts": {
 		"install:all": "bun install",
-		"demo": "cd demos/demo-react && npx vite",
-		"demo:vue": "cd demos/demo-vue && npx vite",
-		"demo:angular": "cd demos/demo-angular && npx vite",
-		"demo:vanilla": "cd demos/demo-vanilla && npx vite",
-		"demo:three-parity": "bun run --cwd demos/demo-three-parity dev",
-		"demo:svelte": "cd demos/demo-svelte && npx vite",
+		"demo": "cd ../../demos/pptx/demo-react && npx vite",
+		"demo:vue": "cd ../../demos/pptx/demo-vue && npx vite",
+		"demo:angular": "cd ../../demos/pptx/demo-angular && npx vite",
+		"demo:vanilla": "cd ../../demos/pptx/demo-vanilla && npx vite",
+		"demo:three-parity": "bun run --cwd ../../demos/pptx/demo-three-parity dev",
+		"demo:svelte": "cd ../../demos/pptx/demo-svelte && npx vite",
 		"docs:dev": "cd docs && bun run docs:dev",
 		"docs:build": "cd docs && bun install && bun run docs:build",
 		"docs:preview": "cd docs && bun run docs:preview",
@@ -50,7 +49,7 @@
 		"release:plan": "node scripts/release-plan.mjs",
 		"outdated": "bun outdated --filter '*'",
 		"update": "bun update --latest",
-		"collab": "bun demos/demo-react/collab-server.mjs",
+		"collab": "bun ../../demos/pptx/demo-react/collab-server.mjs",
 		"e2e": "bun run e2e:contract && playwright test",
 		"e2e:contract": "node scripts/check-e2e-neutrality.mjs",
 		"e2e:local-only": "bun run e2e:contract && playwright test --grep @local-only --workers=1",
@@ -58,7 +57,7 @@
 		"e2e:install": "playwright install --with-deps chromium",
 		"e2e:packaged": "bun run e2e:contract && playwright test --config=playwright.packaged.config.ts",
 		"e2e:ui": "playwright test --ui",
-		"docs:screenshots": "playwright test --config=playwright.capture.config.ts e2e/capture-user-guide-assets.spec.ts e2e/capture-user-guide-gifs.spec.ts",
+		"docs:screenshots": "playwright test --config=playwright.capture.config.ts capture-user-guide-assets.spec.ts capture-user-guide-gifs.spec.ts",
 		"prepare": "husky",
 		"test:scripts": "node --test scripts/*.test.mjs",
 		"test:locale-subpaths": "node scripts/check-locale-subpaths.mjs",

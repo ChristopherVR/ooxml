@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
-import * as angularCopy from '../../../demos/demo-angular/src/demo-locales';
-import { LANGUAGES as angularLanguages } from '../../../demos/demo-angular/src/languages';
-import * as reactCopy from '../../../demos/demo-react/demo-locales';
-import { languages as reactLanguages } from '../../../demos/demo-react/languages';
-import * as svelteCopy from '../../../demos/demo-svelte/src/demo-locales';
-import { languages as svelteLanguages } from '../../../demos/demo-svelte/src/languages';
-import * as vanillaCopy from '../../../demos/demo-vanilla/src/demo-locales';
-import { languages as vanillaLanguages } from '../../../demos/demo-vanilla/src/languages';
-import * as vueCopy from '../../../demos/demo-vue/src/demo-locales';
-import { languages as vueLanguages } from '../../../demos/demo-vue/src/languages';
+import * as angularCopy from '../../../../../demos/pptx/demo-angular/src/demo-locales';
+import { LANGUAGES as angularLanguages } from '../../../../../demos/pptx/demo-angular/src/languages';
+import * as reactCopy from '../../../../../demos/pptx/demo-react/demo-locales';
+import { languages as reactLanguages } from '../../../../../demos/pptx/demo-react/languages';
+import * as svelteCopy from '../../../../../demos/pptx/demo-svelte/src/demo-locales';
+import { languages as svelteLanguages } from '../../../../../demos/pptx/demo-svelte/src/languages';
+import * as vanillaCopy from '../../../../../demos/pptx/demo-vanilla/src/demo-locales';
+import { languages as vanillaLanguages } from '../../../../../demos/pptx/demo-vanilla/src/languages';
+import * as vueCopy from '../../../../../demos/pptx/demo-vue/src/demo-locales';
+import { languages as vueLanguages } from '../../../../../demos/pptx/demo-vue/src/languages';
 import { localeSectionNameForKey } from '../../../scripts/locale-sections';
 import { LOCALE_CATALOG, translationsEn } from '../../shared/src/i18n';
 import { translationsZhCN } from './zh-CN';

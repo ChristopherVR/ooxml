@@ -3,6 +3,9 @@ import { resolve } from 'node:path';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+	// The demo's own test (included below) lives in demos/pptx at the repository root, outside the
+	// workspace root Vite would otherwise allow it to serve files from (viewers/pptx).
+	server: { fs: { allow: [resolve(__dirname, '../../../..')] } },
 	resolve: {
 		alias: [
 			{ find: 'pptx-vanilla-viewer', replacement: resolve(__dirname, 'src/index.ts') },
@@ -50,7 +53,10 @@ export default defineConfig({
 		// 3.5-5.5s on the hosted CI runner, where vitest's 5s default failed five
 		// tests in CI run 36183962014. Matches core and svelte, which set 30s.
 		testTimeout: 30_000,
-		include: ['src/**/*.test.ts', '../../demos/demo-vanilla/src/host-owned-inline-editor.test.ts'],
+		include: [
+			'src/**/*.test.ts',
+			'../../../../demos/pptx/demo-vanilla/src/host-owned-inline-editor.test.ts',
+		],
 		setupFiles: ['./src/web-controls.test-setup.ts'],
 	},
 });

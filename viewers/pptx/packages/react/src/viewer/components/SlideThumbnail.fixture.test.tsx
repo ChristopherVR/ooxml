@@ -31,7 +31,7 @@ vi.mock<typeof import('react-i18next')>(import('react-i18next'), () => ({
 
 const FIXTURE = path.resolve(
 	path.dirname(fileURLToPath(import.meta.url)),
-	'../../../../../e2e/fixtures/Japanese_10_Slides_1_8_MB_bbd4090b55.pptx',
+	'../../../../../../../e2e/pptx/fixtures/Japanese_10_Slides_1_8_MB_bbd4090b55.pptx',
 );
 
 // The layout-inherited background colour (schemeClr lt2) core should resolve.

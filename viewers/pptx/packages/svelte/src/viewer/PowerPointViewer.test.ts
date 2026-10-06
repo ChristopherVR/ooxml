@@ -18,7 +18,7 @@ import type { PowerPointViewerProps } from './types';
  */
 
 // Vitest runs with cwd = packages/svelte; the fixture lives at the repo root.
-const FIXTURE = resolve(process.cwd(), '../../e2e/fixtures/sample-deck.pptx');
+const FIXTURE = resolve(process.cwd(), '../../../../e2e/pptx/fixtures/sample-deck.pptx');
 
 let cleanup: (() => void) | undefined;
 

@@ -28,7 +28,7 @@ ${sp(12, 'Card B', 3048000, 'Scale')}
 </p:spTree></p:cSld></p:sld>`;
 
 const fixture = fileURLToPath(
-	new URL('../../../../e2e/fixtures/linked-textbox.pptx', import.meta.url),
+	new URL('../../../../../../e2e/pptx/fixtures/linked-textbox.pptx', import.meta.url),
 );
 
 async function load(bytes: Uint8Array): Promise<{ handler: PptxHandler; slides: PptxSlide[] }> {

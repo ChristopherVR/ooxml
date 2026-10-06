@@ -108,7 +108,7 @@ describe('collaborationService connect reentrancy', () => {
 
 	it('writes back an already-synced owner startup deck without a later edit', async () => {
 		const source = new Uint8Array(
-			await readFile(resolvePath(__dirname, '../../../../e2e/fixtures/text-layout.pptx')),
+			await readFile(resolvePath(__dirname, '../../../../../../e2e/pptx/fixtures/text-layout.pptx')),
 		);
 		const data = await new PptxHandler().load(source.buffer);
 		const doc = new Y.Doc();

@@ -59,7 +59,10 @@ const FIXTURE = join(
 	'..',
 	'..',
 	'..',
+	'..',
+	'..',
 	'e2e',
+	'pptx',
 	'fixtures',
 	'header-footer-shows.pptx',
 );

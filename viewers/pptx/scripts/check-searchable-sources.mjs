@@ -58,7 +58,7 @@ const SEARCHABLE_EXTENSIONS = new Set([
 ]);
 
 /** Top-level directories worth walking. */
-const SEARCHED_ROOTS = ['packages', 'demos', 'e2e', 'scripts', 'docs'];
+const SEARCHED_ROOTS = ['packages', '../../demos/pptx', '../../e2e/pptx', 'scripts', 'docs'];
 
 function* walk(directory) {
 	let entries;

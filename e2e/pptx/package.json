@@ -1,0 +1,15 @@
+{
+	"name": "pptx-e2e",
+	"version": "0.0.0",
+	"private": true,
+	"description": "The pptx browser tests. Playwright is configured and run from viewers/pptx (bun run e2e); these are the packages the specs import.",
+	"type": "module",
+	"devDependencies": {
+		"@playwright/test": "^1.63.0",
+		"@types/node": "^26.6.4",
+		"fast-xml-parser": "^5.11.2",
+		"jszip": "^3.10.2",
+		"pptx-viewer-core": "workspace:*",
+		"pptx-viewer-shared": "workspace:*"
+	}
+}

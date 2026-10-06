@@ -13,7 +13,7 @@ import { PresentationLoader } from './presentation-loader.svelte';
  */
 
 // Vitest runs with cwd = packages/svelte; the fixture lives at the repo root.
-const FIXTURE = resolve(process.cwd(), '../../e2e/fixtures/sample-deck.pptx');
+const FIXTURE = resolve(process.cwd(), '../../../../e2e/pptx/fixtures/sample-deck.pptx');
 
 function readFixture(): Uint8Array {
 	return new Uint8Array(readFileSync(FIXTURE));

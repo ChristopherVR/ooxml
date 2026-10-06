@@ -26,7 +26,9 @@
 		"e2e/visio",
 		"e2e/teams",
 		"demos/teams/*",
-		"viewers/pptx/demos/demo-*"
+		"demos/pptx",
+		"demos/pptx/demo-*",
+		"e2e/pptx"
 	],
 	"type": "module",
 	"scripts": {
