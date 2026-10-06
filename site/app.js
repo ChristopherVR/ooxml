@@ -297,12 +297,32 @@ tabstrip.addEventListener('click', (event) => {
 	if (main) commit(activateSuiteTab(state, /** @type {HTMLElement} */ (main).dataset.tab || null));
 });
 
-// Middle-click closes, as in a browser.
-tabstrip.addEventListener('auxclick', (event) => {
-	if (event.button !== 1) return;
+// Middle-click closes, as in a browser. Listen for mousedown and mouseup rather than auxclick (not
+// every browser fires it on a draggable element), and stop the press from starting autoscroll.
+/** @type {string} */
+let middleDown = '';
+
+/** @param {Event} event */
+function tabIdAt(event) {
 	const tab = /** @type {HTMLElement} */ (event.target).closest('[data-id]');
-	const id = /** @type {HTMLElement | null} */ (tab)?.dataset.id ?? '';
-	if (id && !state.tabs.find((t) => t.id === id)?.pinned) commit(closeSuiteTab(state, id));
+	return /** @type {HTMLElement | null} */ (tab)?.dataset.id ?? '';
+}
+
+tabstrip.addEventListener('mousedown', (event) => {
+	if (event.button !== 1) return;
+	event.preventDefault();
+	middleDown = tabIdAt(event);
+});
+
+tabstrip.addEventListener('mouseup', (event) => {
+	if (event.button !== 1) return;
+	const id = tabIdAt(event);
+	const pressed = middleDown;
+	middleDown = '';
+	// Only a press and release on the same tab closes it.
+	if (id && id === pressed && !state.tabs.find((t) => t.id === id)?.pinned) {
+		commit(closeSuiteTab(state, id));
+	}
 });
 
 tabstrip.addEventListener('keydown', (event) => {
