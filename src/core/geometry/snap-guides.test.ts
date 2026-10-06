@@ -1,10 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
-import { computeSnap, computeSnapToShape, snapBox, snapToGridStep, snapValue } from './snap-guides';
-import type { SnapBox, SnapGuide, SnapResult } from './snap-guides';
+import {
+	computeSnap,
+	computeSnapToShape,
+	snapBox,
+	snapToGridStep,
+	snapValue,
+} from './snap-guides.js';
+import type { SnapBox, SnapGuide, SnapResult } from './snap-guides.js';
 
 // ---------------------------------------------------------------------------
-// computeSnapToShape (React / Vue model) — siblings + guides → snap lines
+// computeSnapToShape (React / Vue model) - siblings + guides → snap lines
 // ---------------------------------------------------------------------------
 
 describe('computeSnapToShape', () => {
@@ -55,7 +61,7 @@ describe('computeSnapToShape', () => {
 });
 
 // ---------------------------------------------------------------------------
-// computeSnap (Angular model) — closest-per-axis span guides
+// computeSnap (Angular model) - closest-per-axis span guides
 // ---------------------------------------------------------------------------
 
 function box(x: number, y: number, w: number, h: number): SnapBox {
