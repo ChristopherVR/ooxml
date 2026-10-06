@@ -35,6 +35,7 @@ export const galleryTranslationsEn: Record<string, string> = {
 	'pptx.gallery.smartArtStyles.title': 'SmartArt Styles',
 	'pptx.gallery.smartArtColors.title': 'Change Colors',
 	'pptx.gallery.smartArtLayouts.title': 'Layouts',
+	'pptx.gallery.smartArtLayouts.named': '{{name}}',
 	'pptx.gallery.smartArtCommand.addShape': 'Add Shape',
 	'pptx.gallery.smartArtCommand.addBullet': 'Add Bullet',
 	'pptx.gallery.smartArtCommand.textPane': 'Text Pane',

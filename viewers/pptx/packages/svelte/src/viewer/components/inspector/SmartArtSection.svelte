@@ -13,7 +13,6 @@
 		reorderSmartArtNode,
 		setSmartArtNodeStyle,
 		SWITCHABLE_LAYOUT_TYPES,
-		switchSmartArtLayout,
 		updateSmartArtNodeText,
 	} from 'pptx-viewer-core';
 	import {
@@ -27,7 +26,8 @@
 		schemaLabel,
 		SMARTART_COLOR_SCHEME_LABEL_KEYS,
 		SMARTART_STYLE_LABEL_KEYS,
-	} from 'pptx-viewer-shared';
+		switchSmartArtLayoutData,
+} from 'pptx-viewer-shared';
 	import { tick } from 'svelte';
 
 	import { useTranslator } from '../../../i18n/context';
@@ -60,7 +60,7 @@
 
 	function setLayout(layout: SmartArtLayoutType): void {
 		if (data && layout !== data.resolvedLayoutType) {
-			applyData(switchSmartArtLayout(data, layout));
+			applyData(switchSmartArtLayoutData(data, layout));
 		}
 	}
 

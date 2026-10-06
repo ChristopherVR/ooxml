@@ -35,9 +35,9 @@ import {
 	promoteSmartArtNode,
 	removeSmartArtNode,
 	reorderSmartArtNode,
-	switchSmartArtLayout,
 	updateSmartArtNodeText,
 } from './editor-insert';
+import { switchSmartArtLayoutData } from '../internal/shared';
 
 // ── Option constants (mirror the React panel) ───────────────────────────────
 
@@ -171,5 +171,5 @@ export function setLayout(data: PptxSmartArtData, layout: SmartArtLayoutType): P
 	if (currentLayout(data) === layout) {
 		return data;
 	}
-	return switchSmartArtLayout(data, layout);
+	return switchSmartArtLayoutData(data, layout);
 }

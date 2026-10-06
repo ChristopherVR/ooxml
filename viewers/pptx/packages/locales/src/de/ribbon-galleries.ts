@@ -15,6 +15,7 @@ export const translations: Record<string, string> = {
 	'pptx.ribbon.groupLayouts': 'Layouts',
 	'pptx.ribbon.groupReset': 'Zurücksetzen',
 	'pptx.gallery.smartArtLayouts.title': 'Layouts',
+	'pptx.gallery.smartArtLayouts.named': '{{name}}',
 	'pptx.gallery.smartArtCommand.addShape': 'Form hinzufügen',
 	'pptx.gallery.smartArtCommand.addBullet': 'Aufzählungszeichen hinzufügen',
 	'pptx.gallery.smartArtCommand.textPane': 'Textbereich',

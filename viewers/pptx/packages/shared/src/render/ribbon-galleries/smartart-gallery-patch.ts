@@ -22,6 +22,7 @@ import type {
 	SmartArtStyle,
 } from 'pptx-viewer-core';
 
+import { builtinLayoutPatch, smartArtBuiltinLayouts } from '../smartart-builtin-layouts';
 import { resolvePalette } from '../smartart-drawing';
 import { rebuildDrawingShapesIfCleared } from '../smartart-reflow-to-shapes';
 
@@ -65,16 +66,39 @@ export function smartArtLayoutSwitchPatch(
 	layout: SmartArtLayoutType,
 ): Partial<PptxSmartArtData> {
 	const updated = switchSmartArtLayout(data, layout);
+	// A bare category used to leave no layout definition, so a coarse family renderer drew the
+	// diagram. Apply the family's own built-in layout so the real DiagramML engine lays it out.
+	const defaultId = smartArtBuiltinLayouts()?.defaultBuiltinSmartArtLayoutId(layout);
+	const builtin = defaultId ? builtinLayoutPatch(data, defaultId) : undefined;
+	if (builtin) {
+		return { ...builtin, resolvedLayoutType: layout, layoutType: layout };
+	}
 	return {
 		layoutType: updated.layoutType,
 		resolvedLayoutType: updated.resolvedLayoutType,
 		layout: updated.layout,
 		layoutDefinition: updated.layoutDefinition,
+		builtinLayoutId: updated.builtinLayoutId,
 		presLayoutVars: updated.presLayoutVars,
 		layoutDirty: updated.layoutDirty,
 		drawingDirty: updated.drawingDirty,
 		drawingShapes: updated.drawingShapes,
 	};
+}
+
+/**
+ * `data` switched to layout `layout`: {@link smartArtLayoutSwitchPatch} merged onto it. For a
+ * binding that applies whole data rather than a patch; every binding's layout switcher uses it so
+ * all of them lay the diagram out with the family's built-in layout.
+ */
+export function switchSmartArtLayoutData(
+	data: PptxSmartArtData,
+	layout: SmartArtLayoutType,
+): PptxSmartArtData {
+	if ((data.resolvedLayoutType ?? 'list') === layout) {
+		return data;
+	}
+	return { ...data, ...smartArtLayoutSwitchPatch(data, layout) };
 }
 
 /** The element patch for a SmartArt style / colour change, or null for a non-SmartArt. */
@@ -157,3 +181,11 @@ export const SMARTART_STYLE_ENTRIES: readonly SmartArtStyleEntry[] = [
 	},
 	{ id: 'intense', name: 'Intense Effect', labelKey: 'pptx.gallery.smartArtStyles.intenseEffect' },
 ];
+
+/** The patch that applies built-in layout `layoutId`, or `undefined` while the library loads. */
+export function smartArtBuiltinLayoutPatch(
+	data: PptxSmartArtData,
+	layoutId: string,
+): Partial<PptxSmartArtData> | undefined {
+	return builtinLayoutPatch(data, layoutId);
+}

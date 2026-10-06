@@ -55,6 +55,10 @@ export default defineConfig({
 				replacement: resolve(__dirname, '../core/src/ui/index.ts'),
 			},
 			{
+				find: 'pptx-viewer-core/smartart-layouts',
+				replacement: resolve(__dirname, '../core/src/smartart-layouts/index.ts'),
+			},
+			{
 				find: 'pptx-viewer-core/math',
 				replacement: resolve(__dirname, '../core/src/math/index.ts'),
 			},

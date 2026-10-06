@@ -9,12 +9,73 @@
 import { SWITCHABLE_LAYOUT_TYPES } from 'pptx-viewer-core';
 
 import { SMARTART_LAYOUT_LABEL_KEYS } from '../schema-label-keys';
+import { smartArtBuiltinLayouts } from '../smartart-builtin-layouts';
 import type { RibbonGalleryModule } from './gallery-module';
 import { galleryColorScheme } from './gallery-theme';
-import { smartArtElementPatch, smartArtLayoutSwitchPatch } from './smartart-gallery-patch';
+import type { RibbonGallerySection } from './gallery-types';
+import {
+	smartArtBuiltinLayoutPatch,
+	smartArtElementPatch,
+	smartArtLayoutSwitchPatch,
+} from './smartart-gallery-patch';
 import { smartArtLayoutTileSvg } from './smartart-layout-tiles';
 
 const TILE = { width: 56, height: 36 };
+/** PowerPoint's gallery order for the built-in layouts' categories, with English headings. */
+const NAMED_CATEGORIES: ReadonlyArray<readonly [string, string]> = [
+	['list', 'List'],
+	['process', 'Process'],
+	['cycle', 'Cycle'],
+	['hierarchy', 'Hierarchy'],
+	['relationship', 'Relationship'],
+	['matrix', 'Matrix'],
+	['pyramid', 'Pyramid'],
+	['picture', 'Picture'],
+	['timeline', 'Timeline'],
+	['textcard', 'Text Card'],
+	['meettheteam', 'Meet the Team'],
+];
+
+/**
+ * One section per category with PowerPoint's own built-in layouts, once the library has loaded.
+ * A tile previews its category's diagram (the real layout is only drawn when applied).
+ */
+function namedLayoutSections(
+	accent1: string | undefined,
+	currentId: string | undefined,
+): RibbonGallerySection[] {
+	const library = smartArtBuiltinLayouts();
+	if (!library) {
+		return [];
+	}
+	const entries = library.listBuiltinSmartArtLayouts();
+	return NAMED_CATEGORIES.flatMap(([category, heading]) => {
+		const items = entries
+			.filter((entry) => entry.category === category)
+			.map((entry) => ({
+				id: entry.id,
+				labelKey: 'pptx.gallery.smartArtLayouts.named',
+				labelParams: { name: entry.title },
+				label: entry.title,
+				previewSvg: smartArtLayoutTileSvg(category, accent1, TILE),
+				applied: currentId === entry.id,
+			}));
+		return items.length === 0
+			? []
+			: [
+					{
+						id: `named-${category}`,
+						titleKey: SMARTART_LAYOUT_LABEL_KEYS[category],
+						title: heading,
+						columns: 5,
+						tileWidth: TILE.width,
+						tileHeight: TILE.height,
+						items,
+					},
+				];
+	});
+}
+
 const humanize = (id: string): string => id.replace(/^./u, (c) => c.toUpperCase());
 
 export const SMARTART_LAYOUTS_GALLERY: RibbonGalleryModule = {
@@ -42,14 +103,21 @@ export const SMARTART_LAYOUTS_GALLERY: RibbonGalleryModule = {
 						applied: current === type,
 					})),
 				},
+				...namedLayoutSections(accent1, data?.layoutDefinition?.uniqueId),
 			],
 		};
 	},
 	apply(itemId, ctx) {
 		const element = ctx.element;
-		const type = SWITCHABLE_LAYOUT_TYPES.find((candidate) => candidate === itemId);
-		if (!type || element?.type !== 'smartArt' || !element.smartArtData) {
+		if (element?.type !== 'smartArt' || !element.smartArtData) {
 			return null;
+		}
+		const type = SWITCHABLE_LAYOUT_TYPES.find((candidate) => candidate === itemId);
+		if (!type) {
+			// A named built-in layout: its own definition replaces the current one.
+			const named = smartArtBuiltinLayoutPatch(element.smartArtData, itemId);
+			const patch = named ? smartArtElementPatch(element, named) : null;
+			return patch ? { kind: 'element', ...patch } : null;
 		}
 		if ((element.smartArtData.resolvedLayoutType ?? 'list') === type) {
 			return null;

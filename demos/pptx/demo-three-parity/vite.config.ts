@@ -26,6 +26,10 @@ export default defineConfig({
 			},
 			{ find: 'pptx-viewer-core/color', replacement: pkg('core', 'src', 'color', 'index.ts') },
 			{ find: 'pptx-viewer-core/ui', replacement: pkg('core', 'src', 'ui', 'index.ts') },
+			{
+				find: 'pptx-viewer-core/smartart-layouts',
+				replacement: pkg('core', 'src', 'smartart-layouts', 'index.ts'),
+			},
 			{ find: 'pptx-viewer-core/math', replacement: pkg('core', 'src', 'math', 'index.ts') },
 			{ find: 'pptx-viewer-core', replacement: pkg('core', 'src', 'index.ts') },
 			{ find: 'pptx-viewer-shared/i18n', replacement: pkg('shared', 'src', 'i18n', 'index.ts') },

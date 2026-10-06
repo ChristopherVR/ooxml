@@ -96,6 +96,11 @@
 			"types": "./dist/ui/index.d.ts",
 			"import": "./dist/ui/index.mjs",
 			"require": "./dist/ui/index.js"
+		},
+		"./smartart-layouts": {
+			"types": "./dist/smartart-layouts/index.d.ts",
+			"import": "./dist/smartart-layouts/index.mjs",
+			"require": "./dist/smartart-layouts/index.js"
 		}
 	},
 	"scripts": {

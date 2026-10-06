@@ -22,7 +22,6 @@ import {
 	promoteSmartArtNode,
 	demoteSmartArtNode,
 	isImageLikeElement,
-	switchSmartArtLayout,
 	setSmartArtNodeStyle,
 	updateSmartArtNodeText,
 } from 'pptx-viewer-core';
@@ -45,6 +44,7 @@ import {
 	textWrapPatch,
 	updateGradientStopPatch,
 	vAlignPatch,
+	switchSmartArtLayoutData,
 } from 'pptx-viewer-shared';
 import type { GradientState, InlineTextSelection, TextAdvancedChanges } from 'pptx-viewer-shared';
 
@@ -334,7 +334,7 @@ export function createInspectorActions(applyToSelected: ApplyToSelected): Inspec
 			),
 		replaceSmartArtData: (data) => applyToSelected((el) => smartArtPatch(el, () => data)),
 		setSmartArtLayout: (layout) =>
-			applyToSelected((el) => smartArtPatch(el, (data) => switchSmartArtLayout(data, layout))),
+			applyToSelected((el) => smartArtPatch(el, (data) => switchSmartArtLayoutData(data, layout))),
 		setSmartArtColorScheme: (scheme) =>
 			applyToSelected((el) => smartArtPatch(el, (data) => ({ ...data, colorScheme: scheme }))),
 	};
