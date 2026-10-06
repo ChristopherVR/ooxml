@@ -3,10 +3,6 @@
 		{
 			"name": "ooxml",
 			"dir": "ooxml-core"
-		},
-		{
-			"name": "pptx-viewer",
-			"dir": "pptx-viewer"
 		}
 	]
 }

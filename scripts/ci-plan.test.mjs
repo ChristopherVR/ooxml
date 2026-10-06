@@ -5,7 +5,6 @@ import { test } from 'node:test';
 
 import { CONSUMERS, VIEWERS, consumersOfArea, plan, shardsFor, viewersOfArea } from './ci-plan.mjs';
 
-const names = (result) => result.consumers.map((consumer) => consumer.name);
 const viewers = (result) => result.viewers.map((viewer) => viewer.name);
 const ALL_VIEWERS = Object.keys(VIEWERS);
 
@@ -29,12 +28,18 @@ test('a docx change tests the changed files, typechecks and checks only the docx
 	assert.deepEqual(result.consumers, []);
 });
 
-test('a pptx-only change skips the strict typecheck and checks only the external pptx viewer', () => {
+test('a pptx-only change skips the strict typecheck and checks only the pptx viewer', () => {
 	const result = plan(['src/core/pptx/converter/index.ts'], { testFiles: 5 });
 	assert.equal(result.typecheck.strict, false);
 	assert.equal(result.typecheck.pptx, true);
-	assert.deepEqual(names(result), ['pptx-viewer']);
-	assert.deepEqual(result.viewers, []);
+	assert.deepEqual(viewers(result), ['pptx']);
+	assert.deepEqual(result.consumers, []);
+});
+
+test('a change inside viewers/pptx checks the pptx viewer', () => {
+	const result = plan(['viewers/pptx/packages/react/src/index.ts'], { testFiles: 0 });
+	assert.deepEqual(viewers(result), ['pptx']);
+	assert.equal(result.viewers[0].dir, 'viewers/pptx');
 });
 
 test('a shared area can break every viewer', () => {
@@ -133,9 +138,9 @@ test('shards grow with the number of test files, to a cap of six', () => {
 
 test('only format areas narrow the viewers to check', () => {
 	assert.deepEqual(viewersOfArea('xlsx'), ['xlsx']);
-	assert.deepEqual(viewersOfArea('pptx'), []);
+	assert.deepEqual(viewersOfArea('pptx'), ['pptx']);
 	assert.deepEqual(viewersOfArea('collab'), ALL_VIEWERS);
 	assert.deepEqual(consumersOfArea('xlsx'), []);
-	assert.deepEqual(consumersOfArea('pptx'), ['pptx']);
+	assert.deepEqual(consumersOfArea('pptx'), []);
 	assert.equal(consumersOfArea('collab').length, Object.keys(CONSUMERS).length);
 });

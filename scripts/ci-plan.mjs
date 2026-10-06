@@ -29,6 +29,19 @@ const STANDALONE_MCP =
  * CI each viewer had when it was a repository of its own.
  */
 export const VIEWERS = {
+	pptx: {
+		name: 'pptx',
+		dir: 'viewers/pptx',
+		// The bindings inline core, shared and locales, so build before types and tests. Its
+		// `test:scripts` stays out: those scripts ran the CI and releases of its own repository.
+		verify: [
+			'bun run build:packages',
+			'bun run typecheck',
+			'bun run test',
+			'bun run e2e:contract',
+			'bun run test:binding-packages',
+		],
+	},
 	docx: {
 		name: 'docx',
 		dir: 'viewers/docx',
@@ -91,19 +104,12 @@ export const VIEWERS = {
 };
 const ALL_VIEWERS = Object.keys(VIEWERS);
 
-/** The viewer repositories that still consume this one, and how each is verified against a local link. */
-export const CONSUMERS = {
-	pptx: {
-		name: 'pptx-viewer',
-		repo: 'ChristopherVR/pptx-viewer',
-		install: 'bun install',
-		// The shared package holds the pptx-ui-* subclasses of the ooxml-ui elements: the contract
-		// that broke first every time an element changed. The core package is built first because shared
-		// imports its dist. The full suite is the viewer's own CI.
-		verify:
-			'cd packages/core && bun run build && cd ../shared && bunx vitest run src/web-components',
-	},
-};
+/**
+ * The viewer repositories that still consume this one, and how each is verified against a local
+ * link (`{ name, repo, install, verify }`). None today: pptx-viewer, the last one, moved into
+ * `viewers/pptx`. The `consumers` job stays for the next external consumer.
+ */
+export const CONSUMERS = {};
 const ALL_CONSUMERS = Object.keys(CONSUMERS);
 
 /** Files whose change can affect everything: dependencies, compiler and test configuration, CI. */
@@ -119,14 +125,14 @@ const VIEWER_INERT = /^viewers\/[^/]+\/([^/]+\.md|LICENSE|NOTICE|\.gitignore|\.g
  */
 const viewerOfFile = (file) => /^(?:viewers|demos|e2e)\/([^/]+)\//.exec(file)?.[1];
 
-/** The area a format owns: only its own viewer (and, for pptx, the external consumer) can break. */
-const AREA_CONSUMERS = { docx: [], xlsx: [], visio: [], teams: [], pptx: ['pptx'] };
+/** The area a format owns: only its own viewer can break. */
+const AREA_CONSUMERS = { docx: [], xlsx: [], visio: [], teams: [], pptx: [] };
 const AREA_VIEWERS = {
 	docx: ['docx'],
 	xlsx: ['xlsx'],
 	visio: ['visio'],
 	teams: ['teams'],
-	pptx: [],
+	pptx: ['pptx'],
 };
 
 /** Which external viewers a change under `src/core/<area>/` can break. Shared areas can break all of them. */

@@ -231,7 +231,8 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
-  # The viewers that are still their own repository (pptx-viewer), linked to this change: the
+  # The viewers that are still their own repository (none today; see CONSUMERS in ci-plan.mjs),
+  # linked to this change: the
   # contract the shared elements and the format logic have to keep. It reports failures on the run
   # but is not part of `ci-success`: a viewer that is red for its own reasons must not block this
   # repository.
