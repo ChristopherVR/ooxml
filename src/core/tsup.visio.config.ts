@@ -2,7 +2,7 @@ import { defineConfig } from 'tsup';
 
 /** Fast local build for the format's consumer, independent of the PowerPoint bundle. */
 export default defineConfig({
-	entry: { 'visio/index': 'src/core/visio/index.ts' },
+	entry: { 'visio/index': 'visio/index.ts' },
 	outDir: 'dist',
 	tsconfig: 'tsconfig.build.json',
 	format: ['esm', 'cjs'],

@@ -106,7 +106,7 @@ const ALL_CONSUMERS = Object.keys(CONSUMERS);
 
 /** Files whose change can affect everything: dependencies, compiler and test configuration, CI. */
 const EVERYTHING =
-	/^(package\.json|bun\.lockb?|tsconfig[^/]*\.json|vitest\.[^/]+|\.oxfmtrc\.json|\.github\/workflows\/ci\.yml|scripts\/ci-plan\.(mjs|test\.mjs))$/;
+	/^(package\.json|bun\.lockb?|\.oxfmtrc\.json|\.github\/workflows\/ci\.yml|scripts\/ci-plan\.(mjs|test\.mjs)|src\/core\/(package\.json|tsconfig[^/]*\.json|vitest\.[^/]+|tsup[^/]*\.ts|tsdown[^/]*\.ts))$/;
 /** Files that change nothing CI checks. */
 const INERT = /^(docs\/|[^/]+\.md$|LICENSE|NOTICE|\.gitignore|\.gitattributes|\.claude\/|memory\/)/;
 /** Top-level files of a viewer that change nothing CI checks (its docs are checked by its own tests). */
@@ -219,6 +219,7 @@ export function changedSince(base) {
 
 function countTestFiles(base) {
 	const out = execFileSync('bunx', ['vitest', 'list', '--changed', base, '--filesOnly'], {
+		cwd: 'src/core',
 		encoding: 'utf8',
 		shell: process.platform === 'win32',
 	});

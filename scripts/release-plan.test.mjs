@@ -23,7 +23,7 @@ after(() => roots.forEach((r) => rmSync(r, { recursive: true, force: true })));
 const json = (data) => `${JSON.stringify(data, null, '\t')}\n`;
 
 /**
- * A throwaway repository shaped like this one: core at the root (0.1.0), ooxml-ui at src/ui
+ * A throwaway repository shaped like this one: core at src/core (0.1.0), ooxml-ui at src/ui
  * (0.1.0, `workspace:*` on core). `tagged` lists the packages whose baseline tag is set.
  */
 function repo({ ui = true, tagged = ['core', 'ui'], uiRange = 'workspace:*' } = {}) {
@@ -51,7 +51,7 @@ function repo({ ui = true, tagged = ['core', 'ui'], uiRange = 'workspace:*' } = 
 		git('config', k, v);
 	}
 	const files = {
-		'package.json': json({ name: CORE, version: '0.1.0', scripts: { build: 'x' } }),
+		'src/core/package.json': json({ name: CORE, version: '0.1.0', scripts: { build: 'x' } }),
 		...touch('src/core/index.ts'),
 	};
 	if (ui) {
@@ -79,7 +79,7 @@ test('core is ordered before ui and a tagged HEAD releases nothing', () => {
 	assert.equal(p.anyChanged, false);
 	assert.equal(p.packages.ui.dir, 'src/ui');
 	assert.equal(p.packages.ui.changelog, 'src/ui/CHANGELOG.md');
-	assert.equal(p.packages.core.changelog, 'CHANGELOG.md');
+	assert.equal(p.packages.core.changelog, 'src/core/CHANGELOG.md');
 	assert.deepEqual(p.packages.ui.dependsOn, ['core']);
 });
 
@@ -106,7 +106,7 @@ test('a core minor at 0.x leaves the ui caret range, so ui is re-released (patch
 test('a core minor at >=1.0 stays inside ^1.x, so ui is not forced to release', () => {
 	const r = repo();
 	r.commit('chore: 1.0', {
-		'package.json': json({ name: CORE, version: '1.0.0' }),
+		'src/core/package.json': json({ name: CORE, version: '1.0.0' }),
 		'src/ui/package.json': json({
 			name: UI,
 			version: '1.0.0',
@@ -124,7 +124,7 @@ test('a core minor at >=1.0 stays inside ^1.x, so ui is not forced to release', 
 test('a core major forces a ui release', () => {
 	const r = repo();
 	r.commit('chore: 1.0', {
-		'package.json': json({ name: CORE, version: '1.0.0' }),
+		'src/core/package.json': json({ name: CORE, version: '1.0.0' }),
 		'src/ui/package.json': json({
 			name: UI,
 			version: '1.0.0',
@@ -224,9 +224,9 @@ test('tests, changelogs, docs and workspace wiring release nothing', () => {
 		'CHANGELOG.md': '# Changelog\n',
 		'docs/releasing.md': 'x\n',
 	});
-	const manifest = JSON.parse(readFileSync(join(r.root, 'package.json'), 'utf8'));
+	const manifest = JSON.parse(readFileSync(join(r.root, 'src/core/package.json'), 'utf8'));
 	r.commit('build: declare the workspace', {
-		'package.json': json({ ...manifest, workspaces: ['packages/*'], scripts: { y: 'z' } }),
+		'src/core/package.json': json({ ...manifest, workspaces: ['packages/*'], scripts: { y: 'z' } }),
 	});
 	const ui = JSON.parse(readFileSync(join(r.root, 'src/ui/package.json'), 'utf8'));
 	r.commit('chore(ui): reorder the manifest', {
@@ -253,7 +253,7 @@ test('applyPlan stamps versions and keeps workspace ranges for Bun', () => {
 	const p = r.plan(bothPublished);
 	applyPlan({ root: r.root, packages: PACKAGES }, p);
 	const read = (file) => JSON.parse(readFileSync(join(r.root, file), 'utf8'));
-	assert.equal(read('package.json').version, '0.2.0');
+	assert.equal(read('src/core/package.json').version, '0.2.0');
 	assert.equal(read('src/ui/package.json').version, '0.1.1');
 	assert.deepEqual(read('src/ui/package.json').dependencies, { [CORE]: 'workspace:*' });
 });

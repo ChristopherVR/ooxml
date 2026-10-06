@@ -13,6 +13,14 @@
 		"declaration": true,
 		"types": ["node", "vitest/globals"]
 	},
-	"include": ["src/core/**/*.ts"],
-	"exclude": ["**/dist/**", "**/node_modules/**", "src/core/pptx/**"]
+	"include": ["**/*.ts"],
+	"exclude": [
+		"**/dist/**",
+		"**/node_modules/**",
+		"pptx/**",
+		"scripts/**",
+		"tsup*.config.ts",
+		"tsdown*.config.ts",
+		"vitest.config.ts"
+	]
 }

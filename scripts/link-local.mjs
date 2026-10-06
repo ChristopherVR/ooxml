@@ -16,7 +16,7 @@ import { fileURLToPath } from 'node:url';
 
 const SECTIONS = ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies'];
 const here = resolve(fileURLToPath(import.meta.url), '..', '..');
-export const TARGETS = { 'ooxml-core': '.', 'ooxml-ui': 'src/ui' };
+export const TARGETS = { 'ooxml-core': 'src/core', 'ooxml-ui': 'src/ui' };
 export const BACKUP = '.ooxml-link.json';
 
 /** Rewrites the known packages to `file:` paths; returns the manifest and what to restore. */
@@ -64,7 +64,7 @@ function pointUiAtThisCheckout() {
 	if (!existsSync(modules)) return;
 	const link = resolve(modules, 'ooxml-core');
 	rmSync(link, { recursive: true, force: true });
-	symlinkSync(here, link, 'junction');
+	symlinkSync(resolve(here, 'src/core'), link, 'junction');
 }
 
 function main() {
@@ -87,7 +87,7 @@ function main() {
 	}
 	if (existsSync(backupPath)) throw new Error(`${BACKUP} exists: already linked (use --restore)`);
 	if (!args.includes('--no-build'))
-		for (const cwd of [here, resolve(here, 'src/ui')])
+		for (const cwd of [resolve(here, 'src/core'), resolve(here, 'src/ui')])
 			execFileSync('bun', ['run', 'build'], {
 				cwd,
 				stdio: 'inherit',

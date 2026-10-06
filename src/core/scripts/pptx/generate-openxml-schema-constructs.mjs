@@ -1,7 +1,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
-const [strictDir, transitionalDir, outputDir = 'src/core/pptx/core/openxml'] = process.argv.slice(2);
+const [strictDir, transitionalDir, outputDir = 'pptx/core/openxml'] = process.argv.slice(2);
 if (!strictDir || !transitionalDir) {
 	throw new Error(
 		'Usage: bun generate-openxml-schema-constructs.mjs <strict-dir> <transitional-dir> [output-dir]',

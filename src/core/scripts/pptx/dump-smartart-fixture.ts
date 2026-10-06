@@ -9,16 +9,16 @@ import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { PptxHandler } from '../../src/core/pptx/core/PptxHandler';
-import type { PptxElement, SmartArtPptxElement } from '../../src/core/pptx/core/types/elements';
-import { decomposeSmartArt } from '../../src/core/pptx/core/utils';
-import { runSmartArtEngine } from '../../src/core/pptx/core/utils/smartart-engine/engine';
-import type { EngineNode } from '../../src/core/pptx/core/utils/smartart-engine/engine-node';
-import { runEngineLayout } from '../../src/core/pptx/core/utils/smartart-engine/engine-to-result';
-import { interpretedLayoutToElements } from '../../src/core/pptx/core/utils/smartart-interpreter-drawing-bridge';
+import { PptxHandler } from '../../pptx/core/PptxHandler';
+import type { PptxElement, SmartArtPptxElement } from '../../pptx/core/types/elements';
+import { decomposeSmartArt } from '../../pptx/core/utils';
+import { runSmartArtEngine } from '../../pptx/core/utils/smartart-engine/engine';
+import type { EngineNode } from '../../pptx/core/utils/smartart-engine/engine-node';
+import { runEngineLayout } from '../../pptx/core/utils/smartart-engine/engine-to-result';
+import { interpretedLayoutToElements } from '../../pptx/core/utils/smartart-interpreter-drawing-bridge';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const GALLERY_DIR = path.resolve(HERE, '../../src/core/pptx/__tests__/fixtures/smartart-gallery');
+const GALLERY_DIR = path.resolve(HERE, '../../pptx/__tests__/fixtures/smartart-gallery');
 const PT = 0.75;
 
 type ShapeEl = Extract<PptxElement, { type: 'shape' }>;

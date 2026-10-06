@@ -1,7 +1,7 @@
 {
 	"extends": "./tsconfig.json",
 	"compilerOptions": {
-		"rootDir": "src/core",
+		"rootDir": ".",
 		"outDir": "dist",
 		"noEmit": false,
 		"emitDeclarationOnly": true,
@@ -10,12 +10,17 @@
 		"sourceMap": true,
 		"types": ["node"]
 	},
-	"include": ["src/core/**/*.ts"],
+	"include": ["**/*.ts"],
 	"exclude": [
-		"src/core/**/*.test.ts",
-		"src/core/visio/*-fixtures.ts",
-		"src/core/xlsx/**/*-fixtures.ts",
-		"src/core/pptx",
+		"**/*.test.ts",
+		"visio/*-fixtures.ts",
+		"xlsx/**/*-fixtures.ts",
+		"pptx",
+		"scripts",
+		"tsup*.config.ts",
+		"tsdown*.config.ts",
+		"vitest.config.ts",
+		"node_modules",
 		"dist"
 	]
 }

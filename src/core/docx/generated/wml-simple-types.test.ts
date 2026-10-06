@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { generate, OUTPUT_PATH, schemaFingerprint } from '../../../../scripts/gen-schema-types.js';
+import { generate, OUTPUT_PATH, schemaFingerprint } from '../../scripts/gen-schema-types.js';
 import { isStJc, isStJcTable, isStRelFromV, ST_Jc, ST_RelFromH } from './wml-simple-types.js';
 
 describe('generated schema simple types', () => {

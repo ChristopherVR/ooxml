@@ -130,11 +130,11 @@ function referenceTypes(text) {
 
 export function checkCoreUiBoundary(root = ROOT) {
 	const problems = [];
-	const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
+	const manifest = JSON.parse(readFileSync(join(root, 'src', 'core', 'package.json'), 'utf8'));
 	for (const field of DEPENDENCY_FIELDS) {
 		for (const [name, version] of Object.entries(manifest[field] ?? {})) {
 			if (isUi(name) || /^npm:ooxml-ui(?:@|\/|$)/.test(String(version))) {
-				problems.push(`package.json: ${field}.${name} depends on ooxml-ui`);
+				problems.push(`src/core/package.json: ${field}.${name} depends on ooxml-ui`);
 			}
 		}
 	}

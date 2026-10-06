@@ -24,12 +24,12 @@ import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { PptxHandler } from '../../src/core/pptx/core/PptxHandler';
-import type { PptxElement, SmartArtPptxElement } from '../../src/core/pptx/core/types/elements';
-import { computeSmartArtElementsWithoutCache, decomposeSmartArt } from '../../src/core/pptx/core/utils';
+import { PptxHandler } from '../../pptx/core/PptxHandler';
+import type { PptxElement, SmartArtPptxElement } from '../../pptx/core/types/elements';
+import { computeSmartArtElementsWithoutCache, decomposeSmartArt } from '../../pptx/core/utils';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const GALLERY_DIR = path.resolve(HERE, '../../src/core/pptx/__tests__/fixtures/smartart-gallery');
+const GALLERY_DIR = path.resolve(HERE, '../../pptx/__tests__/fixtures/smartart-gallery');
 
 interface ManifestEntry {
 	file: string;

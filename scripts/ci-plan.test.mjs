@@ -98,9 +98,10 @@ test('dependency, compiler and CI configuration runs everything', () => {
 	for (const file of [
 		'package.json',
 		'bun.lock',
-		'tsconfig.json',
+		'src/core/package.json',
+		'src/core/tsconfig.json',
 		'.github/workflows/ci.yml',
-		'vitest.config.ts',
+		'src/core/vitest.config.ts',
 	]) {
 		const result = plan([file]);
 		assert.equal(result.full, true, file);

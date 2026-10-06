@@ -23,9 +23,9 @@ import { mkdir, rm, stat, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { PptxHandler } from '../../src/core/pptx/core/PptxHandler';
-import type { PptxElement } from '../../src/core/pptx/core/types/elements';
-import type { PptxData, PptxSlide } from '../../src/core/pptx/core/types/presentation';
+import { PptxHandler } from '../../pptx/core/PptxHandler';
+import type { PptxElement } from '../../pptx/core/types/elements';
+import type { PptxData, PptxSlide } from '../../pptx/core/types/presentation';
 
 // ---------------------------------------------------------------------------
 // CLI args

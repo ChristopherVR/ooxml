@@ -35,7 +35,7 @@ const JSZip = require('jszip');
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OUT_PATH = path.resolve(
 	__dirname,
-	'../../src/core/pptx/__tests__/fixtures/embedded-assets-sample.pptx',
+	'../../pptx/__tests__/fixtures/embedded-assets-sample.pptx',
 );
 
 /** Number of embedded fonts to generate (non-GUID font1..fontN.fntdata). */

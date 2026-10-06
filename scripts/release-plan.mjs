@@ -42,11 +42,11 @@ import { VIEWER_PACKAGES } from './viewer-packages.mjs';
  * `paths` (optional) narrows what counts as a published file, for a package that is the repo
  * root: entries ending in `/` are directories, anything else a single file.
  *
- * Two packages live here. `core` is rooted at the repository root, so `paths` lists what reaches
- * its npm tarball or decides its contents: the sources, the bundler and declaration configs, the
- * manifest (see IGNORED_MANIFEST_FIELDS) and the licence files. Docs, CI, tests and the build
- * orchestration scripts (scripts/build.mjs, scripts/ensure-built.mjs) do not release anything.
- * `ui` is a Bun workspace at src/ui and depends on core; core never depends on it. A package
+ * Two packages live here. `core` is the ooxml-core library at src/core: everything under it reaches
+ * its npm tarball or decides its contents (the sources, the bundler and declaration configs, the
+ * manifest (see IGNORED_MANIFEST_FIELDS), its README and the licence files). Tests, docs and CI do
+ * not release anything (see `isPublishedFile`). `ui` is a Bun workspace at src/ui and depends on core;
+ * core never depends on it. A package
  * whose manifest does not exist yet is left out of the plan (see `presentPackages`).
  * The viewers imported under `viewers/` are listed in `viewer-packages.mjs`. Two more optional keys
  * serve them: `triggers` are other directories whose published files are inlined into the package
@@ -54,22 +54,10 @@ import { VIEWER_PACKAGES } from './viewer-packages.mjs';
  */
 export const PACKAGES = {
 	core: {
-		dir: '.',
+		dir: 'src/core',
 		npm: 'ooxml-core',
-		paths: [
-			'src/core/',
-			'scripts/pptx/merge-declarations.mjs',
-			'tsconfig.json',
-			'tsconfig.build.json',
-			'tsconfig.pptx.json',
-			'tsup.config.ts',
-			'tsup.pptx.config.ts',
-			'tsdown.pptx.config.ts',
-			'package.json',
-			'LICENSE',
-			'NOTICE',
-			'THIRD-PARTY-LICENSES',
-		],
+		// The manifest sat at the repository root at the releases before the move.
+		previousDirs: ['.'],
 	},
 	// previousDirs: where it lived at earlier releases, so a tag from before the move still resolves.
 	ui: { dir: 'src/ui', npm: 'ooxml-ui', previousDirs: ['packages/ui'] },

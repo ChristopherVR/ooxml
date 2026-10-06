@@ -1,7 +1,7 @@
 // Packs the built UI package AND the core package, installs both tarballs into a clean project
 // and imports every entry point the way a consumer would: once under plain Node (SSR: must import
 // and register as a no-op) and once inside a jsdom window (elements actually register).
-// Run after `bun run build` in the repository root and in src/ui.
+// Run after `bun run build` in src/core and in src/ui.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
@@ -10,7 +10,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const uiRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const coreRoot = path.resolve(uiRoot, '..', '..');
+const coreRoot = path.resolve(uiRoot, '..', 'core');
 const manifest = JSON.parse(await readFile(path.join(uiRoot, 'package.json'), 'utf8'));
 const work = await mkdtemp(path.join(tmpdir(), 'office-ui-smoke-'));
 const npmCli =

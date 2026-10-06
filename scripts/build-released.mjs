@@ -2,7 +2,7 @@
 /**
  * build-released.mjs: build (and optionally smoke-test) the workspace packages a release publishes.
  *
- * The root package (core) is built by `bun run build` / `bun run test:package` in the workflow;
+ * The core (src/core) is built by `bun run build` / `bun run test:package` in the workflow;
  * this script covers every other package of release-plan.json that is released in the plan:
  *
  *   - a package under `viewers/<name>` is built by its viewer, once per viewer: the viewer's
@@ -62,7 +62,8 @@ let uiBuilt = false;
 const builtViewers = new Set();
 for (const key of plan.order) {
 	const pkg = plan.packages[key];
-	if (pkg.dir === '.' || !(pkg.release || argv.includes('--all'))) continue;
+	// The core is built (and smoke-tested) by the workflow's own steps before this runs.
+	if (key === 'core' || !(pkg.release || argv.includes('--all'))) continue;
 	const viewer = viewerOf(pkg.dir);
 	if (key === 'ui') uiBuilt = true;
 	if (viewer) {

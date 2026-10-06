@@ -31,12 +31,12 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { createSaltlessModifyVerifierForTesting, PptxHandler } from '../../src/core/pptx/index.ts';
+import { createSaltlessModifyVerifierForTesting, PptxHandler } from '../../pptx/index.ts';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '../..');
-const coreFixtureDir = resolve(root, 'src/core/pptx/__tests__/fixtures');
-const e2eFixtureDir = resolve(root, 'src/core/pptx/__tests__/fixtures/e2e');
+const coreFixtureDir = resolve(root, 'pptx/__tests__/fixtures');
+const e2eFixtureDir = resolve(root, 'pptx/__tests__/fixtures/e2e');
 
 const PASSWORD = 'open sesame';
 const SPIN_COUNT = 100000;

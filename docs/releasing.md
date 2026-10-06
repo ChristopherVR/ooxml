@@ -25,7 +25,7 @@ A package whose `package.json` does not exist yet (the UI before it is merged) i
 
 Each package's baseline is the newest tag `<npm-name>@x.y.z` that is an ancestor of `HEAD` (`ooxml-core@0.1.0`, `ooxml-ui@0.1.0`). A tag on `HEAD` yields an empty diff, so an already released `HEAD` is a no-op. A package releases when one of **its published files** changed since its baseline:
 
-- core: `src/core/` except tests (`*.test.ts`, `__tests__/`, fixtures), `scripts/pptx/merge-declarations.mjs`, `tsconfig*.json`, `tsup*.config.ts`, `tsdown.pptx.config.ts`, `package.json`, `LICENSE`, `NOTICE`, `THIRD-PARTY-LICENSES`. Nothing under `src/ui/` or `viewers/` counts for core.
+- core: `src/core/` except tests (`*.test.ts`, `__tests__/`, fixtures), which includes its `package.json`, `tsconfig*.json`, `tsup*.config.ts`, `tsdown.pptx.config.ts`, its README and the licence files. Nothing under `src/ui/` or `viewers/` counts for core.
 - ui: everything under `src/ui/` except tests and its `CHANGELOG.md`, including its `package.json`.
 
 `package.json` changes are ignored when they only touch `version`, `scripts`, `devDependencies`, `workspaces` or the range on the other package. Docs, CI, tests, `README.md`, `CHANGELOG.md` and the build orchestration scripts never release anything, and neither does the release commit itself.
@@ -36,7 +36,7 @@ The level is the highest Conventional Commit level among the commits since that 
 
 ### How core releases affect ui
 
-The ui manifest declares `"ooxml-core": "*"` (the repository root is the core and cannot be a member of its own Bun workspace, so `workspace:*` cannot link; tsconfig paths point the UI at the core source in development). In the published tarball that becomes `^<core version in the repository at publish time>` (see below). A core release therefore does not force a ui release as long as the new core version still satisfies the range ui last shipped with:
+The ui manifest declares `"ooxml-core": "*"` (`src/core` is a Bun workspace member, so the workspace links it; tsconfig paths point the UI at the core source in development). In the published tarball that becomes `^<core version in the repository at publish time>` (see below). A core release therefore does not force a ui release as long as the new core version still satisfies the range ui last shipped with:
 
 | Core change                                 | Core release | ui release                                                              |
 | ------------------------------------------- | ------------ | ----------------------------------------------------------------------- |

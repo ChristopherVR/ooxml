@@ -141,7 +141,7 @@ jobs:
       - uses: actions/upload-artifact@v7
         with:
           name: core-dist
-          path: dist
+          path: src/core/dist
           retention-days: 1
 
   # The UI is typed and packed against the core's built output (`dist`), so it reuses the build job's.
@@ -155,7 +155,7 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           name: core-dist
-          path: dist
+          path: src/core/dist
       - run: bun run --cwd src/ui test
       - run: bun run --cwd src/ui build
       - run: bun run --cwd src/ui test:package
@@ -207,7 +207,7 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           name: core-dist
-          path: dist
+          path: src/core/dist
       - uses: actions/download-artifact@v8
         with:
           name: ui-dist
@@ -265,7 +265,7 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           name: core-dist
-          path: ooxml/dist
+          path: ooxml/src/core/dist
         continue-on-error: true
       - uses: actions/download-artifact@v8
         with:
@@ -274,7 +274,7 @@ jobs:
         continue-on-error: true
       - name: Build what this change did not
         run: |
-          [ -d ooxml/dist ] || (cd ooxml && bun run build)
+          [ -d ooxml/src/core/dist ] || (cd ooxml && bun run build)
           [ -d ooxml/src/ui/dist ] || (cd ooxml/src/ui && bun run build)
       - name: Link the viewer to this checkout
         run: node ooxml/scripts/link-local.mjs viewer --no-build

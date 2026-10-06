@@ -14,7 +14,7 @@ function fixture(t, files, manifest = {}) {
 	// The target is the unique temporary directory created above.
 	t.after(() => rmSync(root, { recursive: true, force: true }));
 	mkdirSync(join(root, 'src', 'core'), { recursive: true });
-	writeFileSync(join(root, 'package.json'), JSON.stringify(manifest));
+	writeFileSync(join(root, 'src', 'core', 'package.json'), JSON.stringify(manifest));
 	for (const [name, source] of Object.entries(files))
 		writeFileSync(join(root, 'src', 'core', name), source);
 	return root;
