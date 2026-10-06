@@ -221,7 +221,7 @@
 	},
 	"dependencies": {
 		"@xmldom/xmldom": "^0.9.12",
-		"emf-converter": "^4.8.19",
+		"emf-converter": "^4.8.18",
 		"fast-xml-parser": "^5.11.2",
 		"jszip": "^3.10.2",
 		"lib0": "^0.2.119",

@@ -42,7 +42,7 @@
 		"lint:fix": "oxlint --fix"
 	},
 	"dependencies": {
-		"emf-converter": "4.8.9",
+		"emf-converter": "4.8.18",
 		"ooxml-core": "*",
 		"ooxml-ui": "*"
 	},
