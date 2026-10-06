@@ -1,0 +1,69 @@
+name: Security
+
+# Alerts on risky changes before they merge and on a schedule afterwards. Findings appear on the
+# PR (dependency review) and in the repository's Security tab (CodeQL). Dependabot alerts and
+# security updates are repository settings, not a workflow.
+on:
+  pull_request:
+    paths:
+      - 'bun.lock'
+      - '**/package.json'
+      - '.github/workflows/**'
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'mcp/**'
+      - 'viewers/**'
+      - '.github/workflows/security.yml'
+  schedule:
+    - cron: '41 4 * * 1' # weekly: new advisories and new queries apply to unchanged code
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Fails a PR that adds a dependency with a known high-severity vulnerability, and comments a
+  # summary on the PR when it does.
+  dependency-review:
+    name: Dependency review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+          comment-summary-in-pr: on-failure
+
+  codeql:
+    name: CodeQL
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          queries: security-extended
+          # Fixtures, generated output and the vendored demos are not our code.
+          config: |
+            paths-ignore:
+              - '**/__fixtures__/**'
+              - '**/fixtures/**'
+              - '**/dist/**'
+              - 'node_modules/**'
+      - uses: github/codeql-action/analyze@v3
+        with:
+          category: /language:javascript-typescript

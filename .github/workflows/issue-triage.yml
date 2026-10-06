@@ -1,0 +1,53 @@
+name: Issue triage
+
+# Labels new issues from what the reporter chose in the issue form (the "Which area?" dropdown),
+# marks them `needs-triage`, and asks for a sample file on bug reports that have none.
+#
+# SECURITY: the issue body is untrusted input. It is only matched against a fixed table here, never
+# interpolated into a script or a shell command, and nothing is checked out.
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write
+
+jobs:
+  triage:
+    name: Triage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v9
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const body = issue.body ?? '';
+            const labels = new Set(['needs-triage']);
+
+            // Issue-form dropdown answers (see .github/ISSUE_TEMPLATE) -> area labels.
+            const areas = [
+              [/^(xml|opc|units|color|geometry|chart|diagram|math)\b|shared area|drawingml/im, 'area: shared'],
+              [/^docx$/im, 'area: docx'],
+              [/^pptx$/im, 'area: pptx'],
+              [/^xlsx$/im, 'area: xlsx'],
+              [/^visio$/im, 'area: visio'],
+              [/collab|teams/im, 'area: collab'],
+              [/crypto|digest|signatures/im, 'area: security'],
+              [/ooxml-ui/im, 'area: ui'],
+              [/mcp|automation/im, 'area: mcp'],
+            ];
+            const answer = body.split(/^### /m).find((s) => /^(Which area|Where does this live)/i.test(s)) ?? '';
+            for (const [pattern, label] of areas) {
+              if (pattern.test(answer)) labels.add(label);
+            }
+
+            // Issue forms apply `bug` or `enhancement` themselves; a bug without a file also needs one.
+            const hasFile = /\.(docx|xlsx|pptx|vsdx|doc|xls|ppt)\b|github\.com\/user-attachments|```/i.test(body);
+            const isBug = issue.labels.some((l) => l.name === 'bug');
+            if (isBug && !hasFile) labels.add('needs-repro');
+
+            await github.rest.issues.addLabels({
+              ...context.repo,
+              issue_number: issue.number,
+              labels: [...labels],
+            });

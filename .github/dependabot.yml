@@ -1,0 +1,110 @@
+version: 2
+
+# Dependabot reads bun.lock and the workspace manifests from the root, so one entry covers the
+# library, ooxml-ui, the MCP server, every viewer, demo and e2e package.
+#
+# Commit subjects must pass scripts/check-conventional-commits.mjs, so the prefixes below carry the
+# scope and `include: scope` is deliberately not set (both together produce doubled subjects like
+# `chore(deps-dev)(deps-dev): ...`). `chore` never raises a version on its own; whether a bump
+# releases a package is decided by the paths it touches (see docs/releasing.md).
+
+updates:
+  - package-ecosystem: 'bun'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '06:00'
+      timezone: 'Africa/Johannesburg'
+    # Roughly one open PR per group, so a busy registry week cannot spawn dozens of PRs and CI runs.
+    open-pull-requests-limit: 10
+    versioning-strategy: increase
+    labels:
+      - 'dependencies'
+    commit-message:
+      prefix: 'chore(deps)'
+      prefix-development: 'chore(deps-dev)'
+    groups:
+      # Order matters: a dependency lands in the first group whose patterns match it.
+      # Security fixes are grouped on their own and never held back by an update-types filter.
+      security-updates:
+        applies-to: security-updates
+        patterns:
+          - '*'
+      # Packages that must move in lockstep (mismatched majors break the build) get their own
+      # group, with majors included.
+      angular:
+        applies-to: version-updates
+        patterns:
+          - '@angular/*'
+          - '@angular-devkit/*'
+          - 'zone.js'
+          - 'ng-packagr'
+      playwright:
+        applies-to: version-updates
+        patterns:
+          - '@playwright/*'
+          - 'playwright'
+          - 'playwright-core'
+      yjs:
+        applies-to: version-updates
+        patterns:
+          - 'yjs'
+          - 'y-*'
+          - 'lib0'
+      lit:
+        applies-to: version-updates
+        patterns:
+          - 'lit'
+          - 'lit-*'
+          - '@lit/*'
+      types:
+        applies-to: version-updates
+        patterns:
+          - '@types/*'
+        update-types:
+          - 'minor'
+          - 'patch'
+      # Everything else: routine minor and patch updates, runtime and tooling kept apart so a
+      # tooling regression cannot delay a runtime update. Majors arrive as individual PRs.
+      production-minor-and-patch:
+        applies-to: version-updates
+        dependency-type: production
+        patterns:
+          - '*'
+        update-types:
+          - 'minor'
+          - 'patch'
+      development-minor-and-patch:
+        applies-to: version-updates
+        dependency-type: development
+        patterns:
+          - '*'
+        update-types:
+          - 'minor'
+          - 'patch'
+    ignore:
+      # TypeScript majors are a deliberate migration, not a bump to automate: some packages are
+      # pinned to 6.x because their toolchains (Angular's compiler, vue-tsc, svelte-check) cannot
+      # take 7 yet. Check those upstreams first, then bump by hand.
+      - dependency-name: 'typescript'
+        update-types: ['version-update:semver-major']
+
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '06:00'
+      timezone: 'Africa/Johannesburg'
+    open-pull-requests-limit: 3
+    labels:
+      - 'dependencies'
+      - 'github-actions'
+    commit-message:
+      prefix: 'chore(ci)'
+    groups:
+      actions:
+        applies-to: version-updates
+        patterns:
+          - '*'

@@ -1,0 +1,167 @@
+[
+	{
+		"name": "bug",
+		"color": "d73a4a",
+		"description": "Something is not working"
+	},
+	{
+		"name": "enhancement",
+		"color": "a2eeef",
+		"description": "New feature or request"
+	},
+	{
+		"name": "documentation",
+		"color": "0075ca",
+		"description": "Improvements or additions to documentation"
+	},
+	{
+		"name": "question",
+		"color": "d876e3",
+		"description": "Further information is requested"
+	},
+	{
+		"name": "security",
+		"color": "b60205",
+		"description": "Security vulnerability or hardening"
+	},
+	{
+		"name": "accessibility",
+		"color": "f143ab",
+		"description": "Barrier affecting people with disabilities"
+	},
+	{
+		"name": "dependencies",
+		"color": "0366d6",
+		"description": "Dependency updates"
+	},
+	{
+		"name": "github-actions",
+		"color": "000000",
+		"description": "GitHub Actions updates"
+	},
+	{
+		"name": "breaking",
+		"color": "b60205",
+		"description": "Breaking change"
+	},
+	{
+		"name": "ci",
+		"color": "ededed",
+		"description": "CI, release and repository tooling"
+	},
+	{
+		"name": "tests",
+		"color": "bfd4f2",
+		"description": "Test-only change"
+	},
+	{
+		"name": "site",
+		"color": "c5def5",
+		"description": "The launcher site"
+	},
+	{
+		"name": "needs-triage",
+		"color": "fbca04",
+		"description": "Waiting for a maintainer to look at it"
+	},
+	{
+		"name": "needs-repro",
+		"color": "fef2c0",
+		"description": "A sample file or minimal snippet is needed"
+	},
+	{
+		"name": "good first issue",
+		"color": "7057ff",
+		"description": "Good for newcomers"
+	},
+	{
+		"name": "help wanted",
+		"color": "008672",
+		"description": "Extra attention is needed"
+	},
+	{
+		"name": "duplicate",
+		"color": "cfd3d7",
+		"description": "This already exists"
+	},
+	{
+		"name": "invalid",
+		"color": "e4e669",
+		"description": "This does not seem right"
+	},
+	{
+		"name": "wontfix",
+		"color": "ffffff",
+		"description": "This will not be worked on"
+	},
+	{
+		"name": "area: docx",
+		"color": "1d76db",
+		"description": "Word model, parsing, saving, editing"
+	},
+	{
+		"name": "area: pptx",
+		"color": "d93f0b",
+		"description": "PowerPoint engine"
+	},
+	{
+		"name": "area: xlsx",
+		"color": "0e8a16",
+		"description": "Excel model, formulas, layout"
+	},
+	{
+		"name": "area: visio",
+		"color": "5319e7",
+		"description": "Visio model and rendering"
+	},
+	{
+		"name": "area: shared",
+		"color": "006b75",
+		"description": "xml, opc, units, color, geometry, chart, diagram, math"
+	},
+	{
+		"name": "area: collab",
+		"color": "0052cc",
+		"description": "Collaboration and teams logic"
+	},
+	{
+		"name": "area: security",
+		"color": "b60205",
+		"description": "Encryption, signatures, digests"
+	},
+	{
+		"name": "area: ui",
+		"color": "c2e0c6",
+		"description": "ooxml-ui custom elements"
+	},
+	{
+		"name": "area: mcp",
+		"color": "5ebeff",
+		"description": "MCP servers and automation"
+	},
+	{
+		"name": "viewer: pptx",
+		"color": "f9d0c4",
+		"description": "PowerPoint viewer, demos and tests"
+	},
+	{
+		"name": "viewer: docx",
+		"color": "bfdadc",
+		"description": "Word viewer, demos and tests"
+	},
+	{
+		"name": "viewer: xlsx",
+		"color": "c2e0c6",
+		"description": "Excel viewer, demos and tests"
+	},
+	{
+		"name": "viewer: visio",
+		"color": "d4c5f9",
+		"description": "Visio viewer, demos and tests"
+	},
+	{
+		"name": "viewer: teams",
+		"color": "fad8c7",
+		"description": "OpenTeams viewer, demos and tests"
+	}
+]

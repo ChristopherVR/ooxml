@@ -64,6 +64,12 @@ The release workflow writes `chore(release): bump versions and update changelogs
 - Keep pull requests focused; describe what changed and how you checked it. CI runs typecheck, tests, the release-script tests, build and the package smoke test, and must be green (`ci-success`).
 - Releases are cut automatically from `main` (hourly, plus manual dispatch); do not bump versions in pull requests.
 
+## Labels, alerts and dependencies
+
+- Pull requests are labelled from the files they touch (`.github/labeler.yml`: `area: *`, `viewer: *`, `ci`, `tests`, `documentation`, `dependencies`), and `breaking` is added for a `!` or `BREAKING CHANGE:` commit. New issues get `needs-triage` and an `area: *` label from the form's dropdown; a bug report without a sample file also gets `needs-repro`. The labels themselves live in `.github/labels.json` and are synced to GitHub by `.github/workflows/labels.yml`.
+- Dependabot (`.github/dependabot.yml`) opens weekly update PRs, grouped: one for production and one for development minor/patch updates, plus lockstep groups (Angular, Playwright, Yjs, Lit, `@types/*`) and one for GitHub Actions. Security updates are grouped separately. TypeScript major bumps are ignored on purpose. Review a grouped PR as one change; if a single dependency in it breaks the build, pin or ignore that one and let the rest through.
+- Dependency review comments on and fails a PR that adds a dependency with a known high-severity vulnerability, and CodeQL scans `main` weekly (`.github/workflows/security.yml`). Dependabot alerts, security updates and secret scanning with push protection are enabled in the repository settings.
+
 ## License
 
 By contributing you agree that your contributions are licensed under the [Apache License 2.0](LICENSE).

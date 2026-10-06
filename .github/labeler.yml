@@ -1,0 +1,112 @@
+# Path -> label mapping for actions/labeler (see .github/workflows/pr-hygiene.yml). The labels are
+# defined in .github/labels.json; add a label there before using it here.
+
+# Library areas (src/core)
+'area: docx':
+  - changed-files:
+      - any-glob-to-any-file: 'src/core/docx/**'
+'area: pptx':
+  - changed-files:
+      - any-glob-to-any-file: 'src/core/pptx/**'
+'area: xlsx':
+  - changed-files:
+      - any-glob-to-any-file: 'src/core/xlsx/**'
+'area: visio':
+  - changed-files:
+      - any-glob-to-any-file: 'src/core/visio/**'
+'area: shared':
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'src/core/xml/**'
+          - 'src/core/opc/**'
+          - 'src/core/units/**'
+          - 'src/core/color/**'
+          - 'src/core/geometry/**'
+          - 'src/core/drawingml/**'
+          - 'src/core/chart/**'
+          - 'src/core/diagram/**'
+          - 'src/core/math/**'
+'area: collab':
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'src/core/collab/**'
+          - 'src/core/teams/**'
+'area: security':
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'src/core/crypto/**'
+          - 'src/core/digest/**'
+          - 'src/core/opc/signature/**'
+          - 'SECURITY.md'
+'area: ui':
+  - changed-files:
+      - any-glob-to-any-file: 'src/ui/**'
+'area: mcp':
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'mcp/**'
+          - 'src/core/automation/**'
+          - 'viewers/*/mcp/**'
+
+# Viewers, demos and browser tests
+'viewer: pptx':
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'viewers/pptx/**'
+          - 'demos/pptx/**'
+          - 'e2e/pptx/**'
+'viewer: docx':
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'viewers/docx/**'
+          - 'demos/docx/**'
+          - 'e2e/docx/**'
+'viewer: xlsx':
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'viewers/xlsx/**'
+          - 'demos/xlsx/**'
+          - 'e2e/xlsx/**'
+'viewer: visio':
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'viewers/visio/**'
+          - 'demos/visio/**'
+          - 'e2e/visio/**'
+'viewer: teams':
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'viewers/teams/**'
+          - 'demos/teams/**'
+          - 'e2e/teams/**'
+
+# Cross-cutting
+site:
+  - changed-files:
+      - any-glob-to-any-file: 'site/**'
+ci:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '.github/workflows/**'
+          - '.github/actions/**'
+          - '.github/dependabot.yml'
+          - '.github/labeler.yml'
+          - '.github/labels.json'
+          - 'scripts/**'
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'bun.lock'
+          - '**/package.json'
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'docs/**'
+          - '**/*.md'
+tests:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/__tests__/**'
+          - '**/*.test.*'
+          - '**/*.spec.*'
+          - 'e2e/**'

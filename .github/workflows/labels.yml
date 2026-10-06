@@ -1,0 +1,37 @@
+name: Labels
+
+# Keeps the repository's labels in step with .github/labels.json. Labels are only created or
+# updated, never deleted. Runs on pushes to main that touch the file, and by hand.
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/labels.json'
+      - '.github/workflows/labels.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  sync:
+    name: Sync labels
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Create or update labels
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const labels = JSON.parse(require('node:fs').readFileSync('.github/labels.json', 'utf8'));
+            core.info(`Syncing ${labels.length} labels.`);
+            for (const label of labels) {
+              try {
+                await github.rest.issues.updateLabel({ ...context.repo, ...label });
+              } catch (error) {
+                if (error.status !== 404) throw error;
+                await github.rest.issues.createLabel({ ...context.repo, ...label });
+              }
+            }
