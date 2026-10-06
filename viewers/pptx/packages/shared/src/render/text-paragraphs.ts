@@ -174,6 +174,7 @@ export function buildParagraphs(
 				fieldContext,
 				rtl: rtl === true,
 				eastAsianBreaks: options?.eastAsianRunPieces === false ? undefined : eastAsianBreaks,
+				latinLineBreak: geometryOverrides.latinLineBreak === true,
 			});
 
 			// Suppress bullets for paragraphs with no visible text content.

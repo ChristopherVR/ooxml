@@ -19,6 +19,14 @@
  *  - `eaLnBrk="0"` switches the kinsoku rules off: a line may then start with
  *    `」`, `。`, `、` or a small kana, i.e. East Asian text breaks between any
  *    two characters. Latin words still break only between words.
+ *  - Korean is the exception (PowerPoint for Mac, `lang="ko-KR"` runs): Hangul
+ *    wraps at the spaces between words, like Latin, whether `eaLnBrk` is on
+ *    or off. A Korean run therefore gets no break opportunity next to a Hangul
+ *    character here (see {@link eastAsianBreaksForRun}), and `word-break:
+ *    keep-all` on its span (`segmentStyleToCss`) for the browser's own breaks.
+ *    With `latinLnBrk="1"` PowerPoint breaks Hangul anywhere again (a Latin
+ *    word in the run still moves down whole before it splits), so a Korean
+ *    run there gets `word-break: normal` and keeps these break opportunities.
  *  - None of this depends on run boundaries: a break between two differently
  *    formatted runs (`あいうえ` + a red `」たち`) follows exactly the same
  *    rules as inside one run. Callers therefore pass the character that
@@ -53,6 +61,10 @@ export interface EastAsianBreakOptions {
 	hangingPunctuation: boolean;
 	/** `a:pPr/@eaLnBrk="0"`: break between any two East Asian characters. */
 	breakAnywhere: boolean;
+	/** The run is Korean: Hangul breaks only between words (see the module doc). */
+	keepHangulWords?: boolean;
+	/** `a:pPr/@latinLnBrk="1"`: Hangul may break anywhere, so Korean words are not kept. */
+	latinLineBreak?: boolean;
 }
 
 /** One piece of a run after the East Asian pass. */
@@ -85,10 +97,46 @@ const ZERO_WIDTH_SPACE = '\u200B';
 export function resolveEastAsianBreakOptions(props: {
 	hangingPunctuation?: boolean;
 	eaLineBreak?: boolean;
+	latinLineBreak?: boolean;
 }): EastAsianBreakOptions | undefined {
 	const hangingPunctuation = props.hangingPunctuation === true;
 	const breakAnywhere = props.eaLineBreak === false;
-	return hangingPunctuation || breakAnywhere ? { hangingPunctuation, breakAnywhere } : undefined;
+	if (!hangingPunctuation && !breakAnywhere) {
+		return undefined;
+	}
+	return props.latinLineBreak === true
+		? { hangingPunctuation, breakAnywhere, latinLineBreak: true }
+		: { hangingPunctuation, breakAnywhere };
+}
+
+/** Whether a run language (`a:rPr/@lang`) is Korean: `ko`, `ko-KR`. */
+export function isKoreanLanguage(language: string | undefined): boolean {
+	return language !== undefined && /^ko(?:-|$)/iu.test(language);
+}
+
+/**
+ * A paragraph's East Asian break options as they apply to one run: the same
+ * object, or a copy that keeps Hangul words whole when the run is Korean.
+ */
+export function eastAsianBreaksForRun(
+	options: EastAsianBreakOptions | undefined,
+	language: string | undefined,
+): EastAsianBreakOptions | undefined {
+	return options && !options.latinLineBreak && isKoreanLanguage(language)
+		? { ...options, keepHangulWords: true }
+		: options;
+}
+
+/** Whether `ch` is a Hangul syllable or jamo. */
+function isHangulChar(ch: string): boolean {
+	const cp = ch.codePointAt(0) ?? 0;
+	return (
+		(cp >= 0x1100 && cp <= 0x11ff) ||
+		(cp >= 0x3130 && cp <= 0x318f) ||
+		(cp >= 0xa960 && cp <= 0xa97f) ||
+		(cp >= 0xac00 && cp <= 0xd7ff) ||
+		(cp >= 0xffa0 && cp <= 0xffdc)
+	);
 }
 
 /** Whether `ch` is an East Asian (CJK / kana / hangul / fullwidth) character. */
@@ -144,10 +192,12 @@ function breaksBetween(
 	next: string | undefined,
 	options: EastAsianBreakOptions,
 ): boolean {
+	const breaksAround = (c: string) =>
+		isEastAsianChar(c) && !(options.keepHangulWords && isHangulChar(c));
 	return (
 		options.breakAnywhere &&
 		next !== undefined &&
-		(isEastAsianChar(ch) || isEastAsianChar(next)) &&
+		(breaksAround(ch) || breaksAround(next)) &&
 		!/\s/u.test(ch) &&
 		!/\s/u.test(next) &&
 		!(options.hangingPunctuation && HANGING.has(next))

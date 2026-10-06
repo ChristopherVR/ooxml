@@ -20,7 +20,7 @@ import { resolveFollowingSegmentTexts, resolveSegmentRunText } from './paragraph
 import { resolveParagraphStrutFontSize } from './paragraph-strut';
 import type { ReflectionWrapperStyle } from './reflection';
 import { splitWordsForUnderline, splitsUnderlineIntoWords } from './text-decoration';
-import { splitEastAsianRunPieces } from './text-east-asian-breaks';
+import { eastAsianBreaksForRun, splitEastAsianRunPieces } from './text-east-asian-breaks';
 import type { EastAsianBreakOptions } from './text-east-asian-breaks';
 import type { FieldSubstitutionContext } from './text-field-substitution';
 import { applyFontAlignmentFallback } from './text-font-alignment';
@@ -115,6 +115,8 @@ export interface ParagraphRunBuildInput {
 	rtl?: boolean;
 	/** `@hangingPunct` / `@eaLnBrk="0"` pieces (see `text-east-asian-breaks`). */
 	eastAsianBreaks?: EastAsianBreakOptions;
+	/** The paragraph says `latinLnBrk="1"`, which changes how Korean runs wrap. */
+	latinLineBreak?: boolean;
 }
 
 /**
@@ -135,6 +137,7 @@ export function buildParagraphRuns(input: ParagraphRunBuildInput): BuiltRun[] {
 		fieldContext,
 		rtl,
 		eastAsianBreaks,
+		latinLineBreak,
 	} = input;
 	const runs: BuiltRun[] = [];
 	// What follows each segment, so an East Asian break AT a run boundary obeys
@@ -203,7 +206,7 @@ export function buildParagraphRuns(input: ParagraphRunBuildInput): BuiltRun[] {
 		if (!text) {
 			continue;
 		}
-		const style = segmentStyleToCss(seg, fontScale, { text, blockFont });
+		const style = segmentStyleToCss(seg, fontScale, { text, blockFont, latinLineBreak });
 		applyUnderlineVariant(style, seg);
 		// `u="words"`: word/gap pieces so only the words carry the underline.
 		// Computed once here (not just in the plain per-word-split branch below)
@@ -320,7 +323,7 @@ export function buildParagraphRuns(input: ParagraphRunBuildInput): BuiltRun[] {
 		let charStart = 0;
 		for (const { sourceLength, ...piece } of splitEastAsianRunPieces(
 			splitStyledRun(text, style, runFont, authoredLetterSpacingPx(seg.style), underlineWords),
-			eastAsianBreaks,
+			eastAsianBreaksForRun(eastAsianBreaks, seg.style?.language),
 			runFont,
 			followingTexts?.[at],
 		)) {

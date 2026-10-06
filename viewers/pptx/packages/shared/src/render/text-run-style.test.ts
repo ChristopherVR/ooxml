@@ -191,6 +191,18 @@ describe('segmentStyleToCss run properties', () => {
 		});
 	});
 
+	it('keeps Korean words together (word-break: keep-all) only for a Korean run', () => {
+		expect(segmentStyleToCss({ text: '한국어', style: { language: 'ko-KR' } }).wordBreak).toBe(
+			'keep-all',
+		);
+		expect(segmentStyleToCss({ text: '한국어', style: { language: 'ko' } }).wordBreak).toBe(
+			'keep-all',
+		);
+		expect(
+			segmentStyleToCss({ text: '日本語', style: { language: 'ja-JP' } }).wordBreak,
+		).toBeUndefined();
+	});
+
 	it('adds no keys beyond the always-declared weight and slant', () => {
 		expect(segmentStyleToCss(seg({ fontSize: 16 }))).toStrictEqual({
 			fontSize: '16px',

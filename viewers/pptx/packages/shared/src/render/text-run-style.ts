@@ -19,6 +19,7 @@ import { getSubstituteFontFamily, parsePanoseString } from 'pptx-viewer-core';
 
 import { HYPERLINK_COLOR } from '../constants';
 import { normalizeHexColor } from './fill-style';
+import { isKoreanLanguage } from './text-east-asian-breaks';
 import type { RunFontSpec } from './text-metric-tracking';
 import { resolveMetricTrackingPx } from './text-metric-tracking';
 import { resolveTextOutlineDashCss } from './text-outline-dash';
@@ -165,6 +166,8 @@ export interface RunStyleContext {
 	text?: string;
 	/** What the run inherits from the text body when it declares no font. */
 	blockFont?: RunFontSpec;
+	/** The paragraph says `latinLnBrk="1"` (see the Korean rule below). */
+	latinLineBreak?: boolean;
 }
 
 export function segmentStyleToCss(
@@ -250,6 +253,14 @@ export function segmentStyleToCss(
 	// text and pushes it out of its box.
 	style.fontWeight = s.bold ? 'bold' : 'normal';
 	style.fontStyle = s.italic ? 'italic' : 'normal';
+	// PowerPoint wraps Korean at the spaces between words; browsers break Hangul
+	// between any two syllables unless told otherwise (`text-east-asian-breaks`).
+	// Under `latinLnBrk="1"` a Korean run breaks Hangul anywhere but still moves
+	// a Latin word to the next line before splitting it (PowerPoint for Mac),
+	// which is `normal`, not the paragraph's `break-all`.
+	if (isKoreanLanguage(s.language)) {
+		style.wordBreak = context.latinLineBreak ? 'normal' : 'keep-all';
+	}
 	const deco: string[] = [];
 	// A hyperlink is underlined unless the run says otherwise, which is
 	// PowerPoint's default and React's long-standing behaviour; the other four
