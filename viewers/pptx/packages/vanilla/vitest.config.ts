@@ -38,6 +38,10 @@ export default defineConfig({
 				replacement: resolve(__dirname, '../core/src/color/index.ts'),
 			},
 			{
+				find: 'pptx-viewer-core/ui',
+				replacement: resolve(__dirname, '../core/src/ui/index.ts'),
+			},
+			{
 				find: 'pptx-viewer-core/math',
 				replacement: resolve(__dirname, '../core/src/math/index.ts'),
 			},
