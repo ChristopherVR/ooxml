@@ -301,6 +301,58 @@ describe('chartML data label parsing', () => {
 			});
 		});
 
+		it('parses the run font of a rich-text label (c:dLbl/c:tx/c:rich) into richTextStyle', () => {
+			const series: XmlObject = {
+				'c:dLbls': {
+					'c:dLbl': {
+						'c:idx': { '@_val': '0' },
+						'c:tx': {
+							'c:rich': {
+								'a:bodyPr': {},
+								'a:p': {
+									'a:pPr': { 'a:defRPr': { '@_sz': '1000', '@_i': '1' } },
+									'a:r': {
+										'a:rPr': {
+											'@_sz': '800',
+											'@_b': '1',
+											'a:solidFill': { 'a:srgbClr': { '@_val': '4E4643' } },
+											'a:latin': { '@_typeface': 'Pretendard' },
+										},
+										'a:t': '1,444',
+									},
+								},
+							},
+						},
+						'c:showVal': { '@_val': '1' },
+					},
+				},
+			};
+			const [label] = parseSeriesDataLabels(series, lookup, colorParser);
+			expect(label.text).toBe('1,444');
+			expect(label.richTextStyle).toStrictEqual({
+				fontSize: 8,
+				bold: true,
+				italic: true,
+				fontFamily: 'Pretendard',
+				color: '#4E4643',
+			});
+			expect(label.txPr).toBeUndefined();
+		});
+
+		it('leaves richTextStyle unset for a rich-text label whose run sets no font', () => {
+			const series: XmlObject = {
+				'c:dLbls': {
+					'c:dLbl': {
+						'c:idx': { '@_val': '0' },
+						'c:tx': { 'c:rich': { 'a:p': { 'a:r': { 'a:t': 'Plain' } } } },
+					},
+				},
+			};
+			const [label] = parseSeriesDataLabels(series, lookup, colorParser);
+			expect(label.text).toBe('Plain');
+			expect(label.richTextStyle).toBeUndefined();
+		});
+
 		it("parses a per-point c:dLbl/c:spPr into that label's own spPr", () => {
 			const series: XmlObject = {
 				'c:dLbls': {

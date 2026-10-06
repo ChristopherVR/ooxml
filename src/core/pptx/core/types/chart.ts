@@ -407,6 +407,13 @@ export interface PptxChartDataLabel {
 	 */
 	txPr?: PptxChartLegendTextStyle;
 	/**
+	 * Font of this label's literal rich text (`c:dLbl/c:tx/c:rich`): the first
+	 * run's `a:rPr` over its paragraph's `a:pPr/a:defRPr`. PowerPoint draws
+	 * {@link text} with these run properties, so each field set here wins over
+	 * the same field of {@link txPr}. Read only: the save path does not write it.
+	 */
+	richTextStyle?: PptxChartLegendTextStyle;
+	/**
 	 * This label's own shape formatting (`c:dLbl/c:spPr`): fill/line colour,
 	 * width, and dash style for the label's callout box, taking precedence
 	 * over any chart/series-level default when set.
