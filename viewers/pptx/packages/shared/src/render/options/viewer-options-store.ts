@@ -117,7 +117,8 @@ export function createViewerOptionsStore(init?: ViewerOptionsStoreInit): ViewerO
 		setValue: (group, key, value) => {
 			const defaults = baseline[group] as unknown as Record<string, unknown>;
 			if (
-				!(key in defaults) ||
+				!Object.hasOwn(defaults, key) ||
+				key === '__proto__' ||
 				typeof defaults[key] !== typeof value ||
 				isOptionLocked(constraints.locked, group, key)
 			) {

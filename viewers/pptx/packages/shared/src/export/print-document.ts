@@ -519,7 +519,7 @@ export function buildPrintHtmlDocument(options: PrintHtmlDocumentOptions): strin
     <style>
       :root { color-scheme: light; }
       * { box-sizing: border-box; }
-      body { margin: 0; background: #ffffff; color: #111827; font: 12px/1.4 "Segoe UI", Arial, sans-serif; ${colorFilter} }
+      body { margin: 0; background: #ffffff; color: #111827; font: 12px/1.4 "Segoe UI", Arial, sans-serif; ${escapeHtml(colorFilter)} }
       .page { page-break-after: always; padding: 10mm; width: 100%; }
       .page:last-child { page-break-after: auto; }
       .slide-page { display: flex; align-items: center; justify-content: center; min-height: 250mm; }

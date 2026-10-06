@@ -6,11 +6,11 @@ const GRAY = '#7f7f7f';
 const BLACK = '#404040';
 
 const svg = (body: string, size: number): string =>
-	`<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 16 16" aria-hidden="true">${body}</svg>`;
+	`<svg xmlns="http://www.w3.org/2000/svg" width="${Number(size)}" height="${Number(size)}" viewBox="0 0 16 16" aria-hidden="true">${body}</svg>`;
 
 /** Arrow rotated by `deg` (0 = up). */
 const arrow = (color: string, deg: number): string =>
-	`<g transform="rotate(${deg} 8 8)"><path d="M8 1.5 14 8h-3.5v6.5h-5V8H2z" fill="${color}"/></g>`;
+	`<g transform="rotate(${Number(deg)} 8 8)"><path d="M8 1.5 14 8h-3.5v6.5h-5V8H2z" fill="${color}"/></g>`;
 
 const circle = (color: string, rim = false): string =>
 	`<circle cx="8" cy="8" r="${rim ? 5.5 : 6.5}" fill="${color}"${rim ? ' stroke="#333" stroke-width="2.4"' : ''}/>`;

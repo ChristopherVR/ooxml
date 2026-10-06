@@ -3,6 +3,7 @@ import { convertMetafileToSvgTree } from 'emf-converter';
 import { loadVisio } from 'ooxml-core/visio';
 const worker = self as unknown as DedicatedWorkerGlobalScope;
 worker.onmessage = async (event: MessageEvent<ArrayBuffer>) => {
+	if (event.origin && event.origin !== self.location.origin) return;
 	try {
 		const document = await loadVisio(event.data, { metafileConverter: convertMetafileToSvgTree });
 		worker.postMessage({ ok: true, document });

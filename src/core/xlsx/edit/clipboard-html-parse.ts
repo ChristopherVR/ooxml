@@ -140,12 +140,20 @@ function stylePatchFromCss(css: Map<string, string>, inner: string): StylePatch 
 	return patch;
 }
 
+/** Removes comments and tags, repeating until stable so nested fragments cannot reassemble. */
+function stripTags(markup: string): string {
+	let previous: string;
+	let text = markup;
+	do {
+		previous = text;
+		text = text.replace(/<!--[\s\S]*?-->/g, '').replace(/<[^<>]*>/g, '');
+	} while (text !== previous);
+	return text.split('<!--').join('').split('-->').join('');
+}
+
 function cellText(inner: string): string {
 	return decodeEntities(
-		inner
-			.replace(/<!--[\s\S]*?-->/g, '')
-			.replace(/<br\s*\/?>/gi, '\u0000')
-			.replace(/<[^>]+>/g, '')
+		stripTags(inner.replace(/<br\s*\/?>/gi, '\u0000'))
 			.replace(/\s+/g, ' ')
 			.replace(/ ?\u0000 ?/g, '\n'),
 	)
@@ -164,7 +172,10 @@ export function parseHtmlTable(html: string, base: CellStyle): ClipboardCells | 
 	const classes = new Map<string, string>();
 	for (const block of html.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/gi))
 		for (const rule of (block[1] ?? '')
-			.replace(/<!--|-->/g, '')
+			.split('<!--')
+			.join('')
+			.split('-->')
+			.join('')
 			.matchAll(/\.([\w-]+)\s*\{([^}]*)\}/g))
 			classes.set(rule[1] ?? '', rule[2] ?? '');
 	const grid: (ClipboardCell | null)[][] = [];

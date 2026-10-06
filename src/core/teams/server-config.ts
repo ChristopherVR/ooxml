@@ -37,7 +37,7 @@ function wsUrl(value: unknown, field: string, issues: string[]): string | undefi
 		issues.push(`${field} must be a ws:// or wss:// URL without query or fragment`);
 		return undefined;
 	}
-	return value.trim().replace(/\/+$/u, '');
+	return trimTrailingSlashes(value.trim());
 }
 
 function iceServer(raw: unknown, index: number, issues: string[]): IceServer | null {
@@ -98,11 +98,17 @@ export function parseServerConfig(input: unknown): ServerConfigResult {
 
 /** `base/room?token=...` for a sync or signaling endpoint. The room is URL-encoded. */
 export function endpointUrl(base: string, roomId: string, token?: string): string {
-	const url = `${base.replace(/\/+$/u, '')}/${encodeURIComponent(roomId)}`;
+	const url = `${trimTrailingSlashes(base)}/${encodeURIComponent(roomId)}`;
 	return token ? `${url}?token=${encodeURIComponent(token)}` : url;
 }
 
 /** The local-only config: no server, same-browser tabs. */
 export function localServerConfig(): TeamsServerConfig {
 	return { mode: 'local', iceServers: [...DEFAULT_ICE_SERVERS] };
+}
+
+function trimTrailingSlashes(value: string): string {
+	let end = value.length;
+	while (end > 0 && value.charCodeAt(end - 1) === 47) end--;
+	return value.slice(0, end);
 }

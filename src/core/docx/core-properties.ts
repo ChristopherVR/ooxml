@@ -93,7 +93,7 @@ export async function applyCoreProperties(
 	const relsXml =
 		(await rels?.async('string')) ??
 		'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"></Relationships>';
-	if (!relsXml.includes(CORE_REL)) {
+	if (!relsXml.includes(`Type="${CORE_REL}"`)) {
 		const ids = [...relsXml.matchAll(/Id="rId(\d+)"/g)].map((match) => Number(match[1]));
 		const id = `rId${Math.max(0, ...ids) + 1}`;
 		zip.file(

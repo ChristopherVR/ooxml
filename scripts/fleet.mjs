@@ -67,7 +67,7 @@ async function latestOf(name) {
 	if (!registry.has(name))
 		registry.set(
 			name,
-			fetch(`https://registry.npmjs.org/${name.replace('/', '%2F')}/latest`)
+			fetch(`https://registry.npmjs.org/${encodeURIComponent(name)}/latest`)
 				.then((response) => (response.ok ? response.json() : null))
 				.then((body) => body?.version ?? null)
 				.catch(() => null),

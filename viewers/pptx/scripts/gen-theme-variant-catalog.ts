@@ -151,7 +151,7 @@ const header = (what: string, source: string) => `/**
  * @module render/ribbon-galleries/${what}
  */
 `;
-const q = (s: string) => `'${s.replace(/'/gu, "\\'")}'`;
+const q = (s: string) => `'${s.replace(/\\/gu, '\\\\').replace(/'/gu, "\\'")}'`;
 
 writeFileSync(
 	join(outDir, 'theme-color-schemes-data.ts'),

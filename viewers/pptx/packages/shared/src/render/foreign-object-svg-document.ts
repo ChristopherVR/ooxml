@@ -149,7 +149,7 @@ export function wrapForeignObjectSvg(bodyMarkup: string, tile: ForeignObjectTile
 	const { viewBoxX, viewBoxY, viewBoxWidth, viewBoxHeight, outputWidth, outputHeight } = tile;
 	return (
 		`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" ` +
-		`width="${outputWidth}" height="${outputHeight}" ` +
-		`viewBox="${viewBoxX} ${viewBoxY} ${viewBoxWidth} ${viewBoxHeight}">${bodyMarkup}</svg>`
+		`width="${Number(outputWidth)}" height="${Number(outputHeight)}" ` +
+		`viewBox="${Number(viewBoxX)} ${Number(viewBoxY)} ${Number(viewBoxWidth)} ${Number(viewBoxHeight)}">${bodyMarkup}</svg>`
 	);
 }

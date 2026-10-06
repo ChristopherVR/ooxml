@@ -30,7 +30,7 @@ export interface EditContext {
 }
 
 export function sheetAt(workbook: Workbook, index: number): Worksheet {
-	const sheet = workbook.sheets[index];
+	const sheet = Number.isInteger(index) ? workbook.sheets[index] : undefined;
 	if (!sheet) throw new RangeError(`No sheet at index ${index}`);
 	return sheet;
 }

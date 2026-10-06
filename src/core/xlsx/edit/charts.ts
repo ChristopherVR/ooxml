@@ -51,7 +51,8 @@ export function updateChart(ctx: EditContext, s: number, index: number, patch: C
 		() => {
 			const live = sheet.drawings[index] as ChartObject;
 			for (const [key, value] of Object.entries(structuredClone(patch))) {
-				if (key === 'kind' || key === 'partName') continue;
+				if (key === 'kind' || key === 'partName' || key === '__proto__') continue;
+				if (key === 'constructor' || key === 'prototype') continue;
 				if (value === undefined) delete (live as unknown as Record<string, unknown>)[key];
 				else (live as unknown as Record<string, unknown>)[key] = value;
 			}

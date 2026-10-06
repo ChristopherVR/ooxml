@@ -4,6 +4,7 @@ import { editVsdx, parseVsdx } from 'ooxml-core/visio';
 import type { EditWorkerRequest } from './worker-editor.js';
 const worker = self as unknown as DedicatedWorkerGlobalScope;
 worker.onmessage = async (event: MessageEvent<EditWorkerRequest>) => {
+	if (event.origin && event.origin !== self.location.origin) return;
 	try {
 		const result = await editVsdx(event.data.bytes, event.data.edits);
 		const document = await parseVsdx(result.bytes, { metafileConverter: convertMetafileToSvgTree });

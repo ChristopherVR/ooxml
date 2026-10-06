@@ -1,12 +1,6 @@
 // Pure translation of the core's CellView into CSS values (font shorthand, fills, pattern tiles,
 // borders, alignment). The DOM painter only copies these onto recycled nodes.
-import type {
-	BordersView,
-	EdgeView,
-	FillView,
-	FontView,
-	PatternType,
-} from '../../index.js';
+import type { BordersView, EdgeView, FillView, FontView, PatternType } from '../../index.js';
 
 const FALLBACKS: Record<string, string> = {
 	calibri: '"Calibri", "Carlito", "Segoe UI", Arial, sans-serif',
@@ -109,12 +103,12 @@ export function diagonalSvg(b: BordersView, w: number, h: number): string | unde
 				: edge.style === 'dotted'
 					? ' stroke-dasharray="1 2"'
 					: '';
-		return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${edge.color}" stroke-width="${edge.widthPx}"${dash}/>`;
+		return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${edge.color.replace(/[^#\w(),.%\s-]/gu, '')}" stroke-width="${Number(edge.widthPx)}"${dash}/>`;
 	};
 	let body = '';
 	if (b.diagonalDown) body += line(b.diagonalDown, 0, 0, w, h);
 	if (b.diagonalUp) body += line(b.diagonalUp, 0, h, w, 0);
-	return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${body}</svg>`;
+	return `<svg xmlns="http://www.w3.org/2000/svg" width="${Number(w)}" height="${Number(h)}" viewBox="0 0 ${Number(w)} ${Number(h)}">${body}</svg>`;
 }
 
 /** CSS flex alignment for the text box. */

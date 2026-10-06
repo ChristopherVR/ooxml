@@ -211,8 +211,10 @@ try {
 		...(await readdir(path.join(installed, '@christophervr')).catch(() => [])),
 	];
 	assert.deepEqual(
-		names.filter((name) =>
-			/ole2|docx-(?:legacy|document|layout|bindings|web-component|viewer)$/.test(name),
+		names.filter(
+			(name) =>
+				name.includes('ole2') ||
+				/^docx-(?:legacy|document|layout|bindings|web-component|viewer)$/.test(name),
 		),
 		[],
 		'no internal package or ole2 may be installed alongside the published ones',

@@ -35,7 +35,7 @@ const OPEN = 1;
 
 /** Join a server base URL and a validated room id: `roomUrl('wss://h/collab', 'r1')`. */
 export function roomUrl(server: string, roomId: string): string {
-	return `${server.replace(/\/+$/u, '')}/${encodeURIComponent(roomId)}`;
+	return `${trimTrailingSlashes(server)}/${encodeURIComponent(roomId)}`;
 }
 
 export function createWebSocketTransport(options: WebSocketTransportOptions): Transport {
@@ -109,4 +109,10 @@ export function createWebSocketTransport(options: WebSocketTransportOptions): Tr
 			}
 		},
 	};
+}
+
+function trimTrailingSlashes(value: string): string {
+	let end = value.length;
+	while (end > 0 && value.charCodeAt(end - 1) === 47) end--;
+	return value.slice(0, end);
 }
