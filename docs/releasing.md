@@ -74,7 +74,7 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md#commit-conventions). The `PR hygiene / 
 7. Create each tag and GitHub release at that commit, core first (`scripts/release-notes.mjs <key>` writes the body), upload the plan, and prune superseded releases (`scripts/prune-releases.mjs --keep 1`; tags are kept).
 8. Publish, in parallel groups (`publish-plan`, `build-core`, then a `publish` matrix, environment `npm`). `scripts/publish-released.mjs --groups` splits the release into groups: `core`, `ui`, `mcp` and one group per viewer folder. The core is built once and its `dist` shared as an artifact; each group then builds only its own packages (`build-released.mjs --group <name>`) and runs `publish-released.mjs --group <name>`. A package whose sibling is released in the same run (ooxml-ui on ooxml-core) waits up to an hour for that sibling to appear on npm: the registry can take more than ten minutes to serve the 11 MB core tarball it has just accepted, which is what failed the run that published `ooxml-core@0.21.1` but not `ooxml-ui`. `fail-fast` is off, and a re-run (or `-f tag=...`) skips what is already published.
 
-**Manual dispatch with `tag`** re-publishes one existing tag of either package (skips the `release` job), for when a publish failed or was skipped:
+**Manual dispatch with `tag`** re-publishes one existing tag of either package (skips the `release` job), for when a publish failed or was skipped. It builds the commit the run was dispatched on, not the tag (a tag can predate the current scripts and layout); the manifest check refuses a package that is no longer at the tag's version, so it only works while `main` still carries that version:
 
 ```sh
 gh workflow run release.yml -f tag=ooxml-core@0.2.0

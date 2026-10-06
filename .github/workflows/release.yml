@@ -255,7 +255,11 @@ jobs:
   #   release commit it pushed and publishes the packages listed in the release-plan.json artifact.
   #
   # RE-PUBLISH (dispatch with a tag): skips the `release` job and publishes exactly the tag
-  #   supplied via the `tag` input, checked out at that tag so the build matches the release.
+  #   supplied via the `tag` input. It builds the dispatched commit (the branch the run was started
+  #   on), not the tag: the tag's own tree can predate the scripts and layout this workflow runs
+  #   (an old tree once ran its own publish script in the planning job). `publish-released.mjs`
+  #   refuses a package whose manifest is not at the tag's version, so a tag that `main` has moved
+  #   past fails loudly instead of publishing something else.
   #
   # The packages are split into publish groups (core, ui, mcp, and one group per viewer, see
   # `publish-released.mjs --groups`) that run as parallel matrix jobs. The core is built once
@@ -293,12 +297,12 @@ jobs:
           fetch-depth: 0
           ref: ${{ needs.release.outputs.release_sha }}
 
-      - name: Checkout at tag (re-publish)
+      - name: Checkout the dispatched commit (re-publish)
         if: inputs.tag != ''
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
-          ref: refs/tags/${{ inputs.tag }}
+          ref: ${{ github.sha }}
 
       - name: Download release plan
         if: inputs.tag == ''
@@ -339,12 +343,12 @@ jobs:
           fetch-depth: 0
           ref: ${{ needs.release.outputs.release_sha }}
 
-      - name: Checkout at tag (re-publish)
+      - name: Checkout the dispatched commit (re-publish)
         if: inputs.tag != ''
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
-          ref: refs/tags/${{ inputs.tag }}
+          ref: ${{ github.sha }}
 
       - uses: actions/setup-node@v7
         with:
@@ -389,13 +393,13 @@ jobs:
           fetch-depth: 0
           ref: ${{ needs.release.outputs.release_sha }}
 
-      # Re-publish mode: the exact tag, so the build matches what was released.
-      - name: Checkout at tag (re-publish)
+      # Re-publish mode: the dispatched commit (the manifest check below ties it to the tag).
+      - name: Checkout the dispatched commit (re-publish)
         if: inputs.tag != ''
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
-          ref: refs/tags/${{ inputs.tag }}
+          ref: ${{ github.sha }}
 
       - name: Download release plan
         if: inputs.tag == ''
