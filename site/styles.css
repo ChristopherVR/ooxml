@@ -128,7 +128,6 @@ a {
 	border-bottom: 1px solid var(--line);
 }
 
-.topbar__waffle,
 .topbar__theme {
 	display: grid;
 	place-items: center;
@@ -141,47 +140,31 @@ a {
 	cursor: pointer;
 }
 
-.topbar__waffle svg {
-	width: 1.05rem;
-	height: 1.05rem;
-}
-
 .topbar__theme svg {
 	width: 1.15rem;
 	height: 1.15rem;
 }
 
-.topbar__waffle:hover,
 .topbar__theme:hover {
 	background: var(--line);
 	color: var(--ink);
 }
 
 .topbar__brand {
+	display: flex;
+	align-items: center;
+	gap: 0.55rem;
+	flex-shrink: 0;
+	margin-right: 0.5rem;
 	font-weight: 800;
 	letter-spacing: -0.02em;
 	text-decoration: none;
 	white-space: nowrap;
 }
 
-.topbar__app {
-	display: flex;
-	align-items: center;
-	gap: 0.65rem;
-	min-width: 0;
-	padding-left: 0.9rem;
-	border-left: 1px solid var(--line);
-}
-
-.topbar__app .app-icon {
-	width: 1.7rem;
-	height: 1.7rem;
-	flex-shrink: 0;
-}
-
-.topbar__app-name {
-	font-weight: 700;
-	white-space: nowrap;
+.topbar__mark {
+	width: 1.6rem;
+	height: 1.6rem;
 }
 
 .topbar__framework select {
@@ -514,9 +497,6 @@ a.app:hover .app-icon {
 	gap: 0.25rem;
 	flex: 0 1 auto;
 	min-width: 0;
-	margin-left: 0.25rem;
-	padding-left: 0.75rem;
-	border-left: 1px solid var(--line);
 }
 
 .tabstrip {
@@ -658,14 +638,17 @@ a.app:hover .app-icon {
 	color: var(--ink);
 }
 
+/* Level with the tab row (tabs sit on the bar's bottom edge), not floating mid-bar. */
 .newtab {
 	position: relative;
-	align-self: center;
+	align-self: flex-end;
+	margin-bottom: 0.2rem;
 }
 
 .newtab__button {
-	width: 2rem;
-	height: 2rem;
+	width: 1.9rem;
+	height: 1.9rem;
+	border-radius: 50%;
 }
 
 .newtab__button svg {
@@ -796,7 +779,7 @@ a.app:hover .app-icon {
 	.topbar__action--quiet {
 		display: none;
 	}
-	body.in-app .topbar__brand,
+	.topbar__wordmark,
 	.appbar .tag,
 	.tab:not(:has([aria-selected='true'])) .tab__title {
 		display: none;
@@ -842,4 +825,89 @@ a.app:hover .app-icon {
 	.app .app-icon {
 		transition: none;
 	}
+}
+
+/* ---- Pinned and dragged tabs --------------------------------------- */
+
+.tab--pinned {
+	flex: 0 0 auto;
+	max-width: none;
+	min-width: 0;
+}
+
+.tab--pinned .tab__main {
+	padding: 0 0.65rem;
+}
+
+.tab--pinned .tab__close {
+	display: none;
+}
+
+/* A little air between the pinned group and the rest. */
+.tab--pinned + .tab:not(.tab--pinned) {
+	margin-left: 0.4rem;
+}
+
+.tab--dragging {
+	opacity: 0.45;
+}
+
+.tab--drop-before::before,
+.tab--drop-after::before {
+	content: '';
+	position: absolute;
+	top: 18%;
+	bottom: 18%;
+	width: 2px;
+	border-radius: 1px;
+	background: var(--ink);
+}
+
+.tab--drop-before::before {
+	left: -2px;
+}
+
+.tab--drop-after::before {
+	right: -2px;
+}
+
+.ctxmenu {
+	position: fixed;
+	z-index: 30;
+	display: grid;
+	min-width: 12.5rem;
+	padding: 0.35rem;
+	border: 1px solid var(--line);
+	border-radius: 10px;
+	background: var(--surface);
+	box-shadow: 0 12px 32px -8px rgba(3, 4, 22, 0.5);
+}
+
+.ctxmenu button {
+	padding: 0.45rem 0.65rem;
+	border: 0;
+	border-radius: 6px;
+	background: transparent;
+	color: var(--ink);
+	font: 500 0.88rem var(--font);
+	text-align: left;
+	cursor: pointer;
+}
+
+.ctxmenu button:hover:not(:disabled),
+.ctxmenu button:focus-visible {
+	background: var(--line);
+}
+
+.ctxmenu button:disabled {
+	color: var(--ink-soft);
+	opacity: 0.55;
+	cursor: default;
+}
+
+.ctxmenu hr {
+	width: 100%;
+	margin: 0.3rem 0;
+	border: 0;
+	border-top: 1px solid var(--line);
 }

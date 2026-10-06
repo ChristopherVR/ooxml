@@ -3,7 +3,11 @@ import { describe, expect, it } from 'vitest';
 import {
 	EMPTY_SUITE_STATE,
 	activateSuiteTab,
+	closeOtherSuiteTabs,
 	closeSuiteTab,
+	closeSuiteTabsToRight,
+	moveSuiteTab,
+	pinSuiteTab,
 	newSuiteTabId,
 	openSuiteTab,
 	parseSuiteState,
@@ -66,12 +70,58 @@ describe('suite tab state', () => {
 			],
 			active: 'gone',
 		});
-		expect(state).toEqual({ tabs: [{ id: 'a', app: 'word', framework: 'react' }], active: null });
+		expect(state).toEqual({
+			tabs: [{ id: 'a', app: 'word', framework: 'react', pinned: false }],
+			active: null,
+		});
 		expect(parseSuiteState('junk')).toEqual(EMPTY_SUITE_STATE);
 		expect(parseSuiteState({ tabs: 'no' })).toEqual(EMPTY_SUITE_STATE);
 	});
 
 	it('never reuses a live tab id', () => {
 		expect(newSuiteTabId(closeSuiteTab(three(), 't1').tabs)).toBe('t4');
+	});
+
+	const ids = (state: { tabs: readonly { id: string }[] }) => state.tabs.map((t) => t.id);
+
+	it('pins a tab to the end of the pinned group and unpins it to the start of the rest', () => {
+		let state = pinSuiteTab(three(), 't3', true);
+		expect(ids(state)).toEqual(['t3', 't1', 't2']);
+		state = pinSuiteTab(state, 't2', true);
+		expect(ids(state)).toEqual(['t3', 't2', 't1']);
+		state = pinSuiteTab(state, 't3', false);
+		expect(ids(state)).toEqual(['t2', 't3', 't1']);
+		expect(pinSuiteTab(state, 't2', true)).toBe(state);
+	});
+
+	it('restores pinned tabs first when parsing', () => {
+		const state = parseSuiteState({
+			tabs: [
+				{ id: 'a', app: 'word', framework: 'react' },
+				{ id: 'b', app: 'excel', framework: 'react', pinned: true },
+			],
+		});
+		expect(ids(state)).toEqual(['b', 'a']);
+	});
+
+	it('moves a tab before another or to the end', () => {
+		expect(ids(moveSuiteTab(three(), 't3', 't1'))).toEqual(['t3', 't1', 't2']);
+		expect(ids(moveSuiteTab(three(), 't1', null))).toEqual(['t2', 't3', 't1']);
+		expect(moveSuiteTab(three(), 't1', 't1')).toEqual(three());
+	});
+
+	it('keeps a dragged tab inside its own group', () => {
+		const state = pinSuiteTab(pinSuiteTab(three(), 't1', true), 't2', true); // t1 t2 | t3
+		expect(ids(moveSuiteTab(state, 't3', 't1'))).toEqual(['t1', 't2', 't3']);
+		expect(ids(moveSuiteTab(state, 't1', null))).toEqual(['t2', 't1', 't3']);
+		expect(ids(moveSuiteTab(state, 't2', 't1'))).toEqual(['t2', 't1', 't3']);
+	});
+
+	it('closes other tabs and tabs to the right but never pinned ones', () => {
+		const state = pinSuiteTab(three(), 't3', true); // t3 | t1 t2
+		expect(ids(closeOtherSuiteTabs(state, 't1'))).toEqual(['t3', 't1']);
+		expect(ids(closeSuiteTabsToRight(state, 't3'))).toEqual(['t3']);
+		expect(closeOtherSuiteTabs(state, 't2').active).toBe('t3');
+		expect(closeOtherSuiteTabs(activateSuiteTab(state, 't1'), 't2').active).toBe('t2');
 	});
 });

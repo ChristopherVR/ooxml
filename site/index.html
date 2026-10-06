@@ -39,22 +39,15 @@
 	</head>
 	<body>
 		<header class="topbar">
-			<a class="topbar__waffle" href="#/" aria-label="All apps" title="All apps">
-				<svg viewBox="0 0 18 18" aria-hidden="true">
-					<g fill="currentColor">
-						<circle cx="3" cy="3" r="1.6" />
-						<circle cx="9" cy="3" r="1.6" />
-						<circle cx="15" cy="3" r="1.6" />
-						<circle cx="3" cy="9" r="1.6" />
-						<circle cx="9" cy="9" r="1.6" />
-						<circle cx="15" cy="9" r="1.6" />
-						<circle cx="3" cy="15" r="1.6" />
-						<circle cx="9" cy="15" r="1.6" />
-						<circle cx="15" cy="15" r="1.6" />
-					</g>
+			<a class="topbar__brand" href="#/" title="OOXML Office home">
+				<svg class="topbar__mark" viewBox="0 0 32 32" aria-hidden="true">
+					<rect x="2" y="2" width="13" height="13" rx="3.5" fill="#e2552d" />
+					<rect x="17" y="2" width="13" height="13" rx="3.5" fill="#3d6bf0" />
+					<rect x="2" y="17" width="13" height="13" rx="3.5" fill="#1f9d63" />
+					<rect x="17" y="17" width="13" height="13" rx="3.5" fill="#8a6cf0" />
 				</svg>
+				<span class="topbar__wordmark">OOXML Office</span>
 			</a>
-			<a class="topbar__brand" href="#/">OOXML Office</a>
 			<div class="tabs">
 				<div class="tabstrip" id="tabstrip" role="tablist" aria-label="Open apps"></div>
 				<div class="newtab">
@@ -319,6 +312,8 @@
 				</p>
 			</footer>
 		</main>
+
+		<div class="ctxmenu" id="tab-menu" role="menu" hidden></div>
 
 		<section id="workspace" class="workspace" hidden>
 			<div class="appbar" id="appbar" hidden></div>

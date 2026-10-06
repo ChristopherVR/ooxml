@@ -3,10 +3,14 @@ import { initChungus } from './chungus.js';
 import { currentTheme, initTheme, shareTheme } from './theme.js';
 import {
 	activateSuiteTab,
+	closeOtherSuiteTabs,
 	closeSuiteTab,
+	closeSuiteTabsToRight,
+	moveSuiteTab,
 	newSuiteTabId,
 	openSuiteTab,
 	parseSuiteState,
+	pinSuiteTab,
 	setSuiteTabFramework,
 	suiteTabTitles,
 } from './suite.js';
@@ -31,6 +35,7 @@ const appbar = /** @type {HTMLElement} */ (document.getElementById('appbar'));
 const tabstrip = /** @type {HTMLElement} */ (document.getElementById('tabstrip'));
 const newMenu = /** @type {HTMLElement} */ (document.getElementById('new-menu'));
 const newButton = /** @type {HTMLButtonElement} */ (document.getElementById('new-tab'));
+const tabMenu = /** @type {HTMLElement} */ (document.getElementById('tab-menu'));
 const grid = /** @type {HTMLElement} */ (document.getElementById('app-grid'));
 
 /** Per-viewer conveniences only; the page works the same when storage is blocked. */
@@ -129,10 +134,13 @@ function renderStrip() {
 		const title = escapeHtml(titles.get(tab.id) ?? app.name);
 		const active = tab.id === state.active;
 		items.push(
-			`<div class="tab" role="presentation" style="--app:${app.color}" data-id="${tab.id}">
+			`<div class="tab${tab.pinned ? ' tab--pinned' : ''}" role="presentation"
+				style="--app:${app.color}" data-id="${tab.id}" draggable="true">
 				<button class="tab__main" type="button" role="tab" data-tab="${tab.id}"
-					aria-selected="${active}" tabindex="${active ? 0 : -1}" title="${title}">
-					${appIcon(app)}<span class="tab__title">${title}</span>
+					aria-selected="${active}" tabindex="${active ? 0 : -1}"
+					title="${title}${tab.pinned ? ' (pinned)' : ''}"
+					aria-label="${title}${tab.pinned ? ', pinned' : ''}">
+					${appIcon(app)}${tab.pinned ? '' : `<span class="tab__title">${title}</span>`}
 				</button>
 				<button class="tab__close" type="button" data-close="${tab.id}" tabindex="-1"
 					aria-label="Close ${title}" title="Close">
@@ -293,7 +301,8 @@ tabstrip.addEventListener('click', (event) => {
 tabstrip.addEventListener('auxclick', (event) => {
 	if (event.button !== 1) return;
 	const tab = /** @type {HTMLElement} */ (event.target).closest('[data-id]');
-	if (tab) commit(closeSuiteTab(state, /** @type {HTMLElement} */ (tab).dataset.id ?? ''));
+	const id = /** @type {HTMLElement | null} */ (tab)?.dataset.id ?? '';
+	if (id && !state.tabs.find((t) => t.id === id)?.pinned) commit(closeSuiteTab(state, id));
 });
 
 tabstrip.addEventListener('keydown', (event) => {
@@ -307,7 +316,7 @@ tabstrip.addEventListener('keydown', (event) => {
 	else if (event.key === 'End') next = tabs.length - 1;
 	else if (event.key === 'Delete' || (event.key === 'w' && event.altKey)) {
 		const id = /** @type {HTMLElement} */ (tabs[index]).dataset.tab;
-		if (id) commit(closeSuiteTab(state, id));
+		if (id && !state.tabs.find((t) => t.id === id)?.pinned) commit(closeSuiteTab(state, id));
 		return;
 	} else return;
 	event.preventDefault();
@@ -344,6 +353,163 @@ appbar.addEventListener('change', (event) => {
 	const tab = state.tabs.find((t) => t.id === state.active);
 	if (tab) writeStore(`office-framework:${tab.app}`, select.value);
 	commit(setSuiteTabFramework(state, state.active, select.value));
+});
+
+/* ---- Tab context menu, pinning and drag to reorder ------------------------------------- */
+
+function closeTabMenu() {
+	tabMenu.hidden = true;
+	tabMenu.innerHTML = '';
+}
+
+/** @param {string} id @param {number} x @param {number} y */
+function openTabMenu(id, x, y) {
+	const tab = state.tabs.find((t) => t.id === id);
+	if (!tab) return;
+	const at = state.tabs.findIndex((t) => t.id === id);
+	const hasOthers = state.tabs.some((t) => t.id !== id && !t.pinned);
+	const hasRight = state.tabs.slice(at + 1).some((t) => !t.pinned);
+	tabMenu.innerHTML = `
+		<button type="button" role="menuitem" data-act="pin">${tab.pinned ? 'Unpin tab' : 'Pin tab'}</button>
+		<hr />
+		<button type="button" role="menuitem" data-act="close">Close tab</button>
+		<button type="button" role="menuitem" data-act="others"${hasOthers ? '' : ' disabled'}>Close other tabs</button>
+		<button type="button" role="menuitem" data-act="right"${hasRight ? '' : ' disabled'}>Close tabs to the right</button>`;
+	tabMenu.dataset.id = id;
+	tabMenu.hidden = false;
+	const { width, height } = tabMenu.getBoundingClientRect();
+	tabMenu.style.left = `${Math.max(4, Math.min(x, innerWidth - width - 4))}px`;
+	tabMenu.style.top = `${Math.max(4, Math.min(y, innerHeight - height - 4))}px`;
+	/** @type {HTMLElement | null} */ (tabMenu.querySelector('button:not(:disabled)'))?.focus();
+}
+
+tabstrip.addEventListener('contextmenu', (event) => {
+	const tabEl = /** @type {HTMLElement} */ (event.target).closest('[data-id]');
+	if (!tabEl) return;
+	event.preventDefault();
+	closeMenu();
+	const rect = tabEl.getBoundingClientRect();
+	// A keyboard-opened menu reports no pointer position; anchor it to the tab.
+	const fromKeyboard = event.clientX === 0 && event.clientY === 0;
+	openTabMenu(
+		/** @type {HTMLElement} */ (tabEl).dataset.id ?? '',
+		fromKeyboard ? rect.left : event.clientX,
+		fromKeyboard ? rect.bottom : event.clientY,
+	);
+});
+
+tabMenu.addEventListener('click', (event) => {
+	const act = /** @type {HTMLElement} */ (event.target).closest('[data-act]');
+	const id = tabMenu.dataset.id ?? '';
+	closeTabMenu();
+	if (!act || !id) return;
+	const tab = state.tabs.find((t) => t.id === id);
+	switch (/** @type {HTMLElement} */ (act).dataset.act) {
+		case 'pin':
+			return commit(pinSuiteTab(state, id, !tab?.pinned));
+		case 'close':
+			return commit(closeSuiteTab(state, id));
+		case 'others':
+			return commit(closeOtherSuiteTabs(state, id));
+		case 'right':
+			return commit(closeSuiteTabsToRight(state, id));
+	}
+});
+tabMenu.addEventListener('keydown', (event) => {
+	const items = /** @type {HTMLElement[]} */ ([
+		...tabMenu.querySelectorAll('button:not(:disabled)'),
+	]);
+	const index = items.indexOf(/** @type {HTMLElement} */ (document.activeElement));
+	if (event.key === 'ArrowDown') items[(index + 1) % items.length]?.focus();
+	else if (event.key === 'ArrowUp') items[(index - 1 + items.length) % items.length]?.focus();
+	else return;
+	event.preventDefault();
+});
+document.addEventListener('click', closeTabMenu);
+window.addEventListener('blur', closeTabMenu);
+document.addEventListener('keydown', (event) => {
+	if (event.key === 'Escape') closeTabMenu();
+});
+
+// Double-click a tab to pin or unpin it. The strip re-renders on the first click, so the browser's
+// own dblclick (which needs the same element twice) never fires; count the clicks by tab id.
+let lastClick = { id: '', at: 0 };
+tabstrip.addEventListener('click', (event) => {
+	const main = /** @type {HTMLElement} */ (event.target).closest('[data-tab]');
+	const id = /** @type {HTMLElement | null} */ (main)?.dataset.tab ?? '';
+	if (!id) return;
+	const now = event.timeStamp;
+	const double = lastClick.id === id && now - lastClick.at < 400;
+	lastClick = double ? { id: '', at: 0 } : { id, at: now };
+	if (double) commit(pinSuiteTab(state, id, !state.tabs.find((t) => t.id === id)?.pinned));
+});
+
+/** @type {string | null} */
+let dragId = null;
+
+function clearDropMarks() {
+	for (const el of tabstrip.querySelectorAll('.tab--drop-before, .tab--drop-after')) {
+		el.classList.remove('tab--drop-before', 'tab--drop-after');
+	}
+}
+
+/** The tab a drop at `clientX` lands before (null: at the end) and which tab edge to mark. */
+function dropTarget(clientX) {
+	const tabEls = [...tabstrip.querySelectorAll('[data-id]')];
+	for (const el of tabEls) {
+		const rect = el.getBoundingClientRect();
+		if (clientX < rect.left + rect.width / 2) {
+			return {
+				before: /** @type {HTMLElement} */ (el).dataset.id ?? null,
+				mark: el,
+				side: 'before',
+			};
+		}
+	}
+	return { before: null, mark: tabEls.at(-1) ?? null, side: 'after' };
+}
+
+tabstrip.addEventListener('dragstart', (event) => {
+	const tabEl = /** @type {HTMLElement} */ (event.target).closest?.('[data-id]');
+	if (!tabEl || !event.dataTransfer) return;
+	dragId = /** @type {HTMLElement} */ (tabEl).dataset.id ?? null;
+	event.dataTransfer.effectAllowed = 'move';
+	event.dataTransfer.setData('text/plain', dragId ?? '');
+	closeMenu();
+	closeTabMenu();
+	requestAnimationFrame(() => tabEl.classList.add('tab--dragging'));
+});
+
+tabstrip.addEventListener('dragover', (event) => {
+	if (!dragId) return;
+	event.preventDefault();
+	if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+	clearDropMarks();
+	const { mark, side } = dropTarget(event.clientX);
+	if (mark && /** @type {HTMLElement} */ (mark).dataset.id !== dragId) {
+		mark.classList.add(`tab--drop-${side}`);
+	}
+});
+
+tabstrip.addEventListener('dragleave', (event) => {
+	if (!tabstrip.contains(/** @type {Node | null} */ (event.relatedTarget))) clearDropMarks();
+});
+
+tabstrip.addEventListener('drop', (event) => {
+	if (!dragId) return;
+	event.preventDefault();
+	const id = dragId;
+	const { before } = dropTarget(event.clientX);
+	dragId = null;
+	clearDropMarks();
+	commit(moveSuiteTab(state, id, before));
+});
+
+tabstrip.addEventListener('dragend', () => {
+	dragId = null;
+	clearDropMarks();
+	for (const el of tabstrip.querySelectorAll('.tab--dragging'))
+		el.classList.remove('tab--dragging');
 });
 
 initTheme(() => tabFrames.values());
