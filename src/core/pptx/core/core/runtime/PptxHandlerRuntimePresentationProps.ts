@@ -148,6 +148,29 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	}
 
 	/**
+	 * Whether a legend overlays the plot. A classic `c:overlay` is a
+	 * `CT_Boolean`, so `<c:overlay/>` with no `val` is true; a classic legend
+	 * with no `c:overlay` at all also overlays (PowerPoint 16, every position).
+	 * ChartEx (`cx:chartData` in the chart space) is only read from an explicit
+	 * `@overlay`, since its missing-attribute behaviour has not been measured.
+	 */
+	private resolveLegendOverlay(
+		chartSpace: XmlObject | undefined,
+		legend: XmlObject,
+	): boolean | undefined {
+		const isFalse = (value: unknown) => value === '0' || value === 'false' || value === false;
+		const overlay = this.xmlLookupService.getChildByLocalName(legend, 'overlay');
+		if (overlay) {
+			return !isFalse(overlay['@_val']);
+		}
+		if (legend['@_overlay'] !== undefined) {
+			return !isFalse(legend['@_overlay']);
+		}
+		const isChartEx = this.xmlLookupService.getChildByLocalName(chartSpace, 'chartData');
+		return isChartEx ? undefined : true;
+	}
+
+	/**
 	 * Extract chart style metadata from chart XML.
 	 */
 	protected extractChartStyle(
@@ -204,6 +227,10 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				const legendPosVal = legendPos?.['@_val'] ?? legend['@_pos'];
 				if (legendPosVal) {
 					style.legendPosition = String(legendPosVal);
+				}
+				const legendOverlay = this.resolveLegendOverlay(chartSpace, legend);
+				if (legendOverlay !== undefined) {
+					style.legendOverlay = legendOverlay;
 				}
 				const entries = parseChartLegendEntries(
 					legend,

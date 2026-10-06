@@ -973,8 +973,20 @@ export interface PptxChartStyle {
 	styleId?: number;
 	/** Whether the chart has a visible legend. */
 	hasLegend?: boolean;
-	/** Legend position (t, b, l, r, tr). */
+	/**
+	 * Legend position (t, b, l, r, tr), exactly as written. Absent when the
+	 * legend declares none, which PowerPoint draws on the right; the default is
+	 * left to the renderer so a save never adds a `c:legendPos` the source lacked.
+	 */
 	legendPosition?: string;
+	/**
+	 * Whether the legend floats over the plot instead of reserving space beside
+	 * it. Classic charts read `c:legend/c:overlay`, and PowerPoint treats a
+	 * missing element as an overlay for every position (measured with
+	 * PowerPoint 16: `IncludeInLayout` is false). ChartEx charts read
+	 * `cx:legend/@overlay` only when present. Absent when unknown.
+	 */
+	legendOverlay?: boolean;
 	/** Per-series visibility and text-style overrides. */
 	legendEntries?: PptxChartLegendEntry[];
 	/**

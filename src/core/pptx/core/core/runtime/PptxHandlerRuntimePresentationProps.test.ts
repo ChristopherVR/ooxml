@@ -88,6 +88,49 @@ describe('extractChartStyle legend position (C2-G5)', () => {
 		const style = extractChartStyle(undefined, chartRoot);
 		expect(style?.legendPosition).toBe('r');
 	});
+
+	it('leaves a missing c:legendPos unset so a save does not add one', () => {
+		const chartRoot: XmlObject = { 'c:legend': { 'c:overlay': { '@_val': '0' } } };
+		const style = extractChartStyle(undefined, chartRoot);
+		expect(style?.hasLegend).toBe(true);
+		expect(style?.legendPosition).toBeUndefined();
+	});
+});
+
+// Measured with PowerPoint 16 (Legend.IncludeInLayout): c:overlay alone decides
+// whether the legend reserves space, for every position including `tr`, and a
+// classic legend with no c:overlay element floats over the plot.
+describe('extractChartStyle legend overlay', () => {
+	const legendWith = (children: XmlObject): XmlObject => ({
+		'c:legend': { 'c:legendPos': { '@_val': 'b' }, ...children },
+	});
+
+	it('reserves space for c:overlay val="0"', () => {
+		const style = extractChartStyle(undefined, legendWith({ 'c:overlay': { '@_val': '0' } }));
+		expect(style?.legendOverlay).toBe(false);
+	});
+
+	it('overlays for c:overlay val="1" and for a bare <c:overlay/>', () => {
+		expect(
+			extractChartStyle(undefined, legendWith({ 'c:overlay': { '@_val': '1' } }))?.legendOverlay,
+		).toBe(true);
+		expect(extractChartStyle(undefined, legendWith({ 'c:overlay': {} }))?.legendOverlay).toBe(true);
+	});
+
+	it('overlays a classic legend with no c:overlay element', () => {
+		expect(extractChartStyle(undefined, legendWith({}))?.legendOverlay).toBe(true);
+	});
+
+	it('reads cx:legend/@overlay and leaves an unstated ChartEx overlay unknown', () => {
+		const chartSpace: XmlObject = { 'cx:chartData': {} };
+		expect(
+			extractChartStyle(chartSpace, { 'cx:legend': { '@_pos': 't', '@_overlay': '1' } })
+				?.legendOverlay,
+		).toBe(true);
+		expect(
+			extractChartStyle(chartSpace, { 'cx:legend': { '@_pos': 't' } })?.legendOverlay,
+		).toBeUndefined();
+	});
 });
 
 // Regression: a chart authoring an 18pt legend/chart-level default text style
