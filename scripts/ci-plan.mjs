@@ -113,8 +113,9 @@ export const VIEWERS = {
 				'bun run test:packages',
 			],
 		},
-		// Its `test:browser` also loads the built packages in a browser.
-		before: { browser: ['bun run build:packages'] },
+		// Its `test:browser` also loads the built packages in a browser, through the consumer
+		// project `test:packages` writes (`.package-build/consumer.txt`), so both run first.
+		before: { browser: ['bun run build:packages', 'bun run test:packages'] },
 	},
 	teams: {
 		name: 'teams',

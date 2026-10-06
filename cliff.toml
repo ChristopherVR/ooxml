@@ -27,8 +27,9 @@ conventional commits.
 """
 # Tera template rendered once per release (tag).
 # Repo URL is hard-coded so commit/release links render without needing a
-# GITHUB_TOKEN (the [remote.github] block enriches author handles when a token
-# is available, but is not required for the file to generate).
+# GITHUB_TOKEN. There is deliberately no [remote.github] block: it makes git-cliff page
+# through the whole commit history of the repository once per package (about fifty
+# packages), which trips the GitHub secondary rate limit (HTTP 403) and fails the release.
 body = """
 {% set repo = "https://github.com/ChristopherVR/ooxml" %}\
 {% if version %}\
@@ -41,7 +42,6 @@ body = """
     {% for commit in commits %}
         - {% if commit.scope %}**{{ commit.scope }}:** {% endif %}\
             {{ commit.message | upper_first }}\
-            {% if commit.remote.username %} (by @{{ commit.remote.username }}){% endif %}\
             {% if commit.id %} ([{{ commit.id | truncate(length=7, end="") }}]({{ repo }}/commit/{{ commit.id }})){% endif %}\
     {% endfor %}
 {% endfor %}\n
@@ -96,6 +96,3 @@ tag_pattern = "^(ooxml-core|ooxml-ui)@[0-9]"
 skip_tags = ""
 ignore_tags = ""
 
-[remote.github]
-owner = "ChristopherVR"
-repo = "ooxml"
