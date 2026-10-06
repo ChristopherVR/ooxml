@@ -10,7 +10,16 @@
 // `.ooxml-link.json` in the viewer. Run `bun install --force` there afterwards. Never commit a
 // linked manifest: the viewers' `check:published` and the sync workflow both refuse `file:` ranges.
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import {
+	closeSync,
+	existsSync,
+	openSync,
+	readFileSync,
+	rmSync,
+	symlinkSync,
+	writeFileSync,
+	writeSync,
+} from 'node:fs';
 import { relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -85,7 +94,15 @@ function main() {
 		console.log('Restored. Run `bun install --force` in the viewer.');
 		return;
 	}
-	if (existsSync(backupPath)) throw new Error(`${BACKUP} exists: already linked (use --restore)`);
+	// Exclusive create: fails fast when already linked, with no check-then-write race.
+	let backupFd;
+	try {
+		backupFd = openSync(backupPath, 'wx');
+	} catch (error) {
+		if (error?.code === 'EEXIST')
+			throw new Error(`${BACKUP} exists: already linked (use --restore)`);
+		throw error;
+	}
 	if (!args.includes('--no-build'))
 		for (const cwd of [resolve(here, 'src/core'), resolve(here, 'src/ui')])
 			execFileSync('bun', ['run', 'build'], {
@@ -102,7 +119,8 @@ function main() {
 		backup[file] = saved;
 		write(path, raw, manifest);
 	}
-	writeFileSync(backupPath, JSON.stringify(backup, null, 2), { flag: 'wx' });
+	writeSync(backupFd, JSON.stringify(backup, null, 2));
+	closeSync(backupFd);
 	pointUiAtThisCheckout();
 	console.log(
 		`Linked ${Object.keys(backup).length} manifests. Run \`bun install --force\` in the viewer.`,
