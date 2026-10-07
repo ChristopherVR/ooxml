@@ -10,10 +10,16 @@ import { paragraphAttrs, paragraphFromAttrs } from './paragraph-attributes';
 import { inlineNodeRun, runToInlineNodes } from './run-adapter';
 import { trackChangesPlugin, REMOTE_TRANSACTION_META } from './track-changes-mode';
 import { trackParagraphBoundary } from './track-paragraph-boundaries';
-import { acceptAllChanges, rejectAllChanges, collectRevisionRanges } from './review-commands';
+import {
+	acceptAllChanges,
+	rejectAllChanges,
+	acceptRevisionRange,
+	rejectRevisionRange,
+	collectRevisionRanges,
+} from './review-commands';
 import { loadDocx } from '../parse';
 import { restartFixture } from '../test-support/restart-fixture';
-import { fieldMarkerNodeSpec } from './break-note-schema';
+import { fieldMarkerNodeSpec, noteReferenceNodeSpec } from './break-note-schema';
 import { paragraphBoundaryFixture } from '../test-support/paragraph-boundary-fixture';
 
 const attrs = Object.fromEntries(
@@ -29,6 +35,7 @@ const schema = new Schema({
 		table: { content: 'paragraph+', group: 'block' },
 		text: { group: 'inline' },
 		fieldMarker: fieldMarkerNodeSpec,
+		noteReference: noteReferenceNodeSpec,
 	},
 	marks: markSpecs,
 });
@@ -106,6 +113,76 @@ it("removes the author's pending inserted boundary without adding a deletion", (
 	expect(view.state.doc.eq(doc)).toBe(true);
 	expect(collectRevisionRanges(view.state.doc)).toEqual([]);
 });
+
+it('excludes bookmarked paragraph splits from the guarded boundary recorder', () => {
+	const doc = schema.node(
+		'doc',
+		null,
+		schema.node(
+			'paragraph',
+			{
+				id: 'original',
+				bookmarks: ['Target'],
+			},
+			schema.text('Hello'),
+		),
+	);
+	const state = EditorState.create({ doc });
+	const tr = state.tr.split(3);
+	expect(
+		trackParagraphBoundary(tr.steps, state, state.apply(tr), 'Ada', 'date', () => 'id'),
+	).toBeNull();
+	const view = editor(doc);
+	view.dispatch(view.state.tr.split(3));
+	expect(
+		collectRevisionRanges(view.state.doc).some((range) => range.kind === 'paragraphMark'),
+	).toBe(false);
+});
+
+for (const action of ['accept', 'reject'] as const)
+	it(`retains inline comment anchors, foreign revised text and note reference identity on ${action}ing a supported split`, () => {
+		const original = schema.node('paragraph', { id: 'original' }, [
+			schema.text('AB', [
+				schema.marks.comment!.create({ ids: ['comment-one'] }),
+				schema.marks.insertion!.create({ author: 'Bob', id: 'foreign-text' }),
+			]),
+			schema.node('noteReference', {
+				kind: 'footnote',
+				id: 'note-7',
+				format: JSON.stringify({ commentIds: ['comment-note'], bold: true }),
+			}),
+			schema.text('CD', [schema.marks.comment!.create({ ids: ['comment-two'] })]),
+		]);
+		const view = editor(schema.node('doc', null, original));
+		view.dispatch(view.state.tr.split(2));
+		expect(
+			view.state.doc
+				.firstChild!.content.append(view.state.doc.lastChild!.content)
+				.eq(original.content),
+		).toBe(true);
+		const boundary = collectRevisionRanges(view.state.doc).find(
+			(range) => range.kind === 'paragraphMark',
+		)!;
+		(action === 'accept' ? acceptRevisionRange : rejectRevisionRange)(view, boundary);
+		const content =
+			action === 'accept'
+				? view.state.doc.firstChild!.content.append(view.state.doc.lastChild!.content)
+				: view.state.doc.firstChild!.content;
+		expect(content.eq(original.content)).toBe(true);
+		expect(
+			collectRevisionRanges(view.state.doc).every((range) => range.id === 'foreign-text'),
+		).toBe(true);
+		const references: Node[] = [];
+		view.state.doc.descendants((node) => {
+			if (node.type.name === 'noteReference') references.push(node);
+		});
+		expect(references).toHaveLength(1);
+		expect(inlineNodeRun(references[0]!)).toMatchObject({
+			noteReference: { kind: 'footnote', id: 'note-7' },
+			commentIds: ['comment-note'],
+			bold: true,
+		});
+	});
 
 it('excludes fields, section boundaries, tables, pending foreign boundaries and mixed replacements', () => {
 	const simple = schema.text('Hello', [

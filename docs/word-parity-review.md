@@ -720,6 +720,12 @@ paragraph formatting, fields, tables, inter-section boundaries and mixed
 structural/text edits remain excluded. Display merging of pending deleted
 paragraph marks still requires separate work.
 
+Tracked paragraph splits also exclude paragraphs with bookmarks: the paragraph
+model cannot assign bookmark range ownership safely across split fragments.
+Ordinary untracked split/bookmark modeling remains a separate preexisting gap.
+Supported inline comment anchors, note references and existing inline revisions
+retain their identities through a plain split and its accept/reject resolution.
+
 Regular simple fields and complex markers now preserve explicit lock/dirty flags
 through parsing, editor metadata, edited export and empty-cache conversion.
 Cached complex results derive only their corresponding begin marker's lock state;

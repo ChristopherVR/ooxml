@@ -80,8 +80,10 @@ export function trackParagraphBoundary(
 	if (endsSection(oldState, first)) return null;
 	const revision = () => ({ author, date, dateUtc: date, id: nextId('revision') });
 	if (step.from === step.to) {
+		// Paragraph-level bookmarks cannot be safely assigned to two split fragments.
 		if (
 			!safeParagraph(first) ||
+			first.attrs.bookmarks?.length ||
 			step.slice.openStart !== 1 ||
 			step.slice.openEnd !== 1 ||
 			step.slice.content.childCount !== 2 ||
