@@ -1,12 +1,12 @@
-import type { SnapLine } from 'pptx-viewer-shared';
-import { attachRotateHandlePlacement } from 'pptx-viewer-shared';
+import type { SnapLine } from 'ooxml-ui/pptx';
+import { attachRotateHandlePlacement } from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { OverlayBox } from '../editor/types';
 import SelectionOverlay from './SelectionOverlay.svelte';
 
-vi.mock(import('pptx-viewer-shared'), async (original) => ({
+vi.mock(import('ooxml-ui/pptx'), async (original) => ({
 	...(await original()),
 	attachRotateHandlePlacement: vi.fn(() => vi.fn()),
 }));

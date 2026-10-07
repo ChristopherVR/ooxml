@@ -1,4 +1,4 @@
-import type { PptxAiChatStore, PptxAiStoredChat } from 'pptx-viewer-shared/ai';
+import type { PptxAiChatStore, PptxAiStoredChat } from 'ooxml-ui/pptx/ai';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../i18n';

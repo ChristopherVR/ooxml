@@ -6,8 +6,8 @@
  * `OptionsPane.tsx`, split into its own SFC to keep `OptionsPane.vue` small.
  */
 import { Info } from 'lucide-vue-next';
-import { clampOptionNumber, getDensePanelTouchTargetPx } from 'pptx-viewer-shared';
-import type { ViewerOptions, ViewerOptionsControl, ViewerOptionsGroupId } from 'pptx-viewer-shared';
+import { clampOptionNumber, getDensePanelTouchTargetPx } from 'ooxml-ui/pptx';
+import type { ViewerOptions, ViewerOptionsControl, ViewerOptionsGroupId } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

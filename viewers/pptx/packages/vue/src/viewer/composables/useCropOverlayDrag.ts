@@ -7,8 +7,8 @@
  * controller, which records the single undo step on commit.
  */
 import type { PptxElement } from 'pptx-viewer-core';
-import { beginCropDrag, dragCropHandle, panCropImage, toElementAxes } from 'pptx-viewer-shared';
-import type { CropDragStart, CropElementUpdate, CropHandleId } from 'pptx-viewer-shared';
+import { beginCropDrag, dragCropHandle, panCropImage, toElementAxes } from 'ooxml-ui/pptx';
+import type { CropDragStart, CropElementUpdate, CropHandleId } from 'ooxml-ui/pptx';
 import { onScopeDispose } from 'vue';
 
 export interface UseCropOverlayDragInput {

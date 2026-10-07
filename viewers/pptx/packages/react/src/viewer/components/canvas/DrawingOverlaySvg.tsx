@@ -1,7 +1,7 @@
 /**
  * SVG overlay for drawing ink strokes on the slide canvas.
  */
-import type { InkStrokeView } from 'pptx-viewer-shared';
+import type { InkStrokeView } from 'ooxml-ui/pptx';
 import React from 'react';
 
 import type { CanvasSize } from '../../types';

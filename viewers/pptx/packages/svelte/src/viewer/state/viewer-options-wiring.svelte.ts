@@ -1,5 +1,5 @@
-import type { ViewerPreferences } from 'pptx-viewer-shared';
-import { applyAutoCorrect } from 'pptx-viewer-shared';
+import type { ViewerPreferences } from 'ooxml-ui/pptx';
+import { applyAutoCorrect } from 'ooxml-ui/pptx';
 import { untrack } from 'svelte';
 
 import type { EditorState } from '../editor/editor-state.svelte';

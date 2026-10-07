@@ -1,6 +1,6 @@
 import type { PptxHandler } from 'pptx-viewer-core';
 import { THEME_PRESETS } from 'pptx-viewer-core';
-import { GALLERY_THEME_PRESETS } from 'pptx-viewer-shared';
+import { GALLERY_THEME_PRESETS } from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 

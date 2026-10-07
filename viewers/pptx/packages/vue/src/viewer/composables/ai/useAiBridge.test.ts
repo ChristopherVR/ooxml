@@ -11,7 +11,7 @@ import type {
 	PptxTheme,
 	PptxViewProperties,
 } from 'pptx-viewer-core';
-import type { CanvasSize } from 'pptx-viewer-shared';
+import type { CanvasSize } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 import { ref, shallowRef } from 'vue';
 

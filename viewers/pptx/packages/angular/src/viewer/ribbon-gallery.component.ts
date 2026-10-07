@@ -30,14 +30,14 @@ import {
 import { TranslateService } from '@ngx-translate/core';
 import type { PptxElement } from 'pptx-viewer-core';
 
-import { applyRibbonGalleryItem, buildRibbonGallery, galleryHasItems } from '../internal/shared';
+import { applyRibbonGalleryItem, buildRibbonGallery, galleryHasItems } from 'ooxml-ui/pptx';
 import type {
 	RibbonGalleryDescriptor,
 	RibbonGalleryId,
 	RibbonGalleryItem,
 	RibbonGalleryPickEvent,
 	PptxUiRibbonGalleryElement,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { EditorStateService } from './editor-state.service';
 import { LoadContentService } from './load-content.service';
 import { dispatchGalleryResult, galleryContextFor } from './ribbon-gallery-helpers';

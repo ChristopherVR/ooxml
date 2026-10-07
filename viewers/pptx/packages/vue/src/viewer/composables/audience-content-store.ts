@@ -13,4 +13,4 @@ export {
 	loadAudienceContent,
 	parseAudienceNonce,
 	storeAudienceContent,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

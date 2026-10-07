@@ -1,5 +1,5 @@
-import { TAB_ROW_ACTION_CLASSES as TRA } from 'pptx-viewer-shared';
-import type { ToolbarActionId } from 'pptx-viewer-shared';
+import { TAB_ROW_ACTION_CLASSES as TRA } from 'ooxml-ui/pptx';
+import type { ToolbarActionId } from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { LuShare2 } from 'react-icons/lu';

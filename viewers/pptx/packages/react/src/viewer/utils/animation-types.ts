@@ -3,4 +3,4 @@
  * `pptx-viewer-shared` (`render/animation-timeline-types`); this preserves the
  * historical `./animation-types` import path used across the React binding.
  */
-export type { AnimationStep, EffectName } from 'pptx-viewer-shared';
+export type { AnimationStep, EffectName } from 'ooxml-ui/pptx';

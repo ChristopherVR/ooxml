@@ -10,8 +10,8 @@ import {
 	getImageOverflow,
 	probeNativeImageSize,
 	shouldRenderHitTarget,
-} from '../internal/shared';
-import type { NativeImageSize } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { NativeImageSize } from 'ooxml-ui/pptx';
 import { ColorChangedImageComponent } from './color-changed-image.component';
 import { getReflectionOverlay } from './element-effect-defs';
 import type { ReflectionOverlay } from './element-effect-defs';

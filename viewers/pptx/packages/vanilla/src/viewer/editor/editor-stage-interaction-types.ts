@@ -1,4 +1,4 @@
-import type { ResizeHandleId, ShapeAdjustmentHandleDescriptor } from 'pptx-viewer-shared';
+import type { ResizeHandleId, ShapeAdjustmentHandleDescriptor } from 'ooxml-ui/pptx';
 
 import type { Store, ViewerState } from '../state';
 import type { EditorOps } from './editor-operations';
@@ -11,7 +11,7 @@ export interface StageInteractionsDeps {
 	getScale(): number;
 	getOverlay(): SelectionOverlay | null;
 	getStageRoot(): Element | null;
-	getLivePatcher?(): import('pptx-viewer-shared').CollaborationLivePatcher | undefined;
+	getLivePatcher?(): import('ooxml-ui/pptx').CollaborationLivePatcher | undefined;
 	onCursorMove?: (x: number, y: number) => void;
 	/**
 	 * Mirror in-progress inline-editor text to collaborators. Called on every
@@ -29,11 +29,11 @@ export interface StageInteractionsDeps {
 
 export interface StageInteractions {
 	hasActivePointerInteraction(): boolean;
-	readPendingInlineTextEdit?(): import('pptx-viewer-shared').PendingInlineTextEdit | undefined;
-	readInlineList?(): import('pptx-viewer-shared').InlineListReadResult | undefined;
+	readPendingInlineTextEdit?(): import('ooxml-ui/pptx').PendingInlineTextEdit | undefined;
+	readInlineList?(): import('ooxml-ui/pptx').InlineListReadResult | undefined;
 	/** Preserve exact accepted text before host-only permission loss closes the editor. */
 	retainAcceptedInlineText?(): void;
-	formatInlineList?(snapshot: import('pptx-viewer-shared').InlineTextEditSnapshot): boolean;
+	formatInlineList?(snapshot: import('ooxml-ui/pptx').InlineTextEditSnapshot): boolean;
 	onStagePointerDown(event: PointerEvent): void;
 	onStagePointerMove(event: PointerEvent): void;
 	onStageDblClick(event: MouseEvent): void;

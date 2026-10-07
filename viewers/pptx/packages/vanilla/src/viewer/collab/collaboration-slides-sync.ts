@@ -10,8 +10,8 @@
  * `applyRemoteSlides` at the right moments.
  */
 import type { PptxSlide } from 'pptx-viewer-core';
-import type { CollaborationConfig, YDocLike, YjsFactories } from 'pptx-viewer-shared';
-import { reconcileSlidesInYDoc, readSlidesFromYDoc } from 'pptx-viewer-shared';
+import type { CollaborationConfig, YDocLike, YjsFactories } from 'ooxml-ui/pptx';
+import { reconcileSlidesInYDoc, readSlidesFromYDoc } from 'ooxml-ui/pptx';
 
 import { clampSlideIndex } from '../state';
 import type { Store, ViewerState } from '../state';

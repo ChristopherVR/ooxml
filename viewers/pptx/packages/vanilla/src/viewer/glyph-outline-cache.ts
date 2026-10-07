@@ -12,7 +12,7 @@
  * so `state-sync.ts` repaints and the renderer picks them up from this same
  * cache.
  */
-import { createGlyphOutlineLookup, GlyphOutlineFontCache } from 'pptx-viewer-shared';
+import { createGlyphOutlineLookup, GlyphOutlineFontCache } from 'ooxml-ui/pptx';
 
 export const glyphOutlineFontCache = new GlyphOutlineFontCache();
 

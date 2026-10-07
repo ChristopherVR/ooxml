@@ -43,7 +43,7 @@
 		shouldRenderHitTarget,
 		shouldShowMediaFullscreenStopButton,
 		startMediaAutoplay,
-	} from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 	import { registerCrossSlideAudio, resolveMediaView } from '../render';

@@ -6,7 +6,7 @@ import type {
 	TablePptxElement,
 	TextStyle,
 } from 'pptx-viewer-core';
-import type { AlignEdge, ChangeCaseMode, InlineTextEditSnapshot } from 'pptx-viewer-shared';
+import type { AlignEdge, ChangeCaseMode, InlineTextEditSnapshot } from 'ooxml-ui/pptx';
 import {
 	readEditableText,
 	buildInlineListStylePatch,
@@ -16,7 +16,7 @@ import {
 	transformTextCase,
 	transformInlineListCase,
 	updateTextSegmentStyle,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
 

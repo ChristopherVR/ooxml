@@ -5,5 +5,5 @@
  * by every binding. This shim preserves the historical Angular import surface.
  */
 
-export type { SlideSearchMatch } from '../internal/shared';
-export { collectElementText, collectSlideText, searchSlides } from '../internal/shared';
+export type { SlideSearchMatch } from 'ooxml-ui/pptx';
+export { collectElementText, collectSlideText, searchSlides } from 'ooxml-ui/pptx';

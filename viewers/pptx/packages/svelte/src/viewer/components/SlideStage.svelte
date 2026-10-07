@@ -13,7 +13,7 @@
 		applyRenderedElementAccessibility,
 		deriveSlideFieldContext,
 		getSlideBackgroundStyle,
-	} from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 	import { getFieldContextGetter, provideFieldContext } from '../state/field-context';

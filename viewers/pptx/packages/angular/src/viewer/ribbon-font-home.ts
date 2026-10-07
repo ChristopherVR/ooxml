@@ -3,7 +3,7 @@
  * (`pptx-ui-ribbon-home-font`). Pure helper: decodes the strip's toggle, shadow,
  * size-step and clear intents into the edit this binding runs.
  */
-import type { RibbonControlId } from '../internal/shared';
+import type { RibbonControlId } from 'ooxml-ui/pptx';
 
 export type FontHomeAction =
 	| { kind: 'toggle'; flag: 'bold' | 'italic' | 'underline' | 'strikethrough' }

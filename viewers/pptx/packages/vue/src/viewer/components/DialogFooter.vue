@@ -5,7 +5,7 @@
  * (`ModalDialog`) keeps the backdrop, focus trap and dismissal; this re-emits
  * the activated action id.
  */
-import type { DialogFooterAction, DialogFooterRequestEvent } from 'pptx-viewer-shared';
+import type { DialogFooterAction, DialogFooterRequestEvent } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 
 const props = defineProps<{ actions: readonly DialogFooterAction[] }>();

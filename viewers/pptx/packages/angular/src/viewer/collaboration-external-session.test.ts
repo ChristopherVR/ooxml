@@ -7,8 +7,8 @@ import type {
 	CollaborationConfig,
 	ExternalCollaborationSession,
 	ExternalCollaborationSnapshot,
-} from '../internal/shared';
-import { readSlidesFromYDoc, reconcileSlidesInYDoc } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import { readSlidesFromYDoc, reconcileSlidesInYDoc } from 'ooxml-ui/pptx';
 import { createWebrtcBundle, createWebsocketBundle } from './collaboration-providers';
 import { WriteBackScheduler } from './collaboration-writeback';
 import { CollaborationService } from './collaboration.service';

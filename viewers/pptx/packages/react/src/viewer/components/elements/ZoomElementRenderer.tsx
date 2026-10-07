@@ -1,6 +1,6 @@
 import type { ZoomPptxElement, PptxSlide } from 'pptx-viewer-core';
-import { buildSummaryZoomView, resolveZoomNavigationTarget } from 'pptx-viewer-shared';
-import type { ZoomNavigationTarget } from 'pptx-viewer-shared';
+import { buildSummaryZoomView, resolveZoomNavigationTarget } from 'ooxml-ui/pptx';
+import type { ZoomNavigationTarget } from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 

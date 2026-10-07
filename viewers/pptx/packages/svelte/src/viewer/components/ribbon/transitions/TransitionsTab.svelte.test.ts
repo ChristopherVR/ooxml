@@ -2,7 +2,7 @@ import {
 	EFFECT_SOUND_CATALOGUE,
 	registerPptxWebControls,
 	TRANSITION_PREVIEW_ATTR,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 

@@ -17,5 +17,5 @@ export {
 	has3dTransform,
 	parseBlurValue,
 	removeUnsupportedFeatures,
-} from 'pptx-viewer-shared';
-export type { CssPreprocessingOptions } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+export type { CssPreprocessingOptions } from 'ooxml-ui/pptx';

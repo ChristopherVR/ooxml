@@ -5,8 +5,8 @@
  * never be hidden), plus the keyboard-shortcut reference. Vue counterpart of
  * React's `settings/OptionsRibbonPane.tsx`.
  */
-import type { ToolbarTabId, ViewerOptions } from 'pptx-viewer-shared';
-import { SHORTCUT_REFERENCE_ITEMS, TOOLBAR_TABS } from 'pptx-viewer-shared';
+import type { ToolbarTabId, ViewerOptions } from 'ooxml-ui/pptx';
+import { SHORTCUT_REFERENCE_ITEMS, TOOLBAR_TABS } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

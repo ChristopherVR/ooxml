@@ -1,8 +1,8 @@
 import JSZip from 'jszip';
 import { createImageElement, PptxHandler } from 'pptx-viewer-core';
 import type { PptxElement } from 'pptx-viewer-core';
-import { createViewerOptionsStore, reconcileSlidesInYDoc } from 'pptx-viewer-shared';
-import type { CollaborationConfig, ExternalCollaborationSession } from 'pptx-viewer-shared';
+import { createViewerOptionsStore, reconcileSlidesInYDoc } from 'ooxml-ui/pptx';
+import type { CollaborationConfig, ExternalCollaborationSession } from 'ooxml-ui/pptx';
 // @vitest-environment happy-dom
 /**
  * Live sanity check for `useViewerBuildingBlocks`: renders a component that
@@ -23,7 +23,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 import { Awareness } from 'y-protocols/awareness';
 import * as Y from 'yjs';
 
-import * as imageInsertion from '../../../../shared/src/render/image-file-insertion';
+import * as imageInsertion from '../../../../../../../src/ui/src/pptx/render/image-file-insertion';
 import { SlideCanvas } from '../components/SlideCanvas';
 import type { SlideCanvasProps } from '../components/SlideCanvas';
 import type { PowerPointViewerHandle } from '../types';

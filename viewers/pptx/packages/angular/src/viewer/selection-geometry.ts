@@ -7,8 +7,8 @@
 
 import type { PptxElement } from 'pptx-viewer-core';
 
-import { canInteractWithElement } from '../internal/shared';
-import { resolveTopLevelElementId } from '../internal/shared-src/render/element-hit-test';
+import { canInteractWithElement } from 'ooxml-ui/pptx';
+import { resolveTopLevelElementId } from 'ooxml-ui/pptx/render/element-hit-test';
 import { handleAnchor, handleCursor, RESIZE_HANDLES } from './drag-resize';
 import type { Box, ResizeHandle } from './drag-resize';
 import { isElementInteractive } from './template-mode';

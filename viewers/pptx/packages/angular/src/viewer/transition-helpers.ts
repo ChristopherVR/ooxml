@@ -19,13 +19,13 @@
  */
 import type { PptxSlideTransition } from 'pptx-viewer-core';
 
-import { resolveTransitionDurationMs } from '../internal/shared';
+import { resolveTransitionDurationMs } from 'ooxml-ui/pptx';
 
 export type {
 	SlideTransitionAnimations,
 	ResolvedDirection,
 	ResolvedDirection8,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 export {
 	DEFAULT_MORPH_DURATION_MS,
 	resolveDirection,
@@ -35,7 +35,7 @@ export {
 	INSTANT,
 	SLIDE_TRANSITION_KEYFRAMES,
 	getSlideTransitionAnimations,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 // The rest of the framework-neutral slide-transition surface (issue #290):
 // `resolveSlideTransition` / `resolveTransitionDurationMs` (the whole-transition
 // convenience wrappers), the p14/cinematic sub-resolvers and their keyframe
@@ -65,7 +65,7 @@ export {
 	WHEEL_SPOKE_COUNTS,
 	resolveWheelSpokeCount,
 	DEFAULT_TRANSITION_DURATION_MS as SHARED_DEFAULT_TRANSITION_DURATION_MS,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 
 // ---------------------------------------------------------------------------
 // Legacy local duration policy (no longer used by the overlay)

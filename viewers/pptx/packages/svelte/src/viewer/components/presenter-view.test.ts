@@ -17,7 +17,7 @@
  * `slides[current + 1]` fails rather than quietly previewing a hidden slide.
  */
 import type { PptxSlide } from 'pptx-viewer-core';
-import type { AuthoredSlideRange } from 'pptx-viewer-shared';
+import type { AuthoredSlideRange } from 'ooxml-ui/pptx';
 import {
 	createInitialPresentationSnapshot,
 	NOTES_FONT_SIZE_DEFAULT,
@@ -25,7 +25,7 @@ import {
 	NOTES_FONT_SIZE_STEP,
 	PRESENTER_CONSOLE_ORDER,
 	PRESENTER_TIMER_SEGMENT_MS,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 

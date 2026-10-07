@@ -3,8 +3,8 @@ import {
 	arrangeAlignAction,
 	arrangeHomeControls,
 	arrangePainterHomeControls,
-} from 'pptx-viewer-shared';
-import type { ToolbarActionId } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { ToolbarActionId } from 'ooxml-ui/pptx';
 import React, { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 

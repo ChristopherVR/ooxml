@@ -8,7 +8,7 @@
 	 * cross-binding ribbon inventory; the group's own name is carried by
 	 * `aria-label` on the section instead.
 	 */
-	import type { RibbonGroupId } from 'pptx-viewer-shared';
+	import type { RibbonGroupId } from 'ooxml-ui/pptx';
 	import type { Snippet } from 'svelte';
 
 	/**

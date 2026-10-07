@@ -1,4 +1,4 @@
-import { clipboardHomeControls } from 'pptx-viewer-shared';
+import { clipboardHomeControls } from 'ooxml-ui/pptx';
 import React, { useCallback, useMemo } from 'react';
 
 import { WebHomeControls } from './WebHomeControls';

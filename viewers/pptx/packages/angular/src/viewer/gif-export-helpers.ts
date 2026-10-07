@@ -17,5 +17,5 @@ export {
 	clampGifDimensions,
 	encodeGif,
 	GIF_POST_CAPTURE_MAX_SIDE,
-} from '../internal/shared';
-export type { GifFramePlan, GifPlanOptions, GifFrame, EncodeGifOptions } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+export type { GifFramePlan, GifPlanOptions, GifFrame, EncodeGifOptions } from 'ooxml-ui/pptx';

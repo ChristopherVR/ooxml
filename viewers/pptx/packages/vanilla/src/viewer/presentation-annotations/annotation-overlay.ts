@@ -4,13 +4,13 @@ import {
 	cursorForTool,
 	erasePresentationInkAt,
 	presentationInkPath,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type {
 	PresentationBlackout,
 	PresentationInkPoint,
 	PresentationInkStroke,
 	PresentationPointerTool,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 export interface AnnotationOverlayOptions {
 	stageWrap: HTMLElement;

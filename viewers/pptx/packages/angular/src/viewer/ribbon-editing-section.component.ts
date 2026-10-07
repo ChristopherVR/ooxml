@@ -26,8 +26,8 @@ import {
 } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 
-import { editingHomeControls } from '../internal/shared';
-import type { RibbonHomeRequestEvent } from '../internal/shared';
+import { editingHomeControls } from 'ooxml-ui/pptx';
+import type { RibbonHomeRequestEvent } from 'ooxml-ui/pptx';
 import { homeLanguage, homeTranslator } from './ribbon-home-lang';
 
 @Component({

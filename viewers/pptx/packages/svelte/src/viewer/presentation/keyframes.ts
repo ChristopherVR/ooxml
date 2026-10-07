@@ -2,7 +2,7 @@ import {
 	ANIMATION_KEYFRAMES_CSS,
 	PRESENTATION_HIT_TEST_CSS,
 	SLIDE_TRANSITION_KEYFRAMES_CSS,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 /**
  * `keyframes`: inject the shared `@keyframes` blocks the presentation mode

@@ -5,7 +5,7 @@ import {
 	resolveGoogleWebfontHref,
 	selectGoogleWebfontFamilies,
 	syncGoogleWebfontStylesheet,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { onScopeDispose, toValue, watchEffect } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
 

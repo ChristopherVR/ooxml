@@ -1,5 +1,5 @@
 import type { PptxAnimationPreset, PptxElementAnimation } from 'pptx-viewer-core';
-import type { AnimationGroup } from 'pptx-viewer-shared';
+import type { AnimationGroup } from 'ooxml-ui/pptx';
 import {
 	applyAnimationPreset,
 	applyMotionPathPreset,
@@ -7,7 +7,7 @@ import {
 	removeElementAnimation,
 	setMotionPath,
 	updateSlide,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { EditorState } from './editor-state.svelte';
 

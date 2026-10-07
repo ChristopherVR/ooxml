@@ -8,8 +8,8 @@
  * eagerly (instant on a repeat render); an async probe is kicked off on cache
  * miss and the returned ref updates once it resolves.
  */
-import type { NativeImageSize } from 'pptx-viewer-shared';
-import { getCachedNativeImageSize, probeNativeImageSize } from 'pptx-viewer-shared';
+import type { NativeImageSize } from 'ooxml-ui/pptx';
+import { getCachedNativeImageSize, probeNativeImageSize } from 'ooxml-ui/pptx';
 import type { ComputedRef, Ref } from 'vue';
 import { ref, watch } from 'vue';
 

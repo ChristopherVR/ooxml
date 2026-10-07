@@ -4,8 +4,8 @@ import type {
 	PptxAiConfig,
 	VanillaChatController,
 	VanillaChatSnapshot,
-} from 'pptx-viewer-shared/ai';
-import { createAiChangeAnimator, ProposalStore } from 'pptx-viewer-shared/ai';
+} from 'ooxml-ui/pptx/ai';
+import { createAiChangeAnimator, ProposalStore } from 'ooxml-ui/pptx/ai';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../i18n';

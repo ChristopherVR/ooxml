@@ -13,9 +13,9 @@ import type {
 	ViewerFontSource,
 	ViewerTheme,
 	ViewportFitOptions,
-} from 'pptx-viewer-shared';
-import type { PptxAiConfig } from 'pptx-viewer-shared/ai';
-import type { LocaleCatalogEntry } from 'pptx-viewer-shared/i18n';
+} from 'ooxml-ui/pptx';
+import type { PptxAiConfig } from 'ooxml-ui/pptx/ai';
+import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
 
 import type {
 	ExportGifOptions,
@@ -28,7 +28,7 @@ export type {
 	ExternalCollaborationSession,
 	ExternalCollaborationSnapshot,
 	ExternalCollaborationAwareness,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 /**
  * Public component types for the Svelte PowerPoint viewer.

@@ -5,7 +5,7 @@
 	 * port of React's `inspector/AfterAnimationRow.tsx`.
 	 */
 	import type { PptxAfterAnimationAction } from 'pptx-viewer-core';
-	import { AFTER_ANIMATION_VALUES } from 'pptx-viewer-shared';
+	import { AFTER_ANIMATION_VALUES } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 

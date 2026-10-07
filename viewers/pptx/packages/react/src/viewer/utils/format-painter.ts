@@ -6,5 +6,5 @@
  * This shim preserves the historical React import surface so consumers and
  * colocated tests keep importing the same names unchanged.
  */
-export type { CopiedFormat } from 'pptx-viewer-shared';
-export { copyFormatFromElement, applyFormatToElement, hasCopyableFormat } from 'pptx-viewer-shared';
+export type { CopiedFormat } from 'ooxml-ui/pptx';
+export { copyFormatFromElement, applyFormatToElement, hasCopyableFormat } from 'ooxml-ui/pptx';

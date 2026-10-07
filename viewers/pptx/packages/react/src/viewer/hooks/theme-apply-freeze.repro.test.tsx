@@ -26,7 +26,7 @@ import type {
 	CompatibilityWarningToast,
 	ReadOnlyRecommendation,
 	SlideSizeEmu,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 // @vitest-environment happy-dom
 /**
  * Regression harness for the "AI theme colour change freezes the renderer" bug.

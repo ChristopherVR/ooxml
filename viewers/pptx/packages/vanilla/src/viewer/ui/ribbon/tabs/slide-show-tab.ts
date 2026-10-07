@@ -4,8 +4,8 @@ import type {
 	RibbonControlId,
 	SlideShowOptionsChangeEvent,
 	ToolbarActionId,
-} from 'pptx-viewer-shared';
-import { isActionHidden, SLIDE_SHOW_COMMAND_GROUPS, SLIDE_SHOW_OPTIONS } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import { isActionHidden, SLIDE_SHOW_COMMAND_GROUPS, SLIDE_SHOW_OPTIONS } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../../i18n';
 import { createEl } from '../../../render';

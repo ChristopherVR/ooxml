@@ -16,7 +16,7 @@ import {
 	downloadBlob as sharedDownloadBlob,
 	GIF_POST_CAPTURE_MAX_SIDE,
 	resolveExportBaseName,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type { Ref } from 'vue';
 
 import type { GifFrame } from './gif-encoder';

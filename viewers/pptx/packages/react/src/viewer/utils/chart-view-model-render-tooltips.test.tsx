@@ -1,4 +1,4 @@
-import type { ChartViewModel, SvgPrimitive, SvgRect } from 'pptx-viewer-shared';
+import type { ChartViewModel, SvgPrimitive, SvgRect } from 'ooxml-ui/pptx';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, it, expect } from 'vitest';
 

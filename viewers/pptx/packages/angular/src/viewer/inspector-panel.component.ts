@@ -39,7 +39,7 @@ import type {
 } from 'pptx-viewer-core';
 import { hasShapeProperties, hasTextProperties } from 'pptx-viewer-core';
 
-import type { ThemeColorPickerCommit } from '../internal/shared';
+import type { ThemeColorPickerCommit } from 'ooxml-ui/pptx';
 import {
 	applyTableStyleDelete,
 	applyTableStyleMapChange,
@@ -48,7 +48,7 @@ import {
 	rebuildDrawingShapesIfCleared,
 	resolvePalette,
 	textFontSizePtToPx,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { AccessibilityTextPanelComponent } from './accessibility-text-panel.component';
 import { ActionSettingsPanelComponent } from './action-settings-panel.component';
 import { AnimationAuthorPanelComponent } from './animation-author-panel.component';

@@ -9,7 +9,7 @@
  * tests of a ribbon section) simply renders both controls disabled.
  */
 import type { MergeShapeOperation, PptxElement } from 'pptx-viewer-core';
-import type { CropElementUpdate, NaturalImageSize } from 'pptx-viewer-shared';
+import type { CropElementUpdate, NaturalImageSize } from 'ooxml-ui/pptx';
 import type { ComputedRef, InjectionKey } from 'vue';
 
 /** Merge Shapes: the ribbon dropdown and the context-menu entries. */

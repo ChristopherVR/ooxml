@@ -17,7 +17,7 @@
 	 * and ignores anything inside `[data-pptx-crop-overlay]`.
 	 */
 	import type { PptxElement } from 'pptx-viewer-core';
-	import type { CropHandleId } from 'pptx-viewer-shared';
+	import type { CropHandleId } from 'ooxml-ui/pptx';
 	import {
 		CROP_HANDLE_ARIA_KEY,
 		beginCropDrag,
@@ -25,7 +25,7 @@
 		dragCropHandle,
 		panCropImage,
 		toElementAxes,
-	} from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
 	import { onDestroy, untrack } from 'svelte';
 
 	import { useTranslator } from '../../i18n/context';

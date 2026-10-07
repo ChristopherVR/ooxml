@@ -1,5 +1,5 @@
-import type { RasterizeElementTilesResult } from 'pptx-viewer-shared';
-import { placeTileOnPage } from 'pptx-viewer-shared';
+import type { RasterizeElementTilesResult } from 'ooxml-ui/pptx';
+import { placeTileOnPage } from 'ooxml-ui/pptx';
 
 /** The subset of jsPDF's `addImage` this module needs (duck-typed so callers can pass the real `jsPDF` instance). */
 export interface JsPdfImageTarget {

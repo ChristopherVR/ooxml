@@ -12,8 +12,8 @@ import {
 	scaleFontSizeForAutoFit,
 	splitsUnderlineIntoWords,
 	stripUnderlineDecoration,
-} from 'pptx-viewer-shared';
-import type { EastAsianBreakOptions, ParagraphRun, RunStyle } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { EastAsianBreakOptions, ParagraphRun, RunStyle } from 'ooxml-ui/pptx';
 import React from 'react';
 
 import { DEFAULT_TEXT_FONT_SIZE, DEFAULT_FONT_FAMILY, HYPERLINK_COLOR } from '../constants';

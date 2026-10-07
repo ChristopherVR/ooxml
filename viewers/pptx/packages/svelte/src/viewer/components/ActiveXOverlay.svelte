@@ -9,8 +9,8 @@
 	 * Svelte had no ActiveX overlay at all before this.
 	 */
 	import type { PptxActiveXControl } from 'pptx-viewer-core';
-	import type { CanvasSize } from 'pptx-viewer-shared';
-	import { getActiveXControlOverlayView } from 'pptx-viewer-shared';
+	import type { CanvasSize } from 'ooxml-ui/pptx';
+	import { getActiveXControlOverlayView } from 'ooxml-ui/pptx';
 
 	const {
 		controls,

@@ -19,7 +19,7 @@ export type {
 	SmartArtLayoutResult,
 	LayoutFamily,
 	BoundingBox,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 export {
 	colour,
 	nodeOpacity,
@@ -44,4 +44,4 @@ export {
 	computeTargetLayout,
 	computeSmartArtLayout,
 	computeSmartArtElementLayout,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

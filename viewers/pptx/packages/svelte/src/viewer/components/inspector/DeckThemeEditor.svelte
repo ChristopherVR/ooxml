@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { PptxHandler, PptxTheme } from 'pptx-viewer-core';
-	import type { ThemeEditorEdit } from 'pptx-viewer-shared';
+	import type { ThemeEditorEdit } from 'ooxml-ui/pptx';
 	import type { EditorState } from '../../editor/editor-state.svelte';
 	import { applyThemePreset } from '../../editor/editor-theme-scheme';
 	import ThemeEditorPanel from './ThemeEditorPanel.svelte';

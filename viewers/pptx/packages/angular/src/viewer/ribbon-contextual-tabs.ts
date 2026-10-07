@@ -19,8 +19,8 @@ import {
 	resolveActiveRibbonTab,
 	RIBBON_CONTEXTUAL_TABS,
 	visibleContextualTabs,
-} from '../internal/shared';
-import type { ResolvedCustomization, RibbonContextualTabId } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { ResolvedCustomization, RibbonContextualTabId } from 'ooxml-ui/pptx';
 import type { RibbonTab } from './ribbon-types';
 
 export interface RibbonTabState {

@@ -1,6 +1,6 @@
 import { hasTextProperties } from 'pptx-viewer-core';
 import type { PptxElement } from 'pptx-viewer-core';
-import { buildTextBodyLayoutStyle } from 'pptx-viewer-shared';
+import { buildTextBodyLayoutStyle } from 'ooxml-ui/pptx';
 import React from 'react';
 
 import { DEFAULT_BODY_INSET_TB_PX } from '../constants';

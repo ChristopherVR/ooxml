@@ -459,3 +459,24 @@ existing module until the new UI exports are published. No product palette is ch
 The chart-grid viewer facade was restored to its original implementation in
 the follow-up commit to remain compatible with published core versions. Both
 viewer adoption steps are tracked in `docs/pptx-shared-migration.md`.
+
+## Chart text defaults added during the renderer migration
+
+Source: `IHAGI-c/ooxml`, commit `d29c143e65f0200dc9894a77c220d804c8cd100d` (PR #13).
+The new `chart-text-defaults.ts` and `.test.ts` modules move from
+`viewers/pptx/packages/shared/src/render` to `src/ui/src/pptx/render`.
+Their core type imports use `ooxml-core/pptx`; chart font behavior is preserved.
+
+## PowerPoint shared renderer and document operations
+
+Extracted the complete `viewers/pptx/packages/shared/src` implementation at
+`c666f2ee933be0b0be83a0ef4e3e094c1620fe61` (original repository `ChristopherVR/pptx-viewer`) into
+`src/ui/src/pptx`, with DOM-free document operations in `src/core/pptx/editor`.
+Tool schemas moved from `viewers/pptx/packages/tools/src/schemas` into
+`src/core/pptx/automation/schemas` at the same commit.
+
+[The module inventory](docs/pptx-migration-provenance.json) records each source
+and destination. Imports now use the published core/UI entry points, fixture
+references follow the moved tests, and shared palette/grid policy is reused.
+The private shared package retains compatibility exports. Angular consumes
+public UI entries instead of copying the renderer into its published output.

@@ -10,12 +10,12 @@
  * re-render off the store like the rest of the viewer, and only when an
  * awareness event actually changes something visible (issue #145).
  */
-import type { AwarenessLike, PresenceIdentity, PresencePublisher } from 'pptx-viewer-shared';
+import type { AwarenessLike, PresenceIdentity, PresencePublisher } from 'ooxml-ui/pptx';
 import {
 	createPresencePublisher,
 	createPresenceProjector,
 	PRESENCE_HEARTBEAT_MS,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Store, ViewerState } from '../state';
 

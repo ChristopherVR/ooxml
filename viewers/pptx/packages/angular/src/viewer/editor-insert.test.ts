@@ -9,8 +9,8 @@ import {
 import type { ImagePptxElement, PptxSlide } from 'pptx-viewer-core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { INSERT_CHART_TYPES } from '../internal/shared';
-import { createImageElementFromFile } from '../internal/shared-src/render/image-file-insertion';
+import { INSERT_CHART_TYPES } from 'ooxml-ui/pptx';
+import { createImageElementFromFile } from 'ooxml-ui/pptx/render/image-file-insertion';
 import {
 	newChartElement,
 	newEquationElement,
@@ -22,7 +22,7 @@ import {
 import { EditorStateService } from './editor-state.service';
 import { setupViewerImagePaste } from './viewer-image-paste';
 
-vi.mock(import('../internal/shared-src/render/image-file-insertion'), () => ({
+vi.mock(import('ooxml-ui/pptx/render/image-file-insertion'), () => ({
 	createImageElementFromFile: vi.fn(),
 }));
 

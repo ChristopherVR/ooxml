@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { SmartArtLayout, SmartArtPptxElement } from 'pptx-viewer-core';
-	import { buildSmartArtPresetData } from 'pptx-viewer-shared';
+	import { buildSmartArtPresetData } from 'ooxml-ui/pptx';
 
 	import SmartArtView from '../../SmartArtView.svelte';
 

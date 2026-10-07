@@ -13,7 +13,7 @@ export {
 	registerPersistentAudio,
 	resumeAllPersistentAudio,
 	stopAllPersistentAudio,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 // ---------------------------------------------------------------------------
 // Helpers

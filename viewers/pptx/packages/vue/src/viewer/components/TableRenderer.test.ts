@@ -7,7 +7,7 @@ import type {
 	PptxTableData,
 	PptxThemeColorScheme,
 } from 'pptx-viewer-core';
-import type { CellTextRun } from 'pptx-viewer-shared';
+import type { CellTextRun } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 import { ref } from 'vue';
 

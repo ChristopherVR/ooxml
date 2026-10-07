@@ -47,7 +47,7 @@ export type {
 	PptxAiToolName,
 	PptxAiUIMessage,
 	PptxAiWritePolicy,
-} from 'pptx-viewer-shared/ai';
+} from 'ooxml-ui/pptx/ai';
 export type { SvelteAiBridgeDeps } from './ai';
 export type {
 	ExternalCollaborationSession,
@@ -60,7 +60,7 @@ export type {
 	InlineTextEditSnapshot,
 	InlineListController,
 	InlineListReadResult,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 export { createSvelteAiBridge } from './ai';
 export {
 	clampSlideIndex,

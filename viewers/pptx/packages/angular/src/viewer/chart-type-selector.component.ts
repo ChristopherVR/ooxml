@@ -22,7 +22,7 @@ import {
 import { TranslatePipe } from '@ngx-translate/core';
 import type { ChartPptxElement, PptxChartData } from 'pptx-viewer-core';
 
-import type { ChartTypeSelectValue } from '../internal/shared';
+import type { ChartTypeSelectValue } from 'ooxml-ui/pptx';
 import {
 	CHART_TYPE_OPTIONS,
 	collapseChartTitleRunsForEdit,
@@ -30,7 +30,7 @@ import {
 	GROUPING_SUPPORTED_TYPES,
 	patchChartData,
 	resolveDisplayedChartType,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { isSelectControl } from './control-event-targets';
 
 /**

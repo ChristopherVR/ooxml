@@ -29,7 +29,7 @@
 		getGroupChildParentFill,
 		getImageFitStyle,
 		getImageSrc as sharedGetImageSrc,
-	} from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
 
 	import { getShapeFillStrokeStyle, getTextBlockStyle, styleToString } from '../style';
 	import ShapeEffectOverlay from './ShapeEffectOverlay.svelte';

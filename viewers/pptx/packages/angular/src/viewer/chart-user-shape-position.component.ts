@@ -28,8 +28,8 @@ import {
 import { TranslatePipe } from '@ngx-translate/core';
 import type { PptxChartUserShape } from 'pptx-viewer-core';
 
-import type { ChartUserShapeRow, ChartUserShapeRowPatch } from '../internal/shared';
-import { getChartUserShapeRowChartBox } from '../internal/shared';
+import type { ChartUserShapeRow, ChartUserShapeRowPatch } from 'ooxml-ui/pptx';
+import { getChartUserShapeRowChartBox } from 'ooxml-ui/pptx';
 import { CHART_EDITOR_STYLES } from './chart-editor-styles';
 
 export interface ChartUserShapePositionPatch {

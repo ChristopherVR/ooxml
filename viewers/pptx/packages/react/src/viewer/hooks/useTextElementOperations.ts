@@ -9,7 +9,7 @@ import {
 	transformInlineListCase,
 	remapTextToSegments,
 	toggleSelectionBullets,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { useCallback } from 'react';
 
 import { setPendingSelectionRestore } from '../utils/inline-selection-utils';

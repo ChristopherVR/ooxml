@@ -22,12 +22,12 @@ import type {
 	InlineTextEditSnapshot,
 	MasterViewTarget,
 	SlideSizeEmu,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	buildDeckSaveOptions,
 	resolveSlideSizeSelection,
 	saveDeckWithPassword,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 /**
  * useSerialize: Builds the `serializeSlides` callback that persists the
  * current slide deck (including header/footer, properties, etc.) via the

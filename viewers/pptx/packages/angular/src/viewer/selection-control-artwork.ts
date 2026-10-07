@@ -1,4 +1,4 @@
-import { getSelectionControlArtworkStyle } from '../internal/shared';
+import { getSelectionControlArtworkStyle } from 'ooxml-ui/pptx';
 import type { ResizeHandle } from './drag-resize';
 import type { CornerHandleBox } from './selection-geometry';
 

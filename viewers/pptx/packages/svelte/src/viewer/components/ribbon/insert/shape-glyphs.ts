@@ -1,4 +1,4 @@
-import type { ShapePresetGlyph } from 'pptx-viewer-shared';
+import type { ShapePresetGlyph } from 'ooxml-ui/pptx';
 
 /**
  * Maps the shared shape-preset catalogue's framework-neutral `glyph` names

@@ -7,8 +7,8 @@
  * The transcript itself is owned by useChat (via useAiConversation); this hook
  * only reads `messages` and drives `setMessages` so switching chats stays clean.
  */
-import type { PptxAiChatStore, PptxAiChatSummary, PptxAiUIMessage } from 'pptx-viewer-shared/ai';
-import { createChatHistoryStore } from 'pptx-viewer-shared/ai';
+import type { PptxAiChatStore, PptxAiChatSummary, PptxAiUIMessage } from 'ooxml-ui/pptx/ai';
+import { createChatHistoryStore } from 'ooxml-ui/pptx/ai';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 const SAVE_DEBOUNCE_MS = 800;

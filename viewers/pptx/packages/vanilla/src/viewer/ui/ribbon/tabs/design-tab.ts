@@ -4,7 +4,7 @@ import {
 	DESIGN_RIBBON_GROUPS,
 	FIXED_TAB_GALLERIES,
 	GALLERY_THEME_PRESETS,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../../i18n';
 import { createEl } from '../../../render';

@@ -1,5 +1,5 @@
 import type { MergeShapeOperation, PptxElement } from 'pptx-viewer-core';
-import type { AlignEdge, ToolbarActionId } from 'pptx-viewer-shared';
+import type { AlignEdge, ToolbarActionId } from 'ooxml-ui/pptx';
 import {
 	arrangeAlignAction,
 	arrangeHomeControls,
@@ -11,7 +11,7 @@ import {
 	isActionHidden,
 	parseCropValue,
 	strokeWidthOf,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../../i18n';
 import { createEl } from '../../../render';

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { RIBBON_CONTROL_ICONS } from 'pptx-viewer-shared';
+	import { RIBBON_CONTROL_ICONS } from 'ooxml-ui/pptx';
 
 	const { name, slot: iconSlot }: { name: string; slot?: string } = $props();
 	const artwork = $derived(RIBBON_CONTROL_ICONS[name]);

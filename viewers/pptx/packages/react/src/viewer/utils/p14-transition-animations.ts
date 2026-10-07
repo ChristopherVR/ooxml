@@ -3,4 +3,4 @@
  * `pptx-viewer-shared` (`getP14TransitionAnimations`). Kept so existing
  * importers/tests resolve unchanged.
  */
-export { getP14TransitionAnimations } from 'pptx-viewer-shared';
+export { getP14TransitionAnimations } from 'ooxml-ui/pptx';

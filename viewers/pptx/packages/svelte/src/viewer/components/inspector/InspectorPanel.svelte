@@ -21,8 +21,8 @@
 	import { Layers, MessageSquare, Settings2 } from '@lucide/svelte';
 	import { hasShapeProperties, hasTextProperties, isImageLikeElement } from 'pptx-viewer-core';
 	import type { PptxHandler, PptxTheme } from 'pptx-viewer-core';
-	import { getDensePanelTouchTargetPx, shouldShowAccessibilitySection } from 'pptx-viewer-shared';
-	import type { CanvasSize } from 'pptx-viewer-shared';
+	import { getDensePanelTouchTargetPx, shouldShowAccessibilitySection } from 'ooxml-ui/pptx';
+	import type { CanvasSize } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 	import type { EditorState } from '../../editor/editor-state.svelte';

@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils';
-import type { RunProgramNotice } from 'pptx-viewer-shared';
+import type { RunProgramNotice } from 'ooxml-ui/pptx';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import RunProgramNotices from './RunProgramNotices.vue';

@@ -7,7 +7,7 @@ import type {
 	PptxElementAnimation,
 } from 'pptx-viewer-core';
 import { hasShapeProperties, hasTextProperties, isImageLikeElement } from 'pptx-viewer-core';
-import { shouldShowAccessibilitySection } from 'pptx-viewer-shared';
+import { shouldShowAccessibilitySection } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

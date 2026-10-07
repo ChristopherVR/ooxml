@@ -1,5 +1,5 @@
 import type { ChartPptxElement, PptxChartData } from 'pptx-viewer-core';
-import type { ChartPartRef, ChartViewModel, LegendLineSwatch } from 'pptx-viewer-shared';
+import type { ChartPartRef, ChartViewModel, LegendLineSwatch } from 'ooxml-ui/pptx';
 import {
 	buildChartViewModel,
 	chartPartToAttrs,
@@ -7,7 +7,7 @@ import {
 	computeChartLegendLayout,
 	getChartStylePalette,
 	resolveChartKind,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 /**
  * View-model resolution for `chart` elements (port of the vanilla binding's

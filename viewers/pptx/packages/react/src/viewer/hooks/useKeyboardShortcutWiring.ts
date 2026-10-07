@@ -4,14 +4,14 @@
  */
 import { hasTextProperties } from 'pptx-viewer-core';
 import type { PptxSlide } from 'pptx-viewer-core';
-import type { ResolvedCustomization } from 'pptx-viewer-shared';
+import type { ResolvedCustomization } from 'ooxml-ui/pptx';
 import {
 	cycleSelectableElement,
 	parentSelection,
 	stepFontSizePt,
 	textFontSizePtToPx,
 	textFontSizePxToPt,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { ViewerMode } from '../types-core';
 import type { EditorHistoryResult } from './useEditorHistory';

@@ -1,5 +1,5 @@
-import type { InkPoint } from 'pptx-viewer-shared';
-import { strokeToInkElement } from 'pptx-viewer-shared';
+import type { InkPoint } from 'ooxml-ui/pptx';
+import { strokeToInkElement } from 'ooxml-ui/pptx';
 
 import type { EditorState } from '../editor/editor-state.svelte';
 

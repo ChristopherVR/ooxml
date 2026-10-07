@@ -7,7 +7,7 @@
  * `motion-path-preview.test.ts` already depend on.
  */
 import type { PptxElementAnimation } from 'pptx-viewer-core';
-import { buildAnimationRibbonPreview, playAnimationRibbonPreview } from 'pptx-viewer-shared';
+import { buildAnimationRibbonPreview, playAnimationRibbonPreview } from 'ooxml-ui/pptx';
 
 export function previewElementAnimation(animation: PptxElementAnimation): boolean {
 	const target = document.querySelector<HTMLElement>(

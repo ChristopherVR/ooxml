@@ -7,8 +7,8 @@
  * viewer's `updateElementById` out.
  */
 import type { PptxElement, PptxImageEffects } from 'pptx-viewer-core';
-import type { RibbonGalleryPlacement } from 'pptx-viewer-shared';
-import { CONTEXTUAL_TAB_GROUPS } from 'pptx-viewer-shared';
+import type { RibbonGalleryPlacement } from 'ooxml-ui/pptx';
+import { CONTEXTUAL_TAB_GROUPS } from 'ooxml-ui/pptx';
 import React, { act, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';

@@ -7,7 +7,7 @@
  * @module image-effects
  */
 
-export type { RgbColor, ColorChangeResult } from 'pptx-viewer-shared';
+export type { RgbColor, ColorChangeResult } from 'ooxml-ui/pptx';
 export {
 	parseHexToRgb,
 	colorDistance,
@@ -19,4 +19,4 @@ export {
 	buildCacheKey,
 	getCachedResult,
 	setCachedResult,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

@@ -13,9 +13,9 @@ export default defineConfig({
 			'pptx-viewer-core/smartart-layouts': path.resolve(__dirname, '../core/src/smartart-layouts/index.ts'),
 			'pptx-viewer-core/math': path.resolve(__dirname, '../core/src/math/index.ts'),
 			'pptx-viewer-core': path.resolve(__dirname, '../core/src/index.ts'),
-			'pptx-viewer-shared/i18n': path.resolve(__dirname, '../shared/src/i18n/index.ts'),
-			'pptx-viewer-shared/ai': path.resolve(__dirname, '../shared/src/ai/index.ts'),
-			'pptx-viewer-shared': path.resolve(__dirname, '../shared/src/index.ts'),
+			'ooxml-ui/pptx/i18n': path.resolve(__dirname, '../../../../src/ui/src/pptx/i18n/index.ts'),
+			'ooxml-ui/pptx/ai': path.resolve(__dirname, '../../../../src/ui/src/pptx/ai/index.ts'),
+			'ooxml-ui/pptx': path.resolve(__dirname, '../../../../src/ui/src/pptx/index.ts'),
 		},
 	},
 	test: {

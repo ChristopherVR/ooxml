@@ -26,7 +26,7 @@
 		TRANSITION_MORPH_OPTIONS,
 		TRANSITION_ORIENTATION_TYPES,
 		TRANSITION_SPEED_OPTIONS,
-	} from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 	import type { EditorState } from '../../editor/editor-state.svelte';

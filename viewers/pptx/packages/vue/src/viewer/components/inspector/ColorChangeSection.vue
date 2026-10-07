@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { PptxElement, PptxImageEffects } from 'pptx-viewer-core';
-import { normalizeHexColor } from 'pptx-viewer-shared';
+import { normalizeHexColor } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

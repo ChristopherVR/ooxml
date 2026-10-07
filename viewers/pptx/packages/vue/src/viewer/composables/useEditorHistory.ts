@@ -1,6 +1,6 @@
 import { cloneElement, cloneSlide } from 'pptx-viewer-core';
 import type { PptxSlide } from 'pptx-viewer-core';
-import { EditorHistory } from 'pptx-viewer-shared';
+import { EditorHistory } from 'ooxml-ui/pptx';
 import { computed, shallowRef } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
 

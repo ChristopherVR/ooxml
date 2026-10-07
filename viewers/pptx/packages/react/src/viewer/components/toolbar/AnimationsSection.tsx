@@ -1,10 +1,10 @@
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
-import { playAnimationRibbonPreview } from 'pptx-viewer-shared';
+import { playAnimationRibbonPreview } from 'ooxml-ui/pptx';
 import type {
 	AnimationApplyGroup,
 	PptxUiRibbonAnimationsElement,
 	RibbonAnimationsRequestEvent,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

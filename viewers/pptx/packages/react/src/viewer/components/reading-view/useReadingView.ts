@@ -13,8 +13,8 @@ import {
 	handleReadingViewKey,
 	openReadingView,
 	readingViewFitScale,
-} from 'pptx-viewer-shared';
-import type { ReadingViewCommand, ReadingViewState } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { ReadingViewCommand, ReadingViewState } from 'ooxml-ui/pptx';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type { CanvasSize } from '../../types';

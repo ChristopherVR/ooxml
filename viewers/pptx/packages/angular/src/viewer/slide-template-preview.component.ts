@@ -16,8 +16,8 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import type { PptxElement } from 'pptx-viewer-core';
 
-import { buildSlideTemplateContent } from '../internal/shared';
-import type { SlideTemplateId } from '../internal/shared';
+import { buildSlideTemplateContent } from 'ooxml-ui/pptx';
+import type { SlideTemplateId } from 'ooxml-ui/pptx';
 import { ElementRendererComponent } from './element-renderer.component';
 
 /** Full-size stage the template is built at (standard 16:9 canvas). */

@@ -20,7 +20,7 @@
 		ERROR_BAR_TYPE_OPTIONS,
 		ERROR_BAR_VALTYPE_OPTIONS,
 		ERROR_BAR_VALUE_TYPES,
-	} from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 

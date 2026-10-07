@@ -10,7 +10,7 @@
  * binding cannot drift from React's toolbar the way the old bottom-right
  * annotation strip had.
  */
-import { AUTO_HIDE_DELAY_MS, isInBottomTriggerZone } from 'pptx-viewer-shared';
+import { AUTO_HIDE_DELAY_MS, isInBottomTriggerZone } from 'ooxml-ui/pptx';
 
 /** DOM getters {@link PresentToolbarChrome.attach} needs from the component. */
 export interface PresentToolbarChromeTargets {

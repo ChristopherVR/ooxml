@@ -13,7 +13,7 @@
 import JSZip from 'jszip';
 import { PptxHandler } from 'pptx-viewer-core';
 import type { PptxSlide } from 'pptx-viewer-core';
-import { resolveSlideSizeSelection, SLIDE_SIZE_PRESETS } from 'pptx-viewer-shared';
+import { resolveSlideSizeSelection, SLIDE_SIZE_PRESETS } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 
 import type { EditorSnapshot } from './editor-document-state';

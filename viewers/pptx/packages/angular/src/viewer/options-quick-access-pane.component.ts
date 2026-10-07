@@ -17,8 +17,8 @@ import {
 	getQuickAccessCommand,
 	moveQuickAccessCommand,
 	removeQuickAccessCommand,
-} from '../internal/shared';
-import type { ViewerOptions } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { ViewerOptions } from 'ooxml-ui/pptx';
 
 @Component({
 	selector: 'pptx-options-quick-access-pane',

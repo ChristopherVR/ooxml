@@ -10,7 +10,7 @@
  * provider, as in a standalone unit test, galleries build from an empty
  * context and every trigger renders disabled.
  */
-import type { RibbonGalleryApplyResult, RibbonGalleryContext } from 'pptx-viewer-shared';
+import type { RibbonGalleryApplyResult, RibbonGalleryContext } from 'ooxml-ui/pptx';
 import { createContext, useContext } from 'react';
 
 export interface RibbonGalleryCommands {

@@ -1,8 +1,8 @@
 // oxlint-disable react-hooks/rules-of-hooks
 import { mount } from '@vue/test-utils';
-import { createViewerOptionsStore } from 'pptx-viewer-shared';
-import type { ToolbarActionId, ViewerCustomization } from 'pptx-viewer-shared';
-import type { PptxAiConfig } from 'pptx-viewer-shared/ai';
+import { createViewerOptionsStore } from 'ooxml-ui/pptx';
+import type { ToolbarActionId, ViewerCustomization } from 'ooxml-ui/pptx';
+import type { PptxAiConfig } from 'ooxml-ui/pptx/ai';
 import { afterEach, describe, expect, it } from 'vitest';
 import { defineComponent, h, nextTick, reactive } from 'vue';
 

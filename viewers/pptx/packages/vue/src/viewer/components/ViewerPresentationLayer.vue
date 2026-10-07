@@ -10,7 +10,7 @@
  * than unpacked, so this file stays markup.
  */
 import type { PptxCustomShow, PptxPresentationProperties, PptxSlide } from 'pptx-viewer-core';
-import type { AuthoredSlideRange } from 'pptx-viewer-shared';
+import type { AuthoredSlideRange } from 'ooxml-ui/pptx';
 
 import type { UseDeckViewsResult } from '../composables/useDeckViews';
 import type { UsePresentationControlsResult } from '../composables/usePresentationControls';

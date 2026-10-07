@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { SLIDE_SHOW_COMMAND_GROUPS, SLIDE_SHOW_OPTIONS } from 'pptx-viewer-shared';
+import { SLIDE_SHOW_COMMAND_GROUPS, SLIDE_SHOW_OPTIONS } from 'ooxml-ui/pptx';
 import type {
 	RibbonCommandRequestEvent,
 	RibbonControlId,
 	SlideShowOptionsChangeEvent,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { useI18n } from 'vue-i18n';
 
 import { useToolbarVisibility } from '../../composables/useToolbarVisibility';

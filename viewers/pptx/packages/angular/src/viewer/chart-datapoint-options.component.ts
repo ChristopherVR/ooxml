@@ -29,7 +29,7 @@ import type {
 	PptxChartType,
 } from 'pptx-viewer-core';
 
-import { EXPLOSION_SUPPORTED_TYPES } from '../internal/shared';
+import { EXPLOSION_SUPPORTED_TYPES } from 'ooxml-ui/pptx';
 import { setDataPointExplosion, setDataPointFill } from './chart-data-helpers';
 import { CHART_EDITOR_STYLES } from './chart-editor-styles';
 import { numFromEvent, selectValue, stringFromEvent } from './chart-event-helpers';

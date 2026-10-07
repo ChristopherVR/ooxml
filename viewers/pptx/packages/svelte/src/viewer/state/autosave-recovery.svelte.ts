@@ -1,4 +1,4 @@
-import type { AutosaveRecord, AutosaveRecoveryPrompt } from 'pptx-viewer-shared';
+import type { AutosaveRecord, AutosaveRecoveryPrompt } from 'ooxml-ui/pptx';
 import {
 	acceptAutosaveRecovery,
 	acknowledgeAutosaveRecovery,
@@ -6,7 +6,7 @@ import {
 	discardAutosaveRecovery,
 	probeAutosaveRecovery,
 	shouldProbeAutosaveRecovery,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 /**
  * autosave-recovery.svelte.ts: offer the crash-recovery snapshot back.

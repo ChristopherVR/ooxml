@@ -1,4 +1,4 @@
-import { editingHomeControls } from 'pptx-viewer-shared';
+import { editingHomeControls } from 'ooxml-ui/pptx';
 import React, { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 

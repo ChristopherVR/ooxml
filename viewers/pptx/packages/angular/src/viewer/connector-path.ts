@@ -13,7 +13,7 @@
  * working.
  */
 
-export type { ConnectorRouting, MarkerShape, ConnectorGeometry } from '../internal/shared';
+export type { ConnectorRouting, MarkerShape, ConnectorGeometry } from 'ooxml-ui/pptx';
 
 export {
 	buildConnectorGeometry,
@@ -25,4 +25,4 @@ export {
 	markerPath,
 	normalizeArrow,
 	buildWrapperStyle,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';

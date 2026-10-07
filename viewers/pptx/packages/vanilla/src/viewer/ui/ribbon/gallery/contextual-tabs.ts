@@ -2,13 +2,13 @@ import type {
 	RibbonContextualTabId,
 	RibbonGalleryGroupPlacement,
 	RibbonGroupId,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	CONTEXTUAL_TAB_GROUPS,
 	RIBBON_CONTEXTUAL_TABS,
 	RIBBON_GROUP_ATTR,
 	galleryTextLabel as translateOr,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../../i18n';
 import { createEl } from '../../../render';

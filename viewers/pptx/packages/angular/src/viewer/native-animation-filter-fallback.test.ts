@@ -10,7 +10,7 @@
 import type { PptxNativeAnimation } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 
-import { buildTimeline } from '../internal/shared';
+import { buildTimeline } from 'ooxml-ui/pptx';
 
 describe('angular: native animation @filter fallback', () => {
 	it('plays a filter-only entrance animation with no presetId/presetClass', () => {

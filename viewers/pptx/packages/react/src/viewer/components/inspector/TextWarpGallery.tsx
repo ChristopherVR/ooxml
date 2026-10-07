@@ -1,5 +1,5 @@
 import type { TextStyle } from 'pptx-viewer-core';
-import { TEXT_WARP_PRESETS, warpPreviewPath } from 'pptx-viewer-shared';
+import { TEXT_WARP_PRESETS, warpPreviewPath } from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 

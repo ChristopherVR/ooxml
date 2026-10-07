@@ -12,7 +12,7 @@
  * lives here too rather than duplicating the lookup.
  */
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
-import { motionPathFor, setMotionPath } from 'pptx-viewer-shared';
+import { motionPathFor, setMotionPath } from 'ooxml-ui/pptx';
 import type { ComputedRef, ShallowRef, Ref } from 'vue';
 import { computed } from 'vue';
 

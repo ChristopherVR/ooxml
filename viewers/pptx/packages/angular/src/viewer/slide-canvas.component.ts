@@ -42,7 +42,7 @@ import type {
 	ShapeAdjustmentDragState,
 	Tick,
 	ViewportFitPadding,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import {
 	actionAffordanceLabels,
 	applyElementActionAffordances,
@@ -64,9 +64,9 @@ import {
 	RULER_FONT_SIZE,
 	RULER_THICKNESS,
 	visibleTemplateElements as filterVisibleTemplateElements,
-} from '../internal/shared';
-import type { AiCanvasHighlight, AiChangeBatch } from '../internal/shared-ai';
-import { resolveContextMenuElementId } from '../internal/shared-src/render/context-menu-target';
+} from 'ooxml-ui/pptx';
+import type { AiCanvasHighlight, AiChangeBatch } from 'ooxml-ui/pptx/ai';
+import { resolveContextMenuElementId } from 'ooxml-ui/pptx/render/context-menu-target';
 import { ActiveXControlsOverlayComponent } from './activex-controls-overlay.component';
 import { AiChangeOverlayComponent } from './ai/ai-change-overlay.component';
 import { AiFocusHighlightOverlayComponent } from './ai/ai-focus-highlight-overlay.component';

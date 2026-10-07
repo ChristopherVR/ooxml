@@ -7,8 +7,8 @@ import {
 	readStoredViewerPrefs,
 	resolveProfileInitial,
 	saveViewerProfile,
-} from 'pptx-viewer-shared';
-import type { AccountAuthConfig, ViewerProfile } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { AccountAuthConfig, ViewerProfile } from 'ooxml-ui/pptx';
 
 import { version as vanillaViewerVersion } from '../../../../../package.json';
 import type { Translator } from '../../../i18n';

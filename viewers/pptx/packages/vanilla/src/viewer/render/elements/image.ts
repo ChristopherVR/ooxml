@@ -12,7 +12,7 @@ import {
 	probeNativeImageSize,
 	resolveColorChangedImageSource,
 	resolveShapeGeometry,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import { applyStyleMap, createEl, createSvgEl, setSvgAttrs } from '../dom';
 import type { ElementRenderer } from '../types';

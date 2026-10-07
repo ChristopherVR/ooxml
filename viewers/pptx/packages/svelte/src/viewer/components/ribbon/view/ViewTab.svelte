@@ -8,8 +8,8 @@
 	 * Guides toggles guide visibility only; Snap to shape is its own flag.
 	 * Zoom in/out, Slide Show and the notes toggle live in the status bar.
 	 */
-	import type { RibbonViewIntent, RibbonViewRequestEvent, ViewerPreferences } from 'pptx-viewer-shared';
-	import { updateViewerPreference } from 'pptx-viewer-shared';
+	import type { RibbonViewIntent, RibbonViewRequestEvent, ViewerPreferences } from 'ooxml-ui/pptx';
+	import { updateViewerPreference } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../../i18n/context';
 	import type { EditorState } from '../../../editor/editor-state.svelte';

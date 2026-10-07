@@ -5,4 +5,4 @@
  * (`theme/theme-gallery-presets`). This shim preserves the historical import
  * surface (`GALLERY_THEME_PRESETS`) for Vue's ThemeGallery component.
  */
-export { GALLERY_THEME_PRESETS } from 'pptx-viewer-shared';
+export { GALLERY_THEME_PRESETS } from 'ooxml-ui/pptx';

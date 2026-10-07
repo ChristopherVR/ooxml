@@ -19,8 +19,8 @@ import type {
 	AiCanvasHighlight,
 	PptxAiFocusedTarget,
 	ToolCanvasTarget,
-} from 'pptx-viewer-shared/ai';
-import { computeFocusTargets } from 'pptx-viewer-shared/ai';
+} from 'ooxml-ui/pptx/ai';
+import { computeFocusTargets } from 'ooxml-ui/pptx/ai';
 
 import type { Store, ViewerState } from '../state';
 

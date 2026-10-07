@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { AlignEdge, DistributeAxis } from 'pptx-viewer-shared';
+import type { AlignEdge, DistributeAxis } from 'ooxml-ui/pptx';
 import { useI18n } from 'vue-i18n';
 
 /**

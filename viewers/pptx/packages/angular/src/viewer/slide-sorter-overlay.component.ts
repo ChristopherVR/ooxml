@@ -25,7 +25,7 @@ import {
 	sorterSelectionIndexes,
 	sorterMenuContext,
 	sorterGridColumns,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import type {
 	CanvasSize,
 	HiddenSlideCue,
@@ -33,7 +33,7 @@ import type {
 	SlideSorterState,
 	SlideSorterContextMenuCommandId,
 	SlideSorterContextMenuEntry,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { SlideCanvasComponent } from './slide-canvas.component';
 import { thumbnailHeight, thumbnailZoom } from './slide-sorter-overlay-helpers';
 

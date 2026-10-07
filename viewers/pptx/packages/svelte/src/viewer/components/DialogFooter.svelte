@@ -5,7 +5,7 @@
 	 * backdrop and dismissal stay in the dialog component; this routes the
 	 * activated action id.
 	 */
-	import type { DialogFooterAction, DialogFooterRequestEvent } from 'pptx-viewer-shared';
+	import type { DialogFooterAction, DialogFooterRequestEvent } from 'ooxml-ui/pptx';
 
 	const { actions, onaction }: {
 		actions: readonly DialogFooterAction[];

@@ -1,5 +1,5 @@
 import type { PptxHeaderFooter } from 'pptx-viewer-core';
-import { cloneHeaderFooterDraft } from 'pptx-viewer-shared';
+import { cloneHeaderFooterDraft } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import { createEl } from '../render';

@@ -4,8 +4,8 @@
  * sync-gate re-arming on drops; extracted from `collaboration-controller.ts`
  * so the controller stays within the file-size budget.
  */
-import type { CollaborationTransport, ConnectionStatus } from 'pptx-viewer-shared';
-import { CONNECTION_TIMEOUT_MS } from 'pptx-viewer-shared';
+import type { CollaborationTransport, ConnectionStatus } from 'ooxml-ui/pptx';
+import { CONNECTION_TIMEOUT_MS } from 'ooxml-ui/pptx';
 
 import type { CollabProviderHandle } from './collaboration-provider';
 

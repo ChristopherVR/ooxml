@@ -1,11 +1,11 @@
 import type { PptxThemeColorRef } from 'pptx-viewer-core';
-import type { TableStyleBorderSide, TableStyleEditorFieldEdit } from 'pptx-viewer-shared';
+import type { TableStyleBorderSide, TableStyleEditorFieldEdit } from 'ooxml-ui/pptx';
 import {
 	describeTableStyleEditor,
 	TABLE_STYLE_BORDER_SIDE_LABEL_KEYS,
 	TABLE_STYLE_BORDER_SIDES,
 	TABLE_STYLE_DASH_PRESETS,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 

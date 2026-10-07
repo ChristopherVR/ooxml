@@ -38,7 +38,7 @@ import type {
 	SlideSizeEmu,
 	SlideSizeRescaleMode,
 	TextAdvancedChanges,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { AnimationTimingPatch } from '../../editor/editor-animation-actions';
 import type { GeometryPatch } from '../../editor/editor-edit-ops';

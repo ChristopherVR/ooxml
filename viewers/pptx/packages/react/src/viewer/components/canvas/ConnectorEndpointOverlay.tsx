@@ -18,8 +18,8 @@ import {
 	getConnectorEndpointHandles,
 	resolveConnectorEndpointUpdate,
 	withConnectorEndpointUpdate,
-} from 'pptx-viewer-shared';
-import type { ConnectorEndpointKind } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { ConnectorEndpointKind } from 'ooxml-ui/pptx';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

@@ -12,7 +12,7 @@ import {
 	isHollowShapeElement,
 	resolveShapeGeometry,
 	px,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type { CSSProperties } from 'vue';
 
 import { DEFAULT_STROKE_COLOR, DEFAULT_TEXT_COLOR } from '../constants';

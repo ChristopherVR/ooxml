@@ -10,7 +10,7 @@ import {
 	findElementYMap,
 	reconcileSlidesInYDoc,
 	readSlidesFromYDoc,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React, { act } from 'react';
 /**
  * Regression test for the inline formatting shortcut wiring.
@@ -94,7 +94,7 @@ function collaborationFactories(doc: Y.Doc) {
 		createMap: () => new Y.Map(),
 		createArray: () => new Y.Array(),
 		createText: () => new Y.Text(),
-		createTextPositions: (text: import('pptx-viewer-shared').YTextEditableLike) =>
+		createTextPositions: (text: import('ooxml-ui/pptx').YTextEditableLike) =>
 			createSnapshotTextPositions(text as unknown as Y.Text, {
 				read: () => Y.snapshot(doc),
 				equal: Y.equalSnapshots,

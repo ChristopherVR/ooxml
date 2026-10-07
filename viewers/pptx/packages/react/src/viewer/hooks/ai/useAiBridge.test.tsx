@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import type { PptxSlide } from 'pptx-viewer-core';
-import type { PptxAiBridge, PptxAiFocusedTarget } from 'pptx-viewer-shared/ai';
+import type { PptxAiBridge, PptxAiFocusedTarget } from 'ooxml-ui/pptx/ai';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';

@@ -21,7 +21,7 @@
 		removeCommentFromList,
 		replyToCommentInList,
 		toggleCommentResolvedInList,
-	} from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../../i18n/context';
 	import { useViewerOptions } from '../../../state/viewer-options-context';

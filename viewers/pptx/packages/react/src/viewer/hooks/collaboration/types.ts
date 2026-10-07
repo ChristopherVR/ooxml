@@ -10,7 +10,7 @@ import type {
 	CollaborationConfig,
 	CollaborationRole,
 	CollaborationTransport,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type { Doc as YDoc } from 'yjs';
 
 // ---------------------------------------------------------------------------
@@ -43,7 +43,7 @@ export type {
 	ExternalCollaborationSession,
 	ExternalCollaborationSnapshot,
 	ExternalCollaborationAwareness,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 // ---------------------------------------------------------------------------
 // Connection state

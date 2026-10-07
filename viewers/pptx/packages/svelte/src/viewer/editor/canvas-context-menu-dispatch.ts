@@ -1,5 +1,5 @@
-import type { CanvasContextMenuCommandId, CanvasContextMenuContext } from 'pptx-viewer-shared';
-import { buildCanvasContextMenuEntries } from 'pptx-viewer-shared';
+import type { CanvasContextMenuCommandId, CanvasContextMenuContext } from 'ooxml-ui/pptx';
+import { buildCanvasContextMenuEntries } from 'ooxml-ui/pptx';
 
 import type { EditorState } from './editor-state.svelte';
 

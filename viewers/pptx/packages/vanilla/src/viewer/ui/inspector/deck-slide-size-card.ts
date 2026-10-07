@@ -1,10 +1,10 @@
-import type { SlideSizeEmu, SlideSizeOrientation } from 'pptx-viewer-shared';
+import type { SlideSizeEmu, SlideSizeOrientation } from 'ooxml-ui/pptx';
 import {
 	resolveSlideSizeSelection,
 	SLIDE_SIZE_PRESETS,
 	slideSizeFromPreset,
 	withSlideSizeOrientation,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';

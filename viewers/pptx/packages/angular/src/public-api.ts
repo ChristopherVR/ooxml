@@ -8,8 +8,8 @@
 export * from './viewer';
 export * from './theme';
 export { cn, type ClassValue } from './utils';
-export { keyToLabel, translationsEn, LOCALE_CATALOG } from './internal/shared-src/i18n';
-export type { TranslationKey, LocaleCatalogEntry } from './internal/shared-src/i18n';
+export { keyToLabel, translationsEn, LOCALE_CATALOG } from 'ooxml-ui/pptx/i18n';
+export type { TranslationKey, LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
 
 // ── AI assistant host-facing types (for typing the viewer's `ai` input). ──
 // The stable root surface; the panel/service internals stay in `./viewer`.
@@ -24,7 +24,7 @@ export type {
 	PptxAiWritePolicy,
 	ProposalView,
 	StagedProposal,
-} from './internal/shared-ai';
+} from 'ooxml-ui/pptx/ai';
 
 // ── Internal building blocks. Not covered by semver; prefer the stable root exports. ──
 // Every internal service, component, and helper that composes
@@ -53,10 +53,10 @@ export {
 	isLegacyBinaryPresentation,
 	presentationBaseName,
 	savedPresentationFileName,
-} from './internal/shared';
-export type { SavedPresentationFormat } from './internal/shared';
-export type { ViewportFitOptions, ViewportFitPadding } from './internal/shared';
-export { createImageElementFromFile } from './internal/shared';
+} from 'ooxml-ui/pptx';
+export type { SavedPresentationFormat } from 'ooxml-ui/pptx';
+export type { ViewportFitOptions, ViewportFitPadding } from 'ooxml-ui/pptx';
+export { createImageElementFromFile } from 'ooxml-ui/pptx';
 
 // ── UI customisation (the `customization` input + imperative helpers) ──
 // The framework-neutral model every binding shares; see docs/guide/customization.md.
@@ -81,7 +81,7 @@ export type {
 	ViewerExportFormatId,
 	ViewerFeatureId,
 	ViewerPanelId,
-} from './internal/shared';
+} from 'ooxml-ui/pptx';
 export {
 	BACKSTAGE_CARD_IDS,
 	BACKSTAGE_PAGE_IDS,
@@ -97,4 +97,4 @@ export {
 	VIEWER_EXPORT_FORMAT_IDS,
 	VIEWER_FEATURE_IDS,
 	VIEWER_PANEL_IDS,
-} from './internal/shared';
+} from 'ooxml-ui/pptx';

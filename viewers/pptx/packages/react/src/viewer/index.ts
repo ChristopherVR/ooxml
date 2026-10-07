@@ -10,7 +10,7 @@ export type {
 	PptxAiContextStrategy,
 	PptxAiToolName,
 	PptxAiWritePolicy,
-} from 'pptx-viewer-shared/ai';
+} from 'ooxml-ui/pptx/ai';
 
 // Audience window helpers (opt-in, tree-shakeable).
 //
@@ -34,8 +34,8 @@ export {
 	loadSessionDeck,
 	rememberSessionDeck,
 	restoreSessionDeck,
-} from 'pptx-viewer-shared';
-export type { SessionDeck } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+export type { SessionDeck } from 'ooxml-ui/pptx';
 
 // Theme switching (opt-in, tree-shakeable)
 export { useThemeSwitching } from './hooks/useThemeSwitching';

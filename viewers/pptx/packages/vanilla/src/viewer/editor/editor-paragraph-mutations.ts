@@ -3,8 +3,8 @@ import {
 	getInlineEditorSelectionResult,
 	remapTextToSegments,
 	toggleSelectionBullets,
-} from 'pptx-viewer-shared';
-import type { InlineTextEditSnapshot } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { InlineTextEditSnapshot } from 'ooxml-ui/pptx';
 
 import { canFormatText, readTextFormatState } from './editor-format-mutations';
 import { currentInlineEditorText } from './inline-text-editor';

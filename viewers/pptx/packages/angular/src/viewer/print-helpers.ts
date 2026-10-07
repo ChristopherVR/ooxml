@@ -21,7 +21,7 @@ export {
 	generateNoteLineCount,
 	getHandoutGrid,
 	getPrintableArea,
-} from '../internal/shared-src/export/handout-layout';
+} from 'ooxml-ui/pptx/export/handout-layout';
 export type {
 	HandoutCellPosition,
 	HandoutGrid,
@@ -29,7 +29,7 @@ export type {
 	HandoutPage,
 	HandoutSlidesPerPage,
 	PageDimensions,
-} from '../internal/shared-src/export/handout-layout';
+} from 'ooxml-ui/pptx/export/handout-layout';
 
 export {
 	DEFAULT_PRINT_SETTINGS,
@@ -46,7 +46,7 @@ export {
 	normalizeSlidesPerPage,
 	slideTitle,
 	validatePrintSettings,
-} from '../internal/shared-src/export/print-document';
+} from 'ooxml-ui/pptx/export/print-document';
 export type {
 	PrintColorMode,
 	PrintHtmlDocumentOptions as PrintDocumentOptions,
@@ -54,17 +54,17 @@ export type {
 	PrintSettings,
 	PrintSlideRange,
 	PrintWhat,
-} from '../internal/shared-src/export/print-document';
+} from 'ooxml-ui/pptx/export/print-document';
 
-export { escapeHtml, safeDataImageSrc } from '../internal/shared-src/export/html-escape';
+export { escapeHtml, safeDataImageSrc } from 'ooxml-ui/pptx/export/html-escape';
 
 // Handout master "chrome": background/header/footer/date/page-number/
 // positioned slide-rect resolution for the print path, consumed by
 // `buildHandoutsHtml` above.
-export { handoutMasterChrome } from '../internal/shared-src/export/handout-master-chrome';
+export { handoutMasterChrome } from 'ooxml-ui/pptx/export/handout-master-chrome';
 export type {
 	HandoutChromeBackground,
 	HandoutChromeBox,
 	HandoutMasterChrome,
 	HandoutMasterChromeOptions,
-} from '../internal/shared-src/export/handout-master-chrome';
+} from 'ooxml-ui/pptx/export/handout-master-chrome';

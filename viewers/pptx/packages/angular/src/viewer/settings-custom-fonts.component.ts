@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, input, output, signal } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 
-import { CUSTOM_FONT_ACCEPT, registerCustomFont } from '../internal/shared-src/render/custom-fonts';
+import { CUSTOM_FONT_ACCEPT, registerCustomFont } from 'ooxml-ui/pptx/render/custom-fonts';
 
 /**
  * File > Options > General > Fonts. Angular port of React's

@@ -5,7 +5,7 @@ import {
 	isFeatureEnabled,
 	isPanelVisible,
 	resolveEffectiveHiddenActions,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type {
 	ResolvedCustomization,
 	ToolbarActionId,
@@ -15,7 +15,7 @@ import type {
 	ViewerDialogId,
 	ViewerFeatureId,
 	ViewerPanelId,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { getContext, onDestroy, setContext, untrack } from 'svelte';
 
 /**

@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
 import type { VueWrapper } from '@vue/test-utils';
-import { resolveCustomization } from 'pptx-viewer-shared';
-import type { ToolbarActionId, ViewerCustomization } from 'pptx-viewer-shared';
+import { resolveCustomization } from 'ooxml-ui/pptx';
+import type { ToolbarActionId, ViewerCustomization } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 import { shallowRef } from 'vue';
 

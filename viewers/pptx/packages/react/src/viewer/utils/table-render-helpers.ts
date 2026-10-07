@@ -1,7 +1,7 @@
 // `ooxmlDashToCssBorderStyle` is the framework-agnostic OOXML-dash -> CSS map;
 // it lives in `pptx-viewer-shared` and is re-exported here so this module's
 // public surface (and colocated tests) stay unchanged.
-import { ooxmlDashToCssBorderStyle } from 'pptx-viewer-shared';
+import { ooxmlDashToCssBorderStyle } from 'ooxml-ui/pptx';
 
 export { ooxmlDashToCssBorderStyle };
 
@@ -11,4 +11,4 @@ export { ooxmlDashToCssBorderStyle };
  * the other bindings; the values arrive as CSS strings, which React accepts
  * wherever it accepted the bare numbers this used to emit.
  */
-export { cellStyleToCss } from 'pptx-viewer-shared';
+export { cellStyleToCss } from 'ooxml-ui/pptx';

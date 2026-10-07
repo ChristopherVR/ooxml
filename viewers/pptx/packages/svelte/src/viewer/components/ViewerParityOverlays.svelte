@@ -1,8 +1,8 @@
 <script lang="ts">
 	import type { PptxSlide } from 'pptx-viewer-core';
-	import { resolveAuthoredCustomShowId, shouldShowAutosaveRecoveryPrompt } from 'pptx-viewer-shared';
-	import type { CanvasSize, ThemeCatalogEntry } from 'pptx-viewer-shared';
-	import type { LocaleCatalogEntry } from 'pptx-viewer-shared/i18n';
+	import { resolveAuthoredCustomShowId, shouldShowAutosaveRecoveryPrompt } from 'ooxml-ui/pptx';
+	import type { CanvasSize, ThemeCatalogEntry } from 'ooxml-ui/pptx';
+	import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
 
 	import type { EditorState } from '../editor/editor-state.svelte';
 	import type { ExportUiState } from '../export/export-ui.svelte';

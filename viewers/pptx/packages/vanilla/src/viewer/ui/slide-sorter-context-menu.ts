@@ -9,11 +9,11 @@ import {
 	buildSlideSorterContextMenuEntries,
 	clampFlyoutPosition,
 	slideSorterContextMenuLabel,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type {
 	SlideSorterContextMenuContext,
 	SlideSorterContextMenuCommandId,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import { createEl } from '../render';

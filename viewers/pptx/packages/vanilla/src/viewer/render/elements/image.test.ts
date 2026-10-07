@@ -7,7 +7,7 @@ import { renderImageElement } from './image';
 const resolveSource = vi.fn(async (_src: string, _effect: unknown) =>
 	Promise.resolve('data:image/png;base64,processed'),
 );
-vi.mock(import('pptx-viewer-shared'), async (importOriginal) => ({
+vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => ({
 	...(await importOriginal()),
 	resolveColorChangedImageSource: (src: string, effect: unknown) => resolveSource(src, effect),
 }));

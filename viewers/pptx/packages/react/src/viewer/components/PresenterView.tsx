@@ -4,8 +4,8 @@ import type {
 	PresentationPointerTool,
 	PresentationSnapshot,
 	ShowOrderCustomShow,
-} from 'pptx-viewer-shared';
-import { PRESENTER_CONSOLE_CLASSES, presenterTimerProgress } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import { PRESENTER_CONSOLE_CLASSES, presenterTimerProgress } from 'ooxml-ui/pptx';
 /**
  * PresenterView: Split-screen presenter layout with current slide,
  * next slide preview, speaker notes, timer, and navigation controls.

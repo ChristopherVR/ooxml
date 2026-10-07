@@ -34,8 +34,8 @@
 import type { TranslateService } from '@ngx-translate/core';
 import type { PptxSlide, TextSegment } from 'pptx-viewer-core';
 
-import { nextPresentedSlide, notesSegmentsToSpans } from '../internal/shared';
-import type { AuthoredSlideRange, ShowOrderCustomShow } from '../internal/shared';
+import { nextPresentedSlide, notesSegmentsToSpans } from 'ooxml-ui/pptx';
+import type { AuthoredSlideRange, ShowOrderCustomShow } from 'ooxml-ui/pptx';
 import type { StyleMap } from './element-style';
 import { cssObjectToStyleMap } from './table-renderer-helpers';
 
@@ -49,8 +49,8 @@ export {
 	NOTES_FONT_SIZE_STEP,
 	PRESENTER_TIMER_SEGMENT_MS,
 	presenterTimerProgress,
-} from '../internal/shared';
-export type { PresenterTimerProgress } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+export type { PresenterTimerProgress } from 'ooxml-ui/pptx';
 
 // ---------------------------------------------------------------------------
 // Elapsed time from a start timestamp

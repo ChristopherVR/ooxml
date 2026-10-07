@@ -23,8 +23,8 @@
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 	import Type from '@lucide/svelte/icons/type';
 	import Wrench from '@lucide/svelte/icons/wrench';
-	import { describeToolActivity, summarizeToolArgs, toolLabel } from 'pptx-viewer-shared/ai';
-	import type { RenderableToolPart, ToolActivityIcon } from 'pptx-viewer-shared/ai';
+	import { describeToolActivity, summarizeToolArgs, toolLabel } from 'ooxml-ui/pptx/ai';
+	import type { RenderableToolPart, ToolActivityIcon } from 'ooxml-ui/pptx/ai';
 	import type { Component } from 'svelte';
 
 	import { useTranslator } from '../../../i18n/context';

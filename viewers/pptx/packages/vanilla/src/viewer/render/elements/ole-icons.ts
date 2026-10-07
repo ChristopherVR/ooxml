@@ -1,5 +1,5 @@
-import type { ResolvedOleType } from 'pptx-viewer-shared';
-import { getOleIconShapes } from 'pptx-viewer-shared';
+import type { ResolvedOleType } from 'ooxml-ui/pptx';
+import { getOleIconShapes } from 'ooxml-ui/pptx';
 
 import { createSvgEl } from '../dom';
 

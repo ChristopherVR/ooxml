@@ -5,7 +5,7 @@ import {
 	contentPartViewBox,
 	getContentPartReplayStyles,
 	INK_REPLAY_KEYFRAMES,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type { CSSProperties } from 'vue';
 import { computed, watchEffect } from 'vue';
 

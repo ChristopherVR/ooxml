@@ -1,4 +1,4 @@
-import { resolveCustomization } from 'pptx-viewer-shared';
+import { resolveCustomization } from 'ooxml-ui/pptx';
 // @vitest-environment happy-dom
 /**
  * The empty-canvas context menu: renders the shared six-command list, greys

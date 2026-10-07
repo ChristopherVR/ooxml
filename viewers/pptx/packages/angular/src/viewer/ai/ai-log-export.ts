@@ -5,19 +5,19 @@
  * the two pieces that are genuinely binding-shaped: reading from a default
  * store and triggering the actual browser download via `downloadBlob`.
  */
-import { downloadBlob } from '../../internal/shared';
+import { downloadBlob } from 'ooxml-ui/pptx';
 import {
 	collectStoredChats,
 	createChatHistoryStore,
 	exportAiChatLogs as exportAiChatLogsPure,
-} from '../../internal/shared-ai';
-import type { ExportAiChatLogsMeta, PptxAiChatStore } from '../../internal/shared-ai';
+} from 'ooxml-ui/pptx/ai';
+import type { ExportAiChatLogsMeta, PptxAiChatStore } from 'ooxml-ui/pptx/ai';
 
 export {
 	buildChatLogExport,
 	buildChatLogMarkdown,
 	collectStoredChats,
-} from '../../internal/shared-ai';
+} from 'ooxml-ui/pptx/ai';
 export type {
 	AiLogChat,
 	AiLogExport,
@@ -25,7 +25,7 @@ export type {
 	AiLogMessage,
 	AiLogToolCall,
 	BuildChatLogOptions,
-} from '../../internal/shared-ai';
+} from 'ooxml-ui/pptx/ai';
 
 /** Options for {@link exportAiChatLogs}. */
 export interface ExportAiChatLogsOptions extends ExportAiChatLogsMeta {

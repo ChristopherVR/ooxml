@@ -8,7 +8,7 @@
 	 * other's controls. Re-renders whenever the resolved customisation changes
 	 * (the `customization` prop or an imperative `hideRibbonGroup(...)`).
 	 */
-	import { ribbonCustomizationCss } from 'pptx-viewer-shared';
+	import { ribbonCustomizationCss } from 'ooxml-ui/pptx';
 
 	import { useViewerCustomization } from '../state/viewer-customization.svelte';
 

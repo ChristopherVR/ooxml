@@ -1,7 +1,7 @@
 import {
 	visioOpenArrowPath,
 	visioFilledArrow,
-	trimVisioArrowLine,
+	layoutVisioFilledArrowLine,
 	type VisioStyle,
 } from 'ooxml-core/visio';
 import { safeColor, svgElement } from './render-svg.js';
@@ -19,16 +19,11 @@ export function applyArrowheads(
 		style.lineWidth,
 	);
 	const filledEnd = visioFilledArrow(style.endArrow, style.endArrowSize ?? 2, style.lineWidth);
-	const trimmed =
+	const layout =
 		(filledStart || filledEnd) && (style.lineCap === undefined || style.lineCap === 'round')
-			? trimVisioArrowLine(
-					path.getAttribute('d') ?? '',
-					filledStart?.beginSetback ?? 0,
-					filledEnd?.setback ?? 0,
-					filledStart ? filledStart.setback - filledStart.beginSetback : 0,
-				)
+			? layoutVisioFilledArrowLine(path.getAttribute('d') ?? '', filledStart, filledEnd)
 			: undefined;
-	if (trimmed) path.setAttribute('d', trimmed);
+	if (layout) path.setAttribute('d', layout.path);
 	for (const side of ['start', 'end'] as const) {
 		const code = side === 'start' ? style.startArrow : style.endArrow;
 		if (!code) continue;
@@ -41,11 +36,11 @@ export function applyArrowheads(
 		const marker = svgElement('marker');
 		marker.id = id;
 		const filledArrow = side === 'start' ? filledStart : filledEnd;
-		if (filledArrow && trimmed) {
+		if (filledArrow && layout) {
 			marker.setAttribute('viewBox', '-1 -1 2 2');
 			marker.setAttribute(
 				'refX',
-				String(-(side === 'start' ? filledArrow.beginSetback : filledArrow.setback)),
+				String(-(side === 'start' ? layout.startSetback : layout.endSetback)),
 			);
 			marker.setAttribute('refY', '0');
 			marker.setAttribute('markerWidth', '2');

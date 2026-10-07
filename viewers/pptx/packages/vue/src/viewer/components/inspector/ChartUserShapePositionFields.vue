@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { PptxChartUserShape } from 'pptx-viewer-core';
-import type { ChartUserShapeRow, ChartUserShapeRowPatch } from 'pptx-viewer-shared';
-import { getChartUserShapeRowChartBox } from 'pptx-viewer-shared';
+import type { ChartUserShapeRow, ChartUserShapeRowPatch } from 'ooxml-ui/pptx';
+import { getChartUserShapeRowChartBox } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

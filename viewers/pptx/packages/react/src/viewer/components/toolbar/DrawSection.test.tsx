@@ -1,4 +1,4 @@
-import { registerPptxWebControls } from 'pptx-viewer-shared';
+import { registerPptxWebControls } from 'ooxml-ui/pptx';
 // @vitest-environment happy-dom
 /**
  * Draw ribbon tab: the pen colour is a colour pick like any other, so the

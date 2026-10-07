@@ -1,13 +1,13 @@
 /* oxlint-disable vitest/prefer-importing-vitest-globals -- Playwright spec */
 import { expect, test } from '@playwright/test';
 
+import { translationsEn } from '../../src/ui/src/pptx/i18n/translations-en';
 import {
 	translationsDe,
 	translationsEs,
 	translationsFr,
 	translationsZhCN,
 } from '../../viewers/pptx/packages/locales/src';
-import { translationsEn } from '../../viewers/pptx/packages/shared/src/i18n/translations-en';
 import { loadDeck } from './support/deck';
 import { openOptionsDialog, optionsCategory, pickOptionsEntry } from './support/settings-dialog';
 

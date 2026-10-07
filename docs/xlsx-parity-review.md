@@ -94,8 +94,8 @@ including one with formatting, leaves destination content and formatting untouch
 skipped. A formula returning an empty string, zero and FALSE still paste. Cut with Skip Blanks
 is rejected before edits, matching a separate native check. Empty string constants produced
 by Paste Values now survive cell pruning and save/reload. Tests cover tiled selections and
-one-step undo/redo. Arithmetic paste operations, column widths, all except borders and full
-clipboard metadata remain unsupported.
+one-step undo/redo. Column widths are implemented in the later slice below; full
+clipboard metadata remains incomplete.
 
 Reproduce the fixture with `scripts/record-xlsx-paste-options.ps1 -OutputFile <temporary-json-path>`
 on Windows with Excel installed. The recorder creates its own hidden Excel instance and
@@ -114,6 +114,82 @@ Ribbon Fill Down/Right/Up/Left now request the shared core copy mode, matching t
 commands instead of inferring a weekday or numeric series. Four-direction regressions verify
 weekday repetition, relative and absolute formula references, source formatting and undo/redo.
 AutoFill and the explicit Series command retain their separate series behavior.
+
+### Arithmetic Paste Special
+
+Add, Subtract, Multiply and Divide are available through the existing shared dialog and core
+paste options. The arithmetic adapter reuses the formula engine's scalar operators and numeric
+text parser. Formulas are combined with translated copied references and existing destination
+formulas; Values uses copied results while preserving destination formulas. Numeric text
+participates, while nonnumeric constants and boolean constants stay unchanged. Boolean formula
+results participate in Values arithmetic. Formatting follows the selected content mode.
+
+An intentional Microsoft 365 Excel 16.0 build 20430 corpus records 512 combinations across four
+operations, four paste content modes, constants, numeric text, blank cells, formulas, booleans
+and errors, including formatting. Reproduce it with
+`scripts/record-xlsx-paste-arithmetic.ps1 -OutputFile <temporary-json-path>`. Every native result
+and formula passes a direct comparison with undo/redo. Separate regressions cover tiled and
+transposed operations, Skip Blanks, relative references, save/reload and atomic cut rejection.
+A live native check also confirmed Excel rejects arithmetic Paste Special for cut cells.
+
+The native clipboard browser regression uses Values with Multiply on an existing formula,
+checks the combined formula and result, and verifies one-step keyboard undo. All 898 core
+editing tests and the three clipboard browser regressions passed. These checks establish this
+tested subset, not complete clipboard or whole-workbook parity.
+
+The full core XLSX suite passed 4,839 tests across 127 files, the shared XLSX UI suite passed
+307 tests, and core/UI strict typechecks and builds passed. Initial machine resource pressure
+was handled by running UI tests serially; broad core validation ran after memory recovered.
+All 54 browser tests and 47 viewer/binding tests passed, along with viewer typechecks,
+seven package builds, published-import guards and clean-consumer package smoke checks.
+
+Primary reference: [Microsoft Paste options](https://support.microsoft.com/en-au/excel/paste-options).
+
+### All Except Borders and transpose references
+
+The `noBorders` paste mode copies content and supported formatting while retaining the complete
+destination border model, including edge colors and diagonal directions. A truly empty copied
+cell clears destination content and other formatting while keeping its borders. Skip Blanks
+preserves the entire destination cell. The shared dialog enables All Except Borders; column
+width paste and complete clipboard metadata support remain outstanding.
+
+Twenty native Excel 16.0 build 20430 cases compare four destination cells across transpose,
+Skip Blanks and all five arithmetic-operation choices. They verify values, formulas, fonts,
+fills, number formats and six border directions with undo/redo. Reproduce them with
+`scripts/record-xlsx-paste-borders.ps1 -OutputFile <temporary-json-path>` in a fresh hidden
+Excel instance. Additional regressions cover truly empty source cells, tiled merges and border
+save/reload. The browser test uses native copy, the shared dialog and keyboard undo.
+
+The corpus also exposed incorrect reference translation during transpose. Excel applies the
+copied block's top-left offset to every formula while transposing cell positions. The core now
+uses that offset for each tile. Live native checks confirmed the same reference behavior for
+All, Formulas and All Except Borders. The earlier transposed-arithmetic regression had asserted
+the implementation's incorrect references; its expectations now follow this native evidence.
+
+Validation: the full core XLSX suite passed 4,865 tests, the shared XLSX UI suite passed 308,
+the viewer/binding suite passed 47 and all 55 browser tests passed. Core/UI/viewer typechecks,
+core/UI builds, seven package builds, published-import guards and clean-consumer package smoke
+checks passed. A subsequent native
+check confirmed All Except Borders rejects cut cells; the atomic rejection regression and
+the full 26-test border suite passed after adding that guard.
+
+### Column Widths paste
+
+The shared dialog now enables Column widths. Clipboard snapshots carry visible column metrics and
+the original row extent, independently of the used-area optimization for copied cells. Core paste
+reuses column-span editing and history, changes only destination dimensions, and preserves cell
+contents, formatting, merges and column outline properties. Hidden source columns paste as zero
+width; unhiding their destination reveals the receiving sheet's default width. Transpose repeats
+the original column-width pattern, while incompatible selections fall back to one block. Arithmetic
+and Skip blanks do not change width-only paste behavior.
+
+`scripts/record-xlsx-paste-widths.ps1` reproduces 80 cases from Microsoft 365 Excel 16.0 build 20430:
+finite and whole-column copies, visible/hidden/default widths, transpose, compatible/incompatible
+selections and sheet limits. Tests compare stored width and visibility, unchanged cell contents,
+one-step undo/redo, cross-workbook clipboard snapshots and save/reload. The browser test copies
+through the system clipboard, applies the shared dialog, and checks undo/redo. Text-only clipboard
+sources lack column metrics and are rejected explicitly; complete external Excel clipboard format
+interoperability remains outstanding.
 
 ## Evidence required for parity
 

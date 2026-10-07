@@ -7,4 +7,4 @@ export {
 	isLinkedTextBoxHead,
 	getOverflowSegments,
 	buildSlideOverflowMap,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

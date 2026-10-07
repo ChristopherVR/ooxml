@@ -6,7 +6,7 @@
  * The default value is an inert no-op so chart components keep working when
  * rendered outside the viewer (tests, thumbnails).
  */
-import type { ChartPartRef } from 'pptx-viewer-shared';
+import type { ChartPartRef } from 'ooxml-ui/pptx';
 import React, { createContext, useContext, useMemo, useState } from 'react';
 
 /** A selected chart sub-part, scoped to the chart element that owns it. */

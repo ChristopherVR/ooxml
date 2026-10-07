@@ -1,5 +1,5 @@
-import type { ViewerOptions, ViewerOptionsStore } from 'pptx-viewer-shared';
-import { DEFAULT_VIEWER_OPTIONS } from 'pptx-viewer-shared';
+import type { ViewerOptions, ViewerOptionsStore } from 'ooxml-ui/pptx';
+import { DEFAULT_VIEWER_OPTIONS } from 'ooxml-ui/pptx';
 import { createContext, useContext } from 'react';
 
 /**

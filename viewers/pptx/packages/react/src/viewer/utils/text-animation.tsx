@@ -1,5 +1,5 @@
-import { buildTextBuildSpec, textBuildSpanStyle } from 'pptx-viewer-shared';
-import type { ParagraphRun } from 'pptx-viewer-shared';
+import { buildTextBuildSpec, textBuildSpanStyle } from 'ooxml-ui/pptx';
+import type { ParagraphRun } from 'ooxml-ui/pptx';
 import React from 'react';
 
 import { TEXT_BUILD_ID_SEP } from './animation-timeline';

@@ -1,4 +1,4 @@
-import { sanitizeColor } from 'pptx-viewer-shared';
+import { sanitizeColor } from 'ooxml-ui/pptx';
 import { useMemo } from 'react';
 
 /**

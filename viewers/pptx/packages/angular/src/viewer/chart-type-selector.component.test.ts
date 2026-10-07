@@ -16,7 +16,7 @@ import {
 	CHART_TYPE_OPTIONS,
 	collapseChartTitleRunsForEdit,
 	resolveDisplayedChartType,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { applyChartTypeSelectorPatch } from './chart-type-selector.component';
 
 function chart(overrides: Partial<ChartPptxElement['chartData']> = {}): ChartPptxElement {

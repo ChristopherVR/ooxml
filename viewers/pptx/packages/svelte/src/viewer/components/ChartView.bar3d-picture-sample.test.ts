@@ -15,7 +15,7 @@ import {
 	getCachedBarFacePicturePixelColor,
 	resetBarFacePicturePixelCacheForTests,
 	resolveUntargetedBarFaceFill,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 

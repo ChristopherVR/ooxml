@@ -9,7 +9,7 @@ import {
 	describeToolActivity,
 	humanizeDiffLine,
 	summarizeToolArgs,
-} from '../../internal/shared-ai';
+} from 'ooxml-ui/pptx/ai';
 
 describe('tool-call card activity (friendly labels, ids hidden)', () => {
 	it('describes a tool as a plain-language phrase without leaking element ids', () => {

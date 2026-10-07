@@ -2,8 +2,8 @@ import {
 	calculateViewportFit,
 	EDITOR_VIEWPORT_FIT,
 	resolveViewportFitOptions,
-} from 'pptx-viewer-shared';
-import type { CanvasSize, ViewportFitOptions } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { CanvasSize, ViewportFitOptions } from 'ooxml-ui/pptx';
 
 const DEFAULT_FIT = EDITOR_VIEWPORT_FIT;
 

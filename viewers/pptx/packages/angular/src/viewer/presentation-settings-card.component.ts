@@ -23,7 +23,7 @@ import {
 	printPropertiesSlidesPerPage,
 	withFrameSlides,
 	withSlidesPerPage,
-} from '../internal/shared-src/render/presentation-print-settings';
+} from 'ooxml-ui/pptx/render/presentation-print-settings';
 import { EditorStateService } from './editor-state.service';
 import { INSPECTOR_CARD_STYLES } from './inspector-card-styles';
 import { LoadContentService } from './load-content.service';

@@ -1,5 +1,5 @@
-import { applyFormatToElement, copyFormatFromElement, hasCopyableFormat } from 'pptx-viewer-shared';
-import type { CopiedFormat } from 'pptx-viewer-shared';
+import { applyFormatToElement, copyFormatFromElement, hasCopyableFormat } from 'ooxml-ui/pptx';
+import type { CopiedFormat } from 'ooxml-ui/pptx';
 
 import type { EditorState } from './editor-state.svelte';
 

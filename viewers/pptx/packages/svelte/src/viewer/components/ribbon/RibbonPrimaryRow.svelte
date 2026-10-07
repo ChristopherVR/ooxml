@@ -7,8 +7,8 @@
 	 */
 	import Settings from '@lucide/svelte/icons/settings';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
-	import { isActionHidden } from 'pptx-viewer-shared';
-	import type { ToolbarActionId } from 'pptx-viewer-shared';
+	import { isActionHidden } from 'ooxml-ui/pptx';
+	import type { ToolbarActionId } from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../../i18n/context';
 	import type { ChromeUiState } from '../../state/chrome-ui.svelte';
 	import type { ExportUiState } from '../../export/export-ui.svelte';

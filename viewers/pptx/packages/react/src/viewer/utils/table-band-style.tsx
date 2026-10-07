@@ -1,5 +1,5 @@
 import type { ParsedTableStyleMap, PptxElement, PptxTheme } from 'pptx-viewer-core';
-import { getTableCellBandStyle as resolveTableCellBandStyle } from 'pptx-viewer-shared';
+import { getTableCellBandStyle as resolveTableCellBandStyle } from 'ooxml-ui/pptx';
 import type React from 'react';
 
 /**

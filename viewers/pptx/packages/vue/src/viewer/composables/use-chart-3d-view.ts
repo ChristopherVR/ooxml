@@ -15,13 +15,13 @@ import {
 	applyChart3DSelect,
 	formatAxisValue,
 	resolveChartThreeViewSpec,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type {
 	Chart3DSelectionBridge,
 	ChartPartRef,
 	ThreeViewDragDetail,
 	ThreeViewSpec,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { computed, ref } from 'vue';
 import type { ComputedRef } from 'vue';
 

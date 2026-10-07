@@ -13,7 +13,7 @@
 		DEFAULT_INSERT_CHART_KIND,
 		FREEFORM_TOOL_IDS,
 		isDrawingToolVisible,
-	} from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
 	import type {
 		CanvasSize,
 		FreeformToolKind,
@@ -21,7 +21,7 @@
 		PptxUiRibbonInsertElement,
 		RibbonInsertRequestEvent,
 		ShapePresetType,
-	} from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
 	import { tick } from 'svelte';
 
 	import { useTranslator } from '../../../../i18n/context';

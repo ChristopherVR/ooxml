@@ -20,7 +20,7 @@
 import { inject, Injectable, signal } from '@angular/core';
 import type { PptxData } from 'pptx-viewer-core';
 
-import { mruColorsPatch, pushRecentColor, seedRecentColors } from '../internal/shared';
+import { mruColorsPatch, pushRecentColor, seedRecentColors } from 'ooxml-ui/pptx';
 import { LoadContentService } from './load-content.service';
 
 @Injectable()

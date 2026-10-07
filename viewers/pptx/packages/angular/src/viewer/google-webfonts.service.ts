@@ -27,7 +27,7 @@ import {
 	resolveGoogleWebfontHref,
 	selectGoogleWebfontFamilies,
 	syncGoogleWebfontStylesheet,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { glyphOutlineFontCache, glyphOutlineFontsTick } from './glyph-outline-cache';
 
 /** DOM id of the managed `<link>` element (binding-specific, like the style ids). */

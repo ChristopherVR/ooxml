@@ -1,11 +1,11 @@
 import type { PptxSlide } from 'pptx-viewer-core';
-import type { PresentationActionRunner } from 'pptx-viewer-shared';
+import type { PresentationActionRunner } from 'ooxml-ui/pptx';
 import {
 	applyHighlightClickStyle,
 	findHighlightClickTarget,
 	handlePresentationStageClick,
 	isClickAdvanceAllowed,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 /** Inputs to the swipe/tap advance gate, read from the live viewer state. */
 export interface SwipeAdvanceGateInput {

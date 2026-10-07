@@ -5,8 +5,8 @@ import type {
 	PptxNotesMaster,
 	PptxSlideMaster,
 } from 'pptx-viewer-core';
-import { masterViewElements, replaceMasterViewElements } from 'pptx-viewer-shared';
-import type { MasterViewDocument } from 'pptx-viewer-shared';
+import { masterViewElements, replaceMasterViewElements } from 'ooxml-ui/pptx';
+import type { MasterViewDocument } from 'ooxml-ui/pptx';
 
 import type { EditorState } from './editor-state.svelte';
 

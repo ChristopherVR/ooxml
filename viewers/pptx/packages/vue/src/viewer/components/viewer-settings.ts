@@ -7,5 +7,5 @@ export {
 	DEFAULT_VIEWER_SETTINGS,
 	SETTING_TOGGLES,
 	SHORTCUT_REFERENCE_ITEMS,
-} from 'pptx-viewer-shared';
-export type { SettingToggleSpec, ShortcutReferenceItem, ViewerSettings } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+export type { SettingToggleSpec, ShortcutReferenceItem, ViewerSettings } from 'ooxml-ui/pptx';

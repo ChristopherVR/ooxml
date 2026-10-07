@@ -1,4 +1,4 @@
-import type { GifFrame } from 'pptx-viewer-shared';
+import type { GifFrame } from 'ooxml-ui/pptx';
 import {
 	clampGifDimensions,
 	downloadBlob,
@@ -6,7 +6,7 @@ import {
 	exportAbortError,
 	GIF_POST_CAPTURE_MAX_SIDE,
 	planGifFrames,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { ExportCaptureDeps, ExportProgress } from './export-types';
 

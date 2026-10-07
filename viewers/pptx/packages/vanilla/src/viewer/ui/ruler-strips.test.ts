@@ -6,7 +6,7 @@
  * is what makes this binding agree with React, Vue, Angular and Svelte on tick
  * density, label text, units and the guide-drop rules.
  */
-import { PX_PER_INCH, RULER_THICKNESS } from 'pptx-viewer-shared';
+import { PX_PER_INCH, RULER_THICKNESS } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { RulerStripsState } from './ruler-strips';

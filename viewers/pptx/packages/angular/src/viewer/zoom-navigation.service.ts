@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 
-import type { ZoomNavigationTarget } from '../internal/shared';
+import type { ZoomNavigationTarget } from 'ooxml-ui/pptx';
 
 /**
  * Handler that commits navigation to a zoom's target, applying its own

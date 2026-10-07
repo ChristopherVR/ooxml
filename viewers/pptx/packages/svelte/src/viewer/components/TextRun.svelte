@@ -16,7 +16,7 @@
 	 * `getTextReflectionWrapperStyle`, the text-run counterpart of a
 	 * shape/picture's `ShapeEffectOverlay` reflection - reused, not forked.
 	 */
-	import type { CssStyleMap, ParagraphRun } from 'pptx-viewer-shared';
+	import type { CssStyleMap, ParagraphRun } from 'ooxml-ui/pptx';
 
 	import { styleToString } from '../style';
 	import TextRunBase from './TextRunBase.svelte';

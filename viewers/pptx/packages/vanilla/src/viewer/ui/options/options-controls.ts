@@ -1,12 +1,12 @@
 /* oxlint-disable eslint/one-var -- this module predates the rule and combining
    every sibling const in a function into one comma-list would hurt
    readability, not help it (see chart-view-model.ts for the same rationale). */
-import { clampOptionNumber } from 'pptx-viewer-shared';
+import { clampOptionNumber } from 'ooxml-ui/pptx';
 import type {
 	ViewerOptionsControl,
 	ViewerOptionsSection,
 	ViewerOptionsStore,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';

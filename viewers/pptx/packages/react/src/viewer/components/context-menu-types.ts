@@ -1,5 +1,5 @@
 import type { PptxElement } from 'pptx-viewer-core';
-import type { EditPointsAvailability } from 'pptx-viewer-shared';
+import type { EditPointsAvailability } from 'ooxml-ui/pptx';
 
 import type {
 	ElementContextMenuAction,

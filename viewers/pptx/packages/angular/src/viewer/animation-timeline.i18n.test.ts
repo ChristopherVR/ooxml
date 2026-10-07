@@ -5,7 +5,7 @@ import { provideTranslateService, TranslateService } from '@ngx-translate/core';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 
 import { translationsZhCN } from '../../../locales/src';
-import { translationsEn } from '../../../shared/src/i18n/translations-en';
+import { translationsEn } from '../../../../../../src/ui/src/pptx/i18n/translations-en';
 import { AnimationTimelineComponent } from './animation-timeline.component';
 
 beforeAll(() => {

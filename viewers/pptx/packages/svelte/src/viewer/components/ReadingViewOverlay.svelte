@@ -23,8 +23,8 @@
 		READING_VIEW_ATTR,
 		READING_VIEW_COUNTER_ATTR,
 		READING_VIEW_STAGE_ATTR,
-	} from 'pptx-viewer-shared';
-	import type { CanvasSize } from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
+	import type { CanvasSize } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 	import { ReadingViewSession } from '../state/reading-view.svelte';

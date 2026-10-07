@@ -15,7 +15,7 @@ import type {
 	PptxThemeColorScheme,
 	PptxThemeFontScheme,
 } from 'pptx-viewer-core';
-import type { RibbonGalleryApplyResult, RibbonGalleryContext } from 'pptx-viewer-shared';
+import type { RibbonGalleryApplyResult, RibbonGalleryContext } from 'ooxml-ui/pptx';
 import { useCallback, useMemo } from 'react';
 import type { RefObject } from 'react';
 

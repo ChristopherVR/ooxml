@@ -3,7 +3,7 @@ import type {
 	CollaborationLivePatcher,
 	ResolvedKeyboardCustomization,
 	SnapGuideInput,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { ContextMenuCellTarget } from './context-menu-dispatch';
 

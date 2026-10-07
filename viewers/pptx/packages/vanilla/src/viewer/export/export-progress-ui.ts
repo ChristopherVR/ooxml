@@ -5,7 +5,7 @@ import {
 	recordProgressPercent,
 	slideProgressPercent,
 	slideStatusLabel,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import type { ExportController, ExportPdfOptions } from './export-controller';

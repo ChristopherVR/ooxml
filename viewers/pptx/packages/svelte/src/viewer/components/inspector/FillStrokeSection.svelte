@@ -13,14 +13,14 @@
 	 */
 	import type { PptxElement } from 'pptx-viewer-core';
 	import { hasShapeProperties } from 'pptx-viewer-core';
-	import type { ThemeColorPickerCommit } from 'pptx-viewer-shared';
+	import type { ThemeColorPickerCommit } from 'ooxml-ui/pptx';
 	import {
 		fillColorOf,
 		gradientStateOf,
 		gradientStatePatch,
 		hasGradientFill,
 		strokeColorOf,
-	} from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 	import type { EditorState } from '../../editor/editor-state.svelte';

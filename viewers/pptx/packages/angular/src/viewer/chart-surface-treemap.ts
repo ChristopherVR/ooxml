@@ -5,4 +5,4 @@
  * `pptx-viewer-shared` (`render/chart-surface-treemap.ts`). This shim keeps the
  * historical Angular import path for the chart engine and its tests.
  */
-export * from '../internal/shared-src/render/chart-surface-treemap';
+export * from 'ooxml-ui/pptx/render/chart-surface-treemap';

@@ -8,14 +8,14 @@ import type {
 	PptxAnimationTrigger,
 	PptxElementAnimation,
 } from 'pptx-viewer-core';
-import type { RibbonAnimationsRequestEvent, RibbonAnimationsViewState } from 'pptx-viewer-shared';
+import type { RibbonAnimationsRequestEvent, RibbonAnimationsViewState } from 'ooxml-ui/pptx';
 import {
 	buildAnimationTimelineRows,
 	directionValuesFor,
 	effectiveDirection,
 	effectiveTimingCurve,
 	registerPptxWebControls,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import { playAnimationPreview } from '../../../animation';
 import type { AnimationActions } from '../../../editor/editor-animation-actions';

@@ -8,9 +8,9 @@
  * (= `DEFAULT_CHART_PALETTE`), so the chart `.tsx` renderers and colocated
  * tests keep importing the same names unchanged.
  */
-import { DEFAULT_CHART_PALETTE } from 'pptx-viewer-shared';
+import { DEFAULT_CHART_PALETTE } from 'ooxml-ui/pptx';
 
-export type { ValueRange } from 'pptx-viewer-shared';
+export type { ValueRange } from 'ooxml-ui/pptx';
 export {
 	computeValueRange,
 	valueToY,
@@ -28,7 +28,7 @@ export {
 	getDisplayUnitDivisor,
 	getDisplayUnitLabel,
 	formatAxisValueWithUnits,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 /** Default fallback palette (alias of `DEFAULT_CHART_PALETTE`). */
 export const PALETTE = DEFAULT_CHART_PALETTE;

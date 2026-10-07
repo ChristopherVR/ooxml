@@ -1,4 +1,4 @@
-import { getSelectionOutlineColor } from 'pptx-viewer-shared';
+import { getSelectionOutlineColor } from 'ooxml-ui/pptx';
 import { LuRotateCw } from 'react-icons/lu';
 
 import { ROTATE_ARTWORK } from './selection-control-artwork';

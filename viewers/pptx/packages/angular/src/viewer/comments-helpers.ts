@@ -12,4 +12,4 @@ export {
 	removeCommentFromList,
 	replyToCommentInList,
 	toggleCommentResolvedInList,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';

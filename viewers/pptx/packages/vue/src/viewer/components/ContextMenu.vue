@@ -30,8 +30,8 @@ export interface ContextMenuItem {
 </script>
 
 <script setup lang="ts">
-import { CONTEXT_MENU_PRESENTATION_LAYER } from 'pptx-viewer-shared';
-import type { ContextMenuViewItem, ContextMenuViewState } from 'pptx-viewer-shared';
+import { CONTEXT_MENU_PRESENTATION_LAYER } from 'ooxml-ui/pptx';
+import type { ContextMenuViewItem, ContextMenuViewState } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 
 const props = defineProps<{

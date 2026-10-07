@@ -1,5 +1,5 @@
 import type { PptxElement } from 'pptx-viewer-core';
-import { MAX_ZOOM_SCALE, MIN_ZOOM_SCALE } from 'pptx-viewer-shared';
+import { MAX_ZOOM_SCALE, MIN_ZOOM_SCALE } from 'ooxml-ui/pptx';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { openInlineEditor } from './editor/inline-text-editor';

@@ -26,14 +26,14 @@ import type {
 	CanvasSize,
 	PresentationContextMenuActionId,
 	ShowOrderCustomShow,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import {
 	annotationOverlayZIndex,
 	applyHighlightClickStyle,
 	findHighlightClickTarget,
 	HIGHLIGHT_CLEAR_STYLE,
 	mayLeaveSlideShow,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { AnimationPlaybackService } from './animation-playback.service';
 import { LoadContentService } from './load-content.service';
 import { PresentationAnnotationOverlayComponent } from './presentation-annotation-overlay.component';

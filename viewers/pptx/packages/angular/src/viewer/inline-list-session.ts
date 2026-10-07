@@ -1,11 +1,11 @@
 import type { PptxElement } from 'pptx-viewer-core';
 
-import { createInlineListModelObserver } from '../internal/shared';
+import { createInlineListModelObserver } from 'ooxml-ui/pptx';
 import type {
 	CollaborationInlineEditor,
 	InlineListController,
 	InlineTextEditSnapshot,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 
 /** Scoped normal/master list state; model transactions remain owned by the existing editor. */
 export class InlineListSession {

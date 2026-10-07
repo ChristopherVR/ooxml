@@ -12,7 +12,7 @@ export {
 	getTextBlockStyle,
 	getImageSrc,
 } from './element-style';
-export { getResolvedShapeClipPath, getResolvedShapeClipPathFor } from 'pptx-viewer-shared';
+export { getResolvedShapeClipPath, getResolvedShapeClipPathFor } from 'ooxml-ui/pptx';
 export { useEditorHistory } from './useEditorHistory';
 export { useEditorOperations } from './useEditorOperations';
 export type { EditorOperations } from './useEditorOperations';

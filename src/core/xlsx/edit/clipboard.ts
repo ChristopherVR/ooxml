@@ -7,27 +7,23 @@ import {
 	rangeContains,
 	rangesIntersect,
 } from '../address.js';
-import { deleteCell, forEachCellInRange, getCell, putCell, usedRange } from '../cells.js';
-import type { Cell, Workbook } from '../model.js';
+import { deleteCell, forEachCellInRange, usedRange } from '../cells.js';
+import type { Workbook } from '../model.js';
 import { internStyle, styleAt } from '../styles.js';
-import { clearContents } from './cell-values.js';
 import { toHtml } from './clipboard-html.js';
 import { parseHtmlTable } from './clipboard-html-parse.js';
 import { parseTsv, toTsv } from './clipboard-text.js';
-import { type EditContext, displayText, ensureCell, pruneCell, sheetAt } from './context.js';
+import { type EditContext, displayText, sheetAt } from './context.js';
 import { isSpilledCell, moveReferencesInFormula, parseCellInput } from './deps.js';
 import { rewriteFormulas } from './shift-formulas.js';
 import { moveFormula } from './fill.js';
 import type { EditScope } from './history.js';
 import { rangeWithin } from './range-math.js';
-import type {
-	ClipboardCell,
-	ClipboardCells,
-	ClipboardPayload,
-	PasteMode,
-	PasteRequest,
-} from './types.js';
+import type { ClipboardCell, ClipboardCells, ClipboardPayload, PasteRequest } from './types.js';
 import { resolvePasteOptions } from './paste-options.js';
+import { writeClip } from './paste-cell.js';
+import { copyColumnWidths } from './columns.js';
+import { pasteWidths } from './paste-widths.js';
 
 /** Copies a range into a self-contained payload (whole rows or columns stop at the used area). */
 export function copyRange(workbook: Workbook, s: number, range: CellRange): ClipboardPayload {
@@ -78,6 +74,8 @@ export function copyRange(workbook: Workbook, s: number, range: CellRange): Clip
 			end: { row: m.end.row - r.start.row, col: m.end.col - r.start.col },
 		}));
 	const cells: ClipboardCells = { rows, cols, data, merges, source: { sheet: s, range: clipped } };
+	cells.columnWidthRows = r.end.row - r.start.row + 1;
+	cells.columnWidths = copyColumnWidths(sheet, r.start.col, r.end.col);
 	return {
 		tsv: toTsv(data.map((line) => line.map((c) => c?.text ?? ''))),
 		html: toHtml(cells, workbook.theme),
@@ -108,6 +106,7 @@ export function cellsFromText(workbook: Workbook, text: string): ClipboardCells 
 /**
  * Pastes clipboard cells at `at`. `all` pastes values, formulas (moved relative to the copy) and
  * formats; `values` the results only; `formulas` formulas without formats; `formats` formats only;
+ * `widths` column dimensions only;
  * `transpose` everything with rows and columns swapped. A cut payload clears its source on the
  * first paste and keeps formulas unchanged. Returns the pasted range.
  */
@@ -121,7 +120,16 @@ export function pasteAt(
 	const { workbook } = ctx;
 	const sheet = sheetAt(workbook, s);
 	const cells = typeof payload === 'string' ? cellsFromText(workbook, payload) : payload.cells;
-	const { mode, transpose, skipBlanks } = resolvePasteOptions(request);
+	const { mode, transpose, skipBlanks, operation } = resolvePasteOptions(request);
+	if (mode === 'widths')
+		return pasteWidths(
+			ctx,
+			s,
+			{ start: at, end: at },
+			cells,
+			transpose,
+			typeof payload !== 'string' && !!payload.cut,
+		);
 	const height = transpose ? cells.cols : cells.rows;
 	const width = transpose ? cells.rows : cells.cols;
 	if (!height || !width) return { start: at, end: at };
@@ -130,6 +138,10 @@ export function pasteAt(
 	const dest: CellRange = { start: at, end: { row: at.row + height - 1, col: at.col + width - 1 } };
 	const cut = typeof payload !== 'string' && payload.cut && cells.source ? cells.source : undefined;
 	if (cut && skipBlanks) throw new RangeError('Skip blanks is not available for cut cells.');
+	if (cut && mode === 'noBorders')
+		throw new RangeError('All except borders is not available for cut cells.');
+	if (cut && operation !== 'none')
+		throw new RangeError('Paste operations are not available for cut cells.');
 	// A move rewrites references anywhere in the workbook: it records the references that change
 	// (and every sheet's merges) besides the cells it empties and fills.
 	const destCells: EditScope = { kind: 'cells', sheet: s, ranges: [dest] };
@@ -179,10 +191,7 @@ export function pasteAt(
 							: copied;
 					const row = at.row + (transpose ? c : r);
 					const col = at.col + (transpose ? r : c);
-					const origin = cells.source && {
-						row: cells.source.range.start.row + r,
-						col: cells.source.range.start.col + c,
-					};
+					const origin = cells.source?.range.start;
 					const formula =
 						clip?.formula === undefined
 							? undefined
@@ -190,10 +199,10 @@ export function pasteAt(
 								? moveReferencesInFormula(clip.formula, move.fromSheet, move, move.toSheet)
 								: !origin
 									? clip.formula
-									: moveFormula(clip.formula, row - origin.row, col - origin.col);
-					writeClip(workbook, sheet, row, col, clip, mode, formula, styleOf);
+									: moveFormula(clip.formula, at.row - origin.row, at.col - origin.col);
+					writeClip(workbook, sheet, row, col, clip, mode, formula, styleOf, operation);
 				}
-			if (mode === 'all' || mode === 'formats') {
+			if (mode === 'all' || mode === 'noBorders' || mode === 'formats') {
 				sheet.merges = sheet.merges.filter((m) => !rangesIntersect(m, dest));
 				for (const m of cells.merges)
 					sheet.merges.push(
@@ -213,51 +222,4 @@ export function pasteAt(
 		{ sheet: s, ranges: [dest], ...(cut ? { structural: true } : {}) },
 	);
 	return dest;
-}
-
-function writeClip(
-	workbook: Workbook,
-	sheet: ReturnType<typeof sheetAt>,
-	row: number,
-	col: number,
-	clip: ClipboardCell | null,
-	mode: PasteMode,
-	formula: string | undefined,
-	styleOf: (clip: ClipboardCell) => number | undefined,
-): void {
-	if (mode === 'formats') {
-		const id = clip ? styleOf(clip) : 0;
-		if (id === undefined) return;
-		const cell = ensureCell(sheet, row, col);
-		if (id) cell.styleId = id;
-		else delete cell.styleId;
-		pruneCell(sheet, row, col);
-		return;
-	}
-	const existing = getCell(sheet, row, col);
-	if (!clip) {
-		if (mode === 'all' || mode === 'transpose') deleteCell(sheet, row, col);
-		else if (existing) {
-			clearContents(existing);
-			pruneCell(sheet, row, col);
-		}
-		return;
-	}
-	const keepStyle = mode === 'values' || mode === 'formulas' || !clip.style;
-	const styleId = keepStyle ? existing?.styleId : styleOf(clip);
-	const cell: Cell = { value: clip.value };
-	if (styleId) cell.styleId = styleId;
-	if (mode !== 'values' && formula !== undefined) {
-		cell.formula = formula;
-		if (clip.legacyFormula) cell.legacyFormula = true;
-	}
-	if (clip.richText && mode !== 'values' && mode !== 'formulas')
-		cell.richText = structuredClone(clip.richText);
-	if (clip.numFmt && styleAt(workbook, cell.styleId).numFmt === 'General') {
-		const base = styleAt(workbook, cell.styleId);
-		const id = internStyle(workbook, { ...base, numFmt: clip.numFmt });
-		if (id) cell.styleId = id;
-	}
-	putCell(sheet, row, col, cell);
-	pruneCell(sheet, row, col);
 }

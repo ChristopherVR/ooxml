@@ -10,6 +10,10 @@ export { TeamsController } from './controller.js';
 export { TeamsChannelTab, defineTeamsChannelTab } from './channel-tab.js';
 export { TeamsFilesPanel, defineTeamsFilesPanel } from './files-panel.js';
 export {
+	TeamsPresentationPreview,
+	defineTeamsPresentationPreview,
+} from './presentation-preview.js';
+export {
 	TeamsContentPreview,
 	defineTeamsContentPreview,
 	type FileEmbeds,

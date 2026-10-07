@@ -1,5 +1,5 @@
-import { SLIDE_TEMPLATES } from 'pptx-viewer-shared';
-import { keyToLabel, translationsEn } from 'pptx-viewer-shared/i18n';
+import { SLIDE_TEMPLATES } from 'ooxml-ui/pptx';
+import { keyToLabel, translationsEn } from 'ooxml-ui/pptx/i18n';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';

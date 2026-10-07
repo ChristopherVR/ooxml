@@ -15,5 +15,5 @@ export {
 	canUseClipboard,
 	generateBroadcastRoomId,
 	seedBroadcastFields,
-} from '../internal/shared';
-export type { BroadcastConfig, BroadcastDefaults } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+export type { BroadcastConfig, BroadcastDefaults } from 'ooxml-ui/pptx';

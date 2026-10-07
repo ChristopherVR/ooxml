@@ -8,8 +8,8 @@
 		schemaLabel,
 		tableCellFillColorCommitPatch,
 		tableCellTextColorCommitPatch,
-	} from 'pptx-viewer-shared';
-	import type { ThemeColorPickerCommit } from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
+	import type { ThemeColorPickerCommit } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 	import type { EditorState } from '../../editor/editor-state.svelte';

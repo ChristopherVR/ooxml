@@ -7,5 +7,5 @@
  * `render/chart-palette.ts`). This shim preserves the historical React import
  * surface so consumers and colocated tests keep importing the same names.
  */
-export { tint, shade } from 'pptx-viewer-shared';
-export { getChartStylePalette, DEFAULT_CHART_PALETTE } from 'pptx-viewer-shared';
+export { tint, shade } from 'ooxml-ui/pptx';
+export { getChartStylePalette, DEFAULT_CHART_PALETTE } from 'ooxml-ui/pptx';

@@ -1,6 +1,6 @@
 import type { PptxElement, PptxTableData } from 'pptx-viewer-core';
-import { createCollaborationLivePatcher } from 'pptx-viewer-shared';
-import type { CollaborationInlineEditor } from 'pptx-viewer-shared';
+import { createCollaborationLivePatcher } from 'ooxml-ui/pptx';
+import type { CollaborationInlineEditor } from 'ooxml-ui/pptx';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { EditorControllerDeps } from './editor-controller-deps';

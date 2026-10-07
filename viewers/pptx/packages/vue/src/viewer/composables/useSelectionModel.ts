@@ -10,7 +10,7 @@
  */
 
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
-import { isTemplateElementId, slideSpaceMembers } from 'pptx-viewer-shared';
+import { isTemplateElementId, slideSpaceMembers } from 'ooxml-ui/pptx';
 import type { ComputedRef, Ref, ShallowRef } from 'vue';
 import { computed, ref } from 'vue';
 

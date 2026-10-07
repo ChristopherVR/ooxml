@@ -1,12 +1,12 @@
 import type { PptxSlide } from 'pptx-viewer-core';
-import { applyFindReplacements, findInSlides, replaceMatch } from 'pptx-viewer-shared';
-import type { FindResult } from 'pptx-viewer-shared';
+import { applyFindReplacements, findInSlides, replaceMatch } from 'ooxml-ui/pptx';
+import type { FindResult } from 'ooxml-ui/pptx';
 import type { ComputedRef, Ref } from 'vue';
 import { computed, ref } from 'vue';
 
 // The match descriptor and the search / replace implementations are shared with
 // the other bindings; this composable is the Vue reactive state around them.
-export type { FindResult } from 'pptx-viewer-shared';
+export type { FindResult } from 'ooxml-ui/pptx';
 
 export interface UseFindReplaceInput {
 	/** Reactive list of slides being edited. */

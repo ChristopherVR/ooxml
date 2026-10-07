@@ -4,8 +4,8 @@ import {
 	subtitleSettingsFromOptions,
 	subtitleSettingsLabels,
 	updateSubtitleSettings,
-} from 'pptx-viewer-shared';
-import type { SubtitleSettingsChangeEvent } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { SubtitleSettingsChangeEvent } from 'ooxml-ui/pptx';
 import { inject, onScopeDispose, shallowRef } from 'vue';
 import { useI18n } from 'vue-i18n';
 

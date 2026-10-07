@@ -1,4 +1,4 @@
-import type { ElementAnimationState } from 'pptx-viewer-shared';
+import type { ElementAnimationState } from 'ooxml-ui/pptx';
 import type { InjectionKey, Ref } from 'vue';
 import { inject, provide, shallowRef } from 'vue';
 

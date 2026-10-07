@@ -26,7 +26,7 @@ import path from 'node:path';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 
-import { buildMorphScopedCss, buildMorphTransitionPlan } from '../internal/shared';
+import { buildMorphScopedCss, buildMorphTransitionPlan } from 'ooxml-ui/pptx';
 import {
 	classicIncomingLayerSlide,
 	morphCrossfadeGroupSlides,

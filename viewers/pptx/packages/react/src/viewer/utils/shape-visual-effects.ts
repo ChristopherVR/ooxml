@@ -10,4 +10,4 @@
  * `getImageEffectsFilter` / `getImageEffectsOpacity` symbol names so existing
  * consumers and colocated tests keep importing unchanged.
  */
-export { getImageEffectsFilter, getImageEffectsOpacity } from 'pptx-viewer-shared';
+export { getImageEffectsFilter, getImageEffectsOpacity } from 'ooxml-ui/pptx';

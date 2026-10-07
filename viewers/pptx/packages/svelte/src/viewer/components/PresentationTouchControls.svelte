@@ -1,6 +1,6 @@
 <script lang="ts">
 	/** Persistent safe-area-aware controls for touch presentation mode. */
-	import { buildPresentationTouchControlState } from 'pptx-viewer-shared';
+	import { buildPresentationTouchControlState } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 

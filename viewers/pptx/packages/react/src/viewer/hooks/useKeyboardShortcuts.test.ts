@@ -7,7 +7,7 @@
  * ended up nudging 2px while three other bindings nudged 1px, with a green test
  * suite the whole time.
  */
-import { mapEditorKey, NUDGE_LARGE, NUDGE_SMALL } from 'pptx-viewer-shared';
+import { mapEditorKey, NUDGE_LARGE, NUDGE_SMALL } from 'ooxml-ui/pptx';
 import { describe, it, expect } from 'vitest';
 
 // ---------------------------------------------------------------------------

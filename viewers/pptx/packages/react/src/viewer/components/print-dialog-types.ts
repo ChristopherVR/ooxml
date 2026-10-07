@@ -7,7 +7,7 @@
  * `radioClass` Tailwind helper stay local.
  */
 import type { PptxSlide } from 'pptx-viewer-core';
-import type { PrintSettings } from 'pptx-viewer-shared';
+import type { PrintSettings } from 'ooxml-ui/pptx';
 
 export type {
 	HandoutSlidesPerPage,
@@ -16,8 +16,8 @@ export type {
 	PrintSettings,
 	PrintSlideRange,
 	PrintWhat,
-} from 'pptx-viewer-shared';
-export { HANDOUT_OPTIONS } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+export { HANDOUT_OPTIONS } from 'ooxml-ui/pptx';
 
 // ---------------------------------------------------------------------------
 // Props

@@ -13,7 +13,7 @@
  * (fake-indexeddb) store; here the shared probe is stubbed so the assertion is
  * about the wiring: probe -> prompt -> restore/discard.
  */
-import type { AutosaveRecoveryPrompt } from 'pptx-viewer-shared';
+import type { AutosaveRecoveryPrompt } from 'ooxml-ui/pptx';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
@@ -25,7 +25,7 @@ const { probeMock, discardMock, acknowledgeMock } = vi.hoisted(() => ({
 	acknowledgeMock: vi.fn(),
 }));
 
-vi.mock(import('pptx-viewer-shared'), async (importOriginal) => ({
+vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => ({
 	...(await importOriginal()),
 	probeAutosaveRecovery: probeMock,
 	discardAutosaveRecovery: discardMock,

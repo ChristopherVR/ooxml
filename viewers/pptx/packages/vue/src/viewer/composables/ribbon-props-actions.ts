@@ -1,5 +1,5 @@
-import type { DistributeAxis } from 'pptx-viewer-shared';
-import { resetSlideLayoutPath } from 'pptx-viewer-shared';
+import type { DistributeAxis } from 'ooxml-ui/pptx';
+import { resetSlideLayoutPath } from 'ooxml-ui/pptx';
 
 import type { UseRibbonPropsInput } from './ribbon-props-types';
 import { RIBBON_ALIGN, toShapePreset } from './useRibbonActions';

@@ -12,7 +12,7 @@ import {
 	HIGHLIGHTER_COLORS,
 	PRESENT_TOOLBAR_CONTROLS,
 	PRESENT_TOOLBAR_ORDER,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 

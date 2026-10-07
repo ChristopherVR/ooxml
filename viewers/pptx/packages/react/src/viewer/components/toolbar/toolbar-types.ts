@@ -15,7 +15,7 @@ import type {
 	InsertChartKind,
 	SlideTemplateId,
 	ToolbarActionId,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type {
 	DrawingTool,

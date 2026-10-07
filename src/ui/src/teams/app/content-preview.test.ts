@@ -48,7 +48,11 @@ describe('content preview', () => {
 		expect(frame.getAttribute('referrerpolicy')).toBe('no-referrer');
 	});
 
-	it('supports host Office embeds and reports missing PowerPoint integration', async () => {
+	it('supports host Office embeds after a native PowerPoint load failure', async () => {
+		vi.stubGlobal(
+			'fetch',
+			vi.fn(async () => new Response('', { status: 404 })),
+		);
 		const el = await preview({
 			attachment: { name: 'deck.pptx', kind: 'pptx' },
 			url: 'https://files.test/deck.pptx?sig=1',

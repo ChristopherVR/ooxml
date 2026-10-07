@@ -16,14 +16,14 @@ import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-
 import { provideTranslateService, TranslateService } from '@ngx-translate/core';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { translationsEn } from '../../../shared/src/i18n';
-import { registerPptxWebControls } from '../../../shared/src/web-components';
+import { translationsEn } from '../../../../../../src/ui/src/pptx/i18n';
+import { registerPptxWebControls } from '../../../../../../src/ui/src/pptx/web-components';
 import {
 	AUTO_HIDE_DELAY_MS,
 	PRESENT_TOOLBAR_CLASSES,
 	PRESENT_TOOLBAR_ORDER,
-} from '../internal/shared';
-import type { PresentationBlackout, PresentationPointerTool } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { PresentationBlackout, PresentationPointerTool } from 'ooxml-ui/pptx';
 import { componentSource } from './component-source.test-support';
 import { PresentationAnnotationsService } from './presentation-annotations.service';
 import { presentationStageStyle } from './presentation-overlay-helpers';

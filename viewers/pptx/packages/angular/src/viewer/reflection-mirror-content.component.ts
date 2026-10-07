@@ -8,13 +8,13 @@ import {
 	getGroupChildParentFill,
 	getImageFitStyle,
 	strokeOutlineViewBox,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import type {
 	FillOverlayCss,
 	ReflectionWrapperStyle,
 	StrokeOutline,
 	SubpathFillOverlay,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import {
 	getEffectFillOverlay,
 	getSoftEdgeFilterDef,

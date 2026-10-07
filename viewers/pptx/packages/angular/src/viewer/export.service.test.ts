@@ -27,7 +27,7 @@ vi.mock(import('jspdf'), () => {
 // `Image`/SVG decoding, so the foreignObject attempt they would otherwise
 // make first never resolves. Mocking them keeps these tests focused on
 // `ExportService`'s own Blob/clipboard/PDF wiring, which is what they assert.
-vi.mock(import('../internal/shared'), async (importOriginal) => ({
+vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => ({
 	...(await importOriginal()),
 	rasterizeElement: vi.fn(),
 	rasterizeElementTiles: vi.fn(),
@@ -54,7 +54,7 @@ describe('copyElementAsPng', () => {
 	});
 
 	it('copies the rendered slide as an image/png clipboard item', async () => {
-		const { rasterizeElement } = await import('../internal/shared');
+		const { rasterizeElement } = await import('ooxml-ui/pptx');
 		const canvas = document.createElement('canvas');
 		vi.spyOn(canvas, 'toBlob').mockImplementation((callback) => callback(png));
 		vi.mocked(rasterizeElement).mockResolvedValue({
@@ -79,7 +79,7 @@ describe('copyElementAsPng', () => {
 	});
 
 	it('falls back to html2canvas when the foreignObject/vector-SVG paths fail', async () => {
-		const { rasterizeElement } = await import('../internal/shared');
+		const { rasterizeElement } = await import('ooxml-ui/pptx');
 		const canvas = document.createElement('canvas');
 		vi.spyOn(canvas, 'toBlob').mockImplementation((callback) => callback(png));
 		vi.mocked(rasterizeElement).mockImplementation(async (_el, _w, _h, _doc, options) =>
@@ -138,7 +138,7 @@ describe('savePresentation', () => {
 
 describe('renderElement', () => {
 	it('rasterises via the tiled foreignObject-fidelity path, not raw html2canvas', async () => {
-		const { rasterizeElementTiledToCanvas } = await import('../internal/shared');
+		const { rasterizeElementTiledToCanvas } = await import('ooxml-ui/pptx');
 		const canvas = document.createElement('canvas');
 		vi.mocked(rasterizeElementTiledToCanvas).mockResolvedValue({
 			kind: 'canvas',
@@ -165,7 +165,7 @@ describe('renderElement', () => {
 
 describe('renderElementToTiles', () => {
 	it('returns the raw tiled result from the shared rasterizer', async () => {
-		const { rasterizeElementTiles } = await import('../internal/shared');
+		const { rasterizeElementTiles } = await import('ooxml-ui/pptx');
 		const tilesResult = {
 			fullWidth: 4000,
 			fullHeight: 2250,

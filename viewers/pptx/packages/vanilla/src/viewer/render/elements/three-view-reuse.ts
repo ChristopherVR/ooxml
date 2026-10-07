@@ -1,5 +1,5 @@
-import type { PptxThreeViewElement, ThreeViewSpec } from 'pptx-viewer-shared';
-import { THREE_VIEW_TAG } from 'pptx-viewer-shared';
+import type { PptxThreeViewElement, ThreeViewSpec } from 'ooxml-ui/pptx';
+import { THREE_VIEW_TAG } from 'ooxml-ui/pptx';
 
 /**
  * Carry live `<pptx-three-view>`s across a stage rebuild.

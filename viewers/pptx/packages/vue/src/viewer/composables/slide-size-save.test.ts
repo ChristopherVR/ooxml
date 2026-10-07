@@ -17,8 +17,8 @@
 // save path is pure ZIP/XML work.
 import JSZip from 'jszip';
 import { PptxHandler } from 'pptx-viewer-core';
-import { SLIDE_SIZE_PRESETS, slideSizeFromPreset, slideSizeToCanvasPx } from 'pptx-viewer-shared';
-import type { SlideSizePreset } from 'pptx-viewer-shared';
+import { SLIDE_SIZE_PRESETS, slideSizeFromPreset, slideSizeToCanvasPx } from 'ooxml-ui/pptx';
+import type { SlideSizePreset } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 import { effectScope, nextTick, ref } from 'vue';
 

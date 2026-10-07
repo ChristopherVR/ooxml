@@ -6,4 +6,4 @@
  * stays as a thin re-export shim for the existing React import sites.
  */
 
-export { ACTION_BUTTON_DEFAULT_ACTIONS, ACTION_BUTTON_PRESETS } from 'pptx-viewer-shared';
+export { ACTION_BUTTON_DEFAULT_ACTIONS, ACTION_BUTTON_PRESETS } from 'ooxml-ui/pptx';

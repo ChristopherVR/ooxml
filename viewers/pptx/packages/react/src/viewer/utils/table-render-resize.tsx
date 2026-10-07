@@ -3,7 +3,7 @@ import {
 	computeResizedColumnWidths,
 	computeResizedRowHeight,
 	DEFAULT_ROW_HEIGHT,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React, { useRef, useEffect, useMemo, useLayoutEffect, useState, useCallback } from 'react';
 
 /**

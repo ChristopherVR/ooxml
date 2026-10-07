@@ -1,4 +1,4 @@
-import type { CssStyleMap } from 'pptx-viewer-shared';
+import type { CssStyleMap } from 'ooxml-ui/pptx';
 
 /**
  * Convert the shared render helpers' camelCase style maps (`CssStyleMap`)

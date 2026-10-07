@@ -23,7 +23,7 @@ import {
 import { TranslatePipe } from '@ngx-translate/core';
 import type { ParsedTableStyleMap, PptxTableData, TablePptxElement } from 'pptx-viewer-core';
 
-import type { TableStylePreset } from '../internal/shared';
+import type { TableStylePreset } from 'ooxml-ui/pptx';
 import {
 	applyTableStylePreset,
 	evenColumnWidths,
@@ -31,7 +31,7 @@ import {
 	redistributeColumnWidth,
 	TABLE_STYLE_PRESETS,
 	tableStyleAssignmentUpdate,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { isCheckboxControl } from './control-event-targets';
 import { patchTableData } from './table-data-helpers';
 import type { TableBooleanFlag } from './table-properties-helpers';

@@ -11,4 +11,4 @@ export {
 	isUrlSafe,
 	isPpactionUrl,
 	resolveHyperlinkHref,
-} from '../internal/shared-src/render/hyperlink-security';
+} from 'ooxml-ui/pptx/render/hyperlink-security';

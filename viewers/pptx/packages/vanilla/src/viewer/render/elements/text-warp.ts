@@ -1,6 +1,6 @@
 import type { TextSegment, TextStyle } from 'pptx-viewer-core';
 import { getSubstituteFontFamily, hasTextProperties } from 'pptx-viewer-core';
-import type { EnvelopeSegmentInput, WarpParagraph } from 'pptx-viewer-shared';
+import type { EnvelopeSegmentInput, WarpParagraph } from 'ooxml-ui/pptx';
 import {
 	buildGlyphEnvelopeBlock,
 	buildWarpPath,
@@ -9,7 +9,7 @@ import {
 	groupIntoParagraphs,
 	hasGlyphEnvelope,
 	shouldUseSvgWarp,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import { getGlyphOutline } from '../../glyph-outline-cache';
 import { createEl, createSvgEl } from '../dom';

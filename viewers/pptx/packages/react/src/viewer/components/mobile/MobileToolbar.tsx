@@ -2,7 +2,7 @@ import type {
 	MobileToolbarId,
 	MobileToolbarIntent,
 	PptxUiMobileToolbarElement,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

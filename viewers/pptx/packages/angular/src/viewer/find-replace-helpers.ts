@@ -6,10 +6,10 @@
  * preserves the historical Angular import surface so the find/replace bar, the
  * viewer barrel, and the colocated tests are unchanged.
  */
-export type { FindResult, FindOptions, ReplaceResult } from '../internal/shared';
+export type { FindResult, FindOptions, ReplaceResult } from 'ooxml-ui/pptx';
 export {
 	findInSlides,
 	applyFindReplacements,
 	replaceMatch,
 	replaceInSlides,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';

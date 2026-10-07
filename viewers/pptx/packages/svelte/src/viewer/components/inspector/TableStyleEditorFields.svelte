@@ -4,12 +4,12 @@
 	 * selected. Mirrors React's `TableStyleEditorFields.tsx` / Vue's
 	 * `TableStyleEditorFields.vue`.
 	 */
-	import type { TableStyleEditorDescriptor, TableStyleEditorFieldEdit } from 'pptx-viewer-shared';
+	import type { TableStyleEditorDescriptor, TableStyleEditorFieldEdit } from 'ooxml-ui/pptx';
 	import {
 		TABLE_STYLE_BORDER_SIDE_LABEL_KEYS,
 		TABLE_STYLE_BORDER_SIDES,
 		TABLE_STYLE_DASH_PRESETS,
-	} from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 	import ThemeColorSwatchGrid from './ThemeColorSwatchGrid.svelte';

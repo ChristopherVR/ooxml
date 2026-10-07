@@ -15,7 +15,7 @@ import {
 	mediaTrimEndMsFromAbsoluteMs,
 	mediaTrimResetPatch,
 	mediaTrimResetState,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { LoadContentService } from './load-content.service';
 import { MediaPreviewComponent } from './media-preview.component';
 import { appendMediaBookmark } from './media-properties-helpers';

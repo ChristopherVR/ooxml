@@ -5,7 +5,7 @@
  * them has to import a type from a sibling that also imports it, mirroring
  * the Svelte binding's `ribbon/ribbon-types.ts`.
  */
-import type { RibbonContextualTabId, ToolbarTabId } from '../internal/shared';
+import type { RibbonContextualTabId, ToolbarTabId } from 'ooxml-ui/pptx';
 
 /**
  * Ribbon tab identifiers. Includes 'text' and 'arrange' on top of the shared

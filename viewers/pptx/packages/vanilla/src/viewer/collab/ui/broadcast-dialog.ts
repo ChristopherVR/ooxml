@@ -1,4 +1,4 @@
-import type { DialogFooterAction } from 'pptx-viewer-shared';
+import type { DialogFooterAction } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';

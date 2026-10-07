@@ -116,12 +116,12 @@ export {
 	P14_TRANSITION_KEYFRAMES,
 	P14_TRANSITION_KEYFRAMES_2,
 	P14_TRANSITION_KEYFRAMES_ALL,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 export type {
 	SlideTransitionAnimations,
 	ResolvedDirection,
 	ResolvedDirection8,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 // The presentation-mode transition overlay components themselves (not just the
 // resolver they call), for a host embedding its own `SlideStage` / presentation

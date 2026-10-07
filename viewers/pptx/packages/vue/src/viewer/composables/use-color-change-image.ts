@@ -18,7 +18,7 @@ import {
 	DEFAULT_COLOR_CHANGE_TOLERANCE,
 	getCachedResult,
 	setCachedResult,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type { ComputedRef, Ref } from 'vue';
 import { computed, ref, watch } from 'vue';
 

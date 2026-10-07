@@ -14,7 +14,7 @@
 	 */
 	import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
 	import { hasShapeProperties } from 'pptx-viewer-core';
-	import { getPatternSvg, PATTERN_PRESET_OPTIONS } from 'pptx-viewer-shared';
+	import { getPatternSvg, PATTERN_PRESET_OPTIONS } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 	import type { EditorState } from '../../editor/editor-state.svelte';

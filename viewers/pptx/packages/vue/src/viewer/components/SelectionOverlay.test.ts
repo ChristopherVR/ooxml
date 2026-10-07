@@ -1,11 +1,11 @@
 import { mount } from '@vue/test-utils';
 import type { PptxElement } from 'pptx-viewer-core';
-import { attachRotateHandlePlacement } from 'pptx-viewer-shared';
+import { attachRotateHandlePlacement } from 'ooxml-ui/pptx';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import SelectionOverlay from './SelectionOverlay.vue';
 
-vi.mock(import('pptx-viewer-shared'), async (original) => ({
+vi.mock(import('ooxml-ui/pptx'), async (original) => ({
 	...(await original()),
 	attachRotateHandlePlacement: vi.fn(() => vi.fn()),
 }));

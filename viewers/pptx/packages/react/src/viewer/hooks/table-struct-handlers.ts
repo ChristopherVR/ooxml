@@ -12,7 +12,7 @@ import {
 	insertTableElementColumn,
 	removeTableElementColumn,
 	setCellText,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { TableCellEditorState } from '../types';
 import { updateCellTextInRawXml, updateCellTextStyleInRawXml } from '../utils/table-parse';

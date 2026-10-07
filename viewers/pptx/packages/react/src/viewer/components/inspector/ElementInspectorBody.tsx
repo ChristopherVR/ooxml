@@ -9,7 +9,7 @@ import type {
 	ParsedTableStyleMap,
 } from 'pptx-viewer-core';
 import { isImageLikeElement } from 'pptx-viewer-core';
-import { elementLockTogglePatch, isElementLocked } from 'pptx-viewer-shared';
+import { elementLockTogglePatch, isElementLocked } from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { LuLock, LuLockOpen } from 'react-icons/lu';

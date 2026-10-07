@@ -17,7 +17,7 @@ import type {
 	PptxHeaderFooter,
 	PptxSlide,
 } from 'pptx-viewer-core';
-import type { ViewerAddinStatus, ViewerOptions, ViewerOptionsStore } from 'pptx-viewer-shared';
+import type { ViewerAddinStatus, ViewerOptions, ViewerOptionsStore } from 'ooxml-ui/pptx';
 
 import type { LocaleCatalogEntry } from '../../i18n';
 import type { ThemeCatalogEntry } from '../../theme';

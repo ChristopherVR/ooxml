@@ -3,7 +3,7 @@ import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-
 import { provideTranslateService } from '@ngx-translate/core';
 import { afterEach, beforeAll, expect, test, vi } from 'vitest';
 
-import { registerPptxWebControls } from '../../../shared/src/web-components';
+import { registerPptxWebControls } from '../../../../../../src/ui/src/pptx/web-components';
 import { RibbonRecordSectionComponent } from './ribbon-record-section.component';
 
 beforeAll(() => {

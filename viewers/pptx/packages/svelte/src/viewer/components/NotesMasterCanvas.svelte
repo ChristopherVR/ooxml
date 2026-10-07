@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { PptxNotesMaster } from 'pptx-viewer-core';
-	import { NOTES_MASTER_PLACEHOLDER_RECTS, resolveNotesSchematicBodyFontSizePx } from 'pptx-viewer-shared';
-	import type { CanvasSize } from 'pptx-viewer-shared';
+	import { NOTES_MASTER_PLACEHOLDER_RECTS, resolveNotesSchematicBodyFontSizePx } from 'ooxml-ui/pptx';
+	import type { CanvasSize } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 

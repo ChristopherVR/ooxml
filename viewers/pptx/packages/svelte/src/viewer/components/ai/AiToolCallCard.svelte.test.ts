@@ -1,4 +1,4 @@
-import type { RenderableToolPart } from 'pptx-viewer-shared/ai';
+import type { RenderableToolPart } from 'ooxml-ui/pptx/ai';
 import { mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it } from 'vitest';
 

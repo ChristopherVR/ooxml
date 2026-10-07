@@ -3,7 +3,7 @@ import {
 	applyAnimationTimelineOrder,
 	buildAnimationTimelineRows,
 	reorderAnimationTimelineRows,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 /**
  * Reorders `entries` by moving the editor-authored animation for `sourceId`

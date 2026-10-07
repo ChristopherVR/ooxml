@@ -8,8 +8,8 @@
 	 * Edit Points when its shape disappears (deleted, slide changed), becomes
 	 * locked, or the host switched the feature off.
 	 */
-	import type { CanvasSize } from 'pptx-viewer-shared';
-	import { canEditElementPoints, isEditPointsEnabled } from 'pptx-viewer-shared';
+	import type { CanvasSize } from 'ooxml-ui/pptx';
+	import { canEditElementPoints, isEditPointsEnabled } from 'ooxml-ui/pptx';
 
 	import type { EditorState } from '../editor/editor-state.svelte';
 	import { useViewerCustomization } from '../state/viewer-customization.svelte';

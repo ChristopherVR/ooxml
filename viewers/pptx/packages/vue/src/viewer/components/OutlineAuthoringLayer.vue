@@ -7,7 +7,7 @@
  * (deleted, slide changed) or becomes locked.
  */
 import type { PptxSlide } from 'pptx-viewer-core';
-import { canEditElementPoints } from 'pptx-viewer-shared';
+import { canEditElementPoints } from 'ooxml-ui/pptx';
 import { computed, watch } from 'vue';
 
 import { useOutlineAuthoring } from '../composables/useOutlineAuthoring';

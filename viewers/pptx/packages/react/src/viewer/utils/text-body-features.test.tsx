@@ -9,7 +9,7 @@
  * decisions reach React and not only the four that fold them into one style.
  */
 import type { PptxElement } from 'pptx-viewer-core';
-import { getTextBodyRotationTransform } from 'pptx-viewer-shared';
+import { getTextBodyRotationTransform } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 
 import { getTextLayoutStyle } from './text-layout';

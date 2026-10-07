@@ -5,7 +5,7 @@
 	 * following. Presentational: owns no Yjs/network logic. Svelte port of the
 	 * Vue `FollowModeBar.vue`.
 	 */
-	import type { SanitizedPresence } from 'pptx-viewer-shared';
+	import type { SanitizedPresence } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 	import type { FollowModeBarProps } from './props';

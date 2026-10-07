@@ -1,4 +1,4 @@
-import { editingHomeControls, registerPptxWebControls } from 'pptx-viewer-shared';
+import { editingHomeControls, registerPptxWebControls } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../../i18n';
 import { createEl } from '../../../render';

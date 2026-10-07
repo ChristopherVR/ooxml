@@ -7,8 +7,8 @@
  * down with a CSS transform so the preview is pixel-faithful.
  */
 import type { PptxSlide } from 'pptx-viewer-core';
-import { buildSlideTemplateContent } from 'pptx-viewer-shared';
-import type { SlideTemplateId } from 'pptx-viewer-shared';
+import { buildSlideTemplateContent } from 'ooxml-ui/pptx';
+import type { SlideTemplateId } from 'ooxml-ui/pptx';
 import React, { useMemo } from 'react';
 
 import { StaticElementRenderer } from './StaticElementRenderer';

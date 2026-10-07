@@ -6,7 +6,7 @@
  * share one copy. This module preserves the original public symbol surface so
  * colocated consumers (and their tests) keep importing the same names.
  */
-export type { CellCoord, CellRect } from 'pptx-viewer-shared';
+export type { CellCoord, CellRect } from 'ooxml-ui/pptx';
 
 export {
 	computeBoundingRect,
@@ -15,4 +15,4 @@ export {
 	canSplitCell,
 	mergeCells,
 	splitCell,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

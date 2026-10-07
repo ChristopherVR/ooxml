@@ -13,7 +13,7 @@
  * its cursor said otherwise.
  */
 import type { PptxElement } from 'pptx-viewer-core';
-import { getShapeAdjustmentHandleDescriptors } from 'pptx-viewer-shared';
+import { getShapeAdjustmentHandleDescriptors } from 'ooxml-ui/pptx';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';

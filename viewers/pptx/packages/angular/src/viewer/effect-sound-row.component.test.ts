@@ -14,8 +14,8 @@ import { Injector, runInInjectionContext, signal } from '@angular/core';
 import type { InputSignal, OutputEmitterRef } from '@angular/core';
 import { describe, expect, it, vi } from 'vitest';
 
-import { EFFECT_SOUND_CATALOGUE } from '../internal/shared';
-import type { EffectSoundState } from '../internal/shared';
+import { EFFECT_SOUND_CATALOGUE } from 'ooxml-ui/pptx';
+import type { EffectSoundState } from 'ooxml-ui/pptx';
 import { EffectSoundRowComponent } from './effect-sound-row.component';
 import type { EffectSoundPick } from './effect-sound-row.component';
 

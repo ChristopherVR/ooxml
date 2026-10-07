@@ -1,9 +1,9 @@
-import type { RunStyle } from 'pptx-viewer-shared';
+import type { RunStyle } from 'ooxml-ui/pptx';
 import {
 	followingText,
 	splitWordsForUnderline,
 	stripUnderlineDecoration,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React from 'react';
 
 import type { MetricTextContext, ScriptFonts } from './text-segment-helpers';

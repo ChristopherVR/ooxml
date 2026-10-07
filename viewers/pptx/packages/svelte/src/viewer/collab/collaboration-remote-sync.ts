@@ -10,14 +10,14 @@ import type {
 	CollaborationConfig,
 	YDocLike,
 	YjsFactories,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	LOCAL_SYNC_ORIGIN,
 	observeYDocSlides,
 	readSlidesFromYDoc,
 	reconcileSlidesInYDoc,
 	shouldRoomSlidesReplaceLoad,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 export interface ObserveRemoteDeps {
 	isApplyingRemote: () => boolean;

@@ -12,8 +12,8 @@
 	 * from the existing OMML and applies the replacement in place.
 	 */
 	import DialogFooter from '../../DialogFooter.svelte';
-	import { compileLatexEquation, convertOmmlToLatex } from 'pptx-viewer-shared';
-	import type { CanvasSize } from 'pptx-viewer-shared';
+	import { compileLatexEquation, convertOmmlToLatex } from 'ooxml-ui/pptx';
+	import type { CanvasSize } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../../i18n/context';
 	import type { EditorState } from '../../../editor/editor-state.svelte';

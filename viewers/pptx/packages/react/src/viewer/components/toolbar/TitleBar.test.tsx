@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
-import { DEFAULT_VIEWER_OPTIONS, registerPptxWebControls } from 'pptx-viewer-shared';
-import type { ViewerOptions } from 'pptx-viewer-shared';
-import { translationsEn } from 'pptx-viewer-shared/i18n';
+import { DEFAULT_VIEWER_OPTIONS, registerPptxWebControls } from 'ooxml-ui/pptx';
+import type { ViewerOptions } from 'ooxml-ui/pptx';
+import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import React, { act, StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';

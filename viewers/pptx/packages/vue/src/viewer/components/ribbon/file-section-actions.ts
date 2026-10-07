@@ -20,13 +20,13 @@ import {
 	backstageCardsFor,
 	customizeBackstageCards,
 	EMPTY_RESOLVED_CUSTOMIZATION,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type {
 	BackstageCardId,
 	BackstagePage,
 	ResolvedCustomization,
 	ToolbarActionId,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type { Component } from 'vue';
 
 import type { FileSectionProps } from './file-section-types';

@@ -20,8 +20,8 @@ import {
 	computeMarqueeHitIds as sharedComputeMarqueeHitIds,
 	RESIZE_HANDLE_GEOMETRY,
 	RESIZE_HANDLES as SHARED_RESIZE_HANDLES,
-} from '../internal/shared';
-import type { MarqueeElementRect, ResizeHandleId } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { MarqueeElementRect, ResizeHandleId } from 'ooxml-ui/pptx';
 
 /** The eight resize-handle positions around a selection box. */
 export type ResizeHandle = ResizeHandleId;

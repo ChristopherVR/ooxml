@@ -33,7 +33,7 @@ import {
 	ERROR_BAR_TYPE_OPTIONS,
 	ERROR_BAR_VALTYPE_OPTIONS,
 	ERROR_BAR_VALUE_TYPES,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { setSeriesErrorBars } from './chart-advanced-helpers';
 import { CHART_EDITOR_STYLES } from './chart-editor-styles';
 import { numFromEvent, selectValue } from './chart-event-helpers';

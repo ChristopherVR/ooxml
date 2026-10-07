@@ -22,7 +22,7 @@ import type {
 	PptxThemePreset,
 } from 'pptx-viewer-core';
 
-import type { ThemeEditorEdit } from '../internal/shared';
+import type { ThemeEditorEdit } from 'ooxml-ui/pptx';
 import { EditorStateService } from './editor-state.service';
 import { LoadContentService } from './load-content.service';
 import type { TemplateElementsBySlideId } from './template-mode';

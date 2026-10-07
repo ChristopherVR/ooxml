@@ -11,8 +11,8 @@ import {
 	resolveNotesSegments,
 	segmentsToEditorHtml,
 	segmentsToPlainText,
-} from 'pptx-viewer-shared';
-import type { NotesToolbarRequestEvent } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { NotesToolbarRequestEvent } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import { createEl } from '../render';

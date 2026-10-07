@@ -12,8 +12,8 @@
  * never accumulates across turns.
  */
 import type { ChatTransport } from 'ai';
-import type { PptxAiBridge, PptxAiContextStrategy, PptxAiUIMessage } from 'pptx-viewer-shared/ai';
-import { buildDeckContext } from 'pptx-viewer-shared/ai';
+import type { PptxAiBridge, PptxAiContextStrategy, PptxAiUIMessage } from 'ooxml-ui/pptx/ai';
+import { buildDeckContext } from 'ooxml-ui/pptx/ai';
 
 /** A minimal view of a UI message part we can prepend context to. */
 interface TextPart {

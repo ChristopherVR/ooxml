@@ -13,8 +13,8 @@ import {
 	CONTEXT_MENU_PRESENTATION_LAYER,
 	getPresentationContextMenuSections,
 	presentationViewItems,
-} from 'pptx-viewer-shared';
-import type { PresentationContextMenuActionId } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { PresentationContextMenuActionId } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import type { Store, ViewerState } from '../state';

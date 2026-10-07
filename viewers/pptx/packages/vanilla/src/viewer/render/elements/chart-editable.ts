@@ -16,8 +16,8 @@ import {
 	formatAxisValue,
 	resolveChartKind,
 	withChartTitle,
-} from 'pptx-viewer-shared';
-import type { ChartMarkDragState, ChartPartRef, ChartValueDragState } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { ChartMarkDragState, ChartPartRef, ChartValueDragState } from 'ooxml-ui/pptx';
 
 import type { ElementRenderContext } from '../types';
 import { createChartTitleEditor } from './chart-title-editor';

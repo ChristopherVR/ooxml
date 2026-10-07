@@ -10,8 +10,8 @@
 	 * Selection state stays with the dialog, which owns the Insert button.
 	 */
 	import type { SmartArtLayout } from 'pptx-viewer-core';
-	import { CATEGORIES, PRESETS } from 'pptx-viewer-shared';
-	import type { SmartArtCategory, SmartArtPreset } from 'pptx-viewer-shared';
+	import { CATEGORIES, PRESETS } from 'ooxml-ui/pptx';
+	import type { SmartArtCategory, SmartArtPreset } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../../i18n/context';
 	import SmartArtThumbnail from './SmartArtThumbnail.svelte';

@@ -16,7 +16,7 @@ export type {
 	ObjectUrlFactory,
 	EmbeddedFontStyles,
 	ViewerFontSource,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 
 export {
 	isInjectableUrl,
@@ -26,7 +26,7 @@ export {
 	buildFontFaceRule,
 	buildEmbeddedFontStyles,
 	buildUserFontFaceStyles,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 
 /** DOM id of the managed `<style>` element the service injects into `<head>`. */
 export const EMBEDDED_FONTS_STYLE_ID = 'pptx-angular-embedded-fonts';

@@ -1,4 +1,4 @@
-import type { SlideSizeRescaleMode } from 'pptx-viewer-shared';
+import type { SlideSizeRescaleMode } from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 

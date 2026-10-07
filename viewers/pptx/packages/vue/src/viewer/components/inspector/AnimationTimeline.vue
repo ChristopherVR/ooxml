@@ -5,13 +5,13 @@ import type {
 	PptxElement,
 	PptxElementAnimation,
 } from 'pptx-viewer-core';
-import type { AnimationTimelineRow } from 'pptx-viewer-shared';
+import type { AnimationTimelineRow } from 'ooxml-ui/pptx';
 import {
 	applyAnimationTimelineOrder,
 	buildAnimationTimelineBars,
 	buildAnimationTimelineRows,
 	reorderAnimationTimelineRows,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 

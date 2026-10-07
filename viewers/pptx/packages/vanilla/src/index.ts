@@ -1,4 +1,4 @@
-export type { ElementUpdate, ElementUpdateOptions } from 'pptx-viewer-shared';
+export type { ElementUpdate, ElementUpdateOptions } from 'ooxml-ui/pptx';
 /**
  * pptx-vanilla-viewer: a zero-framework PowerPoint viewer.
  *
@@ -17,13 +17,13 @@ export type { ElementUpdate, ElementUpdateOptions } from 'pptx-viewer-shared';
 
 // ── Viewer ─────────────────────────────────────────────────────────────
 export { createPptxViewer, PptxViewer } from './viewer';
-export type { ViewportFitOptions, ViewportFitPadding } from 'pptx-viewer-shared';
+export type { ViewportFitOptions, ViewportFitPadding } from 'ooxml-ui/pptx';
 export type {
 	ExternalCollaborationAwareness,
 	ExternalCollaborationSession,
 	ExternalCollaborationSnapshot,
-} from 'pptx-viewer-shared';
-export { createImageElementFromFile } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+export { createImageElementFromFile } from 'ooxml-ui/pptx';
 export type { PptxViewerCallbacks, PptxViewerInstance, PptxViewerOptions } from './viewer';
 export type { PptxViewerSource } from './viewer';
 export type { ViewerState, ZoomLevel } from './viewer';
@@ -51,13 +51,13 @@ export type {
 	InlineTextEditSnapshot,
 	InlineTextSelection,
 	InlineListReadResult,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 export {
 	buildInlineTextCommitPatch,
 	canInteractWithElement,
 	describeCollaborationShellState,
 	overlayInlineTextSnapshot,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 export { loadPresentation, revokeBlobUrls } from './viewer/load';
 export type { LoadedPresentation, LoadPresentationOptions } from './viewer/load';
 export { openInlineEditor, canInlineEditElement } from './viewer/editor/inline-text-editor';
@@ -84,7 +84,7 @@ export type {
 	PptxAiContextStrategy,
 	PptxAiToolName,
 	PptxAiWritePolicy,
-} from 'pptx-viewer-shared/ai';
+} from 'ooxml-ui/pptx/ai';
 
 // ── Element renderer extension surface ─────────────────────────────────
 export type {
@@ -147,14 +147,14 @@ export { exportAllSlidesToSvg, exportSlideToSvg } from './viewer';
 // ── i18n / styles ──────────────────────────────────────────────────────
 export type { TranslationMessages, Translator } from './viewer';
 export { createTranslator, getViewerCss } from './viewer';
-export { keyToLabel, translationsEn } from 'pptx-viewer-shared/i18n';
-export type { TranslationKey } from 'pptx-viewer-shared/i18n';
+export { keyToLabel, translationsEn } from 'ooxml-ui/pptx/i18n';
+export type { TranslationKey } from 'ooxml-ui/pptx/i18n';
 
 // ── Theme (re-exported from pptx-viewer-shared for host configuration) ─
-export type { ViewerTheme, ViewerThemeColors } from 'pptx-viewer-shared';
+export type { ViewerTheme, ViewerThemeColors } from 'ooxml-ui/pptx';
 // `createRibbon`'s `hiddenActions`/`accountAuth` params, re-exported so hosts
 // can type them without a direct `pptx-viewer-shared` import.
-export type { AccountAuthConfig, ToolbarActionId } from 'pptx-viewer-shared';
+export type { AccountAuthConfig, ToolbarActionId } from 'ooxml-ui/pptx';
 export {
 	defaultCssVars,
 	defaultRadius,
@@ -164,7 +164,7 @@ export {
 	vermilionLightTheme,
 	loadPresentationDeck,
 	parsePresentationSessionId,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 // Session restore (opt-in, host-driven): remember the deck the host has open,
 // per browser tab, so a page refresh reopens it instead of dropping the user
 // back on the file picker.
@@ -174,8 +174,8 @@ export {
 	loadSessionDeck,
 	rememberSessionDeck,
 	restoreSessionDeck,
-} from 'pptx-viewer-shared';
-export type { SessionDeck } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+export type { SessionDeck } from 'ooxml-ui/pptx';
 
 // ── Core escape-hatch types ────────────────────────────────────────────
 export type { PptxElement, PptxHandler, PptxHandlerSaveOptions, PptxSlide } from 'pptx-viewer-core';
@@ -194,8 +194,8 @@ export {
 	isLegacyBinaryPresentation,
 	presentationBaseName,
 	savedPresentationFileName,
-} from 'pptx-viewer-shared';
-export type { SavedPresentationFormat } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+export type { SavedPresentationFormat } from 'ooxml-ui/pptx';
 
 // ── UI customisation (the `customization` option + the instance's
 // `ViewerCustomizationApi` methods). Type names and the id catalogues come
@@ -221,7 +221,7 @@ export type {
 	ViewerExportFormatId,
 	ViewerFeatureId,
 	ViewerPanelId,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 export {
 	BACKSTAGE_CARD_IDS,
 	BACKSTAGE_PAGE_IDS,
@@ -237,7 +237,7 @@ export {
 	VIEWER_EXPORT_FORMAT_IDS,
 	VIEWER_FEATURE_IDS,
 	VIEWER_PANEL_IDS,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 // ── Rasterisation escape hatch ─────────────────────────────────────────
 // The same `html2canvas-pro` wrapper the built-in export pipeline uses, so a

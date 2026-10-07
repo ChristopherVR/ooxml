@@ -11,8 +11,8 @@
  * navigation, Vanilla and Svelte no bar at all). This asserts the rendered
  * order and the accessible names against the shared spec.
  */
-import { PRESENT_TOOLBAR_ORDER, toggleBlackboard } from 'pptx-viewer-shared';
-import { translationsEn } from 'pptx-viewer-shared/i18n';
+import { PRESENT_TOOLBAR_ORDER, toggleBlackboard } from 'ooxml-ui/pptx';
+import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';

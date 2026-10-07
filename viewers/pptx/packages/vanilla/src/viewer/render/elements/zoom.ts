@@ -2,7 +2,7 @@ import {
 	buildSummaryZoomView,
 	getContainerStyle,
 	resolveZoomNavigationTarget,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import { createEl } from '../dom';

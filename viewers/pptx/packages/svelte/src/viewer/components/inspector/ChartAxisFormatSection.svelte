@@ -17,7 +17,7 @@
 	 * "only scaled axes take display units" rule cannot drift from React.
 	 */
 	import type { PptxChartAxisFormatting, PptxChartData } from 'pptx-viewer-core';
-	import { DISPLAY_UNITS_OPTIONS, EDITABLE_AXIS_ROWS } from 'pptx-viewer-shared';
+	import { DISPLAY_UNITS_OPTIONS, EDITABLE_AXIS_ROWS } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 

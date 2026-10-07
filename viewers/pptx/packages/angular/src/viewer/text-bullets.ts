@@ -20,5 +20,5 @@ export {
 	formatAutoNumber,
 	resolveParagraphBullet,
 	romanNumeral,
-} from '../internal/shared';
-export type { ParagraphBulletResult, PictureBulletMarker } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+export type { ParagraphBulletResult, PictureBulletMarker } from 'ooxml-ui/pptx';

@@ -16,8 +16,8 @@
 	 * on screen since compat toasts hide in fullscreen and this one only
 	 * renders in fullscreen (see `PresentationOverlays.svelte`).
 	 */
-	import type { RunProgramNotice } from 'pptx-viewer-shared';
-	import { canUseClipboard, compatToastStackStyleAttr } from 'pptx-viewer-shared';
+	import type { RunProgramNotice } from 'ooxml-ui/pptx';
+	import { canUseClipboard, compatToastStackStyleAttr } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 

@@ -5,7 +5,7 @@ import {
 	text3dEmuToPt as emuToPt,
 	text3dPtToEmu as ptToEmu,
 	toggleText3dExtrusion,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 

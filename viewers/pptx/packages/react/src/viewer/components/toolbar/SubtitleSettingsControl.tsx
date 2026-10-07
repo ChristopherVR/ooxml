@@ -3,11 +3,11 @@ import {
 	subtitleSettingsFromOptions,
 	subtitleSettingsLabels,
 	updateSubtitleSettings,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type {
 	PptxUiSubtitleSettingsElement,
 	SubtitleSettingsChangeEvent,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React, { useContext, useEffect, useRef, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
 

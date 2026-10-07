@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
-import type { PptxAiBridge } from 'pptx-viewer-shared/ai';
-import { translationsEn } from 'pptx-viewer-shared/i18n';
+import type { PptxAiBridge } from 'ooxml-ui/pptx/ai';
+import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';

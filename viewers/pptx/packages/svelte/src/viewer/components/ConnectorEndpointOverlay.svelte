@@ -19,8 +19,8 @@
 		collectConnectorSiteCandidates,
 		findConnectorSiteNear,
 		getConnectorEndpointHandles,
-	} from 'pptx-viewer-shared';
-	import type { ConnectorEndpointKind } from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
+	import type { ConnectorEndpointKind } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 

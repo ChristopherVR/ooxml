@@ -10,7 +10,7 @@ import {
 	schemaLabel,
 	SMARTART_COLOR_SCHEME_LABEL_KEYS,
 	SMARTART_LAYOUT_LABEL_KEYS,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';

@@ -1,4 +1,4 @@
-import { createTouchGestureRecognizer } from 'pptx-viewer-shared';
+import { createTouchGestureRecognizer } from 'ooxml-ui/pptx';
 
 export interface CanvasPinchZoomOptions {
 	/** Current manual zoom scale (0.2-5); the baseline each pinch gesture scales from. */

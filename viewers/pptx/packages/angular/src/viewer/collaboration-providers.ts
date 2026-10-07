@@ -19,8 +19,8 @@ import type {
 	YMapLike,
 	YArrayLike,
 	YTextLike,
-} from '../internal/shared';
-import { createDepartureChannel, createSnapshotTextPositions } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import { createDepartureChannel, createSnapshotTextPositions } from 'ooxml-ui/pptx';
 
 /** Minimal awareness surface used by the service. */
 export interface AwarenessLike {

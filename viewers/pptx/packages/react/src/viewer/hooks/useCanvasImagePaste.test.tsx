@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { attachEditorImagePaste } from 'pptx-viewer-shared';
-import type { EditorImagePasteOptions } from 'pptx-viewer-shared';
+import { attachEditorImagePaste } from 'ooxml-ui/pptx';
+import type { EditorImagePasteOptions } from 'ooxml-ui/pptx';
 import React, { act, createRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -9,7 +9,7 @@ import { useSlideCanvasImagePaste } from '../components/canvas/useSlideCanvasIma
 import { useCanvasImagePaste } from './useCanvasImagePaste';
 import type { ViewerState } from './useViewerState';
 
-vi.mock(import('pptx-viewer-shared'), () => ({ attachEditorImagePaste: vi.fn() }));
+vi.mock(import('ooxml-ui/pptx'), () => ({ attachEditorImagePaste: vi.fn() }));
 
 const cleanups: (() => void)[] = [];
 let detach = vi.fn();

@@ -1,6 +1,6 @@
 import type { PptxElement } from 'pptx-viewer-core';
 import { hasShapeProperties } from 'pptx-viewer-core';
-import { build3DExtrusionData, getComputedFillStyle } from 'pptx-viewer-shared';
+import { build3DExtrusionData, getComputedFillStyle } from 'ooxml-ui/pptx';
 
 import { createEl } from '../dom';
 

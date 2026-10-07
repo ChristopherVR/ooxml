@@ -1,13 +1,13 @@
 import type { PptxElement, TextSegment, TextStyle } from 'pptx-viewer-core';
 import { hasTextProperties } from 'pptx-viewer-core';
-import type { ElementBoxPatch } from 'pptx-viewer-shared';
+import type { ElementBoxPatch } from 'ooxml-ui/pptx';
 import {
 	cloneElementForPaste,
 	inlineListBodyText,
 	updateSlideNotes,
 	updateElementInTree,
 	updateTextSegmentStyle,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import { appendElement, newElementId } from './editor-insert';
 import type { EditorState } from './editor-state.svelte';
@@ -94,7 +94,7 @@ export class EditorElementController {
 			| Partial<PptxElement>
 			| ((
 					element: PptxElement,
-					snapshot?: import('pptx-viewer-shared').InlineTextEditSnapshot,
+					snapshot?: import('ooxml-ui/pptx').InlineTextEditSnapshot,
 			  ) => Partial<PptxElement>),
 	): void {
 		const id = this.#editor.selectedElementId;
@@ -197,7 +197,7 @@ export class EditorElementController {
 	commitInlineText(
 		id: string,
 		rawText: string,
-		snapshot?: import('pptx-viewer-shared').InlineTextEditSnapshot,
+		snapshot?: import('ooxml-ui/pptx').InlineTextEditSnapshot,
 	): void {
 		// A group member resolves in slide space; its update goes back into the group.
 		const target = this.#editor.elementById(id);

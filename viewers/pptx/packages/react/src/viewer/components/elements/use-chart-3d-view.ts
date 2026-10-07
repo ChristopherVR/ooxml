@@ -15,14 +15,14 @@ import {
 	applyChart3DDrag,
 	applyChart3DSelect,
 	resolveChartThreeViewSpec,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type {
 	Chart3DFlags,
 	Chart3DSelectionBridge,
 	ChartPartRef,
 	ThreeViewDragDetail,
 	ThreeViewSpec,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { useMemo } from 'react';
 
 import type { ChartPartSelection } from '../chart-part-selection';

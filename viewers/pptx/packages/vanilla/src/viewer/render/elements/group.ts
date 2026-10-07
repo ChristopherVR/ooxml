@@ -1,10 +1,10 @@
 import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
-import type { ComputedFillStyle } from 'pptx-viewer-shared';
+import type { ComputedFillStyle } from 'ooxml-ui/pptx';
 import {
 	getContainerStyle,
 	getGroupChildParentFill,
 	resolveGroupChildFill,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import { createEl } from '../dom';
 import { getShapeFillStrokeStyle } from '../element-styles';

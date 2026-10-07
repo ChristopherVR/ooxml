@@ -15,8 +15,8 @@ import {
 	EMPTY_RESOLVED_CUSTOMIZATION,
 	isElementIdInteractive,
 	resolveContextMenuElementId,
-} from 'pptx-viewer-shared';
-import type { CustomizedCanvasContextMenuEntry, ResolvedCustomization } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { CustomizedCanvasContextMenuEntry, ResolvedCustomization } from 'ooxml-ui/pptx';
 
 import type { EditActions } from '../editor';
 import { collectLayoutOptions } from '../editor/editing-chrome-sync';

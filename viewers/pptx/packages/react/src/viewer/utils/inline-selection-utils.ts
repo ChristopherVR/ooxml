@@ -8,5 +8,5 @@ export {
 	getInlineEditorSelection,
 	applyStyleToSelectedSegments,
 	restoreSegmentSelection,
-} from 'pptx-viewer-shared';
-export type { InlineTextSelection } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+export type { InlineTextSelection } from 'ooxml-ui/pptx';

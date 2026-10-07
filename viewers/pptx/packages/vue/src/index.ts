@@ -1,4 +1,4 @@
-export type { ElementUpdate, ElementUpdateOptions } from 'pptx-viewer-shared';
+export type { ElementUpdate, ElementUpdateOptions } from 'ooxml-ui/pptx';
 export type {
 	ExternalCollaborationSession,
 	ExternalCollaborationSnapshot,
@@ -6,8 +6,8 @@ export type {
 	CollaborationShellState,
 	ConnectionStatus,
 	SanitizedPresence,
-} from 'pptx-viewer-shared';
-export { describeCollaborationShellState } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+export { describeCollaborationShellState } from 'ooxml-ui/pptx';
 // ── Vue 3 PowerPoint viewer/editor ──
 export {
 	PowerPointViewer,
@@ -66,14 +66,14 @@ export type {
 } from './viewer';
 
 // ── Shared API types ──
-export { createImageElementFromFile } from 'pptx-viewer-shared';
+export { createImageElementFromFile } from 'ooxml-ui/pptx';
 export type {
 	ViewerMode,
 	PowerPointViewerAPI,
 	ToolbarActionId,
 	ToolbarButtonId,
 	ToolbarTabId,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 // ── UI customisation (`customization` prop + imperative handle helpers) ──
 // See docs/guide/customization.md. Re-exported so a host never has to reach
@@ -99,7 +99,7 @@ export type {
 	ViewerFeatureId,
 	ViewerDialogId,
 	ViewerExportFormatId,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 export {
 	RIBBON_TAB_IDS,
 	TOOLBAR_BUTTON_IDS,
@@ -115,7 +115,7 @@ export {
 	VIEWER_FEATURE_IDS,
 	VIEWER_DIALOG_IDS,
 	VIEWER_EXPORT_FORMAT_IDS,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 // ── Audience / presenter content sharing (IndexedDB, wire-compatible with React) ──
 export {
@@ -126,7 +126,7 @@ export {
 	loadAudienceContent,
 	clearAudienceContent,
 } from './viewer';
-export { parsePresentationSessionId } from 'pptx-viewer-shared';
+export { parsePresentationSessionId } from 'ooxml-ui/pptx';
 
 // ── Session restore (opt-in, host-driven) ──
 // Remember the deck the host has open, per browser tab, so a page refresh
@@ -137,8 +137,8 @@ export {
 	loadSessionDeck,
 	rememberSessionDeck,
 	restoreSessionDeck,
-} from 'pptx-viewer-shared';
-export type { SessionDeck } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+export type { SessionDeck } from 'ooxml-ui/pptx';
 
 // ── Shared utilities ──
 export { cn } from './utils';
@@ -174,8 +174,8 @@ export {
 	isLegacyBinaryPresentation,
 	presentationBaseName,
 	savedPresentationFileName,
-} from 'pptx-viewer-shared';
-export type { SavedPresentationFormat } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+export type { SavedPresentationFormat } from 'ooxml-ui/pptx';
 
 // ── Rasterisation escape hatch ─────────────────────────────────────────
 // The same `html2canvas-pro` wrapper the built-in export pipeline uses, so a

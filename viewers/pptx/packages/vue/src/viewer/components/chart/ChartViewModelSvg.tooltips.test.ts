@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils';
-import type { ChartViewModel } from 'pptx-viewer-shared';
+import type { ChartViewModel } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 
 import ChartViewModelSvg from './ChartViewModelSvg.vue';

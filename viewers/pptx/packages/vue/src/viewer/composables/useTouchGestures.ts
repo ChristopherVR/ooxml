@@ -1,5 +1,5 @@
-import { createTouchGestureRecognizer } from 'pptx-viewer-shared';
-import type { TouchGestureCallbacks } from 'pptx-viewer-shared';
+import { createTouchGestureRecognizer } from 'ooxml-ui/pptx';
+import type { TouchGestureCallbacks } from 'ooxml-ui/pptx';
 import { onScopeDispose, unref, watch } from 'vue';
 import type { Ref } from 'vue';
 

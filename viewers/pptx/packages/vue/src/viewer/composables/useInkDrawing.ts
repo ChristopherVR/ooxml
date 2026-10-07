@@ -1,6 +1,6 @@
 import type { PptxSlide } from 'pptx-viewer-core';
-import type { InkPoint } from 'pptx-viewer-shared';
-import { findEraserHitElementId, strokeToInkElement } from 'pptx-viewer-shared';
+import type { InkPoint } from 'ooxml-ui/pptx';
+import { findEraserHitElementId, strokeToInkElement } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
 

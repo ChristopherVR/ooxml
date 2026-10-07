@@ -24,8 +24,8 @@ import type { InputSignal } from '@angular/core';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 
-import { OUTLINE_ROW_ATTR, OUTLINE_VIEW_ATTR } from '../internal/shared';
-import type { CanvasSize, OutlineRow } from '../internal/shared';
+import { OUTLINE_ROW_ATTR, OUTLINE_VIEW_ATTR } from 'ooxml-ui/pptx';
+import type { CanvasSize, OutlineRow } from 'ooxml-ui/pptx';
 import { OutlineViewOverlayComponent } from './outline-view-overlay.component';
 import type { OutlineCommit } from './outline-view-overlay.component';
 

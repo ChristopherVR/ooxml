@@ -1,5 +1,5 @@
 import type { PptxElement } from 'pptx-viewer-core';
-import type { AccountAuthConfig, RibbonContextualTabId, ToolbarActionId } from 'pptx-viewer-shared';
+import type { AccountAuthConfig, RibbonContextualTabId, ToolbarActionId } from 'ooxml-ui/pptx';
 import {
 	attachRibbonOverflow,
 	homeLaunchers,
@@ -7,7 +7,7 @@ import {
 	isActionHidden,
 	resolveActiveRibbonTab,
 	visibleContextualTabs,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';

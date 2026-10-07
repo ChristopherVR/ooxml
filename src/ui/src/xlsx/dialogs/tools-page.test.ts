@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { createWorkbook, getCell } from 'ooxml-core/xlsx';
+import { createWorkbook, getCell, styleAt } from 'ooxml-core/xlsx';
 import { afterEach, describe, expect, it } from 'vitest';
 import { clipState, clipboardCommands } from 'ooxml-core/xlsx/ui';
 import {
@@ -26,6 +26,84 @@ function setup(grid?: { zoom: number }) {
 const radio = (root: HTMLElement, label: string) => inputByLabel(root, label);
 
 describe('Paste Special', () => {
+	it('pastes column widths through the shared dialog without changing cells', async () => {
+		const ctx = setup();
+		const session = ctx.session()!;
+		const sheet = ctx.workbook()!.sheets[0]!;
+		session.setColumnWidth(0, [0], 20);
+		session.setColumnWidth(0, [2], 12);
+		session.setCellValue(0, 0, 2, 9);
+		clipState(ctx).payload = session.copy(0, {
+			start: { row: 0, col: 0 },
+			end: { row: 0, col: 0 },
+		});
+		ctx.select('C1');
+		const result = ctx.commands.run('home.paste-special');
+		const dialog = dialogEl(ctx, 'paste-special');
+		expect(radio(dialog, 'Column widths').disabled).toBe(false);
+		radio(dialog, 'Column widths').click();
+		radio(dialog, 'Multiply').click();
+		inputByLabel(dialog, 'Skip blanks').click();
+		clickButton(dialog, 'OK');
+		await result;
+		const width = () => sheet.columns.find((c) => c.min <= 2 && c.max >= 2)?.width;
+		expect(width()).toBe(20);
+		expect(getCell(sheet, 0, 2)?.value).toBe(9);
+		session.undo();
+		expect(width()).toBe(12);
+	});
+	it('copies all except destination borders through the shared dialog', async () => {
+		const ctx = setup();
+		const session = ctx.session()!;
+		const source = { start: { row: 0, col: 0 }, end: { row: 0, col: 0 } };
+		const dest = { start: { row: 0, col: 2 }, end: { row: 0, col: 2 } };
+		session.setCellValue(0, 0, 0, 2);
+		session.setCellValue(0, 0, 2, 9);
+		session.applyStyle(0, [source], {
+			font: { bold: true },
+			border: { bottom: { style: 'thin', color: { rgb: 'FFFF0000' } } },
+		});
+		session.applyStyle(0, [dest], {
+			border: { bottom: { style: 'double', color: { rgb: 'FF0000FF' } } },
+		});
+		clipState(ctx).payload = session.copy(0, source);
+		ctx.select('C1');
+		const result = ctx.commands.run('home.paste-special');
+		const dialog = dialogEl(ctx, 'paste-special');
+		radio(dialog, 'All except borders').click();
+		clickButton(dialog, 'OK');
+		await result;
+		const workbook = ctx.workbook()!;
+		const cell = getCell(workbook.sheets[0]!, 0, 2);
+		expect(cell?.value).toBe(2);
+		expect(styleAt(workbook, cell?.styleId).font.bold).toBe(true);
+		expect(styleAt(workbook, cell?.styleId).border.bottom).toEqual({
+			style: 'double',
+			color: { rgb: 'FF0000FF' },
+		});
+		session.undo();
+		expect(getCell(workbook.sheets[0]!, 0, 2)?.value).toBe(9);
+	});
+	it('multiplies a selection and retains destination formulas with Values', async () => {
+		const ctx = setup();
+		const s = ctx.session()!;
+		s.setCellInput(0, 0, 0, '=1+1');
+		s.setRangeValues(0, { row: 0, col: 2 }, [[10, 'text', 10]]);
+		s.setCellInput(0, 0, 4, '=5+5');
+		clipState(ctx).payload = s.copy(0, { start: { row: 0, col: 0 }, end: { row: 0, col: 0 } });
+		ctx.select('C1:E1');
+		const result = ctx.commands.run('home.paste-special');
+		const dialog = dialogEl(ctx, 'paste-special');
+		radio(dialog, 'Values').click();
+		radio(dialog, 'Multiply').click();
+		clickButton(dialog, 'OK');
+		await result;
+		const read = () => [2, 3, 4].map((col) => getCell(ctx.workbook()!.sheets[0]!, 0, col)?.value);
+		expect(read()).toEqual([20, 'text', 20]);
+		expect(getCell(ctx.workbook()!.sheets[0]!, 0, 4)?.formula).toBe('(5+5)*2');
+		s.undo();
+		expect(read()).toEqual([10, 'text', 10]);
+	});
 	it('combines values, transpose and skip blanks in one undo step', async () => {
 		const ctx = setup();
 		const s = ctx.session()!;
@@ -60,7 +138,7 @@ describe('Paste Special', () => {
 		expect(getCell(ctx.workbook()!.sheets[0]!, 2, 1)).toBeUndefined();
 		const result = ctx.commands.run('home.paste-special');
 		const dialog = dialogEl(ctx, 'paste-special');
-		expect(radio(dialog, 'All except borders').disabled).toBe(true);
+		expect(radio(dialog, 'All except borders').disabled).toBe(false);
 		radio(dialog, 'Values').click();
 		clickButton(dialog, 'OK');
 		expect(await result).toBe(true);

@@ -12,8 +12,8 @@ import { Share2 } from 'lucide-vue-next';
  * as `isCollaborating` / `collaboratorCount` props (surfaced through
  * `RibbonProps`).
  */
-import { TAB_ROW_ACTION_CLASSES as TRA } from 'pptx-viewer-shared';
-import type { ToolbarActionId } from 'pptx-viewer-shared';
+import { TAB_ROW_ACTION_CLASSES as TRA } from 'ooxml-ui/pptx';
+import type { ToolbarActionId } from 'ooxml-ui/pptx';
 import { useI18n } from 'vue-i18n';
 
 import { cn } from '../../../utils';

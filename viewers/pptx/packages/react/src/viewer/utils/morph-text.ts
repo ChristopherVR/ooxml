@@ -6,4 +6,4 @@
  *
  * @module utils/morph-text
  */
-export { tokenizeText, matchTextTokens } from 'pptx-viewer-shared';
+export { tokenizeText, matchTextTokens } from 'ooxml-ui/pptx';

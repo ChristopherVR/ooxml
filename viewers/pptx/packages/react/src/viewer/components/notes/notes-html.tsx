@@ -10,7 +10,7 @@ import { INDENT_PX, segmentsToParagraphs } from './notes-utils';
 
 // Serialising segments to editor HTML and parsing them back out of the
 // contentEditable are shared with the other bindings' notes editors.
-export { parseSegmentsFromRichEditor, segmentsToEditorHtml } from 'pptx-viewer-shared';
+export { parseSegmentsFromRichEditor, segmentsToEditorHtml } from 'ooxml-ui/pptx';
 
 /* ------------------------------------------------------------------ */
 /*  Render rich notes segments as React nodes (read-only display)      */

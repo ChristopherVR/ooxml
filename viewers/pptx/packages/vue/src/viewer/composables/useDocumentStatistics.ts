@@ -1,6 +1,6 @@
 import type { PptxCoreProperties, PptxSlide } from 'pptx-viewer-core';
-import { computeDocumentStatistics, countWords } from 'pptx-viewer-shared';
-import type { DocumentStatistics } from 'pptx-viewer-shared';
+import { computeDocumentStatistics, countWords } from 'ooxml-ui/pptx';
+import type { DocumentStatistics } from 'ooxml-ui/pptx';
 import { computed, toValue } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 

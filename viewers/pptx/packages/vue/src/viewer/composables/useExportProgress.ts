@@ -5,7 +5,7 @@ import {
 	recordProgressPercent,
 	slideProgressPercent,
 	slideStatusLabel,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { ref } from 'vue';
 import type { Ref } from 'vue';
 import { useI18n } from 'vue-i18n';

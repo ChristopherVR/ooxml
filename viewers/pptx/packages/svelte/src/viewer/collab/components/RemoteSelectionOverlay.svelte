@@ -12,7 +12,7 @@
 	 * The overlay sets `pointer-events: none` so it never intercepts canvas
 	 * input, and sits just below the cursors overlay (z-index 9997 < 9999).
 	 */
-	import { formatCursorLabel } from 'pptx-viewer-shared';
+	import { formatCursorLabel } from 'ooxml-ui/pptx';
 
 	import type { RemoteSelectionOverlayProps } from './props';
 	import type { RemoteSelectionBox } from './remote-selection';

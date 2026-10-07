@@ -15,7 +15,7 @@ export type {
 	SlideTransitionAnimations,
 	ResolvedDirection,
 	ResolvedDirection8,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 export {
 	resolveDirection,
 	resolveDirection8,
@@ -39,4 +39,4 @@ export {
 	P14_TRANSITION_KEYFRAMES_ALL,
 	resolveSlideTransition,
 	resolveTransitionDurationMs,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

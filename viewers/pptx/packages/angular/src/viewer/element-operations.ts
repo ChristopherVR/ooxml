@@ -25,7 +25,7 @@ import {
 	slideSpaceElement,
 	updateElementById as updateTopLevelElementById,
 	updateElementInTree,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 
 export {
 	deleteElementsByIds,
@@ -34,7 +34,7 @@ export {
 	sendToBack,
 	bringForward,
 	sendBackward,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 
 /** Smallest permitted width/height after a resize (the shared operation's guard). */
 const MIN_ELEMENT_SIZE = 1;

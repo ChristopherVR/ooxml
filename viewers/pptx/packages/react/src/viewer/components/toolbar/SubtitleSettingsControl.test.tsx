@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { createViewerOptionsStore } from 'pptx-viewer-shared';
+import { createViewerOptionsStore } from 'ooxml-ui/pptx';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { describe, expect, it, vi } from 'vitest';

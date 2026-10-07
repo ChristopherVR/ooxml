@@ -1,4 +1,4 @@
-import { RECORD_COMMAND_GROUPS } from 'pptx-viewer-shared';
+import { RECORD_COMMAND_GROUPS } from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 

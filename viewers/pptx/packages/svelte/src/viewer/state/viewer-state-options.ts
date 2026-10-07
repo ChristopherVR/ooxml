@@ -1,5 +1,5 @@
-import { EMPTY_RESOLVED_CUSTOMIZATION, isFeatureEnabled } from 'pptx-viewer-shared';
-import type { ResolvedCustomization } from 'pptx-viewer-shared';
+import { EMPTY_RESOLVED_CUSTOMIZATION, isFeatureEnabled } from 'ooxml-ui/pptx';
+import type { ResolvedCustomization } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n/translator';
 import type { PowerPointViewerProps } from '../types';

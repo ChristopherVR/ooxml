@@ -30,8 +30,8 @@ import type {
  * UI panel state lives in {@link useViewerUIState}.
  *
  */
-import { createCollaborationLivePatcher, publishLiveInlineText } from 'pptx-viewer-shared';
-import type { SlideSizeEmu } from 'pptx-viewer-shared';
+import { createCollaborationLivePatcher, publishLiveInlineText } from 'ooxml-ui/pptx';
+import type { SlideSizeEmu } from 'ooxml-ui/pptx';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { DEFAULT_CANVAS_HEIGHT, DEFAULT_CANVAS_WIDTH } from '../constants';

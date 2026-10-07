@@ -10,9 +10,9 @@
 /* oxlint-disable eslint/one-var -- each fixture/lookup below is an independent
    local; merging unrelated declarations across this file would hurt
    readability, not help it (see chart-view-model.ts for the same rationale). */
-import { DEFAULT_VIEWER_OPTIONS, getViewerOptionsTab } from 'pptx-viewer-shared';
-import type { ViewerOptionsTabDefinition } from 'pptx-viewer-shared';
-import { translationsEn } from 'pptx-viewer-shared/i18n';
+import { DEFAULT_VIEWER_OPTIONS, getViewerOptionsTab } from 'ooxml-ui/pptx';
+import type { ViewerOptionsTabDefinition } from 'ooxml-ui/pptx';
+import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';

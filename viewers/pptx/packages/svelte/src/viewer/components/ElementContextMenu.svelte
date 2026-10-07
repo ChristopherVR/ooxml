@@ -8,7 +8,7 @@
 	 * the dispatch. The rows, positioning, dismissal and focus belong to the shared
 	 * `pptx-ui-context-menu`.
 	 */
-	import { contextMenuViewItems, customizeContextMenuEntries } from 'pptx-viewer-shared';
+	import { contextMenuViewItems, customizeContextMenuEntries } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 	import {

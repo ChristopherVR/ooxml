@@ -3,8 +3,8 @@ import {
 	resolveThemeCatalogEntry,
 	THEME_CATALOG,
 	writeStoredViewerPrefs,
-} from 'pptx-viewer-shared';
-import type { ThemeCatalogEntry, ViewerTheme } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { ThemeCatalogEntry, ViewerTheme } from 'ooxml-ui/pptx';
 import { untrack } from 'svelte';
 
 /** Host props the chrome's theme/locale selection reads (all read reactively). */

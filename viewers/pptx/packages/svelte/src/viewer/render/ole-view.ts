@@ -1,5 +1,5 @@
 import type { OlePptxElement } from 'pptx-viewer-core';
-import type { ResolvedOleType } from 'pptx-viewer-shared';
+import type { ResolvedOleType } from 'ooxml-ui/pptx';
 import {
 	formatBytes,
 	getOleAriaLabel,
@@ -10,12 +10,12 @@ import {
 	getPlaceholderStyle,
 	isBrowserOpenableMime,
 	resolveOleType,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import { styleToString } from '../style';
 
-export type { OleIconShape } from 'pptx-viewer-shared';
-export { getOleIconShapes } from 'pptx-viewer-shared';
+export type { OleIconShape } from 'ooxml-ui/pptx';
+export { getOleIconShapes } from 'ooxml-ui/pptx';
 
 /**
  * View-model builder for `ole` (embedded object) elements (port of the

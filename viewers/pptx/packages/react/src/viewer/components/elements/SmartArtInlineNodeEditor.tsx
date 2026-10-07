@@ -1,4 +1,4 @@
-import type { InlineEditRect } from 'pptx-viewer-shared';
+import type { InlineEditRect } from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 

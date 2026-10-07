@@ -39,7 +39,7 @@ import {
 	resolveChartThreeViewSpec,
 	resolveRevealedChartData,
 	withChartTitle,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import type {
 	Chart3DSelectionBridge,
 	ChartMarkDragState,
@@ -47,7 +47,7 @@ import type {
 	ChartValueDragState,
 	ElementAnimationState,
 	ThreeViewDragDetail,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import {
 	chartCanEditParts,
 	chartDragCommitData,

@@ -11,13 +11,13 @@ import {
 	galleryHasItems,
 	galleryItemLabel,
 	inlineGalleryItems,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type {
 	RibbonGalleryDescriptor,
 	RibbonGalleryId,
 	RibbonGalleryItem,
 	RibbonGallerySection,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import type { ComputedRef } from 'vue';
 import { useI18n } from 'vue-i18n';

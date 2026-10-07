@@ -3,8 +3,8 @@ import {
 	createInitialPresentationSnapshot,
 	PRESENTER_CONSOLE_CONTROLS,
 	PRESENTER_CONSOLE_LABEL_KEYS,
-} from 'pptx-viewer-shared';
-import type { PresentationSnapshot } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { PresentationSnapshot } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 
 import { translationsEn } from '../../i18n';

@@ -10,8 +10,8 @@ import {
 } from '@angular/core';
 import type { PptxElement, PptxSlide, PptxSlideTransition } from 'pptx-viewer-core';
 
-import type { CanvasSize } from '../internal/shared';
-import { applySlideTransitionSound, buildMorphScopedCss } from '../internal/shared';
+import type { CanvasSize } from 'ooxml-ui/pptx';
+import { applySlideTransitionSound, buildMorphScopedCss } from 'ooxml-ui/pptx';
 import { playAnimationSound, stopAnimationSound } from './animation-sound';
 import { FragmentedTransitionLayerComponent } from './fragmented-transition-layer.component';
 import { MorphExtraLayersComponent } from './morph-extra-layers.component';

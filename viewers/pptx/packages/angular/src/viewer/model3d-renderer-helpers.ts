@@ -1,6 +1,6 @@
 import type { Model3DPptxElement, Model3DSceneData, PptxElement } from 'pptx-viewer-core';
 
-import { modelDataToBlobUrl } from '../internal/shared';
+import { modelDataToBlobUrl } from 'ooxml-ui/pptx';
 import type { StyleMap } from './element-style';
 import { getContainerStyle } from './element-style';
 

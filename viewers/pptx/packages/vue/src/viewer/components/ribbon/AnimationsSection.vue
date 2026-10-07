@@ -7,8 +7,8 @@
 -->
 <script setup lang="ts">
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
-import { playAnimationRibbonPreview } from 'pptx-viewer-shared';
-import type { AnimationApplyGroup, RibbonAnimationsRequestEvent } from 'pptx-viewer-shared';
+import { playAnimationRibbonPreview } from 'ooxml-ui/pptx';
+import type { AnimationApplyGroup, RibbonAnimationsRequestEvent } from 'ooxml-ui/pptx';
 import { computed, onBeforeUnmount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 

@@ -1,4 +1,4 @@
-import { CUSTOM_FONT_ACCEPT, registerCustomFont } from 'pptx-viewer-shared';
+import { CUSTOM_FONT_ACCEPT, registerCustomFont } from 'ooxml-ui/pptx';
 import React, { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LuUpload } from 'react-icons/lu';

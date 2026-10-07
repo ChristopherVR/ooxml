@@ -1,6 +1,6 @@
 import type { PptxElement, PptxLayoutPreview, PptxSlide } from 'pptx-viewer-core';
-import type { ToolbarActionId } from 'pptx-viewer-shared';
-import type { PptxAiBridge, PptxAiConfig } from 'pptx-viewer-shared/ai';
+import type { ToolbarActionId } from 'ooxml-ui/pptx';
+import type { PptxAiBridge, PptxAiConfig } from 'ooxml-ui/pptx/ai';
 import type { ReactNode } from 'react';
 
 import type { AiPanelController } from '../hooks/ai/useAiPanelController';

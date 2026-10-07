@@ -3,4 +3,4 @@
  * (`render/element-clipboard.ts`) so every binding mints identical ids. This
  * module stays as a thin re-export shim for the existing React import sites.
  */
-export { generateElementId } from 'pptx-viewer-shared';
+export { generateElementId } from 'ooxml-ui/pptx';

@@ -4,7 +4,7 @@
  * single intent as the typed events TextSection already handles.
  */
 import { mount } from '@vue/test-utils';
-import { registerPptxWebControls } from 'pptx-viewer-shared';
+import { registerPptxWebControls } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 
 import FontHomeControls from './FontHomeControls.vue';

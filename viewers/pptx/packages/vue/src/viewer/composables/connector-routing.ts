@@ -15,9 +15,9 @@ export { getConnectorPathGeometry, getConnectorAdjustment } from 'pptx-viewer-co
 export type { ConnectorPathGeometry } from 'pptx-viewer-core';
 
 // Shared line-style helpers + connector classification.
-export type { CompoundLineType } from 'pptx-viewer-shared';
+export type { CompoundLineType } from 'ooxml-ui/pptx';
 export {
 	getCompoundLineOffsets,
 	getCompoundLineWidths,
 	connectorNeedsPath,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

@@ -52,7 +52,7 @@ import {
 	removeChartSeries,
 	setChartCategoryLabel,
 	setChartCellValue,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 
 // Re-export core primitives so callers can import everything from one place.
 export { chartDataChangeType, chartDataUpdatePoint };

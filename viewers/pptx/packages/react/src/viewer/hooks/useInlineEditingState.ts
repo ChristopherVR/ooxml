@@ -1,4 +1,4 @@
-import type { InlineTextEditSnapshot, InlineListReadResult } from 'pptx-viewer-shared';
+import type { InlineTextEditSnapshot, InlineListReadResult } from 'ooxml-ui/pptx';
 import { useCallback, useRef, useState } from 'react';
 import type { Dispatch, MutableRefObject, SetStateAction } from 'react';
 

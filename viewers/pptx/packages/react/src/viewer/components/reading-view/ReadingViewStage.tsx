@@ -9,7 +9,7 @@
  * same machinery the presenter previews use.
  */
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
-import { READING_VIEW_STAGE_ATTR } from 'pptx-viewer-shared';
+import { READING_VIEW_STAGE_ATTR } from 'ooxml-ui/pptx';
 import React from 'react';
 
 import type { CanvasSize } from '../../types';

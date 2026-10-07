@@ -8,8 +8,8 @@ import {
 	createInlineListSeed,
 	initializeInlineListDom,
 	attachInlineListController,
-} from 'pptx-viewer-shared';
-import type { InlineListController, InlineTextEditSnapshot } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { InlineListController, InlineTextEditSnapshot } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 import { computed, ref } from 'vue';
 

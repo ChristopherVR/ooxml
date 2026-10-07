@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
-import type { InlineEditRect } from 'pptx-viewer-shared';
-import { measureSvgViewportRect } from 'pptx-viewer-shared';
+import type { InlineEditRect } from 'ooxml-ui/pptx';
+import { measureSvgViewportRect } from 'ooxml-ui/pptx';
 import React, { act } from 'react';
 /**
  * Tests for the inline (on-canvas) SmartArt node text editor.

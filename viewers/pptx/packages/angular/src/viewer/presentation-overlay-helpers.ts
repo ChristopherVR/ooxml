@@ -17,8 +17,8 @@ import {
 	resolveAutoAdvanceDelayMs,
 	resolveShowSlideIndexes,
 	stopAllPersistentAudio,
-} from '../internal/shared';
-import type { AuthoredSlideRange, CanvasSize, ShowOrderCustomShow } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { AuthoredSlideRange, CanvasSize, ShowOrderCustomShow } from 'ooxml-ui/pptx';
 
 /**
  * The `p:showPr/p:sldRg` range restriction, when the deck is authored to open

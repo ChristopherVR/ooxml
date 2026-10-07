@@ -1,6 +1,6 @@
 import type { PptxElement, SmartArtLayout } from 'pptx-viewer-core';
-import type { CanvasSize } from 'pptx-viewer-shared';
-import { buildSmartArtPresetData } from 'pptx-viewer-shared';
+import type { CanvasSize } from 'ooxml-ui/pptx';
+import { buildSmartArtPresetData } from 'ooxml-ui/pptx';
 
 import { centerOnCanvas } from './editor-insert';
 

@@ -1,9 +1,9 @@
-import type { ResolvedCustomization } from 'pptx-viewer-shared';
+import type { ResolvedCustomization } from 'ooxml-ui/pptx';
 import {
 	EMPTY_RESOLVED_CUSTOMIZATION,
 	RIBBON_SCOPE_ATTR,
 	ribbonCustomizationCss,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 let scopeCounter = 0;
 

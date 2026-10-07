@@ -1,6 +1,6 @@
-import type { RunStyle } from 'pptx-viewer-shared';
-import { followingText, sanitizeMathMl, splitRunByScriptFont } from 'pptx-viewer-shared';
-import { translationsEn } from 'pptx-viewer-shared/i18n';
+import type { RunStyle } from 'ooxml-ui/pptx';
+import { followingText, sanitizeMathMl, splitRunByScriptFont } from 'ooxml-ui/pptx';
+import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import React from 'react';
 
 import { convertOmmlToMathMl } from './omml-to-mathml';
@@ -270,5 +270,5 @@ export function renderEquationSegment(
 // `resolveUnderlineDecorationStyle` + `UnderlineDecorationCss` now live in
 // `pptx-viewer-shared` (render/text-decoration). Re-exported here so existing
 // React import paths keep working.
-export type { UnderlineDecorationCss } from 'pptx-viewer-shared';
-export { resolveUnderlineDecorationStyle } from 'pptx-viewer-shared';
+export type { UnderlineDecorationCss } from 'ooxml-ui/pptx';
+export { resolveUnderlineDecorationStyle } from 'ooxml-ui/pptx';

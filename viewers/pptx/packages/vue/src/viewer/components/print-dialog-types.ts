@@ -18,7 +18,7 @@ export type {
 	PrintSlideRange,
 	PrintSettings,
 	HandoutGrid,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 export {
 	HANDOUT_OPTIONS,
@@ -33,4 +33,4 @@ export {
 	escapeHtml,
 	buildOutlineHtml,
 	safeDataImageSrc,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

@@ -6,8 +6,8 @@ import {
 	resolveAutoAdvanceDelayMs,
 	resolveForwardSlideWithZoomReturn,
 	buildZoomTransitionOverride,
-} from 'pptx-viewer-shared';
-import type { ZoomExcursion } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { ZoomExcursion } from 'ooxml-ui/pptx';
 import { useRef, useCallback } from 'react';
 
 import type { ViewerMode } from '../../types';

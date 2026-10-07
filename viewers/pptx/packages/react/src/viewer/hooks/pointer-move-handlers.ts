@@ -9,8 +9,8 @@ import {
 	lockResizeAspect,
 	publishLiveGeometry,
 	snapBoxToGrid,
-} from 'pptx-viewer-shared';
-import type { ResizeHandleId } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { ResizeHandleId } from 'ooxml-ui/pptx';
 
 import { MIN_ELEMENT_SIZE } from '../constants';
 import { computeSnapToShapeResult } from '../utils/geometry-selection';

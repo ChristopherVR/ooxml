@@ -60,8 +60,8 @@ import {
 	shouldClearAutosaveCacheOnClose,
 	shouldOpenInProtectedView,
 	shouldShowAutosaveRecoveryPrompt,
-} from 'pptx-viewer-shared';
-import type { ViewerAddinStatus } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { ViewerAddinStatus } from 'ooxml-ui/pptx';
 import { computed, onBeforeUnmount, onMounted, provide, ref, watch, watchEffect } from 'vue';
 import { useI18n } from 'vue-i18n';
 

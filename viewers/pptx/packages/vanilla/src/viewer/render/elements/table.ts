@@ -5,7 +5,7 @@ import type {
 	DiagonalBorderInfo,
 	TableCellCss,
 	TableStyleContext,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	cellPatternFillCss,
 	cellRunStyle,
@@ -14,7 +14,7 @@ import {
 	getContainerStyle,
 	tableCellCss,
 	tableContainerCss,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import { applyStyleMap, createEl, createSvgEl } from '../dom';
 import type { ElementRenderer } from '../types';

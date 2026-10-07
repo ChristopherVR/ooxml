@@ -18,6 +18,7 @@ await Promise.all([
 	run('tsc', ['-p', 'tsconfig.build.json']),
 	run('tsup', ['--config', 'tsup.config.ts']),
 	run('tsup', ['--config', 'tsup.pptx.config.ts']),
+	run('tsup', ['--config', 'tsup.pptx-editor.config.ts']),
 	run('tsdown', ['--config', 'tsdown.pptx.config.ts']),
 ]);
 await run('node', ['scripts/pptx/merge-declarations.mjs']);

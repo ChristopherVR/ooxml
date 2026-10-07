@@ -6,8 +6,8 @@ import {
 	CHART_QUICK_ACTION_BUTTON_SIZE,
 	hideChartSeries,
 	restoreFilteredSeries,
-} from 'pptx-viewer-shared';
-import type { ChartQuickActionsDescriptor, ChartQuickElementKey } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { ChartQuickActionsDescriptor, ChartQuickElementKey } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import type { Store, ViewerState } from '../state';

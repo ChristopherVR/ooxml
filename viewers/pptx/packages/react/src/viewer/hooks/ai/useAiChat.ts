@@ -6,8 +6,8 @@
  * bridge + config. The heavy `@ai-sdk/react` `useChat` wiring lives in
  * {@link useAiConversation}, which the panel only mounts once `state === 'ready'`.
  */
-import { createAiChatSession, isAiAvailable } from 'pptx-viewer-shared/ai';
-import type { PptxAiBridge, PptxAiChatSession, PptxAiConfig } from 'pptx-viewer-shared/ai';
+import { createAiChatSession, isAiAvailable } from 'ooxml-ui/pptx/ai';
+import type { PptxAiBridge, PptxAiChatSession, PptxAiConfig } from 'ooxml-ui/pptx/ai';
 import { useEffect, useRef, useState } from 'react';
 
 /** Lifecycle of the AI session bootstrap. */

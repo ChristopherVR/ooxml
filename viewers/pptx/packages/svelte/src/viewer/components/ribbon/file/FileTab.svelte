@@ -19,8 +19,8 @@
 	import Share2 from '@lucide/svelte/icons/share-2';
 	import Type from '@lucide/svelte/icons/type';
 	import Video from '@lucide/svelte/icons/video';
-	import { BACKSTAGE_NAV, BACKSTAGE_TEMPLATES, backstageCardsFor, customizeBackstageCards, customizeBackstageNav, formatBackstageDate, formatBackstageSize, isActionHidden, listBackstageRecentFiles } from 'pptx-viewer-shared';
-	import type { AccountAuthConfig, BackstageCardId, BackstagePage, BackstageRecentFile, ToolbarActionId } from 'pptx-viewer-shared';
+	import { BACKSTAGE_NAV, BACKSTAGE_TEMPLATES, backstageCardsFor, customizeBackstageCards, customizeBackstageNav, formatBackstageDate, formatBackstageSize, isActionHidden, listBackstageRecentFiles } from 'ooxml-ui/pptx';
+	import type { AccountAuthConfig, BackstageCardId, BackstagePage, BackstageRecentFile, ToolbarActionId } from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../../../i18n/context';
 	import { useViewerCustomization } from '../../../state/viewer-customization.svelte';
 	import { useViewerOptions } from '../../../state/viewer-options-context';

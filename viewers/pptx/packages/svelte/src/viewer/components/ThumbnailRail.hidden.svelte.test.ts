@@ -9,7 +9,7 @@
  * disturbing the "Go to slide {{n}}" accessible name the e2e suite pins.
  */
 import type { PptxSlide } from 'pptx-viewer-core';
-import { HIDDEN_SLIDE_SLASH_GRADIENT } from 'pptx-viewer-shared';
+import { HIDDEN_SLIDE_SLASH_GRADIENT } from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 

@@ -10,5 +10,5 @@ export { createDefaultSession } from './collaboration-session';
 export type { CollabSession, CollabSessionFactory } from './collaboration-session';
 export { createCollabProvider } from './collaboration-provider';
 export type { CollabProviderHandle } from './collaboration-provider';
-export { createWriteBackScheduler } from 'pptx-viewer-shared';
-export type { WriteBackDeps, WriteBackScheduler } from 'pptx-viewer-shared';
+export { createWriteBackScheduler } from 'ooxml-ui/pptx';
+export type { WriteBackDeps, WriteBackScheduler } from 'ooxml-ui/pptx';

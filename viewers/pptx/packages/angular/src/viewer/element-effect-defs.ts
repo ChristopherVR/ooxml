@@ -15,14 +15,14 @@ import {
 	getComputedEffectStyle,
 	getEffectStyleSource,
 	getSoftEdgeSvgFilter,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import type {
 	FillOverlayCss,
 	ReflectionWrapperStyle,
 	StrokeOutline,
 	SubpathFillOverlay,
 	SvgFilterDefinition,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import type { DuotoneFilterDef } from './duotone-filter';
 
 /** Injectable soft-edge `<filter>` descriptor (id + feather radius in px). */

@@ -24,8 +24,8 @@ export {
 	isElementIdInteractive,
 	partitionTemplateElements,
 	setTemplateElements,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 export type {
 	TemplateElementMap,
 	TemplateElementPartition as PartitionedSlides,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

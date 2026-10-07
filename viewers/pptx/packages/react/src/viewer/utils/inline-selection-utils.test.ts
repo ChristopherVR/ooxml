@@ -4,7 +4,7 @@ import {
 	applyListStyleUpdate,
 	buildParagraphs,
 	selectedParagraphBulletKind,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { describe, it, expect } from 'vitest';
 
 import { applyStyleToSelectedSegments, getInlineEditorSelection } from './inline-selection-utils';

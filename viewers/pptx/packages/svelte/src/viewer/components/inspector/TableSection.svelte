@@ -19,7 +19,7 @@
 		tableInspectorPatch,
 		tableInspectorStateOf,
 		tableStyleAssignmentUpdate,
-	} from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 	import type { EditorState } from '../../editor/editor-state.svelte';

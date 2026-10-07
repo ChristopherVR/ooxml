@@ -12,6 +12,6 @@
  * rendering, clearing on pointerup) stays in `SlideCanvasComponent`.
  */
 
-export type { SnapBox, SnapGuide, SnapResult } from '../internal/shared';
+export type { SnapBox, SnapGuide, SnapResult } from 'ooxml-ui/pptx';
 
-export { computeGridSpacingPx, computeSnap, snapToGridStep } from '../internal/shared';
+export { computeGridSpacingPx, computeSnap, snapToGridStep } from 'ooxml-ui/pptx';

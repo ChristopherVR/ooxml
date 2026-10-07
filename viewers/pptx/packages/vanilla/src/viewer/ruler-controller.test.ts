@@ -5,7 +5,7 @@
  * render path would silently stop tracking them.
  */
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
-import { RULER_THICKNESS } from 'pptx-viewer-shared';
+import { RULER_THICKNESS } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createRulerController } from './ruler-controller';

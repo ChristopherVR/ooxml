@@ -1,5 +1,5 @@
-import { normalizeHexColor, resolveTemplateBackgroundRows } from 'pptx-viewer-shared';
-import type { TemplateBackgroundRow } from 'pptx-viewer-shared';
+import { normalizeHexColor, resolveTemplateBackgroundRows } from 'ooxml-ui/pptx';
+import type { TemplateBackgroundRow } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';

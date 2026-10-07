@@ -15,7 +15,7 @@ import { LucideCrosshair, LucideGitMerge, LucidePin, LucidePinOff, LucideX } fro
 import { TranslatePipe } from '@ngx-translate/core';
 import type { PptxSlide } from 'pptx-viewer-core';
 
-import { focusTargetChips, isTwoTableFocus, mergeTablesDirective } from '../../internal/shared-ai';
+import { focusTargetChips, isTwoTableFocus, mergeTablesDirective } from 'ooxml-ui/pptx/ai';
 import { AiPanelStore } from './ai-panel-store';
 
 @Component({

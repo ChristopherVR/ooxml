@@ -1,6 +1,6 @@
 import type { PptxElement } from 'pptx-viewer-core';
-import type { ShapeAdjustmentDragState, ShapeAdjustmentHandleDescriptor } from 'pptx-viewer-shared';
-import { beginShapeAdjustment, getDraggedShapeAdjustments } from 'pptx-viewer-shared';
+import type { ShapeAdjustmentDragState, ShapeAdjustmentHandleDescriptor } from 'ooxml-ui/pptx';
+import { beginShapeAdjustment, getDraggedShapeAdjustments } from 'ooxml-ui/pptx';
 
 /**
  * Pointer driver for PowerPoint's amber shape-adjustment diamond (the handle

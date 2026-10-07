@@ -24,7 +24,7 @@ import {
 	hideChartSeries,
 	restoreFilteredSeries,
 	setDataLabelsRangeCache,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 

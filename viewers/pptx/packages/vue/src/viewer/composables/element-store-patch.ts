@@ -21,7 +21,7 @@ import {
 	slideSpaceElement,
 	updateElementInTree,
 	walkAndPatchElements,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type { Ref } from 'vue';
 
 import { setTemplateElements } from './template-editing';

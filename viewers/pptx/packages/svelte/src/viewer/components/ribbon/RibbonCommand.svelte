@@ -9,7 +9,7 @@
 	 * the drift `e2e/ribbon-control-inventory.spec.ts` diffs the bindings on.
 	 * The tooltip carries the longer explanation instead.
 	 */
-	import type { RibbonControlId } from 'pptx-viewer-shared';
+	import type { RibbonControlId } from 'ooxml-ui/pptx';
 	import type { Snippet } from 'svelte';
 
 	const {

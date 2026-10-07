@@ -5,5 +5,5 @@
  * `pptx-viewer-shared` (`render/text-field-substitution`). This module re-exports
  * it so existing React import paths (`./text-field-substitution`) keep working.
  */
-export type { FieldSubstitutionContext } from 'pptx-viewer-shared';
-export { resolveFieldDateText, substituteFieldText } from 'pptx-viewer-shared';
+export type { FieldSubstitutionContext } from 'ooxml-ui/pptx';
+export { resolveFieldDateText, substituteFieldText } from 'ooxml-ui/pptx';

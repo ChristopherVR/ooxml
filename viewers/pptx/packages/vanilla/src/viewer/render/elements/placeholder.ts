@@ -1,5 +1,5 @@
-import { getContainerStyle } from 'pptx-viewer-shared';
-import { keyToLabel } from 'pptx-viewer-shared/i18n';
+import { getContainerStyle } from 'ooxml-ui/pptx';
+import { keyToLabel } from 'ooxml-ui/pptx/i18n';
 
 import { createEl } from '../dom';
 import type { ElementRenderer } from '../types';

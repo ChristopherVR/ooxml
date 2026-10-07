@@ -9,8 +9,8 @@
  * exactly two tables.
  */
 import type { PptxSlide } from 'pptx-viewer-core';
-import type { PptxAiFocusedTarget } from 'pptx-viewer-shared/ai';
-import { focusTargetChips, isTwoTableFocus, mergeTablesDirective } from 'pptx-viewer-shared/ai';
+import type { PptxAiFocusedTarget } from 'ooxml-ui/pptx/ai';
+import { focusTargetChips, isTwoTableFocus, mergeTablesDirective } from 'ooxml-ui/pptx/ai';
 import { useTranslation } from 'react-i18next';
 import { LuCrosshair, LuGitMerge, LuPin, LuPinOff, LuX } from 'react-icons/lu';
 

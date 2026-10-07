@@ -1,4 +1,4 @@
-import { attachEditorImagePaste } from 'pptx-viewer-shared';
+import { attachEditorImagePaste } from 'ooxml-ui/pptx';
 import { useLayoutEffect, useRef } from 'react';
 
 import type { SlideCanvasProps } from './canvas-types';

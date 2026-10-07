@@ -18,7 +18,7 @@ import { Injector, runInInjectionContext } from '@angular/core';
 import type { OutputEmitterRef } from '@angular/core';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { ViewerOptionsNumberControl } from '../internal/shared';
+import type { ViewerOptionsNumberControl } from 'ooxml-ui/pptx';
 import type { OptionValueChange } from './options-pane.component';
 import { OptionsPaneComponent } from './options-pane.component';
 

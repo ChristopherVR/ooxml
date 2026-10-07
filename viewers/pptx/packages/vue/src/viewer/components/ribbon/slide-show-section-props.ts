@@ -1,5 +1,5 @@
 import type { PptxPresentationProperties } from 'pptx-viewer-core';
-import type { ToolbarActionId } from 'pptx-viewer-shared';
+import type { ToolbarActionId } from 'ooxml-ui/pptx';
 
 import type { CustomShowsControlsProps } from './ribbon-types';
 

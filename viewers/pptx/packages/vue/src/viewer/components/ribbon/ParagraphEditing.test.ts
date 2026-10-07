@@ -3,7 +3,7 @@
  * strips and keep the native text-style edit and the find-panel toggle.
  */
 import { mount } from '@vue/test-utils';
-import { registerPptxWebControls } from 'pptx-viewer-shared';
+import { registerPptxWebControls } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
 import EditingSection from './EditingSection.vue';

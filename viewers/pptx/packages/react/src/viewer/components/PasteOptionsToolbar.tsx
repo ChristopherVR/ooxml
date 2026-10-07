@@ -7,12 +7,12 @@
  * A thin adapter around the shared `pptx-ui-paste-options`: this measures the
  * pasted element and the element renders, positions and dismisses the strip.
  */
-import { findCanvasElementNode } from 'pptx-viewer-shared';
+import { findCanvasElementNode } from 'ooxml-ui/pptx';
 import type {
 	PasteOptionsIntent,
 	PasteSpecialFormat,
 	PptxUiPasteOptionsElement,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

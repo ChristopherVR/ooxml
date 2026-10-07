@@ -7,7 +7,7 @@
  */
 import { mount } from '@vue/test-utils';
 import type { PptxElement, PptxSmartArtData } from 'pptx-viewer-core';
-import type { PptxThreeViewElement } from 'pptx-viewer-shared';
+import type { PptxThreeViewElement } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 import { computed } from 'vue';
 import { createI18n } from 'vue-i18n';

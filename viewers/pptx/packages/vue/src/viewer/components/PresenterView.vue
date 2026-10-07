@@ -20,12 +20,12 @@ import {
 	PRESENTER_RAIL_LABEL_KEYS,
 	presenterPaneAdvancesOnClick,
 	stepPresenterZoom,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type {
 	AuthoredSlideRange,
 	PresentationPointerTool,
 	PresentationSnapshot,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 

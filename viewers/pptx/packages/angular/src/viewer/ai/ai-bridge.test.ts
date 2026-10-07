@@ -12,8 +12,8 @@ import type {
 } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 
-import { ProposalStore } from '../../internal/shared-ai';
-import type { PptxAiBridge } from '../../internal/shared-ai';
+import { ProposalStore } from 'ooxml-ui/pptx/ai';
+import type { PptxAiBridge } from 'ooxml-ui/pptx/ai';
 import { EditorStateService } from '../editor-state.service';
 import { createAngularAiBridge } from './ai-bridge';
 

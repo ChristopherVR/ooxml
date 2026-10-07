@@ -1,6 +1,6 @@
 import type { PptxEmbeddedFont, PptxSlide } from 'pptx-viewer-core';
-import { collectUsedFonts, describeFontEmbedding } from 'pptx-viewer-shared';
-import type { FontEmbeddingDescriptor } from 'pptx-viewer-shared';
+import { collectUsedFonts, describeFontEmbedding } from 'ooxml-ui/pptx';
+import type { FontEmbeddingDescriptor } from 'ooxml-ui/pptx';
 import { computed, ref, watch } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
 

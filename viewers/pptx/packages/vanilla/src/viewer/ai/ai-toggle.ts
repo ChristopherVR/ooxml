@@ -11,7 +11,7 @@
  * mounted eagerly against the framework-free {@link AiFocusController}.
  */
 
-import type { PptxAiBridge, PptxAiConfig } from 'pptx-viewer-shared/ai';
+import type { PptxAiBridge, PptxAiConfig } from 'ooxml-ui/pptx/ai';
 
 import type { Translator } from '../i18n';
 import { createEl } from '../render';

@@ -10,8 +10,8 @@ import { ChangeDetectionStrategy, Component, computed, input, output } from '@an
 import { LucideCheck, LucideX } from '@lucide/angular';
 import { TranslatePipe } from '@ngx-translate/core';
 
-import { humanizeDiffLine } from '../../internal/shared-ai';
-import type { ProposalView } from '../../internal/shared-ai';
+import { humanizeDiffLine } from 'ooxml-ui/pptx/ai';
+import type { ProposalView } from 'ooxml-ui/pptx/ai';
 
 @Component({
 	selector: 'pptx-ai-proposal-card',

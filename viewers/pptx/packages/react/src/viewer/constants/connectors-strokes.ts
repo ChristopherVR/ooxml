@@ -9,7 +9,7 @@
  * `t(option.i18nKey)` without a data-shape change.
  */
 
-import { STROKE_DASH_OPTIONS as SHARED_STROKE_DASH_OPTIONS } from 'pptx-viewer-shared';
+import { STROKE_DASH_OPTIONS as SHARED_STROKE_DASH_OPTIONS } from 'ooxml-ui/pptx';
 
 import type { ConnectorArrowOption, ConnectorGeometryOption } from '../types';
 

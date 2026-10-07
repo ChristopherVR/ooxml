@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
-import { getPresentationContextMenuSections } from '../internal/shared';
+import { getPresentationContextMenuSections } from 'ooxml-ui/pptx';
 import { componentSource } from './component-source.test-support';
 
 const here = dirname(fileURLToPath(import.meta.url));

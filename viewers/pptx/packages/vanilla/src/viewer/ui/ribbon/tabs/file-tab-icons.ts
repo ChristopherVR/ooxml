@@ -14,7 +14,7 @@ import {
 	X,
 } from 'lucide';
 import type { IconNode } from 'lucide';
-import type { BackstagePage } from 'pptx-viewer-shared';
+import type { BackstagePage } from 'ooxml-ui/pptx';
 
 export type FileTabIcon = BackstagePage | 'back';
 

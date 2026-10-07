@@ -1,5 +1,5 @@
-import { resolveStatusBarSave, statusBarViewMode } from 'pptx-viewer-shared';
-import type { PptxUiStatusBarElement, StatusBarRequestEvent } from 'pptx-viewer-shared';
+import { resolveStatusBarSave, statusBarViewMode } from 'ooxml-ui/pptx';
+import type { PptxUiStatusBarElement, StatusBarRequestEvent } from 'ooxml-ui/pptx';
 import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 

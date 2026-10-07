@@ -14,7 +14,7 @@
 	 */
 	import type { PptxThemeColorRef } from 'pptx-viewer-core';
 	import { hasShapeProperties } from 'pptx-viewer-core';
-	import { fillColorOf, RIBBON_SHAPE_SWATCHES, strokeColorOf } from 'pptx-viewer-shared';
+	import { fillColorOf, RIBBON_SHAPE_SWATCHES, strokeColorOf } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 	import type { EditorState } from '../editor/editor-state.svelte';

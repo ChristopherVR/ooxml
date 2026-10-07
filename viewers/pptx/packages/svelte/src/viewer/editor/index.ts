@@ -54,7 +54,7 @@ export type {
 	GestureKind,
 	GestureTransform,
 	PointerLike,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 export {
 	createGestureController,
 	isCornerHandle,
@@ -62,7 +62,7 @@ export {
 	NUDGE_STEP,
 	NUDGE_STEP_LARGE,
 	nudgeDelta,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 export type { EditorKeyboardDeps } from './editor-keyboard';
 export { createEditorKeydownHandler } from './editor-keyboard';
 export {
@@ -100,7 +100,7 @@ export {
 	strokeWidthOf,
 	toggleTextFlagPatch,
 } from './editor-format-mutations';
-export type { ElementBoxPatch } from 'pptx-viewer-shared';
+export type { ElementBoxPatch } from 'ooxml-ui/pptx';
 export {
 	appendElementOnSlide,
 	cloneSlides,
@@ -114,7 +114,7 @@ export {
 	updateElement,
 	updateSlide,
 	updateSlideNotes,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 export type { ZOrderDirection } from './editor-zorder';
 export { reorderElement } from './editor-zorder';
 export { resolveEditTargetElementId, resolveTopLevelElementId } from './element-hit';

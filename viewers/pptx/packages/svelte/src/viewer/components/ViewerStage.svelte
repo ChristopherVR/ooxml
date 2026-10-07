@@ -11,12 +11,12 @@
 	 * is CSS-scaled, and a ruler inside it would scale its strokes and labels
 	 * with the zoom instead of tracking it.
 	 */
-	import type { InspectorSectionAnchor } from 'pptx-viewer-shared';
-	import { RULER_THICKNESS, scrollInspectorSectionIntoView, updateViewerPreference } from 'pptx-viewer-shared';
+	import type { InspectorSectionAnchor } from 'ooxml-ui/pptx';
+	import { RULER_THICKNESS, scrollInspectorSectionIntoView, updateViewerPreference } from 'ooxml-ui/pptx';
 	import { tick } from 'svelte';
 
 	import type { PptxLayoutOption, PptxLayoutPreview } from 'pptx-viewer-core';
-	import type { PasteSpecialFormat } from 'pptx-viewer-shared';
+	import type { PasteSpecialFormat } from 'ooxml-ui/pptx';
 
 	import { saveContextMenuElementAsPicture } from '../export/save-element-as-picture';
 	import { rasterizePastedElementAsPicture } from '../export/rasterize-picture';

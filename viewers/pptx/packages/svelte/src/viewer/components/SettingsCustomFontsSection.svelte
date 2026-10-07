@@ -8,7 +8,7 @@
 	 * substitute. Opt-in, and deliberately session-scoped: the file is added to
 	 * the page's font set and nothing is uploaded or written into the deck.
 	 */
-	import { CUSTOM_FONT_ACCEPT, registerCustomFont } from 'pptx-viewer-shared';
+	import { CUSTOM_FONT_ACCEPT, registerCustomFont } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 

@@ -14,7 +14,7 @@
 	 * is where the slide dimensions live.
 	 */
 
-	import { DESIGN_RIBBON_COMMANDS, DESIGN_RIBBON_GROUPS, designCommandState } from 'pptx-viewer-shared';
+	import { DESIGN_RIBBON_COMMANDS, DESIGN_RIBBON_GROUPS, designCommandState } from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../../../i18n/context';
 	import type { EditorState } from '../../../editor/editor-state.svelte';
 	import { anchoredPopup } from '../anchored-popup';
