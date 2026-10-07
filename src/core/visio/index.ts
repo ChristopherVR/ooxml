@@ -69,3 +69,4 @@ export {
 	type VisioFormulaReference,
 	type VisioFormulaUnit,
 } from './formula.js';
+export { visioOpenArrowExtent } from './open-arrow.js';

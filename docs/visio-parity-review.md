@@ -73,3 +73,21 @@ remaining limits. Full 1:1 parity remains a multi-stage target.
 
 Changes are local and unreleased. These checks cover this increment; they do not
 establish complete native visual, editing or save parity.
+
+## Native open-arrow increment
+
+Open arrow styles 1 and 3 now use native measured proportions and line-width-dependent
+sizes; diagonal tick style 9 is newly rendered. The geometry sizing rule lives in
+core and shared UI supplies SVG markers for all six bindings. Seven sizes at three
+line widths for each style match 63 native Visio 16.0 exports at unit drawing scale.
+The compact numerical reference records native glyph coordinates and scale, without
+shipping native documents or generated SVG markup. Reproduce it with
+`scripts/record-visio-open-arrows.ps1` on Windows with Visio installed.
+
+Native open markers use round joins/caps and have no endpoint setback. Regression
+checks compare local glyph coordinates after the native y-down to model y-up
+conversion, and cover endpoint anchoring, opacity, orientation and inert SVG export.
+These are geometry checks, not a browser pixel equivalence claim. Filled arrow styles
+2, 4 and 5 retain their explicit approximate-sizing warning. Non-unit drawing scales,
+filled-marker setback, other codes, print behavior and full native pixel comparisons
+remain unverified. Full Visio parity is still incomplete.
