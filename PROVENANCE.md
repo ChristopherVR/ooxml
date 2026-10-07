@@ -1486,8 +1486,9 @@ workbook for five legend positions, exports PNGs and records geometry, fonts
 and fills. Measurements from Excel 16.0 build 20430 are retained in
 `src/core/xlsx/layout/__fixtures__/excel-decoration-fills.json`. Native title
 font inheritance and text box geometry differ from the current approximate
-layout: the reference title is 18 points, while the current fallback is 14
-pixels. This change does not certify native chart placement or raster parity.
+layout: the reference title is 18 points, while the fallback at this revision
+was 14 pixels. Built-in defaults are corrected in the later chart entry; native
+chart placement and raster parity remain unverified.
 
 Eighteen browser checks cover four fill targets and existing series controls
 across six bindings; core regressions cover five legend positions, gradient
@@ -1564,3 +1565,31 @@ so an off-centre local pivot never becomes an inferred bounding-box centre.
 Rotation handles use the shared PowerPoint placement helper in a viewport SVG
 layer, preserving paper clipping while keeping off-paper handles interactive.
 The shared native recorder adds an off-centre pivot source/target capture.
+
+## Shared built-in chart text defaults and native title properties
+
+Source: ChristopherVR/ooxml at `4255dcdee`, the shared chart style reader,
+workbook chart appearance resolver and duplicate title XML in
+`src/core/xlsx/write/chart.ts` and `chart-patch.ts`. Built-in style metadata
+uses the existing style definition and shared XML namespace/model. Its text
+defaults feed the existing theme resolver before external and direct styles;
+no viewer font engine or Office-specific XML tree was added. The two title
+writers now reuse `chart-title.ts`, retaining native rich-text property nodes
+so Excel resolves inherited title fonts after regeneration.
+
+`scripts/record-xlsx-chart-styles.ps1` reuses its COM font/paint capture for
+legacy and modern built-in references. The new preparation script uses the
+shared XML parser/writer to remove direct/external text styles while retaining
+empty rich-text property nodes. Excel 16.0 build 20430 independently reopened
+all 96 prepared references; their chart parts and font measurements are in
+`src/core/chart/excel-built-in-text-styles.json` (test-only, excluded from the
+published build). Regression coverage compares resolved title, legend and
+axis fonts with those native measurements, style retention on regeneration,
+theme/direct precedence and new/replaced title property nodes.
+
+Playwright MCP reviewed the native import and changed its chart type through
+the shared UI. Excel reopened/resaved the editor-API export and reopened that
+copy: line chart, 18-point bold Aptos Narrow title and 10-point legend/axis
+fonts. Built-in text defaults do not establish root chart text inheritance,
+mixed-run or East Asian/complex-script font parity, native font measurement,
+manual/automatic layout, built-in paint defaults or complete Excel parity.

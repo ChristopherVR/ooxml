@@ -13,6 +13,7 @@ export * from './pie-label-collision';
 export * from './color-palettes';
 export * from './color-style';
 export * from './style-definition';
+export * from './built-in-text-style';
 export * from './read-style';
 export * from './read-formatting';
 export * from './write-axis-formatting';

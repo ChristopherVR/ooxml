@@ -1362,13 +1362,38 @@ series controls in six bindings.
 
 The repeatable COM recorder `scripts/record-xlsx-chart-decoration-fill.ps1`
 captures five native legend positions, PNGs, fills and font/box measurements.
-The JSON reference records Excel 16.0 build 20430. It exposes a concrete
-remaining gap: native title font is 18 points and legend font is 10 points,
-while current renderer fallbacks are 14 and 10 pixels. Native font
-inheritance, actual font measurement, manual/automatic title and legend
-layout, borders/effects and transparent hit targets remain incomplete.
+The JSON reference records Excel 16.0 build 20430. It exposed a concrete
+gap: native title font is 18 points and legend font is 10 points, while the
+renderer fallbacks were 14 and 10 pixels. Built-in text defaults are now
+resolved as described below. Root chart text inheritance, actual font
+measurement, manual/automatic title and legend layout, borders/effects and
+transparent hit targets remain incomplete.
 Playwright MCP reviewed and edited the native import. Excel reopened/resaved
 the editor's export with a bottom-right circle title (37 percent first-stop
 transparency) and top-left shape legend, retaining all modeled fill metadata
 exactly. These checks establish fill authoring and preservation, not exact
 native geometry or whole-product parity.
+
+Built-in chart text defaults now use the shared chart style model and workbook
+theme resolver. The supported Office 2010 style choice takes precedence over
+its legacy fallback; external styles and direct element formatting retain
+their precedence. New charts use modern style 102, and regenerated imported
+charts retain their known built-in style. Unknown styles receive no invented
+font defaults. Ninety-six independently reopened Excel references cover legacy
+styles 1-48 and modern styles 101-148, including dark-style text colors.
+
+The existing COM style recorder supports this reference workflow; preparation
+uses the shared XML parser/writer to isolate built-in styles from direct and
+external text formatting. New and replaced chart titles reuse one rich-text
+writer with the empty property nodes Excel needs for inherited fonts. Without
+those nodes, regenerated titles reopened with invalid font sizes.
+
+The chart/XLSX sweep passes 8,399 ordinary tests plus 17 existing expected
+raster failures. All 56 focused browser checks pass, covering built-in fonts
+before and after chart type edits and existing fill controls in six bindings.
+Playwright MCP reviewed the native import:
+the modern title renders at 24 pixels and legend/axes at 13.33 pixels. Excel
+reopened and resaved its UI export as a line chart with the expected 18-point
+bold Aptos Narrow title and 10-point legend/axis fonts. Root chart text
+inheritance, mixed rich-text runs, East Asian/complex-script font choices,
+native text measurement/layout and built-in paint defaults remain open.

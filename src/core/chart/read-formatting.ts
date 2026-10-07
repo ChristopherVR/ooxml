@@ -2,6 +2,7 @@ import { NS, buildXml, first, type XmlElement } from '../xml/index';
 import { readChartAppearance } from './read-appearance';
 import type { ChartStyleDefinition, ChartStyleEntry } from './style-definition';
 import { chartFormattingNodes } from './formatting-nodes';
+import { readBuiltInChartStyle } from './built-in-text-style';
 
 const c = (parent: XmlElement | undefined, name: string) => first(parent, name, NS.c);
 const a = (parent: XmlElement | undefined, name: string) => first(parent, name, NS.a);
@@ -34,5 +35,12 @@ export function readChartFormatting(root: XmlElement): ChartStyleDefinition | un
 	const entries = Object.fromEntries(
 		Object.entries(nodes).flatMap(([name, node]) => (node ? [[name, entry(node)]] : [])),
 	);
-	return Object.keys(entries).length ? { entries, sourceXml: buildXml(root) } : undefined;
+	const builtInStyle = readBuiltInChartStyle(root);
+	return Object.keys(entries).length
+		? {
+				entries,
+				sourceXml: buildXml(root),
+				...(builtInStyle === undefined ? {} : { builtInStyle }),
+			}
+		: undefined;
 }

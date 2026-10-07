@@ -10,6 +10,8 @@ export const NS = {
 	a: 'http://schemas.openxmlformats.org/drawingml/2006/main',
 	/** DrawingML chart. */
 	c: 'http://schemas.openxmlformats.org/drawingml/2006/chart',
+	/** Office 2010 chart extensions, including built-in modern chart styles. */
+	c14: 'http://schemas.microsoft.com/office/drawing/2007/8/2/chart',
 	/** DrawingML diagram (SmartArt) main. */
 	dgm: 'http://schemas.openxmlformats.org/drawingml/2006/diagram',
 	/** Office 2007+ diagram drawing (`dsp`). */

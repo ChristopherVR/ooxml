@@ -45,6 +45,8 @@ export interface ChartStyleEntry {
 
 /** Office chart-style part, distinct from a chart color-style palette. */
 export interface ChartStyleDefinition {
+	/** Built-in chart-space style, distinct from an external style part ID. */
+	builtInStyle?: number;
 	id?: number;
 	entries: Record<string, ChartStyleEntry>;
 	sourceXml: string;

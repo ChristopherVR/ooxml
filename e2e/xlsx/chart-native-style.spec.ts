@@ -404,7 +404,23 @@ test('native dark chart styles retain gradient backgrounds and contrasting text'
 }) => {
 	const chart = await openNativeStyle(page, 209);
 	await expect(chart.locator('radialGradient')).toHaveCount(1);
-	await expect(chart.locator('radialGradient stop')).toHaveCount(2);
+	const background = () =>
+		chart.locator('radialGradient').evaluate((node) => ({
+			cx: node.getAttribute('cx'),
+			cy: node.getAttribute('cy'),
+			r: node.getAttribute('r'),
+			transform: node.getAttribute('gradientTransform'),
+			stops: [...node.querySelectorAll('stop')].map((stop) => ({
+				offset: stop.getAttribute('offset'),
+				color: stop.getAttribute('stop-color'),
+				opacity: stop.getAttribute('stop-opacity'),
+			})),
+		}));
+	const before = await background();
+	// The two native endpoints expand to the shared COM-verified sigma paint profile.
+	expect(before.stops.length).toBeGreaterThan(2);
+	expect(before.stops[0]).toEqual({ offset: '0', color: '#595959', opacity: '1' });
+	expect(before.stops.at(-1)).toEqual({ offset: '1', color: '#262626', opacity: '1' });
 	await expect(chart.locator('text').filter({ hasText: 'Native style' })).toHaveAttribute(
 		'fill',
 		'#F2F2F2',
@@ -436,5 +452,5 @@ test('native dark chart styles retain gradient backgrounds and contrasting text'
 		'stop-color',
 		'#ED8256',
 	);
-	await expect(chart.locator('radialGradient stop')).toHaveCount(2);
+	expect(await background()).toEqual(before);
 });

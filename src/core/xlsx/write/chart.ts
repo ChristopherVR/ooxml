@@ -7,6 +7,8 @@ import { drawingFillXml } from '../../diagram/write-fill';
 import { assertBarClusterOptions } from '../../chart/bar-cluster-geometry';
 import { writeChartAxisFormatting } from '../../chart/write-axis-formatting';
 import { writeChartFillFormatting } from '../../chart/write-fill-formatting';
+import { builtInChartStyleXml, effectiveBuiltInChartStyle } from '../../chart/built-in-text-style';
+import { chartTitleXml } from './chart-title';
 
 const pt = (values: readonly (string | number | null)[]) =>
 	values
@@ -135,12 +137,12 @@ export function chartXml(chart: ChartObject): string {
 	assertBarClusterOptions(chart);
 	const title =
 		chart.title !== undefined
-			? `<c:title><c:tx><c:rich><a:bodyPr/><a:lstStyle/><a:p><a:r><a:t>${escapeText(chart.title)}</a:t></a:r></a:p></c:rich></c:tx><c:overlay val="0"/></c:title><c:autoTitleDeleted val="0"/>`
+			? `${chartTitleXml(chart.title)}<c:autoTitleDeleted val="0"/>`
 			: '<c:autoTitleDeleted val="1"/>';
 	const legend = chart.showLegend
 		? `<c:legend><c:legendPos val="${escapeAttr(chart.legendPosition ?? 'r')}"/><c:overlay val="0"/></c:legend>`
 		: '';
-	const xml = `${XML_HEADER}<c:chartSpace xmlns:c="${NS.c}" xmlns:a="${NS.a}" xmlns:r="${NS.r}"><c:roundedCorners val="0"/><c:chart>${title}<c:plotArea><c:layout/>${plotXml(chart)}</c:plotArea>${legend}<c:plotVisOnly val="1"/><c:dispBlanksAs val="gap"/></c:chart></c:chartSpace>`;
+	const xml = `${XML_HEADER}<c:chartSpace xmlns:c="${NS.c}" xmlns:a="${NS.a}" xmlns:r="${NS.r}"><c:roundedCorners val="0"/>${builtInChartStyleXml(effectiveBuiltInChartStyle(chart.formatting))}<c:chart>${title}<c:plotArea><c:layout/>${plotXml(chart)}</c:plotArea>${legend}<c:plotVisOnly val="1"/><c:dispBlanksAs val="gap"/></c:chart></c:chartSpace>`;
 	if (!chart.formatting) return xml;
 	const doc = parseXml(xml);
 	const axesChanged = writeChartAxisFormatting(doc.documentElement, chart.formatting);

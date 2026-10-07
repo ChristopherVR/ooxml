@@ -12,7 +12,7 @@ import {
 import type { ChartObject } from '../model';
 import { parseChart } from '../read/chart';
 import { chartXml, patchChartReferences } from './chart';
-import { escapeText } from './xml-out';
+import { chartTitleXml } from './chart-title';
 import { patchChartColors } from './chart-colors';
 import { assertBarClusterOptions } from '../../chart/bar-cluster-geometry';
 import { writeChartAxisFormatting } from '../../chart/write-axis-formatting';
@@ -27,9 +27,6 @@ function fragment(doc: Doc, xml: string): XmlElement {
 	if (!node) throw new Error('Empty chart fragment');
 	return doc.importNode(node, true) as XmlElement;
 }
-
-const titleXml = (title: string) =>
-	`<c:title><c:tx><c:rich><a:bodyPr/><a:lstStyle/><a:p><a:r><a:t>${escapeText(title)}</a:t></a:r></a:p></c:rich></c:tx><c:overlay val="0"/></c:title>`;
 
 function setVal(doc: Doc, parent: XmlElement, local: string, value: string, before?: XmlElement) {
 	let node = first(parent, local, NS.c);
@@ -55,7 +52,7 @@ function patchTitle(doc: Doc, chart: XmlElement, title: string | undefined): voi
 		firstText.textContent = title;
 		for (const run of runs.slice(1)) run.parentNode?.removeChild(run);
 	} else {
-		const next = fragment(doc, titleXml(title));
+		const next = fragment(doc, chartTitleXml(title));
 		if (existing) chart.replaceChild(next, existing);
 		else chart.insertBefore(next, elements(chart)[0] ?? null);
 	}

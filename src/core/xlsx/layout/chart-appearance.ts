@@ -12,6 +12,7 @@ import type { ChartObject, ThemePalette } from '../model';
 import { chartColorScheme } from './chart-colors';
 import { resolveChartGradient, type ChartGradientFill } from '../../chart/gradient-definition';
 import { resolveDrawingShadowXml, type DrawingSvgShadow } from '../../diagram/drawing-shadow';
+import { builtInChartTextStyle, effectiveBuiltInChartStyle } from '../../chart/built-in-text-style';
 
 export interface ChartAppearanceEntry extends ResolvedChartStyleEntry {
 	textShadow?: DrawingSvgShadow;
@@ -44,13 +45,14 @@ export function chartAppearance(
 	chart: ChartObject,
 	theme: ThemePalette,
 ): ChartAppearance | undefined {
-	if (!chart.styleDefinition && !chart.formatting) return undefined;
+	const defaults = builtInChartTextStyle(effectiveBuiltInChartStyle(chart.formatting));
 	const entries: Record<string, ChartStyleEntry> = {};
 	for (const part of CHART_STYLE_PARTS) {
 		const base = chart.styleDefinition?.entries[part];
 		const direct = chart.formatting?.entries[part];
-		if (!base && !direct) continue;
+		if (!defaults[part] && !base && !direct) continue;
 		const entry: ChartStyleEntry = {
+			...defaults[part],
 			...base,
 			...direct,
 			sourceXml: direct?.sourceXml ?? base?.sourceXml ?? '',
