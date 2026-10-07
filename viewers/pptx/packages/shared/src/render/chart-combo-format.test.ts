@@ -95,6 +95,19 @@ describe('buildComboViewModel series formatting', () => {
 		expect(vm.primitives.filter((p) => p.kind === 'circle')).toHaveLength(4);
 	});
 
+	it('gives a marker with no c:symbol the automatic shape for its series', () => {
+		const data = comboData();
+		const { symbol: _symbol, ...marker } = data.series[1].marker ?? {};
+		data.series[1] = { ...data.series[1], marker };
+		const vm = buildComboViewModel(element, data, CATEGORIES);
+		const markers = vm.primitives.filter(
+			(p) => p.kind !== 'polyline' && p.kind !== 'text' && (p as SvgRect).part?.seriesIndex === 1,
+		);
+		// The second series takes the second shape of the cycle, a square.
+		expect(markers).toHaveLength(4);
+		expect(markers.every((p) => p.kind === 'polygon')).toBeTruthy();
+	});
+
 	it('keeps the defaults for a combo with no formatting', () => {
 		const vm = buildComboViewModel(
 			element,
