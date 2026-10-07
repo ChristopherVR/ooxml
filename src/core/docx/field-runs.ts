@@ -10,9 +10,8 @@ export function fieldName(instr: string): string {
 }
 
 /**
- * Follows `w:fldChar` begin/separate/end markers across a paragraph's runs. Runs between
- * `separate` and `end` receive the innermost field's cached-result metadata. The tracker
- * lifetime remains paragraph-local; fields spanning paragraphs need a container-level tracker.
+ * Follows `w:fldChar` begin/separate/end markers across runs. Runs between `separate` and
+ * `end` receive the innermost field's cached-result metadata. Share a tracker within one story.
  */
 export function createFieldTracker() {
 	const stack: { instr: string; inResult: boolean }[] = [];
@@ -37,4 +36,27 @@ export function createFieldTracker() {
 		if (resultInstr) run.field = { instr: resultInstr };
 		return run;
 	};
+}
+
+export type FieldResultMetadata = WeakMap<XmlElement, NonNullable<TextRun['field']>>;
+
+/**
+ * Scan one story in XML order, including read-only nested table content that the model omits.
+ * Runs are terminal so drawing/textbox stories cannot affect this story's stack. Simple fields
+ * own their cached content and cannot modify an enclosing complex field's tracking state.
+ */
+export function storyFieldResults(container: XmlElement): FieldResultMetadata {
+	const metadata: FieldResultMetadata = new WeakMap();
+	const trackField = createFieldTracker();
+	const visit = (element: XmlElement) => {
+		if (named(element, 'fldSimple') || named(element, 'txbxContent')) return;
+		if (named(element, 'r')) {
+			const run = trackField(element, { text: '' });
+			if (run.field) metadata.set(element, run.field);
+			return;
+		}
+		for (const child of Array.from(element.childNodes)) if (isElement(child)) visit(child);
+	};
+	visit(container);
+	return metadata;
 }

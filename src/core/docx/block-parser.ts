@@ -11,7 +11,7 @@ import { parseTable as parseTableWithFidelity } from './parse-table';
 import { parseDrawing, type DrawingContext } from './drawing';
 import { resolveHyperlink, parseSimpleHyperlinkField } from './hyperlink';
 import { paragraphBookmarkNames } from './bookmarks';
-import { createFieldTracker } from './field-runs';
+import { createFieldTracker, storyFieldResults, type FieldResultMetadata } from './field-runs';
 import { parseEquation } from './equation';
 import {
 	collectParagraphRuns,
@@ -138,13 +138,19 @@ function parseRun(node: XmlElement, revision?: Revision): TextRun {
 	return run;
 }
 
-function parseParagraph(node: XmlElement, id: string): Paragraph {
+function parseParagraph(node: XmlElement, id: string, fields?: FieldResultMetadata): Paragraph {
 	const props = first(node, 'pPr');
 	let simpleFieldIndex = 0;
 	const trackField = createFieldTracker();
 	const { runs } = collectParagraphRuns(
 		node,
-		(element, revision) => trackField(element, parseRun(element, revision)),
+		(element, revision) => {
+			const run = parseRun(element, revision);
+			if (!fields) return trackField(element, run);
+			const field = fields.get(element);
+			if (field) run.field = { ...field };
+			return run;
+		},
 		(item) => {
 			const equation = parseEquation(item);
 			if (equation) return [equation];
@@ -213,8 +219,10 @@ function parseParagraph(node: XmlElement, id: string): Paragraph {
 	return paragraph;
 }
 
-function parseTable(node: XmlElement, id: string): Table {
-	return parseTableWithFidelity(node, id, parseParagraph);
+function parseTable(node: XmlElement, id: string, fields?: FieldResultMetadata): Table {
+	return parseTableWithFidelity(node, id, (paragraph, paragraphId) =>
+		parseParagraph(paragraph, paragraphId, fields),
+	);
 }
 
 /**
@@ -244,10 +252,11 @@ export function parseBlocksFromContainer(
 
 function parseContainer(container: XmlElement, idPrefix: string): Block[] {
 	const blocks: Block[] = [];
+	const fields = storyFieldResults(container);
 	let index = 0;
 	for (const node of Array.from(container.childNodes).filter(isElement)) {
-		if (named(node, 'p')) blocks.push(parseParagraph(node, `${idPrefix}p${index++}`));
-		else if (named(node, 'tbl')) blocks.push(parseTable(node, `${idPrefix}t${index++}`));
+		if (named(node, 'p')) blocks.push(parseParagraph(node, `${idPrefix}p${index++}`, fields));
+		else if (named(node, 'tbl')) blocks.push(parseTable(node, `${idPrefix}t${index++}`, fields));
 	}
 	return blocks;
 }
