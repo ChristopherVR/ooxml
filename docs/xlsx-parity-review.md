@@ -108,6 +108,13 @@ Ctrl+Alt+V, combined options and one-step keyboard undo; the command returns foc
 Published-import guards and clean-consumer package smoke checks passed for all seven XLSX
 packages, including `.xlsx` and legacy `.xls` loading, declarations and framework bindings.
 
+### Ribbon directional fill
+
+Ribbon Fill Down/Right/Up/Left now request the shared core copy mode, matching the keyboard
+commands instead of inferring a weekday or numeric series. Four-direction regressions verify
+weekday repetition, relative and absolute formula references, source formatting and undo/redo.
+AutoFill and the explicit Series command retain their separate series behavior.
+
 ## Evidence required for parity
 
 Track reading, display, editing, calculation and writing separately for each feature. A retained
