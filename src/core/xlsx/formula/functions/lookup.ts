@@ -63,9 +63,16 @@ function lookupValue(args: Value[]): Scalar {
 /** MATCH, VLOOKUP, HLOOKUP and LOOKUP look a blank value up as 0 (XLOOKUP and XMATCH do not). */
 const blankAsZero = (args: Value[]): Scalar => lookupValue(args) ?? 0;
 
+/** Classic lookup functions require an array/reference; scalar coercion still propagates errors. */
+function lookupArray(value: Value): RefValue | Matrix {
+	if (value instanceof RefValue || value instanceof Matrix) return value;
+	num(value);
+	return fail(ERR.NA);
+}
+
 function vhlookup(args: Value[], ctx: CallContext, vertical: boolean): Value {
 	const lookup = blankAsZero(args);
-	const table = args[1] ?? null;
+	const table = lookupArray(args[1] ?? null);
 	const index = int(args[2]);
 	const approximate = args.length < 4 ? true : bool(args[3]);
 	const { rows, cols } = shape(table);
@@ -80,7 +87,7 @@ function vhlookup(args: Value[], ctx: CallContext, vertical: boolean): Value {
 function match(args: Value[], ctx: CallContext): number {
 	const lookup = blankAsZero(args);
 	const type = Math.sign(optNum(args, 2, 1));
-	const { vector } = vectorOf(ctx, args[1] ?? null);
+	const { vector } = vectorOf(ctx, lookupArray(args[1] ?? null));
 	const at =
 		type === 0
 			? findExact(vector, lookup, true)
