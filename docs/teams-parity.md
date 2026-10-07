@@ -391,6 +391,20 @@ and verifies desktop/mobile layouts across all six bindings. Microsoft's
 is the reference. Tab conversations and the post-to-channel option, app catalogs
 and permission enforcement, and Office coediting remain outstanding.
 
+## Twentieth implemented slice: Settings search and app labels
+
+Settings includes keyword search across implemented categories, titles and
+descriptions. Results open the owning panel and focus the setting heading for
+keyboard navigation. Clearing search or choosing a category restores its controls;
+searching does not discard unsubmitted connection fields. Appearance includes
+Show app names, applied immediately and saved per user and workspace. Hidden
+app-bar labels retain accessible button names, tooltips, icons and navigation.
+Browser acceptance checks search, empty results, focus, connection drafts,
+reload and identity/workspace isolation, plus desktop and mobile layouts.
+Microsoft's [Settings workflow](https://support.microsoft.com/en-us/teams/notifications-settings/change-settings-in-microsoft-teams)
+is the reference. Automatic app-bar collapse, regional formats, efficiency mode,
+system startup and the wider Teams Settings catalog remain outstanding.
+
 ## Next releasable slices
 
 1. UI parity: match the current Teams shell, Shared/Files commands, Settings

@@ -51,6 +51,9 @@ button[aria-current='page']::before {
 .label {
 	font-size: var(--office-font-size-2xs);
 }
+:host([hide-labels]) .label {
+	display: none;
+}
 .badge {
 	position: absolute;
 	inset-block-start: -0.4em;

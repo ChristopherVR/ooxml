@@ -45,13 +45,24 @@
 					"name": "OfficeUiAppRail",
 					"tagName": "office-ui-app-rail",
 					"customElement": true,
-					"description": "The narrow app bar on the far left (Chat, Teams, Calls, Files). Properties: `items`, `selected`. Emits `office-rail-select` `{ id }`.",
+					"description": "The narrow app bar on the far left (Chat, Teams, Calls, Files). Properties: `items`, `selected`, `hideLabels` (default false). Hidden labels retain accessible names and tooltips. Emits `office-rail-select` `{ id }`.",
 					"attributes": [
+						{
+							"name": "hide-labels"
+						},
 						{
 							"name": "selected"
 						}
 					],
 					"members": [
+						{
+							"kind": "field",
+							"name": "hideLabels",
+							"type": {
+								"text": "boolean"
+							},
+							"attribute": "hide-labels"
+						},
 						{
 							"kind": "field",
 							"name": "items"

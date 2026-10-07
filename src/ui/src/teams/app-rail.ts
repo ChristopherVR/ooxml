@@ -14,21 +14,25 @@ export interface RailItem {
 
 /**
  * The narrow app bar on the far left (Chat, Teams, Calls, Files). Properties: `items`,
- * `selected`. Emits `office-rail-select` `{ id }`.
+ * `selected`, `hideLabels` (default false). Hidden labels retain accessible names and tooltips.
+ * Emits `office-rail-select` `{ id }`.
  */
 export class OfficeUiAppRail extends TeamsElement {
 	static override styles = withStyles(css);
 	static override properties = {
 		items: { attribute: false },
 		selected: { type: String },
+		hideLabels: { type: Boolean, attribute: 'hide-labels', reflect: true },
 	};
 	declare items: RailItem[];
 	declare selected: string;
+	declare hideLabels: boolean;
 
 	constructor() {
 		super();
 		this.items = [];
 		this.selected = '';
+		this.hideLabels = false;
 	}
 
 	override connectedCallback(): void {
@@ -46,6 +50,7 @@ export class OfficeUiAppRail extends TeamsElement {
 							<button
 								type="button"
 								aria-label=${item.label}
+								title=${item.label}
 								aria-current=${this.selected === item.id ? 'page' : 'false'}
 								@click=${() => this.fire('office-rail-select', { id: item.id })}
 							>

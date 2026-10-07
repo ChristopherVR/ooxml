@@ -101,6 +101,7 @@ export class TeamsApp extends LitElement {
 		theme: { state: true },
 		fileOpenPreference: { state: true },
 		chatDensity: { state: true },
+		showAppNames: { state: true },
 	};
 	declare workspaceId: string;
 	declare userName: string;
@@ -127,6 +128,7 @@ export class TeamsApp extends LitElement {
 	declare theme: TeamsTheme;
 	declare fileOpenPreference: 'teams' | 'browser';
 	declare chatDensity: 'comfy' | 'compact';
+	declare showAppNames: boolean;
 
 	private readonly teams = new TeamsController(this, (text) => this.notify(text));
 	private toastTimer: ReturnType<typeof setTimeout> | undefined;
@@ -165,6 +167,7 @@ export class TeamsApp extends LitElement {
 		this.theme = 'system';
 		this.fileOpenPreference = 'teams';
 		this.chatDensity = 'comfy';
+		this.showAppNames = true;
 	}
 
 	/** The core client behind this element, for hosts that want the raw actions. */
@@ -225,6 +228,9 @@ export class TeamsApp extends LitElement {
 		this.theme =
 			rememberedTheme === 'dark' || rememberedTheme === 'light' ? rememberedTheme : 'system';
 		this.applyTheme();
+		this.showAppNames =
+			safeStorage.getItem(this.themeStorageKey.replace('teams:theme:', 'teams:app-names:')) !==
+			'false';
 		this.chatDensity =
 			safeStorage.getItem(this.themeStorageKey.replace('teams:theme:', 'teams:density:')) ===
 			'compact'
@@ -422,6 +428,7 @@ export class TeamsApp extends LitElement {
 				${this.topbar(s)}
 				<div class="body">
 					<office-ui-app-rail
+						.hideLabels=${!this.showAppNames}
 						.items=${RAIL.map((i) => ({ ...i, ...(i.id === 'calls' && s.channels.some((c) => c.live) ? { badge: s.channels.filter((c) => c.live).length } : {}) }))}
 						selected=${this.rail}
 						@office-rail-select=${(e: CustomEvent<{ id: RailView }>) => {
@@ -440,6 +447,15 @@ export class TeamsApp extends LitElement {
 					.theme=${this.theme}
 					.fileOpenPreference=${this.fileOpenPreference}
 					.chatDensity=${this.chatDensity}
+					.showAppNames=${this.showAppNames}
+					@teams-settings-app-names=${(event: CustomEvent<{ show: boolean }>) => {
+						if (typeof event.detail.show !== 'boolean') return;
+						this.showAppNames = event.detail.show;
+						safeStorage.setItem(
+							this.themeStorageKey.replace('teams:theme:', 'teams:app-names:'),
+							String(this.showAppNames),
+						);
+					}}
 					@teams-settings-density=${(event: CustomEvent<{ density: 'comfy' | 'compact' }>) => {
 						if (!['comfy', 'compact'].includes(event.detail.density)) return;
 						this.chatDensity = event.detail.density;

@@ -9,15 +9,9 @@ import {
 import css from './teams-settings.css?raw';
 import { iceToText, parseIceLines } from './settings-connection.js';
 import { densityChoices, type ChatDensity } from './settings-density.js';
+import { SETTINGS_CATEGORIES as CATEGORIES, settingsSearch } from './settings-search.js';
 export { iceToText, parseIceLines } from './settings-connection.js';
 
-const CATEGORIES = [
-	['general', 'General'],
-	['appearance', 'Appearance and accessibility'],
-	['notifications', 'Notifications and activity'],
-	['files', 'Files and links'],
-	['connection', 'Connection'],
-] as const;
 export type TeamsTheme = 'system' | 'light' | 'dark';
 
 /**
@@ -36,6 +30,8 @@ export class TeamsSettings extends LitElement {
 		userName: { attribute: false },
 		fileOpenPreference: { attribute: false },
 		chatDensity: { attribute: false },
+		showAppNames: { attribute: false },
+		query: { state: true },
 	};
 	declare config: TeamsServerConfig;
 	declare open: boolean;
@@ -46,6 +42,8 @@ export class TeamsSettings extends LitElement {
 	declare userName: string;
 	declare fileOpenPreference: 'teams' | 'browser';
 	declare chatDensity: ChatDensity;
+	declare showAppNames: boolean;
+	declare query: string;
 
 	constructor() {
 		super();
@@ -58,6 +56,11 @@ export class TeamsSettings extends LitElement {
 		this.userName = '';
 		this.fileOpenPreference = 'teams';
 		this.chatDensity = 'comfy';
+		this.showAppNames = true;
+		this.query = '';
+	}
+	protected override willUpdate(changed: PropertyValues<this>): void {
+		if (changed.has('open') && this.open) this.query = '';
 	}
 
 	protected override updated(changed: PropertyValues<this>): void {
@@ -118,6 +121,13 @@ export class TeamsSettings extends LitElement {
 			<dialog aria-label="Settings" @close=${this.close} @cancel=${this.close}>
 				<header>
 					<h1>Settings</h1>
+					<input
+						type="search"
+						aria-label="Search settings"
+						placeholder="Search settings"
+						.value=${this.query}
+						@input=${(event: Event) => (this.query = (event.target as HTMLInputElement).value)}
+					/>
 					<button type="button" class="close" aria-label="Close settings" @click=${this.close}>
 						×
 					</button>
@@ -142,19 +152,55 @@ export class TeamsSettings extends LitElement {
 							if (next < 0) return;
 							event.preventDefault();
 							this.category = CATEGORIES[next]![0];
+							this.query = '';
 							this.renderRoot
 								.querySelector<HTMLButtonElement>(`#settings-${this.category}`)
 								?.focus();
 						}}
 					>
-						${CATEGORIES.map(([id, label]) => html`<button id=${`settings-${id}`} role="tab" type="button" aria-selected=${String(this.category === id)} tabindex=${this.category === id ? 0 : -1} aria-controls=${`panel-${id}`} @click=${() => (this.category = id)}>${label}</button>`)}
+						${CATEGORIES.map(
+							([id, label]) =>
+								html`<button
+									id=${`settings-${id}`}
+									role="tab"
+									type="button"
+									aria-selected=${String(!this.query.trim() && this.category === id)}
+									tabindex=${this.category === id ? 0 : -1}
+									aria-controls=${`panel-${id}`}
+									@click=${() => {
+										this.category = id;
+										this.query = '';
+									}}
+								>
+									${label}
+								</button>`,
+						)}
 					</nav>
 					<div class="settings-content">
+						${
+							this.query.trim()
+								? settingsSearch(this.query, async (topic) => {
+										this.category = topic.category;
+										this.query = '';
+										await this.updateComplete;
+										if (!this.open || this.query.trim() || this.category !== topic.category) return;
+										const panel = this.renderRoot.querySelector<HTMLElement>(
+											`#panel-${topic.category}`,
+										)!;
+										const heading =
+											[...panel.querySelectorAll<HTMLElement>('h2, h3, legend')].find(
+												(element) => element.textContent?.trim() === topic.title,
+											) ?? panel;
+										heading.tabIndex = -1;
+										heading.focus();
+									})
+								: nothing
+						}
 						<section
 							id="panel-general"
 							role="tabpanel"
 							aria-labelledby="settings-general"
-							?hidden=${this.category !== 'general'}
+							?hidden=${!!this.query.trim() || this.category !== 'general'}
 						>
 							<h2>General</h2>
 							<h3>Profile</h3>
@@ -169,7 +215,7 @@ export class TeamsSettings extends LitElement {
 							id="panel-appearance"
 							role="tabpanel"
 							aria-labelledby="settings-appearance"
-							?hidden=${this.category !== 'appearance'}
+							?hidden=${!!this.query.trim() || this.category !== 'appearance'}
 						>
 							<h2>Appearance and accessibility</h2>
 							<h3>Theme</h3>
@@ -177,6 +223,15 @@ export class TeamsSettings extends LitElement {
 								${(['system', 'light', 'dark'] as const).map((theme) => html`<button type="button" aria-pressed=${String(this.theme === theme)} @click=${() => this.dispatchEvent(new CustomEvent('teams-settings-theme', { detail: { theme }, bubbles: true, composed: true }))}><span class="theme-swatch" data-theme=${theme}></span>${theme === 'system' ? 'Follow system' : theme === 'light' ? 'Light' : 'Dark'}</button>`)}
 							</div>
 							${densityChoices(this.chatDensity, (density) => this.dispatchEvent(new CustomEvent('teams-settings-density', { detail: { density }, bubbles: true, composed: true })))}
+							<h3>Show app names</h3>
+							<label class="preference"
+								><span>Display labels beneath app bar icons</span
+								><input
+									type="checkbox"
+									aria-label="Show app names"
+									.checked=${this.showAppNames}
+									@change=${(event: Event) => this.dispatchEvent(new CustomEvent('teams-settings-app-names', { detail: { show: (event.target as HTMLInputElement).checked }, bubbles: true, composed: true }))}
+							/></label>
 							<p class="description">
 								Changes apply immediately to this OpenTeams workspace. Keyboard focus and system
 								high-contrast preferences remain available.
@@ -186,7 +241,7 @@ export class TeamsSettings extends LitElement {
 							id="panel-notifications"
 							role="tabpanel"
 							aria-labelledby="settings-notifications"
-							?hidden=${this.category !== 'notifications'}
+							?hidden=${!!this.query.trim() || this.category !== 'notifications'}
 						>
 							<h2>Notifications and activity</h2>
 							<h3>Followed threads</h3>
@@ -200,7 +255,7 @@ export class TeamsSettings extends LitElement {
 							id="panel-files"
 							role="tabpanel"
 							aria-labelledby="settings-files"
-							?hidden=${this.category !== 'files'}
+							?hidden=${!!this.query.trim() || this.category !== 'files'}
 						>
 							<h2>Files and links</h2>
 							<h3>File open preference</h3>
@@ -225,7 +280,7 @@ export class TeamsSettings extends LitElement {
 							id="panel-connection"
 							role="tabpanel"
 							aria-labelledby="settings-connection"
-							?hidden=${this.category !== 'connection'}
+							?hidden=${!!this.query.trim() || this.category !== 'connection'}
 							@submit=${this.apply}
 						>
 							<h2>Connection</h2>
