@@ -128,7 +128,6 @@
 		"ai": "^7.0.127",
 		"happy-dom": "^20.14.5",
 		"pptx-viewer-core": "workspace:*",
-		"pptx-viewer-shared": "workspace:*",
 		"rollup": "^4.64.0",
 		"rollup-plugin-dts": "^6.5.1",
 		"svelte": "^5.57.1",

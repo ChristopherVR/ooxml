@@ -9,7 +9,7 @@
  * is only the Vue-side reactive state around them.
  */
 import type { PptxSlide } from 'pptx-viewer-core';
-import { buildSlidePaneContextMenuEntries, resolveSlidePaneClick } from 'pptx-viewer-shared';
+import { buildSlidePaneContextMenuEntries, resolveSlidePaneClick } from 'ooxml-ui/pptx';
 import { computed, ref } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
 import { useI18n } from 'vue-i18n';

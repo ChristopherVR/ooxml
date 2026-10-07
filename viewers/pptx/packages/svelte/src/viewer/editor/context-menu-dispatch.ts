@@ -4,7 +4,7 @@ import type {
 	ContextMenuCommandId,
 	ContextMenuEntry,
 	InspectorSectionAnchor,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	buildContextMenuEntries,
 	canCropElement,
@@ -23,7 +23,7 @@ import {
 	removeTableElementColumn,
 	removeTableElementRow,
 	resolveEditPointsAvailability,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { EditorState } from './editor-state.svelte';
 

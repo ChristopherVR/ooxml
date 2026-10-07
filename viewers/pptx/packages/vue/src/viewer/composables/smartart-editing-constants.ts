@@ -1,5 +1,5 @@
 import type { SmartArtColorScheme, SmartArtLayoutType, SmartArtStyle } from 'pptx-viewer-core';
-import { schemaLabel, SMARTART_LAYOUT_LABEL_KEYS } from 'pptx-viewer-shared';
+import { schemaLabel, SMARTART_LAYOUT_LABEL_KEYS } from 'ooxml-ui/pptx';
 
 /**
  * Static option lists and layout-label helper for the SmartArt inspector.

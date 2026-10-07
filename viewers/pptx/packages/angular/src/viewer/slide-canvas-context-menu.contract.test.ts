@@ -11,7 +11,7 @@ import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { buildCanvasContextMenuEntries } from '../internal/shared';
+import { buildCanvasContextMenuEntries } from 'ooxml-ui/pptx';
 
 const SOURCE = readFileSync(
 	path.join(import.meta.dirname, 'slide-canvas-context-menu.component.ts'),

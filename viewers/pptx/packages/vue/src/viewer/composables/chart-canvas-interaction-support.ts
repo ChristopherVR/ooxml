@@ -9,8 +9,8 @@ import {
 	buildChartMarkDragGeometry as buildSharedChartMarkDragGeometry,
 	CHART_DRAG_THRESHOLD_PX,
 	ensureChartInteractionStyles,
-} from 'pptx-viewer-shared';
-import type { ChartMarkDragState, ChartValueDragState } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { ChartMarkDragState, ChartValueDragState } from 'ooxml-ui/pptx';
 
 /**
  * chart-canvas-interaction-support: Vue's names for the framework-neutral

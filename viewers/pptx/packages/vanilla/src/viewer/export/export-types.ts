@@ -1,4 +1,4 @@
-import type { RasterizeElementResult, RasterizeElementTilesResult } from 'pptx-viewer-shared';
+import type { RasterizeElementResult, RasterizeElementTilesResult } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import type { Store, ViewerState } from '../state';

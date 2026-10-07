@@ -1,11 +1,11 @@
 import type { TablePptxElement, PptxTableCell } from 'pptx-viewer-core';
-import type { TableCellCss } from 'pptx-viewer-shared';
+import type { TableCellCss } from 'ooxml-ui/pptx';
 import {
 	canDrillDown,
 	DEFAULT_FONT_FAMILY,
 	tableCellCss,
 	tableContainerCss,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React from 'react';
 
 import { cn } from '../../utils';

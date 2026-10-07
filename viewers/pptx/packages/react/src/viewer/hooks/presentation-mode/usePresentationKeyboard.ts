@@ -1,4 +1,4 @@
-import type { PresentationPointerTool } from 'pptx-viewer-shared';
+import type { PresentationPointerTool } from 'ooxml-ui/pptx';
 import {
 	createPresentationKeyBuffer,
 	firstShowSlideIndex,
@@ -6,7 +6,7 @@ import {
 	createWheelStepBuffer,
 	mapPresentationKey,
 	mapPresentationWheel,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { useEffect, useRef } from 'react';
 
 import type { ViewerMode } from '../../types';

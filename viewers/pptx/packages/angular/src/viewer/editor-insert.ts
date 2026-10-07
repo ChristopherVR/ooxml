@@ -10,8 +10,8 @@
 
 import type { PptxChartType, PptxElement } from 'pptx-viewer-core';
 
-import { DEFAULT_INSERT_CHART_KIND, createDefaultChartElement } from '../internal/shared';
-import type { InsertChartKind, ShapePresetType } from '../internal/shared';
+import { DEFAULT_INSERT_CHART_KIND, createDefaultChartElement } from 'ooxml-ui/pptx';
+import type { InsertChartKind, ShapePresetType } from 'ooxml-ui/pptx';
 
 export {
 	newTextElement,
@@ -19,7 +19,7 @@ export {
 	newTableElement,
 	newSmartArtElement,
 	newEquationElement,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 
 /**
  * SmartArt data-model editing operations, re-exported from `pptx-viewer-core`.

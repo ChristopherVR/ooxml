@@ -14,7 +14,7 @@ import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { formatMediaTime, mediaTimelineGeometry, mediaTrimEndSeconds } from '../internal/shared';
+import { formatMediaTime, mediaTimelineGeometry, mediaTrimEndSeconds } from 'ooxml-ui/pptx';
 
 describe('mediaTrimTimelineComponent end label', () => {
 	it('derives the end label from the shared distance-from-tail conversion', () => {

@@ -1,9 +1,9 @@
-import { registerPptxWebControls } from 'pptx-viewer-shared';
+import { registerPptxWebControls } from 'ooxml-ui/pptx';
 import type {
 	DialogFooterAction,
 	DialogFooterRequestEvent,
 	PptxUiDialogFooterElement,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 /**
  * Mount the shared `pptx-ui-dialog-footer` into a dialog's footer container and

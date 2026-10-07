@@ -6,7 +6,7 @@ import {
 	CHART_QUICK_ACTION_BUTTON_SIZE,
 	hideChartSeries,
 	restoreFilteredSeries,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LuFilter, LuPaintbrush, LuPlus } from 'react-icons/lu';

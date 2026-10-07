@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { TextSegment, TextStyle } from 'pptx-viewer-core';
 	import { getSubstituteFontFamily, hasTextProperties } from 'pptx-viewer-core';
-	import type { EnvelopeGlyphPlacement, EnvelopeSegmentInput } from 'pptx-viewer-shared';
+	import type { EnvelopeGlyphPlacement, EnvelopeSegmentInput } from 'ooxml-ui/pptx';
 	import {
 		buildGlyphEnvelopeBlock,
 		buildWarpPath,
@@ -11,7 +11,7 @@
 		normalizeHexColor,
 		shouldUseSvgWarp,
 		substituteFieldText,
-	} from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
 
 	import { getFieldContextGetter } from '../state/field-context';
 	import { getGlyphOutline, glyphOutlineFontsTick } from '../state/glyph-outline-cache.svelte';

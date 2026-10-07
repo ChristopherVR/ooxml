@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { PptxHandoutMaster } from 'pptx-viewer-core';
-	import { computeHandoutSlotLayout } from 'pptx-viewer-shared';
-	import type { CanvasSize } from 'pptx-viewer-shared';
+	import { computeHandoutSlotLayout } from 'ooxml-ui/pptx';
+	import type { CanvasSize } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 

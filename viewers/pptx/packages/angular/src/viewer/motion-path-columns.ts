@@ -9,8 +9,8 @@ import {
 	motionPathFamilyLabelKey,
 	motionPathPresetLabelKey,
 	motionPathPresetsByFamily,
-} from '../internal/shared';
-import type { MotionPathFamily } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { MotionPathFamily } from 'ooxml-ui/pptx';
 
 /** One entry: the catalogue path it applies plus the key naming it. */
 export interface MotionPathEntry {

@@ -1,5 +1,5 @@
 import type { PptxSlide } from 'pptx-viewer-core';
-import { attachPresentationVisibilityPause } from 'pptx-viewer-shared';
+import { attachPresentationVisibilityPause } from 'ooxml-ui/pptx';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { resolveSlideAutoAdvanceMs, ShowAutoAdvanceTimer } from './presentation-auto-advance';

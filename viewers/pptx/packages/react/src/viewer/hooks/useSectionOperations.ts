@@ -6,7 +6,7 @@ import {
 	moveSectionUp as moveSectionUpTransform,
 	moveSlidesToSection as moveSlidesToSectionTransform,
 	renameSection as renameSectionTransform,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 /**
  * useSectionOperations: CRUD operations for slide sections.
  */

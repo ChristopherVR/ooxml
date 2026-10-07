@@ -14,7 +14,7 @@ import type {
 	InlineTextEditSnapshot,
 	InlineListReadResult,
 	ZoomNavigationTarget,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React from 'react';
 
 import type { CanvasImagePasteHandlers } from '../../hooks/useCanvasImagePaste';

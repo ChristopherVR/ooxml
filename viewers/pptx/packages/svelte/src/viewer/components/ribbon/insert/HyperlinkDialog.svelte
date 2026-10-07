@@ -5,7 +5,7 @@
 		buildHyperlinkPatch,
 		hasExistingLink,
 		seedHyperlinkDraft,
-	} from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
 	import { untrack } from 'svelte';
 	import { useTranslator } from '../../../../i18n/context';
 	import type { EditorState } from '../../../editor/editor-state.svelte';

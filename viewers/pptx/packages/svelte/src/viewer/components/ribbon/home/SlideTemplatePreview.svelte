@@ -9,8 +9,8 @@
 	 * down so the preview is pixel-faithful to what Insert lands in the deck.
 	 */
 	import type { PptxSlide } from 'pptx-viewer-core';
-	import { buildSlideTemplateContent } from 'pptx-viewer-shared';
-	import type { SlideTemplateId } from 'pptx-viewer-shared';
+	import { buildSlideTemplateContent } from 'ooxml-ui/pptx';
+	import type { SlideTemplateId } from 'ooxml-ui/pptx';
 
 	import SlideStage from '../../SlideStage.svelte';
 

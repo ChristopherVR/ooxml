@@ -1,5 +1,5 @@
-import type { ToolbarActionId } from 'pptx-viewer-shared';
-import { EMPTY_RESOLVED_CUSTOMIZATION, isDialogAvailable } from 'pptx-viewer-shared';
+import type { ToolbarActionId } from 'ooxml-ui/pptx';
+import { EMPTY_RESOLVED_CUSTOMIZATION, isDialogAvailable } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';

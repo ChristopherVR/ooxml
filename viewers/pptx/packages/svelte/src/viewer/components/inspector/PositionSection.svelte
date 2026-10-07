@@ -6,7 +6,7 @@
 	 * sections without blowing the file-size budget.
 	 */
 	import type { PptxElement } from 'pptx-viewer-core';
-	import { elementLockTogglePatch, isElementLocked } from 'pptx-viewer-shared';
+	import { elementLockTogglePatch, isElementLocked } from 'ooxml-ui/pptx';
 	import Lock from '@lucide/svelte/icons/lock';
 	import LockOpen from '@lucide/svelte/icons/lock-open';
 

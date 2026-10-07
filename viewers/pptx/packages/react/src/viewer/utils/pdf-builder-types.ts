@@ -20,8 +20,8 @@ export {
 	NOTES_LINE_HEIGHT,
 	NOTES_BORDER_WIDTH,
 	NOTES_CONTINUATION_HEADER_SIZE,
-} from 'pptx-viewer-shared';
-export type { PdfImageData } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+export type { PdfImageData } from 'ooxml-ui/pptx';
 
 /**
  * PDF layout mode for export.

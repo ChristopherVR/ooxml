@@ -1,11 +1,11 @@
-import type { InkPoint, InkStrokeView } from 'pptx-viewer-shared';
+import type { InkPoint, InkStrokeView } from 'ooxml-ui/pptx';
 import {
 	buildLiveInkStrokeView,
 	findEraserHitElementId,
 	pointsToSvgPathD,
 	removeElement,
 	strokeToInkElement,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import { strokeToFreeformShape } from './editor-freeform';
 import type { EditorState } from './editor-state.svelte';

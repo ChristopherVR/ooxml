@@ -5,4 +5,4 @@
  * (`theme/theme-gallery-presets`). This shim preserves the historical import
  * surface (`GALLERY_THEME_PRESETS`) for Angular's theme-gallery component.
  */
-export { GALLERY_THEME_PRESETS } from '../internal/shared';
+export { GALLERY_THEME_PRESETS } from 'ooxml-ui/pptx';

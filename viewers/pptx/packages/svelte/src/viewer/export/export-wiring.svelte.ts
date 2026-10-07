@@ -1,5 +1,5 @@
 import type { PptxData, PptxSlide } from 'pptx-viewer-core';
-import type { CanvasSize, FieldSubstitutionContext } from 'pptx-viewer-shared';
+import type { CanvasSize, FieldSubstitutionContext } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n/translator';
 import { ExportController } from './export-controller.svelte';

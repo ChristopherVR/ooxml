@@ -19,8 +19,8 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import type { PptxActiveXControl } from 'pptx-viewer-core';
 
-import { getActiveXControlOverlayView } from '../internal/shared';
-import type { CanvasSize } from '../internal/shared';
+import { getActiveXControlOverlayView } from 'ooxml-ui/pptx';
+import type { CanvasSize } from 'ooxml-ui/pptx';
 
 interface ActiveXControlRow {
 	readonly key: string;

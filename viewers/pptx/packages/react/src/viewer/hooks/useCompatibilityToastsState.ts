@@ -1,4 +1,4 @@
-import type { CompatibilityWarningToast } from 'pptx-viewer-shared';
+import type { CompatibilityWarningToast } from 'ooxml-ui/pptx';
 import { useCallback, useState } from 'react';
 
 /**

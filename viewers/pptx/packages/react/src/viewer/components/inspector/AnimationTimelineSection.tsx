@@ -1,5 +1,5 @@
 import type { PptxElementAnimation } from 'pptx-viewer-core';
-import { animationEffectLabel } from 'pptx-viewer-shared';
+import { animationEffectLabel } from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import {

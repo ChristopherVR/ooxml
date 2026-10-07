@@ -9,12 +9,12 @@
  * lifecycle instead of in the SFC where the ordering is easy to break.
  */
 import type { PptxCustomShow, PptxSlide } from 'pptx-viewer-core';
-import type { AuthoredSlideRange } from 'pptx-viewer-shared';
+import type { AuthoredSlideRange } from 'ooxml-ui/pptx';
 import {
 	firstShowSlideIndex,
 	presentationEntrySlideIndex,
 	resolveShowSlideIndexes,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type { ComputedRef, Ref, ShallowRef } from 'vue';
 import { computed, ref } from 'vue';
 

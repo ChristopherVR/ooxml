@@ -1,4 +1,4 @@
-import { resolveCustomization } from 'pptx-viewer-shared';
+import { resolveCustomization } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../../../i18n';

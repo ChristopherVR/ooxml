@@ -1,5 +1,5 @@
 import type { UIMessage } from 'ai';
-import { toolCanvasTarget } from 'pptx-viewer-shared/ai';
+import { toolCanvasTarget } from 'ooxml-ui/pptx/ai';
 import { describe, expect, it } from 'vitest';
 
 import { extractReadyToolCalls } from './message-parts';

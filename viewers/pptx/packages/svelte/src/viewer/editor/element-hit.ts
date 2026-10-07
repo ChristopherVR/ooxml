@@ -17,4 +17,4 @@ export {
 	resolveElementIdChain,
 	resolveHitElementId,
 	resolveTopLevelElementId,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

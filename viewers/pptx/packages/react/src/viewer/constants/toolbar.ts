@@ -2,7 +2,7 @@
  * Toolbar section definitions and keyboard shortcut reference items.
  */
 
-import { VIEWER_SHORTCUT_REFERENCE } from 'pptx-viewer-shared';
+import { VIEWER_SHORTCUT_REFERENCE } from 'ooxml-ui/pptx';
 
 import type { ShortcutReferenceItem, ToolbarSection } from '../types';
 

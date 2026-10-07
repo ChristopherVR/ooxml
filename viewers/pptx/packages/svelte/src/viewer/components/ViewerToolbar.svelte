@@ -4,7 +4,7 @@
 	 * and the fullscreen/presentation toggle. All strings come from the shared
 	 * i18n dictionary via the context translator; theming via `--pptx-*` vars.
 	 */
-	import { isActionHidden } from 'pptx-viewer-shared';
+	import { isActionHidden } from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../i18n/context';
 	import AutosaveIndicator from './AutosaveIndicator.svelte';
 	import ExportMenu from './ExportMenu.svelte';

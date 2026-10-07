@@ -5,8 +5,8 @@
  * and the galleries inside them, with their modes, come from the shared
  * `CONTEXTUAL_TAB_GROUPS`; this only maps them onto the ribbon's group markup.
  */
-import { CONTEXTUAL_TAB_GROUPS } from 'pptx-viewer-shared';
-import type { RibbonContextualTabId } from 'pptx-viewer-shared';
+import { CONTEXTUAL_TAB_GROUPS } from 'ooxml-ui/pptx';
+import type { RibbonContextualTabId } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

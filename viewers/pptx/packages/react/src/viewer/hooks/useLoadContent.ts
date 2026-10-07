@@ -26,7 +26,7 @@ import type {
 	CompatibilityWarningToast,
 	ReadOnlyRecommendation,
 	SlideSizeEmu,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	applyImagePathPatches,
 	compatibilityWarningToasts,
@@ -37,7 +37,7 @@ import {
 	resolveTableStyleImageUrls,
 	resolveTextFillBlipUrls,
 	seedRecentColors,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 /**
  * useLoadContent: Handles loading/parsing PPTX content into viewer state.
  *

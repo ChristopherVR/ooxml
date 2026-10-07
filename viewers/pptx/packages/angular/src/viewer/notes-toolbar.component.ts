@@ -27,7 +27,7 @@ import type {
 	NotesParagraphCommand,
 	NotesToolbarRequestEvent,
 	NotesToolbarViewState,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 
 @Component({
 	selector: 'pptx-notes-toolbar',

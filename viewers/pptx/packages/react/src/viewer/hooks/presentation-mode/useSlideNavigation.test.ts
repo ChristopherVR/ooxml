@@ -4,7 +4,7 @@ import {
 	nextShowSlideIndex,
 	previousShowSlideIndex,
 	resolveShowSlideIndexes,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { describe, it, expect } from 'vitest';
 
 import { isClickAdvanceBlocked } from './useSlideNavigation';

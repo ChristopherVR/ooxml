@@ -1,5 +1,5 @@
 import type { PptxSlide } from 'pptx-viewer-core';
-import type { PlaybackContext } from 'pptx-viewer-shared';
+import type { PlaybackContext } from 'ooxml-ui/pptx';
 import {
 	advanceMainSequence,
 	cancelBuildReveal,
@@ -9,7 +9,7 @@ import {
 	playGroup,
 	resolveMediaBookmarkTimesMs,
 	resolveMediaTimeNodeElementIds,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { useRef, useState, useCallback, useEffect } from 'react';
 
 import type { PresentationAnimationRuntime } from '../../types';

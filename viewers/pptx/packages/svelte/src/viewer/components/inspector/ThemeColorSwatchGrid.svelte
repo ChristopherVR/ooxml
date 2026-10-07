@@ -10,13 +10,13 @@
 	 * hex/recent-colour controls.
 	 */
 	import type { PptxThemeColorRef } from 'pptx-viewer-core';
-	import type { ThemeColorPickerCommit } from 'pptx-viewer-shared';
+	import type { ThemeColorPickerCommit } from 'ooxml-ui/pptx';
 	import {
 		buildThemeColorSwatchGrid,
 		findSelectedThemeSwatch,
 		themeColorSwatchRows,
 		themeSwatchCommit,
-	} from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 

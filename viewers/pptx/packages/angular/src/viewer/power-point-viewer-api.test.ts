@@ -18,8 +18,8 @@ import { PptxHandler, createTextElement } from 'pptx-viewer-core';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { ElementInsertionTarget } from '../internal/shared';
-import { buildInlineTextCommitPatch } from '../internal/shared';
+import type { ElementInsertionTarget } from 'ooxml-ui/pptx';
+import { buildInlineTextCommitPatch } from 'ooxml-ui/pptx';
 import { componentSource } from './component-source.test-support';
 import { EditorStateService } from './editor-state.service';
 import { ExportService } from './export.service';
@@ -363,7 +363,7 @@ describe('public cross-slide batches', () => {
 			mainEl: () => undefined,
 			editorCanvas: () => undefined,
 		};
-		const update = (updates: import('../internal/shared').ElementUpdate[]) =>
+		const update = (updates: import('ooxml-ui/pptx').ElementUpdate[]) =>
 			PowerPointViewerComponent.prototype.updateElements.call(
 				context as unknown as PowerPointViewerComponent,
 				updates,

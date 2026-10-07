@@ -6,8 +6,8 @@
  * element, hands it state and wires its typed events. The element owns the rows,
  * keyboard navigation, positioning, Escape/outside dismissal and focus restore.
  */
-import { registerPptxWebControls } from 'pptx-viewer-shared';
-import type { ContextMenuViewState, PptxUiContextMenuElement } from 'pptx-viewer-shared';
+import { registerPptxWebControls } from 'ooxml-ui/pptx';
+import type { ContextMenuViewState, PptxUiContextMenuElement } from 'ooxml-ui/pptx';
 
 export interface ContextMenuSurfaceOptions {
 	doc: Document;

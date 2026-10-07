@@ -19,5 +19,5 @@
 
 // The clone-id builder (template-prefix aware paste/duplicate ids) lives in
 // `pptx-viewer-shared` (render/element-clipboard.ts).
-export { buildSaveSlides, makeCloneId, partitionTemplateElements } from 'pptx-viewer-shared';
-export type { TemplateElementPartition as TemplatePartition } from 'pptx-viewer-shared';
+export { buildSaveSlides, makeCloneId, partitionTemplateElements } from 'ooxml-ui/pptx';
+export type { TemplateElementPartition as TemplatePartition } from 'ooxml-ui/pptx';

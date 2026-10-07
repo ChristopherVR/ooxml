@@ -1,5 +1,5 @@
 import type { PptxTableCell } from 'pptx-viewer-core';
-import { cellRunStyle } from 'pptx-viewer-shared';
+import { cellRunStyle } from 'ooxml-ui/pptx';
 import React from 'react';
 
 /**

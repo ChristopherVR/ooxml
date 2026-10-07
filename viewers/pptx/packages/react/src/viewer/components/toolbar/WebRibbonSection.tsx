@@ -3,7 +3,7 @@ import type {
 	RibbonCommandRequestEvent,
 	RibbonControlId,
 	RibbonGroupView,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React, { useEffect, useRef } from 'react';
 
 /** The shared keyed view owns layout; React supplies state and native intents. */

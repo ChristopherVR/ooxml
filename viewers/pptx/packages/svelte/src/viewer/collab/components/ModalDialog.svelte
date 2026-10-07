@@ -11,7 +11,7 @@
 	 * an export is in flight), this shell closes on backdrop click, the close
 	 * button, or Escape, since none of its callers block a critical operation.
 	 */
-	import { activateModalFocus } from 'pptx-viewer-shared';
+	import { activateModalFocus } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 	import type { ModalDialogProps } from './props';

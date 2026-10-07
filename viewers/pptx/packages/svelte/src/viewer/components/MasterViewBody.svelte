@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { DEFAULT_MASTER_PAGE_SIZE } from 'pptx-viewer-shared';
-	import type { CanvasSize } from 'pptx-viewer-shared';
+	import { DEFAULT_MASTER_PAGE_SIZE } from 'ooxml-ui/pptx';
+	import type { CanvasSize } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 	import type { EditorController } from '../editor/editor-controller.svelte';

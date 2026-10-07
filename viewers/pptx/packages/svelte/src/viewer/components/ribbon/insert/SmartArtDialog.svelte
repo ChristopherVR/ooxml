@@ -7,8 +7,8 @@
 	 */
 	import DialogFooter from '../../DialogFooter.svelte';
 	import type { SmartArtLayout } from 'pptx-viewer-core';
-	import { PRESETS } from 'pptx-viewer-shared';
-	import type { SmartArtCategory, SmartArtPreset } from 'pptx-viewer-shared';
+	import { PRESETS } from 'ooxml-ui/pptx';
+	import type { SmartArtCategory, SmartArtPreset } from 'ooxml-ui/pptx';
 	import { onMount } from 'svelte';
 
 	import { useTranslator } from '../../../../i18n/context';

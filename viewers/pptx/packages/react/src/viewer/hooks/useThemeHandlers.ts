@@ -8,7 +8,7 @@ import type {
 	PptxThemeOption,
 	PptxHandler,
 } from 'pptx-viewer-core';
-import type { ThemeEditorEdit } from 'pptx-viewer-shared';
+import type { ThemeEditorEdit } from 'ooxml-ui/pptx';
 /**
  * useThemeHandlers: Theme application, colour-scheme / font-scheme / name
  * updates, presentation-wide theme apply, and template background handling.

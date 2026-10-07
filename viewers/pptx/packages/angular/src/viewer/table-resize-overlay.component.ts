@@ -33,7 +33,7 @@ import {
 	computeResizedColumnWidths,
 	computeResizedRowHeight,
 	DEFAULT_ROW_HEIGHT,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 
 interface DragState {
 	type: 'col' | 'row';

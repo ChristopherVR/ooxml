@@ -9,14 +9,14 @@ import type {
 	MasterViewCrudActionId,
 	ViewportFitOptions,
 	ZoomNavigationTarget,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	computeGridSpacingPx,
 	DEFAULT_MASTER_PAGE_SIZE,
 	masterViewCrudActions,
 	masterViewPseudoSlide,
 	visibleTemplateElements,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { PresentationPlayback } from './animation';
 import { createPresentationPlayback } from './animation';

@@ -14,8 +14,8 @@
  *     the tool references (see {@link flashToolTarget}).
  */
 import type { PptxElement } from 'pptx-viewer-core';
-import type { AiChangeBatch, PptxAiFocusedTarget, ToolCanvasTarget } from 'pptx-viewer-shared/ai';
-import { computeFocusTargets } from 'pptx-viewer-shared/ai';
+import type { AiChangeBatch, PptxAiFocusedTarget, ToolCanvasTarget } from 'ooxml-ui/pptx/ai';
+import { computeFocusTargets } from 'ooxml-ui/pptx/ai';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 export interface UseAiPanelControllerInput {

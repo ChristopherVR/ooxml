@@ -17,8 +17,8 @@ import {
 	isPanelVisible,
 	resetSlideLayoutPath,
 	templateSchemeFromTheme,
-} from 'pptx-viewer-shared';
-import type { AnimationApplyGroup, FreeformToolKind, ToolbarActionId } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { AnimationApplyGroup, FreeformToolKind, ToolbarActionId } from 'ooxml-ui/pptx';
 /**
  * ViewerToolbarSection: Renders the top toolbar, signature badge,
  * and hidden file-input elements.

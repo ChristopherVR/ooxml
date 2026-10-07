@@ -1,12 +1,12 @@
 // @vitest-environment happy-dom
-import type { ViewerOptions, ViewerOptionsStore } from 'pptx-viewer-shared';
+import type { ViewerOptions, ViewerOptionsStore } from 'ooxml-ui/pptx';
 import {
 	DEFAULT_VIEWER_OPTIONS,
 	VIEWER_PREFS_STORAGE_KEY,
 	deleteAutosaveSnapshot,
 	listAutosaveSnapshots,
 	mergeViewerOptions,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
@@ -15,8 +15,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAutosaveCacheMaintenance } from './useAutosaveCacheMaintenance';
 import { useViewerOptions } from './useViewerOptions';
 
-vi.mock(import('pptx-viewer-shared'), async (importOriginal) => ({
-	...(await importOriginal<typeof import('pptx-viewer-shared')>()),
+vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => ({
+	...(await importOriginal<typeof import('ooxml-ui/pptx')>()),
 	listAutosaveSnapshots: vi.fn(),
 	deleteAutosaveSnapshot: vi.fn(),
 }));

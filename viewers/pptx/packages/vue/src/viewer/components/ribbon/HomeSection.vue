@@ -9,7 +9,7 @@
  * the copied/cut feedback flashes use a `ref` + `setTimeout`.
  */
 import type { PptxElement, PptxLayoutPreview } from 'pptx-viewer-core';
-import type { SlideTemplateId } from 'pptx-viewer-shared';
+import type { SlideTemplateId } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 
 import ClipboardGroup from './ClipboardGroup.vue';

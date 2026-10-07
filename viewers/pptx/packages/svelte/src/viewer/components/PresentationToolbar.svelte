@@ -16,12 +16,12 @@
 	 * comment: svelte2tsx, which `svelte-check` runs on, scans for it textually
 	 * and would decide the script block ends here.)
 	 */
-	import { presentToolbarStyleAttr, toggleBlackboard } from 'pptx-viewer-shared';
+	import { presentToolbarStyleAttr, toggleBlackboard } from 'ooxml-ui/pptx';
 	import type {
 		PresentationBlackout,
 		PresentToolbarRequestEvent,
 		PresentToolbarViewState,
-	} from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 	import type { PresentationAnnotations } from '../presentation/presentation-annotations.svelte';

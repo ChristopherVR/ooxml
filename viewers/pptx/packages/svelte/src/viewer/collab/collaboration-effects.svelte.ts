@@ -7,8 +7,8 @@
  */
 
 import type { PptxSlide } from 'pptx-viewer-core';
-import type { CollaborationConfig } from 'pptx-viewer-shared';
-import { registerCollaborationTeardown } from 'pptx-viewer-shared';
+import type { CollaborationConfig } from 'ooxml-ui/pptx';
+import { registerCollaborationTeardown } from 'ooxml-ui/pptx';
 
 export interface CollaborationEffectsHost {
 	getConfig: () => CollaborationConfig | undefined;

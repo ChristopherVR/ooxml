@@ -46,7 +46,7 @@ import {
 	text3dPtToEmu,
 	text3dStylePatch,
 	toggleText3dExtrusion,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { RecentColorsService } from './recent-colors.service';
 import {
 	TEXT_3D_BOTTOM_BEVEL_KEYS,

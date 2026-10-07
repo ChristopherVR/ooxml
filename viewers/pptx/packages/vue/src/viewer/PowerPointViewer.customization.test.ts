@@ -1,6 +1,6 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import type { VueWrapper } from '@vue/test-utils';
-import type { ViewerCustomization } from 'pptx-viewer-shared';
+import type { ViewerCustomization } from 'ooxml-ui/pptx';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import PowerPointViewer from './PowerPointViewer.vue';

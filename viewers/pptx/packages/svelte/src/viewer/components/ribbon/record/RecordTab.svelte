@@ -1,5 +1,5 @@
 <script lang="ts">
- import { RECORD_COMMAND_GROUPS } from 'pptx-viewer-shared';
+ import { RECORD_COMMAND_GROUPS } from 'ooxml-ui/pptx';
  import { useTranslator } from '../../../../i18n/context';
 
  const { onfrombeginning, onfromcurrent }: { onfrombeginning: () => void; onfromcurrent: () => void } = $props();

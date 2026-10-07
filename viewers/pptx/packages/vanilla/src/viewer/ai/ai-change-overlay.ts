@@ -1,4 +1,4 @@
-import type { CssStyleMap } from 'pptx-viewer-shared';
+import type { CssStyleMap } from 'ooxml-ui/pptx';
 /**
  * Plays the "watch the AI edit land" animation on the canvas. When the AI apply
  * path publishes a batch of changed elements to the session's change animator,
@@ -18,8 +18,8 @@ import type {
 	AiChangeBatch,
 	AiElementChange,
 	ResolvedAiChangeAnimationConfig,
-} from 'pptx-viewer-shared/ai';
-import { aiChangeAnimationCss, changeGhostStyle } from 'pptx-viewer-shared/ai';
+} from 'ooxml-ui/pptx/ai';
+import { aiChangeAnimationCss, changeGhostStyle } from 'ooxml-ui/pptx/ai';
 
 import { createEl } from '../render';
 import type { Store, ViewerState } from '../state';

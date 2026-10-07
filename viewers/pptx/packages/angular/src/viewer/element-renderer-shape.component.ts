@@ -12,12 +12,12 @@ import {
 	placeholderPromptDescriptor,
 	shouldRenderHitTarget,
 	strokeOutlineViewBox,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import type {
 	ElementAnimationState,
 	Extrusion3DData,
 	FieldSubstitutionContext,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { DynamicStyleComponent } from './dynamic-style.component';
 import {
 	getEffectFillOverlay,

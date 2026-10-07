@@ -11,4 +11,4 @@ export {
 	pdfPageSize,
 	sanitizeFileName,
 	slideFileName,
-} from '../internal/shared-src/export/pdf-page-size';
+} from 'ooxml-ui/pptx/export/pdf-page-size';

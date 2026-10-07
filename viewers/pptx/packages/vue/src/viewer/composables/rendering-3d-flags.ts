@@ -10,7 +10,7 @@
  * per element whether a `<pptx-three-view>` spec applies. Mirrors React's
  * `Rendering3DFlagsContext`.
  */
-import type { Rendering3DFlags } from 'pptx-viewer-shared';
+import type { Rendering3DFlags } from 'ooxml-ui/pptx';
 import { computed, inject } from 'vue';
 import type { ComputedRef, InjectionKey } from 'vue';
 

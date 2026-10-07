@@ -10,8 +10,8 @@
  * @module pdf-builder-notes-builder
  */
 
-import { buildNotesPdfBytes } from 'pptx-viewer-shared';
-import type { NotesPageMeta } from 'pptx-viewer-shared';
+import { buildNotesPdfBytes } from 'ooxml-ui/pptx';
+import type { NotesPageMeta } from 'ooxml-ui/pptx';
 
 import type { NotesPageInput } from './pdf-builder-types';
 

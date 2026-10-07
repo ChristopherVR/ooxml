@@ -5,7 +5,7 @@ import {
 	reResolveElementFonts,
 } from 'pptx-viewer-core';
 import type { PptxData } from 'pptx-viewer-core';
-import type { ThemeEditorEdit } from 'pptx-viewer-shared';
+import type { ThemeEditorEdit } from 'ooxml-ui/pptx';
 
 import type { UseThemeHandlersInput } from './useThemeHandlers';
 

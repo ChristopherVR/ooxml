@@ -9,7 +9,7 @@ import {
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import type { PptxElement, PptxThemeColorRef } from 'pptx-viewer-core';
 
-import type { RibbonHomeRequestEvent } from '../internal/shared';
+import type { RibbonHomeRequestEvent } from 'ooxml-ui/pptx';
 import {
 	COMMON_FONT_SIZES,
 	fontHomeControls,
@@ -18,9 +18,9 @@ import {
 	textFontSizePatch,
 	textFontSizePtToPx,
 	textFontSizePxToPt,
-} from '../internal/shared';
-import { resolveDefaultFontFamily } from '../internal/shared-src/render/font-catalog';
-import type { ChangeCaseMode } from '../internal/shared-src/render/text-case-transform';
+} from 'ooxml-ui/pptx';
+import { resolveDefaultFontFamily } from 'ooxml-ui/pptx/render/font-catalog';
+import type { ChangeCaseMode } from 'ooxml-ui/pptx/render/text-case-transform';
 import { CustomFontsService } from './custom-fonts.service';
 import { EditorStateService } from './editor-state.service';
 import { LoadContentService } from './load-content.service';

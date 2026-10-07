@@ -1,5 +1,5 @@
 import type { PptxSlide } from 'pptx-viewer-core';
-import type { PptxAiFocusedTarget } from 'pptx-viewer-shared/ai';
+import type { PptxAiFocusedTarget } from 'ooxml-ui/pptx/ai';
 import { mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 

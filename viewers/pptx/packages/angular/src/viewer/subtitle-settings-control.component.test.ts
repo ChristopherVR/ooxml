@@ -4,7 +4,7 @@ import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-
 import { provideTranslateService } from '@ngx-translate/core';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { registerPptxWebControls } from '../../../shared/src/web-components';
+import { registerPptxWebControls } from '../../../../../../src/ui/src/pptx/web-components';
 import { PresentationSubtitleBarComponent } from './presentation-subtitle-bar.component';
 import { SubtitleSettingsControlComponent } from './subtitle-settings-control.component';
 import { ViewerOptionsService } from './viewer-options.service';

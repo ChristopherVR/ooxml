@@ -11,7 +11,7 @@
  */
 export { getPresentationTransitionStyle } from './style-transitions';
 
-export type { CssBorderStyle, CssStyleMap } from 'pptx-viewer-shared';
+export type { CssBorderStyle, CssStyleMap } from 'ooxml-ui/pptx';
 export {
 	normalizeStrokeDashType,
 	getCssBorderDashStyle,
@@ -23,4 +23,4 @@ export {
 	getElementTransformWithoutRotation,
 	getTextCompensationTransform,
 	parseDrawingPercent,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

@@ -21,8 +21,8 @@ import type { PptxChartData, PptxElement, PptxSlide } from 'pptx-viewer-core';
 import {
 	canDrillDown,
 	ensureChartInteractionStyles as ensureSharedChartInteractionStyles,
-} from '../internal/shared';
-import type { ChartMarkDragState, ChartValueDragState } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { ChartMarkDragState, ChartValueDragState } from 'ooxml-ui/pptx';
 import { findOwningSlideIndex } from './smart-art-inline-edit';
 
 // ─────────────────────────────────────────────────────────────────────────────

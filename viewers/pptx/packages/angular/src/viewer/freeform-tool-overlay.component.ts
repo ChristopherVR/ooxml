@@ -30,8 +30,8 @@ import {
 import { TranslatePipe } from '@ngx-translate/core';
 import type { ShapePptxElement } from 'pptx-viewer-core';
 
-import type { CanvasSize, FreeformToolKind, FreeformToolView } from '../internal/shared';
-import { attachOverlayKeyboard, clientToSlidePoint, FreeformToolSession } from '../internal/shared';
+import type { CanvasSize, FreeformToolKind, FreeformToolView } from 'ooxml-ui/pptx';
+import { attachOverlayKeyboard, clientToSlidePoint, FreeformToolSession } from 'ooxml-ui/pptx';
 
 const PREVIEW_COLOR = '#2f528f';
 

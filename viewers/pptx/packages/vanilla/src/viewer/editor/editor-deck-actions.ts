@@ -9,7 +9,7 @@ import type {
 	PptxThemeFontScheme,
 } from 'pptx-viewer-core';
 import { applyThemeToData, reResolveElementColors, reResolveElementFonts } from 'pptx-viewer-core';
-import type { SlideSizeEmu, SlideSizeRescaleMode } from 'pptx-viewer-shared';
+import type { SlideSizeEmu, SlideSizeRescaleMode } from 'ooxml-ui/pptx';
 import {
 	applyTableStyleDelete,
 	applyTableStyleMapChange,
@@ -17,7 +17,7 @@ import {
 	scaleSlidesForSizeChange,
 	slideSizeToCanvasPx,
 	updateSlide,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Store, ViewerState } from '../state';
 import type { EditorOps } from './editor-operations';

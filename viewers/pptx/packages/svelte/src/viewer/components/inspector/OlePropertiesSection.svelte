@@ -13,7 +13,7 @@
 	 */
 	import type { OlePptxElement, PptxElement } from 'pptx-viewer-core';
 	import { getOleObjectTypeLabel } from 'pptx-viewer-core';
-	import { buildOleObjectNamePatch } from 'pptx-viewer-shared';
+	import { buildOleObjectNamePatch } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 	import type { EditorState } from '../../editor/editor-state.svelte';

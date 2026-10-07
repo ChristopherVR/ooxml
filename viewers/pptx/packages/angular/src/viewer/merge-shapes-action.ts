@@ -12,8 +12,8 @@
  */
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 
-import { applyMergeShapesPlan, canMergeShapes, planMergeShapes } from '../internal/shared';
-import type { MergeShapeOperation } from '../internal/shared';
+import { applyMergeShapesPlan, canMergeShapes, planMergeShapes } from 'ooxml-ui/pptx';
+import type { MergeShapeOperation } from 'ooxml-ui/pptx';
 
 /** The subset of {@link EditorStateService} a merge needs. */
 export interface MergeShapesEditor {

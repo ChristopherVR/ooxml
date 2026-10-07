@@ -5,7 +5,7 @@ import {
 	computeResizedRowHeight,
 	DEFAULT_ROW_HEIGHT,
 	getTableResizeScale,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 /**
  * table-resize (Svelte): column/row drag-resize handles for the canvas table,

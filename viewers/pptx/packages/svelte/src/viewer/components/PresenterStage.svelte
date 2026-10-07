@@ -13,8 +13,8 @@
 	 * than jumping the deck out from under the stroke.
 	 */
 	import type { PptxSlide } from 'pptx-viewer-core';
-	import { PRESENTER_RAIL_LABEL_KEYS } from 'pptx-viewer-shared';
-	import type { CanvasSize, PresentationZoomState } from 'pptx-viewer-shared';
+	import { PRESENTER_RAIL_LABEL_KEYS } from 'ooxml-ui/pptx';
+	import type { CanvasSize, PresentationZoomState } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 	import SlideStage from './SlideStage.svelte';

@@ -1,5 +1,5 @@
-import { FIXED_TAB_GALLERIES } from 'pptx-viewer-shared';
-import type { RibbonControlId, RibbonGalleryPlacement } from 'pptx-viewer-shared';
+import { FIXED_TAB_GALLERIES } from 'ooxml-ui/pptx';
+import type { RibbonControlId, RibbonGalleryPlacement } from 'ooxml-ui/pptx';
 
 /**
  * The shared placement of a gallery that sits on a fixed tab (Home > Drawing,

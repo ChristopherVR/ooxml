@@ -12,7 +12,7 @@
  * else (smoothing, eraser hit-testing, laser fade, stroke ids) is
  * Angular-only and stays pure so it can be unit-tested without TestBed.
  */
-import { buildStrokePathD, cursorForTool as sharedCursorForTool } from '../internal/shared';
+import { buildStrokePathD, cursorForTool as sharedCursorForTool } from 'ooxml-ui/pptx';
 
 // ---------------------------------------------------------------------------
 // Types

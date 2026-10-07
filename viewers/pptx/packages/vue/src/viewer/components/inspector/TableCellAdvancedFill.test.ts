@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
 import type { PptxTableCellStyle } from 'pptx-viewer-core';
-import { PATTERN_PRESET_OPTIONS } from 'pptx-viewer-shared';
+import { PATTERN_PRESET_OPTIONS } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 
 import TableCellAdvancedFill from './TableCellAdvancedFill.vue';

@@ -19,7 +19,7 @@
 import { computed, DestroyRef, inject, Injectable, signal } from '@angular/core';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 
-import { computeFocusTargets, createAiChangeAnimator } from '../../internal/shared-ai';
+import { computeFocusTargets, createAiChangeAnimator } from 'ooxml-ui/pptx/ai';
 import type {
 	AiCanvasHighlight,
 	AiChangeAnimationConfig,
@@ -27,7 +27,7 @@ import type {
 	AiChangeBatch,
 	PptxAiFocusedTarget,
 	ToolCanvasTarget,
-} from '../../internal/shared-ai';
+} from 'ooxml-ui/pptx/ai';
 
 /** Live selection accessors the store reads to derive the follow-selection focus. */
 export interface AiPanelSelectionAccessors {

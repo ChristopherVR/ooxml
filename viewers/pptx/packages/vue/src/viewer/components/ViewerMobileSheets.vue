@@ -19,8 +19,8 @@ import type {
 	PptxSlide,
 	TextSegment,
 } from 'pptx-viewer-core';
-import { isPanelVisible } from 'pptx-viewer-shared';
-import type { ViewerPanelId } from 'pptx-viewer-shared';
+import { isPanelVisible } from 'ooxml-ui/pptx';
+import type { ViewerPanelId } from 'ooxml-ui/pptx';
 import { useI18n } from 'vue-i18n';
 
 import type { UseCommentsWiringResult } from '../composables/useCommentsWiring';

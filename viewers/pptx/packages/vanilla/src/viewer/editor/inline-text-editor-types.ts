@@ -4,7 +4,7 @@ import type {
 	InlineListReadResult,
 	InlineTextEditSnapshot,
 	InlineTextSelection,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { OverlayBox } from './selection-overlay';
 

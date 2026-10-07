@@ -4,7 +4,7 @@
  * Options: print what (slides/handouts/notes/outline), slides per page,
  * orientation, colour mode, frame slides, slide range.
  */
-import { getDensePanelTouchTargetPx, resolveDefaultPrintSettings } from 'pptx-viewer-shared';
+import { getDensePanelTouchTargetPx, resolveDefaultPrintSettings } from 'ooxml-ui/pptx';
 import React, { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LuPrinter, LuX } from 'react-icons/lu';

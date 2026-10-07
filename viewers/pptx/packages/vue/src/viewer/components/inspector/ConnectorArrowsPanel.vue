@@ -16,14 +16,14 @@
  */
 import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
 import { hasShapeProperties } from 'pptx-viewer-core';
-import type { ConnectorArrowControl } from 'pptx-viewer-shared';
+import type { ConnectorArrowControl } from 'ooxml-ui/pptx';
 import {
 	canInteractWithElement,
 	CONNECTOR_ARROW_CONTROLS,
 	connectorArrowPatch,
 	connectorArrowValue,
 	schemaLabel,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

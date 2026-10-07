@@ -4,7 +4,7 @@
  * this a standalone function makes the rule unit-testable without mounting the
  * component (the Angular test setup is TestBed-free).
  */
-import type { PptxAiConfig } from '../../internal/shared-ai';
+import type { PptxAiConfig } from 'ooxml-ui/pptx/ai';
 
 /** Whether the AI assistant toggle should be shown for the given config. */
 export function aiToggleVisible(config: PptxAiConfig | undefined): boolean {

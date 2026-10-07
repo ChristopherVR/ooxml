@@ -1,4 +1,4 @@
-import { PRESENTATION_ANIM_TRIGGER_ATTRIBUTE } from '../internal/shared';
+import { PRESENTATION_ANIM_TRIGGER_ATTRIBUTE } from 'ooxml-ui/pptx';
 /**
  * presentation-stage-animator.ts: applies the slide show's native-animation
  * state to the rendered DOM, and tracks the hover-trigger shape under the
@@ -15,7 +15,7 @@ import { PRESENTATION_ANIM_TRIGGER_ATTRIBUTE } from '../internal/shared';
  * Every element renderer stamps `data-element-id`, so the whole mechanism is a
  * single `querySelectorAll` and needs no per-element renderer plumbing.
  */
-import type { ElementAnimationState } from '../internal/shared';
+import type { ElementAnimationState } from 'ooxml-ui/pptx';
 import type { AnimationPlaybackService } from './animation-playback.service';
 
 /** True when at least one staged node belongs to the tracked element states. */

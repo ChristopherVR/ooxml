@@ -26,7 +26,7 @@ import {
 	removeTableElementColumn,
 	removeTableElementRow,
 	setTableElementCellText,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type React from 'react';
 import { useTranslation } from 'react-i18next';
 

@@ -9,7 +9,7 @@
  * supplies the matching `on*Change` callback it also owns persistence, so the
  * viewer must NOT write `localStorage` behind its back.
  */
-import { readStoredViewerPrefs, writeStoredViewerPrefs } from 'pptx-viewer-shared';
+import { readStoredViewerPrefs, writeStoredViewerPrefs } from 'ooxml-ui/pptx';
 import type { ComputedRef, Ref } from 'vue';
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';

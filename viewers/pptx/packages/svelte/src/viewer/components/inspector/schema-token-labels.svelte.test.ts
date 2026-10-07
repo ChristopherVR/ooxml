@@ -7,8 +7,8 @@ import {
 	SMARTART_COLOR_SCHEME_LABEL_KEYS,
 	SMARTART_STYLE_LABEL_KEYS,
 	TEXT_WARP_PRESETS,
-} from 'pptx-viewer-shared';
-import { translationsEn } from 'pptx-viewer-shared/i18n';
+} from 'ooxml-ui/pptx';
+import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it } from 'vitest';
 

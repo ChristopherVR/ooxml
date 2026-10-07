@@ -11,7 +11,7 @@ import {
 	TRANSITION_MORPH_OPTIONS,
 	TRANSITION_ORIENTATION_TYPES,
 	TRANSITION_SPEED_OPTIONS,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';

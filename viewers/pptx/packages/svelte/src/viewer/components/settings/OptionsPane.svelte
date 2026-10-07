@@ -11,7 +11,7 @@
 		ViewerOptionsGroupId,
 		ViewerOptionsSection,
 		ViewerOptionsTabDefinition,
-	} from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../../i18n/context';
 	import OptionsControlRow from './OptionsControlRow.svelte';
 

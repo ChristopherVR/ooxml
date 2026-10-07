@@ -11,7 +11,7 @@ export {
 	cssKeyframeName,
 	defaultDuration,
 	fillModeForClass,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 // ==========================================================================
 // File reading utility (DOM `FileReader`, binding-only)

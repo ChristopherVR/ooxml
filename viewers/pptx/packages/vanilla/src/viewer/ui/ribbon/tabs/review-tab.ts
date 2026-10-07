@@ -2,8 +2,8 @@ import {
 	buildReviewRibbon,
 	EMPTY_RESOLVED_CUSTOMIZATION,
 	isDialogAvailable,
-} from 'pptx-viewer-shared';
-import type { RibbonCommandRequestEvent } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { RibbonCommandRequestEvent } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../../i18n';
 import { createEl } from '../../../render';

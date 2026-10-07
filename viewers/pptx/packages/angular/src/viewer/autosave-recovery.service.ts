@@ -20,8 +20,8 @@ import {
 	discardAutosaveRecovery,
 	probeAutosaveRecovery,
 	shouldProbeAutosaveRecovery,
-} from '../internal/shared';
-import type { AutosaveRecord, AutosaveRecoveryPrompt } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { AutosaveRecord, AutosaveRecoveryPrompt } from 'ooxml-ui/pptx';
 
 /** Live host accessors the recovery probe reads (all reactive). */
 export interface AutosaveRecoveryHost {

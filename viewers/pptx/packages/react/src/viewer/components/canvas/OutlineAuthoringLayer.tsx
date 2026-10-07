@@ -3,8 +3,8 @@ import type {
 	EditPointsCommandId,
 	EditPointsElementPatch,
 	FreeformToolKind,
-} from 'pptx-viewer-shared';
-import { canEditElementPoints } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import { canEditElementPoints } from 'ooxml-ui/pptx';
 import type React from 'react';
 import { useEffect } from 'react';
 

@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
-import { SLIDE_TEMPLATES } from 'pptx-viewer-shared';
-import type { SlideTemplateId } from 'pptx-viewer-shared';
+import { SLIDE_TEMPLATES } from 'ooxml-ui/pptx';
+import type { SlideTemplateId } from 'ooxml-ui/pptx';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { allButtons } from './dialog-footer.test-support';

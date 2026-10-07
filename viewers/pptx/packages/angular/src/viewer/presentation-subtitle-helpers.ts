@@ -3,7 +3,7 @@ export {
 	captionDisplayText,
 	getSpeechRecognitionCtor,
 	mergeCaptionResults,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 export type {
 	SpeechAlternative,
 	SpeechRecognitionCtor,
@@ -12,4 +12,4 @@ export type {
 	SpeechResult,
 	SpeechResultList,
 	SpeechSupportState,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';

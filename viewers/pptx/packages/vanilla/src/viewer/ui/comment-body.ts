@@ -3,7 +3,7 @@ import {
 	COMMENT_MENTION_ATTRIBUTE,
 	COMMENT_MENTION_CLASS,
 	commentTextSegments,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 /**
  * Fill an element with a comment body, highlighting its `@`-mentions.

@@ -25,7 +25,7 @@ import {
 	TRANSITION_MORPH_OPTIONS,
 	TRANSITION_ORIENTATION_TYPES,
 	TRANSITION_SPEED_OPTIONS,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 

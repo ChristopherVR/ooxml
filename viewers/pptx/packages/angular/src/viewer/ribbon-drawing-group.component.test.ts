@@ -22,7 +22,7 @@ import { Injector, runInInjectionContext } from '@angular/core';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 
-import { SHAPE_PRESET_DEFS, shapeFillChange, shapeOutlineChange } from '../internal/shared';
+import { SHAPE_PRESET_DEFS, shapeFillChange, shapeOutlineChange } from 'ooxml-ui/pptx';
 import { componentSource } from './component-source.test-support';
 import { newPresetShapeElement } from './editor-insert';
 import { EditorStateService } from './editor-state.service';

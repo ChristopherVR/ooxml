@@ -22,7 +22,7 @@ import type { InputSignal, OutputEmitterRef } from '@angular/core';
 import type { PptxElement, PptxElementAnimation } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { CanvasSize } from '../internal/shared';
+import type { CanvasSize } from 'ooxml-ui/pptx';
 import { MotionPathOverlayComponent } from './motion-path-overlay.component';
 
 const OVERLAY_SOURCE = readFileSync(

@@ -13,9 +13,9 @@
  *
  * Reference: ECMA-376 Part 1, §20.1.10.33 (ST_PresetPatternVal).
  */
-import { getPatternSvg as getPatternSvgShared } from '../internal/shared';
+import { getPatternSvg as getPatternSvgShared } from 'ooxml-ui/pptx';
 
-export { buildPatternFillCss } from '../internal/shared';
+export { buildPatternFillCss } from 'ooxml-ui/pptx';
 
 /**
  * Generate an inline SVG string for an OOXML preset pattern fill.

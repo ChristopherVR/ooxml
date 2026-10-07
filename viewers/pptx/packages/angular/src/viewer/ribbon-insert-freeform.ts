@@ -8,8 +8,8 @@
  * {@link OutlineAuthoringService}. Hosts can hide either tool through
  * `hiddenDrawingTools`; nothing renders outside a viewer that provides the service.
  */
-import { FREEFORM_TOOL_IDS, isDrawingToolVisible } from '../internal/shared';
-import type { FreeformToolKind, ResolvedCustomization } from '../internal/shared';
+import { FREEFORM_TOOL_IDS, isDrawingToolVisible } from 'ooxml-ui/pptx';
+import type { FreeformToolKind, ResolvedCustomization } from 'ooxml-ui/pptx';
 import type { OutlineAuthoringService } from './outline-authoring.service';
 
 /** The tools the host did not hide, or none without an outline-authoring service. */

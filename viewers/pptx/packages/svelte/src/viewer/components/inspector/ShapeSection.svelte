@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
-	import { SHAPE_PRESET_DEFS, SHAPE_QUICK_STYLES } from 'pptx-viewer-shared';
+	import { SHAPE_PRESET_DEFS, SHAPE_QUICK_STYLES } from 'ooxml-ui/pptx';
 
 	import type { EditorState } from '../../editor/editor-state.svelte';
 	import ConnectorArrowsSection from './ConnectorArrowsSection.svelte';

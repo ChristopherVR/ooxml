@@ -7,7 +7,7 @@ import {
 	moveSectionUp,
 	moveSlidesToSection,
 	renameSection,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 
 export interface EditorSectionOperations {
 	add(afterSlideIndex: number, name: string): void;

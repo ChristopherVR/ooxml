@@ -13,8 +13,8 @@ import {
 	createSnapshotTextPositions,
 	findElementYMap,
 	reconcileSlidesInYDoc,
-} from 'pptx-viewer-shared';
-import type { YjsFactories } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { YjsFactories } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 import * as Y from 'yjs';
 

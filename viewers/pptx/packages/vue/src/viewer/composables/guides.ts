@@ -6,5 +6,5 @@
  * `ViewerCanvasArea` / the guide dialogs and the colocated tests are unchanged.
  */
 
-export type { Guide } from 'pptx-viewer-shared';
-export { createGuide, moveGuide, removeGuide } from 'pptx-viewer-shared';
+export type { Guide } from 'ooxml-ui/pptx';
+export { createGuide, moveGuide, removeGuide } from 'ooxml-ui/pptx';

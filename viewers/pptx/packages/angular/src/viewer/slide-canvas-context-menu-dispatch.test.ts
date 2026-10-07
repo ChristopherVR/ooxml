@@ -9,8 +9,8 @@
 
 import { describe, expect, it } from 'vitest';
 
-import type { CanvasContextMenuCommandId } from '../internal/shared';
-import { buildCanvasContextMenuEntries } from '../internal/shared';
+import type { CanvasContextMenuCommandId } from 'ooxml-ui/pptx';
+import { buildCanvasContextMenuEntries } from 'ooxml-ui/pptx';
 import type { CanvasContextMenuActions } from './slide-canvas-context-menu-dispatch';
 import { runCanvasContextMenuCommand } from './slide-canvas-context-menu-dispatch';
 

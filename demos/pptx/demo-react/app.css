@@ -8,6 +8,6 @@
  * chrome the published package does not have (it was missing the shared class
  * tokens, hence a transparent app logo and a stuck AutoSave knob).
  */
-@source "../../../viewers/pptx/packages/shared/src/render/**/*.ts";
+@source "../../../src/ui/src/pptx/render/**/*.ts";
 
 @import '../../../viewers/pptx/packages/react/src/styles/theme.css';

@@ -10,7 +10,7 @@
  * `.supports()` is a plain static method testable without DI, and the
  * remaining assertions pin the source to the wiring the template/computed
  * rely on (importing shared through the vendored `../internal/shared`
- * barrel, never the bare `'pptx-viewer-shared'` specifier ng-packagr would
+ * barrel, never the bare `'ooxml-ui/pptx'` specifier ng-packagr would
  * externalize; see `internal/shared.ts`'s docblock).
  */
 import { readFileSync } from 'node:fs';
@@ -58,8 +58,8 @@ describe('accessibilityTextPanelComponent source wiring', () => {
 
 	it('reads its fields through the shared descriptor, via the vendored barrel', () => {
 		expect(source).toMatch(/getNonVisualDescriptionFields/);
-		expect(source).toContain("from '../internal/shared'");
-		expect(source).not.toContain("from 'pptx-viewer-shared'");
+		expect(source).toContain("from 'ooxml-ui/pptx'");
+		expect(source).not.toContain("from 'ooxml-ui/pptx'");
 	});
 
 	it('emits altText and title patches from their own inputs', () => {

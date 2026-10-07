@@ -17,8 +17,8 @@ import {
 	mediaTimeFromPointer,
 	mediaTrimEndSeconds,
 	mediaTrimRangeForDrag,
-} from '../internal/shared';
-import type { MediaTrimHandle, MediaTrimRange } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { MediaTrimHandle, MediaTrimRange } from 'ooxml-ui/pptx';
 
 @Component({
 	selector: 'pptx-media-trim-timeline',

@@ -1,5 +1,5 @@
 import type { ChatTransport } from 'ai';
-import type { PptxAiUIMessage } from 'pptx-viewer-shared/ai';
+import type { PptxAiUIMessage } from 'ooxml-ui/pptx/ai';
 import { describe, expect, it } from 'vitest';
 
 import { injectDeckContext, withDeckContext } from './ai-context-transport';

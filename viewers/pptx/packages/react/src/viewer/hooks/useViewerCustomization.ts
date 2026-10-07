@@ -16,8 +16,8 @@ import type {
 	ViewerCustomizationApi,
 	ViewerCustomizationController,
 	ViewerOptionsStore,
-} from 'pptx-viewer-shared';
-import { createCustomizationController, resolveEffectiveHiddenActions } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import { createCustomizationController, resolveEffectiveHiddenActions } from 'ooxml-ui/pptx';
 import { useLayoutEffect, useMemo, useRef, useSyncExternalStore } from 'react';
 
 export interface ViewerCustomizationResult {

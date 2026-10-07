@@ -1,8 +1,8 @@
 import { NgStyle } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
-import { buildTextBuildSpec, textBuildSpanStyle } from '../internal/shared';
-import type { ElementAnimationState, TextBuildSpec } from '../internal/shared';
+import { buildTextBuildSpec, textBuildSpanStyle } from 'ooxml-ui/pptx';
+import type { ElementAnimationState, TextBuildSpec } from 'ooxml-ui/pptx';
 import type { StyleMap } from './element-style';
 import type { Paragraph, TextRun } from './paragraph-view';
 import { SlideTextRunComponent } from './slide-text-run.component';

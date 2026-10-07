@@ -8,7 +8,7 @@ import type { PptxAnimationPreset, PptxNativeAnimation } from 'pptx-viewer-core'
 import {
 	getInitialStyleForEffect as sharedGetInitialStyleForEffect,
 	getAnimationInitialStyle as sharedGetAnimationInitialStyle,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type React from 'react';
 
 import type { EffectName } from './animation-types';

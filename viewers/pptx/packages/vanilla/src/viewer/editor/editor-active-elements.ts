@@ -5,8 +5,8 @@ import {
 	replaceMasterViewElements,
 	slideSpaceElement,
 	updateElementInTree,
-} from 'pptx-viewer-shared';
-import type { MasterViewDocument, MasterViewTarget } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { MasterViewDocument, MasterViewTarget } from 'ooxml-ui/pptx';
 
 import type { ViewerState } from '../state';
 

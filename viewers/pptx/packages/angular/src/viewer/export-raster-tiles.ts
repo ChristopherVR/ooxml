@@ -20,12 +20,12 @@ import {
 	rasterResultToPngBlob,
 	rasterResultToPngDataUrl,
 	sanitizeDownloadFilename,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import type {
 	RasterOutputSize,
 	RasterSourceRect,
 	RasterizeElementTilesResult,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { renderToCanvas } from '../lib/canvas-export';
 import { pdfPageSize } from './export-helpers';
 

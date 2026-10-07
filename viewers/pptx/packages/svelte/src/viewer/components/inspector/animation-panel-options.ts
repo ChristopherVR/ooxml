@@ -5,7 +5,7 @@ import type {
 	PptxAnimationSequence,
 	PptxAnimationTimingCurve,
 } from 'pptx-viewer-core';
-import { TRIGGER_OPTIONS } from 'pptx-viewer-shared';
+import { TRIGGER_OPTIONS } from 'ooxml-ui/pptx';
 
 /**
  * Option catalogs for the docked inspector AnimationPanel, mirroring React's

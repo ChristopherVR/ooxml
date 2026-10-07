@@ -1,5 +1,5 @@
 import type { PptxElement, TextSegment } from 'pptx-viewer-core';
-import { buildParagraphs } from 'pptx-viewer-shared';
+import { buildParagraphs } from 'ooxml-ui/pptx';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, it, expect } from 'vitest';
 

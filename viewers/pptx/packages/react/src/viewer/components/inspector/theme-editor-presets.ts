@@ -3,5 +3,5 @@
  * data shared by every binding's "Edit theme" panel, so they live in
  * `pptx-viewer-shared`; this module keeps React's existing import path working.
  */
-export { PRESET_THEMES, COMMON_FONTS, DEFAULT_THEME_COLOR_SCHEME } from 'pptx-viewer-shared';
-export type { PresetTheme } from 'pptx-viewer-shared';
+export { PRESET_THEMES, COMMON_FONTS, DEFAULT_THEME_COLOR_SCHEME } from 'ooxml-ui/pptx';
+export type { PresetTheme } from 'ooxml-ui/pptx';

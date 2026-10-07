@@ -11,7 +11,7 @@ import {
 import { TranslatePipe } from '@ngx-translate/core';
 import type { MediaPptxElement, PptxElement } from 'pptx-viewer-core';
 
-import { formatMediaTime } from '../internal/shared';
+import { formatMediaTime } from 'ooxml-ui/pptx';
 import { resolveMediaSrc } from './media-renderer-helpers';
 import { MediaTrimTimelineComponent } from './media-trim-timeline.component';
 

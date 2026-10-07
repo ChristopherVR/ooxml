@@ -1,6 +1,6 @@
 import type { MasterViewTab, PptxSlide, PptxSlideMaster } from 'pptx-viewer-core';
-import { masterViewBackgroundColor, masterViewPseudoSlide } from 'pptx-viewer-shared';
-import type { CanvasSize, MasterViewCrudAction, MasterViewCrudActionId } from 'pptx-viewer-shared';
+import { masterViewBackgroundColor, masterViewPseudoSlide } from 'ooxml-ui/pptx';
+import type { CanvasSize, MasterViewCrudAction, MasterViewCrudActionId } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import { createEl } from '../render';

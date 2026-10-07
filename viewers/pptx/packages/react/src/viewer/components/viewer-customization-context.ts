@@ -1,5 +1,5 @@
-import type { ResolvedCustomization } from 'pptx-viewer-shared';
-import { EMPTY_RESOLVED_CUSTOMIZATION } from 'pptx-viewer-shared';
+import type { ResolvedCustomization } from 'ooxml-ui/pptx';
+import { EMPTY_RESOLVED_CUSTOMIZATION } from 'ooxml-ui/pptx';
 import { createContext, useContext } from 'react';
 
 /**

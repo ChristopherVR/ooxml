@@ -35,7 +35,7 @@ const pkgVersion = (
  * types are likewise inlined via vite-plugin-dts `bundledPackages`, matching
  * the React package's tsup `noExternal` behaviour.
  */
-const INTERNAL_BUNDLED = ['pptx-viewer-core', 'pptx-viewer-shared'];
+const INTERNAL_BUNDLED = ['pptx-viewer-core'];
 
 export default defineConfig({
 	define: {

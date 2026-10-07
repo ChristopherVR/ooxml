@@ -5,8 +5,8 @@ import {
 	EDITOR_SLIDE_RAIL_WIDTH,
 	editorThumbnailStep,
 	SLIDE_VIRTUALIZATION_THRESHOLD,
-} from 'pptx-viewer-shared';
-import type { CanvasSize } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { CanvasSize } from 'ooxml-ui/pptx';
 
 import type { EditActions } from '../editor';
 import type { Translator } from '../i18n';

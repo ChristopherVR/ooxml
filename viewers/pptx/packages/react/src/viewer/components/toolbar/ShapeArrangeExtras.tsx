@@ -1,5 +1,5 @@
 import type { MergeShapeOperation, PptxElement, ShapeStyle } from 'pptx-viewer-core';
-import type { RibbonHomeIntent, ToolbarActionId } from 'pptx-viewer-shared';
+import type { RibbonHomeIntent, ToolbarActionId } from 'ooxml-ui/pptx';
 import {
 	arrangeShapeHomeControls,
 	canGroupSelection,
@@ -7,7 +7,7 @@ import {
 	canUngroupSelection,
 	parseCropValue,
 	strokeWidthOf,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React, { useCallback, useMemo } from 'react';
 
 import { useToolbarVisibility } from '../../hooks/useToolbarVisibility';

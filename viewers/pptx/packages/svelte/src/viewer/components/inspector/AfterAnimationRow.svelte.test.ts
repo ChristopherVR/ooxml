@@ -1,5 +1,5 @@
 import type { PptxElement, PptxElementAnimation, PptxSlide } from 'pptx-viewer-core';
-import { AFTER_ANIMATION_VALUES } from 'pptx-viewer-shared';
+import { AFTER_ANIMATION_VALUES } from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it } from 'vitest';
 

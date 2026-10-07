@@ -13,5 +13,5 @@ export type {
 	ElementChangeKind,
 	SlideDiff,
 	CompareResult,
-} from 'pptx-viewer-shared';
-export { comparePresentation } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+export { comparePresentation } from 'ooxml-ui/pptx';

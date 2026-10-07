@@ -12,7 +12,7 @@
  * this re-renders only when its own selector output changes, not when some
  * unrelated part of the viewer state moves (issue #145).
  */
-import type { ViewerStore, ViewerStoreEquality } from 'pptx-viewer-shared';
+import type { ViewerStore, ViewerStoreEquality } from 'ooxml-ui/pptx';
 import { useCallback, useRef, useSyncExternalStore } from 'react';
 
 /**

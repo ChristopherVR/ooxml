@@ -16,5 +16,5 @@ export {
 	canRemoveTopLevelNode,
 	describeSmartArtBounds,
 	getSmartArtNodeBounds,
-} from 'pptx-viewer-shared';
-export type { SmartArtNodeBounds } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+export type { SmartArtNodeBounds } from 'ooxml-ui/pptx';

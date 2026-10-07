@@ -9,7 +9,7 @@
 	 * hard-coded English option lists this file used to carry.
 	 */
 	import type { PptxChartData, PptxChartMarkerSymbol, PptxChartSeries, PptxChartType } from 'pptx-viewer-core';
-	import { CHART_MARKER_SYMBOL_LABEL_KEYS, CHART_TYPE_LABEL_KEYS, schemaLabel } from 'pptx-viewer-shared';
+	import { CHART_MARKER_SYMBOL_LABEL_KEYS, CHART_TYPE_LABEL_KEYS, schemaLabel } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 	import type { EditorState } from '../../editor/editor-state.svelte';

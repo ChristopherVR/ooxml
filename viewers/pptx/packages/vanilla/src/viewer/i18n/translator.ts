@@ -1,4 +1,4 @@
-import { keyToLabel, translationsEn } from 'pptx-viewer-shared/i18n';
+import { keyToLabel, translationsEn } from 'ooxml-ui/pptx/i18n';
 
 /**
  * Minimal i18n for the vanilla binding.

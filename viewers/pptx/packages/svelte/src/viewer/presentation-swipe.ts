@@ -1,4 +1,4 @@
-import { createTouchGestureRecognizer } from 'pptx-viewer-shared';
+import { createTouchGestureRecognizer } from 'ooxml-ui/pptx';
 
 export interface PresentationSwipeOptions {
 	isEnabled(): boolean;

@@ -4,8 +4,8 @@
  * adapts `cloneHistorySnapshot` to the React-local `EditorHistorySnapshot` type
  * (which adds an optional `actionLabel` on top of the shared structural shape).
  */
-import { cloneHistorySnapshot as cloneHistorySnapshotShared } from 'pptx-viewer-shared';
-import type { HistorySnapshotLike } from 'pptx-viewer-shared';
+import { cloneHistorySnapshot as cloneHistorySnapshotShared } from 'ooxml-ui/pptx';
+import type { HistorySnapshotLike } from 'ooxml-ui/pptx';
 
 import type { EditorHistorySnapshot } from '../types';
 
@@ -20,7 +20,7 @@ export {
 	cloneSlide,
 	cloneTemplateElementsBySlideId,
 	cloneXmlObject,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 /**
  * Deep-clone a history snapshot. Delegates to the shared implementation (which

@@ -10,7 +10,7 @@
  * All state is derived from props; the parent owns trim + playhead values.
  */
 import type { MediaBookmark } from 'pptx-viewer-core';
-import { mediaTrimEndMsFromSeconds, mediaTrimEndSeconds } from 'pptx-viewer-shared';
+import { mediaTrimEndMsFromSeconds, mediaTrimEndSeconds } from 'ooxml-ui/pptx';
 import { computed, onBeforeUnmount, ref } from 'vue';
 
 import { clamp } from '../../composables/useMediaEditing';

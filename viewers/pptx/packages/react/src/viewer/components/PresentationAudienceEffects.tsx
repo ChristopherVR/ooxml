@@ -1,5 +1,5 @@
-import { presentationInkPath } from 'pptx-viewer-shared';
-import type { PresentationSnapshot } from 'pptx-viewer-shared';
+import { presentationInkPath } from 'ooxml-ui/pptx';
+import type { PresentationSnapshot } from 'ooxml-ui/pptx';
 
 export function PresentationAudienceEffects({ snapshot }: { snapshot: PresentationSnapshot }) {
 	const strokes =

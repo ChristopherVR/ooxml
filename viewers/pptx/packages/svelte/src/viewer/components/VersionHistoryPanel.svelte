@@ -3,8 +3,8 @@
 	import Download from '@lucide/svelte/icons/download';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import X from '@lucide/svelte/icons/x';
-	import { deleteAutosaveSnapshot, formatBackstageSize, formatRelativeTime, formatVersionTimestamp, getAutosaveSnapshot } from 'pptx-viewer-shared';
-import type { AutosaveRecord } from 'pptx-viewer-shared';
+	import { deleteAutosaveSnapshot, formatBackstageSize, formatRelativeTime, formatVersionTimestamp, getAutosaveSnapshot } from 'ooxml-ui/pptx';
+import type { AutosaveRecord } from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../i18n/context';
 
 	const { filePath, onclose, onrestore }: { filePath?: string; onclose: () => void; onrestore: (data: Uint8Array) => void | Promise<void> } = $props();

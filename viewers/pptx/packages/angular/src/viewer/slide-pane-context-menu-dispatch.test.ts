@@ -6,8 +6,8 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import type { SlidePaneContextMenuCommandId } from '../internal/shared';
-import { buildSlidePaneContextMenuEntries } from '../internal/shared';
+import type { SlidePaneContextMenuCommandId } from 'ooxml-ui/pptx';
+import { buildSlidePaneContextMenuEntries } from 'ooxml-ui/pptx';
 import type { SlidePaneContextMenuActions } from './slide-pane-context-menu-dispatch';
 import { runSlidePaneContextMenuCommand } from './slide-pane-context-menu-dispatch';
 

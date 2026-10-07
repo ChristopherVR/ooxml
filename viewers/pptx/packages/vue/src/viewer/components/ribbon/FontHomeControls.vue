@@ -7,8 +7,8 @@
  * typed event that TextSection turns into the undoable edit.
  */
 import type { PptxThemeColorRef, TextStyle } from 'pptx-viewer-core';
-import { fontHomeControls, homeSnapshotTranslator } from 'pptx-viewer-shared';
-import type { ChangeCaseMode, RibbonHomeRequestEvent } from 'pptx-viewer-shared';
+import { fontHomeControls, homeSnapshotTranslator } from 'ooxml-ui/pptx';
+import type { ChangeCaseMode, RibbonHomeRequestEvent } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

@@ -1,4 +1,4 @@
-import { computeAnchoredPopupPosition } from 'pptx-viewer-shared';
+import { computeAnchoredPopupPosition } from 'ooxml-ui/pptx';
 import React, { useEffect, useState } from 'react';
 
 import { cn } from '../../utils';

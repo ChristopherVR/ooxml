@@ -18,5 +18,6 @@
 		}
 	},
 	"include": ["src/**/*.ts"],
-	"exclude": ["dist", "node_modules"]
+	"exclude": ["dist", "node_modules", "src/pptx"],
+	"files": ["src/raw.d.ts"]
 }

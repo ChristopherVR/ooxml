@@ -1,5 +1,5 @@
-import { registerPptxWebControls, themeEditorLabels } from 'pptx-viewer-shared';
-import type { ThemeEditorApplyEvent } from 'pptx-viewer-shared';
+import { registerPptxWebControls, themeEditorLabels } from 'ooxml-ui/pptx';
+import type { ThemeEditorApplyEvent } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import type { DeckCard } from './deck-card-helpers';

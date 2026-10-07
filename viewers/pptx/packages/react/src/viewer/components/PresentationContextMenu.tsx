@@ -1,9 +1,9 @@
-import type { PresentationContextMenuActionId, PresentationPointerTool } from 'pptx-viewer-shared';
+import type { PresentationContextMenuActionId, PresentationPointerTool } from 'ooxml-ui/pptx';
 import {
 	CONTEXT_MENU_PRESENTATION_LAYER,
 	getPresentationContextMenuSections,
 	presentationViewItems,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 

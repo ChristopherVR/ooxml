@@ -1,5 +1,5 @@
 import type { MediaBookmark } from 'pptx-viewer-core';
-import { mediaTrimEndMsFromSeconds, mediaTrimEndSeconds } from 'pptx-viewer-shared';
+import { mediaTrimEndMsFromSeconds, mediaTrimEndSeconds } from 'ooxml-ui/pptx';
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 
 // ==========================================================================

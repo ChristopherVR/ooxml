@@ -9,7 +9,7 @@
 	 * here as the descriptor below, so all five bindings show the same dialog.
 	 */
 	import History from '@lucide/svelte/icons/history';
-	import type { AutosaveRecoveryPrompt } from 'pptx-viewer-shared';
+	import type { AutosaveRecoveryPrompt } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 	import DialogFooter from './DialogFooter.svelte';

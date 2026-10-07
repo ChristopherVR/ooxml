@@ -5,14 +5,14 @@ import type {
 	MobileBarViewState,
 	MobileSheetKey,
 	ToolbarActionId,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	createSheetDismissGesture,
 	isActionHidden,
 	registerPptxWebControls,
 	slideTitle,
 	toggleSheet,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import { createEl } from '../render';

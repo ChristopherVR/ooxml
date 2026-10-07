@@ -16,7 +16,7 @@ import path from 'node:path';
  */
 import { describe, expect, it } from 'vitest';
 
-import { HIDDEN_SLIDE_SLASH_GRADIENT, hiddenSlideCue } from '../internal/shared';
+import { HIDDEN_SLIDE_SLASH_GRADIENT, hiddenSlideCue } from 'ooxml-ui/pptx';
 
 const PANEL_TEMPLATE = readFileSync(
 	path.join(import.meta.dirname, 'slides-panel.component.html'),

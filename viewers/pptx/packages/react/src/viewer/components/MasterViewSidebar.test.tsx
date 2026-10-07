@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import type { MasterViewCrudAction } from 'pptx-viewer-shared';
+import type { MasterViewCrudAction } from 'ooxml-ui/pptx';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';

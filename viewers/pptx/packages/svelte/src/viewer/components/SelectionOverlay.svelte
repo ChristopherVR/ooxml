@@ -12,8 +12,8 @@
 	 * handles / rotate knob do, so a click on empty box interior still reaches
 	 * the element beneath and drives a move gesture.
 	 */
-	import { attachRotateHandlePlacement, getResizeHandleHitAreaStyle, getSelectionOutlineColor, RESIZE_HANDLE_GEOMETRY, RESIZE_HANDLES, ROTATE_STEM_PX } from 'pptx-viewer-shared';
-	import type { ResizeHandleId } from 'pptx-viewer-shared';
+	import { attachRotateHandlePlacement, getResizeHandleHitAreaStyle, getSelectionOutlineColor, RESIZE_HANDLE_GEOMETRY, RESIZE_HANDLES, ROTATE_STEM_PX } from 'ooxml-ui/pptx';
+	import type { ResizeHandleId } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 	import { DEFAULT_SELECTION_INTERACTIVITY } from '../editor/editor-selection-interactivity';

@@ -15,8 +15,8 @@
  * bundle it already assembles for the desktop ribbon, plus `open` + a `close`
  * emit, exactly like React threads `ToolbarProps` through.
  */
-import { TOOLBAR_TABS } from 'pptx-viewer-shared';
-import type { ToolbarTabId } from 'pptx-viewer-shared';
+import { TOOLBAR_TABS } from 'ooxml-ui/pptx';
+import type { ToolbarTabId } from 'ooxml-ui/pptx';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 

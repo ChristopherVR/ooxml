@@ -19,8 +19,8 @@
  * the consumer does not install it.
  */
 import type { Model3DPptxElement } from 'pptx-viewer-core';
-import { modelDataToBlobUrl, mountModel3D } from 'pptx-viewer-shared';
-import type { Model3DHandle } from 'pptx-viewer-shared';
+import { modelDataToBlobUrl, mountModel3D } from 'ooxml-ui/pptx';
+import type { Model3DHandle } from 'ooxml-ui/pptx';
 import { onScopeDispose, ref, watch } from 'vue';
 import type { Ref } from 'vue';
 

@@ -1,5 +1,5 @@
-import type { AiChangeBatch } from 'pptx-viewer-shared/ai';
-import { resolveChangeAnimationConfig } from 'pptx-viewer-shared/ai';
+import type { AiChangeBatch } from 'ooxml-ui/pptx/ai';
+import { resolveChangeAnimationConfig } from 'ooxml-ui/pptx/ai';
 import { mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it } from 'vitest';
 

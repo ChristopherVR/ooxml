@@ -15,8 +15,8 @@
 
 import { Injectable, signal } from '@angular/core';
 
-import { rulerDragToGuidePosition } from '../internal/shared';
-import type { CanvasSize } from '../internal/shared';
+import { rulerDragToGuidePosition } from 'ooxml-ui/pptx';
+import type { CanvasSize } from 'ooxml-ui/pptx';
 
 /** A user-created guide line dragged from a ruler strip. */
 export interface RulerGuide {

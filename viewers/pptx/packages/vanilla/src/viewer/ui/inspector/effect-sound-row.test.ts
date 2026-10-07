@@ -1,4 +1,4 @@
-import { EFFECT_SOUND_CATALOGUE } from 'pptx-viewer-shared';
+import { EFFECT_SOUND_CATALOGUE } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../../i18n';

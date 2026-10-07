@@ -23,7 +23,7 @@ import {
 	parentSelection,
 	resolveTopLevelElementId,
 	setPendingCaretPoint,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type { Ref } from 'vue';
 
 import { isElementIdInteractive } from './template-editing';

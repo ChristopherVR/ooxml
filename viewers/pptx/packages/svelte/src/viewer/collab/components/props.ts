@@ -6,7 +6,7 @@ import type {
 	ConnectionStatus,
 	RemoteCursor,
 	SanitizedPresence,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type { Snippet } from 'svelte';
 
 import type { ShareDefaults } from './share-helpers';

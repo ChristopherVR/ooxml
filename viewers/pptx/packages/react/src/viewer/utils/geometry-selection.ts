@@ -14,7 +14,7 @@ import type { PptxElement } from 'pptx-viewer-core';
 import { MIN_ELEMENT_SIZE } from '../constants';
 import type { ElementBounds, MarqueeSelectionState } from '../types';
 
-export { computeSnapToShape as computeSnapToShapeResult } from 'pptx-viewer-shared';
+export { computeSnapToShape as computeSnapToShapeResult } from 'ooxml-ui/pptx';
 
 // ---------------------------------------------------------------------------
 // Bounds / clamping helpers

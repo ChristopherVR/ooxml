@@ -17,8 +17,8 @@ import {
 	presenterPaneAdvancesOnClick,
 	presenterPrevDisabled,
 	visibleTemplateElements as filterVisibleTemplateElements,
-} from '../internal/shared';
-import type { AuthoredSlideRange, CanvasSize, ShowOrderCustomShow } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { AuthoredSlideRange, CanvasSize, ShowOrderCustomShow } from 'ooxml-ui/pptx';
 import type { StyleMap } from './element-style';
 import { PresenterControlsComponent } from './presenter-controls.component';
 import {

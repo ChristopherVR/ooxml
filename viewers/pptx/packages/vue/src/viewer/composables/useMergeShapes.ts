@@ -9,7 +9,7 @@
  * and selects the new shape(s).
  */
 import type { MergeShapeOperation, PptxElement, PptxSlide } from 'pptx-viewer-core';
-import { applyMergeShapesPlan, canMergeShapes, planMergeShapes } from 'pptx-viewer-shared';
+import { applyMergeShapesPlan, canMergeShapes, planMergeShapes } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
 

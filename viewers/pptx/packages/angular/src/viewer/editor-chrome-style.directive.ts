@@ -1,6 +1,6 @@
 import { Directive, ElementRef, inject } from '@angular/core';
 
-import { EDITOR_CHROME_CSS } from '../internal/shared';
+import { EDITOR_CHROME_CSS } from 'ooxml-ui/pptx';
 
 /** Angular templates extract style tags; attach the bundled shared sheet directly. */
 @Directive({ selector: '[pptxEditorChromeStyle]', standalone: true })

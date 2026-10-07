@@ -13,8 +13,8 @@ import { TranslateService } from '@ngx-translate/core';
 import { Subject } from 'rxjs';
 import { describe, expect, it } from 'vitest';
 
-import { DEFAULT_VIEWER_OPTIONS } from '../internal/shared';
-import type { TitleBarViewState, ViewerQuickAccessOptions } from '../internal/shared';
+import { DEFAULT_VIEWER_OPTIONS } from 'ooxml-ui/pptx';
+import type { TitleBarViewState, ViewerQuickAccessOptions } from 'ooxml-ui/pptx';
 import {
 	narrowToExtraQuickAccess,
 	resolveBelowRibbonQuickAccess,

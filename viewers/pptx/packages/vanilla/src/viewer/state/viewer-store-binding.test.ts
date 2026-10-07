@@ -4,7 +4,7 @@
  * Counts PAINTS. This binding writes the DOM directly, so a needless
  * notification is a needless DOM write, not just a wasted diff (issue #145).
  */
-import { createViewerStore } from 'pptx-viewer-shared';
+import { createViewerStore } from 'ooxml-ui/pptx';
 import { describe, it, expect, vi } from 'vitest';
 
 import { watchViewerStore } from './viewer-store-binding';

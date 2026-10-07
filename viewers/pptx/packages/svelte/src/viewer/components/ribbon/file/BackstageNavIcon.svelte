@@ -12,7 +12,7 @@
 	import Upload from '@lucide/svelte/icons/upload';
 	import UserRound from '@lucide/svelte/icons/user-round';
 	import X from '@lucide/svelte/icons/x';
-	import type { BackstagePage } from 'pptx-viewer-shared';
+	import type { BackstagePage } from 'ooxml-ui/pptx';
 	import type { Component } from 'svelte';
 
 	const { page }: { page: BackstagePage | 'back' } = $props();

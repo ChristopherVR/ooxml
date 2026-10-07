@@ -1,4 +1,4 @@
-import type { Computed3dStyle, CssStyleMap } from 'pptx-viewer-shared';
+import type { Computed3dStyle, CssStyleMap } from 'ooxml-ui/pptx';
 
 /**
  * Merge a shared {@link Computed3dStyle} (scene3d/shape3d camera, extrusion,

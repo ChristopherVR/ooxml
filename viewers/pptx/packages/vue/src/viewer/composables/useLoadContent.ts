@@ -39,7 +39,7 @@ import type {
 	DeckSavePurpose,
 	PendingInlineTextEdit,
 	SlideSizeEmu,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	createPresentationLoadResources,
 	applyImagePathPatches,
@@ -51,7 +51,7 @@ import {
 	resolveTableStyleImageUrls,
 	resolveTextFillBlipUrls,
 	saveDeckWithPassword,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { onScopeDispose, ref, shallowRef, toValue, watch } from 'vue';
 import type { MaybeRefOrGetter, Ref, ShallowRef } from 'vue';
 

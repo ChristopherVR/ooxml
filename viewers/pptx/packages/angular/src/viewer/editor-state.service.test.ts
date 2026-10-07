@@ -2,7 +2,7 @@ import { Injector, runInInjectionContext } from '@angular/core';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
 
-import { buildInlineTextCommitPatch, SLIDE_TEMPLATES } from '../internal/shared';
+import { buildInlineTextCommitPatch, SLIDE_TEMPLATES } from 'ooxml-ui/pptx';
 import { CollaborationService } from './collaboration.service';
 import { EditorStateService } from './editor-state.service';
 import { ViewerCanvasEditingService } from './viewer-canvas-editing.service';

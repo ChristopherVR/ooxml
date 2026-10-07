@@ -11,9 +11,9 @@
  * shared uses `latexToMathMl`.
  */
 
-import { EQUATION_TEMPLATES, latexToMathMl } from '../internal/shared';
+import { EQUATION_TEMPLATES, latexToMathMl } from 'ooxml-ui/pptx';
 
-export type { EquationTemplate } from '../internal/shared';
+export type { EquationTemplate } from 'ooxml-ui/pptx';
 
 /**
  * Pre-defined equation templates covering common mathematical formulas

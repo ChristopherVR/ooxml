@@ -16,5 +16,5 @@ export type {
 	MorphTextTokenPair,
 	RgbaColor,
 	SvgPathCommand,
-} from 'pptx-viewer-shared';
-export { MORPH_EASING, PROXIMITY_THRESHOLD } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+export { MORPH_EASING, PROXIMITY_THRESHOLD } from 'ooxml-ui/pptx';

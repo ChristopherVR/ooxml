@@ -15,8 +15,8 @@ import { fileURLToPath } from 'node:url';
 
 import type { PptxSlide } from 'pptx-viewer-core';
 import { PptxHandler } from 'pptx-viewer-core';
-import { partitionTemplateElements } from 'pptx-viewer-shared';
-import { translationsEn } from 'pptx-viewer-shared/i18n';
+import { partitionTemplateElements } from 'ooxml-ui/pptx';
+import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { beforeAll, afterAll, describe, expect, it, vi } from 'vitest';

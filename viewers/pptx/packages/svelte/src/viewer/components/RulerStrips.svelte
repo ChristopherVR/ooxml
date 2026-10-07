@@ -13,7 +13,7 @@
 	 * density and label thinning. Dragging off a strip drops a guide, resolved by
 	 * the shared `rulerDragToGuidePosition` rules.
 	 */
-	import { generateTicks, RULER_FONT_SIZE, RULER_THICKNESS, rulerDragToGuidePosition } from 'pptx-viewer-shared';
+	import { generateTicks, RULER_FONT_SIZE, RULER_THICKNESS, rulerDragToGuidePosition } from 'ooxml-ui/pptx';
 
 	import type { RulerStripsProps } from './viewer-body-props';
 

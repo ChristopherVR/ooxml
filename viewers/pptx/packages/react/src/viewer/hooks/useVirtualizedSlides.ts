@@ -8,12 +8,12 @@
  *
  * @module useVirtualizedSlides
  */
-import { computeVirtualRange, DEFAULT_VIRTUAL_OVERSCAN } from 'pptx-viewer-shared';
-import type { VirtualizedRange } from 'pptx-viewer-shared';
+import { computeVirtualRange, DEFAULT_VIRTUAL_OVERSCAN } from 'ooxml-ui/pptx';
+import type { VirtualizedRange } from 'ooxml-ui/pptx';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-export { computeVirtualRange } from 'pptx-viewer-shared';
-export type { VirtualizedRange } from 'pptx-viewer-shared';
+export { computeVirtualRange } from 'ooxml-ui/pptx';
+export type { VirtualizedRange } from 'ooxml-ui/pptx';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */

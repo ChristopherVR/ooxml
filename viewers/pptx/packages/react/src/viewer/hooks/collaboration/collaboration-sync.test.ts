@@ -1,4 +1,4 @@
-import { sanitizePresence } from 'pptx-viewer-shared';
+import { sanitizePresence } from 'ooxml-ui/pptx';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 /**
  * Tests for two-client collaboration sync over a *simulated transport*.

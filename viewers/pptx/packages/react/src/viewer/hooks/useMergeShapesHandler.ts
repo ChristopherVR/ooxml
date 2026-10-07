@@ -12,7 +12,7 @@ import {
 	applyMergeShapesPlan,
 	canMergeShapes as canMergeSelection,
 	planMergeShapes,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { EditorHistoryResult } from './useEditorHistory';
 import type { ElementOperations } from './useElementOperations';

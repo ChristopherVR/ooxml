@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils';
-import { resolveCustomization } from 'pptx-viewer-shared';
+import { resolveCustomization } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 import { shallowRef } from 'vue';
 

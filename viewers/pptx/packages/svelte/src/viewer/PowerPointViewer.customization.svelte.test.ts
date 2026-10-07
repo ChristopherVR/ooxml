@@ -8,8 +8,8 @@ import {
 	RIBBON_GROUP_IDS,
 	RIBBON_TAB_IDS,
 	TOOLBAR_BUTTON_IDS,
-} from 'pptx-viewer-shared';
-import type { ViewerCustomization, ViewerCustomizationApi } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { ViewerCustomization, ViewerCustomizationApi } from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 

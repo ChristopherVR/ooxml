@@ -29,8 +29,8 @@ import {
 	scheduleMediaTrimAndFade,
 	shouldRenderHitTarget,
 	startMediaAutoplay,
-} from '../internal/shared';
-import type { MediaFallbackVisual, MediaSurface } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { MediaFallbackVisual, MediaSurface } from 'ooxml-ui/pptx';
 import { getClrChangeParams } from './color-changed-image-helpers';
 import type { ClrChangeParams } from './color-changed-image-helpers';
 import { ColorChangedImageComponent } from './color-changed-image.component';

@@ -26,7 +26,7 @@ import type {
 	PptxViewProperties,
 } from 'pptx-viewer-core';
 
-import { applyElementUpdate, deckDataFieldChanged } from '../../internal/shared-ai';
+import { applyElementUpdate, deckDataFieldChanged } from 'ooxml-ui/pptx/ai';
 import type {
 	PptxAiBridge,
 	PptxAiDataUpdater,
@@ -35,7 +35,7 @@ import type {
 	PptxAiFocusedTarget,
 	PptxAiNotifyLevel,
 	PptxAiSlidesUpdater,
-} from '../../internal/shared-ai';
+} from 'ooxml-ui/pptx/ai';
 
 /** Live accessors the bridge closes over, supplied by the viewer component. */
 export interface BridgeDeps {

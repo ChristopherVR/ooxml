@@ -1,10 +1,10 @@
-import { buildTextBuildSpec, runEquationMathMl, textBuildSpanStyle } from 'pptx-viewer-shared';
+import { buildTextBuildSpec, runEquationMathMl, textBuildSpanStyle } from 'ooxml-ui/pptx';
 import type {
 	CssStyleMap,
 	ElementAnimationState,
 	ParagraphRun,
 	RenderParagraph,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import { applyStyleMap, createEl } from '../dom';
 import { appendRunContent } from './text-run-content';

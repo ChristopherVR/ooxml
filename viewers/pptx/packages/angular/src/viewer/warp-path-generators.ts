@@ -21,5 +21,5 @@ export {
 	WARP_PATH_GENERATORS,
 	SVG_WARP_PRESETS,
 	shouldUseSvgWarp,
-} from '../internal/shared';
-export type { WarpPathGenerator } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+export type { WarpPathGenerator } from 'ooxml-ui/pptx';

@@ -10,8 +10,8 @@ import {
 	resolveAudienceScreenPlacement,
 	mergePresentationSnapshot,
 	swapPresentationWindows,
-} from 'pptx-viewer-shared';
-import type { PresentationSnapshot } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { PresentationSnapshot } from 'ooxml-ui/pptx';
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import type { Ref } from 'vue';
 

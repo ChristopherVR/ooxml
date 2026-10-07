@@ -1,6 +1,6 @@
 import type { PptxElement } from 'pptx-viewer-core';
-import type { CanvasSize } from 'pptx-viewer-shared';
-import { buildActionButtonElement } from 'pptx-viewer-shared';
+import type { CanvasSize } from 'ooxml-ui/pptx';
+import { buildActionButtonElement } from 'ooxml-ui/pptx';
 
 import { centerOnCanvas } from './editor-insert';
 

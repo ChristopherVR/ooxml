@@ -12,14 +12,14 @@ import {
 	placeCaretAt,
 	restoreInlineListBodySelection,
 	takePendingCaretPoint,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import type {
 	CollaborationInlineEditor,
 	CollaborationLivePatcher,
 	InlineListController,
 	InlineListSeed,
 	InlineTextEditSnapshot,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import {
 	resolveCommitTextAutoFitHeight,
 	resolveCommitTextNormAutofitShrink,

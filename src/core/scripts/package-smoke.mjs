@@ -76,16 +76,29 @@ try {
 		work,
 	);
 
-	const subpaths = Object.keys(manifest.exports).filter((entry) => !entry.endsWith('/cli'));
+	const subpaths = Object.keys(manifest.exports)
+		.filter((entry) => !entry.endsWith('/cli'))
+		.flatMap((entry) => {
+			if (!entry.includes('*')) return [entry];
+			const target = manifest.exports[entry].import.slice(2);
+			const [prefix, suffix] = target.split('*');
+			return [...files]
+				.filter((file) => file.startsWith(prefix) && file.endsWith(suffix))
+				.map((file) => entry.replace('*', file.slice(prefix.length, -suffix.length)));
+		});
 	const checks = subpaths
 		.map((entry) => {
 			const specifier = path.posix.join(manifest.name, entry === '.' ? '' : entry);
-			const declaresRequire =
-				typeof manifest.exports[entry] === 'object' && 'require' in manifest.exports[entry];
+			const exported =
+				manifest.exports[entry] ??
+				Object.entries(manifest.exports).find(
+					([key]) => key.includes('*') && entry.startsWith(key.split('*')[0]),
+				)?.[1];
+			const declaresRequire = typeof exported === 'object' && 'require' in exported;
 			return [
-				`assert.ok(Object.keys(await import('${specifier}')).length > 0, '${specifier} has no exports');`,
+				`assert.ok(Object.keys(await import('${specifier}')).length > 0 || ${!manifest.exports[entry]}, '${specifier} has no exports');`,
 				declaresRequire
-					? `assert.ok(Object.keys(require('${specifier}')).length > 0, '${specifier} (cjs) has no exports');`
+					? `assert.ok(Object.keys(require('${specifier}')).length > 0 || ${!manifest.exports[entry]}, '${specifier} (cjs) has no exports');`
 					: '',
 			].join('\n');
 		})
@@ -93,7 +106,25 @@ try {
 	await mkdir(path.join(work, 'check'), { recursive: true });
 	await writeFile(
 		path.join(work, 'consumer.mjs'),
-		`import assert from 'node:assert/strict';\nimport { createRequire } from 'node:module';\nconst require = createRequire(import.meta.url);\n${checks}\nconsole.log('all entry points import');\n`,
+		`import assert from 'node:assert/strict';\nimport { createRequire } from 'node:module';\nconst require = createRequire(import.meta.url);\n${checks}\n
+const Y = await import('yjs');
+for (const load of [(s) => import(s), async (s) => require(s)]) {
+ const sync = await load('${manifest.name}/pptx/editor/render/collaboration-sync');
+ const leases = await load('${manifest.name}/pptx/editor/render/collaboration-text-lease');
+ const reconcile = await load('${manifest.name}/pptx/editor/render/collaboration-reconcile');
+ const doc = new Y.Doc();
+ const factories = { createMap: () => new Y.Map(), createArray: () => new Y.Array(), createText: () => new Y.Text() };
+ const element = { id: 'text', type: 'text', x: 0, y: 0, width: 100, height: 20, text: 'before', textSegments: [{ text: 'before', style: {} }] };
+ const slides = [{ id: 'slide', slideNumber: 1, elements: [element] }];
+ sync.writeSlidesToYDoc(slides, doc, factories);
+ const target = doc.getArray(sync.YDOC_SLIDES_KEY).get(0).get('elements').get(0);
+ let checked = 0;
+ const release = leases.registerCollaborationTextLease(target, () => { checked++; return false; });
+ reconcile.reconcileSlidesInYDoc([{ ...slides[0], elements: [{ ...element, text: 'after', textSegments: [{ text: 'after', style: {} }] }] }], doc, factories);
+ assert.equal(checked, 1, 'public editor entries must share collaboration leases');
+ release(); doc.destroy();
+}
+console.log('all entry points import');\n`,
 	);
 	console.log(run('node', ['consumer.mjs'], work).trim());
 } finally {

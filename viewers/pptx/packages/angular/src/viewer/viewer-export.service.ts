@@ -24,7 +24,7 @@ import {
 	recordProgressPercent,
 	resolveExportCaptureDecision,
 	slideStatusLabel,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { slideFileName } from './export-helpers';
 import { ExportService } from './export.service';
 import { LoadContentService } from './load-content.service';

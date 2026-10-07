@@ -1,5 +1,5 @@
-import type { InkPoint } from 'pptx-viewer-shared';
-import { pointFromPointerEvent } from 'pptx-viewer-shared';
+import type { InkPoint } from 'ooxml-ui/pptx';
+import { pointFromPointerEvent } from 'ooxml-ui/pptx';
 
 import type { InkDrawTool } from './editor-ink-controller.svelte';
 

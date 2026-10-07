@@ -13,4 +13,4 @@ export {
 	getResolvedShapeClipPathFor,
 	isHollowShapeElement,
 	isIdentityRectClip,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';

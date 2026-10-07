@@ -8,7 +8,7 @@
  * questions; these names stay so the React hook API does not churn.
  */
 
-import { AUTOSAVE_RECOVERY_WINDOW_MS, shouldProbeAutosaveRecovery } from 'pptx-viewer-shared';
+import { AUTOSAVE_RECOVERY_WINDOW_MS, shouldProbeAutosaveRecovery } from 'ooxml-ui/pptx';
 
 // ---------------------------------------------------------------------------
 // Guard: should we even attempt a recovery check?

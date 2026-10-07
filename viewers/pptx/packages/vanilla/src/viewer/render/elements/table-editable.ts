@@ -5,7 +5,7 @@ import {
 	computeResizedRowHeight,
 	DEFAULT_ROW_HEIGHT,
 	getTableResizeScale,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import { createEl } from '../dom';
 import type { ElementRenderContext } from '../types';

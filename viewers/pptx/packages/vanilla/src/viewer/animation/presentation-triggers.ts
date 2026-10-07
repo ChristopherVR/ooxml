@@ -1,10 +1,10 @@
 import type { PptxSlide } from 'pptx-viewer-core';
-import type { PresentationAnimationController, TimelineClickGroup } from 'pptx-viewer-shared';
+import type { PresentationAnimationController, TimelineClickGroup } from 'ooxml-ui/pptx';
 import {
 	applyHighlightClickStyle,
 	findHighlightClickTarget,
 	HIGHLIGHT_CLEAR_STYLE,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 /** Dependencies the interactive / hover trigger listeners need from playback. */
 export interface TriggerDeps {

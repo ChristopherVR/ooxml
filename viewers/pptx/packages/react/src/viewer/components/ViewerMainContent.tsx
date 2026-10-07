@@ -2,7 +2,7 @@
  * ViewerMainContent: The primary content area containing sidebars,
  * canvas, context menu, and side panels.
  */
-import { setMasterViewBackgroundColor } from 'pptx-viewer-shared';
+import { setMasterViewBackgroundColor } from 'ooxml-ui/pptx';
 import { useMemo, useRef, useState } from 'react';
 
 import { SlidesPaneSidebar, MasterViewSidebar } from '.';

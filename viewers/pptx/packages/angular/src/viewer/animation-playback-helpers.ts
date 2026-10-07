@@ -17,5 +17,5 @@ export {
 	durationOf,
 	pendingElementStyles,
 	revealedElementStyles,
-} from '../internal/shared';
-export type { AnimationClickGroup, CSSProperties } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+export type { AnimationClickGroup, CSSProperties } from 'ooxml-ui/pptx';

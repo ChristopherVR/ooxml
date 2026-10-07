@@ -1,4 +1,4 @@
-import type { PptxAiBridge, PptxAiConfig } from 'pptx-viewer-shared/ai';
+import type { PptxAiBridge, PptxAiConfig } from 'ooxml-ui/pptx/ai';
 import { mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 

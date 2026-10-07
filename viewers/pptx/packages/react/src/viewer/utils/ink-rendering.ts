@@ -27,7 +27,7 @@ export {
 	contentPartViewBox,
 	buildInkGroupStrokes,
 	inkGroupViewBox,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 export type {
 	PathPoint,
 	PressureConfig,
@@ -39,4 +39,4 @@ export type {
 	InkStrokeView,
 	ContentPartStrokeView,
 	InkGroupStrokeView,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

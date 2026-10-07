@@ -1,5 +1,5 @@
-import { THEME_CATALOG } from 'pptx-viewer-shared';
-import { LOCALE_CATALOG } from 'pptx-viewer-shared/i18n';
+import { THEME_CATALOG } from 'ooxml-ui/pptx';
+import { LOCALE_CATALOG } from 'ooxml-ui/pptx/i18n';
 import { describe, expect, it } from 'vitest';
 
 import {

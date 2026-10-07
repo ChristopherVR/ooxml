@@ -1,4 +1,4 @@
-import type { ParagraphRun } from 'pptx-viewer-shared';
+import type { ParagraphRun } from 'ooxml-ui/pptx';
 
 import { createEl } from '../dom';
 

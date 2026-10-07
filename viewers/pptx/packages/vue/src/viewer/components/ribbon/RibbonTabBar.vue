@@ -7,12 +7,12 @@
  * `RibbonToolbar` already reads off `RibbonProps`.
  */
 import { ChevronDown, ChevronUp } from 'lucide-vue-next';
-import { contextualTabLabelKey } from 'pptx-viewer-shared';
+import { contextualTabLabelKey } from 'ooxml-ui/pptx';
 import type {
 	RibbonContextualTabId,
 	ToolbarActionId,
 	ToolbarTabDefinition,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { inject } from 'vue';
 import { useI18n } from 'vue-i18n';
 

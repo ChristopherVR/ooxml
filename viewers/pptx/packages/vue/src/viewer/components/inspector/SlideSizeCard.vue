@@ -10,14 +10,14 @@
  * inputs: that round-trip is lossy (Ledger is 12179300 EMU = 1278.5px) and
  * would cost a preset deck its identity on save.
  */
-import type { SlideSizeEmu, SlideSizeOrientation } from 'pptx-viewer-shared';
+import type { SlideSizeEmu, SlideSizeOrientation } from 'ooxml-ui/pptx';
 import {
 	resolveSlideSizeSelection,
 	SLIDE_SIZE_PRESETS,
 	slideSizeFromPreset,
 	slideSizeToCanvasPx,
 	withSlideSizeOrientation,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

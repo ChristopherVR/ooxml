@@ -24,7 +24,7 @@ import type {
 	PptxViewProperties,
 } from 'pptx-viewer-core';
 import { PptxHandler } from 'pptx-viewer-core';
-import type { CanvasSize, SlideSizeEmu } from 'pptx-viewer-shared';
+import type { CanvasSize, SlideSizeEmu } from 'ooxml-ui/pptx';
 import {
 	applyImagePathPatches,
 	collectAnimationSoundPaths,
@@ -36,7 +36,7 @@ import {
 	resolveTableCellImageUrls,
 	resolveTableStyleImageUrls,
 	resolveTextFillBlipUrls,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 /**
  * The vanilla load pipeline: parse a `.pptx` buffer with `pptx-viewer-core`'s

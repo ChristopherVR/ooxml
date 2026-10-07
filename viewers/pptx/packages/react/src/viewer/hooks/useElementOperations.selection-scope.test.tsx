@@ -10,13 +10,13 @@
  * the paragraphs the selection intersects.
  */
 import type { PptxElement, PptxSlide, TextSegment } from 'pptx-viewer-core';
-import type { InlineTextSelection } from 'pptx-viewer-shared';
+import type { InlineTextSelection } from 'ooxml-ui/pptx';
 import {
 	attachInlineListController,
 	createInlineListSeed,
 	initializeInlineListDom,
 	inlineListBodyText,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
@@ -28,8 +28,8 @@ import type { ElementOperations } from './useElementOperations';
 
 const selectionMock = vi.hoisted(() => ({ current: null as InlineTextSelection | null }));
 
-vi.mock(import('pptx-viewer-shared'), async (importOriginal) => {
-	const actual = await importOriginal<typeof import('pptx-viewer-shared')>();
+vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => {
+	const actual = await importOriginal<typeof import('ooxml-ui/pptx')>();
 	return {
 		...actual,
 		getInlineEditorSelectionResult: (

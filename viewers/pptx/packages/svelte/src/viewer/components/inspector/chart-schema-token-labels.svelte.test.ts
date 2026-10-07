@@ -5,8 +5,8 @@ import {
 	CHART_GRIDLINE_DASH_LABEL_KEYS,
 	CHART_MARKER_SYMBOL_LABEL_KEYS,
 	CHART_TYPE_LABEL_KEYS,
-} from 'pptx-viewer-shared';
-import { translationsEn } from 'pptx-viewer-shared/i18n';
+} from 'ooxml-ui/pptx';
+import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it } from 'vitest';
 

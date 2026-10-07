@@ -23,8 +23,8 @@
  *  - the section sheet's open state is owned here (local `ref`), exactly like
  *    React's `useState`.
  */
-import { isFeatureEnabled } from 'pptx-viewer-shared';
-import type { MobileToolbarId, MobileToolbarRequestEvent } from 'pptx-viewer-shared';
+import { isFeatureEnabled } from 'ooxml-ui/pptx';
+import type { MobileToolbarId, MobileToolbarRequestEvent } from 'ooxml-ui/pptx';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 

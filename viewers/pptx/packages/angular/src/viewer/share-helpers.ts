@@ -13,13 +13,13 @@
  * no regex named-capture-groups (ng-packagr lib-target constraints).
  */
 
-import type { CollaborationConfig, ShareDefaults, ShareFormFields } from '../internal/shared';
+import type { CollaborationConfig, ShareDefaults, ShareFormFields } from 'ooxml-ui/pptx';
 import {
 	buildShareUrl,
 	canStartShare,
 	resolveTransportForServerUrl,
 	seedShareFields,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 
 export type { ShareDefaults, ShareFormFields };
 export { buildShareUrl, canStartShare, seedShareFields };

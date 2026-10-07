@@ -14,7 +14,7 @@ import type {
 	DistributeAxis,
 	InsertChartKind,
 	SlideTemplateId,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type { ComputedRef, Ref, ShallowRef } from 'vue';
 
 import type { ShapePreset } from '../components/EditorToolbar.vue';

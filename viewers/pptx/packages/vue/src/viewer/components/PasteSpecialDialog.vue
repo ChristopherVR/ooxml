@@ -7,8 +7,8 @@
  * toolbar or the other four bindings. Vue port of the React
  * `PasteSpecialDialog.tsx`.
  */
-import type { PasteSpecialFormat } from 'pptx-viewer-shared';
-import { PASTE_SPECIAL_OPTIONS } from 'pptx-viewer-shared';
+import type { PasteSpecialFormat } from 'ooxml-ui/pptx';
+import { PASTE_SPECIAL_OPTIONS } from 'ooxml-ui/pptx';
 import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 

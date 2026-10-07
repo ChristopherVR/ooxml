@@ -1,5 +1,5 @@
 import type { PptxElement, PptxHandler, PptxSlide } from 'pptx-viewer-core';
-import { PRESET_THEMES } from 'pptx-viewer-shared';
+import { PRESET_THEMES } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
 import { applyThemeEditorEdit } from './theme-editor-apply';

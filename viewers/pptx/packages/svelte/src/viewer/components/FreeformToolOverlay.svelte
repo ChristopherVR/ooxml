@@ -8,8 +8,8 @@
 	 * and forwards events. Re-created per tool by `OutlineAuthoringLayer`.
 	 */
 	import type { ShapePptxElement } from 'pptx-viewer-core';
-	import type { FreeformToolKind } from 'pptx-viewer-shared';
-	import { attachOverlayKeyboard, clientToSlidePoint, FreeformToolSession } from 'pptx-viewer-shared';
+	import type { FreeformToolKind } from 'ooxml-ui/pptx';
+	import { attachOverlayKeyboard, clientToSlidePoint, FreeformToolSession } from 'ooxml-ui/pptx';
 	import { untrack } from 'svelte';
 
 	import { useTranslator } from '../../i18n/context';

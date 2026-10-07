@@ -11,7 +11,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import type { PptxElement, PptxImageEffects } from 'pptx-viewer-core';
 import { isImageLikeElement } from 'pptx-viewer-core';
 
-import { ARTISTIC_EFFECTS, imageResetPatch, imageResetState } from '../internal/shared';
+import { ARTISTIC_EFFECTS, imageResetPatch, imageResetState } from 'ooxml-ui/pptx';
 import { ImageCropWashPanelComponent } from './image-crop-wash-panel.component';
 import { RecentColorsService } from './recent-colors.service';
 

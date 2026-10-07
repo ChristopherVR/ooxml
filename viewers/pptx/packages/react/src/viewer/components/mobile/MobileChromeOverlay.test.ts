@@ -1,4 +1,4 @@
-import { toggleSheet } from 'pptx-viewer-shared';
+import { toggleSheet } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 
 import { nextMobileSheet } from './MobileChromeOverlay';

@@ -37,7 +37,7 @@ import {
 	reorderSmartArtNode,
 	updateSmartArtNodeText,
 } from './editor-insert';
-import { switchSmartArtLayoutData } from '../internal/shared';
+import { switchSmartArtLayoutData } from 'ooxml-ui/pptx';
 
 // ── Option constants (mirror the React panel) ───────────────────────────────
 

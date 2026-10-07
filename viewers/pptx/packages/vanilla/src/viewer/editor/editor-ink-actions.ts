@@ -1,10 +1,10 @@
-import type { StrokeToInkElementOpts } from 'pptx-viewer-shared';
+import type { StrokeToInkElementOpts } from 'ooxml-ui/pptx';
 import {
 	appendElementOnSlide,
 	findSlideElement,
 	removeElement,
 	strokeToInkElement,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Store, ViewerState } from '../state';
 import type { EditorOps } from './editor-operations';

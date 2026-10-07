@@ -1,5 +1,5 @@
 export { VIEWER_THEME, provideViewerTheme, themeStyle } from './viewer-theme';
-export type { ViewerTheme, ViewerThemeColors } from '../internal/shared';
+export type { ViewerTheme, ViewerThemeColors } from 'ooxml-ui/pptx';
 export {
 	defaultThemeColors,
 	defaultRadius,
@@ -12,5 +12,5 @@ export {
 	vermilionRadius,
 	THEME_CATALOG,
 	resolveThemeCatalogEntry,
-} from '../internal/shared';
-export type { ThemeCatalogEntry } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+export type { ThemeCatalogEntry } from 'ooxml-ui/pptx';

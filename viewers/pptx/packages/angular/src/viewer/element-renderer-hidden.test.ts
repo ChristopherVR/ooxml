@@ -19,7 +19,7 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
-import { isElementHidden, isElementRendered } from '../internal/shared';
+import { isElementHidden, isElementRendered } from 'ooxml-ui/pptx';
 import { componentSource as readComponentSource } from './component-source.test-support';
 
 const componentSource = readComponentSource(

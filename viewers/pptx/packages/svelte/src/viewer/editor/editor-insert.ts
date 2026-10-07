@@ -1,6 +1,6 @@
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
-import type { CanvasSize, ShapePresetType } from 'pptx-viewer-shared';
-import { mapSlideElements } from 'pptx-viewer-shared';
+import type { CanvasSize, ShapePresetType } from 'ooxml-ui/pptx';
+import { mapSlideElements } from 'ooxml-ui/pptx';
 
 /**
  * Element insertion for the Svelte editor.
@@ -16,7 +16,7 @@ import { mapSlideElements } from 'pptx-viewer-shared';
 
 // Re-export the shared factories so the insert UI imports everything from one
 // place (and the shared origin stays obvious).
-export { newShapeElement, newTableElement, newTextElement } from 'pptx-viewer-shared';
+export { newShapeElement, newTableElement, newTextElement } from 'ooxml-ui/pptx';
 
 /** Generate a fresh, collision-resistant element id (prefixed for clarity). */
 export function newElementId(): string {

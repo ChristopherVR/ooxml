@@ -12,7 +12,7 @@ import {
 import { TranslatePipe } from '@ngx-translate/core';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 
-import type { AuthoredSlideRange, CanvasSize, ShowOrderCustomShow } from '../internal/shared';
+import type { AuthoredSlideRange, CanvasSize, ShowOrderCustomShow } from 'ooxml-ui/pptx';
 import {
 	formatMobileElapsed,
 	mobileElapsedSince,
@@ -21,7 +21,7 @@ import {
 	presenterNextDisabled,
 	presenterPrevDisabled,
 	visibleTemplateElements as filterVisibleTemplateElements,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { currentSlideAt, nextSlideAfter, resolvePresenterNotes } from './presenter-view-helpers';
 import { SlideCanvasComponent } from './slide-canvas.component';
 

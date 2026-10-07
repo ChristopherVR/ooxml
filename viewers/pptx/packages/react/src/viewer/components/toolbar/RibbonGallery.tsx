@@ -1,9 +1,9 @@
-import { applyRibbonGalleryItem, buildRibbonGallery } from 'pptx-viewer-shared';
+import { applyRibbonGalleryItem, buildRibbonGallery } from 'ooxml-ui/pptx';
 import type {
 	PptxUiRibbonGalleryElement,
 	RibbonGalleryPickEvent,
 	RibbonGalleryPlacement,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React, { useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 

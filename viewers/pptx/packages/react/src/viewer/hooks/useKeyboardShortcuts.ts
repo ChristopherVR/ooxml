@@ -4,8 +4,8 @@ import {
 	isFeatureEnabled,
 	mapCustomizedEditorKey,
 	mapSlideShowStartKey,
-} from 'pptx-viewer-shared';
-import type { ResolvedCustomization } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { ResolvedCustomization } from 'ooxml-ui/pptx';
 /**
  * useKeyboardShortcuts: the editor keymap, wired into React.
  *

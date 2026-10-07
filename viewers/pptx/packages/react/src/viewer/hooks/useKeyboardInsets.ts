@@ -3,7 +3,7 @@ import {
 	computeScrollDelta,
 	isKeyboardOpen as isOpen,
 	readViewportMetrics,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 /**
  * useKeyboardInsets: track the on-screen-keyboard inset on touch devices and
  * keep the focused editable visible when the keyboard opens.

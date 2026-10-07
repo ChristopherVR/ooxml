@@ -25,4 +25,4 @@ export {
 	OOXML_PATTERN_PRESETS,
 	type OoxmlPatternPreset,
 	type GradientTileFlipMode,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

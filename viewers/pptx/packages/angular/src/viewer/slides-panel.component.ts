@@ -26,8 +26,8 @@ import {
 	hiddenSlideCue,
 	sectionAddAfterSlideIndex,
 	SLIDE_VIRTUALIZATION_THRESHOLD,
-} from '../internal/shared';
-import type { CanvasSize, HiddenSlideCue, SectionContextMenuCommandId } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { CanvasSize, HiddenSlideCue, SectionContextMenuCommandId } from 'ooxml-ui/pptx';
 import { EditorStateService } from './editor-state.service';
 import { SectionContextMenuComponent } from './section-context-menu.component';
 import { SlideCanvasComponent } from './slide-canvas.component';

@@ -17,7 +17,7 @@ import {
 } from '@angular/core';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 
-import type { CanvasSize, PresentationSnapshot } from '../internal/shared';
+import type { CanvasSize, PresentationSnapshot } from 'ooxml-ui/pptx';
 import { PresenterConsoleStripComponent } from './presenter-console-strip.component';
 import { PresenterSlideNavigatorComponent } from './presenter-slide-navigator.component';
 

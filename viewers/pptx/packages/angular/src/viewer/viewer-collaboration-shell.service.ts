@@ -1,7 +1,7 @@
 import { computed, effect, inject, Injectable, signal, untracked } from '@angular/core';
 
-import { resolveCollaborationShellState } from '../internal/shared';
-import type { CollaborationShellState } from '../internal/shared';
+import { resolveCollaborationShellState } from 'ooxml-ui/pptx';
+import type { CollaborationShellState } from 'ooxml-ui/pptx';
 import { CollaborationService } from './collaboration.service';
 import { EditorStateService } from './editor-state.service';
 import { LoadContentService } from './load-content.service';

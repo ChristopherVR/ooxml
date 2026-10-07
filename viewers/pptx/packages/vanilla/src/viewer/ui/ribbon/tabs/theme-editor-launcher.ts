@@ -1,4 +1,4 @@
-import { DESIGN_RIBBON_COMMANDS } from 'pptx-viewer-shared';
+import { DESIGN_RIBBON_COMMANDS } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../../i18n';
 import { createEl } from '../../../render';

@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import type { ChartPptxElement, PptxChartData, PptxChartType, PptxElement } from 'pptx-viewer-core';
-import type { ChartTypeSelectValue } from 'pptx-viewer-shared';
+import type { ChartTypeSelectValue } from 'ooxml-ui/pptx';
 import {
 	collapseChartTitleRunsForEdit,
 	GROUPING_OPTIONS,
 	GROUPING_SUPPORTED_TYPES,
 	CHART_TYPE_OPTIONS,
 	resolveDisplayedChartType,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { computed, inject } from 'vue';
 import { useI18n } from 'vue-i18n';
 

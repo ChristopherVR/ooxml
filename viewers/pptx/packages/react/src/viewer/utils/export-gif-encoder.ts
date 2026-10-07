@@ -5,5 +5,5 @@
  * in `pptx-viewer-shared` (`export/gif-encoder`). This module preserves the
  * historical `encodeGif` import path for React consumers/tests.
  */
-export { encodeGif } from 'pptx-viewer-shared';
-export type { EncodeGifOptions, GifFrame } from 'pptx-viewer-shared';
+export { encodeGif } from 'ooxml-ui/pptx';
+export type { EncodeGifOptions, GifFrame } from 'ooxml-ui/pptx';

@@ -18,7 +18,7 @@ import { describe, expect, it } from 'vitest';
 import {
 	buildContentPartStrokes,
 	contentPartViewBox,
-} from '../internal/shared-src/render/content-part-strokes';
+} from 'ooxml-ui/pptx/render/content-part-strokes';
 
 const inked = (): ContentPartPptxElement =>
 	({

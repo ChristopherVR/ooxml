@@ -22,8 +22,8 @@ import {
 	tableInspectorStateOf,
 	textAdvancedStateOf,
 	textWrapOf,
-} from 'pptx-viewer-shared';
-import type { InlineTextSelection } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { InlineTextSelection } from 'ooxml-ui/pptx';
 
 import type { ChartPartSelection } from '../render';
 import type { InspectorState } from '../ui';

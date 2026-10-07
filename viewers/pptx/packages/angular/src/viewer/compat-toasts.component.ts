@@ -28,7 +28,7 @@ import type {
 	CompatibilityWarningToast,
 	CompatToastsRequestEvent,
 	CompatToastsViewState,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { translationsSignal } from './translations-signal';
 
 @Component({

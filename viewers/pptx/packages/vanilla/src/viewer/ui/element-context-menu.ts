@@ -24,8 +24,8 @@ import {
 	isElementIdInteractive,
 	resolveContextMenuElementId,
 	resolveEditPointsAvailability,
-} from 'pptx-viewer-shared';
-import type { CustomizedContextMenuEntry, ResolvedCustomization } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { CustomizedContextMenuEntry, ResolvedCustomization } from 'ooxml-ui/pptx';
 
 import { findActiveElement } from '../editor/editor-active-elements';
 import { resolveTopLevelElementId } from '../editor/element-hit';

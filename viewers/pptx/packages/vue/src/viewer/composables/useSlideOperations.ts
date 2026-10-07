@@ -1,6 +1,6 @@
 import type { PptxSlide } from 'pptx-viewer-core';
 import { cloneSlide } from 'pptx-viewer-core';
-import { createBlankSlide, makeSlideId } from 'pptx-viewer-shared';
+import { createBlankSlide, makeSlideId } from 'ooxml-ui/pptx';
 import type { Ref } from 'vue';
 
 /**

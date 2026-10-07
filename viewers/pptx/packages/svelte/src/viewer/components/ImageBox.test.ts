@@ -1,5 +1,5 @@
 import type { PptxElement } from 'pptx-viewer-core';
-import { _resetNativeImageSizeCacheForTests } from 'pptx-viewer-shared';
+import { _resetNativeImageSizeCacheForTests } from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 

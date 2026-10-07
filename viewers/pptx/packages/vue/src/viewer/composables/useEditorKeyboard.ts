@@ -6,8 +6,8 @@ import {
 	stepFontSizePt,
 	textFontSizePtToPx,
 	textFontSizePxToPt,
-} from 'pptx-viewer-shared';
-import type { ResolvedCustomization } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { ResolvedCustomization } from 'ooxml-ui/pptx';
 import { ref } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
 

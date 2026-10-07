@@ -1,4 +1,4 @@
-import type { PptxUiRibbonDrawElement, RibbonDrawRequestEvent } from 'pptx-viewer-shared';
+import type { PptxUiRibbonDrawElement, RibbonDrawRequestEvent } from 'ooxml-ui/pptx';
 import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 

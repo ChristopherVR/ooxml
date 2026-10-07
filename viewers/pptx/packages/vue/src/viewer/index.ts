@@ -10,7 +10,7 @@ export type {
 	InlineListController,
 	InlineListReadResult,
 	PendingInlineTextEdit,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 export { default as SlideCanvas } from './components/SlideCanvas.vue';
 export { default as SlideStage } from './components/SlideStage.vue';
 export { default as ElementRenderer } from './components/ElementRenderer.vue';
@@ -26,7 +26,7 @@ export { default as EquationRenderer } from './components/EquationRenderer.vue';
 export { default as WordArtText } from './components/WordArtText.vue';
 export { default as CollaborationCursors } from './components/CollaborationCursors.vue';
 export { default as InlineTextEditor } from './components/InlineTextEditor.vue';
-export { overlayInlineTextSnapshot } from 'pptx-viewer-shared';
+export { overlayInlineTextSnapshot } from 'ooxml-ui/pptx';
 export { default as SelectionOverlay } from './components/SelectionOverlay.vue';
 export type { RemoteCursor } from './components/CollaborationCursors.vue';
 export { default as CollaborationStatusIndicator } from './components/CollaborationStatusIndicator.vue';
@@ -57,7 +57,7 @@ export type {
 	PptxAiUIMessage,
 	PptxAiWritePolicy,
 	PptxAiBridge,
-} from 'pptx-viewer-shared/ai';
+} from 'ooxml-ui/pptx/ai';
 
 // `RibbonToolbar`'s prop contract, for composing a custom ribbon/toolbar shell
 // with `useRibbonProps` (see `pptx-vue-viewer/internals`) instead of

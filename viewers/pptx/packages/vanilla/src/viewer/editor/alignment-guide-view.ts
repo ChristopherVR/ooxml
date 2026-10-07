@@ -1,4 +1,4 @@
-import type { Guide } from 'pptx-viewer-shared';
+import type { Guide } from 'ooxml-ui/pptx';
 
 /**
  * Draw/remove one guide's callbacks. Passed only while dragging is meaningful

@@ -13,5 +13,7 @@ const run = (cmd, args) =>
 rmSync('dist', { recursive: true, force: true });
 await Promise.all([
 	run('tsc', ['-p', 'tsconfig.build.json']),
+	run('tsc', ['-p', 'tsconfig.pptx.json']),
+	run('tsup', ['--config', 'tsup.pptx.config.ts']),
 	run('tsup', ['--config', 'tsup.config.ts']),
 ]);

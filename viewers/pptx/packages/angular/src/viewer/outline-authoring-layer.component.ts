@@ -29,8 +29,8 @@ import {
 } from '@angular/core';
 import type { PptxElement, PptxSlide, ShapePptxElement } from 'pptx-viewer-core';
 
-import type { CanvasSize } from '../internal/shared';
-import { canEditElementPoints, isEditPointsEnabled } from '../internal/shared';
+import type { CanvasSize } from 'ooxml-ui/pptx';
+import { canEditElementPoints, isEditPointsEnabled } from 'ooxml-ui/pptx';
 import type { EditPointsCommit } from './edit-points-overlay.component';
 import { EditPointsOverlayComponent } from './edit-points-overlay.component';
 import { EditorStateService } from './editor-state.service';

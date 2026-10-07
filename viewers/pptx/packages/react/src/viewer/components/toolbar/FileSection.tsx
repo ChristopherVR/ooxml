@@ -4,8 +4,8 @@ import {
 	BACKSTAGE_NAV_CLASSES,
 	customizeBackstageNav,
 	listBackstageRecentFiles,
-} from 'pptx-viewer-shared';
-import type { BackstagePage, BackstageRecentFile } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { BackstagePage, BackstageRecentFile } from 'ooxml-ui/pptx';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LuArrowLeft, LuFolderOpen, LuSettings } from 'react-icons/lu';

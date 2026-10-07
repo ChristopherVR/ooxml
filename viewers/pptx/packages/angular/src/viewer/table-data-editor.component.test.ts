@@ -25,7 +25,7 @@ import {
 	removeLastTableElementColumn,
 	removeLastTableElementRow,
 	setCellText,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 
 function tableElement(): TablePptxElement {
 	return {

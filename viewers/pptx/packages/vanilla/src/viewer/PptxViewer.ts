@@ -70,7 +70,7 @@ import {
 	THEME_CATALOG,
 	writeStoredViewerPrefs,
 	subtitleSettingsFromOptions,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type {
 	ElementUpdate,
 	ElementUpdateOptions,
@@ -82,8 +82,8 @@ import type {
 	ViewerMode,
 	ViewerQuickAccessOptions,
 	ViewerTheme,
-} from 'pptx-viewer-shared';
-import type { LocaleCatalogEntry } from 'pptx-viewer-shared/i18n';
+} from 'ooxml-ui/pptx';
+import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
 
 import type { AiChatMount, AiFocusController } from './ai';
 import { createAiFocusController, createVanillaAiBridge, mountAiChat } from './ai';

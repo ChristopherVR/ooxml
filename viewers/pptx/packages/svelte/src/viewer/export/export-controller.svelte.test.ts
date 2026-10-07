@@ -55,7 +55,7 @@ vi.mock(import('./export-print'), async (importOriginal) => ({
 // The deck-JSON export is pure serialization in `pptx-viewer-shared`
 // (`exportDeckJson`); mock it so this suite only covers the delegation.
 const { exportDeckJsonMock } = vi.hoisted(() => ({ exportDeckJsonMock: vi.fn() }));
-vi.mock(import('pptx-viewer-shared'), async (importOriginal) => ({
+vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => ({
 	...(await importOriginal()),
 	exportDeckJson: exportDeckJsonMock,
 }));

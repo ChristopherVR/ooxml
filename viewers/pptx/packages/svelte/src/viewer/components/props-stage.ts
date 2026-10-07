@@ -1,5 +1,5 @@
 import type { PptxChartData, PptxComment, PptxSlide } from 'pptx-viewer-core';
-import type { CanvasSize } from 'pptx-viewer-shared';
+import type { CanvasSize } from 'ooxml-ui/pptx';
 
 /**
  * Prop contracts for the slide surfaces: the pure `SlideStage` (used by the

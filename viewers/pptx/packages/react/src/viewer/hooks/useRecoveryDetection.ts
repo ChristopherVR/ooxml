@@ -16,8 +16,8 @@ import {
 	discardAutosaveRecovery,
 	probeAutosaveRecovery,
 	shouldProbeAutosaveRecovery,
-} from 'pptx-viewer-shared';
-import type { AutosaveRecord, AutosaveRecoveryPrompt } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { AutosaveRecord, AutosaveRecoveryPrompt } from 'ooxml-ui/pptx';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 // ---------------------------------------------------------------------------

@@ -7,8 +7,8 @@ import {
 	makeSlideId,
 	prepareElementForInsertion,
 	slideSpaceElement,
-} from 'pptx-viewer-shared';
-import type { PowerPointViewerAPI, ViewerMode } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { PowerPointViewerAPI, ViewerMode } from 'ooxml-ui/pptx';
 
 import type { ViewerState } from '../state/viewer-state.svelte';
 import type { EditorState } from './editor-state.svelte';

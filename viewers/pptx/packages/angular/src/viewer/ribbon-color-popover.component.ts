@@ -10,7 +10,7 @@ import { ChangeDetectionStrategy, Component, inject, input, output } from '@angu
 import { TranslatePipe } from '@ngx-translate/core';
 import type { PptxThemeColorRef } from 'pptx-viewer-core';
 
-import type { ThemeColorPickerCommit } from '../internal/shared';
+import type { ThemeColorPickerCommit } from 'ooxml-ui/pptx';
 import { AnchoredPopupDirective } from './anchored-popup.directive';
 import { RecentColorsRowComponent } from './recent-colors-row.component';
 import { RecentColorsService } from './recent-colors.service';

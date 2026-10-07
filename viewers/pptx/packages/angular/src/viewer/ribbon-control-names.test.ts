@@ -17,14 +17,14 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { keyToLabel, translationsEn } from '../internal/shared-src/i18n';
+import { keyToLabel, translationsEn } from 'ooxml-ui/pptx/i18n';
 import {
 	EMPHASIS_PRESET_VALUES,
 	ENTRANCE_PRESET_VALUES,
 	EXIT_PRESET_VALUES,
-} from '../internal/shared-src/render/animation-authoring';
-import { animationPresetLabelKey } from '../internal/shared-src/render/animation-preset-labels';
-import { ANIMATION_RIBBON_CATEGORIES as ANIMATION_PRESET_CATEGORIES } from '../internal/shared-src/render/ribbon-animations-state';
+} from 'ooxml-ui/pptx/render/animation-authoring';
+import { animationPresetLabelKey } from 'ooxml-ui/pptx/render/animation-preset-labels';
+import { ANIMATION_RIBBON_CATEGORIES as ANIMATION_PRESET_CATEGORIES } from 'ooxml-ui/pptx/render/ribbon-animations-state';
 
 /** The label a ribbon control renders, resolved the way the Angular host does. */
 function label(key: string): string {

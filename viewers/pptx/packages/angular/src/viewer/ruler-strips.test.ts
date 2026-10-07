@@ -14,7 +14,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { PX_PER_CM, PX_PER_INCH, RULER_THICKNESS } from '../internal/shared';
+import { PX_PER_CM, PX_PER_INCH, RULER_THICKNESS } from 'ooxml-ui/pptx';
 import { RulerGuidesService } from './ruler-guides.service';
 import { rulerHighlight, rulerStripTicks } from './ruler-strips';
 

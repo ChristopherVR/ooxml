@@ -7,8 +7,8 @@
  * `resolveExportCaptureDecision` in `pptx-viewer-shared`), and encodes them
  * via the pure-JS GIF89a encoder in export-gif-encoder.ts.
  */
-import { clampGifDimensions, GIF_POST_CAPTURE_MAX_SIDE } from 'pptx-viewer-shared';
-import { translationsEn } from 'pptx-viewer-shared/i18n';
+import { clampGifDimensions, GIF_POST_CAPTURE_MAX_SIDE } from 'ooxml-ui/pptx';
+import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import React from 'react';
 
 import { encodeGif } from './export-gif-encoder';

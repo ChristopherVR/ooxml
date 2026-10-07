@@ -5,11 +5,11 @@
  * assembly) now live in `pptx-viewer-shared` (`render/share-form`). This shim
  * preserves the historical import surface for the Vanilla share dialog.
  */
-export type { JoinSessionFields, ShareDefaults, ShareFormFields } from 'pptx-viewer-shared';
+export type { JoinSessionFields, ShareDefaults, ShareFormFields } from 'ooxml-ui/pptx';
 export {
 	buildJoinConfig,
 	buildShareConfig,
 	canJoinShare,
 	canStartShare,
 	seedShareFields,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

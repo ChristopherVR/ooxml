@@ -3,7 +3,7 @@ import type {
 	PresentationBlackout,
 	PresentToolbarRequestEvent,
 	PresentToolbarViewState,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

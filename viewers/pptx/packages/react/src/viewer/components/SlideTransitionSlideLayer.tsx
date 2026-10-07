@@ -5,7 +5,7 @@ import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
  * transition overlays. Split out of `PresentationTransitionOverlay.tsx` so
  * `FragmentedTransitionLayer.tsx` can reuse it without a circular import.
  */
-import { visibleTemplateElements } from 'pptx-viewer-shared';
+import { visibleTemplateElements } from 'ooxml-ui/pptx';
 import React from 'react';
 
 import type { CanvasSize } from '../types';

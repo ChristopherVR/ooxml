@@ -1,4 +1,4 @@
-import type { InkPoint } from 'pptx-viewer-shared';
+import type { InkPoint } from 'ooxml-ui/pptx';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { InkDrawTool } from './editor-ink-controller.svelte';

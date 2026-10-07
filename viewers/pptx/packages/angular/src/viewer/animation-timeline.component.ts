@@ -16,8 +16,8 @@ import {
 	buildAnimationTimelineBars,
 	buildAnimationTimelineRows,
 	reorderAnimationTimelineRows,
-} from '../internal/shared';
-import type { AnimationTimelineBar, AnimationTimelineRow } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { AnimationTimelineBar, AnimationTimelineRow } from 'ooxml-ui/pptx';
 import { getAnimationElementLabel } from './animation-author-view';
 import { previewAngularAnimation, stopAngularAnimationPreview } from './animation-preview-player';
 

@@ -1,0 +1,29 @@
+{
+	"compilerOptions": {
+		"ignoreDeprecations": "6.0",
+		"target": "ES2022",
+		"module": "ESNext",
+		"moduleResolution": "bundler",
+		"lib": ["ES2022", "DOM", "DOM.Iterable"],
+		"strict": true,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"forceConsistentCasingInFileNames": true,
+		"declaration": true,
+		"declarationMap": true,
+		"outDir": "dist",
+		"rootDir": "src",
+		"noEmit": false,
+		"resolveJsonModule": true,
+		"isolatedModules": true,
+		"noUnusedLocals": false,
+		"noUnusedParameters": false,
+		"emitDeclarationOnly": true,
+		"paths": {
+			"ooxml-core/*": ["../core/dist/*/index.d.ts"]
+		}
+	},
+	"include": ["src/pptx/**/*.ts"],
+	"exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.test.tsx"],
+	"files": ["src/raw.d.ts"]
+}

@@ -12,7 +12,7 @@ import {
 	resolveSecondaryAxisId,
 	schemaLabel,
 	upsertDataPoint,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import { numbers, set, setOptions, value } from './chart-exhaustive-controls';

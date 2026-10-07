@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
 import type { PptxElement } from 'pptx-viewer-core';
-import { RIBBON_SHAPE_SWATCHES } from 'pptx-viewer-shared';
+import { RIBBON_SHAPE_SWATCHES } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 import { ref } from 'vue';
 

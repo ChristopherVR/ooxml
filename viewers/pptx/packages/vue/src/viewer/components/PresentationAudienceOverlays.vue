@@ -9,7 +9,7 @@
  * and each one is positioned in the OVERLAY's coordinate space (percentages of
  * the viewport), not the slide's, so they must not sit inside the scaled frame.
  */
-import type { PresentationSnapshot } from 'pptx-viewer-shared';
+import type { PresentationSnapshot } from 'ooxml-ui/pptx';
 
 defineProps<{ snapshot: PresentationSnapshot }>();
 </script>

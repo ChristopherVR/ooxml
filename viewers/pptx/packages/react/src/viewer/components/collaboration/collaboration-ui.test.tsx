@@ -1,4 +1,4 @@
-import { translationsEn } from 'pptx-viewer-shared/i18n';
+import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import React from 'react';
 /**
  * Tests for collaboration UI components: pure logic and rendering checks.

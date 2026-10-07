@@ -11,7 +11,7 @@ import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { buildSlidePaneContextMenuEntries } from '../internal/shared';
+import { buildSlidePaneContextMenuEntries } from 'ooxml-ui/pptx';
 
 const SOURCE = readFileSync(
 	path.join(import.meta.dirname, 'slide-pane-context-menu.component.ts'),

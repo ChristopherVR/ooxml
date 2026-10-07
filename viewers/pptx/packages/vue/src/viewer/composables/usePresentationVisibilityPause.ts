@@ -12,7 +12,7 @@
  * `presenting`), so teardown also stops all cross-slide persistent audio: a
  * track that "plays across slides" still ends with the show, never after it.
  */
-import { attachPresentationVisibilityPause, stopAllPersistentAudio } from 'pptx-viewer-shared';
+import { attachPresentationVisibilityPause, stopAllPersistentAudio } from 'ooxml-ui/pptx';
 import { onBeforeUnmount, onMounted } from 'vue';
 import type { Ref } from 'vue';
 

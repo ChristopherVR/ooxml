@@ -2,8 +2,8 @@
    piece of state/memoization; merging them into one `const` statement would
    hurt readability (and has previously broken the React compiler's ability to
    track separate hook boundaries), not help it. */
-import type { AnimationTimelineRow } from 'pptx-viewer-shared';
-import { applyAnimationTimelineOrder, reorderAnimationTimelineRows } from 'pptx-viewer-shared';
+import type { AnimationTimelineRow } from 'ooxml-ui/pptx';
+import { applyAnimationTimelineOrder, reorderAnimationTimelineRows } from 'ooxml-ui/pptx';
 import React, { useCallback, useRef, useState } from 'react';
 
 import type { AnimationUpdater } from './animation-handler-types';

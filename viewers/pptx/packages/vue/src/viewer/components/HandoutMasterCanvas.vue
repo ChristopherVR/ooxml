@@ -13,8 +13,8 @@
  * Props : `{ handoutMaster, canvasSize, slidesPerPage, slideThumbnails?, pageNumber? }`
  */
 import type { PptxElement, PptxHandoutMaster } from 'pptx-viewer-core';
-import { computeHandoutSlotLayout, DEFAULT_MASTER_PAGE_SIZE } from 'pptx-viewer-shared';
-import type { MasterPageRect } from 'pptx-viewer-shared';
+import { computeHandoutSlotLayout, DEFAULT_MASTER_PAGE_SIZE } from 'ooxml-ui/pptx';
+import type { MasterPageRect } from 'ooxml-ui/pptx';
 import type { CSSProperties } from 'vue';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';

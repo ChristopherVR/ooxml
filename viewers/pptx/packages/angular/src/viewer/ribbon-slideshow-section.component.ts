@@ -12,8 +12,8 @@ import type {
 	RibbonCommandRequestEvent,
 	SlideShowOptionsChangeEvent,
 	ToolbarActionId,
-} from '../internal/shared';
-import { SLIDE_SHOW_COMMAND_GROUPS, SLIDE_SHOW_OPTIONS } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import { SLIDE_SHOW_COMMAND_GROUPS, SLIDE_SHOW_OPTIONS } from 'ooxml-ui/pptx';
 import { LoadContentService } from './load-content.service';
 import { SubtitleSettingsControlComponent } from './subtitle-settings-control.component';
 import { toolbarVisibility } from './toolbar-visibility';

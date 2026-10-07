@@ -1,4 +1,4 @@
-import { resolveCustomization } from 'pptx-viewer-shared';
+import { resolveCustomization } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 
 import { resolveShortcutAction } from './useKeyboardShortcuts';

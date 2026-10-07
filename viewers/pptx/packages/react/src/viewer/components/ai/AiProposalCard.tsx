@@ -1,5 +1,5 @@
-import type { ProposalView } from 'pptx-viewer-shared/ai';
-import { humanizeDiffLine } from 'pptx-viewer-shared/ai';
+import type { ProposalView } from 'ooxml-ui/pptx/ai';
+import { humanizeDiffLine } from 'ooxml-ui/pptx/ai';
 /**
  * AiProposalCard: a single staged, not-yet-applied change the assistant is
  * suggesting. Reads like a human suggestion: a clear title, a plain-language

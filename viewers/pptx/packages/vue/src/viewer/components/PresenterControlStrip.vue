@@ -9,12 +9,12 @@
  * (`presenterConsoleAction`) are shared too; this maps the resulting action to the
  * emits the console host already handles.
  */
-import { presenterConsoleAction, presenterConsoleViewState } from 'pptx-viewer-shared';
+import { presenterConsoleAction, presenterConsoleViewState } from 'ooxml-ui/pptx';
 import type {
 	PresentationPointerTool,
 	PresentationSnapshot,
 	PresenterConsoleRequestEvent,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

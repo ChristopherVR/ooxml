@@ -1,5 +1,5 @@
-import type { ViewerAddinRow, ViewerAddinStatus } from 'pptx-viewer-shared';
-import { resolveViewerAddinRows } from 'pptx-viewer-shared';
+import type { ViewerAddinRow, ViewerAddinStatus } from 'ooxml-ui/pptx';
+import { resolveViewerAddinRows } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';

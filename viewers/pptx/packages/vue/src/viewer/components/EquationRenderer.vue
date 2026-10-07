@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import type { PptxElement, TextSegment } from 'pptx-viewer-core';
 import { hasTextProperties } from 'pptx-viewer-core';
-import type { OmmlNode } from 'pptx-viewer-shared';
-import { convertOmmlToMathMl, sanitizeMathMl } from 'pptx-viewer-shared';
+import type { OmmlNode } from 'ooxml-ui/pptx';
+import { convertOmmlToMathMl, sanitizeMathMl } from 'ooxml-ui/pptx';
 import type { CSSProperties } from 'vue';
 import { computed } from 'vue';
 

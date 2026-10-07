@@ -8,7 +8,7 @@ import {
 	hasPersistentAudio,
 	registerPersistentAudio,
 	stopAllPersistentAudio,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { componentSource } from './component-source.test-support';
 import {
 	attachShowVisibilityPause,

@@ -4,8 +4,8 @@
  * styles come from the shared `pptx-ui-ribbon-home-clipboard` element; this
  * adapter only maps its one `home-request` intent onto the existing handlers.
  */
-import type { RibbonHomeRequestEvent } from 'pptx-viewer-shared';
-import { clipboardHomeControls, homeSnapshotTranslator } from 'pptx-viewer-shared';
+import type { RibbonHomeRequestEvent } from 'ooxml-ui/pptx';
+import { clipboardHomeControls, homeSnapshotTranslator } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

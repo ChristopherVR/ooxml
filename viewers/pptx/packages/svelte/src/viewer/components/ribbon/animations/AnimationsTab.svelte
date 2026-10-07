@@ -12,7 +12,7 @@
 	 * inspector lifecycle and this binding's own play-order timeline stay native.
 	 */
 	import type { PptxAnimationPreset } from 'pptx-viewer-core';
-	import type { RibbonAnimationsRequestEvent } from 'pptx-viewer-shared';
+	import type { RibbonAnimationsRequestEvent } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../../i18n/context';
 	import type { EditorState } from '../../../editor/editor-state.svelte';

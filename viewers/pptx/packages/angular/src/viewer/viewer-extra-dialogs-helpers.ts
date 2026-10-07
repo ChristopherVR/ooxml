@@ -18,7 +18,7 @@ import type {
 	TextStyle,
 } from 'pptx-viewer-core';
 
-import type { SlideDiff, ViewerAddinStatus } from '../internal/shared';
+import type { SlideDiff, ViewerAddinStatus } from 'ooxml-ui/pptx';
 import { strokeToInkElement } from './ink-drawing-helpers';
 import type { SlideAnnotationMap } from './presentation-annotations-helpers';
 

@@ -2,7 +2,7 @@ import type {
 	PptxUiReadOnlyBannerElement,
 	ReadOnlyBannerIntent,
 	ReadOnlyRecommendation,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { useTranslation } from 'react-i18next';
 
 import { useWebControl } from '../hooks/useWebControl';

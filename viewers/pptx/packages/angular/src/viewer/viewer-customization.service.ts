@@ -26,7 +26,7 @@ import {
 	isFeatureEnabled,
 	isPanelVisible,
 	resolveEffectiveHiddenActions,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import type {
 	ResolvedCustomization,
 	ToolbarActionId,
@@ -36,7 +36,7 @@ import type {
 	ViewerFeatureId,
 	ViewerPanelId,
 	ViewerQuickAccessOptions,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { ViewerOptionsService } from './viewer-options.service';
 
 /** `inject()` that tolerates a plain `new` outside an injection context. */

@@ -1,4 +1,4 @@
-import { tableCellPointerIntent } from 'pptx-viewer-shared';
+import { tableCellPointerIntent } from 'ooxml-ui/pptx';
 
 import { readTableCellTarget } from './context-menu-dispatch';
 import type { EditorState } from './editor-state.svelte';

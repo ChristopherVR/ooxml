@@ -2,7 +2,7 @@ import type {
 	ContextMenuRequestEvent,
 	ContextMenuViewState,
 	PptxUiContextMenuElement,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type React from 'react';
 import { useEffect, useRef } from 'react';
 

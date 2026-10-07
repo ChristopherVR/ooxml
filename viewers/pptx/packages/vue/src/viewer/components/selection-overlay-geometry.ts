@@ -14,8 +14,8 @@
  *
  * @module viewer/components/selection-overlay-geometry
  */
-import type { InteractionBox, ResizeHandleId } from 'pptx-viewer-shared';
-import { RESIZE_HANDLE_GEOMETRY, RESIZE_HANDLES, ROTATE_STEM_PX } from 'pptx-viewer-shared';
+import type { InteractionBox, ResizeHandleId } from 'ooxml-ui/pptx';
+import { RESIZE_HANDLE_GEOMETRY, RESIZE_HANDLES, ROTATE_STEM_PX } from 'ooxml-ui/pptx';
 
 /** A selected element's box, carrying the id the gesture reports back. */
 export interface SelectedBox extends InteractionBox {

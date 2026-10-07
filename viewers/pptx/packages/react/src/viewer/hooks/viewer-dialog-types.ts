@@ -8,7 +8,7 @@
  * @module viewer-dialog-types
  */
 import type { PptxSlide, PptxPresentationProperties } from 'pptx-viewer-core';
-import type { FontEmbeddingDescriptor } from 'pptx-viewer-shared';
+import type { FontEmbeddingDescriptor } from 'ooxml-ui/pptx';
 
 import type { CanvasSize } from '../types';
 import type { ViewerMode } from '../types-core';

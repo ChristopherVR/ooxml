@@ -132,7 +132,6 @@
 		"@types/react": "^19.3.0",
 		"@types/react-dom": "^19.3.0",
 		"pptx-viewer-core": "workspace:*",
-		"pptx-viewer-shared": "workspace:*",
 		"tailwindcss": "^4.3.3",
 		"tsdown": "^0.23.0",
 		"tsup": "^8.5.1",

@@ -14,8 +14,8 @@
 	 * comes from the shared {@link AiChangeAnimator} via the panel controller, so no
 	 * element lookup is needed.
 	 */
-	import type { AiChangeBatch, AiElementChange, ResolvedAiChangeAnimationConfig } from 'pptx-viewer-shared/ai';
-	import { aiChangeAnimationCss, changeGhostStyle } from 'pptx-viewer-shared/ai';
+	import type { AiChangeBatch, AiElementChange, ResolvedAiChangeAnimationConfig } from 'ooxml-ui/pptx/ai';
+	import { aiChangeAnimationCss, changeGhostStyle } from 'ooxml-ui/pptx/ai';
 
 	const {
 		batch,

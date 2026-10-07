@@ -1,5 +1,5 @@
 import type { PptxSlide } from 'pptx-viewer-core';
-import { nextAutosaveDelayMs } from 'pptx-viewer-shared';
+import { nextAutosaveDelayMs } from 'ooxml-ui/pptx';
 import { onScopeDispose, ref, toValue, watch } from 'vue';
 import type { Ref } from 'vue';
 

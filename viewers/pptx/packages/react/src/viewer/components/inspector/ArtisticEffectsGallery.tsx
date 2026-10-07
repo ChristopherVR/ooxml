@@ -1,5 +1,5 @@
 import type { PptxImageLikeElement } from 'pptx-viewer-core';
-import { ARTISTIC_EFFECTS } from 'pptx-viewer-shared';
+import { ARTISTIC_EFFECTS } from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 

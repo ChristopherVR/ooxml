@@ -1,5 +1,5 @@
 import type { PptxElement } from 'pptx-viewer-core';
-import { getShapeAdjustmentHandleDescriptor } from 'pptx-viewer-shared';
+import { getShapeAdjustmentHandleDescriptor } from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it } from 'vitest';
 

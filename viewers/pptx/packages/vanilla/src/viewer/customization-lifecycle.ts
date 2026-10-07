@@ -20,13 +20,13 @@ import {
 	isFeatureEnabled,
 	isPanelVisible,
 	resolveEffectiveHiddenActions,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type {
 	ResolvedCustomization,
 	ViewerCustomizationController,
 	ViewerDialogId,
 	ViewerOptionsStore,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { PptxViewerOptions } from './types';
 

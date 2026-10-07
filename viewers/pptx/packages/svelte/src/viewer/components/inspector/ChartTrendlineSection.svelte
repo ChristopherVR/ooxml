@@ -17,7 +17,7 @@
 	 * label next to the line, so they repaint immediately.
 	 */
 	import type { PptxChartData, PptxChartTrendline } from 'pptx-viewer-core';
-	import { TRENDLINE_SUPPORTED_TYPES, TRENDLINE_TYPE_OPTIONS } from 'pptx-viewer-shared';
+	import { TRENDLINE_SUPPORTED_TYPES, TRENDLINE_TYPE_OPTIONS } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 

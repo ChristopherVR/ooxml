@@ -17,7 +17,7 @@
  *
  * @module ThreeView
  */
-import { defineThreeViewElement } from 'pptx-viewer-shared';
+import { defineThreeViewElement } from 'ooxml-ui/pptx';
 import type {
 	ChartPartRef,
 	PptxThreeViewElement,
@@ -25,7 +25,7 @@ import type {
 	ThreeViewDragDetail,
 	ThreeViewSpec,
 	ThreeViewState,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React, { useCallback, useLayoutEffect, useRef } from 'react';
 
 defineThreeViewElement();

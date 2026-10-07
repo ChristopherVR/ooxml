@@ -11,7 +11,7 @@
 	 * signal between slides).
 	 */
 	import DialogFooter from './DialogFooter.svelte';
-	import { clampPercent } from 'pptx-viewer-shared';
+	import { clampPercent } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 

@@ -39,8 +39,8 @@ import {
 	motionPathFor,
 	motionPathToSvgD,
 	setMotionPathEnd,
-} from '../internal/shared';
-import type { CanvasSize, MotionPathFrame } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { CanvasSize, MotionPathFrame } from 'ooxml-ui/pptx';
 
 /** Live drag state: which pointer owns the handle and where it last was. */
 interface EndHandleDrag {

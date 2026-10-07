@@ -14,8 +14,8 @@ import {
 	setSmartArtNodeStyle,
 	updateSmartArtNodeText,
 } from 'pptx-viewer-core';
-import { rebuildDrawingShapesIfCleared } from 'pptx-viewer-shared';
-import type { BoundingBox } from 'pptx-viewer-shared';
+import { rebuildDrawingShapesIfCleared } from 'ooxml-ui/pptx';
+import type { BoundingBox } from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 

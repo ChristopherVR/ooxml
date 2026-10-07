@@ -1,10 +1,10 @@
-import type { ViewerOptions } from 'pptx-viewer-shared';
+import type { ViewerOptions } from 'ooxml-ui/pptx';
 import {
 	deleteAutosaveSnapshot,
 	listAutosaveSnapshots,
 	resolveExpiredAutosaveSnapshots,
 	shouldClearAutosaveCacheOnClose,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { useEffect } from 'react';
 
 // Keep this callback outside the viewer's render scope: browser listeners must

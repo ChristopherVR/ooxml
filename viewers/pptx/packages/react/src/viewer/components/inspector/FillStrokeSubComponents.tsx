@@ -1,5 +1,5 @@
 import type { PptxThemeColorRef } from 'pptx-viewer-core';
-import { OFFICE_COLOR_SWATCHES } from 'pptx-viewer-shared';
+import { OFFICE_COLOR_SWATCHES } from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { LuPipette } from 'react-icons/lu';

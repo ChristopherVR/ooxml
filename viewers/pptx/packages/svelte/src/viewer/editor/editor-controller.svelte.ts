@@ -8,7 +8,7 @@ import type {
 	InlineTextEditSnapshot,
 	InlineListController,
 	CollaborationInlineEditor,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	armEditorKeyboard,
 	collectConnectorSiteCandidates,
@@ -28,7 +28,7 @@ import {
 	setPendingCaretPoint,
 	slideSpaceElement,
 	withConnectorEndpointUpdate,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import { readTableCellTarget } from './context-menu-dispatch';
 import type { AdjustGestureController } from './editor-adjust-gesture';

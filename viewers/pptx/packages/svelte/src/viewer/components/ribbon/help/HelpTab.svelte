@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { HELP_RIBBON_COMMANDS } from 'pptx-viewer-shared';
+	import { HELP_RIBBON_COMMANDS } from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../../../i18n/context';
 	import type { HelpTabProps } from './help-tab-props';
 

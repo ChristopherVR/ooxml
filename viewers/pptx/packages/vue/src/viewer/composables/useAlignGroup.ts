@@ -7,8 +7,8 @@ import {
 	groupElements,
 	isTemplateElementId,
 	ungroupElements,
-} from 'pptx-viewer-shared';
-import type { AlignEdge, DistributeAxis } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { AlignEdge, DistributeAxis } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
 

@@ -11,5 +11,5 @@ export {
 	themeColorLabel,
 	buildThemeColorGrid,
 	themeColorSchemeToSwatches,
-} from 'pptx-viewer-shared';
-export type { ThemeColorTintRow } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+export type { ThemeColorTintRow } from 'ooxml-ui/pptx';

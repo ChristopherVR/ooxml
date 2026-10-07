@@ -19,8 +19,8 @@ import { Injector, runInInjectionContext } from '@angular/core';
 import type { PptxCustomShow, PptxSlide } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 
-import { resolveAuthoredCustomShowId, SLIDE_SIZE_PRESETS } from '../internal/shared';
-import type { DeckSaveOptions, DeckSaveSerializer } from '../internal/shared';
+import { resolveAuthoredCustomShowId, SLIDE_SIZE_PRESETS } from 'ooxml-ui/pptx';
+import type { DeckSaveOptions, DeckSaveSerializer } from 'ooxml-ui/pptx';
 import {
 	activeCustomShowMembership,
 	customShowsFromDeck,

@@ -32,7 +32,7 @@ import {
 	parentSelection,
 	slideSpaceElement,
 	slideSpaceMembers,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import type { Box } from './drag-resize';
 
 /** A point in slide px (stage coordinates, zoom already divided out). */

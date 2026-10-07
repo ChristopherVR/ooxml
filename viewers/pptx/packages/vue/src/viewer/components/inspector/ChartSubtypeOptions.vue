@@ -7,7 +7,7 @@ import {
 	radarStylePatch,
 	SURFACE_WIREFRAME_OPTIONS,
 	surfaceWireframePatch,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

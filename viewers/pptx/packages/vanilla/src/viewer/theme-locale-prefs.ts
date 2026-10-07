@@ -1,6 +1,6 @@
-import type { ThemeCatalogEntry, ViewerTheme } from 'pptx-viewer-shared';
-import type { LocaleCatalogEntry } from 'pptx-viewer-shared/i18n';
-import { LOCALE_CATALOG } from 'pptx-viewer-shared/i18n';
+import type { ThemeCatalogEntry, ViewerTheme } from 'ooxml-ui/pptx';
+import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
+import { LOCALE_CATALOG } from 'ooxml-ui/pptx/i18n';
 
 import type { PptxViewerOptions } from './types';
 

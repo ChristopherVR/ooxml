@@ -14,7 +14,7 @@ import { TranslateService } from '@ngx-translate/core';
  */
 import { describe, expect, it } from 'vitest';
 
-import { keyToLabel, translationsEn } from '../internal/shared-src/i18n';
+import { keyToLabel, translationsEn } from 'ooxml-ui/pptx/i18n';
 import { themeColorSlotLabelKey } from './schema-token-labels';
 import {
 	ThemeEditorFieldsComponent,

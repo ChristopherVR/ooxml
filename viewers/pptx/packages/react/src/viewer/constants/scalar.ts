@@ -20,7 +20,7 @@ export const DEFAULT_TEXT_FONT_SIZE = 24;
 // Re-exported from pptx-viewer-shared: the "Recent Colors" row is a
 // cross-binding contract (`render/recent-colors.ts`), so the cap is defined
 // once there rather than copied into each binding's constants file.
-export { RECENT_COLOR_LIMIT } from 'pptx-viewer-shared';
+export { RECENT_COLOR_LIMIT } from 'ooxml-ui/pptx';
 export const HYPERLINK_COLOR = '#0563C1';
 export const DEFAULT_TABLE_ROWS = 3;
 export const DEFAULT_TABLE_COLUMNS = 3;
@@ -34,7 +34,7 @@ export const MINIMAP_WIDTH = 180;
 // Re-exported from pptx-viewer-shared: the zoom bounds are a cross-binding
 // contract (the same +/- control exists in all five), so they are defined once
 // there rather than copied into each binding's constants file.
-export { MAX_ZOOM_SCALE, MIN_ZOOM_SCALE } from 'pptx-viewer-shared';
+export { MAX_ZOOM_SCALE, MIN_ZOOM_SCALE } from 'ooxml-ui/pptx';
 export const ZOOM_TO_SELECTION_PADDING = 96;
 export const GRID_SIZE = 8;
 export const SNAP_THRESHOLD = 6;

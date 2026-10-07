@@ -9,12 +9,12 @@
  * adapter over the shared `pptx-ui-paste-options`: this measures the pasted
  * element and the element renders, positions and dismisses the strip.
  */
-import { findCanvasElementNode, registerPptxWebControls } from 'pptx-viewer-shared';
+import { findCanvasElementNode, registerPptxWebControls } from 'ooxml-ui/pptx';
 import type {
 	PasteOptionsRequestEvent,
 	PasteSpecialFormat,
 	PptxUiPasteOptionsElement,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import type { Store, ViewerState } from '../state';

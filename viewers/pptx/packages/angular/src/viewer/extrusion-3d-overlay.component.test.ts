@@ -19,8 +19,8 @@ import { Injector, runInInjectionContext, signal } from '@angular/core';
 import type { InputSignal } from '@angular/core';
 import { describe, expect, it } from 'vitest';
 
-import { build3DExtrusionData } from '../internal/shared';
-import type { Extrusion3DData } from '../internal/shared';
+import { build3DExtrusionData } from 'ooxml-ui/pptx';
+import type { Extrusion3DData } from 'ooxml-ui/pptx';
 import { Extrusion3DOverlayComponent } from './extrusion-3d-overlay.component';
 
 function read(file: string): string {

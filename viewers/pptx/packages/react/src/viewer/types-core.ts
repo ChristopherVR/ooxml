@@ -18,7 +18,7 @@ import type { PptxElement, PptxSlide, ShapeStyle } from 'pptx-viewer-core';
  *
  * Re-exported from `pptx-viewer-shared` for backward compatibility.
  */
-export type { ViewerMode } from 'pptx-viewer-shared';
+export type { ViewerMode } from 'ooxml-ui/pptx';
 
 // ---------------------------------------------------------------------------
 // Shape types
@@ -162,7 +162,7 @@ export interface ResizeState {
  * it on the floor, leaving React's drag with nothing to convert pointer travel
  * with. One declaration, five bindings.
  */
-export type { ShapeAdjustmentHandleDescriptor, ShapeAdjustmentDragState } from 'pptx-viewer-shared';
+export type { ShapeAdjustmentHandleDescriptor, ShapeAdjustmentDragState } from 'ooxml-ui/pptx';
 
 // ---------------------------------------------------------------------------
 // Clipboard / history
@@ -174,7 +174,7 @@ export type { ShapeAdjustmentHandleDescriptor, ShapeAdjustmentDragState } from '
  * Re-exported from `pptx-viewer-shared` (render/element-clipboard.ts), which
  * owns the shared clipboard payload/codec logic.
  */
-export type { ElementClipboardPayload } from 'pptx-viewer-shared';
+export type { ElementClipboardPayload } from 'ooxml-ui/pptx';
 
 /**
  * A snapshot of editor state captured for undo/redo history.

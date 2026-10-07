@@ -8,7 +8,7 @@ import {
 	buildAnimationTimelineRows,
 	moveAnimationTimelineRowBy,
 	reorderAnimationTo,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { getAnimationElementLabel, getAnimationTriggerElements } from './animation-author-view';
 import { buildAnimationTimelineBars } from './animation-timeline.component';
 

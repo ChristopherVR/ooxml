@@ -10,8 +10,8 @@ import {
 	createSnapshotTextPositions,
 	findElementYMap,
 	reconcileSlidesInYDoc,
-} from '../internal/shared';
-import type { CollaborationLivePatcher, YjsFactories } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { CollaborationLivePatcher, YjsFactories } from 'ooxml-ui/pptx';
 import { CollaborationService } from './collaboration.service';
 import { EditorStateService } from './editor-state.service';
 import { InlineListEditorComponent } from './inline-list-editor.component';

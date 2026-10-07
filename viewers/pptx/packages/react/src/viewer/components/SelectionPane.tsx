@@ -1,5 +1,5 @@
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
-import { resolveSelectionPaneRename } from 'pptx-viewer-shared';
+import { resolveSelectionPaneRename } from 'ooxml-ui/pptx';
 /**
  * Selection Pane: lists all elements on the active slide with
  * visibility toggles, rename-on-double-click, and drag-to-reorder.

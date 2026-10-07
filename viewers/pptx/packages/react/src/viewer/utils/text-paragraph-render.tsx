@@ -6,13 +6,13 @@ import {
 	resolveCssTextAlign,
 	resolveParagraphAlign,
 	resolveParagraphRtl,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type {
 	InlineListSeed,
 	ParagraphRun,
 	PlaceholderPromptDescriptor,
 	RenderParagraph,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React from 'react';
 
 import type { ElementAnimationState } from './animation-timeline';

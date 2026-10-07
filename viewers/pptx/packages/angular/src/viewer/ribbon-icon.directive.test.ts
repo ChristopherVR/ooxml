@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 
-import { createRibbonControlIcon } from '../internal/shared';
+import { createRibbonControlIcon } from 'ooxml-ui/pptx';
 import { RibbonIconDirective } from './ribbon-icon.directive';
 
 @Component({

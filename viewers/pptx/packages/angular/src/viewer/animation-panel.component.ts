@@ -30,7 +30,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, output } f
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import type { PptxAnimationTrigger, PptxElementAnimation } from 'pptx-viewer-core';
 
-import { animationEffectLabelKey, TRIGGER_OPTIONS } from '../internal/shared';
+import { animationEffectLabelKey, TRIGGER_OPTIONS } from 'ooxml-ui/pptx';
 import type { AnimationClickGroup } from './animation-playback-helpers';
 
 /** A single rendered playback step (one click group). */

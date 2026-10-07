@@ -34,7 +34,7 @@ import {
 	shouldConfirmExternalHyperlink,
 	shouldDiscardAutosaveOnSuccessfulSave,
 	shouldOpenInProtectedView,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import type {
 	PrintSettings,
 	ToolbarTabId,
@@ -42,7 +42,7 @@ import type {
 	ViewerOptions,
 	ViewerOptionsGroupId,
 	ViewerOptionsStore,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 
 @Injectable()
 export class ViewerOptionsService {

@@ -15,8 +15,8 @@ import {
 	registerCrossSlideAudio,
 	scheduleMediaTrimAndFade,
 	startMediaAutoplay,
-} from 'pptx-viewer-shared';
-import type { MediaPlaybackSource, MediaTrimFadeSource } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { MediaPlaybackSource, MediaTrimFadeSource } from 'ooxml-ui/pptx';
 
 import { createEl } from '../dom';
 import type { ElementRenderer } from '../types';

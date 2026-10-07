@@ -1,4 +1,4 @@
-import { canInteractWithElement, templateSchemeFromTheme } from 'pptx-viewer-shared';
+import { canInteractWithElement, templateSchemeFromTheme } from 'ooxml-ui/pptx';
 
 import type { UseRibbonPropsInput } from './ribbon-props-types';
 

@@ -15,6 +15,6 @@
  * through.
  */
 
-export type { AlignMode, DistributeMode, AlignBox, PositionUpdate } from '../internal/shared';
+export type { AlignMode, DistributeMode, AlignBox, PositionUpdate } from 'ooxml-ui/pptx';
 
-export { computeAlign, computeDistribute } from '../internal/shared';
+export { computeAlign, computeDistribute } from 'ooxml-ui/pptx';

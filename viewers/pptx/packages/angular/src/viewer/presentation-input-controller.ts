@@ -33,7 +33,7 @@ import {
 	runPresentationAction,
 	safeOpenUrl,
 	toggleStageElementMedia,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import type { AnimationPlaybackService } from './animation-playback.service';
 import type { PresentationAnnotationsService } from './presentation-annotations.service';
 import { requestPresentationFullscreen } from './presentation-fullscreen';

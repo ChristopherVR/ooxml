@@ -208,6 +208,21 @@
 			"types": "./dist/visio/ui/index.d.ts",
 			"import": "./dist/visio/ui/index.mjs",
 			"require": "./dist/visio/ui/index.cjs"
+		},
+		"./pptx/editor/*": {
+			"types": "./dist/pptx/editor/*.d.ts",
+			"import": "./dist/pptx/editor/*.mjs",
+			"require": "./dist/pptx/editor/*.cjs"
+		},
+		"./pptx/automation/schemas": {
+			"types": "./dist/pptx/automation/schemas/index.d.ts",
+			"import": "./dist/pptx/automation/schemas/index.mjs",
+			"require": "./dist/pptx/automation/schemas/index.cjs"
+		},
+		"./pptx/automation/schemas/*": {
+			"types": "./dist/pptx/automation/schemas/*.d.ts",
+			"import": "./dist/pptx/automation/schemas/*.mjs",
+			"require": "./dist/pptx/automation/schemas/*.cjs"
 		}
 	},
 	"publishConfig": {

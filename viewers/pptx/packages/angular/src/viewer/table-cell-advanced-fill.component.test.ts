@@ -13,8 +13,8 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { PATTERN_OPTIONS } from '../internal/shared';
-import { keyToLabel, translationsEn } from '../internal/shared-src/i18n';
+import { PATTERN_OPTIONS } from 'ooxml-ui/pptx';
+import { keyToLabel, translationsEn } from 'ooxml-ui/pptx/i18n';
 import { fillPatternLabelKey } from './schema-token-labels';
 import { DEFAULT_PATTERN_FILL_PRESET, patternPresetOptions } from './table-properties-helpers';
 

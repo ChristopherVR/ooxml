@@ -13,8 +13,8 @@ import type { TranslateService } from '@ngx-translate/core';
 import { merge } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 
-import { homeSnapshotTranslator } from '../internal/shared';
-import type { RibbonHomeFamily } from '../internal/shared';
+import { homeSnapshotTranslator } from 'ooxml-ui/pptx';
+import type { RibbonHomeFamily } from 'ooxml-ui/pptx';
 
 /** Changes on every language or dictionary update; must run in an injection context. */
 export function homeLanguage(translation: TranslateService | null): Signal<number> {

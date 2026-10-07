@@ -12,8 +12,8 @@ import {
 	PRESENTER_RAIL_LABEL_KEYS,
 	presenterNextDisabled,
 	presenterPrevDisabled,
-} from 'pptx-viewer-shared';
-import type { AuthoredSlideRange, ShowOrderCustomShow } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { AuthoredSlideRange, ShowOrderCustomShow } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import { createIcon } from '../ui/icons';

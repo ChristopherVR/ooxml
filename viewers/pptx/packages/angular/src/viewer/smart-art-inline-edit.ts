@@ -20,8 +20,8 @@
 
 import type { PptxElement, PptxSlide, PptxSmartArtData } from 'pptx-viewer-core';
 
-import type { RenderedNode } from '../internal/shared';
-import { canDrillDown, isTemplateElementId, projectSmartArtViewBoxRect } from '../internal/shared';
+import type { RenderedNode } from 'ooxml-ui/pptx';
+import { canDrillDown, isTemplateElementId, projectSmartArtViewBoxRect } from 'ooxml-ui/pptx';
 import { updateSmartArtNodeText } from './editor-insert';
 
 /**

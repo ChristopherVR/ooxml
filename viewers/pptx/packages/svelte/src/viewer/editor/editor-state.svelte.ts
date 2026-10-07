@@ -32,7 +32,7 @@ import type {
 	InlineTextEditSnapshot,
 	PendingInlineTextEdit,
 	InlineListController,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	canInteractWithElement,
 	describeFontEmbedding,
@@ -40,7 +40,7 @@ import {
 	pushRecentColor,
 	slideSpaceElement,
 	slideSpaceMembers,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import { EditorAnimationController } from './editor-animation-controller';
 import { EditorArrangeController } from './editor-arrange-controller';

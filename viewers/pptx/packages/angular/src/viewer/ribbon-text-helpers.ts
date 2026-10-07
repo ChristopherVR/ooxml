@@ -13,13 +13,13 @@ import {
 	readEditableText,
 	setElementBullets,
 	transformInlineListCase,
-} from '../internal/shared';
-import type { ElementBulletPatch, InlineTextEditSnapshot } from '../internal/shared';
-import { INLINE_EDITOR_SELECTOR } from '../internal/shared-src/render/context-menu-target';
-import { textStylePatch } from '../internal/shared-src/render/inspector-helpers';
-import { remapTextToSegments } from '../internal/shared-src/render/remap-text';
-import type { ChangeCaseMode } from '../internal/shared-src/render/text-case-transform';
-import { transformTextCase } from '../internal/shared-src/render/text-case-transform';
+} from 'ooxml-ui/pptx';
+import type { ElementBulletPatch, InlineTextEditSnapshot } from 'ooxml-ui/pptx';
+import { INLINE_EDITOR_SELECTOR } from 'ooxml-ui/pptx/render/context-menu-target';
+import { textStylePatch } from 'ooxml-ui/pptx/render/inspector-helpers';
+import { remapTextToSegments } from 'ooxml-ui/pptx/render/remap-text';
+import type { ChangeCaseMode } from 'ooxml-ui/pptx/render/text-case-transform';
+import { transformTextCase } from 'ooxml-ui/pptx/render/text-case-transform';
 import type { EditorStateService } from './editor-state.service';
 
 /**

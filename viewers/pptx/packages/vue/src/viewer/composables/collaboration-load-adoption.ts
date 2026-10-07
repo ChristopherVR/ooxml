@@ -12,8 +12,8 @@
  * client is the seeder and its loaded deck stands.
  */
 import type { PptxSlide } from 'pptx-viewer-core';
-import type { CollabLoadOrigin, YDocLike } from 'pptx-viewer-shared';
-import { readSlidesFromYDoc, shouldRoomSlidesReplaceLoad } from 'pptx-viewer-shared';
+import type { CollabLoadOrigin, YDocLike } from 'ooxml-ui/pptx';
+import { readSlidesFromYDoc, shouldRoomSlidesReplaceLoad } from 'ooxml-ui/pptx';
 import { watch } from 'vue';
 import type { Ref, WatchStopHandle } from 'vue';
 

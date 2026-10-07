@@ -9,10 +9,10 @@
 	 * / the shared `remapTextToSegments`), so per-run styles and field metadata
 	 * survive the round trip.
 	 */
- import { attachInlineListController, buildInlineTextCommitPatch, createInlineListSeed, createInlineListModelObserver, initializeInlineListDom, inlineListBodyText, readListActivationSelection, restoreInlineListBodySelection, placeCaretAt, takePendingCaretPoint } from 'pptx-viewer-shared';
-	import type { InlineListController } from 'pptx-viewer-shared';
-	import { attachCollaborationInlineEditor } from 'pptx-viewer-shared';
-	import type { CollaborationInlineEditor } from 'pptx-viewer-shared';
+ import { attachInlineListController, buildInlineTextCommitPatch, createInlineListSeed, createInlineListModelObserver, initializeInlineListDom, inlineListBodyText, readListActivationSelection, restoreInlineListBodySelection, placeCaretAt, takePendingCaretPoint } from 'ooxml-ui/pptx';
+	import type { InlineListController } from 'ooxml-ui/pptx';
+	import { attachCollaborationInlineEditor } from 'ooxml-ui/pptx';
+	import type { CollaborationInlineEditor } from 'ooxml-ui/pptx';
 	import { onDestroy, onMount, untrack } from 'svelte';
 
 	import { readEditableText, resolveInlineSurface } from '../editor/inline-text';

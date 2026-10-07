@@ -1,9 +1,9 @@
-import type { RibbonContextualTabId } from 'pptx-viewer-shared';
+import type { RibbonContextualTabId } from 'ooxml-ui/pptx';
 import {
 	RIBBON_CONTEXTUAL_TAB_ATTR,
 	contextualTabLabelKey,
 	resolveScreenTip,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 

@@ -1,5 +1,5 @@
-import type { InkPoint, StrokeToInkElementOpts } from 'pptx-viewer-shared';
-import { pointFromPointerEvent } from 'pptx-viewer-shared';
+import type { InkPoint, StrokeToInkElementOpts } from 'ooxml-ui/pptx';
+import { pointFromPointerEvent } from 'ooxml-ui/pptx';
 
 import type { DrawTool } from '../state';
 import { resolveTopLevelElementId } from './element-hit';

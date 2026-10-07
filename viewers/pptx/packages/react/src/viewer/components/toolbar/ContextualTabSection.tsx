@@ -1,5 +1,5 @@
-import type { RibbonContextualTabId } from 'pptx-viewer-shared';
-import { CONTEXTUAL_TAB_GROUPS } from 'pptx-viewer-shared';
+import type { RibbonContextualTabId } from 'ooxml-ui/pptx';
+import { CONTEXTUAL_TAB_GROUPS } from 'ooxml-ui/pptx';
 import React from 'react';
 
 import { RibbonGallery } from './RibbonGallery';

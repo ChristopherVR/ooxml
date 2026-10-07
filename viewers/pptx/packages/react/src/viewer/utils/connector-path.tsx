@@ -15,7 +15,7 @@ export {
 	getConnectionSites,
 	getCompoundLineOffsets,
 	getCompoundLineWidths,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 export function getConnectorAdjustment(
 	element: PptxElementWithShapeStyle,

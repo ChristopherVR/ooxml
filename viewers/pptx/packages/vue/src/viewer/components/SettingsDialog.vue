@@ -17,9 +17,9 @@ import type {
 	ViewerAddinStatus,
 	ViewerOptions,
 	ViewerOptionsGroupId,
-} from 'pptx-viewer-shared';
-import { DEFAULT_QUICK_ACCESS_COMMAND_IDS, getDensePanelTouchTargetPx } from 'pptx-viewer-shared';
-import type { PptxAiChatStore } from 'pptx-viewer-shared/ai';
+} from 'ooxml-ui/pptx';
+import { DEFAULT_QUICK_ACCESS_COMMAND_IDS, getDensePanelTouchTargetPx } from 'ooxml-ui/pptx';
+import type { PptxAiChatStore } from 'ooxml-ui/pptx/ai';
 import { computed, onBeforeUnmount, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 

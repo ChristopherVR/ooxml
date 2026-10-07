@@ -15,10 +15,10 @@ import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-
 import { provideTranslateService, TranslateService } from '@ngx-translate/core';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 
-import { translationsEn } from '../../../shared/src/i18n';
-import { registerPptxWebControls } from '../../../shared/src/web-components';
-import type { CompatibilityWarningToast } from '../internal/shared';
-import { compatToastStackStyle } from '../internal/shared';
+import { translationsEn } from '../../../../../../src/ui/src/pptx/i18n';
+import { registerPptxWebControls } from '../../../../../../src/ui/src/pptx/web-components';
+import type { CompatibilityWarningToast } from 'ooxml-ui/pptx';
+import { compatToastStackStyle } from 'ooxml-ui/pptx';
 import { CompatToastsComponent } from './compat-toasts.component';
 
 beforeAll(() => {

@@ -22,8 +22,8 @@ import type {
 	ThreeViewDragDetail,
 	ThreeViewSpec,
 	ThreeViewState,
-} from 'pptx-viewer-shared';
-import { defineThreeViewElement, THREE_VIEW_EVENTS, THREE_VIEW_TAG } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import { defineThreeViewElement, THREE_VIEW_EVENTS, THREE_VIEW_TAG } from 'ooxml-ui/pptx';
 import { defineComponent, h, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import type { PropType } from 'vue';
 

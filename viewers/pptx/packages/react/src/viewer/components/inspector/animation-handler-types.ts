@@ -4,7 +4,7 @@ import type {
 	PptxAnimationDirection,
 	PptxAnimationTimelineAnchor,
 } from 'pptx-viewer-core';
-import type { AnimationTimelineRow, EffectSoundState } from 'pptx-viewer-shared';
+import type { AnimationTimelineRow, EffectSoundState } from 'ooxml-ui/pptx';
 import type React from 'react';
 
 // ---------------------------------------------------------------------------
@@ -88,7 +88,7 @@ export interface AnimationHandlers {
 // Shared constants
 // ---------------------------------------------------------------------------
 
-export { DIRECTIONAL_PRESETS } from 'pptx-viewer-shared';
+export { DIRECTIONAL_PRESETS } from 'ooxml-ui/pptx';
 
 // ---------------------------------------------------------------------------
 // Shared callback type used by sub-hooks

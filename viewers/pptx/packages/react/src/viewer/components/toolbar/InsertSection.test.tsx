@@ -4,7 +4,7 @@
  * reflection; this adapter only routes typed intents to the native handlers and
  * keeps the Date/Time picker dialog native.
  */
-import { registerPptxWebControls } from 'pptx-viewer-shared';
+import { registerPptxWebControls } from 'ooxml-ui/pptx';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';

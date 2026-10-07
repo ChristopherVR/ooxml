@@ -20,8 +20,8 @@ import {
 	paragraphHomeControls,
 	selectionBulletKind,
 	withHomeGalleries,
-} from '../internal/shared';
-import type { RibbonHomeRequestEvent } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { RibbonHomeRequestEvent } from 'ooxml-ui/pptx';
 import { EditorStateService } from './editor-state.service';
 import { LoadContentService } from './load-content.service';
 /**

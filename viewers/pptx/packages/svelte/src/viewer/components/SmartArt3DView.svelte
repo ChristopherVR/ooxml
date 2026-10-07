@@ -27,7 +27,7 @@
 		shouldRenderHitTarget,
 		stripEditLayerMarkers,
 		routeEditLayerPointerToNodes,
-	} from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
 
 	import { useRendering3DFlags } from '../state/rendering-3d-flags-context';
 	import { getContainerStyle, getElementHitTargetStyle, styleToString } from '../style';

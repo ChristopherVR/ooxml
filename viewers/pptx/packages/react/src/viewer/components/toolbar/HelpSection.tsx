@@ -1,4 +1,4 @@
-import { HELP_RIBBON_COMMANDS, isDialogAvailable } from 'pptx-viewer-shared';
+import { HELP_RIBBON_COMMANDS, isDialogAvailable } from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 

@@ -1,4 +1,4 @@
-export type { ElementUpdate, ElementUpdateOptions } from 'pptx-viewer-shared';
+export type { ElementUpdate, ElementUpdateOptions } from 'ooxml-ui/pptx';
 export type {
 	ExternalCollaborationSession,
 	ExternalCollaborationSnapshot,
@@ -7,8 +7,8 @@ export type {
 	ConnectionStatus,
 	RemoteCursor,
 	SanitizedPresence,
-} from 'pptx-viewer-shared';
-export { describeCollaborationShellState } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+export { describeCollaborationShellState } from 'ooxml-ui/pptx';
 /**
  * pptx-svelte-viewer: Svelte 5 PowerPoint viewer component.
  *
@@ -17,8 +17,8 @@ export { describeCollaborationShellState } from 'pptx-viewer-shared';
  * system (types, defaults, CSS-variable helpers, Vermilion presets).
  */
 export { PowerPointViewer } from './viewer/component';
-export type { ViewportFitOptions, ViewportFitPadding } from 'pptx-viewer-shared';
-export { createImageElementFromFile } from 'pptx-viewer-shared';
+export type { ViewportFitOptions, ViewportFitPadding } from 'ooxml-ui/pptx';
+export { createImageElementFromFile } from 'ooxml-ui/pptx';
 export type {
 	ExportGifOptions,
 	ExportPdfOptions,
@@ -54,7 +54,7 @@ export type {
 	PptxAiToolName,
 	PptxAiUIMessage,
 	PptxAiWritePolicy,
-} from 'pptx-viewer-shared/ai';
+} from 'ooxml-ui/pptx/ai';
 export type { AutosaveStatus } from './viewer/state/autosave.svelte';
 // Autosave recovery helpers (shared IndexedDB store). The viewer now OFFERS a
 // pre-crash snapshot back itself on load ("Recover unsaved changes?", see the
@@ -64,9 +64,9 @@ export {
 	deleteAutosaveSnapshot,
 	getAutosaveSnapshot,
 	listAutosaveSnapshots,
-} from 'pptx-viewer-shared';
-export type { AutosaveRecord } from 'pptx-viewer-shared';
-export { loadPresentationDeck, parsePresentationSessionId } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+export type { AutosaveRecord } from 'ooxml-ui/pptx';
+export { loadPresentationDeck, parsePresentationSessionId } from 'ooxml-ui/pptx';
 // Session restore (opt-in, host-driven): remember the deck the host has open,
 // per browser tab, so a page refresh reopens it instead of dropping the user
 // back on the file picker.
@@ -76,8 +76,8 @@ export {
 	loadSessionDeck,
 	rememberSessionDeck,
 	restoreSessionDeck,
-} from 'pptx-viewer-shared';
-export type { SessionDeck } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+export type { SessionDeck } from 'ooxml-ui/pptx';
 export {
 	defaultCssVars,
 	defaultRadius,
@@ -107,8 +107,8 @@ export {
 	isLegacyBinaryPresentation,
 	presentationBaseName,
 	savedPresentationFileName,
-} from 'pptx-viewer-shared';
-export type { SavedPresentationFormat } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+export type { SavedPresentationFormat } from 'ooxml-ui/pptx';
 
 // ── Rasterisation escape hatch ─────────────────────────────────────────
 // The same `html2canvas-pro` wrapper the built-in export pipeline uses, so a
@@ -145,7 +145,7 @@ export type {
 	ViewerExportFormatId,
 	ViewerFeatureId,
 	ViewerPanelId,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 export {
 	BACKSTAGE_CARD_IDS,
 	BACKSTAGE_PAGE_IDS,
@@ -163,4 +163,4 @@ export {
 	VIEWER_EXPORT_FORMAT_IDS,
 	VIEWER_FEATURE_IDS,
 	VIEWER_PANEL_IDS,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

@@ -1,4 +1,4 @@
-import type { ThemeCatalogEntry } from 'pptx-viewer-shared';
+import type { ThemeCatalogEntry } from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 

@@ -1,4 +1,4 @@
-import type { RulerUnit } from 'pptx-viewer-shared';
+import type { RulerUnit } from 'ooxml-ui/pptx';
 
 import { getActiveElements } from './editor/editor-active-elements';
 import type { Store, ViewerState } from './state';

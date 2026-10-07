@@ -15,7 +15,7 @@
 	 * global rules) by {@link ensurePresentationKeyframes}.
 	 */
 	import type { PptxSlideTransition } from 'pptx-viewer-core';
-	import { getSlideTransitionAnimations } from 'pptx-viewer-shared';
+	import { getSlideTransitionAnimations } from 'ooxml-ui/pptx';
 	import { onMount } from 'svelte';
 
 	import { useTranslator } from '../../../i18n/context';

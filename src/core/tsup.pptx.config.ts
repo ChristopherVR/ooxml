@@ -5,6 +5,31 @@ import { defineConfig } from 'tsup';
 // (`@christophervr/ole2`) inlined, which a plain tsc build cannot produce.
 export default defineConfig(() => ({
 	entry: {
+		'pptx/automation/schemas/chart-formatting-schemas':
+			'pptx/automation/schemas/chart-formatting-schemas.ts',
+		'pptx/automation/schemas/chart-schemas': 'pptx/automation/schemas/chart-schemas.ts',
+		'pptx/automation/schemas/chart-user-shape-schemas':
+			'pptx/automation/schemas/chart-user-shape-schemas.ts',
+		'pptx/automation/schemas/element-schemas': 'pptx/automation/schemas/element-schemas.ts',
+		'pptx/automation/schemas/export-schemas': 'pptx/automation/schemas/export-schemas.ts',
+		'pptx/automation/schemas/geometry-schemas': 'pptx/automation/schemas/geometry-schemas.ts',
+		'pptx/automation/schemas/hyperlink-schemas': 'pptx/automation/schemas/hyperlink-schemas.ts',
+		'pptx/automation/schemas/index': 'pptx/automation/schemas/index.ts',
+		'pptx/automation/schemas/json-schemas': 'pptx/automation/schemas/json-schemas.ts',
+		'pptx/automation/schemas/layout-schemas': 'pptx/automation/schemas/layout-schemas.ts',
+		'pptx/automation/schemas/lock-schemas': 'pptx/automation/schemas/lock-schemas.ts',
+		'pptx/automation/schemas/metadata-schemas': 'pptx/automation/schemas/metadata-schemas.ts',
+		'pptx/automation/schemas/ole-schemas': 'pptx/automation/schemas/ole-schemas.ts',
+		'pptx/automation/schemas/presentation-schemas':
+			'pptx/automation/schemas/presentation-schemas.ts',
+		'pptx/automation/schemas/section-schemas': 'pptx/automation/schemas/section-schemas.ts',
+		'pptx/automation/schemas/slide-schemas': 'pptx/automation/schemas/slide-schemas.ts',
+		'pptx/automation/schemas/smartart-schemas': 'pptx/automation/schemas/smartart-schemas.ts',
+		'pptx/automation/schemas/table-style-schemas': 'pptx/automation/schemas/table-style-schemas.ts',
+		'pptx/automation/schemas/template-schemas': 'pptx/automation/schemas/template-schemas.ts',
+		'pptx/automation/schemas/theme-schemas': 'pptx/automation/schemas/theme-schemas.ts',
+		'pptx/automation/schemas/validation-schemas': 'pptx/automation/schemas/validation-schemas.ts',
+
 		'pptx/automation/index': 'pptx/automation/index.ts',
 		'pptx/ui/index': 'pptx/ui/index.ts',
 		'pptx/index': 'pptx/index.ts',
@@ -23,6 +48,7 @@ export default defineConfig(() => ({
 	// dist also holds the tsc output of the other areas: never clean it here.
 	clean: false,
 	external: [
+		/^ooxml-core(?:\/|$)/,
 		'yjs',
 		'emf-converter',
 		'mtx-decompressor',

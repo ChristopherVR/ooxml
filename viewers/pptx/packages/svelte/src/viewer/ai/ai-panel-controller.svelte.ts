@@ -22,10 +22,10 @@ import type {
 	AiChangeBatch,
 	PptxAiFocusedTarget,
 	ToolCanvasTarget,
-} from 'pptx-viewer-shared/ai';
-import { computeFocusTargets } from 'pptx-viewer-shared/ai';
+} from 'ooxml-ui/pptx/ai';
+import { computeFocusTargets } from 'ooxml-ui/pptx/ai';
 
-export type { AiCanvasHighlight } from 'pptx-viewer-shared/ai';
+export type { AiCanvasHighlight } from 'ooxml-ui/pptx/ai';
 
 /** Live viewer accessors + the panel-open hook the controller closes over. */
 export interface AiPanelControllerDeps {

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { buildReviewRibbon } from 'pptx-viewer-shared';
-import type { RibbonCommandRequestEvent } from 'pptx-viewer-shared';
+import { buildReviewRibbon } from 'ooxml-ui/pptx';
+import type { RibbonCommandRequestEvent } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

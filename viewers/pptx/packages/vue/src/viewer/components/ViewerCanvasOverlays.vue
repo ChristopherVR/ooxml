@@ -20,8 +20,8 @@ import type {
 	PptxSlide,
 	TextStyle,
 } from 'pptx-viewer-core';
-import { parentSelection, slideSpaceElement } from 'pptx-viewer-shared';
-import type { PptxAiConfig } from 'pptx-viewer-shared/ai';
+import { parentSelection, slideSpaceElement } from 'ooxml-ui/pptx';
+import type { PptxAiConfig } from 'ooxml-ui/pptx/ai';
 import { computed, inject, useTemplateRef } from 'vue';
 
 import type { AiPanelController } from '../composables/ai/useAiPanelController';

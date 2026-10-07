@@ -11,7 +11,7 @@ export type {
 	TableStyleImageRef,
 	MediaArrayBufferSource,
 	MediaSourceResolution,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 export {
 	collectMediaElements,
 	collectImagePaths,
@@ -21,4 +21,4 @@ export {
 	applyTableStyleImagePatches,
 	buildInitialGuides,
 	resolveMediaElementSource,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

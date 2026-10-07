@@ -5,7 +5,7 @@ import type {
 	DiagonalBorderInfo,
 	TableCellCss,
 	TableStyleContext,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	cellPatternFillCss,
 	cellRunStyle,
@@ -13,7 +13,7 @@ import {
 	getCellDiagonalBorders,
 	tableCellCss,
 	tableContainerCss,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import { styleToString } from '../style';
 

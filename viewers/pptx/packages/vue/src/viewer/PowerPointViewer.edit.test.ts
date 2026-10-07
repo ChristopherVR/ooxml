@@ -1,6 +1,6 @@
 import { flushPromises, mount } from '@vue/test-utils';
-import type { CollaborationConfig, ExternalCollaborationSession } from 'pptx-viewer-shared';
-import { readSlidesFromYDoc, reconcileSlidesInYDoc } from 'pptx-viewer-shared';
+import type { CollaborationConfig, ExternalCollaborationSession } from 'ooxml-ui/pptx';
+import { readSlidesFromYDoc, reconcileSlidesInYDoc } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 import { Doc, Map as YMap, Array as YArray, Text as YText } from 'yjs';
 

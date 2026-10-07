@@ -10,7 +10,7 @@ import type {
 	PptxAiChatSummary,
 	PptxAiStoredChat,
 	PptxAiUIMessage,
-} from '../../internal/shared-ai';
+} from 'ooxml-ui/pptx/ai';
 import { AiHistoryService } from './ai-history.service';
 
 function userMessage(text: string): PptxAiUIMessage {

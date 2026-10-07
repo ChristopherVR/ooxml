@@ -1,12 +1,12 @@
 import type { MediaBookmark } from 'pptx-viewer-core';
-import type { MediaTrimHandle } from 'pptx-viewer-shared';
+import type { MediaTrimHandle } from 'ooxml-ui/pptx';
 import {
 	formatMediaTime,
 	mediaTimeFromPointer,
 	mediaTimelineGeometry,
 	mediaTrimEndSeconds,
 	mediaTrimRangeForDrag,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import { createEl } from '../../render';
 

@@ -30,8 +30,8 @@ import type {
 	PptxAiConfig,
 	ProposalView,
 	ToolCanvasTarget,
-} from 'pptx-viewer-shared/ai';
-import { toolCanvasTarget } from 'pptx-viewer-shared/ai';
+} from 'ooxml-ui/pptx/ai';
+import { toolCanvasTarget } from 'ooxml-ui/pptx/ai';
 import { computed, ref, watch } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
 

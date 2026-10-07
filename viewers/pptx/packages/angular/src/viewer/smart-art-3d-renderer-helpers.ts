@@ -8,7 +8,7 @@
  */
 import type { PptxElement, PptxSmartArtData } from 'pptx-viewer-core';
 
-import type { InlineEditRect } from '../internal/shared';
+import type { InlineEditRect } from 'ooxml-ui/pptx';
 import type { NodeEditBox } from './smart-art-inline-edit';
 
 /** The element's SmartArt data, or `undefined` when it isn't a SmartArt element. */

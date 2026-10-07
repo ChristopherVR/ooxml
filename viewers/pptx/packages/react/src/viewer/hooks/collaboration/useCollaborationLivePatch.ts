@@ -14,8 +14,8 @@ import type {
 	CollaborationLivePatcher,
 	ExternalCollaborationSession,
 	YjsFactories,
-} from 'pptx-viewer-shared';
-import { createSnapshotTextPositions } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import { createSnapshotTextPositions } from 'ooxml-ui/pptx';
 import { useEffect, useRef, useState } from 'react';
 import type { Doc as YDoc } from 'yjs';
 

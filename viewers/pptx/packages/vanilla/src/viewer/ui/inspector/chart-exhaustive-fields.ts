@@ -23,7 +23,7 @@ import {
 	ERROR_BAR_TYPE_OPTIONS,
 	MARKER_SYMBOL_OPTIONS,
 	TICK_LABEL_POSITION_OPTIONS,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import {

@@ -12,7 +12,7 @@ import {
 	createWheelStepBuffer,
 	mapPresentationKey,
 	mapPresentationWheel,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type { Ref } from 'vue';
 import { onBeforeUnmount, onMounted } from 'vue';
 

@@ -1,5 +1,5 @@
-import { backstageCardsFor, customizeBackstageCards } from 'pptx-viewer-shared';
-import type { BackstageCardId, BackstagePage } from 'pptx-viewer-shared';
+import { backstageCardsFor, customizeBackstageCards } from 'ooxml-ui/pptx';
+import type { BackstageCardId, BackstagePage } from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import type { IconType } from 'react-icons';

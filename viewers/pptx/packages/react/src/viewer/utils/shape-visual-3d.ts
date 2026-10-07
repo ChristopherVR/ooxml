@@ -21,7 +21,7 @@ import {
 	build3DExtrusionData as sharedBuild3DExtrusionData,
 	get3DTransformStyle as sharedGet3DTransformStyle,
 	apply3dEffects as sharedApply3dEffects,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type {
 	ElementSizePx,
 	Extrusion3DData as SharedExtrusion3DData,
@@ -30,7 +30,7 @@ import type {
 	Scene3dParams,
 	Shape3dParams,
 	MutableCss,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type React from 'react';
 
 export {
@@ -39,7 +39,7 @@ export {
 	get3DBevelShadow,
 	get3DMaterialFilter,
 	getLightRigCss,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 /** One side face (panel) of a CSS 3D extrusion, styled with `React.CSSProperties`. */
 export interface ExtrusionPanel extends Omit<SharedExtrusionPanel, 'style'> {

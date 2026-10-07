@@ -26,7 +26,7 @@ import type {
 	RibbonContextualTabId,
 	SlideTemplateId,
 	ToolbarActionId,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 /** Viewer interaction mode. Mirrors React `ViewerMode`. */
 export type ViewerMode = 'preview' | 'edit' | 'present' | 'master';

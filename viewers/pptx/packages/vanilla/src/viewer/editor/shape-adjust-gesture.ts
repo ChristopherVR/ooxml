@@ -1,11 +1,11 @@
 import type { PptxElement } from 'pptx-viewer-core';
 import { hasShapeProperties } from 'pptx-viewer-core';
-import type { ShapeAdjustmentDragState, ShapeAdjustmentHandleDescriptor } from 'pptx-viewer-shared';
+import type { ShapeAdjustmentDragState, ShapeAdjustmentHandleDescriptor } from 'ooxml-ui/pptx';
 import {
 	beginShapeAdjustment,
 	getDraggedShapeAdjustments,
 	getShapeAdjustmentHandleDescriptors,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Store, ViewerState } from '../state';
 import {

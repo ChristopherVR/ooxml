@@ -1,10 +1,10 @@
-import { createAiChatHistoryController, deckIdFromBridge } from 'pptx-viewer-shared/ai';
+import { createAiChatHistoryController, deckIdFromBridge } from 'ooxml-ui/pptx/ai';
 import type {
 	PptxAiBridge,
 	PptxAiChatStore,
 	PptxAiChatSummary,
 	PptxAiUIMessage,
-} from 'pptx-viewer-shared/ai';
+} from 'ooxml-ui/pptx/ai';
 import { untrack } from 'svelte';
 
 export interface AiChatHistoryDeps {

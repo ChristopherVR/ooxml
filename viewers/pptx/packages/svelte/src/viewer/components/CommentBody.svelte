@@ -7,7 +7,7 @@
 	 * component only maps the resulting descriptor onto spans.
 	 */
 	import type { PptxComment } from 'pptx-viewer-core';
-	import { commentTextSegments } from 'pptx-viewer-shared';
+	import { commentTextSegments } from 'ooxml-ui/pptx';
 
 	const { text, mentions }: { text: string; mentions?: PptxComment['mentions'] } = $props();
 

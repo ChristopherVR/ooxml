@@ -1,8 +1,8 @@
 import {
 	buildSlideSorterContextMenuEntries,
 	slideSorterContextMenuLabel,
-} from 'pptx-viewer-shared';
-import type { SlideSorterContextMenuCommandId } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { SlideSorterContextMenuCommandId } from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { LuClipboardPaste, LuCopy, LuCopyPlus, LuEye, LuEyeOff, LuTrash2 } from 'react-icons/lu';

@@ -10,7 +10,7 @@ import {
 	finishPrintWindow as finishPendingPrintWindow,
 	openPendingPrintWindow,
 	openPrintWindow as sharedOpenPrintWindow,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { inject, ref } from 'vue';
 import type { Ref } from 'vue';
 

@@ -1,5 +1,5 @@
 import type { PptxTableData } from 'pptx-viewer-core';
-import { applyTableStylePreset, TABLE_STYLE_PRESETS } from 'pptx-viewer-shared';
+import { applyTableStylePreset, TABLE_STYLE_PRESETS } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';

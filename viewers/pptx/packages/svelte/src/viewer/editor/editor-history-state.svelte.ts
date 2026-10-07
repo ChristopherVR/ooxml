@@ -1,4 +1,4 @@
-import { EditorHistory } from 'pptx-viewer-shared';
+import { EditorHistory } from 'ooxml-ui/pptx';
 
 import type { EditorSnapshot } from './editor-document-state';
 

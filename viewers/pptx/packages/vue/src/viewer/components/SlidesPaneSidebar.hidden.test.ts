@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
 import type { PptxSlide } from 'pptx-viewer-core';
-import { HIDDEN_SLIDE_SLASH_GRADIENT } from 'pptx-viewer-shared';
+import { HIDDEN_SLIDE_SLASH_GRADIENT } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 
 import SlideSorter from './SlideSorter.vue';

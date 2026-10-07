@@ -11,13 +11,13 @@
 import { Injectable, signal } from '@angular/core';
 import type { OnDestroy } from '@angular/core';
 
-import { createAiChatHistoryController } from '../../internal/shared-ai';
+import { createAiChatHistoryController } from 'ooxml-ui/pptx/ai';
 import type {
 	AiChatHistoryController,
 	PptxAiChatStore,
 	PptxAiChatSummary,
 	PptxAiUIMessage,
-} from '../../internal/shared-ai';
+} from 'ooxml-ui/pptx/ai';
 
 export interface AiHistoryInitDeps {
 	deckId: string;

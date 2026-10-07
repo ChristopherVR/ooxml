@@ -9,7 +9,7 @@ import type {
 	PptxAiElementUpdate,
 	PptxAiFocusedTarget,
 	PptxAiSlidesUpdater,
-} from 'pptx-viewer-shared/ai';
+} from 'ooxml-ui/pptx/ai';
 
 function defaultSlides(): PptxSlide[] {
 	return [

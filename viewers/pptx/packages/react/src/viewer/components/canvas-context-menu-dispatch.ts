@@ -1,4 +1,4 @@
-import type { CanvasContextMenuCommandId, CanvasContextMenuContext } from 'pptx-viewer-shared';
+import type { CanvasContextMenuCommandId, CanvasContextMenuContext } from 'ooxml-ui/pptx';
 
 /**
  * What each empty-canvas context-menu command does in React, and what the

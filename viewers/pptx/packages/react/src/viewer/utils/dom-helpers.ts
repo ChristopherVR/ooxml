@@ -6,10 +6,10 @@
  * filename internally, so this module just re-exports them and keeps the
  * historical React import path.
  */
-export { downloadBlob, sanitizeDownloadFilename } from 'pptx-viewer-shared';
+export { downloadBlob, sanitizeDownloadFilename } from 'ooxml-ui/pptx';
 
 // HTML entity escaping is shared (see `export/print-document`).
-export { escapeHtml } from 'pptx-viewer-shared';
+export { escapeHtml } from 'ooxml-ui/pptx';
 
 export function safePrompt(message: string, defaultValue?: string): string | null {
 	try {

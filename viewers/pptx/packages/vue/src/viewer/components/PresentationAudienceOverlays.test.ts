@@ -10,7 +10,7 @@
  * leave a blacked-out show with nothing to click.
  */
 import { mount } from '@vue/test-utils';
-import type { PresentationSnapshot } from 'pptx-viewer-shared';
+import type { PresentationSnapshot } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 
 import PresentationAudienceOverlays from './PresentationAudienceOverlays.vue';

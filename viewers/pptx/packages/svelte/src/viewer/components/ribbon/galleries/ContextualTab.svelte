@@ -5,8 +5,8 @@
 	 * shows, and which galleries sit in them in which mode, is shared's
 	 * `CONTEXTUAL_TAB_GROUPS`; this file only maps that list onto ribbon groups.
 	 */
-	import { CONTEXTUAL_TAB_GROUPS } from 'pptx-viewer-shared';
-	import type { RibbonContextualTabId } from 'pptx-viewer-shared';
+	import { CONTEXTUAL_TAB_GROUPS } from 'ooxml-ui/pptx';
+	import type { RibbonContextualTabId } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../../i18n/context';
 	import RibbonGallery from './RibbonGallery.svelte';

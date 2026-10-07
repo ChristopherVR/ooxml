@@ -1,6 +1,6 @@
 import type { PptxElement, TextSegment, TextStyle } from 'pptx-viewer-core';
-import type { RenderParagraph } from 'pptx-viewer-shared';
-import { buildParagraphs } from 'pptx-viewer-shared';
+import type { RenderParagraph } from 'ooxml-ui/pptx';
+import { buildParagraphs } from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it } from 'vitest';
 

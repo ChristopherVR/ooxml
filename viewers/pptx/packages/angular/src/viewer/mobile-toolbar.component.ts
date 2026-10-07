@@ -33,13 +33,13 @@ import {
 } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 
-import { isActionHidden } from '../internal/shared';
+import { isActionHidden } from 'ooxml-ui/pptx';
 import type {
 	MobileToolbarId,
 	MobileToolbarRequestEvent,
 	MobileToolbarViewState,
 	ToolbarActionId,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { translationsSignal } from './translations-signal';
 
 @Component({

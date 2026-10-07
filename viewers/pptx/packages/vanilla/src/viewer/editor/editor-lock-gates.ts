@@ -1,11 +1,11 @@
 import type { PptxElement } from 'pptx-viewer-core';
-import type { ElementInteraction, ElementInteractivity } from 'pptx-viewer-shared';
+import type { ElementInteraction, ElementInteractivity } from 'ooxml-ui/pptx';
 import {
 	canInteractWithElement,
 	filterInteractableIds,
 	isElementIdInteractive,
 	resolveElementInteractivity,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { ViewerState } from '../state';
 import { findActiveElement } from './editor-active-elements';

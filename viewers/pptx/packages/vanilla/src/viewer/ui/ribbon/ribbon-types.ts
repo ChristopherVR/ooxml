@@ -13,7 +13,7 @@ import type {
 	RibbonGalleryContext,
 	RibbonTransitionDraft,
 	ViewerOptionsStore,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { EditActions } from '../../editor/editor-edit-ops';
 import type { FindReplaceActions } from '../../editor/editor-find-replace-actions';

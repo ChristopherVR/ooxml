@@ -7,7 +7,7 @@
  * `onSetOverflowMenuOpen`) exactly as React, and each OV key maps to its handler.
  */
 import { Ellipsis } from 'lucide-vue-next';
-import { isDialogAvailable } from 'pptx-viewer-shared';
+import { isDialogAvailable } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

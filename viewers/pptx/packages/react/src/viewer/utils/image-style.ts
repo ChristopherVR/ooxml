@@ -1,6 +1,6 @@
 import type { PptxElement } from 'pptx-viewer-core';
 import { isImageLikeElement, hasShapeProperties } from 'pptx-viewer-core';
-import type { NativeImageSize } from 'pptx-viewer-shared';
+import type { NativeImageSize } from 'ooxml-ui/pptx';
 import {
 	getComputedFillStyle,
 	getCropShapeClipPath as sharedGetCropShapeClipPath,
@@ -8,7 +8,7 @@ import {
 	getImageFitStyle,
 	getImageTilingStyle as sharedGetImageTilingStyle,
 	resolveShapeGeometry,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 /**
  * Image mask, render style, crop shape, and tiling helpers
  * for the PowerPoint editor.
@@ -104,7 +104,7 @@ export function getCropShapeClipPath(element: PptxElement): string | undefined {
  * one stretched copy for want of it. Re-exported here under the historical
  * symbol names React consumers already import.
  */
-export { isImageTiled, buildMirrorTiledBackground } from 'pptx-viewer-shared';
+export { isImageTiled, buildMirrorTiledBackground } from 'ooxml-ui/pptx';
 
 /**
  * The tiled-picture background layer, re-typed as `React.CSSProperties`.

@@ -5,7 +5,7 @@ import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
  *
  * Used by PresenterView for current-slide and next-slide previews.
  */
-import { visibleTemplateElements } from 'pptx-viewer-shared';
+import { visibleTemplateElements } from 'ooxml-ui/pptx';
 import React, { useEffect, useRef, useState } from 'react';
 
 import type { CanvasSize } from '../types';
