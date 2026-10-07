@@ -89,7 +89,7 @@ export function runFormattingCss(
 	return css.join(';');
 }
 
-/** The run a text node stands for, with its marks as direct formatting. */
+/** The run an inline node stands for, with its marks or attributes as direct formatting. */
 export function runOf(node: ProseMirrorNode): TextRun | undefined {
 	const runs: TextRun[] = [];
 	appendInlineNode(runs, node);
@@ -142,7 +142,7 @@ export function runStylesPlugin(
 					const paragraphStyleId = displayParagraph(paragraph, mode).value.style;
 					let hasScale = false;
 					paragraph.forEach((child, offset) => {
-						if (!child.isText) return;
+						if (!child.isInline || child.type.name === 'equation') return;
 						const current = runOf(child);
 						if (!current) return;
 						const projected = reviewRunFormatting(current, mode);
@@ -166,6 +166,18 @@ export function runStylesPlugin(
 									}
 								: {};
 						const hidden = resolved.vanish === true;
+						if (!child.isText) {
+							decorations.push(
+								Decoration.node(start + offset, start + offset + child.nodeSize, {
+									style: `${runFormattingCss(resolved, model.theme)};${reviewRunCss(resolved)}`,
+									...(run.language ? { lang: run.language } : {}),
+									...(run.rtl !== undefined ? { dir: run.rtl ? 'rtl' : 'ltr' } : {}),
+									...(projected.error ? { 'data-review-format-error': projected.error } : {}),
+									...(hidden ? { class: 'dve-hidden-text' } : {}),
+								}),
+							);
+							return;
+						}
 						const segments = scaledSegments(
 							child.text!,
 							resolved,

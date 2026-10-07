@@ -59,6 +59,61 @@ function editor(runs: TextRun[]) {
 }
 
 describe('Original run formatting rendering', () => {
+	for (const [atom, selector] of [
+		[{ text: '', noteReference: { kind: 'footnote', id: '1' } }, '.dve-note-reference'],
+		[{ text: '', break: 'page' }, '.dve-break-marker'],
+		[{ text: '', fieldCode: ' PAGE ' }, '.dve-field-marker'],
+		[{ text: '\n' }, 'br'],
+		[
+			{
+				text: '',
+				image: {
+					relId: 'rId1',
+					partName: 'word/media/image.png',
+					contentType: 'image/png',
+					widthPx: 20,
+					heightPx: 30,
+				},
+			},
+			'[data-docx-image]',
+		],
+	] as [TextRun, string][])
+		it(`projects inline ${selector} formatting without changing identity or history`, () => {
+			const instance = editor([
+				tracked(
+					`<w:rPr xmlns:w="${namespace}"><w:rFonts w:ascii="Georgia"/><w:sz w:val="24"/><w:lang w:val="en-GB"/><w:rtl w:val="0"/><w:i/></w:rPr>`,
+					atom,
+				),
+			]);
+			try {
+				const source = instance.view.state.doc;
+				instance.setMode('original');
+				const dom = instance.view.dom.querySelector<HTMLElement>(selector)!;
+				expect(dom).not.toBeNull();
+				expect(dom.style.fontFamily).toContain('Georgia');
+				expect(dom.style.fontSize).toBe('12pt');
+				expect(dom.style.fontStyle).toBe('italic');
+				expect(dom.style.fontWeight).not.toBe('700');
+				expect(dom.style.backgroundColor).toBe('');
+				expect(dom.lang).toBe('en-GB');
+				expect(dom.dir).toBe('ltr');
+				expect(instance.view.state.doc).toBe(source);
+				expect(undo(instance.view.state)).toBe(false);
+				if (atom.image) {
+					expect(dom.getAttribute('width')).toBe('20');
+					expect(dom.getAttribute('height')).toBe('30');
+				}
+				instance.setMode('all');
+				const current = instance.view.dom.querySelector<HTMLElement>(selector)!;
+				expect(current.style.fontWeight).toBe('700');
+				expect(current.style.fontFamily).toContain('Arial');
+				expect(current.lang).toBe('fr-FR');
+				expect(current.dir).toBe('rtl');
+				expect(instance.view.state.doc).toBe(source);
+			} finally {
+				instance.destroy();
+			}
+		});
 	it('neutralizes current outer marks and renders complete prior properties without changing source or undo', () => {
 		const instance = editor([
 			tracked(
@@ -111,19 +166,22 @@ describe('Original run formatting rendering', () => {
 		}
 	});
 
-	it('reports unavailable history and renders current formatting through the display layer', () => {
-		const instance = editor([tracked('<rPr xmlns="urn:wrong"/>')]);
-		try {
-			instance.setMode('original');
-			const leaf = instance.view.dom.querySelector<HTMLElement>('[data-review-format-error]')!;
-			expect(leaf).not.toBeNull();
-			expect(leaf.style.fontWeight).toBe('700');
-			expect(leaf.style.textDecorationLine).toContain('underline');
-			expect(leaf.style.backgroundColor).toBe('rgb(255, 255, 0)');
-		} finally {
-			instance.destroy();
-		}
-	});
+	it.each([{ text: 'Text' }, { text: '', noteReference: { kind: 'footnote' as const, id: '1' } }])(
+		'reports unavailable history and renders current formatting through the display layer: $text',
+		(atom) => {
+			const instance = editor([tracked('<rPr xmlns="urn:wrong"/>', atom)]);
+			try {
+				instance.setMode('original');
+				const leaf = instance.view.dom.querySelector<HTMLElement>('[data-review-format-error]')!;
+				expect(leaf).not.toBeNull();
+				expect(leaf.style.fontWeight).toBe('700');
+				expect(leaf.style.textDecorationLine).toContain('underline');
+				expect(leaf.style.backgroundColor).toBe('rgb(255, 255, 0)');
+			} finally {
+				instance.destroy();
+			}
+		},
+	);
 
 	it('observes real text edits without importing neutral display styles into the document', async () => {
 		const instance = editor([tracked(`<w:rPr xmlns:w="${namespace}"/>`)]);

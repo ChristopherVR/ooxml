@@ -194,8 +194,13 @@ Pictures also retain their source drawing when preceding text is split or remove
 Changing the number of pictures sharing one media relationship is guarded until
 the model carries a stable identity for each drawing.
 Component history, Yjs peer undo and all six browser bindings cover these cases.
-Atom formatting recording and prior formatting display, and OMML formatting,
-still need implementation. These checks do not
+Continuous editing views now also project prior properties on inline atoms and
+hard breaks through the existing shared run-style resolver. Node decorations
+retain note labels, picture dimensions, source positions and undo history.
+Six-binding browser checks compare the four native object cases with their
+before references and retain the source model through display-mode changes.
+Unavailable snapshots report diagnostics and retain current formatting.
+Atom formatting recording and OMML formatting still need implementation. These checks do not
 establish complete native Word object-review parity.
 
 Print Layout now projects prior run and paragraph formatting through the same
