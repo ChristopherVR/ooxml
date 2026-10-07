@@ -42,6 +42,8 @@ export interface RenderResult {
 	dispose(): void;
 }
 export interface RenderOptions {
+	/** Temporary render layers share live resources without selection semantics. */
+	interactive?: boolean;
 	/** Static output embeds rasters and omits viewer selection semantics. Prefer exportPageSvg for bounded serialization. */
 	static?: boolean;
 	/** Optional viewer display state. Export/print snapshot APIs deliberately use saved display. */
@@ -111,7 +113,7 @@ export function renderPage(
 		vectorBudget: new ForeignVectorBudget(),
 		renderable: new WeakMap(),
 		visible,
-		interactive: !options.static,
+		interactive: !options.static && options.interactive !== false,
 	};
 	try {
 		for (const layer of pages)
@@ -120,7 +122,7 @@ export function renderPage(
 		context.resources.dispose();
 		throw error;
 	}
-	if (!options.static) {
+	if (context.interactive) {
 		const first = svg.querySelector<SVGGElement>('[data-shape-id]');
 		first?.setAttribute('tabindex', '0');
 	}

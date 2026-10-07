@@ -1796,3 +1796,31 @@ checks and two handle ownership checks pass. The broad Visio checkpoint passes
 all packed core entry imports and the full Visio viewer check pass. Published
 viewer-package checks still consume released dependencies; browser workflows
 exercise rebuilt local core/UI. The existing user Visio instance was untouched.
+
+## Shared live rotation preview
+
+Pointer rotation now renders a temporary pose through renderPage, using the
+same geometry, text, fill/line paint and live resource management as the canvas.
+Its affine pose composes the existing native pin-relative transform and shared
+affine multiplication. The original selected SVG is temporarily hidden at its
+existing paint position; the preview has no selection semantics or pointer
+hit targets. Cancellation and release restore visibility and dispose resources.
+Focus stays in the viewport so hiding a focused SVG shape cannot send Escape
+outside the gesture owner. Document geometry/history are unchanged until release.
+
+Ten native rectangle/ellipse source-target pairs agree to twelve decimals,
+including four page scales, signed angles beyond 180 degrees and the custom
+local pivot capture. Two additional core checks cover flips, signed turns,
+no-op pose identity and invalid metadata. Browser tests compare preview and
+committed coefficients, source bytes after Escape and during dragging, and
+save/reload behavior. These comparisons establish the temporary pose and
+transaction lifecycle; native gesture increments, handle appearance, text and
+gradient pixels, preview raster paint and Office reopen are still unverified.
+
+All 60 strengthened native pointer workflows and six scroll-boundary checks
+pass across all bindings. Preview coefficients agree with saved/reloaded poses
+to twelve decimals. Original source bytes remain identical immediately after
+Escape and before release. Twelve focused core preview checks and 24 renderer/
+lifecycle checks pass; replaced/cancelled raster URLs are revoked while the
+original canvas URL remains owned by the canvas. The broad core checkpoint
+passes 2,220 checks with 87 optional skips. Core/UI types and builds pass.

@@ -7,6 +7,7 @@ import {
 	wireHandleEvents,
 	type HandleGestureSnapshot,
 } from './viewer-handle-events';
+import { createRotationPreview } from './viewer-rotation-preview';
 const SVG = 'http://www.w3.org/2000/svg';
 const pointOptions = { snap: false, bounded: false } as const;
 /** A source-backed rotation gesture; previews never mutate the model or history. */
@@ -14,6 +15,7 @@ export class ViewerRotationHandle {
 	#drag:
 		| (HandleGestureSnapshot & {
 				preview: SVGLineElement;
+				shapePreview: ReturnType<typeof createRotationPreview>;
 				startX: number;
 				startY: number;
 				center: { x: number; y: number };
@@ -149,8 +151,14 @@ export class ViewerRotationHandle {
 			!this.options.active()
 		)
 			return;
+		const source = Array.from(svg.querySelectorAll<SVGGElement>('[data-shape-id]')).find(
+			(group) => group.dataset.shapeId === shape.id,
+		);
+		if (!source) return;
 		const start = pagePoint(svg, page, event, pointOptions);
 		if (!start) return;
+		// Hiding a focused SVG source must not move Escape outside the gesture owner.
+		this.viewport.focus({ preventScroll: true });
 		const center = { x: shape.rotation.pinX, y: page.height - shape.rotation.pinY };
 		const preview = this.viewport.ownerDocument.createElementNS(SVG, 'line');
 		preview.classList.add('rotation-preview');
@@ -170,6 +178,7 @@ export class ViewerRotationHandle {
 			document: state.document,
 			shapeId: shape.id,
 			preview,
+			shapePreview: createRotationPreview(state.document, page, shape, source),
 			startX: event.clientX,
 			startY: event.clientY,
 			center,
@@ -177,6 +186,13 @@ export class ViewerRotationHandle {
 				unwrapped: true,
 			}),
 		};
+		try {
+			this.#drag.shapePreview.update(shape.rotation.angle);
+		} catch (error) {
+			this.#cancel();
+			this.options.announce(editErrorMessage(error));
+			return;
+		}
 		event.preventDefault();
 		event.stopImmediatePropagation();
 		this.viewport.setPointerCapture?.(event.pointerId);
@@ -186,7 +202,13 @@ export class ViewerRotationHandle {
 		if (!drag || event.pointerId !== drag.pointer) return;
 		const point = pagePoint(drag.svg, drag.page, event, pointOptions);
 		if (point) {
-			drag.rotate(point);
+			const angle = (-drag.rotate(point) * Math.PI) / 180;
+			try {
+				drag.shapePreview.update(angle);
+			} catch (error) {
+				this.#cancel();
+				this.options.announce(editErrorMessage(error));
+			}
 			drag.preview.setAttribute('x2', String(point.x));
 			drag.preview.setAttribute('y2', String(point.y));
 		}
@@ -197,6 +219,7 @@ export class ViewerRotationHandle {
 		const drag = this.#drag;
 		this.#drag = undefined;
 		drag?.preview.remove();
+		drag?.shapePreview.dispose();
 		if (drag && this.viewport.hasPointerCapture?.(drag.pointer))
 			this.viewport.releasePointerCapture(drag.pointer);
 	}

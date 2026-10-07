@@ -95,7 +95,9 @@ local geometry/styles. All six bindings cover control editing, undo/redo and
 public save/reload. Local/inherited LockRotate and guarded/dependent angle
 formulas are checked; angle units are explicit. Pointer rotation handles reuse
 shared geometry and preserve the source pin, including off-centre pivots.
-Native keyboard rotation commands, grouped/master/glued and 1D rotation, broader angle/formula
+Live preview uses the existing renderer without source/history changes;
+native snapping and preview paint remain unverified. Native keyboard rotation
+commands, grouped/master/glued and 1D rotation, broader angle/formula
 and text/gradient paint cases, exact contours/pixels and native Office reopen
 acceptance remain unverified.
 

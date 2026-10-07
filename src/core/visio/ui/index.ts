@@ -19,3 +19,5 @@ export {
 	visioStrokeGradient,
 	visioRenderedGradientStopCount,
 } from '../native-gradient-stops';
+
+export * from './rotation-preview';

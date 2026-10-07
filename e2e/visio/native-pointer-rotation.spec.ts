@@ -120,11 +120,24 @@ for (const variable of [
 				const halfway = pointer(0.5);
 				await page.mouse.move(halfway.x, halfway.y, { steps: 6 });
 				await expect(viewer.locator('.rotation-preview')).toHaveCount(1);
+				await expect(viewer.locator('.rotation-shape-preview')).toHaveCount(1);
+				await expect(shape).toHaveCSS('visibility', 'hidden');
 				await expect(shape).toHaveAttribute('transform', before);
 				await page.keyboard.press('Escape');
 				await page.mouse.up();
 				await expect(viewer.locator('.rotation-preview')).toHaveCount(0);
+				await expect(viewer.locator('.rotation-shape-preview')).toHaveCount(0);
+				await expect(shape).toHaveCSS('visibility', 'visible');
 				await expect(shape).toHaveAttribute('data-selected', 'true');
+				expect(
+					Buffer.from(
+						await viewer.evaluate((element) =>
+							Array.from(
+								(element as unknown as { exportVsdx(): { bytes: Uint8Array } }).exportVsdx().bytes,
+							),
+						),
+					),
+				).toEqual(source);
 				await expect(shape).toHaveAttribute('transform', before);
 				await page.mouse.move(geometry.grip.x, geometry.grip.y);
 				await page.mouse.down();
@@ -134,7 +147,22 @@ for (const variable of [
 					await page.mouse.move(point.x, point.y);
 				}
 				await expect(shape).toHaveAttribute('transform', before);
+				const previewPose = (await viewer
+					.locator('.rotation-shape-preview > g')
+					.getAttribute('transform'))!
+					.slice(7, -1)
+					.split(/[\s,]+/)
+					.map(Number);
+				const duringDrag = Buffer.from(
+					await viewer.evaluate((element) =>
+						Array.from(
+							(element as unknown as { exportVsdx(): { bytes: Uint8Array } }).exportVsdx().bytes,
+						),
+					),
+				);
+				expect(duringDrag).toEqual(source);
 				await page.mouse.up();
+				await expect(viewer.locator('.rotation-shape-preview')).toHaveCount(0);
 				await expect(shape).not.toHaveAttribute('transform', before);
 				const after = (await shape.getAttribute('transform'))!;
 				await viewport.focus();
@@ -155,6 +183,7 @@ for (const variable of [
 					() =>
 						(window as unknown as { rotationSamples: { x: number; y: number }[] }).rotationSamples,
 				);
+				for (let i = 0; i < 6; i++) expect(previewPose[i]).toBeCloseTo(actual.transform[i]!, 12);
 				const [press, release] = samples.slice(-2);
 				const bearing = (point: { x: number; y: number }) =>
 					Math.atan2(point.y - geometry.pin.y, point.x - geometry.pin.x);

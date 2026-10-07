@@ -1616,3 +1616,23 @@ recognizes native `w:delText` alongside `w:t`. A native tracked deletion fixture
 and reopen comparison retain two fields and one text revision. Core resolution
 and six-binding browser cases cover accept/reject and undo; this does not establish
 all field editing with Track Changes or multi-author revision attribution.
+
+## Shared live Visio rotation preview
+
+Source: ChristopherVR/ooxml at `f870296e5`, `src/core/visio/geometry.ts`
+(transform), `src/core/geometry/affine.ts` (composeAffine) and
+`src/ui/src/visio/render-svg.ts` (renderPage/drawShape/drawOwn).
+`visioRotationPreviewTransform` composes the existing pin-relative rotation
+and affine functions with the saved pose. No second shape transform algorithm
+or model mutation path is introduced. Native scaled/custom-pivot poses and
+flipped source poses cover its coefficients.
+
+The UI temporary layer reuses the live SVG renderer with selection semantics
+turned off, retains the source sibling paint order and disposes temporary
+resources on update, cancellation and release. Original source visibility is
+restored; pointer capture and Escape remain in the existing handle lifecycle.
+Focus moves to the viewport before hiding the source SVG, keeping keyboard
+cancellation inside the gesture owner. The browser matrix checks source bytes
+after cancellation and during dragging, and compares preview coefficients to
+the committed/reopened scene. Native snapping, preview raster equivalence and
+Microsoft Visio reopen acceptance remain open.
