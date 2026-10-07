@@ -15,6 +15,7 @@ import type { PptxChartData } from 'ooxml-core/pptx';
 
 import { chartFontPx } from './chart-font';
 import { resolveChartStyleDefaults } from './chart-style-defaults';
+import { resolveChartTextStyle } from './chart-text-defaults';
 
 /** Resolved data-table geometry. */
 export interface DataTableMetrics {
@@ -34,10 +35,9 @@ export function resolveDataTableMetrics(chartData: PptxChartData): DataTableMetr
 	if (!table) {
 		return undefined;
 	}
+	const sizePt = resolveChartTextStyle(chartData, table.txPr)?.fontSize;
 	const fontSize =
-		table.txPr?.fontSize !== undefined
-			? chartFontPx(table.txPr.fontSize)
-			: resolveChartStyleDefaults(chartData).bodyTextPx;
+		sizePt !== undefined ? chartFontPx(sizePt) : resolveChartStyleDefaults(chartData).bodyTextPx;
 	const rowH = Math.max(14, Math.round(fontSize * 1.45));
 	const longestName = chartData.series.reduce((m, s) => Math.max(m, (s.name ?? '').length), 0);
 	const keyW =

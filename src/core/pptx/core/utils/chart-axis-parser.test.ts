@@ -111,6 +111,7 @@ describe('parseChartAxes', () => {
 								'@_sz': '1000',
 								'@_b': '1',
 								'a:latin': { '@_typeface': 'Arial' },
+								'a:ea': { '@_typeface': 'Malgun Gothic' },
 								'a:solidFill': {
 									'a:srgbClr': { '@_val': '333333' },
 								},
@@ -148,6 +149,7 @@ describe('parseChartAxes', () => {
 		expect(catAx?.fontSize).toBe(10);
 		expect(catAx?.fontBold).toBeTruthy();
 		expect(catAx?.fontFamily).toBe('Arial');
+		expect(catAx?.eastAsiaFontFamily).toBe('Malgun Gothic');
 		expect(catAx?.fontColor).toBe('#333333');
 
 		const valAx = result.find((a) => a.axisType === 'valAx');

@@ -7,7 +7,11 @@ import {
 	dataLabelsGroupDeleted,
 	dataLabelsGroupShowsContent,
 } from '../../utils/chart-data-labels-visibility';
-import { parseDefRPrTextStyle, resolveTxPrDefRPr } from '../../utils/chart-def-rpr-style';
+import {
+	parseChartWideTextStyle,
+	parseDefRPrTextStyle,
+	resolveTxPrDefRPr,
+} from '../../utils/chart-def-rpr-style';
 import { parseChartGradientFill } from '../../utils/chart-gradient-fill';
 import { parseChartLegendEntries } from '../../utils/chart-legend-serializer';
 import { parseChartTitleStyle } from '../../utils/chart-title-style-parser';
@@ -209,6 +213,16 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		);
 		if (chartAreaGradient) {
 			style.chartAreaGradient = chartAreaGradient;
+			hasStyle = true;
+		}
+		const textStyle = parseChartWideTextStyle(
+			chartSpace,
+			this.xmlLookupService,
+			{ parseColor: (node) => this.parseColor(node) },
+			(raw) => this.resolveThemeTypeface(raw) ?? raw,
+		);
+		if (textStyle) {
+			style.textStyle = textStyle;
 			hasStyle = true;
 		}
 

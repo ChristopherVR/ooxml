@@ -12,8 +12,9 @@
  */
 import type { PptxChartData } from 'ooxml-core/pptx';
 
-import { chartFontPx } from './chart-font';
+import { chartFontPx, chartTextFontFamily } from './chart-font';
 import { resolveChartStyleDefaults } from './chart-style-defaults';
+import { resolveChartTextStyle } from './chart-text-defaults';
 
 /** Semi-bold weight the bindings historically hardcoded for the title. */
 const DEFAULT_TITLE_FONT_WEIGHT = 600;
@@ -77,6 +78,11 @@ export function resolveChartTitleTextStyle(
 	const fontWeight = bold === undefined ? DEFAULT_TITLE_FONT_WEIGHT : bold ? 700 : 400;
 	const fill =
 		style?.titleFontColor ?? (hasStylePartTitle ? defaults.titleTextColor : DEFAULT_TITLE_FILL);
-	const fontFamily = style?.titleFontFamily?.trim() || undefined;
+	const fontFamily = chartTextFontFamily(
+		resolveChartTextStyle(chartData, {
+			fontFamily: style?.titleFontFamily?.trim() || undefined,
+			eastAsiaFontFamily: style?.titleEastAsiaFontFamily,
+		}),
+	);
 	return fontFamily ? { fontSize, fontWeight, fill, fontFamily } : { fontSize, fontWeight, fill };
 }

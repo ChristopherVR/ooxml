@@ -25,8 +25,9 @@
  */
 import type { PptxChartData, PptxChartLegendTextStyle, PptxChartSeries } from 'ooxml-core/pptx';
 
-import { chartFontPx } from './chart-font';
+import { chartFontPx, chartTextFontFamily } from './chart-font';
 import { formatChartNumberWithColor } from './chart-number-format';
+import { resolveChartTextStyle } from './chart-text-defaults';
 import type { SvgText } from './chart-view-model';
 import { formatAxisValue } from './chart-view-model';
 
@@ -254,7 +255,16 @@ export function resolveDataLabelTextStyle(
 	pointIndex: number,
 ): PptxChartLegendTextStyle | undefined {
 	const point = series.dataLabels?.find((label) => label.idx === pointIndex);
-	return point?.txPr ?? series.dataLabelOptions?.txPr ?? chartData.style?.dataLabels?.txPr;
+	// A rich-text label (`c:dLbl/c:tx/c:rich`) is drawn with its own run's
+	// font, but only while it still has that literal text.
+	const rich = point?.text !== undefined ? point.richTextStyle : undefined;
+	return resolveChartTextStyle(
+		chartData,
+		chartData.style?.dataLabels?.txPr,
+		series.dataLabelOptions?.txPr,
+		point?.txPr,
+		rich,
+	);
 }
 
 /**
@@ -275,8 +285,9 @@ export function dataLabelFontOverride(
 	if (!style) {
 		return {};
 	}
+	const fontFamily = chartTextFontFamily(style);
 	return {
-		...(style.fontFamily ? { fontFamily: style.fontFamily } : {}),
+		...(fontFamily ? { fontFamily } : {}),
 		...(style.fontSize !== undefined ? { fontSize: chartFontPx(style.fontSize) } : {}),
 		...(style.bold !== undefined ? { fontWeight: style.bold ? 'bold' : 'normal' } : {}),
 		...(style.italic !== undefined ? { fontStyle: style.italic ? 'italic' : 'normal' } : {}),

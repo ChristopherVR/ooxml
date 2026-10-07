@@ -460,6 +460,13 @@ The chart-grid viewer facade was restored to its original implementation in
 the follow-up commit to remain compatible with published core versions. Both
 viewer adoption steps are tracked in `docs/pptx-shared-migration.md`.
 
+## Chart text defaults added during the renderer migration
+
+Source: `IHAGI-c/ooxml`, commit `d29c143e65f0200dc9894a77c220d804c8cd100d` (PR #13).
+The new `chart-text-defaults.ts` and `.test.ts` modules move from
+`viewers/pptx/packages/shared/src/render` to `src/ui/src/pptx/render`.
+Their core type imports use `ooxml-core/pptx`; chart font behavior is preserved.
+
 ## PowerPoint shared renderer and document operations
 
 Extracted the complete `viewers/pptx/packages/shared/src` implementation at

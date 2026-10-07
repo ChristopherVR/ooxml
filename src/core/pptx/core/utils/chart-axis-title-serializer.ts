@@ -225,6 +225,9 @@ function buildDefRPr(
 	if (style.fontFamily) {
 		rPr['a:latin'] = { '@_typeface': style.fontFamily };
 	}
+	if (existing['a:ea']) {
+		rPr['a:ea'] = existing['a:ea'];
+	}
 	return rPr;
 }
 

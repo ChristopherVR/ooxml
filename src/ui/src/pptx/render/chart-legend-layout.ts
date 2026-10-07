@@ -15,7 +15,7 @@
  *
  * @module chart-legend-layout
  */
-import { chartFontPx } from './chart-font';
+import { chartFontPx, chartTextFontFamily } from './chart-font';
 import type { LegendLineSwatch } from './chart-legend-swatch';
 import type { ChartViewModel } from './chart-view-model';
 
@@ -75,7 +75,7 @@ export function computeChartLegendLayout(vm: ChartViewModel): ChartLegendLayoutI
 			fill: textStyle?.color ?? DEFAULT_LEGEND_TEXT_COLOR,
 			fontWeight: textStyle?.bold ? 'bold' : 'normal',
 			fontStyle: textStyle?.italic ? 'italic' : 'normal',
-			fontFamily: textStyle?.fontFamily,
+			fontFamily: chartTextFontFamily(textStyle),
 			...(entry.lineSwatch ? { lineSwatch: entry.lineSwatch } : {}),
 		};
 	});

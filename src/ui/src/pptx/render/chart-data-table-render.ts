@@ -20,6 +20,8 @@
 import type { PptxChartData, PptxChartSeries } from 'ooxml-core/pptx';
 
 import { resolveDataTableMetrics } from './chart-data-table-metrics';
+import { chartTextFontFamily } from './chart-font';
+import { resolveChartTextStyle } from './chart-text-defaults';
 import type { PlotLayout, SvgLine, SvgPrimitive, SvgText } from './chart-view-model';
 import { formatAxisValue, seriesColor } from './chart-view-model';
 
@@ -63,12 +65,13 @@ export function computeDataTablePrimitives(
 	const showK = table.showKeys !== false;
 	const stroke = table.spPr?.strokeColor ?? DEFAULT_BORDER_COLOR;
 	const strokeWidth = table.spPr?.strokeWidth ?? 1;
+	const textStyle = resolveChartTextStyle(chartData, table.txPr);
 	const text = {
 		fontSize: metrics.fontSize,
-		fill: table.txPr?.color ?? DEFAULT_TEXT_COLOR,
-		fontFamily: table.txPr?.fontFamily,
-		fontStyle: (table.txPr?.italic ? 'italic' : 'normal') as 'italic' | 'normal',
-		fontWeight: (table.txPr?.bold ? 'bold' : 'normal') as 'bold' | 'normal',
+		fill: textStyle?.color ?? DEFAULT_TEXT_COLOR,
+		fontFamily: chartTextFontFamily(textStyle),
+		fontStyle: (textStyle?.italic ? 'italic' : 'normal') as 'italic' | 'normal',
+		fontWeight: (textStyle?.bold ? 'bold' : 'normal') as 'bold' | 'normal',
 		dominantBaseline: 'central' as const,
 	};
 	const { rowH, keyW } = metrics;

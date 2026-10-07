@@ -43,7 +43,9 @@ export function applyLegendEntryOverrides(
 		if (override?.deleted) {
 			return;
 		}
-		const textStyle = override?.textStyle ?? defaultTextStyle;
+		const textStyle = override?.textStyle
+			? { ...defaultTextStyle, ...override.textStyle }
+			: defaultTextStyle;
 		result.push(textStyle ? { ...item, textStyle } : item);
 	});
 	return result;

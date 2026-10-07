@@ -3,7 +3,10 @@ import { setChartTitle } from 'ooxml-core/pptx';
 import { describe, expect, it } from 'vitest';
 
 import { translationsEn } from '../i18n/translations-en';
+import { chartTextFontFamily } from './chart-font';
 import { collapseChartTitleRunsForEdit, resolveChartTitleRunSpans } from './chart-title-runs';
+
+const GEORGIA = chartTextFontFamily({ fontFamily: 'Georgia' });
 
 function chart(overrides: Partial<PptxChartData> = {}): PptxChartData {
 	return {
@@ -30,14 +33,14 @@ describe('resolveChartTitleRunSpans', () => {
 			style: { hasTitle: true, titleFontFamily: 'Georgia' },
 		});
 		expect(resolveChartTitleRunSpans(data)).toStrictEqual([
-			{ text: 'Sales ', fontSize: 12, fontWeight: 700, fill: '#1e293b', fontFamily: 'Georgia' },
+			{ text: 'Sales ', fontSize: 12, fontWeight: 700, fill: '#1e293b', fontFamily: GEORGIA },
 			{
 				text: 'Q1',
 				fontSize: 20 * (4 / 3),
 				fontWeight: 600,
 				fontStyle: 'italic',
 				fill: '#FF0000',
-				fontFamily: 'Georgia',
+				fontFamily: GEORGIA,
 			},
 		]);
 	});
@@ -63,7 +66,7 @@ describe('resolveChartTitleRunSpans', () => {
 				fontWeight: 700,
 				fontStyle: 'italic',
 				fill: '#FF0000',
-				fontFamily: 'Georgia',
+				fontFamily: GEORGIA,
 			},
 		]);
 		expect(data).toStrictEqual(original);

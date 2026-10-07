@@ -289,6 +289,18 @@ describe('applyChartAxisTitleStyleToXml', () => {
 		expect((fill['a:srgbClr'] as XmlObject)['@_val']).toBe('FF0000');
 	});
 
+	it('keeps the authored East Asian face of the title', () => {
+		const node = axisWithTitle();
+		const ea = { '@_typeface': '+mn-ea' };
+		(node['c:title'] as XmlObject)['c:txPr'] = {
+			'a:p': { 'a:pPr': { 'a:defRPr': { 'a:ea': ea } } },
+		};
+		applyChartAxisTitleStyleToXml(node, { fontFamily: 'Calibri' }, getLocalName);
+		const txPr = (node['c:title'] as XmlObject)['c:txPr'] as XmlObject;
+		const defRPr = ((txPr['a:p'] as XmlObject)['a:pPr'] as XmlObject)['a:defRPr'] as XmlObject;
+		expect(defRPr['a:ea']).toStrictEqual(ea);
+	});
+
 	it('no-ops when no style fields are provided', () => {
 		const node = axisWithTitle();
 		const before = JSON.stringify(node);

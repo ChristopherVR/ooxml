@@ -16,6 +16,13 @@ describe('applyLegendEntryOverrides', () => {
 		expect(applyLegendEntryOverrides(legend, [])).toBe(legend);
 	});
 
+	it('lets an entry override only the fields it sets on the legend default', () => {
+		const entries: PptxChartLegendEntry[] = [{ index: 0, textStyle: { bold: true } }];
+		const result = applyLegendEntryOverrides(legend, entries, { fontSize: 9, color: '#333333' });
+		expect(result[0].textStyle).toStrictEqual({ fontSize: 9, color: '#333333', bold: true });
+		expect(result[1].textStyle).toStrictEqual({ fontSize: 9, color: '#333333' });
+	});
+
 	it('drops a deleted entry entirely rather than hiding it', () => {
 		const entries: PptxChartLegendEntry[] = [{ index: 1, deleted: true }];
 		const result = applyLegendEntryOverrides(legend, entries);

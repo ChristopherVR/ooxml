@@ -50,6 +50,8 @@ export function buildGridlinesAndLabels(
 	 * `c:majorGridlines` is absent (see `shouldRenderMajorGridlines`).
 	 */
 	showMajorGridlines = true,
+	/** The value axis's own text style, laid over the default tick label look. */
+	textStyle?: Pick<SvgText, 'fontSize' | 'fill' | 'fontWeight' | 'fontFamily'>,
 ): { gridlines: SvgLine[]; axisLabels: SvgText[] } {
 	const gridlines: SvgLine[] = [],
 		axisLabels: SvgText[] = [];
@@ -76,6 +78,7 @@ export function buildGridlinesAndLabels(
 			text: formatAxisValue(val),
 			fontSize: DEFAULT_CHART_TEXT_PX,
 			fill: AXIS_LABEL_COLOR,
+			...textStyle,
 			textAnchor: 'end',
 			dominantBaseline: 'central',
 		});
