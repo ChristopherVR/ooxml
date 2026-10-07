@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { layoutSections } from './page-flow.js';
+import { createFakeMeasurer } from './measure.js';
 import type { LayoutTableRow } from './input.js';
 import type { LayoutTableBox } from './result.js';
 
@@ -74,5 +75,53 @@ describe('Word table header pagination', () => {
 			.filter((p) => p.blockId === 'ignored');
 		expect(ignored).toHaveLength(2);
 		expect(ignored.map((p) => p.lines.length)).toEqual([2, 2]);
+	});
+});
+
+describe('table flow progress', () => {
+	it('reports and preserves an oversized splittable row when no line fits an empty column', () => {
+		const result = layoutSections(
+			{
+				sections: [
+					{
+						page: {
+							widthPx: 200,
+							heightPx: 10,
+							marginTopPx: 0,
+							marginBottomPx: 0,
+							marginLeftPx: 0,
+							marginRightPx: 0,
+						},
+						blocks: [
+							{
+								kind: 'table',
+								id: 'table',
+								rows: [
+									{
+										cells: [
+											{
+												paragraphs: [
+													{ kind: 'paragraph', id: 'text', runs: [{ text: 'Oversized line' }] },
+												],
+											},
+										],
+									},
+								],
+							},
+						],
+					},
+				],
+			},
+			createFakeMeasurer(),
+		);
+		expect(result.pages).toHaveLength(1);
+		const table = result.pages[0]!.columns[0]!.blocks[0]!;
+		if (table.kind !== 'table') throw new Error('Expected table');
+		expect(
+			table.rows[0]!.cells[0]![0]!.lines[0]!.fragments.map((fragment) => fragment.text).join(''),
+		).toBe('Oversized line');
+		expect(result.approximations).toContain(
+			'A table row cannot fit a line in an empty page/column and was placed without splitting.',
+		);
 	});
 });

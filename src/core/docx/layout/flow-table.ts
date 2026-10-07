@@ -89,6 +89,18 @@ export function placeTable(
 				continue;
 			}
 			const { before, after } = splitRowAtHeight(remainingRow, Math.max(0, remaining));
+			if (
+				!before.cells.some((cell) => cell.length) &&
+				cursor.atColumnTop &&
+				fragmentRows.every((row) => row.repeated)
+			) {
+				note(
+					'A table row cannot fit a line in an empty page/column and was placed without splitting.',
+				);
+				fragmentRows.push(toRowBox(remainingRow, false));
+				remainingRow = null;
+				continue;
+			}
 			const previousWidth = cursor.columnWidthPx;
 			if (before.cells.some((cell) => cell.length)) fragmentRows.push(toRowBox(before, false));
 			startNewFragment();
