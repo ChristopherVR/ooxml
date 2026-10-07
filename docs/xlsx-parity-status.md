@@ -1,14 +1,59 @@
 # XLSX parity status
 
-Updated 8 October 2026: mixed-title support at `4f3f87ea6`, followed by host
-font measurements for chart titles/legends, natural title baselines and imported
-paragraph spacing.
+Updated 8 October 2026. The latest completed XLSX implementation is
+`4f0d6198d`: chart-title paragraph spacing, following mixed titles, browser
+font measurements and natural title baselines. The evidence below describes
+completed validation at that revision, not every change in the working tree.
 
 **Full 1:1 Microsoft Excel parity has not been achieved.** The product is a
 working spreadsheet editor with substantial supported behavior and an expanding
 native comparison corpus. Compatibility is verified for specific cases, not
 for every Excel feature, workbook or UI interaction. We have not established
 lossless saving or whole-workbook pixel equivalence.
+
+## Current assessment
+
+We have a working spreadsheet editor, with partial compatibility and native
+evidence for specific workflows. We do not yet have Excel-equivalent behavior
+or UI. A supported feature means its listed scope works; it does not mean all
+Excel options, interactions or visual details in that area are implemented.
+
+| Parity dimension               | Assessment   | Evidence or remaining work                                                                                                                                        |
+| ------------------------------ | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Workbook import and saving     | Partial      | Supported content has round-trip regressions and selected Excel acceptance checks. Unsupported features and structural edits need wider preservation coverage.    |
+| Editing and calculation        | Partial      | Values, formulas, formatting, clipboard, history and structural editing work within supported scope. Missing functions and semantic edge cases remain.            |
+| Charts                         | Partial      | Eight SVG families and selected formatting/edit/export workflows are tested. Advanced families, complete controls and exact layout remain open.                   |
+| SmartArt                       | Display-only | Shared cached drawings render; insertion, editing and reflow are absent.                                                                                          |
+| Excel UI and visual appearance | Partial      | Shared ribbon/gallery/fill controls and six bindings are exercised. Full ribbon/dialog behavior, text/layout and raster equivalence are unverified or incomplete. |
+| Whole-product parity           | Not achieved | Missing pivots, advanced data features, native page views, collaboration and macro execution prevent this claim.                                                  |
+
+The last completed sweep passed **8,560 ordinary core tests**, with **17
+existing expected raster failures**, and **164 focused chart browser checks**
+across six bindings. Core/UI typechecks, builds and package checks passed.
+These counts describe regression coverage, not a completion percentage or a
+complete end-to-end Excel comparison.
+
+## Latest completed increments
+
+| Revision    | Implemented behavior                                                                         | Scope of evidence                                                                                              |
+| ----------- | -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `4f3f87ea6` | Import and preserve mixed-format chart-title runs and paragraphs through chart regeneration. | Native character formatting and actual UI type-change/save/reopen comparisons.                                 |
+| `e74cf9e85` | Use the grid's cached browser font measurer for chart-title and legend widths.               | Rich-run advances, centering and edit regressions. Headless estimates remain a fallback.                       |
+| `8499a584e` | Use measured font ascent/descent for title heights and mixed-line baselines.                 | Three native title-box references and a bounded PNG comparison.                                                |
+| `4f0d6198d` | Read, render and preserve title line/before/after spacing in points or percentages.          | Twelve native references, 72 additional browser cases and Excel reopen/resave checks. No spacing-authoring UI. |
+
+## Work in progress, not completed support
+
+Automatic chart-title wrapping is the next implementation increment. Ten
+owned Excel references have been captured at several chart widths, including
+mixed font sizes, an oversized word and paragraph spacing. A shared text-flow
+helper is being extracted from the PowerPoint converter so both products can
+reuse the algorithm.
+
+The helper and PowerPoint adapter are currently uncommitted. The XLSX painter
+does not yet use the new wrapping helper; its integration, broader regression
+checks, UI comparisons and Excel export acceptance remain outstanding. The
+native captures alone do not establish implemented wrapping or parity.
 
 This page is the current summary. The [implementation review](xlsx-parity-review.md)
 records each increment and its evidence; older sections describe the state at
