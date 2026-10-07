@@ -1,4 +1,8 @@
-param([string]$OutputDirectory=(Join-Path $env:TEMP ('visio-gradient-raster-'+[guid]::NewGuid().ToString('N'))))
+param(
+ [string]$OutputDirectory=(Join-Path $env:TEMP ('visio-gradient-raster-'+[guid]::NewGuid().ToString('N'))),
+ [ValidateSet('rectangle','ellipse','triangle','notched','pentagon','chevron','ushape','star')]
+ [string[]]$PathShapes=@('rectangle','ellipse','triangle','notched')
+)
 # Compare the real raster engine, rather than assuming native SVG is a paint oracle.
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'visio-native-shape.ps1')
@@ -33,7 +37,7 @@ try {
  foreach($stopCount in @(2,3)){
   foreach($alpha in @($false,$true)){
    foreach($direction in 0..13){
-    $kinds=if($direction -eq 13){@('rectangle','ellipse','triangle','notched')}else{@('rectangle')}
+    $kinds=if($direction -eq 13){$PathShapes}else{@('rectangle')}
     foreach($kind in $kinds){
      $name="direction-$direction-$kind-stops-$stopCount-alpha-$alpha"
      $shape=New-VisioNativeFillShape $page $kind
@@ -60,7 +64,12 @@ try {
        $color=$bitmap.GetPixel($point[0],$point[1])
        $samples+=,@{x=$point[0];y=$point[1];rgba=@($color.R,$color.G,$color.B,$color.A)}
       }
-      $cases+=,@{name=$name;direction=$direction;kind=$kind;stopCount=$stopCount;alpha=$alpha;shapeId=[string]$shape.ID;width=$bitmap.Width;height=$bitmap.Height;samples=$samples}
+      $outline=@()
+      if($kind -ne 'ellipse'){
+       $points=[double[]](Get-VisioNativeFillPoints $kind)
+       for($i=0;$i -lt $points.Length-2;$i+=2){$outline+=,@((($points[$i]-1)/2),($points[$i+1]-1))}
+      }
+      $cases+=,@{name=$name;direction=$direction;kind=$kind;outline=$outline;stopCount=$stopCount;alpha=$alpha;shapeId=[string]$shape.ID;width=$bitmap.Width;height=$bitmap.Height;samples=$samples}
      } finally {$bitmap.Dispose()}
     }
    }

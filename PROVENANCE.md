@@ -917,3 +917,12 @@ other topology, exact pixels and native reopen parity remain unverified.
   and added decorative workspace previews. Theme events and persisted values
   retain their existing contract. Preview styling resides in
   `src/ui/src/teams/app/settings-previews.css`; no core logic moved.
+
+## Shared native Visio outline capture
+
+Source: ChristopherVR/ooxml at `e0b7ee995`, `scripts/visio-native-shape.ps1`,
+triangle and notched DrawPolyline coordinates. The unchanged existing points
+moved to `Get-VisioNativeFillPoints`; native drawing and raster capture metadata
+consume the same helper. New pentagon, chevron, U-shape and star probes extend
+the independent native corpus. No production geometry or paint algorithm was
+copied. Native settings/owned-process cleanup remain in the existing recorder.

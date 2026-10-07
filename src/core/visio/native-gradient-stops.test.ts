@@ -78,19 +78,29 @@ describe('native opaque gradient sampling', () => {
 	});
 });
 
-const directory = process.env.VISIO_NATIVE_GRADIENT_RASTER_DIR;
-it.skipIf(!directory)('preserves all 68 genuine native raster cases through editing', async () => {
-	const bytes = await readFile(join(directory!, 'gradient-raster.vsdx'));
-	const before = await parseVsdx(bytes),
-		page = before.pages[0]!;
-	expect(page.shapes).toHaveLength(68);
-	const saved = await editVsdx(bytes, [
-		{ type: 'move-shape', pageId: page.id, shapeId: page.shapes[0]!.id, x: 2.25, y: 1.5 },
-	]);
-	const after = await parseVsdx(saved.bytes);
-	for (let i = 0; i < 68; i++)
-		expect(after.pages[0]!.shapes[i]!.style.fillGradient).toEqual(
-			page.shapes[i]!.style.fillGradient,
-		);
-	expect(page.shapes.filter((shape) => shape.style.fillGradient?.interpolation)).toHaveLength(17);
-});
+for (const [name, count, profiles] of [
+	['VISIO_NATIVE_GRADIENT_RASTER_DIR', 68, 17],
+	['VISIO_NATIVE_EXTENDED_GRADIENT_RASTER_DIR', 84, 21],
+] as const) {
+	const directory = process.env[name];
+	it.skipIf(!directory)(
+		`preserves all ${count} genuine native raster cases through editing`,
+		async () => {
+			const bytes = await readFile(join(directory!, 'gradient-raster.vsdx'));
+			const before = await parseVsdx(bytes),
+				page = before.pages[0]!;
+			expect(page.shapes).toHaveLength(count);
+			const saved = await editVsdx(bytes, [
+				{ type: 'move-shape', pageId: page.id, shapeId: page.shapes[0]!.id, x: 2.25, y: 1.5 },
+			]);
+			const after = await parseVsdx(saved.bytes);
+			for (let i = 0; i < count; i++)
+				expect(after.pages[0]!.shapes[i]!.style.fillGradient).toEqual(
+					page.shapes[i]!.style.fillGradient,
+				);
+			expect(page.shapes.filter((shape) => shape.style.fillGradient?.interpolation)).toHaveLength(
+				profiles,
+			);
+		},
+	);
+}

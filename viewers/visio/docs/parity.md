@@ -5,7 +5,8 @@ Full Microsoft Visio parity is a target, not a current claim. Snapshot: 2026-10-
 Gradient fidelity remains open: native PNG captures show that two-stop colors
 and path-following contours differ from native SVG export. Exact native-SVG
 comparisons below do not establish native raster parity. See verification.md
-for the 68-case raster capture and the unverified-gradient-raster diagnostic.
+for the 68-case and extended 84-case raster captures and the
+unverified-gradient-raster diagnostic.
 
 Saved opaque two-stop fills now use the measured sigma/gamma profile, and saved
 radial fills use physical circular radii. The native PNG interior benchmark
@@ -22,6 +23,10 @@ Path fills reuse the evaluated outline and shared region/radial renderer.
 Measured path-fill interior errors remain as high as 10 channel levels, with
 mean below 2.5. Curves beyond canonical ellipses, holes, offset outlines,
 broader concave topologies and transformed native comparisons remain open.
+The extended capture adds pentagons, chevrons, U-shapes and stars. The 80
+non-star cases meet the existing regression bounds; all six star scenarios
+remain explicit expected fidelity failures, with maximum channel errors of 43.
+These failures are recorded independently of successful import/render checks.
 
 Implementation status is based on source inspection. Test filenames identify evidence; current pass counts and limitations are recorded in verification.md. Generated fixtures and the original demo scene do not establish visual parity with Microsoft Visio.
 

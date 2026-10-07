@@ -882,3 +882,45 @@ UI passed 714 with seven skips. Core/UI/viewer types and UI builds passed.
 The root lint run found an existing unused index parameter in XLSX drawings;
 this Visio change does not modify that file. Path fan snapshot isolation,
 normalized page scaling and generated-stop budget accounting have regressions.
+
+## Extended native path corpus and unresolved star fidelity (2026-10-08)
+
+The shared native shape helper now supplies exact polygon vertices to both
+DrawPolyline and the capture metadata. record-visio-gradient-raster.ps1 accepts
+PathShapes; its default 68-case capture is retained. The extended capture uses
+rectangle, ellipse, triangle, notched, pentagon, chevron, ushape and star,
+producing 84 cases in visio-gradient-raster-extended-e3f56a8aba4b4ec5a1feea169af04afe
+in the local temporary directory. Native settings were restored and the owned
+InvisibleApp quit; the user's pre-existing Visio process was untouched.
+
+All six framework routes produced live and portable exports for every case:
+1,008 interior comparisons. Exact capture vertices define the polygon masks,
+with the same eight-pixel contour exclusion; ellipse masks are unchanged.
+The 80 non-star cases meet the existing path bounds of maximum 10 and mean below
+2.5, while directions 0-12 retain their tighter bounds. Every route's star
+fidelity scenario fails the same unchanged maximum-10 gate. Playwright marks
+these six scenarios as expected failures only after successful import, render,
+artifact writing, result-count and minimum-pixel checks. Its summary counts
+expected failures as passing tests; that does not mean native fidelity passed.
+
+Star errors reach 43 levels with mean 3.72 (rounded up), in the opaque
+three-stop live output. The exported counterpart reaches 42 and mean 3.53.
+Opaque two-stop, translucent two-stop and translucent three-stop stars also
+exceed the bound. No benchmark tolerance or production paint changed to hide
+these failures. The earlier 68-case result remains valid at its original scope.
+
+A separate diagnostic rasterized the native SVG geometry with the hypothesized
+fan paint and swept center positions and pixel translations against unchanged
+native PNGs. The best tested center remained the bounding-box center; a
+half-pixel translation in each axis reduced the star's opaque three-stop
+maximum to 12 and mean to 0.76. Triangle/pentagon errors also fell. Results are
+in phase-probe.json beside the extended capture. This suggests sampling phase
+contributes to the mismatch; it does not prove the native UI pipeline or justify
+moving reference pixels or adding a fixed-resolution offset to production SVG.
+Rotated/grouped comparisons and exact contour pixels still require evidence.
+
+Both genuine native documents passed move/save/reparse preservation, including
+all 84 extended shapes and 21 opaque two-stop profiles. The shared optional
+regression covers both captures without copying the edit/preservation logic.
+Core and viewer type checks passed. This checkpoint broadens the native oracle
+and records a reproducible unresolved failure; it does not establish parity.
