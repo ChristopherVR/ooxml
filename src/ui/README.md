@@ -65,6 +65,14 @@ app in the `teams-viewer` repository): `office-ui-avatar`, `-app-rail`, `-channe
 `-chat-composer`, `-prejoin`, `-call-grid` and `-call-controls`. Properties in, bubbling `office-*`
 events out, no data fetching; message text is always rendered as text.
 
+`teams-app` opens Settings as a workspace page beside the app rail, retaining
+the underlying chat, selected tab and edited workbook. Its `teams-settings`
+element also supports standalone modal use; pass `embedded` to render a
+modeless page sized to the containing workspace. Escape and Close settings
+emit `teams-settings-close`; the host controls the `open` attribute. Personal
+preferences apply immediately, while connection changes require Apply and
+reconnect.
+
 ```ts
 import { registerOfficeUi } from 'ooxml-ui';
 registerOfficeUi(); // defines every element, idempotent

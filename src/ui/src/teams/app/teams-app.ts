@@ -225,6 +225,7 @@ export class TeamsApp extends LitElement {
 		this.addingTab = false;
 		this.creatingChannel = false;
 		this.navigationOpen = false;
+		this.settingsOpen = false;
 		this.openRequest++;
 		const named = this.userName
 			? { id: this.userId || loadIdentity()?.id || crypto.randomUUID(), name: this.userName }
@@ -417,6 +418,7 @@ export class TeamsApp extends LitElement {
 
 	private selectChannel(id: string): boolean {
 		if (!this.closePreview()) return false;
+		this.settingsOpen = false;
 		this.addingTab = false;
 		this.creatingChannel = false;
 		this.teams.client?.select(id);
@@ -447,7 +449,18 @@ export class TeamsApp extends LitElement {
 	}
 
 	private askSettings(): void {
+		this.navigationOpen = false;
 		this.settingsOpen = true;
+	}
+
+	private async closeSettings(): Promise<void> {
+		this.settingsOpen = false;
+		await this.updateComplete;
+		if (!this.isConnected || this.settingsOpen) return;
+		this.renderRoot
+			.querySelector('office-ui-menu-button[label="Settings and more"]')
+			?.shadowRoot?.querySelector<HTMLButtonElement>('button')
+			?.focus();
 	}
 
 	private applyTheme(): void {
@@ -485,12 +498,71 @@ export class TeamsApp extends LitElement {
 						selected=${this.rail}
 						@office-rail-select=${(e: CustomEvent<{ id: RailView }>) => {
 							if (!this.closePreview()) return;
+							this.settingsOpen = false;
 							this.rail = e.detail.id;
 							this.meeting = false;
 						}}
 					></office-ui-app-rail>
-					<aside class="side">${this.sidebar(s)}</aside>
-					<main class="main">${this.main(s)}</main>
+					<aside class="side" ?inert=${this.settingsOpen}>${this.sidebar(s)}</aside>
+					<main class="main" ?inert=${this.settingsOpen}>${this.main(s)}</main>
+					<teams-settings
+						embedded
+						?open=${this.settingsOpen}
+						.config=${this.resolveConfig()}
+						.theme=${this.theme}
+						.fileOpenPreference=${this.fileOpenPreference}
+						.chatDensity=${this.chatDensity}
+						.showAppNames=${this.showAppNames}
+						@teams-settings-app-names=${(event: CustomEvent<{ show: boolean }>) => {
+							if (typeof event.detail.show !== 'boolean') return;
+							this.showAppNames = event.detail.show;
+							safeStorage.setItem(
+								this.themeStorageKey.replace('teams:theme:', 'teams:app-names:'),
+								String(this.showAppNames),
+							);
+						}}
+						@teams-settings-density=${(event: CustomEvent<{ density: 'comfy' | 'compact' }>) => {
+							if (!['comfy', 'compact'].includes(event.detail.density)) return;
+							this.chatDensity = event.detail.density;
+							safeStorage.setItem(
+								this.themeStorageKey.replace('teams:theme:', 'teams:density:'),
+								this.chatDensity,
+							);
+						}}
+						@teams-settings-file-open=${(
+							event: CustomEvent<{ preference: 'teams' | 'browser' }>,
+						) => {
+							if (!['teams', 'browser'].includes(event.detail.preference)) return;
+							this.fileOpenPreference = event.detail.preference;
+							safeStorage.setItem(
+								this.themeStorageKey.replace('teams:theme:', 'teams:file-open:'),
+								this.fileOpenPreference,
+							);
+						}}
+						.followSettings=${s.threadFollowSettings}
+						.userName=${s.user.name}
+						@teams-settings-theme=${(event: CustomEvent<{ theme: TeamsTheme }>) => {
+							if (!['system', 'light', 'dark'].includes(event.detail.theme)) return;
+							this.theme = event.detail.theme;
+							this.applyTheme();
+							safeStorage.setItem(this.themeStorageKey, this.theme);
+						}}
+						@teams-settings-follow=${(event: CustomEvent<Partial<typeof s.threadFollowSettings>>) => this.teams.client?.setThreadFollowSettings(event.detail)}
+						@teams-settings-close=${() => void this.closeSettings()}
+						@teams-settings-apply=${(e: CustomEvent<{ config: TeamsServerConfig }>) => {
+							if (!this.closePreview()) return;
+							saveConfig(e.detail.config);
+							this.config = e.detail.config;
+							this.settingsOpen = false;
+							this.dispatchEvent(
+								new CustomEvent('teams-config-change', {
+									detail: e.detail,
+									bubbles: true,
+									composed: true,
+								}),
+							);
+						}}
+					></teams-settings>
 				</div>
 				<teams-create-channel-dialog
 					?open=${this.creatingChannel}
@@ -505,61 +577,7 @@ export class TeamsApp extends LitElement {
 					${this.navigationOpen ? this.sidebar(s) : nothing}
 				</teams-navigation-drawer>
 				${this.toast ? html`<div class="toast" role="status">${this.toast}</div>` : nothing}
-				<teams-settings
-					?open=${this.settingsOpen}
-					.config=${this.resolveConfig()}
-					.theme=${this.theme}
-					.fileOpenPreference=${this.fileOpenPreference}
-					.chatDensity=${this.chatDensity}
-					.showAppNames=${this.showAppNames}
-					@teams-settings-app-names=${(event: CustomEvent<{ show: boolean }>) => {
-						if (typeof event.detail.show !== 'boolean') return;
-						this.showAppNames = event.detail.show;
-						safeStorage.setItem(
-							this.themeStorageKey.replace('teams:theme:', 'teams:app-names:'),
-							String(this.showAppNames),
-						);
-					}}
-					@teams-settings-density=${(event: CustomEvent<{ density: 'comfy' | 'compact' }>) => {
-						if (!['comfy', 'compact'].includes(event.detail.density)) return;
-						this.chatDensity = event.detail.density;
-						safeStorage.setItem(
-							this.themeStorageKey.replace('teams:theme:', 'teams:density:'),
-							this.chatDensity,
-						);
-					}}
-					@teams-settings-file-open=${(event: CustomEvent<{ preference: 'teams' | 'browser' }>) => {
-						if (!['teams', 'browser'].includes(event.detail.preference)) return;
-						this.fileOpenPreference = event.detail.preference;
-						safeStorage.setItem(
-							this.themeStorageKey.replace('teams:theme:', 'teams:file-open:'),
-							this.fileOpenPreference,
-						);
-					}}
-					.followSettings=${s.threadFollowSettings}
-					.userName=${s.user.name}
-					@teams-settings-theme=${(event: CustomEvent<{ theme: TeamsTheme }>) => {
-						if (!['system', 'light', 'dark'].includes(event.detail.theme)) return;
-						this.theme = event.detail.theme;
-						this.applyTheme();
-						safeStorage.setItem(this.themeStorageKey, this.theme);
-					}}
-					@teams-settings-follow=${(event: CustomEvent<Partial<typeof s.threadFollowSettings>>) => this.teams.client?.setThreadFollowSettings(event.detail)}
-					@teams-settings-close=${() => (this.settingsOpen = false)}
-					@teams-settings-apply=${(e: CustomEvent<{ config: TeamsServerConfig }>) => {
-						if (!this.closePreview()) return;
-						saveConfig(e.detail.config);
-						this.config = e.detail.config;
-						this.settingsOpen = false;
-						this.dispatchEvent(
-							new CustomEvent('teams-config-change', {
-								detail: e.detail,
-								bubbles: true,
-								composed: true,
-							}),
-						);
-					}}
-				></teams-settings>
+
 				<teams-add-tab-dialog
 					.open=${this.addingTab}
 					.client=${this.teams.client}

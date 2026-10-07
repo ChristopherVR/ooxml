@@ -17,6 +17,33 @@ dialog {
 dialog::backdrop {
 	background: var(--office-overlay);
 }
+:host([embedded]) {
+	display: block;
+	height: 100%;
+	min-height: 0;
+}
+:host([embedded]:not([open])) {
+	display: none;
+}
+:host([embedded]) dialog {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	max-width: none;
+	max-height: none;
+	margin: 0;
+	border: 0;
+	border-radius: 0;
+	box-shadow: none;
+}
+:host([embedded]) dialog[open] {
+	display: flex;
+	flex-direction: column;
+}
+:host([embedded]) .settings-layout {
+	flex: 1;
+	height: auto;
+}
 form {
 	display: grid;
 	gap: var(--office-space-3);

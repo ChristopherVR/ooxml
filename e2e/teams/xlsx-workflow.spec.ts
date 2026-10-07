@@ -89,6 +89,24 @@ test('pins a workbook, edits a cell, saves a new channel copy, and opens the sav
 			page.locator('xlsx-editor').evaluate((el) => (el as HTMLElement & { dirty: boolean }).dirty),
 		)
 		.toBe(true);
+	// Settings must preserve the exact mounted editor and its unsaved workbook.
+	await page.locator('xlsx-editor').evaluate((element) => {
+		(element as HTMLElement).dataset.settingsRetention = 'edited-workbook';
+	});
+	await page.getByRole('button', { name: 'Settings and more', exact: true }).click();
+	await page.getByRole('menuitem', { name: 'Settings', exact: true }).click();
+	await expect(page.locator('xlsx-editor')).toBeHidden();
+	await page.getByRole('button', { name: 'Close settings', exact: true }).click();
+	await expect(page.locator('xlsx-editor')).toHaveAttribute(
+		'data-settings-retention',
+		'edited-workbook',
+	);
+	await expect(page.locator('xlsx-editor')).toBeVisible();
+	expect(
+		await page
+			.locator('xlsx-editor')
+			.evaluate((element) => (element as HTMLElement & { dirty: boolean }).dirty),
+	).toBe(true);
 	page.once('dialog', (dialog) => dialog.dismiss());
 	await page.getByRole('tab', { name: 'Posts', exact: true }).click();
 	await expect(page.locator('xlsx-editor')).toBeVisible();

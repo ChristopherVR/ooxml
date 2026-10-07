@@ -27,6 +27,7 @@ export class TeamsSettings extends LitElement {
 	static override properties = {
 		config: { attribute: false },
 		open: { type: Boolean, reflect: true },
+		embedded: { type: Boolean, reflect: true },
 		issues: { state: true },
 		category: { state: true },
 		theme: { attribute: false },
@@ -39,6 +40,8 @@ export class TeamsSettings extends LitElement {
 	};
 	declare config: TeamsServerConfig;
 	declare open: boolean;
+	/** Render a modeless settings page inside the host workspace. */
+	declare embedded: boolean;
 	declare issues: string[];
 	declare category: string;
 	declare theme: TeamsTheme;
@@ -53,6 +56,7 @@ export class TeamsSettings extends LitElement {
 		super();
 		this.config = { mode: 'local', iceServers: [] };
 		this.open = false;
+		this.embedded = false;
 		this.issues = [];
 		this.category = 'general';
 		this.theme = 'system';
@@ -86,7 +90,11 @@ export class TeamsSettings extends LitElement {
 			}))
 				this.field(id).value = value;
 		}
-		if (this.open && !dialog.open) dialog.showModal();
+		if (this.open && !dialog.open) {
+			if (this.embedded) dialog.show();
+			else dialog.showModal();
+			this.renderRoot.querySelector<HTMLInputElement>('input[type="search"]')?.focus();
+		}
 		if (!this.open && dialog.open) dialog.close();
 	}
 
@@ -126,7 +134,22 @@ export class TeamsSettings extends LitElement {
 	protected override render() {
 		const c = this.config;
 		return html`
-			<dialog aria-label="Settings" @close=${this.close} @cancel=${this.close}>
+			<dialog
+				aria-label="Settings"
+				@close=${() => {
+					if (this.open) this.close();
+				}}
+				@cancel=${(event: Event) => {
+					event.preventDefault();
+					this.close();
+				}}
+				@keydown=${(event: KeyboardEvent) => {
+					if (this.embedded && event.key === 'Escape' && !event.defaultPrevented) {
+						event.preventDefault();
+						this.close();
+					}
+				}}
+			>
 				<header>
 					<h1>Settings</h1>
 					<input

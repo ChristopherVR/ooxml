@@ -505,10 +505,30 @@ chat-density preference. Decorative previews are hidden from assistive technolog
 This follows Microsoft's [chat-density Settings reference](https://support.microsoft.com/en-us/accessibility/teams/customize-your-teams-chat-interface-with-chat-density-settings).
 The browser checks cover preference persistence, keyboard selection, search,
 connection drafts, stable preview colors and a visible category heading while
-scrolling on mobile across all six bindings. The settings surface still uses a
-modal rather than Microsoft's full application page. Accounts, privacy, calls,
+scrolling on mobile across all six bindings. The initial version used a modal;
+the following slice replaces it inside OpenTeams with a full workspace page.
+Accounts, privacy, calls,
 devices, regional formats, message-preview preferences and other unsupported
 settings remain outstanding; this increment does not establish full UI parity.
+
+## Twenty-seventh slice: Settings workspace page
+
+OpenTeams renders Settings beside the app rail and beneath the top bar, following
+the full-page structure in Microsoft's Settings reference. The app rail, profile
+and global search remain available. The previous channel/chat/file surface stays
+mounted but hidden and inert while Settings is open, retaining conversation
+drafts, the selected tab and the exact edited workbook instance. Closing with
+Escape or Close settings restores focus to Settings and more; choosing an app or
+channel navigates through the existing unsaved-content guard. Changing user or
+workspace closes Settings. Connection fields still reset from the saved
+configuration on reopening, and reconnect remains an explicit action.
+
+`teams-settings` retains its standalone modal behavior by default. The optional
+`embedded` attribute enables the modeless, container-sized surface used by
+`teams-app`. Desktop/mobile acceptance checks shell geometry, accessible app
+navigation, focus return, retained drafts and unsaved XLSX state across the six
+framework bindings. The new page structure is one part of UI parity: unsupported
+Settings categories and workflow gaps listed above remain outstanding.
 
 ## Next releasable slices
 
