@@ -175,9 +175,16 @@ counts, and all twelve object-review exports reopen with zero body and note
 revisions. Yjs peers converge and restore the original structure with one undo.
 Six-binding browser checks cover acceptance, rejection, export and undo.
 Removal across table/section boundaries or at the final paragraph is guarded;
-display projection and recording of paragraph-mark revisions need further work. Atom
-format-revision resolution, recording, prior formatting display and related
-header/footer revision cleanup still require dedicated coverage. These checks do not
+display projection and recording of paragraph-mark revisions need further work.
+Document-wide review now also resolves header/footer snapshots, including tables,
+with the same core commands and history. Header/footer-only changes enable the
+All actions. A native five-story fixture compares body, header, footer, footnote
+and endnote formatting acceptance/rejection, and both editor exports reopen in
+Word with matching story text and zero revisions in every inspected story.
+Local and Yjs undo restore all five stories together; six browser bindings cover
+resolution and preview refresh. Unsupported boundary removal fails before
+dispatch, preserving the body and history. Atom format-revision resolution,
+recording and prior formatting display still require dedicated coverage. These checks do not
 establish complete native Word object-review parity.
 
 Print Layout now projects prior run and paragraph formatting through the same

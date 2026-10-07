@@ -5,6 +5,7 @@ import { inlineTextRevision, clearInlineTextRevisions } from './review-inline-re
 import { trackChangesPluginKey } from './track-changes-mode';
 import { hasNoteRevisions, resolveNoteRevisions } from './note-parts';
 import { paragraphMarkRevision, resolveParagraphMarkRange } from './review-paragraph-marks';
+import { hasSectionPartRevisions, resolveSectionPartRevisions } from './review-section-parts';
 import { formattingRevision, resolveFormattingRange } from './review-formatting';
 import {
 	paragraphFormattingRevision,
@@ -100,7 +101,10 @@ function revisionNear(view: EditorView): RevisionRange | undefined {
 
 export function hasAnyChange(view: EditorView | undefined): boolean {
 	return Boolean(
-		view && (collectRevisionRanges(view.state.doc).length || hasNoteRevisions(view.state.doc)),
+		view &&
+		(collectRevisionRanges(view.state.doc).length ||
+			hasNoteRevisions(view.state.doc) ||
+			hasSectionPartRevisions(view.state.doc)),
 	);
 }
 export function hasChangeAtCursor(view: EditorView | undefined): boolean {
@@ -199,8 +203,10 @@ function applyToAll(view: EditorView, mode: 'accept' | 'reject'): boolean {
 	const ranges = collectRevisionRanges(view.state.doc);
 	const tr = resolveRanges(view, ranges, mode);
 	const notes = resolveNoteRevisions(view.state.doc, tr.doc, mode);
-	if (!ranges.length && !notes) return false;
+	const parts = resolveSectionPartRevisions(view.state.doc, mode);
+	if (!ranges.length && !notes && !parts) return false;
 	if (notes) tr.step(notes);
+	if (parts) tr.step(parts);
 	dispatchIsolatedCommand(view.state, (transaction) => view.dispatch(transaction), tr);
 	return true;
 }

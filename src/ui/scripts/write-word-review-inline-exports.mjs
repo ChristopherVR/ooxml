@@ -9,18 +9,24 @@ import { modelToDoc, docToModel } from '../src/docx/model-adapter.ts';
 const output = process.argv[2];
 if (!output) throw new Error('Provide an output directory for synthetic exports');
 await mkdir(output, { recursive: true });
-for (const name of [
-	'picture-insert',
-	'picture-delete',
-	'note-insert',
-	'note-delete',
-	'break-delete',
-	'break-insert',
-]) {
+const stories = process.argv[3] === '--stories';
+for (const name of stories
+	? ['all-stories']
+	: [
+			'picture-insert',
+			'picture-delete',
+			'note-insert',
+			'note-delete',
+			'break-delete',
+			'break-insert',
+		]) {
 	for (const mode of ['accept', 'reject']) {
 		const loaded = await loadDocx(
 			await readFile(
-				new URL(`../../core/docx/__fixtures__/review-inline/${name}-tracked.docx`, import.meta.url),
+				new URL(
+					`../../core/docx/__fixtures__/${stories ? 'review-stories' : 'review-inline'}/${name}-tracked.docx`,
+					import.meta.url,
+				),
 			),
 		);
 		const view = {
