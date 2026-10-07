@@ -54,6 +54,8 @@ export type PasteMode =
 	| 'formulas'
 	| 'noBorders'
 	| 'widths'
+	| 'comments'
+	| 'validation'
 	| 'transpose';
 export type PasteOperation = 'none' | 'add' | 'subtract' | 'multiply' | 'divide';
 

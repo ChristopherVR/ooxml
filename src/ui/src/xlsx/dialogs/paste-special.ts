@@ -11,6 +11,8 @@ const PASTE: ReadonlyArray<readonly [string, string]> = [
 	['formats', 'Formats'],
 	['noBorders', 'All except borders'],
 	['widths', 'Column widths'],
+	['comments', 'Comments'],
+	['validation', 'Validation'],
 ];
 const OPERATIONS: ReadonlyArray<readonly [string, string]> = [
 	['none', 'None'],

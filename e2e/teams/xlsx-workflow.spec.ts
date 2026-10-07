@@ -112,18 +112,16 @@ test('pins a workbook, edits a cell, saves a new channel copy, and opens the sav
 	await expect
 		.poll(
 			() =>
-				page
-					.locator('xlsx-editor')
-					.evaluate(
-						(el) =>
-							(
-								el as HTMLElement & {
-									workbook: { sheets: { rows: Map<number, Map<number, { value: unknown }>> }[] };
-								}
-							).workbook?.sheets[0]?.rows
-								.get(0)
-								?.get(0)?.value,
-					),
+				page.locator('xlsx-editor').evaluate(
+					(el) =>
+						(
+							el as HTMLElement & {
+								workbook: { sheets: { rows: Map<number, Map<number, { value: unknown }>> }[] };
+							}
+						).workbook?.sheets[0]?.rows
+							.get(0)
+							?.get(0)?.value,
+				),
 			{ timeout: 60_000 },
 		)
 		.toBe('Teams workbook edit');
@@ -171,4 +169,56 @@ test('pins a workbook, edits a cell, saves a new channel copy, and opens the sav
 	expect(Object.keys(latest)).toHaveLength(2);
 	const pendingCopy = await loadXlsx(Uint8Array.from(Object.values(latest)[1]!));
 	expect(getCell(pendingCopy.sheets[0]!, 0, 0)?.value).toBe('Retry workbook edit');
+	const sharedBeforeCancel = await page
+		.locator('teams-app')
+		.evaluate((el) => (el as TeamsApp).client!.getState().files.length);
+	await page.evaluate(() => {
+		const control = window as unknown as { pauseNext: boolean; releaseUpload?: () => void };
+		control.pauseNext = true;
+		delete control.releaseUpload;
+	});
+	await page.getByRole('button', { name: 'Save copy to channel', exact: true }).click();
+	await expect
+		.poll(() =>
+			page.evaluate(
+				() => typeof (window as unknown as { releaseUpload?: () => void }).releaseUpload,
+			),
+		)
+		.toBe('function');
+	await page.getByRole('button', { name: 'Cancel workbook save', exact: true }).click();
+	await expect(page.getByRole('alert')).toContainText('Your edits remain local');
+	await expect(
+		page.getByRole('button', { name: 'Save copy to channel', exact: true }),
+	).toBeEnabled();
+	await page.evaluate(() => (window as unknown as { releaseUpload: () => void }).releaseUpload());
+	await expect
+		.poll(() =>
+			page.evaluate(
+				() =>
+					Object.keys((window as unknown as { copies: Record<string, number[]> }).copies).length,
+			),
+		)
+		.toBe(3);
+	expect(
+		await page
+			.locator('teams-app')
+			.evaluate((el) => (el as TeamsApp).client!.getState().files.length),
+	).toBe(sharedBeforeCancel);
+	expect(
+		await page
+			.locator('xlsx-editor')
+			.evaluate((el) => (el as HTMLElement & { dirty: boolean }).dirty),
+	).toBe(true);
+	await page.getByRole('button', { name: 'Save copy to channel', exact: true }).click();
+	await expect(page.getByRole('status').filter({ hasText: 'Workbook copy shared' })).toBeVisible();
+	await expect
+		.poll(() =>
+			page.locator('teams-app').evaluate((el) => (el as TeamsApp).client!.getState().files.length),
+		)
+		.toBe(sharedBeforeCancel + 1);
+	expect(
+		await page
+			.locator('xlsx-editor')
+			.evaluate((el) => (el as HTMLElement & { dirty: boolean }).dirty),
+	).toBe(false);
 });

@@ -16,6 +16,47 @@ async function preview(detail: OpenFileDetail): Promise<TeamsContentPreview> {
 }
 
 describe('content preview', () => {
+	it('cancels workbook serialization without uploading or clearing local edits', async () => {
+		vi.stubGlobal(
+			'fetch',
+			vi.fn(() => new Promise<Response>(() => {})),
+		);
+		const el = await preview({
+			attachment: { name: 'Budget.xlsx', kind: 'xlsx' },
+			url: 'https://files.test/Budget.xlsx',
+		});
+		const share = vi.fn(async () => {});
+		el.saveCopy = share;
+		el.native = 'xlsx';
+		el.status = 'ready';
+		el.editing = true;
+		el.dirty = true;
+		await el.updateComplete;
+		let finish!: (bytes: Uint8Array) => void;
+		const clean = vi.fn();
+		Object.assign(el.shadowRoot!.querySelector('xlsx-editor')!, {
+			commitEdit: () => true,
+			saveBytes: () =>
+				new Promise<Uint8Array>((resolve) => {
+					finish = resolve;
+				}),
+			markClean: clean,
+		});
+		const button = (name: string) =>
+			Array.from(el.shadowRoot!.querySelectorAll('button')).find(
+				(entry) => entry.textContent?.trim() === name,
+			)!;
+		button('Save copy to channel').click();
+		await el.updateComplete;
+		button('Cancel workbook save').click();
+		finish(new Uint8Array([1, 2, 3]));
+		await el.updateComplete;
+		expect(el.saving).toBe(false);
+		expect(el.dirty).toBe(true);
+		expect(el.saveError).toContain('Your edits remain local');
+		expect(share).not.toHaveBeenCalled();
+		expect(clean).not.toHaveBeenCalled();
+	});
 	it('renders Markdown as safe text and handles loading failure', async () => {
 		vi.stubGlobal(
 			'fetch',

@@ -10,6 +10,7 @@ import type { ConnectionStatus } from '../collab/provider.js';
 import type { CallParticipant, CallSession, MediaDevicesLike } from './call.js';
 import type { Attachment, Channel, Message } from './model.js';
 import { createFileActions } from './files.js';
+import { checkFileAbort, withFileAbort, type FileOperationOptions } from './file-transfer.js';
 import type { ChannelTab, TabContent } from './tabs.js';
 import type { StreamLike } from './peer.js';
 import {
@@ -44,7 +45,7 @@ export interface UploadableFile {
 }
 export type FileUploader = (
 	file: UploadableFile,
-	context: { workspaceId: string },
+	context: { workspaceId: string; signal?: AbortSignal },
 ) => Promise<{ url: string }>;
 
 export interface TeamsClientOptions extends Omit<WorkspaceOptions, 'doc'> {
@@ -107,11 +108,23 @@ export interface TeamsClient {
 	renameTab: (id: string, name: string) => boolean;
 	removeTab: (id: string) => boolean;
 	/** Upload a uniquely named copy and post it in the specified channel. Never overwrites the source. */
-	saveFileCopy: (channelId: string, file: UploadableFile & Blob) => Promise<Attachment>;
+	saveFileCopy: (
+		channelId: string,
+		file: UploadableFile & Blob,
+		options?: FileOperationOptions,
+	) => Promise<Attachment>;
 	/** Upload files directly into the captured channel under unique storage names. */
-	uploadFiles: (channelId: string, files: (UploadableFile & Blob)[]) => Promise<Attachment[]>;
+	uploadFiles: (
+		channelId: string,
+		files: (UploadableFile & Blob)[],
+		options?: FileOperationOptions,
+	) => Promise<Attachment[]>;
 	/** Create a blank native Excel workbook and share it in the captured channel. */
-	createWorkbook: (channelId: string, name: string) => Promise<Attachment>;
+	createWorkbook: (
+		channelId: string,
+		name: string,
+		options?: FileOperationOptions,
+	) => Promise<Attachment>;
 	send: (input: { text: string; files?: (UploadableFile & Blob)[] }) => Promise<void>;
 	startReply: (messageId: string) => void;
 	startEdit: (messageId: string) => void;
@@ -328,7 +341,8 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 		return { base: u.origin, token: config.token };
 	};
 
-	const upload = async (file: UploadableFile & Blob): Promise<Attachment> => {
+	const upload = async (file: UploadableFile & Blob, signal?: AbortSignal): Promise<Attachment> => {
+		checkFileAbort(signal);
 		const attachment: Attachment = {
 			name: file.name,
 			kind: 'other',
@@ -337,7 +351,12 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 		};
 		try {
 			if (options.uploadFile) {
-				attachment.url = (await options.uploadFile(file, { workspaceId })).url;
+				attachment.url = (
+					await withFileAbort(
+						() => options.uploadFile!(file, { workspaceId, ...(signal ? { signal } : {}) }),
+						signal,
+					)
+				).url;
 				return attachment;
 			}
 			const target = server();
@@ -351,12 +370,14 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 				{
 					method: 'POST',
 					body: file,
+					...(signal ? { signal } : {}),
 					...(target.token ? { headers: { Authorization: `Bearer ${target.token}` } } : {}),
 				},
 			);
 			if (!res.ok) throw new Error(`Upload failed (${res.status})`);
 			attachment.url = `${target.base}${((await res.json()) as { url: string }).url}`;
 		} catch (error) {
+			checkFileAbort(signal);
 			notice(error instanceof Error ? error.message : 'Upload failed');
 		}
 		return attachment;

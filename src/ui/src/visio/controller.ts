@@ -453,7 +453,14 @@ export class ViewerController {
 			this.#searchIndex = searchIndex;
 			++this.#documentGeneration;
 			if (
-				this.#change({ document, edit: history.state, search, selectedShape, error: null }) &&
+				this.#change({
+					document,
+					edit: history.state,
+					search,
+					selectedShape,
+					error: null,
+					pageIndex: Math.min(this.#state.pageIndex, Math.max(0, document.pages.length - 1)),
+				}) &&
 				current()
 			)
 				this.#emit('document-change', { document, dirty: history.state.dirty, kind });
