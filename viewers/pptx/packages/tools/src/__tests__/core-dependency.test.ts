@@ -9,7 +9,7 @@ const manifest = JSON.parse(readFileSync(new URL('../../package.json', import.me
 
 describe('canonical core dependency', () => {
 	it('declares an installable core automation release', () => {
-		expect(manifest.dependencies['ooxml-core']).toBe('>=0.11.0 <1');
+		expect(manifest.dependencies['ooxml-core']).toMatch(/^\^1\.\d+\.\d+$/u);
 	});
 	it('does not install the viewer facade and a second document engine', () => {
 		expect(manifest.dependencies['pptx-viewer-core']).toBeUndefined();
