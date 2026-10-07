@@ -492,6 +492,24 @@ outstanding. Microsoft's [PowerPoint Live workflow](https://support.microsoft.co
 is the reference for the remaining meeting integration; a local reading view does
 not establish PowerPoint Live parity or exact rendering fidelity.
 
+## Twenty-sixth slice: Settings appearance controls
+
+The Settings surface now gives its implemented categories shared icons, a wider
+desktop content area and a persistent category heading. Switching categories
+returns the content to its beginning. Theme buttons preview a workspace rather
+than a plain color block; the light and dark examples retain their respective
+appearance when the active workspace theme changes. Comfy and Compact use visual
+message-spacing cards with native radio selection and the existing persisted
+chat-density preference. Decorative previews are hidden from assistive technology.
+
+This follows Microsoft's [chat-density Settings reference](https://support.microsoft.com/en-us/accessibility/teams/customize-your-teams-chat-interface-with-chat-density-settings).
+The browser checks cover preference persistence, keyboard selection, search,
+connection drafts, stable preview colors and a visible category heading while
+scrolling on mobile across all six bindings. The settings surface still uses a
+modal rather than Microsoft's full application page. Accounts, privacy, calls,
+devices, regional formats, message-preview preferences and other unsupported
+settings remain outstanding; this increment does not establish full UI parity.
+
 ## Next releasable slices
 
 The PowerPoint DOM renderer, element registry and asset-loading pipeline ship

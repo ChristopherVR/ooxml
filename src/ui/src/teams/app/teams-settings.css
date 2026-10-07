@@ -4,7 +4,7 @@
 }
 dialog {
 	box-sizing: border-box;
-	width: min(66em, 94vw);
+	width: min(76em, 94vw);
 	max-height: 90dvh;
 	overflow: hidden;
 	padding: 0;
@@ -56,7 +56,7 @@ h1 {
 }
 .settings-layout {
 	display: grid;
-	grid-template-columns: 18em minmax(0, 1fr);
+	grid-template-columns: 19em minmax(0, 1fr);
 	height: min(42em, calc(90dvh - 5em));
 	min-height: 0;
 }
@@ -71,9 +71,26 @@ nav {
 	border-inline-end: var(--office-border-width) solid var(--office-teams-divider);
 }
 nav button {
+	display: flex;
+	align-items: center;
+	gap: var(--office-space-3);
+	min-height: 3em;
 	text-align: start;
 	border: 0;
 	background: transparent;
+}
+nav button:hover {
+	background: var(--office-selected);
+}
+.icon {
+	width: 1.4em;
+	height: 1.4em;
+	flex-shrink: 0;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.5;
+	stroke-linecap: round;
+	stroke-linejoin: round;
 }
 nav button[aria-selected='true'] {
 	background: var(--office-teams-brand-subtle);
@@ -88,6 +105,13 @@ nav button[aria-selected='true'] {
 }
 section {
 	padding: var(--office-space-5);
+}
+section h3 {
+	margin: var(--office-space-5) 0 var(--office-space-3);
+	font-size: var(--office-font-size);
+}
+section h2 + h3 {
+	margin-top: var(--office-space-4);
 }
 [hidden] {
 	display: none !important;
@@ -107,64 +131,14 @@ office-ui-switch {
 	border-block-end: var(--office-border-width) solid var(--office-teams-divider);
 	font-weight: normal;
 }
-.theme-options {
-	display: flex;
-	flex-wrap: wrap;
-	gap: var(--office-space-3);
-}
-.density-options {
-	margin: var(--office-space-5) 0 0;
-	border: 0;
-	padding: 0;
-	display: flex;
-	flex-wrap: wrap;
-	gap: var(--office-space-3);
-}
-.density-options legend {
-	font-weight: var(--office-font-weight-bold);
-	margin-bottom: var(--office-space-3);
-}
-.density-choice {
-	display: flex;
-	align-items: center;
-	gap: var(--office-space-2);
-	padding: var(--office-space-3);
-	border: var(--office-border-width) solid var(--office-teams-divider);
-	border-radius: var(--office-radius-md);
-	cursor: pointer;
-}
-.density-choice:has(input:checked) {
-	border-color: var(--office-teams-brand);
-	background: var(--office-teams-brand-subtle);
-}
-.density-choice span {
-	display: grid;
-	gap: var(--office-space-1);
-}
-.theme-options button {
-	display: grid;
-	gap: var(--office-space-2);
-}
-.theme-options button[aria-pressed='true'] {
-	border-color: var(--office-teams-brand);
-	box-shadow: inset 0 0 0 var(--office-border-width) var(--office-teams-brand);
-}
-.theme-swatch {
-	display: block;
-	width: 6em;
-	height: 3em;
-	border-radius: var(--office-radius);
-	background: var(--office-background);
-	border: var(--office-border-width) solid var(--office-teams-divider);
-}
-.theme-swatch[data-theme='dark'] {
-	background: var(--office-call-background);
-}
-.theme-swatch[data-theme='light'] {
-	background: var(--office-call-foreground);
-}
 h2 {
-	margin: 0;
+	position: sticky;
+	top: 0;
+	z-index: 1;
+	margin: calc(-1 * var(--office-space-5)) calc(-1 * var(--office-space-5)) var(--office-space-4);
+	padding: var(--office-space-5);
+	background: var(--office-popover);
+	border-bottom: var(--office-border-width) solid var(--office-teams-divider);
 	font-size: var(--office-font-size-lg);
 }
 label {

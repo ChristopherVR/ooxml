@@ -907,3 +907,13 @@ canonical ellipse. Shared gradient stop/color/opacity serialization remains in
 one renderer. Snapshot copying, validation and generated-stop accounting retain
 the new coordinate space. Native PNG comparisons cover four captured outlines;
 other topology, exact pixels and native reopen parity remain unverified.
+
+## Settings theme preview template
+
+- Source: `ChristopherVR/ooxml`, `src/ui/src/teams/app/teams-settings.ts`,
+  commit `eff167219`.
+- Destination: `src/ui/src/teams/app/settings-theme.ts`.
+- Changes: extracted the existing theme-button template into a private UI helper
+  and added decorative workspace previews. Theme events and persisted values
+  retain their existing contract. Preview styling resides in
+  `src/ui/src/teams/app/settings-previews.css`; no core logic moved.

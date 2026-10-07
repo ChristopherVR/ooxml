@@ -1,0 +1,161 @@
+.theme-options,
+.density-options {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--office-space-3);
+}
+.theme-options button {
+	display: grid;
+	gap: var(--office-space-3);
+	padding: var(--office-space-2);
+	text-align: start;
+	min-width: 9em;
+}
+.theme-options button[aria-pressed='true'],
+.density-choice:has(input:checked) {
+	border-color: var(--office-teams-brand);
+	box-shadow: inset 0 0 0 var(--office-border-width) var(--office-teams-brand);
+}
+.theme-swatch {
+	--preview-paper: var(--office-call-foreground);
+	--preview-ink: var(--office-call-background);
+	display: grid;
+	grid-template-columns: 0.7em 2.4em 1fr;
+	grid-template-rows: 0.7em 1fr;
+	width: 9em;
+	height: 5.5em;
+	border: var(--office-border-width) solid var(--office-teams-divider);
+	border-radius: var(--office-radius);
+	overflow: hidden;
+	background: var(--preview-paper);
+}
+.theme-swatch[data-theme='dark'] {
+	--preview-paper: var(--office-call-background);
+	--preview-ink: var(--office-call-foreground);
+}
+.theme-swatch[data-theme='system'] {
+	background: linear-gradient(
+		90deg,
+		var(--office-call-foreground) 50%,
+		var(--office-call-background) 50%
+	);
+}
+.preview-toolbar {
+	grid-column: 1 / -1;
+	background: var(--office-teams-brand);
+}
+.preview-rail,
+.preview-sidebar {
+	background: color-mix(in srgb, var(--preview-ink) 8%, var(--preview-paper));
+	border-inline-end: var(--office-border-width) solid var(--office-teams-divider);
+}
+.preview-sidebar,
+.preview-conversation {
+	display: flex;
+	flex-direction: column;
+	gap: var(--office-space-2);
+	padding: var(--office-space-2);
+}
+.preview-sidebar i,
+.preview-conversation i {
+	height: 0.4em;
+	border-radius: var(--office-radius);
+	background: color-mix(in srgb, var(--preview-ink) 25%, var(--preview-paper));
+}
+.preview-conversation i {
+	height: 0.8em;
+	width: 80%;
+}
+.preview-conversation i:nth-child(2) {
+	align-self: flex-end;
+	background: var(--office-teams-brand-subtle);
+}
+.density-options {
+	margin: var(--office-space-5) 0 0;
+	padding: var(--office-space-5) 0 0;
+	border: 0;
+	border-top: var(--office-border-width) solid var(--office-teams-divider);
+}
+.density-options legend {
+	float: inline-start;
+	width: 100%;
+	font-weight: var(--office-font-weight-bold);
+	margin-bottom: var(--office-space-3);
+}
+.density-choice {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: var(--office-space-3);
+	width: 13em;
+	padding: var(--office-space-2);
+	border: var(--office-border-width) solid var(--office-teams-divider);
+	border-radius: var(--office-radius-md);
+	cursor: pointer;
+	font-weight: normal;
+}
+.density-choice input {
+	position: absolute;
+	inset-inline-end: var(--office-space-2);
+	inset-block-end: var(--office-space-2);
+	accent-color: var(--office-teams-brand);
+}
+.density-caption {
+	display: grid;
+	gap: var(--office-space-1);
+	padding-inline-end: var(--office-space-5);
+}
+.density-preview {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	gap: var(--office-space-3);
+	height: 7em;
+	padding: var(--office-space-3);
+	border-radius: var(--office-radius);
+	background: var(--office-teams-panel);
+}
+.preview-message {
+	display: flex;
+	gap: var(--office-space-2);
+	align-items: flex-start;
+}
+.preview-message > i {
+	width: 1.1em;
+	height: 1.1em;
+	border-radius: 50%;
+	background: var(--office-teams-brand-subtle);
+	border: var(--office-border-width) solid var(--office-teams-brand);
+}
+.preview-message > span {
+	display: grid;
+	gap: var(--office-space-1);
+	flex: 1;
+}
+.preview-message b {
+	height: 0.3em;
+	width: 75%;
+	background: var(--office-teams-text-subtle);
+	border-radius: var(--office-radius);
+}
+.preview-message b + b {
+	width: 100%;
+	opacity: 0.4;
+}
+.density-preview[data-density='compact'] {
+	gap: var(--office-space-1);
+}
+.density-preview[data-density='compact'] .preview-message > i {
+	width: 0.7em;
+	height: 0.7em;
+}
+.density-preview[data-density='compact'] .preview-message > span {
+	display: flex;
+	align-items: center;
+}
+@media (forced-colors: active) {
+	.theme-options button[aria-pressed='true'],
+	.density-choice:has(input:checked) {
+		outline: var(--office-focus-width) solid Highlight;
+	}
+}

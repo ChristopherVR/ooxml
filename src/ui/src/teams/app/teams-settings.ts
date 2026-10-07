@@ -7,6 +7,9 @@ import {
 	parseServerConfig,
 } from 'ooxml-core/teams';
 import css from './teams-settings.css?raw';
+import previewCss from './settings-previews.css?raw';
+import { icon } from '../icons';
+import { themeChoices } from './settings-theme';
 import { defineSwitch, type OfficeUiSwitch } from '../../form/switch';
 import { iceToText, parseIceLines } from './settings-connection';
 import { densityChoices, type ChatDensity } from './settings-density';
@@ -20,7 +23,7 @@ export type TeamsTheme = 'system' | 'light' | 'dark';
  * `teams-settings-close` `{}`.
  */
 export class TeamsSettings extends LitElement {
-	static override styles = unsafeCSS(css);
+	static override styles = [unsafeCSS(css), unsafeCSS(previewCss)];
 	static override properties = {
 		config: { attribute: false },
 		open: { type: Boolean, reflect: true },
@@ -65,6 +68,10 @@ export class TeamsSettings extends LitElement {
 	}
 
 	protected override updated(changed: PropertyValues<this>): void {
+		if (changed.has('category')) {
+			const content = this.renderRoot.querySelector('.settings-content');
+			if (content) content.scrollTop = 0;
+		}
 		const dialog = this.renderRoot.querySelector('dialog');
 		if (!dialog) return;
 		if (changed.has('open') && this.open) {
@@ -173,7 +180,9 @@ export class TeamsSettings extends LitElement {
 										this.query = '';
 									}}
 								>
-									${label}
+									${icon({ general: 'settings', appearance: 'formatPainter', notifications: 'message', files: 'folder', connection: 'screenShare' }[id])}<span
+										>${label}</span
+									>
 								</button>`,
 						)}
 					</nav>
@@ -220,9 +229,7 @@ export class TeamsSettings extends LitElement {
 						>
 							<h2>Appearance and accessibility</h2>
 							<h3>Theme</h3>
-							<div class="theme-options">
-								${(['system', 'light', 'dark'] as const).map((theme) => html`<button type="button" aria-pressed=${String(this.theme === theme)} @click=${() => this.dispatchEvent(new CustomEvent('teams-settings-theme', { detail: { theme }, bubbles: true, composed: true }))}><span class="theme-swatch" data-theme=${theme}></span>${theme === 'system' ? 'Follow system' : theme === 'light' ? 'Light' : 'Dark'}</button>`)}
-							</div>
+							${themeChoices(this.theme, (theme) => this.dispatchEvent(new CustomEvent('teams-settings-theme', { detail: { theme }, bubbles: true, composed: true })))}
 							${densityChoices(this.chatDensity, (density) => this.dispatchEvent(new CustomEvent('teams-settings-density', { detail: { density }, bubbles: true, composed: true })))}
 							<h3>Show app names</h3>
 							<label class="preference"

@@ -15,7 +15,15 @@ export function densityChoices(density: ChatDensity, change: (density: ChatDensi
 					.checked=${density === value}
 					@change=${() => change(value)}
 				/>
-				<span
+				<span class="density-preview" data-density=${value} aria-hidden="true">
+					${[0, 1, 2].map(
+						() =>
+							html`<span class="preview-message"
+								><i></i><span><b></b><b></b></span
+							></span>`,
+					)}
+				</span>
+				<span class="density-caption"
 					><strong>${value === 'comfy' ? 'Comfy' : 'Compact'}</strong>
 					<small
 						>${value === 'comfy' ? 'More space between messages' : 'More messages in less space'}</small
