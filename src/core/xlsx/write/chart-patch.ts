@@ -15,6 +15,7 @@ import { chartXml, patchChartReferences } from './chart';
 import { escapeText } from './xml-out';
 import { patchChartColors } from './chart-colors';
 import { assertBarClusterOptions } from '../../chart/bar-cluster-geometry';
+import { writeChartAxisFormatting } from '../../chart/write-axis-formatting';
 
 type Doc = ReturnType<typeof parseXml>;
 
@@ -119,6 +120,8 @@ export function patchChartPart(
 	)
 		return chartXml(model);
 	const refs = patchChartReferences(xml, model) ?? xml;
+	const doc = parseXml(refs, { label: 'XLSX chart' });
+	const formattingChanged = writeChartAxisFormatting(doc.documentElement, model.formatting);
 	const sameNames = before.series.every((s, i) => s.name === model.series[i]?.name);
 	const sameSpacing =
 		before.barGapWidth === model.barGapWidth && before.barOverlap === model.barOverlap;
@@ -148,10 +151,10 @@ export function patchChartPart(
 		sameNames &&
 		sameSpacing &&
 		sameColors &&
+		!formattingChanged &&
 		before.colorPalette === model.colorPalette
 	)
 		return refs === xml ? undefined : refs;
-	const doc = parseXml(refs, { label: 'XLSX chart' });
 	const chart = first(doc.documentElement, 'chart', NS.c);
 	if (!chart) return refs === xml ? undefined : refs;
 	if (before.title !== model.title) patchTitle(doc, chart, model.title);

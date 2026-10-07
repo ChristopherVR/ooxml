@@ -1239,3 +1239,22 @@ fidelity from unresolved chart layout differences. Two small native sampling
 discrepancies remain explicit strict expected-failure repros. Type authoring
 is enabled for bar/column rectangles; arbitrary shapes and other series
 geometries remain outside this implementation's verified scope.
+
+## Shared chart axis visibility serialization
+
+Source: ChristopherVR/ooxml at `2d3652ad1`,
+`src/core/chart/read-formatting.ts` and the XLSX chart writers. Axis node
+selection moved into `src/core/chart/formatting-nodes.ts`, shared by the
+reader and new `write-axis-formatting.ts`. New and regenerated XLSX parts use
+this writer; kept parts patch explicit flags without rebuilding imported axes.
+Effective visibility is compared before mutation to preserve untouched hidden
+axes and high/low label positions. No viewer-side formatting codec was added.
+
+Regression coverage includes repeated workbook saves for six chart types,
+kept-part preservation and regeneration for type, grouping and series-count
+changes. Excel 16.0 build 20430 reopened/resaved twelve generated exports and
+retained their visibility flags. Six framework browser checks cover visible
+labels, hidden labels and hidden axes. Playwright MCP inspected and downloaded
+a hidden-axis chart; Excel COM resaved that download with zero visible axes
+and the original delete/label flags. Other direct formatting metadata edits
+and complete native chart layout remain unsupported or unverified.

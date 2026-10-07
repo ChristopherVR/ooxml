@@ -1297,8 +1297,19 @@ two stops, positions 0/1 and the original red/white RGB values. Native type
 menu/pane layout certification, nonrectangular marks, arbitrary path targets,
 additional stop profiles and the earlier raster gaps remain open.
 
-The fill comparison also exposed a separate export gap: newly created charts
-lose direct `labelsVisible=false` axis formatting on their first save. The
-raster setup fits bounds after a real save/reload so it does not silently
-assume that formatting was retained. Axis formatting preservation needs a
-dedicated round-trip correction.
+The fill comparison exposed an axis-visibility export gap, now corrected by
+the shared chart axis writer. New charts, kept chart parts and type/grouping/
+series-count regeneration serialize explicit axis and label visibility.
+Unchanged imports retain their original boolean spellings and high/low label
+positions, including hidden axes whose effective labels are invisible.
+Other direct formatting edits, including fonts and appearance on regenerated
+chart parts, still need export support.
+
+Repeated save/reload regressions cover column, bar, line, area, scatter and
+radar charts. Excel 16.0 build 20430 reopened and resaved twelve exports with
+the requested `delete` and `tickLblPos` flags intact. Six browser bindings
+verify category-label rendering and UI export for three visibility states.
+Playwright MCP reviewed a 600 by 400 hidden-axis chart and downloaded it;
+Excel COM reopened and resaved that download with zero visible axes and both
+`delete="1"`, `tickLblPos="none"` pairs intact. This verifies visibility and
+serialization, not native chart layout or complete Excel parity.

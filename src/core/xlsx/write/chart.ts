@@ -5,6 +5,7 @@ import { chartSeriesFill } from './chart-colors';
 import { drawingColorXml } from '../../diagram/write-color';
 import { drawingFillXml } from '../../diagram/write-fill';
 import { assertBarClusterOptions } from '../../chart/bar-cluster-geometry';
+import { writeChartAxisFormatting } from '../../chart/write-axis-formatting';
 
 const pt = (values: readonly (string | number | null)[]) =>
 	values
@@ -138,7 +139,10 @@ export function chartXml(chart: ChartObject): string {
 	const legend = chart.showLegend
 		? `<c:legend><c:legendPos val="${escapeAttr(chart.legendPosition ?? 'r')}"/><c:overlay val="0"/></c:legend>`
 		: '';
-	return `${XML_HEADER}<c:chartSpace xmlns:c="${NS.c}" xmlns:a="${NS.a}" xmlns:r="${NS.r}"><c:roundedCorners val="0"/><c:chart>${title}<c:plotArea><c:layout/>${plotXml(chart)}</c:plotArea>${legend}<c:plotVisOnly val="1"/><c:dispBlanksAs val="gap"/></c:chart></c:chartSpace>`;
+	const xml = `${XML_HEADER}<c:chartSpace xmlns:c="${NS.c}" xmlns:a="${NS.a}" xmlns:r="${NS.r}"><c:roundedCorners val="0"/><c:chart>${title}<c:plotArea><c:layout/>${plotXml(chart)}</c:plotArea>${legend}<c:plotVisOnly val="1"/><c:dispBlanksAs val="gap"/></c:chart></c:chartSpace>`;
+	if (!chart.formatting) return xml;
+	const doc = parseXml(xml);
+	return writeChartAxisFormatting(doc.documentElement, chart.formatting) ? buildXml(doc) : xml;
 }
 
 /**

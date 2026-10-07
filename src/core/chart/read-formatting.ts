@@ -1,6 +1,7 @@
-import { NS, buildXml, children, first, type XmlElement } from '../xml/index';
+import { NS, buildXml, first, type XmlElement } from '../xml/index';
 import { readChartAppearance } from './read-appearance';
 import type { ChartStyleDefinition, ChartStyleEntry } from './style-definition';
+import { chartFormattingNodes } from './formatting-nodes';
 
 const c = (parent: XmlElement | undefined, name: string) => first(parent, name, NS.c);
 const a = (parent: XmlElement | undefined, name: string) => first(parent, name, NS.a);
@@ -29,20 +30,7 @@ function entry(node: XmlElement): ChartStyleEntry {
 
 /** Direct element formatting overrides the external style without flattening theme colors. */
 export function readChartFormatting(root: XmlElement): ChartStyleDefinition | undefined {
-	const chart = c(root, 'chart');
-	const plot = c(chart, 'plotArea');
-	const category = c(plot, 'catAx') ?? c(plot, 'dateAx');
-	const values = plot ? children(plot, 'valAx', NS.c) : [];
-	const nodes = {
-		chartArea: root,
-		plotArea: plot,
-		title: c(chart, 'title'),
-		legend: c(chart, 'legend'),
-		categoryAxis: category ?? values[0],
-		valueAxis: category ? values[0] : values[1],
-		gridlineMajor: c(values[0], 'majorGridlines'),
-		gridlineMinor: c(values[0], 'minorGridlines'),
-	};
+	const nodes = chartFormattingNodes(root);
 	const entries = Object.fromEntries(
 		Object.entries(nodes).flatMap(([name, node]) => (node ? [[name, entry(node)]] : [])),
 	);

@@ -15,6 +15,7 @@ export * from './color-style';
 export * from './style-definition';
 export * from './read-style';
 export * from './read-formatting';
+export * from './write-axis-formatting';
 export * from './gradient-definition';
 export * from './gradient-markup';
 export * from './gradient-stop-edit';
