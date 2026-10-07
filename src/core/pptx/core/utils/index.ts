@@ -428,7 +428,7 @@ export {
 	P15_GUIDE_URI,
 } from './guide-utils';
 
-export { convertMetafileToDataUrl } from 'emf-converter';
+export { convertMetafileToDataUrl } from './metafile-convert';
 
 export {
 	SWITCHABLE_LAYOUT_TYPES,

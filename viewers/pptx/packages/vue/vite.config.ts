@@ -91,6 +91,9 @@ export default defineConfig({
 				// Shared Office controls: one copy, owned by the host's node_modules.
 				'ooxml-ui',
 				/^ooxml-ui\//u,
+				// `ooxml-ui` depends on the core, so inlining it here as well would ship it twice.
+				'ooxml-core',
+				/^ooxml-core\//u,
 				'lucide-vue-next',
 				'jspdf',
 				'html2canvas-pro',

@@ -119,6 +119,7 @@
 		"html2canvas-pro": "^2.5.1",
 		"jspdf": "^4.2.1",
 		"lucide-vue-next": "^1.0.0",
+		"ooxml-core": "^0.24.0",
 		"ooxml-ui": "^0.31.0",
 		"opentype.js": "^2.0.0",
 		"tailwind-merge": "^3.7.0"

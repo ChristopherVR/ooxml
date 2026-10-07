@@ -1,8 +1,7 @@
-import { convertMetafileToDataUrl } from 'emf-converter';
-
 import { resolveNativeAnimationThemeColors } from '../../services/native-animation-theme-colors';
 import { XmlObject, PptxElement } from '../../types';
 import type { PptxNativeAnimation } from '../../types';
+import { convertMetafileToDataUrl } from '../../utils/metafile-convert';
 import { forceSvgStretchFill } from '../../utils/svg-stretch-fill';
 import { blobUrlToDataUrl } from './blob-url-to-data-url';
 import type { MediaTimingData } from './PptxHandlerRuntimeImageEffects';

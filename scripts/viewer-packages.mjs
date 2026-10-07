@@ -8,10 +8,9 @@
  * viewer's shared build files (`globals`) releases every package of that viewer, except one
  * marked `global: false` (the teams server ships its own source).
  *
- * The pptx bindings also inline the core code they import (their bundles have no `ooxml-core`
- * import), so `inlinedCore` lists those core paths, relative to the repository root, as further
- * triggers of every bundled package. Before the viewer moved here, every core release reached
- * them through a dependency bump instead.
+ * The pptx bindings import `ooxml-core` as a dependency (inlining it would duplicate the copy
+ * `ooxml-ui` brings), but `inlinedCore` still lists the core paths they reach, relative to the
+ * repository root, as triggers of every bundled package, so a core release also releases them.
  */
 
 const FRAMEWORKS = ['react', 'vue', 'angular', 'svelte', 'solid', 'vanilla'];
@@ -45,7 +44,7 @@ function viewer(name, { bundled, inlinedCore = [], globals, packages }) {
 }
 
 /**
- * The core areas (and the pptx bundler configs) the pptx bindings inline: the `pptx` area, the
+ * The core areas (and the pptx bundler configs) the pptx bindings reach: the `pptx` area, the
  * areas it imports, and the subpaths the viewer imports directly.
  */
 const PPTX_INLINED_CORE = [
@@ -58,7 +57,7 @@ const PPTX_INLINED_CORE = [
 	'src/core/tsdown.pptx.config.ts',
 ];
 
-/** pptx publishes five bindings (no Solid) that inline core/locales and import public UI. */
+/** pptx publishes five bindings (no Solid) that inline locales and import the core and public UI. */
 const PPTX_FRAMEWORKS = ['react', 'vue', 'angular', 'svelte', 'vanilla'];
 
 export const VIEWER_PACKAGES = {

@@ -1,9 +1,9 @@
-import { defineConfig } from 'tsup';
+import { defineConfig, type Options } from 'tsup';
 
 // The pptx area is bundled separately from the tsc build of the other areas: consumers
 // (pptx-viewer-core and the CLI `bin`) need dual ESM/CJS output with the legacy Office codecs
 // (`@christophervr/ole2`) inlined, which a plain tsc build cannot produce.
-export default defineConfig(() => ({
+const shared: Options = {
 	entry: {
 		'pptx/automation/schemas/chart-formatting-schemas':
 			'pptx/automation/schemas/chart-formatting-schemas.ts',
@@ -40,7 +40,6 @@ export default defineConfig(() => ({
 	},
 	outDir: 'dist',
 	tsconfig: 'tsconfig.pptx.json',
-	format: ['esm', 'cjs'],
 	outExtension: ({ format }) => ({ js: format === 'esm' ? '.mjs' : '.cjs' }),
 	dts: false,
 	splitting: false,
@@ -69,4 +68,12 @@ export default defineConfig(() => ({
 	treeshake: true,
 	platform: 'neutral',
 	noExternal: [/^@christophervr\/ole2(?:\/|$)/],
-}));
+};
+
+// The ESM build splits shared code into chunks: without it every subpath entry (for example
+// `pptx` and `pptx/automation`) carries its own copy of the engine, and a consumer that imports
+// both ships it twice. The CJS build keeps one self-contained file per entry.
+export default defineConfig([
+	{ ...shared, format: ['esm'], splitting: true },
+	{ ...shared, format: ['cjs'] },
+]);
