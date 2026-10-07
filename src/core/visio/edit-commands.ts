@@ -22,6 +22,7 @@ export type VisioGeometryEdit =
 	  })
 	| (Target & { type: 'move-shape'; x: number; y: number })
 	| (Target & { type: 'resize-shape'; width: number; height: number })
+	| (Target & { type: 'move-line-endpoint'; endpoint: 'begin' | 'end'; x: number; y: number })
 	| (Target & { type: 'delete-shape' });
 /** Insert a blank foreground page after an existing page, copying its PageSheet settings. */
 export interface VisioPageInsert {
@@ -54,6 +55,18 @@ export const isVisioPageEdit = (edit: VisioEdit): edit is VisioPageEdit =>
 	edit.type === 'reorder-page' ||
 	edit.type === 'rename-page' ||
 	edit.type === 'delete-page';
+
+/** Potential direct changes used by both package and master dependency admission. */
+export function geometryChangedCells(edit: VisioGeometryEdit): string[] {
+	if (edit.type === 'delete-shape') return [];
+	if (edit.type === 'move-line-endpoint') {
+		const prefix = edit.endpoint === 'begin' ? 'Begin' : 'End';
+		return [`${prefix}X`, `${prefix}Y`];
+	}
+	if (edit.type === 'move-shape') return ['PinX', 'PinY'];
+	if (edit.type === 'resize-shape') return ['Width', 'Height'];
+	return ['PinX', 'PinY', 'Width', 'Height'];
+}
 
 export function snapshotVisioEdits(
 	edits: readonly VisioEdit[],
@@ -138,6 +151,16 @@ export function snapshotVisioEdits(
 				};
 			case 'move-shape':
 				return { ...target, type: edit.type, x: numeric(edit.x), y: numeric(edit.y) };
+			case 'move-line-endpoint':
+				if (edit.endpoint !== 'begin' && edit.endpoint !== 'end')
+					fail('INVALID_EDIT', 'A line endpoint must be begin or end.');
+				return {
+					...target,
+					type: edit.type,
+					endpoint: edit.endpoint,
+					x: numeric(edit.x),
+					y: numeric(edit.y),
+				};
 			case 'resize-shape':
 				return {
 					...target,

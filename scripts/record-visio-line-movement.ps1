@@ -1,7 +1,8 @@
 param(
  [string]$OutputDirectory=(Join-Path $env:TEMP ('visio-line-movement-'+[guid]::NewGuid().ToString('N'))),
  [switch]$DeleteAfterMove,
- [ValidateRange(0,1000000)][double]$ResizeWidth=0
+ [ValidateRange(0,1000000)][double]$ResizeWidth=0,
+ [ValidateSet('None','Begin','End')][string]$MoveEndpoint='None'
 )
 # Capture endpoint translation without replacing native transform formulas.
 $ErrorActionPreference='Stop'
@@ -17,6 +18,13 @@ function Get-LineCells($shape){
   $result[$name]=[ordered]@{formula=$cell.FormulaU;value=$cell.ResultIU}
  }
  return $result
+}
+function Get-LineTransform($shape){
+ $x0=0.0;$y0=0.0;$xx=0.0;$yx=0.0;$xy=0.0;$yy=0.0
+ $shape.XYToPage(0,0,[ref]$x0,[ref]$y0)
+ $shape.XYToPage(1,0,[ref]$xx,[ref]$yx)
+ $shape.XYToPage(0,1,[ref]$xy,[ref]$yy)
+ return @(($xx-$x0),($yx-$y0),($xy-$x0),($yy-$y0),$x0,$y0)
 }
 try {
  $app.AlertResponse=7
@@ -57,13 +65,21 @@ try {
   for($i=0;$i -lt $shapes.Length;$i++){
    $shapes[$i].CellsU('Width').ResultIU=$ResizeWidth
    $cases[$i].Add('resized',(Get-LineCells $shapes[$i]))
-   $x0=0.0;$y0=0.0;$xx=0.0;$yx=0.0;$xy=0.0;$yy=0.0
-   $shapes[$i].XYToPage(0,0,[ref]$x0,[ref]$y0)
-   $shapes[$i].XYToPage(1,0,[ref]$xx,[ref]$yx)
-   $shapes[$i].XYToPage(0,1,[ref]$xy,[ref]$yy)
-   $cases[$i].Add('resizedTransform',@(($xx-$x0),($yx-$y0),($xy-$x0),($yy-$y0),$x0,$y0))
+   $cases[$i].Add('resizedTransform',(Get-LineTransform $shapes[$i]))
   }
   $document.SaveAs((Join-Path $directory 'resized.vsdx')) | Out-Null
+ }
+ if($MoveEndpoint -ne 'None'){
+  for($i=0;$i -lt $shapes.Length;$i++){
+   $shape=$shapes[$i]
+   $cases[$i].Add('endpointBefore',(Get-LineCells $shape))
+   $shape.CellsU($MoveEndpoint+'X').ResultIU+=0.75
+   $shape.CellsU($MoveEndpoint+'Y').ResultIU-=0.5
+   $cases[$i].Add('endpointAfter',(Get-LineCells $shape))
+   $cases[$i].Add('endpointTransform',(Get-LineTransform $shape))
+   $cases[$i].Add('endpoint',$MoveEndpoint)
+  }
+  $document.SaveAs((Join-Path $directory 'endpoint.vsdx')) | Out-Null
  }
  $evidence=[ordered]@{application='Microsoft Visio';version=$app.Version;cases=$cases}
  if($DeleteAfterMove){
@@ -73,7 +89,7 @@ try {
   $evidence.Add('deletedShapeIds',@($cases | ForEach-Object shapeId))
   $evidence.Add('controlShapeId',[string]$control.ID)
  }
- $evidence | ConvertTo-Json -Depth 7 | Set-Content (Join-Path $directory 'evidence.json') -Encoding utf8
+ [IO.File]::WriteAllText((Join-Path $directory 'evidence.json'),($evidence | ConvertTo-Json -Depth 7),[Text.UTF8Encoding]::new($false))
  Write-Output $directory
 } finally {
  try {if($document){$document.Close()}} finally {$app.Quit()}

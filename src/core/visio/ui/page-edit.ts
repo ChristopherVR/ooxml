@@ -47,6 +47,7 @@ export function visioPageEditToDrawing(page: VisioPage, edit: VisioEdit): VisioE
 				height: coordinate(edit.height),
 			};
 		case 'move-shape':
+		case 'move-line-endpoint':
 			return { ...edit, x: coordinate(edit.x), y: coordinate(edit.y) };
 		case 'resize-shape':
 			return { ...edit, width: coordinate(edit.width), height: coordinate(edit.height) };

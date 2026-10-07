@@ -2,6 +2,46 @@
 
 Status: local Windows development evidence, 2026-10-03. Full Microsoft Visio parity is not established.
 
+## Native endpoint-cell editing, 2026-10-08
+
+The existing line recorder now takes MoveEndpoint=Begin or End, assigning the
+selected endpoint a delta of (0.75, -0.5) drawing inches after translation.
+It records endpointBefore/endpointAfter caches and formulas, XYToPage basis
+points and endpoint.vsdx. Begin capture:
+visio-line-movement-b6f97cba81e0467f8472f77b833b6d19. End capture:
+visio-line-movement-c278e3a49a4640e1a2b90abe387d04a6. Both contain horizontal,
+diagonal, vertical and reversed lines. Native assignment retains the derived
+midpoint, length, angle and local-pin formulas; the other endpoint stays fixed.
+No native canvas dragging or protection interaction was recorded.
+
+The new move-line-endpoint command reuses local line admission, package scope,
+protection/style resolution and bounded dependency/cache writeback. The duplicated
+package/master changed-cell mappings now share geometryChangedCells. Worker
+command snapshots retain endpoint identity without caller extras, and page-inch
+conversion reuses the move coordinate path. Explicit native transform formulas
+and fresh caches are required. Endpoint GUARD, affected locks, unproven formulas,
+static Width overrides, flips, coincident endpoints and glue continue to refuse.
+Length changes reuse the existing resize geometry dependency proof; a regression
+rejects absolute endpoint coordinates that cannot follow Width. The saved result
+also repeats shared line admission, guarding against invalid dependent geometry.
+
+Core tests using VISIO_NATIVE_LINE_BEGIN_DIR and VISIO_NATIVE_LINE_END_DIR match
+all eight native cell sets, saved models and six-coefficient poses. Native XML
+rounds some caches differently from the numeric interpreter, so complete-model
+numeric comparisons use 12-digit tolerances; nonnumeric fields remain exact.
+The test loader accepts Windows PowerShell's UTF-8 BOM; the recorder now writes
+UTF-8 without a BOM on both PowerShell runtimes.
+
+All twelve browser API scenarios passed, covering both endpoints across six
+frameworks, production edit workers, native pose comparisons, undo/redo, saved
+model comparison and reload. There are no endpoint handles or dedicated controls
+yet. The core Visio suite passed 2,173 active tests with 60 unrelated optional
+skips. Both core typechecks, shared UI/viewer typechecks, core bundles, six demo
+builds, all core package entry-point imports and packed viewer consumer/worker
+checks passed. The source import audit found zero relative .js specifiers or
+unresolved imports. Native Office reopening, canvas dragging, gradient paint
+after endpoint changes, broader 1D formulas and routing/glue remain unverified.
+
 ## Native Width-cell line resizing, 2026-10-08
 
 Native Visio Width.ResultIU=4 on horizontal, diagonal, vertical and reversed

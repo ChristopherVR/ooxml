@@ -36,6 +36,16 @@ describe('page/drawing edit coordinate boundary', () => {
 		).toMatchObject({ x: 6, y: 8 });
 		expect(
 			visioPageEditToDrawing(page, {
+				type: 'move-line-endpoint',
+				pageId: page.id,
+				shapeId: '1',
+				endpoint: 'begin',
+				x: 3,
+				y: 4,
+			}),
+		).toMatchObject({ endpoint: 'begin', x: 6, y: 8 });
+		expect(
+			visioPageEditToDrawing(page, {
 				type: 'resize-shape',
 				pageId: page.id,
 				shapeId: '1',

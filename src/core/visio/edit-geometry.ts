@@ -9,6 +9,7 @@ import type { VisioGeometryEdit } from './edit-commands';
 import { emptyMasterMoveProof, type MasterMoveProof } from './edit-master-move';
 import {
 	moveLocalLine,
+	moveLocalLineEndpoint,
 	proveLocalLine,
 	assertLineTranslation,
 	sameLineCoordinate,
@@ -124,7 +125,11 @@ export function applyGeometryEdit(
 			shape,
 			document,
 			edit.type === 'move-shape' ? masterMovePins : new Set(),
-			lineMove ? ['LockBegin', 'LockEnd'] : [],
+			lineMove
+				? ['LockBegin', 'LockEnd']
+				: edit.type === 'move-line-endpoint'
+					? [edit.endpoint === 'begin' ? 'LockBegin' : 'LockEnd']
+					: [],
 		);
 		if (edit.type !== 'delete-shape')
 			for (const connections of children(root, 'Connects'))
@@ -174,6 +179,16 @@ export function applyGeometryEdit(
 					setCell(shape, name, value);
 					add(name);
 				}
+		} else if (edit.type === 'move-line-endpoint') {
+			if (!isLineSheet(local))
+				fail('UNSUPPORTED_GEOMETRY_EDIT', 'Endpoint editing requires a local line.');
+			const endpoint = moveLocalLineEndpoint(shape, edit);
+			changed.push(...endpoint.changed);
+			expected = endpoint.expected;
+			fixedLine = endpoint.fixed;
+			lineEditShapes.add(shape);
+			if (endpoint.expected.width !== numeric(local.get('Width')))
+				resizeGeometry(shape, roots, edit, check, lineEditShapes);
 		} else {
 			const width = numeric(local.get('Width')),
 				height = numeric(local.get('Height'));
@@ -237,6 +252,7 @@ export function applyGeometryEdit(
 		fixedLine ? (edit.type === 'resize-shape' ? 'resize' : 'move') : undefined,
 	);
 	if (fixedLine) assertLineTranslation(resultShape, fixedLine);
+	if (edit.type === 'move-line-endpoint') proveLocalLine(resultShape);
 	const result = cells(resultShape),
 		provenResult = masterDimensions.get(resultShape);
 	const equal = fixedLine ? sameLineCoordinate : (a: number, b: number) => a === b;

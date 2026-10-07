@@ -1,4 +1,4 @@
-import type { VisioGeometryEdit } from './edit-commands';
+import { geometryChangedCells, type VisioGeometryEdit } from './edit-commands';
 import type { VisioPackage } from './package';
 import { analyzeVisioFormula } from './formula';
 import { fail } from './package-common';
@@ -51,14 +51,11 @@ export async function assertGeometryPackageScope(
 	roots: ReadonlyMap<string, Element>,
 ): Promise<MasterMoveProof> {
 	const changed = commands.flatMap((command) =>
-		command.type === 'delete-shape'
-			? []
-			: (command.type === 'move-shape'
-					? ['PinX', 'PinY']
-					: command.type === 'resize-shape'
-						? ['Width', 'Height']
-						: ['PinX', 'PinY', 'Width', 'Height']
-				).map((cell) => ({ pageId: command.pageId, shapeId: command.shapeId, cell })),
+		geometryChangedCells(command).map((cell) => ({
+			pageId: command.pageId,
+			shapeId: command.shapeId,
+			cell,
+		})),
 	);
 	const deleting = commands.filter((command) => command.type === 'delete-shape');
 	let query: ReturnType<typeof createVisioDependencyQuery> | undefined;

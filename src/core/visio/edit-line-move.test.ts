@@ -5,6 +5,14 @@ import { attribute, children } from './sheet';
 import { cell, fixture, rectangle, row, section, shape } from './test-fixtures';
 
 const move = { type: 'move-shape' as const, pageId: '0', shapeId: '1', x: 4.25, y: 3 };
+const endpoint = {
+	type: 'move-line-endpoint' as const,
+	pageId: '0',
+	shapeId: '1',
+	endpoint: 'end' as const,
+	x: 4,
+	y: 2,
+};
 function line(
 	ex = 3,
 	ey = 1.5,
@@ -237,4 +245,76 @@ it('refuses locked/guarded width edits, nonzero line Height and zero 2D Height',
 	await expect(editVsdx(await source(), [{ ...resize, height: 1 }])).rejects.toThrow('zero Height');
 	const rectangleBytes = await source(shape('1', cell('Width', 2) + cell('Height', 1) + rectangle));
 	await expect(editVsdx(rectangleBytes, [resize])).rejects.toThrow('positive Height');
+});
+
+it.each(['begin', 'end'] as const)(
+	'edits and restores the %s endpoint with native formulas',
+	async (which) => {
+		const bytes = await source();
+		const before = await savedCells(bytes);
+		const saved = await editVsdx(bytes, [{ ...endpoint, endpoint: which }]);
+		const after = await savedCells(saved.bytes);
+		for (const name of ['Width', 'PinX', 'PinY', 'Angle', 'LocPinX', 'LocPinY'])
+			expect(attribute(after.get(name), 'F')).toBe(attribute(before.get(name), 'F'));
+		const prefix = which === 'begin' ? 'Begin' : 'End';
+		const restored = await editVsdx(saved.bytes, [
+			{
+				...endpoint,
+				endpoint: which,
+				x: Number(attribute(before.get(`${prefix}X`), 'V')),
+				y: Number(attribute(before.get(`${prefix}Y`), 'V')),
+			},
+		]);
+		for (const [name, cell] of await savedCells(restored.bytes))
+			expect(Number(attribute(cell, 'V')), name).toBeCloseTo(
+				Number(attribute(before.get(name), 'V')),
+				12,
+			);
+	},
+);
+
+it.each([
+	{ LockEnd: [1] },
+	{ LockWidth: [1] },
+	{ LockMoveX: [1] },
+	{ EndX: [3, 'GUARD(3)'] },
+	{ Angle: [0, '0'] },
+	{ Width: [2] },
+	{ Angle: [1, 'ATAN2(EndY-BeginY,EndX-BeginX)'] },
+	{ LocPinX: [2, 'Width*0.5'] },
+] satisfies Record<string, [number, string?]>[])(
+	'refuses unproven/protected endpoint changes (%s)',
+	async (overrides) => {
+		await expect(editVsdx(await source(line(3, 1.5, overrides)), [endpoint])).rejects.toThrow();
+	},
+);
+
+it('refuses coincident endpoints and glued lines atomically', async () => {
+	await expect(editVsdx(await source(), [{ ...endpoint, x: 1, y: 1.5 }])).rejects.toThrow(
+		'Coincident',
+	);
+	await expect(
+		editVsdx(
+			await source(line(), '', '<Connects><Connect FromSheet="1" ToSheet="2"/></Connects>'),
+			[endpoint],
+		),
+	).rejects.toThrow('Glued');
+});
+
+it('keeps endpoint no-ops byte-identical and bounds endpoint commands', async () => {
+	const bytes = await source();
+	const saved = await editVsdx(bytes, [{ ...endpoint, x: 3, y: 1.5 }]);
+	expect(saved.bytes).toEqual(bytes);
+	expect(saved.changedParts).toEqual([]);
+	await expect(editVsdx(bytes, [{ ...endpoint, x: Infinity }])).rejects.toThrow('finite');
+});
+
+it('refuses endpoint length changes when absolute geometry cannot recalculate', async () => {
+	const geometry = section(
+		'Geometry',
+		row(1, 'MoveTo', cell('X', 0) + cell('Y', 0)) + row(2, 'LineTo', cell('X', 2) + cell('Y', 0)),
+	);
+	await expect(editVsdx(await source(line(3, 1.5, {}, geometry)), [endpoint])).rejects.toThrow(
+		'dimension-dependent',
+	);
 });

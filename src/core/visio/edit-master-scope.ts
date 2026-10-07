@@ -1,4 +1,4 @@
-import type { VisioGeometryEdit } from './edit-commands';
+import { geometryChangedCells, type VisioGeometryEdit } from './edit-commands';
 import type { VisioPackage } from './package';
 import { attribute, children } from './sheet';
 import { related, indexedPart, visioXml } from './parts';
@@ -179,14 +179,11 @@ export async function assertVisioMasterIndependence(
 	}
 	const movePins = prepareMasterMovePins(roots, commands, bindings, check);
 	const changed = commands.flatMap((command) =>
-		command.type === 'delete-shape'
-			? []
-			: (command.type === 'move-shape'
-					? ['PinX', 'PinY']
-					: command.type === 'resize-shape'
-						? ['Width', 'Height']
-						: ['Width', 'Height', 'PinX', 'PinY']
-				).map((cell) => ({ pageId: command.pageId, shapeId: command.shapeId, cell })),
+		geometryChangedCells(command).map((cell) => ({
+			pageId: command.pageId,
+			shapeId: command.shapeId,
+			cell,
+		})),
 	);
 	const query = createVisioDependencyQuery(roots, { check });
 	const directAffected = (pageId: string, shapeId: string, cell: string) =>

@@ -288,6 +288,18 @@ six routes cover controls/history/download/reload, plus native PNG interior
 comparisons for resized gradient paint. Endpoint dragging, nonzero line Height,
 broader 1D resize formulas, routing/glue and native reopening remain open.
 
+`move-line-endpoint` assigns either `endpoint: 'begin'` or `'end'` to drawing-inch
+`x`/`y` coordinates on proven local unglued straight lines. Native midpoint,
+endpoint-length, angle and half-dimension local-pin formulas remain intact;
+the existing dependency graph recalculates their caches and geometry. The other
+endpoint stays fixed. Package/master dependency admission shares one changed-cell
+mapping, and worker snapshots and page-to-drawing conversion support the command.
+Eight native cases verify caches and poses; twelve browser API scenarios cover
+history, download and reload across six frameworks. Numeric model comparisons
+allow 12-digit floating-point roundoff. Static Width overrides, flips, coincident
+endpoints, broader formulas, glue and canvas endpoint handles remain unsupported
+or unverified. Native Office reopen acceptance remains unverified.
+
 Numeric ShapeSheet interpretation uses a bounded AST, never JavaScript execution.
 Arithmetic, comparisons, IF, GUARD, Width/Height scaling, local geometry/named-row
 references and static Sheet.ID references have dependency analysis. MODULUS,

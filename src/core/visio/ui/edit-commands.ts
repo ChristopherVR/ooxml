@@ -57,6 +57,17 @@ export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
 			case 'move-shape':
 				numbers(command.x, command.y);
 				return { type: command.type, ...target, x: command.x, y: command.y };
+			case 'move-line-endpoint':
+				numbers(command.x, command.y);
+				if (command.endpoint !== 'begin' && command.endpoint !== 'end')
+					throw new Error('Invalid line endpoint.');
+				return {
+					type: command.type,
+					...target,
+					endpoint: command.endpoint,
+					x: command.x,
+					y: command.y,
+				};
 			case 'resize-shape':
 				numbers(command.width, command.height);
 				return { type: command.type, ...target, width: command.width, height: command.height };
