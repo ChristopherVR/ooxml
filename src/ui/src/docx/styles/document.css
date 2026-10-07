@@ -16,6 +16,14 @@
 .dve-revision-hidden {
 	display: none;
 }
+.ProseMirror[data-review-display]:not([data-review-display='all']) .dve-revision-insert,
+.ProseMirror[data-review-display]:not([data-review-display='all']) .dve-revision-delete {
+	color: inherit;
+	text-decoration: none;
+}
+.ProseMirror[data-review-display]:not([data-review-display='all']) .dve-comment-range {
+	background: transparent;
+}
 .dve-revision-format-markup {
 	outline: 1px dotted currentColor;
 	outline-offset: 2px;

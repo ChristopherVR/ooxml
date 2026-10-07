@@ -128,7 +128,13 @@ prior paragraph style inheritance, numbering inputs and removal of current direc
 spacing, indentation, direction, borders and shading. Display changes preserve
 the authoritative model, revision records, text positions, selection and undo
 history. All six browser bindings match the native before document's paragraph
-appearance and retain pending revisions on export.
+appearance and retain pending revisions on export. The editable body also projects
+prior run properties. Direct mark views retain their authored document identity
+while deferring appearance to the shared resolved formatting. This removes current
+underline, highlight and script positioning without importing display properties
+into text edits. Native bold and combined font references match the before
+documents across all six bindings. Display modes remain local to each Yjs peer
+and do not create shared undo entries.
 
 Print Layout now projects prior run and paragraph formatting through the same
 core helpers, including table cells, section stories and notes. Native before
@@ -143,8 +149,8 @@ space, and note numbering uses only visible references. Headers and footers use
 the same visibility policy, including floating pictures and watermarks. Native
 move references pass across all six browser bindings, including click-to-cursor
 and retained revisions on export. Print Layout still retains revised paragraph
-marks and reports that display-time merging remains unsupported. Prior run
-formatting in the body editor, non-body editing views and structural review
+marks and reports that display-time merging remains unsupported. Non-body
+editing views and structural review
 display still need implementation. These checks establish the covered formatting
 semantics, not pixel parity with current Microsoft 365 Word.
 
@@ -159,10 +165,9 @@ Accepting a run-format revision clears the snapshot. Shared editor Review
 commands now navigate, accept and reject imported run-format revisions,
 including undo/redo, peer synchronization and export. Supported run-formatting
 changes and pure paragraph-format changes now record revisions. Original display
-projects prior paragraph formatting in the body editor and prior run/paragraph
-formatting in Print Layout. Print Layout also filters text and move revisions by
-review mode. Prior run formatting in the editable body and revised paragraph-mark
-merging for display remain unfinished. Shared Review commands
+projects prior run and paragraph formatting in the body editor and Print Layout.
+Print Layout also filters text and move revisions by review mode. Non-body editing
+views and revised paragraph-mark merging for display remain unfinished. Shared Review commands
 now navigate, accept and reject imported paragraph changes, with undo/redo,
 Yjs peer synchronization and package export. Core
 paragraph rejection now restores the full prior properties and matches all four
@@ -259,8 +264,8 @@ resolving formatting retains the pending text revision. Modern Word UTC timestam
 are preserved separately from legacy revision dates. Core, editor, Yjs and six
 browser bindings cover overlapping tracked typing. Desktop Word reopened four
 exports combining run formatting with insertion or deletion and rejected them
-back to native baseline text and formatting. Displaying their prior properties
-in Original mode remains unfinished.
+back to native baseline text and formatting. Original mode now displays prior
+properties in the body editor and Print Layout while retaining both histories.
 
 The shared Track Changes plugin now records supported run-formatting mark edits,
 including the explicit-off properties used by UI toggles. It reuses shared mark

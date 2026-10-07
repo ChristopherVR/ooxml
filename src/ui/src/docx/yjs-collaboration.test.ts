@@ -66,6 +66,38 @@ function start(
 }
 
 describe('Word Yjs collaboration', () => {
+	it('keeps Original formatting display local without changing shared content or undo', async () => {
+		const bytes = new Uint8Array(
+			await readFile(resolve('../core/docx/__fixtures__/review-formatting/bold-tracked.docx')),
+		);
+		const peers = pair();
+		const a = mount();
+		const b = mount();
+		await a.load(bytes);
+		await b.load(bytes);
+		start(a, b, peers);
+		const source = viewOf(a).state.doc.toJSON();
+		const changeMode = (editor: DocxEditorElement, mode: string) => {
+			const select = editor.shadowRoot!.querySelector<HTMLSelectElement>(
+				'[aria-label="Display for review"]',
+			)!;
+			select.value = mode;
+			select.dispatchEvent(new Event('change', { bubbles: true }));
+		};
+		changeMode(a, 'original');
+		expect(viewOf(a).dom.getAttribute('data-review-display')).toBe('original');
+		expect(viewOf(b).dom.getAttribute('data-review-display')).toBe('all');
+		expect(viewOf(a).dom.querySelector('strong')!.style.fontWeight).toBe('inherit');
+		expect(viewOf(b).dom.querySelector('strong')!.style.fontWeight).toBe('');
+		for (const editor of [a, b]) {
+			expect(viewOf(editor).state.doc.toJSON()).toEqual(source);
+			expect(wordYjsPluginKey.getState(viewOf(editor).state)!.canUndo()).toBe(false);
+			expect(collectRevisionRanges(viewOf(editor).state.doc)).toHaveLength(1);
+		}
+		changeMode(a, 'final');
+		expect(viewOf(a).dom.querySelector('strong')!.style.fontWeight).toBe('');
+		expect(viewOf(b).state.doc.toJSON()).toEqual(source);
+	});
 	it('applies tracking dialog preferences as one shared undo operation', () => {
 		const peers = pair();
 		const a = mount();

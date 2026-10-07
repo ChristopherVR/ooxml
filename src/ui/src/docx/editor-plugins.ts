@@ -11,6 +11,7 @@ import { reviewDisplayPlugin, type ReviewDisplayMode } from './review-display';
 import { runStylesPlugin } from './run-styles';
 import { sectionBreaksPlugin } from './section-commands';
 import { trackChangesPlugin } from './track-changes-mode';
+import { reviewRunMarksPlugin } from './review-run-marks';
 
 /** What the body editor's plugins read from the editor element. */
 export interface BodyPluginHost {
@@ -34,6 +35,7 @@ export function bodyPlugins(host: BodyPluginHost): Plugin[] {
 		noteNumberingPlugin(),
 		sectionBreaksPlugin(),
 		fieldGuardPlugin(),
+		reviewRunMarksPlugin(() => host.reviewDisplayMode()),
 		tabStopsPlugin(),
 		keymap({
 			'Mod-Alt-f': () => (host.insertNote('footnote'), true),

@@ -5,6 +5,7 @@ import {
 	resolveRunFormatting,
 	resolveTableStyleFormatting,
 	resolveThemeColorReference,
+	reviewRunFormatting,
 	type DocumentModel,
 	type RunFormatting,
 	type Table,
@@ -16,6 +17,7 @@ import { scaledSegments, scaleMeasurer } from './run-scale';
 import { scaledParagraphBreaks } from './scaled-paragraph-breaks';
 import type { ReviewDisplayMode } from './review-display';
 import { displayParagraph } from './review-paragraph-display';
+import { reviewRunCss } from './review-run-css';
 
 type Theme = NonNullable<DocumentModel['theme']>;
 
@@ -128,6 +130,7 @@ export function runStylesPlugin(
 		props: {
 			decorations(state) {
 				const model = getModel();
+				const mode = getMode();
 				const tables = new Map<string, Table>();
 				for (const block of model.blocks) if (block.type === 'table') tables.set(block.id, block);
 				const decorations: Decoration[] = [];
@@ -136,19 +139,32 @@ export function runStylesPlugin(
 					start: number,
 					tableStyleRun?: RunFormatting,
 				) => {
-					const paragraphStyleId = displayParagraph(paragraph, getMode()).value.style;
+					const paragraphStyleId = displayParagraph(paragraph, mode).value.style;
 					let hasScale = false;
 					paragraph.forEach((child, offset) => {
 						if (!child.isText) return;
-						const run = runOf(child);
-						if (!run) return;
+						const current = runOf(child);
+						if (!current) return;
+						const projected = reviewRunFormatting(current, mode);
+						const run = projected.value;
 						const resolved = resolveRunFormatting(run, {
 							runCatalog: model.characterStyles,
 							paragraphCatalog: model.paragraphStyles,
 							paragraphStyleId,
 							...(tableStyleRun ? { tableStyleRun } : {}),
 						});
-						const style = runFormattingCss(resolved, model.theme, run);
+						const style =
+							mode === 'original'
+								? `${runFormattingCss(resolved, model.theme)};${reviewRunCss(resolved)}`
+								: runFormattingCss(resolved, model.theme, run);
+						const originalAttrs =
+							mode === 'original'
+								? {
+										...(run.language ? { lang: run.language } : {}),
+										...(run.rtl !== undefined ? { dir: run.rtl ? 'rtl' : 'ltr' } : {}),
+										...(projected.error ? { 'data-review-format-error': projected.error } : {}),
+									}
+								: {};
 						const hidden = resolved.vanish === true;
 						const segments = scaledSegments(
 							child.text!,
@@ -165,6 +181,7 @@ export function runStylesPlugin(
 										start + offset + segment.to,
 										{
 											style: `${style};${segment.css}`,
+											...originalAttrs,
 											class: `dve-scaled-text${hidden ? ' dve-hidden-text' : ''}`,
 										},
 										{ segment: segment.from },
@@ -175,6 +192,7 @@ export function runStylesPlugin(
 						if (style || hidden)
 							decorations.push(
 								Decoration.inline(start + offset, start + offset + child.nodeSize, {
+									...originalAttrs,
 									...(style ? { style } : {}),
 									...(hidden ? { class: 'dve-hidden-text' } : {}),
 								}),

@@ -5,8 +5,8 @@ import { formattingRevision, paragraphFormattingRevision } from 'ooxml-core/docx
 /**
  * All Markup shows insertions/deletions as authored (default CSS from schema.ts's marks).
  * No Markup (final) hides deleted text and shows insertions unmarked, matching the resulting document.
- * Original hides inserted text and shows deletions unmarked. Style plugins project prior paragraph
- * formatting; prior run formatting and structural revision display still need implementation.
+ * Original hides inserted text and shows deletions unmarked. Style plugins project prior run and
+ * paragraph formatting; structural revision display still needs implementation.
  * Simple Markup is approximated as No Markup with a change indicator; per-line change bars are not
  * implemented, so it is visually identical to No Markup today (see docs/parity-roadmap.md).
  */
@@ -23,6 +23,7 @@ function hiddenMarkName(mode: ReviewDisplayMode): 'deletion' | 'insertion' | nul
 export function reviewDisplayPlugin(getMode: () => ReviewDisplayMode): Plugin {
 	return new Plugin({
 		props: {
+			attributes: () => ({ 'data-review-display': getMode() }),
 			decorations(state) {
 				const mode = getMode();
 				const hidden = hiddenMarkName(mode);
