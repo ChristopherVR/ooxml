@@ -3,6 +3,29 @@ import { demoDocument } from 'ooxml-core/visio/ui';
 import { renderPage } from './render-svg.js';
 import { exportPageSvg } from './export-svg.js';
 import evidence from '../../../core/visio/__fixtures__/open-arrows-native.json';
+import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import { parseVsdx } from 'ooxml-core/visio';
+
+const nativeDirectory = process.env.VISIO_NATIVE_OPEN_ARROWS_DIR;
+describe.skipIf(!nativeDirectory)('native-authored open-arrow package', () => {
+	it('parses and renders every measured saved style through the shared viewer', async () => {
+		const model = await parseVsdx(await readFile(resolve(nativeDirectory!, 'open-arrows.vsdx')));
+		const page = model.pages[0]!;
+		expect(page.shapes).toHaveLength(evidence.cases.length);
+		const key = (code: number, size: number, width: number) =>
+			`${code}/${size}/${width.toFixed(6)}`;
+		expect(
+			page.shapes
+				.map((s) => key(s.style.endArrow, s.style.endArrowSize!, s.style.lineWidth))
+				.sort(),
+		).toEqual(evidence.cases.map((r) => key(r.code, r.size, r.lineWidth)).sort());
+		const result = renderPage(model, page);
+		expect(result.svg.querySelectorAll('marker')).toHaveLength(84);
+		expect(result.warnings.some((w) => /Arrowhead|arrowhead/.test(w))).toBe(false);
+		result.dispose();
+	}, 30_000);
+});
 
 describe('native open-arrow glyph coordinates', () => {
 	it.each(evidence.cases)('matches code $code size $size weight $lineWidth', (row) => {

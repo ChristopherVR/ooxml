@@ -91,3 +91,15 @@ These are geometry checks, not a browser pixel equivalence claim. Filled arrow s
 2, 4 and 5 retain their explicit approximate-sizing warning. Non-unit drawing scales,
 filled-marker setback, other codes, print behavior and full native pixel comparisons
 remain unverified. Full Visio parity is still incomplete.
+
+The subsequent increment adds native curved open style 7, moving open-glyph geometry
+into core alongside sizing. The reference matrix now covers 84 native exports. Its
+Bézier controls, local coordinate conversion and stroke paint are checked independently
+of marker construction. The generator also saves a native-authored 84-shape VSDX for
+optional parse-to-render coverage (`VISIO_NATIVE_OPEN_ARROWS_DIR`). Styles 6 and 8 and
+filled-end setback remain unsupported or approximate; full parity remains unfinished.
+
+Verification after the curved-arrow increment: 1,573 core tests passed (34 optional
+skips), 521 shared UI tests passed (one optional skip), and core/UI typechecking passed.
+The shared UI run included native-authored VSDX parsing and rendering for all 84 cases.
+Native pixel rendering in browsers, filled sizing and non-unit scales were not tested.

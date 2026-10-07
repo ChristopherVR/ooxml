@@ -1,5 +1,5 @@
 # Native geometry oracle: own Visio instance, no attachment to an open document.
-param([string]$OutputDirectory = (Join-Path $env:TEMP ('visio-tick-arrows-' + [guid]::NewGuid())))
+param([string]$OutputDirectory = (Join-Path $env:TEMP ('visio-open-arrows-' + [guid]::NewGuid())))
 $ErrorActionPreference = 'Stop'
 New-Item -ItemType Directory -Force $OutputDirectory | Out-Null
 $app = New-Object -ComObject Visio.InvisibleApp
@@ -7,7 +7,7 @@ $rows = @()
 try {
     $document = $app.Documents.Add('')
     $page = $document.Pages.Item(1)
-    foreach ($code in @(1, 3, 9)) {
+    foreach ($code in @(1, 3, 7, 9)) {
     foreach ($weight in @(0.005, 0.01, 0.02)) {
         foreach ($size in 0..6) {
             $shape = $page.DrawLine(0, 0, 2, 0)
@@ -17,14 +17,15 @@ try {
             $path = Join-Path $OutputDirectory "arrow-$code-$weight-$size.svg"
             $shape.Export($path)
             $xml = Get-Content -LiteralPath $path -Raw
-            $glyph = switch ($code) { 1 { 'M 1 -1 L 0 0 L 1 1' } 3 { 'M 2 1 L 0 0 L 2 -1' } 9 { 'M 1 -1 L -1 1' } }
-            if (-not $xml.Contains($glyph)) { throw 'Unexpected native open-arrow geometry' }
+            $glyphMatch = [regex]::Match($xml, "(?s)<g id=`"lend$code`">.*?<path\s+d=`"([^`"]+)`"")
+            if (-not $glyphMatch.Success) { throw 'Missing native open-arrow geometry' }
+            $glyph = [regex]::Replace($glyphMatch.Groups[1].Value.Trim(), '\s+', ' ')
             $scale = [double]::Parse([regex]::Match($xml, 'scale\(-([^,]+)').Groups[1].Value, [cultureinfo]::InvariantCulture)
             $rows += [ordered]@{ code = $code; size = $size; lineWidth = $weight; nativeScale = $scale; extent = $scale * $weight; nativeGlyph = $glyph }
-            $shape.Delete()
         }
     }
     }
+    $document.SaveAs((Join-Path $OutputDirectory 'open-arrows.vsdx'))
     [ordered]@{ application = 'Microsoft Visio'; version = $app.Version; drawingScale = 1; cases = $rows } |
         ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $OutputDirectory 'evidence.json') -Encoding utf8
 } finally {

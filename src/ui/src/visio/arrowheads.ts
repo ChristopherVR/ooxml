@@ -1,7 +1,7 @@
-import { visioOpenArrowExtent, type VisioStyle } from 'ooxml-core/visio';
+import { visioOpenArrowPath, type VisioStyle } from 'ooxml-core/visio';
 import { safeColor, svgElement } from './render-svg.js';
 let markerId = 0;
-/** Common Visio line/triangle and concave arrow styles. Sizes remain a documented visual approximation. */
+/** Native measured open styles and approximate filled triangle/concave styles. */
 export function applyArrowheads(
 	path: SVGPathElement,
 	style: VisioStyle,
@@ -11,7 +11,7 @@ export function applyArrowheads(
 	for (const side of ['start', 'end'] as const) {
 		const code = side === 'start' ? style.startArrow : style.endArrow;
 		if (!code) continue;
-		if (![1, 2, 3, 4, 5, 9].includes(code)) {
+		if (![1, 2, 3, 4, 5, 7, 9].includes(code)) {
 			warnings.add(`Arrowhead style ${code} is not rendered in this build.`);
 			continue;
 		}
@@ -19,8 +19,8 @@ export function applyArrowheads(
 		const id = `visio-arrow-${++markerId}`;
 		const marker = svgElement('marker');
 		marker.id = id;
-		if (code === 1 || code === 3 || code === 9) {
-			const extent = visioOpenArrowExtent(size, style.lineWidth);
+		const openPath = visioOpenArrowPath(code, size, style.lineWidth);
+		if (openPath) {
 			// These native open styles have no setback and use round caps
 			// independent of the connector's line cap.
 			marker.setAttribute('viewBox', '-1 -1 2 2');
@@ -32,13 +32,7 @@ export function applyArrowheads(
 			marker.setAttribute('orient', 'auto-start-reverse');
 			marker.setAttribute('overflow', 'visible');
 			const tick = svgElement('path');
-			// Native SVG is y-down; core geometry is y-up.
-			tick.setAttribute(
-				'd',
-				code === 9
-					? `M ${-extent} ${-extent} L ${extent} ${extent}`
-					: `M ${-extent * (code === 3 ? 2 : 1)} ${-extent} L 0 0 L ${-extent * (code === 3 ? 2 : 1)} ${extent}`,
-			);
+			tick.setAttribute('d', openPath);
 			tick.setAttribute('fill', 'none');
 			tick.setAttribute('stroke', safeColor(style.lineColor));
 			tick.setAttribute('stroke-width', String(style.lineWidth));
