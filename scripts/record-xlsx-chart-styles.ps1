@@ -3,7 +3,8 @@ param(
     [int[]]$StyleIds = (201..216),
     [switch]$BuiltInReferences,
     [string[]]$ReferenceFiles = @(),
-    [switch]$CaptureTitleCharacters
+    [switch]$CaptureTitleCharacters,
+    [switch]$CaptureLayoutGeometry
 )
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -78,6 +79,15 @@ try {
                 $cases[-1].referenceName = [System.IO.Path]::GetFileNameWithoutExtension($path)
                 # The title-wide Font can differ from the actual rich-text range.
                 $cases[-1].titleText = Read-ChartFont $probeChart.ChartTitle.Format.TextFrame2.TextRange.Font -TextRange
+            }
+            if ($CaptureLayoutGeometry) {
+                $cases[-1].layoutGeometry = @{
+                    chart = @{ widthPt = [double]$probeChart.Parent.Width; heightPt = [double]$probeChart.Parent.Height }
+                    chartArea = @{ leftPt = [double]$probeChart.ChartArea.Left; topPt = [double]$probeChart.ChartArea.Top; widthPt = [double]$probeChart.ChartArea.Width; heightPt = [double]$probeChart.ChartArea.Height }
+                    plotArea = @{ leftPt = [double]$probeChart.PlotArea.Left; topPt = [double]$probeChart.PlotArea.Top; widthPt = [double]$probeChart.PlotArea.Width; heightPt = [double]$probeChart.PlotArea.Height }
+                    insidePlotArea = @{ leftPt = [double]$probeChart.PlotArea.InsideLeft; topPt = [double]$probeChart.PlotArea.InsideTop; widthPt = [double]$probeChart.PlotArea.InsideWidth; heightPt = [double]$probeChart.PlotArea.InsideHeight }
+                    titleIncludeInLayout = [bool]$probeChart.ChartTitle.IncludeInLayout
+                }
             }
             if ($CaptureTitleCharacters) {
 				$cases[-1].titleGeometry = @{

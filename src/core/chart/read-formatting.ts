@@ -4,6 +4,7 @@ import type { ChartStyleDefinition, ChartStyleEntry } from './style-definition';
 import { chartFormattingNodes } from './formatting-nodes';
 import { readBuiltInChartStyle } from './built-in-text-style';
 import { parseDrawingTextBody } from '../diagram/drawing-text';
+import { readChartManualLayoutValues } from './manual-layout';
 
 const c = (parent: XmlElement | undefined, name: string) => first(parent, name, NS.c);
 const a = (parent: XmlElement | undefined, name: string) => first(parent, name, NS.a);
@@ -15,9 +16,20 @@ function entry(node: XmlElement): ChartStyleEntry {
 	const rich = c(c(node, 'tx'), 'rich');
 	const richParagraph = a(rich, 'p');
 	const textBody = parseDrawingTextBody(rich);
+	const manual = c(c(node, 'layout'), 'manualLayout');
+	const layout = manual
+		? readChartManualLayoutValues((name) => c(manual, name)?.getAttribute('val'))
+		: undefined;
+	const overlay = c(node, 'overlay')?.getAttribute('val');
 	// Legacy whole-element appearance uses the first run; rich bodies resolve runs separately.
 	const out: ChartStyleEntry = {
 		sourceXml: buildXml(node),
+		...(layout ? { layout } : {}),
+		...(overlay === '0' || overlay === 'false'
+			? { overlay: false }
+			: overlay === '1' || overlay === 'true'
+				? { overlay: true }
+				: {}),
 		...readChartAppearance(defaults, c(node, 'spPr')),
 		...readChartAppearance(a(a(richParagraph, 'pPr'), 'defRPr'), undefined),
 		...readChartAppearance(a(a(richParagraph, 'r'), 'rPr'), undefined),

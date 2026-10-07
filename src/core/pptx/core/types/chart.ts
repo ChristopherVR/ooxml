@@ -5,6 +5,7 @@
  * @module pptx-types/chart
  */
 
+import type { ChartManualLayout } from '../../../chart/manual-layout';
 import type { PptxChartAxisLabelFormatting } from './chart-axis';
 import type { ChartGradientFill } from '../../../chart/gradient-definition';
 import type { PptxChartDataPointPicture } from './chart-ex';
@@ -1179,16 +1180,7 @@ export interface PptxChartChrome {
 }
 
 /** Manual chart placement from `c:layout/c:manualLayout` (CT_ManualLayout). */
-export interface PptxChartManualLayout {
-	layoutTarget?: 'inner' | 'outer';
-	xMode?: 'edge' | 'factor';
-	yMode?: 'edge' | 'factor';
-	widthMode?: 'edge' | 'factor';
-	heightMode?: 'edge' | 'factor';
-	x?: number;
-	y?: number;
-	width?: number;
-	height?: number;
+export interface PptxChartManualLayout extends ChartManualLayout {
 	/**
 	 * Raw `c:extLst` (CT_ExtensionList) of the `c:manualLayout`, captured
 	 * verbatim so it round-trips through the typed model. Without this, a dirty

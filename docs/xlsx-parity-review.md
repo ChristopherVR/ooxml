@@ -1586,3 +1586,46 @@ built-in-font/inheritance checks across six bindings. Core/UI typechecks,
 builds and package import/registration checks pass. Both wrapping JSON fixtures
 are absent from the published chart output. Manual title layout, autofit,
 unverified scripts/fonts, advanced text cases and full Excel parity remain open.
+
+### Manual title placement and layout preservation (8 October 2026)
+
+Regenerating a chart after a type edit previously dropped its manual layout
+and overlay properties. XLSX now preserves the entire imported title,
+plot-area and legend layout/overlay subtrees, including unknown extensions.
+Shared chart formatting exposes typed layout values. The parser is extracted
+from PowerPoint core and rectangle geometry from PowerPoint UI into one core
+chart module; the PowerPoint adapters continue to consume those shared helpers.
+The source structure is documented in Microsoft's
+[Open XML manual-layout reference](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.drawing.charts.manuallayout).
+
+Imported title positions now reach the SVG painter. Overlay titles do not
+reserve the ordinary title band, and moved/overlay titles paint above the
+plot. Seven independently reopened Excel references cover automatic and
+automatic-overlay titles, left/right movement, a moved overlay, a wrapped
+title and a smaller chart. The owned recorder retains title/chart/plot
+rectangles and source parts in `excel-chart-title-layout.json`. Core tests
+verify source layout/overlay preservation, title positioning and overlay
+reservation before/after regeneration. The fixture's drawing-canvas coordinates
+are four points beyond the reported COM title Left/Top coordinates; native
+PNG inspection confirms that mapping for this corpus.
+
+Browser checks exposed a CSS border that shrank the chart SVG viewport by
+two pixels and scaled its coordinate system. The frame now uses an outline,
+keeping its declared SVG dimensions. This fixes the actual rendering issue
+without relaxing the positioning comparison. The native workbook's two-cell
+anchor still produces a 393-CSS-pixel frame instead of the normalized
+400-pixel chart reference, so native grid/frame fidelity remains open.
+
+Playwright MCP reviewed moved and overlay title imports through the actual
+type-change dialog. Excel reopens the Line exports, resaves and reopens them:
+Left=40 points, Top=60/120 points and IncludeInLayout=true/false are unchanged.
+The native and browser images still differ in plot geometry, borders and
+gridline appearance. Manual title dimensions, manual plot/legend rendering,
+position authoring UI, autofit and complete chart parity remain unfinished.
+
+The diagram/chart/XLSX and PowerPoint layout-parser sweep passes 8,581 ordinary
+tests and 17 existing expected raster failures. Updated title-layout checks
+pass all seven native references; the extracted PowerPoint UI integration
+passes 16 checks. All 254 focused chart browser cases pass across six bindings,
+including 42 new native-layout cases. Core/UI typechecks, builds and package
+checks pass, and the native layout fixture is absent from published chart output.

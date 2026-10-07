@@ -1,11 +1,12 @@
 import type { ChartViewModel } from './chart-view';
 import { chartAreaRect, chartTextAttributes } from './chart-svg-appearance';
-import { text } from './chart-svg-util';
+import { text, n } from './chart-svg-util';
 import { chartTextWidth, chartFontMetrics, type ChartSvgOptions } from './chart-svg-text-metrics';
 import type { DiagramTextSpacing } from '../../diagram/types';
 import { chartPointsToPixels } from './chart-appearance';
 import type { ChartTitleText } from './chart-title-text';
 import { wrapStyledRuns } from '../../text/wrap-styled-runs';
+import { hasManualLayoutFields, resolveManualLayoutRect } from '../../chart/manual-layout';
 
 function spacing(
 	value: DiagramTextSpacing | undefined,
@@ -24,6 +25,7 @@ export function chartRichTitleSvg(
 	model: ChartViewModel,
 	width: number,
 	options: ChartSvgOptions = {},
+	frameHeight = 400,
 ): { markup: string; height: number } | undefined {
 	if (!model.title) return undefined;
 	const base = chartTextAttributes(model, 'title', 14);
@@ -32,6 +34,8 @@ export function chartRichTitleSvg(
 	const capacity = Math.max(1, width * 0.8 - 8);
 	if (
 		!model.titleText &&
+		!hasManualLayoutFields(model.titleLayout) &&
+		!model.titleOverlay &&
 		!model.title.includes('\n') &&
 		chartTextWidth(model.title, base, options) <= capacity
 	)
@@ -161,14 +165,23 @@ export function chartRichTitleSvg(
 		'</text>',
 		`${spans.join('')}</text>`,
 	);
+	const markup =
+		chartAreaRect(model, 'title', {
+			x: (width - boxWidth) / 2,
+			y: 4,
+			w: Math.max(0, boxWidth),
+			h: height,
+		}) + parent;
+	const automatic = { x: (width - boxWidth) / 2, y: 4, width: boxWidth, height };
+	const manual = resolveManualLayoutRect(
+		model.titleLayout,
+		{ width, height: frameHeight },
+		automatic,
+	);
 	return {
-		markup:
-			chartAreaRect(model, 'title', {
-				x: (width - boxWidth) / 2,
-				y: 4,
-				w: Math.max(0, boxWidth),
-				h: height,
-			}) + parent,
+		markup: manual
+			? `<g data-chart-title-layout="true" transform="translate(${n(manual.x - automatic.x)} ${n(manual.y - automatic.y)})">${markup}</g>`
+			: markup,
 		height: Math.max(24, height),
 	};
 }

@@ -2011,3 +2011,32 @@ page. Shared affine composition compares every descendant against independent
 native XYToPage measurements. Public API, undo/redo and saved reload are checked
 across six bindings. GUI group authoring, masters/glue, foreign or 1D trees,
 broader formulas, exact paint and native Visio reopen acceptance remain open.
+
+## Shared chart manual-layout values and geometry
+
+Source: ChristopherVR/ooxml at `14a33ed2e`,
+`src/core/pptx/core/utils/chart-layout.ts` and
+`src/ui/src/pptx/render/chart-manual-layout.ts`. Manual-layout value parsing
+and the DOM-free edge/factor rectangle resolver move into
+`src/core/chart/manual-layout.ts`. PowerPoint retains its object-tree/raw
+extension adapter and region-specific title/legend/data-label calculations;
+its UI re-exports the shared resolver for compatibility. XLSX uses the same
+value reader through the shared XML adapter and the same rectangle resolver
+for imported title positions. No duplicate spreadsheet layout parser or
+viewer geometry engine is added.
+
+Shared chart formatting captures manual-layout values and overlay flags.
+Regeneration copies entire title/plot/legend layout and overlay subtrees in
+schema order, retaining unknown extensions. Title positioning and title
+overlay reservation/paint order now reach the XLSX SVG painter. Chart borders
+use an outline so they do not shrink the SVG coordinate viewport. Manual title
+width/height authoring, manual plot/legend painting, native frame/grid sizing
+and complete layout/raster parity remain incomplete.
+
+Seven owned Excel 16.0 build 20430 references are independently reopened with
+chart/title/plot geometry, source parts and text properties. Existing native
+recording adds an optional layout-geometry capture. Playwright MCP edits
+moved/overlay references through Change Chart Type; Excel reopens/resaves and
+reopens both exports at Left=40 points, Top=60/120 points and
+IncludeInLayout=true/false unchanged. Existing PowerPoint layout integration
+tests continue to exercise the extracted resolver.

@@ -24,33 +24,18 @@
 
 import type { PptxChartData, PptxChartLayouts, PptxChartManualLayout } from 'ooxml-core/pptx';
 
-/** An axis-aligned rectangle in the chart's pixel space. */
-export interface ChartLayoutRect {
-	x: number;
-	y: number;
-	width: number;
-	height: number;
-}
-
-/** The chart frame the fractions are measured against. */
-export interface ChartFrameSize {
-	width: number;
-	height: number;
-}
-
-/** True when the layout carries at least one of the four placement fields. */
-export function hasManualLayoutFields(
-	layout: PptxChartManualLayout | null | undefined,
-): layout is PptxChartManualLayout {
-	return (
-		layout !== null &&
-		layout !== undefined &&
-		(layout.x !== undefined ||
-			layout.y !== undefined ||
-			layout.width !== undefined ||
-			layout.height !== undefined)
-	);
-}
+import {
+	hasManualLayoutFields,
+	resolveManualLayoutRect,
+	type ChartLayoutRect,
+	type ChartFrameSize,
+} from 'ooxml-core/chart';
+export {
+	hasManualLayoutFields,
+	resolveManualLayoutRect,
+	type ChartLayoutRect,
+	type ChartFrameSize,
+} from 'ooxml-core/chart';
 
 /** The manual layout of one chart region, when the chart declares one. */
 export function manualLayoutOf(
@@ -59,46 +44,6 @@ export function manualLayoutOf(
 ): PptxChartManualLayout | undefined {
 	const layout = chartData?.layouts?.[region];
 	return hasManualLayoutFields(layout) ? layout : undefined;
-}
-
-/**
- * Resolve a manual layout to a pixel rectangle. Each field the layout omits
- * keeps its `auto` value; `factor`-mode positions offset from `auto`.
- * Returns `undefined` when the layout carries no placement field at all.
- */
-export function resolveManualLayoutRect(
-	layout: PptxChartManualLayout | null | undefined,
-	frame: ChartFrameSize,
-	auto: ChartLayoutRect,
-): ChartLayoutRect | undefined {
-	if (!hasManualLayoutFields(layout)) {
-		return undefined;
-	}
-	const x =
-		layout.x === undefined
-			? auto.x
-			: layout.xMode === 'edge'
-				? layout.x * frame.width
-				: auto.x + layout.x * frame.width;
-	const y =
-		layout.y === undefined
-			? auto.y
-			: layout.yMode === 'edge'
-				? layout.y * frame.height
-				: auto.y + layout.y * frame.height;
-	const width =
-		layout.width === undefined
-			? auto.width
-			: layout.widthMode === 'edge'
-				? layout.width * frame.width - x
-				: layout.width * frame.width;
-	const height =
-		layout.height === undefined
-			? auto.height
-			: layout.heightMode === 'edge'
-				? layout.height * frame.height - y
-				: layout.height * frame.height;
-	return { x, y, width: Math.max(width, 1), height: Math.max(height, 1) };
 }
 
 /** Font size the bindings draw the chart title with (`fontSize={12}`). */

@@ -1,4 +1,5 @@
 import type { DiagramColor, DiagramFill, DiagramLine, DiagramTextBody } from '../diagram/types';
+import type { ChartManualLayout } from './manual-layout';
 
 /** Chart elements consumed by the current Office chart painters. */
 export const CHART_STYLE_PARTS = [
@@ -24,6 +25,9 @@ export interface ChartStyleReference {
 
 /** Theme-relative formatting; opaque XML retains properties not yet interpreted. */
 export interface ChartStyleEntry {
+	/** Imported placement; sourceXml preserves it until layout authoring is implemented. */
+	layout?: ChartManualLayout;
+	overlay?: boolean;
 	textBody?: DiagramTextBody;
 	/** Element text defaults before paragraph/run overrides. */
 	textBodyStyle?: ChartTextProperties;

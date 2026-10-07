@@ -1,5 +1,7 @@
 import type { PptxChartLayouts, PptxChartManualLayout, XmlObject } from '../types';
 
+import { readChartManualLayoutValues } from '../../../chart/manual-layout';
+
 type LocalName = (key: string) => string;
 
 const child = (node: XmlObject | undefined, name: string, localName: LocalName) => {
@@ -8,15 +10,6 @@ const child = (node: XmlObject | undefined, name: string, localName: LocalName) 
 	}
 	const key = Object.keys(node).find((candidate) => localName(candidate) === name);
 	return key ? (node[key] as XmlObject | undefined) : undefined;
-};
-
-const numberValue = (node: XmlObject | undefined): number | undefined => {
-	const raw = node?.['@_val'];
-	if (raw === undefined || raw === null || raw === '') {
-		return undefined;
-	}
-	const value = Number(raw);
-	return Number.isFinite(value) ? value : undefined;
 };
 
 /** Parse one `c:layout/c:manualLayout` subtree. */
@@ -28,20 +21,8 @@ export function parseChartManualLayout(
 	if (!manual) {
 		return undefined;
 	}
-	const result: PptxChartManualLayout = {};
-	const enumValue = <T extends string>(name: string, allowed: readonly T[]): T | undefined => {
-		const raw = child(manual, name, localName)?.['@_val'];
-		return allowed.includes(raw as T) ? (raw as T) : undefined;
-	};
-	result.layoutTarget = enumValue('layoutTarget', ['inner', 'outer']);
-	result.xMode = enumValue('xMode', ['edge', 'factor']);
-	result.yMode = enumValue('yMode', ['edge', 'factor']);
-	result.widthMode = enumValue('wMode', ['edge', 'factor']);
-	result.heightMode = enumValue('hMode', ['edge', 'factor']);
-	result.x = numberValue(child(manual, 'x', localName));
-	result.y = numberValue(child(manual, 'y', localName));
-	result.width = numberValue(child(manual, 'w', localName));
-	result.height = numberValue(child(manual, 'h', localName));
+	const result: PptxChartManualLayout =
+		readChartManualLayoutValues((name) => child(manual, name, localName)?.['@_val']) ?? {};
 	const ext = child(manual, 'extLst', localName);
 	if (ext !== undefined) {
 		result.ext = ext;

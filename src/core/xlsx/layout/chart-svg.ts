@@ -103,6 +103,7 @@ export function renderChartSvg(
 	const w = Math.max(1, width);
 	const h = Math.max(1, height);
 	const out: string[] = [];
+	let foregroundTitle = '';
 	out.push(
 		`<svg xmlns="http://www.w3.org/2000/svg" width="${n(w)}" height="${n(h)}" viewBox="0 0 ${n(w)} ${n(h)}" font-family="${esc(CHART_FONT_FAMILY)}" role="img">`,
 	);
@@ -110,10 +111,12 @@ export function renderChartSvg(
 	if (paint.defs) out.push(paint.defs);
 	out.push(chartAreaRect(model, 'chartArea', { x: 0, y: 0, w, h }));
 	let area: Rect = { x: 8, y: 8, w: w - 16, h: h - 16 };
-	const richTitle = chartRichTitleSvg(model, w, options);
+	const richTitle = chartRichTitleSvg(model, w, options, h);
 	if (richTitle) {
-		out.push(richTitle.markup);
-		area = { ...area, y: area.y + richTitle.height, h: area.h - richTitle.height };
+		if (model.titleLayout || model.titleOverlay) foregroundTitle = richTitle.markup;
+		else out.push(richTitle.markup);
+		if (!model.titleOverlay)
+			area = { ...area, y: area.y + richTitle.height, h: area.h - richTitle.height };
 	} else if (model.title) {
 		const attrs = chartTextAttributes(model, 'title', 14)!;
 		const size = attrs.size ?? 14;
@@ -136,12 +139,14 @@ export function renderChartSvg(
 				...attrs,
 			}),
 		);
-		area = { x: area.x, y: area.y + titleHeight, w: area.w, h: area.h - titleHeight };
+		if (!model.titleOverlay)
+			area = { x: area.x, y: area.y + titleHeight, w: area.w, h: area.h - titleHeight };
 	}
 	if (!model.supported) {
 		out.push(
 			text(w / 2, area.y + area.h / 2, `${model.type} charts are not drawn`, { anchor: 'middle' }),
 		);
+		if (foregroundTitle) out.push(foregroundTitle);
 		out.push('</svg>');
 		return out.join('');
 	}
@@ -151,6 +156,7 @@ export function renderChartSvg(
 		else if (model.type === 'radar') out.push(radarSvg(model, area));
 		else out.push(cartesianSvg(model, area));
 	}
+	if (foregroundTitle) out.push(foregroundTitle);
 	out.push('</svg>');
 	return out.join('');
 }

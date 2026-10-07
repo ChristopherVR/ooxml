@@ -1,0 +1,1813 @@
+{
+  "excelBuild": "20430",
+  "excelVersion": "16.0",
+  "cases": [
+    {
+      "valueText": {
+        "color": "#000000",
+        "name": "Aptos Narrow",
+        "size": 10.0,
+        "bold": false,
+        "italic": false
+      },
+      "titleFontSize": 18.0,
+      "legendText": {
+        "color": "#000000",
+        "name": "Aptos Narrow",
+        "size": 10.0,
+        "bold": false,
+        "italic": false
+      },
+      "titleGeometry": {
+        "heightPt": 23.7,
+        "widthPt": 78.05,
+        "topPt": 2.0,
+        "leftPt": 196.97496062992127
+      },
+      "titleText": {
+        "color": "#FF0000",
+        "name": "Arial",
+        "size": 18.0,
+        "bold": false,
+        "italic": false
+      },
+      "layoutGeometry": {
+        "insidePlotArea": {
+          "heightPt": 234.2324409448819,
+          "widthPt": 398.36787401574804,
+          "topPt": 36.80251968503937,
+          "leftPt": 21.87251968503937
+        },
+        "plotArea": {
+          "heightPt": 248.3,
+          "widthPt": 413.2403937007874,
+          "topPt": 36.7,
+          "leftPt": 7.0
+        },
+        "titleIncludeInLayout": true,
+        "chartArea": {
+          "heightPt": 294.0,
+          "widthPt": 474.0,
+          "topPt": 20.0,
+          "leftPt": 20.0
+        },
+        "chart": {
+          "widthPt": 480.0,
+          "heightPt": 300.0
+        }
+      },
+      "style": 2,
+      "titleCharacters": [
+        {
+          "text": "R",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "e",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "v",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "e",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "n",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "u",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "e",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        }
+      ],
+      "axisFontSize": 10.0,
+      "chartArea": {
+        "fillColor": "#FFFFFF",
+        "lineColor": "#898989",
+        "lineWeight": 1.0
+      },
+      "referenceName": "layout-automatic",
+      "hasValueAxis": true,
+      "categoryText": {
+        "color": "#000000",
+        "name": "Aptos Narrow",
+        "size": 10.0,
+        "bold": false,
+        "italic": false
+      },
+      "legendFontSize": 10.0,
+      "parts": {
+        "xl/charts/chart1.xml": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\r\n<c:chartSpace xmlns:c=\"http://schemas.openxmlformats.org/drawingml/2006/chart\" xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:c16r2=\"http://schemas.microsoft.com/office/drawing/2015/06/chart\"><c:date1904 val=\"0\"/><c:lang val=\"en-US\"/><c:roundedCorners val=\"0\"/><mc:AlternateContent xmlns:mc=\"http://schemas.openxmlformats.org/markup-compatibility/2006\"><mc:Choice Requires=\"c14\" xmlns:c14=\"http://schemas.microsoft.com/office/drawing/2007/8/2/chart\"><c14:style val=\"102\"/></mc:Choice><mc:Fallback><c:style val=\"2\"/></mc:Fallback></mc:AlternateContent><c:chart><c:title><c:tx><c:rich><a:bodyPr/><a:lstStyle/><a:p><a:pPr><a:defRPr sz=\"1800\" b=\"0\" i=\"0\"><a:solidFill><a:srgbClr val=\"FF0000\"/></a:solidFill><a:latin typeface=\"Arial\"/><a:ea typeface=\"Arial\"/><a:cs typeface=\"Arial\"/></a:defRPr></a:pPr><a:r><a:rPr lang=\"en-US\"/><a:t>Revenue</a:t></a:r></a:p></c:rich></c:tx><c:overlay val=\"0\"/></c:title><c:autoTitleDeleted val=\"0\"/><c:plotArea><c:layout/><c:barChart><c:barDir val=\"col\"/><c:grouping val=\"clustered\"/><c:varyColors val=\"0\"/><c:ser><c:idx val=\"0\"/><c:order val=\"0\"/><c:tx><c:strRef><c:f>Sheet1!$B$1</c:f><c:strCache><c:ptCount val=\"1\"/><c:pt idx=\"0\"><c:v>Sales</c:v></c:pt></c:strCache></c:strRef></c:tx><c:invertIfNegative val=\"0\"/><c:cat><c:strRef><c:f>Sheet1!$A$2:$A$3</c:f><c:strCache><c:ptCount val=\"2\"/><c:pt idx=\"0\"><c:v>A</c:v></c:pt><c:pt idx=\"1\"><c:v>B</c:v></c:pt></c:strCache></c:strRef></c:cat><c:val><c:numRef><c:f>Sheet1!$B$2:$B$3</c:f><c:numCache><c:formatCode>General</c:formatCode><c:ptCount val=\"2\"/><c:pt idx=\"0\"><c:v>10</c:v></c:pt><c:pt idx=\"1\"><c:v>20</c:v></c:pt></c:numCache></c:numRef></c:val><c:extLst><c:ext uri=\"{C3380CC4-5D6E-409C-BE32-E72D297353CC}\" xmlns:c16=\"http://schemas.microsoft.com/office/drawing/2014/chart\"><c16:uniqueId val=\"{00000001-1AE3-4C2F-9049-4548AD86C613}\"/></c:ext></c:extLst></c:ser><c:dLbls><c:showLegendKey val=\"0\"/><c:showVal val=\"0\"/><c:showCatName val=\"0\"/><c:showSerName val=\"0\"/><c:showPercent val=\"0\"/><c:showBubbleSize val=\"0\"/></c:dLbls><c:gapWidth val=\"150\"/><c:axId val=\"622846031\"/><c:axId val=\"1393218448\"/></c:barChart><c:catAx><c:axId val=\"622846031\"/><c:scaling><c:orientation val=\"minMax\"/></c:scaling><c:delete val=\"0\"/><c:axPos val=\"b\"/><c:numFmt formatCode=\"General\" sourceLinked=\"1\"/><c:majorTickMark val=\"out\"/><c:minorTickMark val=\"none\"/><c:tickLblPos val=\"nextTo\"/><c:crossAx val=\"1393218448\"/><c:crosses val=\"autoZero\"/><c:auto val=\"1\"/><c:lblAlgn val=\"ctr\"/><c:lblOffset val=\"100\"/><c:noMultiLvlLbl val=\"0\"/></c:catAx><c:valAx><c:axId val=\"1393218448\"/><c:scaling><c:orientation val=\"minMax\"/></c:scaling><c:delete val=\"0\"/><c:axPos val=\"l\"/><c:majorGridlines/><c:numFmt formatCode=\"General\" sourceLinked=\"1\"/><c:majorTickMark val=\"out\"/><c:minorTickMark val=\"none\"/><c:tickLblPos val=\"nextTo\"/><c:crossAx val=\"622846031\"/><c:crosses val=\"autoZero\"/><c:crossBetween val=\"between\"/></c:valAx></c:plotArea><c:legend><c:legendPos val=\"r\"/><c:overlay val=\"0\"/></c:legend><c:plotVisOnly val=\"1\"/><c:dispBlanksAs val=\"gap\"/><c:showDLblsOverMax val=\"0\"/><c:extLst><c:ext uri=\"{56B9EC1D-385E-4148-901F-78D8002777C0}\" xmlns:c16r3=\"http://schemas.microsoft.com/office/drawing/2017/03/chart\"><c16r3:dataDisplayOptions16><c16r3:dispNaAsBlank val=\"1\"/></c16r3:dataDisplayOptions16></c:ext></c:extLst></c:chart><c:printSettings><c:headerFooter/><c:pageMargins b=\"0.75\" l=\"0.7\" r=\"0.7\" t=\"0.75\" header=\"0.3\" footer=\"0.3\"/><c:pageSetup/></c:printSettings></c:chartSpace>"
+      }
+    },
+    {
+      "valueText": {
+        "color": "#000000",
+        "name": "Aptos Narrow",
+        "size": 10.0,
+        "bold": false,
+        "italic": false
+      },
+      "titleFontSize": 18.0,
+      "legendText": {
+        "color": "#000000",
+        "name": "Aptos Narrow",
+        "size": 10.0,
+        "bold": false,
+        "italic": false
+      },
+      "titleGeometry": {
+        "heightPt": 23.7,
+        "widthPt": 78.05,
+        "topPt": 2.0,
+        "leftPt": 196.97496062992127
+      },
+      "titleText": {
+        "color": "#FF0000",
+        "name": "Arial",
+        "size": 18.0,
+        "bold": false,
+        "italic": false
+      },
+      "layoutGeometry": {
+        "insidePlotArea": {
+          "heightPt": 263.9324409448819,
+          "widthPt": 398.36787401574804,
+          "topPt": 7.10251968503937,
+          "leftPt": 21.87251968503937
+        },
+        "plotArea": {
+          "heightPt": 278.0,
+          "widthPt": 413.2403937007874,
+          "topPt": 7.0,
+          "leftPt": 7.0
+        },
+        "titleIncludeInLayout": false,
+        "chartArea": {
+          "heightPt": 294.0,
+          "widthPt": 474.0,
+          "topPt": 20.0,
+          "leftPt": 20.0
+        },
+        "chart": {
+          "widthPt": 480.0,
+          "heightPt": 300.0
+        }
+      },
+      "style": 2,
+      "titleCharacters": [
+        {
+          "text": "R",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "e",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "v",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "e",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "n",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "u",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "e",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        }
+      ],
+      "axisFontSize": 10.0,
+      "chartArea": {
+        "fillColor": "#FFFFFF",
+        "lineColor": "#898989",
+        "lineWeight": 1.0
+      },
+      "referenceName": "layout-automatic-overlay",
+      "hasValueAxis": true,
+      "categoryText": {
+        "color": "#000000",
+        "name": "Aptos Narrow",
+        "size": 10.0,
+        "bold": false,
+        "italic": false
+      },
+      "legendFontSize": 10.0,
+      "parts": {
+        "xl/charts/chart1.xml": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\r\n<c:chartSpace xmlns:c=\"http://schemas.openxmlformats.org/drawingml/2006/chart\" xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:c16r2=\"http://schemas.microsoft.com/office/drawing/2015/06/chart\"><c:date1904 val=\"0\"/><c:lang val=\"en-US\"/><c:roundedCorners val=\"0\"/><mc:AlternateContent xmlns:mc=\"http://schemas.openxmlformats.org/markup-compatibility/2006\"><mc:Choice Requires=\"c14\" xmlns:c14=\"http://schemas.microsoft.com/office/drawing/2007/8/2/chart\"><c14:style val=\"102\"/></mc:Choice><mc:Fallback><c:style val=\"2\"/></mc:Fallback></mc:AlternateContent><c:chart><c:title><c:tx><c:rich><a:bodyPr/><a:lstStyle/><a:p><a:pPr><a:defRPr sz=\"1800\" b=\"0\" i=\"0\"><a:solidFill><a:srgbClr val=\"FF0000\"/></a:solidFill><a:latin typeface=\"Arial\"/><a:ea typeface=\"Arial\"/><a:cs typeface=\"Arial\"/></a:defRPr></a:pPr><a:r><a:rPr lang=\"en-US\"/><a:t>Revenue</a:t></a:r></a:p></c:rich></c:tx><c:overlay val=\"1\"/></c:title><c:autoTitleDeleted val=\"0\"/><c:plotArea><c:layout/><c:barChart><c:barDir val=\"col\"/><c:grouping val=\"clustered\"/><c:varyColors val=\"0\"/><c:ser><c:idx val=\"0\"/><c:order val=\"0\"/><c:tx><c:strRef><c:f>Sheet1!$B$1</c:f><c:strCache><c:ptCount val=\"1\"/><c:pt idx=\"0\"><c:v>Sales</c:v></c:pt></c:strCache></c:strRef></c:tx><c:invertIfNegative val=\"0\"/><c:cat><c:strRef><c:f>Sheet1!$A$2:$A$3</c:f><c:strCache><c:ptCount val=\"2\"/><c:pt idx=\"0\"><c:v>A</c:v></c:pt><c:pt idx=\"1\"><c:v>B</c:v></c:pt></c:strCache></c:strRef></c:cat><c:val><c:numRef><c:f>Sheet1!$B$2:$B$3</c:f><c:numCache><c:formatCode>General</c:formatCode><c:ptCount val=\"2\"/><c:pt idx=\"0\"><c:v>10</c:v></c:pt><c:pt idx=\"1\"><c:v>20</c:v></c:pt></c:numCache></c:numRef></c:val><c:extLst><c:ext uri=\"{C3380CC4-5D6E-409C-BE32-E72D297353CC}\" xmlns:c16=\"http://schemas.microsoft.com/office/drawing/2014/chart\"><c16:uniqueId val=\"{00000001-30B6-4095-8944-53CD0579EA75}\"/></c:ext></c:extLst></c:ser><c:dLbls><c:showLegendKey val=\"0\"/><c:showVal val=\"0\"/><c:showCatName val=\"0\"/><c:showSerName val=\"0\"/><c:showPercent val=\"0\"/><c:showBubbleSize val=\"0\"/></c:dLbls><c:gapWidth val=\"150\"/><c:axId val=\"510649871\"/><c:axId val=\"513740239\"/></c:barChart><c:catAx><c:axId val=\"510649871\"/><c:scaling><c:orientation val=\"minMax\"/></c:scaling><c:delete val=\"0\"/><c:axPos val=\"b\"/><c:numFmt formatCode=\"General\" sourceLinked=\"1\"/><c:majorTickMark val=\"out\"/><c:minorTickMark val=\"none\"/><c:tickLblPos val=\"nextTo\"/><c:crossAx val=\"513740239\"/><c:crosses val=\"autoZero\"/><c:auto val=\"1\"/><c:lblAlgn val=\"ctr\"/><c:lblOffset val=\"100\"/><c:noMultiLvlLbl val=\"0\"/></c:catAx><c:valAx><c:axId val=\"513740239\"/><c:scaling><c:orientation val=\"minMax\"/></c:scaling><c:delete val=\"0\"/><c:axPos val=\"l\"/><c:majorGridlines/><c:numFmt formatCode=\"General\" sourceLinked=\"1\"/><c:majorTickMark val=\"out\"/><c:minorTickMark val=\"none\"/><c:tickLblPos val=\"nextTo\"/><c:crossAx val=\"510649871\"/><c:crosses val=\"autoZero\"/><c:crossBetween val=\"between\"/></c:valAx></c:plotArea><c:legend><c:legendPos val=\"r\"/><c:overlay val=\"0\"/></c:legend><c:plotVisOnly val=\"1\"/><c:dispBlanksAs val=\"gap\"/><c:showDLblsOverMax val=\"0\"/><c:extLst><c:ext uri=\"{56B9EC1D-385E-4148-901F-78D8002777C0}\" xmlns:c16r3=\"http://schemas.microsoft.com/office/drawing/2017/03/chart\"><c16r3:dataDisplayOptions16><c16r3:dispNaAsBlank val=\"1\"/></c16r3:dataDisplayOptions16></c:ext></c:extLst></c:chart><c:printSettings><c:headerFooter/><c:pageMargins b=\"0.75\" l=\"0.7\" r=\"0.7\" t=\"0.75\" header=\"0.3\" footer=\"0.3\"/><c:pageSetup/></c:printSettings></c:chartSpace>"
+      }
+    },
+    {
+      "valueText": {
+        "color": "#000000",
+        "name": "Aptos Narrow",
+        "size": 10.0,
+        "bold": false,
+        "italic": false
+      },
+      "titleFontSize": 18.0,
+      "legendText": {
+        "color": "#000000",
+        "name": "Aptos Narrow",
+        "size": 10.0,
+        "bold": false,
+        "italic": false
+      },
+      "titleGeometry": {
+        "heightPt": 23.7,
+        "widthPt": 78.05,
+        "topPt": 60.0,
+        "leftPt": 40.0
+      },
+      "titleText": {
+        "color": "#FF0000",
+        "name": "Arial",
+        "size": 18.0,
+        "bold": false,
+        "italic": false
+      },
+      "layoutGeometry": {
+        "insidePlotArea": {
+          "heightPt": 234.2324409448819,
+          "widthPt": 398.36787401574804,
+          "topPt": 36.80251968503937,
+          "leftPt": 21.87251968503937
+        },
+        "plotArea": {
+          "heightPt": 248.3,
+          "widthPt": 413.2403937007874,
+          "topPt": 36.7,
+          "leftPt": 7.0
+        },
+        "titleIncludeInLayout": true,
+        "chartArea": {
+          "heightPt": 294.0,
+          "widthPt": 474.0,
+          "topPt": 20.0,
+          "leftPt": 20.0
+        },
+        "chart": {
+          "widthPt": 480.0,
+          "heightPt": 300.0
+        }
+      },
+      "style": 2,
+      "titleCharacters": [
+        {
+          "text": "R",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "e",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "v",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "e",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "n",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "u",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "e",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        }
+      ],
+      "axisFontSize": 10.0,
+      "chartArea": {
+        "fillColor": "#FFFFFF",
+        "lineColor": "#898989",
+        "lineWeight": 1.0
+      },
+      "referenceName": "layout-moved-left",
+      "hasValueAxis": true,
+      "categoryText": {
+        "color": "#000000",
+        "name": "Aptos Narrow",
+        "size": 10.0,
+        "bold": false,
+        "italic": false
+      },
+      "legendFontSize": 10.0,
+      "parts": {
+        "xl/charts/chart1.xml": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\r\n<c:chartSpace xmlns:c=\"http://schemas.openxmlformats.org/drawingml/2006/chart\" xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:c16r2=\"http://schemas.microsoft.com/office/drawing/2015/06/chart\"><c:date1904 val=\"0\"/><c:lang val=\"en-US\"/><c:roundedCorners val=\"0\"/><mc:AlternateContent xmlns:mc=\"http://schemas.openxmlformats.org/markup-compatibility/2006\"><mc:Choice Requires=\"c14\" xmlns:c14=\"http://schemas.microsoft.com/office/drawing/2007/8/2/chart\"><c14:style val=\"102\"/></mc:Choice><mc:Fallback><c:style val=\"2\"/></mc:Fallback></mc:AlternateContent><c:chart><c:title><c:tx><c:rich><a:bodyPr/><a:lstStyle/><a:p><a:pPr><a:defRPr sz=\"1800\" b=\"0\" i=\"0\"><a:solidFill><a:srgbClr val=\"FF0000\"/></a:solidFill><a:latin typeface=\"Arial\"/><a:ea typeface=\"Arial\"/><a:cs typeface=\"Arial\"/></a:defRPr></a:pPr><a:r><a:rPr lang=\"en-US\"/><a:t>Revenue</a:t></a:r></a:p></c:rich></c:tx><c:layout><c:manualLayout><c:xMode val=\"edge\"/><c:yMode val=\"edge\"/><c:x val=\"9.166666666666666E-2\"/><c:y val=\"0.21333333333333335\"/></c:manualLayout></c:layout><c:overlay val=\"0\"/></c:title><c:autoTitleDeleted val=\"0\"/><c:plotArea><c:layout/><c:barChart><c:barDir val=\"col\"/><c:grouping val=\"clustered\"/><c:varyColors val=\"0\"/><c:ser><c:idx val=\"0\"/><c:order val=\"0\"/><c:tx><c:strRef><c:f>Sheet1!$B$1</c:f><c:strCache><c:ptCount val=\"1\"/><c:pt idx=\"0\"><c:v>Sales</c:v></c:pt></c:strCache></c:strRef></c:tx><c:invertIfNegative val=\"0\"/><c:cat><c:strRef><c:f>Sheet1!$A$2:$A$3</c:f><c:strCache><c:ptCount val=\"2\"/><c:pt idx=\"0\"><c:v>A</c:v></c:pt><c:pt idx=\"1\"><c:v>B</c:v></c:pt></c:strCache></c:strRef></c:cat><c:val><c:numRef><c:f>Sheet1!$B$2:$B$3</c:f><c:numCache><c:formatCode>General</c:formatCode><c:ptCount val=\"2\"/><c:pt idx=\"0\"><c:v>10</c:v></c:pt><c:pt idx=\"1\"><c:v>20</c:v></c:pt></c:numCache></c:numRef></c:val><c:extLst><c:ext uri=\"{C3380CC4-5D6E-409C-BE32-E72D297353CC}\" xmlns:c16=\"http://schemas.microsoft.com/office/drawing/2014/chart\"><c16:uniqueId val=\"{00000001-E97A-42EC-892E-D226CA3B8E73}\"/></c:ext></c:extLst></c:ser><c:dLbls><c:showLegendKey val=\"0\"/><c:showVal val=\"0\"/><c:showCatName val=\"0\"/><c:showSerName val=\"0\"/><c:showPercent val=\"0\"/><c:showBubbleSize val=\"0\"/></c:dLbls><c:gapWidth val=\"150\"/><c:axId val=\"270524496\"/><c:axId val=\"1393156528\"/></c:barChart><c:catAx><c:axId val=\"270524496\"/><c:scaling><c:orientation val=\"minMax\"/></c:scaling><c:delete val=\"0\"/><c:axPos val=\"b\"/><c:numFmt formatCode=\"General\" sourceLinked=\"1\"/><c:majorTickMark val=\"out\"/><c:minorTickMark val=\"none\"/><c:tickLblPos val=\"nextTo\"/><c:crossAx val=\"1393156528\"/><c:crosses val=\"autoZero\"/><c:auto val=\"1\"/><c:lblAlgn val=\"ctr\"/><c:lblOffset val=\"100\"/><c:noMultiLvlLbl val=\"0\"/></c:catAx><c:valAx><c:axId val=\"1393156528\"/><c:scaling><c:orientation val=\"minMax\"/></c:scaling><c:delete val=\"0\"/><c:axPos val=\"l\"/><c:majorGridlines/><c:numFmt formatCode=\"General\" sourceLinked=\"1\"/><c:majorTickMark val=\"out\"/><c:minorTickMark val=\"none\"/><c:tickLblPos val=\"nextTo\"/><c:crossAx val=\"270524496\"/><c:crosses val=\"autoZero\"/><c:crossBetween val=\"between\"/></c:valAx></c:plotArea><c:legend><c:legendPos val=\"r\"/><c:overlay val=\"0\"/></c:legend><c:plotVisOnly val=\"1\"/><c:dispBlanksAs val=\"gap\"/><c:showDLblsOverMax val=\"0\"/><c:extLst><c:ext uri=\"{56B9EC1D-385E-4148-901F-78D8002777C0}\" xmlns:c16r3=\"http://schemas.microsoft.com/office/drawing/2017/03/chart\"><c16r3:dataDisplayOptions16><c16r3:dispNaAsBlank val=\"1\"/></c16r3:dataDisplayOptions16></c:ext></c:extLst></c:chart><c:printSettings><c:headerFooter/><c:pageMargins b=\"0.75\" l=\"0.7\" r=\"0.7\" t=\"0.75\" header=\"0.3\" footer=\"0.3\"/><c:pageSetup/></c:printSettings></c:chartSpace>"
+      }
+    },
+    {
+      "valueText": {
+        "color": "#000000",
+        "name": "Aptos Narrow",
+        "size": 10.0,
+        "bold": false,
+        "italic": false
+      },
+      "titleFontSize": 18.0,
+      "legendText": {
+        "color": "#000000",
+        "name": "Aptos Narrow",
+        "size": 10.0,
+        "bold": false,
+        "italic": false
+      },
+      "titleGeometry": {
+        "heightPt": 23.7,
+        "widthPt": 78.05,
+        "topPt": 60.0,
+        "leftPt": 340.0
+      },
+      "titleText": {
+        "color": "#FF0000",
+        "name": "Arial",
+        "size": 18.0,
+        "bold": false,
+        "italic": false
+      },
+      "layoutGeometry": {
+        "insidePlotArea": {
+          "heightPt": 234.2324409448819,
+          "widthPt": 398.36787401574804,
+          "topPt": 36.80251968503937,
+          "leftPt": 21.87251968503937
+        },
+        "plotArea": {
+          "heightPt": 248.3,
+          "widthPt": 413.2403937007874,
+          "topPt": 36.7,
+          "leftPt": 7.0
+        },
+        "titleIncludeInLayout": true,
+        "chartArea": {
+          "heightPt": 294.0,
+          "widthPt": 474.0,
+          "topPt": 20.0,
+          "leftPt": 20.0
+        },
+        "chart": {
+          "widthPt": 480.0,
+          "heightPt": 300.0
+        }
+      },
+      "style": 2,
+      "titleCharacters": [
+        {
+          "text": "R",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "e",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "v",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "e",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "n",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "u",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "e",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        }
+      ],
+      "axisFontSize": 10.0,
+      "chartArea": {
+        "fillColor": "#FFFFFF",
+        "lineColor": "#898989",
+        "lineWeight": 1.0
+      },
+      "referenceName": "layout-moved-right",
+      "hasValueAxis": true,
+      "categoryText": {
+        "color": "#000000",
+        "name": "Aptos Narrow",
+        "size": 10.0,
+        "bold": false,
+        "italic": false
+      },
+      "legendFontSize": 10.0,
+      "parts": {
+        "xl/charts/chart1.xml": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\r\n<c:chartSpace xmlns:c=\"http://schemas.openxmlformats.org/drawingml/2006/chart\" xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:c16r2=\"http://schemas.microsoft.com/office/drawing/2015/06/chart\"><c:date1904 val=\"0\"/><c:lang val=\"en-US\"/><c:roundedCorners val=\"0\"/><mc:AlternateContent xmlns:mc=\"http://schemas.openxmlformats.org/markup-compatibility/2006\"><mc:Choice Requires=\"c14\" xmlns:c14=\"http://schemas.microsoft.com/office/drawing/2007/8/2/chart\"><c14:style val=\"102\"/></mc:Choice><mc:Fallback><c:style val=\"2\"/></mc:Fallback></mc:AlternateContent><c:chart><c:title><c:tx><c:rich><a:bodyPr/><a:lstStyle/><a:p><a:pPr><a:defRPr sz=\"1800\" b=\"0\" i=\"0\"><a:solidFill><a:srgbClr val=\"FF0000\"/></a:solidFill><a:latin typeface=\"Arial\"/><a:ea typeface=\"Arial\"/><a:cs typeface=\"Arial\"/></a:defRPr></a:pPr><a:r><a:rPr lang=\"en-US\"/><a:t>Revenue</a:t></a:r></a:p></c:rich></c:tx><c:layout><c:manualLayout><c:xMode val=\"edge\"/><c:yMode val=\"edge\"/><c:x val=\"0.71666666666666667\"/><c:y val=\"0.21333333333333335\"/></c:manualLayout></c:layout><c:overlay val=\"0\"/></c:title><c:autoTitleDeleted val=\"0\"/><c:plotArea><c:layout/><c:barChart><c:barDir val=\"col\"/><c:grouping val=\"clustered\"/><c:varyColors val=\"0\"/><c:ser><c:idx val=\"0\"/><c:order val=\"0\"/><c:tx><c:strRef><c:f>Sheet1!$B$1</c:f><c:strCache><c:ptCount val=\"1\"/><c:pt idx=\"0\"><c:v>Sales</c:v></c:pt></c:strCache></c:strRef></c:tx><c:invertIfNegative val=\"0\"/><c:cat><c:strRef><c:f>Sheet1!$A$2:$A$3</c:f><c:strCache><c:ptCount val=\"2\"/><c:pt idx=\"0\"><c:v>A</c:v></c:pt><c:pt idx=\"1\"><c:v>B</c:v></c:pt></c:strCache></c:strRef></c:cat><c:val><c:numRef><c:f>Sheet1!$B$2:$B$3</c:f><c:numCache><c:formatCode>General</c:formatCode><c:ptCount val=\"2\"/><c:pt idx=\"0\"><c:v>10</c:v></c:pt><c:pt idx=\"1\"><c:v>20</c:v></c:pt></c:numCache></c:numRef></c:val><c:extLst><c:ext uri=\"{C3380CC4-5D6E-409C-BE32-E72D297353CC}\" xmlns:c16=\"http://schemas.microsoft.com/office/drawing/2014/chart\"><c16:uniqueId val=\"{00000001-BC9F-4982-9D67-8E84B3D91511}\"/></c:ext></c:extLst></c:ser><c:dLbls><c:showLegendKey val=\"0\"/><c:showVal val=\"0\"/><c:showCatName val=\"0\"/><c:showSerName val=\"0\"/><c:showPercent val=\"0\"/><c:showBubbleSize val=\"0\"/></c:dLbls><c:gapWidth val=\"150\"/><c:axId val=\"519682111\"/><c:axId val=\"1393165648\"/></c:barChart><c:catAx><c:axId val=\"519682111\"/><c:scaling><c:orientation val=\"minMax\"/></c:scaling><c:delete val=\"0\"/><c:axPos val=\"b\"/><c:numFmt formatCode=\"General\" sourceLinked=\"1\"/><c:majorTickMark val=\"out\"/><c:minorTickMark val=\"none\"/><c:tickLblPos val=\"nextTo\"/><c:crossAx val=\"1393165648\"/><c:crosses val=\"autoZero\"/><c:auto val=\"1\"/><c:lblAlgn val=\"ctr\"/><c:lblOffset val=\"100\"/><c:noMultiLvlLbl val=\"0\"/></c:catAx><c:valAx><c:axId val=\"1393165648\"/><c:scaling><c:orientation val=\"minMax\"/></c:scaling><c:delete val=\"0\"/><c:axPos val=\"l\"/><c:majorGridlines/><c:numFmt formatCode=\"General\" sourceLinked=\"1\"/><c:majorTickMark val=\"out\"/><c:minorTickMark val=\"none\"/><c:tickLblPos val=\"nextTo\"/><c:crossAx val=\"519682111\"/><c:crosses val=\"autoZero\"/><c:crossBetween val=\"between\"/></c:valAx></c:plotArea><c:legend><c:legendPos val=\"r\"/><c:overlay val=\"0\"/></c:legend><c:plotVisOnly val=\"1\"/><c:dispBlanksAs val=\"gap\"/><c:showDLblsOverMax val=\"0\"/><c:extLst><c:ext uri=\"{56B9EC1D-385E-4148-901F-78D8002777C0}\" xmlns:c16r3=\"http://schemas.microsoft.com/office/drawing/2017/03/chart\"><c16r3:dataDisplayOptions16><c16r3:dispNaAsBlank val=\"1\"/></c16r3:dataDisplayOptions16></c:ext></c:extLst></c:chart><c:printSettings><c:headerFooter/><c:pageMargins b=\"0.75\" l=\"0.7\" r=\"0.7\" t=\"0.75\" header=\"0.3\" footer=\"0.3\"/><c:pageSetup/></c:printSettings></c:chartSpace>"
+      }
+    },
+    {
+      "valueText": {
+        "color": "#000000",
+        "name": "Aptos Narrow",
+        "size": 10.0,
+        "bold": false,
+        "italic": false
+      },
+      "titleFontSize": 18.0,
+      "legendText": {
+        "color": "#000000",
+        "name": "Aptos Narrow",
+        "size": 10.0,
+        "bold": false,
+        "italic": false
+      },
+      "titleGeometry": {
+        "heightPt": 23.7,
+        "widthPt": 78.05,
+        "topPt": 120.0,
+        "leftPt": 40.0
+      },
+      "titleText": {
+        "color": "#FF0000",
+        "name": "Arial",
+        "size": 18.0,
+        "bold": false,
+        "italic": false
+      },
+      "layoutGeometry": {
+        "insidePlotArea": {
+          "heightPt": 263.9324409448819,
+          "widthPt": 398.36787401574804,
+          "topPt": 7.10251968503937,
+          "leftPt": 21.87251968503937
+        },
+        "plotArea": {
+          "heightPt": 278.0,
+          "widthPt": 413.2403937007874,
+          "topPt": 7.0,
+          "leftPt": 7.0
+        },
+        "titleIncludeInLayout": false,
+        "chartArea": {
+          "heightPt": 294.0,
+          "widthPt": 474.0,
+          "topPt": 20.0,
+          "leftPt": 20.0
+        },
+        "chart": {
+          "widthPt": 480.0,
+          "heightPt": 300.0
+        }
+      },
+      "style": 2,
+      "titleCharacters": [
+        {
+          "text": "R",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "e",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "v",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "e",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "n",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "u",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "e",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        }
+      ],
+      "axisFontSize": 10.0,
+      "chartArea": {
+        "fillColor": "#FFFFFF",
+        "lineColor": "#898989",
+        "lineWeight": 1.0
+      },
+      "referenceName": "layout-moved-overlay",
+      "hasValueAxis": true,
+      "categoryText": {
+        "color": "#000000",
+        "name": "Aptos Narrow",
+        "size": 10.0,
+        "bold": false,
+        "italic": false
+      },
+      "legendFontSize": 10.0,
+      "parts": {
+        "xl/charts/chart1.xml": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\r\n<c:chartSpace xmlns:c=\"http://schemas.openxmlformats.org/drawingml/2006/chart\" xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:c16r2=\"http://schemas.microsoft.com/office/drawing/2015/06/chart\"><c:date1904 val=\"0\"/><c:lang val=\"en-US\"/><c:roundedCorners val=\"0\"/><mc:AlternateContent xmlns:mc=\"http://schemas.openxmlformats.org/markup-compatibility/2006\"><mc:Choice Requires=\"c14\" xmlns:c14=\"http://schemas.microsoft.com/office/drawing/2007/8/2/chart\"><c14:style val=\"102\"/></mc:Choice><mc:Fallback><c:style val=\"2\"/></mc:Fallback></mc:AlternateContent><c:chart><c:title><c:tx><c:rich><a:bodyPr/><a:lstStyle/><a:p><a:pPr><a:defRPr sz=\"1800\" b=\"0\" i=\"0\"><a:solidFill><a:srgbClr val=\"FF0000\"/></a:solidFill><a:latin typeface=\"Arial\"/><a:ea typeface=\"Arial\"/><a:cs typeface=\"Arial\"/></a:defRPr></a:pPr><a:r><a:rPr lang=\"en-US\"/><a:t>Revenue</a:t></a:r></a:p></c:rich></c:tx><c:layout><c:manualLayout><c:xMode val=\"edge\"/><c:yMode val=\"edge\"/><c:x val=\"9.166666666666666E-2\"/><c:y val=\"0.41333333333333333\"/></c:manualLayout></c:layout><c:overlay val=\"1\"/></c:title><c:autoTitleDeleted val=\"0\"/><c:plotArea><c:layout/><c:barChart><c:barDir val=\"col\"/><c:grouping val=\"clustered\"/><c:varyColors val=\"0\"/><c:ser><c:idx val=\"0\"/><c:order val=\"0\"/><c:tx><c:strRef><c:f>Sheet1!$B$1</c:f><c:strCache><c:ptCount val=\"1\"/><c:pt idx=\"0\"><c:v>Sales</c:v></c:pt></c:strCache></c:strRef></c:tx><c:invertIfNegative val=\"0\"/><c:cat><c:strRef><c:f>Sheet1!$A$2:$A$3</c:f><c:strCache><c:ptCount val=\"2\"/><c:pt idx=\"0\"><c:v>A</c:v></c:pt><c:pt idx=\"1\"><c:v>B</c:v></c:pt></c:strCache></c:strRef></c:cat><c:val><c:numRef><c:f>Sheet1!$B$2:$B$3</c:f><c:numCache><c:formatCode>General</c:formatCode><c:ptCount val=\"2\"/><c:pt idx=\"0\"><c:v>10</c:v></c:pt><c:pt idx=\"1\"><c:v>20</c:v></c:pt></c:numCache></c:numRef></c:val><c:extLst><c:ext uri=\"{C3380CC4-5D6E-409C-BE32-E72D297353CC}\" xmlns:c16=\"http://schemas.microsoft.com/office/drawing/2014/chart\"><c16:uniqueId val=\"{00000001-7650-4BAF-B43E-719DDA3ADD66}\"/></c:ext></c:extLst></c:ser><c:dLbls><c:showLegendKey val=\"0\"/><c:showVal val=\"0\"/><c:showCatName val=\"0\"/><c:showSerName val=\"0\"/><c:showPercent val=\"0\"/><c:showBubbleSize val=\"0\"/></c:dLbls><c:gapWidth val=\"150\"/><c:axId val=\"519680255\"/><c:axId val=\"513733519\"/></c:barChart><c:catAx><c:axId val=\"519680255\"/><c:scaling><c:orientation val=\"minMax\"/></c:scaling><c:delete val=\"0\"/><c:axPos val=\"b\"/><c:numFmt formatCode=\"General\" sourceLinked=\"1\"/><c:majorTickMark val=\"out\"/><c:minorTickMark val=\"none\"/><c:tickLblPos val=\"nextTo\"/><c:crossAx val=\"513733519\"/><c:crosses val=\"autoZero\"/><c:auto val=\"1\"/><c:lblAlgn val=\"ctr\"/><c:lblOffset val=\"100\"/><c:noMultiLvlLbl val=\"0\"/></c:catAx><c:valAx><c:axId val=\"513733519\"/><c:scaling><c:orientation val=\"minMax\"/></c:scaling><c:delete val=\"0\"/><c:axPos val=\"l\"/><c:majorGridlines/><c:numFmt formatCode=\"General\" sourceLinked=\"1\"/><c:majorTickMark val=\"out\"/><c:minorTickMark val=\"none\"/><c:tickLblPos val=\"nextTo\"/><c:crossAx val=\"519680255\"/><c:crosses val=\"autoZero\"/><c:crossBetween val=\"between\"/></c:valAx></c:plotArea><c:legend><c:legendPos val=\"r\"/><c:overlay val=\"0\"/></c:legend><c:plotVisOnly val=\"1\"/><c:dispBlanksAs val=\"gap\"/><c:showDLblsOverMax val=\"0\"/><c:extLst><c:ext uri=\"{56B9EC1D-385E-4148-901F-78D8002777C0}\" xmlns:c16r3=\"http://schemas.microsoft.com/office/drawing/2017/03/chart\"><c16r3:dataDisplayOptions16><c16r3:dispNaAsBlank val=\"1\"/></c16r3:dataDisplayOptions16></c:ext></c:extLst></c:chart><c:printSettings><c:headerFooter/><c:pageMargins b=\"0.75\" l=\"0.7\" r=\"0.7\" t=\"0.75\" header=\"0.3\" footer=\"0.3\"/><c:pageSetup/></c:printSettings></c:chartSpace>"
+      }
+    },
+    {
+      "valueText": {
+        "color": "#000000",
+        "name": "Aptos Narrow",
+        "size": 10.0,
+        "bold": false,
+        "italic": false
+      },
+      "titleFontSize": 18.0,
+      "legendText": {
+        "color": "#000000",
+        "name": "Aptos Narrow",
+        "size": 10.0,
+        "bold": false,
+        "italic": false
+      },
+      "titleGeometry": {
+        "heightPt": 44.4,
+        "widthPt": 347.18,
+        "topPt": 60.0,
+        "leftPt": 40.0
+      },
+      "titleText": {
+        "color": "#FF0000",
+        "name": "Arial",
+        "size": 18.0,
+        "bold": false,
+        "italic": false
+      },
+      "layoutGeometry": {
+        "insidePlotArea": {
+          "heightPt": 213.5324409448819,
+          "widthPt": 398.36787401574804,
+          "topPt": 57.50251968503937,
+          "leftPt": 21.87251968503937
+        },
+        "plotArea": {
+          "heightPt": 227.6,
+          "widthPt": 413.2403937007874,
+          "topPt": 57.4,
+          "leftPt": 7.0
+        },
+        "titleIncludeInLayout": true,
+        "chartArea": {
+          "heightPt": 294.0,
+          "widthPt": 474.0,
+          "topPt": 20.0,
+          "leftPt": 20.0
+        },
+        "chart": {
+          "widthPt": 480.0,
+          "heightPt": 300.0
+        }
+      },
+      "style": 2,
+      "titleCharacters": [
+        {
+          "text": "R",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "e",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "v",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "e",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "n",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "u",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "e",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": " ",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "g",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "r",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "o",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "w",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "t",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "h",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": " ",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "a",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "n",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "d",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": " ",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "f",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "o",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "r",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "e",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "c",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "a",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "s",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "t",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": " ",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "f",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "o",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "r",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": " ",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "t",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "h",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "e",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": " ",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "e",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "n",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "t",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "i",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "r",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "e",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": " ",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "i",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "n",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "t",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "e",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "r",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "n",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "a",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "t",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "i",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "o",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "n",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "a",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "l",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": " ",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "b",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "u",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "s",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "i",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "n",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "e",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "s",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "s",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": " ",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "r",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "e",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "g",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "i",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "o",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "n",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        }
+      ],
+      "axisFontSize": 10.0,
+      "chartArea": {
+        "fillColor": "#FFFFFF",
+        "lineColor": "#898989",
+        "lineWeight": 1.0
+      },
+      "referenceName": "layout-moved-long",
+      "hasValueAxis": true,
+      "categoryText": {
+        "color": "#000000",
+        "name": "Aptos Narrow",
+        "size": 10.0,
+        "bold": false,
+        "italic": false
+      },
+      "legendFontSize": 10.0,
+      "parts": {
+        "xl/charts/chart1.xml": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\r\n<c:chartSpace xmlns:c=\"http://schemas.openxmlformats.org/drawingml/2006/chart\" xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:c16r2=\"http://schemas.microsoft.com/office/drawing/2015/06/chart\"><c:date1904 val=\"0\"/><c:lang val=\"en-US\"/><c:roundedCorners val=\"0\"/><mc:AlternateContent xmlns:mc=\"http://schemas.openxmlformats.org/markup-compatibility/2006\"><mc:Choice Requires=\"c14\" xmlns:c14=\"http://schemas.microsoft.com/office/drawing/2007/8/2/chart\"><c14:style val=\"102\"/></mc:Choice><mc:Fallback><c:style val=\"2\"/></mc:Fallback></mc:AlternateContent><c:chart><c:title><c:tx><c:rich><a:bodyPr/><a:lstStyle/><a:p><a:pPr><a:defRPr sz=\"1800\" b=\"0\" i=\"0\"><a:solidFill><a:srgbClr val=\"FF0000\"/></a:solidFill><a:latin typeface=\"Arial\"/><a:ea typeface=\"Arial\"/><a:cs typeface=\"Arial\"/></a:defRPr></a:pPr><a:r><a:rPr lang=\"en-US\"/><a:t>Revenue growth and forecast for the entire international business region</a:t></a:r></a:p></c:rich></c:tx><c:layout><c:manualLayout><c:xMode val=\"edge\"/><c:yMode val=\"edge\"/><c:x val=\"9.166666666666666E-2\"/><c:y val=\"0.21333333333333335\"/></c:manualLayout></c:layout><c:overlay val=\"0\"/></c:title><c:autoTitleDeleted val=\"0\"/><c:plotArea><c:layout/><c:barChart><c:barDir val=\"col\"/><c:grouping val=\"clustered\"/><c:varyColors val=\"0\"/><c:ser><c:idx val=\"0\"/><c:order val=\"0\"/><c:tx><c:strRef><c:f>Sheet1!$B$1</c:f><c:strCache><c:ptCount val=\"1\"/><c:pt idx=\"0\"><c:v>Sales</c:v></c:pt></c:strCache></c:strRef></c:tx><c:invertIfNegative val=\"0\"/><c:cat><c:strRef><c:f>Sheet1!$A$2:$A$3</c:f><c:strCache><c:ptCount val=\"2\"/><c:pt idx=\"0\"><c:v>A</c:v></c:pt><c:pt idx=\"1\"><c:v>B</c:v></c:pt></c:strCache></c:strRef></c:cat><c:val><c:numRef><c:f>Sheet1!$B$2:$B$3</c:f><c:numCache><c:formatCode>General</c:formatCode><c:ptCount val=\"2\"/><c:pt idx=\"0\"><c:v>10</c:v></c:pt><c:pt idx=\"1\"><c:v>20</c:v></c:pt></c:numCache></c:numRef></c:val><c:extLst><c:ext uri=\"{C3380CC4-5D6E-409C-BE32-E72D297353CC}\" xmlns:c16=\"http://schemas.microsoft.com/office/drawing/2014/chart\"><c16:uniqueId val=\"{00000001-6F2C-43B1-AD66-324288ACFA97}\"/></c:ext></c:extLst></c:ser><c:dLbls><c:showLegendKey val=\"0\"/><c:showVal val=\"0\"/><c:showCatName val=\"0\"/><c:showSerName val=\"0\"/><c:showPercent val=\"0\"/><c:showBubbleSize val=\"0\"/></c:dLbls><c:gapWidth val=\"150\"/><c:axId val=\"623896079\"/><c:axId val=\"513741199\"/></c:barChart><c:catAx><c:axId val=\"623896079\"/><c:scaling><c:orientation val=\"minMax\"/></c:scaling><c:delete val=\"0\"/><c:axPos val=\"b\"/><c:numFmt formatCode=\"General\" sourceLinked=\"1\"/><c:majorTickMark val=\"out\"/><c:minorTickMark val=\"none\"/><c:tickLblPos val=\"nextTo\"/><c:crossAx val=\"513741199\"/><c:crosses val=\"autoZero\"/><c:auto val=\"1\"/><c:lblAlgn val=\"ctr\"/><c:lblOffset val=\"100\"/><c:noMultiLvlLbl val=\"0\"/></c:catAx><c:valAx><c:axId val=\"513741199\"/><c:scaling><c:orientation val=\"minMax\"/></c:scaling><c:delete val=\"0\"/><c:axPos val=\"l\"/><c:majorGridlines/><c:numFmt formatCode=\"General\" sourceLinked=\"1\"/><c:majorTickMark val=\"out\"/><c:minorTickMark val=\"none\"/><c:tickLblPos val=\"nextTo\"/><c:crossAx val=\"623896079\"/><c:crosses val=\"autoZero\"/><c:crossBetween val=\"between\"/></c:valAx></c:plotArea><c:legend><c:legendPos val=\"r\"/><c:overlay val=\"0\"/></c:legend><c:plotVisOnly val=\"1\"/><c:dispBlanksAs val=\"gap\"/><c:showDLblsOverMax val=\"0\"/><c:extLst><c:ext uri=\"{56B9EC1D-385E-4148-901F-78D8002777C0}\" xmlns:c16r3=\"http://schemas.microsoft.com/office/drawing/2017/03/chart\"><c16r3:dataDisplayOptions16><c16r3:dispNaAsBlank val=\"1\"/></c16r3:dataDisplayOptions16></c:ext></c:extLst></c:chart><c:printSettings><c:headerFooter/><c:pageMargins b=\"0.75\" l=\"0.7\" r=\"0.7\" t=\"0.75\" header=\"0.3\" footer=\"0.3\"/><c:pageSetup/></c:printSettings></c:chartSpace>"
+      }
+    },
+    {
+      "valueText": {
+        "color": "#000000",
+        "name": "Aptos Narrow",
+        "size": 10.0,
+        "bold": false,
+        "italic": false
+      },
+      "titleFontSize": 18.0,
+      "legendText": {
+        "color": "#000000",
+        "name": "Aptos Narrow",
+        "size": 10.0,
+        "bold": false,
+        "italic": false
+      },
+      "titleGeometry": {
+        "heightPt": 23.7,
+        "widthPt": 78.05,
+        "topPt": 60.0,
+        "leftPt": 40.0
+      },
+      "titleText": {
+        "color": "#FF0000",
+        "name": "Arial",
+        "size": 18.0,
+        "bold": false,
+        "italic": false
+      },
+      "layoutGeometry": {
+        "insidePlotArea": {
+          "heightPt": 234.2324409448819,
+          "widthPt": 238.36787401574804,
+          "topPt": 36.80251968503937,
+          "leftPt": 21.87251968503937
+        },
+        "plotArea": {
+          "heightPt": 248.3,
+          "widthPt": 253.2403937007874,
+          "topPt": 36.7,
+          "leftPt": 7.0
+        },
+        "titleIncludeInLayout": true,
+        "chartArea": {
+          "heightPt": 294.0,
+          "widthPt": 314.0,
+          "topPt": 20.0,
+          "leftPt": 20.0
+        },
+        "chart": {
+          "widthPt": 320.0,
+          "heightPt": 300.0
+        }
+      },
+      "style": 2,
+      "titleCharacters": [
+        {
+          "text": "R",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "e",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "v",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "e",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "n",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "u",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        },
+        {
+          "text": "e",
+          "font": {
+            "italic": false,
+            "size": 18.0,
+            "name": "Arial",
+            "underline": false,
+            "bold": false,
+            "color": "#FF0000"
+          }
+        }
+      ],
+      "axisFontSize": 10.0,
+      "chartArea": {
+        "fillColor": "#FFFFFF",
+        "lineColor": "#898989",
+        "lineWeight": 1.0
+      },
+      "referenceName": "layout-moved-small",
+      "hasValueAxis": true,
+      "categoryText": {
+        "color": "#000000",
+        "name": "Aptos Narrow",
+        "size": 10.0,
+        "bold": false,
+        "italic": false
+      },
+      "legendFontSize": 10.0,
+      "parts": {
+        "xl/charts/chart1.xml": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\r\n<c:chartSpace xmlns:c=\"http://schemas.openxmlformats.org/drawingml/2006/chart\" xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:c16r2=\"http://schemas.microsoft.com/office/drawing/2015/06/chart\"><c:date1904 val=\"0\"/><c:lang val=\"en-US\"/><c:roundedCorners val=\"0\"/><mc:AlternateContent xmlns:mc=\"http://schemas.openxmlformats.org/markup-compatibility/2006\"><mc:Choice Requires=\"c14\" xmlns:c14=\"http://schemas.microsoft.com/office/drawing/2007/8/2/chart\"><c14:style val=\"102\"/></mc:Choice><mc:Fallback><c:style val=\"2\"/></mc:Fallback></mc:AlternateContent><c:chart><c:title><c:tx><c:rich><a:bodyPr/><a:lstStyle/><a:p><a:pPr><a:defRPr sz=\"1800\" b=\"0\" i=\"0\"><a:solidFill><a:srgbClr val=\"FF0000\"/></a:solidFill><a:latin typeface=\"Arial\"/><a:ea typeface=\"Arial\"/><a:cs typeface=\"Arial\"/></a:defRPr></a:pPr><a:r><a:rPr lang=\"en-US\"/><a:t>Revenue</a:t></a:r></a:p></c:rich></c:tx><c:layout><c:manualLayout><c:xMode val=\"edge\"/><c:yMode val=\"edge\"/><c:x val=\"0.13750000000000001\"/><c:y val=\"0.21333333333333335\"/></c:manualLayout></c:layout><c:overlay val=\"0\"/></c:title><c:autoTitleDeleted val=\"0\"/><c:plotArea><c:layout/><c:barChart><c:barDir val=\"col\"/><c:grouping val=\"clustered\"/><c:varyColors val=\"0\"/><c:ser><c:idx val=\"0\"/><c:order val=\"0\"/><c:tx><c:strRef><c:f>Sheet1!$B$1</c:f><c:strCache><c:ptCount val=\"1\"/><c:pt idx=\"0\"><c:v>Sales</c:v></c:pt></c:strCache></c:strRef></c:tx><c:invertIfNegative val=\"0\"/><c:cat><c:strRef><c:f>Sheet1!$A$2:$A$3</c:f><c:strCache><c:ptCount val=\"2\"/><c:pt idx=\"0\"><c:v>A</c:v></c:pt><c:pt idx=\"1\"><c:v>B</c:v></c:pt></c:strCache></c:strRef></c:cat><c:val><c:numRef><c:f>Sheet1!$B$2:$B$3</c:f><c:numCache><c:formatCode>General</c:formatCode><c:ptCount val=\"2\"/><c:pt idx=\"0\"><c:v>10</c:v></c:pt><c:pt idx=\"1\"><c:v>20</c:v></c:pt></c:numCache></c:numRef></c:val><c:extLst><c:ext uri=\"{C3380CC4-5D6E-409C-BE32-E72D297353CC}\" xmlns:c16=\"http://schemas.microsoft.com/office/drawing/2014/chart\"><c16:uniqueId val=\"{00000001-C9F4-4FED-B203-04B246304BA7}\"/></c:ext></c:extLst></c:ser><c:dLbls><c:showLegendKey val=\"0\"/><c:showVal val=\"0\"/><c:showCatName val=\"0\"/><c:showSerName val=\"0\"/><c:showPercent val=\"0\"/><c:showBubbleSize val=\"0\"/></c:dLbls><c:gapWidth val=\"150\"/><c:axId val=\"622849743\"/><c:axId val=\"513727759\"/></c:barChart><c:catAx><c:axId val=\"622849743\"/><c:scaling><c:orientation val=\"minMax\"/></c:scaling><c:delete val=\"0\"/><c:axPos val=\"b\"/><c:numFmt formatCode=\"General\" sourceLinked=\"1\"/><c:majorTickMark val=\"out\"/><c:minorTickMark val=\"none\"/><c:tickLblPos val=\"nextTo\"/><c:crossAx val=\"513727759\"/><c:crosses val=\"autoZero\"/><c:auto val=\"1\"/><c:lblAlgn val=\"ctr\"/><c:lblOffset val=\"100\"/><c:noMultiLvlLbl val=\"0\"/></c:catAx><c:valAx><c:axId val=\"513727759\"/><c:scaling><c:orientation val=\"minMax\"/></c:scaling><c:delete val=\"0\"/><c:axPos val=\"l\"/><c:majorGridlines/><c:numFmt formatCode=\"General\" sourceLinked=\"1\"/><c:majorTickMark val=\"out\"/><c:minorTickMark val=\"none\"/><c:tickLblPos val=\"nextTo\"/><c:crossAx val=\"622849743\"/><c:crosses val=\"autoZero\"/><c:crossBetween val=\"between\"/></c:valAx></c:plotArea><c:legend><c:legendPos val=\"r\"/><c:overlay val=\"0\"/></c:legend><c:plotVisOnly val=\"1\"/><c:dispBlanksAs val=\"gap\"/><c:showDLblsOverMax val=\"0\"/><c:extLst><c:ext uri=\"{56B9EC1D-385E-4148-901F-78D8002777C0}\" xmlns:c16r3=\"http://schemas.microsoft.com/office/drawing/2017/03/chart\"><c16r3:dataDisplayOptions16><c16r3:dispNaAsBlank val=\"1\"/></c16r3:dataDisplayOptions16></c:ext></c:extLst></c:chart><c:printSettings><c:headerFooter/><c:pageMargins b=\"0.75\" l=\"0.7\" r=\"0.7\" t=\"0.75\" header=\"0.3\" footer=\"0.3\"/><c:pageSetup/></c:printSettings></c:chartSpace>"
+      }
+    }
+  ],
+  "scheme": {
+    "lt1": "#FFFFFF",
+    "hlink": "#467886",
+    "dk1": "#000000",
+    "accent1": "#156082",
+    "accent4": "#0F9ED5",
+    "accent2": "#E97132",
+    "accent3": "#196B24",
+    "dk2": "#0E2841",
+    "lt2": "#E8E8E8",
+    "accent6": "#4EA72E",
+    "folHlink": "#96607D",
+    "accent5": "#A02B93"
+  }
+}

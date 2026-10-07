@@ -60,7 +60,10 @@ brightness, direction previews and native presets share the same fill controls.
 
 Imported chart styles, supported shadows/gradients, axis visibility, inherited
 fonts, mixed-format title runs, automatic title wrapping and point/percentage title paragraph spacing
-have rendering and preservation support.
+have rendering and preservation support. Imported manual title positions and
+title overlays render; title/plot/legend layout XML is preserved through
+chart type changes. Manual dimensions, complete plot/legend placement and
+position-authoring controls remain incomplete.
 Native Excel comparisons verify specific edit/export paths. Exact chart text
 measurement, wrapping, placement and raster fidelity remain incomplete, as do
 many axes/labels/effects controls, advanced chart families and full native UI.

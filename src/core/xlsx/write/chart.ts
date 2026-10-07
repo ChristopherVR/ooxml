@@ -10,6 +10,7 @@ import { writeChartFillFormatting } from '../../chart/write-fill-formatting';
 import { builtInChartStyleXml, effectiveBuiltInChartStyle } from '../../chart/built-in-text-style';
 import { chartTitleXml } from './chart-title';
 import { writeChartTextFormatting } from '../../chart/write-text-formatting';
+import { writeChartLayoutFormatting } from '../../chart/write-layout-formatting';
 
 const pt = (values: readonly (string | number | null)[]) =>
 	values
@@ -149,7 +150,8 @@ export function chartXml(chart: ChartObject): string {
 	const textChanged = writeChartTextFormatting(doc.documentElement, chart.formatting);
 	const axesChanged = writeChartAxisFormatting(doc.documentElement, chart.formatting);
 	const fillsChanged = writeChartFillFormatting(doc.documentElement, chart.formatting);
-	return textChanged || axesChanged || fillsChanged ? buildXml(doc) : xml;
+	const layoutChanged = writeChartLayoutFormatting(doc.documentElement, chart.formatting);
+	return textChanged || axesChanged || fillsChanged || layoutChanged ? buildXml(doc) : xml;
 }
 
 /**

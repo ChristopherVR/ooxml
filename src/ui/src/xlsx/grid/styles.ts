@@ -94,8 +94,8 @@ export const GRID_CSS = `
 .xg-obj{position:absolute;box-sizing:border-box;pointer-events:auto;cursor:default}
 .xg-obj img,.xg-obj svg{display:block;width:100%;height:100%;pointer-events:none}
 .xg-chart svg [data-chart-series],.xg-chart svg [data-chart-part]{pointer-events:auto}
-.xg-obj.xg-chart{background:#fff;border:1px solid #d9d9d9}
-.xg-obj.xg-obj-sel{outline:1px solid #8a8a8a}
+.xg-obj.xg-chart{background:#fff;outline:1px solid #d9d9d9;outline-offset:-1px}
+.xg-obj.xg-obj-sel{outline:1px solid #8a8a8a;outline-offset:0}
 .xg-obj .xg-grip{position:absolute;width:8px;height:8px;background:#fff;border:1px solid #555;box-sizing:border-box;border-radius:50%}
 .xg-obj-unsupported{background:repeating-linear-gradient(45deg,#f6f6f6,#f6f6f6 6px,#ececec 6px,#ececec 12px);border:1px dashed #aaa;
 	font-size:11px;color:#555;display:flex;align-items:center;justify-content:center;text-align:center}
