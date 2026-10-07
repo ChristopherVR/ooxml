@@ -24,6 +24,64 @@ async function fixture(styles = stylesXml, documentXml = docXml) {
 }
 
 describe('paragraph style catalog', () => {
+	it.each(['start', 'end'] as const)(
+		'resolves inherited %s against final direction after direct or derived bidi overrides',
+		async (justification) => {
+			const styles = `<w:styles xmlns:w="${ns}"><w:style w:type="paragraph" w:styleId="RTL"><w:pPr><w:bidi/><w:jc w:val="${justification}"/></w:pPr></w:style><w:style w:type="paragraph" w:styleId="LTR"><w:pPr><w:bidi w:val="0"/><w:jc w:val="${justification}"/></w:pPr></w:style><w:style w:type="paragraph" w:styleId="DerivedLTR"><w:basedOn w:val="RTL"/><w:pPr><w:bidi w:val="0"/></w:pPr></w:style><w:style w:type="paragraph" w:styleId="DerivedRTL"><w:basedOn w:val="LTR"/><w:pPr><w:bidi/></w:pPr></w:style></w:styles>`;
+			const paragraphProperties = [
+				'<w:pStyle w:val="RTL"/><w:bidi w:val="0"/>',
+				'<w:pStyle w:val="DerivedLTR"/>',
+				'<w:pStyle w:val="LTR"/><w:bidi/>',
+				'<w:pStyle w:val="DerivedRTL"/>',
+				`<w:pStyle w:val="RTL"/><w:bidi w:val="0"/><w:jc w:val="${justification}"/>`,
+				`<w:pStyle w:val="LTR"/><w:bidi/><w:jc w:val="${justification}"/>`,
+			];
+			const document = `<w:document xmlns:w="${ns}"><w:body>${paragraphProperties.map((props) => `<w:p><w:pPr>${props}</w:pPr><w:r><w:t>Example</w:t></w:r></w:p>`).join('')}<w:sectPr/></w:body></w:document>`;
+			const loaded = await loadDocx(await fixture(styles, document));
+			const expected = ['ltr', 'ltr', 'rtl', 'rtl', 'ltr', 'rtl'].map((direction) => ({
+				direction,
+				justification,
+				align: (justification === 'start') === (direction === 'ltr') ? 'left' : 'right',
+			}));
+			const resolved = (model: typeof loaded.model) =>
+				model.blocks.map((block) =>
+					resolveParagraphFormatting(expectParagraph(block), model.paragraphStyles!),
+				);
+			expect(resolved(loaded.model)).toEqual(expected);
+			for (const block of loaded.model.blocks) expectParagraph(block).runs[0]!.text = 'Edited';
+			const saved = await loaded.save();
+			expect(await (await JSZip.loadAsync(saved)).file('word/styles.xml')!.async('string')).toBe(
+				styles,
+			);
+			expect(resolved((await loadDocx(saved)).model)).toEqual(expected);
+		},
+	);
+	it('preserves physical alignment overrides when inherited logical alignment changes direction', () => {
+		const catalog = parseParagraphStyleCatalog(
+			`<w:styles xmlns:w="${ns}"><w:style w:type="paragraph" w:styleId="RTL"><w:pPr><w:bidi/><w:jc w:val="start"/></w:pPr></w:style></w:styles>`,
+		);
+		const paragraph = {
+			type: 'paragraph' as const,
+			id: 'p',
+			style: 'RTL',
+			direction: 'ltr' as const,
+			runs: [],
+		};
+		for (const align of ['left', 'center', 'right', 'justify'] as const) {
+			const resolved = resolveParagraphFormatting({ ...paragraph, align }, catalog);
+			expect(resolved.align).toBe(align);
+			expect(resolved.justification).toBeUndefined();
+		}
+		// Changing align alone after parsing must not revive a stale logical value.
+		expect(
+			resolveParagraphFormatting({ ...paragraph, align: 'center', justification: 'start' }, catalog)
+				.align,
+		).toBe('center');
+		expect(
+			resolveParagraphFormatting({ ...paragraph, align: 'right', justification: 'start' }, catalog)
+				.align,
+		).toBe('right');
+	});
 	it('resolves defaults, basedOn chains and direct overrides independently', async () => {
 		const loaded = await loadDocx(await fixture());
 		const [styled, defaulted, direct] = loaded.model.blocks;

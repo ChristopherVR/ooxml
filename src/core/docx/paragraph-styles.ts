@@ -202,11 +202,12 @@ export function resolveParagraphFormatting(
 	// `start`/`end` follow the resolved direction, which may be inherited from a style.
 	if (
 		(result.justification === 'start' || result.justification === 'end') &&
-		result.direction === 'rtl' &&
-		(paragraph.align === undefined || paragraph.justification !== undefined) &&
-		result.align === alignFromJustification(result.justification, false)
+		(paragraph.align === undefined ||
+			(paragraph.justification !== undefined &&
+				paragraph.align ===
+					alignFromJustification(paragraph.justification, paragraph.direction === 'rtl')))
 	) {
-		const align = alignFromJustification(result.justification, true);
+		const align = alignFromJustification(result.justification, result.direction === 'rtl');
 		if (align === undefined) delete result.align;
 		else result.align = align;
 	}
