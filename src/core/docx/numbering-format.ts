@@ -23,6 +23,11 @@ export function formatListNumber(numFmt: string, value: number): string {
 			return String(value);
 		case 'decimalZero':
 			return value < 10 && value >= 0 ? `0${value}` : String(value);
+		case 'hex':
+			// Native Word emits uppercase hexadecimal only within the unsigned 16-bit range.
+			return Number.isInteger(value) && value >= 0 && value <= 65535
+				? value.toString(16).toUpperCase()
+				: '';
 		case 'upperRoman':
 			return romanNumeral(value);
 		case 'lowerRoman':
@@ -42,7 +47,7 @@ export function formatListNumber(numFmt: string, value: number): string {
 		case 'bullet':
 			return '';
 		default:
-			// Unsupported/legacy formats (e.g. chicago, hex, chineseCounting) fall back to Decimal Number.
+			// Unsupported/legacy formats (e.g. chicago, chineseCounting) fall back to Decimal Number.
 			return String(value);
 	}
 }

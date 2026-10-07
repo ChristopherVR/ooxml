@@ -1,0 +1,126 @@
+{
+	"generator": "src/core/docx/test-support/hex-numbering-fixture.ts: hexNumberingFixture()",
+	"recordedDate": "2026-10-08",
+	"fixtureScope": "synthetic nineteen independent single-level hex lists; raw placeholder, dot suffix and bracket controls; includes zero and 16-bit boundaries; no user documents",
+	"cases": [
+		{
+			"template": "%1",
+			"name": "raw-0",
+			"label": "0",
+			"value": 0
+		},
+		{
+			"template": "%1",
+			"name": "raw-1",
+			"label": "1",
+			"value": 1
+		},
+		{
+			"template": "%1",
+			"name": "raw-9",
+			"label": "9",
+			"value": 9
+		},
+		{
+			"template": "%1",
+			"name": "raw-10",
+			"label": "A",
+			"value": 10
+		},
+		{
+			"template": "%1",
+			"name": "raw-15",
+			"label": "F",
+			"value": 15
+		},
+		{
+			"template": "%1",
+			"name": "raw-16",
+			"label": "10",
+			"value": 16
+		},
+		{
+			"template": "%1",
+			"name": "raw-255",
+			"label": "FF",
+			"value": 255
+		},
+		{
+			"template": "%1",
+			"name": "raw-256",
+			"label": "100",
+			"value": 256
+		},
+		{
+			"template": "%1",
+			"name": "raw-32767",
+			"label": "7FFF",
+			"value": 32767
+		},
+		{
+			"template": "%1",
+			"name": "raw-32768",
+			"label": "8000",
+			"value": 32768
+		},
+		{
+			"template": "%1",
+			"name": "raw-65535",
+			"label": "FFFF",
+			"value": 65535
+		},
+		{
+			"template": "%1",
+			"name": "raw-65536",
+			"label": "",
+			"value": 65536
+		},
+		{
+			"template": "%1",
+			"name": "raw-65537",
+			"label": "",
+			"value": 65537
+		},
+		{
+			"template": "%1",
+			"name": "raw-100000",
+			"label": "",
+			"value": 100000
+		},
+		{
+			"template": "%1",
+			"name": "raw-2147483647",
+			"label": "",
+			"value": 2147483647
+		},
+		{
+			"template": "%1.",
+			"name": "dot-65535",
+			"label": "FFFF.",
+			"value": 65535
+		},
+		{
+			"template": "%1.",
+			"name": "dot-65536",
+			"label": ".",
+			"value": 65536
+		},
+		{
+			"template": "[%1]",
+			"name": "bracket-65535",
+			"label": "[FFFF]",
+			"value": 65535
+		},
+		{
+			"template": "[%1]",
+			"name": "bracket-65536",
+			"label": "[]",
+			"value": 65536
+		}
+	],
+	"recorder": "scripts/record-word-hex-numbering.ps1",
+	"source": "https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oi29500/c87674b0-833c-4019-a21d-9f99dac53178",
+	"wordBuild": "16.0.20430",
+	"wordVersion": "16.0",
+	"scope": "installed perpetual Word; not current Microsoft 365 subscription certification"
+}
