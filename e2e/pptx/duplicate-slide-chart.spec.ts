@@ -34,8 +34,12 @@ test('duplicate a native chart and notes, then save with independent package par
 	const sourcePath = info.outputPath('source.pptx');
 	await writeFile(sourcePath, await handler.save(data.slides));
 	await loadDeck(page, sourcePath);
-	await openMenuOn(page, thumbnail(page, 1));
-	await chooseCommand(page, 'duplicate');
+	const menu = await openMenuOn(page, thumbnail(page, 1));
+	const duplicate = menu.commands.find((command) =>
+		command.label.toLowerCase().includes('duplicate'),
+	);
+	expect(duplicate).toBeDefined();
+	await chooseCommand(page, duplicate!.label);
 	await expect(page.locator('[aria-label^="Go to slide"]')).toHaveCount(2);
 	const bytes = await downloadBytes(await savePptxViaBackstage(page));
 	await writeFile(info.outputPath('duplicated.pptx'), bytes);
