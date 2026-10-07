@@ -8,6 +8,8 @@ for (const sample of [
 	{ name: 'alpha', directory: process.env.VISIO_NATIVE_FILL_PATTERNS_ALPHA_DIR },
 	{ name: 'rotated', directory: process.env.VISIO_NATIVE_FILL_PATTERNS_ROTATED_DIR },
 	{ name: 'scaled', directory: process.env.VISIO_NATIVE_FILL_PATTERNS_SCALED_DIR },
+	{ name: 'flip-x', directory: process.env.VISIO_NATIVE_FILL_PATTERNS_FLIP_X_DIR },
+	{ name: 'flip-y', directory: process.env.VISIO_NATIVE_FILL_PATTERNS_FLIP_Y_DIR },
 	{ name: 'oblique', directory: process.env.VISIO_NATIVE_FILL_PATTERNS_OBLIQUE_DIR },
 ]) {
 	const directory = sample.directory;
@@ -82,15 +84,15 @@ for (const sample of [
 				return differences;
 			}, references);
 			expect(results).toHaveLength(46);
-			expect(
-				Math.max(...results.map((result) => result.maximum)),
-				`${results.reduce((sum, result) => sum + result.count, 0)} differing channels across 46 renders`,
-			).toBe(0);
 			if (results.some((result) => result.maximum))
 				await test.info().attach('native-hatch-differences', {
 					body: JSON.stringify(results, null, 2),
 					contentType: 'application/json',
 				});
+			expect(
+				Math.max(...results.map((result) => result.maximum)),
+				`${results.reduce((sum, result) => sum + result.count, 0)} differing channels across 46 renders`,
+			).toBe(0);
 			for (const result of results)
 				expect(
 					result.maximum,

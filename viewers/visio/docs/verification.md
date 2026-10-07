@@ -438,3 +438,28 @@ with the existing nine unrelated warnings. Viewer types are rechecked after
 rebasing the separately published browser-test type-import fix.
 Viewer typecheck passed after rebasing the public-package browser-test type import
 fix. Binding verification passed 79 client tests, five SSR tests and Svelte checks.
+
+## Native hatch reflections (2026-10-07)
+
+The existing shared affine and hatch counter-transform logic was checked against
+46 additional pages exported by Microsoft Visio 16: all 23 hatch patterns with
+horizontal flips, then all 23 with vertical flips. The capture script now accepts
+FlipX and FlipY and records both in evidence.json. Native sources were created in
+an owned invisible Visio application and saved as VSDX, SVG and PNG references.
+
+The horizontal capture is visio-fill-patterns-d8955fdfd1a8466ba78908011765ef96
+in the local temporary directory; the vertical capture is
+visio-fill-patterns-cc4ee2b703af44689ccc13d706266afb. Set
+VISIO_NATIVE_FILL_PATTERNS_FLIP_X_DIR and VISIO_NATIVE_FILL_PATTERNS_FLIP_Y_DIR
+to reproduce the optional fill-pattern.spec.ts comparisons.
+
+All six framework routes passed for both captures: 12 scenarios, 552 exact
+96-by-96 interior comparisons across live and portable exported SVG, including
+all RGBA channels. Viewer typecheck passed. No new rendering implementation was
+needed. Difference attachments now run before the aggregate assertion, so a
+failing optional native comparison retains its per-pattern evidence.
+
+This establishes only single-shape, axis-aligned reflection interiors. Nested
+groups, reflected oblique shapes, full-page boundary fidelity and native reopening
+of core-edited hatch documents remain unverified. The existing 30-degree native
+comparison still fails by one byte and its zero-tolerance gate is unchanged.
