@@ -14,6 +14,8 @@ export interface Paragraph {
 	/** Stable identity across edits, unique throughout the document. */
 	id: string;
 	runs: TextRun[];
+	/** Complete XML basis restored by paragraph-format rejection; known edits overlay it. */
+	restoredParagraphPropertiesXml?: string;
 	align?: 'left' | 'center' | 'right' | 'justify';
 	/**
 	 * The exact `w:jc` value read from the file (`start`, `end`, `distribute`, kashida variants...).

@@ -16,6 +16,8 @@ import {
 	replaceableInlineChildren,
 } from './write-inline.js';
 import type { RelationshipAllocator } from './relationship-allocator.js';
+import { parseDirectParagraphProperties } from './paragraph-properties.js';
+import { parsePropertiesSnapshot } from './revision-properties.js';
 
 export function setAttribute(element: XmlElement, local: string, value: string): void {
 	element.setAttributeNS(WORD_NS, `w:${local}`, value);
@@ -63,15 +65,31 @@ export function writeParagraphImpl(
 			`Cannot edit paragraph ${paragraph.id}: it contains inline OOXML that this editor cannot safely relocate. The original DOCX package remains unchanged.`,
 		);
 	let pPr = first(node, 'pPr');
+	let propertyBase = base;
+	const restoring =
+		paragraph.restoredParagraphPropertiesXml &&
+		(!base || paragraph.restoredParagraphPropertiesXml !== base.restoredParagraphPropertiesXml);
+	if (restoring) {
+		const restored = parsePropertiesSnapshot(paragraph.restoredParagraphPropertiesXml!, 'pPr');
+		if (pPr) node.removeChild(pPr);
+		pPr = doc.importNode(restored, true) as XmlElement;
+		node.insertBefore(pPr, node.firstChild);
+		propertyBase = {
+			type: 'paragraph',
+			id: paragraph.id,
+			runs: paragraph.runs,
+			...parseDirectParagraphProperties(restored),
+		};
+	}
 	if (!pPr) {
 		pPr = makeW(doc, 'pPr');
 		node.insertBefore(pPr, node.firstChild);
 	}
 	if (
-		!base ||
-		paragraph.align !== base.align ||
-		paragraph.justification !== base.justification ||
-		paragraph.direction !== base.direction
+		!propertyBase ||
+		paragraph.align !== propertyBase.align ||
+		paragraph.justification !== propertyBase.justification ||
+		paragraph.direction !== propertyBase.direction
 	) {
 		removeChildren(pPr, 'jc');
 		const jc = paragraphJustification(paragraph);
@@ -81,7 +99,7 @@ export function writeParagraphImpl(
 			pPr.appendChild(align);
 		}
 	}
-	if (!base || paragraph.style !== base.style) {
+	if (!propertyBase || paragraph.style !== propertyBase.style) {
 		removeChildren(pPr, 'pStyle');
 		if (paragraph.style) {
 			const style = makeW(doc, 'pStyle');
@@ -89,11 +107,11 @@ export function writeParagraphImpl(
 			pPr.appendChild(style);
 		}
 	}
-	writeParagraphProperties(doc, pPr, paragraph, base);
-	writeNumberingProperties(doc, pPr, paragraph, base);
-	writeParagraphMarkRevision(doc, pPr, paragraph, base);
+	writeParagraphProperties(doc, pPr, paragraph, propertyBase);
+	writeNumberingProperties(doc, pPr, paragraph, propertyBase);
+	writeParagraphMarkRevision(doc, pPr, paragraph, restoring ? undefined : base);
 	writeParagraphFormatRevision(doc, pPr, paragraph.formatRevision);
-	writeTabStops(doc, pPr, paragraph, base);
+	writeTabStops(doc, pPr, paragraph, propertyBase);
 	orderParagraphProperties(pPr);
 	rejectUnsafeRunSegmentation(
 		paragraph,

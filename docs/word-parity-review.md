@@ -128,7 +128,9 @@ Accepting a run-format revision clears the snapshot. Shared editor Review
 commands now navigate, accept and reject imported run-format revisions,
 including undo/redo, peer synchronization and export. New formatting-change
 recording and prior formatting in Original display remain unfinished;
-paragraph-format recording and rejection also need implementation. Imported
+paragraph-format recording and editor rejection also need implementation. Core
+paragraph rejection now restores the full prior properties and matches all four
+native rejected documents. Imported
 paragraph snapshots now survive text editing, editor conversion and both export
 paths, with four native references for alignment, spacing, indentation and
 combined changes. Paragraph mark revisions also survive text edits. The references

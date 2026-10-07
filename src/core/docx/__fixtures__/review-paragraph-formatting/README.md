@@ -13,8 +13,13 @@ settings are untouched.
 
 Regression tests cover preserving `w:pPrChange` and its complete prior `w:pPr`
 through text edits, editor conversion and export, and core acceptance. Paragraph
-format recording, editor review commands and rejection remain unfinished.
+format recording and editor review commands remain unfinished. Core rejection
+restores prior properties and matches native rejected documents; later known
+edits overlay the complete restored XML basis.
 
 `core-export-reference.json` records Word opening all eight edited exports
 (package-preserving and standalone for each case): one paragraph property
 revision, edited text, and the expected current paragraph formatting remain.
+
+`core-rejected-reference.json` records Word opening all eight rejected exports:
+zero revisions and the same paragraph properties as native rejection.

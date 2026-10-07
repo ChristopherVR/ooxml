@@ -574,3 +574,14 @@ UI schema. The UI keeps a compatibility facade. Imported formatting-revision
 rejection reuses this mapping to restore formatting without replacing text,
 links or comment anchors. Existing model conversion tests and native formatting
 references verify both callers.
+
+## Word direct paragraph property parsing
+
+Source: ChristopherVR/ooxml at `30d586d1893090538aa45dfe8bc1f42652638071`,
+`src/core/docx/block-parser.ts`. Direct paragraph property parsing moved to
+`src/core/docx/paragraph-properties.ts`, preserving its existing behavior and
+native units. All stories and paragraph-format rejection use this one parser.
+Restoration keeps prior opaque XML as the writer's basis, overlays later known
+property edits, and retains text, bookmarks and paragraph mark revisions.
+Native rejected documents, both export paths and editor conversion cover the
+new caller; existing paragraph, style, decoration and table tests cover parsing.

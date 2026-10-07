@@ -1,6 +1,7 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import type { Block, DocumentModel, Paragraph } from './model.js';
 import { restoreRunFormatting } from './restore-run-format.js';
+import { restoreParagraphFormatting } from './restore-paragraph-format.js';
 
 export interface RevisionEntry {
 	id: string;
@@ -156,10 +157,12 @@ function rejectOne(model: DocumentModel, id: string): DocumentModel {
 		return updateRuns(model, id, (paragraph, index) =>
 			restoreRunFormatting(paragraph.runs[index]!),
 		);
-	if (entry.kind === 'paragraphChange')
-		throw new Error(
-			'Rejecting a formatting-only revision is not supported because its prior formatting snapshot is not modeled; use accept to clear the marker instead.',
-		);
+	if (entry.kind === 'paragraphChange') {
+		const next = structuredClone(model);
+		const paragraph = paragraphsOf(next.blocks).find((item) => item.id === entry.paragraphId)!;
+		restoreParagraphFormatting(paragraph);
+		return next;
+	}
 	if (entry.runIndex === undefined) return resolveParagraphMark(model, id, entry.kind === 'delete');
 	if (entry.kind === 'insert' || entry.kind === 'moveTo')
 		return updateRuns(model, id, (paragraph, runIndex) => {

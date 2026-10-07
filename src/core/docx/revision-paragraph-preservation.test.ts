@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
 import { loadDocx } from './parse.js';
 import { saveDocx } from './save.js';
-import { acceptRevision } from './revision-commands.js';
+import { acceptRevision, rejectRevision, rejectAllRevisions } from './revision-commands.js';
 import { expectParagraph } from './test-support/access.js';
 
 for (const name of ['alignment', 'spacing', 'indent', 'multiple'])
@@ -35,5 +35,39 @@ for (const name of ['alignment', 'spacing', 'indent', 'multiple'])
 			expect(xml).not.toContain('pPrChange');
 			const { formatRevision: _revision, ...expected } = paragraph;
 			expect(expectParagraph((await loadDocx(bytes)).model.blocks[0])).toEqual(expected);
+		});
+		it('restores native rejected formatting through both export paths', async () => {
+			const loaded = await loadDocx(new Uint8Array(await fixture()));
+			const native = await loadDocx(
+				new Uint8Array(
+					await readFile(
+						new URL(
+							`./__fixtures__/review-paragraph-formatting/${name}-rejected.docx`,
+							import.meta.url,
+						),
+					),
+				),
+			);
+			const paragraph = expectParagraph(loaded.model.blocks[0]);
+			for (const model of [
+				rejectRevision(loaded.model, paragraph.formatRevision!.id),
+				rejectAllRevisions(loaded.model),
+			]) {
+				const { restoredParagraphPropertiesXml: _snapshot, ...actual } = expectParagraph(
+					model.blocks[0],
+				);
+				expect(actual).toEqual(expectParagraph(native.model.blocks[0]));
+				for (const bytes of [await loaded.save(model), await saveDocx(model)]) {
+					expect(expectParagraph((await loadDocx(bytes)).model.blocks[0])).toEqual(
+						expectParagraph(native.model.blocks[0]),
+					);
+					const xml = await (
+						await JSZip.loadAsync(bytes)
+					)
+						.file('word/document.xml')!
+						.async('string');
+					expect(xml).not.toContain('pPrChange');
+				}
+			}
 		});
 	});
