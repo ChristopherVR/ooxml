@@ -18,7 +18,7 @@ No feature is considered equivalent solely because a control is present.
 | Meetings                        | Prejoin, microphone, camera, screen share, raised hand, mesh WebRTC                                          | Scheduling, invitations, SFU, lobby, host roles, recording, captions, backgrounds and large calls                  |
 | File sharing                    | Uploads with cancel/retry and file progress, workbook creation, unique storage names, signed download links  | Permissions, versions, folders, durable local-mode sharing, byte progress and storage cleanup                      |
 | Office content                  | Native Word, Excel and Visio previews; static PowerPoint preview; XLSX local editing and channel save copies | Full PowerPoint rendering/playback, coediting, write-back/version conflict handling and fidelity acceptance corpus |
-| Markdown                        | Safe block and flat inline subset added in this change                                                       | Full CommonMark/GFM, tables, task lists, nested structure and relative links                                       |
+| Markdown                        | Safe blocks and flat inline formatting, task lists, pipe tables and relative web links                       | Full CommonMark/GFM, nested structure, reference links and inline precedence                                       |
 | Sites and web apps              | Sandboxed HTML/site previews and shared file/website channel tabs                                            | App permissions, approved origins, app messaging and authentication                                                |
 | Accounts and administration     | Reference server has optional shared token and origin allowlist                                              | User accounts, SSO, tenant/team/channel ACLs, guests, audit, retention and policy enforcement                      |
 | Bindings                        | Six lifecycle bindings share `TeamsProps` and the same app                                                   | Framework-by-framework browser acceptance for the new embedding prop                                               |
@@ -35,7 +35,7 @@ clears the preview; superseded fetches are aborted and late responses ignored.
 - Visio uses the existing viewer. Its local viewer interactions are not shared
   edits and are not written back to file storage.
 - Markdown supports ATX headings, bullets, quotes, fenced code, bold, italic,
-  inline code and absolute/origin-relative web links. Raw HTML remains text.
+  inline code, flat task lists, top-level pipe tables and file-relative web links. Raw HTML remains text.
   This is a subset, not CommonMark or GFM parity.
 - `.txt`, `.csv` and `.json` have literal text previews.
 - HTML attachments and the Files view's **Preview website** action use sandboxed
@@ -183,6 +183,22 @@ cleanup contract. Browser tests exercise pending cancellation, late completion,
 retry, and progress between files across all six bindings. Workbook browser acceptance
 also checks canceled save copies, ignored late storage writes, retained dirty edits,
 and a successful retry without publishing the canceled copy.
+
+## Seventh implemented slice: structured Markdown previews
+
+Markdown previews now render top-level pipe tables with column headers, alignment,
+escaped pipes, missing-cell padding and excess-cell truncation. Flat unordered task
+items show disabled checked/unchecked controls: a preview does not mutate the source.
+Relative links resolve against the attachment URL, while unsafe schemes, credentials
+and protocol-relative links remain literal text. Signed source queries are not copied
+to sibling resources. Tables have keyboard-focusable horizontal scrolling and use
+the same safe inline text bindings as the rest of the preview. No HTML or automatic
+image loading is introduced. Nested containers, full inline precedence, reference
+links and CommonMark/GFM conformance remain unsupported. The syntax reference is
+the [GFM specification](https://github.github.com/gfm/#tables-extension-);
+this subset does not establish Microsoft Teams rendering equivalence.
+Tables are limited to 128 columns and 16,384 generated cells (including headers).
+Wider tables and rows beyond that limit remain readable as ordinary source text.
 
 ## Next releasable slices
 
