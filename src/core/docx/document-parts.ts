@@ -52,7 +52,7 @@ function parseSettings(xml: string | undefined): SettingsInfo {
 		'w:endnotePr/w:numFmt',
 	);
 	return {
-		evenAndOddHeaders: Boolean(first(root, 'evenAndOddHeaders')),
+		evenAndOddHeaders: onOffElement(first(root, 'evenAndOddHeaders')) === true,
 		autoHyphenation: onOffElement(first(root, 'autoHyphenation')) === true,
 		...(footnoteNumFmt ? { footnoteNumFmt } : {}),
 		...(endnoteNumFmt ? { endnoteNumFmt } : {}),

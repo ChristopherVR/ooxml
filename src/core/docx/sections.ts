@@ -6,7 +6,13 @@ import { parsePageBorders } from './page-borders';
 import { isStNumberFormat, isStSectionMark, isStVerticalJc } from './generated/wml-simple-types';
 import { enumValue } from './parse-diagnostics';
 import { twips } from './units';
-import { parseOnOff, parseSignedTwips, parseTwips, parseUnsignedInteger } from './simple-types';
+import {
+	onOffElement,
+	parseOnOff,
+	parseSignedTwips,
+	parseTwips,
+	parseUnsignedInteger,
+} from './simple-types';
 
 const twipInt = parseTwips;
 const signedTwipInt = parseSignedTwips;
@@ -108,7 +114,7 @@ function parseOneSection(section: XmlElement, endsAtBlockId: string): RawSection
 		...(footerDistance !== undefined ? { footerDistanceTwips: footerDistance } : {}),
 		...(gutter !== undefined ? { gutterTwips: gutter } : {}),
 		columns: parseColumns(section),
-		...(first(section, 'titlePg') ? { titlePage: true } : {}),
+		...(onOffElement(first(section, 'titlePg')) === true ? { titlePage: true } : {}),
 		...(vAlignValue ? { verticalAlign: vAlignValue } : {}),
 		...(pgNum
 			? {

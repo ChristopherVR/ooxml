@@ -142,7 +142,8 @@ function writeSectionProperties(
 			section.verticalAlign,
 		);
 	else for (const vAlign of children(sectPr, 'vAlign')) sectPr.removeChild(vAlign);
-	if (section.titlePage) child(doc, sectPr, 'titlePg', AFTER_TITLEPG);
+	if (section.titlePage)
+		child(doc, sectPr, 'titlePg', AFTER_TITLEPG).removeAttributeNS(WORD_NS, 'val');
 	else for (const titlePg of children(sectPr, 'titlePg')) sectPr.removeChild(titlePg);
 	const line = section.lineNumberSettings;
 	if (line) {
