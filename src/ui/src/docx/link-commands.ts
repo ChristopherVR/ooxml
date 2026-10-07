@@ -1,42 +1,15 @@
 import type { EditorView } from 'prosemirror-view';
-import type { Mark } from 'prosemirror-model';
-import { schema } from './schema';
-import { isNavigableHref } from 'ooxml-core/docx/ui';
+import {
+	applyWordLink,
+	removeWordLink,
+	wordLinkRangeAt,
+	isNavigableHref,
+	type LinkTarget,
+} from 'ooxml-core/docx/ui';
 
-export interface LinkTarget {
-	href?: string;
-	anchor?: string;
-	tooltip?: string;
-}
+export type { LinkTarget } from 'ooxml-core/docx/ui';
+export const linkRangeAt = (view: EditorView, pos: number) => wordLinkRangeAt(view.state, pos);
 
-/** The contiguous range carrying the same link mark around `pos`, if the position is inside a link. */
-export function linkRangeAt(
-	view: EditorView,
-	pos: number,
-): { from: number; to: number; mark: Mark } | undefined {
-	const $pos = view.state.doc.resolve(pos);
-	const items: { from: number; to: number; link?: Mark }[] = [];
-	let cursor = $pos.start();
-	$pos.parent.forEach((child) => {
-		const link = child.marks.find((item) => item.type === schema.marks.link);
-		items.push({ from: cursor, to: cursor + child.nodeSize, ...(link && { link }) });
-		cursor += child.nodeSize;
-	});
-	let index = items.findIndex((item) => item.link && item.from <= pos && pos < item.to);
-	if (index < 0) index = items.findIndex((item) => item.link && item.from < pos && pos <= item.to);
-	if (index < 0) return undefined;
-	const mark = items[index]?.link;
-	if (!mark) return undefined;
-	let start = index;
-	let end = index;
-	while (start > 0 && items[start - 1]?.link?.eq(mark)) start--;
-	while (end < items.length - 1 && items[end + 1]?.link?.eq(mark)) end++;
-	const first = items[start];
-	const last = items[end];
-	return first && last ? { from: first.from, to: last.to, mark } : undefined;
-}
-
-/** The link under the selection start, used to prefill the link dialog. */
 export function linkAtSelection(view: EditorView): LinkTarget | undefined {
 	const range = linkRangeAt(view, view.state.selection.from);
 	if (!range) return undefined;
@@ -48,50 +21,12 @@ export function linkAtSelection(view: EditorView): LinkTarget | undefined {
 	};
 }
 
-/**
- * Applies a link to the selection. With an empty selection inside a link the whole link is
- * retargeted; with an empty selection elsewhere `displayText` (or the address) is inserted as a link.
- */
 export function applyLink(view: EditorView, target: LinkTarget, displayText?: string): boolean {
-	if (!target.href && !target.anchor) return false;
-	if (target.href && !isNavigableHref(target.href))
-		throw new Error('Links must start with http://, https:// or mailto:.');
-	const mark = schema.marks.link.create({
-		href: target.href ?? null,
-		anchor: target.anchor ?? null,
-		tooltip: target.tooltip || null,
-	});
-	const { state } = view;
-	const { from, to, empty } = state.selection;
-	const tr = state.tr;
-	if (!empty) tr.removeMark(from, to, schema.marks.link).addMark(from, to, mark);
-	else {
-		const existing = linkRangeAt(view, from);
-		if (existing)
-			tr.removeMark(existing.from, existing.to, schema.marks.link).addMark(
-				existing.from,
-				existing.to,
-				mark,
-			);
-		else {
-			const text = displayText || target.href || target.anchor!;
-			tr.insert(
-				from,
-				schema.text(text, [...(state.storedMarks ?? state.selection.$from.marks()), mark]),
-			);
-		}
-	}
-	view.dispatch(tr.scrollIntoView());
-	return true;
+	return applyWordLink(target, displayText)(view.state, view.dispatch, view);
 }
 
-/** Removes the link from the selection, or from the whole link under an empty selection. */
 export function removeLink(view: EditorView): boolean {
-	const { from, to, empty } = view.state.selection;
-	const range = empty ? linkRangeAt(view, from) : { from, to };
-	if (!range) return false;
-	view.dispatch(view.state.tr.removeMark(range.from, range.to, schema.marks.link));
-	return true;
+	return removeWordLink(view.state, view.dispatch, view);
 }
 
 /** Scrolls to the paragraph whose bookmarks include `name`; returns whether one was found. */

@@ -450,3 +450,9 @@ Unknown inline extensions stay guarded and untouched package saves preserve
 their bytes. Yjs tests cover a tracked explicit off override, export and shared
 rejection back to inheritance. Word recognizes that export's paragraph revision,
 places all paragraphs on page 1, and restores pages 1, 2, 2 on rejection.
+
+Hyperlink selection and mutation now reuse shared core commands. Imported
+picture targets and edits to supported inline elements survive Yjs joining,
+retargeting, removal, clipboard conversion and local undo. Six browser bindings
+verify peer picture-link export without losing shared media. Equation links and
+hyperlink change attribution still need separate implementation and evidence.

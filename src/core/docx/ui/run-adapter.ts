@@ -60,16 +60,17 @@ export function runToInlineNodes(
 		];
 	}
 	if (run.image) {
-		const { text: _text, image: _image, link: _link, ...format } = run;
-		const marks = run.link
-			? [
-					schema.mark('link', {
-						href: run.link.href ?? null,
-						anchor: run.link.anchor ?? null,
-						tooltip: run.link.tooltip ?? null,
-					}),
-				]
-			: [];
+		const { text: _text, image: _image, ...format } = run;
+		const marks =
+			run.link && !schema.nodes.image?.spec.attrs?.runFormat_bold
+				? [
+						schema.mark('link', {
+							href: run.link.href ?? null,
+							anchor: run.link.anchor ?? null,
+							tooltip: run.link.tooltip ?? null,
+						}),
+					]
+				: [];
 		return [
 			schema.node(
 				'image',

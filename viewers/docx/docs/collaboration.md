@@ -204,3 +204,10 @@ Paragraph and table IDs are document content and travel in ProseMirror steps. Fo
 ## Authority responsibilities and limits
 
 The application host owns transport, authentication and authorization, durable storage, snapshot distribution, client identity, reconnect policy, and export timing. The in-memory authority is useful for tests and a local demo, not as a multi-process or production server. DOCX export should use a canonical, sufficiently synchronized model if the application needs shared-save semantics; this library does not coordinate file locks or simultaneous exports. Remote peers receive only schema-supported ProseMirror steps, and the authority validates those steps before accepting them. Structural table commands are disabled during collaboration because the current table editor replaces table structure as a whole; granular cell-level transactions are needed before enabling those commands safely.
+
+Supported inline picture, break and note links are carried by run attributes,
+so importing or editing them does not depend on element marks that Yjs drops.
+The Link dialog reads and edits these targets through the same core commands
+as ordinary text links. Retargeting and removal are synchronized and support
+local author undo; shared picture media remains available in DOCX exports.
+Equation links and hyperlink revision attribution remain outside this support.

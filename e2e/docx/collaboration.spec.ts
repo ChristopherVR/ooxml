@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import type { DocxEditorElement } from '../../viewers/docx/packages/web-component/src';
 import JSZip from 'jszip';
+import { dialogByHeading } from './helpers';
 
 for (const mode of ['steps', 'yjs']) {
 	for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
@@ -105,6 +106,43 @@ for (const mode of ['steps', 'yjs']) {
 				await expect(b.locator('img[data-docx-image]')).toHaveCount(0);
 				await page.keyboard.press('Control+y');
 				await expect(b.locator('img[data-docx-image]')).toHaveAttribute('src', /^blob:/);
+				await a.locator('.dve-picture').click();
+				await page.keyboard.press('Control+k');
+				const dialog = dialogByHeading(a, 'Insert link');
+				await dialog.getByLabel('Address', { exact: true }).fill('https://example.com/picture');
+				await dialog.getByLabel('ScreenTip', { exact: true }).fill('Shared picture');
+				await dialog.getByRole('button', { name: 'Insert', exact: true }).click();
+				const pictureLink = () =>
+					b.evaluate((element) => {
+						const blocks = (element as DocxEditorElement).documentModel!.blocks;
+						return blocks
+							.flatMap((block) => (block.type === 'paragraph' ? block.runs : []))
+							.find((run) => run.image)?.link;
+					});
+				await expect
+					.poll(pictureLink)
+					.toEqual({ href: 'https://example.com/picture', tooltip: 'Shared picture' });
+				const linkedBytes = await b.evaluate(async (element) =>
+					Array.from(await (element as DocxEditorElement).saveBytes()),
+				);
+				const linked = await JSZip.loadAsync(new Uint8Array(linkedBytes));
+				expect(await linked.file('word/document.xml')!.async('string')).toContain('<w:hyperlink');
+				expect(await linked.file('word/_rels/document.xml.rels')!.async('string')).toContain(
+					'https://example.com/picture',
+				);
+				await page.keyboard.press('Control+z');
+				await expect.poll(pictureLink).toBeUndefined();
+				await expect(b.locator('img[data-docx-image]')).toHaveCount(1);
+				await page.keyboard.press('Control+y');
+				await expect
+					.poll(pictureLink)
+					.toEqual({ href: 'https://example.com/picture', tooltip: 'Shared picture' });
+				await page.keyboard.press('Control+k');
+				await expect(dialog.getByLabel('Address', { exact: true })).toHaveValue(
+					'https://example.com/picture',
+				);
+				await dialog.getByRole('button', { name: 'Remove link', exact: true }).click();
+				await expect.poll(pictureLink).toBeUndefined();
 			}
 			expect(errors).toEqual([]);
 		});

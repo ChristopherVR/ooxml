@@ -15,6 +15,7 @@ export * from './dirty-state';
 export * from './field-guard';
 export * from './header-footer-history';
 export * from './hard-break-command';
+export * from './link-commands';
 export * from './run-format-command';
 export * from './note-parts';
 export * from './inline-content-schema';

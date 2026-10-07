@@ -1200,3 +1200,19 @@ schemas and legacy v1 support through matching legacy schemas. Existing native
 advanced references still match thirty reopened export and native Reject All
 checks. Concurrent review authorship and provider persistence migration remain
 unfinished.
+
+## Shared Word hyperlink commands and inline link preservation
+
+Source: ChristopherVR/ooxml at `988a72111`,
+`src/ui/src/docx/link-commands.ts` and the shared core run adapter.
+Selection range discovery, hyperlink insertion, retargeting and removal moved
+into schema-injected `src/core/docx/ui/link-commands.ts`. The UI retains dialog
+wiring, bookmark scrolling and browser navigation. Supported inline elements
+store targets with their canonical run metadata, retaining imported picture
+links across Yjs instead of relying on element marks. Existing schema rules,
+run conversion and OOXML writers remain the only property/link codecs.
+Four peer regressions cover imported links, retargeting, clipboard conversion,
+removal and author undo; a mounted editor verifies dialog and media export.
+Six browser bindings verify peer picture-link export and undo/redo alongside
+the existing step and Yjs collaboration scenarios. Equation hyperlink editing,
+hyperlink revision attribution and complete M365 parity are not established.
