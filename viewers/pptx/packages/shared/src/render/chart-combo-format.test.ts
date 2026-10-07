@@ -70,8 +70,9 @@ describe('buildComboViewModel series formatting', () => {
 		expect(barLabel).toMatchObject({
 			fontSize: 6 * CHART_PX_PER_PT,
 			fill: '#6692AE',
-			fontFamily: 'Pretendard',
 		});
+		// The named face can be followed by the chart font fallback list.
+		expect(barLabel?.fontFamily).toMatch(/^"?Pretendard"?(?:,|$)/u);
 		expect(lineLabel).toMatchObject({ fontSize: 6 * CHART_PX_PER_PT, fill: '#05507D' });
 	});
 
