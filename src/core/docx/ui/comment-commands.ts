@@ -2,6 +2,7 @@ import type { Comment } from '../model.js';
 import type { EditorView } from 'prosemirror-view';
 import { closeHistory } from 'prosemirror-history';
 import { TextSelection } from 'prosemirror-state';
+import { commentIdsFromMarks } from './comment-anchors.js';
 
 let commentSerial = 0;
 function nextCommentId(idGenerator?: (kind: string) => string): string {
@@ -27,10 +28,7 @@ export function addComment(
 		const start = Math.max(pos, from);
 		const end = Math.min(pos + node.nodeSize, to);
 		if (end <= start) return;
-		const existing = node.marks.find((mark) => mark.type.name === 'comment');
-		const ids = existing ? Array.from(new Set([...(existing.attrs.ids as string[]), id])) : [id];
-		if (existing) tr = tr.removeMark(start, end, view.state.schema.marks.comment!);
-		tr = tr.addMark(start, end, view.state.schema.marks.comment!.create({ ids }));
+		tr = tr.addMark(start, end, view.state.schema.marks.comment!.create({ ids: [id] }));
 	});
 	view.dispatch(closeHistory(tr));
 	return { id, author, text, resolved: false };
@@ -42,16 +40,13 @@ export function removeCommentAnchor(view: EditorView, id: string): void {
 	let tr = view.state.tr;
 	view.state.doc.descendants((node, pos) => {
 		if (!node.isText && node.type.name !== 'hardBreak') return;
-		const mark = node.marks.find((item) => item.type.name === 'comment');
-		if (!mark || !(mark.attrs.ids as string[]).includes(id)) return;
-		const remaining = (mark.attrs.ids as string[]).filter((existing) => existing !== id);
-		tr = tr.removeMark(pos, pos + node.nodeSize, view.state.schema.marks.comment!);
-		if (remaining.length)
-			tr = tr.addMark(
-				pos,
-				pos + node.nodeSize,
-				view.state.schema.marks.comment!.create({ ids: remaining }),
-			);
+		for (const mark of node.marks) {
+			if (mark.type.name !== 'comment' || !(mark.attrs.ids as string[]).includes(id)) continue;
+			const remaining = (mark.attrs.ids as string[]).filter((existing) => existing !== id);
+			tr = tr.removeMark(pos, pos + node.nodeSize, mark);
+			if (remaining.length)
+				tr = tr.addMark(pos, pos + node.nodeSize, mark.type.create({ ids: remaining }));
+		}
 	});
 	if (tr.docChanged) view.dispatch(closeHistory(tr));
 }
@@ -73,7 +68,7 @@ export function replyToComment(
 	return [...comments, { id, author, text, parentId }];
 }
 
-/** Comment ids anchored at the selection, outermost first (replies are not anchored). */
+/** Comment ids anchored at the selection, in stable order (replies are not anchored). */
 export function commentIdsAtSelection(view: EditorView): string[] {
 	const { from, to, empty } = view.state.selection;
 	const ids: string[] = [];
@@ -81,8 +76,7 @@ export function commentIdsAtSelection(view: EditorView): string[] {
 		empty ? Math.max(0, from - 1) : from,
 		empty ? from + 1 : to,
 		(node) => {
-			const mark = node.marks.find((item) => item.type.name === 'comment');
-			if (mark) for (const id of mark.attrs.ids as string[]) if (!ids.includes(id)) ids.push(id);
+			for (const id of commentIdsFromMarks(node.marks)) if (!ids.includes(id)) ids.push(id);
 		},
 	);
 	return ids;
@@ -93,9 +87,7 @@ export function commentAnchors(view: EditorView): Array<{ id: string; from: numb
 	const seen = new Set<string>();
 	const anchors: Array<{ id: string; from: number }> = [];
 	view.state.doc.descendants((node, pos) => {
-		const mark = node.marks.find((item) => item.type.name === 'comment');
-		if (!mark) return;
-		for (const id of mark.attrs.ids as string[])
+		for (const id of commentIdsFromMarks(node.marks))
 			if (!seen.has(id)) {
 				seen.add(id);
 				anchors.push({ id, from: pos });

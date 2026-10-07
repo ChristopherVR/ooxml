@@ -1,13 +1,41 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { createDocument, saveDocx } from 'ooxml-core/docx';
+import { createDocument, loadDocx, saveDocx } from 'ooxml-core/docx';
 import { EditorState, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { addComment } from './comment-commands';
 import { docToModel, modelToDoc } from './model-adapter';
 
 describe('comments across paragraphs', () => {
+	it('exports and reloads both independent overlapping anchors', async () => {
+		const model = createDocument();
+		model.blocks = [{ type: 'paragraph', id: 'a', runs: [{ text: 'Alpha beta' }] }];
+		const doc = modelToDoc(model);
+		const view = new EditorView(document.createElement('div'), {
+			state: EditorState.create({ doc, selection: TextSelection.create(doc, 1, 7) }),
+		});
+		try {
+			const first = addComment(view, 'Ada', 'First', () => 'c1')!;
+			view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, 4, 11)));
+			const second = addComment(view, 'Grace', 'Second', () => 'c2')!;
+			const next = docToModel(view.state.doc, model);
+			const { model: loaded } = await loadDocx(
+				await saveDocx({ ...next, comments: [first, second] }),
+			);
+			expect(loaded.comments?.map((comment) => comment.author)).toEqual(['Ada', 'Grace']);
+			const paragraph = loaded.blocks[0]!;
+			if (paragraph.type !== 'paragraph') throw new Error('Expected a paragraph');
+			expect(
+				paragraph.runs
+					.filter((run) => run.commentIds?.length === 2)
+					.map((run) => run.text)
+					.join(''),
+			).toBe('ha ');
+		} finally {
+			view.destroy();
+		}
+	});
 	it('adds one comment over a selection spanning paragraphs and saves a single range', async () => {
 		const model = createDocument();
 		model.blocks = [
