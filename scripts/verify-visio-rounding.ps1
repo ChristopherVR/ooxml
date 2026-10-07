@@ -2,6 +2,7 @@
 # Creates its own invisible instance and documents; never attaches to the user's session.
 param([string]$OutputDirectory = (Join-Path $env:TEMP ('visio-rounding-' + [guid]::NewGuid())))
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'visio-native-shape.ps1')
 New-Item -ItemType Directory -Path $OutputDirectory -Force | Out-Null
 $OutputDirectory = (Resolve-Path -LiteralPath $OutputDirectory).Path
 $cases = @(
@@ -23,15 +24,7 @@ try {
         # Explicit rows exercise the admitted MoveTo/LineTo subset. DrawPolyline
         # normally saves a compressed PolylineTo row, which is outside this slice.
         $shape = $page.DrawRectangle(0, 0, 6, 2)
-        $shape.DeleteSection(10) # visSectionFirstComponent
-        $shape.AddSection(10) | Out-Null
-        $shape.CellsU('Geometry1.NoFill').FormulaU = '1'
-        for ($vertex = 0; $vertex -lt $case.Points.Count / 2; $vertex++) {
-            $tag = if ($vertex -eq 0) { 138 } else { 139 } # MoveTo / LineTo
-            $row = $shape.AddRow(10, $vertex + 1, $tag)
-            $shape.CellsSRC(10, $row, 0).FormulaU = ([double]$case.Points[2 * $vertex]).ToString([cultureinfo]::InvariantCulture) + ' in'
-            $shape.CellsSRC(10, $row, 1).FormulaU = ([double]$case.Points[2 * $vertex + 1]).ToString([cultureinfo]::InvariantCulture) + ' in'
-        }
+        Set-VisioNativePolylineGeometry $shape $case.Points $true
         $shape.CellsU('Rounding').FormulaU = '0.25 in'
         $shape.CellsU('FillPattern').FormulaU = '0'
         $shape.CellsU('BeginArrow').FormulaU = '0'

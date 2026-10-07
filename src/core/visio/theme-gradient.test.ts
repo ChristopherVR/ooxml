@@ -38,7 +38,8 @@ describe('normalized Visio theme gradients', () => {
 				{ offset: 1, color: '#ffffff', opacity: 1 },
 			],
 		});
-		expect(result.diagnostics.some((item) => item.code.includes('gradient'))).toBe(false);
+		expect(result.diagnostics.some((item) => item.code.startsWith('unsupported-'))).toBe(false);
+		expect(result.diagnostics.map((item) => item.code)).toContain('unverified-gradient-raster');
 	});
 	it('projects nonsquare bounds instead of stretching the direction', () => {
 		const endpoints = linearGradientEndpoints(4, 2, 45 * 60_000);

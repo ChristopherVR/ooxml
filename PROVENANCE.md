@@ -773,3 +773,13 @@ lines and short bars do not have degenerate object-bounding-box filter regions.
 The native DrawingML reader and themed resolver reuse shared XML, color and unit
 helpers. The ordinary-shadow primitive retains the existing radius-to-Gaussian
 deviation conversion; projected scale/skew shadows are not approximated by it.
+
+## Shared native Visio geometry probes
+
+Source: ChristopherVR/ooxml at a85cb5c72,
+`scripts/verify-visio-rounding.ps1`. Its explicit MoveTo/LineTo geometry writer
+moved to `scripts/visio-native-shape.ps1`; the rounding probe calls it with
+NoFill enabled. Nine native rounding cases retain their previous output.
+Fill probes share a second helper that creates rectangles, ellipses and genuine
+native DrawPolyline polygons. Raster evidence uses native polygons because
+manually replaced geometry rows produced blank polygon PNG exports in probes.

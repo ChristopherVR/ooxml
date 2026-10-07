@@ -175,7 +175,8 @@ describe('saved horizontal fill gradients', () => {
 				{ offset: 1, color: '#0000ff', opacity: 1 },
 			],
 		});
-		expect(diagnostics.some((d) => d.code.includes('gradient'))).toBe(false);
+		expect(diagnostics.some((d) => d.code.startsWith('unsupported-'))).toBe(false);
+		expect(diagnostics.map((d) => d.code)).toContain('unverified-gradient-raster');
 	});
 	it.each([Math.PI, -Math.PI, 3 * Math.PI, 3.14159265358979])(
 		'accepts sign-independent reversed horizontal angle %s',
@@ -210,8 +211,9 @@ describe('saved horizontal fill gradients', () => {
 		expect(diagnostics.some((d) => d.code === 'unsupported-fill-pattern')).toBe(false);
 	});
 	it('preserves coincident and non-boundary stops', async () => {
-		const { style } = await parse('', stop(0, 0.2) + stop(1, 0.2) + stop(2, 0.8));
+		const { style, diagnostics } = await parse('', stop(0, 0.2) + stop(1, 0.2) + stop(2, 0.8));
 		expect(style.fillGradient?.stops.map((s) => s.offset)).toEqual([0.2, 0.2, 0.8]);
+		expect(diagnostics.map((d) => d.code)).not.toContain('unverified-gradient-raster');
 	});
 	it('ignores rows beyond the first ten and deleted rows', async () => {
 		const rows = Array.from({ length: 10 }, (_, i) => stop(i, i / 10)).join('');

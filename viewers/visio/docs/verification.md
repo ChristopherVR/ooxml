@@ -721,3 +721,44 @@ Strict core, complete UI types and root lint passed, retaining nine unrelated
 lint warnings. Native capture PowerShell scripts passed syntax parsing. Native
 reopening, broader transformed gradients, arbitrary path fills and native PNG
 pipeline equivalence remain unverified.
+
+## Native gradient raster evidence (2026-10-07)
+
+Native SVG export does not establish native gradient color fidelity. A new
+`scripts/record-visio-gradient-raster.ps1` probe captures both native SVG and PNG,
+the genuine VSDX, application version and seven RGBA samples for each case.
+Its 68 cases cover directions 0-12 on rectangles and direction 13 on rectangles,
+ellipses, triangles and notched polygons, with two or three stops and opaque or
+translucent colors. Shape exports are 288 by 144 pixels at 144 dpi. The owned
+Visio instance restores its previous raster export settings before closing.
+
+The completed local capture is
+visio-gradient-raster-032b1a2ac8e44d0582f3838badac0448 in the temporary directory.
+For an opaque red-to-blue horizontal two-stop gradient, native PNG samples at
+x=36, 72, 144 and 216 (y=72) are respectively (250,0,63), (238,0,105),
+(186,0,186) and (104,0,238). These differ substantially from the SVG's straight
+interpolation. A GDI+ gamma-corrected sigma blend reproduces the first three
+samples exactly and differs by one channel in the fourth; this is evidence for
+further investigation, not a completed implementation. Three-stop native
+red/green/blue samples instead follow ordinary straight color interpolation.
+
+Native direction-13 SVG uses a rectangular fallback even for ellipses and
+polygons; PNG follows a different contour. Direction 13 remains unsupported.
+Two-stop normalized fills and classic gradients now report
+unverified-gradient-raster. The earlier exact native-SVG comparisons remain
+valid for exported SVG geometry and stop serialization, but do not prove native
+PNG color or contour parity.
+
+The polygon raster captures use native DrawPolyline. Earlier probes using
+manually replaced geometry rows produced blank polygon PNGs and were discarded
+as raster evidence. The shared explicit-row helper still serves the rounding
+probe; all nine native rounding cases passed after extraction. A separate
+read-only owned-instance check confirmed raster settings were restored to
+source size and screen resolution. No user-owned Visio instance was changed.
+
+Core passed 2,065 tests with 53 optional skips. The UI run passed 711 tests;
+after updating the two saved-gradient assertions to expect the fidelity warning,
+both passed, giving 713 passing tests and seven optional skips. Strict core types,
+PowerShell syntax parsing, viewer formatting and root lint passed; lint retains
+the same nine unrelated warnings. This checkpoint records a remaining gap and
+does not change gradient interpolation or establish full Visio parity.

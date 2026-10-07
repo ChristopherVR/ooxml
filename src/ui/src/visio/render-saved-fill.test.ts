@@ -38,7 +38,8 @@ describe('saved fill gradient import and SVG paint', () => {
 			expect(
 				result.svg.querySelector('[data-shape-id="1"] path')?.getAttribute('fill-opacity'),
 			).toBe('1');
-			expect(document.diagnostics.some((d) => d.code.includes('gradient'))).toBe(false);
+			expect(document.diagnostics.some((d) => d.code.startsWith('unsupported-'))).toBe(false);
+			expect(document.diagnostics.map((d) => d.code)).toContain('unverified-gradient-raster');
 			result.dispose();
 		},
 	);

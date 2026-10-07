@@ -122,6 +122,7 @@ describe('explicit root gradient stop caches', () => {
 			],
 		});
 		expect(style.fillGradient?.stops[1]?.opacity).toBeCloseTo(0.2);
-		expect(parsed.diagnostics.some((d) => d.code.includes('gradient'))).toBe(false);
+		expect(parsed.diagnostics.some((d) => d.code.startsWith('unsupported-'))).toBe(false);
+		expect(parsed.diagnostics.map((d) => d.code)).toContain('unverified-gradient-raster');
 	});
 });

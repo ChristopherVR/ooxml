@@ -9,11 +9,13 @@ param(
  [ValidateRange(1,40)][int]$FirstPattern = 2, [ValidateRange(1,40)][int]$LastPattern = 24,
  [string]$GradientAngle = '',
  # -1 captures the modern direction matching each page's pattern number.
- [ValidateRange(-1,13)][int]$GradientDirection = 0
+ [ValidateRange(-1,13)][int]$GradientDirection = 0,
+ [ValidateSet('rectangle','ellipse','triangle','notched')][string]$ShapeKind = 'rectangle'
 )
 # Capture native pattern tiles and full-page exports from an owned application.
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'visio-native-gradient.ps1')
+. (Join-Path $PSScriptRoot 'visio-native-shape.ps1')
 if($FirstPattern -gt $LastPattern){throw 'FirstPattern must not exceed LastPattern.'}
 if($GradientDirection -eq -1 -and $LastPattern -gt 13){throw 'Modern gradient directions must not exceed 13.'}
 Add-Type -AssemblyName System.Drawing
@@ -34,7 +36,7 @@ try {
   $page.PageSheet.CellsU('PageScale').FormulaU="$PageScale in"
   $page.PageSheet.CellsU('PageWidth').FormulaU='4 in'
   $page.PageSheet.CellsU('PageHeight').FormulaU='3 in'
-  $shape=$page.DrawRectangle(1,1,3,2)
+  $shape=New-VisioNativeFillShape $page $ShapeKind
   $shape.CellsU('Angle').FormulaU=$Angle
   $shape.CellsU('FlipX').FormulaU=if($FlipX){'1'}else{'0'}
   $shape.CellsU('FlipY').FormulaU=if($FlipY){'1'}else{'0'}
@@ -96,6 +98,6 @@ try {
   } finally {$bitmap.Dispose();$stream.Dispose()}
  }
  $document.SaveAs((Join-Path $directory 'fill-patterns.vsdx')) | Out-Null
- [ordered]@{application='Microsoft Visio';version=$app.Version;foreground=$Foreground;background=$Background;foregroundTransparency=$ForegroundTransparency;backgroundTransparency=$BackgroundTransparency;angle=$Angle;gradientAngle=$GradientAngle;gradientDirection=$GradientDirection;drawingScale=$DrawingScale;pageScale=$PageScale;flipX=[bool]$FlipX;flipY=[bool]$FlipY;groupDepth=$GroupDepth;groupAngle=$GroupAngle;groupFlipX=[bool]$GroupFlipX;groupFlipY=[bool]$GroupFlipY;firstPattern=$FirstPattern;lastPattern=$LastPattern;cases=$records} | ConvertTo-Json -Depth 8 | Set-Content (Join-Path $directory 'evidence.json') -Encoding utf8
+ [ordered]@{application='Microsoft Visio';version=$app.Version;foreground=$Foreground;background=$Background;foregroundTransparency=$ForegroundTransparency;backgroundTransparency=$BackgroundTransparency;angle=$Angle;gradientAngle=$GradientAngle;gradientDirection=$GradientDirection;shapeKind=$ShapeKind;drawingScale=$DrawingScale;pageScale=$PageScale;flipX=[bool]$FlipX;flipY=[bool]$FlipY;groupDepth=$GroupDepth;groupAngle=$GroupAngle;groupFlipX=[bool]$GroupFlipX;groupFlipY=[bool]$GroupFlipY;firstPattern=$FirstPattern;lastPattern=$LastPattern;cases=$records} | ConvertTo-Json -Depth 8 | Set-Content (Join-Path $directory 'evidence.json') -Encoding utf8
 } finally {if($document){$document.Saved=$true;$document.Close()};$app.Quit()}
 Write-Output $directory
