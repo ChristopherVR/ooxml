@@ -216,6 +216,13 @@ test('shared pptx code tests every dependent package and runs the parity referen
 	assert.deepEqual(result.e2e.projects, ['react']);
 });
 
+test('the PowerPoint MCP server no longer drives shared UI or binding tests', () => {
+	const result = pptx('viewers/pptx/packages/tools/src/server.ts');
+	assert.deepEqual(result.tests, ['tools']);
+	assert.deepEqual(result.e2e.projects, []);
+	assert.equal(result.packaged, false);
+});
+
 test('an engine change runs every pptx unit leg and the reference project; its tests run nothing', () => {
 	const result = pptx('src/core/pptx/core/core/runtime/PptxHandlerRuntimeSmartArt.ts');
 	assert.equal(result.tests.length, 11);

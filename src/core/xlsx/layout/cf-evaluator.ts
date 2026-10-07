@@ -15,6 +15,7 @@ import type {
 } from '../model.js';
 import { isCellError } from '../model.js';
 import { resolveColor } from './colors.js';
+import { dataBarAppearance } from './data-bar-appearance.js';
 import {
 	computeStats,
 	isTruthy,
@@ -77,6 +78,7 @@ export function createConditionalFormatEvaluator(
 		return cached;
 	};
 	const thresholdCache = new Map<Entry, number[]>();
+	const barAppearances = new Map<Entry, ReturnType<typeof dataBarAppearance>>();
 	let todaySerial: number | undefined;
 	const today = (): number => {
 		if (todaySerial !== undefined) return todaySerial;
@@ -227,14 +229,29 @@ export function createConditionalFormatEvaluator(
 		}
 		if (rule.type === 'dataBar') {
 			if (result.dataBar || typeof value !== 'number') return false;
+			let appearance = barAppearances.get(entry);
+			if (!appearance) {
+				appearance = dataBarAppearance(rule, workbook);
+				barAppearances.set(entry, appearance);
+			}
 			const [lo = 0, hi = 0] = thresholds(entry, [rule.min, rule.max]);
 			const fraction = hi > lo ? Math.max(0, Math.min(1, (value - lo) / (hi - lo))) : 1;
 			result.dataBar = {
 				fraction,
-				color: resolveColor(rule.color, workbook.theme, '#638EC6') ?? '#638EC6',
+				color: value < 0 ? appearance.negative : appearance.positive,
+				gradient: appearance.gradient,
+				direction:
+					appearance.direction === 'context'
+						? sheet.view.rightToLeft
+							? 'rightToLeft'
+							: 'leftToRight'
+						: appearance.direction,
 			};
+			if (appearance.border)
+				result.dataBar.borderColor =
+					value < 0 ? appearance.negativeBorder : appearance.positiveBorder;
 			if (value < 0) result.dataBar.negative = true;
-			if (rule.showValue === false) result.hideValue = true;
+			if (!appearance.showValue) result.hideValue = true;
 			return true;
 		}
 		if (rule.type === 'iconSet') {

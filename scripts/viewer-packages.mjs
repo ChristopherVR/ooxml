@@ -54,10 +54,11 @@ const PPTX_INLINED_CORE = [
 	),
 	...['text', 'units', 'xml'].map((area) => `src/core/${area}`),
 	'src/core/tsup.pptx.config.ts',
+	'src/core/tsup.pptx-editor.config.ts',
 	'src/core/tsdown.pptx.config.ts',
 ];
 
-/** pptx publishes five bindings (no Solid) that each inline core, shared and locales. */
+/** pptx publishes five bindings (no Solid) that inline core/locales and import public UI. */
 const PPTX_FRAMEWORKS = ['react', 'vue', 'angular', 'svelte', 'vanilla'];
 
 export const VIEWER_PACKAGES = {

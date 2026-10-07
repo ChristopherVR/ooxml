@@ -12,6 +12,25 @@ export function followedThreads(
 	return html`<section class="followed-threads" aria-label="Followed threads">
 		<h1>Followed threads</h1>
 		<p>Threads you follow on this device. Notifications are not enabled.</p>
+		<fieldset>
+			<legend>Automatically follow</legend>
+			<label
+				><input
+					type="checkbox"
+					.checked=${state.threadFollowSettings.started}
+					@change=${(event: Event) => client.setThreadFollowSettings({ started: (event.target as HTMLInputElement).checked })}
+				/>
+				Threads I start</label
+			>
+			<label
+				><input
+					type="checkbox"
+					.checked=${state.threadFollowSettings.replied}
+					@change=${(event: Event) => client.setThreadFollowSettings({ replied: (event.target as HTMLInputElement).checked })}
+				/>
+				Threads I reply to</label
+			>
+		</fieldset>
 		<label
 			><input
 				type="checkbox"

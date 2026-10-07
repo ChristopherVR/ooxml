@@ -190,7 +190,7 @@ export function shardsFor(count, full) {
 const PPTX_DEPENDS_ON = {
 	core: [],
 	tools: ['core'],
-	shared: ['core', 'tools'],
+	shared: ['core'],
 	locales: ['shared'],
 	react: ['core', 'shared', 'locales'],
 	react18: ['react'],
@@ -271,7 +271,7 @@ export function pptxPlan(files, { everything, reaches }) {
 			const leg = match[1] === 'react-compat' ? 'react18' : match[1];
 			if (!PPTX_DEPENDS_ON[leg]) continue;
 			for (const dependent of pptxDependents(leg)) legs.add(dependent);
-			if (isTestFile(file) || leg === 'cli') continue;
+			if (isTestFile(file) || leg === 'cli' || leg === 'tools') continue;
 			projects.add(PPTX_BINDINGS.includes(leg) ? leg : PPTX_REFERENCE_PROJECT);
 			packaged = true;
 		} else if (/^viewers\/pptx\/(docs|\.github)\//.test(file)) {

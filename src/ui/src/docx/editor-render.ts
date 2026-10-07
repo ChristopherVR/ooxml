@@ -38,12 +38,20 @@ export function renderDocument(core: EditorCore): void {
 									view: () => {
 										const binding = core.collab.yjs!;
 										const media = binding.media.observe(() => core.imageMedia.refresh());
+										const comments = binding.comments.onChange(() => {
+											if (!binding.sharedComments) return;
+											core.model = { ...core.model, comments: binding.comments.all() };
+											core.notifyChange();
+											core.shell.review?.commentsPanel.refresh();
+											core.refreshControls();
+										});
 										const errors = binding.session.on('error', (error) =>
 											core.host.reportError(error),
 										);
 										return {
 											destroy: () => {
 												media();
+												comments();
 												errors();
 											},
 										};
@@ -75,6 +83,8 @@ export function renderDocument(core: EditorCore): void {
 		handleClick: (view, pos, event) => core.inserts.handleClick(view, pos, event),
 	});
 	if (yjs) core.model = docToModel(core.view.state.doc, core.model);
+	if (core.collab.yjs?.sharedComments)
+		core.model = { ...core.model, comments: core.collab.yjs.comments.all() };
 	core.detachedState = undefined;
 	core.inserts.syncPaper();
 	core.parts.render(canvas, paper);

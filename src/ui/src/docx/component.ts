@@ -248,6 +248,8 @@ export class DocxEditorElement extends DocxEditorApi {
 			);
 		if (core.collab.yjs) {
 			core.model = docToModel(core.collab.yjs.state(schema).doc, core.model);
+			if (core.collab.yjs.sharedComments)
+				core.model = { ...core.model, comments: core.collab.yjs.comments.all() };
 			for (const [name, part] of core.collab.yjs.media.all())
 				core.inserts.pendingMedia.set(name, part);
 		}

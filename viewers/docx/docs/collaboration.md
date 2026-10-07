@@ -35,7 +35,7 @@ There is also a [single-page demo](/demo/collaboration.html){target="_self"} wit
 | Supported                                                        | Not supported                                                                    |
 | ---------------------------------------------------------------- | -------------------------------------------------------------------------------- |
 | Ordered, validated ProseMirror step batches through an authority | A hosted server, networking, authentication or persistence (the host owns these) |
-| Yjs text/formatting merging, relative cursors and local undo     | Concurrent editing of comments, styles, numbering definitions and notes outside the body |
+| Yjs text/formatting merging, relative cursors, comment threads and local undo | Concurrent editing of styles, numbering definitions and notes outside the body |
 | A reference in-memory authority for tests and the local demo     | Structural table commands while collaborating                                    |
 
 ## Yjs mode
@@ -103,6 +103,23 @@ document writes. Client roles are advisory: enforce authorization in the server
 or provider as well. Editing outside the body and structural table commands
 remain disabled. Page and section attributes are preserved and synchronized,
 but multi-story collaboration and a complete package bootstrap are unfinished.
+
+New Yjs rooms also share comment anchors, replies, resolution and deletion through
+the existing review pane. The creator seeds the loaded comments. Each comment has
+an independent anchor attribute and record; concurrent replies retain their own
+IDs. Resolution uses Yjs map conflict ordering. Deleting a root hides its replies,
+including replies written concurrently while offline. Undo restores the root and
+its anchor together and reveals surviving replies; each author's undo retains
+other authors' operations. Export snapshots the latest shared threads even while
+the editor is detached.
+
+Rooms carry an `independent-v1` comment capability in their Word identity map.
+Older rooms without it keep their loaded comments and disable comment editing.
+Create a new room from a canonical saved snapshot to upgrade; do not change the
+capability on a live room. Authority-step mode does not synchronize comment
+metadata, so its comment editing remains disabled. These client behaviors do not
+provide server authorization, durable persistence or modern Word comment mentions,
+notifications and task assignment.
 
 Try the [Yjs two-peer demo](/demo/collaboration.html?mode=yjs){target="_self"}.
 Its Pause delivery, Reconnect providers and Resync providers actions exercise

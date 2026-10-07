@@ -30,13 +30,11 @@ test('a shared change reaches every binding but not core or cli', () => {
 	assert.ok(!r.testLegs.includes('cli'));
 });
 
-test('a tools change reaches shared and the bindings', () => {
-	// packages/shared imports the MCP registry from packages/tools, which is why
-	// a stale tools dist breaks all five demos at once.
+test('a tools change only tests the MCP server', () => {
+	// Shared UI imports core automation, so the MCP server is independent.
 	const r = analyse(['packages/tools/src/index.ts']);
-	assert.ok(r.testLegs.includes('tools'));
-	assert.ok(r.testLegs.includes('shared'));
-	assert.ok(r.testLegs.includes('vue'));
+	assert.deepEqual(r.testLegs, ['tools']);
+	assert.deepEqual(r.e2eProjects, []);
 });
 
 test('a locales change reaches the bindings', () => {

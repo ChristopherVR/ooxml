@@ -12,8 +12,25 @@ export interface FollowedThread {
 	unread: number;
 }
 
+export interface ThreadFollowSettings {
+	started: boolean;
+	replied: boolean;
+}
+
 /** Personal references stay outside Yjs. Storage failures retain the in-memory preference. */
 export function createThreadFollows(storage: StorageLike | undefined, key: string) {
+	const settings: ThreadFollowSettings = { started: true, replied: true };
+	try {
+		const raw = storage?.getItem(`${key}:settings`) ?? '{}';
+		const restored: unknown = raw.length <= 1024 ? JSON.parse(raw) : {};
+		if (restored && typeof restored === 'object')
+			for (const name of ['started', 'replied'] as const) {
+				const value = (restored as Record<string, unknown>)[name];
+				if (typeof value === 'boolean') settings[name] = value;
+			}
+	} catch {
+		/* Defaults remain usable without storage. */
+	}
 	const follows = new Map<
 		string,
 		{ channelId: string; messageId: string; readAt: number; forcedUnread: boolean }
@@ -63,6 +80,22 @@ export function createThreadFollows(storage: StorageLike | undefined, key: strin
 		}
 	};
 	return {
+		settings: (): ThreadFollowSettings => ({ ...settings }),
+		configure(input: Partial<ThreadFollowSettings>): boolean {
+			let changed = false;
+			for (const name of ['started', 'replied'] as const)
+				if (typeof input[name] === 'boolean' && input[name] !== settings[name]) {
+					settings[name] = input[name];
+					changed = true;
+				}
+			if (changed)
+				try {
+					storage?.setItem(`${key}:settings`, JSON.stringify(settings));
+				} catch {
+					/* In-memory only. */
+				}
+			return changed;
+		},
 		has(channel: string, message: string, rootOf?: (id: string) => string | undefined): boolean {
 			return matching(channel, message, rootOf).length > 0;
 		},

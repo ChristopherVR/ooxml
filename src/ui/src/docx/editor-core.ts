@@ -268,6 +268,7 @@ export class EditorCore {
 			this.element.lang,
 			printLayout?.pageStatus(),
 			Boolean(review?.commentsOpen),
+			this.canEditBody() && (!this.collab.active || Boolean(this.collab.yjs?.sharedComments)),
 		);
 		if (status) chrome?.refresh(status.pageText, status.wordText);
 		this.pages.syncControls();

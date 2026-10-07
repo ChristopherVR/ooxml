@@ -8,6 +8,7 @@ export * from './comment-commands.js';
 export * from './comment-anchors.js';
 export * from './yjs-collaboration.js';
 export * from './yjs-media.js';
+export * from './yjs-comments.js';
 export * from './yjs-presence.js';
 export * from './defined.js';
 export * from './dirty-state.js';

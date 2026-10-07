@@ -14,6 +14,7 @@ export type {
 	VisioPageInsert,
 	VisioPageReorder,
 	VisioPageRename,
+	VisioPageDelete,
 	VisioPageEdit,
 } from './edit-commands.js';
 
