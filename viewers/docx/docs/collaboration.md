@@ -73,6 +73,22 @@ adopt the existing body and page/section attributes instead of overwriting them
 with a local snapshot. A mismatched document ID or room format rejects the join.
 An authority session and a Yjs session cannot control one editor simultaneously.
 
+The current shared Word schema initializes `word-yjs-v2` rooms. Each modeled
+direct property of a picture, note reference, field marker or break has an
+independent attribute over its imported property basis. Concurrent changes to
+different properties merge, including property removal; local undo retains the
+other author's changes. Same-property conflicts follow Yjs ordering. Formatting
+history still has one prior snapshot and author per run; complete concurrent
+multi-author review attribution remains unfinished.
+
+This changes room compatibility: the updated viewer rejects `word-yjs-v1`
+rooms, and v1 clients reject v2 rooms. Core consumers using legacy schemas can
+still read and edit matching v1 rooms. To upgrade a persisted room, export its
+current DOCX with the matching old client, load that package in updated clients,
+and let the designated creator initialize a new empty v2 room. Keep every
+participant on the matching schema. The binding does not rewrite a live room or
+migrate provider persistence automatically.
+
 The Yjs mode uses the stable Yjs 13 binding, `y-prosemirror` 1.3.7. Root document
 attributes have a separate mapping because the binding does not synchronize
 them. Text, formatting and tracked revision marks travel through the body
@@ -85,7 +101,7 @@ persistence; this does not coordinate simultaneous saves or prove lossless expor
 
 The Track Changes recording setting also travels through document transactions.
 Toggling it updates peers, participates in local undo/redo and exports as
-`w:trackRevisions`. Joining an older room that lacks the setting retains the
+`w:trackRevisions`. Joining a compatible room that lacks the setting retains the
 loaded package value until a participant changes it. Revision marks retain the
 editing author's name and the recording transaction's UTC timestamp. Peers
 retain those values rather than reattributing remote edits; client-supplied
@@ -122,7 +138,7 @@ other authors' operations. Export snapshots the latest shared threads even while
 the editor is detached.
 
 Rooms carry an `independent-v1` comment capability in their Word identity map.
-Older rooms without it keep their loaded comments and disable comment editing.
+Compatible rooms without it keep their loaded comments and disable comment editing.
 Create a new room from a canonical saved snapshot to upgrade; do not change the
 capability on a live room. Authority-step mode does not synchronize comment
 metadata, so its comment editing remains disabled. These client behaviors do not

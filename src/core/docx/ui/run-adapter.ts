@@ -4,6 +4,7 @@ import type { Node as ProseMirrorNode, Schema } from 'prosemirror-model';
 import { extraRunProperties } from './run-extra-mark';
 import { applyMarkFormatting, linkFromMarks } from './run-mark-properties';
 import { marksForRun } from './run-marks';
+import { inlineRunProperties } from './inline-run-properties';
 
 /** A note reference's number in document order and its label in the document's number format. */
 export type NoteNumberLookup = (
@@ -113,8 +114,7 @@ export function runToInlineNodes(
 }
 
 function applyInlineFormat(run: TextRun, child: ProseMirrorNode): void {
-	if (typeof child.attrs.format === 'string')
-		Object.assign(run, JSON.parse(child.attrs.format) as Partial<TextRun>);
+	Object.assign(run, inlineRunProperties(child));
 	// Imported atom attributes are the base; newly applied marks may explicitly turn them off.
 	// Keep text revision context when an old formatting revision rides in the extra-properties mark.
 	const marks: TextRun = { text: '', ...(run.revision ? { revision: run.revision } : {}) };

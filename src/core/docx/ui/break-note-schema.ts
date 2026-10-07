@@ -1,4 +1,5 @@
 import type { NodeSpec } from 'prosemirror-model';
+import { inlineRunFormattingAttrs, inlineRunPropertiesDomAttrs } from './inline-run-properties';
 
 /** A line break carries its own run properties through element-based collaboration mappings. */
 export const hardBreakNodeSpec: NodeSpec = {
@@ -6,7 +7,7 @@ export const hardBreakNodeSpec: NodeSpec = {
 	inline: true,
 	atom: true,
 	selectable: false,
-	attrs: { format: { default: null } },
+	attrs: { ...inlineRunFormattingAttrs, format: { default: null } },
 	leafText: () => '\n',
 	parseDOM: [
 		{
@@ -14,7 +15,7 @@ export const hardBreakNodeSpec: NodeSpec = {
 			getAttrs: (el) => ({ format: (el as HTMLElement).dataset.runProperties ?? null }),
 		},
 	],
-	toDOM: (node) => ['br', node.attrs.format ? { 'data-run-properties': node.attrs.format } : {}],
+	toDOM: (node) => ['br', inlineRunPropertiesDomAttrs(node)],
 };
 
 /** A visible, editable page or column break marker (`w:br` type page/column). */
@@ -23,7 +24,7 @@ export const pageBreakNodeSpec: NodeSpec = {
 	inline: true,
 	atom: true,
 	selectable: true,
-	attrs: { kind: { default: 'page' }, format: { default: null } },
+	attrs: { ...inlineRunFormattingAttrs, kind: { default: 'page' }, format: { default: null } },
 	leafText: () => '',
 	parseDOM: [
 		{
@@ -40,7 +41,7 @@ export const pageBreakNodeSpec: NodeSpec = {
 			class: 'dve-break-marker',
 			'data-docx-break': node.attrs.kind,
 			contenteditable: 'false',
-			...(node.attrs.format ? { 'data-run-properties': node.attrs.format } : {}),
+			...inlineRunPropertiesDomAttrs(node),
 		},
 		node.attrs.kind === 'column' ? 'Column Break' : 'Page Break',
 	],
@@ -53,6 +54,7 @@ export const noteReferenceNodeSpec: NodeSpec = {
 	atom: true,
 	selectable: false,
 	attrs: {
+		...inlineRunFormattingAttrs,
 		kind: { default: 'footnote' },
 		id: { default: '' },
 		number: { default: 1 },
@@ -66,8 +68,10 @@ export const noteReferenceNodeSpec: NodeSpec = {
 	parseDOM: [
 		{
 			tag: 'sup[data-docx-note-kind]',
+			priority: 60,
 			getAttrs: (el) => ({
 				kind: (el as HTMLElement).dataset.docxNoteKind === 'endnote' ? 'endnote' : 'footnote',
+				format: (el as HTMLElement).dataset.runProperties ?? null,
 				id: (el as HTMLElement).dataset.docxNoteId || '',
 				number: Number((el as HTMLElement).textContent) || 1,
 			}),
@@ -79,6 +83,7 @@ export const noteReferenceNodeSpec: NodeSpec = {
 			class: 'dve-note-reference',
 			'data-docx-note-kind': node.attrs.kind,
 			'data-docx-note-id': node.attrs.id,
+			...inlineRunPropertiesDomAttrs(node),
 			contenteditable: 'false',
 		},
 		String(node.attrs.label ?? node.attrs.number),
@@ -94,13 +99,19 @@ export const fieldMarkerNodeSpec: NodeSpec = {
 	inline: true,
 	atom: true,
 	selectable: false,
-	attrs: { kind: { default: 'begin' }, code: { default: null }, format: { default: null } },
+	attrs: {
+		...inlineRunFormattingAttrs,
+		kind: { default: 'begin' },
+		code: { default: null },
+		format: { default: null },
+	},
 	leafText: () => '',
 	parseDOM: [
 		{
 			tag: 'span[data-field-marker]',
 			getAttrs: (el) => ({
 				kind: (el as HTMLElement).dataset.fieldMarker || 'begin',
+				format: (el as HTMLElement).dataset.runProperties ?? null,
 				code: (el as HTMLElement).dataset.fieldCode ?? null,
 			}),
 		},
@@ -110,6 +121,7 @@ export const fieldMarkerNodeSpec: NodeSpec = {
 		{
 			class: 'dve-field-marker',
 			'data-field-marker': node.attrs.kind,
+			...inlineRunPropertiesDomAttrs(node),
 			...(node.attrs.code != null ? { 'data-field-code': node.attrs.code } : {}),
 			contenteditable: 'false',
 		},

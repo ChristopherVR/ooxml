@@ -56,6 +56,43 @@ function bind(
 }
 
 describe('Word room bootstrap', () => {
+	it('rejects incompatible inline property codecs before exposing a document', () => {
+		const modern = new Schema({
+			nodes: {
+				doc: { content: 'paragraph+' },
+				paragraph: { content: 'inline*' },
+				text: { group: 'inline' },
+				hardBreak: hardBreakNodeSpec,
+			},
+		});
+		const initial = modern.node('doc', null, modern.node('paragraph'));
+		const [a, b] = pair();
+		const creator = bind(a!, initial, true);
+		expect(a!.doc.getMap('docx:identity').get('format')).toBe('word-yjs-v2');
+		expect(() => bind(b!, schema.node('doc', null, schema.node('paragraph')))).toThrow(
+			/Unsupported Word collaboration room format/,
+		);
+		expect(() => creator.state(schema)).toThrow(/Unsupported Word collaboration schema/);
+		expect(creator.state(modern).doc.toJSON()).toEqual(initial.toJSON());
+	});
+	it('keeps legacy rooms readable with their matching schema and rejects a v2 writer', () => {
+		const [a, b] = pair();
+		const initial = schema.node('doc', null, schema.node('paragraph'));
+		bind(a!, initial, true);
+		expect(a!.doc.getMap('docx:identity').get('format')).toBe('word-yjs-v1');
+		const modern = new Schema({
+			nodes: {
+				doc: { content: 'paragraph+' },
+				paragraph: { content: 'inline*' },
+				text: { group: 'inline' },
+				hardBreak: hardBreakNodeSpec,
+			},
+		});
+		expect(() => bind(b!, modern.node('doc', null, modern.node('paragraph')))).toThrow(
+			/Unsupported Word collaboration room format/,
+		);
+		expect(bind(b!, initial).state(schema).doc.toJSON()).toEqual(initial.toJSON());
+	});
 	it('retains hard-break run properties and formatting history when another peer joins', () => {
 		const inlineSchema = new Schema({
 			nodes: {

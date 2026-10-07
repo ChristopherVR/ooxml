@@ -1,12 +1,14 @@
 import type { Node } from 'prosemirror-model';
 import type { Transform } from 'prosemirror-transform';
 import { inlineNodeRun, runToInlineNodes } from './run-adapter';
+import { updatedInlineRunAttributes } from './inline-run-properties';
 
 /** Text marks on line-break elements must be stored as run attributes before Yjs sees them. */
 export function canonicalHardBreak(node: Node): Node {
-	return node.type.name === 'hardBreak' && node.type.spec.attrs?.format
-		? runToInlineNodes(inlineNodeRun(node)!, node.type.schema)[0]!
-		: node;
+	if (node.type.name !== 'hardBreak' || !node.type.spec.attrs?.format || !node.marks.length)
+		return node;
+	const projected = runToInlineNodes(inlineNodeRun(node)!, node.type.schema)[0]!;
+	return node.type.create(updatedInlineRunAttributes(node, projected.attrs.format));
 }
 
 export function canonicalizeHardBreaks(tr: Transform, from: number, to: number): void {

@@ -1,4 +1,5 @@
 import type { DOMOutputSpec, NodeSpec, MarkSpec } from 'prosemirror-model';
+import { inlineRunFormattingAttrs, inlineRunPropertiesDomAttrs } from './inline-run-properties';
 
 const safeAttrValue = (value: unknown): string => String(value ?? '').replace(/[;{}"]/g, '');
 
@@ -52,6 +53,7 @@ export const imageNodeSpec: NodeSpec = {
 	atom: true,
 	selectable: true,
 	attrs: {
+		...inlineRunFormattingAttrs,
 		format: { default: null },
 		relId: { default: '' },
 		partName: { default: '' },
@@ -97,7 +99,7 @@ export const imageNodeSpec: NodeSpec = {
 					'span',
 					{
 						'data-docx-image-placeholder': '1',
-						...(node.attrs.format ? { 'data-run-properties': node.attrs.format } : {}),
+						...inlineRunPropertiesDomAttrs(node),
 						...(node.attrs.diagram ? { 'data-docx-smartart': '1' } : {}),
 						class: 'dve-image-placeholder',
 						style: `width:${node.attrs.widthPx}px;height:${node.attrs.heightPx}px`,
@@ -109,7 +111,7 @@ export const imageNodeSpec: NodeSpec = {
 					'img',
 					{
 						'data-docx-image': '1',
-						...(node.attrs.format ? { 'data-run-properties': node.attrs.format } : {}),
+						...inlineRunPropertiesDomAttrs(node),
 						'data-rel-id': node.attrs.relId,
 						'data-part-name': node.attrs.partName,
 						'data-content-type': node.attrs.contentType,

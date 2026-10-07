@@ -6,6 +6,7 @@ import { WordYjsMedia } from './yjs-media';
 import type { Comment, PendingMediaPart } from '../model';
 import { WordYjsComments } from './yjs-comments';
 import { commentIdsFromMarks } from './comment-anchors';
+import { wordInlinePropertyCodec } from './inline-run-properties';
 import type { EditorView } from 'prosemirror-view';
 import {
 	initProseMirrorDoc,
@@ -42,6 +43,7 @@ export class WordYjsCollaboration {
 	readonly sharedComments: boolean;
 	private readonly attributes: Y.Map<unknown>;
 	private readonly sourceAttributes: Node['attrs'];
+	private readonly roomFormat: ReturnType<typeof wordInlinePropertyCodec>;
 	private readonly undoManager: Y.UndoManager;
 	private destroyed = false;
 	private readonly selectionKey = Symbol('word-undo-selection');
@@ -70,6 +72,8 @@ export class WordYjsCollaboration {
 		this.attributes = session.doc.getMap('docx:attributes');
 		this.sourceAttributes = initial.attrs;
 		const identity = session.doc.getMap<string>('docx:identity');
+		const format = wordInlinePropertyCodec(initial.type.schema);
+		this.roomFormat = format;
 		this.comments = new WordYjsComments(
 			session,
 			() => !this.destroyed && this.sharedComments,
@@ -82,7 +86,7 @@ export class WordYjsCollaboration {
 			session.doc.transact(() => {
 				for (const [name, part] of options.initialMedia ?? []) this.media.publish(name, part);
 				identity.set('documentId', options.documentId);
-				identity.set('format', 'word-yjs-v1');
+				identity.set('format', format);
 				identity.set('comments', 'independent-v1');
 				for (const comment of options.initialComments ?? []) {
 					this.comments.records.set(comment.id, { ...comment });
@@ -95,7 +99,7 @@ export class WordYjsCollaboration {
 			}, this);
 		} else if (identity.get('documentId') !== options.documentId) {
 			throw new Error('Load the matching source package before joining this Word room.');
-		} else if (identity.get('format') !== 'word-yjs-v1') {
+		} else if (identity.get('format') !== format) {
 			throw new Error('Unsupported Word collaboration room format.');
 		}
 		this.sharedComments = identity.get('comments') === 'independent-v1';
@@ -119,6 +123,8 @@ export class WordYjsCollaboration {
 	/** Fresh plugins per live view; the Y.Doc and local undo history survive view teardown. */
 	state(schema: Schema, options: WordYjsViewOptions = {}): { doc: Node; plugins: Plugin[] } {
 		if (this.destroyed) throw new Error('The Word Yjs binding has been destroyed.');
+		if (wordInlinePropertyCodec(schema) !== this.roomFormat)
+			throw new Error('Unsupported Word collaboration schema for this room format.');
 		const { doc, mapping } = initProseMirrorDoc(this.fragment, schema);
 		return {
 			doc: schema.topNodeType.create(

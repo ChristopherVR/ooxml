@@ -404,8 +404,18 @@ exports match their native references; Word reopens fifteen exports and native
 Reject All restores baseline stories and properties. Font-dialog peer tests
 verify shared attribution, atomic undo and resolution. Browser tests cover the
 dialog and export across the six bindings. Formatting general shapes and OMML,
-concurrent property edits on the same atom, and current M365 certification remain
+concurrent review attribution on the same atom, and current M365 certification remain
 unfinished.
+
+Independent direct properties on the same inline atom now merge through Yjs,
+including removals, without replacing the full imported property JSON. Local
+undo retains the other author's properties. The shared schema uses v2 rooms;
+codec guards reject mismatched schemas and rooms, while matching legacy schemas
+retain v1 support. Migration requires export with the old client and initialization
+of a new room; provider persistence is not rewritten. DOM serialization retains
+effective properties and note/field metadata. Eight disconnected-peer tests,
+five DOM round trips and native export/rejection checks cover this change.
+Concurrent review attribution still needs implementation.
 
 Paragraphs now carry their complete source property basis through editor and
 Yjs conversion. Rejection preserves current paragraph-mark and section properties

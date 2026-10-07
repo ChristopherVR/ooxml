@@ -1183,3 +1183,20 @@ The 1,200 RGBA points are in
 `src/core/chart/__fixtures__/native-gradient-circle-shape-profiles.json`.
 Shape captures use chart-area rectangles; arbitrary outlines and series mark
 bounds are outside this extraction's verified scope.
+
+## Independent Word inline property mapping
+
+Source: ChristopherVR/ooxml at `469c0d4b8`, the shared Word inline schemas,
+run adapter and formatting/history commands in `src/core/docx/ui`.
+`inline-run-properties.ts` adds independent direct-property overrides over the
+existing imported JSON basis. It reuses `DIRECT_RUN_PROPERTY_KEYS` and the
+ordinary run adapter/writer; source properties and metadata retain their
+existing representation. No Yjs or y-prosemirror implementation was forked.
+Eight disconnected-peer regressions retain independent edits and removals and
+isolate author undo. DOM regressions serialize effective properties, including
+note and field metadata; the note node rule now precedes generic superscript.
+The current schema uses v2 rooms, with explicit rejection of incompatible
+schemas and legacy v1 support through matching legacy schemas. Existing native
+advanced references still match thirty reopened export and native Reject All
+checks. Concurrent review authorship and provider persistence migration remain
+unfinished.

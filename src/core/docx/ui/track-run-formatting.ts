@@ -8,6 +8,7 @@ import { buildXml, first, makeW, parseXml, WORD_NS, type XmlElement } from '../x
 import { parseRunPropertiesSnapshot } from '../restore-run-format';
 import { inlineNodeRun } from './run-adapter';
 import { formattingRevision } from './review-formatting';
+import { RUN_PROPERTY_ATTRIBUTES } from './inline-run-properties';
 import {
 	RUN_FORMAT_MARKS as TRACKED_MARKS,
 	setInlineRunFormatting,
@@ -44,7 +45,8 @@ export function trackRunFormatting(
 			(step) =>
 				((step instanceof AddMarkStep || step instanceof RemoveMarkStep) &&
 					TRACKED_MARKS.has(step.mark.type.name)) ||
-				(step instanceof AttrStep && step.attr === 'format'),
+				(step instanceof AttrStep &&
+					(step.attr === 'format' || RUN_PROPERTY_ATTRIBUTES.has(step.attr))),
 		)
 	)
 		return null;
