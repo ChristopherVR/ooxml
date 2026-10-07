@@ -73,20 +73,23 @@ function parseCell(
 
 function parseLook(element: XmlElement | undefined): TableLook | undefined {
 	if (!element) return undefined;
-	const flag = (name: string) => onOffAttribute(element, name);
+	const flags = [
+		['firstRow', 0x0020],
+		['lastRow', 0x0040],
+		['firstColumn', 0x0080],
+		['lastColumn', 0x0100],
+		['noHBand', 0x0200],
+		['noVBand', 0x0400],
+	] as const;
+	// Word reads the transitional bitmask only when none of the named flags are present.
+	const namedFlags = flags.some(([name]) => getW(element, name) !== undefined);
+	const raw = getW(element, 'val');
+	const packed = !namedFlags && raw && /^[0-9a-f]{4}$/i.test(raw) ? parseInt(raw, 16) : undefined;
 	const look: TableLook = {};
-	const firstRow = flag('firstRow');
-	const lastRow = flag('lastRow');
-	const firstColumn = flag('firstColumn');
-	const lastColumn = flag('lastColumn');
-	const noHBand = flag('noHBand');
-	const noVBand = flag('noVBand');
-	if (firstRow !== undefined) look.firstRow = firstRow;
-	if (lastRow !== undefined) look.lastRow = lastRow;
-	if (firstColumn !== undefined) look.firstColumn = firstColumn;
-	if (lastColumn !== undefined) look.lastColumn = lastColumn;
-	if (noHBand !== undefined) look.noHBand = noHBand;
-	if (noVBand !== undefined) look.noVBand = noVBand;
+	for (const [name, bit] of flags) {
+		const value = packed === undefined ? onOffAttribute(element, name) : (packed & bit) !== 0;
+		if (value !== undefined) look[name] = value;
+	}
 	return Object.keys(look).length ? look : undefined;
 }
 
