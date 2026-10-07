@@ -5,6 +5,7 @@ import type { DifferentialStyle, Hyperlink, Worksheet } from '../model.js';
 import { createWorksheet } from '../workbook.js';
 import { mergeComments, parseLegacyComments, parseThreadedComments } from './comments.js';
 import { readConditionalFormats, readDataValidations } from './conditional.js';
+import { readConditionalExtensions } from '../conditional-extensions.js';
 import { parseDrawing } from './drawing.js';
 import type { SourceIndex } from './package.js';
 import { readSheetData, type CellContext } from './sheet-data.js';
@@ -175,6 +176,7 @@ export function parseWorksheet(
 		ctx.warn(m),
 	);
 	sheet.dataValidations = readDataValidations(byName.get('dataValidations'));
+	readConditionalExtensions(sheet);
 	sheet.hyperlinks = readHyperlinks(ctx, partName, byName.get('hyperlinks'));
 	const page = readPageSetup(
 		byName.get('pageMargins'),

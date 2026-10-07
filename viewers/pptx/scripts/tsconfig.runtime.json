@@ -1,0 +1,9 @@
+{
+	// Bun tooling imports UI source, whose compiler aliases target declarations.
+	// Override those aliases so runtime imports use the built package exports.
+	"compilerOptions": {
+		"target": "ES2022",
+		"module": "ESNext",
+		"moduleResolution": "Bundler"
+	}
+}

@@ -275,6 +275,37 @@ tests passed. Core/UI/viewer typechecks, builds, published-import guards and cle
 smoke checks passed. The color-scale regression compares eight native colors from a repeated Formats
 paste, proving that destination color-scale statistics span the entire pasted selection.
 
+## Advanced data-bar preservation follow-up
+
+Linked x14 data-bar rule XML now belongs to its base rule in the XLSX model, rather than the
+worksheet's unrelated preserved XML. Copy snapshots retain gradient/solid settings, direction,
+axis configuration, positive and negative borders/colors, automatic limits and unknown rule fields.
+Copies receive independent Office GUIDs. Range clipping, splitting, tiling, clearing and cut now
+regenerate extension coverage from the modeled rule, avoiding stale or orphan records. The existing
+formula traversal also visits extension threshold formulas. Numeric/formula threshold edits update
+both representations when saving; untouched automatic limits retain their extension types.
+
+This uses the shared XML model and serializer. PowerPoint's GUID generator and its four regression
+tests moved into `crypto/uuid`; PowerPoint retains its existing API and XLSX reuses the helper,
+including older-runtime fallbacks. `PROVENANCE.md` records the extraction.
+
+`scripts/record-xlsx-databar-clipboard.ps1` reproduces 25 Excel 16.0 build 20430 cases as before/after
+worksheet XML. Tests compare complete linked rule settings across All/Formats, transpose, clipped
+sources, three appearance variants and automatic limits, then save/reload and undo/redo. Additional regressions cover
+unknown fields, unrelated extensions, clearing, structural formula rewrites and cross-workbook/cut
+copies. Excel accepted and saved three library-authored copied-rule workbooks, retaining all
+applicable measured properties. It also accepted changed numeric limits in a separate edit probe.
+
+These settings are preserved, but advanced data-bar rendering and their dedicated editor controls
+remain incomplete. The opaque rule record is not yet a complete typed appearance model. Other x14
+rule types and native clipboard interchange remain open. The extension's available fields are
+documented in [Microsoft's x14 data-bar reference](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.office2010.excel.databar?view=openxml-3.0.1).
+
+Verification: the full core XLSX suite passed 5,327 tests; all 29 data-bar regressions passed with
+the additional automatic-limit case. The 12 shared GUID/PowerPoint identity tests, 312 XLSX UI tests,
+47 binding tests and 12 clipboard/file browser tests passed. Core (strict and PowerPoint), UI and
+viewer typechecks, core builds, published-import guards and packed-consumer smoke checks passed.
+
 ## Evidence required for parity
 
 Track reading, display, editing, calculation and writing separately for each feature. A retained

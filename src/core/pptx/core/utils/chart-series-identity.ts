@@ -1,3 +1,4 @@
+import { createOfficeGuid as generateChartUniqueId } from '../../../crypto/uuid.js';
 /**
  * chart-series-identity.ts: `c16:uniqueId` (CT_UniqueId, the Office 2014+
  * `{C3380CC4-5D6E-409C-BE32-E72D297353CC}` chart extension), the GUID
@@ -43,51 +44,7 @@ export function parseChartUniqueId(
 	return typeof val === 'string' && val.length > 0 ? val : undefined;
 }
 
-/**
- * Fill `length` bytes of randomness. Prefers the Web Crypto CSPRNG
- * (`crypto.getRandomValues`, available in every browser and server runtime
- * this project targets, including runtimes too old for `crypto.randomUUID`);
- * `Math.random` is used only as a last resort when `crypto` itself is
- * entirely absent, so `generateChartUniqueId` can keep its documented
- * guarantee of never throwing.
- */
-function randomBytes(length: number): Uint8Array {
-	const cryptoObj = typeof crypto === 'undefined' ? undefined : crypto;
-	if (cryptoObj && typeof cryptoObj.getRandomValues === 'function') {
-		return cryptoObj.getRandomValues(new Uint8Array(length));
-	}
-	const bytes = new Uint8Array(length);
-	for (let i = 0; i < length; i++) {
-		bytes[i] = Math.floor(Math.random() * 256);
-	}
-	return bytes;
-}
-
-function randomHex(length: number): string {
-	const bytes = randomBytes(Math.ceil(length / 2));
-	let out = '';
-	for (const b of bytes) {
-		out += b.toString(16).padStart(2, '0');
-	}
-	return out.slice(0, length);
-}
-
-/**
- * Generate a fresh GUID in the `{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}` form
- * `c16:uniqueId/@val` uses. Prefers `crypto.randomUUID` (available in every
- * runtime this package targets); falls back to a `randomBytes`-backed manual
- * v4-shaped generator so this never throws in an environment without
- * `crypto.randomUUID`.
- */
-export function generateChartUniqueId(): string {
-	const cryptoObj = typeof crypto === 'undefined' ? undefined : crypto;
-	const variantNibble = (8 + (randomBytes(1)[0] % 4)).toString(16);
-	const uuid =
-		cryptoObj && typeof cryptoObj.randomUUID === 'function'
-			? cryptoObj.randomUUID()
-			: `${randomHex(8)}-${randomHex(4)}-4${randomHex(3)}-${variantNibble}${randomHex(3)}-${randomHex(12)}`;
-	return `{${uuid.toUpperCase()}}`;
-}
+export { generateChartUniqueId };
 
 /** Build a fresh `c:extLst` singleton wrapping one `c16:uniqueId`, for a brand-new `c:ser`/`c:dPt`. */
 export function buildChartUniqueIdExtLst(uniqueId: string): XmlObject {

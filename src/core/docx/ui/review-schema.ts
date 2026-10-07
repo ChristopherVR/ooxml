@@ -95,6 +95,8 @@ export const reviewMarks = {
 		],
 	},
 	comment: {
+		// Independent overlapping marks let Yjs merge coauthors' comment anchors.
+		excludes: '',
 		attrs: { ids: { default: [] } },
 		parseDOM: [
 			{

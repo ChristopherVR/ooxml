@@ -1,6 +1,6 @@
 /**
  * Regenerates the Design > Variants > Colors / Fonts catalogues
- * (packages/shared/src/render/ribbon-galleries/theme-*-schemes-data.ts) from
+ * (src/ui/src/pptx/render/ribbon-galleries/theme-*-schemes-data.ts) from
  * the scheme files Office installs:
  *
  *   C:\Program Files\Microsoft Office\root\Document Themes 16\Theme Colors\*.xml
@@ -18,15 +18,7 @@ import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const root = process.argv[2] ?? 'C:\\Program Files\\Microsoft Office\\root\\Document Themes 16';
-const outDir = join(
-	import.meta.dir,
-	'..',
-	'packages',
-	'shared',
-	'src',
-	'render',
-	'ribbon-galleries',
-);
+const outDir = join(import.meta.dir, '../../../src/ui/src/pptx/render/ribbon-galleries');
 
 const SLOTS = [
 	'dk1',

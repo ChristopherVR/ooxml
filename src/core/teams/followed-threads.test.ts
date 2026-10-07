@@ -27,6 +27,35 @@ function message(id: string, ts: number, replyTo?: string): Message {
 }
 
 describe('personal followed threads', () => {
+	it('tracks foreign unread messages independently and persists explicit unread marks', () => {
+		const values = new Map<string, string>();
+		const storage = {
+			getItem: (key: string) => values.get(key) ?? null,
+			setItem: (key: string, value: string) => {
+				values.set(key, value);
+			},
+		};
+		const follows = createThreadFollows(storage, 'ada');
+		follows.set(channel.id, 'root', true);
+		const messages = [
+			message('root', 1),
+			{ ...message('reply', 2, 'root'), authorId: 'bob' },
+			{ ...message('deleted', 3, 'root'), authorId: 'bob', deleted: true },
+		];
+		expect(follows.view([channel], () => messages, 'ada')[0]?.unread).toBe(1);
+		expect(follows.mark(channel.id, 'root', 3, false)).toBe(true);
+		expect(follows.view([channel], () => messages, 'ada')[0]?.unread).toBe(0);
+		expect(follows.mark(channel.id, 'root', 3, false)).toBe(false);
+		messages.push({ ...message('new', 4, 'root'), authorId: 'bob' });
+		expect(follows.view([channel], () => messages, 'ada')[0]?.unread).toBe(1);
+		follows.mark(channel.id, 'root', 4, false);
+		follows.mark(channel.id, 'root', 0, true);
+		expect(follows.view([channel], () => messages, 'ada')[0]?.unread).toBe(1);
+		expect(
+			createThreadFollows(storage, 'ada').view([channel], () => [message('root', 1)], 'ada')[0]
+				?.unread,
+		).toBe(1);
+	});
 	it('persists references, derives live counts and orders by activity', () => {
 		const values = new Map<string, string>();
 		const storage = {

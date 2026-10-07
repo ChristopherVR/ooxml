@@ -1,4 +1,5 @@
 import type { ConditionalRule } from '../model.js';
+import { rewriteConditionalExtension } from '../conditional-extensions.js';
 
 /** Visits modeled rule formulas, including formula-valued visual thresholds. */
 export function rewriteConditionalRule(
@@ -20,4 +21,5 @@ export function rewriteConditionalRule(
 	if (rule.type === 'dataBar')
 		for (const threshold of [rule.min, rule.max])
 			if (threshold.type === 'formula' && threshold.value) threshold.value = safe(threshold.value);
+	if (rule.type === 'dataBar') rewriteConditionalExtension(rule, safe);
 }

@@ -58,7 +58,7 @@ own `AGENTS.md` (`viewers/<name>/AGENTS.md`, read it before working there) has t
   does not open.
 - **Office logic goes to the core, view behaviour to the viewer's shared layer.** Document, chart,
   colour, geometry and text algorithms belong in `src/core/<area>/`. Decisions every binding needs
-  belong in the viewer's framework-free layer (for pptx, `viewers/pptx/packages/shared/src/render/`) as a
+  belong in the viewer's framework-free layer (for pptx, `src/ui/src/pptx/render/`) as a
   pure function returning a descriptor the binding only maps onto its template. Making the same edit
   in more than one binding, or finding a framework-free helper inside a binding, is the signal to
   extract it.

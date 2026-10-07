@@ -13,6 +13,8 @@ import { DocxEditorElement } from './index';
 import './index';
 import { editorBindings } from './editor-commands';
 import { insertPicture } from './picture-commands';
+import { TextSelection } from 'prosemirror-state';
+import { addComment, commentIdsAtSelection } from './comment-commands';
 
 const sessions: CollabSession[] = [];
 const editors: DocxEditorElement[] = [];
@@ -55,6 +57,34 @@ function start(
 }
 
 describe('Word Yjs collaboration', () => {
+	it('merges concurrent overlapping anchors and undoes only the local comment mark', () => {
+		let deliver = true;
+		const peers = pair(false, () => deliver);
+		const a = mount();
+		const b = mount();
+		a.documentModel = {
+			...createDocument(),
+			blocks: [{ type: 'paragraph', id: 'p', runs: [{ text: 'Shared text' }] }],
+		};
+		b.documentModel = a.documentModel!;
+		start(a, b, peers);
+		deliver = false;
+		for (const [index, editor] of [a, b].entries()) {
+			const view = viewOf(editor);
+			view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, 1, 7)));
+			addComment(view, index ? 'Bob' : 'Ada', 'Note', () => (index ? 'c2' : 'c1'));
+		}
+		deliver = true;
+		a.resyncCollaboration();
+		for (const editor of [a, b])
+			expect(commentIdsAtSelection(viewOf(editor))).toEqual(['c1', 'c2']);
+		expect(viewOf(a).state.doc.toJSON()).toEqual(viewOf(b).state.doc.toJSON());
+		const model = a.documentModel!;
+		if (model.blocks[0]!.type !== 'paragraph') throw new Error('Expected paragraph');
+		expect(model.blocks[0]!.runs[0]!.commentIds).toEqual(['c1', 'c2']);
+		expect(editorBindings['Mod-z']!(viewOf(a).state, viewOf(a).dispatch, viewOf(a))).toBe(true);
+		for (const editor of [a, b]) expect(commentIdsAtSelection(viewOf(editor))).toEqual(['c2']);
+	});
 	it('converges after a partition and undoes only the local author', () => {
 		let deliver = true;
 		const peers = pair(false, () => deliver);

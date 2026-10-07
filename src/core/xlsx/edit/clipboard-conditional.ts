@@ -5,6 +5,7 @@ import { rewriteConditionalRule } from './conditional-formulas.js';
 import { rulesByPriority, renumber } from './conditional-formats.js';
 import { moveValidationFormula } from './validation-ranges.js';
 import { subtractRange } from './range-math.js';
+import { createOfficeGuid } from '../../crypto/uuid.js';
 
 /** Rebase relative formulas when clipping or splitting changes a rule's first range. */
 export function rebaseConditionalFormat(
@@ -71,8 +72,12 @@ export function pasteConditionalFormats(
 	});
 	const copied = cells.conditionalFormats.map((format) => {
 		const next = structuredClone(format);
-		// Preserved x14 records belong to the original rule; a new base rule must not share its ID.
-		for (const rule of next.rules) if (rule.type === 'dataBar') delete rule.extensionId;
+		// Copies need independent identities for their linked x14 settings.
+		for (const rule of next.rules)
+			if (rule.type === 'dataBar') {
+				if (rule.extensionXml) rule.extensionId = createOfficeGuid();
+				else delete rule.extensionId;
+			}
 		const height = transpose ? cells.cols : cells.rows;
 		const width = transpose ? cells.rows : cells.cols;
 		next.ranges = format.ranges.flatMap((r) => {
