@@ -7,6 +7,7 @@ import {
 } from 'ooxml-core/visio/ui';
 import type { ViewerController, ViewerState } from './controller';
 import { pagePoint } from './viewer-draw-tool';
+import { handleGestureIsCurrent, wireHandleEvents } from './viewer-handle-events';
 
 const SVG = 'http://www.w3.org/2000/svg';
 const pointOptions = { snap: false, bounded: false } as const;
@@ -26,7 +27,6 @@ export class ViewerLineEndpoints {
 				startY: number;
 		  }
 		| undefined;
-	#suppressClick = false;
 	#request = 0;
 	constructor(
 		private readonly viewport: HTMLElement,
@@ -36,16 +36,7 @@ export class ViewerLineEndpoints {
 	render(state: ViewerState): void {
 		const page = state.document?.pages[state.pageIndex];
 		if (this.#drag) {
-			if (
-				state.document === this.#drag.document &&
-				page === this.#drag.page &&
-				state.selectedShape?.id === this.#drag.shapeId &&
-				this.#drag.svg.isConnected &&
-				!state.loading &&
-				!state.edit.busy &&
-				this.options.active()
-			)
-				return;
+			if (handleGestureIsCurrent(this.#drag, state, this.options.active())) return;
 			this.#cancel();
 		}
 		for (const overlay of this.viewport.querySelectorAll('[data-line-endpoint-overlay]'))
@@ -101,55 +92,21 @@ export class ViewerLineEndpoints {
 		svg.append(overlay);
 	}
 	wire(): () => void {
-		const Abort = this.viewport.ownerDocument.defaultView?.AbortController ?? AbortController;
-		const events = new Abort();
-		const options = { signal: events.signal, capture: true };
-		this.viewport.addEventListener('pointerdown', (event) => this.#start(event), options);
-		this.viewport.addEventListener('pointermove', (event) => this.#move(event), options);
-		this.viewport.addEventListener('pointerup', (event) => void this.#finish(event), options);
-		this.viewport.addEventListener(
-			'pointercancel',
-			(event) => {
-				if (event.pointerId === this.#drag?.pointer) this.#cancel();
-			},
-			options,
-		);
-		this.viewport.addEventListener(
-			'lostpointercapture',
-			(event) => {
-				if (event.pointerId === this.#drag?.pointer) this.#cancel();
-			},
-			options,
-		);
-		this.viewport.addEventListener(
-			'keydown',
-			(event) => {
-				if (event.key === 'Escape' && this.#drag) {
-					event.preventDefault();
-					event.stopImmediatePropagation();
-					this.#cancel();
-				}
-			},
-			options,
-		);
-		this.viewport.addEventListener(
-			'click',
-			(event) => {
-				if (this.#suppressClick) {
-					this.#suppressClick = false;
-					event.stopImmediatePropagation();
-				}
-			},
-			options,
-		);
+		const dispose = wireHandleEvents(this.viewport, {
+			pointer: () => this.#drag?.pointer,
+			start: (event) => this.#start(event),
+			move: (event) => this.#move(event),
+			finish: (event) => this.#finish(event),
+			cancel: () => this.#cancel(),
+		});
 		return () => {
 			++this.#request;
-			this.#cancel();
-			events.abort();
+			dispose();
 			for (const overlay of this.viewport.querySelectorAll('[data-line-endpoint-overlay]'))
 				overlay.remove();
 		};
 	}
+
 	#start(event: PointerEvent): void {
 		const handle = (event.target as Element)?.closest?.<SVGCircleElement>('[data-line-endpoint]');
 		const state = this.controller.state,
@@ -231,7 +188,6 @@ export class ViewerLineEndpoints {
 		event.stopImmediatePropagation();
 		const point = pagePoint(drag.svg, drag.page, event, pointOptions);
 		this.#cancel();
-		this.#suppressClick = true;
 		if (
 			!point ||
 			Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) < 0.5 ||

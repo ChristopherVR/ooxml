@@ -81,3 +81,6 @@ export { at } from './indexed';
 export * from './svg-path-flatten';
 export * from './snap-guides';
 export * from './align-distribute';
+
+export * from './rotation-drag';
+export * from './rotate-handle-placement';

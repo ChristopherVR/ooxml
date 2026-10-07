@@ -71,6 +71,12 @@ export function normalizeVisioPageGeometry(
 		shape.width = distance(shape.width, ratio);
 		shape.height = distance(shape.height, ratio);
 		shape.transform = matrix(shape.transform, ratio);
+		if (shape.rotation)
+			shape.rotation = {
+				...shape.rotation,
+				pinX: distance(shape.rotation.pinX, ratio),
+				pinY: distance(shape.rotation.pinY, ratio),
+			};
 		for (const geometry of shape.geometry) {
 			check();
 			geometry.path = scaleVisioGeometryPath(geometry.path, ratio);

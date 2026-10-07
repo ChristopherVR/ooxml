@@ -1755,3 +1755,32 @@ rotation, formulas that intentionally move the pin, other angles/scales,
 text and gradient paint, exact pixels and native Office reopen acceptance
 remain unverified. All fresh owned invisible instances quit; the existing
 user Visio instance remained untouched.
+
+## Native pointer rotation about the saved pin
+
+The shared native recorder now saves `rotation-source.vsdx` before assigning
+Angle and supports `-OffCentrePin`. Capture
+`visio-line-movement-ebd3ce4c0c3643a89ae8b25f783d9e73` sets LocPinX to one quarter
+of Width and LocPinY to three quarters of Height, then rotates both local
+rectangle and ellipse by -30 degrees. The four previous captures provide
+30, -45, 90 and 210 degree targets at ratios 1, 2, 0.5 and 3.
+
+The parser retains source PinX/PinY/Angle through its existing transform reader
+and page scaling. The browser never derives the rotation pin from a bounding
+box centre. PowerPoint's DOM-free anchored rotation and viewport handle
+placement move into shared core geometry, keeping PowerPoint's normalized
+angle contract and adding opt-in signed turns. Visio's existing endpoint
+capture/cancellation lifecycle is shared by both handle kinds. A viewport SVG
+keeps an off-paper handle interactive without changing paper clipping, and
+scroll/resize repositions the handle. Preview does not mutate source/history;
+release submits one existing rotate-shape transaction.
+
+Browser comparisons use real pointer arcs with an off-centre grip, cancel the
+first gesture through Escape, then exercise rotation, undo/redo, export and
+reload. The saved angle matches delivered pointer coordinates to twelve
+decimals. Chromium's pointer coordinates introduce small native-target angular
+error, bounded below 0.000002 radians; transform bounds account for that error
+and shape size. Geometry and effective styles match native targets exactly.
+This does not prove that native Visio uses the same gesture, snapping, handle
+placement or preview paint. Group/master/glued/1D rotation, exact contour
+pixels, text/gradient paint and Microsoft Visio reopen remain open.

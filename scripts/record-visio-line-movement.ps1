@@ -9,6 +9,7 @@ param(
  [switch]$IncludeRectangle,
  [switch]$IncludeEllipse,
  [ValidateRange(-360000,360000)][double]$RotationDegrees=0,
+ [switch]$OffCentrePin,
  [switch]$CustomDefaults
 )
 # Capture endpoint translation without replacing native transform formulas.
@@ -136,6 +137,12 @@ try {
  if($rectangleEvidence){$evidence.Add('rectangle',$rectangleEvidence)}
  if($ellipseEvidence){$evidence.Add('ellipse',$ellipseEvidence)}
  if($RotationDegrees -ne 0){
+  if($OffCentrePin){
+   foreach($shape in @($rectangle,$ellipse)){
+    if($shape){$shape.CellsU('LocPinX').ResultIU=$shape.CellsU('Width').ResultIU*0.25;$shape.CellsU('LocPinY').ResultIU=$shape.CellsU('Height').ResultIU*0.75}
+   }
+  }
+  $document.SaveAs((Join-Path $directory 'rotation-source.vsdx')) | Out-Null
   $rotated=[ordered]@{}
   foreach($entry in @(@('rectangle',$rectangle),@('ellipse',$ellipse))){
    if($entry[1]){

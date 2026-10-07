@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { computeRotation } from './element-interaction';
-import { createRotationDrag } from './rotation-drag';
+import { computeRotation, createRotationDrag } from './rotation-drag';
 
 const center = { x: 50, y: 50 };
 const point = (degrees: number) => ({
@@ -42,4 +41,13 @@ describe('createRotationDrag', () => {
 		expect(computeRotation(center, point(20))).toBeCloseTo(20);
 		expect(computeRotation(center, point(90))).toBeCloseTo(90);
 	});
+});
+
+it('preserves signed turns for a caller with unwrapped native angles', () => {
+	const drag = createRotationDrag(center, point(350), -10, { unwrapped: true });
+	expect(drag(point(10))).toBeCloseTo(10);
+	expect(drag(point(100))).toBeCloseTo(100);
+	expect(drag(point(190))).toBeCloseTo(190);
+	expect(drag(point(280))).toBeCloseTo(280);
+	expect(drag(point(10))).toBeCloseTo(370);
 });

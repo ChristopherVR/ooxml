@@ -6,6 +6,7 @@ import { parseVsdx } from './parser';
 import { editVsdx } from './edit';
 import { cell, fixture, shape, rectangle } from './test-fixtures';
 import { normalizeVisioPageGeometry, scaleVisioGeometryPath } from './page-scale';
+import { assertViewableDocument } from './ui/scene-validation';
 import { visioPageEditToDrawing } from './ui/page-edit';
 import evidence from './__fixtures__/page-scales-native.json';
 
@@ -32,6 +33,30 @@ describe('page drawing coordinates to paper inches', () => {
 			expect(rectangle.height).toBeCloseTo(row.nativeRectangleHeight, 12);
 			expect(rectangle.transform.slice(4)).toEqual([row.nativeRectangleX, row.nativeRectangleY]);
 			expect(rectangle.style.lineWidth).toBe(row.nativeLineStroke);
+		},
+	);
+	it('retains the source rotation pin separately from an off-centre local pivot', async () => {
+		const model = await parseVsdx(
+			await fixture({
+				pages: [
+					{
+						id: '0',
+						pageCells: cell('DrawingScale', 2) + cell('PageScale', 1),
+						contents: `<Shapes>${shape('1', cell('Width', 4) + cell('Height', 2) + cell('PinX', 3) + cell('PinY', 5) + cell('LocPinX', 1) + cell('LocPinY', 1.5) + cell('Angle', Math.PI / 6) + rectangle)}</Shapes>`,
+					},
+				],
+			}),
+		);
+		const rotated = model.pages[0]!.shapes[0]!;
+		expect(rotated.rotation).toEqual({ pinX: 1.5, pinY: 2.5, angle: Math.PI / 6 });
+		expect(rotated.transform[4]).not.toBe(rotated.rotation!.pinX);
+	});
+	it.each(['pinX', 'pinY', 'angle'] as const)(
+		'rejects a nonfinite source rotation %s',
+		async (field) => {
+			const model = await parseVsdx(await scaledFixture());
+			model.pages[0]!.shapes[0]!.rotation![field] = Number.NaN;
+			expect(() => assertViewableDocument(model)).toThrow('rotation');
 		},
 	);
 	it('scales arc radii and endpoints while keeping angles, flags and exponents correct', () => {

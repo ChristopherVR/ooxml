@@ -116,7 +116,6 @@ export interface ResizeOptions {
 // ---------------------------------------------------------------------------
 
 const DEG_TO_RAD = Math.PI / 180;
-const RAD_TO_DEG = 180 / Math.PI;
 
 function rotationOf(box: InteractionBox): number {
 	return box.rotation ?? 0;
@@ -244,14 +243,7 @@ export function applyResize(
  * 0deg points straight up (the rotate handle sits above the element), matching
  * the screen "up = -Y" convention. The result is normalised to [0, 360).
  */
-export function computeRotation(center: Point, pointer: Point): number {
-	const dx = pointer.x - center.x;
-	const dy = pointer.y - center.y;
-	// atan2(dx, -dy): 0 when pointer is directly above center, increasing
-	// clockwise (the visual direction of a positive CSS rotation).
-	const deg = Math.atan2(dx, -dy) * RAD_TO_DEG;
-	return ((deg % 360) + 360) % 360;
-}
+export { computeRotation } from 'ooxml-core/geometry';
 
 /**
  * Snap an angle to the nearest `step` degrees when within `tolerance`.

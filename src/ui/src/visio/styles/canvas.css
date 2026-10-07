@@ -13,16 +13,26 @@
 	stroke-dasharray: 0.08 0.05;
 }
 
-.paper [data-line-endpoint] {
+.paper [data-line-endpoint],
+.rotation-overlay [data-rotation-handle] {
 	fill: var(--_vv-accent);
 	stroke: white;
 	stroke-width: 1.5px;
 	cursor: crosshair;
+	touch-action: none;
 	pointer-events: all;
 }
-.paper .endpoint-preview {
+.paper .endpoint-preview,
+.paper .rotation-preview,
+.rotation-overlay .rotation-stem {
 	stroke: var(--_vv-accent);
 	stroke-width: 1.5px;
 	stroke-dasharray: 5 3;
+	pointer-events: none;
+}
+
+.rotation-overlay {
+	position: absolute;
+	z-index: 1;
 	pointer-events: none;
 }

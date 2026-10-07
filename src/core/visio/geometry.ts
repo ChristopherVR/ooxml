@@ -17,16 +17,32 @@ export function shapeTransform(
 	height: number,
 	report?: Report,
 ): VisioMatrix {
-	return transform(
-		number(cells, 'PinX', width / 2, report),
-		number(cells, 'PinY', height / 2, report),
-		number(cells, 'LocPinX', width / 2, report),
-		number(cells, 'LocPinY', height / 2, report),
-		number(cells, 'Angle', 0, report),
-		number(cells, 'FlipX', 0, report) !== 0,
-		number(cells, 'FlipY', 0, report) !== 0,
-	);
+	return shapeTransformDetails(cells, width, height, report).transform;
 }
+/** One cached transform read also retains the actual parent-space rotation pin. */
+export function shapeTransformDetails(
+	cells: Cells,
+	width: number,
+	height: number,
+	report?: Report,
+) {
+	const pinX = number(cells, 'PinX', width / 2, report),
+		pinY = number(cells, 'PinY', height / 2, report);
+	const angle = number(cells, 'Angle', 0, report);
+	return {
+		rotation: { pinX, pinY, angle },
+		transform: transform(
+			pinX,
+			pinY,
+			number(cells, 'LocPinX', width / 2, report),
+			number(cells, 'LocPinY', height / 2, report),
+			angle,
+			number(cells, 'FlipX', 0, report) !== 0,
+			number(cells, 'FlipY', 0, report) !== 0,
+		),
+	};
+}
+
 export function transform(
 	x: number,
 	y: number,

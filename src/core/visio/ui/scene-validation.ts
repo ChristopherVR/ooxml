@@ -123,6 +123,9 @@ export function assertViewableDocument(model: VisioDocument): void {
 			);
 		}
 		finite(shape.width, 'shape width', 0);
+		if (shape.rotation)
+			for (const value of [shape.rotation.pinX, shape.rotation.pinY, shape.rotation.angle])
+				finite(value, 'rotation');
 		finite(shape.height, 'shape height', 0);
 		if (shape.transform.length !== 6 || shape.text.transform.length !== 6)
 			throw new Error('The scene has an invalid transform.');

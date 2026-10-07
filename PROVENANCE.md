@@ -1544,3 +1544,23 @@ fixture contents. Owned hidden Word COM scripts record four replacement fixtures
 and compare eight editor-hook/model-adapter exports on reopen. Their field codes,
 results, body text and bold match Word 16.0.20430. These are bounded native range
 and export checks, not current Microsoft 365 subscription certification.
+
+## Shared rotation drag geometry and Visio handle lifecycle
+
+Source: ChristopherVR/ooxml at `c68e4f471`,
+`src/ui/src/pptx/render/rotation-drag.ts`, `rotate-handle-placement.ts`,
+their colocated tests and `element-interaction.ts` (computeRotation).
+The DOM-free pointer bearing, anchored drag and viewport placement functions
+move to `src/core/geometry`, with extensionless compatibility exports at the
+original UI paths. Existing PowerPoint normalized-angle behavior remains the
+default; Visio opts into accumulated signed turns. Tests move with the functions.
+
+`src/ui/src/visio/viewer-line-endpoints.ts` supplies the shared capture,
+cancellation, gesture-currentness and post-release click ownership now used
+by endpoint and rotation handles. Escape retains selection until release;
+a new press resets unused click suppression. Visio transforms retain their
+source pin and angle through the existing transform reader and page scaler,
+so an off-centre local pivot never becomes an inferred bounding-box centre.
+Rotation handles use the shared PowerPoint placement helper in a viewport SVG
+layer, preserving paper clipping while keeping off-paper handles interactive.
+The shared native recorder adds an off-centre pivot source/target capture.

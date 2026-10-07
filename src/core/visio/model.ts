@@ -191,6 +191,10 @@ export interface VisioShape {
 	height: number;
 	/** Local y-up coordinates to parent y-up coordinates. */
 	transform: VisioMatrix;
+	/** Saved parent-space pin in physical page inches and counterclockwise radians.
+	 * Optional for older/manually constructed scenes; never infer a pin from a bounds center.
+	 */
+	rotation?: { pinX: number; pinY: number; angle: number };
 	geometry: VisioGeometry[];
 	style: VisioStyle;
 	text: VisioText;

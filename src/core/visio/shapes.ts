@@ -5,7 +5,7 @@ import { shapeMetadata, type VisioMetadataBudget } from './shape-metadata';
 import { shapeLayers, type LayerBudget } from './layers';
 import { layerPaintSheet } from './layer-paint';
 import type { VisioLayer, VisioShape } from './model';
-import { shapeTransform, geometryPaths } from './geometry';
+import { shapeTransformDetails, geometryPaths } from './geometry';
 import { VisioPackageError } from './package';
 import { shapeStyle, shapeText, type Resources } from './style';
 import {
@@ -249,7 +249,7 @@ export function normalizeShapes(
 				width,
 				height,
 				...(groupDisplayMode === undefined ? {} : { groupDisplayMode }),
-				transform: shapeTransform(sheet.cells, width, height, report),
+				...shapeTransformDetails(sheet.cells, width, height, report),
 				geometry,
 				style: shapeStyle(paintSheet, context.resources, report, width, height, geometry),
 				text: shapeText(

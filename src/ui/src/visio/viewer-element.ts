@@ -29,6 +29,7 @@ import { ViewerChrome, viewerChromeTemplate } from './viewer-chrome';
 import { ViewerCanvas } from './viewer-canvas';
 import { ViewerCommands } from './viewer-commands';
 import { ViewerLineEndpoints } from './viewer-line-endpoints';
+import { ViewerRotationHandle } from './viewer-rotation-handle';
 import { editErrorMessage } from 'ooxml-core/visio/ui';
 import { registerViewerControls } from './office-ui';
 import { exportPageSvg, type SvgExportOptions, type SvgExportResult } from './export-svg';
@@ -51,6 +52,7 @@ export class VisioViewerElement extends BaseElement {
 	#announcement: string | undefined;
 	#commands: ViewerCommands;
 	#lineEndpoints: ViewerLineEndpoints;
+	#rotationHandle: ViewerRotationHandle;
 	#rulers: Rulers;
 	#canvas: ViewerCanvas;
 	#panZoom: ViewerPanZoom;
@@ -121,7 +123,10 @@ export class VisioViewerElement extends BaseElement {
 			root: this.#root,
 			viewport: this.#viewport,
 			controller: this.controller,
-			toolChanged: () => this.#lineEndpoints.render(this.controller.state),
+			toolChanged: () => {
+				this.#lineEndpoints.render(this.controller.state);
+				this.#rotationHandle.render(this.controller.state);
+			},
 			fit: (mode) => this.#fit(mode),
 			togglePane: (pane) => this.#chrome.togglePane(pane),
 			reveal: (panel, focusText) => this.#chrome.reveal(panel, focusText),
@@ -138,6 +143,13 @@ export class VisioViewerElement extends BaseElement {
 		});
 		this.#profile = new ViewerProfile(this.#root);
 		this.#lineEndpoints = new ViewerLineEndpoints(this.#viewport, this.controller, {
+			active: () => this.#commands.tool === 'pointer',
+			announce: (message) => {
+				this.#announcement = message;
+				this.#status.textContent = message;
+			},
+		});
+		this.#rotationHandle = new ViewerRotationHandle(this.#viewport, this.controller, {
 			active: () => this.#commands.tool === 'pointer',
 			announce: (message) => {
 				this.#announcement = message;
@@ -335,6 +347,7 @@ export class VisioViewerElement extends BaseElement {
 		const disposeChrome = this.#chrome.wire();
 		const disposeCommands = this.#commands.wire();
 		const disposeLineEndpoints = this.#lineEndpoints.wire();
+		const disposeRotation = this.#rotationHandle.wire();
 		const disposeBackstage = this.#backstage.wire();
 		const disposeMenus = wireContextMenus(this.#root, this.#viewport, this.controller);
 		const disposeTellMe = wireTellMe(this.#root);
@@ -369,6 +382,7 @@ export class VisioViewerElement extends BaseElement {
 			disposeChrome();
 			disposeCommands();
 			disposeLineEndpoints();
+			disposeRotation();
 			disposeBackstage();
 			disposeMenus();
 			disposeTellMe();
@@ -392,6 +406,7 @@ export class VisioViewerElement extends BaseElement {
 		const page = state.document?.pages[state.pageIndex];
 		const changed = this.#canvas.render(state);
 		this.#lineEndpoints.render(state);
+		this.#rotationHandle.render(state);
 		if (changed) this.#announcement = undefined;
 		this.#zoomSlider.value = Math.round(state.zoom * 100);
 		this.#zoomSlider.disabled = !page;
