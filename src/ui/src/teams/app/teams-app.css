@@ -180,6 +180,14 @@ button {
 	min-width: 0;
 	min-height: 0;
 }
+.popout-view {
+	display: flex;
+	height: 100%;
+	min-height: 0;
+}
+.popout-view teams-content-preview {
+	flex: 1;
+}
 .main office-ui-chat-list,
 .main office-ui-prejoin {
 	flex: 1;

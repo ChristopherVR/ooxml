@@ -39,6 +39,7 @@ import css from './teams-app.css?raw';
 import { threadPane } from './thread-pane.js';
 import { followedThreads } from './followed-threads.js';
 import { draftList } from './draft-list.js';
+import { filePopoutDetail, filePopoutUrl } from './file-popout.js';
 import { messageTransfers } from './message-transfers.js';
 
 export type { FileUploader } from 'ooxml-core/teams';
@@ -96,6 +97,7 @@ export class TeamsApp extends LitElement {
 		identity: { state: true },
 		followedUnreadOnly: { state: true },
 		theme: { state: true },
+		fileOpenPreference: { state: true },
 	};
 	declare workspaceId: string;
 	declare userName: string;
@@ -120,12 +122,20 @@ export class TeamsApp extends LitElement {
 	declare identity: Identity | null;
 	declare followedUnreadOnly: boolean;
 	declare theme: TeamsTheme;
+	declare fileOpenPreference: 'teams' | 'browser';
 
 	private readonly teams = new TeamsController(this, (text) => this.notify(text));
 	private toastTimer: ReturnType<typeof setTimeout> | undefined;
 	private openRequest = 0;
 	private retainedTab: ChannelTab | undefined;
 	private themeStorageKey = '';
+	private readonly popoutRequested =
+		new URL(globalThis.location?.href ?? 'https://workspace.invalid').searchParams.get(
+			'openteams-file',
+		) === '1';
+	private readonly popout = filePopoutDetail(
+		globalThis.location?.href ?? 'https://workspace.invalid',
+	);
 
 	constructor() {
 		super();
@@ -149,6 +159,7 @@ export class TeamsApp extends LitElement {
 		this.identity = null;
 		this.followedUnreadOnly = false;
 		this.theme = 'system';
+		this.fileOpenPreference = 'teams';
 	}
 
 	/** The core client behind this element, for hosts that want the raw actions. */
@@ -182,6 +193,7 @@ export class TeamsApp extends LitElement {
 	}
 
 	protected override willUpdate(changed: PropertyValues<this>): void {
+		if (this.popoutRequested) return;
 		const restart = [
 			'workspaceId',
 			'userName',
@@ -206,6 +218,11 @@ export class TeamsApp extends LitElement {
 		this.theme =
 			rememberedTheme === 'dark' || rememberedTheme === 'light' ? rememberedTheme : 'system';
 		this.applyTheme();
+		this.fileOpenPreference =
+			safeStorage.getItem(this.themeStorageKey.replace('teams:theme:', 'teams:file-open:')) ===
+			'browser'
+				? 'browser'
+				: 'teams';
 		this.teams.start({
 			workspaceId,
 			user: named,
@@ -235,13 +252,28 @@ export class TeamsApp extends LitElement {
 	}
 
 	// ---- intent -> client actions -----------------------------------------------------------
-	private async openFile(a: OpenFileDetail['attachment']): Promise<void> {
+	private async openFile(
+		a: OpenFileDetail['attachment'],
+		mode?: 'teams' | 'browser',
+	): Promise<void> {
+		if (!this.canLeaveContent()) return;
+		const browser =
+			mode === 'browser' ||
+			(!mode && a.kind !== 'other' && a.kind !== 'vsdx' && this.fileOpenPreference === 'browser');
+		const popout = browser ? globalThis.open('about:blank', '_blank') : null;
+		if (popout) popout.opener = null;
 		const request = ++this.openRequest;
 		const channelId =
 			(a as { channelId?: string }).channelId ?? this.teams.state?.selectedChannelId;
 		const url = await this.teams.client?.fileUrl(a);
-		if (request !== this.openRequest || !this.isConnected) return;
-		if (!this.canLeaveContent()) return;
+		if (request !== this.openRequest || !this.isConnected) {
+			popout?.close();
+			return;
+		}
+		if (!this.canLeaveContent()) {
+			popout?.close();
+			return;
+		}
 		const detail: OpenFileDetail = { attachment: a, url, ...(channelId ? { channelId } : {}) };
 		if (
 			!this.dispatchEvent(
@@ -252,10 +284,26 @@ export class TeamsApp extends LitElement {
 					cancelable: true,
 				}),
 			)
-		)
+		) {
+			popout?.close();
 			return;
+		}
 		const opener = this.openers[a.kind];
-		if (opener) return opener(detail);
+		if (opener) {
+			popout?.close();
+			return opener(detail);
+		}
+		if (browser && url) {
+			const target = filePopoutUrl(detail, this.ownerDocument.location.href);
+			if (popout && target) {
+				popout.location.replace(target);
+				return;
+			}
+			popout?.close();
+			this.notify('Allow popups to open this file in a browser tab');
+			return;
+		}
+		popout?.close();
 		if (url) this.preview = detail;
 		else this.notify('This file was shared by name only');
 	}
@@ -345,6 +393,15 @@ export class TeamsApp extends LitElement {
 
 	// ---- template ---------------------------------------------------------------------------
 	protected override render() {
+		if (this.popoutRequested)
+			return this.popout
+				? html`<div class="popout-view">
+						<teams-content-preview
+							.detail=${this.popout}
+							@teams-preview-close=${() => globalThis.close()}
+						></teams-content-preview>
+					</div>`
+				: html`<p role="alert">The file preview link is invalid.</p>`;
 		const s = this.teams.state;
 		if (!s) return this.welcome();
 		return html`
@@ -368,6 +425,15 @@ export class TeamsApp extends LitElement {
 					?open=${this.settingsOpen}
 					.config=${this.resolveConfig()}
 					.theme=${this.theme}
+					.fileOpenPreference=${this.fileOpenPreference}
+					@teams-settings-file-open=${(event: CustomEvent<{ preference: 'teams' | 'browser' }>) => {
+						if (!['teams', 'browser'].includes(event.detail.preference)) return;
+						this.fileOpenPreference = event.detail.preference;
+						safeStorage.setItem(
+							this.themeStorageKey.replace('teams:theme:', 'teams:file-open:'),
+							this.fileOpenPreference,
+						);
+					}}
 					.followSettings=${s.threadFollowSettings}
 					.userName=${s.user.name}
 					@teams-settings-theme=${(event: CustomEvent<{ theme: TeamsTheme }>) => {
@@ -802,7 +868,8 @@ export class TeamsApp extends LitElement {
 			.channelId=${state.selectedChannelId}
 			.channelName=${state.channel?.name ?? ''}
 			.canUpload=${state.canUploadFiles}
-			@teams-files-open=${(event: CustomEvent<{ attachment: OpenFileDetail['attachment'] }>) => void this.openFile(event.detail.attachment)}
+			@teams-files-open=${(event: CustomEvent<{ attachment: OpenFileDetail['attachment']; mode?: 'teams' | 'browser' }>) => void this.openFile(event.detail.attachment, event.detail.mode)}
+			@teams-files-browser=${(event: CustomEvent<{ attachment: OpenFileDetail['attachment'] }>) => void this.openFile(event.detail.attachment, 'browser')}
 			@teams-files-pin=${(event: CustomEvent<{ attachment: TeamsState['files'][number] }>) => this.pinFile(event.detail.attachment)}
 		></teams-files-panel>`;
 	}

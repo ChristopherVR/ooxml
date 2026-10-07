@@ -33,6 +33,7 @@ export class TeamsSettings extends LitElement {
 		theme: { attribute: false },
 		followSettings: { attribute: false },
 		userName: { attribute: false },
+		fileOpenPreference: { attribute: false },
 	};
 	declare config: TeamsServerConfig;
 	declare open: boolean;
@@ -41,6 +42,7 @@ export class TeamsSettings extends LitElement {
 	declare theme: TeamsTheme;
 	declare followSettings: ThreadFollowSettings;
 	declare userName: string;
+	declare fileOpenPreference: 'teams' | 'browser';
 
 	constructor() {
 		super();
@@ -51,6 +53,7 @@ export class TeamsSettings extends LitElement {
 		this.theme = 'system';
 		this.followSettings = { started: true, replied: true };
 		this.userName = '';
+		this.fileOpenPreference = 'teams';
 	}
 
 	protected override updated(changed: PropertyValues<this>): void {
@@ -196,11 +199,21 @@ export class TeamsSettings extends LitElement {
 						>
 							<h2>Files and links</h2>
 							<h3>File open preference</h3>
-							<p>Files open inside OpenTeams.</p>
+							<label
+								>Always open Word, PowerPoint and Excel files in:
+								<select
+									aria-label="Office file open preference"
+									.value=${this.fileOpenPreference}
+									@change=${(event: Event) => this.dispatchEvent(new CustomEvent('teams-settings-file-open', { detail: { preference: (event.target as HTMLSelectElement).value }, bubbles: true, composed: true }))}
+								>
+									<option value="teams">OpenTeams</option>
+									<option value="browser">Browser</option>
+								</select></label
+							>
 							<p class="description">
-								Word, Excel, PowerPoint and Visio use the workspace preview. Hosts can provide their
-								own viewers. A desktop-app default and download-location preference are not
-								available yet.
+								Browser opens the built-in viewer in a separate tab. Hosts can provide their own
+								viewers. Desktop-app defaults and download-location preferences are not available
+								yet.
 							</p>
 						</section>
 						<form

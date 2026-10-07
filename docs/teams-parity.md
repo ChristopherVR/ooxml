@@ -317,12 +317,34 @@ existing core personal settings. Keyboard category navigation and mobile layouts
 are covered in browser acceptance. Connection settings preserve validation and
 explicit Apply/Cancel behavior; cancel discards unapplied edits. Replacing the
 client flushes pending local document snapshots so reconnect does not discard
-recent posts or tabs. Files and links currently explains the built-in preview;
-desktop/browser defaults, density, notification delivery, account/privacy controls
+recent posts or tabs. Files and links initially explains the built-in preview;
+the next slice adds the browser default. Desktop defaults, density, notification delivery, account/privacy controls
 and device selection still require implementation. Microsoft's
 [settings categories](https://support.microsoft.com/en-us/accessibility/teams/customize-your-teams-chat-interface-with-chat-density-settings)
 and [notification preferences](https://support.microsoft.com/en-us/teams/notifications-settings/manage-notifications-in-microsoft-teams)
 are references, not evidence of complete visual or feature parity.
+
+## Sixteenth implemented slice: file actions and browser viewer preference
+
+Shared file rows expose a More actions popover with Open in OpenTeams, Open in
+browser, Download, Copy link and Pin as tab. Downloads reuse bounded content reads,
+request a fresh signed URL and preserve original bytes and filenames. Clipboard
+failure retains a selectable link. Menus remain open through unrelated presence
+updates, and a changed file/client cancels the pending action. Settings > Files
+and links saves the Office open preference per user and workspace on this device.
+Browser opens the same native content renderer in a separate tab, not a raw Office
+URL. The viewer carries its bounded, validated payload in the fragment, does not
+join the collaboration room, and has no opener. Local XLSX editing and download
+remain available there; channel save-back and host callback adapters are available
+in the main workspace only. Explicit Open in OpenTeams bypasses the personal
+browser default; existing host open handlers retain precedence. Browser acceptance
+checks actual workbook rendering in both contexts, exact downloaded bytes, link
+copying, preference restoration and pin/save-copy behavior. Signed links can expire;
+copying does not grant or manage recipient permissions. Desktop defaults, folder
+and bulk actions, version/save-back contracts and permission-aware sharing remain
+outstanding. Microsoft's [file-open preferences](https://support.microsoft.com/en-us/office/collab-files/open-file-links-directly-in-microsoft-365-desktop-apps-from-teams-and-classic-outlook)
+and [Shared file downloads](https://support.microsoft.com/en-us/teams/files/download-a-file-from-microsoft-teams)
+are the workflow references.
 
 ## Next releasable slices
 
