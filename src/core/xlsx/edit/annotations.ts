@@ -4,6 +4,7 @@ import type { ConditionalFormat, DataValidation, Hyperlink } from '../model.js';
 import { writeValue } from './cell-values.js';
 import { type EditContext, sheetAt } from './context.js';
 import { patchRange } from './format.js';
+import { removeValidationArea } from './validation-ranges.js';
 import { subtractRange } from './range-math.js';
 
 /** Adds, replaces or (with `text` undefined) removes the comment on a cell. */
@@ -136,9 +137,7 @@ export function setDataValidation(
 		'annotations',
 		[{ kind: 'sheet', sheet: s }],
 		() => {
-			sheet.dataValidations = sheet.dataValidations
-				.map((dv) => ({ ...dv, ranges: dv.ranges.flatMap((dr) => subtractRange(dr, r)) }))
-				.filter((dv) => dv.ranges.length > 0);
+			sheet.dataValidations = removeValidationArea(sheet.dataValidations, r);
 			if (validation)
 				sheet.dataValidations.push({
 					showErrorMessage: true,

@@ -24,6 +24,7 @@ import { resolvePasteOptions } from './paste-options.js';
 import { writeClip } from './paste-cell.js';
 import { copyColumnWidths } from './columns.js';
 import { pasteWidths } from './paste-widths.js';
+import { copyAnnotations, clearAnnotations, pasteAnnotations } from './clipboard-annotations.js';
 
 /** Copies a range into a self-contained payload (whole rows or columns stop at the used area). */
 export function copyRange(workbook: Workbook, s: number, range: CellRange): ClipboardPayload {
@@ -74,6 +75,7 @@ export function copyRange(workbook: Workbook, s: number, range: CellRange): Clip
 			end: { row: m.end.row - r.start.row, col: m.end.col - r.start.col },
 		}));
 	const cells: ClipboardCells = { rows, cols, data, merges, source: { sheet: s, range: clipped } };
+	Object.assign(cells, copyAnnotations(sheet, clipped));
 	cells.columnWidthRows = r.end.row - r.start.row + 1;
 	cells.columnWidths = copyColumnWidths(sheet, r.start.col, r.end.col);
 	return {
@@ -121,6 +123,8 @@ export function pasteAt(
 	const sheet = sheetAt(workbook, s);
 	const cells = typeof payload === 'string' ? cellsFromText(workbook, payload) : payload.cells;
 	const { mode, transpose, skipBlanks, operation } = resolvePasteOptions(request);
+	if ((mode === 'comments' && !cells.comments) || (mode === 'validation' && !cells.dataValidations))
+		throw new RangeError('The clipboard does not contain annotation metadata.');
 	if (mode === 'widths')
 		return pasteWidths(
 			ctx,
@@ -140,6 +144,8 @@ export function pasteAt(
 	if (cut && skipBlanks) throw new RangeError('Skip blanks is not available for cut cells.');
 	if (cut && mode === 'noBorders')
 		throw new RangeError('All except borders is not available for cut cells.');
+	if (cut && (mode === 'comments' || mode === 'validation'))
+		throw new RangeError('Annotation-only paste is not available for cut cells.');
 	if (cut && operation !== 'none')
 		throw new RangeError('Paste operations are not available for cut cells.');
 	// A move rewrites references anywhere in the workbook: it records the references that change
@@ -147,7 +153,7 @@ export function pasteAt(
 	const destCells: EditScope = { kind: 'cells', sheet: s, ranges: [dest] };
 	const scopes: EditScope[] = cut
 		? [{ kind: 'refs' }, { kind: 'cells', sheet: cut.sheet, ranges: [cut.range] }, destCells]
-		: [destCells, { kind: 'parts', sheet: s, parts: ['merges'] }];
+		: [destCells, { kind: 'parts', sheet: s, parts: ['merges', 'comments', 'dataValidations'] }];
 	const move = cut && {
 		fromSheet: sheetAt(workbook, cut.sheet).name,
 		range: cut.range,
@@ -167,7 +173,17 @@ export function pasteAt(
 				forEachCellInRange(from, cut.range, (_c, row, col) => doomed.push([row, col]));
 				for (const [row, col] of doomed) deleteCell(from, row, col);
 				from.merges = from.merges.filter((m) => !rangeWithin(m, cut.range));
+				clearAnnotations(from, cut.range);
 			}
+			pasteAnnotations(
+				sheet,
+				dest,
+				cells,
+				mode,
+				transpose,
+				skipBlanks,
+				move ? (f) => moveReferencesInFormula(f, move.fromSheet, move, move.toSheet) : undefined,
+			);
 			const styleIds = new Map<object, number>();
 			const styleOf = (clip: ClipboardCell): number | undefined => {
 				if (!clip.style) return undefined;

@@ -63,11 +63,11 @@ describe('shared Office-style viewer chrome', () => {
 		expect(viewer.element.pageIndex).toBe(0);
 		strip().querySelector<HTMLButtonElement>('[aria-label="Next page"]')!.click();
 		expect(viewer.element.pageIndex).toBe(1);
-		// Insert Page is Visio's, shown disabled until core can add pages.
+		// Model-only scenes cannot save inserted pages.
 		const add = strip().querySelector<HTMLButtonElement>('.add')!;
 		expect(add.hidden).toBe(false);
 		expect(add.disabled).toBe(true);
-		expect(add.title).toMatch(/not available yet\. Needs core page insertion/);
+		expect(add.title).toMatch(/open a \.vsdx file/);
 		const model = structuredClone(demoDocument);
 		model.pages[0]!.name = '<img src=x onerror=alert(1)>';
 		viewer.update({ document: model });

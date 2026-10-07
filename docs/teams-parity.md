@@ -16,7 +16,7 @@ No feature is considered equivalent solely because a control is present.
 | Search and unread               | Message search, attachment metadata search, per-channel local read markers                                   | Indexed file contents, filters, mentions, activity feed, notifications, shared read receipts                       |
 | Presence                        | Awareness, availability and typing                                                                           | Authenticated identity, idle state, richer status and privacy controls                                             |
 | Meetings                        | Prejoin, microphone, camera, screen share, raised hand, mesh WebRTC                                          | Scheduling, invitations, SFU, lobby, host roles, recording, captions, backgrounds and large calls                  |
-| File sharing                    | Direct uploads with retry, workbook creation, Files views, unique storage names, signed download links       | Permissions, versions, folders, durable local-mode sharing, byte progress and cancellation                         |
+| File sharing                    | Uploads with cancel/retry and file progress, workbook creation, unique storage names, signed download links  | Permissions, versions, folders, durable local-mode sharing, byte progress and storage cleanup                      |
 | Office content                  | Native Word, Excel and Visio previews; static PowerPoint preview; XLSX local editing and channel save copies | Full PowerPoint rendering/playback, coediting, write-back/version conflict handling and fidelity acceptance corpus |
 | Markdown                        | Safe block and flat inline subset added in this change                                                       | Full CommonMark/GFM, tables, task lists, nested structure and relative links                                       |
 | Sites and web apps              | Sandboxed HTML/site previews and shared file/website channel tabs                                            | App permissions, approved origins, app messaging and authentication                                                |
@@ -125,7 +125,7 @@ files for retry, with the original destination named in the error. Uploaded batc
 are posted only when every upload succeeds; a failed batch can leave unreferenced
 storage objects and currently has no server cleanup contract. The size limit is
 32 MiB per file, with at most 20 files in a batch. This implementation reports a
-busy state, not byte-level progress or cancellation. File search covers loaded
+completed-file progress and cancellation, not byte-level progress. File search covers loaded
 attachment metadata, not indexed document contents or folders.
 
 Message attachments now also keep their original channel and reply target while
@@ -168,6 +168,21 @@ Browser acceptance covers a real stop-validation rule, downloading and parsing
 edited bytes, source preservation, absence of a shared attachment, and navigation
 confirmation. This remains a copy workflow, with the engine's existing format
 support and preservation limitations.
+
+## Sixth implemented slice: file transfer control
+
+The Files controls now cancel uploads and workbook creation, retain their captured
+destination for retry, and show completed-file progress. Core copy-save actions
+also accept cancellation and progress callbacks. The workbook save-copy toolbar
+offers cancellation during serialization or upload, retains local edits, and allows
+retry. It does not yet display byte or file-count progress. Closing the Files panel or replacing its client
+aborts its active operation. Cancellation stops waiting even when a host storage
+adapter ignores its optional abort signal, and guards prevent late attachment
+publication. Already written objects can remain in storage because there is no
+cleanup contract. Browser tests exercise pending cancellation, late completion,
+retry, and progress between files across all six bindings. Workbook browser acceptance
+also checks canceled save copies, ignored late storage writes, retained dirty edits,
+and a successful retry without publishing the canceled copy.
 
 ## Next releasable slices
 

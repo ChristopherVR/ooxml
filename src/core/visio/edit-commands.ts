@@ -23,7 +23,14 @@ export type VisioGeometryEdit =
 	| (Target & { type: 'move-shape'; x: number; y: number })
 	| (Target & { type: 'resize-shape'; width: number; height: number })
 	| (Target & { type: 'delete-shape' });
-export type VisioEdit = VisioTextEdit | VisioGeometryEdit;
+/** Insert a blank foreground page after an existing page, copying its PageSheet settings. */
+export interface VisioPageInsert {
+	type: 'insert-page';
+	pageId: string;
+	afterPageId: string;
+	name: string;
+}
+export type VisioEdit = VisioTextEdit | VisioGeometryEdit | VisioPageInsert;
 
 export function snapshotVisioEdits(
 	edits: readonly VisioEdit[],
@@ -59,16 +66,25 @@ export function snapshotVisioEdits(
 		return value;
 	};
 	return Array.from(edits, (edit) => {
-		if (
-			!edit ||
-			typeof edit.pageId !== 'string' ||
-			!edit.pageId ||
-			edit.pageId.length > 256 ||
-			typeof edit.shapeId !== 'string' ||
-			!edit.shapeId ||
-			edit.shapeId.length > 256
-		)
+		if (!edit || typeof edit.pageId !== 'string' || !edit.pageId || edit.pageId.length > 256)
 			fail('INVALID_EDIT', 'Invalid edit target.');
+		if (edit.type === 'insert-page') {
+			const name = text(edit.name);
+			if (
+				!/^(0|[1-9]\d{0,9})$/.test(edit.pageId) ||
+				Number(edit.pageId) > 4294967295 ||
+				typeof edit.afterPageId !== 'string' ||
+				!edit.afterPageId ||
+				edit.afterPageId.length > 256 ||
+				!name.trim() ||
+				name.length > 256 ||
+				/[\t\n]/.test(name)
+			)
+				fail('INVALID_EDIT', 'Invalid new page ID, name or insertion target.');
+			return { type: edit.type, pageId: edit.pageId, afterPageId: edit.afterPageId, name };
+		}
+		if (typeof edit.shapeId !== 'string' || !edit.shapeId || edit.shapeId.length > 256)
+			fail('INVALID_EDIT', 'Invalid edit shape target.');
 		const target = { pageId: edit.pageId, shapeId: edit.shapeId };
 		if (edit.type === 'replace-plain-text')
 			return { ...target, type: edit.type, text: text(edit.text) };
