@@ -33,13 +33,14 @@ export const explicitOffFields = ['bold', 'italic', 'strike', 'underline'] as co
 
 export type ExtraRunProperties = Pick<
 	TextRun,
-	(typeof extraRunFields)[number] | (typeof explicitOffFields)[number]
+	(typeof extraRunFields)[number] | (typeof explicitOffFields)[number] | 'revision'
 >;
 
 export function extraRunProperties(run: TextRun): ExtraRunProperties | undefined {
 	const extra: Record<string, unknown> = {};
 	for (const field of extraRunFields) if (run[field] !== undefined) extra[field] = run[field];
 	for (const field of explicitOffFields) if (run[field] === false) extra[field] = false;
+	if (run.revision?.kind === 'formatChange') extra.revision = run.revision;
 	return Object.keys(extra).length ? (extra as ExtraRunProperties) : undefined;
 }
 

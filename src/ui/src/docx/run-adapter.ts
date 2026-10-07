@@ -159,6 +159,7 @@ function applyMarkFormatting(run: TextRun, child: ProseMirrorNode): void {
 		for (const [key, value] of Object.entries(structuredClone(extra.attrs.props) as TextRun)) {
 			// An explicit off never overrides a mark the user applied (bold on text that was unbolded).
 			const field = key as keyof TextRun;
+			if (key === 'revision' && run.revision) continue;
 			if ((explicitOffFields as readonly string[]).includes(key) && run[field] !== undefined)
 				continue;
 			setRunField(run, field, value);

@@ -11,6 +11,8 @@ import type { HalfPoints, SignedTwips } from './units.js';
 
 /** A tracked-change revision recorded on a run or paragraph mark. */
 export interface Revision {
+	/** Prior `w:rPr` snapshot for an imported run-formatting change. */
+	previousRunPropertiesXml?: string;
 	kind: 'insert' | 'delete' | 'moveFrom' | 'moveTo' | 'formatChange' | 'paragraphChange';
 	/**
 	 * For `moveFrom`/`moveTo`: the move this text belongs to. Both sides share `name` (from

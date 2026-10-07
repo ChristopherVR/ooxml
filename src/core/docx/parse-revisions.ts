@@ -1,7 +1,7 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import { expectDefined } from './expect-defined.js';
 import type { Revision, TextRun } from './model.js';
-import { first, getW, isElement, named, type XmlElement, WORD_NS } from './xml.js';
+import { buildXml, first, getW, isElement, named, type XmlElement, WORD_NS } from './xml.js';
 
 const REVISION_WRAPPERS: Record<string, Revision['kind']> = {
 	ins: 'insert',
@@ -75,10 +75,14 @@ export function paragraphFormatRevision(pPr: XmlElement | undefined): Revision |
 	return change ? revisionFrom(change, 'paragraphChange') : undefined;
 }
 
-/** Marks that `w:rPrChange` recorded a prior run formatting snapshot (not itself modeled). */
+/** Preserve the prior run-properties subtree alongside its revision identity. */
 export function runFormatRevision(rPr: XmlElement | undefined): Revision | undefined {
 	const change = first(rPr, 'rPrChange');
-	return change ? revisionFrom(change, 'formatChange') : undefined;
+	if (!change) return undefined;
+	const revision = revisionFrom(change, 'formatChange');
+	const previous = first(change, 'rPr');
+	if (previous) revision.previousRunPropertiesXml = buildXml(previous);
+	return revision;
 }
 
 /**

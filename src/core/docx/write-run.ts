@@ -6,6 +6,7 @@ import { setExtendedRunProperties } from './write-run-extra.js';
 import { fractionToThemeByte } from './theme-color.js';
 import { createImageRun } from './write-drawing.js';
 import type { RelationshipAllocator } from './relationship-allocator.js';
+import { writeRunFormatRevision } from './write-revisions.js';
 
 function setAttribute(element: XmlElement, local: string, value: string): void {
 	element.setAttributeNS(WORD_NS, `w:${local}`, value);
@@ -76,16 +77,17 @@ function setRunProperties(
 	const changed = (key: keyof TextRun): boolean => !base || run[key] !== base[key];
 	if (
 		!props &&
-		([
-			run.bold,
-			run.italic,
-			run.underline,
-			run.strike,
-			run.caps,
-			run.smallCaps,
-			run.doubleStrike,
-			run.vanish,
-		].some((value) => value !== undefined) ||
+		(run.revision?.kind === 'formatChange' ||
+			[
+				run.bold,
+				run.italic,
+				run.underline,
+				run.strike,
+				run.caps,
+				run.smallCaps,
+				run.doubleStrike,
+				run.vanish,
+			].some((value) => value !== undefined) ||
 			run.highlight ||
 			run.verticalAlign ||
 			run.language !== undefined ||
@@ -115,9 +117,7 @@ function setRunProperties(
 		runNode.insertBefore(props, runNode.firstChild);
 	}
 	if (!props) return;
-	// A rewritten run drops any recorded formatting-change snapshot; reconstructing historical
-	// rPrChange diffs is not supported (see model.ts Revision / parse-revisions.ts).
-	removeChildren(props, 'rPrChange');
+	writeRunFormatRevision(doc, props, run.revision);
 	if (changed('bold')) setToggle(doc, props, 'b', run.bold);
 	if (changed('italic')) setToggle(doc, props, 'i', run.italic);
 	if (changed('strike')) {

@@ -16,6 +16,14 @@ import {
 const DOC = `<w:document xmlns:w="${NS.w}" xmlns:r="${NS.r}"><w:body><w:p w:rsidR="1"><w:r><w:t>Hi</w:t></w:r></w:p><w:p/><x:other xmlns:x="urn:x"/></w:body></w:document>`;
 
 describe('parseXml', () => {
+	it('serializes a subtree with its inherited namespace available on reparse', () => {
+		const doc = parseXml(DOC);
+		const paragraph = doc.getElementsByTagNameNS(NS.w, 'p')[0]!;
+		const snapshot = parseXml(buildXml(paragraph));
+		expect(snapshot.documentElement.namespaceURI).toBe(NS.w);
+		expect(snapshot.documentElement.getAttributeNS(NS.w, 'rsidR')).toBe('1');
+		expect(snapshot.getElementsByTagNameNS(NS.w, 't')[0]!.textContent).toBe('Hi');
+	});
 	it('parses a part and exposes the DOM', () => {
 		const doc = parseXml(DOC);
 		expect(doc.documentElement.localName).toBe('document');

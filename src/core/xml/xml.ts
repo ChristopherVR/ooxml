@@ -29,7 +29,8 @@ export function parseXml(xml: string, options: ParseOptions = {}): XmlDocument {
 		}).parseFromString(xml, 'application/xml') as unknown as XmlDocument;
 	} catch (error) {
 		throw new Error(
-			`Invalid ${label} XML: ${error instanceof Error ? error.message : String(error)}`, { cause: error },
+			`Invalid ${label} XML: ${error instanceof Error ? error.message : String(error)}`,
+			{ cause: error },
 		);
 	}
 	if (parseError || !parsed.documentElement)
@@ -37,8 +38,8 @@ export function parseXml(xml: string, options: ParseOptions = {}): XmlDocument {
 	return parsed;
 }
 
-export const buildXml = (document: XmlDocument): string =>
-	new XMLSerializer().serializeToString(document as unknown as XmldomNode);
+export const buildXml = (node: XmlNode): string =>
+	new XMLSerializer().serializeToString(node as unknown as XmldomNode);
 
 export const isElement = (node: Node): node is XmlElement => node.nodeType === 1;
 export const elements = (parent: ParentNode): XmlElement[] =>
