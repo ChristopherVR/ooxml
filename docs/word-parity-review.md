@@ -675,9 +675,9 @@ explicit full-level starts, omitted starts, standalone start overrides and
 never-restart combinations. Effective omitted abstract starts display zero;
 parser provenance retains the source omission through additive definition saves.
 Authored numeric changes take effect immediately and after reload. To author an
-explicit one from an imported omitted start, remove `startWasOmitted`. Existing
-numbering definitions remain read-only in package editing. Observed precedence
-differs from Microsoft's compatibility note in some cases, so this evidence is
+explicit one from an imported omitted start, remove `startWasOmitted`. Shared
+abstract definitions and full level overrides remain read-only in package editing.
+Observed precedence differs from Microsoft's compatibility note in some cases, so this evidence is
 explicitly tied to the installed desktop build; M365 subscription comparison
 remains required.
 
@@ -687,3 +687,66 @@ retaining literal suffixes and brackets. Nineteen native controls and portable
 list/edit/save/reload tests cover the raw values and punctuation. Other unsupported
 numbering formats still use the existing decimal fallback; this is not complete
 locale or numbering-format parity.
+
+### Guarded core authoring follow-up
+
+Whole simple-field result typing now inserts its final field metadata in one text
+replacement, allowing the existing Track Changes recorder to retain both the
+deleted cache and inserted result. Rejecting an author's pending last result
+retains the instruction as empty complex markers. Twenty-one new regressions
+cover typing/paste, whole/partial replacements, mixed pending/original text,
+stored formatting, adjacent fields and accept/reject/save/reparse.
+
+`setListStartOverride` immutably changes an existing list instance's start for a
+defined level without a full level override. The writer preflights every delta
+and source identity before patching only start values or adding their wrappers.
+It preserves abstract definitions, sibling instances and opaque source metadata;
+removals and other existing-definition edits remain unsupported. Authoring accepts
+zero through 2147483647 for Open XML SDK interoperability; this is not an XSD
+restriction on parsed input. Four independently reopened native Word controls
+cover authored starts four/zero with default and never-restart policies. The
+native comparison remains specific to the installed perpetual build.
+
+Track Changes records one plain top-level paragraph split or adjacent join using
+the existing paragraph-mark revision model. Splits preserve the original final
+paragraph identity and property snapshot; pending joins retain both paragraphs
+until review resolves the deleted boundary. Removing the author's own pending
+inserted boundary restores the original paragraph. Core and mounted keyboard
+checks cover review/history, unique IDs, model projection and save/reload. Bounded
+two-peer Yjs tests cover revision convergence, remote attribution and local undo.
+Native Range.Text/Range.Delete references corroborate mark placement and matching
+formatting, not interactive keyboard or subscription-build parity. Different
+paragraph formatting, fields, tables, inter-section boundaries and mixed
+structural/text edits remain excluded. Display merging of pending deleted
+paragraph marks still requires separate work.
+
+Regular simple fields and complex markers now preserve explicit lock/dirty flags
+through parsing, editor metadata, edited export and empty-cache conversion.
+Cached complex results derive only their corresponding begin marker's lock state;
+nested and cross-paragraph fields keep independent state. Typed/pasted simple
+results take structural metadata from the target field, clearing unrelated
+inherited flags. Literal result clipboard copies discard this metadata. Eighteen
+regressions cover explicit false/absence, rebuilt wrappers, code/result edits and
+adjacency. Simple `HYPERLINK` fields still convert to hyperlink runs and retain a
+structure/flag preservation gap. Dirty-state update policy remains separate from
+preservation.
+
+The shared `isFieldLocked` guard now keeps saved caches during supported page/date
+display, body DATE/TIME layout, REF/PAGEREF updates and SEQ renumbering. Anonymous
+adjacent simple fields with different flags remain separate in editor ranges and
+export wrappers. Four native controls cover simple/complex fields with individual
+and collection updates: locked SEQ cache 42 stays 42 while the following unlocked
+caption becomes 2; locked references retain their stale caches. The recorder
+reseeds stale caches after open, then invokes actual Field.Update/Fields.Update
+on separate fresh documents. Word already omitted dirty flags before those
+updates, so this evidence does not establish an update-specific clearing policy.
+The reference is bounded to Word 16.0.20430 and does not certify all field types,
+switches, stories or current Microsoft 365 behavior.
+
+Complex cached text now reprojects lock state from its enclosing begin marker
+after edits, including clearing/retyping, paste and nested fields. Derived repair
+transactions are excluded from user-step classification but included when undoing
+the untracked edit before tracked replay. This retains text revisions without
+turning metadata repair into formatting history. Mounted checks cover review,
+undo/redo, locked updates and edited save/reload; remote repairs do not add local
+revisions. This does not certify concurrent changes to field structure or locks.
