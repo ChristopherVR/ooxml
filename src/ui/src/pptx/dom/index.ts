@@ -45,3 +45,6 @@ export * from './elements/three-view';
 export * from './elements/zoom';
 export * from './glyph-outline-cache';
 export * from './elements/index';
+export * from './load-presentation';
+export { buildEmbeddedFontStyles, buildFieldSubstitutionContext } from '../index';
+export { createTranslator } from '../i18n';

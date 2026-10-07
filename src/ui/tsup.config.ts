@@ -51,5 +51,5 @@ export default defineConfig({
 	clean: false,
 	treeshake: true,
 	platform: 'browser',
-	external: [/^ooxml-core(\/|$)/],
+	external: [/^ooxml-core(\/|$)/, /^ooxml-ui\/pptx(\/|$)/],
 });

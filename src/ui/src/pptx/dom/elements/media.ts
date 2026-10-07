@@ -89,7 +89,7 @@ export const renderMediaElement: ElementRenderer = (element, zIndex, context) =>
 	// scrubber across all of them, so the presenter console painted a transport
 	// over a slide the speaker cannot play.
 	const surface = mediaSurfaceOf({
-		interactive: context.interactive === true,
+		interactive: context.interactive === true || context.reading === true,
 		presenting: context.presenting,
 	});
 	const showTransport = mediaTransportVisible({ ...surface, canvasTransport: true });

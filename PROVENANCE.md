@@ -867,3 +867,15 @@ copying its theme, tint, swatch, keyboard or popover logic. Native series fill
 replacement was measured using `scripts/record-xlsx-chart-series-fill.ps1`;
 its saved/reopened Excel 16.0 build 20430 measurements are in
 `xlsx/__fixtures__/excel-chart-series-fill.json`.
+
+## PowerPoint asset loader for embedded reading views
+
+Source: ChristopherVR/ooxml at `2e3219cff`,
+`viewers/pptx/packages/vanilla/src/viewer/load/load-presentation.ts`.
+The load pipeline moved to `src/ui/src/pptx/dom/load-presentation.ts` and is
+exported through `ooxml-ui/pptx/dom`; the binding retains a compatibility facade.
+Its parse/media tests moved to the same UI directory, while binding source-buffer
+adapter tests stay with `load/source.ts`. Asset resolution and metadata are
+retained. The shared load options additionally forward the core's existing
+archive expansion limit for embedded consumers. No Office parser or asset
+resolution algorithm is copied into Teams.

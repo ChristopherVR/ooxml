@@ -55,6 +55,17 @@ function mediaElement(overrides: Record<string, unknown>): PptxElement {
 	} as PptxElement;
 }
 
+it('exposes video transport on a reading slide without making it editable', () => {
+	const context = { ...makeContext(new Map(), false, false), reading: true };
+	const node = renderMediaElement(
+		mediaElement({ mediaType: 'video', mediaData: MP4_DATA_URL }),
+		0,
+		context,
+	);
+	expect(node?.querySelector('video')?.controls).toBe(true);
+	expect(context.interactive).toBe(false);
+});
+
 describe('renderMediaElement', () => {
 	it('returns null for non-media elements', () => {
 		const el = { type: 'text', id: 't1', x: 0, y: 0, width: 10, height: 10 } as PptxElement;

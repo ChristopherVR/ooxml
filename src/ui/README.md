@@ -234,6 +234,9 @@ bun run --cwd src/ui test:package
 The Teams PowerPoint preview consumes `src/core/dist/pptx` declarations during
 UI typechecking. The core PPTX area still uses relaxed compiler settings;
 importing its source into the strict UI project would bypass that boundary.
+The UI build first stages PowerPoint declarations in the ignored `.types-pptx`
+directory, so the strict Teams build can consume the DOM adapter's declarations
+without importing legacy source or overwriting its declaration inputs.
 
 ## Documentation
 
@@ -245,6 +248,13 @@ table styles, media URL map and translator (`createTranslator()` from
 the requested scale; its host must reserve the scaled width and height.
 Embedded hosts own navigation, media cleanup, asset lifetimes and presentation
 playback. The renderer does not provide Office editing or collaboration on its own.
+
+`loadPresentation()` resolves slide pictures, table fills and media using the
+existing core handler and returns the archive handler, media URLs and deck
+metadata. Dispose the handler and call `revokeBlobUrls()` on its returned URL
+list when replacing or closing the document. Its options accept the core archive
+expansion budget. Set `reading: true` on a slide stage for accessible reading
+content and native media controls without editing overlays.
 
 [Core and UI source](https://github.com/ChristopherVR/ooxml) |
 [Shared UI plan](https://github.com/ChristopherVR/ooxml/blob/main/docs/ooxml-ui-plan.md)

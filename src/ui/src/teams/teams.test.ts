@@ -72,7 +72,7 @@ describe('office-ui-chat-list', () => {
 	});
 
 	it('groups close messages, separates days and quotes replies', async () => {
-		const now = Date.now();
+		const now = new Date(2026, 9, 7, 12).getTime();
 		const el = await mount<OfficeUiChatList>('office-ui-chat-list', {
 			messages: [
 				msg({ id: '1', ts: now - 3 * 86_400_000 }),

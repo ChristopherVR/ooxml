@@ -16,7 +16,7 @@ const local = (path: string): string =>
 export function sharedConfig(port: number): UserConfig {
 	return {
 		// Discover the lazy presentation engine before first open, avoiding a dev-server reload.
-		optimizeDeps: { include: ['ooxml-core/pptx', 'emf-converter'] },
+		optimizeDeps: { include: ['ooxml-core/pptx', 'ooxml-ui/pptx/dom', 'emf-converter'] },
 		resolve: {
 			// Yjs and Lit break (instanceof, double registration) if two copies load: force one.
 			dedupe: [
@@ -33,9 +33,13 @@ export function sharedConfig(port: number): UserConfig {
 			alias: [
 				...(ooxmlSource
 					? [
-							{ find: /^ooxml-core\/(.+)$/, replacement: `${ooxml}src/core/$1/index.ts` },
+							{ find: /^ooxml-core\/(.+)$/, replacement: `${ooxml}src/core/$1` },
 							{ find: /^ooxml-ui$/, replacement: `${ooxml}src/ui/src/index.ts` },
 							{ find: /^ooxml-ui\/teams$/, replacement: `${ooxml}src/ui/src/teams/index.ts` },
+							{
+								find: /^ooxml-ui\/pptx\/dom$/,
+								replacement: `${ooxml}src/ui/dist/pptx/dom/index.mjs`,
+							},
 						]
 					: []),
 				// The bindings import the private web component by name; the build inlines it.

@@ -9,20 +9,20 @@ No feature is considered equivalent solely because a control is present.
 
 ## Current coverage
 
-| Area                            | Evidence in the implementation                                                                                 | Remaining work                                                                                                           |
-| ------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Channels and posts              | Yjs posts and live thread panes, personal followed threads, replies, reactions, author-side edit/delete checks | Teams hierarchy, private/shared channels, membership enforcement, cross-device follows, thread notifications, moderation |
-| Direct and group chats          | The channel model has a `direct` kind                                                                          | No participant-scoped chat workflow or server-enforced privacy                                                           |
-| Search and unread               | Message search, attachment metadata search, per-channel local read markers                                     | Indexed file contents, filters, mentions, activity feed, notifications, shared read receipts                             |
-| Presence                        | Awareness, availability and typing                                                                             | Authenticated identity, idle state, richer status and privacy controls                                                   |
-| Meetings                        | Prejoin, microphone, camera, screen share, raised hand, mesh WebRTC                                            | Scheduling, invitations, SFU, lobby, host roles, recording, captions, backgrounds and large calls                        |
-| File sharing                    | Uploads with cancel/retry and file progress, workbook creation, unique storage names, signed download links    | Permissions, versions, folders, durable local-mode sharing, byte progress and storage cleanup                            |
-| Office content                  | Native Word, Excel and Visio previews; static PowerPoint preview; XLSX local editing and channel save copies   | Full PowerPoint rendering/playback, coediting, write-back/version conflict handling and fidelity acceptance corpus       |
-| Markdown                        | Safe blocks and flat inline formatting, task lists, pipe tables and relative web links                         | Full CommonMark/GFM, nested structure, reference links and inline precedence                                             |
-| Sites and web apps              | Sandboxed HTML/site previews and shared file/website channel tabs                                              | App permissions, approved origins, app messaging and authentication                                                      |
-| Accounts and administration     | Reference server has optional shared token and origin allowlist                                                | User accounts, SSO, tenant/team/channel ACLs, guests, audit, retention and policy enforcement                            |
-| Bindings                        | Six lifecycle bindings share `TeamsProps` and the same app                                                     | Framework-by-framework browser acceptance for the new embedding prop                                                     |
-| Accessibility and visual parity | Existing Lit controls and token styles                                                                         | Keyboard/focus review, screen-reader acceptance, responsive/mobile workflow coverage, reference screenshots              |
+| Area                            | Evidence in the implementation                                                                                            | Remaining work                                                                                                           |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Channels and posts              | Yjs posts and live thread panes, personal followed threads, replies, reactions, author-side edit/delete checks            | Teams hierarchy, private/shared channels, membership enforcement, cross-device follows, thread notifications, moderation |
+| Direct and group chats          | The channel model has a `direct` kind                                                                                     | No participant-scoped chat workflow or server-enforced privacy                                                           |
+| Search and unread               | Message search, attachment metadata search, per-channel local read markers                                                | Indexed file contents, filters, mentions, activity feed, notifications, shared read receipts                             |
+| Presence                        | Awareness, availability and typing                                                                                        | Authenticated identity, idle state, richer status and privacy controls                                                   |
+| Meetings                        | Prejoin, microphone, camera, screen share, raised hand, mesh WebRTC                                                       | Scheduling, invitations, SFU, lobby, host roles, recording, captions, backgrounds and large calls                        |
+| File sharing                    | Uploads with cancel/retry and file progress, workbook creation, unique storage names, signed download links               | Permissions, versions, folders, durable local-mode sharing, byte progress and storage cleanup                            |
+| Office content                  | Native Word, Excel and Visio previews; DOM PowerPoint reading view with media; XLSX local editing and channel save copies | PowerPoint presentation playback, coediting, write-back/version conflict handling and fidelity acceptance corpus         |
+| Markdown                        | Safe blocks and flat inline formatting, task lists, pipe tables and relative web links                                    | Full CommonMark/GFM, nested structure, reference links and inline precedence                                             |
+| Sites and web apps              | Sandboxed HTML/site previews and shared file/website channel tabs                                                         | App permissions, approved origins, app messaging and authentication                                                      |
+| Accounts and administration     | Reference server has optional shared token and origin allowlist                                                           | User accounts, SSO, tenant/team/channel ACLs, guests, audit, retention and policy enforcement                            |
+| Bindings                        | Six lifecycle bindings share `TeamsProps` and the same app                                                                | Framework-by-framework browser acceptance for the new embedding prop                                                     |
+| Accessibility and visual parity | Existing Lit controls and token styles                                                                                    | Keyboard/focus review, screen-reader acceptance, responsive/mobile workflow coverage, reference screenshots              |
 
 ## First implemented slice: content previews
 
@@ -43,14 +43,18 @@ clears the preview; superseded fetches are aborted and late responses ignored.
   are not. Sites may refuse framing or require functionality the sandbox blocks.
   An external-open link remains available; iframe load is not proof of successful
   site rendering. There is no TeamsJS or Microsoft app manifest compatibility.
-- PowerPoint has a default static preview with navigation, slide text and notes.
+- PowerPoint uses the shared DOM renderer in reading mode with navigation,
+  slide text, notes, embedded fonts and native audio/video controls.
   A host embedding page via `embeds.pptx` can override it.
 
-All native byte reads omit ambient credentials and referrers. Text is capped at
+Attachment byte reads omit ambient credentials and referrers. Text is capped at
 2 MiB and Office bytes at 32 MiB, including streamed responses without a size
 header. Cross-origin files need appropriate CORS. Signed URLs are preserved;
 an expired link must be reopened from the attachment to request a fresh link.
 Local-mode name-only attachments still have no bytes to preview.
+
+Linked presentation media and supported online-video embeds follow browser and
+provider request policies. An administrative origin allowlist is not implemented.
 
 ### Integration contract
 
@@ -134,6 +138,9 @@ Browser evidence covers workbook creation, same-name upload preservation, upload
 failure/retry, file search and opening uploaded Markdown bytes.
 
 ## Fourth implemented slice: static PowerPoint previews
+
+This initial SVG baseline is superseded by the DOM reading view in the
+twenty-fifth slice below. Presentation playback remains outstanding.
 
 PPTX attachments now open without host embed configuration. The pane delegates
 parsing and SVG generation to the existing core PowerPoint engine, displays the
@@ -464,14 +471,33 @@ and [description limit](https://learn.microsoft.com/en-us/powershell/module/micr
 are references. Multiple teams, private/shared channel membership, authenticated
 creation permissions and server-enforced naming uniqueness remain outstanding.
 
+## Twenty-fifth slice: native PowerPoint reading view
+
+PowerPoint files now render through the shared DOM slide renderer and its
+existing asset loader. Reading mode exposes accessible slide content and native
+media controls without authoring overlays. The preview resolves pictures, table
+fills and embedded audio/video, applies deck themes and embedded fonts, and fits
+slides to both pane dimensions. Buttons and Arrow/Page keys navigate locally;
+notes, slide text and compatibility warnings remain available. Closing or
+replacing a preview pauses media, releases media/font URLs and disposes its
+archive. Superseded and late loads release their own resources. The archive
+expansion budget remains 128 MiB and external image loading remains disabled.
+
+Acceptance exercises actual themed slide content, desktop/compact sizing,
+keyboard navigation, real embedded audio playback and teardown across all six
+bindings. The shared asset loader retains direct real-deck and media tests.
+Animation, transitions, Office editing, meeting slide synchronization, presenter
+roles, thumbnails/grid navigation, zoom/pan and shared annotations remain
+outstanding. Microsoft's [PowerPoint Live workflow](https://support.microsoft.com/en-us/powerpoint/present-from-powerpoint-live-in-microsoft-teams)
+is the reference for the remaining meeting integration; a local reading view does
+not establish PowerPoint Live parity or exact rendering fidelity.
+
 ## Next releasable slices
 
-The PowerPoint DOM renderer and its element registry now ship from
-`ooxml-ui/pptx/dom`. The vanilla PowerPoint binding consumes compatibility
-re-exports of the extracted implementation, with its adjacent rendering tests
-relocated into the UI package. OpenTeams still uses the static SVG preview;
-connecting the shared DOM renderer, media lifecycle and presentation controls
-remains necessary before the full PowerPoint adapter slice is achieved.
+The PowerPoint DOM renderer, element registry and asset-loading pipeline ship
+from `ooxml-ui/pptx/dom`. OpenTeams consumes them in reading mode. Presentation
+playback and meeting integration remain necessary before the full PowerPoint
+adapter slice is achieved.
 
 1. UI parity: match the current Teams shell, Shared/Files commands, Settings
    navigation, typography, spacing and responsive layouts against reference
@@ -479,9 +505,9 @@ remains necessary before the full PowerPoint adapter slice is achieved.
    settings honestly. Visual similarity alone does not establish workflow parity.
 2. Shared tab permissions: authenticated membership and server enforcement,
    approved web-app origins and a supported app messaging contract.
-3. Full PowerPoint adapter: expose the existing framework-neutral renderer
-   through the UI package, then consume it here without copying format or render
-   logic. Test actual slide content, navigation, media and teardown.
+3. Full PowerPoint adapter: connect shared animation/transition playback,
+   presentation controls and meeting participant synchronization. Add thumbnail
+   and grid navigation, zoom/pan, accessible presentation controls and annotations.
 4. Files workflow: permission-aware storage IDs, progress/cancel/retry, folders,
    version metadata, and save-back contracts. Add coediting only after identity,
    access control and revision handling are enforceable.

@@ -110,3 +110,6 @@ teams-presentation-preview {
 iframe {
 	background: var(--office-background);
 }
+teams-presentation-preview {
+	display: flex;
+}

@@ -33,6 +33,8 @@ import { createEl } from './dom';
 import type { ChartPartSelection, ElementRenderContext, ElementRendererRegistry } from './types';
 
 export interface SlideStageOptions {
+	/** Accessible reading surface with media controls, without authoring overlays. */
+	reading?: boolean;
 	document: Document;
 	slide: PptxSlide;
 	canvasSize: CanvasSize;
@@ -153,12 +155,13 @@ export function renderSlideStage(options: SlideStageOptions): HTMLElement {
 		'--pptxv-grid-size': `${options.gridSpacingPx ?? 10}px`,
 		...getSlideBackgroundStyle(slide, { widthPx: canvasSize.width, heightPx: canvasSize.height }),
 	});
-	if (interactive) {
+	if (interactive || options.reading) {
 		stage.setAttribute('role', 'region');
 		stage.setAttribute('aria-roledescription', 'slide');
 		stage.setAttribute('aria-label', t('pptx.canvas.slide'));
 	}
 	const context: ElementRenderContext = {
+		reading: options.reading,
 		document: doc,
 		slide,
 		slides: options.slides,
@@ -258,7 +261,7 @@ export function renderSlideStage(options: SlideStageOptions): HTMLElement {
 	// alone; it also stays at the stage boundary (rather than per-renderer) so
 	// custom host renderers receive it too, and thumbnails do not duplicate the
 	// slide's screen-reader tree.
-	if (interactive) {
+	if (interactive || options.reading) {
 		applyRenderedElementAccessibility(stage, slide.elements, {
 			presenting: options.presenting ?? false,
 		});

@@ -4,6 +4,7 @@
 	flex: 1;
 	min-height: 0;
 	overflow: auto;
+	scrollbar-gutter: stable;
 }
 nav {
 	display: flex;
@@ -35,6 +36,7 @@ details {
 	color: var(--office-teams-text-subtle);
 }
 .stage {
+	overflow: hidden;
 	display: grid;
 	grid-template-columns: minmax(0, 1fr);
 	place-items: center;
@@ -44,12 +46,13 @@ details {
 	padding: var(--office-space-3);
 	background: var(--office-background);
 }
-img {
-	display: block;
-	width: 100%;
-	min-width: 0;
-	height: auto;
-	object-fit: contain;
+.stage-frame {
+	position: relative;
+	flex-shrink: 0;
+}
+.stage-frame:focus-visible {
+	outline: var(--office-border-width) solid var(--office-brand-primary);
+	outline-offset: var(--office-space-1);
 }
 pre {
 	white-space: pre-wrap;

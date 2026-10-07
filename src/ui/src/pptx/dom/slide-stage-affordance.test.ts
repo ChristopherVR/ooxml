@@ -46,6 +46,12 @@ function render(elements: PptxSlide['elements'], extra: Record<string, unknown> 
 }
 
 describe('slide stage action affordances', () => {
+	it('makes a reading slide accessible without authoring badges or hit overlays', () => {
+		const stage = render(actionShape, { reading: true });
+		expect(stage.getAttribute('aria-roledescription')).toBe('slide');
+		expect(stage.querySelector(`.${ACTION_INDICATOR_CLASS}`)).toBeNull();
+		expect(stage.querySelector('[data-pptx-hit-target]')).toBeNull();
+	});
 	it('badges an action shape and offers its destination tooltip', () => {
 		const stage = render(actionShape, { interactive: true });
 		const node = stage.querySelector('[data-element-id="el-action"]');

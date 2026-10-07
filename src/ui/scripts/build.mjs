@@ -12,6 +12,9 @@ const run = (cmd, args) =>
 	});
 
 rmSync('dist', { recursive: true, force: true });
+// Strict embedded surfaces consume the relaxed PowerPoint declarations, never its source.
+rmSync('.types-pptx', { recursive: true, force: true });
+await run('tsc', ['-p', 'tsconfig.pptx.json', '--outDir', '.types-pptx']);
 await Promise.all([
 	run('tsc', ['-p', 'tsconfig.build.json']),
 	run('tsc', ['-p', 'tsconfig.pptx.json']),

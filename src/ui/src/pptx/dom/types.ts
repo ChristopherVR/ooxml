@@ -42,6 +42,8 @@ export interface ChartPartSelection {
  * detached documents (tests, export pipelines).
  */
 export interface ElementRenderContext {
+	/** Reading surfaces expose native media transport without authoring hit targets. */
+	readonly reading?: boolean;
 	/** Document used for all DOM creation. */
 	readonly document: Document;
 	/** The slide being rendered. */
