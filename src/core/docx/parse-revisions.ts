@@ -69,10 +69,14 @@ export function paragraphMarkRevision(pPr: XmlElement | undefined): Revision | u
 	return undefined;
 }
 
-/** Marks that `w:pPrChange` recorded a prior paragraph formatting snapshot (not itself modeled). */
+/** Preserve prior paragraph properties alongside their revision identity. */
 export function paragraphFormatRevision(pPr: XmlElement | undefined): Revision | undefined {
 	const change = first(pPr, 'pPrChange');
-	return change ? revisionFrom(change, 'paragraphChange') : undefined;
+	if (!change) return undefined;
+	const revision = revisionFrom(change, 'paragraphChange');
+	const previous = first(change, 'pPr');
+	if (previous) revision.previousParagraphPropertiesXml = buildXml(previous);
+	return revision;
 }
 
 /** Preserve the prior run-properties subtree alongside its revision identity. */

@@ -1,7 +1,7 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import type { Paragraph, Revision } from './model.js';
 import { children, first, makeW, type XmlDocument, type XmlElement, WORD_NS } from './xml.js';
-import { parseRunPropertiesSnapshot } from './restore-run-format.js';
+import { parsePropertiesSnapshot } from './revision-properties.js';
 
 const REVISION_WRAPPER_NAMES = ['ins', 'del', 'moveFrom', 'moveTo'];
 /** Range markers the writer regenerates from the model: comment anchors and move ranges. */
@@ -46,14 +46,37 @@ export function writeRunFormatRevision(
 	props: XmlElement,
 	revision: Revision | undefined,
 ): void {
-	removeChildren(props, 'rPrChange');
-	if (revision?.kind !== 'formatChange') return;
-	if (!revision.previousRunPropertiesXml)
-		throw new Error(
-			'Cannot write a formatting revision without its prior run-properties snapshot.',
-		);
-	const previous = parseRunPropertiesSnapshot(revision.previousRunPropertiesXml);
-	const change = makeW(doc, 'rPrChange');
+	writeFormatRevision(doc, props, revision?.kind === 'formatChange' ? revision : undefined, 'rPr');
+}
+
+/** Rebuild prior paragraph properties when a paragraph is edited. */
+export function writeParagraphFormatRevision(
+	doc: XmlDocument,
+	props: XmlElement,
+	revision: Revision | undefined,
+): void {
+	writeFormatRevision(
+		doc,
+		props,
+		revision?.kind === 'paragraphChange' ? revision : undefined,
+		'pPr',
+	);
+}
+
+function writeFormatRevision(
+	doc: XmlDocument,
+	props: XmlElement,
+	revision: Revision | undefined,
+	local: 'rPr' | 'pPr',
+): void {
+	removeChildren(props, `${local}Change`);
+	if (!revision) return;
+	const xml =
+		local === 'rPr' ? revision.previousRunPropertiesXml : revision.previousParagraphPropertiesXml;
+	if (!xml)
+		throw new Error(`Cannot write a formatting revision without its prior ${local} snapshot.`);
+	const previous = parsePropertiesSnapshot(xml, local);
+	const change = makeW(doc, `${local}Change`);
 	setAttribute(change, 'id', revision.id);
 	setAttribute(change, 'author', revision.author);
 	if (revision.date) setAttribute(change, 'date', revision.date);

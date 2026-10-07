@@ -95,6 +95,8 @@ export const schema = new Schema({
 			content: 'inline*',
 			group: 'block',
 			attrs: {
+				markRevision: { default: null },
+				formatRevision: { default: null },
 				align: { default: null },
 				direction: { default: null },
 				id: { default: '' },

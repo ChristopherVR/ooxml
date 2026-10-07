@@ -1,0 +1,142 @@
+{
+	"applicationVersion": "16.0",
+	"applicationBuild": "16.0.20430",
+	"cases": [
+		{
+			"name": "alignment",
+			"before": {
+				"alignment": 0,
+				"before": 0.0,
+				"after": 0.0,
+				"left": 0.0,
+				"first": 0.0,
+				"line": 12.0,
+				"lineRule": 4,
+				"keepNext": 0
+			},
+			"tracked": {
+				"alignment": 1,
+				"before": 0.0,
+				"after": 0.0,
+				"left": 0.0,
+				"first": 0.0,
+				"line": 12.0,
+				"lineRule": 4,
+				"keepNext": 0
+			},
+			"rejected": {
+				"alignment": 0,
+				"before": 0.0,
+				"after": 0.0,
+				"left": 0.0,
+				"first": 0.0,
+				"line": 12.0,
+				"lineRule": 4,
+				"keepNext": 0
+			},
+			"revisionTypes": [10]
+		},
+		{
+			"name": "spacing",
+			"before": {
+				"alignment": 0,
+				"before": 0.0,
+				"after": 0.0,
+				"left": 0.0,
+				"first": 0.0,
+				"line": 12.0,
+				"lineRule": 4,
+				"keepNext": 0
+			},
+			"tracked": {
+				"alignment": 0,
+				"before": 18.0,
+				"after": 6.0,
+				"left": 0.0,
+				"first": 0.0,
+				"line": 24.0,
+				"lineRule": 4,
+				"keepNext": 0
+			},
+			"rejected": {
+				"alignment": 0,
+				"before": 0.0,
+				"after": 0.0,
+				"left": 0.0,
+				"first": 0.0,
+				"line": 12.0,
+				"lineRule": 4,
+				"keepNext": 0
+			},
+			"revisionTypes": [10]
+		},
+		{
+			"name": "indent",
+			"before": {
+				"alignment": 0,
+				"before": 0.0,
+				"after": 0.0,
+				"left": 0.0,
+				"first": 0.0,
+				"line": 12.0,
+				"lineRule": 4,
+				"keepNext": 0
+			},
+			"tracked": {
+				"alignment": 0,
+				"before": 0.0,
+				"after": 0.0,
+				"left": 36.0,
+				"first": 18.0,
+				"line": 12.0,
+				"lineRule": 4,
+				"keepNext": 0
+			},
+			"rejected": {
+				"alignment": 0,
+				"before": 0.0,
+				"after": 0.0,
+				"left": 0.0,
+				"first": 0.0,
+				"line": 12.0,
+				"lineRule": 4,
+				"keepNext": 0
+			},
+			"revisionTypes": [10]
+		},
+		{
+			"name": "multiple",
+			"before": {
+				"alignment": 0,
+				"before": 0.0,
+				"after": 0.0,
+				"left": 0.0,
+				"first": 0.0,
+				"line": 12.0,
+				"lineRule": 4,
+				"keepNext": 0
+			},
+			"tracked": {
+				"alignment": 1,
+				"before": 18.0,
+				"after": 6.0,
+				"left": 36.0,
+				"first": 18.0,
+				"line": 24.0,
+				"lineRule": 4,
+				"keepNext": -1
+			},
+			"rejected": {
+				"alignment": 0,
+				"before": 0.0,
+				"after": 0.0,
+				"left": 0.0,
+				"first": 0.0,
+				"line": 12.0,
+				"lineRule": 4,
+				"keepNext": 0
+			},
+			"revisionTypes": [10]
+		}
+	]
+}

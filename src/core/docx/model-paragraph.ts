@@ -42,7 +42,7 @@ export interface Paragraph {
 	pageBreakBefore?: boolean;
 	/** Tracked insertion/deletion of the paragraph mark itself (the paragraph break). */
 	markRevision?: Revision;
-	/** Marks that `w:pPrChange` recorded a prior paragraph formatting snapshot; the snapshot itself is not modeled. */
+	/** Tracked paragraph formatting, including the prior `w:pPr` XML snapshot. */
 	formatRevision?: Revision;
 	/** Custom tab stops (`w:tabs`), in document order. */
 	tabStops?: TabStop[];

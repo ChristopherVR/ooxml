@@ -7,7 +7,7 @@ import { continuationKey } from './comment-spans.js';
 import type { CommentSpans } from './write-ranges.js';
 import { reconcileBookmarks } from './bookmarks.js';
 import { writeNumberingProperties } from './numbering-write.js';
-import { writeParagraphMarkRevision } from './write-revisions.js';
+import { writeParagraphFormatRevision, writeParagraphMarkRevision } from './write-revisions.js';
 import { paragraphJustification } from './paragraph-alignment.js';
 import { runHasUnknownProperties } from './write-run-validation.js';
 import {
@@ -92,7 +92,7 @@ export function writeParagraphImpl(
 	writeParagraphProperties(doc, pPr, paragraph, base);
 	writeNumberingProperties(doc, pPr, paragraph, base);
 	writeParagraphMarkRevision(doc, pPr, paragraph, base);
-	removeChildren(pPr, 'pPrChange');
+	writeParagraphFormatRevision(doc, pPr, paragraph.formatRevision);
 	writeTabStops(doc, pPr, paragraph, base);
 	orderParagraphProperties(pPr);
 	rejectUnsafeRunSegmentation(

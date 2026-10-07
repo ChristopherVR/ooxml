@@ -1,13 +1,11 @@
 import type { TextRun } from './model.js';
 import { DIRECT_RUN_PROPERTY_KEYS } from './run-formatting.js';
 import { parseDirectRunProperties } from './run-properties.js';
-import { named, parseXml, type XmlElement } from './xml.js';
+import type { XmlElement } from './xml.js';
+import { parsePropertiesSnapshot } from './revision-properties.js';
 
 export function parseRunPropertiesSnapshot(xml: string): XmlElement {
-	const element = parseXml(xml).documentElement;
-	if (!named(element, 'rPr'))
-		throw new Error('A formatting revision snapshot must contain Word run properties.');
-	return element;
+	return parsePropertiesSnapshot(xml, 'rPr');
 }
 
 /** Restores modeled and opaque properties without changing text, anchors or inline content. */

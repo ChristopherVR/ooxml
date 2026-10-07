@@ -38,6 +38,8 @@ function paragraphNode(paragraph: Paragraph, labels: ListLabels, noteNumber?: No
 		'paragraph',
 		{
 			id: paragraph.id,
+			markRevision: paragraph.markRevision ?? null,
+			formatRevision: paragraph.formatRevision ?? null,
 			align: paragraph.align ?? null,
 			direction: paragraph.direction ?? null,
 			style: paragraph.style || '',
@@ -187,6 +189,8 @@ export function docToModel(
 		const previous = previousParagraphs.get(id);
 		if (
 			previous &&
+			sameJson(previous.markRevision ?? null, node.attrs.markRevision ?? null) &&
+			sameJson(previous.formatRevision ?? null, node.attrs.formatRevision ?? null) &&
 			sameRuns(previous.runs, runs) &&
 			previous.align === (node.attrs.align ?? undefined) &&
 			previous.direction === (node.attrs.direction ?? undefined) &&
@@ -216,6 +220,12 @@ export function docToModel(
 			type: 'paragraph',
 			id,
 			runs,
+			...(node.attrs.markRevision
+				? { markRevision: structuredClone(node.attrs.markRevision) }
+				: {}),
+			...(node.attrs.formatRevision
+				? { formatRevision: structuredClone(node.attrs.formatRevision) }
+				: {}),
 			...(node.attrs.align != null ? { align: node.attrs.align } : {}),
 			...(node.attrs.direction != null ? { direction: node.attrs.direction } : {}),
 			...(node.attrs.style ? { style: node.attrs.style } : {}),

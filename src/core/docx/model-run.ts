@@ -13,6 +13,8 @@ import type { HalfPoints, SignedTwips } from './units.js';
 export interface Revision {
 	/** Prior `w:rPr` snapshot for an imported run-formatting change. */
 	previousRunPropertiesXml?: string;
+	/** Prior `w:pPr` snapshot for an imported paragraph-formatting change. */
+	previousParagraphPropertiesXml?: string;
 	kind: 'insert' | 'delete' | 'moveFrom' | 'moveTo' | 'formatChange' | 'paragraphChange';
 	/**
 	 * For `moveFrom`/`moveTo`: the move this text belongs to. Both sides share `name` (from
