@@ -121,3 +121,28 @@ it('does not handle a field cut event in read-only mode', () => {
 	expect(setData).not.toHaveBeenCalled();
 	expect(view.state.doc.eq(original)).toBe(true);
 });
+
+for (const [from, to, expected] of [
+	[1, 6, 'LA'],
+	[6, 9, 'BR'],
+] as const)
+	it(`copies a boundary slice as ${expected} without incomplete field markers`, () => {
+		const view = editor(false);
+		view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, from, to)));
+		const original = view.state.doc;
+		const copied = view.serializeForClipboard(view.state.selection.content());
+		expect(copied.text).toBe(expected);
+		expect(copied.dom.innerHTML).not.toContain('data-field');
+		expect(copied.dom.innerHTML).toContain('<strong');
+		expect(view.state.doc.eq(original)).toBe(true);
+		view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, 9)));
+		expect(view.pasteHTML(copied.dom.innerHTML)).toBe(true);
+		expect(view.state.doc.textContent).toBe(`LABR${expected}`);
+		const markers: string[] = [];
+		view.state.doc.descendants((node) => {
+			if (node.type.name === 'fieldMarker') markers.push(node.attrs.kind);
+		});
+		expect(markers).toEqual(['begin', 'code', 'separate', 'end']);
+		undo(view.state, view.dispatch);
+		expect(view.state.doc.eq(original)).toBe(true);
+	});
