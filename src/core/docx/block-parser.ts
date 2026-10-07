@@ -163,6 +163,7 @@ function parseParagraph(node: XmlElement, id: string): Paragraph {
 	);
 	if (!runs.length) runs.push({ text: '' });
 	const paragraph: Paragraph = { type: 'paragraph', id, runs };
+	if (props) paragraph.sourceParagraphPropertiesXml = buildXml(props);
 	const bookmarks = paragraphBookmarkNames(node);
 	if (bookmarks.length) paragraph.bookmarks = bookmarks;
 	const markRevision = paragraphMarkRevision(props);

@@ -15,6 +15,7 @@ export type DirectParagraphProperties = Omit<
 	| 'formatRevision'
 	| 'bookmarks'
 	| 'restoredParagraphPropertiesXml'
+	| 'sourceParagraphPropertiesXml'
 >;
 const signedTwipValue = parseSignedTwips;
 const twipValue = parseTwips;

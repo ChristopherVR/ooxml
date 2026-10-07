@@ -1,0 +1,78 @@
+{
+	"applicationVersion": "16.0",
+	"applicationBuild": "16.0.20430",
+	"cases": [
+		{
+			"name": "paragraph-core-alignment.docx",
+			"revisionCount": 0,
+			"text": "Paragraph formatting\r",
+			"paragraphMarkFont": "Arial",
+			"paragraphMarkComplexScriptFont": "Arial",
+			"alignment": 0,
+			"spacingAfter": 0.0
+		},
+		{
+			"name": "paragraph-core-indent.docx",
+			"revisionCount": 0,
+			"text": "Paragraph formatting\r",
+			"paragraphMarkFont": "Arial",
+			"paragraphMarkComplexScriptFont": "Arial",
+			"alignment": 0,
+			"spacingAfter": 0.0
+		},
+		{
+			"name": "paragraph-core-multiple.docx",
+			"revisionCount": 0,
+			"text": "Paragraph formatting\r",
+			"paragraphMarkFont": "Arial",
+			"paragraphMarkComplexScriptFont": "Arial",
+			"alignment": 0,
+			"spacingAfter": 0.0
+		},
+		{
+			"name": "paragraph-core-spacing.docx",
+			"revisionCount": 0,
+			"text": "Paragraph formatting\r",
+			"paragraphMarkFont": "Arial",
+			"paragraphMarkComplexScriptFont": "Arial",
+			"alignment": 0,
+			"spacingAfter": 0.0
+		},
+		{
+			"name": "paragraph-standalone-alignment.docx",
+			"revisionCount": 0,
+			"text": "Paragraph formatting\r",
+			"paragraphMarkFont": "Arial",
+			"paragraphMarkComplexScriptFont": "Arial",
+			"alignment": 0,
+			"spacingAfter": 0.0
+		},
+		{
+			"name": "paragraph-standalone-indent.docx",
+			"revisionCount": 0,
+			"text": "Paragraph formatting\r",
+			"paragraphMarkFont": "Arial",
+			"paragraphMarkComplexScriptFont": "Arial",
+			"alignment": 0,
+			"spacingAfter": 0.0
+		},
+		{
+			"name": "paragraph-standalone-multiple.docx",
+			"revisionCount": 0,
+			"text": "Paragraph formatting\r",
+			"paragraphMarkFont": "Arial",
+			"paragraphMarkComplexScriptFont": "Arial",
+			"alignment": 0,
+			"spacingAfter": 0.0
+		},
+		{
+			"name": "paragraph-standalone-spacing.docx",
+			"revisionCount": 0,
+			"text": "Paragraph formatting\r",
+			"paragraphMarkFont": "Arial",
+			"paragraphMarkComplexScriptFont": "Arial",
+			"alignment": 0,
+			"spacingAfter": 0.0
+		}
+	]
+}

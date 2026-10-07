@@ -10,11 +10,7 @@ import { writeNumberingProperties } from './numbering-write';
 import { writeParagraphFormatRevision, writeParagraphMarkRevision } from './write-revisions';
 import { paragraphJustification } from './paragraph-alignment';
 import { runHasUnknownProperties } from './write-run-validation';
-import {
-	buildInlineContent,
-	collectInlineSlots,
-	replaceableInlineChildren,
-} from './write-inline';
+import { buildInlineContent, collectInlineSlots, replaceableInlineChildren } from './write-inline';
 import type { RelationshipAllocator } from './relationship-allocator';
 import { parseDirectParagraphProperties } from './paragraph-properties';
 import { parsePropertiesSnapshot } from './revision-properties';
@@ -78,8 +74,10 @@ export function writeParagraphImpl(
 	const restoring =
 		paragraph.restoredParagraphPropertiesXml &&
 		(!base || paragraph.restoredParagraphPropertiesXml !== base.restoredParagraphPropertiesXml);
-	if (restoring) {
-		const restored = parsePropertiesSnapshot(paragraph.restoredParagraphPropertiesXml!, 'pPr');
+	const propertiesXml =
+		paragraph.restoredParagraphPropertiesXml ?? paragraph.sourceParagraphPropertiesXml;
+	if (propertiesXml && (restoring || paragraph.sourceParagraphPropertiesXml || !base)) {
+		const restored = parsePropertiesSnapshot(propertiesXml, 'pPr');
 		if (pPr) node.removeChild(pPr);
 		pPr = doc.importNode(restored, true) as XmlElement;
 		node.insertBefore(pPr, node.firstChild);

@@ -1,6 +1,8 @@
 import type { Paragraph } from './model';
 import { parseDirectParagraphProperties } from './paragraph-properties';
 import { parsePropertiesSnapshot } from './revision-properties';
+import { buildXml, first } from './xml';
+import { orderParagraphProperties } from './tab-stops';
 
 export const PARAGRAPH_FORMAT_KEYS = [
 	'align',
@@ -38,9 +40,23 @@ export function restoreParagraphFormatting(paragraph: Paragraph): void {
 		throw new Error(
 			'Cannot reject a paragraph formatting revision without its prior properties snapshot.',
 		);
-	const previous = parseDirectParagraphProperties(parsePropertiesSnapshot(xml, 'pPr'));
+	const properties = parsePropertiesSnapshot(xml, 'pPr');
+	// Paragraph-mark and section properties have independent revision histories. Native Word
+	// retains their current values when a paragraph-format snapshot omits them.
+	if (paragraph.sourceParagraphPropertiesXml) {
+		const current = parsePropertiesSnapshot(paragraph.sourceParagraphPropertiesXml, 'pPr');
+		for (const name of ['rPr', 'sectPr']) {
+			const element = first(current, name);
+			if (element && !first(properties, name))
+				properties.appendChild(properties.ownerDocument!.importNode(element, true));
+		}
+		orderParagraphProperties(properties);
+	}
+	const previous = parseDirectParagraphProperties(properties);
 	for (const key of PARAGRAPH_FORMAT_KEYS) delete paragraph[key];
 	Object.assign(paragraph, previous);
-	paragraph.restoredParagraphPropertiesXml = xml;
+	paragraph.restoredParagraphPropertiesXml = buildXml(properties);
+	if (paragraph.sourceParagraphPropertiesXml)
+		paragraph.sourceParagraphPropertiesXml = paragraph.restoredParagraphPropertiesXml;
 	delete paragraph.formatRevision;
 }

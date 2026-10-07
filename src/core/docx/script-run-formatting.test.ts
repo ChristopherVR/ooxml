@@ -4,7 +4,7 @@ import JSZip from 'jszip';
 import { loadDocx, saveDocx, resolveRunFormatting } from './index';
 import { parseXml, WORD_NS } from './xml';
 import { runHasUnknownProperties } from './write-run-validation';
-import { expectParagraph } from './test-support/access';
+import { expectParagraph, paragraphWithoutXmlBases } from './test-support/access';
 import { rejectRevision, rejectAllRevisions } from './revision-commands';
 
 const properties =
@@ -69,7 +69,10 @@ describe('script-specific run properties', () => {
 			);
 			const actual = expectParagraph(rejected.model.blocks[0]);
 			const expected = expectParagraph(native.model.blocks[0]);
-			expect({ ...actual, runs: undefined }).toEqual({ ...expected, runs: undefined });
+			expect({ ...paragraphWithoutXmlBases(actual), runs: undefined }).toEqual({
+				...paragraphWithoutXmlBases(expected),
+				runs: undefined,
+			});
 			expect(actual.runs.map((run) => run.text).join('')).toBe(
 				expected.runs.map((run) => run.text).join(''),
 			);

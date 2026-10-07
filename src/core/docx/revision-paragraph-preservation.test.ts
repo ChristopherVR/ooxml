@@ -4,7 +4,7 @@ import JSZip from 'jszip';
 import { loadDocx } from './parse';
 import { saveDocx } from './save';
 import { acceptRevision, rejectRevision, rejectAllRevisions } from './revision-commands';
-import { expectParagraph } from './test-support/access';
+import { expectParagraph, paragraphWithoutXmlBases } from './test-support/access';
 
 for (const name of ['alignment', 'spacing', 'indent', 'multiple'])
 	describe(`native paragraph ${name} history`, () => {
@@ -33,8 +33,10 @@ for (const name of ['alignment', 'spacing', 'indent', 'multiple'])
 			const bytes = await loaded.save(accepted);
 			const xml = await (await JSZip.loadAsync(bytes)).file('word/document.xml')!.async('string');
 			expect(xml).not.toContain('pPrChange');
-			const { formatRevision: _revision, ...expected } = paragraph;
-			expect(expectParagraph((await loadDocx(bytes)).model.blocks[0])).toEqual(expected);
+			const { formatRevision: _revision, ...expected } = paragraphWithoutXmlBases(paragraph);
+			expect(
+				paragraphWithoutXmlBases(expectParagraph((await loadDocx(bytes)).model.blocks[0])),
+			).toEqual(expected);
 		});
 		it('restores native rejected formatting through both export paths', async () => {
 			const loaded = await loadDocx(new Uint8Array(await fixture()));
@@ -56,11 +58,13 @@ for (const name of ['alignment', 'spacing', 'indent', 'multiple'])
 				const { restoredParagraphPropertiesXml: _snapshot, ...actual } = expectParagraph(
 					model.blocks[0],
 				);
-				expect(actual).toEqual(expectParagraph(native.model.blocks[0]));
+				expect(paragraphWithoutXmlBases(actual)).toEqual(
+					paragraphWithoutXmlBases(expectParagraph(native.model.blocks[0])),
+				);
 				for (const bytes of [await loaded.save(model), await saveDocx(model)]) {
-					expect(expectParagraph((await loadDocx(bytes)).model.blocks[0])).toEqual(
-						expectParagraph(native.model.blocks[0]),
-					);
+					expect(
+						paragraphWithoutXmlBases(expectParagraph((await loadDocx(bytes)).model.blocks[0])),
+					).toEqual(paragraphWithoutXmlBases(expectParagraph(native.model.blocks[0])));
 					const xml = await (
 						await JSZip.loadAsync(bytes)
 					)

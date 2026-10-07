@@ -26,6 +26,12 @@ revision, edited text, and the expected current paragraph formatting remain.
 `core-rejected-reference.json` records Word opening all eight rejected exports:
 zero revisions and the same paragraph properties as native rejection.
 
+`core-rejected-properties-reference.json` additionally checks the paragraph-mark
+font in all eight rejected exports. Rejection retains the current paragraph-mark
+and section properties when the prior paragraph snapshot omits them. The model
+and editor retain complete source paragraph properties through text edits and
+export, including opaque attributes and independently tracked properties.
+
 # Tracked text export check
 
 `tracked-text-export-reference.json` records desktop Word reopening four core

@@ -259,3 +259,11 @@ Word behavior for all story revisions.
 
 Full M365 Word parity remains unfinished and must not be claimed without this
 reference evidence.
+
+Paragraphs now carry their complete source property basis through editor and
+Yjs conversion. Rejection preserves current paragraph-mark and section properties
+when the prior paragraph snapshot omits them, while restoring the paragraph
+formatting that snapshot records. Raw-property regressions cover opaque
+attributes, borders and section metadata. Desktop Word reopened all eight native
+paragraph rejection exports with zero revisions and the expected paragraph-mark
+fonts; all six browser bindings cover Review rejection and undo.

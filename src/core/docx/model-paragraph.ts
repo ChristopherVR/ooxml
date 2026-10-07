@@ -16,6 +16,8 @@ export interface Paragraph {
 	runs: TextRun[];
 	/** Complete XML basis restored by paragraph-format rejection; known edits overlay it. */
 	restoredParagraphPropertiesXml?: string;
+	/** Complete source `w:pPr` basis for property snapshots and preservation after editor conversion. */
+	sourceParagraphPropertiesXml?: string;
 	align?: 'left' | 'center' | 'right' | 'justify';
 	/**
 	 * The exact `w:jc` value read from the file (`start`, `end`, `distribute`, kashida variants...).

@@ -20,6 +20,9 @@ export function paragraphFromAttrs(attrs: Attrs, id: string, runs: TextRun[]): P
 		...(attrs.restoredParagraphPropertiesXml
 			? { restoredParagraphPropertiesXml: String(attrs.restoredParagraphPropertiesXml) }
 			: {}),
+		...(attrs.sourceParagraphPropertiesXml
+			? { sourceParagraphPropertiesXml: String(attrs.sourceParagraphPropertiesXml) }
+			: {}),
 		...(attrs.markRevision ? { markRevision: structuredClone(attrs.markRevision) } : {}),
 		...(attrs.formatRevision ? { formatRevision: structuredClone(attrs.formatRevision) } : {}),
 		...(attrs.align != null ? { align: attrs.align } : {}),
@@ -49,6 +52,7 @@ export function paragraphAttrs(paragraph: Paragraph): Attrs {
 		markRevision: paragraph.markRevision ?? null,
 		formatRevision: paragraph.formatRevision ?? null,
 		restoredParagraphPropertiesXml: paragraph.restoredParagraphPropertiesXml ?? null,
+		sourceParagraphPropertiesXml: paragraph.sourceParagraphPropertiesXml ?? null,
 		align: paragraph.align ?? null,
 		justification: paragraph.justification ?? null,
 		outlineLevel: paragraph.outlineLevel ?? null,

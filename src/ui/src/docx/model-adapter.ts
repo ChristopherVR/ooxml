@@ -158,6 +158,8 @@ export function docToModel(
 		const previous = previousParagraphs.get(id);
 		if (
 			previous &&
+			(previous.sourceParagraphPropertiesXml ?? null) ===
+				(node.attrs.sourceParagraphPropertiesXml ?? null) &&
 			(previous.restoredParagraphPropertiesXml ?? null) ===
 				(node.attrs.restoredParagraphPropertiesXml ?? null) &&
 			sameJson(previous.markRevision ?? null, node.attrs.markRevision ?? null) &&

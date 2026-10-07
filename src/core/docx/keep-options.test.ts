@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
 import { createDocument, loadDocx, resolveParagraphFormatting, type Paragraph } from './index';
+import { first, parseXml, children, isElement } from './xml';
 
 const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 
@@ -25,9 +26,13 @@ describe('paragraph keep options', () => {
 		)
 			.file('word/document.xml')!
 			.async('string');
-		expect(xml).toContain(
-			'<w:pPr><w:keepLines/><w:widowControl w:val="0"/><w:contextualSpacing/></w:pPr>',
-		);
+		const props = first(first(first(parseXml(xml).documentElement, 'body'), 'p'), 'pPr')!;
+		expect(
+			Array.from(props.childNodes)
+				.filter(isElement)
+				.map((node) => node.localName),
+		).toEqual(['keepLines', 'widowControl', 'contextualSpacing']);
+		expect(children(props, 'widowControl')[0]!.getAttributeNS(W, 'val')).toBe('0');
 	});
 
 	it("resolves Word's heading styles as keep-with-next", () => {

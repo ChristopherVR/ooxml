@@ -27,6 +27,9 @@ export function resolveParagraphFormatting(
 			id: String(node.attrs.id),
 			runs: [],
 			formatRevision: revision,
+			...(node.attrs.sourceParagraphPropertiesXml
+				? { sourceParagraphPropertiesXml: String(node.attrs.sourceParagraphPropertiesXml) }
+				: {}),
 		};
 		restoreParagraphFormatting(paragraph);
 		for (const key of PARAGRAPH_FORMAT_KEYS)
@@ -35,6 +38,8 @@ export function resolveParagraphFormatting(
 		attrs.numId = paragraph.numbering?.numId ?? null;
 		attrs.ilvl = paragraph.numbering?.level ?? null;
 		attrs.restoredParagraphPropertiesXml = paragraph.restoredParagraphPropertiesXml;
+		if (paragraph.sourceParagraphPropertiesXml)
+			attrs.sourceParagraphPropertiesXml = paragraph.sourceParagraphPropertiesXml;
 	}
 	tr.setNodeMarkup(pos, undefined, attrs);
 }

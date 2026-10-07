@@ -32,6 +32,16 @@ export function expectParagraph(block: Block | undefined): Paragraph {
 	return block;
 }
 
+/** Semantic paragraph comparison excludes the immutable source and restored XML bases. */
+export function paragraphWithoutXmlBases(paragraph: Paragraph) {
+	const {
+		sourceParagraphPropertiesXml: _source,
+		restoredParagraphPropertiesXml: _restored,
+		...properties
+	} = paragraph;
+	return properties;
+}
+
 /** Narrows a block to a table. */
 export function expectTable(block: Block | undefined): Table {
 	if (block?.type !== 'table') throw new Error('Expected a table block');

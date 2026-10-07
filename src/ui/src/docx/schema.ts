@@ -100,6 +100,7 @@ export const schema = new Schema({
 				markRevision: { default: null },
 				formatRevision: { default: null },
 				restoredParagraphPropertiesXml: { default: null },
+				sourceParagraphPropertiesXml: { default: null },
 				justification: { default: null },
 				outlineLevel: { default: null },
 				align: { default: null },
