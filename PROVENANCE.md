@@ -1965,3 +1965,28 @@ public export/reload; same-value API checks inspect bytes/history because poses
 cannot distinguish that edit. Source protections remain enforced. Native pointer
 snapping, exact paint, groups/master/glue, inherited or unresolved formula sources
 and native Visio reopening remain unverified.
+
+## Shared horizontal text flow for chart titles and PowerPoint SVG
+
+Source: ChristopherVR/ooxml at `71b75cb4e`,
+`src/core/pptx/converter/svg-text-lines.ts`. Horizontal flow is extracted into
+`src/core/text/wrap-styled-runs.ts`; the existing PowerPoint adapter retains
+its font tables and optional host measurement. The shared helper groups words
+across formatting runs, measures combined fragments to preserve kerning,
+retains explicit empty lines and supports optional oversized-word splitting
+at grapheme boundaries. XLSX title rendering enables that splitting and uses
+its existing appearance resolver and cached grid canvas measurements. No
+spreadsheet-only wrapping engine or additional DOM dependency is introduced.
+
+The owned Excel recorder captures ten independently reopened title references
+with chart widths, character formatting, source parts and title rectangles.
+Test-only browser metrics record Chromium 154 on Windows canvas widths and
+font boxes for Arial 18-point normal and 24-point bold. Native title widths
+are within 2 CSS pixels and heights within 4 for that corpus. Browser checks
+cover all six bindings, actual type edits and save/reload. The MCP-reviewed
+200-point word-title export reopens/resaves/reopens in Excel 16.0 build 20430
+with its complete title and 152.07 by 65.1-point box unchanged. Fractional
+grid drawing dimensions are retained because whole-pixel rounding moved a
+word break. Six-binding pointer resizing checks reflow and undo/redo.
+Manual layout, autofit, other scripts/fonts and full raster
+equivalence remain unverified or incomplete.

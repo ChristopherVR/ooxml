@@ -4,6 +4,8 @@ import { text } from './chart-svg-util';
 import { chartTextWidth, chartFontMetrics, type ChartSvgOptions } from './chart-svg-text-metrics';
 import type { DiagramTextSpacing } from '../../diagram/types';
 import { chartPointsToPixels } from './chart-appearance';
+import type { ChartTitleText } from './chart-title-text';
+import { wrapStyledRuns } from '../../text/wrap-styled-runs';
 
 function spacing(
 	value: DiagramTextSpacing | undefined,
@@ -17,32 +19,70 @@ function spacing(
 		: fallback;
 }
 
-/** Paint explicit rich lines with host font metrics when available. Automatic wrapping remains open. */
+/** Paint title runs with shared horizontal flow and optional host font metrics. */
 export function chartRichTitleSvg(
 	model: ChartViewModel,
 	width: number,
 	options: ChartSvgOptions = {},
 ): { markup: string; height: number } | undefined {
-	if (!model.titleText) return undefined;
-	const lines: (typeof model.titleText.paragraphs)[number][] = [];
-	for (const paragraph of model.titleText.paragraphs) {
-		let line: (typeof lines)[number] = {
+	if (!model.title) return undefined;
+	const base = chartTextAttributes(model, 'title', 14);
+	// Native automatic title boxes use 80% of chart width, with 8 CSS pixels of inner padding.
+	// Manual text boxes and platform-specific font layout still need separate comparisons.
+	const capacity = Math.max(1, width * 0.8 - 8);
+	if (
+		!model.titleText &&
+		!model.title.includes('\n') &&
+		chartTextWidth(model.title, base, options) <= capacity
+	)
+		return undefined;
+	const paragraphs = model.titleText?.paragraphs ?? [
+		{
+			runs: [{ text: model.title, appearance: model.appearance?.title ?? {} }],
+		},
+	];
+	const hardLines: ChartTitleText['paragraphs'] = [];
+	for (const paragraph of paragraphs) {
+		let line: ChartTitleText['paragraphs'][number] = {
 			...paragraph,
 			runs: [],
 		};
-		lines.push(line);
+		hardLines.push(line);
 		for (const run of paragraph.runs) {
 			const pieces = run.text.split('\n');
 			for (const [index, piece] of pieces.entries()) {
 				if (index) {
 					line = { ...paragraph, runs: [] };
-					lines.push(line);
+					hardLines.push(line);
 				}
 				if (piece) line.runs.push({ ...run, text: piece });
 			}
 		}
 	}
-	const base = chartTextAttributes(model, 'title', 14);
+	const lines: ChartTitleText['paragraphs'] = hardLines.flatMap((line) => {
+		const wrapped = wrapStyledRuns(
+			line.runs,
+			capacity,
+			(content, run) =>
+				chartTextWidth(
+					content,
+					chartTextAttributes(
+						{ ...model, appearance: { title: run.appearance } },
+						'title',
+						base.size,
+					),
+					options,
+				),
+			{ breakWords: true },
+		);
+		const { spaceBefore, spaceAfter, ...properties } = line;
+		return wrapped.map((runs, index) => ({
+			...properties,
+			runs,
+			...(index === 0 && spaceBefore ? { spaceBefore } : {}),
+			...(index === wrapped.length - 1 && spaceAfter ? { spaceAfter } : {}),
+		}));
+	});
 	const metrics = lines.map((line) => {
 		const runs = line.runs.map((run) => ({
 			...run,

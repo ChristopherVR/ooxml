@@ -1,9 +1,9 @@
 # XLSX parity status
 
-Updated 8 October 2026. The latest completed XLSX implementation is
-`4f0d6198d`: chart-title paragraph spacing, following mixed titles, browser
-font measurements and natural title baselines. The evidence below describes
-completed validation at that revision, not every change in the working tree.
+Updated 8 October 2026. The latest XLSX increment adds automatic chart-title
+wrapping, following paragraph spacing at `4f0d6198d`, mixed titles, browser
+font measurements and natural title baselines. The evidence below identifies
+the scope of completed validation.
 
 **Full 1:1 Microsoft Excel parity has not been achieved.** The product is a
 working spreadsheet editor with substantial supported behavior and an expanding
@@ -27,9 +27,11 @@ Excel options, interactions or visual details in that area are implemented.
 | Excel UI and visual appearance | Partial      | Shared ribbon/gallery/fill controls and six bindings are exercised. Full ribbon/dialog behavior, text/layout and raster equivalence are unverified or incomplete. |
 | Whole-product parity           | Not achieved | Missing pivots, advanced data features, native page views, collaboration and macro execution prevent this claim.                                                  |
 
-The last completed sweep passed **8,560 ordinary core tests**, with **17
-existing expected raster failures**, and **164 focused chart browser checks**
-across six bindings. Core/UI typechecks, builds and package checks passed.
+The latest expanded core sweep passed **9,938 ordinary tests**, with **17
+existing expected raster failures**. It includes diagram/chart/XLSX/shared
+text and matching PowerPoint text tests. Focused chart browser runs passed
+**212 checks** across six bindings. Core/UI typechecks, builds and package
+checks passed.
 These counts describe regression coverage, not a completion percentage or a
 complete end-to-end Excel comparison.
 
@@ -42,18 +44,27 @@ complete end-to-end Excel comparison.
 | `8499a584e` | Use measured font ascent/descent for title heights and mixed-line baselines.                 | Three native title-box references and a bounded PNG comparison.                                                |
 | `4f0d6198d` | Read, render and preserve title line/before/after spacing in points or percentages.          | Twelve native references, 72 additional browser cases and Excel reopen/resave checks. No spacing-authoring UI. |
 
-## Work in progress, not completed support
+## Automatic wrapping: implemented scope and remaining limits
 
-Automatic chart-title wrapping is the next implementation increment. Ten
-owned Excel references have been captured at several chart widths, including
-mixed font sizes, an oversized word and paragraph spacing. A shared text-flow
-helper is being extracted from the PowerPoint converter so both products can
-reuse the algorithm.
+Automatic chart-title wrapping now uses one shared text-flow helper in XLSX
+and the PowerPoint static SVG converter. Words can cross formatting runs;
+oversized words split at grapheme boundaries in XLSX. Soft wraps do not alter
+the source title or its rich-body XML. Paragraph before/after spacing applies
+at the wrapped paragraph edges. The grid retains fractional drawing dimensions
+to avoid moving a break when width is rounded to a whole pixel.
 
-The helper and PowerPoint adapter are currently uncommitted. The XLSX painter
-does not yet use the new wrapping helper; its integration, broader regression
-checks, UI comparisons and Excel export acceptance remain outstanding. The
-native captures alone do not establish implemented wrapping or parity.
+Ten independently reopened Excel references cover chart widths from 160 to
+480 points, mixed font sizes, an oversized word and paragraph spacing. With
+captured Chromium Arial metrics, title widths differ from these native boxes
+by less than 2 CSS pixels and heights by less than 4. These bounds are specific
+to this corpus. Playwright MCP verified the native 200-point word reference
+before/after a type change. Excel reopens, resaves and reopens that export with
+the full title and 152.07 by 65.1-point title box unchanged.
+
+Manual title layout, autofit, other scripts/fonts and exact title/plot placement
+remain unverified or incomplete. The native and browser screenshots still
+show different plot geometry and gridline appearance. This is automatic
+wrapping support for the tested scope, not full chart or text parity.
 
 This page is the current summary. The [implementation review](xlsx-parity-review.md)
 records each increment and its evidence; older sections describe the state at
@@ -85,6 +96,9 @@ logic reuse and extraction.
   existing chart/theme resolver, rather than a viewer-specific text parser.
 - Series and background formatting panes share fill bindings and controls;
   edits use the existing XLSX transaction, history and save pipelines.
+- Chart-title wrapping and PowerPoint static SVG text share `wrapStyledRuns`
+  in the core text area. Font resolution and measurement stay with their
+  existing product/host implementations.
 - Modern OOXML logic stays in `ooxml-core`; legacy XLS/CFB codecs stay in `ole2`.
   Framework adapters do not contain duplicate spreadsheet engines.
 

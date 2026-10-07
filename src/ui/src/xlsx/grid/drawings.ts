@@ -132,15 +132,10 @@ export class DrawingLayer {
 					node.append(
 						svgNode(
 							doc,
-							renderChartSvg(
-								model,
-								Math.max(10, Math.round(box.w)),
-								Math.max(10, Math.round(box.h)),
-								{
-									measureText: (content, font) => view.measurer.measure(content, font),
-									measureFont: (font) => view.measurer.fontMetrics(font),
-								},
-							),
+							renderChartSvg(model, Math.max(10, box.w), Math.max(10, box.h), {
+								measureText: (content, font) => view.measurer.measure(content, font),
+								measureFont: (font) => view.measurer.fontMetrics(font),
+							}),
 						),
 					);
 				} catch {

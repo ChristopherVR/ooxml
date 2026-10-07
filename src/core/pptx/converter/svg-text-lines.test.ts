@@ -4,7 +4,7 @@ import { svgTextLines } from './svg-text-lines';
 
 describe('static SVG text wrapping', () => {
 	it('uses host font metrics and falls back when they are unavailable', () => {
-		const measure = vi.fn(() => 60);
+		const measure = vi.fn((text: string) => text.length * 20);
 		const segments = [{ text: 'one two', style: { bold: true, fontFamily: 'Verdana' } }];
 		expect(svgTextLines(segments, 100, 24, 'Arial', measure).map((run) => run.text)).toEqual([
 			'one',

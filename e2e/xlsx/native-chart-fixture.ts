@@ -6,6 +6,7 @@ export async function nativeChartFixture(
 	parts: Readonly<Record<string, string>>,
 	minorFont: string,
 	majorFont = 'Aptos Display',
+	size = { width: 600, height: 400 },
 ): Promise<Buffer> {
 	const book = createWorkbook();
 	book.theme.minorFont = minorFont;
@@ -16,7 +17,7 @@ export async function nativeChartFixture(
 		series: [],
 		anchor: {
 			from: { row: 1, col: 1, rowOffset: 0, colOffset: 0 },
-			ext: { cx: 600 * 9525, cy: 400 * 9525 },
+			ext: { cx: size.width * 9525, cy: size.height * 9525 },
 		},
 	});
 	const zip = await JSZip.loadAsync(await saveXlsx(book));

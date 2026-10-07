@@ -1545,3 +1545,44 @@ The diagram/chart/XLSX sweep passes 8,560 ordinary tests with the same 17
 expected raster failures. All 164 focused chart browser cases pass, including
 72 new native-spacing cases across six bindings. Core/UI typechecks, builds
 and package checks pass. The spacing fixture is absent from published output.
+
+### Automatic chart-title wrapping (8 October 2026)
+
+Long plain and rich chart titles now wrap using the shared core text helper
+extracted from PowerPoint's static SVG converter. Words spanning formatting
+runs stay together; XLSX splits oversized words at grapheme boundaries. The
+host still supplies font measurements, and the existing appearance resolver
+supplies run fonts/styles. Soft breaks do not modify title text or rich XML.
+Before/after paragraph spacing applies at the automatically wrapped paragraph
+edges, while explicit title line feeds retain the previously verified behavior.
+
+`scripts/record-xlsx-chart-title-wrap.ps1` owns hidden Excel instances and
+creates ten references at chart widths from 160 to 480 points. Independent
+reopen captures are in `src/core/chart/excel-chart-title-wrap.json`.
+`excel-chart-title-wrap-browser-metrics.json` records actual Chromium 154
+canvas measurements for the reference fonts/text. Core comparisons verify
+native line counts, selected native-image line contents, title widths within
+2 CSS pixels and heights within 4, plus exact rich-body preservation through
+chart regeneration. These are bounds for these references, not universal
+font/layout tolerances. A separate regression covers long/short plain titles.
+
+Playwright MCP found that rounding the 200-point chart to 267 CSS pixels
+changed a word break. The grid now passes its fractional dimensions into the
+existing painter. The corrected reference displays `InternationalBusin`,
+`essRevenueForec`, `ast`, matching the native PNG before/after an actual type
+change. Excel reopens that UI export as type 4 (Line), resaves and reopens it
+with the full title and native 152.07 by 65.1-point title rectangle unchanged.
+The screenshot review still exposes different plot geometry/gridline paint.
+The six-binding 200-point browser case also resizes the drawing with its
+pointer grip, verifies the native 320-point word breaks, then checks undo,
+redo and restoration before the type change and save.
+
+The expanded `vitest run diagram chart xlsx text
+pptx/converter/svg-text-lines.test.ts` sweep passes 9,938 ordinary tests plus
+17 expected raster failures. The subsequent plain-title regression and updated
+width assertions pass in the 20-test focused wrapping/PowerPoint run. Browser
+runs pass 212 checks: 176 native-style/title/spacing/wrapping checks and 36
+built-in-font/inheritance checks across six bindings. Core/UI typechecks,
+builds and package import/registration checks pass. Both wrapping JSON fixtures
+are absent from the published chart output. Manual title layout, autofit,
+unverified scripts/fonts, advanced text cases and full Excel parity remain open.
