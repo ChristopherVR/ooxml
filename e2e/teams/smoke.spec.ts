@@ -4,7 +4,7 @@ import { expect, test } from '@playwright/test';
 // (?local=1: same-browser chat over BroadcastChannel, no server), so it needs nothing but the demo.
 // Add specs beside it; the structure mirrors e2e/docx, e2e/xlsx and e2e/visio.
 
-test('the vanilla demo mounts <teams-app> in local mode', async ({ page }) => {
+test('the selected demo mounts <teams-app> in local mode', async ({ page }) => {
 	await page.goto('/?local=1&name=Ada');
 	await expect(page.locator('teams-app')).toBeVisible();
 	await expect(page).toHaveTitle(/OpenTeams/);

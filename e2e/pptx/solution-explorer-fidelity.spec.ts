@@ -239,30 +239,38 @@ test.describe('issue #130 - solution-explorer deck fidelity', () => {
 		// `buSzPct`/`buSzPts`. PowerPoint draws both at 100% of the paragraph's
 		// first run, so they are the same size on screen. The Wingdings ones were
 		// rendering at the 18pt body default: 24px against the Arial one's 13px.
-		const sizes = await page.evaluate(() => {
-			const out: number[] = [];
-			const slide = document.querySelector('[data-pptx-viewport] [aria-roledescription="slide"]')!;
-			for (const node of slide.querySelectorAll<HTMLElement>('*')) {
-				if (node.children.length > 0) {
-					continue;
+		const measureBulletSizes = () =>
+			page.evaluate(() => {
+				const out: number[] = [];
+				const slide = document.querySelector(
+					'[data-pptx-viewport] [aria-roledescription="slide"]',
+				)!;
+				for (const node of slide.querySelectorAll<HTMLElement>('*')) {
+					if (node.children.length > 0) {
+						continue;
+					}
+					const text = (node.textContent ?? '').trim();
+					if (text.length > 2 && !/[§•▪■]/u.test(text)) {
+						continue;
+					}
+					if (!/[§•▪■]/u.test(text)) {
+						continue;
+					}
+					const box = node.getBoundingClientRect();
+					if (box.width <= 0 || box.height <= 0) {
+						continue;
+					}
+					out.push(Number.parseFloat(getComputedStyle(node).fontSize));
 				}
-				const text = (node.textContent ?? '').trim();
-				if (text.length > 2 && !/[§•▪■]/u.test(text)) {
-					continue;
-				}
-				if (!/[§•▪■]/u.test(text)) {
-					continue;
-				}
-				const box = node.getBoundingClientRect();
-				if (box.width <= 0 || box.height <= 0) {
-					continue;
-				}
-				out.push(Number.parseFloat(getComputedStyle(node).fontSize));
-			}
-			return out;
-		});
+				return out;
+			});
 
-		expect(sizes.length, 'found bullet glyphs on the slide').toBeGreaterThan(1);
+		await expect
+			.poll(async () => (await measureBulletSizes()).length, {
+				message: 'found bullet glyphs on the slide',
+			})
+			.toBeGreaterThan(1);
+		const sizes = await measureBulletSizes();
 		const largest = Math.max(...sizes);
 		const smallest = Math.min(...sizes);
 		// All three bullets derive from 8-10pt runs, so they must be within a

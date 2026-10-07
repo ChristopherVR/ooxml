@@ -49,6 +49,17 @@ export type ClearWhat = 'all' | 'contents' | 'formats' | 'comments' | 'hyperlink
 
 export type PasteMode = 'all' | 'values' | 'formats' | 'formulas' | 'transpose';
 
+/** Paste content and independent modifiers. Legacy string modes remain supported. */
+export interface PasteOptions {
+	mode?: Exclude<PasteMode, 'transpose'>;
+	transpose?: boolean;
+	skipBlanks?: boolean;
+}
+export type PasteRequest = PasteMode | PasteOptions;
+
+/** AutoFill infers a series; Fill Down / Right repeat cells with translated formulas. */
+export type FillMode = 'auto' | 'copy';
+
 export type MergeMode = 'merge' | 'center' | 'across';
 
 export type {
@@ -140,14 +151,14 @@ export interface EditSession {
 		keys: { col: number; descending?: boolean }[],
 		hasHeader: boolean,
 	): void;
-	fill(sheet: number, source: CellRange, target: CellRange): void;
+	fill(sheet: number, source: CellRange, target: CellRange, mode?: FillMode): void;
 	copy(sheet: number, range: CellRange): ClipboardPayload;
 	cut(sheet: number, range: CellRange): ClipboardPayload;
 	paste(
 		sheet: number,
-		at: CellAddress,
+		at: CellAddress | CellRange,
 		payload: ClipboardPayload | string,
-		mode?: PasteMode,
+		mode?: PasteRequest,
 	): CellRange;
 	findAll(query: FindQuery): FindMatch[];
 	replaceAll(query: FindQuery, replacement: string): number;

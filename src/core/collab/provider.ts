@@ -52,6 +52,8 @@ export interface SyncProvider {
 	readonly synced: boolean;
 	connect: () => void;
 	disconnect: () => void;
+	/** Request another state exchange without closing the connection, when supported. */
+	resync?: () => void;
 	/** Release every listener and timer; the provider cannot be reused. */
 	destroy: () => void;
 	on: <K extends keyof ProviderEvents>(

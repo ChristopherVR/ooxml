@@ -1,0 +1,100 @@
+:host {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	min-height: 0;
+	overflow: auto;
+}
+.toolbar,
+form {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--office-space-3);
+	padding: var(--office-space-3);
+}
+input,
+button {
+	font: inherit;
+	color: inherit;
+}
+input[type='search'],
+input[name='name'] {
+	flex: 1;
+	min-width: 10em;
+	padding: var(--office-space-2);
+	background: var(--office-background);
+	border: var(--office-border-width) solid var(--office-teams-divider);
+	border-radius: var(--office-radius-md);
+}
+input[type='file'] {
+	max-width: 16em;
+}
+button {
+	cursor: pointer;
+	padding: var(--office-space-2);
+	border: var(--office-border-width) solid var(--office-teams-divider);
+	border-radius: var(--office-radius-md);
+	background: var(--office-background);
+}
+button:disabled {
+	cursor: default;
+	opacity: 0.5;
+}
+.hint,
+[role='status'],
+[role='alert'] {
+	margin: 0;
+	padding: var(--office-space-2) var(--office-space-3);
+}
+.hint {
+	color: var(--office-teams-text-subtle);
+}
+.files {
+	list-style: none;
+	margin: 0;
+	padding: var(--office-space-3);
+}
+.files li {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: var(--office-space-3);
+	padding: var(--office-space-3);
+	border-block-end: var(--office-border-width) solid var(--office-teams-divider);
+}
+.files .none {
+	color: var(--office-teams-text-subtle);
+}
+.meta {
+	display: grid;
+	gap: var(--office-space-1);
+	flex: 1;
+	min-width: 0;
+	overflow-wrap: anywhere;
+}
+small {
+	color: var(--office-teams-text-subtle);
+}
+.badge {
+	display: grid;
+	place-items: center;
+	width: 2.2em;
+	height: 2.2em;
+	border-radius: var(--office-radius-md);
+	background: var(--office-file-other);
+	color: var(--office-call-foreground);
+	font-weight: var(--office-font-weight-bold);
+}
+.badge[data-kind='docx'] {
+	background: var(--office-file-docx);
+}
+.badge[data-kind='xlsx'] {
+	background: var(--office-file-xlsx);
+}
+.badge[data-kind='pptx'] {
+	background: var(--office-file-pptx);
+}
+.badge[data-kind='vsdx'] {
+	background: var(--office-file-vsdx);
+}

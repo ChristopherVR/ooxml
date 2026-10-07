@@ -1,17 +1,38 @@
-import type { VisioStyle } from 'ooxml-core/visio';
+import {
+	visioOpenArrowPath,
+	visioFilledArrow,
+	trimVisioArrowLine,
+	type VisioStyle,
+} from 'ooxml-core/visio';
 import { safeColor, svgElement } from './render-svg.js';
 let markerId = 0;
-/** Common Visio line/triangle and concave arrow styles. Sizes remain a documented visual approximation. */
+/** Native measured arrow subsets with explicit filled-path fallbacks. */
 export function applyArrowheads(
 	path: SVGPathElement,
 	style: VisioStyle,
 	defs: SVGDefsElement,
 	warnings: Set<string>,
 ): void {
+	const filledStart = visioFilledArrow(
+		style.startArrow,
+		style.startArrowSize ?? 2,
+		style.lineWidth,
+	);
+	const filledEnd = visioFilledArrow(style.endArrow, style.endArrowSize ?? 2, style.lineWidth);
+	const trimmed =
+		(filledStart || filledEnd) && (style.lineCap === undefined || style.lineCap === 'round')
+			? trimVisioArrowLine(
+					path.getAttribute('d') ?? '',
+					filledStart?.beginSetback ?? 0,
+					filledEnd?.setback ?? 0,
+					filledStart ? filledStart.setback - filledStart.beginSetback : 0,
+				)
+			: undefined;
+	if (trimmed) path.setAttribute('d', trimmed);
 	for (const side of ['start', 'end'] as const) {
 		const code = side === 'start' ? style.startArrow : style.endArrow;
 		if (!code) continue;
-		if (![1, 2, 3, 4, 5].includes(code)) {
+		if (![1, 2, 3, 4, 5, 6, 7, 9].includes(code)) {
 			warnings.add(`Arrowhead style ${code} is not rendered in this build.`);
 			continue;
 		}
@@ -19,6 +40,60 @@ export function applyArrowheads(
 		const id = `visio-arrow-${++markerId}`;
 		const marker = svgElement('marker');
 		marker.id = id;
+		const filledArrow = side === 'start' ? filledStart : filledEnd;
+		if (filledArrow && trimmed) {
+			marker.setAttribute('viewBox', '-1 -1 2 2');
+			marker.setAttribute(
+				'refX',
+				String(-(side === 'start' ? filledArrow.beginSetback : filledArrow.setback)),
+			);
+			marker.setAttribute('refY', '0');
+			marker.setAttribute('markerWidth', '2');
+			marker.setAttribute('markerHeight', '2');
+			marker.setAttribute('markerUnits', 'userSpaceOnUse');
+			marker.setAttribute('orient', 'auto-start-reverse');
+			marker.setAttribute('overflow', 'visible');
+			const glyph = svgElement('path');
+			glyph.setAttribute('d', filledArrow.path);
+			glyph.setAttribute('fill', safeColor(style.lineColor));
+			glyph.setAttribute('stroke', 'none');
+			glyph.setAttribute('opacity', String(style.lineOpacity));
+			marker.append(glyph);
+			defs.append(marker);
+			path.setAttribute(`marker-${side}`, `url(#${id})`);
+			continue;
+		}
+		if (code === 6) {
+			warnings.add(
+				'Arrowhead style 6 requires a straight round-capped line with non-overlapping filled setbacks.',
+			);
+			continue;
+		}
+		const openPath = visioOpenArrowPath(code, size, style.lineWidth);
+		if (openPath) {
+			// These native open styles have no setback and use round caps
+			// independent of the connector's line cap.
+			marker.setAttribute('viewBox', '-1 -1 2 2');
+			marker.setAttribute('refX', '0');
+			marker.setAttribute('refY', '0');
+			marker.setAttribute('markerWidth', '2');
+			marker.setAttribute('markerHeight', '2');
+			marker.setAttribute('markerUnits', 'userSpaceOnUse');
+			marker.setAttribute('orient', 'auto-start-reverse');
+			marker.setAttribute('overflow', 'visible');
+			const tick = svgElement('path');
+			tick.setAttribute('d', openPath);
+			tick.setAttribute('fill', 'none');
+			tick.setAttribute('stroke', safeColor(style.lineColor));
+			tick.setAttribute('stroke-width', String(style.lineWidth));
+			tick.setAttribute('stroke-linecap', 'round');
+			tick.setAttribute('stroke-linejoin', 'round');
+			tick.setAttribute('opacity', String(style.lineOpacity));
+			marker.append(tick);
+			defs.append(marker);
+			path.setAttribute(`marker-${side}`, `url(#${id})`);
+			continue;
+		}
 		// Include the code-5 outline inside its viewport instead of clipping the base.
 		marker.setAttribute('viewBox', code === 5 ? '-1 -5 11 10' : '0 -4 10 8');
 		marker.setAttribute('refX', '9');

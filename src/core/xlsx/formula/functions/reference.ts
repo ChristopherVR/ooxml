@@ -1,4 +1,5 @@
 import { columnLabel, MAX_COL, MAX_ROW, quoteSheetName } from '../../address.js';
+import { parseR1C1Range } from '../../address-r1c1.js';
 import type { CallContext } from '../context.js';
 import { sheetIndex } from '../references.js';
 import { ERR, fail, isError, Matrix, RefValue, type Scalar, type Value } from '../values.js';
@@ -19,8 +20,8 @@ function offset(args: Value[]): Value {
 	const area = ref.areas[0];
 	if (!area || ref.areas.length !== 1) fail(ERR.VALUE);
 	const { start, end } = area.range;
-	const height = args.length > 3 && args[3] !== null ? int(args[3]) : end.row - start.row + 1;
-	const width = args.length > 4 && args[4] !== null ? int(args[4]) : end.col - start.col + 1;
+	const height = args.length > 3 ? int(args[3]) : end.row - start.row + 1;
+	const width = args.length > 4 ? int(args[4]) : end.col - start.col + 1;
 	if (height === 0 || width === 0) fail(ERR.REF);
 	const top = start.row + int(args[1]);
 	const left = start.col + int(args[2]);
@@ -48,36 +49,8 @@ function parseR1C1(text: string, ctx: CallContext): RefValue | undefined {
 		if (sheet < 0) return undefined;
 		body = text.slice(bang + 1);
 	}
-	const part = (spec: string | undefined, base: number): number | undefined => {
-		if (spec === undefined || spec === '') return base;
-		if (spec.startsWith('[')) return base + Number(spec.slice(1, -1));
-		return Number(spec) - 1;
-	};
-	const cells = body.split(':').map((p) => /^R(\[-?\d+\]|\d+)?C(\[-?\d+\]|\d+)?$/i.exec(p));
-	if (cells.length > 2 || cells.some((m) => !m)) return undefined;
-	const corners = cells.map((m) => ({ row: part(m?.[1], ctx.row), col: part(m?.[2], ctx.col) }));
-	const a = corners[0];
-	const b = corners[corners.length - 1];
-	if (
-		!a ||
-		!b ||
-		a.row === undefined ||
-		a.col === undefined ||
-		b.row === undefined ||
-		b.col === undefined
-	)
-		return undefined;
-	const range = {
-		start: { row: Math.min(a.row, b.row), col: Math.min(a.col, b.col) },
-		end: { row: Math.max(a.row, b.row), col: Math.max(a.col, b.col) },
-	};
-	if (
-		range.start.row < 0 ||
-		range.start.col < 0 ||
-		range.end.row > MAX_ROW ||
-		range.end.col > MAX_COL
-	)
-		return undefined;
+	const range = parseR1C1Range(body, { row: ctx.row, col: ctx.col });
+	if (!range) return undefined;
 	return new RefValue([{ sheet, range }]);
 }
 
@@ -85,7 +58,7 @@ function address(args: Value[]): string {
 	const row = int(args[0]);
 	const col = int(args[1]);
 	const abs = Math.trunc(optNum(args, 2, 1));
-	const a1 = args.length > 3 && args[3] !== null ? bool(args[3]) : true;
+	const a1 = args.length > 3 ? bool(args[3]) : true;
 	if (row < 1 || col < 1 || row > MAX_ROW + 1 || col > MAX_COL + 1 || abs < 1 || abs > 4)
 		fail(ERR.VALUE);
 	const absRow = abs === 1 || abs === 2;
@@ -115,17 +88,23 @@ function rowsOrCols(value: Value | undefined, ctx: CallContext, axis: 'row' | 'c
 }
 
 export const REFERENCE_FUNCTIONS: FunctionSpec[] = [
-	spec(
-		'OFFSET',
-		C,
-		'OFFSET(reference, rows, cols, [height], [width])',
-		'A reference offset from a starting reference.',
-		3,
-		5,
-		(args) => offset(args),
-		['any', 'value'],
-		true,
-	),
+	{
+		...spec(
+			'OFFSET',
+			C,
+			'OFFSET(reference, rows, cols, [height], [width])',
+			'A reference offset from a starting reference.',
+			3,
+			5,
+			(args) => offset(args),
+			['any', 'value'],
+			true,
+		),
+		missingDefaults: {
+			3: (args: readonly Value[]) => shape(args[0] ?? null).rows,
+			4: (args: readonly Value[]) => shape(args[0] ?? null).cols,
+		},
+	},
 	spec(
 		'INDIRECT',
 		C,
@@ -135,7 +114,7 @@ export const REFERENCE_FUNCTIONS: FunctionSpec[] = [
 		2,
 		(args, ctx) => {
 			const text = str(args[0]).trim();
-			const a1 = args.length > 1 && args[1] !== null ? bool(args[1]) : true;
+			const a1 = args.length > 1 ? bool(args[1]) : true;
 			const ref = a1 ? ctx.parseReference(text) : parseR1C1(text, ctx);
 			return ref ?? ERR.REF;
 		},
@@ -198,15 +177,18 @@ export const REFERENCE_FUNCTIONS: FunctionSpec[] = [
 		(args) => refArg(args[0]).areas.length,
 		['any'],
 	),
-	spec(
-		'ADDRESS',
-		C,
-		'ADDRESS(row_num, column_num, [abs_num], [a1], [sheet_text])',
-		'A cell address as text.',
-		2,
-		5,
-		(args) => address(args),
-	),
+	{
+		...spec(
+			'ADDRESS',
+			C,
+			'ADDRESS(row_num, column_num, [abs_num], [a1], [sheet_text])',
+			'A cell address as text.',
+			2,
+			5,
+			(args) => address(args),
+		),
+		missingDefaults: { 2: 1, 3: true },
+	},
 	spec(
 		'HYPERLINK',
 		C,

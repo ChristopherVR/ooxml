@@ -51,6 +51,12 @@ export class XlsxEditorApi extends HTMLElementBase {
 		this.chrome?.setSaveState('saved');
 	}
 
+	/** Commits an in-progress cell edit before a host navigates or persists. False means validation blocked it. */
+	commitEdit(): boolean {
+		const grid = this.core.ctx.grid();
+		return !grid?.isEditing() || grid.commitEdit();
+	}
+
 	/** Selects `B2`, `B2:C5`, `A:A`, `B2:C5,E1` or `'Sheet 2'!A1` and scrolls it into view. */
 	select(ref: string): void {
 		const parsed = parseSelectionRef(ref, this.core.workbook);

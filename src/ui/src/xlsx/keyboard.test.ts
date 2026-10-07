@@ -50,6 +50,7 @@ describe('key specs', () => {
 		expect(id(key('F6'))).toBe('next-region');
 		expect(id(key('/', { ctrlKey: true }))).toBe('help');
 		expect(id(key('F5'))).toBe('home.go-to');
+		expect(id(key('v', { ctrlKey: true, altKey: true }))).toBe('home.paste-special');
 	});
 
 	it('formats keys for help', () => {
