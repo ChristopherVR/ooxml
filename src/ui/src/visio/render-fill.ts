@@ -88,6 +88,8 @@ function gradientPaint(
 		gradient.setAttribute('cy', String(paint.center[1]));
 		gradient.setAttribute('r', String(paint.radius));
 	} else {
+		normalized ||= paint.boundingBoxAngle !== undefined;
+		rotation ??= paint.boundingBoxAngle;
 		gradient.setAttribute('gradientUnits', normalized ? 'objectBoundingBox' : 'userSpaceOnUse');
 		gradient.setAttribute('x1', String(paint.start[0]));
 		gradient.setAttribute('y1', String(paint.start[1]));

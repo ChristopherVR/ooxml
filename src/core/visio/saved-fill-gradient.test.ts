@@ -29,10 +29,13 @@ const settings =
 
 const verticalNative = process.env.VISIO_NATIVE_LINEAR_VERTICAL_DIR;
 const reverseNative = process.env.VISIO_NATIVE_LINEAR_REVERSE_DIR;
-it.skipIf(!verticalNative || !reverseNative)(
-	'preserves genuine vertical saved gradients through core edits',
+const obliqueNative = process.env.VISIO_NATIVE_LINEAR_OBLIQUE_DIR;
+const obliqueAlphaNative = process.env.VISIO_NATIVE_LINEAR_OBLIQUE_ALPHA_DIR;
+it.skipIf(!verticalNative && !reverseNative && !obliqueNative && !obliqueAlphaNative)(
+	'preserves genuine saved gradients through core edits',
 	async () => {
-		for (const directory of [verticalNative!, reverseNative!]) {
+		for (const directory of [verticalNative, reverseNative, obliqueNative, obliqueAlphaNative]) {
+			if (!directory) continue;
 			const bytes = new Uint8Array(await readFile(join(directory, 'fill-patterns.vsdx')));
 			const original = await parseVsdx(bytes);
 			expect(original.pages).toHaveLength(6);
@@ -79,6 +82,22 @@ it.each([
 ])('normalizes native vertical angle %s with saved decimal rounding', async (angle, start, end) => {
 	const { style } = await parse(cell('FillGradientAngle', angle as number));
 	expect(style.fillGradient).toMatchObject({ type: 'linear', start, end });
+});
+
+it.each([
+	[Math.PI / 6, -30],
+	[0.5235987755983, -30],
+	[-Math.PI / 4, -315],
+	[(5 * Math.PI) / 4, -225],
+])('retains native bounding-box rotation for oblique angle %s', async (angle, expected) => {
+	const { style, diagnostics } = await parse(cell('FillGradientAngle', angle));
+	expect(style.fillGradient).toMatchObject({
+		type: 'linear',
+		start: [0, 1],
+		end: [1, 1],
+		boundingBoxAngle: expected,
+	});
+	expect(diagnostics.some((item) => item.code === 'unsupported-saved-fill-gradient')).toBe(false);
 });
 
 it('ignores inherited wholly themed stop tails while diagnosing partly themed active rows', async () => {
@@ -157,7 +176,7 @@ describe('saved horizontal fill gradients', () => {
 	it.each([
 		cell('FillGradientDir', 3),
 		cell('FillGradientDir', 'Themed'),
-		cell('FillGradientAngle', Math.PI / 6),
+		cell('FillGradientAngle', 'invalid'),
 		cell('FillGradientAngle', 'Themed'),
 		cell('FillGradientAngle', 'bad'),
 		cell('RotateGradientWithShape', 0),

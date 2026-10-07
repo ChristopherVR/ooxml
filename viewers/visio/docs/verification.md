@@ -634,3 +634,30 @@ with seven optional skips. Strict core types, the complete UI typecheck (strict
 and relaxed PPTX projects), viewer types, viewer formatting and root lint passed.
 Root lint retains its nine existing unrelated warnings. Native reopening and
 native PNG pipeline equivalence remain unverified.
+
+## Native saved oblique gradients (2026-10-07)
+
+Native saved linear gradients rotate within the normalized shape bounding box.
+Physical endpoint projection changes the angle on nonsquare shapes. The core
+linear paint model now retains an optional bounding-box angle for oblique saved
+caches; quarter turns retain their existing physical endpoints. The shared SVG
+renderer reuses its gradient rotation and stop serializer. Drawing-scale
+normalization leaves normalized endpoints intact, snapshot copying retains the
+angle, and scene validation bounds the angle and endpoints.
+
+Owned Visio 16 captures contain six pages each with explicit saved gradients
+above legacy patterns 25-30: visio-fill-patterns-fa9ce73adad349318b980f6740ab70db
+(30 degrees, opaque) and visio-fill-patterns-800f7e4db3694376914dffb3f645c0c5
+(225 degrees, translucent), in the local temporary directory. Enable
+VISIO_NATIVE_LINEAR_OBLIQUE_DIR and VISIO_NATIVE_LINEAR_OBLIQUE_ALPHA_DIR for
+native comparisons. Both genuine source packages passed core move/save/reparse
+preservation checks. Native reopening remains unverified.
+
+All six routes passed both captures: 12 scenarios, 144 exact full-page
+576-by-432 RGBA live/export comparisons against native SVG rasterization, with
+zero differing channels. Core passed 2,052 tests with 45 optional skips; UI
+passed 713 with seven optional skips. Strict core and complete UI types passed;
+root lint retains nine existing unrelated warnings. Regression coverage includes
+negative and wrapped oblique angles, decimal rounding, scaling, snapshot copying
+and invalid normalized paint. Broader transformed gradients, modern radial
+fills, effects and native PNG pipeline equivalence remain open parity work.

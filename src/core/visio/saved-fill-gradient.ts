@@ -4,7 +4,7 @@ import { linearGradientEndpoints } from './theme-gradient';
 
 /**
  * Saved ShapeSheet gradients use radians and normalized [0,1] stop values.
- * Only complete local, shape-rotating orthogonal linear caches are accepted. Theme and
+ * Only complete local, shape-rotating linear caches are accepted. Theme and
  * root-style substitution happen before this function; missing caches are not
  * inferred from formulas, legacy pattern numbers, or an unrelated theme.
  * https://learn.microsoft.com/en-us/office/client-developer/visio/fill-gradient-section
@@ -40,8 +40,8 @@ export function savedFillGradient(
 	};
 	const angle = number(cells, 'FillGradientAngle', NaN);
 	const wrapped = ((angle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
-	// Native quarter-turn SVG references establish clockwise, local y-up endpoints.
-	// Tolerate saved decimal rounding; oblique directions still need native evidence.
+	// Quarter turns retain physical endpoints. Native oblique SVG references use
+	// bounding-box rotation, which differs from physical projection on rectangles.
 	const quarter = Math.round(wrapped / (Math.PI / 2));
 	const orthogonal = Math.abs(wrapped - quarter * (Math.PI / 2)) < 1e-12;
 	if (
@@ -49,7 +49,7 @@ export function savedFillGradient(
 		!Number.isFinite(height) ||
 		width <= 0 ||
 		height <= 0 ||
-		!orthogonal ||
+		!Number.isFinite(angle) ||
 		number(cells, 'FillGradientDir', NaN) !== 0 ||
 		number(cells, 'RotateGradientWithShape', NaN) !== 1 ||
 		number(cells, 'UseGroupGradient', NaN) !== 0
@@ -81,7 +81,13 @@ export function savedFillGradient(
 	}
 	return {
 		type: 'linear',
-		...linearGradientEndpoints(width, height, (quarter % 4) * 90 * 60_000),
+		...(orthogonal
+			? linearGradientEndpoints(width, height, (quarter % 4) * 90 * 60_000)
+			: {
+					start: [0, 1] as const,
+					end: [1, 1] as const,
+					boundingBoxAngle: -Math.round((wrapped * 180 * 1e10) / Math.PI) / 1e10,
+				}),
 		stops,
 	};
 }

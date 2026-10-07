@@ -5,6 +5,26 @@ import { renderText } from './render-text';
 import { rasterFixture } from './__fixtures__/raster-fixtures.mjs';
 
 describe('defensive scene limits', () => {
+	it('validates bounding-box gradient rotation and normalized endpoints', () => {
+		const model = structuredClone(demoDocument);
+		const gradient = {
+			type: 'linear' as const,
+			start: [0, 1] as const,
+			end: [1, 1] as const,
+			boundingBoxAngle: -30,
+			stops: [
+				{ offset: 0, color: '#000', opacity: 1 },
+				{ offset: 1, color: '#fff', opacity: 1 },
+			],
+		};
+		model.pages[0]!.shapes[0]!.style.fillGradient = gradient;
+		assertViewableDocument(model);
+		gradient.boundingBoxAngle = NaN;
+		expect(() => assertViewableDocument(model)).toThrow('gradient bounding-box angle');
+		gradient.boundingBoxAngle = -30;
+		Object.assign(gradient, { end: [2, 1] });
+		expect(() => assertViewableDocument(model)).toThrow('gradient position');
+	});
 	it('rejects iterable substitutes for diagnostic and gradient arrays and nonboolean hiding', () => {
 		const model = structuredClone(demoDocument),
 			shape = model.pages[0]!.shapes[0]!;

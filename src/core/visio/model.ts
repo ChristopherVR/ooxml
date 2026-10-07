@@ -19,9 +19,11 @@ export interface VisioGeometry {
 }
 export interface VisioLinearGradient {
 	type: 'linear';
-	/** Gradient endpoints in local y-up inches, for SVG userSpaceOnUse. */
+	/** Local y-up inches, or normalized coordinates when boundingBoxAngle is present. */
 	start: readonly [number, number];
 	end: readonly [number, number];
+	/** Rotation in local y-up degrees around the normalized bounding-box center. */
+	boundingBoxAngle?: number;
 	stops: { offset: number; color: string; opacity: number }[];
 }
 export interface VisioRadialGradient {

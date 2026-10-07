@@ -19,6 +19,8 @@ for (const sample of [
 	{ name: 'regions-alpha', directory: process.env.VISIO_NATIVE_REGION_FILLS_ALPHA_DIR },
 	{ name: 'linear-vertical', directory: process.env.VISIO_NATIVE_LINEAR_VERTICAL_DIR },
 	{ name: 'linear-reverse', directory: process.env.VISIO_NATIVE_LINEAR_REVERSE_DIR },
+	{ name: 'linear-oblique', directory: process.env.VISIO_NATIVE_LINEAR_OBLIQUE_DIR },
+	{ name: 'linear-oblique-alpha', directory: process.env.VISIO_NATIVE_LINEAR_OBLIQUE_ALPHA_DIR },
 ]) {
 	const directory = sample.directory;
 	const linear = sample.name.startsWith('linear');

@@ -16,6 +16,7 @@ function scene() {
 		type: 'linear',
 		start: [0, 0],
 		end: [1, 1],
+		boundingBoxAngle: -30,
 		stops: [
 			{ offset: 0, color: '#000', opacity: 1 },
 			{ offset: 1, color: '#fff', opacity: 0.5 },

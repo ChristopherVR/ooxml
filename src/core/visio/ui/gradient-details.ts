@@ -19,10 +19,17 @@ export function assertVisioFillGradient(
 	)
 		throw new Error('The scene has an invalid fill gradient.');
 	if (gradient.type === 'linear') {
+		if (gradient.boundingBoxAngle !== undefined)
+			finite(gradient.boundingBoxAngle, 'gradient bounding-box angle', -360, 360);
 		if (gradient.start.length !== 2 || gradient.end.length !== 2)
 			throw new Error('The scene has invalid gradient endpoints.');
 		for (const value of [...gradient.start, ...gradient.end])
-			finite(value, 'gradient position', -20_000, 20_000);
+			finite(
+				value,
+				'gradient position',
+				gradient.boundingBoxAngle === undefined ? -20_000 : 0,
+				gradient.boundingBoxAngle === undefined ? 20_000 : 1,
+			);
 	} else if (gradient.type === 'radial') {
 		if (gradient.center.length !== 2) throw new Error('The scene has an invalid gradient center.');
 		for (const value of gradient.center) finite(value, 'gradient center', 0, 1);

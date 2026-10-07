@@ -76,7 +76,7 @@ export function normalizeVisioPageGeometry(
 			geometry.path = scaleVisioGeometryPath(geometry.path, ratio);
 		}
 		const gradient = shape.style.fillGradient;
-		if (gradient?.type === 'linear') {
+		if (gradient?.type === 'linear' && gradient.boundingBoxAngle === undefined) {
 			gradient.start = [distance(gradient.start[0], ratio), distance(gradient.start[1], ratio)];
 			gradient.end = [distance(gradient.end[0], ratio), distance(gradient.end[1], ratio)];
 		}

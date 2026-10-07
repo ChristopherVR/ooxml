@@ -57,11 +57,23 @@ describe('page drawing coordinates to paper inches', () => {
 		parent.image = image;
 		child.image = image;
 		child.style.fillGradient = { type: 'linear', start: [2, 4], end: [6, 8], stops: [] };
+		parent.style.fillGradient = {
+			type: 'linear',
+			start: [0, 1],
+			end: [1, 1],
+			boundingBoxAngle: -30,
+			stops: [],
+		};
 		const fontSize = child.text.fontSize;
 		const margins = { ...child.text.margins };
 		normalizeVisioPageGeometry([parent], 0.5, () => {});
 		expect(child.transform).toEqual([0, 1, -1, 0, 3, 4]);
 		expect(child.style.fillGradient).toMatchObject({ start: [1, 2], end: [3, 4] });
+		expect(parent.style.fillGradient).toMatchObject({
+			start: [0, 1],
+			end: [1, 1],
+			boundingBoxAngle: -30,
+		});
 		expect(parent.image).not.toBe(image);
 		expect(child.image).not.toBe(image);
 		expect(child.image).toMatchObject({ x: 1, y: 2, width: 3, height: 4 });

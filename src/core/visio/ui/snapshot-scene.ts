@@ -127,6 +127,9 @@ export function copySnapshotScene(model: VisioDocument): VisioDocument {
 										type: 'linear' as const,
 										start: [gradient.start[0], gradient.start[1]] as const,
 										end: [gradient.end[0], gradient.end[1]] as const,
+										...(gradient.boundingBoxAngle === undefined
+											? {}
+											: { boundingBoxAngle: gradient.boundingBoxAngle }),
 									}
 								: gradient.type === 'radial'
 									? {
