@@ -139,7 +139,17 @@ export function resolveNumberingLevel(
 	const num = catalog.nums[numId];
 	if (!num) return undefined;
 	const override = num.levelOverrides?.[level];
-	const base = override?.lvl ?? catalog.abstractNums[num.abstractNumId]?.levels[level];
+	const abstract = catalog.abstractNums[num.abstractNumId]?.levels[level];
+	let base = override?.lvl ?? abstract;
 	if (!base) return undefined;
+	if (override?.lvl) {
+		// Word ignores lvlRestart in a level override (MS-OI29500 17.9.10).
+		// Retain the source definition in the catalog, but resolve the abstract policy.
+		const { lvlRestart: _ignored, ...properties } = base;
+		base = {
+			...properties,
+			...(abstract?.lvlRestart !== undefined ? { lvlRestart: abstract.lvlRestart } : {}),
+		};
+	}
 	return override?.startOverride !== undefined ? { ...base, start: override.startOverride } : base;
 }

@@ -1,0 +1,36 @@
+{
+	"wordVersion": "16.0",
+	"wordBuild": "16.0.20430",
+	"recordedDate": "2026-10-08",
+	"scope": "installed perpetual Word; not current Microsoft 365 subscription certification",
+	"source": "https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oi29500/140a2cd9-2f26-456d-9760-ae6ecef4e8b5",
+	"generator": "src/core/docx/test-support/override-restart-fixture.ts: overrideRestartFixture(abstractRestart ?? undefined, overrideRestart)",
+	"recorder": "scripts/record-word-numbering-overrides.ps1",
+	"fixtureScope": "synthetic eight-paragraph restartSequence; abstract, full override and startOverride all start at one; no user documents",
+	"cases": [
+		{
+			"name": "default-override-never",
+			"abstractRestart": null,
+			"overrideRestart": 0,
+			"labels": ["1.", "1.", "1.", "2.", "2.", "1.", "2.", "1."]
+		},
+		{
+			"name": "never-override-previous",
+			"abstractRestart": 0,
+			"overrideRestart": 2,
+			"labels": ["1.", "1.", "1.", "2.", "2.", "3.", "2.", "4."]
+		},
+		{
+			"name": "previous-override-never",
+			"abstractRestart": 2,
+			"overrideRestart": 0,
+			"labels": ["1.", "1.", "1.", "2.", "2.", "1.", "2.", "1."]
+		},
+		{
+			"name": "top-override-never",
+			"abstractRestart": 1,
+			"overrideRestart": 0,
+			"labels": ["1.", "1.", "1.", "2.", "2.", "1.", "2.", "2."]
+		}
+	]
+}
