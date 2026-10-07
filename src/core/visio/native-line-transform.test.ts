@@ -46,68 +46,90 @@ it.each([
 });
 
 const directory = process.env.VISIO_NATIVE_LINE_MOVEMENT_DIR;
-it
-	.skipIf(!process.env.VISIO_NATIVE_LINE_BEGIN_DIR || !process.env.VISIO_NATIVE_LINE_END_DIR)
-	.each(['VISIO_NATIVE_LINE_BEGIN_DIR', 'VISIO_NATIVE_LINE_END_DIR'])(
-	'matches native endpoint edit caches and poses (%s)',
-	async (variable) => {
-		const directory = process.env[variable]!;
-		const bytes = await readFile(join(directory, 'moved.vsdx'));
-		const original = await parseVsdx(bytes);
-		const evidence = JSON.parse(
-			(await readFile(join(directory, 'evidence.json'), 'utf8')).replace(/^\uFEFF/, ''),
-		) as {
-			cases: {
-				shapeId: string;
-				endpoint: 'Begin' | 'End';
-				endpointAfter: Record<string, { value: number; formula: string }>;
-				endpointTransform: number[];
-			}[];
-		};
-		const saved = await editVsdx(
-			bytes,
-			evidence.cases.map((item) => ({
-				type: 'move-line-endpoint',
-				pageId: original.pages[0]!.id,
-				shapeId: item.shapeId,
-				endpoint: item.endpoint === 'Begin' ? 'begin' : 'end',
-				x: item.endpointAfter[`${item.endpoint}X`]!.value,
-				y: item.endpointAfter[`${item.endpoint}Y`]!.value,
-			})),
-		);
-		const result = await parseVsdx(saved.bytes);
-		const pkg = await VisioPackage.open(saved.bytes);
-		const root = await pkg.readXml('visio/pages/page1.xml', 'PageContents');
-		for (const item of evidence.cases) {
-			const node = children(children(root, 'Shapes')[0], 'Shape').find(
-				(node) => attribute(node, 'ID') === item.shapeId,
+for (const variable of [
+	'VISIO_NATIVE_LINE_BEGIN_DIR',
+	'VISIO_NATIVE_LINE_END_DIR',
+	'VISIO_NATIVE_LINE_SCALED_HALF_BEGIN_DIR',
+	'VISIO_NATIVE_LINE_SCALED_HALF_END_DIR',
+	'VISIO_NATIVE_LINE_SCALED_DOUBLE_BEGIN_DIR',
+	'VISIO_NATIVE_LINE_SCALED_DOUBLE_END_DIR',
+	'VISIO_NATIVE_LINE_SCALED_TRIPLE_BEGIN_DIR',
+	'VISIO_NATIVE_LINE_SCALED_TRIPLE_END_DIR',
+]) {
+	it.skipIf(!process.env[variable])(
+		`matches native endpoint edit caches and poses (${variable})`,
+		async () => {
+			const directory = process.env[variable]!;
+			const bytes = await readFile(join(directory, 'moved.vsdx'));
+			const original = await parseVsdx(bytes);
+			const evidence = JSON.parse(
+				(await readFile(join(directory, 'evidence.json'), 'utf8')).replace(/^\uFEFF/, ''),
+			) as {
+				pageScale?: number;
+				drawingScale?: number;
+				cases: {
+					shapeId: string;
+					endpoint: 'Begin' | 'End';
+					endpointAfter: Record<string, { value: number; formula: string }>;
+					endpointTransform: number[];
+				}[];
+			};
+			const saved = await editVsdx(
+				bytes,
+				evidence.cases.map((item) => ({
+					type: 'move-line-endpoint',
+					pageId: original.pages[0]!.id,
+					shapeId: item.shapeId,
+					endpoint: item.endpoint === 'Begin' ? 'begin' : 'end',
+					x: item.endpointAfter[`${item.endpoint}X`]!.value,
+					y: item.endpointAfter[`${item.endpoint}Y`]!.value,
+				})),
 			);
-			const cells = new Map(children(node, 'Cell').map((node) => [attribute(node, 'N'), node]));
-			for (const [name, native] of Object.entries(item.endpointAfter)) {
-				expect(Number(attribute(cells.get(name), 'V')), `${item.shapeId}/${name}`).toBeCloseTo(
-					native.value,
-					12,
+			const result = await parseVsdx(saved.bytes);
+			const pkg = await VisioPackage.open(saved.bytes);
+			const before = await VisioPackage.open(bytes);
+			expect(await pkg.readBytes('visio/pages/pages.xml')).toEqual(
+				await before.readBytes('visio/pages/pages.xml'),
+			);
+			expect(result.pages[0]!.drawingToPageScale ?? 1).toBe(
+				(evidence.pageScale ?? 1) / (evidence.drawingScale ?? 1),
+			);
+			const root = await pkg.readXml('visio/pages/page1.xml', 'PageContents');
+			for (const item of evidence.cases) {
+				const node = children(children(root, 'Shapes')[0], 'Shape').find(
+					(node) => attribute(node, 'ID') === item.shapeId,
 				);
-				const formula = attribute(cells.get(name), 'F');
-				if (formula) expect(formula, name).toBe(native.formula);
+				const cells = new Map(children(node, 'Cell').map((node) => [attribute(node, 'N'), node]));
+				for (const [name, native] of Object.entries(item.endpointAfter)) {
+					expect(Number(attribute(cells.get(name), 'V')), `${item.shapeId}/${name}`).toBeCloseTo(
+						native.value,
+						12,
+					);
+					const formula = attribute(cells.get(name), 'F');
+					if (formula) expect(formula, name).toBe(native.formula);
+				}
+				const shape = result.pages[0]!.shapes.find((shape) => shape.id === item.shapeId)!;
+				for (let i = 0; i < 6; i++)
+					expect(shape.transform[i]).toBeCloseTo(
+						item.endpointTransform[i]! *
+							(i >= 4 ? (evidence.pageScale ?? 1) / (evidence.drawingScale ?? 1) : 1),
+						12,
+					);
 			}
-			const shape = result.pages[0]!.shapes.find((shape) => shape.id === item.shapeId)!;
-			for (let i = 0; i < 6; i++)
-				expect(shape.transform[i]).toBeCloseTo(item.endpointTransform[i]!, 12);
-		}
-		const native = await parseVsdx(await readFile(join(directory, 'endpoint.vsdx')));
-		const nativeNumbers = (value: unknown): unknown => {
-			if (typeof value === 'number') return expect.closeTo(value, 12);
-			if (Array.isArray(value)) return value.map(nativeNumbers);
-			if (value && typeof value === 'object')
-				return Object.fromEntries(
-					Object.entries(value).map(([key, item]) => [key, nativeNumbers(item)]),
-				);
-			return value;
-		};
-		expect(result.pages[0]!.shapes).toEqual(nativeNumbers(native.pages[0]!.shapes));
-	},
-);
+			const native = await parseVsdx(await readFile(join(directory, 'endpoint.vsdx')));
+			const nativeNumbers = (value: unknown): unknown => {
+				if (typeof value === 'number') return expect.closeTo(value, 12);
+				if (Array.isArray(value)) return value.map(nativeNumbers);
+				if (value && typeof value === 'object')
+					return Object.fromEntries(
+						Object.entries(value).map(([key, item]) => [key, nativeNumbers(item)]),
+					);
+				return value;
+			};
+			expect(result.pages[0]!.shapes).toEqual(nativeNumbers(native.pages[0]!.shapes));
+		},
+	);
+}
 const resizeDirectory = process.env.VISIO_NATIVE_LINE_RESIZE_DIR;
 it.skipIf(!resizeDirectory)(
 	'matches native Width-cell resize caches and XYToPage poses',

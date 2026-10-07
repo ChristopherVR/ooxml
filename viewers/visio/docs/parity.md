@@ -34,7 +34,12 @@ caches and poses. Pointer endpoint handles now commit the same command once on
 release, with a preview, cancellation and all-six native pose/history/save/reload
 comparisons. Static Width overrides, flipped or coincident endpoints, broader
 formulas and glued connector routing remain open. Native Visio snapping, keyboard
-endpoint manipulation, scaled-page gestures and gesture paint remain unverified.
+endpoint manipulation and gesture paint remain unverified. Native drawing-to-page
+ratios 0.5, 2 and 3 have 72 distinct API/pointer workflows across six frameworks,
+including both endpoints, undo/redo, download and reload. Independent native SVG
+measurements verify physical paper sizes and saved endpoints, and page-scale
+metadata is preserved byte-for-byte. Other scales and unit conventions remain
+unverified.
 
 Saved oblique linear fills now use the shared physical endpoint helper rather
 than native-SVG box rotation. Native 45-degree rectangle paint and 225-degree

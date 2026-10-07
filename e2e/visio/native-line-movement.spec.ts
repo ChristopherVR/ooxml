@@ -3,6 +3,18 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { parseVsdx } from 'ooxml-core/visio';
 import { downloadCopy } from './ribbon';
+import { nativeSvgLineEndpoints } from './native-line-svg';
+
+interface NativeEndpointEvidence {
+	pageScale?: number;
+	drawingScale?: number;
+	cases: {
+		shapeId: string;
+		endpoint: 'Begin' | 'End';
+		endpointAfter: Record<string, { value: number }>;
+		endpointTransform: number[];
+	}[];
+}
 
 const directory = process.env.VISIO_NATIVE_LINE_MOVEMENT_DIR;
 async function downloadBytes(page: Page): Promise<Buffer> {
@@ -16,6 +28,16 @@ async function downloadBytes(page: Page): Promise<Buffer> {
 }
 
 const resizeDirectory = process.env.VISIO_NATIVE_LINE_RESIZE_DIR;
+const endpointDirectories = [
+	'VISIO_NATIVE_LINE_BEGIN_DIR',
+	'VISIO_NATIVE_LINE_END_DIR',
+	'VISIO_NATIVE_LINE_SCALED_HALF_BEGIN_DIR',
+	'VISIO_NATIVE_LINE_SCALED_HALF_END_DIR',
+	'VISIO_NATIVE_LINE_SCALED_DOUBLE_BEGIN_DIR',
+	'VISIO_NATIVE_LINE_SCALED_DOUBLE_END_DIR',
+	'VISIO_NATIVE_LINE_SCALED_TRIPLE_BEGIN_DIR',
+	'VISIO_NATIVE_LINE_SCALED_TRIPLE_END_DIR',
+];
 test('vanilla: endpoint drag cancellation and clicks preserve source bytes and history', async ({
 	page,
 }) => {
@@ -44,7 +66,7 @@ test('vanilla: endpoint drag cancellation and clicks preserve source bytes and h
 	).toBeDisabled();
 	expect(await downloadBytes(page)).toEqual(await readFile(join(directory!, 'moved.vsdx')));
 });
-for (const variable of ['VISIO_NATIVE_LINE_BEGIN_DIR', 'VISIO_NATIVE_LINE_END_DIR']) {
+for (const variable of endpointDirectories) {
 	for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
 		test(`${framework}: native endpoint canvas drag supports history and saved copies (${variable})`, async ({
 			page,
@@ -53,17 +75,22 @@ for (const variable of ['VISIO_NATIVE_LINE_BEGIN_DIR', 'VISIO_NATIVE_LINE_END_DI
 			test.skip(!directory, `Set ${variable} to the native endpoint capture.`);
 			const evidence = JSON.parse(
 				(await readFile(join(directory!, 'evidence.json'), 'utf8')).replace(/^\uFEFF/, ''),
-			) as {
-				cases: {
-					shapeId: string;
-					endpoint: 'Begin' | 'End';
-					endpointAfter: Record<string, { value: number }>;
-					endpointTransform: number[];
-				}[];
-			};
+			) as NativeEndpointEvidence;
 			await page.goto(framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`);
 			await page.locator('#file').setInputFiles(join(directory!, 'moved.vsdx'));
 			await expect(page.locator('#file-name')).toHaveText('moved.vsdx');
+			const native = await parseVsdx(await readFile(join(directory!, 'endpoint.vsdx')));
+			const nativeSvg = variable.includes('SCALED')
+				? await nativeSvgLineEndpoints(
+						page,
+						await readFile(join(directory!, 'endpoint-page.svg'), 'utf8'),
+					)
+				: undefined;
+			if (nativeSvg) {
+				expect(native.pages[0]!.width).toBeCloseTo(nativeSvg.width, 12);
+				expect(native.pages[0]!.height).toBeCloseTo(nativeSvg.height, 12);
+				expect(nativeSvg.lines).toHaveLength(4);
+			}
 			const viewer = page.locator('visio-viewer');
 			await viewer.locator('.edit-controls summary').click();
 			for (const item of evidence.cases) {
@@ -104,7 +131,10 @@ for (const variable of ['VISIO_NATIVE_LINE_BEGIN_DIR', 'VISIO_NATIVE_LINE_END_DI
 					.trim()
 					.split(/[\s,]+/)
 					.map(Number);
-				for (let i = 0; i < 6; i++) expect(pose[i]).toBeCloseTo(item.endpointTransform[i]!, 4);
+				const expectedPose = native.pages[0]!.shapes.find(
+					(shape) => shape.id === item.shapeId,
+				)!.transform;
+				for (let i = 0; i < 6; i++) expect(pose[i]).toBeCloseTo(expectedPose[i]!, 4);
 				await viewer
 					.locator('.edit-controls')
 					.getByRole('button', { name: 'Undo', exact: true })
@@ -115,16 +145,24 @@ for (const variable of ['VISIO_NATIVE_LINE_BEGIN_DIR', 'VISIO_NATIVE_LINE_END_DI
 					.getByRole('button', { name: 'Redo', exact: true })
 					.click();
 				await expect(line).toHaveAttribute('transform', after);
+				await expect(handle).toBeVisible();
 			}
 			const bytes = await downloadBytes(page);
-			const actual = await parseVsdx(bytes),
-				native = await parseVsdx(await readFile(join(directory!, 'endpoint.vsdx')));
+			const actual = await parseVsdx(bytes);
 			for (const shape of actual.pages[0]!.shapes) {
 				const expected = native.pages[0]!.shapes.find((item) => item.id === shape.id)!;
 				for (let i = 0; i < 6; i++)
 					expect(shape.transform[i]).toBeCloseTo(expected.transform[i]!, 4);
 				expect(shape.width).toBeCloseTo(expected.width, 4);
 				expect(shape.style).toEqual(expected.style);
+				const svgLine = nativeSvg?.lines.find((line) => line.id === shape.id);
+				if (svgLine) {
+					const [a, b, , , x, y] = shape.transform;
+					expect(x).toBeCloseTo(svgLine.begin.x, 3);
+					expect(y).toBeCloseTo(svgLine.begin.y, 3);
+					expect(x + a * shape.width).toBeCloseTo(svgLine.end.x, 3);
+					expect(y + b * shape.width).toBeCloseTo(svgLine.end.y, 3);
+				}
 			}
 			await page.locator('#file').setInputFiles({
 				name: 'core-dragged.vsdx',
@@ -136,7 +174,7 @@ for (const variable of ['VISIO_NATIVE_LINE_BEGIN_DIR', 'VISIO_NATIVE_LINE_END_DI
 		});
 	}
 }
-for (const variable of ['VISIO_NATIVE_LINE_BEGIN_DIR', 'VISIO_NATIVE_LINE_END_DIR']) {
+for (const variable of endpointDirectories) {
 	for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
 		test(`${framework}: native endpoint API supports history and saved copies (${variable})`, async ({
 			page,
@@ -145,14 +183,7 @@ for (const variable of ['VISIO_NATIVE_LINE_BEGIN_DIR', 'VISIO_NATIVE_LINE_END_DI
 			test.skip(!directory, `Set ${variable} to the native endpoint capture.`);
 			const evidence = JSON.parse(
 				(await readFile(join(directory!, 'evidence.json'), 'utf8')).replace(/^\uFEFF/, ''),
-			) as {
-				cases: {
-					shapeId: string;
-					endpoint: 'Begin' | 'End';
-					endpointAfter: Record<string, { value: number }>;
-					endpointTransform: number[];
-				}[];
-			};
+			) as NativeEndpointEvidence;
 			await page.goto(framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`);
 			await page.locator('#file').setInputFiles(join(directory!, 'moved.vsdx'));
 			await expect(page.locator('#file-name')).toHaveText('moved.vsdx');
@@ -184,7 +215,12 @@ for (const variable of ['VISIO_NATIVE_LINE_BEGIN_DIR', 'VISIO_NATIVE_LINE_END_DI
 					.split(/[\s,]+/)
 					.map(Number);
 				expect(pose).toHaveLength(6);
-				for (let i = 0; i < 6; i++) expect(pose[i]).toBeCloseTo(item.endpointTransform[i]!, 12);
+				for (let i = 0; i < 6; i++)
+					expect(pose[i]).toBeCloseTo(
+						item.endpointTransform[i]! *
+							(i >= 4 ? (evidence.pageScale ?? 1) / (evidence.drawingScale ?? 1) : 1),
+						12,
+					);
 				await viewer
 					.locator('.edit-controls')
 					.getByRole('button', { name: 'Undo', exact: true })

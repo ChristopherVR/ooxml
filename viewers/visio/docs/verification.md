@@ -2,6 +2,45 @@
 
 Status: local Windows development evidence, 2026-10-03. Full Microsoft Visio parity is not established.
 
+## Scaled-page endpoint editing, 2026-10-08
+
+Six fresh native Visio captures cover drawing-to-page ratios 0.5, 2 and 3,
+both endpoint assignments and four orientations per capture: horizontal,
+30-degree, vertical and reversed. The recorder accepts DrawingScale/PageScale
+and records their native cached values alongside cells and XYToPage poses.
+It also exports each resulting page as native SVG.
+
+Optional capture directories, named by VISIO_NATIVE_LINE_SCALED_*_DIR:
+
+- HALF_BEGIN: visio-line-movement-4066bcfeeec64a1c84be6b685edb710f
+- HALF_END: visio-line-movement-16f211dfb5c646ca9ded30a7b1116ef9
+- DOUBLE_BEGIN: visio-line-movement-6d135280ddbf4ef88051637e37e61886
+- DOUBLE_END: visio-line-movement-418948da1efd48e7a5d455c8968db455
+- TRIPLE_BEGIN: visio-line-movement-0e203678cc7e4613a0ab849f6b0f615c
+- TRIPLE_END: visio-line-movement-699d528dcfcd47138abd1e4cfb269766
+
+The existing shared page-point and page-to-drawing conversion passed without
+production changes. Core tests compare native caches and scaled XYToPage poses
+to 12 digits, check parsed scale metadata against native cached values and
+preserve the pages.xml payload byte-for-byte. The full core Visio run passed
+2,186 tests with 60 unrelated optional skips; both core TypeScript projects
+and the viewer TypeScript check passed.
+
+Across two browser runs, 72 distinct scaled workflows passed: 36 pointer and
+36 API scenarios, six frameworks per endpoint/scale combination. The final run
+passed 48 scenarios, including all 36 scaled pointer workflows with visible
+handles after redo and the 12 ratio-three API workflows. Each scenario edits
+four lines and checks history, saved copies and reload.
+
+A shared browser helper measures endpoint positions directly from native SVG
+path geometry and matrices, independently of the core parser. Native physical
+paper dimensions match to 12 digits; saved pointer endpoints match to three
+decimal places, accounting for native SVG export rounding. Existing pointer
+pose/length checks retain four decimals and API checks retain 12 digits.
+These measurements establish endpoint geometry for the captured cases, not
+pixel/paint parity. Other scales/unit conventions, native snapping, keyboard
+manipulation, gesture paint and native Office reopen acceptance remain open.
+
 ## Canvas endpoint dragging, 2026-10-08
 
 Selected visible top-level straight connectors with source bytes now expose begin

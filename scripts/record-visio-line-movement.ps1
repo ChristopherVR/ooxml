@@ -2,7 +2,9 @@ param(
  [string]$OutputDirectory=(Join-Path $env:TEMP ('visio-line-movement-'+[guid]::NewGuid().ToString('N'))),
  [switch]$DeleteAfterMove,
  [ValidateRange(0,1000000)][double]$ResizeWidth=0,
- [ValidateSet('None','Begin','End')][string]$MoveEndpoint='None'
+ [ValidateSet('None','Begin','End')][string]$MoveEndpoint='None',
+ [ValidateRange(0.000001,1000000)][double]$DrawingScale=1,
+ [ValidateRange(0.000001,1000000)][double]$PageScale=1
 )
 # Capture endpoint translation without replacing native transform formulas.
 $ErrorActionPreference='Stop'
@@ -30,6 +32,8 @@ try {
  $app.AlertResponse=7
  $document=$app.Documents.Add('')
  $page=$document.Pages.Item(1)
+ $page.PageSheet.CellsU('DrawingScale').ResultIU=$DrawingScale
+ $page.PageSheet.CellsU('PageScale').ResultIU=$PageScale
  $shapes=@()
  $cases=@()
  foreach($end in @(@(3,1.5),@(2.732050807568877,2.5),@(1,3.5),@(-1,1.5))){
@@ -80,8 +84,9 @@ try {
    $cases[$i].Add('endpoint',$MoveEndpoint)
   }
   $document.SaveAs((Join-Path $directory 'endpoint.vsdx')) | Out-Null
+  $page.Export((Join-Path $directory 'endpoint-page.svg'))
  }
- $evidence=[ordered]@{application='Microsoft Visio';version=$app.Version;cases=$cases}
+ $evidence=[ordered]@{application='Microsoft Visio';version=$app.Version;cases=$cases;drawingScale=$page.PageSheet.CellsU('DrawingScale').ResultIU;pageScale=$page.PageSheet.CellsU('PageScale').ResultIU}
  if($DeleteAfterMove){
   foreach($shape in $shapes){$shape.Delete()}
   if($page.Shapes.Count -ne 1 -or $page.Shapes.Item(1).ID -ne $control.ID){throw 'Deletion altered the control shape.'}
