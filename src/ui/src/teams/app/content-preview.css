@@ -51,6 +51,42 @@ blockquote {
 	border-inline-start: var(--office-space-1) solid var(--office-teams-divider);
 	padding-inline-start: var(--office-space-3);
 }
+.markdown-table {
+	overflow-x: auto;
+	max-width: 100%;
+	margin-block: var(--office-space-3);
+}
+.markdown-table:focus-visible {
+	outline: var(--office-border-width) solid var(--office-foreground);
+}
+table {
+	border-collapse: collapse;
+	min-width: 100%;
+}
+th,
+td {
+	padding: var(--office-space-2) var(--office-space-3);
+	border: var(--office-border-width) solid var(--office-teams-divider);
+}
+th {
+	background: var(--office-background);
+}
+[data-align='left'] {
+	text-align: left;
+}
+[data-align='center'] {
+	text-align: center;
+}
+[data-align='right'] {
+	text-align: right;
+}
+.task-list {
+	list-style: none;
+	padding-inline-start: var(--office-space-3);
+}
+.task-list input {
+	margin-inline-end: var(--office-space-2);
+}
 .heading {
 	font-size: 1.3em;
 	font-weight: bold;

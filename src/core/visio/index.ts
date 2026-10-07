@@ -55,6 +55,8 @@ export {
 	type VisioGeometryEdit,
 	type VisioTextEdit,
 	type VisioPageInsert,
+	type VisioPageReorder,
+	type VisioPageEdit,
 	type EditVsdxOptions,
 	type EditVsdxResult,
 } from './edit.js';

@@ -8,7 +8,7 @@ import { refreshEditorControls } from './editor-controls';
 import { assignMissingParagraphIds, docToModel } from './model-adapter';
 import type { SearchPanelHandle } from './search-panel';
 import { CollaborationSession } from './collaboration-session';
-import { repairCollaborativeDocumentIds } from 'ooxml-core/docx/ui';
+import { repairCollaborativeDocumentIds, isWordYjsRemoteTransaction } from 'ooxml-core/docx/ui';
 import type { EditorTheme, EditorThemeMode } from 'ooxml-core/docx/ui';
 import type { EditorLocale } from './localization';
 import { findLocalizedControl } from './localization';
@@ -28,6 +28,7 @@ import { PageTracker, syncPageState } from './page-sync';
 import type { PageNavigator } from './page-navigator';
 import type { HeadingNavigator } from './heading-navigator';
 import { HEADER_FOOTER_INPUT } from 'ooxml-core/docx/ui';
+import { newPicturePartName } from './picture-commands';
 import { ViewOptions } from './view-options';
 import { currentSectionIndex } from './section-commands';
 import { syncHeaderFooterRibbon } from './header-footer-ribbon';
@@ -89,12 +90,15 @@ export class EditorCore {
 			paper: () => this.shell.paper,
 			toolbar: () => this.shell.toolbar,
 			reportError: (error) => emit(element, 'document-error', error),
+			newMediaPartName: (contentType) =>
+				this.collab.yjs?.media.partName(contentType) ?? newPicturePartName(contentType),
+			stageMedia: (name, part) => this.collab.yjs?.media.publish(name, part),
 		});
 		this.formatDialogs = new FormatDialogs({
 			view: () => this.targetView(),
 			historyView: () => (this.parts.usesBodyHistory() ? this.view : this.targetView()),
 			model: () => this.model,
-			canDefineList: () => !this.readOnly && !this.collab.client,
+			canDefineList: () => !this.readOnly && !this.collab.active,
 			zoom: {
 				percent: () => Math.round(this.pages.zoom * 100),
 				setPercent: (percent) => this.pages.setZoom(percent),
@@ -102,32 +106,34 @@ export class EditorCore {
 			},
 			pageSetup: {
 				section: () => this.pages.currentSection(),
-				canEdit: () => !this.readOnly && !this.collab.client,
+				canEdit: () => !this.readOnly && !this.collab.active,
 				apply: (values) => this.pages.applyPageSetupValues(values),
 			},
 			lineNumbers: {
 				section: () => this.pages.currentSection(),
-				canEdit: () => !this.readOnly && !this.collab.client,
+				canEdit: () => !this.readOnly && !this.collab.active,
 				apply: (settings) => this.pages.applyLineNumberSettings(settings),
 			},
 			watermark: {
 				current: () => this.pages.currentWatermark(),
-				canEdit: () => !this.readOnly && !this.collab.client,
+				canEdit: () => !this.readOnly && !this.collab.active,
 				apply: (spec) => this.pages.applyWatermark(spec),
 			},
 			pageBorders: {
 				section: () => this.pages.currentSection(),
-				canEdit: () => !this.readOnly && !this.collab.client,
+				canEdit: () => !this.readOnly && !this.collab.active,
 				apply: (borders) => this.pages.applyPageBorders(borders),
 			},
 			columns: {
 				section: () => this.pages.currentSection(),
-				canEdit: () => !this.readOnly && !this.collab.client,
+				canEdit: () => !this.readOnly && !this.collab.active,
 				apply: (columns) => this.pages.applyColumns(columns),
 			},
 		});
-		this.imageMedia = new ImageMediaCache((partName) =>
-			this.inserts.media(partName, this.loaded?.media),
+		this.imageMedia = new ImageMediaCache(
+			(partName) =>
+				this.collab.yjs?.media.get(partName)?.bytes ??
+				this.inserts.media(partName, this.loaded?.media),
 		);
 		this.host = {
 			element,
@@ -137,7 +143,7 @@ export class EditorCore {
 				this.model = model;
 			},
 			locale: () => this.locale,
-			canEditOutsideBody: () => !this.readOnly && !this.collab.client,
+			canEditOutsideBody: () => !this.readOnly && !this.collab.active,
 			edited: () => this.markEditedOutsideBody(),
 			reportError: (cause) => dispatchDocumentError(element, cause),
 		};
@@ -168,6 +174,10 @@ export class EditorCore {
 		return this.model.page.width - this.model.page.marginLeft - this.model.page.marginRight;
 	}
 
+	canEditBody(): boolean {
+		return !this.readOnly && (!this.collab.yjs || this.collab.yjs.session.canWrite());
+	}
+
 	/** The ribbon acts on an open header/footer/note editor, otherwise on the main text. */
 	targetView(): EditorView | undefined {
 		return this.parts.activeView() ?? this.view;
@@ -195,15 +205,29 @@ export class EditorCore {
 
 	applyTransaction(transaction: Transaction, remote = false): void {
 		const view = this.view;
-		if (!view) return;
+		if (!view || view.isDestroyed) return;
+		remote ||= Boolean(this.collab.yjs && isWordYjsRemoteTransaction(transaction));
+		if (this.collab.yjs && this.readOnly && transaction.docChanged && !remote) {
+			view.updateState(view.state);
+			return;
+		}
 		if (remote) transaction.setMeta(REMOTE_TRANSACTION_META, true);
 		const previousParts = view.state.doc.attrs.sectionParts;
 		const applied = view.state.applyTransaction(transaction).state;
-		const repaired = remote
-			? null
-			: this.collab.client
-				? repairCollaborativeDocumentIds(applied, this.collab.client.clientId, this.collab.ids)
-				: assignMissingParagraphIds(applied);
+		if (applied === view.state) {
+			view.updateState(applied);
+			return;
+		}
+		const repaired =
+			remote || !transaction.docChanged
+				? null
+				: this.collab.active
+					? repairCollaborativeDocumentIds(
+							applied,
+							this.collab.client?.clientId ?? String(this.collab.yjs!.session.clientId),
+							this.collab.ids,
+						)
+					: assignMissingParagraphIds(applied);
 		view.updateState(repaired ? applied.apply(repaired) : applied);
 		if (transaction.docChanged) {
 			this.model = docToModel(view.state.doc, this.model);
@@ -238,8 +262,8 @@ export class EditorCore {
 			toolbar,
 			this.targetView(),
 			this.model,
-			this.readOnly,
-			Boolean(this.collab.client),
+			!this.canEditBody(),
+			this.collab.active,
 			this.locale,
 			this.element.lang,
 			printLayout?.pageStatus(),

@@ -2,6 +2,7 @@ import { setDropCap } from './drop-cap-command';
 import type { Command } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import { undo, redo } from 'prosemirror-history';
+import { wordYjsPluginKey, wordYjsUndo, wordYjsRedo } from 'ooxml-core/docx/ui';
 import { baseKeymap, chainCommands } from 'prosemirror-commands';
 import { expectDefined } from 'ooxml-core/docx/ui';
 import { toggleFormat } from './toggle-commands';
@@ -32,6 +33,14 @@ const marks = {
 	underline: toggleFormat('underline'),
 	strike: toggleFormat('strike'),
 };
+const editorUndo: Command = (state, dispatch, view) =>
+	wordYjsPluginKey.getState(state)
+		? wordYjsUndo(state, dispatch, view)
+		: undo(state, dispatch, view);
+const editorRedo: Command = (state, dispatch, view) =>
+	wordYjsPluginKey.getState(state)
+		? wordYjsRedo(state, dispatch, view)
+		: redo(state, dispatch, view);
 const editable =
 	(command: Command): Command =>
 	(state, dispatch, view) =>
@@ -59,9 +68,9 @@ function alignBindings(): Record<string, Command> {
 
 /** ProseMirror bindings the editor adds on top of the base keymap; the help dialog lists these. */
 export const editorBindings: Record<string, Command> = {
-	'Mod-z': undo,
-	'Mod-y': redo,
-	'Mod-Shift-z': redo,
+	'Mod-z': editorUndo,
+	'Mod-y': editorRedo,
+	'Mod-Shift-z': editorRedo,
 	'Mod-b': marks.bold,
 	'Mod-i': marks.italic,
 	'Mod-u': marks.underline,
@@ -126,7 +135,7 @@ export function runRibbonCommand(
 		});
 		if (transaction.docChanged) view.dispatch(transaction);
 	} else if (action.type === 'history')
-		(action.key === 'undo' ? undo : redo)(view.state, view.dispatch, view);
+		(action.key === 'undo' ? editorUndo : editorRedo)(view.state, view.dispatch, view);
 	else if (action.type === 'font') {
 		if (action.key === 'highlight') applyHighlight(view, action.value);
 		else applyFont(view, action.key, action.value);

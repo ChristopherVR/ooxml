@@ -17,17 +17,17 @@ product surface. A function count or ribbon button count does not establish comp
 
 ## Findings and priorities
 
-| Priority       | Area                    | Evidence and gap                                                                                                                                                                                                                                       | Next acceptance target                                                                                                                                                       |
-| -------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| P0             | Everyday editing        | `edit/clipboard.ts` clipped every copied rectangle to used cells; `grid/grid-commands.ts` routed Fill Down/Right through series inference. Fixed in this slice.                                                                                        | Trailing blanks overwrite the full finite destination; date and weekday fills repeat content, retain formatting and translate formulas.                                      |
-| P0             | Save fidelity           | The reader/writer retain unsupported XML and parts, and patch some carried references. This does not prove preservation across every edit. Default clipboard payloads also do not cover all Excel metadata such as conditional formats and hyperlinks. | Excel-produced fixtures for metadata, structural edits, tables, drawings, external links and unsupported parts; compare package contents and reopen in Excel without repair. |
-| P1             | Clipboard and selection | Compatible selection paste now repeats copied blocks, with size checks and one undo step. Whole-row/column copies are intentionally bounded to used content. Clipboard payloads are dense arrays.                                                      | Skip blanks, full metadata semantics and bounded large-selection performance.                                                                                                |
-| P1             | Formula compatibility   | A substantial function catalogue and recorded Excel corpus exist; missing functions and cached external references remain documented.                                                                                                                  | Expand real-Excel differential cases for coercion, errors, arrays, names, tables, dates and structural edits before treating any function as complete.                       |
-| P1             | Grid and print fidelity | The core supplies grid metrics and cell views; printing uses a browser-rendered range. Page Layout and page-break preview are absent.                                                                                                                  | Reference workbooks and screenshots for widths, fonts, wrapping, merges, panes and number formats; paginated print with repeating titles and scaling.                        |
-| P2             | Charts and drawings     | Live chart rendering and limited chart edits exist; many drawing types remain placeholders. SmartArt primarily uses cached drawings.                                                                                                                   | Shared chart/DrawingML support for axes, labels, series formatting and geometry, with read/edit/save fixtures.                                                               |
-| P2             | Pivot/data features     | Pivot caches/tables are retained without pivot refresh/rendering; slicers, timelines and sparklines are not drawn. Connections are cached.                                                                                                             | Implement bounded pivot aggregation and views, then filtering controls and refresh, with explicit unsupported-feature reporting.                                             |
-| P2             | Collaboration           | The shared Yjs infrastructure exists; spreadsheet document mapping and product integration are missing.                                                                                                                                                | XLSX adapter with atomic edits, origins, shared undo rules, selections, reconnect and conflict tests.                                                                        |
-| Separate scope | Excel platform features | VBA is carried but never executed; add-ins and Power Query are not implemented. XLSB/ODS are unsupported.                                                                                                                                              | Define platform and file-format requirements explicitly before claiming whole-product 1:1 parity.                                                                            |
+| Priority       | Area                    | Evidence and gap                                                                                                                                                                                                                                     | Next acceptance target                                                                                                                                                       |
+| -------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P0             | Everyday editing        | `edit/clipboard.ts` clipped every copied rectangle to used cells; `grid/grid-commands.ts` routed Fill Down/Right through series inference. Fixed in this slice.                                                                                      | Trailing blanks overwrite the full finite destination; date and weekday fills repeat content, retain formatting and translate formulas.                                      |
+| P0             | Save fidelity           | The reader/writer retain unsupported XML and parts, and patch some carried references. This does not prove preservation across every edit. Default clipboard payloads also do not cover all Excel metadata such as conditional formats and drawings. | Excel-produced fixtures for metadata, structural edits, tables, drawings, external links and unsupported parts; compare package contents and reopen in Excel without repair. |
+| P1             | Clipboard and selection | Compatible selection paste now repeats copied blocks, with size checks and one undo step. Whole-row/column copies are intentionally bounded to used content. Clipboard payloads are dense arrays.                                                    | Skip blanks, full metadata semantics and bounded large-selection performance.                                                                                                |
+| P1             | Formula compatibility   | A substantial function catalogue and recorded Excel corpus exist; missing functions and cached external references remain documented.                                                                                                                | Expand real-Excel differential cases for coercion, errors, arrays, names, tables, dates and structural edits before treating any function as complete.                       |
+| P1             | Grid and print fidelity | The core supplies grid metrics and cell views; printing uses a browser-rendered range. Page Layout and page-break preview are absent.                                                                                                                | Reference workbooks and screenshots for widths, fonts, wrapping, merges, panes and number formats; paginated print with repeating titles and scaling.                        |
+| P2             | Charts and drawings     | Live chart rendering and limited chart edits exist; many drawing types remain placeholders. SmartArt primarily uses cached drawings.                                                                                                                 | Shared chart/DrawingML support for axes, labels, series formatting and geometry, with read/edit/save fixtures.                                                               |
+| P2             | Pivot/data features     | Pivot caches/tables are retained without pivot refresh/rendering; slicers, timelines and sparklines are not drawn. Connections are cached.                                                                                                           | Implement bounded pivot aggregation and views, then filtering controls and refresh, with explicit unsupported-feature reporting.                                             |
+| P2             | Collaboration           | The shared Yjs infrastructure exists; spreadsheet document mapping and product integration are missing.                                                                                                                                              | XLSX adapter with atomic edits, origins, shared undo rules, selections, reconnect and conflict tests.                                                                        |
+| Separate scope | Excel platform features | VBA is carried but never executed; add-ins and Power Query are not implemented. XLSB/ODS are unsupported.                                                                                                                                            | Define platform and file-format requirements explicitly before claiming whole-product 1:1 parity.                                                                            |
 
 ## Reuse decisions
 
@@ -210,13 +210,37 @@ and save/reload. Browser tests exercise native clipboard note paste/undo and val
 subsequent accepted/rejected entry. [Microsoft's paste type enumeration](https://learn.microsoft.com/en-us/office/vba/api/excel.xlpastetype)
 documents the corresponding modes. The native corpus covers legacy notes; it does not establish
 threaded-comment presentation or complete clipboard metadata parity. Conditional formats,
-hyperlinks, drawings and external native clipboard interchange remain to be implemented.
+drawings and external native clipboard interchange remain to be implemented. Hyperlink clipboard
+support is implemented in the following slice.
 
 Verification: 5,010 core XLSX tests, 310 other shared UI tests plus the corrected translation test,
 47 viewer binding tests and all 58 browser tests passed. Core/UI/viewer typechecks and builds passed.
 A generated library workbook was opened and saved in native Excel, then reloaded: note author/text
 and the transposed validation's accepted/rejected results remained correct after Excel combined
 equivalent validation ranges. This is a focused native acceptance probe, not a lossless-save claim.
+
+### Hyperlink clipboard semantics
+
+Clipboard snapshots now carry clipped hyperlink ranges, external targets, in-workbook locations
+and tooltips. All and All except borders replace destination links; the other supported modes
+retain them. Skip blanks retains destination links wherever the source has no link, independently
+of whether source cell content is present. Range splitting preserves portions outside the paste
+area, tiled paste shares one undo step, and cut uses the existing reference-rewrite engine for
+internal targets. HTML copy emits escaped anchors; HTML import reads their targets and tooltips.
+Both paths reuse the shared OPC hyperlink policy. Plain TSV cannot represent link metadata.
+
+`scripts/record-xlsx-paste-hyperlinks.ps1` records 64 Microsoft 365 Excel 16.0 build 20430 cases
+covering eight modes, transpose, Skip blanks and arithmetic. Tests compare 256 destination cells'
+values and link targets/locations/tooltips, plus undo/redo. Additional regressions cover clipped
+spans, cross-workbook snapshots, tiling, save/reload, HTML interchange, cut references and shared
+link policy. The browser test inserts links through the existing dialog, copies through the system
+clipboard, and verifies target replacement and undo/redo. Conditional formats, drawings and complete
+native Excel clipboard interchange remain outstanding.
+
+Verification: 5,078 core XLSX tests, all 311 shared XLSX UI tests, 47 viewer binding tests and all
+59 browser tests passed. Core/UI/viewer typechecks and package builds passed. Excel opened and
+saved a generated workbook containing transposed copied links; library reload retained both target
+kinds and the tooltip. This focused probe does not establish complete hyperlink or export parity.
 
 ## Evidence required for parity
 

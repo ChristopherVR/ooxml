@@ -16,6 +16,39 @@ async function preview(detail: OpenFileDetail): Promise<TeamsContentPreview> {
 }
 
 describe('content preview', () => {
+	it('renders accessible tables and read-only tasks with safe relative links', async () => {
+		vi.stubGlobal(
+			'fetch',
+			vi.fn(
+				async () =>
+					new Response(
+						'| File | Status |\n| :--- | ---: |\n| [Budget](./Budget.xlsx) | **Ready** |\n| <img src=x onerror=alert(1)> | [bad](javascript:x) |\n\n- [x] Reviewed\n- [ ] Waiting',
+					),
+			),
+		);
+		const el = await preview({
+			attachment: { name: 'notes.md', kind: 'other' },
+			url: 'https://files.test/project/notes.md?sig=secret',
+		});
+		await vi.waitFor(() => expect(el.status).toBe('ready'));
+		await el.updateComplete;
+		expect(el.shadowRoot!.querySelectorAll('th[scope=col]')).toHaveLength(2);
+		expect(el.shadowRoot!.querySelector('td[data-align=right] strong')?.textContent).toBe('Ready');
+		expect(el.shadowRoot!.querySelector('table a')?.getAttribute('href')).toBe(
+			'https://files.test/project/Budget.xlsx',
+		);
+		expect(el.shadowRoot!.querySelector('table img')).toBeNull();
+		expect(el.shadowRoot!.querySelectorAll('table a')).toHaveLength(1);
+		const checks = Array.from(
+			el.shadowRoot!.querySelectorAll<HTMLInputElement>('input[type=checkbox]'),
+		);
+		expect(
+			checks.map((input) => [input.checked, input.disabled, input.getAttribute('aria-label')]),
+		).toEqual([
+			[true, true, 'Reviewed'],
+			[false, true, 'Waiting'],
+		]);
+	});
 	it('cancels workbook serialization without uploading or clearing local edits', async () => {
 		vi.stubGlobal(
 			'fetch',

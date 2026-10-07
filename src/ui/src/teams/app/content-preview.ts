@@ -3,8 +3,6 @@ import { keyed } from 'lit/directives/keyed.js';
 import {
 	contentUrl,
 	detectContentKind,
-	markdownBlocks,
-	markdownInline,
 	readContent,
 	type ContentKind,
 	type OfficeKind,
@@ -14,6 +12,7 @@ import type { OpenFileDetail } from './teams-app.js';
 import css from './content-preview.css?raw';
 import { blobFor, downloadBytes, saveExtension, withExtension } from '../../xlsx/file-commands.js';
 import { workbookActions } from './workbook-actions.js';
+import { markdownPreview } from './markdown-preview.js';
 
 /** Trusted host adapters return an embedding page URL, not an Office file URL. */
 export type FileEmbeds = Partial<Record<OfficeKind, (detail: OpenFileDetail) => string>>;
@@ -340,39 +339,13 @@ export class TeamsContentPreview extends LitElement {
 					? html`<article>
 							${
 								kind === 'markdown'
-									? markdownBlocks(this.text).map((block) => {
-											if (block.kind === 'code') return html`<pre><code>${block.text}</code></pre>`;
-											const text = this.inline(block.text, url!);
-											if (block.kind === 'quote') return html`<blockquote>${text}</blockquote>`;
-											if (block.kind === 'list')
-												return html`<ul>
-													<li>${text}</li>
-												</ul>`;
-											if (block.kind === 'heading')
-												return html`<div role="heading" aria-level=${block.level} class="heading">
-													${text}
-												</div>`;
-											return html`<p>${text}</p>`;
-										})
+									? markdownPreview(this.text, url!)
 									: html`<pre>${this.text}</pre>`
 							}
 						</article>`
 					: nothing
 			}
 		</section>`;
-	}
-
-	private inline(text: string, base: string) {
-		return markdownInline(text, base).map((token) => {
-			if (token.kind === 'strong') return html`<strong>${token.text}</strong>`;
-			if (token.kind === 'emphasis') return html`<em>${token.text}</em>`;
-			if (token.kind === 'code') return html`<code>${token.text}</code>`;
-			if (token.kind === 'link')
-				return html`<a href=${token.url!} target="_blank" rel="noopener noreferrer"
-					>${token.text}</a
-				>`;
-			return token.text;
-		});
 	}
 }
 

@@ -983,6 +983,8 @@ function applyLabelEdit(label: PptxChartDataLabel, edit: ChartDataPointLabelEdit
 	}
 	if (edit.text !== undefined) {
 		label.text = edit.text === '' ? undefined : edit.text;
+		// Typed text replaces a "Value From Cells" link, so it is saved as literal text.
+		delete label.textFromCells;
 	}
 	if (edit.spPr !== undefined) {
 		label.spPr = edit.spPr === null ? undefined : { ...(label.spPr ?? {}), ...edit.spPr };

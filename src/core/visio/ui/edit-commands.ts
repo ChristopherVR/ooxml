@@ -13,6 +13,11 @@ export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
 			command.pageId.length > 256
 		)
 			throw new Error('Invalid edit command.');
+		if (command.type === 'reorder-page') {
+			if (!Number.isSafeInteger(command.index) || command.index < 0 || command.index > 1_000_000)
+				throw new Error('Invalid page order index.');
+			return { type: command.type, pageId: command.pageId, index: command.index };
+		}
 		const text = (value: unknown): string => {
 			if (typeof value !== 'string') throw new Error('Invalid edit text.');
 			characters += value.length;
