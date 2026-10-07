@@ -12,6 +12,7 @@ export { parseTsv, toTsv } from './clipboard-text.js';
 export { parseHtmlTable } from './clipboard-html-parse.js';
 export { toHtml } from './clipboard-html.js';
 export { cellsFromText } from './clipboard.js';
+export { resolvePasteOptions } from './paste-options.js';
 export { currentRegion } from './filter.js';
 export { mergeWouldDiscard } from './merge.js';
 export { queryPattern, replaceText } from './find.js';
@@ -44,8 +45,11 @@ export type {
 	EditSessionOptions,
 	FindMatch,
 	FindQuery,
+	FillMode,
 	MergeMode,
 	PasteMode,
+	PasteOptions,
+	PasteRequest,
 	ValidationFailure,
 	ValidationResult,
 	WorkbookChange,

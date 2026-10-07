@@ -33,8 +33,13 @@ export interface YjsProviderLike {
  */
 export function adaptYjsProvider(provider: YjsProviderLike): SyncProvider {
 	const events = new Emitter<ProviderEvents>();
+	let destroyed = false;
 	let status: ConnectionStatus =
-		provider.wsconnected || provider.connected ? 'connected' : 'disconnected';
+		provider.wsconnected || provider.connected
+			? 'connected'
+			: provider.wsconnecting
+				? 'connecting'
+				: 'disconnected';
 	let synced = Boolean(provider.synced);
 	const subscriptions: [string, (payload: never) => void][] = [];
 	const listen = <P>(name: string, handler: (payload: P) => void): void => {
@@ -43,18 +48,20 @@ export function adaptYjsProvider(provider: YjsProviderLike): SyncProvider {
 		subscriptions.push([name, wrapped]);
 	};
 	const setStatus = (next: ConnectionStatus): void => {
-		if (next === status) return;
+		if (destroyed || next === status) return;
 		status = next;
 		events.emit('status', next);
 	};
 	const setSynced = (next: boolean): void => {
-		if (next === synced) return;
+		if (destroyed || next === synced) return;
 		synced = next;
 		events.emit('synced', next);
 	};
 	listen<{ status?: string; connected?: boolean }>('status', (payload) => {
-		if (typeof payload.connected === 'boolean')
+		if (typeof payload.connected === 'boolean') {
+			if (!payload.connected) setSynced(false);
 			return setStatus(payload.connected ? 'connected' : 'disconnected');
+		}
 		if (payload.status === 'connected' || payload.status === 'connecting')
 			setStatus(payload.status);
 		else if (payload.status === 'disconnected') {
@@ -62,9 +69,12 @@ export function adaptYjsProvider(provider: YjsProviderLike): SyncProvider {
 			setStatus('disconnected');
 		}
 	});
-	listen<boolean | { synced?: boolean }>('sync', (value) => setSynced(Boolean(value)));
-	listen<{ synced?: boolean }>('synced', (value) => setSynced(Boolean(value.synced)));
+	const onSync = (value: boolean | { synced?: boolean }): void =>
+		setSynced(typeof value === 'boolean' ? value : value.synced === true);
+	listen('sync', onSync);
+	listen('synced', onSync);
 	listen<unknown>('connection-error', (cause) => {
+		if (destroyed) return;
 		setStatus('error');
 		events.emit('error', cause instanceof Error ? cause : new Error('Provider connection error'));
 	});
@@ -76,11 +86,21 @@ export function adaptYjsProvider(provider: YjsProviderLike): SyncProvider {
 			return synced;
 		},
 		connect: () => {
+			if (destroyed || status === 'connected' || status === 'connecting') return;
 			setStatus('connecting');
 			provider.connect?.();
 		},
-		disconnect: () => provider.disconnect?.(),
+		disconnect: () => {
+			if (destroyed) return;
+			provider.disconnect?.();
+			setSynced(false);
+			setStatus('disconnected');
+		},
 		destroy: () => {
+			if (destroyed) return;
+			setSynced(false);
+			setStatus('disconnected');
+			destroyed = true;
 			for (const [name, handler] of subscriptions) provider.off?.(name, handler);
 			subscriptions.length = 0;
 			events.clear();

@@ -1,0 +1,925 @@
+{
+	"cases": [
+		{
+			"value": 120.0,
+			"formula": "=DDB(2400,300,10,0.1,0.5)",
+			"type": "number"
+		},
+		{
+			"value": 120.0,
+			"formula": "=DDB(2400,300,10,0.5,0.5)",
+			"type": "number"
+		},
+		{
+			"value": 120.0,
+			"formula": "=DDB(2400,300,10,1,0.5)",
+			"type": "number"
+		},
+		{
+			"value": 116.96153213770756,
+			"formula": "=DDB(2400,300,10,1.5,0.5)",
+			"type": "number"
+		},
+		{
+			"value": 114.0,
+			"formula": "=DDB(2400,300,10,2,0.5)",
+			"type": "number"
+		},
+		{
+			"value": 111.1134555308222,
+			"formula": "=DDB(2400,300,10,2.5,0.5)",
+			"type": "number"
+		},
+		{
+			"value": 81.67860010002892,
+			"formula": "=DDB(2400,300,10,8.5,0.5)",
+			"type": "number"
+		},
+		{
+			"value": 79.6104517546875,
+			"formula": "=DDB(2400,300,10,9,0.5)",
+			"type": "number"
+		},
+		{
+			"value": 77.59467009502748,
+			"formula": "=DDB(2400,300,10,9.5,0.5)",
+			"type": "number"
+		},
+		{
+			"value": 75.62992916695312,
+			"formula": "=DDB(2400,300,10,10,0.5)",
+			"type": "number"
+		},
+		{
+			"value": 240.0,
+			"formula": "=DDB(2400,300,10,0.1,1)",
+			"type": "number"
+		},
+		{
+			"value": 240.0,
+			"formula": "=DDB(2400,300,10,0.5,1)",
+			"type": "number"
+		},
+		{
+			"value": 240.0,
+			"formula": "=DDB(2400,300,10,1,1)",
+			"type": "number"
+		},
+		{
+			"value": 227.68399153212331,
+			"formula": "=DDB(2400,300,10,1.5,1)",
+			"type": "number"
+		},
+		{
+			"value": 216.0,
+			"formula": "=DDB(2400,300,10,2,1)",
+			"type": "number"
+		},
+		{
+			"value": 204.915592378911,
+			"formula": "=DDB(2400,300,10,2.5,1)",
+			"type": "number"
+		},
+		{
+			"value": 108.90054732944084,
+			"formula": "=DDB(2400,300,10,8.5,1)",
+			"type": "number"
+		},
+		{
+			"value": 103.31213040000006,
+			"formula": "=DDB(2400,300,10,9,1)",
+			"type": "number"
+		},
+		{
+			"value": 98.01049259649676,
+			"formula": "=DDB(2400,300,10,9.5,1)",
+			"type": "number"
+		},
+		{
+			"value": 92.98091736000003,
+			"formula": "=DDB(2400,300,10,10,1)",
+			"type": "number"
+		},
+		{
+			"value": 360.0,
+			"formula": "=DDB(2400,300,10,0.1,1.5)",
+			"type": "number"
+		},
+		{
+			"value": 360.0,
+			"formula": "=DDB(2400,300,10,0.5,1.5)",
+			"type": "number"
+		},
+		{
+			"value": 360.0,
+			"formula": "=DDB(2400,300,10,1,1.5)",
+			"type": "number"
+		},
+		{
+			"value": 331.903600462544,
+			"formula": "=DDB(2400,300,10,1.5,1.5)",
+			"type": "number"
+		},
+		{
+			"value": 306.0,
+			"formula": "=DDB(2400,300,10,2,1.5)",
+			"type": "number"
+		},
+		{
+			"value": 282.1180603931623,
+			"formula": "=DDB(2400,300,10,2.5,1.5)",
+			"type": "number"
+		},
+		{
+			"value": 106.40068982634567,
+			"formula": "=DDB(2400,300,10,8.5,1.5)",
+			"type": "number"
+		},
+		{
+			"value": 98.09658901406247,
+			"formula": "=DDB(2400,300,10,9,1.5)",
+			"type": "number"
+		},
+		{
+			"value": 90.4405863523938,
+			"formula": "=DDB(2400,300,10,9.5,1.5)",
+			"type": "number"
+		},
+		{
+			"value": 83.38210066195309,
+			"formula": "=DDB(2400,300,10,10,1.5)",
+			"type": "number"
+		},
+		{
+			"value": 480.0,
+			"formula": "=DDB(2400,300,10,0.1,2)",
+			"type": "number"
+		},
+		{
+			"value": 480.0,
+			"formula": "=DDB(2400,300,10,0.5,2)",
+			"type": "number"
+		},
+		{
+			"value": 480.0,
+			"formula": "=DDB(2400,300,10,1,2)",
+			"type": "number"
+		},
+		{
+			"value": 429.32505167995964,
+			"formula": "=DDB(2400,300,10,1.5,2)",
+			"type": "number"
+		},
+		{
+			"value": 384.0,
+			"formula": "=DDB(2400,300,10,2,2)",
+			"type": "number"
+		},
+		{
+			"value": 343.46004134396776,
+			"formula": "=DDB(2400,300,10,2.5,2)",
+			"type": "number"
+		},
+		{
+			"value": 90.0359890780731,
+			"formula": "=DDB(2400,300,10,8.5,2)",
+			"type": "number"
+		},
+		{
+			"value": 80.53063680000008,
+			"formula": "=DDB(2400,300,10,9,2)",
+			"type": "number"
+		},
+		{
+			"value": 60.1439563122924,
+			"formula": "=DDB(2400,300,10,9.5,2)",
+			"type": "number"
+		},
+		{
+			"value": 22.12254720000027,
+			"formula": "=DDB(2400,300,10,10,2)",
+			"type": "number"
+		},
+		{
+			"value": 2100.0,
+			"formula": "=DDB(2400,300,10,0.1,10)",
+			"type": "number"
+		},
+		{
+			"value": 2100.0,
+			"formula": "=DDB(2400,300,10,0.5,10)",
+			"type": "number"
+		},
+		{
+			"value": 2100.0,
+			"formula": "=DDB(2400,300,10,1,10)",
+			"type": "number"
+		},
+		{
+			"value": 0.0,
+			"formula": "=DDB(2400,300,10,1.5,10)",
+			"type": "number"
+		},
+		{
+			"value": 0.0,
+			"formula": "=DDB(2400,300,10,2,10)",
+			"type": "number"
+		},
+		{
+			"value": 0.0,
+			"formula": "=DDB(2400,300,10,2.5,10)",
+			"type": "number"
+		},
+		{
+			"value": 0.0,
+			"formula": "=DDB(2400,300,10,8.5,10)",
+			"type": "number"
+		},
+		{
+			"value": 0.0,
+			"formula": "=DDB(2400,300,10,9,10)",
+			"type": "number"
+		},
+		{
+			"value": 0.0,
+			"formula": "=DDB(2400,300,10,9.5,10)",
+			"type": "number"
+		},
+		{
+			"value": 0.0,
+			"formula": "=DDB(2400,300,10,10,10)",
+			"type": "number"
+		},
+		{
+			"value": 2100.0,
+			"formula": "=DDB(2400,300,10,0.1,20)",
+			"type": "number"
+		},
+		{
+			"value": 2100.0,
+			"formula": "=DDB(2400,300,10,0.5,20)",
+			"type": "number"
+		},
+		{
+			"value": 2100.0,
+			"formula": "=DDB(2400,300,10,1,20)",
+			"type": "number"
+		},
+		{
+			"value": 0.0,
+			"formula": "=DDB(2400,300,10,1.5,20)",
+			"type": "number"
+		},
+		{
+			"value": 0.0,
+			"formula": "=DDB(2400,300,10,2,20)",
+			"type": "number"
+		},
+		{
+			"value": 0.0,
+			"formula": "=DDB(2400,300,10,2.5,20)",
+			"type": "number"
+		},
+		{
+			"value": 0.0,
+			"formula": "=DDB(2400,300,10,8.5,20)",
+			"type": "number"
+		},
+		{
+			"value": 0.0,
+			"formula": "=DDB(2400,300,10,9,20)",
+			"type": "number"
+		},
+		{
+			"value": 0.0,
+			"formula": "=DDB(2400,300,10,9.5,20)",
+			"type": "number"
+		},
+		{
+			"value": 0.0,
+			"formula": "=DDB(2400,300,10,10,20)",
+			"type": "number"
+		},
+		{
+			"value": 2100.0,
+			"formula": "=DDB(2400,300,0.5,0.5,2)",
+			"type": "number"
+		},
+		{
+			"value": 2100.0,
+			"formula": "=DDB(2400,300,1,1,2)",
+			"type": "number"
+		},
+		{
+			"value": 0.0,
+			"formula": "=DDB(2400,300,1.5,1.5,2)",
+			"type": "number"
+		},
+		{
+			"value": 6.496381011244294e-10,
+			"formula": "=DDB(2400,300,1000000000000,1000000000000,2)",
+			"type": "number"
+		},
+		{
+			"value": "#NUM!",
+			"formula": "=DDB(-1,-1,10,1)",
+			"type": "error"
+		},
+		{
+			"value": "#NUM!",
+			"formula": "=DDB(-1,-1,10,9.5)",
+			"type": "error"
+		},
+		{
+			"value": "#NUM!",
+			"formula": "=DDB(-1,0,10,1)",
+			"type": "error"
+		},
+		{
+			"value": "#NUM!",
+			"formula": "=DDB(-1,0,10,9.5)",
+			"type": "error"
+		},
+		{
+			"value": "#NUM!",
+			"formula": "=DDB(-1,2390,10,1)",
+			"type": "error"
+		},
+		{
+			"value": "#NUM!",
+			"formula": "=DDB(-1,2390,10,9.5)",
+			"type": "error"
+		},
+		{
+			"value": "#NUM!",
+			"formula": "=DDB(-1,2400,10,1)",
+			"type": "error"
+		},
+		{
+			"value": "#NUM!",
+			"formula": "=DDB(-1,2400,10,9.5)",
+			"type": "error"
+		},
+		{
+			"value": "#NUM!",
+			"formula": "=DDB(-1,2500,10,1)",
+			"type": "error"
+		},
+		{
+			"value": "#NUM!",
+			"formula": "=DDB(-1,2500,10,9.5)",
+			"type": "error"
+		},
+		{
+			"value": "#NUM!",
+			"formula": "=DDB(0,-1,10,1)",
+			"type": "error"
+		},
+		{
+			"value": "#NUM!",
+			"formula": "=DDB(0,-1,10,9.5)",
+			"type": "error"
+		},
+		{
+			"value": 0.0,
+			"formula": "=DDB(0,0,10,1)",
+			"type": "number"
+		},
+		{
+			"value": 0.0,
+			"formula": "=DDB(0,0,10,9.5)",
+			"type": "number"
+		},
+		{
+			"value": 0.0,
+			"formula": "=DDB(0,2390,10,1)",
+			"type": "number"
+		},
+		{
+			"value": 0.0,
+			"formula": "=DDB(0,2390,10,9.5)",
+			"type": "number"
+		},
+		{
+			"value": 0.0,
+			"formula": "=DDB(0,2400,10,1)",
+			"type": "number"
+		},
+		{
+			"value": 0.0,
+			"formula": "=DDB(0,2400,10,9.5)",
+			"type": "number"
+		},
+		{
+			"value": 0.0,
+			"formula": "=DDB(0,2500,10,1)",
+			"type": "number"
+		},
+		{
+			"value": 0.0,
+			"formula": "=DDB(0,2500,10,9.5)",
+			"type": "number"
+		},
+		{
+			"value": "#NUM!",
+			"formula": "=DDB(2400,-1,10,1)",
+			"type": "error"
+		},
+		{
+			"value": "#NUM!",
+			"formula": "=DDB(2400,-1,10,9.5)",
+			"type": "error"
+		},
+		{
+			"value": 480.0,
+			"formula": "=DDB(2400,0,10,1)",
+			"type": "number"
+		},
+		{
+			"value": 72.02879126245848,
+			"formula": "=DDB(2400,0,10,9.5)",
+			"type": "number"
+		},
+		{
+			"value": 10.0,
+			"formula": "=DDB(2400,2390,10,1)",
+			"type": "number"
+		},
+		{
+			"value": 0.0,
+			"formula": "=DDB(2400,2390,10,9.5)",
+			"type": "number"
+		},
+		{
+			"value": 0.0,
+			"formula": "=DDB(2400,2400,10,1)",
+			"type": "number"
+		},
+		{
+			"value": 0.0,
+			"formula": "=DDB(2400,2400,10,9.5)",
+			"type": "number"
+		},
+		{
+			"value": 0.0,
+			"formula": "=DDB(2400,2500,10,1)",
+			"type": "number"
+		},
+		{
+			"value": 0.0,
+			"formula": "=DDB(2400,2500,10,9.5)",
+			"type": "number"
+		},
+		{
+			"value": "#NUM!",
+			"formula": "=DDB(2400,300,10,0)",
+			"type": "error"
+		},
+		{
+			"value": "#NUM!",
+			"formula": "=DDB(2400,300,10,-0.5)",
+			"type": "error"
+		},
+		{
+			"value": "#NUM!",
+			"formula": "=DDB(2400,300,10,11)",
+			"type": "error"
+		},
+		{
+			"value": "#NUM!",
+			"formula": "=DDB(2400,300,0,1)",
+			"type": "error"
+		},
+		{
+			"value": "#NUM!",
+			"formula": "=DDB(2400,300,-1,1)",
+			"type": "error"
+		},
+		{
+			"value": "#NUM!",
+			"formula": "=DDB(2400,300,10,1,0)",
+			"type": "error"
+		},
+		{
+			"value": "#NUM!",
+			"formula": "=DDB(2400,300,10,1,-1)",
+			"type": "error"
+		},
+		{
+			"value": "#NUM!",
+			"formula": "=DDB(2400,300,10,1,)",
+			"type": "error"
+		},
+		{
+			"value": "#DIV/0!",
+			"formula": "=DDB(2400,300,10,1,1/0)",
+			"type": "error"
+		},
+		{
+			"value": "#VALUE!",
+			"formula": "=DDB(2400,300,10,1,\"bad\")",
+			"type": "error"
+		},
+		{
+			"value": 480.0,
+			"formula": "=DDB(2400,300,10,1,\"2\")",
+			"type": "number"
+		},
+		{
+			"value": 240.0,
+			"formula": "=DDB(2400,300,10,1,TRUE)",
+			"type": "number"
+		},
+		{
+			"value": "#NUM!",
+			"formula": "=DDB(2400,300,10,1,FALSE)",
+			"type": "error"
+		},
+		{
+			"value": 37.599999999999994,
+			"formula": "=DB(2400,300,10,0.5,1)",
+			"type": "number"
+		},
+		{
+			"value": 37.599999999999994,
+			"formula": "=DB(2400,300,10,1,1)",
+			"type": "number"
+		},
+		{
+			"value": 37.599999999999994,
+			"formula": "=DB(2400,300,10,1.5,1)",
+			"type": "number"
+		},
+		{
+			"value": 444.13120000000004,
+			"formula": "=DB(2400,300,10,2,1)",
+			"type": "number"
+		},
+		{
+			"value": 444.13120000000004,
+			"formula": "=DB(2400,300,10,2.5,1)",
+			"type": "number"
+		},
+		{
+			"value": 83.93817397301967,
+			"formula": "=DB(2400,300,10,10,1)",
+			"type": "number"
+		},
+		{
+			"value": 83.93817397301967,
+			"formula": "=DB(2400,300,10,10.5,1)",
+			"type": "number"
+		},
+		{
+			"value": 83.93817397301967,
+			"formula": "=DB(2400,300,10,10.9,1)",
+			"type": "number"
+		},
+		{
+			"value": 62.477980827250974,
+			"formula": "=DB(2400,300,10,11,1)",
+			"type": "number"
+		},
+		{
+			"value": 62.477980827250974,
+			"formula": "=DB(2400,300,10,11.9,1)",
+			"type": "number"
+		},
+		{
+			"value": 263.2,
+			"formula": "=DB(2400,300,10,0.5,7)",
+			"type": "number"
+		},
+		{
+			"value": 263.2,
+			"formula": "=DB(2400,300,10,1,7)",
+			"type": "number"
+		},
+		{
+			"value": 263.2,
+			"formula": "=DB(2400,300,10,1.5,7)",
+			"type": "number"
+		},
+		{
+			"value": 401.71840000000003,
+			"formula": "=DB(2400,300,10,2,7)",
+			"type": "number"
+		},
+		{
+			"value": 401.71840000000003,
+			"formula": "=DB(2400,300,10,2.5,7)",
+			"type": "number"
+		},
+		{
+			"value": 75.92240524278209,
+			"formula": "=DB(2400,300,10,10,7)",
+			"type": "number"
+		},
+		{
+			"value": 75.92240524278209,
+			"formula": "=DB(2400,300,10,10.5,7)",
+			"type": "number"
+		},
+		{
+			"value": 75.92240524278209,
+			"formula": "=DB(2400,300,10,10.9,7)",
+			"type": "number"
+		},
+		{
+			"value": 25.68708044047461,
+			"formula": "=DB(2400,300,10,11,7)",
+			"type": "number"
+		},
+		{
+			"value": 25.68708044047461,
+			"formula": "=DB(2400,300,10,11.9,7)",
+			"type": "number"
+		},
+		{
+			"value": 263.2,
+			"formula": "=DB(2400,300,10,0.5,7.9)",
+			"type": "number"
+		},
+		{
+			"value": 263.2,
+			"formula": "=DB(2400,300,10,1,7.9)",
+			"type": "number"
+		},
+		{
+			"value": 263.2,
+			"formula": "=DB(2400,300,10,1.5,7.9)",
+			"type": "number"
+		},
+		{
+			"value": 401.71840000000003,
+			"formula": "=DB(2400,300,10,2,7.9)",
+			"type": "number"
+		},
+		{
+			"value": 401.71840000000003,
+			"formula": "=DB(2400,300,10,2.5,7.9)",
+			"type": "number"
+		},
+		{
+			"value": 75.92240524278209,
+			"formula": "=DB(2400,300,10,10,7.9)",
+			"type": "number"
+		},
+		{
+			"value": 75.92240524278209,
+			"formula": "=DB(2400,300,10,10.5,7.9)",
+			"type": "number"
+		},
+		{
+			"value": 75.92240524278209,
+			"formula": "=DB(2400,300,10,10.9,7.9)",
+			"type": "number"
+		},
+		{
+			"value": 25.68708044047461,
+			"formula": "=DB(2400,300,10,11,7.9)",
+			"type": "number"
+		},
+		{
+			"value": 25.68708044047461,
+			"formula": "=DB(2400,300,10,11.9,7.9)",
+			"type": "number"
+		},
+		{
+			"value": 413.59999999999997,
+			"formula": "=DB(2400,300,10,0.5,11.9)",
+			"type": "number"
+		},
+		{
+			"value": 413.59999999999997,
+			"formula": "=DB(2400,300,10,1,11.9)",
+			"type": "number"
+		},
+		{
+			"value": 413.59999999999997,
+			"formula": "=DB(2400,300,10,1.5,11.9)",
+			"type": "number"
+		},
+		{
+			"value": 373.4432,
+			"formula": "=DB(2400,300,10,2,11.9)",
+			"type": "number"
+		},
+		{
+			"value": 373.4432,
+			"formula": "=DB(2400,300,10,2.5,11.9)",
+			"type": "number"
+		},
+		{
+			"value": 70.57855942262371,
+			"formula": "=DB(2400,300,10,10,11.9)",
+			"type": "number"
+		},
+		{
+			"value": 70.57855942262371,
+			"formula": "=DB(2400,300,10,10.5,11.9)",
+			"type": "number"
+		},
+		{
+			"value": 70.57855942262371,
+			"formula": "=DB(2400,300,10,10.9,11.9)",
+			"type": "number"
+		},
+		{
+			"value": 4.775815854264205,
+			"formula": "=DB(2400,300,10,11,11.9)",
+			"type": "number"
+		},
+		{
+			"value": 4.775815854264205,
+			"formula": "=DB(2400,300,10,11.9,11.9)",
+			"type": "number"
+		},
+		{
+			"value": 451.2,
+			"formula": "=DB(2400,300,10,0.5,12)",
+			"type": "number"
+		},
+		{
+			"value": 451.2,
+			"formula": "=DB(2400,300,10,1,12)",
+			"type": "number"
+		},
+		{
+			"value": 451.2,
+			"formula": "=DB(2400,300,10,1.5,12)",
+			"type": "number"
+		},
+		{
+			"value": 366.3744,
+			"formula": "=DB(2400,300,10,2,12)",
+			"type": "number"
+		},
+		{
+			"value": 366.3744,
+			"formula": "=DB(2400,300,10,2.5,12)",
+			"type": "number"
+		},
+		{
+			"value": 69.24259796758413,
+			"formula": "=DB(2400,300,10,10,12)",
+			"type": "number"
+		},
+		{
+			"value": 69.24259796758413,
+			"formula": "=DB(2400,300,10,10.5,12)",
+			"type": "number"
+		},
+		{
+			"value": 69.24259796758413,
+			"formula": "=DB(2400,300,10,10.9,12)",
+			"type": "number"
+		},
+		{
+			"value": "#NUM!",
+			"formula": "=DB(2400,300,10,11,12)",
+			"type": "error"
+		},
+		{
+			"value": "#NUM!",
+			"formula": "=DB(2400,300,10,11.9,12)",
+			"type": "error"
+		},
+		{
+			"value": 451.2,
+			"formula": "=DB(2400,300,10,0.5,12.9)",
+			"type": "number"
+		},
+		{
+			"value": 451.2,
+			"formula": "=DB(2400,300,10,1,12.9)",
+			"type": "number"
+		},
+		{
+			"value": 451.2,
+			"formula": "=DB(2400,300,10,1.5,12.9)",
+			"type": "number"
+		},
+		{
+			"value": 366.3744,
+			"formula": "=DB(2400,300,10,2,12.9)",
+			"type": "number"
+		},
+		{
+			"value": 366.3744,
+			"formula": "=DB(2400,300,10,2.5,12.9)",
+			"type": "number"
+		},
+		{
+			"value": 69.24259796758413,
+			"formula": "=DB(2400,300,10,10,12.9)",
+			"type": "number"
+		},
+		{
+			"value": 69.24259796758413,
+			"formula": "=DB(2400,300,10,10.5,12.9)",
+			"type": "number"
+		},
+		{
+			"value": 69.24259796758413,
+			"formula": "=DB(2400,300,10,10.9,12.9)",
+			"type": "number"
+		},
+		{
+			"value": "#NUM!",
+			"formula": "=DB(2400,300,10,11,12.9)",
+			"type": "error"
+		},
+		{
+			"value": "#NUM!",
+			"formula": "=DB(2400,300,10,11.9,12.9)",
+			"type": "error"
+		},
+		{
+			"value": 1377.6000000000001,
+			"formula": "=DB(2400,300,0.5,0.5,7)",
+			"type": "number"
+		},
+		{
+			"value": 1225.0,
+			"formula": "=DB(2400,300,1,1,7)",
+			"type": "number"
+		},
+		{
+			"value": 1050.0,
+			"formula": "=DB(2400,300,1.5,1.5,7)",
+			"type": "number"
+		},
+		{
+			"value": 81.30531748387574,
+			"formula": "=DB(2400,300,10.9,10.9,7)",
+			"type": "number"
+		},
+		{
+			"value": 0.0,
+			"formula": "=DB(2400,300,1000000000000,1000000000000,7)",
+			"type": "number"
+		},
+		{
+			"value": 0.0,
+			"formula": "=DB(0,300,10,1)",
+			"type": "number"
+		},
+		{
+			"value": -9.6,
+			"formula": "=DB(2400,2500,10,1)",
+			"type": "number"
+		},
+		{
+			"value": "#NUM!",
+			"formula": "=DB(2400,300,10,0)",
+			"type": "error"
+		},
+		{
+			"value": "#NUM!",
+			"formula": "=DB(2400,300,10,-0.5)",
+			"type": "error"
+		},
+		{
+			"value": "#NUM!",
+			"formula": "=DB(2400,300,0,1)",
+			"type": "error"
+		},
+		{
+			"value": "#NUM!",
+			"formula": "=DB(2400,300,10,1,0.9)",
+			"type": "error"
+		},
+		{
+			"value": "#NUM!",
+			"formula": "=DB(2400,300,10,1,13)",
+			"type": "error"
+		},
+		{
+			"value": "#NUM!",
+			"formula": "=DB(2400,300,10,1,)",
+			"type": "error"
+		},
+		{
+			"value": "#VALUE!",
+			"formula": "=DB(2400,300,10,1,\"bad\")",
+			"type": "error"
+		},
+		{
+			"value": "#DIV/0!",
+			"formula": "=DB(2400,300,10,1,1/0)",
+			"type": "error"
+		},
+		{
+			"value": "#NUM!",
+			"formula": "=DB(-1,300,10,1)",
+			"type": "error"
+		},
+		{
+			"value": "#NUM!",
+			"formula": "=DB(2400,-1,10,1)",
+			"type": "error"
+		}
+	],
+	"version": "16.0"
+}

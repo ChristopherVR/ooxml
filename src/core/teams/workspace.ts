@@ -13,6 +13,7 @@ import { createWebSocketTransport } from '../collab/websocket-transport.js';
 import type { WebSocketConstructor } from '../collab/websocket-transport.js';
 import { type CallSession, type MediaDevicesLike, createCallSession } from './call.js';
 import { type ChatStore, createChatStore } from './chat.js';
+import { createTabStore, type TabStore } from './tabs.js';
 import type { PeerConnectionFactory, StreamFactory } from './peer.js';
 import { type TeamsServerConfig, endpointUrl, localServerConfig } from './server-config.js';
 import {
@@ -50,6 +51,7 @@ export interface TeamsWorkspace {
 	readonly user: { id: string; name: string };
 	readonly session: CollabSession<TeamsPresence>;
 	readonly chat: ChatStore;
+	readonly tabs: TabStore;
 	readonly config: TeamsServerConfig;
 	/** A call for a channel; call `join()` on it. One call per channel per workspace. */
 	call: (channelId: string) => CallSession;
@@ -118,12 +120,16 @@ export function createTeamsWorkspace(options: WorkspaceOptions): TeamsWorkspace 
 		},
 	});
 	chat = createChatStore(session.doc, user);
+	const tabs = createTabStore(session.doc, user, (id) =>
+		chat.channels().some((c) => c.id === id && !c.archived),
+	);
 
 	const calls = new Map<string, CallSession>();
 	return {
 		user,
 		session,
 		chat,
+		tabs,
 		config,
 		call(channelId) {
 			const existing = calls.get(channelId);

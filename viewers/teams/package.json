@@ -26,7 +26,8 @@
 		"fmt:check": "oxfmt --check",
 		"lint": "oxlint",
 		"lint:fix": "oxlint --fix",
-		"test:browser": "playwright test"
+		"test:browser": "playwright test",
+		"test:browser:bindings": "node scripts/test-browser-bindings.mjs"
 	},
 	"dependencies": {
 		"lib0": "^0.2.119",

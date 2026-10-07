@@ -31,6 +31,7 @@ export function Teams(props: TeamsProps): HTMLElement {
 		...(props.config !== undefined ? { config: props.config } : {}),
 		...(props.uploadFile ? { uploadFile: props.uploadFile } : {}),
 		...(props.openers ? { openers: props.openers } : {}),
+		...(props.embeds ? { embeds: props.embeds } : {}),
 	});
 	createEffect(() => {
 		const next = snapshot();

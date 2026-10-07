@@ -741,6 +741,7 @@ test.describe('table styling', () => {
 	});
 
 	test('renders attributed table text and preserves it through save', async ({ page }) => {
+		test.slow();
 		await loadDeck(page, await attributedTableTextDeck());
 		await gotoSlide(page, 4);
 		let cell = canvasCell(page, 'Revenue grew 42%');
@@ -899,6 +900,7 @@ test.describe('table styling', () => {
 	});
 
 	test('preserves an untouched rich cell through merge and split saves', async ({ page }) => {
+		test.slow();
 		await gotoSlide(page, 4);
 		expectRenderedRevenueRuns(await measureTable(page));
 

@@ -67,8 +67,8 @@ export function roundedRectanglePath(
 }
 
 /**
- * Open orthogonal line chains with enough space for the saved radius, without
- * clamping. Repeated vertices deliberately remain unsupported: Visio authors
+ * Open orthogonal line chains with ordered native-observed radius clamping.
+ * Repeated vertices deliberately remain unsupported: Visio authors
  * use them to suppress rounding (see docs/visio-connector-rounding.md).
  */
 export function roundedOrthogonalPath(
@@ -103,11 +103,14 @@ export function roundedOrthogonalPath(
 		corners.push(dot === 0);
 	}
 	corners.push(false);
-	// Each adjacent corner consumes radius along this source segment. Keeping
-	// collinear vertices avoids silently changing their available rounding space.
-	for (let i = 0; i < lengths.length; i++) {
-		const required = (Number(corners[i]) + Number(corners[i + 1])) * radius;
-		if (lengths[i]! < required) return undefined;
+	// Visio 16 SVG exports establish ordered allocation: the first incoming
+	// segment and every outgoing segment reserve half their length. Subsequent
+	// incoming segments use the length left by the preceding corner, including
+	// zero for a forward collinear vertex. Traversal reversal can change radii.
+	const radii = [0];
+	for (let i = 1; i < points.length - 1; i++) {
+		const available = i === 1 ? lengths[0]! / 2 : lengths[i - 1]! - radii[i - 1]!;
+		radii.push(corners[i] ? Math.min(radius, available, lengths[i]! / 2) : 0);
 	}
 	const commands = [`M ${point(first[0], first[1])}`];
 	let extraCommands = 0;
@@ -117,6 +120,8 @@ export function roundedOrthogonalPath(
 			commands.push(`L ${point(vertex[0], vertex[1])}`);
 			continue;
 		}
+		const radius = radii[i]!;
+		if (!Number.isFinite(radius) || radius < 1e-9) return undefined;
 		const incoming = directions[i - 1]!,
 			outgoing = directions[i]!;
 		const entry: RectanglePoint = [

@@ -1,0 +1,655 @@
+{
+	"cases": [
+		{
+			"value": 131.99999999999997,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,0,0.15,0)"
+		},
+		{
+			"value": 360.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,1,0.15,0)"
+		},
+		{
+			"value": 360.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,5,0.15,0)"
+		},
+		{
+			"value": 168.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,6,0.15,0)"
+		},
+		{
+			"value": 0.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,7,0.15,0)"
+		},
+		{
+			"value": 0.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,100,0.15,0)"
+		},
+		{
+			"value": 360.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,1.9,0.15,0)"
+		},
+		{
+			"value": 360.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39679,300,0,0.15,0)"
+		},
+		{
+			"value": 361.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,40045,300,0,0.15,0)"
+		},
+		{
+			"value": 31.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,43890,43921,300,0,0.15,0)"
+		},
+		{
+			"value": 1.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,59,61,300,0,0.15,0)"
+		},
+		{
+			"value": 1.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,0,1,300,0,0.15,0)"
+		},
+		{
+			"value": 1.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,43889,43890,300,0,0.15,0)"
+		},
+		{
+			"value": 1.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,43890,43891,300,0,0.15,0)"
+		},
+		{
+			"value": 418.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,43466,43890,300,0,0.15,0)"
+		},
+		{
+			"value": 131.8032786885246,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,0,0.15,1)"
+		},
+		{
+			"value": 360.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,1,0.15,1)"
+		},
+		{
+			"value": 360.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,5,0.15,1)"
+		},
+		{
+			"value": 168.19672131147536,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,6,0.15,1)"
+		},
+		{
+			"value": 0.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,7,0.15,1)"
+		},
+		{
+			"value": 0.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,100,0.15,1)"
+		},
+		{
+			"value": 360.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,1.9,0.15,1)"
+		},
+		{
+			"value": 360.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39679,300,0,0.15,1)"
+		},
+		{
+			"value": 360.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,40045,300,0,0.15,1)"
+		},
+		{
+			"value": 31.475409836065573,
+			"type": "number",
+			"formula": "=AMORLINC(2400,43890,43921,300,0,0.15,1)"
+		},
+		{
+			"value": 1.9726027397260273,
+			"type": "number",
+			"formula": "=AMORLINC(2400,59,61,300,0,0.15,1)"
+		},
+		{
+			"value": 0.9863013698630136,
+			"type": "number",
+			"formula": "=AMORLINC(2400,0,1,300,0,0.15,1)"
+		},
+		{
+			"value": 360.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,43889,43890,300,0,0.15,1)"
+		},
+		{
+			"value": 1.9672131147540983,
+			"type": "number",
+			"formula": "=AMORLINC(2400,43890,43891,300,0,0.15,1)"
+		},
+		{
+			"value": 417.20547945205476,
+			"type": "number",
+			"formula": "=AMORLINC(2400,43466,43890,300,0,0.15,1)"
+		},
+		{
+			"value": 132.16438356164383,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,0,0.15,3)"
+		},
+		{
+			"value": 360.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,1,0.15,3)"
+		},
+		{
+			"value": 360.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,5,0.15,3)"
+		},
+		{
+			"value": 167.83561643835628,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,6,0.15,3)"
+		},
+		{
+			"value": 0.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,7,0.15,3)"
+		},
+		{
+			"value": 0.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,100,0.15,3)"
+		},
+		{
+			"value": 360.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,1.9,0.15,3)"
+		},
+		{
+			"value": 360.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39679,300,0,0.15,3)"
+		},
+		{
+			"value": 360.98630136986304,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,40045,300,0,0.15,3)"
+		},
+		{
+			"value": 31.561643835616437,
+			"type": "number",
+			"formula": "=AMORLINC(2400,43890,43921,300,0,0.15,3)"
+		},
+		{
+			"value": 1.9726027397260273,
+			"type": "number",
+			"formula": "=AMORLINC(2400,59,61,300,0,0.15,3)"
+		},
+		{
+			"value": 0.9863013698630136,
+			"type": "number",
+			"formula": "=AMORLINC(2400,0,1,300,0,0.15,3)"
+		},
+		{
+			"value": 360.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,43889,43890,300,0,0.15,3)"
+		},
+		{
+			"value": 1.9726027397260273,
+			"type": "number",
+			"formula": "=AMORLINC(2400,43890,43891,300,0,0.15,3)"
+		},
+		{
+			"value": 417.20547945205476,
+			"type": "number",
+			"formula": "=AMORLINC(2400,43466,43890,300,0,0.15,3)"
+		},
+		{
+			"value": 131.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,0,0.15,4)"
+		},
+		{
+			"value": 360.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,1,0.15,4)"
+		},
+		{
+			"value": 360.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,5,0.15,4)"
+		},
+		{
+			"value": 169.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,6,0.15,4)"
+		},
+		{
+			"value": 0.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,7,0.15,4)"
+		},
+		{
+			"value": 0.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,100,0.15,4)"
+		},
+		{
+			"value": 360.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,1.9,0.15,4)"
+		},
+		{
+			"value": 360.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39679,300,0,0.15,4)"
+		},
+		{
+			"value": 361.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,40045,300,0,0.15,4)"
+		},
+		{
+			"value": 31.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,43890,43921,300,0,0.15,4)"
+		},
+		{
+			"value": 3.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,59,61,300,0,0.15,4)"
+		},
+		{
+			"value": 1.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,0,1,300,0,0.15,4)"
+		},
+		{
+			"value": 1.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,43889,43890,300,0,0.15,4)"
+		},
+		{
+			"value": 2.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,43890,43891,300,0,0.15,4)"
+		},
+		{
+			"value": 418.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,43466,43890,300,0,0.15,4)"
+		},
+		{
+			"value": "#NUM!",
+			"type": "error",
+			"formula": "=AMORLINC(0,39679,39813,-1,0,0.15)"
+		},
+		{
+			"value": "#NUM!",
+			"type": "error",
+			"formula": "=AMORLINC(0,39679,39813,-1,1,0.15)"
+		},
+		{
+			"value": "#NUM!",
+			"type": "error",
+			"formula": "=AMORLINC(0,39679,39813,0,0,0.15)"
+		},
+		{
+			"value": "#NUM!",
+			"type": "error",
+			"formula": "=AMORLINC(0,39679,39813,0,1,0.15)"
+		},
+		{
+			"value": "#NUM!",
+			"type": "error",
+			"formula": "=AMORLINC(0,39679,39813,2390,0,0.15)"
+		},
+		{
+			"value": "#NUM!",
+			"type": "error",
+			"formula": "=AMORLINC(0,39679,39813,2390,1,0.15)"
+		},
+		{
+			"value": "#NUM!",
+			"type": "error",
+			"formula": "=AMORLINC(0,39679,39813,2400,0,0.15)"
+		},
+		{
+			"value": "#NUM!",
+			"type": "error",
+			"formula": "=AMORLINC(0,39679,39813,2400,1,0.15)"
+		},
+		{
+			"value": "#NUM!",
+			"type": "error",
+			"formula": "=AMORLINC(0,39679,39813,2500,0,0.15)"
+		},
+		{
+			"value": "#NUM!",
+			"type": "error",
+			"formula": "=AMORLINC(0,39679,39813,2500,1,0.15)"
+		},
+		{
+			"value": "#NUM!",
+			"type": "error",
+			"formula": "=AMORLINC(-1,39679,39813,-1,0,0.15)"
+		},
+		{
+			"value": "#NUM!",
+			"type": "error",
+			"formula": "=AMORLINC(-1,39679,39813,-1,1,0.15)"
+		},
+		{
+			"value": "#NUM!",
+			"type": "error",
+			"formula": "=AMORLINC(-1,39679,39813,0,0,0.15)"
+		},
+		{
+			"value": "#NUM!",
+			"type": "error",
+			"formula": "=AMORLINC(-1,39679,39813,0,1,0.15)"
+		},
+		{
+			"value": "#NUM!",
+			"type": "error",
+			"formula": "=AMORLINC(-1,39679,39813,2390,0,0.15)"
+		},
+		{
+			"value": "#NUM!",
+			"type": "error",
+			"formula": "=AMORLINC(-1,39679,39813,2390,1,0.15)"
+		},
+		{
+			"value": "#NUM!",
+			"type": "error",
+			"formula": "=AMORLINC(-1,39679,39813,2400,0,0.15)"
+		},
+		{
+			"value": "#NUM!",
+			"type": "error",
+			"formula": "=AMORLINC(-1,39679,39813,2400,1,0.15)"
+		},
+		{
+			"value": "#NUM!",
+			"type": "error",
+			"formula": "=AMORLINC(-1,39679,39813,2500,0,0.15)"
+		},
+		{
+			"value": "#NUM!",
+			"type": "error",
+			"formula": "=AMORLINC(-1,39679,39813,2500,1,0.15)"
+		},
+		{
+			"value": "#NUM!",
+			"type": "error",
+			"formula": "=AMORLINC(2400,39679,39813,-1,0,0.15)"
+		},
+		{
+			"value": "#NUM!",
+			"type": "error",
+			"formula": "=AMORLINC(2400,39679,39813,-1,1,0.15)"
+		},
+		{
+			"value": 131.99999999999997,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,0,0,0.15)"
+		},
+		{
+			"value": 360.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,0,1,0.15)"
+		},
+		{
+			"value": 10.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,2390,0,0.15)"
+		},
+		{
+			"value": 0.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,2390,1,0.15)"
+		},
+		{
+			"value": 0.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,2400,0,0.15)"
+		},
+		{
+			"value": 0.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,2400,1,0.15)"
+		},
+		{
+			"value": "#NUM!",
+			"type": "error",
+			"formula": "=AMORLINC(2400,39679,39813,2500,0,0.15)"
+		},
+		{
+			"value": "#NUM!",
+			"type": "error",
+			"formula": "=AMORLINC(2400,39679,39813,2500,1,0.15)"
+		},
+		{
+			"value": "#NUM!",
+			"type": "error",
+			"formula": "=AMORLINC(2400,39679,39813,300,0,-0.1)"
+		},
+		{
+			"value": "#NUM!",
+			"type": "error",
+			"formula": "=AMORLINC(2400,39679,39813,300,1,-0.1)"
+		},
+		{
+			"value": "#NUM!",
+			"type": "error",
+			"formula": "=AMORLINC(2400,39679,39813,300,6,-0.1)"
+		},
+		{
+			"value": "#NUM!",
+			"type": "error",
+			"formula": "=AMORLINC(2400,39679,39813,300,-0.5,-0.1)"
+		},
+		{
+			"value": "#NUM!",
+			"type": "error",
+			"formula": "=AMORLINC(2400,39679,39813,300,0,0)"
+		},
+		{
+			"value": "#NUM!",
+			"type": "error",
+			"formula": "=AMORLINC(2400,39679,39813,300,1,0)"
+		},
+		{
+			"value": "#NUM!",
+			"type": "error",
+			"formula": "=AMORLINC(2400,39679,39813,300,6,0)"
+		},
+		{
+			"value": "#NUM!",
+			"type": "error",
+			"formula": "=AMORLINC(2400,39679,39813,300,-0.5,0)"
+		},
+		{
+			"value": 131.99999999999997,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,0,0.15)"
+		},
+		{
+			"value": 360.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,1,0.15)"
+		},
+		{
+			"value": 168.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,6,0.15)"
+		},
+		{
+			"value": "#NUM!",
+			"type": "error",
+			"formula": "=AMORLINC(2400,39679,39813,300,-0.5,0.15)"
+		},
+		{
+			"value": 1759.9999999999998,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,0,2)"
+		},
+		{
+			"value": 340.0000000000002,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,1,2)"
+		},
+		{
+			"value": 0.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,6,2)"
+		},
+		{
+			"value": "#NUM!",
+			"type": "error",
+			"formula": "=AMORLINC(2400,39679,39813,300,-0.5,2)"
+		},
+		{
+			"value": 2100.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,0,10)"
+		},
+		{
+			"value": 0.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,1,10)"
+		},
+		{
+			"value": 0.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,6,10)"
+		},
+		{
+			"value": "#NUM!",
+			"type": "error",
+			"formula": "=AMORLINC(2400,39679,39813,300,-0.5,10)"
+		},
+		{
+			"value": "#NUM!",
+			"type": "error",
+			"formula": "=AMORLINC(2400,39679,39813,300,0,0.15,-1)"
+		},
+		{
+			"value": "#NUM!",
+			"type": "error",
+			"formula": "=AMORLINC(2400,39679,39813,300,0,0.15,-0.5)"
+		},
+		{
+			"value": 131.8032786885246,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,0,0.15,1.9)"
+		},
+		{
+			"value": "#NUM!",
+			"type": "error",
+			"formula": "=AMORLINC(2400,39679,39813,300,0,0.15,2)"
+		},
+		{
+			"value": 131.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,0,0.15,4.9)"
+		},
+		{
+			"value": "#NUM!",
+			"type": "error",
+			"formula": "=AMORLINC(2400,39679,39813,300,0,0.15,5)"
+		},
+		{
+			"value": 89.75342465753425,
+			"type": "number",
+			"formula": "=AMORLINC(2400,DATE(2019,12,31),DATE(2020,3,31),300,0,0.15,1)"
+		},
+		{
+			"value": 88.52459016393442,
+			"type": "number",
+			"formula": "=AMORLINC(2400,DATE(2020,12,31),DATE(2021,3,31),300,0,0.15,1)"
+		},
+		{
+			"value": 720.986301369863,
+			"type": "number",
+			"formula": "=AMORLINC(2400,DATE(2019,1,1),DATE(2021,1,1),300,0,0.15,1)"
+		},
+		{
+			"value": "#NUM!",
+			"type": "error",
+			"formula": "=AMORLINC(2400,39814,39813,300,0,0.15)"
+		},
+		{
+			"value": "#NUM!",
+			"type": "error",
+			"formula": "=AMORLINC(2400,-0.1,1,300,0,0.15)"
+		},
+		{
+			"value": 131.99999999999997,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679.9,39813.1,300,0,0.15)"
+		},
+		{
+			"value": 360.0,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,1,0.15,)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"formula": "=AMORLINC(2400,39679,39813,300,,0.15)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"formula": "=AMORLINC(2400,39679,39813,,0,0.15)"
+		},
+		{
+			"value": 131.99999999999997,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,A1,0.15)"
+		},
+		{
+			"value": 131.99999999999997,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,A1,0,0.15)"
+		},
+		{
+			"value": 131.99999999999997,
+			"type": "number",
+			"formula": "=AMORLINC(2400,39679,39813,300,0,\"0.15\")"
+		},
+		{
+			"value": "#VALUE!",
+			"type": "error",
+			"formula": "=AMORLINC(2400,39679,39813,300,0,\"bad\")"
+		},
+		{
+			"value": "#DIV/0!",
+			"type": "error",
+			"formula": "=AMORLINC(2400,39679,39813,300,0,1/0)"
+		}
+	],
+	"version": "16.0"
+}
