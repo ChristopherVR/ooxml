@@ -5,7 +5,7 @@ import { composeAffine, IDENTITY_AFFINE, type AffineMatrix } from '../geometry/a
 import { parseVsdx } from './parser';
 import { editVsdx } from './edit';
 import { VisioPackage } from './package';
-import { children, attribute } from './sheet';
+import { children } from './sheet';
 import { buildXml } from '../xml/xml';
 import { fixture, cell, shape, rectangle } from './test-fixtures';
 import type { VisioShape } from './model';
