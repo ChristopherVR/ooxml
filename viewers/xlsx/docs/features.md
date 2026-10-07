@@ -2,6 +2,9 @@
 
 This is an early implementation. It is **not Microsoft Excel parity** and saving is not lossless for features the model does not cover. This page lists what the editor is built to handle and what it does not; when a workbook contains something unsupported, the editor reports it (`workbook-warning`) instead of hiding it.
 
+The [current parity status and evidence](https://github.com/ChristopherVR/ooxml/blob/main/docs/xlsx-parity-status.md)
+summarize implemented work, native Excel comparisons and the remaining gaps.
+
 ::: warning Early release
 The workbook engine in `ooxml-core` and the `<xlsx-editor>` component are young. The browser tests (`e2e/xlsx/*.spec.ts`) cover opening `.xlsx`, `.xls` and `.csv`, typing values and formulas, recalculation, ribbon formatting, row insertion and deletion, sheet tabs, undo and redo, Find and Replace, Format Cells, chart selection, save and reopen, read-only mode, locales and all six framework bindings. Everything else below is implemented but less exercised; expect rough edges.
 :::
@@ -46,19 +49,39 @@ Sheet and workbook-structure protection can carry a password. It stops accidenta
 
 Pictures and charts are selected by clicking them: they move and resize with the mouse, nudge with the arrow keys and are removed with Delete; a selected chart shows the Chart Design tab.
 
+## Charts and SmartArt
+
+Common chart families (column, bar, line, area, pie, doughnut, scatter and radar)
+render as SVG from live values. Chart insertion, type/grouping, title, legend and
+color changes use the shared core and Office gallery controls. Docked formatting
+panes provide series fills, supported bar spacing, and fills for chart area,
+plot area, title and legend. Supported gradient types, stops, transparency,
+brightness, direction previews and native presets share the same fill controls.
+
+Imported chart styles, supported shadows/gradients, axis visibility, inherited
+fonts and mixed-format title runs have rendering and preservation support.
+Native Excel comparisons verify specific edit/export paths. Exact chart text
+measurement, wrapping, placement and raster fidelity remain incomplete, as do
+many axes/labels/effects controls, advanced chart families and full native UI.
+
+SmartArt uses the shared cached-drawing renderer with workbook theme fonts and
+colors. It remains display-only: insertion, text editing, reflow and complete
+layout/color/style galleries are not implemented. A missing cached drawing
+produces a text placeholder.
+
 ## Not supported (preserved where possible)
 
-| Feature                             | Behaviour                                                                                                                                                                                                              |
-| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Pivot tables and pivot caches       | Kept on save; not shown as pivots and not refreshed.                                                                                                                                                                   |
-| Slicers, timelines, sparklines      | Kept on save; not drawn.                                                                                                                                                                                               |
-| Charts                              | Common types drawn as SVG from live values. Type, title and legend can be changed; formatting the chart's own parts (axes, series colours, labels) is not. A loaded chart keeps its part on save, patched by the core. |
-| Shapes, SmartArt, form controls     | Pictures display. SmartArt uses the cached drawing through the shared renderer (display only); without a cached drawing, its text is listed. Other drawings show as placeholders.                                      |
-| Macros (VBA), add-ins, Power Query  | Never executed; the VBA project is carried through.                                                                                                                                                                    |
-| External links and data connections | Kept; values are the cached ones.                                                                                                                                                                                      |
-| Real-time collaboration             | Not implemented yet, see [collaboration](/collaboration).                                                                                                                                                              |
-| Printing                            | The browser's print of the used range or print area; no Page Layout view or page break preview.                                                                                                                        |
-| Document properties                 | Core, company, manager and custom properties are editable in File > Info with undo. Unknown custom-property types are kept and displayed read-only.                                                                    |
+| Feature                             | Behaviour                                                                                                                                                                         |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Pivot tables and pivot caches       | Kept on save; not shown as pivots and not refreshed.                                                                                                                              |
+| Slicers, timelines, sparklines      | Kept on save; not drawn.                                                                                                                                                          |
+| Advanced charts and chart options   | Common families and supported formatting are described above. Advanced families, complete axes/labels/effects authoring and exact native layout remain incomplete.                |
+| Shapes, SmartArt, form controls     | Pictures display. SmartArt uses the cached drawing through the shared renderer (display only); without a cached drawing, its text is listed. Other drawings show as placeholders. |
+| Macros (VBA), add-ins, Power Query  | Never executed; the VBA project is carried through.                                                                                                                               |
+| External links and data connections | Kept; values are the cached ones.                                                                                                                                                 |
+| Real-time collaboration             | Not implemented yet, see [collaboration](/collaboration).                                                                                                                         |
+| Printing                            | The browser's print of the used range or print area; no Page Layout view or page break preview.                                                                                   |
+| Document properties                 | Core, company, manager and custom properties are editable in File > Info with undo. Unknown custom-property types are kept and displayed read-only.                               |
 
 The core's round-trip tests and Excel acceptance checks live in the `ooxml` repository. Report a workbook that renders or saves wrongly as an issue with the file attached if you can share it.
 

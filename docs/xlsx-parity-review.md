@@ -1,5 +1,10 @@
 # Excel parity review and implementation order
 
+For the current implementation, evidence and remaining gaps, see
+[XLSX parity status](xlsx-parity-status.md). **Full Excel parity is not achieved.**
+The sections below retain the history of individual implementation increments;
+their test counts and limitations apply to the revisions described.
+
 Reviewed 7 October 2026 against the consolidated source at `b9af841c0`, before the changes
 described below. This is a source and regression-test review, not an assertion of Excel parity.
 The viewer's [features and limitations](../viewers/xlsx/docs/features.md) describe the existing
