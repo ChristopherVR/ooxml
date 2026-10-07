@@ -7,6 +7,7 @@ import { RectangleDrawTool } from './viewer-draw-tool.js';
 import type { Rulers } from './viewer-ruler.js';
 import { ViewerPageOrder } from './viewer-page-order.js';
 import { ViewerPageRename } from './viewer-page-rename.js';
+import { ViewerPageDelete } from './viewer-page-delete.js';
 
 export type CanvasTool = 'pointer' | 'rectangle';
 interface CommandHost {
@@ -39,10 +40,12 @@ export class ViewerCommands {
 	#draw: RectangleDrawTool;
 	#pageOrder: ViewerPageOrder;
 	#pageRename: ViewerPageRename;
+	#pageDelete: ViewerPageDelete;
 	readonly #targets: RibbonTargets;
 	constructor(private readonly host: CommandHost) {
 		this.#pageOrder = new ViewerPageOrder(host.root, host.controller);
 		this.#pageRename = new ViewerPageRename(host.root, host.controller);
+		this.#pageDelete = new ViewerPageDelete(host.root, host.controller);
 		this.#draw = new RectangleDrawTool(host.viewport, host.controller, {
 			active: () => this.#tool === 'rectangle',
 			announce: host.announce,
@@ -94,6 +97,8 @@ export class ViewerCommands {
 					this.#pageOrder.show();
 				if ((event as CustomEvent<{ command?: unknown }>).detail?.command === 'rename-page')
 					this.#pageRename.show();
+				if ((event as CustomEvent<{ command?: unknown }>).detail?.command === 'delete-page')
+					this.#pageDelete.show();
 				if (
 					(event as CustomEvent<{ command?: unknown }>).detail?.command === 'tab-add' &&
 					(event.target as Element)?.matches?.('.page-tabs')
@@ -141,6 +146,7 @@ export class ViewerCommands {
 		return () => {
 			this.#pageOrder.close();
 			this.#pageRename.close();
+			this.#pageDelete.close();
 			++this.#pending;
 			events.abort();
 			disposeDraw();
@@ -245,6 +251,7 @@ export class ViewerCommands {
 	render(state: ViewerState): void {
 		this.#pageOrder.render(state);
 		this.#pageRename.render(state);
+		this.#pageDelete.render(state);
 		const { root, viewport } = this.host;
 		const button = (name: string) => root.querySelector<RibbonCommand>(`[command="${name}"]`)!;
 		const box = (name: string) =>

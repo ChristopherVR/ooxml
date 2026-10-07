@@ -42,6 +42,8 @@ const staticUnsupported = new Set([
 	// Keep evaluation unsupported: identifiers depend on the document/system.
 	// https://learn.microsoft.com/en-us/office/client-developer/visio/font-function
 	'FONT',
+	// Page-name lookup has explicit arguments but returns a string, outside numeric evaluation.
+	'PAGENAME',
 	'ROUND',
 	'INT',
 	'MOD',
