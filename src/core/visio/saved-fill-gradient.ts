@@ -3,6 +3,7 @@ import { radialFillGradient } from './radial-fill-gradient';
 import { regionFillGradient } from './region-fill-gradient';
 import { number, sectionRows, type Cells, type Report, type Sheet } from './sheet';
 import { linearGradientEndpoints } from './theme-gradient';
+import { canUseVisioSigmaInterpolation } from './native-gradient-stops';
 
 /**
  * Saved ShapeSheet gradients use radians and normalized [0,1] stop values.
@@ -84,17 +85,22 @@ export function savedFillGradient(
 		if (!color) return reject();
 		stops.push({ offset, color, opacity: 1 - transparency });
 	}
-	if (direction >= 8) return regionFillGradient(direction, stops);
-	if (direction !== 0) return radialFillGradient(direction, stops);
-	return {
-		type: 'linear',
-		...(orthogonal
-			? linearGradientEndpoints(width, height, (quarter % 4) * 90 * 60_000)
-			: {
-					start: [0, 1] as const,
-					end: [1, 1] as const,
-					boundingBoxAngle: -Math.round((wrapped * 180 * 1e10) / Math.PI) / 1e10,
-				}),
-		stops,
-	};
+	const gradient: VisioFillGradient | undefined =
+		direction >= 8
+			? regionFillGradient(direction, stops)
+			: direction !== 0
+				? radialFillGradient(direction, stops, [width, height])
+				: {
+						type: 'linear',
+						...(orthogonal
+							? linearGradientEndpoints(width, height, (quarter % 4) * 90 * 60_000)
+							: {
+									start: [0, 1] as const,
+									end: [1, 1] as const,
+									boundingBoxAngle: -Math.round((wrapped * 180 * 1e10) / Math.PI) / 1e10,
+								}),
+						stops,
+					};
+	if (gradient && canUseVisioSigmaInterpolation(gradient)) gradient.interpolation = 'sigma-gamma22';
+	return gradient;
 }

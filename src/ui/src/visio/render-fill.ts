@@ -4,7 +4,7 @@ import type {
 	VisioLinearGradient,
 	VisioRadialGradient,
 } from 'ooxml-core/visio';
-import { visioFillPatternTransform } from 'ooxml-core/visio/ui';
+import { visioFillPatternTransform, visioRenderedGradientStops } from 'ooxml-core/visio/ui';
 import { safeColor, svgElement, matrix } from './render-svg';
 import type { RenderResources } from './render-resources';
 let gradientId = 0;
@@ -41,6 +41,7 @@ export function fillPaint(
 	if (!style.fillGradient) return safeColor(style.fill, '#fff');
 	const paint = style.fillGradient;
 	if (paint.type === 'regions') {
+		const stops = visioRenderedGradientStops(paint);
 		const pattern = svgElement('pattern');
 		pattern.id = `visio-fill-${++gradientId}`;
 		pattern.setAttribute('patternUnits', 'objectBoundingBox');
@@ -50,6 +51,8 @@ export function fillPaint(
 		pattern.setAttribute('patternTransform', 'scale(1 -1)');
 		for (const region of paint.regions) {
 			const path = svgElement('path');
+			// Shared triangle edges must not expose antialiased transparent seams.
+			if (paint.interpolation) path.setAttribute('shape-rendering', 'crispEdges');
 			path.setAttribute(
 				'd',
 				region.points
@@ -59,7 +62,7 @@ export function fillPaint(
 			path.setAttribute(
 				'fill',
 				gradientPaint(
-					{ type: 'linear', start: [0, 0], end: [1, 0], stops: paint.stops },
+					{ type: 'linear', start: [0, 0], end: [1, 0], stops },
 					defs,
 					true,
 					region.angle,
@@ -83,7 +86,10 @@ function gradientPaint(
 	const gradient = svgElement(paint.type === 'radial' ? 'radialGradient' : 'linearGradient');
 	gradient.id = `visio-fill-${++gradientId}`;
 	if (paint.type === 'radial') {
-		gradient.setAttribute('gradientUnits', 'objectBoundingBox');
+		gradient.setAttribute(
+			'gradientUnits',
+			paint.coordinateSpace === 'local' ? 'userSpaceOnUse' : 'objectBoundingBox',
+		);
 		gradient.setAttribute('cx', String(paint.center[0]));
 		gradient.setAttribute('cy', String(paint.center[1]));
 		gradient.setAttribute('r', String(paint.radius));
@@ -98,7 +104,7 @@ function gradientPaint(
 		if (rotation !== undefined)
 			gradient.setAttribute('gradientTransform', `rotate(${rotation} 0.5 0.5)`);
 	}
-	for (const color of paint.stops) {
+	for (const color of visioRenderedGradientStops(paint)) {
 		const stop = svgElement('stop');
 		stop.setAttribute('offset', String(color.offset));
 		stop.setAttribute('stop-color', safeColor(color.color));

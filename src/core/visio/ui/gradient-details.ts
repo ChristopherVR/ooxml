@@ -1,4 +1,8 @@
 import type { VisioFillGradient } from '../model';
+import {
+	canUseVisioSigmaInterpolation,
+	visioRenderedGradientStopCount,
+} from '../native-gradient-stops';
 
 /** Number of independently rendered gradients sharing the normalized stops. */
 export function visioGradientInstances(gradient: VisioFillGradient | undefined): number {
@@ -18,6 +22,11 @@ export function assertVisioFillGradient(
 		gradient.stops.length > 128
 	)
 		throw new Error('The scene has an invalid fill gradient.');
+	if (
+		gradient.interpolation !== undefined &&
+		(gradient.interpolation !== 'sigma-gamma22' || !canUseVisioSigmaInterpolation(gradient))
+	)
+		throw new Error('The scene has invalid native gradient interpolation.');
 	if (gradient.type === 'linear') {
 		if (gradient.boundingBoxAngle !== undefined)
 			finite(gradient.boundingBoxAngle, 'gradient bounding-box angle', -360, 360);
@@ -31,8 +40,11 @@ export function assertVisioFillGradient(
 				gradient.boundingBoxAngle === undefined ? 20_000 : 1,
 			);
 	} else if (gradient.type === 'radial') {
+		if (gradient.coordinateSpace !== undefined && gradient.coordinateSpace !== 'local')
+			throw new Error('The scene has invalid radial gradient coordinates.');
 		if (gradient.center.length !== 2) throw new Error('The scene has an invalid gradient center.');
-		for (const value of gradient.center) finite(value, 'gradient center', 0, 1);
+		for (const value of gradient.center)
+			finite(value, 'gradient center', 0, gradient.coordinateSpace === 'local' ? 20_000 : 1);
 		finite(gradient.radius, 'gradient radius', Number.MIN_VALUE, 20_000);
 	} else {
 		if (!Array.isArray(gradient.regions) || ![2, 4].includes(gradient.regions.length))
@@ -62,5 +74,5 @@ export function assertVisioFillGradient(
 		if (stop.offset < offset) throw new Error('Gradient stops must be ordered.');
 		offset = stop.offset;
 	}
-	return gradient.stops.length * visioGradientInstances(gradient);
+	return visioRenderedGradientStopCount(gradient) * visioGradientInstances(gradient);
 }

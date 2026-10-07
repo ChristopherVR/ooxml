@@ -762,3 +762,47 @@ both passed, giving 713 passing tests and seven optional skips. Strict core type
 PowerShell syntax parsing, viewer formatting and root lint passed; lint retains
 the same nine unrelated warnings. This checkpoint records a remaining gap and
 does not change gradient interpolation or establish full Visio parity.
+
+## Native opaque gradient interpolation (2026-10-07)
+
+Saved opaque two-stop gradients with boundary stops now retain an explicit
+sigma-gamma22 paint profile. The core sampler expands it into 256 color stops
+using native GDI+ quantized sigma factors and gamma 2.2, reusing shared color
+hex conversion. The ShapeSheet source rows remain two stops. Translucent,
+non-boundary, theme and classic gradient interpolation retain the diagnostic;
+the diagnostic also remains on the improved opaque profile because exact native
+raster equality is not established. Three-stop fills do not use this curve.
+
+Saved radial centers reuse the existing shared preset helper, while radii now
+use the physical distance to the farthest corner. Native PNG uses a circle in
+local physical coordinates, unlike the bounding-box ellipse exported by native
+SVG. Scaling, scene snapshots, runtime validation, SVG/print byte budgets and
+aggregate rendered-stop limits retain this distinction. Opaque region paint
+also suppresses transparent seams on shared internal triangle edges.
+
+The six-route gradient-raster.spec.ts benchmark imports the genuine 68-shape
+package through the worker and measures directions 0-12 in live and portable
+SVG paint: 156 native PNG comparisons. It compares the 272-by-128-pixel interior
+of each 288-by-144 native shape export. All six routes passed the recorded
+regression bound of seven channel levels and mean difference below one level.
+These bounds measure improvement; they are not an exact-parity tolerance.
+Outer-edge antialiasing, small phase/quantization differences and the centered
+rectangular preset's residual difference remain open. The previous saved-gradient
+native-SVG equality scenarios were retired because SVG is not a native paint
+oracle; classic/hatch SVG compatibility checks remain explicit.
+
+The mixed native package initially refused all edits because POLYLINE was
+classified as a dynamic dependency. Its geometry-data function has explicit
+arguments, so the existing dependency analyzer now records those arguments as
+static. Recalculation remains unsupported and rejects affected expressions;
+nested GETREF remains dynamic. All 68 native shapes then passed core
+move/save/reparse gradient preservation. This does not establish native reopen
+acceptance or arbitrary polyline editing.
+
+Core passed 2,071 tests with 53 optional skips, including the native mixed
+package. UI passed 713 tests with seven skips before the additional expanded-paint
+preflight test; all 45 exporter tests then passed, giving 714 passing UI tests.
+Strict core, complete UI and viewer types passed, as did the full UI build,
+fresh Visio ESM/CJS bundles, PowerShell syntax and formatting. A Node public-ESM
+smoke check edited/reparsed all 68 native shapes, retained 13 opaque profiles and
+changed only visio/pages/page1.xml. Root lint retains nine unrelated warnings.

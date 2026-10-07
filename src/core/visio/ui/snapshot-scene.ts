@@ -122,6 +122,7 @@ export function copySnapshotScene(model: VisioDocument): VisioDocument {
 			...(gradient
 				? {
 						fillGradient: {
+							...fields(gradient, ['interpolation']),
 							...(gradient.type === 'linear'
 								? {
 										type: 'linear' as const,
@@ -136,6 +137,7 @@ export function copySnapshotScene(model: VisioDocument): VisioDocument {
 											type: 'radial' as const,
 											center: [gradient.center[0], gradient.center[1]] as const,
 											radius: gradient.radius,
+											...fields(gradient, ['coordinateSpace']),
 										}
 									: {
 											type: 'regions' as const,

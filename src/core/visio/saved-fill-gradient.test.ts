@@ -77,20 +77,25 @@ async function parse(overrides = '', stops = stop(0, 0) + stop(1, 1, '#0000ff'),
 }
 
 it.each([
-	[1, [1, 0], 1.4],
-	[2, [0, 0], 1.4],
-	[3, [0.5, 0.5], 0.73],
-	[4, [0.5, 1], 1.1],
-	[5, [0.5, 0], 1.1],
-	[6, [1, 1], 1.4],
-	[7, [0, 1], 1.4],
+	[1, [4, 0], Math.hypot(4, 2)],
+	[2, [0, 0], Math.hypot(4, 2)],
+	[3, [2, 1], Math.hypot(2, 1)],
+	[4, [2, 2], Math.hypot(2, 2)],
+	[5, [2, 0], Math.hypot(2, 2)],
+	[6, [4, 2], Math.hypot(4, 2)],
+	[7, [0, 2], Math.hypot(4, 2)],
 ])(
 	'normalizes native saved radial direction %s independently of the linear angle',
 	async (direction, center, radius) => {
 		const { style, diagnostics } = await parse(
 			cell('FillGradientDir', direction as number) + cell('FillGradientAngle', 'Themed'),
 		);
-		expect(style.fillGradient).toMatchObject({ type: 'radial', center, radius });
+		expect(style.fillGradient).toMatchObject({
+			type: 'radial',
+			coordinateSpace: 'local',
+			center,
+			radius,
+		});
 		expect(style.fillGradient?.stops).toHaveLength(2);
 		expect(diagnostics.some((item) => item.code === 'unsupported-saved-fill-gradient')).toBe(false);
 	},
@@ -168,6 +173,7 @@ describe('saved horizontal fill gradients', () => {
 		const { style, diagnostics } = await parse();
 		expect(style.fillGradient).toEqual({
 			type: 'linear',
+			interpolation: 'sigma-gamma22',
 			start: [0, 1],
 			end: [4, 1],
 			stops: [

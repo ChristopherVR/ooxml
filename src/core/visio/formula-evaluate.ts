@@ -36,7 +36,7 @@ const supported = new Set([
 	'PAGECOUNT',
 	...numericFormulaFunctions,
 ]);
-// Known pure numeric functions may be independent of an edit even when evaluation is unsupported.
+// Known pure functions may be independent of an edit even when evaluation is unsupported.
 const staticUnsupported = new Set([
 	// FONT reads the font table by name, not a hidden ShapeSheet reference.
 	// Keep evaluation unsupported: identifiers depend on the document/system.
@@ -44,6 +44,10 @@ const staticUnsupported = new Set([
 	'FONT',
 	// Page-name lookup has explicit arguments but returns a string, outside numeric evaluation.
 	'PAGENAME',
+	// POLYLINE encodes explicitly supplied geometry data; affected expressions
+	// still require the geometry evaluator and are rejected by numeric recalculation.
+	// https://learn.microsoft.com/en-us/office/client-developer/visio/polyline-function
+	'POLYLINE',
 	'ROUND',
 	'INT',
 	'MOD',

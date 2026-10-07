@@ -800,3 +800,19 @@ to `chart-svg-bars.ts`, keeping its stacking and paint behavior. It now uses the
 shared geometry and the native horizontal series direction; SVG groups identify
 series and point indices for review and future UI hit testing. Office models and
 calculations remain in core, while the existing PowerPoint UI keeps its painter.
+
+## Native Visio gradient interpolation and physical radial geometry
+
+Source: Windows System.Drawing GDI+ SetSigmaBellShape(1, 1), sampled on
+2026-10-07. Its 256 quantized blend factors are stored in
+`src/core/visio/native-gradient-curve.ts`; `scripts/record-visio-gradient-raster.ps1`
+records the same table in sigma-blend.json. Native Visio 16 PNG captures, rather
+than SVG export, established the opaque two-stop curve and physical circular
+radial geometry. This is new native evidence, not a copied renderer.
+
+The sampler reuses shared color hex conversion; saved and classic gradients
+share the existing radial-center helper. Existing gradient validation, snapshot,
+SVG and print budgets now account for expanded paint. Relative source imports
+remain extensionless. Saved stop rows remain intact. Translucent, themed and
+classic interpolation, arbitrary path fills and exact raster equality remain
+unverified; native-SVG comparisons were replaced for saved gradients only.

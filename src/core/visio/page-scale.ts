@@ -80,6 +80,10 @@ export function normalizeVisioPageGeometry(
 			gradient.start = [distance(gradient.start[0], ratio), distance(gradient.start[1], ratio)];
 			gradient.end = [distance(gradient.end[0], ratio), distance(gradient.end[1], ratio)];
 		}
+		if (gradient?.type === 'radial' && gradient.coordinateSpace === 'local') {
+			gradient.center = [distance(gradient.center[0], ratio), distance(gradient.center[1], ratio)];
+			gradient.radius = distance(gradient.radius, ratio);
+		}
 		shape.text.width = distance(shape.text.width, ratio);
 		shape.text.height = distance(shape.text.height, ratio);
 		shape.text.transform = matrix(shape.text.transform, ratio);

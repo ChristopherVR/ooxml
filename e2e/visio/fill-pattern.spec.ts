@@ -17,37 +17,13 @@ for (const sample of [
 	{ name: 'radial-alpha', directory: process.env.VISIO_NATIVE_RADIAL_FILLS_ALPHA_DIR },
 	{ name: 'regions', directory: process.env.VISIO_NATIVE_REGION_FILLS_DIR },
 	{ name: 'regions-alpha', directory: process.env.VISIO_NATIVE_REGION_FILLS_ALPHA_DIR },
-	{ name: 'linear-vertical', directory: process.env.VISIO_NATIVE_LINEAR_VERTICAL_DIR },
-	{ name: 'linear-reverse', directory: process.env.VISIO_NATIVE_LINEAR_REVERSE_DIR },
-	{ name: 'linear-oblique', directory: process.env.VISIO_NATIVE_LINEAR_OBLIQUE_DIR },
-	{ name: 'linear-oblique-alpha', directory: process.env.VISIO_NATIVE_LINEAR_OBLIQUE_ALPHA_DIR },
-	{ name: 'saved-radial', directory: process.env.VISIO_NATIVE_SAVED_RADIAL_DIR },
-	{ name: 'saved-radial-alpha', directory: process.env.VISIO_NATIVE_SAVED_RADIAL_ALPHA_DIR },
-	{ name: 'saved-regions', directory: process.env.VISIO_NATIVE_SAVED_REGIONS_DIR },
-	{ name: 'saved-regions-alpha', directory: process.env.VISIO_NATIVE_SAVED_REGIONS_ALPHA_DIR },
 ]) {
 	const directory = sample.directory;
-	const linear = sample.name.startsWith('linear');
-	const savedRadial = sample.name.startsWith('saved-radial');
-	const savedRegions = sample.name.startsWith('saved-regions');
-	const fullPage =
-		savedRegions ||
-		savedRadial ||
-		linear ||
-		sample.name.startsWith('radial') ||
-		sample.name.startsWith('regions');
-	const firstPattern = savedRegions
-			? 8
-			: savedRadial
-				? 1
-				: linear
-					? 25
-					: sample.name.startsWith('regions')
-						? 31
-						: fullPage
-							? 36
-							: 2,
-		patternCount = savedRadial ? 7 : linear ? 6 : fullPage ? 5 : 23;
+	// Saved gradients use the native PNG benchmark in gradient-raster.spec.ts.
+	// Classic SVG compatibility remains measured here, without a native-paint claim.
+	const fullPage = sample.name.startsWith('radial') || sample.name.startsWith('regions');
+	const firstPattern = sample.name.startsWith('regions') ? 31 : fullPage ? 36 : 2,
+		patternCount = fullPage ? 5 : 23;
 	for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
 		test(`${framework}: ${sample.name} native fills match live and exported SVG`, async ({
 			page,

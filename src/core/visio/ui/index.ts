@@ -12,3 +12,7 @@ export * from './snapshot-scene';
 export * from './page-edit';
 export * from './fill-pattern-transform';
 export { visioGradientInstances } from './gradient-details';
+export {
+	visioRenderedGradientStops,
+	visioRenderedGradientStopCount,
+} from '../native-gradient-stops';

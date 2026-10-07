@@ -256,6 +256,26 @@ describe('embedded raster resources and export bounds', () => {
 			expect(() => exportPageSvg(demoDocument, 0, { maxBytes })).toThrow('maxBytes');
 		},
 	);
+	it('preflights expanded native gradient paint before allocating DOM', () => {
+		const model = scene();
+		model.pages[0]!.shapes = [model.pages[0]!.shapes[0]!];
+		model.pages[0]!.shapes[0]!.style.fillGradient = {
+			type: 'linear',
+			start: [0, 0],
+			end: [2, 0],
+			interpolation: 'sigma-gamma22',
+			stops: [
+				{ offset: 0, color: '#ff0000', opacity: 1 },
+				{ offset: 1, color: '#0000ff', opacity: 1 },
+			],
+		};
+		const create = vi.spyOn(document, 'createElementNS');
+		expect(() => exportPageSvg(model, 0, { maxBytes: 64_000 })).toThrow('amplification');
+		expect(create).not.toHaveBeenCalled();
+		create.mockRestore();
+		delete model.pages[0]!.shapes[0]!.style.fillGradient!.interpolation;
+		expect(() => exportPageSvg(model, 0, { maxBytes: 64_000 })).not.toThrow();
+	});
 	it('preflights escaped path amplification before renderer allocation', () => {
 		const model = scene();
 		model.pages[0]!.shapes[0]!.geometry[0]!.path = '&'.repeat(3_000_000);

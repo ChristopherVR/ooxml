@@ -7,6 +7,11 @@ Add-Type -AssemblyName System.Drawing
 $directory=[IO.Path]::GetFullPath($OutputDirectory)
 if(Test-Path -LiteralPath $directory){throw 'Use a fresh output directory.'}
 New-Item -ItemType Directory -Path $directory | Out-Null
+$brush=[Drawing.Drawing2D.LinearGradientBrush]::new([Drawing.Point]::new(0,0),[Drawing.Point]::new(288,0),[Drawing.Color]::Red,[Drawing.Color]::Blue)
+try {
+ $brush.SetSigmaBellShape(1,1)
+ [ordered]@{positions=$brush.Blend.Positions;factors=$brush.Blend.Factors} | ConvertTo-Json -Depth 3 | Set-Content (Join-Path $directory 'sigma-blend.json') -Encoding utf8
+} finally {$brush.Dispose()}
 $app=New-Object -ComObject Visio.InvisibleApp
 $document=$null
 $size=0;$width=0.0;$height=0.0;$sizeUnits=0

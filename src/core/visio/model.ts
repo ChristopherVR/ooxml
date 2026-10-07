@@ -17,21 +17,26 @@ export interface VisioGeometry {
 	fill: boolean;
 	stroke: boolean;
 }
-export interface VisioLinearGradient {
+export interface VisioGradientPaint {
+	stops: { offset: number; color: string; opacity: number }[];
+	/** Native opaque two-stop interpolation; source stops remain unchanged. */
+	interpolation?: 'sigma-gamma22';
+}
+export interface VisioLinearGradient extends VisioGradientPaint {
 	type: 'linear';
 	/** Local y-up inches, or normalized coordinates when boundingBoxAngle is present. */
 	start: readonly [number, number];
 	end: readonly [number, number];
 	/** Rotation in local y-up degrees around the normalized bounding-box center. */
 	boundingBoxAngle?: number;
-	stops: { offset: number; color: string; opacity: number }[];
 }
-export interface VisioRadialGradient {
+export interface VisioRadialGradient extends VisioGradientPaint {
 	type: 'radial';
 	/** Normalized local y-up object-bounding-box coordinates. */
 	center: readonly [number, number];
 	radius: number;
-	stops: VisioLinearGradient['stops'];
+	/** Absent uses normalized bounds; local uses y-up inches and a circular radius. */
+	coordinateSpace?: 'local';
 }
 export interface VisioGradientRegion {
 	/** Normalized local y-up triangle vertices; endpoints use each triangle's bounding box. */
@@ -41,10 +46,9 @@ export interface VisioGradientRegion {
 	/** Native clockwise SVG rotation in degrees, retained for exact rasterization. */
 	angle: number;
 }
-export interface VisioRegionGradient {
+export interface VisioRegionGradient extends VisioGradientPaint {
 	type: 'regions';
 	regions: VisioGradientRegion[];
-	stops: VisioLinearGradient['stops'];
 }
 export type VisioFillGradient = VisioLinearGradient | VisioRadialGradient | VisioRegionGradient;
 export interface VisioFillPattern extends VisioImage {
