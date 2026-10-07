@@ -17,7 +17,10 @@ export function placeTable(
 	measurer: TextMeasurer,
 	note: (message: string) => void,
 ): void {
-	const headerRows = table.rows.filter((row) => row.isHeader);
+	// Word only repeats the contiguous header group starting at the first row.
+	// A tblHeader flag after the first body row is ignored (ECMA-376 17.4.50).
+	const firstBodyRow = table.rows.findIndex((row) => !row.isHeader);
+	const headerRows = table.rows.slice(0, firstBodyRow < 0 ? table.rows.length : firstBodyRow);
 
 	// Table indent, or alignment of the grid within the column.
 	const xPosition = () => {
@@ -104,7 +107,7 @@ export function placeTable(
 
 	for (const row of table.rows) {
 		const layout = layoutRow(row, cursor.columnWidthPx, measurer, note);
-		placeRow(row, layout, Boolean(row.cantSplit) || row.isHeader === true);
+		placeRow(row, layout, Boolean(row.cantSplit) || headerRows.includes(row));
 	}
 	flushFragment();
 }
