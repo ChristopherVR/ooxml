@@ -1070,3 +1070,15 @@ separately from premultiplied color. The native translucent three-stop color
 residual and one coincident-edge coverage discrepancy remain explicit expected
 failures. The passing sweep and native round-trip checks are separate from
 these known gaps, so a green test run does not claim full gradient parity.
+
+## Shared Word formatting toggles
+
+Source: ChristopherVR/ooxml at `73691b88ba16cf53b10aaaf68696ecb1c95980e8`,
+`src/ui/src/docx/toggle-commands.ts`. The style-aware Bold, Italic, Underline and
+Strikethrough command logic moved to `src/core/docx/ui/toggle-format.ts`.
+The factory accepts the caller's schema and document-style lookup; the UI now
+only wires them in. The extraction extends selection handling to supported
+inline objects and retains explicit-off overrides for imported atom properties.
+Native run-formatting recording and restoration reuse the shared run adapter
+and writer rather than adding an atom-specific property codec. UI integration
+tests remain with the component; native command regressions live in core.

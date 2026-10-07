@@ -24,6 +24,19 @@ creates eight synthetic editor exports. Reopening them read-only with
 `core-export-reference.json`: all story text matches Word's native results,
 with zero revisions in every inspected story.
 
-This establishes the covered review resolution behavior. It does not establish
-pixel equality, atom formatting recording, OMML formatting, or full Microsoft
+`--record-object-formatting` instead starts from the native before files and
+uses the shared core toggle and tracking commands to produce twelve tracked,
+accepted and rejected exports. `recorded-export-reference.json` records Word's
+revision counts and direct object bold properties. `recorded-rejection-reference.json`
+uses Word's document-wide Reject All in memory before inspecting the same files,
+without saving them: recorded changes clear and prior direct bold is restored.
+Core tests compare native resolved content and preserve the earliest snapshot
+through successive edits and full reversion. Yjs peers cover author identity,
+convergence and one-step undo/redo; mixed text/object ribbon selections work
+across all six browser bindings. Hidden field-code formatting uses a direct
+command because the editing field guard trims hidden markers from selections.
+
+This establishes the covered formatting and review behavior. It does not establish
+pixel equality, mixed structural tracking, all advanced atom controls, OMML formatting,
+hard-break formatting in Yjs, or full Microsoft
 365 Word parity.

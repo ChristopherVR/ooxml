@@ -26,6 +26,7 @@ export * from './review-commands';
 export { formattingRevision } from './review-formatting';
 export { paragraphFormattingRevision } from './review-paragraph-formatting';
 export * from './track-changes-mode';
+export * from './toggle-format';
 export * from './ribbon-action-ids';
 export * from './ribbon-colors';
 export * from './ribbon-legacy-labels';

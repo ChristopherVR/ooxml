@@ -200,7 +200,19 @@ retain note labels, picture dimensions, source positions and undo history.
 Six-binding browser checks compare the four native object cases with their
 before references and retain the source model through display-mode changes.
 Unavailable snapshots report diagnostics and retain current formatting.
-Atom formatting recording and OMML formatting still need implementation. These checks do not
+Pure supported atom-format changes now record complete prior run properties
+through the existing tracking plugin. The shared style-aware toggle command
+lives in core and includes atoms in mixed text selections. Canonical atom
+attributes retain formatting and history through Yjs, whose element mapping
+does not retain ProseMirror marks. Native comparisons cover picture, note,
+page-break and field-code recording, acceptance/rejection, earliest snapshots
+and full reversion. Word recognizes all twelve recorded/resolved exports and
+its Reject All restores the expected direct bold properties with zero revisions.
+Peer tests retain the editing author and isolated undo; six-binding ribbon
+checks cover mixed text/picture and text/note selections. Hidden field-code
+formatting is tested through the command path because editing selections trim
+hidden markers. Mixed structural transactions, OMML formatting, all advanced
+atom formatting controls and hard-break formatting in Yjs need further work. These checks do not
 establish complete native Word object-review parity.
 
 Print Layout now projects prior run and paragraph formatting through the same

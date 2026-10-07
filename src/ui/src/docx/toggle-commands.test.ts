@@ -27,6 +27,21 @@ const runOf = (state: EditorState, model: ReturnType<typeof createDocument>) =>
 	at(paragraphAt(docToModel(state.doc, model).blocks, 0).runs, 0);
 
 describe('style-aware Bold', () => {
+	it('toggles imported bold note references together with text and writes explicit off overrides', () => {
+		const { model, state } = setup([
+			{ text: 'Text', bold: true },
+			{ text: '', bold: true, noteReference: { kind: 'footnote', id: '1' } },
+		]);
+		const off = apply(state, 'bold');
+		const paragraph = paragraphAt(docToModel(off.doc, model).blocks, 0);
+		expect(paragraph.runs.map((run) => run.bold)).toEqual([undefined, undefined]);
+		expect(paragraph.runs[1]!.noteReference).toEqual({ kind: 'footnote', id: '1' });
+		const on = apply(off, 'bold');
+		expect(paragraphAt(docToModel(on.doc, model).blocks, 0).runs.map((run) => run.bold)).toEqual([
+			true,
+			true,
+		]);
+	});
 	it('un-bolds heading text with an explicit off, and bolds it again', () => {
 		// Heading 1 in the default styles is not bold; Title is not either, so use a bold char style.
 		const { model, state } = setup([{ text: 'Heading text', style: 'Strong' }]);

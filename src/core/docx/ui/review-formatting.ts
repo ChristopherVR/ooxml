@@ -3,7 +3,8 @@ import type { Transaction } from 'prosemirror-state';
 import type { Revision, TextRun } from '../model';
 import { restoreRunFormatting } from '../restore-run-format';
 import { marksForRun } from './run-marks';
-import { inlineNodeRun, runToInlineNodes } from './run-adapter';
+import { inlineNodeRun } from './run-adapter';
+import { RUN_FORMAT_MARKS as FORMAT_MARKS, setInlineRunFormatting } from './inline-formatting';
 
 /** Imported formatting history travels with run marks or inline object attributes. */
 export function formattingRevision(node: ProseMirrorNode): Revision | undefined {
@@ -12,20 +13,6 @@ export function formattingRevision(node: ProseMirrorNode): Revision | undefined 
 	const revision = props?.formatRevision ?? props?.revision;
 	return revision?.kind === 'formatChange' ? revision : undefined;
 }
-
-const FORMAT_MARKS = new Set([
-	'bold',
-	'italic',
-	'underline',
-	'strike',
-	'highlight',
-	'verticalAlign',
-	'language',
-	'runRtl',
-	'font',
-	'characterStyle',
-	'runProperties',
-]);
 
 /** Resolves formatting only, retaining text, links, comments and other inline marks. */
 export function resolveFormattingRange(
@@ -52,15 +39,7 @@ export function resolveFormattingRange(
 			if (mode === 'reject') restoreRunFormatting(run);
 			else if (run.formatRevision) delete run.formatRevision;
 			else delete run.revision;
-			const projected = runToInlineNodes(run, tr.doc.type.schema)[0]!;
-			tr.setNodeMarkup(
-				piece.from,
-				undefined,
-				{ ...piece.node.attrs, format: projected.attrs.format },
-				mode === 'reject'
-					? piece.node.marks.filter((mark) => !FORMAT_MARKS.has(mark.type.name))
-					: piece.node.marks,
-			);
+			setInlineRunFormatting(tr, piece.from, run);
 			continue;
 		}
 		const properties = piece.node.marks.find((mark) => mark.type.name === 'runProperties')!;

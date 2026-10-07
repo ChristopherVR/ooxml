@@ -111,7 +111,12 @@ export function runToInlineNodes(
 function applyInlineFormat(run: TextRun, child: ProseMirrorNode): void {
 	if (typeof child.attrs.format === 'string')
 		Object.assign(run, JSON.parse(child.attrs.format) as Partial<TextRun>);
-	applyMarkFormatting(run, child);
+	// Imported atom attributes are the base; newly applied marks may explicitly turn them off.
+	// Keep text revision context when an old formatting revision rides in the extra-properties mark.
+	const marks: TextRun = { text: '', ...(run.revision ? { revision: run.revision } : {}) };
+	applyMarkFormatting(marks, child);
+	const { text: _text, ...properties } = marks;
+	Object.assign(run, properties);
 }
 
 /** A single source run, including inline atoms with their own properties and revisions. */

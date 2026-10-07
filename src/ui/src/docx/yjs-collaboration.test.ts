@@ -28,6 +28,7 @@ import './index';
 import { editorBindings } from './editor-commands';
 import { insertPicture } from './picture-commands';
 import { TextSelection } from 'prosemirror-state';
+import { toggleFormat } from './toggle-commands';
 import { addComment, commentIdsAtSelection } from './comment-commands';
 
 const sessions: CollabSession[] = [];
@@ -71,6 +72,62 @@ function start(
 }
 
 describe('Word Yjs collaboration', () => {
+	for (const name of ['picture', 'note', 'break', 'field'])
+		it(`shares newly recorded native ${name} object formatting with author history`, async () => {
+			const bytes = new Uint8Array(
+				await readFile(
+					resolve(`../core/docx/__fixtures__/review-object-formatting/${name}-before.docx`),
+				),
+			);
+			const peers = pair();
+			const a = mount();
+			const b = mount();
+			await a.load(bytes);
+			await b.load(bytes);
+			a.reviewAuthor = 'Ada';
+			b.reviewAuthor = 'Bob';
+			start(a, b, peers);
+			toggleTrackChanges(viewOf(a).state, viewOf(a).dispatch, viewOf(a));
+			const collab = wordYjsPluginKey.getState(viewOf(b).state)!;
+			collab.stopCapturing();
+			const initial = viewOf(b).state.doc;
+			let position = -1;
+			initial.descendants((node, pos) => {
+				if (position >= 0 || !node.isInline || node.isText) return;
+				if (node.type.name === 'fieldMarker' && node.attrs.kind !== 'code') return;
+				position = pos;
+			});
+			viewOf(b).dispatch(
+				viewOf(b).state.tr.setSelection(TextSelection.create(initial, position, position + 1)),
+			);
+			if (name === 'field')
+				viewOf(b).dispatch(
+					viewOf(b).state.tr.addMark(
+						position,
+						position + 1,
+						viewOf(b).state.schema.marks.bold!.create(),
+					),
+				);
+			else expect(toggleFormat('bold')(viewOf(b).state, viewOf(b).dispatch, viewOf(b))).toBe(true);
+			const recorded = viewOf(b).state.doc;
+			for (const editor of [a, b]) {
+				expect(viewOf(editor).state.doc.eq(recorded)).toBe(true);
+				expect(collectRevisionRanges(viewOf(editor).state.doc)).toMatchObject([
+					{ kind: 'formatChange', author: 'Bob' },
+				]);
+				expect(listRevisions((await loadDocx(await editor.saveBytes())).model)).toHaveLength(1);
+			}
+			expect(collab.undo()).toBe(true);
+			expect(viewOf(a).state.doc.eq(initial)).toBe(true);
+			expect(collab.redo()).toBe(true);
+			expect(viewOf(a).state.doc.eq(recorded)).toBe(true);
+			wordYjsPluginKey.getState(viewOf(a).state)!.stopCapturing();
+			expect(rejectAllChanges(viewOf(a))).toBe(true);
+			for (const editor of [a, b])
+				expect(listRevisions((await loadDocx(await editor.saveBytes())).model)).toHaveLength(0);
+			expect(wordYjsPluginKey.getState(viewOf(a).state)!.undo()).toBe(true);
+			expect(viewOf(b).state.doc.eq(recorded)).toBe(true);
+		});
 	for (const name of ['picture', 'note', 'break', 'field'])
 		for (const mode of ['accept', 'reject'] as const)
 			it(`shares native ${name} formatting ${mode} and one undo operation`, async () => {
