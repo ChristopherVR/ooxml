@@ -1,5 +1,12 @@
 import { EditorState, Transaction } from 'prosemirror-state';
-import type { DocumentModel, Block, Paragraph, SectionProperties, Table, TextRun } from 'ooxml-core/docx';
+import type {
+	DocumentModel,
+	Block,
+	Paragraph,
+	SectionProperties,
+	Table,
+	TextRun,
+} from 'ooxml-core/docx';
 import type { Node as ProseMirrorNode } from 'prosemirror-model';
 import {
 	computeListLabels,
@@ -108,6 +115,7 @@ export function modelToDoc(model: DocumentModel) {
 			sections: model.sections ? sectionLayoutJson(model.sections) : null,
 			sectionParts: sectionPartsJson(model.sections),
 			evenAndOddHeaders: Boolean(model.evenAndOddHeaders),
+			trackChanges: Boolean(model.trackChanges),
 			pageColor: model.pageColor ?? null,
 			autoHyphenation: Boolean(model.autoHyphenation),
 			footnoteNumFmt: model.footnoteNumFmt ?? null,
@@ -261,6 +269,7 @@ export function docToModel(
 	const {
 		sections: priorSections,
 		evenAndOddHeaders: _evenOdd,
+		trackChanges: _trackChanges,
 		pageColor: _pageColor,
 		autoHyphenation: _hyphenation,
 		...rest
@@ -277,6 +286,7 @@ export function docToModel(
 		...rest,
 		blocks,
 		...(doc.attrs.evenAndOddHeaders ? { evenAndOddHeaders: true } : {}),
+		trackChanges: Boolean(doc.attrs.trackChanges),
 		...(doc.attrs.pageColor ? { pageColor: String(doc.attrs.pageColor) } : {}),
 		...(doc.attrs.autoHyphenation ? { autoHyphenation: true } : {}),
 		...(sections ? { sections } : {}),

@@ -83,6 +83,12 @@ after stopping collaboration. Existing package assets remain in each editor's
 matching loaded source. The host still controls export synchronization and room
 persistence; this does not coordinate simultaneous saves or prove lossless export.
 
+The Track Changes recording setting also travels through document transactions.
+Toggling it updates peers, participates in local undo/redo and exports as
+`w:trackRevisions`. Joining an older room that lacks the setting retains the
+loaded package value until a participant changes it. Revision marks retain the
+editing author's name; this does not authenticate that identity.
+
 Ctrl/Cmd+Z and ribbon undo use local Yjs history. History survives editor detach
 and remount; disconnected views adopt changes on remount. Awareness uses relative
 positions for cursor/selection mapping, with the existing localized cursor UI.
