@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { book, engine, get, set, E } from './test-helpers.js';
+import { createEditSession } from '../edit/index.js';
+import { createWorkbook } from '../workbook.js';
+import { saveXlsx } from '../write/index.js';
+import { loadXlsx } from '../read/index.js';
+import { getCell } from '../cells.js';
+import { createCalcEngine } from './engine.js';
 
 // Recorded independently with Excel 16.0 build 20430 at Z1, 2026-10-07.
 describe('INDIRECT R1C1 references', () => {
@@ -40,5 +46,16 @@ describe('INDIRECT R1C1 references', () => {
 		set(wb, 'Z1', '=SUM(INDIRECT("\'Sheet 2\'!C1",FALSE))');
 		engine(wb).recalculateAll();
 		expect(get(wb, 'Z1')).toBe(7);
+	});
+
+	it('preserves a wrapped reference formula and cached value across save/reload', async () => {
+		const wb = createWorkbook();
+		const formula = 'ROW(INDIRECT("R[-1]C1",FALSE))';
+		createEditSession(wb).setCellInput(0, 0, 25, `=${formula}`);
+		expect(getCell(wb.sheets[0]!, 0, 25)?.value).toBe(1048576);
+		const loaded = await loadXlsx(await saveXlsx(wb));
+		expect(getCell(loaded.sheets[0]!, 0, 25)).toMatchObject({ formula, value: 1048576 });
+		createCalcEngine(loaded).recalculateAll();
+		expect(getCell(loaded.sheets[0]!, 0, 25)?.value).toBe(1048576);
 	});
 });

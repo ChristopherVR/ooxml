@@ -59,6 +59,17 @@ reads. The recorded application was Excel 16.0 build 20430.
   bounded save acceptance evidence, not a general lossless-export claim.
 - Existing formula regression cases continue to pass, including classic
   approximate lookup behavior, array lifting and return references.
+- After adding reference-function fixes, 2,369 formula tests and both core
+  TypeScript projects passed. The parser suite and sheet-qualified aggregation
+  checks passed, followed by a save/reload/recalculation regression for a
+  wrapped R1C1 reference (26 reference tests passed).
+- The final broad rerun hit suite-load failures during severe shared-machine
+  memory pressure and was stopped. Those suites passed when rerun separately.
+  Strict declarations emitted successfully; the latest package build remains
+  incomplete because native TypeScript's PPTX declaration emitter repeatedly
+  failed to create temporary directories (`TS5033`), including a serial retry.
+  The earlier successful full suite/build must not be read as validation of
+  every subsequent integration change.
 - Binary search requires the declared sort order. The corpus does not
   establish arbitrary unsorted-input behavior or every error placement.
 - Current Microsoft 365 regex functions need further work. Microsoft
