@@ -22,12 +22,13 @@ export interface BodyPluginHost {
 	/** Controller and collaboration plugins, in the order they apply. */
 	extraPlugins: Plugin[];
 	collaborationPlugins: Plugin[];
+	yjs?: boolean;
 }
 
 /** The main body editor's plugins: history, structure guards, style decorations, review and keys. */
 export function bodyPlugins(host: BodyPluginHost): Plugin[] {
 	return [
-		history(),
+		...(host.yjs ? [] : [history()]),
 		...host.extraPlugins,
 		noteNumberingPlugin(),
 		sectionBreaksPlugin(),

@@ -51,6 +51,7 @@ describe('shared Office-style viewer chrome', () => {
 		expect(items.map((item) => item.getAttribute('label'))).toEqual([
 			'Release workflow',
 			'Architecture',
+			'Reorder Pages...',
 		]);
 		expect(items[0]!.getAttribute('checked')).toBe('true');
 		items[1]!.shadowRoot!.querySelector('button')!.click();

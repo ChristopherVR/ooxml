@@ -1,0 +1,295 @@
+{
+  "application": "Microsoft Word",
+  "version": "16.0",
+  "build": "16.0.20430",
+  "cases": [
+    {
+      "name": "same",
+      "pages": 1,
+      "positions": [
+        {
+          "text": "Before1",
+          "section": 1,
+          "page": 1,
+          "xPt": 72.0,
+          "yPt": 72.0
+        },
+        {
+          "text": "Before2",
+          "section": 1,
+          "page": 1,
+          "xPt": 72.0,
+          "yPt": 84.0
+        },
+        {
+          "text": "",
+          "section": 1,
+          "page": 1,
+          "xPt": 120.5,
+          "yPt": 84.0
+        },
+        {
+          "text": "After1",
+          "section": 2,
+          "page": 1,
+          "xPt": 72.0,
+          "yPt": 96.0
+        },
+        {
+          "text": "After2",
+          "section": 2,
+          "page": 1,
+          "xPt": 72.0,
+          "yPt": 108.0
+        },
+        {
+          "text": "",
+          "section": 2,
+          "page": 1,
+          "xPt": 72.0,
+          "yPt": 120.0
+        }
+      ]
+    },
+    {
+      "name": "left-margin",
+      "pages": 1,
+      "positions": [
+        {
+          "text": "Before1",
+          "section": 1,
+          "page": 1,
+          "xPt": 72.0,
+          "yPt": 72.0
+        },
+        {
+          "text": "Before2",
+          "section": 1,
+          "page": 1,
+          "xPt": 72.0,
+          "yPt": 84.0
+        },
+        {
+          "text": "",
+          "section": 1,
+          "page": 1,
+          "xPt": 120.5,
+          "yPt": 84.0
+        },
+        {
+          "text": "After1",
+          "section": 2,
+          "page": 1,
+          "xPt": 108.0,
+          "yPt": 96.0
+        },
+        {
+          "text": "After2",
+          "section": 2,
+          "page": 1,
+          "xPt": 108.0,
+          "yPt": 108.0
+        },
+        {
+          "text": "",
+          "section": 2,
+          "page": 1,
+          "xPt": 108.0,
+          "yPt": 120.0
+        }
+      ]
+    },
+    {
+      "name": "top-margin",
+      "pages": 1,
+      "positions": [
+        {
+          "text": "Before1",
+          "section": 1,
+          "page": 1,
+          "xPt": 72.0,
+          "yPt": 72.0
+        },
+        {
+          "text": "Before2",
+          "section": 1,
+          "page": 1,
+          "xPt": 72.0,
+          "yPt": 84.0
+        },
+        {
+          "text": "",
+          "section": 1,
+          "page": 1,
+          "xPt": 120.5,
+          "yPt": 84.0
+        },
+        {
+          "text": "After1",
+          "section": 2,
+          "page": 1,
+          "xPt": 72.0,
+          "yPt": 96.0
+        },
+        {
+          "text": "After2",
+          "section": 2,
+          "page": 1,
+          "xPt": 72.0,
+          "yPt": 108.0
+        },
+        {
+          "text": "",
+          "section": 2,
+          "page": 1,
+          "xPt": 72.0,
+          "yPt": 120.0
+        }
+      ]
+    },
+    {
+      "name": "columns",
+      "pages": 1,
+      "positions": [
+        {
+          "text": "Before1",
+          "section": 1,
+          "page": 1,
+          "xPt": 72.0,
+          "yPt": 72.0
+        },
+        {
+          "text": "Before2",
+          "section": 1,
+          "page": 1,
+          "xPt": 72.0,
+          "yPt": 84.0
+        },
+        {
+          "text": "",
+          "section": 1,
+          "page": 1,
+          "xPt": 120.5,
+          "yPt": 84.0
+        },
+        {
+          "text": "After1",
+          "section": 2,
+          "page": 1,
+          "xPt": 72.0,
+          "yPt": 96.0
+        },
+        {
+          "text": "After2",
+          "section": 2,
+          "page": 1,
+          "xPt": 72.0,
+          "yPt": 108.0
+        },
+        {
+          "text": "",
+          "section": 2,
+          "page": 1,
+          "xPt": 72.0,
+          "yPt": 120.0
+        }
+      ]
+    },
+    {
+      "name": "page-size",
+      "pages": 2,
+      "positions": [
+        {
+          "text": "Before1",
+          "section": 1,
+          "page": 1,
+          "xPt": 72.0,
+          "yPt": 72.0
+        },
+        {
+          "text": "Before2",
+          "section": 1,
+          "page": 1,
+          "xPt": 72.0,
+          "yPt": 84.0
+        },
+        {
+          "text": "",
+          "section": 1,
+          "page": 1,
+          "xPt": 120.5,
+          "yPt": 84.0
+        },
+        {
+          "text": "After1",
+          "section": 2,
+          "page": 2,
+          "xPt": 72.0,
+          "yPt": 72.0
+        },
+        {
+          "text": "After2",
+          "section": 2,
+          "page": 2,
+          "xPt": 72.0,
+          "yPt": 84.0
+        },
+        {
+          "text": "",
+          "section": 2,
+          "page": 2,
+          "xPt": 72.0,
+          "yPt": 96.0
+        }
+      ]
+    },
+    {
+      "name": "orientation",
+      "pages": 2,
+      "positions": [
+        {
+          "text": "Before1",
+          "section": 1,
+          "page": 1,
+          "xPt": 72.0,
+          "yPt": 72.0
+        },
+        {
+          "text": "Before2",
+          "section": 1,
+          "page": 1,
+          "xPt": 72.0,
+          "yPt": 84.0
+        },
+        {
+          "text": "",
+          "section": 1,
+          "page": 1,
+          "xPt": 120.5,
+          "yPt": 84.0
+        },
+        {
+          "text": "After1",
+          "section": 2,
+          "page": 2,
+          "xPt": 72.0,
+          "yPt": 72.0
+        },
+        {
+          "text": "After2",
+          "section": 2,
+          "page": 2,
+          "xPt": 72.0,
+          "yPt": 84.0
+        },
+        {
+          "text": "",
+          "section": 2,
+          "page": 2,
+          "xPt": 72.0,
+          "yPt": 96.0
+        }
+      ]
+    }
+  ]
+}

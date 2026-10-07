@@ -18,6 +18,7 @@ import {
 import { parseDefRPrTextStyle, parseRichTextStyle, resolveTxPrDefRPr } from './chart-def-rpr-style';
 import { parseChartManualLayout } from './chart-layout';
 import { parseShapeProps } from './chart-series-detail-parser';
+import { collectAllText } from './chart-title-xml-ops';
 
 interface XmlLookupLike {
 	getChildByLocalName: (parent: XmlObject | undefined, name: string) => XmlObject | undefined;
@@ -86,22 +87,6 @@ function bool(node: XmlObject | undefined): boolean | undefined {
 		return false;
 	}
 	return undefined;
-}
-
-function text(node: XmlObject, results: string[]): void {
-	for (const [key, child] of Object.entries(node)) {
-		if (key === 'a:t' || key.endsWith(':t')) {
-			results.push(String(child));
-		} else if (Array.isArray(child)) {
-			for (const item of child) {
-				if (item && typeof item === 'object') {
-					text(item, results);
-				}
-			}
-		} else if (child && typeof child === 'object') {
-			text(child as XmlObject, results);
-		}
-	}
 }
 
 function position(node: XmlObject | undefined): PptxChartDataLabelPosition | undefined {
@@ -183,7 +168,7 @@ export function parseSeriesDataLabels(
 		const rich = xmlLookup.getChildByLocalName(xmlLookup.getChildByLocalName(node, 'tx'), 'rich');
 		if (rich) {
 			const values: string[] = [];
-			text(rich, values);
+			collectAllText(rich, localNameOf, values);
 			if (values.length) {
 				result.text = values.join('');
 			}
@@ -195,6 +180,7 @@ export function parseSeriesDataLabels(
 			const cellText = fieldTable.get(idx);
 			if (cellText !== undefined) {
 				result.text = cellText;
+				result.textFromCells = true;
 			}
 		}
 		// `c15:xForSave`: this override exists only to survive a save/reload

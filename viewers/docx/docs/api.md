@@ -28,6 +28,8 @@ Every framework adapter wraps the same `<docx-editor>` custom element. The adapt
 | `download(fileName?)`                                 | Saves and starts a browser download.                                           |
 | `markClean()`                                         | Clears the dirty flag after the host persisted the document.                   |
 | `startCollaboration(config)`                          | Join a collaboration session; see [collaboration](/collaboration).             |
+| `startYjsCollaboration(session, options)`              | Join a synchronized Yjs room with its matching source package.                 |
+| `reconnectCollaboration()`, `resyncCollaboration()`    | Recover the Yjs connection or request provider state exchange.                 |
 | `getPendingCollaboration()`                           | The pending step batch, or `null`.                                             |
 | `receiveCollaboration(batch)`                         | Apply an accepted batch from the authority.                                    |
 | `stopCollaboration(discardPending?)`                  | Leave the session; pending edits must be acknowledged or explicitly discarded. |

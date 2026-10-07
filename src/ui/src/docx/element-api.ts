@@ -1,4 +1,10 @@
+import type { CollabSession } from 'ooxml-core/collab';
+import type { WordYjsOptions } from 'ooxml-core/docx/ui';
+import { renderDocument } from './editor-render';
+import { yjsPresenceProfile } from './yjs-presence';
 import { saveDocx } from 'ooxml-core/docx';
+import { schema } from './schema';
+import { docToModel } from './model-adapter';
 import type { EditorCore } from './editor-core';
 import { reflectAttribute } from './editor-attributes';
 import { downloadBytes, wordBlob } from './file-commands';
@@ -14,12 +20,57 @@ const HTMLElementBase: typeof HTMLElement =
 	typeof HTMLElement === 'undefined' ? (class {} as typeof HTMLElement) : HTMLElement;
 
 /**
- * Save, dirty-tracking and UI-customisation surface of `<docx-editor>`. It only reads and writes
+ * Save, collaboration, dirty-tracking and UI-customisation surface of `<docx-editor>`.
  * the shared `EditorCore`, so the element class stays a thin lifecycle facade.
  */
 export abstract class DocxEditorApi extends HTMLElementBase {
 	protected abstract readonly core: EditorCore;
 	abstract fileName: string;
+	abstract reviewAuthor: string;
+
+	/** Join a synchronized Yjs room after loading its matching source package. */
+	startYjsCollaboration(session: CollabSession, options: WordYjsOptions): void {
+		const { core } = this;
+		if (!core.view) throw new Error('Mount and load the document before starting collaboration.');
+		core.collab.startYjs(session, core.view.state.doc, {
+			...options,
+			initialMedia: new Map([...(options.initialMedia ?? []), ...core.inserts.pendingMedia]),
+		});
+		core.loadGeneration++;
+		core.detachedState = undefined;
+		renderDocument(core);
+	}
+
+	reconnectCollaboration(): void {
+		if (!this.core.collab.yjs) throw new Error('No Yjs collaboration session.');
+		this.core.collab.yjs.reconnect();
+	}
+
+	resyncCollaboration(): boolean {
+		return this.core.collab.yjs?.resync() ?? false;
+	}
+
+	publishPresence(profile: { name: string; color: string }) {
+		if (this.core.collab.yjs) {
+			const validated = yjsPresenceProfile(profile);
+			this.reviewAuthor = validated.name;
+			this.core.collab.yjs.session.awareness.setLocalStateField('user', validated);
+			return null;
+		}
+		if (!this.core.collab.presence)
+			throw new Error('Start collaboration before publishing presence.');
+		this.reviewAuthor = profile.name || this.reviewAuthor;
+		return this.core.collab.presence.publish(profile);
+	}
+	receivePresence(message: unknown) {
+		if (!this.core.collab.presence)
+			throw new Error('Start collaboration before receiving presence.');
+		return this.core.collab.presence.receive(message);
+	}
+	leavePresence() {
+		this.core.collab.yjs?.session.awareness.setLocalStateField('cursor', null);
+		return this.core.collab.presence?.leave() ?? null;
+	}
 
 	/** Shows the left rail of page thumbnails. Needs Print Layout; reflected to `show-thumbnails`. */
 	get showThumbnails(): boolean {
@@ -83,8 +134,13 @@ export abstract class DocxEditorApi extends HTMLElementBase {
 	/** Serialized document bytes: the loaded package's own writer, else a fresh DOCX from the model. */
 	async saveBytes(): Promise<Uint8Array> {
 		const { core } = this;
+		if (core.collab.yjs) core.model = docToModel(core.collab.yjs.state(schema).doc, core.model);
 		// Only pass staged pictures when there are any: legacy DOC sessions take the model alone.
-		const media = core.inserts.pendingMedia.size ? core.inserts.pendingMedia : undefined;
+		const pending = new Map([
+			...core.inserts.pendingMedia,
+			...(core.collab.yjs?.media.all() ?? []),
+		]);
+		const media = pending.size ? pending : undefined;
 		if (core.loaded)
 			return media ? core.loaded.save(core.model, media) : core.loaded.save(core.model);
 		return saveDocx(core.model, media);

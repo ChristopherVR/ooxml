@@ -384,6 +384,12 @@ export interface PptxChartDataLabel {
 	showBubbleSize?: boolean;
 	position?: PptxChartDataLabelPosition;
 	text?: string;
+	/**
+	 * {@link text} was read from the cells of a "Value From Cells" range, not
+	 * from a literal `c:tx`. The save path keeps such a label linked to its
+	 * cells and writes no `c:tx`; clear this to save the text as literal.
+	 */
+	textFromCells?: boolean;
 	separator?: string;
 	showLeaderLines?: boolean;
 	/**
