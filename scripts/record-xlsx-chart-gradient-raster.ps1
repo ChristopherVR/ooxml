@@ -1,11 +1,30 @@
 param(
     [string]$OutputFolder = (Join-Path $env:TEMP 'ooxml-chart-gradient-raster'),
     [ValidateSet('opaque','transparent','interior','three','three-transparent','crossed','coincident','path-corner','path-center','path-corner-transparent','path-center-transparent','path-center-circle','path-corner-circle','path-center-circle-transparent','path-corner-circle-transparent','path-center-shape','path-corner-shape','path-center-shape-transparent','path-corner-shape-transparent')]
-    [string]$Profile = 'opaque'
+    [string]$Profile = 'opaque',
+    [ValidateSet('chart-area','series-column','series-bar')]
+    [string]$Target = 'chart-area'
 )
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
 Add-Type -AssemblyName System.IO.Compression.FileSystem
+Add-Type -ReferencedAssemblies System.Drawing.Common,System.Drawing.Primitives -TypeDefinition @'
+using System.Drawing;
+public static class NativeGradientBitmap {
+    public static int[] Bounds(Bitmap bitmap) {
+        int left=bitmap.Width, top=bitmap.Height, right=-1, bottom=-1;
+        for(int y=0;y<bitmap.Height;y++) for(int x=0;x<bitmap.Width;x++) {
+            // These red/white references exclude achromatic chart gridlines.
+            var color=bitmap.GetPixel(x,y);
+            if(color.A==0 || color.R<=color.G || color.R<=color.B) continue;
+            left=System.Math.Min(left,x); top=System.Math.Min(top,y);
+            right=System.Math.Max(right,x); bottom=System.Math.Max(bottom,y);
+        }
+        if(right<left) throw new System.Exception("Native series has no visible pixels");
+        return new int[]{left,top,right-left+1,bottom-top+1};
+    }
+}
+'@
 New-Item -ItemType Directory -Force -Path $OutputFolder | Out-Null
 $excel=$null; $book=$null
 try {
@@ -23,13 +42,21 @@ try {
         }
         foreach($angle in $directions) {
             $object=$sheet.ChartObjects().Add(20,20,$size[0],$size[1]); $chart=$object.Chart
-            $chart.ChartType=51; $chart.SetSourceData($sheet.Range('A1:A2'),2)
+            $chart.ChartType=if($Target -eq 'series-bar'){57}else{51}; $chart.SetSourceData($sheet.Range('A1:A2'),2)
             $chart.HasTitle=$false; $chart.HasLegend=$false
             $chart.Axes(1).Delete(); $chart.Axes(2).Delete()
             $chart.PlotArea.Format.Fill.Visible=0; $chart.PlotArea.Format.Line.Visible=0
             $chart.SeriesCollection(1).Format.Fill.Visible=0
             $chart.SeriesCollection(1).Format.Line.Visible=0
-            $fill=$chart.ChartArea.Format.Fill; $fill.Solid()
+            if($Target -eq 'chart-area') {
+                $fill=$chart.ChartArea.Format.Fill
+                $fillXPath='/c:chartSpace/c:spPr/a:gradFill'
+            } else {
+                $chart.ChartArea.Format.Fill.Visible=0
+                $fill=$chart.SeriesCollection(1).Format.Fill
+                $fillXPath='/c:chartSpace/c:chart/c:plotArea/c:barChart/c:ser/c:spPr/a:gradFill'
+            }
+            $fill.Visible=-1; $fill.Solid()
             $fill.ForeColor.RGB=255; $fill.TwoColorGradient(1,1)
             if($Profile -like 'path-corner*') {$fill.TwoColorGradient(5,$angle)}
             if($Profile -like 'path-center*') {$fill.TwoColorGradient(7,$angle)}
@@ -66,6 +93,7 @@ try {
             $chart.ChartArea.Format.Line.Visible=0
             $name="angle-$angle-$($size[0])x$($size[1])"
             if($Profile -ne 'opaque') {$name="$Profile-$name"}
+            if($Target -ne 'chart-area') {$name="$Target-$name"}
             $path=Join-Path $OutputFolder "$name.xlsx"; $book.SaveCopyAs($path)
             $pathType = if($Profile -match '-(circle|shape)(-transparent)?$') {$Matches[1]} else {$null}
             if($pathType) {
@@ -79,7 +107,7 @@ try {
                     $ns=[Xml.XmlNamespaceManager]::new($importXml.NameTable)
                     $ns.AddNamespace('c','http://schemas.openxmlformats.org/drawingml/2006/chart')
                     $ns.AddNamespace('a','http://schemas.openxmlformats.org/drawingml/2006/main')
-                    $importXml.SelectSingleNode('/c:chartSpace/c:spPr/a:gradFill/a:path',$ns).SetAttribute('path',$pathType)
+                    $importXml.SelectSingleNode("$fillXPath/a:path",$ns).SetAttribute('path',$pathType)
                     $entry.Delete(); $replacement=$package.CreateEntry('xl/charts/chart1.xml')
                     $writer=[IO.StreamWriter]::new($replacement.Open(),[Text.UTF8Encoding]::new($false))
                     try {$writer.Write($importXml.OuterXml)} finally {$writer.Dispose()}
@@ -92,7 +120,7 @@ try {
                 $namespaces=[Xml.XmlNamespaceManager]::new($xml.NameTable)
                 $namespaces.AddNamespace('c','http://schemas.openxmlformats.org/drawingml/2006/chart')
                 $namespaces.AddNamespace('a','http://schemas.openxmlformats.org/drawingml/2006/main')
-                $fillXml=$xml.SelectSingleNode('/c:chartSpace/c:spPr/a:gradFill',$namespaces).OuterXml
+                $fillXml=$xml.SelectSingleNode($fillXPath,$namespaces).OuterXml
             } finally {$zip.Dispose()}
             $probe=$excel.Workbooks.Open($path,0,$true)
             try {
@@ -106,7 +134,7 @@ try {
                         $savedNs=[Xml.XmlNamespaceManager]::new($savedXml.NameTable)
                         $savedNs.AddNamespace('c','http://schemas.openxmlformats.org/drawingml/2006/chart')
                         $savedNs.AddNamespace('a','http://schemas.openxmlformats.org/drawingml/2006/main')
-                        $fillXml=$savedXml.SelectSingleNode('/c:chartSpace/c:spPr/a:gradFill',$savedNs).OuterXml
+                        $fillXml=$savedXml.SelectSingleNode($fillXPath,$savedNs).OuterXml
                     } finally {$savedPackage.Dispose()}
                 }
                 $native.Parent.Activate(); $native.Refresh()
@@ -114,16 +142,30 @@ try {
                 if(!$native.Export($png,'PNG')) {throw "Excel did not export $name"}
                 $bitmap=[Drawing.Bitmap]::new($png)
                 try {
+                    $nativeFill=if($Target -eq 'chart-area'){$native.ChartArea.Format.Fill}else{$native.SeriesCollection(1).Format.Fill}
+                    $nativeAngle=[double]$nativeFill.GradientAngle
+                    $bounds=@(0,0,$bitmap.Width,$bitmap.Height)
+                    if($Target -ne 'chart-area') {
+                        # Gradient endpoints can contain white plateaus. Measure the same
+                        # mark with a solid red fill instead of shrinking to colored pixels.
+                        $nativeFill.Solid(); $nativeFill.ForeColor.RGB=255; $nativeFill.Transparency=[single]0
+                        $native.Refresh(); $boundsPng=Join-Path $OutputFolder "$name-bounds.png"
+                        if(!$native.Export($boundsPng,'PNG')) {throw "Excel did not export bounds for $name"}
+                        $boundsBitmap=[Drawing.Bitmap]::new($boundsPng)
+                        try {$bounds=[NativeGradientBitmap]::Bounds($boundsBitmap)} finally {$boundsBitmap.Dispose()}
+                    }
                     $samples=@()
                     foreach($y in @(0.11,0.26,0.51,0.76,0.91)) {
                         foreach($x in @(0.11,0.26,0.51,0.76,0.91)) {
-                            $px=[int][Math]::Floor($bitmap.Width*$x)
-                            $py=[int][Math]::Floor($bitmap.Height*$y)
+                            $px=$bounds[0]+[int][Math]::Floor($bounds[2]*$x)
+                            $py=$bounds[1]+[int][Math]::Floor($bounds[3]*$y)
                             $color=$bitmap.GetPixel($px,$py)
                             $samples+=[ordered]@{x=$px;y=$py;rgb=@([int]$color.R,[int]$color.G,[int]$color.B);alpha=[int]$color.A}
                         }
                     }
-                    $cases+=[ordered]@{name=$name;profile=$Profile;angle=[double]$native.ChartArea.Format.Fill.GradientAngle;fillXml=$fillXml;width=$bitmap.Width;height=$bitmap.Height;samples=$samples}
+                    $case=[ordered]@{name=$name;profile=$Profile;angle=$nativeAngle;fillXml=$fillXml;width=$bitmap.Width;height=$bitmap.Height;samples=$samples}
+                    if($Target -ne 'chart-area') {$case['target']=$Target; $case['paintBounds']=[ordered]@{x=$bounds[0];y=$bounds[1];width=$bounds[2];height=$bounds[3]}}
+                    $cases+=$case
                 } finally {$bitmap.Dispose()}
             } finally {$probe.Close($false)}
             $object.Delete()

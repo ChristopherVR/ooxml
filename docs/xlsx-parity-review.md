@@ -1256,3 +1256,49 @@ physical gradient bounds and independent native comparisons; nonrectangular
 shape outlines, arbitrary target rectangles, other stop profiles and full
 native pane layout remain open. Existing translucent three-stop and
 coincident-edge discrepancies remain explicit expected failures.
+
+## Circular and shape fills on bar/column series
+
+Each bar/column mark now receives its own circle/shape paint using its actual
+rounded bounds. A series with unequal values retains circular fills on every
+mark instead of sharing one stretched gradient. Point fills keep their own
+paint and focus; solid point overrides are retained. Clustered, stacked,
+percent-stacked, negative, zero and missing values have geometry regressions.
+The shared core geometry command now authors circle and shape paths while
+preserving stops, root flags and extensions. The shared Office gallery supplies
+five directions for Rectangular/Radial/Path and retains eight linear directions.
+Preview gestures update all inherited marks without changing the workbook until
+release. Undo, cancellation and read-only behavior remain guarded.
+
+Radial and Path choices are enabled for bar/column series rectangles. Other
+chart types retain disabled choices while keeping imported paths visible.
+The existing PowerPoint gallery and rectangular painter are reused, together
+with the shared chart resolver and stop sampler; no second gradient engine
+was added to XLSX UI.
+
+Excel 16.0 build 20430 supplies 96 column/bar captures with 2,400 native RGBA
+points, including opaque/translucent center and corner variants at two chart
+sizes. Explicit OOXML paths are imported and resaved in Excel before capture.
+A second solid fill measures the mark's full bounds, avoiding gridlines and
+white endpoint plateaus. Browser raster checks match physical mark aspects
+independently of surrounding chart layout. Of the 96 profiles, 94 meet the
+unchanged tolerances; two remain strict expected-failure repros: translucent
+top-right circle at pixel 391,479 differs by about 3.04 premultiplied levels
+(limit 3), and opaque centered shape at 302,376 differs by 3 levels (limit 2).
+These are sampling/quantization gaps, not grounds to claim exact native paint.
+
+The diagram/chart/XLSX core sweep passes 8,323 tests plus the existing 17
+expected raster failures. The six-binding browser selection passes 42 ordinary
+checks plus 24 expected-failure repros, including the two new series gaps.
+Playwright MCP reviewed the Path gallery without
+horizontal pane overflow and downloaded a bottom-right series fill. Excel
+COM reopened and resaved it with `path="shape"`, the requested target point,
+two stops, positions 0/1 and the original red/white RGB values. Native type
+menu/pane layout certification, nonrectangular marks, arbitrary path targets,
+additional stop profiles and the earlier raster gaps remain open.
+
+The fill comparison also exposed a separate export gap: newly created charts
+lose direct `labelsVisible=false` axis formatting on their first save. The
+raster setup fits bounds after a real save/reload so it does not silently
+assume that formatting was retained. Axis formatting preservation needs a
+dedicated round-trip correction.

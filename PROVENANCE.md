@@ -1216,3 +1216,26 @@ removal and author undo; a mounted editor verifies dialog and media export.
 Six browser bindings verify peer picture-link export and undo/redo alongside
 the existing step and Yjs collaboration scenarios. Equation hyperlink editing,
 hyperlink revision attribution and complete M365 parity are not established.
+
+## Shared native circle/shape series geometry and controls
+
+Source: ChristopherVR/ooxml at `e2bddbfda`, the shared chart gradient bounds,
+diagram geometry helper and Office gradient direction/preset/stop controls.
+The geometry helper now supports circle/shape paths without changing stops or
+imported flags. XLSX rectangular series marks use their final rounded paint
+bounds and unique targets, including point overrides. Preview gestures update
+all inherited series targets while preserving each mark's geometry. Gallery
+previews use the shared square-outline painter; no series gradient engine or
+gallery was copied into the viewer.
+
+The extended recorder imports and resaves explicit circle/shape OOXML through
+Excel 16.0 build 20430 on column and bar series. Its 96 profiles contain 2,400
+native RGBA samples. It exports a second solid-red version of the same mark
+to measure bounds independently of white gradient plateaus and gray gridlines.
+The native references are in
+`src/core/chart/__fixtures__/native-gradient-series-path-profiles.json`.
+Browser comparisons match the native physical mark aspect to isolate fill
+fidelity from unresolved chart layout differences. Two small native sampling
+discrepancies remain explicit strict expected-failure repros. Type authoring
+is enabled for bar/column rectangles; arbitrary shapes and other series
+geometries remain outside this implementation's verified scope.

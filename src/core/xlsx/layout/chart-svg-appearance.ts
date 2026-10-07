@@ -53,11 +53,15 @@ export function chartGradientPaint(
 	const series = model.series.map((source, index) => {
 		const view = { ...source };
 		if (source.shadow) view.shadowFilter = shadowPaint(source.shadow, `s${index}-shadow`);
-		if (source.gradient) view.color = paint(source.gradient, `s${index}`);
+		const bounds =
+			model.type === 'bar' || model.type === 'column'
+				? { width: 1, height: 1, shape: 'rect' as const }
+				: undefined;
+		if (source.gradient) view.color = paint(source.gradient, `s${index}`, bounds);
 		if (source.pointGradients) {
 			view.pointColors = [...(source.pointColors ?? [])];
 			for (const [key, gradient] of Object.entries(source.pointGradients))
-				view.pointColors[Number(key)] = paint(gradient, `s${index}-p${key}`);
+				view.pointColors[Number(key)] = paint(gradient, `s${index}-p${key}`, bounds);
 		}
 		return view;
 	});

@@ -146,7 +146,8 @@ export function createSeriesGradient(ctx: EditorContext, selected: () => number)
 			translate: ctx.t,
 			onPick: (id) => apply({ kind: 'preset', id }),
 		});
-		type.refresh(fill, disabled);
+		const rectangularMarks = chart?.chartType === 'column' || chart?.chartType === 'bar';
+		type.refresh(fill, disabled, rectangularMarks);
 		if (shownPath !== fill.path) direction.close();
 		shownPath = fill.path;
 		angle.value = String(fill.angle ?? 90);
@@ -165,11 +166,19 @@ export function createSeriesGradient(ctx: EditorContext, selected: () => number)
 		directionRow.querySelector('span')!.textContent = ctx.t('Direction');
 		direction.update({
 			gradient: view?.series[selected()]?.gradient ?? { type: 'linear', stops: [] },
-			disabled: disabled || (!!fill.path && fill.path !== 'rect'),
+			disabled:
+				disabled ||
+				(!!fill.path &&
+					fill.path !== 'rect' &&
+					!(rectangularMarks && ['circle', 'shape'].includes(fill.path))),
 			label: ctx.t('Direction'),
 			translate: ctx.t,
 			onPick: (value) => apply({ kind: 'angle', value }),
 			onRectPick: (direction) => apply({ kind: 'geometry', type: 'rect', direction }),
+			onPathPick: (direction) => {
+				if (fill.path === 'rect' || fill.path === 'circle' || fill.path === 'shape')
+					apply({ kind: 'geometry', type: fill.path, direction });
+			},
 		});
 		brightness.disabled ||= stopBrightness === undefined;
 		const previewSeries = selected();

@@ -95,3 +95,40 @@ it('previews native rectangular directions without flattening the gradient or ac
 	pick('center');
 	expect(picked).toBe('bottom-right');
 });
+
+for (const path of ['circle', 'shape'])
+	it(`reuses path directions and the shared ${path} painter`, () => {
+		const gallery = createGradientDirectionGallery(document);
+		let picked = '';
+		gallery.update({
+			gradient: {
+				type: 'radial',
+				path,
+				stops: [
+					{ position: 0, color: '#ff0000' },
+					{ position: 100, color: '#ffffff' },
+				],
+				fillToRect: { l: 0.5, t: 0.5, r: 0.5, b: 0.5 },
+			},
+			disabled: false,
+			label: 'Direction',
+			translate: (label) => label,
+			onPick: () => {
+				throw new Error('Unexpected angle');
+			},
+			onPathPick: (direction) => {
+				picked = direction;
+			},
+		});
+		const items = gallery.element.state!.sections[0]!.items;
+		expect(items).toHaveLength(5);
+		expect(items.find((item) => item.applied)?.id).toBe('center');
+		for (const item of items) {
+			const doc = new DOMParser().parseFromString(item.preview!, 'image/svg+xml');
+			expect(doc.querySelector(path === 'circle' ? 'radialGradient' : 'pattern')).not.toBeNull();
+		}
+		gallery.element.dispatchEvent(
+			new CustomEvent('office-gallery-pick', { detail: { itemId: 'bottom-right' } }),
+		);
+		expect(picked).toBe('bottom-right');
+	});

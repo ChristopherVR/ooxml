@@ -1,6 +1,7 @@
 import { expect, it } from 'vitest';
 import reference from './__fixtures__/native-gradient-path-profiles.json';
 import paths from './__fixtures__/native-gradient-circle-shape-profiles.json';
+import series from './__fixtures__/native-gradient-series-path-profiles.json';
 import { parseXml, NS } from '../xml';
 import { parseDrawingFill } from '../diagram/drawing-fill';
 import { drawingFillXml } from '../diagram/write-fill';
@@ -11,6 +12,18 @@ import { buildChartGradientDef, resolveChartGradient } from './gradient-definiti
 for (const sample of [
 	...reference.cases,
 	...paths.cases.filter((sample) => sample.profile.includes('shape')),
+	...series.cases
+		.filter((sample) => sample.profile.includes('shape'))
+		.map((sample) => ({
+			...sample,
+			width: sample.paintBounds.width,
+			height: sample.paintBounds.height,
+			samples: sample.samples.map((pixel) => ({
+				...pixel,
+				x: pixel.x - sample.paintBounds.x,
+				y: pixel.y - sample.paintBounds.y,
+			})),
+		})),
 ])
 	it(`paints native rectangular path gradient ${sample.name}`, () => {
 		const read = (xml: string) =>

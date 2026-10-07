@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest';
 import native from '../../chart/__fixtures__/native-gradient-path-profiles.json';
+import series from '../../chart/__fixtures__/native-gradient-series-path-profiles.json';
 import { parseXml, NS } from '../../xml';
 import { parseDrawingFill } from '../../diagram/drawing-fill';
 import { drawingFillXml } from '../../diagram/write-fill';
@@ -11,12 +12,15 @@ import { saveXlsx } from '../write';
 import { loadXlsx } from '../read';
 import { chartSeriesGradientPatch } from './chart-series-gradient';
 
-for (const sample of native.cases)
+for (const sample of [...native.cases, ...series.cases])
 	it(`authors native target and tile geometry for ${sample.name}`, async () => {
 		const expected = parseDrawingFill(
 			parseXml(`<a:spPr xmlns:a="${NS.a}">${sample.fillXml}</a:spPr>`).documentElement,
 		)!;
 		if (expected.kind !== 'gradient') throw new Error('Expected native gradient');
+		const type = expected.path;
+		if (type !== 'rect' && type !== 'circle' && type !== 'shape')
+			throw new Error('Expected native path type');
 		const direction = rectGradientDirection(expected.fillToRect)!;
 		const book = createWorkbook(),
 			session = createEditSession(book);
@@ -31,7 +35,7 @@ for (const sample of native.cases)
 		const chart = book.sheets[0]!.drawings[0]!;
 		if (chart.kind !== 'chart') throw new Error('Expected chart');
 		const originalChart = structuredClone(chart);
-		const edit = chartSeriesGradientPatch(chart, 0, { kind: 'geometry', type: 'rect', direction })!;
+		const edit = chartSeriesGradientPatch(chart, 0, { kind: 'geometry', type, direction })!;
 		expect(chart.series[0]!.fill).toEqual(original);
 		session.updateChart(0, 0, edit.patch);
 		const updated = book.sheets[0]!.drawings[0]!;
@@ -43,7 +47,7 @@ for (const sample of native.cases)
 			stops: original.stops,
 		});
 		expect(
-			chartSeriesGradientPatch(updated, 0, { kind: 'geometry', type: 'rect', direction }),
+			chartSeriesGradientPatch(updated, 0, { kind: 'geometry', type, direction }),
 		).toBeUndefined();
 		const roundtrip = (await loadXlsx(await saveXlsx(book))).sheets[0]!.drawings[0]!;
 		if (roundtrip.kind !== 'chart') throw new Error('Expected chart');

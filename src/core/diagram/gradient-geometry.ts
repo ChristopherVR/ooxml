@@ -1,6 +1,7 @@
 import type { DiagramFill } from './types';
 
 type Gradient = Extract<DiagramFill, { kind: 'gradient' }>;
+export type DrawingGradientGeometryType = 'linear' | 'rect' | 'circle' | 'shape';
 export type RectGradientDirection =
 	| 'center'
 	| 'top-left'
@@ -38,7 +39,7 @@ export function rectGradientDirection(
 /** Replace geometry without changing stops, root flags or carried extensions. */
 export function withDrawingGradientGeometry(
 	fill: Gradient,
-	type: 'linear' | 'rect',
+	type: DrawingGradientGeometryType,
 	direction: RectGradientDirection = 'center',
 ): Gradient {
 	const next = structuredClone(fill);
@@ -48,8 +49,8 @@ export function withDrawingGradientGeometry(
 		delete next.fillToRect;
 		next.angle ??= 90;
 		next.scaled = true;
-	} else if (type === 'rect') {
-		next.path = 'rect';
+	} else if (type === 'rect' || type === 'circle' || type === 'shape') {
+		next.path = type;
 		next.fillToRect = rectGradientFocus(direction);
 		delete next.angle;
 		delete next.scaled;

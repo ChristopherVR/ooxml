@@ -6,6 +6,7 @@ import { officeGradientPresetFill } from '../../diagram/gradient-presets';
 import {
 	withDrawingGradientGeometry,
 	type RectGradientDirection,
+	type DrawingGradientGeometryType,
 } from '../../diagram/gradient-geometry';
 import type { DiagramFill } from '../../diagram/types';
 import type { ChartObject, Color } from '../model';
@@ -17,7 +18,7 @@ export type ChartGradientEdit =
 	| { kind: 'create' }
 	| { kind: 'preset'; id: number }
 	| { kind: 'angle'; value: number }
-	| { kind: 'geometry'; type: 'linear' | 'rect'; direction?: RectGradientDirection }
+	| { kind: 'geometry'; type: DrawingGradientGeometryType; direction?: RectGradientDirection }
 	| {
 			kind: 'stop';
 			index: number;
@@ -85,7 +86,7 @@ export function chartSeriesGradientPatch(
 		fill.angle = edit.value % 360;
 	} else if (edit.kind === 'geometry') {
 		if (edit.type === 'linear' && !fill.path) return undefined;
-		if (edit.type === 'rect' && fill.path === 'rect' && edit.direction === undefined)
+		if (edit.type !== 'linear' && fill.path === edit.type && edit.direction === undefined)
 			return undefined;
 		fill = withDrawingGradientGeometry(fill, edit.type, edit.direction);
 	} else if (edit.kind !== 'create' && edit.kind !== 'preset') {

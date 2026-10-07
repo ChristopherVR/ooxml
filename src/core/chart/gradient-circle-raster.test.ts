@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest';
 import reference from './__fixtures__/native-gradient-circle-shape-profiles.json';
+import series from './__fixtures__/native-gradient-series-path-profiles.json';
 import { parseXml, NS } from '../xml';
 import { parseDrawingFill } from '../diagram/drawing-fill';
 import { drawingFillXml } from '../diagram/write-fill';
@@ -8,7 +9,20 @@ import { hexToRgbChannels } from '../color/color-primitives';
 import { buildChartGradientDef, resolveChartGradient } from './gradient-definition';
 import { chartGradientMarkup } from './gradient-markup';
 
-for (const sample of reference.cases.filter((sample) => sample.profile.includes('circle')))
+const samples = [
+	...reference.cases,
+	...series.cases.map((sample) => ({
+		...sample,
+		width: sample.paintBounds.width,
+		height: sample.paintBounds.height,
+		samples: sample.samples.map((pixel) => ({
+			...pixel,
+			x: pixel.x - sample.paintBounds.x,
+			y: pixel.y - sample.paintBounds.y,
+		})),
+	})),
+];
+for (const sample of samples.filter((sample) => sample.profile.includes('circle')))
 	it(`paints physical circular native gradient ${sample.name}`, () => {
 		const read = (xml: string) =>
 			parseDrawingFill(parseXml(`<a:spPr xmlns:a="${NS.a}">${xml}</a:spPr>`).documentElement)!;
@@ -23,10 +37,14 @@ for (const sample of reference.cases.filter((sample) => sample.profile.includes(
 		if (def.kind !== 'radialGradient') throw new Error('Expected circular paint');
 		const aspect = sample.height / sample.width;
 		for (const pixel of sample.samples) {
+			// Series references use a raster-measured mark origin; evaluate pixel centers.
+			const center = 'target' in sample ? 0.5 : 0;
 			const t = Math.min(
 				1,
-				Math.hypot(pixel.x / sample.width - def.cx, (pixel.y / sample.height - def.cy) * aspect) /
-					def.r,
+				Math.hypot(
+					(pixel.x + center) / sample.width - def.cx,
+					((pixel.y + center) / sample.height - def.cy) * aspect,
+				) / def.r,
 			);
 			const right = Math.max(
 				1,

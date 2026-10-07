@@ -17,7 +17,10 @@ export function createChartGradientPreview(
 		children: Array.from(node.childNodes).map((child) => child.cloneNode(true)),
 	}));
 	const paint = (fill: ChartGradientFill) => {
-		const def = buildChartGradientDef('preview', fill);
+		const bounds = nodes.some((node) => node.localName === 'pattern')
+			? { width: 1, height: 1, shape: 'rect' as const }
+			: undefined;
+		const def = buildChartGradientDef('preview', fill, bounds);
 		for (const node of nodes) {
 			if (!node.isConnected) continue;
 			if (def.kind === 'rectPath') {

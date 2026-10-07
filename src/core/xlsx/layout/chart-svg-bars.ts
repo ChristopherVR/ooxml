@@ -1,8 +1,10 @@
 import type { ChartViewModel } from './chart-view';
 import type { Frame } from './chart-svg-cartesian';
-import { rect } from './chart-svg-util';
+import { rect, n } from './chart-svg-util';
 import { clusteredBarGeometry } from '../../chart/bar-cluster-geometry';
 import { chartBarSpacing } from './chart-spacing';
+import { buildChartGradientDef } from '../../chart/gradient-definition';
+import { chartGradientMarkup } from '../../chart/gradient-markup';
 
 export function bars(
 	model: ChartViewModel,
@@ -34,28 +36,32 @@ export function bars(
 				? geometry.clusterWidth / 2 - barSize - si * geometry.step
 				: -geometry.clusterWidth / 2 + si * geometry.step;
 			const center = frame.band(i);
+			const width = model.horizontal ? Math.abs(b - a) : barSize;
+			const height = model.horizontal ? barSize : Math.abs(b - a);
+			let color = s.pointColors?.[i] ?? s.color;
+			const gradient =
+				s.pointGradients?.[i] ?? (s.pointColors?.[i] === undefined ? s.gradient : undefined);
+			if (gradient && (gradient.path === 'circle' || gradient.path === 'shape')) {
+				const baseId = color.match(/^url\(#(.+)\)$/)?.[1];
+				if (baseId) {
+					const id = baseId.replace(/(-s\d+(?:-p\d+)?)$/, `-mark${i}$1`);
+					const def = buildChartGradientDef(id, gradient, {
+						width: Number(n(width)),
+						height: Number(n(height)),
+						shape: 'rect',
+					});
+					out.push(`<defs>${chartGradientMarkup(def)}</defs>`);
+					color = `url(#${id})`;
+				}
+			}
 			out.push(`<g data-chart-series="${si}" data-chart-point="${i}">`);
 			if (model.horizontal)
 				out.push(
-					rect(
-						Math.min(a, b),
-						center + offset,
-						Math.abs(b - a),
-						barSize,
-						s.pointColors?.[i] ?? s.color,
-						s.shadowFilter,
-					),
+					rect(Math.min(a, b), center + offset, Math.abs(b - a), barSize, color, s.shadowFilter),
 				);
 			else
 				out.push(
-					rect(
-						center + offset,
-						Math.min(a, b),
-						barSize,
-						Math.abs(b - a),
-						s.pointColors?.[i] ?? s.color,
-						s.shadowFilter,
-					),
+					rect(center + offset, Math.min(a, b), barSize, Math.abs(b - a), color, s.shadowFilter),
 				);
 			out.push('</g>');
 		});

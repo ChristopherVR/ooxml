@@ -1,11 +1,11 @@
-import type { DiagramFill } from 'ooxml-core/diagram';
+import type { DiagramFill, DrawingGradientGeometryType } from 'ooxml-core/diagram';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { el, field, select } from './dialogs/fields';
 
 /** A native type field that keeps unsupported imported types visible until explicitly changed. */
 export function createGradientTypeField(
 	ctx: EditorContext,
-	onPick: (type: 'linear' | 'rect') => void,
+	onPick: (type: DrawingGradientGeometryType) => void,
 ) {
 	const input = select(ctx, [
 		['linear', 'Linear'],
@@ -21,12 +21,21 @@ export function createGradientTypeField(
 	input.append(other);
 	const element = field(ctx, 'Type', input);
 	input.addEventListener('change', () => {
-		if (!input.disabled && (input.value === 'linear' || input.value === 'rect'))
-			onPick(input.value);
+		if (
+			!input.disabled &&
+			!input.selectedOptions[0]?.disabled &&
+			['linear', 'rect', 'circle', 'shape'].includes(input.value)
+		)
+			onPick(input.value as DrawingGradientGeometryType);
 	});
 	return {
 		element,
-		refresh(fill: Extract<DiagramFill, { kind: 'gradient' }>, disabled: boolean) {
+		refresh(
+			fill: Extract<DiagramFill, { kind: 'gradient' }>,
+			disabled: boolean,
+			rectangularMarks = false,
+		) {
+			input.options[1]!.disabled = input.options[3]!.disabled = !rectangularMarks;
 			element.querySelector('span')!.textContent = ctx.t('Type');
 			input.setAttribute('aria-label', ctx.t('Type'));
 			const linearLabel = ctx.t('Linear gradient');

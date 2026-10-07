@@ -30,6 +30,7 @@ interface DirectionOptions {
 	translate(label: string): string;
 	onPick(angle: number): void;
 	onRectPick?(direction: RectGradientDirection): void;
+	onPathPick?(direction: RectGradientDirection): void;
 }
 let sequence = 0;
 
@@ -41,9 +42,12 @@ export function createGradientDirectionGallery(doc: Document) {
 	let current: DirectionOptions | undefined;
 	element.addEventListener('office-gallery-pick', (event) => {
 		const id = (event as OfficeGalleryPickEvent).detail.itemId;
-		if (current?.gradient.path === 'rect') {
+		if (['rect', 'circle', 'shape'].includes(current?.gradient.path ?? '')) {
 			const direction = RECT_GRADIENT_DIRECTIONS.find((direction) => direction.id === id);
-			if (direction && !current.disabled) current.onRectPick?.(direction.id);
+			if (direction && current && !current.disabled) {
+				if (current.onPathPick) current.onPathPick(direction.id);
+				else if (current.gradient.path === 'rect') current.onRectPick?.(direction.id);
+			}
 			return;
 		}
 		const direction = DIRECTIONS.find(([angle]) => String(angle) === id);
@@ -52,7 +56,7 @@ export function createGradientDirectionGallery(doc: Document) {
 	const update = (options: DirectionOptions) => {
 		current = options;
 		if (options.disabled) element.open = false;
-		const rectangular = options.gradient.path === 'rect';
+		const rectangular = ['rect', 'circle', 'shape'].includes(options.gradient.path ?? '');
 		const items = rectangular
 			? RECT_GRADIENT_DIRECTIONS.map(({ id, label }) => ({
 					id,
@@ -61,7 +65,6 @@ export function createGradientDirectionGallery(doc: Document) {
 					preview: gradientGalleryPreview(`${prefix}-${id}`, {
 						...options.gradient,
 						type: 'radial',
-						path: 'rect',
 						fillToRect: rectGradientFocus(id),
 					}),
 				}))

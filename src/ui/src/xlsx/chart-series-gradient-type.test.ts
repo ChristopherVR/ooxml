@@ -37,4 +37,15 @@ it('retains imported types and guards disabled or unsupported type picks', () =>
 	ctx.t = (key) => (key === 'Linear gradient' ? '线性' : key);
 	field.refresh(fill, false);
 	expect(input.options[0]!.textContent).toBe('线性');
+	field.refresh(fill, false, true);
+	for (const type of ['circle', 'shape']) {
+		input.value = type;
+		input.dispatchEvent(new Event('change'));
+		expect(picked).toBe(type);
+	}
+	field.refresh({ ...fill, path: 'circle' }, false, false);
+	expect(input.value).toBe('circle');
+	expect(input.selectedOptions[0]!.disabled).toBe(true);
+	input.dispatchEvent(new Event('change'));
+	expect(picked).toBe('shape');
 });
