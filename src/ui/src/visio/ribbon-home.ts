@@ -5,7 +5,7 @@ const TEXT = 'Needs core text formatting edits.';
 const STYLE = 'Needs core fill, line and effect edits.';
 const ARRANGE = 'Needs core alignment, position, z-order and grouping edits.';
 const CONNECT = 'Needs core connector and glue edits.';
-const SHAPES = 'Needs core shape creation beyond rectangles.';
+const SHAPES = 'This shape type cannot be created yet.';
 const SELECT = 'Needs multi-shape selection.';
 const small = (spec: CommandSpec): CommandSpec => ({ size: 'small', ...spec });
 const icon = (spec: CommandSpec): CommandSpec => ({ size: 'icon', ...spec });
@@ -54,7 +54,14 @@ export function buildHomePanel(doc: Document, panel: HTMLElement): void {
 						checked: false,
 					},
 					{ id: 'ellipse', label: 'Ellipse', unsupported: SHAPES },
-					{ id: 'line-tool', label: 'Line', icon: 'line', unsupported: SHAPES },
+					{
+						id: 'line-tool',
+						label: 'Line',
+						icon: 'line',
+						action: { type: 'tool', tool: 'line' },
+						keys: ['Control+6', 'Ctrl+6'],
+						checked: false,
+					},
 					{ id: 'freeform', label: 'Freeform', unsupported: SHAPES },
 					{ id: 'arc', label: 'Arc', unsupported: SHAPES },
 					{ id: 'pencil', label: 'Pencil', icon: 'pencil', unsupported: SHAPES },

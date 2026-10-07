@@ -12,6 +12,7 @@ interface Target {
 }
 /** Drawing inches; bottom-left origin, up-positive rotation pin. */
 export type VisioGeometryEdit =
+	| (Target & { type: 'create-line'; beginX: number; beginY: number; endX: number; endY: number })
 	| (Target & {
 			type: 'create-rectangle';
 			x: number;
@@ -58,6 +59,20 @@ export const isVisioPageEdit = (edit: VisioEdit): edit is VisioPageEdit =>
 
 /** Potential direct changes used by both package and master dependency admission. */
 export function geometryChangedCells(edit: VisioGeometryEdit): string[] {
+	if (edit.type === 'create-line')
+		return [
+			'BeginX',
+			'BeginY',
+			'EndX',
+			'EndY',
+			'PinX',
+			'PinY',
+			'Width',
+			'Height',
+			'Angle',
+			'LocPinX',
+			'LocPinY',
+		];
 	if (edit.type === 'delete-shape') return [];
 	if (edit.type === 'move-line-endpoint') {
 		const prefix = edit.endpoint === 'begin' ? 'Begin' : 'End';
@@ -139,6 +154,14 @@ export function snapshotVisioEdits(
 		if (!/^[1-9]\d{0,9}$/.test(edit.shapeId) || Number(edit.shapeId) > 4294967295)
 			fail('INVALID_EDIT', 'Geometry shape IDs must be canonical positive unsigned integers.');
 		switch (edit.type) {
+			case 'create-line': {
+				const beginX = numeric(edit.beginX),
+					beginY = numeric(edit.beginY);
+				const endX = numeric(edit.endX),
+					endY = numeric(edit.endY);
+				numeric(Math.hypot(endX - beginX, endY - beginY), true);
+				return { ...target, type: edit.type, beginX, beginY, endX, endY };
+			}
 			case 'create-rectangle':
 				return {
 					...target,

@@ -3,13 +3,13 @@ import { editErrorMessage, isEditCancellation, visioPageInsertCommand } from 'oo
 import { RIBBON_ACTION_EVENT, type VisioRibbonAction } from './ribbon-action';
 import type { RibbonCommand } from './ribbon-parts';
 import { routeRibbonAction, type RibbonTargets } from './ribbon-router';
-import { RectangleDrawTool } from './viewer-draw-tool';
+import { ShapeDrawTool } from './viewer-draw-tool';
 import type { Rulers } from './viewer-ruler';
 import { ViewerPageOrder } from './viewer-page-order';
 import { ViewerPageRename } from './viewer-page-rename';
 import { ViewerPageDelete } from './viewer-page-delete';
 
-export type CanvasTool = 'pointer' | 'rectangle';
+export type CanvasTool = 'pointer' | 'rectangle' | 'line';
 interface CommandHost {
 	root: ShadowRoot;
 	viewport: HTMLElement;
@@ -38,7 +38,7 @@ export class ViewerCommands {
 	#grid = false;
 	#ruler = false;
 	#pending = 0;
-	#draw: RectangleDrawTool;
+	#draw: ShapeDrawTool;
 	#pageOrder: ViewerPageOrder;
 	#pageRename: ViewerPageRename;
 	#pageDelete: ViewerPageDelete;
@@ -47,8 +47,8 @@ export class ViewerCommands {
 		this.#pageOrder = new ViewerPageOrder(host.root, host.controller);
 		this.#pageRename = new ViewerPageRename(host.root, host.controller);
 		this.#pageDelete = new ViewerPageDelete(host.root, host.controller);
-		this.#draw = new RectangleDrawTool(host.viewport, host.controller, {
-			active: () => this.#tool === 'rectangle',
+		this.#draw = new ShapeDrawTool(host.viewport, host.controller, {
+			tool: () => (this.#tool === 'pointer' ? undefined : this.#tool),
 			announce: host.announce,
 		});
 		this.#targets = {
@@ -154,7 +154,7 @@ export class ViewerCommands {
 		};
 	}
 	setTool(tool: CanvasTool): void {
-		if (tool === 'rectangle' && !this.#canEdit(this.host.controller.state)) return;
+		if (tool !== 'pointer' && !this.#canEdit(this.host.controller.state)) return;
 		this.#tool = tool;
 		this.render(this.host.controller.state);
 		this.host.toolChanged?.();
@@ -236,6 +236,7 @@ export class ViewerCommands {
 			return { type: 'history', key: 'redo' };
 		if (control && key === '1') return { type: 'tool', tool: 'pointer' };
 		if (control && key === '8') return { type: 'tool', tool: 'rectangle' };
+		if (control && key === '6') return { type: 'tool', tool: 'line' };
 		if (!control && key === 'Delete' && state.selectedShape) return { type: 'delete' };
 		if (!control && key === 'F2' && state.document)
 			return { type: 'reveal', panel: 'edit', focusText: true };
@@ -259,17 +260,19 @@ export class ViewerCommands {
 		const box = (name: string) =>
 			root.querySelector<RibbonCommand & { checked: boolean }>(`[data-check="${name}"]`)!;
 		const editing = this.#canEdit(state);
-		if (this.#tool === 'rectangle' && !state.edit.sourceAvailable) this.#tool = 'pointer';
+		if (this.#tool !== 'pointer' && !state.edit.sourceAvailable) this.#tool = 'pointer';
 		const page = state.document?.pages[state.pageIndex];
 		button('undo').disabled = !state.edit.canUndo || state.edit.busy || state.loading;
 		button('redo').disabled = !state.edit.canRedo || state.edit.busy || state.loading;
 		button('pointer').setAttribute('pressed', String(this.#tool === 'pointer'));
-		// The drawing-tools split button shows the active tool; its Rectangle item is checked.
+		// The drawing-tools split button shows the active tool; its active drawing item is checked.
 		const rectangle = button('rectangle');
 		rectangle.toggleAttribute('data-active', this.#tool === 'rectangle');
 		rectangle.disabled = !editing || !page;
 		button('rectangle-item').setAttribute('checked', String(this.#tool === 'rectangle'));
 		button('rectangle-item').disabled = !editing || !page;
+		button('line-tool').setAttribute('checked', String(this.#tool === 'line'));
+		button('line-tool').disabled = !editing || !page;
 		rectangle.title = state.edit.sourceAvailable
 			? 'Rectangle (Ctrl+8)'
 			: 'Rectangle (Ctrl+8): open a .vsdx file to draw. Model-only documents are read only.';

@@ -1258,3 +1258,20 @@ labels, hidden labels and hidden axes. Playwright MCP inspected and downloaded
 a hidden-axis chart; Excel COM resaved that download with zero visible axes
 and the original delete/label flags. Other direct formatting metadata edits
 and complete native chart layout remain unsupported or unverified.
+
+## Shared Visio shape creation and ID allocation
+
+Source: ChristopherVR/ooxml at `c699b549a`,
+`src/core/visio/edit-geometry.ts`. Rectangle construction moved into
+`src/core/visio/edit-shape-create.ts`, preserving its cells, geometry and text.
+Rectangle and straight-line creation now share shape-container insertion and
+descendant ID collision admission. New line construction follows native
+DrawLine geometry and DocumentSettings defaults, reusing the existing formula
+recalculation and editing admission.
+
+Source: ChristopherVR/ooxml at `c699b549a`,
+`src/ui/src/visio/viewer-draw-tool.ts`. Its DOM-free shape ID allocation moved
+into `src/core/visio/ui/shape-id.ts`. The shared allocator includes ten-digit
+unsigned IDs and reports exhaustion. The UI retains a compatibility re-export
+and uses one pointer lifecycle, coordinate conversion, creation transaction
+and selection flow for rectangles and lines.

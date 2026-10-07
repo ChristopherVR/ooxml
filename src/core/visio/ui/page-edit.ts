@@ -46,6 +46,14 @@ export function visioPageEditToDrawing(page: VisioPage, edit: VisioEdit): VisioE
 				width: coordinate(edit.width),
 				height: coordinate(edit.height),
 			};
+		case 'create-line':
+			return {
+				...edit,
+				beginX: coordinate(edit.beginX),
+				beginY: coordinate(edit.beginY),
+				endX: coordinate(edit.endX),
+				endY: coordinate(edit.endY),
+			};
 		case 'move-shape':
 		case 'move-line-endpoint':
 			return { ...edit, x: coordinate(edit.x), y: coordinate(edit.y) };

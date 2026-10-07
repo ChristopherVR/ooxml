@@ -4,7 +4,8 @@ param(
  [ValidateRange(0,1000000)][double]$ResizeWidth=0,
  [ValidateSet('None','Begin','End')][string]$MoveEndpoint='None',
  [ValidateRange(0.000001,1000000)][double]$DrawingScale=1,
- [ValidateRange(0.000001,1000000)][double]$PageScale=1
+ [ValidateRange(0.000001,1000000)][double]$PageScale=1,
+ [switch]$GridAligned
 )
 # Capture endpoint translation without replacing native transform formulas.
 $ErrorActionPreference='Stop'
@@ -36,15 +37,17 @@ try {
  $page.PageSheet.CellsU('PageScale').ResultIU=$PageScale
  $shapes=@()
  $cases=@()
- foreach($end in @(@(3,1.5),@(2.732050807568877,2.5),@(1,3.5),@(-1,1.5))){
+ $diagonal=if($GridAligned){@(3,3.5)}else{@(2.732050807568877,2.5)}
+ foreach($end in @(@(3,1.5),$diagonal,@(1,3.5),@(-1,1.5))){
   $shape=$page.DrawLine(1,1.5,$end[0],$end[1])
   if($shape.OneD -eq 0){throw 'Native probe is not a one-dimensional shape.'}
   $shapes+=,$shape
-  $cases+=,[ordered]@{shapeId=[string]$shape.ID;oneD=$shape.OneD;before=(Get-LineCells $shape)}
+  $cases+=,[ordered]@{shapeId=[string]$shape.ID;oneD=$shape.OneD;before=(Get-LineCells $shape);beforeTransform=(Get-LineTransform $shape)}
  }
  $control=$null
  if($DeleteAfterMove){$control=$page.DrawRectangle(6,6,7,7)}
  $document.SaveAs((Join-Path $directory 'original.vsdx')) | Out-Null
+ $page.Export((Join-Path $directory 'original-page.svg'))
  for($i=0;$i -lt $shapes.Length;$i++){
   $shape=$shapes[$i]
   $before=$cases[$i].before
@@ -62,9 +65,11 @@ try {
    if($before['Pin'+$axis].formula -ne $after['Pin'+$axis].formula){throw 'Native midpoint formula was replaced.'}
   }
   $cases[$i].Add('after',$after)
+  $cases[$i].Add('afterTransform',(Get-LineTransform $shape))
   $cases[$i].Add('delta',@($dx,$dy))
  }
  $document.SaveAs((Join-Path $directory 'moved.vsdx')) | Out-Null
+ $page.Export((Join-Path $directory 'moved-page.svg'))
  if($ResizeWidth -gt 0){
   for($i=0;$i -lt $shapes.Length;$i++){
    $shapes[$i].CellsU('Width').ResultIU=$ResizeWidth

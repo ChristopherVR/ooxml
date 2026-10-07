@@ -6,7 +6,7 @@ export interface RibbonTargets {
 	controller: ViewerController;
 	history(key: 'undo' | 'redo'): void;
 	deleteSelection(): void;
-	setTool(tool: 'pointer' | 'rectangle'): void;
+	setTool(tool: 'pointer' | 'rectangle' | 'line'): void;
 	toggleGrid(): void;
 	toggleRuler(): void;
 	togglePanZoom(): void;

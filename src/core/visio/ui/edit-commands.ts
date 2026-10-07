@@ -50,6 +50,16 @@ export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
 			throw new Error('Invalid edit shape target.');
 		const target = { pageId: command.pageId, shapeId: command.shapeId };
 		switch (command.type) {
+			case 'create-line':
+				numbers(command.beginX, command.beginY, command.endX, command.endY);
+				return {
+					type: command.type,
+					...target,
+					beginX: command.beginX,
+					beginY: command.beginY,
+					endX: command.endX,
+					endY: command.endY,
+				};
 			case 'replace-plain-text':
 				return { type: command.type, ...target, text: text(command.text) };
 			case 'delete-shape':

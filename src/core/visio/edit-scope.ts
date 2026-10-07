@@ -7,6 +7,7 @@ import { createVisioDependencyQuery } from './edit-recalculate';
 import { executableCellFormula, inertDoubleClickFormula } from './cell-formula';
 import { assertVisioMasterIndependence } from './edit-master-scope';
 import { emptyMasterMoveProof, type MasterMoveProof } from './edit-master-move';
+import { applyLineCreationStyles } from './edit-shape-create';
 
 const admitted = (node: Element) =>
 	node.namespaceURI === VISIO_NS || node.namespaceURI === VISIO_LEGACY_NS;
@@ -227,13 +228,14 @@ export async function assertGeometryPackageScope(
 		const shapes = Array.from(root.getElementsByTagNameNS(root.namespaceURI!, 'Shape'));
 		for (const command of commands)
 			if (
-				command.type === 'create-rectangle' &&
+				(command.type === 'create-rectangle' || command.type === 'create-line') &&
 				command.pageId === pageId &&
 				!shapes.some((shape) => attribute(shape, 'ID') === command.shapeId)
 			) {
-				// Detached admission context only: a planned rectangle receives document default styles.
+				// Detached admission context only: planned lines share their native drawing defaults.
 				const shape = root.ownerDocument!.createElementNS(root.namespaceURI, 'Shape');
 				shape.setAttribute('ID', command.shapeId);
+				if (command.type === 'create-line') applyLineCreationStyles(shape, documentRoot);
 				for (const name of ['PinX', 'PinY', 'Width', 'Height', 'LocPinX', 'LocPinY', 'Angle']) {
 					const node = root.ownerDocument!.createElementNS(root.namespaceURI, 'Cell');
 					node.setAttribute('N', name);

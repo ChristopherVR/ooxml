@@ -1,3 +1,4 @@
+import { createRectangle, createLine } from './edit-shape-create';
 import { attribute, children } from './sheet';
 import { fail } from './package-common';
 import {
@@ -5,7 +6,7 @@ import {
 	recalculateVisioCells,
 	type VisioCellKey,
 } from './edit-recalculate';
-import type { VisioGeometryEdit } from './edit-commands';
+import { geometryChangedCells, type VisioGeometryEdit } from './edit-commands';
 import { emptyMasterMoveProof, type MasterMoveProof } from './edit-master-move';
 import {
 	moveLocalLine,
@@ -25,71 +26,6 @@ import {
 	resizeGeometry,
 } from './edit-geometry-admission';
 
-function createRectangle(
-	root: Element,
-	edit: Extract<VisioGeometryEdit, { type: 'create-rectangle' }>,
-): Element {
-	const doc = root.ownerDocument!;
-	const node = (name: string) => doc.createElementNS(root.namespaceURI, name);
-	let container = children(root, 'Shapes')[0];
-	if (children(root, 'Shapes').length > 1) fail('INVALID_SHAPE_ID', 'Duplicate Shapes containers.');
-	const pending: Element[] = [root];
-	while (pending.length) {
-		const parent = pending.pop()!;
-		for (const shapes of children(parent, 'Shapes'))
-			for (const shape of children(shapes, 'Shape')) {
-				if (attribute(shape, 'ID') === edit.shapeId)
-					fail('INVALID_SHAPE_ID', 'Shape ID already exists.');
-				pending.push(shape);
-			}
-	}
-	if (!container) {
-		container = node('Shapes');
-		root.insertBefore(container, children(root, 'Connects')[0] ?? null);
-	}
-	const shape = node('Shape');
-	shape.setAttribute('ID', edit.shapeId);
-	shape.setAttribute('Type', 'Shape');
-	for (const [name, value] of Object.entries({
-		PinX: edit.x,
-		PinY: edit.y,
-		Width: edit.width,
-		Height: edit.height,
-		LocPinX: edit.width / 2,
-		LocPinY: edit.height / 2,
-		Angle: 0,
-	}))
-		setCell(
-			shape,
-			name,
-			value,
-			name === 'LocPinX' ? 'Width*0.5' : name === 'LocPinY' ? 'Height*0.5' : undefined,
-		);
-	const section = node('Section');
-	section.setAttribute('N', 'Geometry');
-	section.setAttribute('IX', '0');
-	for (const [index, [x, y]] of [
-		[0, 0],
-		[1, 0],
-		[1, 1],
-		[0, 1],
-		[0, 0],
-	].entries()) {
-		const row = node('Row');
-		row.setAttribute('IX', String(index + 1));
-		row.setAttribute('T', index ? 'RelLineTo' : 'RelMoveTo');
-		setCell(row, 'X', x!);
-		setCell(row, 'Y', y!);
-		section.appendChild(row);
-	}
-	shape.appendChild(section);
-	const text = node('Text');
-	text.appendChild(doc.createTextNode(edit.text ?? ''));
-	shape.appendChild(text);
-	container.appendChild(shape);
-	return shape;
-}
-
 export function applyGeometryEdit(
 	roots: ReadonlyMap<string, Element>,
 	document: Element,
@@ -107,7 +43,18 @@ export function applyGeometryEdit(
 	const lineEditShapes = new Set<Element>();
 	let fixedLine: ReadonlyMap<string, number> | undefined;
 	const add = (cell: string) => changed.push({ pageId: edit.pageId, shapeId: edit.shapeId, cell });
-	if (edit.type === 'create-rectangle') {
+	if (edit.type === 'create-line') {
+		const shape = createLine(root, document, edit);
+		lineEditShapes.add(shape);
+		fixedLine = proveLocalLine(shape);
+		expected = {
+			width: Math.hypot(edit.endX - edit.beginX, edit.endY - edit.beginY),
+			height: 0,
+			x: (edit.beginX + edit.endX) / 2,
+			y: (edit.beginY + edit.endY) / 2,
+		};
+		for (const name of geometryChangedCells(edit)) add(name);
+	} else if (edit.type === 'create-rectangle') {
 		createRectangle(root, edit);
 		expected = { width: edit.width, height: edit.height, x: edit.x, y: edit.y };
 		for (const name of ['Width', 'Height', 'PinX', 'PinY']) add(name);

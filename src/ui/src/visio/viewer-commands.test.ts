@@ -83,6 +83,20 @@ async function setup(source = true) {
 }
 
 describe('Visio ribbon commands', () => {
+	it('shares line ribbon and Ctrl+6 tool state, while read-only sources refuse drawing', async () => {
+		const { press, key, commands, command } = await setup();
+		press('line-tool');
+		expect(commands.tool).toBe('line');
+		expect(command('line-tool').getAttribute('checked')).toBe('true');
+		key({ key: '1', ctrlKey: true });
+		expect(commands.tool).toBe('pointer');
+		key({ key: '6', ctrlKey: true });
+		expect(commands.tool).toBe('line');
+		const readOnly = await setup(false);
+		readOnly.key({ key: '6', ctrlKey: true });
+		expect(readOnly.commands.tool).toBe('pointer');
+		expect(readOnly.command('line-tool').disabled).toBe(true);
+	});
 	it('turns shared button activation into typed ribbon actions', async () => {
 		const { root, press } = await setup();
 		const actions: unknown[] = [];

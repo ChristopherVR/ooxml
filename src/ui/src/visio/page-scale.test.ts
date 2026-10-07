@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { editVsdx, parseVsdx } from 'ooxml-core/visio';
 import { ViewerController } from './controller';
-import { insertRectangle } from './viewer-draw-tool';
+import { insertRectangle, insertLine } from './viewer-draw-tool';
 import { renderPage } from './render-svg';
 import { exportPageSvg } from './export-svg';
 import { cell, fixture } from '../../../core/visio/test-fixtures';
@@ -42,6 +42,41 @@ it('inserts, exports, undoes and redoes a rectangle at the pointer location on a
 });
 
 const native = process.env.VISIO_NATIVE_PAGE_SCALES_DIR;
+it('inserts a scaled line through the same controller and drawing coordinate conversion', async () => {
+	const bytes = await fixture({
+		pages: [
+			{ id: '0', pageCells: cell('DrawingScale', 2) + cell('PageScale', 1), contents: '<Shapes/>' },
+		],
+	});
+	const controller = new ViewerController(
+		parseVsdx,
+		() => {},
+		async (source, edits) => {
+			const saved = await editVsdx(source, edits);
+			return { ...saved, document: await parseVsdx(saved.bytes) };
+		},
+	);
+	try {
+		await controller.load(bytes);
+		const page = controller.state.document!.pages[0]!;
+		const id = await insertLine(controller, page, { x: 1, y: 2 }, { x: 2, y: 3 });
+		const line = controller.state.document!.pages[0]!.shapes[0]!;
+		expect(line.id).toBe(id);
+		expect(line.kind).toBe('connector');
+		expect(line.width).toBeCloseTo(Math.sqrt(2), 12);
+		expect(line.transform[4]).toBeCloseTo(1, 12);
+		expect(line.transform[5]).toBeCloseTo(page.height - 2, 12);
+		await controller.undo();
+		expect(controller.exportVsdx().bytes).toEqual(bytes);
+		await controller.redo();
+		expect((await parseVsdx(controller.exportVsdx().bytes)).pages[0]!.shapes[0]!.width).toBeCloseTo(
+			Math.sqrt(2),
+			12,
+		);
+	} finally {
+		controller.destroy();
+	}
+});
 describe.skipIf(!native)('native scaled page SVG rendering', () => {
 	it('matches page dimensions, line stems, rectangle bounds and physical text placement', async () => {
 		const model = await parseVsdx(await readFile(resolve(native!, 'page-scales.vsdx')));

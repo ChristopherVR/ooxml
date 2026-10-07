@@ -1507,3 +1507,38 @@ Core optional regressions preserve all 32 rotated gradient models through
 move/save/reparse, with eight opaque two-stop profiles. The same parameterized
 regression also passed the original 68- and extended 84-case captures. Core
 strict types passed. The source warning for unverified gradient raster remains.
+
+## Native straight-line creation
+
+The fresh `visio-line-movement-585c12348720422c8b81a92b6178b192` capture
+uses the recorder's `-GridAligned` option and a newly owned invisible Visio
+instance. Four native DrawLine cases cover horizontal, 45-degree diagonal,
+vertical and reversed endpoints. The recorder saves original/moved SVG and
+VSDX references and captures before/after cells and transforms.
+
+Core clears the native lines, recreates their IDs and endpoints, and compares
+geometry and effective styles exactly, with caches and transforms to twelve
+decimal places. It also verifies creation followed by endpoint editing,
+deletion, round-trip preservation, invalid/colliding input, detached command
+snapshots, page scaling and ten-digit descendant ID allocation/exhaustion.
+The focused suite passes eight tests, including the optional native check.
+
+`native-line-create.spec.ts` passes all six framework routes: 24 real drags,
+preview paint, native poses, undo/redo per line, public export, saved reload
+and cancelled-drag source preservation. Saved endpoints match independently
+measured native SVG endpoints to three decimal places. Horizontal SVG lines
+have zero-height bounding boxes: checks inspect stroke visibility and actual
+path length instead of using rectangle visibility as a paint proxy.
+
+The earlier core Visio suite passed 2,193 checks with 64 optional skips; the
+additional ID-allocation regression subsequently passed in the focused suite.
+Core, shared UI and viewer typechecks pass. The existing rectangle toolbar
+workflow passes after sharing its drawing lifecycle. Three vanilla native
+endpoint/cancellation browser regressions also pass. Packed ESM, declarations,
+consumer build and production parser/edit-worker smoke checks pass.
+
+These checks prove the documented basic unglued-line scope. Native UI creation
+gestures, native snapping and joining/glue, other default style documents,
+scaled browser creation, exact paint pixels and Office reopen acceptance are
+not proven. Native COM DrawLine is the geometry/style reference, not evidence
+that our pointer behavior matches every native gesture.
