@@ -27,6 +27,8 @@ export interface Revision {
 
 export interface TextRun {
 	text: string;
+	/** Complete XML basis restored by rejecting a run-format revision; known property edits overlay it. */
+	restoredRunPropertiesXml?: string;
 	/** Imported, display-only equation. Source OMML is preserved; equation editing is unsupported. */
 	equation?: { omml: string; display: boolean };
 	bold?: boolean;

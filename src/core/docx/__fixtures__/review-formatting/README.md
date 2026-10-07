@@ -13,3 +13,7 @@ Office profile settings are changed.
 Regression tests first cover preserving `w:rPrChange` and its original `w:rPr`
 snapshot through text edits, model conversion and export. Editor recording,
 navigation and rejection of formatting changes still require implementation.
+Core rejection now restores the complete prior properties. The installed Word
+build opened four core-rejected exports (both package-preserving and standalone
+for both cases), reporting zero revisions and the same fonts as native rejection.
+`core-rejected-reference.json` records this additional interoperability check.

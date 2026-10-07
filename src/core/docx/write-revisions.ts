@@ -1,15 +1,7 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import type { Paragraph, Revision } from './model.js';
-import {
-	children,
-	first,
-	makeW,
-	named,
-	parseXml,
-	type XmlDocument,
-	type XmlElement,
-	WORD_NS,
-} from './xml.js';
+import { children, first, makeW, type XmlDocument, type XmlElement, WORD_NS } from './xml.js';
+import { parseRunPropertiesSnapshot } from './restore-run-format.js';
 
 const REVISION_WRAPPER_NAMES = ['ins', 'del', 'moveFrom', 'moveTo'];
 /** Range markers the writer regenerates from the model: comment anchors and move ranges. */
@@ -60,9 +52,7 @@ export function writeRunFormatRevision(
 		throw new Error(
 			'Cannot write a formatting revision without its prior run-properties snapshot.',
 		);
-	const previous = parseXml(revision.previousRunPropertiesXml).documentElement;
-	if (!named(previous, 'rPr'))
-		throw new Error('A formatting revision snapshot must contain Word run properties.');
+	const previous = parseRunPropertiesSnapshot(revision.previousRunPropertiesXml);
 	const change = makeW(doc, 'rPrChange');
 	setAttribute(change, 'id', revision.id);
 	setAttribute(change, 'author', revision.author);

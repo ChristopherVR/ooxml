@@ -2,16 +2,9 @@
 // Paragraph/table/run parsing shared by the main document body, headers, footers, footnotes and
 // endnotes (moved out of parse.ts so every container can reuse the identical parser).
 import type { Block, Paragraph, Revision, Table, TextRun } from './model.js';
-import {
-	first,
-	getW,
-	isElement,
-	named,
-	textContent,
-	type XmlElement,
-} from './xml.js';
+import { first, getW, isElement, named, textContent, type XmlElement } from './xml.js';
 import { classifyBreak } from './breaks.js';
-import { parseRunProperties } from './run-properties.js';
+import { parseDirectRunProperties } from './run-properties.js';
 import { parseTable as parseTableWithFidelity } from './parse-table.js';
 import { parseDrawing, type DrawingContext } from './drawing.js';
 import { resolveHyperlink, parseSimpleHyperlinkField } from './hyperlink.js';
@@ -125,7 +118,7 @@ function parseRun(node: XmlElement, revision?: Revision): TextRun {
 						return '';
 					})
 					.join('');
-	const run: TextRun = { text, ...parseRunProperties(props) };
+	const run: TextRun = { text, ...parseDirectRunProperties(props) };
 	if (breakKind) run.break = breakKind;
 	if (noteReference) run.noteReference = noteReference;
 	if (noteMark) run.noteMark = noteMark;
@@ -133,17 +126,6 @@ function parseRun(node: XmlElement, revision?: Revision): TextRun {
 	if (fieldCode !== undefined) run.fieldCode = fieldCode;
 	const runRevision = revision ?? runFormatRevision(props);
 	if (runRevision) run.revision = runRevision;
-	const language = first(props, 'lang');
-	const languageValue = getW(language, 'val');
-	const eastAsiaLanguage = getW(language, 'eastAsia');
-	const bidiLanguage = getW(language, 'bidi');
-	if (languageValue !== undefined) run.language = languageValue;
-	if (eastAsiaLanguage !== undefined) run.eastAsiaLanguage = eastAsiaLanguage;
-	if (bidiLanguage !== undefined) run.bidiLanguage = bidiLanguage;
-	const rtl = onOffElement(first(props, 'rtl'));
-	if (rtl !== undefined) run.rtl = rtl;
-	const styleRef = getW(first(props, 'rStyle'), 'val');
-	if (styleRef) run.style = styleRef;
 	return run;
 }
 

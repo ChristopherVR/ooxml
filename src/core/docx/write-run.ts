@@ -7,6 +7,8 @@ import { fractionToThemeByte } from './theme-color.js';
 import { createImageRun } from './write-drawing.js';
 import type { RelationshipAllocator } from './relationship-allocator.js';
 import { writeRunFormatRevision } from './write-revisions.js';
+import { parseRunPropertiesSnapshot } from './restore-run-format.js';
+import { parseDirectRunProperties } from './run-properties.js';
 
 function setAttribute(element: XmlElement, local: string, value: string): void {
 	element.setAttributeNS(WORD_NS, `w:${local}`, value);
@@ -221,6 +223,16 @@ export function createRun(
 ): XmlElement {
 	if (run.image) return createImageRun(doc, run.image, base?.image, old, allocator);
 	const node = old ?? makeW(doc, 'r');
+	if (
+		run.restoredRunPropertiesXml &&
+		(!old || run.restoredRunPropertiesXml !== base?.restoredRunPropertiesXml)
+	) {
+		const restored = parseRunPropertiesSnapshot(run.restoredRunPropertiesXml);
+		const props = first(node, 'rPr');
+		if (props) node.removeChild(props);
+		node.insertBefore(doc.importNode(restored, true), node.firstChild);
+		base = { text: run.text, ...parseDirectRunProperties(restored) };
+	}
 	setRunProperties(doc, node, run, base);
 	for (const child of Array.from(node.childNodes))
 		if (child.nodeType !== 1 || (child as XmlElement).localName !== 'rPr') node.removeChild(child);

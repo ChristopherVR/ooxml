@@ -8,6 +8,7 @@ import { ligatureStyle } from './ligature-style.js';
  * so the writer never strips them from the source XML).
  */
 export const extraRunFields = [
+	'restoredRunPropertiesXml',
 	'caps',
 	'smallCaps',
 	'doubleStrike',
