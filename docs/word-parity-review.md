@@ -393,6 +393,20 @@ counts and rejects tracked formatting to the baseline. This reference proves
 those bounded semantics; current M365, layout and general atom mark parity remain
 unfinished.
 
+Direct font properties, highlights, script positioning and Font-dialog advanced
+properties now use one core patch command for text and supported inline objects.
+Selection readback includes objects instead of substituting the caret's font.
+Clear Formatting retains hyperlinks, comments, field identities and tracked
+text while clearing modeled direct run properties. Native references establish
+size, color, small caps, spacing, scale, baseline position and kerning on pictures,
+note references, page/line breaks and field-code runs. Core accepted/rejected
+exports match their native references; Word reopens fifteen exports and native
+Reject All restores baseline stories and properties. Font-dialog peer tests
+verify shared attribution, atomic undo and resolution. Browser tests cover the
+dialog and export across the six bindings. Formatting general shapes and OMML,
+concurrent property edits on the same atom, and current M365 certification remain
+unfinished.
+
 Paragraphs now carry their complete source property basis through editor and
 Yjs conversion. Rejection preserves current paragraph-mark and section properties
 when the prior paragraph snapshot omits them, while restoring the paragraph

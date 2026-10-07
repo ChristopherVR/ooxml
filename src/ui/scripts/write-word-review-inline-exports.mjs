@@ -2,12 +2,13 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { EditorState, TextSelection } from 'prosemirror-state';
-import { loadDocx } from 'ooxml-core/docx';
+import { loadDocx, signedTwips, halfPoints } from 'ooxml-core/docx';
 import {
 	acceptAllChanges,
 	rejectAllChanges,
 	trackChangesPlugin,
 	createToggleFormat,
+	applyRunFormattingPatch,
 } from 'ooxml-core/docx/ui';
 import { modelToDoc, docToModel } from '../src/docx/model-adapter.ts';
 
@@ -16,27 +17,30 @@ if (!output) throw new Error('Provide an output directory for synthetic exports'
 await mkdir(output, { recursive: true });
 const stories = process.argv[3] === '--stories';
 const lineBreak = process.argv[3] === '--record-line-break-formatting';
-const record = lineBreak || process.argv[3] === '--record-object-formatting';
+const advanced = process.argv[3] === '--record-advanced-object-formatting';
+const record = advanced || lineBreak || process.argv[3] === '--record-object-formatting';
 const objects = record || process.argv[3] === '--object-formatting';
-for (const name of lineBreak
-	? ['line-break']
-	: objects
-		? ['picture', 'note', 'break', 'field']
-		: stories
-			? ['all-stories']
-			: [
-					'picture-insert',
-					'picture-delete',
-					'note-insert',
-					'note-delete',
-					'break-delete',
-					'break-insert',
-				]) {
+for (const name of advanced
+	? ['picture', 'note', 'break', 'field', 'line-break']
+	: lineBreak
+		? ['line-break']
+		: objects
+			? ['picture', 'note', 'break', 'field']
+			: stories
+				? ['all-stories']
+				: [
+						'picture-insert',
+						'picture-delete',
+						'note-insert',
+						'note-delete',
+						'break-delete',
+						'break-insert',
+					]) {
 	for (const mode of record ? ['tracked', 'accept', 'reject'] : ['accept', 'reject']) {
 		const loaded = await loadDocx(
 			await readFile(
 				new URL(
-					`../../core/docx/__fixtures__/${lineBreak ? 'review-line-break-formatting' : objects ? 'review-object-formatting' : stories ? 'review-stories' : 'review-inline'}/${name}-${record ? 'before' : 'tracked'}.docx`,
+					`../../core/docx/__fixtures__/${advanced ? 'review-advanced-object-formatting' : lineBreak ? 'review-line-break-formatting' : objects ? 'review-object-formatting' : stories ? 'review-stories' : 'review-inline'}/${name}-${record ? 'before' : 'tracked'}.docx`,
 					import.meta.url,
 				),
 			),
@@ -70,9 +74,20 @@ for (const name of lineBreak
 			view.dispatch(
 				view.state.tr.setSelection(TextSelection.create(view.state.doc, position, position + 1)),
 			);
-			createToggleFormat(view.state.schema, () => loaded.model)('bold')(view.state, (tr) =>
-				view.dispatch(tr),
-			);
+			if (advanced)
+				applyRunFormattingPatch({
+					fontSize: 18,
+					color: '#C00000',
+					smallCaps: true,
+					characterSpacingTwips: signedTwips(30),
+					textScalePercent: 150,
+					positionHalfPoints: halfPoints(4),
+					kerningHalfPoints: halfPoints(24),
+				})(view.state, (tr) => view.dispatch(tr));
+			else
+				createToggleFormat(view.state.schema, () => loaded.model)('bold')(view.state, (tr) =>
+					view.dispatch(tr),
+				);
 		}
 		if (mode !== 'tracked' && !(mode === 'accept' ? acceptAllChanges : rejectAllChanges)(view))
 			throw new Error(`Expected ${name} to have a pending revision`);

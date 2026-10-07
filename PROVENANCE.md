@@ -1133,3 +1133,20 @@ Their DrawingML and 600 native RGBA points are retained in
 `scripts/record-xlsx-chart-gradient-raster.ps1` reproduces those profiles.
 No generic rectangular paint engine or color engine was copied into XLSX UI.
 Chart SVG and gallery serialization now share `chart/gradient-markup.ts`.
+
+## Shared Word direct run-format commands
+
+Source: ChristopherVR/ooxml at `a4dfbc400`,
+`src/ui/src/docx/ribbon-commands.ts`, `font-format.ts` and `inline-commands.ts`.
+Direct font, extra-property and mark mutation moved into the schema-driven
+`src/core/docx/ui/run-format-command.ts`. UI controls translate their values
+into typed patches, using existing core unit conversions. The shared command
+handles text and supported inline objects, storing element properties in their
+canonical attributes and retaining comments, links, field identities and text
+revisions when clearing direct formatting. The Font dialog now reads inline
+objects and reuses this command for atomic edits. The existing core recorder
+and writer provide full prior-property snapshots; no second property codec was
+introduced. The native advanced references and reopen/rejection reports in
+`review-advanced-object-formatting` came from owned hidden Word 16.0 build 20430.
+They cover seven advanced properties on five inline kinds, not current M365
+certification or general shape/OMML formatting.

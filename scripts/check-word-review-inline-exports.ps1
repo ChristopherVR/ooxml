@@ -1,5 +1,5 @@
 # Reopen only synthetic exports in an owned hidden instance; leave their bytes unchanged.
-param([Parameter(Mandatory)][string]$ExportDirectory, [Parameter(Mandatory)][string]$ReportPath, [switch]$IncludeStories, [switch]$RejectAll, [switch]$IncludeObjectFormatting)
+param([Parameter(Mandatory)][string]$ExportDirectory, [Parameter(Mandatory)][string]$ReportPath, [switch]$IncludeStories, [switch]$RejectAll, [switch]$IncludeObjectFormatting, [switch]$IncludeAdvancedFormatting, [string]$FilePattern = '*.docx')
 $ErrorActionPreference = 'Stop'
 if ($IncludeStories) { . (Join-Path $PSScriptRoot 'word-review-stories.ps1') }
 $directory = (Resolve-Path -LiteralPath $ExportDirectory).Path
@@ -8,8 +8,27 @@ $application.Visible = $false
 $application.DisplayAlerts = 0
 $document = $null
 $cases = @()
+function Get-WordObjectFormatting($kind, $range) {
+    $font = $range.Font
+    try {
+        $entry = [ordered]@{ kind = $kind; bold = [int]$font.Bold }
+        if ($IncludeAdvancedFormatting) {
+            $entry.size = [double]$font.Size
+            $entry.color = [int]$font.Color
+            $entry.smallCaps = [int]$font.SmallCaps
+            $entry.spacing = [double]$font.Spacing
+            $entry.scale = [int]$font.Scaling
+            $entry.position = [double]$font.Position
+            $entry.kerning = [double]$font.Kerning
+        }
+        return $entry
+    } finally {
+        [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($font)
+        [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($range)
+    }
+}
 try {
-    foreach ($file in (Get-ChildItem -LiteralPath $directory -Filter '*.docx' | Sort-Object Name)) {
+    foreach ($file in (Get-ChildItem -LiteralPath $directory -Filter $FilePattern | Sort-Object Name)) {
         $document = $application.Documents.Open($file.FullName, $false, $true)
         try {
             $beforeRevisions = [int]$document.Revisions.Count
@@ -21,13 +40,13 @@ try {
             if ($RejectAll) { $entry.beforeRevisions = $beforeRevisions }
             if ($IncludeObjectFormatting) {
                 $objects = @()
-                for ($i = 1; $i -le $document.InlineShapes.Count; $i++) { $objects += [ordered]@{ kind = 'picture'; bold = [int]$document.InlineShapes.Item($i).Range.Font.Bold } }
-                for ($i = 1; $i -le $document.Footnotes.Count; $i++) { $objects += [ordered]@{ kind = 'note'; bold = [int]$document.Footnotes.Item($i).Reference.Font.Bold } }
-                for ($i = 1; $i -le $document.Fields.Count; $i++) { $objects += [ordered]@{ kind = 'field'; bold = [int]$document.Fields.Item($i).Code.Font.Bold } }
+                for ($i = 1; $i -le $document.InlineShapes.Count; $i++) { $objects += Get-WordObjectFormatting 'picture' $document.InlineShapes.Item($i).Range }
+                for ($i = 1; $i -le $document.Footnotes.Count; $i++) { $objects += Get-WordObjectFormatting 'note' $document.Footnotes.Item($i).Reference }
+                for ($i = 1; $i -le $document.Fields.Count; $i++) { $objects += Get-WordObjectFormatting 'field' $document.Fields.Item($i).Code }
                 $breakPosition = ([string]$document.Content.Text).IndexOf([char]12)
-                if ($breakPosition -ge 0) { $objects += [ordered]@{ kind = 'break'; bold = [int]$document.Range($breakPosition, $breakPosition + 1).Font.Bold } }
+                if ($breakPosition -ge 0) { $objects += Get-WordObjectFormatting 'break' ($document.Range($breakPosition, $breakPosition + 1)) }
 				$lineBreakPosition = ([string]$document.Content.Text).IndexOf([char]11)
-				if ($lineBreakPosition -ge 0) { $objects += [ordered]@{ kind = 'line-break'; bold = [int]$document.Range($lineBreakPosition, $lineBreakPosition + 1).Font.Bold } }
+				if ($lineBreakPosition -ge 0) { $objects += Get-WordObjectFormatting 'line-break' ($document.Range($lineBreakPosition, $lineBreakPosition + 1)) }
                 $entry.objects = $objects
             }
             $cases += $entry

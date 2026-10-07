@@ -20,8 +20,8 @@ export function effectiveFont(
 	if (!run || !model) {
 		const font = text.marks.find((mark) => mark.type === schema.marks.font);
 		return {
-			family: String(font?.attrs.family ?? DEFAULT_FAMILY),
-			size: Number(font?.attrs.size ?? DEFAULT_SIZE),
+			family: String(run?.fontFamily ?? font?.attrs.family ?? DEFAULT_FAMILY),
+			size: Number(run?.fontSize ?? font?.attrs.size ?? DEFAULT_SIZE),
 		};
 	}
 	const resolved = resolveRunFormatting(run, {
@@ -51,7 +51,7 @@ export function syncFontControls(toolbar: HTMLElement, state: EditorState): void
 	} else {
 		let found = false;
 		doc.nodesBetween(selection.from, selection.to, (node, _pos, parent) => {
-			if (!node.isText || !parent) return;
+			if (!node.isInline || node.type.name === 'equation' || !parent) return;
 			found = true;
 			add(node, parent);
 		});

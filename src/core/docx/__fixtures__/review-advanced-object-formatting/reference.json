@@ -1,0 +1,173 @@
+{
+  "applicationVersion": "16.0",
+  "applicationBuild": "16.0.20430",
+  "cases": [
+    {
+      "name": "picture",
+      "before": {
+        "type": 1,
+        "index": 0,
+        "text": "Before/After\r",
+        "revisions": 0
+      },
+      "tracked": {
+        "type": 1,
+        "index": 0,
+        "text": "Before/After\r",
+        "revisions": 1
+      },
+      "accepted": {
+        "type": 1,
+        "index": 0,
+        "text": "Before/After\r",
+        "revisions": 0
+      },
+      "rejected": {
+        "type": 1,
+        "index": 0,
+        "text": "Before/After\r",
+        "revisions": 0
+      }
+    },
+    {
+      "name": "note",
+      "before": [
+        {
+          "type": 1,
+          "index": 0,
+          "text": "Before\u0002After\r",
+          "revisions": 0
+        },
+        {
+          "type": 2,
+          "index": 0,
+          "text": "\u0002 Note text\r",
+          "revisions": 0
+        }
+      ],
+      "tracked": [
+        {
+          "type": 1,
+          "index": 0,
+          "text": "Before\u0002After\r",
+          "revisions": 1
+        },
+        {
+          "type": 2,
+          "index": 0,
+          "text": "\u0002 Note text\r",
+          "revisions": 0
+        }
+      ],
+      "accepted": [
+        {
+          "type": 1,
+          "index": 0,
+          "text": "Before\u0002After\r",
+          "revisions": 0
+        },
+        {
+          "type": 2,
+          "index": 0,
+          "text": "\u0002 Note text\r",
+          "revisions": 0
+        }
+      ],
+      "rejected": [
+        {
+          "type": 1,
+          "index": 0,
+          "text": "Before\u0002After\r",
+          "revisions": 0
+        },
+        {
+          "type": 2,
+          "index": 0,
+          "text": "\u0002 Note text\r",
+          "revisions": 0
+        }
+      ]
+    },
+    {
+      "name": "break",
+      "before": {
+        "type": 1,
+        "index": 0,
+        "text": "Before\r\f\rAfter\r",
+        "revisions": 0
+      },
+      "tracked": {
+        "type": 1,
+        "index": 0,
+        "text": "Before\r\f\rAfter\r",
+        "revisions": 1
+      },
+      "accepted": {
+        "type": 1,
+        "index": 0,
+        "text": "Before\r\f\rAfter\r",
+        "revisions": 0
+      },
+      "rejected": {
+        "type": 1,
+        "index": 0,
+        "text": "Before\r\f\rAfter\r",
+        "revisions": 0
+      }
+    },
+    {
+      "name": "field",
+      "before": {
+        "type": 1,
+        "index": 0,
+        "text": "Before1After\r",
+        "revisions": 0
+      },
+      "tracked": {
+        "type": 1,
+        "index": 0,
+        "text": "Before1After\r",
+        "revisions": 1
+      },
+      "accepted": {
+        "type": 1,
+        "index": 0,
+        "text": "Before1After\r",
+        "revisions": 0
+      },
+      "rejected": {
+        "type": 1,
+        "index": 0,
+        "text": "Before1After\r",
+        "revisions": 0
+      }
+    },
+    {
+      "name": "line-break",
+      "before": {
+        "type": 1,
+        "index": 0,
+        "text": "Before\u000bAfter\r",
+        "revisions": 0
+      },
+      "tracked": {
+        "type": 1,
+        "index": 0,
+        "text": "Before\u000bAfter\r",
+        "revisions": 1
+      },
+      "accepted": {
+        "type": 1,
+        "index": 0,
+        "text": "Before\u000bAfter\r",
+        "revisions": 0
+      },
+      "rejected": {
+        "type": 1,
+        "index": 0,
+        "text": "Before\u000bAfter\r",
+        "revisions": 0
+      }
+    }
+  ]
+}

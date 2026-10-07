@@ -5,37 +5,20 @@ import { DEFAULT_TABLE_BORDERS } from 'ooxml-core/docx';
 import { schema } from './schema';
 import { parseLineSpacingValue } from 'ooxml-core/docx';
 import { twipsAttr } from 'ooxml-core/docx';
+import { applyRunFormattingPatch, clearDirectRunFormatting } from 'ooxml-core/docx/ui';
 
 export function applyFont(view: EditorView, key: 'family' | 'size' | 'color', value: string) {
-	const attr = key === 'family' ? 'family' : key === 'size' ? 'size' : 'color';
-	const mark = schema.marks.font;
-	const nextValue = key === 'size' ? Number(value) : value;
-	const { state } = view;
-	if (state.selection.empty) {
-		const marks = state.storedMarks || state.selection.$from.marks();
-		const existing = marks.find((item) => item.type === mark);
-		const type = mark.create({ ...existing?.attrs, [attr]: nextValue });
-		view.dispatch(state.tr.setStoredMarks([...marks.filter((item) => item.type !== mark), type]));
-		return;
-	}
-	let transaction = state.tr;
-	state.doc.nodesBetween(state.selection.from, state.selection.to, (node, pos) => {
-		if (!node.isText) return;
-		const start = Math.max(pos, state.selection.from);
-		const end = Math.min(pos + node.nodeSize, state.selection.to);
-		const existing = node.marks.find((item) => item.type === mark);
-		const type = mark.create({ ...existing?.attrs, [attr]: nextValue });
-		transaction = transaction.removeMark(start, end, mark).addMark(start, end, type);
-	});
-	view.dispatch(transaction);
+	const patch =
+		key === 'family'
+			? { fontFamily: value }
+			: key === 'size'
+				? { fontSize: Number(value) }
+				: { color: value };
+	applyRunFormattingPatch(patch)(view.state, view.dispatch, view);
 }
 
 export function clearFormatting(view: EditorView) {
-	const { state } = view;
-	let transaction = state.tr;
-	for (const mark of Object.values(schema.marks))
-		transaction = transaction.removeMark(state.selection.from, state.selection.to, mark);
-	view.dispatch(transaction.setStoredMarks([]));
+	clearDirectRunFormatting(view.state, view.dispatch, view);
 }
 
 let tableId = 0;

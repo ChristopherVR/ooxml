@@ -1,5 +1,5 @@
 # Native object run-property references in an owned hidden instance.
-param([Parameter(Mandatory)][string]$OutputDirectory, [ValidateSet('picture', 'note', 'break', 'field', 'line-break')][string[]]$Kinds = @('picture', 'note', 'break', 'field'))
+param([Parameter(Mandatory)][string]$OutputDirectory, [ValidateSet('picture', 'note', 'break', 'field', 'line-break')][string[]]$Kinds = @('picture', 'note', 'break', 'field'), [ValidateSet('bold', 'advanced')][string]$Formatting = 'bold')
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'word-review-stories.ps1')
 New-Item -ItemType Directory -Force -Path $OutputDirectory | Out-Null
@@ -37,7 +37,16 @@ try {
             'line-break' { $position = ([string]$document.Content.Text).IndexOf([char]11); $document.Range($position, $position + 1) }
             'field' { $document.Fields.Item(1).Code }
         }
-        $range.Font.Bold = -1
+        if ($Formatting -eq 'bold') { $range.Font.Bold = -1 }
+        else {
+            $range.Font.Size = 18
+            $range.Font.Color = 192
+            $range.Font.SmallCaps = -1
+            $range.Font.Spacing = 1.5
+            $range.Font.Scaling = 150
+            $range.Font.Position = 2
+            $range.Font.Kerning = 12
+        }
         [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($range)
         $tracked = Get-WordReviewStories $document
         $trackedPath = Join-Path $destination "$kind-tracked.docx"

@@ -1,5 +1,11 @@
-import { resolveRunFormatting, isLigatures, type Ligatures, type RunFormatting } from 'ooxml-core/docx';
-import type { Mark, Node as ProseMirrorNode } from 'prosemirror-model';
+import {
+	resolveRunFormatting,
+	isLigatures,
+	type Ligatures,
+	type RunFormatting,
+} from 'ooxml-core/docx';
+import type { Node as ProseMirrorNode } from 'prosemirror-model';
+import { applyRunFormattingPatch, type RunFormattingPatch } from 'ooxml-core/docx/ui';
 import type { EditorState } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import { effectiveFont } from './font-sync';
@@ -9,6 +15,7 @@ import { runOf, styleModelOf } from './run-styles';
 import { schema } from './schema';
 import { toggleFormat, type ToggleKey } from './toggle-commands';
 import { batchFontFormat } from './font-format-batch';
+import { signedTwips, halfPointsFromPoints } from 'ooxml-core/docx';
 
 export type UnderlineKind = 'none' | 'single' | 'double' | 'dotted' | 'dash' | 'wave';
 export type Script = 'none' | 'superscript' | 'subscript';
@@ -126,7 +133,8 @@ function formatsOf(state: EditorState): FontFormat[] {
 		formats.push(formatOf(state, schema.text('x', marks), selection.$from.parent));
 	} else {
 		doc.nodesBetween(selection.from, selection.to, (node, _pos, parent) => {
-			if (node.isText && parent) formats.push(formatOf(state, node, parent));
+			if (node.isInline && node.type.name !== 'equation' && parent)
+				formats.push(formatOf(state, node, parent));
 		});
 		if (!formats.length)
 			formats.push(
@@ -164,37 +172,11 @@ function setToggle(view: EditorView, key: ToggleKey, desired: boolean): void {
 	}
 }
 
-type ExtraPatch = Record<string, unknown>;
+type ExtraPatch = RunFormattingPatch;
 
-/** Merges `patch` into each text run's opaque run-properties mark; `undefined` removes a property. */
+/** Applies a property patch through the shared text and inline-object command. */
 function patchExtraProps(view: EditorView, patch: ExtraPatch): void {
-	const type = schema.marks.runProperties;
-	const next = (marks: readonly Mark[]): Mark[] => {
-		const existing = type.isInSet(marks);
-		const props: ExtraPatch = { ...((existing?.attrs.props as ExtraPatch | null) ?? {}) };
-		for (const [key, value] of Object.entries(patch))
-			if (value === undefined) delete props[key];
-			else props[key] = value;
-		const others = marks.filter((mark) => mark.type !== type);
-		return Object.keys(props).length ? [...others, type.create({ props })] : others;
-	};
-	const { state } = view;
-	if (state.selection.empty) {
-		view.dispatch(
-			state.tr.setStoredMarks(next(state.storedMarks ?? state.selection.$from.marks())),
-		);
-		return;
-	}
-	const tr = state.tr;
-	state.doc.nodesBetween(state.selection.from, state.selection.to, (node, pos) => {
-		if (!node.isText) return;
-		const from = Math.max(pos, state.selection.from);
-		const to = Math.min(pos + node.nodeSize, state.selection.to);
-		tr.removeMark(from, to, type);
-		const wanted = type.isInSet(next(node.marks));
-		if (wanted) tr.addMark(from, to, wanted);
-	});
-	view.dispatch(tr);
+	applyRunFormattingPatch(patch)(view.state, view.dispatch, view);
 }
 
 /** Applies the fields present in `changes` to the selection; untouched fields keep their values. */
@@ -233,8 +215,8 @@ function applyFontFields(view: EditorView, changes: Partial<FontFormat>): void {
 	if (changes.smallCaps !== undefined) extras.smallCaps = changes.smallCaps;
 	if (changes.caps !== undefined) extras.caps = changes.caps;
 	if (changes.hidden !== undefined) extras.vanish = changes.hidden;
-	if (changes.spacing !== undefined)
-		extras.characterSpacingTwips = Math.round(changes.spacing * 20);
+	if (changes.spacing !== undefined && Number.isFinite(changes.spacing))
+		extras.characterSpacingTwips = signedTwips(Math.round(changes.spacing * 20));
 	if (
 		changes.scale !== undefined &&
 		Number.isInteger(changes.scale) &&
@@ -243,9 +225,8 @@ function applyFontFields(view: EditorView, changes: Partial<FontFormat>): void {
 	)
 		extras.textScalePercent = changes.scale;
 	if (changes.position !== undefined && Number.isFinite(changes.position))
-		extras.positionHalfPoints =
-			Math.sign(changes.position) * Math.round(Math.abs(changes.position) * 2);
+		extras.positionHalfPoints = halfPointsFromPoints(changes.position);
 	if (changes.kerning !== undefined && Number.isFinite(changes.kerning) && changes.kerning >= 0)
-		extras.kerningHalfPoints = Math.round(changes.kerning * 2);
+		extras.kerningHalfPoints = halfPointsFromPoints(changes.kerning);
 	if (Object.keys(extras).length) patchExtraProps(view, extras);
 }

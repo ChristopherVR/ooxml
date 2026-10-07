@@ -24,7 +24,7 @@ export function selectionScript(state: EditorState): Script | null {
 	};
 	if (!state.selection.empty)
 		state.doc.nodesBetween(state.selection.from, state.selection.to, (node, _pos, parent) => {
-			if (node.isText && parent) add(node, parent);
+			if (node.isInline && node.type.name !== 'equation' && parent) add(node, parent);
 		});
 	if (!values.size)
 		add(
