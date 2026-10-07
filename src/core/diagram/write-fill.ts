@@ -1,7 +1,37 @@
-import { NS, buildXml, children, elements, first, parseXml } from '../xml/index';
+import { NS, buildXml, children, elements, first, parseXml, type XmlElement } from '../xml/index';
 import { drawingColorXml } from './write-color';
 import { parseDrawingColorIn } from './drawing-color';
 import type { DiagramFill } from './types';
+
+/** Replace only the DrawingML fill, retaining geometry, outlines, effects and extensions. */
+export function setDrawingFillXml(properties: XmlElement, xml: string): void {
+	const doc = properties.ownerDocument;
+	const wrapper = parseXml(`<w xmlns:a="${NS.a}">${xml}</w>`);
+	const fill = elements(wrapper.documentElement)[0];
+	const names = ['solidFill', 'gradFill', 'pattFill', 'blipFill', 'grpFill', 'noFill'];
+	if (
+		elements(wrapper.documentElement).length !== 1 ||
+		!fill ||
+		fill.namespaceURI !== NS.a ||
+		!names.includes(fill.localName)
+	)
+		throw new Error('Invalid DrawingML fill XML');
+	const existing = elements(properties).filter(
+		(node) => node.namespaceURI === NS.a && names.includes(node.localName),
+	);
+	const next = doc.importNode(fill, true);
+	if (existing[0]) properties.replaceChild(next, existing[0]);
+	else
+		properties.insertBefore(
+			next,
+			elements(properties).find(
+				(node) =>
+					node.namespaceURI === NS.a &&
+					['ln', 'effectLst', 'effectDag', 'scene3d', 'sp3d', 'extLst'].includes(node.localName),
+			) ?? null,
+		);
+	for (const extra of existing.slice(1)) properties.removeChild(extra);
+}
 
 /** Serializes modelled DrawingML fills, retaining imported gradient flags and extensions. */
 export function drawingFillXml(fill: DiagramFill): string | undefined {

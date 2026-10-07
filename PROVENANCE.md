@@ -1275,6 +1275,7 @@ into `src/core/visio/ui/shape-id.ts`. The shared allocator includes ten-digit
 unsigned IDs and reports exhaustion. The UI retains a compatibility re-export
 and uses one pointer lifecycle, coordinate conversion, creation transaction
 and selection flow for rectangles and lines.
+
 ## Independent Word inline comment ranges
 
 Source: ChristopherVR/ooxml at `7ecbe15f2`, shared Word comment commands,
@@ -1290,3 +1291,29 @@ and six-binding browser regressions cover concurrent anchors and local history.
 The native reference records fifteen reopened synthetic exports, including the
 unresolved zero-width overlapping field scope. V3 rooms require matching clients;
 v1/v2 persistence migration, complete field scopes and M365 parity are unfinished.
+
+## Shared DrawingML fill replacement and chart-element export
+
+Source: ChristopherVR/ooxml at `da056bb9e`,
+`src/core/xlsx/write/chart-colors.ts` and `src/core/diagram/write-fill.ts`.
+The series writer's fill replacement moved to `setDrawingFillXml` in the
+shared diagram area. It validates fragments and inserts fills before outline,
+effect, 3D and extension nodes. The series writer now reuses this helper and
+the shared fill-node reader; no parallel fill codec was added.
+
+`src/core/chart/write-fill-formatting.ts` uses the shared formatting node map,
+fill reader and serializer for direct element fills. New/regenerated XLSX
+parts and kept chart patches retain supported fill metadata. Kept patches also
+apply fills after inserting legends or replacing referenced titles. Untouched
+imports retain their source XML; unsupported pattern/picture fill edits are
+not implemented. Fonts, outlines and effects on regenerated parts still need
+separate preservation work. Title/legend background painting and formatting
+pane authoring remain outside this change's verified scope.
+
+Excel 16.0 build 20430 reopened/resaved six exports, covering none, solid,
+linear, rectangle, circle and shape fills on chart area, plot area, title and
+legend. Six browser bindings verify background painting and UI export for all
+six variants. Playwright MCP reviewed a circular chart/plot background and
+downloaded it. Excel COM resaved the download with circle paths, center focus,
+two endpoint stops and red/white RGB intact on all four elements. Native chart
+layout and complete Excel parity are not established by these checks.

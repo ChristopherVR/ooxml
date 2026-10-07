@@ -1302,8 +1302,8 @@ the shared chart axis writer. New charts, kept chart parts and type/grouping/
 series-count regeneration serialize explicit axis and label visibility.
 Unchanged imports retain their original boolean spellings and high/low label
 positions, including hidden axes whose effective labels are invisible.
-Other direct formatting edits, including fonts and appearance on regenerated
-chart parts, still need export support.
+Other direct formatting edits, including fonts, outlines and effects on
+regenerated chart parts, still need export support.
 
 Repeated save/reload regressions cover column, bar, line, area, scatter and
 radar charts. Excel 16.0 build 20430 reopened and resaved twelve exports with
@@ -1313,3 +1313,22 @@ Playwright MCP reviewed a 600 by 400 hidden-axis chart and downloaded it;
 Excel COM reopened and resaved that download with zero visible axes and both
 `delete="1"`, `tickLblPos="none"` pairs intact. This verifies visibility and
 serialization, not native chart layout or complete Excel parity.
+
+Direct chart-element fill export now uses the shared DrawingML fill writer.
+New charts, regenerated parts and kept-part patches retain supported chart
+area, plot area, title and legend fill metadata. Kept-part tests preserve
+outlines, effects and extensions, including newly inserted legends and
+replaced referenced titles. Existing series fill editing uses the same shared
+DOM replacement helper. Unsupported picture/pattern fill editing, generated
+font/outline/effect preservation, title/legend background painting and a
+background-formatting pane remain open.
+
+The diagram/chart/XLSX sweep passes 8,349 ordinary tests plus the 17 existing
+expected raster failures, with an additional focused title/legend insertion
+regression passing afterward. Six browser bindings verify no fill, solid and
+four gradient geometries through UI export. Excel 16.0 build 20430 reopened
+and resaved all six variants on four chart elements. Playwright MCP reviewed
+and downloaded a circular chart/plot background; Excel COM retained circle
+paths, center focus, red/white colors and endpoint positions on all four
+fill-bearing elements after resave. These checks verify fill metadata and
+background rendering, not exact native layout or full formatting UI parity.

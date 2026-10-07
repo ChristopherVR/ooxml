@@ -6,8 +6,9 @@ import {
 	CHART_COLOR_STYLE_REL,
 } from '../../chart/color-style';
 import { parseDrawingColorIn } from '../../diagram/drawing-color';
+import { fillElementOf } from '../../diagram/drawing-fill';
 import { drawingColorXml } from '../../diagram/write-color';
-import { drawingFillXml } from '../../diagram/write-fill';
+import { drawingFillXml, setDrawingFillXml } from '../../diagram/write-fill';
 import type { DiagramColor } from '../../diagram/types';
 import { NS, children, elements, first, parseXml, type XmlElement } from '../../xml/index';
 import { sameChartColor } from '../edit/chart-colors';
@@ -16,7 +17,6 @@ import { chartDrawingColor } from '../edit/chart-series-fill';
 import { RelationshipSet, type PackageWriter } from './package-writer';
 
 type Doc = ReturnType<typeof parseXml>;
-const FILLS = new Set(['solidFill', 'gradFill', 'pattFill', 'blipFill', 'grpFill', 'noFill']);
 
 /** Primary color of a series, preserving a manual fill before palette defaults. */
 export function chartSeriesFill(chart: ChartObject, series: ChartSeries, index: number): string {
@@ -34,31 +34,14 @@ export function chartSeriesFill(chart: ChartObject, series: ChartSeries, index: 
 	return `<a:solidFill>${drawingColorXml(choice)}</a:solidFill>`;
 }
 
-function setFill(doc: Doc, parent: XmlElement, xml: string): void {
-	const wrapper = parseXml(`<w xmlns:a="${NS.a}">${xml}</w>`);
-	const fill = elements(wrapper.documentElement)[0]!;
-	const existing = elements(parent).filter(
-		(node) => node.namespaceURI === NS.a && FILLS.has(node.localName),
-	);
-	const next = doc.importNode(fill, true);
-	if (existing[0]) parent.replaceChild(next, existing[0]);
-	else
-		parent.insertBefore(
-			next,
-			first(parent, 'ln', NS.a) ?? first(parent, 'effectLst', NS.a) ?? null,
-		);
-	for (const extra of existing.slice(1)) parent.removeChild(extra);
-}
-
 function recolorMarker(
-	doc: Doc,
 	marker: XmlElement | undefined,
 	previous: DiagramColor,
 	next: DiagramColor,
 ): void {
 	for (const paint of [marker, first(marker, 'ln', NS.a)]) {
 		if (paint && sameChartColor(parseDrawingColorIn(first(paint, 'solidFill', NS.a)), previous))
-			setFill(doc, paint, `<a:solidFill>${drawingColorXml(next)}</a:solidFill>`);
+			setDrawingFillXml(paint, `<a:solidFill>${drawingColorXml(next)}</a:solidFill>`);
 	}
 }
 
@@ -150,15 +133,15 @@ export function patchChartColors(
 				paint = doc.createElementNS(NS.a, 'a:ln');
 				spPr.appendChild(paint);
 			}
-			setFill(doc, paint, chartSeriesFill(model, series, index));
+			setDrawingFillXml(paint, chartSeriesFill(model, series, index));
 		}
 		if (previousPalette && palette && before.colorPalette !== model.colorPalette) {
 			const marker = first(first(ser, 'marker', NS.c), 'spPr', NS.c);
 			const previous = chartPaletteSeriesColorChoice(previousPalette, index, model.series.length);
 			const next = chartPaletteSeriesColorChoice(palette, index, model.series.length);
-			recolorMarker(doc, marker, previous, next);
+			recolorMarker(marker, previous, next);
 			for (const point of children(ser, 'dPt', NS.c))
-				recolorMarker(doc, first(first(point, 'marker', NS.c), 'spPr', NS.c), previous, next);
+				recolorMarker(first(first(point, 'marker', NS.c), 'spPr', NS.c), previous, next);
 		}
 		if (
 			JSON.stringify([old?.pointColors, old?.pointFills]) !==
@@ -186,8 +169,11 @@ export function patchChartColors(
 						: undefined;
 				let spPr = first(point, 'spPr', NS.c);
 				if (!xml) {
-					for (const paint of spPr ? elements(spPr) : [])
-						if (paint.namespaceURI === NS.a && FILLS.has(paint.localName)) spPr!.removeChild(paint);
+					let paint = fillElementOf(spPr);
+					while (paint && spPr) {
+						spPr.removeChild(paint);
+						paint = fillElementOf(spPr);
+					}
 					continue;
 				}
 				if (!point) {
@@ -213,7 +199,7 @@ export function patchChartColors(
 						first(point, 'pictureOptions', NS.c) ?? first(point, 'extLst', NS.c) ?? null,
 					);
 				}
-				setFill(doc, spPr, xml);
+				setDrawingFillXml(spPr, xml);
 			}
 		}
 	});

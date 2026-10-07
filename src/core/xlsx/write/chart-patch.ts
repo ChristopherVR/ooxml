@@ -16,6 +16,7 @@ import { escapeText } from './xml-out';
 import { patchChartColors } from './chart-colors';
 import { assertBarClusterOptions } from '../../chart/bar-cluster-geometry';
 import { writeChartAxisFormatting } from '../../chart/write-axis-formatting';
+import { writeChartFillFormatting } from '../../chart/write-fill-formatting';
 
 type Doc = ReturnType<typeof parseXml>;
 
@@ -122,6 +123,7 @@ export function patchChartPart(
 	const refs = patchChartReferences(xml, model) ?? xml;
 	const doc = parseXml(refs, { label: 'XLSX chart' });
 	const formattingChanged = writeChartAxisFormatting(doc.documentElement, model.formatting);
+	const fillsChanged = writeChartFillFormatting(doc.documentElement, model.formatting);
 	const sameNames = before.series.every((s, i) => s.name === model.series[i]?.name);
 	const sameSpacing =
 		before.barGapWidth === model.barGapWidth && before.barOverlap === model.barOverlap;
@@ -152,6 +154,7 @@ export function patchChartPart(
 		sameSpacing &&
 		sameColors &&
 		!formattingChanged &&
+		!fillsChanged &&
 		before.colorPalette === model.colorPalette
 	)
 		return refs === xml ? undefined : refs;
@@ -159,6 +162,8 @@ export function patchChartPart(
 	if (!chart) return refs === xml ? undefined : refs;
 	if (before.title !== model.title) patchTitle(doc, chart, model.title);
 	patchLegend(doc, chart, model);
+	// Title/legend edits can create or replace their nodes after the initial change check.
+	writeChartFillFormatting(doc.documentElement, model.formatting);
 	if (!sameNames) patchSeriesNames(chart, model);
 	if (!sameColors || before.colorPalette !== model.colorPalette)
 		patchChartColors(doc, chart, model, before);

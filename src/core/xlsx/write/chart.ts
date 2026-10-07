@@ -6,6 +6,7 @@ import { drawingColorXml } from '../../diagram/write-color';
 import { drawingFillXml } from '../../diagram/write-fill';
 import { assertBarClusterOptions } from '../../chart/bar-cluster-geometry';
 import { writeChartAxisFormatting } from '../../chart/write-axis-formatting';
+import { writeChartFillFormatting } from '../../chart/write-fill-formatting';
 
 const pt = (values: readonly (string | number | null)[]) =>
 	values
@@ -142,7 +143,9 @@ export function chartXml(chart: ChartObject): string {
 	const xml = `${XML_HEADER}<c:chartSpace xmlns:c="${NS.c}" xmlns:a="${NS.a}" xmlns:r="${NS.r}"><c:roundedCorners val="0"/><c:chart>${title}<c:plotArea><c:layout/>${plotXml(chart)}</c:plotArea>${legend}<c:plotVisOnly val="1"/><c:dispBlanksAs val="gap"/></c:chart></c:chartSpace>`;
 	if (!chart.formatting) return xml;
 	const doc = parseXml(xml);
-	return writeChartAxisFormatting(doc.documentElement, chart.formatting) ? buildXml(doc) : xml;
+	const axesChanged = writeChartAxisFormatting(doc.documentElement, chart.formatting);
+	const fillsChanged = writeChartFillFormatting(doc.documentElement, chart.formatting);
+	return axesChanged || fillsChanged ? buildXml(doc) : xml;
 }
 
 /**
