@@ -9,6 +9,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		['note', '.dve-note-reference'],
 		['break', '.dve-break-marker'],
 		['field', '[data-field-marker="code"]'],
+		['line-break', 'br[data-run-properties]'],
 	])
 		test(`${framework}: Original ${name} properties match the native before reference`, async ({
 			page,
@@ -19,7 +20,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 				(await fileInput(page)).setInputFiles(
 					fileURLToPath(
 						new URL(
-							`../../src/core/docx/__fixtures__/review-object-formatting/${name}-${state}.docx`,
+							`../../src/core/docx/__fixtures__/${name === 'line-break' ? 'review-line-break-formatting' : 'review-object-formatting'}/${name}-${state}.docx`,
 							import.meta.url,
 						),
 					),

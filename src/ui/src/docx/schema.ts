@@ -1,5 +1,10 @@
 import { Schema, type DOMOutputSpec } from 'prosemirror-model';
-import { fieldMarkerNodeSpec, noteReferenceNodeSpec, pageBreakNodeSpec } from 'ooxml-core/docx/ui';
+import {
+	fieldMarkerNodeSpec,
+	noteReferenceNodeSpec,
+	pageBreakNodeSpec,
+	hardBreakNodeSpec,
+} from 'ooxml-core/docx/ui';
 import { paragraphBoxCss, tableStyle, tableCellStyle } from 'ooxml-core/docx/ui';
 import { imageNodeSpec } from 'ooxml-core/docx/ui';
 import { markSpecs } from 'ooxml-core/docx/ui';
@@ -206,15 +211,7 @@ export const schema = new Schema({
 			],
 		},
 		text: { group: 'inline' },
-		hardBreak: {
-			group: 'inline',
-			inline: true,
-			atom: true,
-			selectable: false,
-			leafText: () => '\n',
-			parseDOM: [{ tag: 'br' }],
-			toDOM: () => ['br'],
-		},
+		hardBreak: hardBreakNodeSpec,
 		pageBreak: pageBreakNodeSpec,
 		noteReference: noteReferenceNodeSpec,
 		fieldMarker: fieldMarkerNodeSpec,

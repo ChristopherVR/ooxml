@@ -1,6 +1,10 @@
 import type { Transaction } from 'prosemirror-state';
 import type { TextRun } from '../model';
 import { runToInlineNodes } from './run-adapter';
+import type { Node as ProseMirrorNode } from 'prosemirror-model';
+
+export const hasInlineRunAttributes = (node: ProseMirrorNode): boolean =>
+	!node.isText && Boolean(node.type.spec.attrs?.format);
 
 export const RUN_FORMAT_MARKS = new Set([
 	'bold',

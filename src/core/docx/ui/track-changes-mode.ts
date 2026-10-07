@@ -7,6 +7,8 @@ import { createCollaborationIdGenerator } from './collaboration-identity';
 import { isHistoryTransaction } from 'prosemirror-history';
 import { trackRunFormatting } from './track-run-formatting';
 import { trackParagraphFormatting } from './track-paragraph-formatting';
+import { canonicalHardBreak, canonicalizeHardBreaks } from './hard-break-revisions';
+import { inlineTextRevision } from './review-inline-revisions';
 
 /** Text removed by the latest tracked cut, so pasting it back records a move. */
 interface TrackState {
@@ -25,7 +27,7 @@ function withMark(fragment: Fragment, mark: Mark): Fragment {
 	const children: ProseMirrorNode[] = [];
 	fragment.forEach((node) => {
 		if (node.isText || node.type.name === 'hardBreak')
-			children.push(node.mark(mark.addToSet(node.marks)));
+			children.push(canonicalHardBreak(node.mark(mark.addToSet(node.marks))));
 		else children.push(node.copy(withMark(node.content, mark)));
 	});
 	return Fragment.fromArray(children);
@@ -43,8 +45,10 @@ function segmentsOf(doc: ProseMirrorNode, from: number, to: number, author: stri
 		const start = Math.max(pos, from);
 		const end = Math.min(pos + node.nodeSize, to);
 		if (end <= start) return true;
-		const mark = node.marks.find((item) => item.type.name === 'insertion');
-		const ownInsertion = Boolean(mark && mark.attrs.author === author);
+		const revision = inlineTextRevision(node);
+		const ownInsertion = Boolean(
+			revision && ['insert', 'moveTo'].includes(revision.kind) && revision.author === author,
+		);
 		const last = segments.at(-1);
 		if (last && last.ownInsertion === ownInsertion && last.to === start) last.to = end;
 		else segments.push({ from: start, to: end, ownInsertion });
@@ -92,6 +96,7 @@ function applyTrackedReplace(
 				segment.to,
 				expectDefined(schema.marks.deletion, 'deletion mark').create({ author, date, id }),
 			);
+			canonicalizeHardBreaks(transform, segment.from, segment.to);
 		}
 	}
 	if (slice.size) {
@@ -120,6 +125,19 @@ function markMove(tr: Transaction, ids: ReadonlySet<string>, name: string): void
 	const move = JSON.stringify({ name });
 	tr.doc.descendants((node, pos) => {
 		if (!node.isText && node.type.name !== 'hardBreak') return true;
+		if (node.type.name === 'hardBreak' && node.type.spec.attrs?.format) {
+			const revision = inlineTextRevision(node);
+			if (revision && ids.has(revision.id)) {
+				const format = JSON.parse(node.attrs.format);
+				format.revision = {
+					...revision,
+					kind: ['insert', 'moveTo'].includes(revision.kind) ? 'moveTo' : 'moveFrom',
+					move: { name },
+				};
+				tr.setNodeAttribute(pos, 'format', JSON.stringify(format));
+			}
+			return true;
+		}
 		for (const mark of node.marks) {
 			if (
 				(mark.type.name !== 'insertion' && mark.type.name !== 'deletion') ||

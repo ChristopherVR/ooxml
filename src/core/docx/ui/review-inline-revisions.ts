@@ -14,13 +14,7 @@ export function inlineTextRevision(node: Node): Revision | undefined {
 export function clearInlineTextRevisions(tr: Transaction, from: number, to: number): void {
 	const atoms: { pos: number; format: Partial<TextRun> }[] = [];
 	tr.doc.nodesBetween(from, to, (node, pos) => {
-		if (
-			!node.isInline ||
-			node.isText ||
-			node.type.name === 'hardBreak' ||
-			typeof node.attrs.format !== 'string'
-		)
-			return;
+		if (!node.isInline || node.isText || typeof node.attrs.format !== 'string') return;
 		const format = { ...JSON.parse(node.attrs.format) } as Partial<TextRun>;
 		if (
 			!format.revision ||

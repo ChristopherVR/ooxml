@@ -1,18 +1,18 @@
 # Native object run-property references in an owned hidden instance.
-param([Parameter(Mandatory)][string]$OutputDirectory)
+param([Parameter(Mandatory)][string]$OutputDirectory, [ValidateSet('picture', 'note', 'break', 'field', 'line-break')][string[]]$Kinds = @('picture', 'note', 'break', 'field'))
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'word-review-stories.ps1')
 New-Item -ItemType Directory -Force -Path $OutputDirectory | Out-Null
 $destination = (Resolve-Path -LiteralPath $OutputDirectory).Path
 $picturePath = Join-Path $destination 'reference.png'
-[IO.File]::WriteAllBytes($picturePath, [Convert]::FromBase64String('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a5l8AAAAASUVORK5CYII='))
+if ($Kinds -contains 'picture') { [IO.File]::WriteAllBytes($picturePath, [Convert]::FromBase64String('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a5l8AAAAASUVORK5CYII=')) }
 $application = New-Object -ComObject Word.Application
 $application.Visible = $false
 $application.DisplayAlerts = 0
 $document = $null
 $cases = @()
 try {
-    foreach ($kind in @('picture', 'note', 'break', 'field')) {
+    foreach ($kind in $Kinds) {
         $document = $application.Documents.Add()
         $document.TrackRevisions = $false
         $document.Content.Text = 'BeforeAfter'
@@ -23,6 +23,7 @@ try {
             'picture' { [void]$document.InlineShapes.AddPicture($picturePath, $false, $true, $range) }
             'note' { [void]$document.Footnotes.Add($range, [Type]::Missing, 'Note text') }
             'break' { $range.InsertBreak(7) }
+            'line-break' { $range.InsertBreak(6) }
             'field' { [void]$document.Fields.Add($range, 33, [Type]::Missing, $false) }
         }
         [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($range)
@@ -33,6 +34,7 @@ try {
             'picture' { $document.InlineShapes.Item(1).Range }
             'note' { $document.Footnotes.Item(1).Reference }
             'break' { $position = ([string]$document.Content.Text).IndexOf([char]12); $document.Range($position, $position + 1) }
+            'line-break' { $position = ([string]$document.Content.Text).IndexOf([char]11); $document.Range($position, $position + 1) }
             'field' { $document.Fields.Item(1).Code }
         }
         $range.Font.Bold = -1

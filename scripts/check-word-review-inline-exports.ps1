@@ -26,6 +26,8 @@ try {
                 for ($i = 1; $i -le $document.Fields.Count; $i++) { $objects += [ordered]@{ kind = 'field'; bold = [int]$document.Fields.Item($i).Code.Font.Bold } }
                 $breakPosition = ([string]$document.Content.Text).IndexOf([char]12)
                 if ($breakPosition -ge 0) { $objects += [ordered]@{ kind = 'break'; bold = [int]$document.Range($breakPosition, $breakPosition + 1).Font.Bold } }
+				$lineBreakPosition = ([string]$document.Content.Text).IndexOf([char]11)
+				if ($lineBreakPosition -ge 0) { $objects += [ordered]@{ kind = 'line-break'; bold = [int]$document.Range($lineBreakPosition, $lineBreakPosition + 1).Font.Bold } }
                 $entry.objects = $objects
             }
             $cases += $entry

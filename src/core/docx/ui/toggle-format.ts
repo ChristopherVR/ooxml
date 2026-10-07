@@ -4,7 +4,11 @@ import { toggleMark } from 'prosemirror-commands';
 import type { Node as ProseMirrorNode, Schema } from 'prosemirror-model';
 import type { Command, EditorState, Transaction } from 'prosemirror-state';
 import { appendInlineNode, inlineNodeRun, runToInlineNodes } from './run-adapter';
-import { RUN_FORMAT_MARKS, setInlineRunFormatting } from './inline-formatting';
+import {
+	RUN_FORMAT_MARKS,
+	setInlineRunFormatting,
+	hasInlineRunAttributes,
+} from './inline-formatting';
 
 export type ToggleKey = 'bold' | 'italic' | 'underline' | 'strike';
 
@@ -91,7 +95,7 @@ export function createToggleFormat(
 			if (!dispatch) return true;
 			const tr = state.tr;
 			for (const piece of pieces) {
-				if (!piece.node.isText && piece.node.type.name !== 'hardBreak') {
+				if (hasInlineRunAttributes(piece.node)) {
 					const run = inlineNodeRun(piece.node)!;
 					delete run[key];
 					const without = runToInlineNodes(run, schema)[0]!;

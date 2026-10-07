@@ -1,0 +1,33 @@
+{
+  "applicationVersion": "16.0",
+  "applicationBuild": "16.0.20430",
+  "cases": [
+    {
+      "name": "line-break",
+      "before": {
+        "type": 1,
+        "index": 0,
+        "text": "Before\u000bAfter\r",
+        "revisions": 0
+      },
+      "tracked": {
+        "type": 1,
+        "index": 0,
+        "text": "Before\u000bAfter\r",
+        "revisions": 1
+      },
+      "accepted": {
+        "type": 1,
+        "index": 0,
+        "text": "Before\u000bAfter\r",
+        "revisions": 0
+      },
+      "rejected": {
+        "type": 1,
+        "index": 0,
+        "text": "Before\u000bAfter\r",
+        "revisions": 0
+      }
+    }
+  ]
+}

@@ -4,7 +4,11 @@ import type { Revision, TextRun } from '../model';
 import { restoreRunFormatting } from '../restore-run-format';
 import { marksForRun } from './run-marks';
 import { inlineNodeRun } from './run-adapter';
-import { RUN_FORMAT_MARKS as FORMAT_MARKS, setInlineRunFormatting } from './inline-formatting';
+import {
+	RUN_FORMAT_MARKS as FORMAT_MARKS,
+	setInlineRunFormatting,
+	hasInlineRunAttributes,
+} from './inline-formatting';
 
 /** Imported formatting history travels with run marks or inline object attributes. */
 export function formattingRevision(node: ProseMirrorNode): Revision | undefined {
@@ -34,7 +38,7 @@ export function resolveFormattingRange(
 			});
 	});
 	for (const piece of pieces) {
-		if (!piece.node.isText && piece.node.type.name !== 'hardBreak') {
+		if (hasInlineRunAttributes(piece.node)) {
 			const run = inlineNodeRun(piece.node)!;
 			if (mode === 'reject') restoreRunFormatting(run);
 			else if (run.formatRevision) delete run.formatRevision;

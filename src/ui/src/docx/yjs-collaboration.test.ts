@@ -30,6 +30,7 @@ import { insertPicture } from './picture-commands';
 import { TextSelection } from 'prosemirror-state';
 import { toggleFormat } from './toggle-commands';
 import { addComment, commentIdsAtSelection } from './comment-commands';
+import { insertHardBreak } from './hard-break-command';
 
 const sessions: CollabSession[] = [];
 const editors: DocxEditorElement[] = [];
@@ -72,11 +73,69 @@ function start(
 }
 
 describe('Word Yjs collaboration', () => {
-	for (const name of ['picture', 'note', 'break', 'field'])
+	it('retains stored font formatting on a newly inserted untracked line break', () => {
+		const peers = pair();
+		const a = mount();
+		const b = mount();
+		start(a, b, peers);
+		const view = viewOf(a);
+		view.dispatch(
+			view.state.tr.setStoredMarks([
+				view.state.schema.marks.bold!.create(),
+				view.state.schema.marks.font!.create({ family: 'Georgia', size: 18 }),
+			]),
+		);
+		expect(insertHardBreak(view.state, view.dispatch, view)).toBe(true);
+		expect(view.state.doc.eq(viewOf(b).state.doc)).toBe(true);
+		expect(b.documentModel!.blocks[0]).toMatchObject({
+			runs: [{ text: '\n', bold: true, fontFamily: 'Georgia', fontSize: 18 }],
+		});
+	});
+	it('shares authored hard-break revisions, deletes own insertions and restores rejected deletions', async () => {
+		const peers = pair();
+		const a = mount();
+		const b = mount();
+		const model = createDocument();
+		model.trackChanges = true;
+		a.documentModel = structuredClone(model);
+		b.documentModel = structuredClone(model);
+		a.reviewAuthor = 'Ada';
+		b.reviewAuthor = 'Bob';
+		start(a, b, peers);
+		const av = viewOf(a);
+		const bv = viewOf(b);
+		av.dispatch(av.state.tr.insert(1, av.state.schema.node('hardBreak')));
+		expect(av.state.doc.eq(bv.state.doc)).toBe(true);
+		expect(collectRevisionRanges(bv.state.doc)).toMatchObject([{ kind: 'insert', author: 'Ada' }]);
+		expect(listRevisions((await loadDocx(await b.saveBytes())).model)).toHaveLength(1);
+		av.dispatch(av.state.tr.delete(1, 2));
+		expect(av.state.doc.eq(bv.state.doc)).toBe(true);
+		expect(collectRevisionRanges(bv.state.doc)).toHaveLength(0);
+		expect(bv.state.doc.firstChild!.childCount).toBe(0);
+		av.dispatch(av.state.tr.insert(1, av.state.schema.node('hardBreak')));
+		expect(acceptAllChanges(av)).toBe(true);
+		wordYjsPluginKey.getState(bv.state)!.stopCapturing();
+		const initial = bv.state.doc;
+		bv.dispatch(bv.state.tr.delete(1, 2));
+		const tracked = bv.state.doc;
+		expect(av.state.doc.eq(tracked)).toBe(true);
+		expect(collectRevisionRanges(av.state.doc)).toMatchObject([{ kind: 'delete', author: 'Bob' }]);
+		expect(wordYjsPluginKey.getState(bv.state)!.undo()).toBe(true);
+		expect(av.state.doc.eq(initial)).toBe(true);
+		expect(wordYjsPluginKey.getState(bv.state)!.redo()).toBe(true);
+		expect(av.state.doc.eq(tracked)).toBe(true);
+		expect(rejectAllChanges(av)).toBe(true);
+		expect(av.state.doc.eq(bv.state.doc)).toBe(true);
+		expect(collectRevisionRanges(bv.state.doc)).toHaveLength(0);
+		expect(bv.state.doc.firstChild!.childCount).toBe(1);
+	});
+	for (const name of ['picture', 'note', 'break', 'field', 'line-break'])
 		it(`shares newly recorded native ${name} object formatting with author history`, async () => {
 			const bytes = new Uint8Array(
 				await readFile(
-					resolve(`../core/docx/__fixtures__/review-object-formatting/${name}-before.docx`),
+					resolve(
+						`../core/docx/__fixtures__/${name === 'line-break' ? 'review-line-break-formatting' : 'review-object-formatting'}/${name}-before.docx`,
+					),
 				),
 			);
 			const peers = pair();
@@ -128,12 +187,14 @@ describe('Word Yjs collaboration', () => {
 			expect(wordYjsPluginKey.getState(viewOf(a).state)!.undo()).toBe(true);
 			expect(viewOf(b).state.doc.eq(recorded)).toBe(true);
 		});
-	for (const name of ['picture', 'note', 'break', 'field'])
+	for (const name of ['picture', 'note', 'break', 'field', 'line-break'])
 		for (const mode of ['accept', 'reject'] as const)
 			it(`shares native ${name} formatting ${mode} and one undo operation`, async () => {
 				const bytes = new Uint8Array(
 					await readFile(
-						resolve(`../core/docx/__fixtures__/review-object-formatting/${name}-tracked.docx`),
+						resolve(
+							`../core/docx/__fixtures__/${name === 'line-break' ? 'review-line-break-formatting' : 'review-object-formatting'}/${name}-tracked.docx`,
+						),
 					),
 				);
 				const peers = pair();

@@ -8,7 +8,12 @@ import { listRevisions } from '../revision-commands';
 import type { Paragraph, TextRun } from '../model';
 import { markSpecs } from './schema-marks';
 import { imageNodeSpec } from './inline-content-schema';
-import { pageBreakNodeSpec, noteReferenceNodeSpec, fieldMarkerNodeSpec } from './break-note-schema';
+import {
+	pageBreakNodeSpec,
+	noteReferenceNodeSpec,
+	fieldMarkerNodeSpec,
+	hardBreakNodeSpec,
+} from './break-note-schema';
 import { runToInlineNodes, appendInlineNode, inlineNodeRun } from './run-adapter';
 import { trackChangesPlugin, trackChangesPluginKey } from './track-changes-mode';
 import { resolveFormattingRange } from './review-formatting';
@@ -23,6 +28,7 @@ const schema = new Schema({
 		pageBreak: pageBreakNodeSpec,
 		noteReference: noteReferenceNodeSpec,
 		fieldMarker: fieldMarkerNodeSpec,
+		hardBreak: hardBreakNodeSpec,
 	},
 	marks: markSpecs,
 });
@@ -33,11 +39,14 @@ const normalized = (paragraphs: Paragraph[]) =>
 		),
 	);
 
-for (const name of ['picture', 'note', 'break', 'field'])
+for (const name of ['picture', 'note', 'break', 'field', 'line-break'])
 	it(`records native ${name} formatting, exports Word-equivalent resolution and retains isolated history`, async () => {
 		const fixture = (state: string) =>
 			readFile(
-				new URL(`../__fixtures__/review-object-formatting/${name}-${state}.docx`, import.meta.url),
+				new URL(
+					`../__fixtures__/${name === 'line-break' ? 'review-line-break-formatting' : 'review-object-formatting'}/${name}-${state}.docx`,
+					import.meta.url,
+				),
 			);
 		const loaded = await loadDocx(await fixture('before'));
 		const paragraphs = loaded.model.blocks as Paragraph[];

@@ -6,6 +6,7 @@ import { EditorState, TextSelection } from 'prosemirror-state';
 import { docToModel, modelToDoc } from './model-adapter';
 import { insertHardBreak } from './hard-break-command';
 import { schema } from './schema';
+import { inlineNodeRun } from 'ooxml-core/docx/ui';
 
 describe('paragraph line breaks and spacing adapter', () => {
 	it('distinguishes an inherited page break from a direct off override through edits and DOM conversion', () => {
@@ -57,7 +58,11 @@ describe('paragraph line breaks and spacing adapter', () => {
 			'hardBreak',
 			'text',
 		]);
-		expect(paragraph.child(1).marks.map((mark) => mark.type.name)).toEqual(['bold', 'font']);
+		expect(inlineNodeRun(paragraph.child(1))).toEqual({
+			text: '\n',
+			bold: true,
+			fontFamily: 'Georgia',
+		});
 		expect(editorDoc.textBetween(0, editorDoc.content.size, '\n')).toBe('First\nSecond\nThird');
 
 		const roundtripped = docToModel(editorDoc, model);

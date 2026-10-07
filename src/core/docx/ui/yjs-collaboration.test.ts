@@ -7,6 +7,9 @@ import {
 	type CollabSession,
 } from '../../collab/index';
 import { WordYjsCollaboration } from './yjs-collaboration';
+import { markSpecs } from './schema-marks';
+import { runToInlineNodes, inlineNodeRun } from './run-adapter';
+import { hardBreakNodeSpec } from './break-note-schema';
 
 const schema = new Schema({
 	nodes: {
@@ -53,6 +56,37 @@ function bind(
 }
 
 describe('Word room bootstrap', () => {
+	it('retains hard-break run properties and formatting history when another peer joins', () => {
+		const inlineSchema = new Schema({
+			nodes: {
+				doc: { content: 'paragraph+' },
+				paragraph: { content: 'inline*' },
+				text: { group: 'inline' },
+				hardBreak: hardBreakNodeSpec,
+			},
+			marks: markSpecs,
+		});
+		const run = {
+			text: 'before\nafter',
+			bold: true,
+			language: 'en-GB',
+			formatRevision: {
+				kind: 'formatChange' as const,
+				author: 'Ada',
+				id: '12',
+				previousRunPropertiesXml:
+					'<w:rPr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:i/></w:rPr>',
+			},
+		};
+		const initial = inlineSchema.node('doc', null, [
+			inlineSchema.node('paragraph', null, runToInlineNodes(run, inlineSchema)),
+		]);
+		const [a, b] = pair();
+		bind(a!, initial, true);
+		const joined = bind(b!, initial).state(inlineSchema).doc;
+		expect(joined.toJSON()).toEqual(initial.toJSON());
+		expect(inlineNodeRun(joined.child(0).child(1))).toEqual({ ...run, text: '\n' });
+	});
 	it('preserves sections and header/footer data instead of adopting the joining snapshot', () => {
 		const [a, b] = pair();
 		const initial = schema.node(

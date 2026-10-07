@@ -1099,3 +1099,18 @@ Source extraction: ChristopherVR/ooxml at `ccc4cebc6`,
 to `gradient-gallery-preview.ts`, used by both direction and preset galleries.
 The new preset UI consumes the existing shared Office gallery and shared
 core gradient painter; editing and serialization remain in the core XLSX area.
+
+## Shared Word hard-break schema and collaboration history
+
+Source: ChristopherVR/ooxml at `5de353df2`, `src/ui/src/docx/schema.ts`.
+The hard-break NodeSpec moved to `src/core/docx/ui/break-note-schema.ts` and
+gained serialized run-property attributes and DOM metadata. The insertion
+command moved from `src/ui/src/docx/hard-break-command.ts`
+to `src/core/docx/ui/hard-break-command.ts`, with schema injection through state.
+Run conversion, formatting recording, review resolution and text revision recording reuse the
+existing core run adapter. Older consumer schemas without these attributes
+retain mark-based behavior. Yjs peers now retain line-break properties and
+history instead of losing element marks. The native recorder generated the
+four line-break references in `review-line-break-formatting` with owned hidden
+Word 16.0 build 20430; the companion export reports record reopening and native
+Reject All. This installed perpetual build does not certify current M365 parity.

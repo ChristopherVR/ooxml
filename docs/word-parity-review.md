@@ -1,4 +1,4 @@
-# Word parity review and first implementation slice
+# Word parity review and implementation progress
 
 Reviewed 2026-10-07. This is a source review and a bounded first implementation,
 not a claim of Microsoft Word equivalence or a completed browser assessment.
@@ -379,6 +379,19 @@ Word behavior for all story revisions.
 
 Full M365 Word parity remains unfinished and must not be claimed without this
 reference evidence.
+
+Line breaks now use the shared core schema with run-property attributes, so Yjs
+retains their formatting, language and imported history. Formatting commands,
+recording and accept/reject reuse the same code as other supported inline atoms.
+Tracked insertion, deletion and linked cut/paste moves retain line-break history;
+deleting the author's own pending insertion removes it. Core regressions retain
+compatibility with older mark-based hard-break schemas. Peer tests cover exports,
+resolution and isolated undo/redo, and the six browser bindings cover recording
+and Original display against native before documents. Word 16.0 build 20430
+reopens the three recorded exports with the expected bold property and revision
+counts and rejects tracked formatting to the baseline. This reference proves
+those bounded semantics; current M365, layout and general atom mark parity remain
+unfinished.
 
 Paragraphs now carry their complete source property basis through editor and
 Yjs conversion. Rejection preserves current paragraph-mark and section properties

@@ -1,5 +1,22 @@
 import type { NodeSpec } from 'prosemirror-model';
 
+/** A line break carries its own run properties through element-based collaboration mappings. */
+export const hardBreakNodeSpec: NodeSpec = {
+	group: 'inline',
+	inline: true,
+	atom: true,
+	selectable: false,
+	attrs: { format: { default: null } },
+	leafText: () => '\n',
+	parseDOM: [
+		{
+			tag: 'br',
+			getAttrs: (el) => ({ format: (el as HTMLElement).dataset.runProperties ?? null }),
+		},
+	],
+	toDOM: (node) => ['br', node.attrs.format ? { 'data-run-properties': node.attrs.format } : {}],
+};
+
 /** A visible, editable page or column break marker (`w:br` type page/column). */
 export const pageBreakNodeSpec: NodeSpec = {
 	group: 'inline',

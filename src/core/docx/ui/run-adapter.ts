@@ -97,14 +97,18 @@ export function runToInlineNodes(
 	}
 	if (!run.text) return [];
 	const marks = marksForRun(run, schema);
+	const { text: _text, ...format } = run;
+	const hardBreak = schema.nodes.hardBreak;
+	const breakNode = () =>
+		hardBreak?.spec.attrs?.format
+			? schema.node('hardBreak', {
+					format: Object.keys(format).length ? JSON.stringify(format) : null,
+				})
+			: schema.node('hardBreak', null, undefined, marks);
 	return run.text
 		.split(/(\n)/)
 		.flatMap((piece) =>
-			piece === '\n'
-				? [schema.node('hardBreak', null, undefined, marks)]
-				: piece
-					? [schema.text(piece, marks)]
-					: [],
+			piece === '\n' ? [breakNode()] : piece ? [schema.text(piece, marks)] : [],
 		);
 }
 
@@ -202,7 +206,8 @@ export function appendInlineNode(runs: TextRun[], child: ProseMirrorNode): void 
 	const run: TextRun = { text: child.isText ? child.text || '' : '\n' };
 	const link = linkFromMarks(child);
 	if (link) run.link = link;
-	applyMarkFormatting(run, child);
+	if (!child.isText && child.type.spec.attrs?.format) applyInlineFormat(run, child);
+	else applyMarkFormatting(run, child);
 	const previous = runs.at(-1);
 	const fields: (keyof TextRun)[] = [
 		'bold',

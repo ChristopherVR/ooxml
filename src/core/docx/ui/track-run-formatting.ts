@@ -8,7 +8,11 @@ import { buildXml, first, makeW, parseXml, WORD_NS, type XmlElement } from '../x
 import { parseRunPropertiesSnapshot } from '../restore-run-format';
 import { inlineNodeRun } from './run-adapter';
 import { formattingRevision } from './review-formatting';
-import { RUN_FORMAT_MARKS as TRACKED_MARKS, setInlineRunFormatting } from './inline-formatting';
+import {
+	RUN_FORMAT_MARKS as TRACKED_MARKS,
+	setInlineRunFormatting,
+	hasInlineRunAttributes,
+} from './inline-formatting';
 
 /** Uses the ordinary writer so snapshots retain script fonts and opaque source properties. */
 function properties(node: ProseMirrorNode): XmlElement {
@@ -73,8 +77,7 @@ export function trackRunFormatting(
 				const after = properties(node);
 				if (propertiesSignature(before) === propertiesSignature(after)) {
 					if (
-						!node.isText &&
-						node.type.name !== 'hardBreak' &&
+						hasInlineRunAttributes(node) &&
 						node.marks.some((mark) => TRACKED_MARKS.has(mark.type.name))
 					)
 						setInlineRunFormatting(tr, start, inlineNodeRun(node)!);
@@ -85,7 +88,7 @@ export function trackRunFormatting(
 				const restored =
 					propertiesSignature(after) === propertiesSignature(parseRunPropertiesSnapshot(priorXml));
 				const mark = node.marks.find((item) => item.type === markType);
-				const atom = !node.isText && node.type.name !== 'hardBreak';
+				const atom = hasInlineRunAttributes(node);
 				const props = atom
 					? inlineNodeRun(node)!
 					: (structuredClone(mark?.attrs.props ?? {}) as Partial<TextRun>);

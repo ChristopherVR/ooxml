@@ -15,25 +15,28 @@ const output = process.argv[2];
 if (!output) throw new Error('Provide an output directory for synthetic exports');
 await mkdir(output, { recursive: true });
 const stories = process.argv[3] === '--stories';
-const record = process.argv[3] === '--record-object-formatting';
+const lineBreak = process.argv[3] === '--record-line-break-formatting';
+const record = lineBreak || process.argv[3] === '--record-object-formatting';
 const objects = record || process.argv[3] === '--object-formatting';
-for (const name of objects
-	? ['picture', 'note', 'break', 'field']
-	: stories
-		? ['all-stories']
-		: [
-				'picture-insert',
-				'picture-delete',
-				'note-insert',
-				'note-delete',
-				'break-delete',
-				'break-insert',
-			]) {
+for (const name of lineBreak
+	? ['line-break']
+	: objects
+		? ['picture', 'note', 'break', 'field']
+		: stories
+			? ['all-stories']
+			: [
+					'picture-insert',
+					'picture-delete',
+					'note-insert',
+					'note-delete',
+					'break-delete',
+					'break-insert',
+				]) {
 	for (const mode of record ? ['tracked', 'accept', 'reject'] : ['accept', 'reject']) {
 		const loaded = await loadDocx(
 			await readFile(
 				new URL(
-					`../../core/docx/__fixtures__/${objects ? 'review-object-formatting' : stories ? 'review-stories' : 'review-inline'}/${name}-${record ? 'before' : 'tracked'}.docx`,
+					`../../core/docx/__fixtures__/${lineBreak ? 'review-line-break-formatting' : objects ? 'review-object-formatting' : stories ? 'review-stories' : 'review-inline'}/${name}-${record ? 'before' : 'tracked'}.docx`,
 					import.meta.url,
 				),
 			),

@@ -1,0 +1,75 @@
+{
+  "applicationVersion": "16.0",
+  "applicationBuild": "16.0.20430",
+  "cases": [
+    {
+      "name": "line-break-accept",
+      "text": "Before\u000bAfter\r",
+      "revisions": 0,
+      "pictures": 0,
+      "footnotes": 0,
+      "footnoteRevisions": 0,
+      "pages": 1,
+      "stories": [
+        {
+          "type": 1,
+          "index": 0,
+          "text": "Before\u000bAfter\r",
+          "revisions": 0
+        }
+      ],
+      "objects": [
+        {
+          "kind": "line-break",
+          "bold": -1
+        }
+      ]
+    },
+    {
+      "name": "line-break-reject",
+      "text": "Before\u000bAfter\r",
+      "revisions": 0,
+      "pictures": 0,
+      "footnotes": 0,
+      "footnoteRevisions": 0,
+      "pages": 1,
+      "stories": [
+        {
+          "type": 1,
+          "index": 0,
+          "text": "Before\u000bAfter\r",
+          "revisions": 0
+        }
+      ],
+      "objects": [
+        {
+          "kind": "line-break",
+          "bold": 0
+        }
+      ]
+    },
+    {
+      "name": "line-break-tracked",
+      "text": "Before\u000bAfter\r",
+      "revisions": 1,
+      "pictures": 0,
+      "footnotes": 0,
+      "footnoteRevisions": 0,
+      "pages": 1,
+      "stories": [
+        {
+          "type": 1,
+          "index": 0,
+          "text": "Before\u000bAfter\r",
+          "revisions": 1
+        }
+      ],
+      "objects": [
+        {
+          "kind": "line-break",
+          "bold": -1
+        }
+      ]
+    }
+  ]
+}
