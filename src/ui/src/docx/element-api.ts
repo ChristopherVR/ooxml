@@ -35,6 +35,7 @@ export abstract class DocxEditorApi extends HTMLElementBase {
 		core.collab.startYjs(session, core.view.state.doc, {
 			...options,
 			initialMedia: new Map([...(options.initialMedia ?? []), ...core.inserts.pendingMedia]),
+			initialComments: options.initialComments ?? core.model.comments ?? [],
 		});
 		core.loadGeneration++;
 		core.detachedState = undefined;
@@ -134,7 +135,11 @@ export abstract class DocxEditorApi extends HTMLElementBase {
 	/** Serialized document bytes: the loaded package's own writer, else a fresh DOCX from the model. */
 	async saveBytes(): Promise<Uint8Array> {
 		const { core } = this;
-		if (core.collab.yjs) core.model = docToModel(core.collab.yjs.state(schema).doc, core.model);
+		if (core.collab.yjs) {
+			core.model = docToModel(core.collab.yjs.state(schema).doc, core.model);
+			if (core.collab.yjs.sharedComments)
+				core.model = { ...core.model, comments: core.collab.yjs.comments.all() };
+		}
 		// Only pass staged pictures when there are any: legacy DOC sessions take the model alone.
 		const pending = new Map([
 			...core.inserts.pendingMedia,

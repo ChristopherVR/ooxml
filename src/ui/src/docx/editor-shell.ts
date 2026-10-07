@@ -166,6 +166,9 @@ export function buildShell(core: EditorCore, api: ShellApi): void {
 		getView: () => core.view,
 		getReviewAuthor: () => core.reviewAuthor,
 		getCollaborationIds: () => core.collab.ids,
+		getYjs: () => core.collab.yjs,
+		canEditComments: () =>
+			core.canEditBody() && (!core.collab.active || Boolean(core.collab.yjs?.sharedComments)),
 		notifyChange: () => core.notifyChange(),
 		refresh: () => core.refreshControls(),
 	});

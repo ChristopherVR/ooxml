@@ -30,6 +30,7 @@ export function refreshEditorControls(
 	language: string,
 	printPageStatus?: { current: number; total: number } | null,
 	commentsOpen = false,
+	canEditComments = !readOnly && !collaboration,
 ): { pageText: string; wordText: string } | undefined {
 	toolbar
 		?.querySelectorAll<HTMLButtonElement | HTMLSelectElement | HTMLInputElement>(
@@ -58,6 +59,7 @@ export function refreshEditorControls(
 					'Read aloud',
 					'Gridlines',
 					'Ruler',
+					'Comments',
 				].includes(label ?? '');
 		});
 	if (!view) return undefined;
@@ -95,8 +97,8 @@ export function refreshEditorControls(
 			['Reject all', anyChange],
 			['Previous change', anyChange],
 			['Next change', anyChange],
-			['Add comment', !state.selection.empty],
-			['Delete comment', commentIdsAtSelection(view).length > 0],
+			['Add comment', canEditComments && !state.selection.empty],
+			['Delete comment', canEditComments && commentIdsAtSelection(view).length > 0],
 			['Previous comment', commentAnchors(view).length > 0],
 			['Next comment', commentAnchors(view).length > 0],
 			[

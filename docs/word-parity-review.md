@@ -80,11 +80,23 @@ The browser convergence and export contract passed in all six framework mounts.
 Core and UI regressions also cover simultaneous first insertions in empty
 paragraphs, formatting, page settings, recovery, loaded opaque parts and new
 picture bytes. This is bounded evidence, not a complete M365 comparison. The
-matching loaded package remains necessary for styles, notes, comments and
+matching loaded package remains necessary for styles, notes and
 existing assets. Editing outside the body and structural table commands remain
 disabled; canonical multi-author saving, authorization and persistence remain
 host responsibilities. See `viewers/docx/docs/collaboration.md` for the API and
 limitations.
+
+Comment editing commands now live in core and the UI re-exports them. New Yjs
+rooms share independent anchor attributes and comment records, with separate
+resolution and deletion maps. Adding or deleting a thread and its anchor uses
+one local undo operation. Concurrent replies survive synchronization; deleted
+roots hide concurrent replies until undo restores the root. Imported overlapping
+anchors normalize before bootstrap, and deletion formats only the relevant Yjs
+attribute to avoid reasserting another author's concurrently deleted anchor.
+Legacy rooms without the comment capability and authority-step rooms keep comment
+editing disabled. Tests cover partitioned edits, imported threads, author undo,
+read-only peers and detached DOCX export, plus the review pane in six browser
+bindings. This does not implement M365 mentions, notifications or assigned tasks.
 
 ## Next implementation sequence
 
@@ -118,7 +130,7 @@ renders it through compatibility facades. These semantic references do not
 certify font metrics, header/footer geometry, all numbering formats, or M365
 subscription behavior.
 
-1. Extend collaboration to comments, note content, headers/footers, style and
+1. Extend collaboration to note content, headers/footers, style and
    numbering definitions, using granular mappings and explicit conflict rules.
    Add granular table transactions before enabling structural table editing.
 2. Define full package bootstrap, authenticated provider permissions,

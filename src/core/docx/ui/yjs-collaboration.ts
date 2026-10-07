@@ -3,7 +3,9 @@ import { Plugin, PluginKey, type Command, type Transaction } from 'prosemirror-s
 import type { CollabSession } from '../../collab/index.js';
 import * as Y from 'yjs';
 import { WordYjsMedia } from './yjs-media.js';
-import type { PendingMediaPart } from '../model.js';
+import type { Comment, PendingMediaPart } from '../model.js';
+import { WordYjsComments } from './yjs-comments.js';
+import { commentIdsFromMarks } from './comment-anchors.js';
 import type { EditorView } from 'prosemirror-view';
 import {
 	initProseMirrorDoc,
@@ -21,6 +23,8 @@ export interface WordYjsOptions {
 	initializeIfEmpty?: boolean;
 	/** New media referenced by the creator's initial snapshot. */
 	initialMedia?: ReadonlyMap<string, PendingMediaPart>;
+	/** Comment threads from the creator's matching source package. */
+	initialComments?: readonly Comment[];
 }
 
 export const wordYjsPluginKey = new PluginKey<WordYjsCollaboration>('docx-yjs');
@@ -34,6 +38,8 @@ export interface WordYjsViewOptions {
 export class WordYjsCollaboration {
 	readonly fragment: Y.XmlFragment;
 	readonly media: WordYjsMedia;
+	readonly comments: WordYjsComments;
+	readonly sharedComments: boolean;
 	private readonly attributes: Y.Map<unknown>;
 	private readonly undoManager: Y.UndoManager;
 	private destroyed = false;
@@ -62,6 +68,12 @@ export class WordYjsCollaboration {
 		this.media = new WordYjsMedia(session);
 		this.attributes = session.doc.getMap('docx:attributes');
 		const identity = session.doc.getMap<string>('docx:identity');
+		this.comments = new WordYjsComments(
+			session,
+			() => !this.destroyed && this.sharedComments,
+			() => this.stopCapturing(),
+			this.fragment,
+		);
 		if (!identity.has('documentId')) {
 			if (!options.initializeIfEmpty || !session.canWrite() || this.fragment.length)
 				throw new Error('The Word room has not been initialized by its designated creator.');
@@ -69,8 +81,14 @@ export class WordYjsCollaboration {
 				for (const [name, part] of options.initialMedia ?? []) this.media.publish(name, part);
 				identity.set('documentId', options.documentId);
 				identity.set('format', 'word-yjs-v1');
+				identity.set('comments', 'independent-v1');
+				for (const comment of options.initialComments ?? []) {
+					this.comments.records.set(comment.id, { ...comment });
+					if (comment.resolved !== undefined)
+						this.comments.resolved.set(comment.id, comment.resolved);
+				}
 				for (const [key, value] of Object.entries(initial.attrs)) this.attributes.set(key, value);
-				prosemirrorToYXmlFragment(initial, this.fragment);
+				prosemirrorToYXmlFragment(independentCommentAnchors(initial), this.fragment);
 				seedEmptyParagraphText(this.fragment);
 			}, this);
 		} else if (identity.get('documentId') !== options.documentId) {
@@ -78,11 +96,21 @@ export class WordYjsCollaboration {
 		} else if (identity.get('format') !== 'word-yjs-v1') {
 			throw new Error('Unsupported Word collaboration room format.');
 		}
-		this.undoManager = new Y.UndoManager([this.fragment, this.attributes], {
-			trackedOrigins: new Set([ySyncPluginKey]),
-			deleteFilter: (item) => defaultDeleteFilter(item, new Set(['paragraph'])),
-			captureTransaction: (transaction) => transaction.meta.get('addToHistory') !== false,
-		});
+		this.sharedComments = identity.get('comments') === 'independent-v1';
+		this.undoManager = new Y.UndoManager(
+			[
+				this.fragment,
+				this.attributes,
+				this.comments.records,
+				this.comments.resolved,
+				this.comments.deleted,
+			],
+			{
+				trackedOrigins: new Set([ySyncPluginKey]),
+				deleteFilter: (item) => defaultDeleteFilter(item, new Set(['paragraph'])),
+				captureTransaction: (transaction) => transaction.meta.get('addToHistory') !== false,
+			},
+		);
 		session.doc.on('afterTransaction', this.ensureTextContainers);
 	}
 
@@ -212,6 +240,21 @@ export class WordYjsCollaboration {
 		this.session.doc.off('afterTransaction', this.ensureTextContainers);
 		this.undoManager.destroy();
 	}
+}
+
+/** Normalize loaded legacy grouped marks before creating a new shared room. */
+function independentCommentAnchors(node: Node): Node {
+	const comment = node.type.schema.marks.comment;
+	const marks = comment
+		? [
+				...node.marks.filter((mark) => mark.type !== comment),
+				...commentIdsFromMarks(node.marks).map((id) => comment.create({ ids: [id] })),
+			]
+		: node.marks;
+	if (node.isLeaf) return node.mark(marks);
+	const children: Node[] = [];
+	node.forEach((child) => children.push(independentCommentAnchors(child)));
+	return node.type.create(node.attrs, children, marks);
 }
 
 /** A shared empty text container avoids concurrent first-insertion text-node merging
