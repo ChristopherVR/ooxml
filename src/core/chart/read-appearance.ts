@@ -19,6 +19,8 @@ export function readChartAppearance(
 		if (value !== null && value !== undefined) out[key] = value === '1' || value === 'true';
 	}
 	const typeface = first(text, 'latin', NS.a)?.getAttribute('typeface');
+	const underline = text?.getAttribute('u');
+	if (underline) out.underline = underline !== 'none';
 	if (typeface) out.typeface = typeface;
 	const color = parseDrawingColorIn(first(text, 'solidFill', NS.a));
 	if (color) out.textColor = color;

@@ -252,6 +252,8 @@ export interface DiagramTextRun {
 }
 
 export interface DiagramTextParagraph {
+	/** Paragraph default run properties, inherited by individual runs. */
+	defaultProperties?: Omit<DiagramTextRun, 'text'>;
 	/** `l`, `ctr`, `r`, `just`... */
 	align?: string;
 	runs: DiagramTextRun[];

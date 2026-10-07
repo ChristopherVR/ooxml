@@ -1424,3 +1424,29 @@ title 24 points, legend/axes 20 points, all italic Arial and color #123456;
 explicit title 32 points, bold, major theme font and color #595959, with
 9-point legend/axes. These checks establish those font inheritance and
 preservation paths, not exact raster or complete Excel parity.
+
+Imported mixed-format chart titles now reuse the shared DrawingML text body
+reader and chart/theme style resolver. Runs keep their own size, font, weight,
+italic, color and simple underline; explicit line feeds and paragraph boundaries
+render on separate lines. Paragraph defaults apply before run properties. The
+shared reader also retains cached fields and breaks in their original order.
+Unchanged title text retains its entire rich body when chart topology is
+regenerated, instead of copying only the first run's properties. Plain title
+replacement still uses the existing first-run formatting behavior.
+
+The native recorder creates single-line and line-feed mixed titles and measures
+individual characters on reopen. A shared-XML preparation step isolates a third
+explicit-paragraph reference, which Excel reopens and measures independently.
+The test-only chart parts and measurements are in
+`src/core/chart/excel-chart-title-text.json`. Per-character comparison verifies
+the resolved runs, and browser tests reuse the existing native chart shell in
+all six bindings. The diagram/chart/XLSX sweep passes 8,534 ordinary tests plus
+17 existing expected raster failures; all 92 focused browser checks pass.
+
+Playwright MCP reviewed the title and changed the native paragraph reference
+to a line chart. Excel 16.0 build 20430 reopened its UI export, resaved it, and
+reopened the copy: all 23 characters retain size, font name, bold, italic,
+underline and color. The visual review still exposes approximate horizontal
+text measurement and line spacing. Automatic wrapping, native text box layout,
+advanced underline/baseline/spacing effects, list-level defaults, mixed-format
+font authoring UI and full Excel parity remain unfinished.

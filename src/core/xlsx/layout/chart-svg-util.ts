@@ -40,6 +40,7 @@ export function text(
 		fill?: string;
 		family?: string;
 		italic?: boolean;
+		underline?: boolean;
 		filter?: string;
 	} = {},
 ): string {
@@ -52,6 +53,8 @@ export function text(
 	if (attrs.family) parts.push(`font-family="${esc(attrs.family)}"`);
 	if (attrs.filter) parts.push(`filter="${esc(attrs.filter)}"`);
 	if (attrs.italic !== undefined) parts.push(`font-style="${attrs.italic ? 'italic' : 'normal'}"`);
+	if (attrs.underline !== undefined)
+		parts.push(`text-decoration="${attrs.underline ? 'underline' : 'none'}"`);
 	return `<text ${parts.join(' ')}>${esc(content)}</text>`;
 }
 

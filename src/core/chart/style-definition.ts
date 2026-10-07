@@ -1,4 +1,4 @@
-import type { DiagramColor, DiagramFill, DiagramLine } from '../diagram/types';
+import type { DiagramColor, DiagramFill, DiagramLine, DiagramTextBody } from '../diagram/types';
 
 /** Chart elements consumed by the current Office chart painters. */
 export const CHART_STYLE_PARTS = [
@@ -24,12 +24,16 @@ export interface ChartStyleReference {
 
 /** Theme-relative formatting; opaque XML retains properties not yet interpreted. */
 export interface ChartStyleEntry {
+	textBody?: DiagramTextBody;
+	/** Element text defaults before paragraph/run overrides. */
+	textBodyStyle?: ChartTextProperties;
 	/** Direct axis formatting, when imported from a chart part. */
 	axisVisible?: boolean;
 	labelsVisible?: boolean;
 	fontSize?: number;
 	bold?: boolean;
 	italic?: boolean;
+	underline?: boolean;
 	typeface?: string;
 	textColor?: DiagramColor;
 	fontRef?: ChartStyleReference;
@@ -42,6 +46,18 @@ export interface ChartStyleEntry {
 	textEffectsXml?: string;
 	sourceXml: string;
 }
+
+export type ChartTextProperties = Pick<
+	ChartStyleEntry,
+	| 'fontSize'
+	| 'bold'
+	| 'italic'
+	| 'underline'
+	| 'typeface'
+	| 'textColor'
+	| 'fontRef'
+	| 'textEffectsXml'
+>;
 
 /** Office chart-style part, distinct from a chart color-style palette. */
 export interface ChartStyleDefinition {
@@ -59,6 +75,7 @@ export interface ResolvedChartStyleEntry {
 	fontSize?: number;
 	bold?: boolean;
 	italic?: boolean;
+	underline?: boolean;
 	color?: string;
 	lineColor?: string;
 	lineWidth?: number;
@@ -78,7 +95,7 @@ export function resolveChartStyleDefinition(
 		const source = style.entries[name];
 		if (!source) continue;
 		const entry: ResolvedChartStyleEntry = {};
-		for (const key of ['fontSize', 'bold', 'italic'] as const) {
+		for (const key of ['fontSize', 'bold', 'italic', 'underline'] as const) {
 			const value = source[key];
 			if (value !== undefined) Object.assign(entry, { [key]: value });
 		}

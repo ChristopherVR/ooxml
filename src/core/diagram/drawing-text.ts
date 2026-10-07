@@ -1,12 +1,11 @@
 // DrawingML text body reader (`dsp:txBody`, `a:txBody`) over the DOM. Diagram-independent;
 // destined for `drawingml`.
 import { parseDrawingColorIn } from './drawing-color';
-import { NS, booleanAttribute, children, first, type XmlElement } from './dom';
+import { NS, booleanAttribute, children, elements, first, type XmlElement } from './dom';
 import type { DiagramTextBody, DiagramTextParagraph, DiagramTextRun } from './types';
 
-function parseRun(run: XmlElement): DiagramTextRun {
-	const properties = first(run, 'rPr', NS.a);
-	const parsed: DiagramTextRun = { text: first(run, 't', NS.a)?.textContent ?? '' };
+function parseProperties(properties: XmlElement | undefined): Omit<DiagramTextRun, 'text'> {
+	const parsed: Omit<DiagramTextRun, 'text'> = {};
 	const size = Number.parseInt(properties?.getAttribute('sz') ?? '', 10);
 	if (Number.isFinite(size)) parsed.sizePt = size / 100;
 	const bold = booleanAttribute(properties, 'b');
@@ -22,13 +21,26 @@ function parseRun(run: XmlElement): DiagramTextRun {
 	return parsed;
 }
 
+function parseRun(run: XmlElement): DiagramTextRun {
+	return {
+		text: run.localName === 'br' ? '\n' : (first(run, 't', NS.a)?.textContent ?? ''),
+		...parseProperties(first(run, 'rPr', NS.a)),
+	};
+}
+
 function parseParagraph(paragraph: XmlElement): DiagramTextParagraph {
 	const runs: DiagramTextRun[] = [];
-	for (const child of children(paragraph, 'r', NS.a)) runs.push(parseRun(child));
-	// Fields (`a:fld`, slide numbers and the like) show their cached text.
-	for (const field of children(paragraph, 'fld', NS.a)) runs.push(parseRun(field));
+	// Fields show cached text in their original position, and breaks retain their line boundary.
+	for (const child of elements(paragraph))
+		if (child.namespaceURI === NS.a && ['r', 'fld', 'br'].includes(child.localName))
+			runs.push(parseRun(child));
 	const align = first(paragraph, 'pPr', NS.a)?.getAttribute('algn');
-	return { ...(align ? { align } : {}), runs };
+	const defaults = parseProperties(first(first(paragraph, 'pPr', NS.a), 'defRPr', NS.a));
+	return {
+		...(align ? { align } : {}),
+		...(Object.keys(defaults).length ? { defaultProperties: defaults } : {}),
+		runs,
+	};
 }
 
 /** Reads a text body: anchor, insets and the runs of every paragraph. */

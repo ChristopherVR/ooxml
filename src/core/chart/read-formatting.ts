@@ -3,6 +3,7 @@ import { readChartAppearance } from './read-appearance';
 import type { ChartStyleDefinition, ChartStyleEntry } from './style-definition';
 import { chartFormattingNodes } from './formatting-nodes';
 import { readBuiltInChartStyle } from './built-in-text-style';
+import { parseDrawingTextBody } from '../diagram/drawing-text';
 
 const c = (parent: XmlElement | undefined, name: string) => first(parent, name, NS.c);
 const a = (parent: XmlElement | undefined, name: string) => first(parent, name, NS.a);
@@ -13,12 +14,14 @@ function entry(node: XmlElement): ChartStyleEntry {
 	const defaults = a(a(paragraph, 'pPr'), 'defRPr');
 	const rich = c(c(node, 'tx'), 'rich');
 	const richParagraph = a(rich, 'p');
-	// Whole-element appearance uses the first rich run. Mixed-run styling remains in source XML.
+	const textBody = parseDrawingTextBody(rich);
+	// Legacy whole-element appearance uses the first run; rich bodies resolve runs separately.
 	const out: ChartStyleEntry = {
 		sourceXml: buildXml(node),
 		...readChartAppearance(defaults, c(node, 'spPr')),
 		...readChartAppearance(a(a(richParagraph, 'pPr'), 'defRPr'), undefined),
 		...readChartAppearance(a(a(richParagraph, 'r'), 'rPr'), undefined),
+		...(textBody ? { textBody, textBodyStyle: readChartAppearance(defaults, undefined) } : {}),
 	};
 	if (['catAx', 'dateAx', 'valAx'].includes(node.localName)) {
 		const deleted = c(node, 'delete')?.getAttribute('val');

@@ -5,6 +5,7 @@ import { parseDrawingColorIn } from '../../diagram/drawing-color';
 import { readChartFormatting } from '../../chart/read-formatting';
 import { parseDrawingFill } from '../../diagram/drawing-fill';
 import { buildXml } from '../../xml/index';
+import { parseDrawingTextBody } from '../../diagram/drawing-text';
 
 const c = (parent: ParentNode | null | undefined, local: string) => first(parent, local, NS.c);
 const val = (parent: ParentNode | null | undefined, local: string) => att(c(parent, local), 'val');
@@ -49,12 +50,7 @@ export function solidFillColor(spPr: XmlElement | undefined): Color | undefined 
 function richText(tx: XmlElement | undefined): string | undefined {
 	const rich = c(tx, 'rich');
 	if (rich) {
-		const paragraphs = children(rich, 'p', NS.a).map((p) =>
-			Array.from(p.getElementsByTagNameNS(NS.a, 't'))
-				.map((t) => t.textContent ?? '')
-				.join(''),
-		);
-		return paragraphs.join('\n');
+		return parseDrawingTextBody(rich)?.text;
 	}
 	const cached = cache(c(c(tx, 'strRef'), 'strCache'));
 	return cached[0] === undefined ? undefined : String(cached[0]);

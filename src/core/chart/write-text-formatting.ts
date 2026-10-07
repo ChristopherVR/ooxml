@@ -1,6 +1,7 @@
 import { NS, elements, first, parseXml, type XmlElement } from '../xml';
 import { chartFormattingNodes } from './formatting-nodes';
 import type { ChartStyleDefinition } from './style-definition';
+import { parseDrawingTextBody } from '../diagram/drawing-text';
 
 const rich = (node: XmlElement) => first(first(node, 'tx', NS.c), 'rich', NS.c);
 
@@ -51,6 +52,11 @@ export function writeChartTextFormatting(
 		const sourceRich = rich(source);
 		const targetRich = rich(node);
 		if (!sourceRich || !targetRich) continue;
+		if (parseDrawingTextBody(sourceRich)?.text === parseDrawingTextBody(targetRich)?.text) {
+			targetRich.parentNode!.replaceChild(doc.importNode(sourceRich, true), targetRich);
+			changed = true;
+			continue;
+		}
 		copy(sourceRich, targetRich, 'bodyPr');
 		copy(sourceRich, targetRich, 'lstStyle');
 		const sourceParagraph = first(sourceRich, 'p', NS.a);

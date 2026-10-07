@@ -1731,3 +1731,32 @@ poses and unchanged geometry/styles, plus undo/redo and public save/reload,
 through the actual nested menu in all six bindings. Literal native menu
 gestures, exact menu styling, grouped/master/glued rotation, flip editing and
 Microsoft Visio reopen acceptance remain open.
+
+## Shared DrawingML mixed text for XLSX chart titles
+
+Source: ChristopherVR/ooxml at `b292d167b`,
+`src/core/diagram/drawing-text.ts`, diagram text types, chart appearance reader,
+text-body preservation writer and XLSX SVG text/paint helpers. The DrawingML
+reader now exposes paragraph defaults and reads runs, cached fields and breaks
+in source order. XLSX title parsing reuses it instead of its separate plain-text
+scan. Mixed run views reuse the existing chart/theme resolver, and the rich
+SVG title painter reuses chart text attributes, escaping and background paint.
+No second XML model, DrawingML text parser or viewer font resolver was added.
+
+Regeneration copies an unchanged title's full rich body through the shared XML
+import path; edited plain titles keep the existing first-run formatting path.
+The native style recorder adds per-character font measurements. The title
+recorder authors two Excel mixed-run references; a shared-XML preparation script
+isolates an explicit-paragraph variant. All three are independently reopened
+in Excel 16.0 build 20430, and test-only parts/measurements are retained in
+`src/core/chart/excel-chart-title-text.json` outside the published build.
+
+Per-character regression checks compare native fonts before/after regeneration,
+and shared-reader coverage checks field/break order and paragraph defaults.
+Eighteen new browser cases reuse the native chart workbook shell in six
+bindings; all 92 focused cases pass. Playwright MCP reviewed and exported a
+type edit of the paragraph reference. Excel reopened/resaved the export and
+reopened its copy with all 23 character font properties unchanged. Native
+horizontal text measurement, automatic wrapping, line spacing/layout,
+advanced text effects, list-level defaults, mixed-format font authoring UI
+and full Excel parity remain open.

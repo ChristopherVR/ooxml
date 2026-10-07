@@ -82,6 +82,7 @@ export function chartTextAttributes(
 		...(entry?.color === undefined ? {} : { fill: entry.color }),
 		...(entry?.bold === undefined ? {} : { weight: entry.bold ? 'bold' : 'normal' }),
 		...(entry?.italic === undefined ? {} : { italic: entry.italic }),
+		...(entry?.underline === undefined ? {} : { underline: entry.underline }),
 		...(entry?.typeface === undefined ? {} : { family: cssFontFamily(entry.typeface) }),
 		...(entry?.textShadowFilter === undefined ? {} : { filter: entry.textShadowFilter }),
 	};

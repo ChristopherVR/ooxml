@@ -2,7 +2,8 @@ param(
     [string]$OutputFolder = (Join-Path $env:TEMP 'ooxml-native-chart-styles'),
     [int[]]$StyleIds = (201..216),
     [switch]$BuiltInReferences,
-    [string[]]$ReferenceFiles = @()
+    [string[]]$ReferenceFiles = @(),
+    [switch]$CaptureTitleCharacters
 )
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -77,6 +78,15 @@ try {
                 $cases[-1].referenceName = [System.IO.Path]::GetFileNameWithoutExtension($path)
                 # The title-wide Font can differ from the actual rich-text range.
                 $cases[-1].titleText = Read-ChartFont $probeChart.ChartTitle.Format.TextFrame2.TextRange.Font -TextRange
+            }
+            if ($CaptureTitleCharacters) {
+                $title = [string]$probeChart.ChartTitle.Text
+                $cases[-1].titleCharacters = @(for ($index = 0; $index -lt $title.Length; $index++) {
+                    $font = $probeChart.ChartTitle.Characters($index+1,1).Font
+                    $properties = Read-ChartFont $font
+                    $properties.underline = [int]$font.Underline -ne -4142
+                    @{ text = $title.Substring($index,1); font = $properties }
+                })
             }
         } finally { $probeBook.Close($false) }
         if (-not $BuiltInReferences -and -not $reference.path) { $object.Delete() }

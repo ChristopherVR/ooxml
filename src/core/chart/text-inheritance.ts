@@ -1,6 +1,14 @@
 import type { ChartStyleEntry, ChartStylePart } from './style-definition';
 
-const TEXT_KEYS = ['fontSize', 'bold', 'italic', 'typeface', 'textColor', 'fontRef'] as const;
+const TEXT_KEYS = [
+	'fontSize',
+	'bold',
+	'italic',
+	'underline',
+	'typeface',
+	'textColor',
+	'fontRef',
+] as const;
 const TEXT_PARTS: readonly ChartStylePart[] = [
 	'title',
 	'axisTitle',

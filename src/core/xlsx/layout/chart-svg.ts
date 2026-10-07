@@ -3,6 +3,7 @@ import { pieSvg, radarSvg } from './chart-svg-radial';
 import { esc, fit, n, rect, text, textWidth, type Rect } from './chart-svg-util';
 import type { ChartViewModel } from './chart-view';
 import { chartAreaRect, chartTextAttributes, chartGradientPaint } from './chart-svg-appearance';
+import { chartRichTitleSvg } from './chart-svg-title-text';
 
 const FONT_FAMILY = 'Calibri, Carlito, Arial, sans-serif';
 
@@ -96,7 +97,11 @@ export function renderChartSvg(model: ChartViewModel, width: number, height: num
 	if (paint.defs) out.push(paint.defs);
 	out.push(chartAreaRect(model, 'chartArea', { x: 0, y: 0, w, h }));
 	let area: Rect = { x: 8, y: 8, w: w - 16, h: h - 16 };
-	if (model.title) {
+	const richTitle = chartRichTitleSvg(model, w);
+	if (richTitle) {
+		out.push(richTitle.markup);
+		area = { ...area, y: area.y + richTitle.height, h: area.h - richTitle.height };
+	} else if (model.title) {
 		const attrs = chartTextAttributes(model, 'title', 14)!;
 		const size = attrs.size ?? 14;
 		const label = fit(model.title, w - 16, size);

@@ -9,6 +9,7 @@ import { resolveColor } from './colors';
 import { chartAppearance, type ChartAppearance } from './chart-appearance';
 import { resolveChartGradient, type ChartGradientFill } from '../../chart/gradient-definition';
 import { resolveDrawingShadowXml, type DrawingSvgShadow } from '../../diagram/drawing-shadow';
+import { chartTitleText, type ChartTitleText } from './chart-title-text';
 
 export interface ChartSeriesView {
 	shadow?: DrawingSvgShadow;
@@ -31,6 +32,7 @@ export interface ValueAxisView extends AxisScale {
 
 /** Neutral data for a chart painter: series resolved, colours chosen, axes scaled. */
 export interface ChartViewModel {
+	titleText?: ChartTitleText;
 	barGapWidth?: number;
 	barOverlap?: number;
 	/** Native defaults and direct element formatting, resolved against the workbook theme. */
@@ -219,6 +221,8 @@ export function chartView(
 		supported: SUPPORTED.has(type),
 	};
 	if (chart.title) model.title = chart.title;
+	const titleText = chartTitleText(chart, theme);
+	if (titleText) model.titleText = titleText;
 	const appearance = chartAppearance(chart, theme);
 	if (appearance) model.appearance = appearance;
 
