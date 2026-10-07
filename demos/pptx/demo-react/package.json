@@ -7,6 +7,7 @@
 		"preview": "vite preview"
 	},
 	"dependencies": {
+		"emf-converter": "4.8.21",
 		"fast-xml-parser": "^5.11.2",
 		"framer-motion": "^14.0.0",
 		"html2canvas-pro": "^2.5.1",

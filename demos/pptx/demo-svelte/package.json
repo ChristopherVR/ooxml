@@ -13,6 +13,7 @@
 		"@ai-sdk/svelte": "^5.0.127",
 		"@lucide/svelte": "^1.52.0",
 		"ai": "^7.0.127",
+		"emf-converter": "4.8.21",
 		"fast-xml-parser": "^5.11.2",
 		"jszip": "^3.10.2",
 		"pptx-svelte-viewer": "workspace:*",
