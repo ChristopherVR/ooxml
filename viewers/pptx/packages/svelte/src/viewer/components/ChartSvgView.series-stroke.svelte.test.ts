@@ -1,5 +1,5 @@
+import { buildChartViewModel } from 'ooxml-ui/pptx';
 import type { ChartPptxElement, PptxChartData } from 'pptx-viewer-core';
-import { buildChartViewModel } from 'pptx-viewer-shared';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it } from 'vitest';
 

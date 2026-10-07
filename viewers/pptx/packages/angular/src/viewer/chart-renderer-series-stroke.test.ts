@@ -1,6 +1,6 @@
 /**
  * A dotted combo line with hollow markers keeps its dash and marker outline
- * through Angular's vendored copy of `pptx-viewer-shared`. Like
+ * through the shared UI renderer used by Angular. Like
  * `chart-renderer-legend-swatch.test.ts`, this checks the view model the
  * `pptx-chart-primitives` template binds, since the component is not
  * template-mounted in this package's tests.

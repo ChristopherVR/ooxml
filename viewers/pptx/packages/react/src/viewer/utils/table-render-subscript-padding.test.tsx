@@ -1,9 +1,9 @@
+import { translationsEn } from 'ooxml-ui/pptx/i18n';
 /**
  * A subscript run and a bordered cell margin, rendered through the full
  * table path so the shared run style and cell padding reach the markup.
  */
 import type { PptxTableCell, TablePptxElement } from 'pptx-viewer-core';
-import { translationsEn } from 'pptx-viewer-shared/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 
