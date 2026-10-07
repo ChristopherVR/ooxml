@@ -11,6 +11,7 @@ import { canonicalHardBreak, canonicalizeHardBreaks } from './hard-break-revisio
 import { inlineTextRevision } from './review-inline-revisions';
 import { trackSimpleFieldDeletion } from './track-simple-field-deletion';
 import { trackParagraphBoundary } from './track-paragraph-boundaries';
+import { FIELD_RESULT_REPAIR_META } from './field-guard';
 
 /** Text removed by the latest tracked cut, so pasting it back records a move. */
 interface TrackState {
@@ -215,7 +216,9 @@ export function trackChangesPlugin(
 				)
 			)
 				return null;
-			const relevant = transactions.filter((tr) => tr.docChanged);
+			const relevant = transactions.filter(
+				(tr) => tr.docChanged && !tr.getMeta(FIELD_RESULT_REPAIR_META),
+			);
 			if (!relevant.length) return null;
 			const steps = relevant.flatMap((tr) => tr.steps);
 			const author = getAuthor() || 'Author';
@@ -254,14 +257,17 @@ export function trackChangesPlugin(
 			});
 			if (!transform.docChanged) return null;
 			// newState already contains the untracked edit: undo it first so the tracked steps,
-			// computed against oldState.doc, apply to the document they were derived from.
+			// computed against oldState.doc, apply to the document they were derived from. Undo
+			// derived field repairs too; fieldGuardPlugin projects them again after tracked replay.
 			const result = newState.tr;
-			const applied = relevant.flatMap((tr) =>
-				tr.steps.map((step, index) => ({
-					step,
-					doc: expectDefined(tr.docs[index], 'document before step'),
-				})),
-			);
+			const applied = transactions
+				.filter((tr) => tr.docChanged)
+				.flatMap((tr) =>
+					tr.steps.map((step, index) => ({
+						step,
+						doc: expectDefined(tr.docs[index], 'document before step'),
+					})),
+				);
 			for (const { step, doc } of [...applied].reverse()) result.step(step.invert(doc));
 			for (const step of transform.steps) result.step(step);
 			const meta: TrackMeta = { tracked: true };

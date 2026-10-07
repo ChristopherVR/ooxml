@@ -1,11 +1,16 @@
 import type { Node as ProseMirrorNode } from 'prosemirror-model';
 import { Plugin, TextSelection, type EditorState, type Transaction } from 'prosemirror-state';
 import { fieldClipboardSlice } from './field-clipboard';
+import { inlineNodeRun } from './run-adapter';
+import type { ExtraRunProperties } from './run-extra-mark';
 import {
 	deleteSimpleFieldResult,
 	replaceSimpleFieldResult,
 	simpleFieldPasteSlice,
 } from './simple-field-input';
+
+/** Derived field metadata repairs are not user formatting edits. */
+export const FIELD_RESULT_REPAIR_META = 'dve-field-result-repair';
 
 /** Field marker kinds in document order. */
 function markerKinds(doc: ProseMirrorNode): string[] {
@@ -107,17 +112,19 @@ export function deleteFieldSelection(state: EditorState): Transaction | null {
 
 /**
  * Tags text typed into a complex field's result (between its separator and end) with the field
- * mark, so replacing a whole result keeps it a field result as it does in Word.
+ * mark, so replacing a whole result keeps it a field result as it does in Word. The innermost
+ * begin marker owns the result's lock state; cached run formatting remains independent.
  */
 function markFieldResults(state: EditorState): Transaction | null {
 	const fieldMark = state.schema.marks.field;
 	if (!fieldMark) return null;
-	const stack: { code: string; inResult: boolean }[] = [];
-	const missing: { from: number; to: number; instr: string }[] = [];
+	const stack: { code: string; inResult: boolean; locked: boolean | undefined }[] = [];
+	const transaction = state.tr;
 	state.doc.descendants((node, pos) => {
 		if (node.type.name === 'fieldMarker') {
 			const kind = node.attrs.kind;
-			if (kind === 'begin') stack.push({ code: '', inResult: false });
+			if (kind === 'begin')
+				stack.push({ code: '', inResult: false, locked: inlineNodeRun(node)?.fieldFlags?.locked });
 			else if (kind === 'code' && stack.length) {
 				const open = stack[stack.length - 1];
 				if (open) open.code += node.attrs.code ?? '';
@@ -128,15 +135,28 @@ function markFieldResults(state: EditorState): Transaction | null {
 			return false;
 		}
 		const top = stack.at(-1);
-		if (node.isText && top?.inResult && !fieldMark.isInSet(node.marks))
-			missing.push({ from: pos, to: pos + node.nodeSize, instr: top.code.trim() });
+		if (node.isText && top?.inResult) {
+			const end = pos + node.nodeSize;
+			if (!fieldMark.isInSet(node.marks))
+				transaction.addMark(pos, end, fieldMark.create({ instr: top.code.trim(), simple: false }));
+			const type = state.schema.marks.runProperties;
+			const current = type?.isInSet(node.marks);
+			const props = (current?.attrs.props ?? {}) as ExtraRunProperties;
+			if (type && props.fieldFlags?.locked !== top.locked) {
+				const next = { ...props };
+				const flags = { ...props.fieldFlags };
+				if (top.locked === undefined) delete flags.locked;
+				else flags.locked = top.locked;
+				if (Object.keys(flags).length) next.fieldFlags = flags;
+				else delete next.fieldFlags;
+				if (current) transaction.removeMark(pos, end, current);
+				if (Object.keys(next).length)
+					transaction.addMark(pos, end, type.create({ ...current?.attrs, props: next }));
+			}
+		}
 		return true;
 	});
-	if (!missing.length) return null;
-	const transaction = state.tr;
-	for (const { from, to, instr } of missing)
-		transaction.addMark(from, to, fieldMark.create({ instr, simple: false }));
-	return transaction;
+	return transaction.docChanged ? transaction.setMeta(FIELD_RESULT_REPAIR_META, true) : null;
 }
 
 const isMarker = (node: ProseMirrorNode | null | undefined) => node?.type.name === 'fieldMarker';
