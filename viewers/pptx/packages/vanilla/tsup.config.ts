@@ -15,7 +15,8 @@ export default defineConfig((options) => ({
 	splitting: true,
 	sourcemap: false,
 	clean: !options.watch,
-	external: [/^ooxml-ui(?:\/|$)/,
+	// `ooxml-ui` depends on `ooxml-core`, so inlining the core here as well would ship it twice.
+	external: [/^ooxml-ui(?:\/|$)/, /^ooxml-core(?:\/|$)/,
 		'jszip',
 		'fast-xml-parser',
 		'dompurify',

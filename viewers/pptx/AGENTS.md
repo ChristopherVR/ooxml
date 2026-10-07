@@ -99,11 +99,14 @@ How they connect:
   `/geometry` and `/color` APIs. Its `src/` holds thin entry files and an
   entry-point contract test, nothing else. In the workspace it links to
   `src/core` itself, so it always sees the current engine.
-- The bindings bundle `pptx-viewer-core`, `pptx-viewer-locales` and the core
-  code they reach. They declare `ooxml-ui` as a runtime dependency and consume
-  its public PowerPoint entries. A change to the core's `pptx` area (or a shared
-  area it uses) releases the bindings (`scripts/viewer-packages.mjs` at the
-  repository root).
+- The React, Vue, Svelte and vanilla bindings bundle `pptx-viewer-core` (a thin
+  re-export) and `pptx-viewer-locales`, and declare `ooxml-core` and `ooxml-ui`
+  as runtime dependencies instead of inlining them: `ooxml-ui` depends on the
+  core, so an inlined copy would ship the core twice. Angular imports the
+  published `pptx-viewer-core` instead. Either way a binding can only use core
+  code that has been released. A change to the core's `pptx` area (or a shared
+  area it uses) still releases the bindings (`scripts/viewer-packages.mjs` at
+  the repository root).
 - Modern OOXML never goes into ole2; binary codecs never go into the core;
   engine logic never goes into this viewer.
 
