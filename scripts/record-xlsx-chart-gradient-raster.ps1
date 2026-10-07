@@ -1,6 +1,6 @@
 param(
     [string]$OutputFolder = (Join-Path $env:TEMP 'ooxml-chart-gradient-raster'),
-    [ValidateSet('opaque','transparent','interior','three','three-transparent','crossed','coincident','path-corner','path-center','path-corner-transparent','path-center-transparent')]
+    [ValidateSet('opaque','transparent','interior','three','three-transparent','crossed','coincident','path-corner','path-center','path-corner-transparent','path-center-transparent','path-center-circle','path-corner-circle','path-center-circle-transparent','path-corner-circle-transparent','path-center-shape','path-corner-shape','path-center-shape-transparent','path-corner-shape-transparent')]
     [string]$Profile = 'opaque'
 )
 $ErrorActionPreference = 'Stop'
@@ -67,6 +67,24 @@ try {
             $name="angle-$angle-$($size[0])x$($size[1])"
             if($Profile -ne 'opaque') {$name="$Profile-$name"}
             $path=Join-Path $OutputFolder "$name.xlsx"; $book.SaveCopyAs($path)
+            $pathType = if($Profile -match '-(circle|shape)(-transparent)?$') {$Matches[1]} else {$null}
+            if($pathType) {
+                # COM only exposes legacy rectangular styles. Import the explicit OOXML
+                # path, then let Excel save it again before measuring the native render.
+                $package=[IO.Compression.ZipFile]::Open($path,[IO.Compression.ZipArchiveMode]::Update)
+                try {
+                    $entry=$package.GetEntry('xl/charts/chart1.xml')
+                    $reader=[IO.StreamReader]::new($entry.Open())
+                    try {[xml]$importXml=$reader.ReadToEnd()} finally {$reader.Dispose()}
+                    $ns=[Xml.XmlNamespaceManager]::new($importXml.NameTable)
+                    $ns.AddNamespace('c','http://schemas.openxmlformats.org/drawingml/2006/chart')
+                    $ns.AddNamespace('a','http://schemas.openxmlformats.org/drawingml/2006/main')
+                    $importXml.SelectSingleNode('/c:chartSpace/c:spPr/a:gradFill/a:path',$ns).SetAttribute('path',$pathType)
+                    $entry.Delete(); $replacement=$package.CreateEntry('xl/charts/chart1.xml')
+                    $writer=[IO.StreamWriter]::new($replacement.Open(),[Text.UTF8Encoding]::new($false))
+                    try {$writer.Write($importXml.OuterXml)} finally {$writer.Dispose()}
+                } finally {$package.Dispose()}
+            }
             $zip=[IO.Compression.ZipFile]::OpenRead($path)
             try {
                 $reader=[IO.StreamReader]::new($zip.GetEntry('xl/charts/chart1.xml').Open())
@@ -79,6 +97,18 @@ try {
             $probe=$excel.Workbooks.Open($path,0,$true)
             try {
                 $native=$probe.Worksheets.Item(1).ChartObjects(1).Chart
+                if($pathType) {
+                    $saved=Join-Path $OutputFolder "$name-native.xlsx"; $probe.SaveCopyAs($saved)
+                    $savedPackage=[IO.Compression.ZipFile]::OpenRead($saved)
+                    try {
+                        $reader=[IO.StreamReader]::new($savedPackage.GetEntry('xl/charts/chart1.xml').Open())
+                        try {[xml]$savedXml=$reader.ReadToEnd()} finally {$reader.Dispose()}
+                        $savedNs=[Xml.XmlNamespaceManager]::new($savedXml.NameTable)
+                        $savedNs.AddNamespace('c','http://schemas.openxmlformats.org/drawingml/2006/chart')
+                        $savedNs.AddNamespace('a','http://schemas.openxmlformats.org/drawingml/2006/main')
+                        $fillXml=$savedXml.SelectSingleNode('/c:chartSpace/c:spPr/a:gradFill',$savedNs).OuterXml
+                    } finally {$savedPackage.Dispose()}
+                }
                 $native.Parent.Activate(); $native.Refresh()
                 $png=Join-Path $OutputFolder "$name.png"
                 if(!$native.Export($png,'PNG')) {throw "Excel did not export $name"}

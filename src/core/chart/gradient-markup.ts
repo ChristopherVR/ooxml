@@ -15,5 +15,9 @@ export function chartGradientMarkup(def: ChartSvgGradientDef): string {
 				`<stop offset="${stop.offset}" stop-color="${esc(stop.color)}" stop-opacity="${stop.opacity ?? 1}"/>`,
 		)
 		.join('');
-	return `<${def.kind} id="${esc(def.id)}" ${geometry}>${stops}</${def.kind}>`;
+	const transform =
+		def.kind === 'radialGradient' && def.gradientTransform
+			? ` gradientTransform="${esc(def.gradientTransform)}"`
+			: '';
+	return `<${def.kind} id="${esc(def.id)}" ${geometry}${transform}>${stops}</${def.kind}>`;
 }

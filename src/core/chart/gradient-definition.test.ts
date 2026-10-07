@@ -33,9 +33,21 @@ it('restricts native interpolation to resolved opaque scaled linear endpoint pai
 	expect(resolve().interpolation).toBeUndefined();
 	fill.scaled = true;
 	fill.path = 'circle';
-	expect(resolve().interpolation).toBeUndefined();
+	expect(resolve().interpolation).toBe('sigma-gamma22');
 	delete fill.path;
 	fill.stops[0]!.position = 80;
 	expect(resolve().interpolation).toBeUndefined();
 	expect(fill.stops.map((stop) => stop.position)).toEqual([80, 0]);
+});
+
+it('keeps legacy radial descriptors and unknown shape outlines unchanged', () => {
+	const bounds = { width: 960, height: 600, shape: 'rect' as const };
+	const legacy = { type: 'radial' as const, stops: [] };
+	expect(buildChartGradientDef('g', legacy, bounds)).toEqual(buildChartGradientDef('g', legacy));
+	expect(buildChartGradientDef('g', { ...legacy, path: 'shape' })).toMatchObject({
+		kind: 'radialGradient',
+	});
+	expect(
+		buildChartGradientDef('g', { ...legacy, path: 'circle' }, { width: 0, height: 0 }),
+	).toEqual(buildChartGradientDef('g', legacy));
 });

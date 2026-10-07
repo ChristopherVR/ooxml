@@ -1224,3 +1224,35 @@ raster failures. The 62 browser checks pass, including the existing 12
 expected-failure repros. These results establish the implemented geometry and
 editing behavior, not full native pane layout, every gradient type or every
 multi-stop raster profile.
+
+## Native circular and rectangular-shape chart backgrounds
+
+Imported `path="circle"` backgrounds now remain circular in physical paint
+bounds instead of stretching into ellipses. Their radius reaches the farthest
+corner and their SVG transform preserves the native center/corner focus.
+Chart areas supply chart bounds; plot areas supply their final bounds after
+title, legend and axis layout. Imported `path="shape"` backgrounds use the
+existing shared rectangular path painter when the painted outline is a chart
+or plot rectangle. Legacy radial descriptors keep their existing behavior.
+
+The extended Excel COM recorder captures 48 opaque/translucent center/corner
+profiles across square and wide bounds, with 1,200 RGBA samples. Circle/shape
+paths are imported as explicit OOXML, resaved by Excel and rendered natively
+on Excel 16.0 build 20430. All six browser bindings meet the unchanged native
+pixel tolerances. The affected core selection passes 2,090 tests plus the
+existing 17 expected raster failures; strict core/UI typechecks, builds and
+clean package import checks pass. PowerPoint's shared gradient consumers
+retain their existing compatibility descriptors; their affected suites pass
+12 tests. The browser selection passes 30 ordinary checks plus the existing
+12 expected-failure repros.
+
+Playwright MCP reviewed an Excel-saved wide circular fill and downloaded it.
+Excel COM reopened and resaved the download with `path="circle"`, two stops,
+positions 0/1 and the original red/white RGB values. This validates the fill
+round trip, not every surrounding chart element's native layout.
+
+Radial/Path authoring remains disabled. Series marks still need their own
+physical gradient bounds and independent native comparisons; nonrectangular
+shape outlines, arbitrary target rectangles, other stop profiles and full
+native pane layout remain open. Existing translucent three-stop and
+coincident-edge discrepancies remain explicit expected failures.

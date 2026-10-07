@@ -60,7 +60,12 @@ for (const sample of native.cases)
 				...svg.getElementsByTagName('linearGradient'),
 				...svg.getElementsByTagName('radialGradient'),
 			].find((node) => node.getAttribute('id')?.endsWith('-chartArea'))!;
-			expect(background.getElementsByTagName('stop')).toHaveLength(area.gradient.stops.length);
+			const stops = [...background.getElementsByTagName('stop')];
+			expect(stops).toHaveLength(
+				area.gradient.interpolation === 'sigma-gamma22' ? 256 : area.gradient.stops.length,
+			);
+			expect(stops[0]!.getAttribute('stop-color')).toBe(area.gradient.stops[0]!.color);
+			expect(stops.at(-1)!.getAttribute('stop-color')).toBe(area.gradient.stops.at(-1)!.color);
 		}
 		if (sample.chartArea.lineWeight !== null) {
 			expect(view.appearance?.chartArea?.lineWidth).toBe(sample.chartArea.lineWeight);

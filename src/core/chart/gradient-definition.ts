@@ -22,6 +22,12 @@ export interface ChartSvgGradientStop {
 	color: string;
 	opacity?: number;
 }
+/** Actual paint bounds; shape paths need the outline of the painted object. */
+export interface ChartGradientBounds {
+	width: number;
+	height: number;
+	shape?: 'rect';
+}
 export type ChartSvgGradientDef =
 	| { kind: 'rectPath'; id: string; href: string; stops: ChartSvgGradientStop[] }
 	| {
@@ -39,6 +45,7 @@ export type ChartSvgGradientDef =
 			cx: number;
 			cy: number;
 			r: number;
+			gradientTransform?: string;
 			stops: ChartSvgGradientStop[];
 	  };
 
@@ -59,8 +66,9 @@ export function resolveChartGradient(
 		...(fill.scaled === undefined ? {} : { scaled: fill.scaled }),
 		...(fill.path === undefined ? {} : { path: fill.path }),
 		...(focus === undefined ? {} : { fillToRect: { ...focus } }),
-		// Native opaque endpoint-pair linear and rectangular profiles share this curve.
-		...(((!fill.path && fill.scaled === true) || fill.path === 'rect') &&
+		// Native opaque endpoint-pair linear, rect, circle and rectangular-shape profiles.
+		...(((!fill.path && fill.scaled === true) ||
+			['rect', 'circle', 'shape'].includes(fill.path ?? '')) &&
 		fill.stops.length === 2 &&
 		stops.length === 2 &&
 		stops.every((stop) => stop.opacity === 1) &&
@@ -75,7 +83,11 @@ export function resolveChartGradient(
 }
 
 /** Extracted from PowerPoint's COM-verified chart gradient painter. */
-export function buildChartGradientDef(id: string, fill: ChartGradientFill): ChartSvgGradientDef {
+export function buildChartGradientDef(
+	id: string,
+	fill: ChartGradientFill,
+	bounds?: ChartGradientBounds,
+): ChartSvgGradientDef {
 	const sourceStops = sortGradientStops(fill.stops).map((stop) => ({
 		offset: Math.min(Math.max(stop.position / 100, 0), 1),
 		color: stop.color,
@@ -85,7 +97,10 @@ export function buildChartGradientDef(id: string, fill: ChartGradientFill): Char
 		fill.interpolation === 'sigma-gamma22'
 			? (sigmaGradientStops(sourceStops) ?? sourceStops)
 			: sourceStops;
-	if (fill.type === 'radial' && fill.path === 'rect') {
+	if (
+		fill.type === 'radial' &&
+		(fill.path === 'rect' || (fill.path === 'shape' && bounds?.shape === 'rect'))
+	) {
 		const markup = buildRectPathGradientSvg(
 			stops.map((stop) => ({
 				position: stop.offset * 100,
@@ -106,12 +121,27 @@ export function buildChartGradientDef(id: string, fill: ChartGradientFill): Char
 	if (fill.type === 'radial') {
 		const cx = fill.focalPoint?.x ?? 0.5;
 		const cy = fill.focalPoint?.y ?? 0.5;
+		// DrawingML circle paths stay circular in physical bounds, including wide charts.
+		const aspect =
+			fill.path === 'circle' &&
+			bounds &&
+			Number.isFinite(bounds.width) &&
+			Number.isFinite(bounds.height) &&
+			bounds.width > 0 &&
+			bounds.height > 0
+				? bounds.height / bounds.width
+				: 1;
 		return {
 			kind: 'radialGradient',
 			id,
 			cx,
 			cy,
-			r: Math.max(...[0, 1].flatMap((x) => [0, 1].map((y) => Math.hypot(x - cx, y - cy)))),
+			r: Math.max(
+				...[0, 1].flatMap((x) => [0, 1].map((y) => Math.hypot(x - cx, (y - cy) * aspect))),
+			),
+			...(aspect === 1
+				? {}
+				: { gradientTransform: `matrix(1 0 0 ${1 / aspect} 0 ${cy * (1 - 1 / aspect)})` }),
 			stops,
 		};
 	}

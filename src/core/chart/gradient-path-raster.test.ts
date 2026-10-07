@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest';
 import reference from './__fixtures__/native-gradient-path-profiles.json';
+import paths from './__fixtures__/native-gradient-circle-shape-profiles.json';
 import { parseXml, NS } from '../xml';
 import { parseDrawingFill } from '../diagram/drawing-fill';
 import { drawingFillXml } from '../diagram/write-fill';
@@ -7,7 +8,10 @@ import { resolveDrawingColor } from '../diagram/drawing-color';
 import { hexToRgbChannels } from '../color/color-primitives';
 import { buildChartGradientDef, resolveChartGradient } from './gradient-definition';
 
-for (const sample of reference.cases)
+for (const sample of [
+	...reference.cases,
+	...paths.cases.filter((sample) => sample.profile.includes('shape')),
+])
 	it(`paints native rectangular path gradient ${sample.name}`, () => {
 		const read = (xml: string) =>
 			parseDrawingFill(parseXml(`<a:spPr xmlns:a="${NS.a}">${xml}</a:spPr>`).documentElement)!;
@@ -15,7 +19,11 @@ for (const sample of reference.cases)
 		if (fill.kind !== 'gradient') throw new Error('Expected native gradient');
 		const original = structuredClone(fill);
 		const gradient = resolveChartGradient(fill, (color) => resolveDrawingColor(color));
-		const def = buildChartGradientDef('native', gradient);
+		const def = buildChartGradientDef('native', gradient, {
+			width: sample.width,
+			height: sample.height,
+			shape: 'rect',
+		});
 		expect(def.kind).toBe('rectPath');
 		if (def.kind !== 'rectPath') throw new Error('Expected rectangular paint');
 		const svg = parseXml(decodeURIComponent(def.href.split(',')[1]!));

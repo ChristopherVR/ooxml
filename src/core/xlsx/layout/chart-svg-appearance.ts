@@ -32,15 +32,23 @@ export function chartGradientPaint(
 				textShadowFilter: shadowPaint(entry.textShadow, `${part}-text-shadow`),
 			};
 	}
-	const paint = (gradient: ChartGradientFill, suffix: string) => {
-		const def = buildChartGradientDef(`${prefix}-${suffix}`, gradient);
+	const paint = (
+		gradient: ChartGradientFill,
+		suffix: string,
+		bounds?: { width: number; height: number; shape: 'rect' },
+	) => {
+		const def = buildChartGradientDef(`${prefix}-${suffix}`, gradient, bounds);
 		defs.push(chartGradientMarkup(def));
 		return `url(#${def.id})`;
 	};
 	for (const part of ['chartArea', 'plotArea'] as const) {
 		const entry = appearance[part];
 		if (!entry?.gradient) continue;
-		appearance[part] = { ...entry, fillColor: paint(entry.gradient, part) };
+		if (part === 'plotArea' && ['circle', 'shape'].includes(entry.gradient.path ?? '')) continue;
+		appearance[part] = {
+			...entry,
+			fillColor: paint(entry.gradient, part, { width, height, shape: 'rect' }),
+		};
 	}
 	const series = model.series.map((source, index) => {
 		const view = { ...source };
@@ -95,9 +103,23 @@ export function chartAreaRect(
 	area: Rect,
 ): string {
 	const entry = model.appearance?.[part];
-	const fill = entry?.fillColor ?? (part === 'chartArea' ? '#FFFFFF' : 'none');
+	let fill = entry?.fillColor ?? (part === 'chartArea' ? '#FFFFFF' : 'none');
+	let defs = '';
+	if (
+		part === 'plotArea' &&
+		entry?.gradient &&
+		['circle', 'shape'].includes(entry.gradient.path ?? '')
+	) {
+		const def = buildChartGradientDef(`xlsx-chart-${++nextPaintId}-plotArea`, entry.gradient, {
+			width: area.w,
+			height: area.h,
+			shape: 'rect',
+		});
+		defs = `<defs>${chartGradientMarkup(def)}</defs>`;
+		fill = `url(#${def.id})`;
+	}
 	const stroke = entry?.lineColor ?? 'none';
 	if (fill === 'none' && stroke === 'none') return '';
 	const width = entry?.lineWidth === undefined ? 1 : chartPointsToPixels(entry.lineWidth);
-	return `<rect x="${n(area.x)}" y="${n(area.y)}" width="${n(area.w)}" height="${n(area.h)}" fill="${esc(fill)}" stroke="${esc(stroke)}" stroke-width="${n(width)}"/>`;
+	return `${defs}<rect x="${n(area.x)}" y="${n(area.y)}" width="${n(area.w)}" height="${n(area.h)}" fill="${esc(fill)}" stroke="${esc(stroke)}" stroke-width="${n(width)}"/>`;
 }

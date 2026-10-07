@@ -1163,3 +1163,23 @@ do not rewrite source XML in UI. No gradient or gallery engine was copied.
 The existing gallery now renders rectangular directions through the same
 core chart painter. XLSX uses that shared helper for one-step type/direction
 commands and keeps the selected stop through those changes.
+
+## Native circular and rectangular-shape chart paints
+
+Source: ChristopherVR/ooxml at `e10c21a08`, the existing shared chart gradient
+definition/serialization and the rectangular path painter extracted from
+PowerPoint. Their extensions accept physical paint bounds; no new color or
+path engine was copied into XLSX. Chart backgrounds and laid-out plot
+rectangles supply their own bounds. Legacy radial descriptors retain their
+previous geometry when no explicit circle path is provided.
+
+Excel 16.0 build 20430 independently rendered 48 circle/shape center/corner
+profiles in square and wide bounds, both opaque and translucent. COM first
+creates the legacy rectangular fill; the recorder patches its OOXML path to
+circle or shape, then imports and resaves it in Excel before capturing native
+PNG samples and the resaved DrawingML. This is native import/render evidence,
+not evidence for a COM command that authors modern circle/shape types directly.
+The 1,200 RGBA points are in
+`src/core/chart/__fixtures__/native-gradient-circle-shape-profiles.json`.
+Shape captures use chart-area rectangles; arbitrary outlines and series mark
+bounds are outside this extraction's verified scope.

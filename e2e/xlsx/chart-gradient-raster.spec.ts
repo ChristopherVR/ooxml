@@ -5,6 +5,7 @@ import { buildChartGradientDef, resolveChartGradient } from 'ooxml-core/chart';
 import { parseXml, NS } from 'ooxml-core/xml';
 import { parseDrawingFill, resolveDrawingColor } from 'ooxml-core/diagram';
 import paths from '../../src/core/chart/__fixtures__/native-gradient-path-profiles.json' with { type: 'json' };
+import circleShape from '../../src/core/chart/__fixtures__/native-gradient-circle-shape-profiles.json' with { type: 'json' };
 import native from '../../src/core/chart/__fixtures__/native-gradient-raster.json' with { type: 'json' };
 import profiles from '../../src/core/chart/__fixtures__/native-gradient-linear-profiles.json' with { type: 'json' };
 import { FRAMEWORKS, editor, openLanding, pageErrors } from './helpers';
@@ -22,6 +23,14 @@ const samples = [
 ];
 
 const runs = [
+	{
+		name: 'native circle and rectangular-shape chart gradient raster',
+		gap: false,
+		cases: circleShape.cases.map((sample) => ({
+			...sample,
+			paintStops: sample.profile.includes('transparent') ? 2 : 256,
+		})),
+	},
 	{
 		name: 'native rectangular chart gradient raster',
 		gap: false,
@@ -64,6 +73,14 @@ for (const run of runs)
 			await openLanding(page, framework);
 			for (const sample of run.cases) {
 				const zip = await JSZip.loadAsync(base);
+				const drawing = await zip.file('xl/drawings/drawing1.xml')!.async('string');
+				zip.file(
+					'xl/drawings/drawing1.xml',
+					drawing.replace(
+						'cx="4572000" cy="2857500"',
+						`cx="${(sample.width / 2) * 9525}" cy="${(sample.height / 2) * 9525}"`,
+					),
+				);
 				const xml = await zip.file('xl/charts/chart1.xml')!.async('string');
 				zip.file(
 					'xl/charts/chart1.xml',
@@ -81,17 +98,23 @@ for (const run of runs)
 				const expected = buildChartGradientDef(
 					'native',
 					resolveChartGradient(nativeFill, (color) => resolveDrawingColor(color)),
+					{ width: sample.width, height: sample.height, shape: 'rect' },
 				);
 				const gradient = editor(page)
-					.locator(
-						`${expected.kind === 'rectPath' ? 'pattern' : 'linearGradient'}[id$="-chartArea"]`,
-					)
+					.locator(`${expected.kind === 'rectPath' ? 'pattern' : expected.kind}[id$="-chartArea"]`)
 					.first();
 				if (expected.kind === 'rectPath') {
 					await expect(gradient.locator('image')).toHaveAttribute('href', expected.href);
 				} else if (expected.kind === 'linearGradient') {
 					for (const attr of ['x1', 'y1', 'x2', 'y2'] as const)
 						await expect(gradient).toHaveAttribute(attr, String(expected[attr]));
+					await expect(gradient.locator('stop')).toHaveCount(sample.paintStops);
+				} else if (expected.kind === 'radialGradient') {
+					for (const attr of ['cx', 'cy', 'r'] as const)
+						await expect(gradient).toHaveAttribute(attr, String(expected[attr]));
+					if (expected.gradientTransform)
+						await expect(gradient).toHaveAttribute('gradientTransform', expected.gradientTransform);
+					else await expect(gradient).not.toHaveAttribute('gradientTransform');
 					await expect(gradient.locator('stop')).toHaveCount(sample.paintStops);
 				} else throw new Error('Unexpected native paint');
 				const pixels = await gradient.evaluate(async (element, sample) => {
