@@ -300,6 +300,14 @@ allow 12-digit floating-point roundoff. Static Width overrides, flips, coinciden
 endpoints, broader formulas and glue remain unsupported
 or unverified. Native Office reopen acceptance remains unverified.
 
+Native combined Width-override/endpoint assignments clarify that limitation:
+Width remains constant while midpoint and angle follow the raw endpoint cells.
+The displayed line endpoints consequently differ from those cells. Eight native
+cases verify saved poses and all-six viewing against native SVG endpoints;
+source-backed endpoint commands remain refused with unchanged bytes/model.
+Native pointer behavior after a Width override still needs evidence before
+extending the current fixed-opposite-endpoint gesture semantics.
+
 The shared UI now offers pointer endpoint handles on selected visible top-level
 straight connectors with editable source bytes. This is visual eligibility,
 not a source-formula/protection certificate: core can refuse the edit. Handles

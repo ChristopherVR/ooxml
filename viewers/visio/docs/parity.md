@@ -48,6 +48,13 @@ pass actual pointer editing and saved reload across all six frameworks within
 the unchanged paint bounds and existing four-decimal pointer geometry contract.
 Other gradient directions/angles and exact pointer-paint pixels remain open.
 
+Native endpoint-cell assignment after a Width override retains the fixed Width,
+changing midpoint and angle while displayed endpoints diverge from raw cells.
+Eight saved native cases verify viewing geometry across six frameworks, with
+the current endpoint-command refusal preserving model/source bytes. Native
+mouse-drag semantics for these sources remain unverified; this is not endpoint
+editing parity after Width-cell resizing.
+
 Saved oblique linear fills now use the shared physical endpoint helper rather
 than native-SVG box rotation. Native 45-degree rectangle paint and 225-degree
 paint on a 30-degree rotated rectangle meet the existing interior bounds across

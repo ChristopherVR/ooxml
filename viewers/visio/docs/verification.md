@@ -2,6 +2,45 @@
 
 Status: local Windows development evidence, 2026-10-03. Full Microsoft Visio parity is not established.
 
+## Native endpoint cells after an explicit Width override, 2026-10-08
+
+The existing line recorder accepts combined ResizeWidth=4 and MoveEndpoint
+Begin/End. Two fresh owned InvisibleApp captures cover horizontal, 30-degree,
+vertical and reversed lines:
+
+- Begin: visio-line-movement-aff296c6167b41938cf55bb4ab28cd5a
+- End: visio-line-movement-df4a2be6a1774ba08ce2976205014061
+
+Both reside in the local temporary directory. Source is resized.vsdx; native
+endpoint assignments are in endpoint.vsdx and endpoint-page.svg. The applications
+quit after recording; the user's pre-existing Visio instance stayed untouched.
+No native open/reopen attempt or user mouse interaction is represented here.
+
+The native assignments retain Width=4 and its constant formula. Opposite raw
+endpoint cells stay fixed; midpoint and derived angle follow the changed cells.
+Displayed geometry remains four inches long, so its begin and end differ from
+the raw cells by more than 0.1 inch in every case. Merely admitting static Width
+in the current pointer command would therefore produce a different drop result
+from its fixed-opposite-endpoint geometry contract. No admission was weakened
+and no new endpoint edit support is claimed.
+
+Two optional core regressions passed, enabled by VISIO_NATIVE_LINE_WIDTH_BEGIN_DIR
+and VISIO_NATIVE_LINE_WIDTH_END_DIR. They check native cached Width/opposite
+cells, parsed poses against XYToPage to 12 digits, visible-versus-cell endpoint
+divergence and the retained source-backed refusal.
+
+All twelve browser scenarios passed across six frameworks. Saved native poses
+match DOM transforms to 12 digits; displayed begin/end positions match the
+independent native SVG measurements to three decimals (export rounding).
+Each scenario then loads the resized source, attempts all four endpoint commands,
+checks their explicit refusals and preserves the complete page model and exported
+source bytes exactly. Core strict/PowerPoint and viewer type checks passed.
+
+This is viewing and refusal evidence, not native endpoint editing acceptance.
+Native interactive endpoint behavior after Width overrides must be recorded
+before implementing that interaction. Existing derived-Width endpoint editing,
+paint and save/reload evidence remains valid at its documented scope.
+
 ## Pointer endpoint gradient paint after save/reload, 2026-10-08
 
 The native begin/end paint captures below now also drive actual pointer gestures
