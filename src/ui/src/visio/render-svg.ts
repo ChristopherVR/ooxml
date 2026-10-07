@@ -166,7 +166,7 @@ function drawShape(
 function drawOwn(shape: VisioShape, group: SVGElement, context: RenderContext): void {
 	const { warnings, defs, resources } = context;
 	const fill = shape.geometry.some((geometry) => geometry.fill)
-		? fillPaint(shape.style, defs)
+		? fillPaint(shape.style, defs, resources)
 		: 'none';
 	for (const geometry of shape.geometry) {
 		if (++context.nodes > 50_000) {

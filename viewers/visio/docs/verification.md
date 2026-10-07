@@ -362,3 +362,39 @@ All six Chromium framework routes passed the 21-case live/exported SVG native
 stroke-pixel comparison (252 RGBA comparisons). All six page insertion, history
 and saved-package browser regressions also passed. These are sampled stroke
 comparisons, not complete image or text-layout parity.
+
+## Native hatch tiles and transparency (2026-10-07)
+
+The core now normalizes all built-in bitmap fill patterns 2-24 into bounded
+8-by-8 PNG tiles. The native coverage table comes from
+`scripts/record-visio-fill-patterns.ps1`, with compact pixel evidence in
+`fill-patterns-native.json`. Separate red/blue opaque and mixed-color/translucent
+captures cover 46 Visio 16 pages. The implementation reuses shared color parsing
+and clamping and the existing ole2 PNG encoder. The shared UI reuses its raster
+URL, embedded-resource, disposal, validation and immutable snapshot machinery.
+No viewer binding contains pattern logic.
+
+Every RGBA byte in both captures matches. Eighteen Chromium scenarios pass:
+12 opaque/translucent hatch scenarios across all six frameworks and six existing
+layer-stroke scenarios. Hatch tests compare 96-by-96 interiors of every native
+page with both live SVG (inlining its existing blob resources for rasterization)
+and portable exported SVG: 552 exact interior comparisons, with no channel
+threshold or tolerance. Flipping the complete pattern instead of its child image
+resolved the initial one-byte interpolation differences.
+
+Core move/save/reparse tests retain every normalized tile. The full local Visio
+suites pass 1,999 core tests (41 optional skips) and 711 UI tests (six optional
+skips), strict core/viewer types, 79 framework binding tests and five SSR tests.
+The existing seven Teams/PPTX declaration errors remain outside this change.
+The earlier seven-package registry-only consumer verification also completed
+successfully, including packed ESM/declarations and production worker checks.
+
+Native rotated/scaled hatch placement and edit/save/reopen still need evidence.
+These interior comparisons establish this captured subset, not complete Visio
+visual, editing or printing parity. The earlier layer-paint record's hatch
+limitation is superseded for patterns 2-24 by this follow-up.
+A further optional native-corpus test moves and saves the genuine 23-page source,
+reparses it and verifies identical normalized tile bytes for every page. All three
+focused pattern tests passed with that native corpus enabled. The saved acceptance
+candidate is `core-fill-patterns.vsdx` in the local oracle directory; opening it in
+Microsoft Visio remains an outstanding native acceptance step.

@@ -107,6 +107,15 @@ export function copySnapshotScene(model: VisioDocument): VisioDocument {
 		const gradient = source.fillGradient;
 		return {
 			...result,
+			...(source.fillPattern
+				? {
+						fillPattern: {
+							...image(source.fillPattern),
+							width: source.fillPattern.width,
+							height: source.fillPattern.height,
+						},
+					}
+				: {}),
 			...(dash === undefined
 				? {}
 				: { lineDash: list(dash, 'dash values', 150_000, (value) => value) }),

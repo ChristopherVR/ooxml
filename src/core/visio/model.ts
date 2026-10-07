@@ -24,10 +24,17 @@ export interface VisioLinearGradient {
 	end: readonly [number, number];
 	stops: { offset: number; color: string; opacity: number }[];
 }
+export interface VisioFillPattern extends VisioImage {
+	/** Physical tile dimensions in local inches; bytes encode a normalized 8-by-8 PNG. */
+	width: number;
+	height: number;
+	bytes: Uint8Array;
+}
 export interface VisioStyle {
 	fill: string;
 	/** Supported normalized gradient; fill remains the solid fallback color. */
 	fillGradient?: VisioLinearGradient;
+	fillPattern?: VisioFillPattern;
 	lineColor: string;
 	lineWidth: number;
 	/** Normalized SVG-compatible cap; absent means the effective cap is unresolved. */

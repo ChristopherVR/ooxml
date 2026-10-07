@@ -300,6 +300,7 @@ function validationCost(model: VisioDocument): {
 				shape.text.backgroundColor,
 			);
 			for (const geometry of shape.geometry) strings(geometry.path);
+			if (shape.style.fillPattern) work += 64;
 			for (const stop of shape.style.fillGradient?.stops ?? []) {
 				work += 3;
 				strings(stop.color);

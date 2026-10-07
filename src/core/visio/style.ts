@@ -1,5 +1,6 @@
 import { savedFillGradient } from './saved-fill-gradient';
 import { legacyFillGradient } from './legacy-fill-gradient';
+import { cachedFillPattern } from './fill-pattern';
 import { clampUnitInterval } from '../color/color-primitives';
 import { themeLinearGradient } from './theme-gradient';
 import { themeLineWeight, reportThemeEffects, themeSolidLinePattern } from './theme-line';
@@ -92,7 +93,10 @@ export function shapeStyle(
 		savedGradient ??
 		legacyGradient ??
 		(pattern === 1 ? themeLinearGradient(sheet, resources, width, height, report) : undefined);
-	if (pattern > 1 && !fillGradient)
+	const fillPattern = fillGradient
+		? undefined
+		: cachedFillPattern(cells, (name) => color(cells, name, '', resources, report));
+	if (pattern > 1 && !fillGradient && !fillPattern)
 		report(
 			'unsupported-fill-pattern',
 			`Fill pattern ${pattern} is approximated by its foreground color.`,
@@ -115,6 +119,7 @@ export function shapeStyle(
 				? 'none'
 				: color(cells, 'FillForegnd', '#ffffff', resources, report, cells, !!fillGradient),
 		...(fillGradient ? { fillGradient } : {}),
+		...(fillPattern ? { fillPattern } : {}),
 		lineColor: color(cells, 'LineColor', '#000000', resources, report),
 		lineWidth:
 			themeLineWeight(cells, resources, report) ??
@@ -123,7 +128,9 @@ export function shapeStyle(
 		...(themeSolidLinePattern(cells, resources) ?? linePattern(cells, report)),
 		// Saved and legacy stop transparencies already supply the fill opacity.
 		fillOpacity:
-			savedGradient || legacyGradient ? 1 : opacity(number(cells, 'FillForegndTrans', 0, report)),
+			savedGradient || legacyGradient || fillPattern
+				? 1
+				: opacity(number(cells, 'FillForegndTrans', 0, report)),
 		lineOpacity: opacity(number(cells, 'LineColorTrans', 0, report)),
 		startArrow: number(cells, 'BeginArrow', 0, report),
 		endArrow: number(cells, 'EndArrow', 0, report),

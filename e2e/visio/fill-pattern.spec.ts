@@ -1,0 +1,89 @@
+import { test, expect } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import type { VisioDocument } from 'ooxml-core/visio';
+
+for (const sample of [
+	{ name: 'opaque', directory: process.env.VISIO_NATIVE_FILL_PATTERNS_DIR },
+	{ name: 'alpha', directory: process.env.VISIO_NATIVE_FILL_PATTERNS_ALPHA_DIR },
+]) {
+	const directory = sample.directory;
+	for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
+		test(`${framework}: ${sample.name} native hatch interiors match live and exported SVG`, async ({
+			page,
+		}) => {
+			test.skip(!directory, 'Set VISIO_NATIVE_FILL_PATTERNS_DIR to the native oracle directory.');
+			await page.goto(framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`);
+			await page.locator('#file').setInputFiles(join(directory!, 'fill-patterns.vsdx'));
+			await expect(page.locator('#file-name')).toHaveText('fill-patterns.vsdx');
+			const references = await Promise.all(
+				Array.from({ length: 23 }, (_, index) =>
+					readFile(join(directory!, `pattern-${index + 2}.svg`), 'utf8'),
+				),
+			);
+			const results = await page.evaluate(async (references) => {
+				const load = (path: string) => import(/* @vite-ignore */ path);
+				const { exportPageSvg, renderPage } = await load('/test-api.js');
+				const model = (
+					document.querySelector('visio-viewer') as unknown as { document: VisioDocument }
+				).document;
+				const raster = async (source: string) => {
+					const url = URL.createObjectURL(new Blob([source], { type: 'image/svg+xml' }));
+					try {
+						const image = new Image();
+						image.src = url;
+						await image.decode();
+						const canvas = document.createElement('canvas');
+						canvas.width = 576;
+						canvas.height = 432;
+						const context = canvas.getContext('2d')!;
+						context.fillStyle = 'white';
+						context.fillRect(0, 0, 576, 432);
+						context.drawImage(image, 0, 0, 576, 432);
+						return context.getImageData(156, 156, 96, 96).data;
+					} finally {
+						URL.revokeObjectURL(url);
+					}
+				};
+				const differences = [];
+				for (let index = 0; index < model.pages.length; index++) {
+					const expected = await raster(references[index]!);
+					const live = renderPage(model, model.pages[index]);
+					const copy = live.svg.cloneNode(true) as SVGSVGElement;
+					for (const image of copy.querySelectorAll('image')) {
+						const href = image.getAttribute('href');
+						if (!href?.startsWith('blob:')) continue;
+						const bytes = new Uint8Array(await (await fetch(href)).arrayBuffer());
+						image.setAttribute(
+							'href',
+							`data:image/png;base64,${btoa(String.fromCharCode(...bytes))}`,
+						);
+					}
+					const sources = [
+						new XMLSerializer().serializeToString(copy),
+						exportPageSvg(model, index).svg,
+					];
+					for (const source of sources) {
+						const actual = await raster(source);
+						let maximum = 0,
+							count = 0;
+						for (let byte = 0; byte < expected.length; byte++) {
+							const difference = Math.abs(actual[byte]! - expected[byte]!);
+							maximum = Math.max(maximum, difference);
+							if (difference) count++;
+						}
+						differences.push({ pattern: index + 2, maximum, count });
+					}
+					live.dispose();
+				}
+				return differences;
+			}, references);
+			expect(results).toHaveLength(46);
+			for (const result of results)
+				expect(
+					result.maximum,
+					`pattern ${result.pattern}: ${result.count} differing channels`,
+				).toBe(0);
+		});
+	}
+}

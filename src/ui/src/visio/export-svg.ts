@@ -133,6 +133,8 @@ export function estimatePageSvgBytes(
 					shape.style.fill.length * 6,
 			);
 		for (const stop of shape.style.fillGradient?.stops ?? []) reserve(256 + stop.color.length * 6);
+		if (shape.style.fillPattern)
+			reserve(1536 + 4 * Math.ceil(shape.style.fillPattern.bytes.byteLength / 3));
 		if (shape.image) {
 			reserve(1536);
 			const image = shape.image;

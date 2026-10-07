@@ -135,7 +135,7 @@ describe('native single-layer paint context', () => {
 			false,
 		);
 		expect(document.diagnostics.some((item) => item.code === 'unsupported-fill-pattern')).toBe(
-			true,
+			false,
 		);
 	});
 	it('does not mutate source or inherited sheet colors, and supplies a missing character row', () => {

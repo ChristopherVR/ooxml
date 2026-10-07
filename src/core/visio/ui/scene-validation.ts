@@ -152,6 +152,25 @@ export function assertViewableDocument(model: VisioDocument): void {
 			throw new Error('The scene has an invalid normalized line cap.');
 		finite(shape.style.fillOpacity, 'fill opacity', 0, 1);
 		finite(shape.style.lineOpacity, 'line opacity', 0, 1);
+		if (shape.style.fillPattern) {
+			const tile = shape.style.fillPattern;
+			finite(tile.width, 'fill pattern width', 1 / 12, 1 / 12);
+			finite(tile.height, 'fill pattern height', 1 / 12, 1 / 12);
+			if (
+				!(tile.bytes instanceof Uint8Array) ||
+				tile.bytes.byteLength > 4096 ||
+				tile.mimeType !== 'image/png' ||
+				tile.pixelWidth !== 8 ||
+				tile.pixelHeight !== 8
+			)
+				throw new Error('The scene has an invalid fill pattern tile.');
+			const info = inspectVisioRasterImage(tile.bytes);
+			if (info.mimeType !== 'image/png' || info.pixelWidth !== 8 || info.pixelHeight !== 8)
+				throw new Error('The scene has invalid fill pattern pixels.');
+			imageBytes += tile.bytes.byteLength;
+			if (imageBytes > 64 * 1024 * 1024)
+				throw new Error('The scene exceeds safe raster byte limits.');
+		}
 		if (shape.style.fillGradient) {
 			const gradient = shape.style.fillGradient;
 			if (
