@@ -93,7 +93,7 @@
 		}
 	},
 	"scripts": {
-		"build": "tsup && tsdown && node ../../scripts/merge-declarations.mjs && bun scripts/build-styles.ts && node ../locales/scripts/copy-subpaths.mjs",
+		"build": "tsup && tsdown && node ../../scripts/merge-declarations.mjs && node scripts/build-styles.mjs && node ../locales/scripts/copy-subpaths.mjs",
 		"dev": "tsup --watch",
 		"typecheck": "tsc --noEmit --pretty",
 		"test": "vitest run",
