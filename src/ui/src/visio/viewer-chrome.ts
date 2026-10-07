@@ -207,6 +207,14 @@ export class ViewerChrome {
 			);
 		}
 		this.#pageTabs.selected = page ? String(state.pageIndex) : '';
+		this.#pageTabs.toggleAttribute(
+			'add-disabled',
+			!page || !state.edit.sourceAvailable || state.edit.busy || state.loading,
+		);
+		this.#pageTabs.setAttribute(
+			'add-title',
+			state.edit.sourceAvailable ? 'Insert Page' : 'Insert Page: open a .vsdx file to edit pages.',
+		);
 		for (const item of this.#allPages.querySelectorAll('office-ui-menu-item'))
 			item.setAttribute(
 				'checked',

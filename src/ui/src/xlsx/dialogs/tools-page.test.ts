@@ -26,6 +26,34 @@ function setup(grid?: { zoom: number }) {
 const radio = (root: HTMLElement, label: string) => inputByLabel(root, label);
 
 describe('Paste Special', () => {
+	it.each(['Comments', 'Validation'])('pastes only %s through the shared dialog', async (label) => {
+		const ctx = setup();
+		const session = ctx.session()!;
+		const source = { start: { row: 0, col: 0 }, end: { row: 0, col: 0 } };
+		session.setComment(0, source.start, 'source note', 'Author');
+		session.setDataValidation(
+			0,
+			{ ranges: [], type: 'whole', operator: 'between', formula1: '1', formula2: '5' },
+			source,
+		);
+		session.setCellValue(0, 0, 2, 9);
+		clipState(ctx).payload = session.copy(0, source);
+		ctx.select('C1');
+		const result = ctx.commands.run('home.paste-special');
+		const dialog = dialogEl(ctx, 'paste-special');
+		radio(dialog, label).click();
+		radio(dialog, 'Add').click();
+		inputByLabel(dialog, 'Skip blanks').click();
+		clickButton(dialog, 'OK');
+		await result;
+		const sheet = ctx.workbook()!.sheets[0]!;
+		expect(getCell(sheet, 0, 2)?.value).toBe(9);
+		expect(sheet.comments.some((c) => c.address.col === 2)).toBe(label === 'Comments');
+		expect(session.validate(0, 0, 2, 10).ok).toBe(label !== 'Validation');
+		session.undo();
+		expect(sheet.comments.some((c) => c.address.col === 2)).toBe(false);
+		expect(session.validate(0, 0, 2, 10).ok).toBe(true);
+	});
 	it('pastes column widths through the shared dialog without changing cells', async () => {
 		const ctx = setup();
 		const session = ctx.session()!;

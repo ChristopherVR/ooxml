@@ -8,6 +8,7 @@ import {
 	readContent,
 	type ContentKind,
 	type OfficeKind,
+	type FileOperationOptions,
 } from 'ooxml-core/teams';
 import type { OpenFileDetail } from './teams-app.js';
 import css from './content-preview.css?raw';
@@ -16,7 +17,7 @@ import { workbookActions } from './workbook-actions.js';
 
 /** Trusted host adapters return an embedding page URL, not an Office file URL. */
 export type FileEmbeds = Partial<Record<OfficeKind, (detail: OpenFileDetail) => string>>;
-export type SaveFileCopy = (file: File) => Promise<void>;
+export type SaveFileCopy = (file: File, options?: FileOperationOptions) => Promise<void>;
 
 export class TeamsContentPreview extends LitElement {
 	static override styles = unsafeCSS(css);
@@ -46,6 +47,7 @@ export class TeamsContentPreview extends LitElement {
 	declare saved: boolean;
 	declare downloaded: boolean;
 	private revision = 0;
+	private saveAbort: AbortController | undefined;
 	private readonly beforeUnload = (event: BeforeUnloadEvent): void => {
 		this.commitPendingEdit();
 		if (this.dirty || this.saving) {
@@ -83,6 +85,7 @@ export class TeamsContentPreview extends LitElement {
 	}
 
 	override disconnectedCallback(): void {
+		this.saveAbort?.abort();
 		this.abort?.abort();
 		this.ownerDocument.defaultView?.removeEventListener('beforeunload', this.beforeUnload);
 		super.disconnectedCallback();
@@ -97,7 +100,7 @@ export class TeamsContentPreview extends LitElement {
 	/** Called by the workspace before replacing this pane. */
 	canLeave(): boolean {
 		if (this.saving) {
-			this.saveError = 'Wait for the workbook copy to finish saving.';
+			this.saveError = 'Wait for the workbook copy to finish saving or cancel the save.';
 			return false;
 		}
 		if (!this.commitPendingEdit()) {
@@ -115,6 +118,8 @@ export class TeamsContentPreview extends LitElement {
 	}
 
 	private async load(): Promise<void> {
+		this.saveAbort?.abort();
+		this.saveAbort = undefined;
 		this.abort?.abort();
 		const request = (this.abort = new AbortController());
 		this.editing = false;
@@ -195,6 +200,8 @@ export class TeamsContentPreview extends LitElement {
 		if (!viewer) return;
 		const callback = this.saveCopy;
 		const request = this.abort;
+		const controller = new AbortController();
+		this.saveAbort = controller;
 		const name = withExtension(
 			this.detail.attachment.name,
 			saveExtension(this.detail.attachment.name),
@@ -207,25 +214,35 @@ export class TeamsContentPreview extends LitElement {
 			const pendingBytes = viewer.saveBytes();
 			const revision = this.revision;
 			const bytes = await pendingBytes;
-			if (request?.signal.aborted) return;
+			if (request?.signal.aborted || controller.signal.aborted) return;
 			if (download) {
 				downloadBytes(this.ownerDocument, bytes, name);
 				this.downloaded = true;
 				return;
 			}
 			const blob = blobFor(bytes, name);
-			await callback!(new File([blob], name, { type: blob.type }));
-			if (request?.signal.aborted) return;
+			await callback!(new File([blob], name, { type: blob.type }), { signal: controller.signal });
+			if (request?.signal.aborted || controller.signal.aborted) return;
 			if (revision === this.revision) viewer.markClean();
 			this.saveError = '';
 			this.saved = true;
 		} catch (error) {
-			if (!request?.signal.aborted)
+			if (!request?.signal.aborted && !controller.signal.aborted)
 				this.saveError =
 					error instanceof Error ? error.message : 'Could not save the workbook copy';
 		} finally {
-			if (!request?.signal.aborted) this.saving = false;
+			if (this.saveAbort === controller) {
+				this.saveAbort = undefined;
+				if (!request?.signal.aborted) this.saving = false;
+			}
 		}
+	}
+
+	private cancelWorkbookSave(): void {
+		this.saveAbort?.abort();
+		this.saveAbort = undefined;
+		this.saving = false;
+		this.saveError = 'Workbook save canceled. Your edits remain local.';
 	}
 
 	protected override render() {
@@ -244,6 +261,7 @@ export class TeamsContentPreview extends LitElement {
 									toggle: () => this.toggleWorkbook(),
 									share: () => void this.saveWorkbookCopy(),
 									download: () => void this.saveWorkbookCopy(true),
+									cancel: () => this.cancelWorkbookSave(),
 								},
 							)
 						: nothing

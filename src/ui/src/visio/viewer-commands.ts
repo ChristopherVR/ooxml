@@ -1,5 +1,5 @@
 import type { ViewerController, ViewerState } from './controller.js';
-import { editErrorMessage, isEditCancellation } from 'ooxml-core/visio/ui';
+import { editErrorMessage, isEditCancellation, visioPageInsertCommand } from 'ooxml-core/visio/ui';
 import { RIBBON_ACTION_EVENT, type VisioRibbonAction } from './ribbon-action.js';
 import type { RibbonCommand } from './ribbon-parts.js';
 import { routeRibbonAction, type RibbonTargets } from './ribbon-router.js';
@@ -84,6 +84,11 @@ export class ViewerCommands {
 		root.addEventListener(
 			'office-command',
 			(event) => {
+				if (
+					(event as CustomEvent<{ command?: unknown }>).detail?.command === 'tab-add' &&
+					(event.target as Element)?.matches?.('.page-tabs')
+				)
+					this.#insertPage();
 				if ((event as CustomEvent<{ command?: unknown }>).detail?.command === 'zoom-fit')
 					this.run({ type: 'zoom', mode: 'fit' });
 			},
@@ -152,6 +157,19 @@ export class ViewerCommands {
 			() => this.host.controller.applyEdits([{ type: 'delete-shape', pageId, shapeId: shape.id }]),
 			`Deleted ${shape.name || `shape ${shape.id}`}.`,
 		);
+	}
+	#insertPage(): void {
+		const state = this.host.controller.state;
+		const page = state.document?.pages[state.pageIndex];
+		if (!page || !state.document || !this.#canEdit(state)) return;
+		void this.#edit(async () => {
+			const command = visioPageInsertCommand(state.document!, page.id);
+			await this.host.controller.applyEdits([command]);
+			const index = this.host.controller.state.document!.pages.findIndex(
+				(page) => page.id === command.pageId,
+			);
+			if (index >= 0) this.host.controller.setPage(index);
+		}, 'Inserted a blank page.');
 	}
 	async #edit(action: () => Promise<void>, success?: string): Promise<void> {
 		const request = ++this.#pending;

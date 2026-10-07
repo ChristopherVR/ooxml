@@ -47,6 +47,8 @@ export const TOOLS_STRINGS: Translations = {
 		'边框除外',
 	],
 	'Column widths': ['Largeurs de colonnes', 'Spaltenbreite', 'Ancho de las columnas', '列宽'],
+	Validation: ['Validation', 'Gültigkeitsprüfung', 'Validación', '数据验证'],
+	Comments: ['Commentaires', 'Kommentare', 'Comentarios', '批注'],
 	Operation: ['Opération', 'Vorgang', 'Operación', '运算'],
 	None: ['Aucune', 'Keine', 'Ninguna', '无'],
 	Add: ['Addition', 'Addieren', 'Sumar', '加'],

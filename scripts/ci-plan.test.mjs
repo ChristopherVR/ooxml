@@ -19,6 +19,25 @@ const ALL_VIEWERS = Object.keys(VIEWERS);
 /** The viewers checked in the shared `viewers` job; pptx has its own jobs (`plan.pptx`). */
 const MATRIX_VIEWERS = ALL_VIEWERS.filter((key) => !VIEWERS[key].ownJobs);
 
+test('UI typechecks reuse core declarations from the build job', () => {
+	for (const file of [
+		'src/ui/src/pptx/render/table-style.ts',
+		'src/ui/src/teams/app/presentation-preview.ts',
+		'src/ui/tsconfig.pptx.json',
+		'.github/workflows/ci.yml',
+	]) {
+		const result = plan([file]);
+		assert.equal(result.typecheck.ui, true);
+		assert.equal(result.build, true);
+	}
+	const workflow = readFileSync(new URL('../.github/workflows/ci.yml', import.meta.url), 'utf8');
+	const job = workflow.match(/^  typecheck-ui:\r?\n([\s\S]*?)(?=^  \S)/m)?.[1];
+	assert.ok(job, 'the workflow has a UI typecheck job');
+	assert.match(job, /needs:\s*\[[^\]]*\bbuild\b[^\]]*\]/u);
+	assert.match(job, /download-artifact@\S+\s+with:\s+name:\s*core-dist\s+path:\s*src\/core\/dist/u);
+	assert.ok(job.indexOf('download-artifact') < job.indexOf('src/ui typecheck'));
+});
+
 test('a docs-only change runs nothing', () => {
 	const result = plan(['docs/releasing.md', 'AGENTS.md']);
 	assert.equal(result.full, false);
