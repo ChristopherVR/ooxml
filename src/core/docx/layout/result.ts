@@ -103,12 +103,19 @@ export interface LayoutColumnBox {
 	xPx: number;
 	widthPx: number;
 	blocks: LayoutBlockBox[];
+	/** Section-owned column band on a page shared by continuous sections. */
+	sectionIndex?: number;
+	startYPx?: number;
+	endYPx?: number;
+	separator?: boolean;
 }
 
 export interface LayoutPageBox {
 	index: number;
 	/** Index into the input sections this page belongs to. */
 	sectionIndex: number;
+	/** All sections contributing to this physical page, in flow order. */
+	sectionIndices?: number[];
 	/** Zero-based position of this page within its section (for first-page headers and numbering). */
 	pageInSection: number;
 	widthPx: number;

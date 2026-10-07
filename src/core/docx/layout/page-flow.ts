@@ -10,17 +10,8 @@ import type { LayoutPageBox, LayoutResult } from './result.js';
 import { lineBoxesFor, type Exclusion } from './wrap.js';
 import { expectDefined } from '../expect-defined.js';
 
-/**
- * Section-break approximation: every section here starts a fresh page, even
- * one marked `continuous`. Word's continuous section breaks can change page
- * geometry/column count mid-page without a page break, which this engine
- * does not attempt to represent (see docs/parity-roadmap.md §3).
- */
-const CONTINUOUS_BREAK_NOTE =
-	'Continuous section breaks are rendered as page breaks; changing page size, margins or column count without starting a new page is not modeled.';
-
 class SectionFlow {
-	private readonly cursor: PageCursor;
+	readonly cursor: PageCursor;
 	private readonly blocks: LayoutBlock[];
 	private readonly measurer: TextMeasurer;
 	private readonly note: (message: string) => void;
@@ -34,6 +25,7 @@ class SectionFlow {
 		note: (m: string) => void,
 		sectionIndex = 0,
 		private readonly exclusions?: ReadonlyMap<number, Exclusion[]>,
+		continueAt?: number,
 	) {
 		this.blocks = section.blocks;
 		this.measurer = measurer;
@@ -43,8 +35,8 @@ class SectionFlow {
 			section.page,
 			section.columns ?? { count: 1, gapPx: 0 },
 			sectionIndex,
+			continueAt,
 		);
-		if (section.break === 'continuous') note(CONTINUOUS_BREAK_NOTE);
 	}
 
 	private paragraphLayout(index: number): ParagraphLayoutResult {
@@ -228,10 +220,37 @@ export function layoutSections(
 	const approximations = new Set<string>();
 	const note = (message: string) => approximations.add(message);
 	const pages: LayoutPageBox[] = [];
+	let previousFlow: SectionFlow | undefined;
 	input.sections.forEach((section, index) => {
 		insertParityBlank(pages, section);
 		const first = pages.length;
-		new SectionFlow(section, pages, measurer, note, index, exclusions).run();
+		const previous = input.sections[index - 1];
+		const page = pages.at(-1);
+		let continueAt: number | undefined;
+		if (
+			section.break === 'continuous' &&
+			previousFlow &&
+			previous &&
+			page &&
+			page.widthPx === section.page.widthPx &&
+			page.heightPx === section.page.heightPx
+		) {
+			if ((previous.columns?.count ?? 1) > 1)
+				note(
+					'Continuous breaks after multi-column sections start a new page; column balancing is not yet modeled.',
+				);
+			else if (page.footnotes?.length)
+				note('Continuous sections sharing a page with footnotes start a new page.');
+			else if (
+				(previous.verticalAlign && previous.verticalAlign !== 'top') ||
+				(section.verticalAlign && section.verticalAlign !== 'top')
+			)
+				note('Continuous sections with vertical alignment changes start a new page.');
+			else continueAt = previousFlow.cursor.finishBand();
+		}
+		const flow = new SectionFlow(section, pages, measurer, note, index, exclusions, continueAt);
+		flow.run();
+		previousFlow = flow;
 		alignVertically(pages.slice(first), section, note);
 	});
 	return { pages, approximations: [...approximations] };

@@ -13,13 +13,14 @@ export const FOOTNOTE_SEPARATOR_PX = 12;
 /**
  * Mutable fill-position bookkeeping for one section: which page/column is
  * currently being filled and how much vertical space remains in it. A new
- * `PageCursor` is created per section (see `page-flow.ts`'s approximation
- * that a continuous section break still starts a fresh page).
+ * `PageCursor` is created per section. Compatible continuous sections reuse
+ * the last physical page, with their own column band and future page geometry.
  */
 export class PageCursor {
 	readonly pages: LayoutPageBox[];
 	private readonly equalColumnWidthPx: number;
-	readonly columnHeightPx: number;
+	private activeColumns: LayoutColumnBox[] = [];
+	private columnTopPx = 0;
 	private geometry: LayoutPageGeometry;
 	private columns: LayoutColumns;
 	private columnIndex = 0;
@@ -36,6 +37,7 @@ export class PageCursor {
 		geometry: LayoutPageGeometry,
 		columns: LayoutColumns,
 		sectionIndex = 0,
+		continueAt?: number,
 	) {
 		this.sectionIndex = sectionIndex;
 		this.pages = pages;
@@ -46,16 +48,23 @@ export class PageCursor {
 			1,
 			(contentWidth - columns.gapPx * (columns.count - 1)) / columns.count,
 		);
-		this.columnHeightPx = Math.max(
-			1,
-			geometry.heightPx - geometry.marginTopPx - geometry.marginBottomPx,
-		);
-		this.pushPage();
+		if (continueAt === undefined) this.pushPage();
+		else {
+			this.columnTopPx = continueAt;
+			this.yPx = continueAt;
+			this.activeColumns = this.columnBoxes(geometry.marginLeftPx - this.page.marginLeftPx);
+			for (const column of this.activeColumns) {
+				column.sectionIndex = sectionIndex;
+				column.startYPx = continueAt;
+				column.separator = columns.separator ?? false;
+			}
+			this.page.columns.push(...this.activeColumns);
+		}
 	}
 
-	private pushPage() {
+	private columnBoxes(offsetPx = 0): LayoutColumnBox[] {
 		const columnBoxes: LayoutColumnBox[] = [];
-		let xPx = 0;
+		let xPx = offsetPx;
 		for (let i = 0; i < this.columns.count; i++) {
 			const explicit = this.columns.widths?.[i];
 			const widthPx = Math.max(1, explicit?.widthPx ?? this.equalColumnWidthPx);
@@ -66,6 +75,12 @@ export class PageCursor {
 			});
 			xPx += widthPx + (explicit?.gapPx ?? this.columns.gapPx);
 		}
+		return columnBoxes;
+	}
+
+	private pushPage() {
+		const columnBoxes = this.columnBoxes();
+		this.activeColumns = columnBoxes;
 		this.pages.push({
 			index: this.pages.length,
 			sectionIndex: this.sectionIndex,
@@ -80,6 +95,7 @@ export class PageCursor {
 			...(this.columns.separator ? { columnSeparator: true } : {}),
 		});
 		this.columnIndex = 0;
+		this.columnTopPx = 0;
 		this.yPx = 0;
 		this.reservedPx = 0;
 	}
@@ -88,7 +104,7 @@ export class PageCursor {
 		return this.pages.at(-1)!;
 	}
 	get column(): LayoutColumnBox {
-		return expectDefined(this.page.columns[this.columnIndex], 'current page column');
+		return expectDefined(this.activeColumns[this.columnIndex], 'current page column');
 	}
 	get columnWidthPx(): number {
 		return this.column.widthPx;
@@ -97,10 +113,38 @@ export class PageCursor {
 		return this.yPx;
 	}
 	get atColumnTop(): boolean {
-		return this.yPx === 0;
+		return this.yPx === this.columnTopPx;
+	}
+	get hasPageContent(): boolean {
+		return this.page.columns.some((column) => column.blocks.length > 0);
+	}
+	get columnHeightPx(): number {
+		return Math.max(
+			1,
+			this.page.heightPx - this.page.marginTopPx - this.geometry.marginBottomPx - this.columnTopPx,
+		);
 	}
 	remainingHeightPx(): number {
-		return this.columnHeightPx - this.yPx - this.reservedPx - this.pendingHeightPx();
+		return (
+			this.columnHeightPx - (this.yPx - this.columnTopPx) - this.reservedPx - this.pendingHeightPx()
+		);
+	}
+
+	/** Close this section's column band before another section shares its page. */
+	finishBand(): number {
+		const bottom = Math.max(
+			this.yPx,
+			...this.activeColumns.flatMap((column) =>
+				column.blocks.map((block) => block.yPx + block.heightPx),
+			),
+		);
+		for (const column of this.activeColumns) {
+			column.sectionIndex = this.sectionIndex;
+			column.startYPx ??= this.columnTopPx;
+			column.endYPx = bottom;
+			column.separator = this.columns.separator ?? false;
+		}
+		return bottom;
 	}
 
 	private pendingHeightPx(): number {
@@ -124,7 +168,7 @@ export class PageCursor {
 	newColumn(): void {
 		if (this.columnIndex + 1 < this.columns.count) {
 			this.columnIndex++;
-			this.yPx = 0;
+			this.yPx = this.columnTopPx;
 		} else {
 			this.pushPage();
 		}
@@ -132,6 +176,13 @@ export class PageCursor {
 
 	/** Places a box at the current fill position (sets its `yPx`) and advances by `advancePx`. */
 	place(box: LayoutBlockBox, advancePx: number): void {
+		if (
+			this.page.sectionIndex !== this.sectionIndex &&
+			!this.page.sectionIndices?.includes(this.sectionIndex)
+		) {
+			(this.page.sectionIndices ??= [this.page.sectionIndex]).push(this.sectionIndex);
+			this.pageInSection = 1;
+		}
 		box.yPx = this.yPx;
 		this.column.blocks.push(box);
 		this.yPx += advancePx;

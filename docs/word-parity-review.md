@@ -88,6 +88,24 @@ limitations.
 
 ## Next implementation sequence
 
+Continuous-section pagination now shares a physical page after a single-column
+section, including changed margins and a new column count. Each section gets
+its own column band; overflow adopts the new section's page geometry. Empty
+continuous-break markers do not add a printed blank line. Page size and
+orientation changes still start a new page, matching native Word measurements.
+Print Layout limits column separators to their bands and retains per-section
+line numbering and section-page counts.
+
+Six committed native DOCX references record paragraph page numbers and origins
+from desktop Word `16.0.20430.20140`, with Arial 12 pt and exact line spacing.
+The installed licenses are 2021/2024, so this is explicit desktop Word evidence,
+not a current M365 subscription certification or a glyph/raster comparison.
+Breaks after multi-column sections still start a new page and report missing
+column balancing. Vertical alignment changes and shared-page footnote cases
+also retain reported approximations. Header/page-number transitions, floats
+relative to changed margins, and all remaining complex layouts need native
+references before parity can be claimed.
+
 1. Extend collaboration to comments, note content, headers/footers, style and
    numbering definitions, using granular mappings and explicit conflict rules.
    Add granular table transactions before enabling structural table editing.
@@ -98,7 +116,7 @@ limitations.
    Record the Office build, fonts, semantic expectations and measured layout
    tolerances. Import/edit/undo/export/save-reopen and all six bindings must be
    checked for every feature.
-4. Replace continuous-section approximations and develop editable pages with
+4. Finish continuous-section balancing and complex page transitions, and develop editable pages with
    caret, selection, IME and keyboard contracts.
 5. Fill DrawingML, chart, SmartArt, equations, proofing, references and protection
    gaps through shared core areas and one shared Word UI.
