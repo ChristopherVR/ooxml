@@ -20,7 +20,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { extname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)));
+const ROOT = resolve(fileURLToPath(new URL('../../..', import.meta.url)));
 
 /** Directories that are build output, dependencies or caches, not sources. */
 const SKIPPED_DIRECTORIES = new Set([
@@ -58,7 +58,15 @@ const SEARCHABLE_EXTENSIONS = new Set([
 ]);
 
 /** Top-level directories worth walking. */
-const SEARCHED_ROOTS = ['packages', '../../demos/pptx', '../../e2e/pptx', 'scripts', 'docs'];
+const SEARCHED_ROOTS = [
+	'viewers/pptx/packages',
+	'src/ui/src/pptx',
+	'src/core/pptx',
+	'demos/pptx',
+	'e2e/pptx',
+	'viewers/pptx/scripts',
+	'viewers/pptx/docs',
+];
 
 function* walk(directory) {
 	let entries;

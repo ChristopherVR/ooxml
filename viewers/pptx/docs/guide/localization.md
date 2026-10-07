@@ -302,7 +302,7 @@ Each language is organized into named product-area files such as `charts.ts`,
 Native and fluent speakers can help without reviewing an entire dictionary:
 
 1. Pick one product-area file under `packages/locales/src/fr`, `src/es`, `src/de`, or `src/zh-CN`.
-2. Compare each value with the matching key in `packages/shared/src/i18n/translations-en.ts`.
+2. Compare each value with the matching key in `src/ui/src/pptx/i18n/translations-en.ts`.
 3. Improve translated values while leaving dotted keys and every `{{token}}` placeholder unchanged.
 4. Prefer terminology from the localized Microsoft PowerPoint UI, especially for SmartArt, morph transitions, charts, and master views.
 5. Run `bun run --filter 'pptx-viewer-locales' test`, `typecheck`, and `build`, then identify the reviewed language and product areas in the pull request.

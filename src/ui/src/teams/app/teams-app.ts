@@ -84,6 +84,7 @@ export class TeamsApp extends LitElement {
 		settingsOpen: { state: true },
 		toast: { state: true },
 		identity: { state: true },
+		followedUnreadOnly: { state: true },
 	};
 	declare workspaceId: string;
 	declare userName: string;
@@ -106,6 +107,7 @@ export class TeamsApp extends LitElement {
 	declare settingsOpen: boolean;
 	declare toast: string;
 	declare identity: Identity | null;
+	declare followedUnreadOnly: boolean;
 
 	private readonly teams = new TeamsController(this, (text) => this.notify(text));
 	private toastTimer: ReturnType<typeof setTimeout> | undefined;
@@ -132,6 +134,7 @@ export class TeamsApp extends LitElement {
 		this.settingsOpen = false;
 		this.toast = '';
 		this.identity = null;
+		this.followedUnreadOnly = false;
 	}
 
 	/** The core client behind this element, for hosts that want the raw actions. */
@@ -194,6 +197,16 @@ export class TeamsApp extends LitElement {
 		this.dispatchEvent(
 			new CustomEvent('teams-ready', { detail: { user: named }, bubbles: true, composed: true }),
 		);
+	}
+
+	protected override updated(): void {
+		const state = this.teams.state;
+		if (
+			state?.thread &&
+			document.visibilityState === 'visible' &&
+			this.renderRoot.querySelector('.thread-pane')
+		)
+			this.teams.client?.markThreadRead(state.selectedChannelId, state.thread.root.id);
 	}
 
 	private notify(text: string): void {
@@ -486,9 +499,17 @@ export class TeamsApp extends LitElement {
 			></teams-content-preview>`;
 		if (this.rail === 'files') return this.allFiles(s);
 		if (this.rail === 'followed' && this.teams.client)
-			return followedThreads(s, this.teams.client, (thread) => {
-				if (this.selectChannel(thread.channelId)) void this.openThread(thread.root.id);
-			});
+			return followedThreads(
+				s,
+				this.teams.client,
+				(thread) => {
+					if (this.selectChannel(thread.channelId)) void this.openThread(thread.root.id);
+				},
+				this.followedUnreadOnly,
+				(value) => {
+					this.followedUnreadOnly = value;
+				},
+			);
 		if (s.call && this.meeting) return this.meetingView(s);
 		return html`
 			${

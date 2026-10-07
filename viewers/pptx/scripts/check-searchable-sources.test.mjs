@@ -20,34 +20,45 @@ function fixture(files) {
 
 test('reports a source file carrying a raw NUL byte', () => {
 	const root = fixture({
-		'packages/a/src/keys.ts': `export const SEP = '${NUL}';\n`,
+		'viewers/pptx/packages/a/src/keys.ts': `export const SEP = '${NUL}';\n`,
 	});
 	const offences = findUnsearchableSources(root);
-	assert.deepEqual(offences, [{ file: 'packages/a/src/keys.ts', line: 1 }]);
+	assert.deepEqual(offences, [{ file: 'viewers/pptx/packages/a/src/keys.ts', line: 1 }]);
 });
 
 test('reports the line the byte sits on, once per occurrence', () => {
 	const root = fixture({
-		'e2e/support/keys.ts': `const a = 1;\nconst b = '${NUL}';\nconst c = '${NUL}';\n`,
+		'e2e/pptx/support/keys.ts': `const a = 1;\nconst b = '${NUL}';\nconst c = '${NUL}';\n`,
 	});
 	assert.deepEqual(findUnsearchableSources(root), [
-		{ file: 'e2e/support/keys.ts', line: 2 },
-		{ file: 'e2e/support/keys.ts', line: 3 },
+		{ file: 'e2e/pptx/support/keys.ts', line: 2 },
+		{ file: 'e2e/pptx/support/keys.ts', line: 3 },
 	]);
 });
 
 test('accepts the escaped spelling, which is the same string at runtime', () => {
 	const root = fixture({
-		'packages/a/src/keys.ts': "export const SEP = '\\u0000';\n",
+		'viewers/pptx/packages/a/src/keys.ts': "export const SEP = '\\u0000';\n",
 	});
 	assert.deepEqual(findUnsearchableSources(root), []);
 });
 
+test('checks the migrated renderer and document operations', () => {
+	const root = fixture({
+		'src/ui/src/pptx/render/keys.ts': `const key = '${NUL}';\n`,
+		'src/core/pptx/editor/render/keys.ts': `const key = '${NUL}';\n`,
+	});
+	assert.deepEqual(findUnsearchableSources(root), [
+		{ file: 'src/ui/src/pptx/render/keys.ts', line: 1 },
+		{ file: 'src/core/pptx/editor/render/keys.ts', line: 1 },
+	]);
+});
+
 test('ignores build output and vendored copies', () => {
 	const root = fixture({
-		'packages/a/dist/index.js': `'${NUL}'`,
-		'packages/a/node_modules/dep/index.js': `'${NUL}'`,
-		'packages/angular/src/internal/shared-src/keys.ts': `'${NUL}'`,
+		'viewers/pptx/packages/a/dist/index.js': `'${NUL}'`,
+		'viewers/pptx/packages/a/node_modules/dep/index.js': `'${NUL}'`,
+		'viewers/pptx/packages/angular/src/internal/shared-src/keys.ts': `'${NUL}'`,
 	});
 	assert.deepEqual(findUnsearchableSources(root), []);
 });

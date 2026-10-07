@@ -3,7 +3,7 @@
  * from the shared customisation catalogues, then formats it with oxfmt (the
  * same formatter the pre-commit hook runs). Run with
  * `bun run docs:customization` after adding or renaming a customisation id;
- * `customization-reference.test.ts` in packages/shared fails until you do.
+ * `customization-reference.test.ts` in src/ui/src/pptx fails until you do.
  */
 import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -12,7 +12,7 @@ import { resolve } from 'node:path';
 import {
 	normalizeReferenceMarkdown,
 	replaceCustomizationReference,
-} from '../packages/shared/src/render/customization/customization-reference';
+} from '../../../src/ui/src/pptx/render/customization/customization-reference';
 
 const docPath = resolve(import.meta.dirname, '../docs/guide/customization.md');
 const before = readFileSync(docPath, 'utf8');

@@ -66,7 +66,8 @@ export function marksForRun(run: TextRun): Mark[] {
 				move: revision.kind === 'moveFrom' ? move : null,
 			}),
 		);
-	if (run.commentIds?.length) marks.push(schema.marks.comment.create({ ids: run.commentIds }));
+	for (const id of [...new Set(run.commentIds ?? [])].sort())
+		marks.push(schema.marks.comment.create({ ids: [id] }));
 	if (run.style) marks.push(schema.marks.characterStyle.create({ id: run.style }));
 	const extra = extraRunProperties(run);
 	if (extra) marks.push(schema.marks.runProperties.create({ props: extra }));

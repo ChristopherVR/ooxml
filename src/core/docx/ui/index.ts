@@ -5,6 +5,7 @@ export * from './collaboration-identity.js';
 export * from './collaboration-protocol.js';
 export * from './collaboration.js';
 export * from './comment-commands.js';
+export * from './comment-anchors.js';
 export * from './yjs-collaboration.js';
 export * from './yjs-media.js';
 export * from './yjs-presence.js';

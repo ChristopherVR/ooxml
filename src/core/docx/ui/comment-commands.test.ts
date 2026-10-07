@@ -34,6 +34,16 @@ function view(editable = true): EditorView {
 }
 
 describe('shared Word comment commands', () => {
+	it('retains independent anchors when removing one id from a legacy grouped mark', () => {
+		const editor = view();
+		editor.dispatch(
+			editor.state.tr.addMark(2, 10, schema.marks.comment!.create({ ids: ['c1', 'c2'] })),
+		);
+		addComment(editor, 'Ada', 'Independent', () => 'c3');
+		expect(commentIdsAtSelection(editor)).toEqual(['c1', 'c2', 'c3']);
+		removeCommentAnchor(editor, 'c1');
+		expect(commentIdsAtSelection(editor)).toEqual(['c2', 'c3']);
+	});
 	it('retains overlapping anchors across paragraphs when one comment is removed', () => {
 		const editor = view();
 		expect(addComment(editor, 'Ada', 'First', () => 'c1')?.id).toBe('c1');

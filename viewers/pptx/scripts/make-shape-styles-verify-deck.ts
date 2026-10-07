@@ -4,15 +4,15 @@
  * for `scripts/verify-shape-styles-com.ps1` to compare against PowerPoint's
  * own `Shape.ShapeStyle` on the same deck.
  *
- *   bun scripts/make-shape-styles-verify-deck.ts <out.pptx>
+ *   bun --tsconfig-override scripts/tsconfig.runtime.json scripts/make-shape-styles-verify-deck.ts <out.pptx>
  *
  * Shape N is named `gallery-<itemId>-<msoShapeStylePreset index>`.
  */
 import { writeFileSync } from 'node:fs';
 
+import { applyRibbonGalleryItem } from '../../../src/ui/src/pptx/render/ribbon-galleries/gallery-registry';
 import { PptxHandler } from '../packages/core/src';
 import type { PptxElement } from '../packages/core/src';
-import { applyRibbonGalleryItem } from '../packages/shared/src/render/ribbon-galleries/gallery-registry';
 
 const out = process.argv[2];
 if (!out) {

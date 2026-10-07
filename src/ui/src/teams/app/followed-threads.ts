@@ -5,15 +5,26 @@ export function followedThreads(
 	state: TeamsState,
 	client: TeamsClient,
 	open: (thread: FollowedThread) => void,
+	unreadOnly: boolean,
+	filter: (unreadOnly: boolean) => void,
 ) {
+	const threads = state.followedThreads.filter((thread) => !unreadOnly || thread.unread > 0);
 	return html`<section class="followed-threads" aria-label="Followed threads">
 		<h1>Followed threads</h1>
 		<p>Threads you follow on this device. Notifications are not enabled.</p>
+		<label
+			><input
+				type="checkbox"
+				.checked=${unreadOnly}
+				@change=${(event: Event) => filter((event.target as HTMLInputElement).checked)}
+			/>
+			Unread only</label
+		>
 		<ul>
 			${
-				state.followedThreads.length
-					? state.followedThreads.map(
-							(thread) => html`<li>
+				threads.length
+					? threads.map(
+							(thread) => html`<li data-unread=${String(thread.unread > 0)}>
 								<button
 									type="button"
 									@click=${() => open(thread)}
@@ -27,6 +38,12 @@ export function followedThreads(
 										>${thread.replyCount} ${thread.replyCount === 1 ? 'reply' : 'replies'} ·
 										${new Date(thread.updatedAt).toLocaleString()}</small
 									></button
+								><span>${thread.unread > 0 ? `${thread.unread} unread` : 'Read'}</span
+								><button
+									type="button"
+									@click=${() => client.markThreadRead(thread.channelId, thread.root.id, thread.unread > 0)}
+								>
+									${thread.unread > 0 ? 'Mark as read' : 'Mark as unread'}</button
 								><button
 									type="button"
 									@click=${() => client.followThread(thread.channelId, thread.root.id, false)}
@@ -35,7 +52,9 @@ export function followedThreads(
 								</button>
 							</li>`,
 						)
-					: html`<li>No followed threads yet. Open a thread and choose Follow thread.</li>`
+					: html`<li>
+							${unreadOnly ? 'No unread followed threads.' : 'No followed threads yet. Open a thread and choose Follow thread.'}
+						</li>`
 			}
 		</ul>
 	</section>`;
