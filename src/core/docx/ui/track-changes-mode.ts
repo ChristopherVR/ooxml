@@ -5,7 +5,7 @@ import { Fragment, Slice, type Mark, type Node as ProseMirrorNode } from 'prosem
 import { createClientId } from '../../collab/identity';
 import { createCollaborationIdGenerator } from './collaboration-identity';
 import { isHistoryTransaction } from 'prosemirror-history';
-import { trackRunFormatting } from './track-run-formatting.js';
+import { trackRunFormatting } from './track-run-formatting';
 
 /** Text removed by the latest tracked cut, so pasting it back records a move. */
 interface TrackState {
@@ -190,6 +190,7 @@ export function trackChangesPlugin(
 			const author = getAuthor() || 'Author';
 			const date = new Date(Date.now()).toISOString();
 			if (!steps.length || !steps.every((step) => step instanceof ReplaceStep)) {
+				if (newState.doc.attrs.trackFormatting === false) return null;
 				const formatting = trackRunFormatting(steps, oldState, newState, author, date, () =>
 					idGenerator('revision'),
 				);
@@ -237,10 +238,11 @@ export function trackChangesPlugin(
 				change.insertionId ? [change.insertionId] : [],
 			);
 			const lastCut = trackChangesPluginKey.getState(oldState)?.lastCut;
-			if (events.has('drop') && deletedText && deletedText === insertedText)
+			const trackMoves = newState.doc.attrs.trackMoves !== false;
+			if (trackMoves && events.has('drop') && deletedText && deletedText === insertedText)
 				// Dragging selected text records a move, as Word does.
 				markMove(result, new Set([...deletionIds, ...insertionIds]), nextMoveName());
-			else if (events.has('paste') && lastCut && insertedText === lastCut.text) {
+			else if (trackMoves && events.has('paste') && lastCut && insertedText === lastCut.text) {
 				// Pasting the text of the latest cut completes a move.
 				markMove(result, new Set([...lastCut.deletionIds, ...insertionIds]), nextMoveName());
 				meta.pasted = true;

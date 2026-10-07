@@ -1,24 +1,27 @@
 import { describe, expect, it } from 'vitest';
 import { readFile } from 'node:fs/promises';
-import { loadDocx, saveDocx, rejectAllRevisions, listRevisions } from '../index.js';
+import { loadDocx, saveDocx, rejectAllRevisions, listRevisions } from '../index';
 import { Schema } from 'prosemirror-model';
 import { EditorState } from 'prosemirror-state';
 import { history, undo, redo } from 'prosemirror-history';
-import type { TextRun } from '../model.js';
-import { first, parseXml, WORD_NS } from '../xml.js';
-import { marksForRun } from './run-marks.js';
-import { applyMarkFormatting } from './run-mark-properties.js';
-import { markSpecs } from './schema-marks.js';
-import { formattingRevision, resolveFormattingRange } from './review-formatting.js';
+import type { TextRun } from '../model';
+import { first, parseXml, WORD_NS } from '../xml';
+import { marksForRun } from './run-marks';
+import { applyMarkFormatting } from './run-mark-properties';
+import { markSpecs } from './schema-marks';
+import { formattingRevision, resolveFormattingRange } from './review-formatting';
 import {
 	REMOTE_TRANSACTION_META,
 	trackChangesPlugin,
 	trackChangesPluginKey,
-} from './track-changes-mode.js';
+} from './track-changes-mode';
 
 const schema = new Schema({
 	nodes: {
-		doc: { content: 'paragraph+' },
+		doc: {
+			content: 'paragraph+',
+			attrs: { trackFormatting: { default: true }, trackMoves: { default: true } },
+		},
 		paragraph: { content: 'text*' },
 		text: {},
 	},
@@ -55,6 +58,39 @@ function runAt(editor: EditorState, pos = 1): TextRun {
 }
 
 describe('shared formatting revision recording', () => {
+	it('honors native disabled formatting tracking while continuing to record insertions', async () => {
+		const loaded = await loadDocx(
+			new Uint8Array(
+				await readFile(
+					new URL('../__fixtures__/review-preferences/preferences.docx', import.meta.url),
+				),
+			),
+		);
+		const paragraph = loaded.model.blocks[0]!;
+		if (paragraph.type !== 'paragraph') throw new Error('Expected paragraph');
+		let editor = state(paragraph.runs);
+		editor = editor.apply(
+			editor.tr.setDocAttribute('trackFormatting', loaded.model.trackFormatting),
+		);
+		editor = editor.apply(editor.tr.addMark(1, 11, schema.marks.bold!.create()));
+		expect(runAt(editor).bold).toBe(true);
+		expect(runAt(editor).formatRevision).toBeUndefined();
+		editor = editor.apply(editor.tr.insertText('!', 16));
+		expect(runAt(editor, 16).revision?.kind).toBe('insert');
+	});
+	it('records a drag as insertion/deletion when move recording is disabled', () => {
+		let editor = state();
+		editor = editor.apply(editor.tr.setDocAttribute('trackMoves', false));
+		const tr = editor.tr.delete(1, 2);
+		tr.insertText('F', tr.mapping.map(10));
+		editor = editor.apply(tr.setMeta('uiEvent', 'drop'));
+		const source = runAt(editor).revision;
+		const target = runAt(editor, 10).revision;
+		expect(source?.kind).toBe('delete');
+		expect(target?.kind).toBe('insert');
+		expect(source?.move).toBeUndefined();
+		expect(target?.move).toBeUndefined();
+	});
 	it.each(['bold', 'bold-italic', 'bold-off', 'own-insertion'])(
 		'matches native Word %s recording and exports rejectable snapshots',
 		async (action) => {

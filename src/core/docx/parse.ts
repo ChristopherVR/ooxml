@@ -2,21 +2,14 @@ import { parseCoreProperties } from './core-properties';
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import JSZip from 'jszip';
 import type { Block, DocumentModel, LoadedDocument } from './model';
-import {
-	children,
-	first,
-	getW,
-	parseXml,
-	type XmlDocument,
-	WORD_NS,
-} from './xml';
+import { children, first, getW, parseXml, type XmlDocument, WORD_NS } from './xml';
 import { remember, saveDocx } from './save';
 import { parseParagraphStyleCatalog } from './paragraph-styles';
 import { parseBlocksFromContainer } from './block-parser';
 import { parseDocumentParts } from './document-parts';
 import { parseNumberingCatalog } from './numbering-parse';
 import { parseComments } from './comments';
-import { parseTrackChangesSetting } from './settings';
+import { parseTrackChangesSetting, parseReviewPreferences } from './settings';
 import { parsePageBackground } from './page-background';
 import { parseRunStyleCatalog } from './character-styles';
 import { parseTableStyleCatalog } from './table-styles';
@@ -50,7 +43,9 @@ export async function readPackage(input: Uint8Array | ArrayBuffer): Promise<{
 	const entries = Object.values(zip.files);
 	if (entries.length > 5000) throw new Error('DOCX package exceeds the 5,000 part limit');
 	const totalSize = entries.reduce(
-		(sum, entry) => sum + Number((entry as { _data?: { uncompressedSize?: number } })._data?.uncompressedSize ?? 0),
+		(sum, entry) =>
+			sum +
+			Number((entry as { _data?: { uncompressedSize?: number } })._data?.uncompressedSize ?? 0),
 		0,
 	);
 	if (totalSize > 200 * 1024 * 1024)
@@ -174,8 +169,11 @@ export async function readPackage(input: Uint8Array | ArrayBuffer): Promise<{
 			'Comment ranges are modeled at run granularity (they may span paragraphs); a range edge outside any run, such as around an empty paragraph or a table, moves to the nearest commented text when that paragraph is edited.',
 		);
 	}
-	if (settingsFile)
-		model.trackChanges = parseTrackChangesSetting(await settingsFile.async('string'));
+	if (settingsFile) {
+		const settingsXml = await settingsFile.async('string');
+		model.trackChanges = parseTrackChangesSetting(settingsXml);
+		Object.assign(model, parseReviewPreferences(settingsXml));
+	}
 	if (
 		blocks.some(
 			(block) =>

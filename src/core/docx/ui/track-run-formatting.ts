@@ -1,12 +1,12 @@
 import type { Node as ProseMirrorNode } from 'prosemirror-model';
 import type { EditorState, Transaction } from 'prosemirror-state';
 import { AddMarkStep, RemoveMarkStep, type Step } from 'prosemirror-transform';
-import type { TextRun } from '../model.js';
-import { createRun } from '../write-run.js';
-import { buildXml, first, makeW, parseXml, WORD_NS, type XmlElement } from '../xml.js';
-import { parseRunPropertiesSnapshot } from '../restore-run-format.js';
-import { applyMarkFormatting } from './run-mark-properties.js';
-import { formattingRevision } from './review-formatting.js';
+import type { TextRun } from '../model';
+import { createRun } from '../write-run';
+import { buildXml, first, makeW, parseXml, WORD_NS, type XmlElement } from '../xml';
+import { parseRunPropertiesSnapshot } from '../restore-run-format';
+import { applyMarkFormatting } from './run-mark-properties';
+import { formattingRevision } from './review-formatting';
 
 const TRACKED_MARKS = new Set([
 	'bold',

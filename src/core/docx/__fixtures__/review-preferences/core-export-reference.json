@@ -1,0 +1,20 @@
+{
+	"applicationVersion": "16.0",
+	"applicationBuild": "16.0.20430",
+	"cases": [
+		{
+			"name": "enabled",
+			"trackFormatting": true,
+			"trackMoves": true,
+			"formattingRevisionCount": 1,
+			"rejectedBold": 0
+		},
+		{
+			"name": "standalone-disabled",
+			"trackFormatting": false,
+			"trackMoves": false,
+			"formattingRevisionCount": 0,
+			"rejectedBold": -1
+		}
+	]
+}

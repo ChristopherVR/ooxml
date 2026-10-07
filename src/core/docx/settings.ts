@@ -121,6 +121,18 @@ export function parseTrackChangesSetting(xml: string): boolean {
 	);
 }
 
+/** Word's negative flags disable individual revision kinds while text tracking stays enabled. */
+export function parseReviewPreferences(xml: string): {
+	trackFormatting: boolean;
+	trackMoves: boolean;
+} {
+	const root = parseXml(xml).documentElement;
+	return {
+		trackFormatting: onOffElement(children(root, 'doNotTrackFormatting')[0]) !== true,
+		trackMoves: onOffElement(children(root, 'doNotTrackMoves')[0]) !== true,
+	};
+}
+
 /**
  * Sets or clears an on/off element in settings.xml, inserting it in schema order. Creates the
  * settings part (with its relationship and content type) the first time it's needed.

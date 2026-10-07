@@ -1,0 +1,14 @@
+{
+	"applicationVersion": "16.0",
+	"applicationBuild": "16.0.20430",
+	"trackFormatting": false,
+	"trackMoves": false,
+	"revisions": [
+		{
+			"type": 1,
+			"text": "!"
+		}
+	],
+	"rejectedText": "Preference text\r",
+	"rejectedFirstWordBold": -1
+}

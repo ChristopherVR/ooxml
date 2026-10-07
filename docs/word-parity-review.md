@@ -241,6 +241,14 @@ standalone exports with matching revision types and Reject All results. These
 references do not establish current M365 certification, multi-author attribution
 rules, paragraph-format recording or mixed structural/formatting transactions.
 
+Word's document-level Track Formatting and Track Moves preferences now parse
+and export their negative settings flags. The editor retains them as shared
+document attributes and core supplies isolated undoable toggle commands.
+Disabled formatting tracking keeps formatting edits untracked while text tracking
+continues; disabled move tracking keeps drag and cut/paste revisions as ordinary
+insertion/deletion pairs. Native preference references and package/standalone
+round trips cover the flags. The ribbon still needs advanced tracking controls.
+
 Core revision enumeration and resolution now include headers, footers, footnotes,
 endnotes and table cells through the shared document-story traversal. Synthetic
 package tests verify accept/reject/save/reopen, including headers shared across

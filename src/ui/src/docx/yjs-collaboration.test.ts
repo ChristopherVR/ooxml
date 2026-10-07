@@ -11,7 +11,12 @@ import {
 	transportProvider,
 	type CollabSession,
 } from 'ooxml-core/collab';
-import { toggleTrackChanges, wordYjsPluginKey } from 'ooxml-core/docx/ui';
+import {
+	toggleTrackChanges,
+	toggleTrackFormatting,
+	toggleTrackMoves,
+	wordYjsPluginKey,
+} from 'ooxml-core/docx/ui';
 import type { EditorView } from 'prosemirror-view';
 import { DocxEditorElement } from './index';
 import './index';
@@ -61,6 +66,52 @@ function start(
 }
 
 describe('Word Yjs collaboration', () => {
+	it('shares native recording preferences, honors them in edits, and undoes preference changes', async () => {
+		const bytes = new Uint8Array(
+			await readFile(
+				resolve(
+					import.meta.dirname,
+					'../../../core/docx/__fixtures__/review-preferences/preferences.docx',
+				),
+			),
+		);
+		const a = mount();
+		const b = mount();
+		await a.load(bytes);
+		await b.load(bytes);
+		start(a, b, pair());
+		const view = viewOf(b);
+		for (const editor of [a, b]) {
+			expect(viewOf(editor).state.doc.attrs).toMatchObject({
+				trackFormatting: false,
+				trackMoves: false,
+			});
+		}
+		view.dispatch(view.state.tr.addMark(1, 11, view.state.schema.marks.bold!.create()));
+		for (const editor of [a, b]) {
+			expect(collectRevisionRanges(viewOf(editor).state.doc)).toEqual([]);
+			const exported = await loadDocx(await editor.saveBytes());
+			expect(exported.model).toMatchObject({
+				trackChanges: true,
+				trackFormatting: false,
+				trackMoves: false,
+			});
+		}
+		expect(toggleTrackFormatting(view.state, view.dispatch, view)).toBe(true);
+		for (const editor of [a, b]) expect(viewOf(editor).state.doc.attrs.trackFormatting).toBe(true);
+		expect(wordYjsPluginKey.getState(view.state)!.undo()).toBe(true);
+		for (const editor of [a, b]) expect(viewOf(editor).state.doc.attrs.trackFormatting).toBe(false);
+		expect(wordYjsPluginKey.getState(view.state)!.redo()).toBe(true);
+		for (const editor of [a, b]) expect(viewOf(editor).state.doc.attrs.trackFormatting).toBe(true);
+		view.dispatch(view.state.tr.addMark(1, 11, view.state.schema.marks.italic!.create()));
+		for (const editor of [a, b])
+			expect(collectRevisionRanges(viewOf(editor).state.doc)).toHaveLength(1);
+		rejectRevisionRange(view, collectRevisionRanges(view.state.doc)[0]!);
+		expect(toggleTrackMoves(view.state, view.dispatch, view)).toBe(true);
+		for (const editor of [a, b]) expect(viewOf(editor).state.doc.attrs.trackMoves).toBe(true);
+		b.readOnly = true;
+		expect(toggleTrackFormatting(view.state, view.dispatch, view)).toBe(false);
+	});
 	it('records peer formatting with one reversible revision and both peers export its prior properties', async () => {
 		const bytes = new Uint8Array(
 			await readFile(

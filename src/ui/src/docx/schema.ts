@@ -80,6 +80,8 @@ export const schema = new Schema({
 				evenAndOddHeaders: { default: false },
 				/** Document-wide revision recording (`w:trackRevisions`). */
 				trackChanges: { default: false },
+				trackFormatting: { default: true },
+				trackMoves: { default: true },
 				/** Page colour (`w:background`) as hex without `#`. */
 				pageColor: { default: null },
 				/** `w:autoHyphenation` from settings.xml. */

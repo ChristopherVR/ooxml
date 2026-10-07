@@ -137,6 +137,10 @@ export interface DocumentModel {
 	comments?: Comment[];
 	/** settings.xml `w:trackRevisions`; toggling this changes how the editor records new edits. */
 	trackChanges?: boolean;
+	/** Formatting revisions are enabled by default; false writes `w:doNotTrackFormatting`. */
+	trackFormatting?: boolean;
+	/** Move revisions are enabled by default; false writes `w:doNotTrackMoves`. */
+	trackMoves?: boolean;
 	/** Source run-level defaults/character styles; editing the catalog itself is not supported. */
 	characterStyles?: RunStyleCatalog;
 	/** Source table style catalog; editing the catalog itself is not supported. */

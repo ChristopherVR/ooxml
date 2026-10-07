@@ -144,6 +144,12 @@ export async function saveDocx(
 		await applySettingsFlag(zip, 'autoHyphenation', Boolean(model.autoHyphenation));
 	if (model.trackChanges !== binding?.base.trackChanges)
 		await applyTrackChangesSetting(zip, model.trackChanges === true);
+	for (const [key, flag] of [
+		['trackFormatting', 'doNotTrackFormatting'],
+		['trackMoves', 'doNotTrackMoves'],
+	] as const)
+		if ((model[key] !== false) !== (binding?.base[key] !== false))
+			await applySettingsFlag(zip, flag, model[key] === false);
 	// New documents carry Word's modern defaults, so they open in Word as they were edited.
 	if (!binding && model.paragraphStyles) {
 		zip.file(DEFAULT_STYLES_PATH, DEFAULT_STYLES_XML);
