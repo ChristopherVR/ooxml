@@ -548,3 +548,43 @@ core-fill-patterns.vsdx acceptance candidates and preserving all normalized pain
 through move/save/reparse. That is parser/serializer preservation evidence; it
 does not establish native Visio reopen acceptance. Root lint passed with the nine
 existing unrelated warnings.
+
+## Native classic region gradients (2026-10-07)
+
+Classic fill patterns 31-35 now preserve native triangle regions and their
+triangle-local linear gradients. The core normalizes two triangles for patterns
+31-34 and four for pattern 35, including region-local endpoints, native rotation,
+foreground/background colors and independent stop alpha. Existing linear endpoint
+and color/opacity helpers are reused. The renderer shares its linear/radial stop
+serialization; no framework-specific painter was added.
+
+Native SVG uses top-down pattern coordinates. Flipping the pattern transform,
+rather than the triangle content, is required by these captured pixel references.
+The latter differed by one byte for opaque patterns and up to two for alpha;
+the final transform matches both references exactly without a tolerance change.
+Snapshots copy the region vertices and endpoints independently. Existing scene
+validation moved into a reusable gradient helper, with the extraction recorded in
+PROVENANCE.md. Export estimates and print work budgets count all rendered regions.
+
+Microsoft Visio 16 captures in the local temporary directory are
+visio-fill-patterns-6f5fdd0b579c4171ae17dd584c3ca7ef (opaque) and
+visio-fill-patterns-74695b6af9d84dd59f80a4415f6ea7dc (alpha). The alpha values
+are RGB(27,139,211) at 20 percent transparency and RGB(231,61,83) at 50 percent.
+Enable VISIO_NATIVE_REGION_FILLS_DIR and VISIO_NATIVE_REGION_FILLS_ALPHA_DIR
+for the optional browser and native-source preservation tests.
+
+All six framework routes passed both captures: 12 scenarios and 120 exact
+576-by-432 full-page RGBA live/export comparisons against native SVG rasterization.
+The genuine native documents also passed core move/save/reparse preservation;
+core-fill-patterns.vsdx candidates were written alongside their native sources.
+This is not native Visio reopen acceptance, nor native PNG pipeline equivalence.
+Grouped, rotated, nonrectangular and colored-layer region fills still need native
+comparisons. Modern gradient settings and broader effects remain separate gaps.
+
+Strict core types, viewer types and viewer formatting passed. Visio core passed
+2,031 tests with 44 optional skips; UI passed 712 tests with seven optional skips.
+Root lint passed with nine existing unrelated warnings. The snapshot regression
+now narrows the gradient discriminant before checking linear endpoints, fixing
+the test type errors introduced when radial paints were added. Its four focused tests passed. After generating the missing local PowerPoint
+declarations, the full UI typecheck passed for both the strict and relaxed PPTX
+projects. The seven missing-declaration errors were local build prerequisites.

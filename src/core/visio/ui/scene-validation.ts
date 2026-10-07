@@ -1,3 +1,4 @@
+import { assertVisioFillGradient } from './gradient-details';
 import {
 	inspectVisioRasterImage,
 	VISIO_RASTER_IMAGE_LIMITS,
@@ -171,37 +172,11 @@ export function assertViewableDocument(model: VisioDocument): void {
 			if (imageBytes > 64 * 1024 * 1024)
 				throw new Error('The scene exceeds safe raster byte limits.');
 		}
-		if (shape.style.fillGradient) {
-			const gradient = shape.style.fillGradient;
-			if (
-				!['linear', 'radial'].includes(gradient.type) ||
-				!Array.isArray(gradient.stops) ||
-				gradient.stops.length < 2 ||
-				gradient.stops.length > 128
-			)
-				throw new Error('The scene has an invalid fill gradient.');
-			if ((gradientStops += gradient.stops.length) > 100_000)
-				throw new Error('The scene exceeds aggregate gradient stop limits.');
-			if (gradient.type === 'linear') {
-				if (gradient.start.length !== 2 || gradient.end.length !== 2)
-					throw new Error('The scene has invalid gradient endpoints.');
-				for (const value of [...gradient.start, ...gradient.end])
-					finite(value, 'gradient position', -20_000, 20_000);
-			} else {
-				if (gradient.center.length !== 2)
-					throw new Error('The scene has an invalid gradient center.');
-				for (const value of gradient.center) finite(value, 'gradient center', 0, 1);
-				finite(gradient.radius, 'gradient radius', Number.MIN_VALUE, 20_000);
-			}
-			let offset = -1;
-			for (const stop of gradient.stops) {
-				finite(stop.offset, 'gradient stop', 0, 1);
-				finite(stop.opacity, 'gradient opacity', 0, 1);
-				label(stop.color, 256);
-				if (stop.offset < offset) throw new Error('Gradient stops must be ordered.');
-				offset = stop.offset;
-			}
-		}
+		if (
+			shape.style.fillGradient &&
+			(gradientStops += assertVisioFillGradient(shape.style.fillGradient, finite, label)) > 100_000
+		)
+			throw new Error('The scene exceeds aggregate gradient stop limits.');
 		if (typeof shape.text.plainText !== 'string')
 			throw new Error('The scene has invalid plain text.');
 		textBytes += shape.text.plainText.length;

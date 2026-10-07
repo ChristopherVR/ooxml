@@ -11,3 +11,4 @@ export * from './scene-validation';
 export * from './snapshot-scene';
 export * from './page-edit';
 export * from './fill-pattern-transform';
+export { visioGradientInstances } from './gradient-details';

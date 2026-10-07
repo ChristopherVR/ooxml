@@ -608,3 +608,14 @@ the existing OfficeUiGallery, with a thin translated command adapter. Chart
 palettes and color-style XML remain in core; no PowerPoint engine dependency
 was introduced into the XLSX UI. Existing PowerPoint gallery regressions cover
 the compatibility paths and XLSX browser tests cover the shared control.
+
+## Visio gradient scene validation extraction (2026-10-07)
+
+Source: ChristopherVR/ooxml, src/core/visio/ui/scene-validation.ts at
+e26a6f5e7464f3f37b940e36137e13531be55c7b.
+The existing linear/radial gradient validation moved to
+src/core/visio/ui/gradient-details.ts. The original finite-number checks and
+aggregate metadata accounting are passed in, rather than copied. The helper adds
+bounded triangle-region validation and exposes the number of independently
+rendered gradients. Scene stop limits, SVG byte estimates and print work budgets
+reuse that count so multi-region paints do not bypass the existing limits.

@@ -15,10 +15,12 @@ for (const sample of [
 	{ name: 'oblique', directory: process.env.VISIO_NATIVE_FILL_PATTERNS_OBLIQUE_DIR },
 	{ name: 'radial', directory: process.env.VISIO_NATIVE_RADIAL_FILLS_DIR },
 	{ name: 'radial-alpha', directory: process.env.VISIO_NATIVE_RADIAL_FILLS_ALPHA_DIR },
+	{ name: 'regions', directory: process.env.VISIO_NATIVE_REGION_FILLS_DIR },
+	{ name: 'regions-alpha', directory: process.env.VISIO_NATIVE_REGION_FILLS_ALPHA_DIR },
 ]) {
 	const directory = sample.directory;
-	const radial = sample.name.startsWith('radial');
-	const firstPattern = radial ? 36 : 2,
+	const radial = sample.name.startsWith('radial') || sample.name.startsWith('regions');
+	const firstPattern = sample.name.startsWith('regions') ? 31 : radial ? 36 : 2,
 		patternCount = radial ? 5 : 23;
 	for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
 		test(`${framework}: ${sample.name} native fills match live and exported SVG`, async ({

@@ -31,7 +31,20 @@ export interface VisioRadialGradient {
 	radius: number;
 	stops: VisioLinearGradient['stops'];
 }
-export type VisioFillGradient = VisioLinearGradient | VisioRadialGradient;
+export interface VisioGradientRegion {
+	/** Normalized local y-up triangle vertices; endpoints use each triangle's bounding box. */
+	points: readonly (readonly [number, number])[];
+	start: readonly [number, number];
+	end: readonly [number, number];
+	/** Native clockwise SVG rotation in degrees, retained for exact rasterization. */
+	angle: number;
+}
+export interface VisioRegionGradient {
+	type: 'regions';
+	regions: VisioGradientRegion[];
+	stops: VisioLinearGradient['stops'];
+}
+export type VisioFillGradient = VisioLinearGradient | VisioRadialGradient | VisioRegionGradient;
 export interface VisioFillPattern extends VisioImage {
 	/** Physical tile dimensions in local inches; bytes encode a normalized 8-by-8 PNG. */
 	width: number;

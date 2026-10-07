@@ -3,6 +3,7 @@ import type { CompatibilityNote } from 'ooxml-core/visio/ui';
 import { estimatePageSvgBytes, exportPageSvg, MAX_SVG_EXPORT_BYTES } from './export-svg';
 import { assertViewableDocument } from 'ooxml-core/visio/ui';
 import { copySnapshotScene } from 'ooxml-core/visio/ui';
+import { visioGradientInstances } from 'ooxml-core/visio/ui';
 import { FOREIGN_VECTOR_SCENE_LIMITS, inspectForeignVectorResource } from 'ooxml-core/visio/ui';
 
 /** Application guardrails, not printer capabilities or Microsoft Visio limits. */
@@ -301,8 +302,10 @@ function validationCost(model: VisioDocument): {
 			);
 			for (const geometry of shape.geometry) strings(geometry.path);
 			if (shape.style.fillPattern) work += 64;
+			const gradients = visioGradientInstances(shape.style.fillGradient);
+			work += gradients * 16;
 			for (const stop of shape.style.fillGradient?.stops ?? []) {
-				work += 3;
+				work += 3 * gradients;
 				strings(stop.color);
 			}
 			for (const run of shape.text.runs) {

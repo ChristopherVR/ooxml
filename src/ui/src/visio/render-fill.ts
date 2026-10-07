@@ -1,4 +1,9 @@
-import type { VisioStyle, VisioMatrix } from 'ooxml-core/visio';
+import type {
+	VisioStyle,
+	VisioMatrix,
+	VisioLinearGradient,
+	VisioRadialGradient,
+} from 'ooxml-core/visio';
 import { visioFillPatternTransform } from 'ooxml-core/visio/ui';
 import { safeColor, svgElement, matrix } from './render-svg';
 import type { RenderResources } from './render-resources';
@@ -34,8 +39,48 @@ export function fillPaint(
 		return `url(#${pattern.id})`;
 	}
 	if (!style.fillGradient) return safeColor(style.fill, '#fff');
-	const paint = style.fillGradient,
-		gradient = svgElement(paint.type === 'radial' ? 'radialGradient' : 'linearGradient');
+	const paint = style.fillGradient;
+	if (paint.type === 'regions') {
+		const pattern = svgElement('pattern');
+		pattern.id = `visio-fill-${++gradientId}`;
+		pattern.setAttribute('patternUnits', 'objectBoundingBox');
+		pattern.setAttribute('patternContentUnits', 'objectBoundingBox');
+		pattern.setAttribute('width', '1');
+		pattern.setAttribute('height', '1');
+		pattern.setAttribute('patternTransform', 'scale(1 -1)');
+		for (const region of paint.regions) {
+			const path = svgElement('path');
+			path.setAttribute(
+				'd',
+				region.points
+					.map((point, index) => `${index ? 'L' : 'M'} ${point[0]} ${1 - point[1]}`)
+					.join(' ') + ' z',
+			);
+			path.setAttribute(
+				'fill',
+				gradientPaint(
+					{ type: 'linear', start: [0, 0], end: [1, 0], stops: paint.stops },
+					defs,
+					true,
+					region.angle,
+				),
+			);
+			pattern.append(path);
+		}
+		defs.append(pattern);
+		return `url(#${pattern.id})`;
+	}
+	return gradientPaint(paint, defs);
+}
+
+/** All gradient kinds share the existing stop, color and alpha serialization. */
+function gradientPaint(
+	paint: VisioLinearGradient | VisioRadialGradient,
+	defs: SVGDefsElement,
+	normalized = false,
+	rotation?: number,
+): string {
+	const gradient = svgElement(paint.type === 'radial' ? 'radialGradient' : 'linearGradient');
 	gradient.id = `visio-fill-${++gradientId}`;
 	if (paint.type === 'radial') {
 		gradient.setAttribute('gradientUnits', 'objectBoundingBox');
@@ -43,11 +88,13 @@ export function fillPaint(
 		gradient.setAttribute('cy', String(paint.center[1]));
 		gradient.setAttribute('r', String(paint.radius));
 	} else {
-		gradient.setAttribute('gradientUnits', 'userSpaceOnUse');
+		gradient.setAttribute('gradientUnits', normalized ? 'objectBoundingBox' : 'userSpaceOnUse');
 		gradient.setAttribute('x1', String(paint.start[0]));
 		gradient.setAttribute('y1', String(paint.start[1]));
 		gradient.setAttribute('x2', String(paint.end[0]));
 		gradient.setAttribute('y2', String(paint.end[1]));
+		if (rotation !== undefined)
+			gradient.setAttribute('gradientTransform', `rotate(${rotation} 0.5 0.5)`);
 	}
 	for (const color of paint.stops) {
 		const stop = svgElement('stop');

@@ -7,6 +7,29 @@ import { exportPageSvg } from './export-svg';
 import { renderPage } from './render-svg';
 import { createPrintSnapshot } from './print-snapshot';
 
+it('renders triangle regions through shared gradient stops and captures immutable print paint', async () => {
+	const zip = await JSZip.loadAsync(await createVsdxFixture('Regions'));
+	zip.file(
+		'visio/pages/page1.xml',
+		(await zip.file('visio/pages/page1.xml')!.async('string')).replace(
+			'<Text>',
+			'<Cell N="FillPattern" V="35"/><Cell N="FillForegnd" V="#ff0000"/><Cell N="FillBkgnd" V="#0000ff"/><Text>',
+		),
+	);
+	const document = await parseVsdx(await zip.generateAsync({ type: 'uint8array' }));
+	const live = renderPage(document, document.pages[0]!);
+	expect(live.svg.querySelectorAll('pattern path')).toHaveLength(4);
+	expect(live.svg.querySelectorAll('linearGradient stop')).toHaveLength(8);
+	expect(live.svg.querySelector('pattern')!.getAttribute('patternTransform')).toBe('scale(1 -1)');
+	const snapshot = createPrintSnapshot(document, { pageIndices: [0] });
+	const paint = document.pages[0]!.shapes[0]!.style.fillGradient!;
+	if (paint.type !== 'regions') throw new Error('Expected region fill.');
+	paint.stops[0]!.color = '#00ff00';
+	expect(snapshot.pages[0]!.svg).toContain('#ff0000');
+	expect(snapshot.pages[0]!.svg).not.toContain('#00ff00');
+	live.dispose();
+});
+
 it('shares normalized radial stops between live, export and immutable print snapshots', async () => {
 	const document = await parseVsdx(await createVsdxFixture('Radial'));
 	const paint = document.pages[0]!.shapes[0]!.style;
