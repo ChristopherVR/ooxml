@@ -22,6 +22,11 @@ or new logic package was introduced.
   empty referenced cell still coerces to zero and produces `#VALUE!`. The
   shared function-call default policy preserves that distinction before
   parameter lifting, without changing other functions' optional arguments.
+- ADDRESS preserves omitted absolute/style defaults while coercing empty
+  references normally. INDIRECT treats an explicitly empty style slot as
+  R1C1 mode. OFFSET retains source dimensions only for omitted height/width
+  slots; empty referenced dimensions produce `#REF!`. Computed defaults reuse
+  the same call policy and derive their values from the source reference.
 
 ## Reproduce the native evidence
 

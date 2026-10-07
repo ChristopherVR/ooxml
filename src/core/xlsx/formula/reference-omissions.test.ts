@@ -15,6 +15,13 @@ describe('reference function omissions', () => {
 		['INDIRECT("A1",A2)', E.REF],
 		['INDIRECT("R1C1",A2)', 42],
 		['INDIRECT("R1C1",)', 42],
+		['ROWS(OFFSET(A1:A2,0,0,,))', 2],
+		['ROWS(OFFSET(A1:A2,0,0,B1))', E.REF],
+		['ROWS(OFFSET(A1:A2,0,0,IF(TRUE,B1,1)))', E.REF],
+		['COLUMNS(OFFSET(A1:B2,0,0,,B3))', E.REF],
+		['ROWS(OFFSET(A1:A2,0,0,0))', E.REF],
+		['ROWS(OFFSET(A1:A2,0,0,,1))', 2],
+		['ROWS(OFFSET(A1:A2,0,0,-1))', 1],
 	] as const)('%s matches recorded Excel behavior', (formula, expected) => {
 		expect(calc(formula, { A1: 42 })).toEqual(expected);
 	});
@@ -24,5 +31,10 @@ describe('reference function omissions', () => {
 			["'Sheet 1'!$B$1"],
 			["'Sheet 1'!$B$2"],
 		]);
+	});
+
+	it('derives omitted OFFSET dimensions from the input reference', () => {
+		expect(calc('ROWS(OFFSET(A1:C2,0,0,,))')).toBe(2);
+		expect(calc('COLUMNS(OFFSET(A1:C2,0,0,,))')).toBe(3);
 	});
 });

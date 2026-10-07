@@ -19,8 +19,8 @@ function offset(args: Value[]): Value {
 	const area = ref.areas[0];
 	if (!area || ref.areas.length !== 1) fail(ERR.VALUE);
 	const { start, end } = area.range;
-	const height = args.length > 3 && args[3] !== null ? int(args[3]) : end.row - start.row + 1;
-	const width = args.length > 4 && args[4] !== null ? int(args[4]) : end.col - start.col + 1;
+	const height = args.length > 3 ? int(args[3]) : end.row - start.row + 1;
+	const width = args.length > 4 ? int(args[4]) : end.col - start.col + 1;
 	if (height === 0 || width === 0) fail(ERR.REF);
 	const top = start.row + int(args[1]);
 	const left = start.col + int(args[2]);
@@ -115,17 +115,23 @@ function rowsOrCols(value: Value | undefined, ctx: CallContext, axis: 'row' | 'c
 }
 
 export const REFERENCE_FUNCTIONS: FunctionSpec[] = [
-	spec(
-		'OFFSET',
-		C,
-		'OFFSET(reference, rows, cols, [height], [width])',
-		'A reference offset from a starting reference.',
-		3,
-		5,
-		(args) => offset(args),
-		['any', 'value'],
-		true,
-	),
+	{
+		...spec(
+			'OFFSET',
+			C,
+			'OFFSET(reference, rows, cols, [height], [width])',
+			'A reference offset from a starting reference.',
+			3,
+			5,
+			(args) => offset(args),
+			['any', 'value'],
+			true,
+		),
+		missingDefaults: {
+			3: (args: readonly Value[]) => shape(args[0] ?? null).rows,
+			4: (args: readonly Value[]) => shape(args[0] ?? null).cols,
+		},
+	},
 	spec(
 		'INDIRECT',
 		C,
