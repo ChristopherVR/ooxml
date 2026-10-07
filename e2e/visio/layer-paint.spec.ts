@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { join } from 'node:path';
+import type { VisioViewerElement } from '../../src/ui/src/visio/index';
 import reference from '../../src/core/visio/__fixtures__/layer-colors-native.json' with { type: 'json' };
 
 const nativeDirectory = process.env.VISIO_NATIVE_LAYER_COLORS_DIR;
@@ -18,8 +19,8 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		const pixels = await page.evaluate(async () => {
 			const load = (path: string) => import(/* @vite-ignore */ path);
 			const { renderPage, exportPageSvg } = await load('/test-api.js');
-			const element = document.querySelector('visio-viewer') as unknown as { document: any };
-			const model = element.document;
+			const element = document.querySelector<VisioViewerElement>('visio-viewer')!;
+			const model = element.document!;
 			const pixels = [];
 			for (let index = 0; index < model.pages.length; index++) {
 				const live = renderPage(model, model.pages[index]);
