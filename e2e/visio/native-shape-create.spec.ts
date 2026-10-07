@@ -7,11 +7,14 @@ import { nativeSvgLineEndpoints } from './native-line-svg';
 for (const variable of [
 	'VISIO_NATIVE_DRAW_DEFAULTS_DIR',
 	'VISIO_NATIVE_DRAW_CUSTOM_DEFAULTS_DIR',
+	'VISIO_NATIVE_DRAW_HALF_DIR',
+	'VISIO_NATIVE_DRAW_DOUBLE_DIR',
+	'VISIO_NATIVE_DRAW_TRIPLE_DIR',
 ]) {
 	const directory = process.env[variable];
 	for (const kind of ['rectangle', 'ellipse'] as const) {
 		for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
-			test(`${framework}: draws a ${kind} with native defaults and saved history (${variable})`, async ({
+			test(`${framework}: draws native ${kind} with native defaults and saved history (${variable})`, async ({
 				page,
 			}) => {
 				test.skip(
@@ -30,6 +33,7 @@ for (const variable of [
 					};
 				};
 				const target = evidence[kind]!;
+				const ratio = native.pages[0]!.drawingToPageScale ?? 1;
 				const expected = native.pages[0]!.shapes.find((shape) => shape.id === target.shapeId)!;
 				const cleared = await editVsdx(
 					bytes,
@@ -56,26 +60,31 @@ for (const variable of [
 					page,
 					await readFile(join(directory!, 'original-page.svg'), 'utf8'),
 				);
+				expect(native.pages[0]!.width).toBeCloseTo(reference.width, 12);
+				expect(native.pages[0]!.height).toBeCloseTo(reference.height, 12);
 				const paint = reference.lines.find((shape) => shape.id === target.shapeId)!.paint;
 				await viewport.focus();
 				await viewport.press('Control+Shift+w');
 				await viewport.press(kind === 'ellipse' ? 'Control+9' : 'Control+8');
 				await expect(viewport).toHaveAttribute('data-tool', kind);
-				const points = await viewer.evaluate((element, cells) => {
-					const model = (
-						element as unknown as { document: import('ooxml-core/visio').VisioDocument }
-					).document.pages[0]!;
-					const matrix = (element as HTMLElement)
-						.shadowRoot!.querySelector<SVGSVGElement>('svg.paper')!
-						.getScreenCTM()!;
-					return [-1, 1].map((sign) => {
-						const point = new DOMPoint(
-							cells.PinX!.value + (sign * cells.Width!.value) / 2,
-							model.height - cells.PinY!.value - (sign * cells.Height!.value) / 2,
-						).matrixTransform(matrix);
-						return { x: point.x, y: point.y };
-					});
-				}, target.cells);
+				const points = await viewer.evaluate(
+					(element, { cells, ratio }) => {
+						const model = (
+							element as unknown as { document: import('ooxml-core/visio').VisioDocument }
+						).document.pages[0]!;
+						const matrix = (element as HTMLElement)
+							.shadowRoot!.querySelector<SVGSVGElement>('svg.paper')!
+							.getScreenCTM()!;
+						return [-1, 1].map((sign) => {
+							const point = new DOMPoint(
+								(cells.PinX!.value + (sign * cells.Width!.value) / 2) * ratio,
+								model.height - (cells.PinY!.value + (sign * cells.Height!.value) / 2) * ratio,
+							).matrixTransform(matrix);
+							return { x: point.x, y: point.y };
+						});
+					},
+					{ cells: target.cells, ratio },
+				);
 				await page.mouse.move(points[0]!.x, points[0]!.y);
 				await page.mouse.down();
 				await page.mouse.move(points[1]!.x, points[1]!.y, { steps: 4 });
@@ -126,10 +135,11 @@ for (const variable of [
 				);
 				const model = await parseVsdx(saved);
 				const actual = model.pages[0]!.shapes.find((shape) => shape.id === target.shapeId)!;
+				expect(model.pages[0]!.drawingToPageScale ?? 1).toBe(ratio);
 				expect(actual.style).toEqual(expected.style);
 				expect(actual.geometry).toEqual(expected.geometry);
 				for (let i = 0; i < 6; i++)
-					expect(actual.transform[i]).toBeCloseTo(target.transform[i]!, 12);
+					expect(actual.transform[i]).toBeCloseTo(target.transform[i]! * (i >= 4 ? ratio : 1), 12);
 				await page.locator('#file').setInputFiles({
 					name: 'drawn-defaults.vsdx',
 					mimeType: 'application/vnd.ms-visio.drawing',
@@ -200,7 +210,10 @@ for (const variable of [
 					expect(actual.geometry).toEqual(expected.geometry);
 					expect(actual.style).toEqual(expected.style);
 					for (let i = 0; i < 6; i++)
-						expect(actual.transform[i]).toBeCloseTo(target.editedTransform[i]!, 12);
+						expect(actual.transform[i]).toBeCloseTo(
+							target.editedTransform[i]! * (i >= 4 ? ratio : 1),
+							12,
+						);
 					await page.locator('#file').setInputFiles({
 						name: 'edited-ellipse.vsdx',
 						mimeType: 'application/vnd.ms-visio.drawing',

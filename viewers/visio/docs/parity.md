@@ -77,8 +77,13 @@ control formulas are preserved, and canonical axis-aligned local ellipses
 can resize through the existing dependency recalculator. Standard and custom
 style references verify core creation/move/resize plus all-six pointer creation,
 geometry controls, undo/redo and public save/reload. Native SVG extent and
-color comparisons cover basic unscaled ellipses. Arbitrary control axes,
-other formulas, scaled/rotated browser authoring, native snapping, exact pixels
+color comparisons cover basic unscaled ellipses. Native drawing-to-page ratios
+0.5, 2 and 3 also cover rectangle/ellipse pointer creation and ellipse resize/move,
+history and saved reload across all six routes. Shared page conversion is reused,
+and unrelated package parts remain byte-for-byte unchanged. Rectangle and ellipse
+gestures now retain off-paper coordinates through the same unbounded conversion
+as lines, instead of collapsing both corners at the paper edge. Arbitrary control axes,
+other formulas, other scales and rotated browser authoring, native snapping, exact pixels
 and native Office reopen acceptance remain unverified.
 
 Native endpoint-cell assignment after a Width override retains the fixed Width,

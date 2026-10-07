@@ -1444,3 +1444,15 @@ workflow moved to `e2e/visio/native-shape-create.spec.ts` and parameterizes both
 shape kinds and default-style captures. Native SVG registration also measures
 primitive extents. Canonical-axis coverage does not establish arbitrary ellipse
 resize, snapping, exact pixels or native reopen parity.
+
+## Shared Visio off-paper box drawing
+
+Source: ChristopherVR/ooxml at `6c4d00839`,
+`src/ui/src/visio/viewer-draw-tool.ts`. Rectangle and ellipse gestures now use
+the existing line tool's unbounded page-point conversion at start, preview and
+release. No new coordinate converter, gesture lifecycle or snapping code was
+added. Fresh native scale captures exposed zero-size collapsed box drags at the
+paper edge; the shared browser workflow now compares scaled box creation and
+ellipse resize/move through history and saved reload. Geometry controls retain
+their documented drawing-inch contract. Native off-paper visibility, native
+pointer snapping and Office reopen acceptance remain unverified.

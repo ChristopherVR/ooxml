@@ -166,7 +166,7 @@ export class ShapeDrawTool {
 		const page = state.document?.pages[state.pageIndex];
 		const svg = this.viewport.querySelector<SVGSVGElement>('svg.paper');
 		if (!page || !svg || !state.edit.sourceAvailable || state.edit.busy) return;
-		const start = pagePoint(svg, page, event, { bounded: kind !== 'line' });
+		const start = pagePoint(svg, page, event, { bounded: false });
 		if (!start) return;
 		event.preventDefault();
 		const rect = this.viewport.ownerDocument.createElementNS(
@@ -183,7 +183,7 @@ export class ShapeDrawTool {
 	#move(event: PointerEvent): void {
 		if (!this.#drag || event.pointerId !== this.#drag.pointer) return;
 		const point = pagePoint(this.#drag.svg, this.#drag.page, event, {
-			bounded: this.#drag.kind !== 'line',
+			bounded: false,
 		});
 		if (point) this.#update(point);
 	}
@@ -219,7 +219,7 @@ export class ShapeDrawTool {
 	async #finish(event: PointerEvent): Promise<void> {
 		const drag = this.#drag;
 		if (!drag || event.pointerId !== drag.pointer) return;
-		const end = pagePoint(drag.svg, drag.page, event, { bounded: drag.kind !== 'line' }) ?? drag;
+		const end = pagePoint(drag.svg, drag.page, event, { bounded: false }) ?? drag;
 		this.#cancel();
 		const width = Math.abs(end.x - drag.x),
 			height = Math.abs(end.y - drag.y);

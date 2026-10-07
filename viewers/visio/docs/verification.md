@@ -1664,3 +1664,45 @@ scaled browser ellipse authoring, gradients/effects, text paint, contour and
 exact pixels, native snapping/gesture semantics and native Office reopen
 acceptance remain unverified. Fresh owned invisible instances quit; the
 existing user Visio instance remained untouched.
+
+## Native scaled rectangle and ellipse authoring
+
+Fresh Visio 16 captures extend the shared shape workflow at these physical
+drawing-to-page ratios:
+
+- 0.5: `visio-line-movement-72974162251b475eac5d420e9da753b9`, DrawingScale 2,
+  PageScale 1, standard defaults.
+- 2: `visio-line-movement-ff0b777d5f5e4324a1270aa05e7d5084`, DrawingScale 0.5,
+  PageScale 1, distinct custom defaults.
+- 3: `visio-line-movement-1e61ca1a725c4c24893388aabd4b0c4f`, DrawingScale 1,
+  PageScale 3, standard defaults.
+
+The recorder keeps the same physical original rectangle/ellipse extents and
+ellipse resize/move target, while native drawing-unit caches differ. The core
+comparison uses the public drawing-inch API. Browser drags use physical page
+inches through existing `visioPageEditToDrawing`; the experimental geometry
+controls retain their documented drawing-inch contract. Test pointer coordinates
+and native COM translations explicitly account for the ratio. No second unit
+conversion or gesture implementation was added.
+
+The ratio 0.5 capture places both boxes beyond the reduced paper dimensions.
+The former box-tool clamping collapsed the drag to zero size, unlike native
+DrawRectangle/DrawOval. All three tools now share unbounded page-point conversion
+for start, preview and release, preserving the native off-paper coordinates.
+This verifies retained geometry, not native off-paper visibility or snapping.
+
+Eight core checks pass, including all five native default/scale captures.
+Created and edited ellipse geometry/styles match exactly, physical dimensions
+and native COM poses agree to twelve decimals, and every part except the edited
+page XML is byte-for-byte unchanged. Native SVG page dimensions and primitive
+extents provide independent physical measurements. The browser workflow covers
+creation, ellipse resize/move, per-step undo/redo, exported VSDX and reload across
+six bindings for both shapes; unselected colors/opacity match native SVG.
+All 60 browser workflows pass, including 36 at the three new scales. Core/UI
+builds and types, 20 UI command/geometry checks (one optional skip), viewer
+types and the full viewer check command also pass. Viewer package checks use
+released dependencies; the native workflows exercise the rebuilt local core/UI.
+
+Other scales, rotated authoring, snapping/gesture semantics, contour/exact
+pixels and native Office reopen acceptance remain unverified. Each fresh owned
+invisible Visio instance quit, and the user's existing instance was untouched.

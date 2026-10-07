@@ -87,11 +87,15 @@ it('refuses changed ellipse axes that lack the native resize proof', async () =>
 for (const variable of [
 	'VISIO_NATIVE_DRAW_DEFAULTS_DIR',
 	'VISIO_NATIVE_DRAW_CUSTOM_DEFAULTS_DIR',
+	'VISIO_NATIVE_DRAW_HALF_DIR',
+	'VISIO_NATIVE_DRAW_DOUBLE_DIR',
+	'VISIO_NATIVE_DRAW_TRIPLE_DIR',
 ]) {
 	const directory = process.env[variable];
 	it.skipIf(!directory)(`matches native ellipse creation and editing (${variable})`, async () => {
 		const bytes = await readFile(join(directory!, 'original.vsdx'));
 		const original = await parseVsdx(bytes);
+		const before = await VisioPackage.open(bytes);
 		const evidence = JSON.parse(await readFile(join(directory!, 'evidence.json'), 'utf8')) as {
 			ellipse: {
 				shapeId: string;
@@ -102,6 +106,7 @@ for (const variable of [
 			};
 		};
 		const target = evidence.ellipse;
+		const ratio = original.pages[0]!.drawingToPageScale ?? 1;
 		const cleared = await editVsdx(bytes, [
 			{ type: 'delete-shape', pageId: original.pages[0]!.id, shapeId: target.shapeId },
 		]);
@@ -133,6 +138,10 @@ for (const variable of [
 			},
 		]);
 		const nativeEdited = await parseVsdx(await readFile(join(directory!, 'ellipse-edited.vsdx')));
+		const after = await VisioPackage.open(edited.bytes);
+		for (const path of before.paths())
+			if (path !== 'visio/pages/page1.xml')
+				expect(await after.readBytes(path)).toEqual(await before.readBytes(path));
 		for (const [result, native, pose] of [
 			[made, original, target.transform],
 			[edited, nativeEdited, target.editedTransform],
@@ -140,9 +149,13 @@ for (const variable of [
 			const model = await parseVsdx(result.bytes),
 				actual = model.pages[0]!.shapes.find((shape) => shape.id === target.shapeId)!;
 			const expected = native.pages[0]!.shapes.find((shape) => shape.id === target.shapeId)!;
+			expect(model.pages[0]!.drawingToPageScale ?? 1).toBe(ratio);
+			expect(actual.width).toBeCloseTo(expected.width, 12);
+			expect(actual.height).toBeCloseTo(expected.height, 12);
 			expect(actual.geometry).toEqual(expected.geometry);
 			expect(actual.style).toEqual(expected.style);
-			for (let i = 0; i < 6; i++) expect(actual.transform[i]).toBeCloseTo(pose[i]!, 12);
+			for (let i = 0; i < 6; i++)
+				expect(actual.transform[i]).toBeCloseTo(pose[i]! * (i >= 4 ? ratio : 1), 12);
 		}
 	});
 }
