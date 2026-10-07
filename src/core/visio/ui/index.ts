@@ -21,3 +21,5 @@ export {
 } from '../native-gradient-stops';
 
 export * from './rotation-preview';
+
+export * from './shape-rotation';

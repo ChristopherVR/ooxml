@@ -10,6 +10,7 @@ param(
  [switch]$IncludeEllipse,
  [ValidateRange(-360000,360000)][double]$RotationDegrees=0,
  [switch]$OffCentrePin,
+ [ValidateSet('None','Left','Right')][string]$QuarterTurn='None',
  [switch]$CustomDefaults
 )
 # Capture endpoint translation without replacing native transform formulas.
@@ -55,7 +56,7 @@ try {
  $shapes=@()
  $cases=@()
  # GridAligned references use identical physical-page coordinates across scales.
- $coordinates=if($GridAligned){$DrawingScale/$PageScale}else{1}
+ [double]$coordinates=if($GridAligned){$DrawingScale/$PageScale}else{1.0}
  $diagonal=if($GridAligned){@(3,3.5)}else{@(2.732050807568877,2.5)}
  foreach($end in @(@(3,1.5),$diagonal,@(1,3.5),@(-1,1.5))){
   $shape=$page.DrawLine($coordinates,1.5*$coordinates,$end[0]*$coordinates,$end[1]*$coordinates)
@@ -153,6 +154,22 @@ try {
   $document.SaveAs((Join-Path $directory 'rotated.vsdx')) | Out-Null
   $page.Export((Join-Path $directory 'rotated-page.svg'))
   $evidence.Add('rotated',$rotated)
+ }
+ if($QuarterTurn -ne 'None'){
+  $document.SaveAs((Join-Path $directory 'quarter-source.vsdx')) | Out-Null
+  $turned=[ordered]@{}
+  $degrees=if($QuarterTurn -eq 'Left'){90}else{-90}
+  foreach($entry in @(@('rectangle',$rectangle),@('ellipse',$ellipse))){
+   if($entry[1]){
+    $selection=$page.CreateSelection(2,256,$entry[1])
+    $selection.Rotate($degrees,'deg',$false,2)
+    $turned[$entry[0]]=[ordered]@{shapeId=[string]$entry[1].ID;cells=(Get-ShapeCells $entry[1] @('Width','Height','PinX','PinY','LocPinX','LocPinY','Angle'));transform=(Get-LineTransform $entry[1])}
+   }
+  }
+  $document.SaveAs((Join-Path $directory 'quarter-turned.vsdx')) | Out-Null
+  $page.Export((Join-Path $directory 'quarter-page.svg'))
+  $evidence.Add('quarterTurn',$QuarterTurn)
+  $evidence.Add('quarterTurned',$turned)
  }
  if($DeleteAfterMove){
   foreach($shape in $shapes){$shape.Delete()}

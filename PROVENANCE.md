@@ -1684,3 +1684,29 @@ API. Excel reopened/resaved both exports and reopened those copies, retaining
 direct 9-point legend/axis fonts. Mixed rich runs, multiple paragraphs,
 native font measurement/layout, text effects authoring and full Excel parity
 remain unfinished.
+
+## Shared Visio quarter-turn command preparation
+
+Source: ChristopherVR/ooxml at `87c3957b5`, the local-shape admission in
+`src/ui/src/visio/viewer-rotation-handle.ts` and the existing `rotate-shape`
+geometry transaction. `src/core/visio/ui/shape-rotation.ts` now owns that
+model-level admission, reused by the pointer handle and quarter-turn command
+builder. Source guards, inherited LockRotate and dependency recalculation
+remain in the existing core edit path. Relative TypeScript imports are
+extensionless; emitted worker asset URLs retain their JavaScript extension.
+
+Five fresh owned Visio 16 captures use `Selection.Rotate` with rotation type
+2 (each shape's own pin), guards respected, for ten rectangle/ellipse cases.
+Source angles 210, -30, 330, 90 and -90 degrees cover signed normalization,
+custom pins, drawing-to-page ratios 0.5 and 3, and both signed half-turn
+boundaries. XML cache rounding near the half-turn boundary retains its native
+sign; larger differences still wrap. Tests compare saved angle, transform,
+pin, geometry and style against those native exports. The recorder reuses its
+existing shape-cell and transform capture. Native applications are closed by
+the recorder's existing finally block.
+
+These comparisons establish core command preparation, not literal native
+menu interaction. The Position > Rotate Shapes submenu, UI command wiring,
+native mouse/menu gesture evidence and Microsoft Visio reopen acceptance
+remain open. Six framework pointer-rotation cases pass after the admission
+extraction, including cancellation, history, save and reload.

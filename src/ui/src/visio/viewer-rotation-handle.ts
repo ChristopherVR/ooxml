@@ -1,5 +1,5 @@
 import { createRotationDrag, resolveRotateHandlePlacement } from 'ooxml-core/geometry';
-import { editErrorMessage, isEditCancellation } from 'ooxml-core/visio/ui';
+import { editErrorMessage, isEditCancellation, visioLocalRotationShape } from 'ooxml-core/visio/ui';
 import type { ViewerController, ViewerState } from './controller';
 import { pagePoint } from './viewer-draw-tool';
 import {
@@ -46,20 +46,8 @@ export class ViewerRotationHandle {
 			!this.options.active()
 		)
 			return;
-		const shape = page.shapes.find((shape) => shape.id === selection.id);
-		if (
-			!shape ||
-			shape.kind !== 'shape' ||
-			shape.children.length ||
-			shape.masterId ||
-			shape.hidden ||
-			!shape.rotation ||
-			!(shape.width > 0 && shape.height > 0) ||
-			page.connectors.some(
-				(connection) => connection.fromShapeId === shape.id || connection.toShapeId === shape.id,
-			)
-		)
-			return;
+		const shape = visioLocalRotationShape(page, selection.id);
+		if (!shape?.rotation) return;
 		const group = Array.from(this.viewport.querySelectorAll<SVGGElement>('[data-shape-id]')).find(
 			(group) => group.dataset.shapeId === shape.id && group.dataset.selected === 'true',
 		);
