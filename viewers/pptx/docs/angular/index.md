@@ -10,7 +10,7 @@ and editing `.pptx` files. It is built on [`pptx-viewer-core`](/core/) and inclu
 toolbar, inspector panels, slide canvas, animation engine, presentation mode, real-time
 collaboration, and export. It is the Angular
 counterpart of `pptx-react-viewer` and `pptx-vue-viewer`, sharing framework-agnostic logic with both
-through the internal `pptx-viewer-shared` package.
+through the public `ooxml-ui/pptx` API.
 
 ![The editor chrome is identical across bindings: ribbon, slide thumbnails, canvas, and inspector](/docs-shots/editor.jpg)
 

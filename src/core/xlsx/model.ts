@@ -324,6 +324,8 @@ export type ConditionalRule =
 			showValue?: boolean;
 			/** GUID linking this rule to its Excel 2010 (`x14:dataBar`) extension, kept for round trip. */
 			extensionId?: string;
+			/** Self-contained linked x14 rule XML, retaining advanced settings and unknown fields. */
+			extensionXml?: string;
 	  }
 	| {
 			type: 'iconSet';

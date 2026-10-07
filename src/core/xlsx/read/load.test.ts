@@ -113,7 +113,8 @@ describe('loadXlsx with an Excel-authored workbook', () => {
 			style: { fill: { pattern: 'solid', fgColor: { rgb: 'FFFFC79C' } } },
 		});
 		expect(rules[1]).toMatchObject({ extensionId: expect.stringMatching(/^\{[0-9A-F-]+\}$/) });
-		expect(sheet.preserved.get('extLst')?.[0]).toContain('x14:conditionalFormattings');
+		expect(rules[1]).toMatchObject({ extensionXml: expect.stringContaining('x14:dataBar') });
+		expect(sheet.preserved.get('extLst')).toBeUndefined();
 	});
 
 	it('reads validations, hyperlinks and threaded comments', async () => {

@@ -7,7 +7,7 @@ description: The cross-binding ViewerTheme system - the theme object shape, how 
 
 The viewer chrome (toolbar, ribbon, dialogs, backstage) is themed through a `ViewerTheme` object: a set of CSS custom properties (`--pptx-*`) applied to the viewer root. This is entirely separate from a presentation's own OOXML color scheme and fonts (the Design tab's "Themes" gallery edits the `.pptx` document itself); `ViewerTheme` only affects the app's own UI.
 
-The theme system is framework-agnostic. The types, defaults, presets, and helpers below are implemented once (in the internal `pptx-viewer-shared` package) and re-exported identically by every published binding: `pptx-react-viewer`, `pptx-vue-viewer`, `pptx-angular-viewer`, `pptx-svelte-viewer`, and `pptx-vanilla-viewer`.
+The theme system is framework-agnostic. The types, defaults, presets, and helpers below are implemented once (in the public `ooxml-ui/pptx` API) and re-exported identically by every published binding: `pptx-react-viewer`, `pptx-vue-viewer`, `pptx-angular-viewer`, `pptx-svelte-viewer`, and `pptx-vanilla-viewer`.
 
 ## The `ViewerTheme` shape
 

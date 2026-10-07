@@ -9,11 +9,15 @@ export interface FollowedThread {
 	root: Message;
 	replyCount: number;
 	updatedAt: number;
+	unread: number;
 }
 
 /** Personal references stay outside Yjs. Storage failures retain the in-memory preference. */
 export function createThreadFollows(storage: StorageLike | undefined, key: string) {
-	const follows = new Map<string, { channelId: string; messageId: string }>();
+	const follows = new Map<
+		string,
+		{ channelId: string; messageId: string; readAt: number; forcedUnread: boolean }
+	>();
 	const reference = (channel: string, message: string) => JSON.stringify([channel, message]);
 	const matching = (
 		channel: string,
@@ -41,11 +45,23 @@ export function createThreadFollows(storage: StorageLike | undefined, key: strin
 					follows.set(reference(row.channelId, row.messageId), {
 						channelId: row.channelId,
 						messageId: row.messageId,
+						readAt:
+							typeof row.readAt === 'number' && Number.isFinite(row.readAt) && row.readAt >= 0
+								? row.readAt
+								: 0,
+						forcedUnread: row.forcedUnread === true,
 					});
 			}
 	} catch {
 		/* Corrupt or blocked local preferences do not affect the shared document. */
 	}
+	const persist = () => {
+		try {
+			storage?.setItem(key, JSON.stringify([...follows.values()]));
+		} catch {
+			/* In-memory only. */
+		}
+	};
 	return {
 		has(channel: string, message: string, rootOf?: (id: string) => string | undefined): boolean {
 			return matching(channel, message, rootOf).length > 0;
@@ -60,16 +76,36 @@ export function createThreadFollows(storage: StorageLike | undefined, key: strin
 			const id = reference(channel, message);
 			const matches = matching(channel, message, rootOf);
 			if (followed === matches.length > 0 || (followed && follows.size >= 250)) return false;
-			if (followed) follows.set(id, { channelId: channel, messageId: message });
+			if (followed)
+				follows.set(id, { channelId: channel, messageId: message, readAt: 0, forcedUnread: false });
 			else for (const match of matches) follows.delete(match);
-			try {
-				storage?.setItem(key, JSON.stringify([...follows.values()]));
-			} catch {
-				/* In-memory only. */
-			}
+			persist();
 			return true;
 		},
-		view(channels: readonly Channel[], messagesOf: (id: string) => Message[]): FollowedThread[] {
+		mark(
+			channel: string,
+			message: string,
+			readAt: number,
+			forcedUnread: boolean,
+			rootOf?: (id: string) => string | undefined,
+		): boolean {
+			let changed = false;
+			for (const id of matching(channel, message, rootOf)) {
+				const row = follows.get(id)!;
+				const nextReadAt = forcedUnread ? row.readAt : readAt;
+				if (row.readAt === nextReadAt && row.forcedUnread === forcedUnread) continue;
+				row.readAt = nextReadAt;
+				row.forcedUnread = forcedUnread;
+				changed = true;
+			}
+			if (changed) persist();
+			return changed;
+		},
+		view(
+			channels: readonly Channel[],
+			messagesOf: (id: string) => Message[],
+			selfId = '',
+		): FollowedThread[] {
 			const visible = new Map(
 				channels.filter((channel) => !channel.archived).map((channel) => [channel.id, channel]),
 			);
@@ -92,12 +128,22 @@ export function createThreadFollows(storage: StorageLike | undefined, key: strin
 				let updatedAt = Math.max(thread.root.ts, thread.root.editedAt ?? 0);
 				for (const reply of thread.replies)
 					if (!reply.deleted) updatedAt = Math.max(updatedAt, reply.ts, reply.editedAt ?? 0);
+				const preferences = matching(
+					channelId,
+					thread.root.id,
+					(id) => index!.thread(id)?.root.id,
+				).map((id) => follows.get(id)!);
+				const readAt = Math.min(...preferences.map((row) => row.readAt));
+				const unread = [thread.root, ...thread.replies].filter(
+					(message) => !message.deleted && message.authorId !== selfId && message.ts > readAt,
+				).length;
 				result.push({
 					channelId,
 					channelName: channel.name,
 					root: thread.root,
 					replyCount: index.replyCounts[thread.root.id] ?? 0,
 					updatedAt,
+					unread: preferences.some((row) => row.forcedUnread) ? Math.max(1, unread) : unread,
 				});
 			}
 			return result.sort((a, b) => b.updatedAt - a.updatedAt || a.root.id.localeCompare(b.root.id));

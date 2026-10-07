@@ -70,7 +70,7 @@ function renderToCanvas(
 ```
 
 It builds on `html2canvas-pro` and, during the `onclone` phase, runs the CSS preprocessing pipeline
-shared with React and Vue (from `pptx-viewer-shared`, inlined at build time): it converts unsupported
+shared with React and Vue (from the public `ooxml-ui/pptx` API): it converts unsupported
 color functions to `rgb()`/hex, and flattens `backdrop-filter`, `mix-blend-mode`, and CSS 3D
 transforms that html2canvas-pro cannot render.
 
