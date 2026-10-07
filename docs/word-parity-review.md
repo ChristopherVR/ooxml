@@ -506,3 +506,10 @@ pane. Stopping Yjs and remounting retains shared threads for subsequent ordinary
 history. Local snapshots are excluded from shared Yjs document attributes, which
 continue to use independent thread maps. Modern comment notifications and task
 assignment remain unfinished.
+
+Provider transactions that change body content and root document settings now
+project settings under the existing binding mutex. This prevents a settings
+notification from writing an older body snapshot back before the body observer
+runs. Regressions cover both notification orders, editing/read-only peers and
+local undo, plus mounted public-model and saved-package checks. The mapping is
+split into a small core module; provider lifecycle remains format-neutral.

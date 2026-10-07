@@ -8,6 +8,7 @@ import { WordYjsComments } from './yjs-comments';
 import { wordInlinePropertyCodec } from './inline-run-properties';
 import { independentCommentAnchors, seedEmptyParagraphText } from './yjs-bootstrap';
 import { guardDeletedNodeSelection } from './yjs-node-selection';
+import { wordYjsDocumentAttributes } from './yjs-document-attributes';
 import type { EditorView } from 'prosemirror-view';
 import {
 	initProseMirrorDoc,
@@ -150,7 +151,7 @@ export class WordYjsCollaboration {
 			),
 			plugins: [
 				ySyncPlugin(this.fragment, { mapping }),
-				this.attributePlugin(),
+				wordYjsDocumentAttributes(this.attributes, () => this.session.canWrite()),
 				...(this.sharedInlineComments ? [this.comments.inlineAnchors.plugin()] : []),
 				new Plugin({
 					key: wordYjsPluginKey,
@@ -204,50 +205,6 @@ export class WordYjsCollaboration {
 				}),
 			],
 		};
-	}
-
-	private attributePlugin(): Plugin {
-		const attrs = this.attributes;
-		const patch = (state: import('prosemirror-state').EditorState) => {
-			const tr = state.tr;
-			for (const [key, value] of attrs.entries()) {
-				if (
-					key !== 'commentThreads' &&
-					key in (state.doc.type.spec.attrs ?? {}) &&
-					JSON.stringify(state.doc.attrs[key]) !== JSON.stringify(value)
-				)
-					tr.setDocAttribute(key, value);
-			}
-			return tr.steps.length ? tr.setMeta('dve-remote', true).setMeta('addToHistory', false) : null;
-		};
-		const thisPlugin = new Plugin({
-			state: { init: () => true, apply: (tr) => tr.getMeta('addToHistory') !== false },
-			appendTransaction: (transactions, _old, state) =>
-				transactions.some((tr) => tr.getMeta(ySyncPluginKey)) ? patch(state) : null,
-			view: (view) => {
-				const changed = () => {
-					const tr = patch(view.state);
-					if (tr) view.dispatch(tr);
-				};
-				attrs.observe(changed);
-				return {
-					update: (next, previous) => {
-						if (previous.doc.attrs === next.state.doc.attrs || !this.session.canWrite()) return;
-						this.session.doc.transact((transaction) => {
-							transaction.meta.set('addToHistory', thisPlugin.getState(next.state));
-							for (const [key, value] of Object.entries(next.state.doc.attrs))
-								if (
-									key !== 'commentThreads' &&
-									JSON.stringify(attrs.get(key)) !== JSON.stringify(value)
-								)
-									attrs.set(key, value);
-						}, ySyncPluginKey);
-					},
-					destroy: () => attrs.unobserve(changed),
-				};
-			},
-		});
-		return thisPlugin;
 	}
 
 	/** Provider reconnects do not replace the document or discard local history. */

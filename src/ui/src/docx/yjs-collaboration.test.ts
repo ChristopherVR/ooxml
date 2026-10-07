@@ -9,6 +9,7 @@ import {
 } from './review-commands';
 import { afterEach, describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
+import * as Y from 'yjs';
 import { createDocument, saveDocx } from 'ooxml-core/docx';
 import {
 	createCollabSession,
@@ -73,6 +74,28 @@ function start(
 }
 
 describe('Word Yjs collaboration', () => {
+	for (const viewer of [false, true])
+		it(`retains provider body and page updates in ${viewer ? 'read-only' : 'editing'} mounted peers`, async () => {
+			const peers = pair(viewer);
+			const a = mount();
+			const b = mount();
+			start(a, b, peers);
+			viewOf(a).dispatch(viewOf(a).state.tr.insertText('Alpha', 1));
+			const binding = wordYjsPluginKey.getState(viewOf(a).state)!;
+			const text = (binding.fragment.get(0) as Y.XmlElement).get(0) as Y.XmlText;
+			peers[0].doc.transact(() => {
+				peers[0].doc.getMap('docx:attributes').set('pageWidth', 900);
+				text.insert(0, 'New ');
+			}, 'provider-batch');
+			for (const editor of [a, b]) {
+				expect(viewOf(editor).state.doc.textContent).toBe('New Alpha');
+				expect(editor.documentModel!.page.width).toBe(900);
+				expect(editor.documentModel!.blocks[0]).toMatchObject({ runs: [{ text: 'New Alpha' }] });
+				const saved = (await loadDocx(await editor.saveBytes())).model;
+				expect(saved.page.width).toBe(900);
+				expect(saved.blocks[0]).toMatchObject({ runs: [{ text: 'New Alpha' }] });
+			}
+		});
 	it('retains stored font formatting on a newly inserted untracked line break', () => {
 		const peers = pair();
 		const a = mount();
