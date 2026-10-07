@@ -66,6 +66,7 @@ export function admitted(
 	shapeId: string,
 	masterMovePins: ReadonlySet<Element> = new Set(),
 	masterDimensions: ReadonlyMap<Element, { width: number; height: number }> = new Map(),
+	allowLineMove = false,
 ): Element {
 	const containers = children(root, 'Shapes');
 	if (containers.length !== 1)
@@ -99,10 +100,10 @@ export function admitted(
 		if (unit && visioFormulaCachedValue('0', unit).unit !== 'length')
 			fail('EDIT_FORMULA_UNIT', 'Transform cells must use length units.');
 	}
-	if (
+	const line =
 		numeric(local.get('OneD'), 0) !== 0 ||
-		['BeginX', 'BeginY', 'EndX', 'EndY'].some((name) => local.has(name))
-	)
+		['BeginX', 'BeginY', 'EndX', 'EndY'].some((name) => local.has(name));
+	if (line && !allowLineMove)
 		fail(
 			'UNSUPPORTED_GEOMETRY_EDIT',
 			'Only local 2D shapes are admitted; line routing and glue are unsupported.',
@@ -110,7 +111,10 @@ export function admitted(
 	const proven = masterDimensions.get(shape);
 	if (
 		!(numeric(local.get('Width'), proven?.width) > 0) ||
-		!(numeric(local.get('Height'), proven?.height) > 0)
+		!(
+			numeric(local.get('Height'), proven?.height) > 0 ||
+			(line && allowLineMove && numeric(local.get('Height')) === 0)
+		)
 	)
 		fail('UNSUPPORTED_GEOMETRY_EDIT', 'Positive proven Width and Height caches are required.');
 	return shape;

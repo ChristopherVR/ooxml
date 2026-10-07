@@ -7,6 +7,7 @@ import {
 } from './edit-recalculate';
 import type { VisioGeometryEdit } from './edit-commands';
 import { emptyMasterMoveProof, type MasterMoveProof } from './edit-master-move';
+import { moveLocalLine, assertLineTranslation, sameLineCoordinate } from './edit-line-move';
 import {
 	numeric,
 	editableCell,
@@ -96,6 +97,8 @@ export function applyGeometryEdit(
 	if (!root) fail('EDIT_TARGET_NOT_FOUND', 'Page does not exist.');
 	const changed: VisioCellKey[] = [];
 	let expected: { width: number; height: number; x: number; y: number } | undefined;
+	const lineMoveShapes = new Set<Element>();
+	let fixedLine: ReadonlyMap<string, number> | undefined;
 	const add = (cell: string) => changed.push({ pageId: edit.pageId, shapeId: edit.shapeId, cell });
 	if (edit.type === 'create-rectangle') {
 		createRectangle(root, edit);
@@ -107,6 +110,7 @@ export function applyGeometryEdit(
 			edit.shapeId,
 			edit.type === 'move-shape' ? masterMovePins : new Set(),
 			edit.type === 'move-shape' ? masterDimensions : new Map(),
+			edit.type === 'move-shape',
 		);
 		protectedShape(shape, document, edit.type === 'move-shape' ? masterMovePins : new Set());
 		if (edit.type !== 'delete-shape')
@@ -138,20 +142,29 @@ export function applyGeometryEdit(
 				x: edit.x,
 				y: edit.y,
 			};
-			for (const [name, value, lock] of [
-				['PinX', edit.x, 'LockMoveX'],
-				['PinY', edit.y, 'LockMoveY'],
-			] as const) {
-				if (
-					numeric(local.get(name), name === 'PinX' ? expected.width / 2 : expected.height / 2) ===
-					value
-				)
-					continue;
-				unlocked(lock);
-				editableCell(local.get(name));
-				setCell(shape, name, value);
-				add(name);
-			}
+			if (
+				numeric(local.get('OneD'), 0) !== 0 ||
+				['BeginX', 'BeginY', 'EndX', 'EndY'].some((name) => local.has(name))
+			) {
+				const translation = moveLocalLine(shape, edit.pageId, edit.shapeId, edit.x, edit.y);
+				changed.push(...translation.changed);
+				fixedLine = translation.fixed;
+				lineMoveShapes.add(shape);
+			} else
+				for (const [name, value, lock] of [
+					['PinX', edit.x, 'LockMoveX'],
+					['PinY', edit.y, 'LockMoveY'],
+				] as const) {
+					if (
+						numeric(local.get(name), name === 'PinX' ? expected.width / 2 : expected.height / 2) ===
+						value
+					)
+						continue;
+					unlocked(lock);
+					editableCell(local.get(name));
+					setCell(shape, name, value);
+					add(name);
+				}
 		} else {
 			const width = numeric(local.get('Width')),
 				height = numeric(local.get('Height'));
@@ -192,21 +205,28 @@ export function applyGeometryEdit(
 		}
 	}
 	if (!changed.length) return [];
-	const affectedPages = recalculateVisioCells(roots, changed, { check, masterMovePins });
+	const affectedPages = recalculateVisioCells(roots, changed, {
+		check,
+		masterMovePins,
+		lineMoveShapes,
+	});
 	const resultShape = admitted(
 		root,
 		edit.shapeId,
 		edit.type === 'move-shape' ? masterMovePins : new Set(),
 		edit.type === 'move-shape' ? masterDimensions : new Map(),
+		!!fixedLine,
 	);
+	if (fixedLine) assertLineTranslation(resultShape, fixedLine);
 	const result = cells(resultShape),
 		provenResult = masterDimensions.get(resultShape);
+	const equal = fixedLine ? sameLineCoordinate : (a: number, b: number) => a === b;
 	if (
 		expected &&
-		(numeric(result.get('Width'), provenResult?.width) !== expected.width ||
-			numeric(result.get('Height'), provenResult?.height) !== expected.height ||
-			numeric(result.get('PinX'), expected.width / 2) !== expected.x ||
-			numeric(result.get('PinY'), expected.height / 2) !== expected.y)
+		(!equal(numeric(result.get('Width'), provenResult?.width), expected.width) ||
+			!equal(numeric(result.get('Height'), provenResult?.height), expected.height) ||
+			!equal(numeric(result.get('PinX'), expected.width / 2), expected.x) ||
+			!equal(numeric(result.get('PinY'), expected.height / 2), expected.y))
 	)
 		fail(
 			'EDIT_UNSUPPORTED_DEPENDENCY',

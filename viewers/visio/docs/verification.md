@@ -22,9 +22,35 @@ translation, including dimensional square roots and ATAN2 argument order.
 VISIO_NATIVE_LINE_MOVEMENT_DIR pointing to the local capture
 visio-line-movement-a6330ef9743145c096db40a901d12302. The capture test is
 optional; four measured formula regressions run without native Visio.
-This establishes the transform oracle for the next editing change. It does
-not admit direct line movement in the editor or establish native reopening
-of editor output; those requirements remain open.
+The shared editor now admits these unglued local straight-line translations.
+It reuses cell access, protection checks, endpoint edit admission and the
+existing bounded dependency graph and cache writeback. A per-operation proof
+allows the target line's local cells to participate without relaxing group,
+master, foreign, deleted, glued or inherited-cell checks. Midpoint and length
+formulas remain unchanged; length, angle, local pins and flips must remain
+fixed. Post-translation comparisons allow floating-point roundoff. Endpoint
+GUARD/reference overwrites, stale caches, curved geometry and pose-changing
+dependencies fail atomically. Line resizing/deletion and broader 1D formulas
+remain unsupported.
+
+The additional native editing test matches all saved transform caches to the
+native after-values. Fifteen regular editing regressions cover four orientations,
+round-trip restoration, external endpoint references, locks, GUARD, no-op,
+stale caches, geometry/unit refusal and pose-changing dependencies. Along-line,
+perpendicular and rotated oblique native gradient captures also preserve paint
+through direct movement. All six native-line-movement.spec.ts scenarios passed
+using the real worker, geometry controls, keyboard selection, undo/redo,
+downloaded package comparisons and reload. Core Visio tests passed 2,135 active
+cases with 59 unrelated optional skips. Core/UI types, core/UI builds and viewer
+types passed.
+
+A new four-line source/candidate native reopen attempt used the fresh local
+directory visio-line-reopen-8d2b94cc7e874316bd5b4f9d80126063. OpenEx(200) again
+stalled while opening the untouched native original, before reaching the
+candidate. The probe worker and invisible Visio process were stopped after
+matching their recorded process IDs and start ticks; the user's instance stayed
+open. No native repair-free acceptance or native resave evidence was obtained.
+Native reopening of editor output remains unverified.
 
 ## Height-zero gradient strokes, 2026-10-08
 

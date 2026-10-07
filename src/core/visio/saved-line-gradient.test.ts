@@ -175,17 +175,18 @@ for (const name of ['VISIO_NATIVE_LINE_GRADIENT_DIR', 'VISIO_NATIVE_1D_LINE_GRAD
 			expect(shapes).toHaveLength(oneDimensional ? 5 : 4);
 			if (oneDimensional) {
 				expect(shapes.slice(0, 4).every((shape) => shape.height === 0)).toBe(true);
-				await expect(
-					editVsdx(bytes, [
-						{
-							type: 'move-shape',
-							pageId: original.pages[0]!.id,
-							shapeId: shapes[0]!.id,
-							x: 4,
-							y: 3,
-						},
-					]),
-				).rejects.toThrow('Only local 2D shapes');
+				const translated = await editVsdx(bytes, [
+					{
+						type: 'move-shape',
+						pageId: original.pages[0]!.id,
+						shapeId: shapes[0]!.id,
+						x: 4,
+						y: 3,
+					},
+				]);
+				expect((await parseVsdx(translated.bytes)).pages[0]!.shapes[0]!.style.lineGradient).toEqual(
+					shapes[0]!.style.lineGradient,
+				);
 			}
 			expect(shapes.slice(0, 4).every((shape) => shape.style.lineGradient?.type === 'linear')).toBe(
 				true,

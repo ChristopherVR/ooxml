@@ -4,6 +4,8 @@ import { expect, it } from 'vitest';
 import { evaluateVisioFormula, type VisioFormulaValue } from './formula';
 import { VisioPackage } from './package';
 import { attribute, children } from './sheet';
+import { editVsdx } from './edit';
+import { parseVsdx } from './parser';
 
 // Visio 16 DrawLine caches captured by scripts/record-visio-line-movement.ps1.
 it.each([
@@ -44,6 +46,45 @@ it.each([
 });
 
 const directory = process.env.VISIO_NATIVE_LINE_MOVEMENT_DIR;
+it.skipIf(!directory)(
+	'moves genuine native lines with the same caches as native endpoint translation',
+	async () => {
+		const original = await readFile(join(directory!, 'original.vsdx'));
+		const parsed = await parseVsdx(original);
+		const evidence = JSON.parse(await readFile(join(directory!, 'evidence.json'), 'utf8')) as {
+			cases: { shapeId: string; after: Record<string, { value: number; formula: string }> }[];
+		};
+		const saved = await editVsdx(
+			original,
+			evidence.cases.map((item) => ({
+				type: 'move-shape',
+				pageId: parsed.pages[0]!.id,
+				shapeId: item.shapeId,
+				x: item.after.PinX!.value,
+				y: item.after.PinY!.value,
+			})),
+		);
+		const pkg = await VisioPackage.open(saved.bytes);
+		const root = await pkg.readXml('visio/pages/page1.xml', 'PageContents');
+		for (const item of evidence.cases) {
+			const shape = children(children(root, 'Shapes')[0], 'Shape').find(
+				(node) => attribute(node, 'ID') === item.shapeId,
+			);
+			const cells = new Map(children(shape, 'Cell').map((node) => [attribute(node, 'N'), node]));
+			for (const [name, native] of Object.entries(item.after)) {
+				expect(Number(attribute(cells.get(name), 'V')), `${item.shapeId}/${name}`).toBeCloseTo(
+					native.value,
+					12,
+				);
+				const formula = attribute(cells.get(name), 'F');
+				if (formula) expect(formula, name).toBe(native.formula);
+			}
+		}
+		const result = await parseVsdx(saved.bytes);
+		expect(result.pages[0]!.shapes).toHaveLength(4);
+		for (const shape of result.pages[0]!.shapes) expect(shape.width).toBeCloseTo(2, 12);
+	},
+);
 it.skipIf(!directory)(
 	'matches native saved original and moved line caches and preserves transform formulas',
 	async () => {

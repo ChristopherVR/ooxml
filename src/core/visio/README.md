@@ -256,6 +256,17 @@ dimensions must be positive. Existing admitted top-level local 2D shapes can be
 edited, including shapes imported from another producer. There is no provenance
 requirement that the viewer created the shape.
 
+Local unglued straight lines also admit `move-shape`: both endpoints translate
+while native midpoint and length formulas remain intact. This reuses the same
+protection and bounded dependency closure. Required evidence is explicit local
+endpoints, positive length, zero Height, canonical midpoint/length formulas,
+an explicit Angle and one local MoveTo/LineTo geometry section. Length, angle,
+local rotation pins and flips remain fixed. Horizontal, diagonal, vertical and
+reversed native DrawLine cases match native caches after save/core reparse;
+all six demos cover controls, undo/redo, download and reload. Native Office
+reopening remains unverified. Broader 1D formulas, routing/glue, line resize
+and deletion remain unsupported.
+
 Numeric ShapeSheet interpretation uses a bounded AST, never JavaScript execution.
 Arithmetic, comparisons, IF, GUARD, Width/Height scaling, local geometry/named-row
 references and static Sheet.ID references have dependency analysis. MODULUS,
@@ -334,7 +345,7 @@ This first bundle has deliberate exclusions:
 | Exclusion                                                                     | Reason                                                                              | Next expansion                                                                  |
 | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
 | Master-linked resize/delete, unproven master moves, groups and foreign shapes | Broader instance overrides, nested transforms and resource semantics are not proven | Additional scoped master/instance proofs                                        |
-| Glue/Connects participation and 1D shapes                                     | Formula-only recalculation cannot route connectors or establish glue                | Endpoint dependencies and glued connector routing                               |
+| Glue/Connects participation and broader 1D editing                            | Proven straight-line translation does not establish connector routing or glue       | Endpoint editing and glued connector routing                                    |
 | Non-page affected/unknown dependencies                                        | Page metadata, document, master and style scopes can otherwise retain stale caches  | Scoped package-wide graph, starting with page metadata and pure theme functions |
 | GUARD, SETATREF and referenced transform formulas                             | Direct overwrites would bypass protection/redirection or discard semantics          | Verified redirection commands; never bypass protection                          |
 | Protected cells and inherited/ambiguous protection                            | LockMoveX/Y, LockWidth/Height/Aspect/Delete must be honored                         | Proven effective protection resolution                                          |

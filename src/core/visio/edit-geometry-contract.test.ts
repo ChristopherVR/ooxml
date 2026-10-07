@@ -249,7 +249,7 @@ describe('source-backed geometry edit contract', () => {
 			).rejects.toThrow();
 		},
 	);
-	it('refuses 1D shapes and nested targets without pretending unglued lines are glued connectors', async () => {
+	it('refuses incomplete 1D transforms and nested targets without treating unglued lines as glued', async () => {
 		await expect(editVsdx(await source(existing(cell('OneD', 1))), [move()])).rejects.toThrow();
 		const group = shape('10', `<Shapes>${existing()}</Shapes>`, 'Type="Group"');
 		await expect(editVsdx(await source(group), [move()])).rejects.toThrow();
