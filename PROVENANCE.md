@@ -522,3 +522,17 @@ Source: ChristopherVR/ooxml at `e536c3553ad87ccc4e35a1d2212ab65bb22e821f`
   fields, preserving their individual fallback values. Core regressions cover
   frame unions, independent text, negative coordinates and empty drawings;
   existing renderer tests remain in UI to cover the adapter.
+
+## Word revision recording and resolution
+
+Source: ChristopherVR/ooxml at `2e493931f821785829127c69cd133b9b360db680`,
+`src/ui/src/docx/track-changes-mode.ts` and `review-commands.ts`. These modules
+moved to `src/core/docx/ui/`; the UI keeps explicit compatibility exports.
+Recording and resolution use the caller's schema. Revision IDs reuse the shared
+client identity generator, including a persistent collaboration-session generator.
+Legacy colliding IDs are separated by author and move linkage. Resolution and
+undo/redo bypass recording; resolution checks read-only views and ignores stale
+ranges. Explicit commands use a shared boundary helper to isolate them from
+nearby typing in both ProseMirror and Yjs history. DOM-free regression tests accompany the
+core logic; existing model conversion, move, editor and Yjs tests remain in UI
+to cover those adapters. Move-name identity is still the earlier timestamp scheme.

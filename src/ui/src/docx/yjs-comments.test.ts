@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createDocument, loadDocx, type DocumentModel } from 'ooxml-core/docx';
 import {
 	createCollabSession,
@@ -11,6 +11,7 @@ import type { EditorView } from 'prosemirror-view';
 import { TextSelection } from 'prosemirror-state';
 import { DocxEditorElement } from './index';
 import './index';
+import { collectRevisionRanges, rejectRevisionRange } from './review-commands';
 
 const sessions: CollabSession[] = [];
 const editors: DocxEditorElement[] = [];
@@ -70,6 +71,48 @@ function add(editor: DocxEditorElement, id = 'root') {
 }
 
 describe('shared Word comment threads', () => {
+	it('keeps concurrent peer revisions distinct and resolves a peer insertion without re-tracking', () => {
+		const { a, b, partition, sync } = pair();
+		a.reviewAuthor = 'Ada';
+		b.reviewAuthor = 'Grace';
+		const first = viewOf(a);
+		toggleTrackChanges(first.state, first.dispatch, first);
+		partition();
+		const clock = vi.spyOn(Date, 'now').mockReturnValue(1);
+		try {
+			for (const [editor, text] of [
+				[a, 'A'],
+				[b, 'B'],
+			] as const) {
+				const view = viewOf(editor);
+				view.dispatch(view.state.tr.insertText(text, 7));
+			}
+		} finally {
+			clock.mockRestore();
+		}
+		sync();
+		const ranges = collectRevisionRanges(first.state.doc);
+		expect(ranges).toHaveLength(2);
+		expect(new Set(ranges.map((range) => range.id)).size).toBe(2);
+		const grace = ranges.find((range) => range.author === 'Grace')!;
+		rejectRevisionRange(first, grace);
+		for (const editor of [a, b]) {
+			expect(viewOf(editor).state.doc.textContent).toBe('SharedA text');
+			expect(collectRevisionRanges(viewOf(editor).state.doc).map((range) => range.author)).toEqual([
+				'Ada',
+			]);
+		}
+		expect(binding(a).undo()).toBe(true);
+		for (const editor of [a, b]) {
+			expect(
+				collectRevisionRanges(viewOf(editor).state.doc)
+					.map((range) => range.author)
+					.sort(),
+			).toEqual(['Ada', 'Grace']);
+		}
+		expect(binding(a).redo()).toBe(true);
+		for (const editor of [a, b]) expect(viewOf(editor).state.doc.textContent).toBe('SharedA text');
+	});
 	it('shares review recording, tracks peer typing and exports the setting with local undo', async () => {
 		const { a, b } = pair();
 		a.reviewAuthor = 'Ada';

@@ -23,6 +23,7 @@ export interface BodyPluginHost {
 	extraPlugins: Plugin[];
 	collaborationPlugins: Plugin[];
 	yjs?: boolean;
+	revisionIds?: ((kind: string) => string) | undefined;
 }
 
 /** The main body editor's plugins: history, structure guards, style decorations, review and keys. */
@@ -43,6 +44,7 @@ export function bodyPlugins(host: BodyPluginHost): Plugin[] {
 		trackChangesPlugin(
 			() => host.reviewAuthor(),
 			() => Boolean(host.model().trackChanges),
+			host.revisionIds,
 		),
 		reviewDisplayPlugin(() => host.reviewDisplayMode()),
 		editorKeymap(() => host.showSearch()),

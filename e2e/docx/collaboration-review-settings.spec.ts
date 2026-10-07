@@ -3,6 +3,50 @@ import JSZip from 'jszip';
 import type { DocxEditorElement } from '../../viewers/docx/packages/web-component/src';
 
 for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
+	test(`${framework}: rejecting a peer revision preserves the other author's insertion`, async ({
+		page,
+	}) => {
+		const errors: string[] = [];
+		page.on('pageerror', (error) => errors.push(error.message));
+		await page.setViewportSize({ width: 3200, height: 1000 });
+		await page.goto(`/collaboration.html?framework=${framework}&mode=yjs`);
+		const a = page.locator('#peer-a docx-editor');
+		const b = page.locator('#peer-b docx-editor');
+		await expect(b.locator('.ProseMirror')).toContainText('Shared document');
+		await a.getByRole('tab', { name: 'Review', exact: true }).click();
+		await a.getByRole('button', { name: 'Track changes', exact: true }).click();
+		await page.getByRole('button', { name: 'Pause delivery', exact: true }).click();
+		for (const [editor, text] of [
+			[a, ' AdaEdit'],
+			[b, ' GraceEdit'],
+		] as const) {
+			await editor.locator('.ProseMirror').click();
+			await page.keyboard.press('Control+End');
+			await page.keyboard.insertText(text);
+		}
+		await page.getByRole('button', { name: 'Resume delivery', exact: true }).click();
+		const grace = a.locator('.ProseMirror ins[data-author="Grace"]');
+		await expect(grace).toContainText('GraceEdit');
+		await grace.dblclick();
+		await a.getByRole('button', { name: 'Reject', exact: true }).click();
+		for (const editor of [a, b]) {
+			await expect(editor.locator('.ProseMirror')).not.toContainText('GraceEdit');
+			await expect(editor.locator('.ProseMirror ins[data-author="Ada"]')).toContainText('AdaEdit');
+			await expect(editor.locator('.ProseMirror del')).toHaveCount(0);
+		}
+		await a.locator('.ProseMirror').click();
+		await page.keyboard.press('Control+z');
+		for (const editor of [a, b]) {
+			await expect(editor.locator('.ProseMirror ins[data-author="Grace"]')).toContainText(
+				'GraceEdit',
+			);
+			await expect(editor.locator('.ProseMirror ins[data-author="Ada"]')).toContainText('AdaEdit');
+		}
+		await page.keyboard.press('Control+Shift+z');
+		await expect(b.locator('.ProseMirror')).not.toContainText('GraceEdit');
+		await expect(b.locator('.ProseMirror ins[data-author="Ada"]')).toContainText('AdaEdit');
+		expect(errors).toEqual([]);
+	});
 	test(`${framework}: shared Track Changes records peer edits and exports its setting`, async ({
 		page,
 	}) => {

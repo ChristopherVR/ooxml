@@ -98,6 +98,16 @@ editing disabled. Tests cover partitioned edits, imported threads, author undo,
 read-only peers and detached DOCX export, plus the review pane in six browser
 bindings. This does not implement M365 mentions, notifications or assigned tasks.
 
+The Track Changes recording setting now uses document transactions, shares
+through Yjs, supports local undo/redo and exports `w:trackRevisions`. Recording
+and revision resolution live in core and use the caller's schema. Revision IDs
+reuse the client identity generator. Resolution separates legacy IDs by author,
+ignores stale ranges, blocks read-only writes and bypasses recording, as do
+undo/redo transactions. A two-peer partition/reject regression retains the other
+author's insertion. Browser review contracts pass in all six bindings.
+Formatting-change snapshots, paragraph-mark recording and shared move-name
+identity still need implementation and native reference evidence.
+
 ## Next implementation sequence
 
 Continuous-section pagination now shares a physical page after a single-column
