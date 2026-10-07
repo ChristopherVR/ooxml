@@ -99,7 +99,23 @@ export const runPropertiesMark: MarkSpec = {
 			'span',
 			{
 				'data-run-props': JSON.stringify(props),
-				...(props.vanish ? { class: 'dve-hidden-text' } : {}),
+				...(props.vanish || props.revision
+					? {
+							class: [
+								props.vanish ? 'dve-hidden-text' : '',
+								props.revision ? 'dve-revision-format' : '',
+							]
+								.filter(Boolean)
+								.join(' '),
+						}
+					: {}),
+				...(props.revision
+					? {
+							'data-revision-id': props.revision.id,
+							'data-author': props.revision.author,
+							...(props.revision.date ? { 'data-date': props.revision.date } : {}),
+						}
+					: {}),
 				...(style ? { style } : {}),
 			},
 			0,

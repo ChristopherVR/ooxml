@@ -3,10 +3,11 @@ import type { EditorView } from 'prosemirror-view';
 import { dispatchIsolatedCommand } from './command-history.js';
 import { moveName } from './review-schema.js';
 import { trackChangesPluginKey } from './track-changes-mode.js';
+import { formattingRevision, resolveFormattingRange } from './review-formatting.js';
 
 export interface RevisionRange {
 	id: string;
-	kind: 'insert' | 'delete';
+	kind: 'insert' | 'delete' | 'formatChange';
 	from: number;
 	to: number;
 	author: string;
@@ -22,11 +23,12 @@ export function collectRevisionRanges(doc: import('prosemirror-model').Node): Re
 		const mark = node.marks.find(
 			(item) => item.type.name === 'insertion' || item.type.name === 'deletion',
 		);
-		if (!mark) return;
-		const kind = mark.type.name === 'insertion' ? 'insert' : 'delete';
-		const id = String(mark.attrs.id);
-		const move = moveName(mark.attrs.move);
-		const author = String(mark.attrs.author);
+		const format = formattingRevision(node);
+		if (!mark && !format) return;
+		const kind = mark ? (mark.type.name === 'insertion' ? 'insert' : 'delete') : 'formatChange';
+		const id = String(mark?.attrs.id ?? format!.id);
+		const move = mark && moveName(mark.attrs.move);
+		const author = String(mark?.attrs.author ?? format!.author);
 		const last = ranges.at(-1);
 		if (
 			last &&
@@ -86,6 +88,10 @@ function resolveRanges(view: EditorView, ranges: RevisionRange[], mode: 'accept'
 	for (const range of ranges) {
 		const from = tr.mapping.map(range.from);
 		const to = tr.mapping.map(range.to);
+		if (range.kind === 'formatChange') {
+			resolveFormattingRange(tr, from, to, mode);
+			continue;
+		}
 		const removeText = (mode === 'accept') === (range.kind === 'delete');
 		if (removeText) tr = tr.delete(from, to);
 		else

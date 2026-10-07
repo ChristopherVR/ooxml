@@ -1,3 +1,7 @@
+import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import { loadDocx } from 'ooxml-core/docx';
+import { collectRevisionRanges, rejectRevisionRange } from './review-commands';
 import { afterEach, describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
 import { createDocument, saveDocx } from 'ooxml-core/docx';
@@ -57,6 +61,38 @@ function start(
 }
 
 describe('Word Yjs collaboration', () => {
+	it('shares imported formatting rejection and its undo without recording remote changes', async () => {
+		const bytes = new Uint8Array(
+			await readFile(resolve('../core/docx/__fixtures__/review-formatting/multiple-tracked.docx')),
+		);
+		const peers = pair();
+		const a = mount();
+		const b = mount();
+		await a.load(bytes);
+		await b.load(bytes);
+		start(a, b, peers);
+		const first = viewOf(a);
+		const before = first.state.doc;
+		const range = collectRevisionRanges(first.state.doc)[0]!;
+		expect(range.kind).toBe('formatChange');
+		rejectRevisionRange(first, range);
+		for (const editor of [a, b]) {
+			const paragraph = editor.documentModel!.blocks[0]!;
+			if (paragraph.type !== 'paragraph') throw new Error('Expected paragraph');
+			expect(paragraph.runs[0]).toMatchObject({ text: 'Format me', bold: true, color: '#0000FF' });
+			expect(paragraph.runs[0]!.italic).toBeUndefined();
+			expect(paragraph.runs[0]!.revision).toBeUndefined();
+		}
+		const reopened = await loadDocx(await b.saveBytes());
+		const paragraph = reopened.model.blocks[0]!;
+		if (paragraph.type !== 'paragraph') throw new Error('Expected paragraph');
+		expect(paragraph.runs[0]).toMatchObject({ text: 'Format me', bold: true, color: '#0000FF' });
+		expect(wordYjsPluginKey.getState(viewOf(a).state)!.undo()).toBe(true);
+		for (const editor of [a, b]) expect(viewOf(editor).state.doc.eq(before)).toBe(true);
+		expect(wordYjsPluginKey.getState(viewOf(a).state)!.redo()).toBe(true);
+		expect(collectRevisionRanges(viewOf(b).state.doc)).toEqual([]);
+	});
+
 	it('merges concurrent overlapping anchors and undoes only the local comment mark', () => {
 		let deliver = true;
 		const peers = pair(false, () => deliver);

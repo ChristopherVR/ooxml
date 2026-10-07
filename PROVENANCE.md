@@ -564,3 +564,13 @@ instance and records all palettes under Office and custom themes with
 38 individual colors in the remaining 14 cases have unresolved one-channel-step
 rounding differences. The regression distinguishes the exact 85-case Office
 baseline from extended comparisons that permit that measured difference.
+
+## Word run-to-mark mapping
+
+Source: ChristopherVR/ooxml at `94274409912976a358179ee79a16e3c5da9f88dc`,
+`src/ui/src/docx/run-marks.ts`. The model-to-ProseMirror mark mapping moved to
+`src/core/docx/ui/run-marks.ts`, with the caller's schema replacing the global
+UI schema. The UI keeps a compatibility facade. Imported formatting-revision
+rejection reuses this mapping to restore formatting without replacing text,
+links or comment anchors. Existing model conversion tests and native formatting
+references verify both callers.

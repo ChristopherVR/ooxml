@@ -25,7 +25,7 @@ export function warningsFor(document: XmlDocument): string[] {
 		],
 		[
 			['rPrChange'],
-			'Formatting-change revisions retain their prior run-properties snapshots; recording and rejecting formatting changes in the editor are not supported yet.',
+			'Formatting-change revisions retain their prior run-properties snapshots and support acceptance and rejection; recording new formatting changes and showing prior formatting in Original display are not supported yet.',
 		],
 		[
 			['pPrChange'],

@@ -16,6 +16,10 @@
 .dve-revision-hidden {
 	display: none;
 }
+.dve-revision-format-markup {
+	outline: 1px dotted currentColor;
+	outline-offset: 2px;
+}
 .dve-comment-range {
 	background: rgba(255, 212, 0, 0.28);
 }
