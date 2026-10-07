@@ -495,3 +495,14 @@ mutations, and no longer import the UI schema. The UI keeps a compatibility
 facade. DOM-free core regressions cover overlapping anchors, read-only edits
 and immutable thread operations; browser-model/export and ribbon tests remain
 beside the UI code they exercise. Yjs thread synchronization is a separate step.
+
+## Shared Office GUID generation
+
+Extracted `randomBytes`, `randomHex` and `generateChartUniqueId` from
+`src/core/pptx/core/utils/chart-series-identity.ts` in `ChristopherVR/ooxml` at
+`91a856ae3137b960472d0df713ddb95258c85af7` (original area: `ChristopherVR/pptx-viewer`)
+into `src/core/crypto/uuid.ts`. The four generator regression tests moved from
+`chart-series-identity.test.ts` to `crypto/uuid.test.ts`. The shared helper compiles
+with strict indexed access, retains the Web Crypto and older-runtime fallbacks,
+and keeps the PowerPoint API as an alias. XLSX clipboard copies reuse it for new
+x14 conditional-rule identities.
