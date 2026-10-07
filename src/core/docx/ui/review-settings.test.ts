@@ -2,9 +2,59 @@ import { describe, expect, it } from 'vitest';
 import { Schema } from 'prosemirror-model';
 import { EditorState } from 'prosemirror-state';
 import { history, undo } from 'prosemirror-history';
-import { toggleTrackChanges, toggleTrackFormatting, toggleTrackMoves } from './review-settings';
+import {
+	setReviewRecordingPreferences,
+	toggleTrackChanges,
+	toggleTrackFormatting,
+	toggleTrackMoves,
+} from './review-settings';
 
 describe('document-wide review recording', () => {
+	it('applies both preferences atomically and supports probes and no-op updates', () => {
+		const schema = new Schema({
+			nodes: {
+				doc: {
+					content: 'text*',
+					attrs: { trackFormatting: { default: true }, trackMoves: { default: true } },
+				},
+				text: {},
+			},
+		});
+		let state = EditorState.create({ schema, plugins: [history()] });
+		const command = setReviewRecordingPreferences({ trackFormatting: false, trackMoves: false });
+		expect(command(state)).toBe(true);
+		expect(state.doc.attrs.trackFormatting).toBe(true);
+		command(state, (tr) => {
+			state = state.apply(tr);
+		});
+		expect(state.doc.attrs).toMatchObject({ trackFormatting: false, trackMoves: false });
+		let dispatched = false;
+		command(state, () => {
+			dispatched = true;
+		});
+		expect(dispatched).toBe(false);
+		expect(
+			undo(state, (tr) => {
+				state = state.apply(tr);
+			}),
+		).toBe(true);
+		expect(state.doc.attrs).toMatchObject({ trackFormatting: true, trackMoves: true });
+	});
+	it('refuses an unsupported preference without dispatching partial updates', () => {
+		const schema = new Schema({
+			nodes: { doc: { content: 'text*', attrs: { trackFormatting: { default: true } } }, text: {} },
+		});
+		let dispatched = false;
+		expect(
+			setReviewRecordingPreferences({ trackFormatting: false, trackMoves: false })(
+				EditorState.create({ schema }),
+				() => {
+					dispatched = true;
+				},
+			),
+		).toBe(false);
+		expect(dispatched).toBe(false);
+	});
 	it.each([
 		['trackFormatting', toggleTrackFormatting],
 		['trackMoves', toggleTrackMoves],

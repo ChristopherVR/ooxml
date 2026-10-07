@@ -96,6 +96,7 @@ export class EditorCore {
 		});
 		this.formatDialogs = new FormatDialogs({
 			view: () => this.targetView(),
+			reviewView: () => this.view,
 			historyView: () => (this.parts.usesBodyHistory() ? this.view : this.targetView()),
 			model: () => this.model,
 			canDefineList: () => !this.readOnly && !this.collab.active,

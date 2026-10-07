@@ -66,6 +66,32 @@ function start(
 }
 
 describe('Word Yjs collaboration', () => {
+	it('applies tracking dialog preferences as one shared undo operation', () => {
+		const peers = pair();
+		const a = mount();
+		const b = mount();
+		start(a, b, peers);
+		a.shadowRoot!.querySelector<HTMLButtonElement>('[aria-label="Tracking options"]')!.click();
+		const dialog = a.shadowRoot!.querySelector<HTMLElement>(
+			'office-ui-dialog[data-title="Tracking options"]',
+		)!;
+		for (const name of ['Track formatting', 'Track moves']) {
+			const input = dialog.querySelector<HTMLInputElement>(`[aria-label="${name}"]`)!;
+			input.checked = false;
+			input.dispatchEvent(new Event('change', { bubbles: true }));
+		}
+		[...dialog.querySelectorAll<HTMLButtonElement>('button')]
+			.find((button) => button.textContent === 'OK')!
+			.click();
+		expect(viewOf(a).state.doc.toJSON()).toEqual(viewOf(b).state.doc.toJSON());
+		expect(viewOf(b).state.doc.attrs).toMatchObject({ trackFormatting: false, trackMoves: false });
+		expect(editorBindings['Mod-z']!(viewOf(a).state, viewOf(a).dispatch, viewOf(a))).toBe(true);
+		expect(viewOf(b).state.doc.attrs).toMatchObject({ trackFormatting: true, trackMoves: true });
+		expect(editorBindings['Mod-Shift-z']!(viewOf(a).state, viewOf(a).dispatch, viewOf(a))).toBe(
+			true,
+		);
+		expect(viewOf(b).state.doc.attrs).toMatchObject({ trackFormatting: false, trackMoves: false });
+	});
 	it('shares a direct off override of a native style page break and restores inheritance on rejection', async () => {
 		const bytes = new Uint8Array(
 			await readFile(resolve('../core/docx/__fixtures__/page-break-style/page-break-style.docx')),

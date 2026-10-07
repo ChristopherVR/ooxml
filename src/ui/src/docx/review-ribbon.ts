@@ -1,5 +1,5 @@
 import type { ReviewDisplayMode } from './review-display';
-import { menuSelect, tool } from './ribbon-parts';
+import { launcher, menuSelect, tool } from './ribbon-parts';
 
 const big = { large: true } as const;
 function group(label: string, ...children: HTMLElement[]): HTMLElement {
@@ -33,6 +33,7 @@ export function createReviewControls(): HTMLElement[] {
 		tool('Track changes', 'track', { type: 'review', key: 'trackChanges' }, big),
 		displayMode,
 	);
+	tracking.append(launcher('Tracking options', { type: 'formatDialog', kind: 'tracking' }));
 	const changes = group(
 		'Changes',
 		tool('Accept', 'accept', { type: 'review', key: 'acceptOne' }, big),

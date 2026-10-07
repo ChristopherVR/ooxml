@@ -19,6 +19,7 @@ import { createLineNumberDialog, type LineNumberHost } from './line-number-dialo
 import { createDropCapDialog } from './drop-cap-dialog';
 import { createColumnsDialog, type ColumnsHost } from './columns-dialog';
 import { createMultilevelListDialog } from './multilevel-list-dialog';
+import { createReviewOptionsDialog } from './review-options-dialog';
 
 export type FormatDialogKind =
 	| 'font'
@@ -36,12 +37,15 @@ export type FormatDialogKind =
 	| 'watermark'
 	| 'dropCap'
 	| 'columns'
-	| 'multilevelList';
+	| 'multilevelList'
+	| 'tracking';
 
 export interface FormatDialogsHost {
 	view(): EditorView | undefined;
 	/** Header/footer edits use the main document's history; notes use their own. */
 	historyView?(): EditorView | undefined;
+	/** Recording preferences always belong to the main document, including while editing a story. */
+	reviewView?(): EditorView | undefined;
 	model(): DocumentModel;
 	canDefineList?(): boolean;
 	/** Page Setup edits the section holding the selection. */
@@ -118,6 +122,9 @@ export class FormatDialogs {
 				() => host.view(),
 				() => host.model(),
 				() => host.canDefineList?.() ?? true,
+			),
+			tracking: createReviewOptionsDialog(() =>
+				host.reviewView ? host.reviewView() : host.view(),
 			),
 		};
 	}

@@ -247,7 +247,10 @@ document attributes and core supplies isolated undoable toggle commands.
 Disabled formatting tracking keeps formatting edits untracked while text tracking
 continues; disabled move tracking keeps drag and cut/paste revisions as ordinary
 insertion/deletion pairs. Native preference references and package/standalone
-round trips cover the flags. The ribbon still needs advanced tracking controls.
+round trips cover the flags. A localized Tracking options dialog now exposes
+Track Formatting and Track Moves through the existing shared dialog shell.
+Both changed preferences apply as one undo operation; untouched fields retain
+concurrent peer updates. Other advanced tracking and markup options remain unfinished.
 
 Core revision enumeration and resolution now include headers, footers, footnotes,
 endnotes and table cells through the shared document-story traversal. Synthetic
