@@ -601,3 +601,45 @@ references on reopen: field counts, complete text and copied bold. The native
 range operation does not certify Windows clipboard formats. Legacy cut events
 without clipboard data, multi-author tracked cut/paste and structural selections
 still require separate evidence.
+
+### Core field integrity follow-up
+
+Clipboard projection removes unmatched field instructions and structural markers,
+including invalid marker order, while preserving independently complete nested
+fields and the formatting of literal result text. Mounted editor and six-binding
+browser cases cover both boundary slices, paste into a document with an existing
+field, saved marker counts and undo. Native formatted-range transfer produced
+inconsistent boundary behavior and is not evidence of interactive clipboard
+parity; these checks establish document integrity only.
+
+Explicitly empty simple-field cache runs now import without invented `[Field]`
+text. They reuse complex markers to retain the instruction through editor typing,
+save/reparse and undo. A missing cache keeps its existing display fallback;
+supported nontext cached runs remain intact. Empty result formatting survives
+direct model saving, but the editor does not retain zero-length run properties.
+
+Backspace at the end or Delete at the start of a single-grapheme simple result
+preserves an empty instruction, including emoji, combining accents, flags and ZWJ
+sequences split across formatting runs. Interior positions and multi-grapheme
+results keep the existing host deletion behavior. Core tests cover adjacency and
+undo; native subscription-build keyboard equivalence remains unverified.
+
+Nested complex-field parsing uses independent instruction/result stack frames.
+Inner cached text, including deleted text, keeps its own metadata; the outer
+result resumes after the inner end. Tests cover split codes, nested instructions,
+PAGE display recalculation and edited save/reparse. Tracker lifetime remains
+paragraph-local, so fields spanning paragraphs require separate implementation.
+
+### Core style resolution follow-up
+
+Logical paragraph `start` and `end` alignment now follows the final resolved
+direction when direct or derived styles switch between RTL and LTR. Explicit
+physical alignment edits remain authoritative. XML import, text edit/save/reload
+and unchanged style-part checks cover both logical values and both directions.
+
+Packed transitional `tblLook` values now select the existing conditional table
+styles when no named look attribute is present. Named attributes suppress the
+entire packed value, including explicit off, following Microsoft's documented
+precedence. Tests cover each flag, first-row/banding selection, malformed input
+and cell text edit/save/reload without rewriting the source packed flags. These
+are core semantic fixes, not native layout or current M365 certification.
