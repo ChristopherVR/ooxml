@@ -1,8 +1,9 @@
 import { Injector, runInInjectionContext } from '@angular/core';
-import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
+import { buildInlineTextCommitPatch, SLIDE_TEMPLATES } from 'ooxml-ui/pptx';
+import type { ChartPptxElement, PptxElement, PptxSlide } from 'pptx-viewer-core';
+import { createChartElement } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
 
-import { buildInlineTextCommitPatch, SLIDE_TEMPLATES } from 'ooxml-ui/pptx';
 import { CollaborationService } from './collaboration.service';
 import { EditorStateService } from './editor-state.service';
 import { ViewerCanvasEditingService } from './viewer-canvas-editing.service';
@@ -506,12 +507,27 @@ describe('editorStateService', () => {
 		expect(svc.slides()).toHaveLength(1);
 	});
 
+	it('retains package provenance even when the editor replaces the relationship id', () => {
+		const svc = service();
+		const original = slide('ppt/slides/slide1.xml', [
+			createChartElement('line', { categories: ['A'], series: [{ name: 'One', values: [1] }] }),
+		]);
+		svc.setSlides([original]);
+		svc.duplicateSlide(0);
+		expect(svc.slides()[1].sourceSlideId).toBe(original.id);
+		(svc.slides()[1].elements[0] as ChartPptxElement).chartData!.series[0].values[0] = 2;
+		expect((svc.slides()[0].elements[0] as ChartPptxElement).chartData!.series[0].values[0]).toBe(
+			1,
+		);
+	});
+
 	it('duplicates a slide with a fresh id', () => {
 		const svc = deck();
 		svc.duplicateSlide(0);
 		expect(svc.slides()).toHaveLength(3);
 		expect(svc.slides()[1].id).not.toBe('s1');
-		expect(svc.slides()[1].elements.map((e) => e.id)).toStrictEqual(['a']);
+		expect(svc.slides()[1].elements[0].id).not.toBe('a');
+		expect(svc.slides()[1].sourceSlideId).toBe('s1');
 	});
 
 	it('reorders slides', () => {

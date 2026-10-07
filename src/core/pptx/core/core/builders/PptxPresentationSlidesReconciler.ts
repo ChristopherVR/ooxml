@@ -6,6 +6,7 @@ import type { PptxSlideReferenceRemap } from '../../utils/presentation-collectio
 import { normalizeNamespaceUri } from '../../utils/strict-namespace-map';
 import type { PptxSaveState } from './PptxSaveSessionBuilder';
 import { buildSlideReferenceRemap } from './slide-reference-remap';
+import { duplicateSlideParts } from './duplicate-slide-parts';
 
 export interface PptxPresentationSlidesReconcilerInput {
 	slides: PptxSlide[];
@@ -26,6 +27,7 @@ export interface PptxPresentationSlidesReconcilerInput {
 	deepCloneXml: (value: XmlObject | undefined) => XmlObject | undefined;
 	findSourceSlidePath: (sourceSlideId: string | undefined) => string | undefined;
 	loadSlideRelationships: (slidePath: string, slideRelsPath: string) => Promise<void>;
+	onSlidePartsDuplicated?: (copies: ReadonlyMap<string, string>) => void;
 }
 
 export interface IPptxPresentationSlidesReconciler {
@@ -139,6 +141,7 @@ export class PptxPresentationSlidesReconciler implements IPptxPresentationSlides
 			}
 		}
 
+		const attachedPaths = new Map<string, string>();
 		for (let index = 0; index < input.slides.length; index++) {
 			const slide = input.slides[index];
 			slide.slideNumber = index + 1;
@@ -154,13 +157,28 @@ export class PptxPresentationSlidesReconciler implements IPptxPresentationSlides
 				continue;
 			}
 
+			const originalId = slide.id;
+			// Legacy editor copies retain both the presentation rId and the raw
+			// source tree. Require both: an unrelated imported or new slide must
+			// not inherit package parts merely because its rId collides.
+			const inheritedSource = originalRIdToPath.get(slide.rId);
+			const requestedSource =
+				slide.sourceSlideId ??
+				(inheritedSource && slide.rawXml === input.slideMap.get(inheritedSource)
+					? inheritedSource
+					: undefined);
+			const sourceSlidePath = input.findSourceSlidePath(
+				requestedSource ? (attachedPaths.get(requestedSource) ?? requestedSource) : undefined,
+			);
 			await this.attachNewSlide({
 				input,
 				slide,
+				sourceSlidePath,
 				usedRIds,
 				slideTargetByRid,
 				nextRelationshipId,
 			});
+			attachedPaths.set(originalId, slide.id);
 		}
 
 		this.removeInactiveSlides({
@@ -253,11 +271,12 @@ export class PptxPresentationSlidesReconciler implements IPptxPresentationSlides
 	private async attachNewSlide(init: {
 		input: PptxPresentationSlidesReconcilerInput;
 		slide: PptxSlide;
+		sourceSlidePath: string | undefined;
 		usedRIds: Set<string>;
 		slideTargetByRid: Map<string, string>;
 		nextRelationshipId: () => string;
 	}): Promise<void> {
-		const sourceSlidePath = init.input.findSourceSlidePath(init.slide.sourceSlideId);
+		const { sourceSlidePath } = init;
 		const sourceSlideXml = sourceSlidePath
 			? init.input.deepCloneXml(init.input.slideMap.get(sourceSlidePath))
 			: undefined;
@@ -282,6 +301,7 @@ export class PptxPresentationSlidesReconciler implements IPptxPresentationSlides
 		const newSlideRelsPath = init.input.toSlideRelsPath(newSlidePath);
 		const relationshipsCopied = await this.tryCopySourceRelationships({
 			input: init.input,
+			slide: init.slide,
 			sourceSlidePath,
 			newSlidePath,
 			newSlideRelsPath,
@@ -311,6 +331,7 @@ export class PptxPresentationSlidesReconciler implements IPptxPresentationSlides
 
 	private async tryCopySourceRelationships(init: {
 		input: PptxPresentationSlidesReconcilerInput;
+		slide: PptxSlide;
 		sourceSlidePath: string | undefined;
 		newSlidePath: string;
 		newSlideRelsPath: string;
@@ -325,7 +346,8 @@ export class PptxPresentationSlidesReconciler implements IPptxPresentationSlides
 			return false;
 		}
 
-		init.input.zip.file(init.newSlideRelsPath, sourceSlideRelsXml);
+		const copies = await duplicateSlideParts(init.input.zip, init.slide, init.sourceSlidePath);
+		init.input.onSlidePartsDuplicated?.(copies);
 		await init.input.loadSlideRelationships(init.newSlidePath, init.newSlideRelsPath);
 		return true;
 	}

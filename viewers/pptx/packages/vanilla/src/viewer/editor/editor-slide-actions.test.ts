@@ -1,4 +1,11 @@
-import type { PptxElement, PptxHandler, PptxSlide, PptxThemeColorScheme } from 'pptx-viewer-core';
+import type {
+	ChartPptxElement,
+	PptxElement,
+	PptxHandler,
+	PptxSlide,
+	PptxThemeColorScheme,
+} from 'pptx-viewer-core';
+import { createChartElement } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createInitialViewerState, createStore } from '../state';
@@ -12,6 +19,27 @@ const buildSlides = (count: number): PptxSlide[] =>
 		slideNumber: index + 1,
 		elements: [],
 	}));
+
+describe('duplicateSlide', () => {
+	it('retains package source identity and isolates chart data before saving', () => {
+		const original = buildSlides(1)[0];
+		original.id = 'ppt/slides/slide1.xml';
+		original.elements = [
+			createChartElement('line', { categories: ['A'], series: [{ name: 'One', values: [1] }] }),
+		];
+		const store = createStore({
+			...createInitialViewerState(),
+			slides: [original],
+			editable: true,
+		});
+		const ops = createEditorOps({ store, getHandler: () => null, onHistoryChange: vi.fn() });
+		createSlideActions({ store, ops, getHandler: () => null }).duplicateSlide();
+		const copy = store.get().slides[1];
+		expect(copy.sourceSlideId).toBe(original.id);
+		(copy.elements[0] as ChartPptxElement).chartData!.series[0].values[0] = 2;
+		expect((original.elements[0] as ChartPptxElement).chartData!.series[0].values[0]).toBe(1);
+	});
+});
 
 describe('insertSlideFromTemplate', () => {
 	it('inserts the built template after the current slide, selected and history-integrated', () => {

@@ -1,8 +1,3 @@
-/* oxlint-disable eslint/one-var -- pervasive pre-existing pattern in this file
-   (many independent short-lived `const`s per action, each computed from the
-   previous statement's result); merging them isn't a style choice here. */
-import { cloneElement, cloneSlide } from 'pptx-viewer-core';
-import type { PptxHandler, PptxSlide } from 'pptx-viewer-core';
 import {
 	buildSlideTemplateSlide,
 	createBlankSlide,
@@ -11,6 +6,11 @@ import {
 	templateSchemeFromTheme,
 } from 'ooxml-ui/pptx';
 import type { SlideTemplateId } from 'ooxml-ui/pptx';
+/* oxlint-disable eslint/one-var -- pervasive pre-existing pattern in this file
+   (many independent short-lived `const`s per action, each computed from the
+   previous statement's result); merging them isn't a style choice here. */
+import { cloneElement, duplicateSlide } from 'pptx-viewer-core';
+import type { PptxHandler, PptxSlide } from 'pptx-viewer-core';
 
 import type { Store, ViewerState } from '../state';
 import type { EditorOps } from './editor-operations';
@@ -130,7 +130,7 @@ export function createSlideActions(deps: SlideActionsDeps): SlideActions {
 			}
 			ops.pushHistory();
 			const insertAt = state.currentSlide + 1;
-			const copy = { ...cloneSlide(source), id: makeSlideId() };
+			const copy = { ...duplicateSlide(source, state.slides.length + 1), id: makeSlideId() };
 			const sourceTemplate = state.templateElementsBySlideId[source.id] ?? [];
 			const slides = renumber([
 				...state.slides.slice(0, insertAt),

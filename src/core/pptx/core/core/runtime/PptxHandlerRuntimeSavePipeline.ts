@@ -67,6 +67,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			slideLayoutRelationshipType,
 			relationshipsNamespace,
 		});
+		// Reconciliation can copy media, ink and comment parts. Reserve their
+		// names before new elements allocate parts during this same save.
+		saveSession.refreshPackageState(this.zip);
 		await this.ensureNotesMasterForAuthoredNotes(slides, saveConstants);
 		await this.ensureHandoutMasterInfrastructure(options?.handoutMaster, saveConstants);
 

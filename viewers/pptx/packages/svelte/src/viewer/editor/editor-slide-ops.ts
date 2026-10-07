@@ -1,7 +1,7 @@
-import type { PptxSlide } from 'pptx-viewer-core';
-import { cloneSlide } from 'pptx-viewer-core';
 import { buildSlideTemplateSlide, createBlankSlide, makeSlideId } from 'ooxml-ui/pptx';
 import type { SlideTemplateBuildOptions, SlideTemplateId } from 'ooxml-ui/pptx';
+import type { PptxSlide } from 'pptx-viewer-core';
+import { duplicateSlide } from 'pptx-viewer-core';
 
 /**
  * Pure slide-array mutations for the Home tab's Slides group (New slide /
@@ -59,7 +59,7 @@ export function duplicateSlideAt(
 	if (!source) {
 		return null;
 	}
-	const clone = cloneSlide(source);
+	const clone = duplicateSlide(source, slides.length + 1);
 	clone.id = makeSlideId();
 	const next = [...slides];
 	next.splice(index + 1, 0, clone);
@@ -93,7 +93,7 @@ export function duplicateSlidesAt(
 		if (!selected.has(index)) {
 			return [slide];
 		}
-		const clone = cloneSlide(slide);
+		const clone = duplicateSlide(slide, slides.length + index + 1);
 		clone.id = makeSlideId();
 		return [slide, clone];
 	});

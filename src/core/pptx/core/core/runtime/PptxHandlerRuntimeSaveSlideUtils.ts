@@ -3,6 +3,7 @@ import type { PptxElementAnimation, PptxSlideTransition } from '../../types';
 import { parseDataUrlToBytes, fetchUrlToBytes } from '../../utils/data-url-utils';
 import type { PptxSlideReferenceRemap } from '../../utils/presentation-collections';
 import type { PptxSaveState, IPptxSlideRelationshipRegistry } from '../builders';
+import { remapPartPaths } from '../builders/duplicate-slide-parts';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimePresentationProps';
 
 /** Context {@link PptxHandlerRuntime.embedTransitionSound} needs from the slide save writer. */
@@ -110,6 +111,17 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			findSourceSlidePath: (sourceSlideId) => this.findSourceSlidePath(sourceSlideId),
 			loadSlideRelationships: (slidePath, slideRelsPath) =>
 				this.loadSlideRelationships(slidePath, slideRelsPath),
+			onSlidePartsDuplicated: (copies) => {
+				// An unchanged copy must retain the source chart's byte-preserving
+				// save gate. Edited data still differs from this remapped baseline.
+				for (const [source, destination] of copies) {
+					const baseline = this.chartDataBaselines.get(source);
+					if (!baseline) continue;
+					const data: unknown = JSON.parse(baseline);
+					remapPartPaths(data, copies);
+					this.chartDataBaselines.set(destination, JSON.stringify(data));
+				}
+			},
 		});
 	}
 

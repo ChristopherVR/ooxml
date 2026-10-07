@@ -1,5 +1,4 @@
 import { mount } from '@vue/test-utils';
-import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import {
 	createCollaborationLivePatcher,
 	createSnapshotTextPositions,
@@ -8,6 +7,7 @@ import {
 	reconcileSlidesInYDoc,
 } from 'ooxml-ui/pptx';
 import type { YjsFactories } from 'ooxml-ui/pptx';
+import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
 import { computed, ref, shallowRef } from 'vue';
 import * as Y from 'yjs';
@@ -71,6 +71,8 @@ describe('commitInlineEdit', () => {
 		useSlideOperations({ slides, activeSlideIndex, pushHistory: vi.fn() }).duplicateSlide(0);
 		activeSlideIndex.value = 0;
 		const [original, duplicate] = slides.value;
+		// Imported or remote slides can still carry the same element id.
+		duplicate.elements[0].id = original.elements[0].id;
 		expect(duplicate.id).not.toBe(original.id);
 		expect(duplicate.elements[0].id).toBe(original.elements[0].id);
 		const activeSlide = computed(() => slides.value[activeSlideIndex.value]);
