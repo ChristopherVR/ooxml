@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import { parseXml } from '../xml/index.js';
-import { parseVsdx } from './index.js';
-import { createLayerBudget, indexLayers, pageLayers, shapeLayers } from './layers.js';
-import type { VisioLayer } from './model.js';
-import { readSheet, type Sheet } from './sheet.js';
-import { cell, fixture, row, section, shape, xml } from './test-fixtures.js';
+import { parseXml } from '../xml/index';
+import { parseVsdx } from './index';
+import { createLayerBudget, indexLayers, pageLayers, shapeLayers } from './layers';
+import type { VisioLayer } from './model';
+import { readSheet, type Sheet } from './sheet';
+import { cell, fixture, row, section, shape, xml } from './test-fixtures';
 
 const resources = { colors: new Map<string, string>(), fonts: new Map<string, string>() };
 const layer = (id: string, visible = true): VisioLayer => ({

@@ -5,8 +5,8 @@ import {
 	parseVisioFormula,
 	VisioFormulaError,
 	visioFormulaCachedValue,
-} from './formula.js';
-import type { VisioFormulaReference, VisioFormulaValue } from './formula.js';
+} from './formula';
+import type { VisioFormulaReference, VisioFormulaValue } from './formula';
 
 const length = (value: number): VisioFormulaValue => ({ value, unit: 'length' });
 const scalar = (value: number): VisioFormulaValue => ({ value, unit: 'scalar' });

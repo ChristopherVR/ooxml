@@ -3,9 +3,9 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { parseXml } from '../xml/index.js';
-import { children, child, readSheet } from './sheet.js';
-import { parseVsdx } from './parser.js';
+import { parseXml } from '../xml/index';
+import { children, child, readSheet } from './sheet';
+import { parseVsdx } from './parser';
 // Apache POI 732120980140d5ed64b482c470e0b625cdb1ab15/test-data/diagram/60973.vsdx.
 // Optional read-only check; no third-party fixture bytes are redistributed.
 const directory = process.env.VISIO_THEME_CORPUS_DIR;

@@ -1,7 +1,7 @@
 import type { VisioText } from 'ooxml-core/visio';
-import { matrix, safeColor, svgElement } from './render-svg.js';
-import type { TextLayoutBudget } from './text-layout.js';
-import { layoutParagraphs } from './paragraph-layout.js';
+import { matrix, safeColor, svgElement } from './render-svg';
+import type { TextLayoutBudget } from './text-layout';
+import { layoutParagraphs } from './paragraph-layout';
 
 /** Browser-font layout is approximate until compared with the licensed Visio reference corpus. */
 export function renderText(

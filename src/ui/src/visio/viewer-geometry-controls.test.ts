@@ -1,6 +1,6 @@
 import { afterEach, expect, it, vi } from 'vitest';
-import { ViewerController } from './controller.js';
-import { ViewerEditControls, editControlsTemplate } from './viewer-edit-controls.js';
+import { ViewerController } from './controller';
+import { ViewerEditControls, editControlsTemplate } from './viewer-edit-controls';
 import { demoDocument } from 'ooxml-core/visio/ui';
 
 async function setup() {

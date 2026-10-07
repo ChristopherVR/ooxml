@@ -1,5 +1,5 @@
-import type { VisioForeignVector } from './foreign-vector.js';
-import type { VisioHyperlink, VisioShapeData } from './shape-metadata.js';
+import type { VisioForeignVector } from './foreign-vector';
+import type { VisioHyperlink, VisioShapeData } from './shape-metadata';
 
 /** Visio's internal distance unit is the inch; angles are radians. */
 export type VisioMatrix = readonly [number, number, number, number, number, number];

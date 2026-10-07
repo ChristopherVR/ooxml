@@ -1,8 +1,8 @@
 import { it, expect } from 'vitest';
 import JSZip from 'jszip';
-import { editVsdx } from './edit.js';
-import { fixture, shape } from './test-fixtures.js';
-import { VisioPackage } from './package.js';
+import { editVsdx } from './edit';
+import { fixture, shape } from './test-fixtures';
+import { VisioPackage } from './package';
 const command = { type: 'replace-plain-text' as const, pageId: '0', shapeId: '1', text: 'new' };
 const base = () =>
 	fixture({

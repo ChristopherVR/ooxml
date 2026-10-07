@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { VisioTextRun } from 'ooxml-core/visio';
-import { wrapText } from './text-layout.js';
+import { wrapText } from './text-layout';
 const run = (text: string): VisioTextRun => ({
 	text,
 	fontFamily: 'Arial',
@@ -40,7 +40,7 @@ describe('text wrapping', () => {
 });
 
 import { vi } from 'vitest';
-import { createTextLayoutBudget, TextLayoutBudgetError } from './text-layout.js';
+import { createTextLayoutBudget, TextLayoutBudgetError } from './text-layout';
 describe('bounded browser text work', () => {
 	it('rejects a large shape before tokenization or browser measurements', () => {
 		const measure = vi.fn((value: string) => value.length);

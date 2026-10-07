@@ -4,9 +4,9 @@ import {
 	type VisioDocument,
 	type VisioShape,
 	type VisioImage,
-} from '../index.js';
-import { assertShapeDetails } from './scene-details.js';
-import { ForeignVectorBudget } from './foreign-vector-budget.js';
+} from '../index';
+import { assertShapeDetails } from './scene-details';
+import { ForeignVectorBudget } from './foreign-vector-budget';
 
 export const MAX_INPUT_BYTES = 32 * 1024 * 1024;
 const MAX_DIMENSION = 10_000;

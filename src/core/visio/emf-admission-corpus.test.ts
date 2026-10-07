@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
-import { inspectVisioEmfAdmission } from './emf-admission.js';
+import { inspectVisioEmfAdmission } from './emf-admission';
 
 // Optional read-only external validation; never copies or redistributes corpus fixture bytes.
 // Provenance: Apache POI test-data/diagram/60973.vsdx. Set VISIO_EMF_CORPUS_FILE explicitly.

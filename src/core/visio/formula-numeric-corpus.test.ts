@@ -3,9 +3,9 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
-import { parseXml } from '../xml/index.js';
-import { children, attribute } from './sheet.js';
-import { analyzeVisioFormula, evaluateVisioFormula, visioFormulaCachedValue } from './formula.js';
+import { parseXml } from '../xml/index';
+import { children, attribute } from './sheet';
+import { analyzeVisioFormula, evaluateVisioFormula, visioFormulaCachedValue } from './formula';
 
 const directory = process.env['VISIO_EDIT_CORPUS_DIR'];
 // Immutable public Apache POI fixtures; hashes match the pinned downloaded corpus.

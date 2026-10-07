@@ -1,6 +1,7 @@
 // Declarations (tsc) and the ESM bundle (tsup), built concurrently into dist.
 import { spawn } from 'node:child_process';
 import { rmSync } from 'node:fs';
+import { rewriteEsmDeclarationImports } from '../../../scripts/esm-declarations.mjs';
 
 const run = (cmd, args) =>
 	new Promise((resolve, reject) => {
@@ -17,3 +18,4 @@ await Promise.all([
 	run('tsup', ['--config', 'tsup.pptx.config.ts']),
 	run('tsup', ['--config', 'tsup.config.ts']),
 ]);
+rewriteEsmDeclarationImports('dist');

@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { VisioDocument } from 'ooxml-core/visio';
-import { ViewerController } from './controller.js';
-import { createWorkerParser } from './worker-parser.js';
+import { ViewerController } from './controller';
+import { createWorkerParser } from './worker-parser';
 import { demoDocument } from 'ooxml-core/visio/ui';
 
 const { loadVisio, convertMetafileToSvgTree } = vi.hoisted(() => ({
@@ -56,7 +56,7 @@ describe('unified legacy parser dispatch', () => {
 			postMessage: ReturnType<typeof vi.fn>;
 		} = { onmessage: null, postMessage: vi.fn() };
 		vi.stubGlobal('self', worker);
-		await import('./parse-worker.js');
+		await import('./parse-worker');
 		expect(worker.onmessage).toBeTypeOf('function');
 		for (const { format, bytes } of sources) {
 			const document = scene(format);

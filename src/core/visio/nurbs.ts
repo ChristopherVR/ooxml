@@ -1,5 +1,5 @@
-import { flattenNurbs, CURVE_TOLERANCE } from './nurbs-flatten.js';
-import type { Report } from './sheet.js';
+import { flattenNurbs, CURVE_TOLERANCE } from './nurbs-flatten';
+import type { Report } from './sheet';
 
 export type NurbsPoint = { x: number; y: number };
 export type NurbsControl = NurbsPoint & { weight: number };

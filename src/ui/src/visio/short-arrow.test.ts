@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { parseVsdx } from 'ooxml-core/visio';
 import { demoDocument } from 'ooxml-core/visio/ui';
-import { renderPage } from './render-svg.js';
+import { renderPage } from './render-svg';
 import evidence from '../../../core/visio/__fixtures__/short-arrows-native.json';
 
 describe('native short filled-arrow rendering', () => {

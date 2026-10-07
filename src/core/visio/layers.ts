@@ -1,8 +1,8 @@
-import type { VisioLayer, VisioLayerPrintSummary } from './model.js';
-import { metadata } from './metadata.js';
-import { VisioPackageError } from './package.js';
-import { number, sectionRows, type Report, type Sheet } from './sheet.js';
-import { color, type Resources } from './style.js';
+import type { VisioLayer, VisioLayerPrintSummary } from './model';
+import { metadata } from './metadata';
+import { VisioPackageError } from './package';
+import { number, sectionRows, type Report, type Sheet } from './sheet';
+import { color, type Resources } from './style';
 
 export interface LayerBudget {
 	consumeCharacters(count: number): void;

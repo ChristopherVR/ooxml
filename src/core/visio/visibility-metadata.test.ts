@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { parseVsdx, resolveVisioPageVisibility } from './index.js';
-import { cell, fixture, rectangle, row, section, shape, xml } from './test-fixtures.js';
+import { parseVsdx, resolveVisioPageVisibility } from './index';
+import { cell, fixture, rectangle, row, section, shape, xml } from './test-fixtures';
 
 async function scene(contents: string, layers: string, masters?: { id: string; shapes: string }[]) {
 	return parseVsdx(

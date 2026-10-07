@@ -3,9 +3,9 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { parseXml } from '../xml/index.js';
-import { children, readSheet, type Sheet } from './sheet.js';
-import { parseVsdx } from './parser.js';
+import { parseXml } from '../xml/index';
+import { children, readSheet, type Sheet } from './sheet';
+import { parseVsdx } from './parser';
 // Read-only external fixture, Apache POI 732120980140d5ed64b482c470e0b625cdb1ab15.
 const directory = process.env.VISIO_THEME_CORPUS_DIR;
 describe.skipIf(!directory)('hash-pinned Apache POI 60973 connector rounding', () => {

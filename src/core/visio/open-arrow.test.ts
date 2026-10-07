@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { visioOpenArrowExtent, visioOpenArrowPath } from './open-arrow.js';
+import { visioOpenArrowExtent, visioOpenArrowPath } from './open-arrow';
 import evidence from './__fixtures__/open-arrows-native.json';
 
 describe('native open-arrow geometry at unit drawing scale', () => {

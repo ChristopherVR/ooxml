@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import { parseVsdx } from './index.js';
-import { fixture, shape, xml, relations } from './test-fixtures.js';
-import { emf, record } from './emf-admission.test-fixtures.js';
-import { inspectEmbeddedVisioMetafile } from './prepare-metafiles.js';
-import { parseXml, NS } from '../xml/index.js';
-import type { VisioPackage } from './package.js';
+import { parseVsdx } from './index';
+import { fixture, shape, xml, relations } from './test-fixtures';
+import { emf, record } from './emf-admission.test-fixtures';
+import { inspectEmbeddedVisioMetafile } from './prepare-metafiles';
+import { parseXml, NS } from '../xml/index';
+import type { VisioPackage } from './package';
 
 const data = '<ForeignData ForeignType="EnhMetaFile"><Rel r:id="media"/></ForeignData>';
 const relation = (mode = 'Internal', type = `${NS.r}/image`) =>

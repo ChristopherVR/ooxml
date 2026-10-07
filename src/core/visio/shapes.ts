@@ -1,12 +1,12 @@
-import { rootThemeSheet } from './theme-root.js';
-import { styleSheet, type StyleContext } from './style-inheritance.js';
-import { metadata } from './metadata.js';
-import { shapeMetadata, type VisioMetadataBudget } from './shape-metadata.js';
-import { shapeLayers, type LayerBudget } from './layers.js';
-import type { VisioLayer, VisioShape } from './model.js';
-import { shapeTransform, geometryPaths } from './geometry.js';
-import { VisioPackageError } from './package.js';
-import { shapeStyle, shapeText, type Resources } from './style.js';
+import { rootThemeSheet } from './theme-root';
+import { styleSheet, type StyleContext } from './style-inheritance';
+import { metadata } from './metadata';
+import { shapeMetadata, type VisioMetadataBudget } from './shape-metadata';
+import { shapeLayers, type LayerBudget } from './layers';
+import type { VisioLayer, VisioShape } from './model';
+import { shapeTransform, geometryPaths } from './geometry';
+import { VisioPackageError } from './package';
+import { shapeStyle, shapeText, type Resources } from './style';
 import {
 	emptySheet,
 	mergeSheets,
@@ -14,7 +14,7 @@ import {
 	reportCachedErrors,
 	type RawShape,
 	type Report,
-} from './sheet.js';
+} from './sheet';
 
 export interface ShapeContext extends StyleContext {
 	metadataBudget: VisioMetadataBudget;

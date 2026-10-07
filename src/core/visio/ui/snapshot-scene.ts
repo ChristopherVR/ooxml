@@ -6,8 +6,8 @@ import type {
 	VisioShape,
 	VisioStyle,
 	VisioText,
-} from '../index.js';
-import { ForeignVectorBudget } from './foreign-vector-budget.js';
+} from '../index';
+import { ForeignVectorBudget } from './foreign-vector-budget';
 
 /** Copy only named scalar fields, never arbitrary host properties or their getters. */
 function fields<T, K extends keyof T>(source: T, keys: readonly K[]): Pick<T, K> {

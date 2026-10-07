@@ -1,41 +1,41 @@
 import type { VisioDocument, VisioEdit } from 'ooxml-core/visio';
 import type { VsdxSource } from 'ooxml-core/visio/ui';
-import { createWorkerParser } from './worker-parser.js';
-import { ViewerController, type ViewerState } from './controller.js';
+import { createWorkerParser } from './worker-parser';
+import { ViewerController, type ViewerState } from './controller';
 import { MAX_INPUT_BYTES } from 'ooxml-core/visio/ui';
-import { selectedShape } from './shape-inspector.js';
-import { wireViewerInputs } from './viewer-input.js';
-import { renderLayerControls, wireLayerControls } from './viewer-layer-controls.js';
-import { viewerStyles } from './styles.js';
-import { canvasAndRibbonStyles } from './styles/index.js';
-import { createRibbon } from './ribbon.js';
-import { applyKeyTips } from './ribbon-keytips.js';
+import { selectedShape } from './shape-inspector';
+import { wireViewerInputs } from './viewer-input';
+import { renderLayerControls, wireLayerControls } from './viewer-layer-controls';
+import { viewerStyles } from './styles';
+import { canvasAndRibbonStyles } from './styles/index';
+import { createRibbon } from './ribbon';
+import { applyKeyTips } from './ribbon-keytips';
 import { attachKeyTips } from '../controls';
-import { createPageTabs, createStatusBar } from './status-bar.js';
-import { createFindBar, renderFindBar, wireFindBar, type FindBar } from './viewer-search.js';
-import { fitZoom } from './viewer-fit.js';
-import { createShapesStrip, createShapesWindow } from './shapes-window.js';
-import { createBackstage, type BackstagePage } from './backstage.js';
-import { ViewerBackstage } from './viewer-backstage.js';
-import { createContextMenus, wireContextMenus } from './viewer-context-menu.js';
-import { wireTellMe } from './viewer-tell-me.js';
-import { createPanZoom, ViewerPanZoom } from './viewer-pan-zoom.js';
-import { createOptionsDialog, ViewerProfile } from './viewer-options.js';
-import { ViewerShare } from './viewer-share.js';
-import { wireStencil } from './viewer-stencil.js';
-import { createRulers, type Rulers } from './viewer-ruler.js';
-import { ViewerEditControls } from './viewer-edit-controls.js';
-import { ViewerChrome, viewerChromeTemplate } from './viewer-chrome.js';
-import { ViewerCanvas } from './viewer-canvas.js';
-import { ViewerCommands } from './viewer-commands.js';
+import { createPageTabs, createStatusBar } from './status-bar';
+import { createFindBar, renderFindBar, wireFindBar, type FindBar } from './viewer-search';
+import { fitZoom } from './viewer-fit';
+import { createShapesStrip, createShapesWindow } from './shapes-window';
+import { createBackstage, type BackstagePage } from './backstage';
+import { ViewerBackstage } from './viewer-backstage';
+import { createContextMenus, wireContextMenus } from './viewer-context-menu';
+import { wireTellMe } from './viewer-tell-me';
+import { createPanZoom, ViewerPanZoom } from './viewer-pan-zoom';
+import { createOptionsDialog, ViewerProfile } from './viewer-options';
+import { ViewerShare } from './viewer-share';
+import { wireStencil } from './viewer-stencil';
+import { createRulers, type Rulers } from './viewer-ruler';
+import { ViewerEditControls } from './viewer-edit-controls';
+import { ViewerChrome, viewerChromeTemplate } from './viewer-chrome';
+import { ViewerCanvas } from './viewer-canvas';
+import { ViewerCommands } from './viewer-commands';
 import { editErrorMessage } from 'ooxml-core/visio/ui';
-import { registerViewerControls } from './office-ui.js';
-import { exportPageSvg, type SvgExportOptions, type SvgExportResult } from './export-svg.js';
+import { registerViewerControls } from './office-ui';
+import { exportPageSvg, type SvgExportOptions, type SvgExportResult } from './export-svg';
 import {
 	createPrintSnapshot,
 	type CurrentPagePrintSnapshotOptions,
 	type PrintSnapshot,
-} from './print-snapshot.js';
+} from './print-snapshot';
 
 const BaseElement = (
 	typeof HTMLElement === 'undefined' ? class {} : HTMLElement

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { editVsdx } from './edit.js';
-import { parseVsdx } from './parser.js';
-import { fixture, shape, cell } from './test-fixtures.js';
+import { editVsdx } from './edit';
+import { parseVsdx } from './parser';
+import { fixture, shape, cell } from './test-fixtures';
 const command = (text = 'New & <text> 😀') => ({
 	type: 'replace-plain-text' as const,
 	pageId: '0',

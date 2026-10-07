@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { parseXml } from '../xml/index.js';
-import { geometryPaths, shapeTransform } from './geometry.js';
-import { readSheet, type Cells } from './sheet.js';
-import { cell, row, section, xml } from './test-fixtures.js';
+import { parseXml } from '../xml/index';
+import { geometryPaths, shapeTransform } from './geometry';
+import { readSheet, type Cells } from './sheet';
+import { cell, row, section, xml } from './test-fixtures';
 
 function geometry(rows: string, width = 4, height = 2) {
 	const warnings: string[] = [];

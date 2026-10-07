@@ -1,6 +1,6 @@
-import { formulaFailure } from './formula.js';
-import type { VisioFormulaValue } from './formula.js';
-import { compatibleFormulaUnits, finiteFormulaValue } from './formula-arithmetic.js';
+import { formulaFailure } from './formula';
+import type { VisioFormulaValue } from './formula';
+import { compatibleFormulaUnits, finiteFormulaValue } from './formula-arithmetic';
 
 export const numericFormulaFunctions = new Set([
 	'AND',

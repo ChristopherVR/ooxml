@@ -1,5 +1,5 @@
-import { linearToSrgb255, srgb255ToLinear } from '../color/index.js';
-import { elements } from '../xml/index.js';
+import { linearToSrgb255, srgb255ToLinear } from '../color/index';
+import { elements } from '../xml/index';
 
 export const DRAWING_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main';
 export const THEME_NS = 'http://schemas.microsoft.com/office/visio/2012/theme';

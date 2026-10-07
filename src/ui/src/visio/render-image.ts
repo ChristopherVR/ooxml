@@ -1,6 +1,6 @@
 import type { VisioShape } from 'ooxml-core/visio';
-import type { RenderResources } from './render-resources.js';
-import { svgElement } from './render-svg.js';
+import type { RenderResources } from './render-resources';
+import { svgElement } from './render-svg';
 
 let clipId = 0;
 

@@ -1,6 +1,6 @@
-import type { VisioText } from './model.js';
-import { number, type Cells, type Report } from './sheet.js';
-import { color, type Resources } from './style.js';
+import type { VisioText } from './model';
+import { number, type Cells, type Report } from './sheet';
+import { color, type Resources } from './style';
 
 /**
  * TextBkgnd uses one-based palette indices; 0 and 255 mean no background.

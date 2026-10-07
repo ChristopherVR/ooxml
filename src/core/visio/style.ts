@@ -1,14 +1,14 @@
-import { savedFillGradient } from './saved-fill-gradient.js';
-import { themeLinearGradient } from './theme-gradient.js';
-import { themeLineWeight, reportThemeEffects, themeSolidLinePattern } from './theme-line.js';
-import { lineCap } from './line-style.js';
-import { linePattern } from './line-pattern.js';
-import { themeColor, type ThemeResources } from './theme-resolve.js';
-import { textBackground } from './text-background.js';
-import { textParagraphs, type ParagraphMarker } from './paragraphs.js';
-import type { VisioStyle, VisioText, VisioTextRun } from './model.js';
-import { transform } from './geometry.js';
-import { number, sectionRows, type Cells, type Report, type Sheet } from './sheet.js';
+import { savedFillGradient } from './saved-fill-gradient';
+import { themeLinearGradient } from './theme-gradient';
+import { themeLineWeight, reportThemeEffects, themeSolidLinePattern } from './theme-line';
+import { lineCap } from './line-style';
+import { linePattern } from './line-pattern';
+import { themeColor, type ThemeResources } from './theme-resolve';
+import { textBackground } from './text-background';
+import { textParagraphs, type ParagraphMarker } from './paragraphs';
+import type { VisioStyle, VisioText, VisioTextRun } from './model';
+import { transform } from './geometry';
+import { number, sectionRows, type Cells, type Report, type Sheet } from './sheet';
 
 export interface Resources extends ThemeResources {
 	colors: Map<string, string>;

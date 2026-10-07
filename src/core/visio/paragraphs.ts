@@ -1,6 +1,6 @@
-import type { VisioParagraph, VisioTextRun } from './model.js';
-import { number, sectionRows, type Cells, type Report, type Sheet } from './sheet.js';
-import type { Resources } from './style.js';
+import type { VisioParagraph, VisioTextRun } from './model';
+import { number, sectionRows, type Cells, type Report, type Sheet } from './sheet';
+import type { Resources } from './style';
 
 export interface ParagraphMarker {
 	offset: number;

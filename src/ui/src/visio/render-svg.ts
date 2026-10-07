@@ -11,16 +11,16 @@ import {
 	hasVisibleShapeContent,
 	EMPTY_LAYER_OVERRIDES,
 	type LayerVisibilityOverride,
-} from './viewer-layers.js';
-import { fillPaint } from './render-fill.js';
-import { renderImage } from './render-image.js';
-import { renderForeignVectorShape } from './render-foreign-vector-shape.js';
+} from './viewer-layers';
+import { fillPaint } from './render-fill';
+import { renderImage } from './render-image';
+import { renderForeignVectorShape } from './render-foreign-vector-shape';
 import { ForeignVectorBudget } from 'ooxml-core/visio/ui';
-import { RenderResources } from './render-resources.js';
-import { applyArrowheads } from './arrowheads.js';
+import { RenderResources } from './render-resources';
+import { applyArrowheads } from './arrowheads';
 import { assertViewableDocument } from 'ooxml-core/visio/ui';
-import { createTextLayoutBudget, type TextLayoutBudget } from './text-layout.js';
-import { renderText } from './render-text.js';
+import { createTextLayoutBudget, type TextLayoutBudget } from './text-layout';
+import { renderText } from './render-text';
 
 const NS = 'http://www.w3.org/2000/svg';
 export function svgElement<K extends keyof SVGElementTagNameMap>(name: K): SVGElementTagNameMap[K] {

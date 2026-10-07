@@ -1,13 +1,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { sanitizeVisioForeignVectorTree, type VisioDocument } from 'ooxml-core/visio';
 import { demoDocument } from 'ooxml-core/visio/ui';
-import { renderPage } from './render-svg.js';
-import { exportPageSvg } from './export-svg.js';
-import { createPrintSnapshot } from './print-snapshot.js';
+import { renderPage } from './render-svg';
+import { exportPageSvg } from './export-svg';
+import { createPrintSnapshot } from './print-snapshot';
 import { copySnapshotScene } from 'ooxml-core/visio/ui';
 import { assertViewableDocument } from 'ooxml-core/visio/ui';
 import { inspectForeignVectorResource } from 'ooxml-core/visio/ui';
-import { mountViewer } from './binding.js';
+import { mountViewer } from './binding';
 
 function vector() {
 	return sanitizeVisioForeignVectorTree({

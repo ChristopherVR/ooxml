@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { downloadCopy, loadSampleTemplate, saveCommand, taskPane } from './ribbon.js';
+import { downloadCopy, loadSampleTemplate, saveCommand, taskPane } from './ribbon';
 import { createVsdxFixture } from './fixture.mjs';
 
 test('edits literal text locally, undoes/redoes and downloads a reopenable VSDX copy', async ({

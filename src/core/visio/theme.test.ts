@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
-import { parseVsdx } from './parser.js';
-import { parseXml } from '../xml/index.js';
-import { drawingColor } from './theme-color.js';
+import { parseVsdx } from './parser';
+import { parseXml } from '../xml/index';
+import { drawingColor } from './theme-color';
 import {
 	drawingNamespace,
 	generatedTheme,
 	themeFixture,
 	themeRelationship,
-} from './theme-fixtures.js';
-import { cell } from './test-fixtures.js';
+} from './theme-fixtures';
+import { cell } from './test-fixtures';
 
 async function parse(options: Parameters<typeof themeFixture>[0] = {}) {
 	const document = await parseVsdx(await themeFixture(options));

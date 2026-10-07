@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
 import { convertMetafileToSvgTree } from 'emf-converter';
 import { editVsdx, parseVsdx } from 'ooxml-core/visio';
-import type { EditWorkerRequest } from './worker-editor.js';
+import type { EditWorkerRequest } from './worker-editor';
 const worker = self as unknown as DedicatedWorkerGlobalScope;
 worker.onmessage = async (event: MessageEvent<EditWorkerRequest>) => {
 	if (event.origin && event.origin !== self.location.origin) return;

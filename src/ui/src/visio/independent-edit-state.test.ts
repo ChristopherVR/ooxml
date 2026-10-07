@@ -1,7 +1,7 @@
 import { expect, it, vi } from 'vitest';
-import { ViewerController } from './controller.js';
+import { ViewerController } from './controller';
 import { demoDocument } from 'ooxml-core/visio/ui';
-import type { EditTransactionResult, CancellableEditor } from './worker-editor.js';
+import type { EditTransactionResult, CancellableEditor } from './worker-editor';
 import { DocumentHistory } from 'ooxml-core/visio/ui';
 const model = () => structuredClone(demoDocument);
 const result = (n = 2): EditTransactionResult => ({

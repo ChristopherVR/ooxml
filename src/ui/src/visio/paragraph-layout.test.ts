@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { demoDocument } from 'ooxml-core/visio/ui';
-import { layoutParagraphs } from './paragraph-layout.js';
+import { layoutParagraphs } from './paragraph-layout';
 import type { VisioParagraph } from 'ooxml-core/visio';
 const paragraph: VisioParagraph = {
 	start: 0,
@@ -49,7 +49,7 @@ describe('paragraph layout', () => {
 });
 
 import { vi } from 'vitest';
-import { createTextLayoutBudget } from './text-layout.js';
+import { createTextLayoutBudget } from './text-layout';
 describe('indexed and bounded paragraph layout', () => {
 	it('indexes runs once rather than scanning every preceding run for each paragraph', () => {
 		const text = structuredClone(demoDocument.pages[0]!.shapes[0]!.text);

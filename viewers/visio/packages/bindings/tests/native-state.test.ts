@@ -1,5 +1,5 @@
 import { beforeEach, expect, it } from 'vitest';
-import { current, reset, setState } from './mock-binding.js';
+import { current, reset, setState } from './mock-binding';
 import { act, createElement, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createApp, defineComponent, h, nextTick, shallowRef } from 'vue';
@@ -10,12 +10,12 @@ import { mount, unmount, flushSync, tick } from 'svelte';
 import '@angular/compiler';
 import { createApplication } from '@angular/platform-browser';
 import { createComponent, provideZonelessChangeDetection } from '@angular/core';
-import { VisioViewer as ReactViewer, useVisioViewerState } from '../src/react.js';
-import { VisioViewer as VueViewer, useVisioViewerState as useVueState } from '../src/vue.js';
-import { VisioViewer as SolidViewer, createVisioViewerState } from '../src/solid.jsx';
-import { VisioViewerComponent } from '../src/angular.js';
+import { VisioViewer as ReactViewer, useVisioViewerState } from '../src/react';
+import { VisioViewer as VueViewer, useVisioViewerState as useVueState } from '../src/vue';
+import { VisioViewer as SolidViewer, createVisioViewerState } from '../src/solid';
+import { VisioViewerComponent } from '../src/angular';
 import SvelteViewer from '../src/VisioViewer.svelte';
-import type { ViewerHandle } from '../src/common.js';
+import type { ViewerHandle } from '../src/common';
 beforeEach(reset);
 const host = () => {
 	const element = document.createElement('div');

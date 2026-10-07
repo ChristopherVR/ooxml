@@ -1,13 +1,13 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import type { VisioEdit } from 'ooxml-core/visio';
-import { ViewerController } from './controller.js';
+import { ViewerController } from './controller';
 import { demoDocument } from 'ooxml-core/visio/ui';
-import { registerViewerControls } from './office-ui.js';
-import { ViewerCommands } from './viewer-commands.js';
-import { nextShapeId } from './viewer-draw-tool.js';
-import { createRibbon } from './ribbon.js';
-import { createRulers } from './viewer-ruler.js';
-import type { CancellableEditor } from './worker-editor.js';
+import { registerViewerControls } from './office-ui';
+import { ViewerCommands } from './viewer-commands';
+import { nextShapeId } from './viewer-draw-tool';
+import { createRibbon } from './ribbon';
+import { createRulers } from './viewer-ruler';
+import type { CancellableEditor } from './worker-editor';
 
 afterEach(() => document.body.replaceChildren());
 
@@ -197,7 +197,7 @@ describe('rectangle tool shape IDs', () => {
 
 describe('Visio context menus', () => {
 	it('opens the shape menu on right-click, selects the shape and runs Edit Text', async () => {
-		const { mountViewer } = await import('./binding.js');
+		const { mountViewer } = await import('./binding');
 		const host = document.createElement('div');
 		document.body.append(host);
 		const viewer = mountViewer(host, { document: structuredClone(demoDocument) });
@@ -228,7 +228,7 @@ describe('Visio context menus', () => {
 
 describe('Visio Tell me', () => {
 	it('finds ribbon commands, runs enabled ones and lists unsupported ones with reasons', async () => {
-		const { mountViewer } = await import('./binding.js');
+		const { mountViewer } = await import('./binding');
 		const host = document.createElement('div');
 		document.body.append(host);
 		const viewer = mountViewer(host, { document: structuredClone(demoDocument) });

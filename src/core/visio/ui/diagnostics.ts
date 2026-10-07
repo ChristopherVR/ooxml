@@ -1,4 +1,4 @@
-import type { VisioDiagnostic } from '../index.js';
+import type { VisioDiagnostic } from '../index';
 export interface CompatibilityNote {
 	message: string;
 	count: number;

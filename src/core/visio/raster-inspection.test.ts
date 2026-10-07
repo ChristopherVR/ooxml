@@ -5,12 +5,12 @@ import {
 	VisioImageError,
 	VISIO_RASTER_IMAGE_LIMITS,
 	type VisioImageOptions,
-} from './index.js';
-import { readVisioImage } from './media.js';
-import { crc32 } from './package-common.js';
-import { VisioPackage } from './package.js';
-import { child, type Report } from './sheet.js';
-import { relations, xml } from './test-fixtures.js';
+} from './index';
+import { readVisioImage } from './media';
+import { crc32 } from './package-common';
+import { VisioPackage } from './package';
+import { child, type Report } from './sheet';
+import { relations, xml } from './test-fixtures';
 
 const png = Uint8Array.from(
 	Buffer.from(

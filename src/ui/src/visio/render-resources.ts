@@ -1,5 +1,5 @@
 import type { VisioImage } from 'ooxml-core/visio';
-import { svgElement } from './render-svg.js';
+import { svgElement } from './render-svg';
 
 const MAX_EMBEDDED_BYTES = 16 * 1024 * 1024;
 /** One reference per shared core image resource, with explicit per-render disposal. */

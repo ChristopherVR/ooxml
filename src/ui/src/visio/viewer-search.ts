@@ -1,5 +1,5 @@
 import { TEXT_SEARCH_LIMITS, textSearchStatus } from 'ooxml-core/visio/ui';
-import type { ViewerController, ViewerState } from './controller.js';
+import type { ViewerController, ViewerState } from './controller';
 
 export type FindBar = HTMLElement & {
 	open: boolean;

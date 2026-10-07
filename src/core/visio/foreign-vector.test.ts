@@ -5,9 +5,9 @@ import {
 	VisioForeignVectorError,
 	VISIO_FOREIGN_VECTOR_LIMITS,
 	type VisioForeignVectorPath,
-} from './foreign-vector.js';
+} from './foreign-vector';
 
-import { root, path, group, clip, defs } from './foreign-vector-test-fixtures.js';
+import { root, path, group, clip, defs } from './foreign-vector-test-fixtures';
 
 const first = (d: string) =>
 	(sanitize(root([path(d)])).items[0] as VisioForeignVectorPath).commands;

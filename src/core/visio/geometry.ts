@@ -1,12 +1,12 @@
-import { splineGeometry } from './spline-geometry.js';
-import { geometryRow } from './complex-geometry.js';
+import { splineGeometry } from './spline-geometry';
+import { geometryRow } from './complex-geometry';
 import {
 	roundedRectanglePath,
 	roundedOrthogonalPath,
 	type RectanglePoint,
-} from './rounded-geometry.js';
-import type { VisioGeometry, VisioMatrix } from './model.js';
-import { number, type Cells, type Report, type Sheet } from './sheet.js';
+} from './rounded-geometry';
+import type { VisioGeometry, VisioMatrix } from './model';
+import { number, type Cells, type Report, type Sheet } from './sheet';
 
 const clean = (value: number) => (Math.abs(value) < 1e-12 ? 0 : Number(value.toFixed(9)));
 const point = (x: number, y: number) => `${clean(x)} ${clean(y)}`;

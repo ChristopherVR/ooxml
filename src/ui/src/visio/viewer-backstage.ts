@@ -1,6 +1,6 @@
-import type { ViewerState } from './controller.js';
+import type { ViewerState } from './controller';
 import type { VsdxSource } from 'ooxml-core/visio/ui';
-import { backstageItems, type BackstagePage } from './backstage.js';
+import { backstageItems, type BackstagePage } from './backstage';
 
 /** What the backstage needs from the element; every action delegates to existing APIs. */
 export interface BackstageHost {

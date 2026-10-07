@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { VisioDocument } from 'ooxml-core/visio';
-import { ViewerController } from './controller.js';
+import { ViewerController } from './controller';
 import { demoDocument } from 'ooxml-core/visio/ui';
-import type { CancellableEditor, EditTransactionResult } from './worker-editor.js';
+import type { CancellableEditor, EditTransactionResult } from './worker-editor';
 
 function scene(format: VisioDocument['format']): VisioDocument {
 	return { ...structuredClone(demoDocument), format };

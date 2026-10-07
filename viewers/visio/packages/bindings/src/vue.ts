@@ -23,7 +23,7 @@ import {
 	type ViewerHandle,
 	type ViewerProperties,
 	type ViewerState,
-} from './common.js';
+} from './common';
 /** Vue props and emitted event names are checked against the shared contract. */
 export const VisioViewer = defineComponent({
 	name: 'VisioViewer',
@@ -87,4 +87,4 @@ export type {
 	ViewerEvents,
 	ViewerEditState,
 	VsdxExportResult,
-} from './common.js';
+} from './common';

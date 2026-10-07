@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { normalizedNurbs, type NurbsControl } from './nurbs.js';
+import { normalizedNurbs, type NurbsControl } from './nurbs';
 
 type Point = readonly [number, number];
 function sample(controls: NurbsControl[], knots: number[], degree: number) {

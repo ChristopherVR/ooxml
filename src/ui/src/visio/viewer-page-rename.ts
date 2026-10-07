@@ -1,4 +1,4 @@
-import type { ViewerController, ViewerState } from './controller.js';
+import type { ViewerController, ViewerState } from './controller';
 import { editErrorMessage } from 'ooxml-core/visio/ui';
 
 type Dialog = HTMLElement & { open: boolean; show(): void; close(): void };

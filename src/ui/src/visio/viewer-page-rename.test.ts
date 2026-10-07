@@ -1,9 +1,9 @@
 import { expect, it, vi } from 'vitest';
 import { editVsdx, parseVsdx } from 'ooxml-core/visio';
-import { ViewerController } from './controller.js';
-import { ViewerPageRename } from './viewer-page-rename.js';
-import { registerViewerControls } from './office-ui.js';
-import { fixture, shape } from '../../../core/visio/test-fixtures.js';
+import { ViewerController } from './controller';
+import { ViewerPageRename } from './viewer-page-rename';
+import { registerViewerControls } from './office-ui';
+import { fixture, shape } from '../../../core/visio/test-fixtures';
 
 async function setup() {
 	registerViewerControls();

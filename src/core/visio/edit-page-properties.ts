@@ -1,9 +1,9 @@
-import { parseAppProperties, writeAppProperties } from '../opc/properties/index.js';
-import { NS, parseXml } from '../xml/index.js';
-import { attribute, children } from './sheet.js';
-import { fail, type VisioPackageLimits } from './package-common.js';
-import { serializeEditedXml } from './edit-text.js';
-import type { VisioPackage } from './package.js';
+import { parseAppProperties, writeAppProperties } from '../opc/properties/index';
+import { NS, parseXml } from '../xml/index';
+import { attribute, children } from './sheet';
+import { fail, type VisioPackageLimits } from './package-common';
+import { serializeEditedXml } from './edit-text';
+import type { VisioPackage } from './package';
 
 /** Refresh the existing Pages category without replacing other property groups/extensions. */
 export async function updatePageAppProperties(

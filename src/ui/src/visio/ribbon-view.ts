@@ -1,4 +1,4 @@
-import { check, command, commandRow, group, menu, stack } from './ribbon-parts.js';
+import { check, command, commandRow, group, menu, stack } from './ribbon-parts';
 
 const EDITING_AIDS = 'Needs interactive shape editing aids.';
 const WINDOWS = 'The viewer shows one drawing window.';

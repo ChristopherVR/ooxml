@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { parseXml } from '../xml/index.js';
-import { parseVsdx } from './index.js';
-import { indexLayers, pageLayers, shapeLayers } from './layers.js';
-import { readSheet } from './sheet.js';
-import { cell, fixture, row, section, shape, xml } from './test-fixtures.js';
+import { parseXml } from '../xml/index';
+import { parseVsdx } from './index';
+import { indexLayers, pageLayers, shapeLayers } from './layers';
+import { readSheet } from './sheet';
+import { cell, fixture, row, section, shape, xml } from './test-fixtures';
 
 const resources = { colors: new Map<string, string>(), fonts: new Map<string, string>() };
 const sheet = (data: string) => readSheet(parseXml(xml('PageSheet', data)).documentElement);

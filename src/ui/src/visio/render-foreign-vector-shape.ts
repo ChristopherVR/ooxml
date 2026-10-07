@@ -1,7 +1,7 @@
 import type { VisioShape } from 'ooxml-core/visio';
 import type { ForeignVectorBudget } from 'ooxml-core/visio/ui';
-import { renderForeignVector } from './render-foreign-vector.js';
-import { svgElement } from './render-svg.js';
+import { renderForeignVector } from './render-foreign-vector';
+import { svgElement } from './render-svg';
 
 let clipId = 0;
 

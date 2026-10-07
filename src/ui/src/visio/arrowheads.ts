@@ -4,7 +4,7 @@ import {
 	layoutVisioFilledArrowLine,
 	type VisioStyle,
 } from 'ooxml-core/visio';
-import { safeColor, svgElement } from './render-svg.js';
+import { safeColor, svgElement } from './render-svg';
 let markerId = 0;
 /** Native measured arrow subsets with explicit filled-path fallbacks. */
 export function applyArrowheads(
