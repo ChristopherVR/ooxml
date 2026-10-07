@@ -1,8 +1,8 @@
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
-import { editVsdx } from './edit.js';
-import { VisioPackage } from './package.js';
-import { fixture, shape, ns } from './test-fixtures.js';
+import { editVsdx } from './edit';
+import { VisioPackage } from './package';
+import { fixture, shape, ns } from './test-fixtures';
 const edit = { type: 'replace-plain-text' as const, pageId: '0', shapeId: '1', text: 'Changed' };
 describe('VSDX edit preservation', () => {
 	it('preserves every untouched part byte-for-byte and unknown edited-page content semantically', async () => {

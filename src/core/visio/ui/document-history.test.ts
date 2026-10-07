@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { DocumentHistory, EDIT_HISTORY_LIMITS } from './document-history.js';
+import { DocumentHistory, EDIT_HISTORY_LIMITS } from './document-history';
 it('owns snapshots, truncates by entry count and pins the original independently', () => {
 	const bytes = new Uint8Array([1]);
 	const history = new DocumentHistory(bytes);

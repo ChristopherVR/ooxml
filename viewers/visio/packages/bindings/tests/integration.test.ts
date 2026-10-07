@@ -8,13 +8,13 @@ import { createComponent as createAngular, provideZonelessChangeDetection } from
 import { createComponent as createSolid, createSignal } from 'solid-js';
 import { render } from 'solid-js/web';
 import { mount, unmount, flushSync, tick } from 'svelte';
-import { VisioViewer as ReactViewer } from '../src/react.js';
-import { VisioViewer as VueViewer } from '../src/vue.js';
-import { VisioViewerComponent } from '../src/angular.js';
-import { VisioViewer as SolidViewer } from '../src/solid.jsx';
+import { VisioViewer as ReactViewer } from '../src/react';
+import { VisioViewer as VueViewer } from '../src/vue';
+import { VisioViewerComponent } from '../src/angular';
+import { VisioViewer as SolidViewer } from '../src/solid';
 import SvelteHarness from './IntegrationHarness.svelte';
 import { demoDocument } from 'ooxml-core/visio/ui';
-import { mountViewer } from '../src/vanilla.js';
+import { mountViewer } from '../src/vanilla';
 import {
 	eventKeys,
 	propertyKeys,
@@ -23,7 +23,7 @@ import {
 	type ViewerHandle,
 	type ViewerEvents,
 	type ViewerOptions,
-} from '../src/common.js';
+} from '../src/common';
 
 type NativeMount = (
 	host: HTMLElement,

@@ -1,5 +1,5 @@
-import { VisioPackageError } from './package.js';
-import { emptySheet, mergeSheets, number, type Report, type Sheet } from './sheet.js';
+import { VisioPackageError } from './package';
+import { emptySheet, mergeSheets, number, type Report, type Sheet } from './sheet';
 
 export interface StyleRecord {
 	sheet: Sheet;

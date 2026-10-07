@@ -1,5 +1,5 @@
 import JSZip from 'jszip';
-import { parseXml } from '../xml/index.js';
+import { parseXml } from '../xml/index';
 import {
 	DEFAULTS,
 	VisioPackageError,
@@ -10,14 +10,14 @@ import {
 	type Entry,
 	type VisioPackageLimits,
 	type VisioPackageRelationship,
-} from './package-common.js';
-import { inspectZip } from './zip-validation.js';
-import { inspectXml, inspectNamespaces } from './xml-validation.js';
+} from './package-common';
+import { inspectZip } from './zip-validation';
+import { inspectXml, inspectNamespaces } from './xml-validation';
 export {
 	VisioPackageError,
 	type VisioPackageLimits,
 	type VisioPackageRelationship,
-} from './package-common.js';
+} from './package-common';
 
 function resolveTarget(source: string, target: string): string {
 	const decoded = decodePath(target);

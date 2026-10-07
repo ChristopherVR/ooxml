@@ -328,3 +328,37 @@ curves and malformed coordinates are declined. No guessed short-segment clamping
 is included. Analytic, source and secondary-renderer checks do not establish
 native Microsoft Visio pixel equivalence. The companion core
 `docs/visio-connector-rounding.md` records primary semantics and fixture hashes.
+
+## Native layer paint and classic linear fills (2026-10-07)
+
+The shared core now applies a single colored layer to geometry and character
+paint without rewriting the source color cells. Shapes in multiple layers retain
+their own colors, matching the native cases. Solid fills become white; classic
+orthogonal fill patterns 25-30 retain native two- or three-stop gradients. Modern
+cached stop colors yield to the single-layer paint context. Character alpha uses
+Visio's observed byte quantization, and shared SVG rendering and immutable export
+snapshots retain that alpha.
+
+`scripts/record-visio-layer-colors.ps1` creates an owned invisible Visio 16 instance
+and records 21 native pages as VSDX, SVG and PNG. Compact reference measurements
+are committed in `layer-colors-native.json`; native binary files remain local.
+Cases cover no color, multiple/mixed layers, zero/partial/full and fractional
+transparency, source alpha, no fill/line, hatch, modern gradients and patterns
+25-30. Hatch rendering remains unsupported and diagnosed. Groups, foreign paint
+and text-background overrides remain unverified and are diagnosed when applicable.
+
+The native corpus passes core parsing, move/save/reparse and shared UI rendering
+comparisons. Native reopening of the edited package remains unverified: the owned
+COM instance stalled when opening both the edited file and Visio's own original.
+The stalled test instances were closed; the existing user application was untouched.
+This is not evidence of native save/reopen parity.
+
+Local checks: 1,994 core Visio tests passed (41 optional skips with only this native
+corpus enabled), followed by seven focused tests after adding three regressions;
+710 shared UI tests passed (six optional skips). Strict core and viewer typechecks,
+79 framework binding tests and five SSR tests passed. The broader UI declaration
+build still reports the existing seven Teams/PPTX dependency/type errors.
+All six Chromium framework routes passed the 21-case live/exported SVG native
+stroke-pixel comparison (252 RGBA comparisons). All six page insertion, history
+and saved-package browser regressions also passed. These are sampled stroke
+comparisons, not complete image or text-layout parity.

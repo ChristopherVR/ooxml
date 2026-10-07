@@ -12,5 +12,6 @@ export * from './drawing-fill.js';
 export * from './drawing-text.js';
 export * from './drawing-geometry.js';
 export * from './drawing.js';
+export * from './drawing-bounds.js';
 export * from './load.js';
 export { attributeReader } from './dom.js';

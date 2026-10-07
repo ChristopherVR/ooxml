@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { editVsdx, parseVsdx } from 'ooxml-core/visio';
-import { ViewerController } from './controller.js';
-import { insertRectangle } from './viewer-draw-tool.js';
-import { renderPage } from './render-svg.js';
-import { exportPageSvg } from './export-svg.js';
-import { cell, fixture } from '../../../core/visio/test-fixtures.js';
+import { ViewerController } from './controller';
+import { insertRectangle } from './viewer-draw-tool';
+import { renderPage } from './render-svg';
+import { exportPageSvg } from './export-svg';
+import { cell, fixture } from '../../../core/visio/test-fixtures';
 import evidence from '../../../core/visio/__fixtures__/page-scales-native.json';
 
 it('inserts, exports, undoes and redoes a rectangle at the pointer location on a scaled page', async () => {

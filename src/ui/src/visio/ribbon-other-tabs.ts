@@ -1,12 +1,4 @@
-import {
-	check,
-	command,
-	commandRow,
-	group,
-	menu,
-	stack,
-	type CommandSpec,
-} from './ribbon-parts.js';
+import { check, command, commandRow, group, menu, stack, type CommandSpec } from './ribbon-parts';
 
 const PAGES = 'Needs core page insertion.';
 const MEDIA = 'Needs core image and object insertion.';

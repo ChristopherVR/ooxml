@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { VsdDocument } from '@christophervr/ole2';
 import { parseVsd } from '@christophervr/ole2';
-import { parseLegacyVsd } from './legacy.js';
-import { loadVisio } from './load.js';
-import { parseVsdx } from './parser.js';
-import { fixture, shape, rectangle } from './test-fixtures.js';
+import { parseLegacyVsd } from './legacy';
+import { loadVisio } from './load';
+import { parseVsdx } from './parser';
+import { fixture, shape, rectangle } from './test-fixtures';
 
 vi.mock('@christophervr/ole2', async (importOriginal) => ({
 	...(await importOriginal<typeof import('@christophervr/ole2')>()),

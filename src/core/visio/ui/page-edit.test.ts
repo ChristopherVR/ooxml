@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { visioPageEditToDrawing } from './page-edit.js';
-import { demoDocument } from './demo-document.js';
-import { copySnapshotScene } from './snapshot-scene.js';
-import { assertViewableDocument } from './scene-validation.js';
+import { visioPageEditToDrawing } from './page-edit';
+import { demoDocument } from './demo-document';
+import { copySnapshotScene } from './snapshot-scene';
+import { assertViewableDocument } from './scene-validation';
 
 describe('page/drawing edit coordinate boundary', () => {
 	it('converts creation, move and resize without altering text/delete edits or caller state', () => {

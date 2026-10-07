@@ -46,6 +46,20 @@ function data(over: Partial<PptxSmartArtData> = {}): PptxSmartArtData {
 // ── computeDrawingViewBox ──────────────────────────────────────────────────────
 
 describe('computeDrawingViewBox', () => {
+	it('includes an independent text frame with partially specified fields', () => {
+		expect(
+			computeDrawingViewBox([
+				shape({
+					x: 10,
+					y: 20,
+					width: 100,
+					height: 50,
+					textFrameX: -20,
+					textFrameWidth: 200,
+				}),
+			]),
+		).toEqual({ minX: -20, minY: 20, width: 200, height: 50 });
+	});
 	it('fits a single shape, rebasing to its own origin', () => {
 		const vb = computeDrawingViewBox([shape({ x: 10, y: 20, width: 100, height: 50 })]);
 		expect(vb).toStrictEqual({ minX: 10, minY: 20, width: 100, height: 50 });

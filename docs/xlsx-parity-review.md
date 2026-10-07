@@ -333,6 +333,123 @@ passed. The new data-bar browser regression and the 12 clipboard/file browser
 checks passed. Core/UI/viewer typechecks, strict core ESM/CJS/declaration builds,
 the UI build and all seven viewer package builds passed.
 
+## Data-bar axis and length follow-up
+
+The core now calculates normalized bar starts, lengths, growth direction and axis
+positions. Automatic axes separate positive and negative bars at zero; middle axes
+allocate half the cell width to each side. Explicit RTL mirrors that geometry.
+Automatic minimum/maximum limits include zero for one-sided ranges. Equal limits
+produce half-length bars, while all-zero axis ranges show the axis without a bar.
+The grid consumes these coordinates and paints the rule's dashed axis color.
+
+`scripts/record-xlsx-databar-geometry.ps1` uses a fresh hidden Excel application to
+record 72 worksheet/PDF cases, spanning three axis modes, both directions,
+automatic versus numeric limits, mixed/one-sided values and constant ranges.
+`scripts/extract-xlsx-databar-geometry.py` uses PyMuPDF to extract native solid-fill
+vectors, normalized to a full-length native reference bar. Committed JSON retains
+the source worksheet XML and measured coordinates, not generated workbooks/PDFs.
+Regression comparisons allow 0.015 for axis gaps and print quantization. All 72
+native comparisons and the legacy-length save/reload regression passed.
+
+Legacy base rules now retain explicit minimum/maximum length percentages and use
+their specified interpolation (defaults 10/90). That formula is documented in
+[Microsoft's base data-bar reference](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.databar?view=openxml-3.0.1).
+Automatic limits and axis options use the preserved extension and shared XML/color
+readers rather than introducing a second OOXML model.
+
+This covers the measured normalized geometry. Advanced non-default length
+percentages, thresholds outside the measured cases, contextual reading direction,
+gradient endpoint intensity and pixel-level insets/dashes still need native
+comparisons. Dedicated editor controls remain incomplete.
+
+Verification: 5,404 core XLSX tests, 313 shared UI tests, 47 binding tests and
+13 clipboard/file/data-bar browser checks passed. Core/UI/viewer typechecks,
+core ESM/CJS/declaration builds, the UI build and all seven binding package builds
+passed. Excel also opened and saved a library-authored legacy bar with explicit
+20/80 lengths, reporting those same percentages through its native object model.
+
+## Advanced data-bar percentages and context follow-up
+
+Native measurements now cover seven additional percentage pairs: 20/80, 10/90,
+40/40, 0/0, 5/55, 40/80 and 100/100. These 504 cases exposed and fixed minimum
+lengths around zero, percentage-dependent automatic axis positions, one-sided
+negative axis placement and capped middle-axis lengths. A nonzero minimum gives
+zero a half-minimum-length bar. Equal percentage bounds and zero/full lengths
+are included. The existing shared geometry helper applies the resulting rules.
+
+Another 108 cases record contextual direction on both sheet directions and all
+three cell reading orders. They retain native worksheet and style XML as well as
+PDF vectors. Context follows the sheet's RTL setting even when a cell's reading
+order differs, confirming the existing fallback. That measured behavior agrees
+with [Microsoft's spreadsheet rendering protocol](https://learn.microsoft.com/en-us/openspecs/sharepoint_protocols/ms-exspxml3/a32e609d-a33b-460a-b2db-b1153730699b).
+Together with the earlier 72 cases, 684 native geometry comparisons pass.
+
+Logical length percentages now come from the linked x14 rule on read. One shared
+resolver supplies layout and the legacy fallback writer. Typed edits update the
+extension when saving; full-width 0/100 bars retain Excel's required legacy 10/90
+fallback. Editing, clipboard paste, undo/redo and save/reload tests cover those
+representations. Excel accepted four library-authored edits (5/55, 0/100, 40/40
+and 0/0), saved them, and the library reloaded the same logical percentages.
+
+Reproduce each length profile with `scripts/record-xlsx-databar-geometry.ps1`
+using `-PercentMin`, `-PercentMax` and a separate `-OutputFolder`. Extract each
+folder with `scripts/extract-xlsx-databar-geometry.py <folder> <output-json>`;
+use `--append` after the first profile to merge disjoint cases from the same Excel
+build. Context profiles use `-Context -Kinds mixed,positive,negative` and
+`-ReadingOrder -5002`, `-5003` or `-5004`. Native PDFs/workbooks stay in temporary
+folders. The committed fixtures retain measurements and the source XML.
+
+Verification: 6,020 core XLSX tests, 313 shared UI tests, 47 binding tests and
+13 focused browser checks passed, along with core/UI/viewer typechecks and core
+ESM/CJS/declaration builds. The geometry comparison tolerance remains 0.015 for
+axis gaps and print quantization. Other threshold configurations, gradient
+endpoint intensity, pixel-level insets/dashes and dedicated editor controls
+still need work; these checks do not establish whole-workbook Excel parity.
+
+## Shared chart UI and SmartArt review
+
+The XLSX Insert Chart / Change Chart Type picker now uses `office-ui-gallery`,
+the same component behind PowerPoint's `pptx-ui-ribbon-gallery`, with labelled
+visual tiles and keyboard selection. A new panel mode reuses its tile rendering,
+selection contract, theme styles and safe SVG parser. Chart data and SVG generation
+remain in the strict XLSX core. No PowerPoint engine or model was copied into XLSX.
+
+Existing column/bar charts can now change between clustered, stacked and 100%
+stacked through the dialog. Previously the grouping control was hidden while
+editing, and submission only changed the chart family. Undo restores the original
+chart and redo/save/reopen retain the edited grouping, title and series.
+
+`scripts/record-xlsx-chart-types.ps1` records six transitions in an isolated hidden
+Excel instance. The committed Excel 16.0 build 20430 fixture retains native chart
+XML, series formulas, names and values. Six regression tests check reading those
+parts and all 36 source-to-target edits through save/reload and undo. Native Excel
+also opened and saved six library-authored variants; the library reloaded each with
+the expected family, grouping, title and values. Regenerating a changed chart type
+can materialize default theme colors and does not establish full style fidelity.
+
+Playwright MCP reviewed the chart dialog and its keyboard selection, plus its fit
+inside a 390 px viewport. Browser coverage exercises insertion, grouping changes,
+undo/redo and save/reopen. The existing native SmartArt fixture was inspected
+through COM and Playwright MCP: Basic Block List, three nodes, labels Plan/Build/Ship,
+rendered by `office-ui-smartart`. This checks those labels and cached drawing
+display, not pixel equivalence or SmartArt editing.
+
+Next shared UI targets are Chart Design's color/style/layout galleries and
+SmartArt's layout/color/style galleries and text pane. Their PowerPoint operations
+currently depend on its product model; extract format-neutral behavior into shared
+`chart` / `diagram` core areas and shared UI, then add XLSX adapters and native
+fixtures. SmartArt insertion/reflow/text editing, effects and typography fidelity,
+advanced chart types/axes/labels, recommended-chart behavior and whole-workbook
+visual equivalence remain unverified or unsupported. The data-bar rule editor also
+needs controls for the advanced settings already preserved by core.
+
+Verification: 314 XLSX UI tests plus ten shared gallery tests, 14 focused PowerPoint
+gallery tests, 47 binding tests and six native chart tests passed. Core/UI/viewer
+typechecks, core and UI builds, viewer package builds, published-import guards,
+script tests and clean-consumer package smoke checks passed. The new browser test
+covers keyboard selection, narrow-screen fit, grouping edits and save/reopen;
+all 62 browser tests passed, including the six-framework matrix.
+
 ## Evidence required for parity
 
 Track reading, display, editing, calculation and writing separately for each feature. A retained

@@ -1,0 +1,492 @@
+﻿{
+	"application": "Microsoft Visio",
+	"version": "16.0",
+	"cases": [
+		{
+			"name": "opaque",
+			"pageId": "0",
+			"shapeId": "1",
+			"members": "0",
+			"layerColor": "RGB(255,0,0)",
+			"layerTransparency": 0,
+			"paint": {
+				"fill": "#ffffff",
+				"fillOpacity": 1,
+				"stroke": "#ff0000",
+				"strokeOpacity": 1,
+				"text": "#ff0000",
+				"textOpacity": 1,
+				"gradientAngle": null,
+				"gradientStops": [],
+				"strokePixel": [255, 0, 0, 255]
+			}
+		},
+		{
+			"name": "partial",
+			"pageId": "4",
+			"shapeId": "1",
+			"members": "0",
+			"layerColor": "RGB(255,0,0)",
+			"layerTransparency": 0.4,
+			"paint": {
+				"fill": "#ffffff",
+				"fillOpacity": 0.6,
+				"stroke": "#ff0000",
+				"strokeOpacity": 0.6,
+				"text": "#ff0000",
+				"textOpacity": 0.6,
+				"gradientAngle": null,
+				"gradientStops": [],
+				"strokePixel": [255, 102, 102, 255]
+			}
+		},
+		{
+			"name": "transparent",
+			"pageId": "5",
+			"shapeId": "1",
+			"members": "0",
+			"layerColor": "RGB(255,0,0)",
+			"layerTransparency": 1,
+			"paint": {
+				"fill": "#ffffff",
+				"fillOpacity": 0,
+				"stroke": "#ff0000",
+				"strokeOpacity": 0,
+				"text": "#ff0000",
+				"textOpacity": 0,
+				"gradientAngle": null,
+				"gradientStops": [],
+				"strokePixel": [255, 255, 255, 255]
+			}
+		},
+		{
+			"name": "none",
+			"pageId": "6",
+			"shapeId": "1",
+			"members": "0",
+			"layerColor": "255",
+			"layerTransparency": 0,
+			"paint": {
+				"fill": "#00ff00",
+				"fillOpacity": 1,
+				"stroke": "#0000ff",
+				"strokeOpacity": 1,
+				"text": "#00ffff",
+				"textOpacity": 1,
+				"gradientAngle": null,
+				"gradientStops": [],
+				"strokePixel": [0, 0, 255, 255]
+			}
+		},
+		{
+			"name": "multiple",
+			"pageId": "7",
+			"shapeId": "1",
+			"members": "0;1",
+			"layerColor": "RGB(255,0,0)",
+			"layerTransparency": 0,
+			"paint": {
+				"fill": "#00ff00",
+				"fillOpacity": 1,
+				"stroke": "#0000ff",
+				"strokeOpacity": 1,
+				"text": "#00ffff",
+				"textOpacity": 1,
+				"gradientAngle": null,
+				"gradientStops": [],
+				"strokePixel": [0, 0, 255, 255]
+			}
+		},
+		{
+			"name": "mixed",
+			"pageId": "8",
+			"shapeId": "1",
+			"members": "0;1",
+			"layerColor": "RGB(255,0,0)",
+			"layerTransparency": 0,
+			"paint": {
+				"fill": "#00ff00",
+				"fillOpacity": 1,
+				"stroke": "#0000ff",
+				"strokeOpacity": 1,
+				"text": "#00ffff",
+				"textOpacity": 1,
+				"gradientAngle": null,
+				"gradientStops": [],
+				"strokePixel": [0, 0, 255, 255]
+			}
+		},
+		{
+			"name": "source-alpha",
+			"pageId": "9",
+			"shapeId": "1",
+			"members": "0",
+			"layerColor": "RGB(255,0,0)",
+			"layerTransparency": 0.4,
+			"paint": {
+				"fill": "#ffffff",
+				"fillOpacity": 0.6,
+				"stroke": "#ff0000",
+				"strokeOpacity": 0.6,
+				"text": "#ff0000",
+				"textOpacity": 0.6,
+				"gradientAngle": null,
+				"gradientStops": [],
+				"strokePixel": [255, 102, 102, 255]
+			}
+		},
+		{
+			"name": "no-fill",
+			"pageId": "10",
+			"shapeId": "1",
+			"members": "0",
+			"layerColor": "RGB(255,0,0)",
+			"layerTransparency": 0,
+			"paint": {
+				"fill": "none",
+				"fillOpacity": 1,
+				"stroke": "#ff0000",
+				"strokeOpacity": 1,
+				"text": "#ff0000",
+				"textOpacity": 1,
+				"gradientAngle": null,
+				"gradientStops": [],
+				"strokePixel": [255, 0, 0, 255]
+			}
+		},
+		{
+			"name": "no-line",
+			"pageId": "11",
+			"shapeId": "1",
+			"members": "0",
+			"layerColor": "RGB(255,0,0)",
+			"layerTransparency": 0,
+			"paint": {
+				"fill": "#ffffff",
+				"fillOpacity": 1,
+				"stroke": "none",
+				"strokeOpacity": 1,
+				"text": "#ff0000",
+				"textOpacity": 1,
+				"gradientAngle": null,
+				"gradientStops": [],
+				"strokePixel": [255, 255, 255, 255]
+			}
+		},
+		{
+			"name": "gradient",
+			"pageId": "12",
+			"shapeId": "1",
+			"members": "0",
+			"layerColor": "RGB(255,0,0)",
+			"layerTransparency": 0,
+			"paint": {
+				"fill": "url(#grad0-4)",
+				"fillOpacity": 1,
+				"stroke": "#ff0000",
+				"strokeOpacity": 1,
+				"text": "#ff0000",
+				"textOpacity": 1,
+				"gradientAngle": 0,
+				"gradientStops": [
+					{
+						"offset": 0,
+						"color": "#ff0000",
+						"opacity": 1
+					},
+					{
+						"offset": 1,
+						"color": "#ffffff",
+						"opacity": 1
+					}
+				],
+				"strokePixel": [255, 0, 0, 255]
+			}
+		},
+		{
+			"name": "hatch",
+			"pageId": "13",
+			"shapeId": "1",
+			"members": "0",
+			"layerColor": "RGB(255,0,0)",
+			"layerTransparency": 0,
+			"paint": {
+				"fill": "url(#ptrn2-4)",
+				"fillOpacity": 1,
+				"stroke": "#ff0000",
+				"strokeOpacity": 1,
+				"text": "#ff0000",
+				"textOpacity": 1,
+				"gradientAngle": null,
+				"gradientStops": [],
+				"strokePixel": [255, 0, 0, 255]
+			}
+		},
+		{
+			"name": "uncolored-alpha",
+			"pageId": "14",
+			"shapeId": "1",
+			"members": "0",
+			"layerColor": "255",
+			"layerTransparency": 0,
+			"paint": {
+				"fill": "#00ff00",
+				"fillOpacity": 1,
+				"stroke": "#0000ff",
+				"strokeOpacity": 1,
+				"text": "#00ffff",
+				"textOpacity": 0.498039,
+				"gradientAngle": null,
+				"gradientStops": [],
+				"strokePixel": [0, 0, 255, 255]
+			}
+		},
+		{
+			"name": "modern-gradient",
+			"pageId": "15",
+			"shapeId": "1",
+			"members": "0",
+			"layerColor": "RGB(255,0,0)",
+			"layerTransparency": 0,
+			"paint": {
+				"fill": "#ffffff",
+				"fillOpacity": 1,
+				"stroke": "#ff0000",
+				"strokeOpacity": 1,
+				"text": "#ff0000",
+				"textOpacity": 1,
+				"gradientAngle": null,
+				"gradientStops": [],
+				"strokePixel": [255, 0, 0, 255]
+			}
+		},
+		{
+			"name": "modern-gradient-partial",
+			"pageId": "16",
+			"shapeId": "1",
+			"members": "0",
+			"layerColor": "RGB(255,0,0)",
+			"layerTransparency": 0.4,
+			"paint": {
+				"fill": "#ffffff",
+				"fillOpacity": 0.6,
+				"stroke": "#ff0000",
+				"strokeOpacity": 0.6,
+				"text": "#ff0000",
+				"textOpacity": 0.6,
+				"gradientAngle": null,
+				"gradientStops": [],
+				"strokePixel": [255, 102, 102, 255]
+			}
+		},
+		{
+			"name": "fractional",
+			"pageId": "17",
+			"shapeId": "1",
+			"members": "0",
+			"layerColor": "RGB(255,0,0)",
+			"layerTransparency": 0.415,
+			"paint": {
+				"fill": "#ffffff",
+				"fillOpacity": 0.58,
+				"stroke": "#ff0000",
+				"strokeOpacity": 0.58,
+				"text": "#ff0000",
+				"textOpacity": 0.584314,
+				"gradientAngle": null,
+				"gradientStops": [],
+				"strokePixel": [255, 106, 106, 255]
+			}
+		},
+		{
+			"name": "linear26",
+			"pageId": "18",
+			"shapeId": "1",
+			"members": "0",
+			"layerColor": "RGB(255,0,0)",
+			"layerTransparency": 0,
+			"paint": {
+				"fill": "url(#grad0-4)",
+				"fillOpacity": 1,
+				"stroke": "#ff0000",
+				"strokeOpacity": 1,
+				"text": "#ff0000",
+				"textOpacity": 1,
+				"gradientAngle": 0,
+				"gradientStops": [
+					{
+						"offset": 0,
+						"color": "#ffffff",
+						"opacity": 1
+					},
+					{
+						"offset": 0.5,
+						"color": "#ff0000",
+						"opacity": 1
+					},
+					{
+						"offset": 1,
+						"color": "#ffffff",
+						"opacity": 1
+					}
+				],
+				"strokePixel": [255, 0, 0, 255]
+			}
+		},
+		{
+			"name": "linear27",
+			"pageId": "19",
+			"shapeId": "1",
+			"members": "0",
+			"layerColor": "RGB(255,0,0)",
+			"layerTransparency": 0,
+			"paint": {
+				"fill": "url(#grad0-4)",
+				"fillOpacity": 1,
+				"stroke": "#ff0000",
+				"strokeOpacity": 1,
+				"text": "#ff0000",
+				"textOpacity": 1,
+				"gradientAngle": 180,
+				"gradientStops": [
+					{
+						"offset": 0,
+						"color": "#ff0000",
+						"opacity": 1
+					},
+					{
+						"offset": 1,
+						"color": "#ffffff",
+						"opacity": 1
+					}
+				],
+				"strokePixel": [255, 0, 0, 255]
+			}
+		},
+		{
+			"name": "linear28",
+			"pageId": "20",
+			"shapeId": "1",
+			"members": "0",
+			"layerColor": "RGB(255,0,0)",
+			"layerTransparency": 0,
+			"paint": {
+				"fill": "url(#grad0-4)",
+				"fillOpacity": 1,
+				"stroke": "#ff0000",
+				"strokeOpacity": 1,
+				"text": "#ff0000",
+				"textOpacity": 1,
+				"gradientAngle": 90,
+				"gradientStops": [
+					{
+						"offset": 0,
+						"color": "#ff0000",
+						"opacity": 1
+					},
+					{
+						"offset": 1,
+						"color": "#ffffff",
+						"opacity": 1
+					}
+				],
+				"strokePixel": [255, 0, 0, 255]
+			}
+		},
+		{
+			"name": "linear29",
+			"pageId": "21",
+			"shapeId": "1",
+			"members": "0",
+			"layerColor": "RGB(255,0,0)",
+			"layerTransparency": 0,
+			"paint": {
+				"fill": "url(#grad0-4)",
+				"fillOpacity": 1,
+				"stroke": "#ff0000",
+				"strokeOpacity": 1,
+				"text": "#ff0000",
+				"textOpacity": 1,
+				"gradientAngle": 90,
+				"gradientStops": [
+					{
+						"offset": 0,
+						"color": "#ffffff",
+						"opacity": 1
+					},
+					{
+						"offset": 0.5,
+						"color": "#ff0000",
+						"opacity": 1
+					},
+					{
+						"offset": 1,
+						"color": "#ffffff",
+						"opacity": 1
+					}
+				],
+				"strokePixel": [255, 0, 0, 255]
+			}
+		},
+		{
+			"name": "linear30",
+			"pageId": "22",
+			"shapeId": "1",
+			"members": "0",
+			"layerColor": "RGB(255,0,0)",
+			"layerTransparency": 0,
+			"paint": {
+				"fill": "url(#grad0-4)",
+				"fillOpacity": 1,
+				"stroke": "#ff0000",
+				"strokeOpacity": 1,
+				"text": "#ff0000",
+				"textOpacity": 1,
+				"gradientAngle": 270,
+				"gradientStops": [
+					{
+						"offset": 0,
+						"color": "#ff0000",
+						"opacity": 1
+					},
+					{
+						"offset": 1,
+						"color": "#ffffff",
+						"opacity": 1
+					}
+				],
+				"strokePixel": [255, 0, 0, 255]
+			}
+		},
+		{
+			"name": "linear-partial",
+			"pageId": "23",
+			"shapeId": "1",
+			"members": "0",
+			"layerColor": "RGB(255,0,0)",
+			"layerTransparency": 0.4,
+			"paint": {
+				"fill": "url(#grad0-4)",
+				"fillOpacity": 1,
+				"stroke": "#ff0000",
+				"strokeOpacity": 0.6,
+				"text": "#ff0000",
+				"textOpacity": 0.6,
+				"gradientAngle": 0,
+				"gradientStops": [
+					{
+						"offset": 0,
+						"color": "#ff0000",
+						"opacity": 0.6
+					},
+					{
+						"offset": 1,
+						"color": "#ffffff",
+						"opacity": 0.6
+					}
+				],
+				"strokePixel": [255, 102, 102, 255]
+			}
+		}
+	]
+}

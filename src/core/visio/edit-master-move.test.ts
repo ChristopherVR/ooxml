@@ -1,10 +1,10 @@
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
-import { parseXml } from '../xml/index.js';
-import { editVsdx, type VisioEdit } from './edit.js';
-import { parseVsdx } from './parser.js';
-import { VisioPackageError } from './package-common.js';
-import { cell, fixture, rectangle, section, row, shape } from './test-fixtures.js';
+import { parseXml } from '../xml/index';
+import { editVsdx, type VisioEdit } from './edit';
+import { parseVsdx } from './parser';
+import { VisioPackageError } from './package-common';
+import { cell, fixture, rectangle, section, row, shape } from './test-fixtures';
 
 const locks = ['LockMoveX', 'LockMoveY', 'LockWidth', 'LockHeight', 'LockAspect', 'LockDelete'];
 const dimensions = (inherited = false) =>

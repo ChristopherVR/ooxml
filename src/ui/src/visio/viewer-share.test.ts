@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { createBackstage } from './backstage.js';
-import { ViewerController } from './controller.js';
+import { createBackstage } from './backstage';
+import { ViewerController } from './controller';
 import { demoDocument } from 'ooxml-core/visio/ui';
-import { registerViewerControls } from './office-ui.js';
-import { ViewerShare } from './viewer-share.js';
-import type { CancellableEditor } from './worker-editor.js';
+import { registerViewerControls } from './office-ui';
+import { ViewerShare } from './viewer-share';
+import type { CancellableEditor } from './worker-editor';
 
 const disposers: (() => void)[] = [];
 afterEach(() => {

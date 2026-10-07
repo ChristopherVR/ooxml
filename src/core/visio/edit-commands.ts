@@ -1,4 +1,4 @@
-import { fail } from './package-common.js';
+import { fail } from './package-common';
 
 export interface VisioTextEdit {
 	type: 'replace-plain-text';

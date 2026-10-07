@@ -1,7 +1,7 @@
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
-import { editVsdx } from './edit.js';
-import { cell, fixture, rectangle, shape } from './test-fixtures.js';
+import { editVsdx } from './edit';
+import { cell, fixture, rectangle, shape } from './test-fixtures';
 
 const locks = ['LockMoveX', 'LockMoveY', 'LockWidth', 'LockHeight', 'LockAspect', 'LockDelete'];
 const zero = locks.map((name) => cell(name, 0, 'No Formula')).join('');

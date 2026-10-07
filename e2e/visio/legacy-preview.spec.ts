@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { saveCommand } from './ribbon.js';
+import { saveCommand } from './ribbon';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { createVsdxFixture } from './fixture.mjs';

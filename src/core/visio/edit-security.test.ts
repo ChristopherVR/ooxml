@@ -1,7 +1,7 @@
 import JSZip from 'jszip';
 import { describe, expect, it, vi } from 'vitest';
-import { editVsdx } from './edit.js';
-import { fixture, shape, relations } from './test-fixtures.js';
+import { editVsdx } from './edit';
+import { fixture, shape, relations } from './test-fixtures';
 const command = { type: 'replace-plain-text' as const, pageId: '0', shapeId: '1', text: 'New' };
 const input = (edit?: (zip: JSZip) => void) =>
 	fixture({

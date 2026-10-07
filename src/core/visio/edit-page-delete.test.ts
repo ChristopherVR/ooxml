@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import JSZip from 'jszip';
-import { editVsdx } from './edit.js';
-import { parseVsdx } from './parser.js';
-import { fixture, shape, cell } from './test-fixtures.js';
+import { editVsdx } from './edit';
+import { parseVsdx } from './parser';
+import { fixture, shape, cell } from './test-fixtures';
 import evidence from './__fixtures__/page-delete-native.json';
 const remove = { type: 'delete-page', pageId: '0' } as const;
 const source = () =>

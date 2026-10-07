@@ -1,12 +1,12 @@
-import type { VisioGeometryEdit } from './edit-commands.js';
-import type { VisioPackage } from './package.js';
-import { analyzeVisioFormula } from './formula.js';
-import { fail } from './package-common.js';
-import { VISIO_NS, VISIO_LEGACY_NS, attribute, children } from './sheet.js';
-import { createVisioDependencyQuery } from './edit-recalculate.js';
-import { executableCellFormula, inertDoubleClickFormula } from './cell-formula.js';
-import { assertVisioMasterIndependence } from './edit-master-scope.js';
-import { emptyMasterMoveProof, type MasterMoveProof } from './edit-master-move.js';
+import type { VisioGeometryEdit } from './edit-commands';
+import type { VisioPackage } from './package';
+import { analyzeVisioFormula } from './formula';
+import { fail } from './package-common';
+import { VISIO_NS, VISIO_LEGACY_NS, attribute, children } from './sheet';
+import { createVisioDependencyQuery } from './edit-recalculate';
+import { executableCellFormula, inertDoubleClickFormula } from './cell-formula';
+import { assertVisioMasterIndependence } from './edit-master-scope';
+import { emptyMasterMoveProof, type MasterMoveProof } from './edit-master-move';
 
 const admitted = (node: Element) =>
 	node.namespaceURI === VISIO_NS || node.namespaceURI === VISIO_LEGACY_NS;

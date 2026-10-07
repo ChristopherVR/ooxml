@@ -322,6 +322,9 @@ export type ConditionalRule =
 			priority: number;
 			stopIfTrue?: boolean;
 			showValue?: boolean;
+			/** Logical bar length percentages; linked x14 values override the legacy fallback on read. */
+			minLength?: number;
+			maxLength?: number;
 			/** GUID linking this rule to its Excel 2010 (`x14:dataBar`) extension, kept for round trip. */
 			extensionId?: string;
 			/** Self-contained linked x14 rule XML, retaining advanced settings and unknown fields. */

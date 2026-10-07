@@ -370,11 +370,6 @@ ul.plain li > :first-child:not(office-ui-avatar) {
 	color: var(--office-call-foreground);
 }
 
-.site-preview {
-	display: flex;
-	gap: var(--office-space-2);
-	padding: var(--office-space-3);
-}
 .conversation-grid {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr);
@@ -408,6 +403,28 @@ ul.plain li > :first-child:not(office-ui-avatar) {
 .followed-threads {
 	overflow: auto;
 	padding: var(--office-space-4);
+}
+.message-transfer {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--office-space-3);
+	padding: var(--office-space-3);
+	background: var(--office-teams-panel);
+	border-block-end: var(--office-border-width) solid var(--office-teams-divider);
+}
+.message-transfer span {
+	flex: 1;
+	overflow-wrap: anywhere;
+}
+.message-transfer button {
+	font: inherit;
+	color: inherit;
+	background: var(--office-background);
+	border: var(--office-border-width) solid var(--office-teams-divider);
+	border-radius: var(--office-radius-md);
+	padding: var(--office-space-2) var(--office-space-3);
+	cursor: pointer;
 }
 .followed-threads ul {
 	list-style: none;
@@ -465,16 +482,6 @@ ul.plain li > :first-child:not(office-ui-avatar) {
 .tabs {
 	overflow-x: auto;
 	min-width: 0;
-}
-.site-preview input {
-	flex: 1;
-	min-width: 0;
-	padding: var(--office-space-2);
-	font: inherit;
-	color: inherit;
-	background: var(--office-background);
-	border: var(--office-border-width) solid var(--office-teams-divider);
-	border-radius: var(--office-radius-md);
 }
 
 @media (max-width: 900px) {

@@ -10,9 +10,9 @@ import {
 	type VisioForeignVectorMatrix,
 	type VisioForeignVectorNode,
 	type VisioForeignVectorPaint,
-} from './foreign-vector-types.js';
-import { checkVectorGraph } from './foreign-vector-graph.js';
-import { finite, limitsFor, paint, record } from './foreign-vector-values.js';
+} from './foreign-vector-types';
+import { checkVectorGraph } from './foreign-vector-graph';
+import { finite, limitsFor, paint, record } from './foreign-vector-values';
 
 const ARITY: Readonly<Record<string, number>> = { M: 2, L: 2, C: 6, Q: 4, A: 7, Z: 0 };
 const PAINT = {

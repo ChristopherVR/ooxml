@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
 	inspectVisioEmfAdmission as inspect,
 	type VisioEmfAdmissionOptions,
-} from './emf-admission.js';
+} from './emf-admission';
 import {
 	checksumComment,
 	emf,
@@ -11,7 +11,7 @@ import {
 	setWord,
 	sourceComment,
 	triangle,
-} from './emf-admission.test-fixtures.js';
+} from './emf-admission.test-fixtures';
 const has = (b: Uint8Array, code: string) =>
 	expect(inspect(b).diagnostics.map((d) => d.code)).toContain(code);
 

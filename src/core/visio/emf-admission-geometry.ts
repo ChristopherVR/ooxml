@@ -1,4 +1,4 @@
-import { type EmfAdmissionContext as Context } from './emf-admission-context.js';
+import { type EmfAdmissionContext as Context } from './emf-admission-context';
 
 export function inspectEmfGeometry(c: Context, size: number): boolean {
 	const t = c.type;

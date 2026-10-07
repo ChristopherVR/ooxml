@@ -1,5 +1,5 @@
-import type { ViewerController } from './controller.js';
-import { contextMenu } from './ribbon-parts.js';
+import type { ViewerController } from './controller';
+import { contextMenu } from './ribbon-parts';
 
 const CLIPBOARD = 'Needs core shape copy and paste.';
 const ARRANGE = 'Needs core grouping, container and z-order edits.';

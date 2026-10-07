@@ -1,6 +1,6 @@
-import type { VisioMatrix, VisioShape } from './model.js';
-import { number, type Cells, type Report } from './sheet.js';
-import { VisioPackageError } from './package.js';
+import type { VisioMatrix, VisioShape } from './model';
+import { number, type Cells, type Report } from './sheet';
+import { VisioPackageError } from './package';
 
 /** Cached drawing distances to physical page inches. Line weights, character
  * sizes, text margins and paragraph lengths remain physical page measurements.

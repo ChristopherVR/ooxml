@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { sanitizeVisioForeignVectorTree } from 'ooxml-core/visio';
-import { renderForeignVector } from './render-foreign-vector.js';
+import { renderForeignVector } from './render-foreign-vector';
 const source = () => ({
 	tag: 'svg',
 	attrs: { xmlns: 'http://www.w3.org/2000/svg', width: 30, height: 20, viewBox: '0 0 30 20' },

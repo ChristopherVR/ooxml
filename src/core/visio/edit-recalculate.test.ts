@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { parseXml, buildXml } from '../xml/index.js';
-import { VISIO_NS } from './sheet.js';
+import { parseXml, buildXml } from '../xml/index';
+import { VISIO_NS } from './sheet';
 import {
 	recalculateVisioCells,
 	assertVisioShapeUnreferenced,
 	visioCellDependsOn,
-} from './edit-recalculate.js';
+} from './edit-recalculate';
 const page = (shapes: string, extra = '') =>
 	parseXml(`<PageContents xmlns="${VISIO_NS}"><Shapes>${shapes}</Shapes>${extra}</PageContents>`)
 		.documentElement;

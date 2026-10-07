@@ -1,8 +1,8 @@
-import type { VisioLayer, VisioLayerPrintSummary } from './model.js';
-import { metadata } from './metadata.js';
-import { VisioPackageError } from './package.js';
-import { number, sectionRows, type Report, type Sheet } from './sheet.js';
-import { color, type Resources } from './style.js';
+import type { VisioLayer, VisioLayerPrintSummary } from './model';
+import { metadata } from './metadata';
+import { VisioPackageError } from './package';
+import { number, sectionRows, type Report, type Sheet } from './sheet';
+import { color, type Resources } from './style';
 
 export interface LayerBudget {
 	consumeCharacters(count: number): void;
@@ -89,24 +89,17 @@ export function shapeLayers(
 		),
 	];
 	let missing = false,
-		colored = false,
 		hidden = false,
 		printEnabled = false,
 		printDisabled = false;
 	for (const id of layerIds) {
 		const layer = layers.get(id);
 		missing ||= layer === undefined;
-		colored ||= layer?.color !== undefined;
 		hidden ||= layer?.visible === false;
 		printEnabled ||= layer?.printable === true;
 		printDisabled ||= layer?.printable === false;
 	}
 	if (missing) report('missing-layer', 'Shape references a layer absent from this page.');
-	if (colored)
-		report(
-			'unsupported-layer-color',
-			'Layer color overrides are retained as metadata but not applied to shape styling.',
-		);
 	// MS-VSDX 2.2.3.2.2: a geometry path must not belong to a layer whose Visible is zero.
 	return {
 		layerIds,

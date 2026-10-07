@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { createVsdxFixture } from './fixture.mjs';
-import { fileBackstage } from './ribbon.js';
+import { fileBackstage } from './ribbon';
 
 async function startSharing(page: Page, room: string): Promise<void> {
 	const viewer = page.locator('visio-viewer');

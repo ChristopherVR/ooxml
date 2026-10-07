@@ -4,7 +4,7 @@ import {
 	type ViewerEditState,
 	type VsdxExportResult,
 } from 'ooxml-core/visio/ui';
-import { createWorkerEditor, snapshotEdits, type CancellableEditor } from './worker-editor.js';
+import { createWorkerEditor, snapshotEdits, type CancellableEditor } from './worker-editor';
 import { MAX_INPUT_BYTES } from 'ooxml-core/visio/ui';
 import { loadVisio, type VisioDocument, type VisioEdit } from 'ooxml-core/visio';
 import {
@@ -12,9 +12,9 @@ import {
 	documentVisibility,
 	visibleSelection,
 	type LayerVisibilityOverride,
-} from './viewer-layers.js';
+} from './viewer-layers';
 import { assertViewableDocument } from 'ooxml-core/visio/ui';
-import type { CancellableParser } from './worker-parser.js';
+import type { CancellableParser } from './worker-parser';
 import type { ViewerEvents } from 'ooxml-core/visio/ui';
 import {
 	EMPTY_TEXT_SEARCH,

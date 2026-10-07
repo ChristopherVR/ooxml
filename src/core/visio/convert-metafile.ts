@@ -1,10 +1,10 @@
-import { inspectVisioEmfAdmission } from './emf-admission.js';
-import { emfInputView } from './emf-admission-input.js';
+import { inspectVisioEmfAdmission } from './emf-admission';
+import { emfInputView } from './emf-admission-input';
 import {
 	sanitizeVisioForeignVectorTree,
 	VisioForeignVectorError,
 	type VisioForeignVector,
-} from './foreign-vector.js';
+} from './foreign-vector';
 
 /** Trusted package function, normally emf-converter's browser convertMetafileToSvgTree.
  * The host supplies the package so this format boundary cannot accidentally load Node codecs.

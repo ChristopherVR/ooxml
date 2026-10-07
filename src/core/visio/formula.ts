@@ -206,4 +206,4 @@ export function parseVisioFormula(
 	return ast;
 }
 
-export { analyzeVisioFormula, evaluateVisioFormula } from './formula-evaluate.js';
+export { analyzeVisioFormula, evaluateVisioFormula } from './formula-evaluate';

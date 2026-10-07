@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { roundedOrthogonalPath, type RectanglePoint as Point } from './rounded-geometry.js';
-import { geometryPaths } from './geometry.js';
-import { readSheet } from './sheet.js';
-import { parseXml } from '../xml/index.js';
-import { cell, row, section, xml } from './test-fixtures.js';
+import { roundedOrthogonalPath, type RectanglePoint as Point } from './rounded-geometry';
+import { geometryPaths } from './geometry';
+import { readSheet } from './sheet';
+import { parseXml } from '../xml/index';
+import { cell, row, section, xml } from './test-fixtures';
 
 // Independently observed Visio 16 SVG radii in points, divided by 72.
 // Reproduce with scripts/verify-visio-rounding.ps1; no native document is shipped.

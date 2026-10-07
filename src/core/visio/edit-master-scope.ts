@@ -1,16 +1,16 @@
-import type { VisioGeometryEdit } from './edit-commands.js';
-import type { VisioPackage } from './package.js';
-import { attribute, children } from './sheet.js';
-import { related, indexedPart, visioXml } from './parts.js';
-import { fail } from './package-common.js';
-import { executableCellFormula, inertDoubleClickFormula } from './cell-formula.js';
-import { analyzeVisioMasterFormula } from './formula-master.js';
-import { createVisioDependencyQuery } from './edit-recalculate.js';
+import type { VisioGeometryEdit } from './edit-commands';
+import type { VisioPackage } from './package';
+import { attribute, children } from './sheet';
+import { related, indexedPart, visioXml } from './parts';
+import { fail } from './package-common';
+import { executableCellFormula, inertDoubleClickFormula } from './cell-formula';
+import { analyzeVisioMasterFormula } from './formula-master';
+import { createVisioDependencyQuery } from './edit-recalculate';
 import {
 	prepareMasterMovePins,
 	emptyMasterMoveProof,
 	type MasterMoveProof,
-} from './edit-master-move.js';
+} from './edit-master-move';
 import {
 	masterCells,
 	masterShapes,
@@ -18,7 +18,7 @@ import {
 	assertMasterMarkup,
 	overlay,
 	type MasterCellSource as Source,
-} from './edit-master-index.js';
+} from './edit-master-index';
 
 interface Binding {
 	id: string;

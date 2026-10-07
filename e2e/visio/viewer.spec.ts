@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { exportSvgCommand, loadSampleTemplate, zoomPreset } from './ribbon.js';
+import { exportSvgCommand, loadSampleTemplate, zoomPreset } from './ribbon';
 
 test('sample supports page navigation, zoom, selection and compatibility notes', async ({
 	page,

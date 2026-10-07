@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import { lineCap } from './line-style.js';
-import { parseVsdx } from './parser.js';
-import type { Cells } from './sheet.js';
-import type { ThemeResources } from './theme-resolve.js';
-import { generatedTheme, themeFixture } from './theme-fixtures.js';
-import { cell, fixture, shape } from './test-fixtures.js';
+import { lineCap } from './line-style';
+import { parseVsdx } from './parser';
+import type { Cells } from './sheet';
+import type { ThemeResources } from './theme-resolve';
+import { generatedTheme, themeFixture } from './theme-fixtures';
+import { cell, fixture, shape } from './test-fixtures';
 
 const caps = (value: string): Cells => new Map([['LineCap', { value }]]);
 const resources: ThemeResources = {};

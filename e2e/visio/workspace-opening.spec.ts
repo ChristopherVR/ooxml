@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { loadSampleTemplate, openFind, taskPane } from './ribbon.js';
+import { loadSampleTemplate, openFind, taskPane } from './ribbon';
 import { createVsdxFixture } from './fixture.mjs';
 
 test('mobile Tools exposes Visio groups, opens Find and edits text with F2', async ({ page }) => {

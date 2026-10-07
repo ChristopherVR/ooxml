@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
 import { parseVsdx } from 'ooxml-core/visio';
 import { createVsdxFixture } from './__fixtures__/fixture.mjs';
-import { renderPage } from './render-svg.js';
+import { renderPage } from './render-svg';
 
 // Original generated parser-to-SVG regression, not a native Visio reference.
 describe('saved fill gradient import and SVG paint', () => {

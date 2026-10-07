@@ -1,6 +1,6 @@
 import { getVisioPageLayers } from 'ooxml-core/visio';
-import type { ViewerController, ViewerState } from './controller.js';
-import { VIEWER_LAYER_LIMITS, layerOverrideMaps } from './viewer-layers.js';
+import type { ViewerController, ViewerState } from './controller';
+import { VIEWER_LAYER_LIMITS, layerOverrideMaps } from './viewer-layers';
 
 export const layerControlsTemplate = `<details class="layer-controls" hidden><summary>Layers</summary><p>Display changes only. SVG and print snapshots use saved visibility. Guides, NoShow and unknown hidden reasons remain hidden.</p><div data-layer-list></div><p data-layer-status role="status"></p><button type="button" data-layer-reset="all">Reset all layers</button></details>`;
 

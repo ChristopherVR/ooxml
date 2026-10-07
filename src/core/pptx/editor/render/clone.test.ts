@@ -154,4 +154,10 @@ describe('clone helpers', () => {
 		expect(clone).not.toBe(xml);
 		expect(cloneXmlObject(undefined)).toBeUndefined();
 	});
+
+	it('does not substitute structuredClone for the editor circular-XML contract', () => {
+		const circular: Record<string, unknown> = {};
+		circular.self = circular;
+		expect(cloneXmlObject(circular as never)).toBeUndefined();
+	});
 });

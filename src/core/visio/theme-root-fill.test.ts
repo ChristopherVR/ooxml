@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { parseVsdx } from './parser.js';
-import { rootThemeSheet } from './theme-root.js';
-import { emptySheet } from './sheet.js';
-import { cell, fixture, rectangle, relation, relations, shape, xml } from './test-fixtures.js';
-import { generatedTheme, themeRelationship } from './theme-fixtures.js';
+import { parseVsdx } from './parser';
+import { rootThemeSheet } from './theme-root';
+import { emptySheet } from './sheet';
+import { cell, fixture, rectangle, relation, relations, shape, xml } from './test-fixtures';
+import { generatedTheme, themeRelationship } from './theme-fixtures';
 
 const properties = [
 	'FillForegndTrans',

@@ -1,10 +1,10 @@
 import JSZip from 'jszip';
 import { describe, expect, it, vi } from 'vitest';
-import { crc32 } from './package-common.js';
-import { VisioPackage } from './package.js';
-import { readVisioImage, type VisioImageOptions } from './media.js';
-import { child, type Report } from './sheet.js';
-import { xml, relations } from './test-fixtures.js';
+import { crc32 } from './package-common';
+import { VisioPackage } from './package';
+import { readVisioImage, type VisioImageOptions } from './media';
+import { child, type Report } from './sheet';
+import { xml, relations } from './test-fixtures';
 
 const png = Uint8Array.from(
 	Buffer.from(

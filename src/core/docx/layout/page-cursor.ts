@@ -38,7 +38,7 @@ export class PageCursor {
 		columns: LayoutColumns,
 		sectionIndex = 0,
 		continueAt?: number,
-		private readonly balance?: { pageIndex: number; heightPx: number },
+		private balance?: { pageIndex: number; heightPx: number },
 	) {
 		this.sectionIndex = sectionIndex;
 		this.pages = pages;
@@ -109,6 +109,17 @@ export class PageCursor {
 	}
 	get columnWidthPx(): number {
 		return this.column.widthPx;
+	}
+	/** Reject trials that overflow an earlier column, including a kept table row. */
+	get columnContentFits(): boolean {
+		return this.activeColumns.every((column) =>
+			column.blocks.every(
+				(block) => block.yPx + block.heightPx <= this.columnTopPx + this.columnHeightPx,
+			),
+		);
+	}
+	endBalance(): void {
+		this.balance = undefined;
 	}
 	get y(): number {
 		return this.yPx;

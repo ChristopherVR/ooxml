@@ -4,10 +4,10 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
-import { editVsdx, type VisioEdit, type EditVsdxResult } from './edit.js';
-import { VisioPackageError } from './package-common.js';
-import { parseVsdx } from './parser.js';
-import { children } from './sheet.js';
+import { editVsdx, type VisioEdit, type EditVsdxResult } from './edit';
+import { VisioPackageError } from './package-common';
+import { parseVsdx } from './parser';
+import { children } from './sheet';
 
 const root = process.env['VISIO_EDIT_CORPUS_DIR'];
 const pagePath = 'visio/pages/page1.xml';

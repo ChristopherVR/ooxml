@@ -1,7 +1,7 @@
-import { buildXml } from '../xml/index.js';
-import { fail, type VisioPackageLimits } from './package-common.js';
-import { attribute, children } from './sheet.js';
-import { inspectXml, inspectNamespaces } from './xml-validation.js';
+import { buildXml } from '../xml/index';
+import { fail, type VisioPackageLimits } from './package-common';
+import { attribute, children } from './sheet';
+import { inspectXml, inspectNamespaces } from './xml-validation';
 
 export function replacePlainText(
 	root: Element,

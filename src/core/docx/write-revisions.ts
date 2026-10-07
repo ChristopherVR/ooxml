@@ -51,7 +51,7 @@ export function revisionWrapper(
 	wrapper.appendChild(content);
 	return wrapper;
 }
-/** Deleted/moved-from text is stored as `w:delText` rather than `w:t`. */
+/** Deleted text uses `w:delText`; moved-from content retains `w:t`. */
 export function convertToDeleteText(doc: XmlDocument, run: XmlElement): void {
 	for (const t of children(run, 't')) {
 		const delText = doc.createElementNS(WORD_NS, 'w:delText');

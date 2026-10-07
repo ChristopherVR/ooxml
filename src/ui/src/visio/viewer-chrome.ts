@@ -1,8 +1,8 @@
 import type { VisioDocument } from 'ooxml-core/visio';
 import type { OfficeTab } from '../controls';
-import type { ViewerController, ViewerState } from './controller.js';
-import { editControlsTemplate } from './viewer-edit-controls.js';
-import { layerControlsTemplate } from './viewer-layer-controls.js';
+import type { ViewerController, ViewerState } from './controller';
+import { editControlsTemplate } from './viewer-edit-controls';
+import { layerControlsTemplate } from './viewer-layer-controls';
 
 /**
  * Static workspace markup (legacy; migrate to builders when next changed). The ribbon, Shapes

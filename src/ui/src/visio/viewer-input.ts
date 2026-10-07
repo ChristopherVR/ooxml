@@ -1,4 +1,4 @@
-import type { ViewerController, ViewerState } from './controller.js';
+import type { ViewerController, ViewerState } from './controller';
 interface Controls {
 	viewport: HTMLDivElement;
 	zoomSlider: HTMLElement & { value: number };

@@ -18,7 +18,7 @@ import {
 	type ViewerHandle,
 	type ViewerProps,
 	type ViewerState,
-} from './common.js';
+} from './common';
 export interface VisioViewerProps extends ViewerProps {
 	className?: string | undefined;
 	style?: CSSProperties | undefined;
@@ -67,4 +67,4 @@ export type {
 	ViewerEvents,
 	ViewerEditState,
 	VsdxExportResult,
-} from './common.js';
+} from './common';

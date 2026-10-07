@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { demoDocument } from 'ooxml-core/visio/ui';
-import { shapeDetails, safeExternalHref, selectedShape } from './shape-inspector.js';
+import { shapeDetails, safeExternalHref, selectedShape } from './shape-inspector';
 describe('read-only shape inspector', () => {
 	it('renders cached values literally and honors invisible fields', () => {
 		const shape = structuredClone(demoDocument.pages[0]!.shapes[0]!);

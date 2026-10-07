@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getVisioPageLayers, parseVsdx } from './index.js';
+import { getVisioPageLayers, parseVsdx } from './index';
 import {
 	cell,
 	fixture,
@@ -9,7 +9,7 @@ import {
 	row,
 	section,
 	shape,
-} from './test-fixtures.js';
+} from './test-fixtures';
 
 const pageShapes = (contents: string) => `<Shapes>${contents}</Shapes>`;
 describe('VSDX scene parsing', () => {

@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { parseXml } from '../xml/index.js';
-import { geometryPaths } from './geometry.js';
-import { readSheet, mergeSheets } from './sheet.js';
-import { parseVsdx } from './index.js';
-import { cell, row, section, xml, fixture, shape } from './test-fixtures.js';
+import { parseXml } from '../xml/index';
+import { geometryPaths } from './geometry';
+import { readSheet, mergeSheets } from './sheet';
+import { parseVsdx } from './index';
+import { cell, row, section, xml, fixture, shape } from './test-fixtures';
 
 const cells = (v: Record<string, string | number>) =>
 	Object.entries(v)

@@ -1,7 +1,7 @@
-import { isSafeHyperlinkHref } from '../opc/safe-href.js';
-import { metadata } from './metadata.js';
-import { VisioPackageError } from './package.js';
-import type { Cells, Report, Row, Sheet } from './sheet.js';
+import { isSafeHyperlinkHref } from '../opc/safe-href';
+import { metadata } from './metadata';
+import { VisioPackageError } from './package';
+import type { Cells, Report, Row, Sheet } from './sheet';
 
 export interface VisioShapeData {
 	id: string;

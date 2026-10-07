@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { demoDocument } from 'ooxml-core/visio/ui';
-import { renderPage } from './render-svg.js';
+import { renderPage } from './render-svg';
 describe('normalized linear gradients', () => {
 	it('draws local y-up endpoints and per-stop opacity without external paint URLs', () => {
 		const model = structuredClone(demoDocument);

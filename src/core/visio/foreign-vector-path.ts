@@ -4,8 +4,8 @@ import {
 	type VisioForeignVectorCommand,
 	type VisioForeignVectorLimits,
 	type VisioForeignVectorMatrix,
-} from './foreign-vector-types.js';
-import { finite } from './foreign-vector-values.js';
+} from './foreign-vector-types';
+import { finite } from './foreign-vector-values';
 
 const ARITY: Readonly<Record<string, number>> = {
 	M: 2,
