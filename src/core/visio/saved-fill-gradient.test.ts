@@ -34,6 +34,8 @@ for (const [name, type, count] of [
 	['LINEAR_OBLIQUE_ALPHA', 'linear', 6],
 	['SAVED_RADIAL', 'radial', 7],
 	['SAVED_RADIAL_ALPHA', 'radial', 7],
+	['SAVED_REGIONS', 'regions', 5],
+	['SAVED_REGIONS_ALPHA', 'regions', 5],
 ] as const) {
 	const directory = process.env[`VISIO_NATIVE_${name}_DIR`];
 	it.skipIf(!directory)(`preserves genuine ${name} gradients through core edits`, async () => {
@@ -102,6 +104,29 @@ it.each([
 ])('normalizes native vertical angle %s with saved decimal rounding', async (angle, start, end) => {
 	const { style } = await parse(cell('FillGradientAngle', angle as number));
 	expect(style.fillGradient).toMatchObject({ type: 'linear', start, end });
+});
+
+it.each([
+	[8, [270, 180]],
+	[9, [270, 360]],
+	[10, [180, 360, 270, 90]],
+	[11, [180, 90]],
+	[12, [90, 360]],
+])('normalizes native saved rectangular direction %s', async (direction, angles) => {
+	const { style, diagnostics } = await parse(
+		cell('FillGradientDir', direction as number) + cell('FillGradientAngle', 'Themed'),
+		stop(0, 0, '#ff0000', 0.2) + stop(1, 0.5, '#00ff00', 0.4) + stop(2, 1, '#0000ff', 0.5),
+	);
+	const gradient = style.fillGradient;
+	expect(gradient?.type).toBe('regions');
+	if (gradient?.type !== 'regions') throw new Error('Expected a rectangular gradient.');
+	expect(gradient.regions.map((region) => region.angle)).toEqual(angles);
+	expect(gradient.stops).toEqual([
+		{ offset: 0, color: '#ff0000', opacity: 0.8 },
+		{ offset: 0.5, color: '#00ff00', opacity: 0.6 },
+		{ offset: 1, color: '#0000ff', opacity: 0.5 },
+	]);
+	expect(diagnostics.some((item) => item.code === 'unsupported-saved-fill-gradient')).toBe(false);
 });
 
 it.each([
@@ -194,7 +219,7 @@ describe('saved horizontal fill gradients', () => {
 		expect(style.fillGradient?.stops).toHaveLength(10);
 	});
 	it.each([
-		cell('FillGradientDir', 8),
+		cell('FillGradientDir', -1),
 		cell('FillGradientDir', 13),
 		cell('FillGradientDir', 1.5),
 		cell('FillGradientDir', 'Themed'),

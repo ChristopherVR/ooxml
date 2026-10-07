@@ -1,11 +1,12 @@
 import type { VisioFillGradient, VisioLinearGradient } from './model';
 import { radialFillGradient } from './radial-fill-gradient';
+import { regionFillGradient } from './region-fill-gradient';
 import { number, sectionRows, type Cells, type Report, type Sheet } from './sheet';
 import { linearGradientEndpoints } from './theme-gradient';
 
 /**
  * Saved ShapeSheet gradients use radians and normalized [0,1] stop values.
- * Only complete local, shape-rotating linear and radial caches are accepted. Theme and
+ * Only complete local, shape-rotating linear, radial and rectangular caches are accepted. Theme and
  * root-style substitution happen before this function; missing caches are not
  * inferred from formulas, legacy pattern numbers, or an unrelated theme.
  * https://learn.microsoft.com/en-us/office/client-developer/visio/fill-gradient-section
@@ -54,7 +55,7 @@ export function savedFillGradient(
 		(direction === 0 && !Number.isFinite(angle)) ||
 		!Number.isInteger(direction) ||
 		direction < 0 ||
-		direction > 7 ||
+		direction > 12 ||
 		number(cells, 'RotateGradientWithShape', NaN) !== 1 ||
 		number(cells, 'UseGroupGradient', NaN) !== 0
 	)
@@ -83,6 +84,7 @@ export function savedFillGradient(
 		if (!color) return reject();
 		stops.push({ offset, color, opacity: 1 - transparency });
 	}
+	if (direction >= 8) return regionFillGradient(direction, stops);
 	if (direction !== 0) return radialFillGradient(direction, stops);
 	return {
 		type: 'linear',

@@ -720,3 +720,13 @@ The shared native-gradient setup in `scripts/visio-native-gradient.ps1` now
 accepts a direction and is named Set-VisioNativeFillGradient. Both existing
 capture callers use it. Saved-gradient preservation tests also share one
 parameterized test body across linear and radial captures.
+
+## Shared native rectangular gradient geometry
+
+Source: ChristopherVR/ooxml at 9e8a56c14,
+`src/core/visio/legacy-fill-gradient.ts`. Native triangle-gradient presets moved
+unchanged to `src/core/visio/region-fill-gradient.ts`. The classic pattern numbers
+and modern saved direction numbers map into this one implementation. Both reuse
+the shared DrawingML linear endpoint helper and the existing region SVG renderer.
+Stop color, position and transparency normalization remain in the saved parser.
+Path-following direction 13 remains explicitly unsupported.

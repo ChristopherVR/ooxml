@@ -15,6 +15,7 @@ param(
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'visio-native-gradient.ps1')
 if($FirstPattern -gt $LastPattern){throw 'FirstPattern must not exceed LastPattern.'}
+if($GradientDirection -eq -1 -and $LastPattern -gt 13){throw 'Modern gradient directions must not exceed 13.'}
 Add-Type -AssemblyName System.Drawing
 $directory=[IO.Path]::GetFullPath($OutputDirectory)
 if(Test-Path -LiteralPath $directory){throw 'Use a fresh output directory.'}

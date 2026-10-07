@@ -695,3 +695,29 @@ Its owned Visio process 33288 and PowerShell process 41760 (both started at
 Read-only enumeration of the owned process's top-level windows found PDFMakerWindow
 alongside the Visio main window, with no separate file/repair dialog. This does
 not establish the cause of the stall; no add-in or user settings were changed.
+
+## Native saved rectangular gradient presets (2026-10-07)
+
+Saved directions 8-12 now reuse the classic triangle-region gradient geometry,
+including native 360-degree rotation spelling. The existing SVG renderer,
+weighted gradient validation, snapshot copying and export/print budgets handle
+the paint without a second implementation. Source imports remain extensionless.
+Direction 13 (path-following), group gradients and gradients that do not rotate
+with their shape remain diagnosed. A native rectangular direction-13 probe
+resembled the centered rectangular preset, which does not establish arbitrary
+path-gradient behavior and was not used to broaden support.
+
+Owned Visio 16 captures contain all five presets in
+visio-fill-patterns-9fb7f01f032b450a990f8155a45ac8f1 (opaque) and
+visio-fill-patterns-4d6d37ce83af41498a5022aa7acf9ca6 (translucent), in the local
+temporary directory. Enable VISIO_NATIVE_SAVED_REGIONS_DIR and
+VISIO_NATIVE_SAVED_REGIONS_ALPHA_DIR. Both genuine packages passed core
+move/save/reparse preservation checks. All six routes passed both captures:
+12 scenarios and 120 exact full-page 576-by-432 RGBA live/export comparisons
+against native SVG rasterization, with zero differing channels.
+
+Core passed 2,067 tests with 51 optional skips; UI passed 713 with seven skips.
+Strict core, complete UI types and root lint passed, retaining nine unrelated
+lint warnings. Native capture PowerShell scripts passed syntax parsing. Native
+reopening, broader transformed gradients, arbitrary path fills and native PNG
+pipeline equivalence remain unverified.
