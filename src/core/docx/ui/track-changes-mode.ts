@@ -105,10 +105,8 @@ function applyTrackedReplace(
 	return change;
 }
 
-let moveSerial = 0;
-/** A move name in Word's style (`move` plus digits), unique within this session. */
-const nextMoveName = () =>
-	`move${(Math.floor(Date.now() / 1000) % 1e8) * 100 + (++moveSerial % 100)}`;
+/** Names link both move sides; shared client identity avoids per-second counter collisions. */
+const nextMoveName = () => `move${createClientId().replaceAll('-', '')}`;
 
 /** Marks every insertion/deletion carrying one of `ids` as a side of the move `name`. */
 function markMove(tr: Transaction, ids: ReadonlySet<string>, name: string): void {

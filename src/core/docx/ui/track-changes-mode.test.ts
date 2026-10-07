@@ -24,6 +24,23 @@ function state(author = 'Ada', client?: string) {
 }
 
 describe('shared revision recording', () => {
+	it('keeps more than 100 moves at a fixed time independently named', () => {
+		const clock = vi.spyOn(Date, 'now').mockReturnValue(1);
+		try {
+			const names = Array.from({ length: 101 }, () => {
+				const editor = state();
+				const tr = editor.tr.delete(1, 2);
+				tr.insertText('H', tr.mapping.map(6));
+				const ranges = collectRevisionRanges(editor.apply(tr.setMeta('uiEvent', 'drop')).doc);
+				expect(ranges).toHaveLength(2);
+				expect(ranges[0]!.move).toBe(ranges[1]!.move);
+				return ranges[0]!.move;
+			});
+			expect(new Set(names).size).toBe(101);
+		} finally {
+			clock.mockRestore();
+		}
+	});
 	it('records insertions and deletions using the supplied schema', () => {
 		let editor = state();
 		editor = editor.apply(editor.tr.insertText('!', 6));

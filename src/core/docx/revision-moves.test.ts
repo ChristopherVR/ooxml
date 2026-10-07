@@ -74,7 +74,7 @@ describe('tracked moves', () => {
 			/<w:moveFromRangeStart w:id="10" w:author="Ada" w:date="[^"]+" w:name="move1"\/><w:moveFrom w:id="11"/,
 		);
 		expect(xml).toMatch(
-			/Moved two<\/w:delText><\/w:r><\/w:moveFrom><w:moveFromRangeEnd w:id="10"\/><w:r><w:t xml:space="preserve"> STAYS/,
+			/Moved two<\/w:t><\/w:r><\/w:moveFrom><w:moveFromRangeEnd w:id="10"\/><w:r><w:t xml:space="preserve"> STAYS/,
 		);
 		expect(xml).toMatch(
 			/END <\/w:t><\/w:r><w:moveToRangeStart w:id="13"[^>]*w:name="move1"\/><w:moveTo w:id="14"/,

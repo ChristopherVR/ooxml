@@ -535,4 +535,13 @@ undo/redo bypass recording; resolution checks read-only views and ignores stale
 ranges. Explicit commands use a shared boundary helper to isolate them from
 nearby typing in both ProseMirror and Yjs history. DOM-free regression tests accompany the
 core logic; existing model conversion, move, editor and Yjs tests remain in UI
-to cover those adapters. Move-name identity is still the earlier timestamp scheme.
+to cover those adapters. Subsequent native references corrected move names and export text.
+
+## Word paragraph traversal for export identity mapping
+
+Source: ChristopherVR/ooxml at `26c54cd5db2c8ed69547540ed4448c979357cde4`,
+`src/core/docx/revision-ids.ts`. Its block traversal, story enumeration and
+document-wide paragraph mapping moved to `src/core/docx/document-paragraphs.ts`.
+Revision ID export retains its existing behavior through those helpers, and
+move-name export reuses them. Regression tests cover the body, table cells,
+headers, footers, footnotes and endnotes with one shared identity map.

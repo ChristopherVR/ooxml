@@ -105,8 +105,17 @@ reuse the client identity generator. Resolution separates legacy IDs by author,
 ignores stale ranges, blocks read-only writes and bypasses recording, as do
 undo/redo transactions. A two-peer partition/reject regression retains the other
 author's insertion. Browser review contracts pass in all six bindings.
-Formatting-change snapshots, paragraph-mark recording and shared move-name
-identity still need implementation and native reference evidence.
+Formatting-change snapshots and paragraph-mark recording still need implementation
+and native reference evidence.
+
+Move names now reuse shared identity generation during editing, with numeric
+names assigned only on export. A fixed-clock regression covers 101 independent
+moves. Native Word opened the corrected core export, saved both linked moves
+and accepted or rejected the first without resolving the second. Moved-from runs now retain
+`w:t`; the earlier `w:delText` export caused Word to reject the package as corrupt.
+The four DOCX fixtures and native build/revision report are kept in
+`src/core/docx/__fixtures__/review-moves`. This is desktop-build interoperation
+evidence, with current M365 subscription validation still required.
 
 ## Next implementation sequence
 
