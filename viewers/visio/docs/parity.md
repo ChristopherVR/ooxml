@@ -86,6 +86,18 @@ as lines, instead of collapsing both corners at the paper edge. Arbitrary contro
 other formulas, other scales and rotated browser authoring, native snapping, exact pixels
 and native Office reopen acceptance remain unverified.
 
+The shared `rotate-shape` command sets a local 2D shape's angle in radians
+through the existing geometry transaction, protection and dependency path.
+The shared experimental control accepts degrees and forwards that command.
+Native rectangle and ellipse rotations at 30, -45, 90 and 210 degrees, with
+drawing-to-page ratios 1, 2, 0.5 and 3, compare cached poses and unchanged
+local geometry/styles. All six bindings cover control editing, undo/redo and
+public save/reload. Local/inherited LockRotate and guarded/dependent angle
+formulas are checked; angle units are explicit. Rotation handles and keyboard
+rotation commands, grouped/master/glued and 1D rotation, broader angle/formula
+and text/gradient paint cases, exact contours/pixels and native Office reopen
+acceptance remain unverified.
+
 Native endpoint-cell assignment after a Width override retains the fixed Width,
 changing midpoint and angle while displayed endpoints diverge from raw cells.
 Eight saved native cases verify viewing geometry across six frameworks, with

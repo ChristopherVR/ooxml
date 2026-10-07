@@ -1,6 +1,7 @@
 import { createRectangle, createEllipse, createLine } from './edit-shape-create';
 import { attribute, children } from './sheet';
 import { fail } from './package-common';
+import { visioFormulaCachedValue } from './formula';
 import {
 	assertVisioShapeUnreferenced,
 	recalculateVisioCells,
@@ -42,6 +43,7 @@ export function applyGeometryEdit(
 	let expected: { width: number; height: number; x: number; y: number } | undefined;
 	const lineEditShapes = new Set<Element>();
 	let fixedLine: ReadonlyMap<string, number> | undefined;
+	let expectedAngle: number | undefined;
 	const add = (cell: string) => changed.push({ pageId: edit.pageId, shapeId: edit.shapeId, cell });
 	if (edit.type === 'create-line') {
 		const shape = createLine(root, document, edit);
@@ -77,7 +79,9 @@ export function applyGeometryEdit(
 				? ['LockBegin', 'LockEnd']
 				: edit.type === 'move-line-endpoint'
 					? [edit.endpoint === 'begin' ? 'LockBegin' : 'LockEnd']
-					: [],
+					: edit.type === 'rotate-shape'
+						? ['LockRotate']
+						: [],
 		);
 		if (edit.type !== 'delete-shape')
 			for (const connections of children(root, 'Connects'))
@@ -88,7 +92,14 @@ export function applyGeometryEdit(
 							'Glued connections need routing and endpoint recalculation outside this subset.',
 						);
 		const unlocked = (
-			name: 'LockMoveX' | 'LockMoveY' | 'LockWidth' | 'LockHeight' | 'LockAspect' | 'LockDelete',
+			name:
+				| 'LockMoveX'
+				| 'LockMoveY'
+				| 'LockWidth'
+				| 'LockHeight'
+				| 'LockAspect'
+				| 'LockDelete'
+				| 'LockRotate',
 		) => {
 			if (numeric(local.get(name), 0) !== 0)
 				fail('EDIT_PROTECTED_CELL', `${name} prevents this operation.`);
@@ -99,7 +110,29 @@ export function applyGeometryEdit(
 			shape.parentNode!.removeChild(shape);
 			return [edit.pageId];
 		}
-		if (edit.type === 'move-shape') {
+		if (edit.type === 'rotate-shape') {
+			if (isLineSheet(local))
+				fail('UNSUPPORTED_GEOMETRY_EDIT', 'Line rotation requires endpoint proof.');
+			const angle = local.get('Angle');
+			if (
+				angle?.hasAttribute('U') &&
+				visioFormulaCachedValue('0', attribute(angle, 'U')).unit !== 'angle'
+			)
+				fail('EDIT_FORMULA_UNIT', 'Angle must use angular units.');
+			unlocked('LockRotate');
+			editableCell(angle);
+			if (numeric(angle, 0) === edit.angle) return [];
+			expected = {
+				width: numeric(local.get('Width')),
+				height: numeric(local.get('Height')),
+				x: numeric(local.get('PinX'), numeric(local.get('Width')) / 2),
+				y: numeric(local.get('PinY'), numeric(local.get('Height')) / 2),
+			};
+			expectedAngle = edit.angle;
+			setCell(shape, 'Angle', edit.angle);
+			cells(shape).get('Angle')!.setAttribute('U', 'RAD');
+			add('Angle');
+		} else if (edit.type === 'move-shape') {
 			const proven = masterDimensions.get(shape);
 			expected = {
 				width: numeric(local.get('Width'), proven?.width),
@@ -203,6 +236,8 @@ export function applyGeometryEdit(
 	if (edit.type === 'move-line-endpoint') proveLocalLine(resultShape);
 	const result = cells(resultShape),
 		provenResult = masterDimensions.get(resultShape);
+	if (expectedAngle !== undefined && numeric(result.get('Angle')) !== expectedAngle)
+		fail('EDIT_UNSUPPORTED_DEPENDENCY', 'Dependent formulas would violate the requested rotation.');
 	const equal = fixedLine ? sameLineCoordinate : (a: number, b: number) => a === b;
 	if (
 		expected &&

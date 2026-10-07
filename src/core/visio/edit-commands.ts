@@ -11,13 +11,14 @@ interface Target {
 	shapeId: string;
 }
 type BoxCreation = Target & { x: number; y: number; width: number; height: number; text?: string };
-/** Drawing inches; bottom-left origin, up-positive rotation pin. */
+/** Drawing inches; bottom-left origin, up-positive rotation pin. Rotation angles use radians. */
 export type VisioGeometryEdit =
 	| (Target & { type: 'create-line'; beginX: number; beginY: number; endX: number; endY: number })
 	| (BoxCreation & { type: 'create-rectangle' })
 	| (BoxCreation & { type: 'create-ellipse' })
 	| (Target & { type: 'move-shape'; x: number; y: number })
 	| (Target & { type: 'resize-shape'; width: number; height: number })
+	| (Target & { type: 'rotate-shape'; angle: number })
 	| (Target & { type: 'move-line-endpoint'; endpoint: 'begin' | 'end'; x: number; y: number })
 	| (Target & { type: 'delete-shape' });
 /** Insert a blank foreground page after an existing page, copying its PageSheet settings. */
@@ -75,6 +76,7 @@ export function geometryChangedCells(edit: VisioGeometryEdit): string[] {
 	}
 	if (edit.type === 'move-shape') return ['PinX', 'PinY'];
 	if (edit.type === 'resize-shape') return ['Width', 'Height'];
+	if (edit.type === 'rotate-shape') return ['Angle'];
 	return ['PinX', 'PinY', 'Width', 'Height'];
 }
 
@@ -168,6 +170,8 @@ export function snapshotVisioEdits(
 					height: numeric(edit.height, true),
 					...(edit.text === undefined ? {} : { text: text(edit.text) }),
 				};
+			case 'rotate-shape':
+				return { ...target, type: edit.type, angle: numeric(edit.angle) };
 			case 'move-shape':
 				return { ...target, type: edit.type, x: numeric(edit.x), y: numeric(edit.y) };
 			case 'move-line-endpoint':

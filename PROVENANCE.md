@@ -1496,3 +1496,20 @@ and edited title/legend through the reused pane. Excel reopened/resaved its
 editor-API export: bottom-right circle title with 37 percent first-stop alpha
 and top-left shape legend retain paths, stops, scheme/RGB colors, alpha and
 target/tile rectangles exactly. Full native UI parity remains unfinished.
+
+## Shared Visio local shape rotation
+
+Source: ChristopherVR/ooxml at `0048416f0`, `src/core/visio/edit-geometry.ts`,
+`edit-geometry-admission.ts`, `edit-commands.ts` and UI command snapshots.
+Rotation extends the existing local geometry transaction and scalar protection
+resolver with Angle and LockRotate. The current cell writer and dependency
+recalculator update caches; no second transform, formula engine or package
+mutation path was added. Explicit radians normalize existing degree caches.
+Fixed pin/dimensions are verified after recalculation, and source-byte no-ops
+and unsupported geometry/protection cases are covered beside the implementation.
+
+`src/ui/src/visio/viewer-geometry-controls.ts` composes a typed angle input and
+button into the existing panel, sharing its worker transaction and draft
+lifecycle across all six bindings. Native recorder rotation extends the shared
+rectangle/ellipse evidence collection; browser tests reuse native SVG physical
+registration. Pointer rotation handles and native Office reopen remain open.

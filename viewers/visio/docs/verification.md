@@ -1706,3 +1706,52 @@ released dependencies; the native workflows exercise the rebuilt local core/UI.
 Other scales, rotated authoring, snapping/gesture semantics, contour/exact
 pixels and native Office reopen acceptance remain unverified. Each fresh owned
 invisible Visio instance quit, and the user's existing instance was untouched.
+
+## Native local 2D shape rotation
+
+The shared recorder's `-RotationDegrees` switch assigns native Angle.ResultIU
+to both rectangle and ellipse after the original move/resize capture. It saves
+`rotated.vsdx` and `rotated-page.svg`, recording angle caches and native XYToPage
+poses. Sources use `ellipse-edited.vsdx`; comparison targets one shape at a time.
+
+- `visio-line-movement-041ef57111794624b34bf9b3e7a5b48d`: 30 degrees, ratio 1.
+- `visio-line-movement-64f4394fe5a34742837f7efa4a5645eb`: -45 degrees, ratio 2,
+  distinct custom defaults.
+- `visio-line-movement-afe4954faefa45f488ddc70e57cdd3e7`: 90 degrees, ratio 0.5.
+- `visio-line-movement-51a9a06dfd5a4f3a99a0480a09823f8e`: 210 degrees, ratio 3.
+
+Microsoft documents the parent-relative
+[Angle cell](https://learn.microsoft.com/en-us/office/client-developer/visio/angle-cell-shape-transform-section)
+and 2D UI rotation protection through
+[LockRotate](https://learn.microsoft.com/en-us/office/client-developer/visio/lockrotate-cell-protection-section).
+COM assignment is evidence of the saved transform, not native pointer-handle
+or keyboard gesture equivalence.
+
+`rotate-shape` uses the existing command snapshot, local leaf admission,
+protection-style resolution, cell writer, dependency graph and recalculator.
+The command holds dimensions and rotation pin fixed, writes an explicit RAD
+angle and refuses active local/inherited LockRotate, protected angle formulas,
+unknown affected dependencies, glued shapes, groups and 1D shapes. A no-op
+angle preserves original bytes. Page scaling does not scale angular values.
+The UI builds its new angle input and button with typed DOM creation and
+shares the existing draft, selection, worker and transaction lifecycle.
+
+Eighteen focused core checks pass, including eight native shape/scale cases,
+angular unit normalization, snapshots, dependency recalculation, no-op bytes,
+part preservation and unsupported-scope refusal. The broad Visio checkpoint
+passes 2,210 checks with 80 optional skips. Eight geometry-control UI checks
+pass. Native poses agree to twelve decimals; local geometry and effective
+styles match exactly. Browser comparisons also measure transformed primitive
+bounding boxes to three decimals and computed solid colors/opacity against
+native SVG; these bounding boxes do not prove ellipse contour or exact pixels.
+All 48 browser rotation workflows pass across six bindings, four native angles
+and both shape kinds, including undo/redo and exported VSDX reload.
+Core/UI builds and type checks pass, as does the full viewer check command.
+Viewer consumer-package checks use released dependencies; native rotation
+workflows exercise rebuilt local core/UI code.
+
+Rotation handles, native shortcut semantics, grouped/master/glued and line
+rotation, formulas that intentionally move the pin, other angles/scales,
+text and gradient paint, exact pixels and native Office reopen acceptance
+remain unverified. All fresh owned invisible instances quit; the existing
+user Visio instance remained untouched.

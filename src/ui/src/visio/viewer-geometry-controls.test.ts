@@ -179,3 +179,24 @@ it('source replacement cancels the geometry draft identity and ignores an obsole
 	expect(controller.state.edit.dirty).toBe(false);
 	dispose();
 });
+
+it('forwards angular drafts in radians and clears them with shared selection state', async () => {
+	const { controller, input, button, dispose } = await setup();
+	const apply = vi.spyOn(controller, 'applyEdits').mockResolvedValue();
+	expect(button('rotate-shape').disabled).toBe(true);
+	input('angle', '-45');
+	expect(button('rotate-shape').disabled).toBe(false);
+	button('rotate-shape').click();
+	expect(apply).toHaveBeenLastCalledWith([
+		{ type: 'rotate-shape', pageId: '1', shapeId: 's1', angle: -Math.PI / 4 },
+	]);
+	controller.selectShape(null);
+	expect(button('rotate-shape').disabled).toBe(true);
+	dispose();
+});
+it('keeps unsupported connector rotation disabled', async () => {
+	const { input, button, dispose } = await setup(true);
+	input('angle', '30');
+	expect(button('rotate-shape').disabled).toBe(true);
+	dispose();
+});

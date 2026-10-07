@@ -64,6 +64,9 @@ export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
 				return { type: command.type, ...target, text: text(command.text) };
 			case 'delete-shape':
 				return { type: command.type, ...target };
+			case 'rotate-shape':
+				numbers(command.angle);
+				return { type: command.type, ...target, angle: command.angle };
 			case 'move-shape':
 				numbers(command.x, command.y);
 				return { type: command.type, ...target, x: command.x, y: command.y };

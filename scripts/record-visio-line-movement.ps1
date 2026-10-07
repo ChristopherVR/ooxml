@@ -8,6 +8,7 @@ param(
  [switch]$GridAligned,
  [switch]$IncludeRectangle,
  [switch]$IncludeEllipse,
+ [ValidateRange(-360000,360000)][double]$RotationDegrees=0,
  [switch]$CustomDefaults
 )
 # Capture endpoint translation without replacing native transform formulas.
@@ -134,6 +135,18 @@ try {
  $evidence=[ordered]@{application='Microsoft Visio';version=$app.Version;cases=$cases;drawingScale=$page.PageSheet.CellsU('DrawingScale').ResultIU;pageScale=$page.PageSheet.CellsU('PageScale').ResultIU}
  if($rectangleEvidence){$evidence.Add('rectangle',$rectangleEvidence)}
  if($ellipseEvidence){$evidence.Add('ellipse',$ellipseEvidence)}
+ if($RotationDegrees -ne 0){
+  $rotated=[ordered]@{}
+  foreach($entry in @(@('rectangle',$rectangle),@('ellipse',$ellipse))){
+   if($entry[1]){
+    $entry[1].CellsU('Angle').ResultIU=$RotationDegrees*[Math]::PI/180
+    $rotated[$entry[0]]=[ordered]@{shapeId=[string]$entry[1].ID;cells=(Get-ShapeCells $entry[1] @('Width','Height','PinX','PinY','LocPinX','LocPinY','Angle'));transform=(Get-LineTransform $entry[1])}
+   }
+  }
+  $document.SaveAs((Join-Path $directory 'rotated.vsdx')) | Out-Null
+  $page.Export((Join-Path $directory 'rotated-page.svg'))
+  $evidence.Add('rotated',$rotated)
+ }
  if($DeleteAfterMove){
   foreach($shape in $shapes){$shape.Delete()}
   $retainedIds=@($control.ID)

@@ -105,10 +105,10 @@ export function protectedShape(
 	shape: Element,
 	document: Element,
 	masterMovePins: ReadonlySet<Element> = new Set(),
-	endpointLocks: readonly ('LockBegin' | 'LockEnd')[] = [],
+	additionalLocks: readonly ('LockBegin' | 'LockEnd' | 'LockRotate')[] = [],
 ): void {
 	const local = cells(shape);
-	const protectionLocks = [...locks, ...endpointLocks];
+	const protectionLocks = [...locks, ...additionalLocks];
 	const certifiedMove =
 		shape.hasAttribute('Master') &&
 		['PinX', 'PinY'].every((name) => {

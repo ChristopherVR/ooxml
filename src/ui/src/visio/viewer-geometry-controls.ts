@@ -7,7 +7,7 @@ export const geometryControlsTemplate = `<fieldset data-geometry><legend>Geometr
 
 /** Collect explicit coordinates; never infer a Visio pin from rendered SVG transforms. */
 export class ViewerGeometryControls {
-	#fields: Record<'id' | 'text' | 'x' | 'y' | 'width' | 'height', HTMLInputElement>;
+	#fields: Record<'id' | 'text' | 'x' | 'y' | 'width' | 'height' | 'angle', HTMLInputElement>;
 	#buttons: HTMLButtonElement[];
 	#error: HTMLElement;
 	#identity = '';
@@ -19,6 +19,21 @@ export class ViewerGeometryControls {
 	) {
 		const field = (name: string) =>
 			panel.querySelector<HTMLInputElement>(`[data-geometry-field="${name}"]`)!;
+		const doc = panel.ownerDocument;
+		const label = doc.createElement('label');
+		label.textContent = 'Angle (degrees) ';
+		const angle = doc.createElement('input');
+		angle.type = 'number';
+		angle.step = 'any';
+		angle.dataset.geometryField = 'angle';
+		label.append(angle);
+		const actions = panel.querySelector<HTMLElement>('[data-geometry] .edit-actions')!;
+		actions.before(label);
+		const rotate = doc.createElement('button');
+		rotate.type = 'button';
+		rotate.dataset.geometryAction = 'rotate-shape';
+		rotate.textContent = 'Rotate selected';
+		actions.append(rotate);
 		this.#fields = {
 			id: field('id'),
 			text: field('text'),
@@ -26,6 +41,7 @@ export class ViewerGeometryControls {
 			y: field('y'),
 			width: field('width'),
 			height: field('height'),
+			angle,
 		};
 		this.#buttons = [...panel.querySelectorAll<HTMLButtonElement>('[data-geometry-action]')];
 		this.#error = panel.querySelector('[data-geometry-error]')!;
@@ -85,7 +101,9 @@ export class ViewerGeometryControls {
 					? { type, ...target, x, y }
 					: type === 'resize-shape'
 						? { type, ...target, width, height }
-						: { type: 'delete-shape', ...target };
+						: type === 'rotate-shape'
+							? { type, ...target, angle: (this.#fields.angle.valueAsNumber * Math.PI) / 180 }
+							: { type: 'delete-shape', ...target };
 		const request = ++this.#request;
 		this.#error.hidden = true;
 		try {
@@ -148,7 +166,10 @@ export class ViewerGeometryControls {
 					? !this.#fields.id.value || !position || !size
 					: !state.selectedShape ||
 						(action === 'move-shape' && !position) ||
-						(action === 'resize-shape' && !size && !lineSize));
+						(action === 'resize-shape' && !size && !lineSize) ||
+						(action === 'rotate-shape' &&
+							(!Number.isFinite(this.#fields.angle.valueAsNumber) ||
+								selected?.kind === 'connector')));
 		}
 	}
 }
