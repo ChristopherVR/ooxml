@@ -506,3 +506,19 @@ into `src/core/crypto/uuid.ts`. The four generator regression tests moved from
 with strict indexed access, retains the Web Crypto and older-runtime fallbacks,
 and keeps the PowerPoint API as an alias. XLSX clipboard copies reuse it for new
 x14 conditional-rule identities.
+
+## PowerPoint snapshot cloning and neutral cached drawing bounds
+
+Source: ChristopherVR/ooxml at `e536c3553ad87ccc4e35a1d2212ab65bb22e821f`
+(original repository: ChristopherVR/pptx-viewer).
+
+- `src/ui/src/pptx/render/clone.ts` and `clone.test.ts` moved to
+  `src/core/pptx/editor/render/`. Document/history cloning is unchanged,
+  including the JSON-only XML failure behavior. UI keeps explicit compatibility
+  exports. The circular-XML regression also moved into the core contract.
+- The bounds algorithm in `src/ui/src/pptx/render/smartart-drawing-viewbox.ts`
+  moved to strict, format-neutral `src/core/diagram/drawing-bounds.ts`.
+  It uses diagram shape/text frames in caller units. UI adapts the PowerPoint
+  fields, preserving their individual fallback values. Core regressions cover
+  frame unions, independent text, negative coordinates and empty drawings;
+  existing renderer tests remain in UI to cover the adapter.

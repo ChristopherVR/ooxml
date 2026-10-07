@@ -38,6 +38,7 @@ export default defineConfig({
 		'pptx/editor/render/bullet-list': 'pptx/editor/render/bullet-list.ts',
 		'pptx/editor/render/bullet-toggle': 'pptx/editor/render/bullet-toggle.ts',
 		'pptx/editor/render/chart-user-shape-edit': 'pptx/editor/render/chart-user-shape-edit.ts',
+		'pptx/editor/render/clone': 'pptx/editor/render/clone.ts',
 		'pptx/editor/render/collaboration-active-session':
 			'pptx/editor/render/collaboration-active-session.ts',
 		'pptx/editor/render/collaboration-assets': 'pptx/editor/render/collaboration-assets.ts',
