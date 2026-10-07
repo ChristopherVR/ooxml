@@ -202,5 +202,13 @@ subscription behavior.
 5. Fill DrawingML, chart, SmartArt, equations, proofing, references and protection
    gaps through shared core areas and one shared Word UI.
 
+Core revision enumeration and resolution now include headers, footers, footnotes,
+endnotes and table cells through the shared document-story traversal. Synthetic
+package tests verify accept/reject/save/reopen, including headers shared across
+sections. Paragraph-mark merges stay within their story or cell. Failed Reject All
+operations throw and preserve the input model and pending revisions. These core
+commands do not enable collaborative editing of non-body stories or certify native
+Word behavior for all story revisions.
+
 Full M365 Word parity remains unfinished and must not be claimed without this
 reference evidence.

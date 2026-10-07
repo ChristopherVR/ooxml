@@ -2,6 +2,7 @@
 import type { Block, DocumentModel, Paragraph } from './model.js';
 import { restoreRunFormatting } from './restore-run-format.js';
 import { restoreParagraphFormatting } from './restore-paragraph-format.js';
+import { documentBlockLists } from './document-paragraphs.js';
 
 export interface RevisionEntry {
 	id: string;
@@ -23,10 +24,14 @@ function paragraphsOf(blocks: Block[]): Paragraph[] {
 	return paragraphs;
 }
 
+function documentParagraphs(model: DocumentModel): Paragraph[] {
+	return documentBlockLists(model).flatMap(paragraphsOf);
+}
+
 /** Lists every run/paragraph revision in document order, for navigation and enumeration. */
 export function listRevisions(model: DocumentModel): RevisionEntry[] {
 	const entries: RevisionEntry[] = [];
-	for (const paragraph of paragraphsOf(model.blocks)) {
+	for (const paragraph of documentParagraphs(model)) {
 		if (paragraph.markRevision)
 			entries.push({ ...paragraph.markRevision, paragraphId: paragraph.id });
 		if (paragraph.formatRevision)
@@ -67,7 +72,7 @@ function updateRuns(
 	apply: (paragraph: Paragraph, runIndex: number) => void,
 ): DocumentModel {
 	const next = structuredClone(model);
-	for (const paragraph of paragraphsOf(next.blocks)) {
+	for (const paragraph of documentParagraphs(next)) {
 		const indices = matchingRunIndices(paragraph, id);
 		if (!indices.length) continue;
 		for (const index of [...indices].sort((a, b) => b - a)) apply(paragraph, index);
@@ -79,14 +84,29 @@ function updateRuns(
 
 function resolveParagraphMark(model: DocumentModel, id: string, keepBreak: boolean): DocumentModel {
 	const next = structuredClone(model);
-	const paragraph = paragraphsOf(next.blocks).find((p) => p.markRevision?.id === id);
+	const paragraph = documentParagraphs(next).find((p) => p.markRevision?.id === id);
 	if (!paragraph) throw new Error(`No paragraph mark revision with id ${id} was found.`);
 	if (keepBreak) {
 		delete paragraph.markRevision;
 		return next;
 	}
-	next.blocks = mergeIntoNext(next.blocks, paragraph.id);
-	return next;
+	for (const blocks of documentBlockLists(next)) {
+		const lists: Block[][] = [
+			blocks,
+			...blocks.flatMap((block) =>
+				block.type === 'table'
+					? block.rows.flatMap((row) => row.map((cell) => cell.paragraphs))
+					: [],
+			),
+		];
+		for (const list of lists) {
+			if (!list.includes(paragraph)) continue;
+			const merged = mergeIntoNext(list, paragraph.id);
+			list.splice(0, list.length, ...merged);
+			return next;
+		}
+	}
+	throw new Error(`Cannot locate the story containing paragraph ${paragraph.id}.`);
 }
 
 /** Revision ids resolved together with `id`: every side of the same move, or just `id`. */
@@ -136,7 +156,7 @@ function acceptOne(model: DocumentModel, id: string): DocumentModel {
 		});
 	if (entry.kind === 'paragraphChange') {
 		const next = structuredClone(model);
-		const paragraph = paragraphsOf(next.blocks).find((p) => p.id === entry.paragraphId)!;
+		const paragraph = documentParagraphs(next).find((p) => p.formatRevision?.id === id)!;
 		delete paragraph.formatRevision;
 		return next;
 	}
@@ -159,7 +179,7 @@ function rejectOne(model: DocumentModel, id: string): DocumentModel {
 		);
 	if (entry.kind === 'paragraphChange') {
 		const next = structuredClone(model);
-		const paragraph = paragraphsOf(next.blocks).find((item) => item.id === entry.paragraphId)!;
+		const paragraph = documentParagraphs(next).find((item) => item.formatRevision?.id === id)!;
 		restoreParagraphFormatting(paragraph);
 		return next;
 	}
