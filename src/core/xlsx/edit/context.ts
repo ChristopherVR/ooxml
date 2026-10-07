@@ -123,12 +123,7 @@ export function rawText(value: CellValue): string {
 export function pruneCell(sheet: Worksheet, row: number, col: number): void {
 	const cell = getCell(sheet, row, col);
 	if (!cell) return;
-	if (
-		(cell.value === null || cell.value === '') &&
-		cell.formula === undefined &&
-		!cell.styleId &&
-		!cell.richText
-	) {
+	if (cell.value === null && cell.formula === undefined && !cell.styleId && !cell.richText) {
 		const cells = sheet.rows.get(row);
 		cells?.delete(col);
 		if (cells && cells.size === 0) sheet.rows.delete(row);

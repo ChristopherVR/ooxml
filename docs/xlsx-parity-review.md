@@ -79,7 +79,34 @@ The shared editor passes the selection to this core operation and reports failur
 cut state before the core consumes the move flag, so a successful cut/paste clears the marquee.
 Multi-area paste is explicitly rejected until its semantics are supported. Tests cover formulas,
 blanks, transposition, merged cells, formatting, undo/redo, UI errors and native browser copy/paste.
-Skip blanks and complete clipboard metadata support remain outstanding.
+Complete clipboard metadata support remains outstanding.
+
+### Combined Paste Special options
+
+The core paste engine accepts independent content mode, transpose and Skip Blanks options,
+while retaining the existing string-mode API. Ribbon paste variants and the grid use the same
+clipboard path; the dialog gathers options and its requesting command applies them once.
+Ctrl+Alt+V now opens Paste Special through the shared shortcut map.
+
+An intentional fixture recorded with Microsoft 365 Excel 16.0 build 20430 covers all 16
+combinations of All/Values/Formulas/Formats, transpose and Skip Blanks. A true empty cell,
+including one with formatting, leaves destination content and formatting untouched when
+skipped. A formula returning an empty string, zero and FALSE still paste. Cut with Skip Blanks
+is rejected before edits, matching a separate native check. Empty string constants produced
+by Paste Values now survive cell pruning and save/reload. Tests cover tiled selections and
+one-step undo/redo. Arithmetic paste operations, column widths, all except borders and full
+clipboard metadata remain unsupported.
+
+Reproduce the fixture with `scripts/record-xlsx-paste-options.ps1 -OutputFile <temporary-json-path>`
+on Windows with Excel installed. The recorder creates its own hidden Excel instance and
+closes its workbook without attaching to an existing user session.
+
+Validation before integration with concurrent main changes: all 3,801 core XLSX tests,
+301 shared XLSX UI tests, 47 viewer/binding tests and 52 browser tests passed. Core/UI/viewer
+typechecks and core/UI/viewer package builds passed. The browser test exercises native copy,
+Ctrl+Alt+V, combined options and one-step keyboard undo; the command returns focus to the grid.
+Published-import guards and clean-consumer package smoke checks passed for all seven XLSX
+packages, including `.xlsx` and legacy `.xls` loading, declarations and framework bindings.
 
 ## Evidence required for parity
 

@@ -4,7 +4,7 @@ import {
 	currentRegion,
 	normalizeRange,
 	type CellRange,
-	type PasteMode,
+	resolvePasteOptions,
 	type Worksheet,
 } from 'ooxml-core/xlsx';
 import type { GridClipboard } from '../clipboard.js';
@@ -18,8 +18,6 @@ export interface CommandHost {
 	selectAll(): void;
 	openValidationList(): boolean;
 }
-
-const PASTE_MODES: readonly PasteMode[] = ['all', 'values', 'formats', 'formulas', 'transpose'];
 
 /** Ctrl+A: the current region first, everything when the region is already selected. */
 export function currentRegionOrAll(sheet: Worksheet, selection: Selection): CellRange | undefined {
@@ -103,11 +101,7 @@ export function gridCommands(host: CommandHost): Command[] {
 			editing: true,
 			enabled: hasSession,
 			run: async (_ctx, arg) => {
-				const mode =
-					typeof arg === 'string' && PASTE_MODES.includes(arg as PasteMode)
-						? (arg as PasteMode)
-						: 'all';
-				await host.clipboard.pasteSystem(mode);
+				await host.clipboard.pasteSystem(resolvePasteOptions(arg));
 			},
 		},
 		{
@@ -127,14 +121,8 @@ export function gridCommands(host: CommandHost): Command[] {
 			enabled: hasSession,
 			run: async (ctx) => {
 				const result = await ctx.dialogs.open<unknown>('paste-special');
-				const mode =
-					typeof result === 'string'
-						? result
-						: result && typeof result === 'object' && 'mode' in result
-							? String((result as { mode: unknown }).mode)
-							: undefined;
-				if (mode && PASTE_MODES.includes(mode as PasteMode))
-					await host.clipboard.pasteSystem(mode as PasteMode);
+				if (result !== undefined) await host.clipboard.pasteSystem(resolvePasteOptions(result));
+				ctx.grid()?.focus();
 			},
 		},
 		{
