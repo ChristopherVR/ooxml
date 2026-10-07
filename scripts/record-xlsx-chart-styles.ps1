@@ -50,6 +50,3 @@ try {
     if ($null -ne $book) { $book.Close($false) }
     if ($null -ne $excel) { $excel.Quit() }
 }
-
-
-
