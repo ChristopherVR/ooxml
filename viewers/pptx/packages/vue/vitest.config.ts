@@ -10,6 +10,8 @@ const pkgVersion = (
 ).version;
 
 export default defineConfig({
+	// Shared UI sources and their raw CSS now live outside the viewer workspace.
+	server: { fs: { allow: [resolve(__dirname, '../../../..')] } },
 	define: {
 		__PPTX_PACKAGE_VERSION__: JSON.stringify(pkgVersion),
 	},
@@ -33,7 +35,10 @@ export default defineConfig({
 				find: 'ooxml-ui/pptx/ai',
 				replacement: resolve(__dirname, '../../../../src/ui/src/pptx/ai/index.ts'),
 			},
-			{ find: 'ooxml-ui/pptx', replacement: resolve(__dirname, '../../../../src/ui/src/pptx/index.ts') },
+			{
+				find: 'ooxml-ui/pptx',
+				replacement: resolve(__dirname, '../../../../src/ui/src/pptx/index.ts'),
+			},
 			{
 				find: 'pptx-viewer-core/chart',
 				replacement: resolve(__dirname, '../core/src/chart/index.ts'),

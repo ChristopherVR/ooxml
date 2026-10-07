@@ -11,6 +11,8 @@ import {
 } from 'ooxml-core/teams';
 import type { OpenFileDetail } from './teams-app.js';
 import css from './content-preview.css?raw';
+import { blobFor, downloadBytes, saveExtension, withExtension } from '../../xlsx/file-commands.js';
+import { workbookActions } from './workbook-actions.js';
 
 /** Trusted host adapters return an embedding page URL, not an Office file URL. */
 export type FileEmbeds = Partial<Record<OfficeKind, (detail: OpenFileDetail) => string>>;
@@ -27,6 +29,7 @@ export class TeamsContentPreview extends LitElement {
 		saving: { state: true },
 		saveError: { state: true },
 		saved: { state: true },
+		downloaded: { state: true },
 		status: { state: true },
 		text: { state: true },
 		frame: { state: true },
@@ -41,6 +44,7 @@ export class TeamsContentPreview extends LitElement {
 	declare saving: boolean;
 	declare saveError: string;
 	declare saved: boolean;
+	declare downloaded: boolean;
 	private revision = 0;
 	private readonly beforeUnload = (event: BeforeUnloadEvent): void => {
 		this.commitPendingEdit();
@@ -66,6 +70,7 @@ export class TeamsContentPreview extends LitElement {
 		this.saving = false;
 		this.saveError = '';
 		this.saved = false;
+		this.downloaded = false;
 		this.status = 'loading';
 		this.text = '';
 		this.frame = null;
@@ -117,6 +122,7 @@ export class TeamsContentPreview extends LitElement {
 		this.saving = false;
 		this.saveError = '';
 		this.saved = false;
+		this.downloaded = false;
 		this.status = 'loading';
 		this.text = '';
 		this.frame = null;
@@ -168,32 +174,47 @@ export class TeamsContentPreview extends LitElement {
 		}
 	}
 
-	private async saveWorkbookCopy(): Promise<void> {
-		if (this.saving || !this.saveCopy || this.native !== 'xlsx' || !this.detail) return;
+	private toggleWorkbook(): void {
+		if (!this.commitPendingEdit()) {
+			this.saveError = 'Finish or cancel the current cell edit before switching modes.';
+			return;
+		}
+		this.saveError = '';
+		this.editing = !this.editing;
+	}
+	private async saveWorkbookCopy(download = false): Promise<void> {
+		if (this.saving || (!download && !this.saveCopy) || this.native !== 'xlsx' || !this.detail)
+			return;
+		if (!this.commitPendingEdit()) {
+			this.saveError = 'Finish or cancel the current cell edit before saving.';
+			return;
+		}
 		const viewer = this.shadowRoot?.querySelector<
 			HTMLElement & { saveBytes(): Promise<Uint8Array>; markClean(): void }
 		>('xlsx-editor');
 		if (!viewer) return;
 		const callback = this.saveCopy;
 		const request = this.abort;
-		const name =
-			this.detail.attachment.name.replace(/\.[^./\\]+$/u, '') +
-			(this.detail.attachment.name.toLowerCase().endsWith('.xlsm') ? '.xlsm' : '.xlsx');
+		const name = withExtension(
+			this.detail.attachment.name,
+			saveExtension(this.detail.attachment.name),
+		);
 		this.saving = true;
 		this.saveError = '';
 		this.saved = false;
+		this.downloaded = false;
 		try {
 			const pendingBytes = viewer.saveBytes();
 			const revision = this.revision;
 			const bytes = await pendingBytes;
 			if (request?.signal.aborted) return;
-			await callback(
-				new File([new Uint8Array(bytes)], name, {
-					type: name.endsWith('.xlsm')
-						? 'application/vnd.ms-excel.sheet.macroEnabled.12'
-						: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-				}),
-			);
+			if (download) {
+				downloadBytes(this.ownerDocument, bytes, name);
+				this.downloaded = true;
+				return;
+			}
+			const blob = blobFor(bytes, name);
+			await callback!(new File([blob], name, { type: blob.type }));
 			if (request?.signal.aborted) return;
 			if (revision === this.revision) viewer.markClean();
 			this.saveError = '';
@@ -216,21 +237,15 @@ export class TeamsContentPreview extends LitElement {
 			<header>
 				<h2>${detail.attachment.name}</h2>
 				${
-					this.native === 'xlsx' && this.status === 'ready' && this.saveCopy
-						? html` <button
-									type="button"
-									?disabled=${this.saving}
-									@click=${() => (this.editing = !this.editing)}
-								>
-									${this.editing ? 'View workbook' : 'Edit workbook'}
-								</button>
-								<button
-									type="button"
-									?disabled=${this.saving || !this.editing}
-									@click=${() => void this.saveWorkbookCopy()}
-								>
-									${this.saving ? 'Saving copy...' : 'Save copy to channel'}
-								</button>`
+					this.native === 'xlsx' && this.status === 'ready'
+						? workbookActions(
+								{ editing: this.editing, saving: this.saving, canShare: !!this.saveCopy },
+								{
+									toggle: () => this.toggleWorkbook(),
+									share: () => void this.saveWorkbookCopy(),
+									download: () => void this.saveWorkbookCopy(true),
+								},
+							)
 						: nothing
 				}
 				${url ? html`<a href=${url} target="_blank" rel="noopener noreferrer">Open externally</a>` : nothing}
@@ -241,8 +256,9 @@ export class TeamsContentPreview extends LitElement {
 					Close preview
 				</button>
 			</header>
-			${this.saveCopy && this.native === 'xlsx' ? html`<p class="hint">Edits stay local until you save a copy to the channel. Other people keep their own copy open.</p>` : nothing}
+			${this.native === 'xlsx' ? html`<p class="hint">Edits stay local. Download a copy${this.saveCopy ? ' or save a copy to the channel' : ''} to keep them. Other people keep their own copy open.</p>` : nothing}
 			${this.saved ? html`<p role="status">Workbook copy shared in the channel.</p>` : nothing}
+			${this.downloaded ? html`<p role="status">Workbook download started. Your changes remain local.</p>` : nothing}
 			${this.saveError ? html`<p role="alert">${this.saveError}</p>` : nothing}
 			${this.status === 'loading' ? html`<p role="status">Loading preview...</p>` : nothing}
 			${
@@ -268,22 +284,29 @@ export class TeamsContentPreview extends LitElement {
 					? html`<docx-editor .readOnly=${true} .fileName=${detail.attachment.name}></docx-editor>`
 					: this.native === 'xlsx'
 						? html`<xlsx-editor
-								.readOnly=${!this.editing || !this.saveCopy}
+								.readOnly=${!this.editing}
 								.fileName=${detail.attachment.name}
 								@workbook-change=${() => {
 									this.revision++;
 									this.saved = false;
+									this.downloaded = false;
 								}}
 								@dirty-change=${(e: CustomEvent<{ dirty: boolean }>) => (this.dirty = e.detail.dirty)}
 								@readonly-change=${(e: CustomEvent<{ readOnly: boolean }>) => {
-									if (!this.saveCopy && !e.detail.readOnly)
-										(e.target as HTMLElement & { readOnly: boolean }).readOnly = true;
-									else this.editing = !e.detail.readOnly;
+									this.editing = !e.detail.readOnly;
 								}}
 								@file-command=${(e: CustomEvent<{ command: string }>) => {
-									if (e.detail.command === 'save' && this.saveCopy) {
+									if (
+										['save', 'saveAs', 'export', 'exportCsv'].includes(e.detail.command) &&
+										!this.commitPendingEdit()
+									) {
 										e.preventDefault();
-										void this.saveWorkbookCopy();
+										this.saveError = 'Finish or cancel the current cell edit before saving.';
+										return;
+									}
+									if (e.detail.command === 'save') {
+										e.preventDefault();
+										void this.saveWorkbookCopy(!this.saveCopy);
 									}
 									if (e.detail.command === 'new' || e.detail.command === 'open') e.preventDefault();
 								}}

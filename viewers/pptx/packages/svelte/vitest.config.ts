@@ -4,6 +4,8 @@ import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+	// Shared UI sources and their raw CSS now live outside the viewer workspace.
+	server: { fs: { allow: [resolve(__dirname, '../../../..')] } },
 	plugins: [svelte({ compilerOptions: { css: 'injected' } })],
 	resolve: {
 		// Test against workspace sources (not dists) so the suite never runs
@@ -18,7 +20,10 @@ export default defineConfig({
 				find: 'ooxml-ui/pptx/ai',
 				replacement: resolve(__dirname, '../../../../src/ui/src/pptx/ai/index.ts'),
 			},
-			{ find: 'ooxml-ui/pptx', replacement: resolve(__dirname, '../../../../src/ui/src/pptx/index.ts') },
+			{
+				find: 'ooxml-ui/pptx',
+				replacement: resolve(__dirname, '../../../../src/ui/src/pptx/index.ts'),
+			},
 			{
 				find: 'pptx-viewer-core/chart',
 				replacement: resolve(__dirname, '../core/src/chart/index.ts'),
