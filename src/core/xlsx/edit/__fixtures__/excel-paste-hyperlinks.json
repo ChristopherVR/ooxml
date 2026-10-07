@@ -1,0 +1,3014 @@
+{
+  "version": "16.0",
+  "build": 20430.0,
+  "cases": [
+    {
+      "mode": "all",
+      "transpose": false,
+      "skipBlanks": false,
+      "operation": "none",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 2.0,
+          "link": {
+            "target": "https://example.com/source?x=1&y=2",
+            "location": "",
+            "tooltip": "source tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 4.0,
+          "link": {
+            "target": "",
+            "location": "Sheet1!$J$1",
+            "tooltip": "internal tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 3.0,
+          "link": null
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": null,
+          "link": null
+        }
+      ]
+    },
+    {
+      "mode": "all",
+      "transpose": false,
+      "skipBlanks": false,
+      "operation": "add",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 11.0,
+          "link": {
+            "target": "https://example.com/source?x=1&y=2",
+            "location": "",
+            "tooltip": "source tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 13.0,
+          "link": {
+            "target": "",
+            "location": "Sheet1!$J$1",
+            "tooltip": "internal tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 21.0,
+          "link": null
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": null
+        }
+      ]
+    },
+    {
+      "mode": "all",
+      "transpose": false,
+      "skipBlanks": true,
+      "operation": "none",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 2.0,
+          "link": {
+            "target": "https://example.com/source?x=1&y=2",
+            "location": "",
+            "tooltip": "source tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 4.0,
+          "link": {
+            "target": "",
+            "location": "Sheet1!$J$1",
+            "tooltip": "internal tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 12.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "all",
+      "transpose": false,
+      "skipBlanks": true,
+      "operation": "add",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 11.0,
+          "link": {
+            "target": "https://example.com/source?x=1&y=2",
+            "location": "",
+            "tooltip": "source tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 13.0,
+          "link": {
+            "target": "",
+            "location": "Sheet1!$J$1",
+            "tooltip": "internal tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 21.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "all",
+      "transpose": true,
+      "skipBlanks": false,
+      "operation": "none",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 2.0,
+          "link": {
+            "target": "https://example.com/source?x=1&y=2",
+            "location": "",
+            "tooltip": "source tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 3.0,
+          "link": null
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 4.0,
+          "link": {
+            "target": "",
+            "location": "Sheet1!$J$1",
+            "tooltip": "internal tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": null,
+          "link": null
+        }
+      ]
+    },
+    {
+      "mode": "all",
+      "transpose": true,
+      "skipBlanks": false,
+      "operation": "add",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 11.0,
+          "link": {
+            "target": "https://example.com/source?x=1&y=2",
+            "location": "",
+            "tooltip": "source tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 21.0,
+          "link": null
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 13.0,
+          "link": {
+            "target": "",
+            "location": "Sheet1!$J$1",
+            "tooltip": "internal tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": null
+        }
+      ]
+    },
+    {
+      "mode": "all",
+      "transpose": true,
+      "skipBlanks": true,
+      "operation": "none",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 2.0,
+          "link": {
+            "target": "https://example.com/source?x=1&y=2",
+            "location": "",
+            "tooltip": "source tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 12.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 4.0,
+          "link": {
+            "target": "",
+            "location": "Sheet1!$J$1",
+            "tooltip": "internal tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "all",
+      "transpose": true,
+      "skipBlanks": true,
+      "operation": "add",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 11.0,
+          "link": {
+            "target": "https://example.com/source?x=1&y=2",
+            "location": "",
+            "tooltip": "source tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 21.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 13.0,
+          "link": {
+            "target": "",
+            "location": "Sheet1!$J$1",
+            "tooltip": "internal tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "values",
+      "transpose": false,
+      "skipBlanks": false,
+      "operation": "none",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 2.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 4.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 3.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": null,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "values",
+      "transpose": false,
+      "skipBlanks": false,
+      "operation": "add",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 11.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 13.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 12.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "values",
+      "transpose": false,
+      "skipBlanks": true,
+      "operation": "none",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 2.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 4.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 3.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "values",
+      "transpose": false,
+      "skipBlanks": true,
+      "operation": "add",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 11.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 13.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 12.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "values",
+      "transpose": true,
+      "skipBlanks": false,
+      "operation": "none",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 2.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 3.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 4.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": null,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "values",
+      "transpose": true,
+      "skipBlanks": false,
+      "operation": "add",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 11.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 12.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 13.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "values",
+      "transpose": true,
+      "skipBlanks": true,
+      "operation": "none",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 2.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 3.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 4.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "values",
+      "transpose": true,
+      "skipBlanks": true,
+      "operation": "add",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 11.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 12.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 13.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "formulas",
+      "transpose": false,
+      "skipBlanks": false,
+      "operation": "none",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 2.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 4.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 3.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": null,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "formulas",
+      "transpose": false,
+      "skipBlanks": false,
+      "operation": "add",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 11.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 13.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 21.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "formulas",
+      "transpose": false,
+      "skipBlanks": true,
+      "operation": "none",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 2.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 4.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 12.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "formulas",
+      "transpose": false,
+      "skipBlanks": true,
+      "operation": "add",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 11.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 13.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 21.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "formulas",
+      "transpose": true,
+      "skipBlanks": false,
+      "operation": "none",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 2.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 3.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 4.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": null,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "formulas",
+      "transpose": true,
+      "skipBlanks": false,
+      "operation": "add",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 11.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 21.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 13.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "formulas",
+      "transpose": true,
+      "skipBlanks": true,
+      "operation": "none",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 2.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 12.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 4.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "formulas",
+      "transpose": true,
+      "skipBlanks": true,
+      "operation": "add",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 11.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 21.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 13.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "formats",
+      "transpose": false,
+      "skipBlanks": false,
+      "operation": "none",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "formats",
+      "transpose": false,
+      "skipBlanks": false,
+      "operation": "add",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "formats",
+      "transpose": false,
+      "skipBlanks": true,
+      "operation": "none",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "formats",
+      "transpose": false,
+      "skipBlanks": true,
+      "operation": "add",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "formats",
+      "transpose": true,
+      "skipBlanks": false,
+      "operation": "none",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "formats",
+      "transpose": true,
+      "skipBlanks": false,
+      "operation": "add",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "formats",
+      "transpose": true,
+      "skipBlanks": true,
+      "operation": "none",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "formats",
+      "transpose": true,
+      "skipBlanks": true,
+      "operation": "add",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "noBorders",
+      "transpose": false,
+      "skipBlanks": false,
+      "operation": "none",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 2.0,
+          "link": {
+            "target": "https://example.com/source?x=1&y=2",
+            "location": "",
+            "tooltip": "source tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 4.0,
+          "link": {
+            "target": "",
+            "location": "Sheet1!$J$1",
+            "tooltip": "internal tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 3.0,
+          "link": null
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": null,
+          "link": null
+        }
+      ]
+    },
+    {
+      "mode": "noBorders",
+      "transpose": false,
+      "skipBlanks": false,
+      "operation": "add",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 11.0,
+          "link": {
+            "target": "https://example.com/source?x=1&y=2",
+            "location": "",
+            "tooltip": "source tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 13.0,
+          "link": {
+            "target": "",
+            "location": "Sheet1!$J$1",
+            "tooltip": "internal tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 21.0,
+          "link": null
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": null
+        }
+      ]
+    },
+    {
+      "mode": "noBorders",
+      "transpose": false,
+      "skipBlanks": true,
+      "operation": "none",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 2.0,
+          "link": {
+            "target": "https://example.com/source?x=1&y=2",
+            "location": "",
+            "tooltip": "source tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 4.0,
+          "link": {
+            "target": "",
+            "location": "Sheet1!$J$1",
+            "tooltip": "internal tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 12.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "noBorders",
+      "transpose": false,
+      "skipBlanks": true,
+      "operation": "add",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 11.0,
+          "link": {
+            "target": "https://example.com/source?x=1&y=2",
+            "location": "",
+            "tooltip": "source tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 13.0,
+          "link": {
+            "target": "",
+            "location": "Sheet1!$J$1",
+            "tooltip": "internal tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 21.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "noBorders",
+      "transpose": true,
+      "skipBlanks": false,
+      "operation": "none",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 2.0,
+          "link": {
+            "target": "https://example.com/source?x=1&y=2",
+            "location": "",
+            "tooltip": "source tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 3.0,
+          "link": null
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 4.0,
+          "link": {
+            "target": "",
+            "location": "Sheet1!$J$1",
+            "tooltip": "internal tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": null,
+          "link": null
+        }
+      ]
+    },
+    {
+      "mode": "noBorders",
+      "transpose": true,
+      "skipBlanks": false,
+      "operation": "add",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 11.0,
+          "link": {
+            "target": "https://example.com/source?x=1&y=2",
+            "location": "",
+            "tooltip": "source tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 21.0,
+          "link": null
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 13.0,
+          "link": {
+            "target": "",
+            "location": "Sheet1!$J$1",
+            "tooltip": "internal tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": null
+        }
+      ]
+    },
+    {
+      "mode": "noBorders",
+      "transpose": true,
+      "skipBlanks": true,
+      "operation": "none",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 2.0,
+          "link": {
+            "target": "https://example.com/source?x=1&y=2",
+            "location": "",
+            "tooltip": "source tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 12.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 4.0,
+          "link": {
+            "target": "",
+            "location": "Sheet1!$J$1",
+            "tooltip": "internal tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "noBorders",
+      "transpose": true,
+      "skipBlanks": true,
+      "operation": "add",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 11.0,
+          "link": {
+            "target": "https://example.com/source?x=1&y=2",
+            "location": "",
+            "tooltip": "source tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 21.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 13.0,
+          "link": {
+            "target": "",
+            "location": "Sheet1!$J$1",
+            "tooltip": "internal tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "comments",
+      "transpose": false,
+      "skipBlanks": false,
+      "operation": "none",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "comments",
+      "transpose": false,
+      "skipBlanks": false,
+      "operation": "add",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "comments",
+      "transpose": false,
+      "skipBlanks": true,
+      "operation": "none",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "comments",
+      "transpose": false,
+      "skipBlanks": true,
+      "operation": "add",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "comments",
+      "transpose": true,
+      "skipBlanks": false,
+      "operation": "none",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "comments",
+      "transpose": true,
+      "skipBlanks": false,
+      "operation": "add",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "comments",
+      "transpose": true,
+      "skipBlanks": true,
+      "operation": "none",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "comments",
+      "transpose": true,
+      "skipBlanks": true,
+      "operation": "add",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "validation",
+      "transpose": false,
+      "skipBlanks": false,
+      "operation": "none",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "validation",
+      "transpose": false,
+      "skipBlanks": false,
+      "operation": "add",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "validation",
+      "transpose": false,
+      "skipBlanks": true,
+      "operation": "none",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "validation",
+      "transpose": false,
+      "skipBlanks": true,
+      "operation": "add",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "validation",
+      "transpose": true,
+      "skipBlanks": false,
+      "operation": "none",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "validation",
+      "transpose": true,
+      "skipBlanks": false,
+      "operation": "add",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "validation",
+      "transpose": true,
+      "skipBlanks": true,
+      "operation": "none",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "validation",
+      "transpose": true,
+      "skipBlanks": true,
+      "operation": "add",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "widths",
+      "transpose": false,
+      "skipBlanks": false,
+      "operation": "none",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "widths",
+      "transpose": false,
+      "skipBlanks": false,
+      "operation": "add",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "widths",
+      "transpose": false,
+      "skipBlanks": true,
+      "operation": "none",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "widths",
+      "transpose": false,
+      "skipBlanks": true,
+      "operation": "add",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "widths",
+      "transpose": true,
+      "skipBlanks": false,
+      "operation": "none",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "widths",
+      "transpose": true,
+      "skipBlanks": false,
+      "operation": "add",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "widths",
+      "transpose": true,
+      "skipBlanks": true,
+      "operation": "none",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    },
+    {
+      "mode": "widths",
+      "transpose": true,
+      "skipBlanks": true,
+      "operation": "add",
+      "cells": [
+        {
+          "row": 3,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 3,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 3,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        },
+        {
+          "row": 4,
+          "col": 4,
+          "value": 9.0,
+          "link": {
+            "target": "https://example.com/destination",
+            "location": "",
+            "tooltip": "dest tip"
+          }
+        }
+      ]
+    }
+  ]
+}
