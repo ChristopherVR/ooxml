@@ -3,8 +3,66 @@ import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
 import { fileInput, fileNameLabel, newDocument, saveButton } from './helpers';
 import type { DocxEditorElement } from '../../viewers/docx/packages/web-component/src';
+import type { EditorView } from 'prosemirror-view';
+import type { TextSelection } from 'prosemirror-state';
 
 const w = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+
+for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'])
+	for (const simple of [true, false])
+		test(`${framework}: pasted ${simple ? 'simple' : 'complex'} field result HTML remains literal text`, async ({
+			page,
+		}) => {
+			await page.goto(`/?framework=${framework}`);
+			await (
+				await fileInput(page)
+			).setInputFiles({
+				name: 'field.docx',
+				mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+				buffer: await fieldDocx(simple),
+			});
+			const editor = page.locator('docx-editor');
+			const result = editor.locator('[data-field="AUTHOR"]').first();
+			await expect(result).toContainText('Ann');
+			const html = await result.evaluate((element) => element.outerHTML);
+			const body = editor.locator('.ProseMirror');
+			await editor.evaluate((element, html) => {
+				// Synthetic paste events have no native clipboard selection sequencing.
+				const view = (element as unknown as { view: EditorView }).view;
+				const Selection = view.state.selection.constructor as typeof TextSelection;
+				view.dispatch(
+					view.state.tr.setSelection(
+						Selection.create(view.state.doc, view.state.doc.content.size - 1),
+					),
+				);
+				view.focus();
+				const data = new DataTransfer();
+				data.setData('text/html', html);
+				view.dom.dispatchEvent(
+					new ClipboardEvent('paste', { clipboardData: data, bubbles: true, cancelable: true }),
+				);
+			}, html);
+			await expect(body).toContainText('wrote this.Ann');
+			const model = await editor.evaluate(
+				(element) => (element as DocxEditorElement).documentModel!,
+			);
+			expect(
+				model.blocks.flatMap((block) =>
+					block.type === 'paragraph' ? block.runs.filter((run) => run.field) : [],
+				),
+			).toHaveLength(1);
+			const bytes = await editor.evaluate(async (element) =>
+				Array.from(await (element as DocxEditorElement).saveBytes()),
+			);
+			const xml = await (
+				await JSZip.loadAsync(new Uint8Array(bytes))
+			)
+				.file('word/document.xml')!
+				.async('string');
+			expect(xml.match(simple ? /<w:fldSimple\b/g : /w:fldCharType="begin"/g)).toHaveLength(1);
+			await editor.getByRole('button', { name: 'Undo', exact: true }).click();
+			await expect(body).not.toContainText('wrote this.Ann');
+		});
 
 for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'])
 	for (const kind of ['complex', 'simple', 'adjacent'] as const)

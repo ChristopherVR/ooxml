@@ -529,3 +529,20 @@ field's scope matches native Word (6:29) and excludes the second field. This
 addresses the imported adjacency gap noted above. Identity is regenerated from
 source order on import, not written as an OOXML attribute. Clipboard copies and
 new adjacent fields lacking an identity are not established by these cases.
+
+### Field-result clipboard projection
+
+The shared field guard projects copied/pasted result-only field marks to literal
+text while retaining formatting and removing boundary identity. Complete complex
+field representations keep their markers/results. Native Word formatted-range
+transfer records three fields for a whole-field copy between two existing fields,
+and two fields for full-result or one-character copies; copied bold survives.
+The core helper is shared by both clipboard hooks, with mounted history and Yjs
+convergence/export cases. Native range transfer corroborates these semantics;
+full Microsoft 365 clipboard formats, whole simple-field copying in the editing
+surface and pasting within field results still need separate coverage.
+
+All three clipboard-hook/model-adapter exports reopen in Word with the same
+field counts, complete body text and copied bold formatting as their native
+range-transfer references. `write-word-field-copy-exports.mjs` and
+`check-word-field-copy-exports.ps1` reproduce this bounded comparison.

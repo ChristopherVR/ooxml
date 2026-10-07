@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { readFile } from 'node:fs/promises';
-import { afterEach, expect, it } from 'vitest';
+import { afterEach, expect, it, vi } from 'vitest';
 import { TextSelection } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import { loadDocx, type DocumentModel } from 'ooxml-core/docx';
@@ -10,7 +10,7 @@ import {
 	transportProvider,
 	type CollabSession,
 } from 'ooxml-core/collab';
-import { wordYjsPluginKey, commentIdsAtSelection } from 'ooxml-core/docx/ui';
+import { wordYjsPluginKey, commentIdsAtSelection, fieldResultRanges } from 'ooxml-core/docx/ui';
 import { DocxEditorElement } from './index';
 import './index';
 import { applyFontFormat } from './font-format';
@@ -26,6 +26,7 @@ afterEach(() => {
 		editor.remove();
 	}
 	for (const session of sessions.splice(0)) session.destroy();
+	vi.unstubAllGlobals();
 });
 
 for (const name of [
@@ -69,6 +70,20 @@ for (const name of [
 		const bv = viewOf(b!);
 		const ab = wordYjsPluginKey.getState(av.state)!;
 		const bb = wordYjsPluginKey.getState(bv.state)!;
+		if (name === 'simple-field' || name === 'adjacent-fields') {
+			vi.stubGlobal('ClipboardEvent', Event);
+			const field = fieldResultRanges(av.state.doc)[0]!;
+			av.dispatch(
+				av.state.tr.setSelection(TextSelection.create(av.state.doc, field.from, field.to)),
+			);
+			const { dom } = av.serializeForClipboard(av.state.selection.content());
+			av.dispatch(av.state.tr.setSelection(TextSelection.create(av.state.doc, field.to)));
+			expect(av.pasteHTML(dom.innerHTML)).toBe(true);
+			expect(av.state.doc.eq(bv.state.doc)).toBe(true);
+			expect(fieldResultRanges(bv.state.doc).map((run) => run.text)).toEqual(
+				name === 'simple-field' ? ['ABCDE'] : ['ABCDE', 'ABCDE'],
+			);
+		}
 		let pos = -1;
 		av.state.doc.descendants((node, position) => {
 			if (

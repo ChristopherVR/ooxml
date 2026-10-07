@@ -1,0 +1,33 @@
+{
+	"applicationVersion": "16.0",
+	"applicationBuild": "16.0.20430",
+	"cases": [
+		{
+			"name": "partial",
+			"text": "BeforeABCDEBABCDEAfter\r",
+			"revisions": 0,
+			"pictures": 0,
+			"footnotes": 0,
+			"footnoteRevisions": 0,
+			"pages": 1
+		},
+		{
+			"name": "result",
+			"text": "BeforeABCDEABCDEABCDEAfter\r",
+			"revisions": 0,
+			"pictures": 0,
+			"footnotes": 0,
+			"footnoteRevisions": 0,
+			"pages": 1
+		},
+		{
+			"name": "whole",
+			"text": "BeforeABCDEABCDEABCDEAfter\r",
+			"revisions": 0,
+			"pictures": 0,
+			"footnotes": 0,
+			"footnoteRevisions": 0,
+			"pages": 1
+		}
+	]
+}

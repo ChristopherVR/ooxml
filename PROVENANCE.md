@@ -1513,3 +1513,18 @@ button into the existing panel, sharing its worker transaction and draft
 lifecycle across all six bindings. Native recorder rotation extends the shared
 rectangle/ellipse evidence collection; browser tests reuse native SVG physical
 registration. Pointer rotation handles and native Office reopen remain open.
+
+## Shared Word field clipboard projection
+
+Source: ChristopherVR/ooxml at `9303f68aa`, the core field guard and existing
+ProseMirror clipboard hooks. New `src/core/docx/ui/field-clipboard.ts` removes
+result-only field metadata while retaining ordinary formatting, slice openness
+and complete complex-field representations. Copied source nodes are unchanged.
+Both copy and paste use the same projection; the UI has no duplicate codec.
+Native formatted-range transfer fixtures record whole-field, result-only and
+partial-result behavior. This is owned desktop Word COM range evidence, not
+certification of all Microsoft 365 clipboard formats or cross-app clipboard UI.
+
+The UI model-adapter export driver consumes the core clipboard hooks; an owned
+native comparison verifies all three saved exports against the recorded field
+counts, text and copied bold. No clipboard, parser or provider engine is forked.
