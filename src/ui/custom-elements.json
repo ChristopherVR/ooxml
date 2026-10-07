@@ -649,6 +649,10 @@
 						},
 						{
 							"kind": "field",
+							"name": "replyCounts"
+						},
+						{
+							"kind": "field",
 							"name": "selfId",
 							"type": {
 								"text": "string"
@@ -671,6 +675,9 @@
 						},
 						{
 							"name": "office-chat-reply"
+						},
+						{
+							"name": "office-chat-thread"
 						}
 					]
 				}
