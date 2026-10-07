@@ -4,7 +4,7 @@ import { definer } from '../registry.js';
 import { TeamsElement, withStyles } from './base.js';
 import { icon } from './icons.js';
 import css from './chat-composer.css?raw';
-import type { ChatDraft } from 'ooxml-core/teams';
+import { MAX_ATTACHMENTS, type ChatDraft } from 'ooxml-core/teams';
 
 export const EMOJI = [
 	'😀',
@@ -28,7 +28,7 @@ export const EMOJI = [
 	'✅',
 	'👀',
 ] as const;
-const MAX_FILES = 10;
+const MAX_FILES = MAX_ATTACHMENTS;
 
 /**
  * The compose box: a growing text area, attach and emoji buttons, reply or edit banner and a

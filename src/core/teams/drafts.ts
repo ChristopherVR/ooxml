@@ -1,5 +1,5 @@
 import { isValidId } from '../collab/validation.js';
-import { MAX_MESSAGE_CHARS } from './model.js';
+import { MAX_MESSAGE_CHARS, MAX_ATTACHMENTS } from './model.js';
 import type { StorageLike, UploadableFile } from './store.js';
 
 export interface DraftContext {
@@ -7,6 +7,8 @@ export interface DraftContext {
 	threadId?: string;
 	editId?: string;
 	replyTo?: string;
+	/** Separate recovery when a failed send would overwrite a newer compose draft. */
+	draftId?: string;
 }
 export interface ChatDraft {
 	text: string;
@@ -19,10 +21,15 @@ export interface SavedDraft extends ChatDraft {
 	updatedAt: number;
 }
 const idOf = (context: DraftContext) =>
-	JSON.stringify([context.channelId, context.threadId ?? '', context.editId ?? '']);
+	JSON.stringify([
+		context.channelId,
+		context.threadId ?? '',
+		context.editId ?? '',
+		context.draftId ?? '',
+	]);
 const valid = (context: DraftContext) =>
 	isValidId(context.channelId, 64) &&
-	[context.threadId, context.editId, context.replyTo].every(
+	[context.threadId, context.editId, context.replyTo, context.draftId].every(
 		(id) => id === undefined || isValidId(id),
 	);
 const names = (input: unknown): string[] =>
@@ -32,7 +39,7 @@ const names = (input: unknown): string[] =>
 					(name): name is string =>
 						typeof name === 'string' && name.length > 0 && name.length <= 255,
 				)
-				.slice(0, 10)
+				.slice(0, MAX_ATTACHMENTS)
 		: [];
 const empty = (): ChatDraft => ({ text: '', files: [], missingFiles: [] });
 const copy = (draft: ChatDraft): ChatDraft => ({
@@ -63,6 +70,7 @@ export function createDraftStore(storage: StorageLike | undefined, key: string) 
 					...(row.context.threadId ? { threadId: row.context.threadId } : {}),
 					...(row.context.editId ? { editId: row.context.editId } : {}),
 					...(row.context.replyTo ? { replyTo: row.context.replyTo } : {}),
+					...(row.context.draftId ? { draftId: row.context.draftId } : {}),
 				};
 				rows.set(idOf(context), {
 					context,
@@ -99,7 +107,7 @@ export function createDraftStore(storage: StorageLike | undefined, key: string) 
 			rows.set(id, {
 				context: { ...context },
 				text: draft.text.slice(0, MAX_MESSAGE_CHARS),
-				files: draft.files.slice(0, 10),
+				files: draft.files.slice(0, MAX_ATTACHMENTS),
 				missingFiles: names(draft.missingFiles),
 				updatedAt: Date.now(),
 			});
@@ -115,7 +123,9 @@ export function createDraftStore(storage: StorageLike | undefined, key: string) 
 		set,
 		clear: (context: DraftContext) => set(context, empty()),
 		restore(context: DraftContext, draft: ChatDraft, revision: number) {
-			if (revisions.get(idOf(context)) === revision) set(context, draft);
+			if (revisions.get(idOf(context)) !== revision) return false;
+			set(context, draft);
+			return true;
 		},
 		list(): SavedDraft[] {
 			return [...rows.values()]

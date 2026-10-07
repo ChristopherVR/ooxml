@@ -265,7 +265,7 @@ session. After reload, restored attachment names require reattaching or explicit
 discard before sending. The UI does not silently send a draft without those files.
 Successful sends clear their captured draft without clearing newer text typed
 during an upload; rejected edits retain the draft. Local storage is bounded to
-512 KiB of serialized text/metadata, 500 restored contexts and ten attachments per
+512 KiB of serialized text/metadata, 500 restored contexts and twenty attachments per
 draft; blocked storage or larger snapshots preserve only session state. Cross-device
 draft sync, durable attachment bytes, unavailable-message recovery and shared read
 receipts remain outstanding. Unit tests cover context isolation, defensive copies,
@@ -274,6 +274,23 @@ navigation, retained attachment bytes, central resume, reload, missing-attachmen
 guard and sending. Microsoft's current
 [Drafts quick view](https://support.microsoft.com/en-us/teams/platform/what-s-new-in-microsoft-teams)
 is the workflow reference; this local implementation does not establish full parity.
+
+## Thirteenth implemented slice: reliable chat attachment transfers
+
+Message attachments use configured storage, retain their display names and receive
+fresh storage names on every attempt. A post or thread reply is published only
+after every file has a valid URL. Missing storage, invalid files and partial upload
+failures retain the complete draft instead of publishing filename-only cards.
+Channel transfer status shows completed file counts and supports cancellation,
+including adapters that ignore abort signals. Failures and cancellations recover
+the original text and attachment bytes in Drafts; newer text typed during the send
+is preserved as a separate draft. Resuming and sending uses the captured channel
+and thread context. Unit and browser coverage exercises partial failure, retry,
+cancellation, late adapter completion, preserved bytes and concurrent new text.
+Progress counts completed files rather than transferred bytes. Uploaded storage
+objects are not automatically removed after failure or cancellation because the
+storage contract has no deletion operation. Durable attachment recovery, shared
+storage permissions, folders and version/save-back contracts remain outstanding.
 
 ## Next releasable slices
 

@@ -39,6 +39,7 @@ import css from './teams-app.css?raw';
 import { threadPane } from './thread-pane.js';
 import { followedThreads } from './followed-threads.js';
 import { draftList } from './draft-list.js';
+import { messageTransfers } from './message-transfers.js';
 
 export type { FileUploader } from 'ooxml-core/teams';
 export interface OpenFileDetail {
@@ -619,6 +620,7 @@ export class TeamsApp extends LitElement {
 						</header>`
 			}
 			${this.addingTab && !compact ? this.tabForm() : nothing}
+			${c ? messageTransfers(s, c) : nothing}
 			${activeTab && !sharedTab && !compact ? html`<p role="status">This tab was removed from the channel. Your open copy remains here until you close it.</p>` : nothing}
 			${
 				activeTab && !compact

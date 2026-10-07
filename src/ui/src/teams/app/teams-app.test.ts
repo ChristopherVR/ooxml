@@ -121,7 +121,10 @@ describe('<teams-app>', () => {
 		});
 		el.client!.createChannel('Files');
 		await tick(10);
-		await el.client!.send({ text: 'see file', files: [new File(['x'], 'Plan.docx')] });
+		el.client!.workspace.chat.post(el.client!.getState().selectedChannelId, {
+			text: 'see file',
+			attachments: [{ name: 'Plan.docx', kind: 'docx', url: 'https://files.test/Plan.docx' }],
+		});
 		await tick(20);
 		await el.updateComplete;
 		const list = q<HTMLElement & { updateComplete: Promise<boolean> }>(

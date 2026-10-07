@@ -6,10 +6,12 @@
 import * as Y from 'yjs';
 import { fromBase64, toBase64 } from '../collab/codec.js';
 import { Emitter } from '../collab/emitter.js';
+import { createClientId } from '../collab/identity.js';
 import type { ConnectionStatus } from '../collab/provider.js';
 import type { CallParticipant, CallSession, MediaDevicesLike } from './call.js';
 import type { Attachment, Channel, Message } from './model.js';
 import { createFileActions } from './files.js';
+import { createMessageTransfers, type MessageTransfer } from './message-transfer.js';
 import { checkFileAbort, withFileAbort, type FileOperationOptions } from './file-transfer.js';
 import type { ChannelTab, TabContent } from './tabs.js';
 import { channelThreads, type MessageThread } from './threads.js';
@@ -95,6 +97,7 @@ export interface TeamsState {
 	threadFollowSettings: ThreadFollowSettings;
 	draft: ChatDraft;
 	drafts: SavedDraft[];
+	messageTransfers: MessageTransfer[];
 	files: FileEntry[];
 	/** Every file in every channel, newest first. */
 	allFiles: FileEntry[];
@@ -144,6 +147,7 @@ export interface TeamsClient {
 	setDraft: (draft: ChatDraft) => void;
 	openDraft: (context: DraftContext) => boolean;
 	discardDraft: (context: DraftContext) => void;
+	cancelSend: (transferId: string) => void;
 	startReply: (messageId: string) => void;
 	openThread: (messageId: string) => void;
 	closeThread: () => void;
@@ -242,12 +246,15 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 
 	const messagesOf = (id: string): Message[] => ws.chat.messages(id);
 	let threadId = '';
+	let activeDraftId = '';
+	let transfers: ReturnType<typeof createMessageTransfers> | undefined;
 	const draftContext = (): DraftContext => {
 		const root =
 			threadId ||
 			(replyId ? channelThreads(messagesOf(selected)).thread(replyId)?.root.id : undefined);
 		return {
 			channelId: selected,
+			...(activeDraftId ? { draftId: activeDraftId } : {}),
 			...(root ? { threadId: root } : {}),
 			...(editId ? { editId } : {}),
 			...(replyId ? { replyTo: replyId } : {}),
@@ -259,7 +266,7 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 	const compute = (): TeamsState => {
 		const channels = visibleChannels();
 		if (!channels.some((c) => c.id === selected)) {
-			threadId = replyId = editId = '';
+			activeDraftId = threadId = replyId = editId = '';
 			selected = channels[0]?.id ?? '';
 			if (selected) ws.setActiveChannel(selected);
 		}
@@ -299,6 +306,7 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 				!!thread && follows.has(selected, thread.root.id, (id) => threads.thread(id)?.root.id),
 			followedThreads: follows.view(channels, messagesOf, ws.user.id),
 			threadFollowSettings: follows.settings(),
+			messageTransfers: transfers?.list() ?? [],
 			draft: drafts.read(
 				draftContext(),
 				messages.find((message) => message.id === editId)?.text ?? '',
@@ -422,8 +430,7 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			}
 			const target = server();
 			if (!target) {
-				notice('No file server configured: sharing the name only');
-				return attachment;
+				throw new Error('Configure file storage before sharing attachments');
 			}
 			const doFetch = options.fetch ?? globalThis.fetch;
 			const res = await doFetch(
@@ -439,10 +446,17 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			attachment.url = `${target.base}${((await res.json()) as { url: string }).url}`;
 		} catch (error) {
 			checkFileAbort(signal);
-			notice(error instanceof Error ? error.message : 'Upload failed');
+			throw error;
 		}
 		return attachment;
 	};
+	transfers = createMessageTransfers({
+		available: (channelId) =>
+			!destroyed && visibleChannels().some((channel) => channel.id === channelId),
+		canUpload: () => Boolean(options.uploadFile || server()),
+		upload,
+		changed: refresh,
+	});
 
 	const act =
 		<A extends unknown[]>(fn: (...args: A) => void) =>
@@ -525,20 +539,21 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 		select: act((id) => {
 			if (id === selected) return;
 			selected = id;
-			threadId = replyId = editId = '';
+			activeDraftId = threadId = replyId = editId = '';
 			ws.setActiveChannel(id);
 			scheduleSave();
 		}),
 		createChannel: act((name, topic = '') => {
 			const channel = ws.chat.createChannel({ name, topic });
 			if (channel) {
-				threadId = replyId = editId = '';
+				activeDraftId = threadId = replyId = editId = '';
 				selected = channel.id;
 				ws.setActiveChannel(channel.id);
 			}
 		}),
 		async send({ text, files = [] }) {
 			if (!selected) return;
+			files = [...files];
 			if (!editId && !text.trim() && !files.length) return;
 			const context = draftContext();
 			const previous = drafts.read(context);
@@ -561,23 +576,34 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 				editId = '';
 				return refresh();
 			}
-			const attachments: Attachment[] = [];
-			for (const file of files) attachments.push(await upload(file));
-			if (destroyed || !visibleChannels().some((c) => c.id === channelId)) {
-				drafts.restore(context, sentDraft, revision);
-				notice('The channel is no longer available; the message was not shared');
-				return;
+			try {
+				const publish = (attachments: Attachment[]) => {
+					if (destroyed || !visibleChannels().some((channel) => channel.id === channelId))
+						throw new Error('The channel is no longer available');
+					const message = ws.chat.post(channelId, {
+						text,
+						...(replyingTo ? { replyTo: replyingTo } : {}),
+						attachments,
+					});
+					if (!message) throw new Error('The message could not be shared');
+					followAuthored(message);
+					if (selected === channelId && replyId === replyingTo) replyId = '';
+				};
+				if (files.length) await transfers!.upload(context, files, publish);
+				else publish([]);
+			} catch (error) {
+				if (!drafts.restore(context, sentDraft, revision))
+					drafts.set({ ...context, draftId: createClientId() }, sentDraft);
+				notice(
+					error instanceof Error && error.name === 'AbortError'
+						? 'Message send canceled. The message was saved in Drafts.'
+						: `Message was not sent: ${error instanceof Error ? error.message : 'Upload failed'}. Saved in Drafts.`,
+				);
+			} finally {
+				refresh();
 			}
-			const message = ws.chat.post(channelId, {
-				text,
-				...(replyingTo ? { replyTo: replyingTo } : {}),
-				attachments,
-			});
-			followAuthored(message);
-			if (!message) drafts.restore(context, sentDraft, revision);
-			if (selected === channelId && replyId === replyingTo) replyId = '';
-			refresh();
 		},
+		cancelSend: (id) => transfers?.cancel(id),
 		startReply: act((id) => {
 			if (find(id)) [replyId, editId] = [id, ''];
 		}),
@@ -600,6 +626,7 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			)
 				return false;
 			selected = context.channelId;
+			activeDraftId = context.draftId ?? '';
 			threadId = context.threadId ?? '';
 			editId = context.editId ?? '';
 			replyId = context.replyTo ?? '';
@@ -610,13 +637,14 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 		openThread: act((id) => {
 			const thread = channelThreads(messagesOf(selected)).thread(id);
 			if (thread) {
+				activeDraftId = '';
 				threadId = thread.root.id;
 				replyId = editId = '';
 				markThreadRead(selected, thread.root.id);
 			}
 		}),
 		closeThread: act(() => {
-			threadId = replyId = editId = '';
+			activeDraftId = threadId = replyId = editId = '';
 		}),
 		followThread(channelId, messageId, followed) {
 			const index = channelThreads(messagesOf(channelId));
@@ -639,10 +667,13 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 		}),
 		startEdit: act((id) => {
 			const m = find(id);
-			if (m && m.authorId === ws.user.id) [editId, replyId] = [id, ''];
+			if (m && m.authorId === ws.user.id) {
+				activeDraftId = '';
+				[editId, replyId] = [id, ''];
+			}
 		}),
 		cancelCompose: act(() => {
-			replyId = editId = '';
+			activeDraftId = replyId = editId = '';
 		}),
 		deleteMessage: act((id) => void ws.chat.remove(selected, id)),
 		toggleReaction: act((id, emoji) => {
@@ -766,6 +797,7 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 		toggleHand: act(() => call?.session?.toggleHand()),
 		destroy() {
 			destroyed = true;
+			transfers?.destroy();
 			clearTimeout(typingTimer);
 			clearTimeout(saveTimer);
 			try {

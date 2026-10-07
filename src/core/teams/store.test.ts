@@ -14,6 +14,92 @@ afterEach(() => {
 });
 
 describe('teams client', () => {
+	it('retains an entire attachment message after a partial upload and retries with unique names', async () => {
+		let offline = true;
+		const names: string[] = [];
+		const client = make('ada', 'chat-partial-upload', {
+			uploadFile: async (file: { name: string }) => {
+				names.push(file.name);
+				if (offline && names.length === 2) throw new Error('Storage offline');
+				return { url: `https://files.test/${file.name}` };
+			},
+		});
+		client.createChannel('Project');
+		await tick();
+		const channel = client.getState().selectedChannelId;
+		const root = client.workspace.chat.post(channel, { text: 'Original thread' })!;
+		client.openThread(root.id);
+		client.startReply(root.id);
+		const files = ['Budget.xlsx', 'Notes.md'].map((name) =>
+			Object.assign(new Blob([name]), { name }),
+		);
+		await client.send({ text: 'Both files', files });
+		await tick();
+		expect(client.getState().messages).toHaveLength(1);
+		expect(client.getState().draft.text).toBe('Both files');
+		expect(client.getState().draft.files).toEqual(files);
+		expect(client.getState().messageTransfers).toEqual([]);
+		offline = false;
+		await client.send(client.getState().draft);
+		await tick();
+		expect(client.getState().messages[1]).toMatchObject({
+			text: 'Both files',
+			replyTo: root.id,
+			attachments: [{ name: 'Budget.xlsx', kind: 'xlsx' }, { name: 'Notes.md' }],
+		});
+		expect(new Set(names).size).toBe(4);
+		expect(client.getState().drafts).toEqual([]);
+	});
+	it('cancels ignored adapters and recovers the original send without overwriting newer text', async () => {
+		let finish!: (result: { url: string }) => void;
+		let signal: AbortSignal | undefined;
+		const client = make('ada', 'chat-cancel-recovery', {
+			uploadFile: (_file: unknown, context: { signal?: AbortSignal }) => {
+				signal = context.signal;
+				return new Promise<{ url: string }>((resolve) => {
+					finish = resolve;
+				});
+			},
+		});
+		client.createChannel('Project');
+		await tick();
+		const file = Object.assign(new Blob(['xlsx']), { name: 'Budget.xlsx' });
+		const sending = client.send({ text: 'Original send', files: [file] });
+		await tick();
+		expect(client.getState().messageTransfers[0]?.progress).toMatchObject({
+			completed: 0,
+			total: 1,
+			fileName: 'Budget.xlsx',
+		});
+		client.setDraft({ text: 'Newer compose text', files: [], missingFiles: [] });
+		client.cancelSend(client.getState().messageTransfers[0]!.id);
+		await sending;
+		await tick();
+		expect(signal?.aborted).toBe(true);
+		expect(client.getState().draft.text).toBe('Newer compose text');
+		const recovered = client.getState().drafts.find((draft) => draft.text === 'Original send')!;
+		expect(recovered.context.draftId).toBeTruthy();
+		expect(recovered.files[0]).toBe(file);
+		finish({ url: 'https://files.test/late.xlsx' });
+		await tick();
+		expect(client.getState().messages).toEqual([]);
+		expect(client.openDraft(recovered.context)).toBe(true);
+		await tick();
+		expect(client.getState().draft.text).toBe('Original send');
+		client.discardDraft(recovered.context);
+		await tick();
+		expect(client.getState().drafts.map((draft) => draft.text)).toEqual(['Newer compose text']);
+	});
+	it('rejects chat attachments without storage and never shares filename-only messages', async () => {
+		const client = make('ada', 'chat-no-storage');
+		client.createChannel('Project');
+		await tick();
+		const file = Object.assign(new Blob(['xlsx']), { name: 'Budget.xlsx' });
+		await client.send({ text: 'Budget', files: [file] });
+		await tick();
+		expect(client.getState().messages).toEqual([]);
+		expect(client.getState().draft.files[0]).toBe(file);
+	});
 	it('retains independent post, thread and edit drafts across navigation', async () => {
 		const client = make('ada', 'draft-navigation');
 		client.createChannel('Project');
