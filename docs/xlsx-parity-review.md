@@ -1021,3 +1021,33 @@ gradient interpolation and endpoint behavior need a measured pixel corpus
 before adjusting the shared renderer. The recorder now exports native direction
 PNGs for that comparison. Radial/rectangular/path direction controls, exact
 native gallery arrangement, preset/type galleries and stop dragging remain open.
+
+## Gradient stop dragging and live preview
+
+The shared stop strip now supports mouse dragging. The strip, position readout
+and rendered chart preview the chosen stop's position while the workbook remains
+unchanged. Release routes one edit through core, so one undo restores the whole
+gesture. Crossing another stop retains native insertion-order identities; only
+paint order changes. Pointer capture keeps the gesture active beyond the strip.
+Escape, pointer cancellation, model/selection refresh and read-only transitions
+discard the preview. Preview paints all frozen-pane copies of the chosen series
+through the existing shared chart painter. Unresolved stop colors disable the
+strip when painted stops cannot be mapped safely to model identities.
+
+Playwright MCP reviewed a crossing drag from 23% to 85%: workbook positions
+stayed `[23, 56]` during preview, became `[85, 56]` on release, and returned to
+`[23, 56]` after one undo. Excel 16.0 build 20430 reopened the downloaded file
+with the 85% stop, original 37% brightness/transparency, 54-degree angle and
+the unchanged 56% green stop's 13% transparency. Independent COM captures
+also cover 85%, 0% and 100%; core round trips match native stop identities,
+colors, positions and opacity. The gradient core suite passed 26 tests.
+Seven focused UI suites passed 27 tests, covering crossing, clamping, Escape,
+secondary-pointer cancellation, read-only refresh, removal and SVG restoration.
+All six final browser checks passed, including a read-only transition mid-drag.
+Core/UI builds passed; clean-package checks imported 96 entries and registered
+45 custom elements.
+
+Mouse drag behavior is verified across all six bindings. Exact native fractional
+drag quantization and touch/pen behavior remain unverified. Stop sliders,
+preset/type galleries, path direction controls and diagonal raster parity remain
+open. This increment adds interaction without changing gradient interpolation.

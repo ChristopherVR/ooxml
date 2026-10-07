@@ -105,6 +105,33 @@ it('matches all eight Excel linear direction angles without replacing the stops'
 	}
 });
 
+it('retains stop identities when crossing another stop and reaching native endpoints', async () => {
+	const book = await setup(native.cases.find((sample) => sample.name === 'direction-315')!);
+	const session = createEditSession(book);
+	for (const value of [85, 0, 100]) {
+		const before = structuredClone(chartOf(book).series[0]!.fill);
+		const result = chartSeriesGradientPatch(chartOf(book), 0, {
+			kind: 'stop',
+			index: 0,
+			position: value,
+		})!;
+		expect(result.stopIndex).toBe(0);
+		session.updateChart(0, 0, result.patch);
+		const saved = chartOf(await loadXlsx(await saveXlsx(book))).series[0]!.fill;
+		const expected = chartOf(
+			await setup(native.cases.find((sample) => sample.name === `position-${value}`)!),
+		).series[0]!.fill;
+		if (saved?.kind !== 'gradient' || expected?.kind !== 'gradient')
+			throw new Error('Expected gradients');
+		expect(saved.stops).toEqual(expected.stops);
+		expect(saved.stops[1]!.position).toBe(56);
+		session.undo();
+		expect(chartOf(book).series[0]!.fill).toEqual(before);
+		session.redo();
+		expect(chartOf(book).series[0]!.fill).toMatchObject({ stops: saved.stops });
+	}
+});
+
 for (const sample of native.cases)
 	it(`renders native ${sample.name} gradient stops in visual order without changing their identities`, async () => {
 		const book = await setup(sample);

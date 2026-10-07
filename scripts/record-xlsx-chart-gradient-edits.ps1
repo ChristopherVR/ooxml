@@ -50,6 +50,10 @@ try {
         $fill.GradientAngle=[single]$angle
         $cases+=Capture "direction-$angle"
     }
+    foreach($position in @(85,0,100)) {
+        $fill.GradientStops.Item(1).Position=[single]($position/100)
+        $cases+=Capture "position-$position"
+    }
     [ordered]@{excelVersion=[string]$excel.Version;excelBuild=[string]$excel.Build;cases=$cases;minimumRejected=$minimumRejected} |
         ConvertTo-Json -Depth 6 | Set-Content -Encoding utf8 (Join-Path $OutputFolder 'gradient-edits.json')
     Write-Output "Recorded gradient edits in $OutputFolder"

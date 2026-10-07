@@ -7,6 +7,8 @@ export interface GradientStopTrackOptions {
 	label: string;
 	stopLabel(index: number): string;
 	onSelect(index: number): void;
+	onMove?(index: number, position: number): void;
+	onPreview?(index: number, position: number | undefined): void;
 }
 
 /** Native buttons provide keyboard navigation and focus for the shared Office gradient strip. */
@@ -17,19 +19,38 @@ export function createGradientStopTrack(doc: Document) {
 	const style = doc.createElement('style');
 	style.textContent = `.office-gradient-stop-track{position:relative;height:40px;margin:12px 7px}
 .office-gradient-stop-paint{position:absolute;inset:3px 0 15px;border:1px solid var(--line,#aaa)}
-.office-gradient-stop{position:absolute;top:0;width:14px;height:30px;padding:0;border:1px solid var(--line,#888);border-radius:2px;cursor:pointer}
+.office-gradient-stop{position:absolute;top:0;width:14px;height:30px;padding:0;border:1px solid var(--line,#888);border-radius:2px;cursor:pointer;touch-action:none}
 .office-gradient-stop[aria-pressed=true]{outline:2px solid var(--accent,#217346);outline-offset:2px}
 .office-gradient-stop:focus-visible{outline:2px solid var(--accent,#217346);outline-offset:3px}
 .office-gradient-stop:disabled{opacity:.5;cursor:default}`;
 	const paint = doc.createElement('div');
 	paint.className = 'office-gradient-stop-paint';
 	let current: GradientStopTrackOptions;
-	const update = (options: GradientStopTrackOptions) => {
-		current = options;
-		element.setAttribute('aria-label', options.label);
-		paint.style.background = `linear-gradient(90deg,${sortGradientStops(options.stops)
+	let drag:
+		| { pointer: number; index: number; x: number; width: number; origin: number; value: number }
+		| undefined;
+	const paintStops = (stops: GradientStopTrackOptions['stops']) => {
+		paint.style.background = `linear-gradient(90deg,${sortGradientStops(stops)
 			.map((stop) => `${stop.color} ${stop.position}%`)
 			.join(',')})`;
+	};
+	const cancel = () => {
+		if (!drag) return;
+		const previous = drag;
+		drag = undefined;
+		paintStops(current.stops);
+		element
+			.querySelectorAll<HTMLButtonElement>('button')
+			[previous.index]?.style.setProperty('left', `calc(${previous.origin}% - 7px)`);
+		current.onPreview?.(previous.index, undefined);
+		if (element.hasPointerCapture?.(previous.pointer))
+			element.releasePointerCapture(previous.pointer);
+	};
+	const update = (options: GradientStopTrackOptions) => {
+		cancel();
+		current = options;
+		element.setAttribute('aria-label', options.label);
+		paintStops(options.stops);
 		element.replaceChildren(
 			style,
 			paint,
@@ -62,5 +83,69 @@ export function createGradientStopTrack(doc: Document) {
 			}),
 		);
 	};
-	return { element, update };
+	element.addEventListener('pointerdown', (event) => {
+		if (
+			drag ||
+			!current ||
+			event.isPrimary === false ||
+			event.button !== 0 ||
+			current.disabled ||
+			!current.onMove
+		)
+			return;
+		const button = (event.target as Element).closest('button');
+		const index = Array.from(element.querySelectorAll('button')).indexOf(
+			button as HTMLButtonElement,
+		);
+		if (index < 0) return;
+		event.preventDefault();
+		current.onSelect(index);
+		const width = paint.getBoundingClientRect().width;
+		const origin = current.stops[index]?.position;
+		if (!width || origin === undefined) return;
+		drag = { pointer: event.pointerId, index, x: event.clientX, width, origin, value: origin };
+		try {
+			element.setPointerCapture?.(event.pointerId);
+		} catch {
+			/* Synthetic pointers cannot be captured. */
+		}
+		element.querySelectorAll<HTMLButtonElement>('button')[index]?.focus();
+	});
+	element.addEventListener('pointermove', (event) => {
+		if (!drag || event.pointerId !== drag.pointer || current.disabled) return;
+		const value = Math.max(
+			0,
+			Math.min(100, Math.round(drag.origin + ((event.clientX - drag.x) / drag.width) * 100)),
+		);
+		if (value === drag.value) return;
+		drag.value = value;
+		element
+			.querySelectorAll<HTMLButtonElement>('button')
+			[drag.index]?.style.setProperty('left', `calc(${value}% - 7px)`);
+		paintStops(
+			current.stops.map((stop, index) =>
+				index === drag!.index ? { ...stop, position: value } : stop,
+			),
+		);
+		current.onPreview?.(drag.index, value);
+	});
+	element.addEventListener('pointerup', (event) => {
+		if (!drag || event.pointerId !== drag.pointer) return;
+		const previous = drag;
+		cancel();
+		if (!current.disabled && element.isConnected && previous.value !== previous.origin)
+			current.onMove?.(previous.index, previous.value);
+	});
+	for (const name of ['pointercancel', 'lostpointercapture'] as const)
+		element.addEventListener(name, (event) => {
+			if (drag?.pointer === event.pointerId) cancel();
+		});
+	element.addEventListener('keydown', (event) => {
+		if (event.key === 'Escape' && drag) {
+			event.preventDefault();
+			event.stopPropagation();
+			cancel();
+		}
+	});
+	return { element, update, cancel };
 }

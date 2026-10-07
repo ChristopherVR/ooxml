@@ -1008,3 +1008,16 @@ and sanitization, and the shared chart painter for independently namespaced
 previews. XLSX routes its picks through the existing core gradient angle edits.
 The Excel COM recorder now captures the eight linear angles and their native
 PNG references without changing stop identities or inventing native presets.
+
+## Shared gradient stop dragging
+
+Source: ChristopherVR/ooxml at `2fff3122b`,
+`src/ui/src/form/gradient-stop-track.ts`, `src/core/chart/gradient-definition.ts`
+and the existing commit-on-release drawing interaction in
+`src/ui/src/xlsx/grid/drawings.ts`. The shared strip gained pointer capture,
+temporary previews and cancellation; no editing or gradient algorithm moved
+into UI. The XLSX SVG preview adapter consumes the shared chart painter and
+updates only temporary rendered stops, including frozen-pane copies. Release
+uses the existing core position command for one history step. Excel COM captures
+now cover a stop crossing its neighbor and the 0%/100% endpoints; they remain
+independent native files in the gradient recorder's fixture.

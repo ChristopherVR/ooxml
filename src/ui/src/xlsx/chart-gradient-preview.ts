@@ -1,0 +1,46 @@
+import { buildChartGradientDef, type ChartGradientFill } from 'ooxml-core/chart';
+
+/** Preview a gesture in the rendered SVG; the workbook is edited once on release. */
+export function createChartGradientPreview(
+	root: ShadowRoot,
+	drawing: number,
+	series: number,
+	gradient: ChartGradientFill,
+) {
+	const nodes = Array.from(
+		root.querySelectorAll<SVGElement>(
+			`.xg-obj[data-index="${drawing}"] :is(linearGradient,radialGradient)[id$="-s${series}"]`,
+		),
+	);
+	const originals = nodes.map((node) => ({
+		node,
+		children: Array.from(node.childNodes).map((child) => child.cloneNode(true)),
+	}));
+	return {
+		position(index: number, position: number) {
+			const def = buildChartGradientDef('preview', {
+				...gradient,
+				stops: gradient.stops.map((stop, i) => (i === index ? { ...stop, position } : stop)),
+			});
+			for (const node of nodes) {
+				if (!node.isConnected) continue;
+				node.replaceChildren(
+					...def.stops.map((stop) => {
+						const element = node.ownerDocument.createElementNS(
+							'http://www.w3.org/2000/svg',
+							'stop',
+						);
+						element.setAttribute('offset', String(stop.offset));
+						element.setAttribute('stop-color', stop.color);
+						element.setAttribute('stop-opacity', String(stop.opacity ?? 1));
+						return element;
+					}),
+				);
+			}
+		},
+		restore() {
+			for (const { node, children } of originals)
+				if (node.isConnected) node.replaceChildren(...children);
+		},
+	};
+}

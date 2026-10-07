@@ -186,6 +186,62 @@ for (const framework of FRAMEWORKS)
 		const pane = editor(page).getByRole('complementary', { name: 'Format Data Series' });
 		const stops = pane.getByRole('group', { name: 'Gradient stops', exact: true });
 		await expect(stops.getByRole('button')).toHaveCount(3);
+		const dragPosition = pane.getByRole('spinbutton', { name: 'Position', exact: true });
+		const paintBox = await stops.locator('.office-gradient-stop-paint').boundingBox();
+		const markerBox = await stops
+			.getByRole('button', { name: 'Gradient stop 1', exact: true })
+			.boundingBox();
+		if (!paintBox || !markerBox) throw new Error('Expected stop track');
+		const startX = markerBox.x + markerBox.width / 2;
+		const startY = markerBox.y + markerBox.height / 2;
+		await page.mouse.move(startX, startY);
+		await page.mouse.down();
+		await page.mouse.move(startX + paintBox.width * 0.85, startY, { steps: 5 });
+		await expect(dragPosition).toHaveValue('85');
+		await expect(chart.locator('linearGradient[id$="-s1"] stop').first()).toHaveAttribute(
+			'offset',
+			'0.5',
+		);
+		const previewBytes = await editor(page).evaluate(async (node) =>
+			Array.from(await (node as unknown as { saveBytes(): Promise<Uint8Array> }).saveBytes()),
+		);
+		const previewChart = (await loadXlsx(new Uint8Array(previewBytes))).sheets[0]!.drawings[0]!;
+		if (previewChart.kind !== 'chart' || previewChart.series[1]!.fill?.kind !== 'gradient')
+			throw new Error('Expected gradient');
+		expect(previewChart.series[1]!.fill.stops[0]!.position).toBe(0);
+		await page.mouse.up();
+		await expect(dragPosition).toHaveValue('85');
+		await editor(page).evaluate((node) => (node as unknown as { undo(): void }).undo());
+		await expect(dragPosition).toHaveValue('0');
+		await expect(chart.locator('linearGradient[id$="-s1"] stop').first()).toHaveAttribute(
+			'offset',
+			'0',
+		);
+		await page.mouse.move(startX, startY);
+		await page.mouse.down();
+		await page.mouse.move(startX + paintBox.width * 0.4, startY, { steps: 3 });
+		await expect(dragPosition).toHaveValue('40');
+		await page.keyboard.press('Escape');
+		await page.mouse.up();
+		await expect(dragPosition).toHaveValue('0');
+		await expect(chart.locator('linearGradient[id$="-s1"] stop').first()).toHaveAttribute(
+			'offset',
+			'0',
+		);
+		await page.mouse.move(startX, startY);
+		await page.mouse.down();
+		await page.mouse.move(startX + paintBox.width * 0.4, startY, { steps: 3 });
+		await expect(dragPosition).toHaveValue('40');
+		await editor(page).evaluate((node) => {
+			(node as unknown as { readOnly: boolean }).readOnly = true;
+		});
+		await expect(dragPosition).toBeDisabled();
+		await expect(dragPosition).toHaveValue('0');
+		await page.mouse.up();
+		await editor(page).evaluate((node) => {
+			(node as unknown as { readOnly: boolean }).readOnly = false;
+		});
+		await expect(dragPosition).toBeEnabled();
 		const direction = pane.getByRole('button', { name: 'Direction', exact: true });
 		const initialAngle = await pane
 			.getByRole('spinbutton', { name: 'Angle', exact: true })

@@ -110,6 +110,14 @@ it('keeps the chosen series through fill edits and undo and guards stale color m
 	ctx.session()!.undo();
 	expect(brightness.disabled).toBe(false);
 	expect(brightness.value).toBe('0');
+	gradientFill.stops[0]!.color = { kind: 'scheme', value: 'unknown-theme-slot', transforms: [] };
+	ctx.session()!.updateChart(0, 0, { series: gradientSeries });
+	expect(
+		Array.from(pane.element.querySelectorAll<HTMLButtonElement>('.office-gradient-stop')).every(
+			(button) => button.disabled,
+		),
+	).toBe(true);
+	ctx.session()!.undo();
 	const position = pane.element.querySelector<HTMLInputElement>('[aria-label="Position"]')!;
 	position.value = '23';
 	position.dispatchEvent(new Event('change'));

@@ -11,6 +11,7 @@ import { createGradientStopTrack } from '../form/gradient-stop-track';
 import { createGradientDirectionGallery } from '../form/gradient-direction-gallery';
 import { el, field, numberInput } from './dialogs/fields';
 import { openColorGrid } from './ribbon/color-grid';
+import { createChartGradientPreview } from './chart-gradient-preview';
 
 export function createSeriesGradient(ctx: EditorContext, selected: () => number) {
 	const element = el(ctx, 'div', 'xve-chart-series-gradient');
@@ -61,6 +62,7 @@ export function createSeriesGradient(ctx: EditorContext, selected: () => number)
 		ctx.session()?.updateChart(ctx.activeSheet(), found.index, result.patch);
 	};
 	const refresh = (chart: ChartObject | undefined, view: ChartViewModel | undefined) => {
+		track.cancel();
 		const nextDrawing = activeChart(ctx)?.index ?? -1;
 		if (
 			seriesIndex !== selected() ||
@@ -108,18 +110,33 @@ export function createSeriesGradient(ctx: EditorContext, selected: () => number)
 		});
 		brightness.disabled ||= stopBrightness === undefined;
 		color.style.setProperty('--series-fill', stops[stopIndex]?.color ?? 'transparent');
+		let preview: ReturnType<typeof createChartGradientPreview> | undefined;
+		const gradient = view?.series[selected()]?.gradient;
 		track.update({
 			stops: stops.map((stop) => ({
 				position: stop.position,
 				color: drawingColorCss({ hex: stop.color, alpha: stop.opacity ?? 1, unapplied: [] })!,
 			})),
 			selected: stopIndex,
-			disabled,
+			disabled: disabled || stops.length !== fill.stops.length,
 			label: ctx.t('Gradient stops'),
 			stopLabel: (index) => ctx.t('Gradient stop {index}', { index: index + 1 }),
 			onSelect: (index) => {
 				stopIndex = index;
 				refresh(current, model);
+			},
+			onMove: (index, position) => apply({ kind: 'stop', index, position }),
+			onPreview: (index, value) => {
+				if (value === undefined) {
+					preview?.restore();
+					preview = undefined;
+				}
+				if (current !== chart || chart?.series[selected()]?.fill !== fill) return;
+				position.value = String(value ?? fill.stops[index]?.position ?? 0);
+				if (value !== undefined && gradient) {
+					preview ??= createChartGradientPreview(ctx.root, drawingIndex, selected(), gradient);
+					preview.position(index, value);
+				}
 			},
 		});
 		add.disabled = disabled || !fill.stops.length;
