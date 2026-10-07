@@ -1816,3 +1816,21 @@ This resolves the recorded horizontal protected-angle cases, not all
 protected shape transforms. Guarded flip flags, dependent angle/flip formulas,
 broader inherited protections, groups/masters/glue, native UI gesture and
 paint evidence, and Microsoft Visio reopen acceptance remain open.
+
+## Reuse of the grid measurer for XLSX chart text
+
+Source: ChristopherVR/ooxml at `8da3e8b05`,
+`src/ui/src/xlsx/grid/measure.ts`, grid drawing layer, and
+`src/core/xlsx/layout/chart-svg*.ts`. Chart titles and legends now inject the
+existing cached grid canvas width measurer into the DOM-free SVG painter.
+One core text metrics helper derives the painter's CSS font, checks host
+results, fits Unicode text and retains the previous estimate for headless
+callers. No second canvas, font cache or viewer-side chart layout was added.
+The shared rich-title painter, background fill painter and legend flow all
+consume these widths. Axis labels, wrapping and vertical metrics remain open.
+
+The native mixed-title corpus supplies regression inputs. Playwright MCP
+confirmed the previously overlapping Revenue/space runs now advance
+contiguously; screenshot review and Excel COM title bounds identify remaining
+padding/vertical placement differences. Browser tests compare painted SVG
+advances and line centering in every binding before/after a type edit.

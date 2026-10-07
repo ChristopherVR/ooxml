@@ -1455,3 +1455,27 @@ underline and color. The visual review still exposes approximate horizontal
 text measurement and line spacing. Automatic wrapping, native text box layout,
 advanced underline/baseline/spacing effects, list-level defaults, mixed-format
 font authoring UI and full Excel parity remain unfinished.
+
+Chart titles and legends now accept host font measurements through
+`renderChartSvg(..., { measureText })`. The grid supplies its existing cached
+canvas measurer, using the same CSS family, size, weight and italic style as
+SVG painting. Rich-run advances and centering, plain title background bounds,
+legend widths and truncation share one core helper. Headless callers keep the
+existing estimate when no measurer is supplied; invalid widths also fall back.
+Measured truncation retains complete Unicode code points.
+
+Playwright MCP observed the native paragraph reference before/after the change:
+the Revenue advance is about 133.37 CSS pixels. Previously the following space
+started only 123.2 pixels later, overlapping Revenue; it now starts about
+133.39 pixels later. Forecast moves from x=261.33 to x=271.85 and is centered
+using its measured advance. Native Excel COM reopened all three references:
+the title box is 141.62496 points wide, 30.59504 points high for the single
+line and 54.04504 points high for either two-line variant. Screenshot review
+still shows different title padding/placement and vertical spacing. This change
+does not establish native text box geometry, wrapping or complete chart parity.
+
+The follow-up diagram/chart/XLSX sweep passes 8,539 ordinary tests with the same
+17 expected raster failures. Core/UI builds and typechecks pass; all 92 focused
+chart browser checks pass across six bindings. Browser rich
+text regressions wait for SVG layout, then compare actual rendered advances
+and centering across six bindings before/after chart edits.

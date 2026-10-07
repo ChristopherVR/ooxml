@@ -1,11 +1,13 @@
 import type { ChartViewModel } from './chart-view';
 import { chartAreaRect, chartTextAttributes } from './chart-svg-appearance';
-import { text, textWidth } from './chart-svg-util';
+import { text } from './chart-svg-util';
+import { chartTextWidth, type ChartSvgOptions } from './chart-svg-text-metrics';
 
-/** Paint explicit rich lines with shared text attributes; font measurement/wrapping remains approximate. */
+/** Paint explicit rich lines with optional host widths; line height and wrapping remain approximate. */
 export function chartRichTitleSvg(
 	model: ChartViewModel,
 	width: number,
+	options: ChartSvgOptions = {},
 ): { markup: string; height: number } | undefined {
 	if (!model.titleText) return undefined;
 	type Run = (typeof model.titleText.paragraphs)[number]['runs'][number];
@@ -40,7 +42,7 @@ export function chartRichTitleSvg(
 		return {
 			...line,
 			runs,
-			width: runs.reduce((sum, run) => sum + textWidth(run.text, run.attrs.size), 0),
+			width: runs.reduce((sum, run) => sum + chartTextWidth(run.text, run.attrs, options), 0),
 			size: runs.length ? Math.max(...runs.map((run) => run.attrs.size ?? 14)) : (base.size ?? 14),
 		};
 	});
@@ -61,7 +63,7 @@ export function chartRichTitleSvg(
 					.replace('<text ', '<tspan data-chart-title-run="true" ')
 					.replace('</text>', '</tspan>'),
 			);
-			x += textWidth(run.text, run.attrs.size);
+			x += chartTextWidth(run.text, run.attrs, options);
 		}
 		y += line.size * 1.4 + 4;
 	}

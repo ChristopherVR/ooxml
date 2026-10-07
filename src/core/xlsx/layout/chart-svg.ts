@@ -1,11 +1,16 @@
 import { cartesianSvg } from './chart-svg-cartesian';
 import { pieSvg, radarSvg } from './chart-svg-radial';
-import { esc, fit, n, rect, text, textWidth, type Rect } from './chart-svg-util';
+import { esc, n, rect, text, type Rect } from './chart-svg-util';
 import type { ChartViewModel } from './chart-view';
 import { chartAreaRect, chartTextAttributes, chartGradientPaint } from './chart-svg-appearance';
 import { chartRichTitleSvg } from './chart-svg-title-text';
-
-const FONT_FAMILY = 'Calibri, Carlito, Arial, sans-serif';
+import {
+	CHART_FONT_FAMILY,
+	chartTextWidth,
+	fitChartText,
+	type ChartSvgOptions,
+} from './chart-svg-text-metrics';
+export type { ChartSvgOptions } from './chart-svg-text-metrics';
 
 interface LegendEntry {
 	label: string;
@@ -24,7 +29,7 @@ function legendEntries(model: ChartViewModel): LegendEntry[] {
 }
 
 /** Draws the legend and returns the area left for the plot. */
-function legend(model: ChartViewModel, area: Rect, out: string[]): Rect {
+function legend(model: ChartViewModel, area: Rect, out: string[], options: ChartSvgOptions): Rect {
 	const entries = legendEntries(model);
 	if (!model.showLegend || entries.length === 0) return area;
 	const pos = model.legendPosition;
@@ -32,7 +37,9 @@ function legend(model: ChartViewModel, area: Rect, out: string[]): Rect {
 	const size = attrs.size ?? 10;
 	const rowH = Math.max(16, size * 1.4);
 	if (pos === 't' || pos === 'b') {
-		const widths = entries.map((e) => Math.min(textWidth(e.label, size) + 20, area.w / 2));
+		const widths = entries.map((e) =>
+			Math.min(chartTextWidth(e.label, attrs, options) + 20, area.w / 2),
+		);
 		const total = widths.reduce((a, b) => a + b, 0);
 		let x = area.x + Math.max(0, (area.w - total) / 2);
 		const y = pos === 't' ? area.y + 4 : area.y + area.h - rowH + 4;
@@ -47,7 +54,7 @@ function legend(model: ChartViewModel, area: Rect, out: string[]): Rect {
 		entries.forEach((e, i) => {
 			const w = widths[i] ?? 0;
 			out.push(rect(x, y, 8, 8, e.color));
-			out.push(text(x + 12, y + 8, fit(e.label, w - 16, size), attrs));
+			out.push(text(x + 12, y + 8, fitChartText(e.label, w - 16, attrs, options), attrs));
 			x += w;
 		});
 		return pos === 't'
@@ -56,7 +63,7 @@ function legend(model: ChartViewModel, area: Rect, out: string[]): Rect {
 	}
 	const width = Math.min(
 		area.w * 0.35,
-		Math.max(...entries.map((e) => textWidth(e.label, size))) + 22,
+		Math.max(...entries.map((e) => chartTextWidth(e.label, attrs, options))) + 22,
 	);
 	const height = entries.length * rowH;
 	const x = pos === 'l' ? area.x + 4 : area.x + area.w - width;
@@ -73,7 +80,7 @@ function legend(model: ChartViewModel, area: Rect, out: string[]): Rect {
 		const y = y0 + i * rowH;
 		if (y + rowH > area.y + area.h + 2) return;
 		out.push(rect(x, y + 3, 8, 8, e.color));
-		out.push(text(x + 12, y + 11, fit(e.label, width - 16, size), attrs));
+		out.push(text(x + 12, y + 11, fitChartText(e.label, width - 16, attrs, options), attrs));
 	});
 	return pos === 'l'
 		? { x: area.x + width + 8, y: area.y, w: area.w - width - 8, h: area.h }
@@ -84,28 +91,33 @@ function legend(model: ChartViewModel, area: Rect, out: string[]): Rect {
  * A standalone SVG document for a chart view model: title, legend, axes and series. Every piece
  * of text is escaped. Unsupported chart types (bubble, stock, surface) render a labelled frame.
  */
-export function renderChartSvg(model: ChartViewModel, width: number, height: number): string {
+export function renderChartSvg(
+	model: ChartViewModel,
+	width: number,
+	height: number,
+	options: ChartSvgOptions = {},
+): string {
 	const paint = chartGradientPaint(model, Math.max(1, width), Math.max(1, height));
 	model = paint.model;
 	const w = Math.max(1, width);
 	const h = Math.max(1, height);
 	const out: string[] = [];
 	out.push(
-		`<svg xmlns="http://www.w3.org/2000/svg" width="${n(w)}" height="${n(h)}" viewBox="0 0 ${n(w)} ${n(h)}" font-family="${esc(FONT_FAMILY)}" role="img">`,
+		`<svg xmlns="http://www.w3.org/2000/svg" width="${n(w)}" height="${n(h)}" viewBox="0 0 ${n(w)} ${n(h)}" font-family="${esc(CHART_FONT_FAMILY)}" role="img">`,
 	);
 	if (model.title) out.push(`<title>${esc(model.title)}</title>`);
 	if (paint.defs) out.push(paint.defs);
 	out.push(chartAreaRect(model, 'chartArea', { x: 0, y: 0, w, h }));
 	let area: Rect = { x: 8, y: 8, w: w - 16, h: h - 16 };
-	const richTitle = chartRichTitleSvg(model, w);
+	const richTitle = chartRichTitleSvg(model, w, options);
 	if (richTitle) {
 		out.push(richTitle.markup);
 		area = { ...area, y: area.y + richTitle.height, h: area.h - richTitle.height };
 	} else if (model.title) {
 		const attrs = chartTextAttributes(model, 'title', 14)!;
 		const size = attrs.size ?? 14;
-		const label = fit(model.title, w - 16, size);
-		const titleWidth = Math.min(w - 16, textWidth(label, size) + 8);
+		const label = fitChartText(model.title, w - 16, attrs, options);
+		const titleWidth = Math.min(w - 16, chartTextWidth(label, attrs, options) + 8);
 		out.push(
 			chartAreaRect(model, 'title', {
 				x: (w - titleWidth) / 2,
@@ -131,7 +143,7 @@ export function renderChartSvg(model: ChartViewModel, width: number, height: num
 		out.push('</svg>');
 		return out.join('');
 	}
-	area = legend(model, area, out);
+	area = legend(model, area, out, options);
 	if (area.w > 4 && area.h > 4) {
 		if (model.type === 'pie' || model.type === 'doughnut') out.push(pieSvg(model, area));
 		else if (model.type === 'radar') out.push(radarSvg(model, area));

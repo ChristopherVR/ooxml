@@ -89,7 +89,7 @@ export {
 	type EvaluateRef,
 	type ValueAxisView,
 } from './chart-view';
-export { renderChartSvg } from './chart-svg';
+export { renderChartSvg, type ChartSvgOptions } from './chart-svg';
 export { chartBarSpacing } from './chart-spacing';
 export { createRefEvaluator, type RefEvaluatorOptions } from './ref-evaluator';
 export {

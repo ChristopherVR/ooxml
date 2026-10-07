@@ -12,13 +12,11 @@ for (const framework of FRAMEWORKS)
 			const errors = pageErrors(page);
 			await openLanding(page, framework);
 			const name = `${sample.referenceName}.xlsx`;
-			await page
-				.locator('#landing-file')
-				.setInputFiles({
-					name,
-					mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-					buffer: await nativeChartFixture(sample.parts, 'Aptos Narrow'),
-				});
+			await page.locator('#landing-file').setInputFiles({
+				name,
+				mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+				buffer: await nativeChartFixture(sample.parts, 'Aptos Narrow'),
+			});
 			const host = editor(page);
 			await expect(host.getByText(name, { exact: true })).toBeVisible();
 			const spans = host.locator('.xg-chart svg tspan[data-chart-title-run]');
@@ -32,6 +30,30 @@ for (const framework of FRAMEWORKS)
 				await expect(growth).toHaveAttribute('font-size', '16');
 				await expect(growth).toHaveAttribute('font-style', 'italic');
 				await expect(growth).toHaveAttribute('fill', '#0000FF');
+				// Newly replaced SVG text can report zero advances before browser layout.
+				await expect
+					.poll(() =>
+						spans.evaluateAll((nodes) => {
+							const advances = nodes.slice(0, 3).map((node) => ({
+								x: Number(node.getAttribute('x')),
+								width: (node as SVGTextContentElement).getComputedTextLength(),
+							}));
+							const svgWidth = Number(nodes[0]!.closest('svg')!.getAttribute('width'));
+							return Math.max(
+								...advances
+									.slice(1)
+									.map((item, index) =>
+										Math.abs(item.x - advances[index]!.x - advances[index]!.width),
+									),
+								Math.abs(
+									advances[0]!.x +
+										advances.reduce((sum, item) => sum + item.width, 0) / 2 -
+										svgWidth / 2,
+								),
+							);
+						}),
+					)
+					.toBeLessThan(0.5);
 				if (sample.referenceName !== 'mixed-single') {
 					const forecast = spans.filter({ hasText: /^Forecast$/ });
 					await expect(forecast).toHaveAttribute('text-decoration', 'underline');

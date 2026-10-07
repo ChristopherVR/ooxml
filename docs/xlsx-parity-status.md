@@ -1,6 +1,7 @@
 # XLSX parity status
 
-Updated 8 October 2026 against implementation commit `4f3f87ea6`.
+Updated 8 October 2026: mixed-title support at `4f3f87ea6`, followed by host
+font measurements for chart titles and legends.
 
 **Full 1:1 Microsoft Excel parity has not been achieved.** The product is a
 working spreadsheet editor with substantial supported behavior and an expanding
@@ -48,6 +49,15 @@ tests**, with **17 existing expected raster failures**. Those failures remain
 explicit; this is not a clean pixel-parity result. **92 focused chart browser
 checks** passed across vanilla, React, Vue, Angular, Svelte and Solid. Core/UI
 typechecks, builds and package import/registration checks passed.
+
+The subsequent host-measurement change reuses the grid's cached canvas measurer
+for chart titles and legends, removing uniform-character width estimates from
+their browser layout. The follow-up sweep passed **8,539 ordinary tests** plus
+the same **17 expected failures**, and all **92 focused chart browser checks**
+passed again. Browser checks compare painted rich-run advances and centering
+before/after edits. Native placement, vertical metrics,
+wrapping and axis-label measurement still require work; headless callers without
+a supplied measurer retain the previous width estimates.
 
 Native evidence uses owned hidden Excel instances, principally Excel 16.0
 build 20430. The current chart text corpus includes 96 built-in style
