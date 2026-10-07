@@ -1,5 +1,6 @@
 import type { VisioFillGradient, VisioGradientRegion } from './model';
 import { linearGradientEndpoints } from './theme-gradient';
+import { radialFillGradient } from './radial-fill-gradient';
 import { number, type Cells } from './sheet';
 import { clampUnitInterval } from '../color/color-primitives';
 
@@ -120,15 +121,10 @@ export function legacyFillGradient(
 		};
 	}
 	if (pattern >= 36)
-		return {
-			type: 'radial',
-			center: pattern === 40 ? [0.5, 0.5] : [(pattern - 36) % 2, pattern <= 37 ? 1 : 0],
-			radius: pattern === 40 ? 0.73 : 1.4,
-			stops: [
-				{ offset: 0, ...front },
-				{ offset: 1, ...back },
-			],
-		};
+		return radialFillGradient([7, 6, 2, 1, 3][pattern - 36]!, [
+			{ offset: 0, ...front },
+			{ offset: 1, ...back },
+		]);
 	const angle = pattern <= 26 ? 0 : pattern === 27 ? 180 : pattern <= 29 ? 90 : 270;
 	return {
 		type: 'linear',

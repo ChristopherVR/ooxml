@@ -21,12 +21,24 @@ for (const sample of [
 	{ name: 'linear-reverse', directory: process.env.VISIO_NATIVE_LINEAR_REVERSE_DIR },
 	{ name: 'linear-oblique', directory: process.env.VISIO_NATIVE_LINEAR_OBLIQUE_DIR },
 	{ name: 'linear-oblique-alpha', directory: process.env.VISIO_NATIVE_LINEAR_OBLIQUE_ALPHA_DIR },
+	{ name: 'saved-radial', directory: process.env.VISIO_NATIVE_SAVED_RADIAL_DIR },
+	{ name: 'saved-radial-alpha', directory: process.env.VISIO_NATIVE_SAVED_RADIAL_ALPHA_DIR },
 ]) {
 	const directory = sample.directory;
 	const linear = sample.name.startsWith('linear');
-	const fullPage = linear || sample.name.startsWith('radial') || sample.name.startsWith('regions');
-	const firstPattern = linear ? 25 : sample.name.startsWith('regions') ? 31 : fullPage ? 36 : 2,
-		patternCount = linear ? 6 : fullPage ? 5 : 23;
+	const savedRadial = sample.name.startsWith('saved-radial');
+	const fullPage =
+		savedRadial || linear || sample.name.startsWith('radial') || sample.name.startsWith('regions');
+	const firstPattern = savedRadial
+			? 1
+			: linear
+				? 25
+				: sample.name.startsWith('regions')
+					? 31
+					: fullPage
+						? 36
+						: 2,
+		patternCount = savedRadial ? 7 : linear ? 6 : fullPage ? 5 : 23;
 	for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
 		test(`${framework}: ${sample.name} native fills match live and exported SVG`, async ({
 			page,

@@ -661,3 +661,37 @@ root lint retains nine existing unrelated warnings. Regression coverage includes
 negative and wrapped oblique angles, decimal rounding, scaling, snapshot copying
 and invalid normalized paint. Broader transformed gradients, modern radial
 fills, effects and native PNG pipeline equivalence remain open parity work.
+
+## Native saved radial gradient presets (2026-10-07)
+
+Complete saved shape-rotating radial gradients now use the same normalized paint
+model and SVG renderer as classic radial fills. Directions 1-7 retain the seven
+native centers/radii; only the linear direction consumes FillGradientAngle.
+Unsupported rectangular/path directions and group/nonrotating gradients remain
+diagnosed. Classic fills now use the same core geometry helper, with unchanged
+paint. Source imports remain extensionless.
+
+Owned Visio 16 captures in the local temporary directory are
+visio-fill-patterns-2a5f14c7ad994952a60b88c5760a09f7 (opaque) and
+visio-fill-patterns-5410848eb1a0466a9f560793b35ec4dc (translucent), containing
+all seven presets. Enable VISIO_NATIVE_SAVED_RADIAL_DIR and
+VISIO_NATIVE_SAVED_RADIAL_ALPHA_DIR for the browser and preservation tests.
+Both genuine packages passed move/save/reparse checks. All six framework routes
+passed both captures: 12 scenarios and 168 exact full-page 576-by-432 RGBA
+live/export comparisons against native SVG rasterization, with zero differing
+channels. This does not establish equivalence to native PNG export.
+
+The full Visio core suite passed 2,062 tests with 46 optional skips before the
+native test bodies were consolidated. The UI suite passed 713 with seven skips;
+strict core and complete UI types passed. After consolidation, the saved and
+classic gradient suites passed 57 tests with six optional skips, including both
+genuine radial captures. Native reopening remains a separate acceptance gate.
+
+A fresh owned instance authored all seven translucent presets, saved and closed
+its document, produced a core-edited candidate, then called OpenEx(200) on the
+native original in that same instance. It stalled before reaching the candidate.
+Its owned Visio process 33288 and PowerShell process 41760 (both started at
+22:41:02) were verified and terminated. The user's process 43312 remained running.
+Read-only enumeration of the owned process's top-level windows found PDFMakerWindow
+alongside the Visio main window, with no separate file/repair dialog. This does
+not establish the cause of the stall; no add-in or user settings were changed.

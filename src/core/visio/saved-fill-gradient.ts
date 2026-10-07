@@ -1,10 +1,11 @@
-import type { VisioLinearGradient } from './model';
+import type { VisioFillGradient, VisioLinearGradient } from './model';
+import { radialFillGradient } from './radial-fill-gradient';
 import { number, sectionRows, type Cells, type Report, type Sheet } from './sheet';
 import { linearGradientEndpoints } from './theme-gradient';
 
 /**
  * Saved ShapeSheet gradients use radians and normalized [0,1] stop values.
- * Only complete local, shape-rotating linear caches are accepted. Theme and
+ * Only complete local, shape-rotating linear and radial caches are accepted. Theme and
  * root-style substitution happen before this function; missing caches are not
  * inferred from formulas, legacy pattern numbers, or an unrelated theme.
  * https://learn.microsoft.com/en-us/office/client-developer/visio/fill-gradient-section
@@ -17,7 +18,7 @@ export function savedFillGradient(
 	height: number,
 	resolveColor: (cells: Cells) => string,
 	report: Report,
-): VisioLinearGradient | undefined {
+): VisioFillGradient | undefined {
 	const cells = sheet.cells;
 	if (number(cells, 'FillGradientEnabled', NaN) !== 1) return undefined;
 	// Native explicit stops override the active theme stops; wholly themed tail
@@ -39,6 +40,7 @@ export function savedFillGradient(
 		return undefined;
 	};
 	const angle = number(cells, 'FillGradientAngle', NaN);
+	const direction = number(cells, 'FillGradientDir', NaN);
 	const wrapped = ((angle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
 	// Quarter turns retain physical endpoints. Native oblique SVG references use
 	// bounding-box rotation, which differs from physical projection on rectangles.
@@ -49,8 +51,10 @@ export function savedFillGradient(
 		!Number.isFinite(height) ||
 		width <= 0 ||
 		height <= 0 ||
-		!Number.isFinite(angle) ||
-		number(cells, 'FillGradientDir', NaN) !== 0 ||
+		(direction === 0 && !Number.isFinite(angle)) ||
+		!Number.isInteger(direction) ||
+		direction < 0 ||
+		direction > 7 ||
 		number(cells, 'RotateGradientWithShape', NaN) !== 1 ||
 		number(cells, 'UseGroupGradient', NaN) !== 0
 	)
@@ -79,6 +83,7 @@ export function savedFillGradient(
 		if (!color) return reject();
 		stops.push({ offset, color, opacity: 1 - transparency });
 	}
+	if (direction !== 0) return radialFillGradient(direction, stops);
 	return {
 		type: 'linear',
 		...(orthogonal

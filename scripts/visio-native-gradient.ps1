@@ -1,10 +1,11 @@
 # Shared native-oracle setup. The caller owns the invisible application and document.
-function Set-VisioNativeLinearGradient {
+function Set-VisioNativeFillGradient {
  param($Shape, [string]$Angle, [string]$Foreground, [string]$Background,
-  [string]$ForegroundTransparency, [string]$BackgroundTransparency)
+  [string]$ForegroundTransparency, [string]$BackgroundTransparency,
+  [ValidateRange(0,13)][int]$Direction = 0)
  $Shape.CellsU('FillGradientEnabled').FormulaU='1'
  $Shape.CellsU('FillGradientAngle').FormulaU=$Angle
- $Shape.CellsU('FillGradientDir').FormulaU='0'
+ $Shape.CellsU('FillGradientDir').FormulaU=[string]$Direction
  $Shape.CellsU('RotateGradientWithShape').FormulaU='1'
  $Shape.CellsU('UseGroupGradient').FormulaU='0'
  if($Shape.SectionExists(249,0) -eq 0){$Shape.AddSection(249) | Out-Null}

@@ -109,7 +109,7 @@ try {
   if($name -eq 'hatch') { $shape.CellsU('FillPattern').FormulaU='2' }
   if($name -eq 'uncolored-alpha') { $layer.CellsC(2).FormulaU='255'; $shape.CellsU('Char.ColorTrans').FormulaU='50%' }
   if($name -like 'modern-gradient*') {
-   Set-VisioNativeLinearGradient $shape '0 deg' 'RGB(0,255,0)' 'RGB(0,0,255)' '20%' '50%'
+   Set-VisioNativeFillGradient $shape '0 deg' 'RGB(0,255,0)' 'RGB(0,0,255)' '20%' '50%'
    if($name -eq 'modern-gradient-partial') { $layer.CellsC(11).FormulaU='40%' }
   }
   $page.Export((Join-Path $directory "$name.svg"))

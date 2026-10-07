@@ -27,38 +27,38 @@ const settings =
 	cell('RotateGradientWithShape', 1) +
 	cell('UseGroupGradient', 0);
 
-const verticalNative = process.env.VISIO_NATIVE_LINEAR_VERTICAL_DIR;
-const reverseNative = process.env.VISIO_NATIVE_LINEAR_REVERSE_DIR;
-const obliqueNative = process.env.VISIO_NATIVE_LINEAR_OBLIQUE_DIR;
-const obliqueAlphaNative = process.env.VISIO_NATIVE_LINEAR_OBLIQUE_ALPHA_DIR;
-it.skipIf(!verticalNative && !reverseNative && !obliqueNative && !obliqueAlphaNative)(
-	'preserves genuine saved gradients through core edits',
-	async () => {
-		for (const directory of [verticalNative, reverseNative, obliqueNative, obliqueAlphaNative]) {
-			if (!directory) continue;
-			const bytes = new Uint8Array(await readFile(join(directory, 'fill-patterns.vsdx')));
-			const original = await parseVsdx(bytes);
-			expect(original.pages).toHaveLength(6);
-			const saved = await editVsdx(bytes, [
-				{
-					type: 'move-shape',
-					pageId: original.pages[0]!.id,
-					shapeId: original.pages[0]!.shapes[0]!.id,
-					x: 2.25,
-					y: 1.5,
-				},
-			]);
-			const reopened = await parseVsdx(saved.bytes);
-			for (let index = 0; index < 6; index++) {
-				expect(original.pages[index]!.shapes[0]!.style.fillGradient?.type).toBe('linear');
-				expect(reopened.pages[index]!.shapes[0]!.style.fillGradient).toEqual(
-					original.pages[index]!.shapes[0]!.style.fillGradient,
-				);
-			}
-			await writeFile(join(directory, 'core-fill-patterns.vsdx'), saved.bytes);
+for (const [name, type, count] of [
+	['LINEAR_VERTICAL', 'linear', 6],
+	['LINEAR_REVERSE', 'linear', 6],
+	['LINEAR_OBLIQUE', 'linear', 6],
+	['LINEAR_OBLIQUE_ALPHA', 'linear', 6],
+	['SAVED_RADIAL', 'radial', 7],
+	['SAVED_RADIAL_ALPHA', 'radial', 7],
+] as const) {
+	const directory = process.env[`VISIO_NATIVE_${name}_DIR`];
+	it.skipIf(!directory)(`preserves genuine ${name} gradients through core edits`, async () => {
+		const bytes = new Uint8Array(await readFile(join(directory!, 'fill-patterns.vsdx')));
+		const original = await parseVsdx(bytes);
+		expect(original.pages).toHaveLength(count);
+		const saved = await editVsdx(bytes, [
+			{
+				type: 'move-shape',
+				pageId: original.pages[0]!.id,
+				shapeId: original.pages[0]!.shapes[0]!.id,
+				x: 2.25,
+				y: 1.5,
+			},
+		]);
+		const reopened = await parseVsdx(saved.bytes);
+		for (let index = 0; index < count; index++) {
+			expect(original.pages[index]!.shapes[0]!.style.fillGradient?.type).toBe(type);
+			expect(reopened.pages[index]!.shapes[0]!.style.fillGradient).toEqual(
+				original.pages[index]!.shapes[0]!.style.fillGradient,
+			);
 		}
-	},
-);
+		await writeFile(join(directory!, 'core-fill-patterns.vsdx'), saved.bytes);
+	});
+}
 async function parse(overrides = '', stops = stop(0, 0) + stop(1, 1, '#0000ff'), document = '') {
 	const parsed = await parseVsdx(
 		await fixture({
@@ -73,6 +73,26 @@ async function parse(overrides = '', stops = stop(0, 0) + stop(1, 1, '#0000ff'),
 	);
 	return { style: parsed.pages[0]!.shapes[0]!.style, diagnostics: parsed.diagnostics };
 }
+
+it.each([
+	[1, [1, 0], 1.4],
+	[2, [0, 0], 1.4],
+	[3, [0.5, 0.5], 0.73],
+	[4, [0.5, 1], 1.1],
+	[5, [0.5, 0], 1.1],
+	[6, [1, 1], 1.4],
+	[7, [0, 1], 1.4],
+])(
+	'normalizes native saved radial direction %s independently of the linear angle',
+	async (direction, center, radius) => {
+		const { style, diagnostics } = await parse(
+			cell('FillGradientDir', direction as number) + cell('FillGradientAngle', 'Themed'),
+		);
+		expect(style.fillGradient).toMatchObject({ type: 'radial', center, radius });
+		expect(style.fillGradient?.stops).toHaveLength(2);
+		expect(diagnostics.some((item) => item.code === 'unsupported-saved-fill-gradient')).toBe(false);
+	},
+);
 
 it.each([
 	[Math.PI / 2, [2, 2], [2, 0]],
@@ -174,7 +194,9 @@ describe('saved horizontal fill gradients', () => {
 		expect(style.fillGradient?.stops).toHaveLength(10);
 	});
 	it.each([
-		cell('FillGradientDir', 3),
+		cell('FillGradientDir', 8),
+		cell('FillGradientDir', 13),
+		cell('FillGradientDir', 1.5),
 		cell('FillGradientDir', 'Themed'),
 		cell('FillGradientAngle', 'invalid'),
 		cell('FillGradientAngle', 'Themed'),

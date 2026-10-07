@@ -706,3 +706,17 @@ export; chart text uses the same fallback stack instead of falling back to a
 serif font when an authored Office font is unavailable. No font binaries were
 copied or added. Shared chart style and direct-formatting readers now use one
 DrawingML text/fill/line property reader in `chart/read-appearance.ts`.
+
+## Shared native radial fill geometry
+
+Source: ChristopherVR/ooxml at ef81f394cd2f275bcc9db87830db24b0adb2ec8b,
+`src/core/visio/legacy-fill-gradient.ts`. Its classic radial centers and radii
+moved to `src/core/visio/radial-fill-gradient.ts`, where the matching modern
+saved presets share the same geometry. Native Visio 16 captures established
+the two additional edge-center presets. No DOM or renderer logic was copied.
+The existing shared radial SVG renderer, scene snapshot and validation are reused.
+
+The shared native-gradient setup in `scripts/visio-native-gradient.ps1` now
+accepts a direction and is named Set-VisioNativeFillGradient. Both existing
+capture callers use it. Saved-gradient preservation tests also share one
+parameterized test body across linear and radial captures.

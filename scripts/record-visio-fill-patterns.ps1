@@ -7,7 +7,9 @@ param(
  [ValidateRange(0,8)][int]$GroupDepth = 0, [string]$GroupAngle = '0 deg',
  [switch]$GroupFlipX, [switch]$GroupFlipY,
  [ValidateRange(1,40)][int]$FirstPattern = 2, [ValidateRange(1,40)][int]$LastPattern = 24,
- [string]$GradientAngle = ''
+ [string]$GradientAngle = '',
+ # -1 captures the modern direction matching each page's pattern number.
+ [ValidateRange(-1,13)][int]$GradientDirection = 0
 )
 # Capture native pattern tiles and full-page exports from an owned application.
 $ErrorActionPreference='Stop'
@@ -41,7 +43,12 @@ try {
   $shape.CellsU('FillForegndTrans').FormulaU=$ForegroundTransparency
   $shape.CellsU('FillBkgndTrans').FormulaU=$BackgroundTransparency
   $shape.CellsU('LinePattern').FormulaU='0'
-  if($GradientAngle){Set-VisioNativeLinearGradient $shape $GradientAngle $Foreground $Background $ForegroundTransparency $BackgroundTransparency}
+  $modernGradient=$GradientAngle -or $GradientDirection -ne 0
+  $direction=if($GradientDirection -eq -1){$pattern}else{$GradientDirection}
+  if($modernGradient){
+   $modernAngle=if($GradientAngle){$GradientAngle}else{'0 deg'}
+   Set-VisioNativeFillGradient $shape $modernAngle $Foreground $Background $ForegroundTransparency $BackgroundTransparency $direction
+  }
   $groupIds=@()
   for($depth=0;$depth -lt $GroupDepth;$depth++) {
    # An invisible sibling lets native Visio create a real group at each level.
@@ -67,7 +74,7 @@ try {
   $tile=$svg.SelectSingleNode('//s:pattern',$ns)
   $tileImage=if($tile){$tile.SelectSingleNode('s:image',$ns)}else{$null}
   if(-not $tileImage){
-   if(-not $GradientAngle -and $pattern -ge 2 -and $pattern -le 24){throw "Pattern $pattern has no native tile"}
+   if(-not $modernGradient -and $pattern -ge 2 -and $pattern -le 24){throw "Pattern $pattern has no native tile"}
    $records += [ordered]@{pattern=$pattern;pageId=[string]$page.ID;shapeId=[string]$shape.ID;groupIds=$groupIds}
    continue
   }
@@ -88,6 +95,6 @@ try {
   } finally {$bitmap.Dispose();$stream.Dispose()}
  }
  $document.SaveAs((Join-Path $directory 'fill-patterns.vsdx')) | Out-Null
- [ordered]@{application='Microsoft Visio';version=$app.Version;foreground=$Foreground;background=$Background;foregroundTransparency=$ForegroundTransparency;backgroundTransparency=$BackgroundTransparency;angle=$Angle;gradientAngle=$GradientAngle;drawingScale=$DrawingScale;pageScale=$PageScale;flipX=[bool]$FlipX;flipY=[bool]$FlipY;groupDepth=$GroupDepth;groupAngle=$GroupAngle;groupFlipX=[bool]$GroupFlipX;groupFlipY=[bool]$GroupFlipY;firstPattern=$FirstPattern;lastPattern=$LastPattern;cases=$records} | ConvertTo-Json -Depth 8 | Set-Content (Join-Path $directory 'evidence.json') -Encoding utf8
+ [ordered]@{application='Microsoft Visio';version=$app.Version;foreground=$Foreground;background=$Background;foregroundTransparency=$ForegroundTransparency;backgroundTransparency=$BackgroundTransparency;angle=$Angle;gradientAngle=$GradientAngle;gradientDirection=$GradientDirection;drawingScale=$DrawingScale;pageScale=$PageScale;flipX=[bool]$FlipX;flipY=[bool]$FlipY;groupDepth=$GroupDepth;groupAngle=$GroupAngle;groupFlipX=[bool]$GroupFlipX;groupFlipY=[bool]$GroupFlipY;firstPattern=$FirstPattern;lastPattern=$LastPattern;cases=$records} | ConvertTo-Json -Depth 8 | Set-Content (Join-Path $directory 'evidence.json') -Encoding utf8
 } finally {if($document){$document.Saved=$true;$document.Close()};$app.Quit()}
 Write-Output $directory
