@@ -31,6 +31,7 @@ export interface FixturePage {
 	attributes?: string;
 	width?: number;
 	height?: number;
+	pageCells?: string;
 }
 export async function fixture(
 	options: {
@@ -62,7 +63,7 @@ export async function fixture(
 			pages
 				.map(
 					(page, i) =>
-						`<Page ID="${page.id}" Name="Page ${i + 1}" ${page.attributes ?? ''}><PageSheet>${cell('PageWidth', page.width ?? 8.5)}${cell('PageHeight', page.height ?? 11)}</PageSheet><Rel r:id="rId${i + 1}"/></Page>`,
+						`<Page ID="${page.id}" Name="Page ${i + 1}" ${page.attributes ?? ''}><PageSheet>${cell('PageWidth', page.width ?? 8.5)}${cell('PageHeight', page.height ?? 11)}${page.pageCells ?? ''}</PageSheet><Rel r:id="rId${i + 1}"/></Page>`,
 				)
 				.join(''),
 		),
