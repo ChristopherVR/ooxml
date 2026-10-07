@@ -80,7 +80,7 @@ export function layoutSections(
 				note('Continuous sections with vertical alignment changes start a new page.');
 			else if ((previous.columns?.count ?? 1) > 1 && !previousFlow.balanced)
 				note(
-					'Continuous breaks after multi-column sections requiring unsupported balancing start a new page; balancing those layouts (splittable or repeated-header tables, floats or explicit breaks) is not yet modeled.',
+					'Continuous breaks after multi-column sections requiring unsupported balancing start a new page; balancing those layouts (floats, footnotes or explicit breaks) is not yet modeled.',
 				);
 			else continueAt = previousFlow.cursor.finishBand();
 		}

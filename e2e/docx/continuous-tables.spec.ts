@@ -9,6 +9,7 @@ const evidence = JSON.parse(await readFile(fixture('evidence.json'), 'utf8')) as
 	cases: {
 		name: string;
 		pages: number;
+		headerCounts?: number[];
 		positions: { text: string; page: number; xPt: number; yPt: number }[];
 	}[];
 };
@@ -44,9 +45,19 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 				),
 			);
 			for (const position of reference.positions.filter((entry) => entry.text.trim())) {
-				expect(positions.filter((entry) => entry.text === position.text)).toEqual([
+				const matches = positions.filter((entry) => entry.text === position.text);
+				const actual =
+					reference.headerCounts && position.text === 'Row1' ? matches.slice(0, 1) : matches;
+				expect(actual).toEqual([
 					{ text: position.text, page: position.page, xPt: position.xPt, yPt: position.yPt },
 				]);
 			}
+			if (reference.headerCounts)
+				expect(
+					reference.headerCounts.map(
+						(_count, index) =>
+							positions.filter((entry) => entry.page === index + 1 && entry.text === 'Row1').length,
+					),
+				).toEqual(reference.headerCounts);
 			expect(errors).toEqual([]);
 		});

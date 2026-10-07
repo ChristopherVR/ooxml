@@ -7,15 +7,12 @@ export function canBalanceBlock(block: LayoutBlock): boolean {
 		return !block.floats?.length && !block.runs.some((run) => run.breakAfter);
 	return (
 		block.rows.length > 0 &&
-		block.rows.every(
-			(row) =>
-				row.cantSplit &&
-				!row.isHeader &&
-				row.cells.every((cell) =>
-					cell.paragraphs.every(
-						(paragraph) => !paragraph.footnotes?.length && canBalanceBlock(paragraph),
-					),
+		block.rows.every((row) =>
+			row.cells.every((cell) =>
+				cell.paragraphs.every(
+					(paragraph) => !paragraph.footnotes?.length && canBalanceBlock(paragraph),
 				),
+			),
 		)
 	);
 }

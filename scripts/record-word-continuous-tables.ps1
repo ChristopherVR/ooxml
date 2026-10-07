@@ -1,5 +1,8 @@
 # Native reference: fresh documents in a separate hidden Word instance.
-param([string]$OutputDirectory = (Join-Path $env:TEMP ('word-continuous-tables-' + [guid]::NewGuid())))
+param(
+    [string]$OutputDirectory = (Join-Path $env:TEMP ('word-continuous-tables-' + [guid]::NewGuid())),
+    [string[]]$CaseNames = @('table-even', 'table-odd', 'table-overflow', 'table-split', 'table-header', 'table-header-overflow')
+)
 $ErrorActionPreference = 'Stop'
 New-Item -ItemType Directory -Force $OutputDirectory | Out-Null
 $wordReference = New-Object -ComObject Word.Application
@@ -7,10 +10,10 @@ $wordReference.Visible = $false
 $wordReference.DisplayAlerts = 0
 $cases = @()
 try {
-    foreach ($kind in @('table-even', 'table-odd', 'table-overflow')) {
+    foreach ($kind in $CaseNames) {
         $document = $wordReference.Documents.Add()
         try {
-            $count = switch ($kind) { 'table-even' { 4 }; 'table-odd' { 5 }; 'table-overflow' { 120 } }
+            $count = switch ($kind) { 'table-even' { 4 }; 'table-odd' { 5 }; 'table-overflow' { 120 }; 'table-split' { 2 }; 'table-header' { 5 }; 'table-header-overflow' { 120 } }
             $document.Content.Text = "After1`rAfter2`r"
             $document.PageSetup.PageWidth = 612
             $document.PageSetup.PageHeight = 792
@@ -32,6 +35,13 @@ try {
             $table.Rows.AllowBreakAcrossPages = 0
             $table.Borders.Enable = 0
             for ($row=1; $row -le $count; $row++) { $table.Cell($row,1).Range.Text = "Row$row" }
+            if ($kind -eq 'table-split') {
+                $table.Rows.AllowBreakAcrossPages = -1
+                $table.Rows.HeightRule = 1 # wdRowHeightAtLeast
+                $table.Cell(1,1).Range.Text = "Row1a`vRow1b`vRow1c`vRow1d`vRow1e`vRow1f"
+                $table.Cell(2,1).Range.Text = "Row2a`vRow2b"
+            }
+            if ($kind.StartsWith('table-header')) { $table.Rows.Item(1).HeadingFormat = -1 }
             $document.Content.Font.Name = 'Arial'
             $document.Content.Font.Size = 12
             $document.Content.ParagraphFormat.SpaceBefore = 0
@@ -46,14 +56,17 @@ try {
             $document.Repaginate()
             $positions = @()
             foreach ($paragraph in $document.Paragraphs) {
-                $range = $paragraph.Range.Duplicate
-                $range.Collapse(1)
-                $positions += [ordered]@{
-                    text=$paragraph.Range.Text.Trim([char[]]@([char]13,[char]7,[char]12))
-                    section=$range.Information(2)
-                    page=$range.Information(3)
-                    xPt=$range.Information(5)
-                    yPt=$range.Information(6)
+                $offset = 0
+                foreach ($line in $paragraph.Range.Text.Split([char]11)) {
+                    $range = $document.Range($paragraph.Range.Start + $offset,$paragraph.Range.Start + $offset)
+                    $positions += [ordered]@{
+                        text=$line.Trim([char[]]@([char]13,[char]7,[char]12))
+                        section=$range.Information(2)
+                        page=$range.Information(3)
+                        xPt=$range.Information(5)
+                        yPt=$range.Information(6)
+                    }
+                    $offset += $line.Length + 1
                 }
             }
             $document.SaveAs2((Join-Path $OutputDirectory "$kind.docx"),16)
