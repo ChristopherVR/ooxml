@@ -1113,3 +1113,34 @@ still need independent raster measurements. PowerPoint's existing descriptors
 keep their prior paint behavior until their native profile is measured and
 explicitly enabled. Presets, path-gradient controls and native pane layout
 remain open; this evidence does not establish full Excel UI parity.
+
+## Extended linear gradient measurements
+
+Excel COM now captures six additional scaled linear profiles at ten angles in
+square and wide bounds: transparent endpoint pairs, opaque interior pairs,
+opaque three-stop fills, translucent three-stop fills, crossed pairs and
+coincident pairs. Each capture saves/reopens its own workbook and records the
+saved fill XML and native PNG alpha alongside its pixels. The combined corpus
+contains 140 native cases and 3,500 points, including the original opaque pair.
+Native stop insertion order, opacity and geometry round trips are checked for
+every profile; renderer sampling leaves the editable fills unchanged.
+
+The existing straight SVG path passes the new transparent two-stop, interior,
+crossed and opaque three-stop comparisons. Alpha is checked separately within
+two byte levels; colors are compared after premultiplication, with the original
+two-level opaque tolerance and three levels for translucent pixels. This avoids
+interpreting unpremultiplication noise at low alpha as a paint algorithm.
+
+Two native differences remain explicit. At `(306, 66)` in the 600x600 native
+135-degree translucent three-stop capture, Excel reports RGBA `[114,138,0,193]`
+while Playwright MCP reports `[118,136,0,193]`, a red premultiplied error just
+over three levels. A wide 135-degree coincident-stop boundary also has native
+edge coverage absent from the SVG hard step. The fixtures retain both problems;
+strict expected-failure repros distinguish them from passing comparisons.
+This increment expands the native evidence, not the renderer's parity claim.
+
+Core raster checks report 124 passing tests and 17 expected failures. Across
+all six bindings, 2,975 points per binding pass strict browser comparisons;
+twelve additional browser repros remain expected failures (the two gaps in
+each binding). Strict core typechecks pass. Unscaled/path gradients, additional
+translucent profiles, presets and native pane layout still need work.

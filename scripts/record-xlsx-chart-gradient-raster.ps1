@@ -1,4 +1,8 @@
-param([string]$OutputFolder = (Join-Path $env:TEMP 'ooxml-chart-gradient-raster'))
+param(
+    [string]$OutputFolder = (Join-Path $env:TEMP 'ooxml-chart-gradient-raster'),
+    [ValidateSet('opaque','transparent','interior','three','three-transparent','crossed','coincident')]
+    [string]$Profile = 'opaque'
+)
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
 Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -24,9 +28,33 @@ try {
             $fill.ForeColor.RGB=255; $fill.TwoColorGradient(1,1)
             $fill.GradientStops.Item(1).Color.RGB=255
             $fill.GradientStops.Item(2).Color.RGB=16777215
+            switch($Profile) {
+                'transparent' {
+                    $fill.GradientStops.Item(1).Transparency=[single]0.37
+                    $fill.GradientStops.Item(2).Transparency=[single]0.13
+                }
+                'interior' {
+                    $fill.GradientStops.Item(1).Position=[single]0.23
+                    $fill.GradientStops.Item(2).Position=[single]0.56
+                }
+                'three' {$fill.GradientStops.Insert(65280,[single]0.56,[single]0)}
+                'three-transparent' {
+                    $fill.GradientStops.Item(1).Transparency=[single]0.37
+                    $fill.GradientStops.Insert(65280,[single]0.56,[single]0.13)
+                }
+                'crossed' {
+                    $fill.GradientStops.Item(1).Position=[single]0.85
+                    $fill.GradientStops.Item(2).Position=[single]0.56
+                }
+                'coincident' {
+                    $fill.GradientStops.Item(1).Position=[single]0.5
+                    $fill.GradientStops.Item(2).Position=[single]0.5
+                }
+            }
             $fill.GradientAngle=[single]$angle
             $chart.ChartArea.Format.Line.Visible=0
             $name="angle-$angle-$($size[0])x$($size[1])"
+            if($Profile -ne 'opaque') {$name="$Profile-$name"}
             $path=Join-Path $OutputFolder "$name.xlsx"; $book.SaveCopyAs($path)
             $zip=[IO.Compression.ZipFile]::OpenRead($path)
             try {
@@ -51,10 +79,10 @@ try {
                             $px=[int][Math]::Floor($bitmap.Width*$x)
                             $py=[int][Math]::Floor($bitmap.Height*$y)
                             $color=$bitmap.GetPixel($px,$py)
-                            $samples+=[ordered]@{x=$px;y=$py;rgb=@([int]$color.R,[int]$color.G,[int]$color.B)}
+                            $samples+=[ordered]@{x=$px;y=$py;rgb=@([int]$color.R,[int]$color.G,[int]$color.B);alpha=[int]$color.A}
                         }
                     }
-                    $cases+=[ordered]@{name=$name;angle=[double]$native.ChartArea.Format.Fill.GradientAngle;fillXml=$fillXml;width=$bitmap.Width;height=$bitmap.Height;samples=$samples}
+                    $cases+=[ordered]@{name=$name;profile=$Profile;angle=[double]$native.ChartArea.Format.Fill.GradientAngle;fillXml=$fillXml;width=$bitmap.Width;height=$bitmap.Height;samples=$samples}
                 } finally {$bitmap.Dispose()}
             } finally {$probe.Close($false)}
             $object.Delete()

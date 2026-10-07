@@ -16,3 +16,20 @@ in all six XLSX bindings and checks the same pixels. This verifies this measured
 paint profile, not chart typography/layout or other gradient profiles. Generated
 workbooks and PNGs remain outside the package; no Office dependency is required
 for these regressions.
+
+`native-gradient-linear-profiles.json` adds six profiles (120 independently
+saved/reopened charts, 3,000 pixels): transparent endpoint pairs, opaque interior
+pairs, opaque three-stop fills, translucent three-stop fills, crossed pairs and
+coincident pairs. Generate each profile with the recorder's `-Profile` option
+into its own output directory. The additional JSON includes raw PNG alpha;
+comparisons use premultiplied color channels and test alpha separately. Opaque
+samples retain the two-level tolerance; translucent premultiplied samples allow
+three levels, with alpha within two levels.
+
+The additional capture deliberately retains unresolved differences. Sixteen
+translucent three-stop core cases and one wide 135-degree coincident-edge case
+are explicit expected failures, not passing parity evidence. Browser coverage
+has a strict passing sweep plus separate expected-failure repros for each of
+these two problems in every binding. Those markers must be removed once the
+renderer matches the native pixels; the tolerances must not be raised to hide
+the remaining discrepancies.

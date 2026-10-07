@@ -1053,3 +1053,20 @@ bounds. Its saved fill XML and 500 background pixels are committed in the chart
 fixture. Core sampling and all six browser SVG painters match within two RGB
 levels. Existing direction captures now activate/refresh the native chart and
 reject empty or failed PNG exports.
+
+## Extended native Excel gradient evidence
+
+Source: ChristopherVR/ooxml at `8bd117180`,
+`scripts/record-xlsx-chart-gradient-raster.ps1` and the core/browser raster
+comparators. No production paint algorithm was copied or changed. The recorder
+now accepts six additional profile variants and retains native PNG alpha.
+Excel 16.0 build 20430 produced 120 independent saved/reopened chart captures
+for transparent, interior, three-stop, crossed and coincident profiles, at ten
+angles and two aspect ratios. Their source fills and 3,000 pixels live in
+`src/core/chart/__fixtures__/native-gradient-linear-profiles.json`.
+
+Comparators now handle endpoint padding and hard-step pairs and compare alpha
+separately from premultiplied color. The native translucent three-stop color
+residual and one coincident-edge coverage discrepancy remain explicit expected
+failures. The passing sweep and native round-trip checks are separate from
+these known gaps, so a green test run does not claim full gradient parity.
