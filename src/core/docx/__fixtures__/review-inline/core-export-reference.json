@@ -21,6 +21,24 @@
 			"pages": 2
 		},
 		{
+			"name": "break-insert-accept",
+			"text": "Before\r\f\rAfter\r",
+			"revisions": 0,
+			"pictures": 0,
+			"footnotes": 0,
+			"footnoteRevisions": 0,
+			"pages": 2
+		},
+		{
+			"name": "break-insert-reject",
+			"text": "BeforeAfter\r",
+			"revisions": 0,
+			"pictures": 0,
+			"footnotes": 0,
+			"footnoteRevisions": 0,
+			"pages": 1
+		},
+		{
 			"name": "note-delete-accept",
 			"text": "BeforeAfter\r",
 			"revisions": 0,

@@ -84,7 +84,12 @@ function updateRuns(
 	throw new Error(`No run revision with id ${id} was found.`);
 }
 
-function resolveParagraphMark(model: DocumentModel, id: string, keepBreak: boolean): DocumentModel {
+/** Resolve a paragraph boundary using the following paragraph's formatting when merging. */
+export function resolveParagraphMark(
+	model: DocumentModel,
+	id: string,
+	keepBreak: boolean,
+): DocumentModel {
 	const next = structuredClone(model);
 	const paragraph = documentParagraphs(next).find((p) => p.markRevision?.id === id);
 	if (!paragraph) throw new Error(`No paragraph mark revision with id ${id} was found.`);

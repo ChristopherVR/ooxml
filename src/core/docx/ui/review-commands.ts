@@ -4,6 +4,7 @@ import { dispatchIsolatedCommand } from './command-history';
 import { inlineTextRevision, clearInlineTextRevisions } from './review-inline-revisions';
 import { trackChangesPluginKey } from './track-changes-mode';
 import { hasNoteRevisions, resolveNoteRevisions } from './note-parts';
+import { paragraphMarkRevision, resolveParagraphMarkRange } from './review-paragraph-marks';
 import { formattingRevision, resolveFormattingRange } from './review-formatting';
 import {
 	paragraphFormattingRevision,
@@ -12,7 +13,7 @@ import {
 
 export interface RevisionRange {
 	id: string;
-	kind: 'insert' | 'delete' | 'formatChange' | 'paragraphChange';
+	kind: 'insert' | 'delete' | 'formatChange' | 'paragraphChange' | 'paragraphMark';
 	/** Node position for a paragraph-format change, mapped before applying a command. */
 	paragraphPos?: number;
 	from: number;
@@ -26,6 +27,16 @@ export interface RevisionRange {
 export function collectRevisionRanges(doc: import('prosemirror-model').Node): RevisionRange[] {
 	const ranges: RevisionRange[] = [];
 	doc.descendants((node, pos) => {
+		const mark = paragraphMarkRevision(node);
+		if (mark)
+			ranges.push({
+				id: mark.id,
+				kind: 'paragraphMark',
+				author: mark.author,
+				paragraphPos: pos,
+				from: pos + node.nodeSize - 1,
+				to: pos + node.nodeSize - 1,
+			});
 		const paragraph = paragraphFormattingRevision(node);
 		if (paragraph)
 			ranges.push({
@@ -76,7 +87,7 @@ export function collectRevisionRanges(doc: import('prosemirror-model').Node): Re
 				...(move ? { move } : {}),
 			});
 	});
-	return ranges;
+	return ranges.sort((a, b) => a.from - b.from);
 }
 
 function revisionNear(view: EditorView): RevisionRange | undefined {
@@ -115,6 +126,7 @@ function linkedRanges(view: EditorView, range: RevisionRange): RevisionRange[] {
 function resolveRanges(view: EditorView, ranges: RevisionRange[], mode: 'accept' | 'reject') {
 	let tr = view.state.tr;
 	for (const range of ranges) {
+		if (range.kind === 'paragraphMark') continue;
 		const from = tr.mapping.map(range.from);
 		const to = tr.mapping.map(range.to);
 		if (range.kind === 'paragraphChange' && range.paragraphPos !== undefined) {
@@ -136,6 +148,13 @@ function resolveRanges(view: EditorView, ranges: RevisionRange[], mode: 'accept'
 			);
 		}
 	}
+	// Resolve text and formatting first, then boundaries from the end, so adjacent merges retain
+	// the final paragraph's attributes and the transaction maps every original position once.
+	for (const range of ranges
+		.filter((range) => range.kind === 'paragraphMark')
+		.sort((a, b) => b.from - a.from))
+		if (range.paragraphPos !== undefined)
+			resolveParagraphMarkRange(tr, tr.mapping.map(range.paragraphPos), mode);
 	return tr.setMeta(trackChangesPluginKey, { tracked: true });
 }
 

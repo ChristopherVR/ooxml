@@ -119,6 +119,7 @@ for (const name of [
 	'note-insert',
 	'note-delete',
 	'break-delete',
+	'break-insert',
 ])
 	for (const mode of ['accept', 'reject'] as const)
 		it(`exports native ${name} after editor ${mode} without leaking removed picture properties`, async () => {
@@ -135,6 +136,33 @@ for (const name of [
 				const bytes = await loaded.save(model);
 				const reopened = (await loadDocx(bytes)).model;
 				expect(listRevisions(reopened)).toHaveLength(0);
+				const native = (
+					await loadDocx(
+						await readFile(
+							resolve(
+								'../core/docx/__fixtures__/review-inline',
+								`${name}-${mode === 'accept' ? 'accepted' : 'rejected'}.docx`,
+							),
+						),
+					)
+				).model;
+				const content = (blocks: typeof model.blocks) =>
+					blocks.map((block) =>
+						block.type === 'paragraph'
+							? block.runs
+									.map((run) =>
+										run.image
+											? '[picture]'
+											: run.noteReference
+												? `[${run.noteReference.kind}:${run.noteReference.id}]`
+												: run.break
+													? `[${run.break}]`
+													: run.text,
+									)
+									.join('')
+							: '[table]',
+					);
+				expect(content(reopened.blocks)).toEqual(content(native.blocks));
 				const paragraphs = reopened.blocks.flatMap((block) =>
 					block.type === 'paragraph' ? [block] : [],
 				);

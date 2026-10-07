@@ -14,11 +14,13 @@ Shared editor regression tests compare body object/text content with native
 accept/reject results for both picture cases, both note cases and page-break
 deletion. Note snapshots also resolve retained note-story revisions and remove
 notes whose revised body reference was removed. This does not establish style
-or pixel equality or resolution of every related non-body revision. The insertion of a page break
-also inserted two tracked paragraph marks in this Word build; the fixture is
-retained for the separate paragraph-mark implementation, not claimed as covered.
+or pixel equality or resolution of every related non-body revision. The insertion
+of a page break also inserted two tracked paragraph marks in this Word build;
+shared editor commands now resolve them, matching the native paragraph content
+and page count after acceptance/rejection. This does not cover boundary removal
+across a table or section, or paragraph-mark recording/display.
 
-`src/ui/scripts/write-word-review-inline-exports.mjs` writes the ten covered
+`src/ui/scripts/write-word-review-inline-exports.mjs` writes the twelve covered
 editor exports using the shared adapter and commands. The separate hidden
 `scripts/check-word-review-inline-exports.ps1` reopens them read-only.
 `core-export-reference.json` records matching body text, pictures, footnote counts

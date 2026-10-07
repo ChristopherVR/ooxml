@@ -164,8 +164,18 @@ endnote sharing the same numeric ID retain independent content during editing
 and review-mode refreshes. Component and six-binding browser checks cover this.
 Picture parsing now carries its run property basis; removing a picture may remove its own opaque properties without
 weakening the guard for unsupported retained text or copying picture properties
-onto neighboring text. Native page-break
-insertion also revises paragraph marks, which remain outside this slice. Atom
+onto neighboring text. Native page-break insertion also revises paragraph marks.
+Shared review commands now enumerate, navigate and resolve inserted/deleted
+paragraph boundaries, retain the following paragraph's formatting when merging,
+and resolve consecutive boundaries from the end in one undoable transaction.
+The merge rule reuses the core model command and follows the documented
+[WordprocessingML paragraph-mark behavior](https://learn.microsoft.com/en-us/office/open-xml/word/how-to-accept-all-revisions-in-a-word-processing-document).
+Native insertion accept/reject exports match Word's paragraph content and page
+counts, and all twelve object-review exports reopen with zero body and note
+revisions. Yjs peers converge and restore the original structure with one undo.
+Six-binding browser checks cover acceptance, rejection, export and undo.
+Removal across table/section boundaries or at the final paragraph is guarded;
+display projection and recording of paragraph-mark revisions need further work. Atom
 format-revision resolution, recording, prior formatting display and related
 header/footer revision cleanup still require dedicated coverage. These checks do not
 establish complete native Word object-review parity.

@@ -15,6 +15,7 @@ for (const name of [
 	'note-insert',
 	'note-delete',
 	'break-delete',
+	'break-insert',
 ]) {
 	for (const mode of ['accept', 'reject']) {
 		const loaded = await loadDocx(
