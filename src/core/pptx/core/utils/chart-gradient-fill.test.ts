@@ -44,4 +44,13 @@ describe('parseChartGradientFill (COM: charts-com.pptx slide 23)', () => {
 		expect(parseChartGradientFill({ 'a:solidFill': {} }, lookup, codec('linear'))).toBeUndefined();
 		expect(parseChartGradientFill(undefined, lookup, codec('linear'))).toBeUndefined();
 	});
+	it('retains rectangular path gradients for shared chart painting', () => {
+		expect(
+			parseChartGradientFill(
+				{ 'a:gradFill': { 'a:path': { '@_path': 'rect' } } },
+				lookup,
+				codec('radial'),
+			),
+		).toMatchObject({ type: 'radial', path: 'rect' });
+	});
 });

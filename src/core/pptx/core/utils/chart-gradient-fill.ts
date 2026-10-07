@@ -51,7 +51,13 @@ export function parseChartGradientFill(
 	const type = codec.extractGradientType(gradFill);
 	if (type === 'radial') {
 		const focalPoint = codec.extractGradientFocalPoint(gradFill);
-		return focalPoint ? { type, stops, focalPoint } : { type, stops };
+		const path = lookup.getChildByLocalName(gradFill, 'path')?.['@_path'];
+		return {
+			type,
+			stops,
+			...(focalPoint ? { focalPoint } : {}),
+			...(typeof path === 'string' && path !== 'circle' ? { path } : {}),
+		};
 	}
 	return { type, stops, angle: codec.extractGradientAngle(gradFill) };
 }

@@ -82,6 +82,7 @@ export function chartGradientsEqual(a: PptxChartGradientFill, b: PptxChartGradie
 		return false;
 	}
 	if (a.type === 'radial') {
+		if ((a.path ?? 'circle') !== (b.path ?? 'circle')) return false;
 		const [ax, ay] = focalUnits(a);
 		const [bx, by] = focalUnits(b);
 		return ax === bx && ay === by;
@@ -142,7 +143,9 @@ function buildPath(
 		authored?.parsed.type === 'radial'
 			? (authored.node[findKey(authored.node, 'path', getLocalName) ?? ''] as XmlObject | undefined)
 			: undefined;
-	const path: XmlObject = { '@_path': String(authoredPath?.['@_path'] ?? 'circle') };
+	const path: XmlObject = {
+		'@_path': gradient.path ?? String(authoredPath?.['@_path'] ?? 'circle'),
+	};
 	const [x, y] = focalUnits(gradient);
 	const authoredFocal =
 		authored?.parsed.type === 'radial' ? focalUnits(authored.parsed) : undefined;
