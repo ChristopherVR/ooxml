@@ -3,6 +3,7 @@ import type { EditorView } from 'prosemirror-view';
 import { dispatchIsolatedCommand } from './command-history';
 import { inlineTextRevision, clearInlineTextRevisions } from './review-inline-revisions';
 import { trackChangesPluginKey } from './track-changes-mode';
+import { emptySimpleFieldResult } from './simple-field-input';
 import { hasNoteRevisions, resolveNoteRevisions } from './note-parts';
 import { paragraphMarkRevision, resolveParagraphMarkRange } from './review-paragraph-marks';
 import { hasSectionPartRevisions, resolveSectionPartRevisions } from './review-section-parts';
@@ -142,8 +143,9 @@ function resolveRanges(view: EditorView, ranges: RevisionRange[], mode: 'accept'
 			continue;
 		}
 		const removeText = (mode === 'accept') === (range.kind === 'delete');
-		if (removeText) tr = tr.delete(from, to);
-		else {
+		if (removeText) {
+			if (!emptySimpleFieldResult(tr, from, to)) tr.delete(from, to);
+		} else {
 			clearInlineTextRevisions(tr, from, to);
 			tr = tr.removeMark(
 				from,

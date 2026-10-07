@@ -1,6 +1,7 @@
 import { Fragment, Slice, type Mark, type Node } from 'prosemirror-model';
 import type { EditorState, Transaction } from 'prosemirror-state';
 import { TextSelection } from 'prosemirror-state';
+import type { Transform } from 'prosemirror-transform';
 import { fieldResultRanges, type FieldResultRange } from './field-results';
 import { inlineNodeRun, runToInlineNodes } from './run-adapter';
 
@@ -73,30 +74,41 @@ export function replaceSimpleFieldResult(
 	const field = targetField(state, from, to);
 	if (!field) return null;
 	if (!text) {
-		if (from !== field.from || to !== field.to || !state.schema.nodes.fieldMarker) return null;
-		const run = inlineNodeRun(state.doc.nodeAt(from)!);
-		if (!run) return null;
-		// A simple field has no separately formatted code runs. Its removed result's
-		// direct formatting must not become formatting on the structural markers.
-		const format = {
-			...(run.commentIds && { commentIds: run.commentIds }),
-		};
-		const markers = [
-			{ ...format, text: '', fieldChar: 'begin' as const },
-			{ ...format, text: '', fieldCode: field.mark.attrs.instr as string },
-			{ ...format, text: '', fieldChar: 'separate' as const },
-			{ ...format, text: '', fieldChar: 'end' as const },
-		].flatMap((item) => runToInlineNodes(item, state.schema));
-		const tr = state.tr.replaceWith(from, to, markers);
+		const tr = state.tr;
+		if (!emptySimpleFieldResult(tr, from, to)) return null;
 		return tr.setSelection(TextSelection.create(tr.doc, from + 3));
 	}
-	const tr = state.tr.insertText(text, from, to);
-	tr.doc.nodesBetween(from, from + text.length, (node, pos) => {
-		if (!node.isText) return;
-		for (const mark of resultMarks(node, field))
-			tr.addMark(Math.max(from, pos), Math.min(from + text.length, pos + node.nodeSize), mark);
-	});
+	const $from = state.doc.resolve(from);
+	const marks =
+		state.storedMarks ?? (from === to ? $from.marks() : $from.marksAcross(state.doc.resolve(to)));
+	const node = state.schema.text(text, marks);
+	// Put metadata on the inserted slice before replacing. Adding it afterward emits mark steps,
+	// which a text-only Track Changes transaction cannot replay as a tracked replacement.
+	const tr = state.tr.replaceRangeWith(from, to, node.mark(resultMarks(node, field)));
+	if (!tr.selection.empty && tr.selection.to === from + text.length)
+		tr.setSelection(TextSelection.near(tr.selection.$to));
 	return tr;
+}
+
+/** Removing a complete simple cached result keeps its instruction as an empty complex field. */
+export function emptySimpleFieldResult(transform: Transform, from: number, to: number): boolean {
+	const field = fieldResultRanges(transform.doc).find(
+		(range) => range.mark.attrs.simple && range.from === from && range.to === to,
+	);
+	const schema = transform.doc.type.schema;
+	if (!field || !schema.nodes.fieldMarker) return false;
+	const run = inlineNodeRun(transform.doc.nodeAt(from)!);
+	if (!run) return false;
+	// Result formatting and revisions do not belong to the structural markers.
+	const format = { ...(run.commentIds && { commentIds: run.commentIds }) };
+	const markers = [
+		{ ...format, text: '', fieldChar: 'begin' as const },
+		{ ...format, text: '', fieldCode: field.mark.attrs.instr as string },
+		{ ...format, text: '', fieldChar: 'separate' as const },
+		{ ...format, text: '', fieldChar: 'end' as const },
+	].flatMap((item) => runToInlineNodes(item, schema));
+	transform.replaceWith(from, to, markers);
+	return true;
 }
 
 /** Preserve the instruction when Backspace/Delete removes the last cached result text. */
