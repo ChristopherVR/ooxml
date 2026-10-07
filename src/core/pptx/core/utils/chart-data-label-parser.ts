@@ -2,7 +2,6 @@ import type {
 	PptxChartDataLabel,
 	PptxChartDataLabelPosition,
 	PptxChartDataLabelOptions,
-	PptxChartLegendTextStyle,
 	XmlObject,
 } from '../types';
 import { parseDataLabelBox } from './chart-data-label-box';
@@ -16,7 +15,7 @@ import {
 	parseDataLabelsRange,
 	parseXForSave,
 } from './chart-data-labels-range';
-import { parseDefRPrTextStyle, resolveTxPrDefRPr } from './chart-def-rpr-style';
+import { parseDefRPrTextStyle, parseRichTextStyle, resolveTxPrDefRPr } from './chart-def-rpr-style';
 import { parseChartManualLayout } from './chart-layout';
 import { parseShapeProps } from './chart-series-detail-parser';
 
@@ -136,30 +135,6 @@ function numberFormatCode(
 	return formatCode.length > 0 ? formatCode : undefined;
 }
 
-/**
- * The font a rich-text label (`c:tx/c:rich`) is drawn with: its first run's
- * `a:rPr` over the paragraph's `a:pPr/a:defRPr`. Only the first run counts,
- * since the label is drawn as one piece of text.
- */
-function parseRichTextStyle(
-	rich: XmlObject,
-	xmlLookup: XmlLookupLike,
-	colorParser: ColorParserLike,
-	resolveTypeface?: (raw: string) => string,
-): PptxChartLegendTextStyle | undefined {
-	const paragraph = xmlLookup.getChildByLocalName(rich, 'p');
-	const defRPr = xmlLookup.getChildByLocalName(
-		xmlLookup.getChildByLocalName(paragraph, 'pPr'),
-		'defRPr',
-	);
-	const rPr = xmlLookup.getChildByLocalName(xmlLookup.getChildByLocalName(paragraph, 'r'), 'rPr');
-	const style = {
-		...parseDefRPrTextStyle(defRPr, xmlLookup, colorParser, resolveTypeface),
-		...parseDefRPrTextStyle(rPr, xmlLookup, colorParser, resolveTypeface),
-	};
-	return Object.keys(style).length > 0 ? style : undefined;
-}
-
 /** Parse individual `c:dLbl` overrides and validate their simple-type values. */
 export function parseSeriesDataLabels(
 	seriesNode: XmlObject,
@@ -247,9 +222,7 @@ export function parseSeriesDataLabels(
 			if (txPrStyle) {
 				result.txPr = txPrStyle;
 			}
-			const richStyle = rich
-				? parseRichTextStyle(rich, xmlLookup, colorParser, resolveTypeface)
-				: undefined;
+			const richStyle = parseRichTextStyle(rich, xmlLookup, colorParser, resolveTypeface);
 			if (richStyle) {
 				result.richTextStyle = richStyle;
 			}

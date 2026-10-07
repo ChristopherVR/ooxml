@@ -25,7 +25,12 @@ interface ColorParserLike {
 
 type ChartTitleStyleFields = Pick<
 	PptxChartStyle,
-	'titleFontFamily' | 'titleFontSize' | 'titleFontBold' | 'titleFontColor' | 'titleSpPr'
+	| 'titleFontFamily'
+	| 'titleEastAsiaFontFamily'
+	| 'titleFontSize'
+	| 'titleFontBold'
+	| 'titleFontColor'
+	| 'titleSpPr'
 >;
 
 /**
@@ -60,6 +65,9 @@ export function parseChartTitleStyle(
 	const text = parseDefRPrTextStyle(defRPr, xmlLookup, colorParser, resolveTypeface);
 	if (text?.fontFamily !== undefined) {
 		fields.titleFontFamily = text.fontFamily;
+	}
+	if (text?.eastAsiaFontFamily !== undefined) {
+		fields.titleEastAsiaFontFamily = text.eastAsiaFontFamily;
 	}
 	if (text?.fontSize !== undefined) {
 		fields.titleFontSize = text.fontSize;

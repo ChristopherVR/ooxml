@@ -24,6 +24,7 @@ import { collectAllText } from './chart-title-xml-ops';
 /** The subset of font fields a `cx:txPr`/`cx:unitsLabel` run reads onto. */
 interface CxFontTarget {
 	fontFamily?: string;
+	eastAsiaFontFamily?: string;
 	fontSize?: number;
 	fontBold?: boolean;
 	fontColor?: string;
@@ -89,6 +90,11 @@ function parseTxPrFont(
 	if (latin?.['@_typeface']) {
 		const raw = String(latin['@_typeface']);
 		target.fontFamily = resolveTypeface ? resolveTypeface(raw) : raw;
+	}
+	const ea = xmlLookup.getChildByLocalName(defRPr, 'ea');
+	if (ea?.['@_typeface']) {
+		const raw = String(ea['@_typeface']);
+		target.eastAsiaFontFamily = resolveTypeface ? resolveTypeface(raw) : raw;
 	}
 	const fontColor = colorParser.parseColor(xmlLookup.getChildByLocalName(defRPr, 'solidFill'));
 	if (fontColor) {

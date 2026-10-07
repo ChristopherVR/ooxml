@@ -410,7 +410,8 @@ export interface PptxChartDataLabel {
 	 * Font of this label's literal rich text (`c:dLbl/c:tx/c:rich`): the first
 	 * run's `a:rPr` over its paragraph's `a:pPr/a:defRPr`. PowerPoint draws
 	 * {@link text} with these run properties, so each field set here wins over
-	 * the same field of {@link txPr}. Read only: the save path does not write it.
+	 * the same field of {@link txPr}. Parsed for drawing only; saving does not
+	 * write it back from here.
 	 */
 	richTextStyle?: PptxChartLegendTextStyle;
 	/**
@@ -474,6 +475,8 @@ export interface PptxChartAxisFormatting extends PptxChartAxisLabelFormatting {
 	titleText?: string;
 	spPr?: PptxChartShapeProps;
 	fontFamily?: string;
+	/** East Asian typeface of the axis text (`a:ea/@typeface`). */
+	eastAsiaFontFamily?: string;
 	fontSize?: number;
 	fontBold?: boolean;
 	fontColor?: string;
@@ -948,6 +951,11 @@ export interface PptxChartDataLabelOptions {
 /** Typed text defaults for a single chart legend entry. */
 export interface PptxChartLegendTextStyle {
 	fontFamily?: string;
+	/**
+	 * East Asian typeface (`a:ea/@typeface`). PowerPoint draws CJK characters
+	 * in this face and everything else in {@link fontFamily}.
+	 */
+	eastAsiaFontFamily?: string;
 	fontSize?: number;
 	bold?: boolean;
 	italic?: boolean;
@@ -1004,6 +1012,13 @@ export interface PptxChartStyle {
 	 * which always wins over this chart-level default.
 	 */
 	legendTextStyle?: PptxChartLegendTextStyle;
+	/**
+	 * The chart-wide default text style: `c:chartSpace/c:txPr` over the theme's
+	 * minor (body) fonts. PowerPoint uses it for any chart text whose own
+	 * `txPr` leaves a field unset, such as axis labels and data labels. Not
+	 * written back on save: the authored `c:txPr` is kept as it is.
+	 */
+	textStyle?: PptxChartLegendTextStyle;
 	/** Whether the chart has a title. */
 	hasTitle?: boolean;
 	/** Whether gridlines are visible. */
@@ -1042,6 +1057,8 @@ export interface PptxChartStyle {
 	 * from an axis title's styling (`PptxChartAxisFormatting.fontFamily` etc.).
 	 */
 	titleFontFamily?: string;
+	/** East Asian typeface of the title (`a:ea/@typeface`). */
+	titleEastAsiaFontFamily?: string;
 	titleFontSize?: number;
 	titleFontBold?: boolean;
 	titleFontColor?: string;

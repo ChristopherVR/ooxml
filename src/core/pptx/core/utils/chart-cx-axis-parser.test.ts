@@ -132,6 +132,7 @@ describe('parseCxAxes (C2-G7)', () => {
 								'@_sz': '900',
 								'@_b': '1',
 								'a:latin': { '@_typeface': 'Calibri' },
+								'a:ea': { '@_typeface': 'Malgun Gothic' },
 								'a:solidFill': { 'a:srgbClr': { '@_val': 'FF0000' } },
 							},
 						},
@@ -148,6 +149,7 @@ describe('parseCxAxes (C2-G7)', () => {
 		const [axis] = parseCxAxes(plotArea, xmlLookup, colorParser)!;
 		expect(axis.deleted).toBeTruthy();
 		expect(axis.fontFamily).toBe('Calibri');
+		expect(axis.eastAsiaFontFamily).toBe('Malgun Gothic');
 		expect(axis.fontSize).toBe(9);
 		expect(axis.fontBold).toBeTruthy();
 		expect(axis.fontColor).toBe('#FF0000');
