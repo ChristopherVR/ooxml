@@ -1,4 +1,5 @@
 import { columnLabel, MAX_COL, MAX_ROW, quoteSheetName } from '../../address.js';
+import { parseR1C1Range } from '../../address-r1c1.js';
 import type { CallContext } from '../context.js';
 import { sheetIndex } from '../references.js';
 import { ERR, fail, isError, Matrix, RefValue, type Scalar, type Value } from '../values.js';
@@ -48,36 +49,8 @@ function parseR1C1(text: string, ctx: CallContext): RefValue | undefined {
 		if (sheet < 0) return undefined;
 		body = text.slice(bang + 1);
 	}
-	const part = (spec: string | undefined, base: number): number | undefined => {
-		if (spec === undefined || spec === '') return base;
-		if (spec.startsWith('[')) return base + Number(spec.slice(1, -1));
-		return Number(spec) - 1;
-	};
-	const cells = body.split(':').map((p) => /^R(\[-?\d+\]|\d+)?C(\[-?\d+\]|\d+)?$/i.exec(p));
-	if (cells.length > 2 || cells.some((m) => !m)) return undefined;
-	const corners = cells.map((m) => ({ row: part(m?.[1], ctx.row), col: part(m?.[2], ctx.col) }));
-	const a = corners[0];
-	const b = corners[corners.length - 1];
-	if (
-		!a ||
-		!b ||
-		a.row === undefined ||
-		a.col === undefined ||
-		b.row === undefined ||
-		b.col === undefined
-	)
-		return undefined;
-	const range = {
-		start: { row: Math.min(a.row, b.row), col: Math.min(a.col, b.col) },
-		end: { row: Math.max(a.row, b.row), col: Math.max(a.col, b.col) },
-	};
-	if (
-		range.start.row < 0 ||
-		range.start.col < 0 ||
-		range.end.row > MAX_ROW ||
-		range.end.col > MAX_COL
-	)
-		return undefined;
+	const range = parseR1C1Range(body, { row: ctx.row, col: ctx.col });
+	if (!range) return undefined;
 	return new RefValue([{ sheet, range }]);
 }
 

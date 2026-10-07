@@ -27,6 +27,11 @@ or new logic package was introduced.
   R1C1 mode. OFFSET retains source dimensions only for omitted height/width
   slots; empty referenced dimensions produce `#REF!`. Computed defaults reuse
   the same call policy and derive their values from the source reference.
+- INDIRECT now supports whole-row/column R1C1 references, signed relative
+  coordinates and native wrapping at sheet edges. The exported
+  `parseR1C1Range` address helper is independent of formula evaluation and
+  reuses the existing grid limits and range normalization. Product sheet
+  resolution and sparse aggregation remain in their existing core paths.
 
 ## Reproduce the native evidence
 
