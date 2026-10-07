@@ -24,47 +24,75 @@ const paragraph = (id: string, lines = 1): LayoutParagraph => ({
 });
 
 describe('native Word continuous section references', () => {
-	it.each(['same', 'left-margin', 'top-margin', 'columns', 'page-size', 'orientation'])(
-		'matches paragraph page and origin in the %s reference',
-		async (name) => {
-			const evidence = JSON.parse(await readFile(fixture('evidence.json'), 'utf8')) as {
-				cases: {
-					name: string;
-					pages: number;
-					positions: { text: string; page: number; xPt: number; yPt: number }[];
-				}[];
-			};
-			const reference = evidence.cases.find((entry) => entry.name === name)!;
-			const loaded = await loadDocx(new Uint8Array(await readFile(fixture(`${name}.docx`))));
-			const result = layoutDocumentModel(loaded.model, createFakeMeasurer());
-			expect(result.pages).toHaveLength(reference.pages);
-			for (const position of reference.positions.filter((entry) => entry.text)) {
-				const source = loaded.model.blocks.find(
-					(block) =>
-						block.type === 'paragraph' &&
-						block.runs.map((run) => run.text).join('') === position.text,
-				)!;
-				const placements = result.pages.flatMap((sheet) =>
-					sheet.columns.flatMap((column) =>
-						column.blocks
-							.filter((block) => block.blockId === source.id)
-							.map((block) => ({
-								page: sheet.index + 1,
-								xPt: (sheet.marginLeftPx + column.xPx) * 0.75,
-								yPt: (sheet.marginTopPx + block.yPx) * 0.75,
-							})),
-					),
-				);
-				expect(placements).toEqual([{ page: position.page, xPt: position.xPt, yPt: position.yPt }]);
-			}
-			expect(result.approximations).not.toContain(
-				'Continuous section breaks are rendered as page breaks; changing page size, margins or column count without starting a new page is not modeled.',
+	it.each([
+		'same',
+		'left-margin',
+		'top-margin',
+		'columns',
+		'page-size',
+		'orientation',
+		'balanced-columns',
+		'balanced-odd',
+		'balanced-overflow',
+		'balanced-keep',
+	])('matches paragraph page and origin in the %s reference', async (name) => {
+		const evidence = JSON.parse(await readFile(fixture('evidence.json'), 'utf8')) as {
+			cases: {
+				name: string;
+				pages: number;
+				positions: { text: string; page: number; xPt: number; yPt: number }[];
+			}[];
+		};
+		const reference = evidence.cases.find((entry) => entry.name === name)!;
+		const loaded = await loadDocx(new Uint8Array(await readFile(fixture(`${name}.docx`))));
+		const result = layoutDocumentModel(loaded.model, createFakeMeasurer());
+		expect(result.pages).toHaveLength(reference.pages);
+		for (const position of reference.positions.filter((entry) => entry.text)) {
+			const source = loaded.model.blocks.find(
+				(block) =>
+					block.type === 'paragraph' &&
+					block.runs.map((run) => run.text).join('') === position.text,
+			)!;
+			const placements = result.pages.flatMap((sheet) =>
+				sheet.columns.flatMap((column) =>
+					column.blocks
+						.filter((block) => block.blockId === source.id)
+						.map((block) => ({
+							page: sheet.index + 1,
+							xPt: (sheet.marginLeftPx + column.xPx) * 0.75,
+							yPt: (sheet.marginTopPx + block.yPx) * 0.75,
+						})),
+				),
 			);
-		},
-	);
+			expect(placements).toEqual([{ page: position.page, xPt: position.xPt, yPt: position.yPt }]);
+		}
+		expect(result.approximations).not.toContain(
+			'Continuous section breaks are rendered as page breaks; changing page size, margins or column count without starting a new page is not modeled.',
+		);
+	});
 });
 
 describe('continuous section flow', () => {
+	it('keeps a whole paragraph together while balancing columns', () => {
+		const result = layoutSections(
+			{
+				sections: [
+					{
+						page,
+						columns: { count: 2, gapPx: 10 },
+						blocks: [{ ...paragraph('whole', 3), keepLines: true }, paragraph('tail')],
+					},
+					{ page, break: 'continuous', blocks: [paragraph('after')] },
+				],
+			},
+			measurer,
+		);
+		expect(result.pages).toHaveLength(1);
+		const boxes = result.pages[0]!.columns.flatMap((column) => column.blocks);
+		expect(boxes.filter((box) => box.blockId === 'whole')).toHaveLength(1);
+		expect(boxes.find((box) => box.blockId === 'after')!.yPx).toBe(60);
+		expect(result.approximations).toEqual([]);
+	});
 	it('continues into new columns at the section band top and uses new margins on overflow', () => {
 		const result = layoutSections(
 			{
@@ -126,17 +154,23 @@ describe('continuous section flow', () => {
 		).toEqual([0, 20, 40]);
 	});
 
-	it('reports the remaining multi-column balancing approximation', () => {
+	it('reports the remaining table-column balancing approximation', () => {
 		const result = layoutSections(
 			{
 				sections: [
-					{ page, columns: { count: 2, gapPx: 10 }, blocks: [paragraph('before')] },
+					{
+						page,
+						columns: { count: 2, gapPx: 10 },
+						blocks: [{ kind: 'table', id: 'table', rows: [] }],
+					},
 					{ page, break: 'continuous', blocks: [paragraph('after')] },
 				],
 			},
 			measurer,
 		);
 		expect(result.pages).toHaveLength(2);
-		expect(result.approximations.some((note) => note.includes('column balancing'))).toBe(true);
+		expect(result.approximations.some((note) => note.includes('balancing those layouts'))).toBe(
+			true,
+		);
 	});
 });
