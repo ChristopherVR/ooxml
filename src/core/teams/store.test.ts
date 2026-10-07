@@ -14,6 +14,33 @@ afterEach(() => {
 });
 
 describe('teams client', () => {
+	it('passes cancellation to host storage and does not post a canceled copy', async () => {
+		const controller = new AbortController();
+		let seen: AbortSignal | undefined;
+		let finish!: (result: { url: string }) => void;
+		const client = make('ada', 'store-cancel-copy', {
+			uploadFile: (_file: unknown, context: { signal?: AbortSignal }) => {
+				seen = context.signal;
+				return new Promise<{ url: string }>((resolve) => {
+					finish = resolve;
+				});
+			},
+		});
+		client.createChannel('Files');
+		await tick();
+		const channel = client.getState().selectedChannelId;
+		const pending = client.saveFileCopy(
+			channel,
+			Object.assign(new Blob(['x']), { name: 'Budget.xlsx' }),
+			{ signal: controller.signal },
+		);
+		expect(seen).toBe(controller.signal);
+		controller.abort();
+		await expect(pending).rejects.toMatchObject({ name: 'AbortError' });
+		finish({ url: 'https://files.test/copy.xlsx' });
+		await tick();
+		expect(client.workspace.chat.messages(channel)).toEqual([]);
+	});
 	it('keeps a pending attachment message and reply in its original channel', async () => {
 		let finish!: (result: { url: string }) => void;
 		const a = make('ada', 'store-captured-send', {
