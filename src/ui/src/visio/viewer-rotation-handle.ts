@@ -23,6 +23,7 @@ export class ViewerRotationHandle {
 		  })
 		| undefined;
 	#request = 0;
+	#overlay: SVGSVGElement | undefined;
 	constructor(
 		private readonly viewport: HTMLElement,
 		private readonly controller: ViewerController,
@@ -33,8 +34,8 @@ export class ViewerRotationHandle {
 			if (handleGestureIsCurrent(this.#drag, state, this.options.active())) return;
 			this.#cancel();
 		}
-		for (const overlay of this.viewport.querySelectorAll('[data-rotation-overlay]'))
-			overlay.remove();
+		this.#overlay?.remove();
+		this.#overlay = undefined;
 		const page = state.document?.pages[state.pageIndex],
 			selection = state.selectedShape;
 		if (
@@ -52,7 +53,7 @@ export class ViewerRotationHandle {
 			(group) => group.dataset.shapeId === shape.id && group.dataset.selected === 'true',
 		);
 		const svg = group?.ownerSVGElement,
-			matrix = svg?.getScreenCTM();
+			matrix = svg?.getScreenCTM?.();
 		if (!group || !svg || !matrix) return;
 		const center = { x: shape.rotation.pinX, y: page.height - shape.rotation.pinY };
 		const rect = group.getBoundingClientRect(),
@@ -95,6 +96,7 @@ export class ViewerRotationHandle {
 		handle.setAttribute('aria-label', 'Drag rotation handle');
 		overlay.append(stem, handle);
 		this.viewport.append(overlay);
+		this.#overlay = overlay;
 	}
 	wire(): () => void {
 		const dispose = wireHandleEvents(this.viewport, {
@@ -114,8 +116,8 @@ export class ViewerRotationHandle {
 			observer?.disconnect();
 			++this.#request;
 			dispose();
-			for (const overlay of this.viewport.querySelectorAll('[data-rotation-overlay]'))
-				overlay.remove();
+			this.#overlay?.remove();
+			this.#overlay = undefined;
 		};
 	}
 	#start(event: PointerEvent): void {

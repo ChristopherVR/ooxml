@@ -28,6 +28,7 @@ export class ViewerLineEndpoints {
 		  }
 		| undefined;
 	#request = 0;
+	#overlay: SVGGElement | undefined;
 	constructor(
 		private readonly viewport: HTMLElement,
 		private readonly controller: ViewerController,
@@ -39,8 +40,8 @@ export class ViewerLineEndpoints {
 			if (handleGestureIsCurrent(this.#drag, state, this.options.active())) return;
 			this.#cancel();
 		}
-		for (const overlay of this.viewport.querySelectorAll('[data-line-endpoint-overlay]'))
-			overlay.remove();
+		this.#overlay?.remove();
+		this.#overlay = undefined;
 		if (
 			!page ||
 			!state.selectedShape ||
@@ -90,6 +91,7 @@ export class ViewerLineEndpoints {
 			overlay.append(handle);
 		}
 		svg.append(overlay);
+		this.#overlay = overlay;
 	}
 	wire(): () => void {
 		const dispose = wireHandleEvents(this.viewport, {
@@ -102,8 +104,8 @@ export class ViewerLineEndpoints {
 		return () => {
 			++this.#request;
 			dispose();
-			for (const overlay of this.viewport.querySelectorAll('[data-line-endpoint-overlay]'))
-				overlay.remove();
+			this.#overlay?.remove();
+			this.#overlay = undefined;
 		};
 	}
 
