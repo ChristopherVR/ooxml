@@ -103,3 +103,33 @@ Verification after the curved-arrow increment: 1,573 core tests passed (34 optio
 skips), 521 shared UI tests passed (one optional skip), and core/UI typechecking passed.
 The shared UI run included native-authored VSDX parsing and rendering for all 84 cases.
 Native pixel rendering in browsers, filled sizing and non-unit scales were not tested.
+
+## Native filled-arrow increment
+
+Filled triangle and curved-base styles 2, 4, 5 and 6 now use measured native glyphs,
+sizing and endpoint setbacks on single straight, round-capped connectors at unit
+drawing scale, where the setbacks fit. Style 6 is newly supported in this subset.
+Native fills have no outline. The original model path is preserved; the shared UI
+renders a shortened stroke and positions the marker tip at the original endpoint.
+
+The core helper reproduces the asymmetric begin setback and its small stem extension:
+the begin setback is the end setback minus the larger of 0.005 inches and one percent
+of the end setback. This rule matches all 84 two-ended reference exports. Another
+84 one-ended exports verify the glyph coordinates and end setback. Reference stem
+coordinates are checked to the precision of Visio's SVG export. Regenerate with
+`scripts/record-visio-filled-arrows.ps1` (add `-BothEnds` for the second matrix), and
+set `VISIO_NATIVE_FILLED_ARROWS_DIR` / `VISIO_NATIVE_FILLED_BOTH_DIR` to the output
+folders to verify saved native VSDX parsing and rendering. Only numerical evidence
+is committed; generated VSDX/SVG files stay local.
+
+Overlapping arrows can make Visio reverse the stem and change setbacks. Curved,
+closed and multi-segment paths, overlapping setbacks and non-round caps retain the
+approximate fallback for styles 2, 4 and 5. Style 6 reports those unsupported cases
+without rendering a guessed marker. Non-unit drawing scales, browser pixel parity,
+other arrow codes, routing, text layout, editing and save fidelity remain incomplete.
+
+Verification for this increment: 1,750 core tests passed (34 optional skips), 534
+shared Visio UI tests passed, 48 documentation tests passed, and both core typecheck
+projects plus shared UI typechecking passed. The UI run enabled the native open,
+one-ended filled and two-ended filled VSDX matrices, plus the hash-pinned real
+code-5 corpus. Browser pixels and general native save/reopen parity were not tested.

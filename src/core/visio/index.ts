@@ -70,3 +70,4 @@ export {
 	type VisioFormulaUnit,
 } from './formula.js';
 export { visioOpenArrowExtent, visioOpenArrowPath } from './open-arrow.js';
+export { visioFilledArrow, trimVisioArrowLine, type VisioFilledArrow } from './filled-arrow.js';
