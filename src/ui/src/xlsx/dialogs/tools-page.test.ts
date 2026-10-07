@@ -26,6 +26,38 @@ function setup(grid?: { zoom: number }) {
 const radio = (root: HTMLElement, label: string) => inputByLabel(root, label);
 
 describe('Paste Special', () => {
+	it('merges copied conditional rules through the shared dialog and undoes once', async () => {
+		const ctx = setup();
+		const session = ctx.session()!;
+		const sheet = ctx.workbook()!.sheets[0]!;
+		for (const col of [0, 2]) {
+			session.setCellValue(0, 0, col, col ? 9 : 2);
+			session.addConditionalFormat(0, {
+				ranges: [{ start: { row: 0, col }, end: { row: 0, col } }],
+				rules: [{ type: 'expression', formula: col ? 'C1>5' : 'A1>0', priority: 1, style: {} }],
+			});
+		}
+		const before = structuredClone(sheet.conditionalFormats);
+		clipState(ctx).payload = session.copy(0, {
+			start: { row: 0, col: 0 },
+			end: { row: 0, col: 0 },
+		});
+		ctx.select('C1');
+		const result = ctx.commands.run('home.paste-special');
+		const dialog = dialogEl(ctx, 'paste-special');
+		radio(dialog, 'All merging conditional formats').click();
+		clickButton(dialog, 'OK');
+		await result;
+		expect(sheet.conditionalFormats).toHaveLength(3);
+		expect(sheet.conditionalFormats.at(-1)!.rules[0]).toMatchObject({
+			formula: 'C1>0',
+			priority: 1,
+		});
+		expect(getCell(sheet, 0, 2)?.value).toBe(2);
+		session.undo();
+		expect(sheet.conditionalFormats).toEqual(before);
+		expect(getCell(sheet, 0, 2)?.value).toBe(9);
+	});
 	it.each(['Comments', 'Validation'])('pastes only %s through the shared dialog', async (label) => {
 		const ctx = setup();
 		const session = ctx.session()!;
