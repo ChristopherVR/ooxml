@@ -9,6 +9,8 @@ for (const variable of [
 	'VISIO_NATIVE_ROTATE_DOUBLE_DIR',
 	'VISIO_NATIVE_ROTATE_HALF_DIR',
 	'VISIO_NATIVE_ROTATE_TRIPLE_DIR',
+	'VISIO_NATIVE_ROTATE_DEPENDENT_DIR',
+	'VISIO_NATIVE_ROTATE_DEPENDENT_SAME_DIR',
 ]) {
 	const directory = process.env[variable];
 	for (const kind of ['rectangle', 'ellipse'])
@@ -17,7 +19,12 @@ for (const variable of [
 				page,
 			}) => {
 				test.skip(!directory, `Set ${variable} to a native rotated shape capture.`);
-				const source = await readFile(join(directory!, 'ellipse-edited.vsdx'));
+				const source = await readFile(
+					join(
+						directory!,
+						variable.includes('_DEPENDENT_') ? 'rotation-source.vsdx' : 'ellipse-edited.vsdx',
+					),
+				);
 				const native = await parseVsdx(await readFile(join(directory!, 'rotated.vsdx')));
 				const evidence = JSON.parse(await readFile(join(directory!, 'evidence.json'), 'utf8')) as {
 					rotated: Record<
@@ -39,6 +46,26 @@ for (const variable of [
 				await expect(page.locator('#file-name')).toHaveText('native-rotation.vsdx');
 				const viewer = page.locator('visio-viewer'),
 					viewport = viewer.locator('.viewport');
+				const historyState = () =>
+					viewer.evaluate((element) => {
+						const state = (
+							element as unknown as {
+								controller: {
+									state: {
+										loading: boolean;
+										edit: {
+											busy: boolean;
+											dirty: boolean;
+											canUndo: boolean;
+											canRedo: boolean;
+											error: unknown;
+										};
+									};
+								};
+							}
+						).controller.state;
+						return { ...state.edit, loading: state.loading };
+					});
 				const shape = viewer.locator(`[data-shape-id="${reference.shapeId}"]`);
 				await expect(shape).toBeVisible();
 				const before = (await shape.getAttribute('transform'))!;
@@ -48,18 +75,67 @@ for (const variable of [
 				await controls.locator('summary').click();
 				const rotate = controls.getByRole('button', { name: 'Rotate selected', exact: true });
 				await expect(rotate).toBeDisabled();
-				await controls
-					.getByLabel('Angle (degrees)', { exact: true })
-					.fill(String((reference.cells.Angle!.value * 180) / Math.PI));
-				await expect(rotate).toBeEnabled();
-				await rotate.click();
-				await expect(shape).not.toHaveAttribute('transform', before);
+				if (variable.includes('_SAME_')) {
+					await viewer
+						.evaluate(
+							async (element, { id, angle }) => {
+								const host = element as unknown as {
+									applyEdits(edits: readonly import('ooxml-core/visio').VisioEdit[]): Promise<void>;
+									controller: {
+										documentGeneration: number;
+										state: { edit: { dirty: boolean; canUndo: boolean } };
+									};
+								};
+								const generation = host.controller.documentGeneration;
+								await host.applyEdits([{ type: 'rotate-shape', pageId: '0', shapeId: id, angle }]);
+								return {
+									generation: host.controller.documentGeneration - generation,
+									dirty: host.controller.state.edit.dirty,
+									canUndo: host.controller.state.edit.canUndo,
+								};
+							},
+							{ id: reference.shapeId, angle: reference.cells.Angle!.value },
+						)
+						.then((state) => expect(state).toEqual({ generation: 1, dirty: true, canUndo: true }));
+					await expect(shape).toHaveAttribute('transform', before);
+				} else {
+					await controls
+						.getByLabel('Angle (degrees)', { exact: true })
+						.fill(String((reference.cells.Angle!.value * 180) / Math.PI));
+					await expect(rotate).toBeEnabled();
+					await rotate.click();
+					await expect(shape).not.toHaveAttribute('transform', before);
+				}
 				const after = (await shape.getAttribute('transform'))!;
 				await viewport.focus();
 				await viewport.press('Control+z');
 				await expect(shape).toHaveAttribute('transform', before);
+				if (variable.includes('_DEPENDENT_')) {
+					await expect.poll(historyState).toMatchObject({
+						busy: false,
+						loading: false,
+						dirty: false,
+						canRedo: true,
+						error: null,
+					});
+					expect(
+						await viewer.evaluate((element) =>
+							Array.from(
+								(element as unknown as { exportVsdx(): { bytes: Uint8Array } }).exportVsdx().bytes,
+							),
+						),
+					).toEqual(Array.from(source));
+				}
 				await viewport.press('Control+y');
 				await expect(shape).toHaveAttribute('transform', after);
+				if (variable.includes('_DEPENDENT_'))
+					await expect.poll(historyState).toMatchObject({
+						busy: false,
+						loading: false,
+						dirty: true,
+						canUndo: true,
+						error: null,
+					});
 				const saved = Buffer.from(
 					await viewer.evaluate((element) =>
 						Array.from(
@@ -67,6 +143,7 @@ for (const variable of [
 						),
 					),
 				);
+				if (variable.includes('_SAME_')) expect(saved.equals(source)).toBe(false);
 				const model = await parseVsdx(saved);
 				const actual = model.pages[0]!.shapes.find((shape) => shape.id === reference.shapeId)!;
 				expect(actual.geometry).toEqual(expected.geometry);

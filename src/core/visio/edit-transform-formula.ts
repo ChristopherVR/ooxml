@@ -6,8 +6,8 @@ import { indexCells, key } from './edit-recalculate-index';
 import { createVisioCellEvaluator } from './edit-recalculate-values';
 import type { VisioGeometryEdit } from './edit-commands';
 
-/** Native flips replace unguarded formulas after their source dependency/cache proof. */
-export function editableFlipCell(
+/** Native rotations and flips replace unguarded formulas after their source dependency/cache proof. */
+export function editableTransformCell(
 	roots: ReadonlyMap<string, Element>,
 	edit: VisioGeometryEdit,
 	node: Element | undefined,

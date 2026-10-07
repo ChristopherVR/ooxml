@@ -49,6 +49,8 @@ for (const variable of [
 	'VISIO_NATIVE_QUARTER_WRAP_DIR',
 	'VISIO_NATIVE_QUARTER_HALF_LEFT_DIR',
 	'VISIO_NATIVE_QUARTER_HALF_RIGHT_DIR',
+	'VISIO_NATIVE_QUARTER_DEPENDENT_RIGHT_DIR',
+	'VISIO_NATIVE_QUARTER_DEPENDENT_WRAP_DIR',
 ]) {
 	it.skipIf(!process.env[variable]).each(['rectangle', 'ellipse'])(
 		`matches native Selection.Rotate ${variable} %s`,
@@ -76,8 +78,11 @@ for (const variable of [
 			expect(actual.rotation!.angle).toBeCloseTo(reference.cells.Angle.value, 12);
 			expect(actual.rotation!.pinX).toBeCloseTo(expected.rotation!.pinX, 12);
 			expect(actual.rotation!.pinY).toBeCloseTo(expected.rotation!.pinY, 12);
-			for (let i = 0; i < 6; i++)
+			const ratio = native.pages[0]!.drawingToPageScale ?? 1;
+			for (let i = 0; i < 6; i++) {
 				expect(actual.transform[i]).toBeCloseTo(expected.transform[i]!, 12);
+				expect(actual.transform[i]).toBeCloseTo(reference.transform[i] * (i >= 4 ? ratio : 1), 12);
+			}
 		},
 	);
 }

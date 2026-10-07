@@ -2,6 +2,51 @@
 
 Status: local Windows development evidence, 2026-10-03. Full Microsoft Visio parity is not established.
 
+## Native static rotation formulas, 2026-10-08
+
+Four owned Visio 16 captures supply rectangle and ellipse references:
+
+- Absolute rotation from Width-dependent Angle to 90 degrees, custom pivots:
+  visio-line-movement-3da4307f83444f7f8b6d66ec953b6e26.
+- Exact current-value assignment from Width/Width*30deg, custom pivots:
+  visio-line-movement-aa377d6a6aef40608a56431ffb6f4254.
+- Right quarter-turn from Width-dependent Angle on a drawing-to-page ratio of 2:
+  visio-line-movement-1ab9a6be262042129c4ce434e991b75c.
+- Left quarter-turn from Width/Width*330deg:
+  visio-line-movement-65f55f5b0dc349a08849ef0ba76fcbad.
+
+The recorder's shared SourceAngleFormula setup and RotateToSourceAngle mode
+preserve the native capture lifecycle. Both absolute assignment and per-shape
+Selection.Rotate replace the unguarded formula. Assigning the exact current
+native cached angle still removes F while retaining V and the pose. Owned
+applications quit, and the original user instance remained intact. These are
+native API recordings, not literal native pointer/menu interaction or reopening.
+
+Rotation now shares edit-transform-formula.ts with flips. The bounded source
+proof, cell writer, dependency recalculator, worker and history paths are reused.
+Explicit current-value formula replacement creates one dirty page; another
+same-value command after the formula is gone preserves the existing bytes.
+Core checks compare formula removal, cached poses and unrelated package parts.
+Quarter-turn regressions also compare independent native XYToPage matrices,
+including physical scale normalization, rather than relying only on core reparse.
+
+The full Visio suite passed 2,263 checks, with 109 optional checks skipped where
+captures were not supplied. A focused quarter-turn run passed all 15 checks with
+both new and five earlier native captures. Builds for Visio core and UI passed,
+as did root, UI and configured viewer typechecks. The source import audit found
+zero .js TypeScript imports and zero unresolved relative imports.
+
+There are 60 distinct passing browser workflows across six bindings: 12 control
+rotations, 12 pointer rotations, 24 menu quarter-turns and 12 current-value API
+assignments. The first run passed the 48 pose-changing workflows but the 12
+current-value tests exported during asynchronous undo. Waiting for completed
+controller/history state fixed the test timing; the complete 24-case control/API
+rerun passed. Current-value API checks prove generation/dirty/history changes,
+byte-exact undo restoration, redo and public export/reload despite unchanged pose.
+Pointer checks also cover cancellation and preview/source separation. Other
+native pointer behavior, exact paint, inherited/unresolved formulas, groups,
+masters/glue and native Visio reopen acceptance remain unverified.
+
 ## Native static flip formulas, 2026-10-08
 
 Three owned Visio 16 captures exercise rectangle and ellipse source formulas:

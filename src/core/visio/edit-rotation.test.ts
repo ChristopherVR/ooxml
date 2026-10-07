@@ -72,7 +72,7 @@ it('keeps a zero-angle no-op byte preserving and snapshots independent angular c
 for (const [name, extra, document] of [
 	['local rotation lock', cell('LockRotate', 1), ''],
 	['guarded angle', cell('Angle', 0, 'GUARD(0rad)'), ''],
-	['dependent angle', cell('Angle', 0, 'Width/1in'), ''],
+	['inconsistent dependent angle', cell('Angle', 0, 'Width/1in'), ''],
 	['invalid angle unit', '<Cell N="Angle" V="0" U="IN"/>', ''],
 	[
 		'inherited rotation lock',
@@ -88,6 +88,38 @@ for (const [name, extra, document] of [
 		});
 		await expect(editVsdx(bytes, [rotate()])).rejects.toThrow();
 	});
+it('replaces a proven formula on an explicit same-value angle assignment', async () => {
+	const source = await fixture({
+		pages: [
+			{
+				id: '0',
+				contents: `<Shapes>${target(cell('Angle', Math.PI / 6, 'Width/1in*15deg') + cell('TxtAngle', Math.PI / 12, 'Angle*0.5'))}</Shapes>`,
+			},
+		],
+	});
+	const edited = await editVsdx(source, [rotate(Math.PI / 6)]);
+	expect(edited.changedParts).toEqual(['visio/pages/page1.xml']);
+	expect((await parseVsdx(edited.bytes)).pages[0]!.shapes[0]!.transform).toEqual(
+		(await parseVsdx(source)).pages[0]!.shapes[0]!.transform,
+	);
+	const root = await (
+		await VisioPackage.open(edited.bytes)
+	).readXml('visio/pages/page1.xml', 'PageContents');
+	const nodes = children(children(children(root, 'Shapes')[0], 'Shape')[0], 'Cell');
+	expect(
+		attribute(
+			nodes.find((node) => attribute(node, 'N') === 'Angle'),
+			'F',
+		),
+	).toBeUndefined();
+	expect(
+		attribute(
+			nodes.find((node) => attribute(node, 'N') === 'TxtAngle'),
+			'F',
+		),
+	).toBe('Angle*0.5');
+	expect((await editVsdx(edited.bytes, [rotate(Math.PI / 6)])).bytes).toEqual(edited.bytes);
+});
 it('converts a cached degree angle to native radians on rotation', async () => {
 	const bytes = await fixture({
 		pages: [
@@ -105,11 +137,18 @@ for (const variable of [
 	'VISIO_NATIVE_ROTATE_DOUBLE_DIR',
 	'VISIO_NATIVE_ROTATE_HALF_DIR',
 	'VISIO_NATIVE_ROTATE_TRIPLE_DIR',
+	'VISIO_NATIVE_ROTATE_DEPENDENT_DIR',
+	'VISIO_NATIVE_ROTATE_DEPENDENT_SAME_DIR',
 ]) {
 	const directory = process.env[variable];
 	for (const kind of ['rectangle', 'ellipse'])
 		it.skipIf(!directory)(`matches native ${kind} rotation (${variable})`, async () => {
-			const source = await readFile(join(directory!, 'ellipse-edited.vsdx'));
+			const source = await readFile(
+				join(
+					directory!,
+					variable.includes('_DEPENDENT_') ? 'rotation-source.vsdx' : 'ellipse-edited.vsdx',
+				),
+			);
 			const native = await parseVsdx(await readFile(join(directory!, 'rotated.vsdx')));
 			const evidence = JSON.parse(await readFile(join(directory!, 'evidence.json'), 'utf8')) as {
 				rotated: Record<
@@ -127,6 +166,27 @@ for (const variable of [
 					angle: reference.cells.Angle!.value,
 				},
 			]);
+			if (variable.includes('_DEPENDENT_')) {
+				const before = await VisioPackage.open(source),
+					after = await VisioPackage.open(edited.bytes);
+				const getAngle = async (pkg: VisioPackage) => {
+					const root = await pkg.readXml('visio/pages/page1.xml', 'PageContents');
+					const node = children(children(root, 'Shapes')[0], 'Shape').find(
+						(node) => attribute(node, 'ID') === reference.shapeId,
+					)!;
+					return children(node, 'Cell').find((node) => attribute(node, 'N') === 'Angle')!;
+				};
+				expect(attribute(await getAngle(before), 'F')).toContain('Width');
+				expect(attribute(await getAngle(after), 'F')).toBeUndefined();
+				if (variable.includes('_SAME_'))
+					expect(attribute(await getAngle(after), 'V')).toBe(
+						attribute(await getAngle(before), 'V'),
+					);
+				expect(edited.changedParts).toContain('visio/pages/page1.xml');
+				for (const path of before.paths())
+					if (path !== 'visio/pages/page1.xml')
+						expect(await after.readBytes(path)).toEqual(await before.readBytes(path));
+			}
 			const actual = (await parseVsdx(edited.bytes)).pages[0]!.shapes.find(
 				(shape) => shape.id === reference.shapeId,
 			)!;

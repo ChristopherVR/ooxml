@@ -1941,3 +1941,27 @@ save/reload. Playwright MCP reviewed native imports; Excel reopened, resaved
 and reopened its UI export with 6/8-point before/after spacing unchanged.
 Compressed first-line placement, additional break/list/field cases, spacing
 authoring controls, wrapping and full raster parity remain open.
+
+## Reuse of native flip source proof for Visio rotation
+
+Source: ChristopherVR/ooxml at `f4d411d1f`,
+`src/core/visio/edit-flip-formula.ts`, the bounded cell evaluator and existing
+rotate-shape/quarter-turn command path. The source-proof helper is renamed to
+`edit-transform-formula.ts` and shared by rotation and flip cells. Rotation now
+admits resolved static Angle formulas through the same dependency/cache proof,
+then writes through the existing atomic transaction and recalculation path.
+An explicit assignment replaces an executable Angle formula even at the current
+value; formula-free same-value commands still preserve original bytes. This
+matches native assignment and creates an ordinary undoable formula edit without
+adding another history or worker engine.
+
+The existing owned recorder adds shared source-angle setup and an exact
+RotateToSourceAngle mode. Four native Visio 16 captures cover dependent angles,
+unchanged-value formula replacement, scaled right quarter-turns and normalized
+left quarter-turns from 330 degrees. Rectangle and ellipse checks retain pins,
+geometry/styles and unrelated package parts. Existing six-binding control,
+pointer and menu workflows cover worker editing, cancellation, undo/redo and
+public export/reload; same-value API checks inspect bytes/history because poses
+cannot distinguish that edit. Source protections remain enforced. Native pointer
+snapping, exact paint, groups/master/glue, inherited or unresolved formula sources
+and native Visio reopening remain unverified.

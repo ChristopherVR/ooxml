@@ -9,6 +9,9 @@ param(
  [switch]$IncludeRectangle,
  [switch]$IncludeEllipse,
  [ValidateRange(-360000,360000)][double]$RotationDegrees=0,
+ [switch]$RotateShape,
+ [switch]$RotateToSourceAngle,
+ [string]$SourceAngleFormula='',
  [switch]$OffCentrePin,
  [ValidateSet('None','Left','Right')][string]$QuarterTurn='None',
  [ValidateSet('None','Horizontal','Vertical')][string]$Flip='None',
@@ -28,6 +31,9 @@ function Get-ShapeCells($shape,[string[]]$names){
  $result=[ordered]@{}
  foreach($name in $names){$cell=$shape.CellsU($name);$result[$name]=[ordered]@{formula=$cell.FormulaU;value=$cell.ResultIU}}
  return $result
+}
+function Set-SourceAngle($shapes,$formula){
+ foreach($shape in $shapes){if($shape -and $formula){$shape.CellsU('Angle').FormulaU=$formula}}
 }
 function Get-LineCells($shape){return Get-ShapeCells $shape @('BeginX','BeginY','EndX','EndY','Width','Height','PinX','PinY','LocPinX','LocPinY','Angle','FlipX','FlipY')}
 function Get-LineTransform($shape){
@@ -141,17 +147,18 @@ try {
  $evidence=[ordered]@{application='Microsoft Visio';version=$app.Version;cases=$cases;drawingScale=$page.PageSheet.CellsU('DrawingScale').ResultIU;pageScale=$page.PageSheet.CellsU('PageScale').ResultIU}
  if($rectangleEvidence){$evidence.Add('rectangle',$rectangleEvidence)}
  if($ellipseEvidence){$evidence.Add('ellipse',$ellipseEvidence)}
- if($RotationDegrees -ne 0){
+ if($RotationDegrees -ne 0 -or $RotateShape -or $RotateToSourceAngle){
   if($OffCentrePin){
    foreach($shape in @($rectangle,$ellipse)){
     if($shape){$shape.CellsU('LocPinX').ResultIU=$shape.CellsU('Width').ResultIU*0.25;$shape.CellsU('LocPinY').ResultIU=$shape.CellsU('Height').ResultIU*0.75}
    }
   }
+  Set-SourceAngle @($rectangle,$ellipse) $SourceAngleFormula
   $document.SaveAs((Join-Path $directory 'rotation-source.vsdx')) | Out-Null
   $rotated=[ordered]@{}
   foreach($entry in @(@('rectangle',$rectangle),@('ellipse',$ellipse))){
    if($entry[1]){
-    $entry[1].CellsU('Angle').ResultIU=$RotationDegrees*[Math]::PI/180
+    $entry[1].CellsU('Angle').ResultIU=if($RotateToSourceAngle){$entry[1].CellsU('Angle').ResultIU}else{$RotationDegrees*[Math]::PI/180}
     $rotated[$entry[0]]=[ordered]@{shapeId=[string]$entry[1].ID;cells=(Get-ShapeCells $entry[1] @('Width','Height','PinX','PinY','LocPinX','LocPinY','Angle'));transform=(Get-LineTransform $entry[1])}
    }
   }
@@ -160,6 +167,7 @@ try {
   $evidence.Add('rotated',$rotated)
  }
  if($QuarterTurn -ne 'None'){
+  Set-SourceAngle @($rectangle,$ellipse) $SourceAngleFormula
   $document.SaveAs((Join-Path $directory 'quarter-source.vsdx')) | Out-Null
   $turned=[ordered]@{}
   $degrees=if($QuarterTurn -eq 'Left'){90}else{-90}

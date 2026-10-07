@@ -8,6 +8,7 @@ for (const variable of [
 	'VISIO_NATIVE_ROTATE_HALF_DIR',
 	'VISIO_NATIVE_ROTATE_TRIPLE_DIR',
 	'VISIO_NATIVE_ROTATE_PIN_DIR',
+	'VISIO_NATIVE_ROTATE_DEPENDENT_DIR',
 ]) {
 	const directory = process.env[variable];
 	for (const kind of ['rectangle', 'ellipse'])
@@ -19,7 +20,7 @@ for (const variable of [
 				const source = await readFile(
 					join(
 						directory!,
-						variable === 'VISIO_NATIVE_ROTATE_PIN_DIR'
+						variable === 'VISIO_NATIVE_ROTATE_PIN_DIR' || variable.includes('_DEPENDENT_')
 							? 'rotation-source.vsdx'
 							: 'ellipse-edited.vsdx',
 					),
