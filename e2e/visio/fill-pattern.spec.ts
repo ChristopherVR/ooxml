@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { VisioDocument } from 'ooxml-core/visio';
+import type { VisioDocument, VisioShape } from 'ooxml-core/visio';
 
 for (const sample of [
 	{ name: 'opaque', directory: process.env.VISIO_NATIVE_FILL_PATTERNS_DIR },
@@ -10,6 +10,8 @@ for (const sample of [
 	{ name: 'scaled', directory: process.env.VISIO_NATIVE_FILL_PATTERNS_SCALED_DIR },
 	{ name: 'flip-x', directory: process.env.VISIO_NATIVE_FILL_PATTERNS_FLIP_X_DIR },
 	{ name: 'flip-y', directory: process.env.VISIO_NATIVE_FILL_PATTERNS_FLIP_Y_DIR },
+	{ name: 'grouped', directory: process.env.VISIO_NATIVE_FILL_PATTERNS_GROUPED_DIR },
+	{ name: 'group-flipped', directory: process.env.VISIO_NATIVE_FILL_PATTERNS_GROUP_FLIPPED_DIR },
 	{ name: 'oblique', directory: process.env.VISIO_NATIVE_FILL_PATTERNS_OBLIQUE_DIR },
 ]) {
 	const directory = sample.directory;
@@ -26,12 +28,17 @@ for (const sample of [
 					readFile(join(directory!, `pattern-${index + 2}.svg`), 'utf8'),
 				),
 			);
-			const results = await page.evaluate(async (references) => {
+			const { results, groupDepths } = await page.evaluate(async (references) => {
 				const load = (path: string) => import(/* @vite-ignore */ path);
 				const { exportPageSvg, renderPage } = await load('/test-api.js');
 				const model = (
 					document.querySelector('visio-viewer') as unknown as { document: VisioDocument }
 				).document;
+				const groupDepth = (shapes: readonly VisioShape[]): number =>
+					Math.max(
+						0,
+						...shapes.map((shape) => (shape.kind === 'group' ? 1 + groupDepth(shape.children) : 0)),
+					);
 				const raster = async (source: string) => {
 					const url = URL.createObjectURL(new Blob([source], { type: 'image/svg+xml' }));
 					try {
@@ -81,8 +88,12 @@ for (const sample of [
 					}
 					live.dispose();
 				}
-				return differences;
+				return {
+					results: differences,
+					groupDepths: model.pages.map((page) => groupDepth(page.shapes)),
+				};
 			}, references);
+			if (sample.name.startsWith('group')) expect(groupDepths).toEqual(Array(23).fill(2));
 			expect(results).toHaveLength(46);
 			if (results.some((result) => result.maximum))
 				await test.info().attach('native-hatch-differences', {

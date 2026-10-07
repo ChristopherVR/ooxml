@@ -463,3 +463,40 @@ This establishes only single-shape, axis-aligned reflection interiors. Nested
 groups, reflected oblique shapes, full-page boundary fidelity and native reopening
 of core-edited hatch documents remain unverified. The existing 30-degree native
 comparison still fails by one byte and its zero-tolerance gate is unchanged.
+
+## Native nested hatch groups (2026-10-07)
+
+The native capture script can now build up to eight real group levels through
+Page.CreateSelection and Selection.Group. Each level has an invisible sibling;
+GroupAngle and GroupFlipX/GroupFlipY apply to the native parent. The evidence file
+records settings and actual group IDs. The optional browser comparison now also
+asserts that every page preserves the expected two-level hierarchy after worker
+parsing, rather than only checking pixels.
+
+Two captures used two 90-degree parent rotations, with and without a horizontal
+reflection at each level. These cover 46 native pages in
+visio-fill-patterns-4e96a0ec7e7f4cadb69f40361ebe0a32 and
+visio-fill-patterns-412c142e096146f3ac419e78094ae7fa in the local temporary
+directory. All six framework routes passed 12 scenarios and 552 exact live/export
+96-by-96 interior comparisons. Existing shared transform composition handles
+these cases without another implementation. Viewer typecheck passed.
+
+The capture parameters follow Microsoft's Page.CreateSelection and
+Selection.Group APIs:
+https://learn.microsoft.com/en-us/office/vba/api/visio.page.createselection
+https://learn.microsoft.com/en-us/office/vba/api/visio.selection.group
+
+These references establish bounded quarter-turn group interiors only. Arbitrary
+group rotations, parent resizing, clipping, full-page boundaries, grouped editing
+and native reopening remain unverified. Native pixel equality at 30 degrees
+continues to fail by one byte; its zero-tolerance test remains unchanged.
+
+Two further captures rotated the child by 90 degrees as well, giving a total
+270-degree orientation for the unreflected case and a quarter-turn child inside
+the reflected hierarchy. These are
+visio-fill-patterns-4076f84791094f11b7e2143ae131337d and
+visio-fill-patterns-cc5b82f96b8c4e8485037eaca0b8aaba. Both passed all six
+framework routes with hierarchy assertions and zero differing channels.
+Across all four grouped captures, 92 native pages passed 24 scenarios and 1,104
+exact live/export interior comparisons. Use VISIO_NATIVE_FILL_PATTERNS_GROUPED_DIR
+and VISIO_NATIVE_FILL_PATTERNS_GROUP_FLIPPED_DIR for either corresponding pair.
