@@ -7,6 +7,46 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.28.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-svelte-viewer@4.28.0) - 2026-10-07
+
+### Features
+
+- **xlsx:** Author chart series gradients with shared controls ([a932dbd](https://github.com/ChristopherVR/ooxml/commit/a932dbd724eb5bcf6f34473bd5e6f1fc80c07849))
+- **xlsx:** Edit gradient stop brightness with shared color logic ([a49baa4](https://github.com/ChristopherVR/ooxml/commit/a49baa4d275182dd89bb3bd61fd5b7c9e2e719db))
+- **xlsx:** Add native named gradient preset gallery ([47ec692](https://github.com/ChristopherVR/ooxml/commit/47ec69208803df71d035ba191653134ec475ff26))
+- **xlsx:** Add rectangular gradient geometry controls ([e10c21a](https://github.com/ChristopherVR/ooxml/commit/e10c21a08bf6fdc3238504d7434db3f0b2a8b68f))
+- **xlsx:** Author radial and path fills on chart series ([2d3652a](https://github.com/ChristopherVR/ooxml/commit/2d3652ad10b2422302dbe457bb6899f2e56cb7bb))
+- **xlsx:** Format chart and plot background fills ([9237f7f](https://github.com/ChristopherVR/ooxml/commit/9237f7f2ec5851088a28d2af5ca82d02806f5438))
+- **visio:** Rotate shapes with shared pointer geometry ([407fa61](https://github.com/ChristopherVR/ooxml/commit/407fa614c7f919052d44d9e31f7abfbcfe6df50d))
+- **xlsx:** Render and preserve mixed chart title text ([4f3f87e](https://github.com/ChristopherVR/ooxml/commit/4f3f87ea6eff2802393f24448a1b48931282d012))
+- **xlsx:** Render and preserve chart title paragraph spacing ([4f0d619](https://github.com/ChristopherVR/ooxml/commit/4f0d6198d90ab3befbfa6b9806965f01492bce45))
+- **xlsx:** Wrap chart titles with shared text flow ([14a33ed](https://github.com/ChristopherVR/ooxml/commit/14a33ed2ee58f8469e5d24a0a36923a3922f23c4))
+
+### Bug Fixes
+
+- **chart:** Match native scaled linear gradient paint ([8bd1171](https://github.com/ChristopherVR/ooxml/commit/8bd1171809210e886f9a459a5d634b2109ad06e9))
+- **chart:** Paint native rectangular path gradients ([af81015](https://github.com/ChristopherVR/ooxml/commit/af81015bca6823dc505c26c006b2a99eb2e85c8f))
+- **xlsx:** Paint native circular chart backgrounds ([e2bddbf](https://github.com/ChristopherVR/ooxml/commit/e2bddbfdafdfe31792ec9f9e6e5002350e5d2f4f))
+- **xlsx:** Preserve chart axis visibility on export ([da056bb](https://github.com/ChristopherVR/ooxml/commit/da056bb9ebbc70561d63b1dc9e1f558997c0f946))
+- **xlsx:** Preserve direct chart fills on export ([c3b3491](https://github.com/ChristopherVR/ooxml/commit/c3b3491a109720a2e38599b3b5272e9d84964309))
+- **pptx:** Copy owned package parts when duplicating slides ([6940f93](https://github.com/ChristopherVR/ooxml/commit/6940f936cc1f804a498aea941480357ad4236edb))
+- **pptx:** Generate complete native 3d chart axes ([6de35d9](https://github.com/ChristopherVR/ooxml/commit/6de35d96c68b4c7a6118b7bcb2a9ac27fa7f3ecc))
+- **pptx:** Write text properties before paragraph content ([a5fe6e7](https://github.com/ChristopherVR/ooxml/commit/a5fe6e78fe4889804f4a553dcbf4ce4a1c6c92e4))
+- **xlsx:** Preserve native built-in chart text defaults ([f3b9335](https://github.com/ChristopherVR/ooxml/commit/f3b93358bc0fd123c1eb83cfba9237e183ae31e6))
+- **xlsx:** Inherit and preserve chart text formatting ([b292d16](https://github.com/ChristopherVR/ooxml/commit/b292d167b07c6cebaa9168f7a01ab113135d3857))
+- **xlsx:** Align chart title lines with measured font boxes ([8499a58](https://github.com/ChristopherVR/ooxml/commit/8499a584ea11a03cb25517f3d6dad3b16104b375))
+- **pptx:** Project rectangular chart gradients in every binding ([8bc5ee3](https://github.com/ChristopherVR/ooxml/commit/8bc5ee3be9584e37a251ae72701ed9d2d392448f))
+- **ci:** Clear lint errors in chart and drawing checks ([f331e67](https://github.com/ChristopherVR/ooxml/commit/f331e670ca9c52a76e048648e55d0660d925f7c4))
+- **pptx:** Preserve rectangular chart gradient paths ([27c6ddb](https://github.com/ChristopherVR/ooxml/commit/27c6ddbf0b123266a67c794b4bbaa0b7c0d062ef))
+
+### Performance
+
+- **pptx:** Share the engine and load metafile conversion lazily ([e00b1d7](https://github.com/ChristopherVR/ooxml/commit/e00b1d748b9adb79dac8579f67db24e75f0a7fe2))
+
+### Testing
+
+- **xlsx:** Measure native linear gradient paint profiles ([ccc4ceb](https://github.com/ChristopherVR/ooxml/commit/ccc4cebc6408a47f73e85ce95262ebe61973deda))
+
 ## [4.27.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-svelte-viewer@4.27.0) - 2026-10-07
 
 ### Features

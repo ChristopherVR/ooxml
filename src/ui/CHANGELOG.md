@@ -7,6 +7,73 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [1.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@1.0.0) - 2026-10-07
+
+### Features
+
+- **xlsx:** Author chart series gradients with shared controls ([a932dbd](https://github.com/ChristopherVR/ooxml/commit/a932dbd724eb5bcf6f34473bd5e6f1fc80c07849))
+- **docx:** Resolve inline object revisions in shared review ([af12a22](https://github.com/ChristopherVR/ooxml/commit/af12a22e52ce03c3ce48c1b2fd41d61a0fcce91b))
+- **docx:** Resolve note revisions in document history ([bc485ab](https://github.com/ChristopherVR/ooxml/commit/bc485abfb662493b8efa31fd96653b92c0954ac0))
+- **xlsx:** Edit gradient stop brightness with shared color logic ([a49baa4](https://github.com/ChristopherVR/ooxml/commit/a49baa4d275182dd89bb3bd61fd5b7c9e2e719db))
+- **xlsx:** Add shared gradient direction gallery ([2fff312](https://github.com/ChristopherVR/ooxml/commit/2fff3122b914ed8421128393bdcd8d937b26116c))
+- **visio:** Render saved linear gradient strokes ([376480f](https://github.com/ChristopherVR/ooxml/commit/376480f823d76dcc0e9b71ace28611b6b885e755))
+- **docx:** Resolve tracked paragraph marks in shared review ([f953d21](https://github.com/ChristopherVR/ooxml/commit/f953d211fd7f883e9f1eecbedb11b43d2cfc4ad3))
+- **xlsx:** Drag gradient stops with shared live previews ([03fe589](https://github.com/ChristopherVR/ooxml/commit/03fe589bf37ad48b8e879a4855047586ae2e105b))
+- **docx:** Resolve header and footer revisions with the body ([1229478](https://github.com/ChristopherVR/ooxml/commit/12294785b225730cee6b75816bc5fec2fd7a1e11))
+- **xlsx:** Pair gradient fields with shared range controls ([dba0182](https://github.com/ChristopherVR/ooxml/commit/dba01824576dc7d329e0e4185ecf8a302f75e823))
+- **docx:** Resolve inline object formatting history ([9689395](https://github.com/ChristopherVR/ooxml/commit/9689395a265d78a0f472f4880b6191130d2a9b43))
+- **docx:** Project prior inline object formatting ([73691b8](https://github.com/ChristopherVR/ooxml/commit/73691b88ba16cf53b10aaaf68696ecb1c95980e8))
+- **docx:** Record inline object formatting in shared history ([5de353d](https://github.com/ChristopherVR/ooxml/commit/5de353df2cf0b61b921dd2fef0141485292db1d8))
+- **xlsx:** Add native named gradient preset gallery ([47ec692](https://github.com/ChristopherVR/ooxml/commit/47ec69208803df71d035ba191653134ec475ff26))
+- **docx:** Preserve hard-break formatting and shared history ([a4dfbc4](https://github.com/ChristopherVR/ooxml/commit/a4dfbc40088ad577195695092149bdd195d798f2))
+- **visio:** Resize native local lines through the width cell ([cdb9b5f](https://github.com/ChristopherVR/ooxml/commit/cdb9b5f5e2f393de2e740489920e70bdc820f1c2))
+- **docx:** Share font commands across text and inline objects ([469c0d4](https://github.com/ChristopherVR/ooxml/commit/469c0d4b8f9d3a43dbcb2ef907ce472c2ba8e5ad))
+- **xlsx:** Add rectangular gradient geometry controls ([e10c21a](https://github.com/ChristopherVR/ooxml/commit/e10c21a08bf6fdc3238504d7434db3f0b2a8b68f))
+- **visio:** Drag local line endpoints on the canvas ([f68d353](https://github.com/ChristopherVR/ooxml/commit/f68d35354731f13c283032d81d2d11aec9c4b783))
+- **docx:** Preserve inline hyperlinks through shared commands ([d1e7bf0](https://github.com/ChristopherVR/ooxml/commit/d1e7bf05f53d7b84fa2b7da3aec4ea006f629b8f))
+- **xlsx:** Author radial and path fills on chart series ([2d3652a](https://github.com/ChristopherVR/ooxml/commit/2d3652ad10b2422302dbe457bb6899f2e56cb7bb))
+- **visio:** Create straight lines through shared drawing tools ([f67c10f](https://github.com/ChristopherVR/ooxml/commit/f67c10f3032f03e4c4b5b01f1caafe0395bb7af6))
+- **docx:** Share independent inline comment anchors ([4397b4b](https://github.com/ChristopherVR/ooxml/commit/4397b4bf5629a7a9da21a34b286f01d2b0853136))
+- **ui:** Embed teams settings in the workspace ([6b13bae](https://github.com/ChristopherVR/ooxml/commit/6b13bae9b7fbb62a320d088a66eacc52f00a9c44))
+- **ui:** Refine shared files commands and sorting ([9372d61](https://github.com/ChristopherVR/ooxml/commit/9372d61fecf826888d184a48d3f3f1c063328174))
+- **xlsx:** Format chart and plot background fills ([9237f7f](https://github.com/ChristopherVR/ooxml/commit/9237f7f2ec5851088a28d2af5ca82d02806f5438))
+- **visio:** Create and resize native ellipses with shared logic ([6c4d008](https://github.com/ChristopherVR/ooxml/commit/6c4d00839469577dfff31a61e27150c7bd281c53))
+- **xlsx:** Format and paint chart title and legend fills ([4255dcd](https://github.com/ChristopherVR/ooxml/commit/4255dcdee2fbf4c62ea9260ffcf3a9856ebb859b))
+- **visio:** Rotate local shapes through shared editing ([c68e4f4](https://github.com/ChristopherVR/ooxml/commit/c68e4f471d9fdd2927bdb47a13c95b78c0bd706e))
+- **visio:** Rotate shapes with shared pointer geometry ([407fa61](https://github.com/ChristopherVR/ooxml/commit/407fa614c7f919052d44d9e31f7abfbcfe6df50d))
+- **visio:** Render live rotation previews through shared svg ([87c3957](https://github.com/ChristopherVR/ooxml/commit/87c3957b5967466db44cbc95b08f5cfff21d81a7))
+- **visio:** Share native quarter-turn command preparation ([c342e79](https://github.com/ChristopherVR/ooxml/commit/c342e79b82930797a7bf3a16b89a3bbe86d0128e))
+- **visio:** Add shared nested quarter-turn menus ([b1c7377](https://github.com/ChristopherVR/ooxml/commit/b1c737749e22e4340ea04ddd695ada3b5049dc33))
+- **visio:** Flip local shapes through shared geometry edits ([cffd415](https://github.com/ChristopherVR/ooxml/commit/cffd415a9fd7a8866f3f07dae027850dccb17c82))
+- **xlsx:** Wrap chart titles with shared text flow ([14a33ed](https://github.com/ChristopherVR/ooxml/commit/14a33ed2ee58f8469e5d24a0a36923a3922f23c4))
+
+### Bug Fixes
+
+- **docx:** Distinguish footnotes and endnotes with shared ids ([874ff3b](https://github.com/ChristopherVR/ooxml/commit/874ff3b325a0da5675c34786f14f68cc4e31bc1d))
+- **visio:** Project oblique stroke gradients in physical bounds ([2a05f37](https://github.com/ChristopherVR/ooxml/commit/2a05f37fb9e7e2e7683d0566a2831cc0122360cf))
+- **visio:** Project saved oblique fills through physical bounds ([938ceae](https://github.com/ChristopherVR/ooxml/commit/938ceae0aaa1a7db365f577f36550863757f3f8f))
+- **chart:** Paint native rectangular path gradients ([af81015](https://github.com/ChristopherVR/ooxml/commit/af81015bca6823dc505c26c006b2a99eb2e85c8f))
+- **docx:** Locate imported inline comment anchors ([7ecbe15](https://github.com/ChristopherVR/ooxml/commit/7ecbe15f2e9b25401316579ad35e855b5add6b90))
+- **visio:** Preserve drawn line endpoints beyond paper edges ([6cc3708](https://github.com/ChristopherVR/ooxml/commit/6cc37087579742326cacec4b8b670b869c1ad48f))
+- **docx:** Anchor comments to complete complex fields ([065cb5c](https://github.com/ChristopherVR/ooxml/commit/065cb5c1c8554e9cdbe7b61a807d9efff1ffc2de))
+- **docx:** Undo comment records with their anchors ([c736fab](https://github.com/ChristopherVR/ooxml/commit/c736fabf6d76c7e5cf87f137745e7dc1ea21bdba))
+- **docx:** Retain body edits during yjs settings updates ([62d3fbd](https://github.com/ChristopherVR/ooxml/commit/62d3fbd3a5b852cb78619f3006ec982e5bbc4230))
+- **docx:** Retain complete simple field comment scopes ([30500ef](https://github.com/ChristopherVR/ooxml/commit/30500efc737d69b920530893bf4de24b629b1dd9))
+- **visio:** Preserve drawn boxes beyond scaled paper edges ([0048416](https://github.com/ChristopherVR/ooxml/commit/0048416f0cca19f7d3888e4c71c1d1d09583792e))
+- **docx:** Retain adjacent simple field boundaries ([9303f68](https://github.com/ChristopherVR/ooxml/commit/9303f68aab372012d833669aa4eb45ceffba7726))
+- **docx:** Copy field results as formatted literal text ([797db1b](https://github.com/ChristopherVR/ooxml/commit/797db1ba8f8942b2b364833e6a065504486ceaac))
+- **docx:** Retain simple fields during result replacements ([908c45e](https://github.com/ChristopherVR/ooxml/commit/908c45ea9da8bf6ca75b7a4faefab87db44711d4))
+- **docx:** Preserve empty fields through deletion and review ([e3c06a7](https://github.com/ChristopherVR/ooxml/commit/e3c06a73632b21645ff6553ed85d5426bfe49e53))
+- **docx:** Share field-aware deletion across clipboard paths ([408ecb8](https://github.com/ChristopherVR/ooxml/commit/408ecb8a12549b953777c3037074280110ddd017))
+- **xlsx:** Measure chart title and legend text in the browser ([e74cf9e](https://github.com/ChristopherVR/ooxml/commit/e74cf9e85fec51ee29fee5c2ad9f892c38a1c12f))
+- **xlsx:** Align chart title lines with measured font boxes ([8499a58](https://github.com/ChristopherVR/ooxml/commit/8499a584ea11a03cb25517f3d6dad3b16104b375))
+- **ui:** Preserve feedback and history for blocked visio flips ([9feb751](https://github.com/ChristopherVR/ooxml/commit/9feb75113d0e0d3f01bf509bbe55d08ee46af7ce))
+- **docx:** Remove incomplete field structure from clipboard ([1539bbc](https://github.com/ChristopherVR/ooxml/commit/1539bbc9a136a904aad1e3b73f59834ac195ccd8))
+- **ui:** Avoid viewport scans when clearing visio handles ([091cc4f](https://github.com/ChristopherVR/ooxml/commit/091cc4f36a833e66d59a3465d75eac1623650427))
+- **ui:** Refresh the published custom element manifest ([ac3acb6](https://github.com/ChristopherVR/ooxml/commit/ac3acb6ad7af6bbbfba5536b119367ecff1e78a1))
+- **pptx:** Project rectangular chart gradients in every binding ([8bc5ee3](https://github.com/ChristopherVR/ooxml/commit/8bc5ee3be9584e37a251ae72701ed9d2d392448f))
+- **ci:** Clear lint errors in chart and drawing checks ([f331e67](https://github.com/ChristopherVR/ooxml/commit/f331e670ca9c52a76e048648e55d0660d925f7c4))
+
 ## [0.31.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@0.31.0) - 2026-10-07
 
 ### Features

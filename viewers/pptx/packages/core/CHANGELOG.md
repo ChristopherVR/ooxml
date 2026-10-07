@@ -7,6 +7,8 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.13.2](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-viewer-core@4.13.2) - 2026-10-07
+
 ## [4.13.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-viewer-core@4.13.1) - 2026-10-07
 
 ## [4.13.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-viewer-core@4.13.0) - 2026-10-07

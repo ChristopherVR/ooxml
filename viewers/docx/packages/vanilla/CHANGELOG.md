@@ -7,6 +7,8 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.4.8](https://github.com/ChristopherVR/ooxml/releases/tag/docx-vanilla-viewer@0.4.8) - 2026-10-07
+
 ## [0.4.7](https://github.com/ChristopherVR/ooxml/releases/tag/docx-vanilla-viewer@0.4.7) - 2026-10-07
 
 ## [0.4.6](https://github.com/ChristopherVR/ooxml/releases/tag/docx-vanilla-viewer@0.4.6) - 2026-10-07

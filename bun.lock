@@ -367,7 +367,7 @@
     },
     "mcp": {
       "name": "ooxml-mcp",
-      "version": "0.1.10",
+      "version": "0.1.11",
       "bin": {
         "ooxml-tools": "src/cli.js",
       },
@@ -393,7 +393,7 @@
     },
     "src/core": {
       "name": "ooxml-core",
-      "version": "0.24.0",
+      "version": "1.0.0",
       "bin": {
         "pptx": "./dist/pptx/cli/index.mjs",
       },
@@ -448,7 +448,7 @@
     },
     "src/ui": {
       "name": "ooxml-ui",
-      "version": "0.31.0",
+      "version": "1.0.0",
       "dependencies": {
         "dompurify": "^3.4.16",
         "emf-converter": "4.8.21",
@@ -534,7 +534,7 @@
     },
     "viewers/docx/mcp": {
       "name": "docx-viewer-mcp",
-      "version": "0.1.4",
+      "version": "0.1.5",
       "bin": {
         "docx-tools": "src/cli.js",
       },
@@ -546,7 +546,7 @@
     },
     "viewers/docx/packages/angular": {
       "name": "docx-angular-viewer",
-      "version": "0.4.7",
+      "version": "0.4.8",
       "dependencies": {
         "docx-core": "^0.1.7",
         "ooxml-core": "*",
@@ -581,14 +581,14 @@
     },
     "viewers/docx/packages/core": {
       "name": "docx-core",
-      "version": "0.1.10",
+      "version": "0.1.11",
       "dependencies": {
         "ooxml-core": "*",
       },
     },
     "viewers/docx/packages/react": {
       "name": "docx-react-viewer",
-      "version": "0.4.7",
+      "version": "0.4.8",
       "dependencies": {
         "docx-core": "^0.1.7",
         "ooxml-core": "*",
@@ -600,7 +600,7 @@
     },
     "viewers/docx/packages/solid": {
       "name": "docx-solid-viewer",
-      "version": "0.4.7",
+      "version": "0.4.8",
       "dependencies": {
         "docx-core": "^0.1.7",
         "ooxml-core": "*",
@@ -612,7 +612,7 @@
     },
     "viewers/docx/packages/svelte": {
       "name": "docx-svelte-viewer",
-      "version": "0.4.7",
+      "version": "0.4.8",
       "dependencies": {
         "docx-core": "^0.1.7",
         "ooxml-core": "*",
@@ -624,7 +624,7 @@
     },
     "viewers/docx/packages/vanilla": {
       "name": "docx-vanilla-viewer",
-      "version": "0.4.7",
+      "version": "0.4.8",
       "dependencies": {
         "docx-core": "^0.1.7",
         "ooxml-core": "*",
@@ -633,7 +633,7 @@
     },
     "viewers/docx/packages/vue": {
       "name": "docx-vue-viewer",
-      "version": "0.4.7",
+      "version": "0.4.8",
       "dependencies": {
         "docx-core": "^0.1.7",
         "ooxml-core": "*",
@@ -714,7 +714,7 @@
     },
     "viewers/pptx/packages/angular": {
       "name": "pptx-angular-viewer",
-      "version": "4.27.0",
+      "version": "4.28.0",
       "dependencies": {
         "@lucide/angular": "^1.52.0",
         "dompurify": "^3.4.16",
@@ -822,12 +822,12 @@
     },
     "viewers/pptx/packages/core": {
       "name": "pptx-viewer-core",
-      "version": "4.13.1",
+      "version": "4.13.2",
       "bin": {
         "pptx": "./dist/cli/index.mjs",
       },
       "dependencies": {
-        "ooxml-core": "^0.24.0",
+        "ooxml-core": "^1.0.0",
       },
       "devDependencies": {
         "@napi-rs/canvas": "^1.0.10",
@@ -867,13 +867,13 @@
     },
     "viewers/pptx/packages/react": {
       "name": "pptx-react-viewer",
-      "version": "4.27.0",
+      "version": "4.28.0",
       "dependencies": {
         "clsx": "^2.1.1",
         "dompurify": "^3.4.16",
         "html2canvas-pro": "^2.5.1",
-        "ooxml-core": "^0.24.0",
-        "ooxml-ui": "^0.31.0",
+        "ooxml-core": "^1.0.0",
+        "ooxml-ui": "^1.0.0",
         "opentype.js": "^2.0.0",
         "tailwind-merge": "^3.7.0",
       },
@@ -953,7 +953,7 @@
     },
     "viewers/pptx/packages/svelte": {
       "name": "pptx-svelte-viewer",
-      "version": "4.27.0",
+      "version": "4.28.0",
       "dependencies": {
         "@lucide/svelte": "^1.52.0",
         "fast-xml-parser": "^5.11.2",
@@ -1003,7 +1003,7 @@
     },
     "viewers/pptx/packages/tools": {
       "name": "pptx-viewer-mcp",
-      "version": "2.8.0",
+      "version": "2.8.1",
       "bin": {
         "pptx-tools": "dist/mcp/cli.mjs",
       },
@@ -1031,7 +1031,7 @@
     },
     "viewers/pptx/packages/vanilla": {
       "name": "pptx-vanilla-viewer",
-      "version": "3.27.0",
+      "version": "3.28.0",
       "dependencies": {
         "dompurify": "^3.4.16",
         "fast-xml-parser": "^5.11.2",
@@ -1071,7 +1071,7 @@
     },
     "viewers/pptx/packages/vue": {
       "name": "pptx-vue-viewer",
-      "version": "4.27.0",
+      "version": "4.28.0",
       "dependencies": {
         "clsx": "^2.1.1",
         "dompurify": "^3.4.16",
@@ -1165,7 +1165,7 @@
     },
     "viewers/teams/packages/angular": {
       "name": "openteams-angular-viewer",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "dependencies": {
         "lit": "^3.3.3",
         "ooxml-core": "*",
@@ -1180,7 +1180,7 @@
     },
     "viewers/teams/packages/react": {
       "name": "openteams-react-viewer",
-      "version": "0.1.4",
+      "version": "0.1.5",
       "dependencies": {
         "lit": "^3.3.3",
         "ooxml-core": "*",
@@ -1196,7 +1196,7 @@
     },
     "viewers/teams/packages/solid": {
       "name": "openteams-solid-viewer",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "dependencies": {
         "lit": "^3.3.3",
         "ooxml-core": "*",
@@ -1211,7 +1211,7 @@
     },
     "viewers/teams/packages/svelte": {
       "name": "openteams-svelte-viewer",
-      "version": "0.1.4",
+      "version": "0.1.5",
       "dependencies": {
         "lit": "^3.3.3",
         "ooxml-core": "*",
@@ -1226,7 +1226,7 @@
     },
     "viewers/teams/packages/vanilla": {
       "name": "openteams-vanilla-viewer",
-      "version": "0.1.4",
+      "version": "0.1.5",
       "dependencies": {
         "lit": "^3.3.3",
         "ooxml-core": "*",
@@ -1235,7 +1235,7 @@
     },
     "viewers/teams/packages/vue": {
       "name": "openteams-vue-viewer",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "dependencies": {
         "lit": "^3.3.3",
         "ooxml-core": "*",
@@ -1302,7 +1302,7 @@
     },
     "viewers/visio/mcp": {
       "name": "visio-viewer-mcp",
-      "version": "0.2.2",
+      "version": "0.2.3",
       "bin": {
         "visio-tools": "src/cli.js",
       },
@@ -1314,7 +1314,7 @@
     },
     "viewers/visio/packages/angular": {
       "name": "visio-angular-viewer",
-      "version": "0.5.7",
+      "version": "0.5.8",
       "dependencies": {
         "emf-converter": "4.8.21",
         "ooxml-core": "*",
@@ -1352,14 +1352,14 @@
     },
     "viewers/visio/packages/core": {
       "name": "visio-core",
-      "version": "0.3.5",
+      "version": "0.3.6",
       "dependencies": {
         "ooxml-core": "*",
       },
     },
     "viewers/visio/packages/react": {
       "name": "visio-react-viewer",
-      "version": "0.5.7",
+      "version": "0.5.8",
       "dependencies": {
         "emf-converter": "4.8.21",
         "ooxml-core": "*",
@@ -1372,7 +1372,7 @@
     },
     "viewers/visio/packages/solid": {
       "name": "visio-solid-viewer",
-      "version": "0.5.7",
+      "version": "0.5.8",
       "dependencies": {
         "emf-converter": "4.8.21",
         "ooxml-core": "*",
@@ -1385,7 +1385,7 @@
     },
     "viewers/visio/packages/svelte": {
       "name": "visio-svelte-viewer",
-      "version": "0.5.7",
+      "version": "0.5.8",
       "dependencies": {
         "emf-converter": "4.8.21",
         "ooxml-core": "*",
@@ -1398,7 +1398,7 @@
     },
     "viewers/visio/packages/vanilla": {
       "name": "visio-vanilla-viewer",
-      "version": "0.5.7",
+      "version": "0.5.8",
       "dependencies": {
         "emf-converter": "4.8.21",
         "ooxml-core": "*",
@@ -1408,7 +1408,7 @@
     },
     "viewers/visio/packages/vue": {
       "name": "visio-vue-viewer",
-      "version": "0.5.7",
+      "version": "0.5.8",
       "dependencies": {
         "emf-converter": "4.8.21",
         "ooxml-core": "*",
@@ -1463,7 +1463,7 @@
     },
     "viewers/xlsx/mcp": {
       "name": "xlsx-viewer-mcp",
-      "version": "0.1.4",
+      "version": "0.1.5",
       "bin": {
         "xlsx-tools": "src/cli.js",
       },
@@ -1475,7 +1475,7 @@
     },
     "viewers/xlsx/packages/angular": {
       "name": "xlsx-angular-viewer",
-      "version": "0.4.4",
+      "version": "0.4.5",
       "dependencies": {
         "@christophervr/xlsx-core": "^0.2.4",
         "ooxml-core": "*",
@@ -1510,14 +1510,14 @@
     },
     "viewers/xlsx/packages/core": {
       "name": "@christophervr/xlsx-core",
-      "version": "0.2.7",
+      "version": "0.2.8",
       "dependencies": {
         "ooxml-core": "*",
       },
     },
     "viewers/xlsx/packages/react": {
       "name": "@christophervr/xlsx-react-viewer",
-      "version": "0.4.4",
+      "version": "0.4.5",
       "dependencies": {
         "@christophervr/xlsx-core": "^0.2.4",
         "ooxml-core": "*",
@@ -1529,7 +1529,7 @@
     },
     "viewers/xlsx/packages/solid": {
       "name": "xlsx-solid-viewer",
-      "version": "0.4.4",
+      "version": "0.4.5",
       "dependencies": {
         "@christophervr/xlsx-core": "^0.2.4",
         "ooxml-core": "*",
@@ -1541,7 +1541,7 @@
     },
     "viewers/xlsx/packages/svelte": {
       "name": "xlsx-svelte-viewer",
-      "version": "0.4.4",
+      "version": "0.4.5",
       "dependencies": {
         "@christophervr/xlsx-core": "^0.2.4",
         "ooxml-core": "*",
@@ -1553,7 +1553,7 @@
     },
     "viewers/xlsx/packages/vanilla": {
       "name": "xlsx-vanilla-viewer",
-      "version": "0.4.4",
+      "version": "0.4.5",
       "dependencies": {
         "@christophervr/xlsx-core": "^0.2.4",
         "ooxml-core": "*",
@@ -1562,7 +1562,7 @@
     },
     "viewers/xlsx/packages/vue": {
       "name": "xlsx-vue-viewer",
-      "version": "0.4.4",
+      "version": "0.4.5",
       "dependencies": {
         "@christophervr/xlsx-core": "^0.2.4",
         "ooxml-core": "*",
@@ -3979,6 +3979,8 @@
 
     "docx-e2e/@types/node": ["@types/node@24.19.1", "", { "dependencies": { "undici-types": ">=7.24.0 <7.24.7" } }, "sha512-aS3/DG0oM05K0RIXXP+hKjinGG5IgSSVGzswZxW3O0sS3pH4/fycXundUC9XsszgKCk4gHXylTEK6hyFxVxnoQ=="],
 
+    "docx-viewer-mcp/ooxml-core": ["ooxml-core@0.23.0", "", { "dependencies": { "@xmldom/xmldom": "^0.9.12", "emf-converter": "^4.8.21", "fast-xml-parser": "^5.11.2", "fflate": "^0.8.3", "jszip": "^3.10.2", "lib0": "^0.2.119", "mtx-decompressor": "^1.8.0", "prosemirror-collab": "^1.3.1", "prosemirror-commands": "^1.7.2", "prosemirror-history": "^1.5.1", "prosemirror-keymap": "^1.2.3", "prosemirror-model": "^1.25.12", "prosemirror-state": "^1.4.4", "prosemirror-transform": "^1.12.2", "prosemirror-view": "^1.42.6", "utif": "3.1.0", "y-protocols": "^1.0.7", "yjs": "^13.6.33" }, "peerDependencies": { "@napi-rs/canvas": "^1.0.9", "node-forge": "^1.3.0", "xml-crypto": "^6.0.0" }, "optionalPeers": ["@napi-rs/canvas", "node-forge", "xml-crypto"], "bin": { "pptx": "dist/pptx/cli/index.mjs" } }, "sha512-DTiLydK56en+68SztM2Q3cO4bc31WTgw2gF/bdBjfnylg5zsSEygIlGAo9rTWFj+Jv/YsyYU05omCt3VbHeHFg=="],
+
     "docx-viewer-workspace/@types/node": ["@types/node@24.19.1", "", { "dependencies": { "undici-types": ">=7.24.0 <7.24.7" } }, "sha512-aS3/DG0oM05K0RIXXP+hKjinGG5IgSSVGzswZxW3O0sS3pH4/fycXundUC9XsszgKCk4gHXylTEK6hyFxVxnoQ=="],
 
     "docx-viewer-workspace/typescript": ["typescript@6.0.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw=="],
@@ -4045,6 +4047,8 @@
 
     "pptx-svelte-viewer/typescript": ["typescript@6.0.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw=="],
 
+    "pptx-viewer-mcp/ooxml-core": ["ooxml-core@0.23.0", "", { "dependencies": { "@xmldom/xmldom": "^0.9.12", "emf-converter": "^4.8.21", "fast-xml-parser": "^5.11.2", "fflate": "^0.8.3", "jszip": "^3.10.2", "lib0": "^0.2.119", "mtx-decompressor": "^1.8.0", "prosemirror-collab": "^1.3.1", "prosemirror-commands": "^1.7.2", "prosemirror-history": "^1.5.1", "prosemirror-keymap": "^1.2.3", "prosemirror-model": "^1.25.12", "prosemirror-state": "^1.4.4", "prosemirror-transform": "^1.12.2", "prosemirror-view": "^1.42.6", "utif": "3.1.0", "y-protocols": "^1.0.7", "yjs": "^13.6.33" }, "peerDependencies": { "@napi-rs/canvas": "^1.0.9", "node-forge": "^1.3.0", "xml-crypto": "^6.0.0" }, "optionalPeers": ["@napi-rs/canvas", "node-forge", "xml-crypto"], "bin": { "pptx": "dist/pptx/cli/index.mjs" } }, "sha512-DTiLydK56en+68SztM2Q3cO4bc31WTgw2gF/bdBjfnylg5zsSEygIlGAo9rTWFj+Jv/YsyYU05omCt3VbHeHFg=="],
+
     "pptx-viewer-monorepo/typescript": ["typescript@6.0.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw=="],
 
     "pptx-viewer-shared/ooxml-ui": ["ooxml-ui@0.30.1", "", { "dependencies": { "emf-converter": "4.8.21", "lit": "^3.3.3", "ooxml-core": "^0.23.0", "prosemirror-collab": "^1.3.1", "prosemirror-commands": "^1.7.2", "prosemirror-history": "^1.5.1", "prosemirror-keymap": "^1.2.3", "prosemirror-model": "^1.25.12", "prosemirror-state": "^1.4.4", "prosemirror-transform": "^1.12.2", "prosemirror-view": "^1.42.6" } }, "sha512-fAEyKCVFhkhdVJ3aVM/0bdowF8GMWaXhRdoluaczRbHxRsAkwr4jrwNZFGucHrKXjJfJxJma8LCNUrb/39bRLw=="],
@@ -4103,6 +4107,8 @@
 
     "visio-e2e/@types/node": ["@types/node@22.20.5", "", { "dependencies": { "undici-types": "~6.21.0" } }, "sha512-U2+DNr+wSjpsTS/wZGYHq7GcwfuSmKiKvoPvK22zwTlRhU91yOniN4qRR5KhIjvif7ysw/dz/hKmfDH0Ris4aA=="],
 
+    "visio-viewer-mcp/ooxml-core": ["ooxml-core@0.23.0", "", { "dependencies": { "@xmldom/xmldom": "^0.9.12", "emf-converter": "^4.8.21", "fast-xml-parser": "^5.11.2", "fflate": "^0.8.3", "jszip": "^3.10.2", "lib0": "^0.2.119", "mtx-decompressor": "^1.8.0", "prosemirror-collab": "^1.3.1", "prosemirror-commands": "^1.7.2", "prosemirror-history": "^1.5.1", "prosemirror-keymap": "^1.2.3", "prosemirror-model": "^1.25.12", "prosemirror-state": "^1.4.4", "prosemirror-transform": "^1.12.2", "prosemirror-view": "^1.42.6", "utif": "3.1.0", "y-protocols": "^1.0.7", "yjs": "^13.6.33" }, "peerDependencies": { "@napi-rs/canvas": "^1.0.9", "node-forge": "^1.3.0", "xml-crypto": "^6.0.0" }, "optionalPeers": ["@napi-rs/canvas", "node-forge", "xml-crypto"], "bin": { "pptx": "dist/pptx/cli/index.mjs" } }, "sha512-DTiLydK56en+68SztM2Q3cO4bc31WTgw2gF/bdBjfnylg5zsSEygIlGAo9rTWFj+Jv/YsyYU05omCt3VbHeHFg=="],
+
     "vitepress/@vitejs/plugin-vue": ["@vitejs/plugin-vue@5.2.4", "", { "peerDependencies": { "vite": "^5.0.0 || ^6.0.0", "vue": "^3.2.25" } }, "sha512-7Yx/SXSOcQq5HiiV3orevHUFn+pmMB4cgbEkDYgnkUWb0WfeQ/wa2yFv6D5ICiCQOVpjA7vYDXrC7AGO8yjDHA=="],
 
     "vitepress/vite": ["vite@5.4.21", "", { "dependencies": { "esbuild": "^0.21.3", "postcss": "^8.4.43", "rollup": "^4.20.0" }, "optionalDependencies": { "fsevents": "~2.3.3" }, "peerDependencies": { "@types/node": "^18.0.0 || >=20.0.0", "less": "*", "lightningcss": "^1.21.0", "sass": "*", "sass-embedded": "*", "stylus": "*", "sugarss": "*", "terser": "^5.4.0" }, "optionalPeers": ["@types/node", "less", "lightningcss", "sass", "sass-embedded", "stylus", "sugarss", "terser"], "bin": { "vite": "bin/vite.js" } }, "sha512-o5a9xKjbtuhY6Bi5S3+HvbRERmouabWbyUcpXXUA1u+GNUKoROi9byOJ8M0nHbHYHkYICiMlqxkg1KkYmm25Sw=="],
@@ -4112,6 +4118,8 @@
     "xlsx-demos/@types/node": ["@types/node@24.19.1", "", { "dependencies": { "undici-types": ">=7.24.0 <7.24.7" } }, "sha512-aS3/DG0oM05K0RIXXP+hKjinGG5IgSSVGzswZxW3O0sS3pH4/fycXundUC9XsszgKCk4gHXylTEK6hyFxVxnoQ=="],
 
     "xlsx-e2e/@types/node": ["@types/node@24.19.1", "", { "dependencies": { "undici-types": ">=7.24.0 <7.24.7" } }, "sha512-aS3/DG0oM05K0RIXXP+hKjinGG5IgSSVGzswZxW3O0sS3pH4/fycXundUC9XsszgKCk4gHXylTEK6hyFxVxnoQ=="],
+
+    "xlsx-viewer-mcp/ooxml-core": ["ooxml-core@0.23.0", "", { "dependencies": { "@xmldom/xmldom": "^0.9.12", "emf-converter": "^4.8.21", "fast-xml-parser": "^5.11.2", "fflate": "^0.8.3", "jszip": "^3.10.2", "lib0": "^0.2.119", "mtx-decompressor": "^1.8.0", "prosemirror-collab": "^1.3.1", "prosemirror-commands": "^1.7.2", "prosemirror-history": "^1.5.1", "prosemirror-keymap": "^1.2.3", "prosemirror-model": "^1.25.12", "prosemirror-state": "^1.4.4", "prosemirror-transform": "^1.12.2", "prosemirror-view": "^1.42.6", "utif": "3.1.0", "y-protocols": "^1.0.7", "yjs": "^13.6.33" }, "peerDependencies": { "@napi-rs/canvas": "^1.0.9", "node-forge": "^1.3.0", "xml-crypto": "^6.0.0" }, "optionalPeers": ["@napi-rs/canvas", "node-forge", "xml-crypto"], "bin": { "pptx": "dist/pptx/cli/index.mjs" } }, "sha512-DTiLydK56en+68SztM2Q3cO4bc31WTgw2gF/bdBjfnylg5zsSEygIlGAo9rTWFj+Jv/YsyYU05omCt3VbHeHFg=="],
 
     "xlsx-viewer-workspace/@types/node": ["@types/node@24.19.1", "", { "dependencies": { "undici-types": ">=7.24.0 <7.24.7" } }, "sha512-aS3/DG0oM05K0RIXXP+hKjinGG5IgSSVGzswZxW3O0sS3pH4/fycXundUC9XsszgKCk4gHXylTEK6hyFxVxnoQ=="],
 

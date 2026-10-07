@@ -1,6 +1,6 @@
 {
 	"name": "visio-react-viewer",
-	"version": "0.5.7",
+	"version": "0.5.8",
 	"description": "Local-first Visio viewer for react",
 	"homepage": "https://christophervr.github.io/ooxml/visio/",
 	"bugs": {
@@ -33,7 +33,7 @@
 		"emf-converter": "4.8.21",
 		"ooxml-core": "*",
 		"ooxml-ui": "*",
-		"visio-core": "^0.3.5"
+		"visio-core": "^0.3.6"
 	},
 	"peerDependencies": {
 		"react": ">=18"
