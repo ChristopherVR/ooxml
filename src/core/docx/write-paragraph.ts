@@ -32,9 +32,14 @@ function rejectUnsafeRunSegmentation(
 	oldRuns: XmlElement[],
 ): void {
 	if (!base || !oldRuns.some(runHasUnknownProperties)) return;
-	// A rejected format revision supplies a complete XML basis for each remaining text run.
+	// Imported opaque properties or a rejected format revision supply a complete XML basis.
 	// The writer imports that basis before applying modeled edits, independently of source slots.
-	if (paragraph.runs.every((run) => !run.image && !run.equation && run.restoredRunPropertiesXml))
+	if (
+		paragraph.runs.every(
+			(run) =>
+				!run.image && !run.equation && (run.restoredRunPropertiesXml || run.sourceRunPropertiesXml),
+		)
+	)
 		return;
 	const sameText =
 		paragraph.runs.map((run) => run.text).join('') === base.runs.map((run) => run.text).join('');

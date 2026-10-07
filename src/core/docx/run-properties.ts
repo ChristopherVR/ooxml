@@ -20,6 +20,17 @@ import { first, getW, type XmlElement } from './xml.js';
 import { isWordUnderlineStyle } from './underline.js';
 import { parseLigatures } from './ligatures.js';
 
+/** Parsed snapshots allocate fresh objects; compare values before rewriting opaque XML. */
+export function runPropertyChanged(
+	run: TextRun,
+	base: TextRun | undefined,
+	key: keyof TextRun,
+): boolean {
+	return (
+		!base || (run[key] !== base[key] && JSON.stringify(run[key]) !== JSON.stringify(base[key]))
+	);
+}
+
 /** Direct properties shared by ordinary runs and restored formatting snapshots. */
 export function parseDirectRunProperties(
 	props: XmlElement | undefined,

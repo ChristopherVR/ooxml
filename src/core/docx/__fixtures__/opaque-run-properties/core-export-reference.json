@@ -1,0 +1,36 @@
+{
+	"applicationVersion": "16.0",
+	"applicationBuild": "16.0.20430",
+	"cases": [
+		{
+			"name": "package",
+			"tracked": {
+				"text": "Outl!ined text\r",
+				"revisions": 1,
+				"outline": -1,
+				"shadow": -1
+			},
+			"rejected": {
+				"text": "Outlined text\r",
+				"revisions": 0,
+				"outline": -1,
+				"shadow": -1
+			}
+		},
+		{
+			"name": "standalone",
+			"tracked": {
+				"text": "Outl!ined text\r",
+				"revisions": 1,
+				"outline": -1,
+				"shadow": -1
+			},
+			"rejected": {
+				"text": "Outlined text\r",
+				"revisions": 0,
+				"outline": -1,
+				"shadow": -1
+			}
+		}
+	]
+}

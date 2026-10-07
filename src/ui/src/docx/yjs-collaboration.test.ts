@@ -61,6 +61,40 @@ function start(
 }
 
 describe('Word Yjs collaboration', () => {
+	it('retains opaque current run properties through tracked peer typing, export and history', async () => {
+		const zip = new JSZip();
+		zip.file(
+			'word/document.xml',
+			'<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:x="urn:peer-properties"><w:body><w:p><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:hint="eastAsia" w:asciiTheme="minorAscii"/><x:property x:value="retained"/></w:rPr><w:t>Text</w:t></w:r></w:p><w:sectPr/></w:body></w:document>',
+		);
+		const bytes = await zip.generateAsync({ type: 'uint8array' });
+		const peers = pair();
+		const a = mount();
+		const b = mount();
+		await a.load(bytes);
+		await b.load(bytes);
+		start(a, b, peers);
+		const view = viewOf(b);
+		toggleTrackChanges(view.state, view.dispatch, view);
+		const before = view.state.doc;
+		view.dispatch(view.state.tr.insertText('!', 3));
+		for (const editor of [a, b]) {
+			const exported = await JSZip.loadAsync(await editor.saveBytes());
+			const xml = await exported.file('word/document.xml')!.async('string');
+			expect(xml.match(/x:value="retained"/g)).toHaveLength(3);
+			expect(xml.match(/w:hint="eastAsia"/g)).toHaveLength(3);
+			expect(xml).toContain('<w:ins ');
+		}
+		expect(wordYjsPluginKey.getState(view.state)!.undo()).toBe(true);
+		for (const editor of [a, b]) expect(viewOf(editor).state.doc.eq(before)).toBe(true);
+		expect(wordYjsPluginKey.getState(view.state)!.redo()).toBe(true);
+		const xml = await (
+			await JSZip.loadAsync(await a.saveBytes())
+		)
+			.file('word/document.xml')!
+			.async('string');
+		expect(xml.match(/x:value="retained"/g)).toHaveLength(3);
+	});
 	it.each(['bold', 'multiple'])(
 		'preserves overlapping %s formatting and tracked peer typing',
 		async (name) => {

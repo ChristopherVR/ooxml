@@ -97,7 +97,10 @@ function hasUnexpectedAttributes(
 
 /** Whether a run's `rPr` contains any property/attribute/value this writer does not model. */
 export function runHasUnknownProperties(run: XmlElement): boolean {
-	const properties = first(run, 'rPr');
+	return runPropertiesHaveUnknownContent(first(run, 'rPr'));
+}
+
+export function runPropertiesHaveUnknownContent(properties: XmlElement | undefined): boolean {
 	if (!properties) return false;
 	if (hasUnexpectedAttributes(properties, [])) return true;
 	for (const node of Array.from(properties.childNodes)) {

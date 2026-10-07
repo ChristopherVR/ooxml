@@ -33,6 +33,8 @@ export interface TextRun {
 	text: string;
 	/** Run-format history inside an insertion, deletion or move wrapper. */
 	formatRevision?: Revision;
+	/** Complete source properties retained when current formatting contains unsupported OOXML. */
+	sourceRunPropertiesXml?: string;
 	/** Complete XML basis restored by rejecting a run-format revision; known property edits overlay it. */
 	restoredRunPropertiesXml?: string;
 	/** Imported, display-only equation. Source OMML is preserved; equation editing is unsupported. */

@@ -211,6 +211,15 @@ scripts, and rejected both revisions back to the original text. All six browser
 bindings exercise tracked and untracked typing. Script shaping, font fallback and
 glyph metrics still require separate rendering parity work.
 
+The parser now retains a complete property basis for runs containing unsupported
+current formatting. Text splits can reuse that basis, including font hints,
+extension properties and unmodeled formatting-history attributes. Each rebuilt
+run imports its own basis, so changed run positions do not copy another run's
+opaque properties. Known object-valued properties compare by value before XML
+rewriting. Core package/standalone export, Yjs peer history and all six browser
+bindings cover this path. Missing bases and mixed segmentations remain guarded;
+this is not a claim that opaque formatting can be rendered or freely edited.
+
 Text runs now preserve formatting history independently when they are inside
 insertion, deletion or move wrappers. Both histories receive valid export IDs;
 resolving formatting retains the pending text revision. Modern Word UTC timestamps

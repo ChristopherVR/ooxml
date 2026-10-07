@@ -8,7 +8,7 @@ import { createImageRun } from './write-drawing.js';
 import type { RelationshipAllocator } from './relationship-allocator.js';
 import { writeRunFormatRevision } from './write-revisions.js';
 import { parseRunPropertiesSnapshot } from './restore-run-format.js';
-import { parseDirectRunProperties } from './run-properties.js';
+import { parseDirectRunProperties, runPropertyChanged } from './run-properties.js';
 
 function setAttribute(element: XmlElement, local: string, value: string): void {
 	element.setAttributeNS(WORD_NS, `w:${local}`, value);
@@ -76,7 +76,7 @@ function setRunProperties(
 	base?: TextRun,
 ): void {
 	let props = first(runNode, 'rPr');
-	const changed = (key: keyof TextRun): boolean => !base || run[key] !== base[key];
+	const changed = (key: keyof TextRun): boolean => runPropertyChanged(run, base, key);
 	if (
 		!props &&
 		(run.formatRevision?.kind === 'formatChange' ||
@@ -246,11 +246,14 @@ export function createRun(
 ): XmlElement {
 	if (run.image) return createImageRun(doc, run.image, base?.image, old, allocator);
 	const node = old ?? makeW(doc, 'r');
+	const propertiesXml = run.restoredRunPropertiesXml ?? run.sourceRunPropertiesXml;
 	if (
-		run.restoredRunPropertiesXml &&
-		(!old || run.restoredRunPropertiesXml !== base?.restoredRunPropertiesXml)
+		propertiesXml &&
+		(run.sourceRunPropertiesXml ||
+			!old ||
+			run.restoredRunPropertiesXml !== base?.restoredRunPropertiesXml)
 	) {
-		const restored = parseRunPropertiesSnapshot(run.restoredRunPropertiesXml);
+		const restored = parseRunPropertiesSnapshot(propertiesXml);
 		const props = first(node, 'rPr');
 		if (props) node.removeChild(props);
 		node.insertBefore(doc.importNode(restored, true), node.firstChild);

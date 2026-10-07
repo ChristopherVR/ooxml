@@ -9,6 +9,7 @@ import { ligatureStyle } from './ligature-style.js';
  */
 export const extraRunFields = [
 	'restoredRunPropertiesXml',
+	'sourceRunPropertiesXml',
 	'formatRevision',
 	'fontFamilyEastAsia',
 	'fontFamilyComplexScript',

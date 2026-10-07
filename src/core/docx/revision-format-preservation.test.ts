@@ -79,7 +79,7 @@ for (const name of ['bold', 'multiple'])
 						.file('word/document.xml')!
 						.async('string');
 					expect(xml).not.toContain('rPrChange');
-					// Complex-script properties are preserved even though they are not modeled.
+					// Complex-script fonts survive the full prior-properties restoration.
 					expect(xml).toContain('w:cs="Arial"');
 				}
 			}

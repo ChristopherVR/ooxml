@@ -3,6 +3,7 @@ import type { TextRun } from './model.js';
 import { children, makeW, type XmlDocument, type XmlElement, WORD_NS } from './xml.js';
 import { fractionToThemeByte } from './theme-color.js';
 import { writeLigatures } from './ligatures.js';
+import { runPropertyChanged } from './run-properties.js';
 
 function setAttribute(element: XmlElement, local: string, value: string): void {
 	element.setAttributeNS(WORD_NS, `w:${local}`, value);
@@ -31,7 +32,7 @@ export function setExtendedRunProperties(
 	run: TextRun,
 	base?: TextRun,
 ): void {
-	const changed = (key: keyof TextRun): boolean => !base || run[key] !== base[key];
+	const changed = (key: keyof TextRun): boolean => runPropertyChanged(run, base, key);
 	if (changed('ligatures')) writeLigatures(doc, props, run.ligatures);
 	if (changed('style')) {
 		removeChildren(props, 'rStyle');

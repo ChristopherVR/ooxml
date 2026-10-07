@@ -44,7 +44,9 @@ function writeRevisionMetadata(element: XmlElement, revision: Revision): void {
 	setAttribute(element, 'id', revision.id);
 	setAttribute(element, 'author', revision.author);
 	if (revision.date) setAttribute(element, 'date', revision.date);
+	else element.removeAttributeNS(WORD_NS, 'date');
 	if (revision.dateUtc) element.setAttributeNS(WORD_DATE_UTC_NS, 'w16du:dateUtc', revision.dateUtc);
+	else element.removeAttributeNS(WORD_DATE_UTC_NS, 'dateUtc');
 }
 function revisionTag(kind: Revision['kind']): string {
 	return kind === 'delete'
@@ -84,6 +86,7 @@ function writeFormatRevision(
 	revision: Revision | undefined,
 	local: 'rPr' | 'pPr',
 ): void {
+	const original = first(props, `${local}Change`);
 	removeChildren(props, `${local}Change`);
 	if (!revision) return;
 	const xml =
@@ -91,7 +94,8 @@ function writeFormatRevision(
 	if (!xml)
 		throw new Error(`Cannot write a formatting revision without its prior ${local} snapshot.`);
 	const previous = parsePropertiesSnapshot(xml, local);
-	const change = makeW(doc, `${local}Change`);
+	const change = original ?? makeW(doc, `${local}Change`);
+	removeChildren(change, local);
 	writeRevisionMetadata(change, revision);
 	change.appendChild(doc.importNode(previous, true));
 	props.appendChild(change);

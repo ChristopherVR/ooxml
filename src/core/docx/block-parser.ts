@@ -2,7 +2,8 @@
 // Paragraph/table/run parsing shared by the main document body, headers, footers, footnotes and
 // endnotes (moved out of parse.ts so every container can reuse the identical parser).
 import type { Block, Paragraph, Revision, Table, TextRun } from './model.js';
-import { first, getW, isElement, named, textContent, type XmlElement } from './xml.js';
+import { first, getW, isElement, named, textContent, buildXml, type XmlElement } from './xml.js';
+import { runPropertiesHaveUnknownContent } from './write-run-validation.js';
 import { classifyBreak } from './breaks.js';
 import { parseDirectRunProperties } from './run-properties.js';
 import { parseDirectParagraphProperties } from './paragraph-properties.js';
@@ -112,6 +113,7 @@ function parseRun(node: XmlElement, revision?: Revision): TextRun {
 					})
 					.join('');
 	const run: TextRun = { text, ...parseDirectRunProperties(props) };
+	if (props && runPropertiesHaveUnknownContent(props)) run.sourceRunPropertiesXml = buildXml(props);
 	if (breakKind) run.break = breakKind;
 	if (noteReference) run.noteReference = noteReference;
 	if (noteMark) run.noteMark = noteMark;
