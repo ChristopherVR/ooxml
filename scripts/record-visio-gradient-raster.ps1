@@ -95,7 +95,7 @@ try {
       $shape.XYToPage(1,0,[ref]$xx,[ref]$xy)
       $shape.XYToPage(0,1,[ref]$yx,[ref]$yy)
       $nativeTransform=@(($xx-$ox),($xy-$oy),($yx-$ox),($yy-$oy),$ox,$oy)
-      $cases+=,@{name=$name;paint=$Paint;direction=$direction;kind=$kind;outline=$outline;angle=$ShapeAngle;nativeExtents=$nativeExtents;nativeLineWidth=$shape.CellsU('LineWeight').ResultIU;nativeTransform=$nativeTransform;stopCount=$stopCount;alpha=$alpha;shapeId=[string]$shape.ID;width=$bitmap.Width;height=$bitmap.Height;samples=$samples}
+      $cases+=,@{name=$name;paint=$Paint;gradientAngle=$shape.CellsU($Paint+'GradientAngle').ResultIU;direction=$direction;kind=$kind;outline=$outline;angle=$ShapeAngle;nativeExtents=$nativeExtents;nativeLineWidth=$shape.CellsU('LineWeight').ResultIU;nativeTransform=$nativeTransform;stopCount=$stopCount;alpha=$alpha;shapeId=[string]$shape.ID;width=$bitmap.Width;height=$bitmap.Height;samples=$samples}
      } finally {$bitmap.Dispose()}
     }
    }

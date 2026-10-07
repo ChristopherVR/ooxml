@@ -1,6 +1,7 @@
 import type { VisioGradientPaint, VisioFillGradient } from './model';
 import { hexToRgbChannels, toHex } from '../color/color-primitives';
 import { VISIO_SIGMA_FACTORS } from './native-gradient-curve';
+import { linearGradientEndpoints } from './theme-gradient';
 
 export function canUseVisioSigmaInterpolation(paint: VisioGradientPaint): boolean {
 	return (
@@ -37,12 +38,26 @@ export function visioRenderedGradientStops(paint: VisioGradientPaint): VisioGrad
 	});
 }
 
-/** Native orthogonal stroke paint includes the physical half-width on each side. */
+/** Native raster stroke paint projects through physical bounds including line width. */
 export function visioStrokeGradient(
 	source: VisioFillGradient | undefined,
 	lineWidth: number,
+	size?: readonly [number, number],
 ): VisioFillGradient | undefined {
 	let gradient = source;
+	if (gradient?.type === 'linear' && gradient.boundingBoxAngle !== undefined && size) {
+		const { boundingBoxAngle, ...physical } = gradient;
+		const endpoints = linearGradientEndpoints(
+			size[0] + lineWidth,
+			size[1] + lineWidth,
+			-boundingBoxAngle * 60_000,
+		);
+		return {
+			...physical,
+			start: [endpoints.start[0] - lineWidth / 2, endpoints.start[1] - lineWidth / 2],
+			end: [endpoints.end[0] - lineWidth / 2, endpoints.end[1] - lineWidth / 2],
+		};
+	}
 	if (gradient?.type === 'linear' && gradient.boundingBoxAngle === undefined) {
 		// Native stroke paint spans the stroke's outer bounds, including its physical half-width.
 		const dx = gradient.end[0] - gradient.start[0],

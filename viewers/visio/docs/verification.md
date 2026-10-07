@@ -4,6 +4,34 @@ Status: local Windows development evidence, 2026-10-03. Full Microsoft Visio par
 
 ## Saved linear stroke paint, 2026-10-08
 
+Additional native captures cover 45-degree paint and 225-degree paint on a
+30-degree rotated rectangle. The local directories are
+visio-line-gradient-oblique-4d9eef5cbed0437896e6123406f76233 and
+visio-line-gradient-oblique-rotated-35eb4673d98f4407b0d56671c508f53e.
+Each has four two/three-stop opaque/translucent cases. All six routes pass live
+and portable SVG interior comparisons: 96 additional comparisons, maximum
+channel error five, means below 0.965 and 0.971 respectively. Independent native
+pose checks pass; source PNGs and existing error bounds are unchanged.
+
+The original normalized SVG-style rotation reached maximum 94 and mean 17.52
+on the 45-degree opaque two-stop stroke. Native raster paint uses physical
+projection through the stroked rectangle. The descriptor now delegates to the
+existing linearGradientEndpoints helper using dimensions plus physical line
+width, and translates the result by half that width. Source caches keep their
+normalized angle and stops; the renderer consumes a separate physical descriptor.
+Analytic and parser-to-SVG regressions check the physical endpoints, scaled
+dimensions, unchanged stop alpha and source preservation. Both native captures
+retain all four gradient models through move/save/core reparse.
+
+The fast build:visio command previously failed in tsup's legacy declaration
+plugin with TypeScript 7. It now shares the full build's command runner and strict
+declaration compiler, bundles both Visio entry points, and reuses the declaration
+import rewriter. Full and fast builds, strict/PowerPoint and UI typechecks,
+clean-package imports of every entry point and the NodeNext declaration test pass.
+Other angles, nonrectangular stroke paint, groups/flips, contours, arrowheads,
+nonlinear paint, editing controls, exact native pixels and native Office reopening
+remain unverified. The raster diagnostic remains.
+
 The native recorder shares stop setup between Fill section 249 and Line section
 248 and accepts Paint and GradientAngle. Two genuine four-case rectangle captures
 cover two/three stops and opaque/translucent paint at zero and 90 degrees. Their
@@ -35,7 +63,7 @@ also checks independent fill/line caches, scaling, layer overrides, detached
 snapshots and combined stop budgets. Core reparse is not native Office acceptance.
 
 Arrowheads retain solid fallback paint and report unsupported-gradient-arrows.
-Nonlinear directions report unsupported-saved-line-gradient. Oblique spans,
+Nonlinear directions report unsupported-saved-line-gradient. Other oblique spans,
 groups/flips, contours, exact colors, editing UI and native Office reopening
 remain unverified. Accepted gradients retain unverified-gradient-raster.
 

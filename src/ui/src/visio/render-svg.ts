@@ -183,7 +183,10 @@ function drawOwn(
 		: 'none';
 	const stroke =
 		shape.geometry.some((geometry) => geometry.stroke) && shape.style.linePattern !== 0
-			? linePaint(shape.style, defs, resources, world, context.pageHeight)
+			? linePaint(shape.style, defs, resources, world, context.pageHeight, [
+					shape.width,
+					shape.height,
+				])
 			: 'none';
 	for (const geometry of shape.geometry) {
 		if (++context.nodes > 50_000) {

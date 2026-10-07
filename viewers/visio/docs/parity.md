@@ -12,8 +12,11 @@ Saved linear strokes now reuse the fill-gradient parser, sampler and painter.
 Native horizontal and vertical rectangle strokes with two/three stops and
 independent transparency meet the existing interior error bounds across all six
 routes for live rendering and portable SVG. Colored layers override them with
-solid layer paint. Exact pixels, contours, oblique strokes, arrowheads, nonlinear
-directions, editing controls and native save/reopen acceptance remain open.
+solid layer paint. Oblique rectangle strokes at 45 degrees and at 225 degrees
+on a 30-degree rotated shape also meet those interior bounds, using the shared
+physical endpoint helper. Exact pixels, contours, other angles/shapes/groups,
+arrowheads, nonlinear directions, editing controls and native save/reopen
+acceptance remain open.
 
 Saved opaque two-stop fills now use the measured sigma/gamma profile, and saved
 radial fills use physical circular radii. The native PNG interior benchmark

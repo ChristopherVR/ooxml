@@ -6,6 +6,7 @@ import { editVsdx } from './edit';
 import {
 	visioRenderedGradientStops,
 	visioRenderedGradientStopCount,
+	visioStrokeGradient,
 } from './native-gradient-stops';
 import { demoDocument } from './ui/demo-document';
 import { assertViewableDocument } from './ui/scene-validation';
@@ -25,6 +26,27 @@ const paint = (): VisioLinearGradient => ({
 });
 
 describe('native opaque gradient sampling', () => {
+	it('projects oblique stroke paint through physical dimensions without altering its source cache', () => {
+		const original: VisioLinearGradient = {
+			...paint(),
+			start: [0, 1],
+			end: [1, 1],
+			boundingBoxAngle: -45,
+		};
+		const rendered = visioStrokeGradient(original, 0.2, [4, 2]);
+		if (rendered?.type !== 'linear') throw new Error('Expected linear stroke paint.');
+		expect(rendered.boundingBoxAngle).toBeUndefined();
+		expect(rendered.start[0]).toBeCloseTo(0.4);
+		expect(rendered.start[1]).toBeCloseTo(2.6);
+		expect(rendered.end[0]).toBeCloseTo(3.6);
+		expect(rendered.end[1]).toBeCloseTo(-0.6);
+		expect(rendered.stops).toBe(original.stops);
+		expect(original.boundingBoxAngle).toBe(-45);
+		const scaled = visioStrokeGradient(original, 0.2, [2, 1]);
+		if (scaled?.type !== 'linear') throw new Error('Expected scaled stroke paint.');
+		expect(scaled.start[0]).toBeCloseTo(0.15);
+		expect(scaled.start[1]).toBeCloseTo(1.35);
+	});
 	it('retains source stops and uses the observed brighter quarter colors', () => {
 		const original = paint(),
 			stops = visioRenderedGradientStops(original);

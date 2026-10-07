@@ -95,8 +95,9 @@ export function linePaint(
 	resources: RenderResources,
 	world: VisioMatrix,
 	pageHeight: number,
+	size: readonly [number, number],
 ): string {
-	const gradient = visioStrokeGradient(style.lineGradient, style.lineWidth);
+	const gradient = visioStrokeGradient(style.lineGradient, style.lineWidth, size);
 	if (!gradient) return safeColor(style.lineColor);
 	return fillPaint(
 		{ fill: style.lineColor, fillGradient: gradient },

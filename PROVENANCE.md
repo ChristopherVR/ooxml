@@ -1,5 +1,24 @@
 # Provenance
 
+## Shared core build command runner
+
+Source: ChristopherVR/ooxml at `376480f82`, `src/core/scripts/build.mjs`.
+Its process-spawning helper moved to `src/core/scripts/run-build.mjs`, retaining
+the Windows command flow and adding spawn-error rejection. The full build and
+new Visio build orchestrator share it. Visio also reuses the strict declaration
+compiler and `scripts/esm-declarations.mjs`, replacing tsup's unsupported legacy
+declaration API. The fast bundle includes both public Visio entry points.
+
+## Oblique Visio stroke projection
+
+Source: ChristopherVR/ooxml at `376480f82`,
+`src/core/visio/theme-gradient.ts` and `native-gradient-stops.ts`.
+The stroke descriptor now calls the existing physical linearGradientEndpoints
+helper for cached oblique angles, with physical stroke margins. No geometry
+formula or painter was copied. UI supplies the already normalized shape size;
+source caches remain intact. Two native raster captures verify the bounded
+45-degree and rotated 225-degree rectangle scopes.
+
 ## Shared Visio stroke gradient descriptors
 
 Source: ChristopherVR/ooxml at `e567a4a8a`, the existing fill-gradient parser in

@@ -230,7 +230,7 @@
 	},
 	"scripts": {
 		"build": "node scripts/build.mjs",
-		"build:visio": "tsup --config tsup.visio.config.ts",
+		"build:visio": "node scripts/build-visio.mjs",
 		"prepack": "node scripts/ensure-built.mjs",
 		"typecheck": "bun run typecheck:strict && bun run typecheck:pptx",
 		"typecheck:strict": "tsc -p tsconfig.json --noEmit",
