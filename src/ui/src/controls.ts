@@ -3,6 +3,11 @@ import { defineToasts } from './notices/toasts.js';
 import { definePasteOptions } from './notices/paste-options.js';
 import { defineReadOnlyBanner } from './notices/read-only-banner.js';
 import { defineRadio } from './form/radio.js';
+export {
+	OFFICE_COLOR_SWATCHES,
+	OFFICE_COLOR_SWATCH_HEXES,
+	type OfficeColorSwatch,
+} from './form/color-swatches.js';
 import { defineRibbonToggle } from './ribbon/ribbon-toggle.js';
 import { defineSearchField } from './form/search-field.js';
 import { defineBackstage } from './chrome/backstage.js';

@@ -4,7 +4,8 @@ import { defineTeamsApp, TeamsApp } from './teams-app.js';
 
 const LOCAL = JSON.stringify({ mode: 'local', iceServers: [] });
 const tick = (ms = 0): Promise<void> => new Promise((r) => setTimeout(r, ms));
-const q = <T extends Element>(root: ParentNode | null | undefined, s: string): T => root!.querySelector<T>(s)!;
+const q = <T extends Element>(root: ParentNode | null | undefined, s: string): T =>
+	root!.querySelector<T>(s)!;
 
 beforeAll(() => defineTeamsApp());
 afterEach(() => {
@@ -21,6 +22,28 @@ async function mount(attrs: Record<string, string> = {}): Promise<TeamsApp> {
 }
 
 describe('<teams-app>', () => {
+	it('opens attachment content in the workspace and clears it on navigation', async () => {
+		const el = await mount({
+			'workspace-id': 'ta-default-preview',
+			'user-name': 'Ada',
+			'server-config': LOCAL,
+		});
+		const chat = q<HTMLElement>(el.shadowRoot, 'office-ui-chat-list');
+		chat.dispatchEvent(
+			new CustomEvent('office-chat-open-file', {
+				detail: { attachment: { name: 'page.html', kind: 'other', url: 'https://site.test/' } },
+			}),
+		);
+		await tick();
+		await el.updateComplete;
+		expect(el.preview?.url).toBe('https://site.test/');
+		q<HTMLElement>(el.shadowRoot, 'office-ui-app-rail').dispatchEvent(
+			new CustomEvent('office-rail-select', { detail: { id: 'files' } }),
+		);
+		await el.updateComplete;
+		expect(el.preview).toBeNull();
+		expect(el.rail).toBe('files');
+	});
 	it('asks for a name first and remembers it', async () => {
 		const el = await mount({ 'workspace-id': 'ta-welcome', 'server-config': LOCAL });
 		const form = q<HTMLFormElement>(el.shadowRoot, '.welcome form');
@@ -34,9 +57,19 @@ describe('<teams-app>', () => {
 	});
 
 	it('renders the Teams shell from a named user and ooxml-ui elements', async () => {
-		const el = await mount({ 'workspace-id': 'ta-shell', 'user-name': 'Ada', 'user-id': 'ada', 'server-config': LOCAL });
+		const el = await mount({
+			'workspace-id': 'ta-shell',
+			'user-name': 'Ada',
+			'user-id': 'ada',
+			'server-config': LOCAL,
+		});
 		const root = el.shadowRoot!;
-		for (const tag of ['office-ui-app-rail', 'office-ui-channel-list', 'office-ui-chat-list', 'office-ui-chat-composer'])
+		for (const tag of [
+			'office-ui-app-rail',
+			'office-ui-channel-list',
+			'office-ui-chat-list',
+			'office-ui-chat-composer',
+		])
 			expect(root.querySelector(tag), tag).not.toBeNull();
 		expect(root.querySelector('.topbar')!.textContent).toContain('Teams');
 		expect(el.client).not.toBeNull();
@@ -44,11 +77,19 @@ describe('<teams-app>', () => {
 	});
 
 	it('creates a channel, posts through the composer and shows the message', async () => {
-		const el = await mount({ 'workspace-id': 'ta-post', 'user-name': 'Ada', 'user-id': 'ada', 'server-config': LOCAL });
+		const el = await mount({
+			'workspace-id': 'ta-post',
+			'user-name': 'Ada',
+			'user-id': 'ada',
+			'server-config': LOCAL,
+		});
 		el.client!.createChannel('Ops');
 		await tick(10);
 		await el.updateComplete;
-		const composer = q<HTMLElement & { updateComplete: Promise<boolean> }>(el.shadowRoot, 'office-ui-chat-composer');
+		const composer = q<HTMLElement & { updateComplete: Promise<boolean> }>(
+			el.shadowRoot,
+			'office-ui-chat-composer',
+		);
 		const area = q<HTMLTextAreaElement>(composer.shadowRoot, 'textarea');
 		area.value = 'Deploy at <b>noon</b>';
 		area.dispatchEvent(new Event('input'));
@@ -56,7 +97,10 @@ describe('<teams-app>', () => {
 		area.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
 		await tick(20);
 		await el.updateComplete;
-		const list = q<HTMLElement & { updateComplete: Promise<boolean> }>(el.shadowRoot, 'office-ui-chat-list');
+		const list = q<HTMLElement & { updateComplete: Promise<boolean> }>(
+			el.shadowRoot,
+			'office-ui-chat-list',
+		);
 		await list.updateComplete;
 		expect(q(list.shadowRoot, '.text').textContent).toBe('Deploy at noon');
 		expect(q(el.shadowRoot, '.channel-head h1').textContent).toContain('Ops');
@@ -64,7 +108,12 @@ describe('<teams-app>', () => {
 	});
 
 	it('lets the host take over opening a file', async () => {
-		const el = await mount({ 'workspace-id': 'ta-open', 'user-name': 'Ada', 'user-id': 'ada', 'server-config': LOCAL });
+		const el = await mount({
+			'workspace-id': 'ta-open',
+			'user-name': 'Ada',
+			'user-id': 'ada',
+			'server-config': LOCAL,
+		});
 		const seen: unknown[] = [];
 		el.addEventListener('teams-open-file', (e) => {
 			seen.push((e as CustomEvent).detail.attachment.name);
@@ -75,7 +124,10 @@ describe('<teams-app>', () => {
 		await el.client!.send({ text: 'see file', files: [new File(['x'], 'Plan.docx')] });
 		await tick(20);
 		await el.updateComplete;
-		const list = q<HTMLElement & { updateComplete: Promise<boolean> }>(el.shadowRoot, 'office-ui-chat-list');
+		const list = q<HTMLElement & { updateComplete: Promise<boolean> }>(
+			el.shadowRoot,
+			'office-ui-chat-list',
+		);
 		await list.updateComplete;
 		q<HTMLElement>(list.shadowRoot, '.file').click();
 		await tick(5); // the link is requested before the event
@@ -84,7 +136,12 @@ describe('<teams-app>', () => {
 	});
 
 	it('restarts the client when the workspace changes', async () => {
-		const el = await mount({ 'workspace-id': 'ta-one', 'user-name': 'Ada', 'user-id': 'ada', 'server-config': LOCAL });
+		const el = await mount({
+			'workspace-id': 'ta-one',
+			'user-name': 'Ada',
+			'user-id': 'ada',
+			'server-config': LOCAL,
+		});
 		const first = el.client;
 		el.setAttribute('workspace-id', 'ta-two');
 		await el.updateComplete;
@@ -95,10 +152,40 @@ describe('<teams-app>', () => {
 });
 
 describe('bindings contract', () => {
+	it('forwards and clears embed providers through the common binding contract', async () => {
+		const el = await mount({
+			'workspace-id': 'ta-embed',
+			'user-name': 'Ada',
+			'server-config': LOCAL,
+		});
+		const embeds = { pptx: () => 'https://viewer.test/' };
+		applyTeamsProps(el, { embeds });
+		expect(el.embeds).toBe(embeds);
+		applyTeamsProps(el, {}, { embeds });
+		expect(el.embeds).toEqual({});
+		el.previewContent({
+			attachment: { name: 'site.html', kind: 'other' },
+			url: 'https://site.test/',
+		});
+		await el.updateComplete;
+		expect(el.shadowRoot!.querySelector('teams-content-preview')).not.toBeNull();
+		el.workspaceId = 'ta-next';
+		await el.updateComplete;
+		expect(el.preview).toBeNull();
+	});
 	it('applies only changed props and reads the latest handlers', async () => {
-		const el = await mount({ 'workspace-id': 'ta-bind', 'user-name': 'Ada', 'user-id': 'ada', 'server-config': LOCAL });
+		const el = await mount({
+			'workspace-id': 'ta-bind',
+			'user-name': 'Ada',
+			'user-id': 'ada',
+			'server-config': LOCAL,
+		});
 		const uploader = async () => ({ url: 'http://x/y' });
-		applyTeamsProps(el, { workspaceId: 'ta-bind-2', uploadFile: uploader }, { workspaceId: 'ta-bind' });
+		applyTeamsProps(
+			el,
+			{ workspaceId: 'ta-bind-2', uploadFile: uploader },
+			{ workspaceId: 'ta-bind' },
+		);
 		expect(el.workspaceId).toBe('ta-bind-2');
 		expect(el.uploadFile).toBe(uploader);
 		applyTeamsProps(el, {}, { uploadFile: uploader });
@@ -121,9 +208,19 @@ describe('settings helpers', () => {
 	it('round-trips ICE servers through one-per-line text', () => {
 		const text = 'stun:s.example:3478\nturn:t.example:3478,turns:t.example:5349 user pass';
 		const parsed = parseIceLines(text) as { urls: string[]; username?: string }[];
-		expect(parsed[1]).toEqual({ urls: ['turn:t.example:3478', 'turns:t.example:5349'], username: 'user', credential: 'pass' });
-		expect(iceToText({ mode: 'local', iceServers: [{ urls: 'stun:s.example:3478' }, { urls: ['turn:t.example:3478'], username: 'u', credential: 'p' }] })).toBe(
-			'stun:s.example:3478\nturn:t.example:3478 u p',
-		);
+		expect(parsed[1]).toEqual({
+			urls: ['turn:t.example:3478', 'turns:t.example:5349'],
+			username: 'user',
+			credential: 'pass',
+		});
+		expect(
+			iceToText({
+				mode: 'local',
+				iceServers: [
+					{ urls: 'stun:s.example:3478' },
+					{ urls: ['turn:t.example:3478'], username: 'u', credential: 'p' },
+				],
+			}),
+		).toBe('stun:s.example:3478\nturn:t.example:3478 u p');
 	});
 });

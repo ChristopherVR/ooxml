@@ -1,0 +1,678 @@
+{
+  "version": "16.0",
+  "build": 20430.0,
+  "cases": [
+    {
+      "mode": "all",
+      "transpose": false,
+      "skipBlanks": false,
+      "cells": [
+        {
+          "value": null,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "fill": "FF0000"
+        },
+        {
+          "value": "",
+          "formula": "\"\"",
+          "bold": false,
+          "italic": false,
+          "fill": null
+        },
+        {
+          "value": 0.0,
+          "formula": null,
+          "bold": false,
+          "italic": false,
+          "fill": null
+        },
+        {
+          "value": false,
+          "formula": null,
+          "bold": false,
+          "italic": false,
+          "fill": null
+        },
+        {
+          "value": null,
+          "formula": null,
+          "bold": false,
+          "italic": false,
+          "fill": null
+        }
+      ]
+    },
+    {
+      "mode": "all",
+      "transpose": false,
+      "skipBlanks": true,
+      "cells": [
+        {
+          "value": 9.0,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        },
+        {
+          "value": "",
+          "formula": "\"\"",
+          "bold": false,
+          "italic": false,
+          "fill": null
+        },
+        {
+          "value": 0.0,
+          "formula": null,
+          "bold": false,
+          "italic": false,
+          "fill": null
+        },
+        {
+          "value": false,
+          "formula": null,
+          "bold": false,
+          "italic": false,
+          "fill": null
+        },
+        {
+          "value": 9.0,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        }
+      ]
+    },
+    {
+      "mode": "all",
+      "transpose": true,
+      "skipBlanks": false,
+      "cells": [
+        {
+          "value": null,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "fill": "FF0000"
+        },
+        {
+          "value": "",
+          "formula": "\"\"",
+          "bold": false,
+          "italic": false,
+          "fill": null
+        },
+        {
+          "value": 0.0,
+          "formula": null,
+          "bold": false,
+          "italic": false,
+          "fill": null
+        },
+        {
+          "value": false,
+          "formula": null,
+          "bold": false,
+          "italic": false,
+          "fill": null
+        },
+        {
+          "value": null,
+          "formula": null,
+          "bold": false,
+          "italic": false,
+          "fill": null
+        }
+      ]
+    },
+    {
+      "mode": "all",
+      "transpose": true,
+      "skipBlanks": true,
+      "cells": [
+        {
+          "value": 9.0,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        },
+        {
+          "value": "",
+          "formula": "\"\"",
+          "bold": false,
+          "italic": false,
+          "fill": null
+        },
+        {
+          "value": 0.0,
+          "formula": null,
+          "bold": false,
+          "italic": false,
+          "fill": null
+        },
+        {
+          "value": false,
+          "formula": null,
+          "bold": false,
+          "italic": false,
+          "fill": null
+        },
+        {
+          "value": 9.0,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        }
+      ]
+    },
+    {
+      "mode": "values",
+      "transpose": false,
+      "skipBlanks": false,
+      "cells": [
+        {
+          "value": null,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        },
+        {
+          "value": "",
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        },
+        {
+          "value": 0.0,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        },
+        {
+          "value": false,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        },
+        {
+          "value": null,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        }
+      ]
+    },
+    {
+      "mode": "values",
+      "transpose": false,
+      "skipBlanks": true,
+      "cells": [
+        {
+          "value": 9.0,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        },
+        {
+          "value": "",
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        },
+        {
+          "value": 0.0,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        },
+        {
+          "value": false,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        },
+        {
+          "value": 9.0,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        }
+      ]
+    },
+    {
+      "mode": "values",
+      "transpose": true,
+      "skipBlanks": false,
+      "cells": [
+        {
+          "value": null,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        },
+        {
+          "value": "",
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        },
+        {
+          "value": 0.0,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        },
+        {
+          "value": false,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        },
+        {
+          "value": null,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        }
+      ]
+    },
+    {
+      "mode": "values",
+      "transpose": true,
+      "skipBlanks": true,
+      "cells": [
+        {
+          "value": 9.0,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        },
+        {
+          "value": "",
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        },
+        {
+          "value": 0.0,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        },
+        {
+          "value": false,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        },
+        {
+          "value": 9.0,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        }
+      ]
+    },
+    {
+      "mode": "formulas",
+      "transpose": false,
+      "skipBlanks": false,
+      "cells": [
+        {
+          "value": null,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        },
+        {
+          "value": "",
+          "formula": "\"\"",
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        },
+        {
+          "value": 0.0,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        },
+        {
+          "value": false,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        },
+        {
+          "value": null,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        }
+      ]
+    },
+    {
+      "mode": "formulas",
+      "transpose": false,
+      "skipBlanks": true,
+      "cells": [
+        {
+          "value": 9.0,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        },
+        {
+          "value": "",
+          "formula": "\"\"",
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        },
+        {
+          "value": 0.0,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        },
+        {
+          "value": false,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        },
+        {
+          "value": 9.0,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        }
+      ]
+    },
+    {
+      "mode": "formulas",
+      "transpose": true,
+      "skipBlanks": false,
+      "cells": [
+        {
+          "value": null,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        },
+        {
+          "value": "",
+          "formula": "\"\"",
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        },
+        {
+          "value": 0.0,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        },
+        {
+          "value": false,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        },
+        {
+          "value": null,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        }
+      ]
+    },
+    {
+      "mode": "formulas",
+      "transpose": true,
+      "skipBlanks": true,
+      "cells": [
+        {
+          "value": 9.0,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        },
+        {
+          "value": "",
+          "formula": "\"\"",
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        },
+        {
+          "value": 0.0,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        },
+        {
+          "value": false,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        },
+        {
+          "value": 9.0,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        }
+      ]
+    },
+    {
+      "mode": "formats",
+      "transpose": false,
+      "skipBlanks": false,
+      "cells": [
+        {
+          "value": 9.0,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "fill": "FF0000"
+        },
+        {
+          "value": 9.0,
+          "formula": null,
+          "bold": false,
+          "italic": false,
+          "fill": null
+        },
+        {
+          "value": 9.0,
+          "formula": null,
+          "bold": false,
+          "italic": false,
+          "fill": null
+        },
+        {
+          "value": 9.0,
+          "formula": null,
+          "bold": false,
+          "italic": false,
+          "fill": null
+        },
+        {
+          "value": 9.0,
+          "formula": null,
+          "bold": false,
+          "italic": false,
+          "fill": null
+        }
+      ]
+    },
+    {
+      "mode": "formats",
+      "transpose": false,
+      "skipBlanks": true,
+      "cells": [
+        {
+          "value": 9.0,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        },
+        {
+          "value": 9.0,
+          "formula": null,
+          "bold": false,
+          "italic": false,
+          "fill": null
+        },
+        {
+          "value": 9.0,
+          "formula": null,
+          "bold": false,
+          "italic": false,
+          "fill": null
+        },
+        {
+          "value": 9.0,
+          "formula": null,
+          "bold": false,
+          "italic": false,
+          "fill": null
+        },
+        {
+          "value": 9.0,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        }
+      ]
+    },
+    {
+      "mode": "formats",
+      "transpose": true,
+      "skipBlanks": false,
+      "cells": [
+        {
+          "value": 9.0,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "fill": "FF0000"
+        },
+        {
+          "value": 9.0,
+          "formula": null,
+          "bold": false,
+          "italic": false,
+          "fill": null
+        },
+        {
+          "value": 9.0,
+          "formula": null,
+          "bold": false,
+          "italic": false,
+          "fill": null
+        },
+        {
+          "value": 9.0,
+          "formula": null,
+          "bold": false,
+          "italic": false,
+          "fill": null
+        },
+        {
+          "value": 9.0,
+          "formula": null,
+          "bold": false,
+          "italic": false,
+          "fill": null
+        }
+      ]
+    },
+    {
+      "mode": "formats",
+      "transpose": true,
+      "skipBlanks": true,
+      "cells": [
+        {
+          "value": 9.0,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        },
+        {
+          "value": 9.0,
+          "formula": null,
+          "bold": false,
+          "italic": false,
+          "fill": null
+        },
+        {
+          "value": 9.0,
+          "formula": null,
+          "bold": false,
+          "italic": false,
+          "fill": null
+        },
+        {
+          "value": 9.0,
+          "formula": null,
+          "bold": false,
+          "italic": false,
+          "fill": null
+        },
+        {
+          "value": 9.0,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "fill": "00FF00"
+        }
+      ]
+    }
+  ]
+}

@@ -4,6 +4,7 @@
 // that want to render their own UI (see `store.ts`).
 import type { TeamsServerConfig } from 'ooxml-core/teams';
 import type { FileOpeners, FileUploader, OpenFileDetail, TeamsApp } from './teams-app.js';
+import type { FileEmbeds } from './content-preview.js';
 
 export interface TeamsProps {
 	/** Shared-state room: 1-100 alphanumeric, `-` or `_`. Default `demo`. */
@@ -15,6 +16,7 @@ export interface TeamsProps {
 	config?: TeamsServerConfig | null;
 	uploadFile?: FileUploader;
 	openers?: FileOpeners;
+	embeds?: FileEmbeds;
 	onReady?: (detail: { user: { id: string; name: string } }) => void;
 	/** Cancel the event (`preventDefault`) to take over opening a file. */
 	onOpenFile?: (detail: OpenFileDetail, event: CustomEvent<OpenFileDetail>) => void;
@@ -32,6 +34,7 @@ export function applyTeamsProps(el: TeamsApp, props: TeamsProps, prev: TeamsProp
 	if (props.config !== prev.config && props.config !== undefined) el.config = props.config;
 	if (props.uploadFile !== prev.uploadFile) el.uploadFile = props.uploadFile;
 	if (props.openers !== prev.openers) el.openers = props.openers ?? {};
+	if (props.embeds !== prev.embeds) el.embeds = props.embeds ?? {};
 }
 
 /** Subscribe to the element's events; the latest handlers are read through `get`. */

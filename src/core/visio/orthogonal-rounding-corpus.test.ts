@@ -9,7 +9,7 @@ import { parseVsdx } from './parser.js';
 // Read-only external fixture, Apache POI 732120980140d5ed64b482c470e0b625cdb1ab15.
 const directory = process.env.VISIO_THEME_CORPUS_DIR;
 describe.skipIf(!directory)('hash-pinned Apache POI 60973 connector rounding', () => {
-	it('rounds fourteen proven corners while retaining two unresolved short-segment connectors', async () => {
+	it('rounds eighteen cached corners including a native-verified short connector', async () => {
 		const bytes = await readFile(join(directory!, '60973.vsdx'));
 		expect(createHash('sha256').update(bytes).digest('hex')).toBe(
 			'c61ca252ea251262f81b18fb0e461c50797bf4b148b2c01448792447ada51f03',
@@ -36,8 +36,8 @@ describe.skipIf(!directory)('hash-pinned Apache POI 60973 connector rounding', (
 			['4', 'page2', '835', 4],
 			['4', 'page2', '857', 2],
 			['7', 'page3', '293', 4],
-			['4', 'page2', '825', 0],
-			['7', 'page3', '149', 0],
+			['4', 'page2', '825', 2],
+			['7', 'page3', '149', 2],
 		] as const) {
 			const rendered = flatten(model.pages.find((p) => p.id === pageId)!.shapes).find(
 				(s) => s.id === id,
@@ -78,11 +78,7 @@ describe.skipIf(!directory)('hash-pinned Apache POI 60973 connector rounding', (
 					(d) =>
 						d.pageId === pageId && d.shapeId === id && d.code === 'unsupported-corner-rounding',
 				),
-			).toBe(cornerCount === 0);
-			if (cornerCount === 0)
-				expect(path).toBe(
-					points.map((p, i) => `${i ? 'L' : 'M'} ${p.map(clean).join(' ')}`).join(' '),
-				);
+			).toBe(false);
 			if (id === '830') {
 				// Independently calculated tangent endpoints, not a renderer snapshot.
 				const x = points[1]![0]!,

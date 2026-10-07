@@ -17,6 +17,32 @@ parity. It implements:
 It does **not** implement 1:1 or group chats outside channels, threads as separate panes,
 notifications, a calendar, recording, background blur or live captions.
 
+## Content workspace
+
+Word previews read-only; Excel offers local editing and saving new channel copies
+when storage is configured; Visio uses its existing viewer.
+There is no coediting, overwrite or versioned save-back. PowerPoint needs a
+host-configured embedded viewer page. Missing integrations are reported in the pane.
+Text reads are limited to 2 MiB and native Office reads to 32 MiB.
+
+Files views support direct upload, blank Excel creation and metadata search when
+storage is configured. Uploads show a busy state and allow retry, with no byte
+progress or cancellation. Failed batches can leave unreferenced storage objects;
+the reference server has no cleanup contract for these objects. Folders, document
+content indexing, file version history and authenticated file permissions are
+not implemented.
+
+Markdown supports headings, bullets, quotes, fenced code, basic emphasis and web
+links. It does not yet implement full CommonMark/GFM, tables, task lists, nested
+structures or relative links. Raw HTML is displayed as text.
+
+Websites and HTML attachments use a sandbox without same-origin, popup or top
+navigation permission. Some sites block embedding or require permissions this
+sandbox does not grant. External open remains available. File and website tab
+definitions can be shared in channels; the embedded app platform, authentication
+and permissions of Microsoft Teams are not implemented. Tab creator checks run
+in the client and require server authorization to become enforceable.
+
 ## Security and privacy
 
 - **No end-to-end encryption.** Chat travels as Yjs updates through your server, which can read
