@@ -59,7 +59,7 @@ for (const name of ['bold', 'multiple'])
 			);
 			const revision = expectParagraph(loaded.model.blocks[0]).runs.find(
 				(run) => run.revision,
-			)?.revision!;
+			)!.revision!;
 			for (const model of [
 				rejectRevision(loaded.model, revision.id),
 				rejectAllRevisions(loaded.model),
@@ -88,7 +88,7 @@ for (const name of ['bold', 'multiple'])
 			const loaded = await loadDocx(new Uint8Array(await fixture(name)));
 			const revision = expectParagraph(loaded.model.blocks[0]).runs.find(
 				(run) => run.revision,
-			)?.revision!;
+			)!.revision!;
 			const model = rejectRevision(loaded.model, revision.id);
 			const run = expectParagraph(model.blocks[0]).runs.find(
 				(run) => run.restoredRunPropertiesXml,
