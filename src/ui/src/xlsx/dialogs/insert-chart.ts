@@ -1,12 +1,7 @@
 // Insert Chart: a chart type gallery, grouping, title and a live preview drawn by the core's
 // chartView + renderChartSvg. OK adds a ChartObject over the selection (or, from Chart Design,
 // changes the active chart's type).
-import {
-	type ChartObject,
-	type ChartType,
-	chartView,
-	renderChartSvg,
-} from 'ooxml-core/xlsx';
+import { type ChartObject, type ChartType, chartView, renderChartSvg } from 'ooxml-core/xlsx';
 import { activeChart, editChart } from 'ooxml-core/xlsx/ui';
 import { CHART_TYPES } from '../commands/insert.js';
 import { regionOf, target } from 'ooxml-core/xlsx/ui';
@@ -14,6 +9,12 @@ import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { el, field, select, text, textInput } from './fields.js';
 import { showDialog } from './frame.js';
 import { buildChart, evaluateRef } from 'ooxml-core/xlsx/ui';
+import {
+	defineGallery,
+	type OfficeUiGallery,
+	type OfficeGalleryPickEvent,
+} from '../../ribbon/gallery.js';
+import { parseSvgPreview } from '../../ribbon/safe-svg.js';
 
 export interface InsertChartProps {
 	type?: ChartType;
@@ -27,15 +28,6 @@ const GROUPINGS: ReadonlyArray<readonly [Grouping, string]> = [
 	['percentStacked', '100% Stacked'],
 ];
 
-/** Parses the core's SVG string into nodes (no innerHTML). */
-function svgNode(ctx: EditorContext, markup: string): Node | undefined {
-	const Parser = ctx.host.ownerDocument.defaultView?.DOMParser;
-	if (!Parser) return undefined;
-	const doc = new Parser().parseFromString(markup, 'image/svg+xml');
-	if (doc.querySelector('parsererror')) return undefined;
-	return ctx.host.ownerDocument.importNode(doc.documentElement, true);
-}
-
 export function openInsertChart(
 	ctx: EditorContext,
 	props: InsertChartProps = {},
@@ -45,58 +37,66 @@ export function openInsertChart(
 	const change = props.change === true ? activeChart(ctx) : undefined;
 	let type: ChartType = props.type ?? change?.chart.chartType ?? 'column';
 	const range = regionOf(t);
-	const tiles = el(ctx, 'div', 'xve-tiles');
-	tiles.setAttribute('role', 'group');
-	tiles.setAttribute('aria-label', ctx.t('Chart type'));
+	defineGallery(ctx.host.ownerDocument.defaultView?.customElements);
+	const tiles = ctx.host.ownerDocument.createElement('office-ui-gallery') as OfficeUiGallery;
+	tiles.setAttribute('mode', 'panel');
 	const grouping = select(ctx, GROUPINGS, change?.chart.grouping ?? 'clustered');
 	const groupingField = field(ctx, 'Grouping', grouping);
 	const title = textInput(ctx, change?.chart.title ?? '');
 	const preview = el(ctx, 'div', 'xve-preview');
 	preview.setAttribute('aria-label', ctx.t('Preview'));
 	preview.setAttribute('role', 'img');
-	const buttons = new Map<ChartType, HTMLButtonElement>();
 	const current = (): ChartObject => {
-		if (change) return { ...structuredClone(change.chart), chartType: type };
+		if (change)
+			return {
+				...structuredClone(change.chart),
+				chartType: type,
+				grouping: grouping.value as Grouping,
+			};
 		return buildChart(t.workbook, t.sheet, range, type, {
 			grouping: grouping.value as Grouping,
 			...(title.value.trim() ? { title: title.value.trim() } : {}),
 		});
 	};
 	const refresh = (): void => {
-		for (const [key, button] of buttons) button.setAttribute('aria-pressed', String(key === type));
-		groupingField.hidden = !!change || !(type === 'column' || type === 'bar');
+		tiles.state = {
+			id: 'chart-type',
+			label: ctx.t('Chart type'),
+			sections: [
+				{
+					columns: 4,
+					tileWidth: 96,
+					tileHeight: 60,
+					items: CHART_TYPES.map(([key, label]) => ({
+						id: key,
+						label: ctx.t(label),
+						applied: key === type,
+						preview: renderChartSvg(
+							chartView(
+								t.workbook,
+								t.sheet,
+								{ ...current(), chartType: key, title: '', showLegend: false },
+								(ref) => evaluateRef(t.workbook, t.sheet, ref),
+							),
+							360,
+							220,
+						),
+					})),
+				},
+			],
+		};
+		groupingField.hidden = !(type === 'column' || type === 'bar');
 		const model = chartView(t.workbook, t.sheet, current(), (ref) =>
 			evaluateRef(t.workbook, t.sheet, ref),
 		);
-		const node = svgNode(ctx, renderChartSvg(model, 360, 220));
+		const node = parseSvgPreview(ctx.host.ownerDocument, renderChartSvg(model, 360, 220));
 		preview.replaceChildren(...(node ? [node] : []));
 	};
-	for (const [key, label] of CHART_TYPES) {
-		const button = el(ctx, 'button', 'xve-tile');
-		button.type = 'button';
-		button.textContent = ctx.t(label);
-		button.dataset.type = key;
-		button.addEventListener('click', () => {
-			type = key;
-			refresh();
-		});
-		buttons.set(key, button);
-		tiles.append(button);
-	}
-	tiles.addEventListener('keydown', (event) => {
-		const list = [...buttons.values()];
-		const i = list.indexOf(event.target as HTMLButtonElement);
-		const delta =
-			event.key === 'ArrowRight' || event.key === 'ArrowDown'
-				? 1
-				: event.key === 'ArrowLeft' || event.key === 'ArrowUp'
-					? -1
-					: 0;
-		if (i < 0 || !delta) return;
-		event.preventDefault();
-		const next = list[(i + delta + list.length) % list.length];
-		next?.focus();
-		next?.click();
+	tiles.addEventListener('office-gallery-pick', (event) => {
+		const key = (event as OfficeGalleryPickEvent).detail.itemId;
+		if (!CHART_TYPES.some(([id]) => id === key)) return;
+		type = key as ChartType;
+		refresh();
 	});
 	grouping.addEventListener('change', refresh);
 	title.addEventListener('input', refresh);
@@ -111,10 +111,14 @@ export function openInsertChart(
 		heading: change ? 'Change Chart Type' : 'Insert Chart',
 		wide: true,
 		body,
-		opened: () => buttons.get(type)?.focus(),
+		opened: () => tiles.querySelector<HTMLButtonElement>(`[data-gallery-item="${type}"]`)?.focus(),
 		submit: () => {
 			const chart = current();
-			if (change) editChart(ctx, () => ({ chartType: type }));
+			if (change)
+				editChart(ctx, () => ({
+					chartType: type,
+					...(type === 'column' || type === 'bar' ? { grouping: grouping.value as Grouping } : {}),
+				}));
 			else {
 				const { kind: _kind, ...model } = chart;
 				ctx.selection.set({ drawing: t.session.addChart(t.sheet, model) });

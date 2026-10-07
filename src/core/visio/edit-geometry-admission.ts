@@ -1,9 +1,9 @@
-import { attribute, children } from './sheet.js';
-import { fail } from './package-common.js';
-import { analyzeVisioFormula, evaluateVisioFormula, visioFormulaCachedValue } from './formula.js';
-import { visioCellDependsOn } from './edit-recalculate.js';
-import type { VisioGeometryEdit } from './edit-commands.js';
-import { executableCellFormula } from './cell-formula.js';
+import { attribute, children } from './sheet';
+import { fail } from './package-common';
+import { analyzeVisioFormula, evaluateVisioFormula, visioFormulaCachedValue } from './formula';
+import { visioCellDependsOn } from './edit-recalculate';
+import type { VisioGeometryEdit } from './edit-commands';
+import { executableCellFormula } from './cell-formula';
 
 const locks = [
 	'LockMoveX',

@@ -1,9 +1,9 @@
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
-import { parseXml } from '../xml/index.js';
-import { editVsdx } from './edit.js';
-import { parseVsdx } from './parser.js';
-import { fixture, cell, shape, section, row, rectangle } from './test-fixtures.js';
+import { parseXml } from '../xml/index';
+import { editVsdx } from './edit';
+import { parseVsdx } from './parser';
+import { fixture, cell, shape, section, row, rectangle } from './test-fixtures';
 
 const dimensions =
 	cell('PinX', 2) +

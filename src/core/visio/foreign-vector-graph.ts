@@ -7,9 +7,9 @@ import {
 	type VisioForeignVectorLimits,
 	type VisioForeignVectorMatrix,
 	type VisioForeignVectorNode,
-} from './foreign-vector-types.js';
-import { compose, finite, IDENTITY } from './foreign-vector-values.js';
-import { checkPathBounds } from './foreign-vector-path.js';
+} from './foreign-vector-types';
+import { compose, finite, IDENTITY } from './foreign-vector-values';
+import { checkPathBounds } from './foreign-vector-path';
 
 /** Validate ALL definitions, including unused clips, before charging their use-site expansions. */
 export function checkVectorGraph(

@@ -1,9 +1,9 @@
 import { DOMParser } from '@xmldom/xmldom';
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
-import { editVsdx, type VisioEdit } from './edit.js';
-import { parseVsdx } from './parser.js';
-import { cell, fixture, rectangle, row, section, shape } from './test-fixtures.js';
+import { editVsdx, type VisioEdit } from './edit';
+import { parseVsdx } from './parser';
+import { cell, fixture, rectangle, row, section, shape } from './test-fixtures';
 
 const dimensions = () => cell('PinX', 2) + cell('PinY', 3) + cell('Width', 2) + cell('Height', 1);
 const existing = (extra = '', geometry = rectangle, attrs = '') =>

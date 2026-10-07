@@ -1,4 +1,4 @@
-import { cell, fixture, rectangle, relations, relation, shape, xml } from './test-fixtures.js';
+import { cell, fixture, rectangle, relations, relation, shape, xml } from './test-fixtures';
 
 export const drawingNamespace = 'http://schemas.openxmlformats.org/drawingml/2006/main';
 export const visioThemeNamespace = 'http://schemas.microsoft.com/office/visio/2012/theme';

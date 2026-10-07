@@ -48,10 +48,14 @@ export type VAlignView = 'top' | 'center' | 'bottom' | 'justify' | 'distributed'
 export interface DataBarView {
 	/** 0..1 bar length relative to the cell's width. */
 	fraction: number;
+	/** Left edge in normalized cell coordinates, after rule-direction mirroring. */
+	start?: number;
+	axis?: { fraction: number; color: string };
 	color: string;
 	negative?: boolean;
 	/** Solid when false; gradient when true (the legacy default). */
 	gradient?: boolean;
+	/** Rendered growth direction, including negative-axis reversal. */
 	direction?: 'leftToRight' | 'rightToLeft';
 	/** Absent means no outline. */
 	borderColor?: string;

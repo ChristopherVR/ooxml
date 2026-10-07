@@ -1,4 +1,4 @@
-import { emitRibbonAction, type VisioRibbonAction } from './ribbon-action.js';
+import { emitRibbonAction, type VisioRibbonAction } from './ribbon-action';
 
 /** A shared `office-ui-*` command element with Visio state hooks. */
 export type RibbonCommand = HTMLElement & { disabled: boolean };

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { untrack } from 'svelte';
   import VisioViewer from '../src/VisioViewer.svelte';
-  import type { ViewerOptions, ViewerHandle } from '../src/common.js';
+  import type { ViewerOptions, ViewerHandle } from '../src/common';
   let { initial }: { initial: ViewerOptions } = $props();
   let options = $state.raw<ViewerOptions>(untrack(() => initial));
   let viewer: ReturnType<typeof VisioViewer>;

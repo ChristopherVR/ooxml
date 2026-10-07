@@ -1,7 +1,7 @@
-import { NS } from '../xml/index.js';
-import { crc32 } from './package-common.js';
-import { VisioPackage, VisioPackageError } from './package.js';
-import { children, type Report } from './sheet.js';
+import { NS } from '../xml/index';
+import { crc32 } from './package-common';
+import { VisioPackage, VisioPackageError } from './package';
+import { children, type Report } from './sheet';
 
 export interface VisioImageOptions {
 	maxImageBytes?: number;

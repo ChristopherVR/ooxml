@@ -1,9 +1,9 @@
 import JSZip from 'jszip';
-import { elements } from '../xml/index.js';
-import { VisioPackage } from './package.js';
-import { fail, decodePath, type VisioPackageLimits } from './package-common.js';
-import { related, indexedPart, visioXml } from './parts.js';
-import { attribute, children } from './sheet.js';
+import { elements } from '../xml/index';
+import { VisioPackage } from './package';
+import { fail, decodePath, type VisioPackageLimits } from './package-common';
+import { related, indexedPart, visioXml } from './parts';
+import { attribute, children } from './sheet';
 
 export async function openEditablePackage(
 	bytes: Uint8Array,

@@ -7,6 +7,8 @@ import type { Worksheet } from '../model.js';
 import { createWorkbook } from '../workbook.js';
 import { loadXlsx } from '../read/index.js';
 import { saveXlsx } from '../write/index.js';
+import { createCalcEngine } from '../formula/index.js';
+import { createConditionalFormatEvaluator } from '../layout/cf-evaluator.js';
 import { createEditSession } from './session.js';
 
 interface NativeCase {
@@ -69,6 +71,74 @@ const normalized = (sheet: Worksheet) =>
 		.sort((a, b) => a.priority - b.priority);
 
 describe('Advanced data-bar clipboard settings recorded in native Excel', () => {
+	it.each([
+		[20, 80],
+		[40, 40],
+		[0, 0],
+	])(
+		'keeps typed lengths %i/%i authoritative through editing, paste and save',
+		async (minimum, maximum) => {
+			const workbook = await loadSheet(native.cases[0]!.before);
+			const sheet = workbook.sheets[0]!;
+			const original = structuredClone(sheet.conditionalFormats);
+			const format = structuredClone(sheet.conditionalFormats[0]!);
+			const rule = format.rules[0]!;
+			if (rule.type !== 'dataBar') throw new Error('Expected a data bar');
+			rule.minLength = minimum;
+			rule.maxLength = maximum;
+			const session = createEditSession(workbook);
+			session.replaceConditionalFormat(0, 0, format);
+			const calc = createCalcEngine(workbook);
+			const view = createConditionalFormatEvaluator(workbook, 0, (formula, at) =>
+				calc.evaluate(formula, at),
+			);
+			expect(view.at(2, 0)?.dataBar?.fraction).toBe(minimum / 200);
+			session.paste(0, range('D4'), session.copy(0, range('A1:A5')), { mode: 'formats' });
+			const bytes = await saveXlsx(workbook);
+			const zip = await JSZip.loadAsync(bytes);
+			const xml = parseXml(await zip.file('xl/worksheets/sheet1.xml')!.async('string'));
+			for (const namespace of [NS.x, NS.x14]) {
+				const bars = Array.from(xml.getElementsByTagNameNS(namespace, 'dataBar'));
+				expect(bars).toHaveLength(2);
+				for (const bar of bars) {
+					expect(bar.getAttribute('minLength')).toBe(String(minimum));
+					expect(bar.getAttribute('maxLength')).toBe(String(maximum));
+				}
+			}
+			const reloaded = await loadXlsx(bytes);
+			for (const format of reloaded.sheets[0]!.conditionalFormats)
+				expect(format.rules[0]).toMatchObject({ minLength: minimum, maxLength: maximum });
+			session.undo();
+			session.undo();
+			expect(sheet.conditionalFormats).toEqual(original);
+			session.redo();
+			expect(sheet.conditionalFormats[0]!.rules[0]).toMatchObject({
+				minLength: minimum,
+				maxLength: maximum,
+			});
+		},
+	);
+	it('writes the 10/90 legacy fallback for a full-length linked bar without typed percentages', async () => {
+		const workbook = await loadSheet(native.cases[0]!.before);
+		const rule = workbook.sheets[0]!.conditionalFormats[0]!.rules[0]!;
+		if (rule.type !== 'dataBar') throw new Error('Expected a data bar');
+		delete rule.minLength;
+		delete rule.maxLength;
+		const bytes = await saveXlsx(workbook);
+		const zip = await JSZip.loadAsync(bytes);
+		const xml = parseXml(await zip.file('xl/worksheets/sheet1.xml')!.async('string'));
+		const base = xml.getElementsByTagNameNS(NS.x, 'dataBar')[0]!;
+		expect([base.getAttribute('minLength'), base.getAttribute('maxLength')]).toEqual(['10', '90']);
+		const extended = xml.getElementsByTagNameNS(NS.x14, 'dataBar')[0]!;
+		expect([extended.getAttribute('minLength'), extended.getAttribute('maxLength')]).toEqual([
+			'0',
+			'100',
+		]);
+		expect((await loadXlsx(bytes)).sheets[0]!.conditionalFormats[0]!.rules[0]).toMatchObject({
+			minLength: 0,
+			maxLength: 100,
+		});
+	});
 	it('writes typed threshold edits into the linked extension as well as the base rule', async () => {
 		const workbook = await loadSheet(native.cases[0]!.before);
 		const format = structuredClone(workbook.sheets[0]!.conditionalFormats[0]!);

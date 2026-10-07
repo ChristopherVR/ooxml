@@ -16,6 +16,7 @@ import type {
 import { isCellError } from '../model.js';
 import { resolveColor } from './colors.js';
 import { dataBarAppearance } from './data-bar-appearance.js';
+import { dataBarGeometry } from './data-bar-geometry.js';
 import {
 	computeStats,
 	isTruthy,
@@ -235,18 +236,23 @@ export function createConditionalFormatEvaluator(
 				barAppearances.set(entry, appearance);
 			}
 			const [lo = 0, hi = 0] = thresholds(entry, [rule.min, rule.max]);
-			const fraction = hi > lo ? Math.max(0, Math.min(1, (value - lo) / (hi - lo))) : 1;
+			const geometry = dataBarGeometry(value, lo, hi, appearance);
+			const rtl =
+				appearance.direction === 'context'
+					? Boolean(sheet.view.rightToLeft)
+					: appearance.direction === 'rightToLeft';
 			result.dataBar = {
-				fraction,
+				fraction: geometry.fraction,
+				start: rtl ? 1 - geometry.start - geometry.fraction : geometry.start,
 				color: value < 0 ? appearance.negative : appearance.positive,
 				gradient: appearance.gradient,
-				direction:
-					appearance.direction === 'context'
-						? sheet.view.rightToLeft
-							? 'rightToLeft'
-							: 'leftToRight'
-						: appearance.direction,
+				direction: rtl !== geometry.reverse ? 'rightToLeft' : 'leftToRight',
 			};
+			if (geometry.axis !== undefined)
+				result.dataBar.axis = {
+					fraction: rtl ? 1 - geometry.axis : geometry.axis,
+					color: appearance.axisColor,
+				};
 			if (appearance.border)
 				result.dataBar.borderColor =
 					value < 0 ? appearance.negativeBorder : appearance.positiveBorder;

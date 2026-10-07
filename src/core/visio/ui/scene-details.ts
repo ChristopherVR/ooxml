@@ -1,4 +1,4 @@
-import type { VisioShape } from '../index.js';
+import type { VisioShape } from '../index';
 
 export interface DetailBudget {
 	rows: number;

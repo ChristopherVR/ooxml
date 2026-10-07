@@ -1,7 +1,4 @@
-import {
-	VISIO_EMF_ADMISSION_LIMITS,
-	type VisioEmfAdmissionOptions,
-} from './emf-admission-types.js';
+import { VISIO_EMF_ADMISSION_LIMITS, type VisioEmfAdmissionOptions } from './emf-admission-types';
 
 // Capture the actual TypedArray accessors. Own accessors, proxies and toStringTag overrides
 // must never control buffer boundaries or execute while byte records are inspected.

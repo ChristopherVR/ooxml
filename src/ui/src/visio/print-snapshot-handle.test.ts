@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { mountViewer } from './binding.js';
-import { ViewerController } from './controller.js';
+import { mountViewer } from './binding';
+import { ViewerController } from './controller';
 import { demoDocument } from 'ooxml-core/visio/ui';
-import * as snapshots from './print-snapshot.js';
+import * as snapshots from './print-snapshot';
 
 afterEach(() => {
 	vi.restoreAllMocks();

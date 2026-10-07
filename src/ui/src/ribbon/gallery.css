@@ -147,6 +147,27 @@
 [data-office-gallery] .section + .section {
 	margin-top: var(--office-space-2-5);
 }
+[data-office-gallery][mode='panel'] {
+	display: block;
+}
+[data-office-gallery][mode='panel'] .grid {
+	width: 100%;
+}
+[data-office-gallery][mode='panel'] .tile {
+	flex-direction: column;
+	gap: var(--office-space-1);
+	width: 100% !important;
+	height: auto !important;
+	min-height: var(--office-target-size-touch);
+	padding: var(--office-space-1);
+}
+[data-office-gallery][mode='panel'] .tile-label {
+	font-size: var(--office-font-size-xs);
+}
+[data-office-gallery][mode='panel'] .tile svg {
+	width: var(--office-gallery-preview-width);
+	height: var(--office-gallery-preview-height);
+}
 @media (pointer: coarse), (max-width: 1023px) {
 	[data-office-gallery] .trigger,
 	[data-office-gallery] .tile {

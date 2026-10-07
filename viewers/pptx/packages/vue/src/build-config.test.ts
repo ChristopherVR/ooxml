@@ -12,10 +12,10 @@ describe('published Vue declarations', () => {
 		await import('../vite.config');
 		const options = vi.mocked(dts).mock.calls[0]?.[0];
 
-		// The private shared package is not installed by consumers. Generating
-		// declarations without bundling leaves its public re-exports unresolved.
+		// Inline the compatibility core declarations. The public UI dependency
+		// supplies its own declarations and remains external to the binding.
 		expect(options?.bundleTypes).toStrictEqual({
-			bundledPackages: ['pptx-viewer-core', 'ooxml-ui/pptx'],
+			bundledPackages: ['pptx-viewer-core'],
 		});
 		expect(options).not.toHaveProperty('rollupTypes');
 		expect(options).not.toHaveProperty('bundledPackages');

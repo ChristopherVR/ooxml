@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { geometryRow } from './complex-geometry.js';
-import type { Cell, Row } from './sheet.js';
+import { geometryRow } from './complex-geometry';
+import type { Cell, Row } from './sheet';
 
 function run(
 	type: string,

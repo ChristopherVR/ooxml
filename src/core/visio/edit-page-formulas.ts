@@ -1,10 +1,10 @@
-import { attribute, child, children } from './sheet.js';
-import { indexedPart, related, visioXml } from './parts.js';
-import type { VisioPackage } from './package.js';
-import { fail } from './package-common.js';
-import { parseVisioFormula, type VisioFormulaAst } from './formula.js';
-import { indexCells, type VisioCellKey } from './edit-recalculate-index.js';
-import { recalculateVisioCells } from './edit-recalculate.js';
+import { attribute, child, children } from './sheet';
+import { indexedPart, related, visioXml } from './parts';
+import type { VisioPackage } from './package';
+import { fail } from './package-common';
+import { parseVisioFormula, type VisioFormulaAst } from './formula';
+import { indexCells, type VisioCellKey } from './edit-recalculate-index';
+import { recalculateVisioCells } from './edit-recalculate';
 
 function pageFunctions(source: string): Set<string> {
 	const result = new Set<string>();

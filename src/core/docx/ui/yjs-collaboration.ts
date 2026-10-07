@@ -41,6 +41,7 @@ export class WordYjsCollaboration {
 	readonly comments: WordYjsComments;
 	readonly sharedComments: boolean;
 	private readonly attributes: Y.Map<unknown>;
+	private readonly sourceAttributes: Node['attrs'];
 	private readonly undoManager: Y.UndoManager;
 	private destroyed = false;
 	private readonly selectionKey = Symbol('word-undo-selection');
@@ -67,6 +68,7 @@ export class WordYjsCollaboration {
 		this.fragment = session.doc.getXmlFragment('docx:body');
 		this.media = new WordYjsMedia(session);
 		this.attributes = session.doc.getMap('docx:attributes');
+		this.sourceAttributes = initial.attrs;
 		const identity = session.doc.getMap<string>('docx:identity');
 		this.comments = new WordYjsComments(
 			session,
@@ -119,7 +121,10 @@ export class WordYjsCollaboration {
 		if (this.destroyed) throw new Error('The Word Yjs binding has been destroyed.');
 		const { doc, mapping } = initProseMirrorDoc(this.fragment, schema);
 		return {
-			doc: schema.topNodeType.create(this.attributes.toJSON(), doc.content),
+			doc: schema.topNodeType.create(
+				{ ...this.sourceAttributes, ...this.attributes.toJSON() },
+				doc.content,
+			),
 			plugins: [
 				ySyncPlugin(this.fragment, { mapping }),
 				this.attributePlugin(),

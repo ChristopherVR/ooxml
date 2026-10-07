@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { mountViewer } from './binding.js';
+import { mountViewer } from './binding';
 import { demoDocument } from 'ooxml-core/visio/ui';
 
 afterEach(() => document.body.replaceChildren());

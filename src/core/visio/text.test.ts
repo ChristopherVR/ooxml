@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { parseVsdx } from './index.js';
-import { cell, fixture, row, section, shape } from './test-fixtures.js';
+import { parseVsdx } from './index';
+import { cell, fixture, row, section, shape } from './test-fixtures';
 const parseText = async (data: string, text: string, document = '', attrs = '') =>
 	(
 		await parseVsdx(

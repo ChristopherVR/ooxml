@@ -1,8 +1,8 @@
-import { relAttr } from '../xml/index.js';
-import type { VisioConnection, VisioPage } from './model.js';
-import { VisioPackage, VisioPackageError } from './package.js';
-import { metadata } from './metadata.js';
-import { attribute, child, children, VISIO_NS, VISIO_LEGACY_NS, type Report } from './sheet.js';
+import { relAttr } from '../xml/index';
+import type { VisioConnection, VisioPage } from './model';
+import { VisioPackage, VisioPackageError } from './package';
+import { metadata } from './metadata';
+import { attribute, child, children, VISIO_NS, VISIO_LEGACY_NS, type Report } from './sheet';
 const REL = 'http://schemas.microsoft.com/visio/2010/relationships/';
 export async function visioXml(
 	pkg: VisioPackage,

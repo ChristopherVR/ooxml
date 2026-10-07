@@ -506,3 +506,42 @@ into `src/core/crypto/uuid.ts`. The four generator regression tests moved from
 with strict indexed access, retains the Web Crypto and older-runtime fallbacks,
 and keeps the PowerPoint API as an alias. XLSX clipboard copies reuse it for new
 x14 conditional-rule identities.
+
+## PowerPoint snapshot cloning and neutral cached drawing bounds
+
+Source: ChristopherVR/ooxml at `e536c3553ad87ccc4e35a1d2212ab65bb22e821f`
+(original repository: ChristopherVR/pptx-viewer).
+
+- `src/ui/src/pptx/render/clone.ts` and `clone.test.ts` moved to
+  `src/core/pptx/editor/render/`. Document/history cloning is unchanged,
+  including the JSON-only XML failure behavior. UI keeps explicit compatibility
+  exports. The circular-XML regression also moved into the core contract.
+- The bounds algorithm in `src/ui/src/pptx/render/smartart-drawing-viewbox.ts`
+  moved to strict, format-neutral `src/core/diagram/drawing-bounds.ts`.
+  It uses diagram shape/text frames in caller units. UI adapts the PowerPoint
+  fields, preserving their individual fallback values. Core regressions cover
+  frame unions, independent text, negative coordinates and empty drawings;
+  existing renderer tests remain in UI to cover the adapter.
+
+## Word revision recording and resolution
+
+Source: ChristopherVR/ooxml at `2e493931f821785829127c69cd133b9b360db680`,
+`src/ui/src/docx/track-changes-mode.ts` and `review-commands.ts`. These modules
+moved to `src/core/docx/ui/`; the UI keeps explicit compatibility exports.
+Recording and resolution use the caller's schema. Revision IDs reuse the shared
+client identity generator, including a persistent collaboration-session generator.
+Legacy colliding IDs are separated by author and move linkage. Resolution and
+undo/redo bypass recording; resolution checks read-only views and ignores stale
+ranges. Explicit commands use a shared boundary helper to isolate them from
+nearby typing in both ProseMirror and Yjs history. DOM-free regression tests accompany the
+core logic; existing model conversion, move, editor and Yjs tests remain in UI
+to cover those adapters. Subsequent native references corrected move names and export text.
+
+## Word paragraph traversal for export identity mapping
+
+Source: ChristopherVR/ooxml at `26c54cd5db2c8ed69547540ed4448c979357cde4`,
+`src/core/docx/revision-ids.ts`. Its block traversal, story enumeration and
+document-wide paragraph mapping moved to `src/core/docx/document-paragraphs.ts`.
+Revision ID export retains its existing behavior through those helpers, and
+move-name export reuses them. Regression tests cover the body, table cells,
+headers, footers, footnotes and endnotes with one shared identity map.

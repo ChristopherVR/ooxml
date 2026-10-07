@@ -1,5 +1,5 @@
-import type { VisioForeignVector } from './foreign-vector.js';
-import type { VisioHyperlink, VisioShapeData } from './shape-metadata.js';
+import type { VisioForeignVector } from './foreign-vector';
+import type { VisioHyperlink, VisioShapeData } from './shape-metadata';
 
 /** Visio's internal distance unit is the inch; angles are radians. */
 export type VisioMatrix = readonly [number, number, number, number, number, number];
@@ -52,6 +52,8 @@ export interface VisioTextRun {
 	fontFamily: string;
 	fontSize: number;
 	color: string;
+	/** Native character color alpha, including a single colored layer override. */
+	opacity?: number;
 	bold: boolean;
 	italic: boolean;
 	underline: boolean;
@@ -81,6 +83,7 @@ export interface VisioText {
 	fontFamily: string;
 	fontSize: number;
 	color: string;
+	opacity?: number;
 	horizontalAlign: 'left' | 'center' | 'right';
 	verticalAlign: 'top' | 'middle' | 'bottom';
 	/** Local text box transform (y-up), dimensions and margins in inches. */

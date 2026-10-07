@@ -33,13 +33,19 @@ describe('Data-bar grid rendering', () => {
 		dispose = mountGrid(ctx, container);
 		const bars = [...ctx.root.querySelectorAll<HTMLElement>('.xg-db')];
 		const negative = bars.find((bar) => bar.style.backgroundColor === 'rgb(0, 0, 255)')!;
-		const positive = bars.find((bar) => bar.style.backgroundColor === 'rgb(0, 255, 0)')!;
+		const positive = bars.filter((bar) => bar.style.backgroundColor === 'rgb(0, 255, 0)').at(-1)!;
 		expect(negative).toBeDefined();
 		expect(positive).toBeDefined();
 		expect(negative.style.borderColor).toBe('rgb(255, 255, 0)');
 		expect(positive.style.borderColor).toBe('rgb(255, 0, 0)');
-		expect(negative.style.left).toBe('auto');
-		expect(negative.style.right).toBe('2px');
+		const cellWidth = Number.parseFloat(negative.parentElement!.style.width);
+		expect(Number.parseFloat(negative.style.left)).toBe(2 + (cellWidth - 4) / 2);
+		expect(negative.style.right).toBe('auto');
+		const axis = negative.parentElement!.querySelector<HTMLElement>('.xg-db-axis')!;
+		expect(axis.style.left).toBe(negative.style.left);
+		expect(axis.style.borderLeftColor).toBe('rgb(255, 0, 255)');
+		expect(axis.style.borderLeftStyle).toBe('dashed');
+		expect(positive.style.left).toBe('2px');
 		expect(negative.style.backgroundImage).toBe('none');
 		expect(negative.parentElement?.querySelector('.xg-tx')).toBeNull();
 

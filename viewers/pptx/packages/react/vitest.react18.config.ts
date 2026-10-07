@@ -42,8 +42,10 @@ function pkgDir18(name: string): string {
 }
 
 export default defineConfig({
+	server: { fs: { allow: [path.resolve(import.meta.dirname, '../../../..')] } },
 	resolve: {
 		alias: [
+			{ find: 'ooxml-core/pptx', replacement: src('../../../../src/core/pptx') },
 			{ find: /^react$/u, replacement: require18.resolve('react') },
 			{ find: /^react\/jsx-runtime$/u, replacement: require18.resolve('react/jsx-runtime') },
 			{
@@ -69,9 +71,15 @@ export default defineConfig({
 			{ find: /^@ai-sdk\/react$/u, replacement: require18.resolve('@ai-sdk/react') },
 			{ find: /^react-icons\//u, replacement: `${pkgDir18('react-icons')}/` },
 			{ find: /^pptx-viewer-core$/u, replacement: src('../core/src/index.ts') },
-			{ find: /^pptx-viewer-shared\/i18n$/u, replacement: src('../../../../src/ui/src/pptx/i18n/index.ts') },
-			{ find: /^pptx-viewer-shared\/ai$/u, replacement: src('../../../../src/ui/src/pptx/ai/index.ts') },
-			{ find: /^pptx-viewer-shared$/u, replacement: src('../../../../src/ui/src/pptx/index.ts') },
+			{
+				find: /^ooxml-ui\/pptx\/i18n$/u,
+				replacement: src('../../../../src/ui/src/pptx/i18n/index.ts'),
+			},
+			{
+				find: /^ooxml-ui\/pptx\/ai$/u,
+				replacement: src('../../../../src/ui/src/pptx/ai/index.ts'),
+			},
+			{ find: /^ooxml-ui\/pptx$/u, replacement: src('../../../../src/ui/src/pptx/index.ts') },
 		],
 	},
 	test: {

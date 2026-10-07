@@ -1,16 +1,16 @@
 /** VSDX parsing/editing and conservative legacy VSD preview scenes. */
-export type * from './model.js';
-export type { VisioShapeData, VisioHyperlink, VisioMetadataOptions } from './shape-metadata.js';
-export { parseVsdx, getVisioPageLayers, type ParseVsdxOptions } from './parser.js';
-export { loadVisio } from './load.js';
-export { parseLegacyVsd, type ParseLegacyVsdOptions } from './legacy.js';
-export { VisioPackageError, type VisioPackageLimits } from './package.js';
+export type * from './model';
+export type { VisioShapeData, VisioHyperlink, VisioMetadataOptions } from './shape-metadata';
+export { parseVsdx, getVisioPageLayers, type ParseVsdxOptions } from './parser';
+export { loadVisio } from './load';
+export { parseLegacyVsd, type ParseLegacyVsdOptions } from './legacy';
+export { VisioPackageError, type VisioPackageLimits } from './package';
 export {
 	resolveVisioPageVisibility,
 	VISIO_VISIBILITY_LIMITS,
 	type VisioVisibilityOptions,
 	type VisioResolvedShapeVisibility,
-} from './visibility.js';
+} from './visibility';
 export {
 	inspectVisioRasterImage,
 	VisioImageError,
@@ -18,7 +18,7 @@ export {
 	type VisioImageOptions,
 	type VisioImageErrorCode,
 	type VisioRasterImageInfo,
-} from './media.js';
+} from './media';
 export {
 	inspectVisioEmfAdmission,
 	VISIO_EMF_ADMISSION_LIMITS,
@@ -27,7 +27,7 @@ export {
 	type VisioEmfAdmissionStatus,
 	type VisioEmfAdmissionDiagnostic,
 	type VisioEmfAdmissionMetrics,
-} from './emf-admission.js';
+} from './emf-admission';
 export {
 	sanitizeVisioForeignVectorTree,
 	validateVisioForeignVector,
@@ -42,12 +42,12 @@ export {
 	type VisioForeignVectorPath,
 	type VisioForeignVectorPaint,
 	type VisioForeignVectorMatrix,
-} from './foreign-vector.js';
+} from './foreign-vector';
 export {
 	convertVisioMetafile,
 	type VisioMetafileTreeConverter,
 	type VisioMetafileConversionResult,
-} from './convert-metafile.js';
+} from './convert-metafile';
 
 export {
 	editVsdx,
@@ -61,7 +61,7 @@ export {
 	type VisioPageEdit,
 	type EditVsdxOptions,
 	type EditVsdxResult,
-} from './edit.js';
+} from './edit';
 export {
 	parseVisioFormula,
 	analyzeVisioFormula,
@@ -73,12 +73,12 @@ export {
 	type VisioFormulaValue,
 	type VisioFormulaReference,
 	type VisioFormulaUnit,
-} from './formula.js';
-export { visioOpenArrowExtent, visioOpenArrowPath } from './open-arrow.js';
+} from './formula';
+export { visioOpenArrowExtent, visioOpenArrowPath } from './open-arrow';
 export {
 	visioFilledArrow,
 	trimVisioArrowLine,
 	layoutVisioFilledArrowLine,
 	type VisioFilledArrow,
 	type VisioArrowLineLayout,
-} from './filled-arrow.js';
+} from './filled-arrow';

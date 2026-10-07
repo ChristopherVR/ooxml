@@ -5,7 +5,7 @@ import {
 	type VisioShape,
 } from 'ooxml-core/visio';
 import { compatibilityNotes, compatibilityText, type CompatibilityNote } from 'ooxml-core/visio/ui';
-import { renderPage, svgElement } from './render-svg.js';
+import { renderPage, svgElement } from './render-svg';
 import { assertViewableDocument } from 'ooxml-core/visio/ui';
 import { inspectForeignVectorResource } from 'ooxml-core/visio/ui';
 

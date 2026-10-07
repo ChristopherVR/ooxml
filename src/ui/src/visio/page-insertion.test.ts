@@ -1,8 +1,8 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import { editVsdx, parseVsdx } from 'ooxml-core/visio';
-import { mountViewer } from './binding.js';
-import type { EditWorkerRequest } from './worker-editor.js';
-import { cell, fixture } from '../../../core/visio/test-fixtures.js';
+import { mountViewer } from './binding';
+import type { EditWorkerRequest } from './worker-editor';
+import { cell, fixture } from '../../../core/visio/test-fixtures';
 
 /** Transport shim exercises the actual core backend without browser worker scheduling. */
 class CoreWorker {

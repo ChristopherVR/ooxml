@@ -1,7 +1,7 @@
-import { elements } from '../xml/index.js';
-import type { Cells, Report } from './sheet.js';
-import { themeChild, themeChildren } from './theme-color.js';
-import { themeFormat, type ThemeResources } from './theme-resolve.js';
+import { elements } from '../xml/index';
+import type { Cells, Report } from './sheet';
+import { themeChild, themeChildren } from './theme-color';
+import { themeFormat, type ThemeResources } from './theme-resolve';
 
 /** DrawingML line widths are EMUs; one inch is 914400 EMUs. Cached values win. */
 export function themeLineWeight(

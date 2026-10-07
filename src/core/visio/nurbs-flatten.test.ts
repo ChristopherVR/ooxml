@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { normalizedNurbs } from './nurbs.js';
+import { normalizedNurbs } from './nurbs';
 
 // Independently generated Bernstein coefficients of k*product(t-j/16), j=0..16,
 // scaled so y(1/64)=1. Fixed quarter/midpoint probes previously missed every loop.

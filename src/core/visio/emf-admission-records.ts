@@ -1,4 +1,4 @@
-import { type EmfAdmissionContext as Context } from './emf-admission-context.js';
+import { type EmfAdmissionContext as Context } from './emf-admission-context';
 
 export const EMF_FIXED_SIZES = new Map<number, number>([
 	[9, 16],

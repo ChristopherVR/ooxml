@@ -4,8 +4,8 @@ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { parseVsdx } from 'ooxml-core/visio';
 import { demoDocument } from 'ooxml-core/visio/ui';
-import { renderPage } from './render-svg.js';
-import { exportPageSvg } from './export-svg.js';
+import { renderPage } from './render-svg';
+import { exportPageSvg } from './export-svg';
 
 function scene(path = 'M 0 0 L 1 0 L 1 1') {
 	const model = structuredClone(demoDocument);

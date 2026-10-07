@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { compatibilityNotes, compatibilityText } from './diagnostics.js';
+import { compatibilityNotes, compatibilityText } from './diagnostics';
 describe('compatibility summaries', () => {
 	it('groups repeated per-shape messages while keeping occurrence counts', () => {
 		const notes = compatibilityNotes([

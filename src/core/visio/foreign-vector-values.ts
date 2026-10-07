@@ -6,7 +6,7 @@ import {
 	type VisioForeignVectorMatrix,
 	type VisioForeignVectorPaint,
 	type VisioForeignVectorRule,
-} from './foreign-vector-types.js';
+} from './foreign-vector-types';
 
 export const IDENTITY: VisioForeignVectorMatrix = Object.freeze([1, 0, 0, 1, 0, 0]);
 const NUMBER = /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/;

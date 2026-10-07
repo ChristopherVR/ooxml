@@ -1,6 +1,6 @@
-import type { VisioPackage } from './package.js';
-import { indexedPart, related, visioXml } from './parts.js';
-import { children } from './sheet.js';
+import type { VisioPackage } from './package';
+import { indexedPart, related, visioXml } from './parts';
+import { children } from './sheet';
 
 /** Shared inventory of formula-bearing parts; OPC paths come from relationships. */
 export async function editableVisioPageRoots(

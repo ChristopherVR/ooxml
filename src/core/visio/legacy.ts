@@ -1,10 +1,10 @@
 /** Legacy VSD import uses the shared binary codec, never an OOXML conversion. */
 import { parseVsd, type VsdDocument } from '@christophervr/ole2';
-import { transform } from './geometry.js';
-import { diagnosticCollector } from './diagnostics.js';
-import { VisioPackageError } from './package.js';
-import type { ParseVsdxOptions } from './parser.js';
-import type { VisioDocument, VisioGeometry, VisioShape, VisioText } from './model.js';
+import { transform } from './geometry';
+import { diagnosticCollector } from './diagnostics';
+import { VisioPackageError } from './package';
+import type { ParseVsdxOptions } from './parser';
+import type { VisioDocument, VisioGeometry, VisioShape, VisioText } from './model';
 
 export type ParseLegacyVsdOptions = Pick<
 	ParseVsdxOptions,

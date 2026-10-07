@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { exportPageSvg, MAX_SVG_EXPORT_BYTES } from './export-svg.js';
+import { exportPageSvg, MAX_SVG_EXPORT_BYTES } from './export-svg';
 import { demoDocument } from 'ooxml-core/visio/ui';
-import { mountViewer } from './binding.js';
-import { RenderResources } from './render-resources.js';
-import { renderPage } from './render-svg.js';
+import { mountViewer } from './binding';
+import { RenderResources } from './render-resources';
+import { renderPage } from './render-svg';
 import { rasterFixture } from './__fixtures__/raster-fixtures.mjs';
 
 const scene = () => structuredClone(demoDocument);

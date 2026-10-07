@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { createVsdxFixture } from './__fixtures__/fixture.mjs';
-import { mountViewer } from './binding.js';
+import { mountViewer } from './binding';
 
 describe('end-to-end import in DOM runtime', () => {
 	it('opens a synthetic VSDX through package parser, controller and SVG renderer', async () => {

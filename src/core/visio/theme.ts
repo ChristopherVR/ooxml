@@ -4,8 +4,8 @@
  * https://learn.microsoft.com/en-us/openspecs/sharepoint_protocols/ms-vsdx/79aed9f8-5d10-4038-9106-7d1927fa0575
  * Only color-bearing quick-style properties are represented here.
  */
-import type { VisioPackage } from './package.js';
-import type { Report } from './sheet.js';
+import type { VisioPackage } from './package';
+import type { Report } from './sheet';
 import {
 	colorChoice,
 	DRAWING_NS,
@@ -14,7 +14,7 @@ import {
 	themeChild,
 	themeChildren,
 	THEME_NS,
-} from './theme-color.js';
+} from './theme-color';
 
 export interface VisioTheme {
 	colorId: number | undefined;
