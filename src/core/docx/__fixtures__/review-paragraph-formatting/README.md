@@ -25,3 +25,13 @@ revision, edited text, and the expected current paragraph formatting remain.
 
 `core-rejected-reference.json` records Word opening all eight rejected exports:
 zero revisions and the same paragraph properties as native rejection.
+
+# Tracked text export check
+
+`tracked-text-export-reference.json` records desktop Word reopening four core
+exports. Each export splits the first run after four characters, inserts a
+tracked `!` by Codex, and preserves the original run formatting on all three
+pieces. Word reports one paragraph-format revision (10) and one insertion (1),
+retains the complex-script Arial font, and Reject All restores the original text
+with zero revisions. The export comes from the corresponding tracked fixture via
+`loadDocx(...).save(model)`. This does not certify glyph shaping or M365 licensing.

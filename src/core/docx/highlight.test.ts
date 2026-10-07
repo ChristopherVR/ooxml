@@ -93,7 +93,7 @@ describe('Word highlight tokens', () => {
 
 	it('treats unmodeled attributes inside known run properties as opaque', async () => {
 		const original = await packageWith(
-			`<w:document xmlns:w="${ns}"><w:body><w:p><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Noto"/></w:rPr><w:t>Formatted</w:t></w:r></w:p><w:sectPr/></w:body></w:document>`,
+			`<w:document xmlns:w="${ns}"><w:body><w:p><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:hint="eastAsia"/></w:rPr><w:t>Formatted</w:t></w:r></w:p><w:sectPr/></w:body></w:document>`,
 		);
 		const loaded = await loadDocx(original);
 		const paragraph = expectParagraph(loaded.model.blocks[0]);

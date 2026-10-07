@@ -1,0 +1,62 @@
+{
+	"applicationVersion": "16.0",
+	"applicationBuild": "16.0.20430",
+	"cases": [
+		{
+			"name": "alignment",
+			"tracked": {
+				"text": "Para!graph formatting\r",
+				"revisionTypes": [10, 1],
+				"complexScriptFonts": ["Arial", "Arial", "Arial", "Arial"]
+			},
+			"rejected": {
+				"text": "Paragraph formatting\r",
+				"revisions": 0,
+				"alignment": 0,
+				"complexScriptFont": "Arial"
+			}
+		},
+		{
+			"name": "spacing",
+			"tracked": {
+				"text": "Para!graph formatting\r",
+				"revisionTypes": [10, 1],
+				"complexScriptFonts": ["Arial", "Arial", "Arial", "Arial"]
+			},
+			"rejected": {
+				"text": "Paragraph formatting\r",
+				"revisions": 0,
+				"alignment": 0,
+				"complexScriptFont": "Arial"
+			}
+		},
+		{
+			"name": "indent",
+			"tracked": {
+				"text": "Para!graph formatting\r",
+				"revisionTypes": [10, 1],
+				"complexScriptFonts": ["Arial", "Arial", "Arial", "Arial"]
+			},
+			"rejected": {
+				"text": "Paragraph formatting\r",
+				"revisions": 0,
+				"alignment": 0,
+				"complexScriptFont": "Arial"
+			}
+		},
+		{
+			"name": "multiple",
+			"tracked": {
+				"text": "Para!graph formatting\r",
+				"revisionTypes": [10, 1],
+				"complexScriptFonts": ["Arial", "Arial", "Arial", "Arial"]
+			},
+			"rejected": {
+				"text": "Paragraph formatting\r",
+				"revisions": 0,
+				"alignment": 0,
+				"complexScriptFont": "Arial"
+			}
+		}
+	]
+}

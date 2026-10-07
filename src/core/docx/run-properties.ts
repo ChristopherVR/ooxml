@@ -55,6 +55,8 @@ export function parseRunProperties(props: XmlElement | undefined): RunFormatting
 	for (const [local, key] of [
 		['b', 'bold'],
 		['i', 'italic'],
+		['bCs', 'boldComplexScript'],
+		['iCs', 'italicComplexScript'],
 		['caps', 'caps'],
 		['smallCaps', 'smallCaps'],
 		['vanish', 'vanish'],
@@ -92,9 +94,15 @@ export function parseRunProperties(props: XmlElement | undefined): RunFormatting
 	if (isStVerticalAlignRun(verticalAlign)) result.verticalAlign = verticalAlign;
 	const size = parseHalfPoints(getW(first(props, 'sz'), 'val'));
 	if (size !== undefined) result.fontSize = size / 2;
+	const complexSize = parseHalfPoints(getW(first(props, 'szCs'), 'val'));
+	if (complexSize !== undefined) result.fontSizeComplexScript = complexSize / 2;
 	const fonts = first(props, 'rFonts');
 	const family = getW(fonts, 'ascii') ?? getW(fonts, 'hAnsi');
 	if (family) result.fontFamily = family;
+	const eastAsia = getW(fonts, 'eastAsia');
+	if (eastAsia) result.fontFamilyEastAsia = eastAsia;
+	const complexScript = getW(fonts, 'cs');
+	if (complexScript) result.fontFamilyComplexScript = complexScript;
 	const fontTheme: RunFormatting['fontTheme'] = {};
 	for (const [xmlKey, script] of [
 		['asciiTheme', 'ascii'],

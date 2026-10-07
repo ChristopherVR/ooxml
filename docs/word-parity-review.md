@@ -202,6 +202,15 @@ subscription behavior.
 5. Fill DrawingML, chart, SmartArt, equations, proofing, references and protection
    gaps through shared core areas and one shared Word UI.
 
+Complex-script font family, size, bold and italic, plus the East Asian font family,
+now have shared parsing, style resolution, editor preservation and serialization.
+The native paragraph-format fixtures support tracked text splitting and peer
+export without dropping these properties. Desktop Word reopened all four exports
+with their paragraph-format and insertion revisions, retained Arial for complex
+scripts, and rejected both revisions back to the original text. All six browser
+bindings exercise tracked and untracked typing. Script shaping, font fallback and
+glyph metrics still require separate rendering parity work.
+
 Core revision enumeration and resolution now include headers, footers, footnotes,
 endnotes and table cells through the shared document-story traversal. Synthetic
 package tests verify accept/reject/save/reopen, including headers shared across

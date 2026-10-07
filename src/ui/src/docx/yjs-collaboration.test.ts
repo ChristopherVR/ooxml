@@ -100,35 +100,44 @@ describe('Word Yjs collaboration', () => {
 		expect(wordYjsPluginKey.getState(first.state)!.redo()).toBe(true);
 		expect(collectRevisionRanges(viewOf(b).state.doc)).toEqual([]);
 	});
-	it('retains native paragraph formatting history during untracked peer typing and export', async () => {
-		const bytes = new Uint8Array(
-			await readFile(
-				resolve('../core/docx/__fixtures__/review-paragraph-formatting/multiple-tracked.docx'),
-			),
-		);
-		const loaded = await loadDocx(bytes);
-		const paragraph = loaded.model.blocks[0]!;
-		if (paragraph.type !== 'paragraph') throw new Error('Expected paragraph');
-		const peers = pair();
-		const a = mount();
-		const b = mount();
-		await a.load(bytes);
-		await b.load(bytes);
-		start(a, b, peers);
-		const first = viewOf(a);
-		toggleTrackChanges(first.state, first.dispatch, first);
-		const view = viewOf(b);
-		view.dispatch(view.state.tr.insertText('!', 5));
-		for (const editor of [a, b]) {
-			const actual = editor.documentModel!.blocks[0]!;
-			if (actual.type !== 'paragraph') throw new Error('Expected paragraph');
-			expect(actual.formatRevision).toEqual(paragraph.formatRevision);
-			const reopened = await loadDocx(await editor.saveBytes());
-			const exported = reopened.model.blocks[0]!;
-			if (exported.type !== 'paragraph') throw new Error('Expected paragraph');
-			expect(exported.formatRevision).toEqual(paragraph.formatRevision);
-		}
-	});
+	it.each([true, false])(
+		'retains native paragraph formatting history during peer typing with tracking %s',
+		async (tracked) => {
+			const bytes = new Uint8Array(
+				await readFile(
+					resolve('../core/docx/__fixtures__/review-paragraph-formatting/multiple-tracked.docx'),
+				),
+			);
+			const loaded = await loadDocx(bytes);
+			const paragraph = loaded.model.blocks[0]!;
+			if (paragraph.type !== 'paragraph') throw new Error('Expected paragraph');
+			const peers = pair();
+			const a = mount();
+			const b = mount();
+			await a.load(bytes);
+			await b.load(bytes);
+			start(a, b, peers);
+			const first = viewOf(a);
+			if (!tracked) toggleTrackChanges(first.state, first.dispatch, first);
+			const view = viewOf(b);
+			view.dispatch(view.state.tr.insertText('!', 5));
+			for (const editor of [a, b]) {
+				const actual = editor.documentModel!.blocks[0]!;
+				if (actual.type !== 'paragraph') throw new Error('Expected paragraph');
+				expect(actual.formatRevision).toEqual(paragraph.formatRevision);
+				expect(actual.runs.some((run) => run.revision?.kind === 'insert')).toBe(tracked);
+				for (const run of actual.runs)
+					expect(run.fontFamilyComplexScript).toBe(paragraph.runs[0]?.fontFamilyComplexScript);
+				const reopened = await loadDocx(await editor.saveBytes());
+				const exported = reopened.model.blocks[0]!;
+				if (exported.type !== 'paragraph') throw new Error('Expected paragraph');
+				expect(exported.formatRevision).toEqual(paragraph.formatRevision);
+				expect(exported.runs.some((run) => run.revision?.kind === 'insert')).toBe(tracked);
+				for (const run of exported.runs)
+					expect(run.fontFamilyComplexScript).toBe(paragraph.runs[0]?.fontFamilyComplexScript);
+			}
+		},
+	);
 	it('shares imported formatting rejection and its undo without recording remote changes', async () => {
 		const bytes = new Uint8Array(
 			await readFile(resolve('../core/docx/__fixtures__/review-formatting/multiple-tracked.docx')),

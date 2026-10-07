@@ -51,6 +51,14 @@ export interface TextRun {
 	/** Font size in points (whole or half points, e.g. 10.5); `HalfPoints` is the on-disk `w:sz`. */
 	fontSize?: number;
 	fontFamily?: string;
+	/** Direct East Asian font (`w:rFonts/@w:eastAsia`). */
+	fontFamilyEastAsia?: string;
+	/** Direct complex-script font (`w:rFonts/@w:cs`). */
+	fontFamilyComplexScript?: string;
+	/** Complex-script font size in points (`w:szCs`). */
+	fontSizeComplexScript?: number;
+	boldComplexScript?: boolean;
+	italicComplexScript?: boolean;
 	/** Direct RGB color, e.g. #28665E. May coexist with `colorTheme` as Word's stored fallback. */
 	color?: string;
 	/**

@@ -11,6 +11,8 @@ import type { RunFormatting, RunStyleCatalog } from './run-style-model.js';
 const TOGGLE_KEYS = [
 	'bold',
 	'italic',
+	'boldComplexScript',
+	'italicComplexScript',
 	'caps',
 	'smallCaps',
 	'strike',
@@ -25,6 +27,9 @@ const OVERRIDE_KEYS = [
 	'verticalAlign',
 	'fontSize',
 	'fontFamily',
+	'fontFamilyEastAsia',
+	'fontFamilyComplexScript',
+	'fontSizeComplexScript',
 	'fontTheme',
 	'color',
 	'colorTheme',

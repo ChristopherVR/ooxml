@@ -17,6 +17,9 @@ import {
 const modeledRunProperties = new Set([
 	'b',
 	'i',
+	'bCs',
+	'iCs',
+	'szCs',
 	'strike',
 	'u',
 	'highlight',
@@ -37,13 +40,33 @@ const modeledRunProperties = new Set([
 	'position',
 	'shd',
 ]);
-const simpleToggleProperties = ['b', 'i', 'strike', 'caps', 'smallCaps', 'dstrike', 'vanish'];
+const simpleToggleProperties = [
+	'b',
+	'i',
+	'bCs',
+	'iCs',
+	'strike',
+	'caps',
+	'smallCaps',
+	'dstrike',
+	'vanish',
+];
 const allowedRunPropertyAttributes: Record<string, string[]> = {
-	rFonts: ['ascii', 'hAnsi', 'asciiTheme', 'hAnsiTheme', 'eastAsiaTheme', 'cstheme'],
+	rFonts: [
+		'ascii',
+		'hAnsi',
+		'eastAsia',
+		'cs',
+		'asciiTheme',
+		'hAnsiTheme',
+		'eastAsiaTheme',
+		'cstheme',
+	],
 	lang: ['val', 'eastAsia', 'bidi'],
 	highlight: ['val'],
 	vertAlign: ['val'],
 	sz: ['val'],
+	szCs: ['val'],
 	rtl: ['val'],
 	rStyle: ['val'],
 	spacing: ['val'],
@@ -124,7 +147,12 @@ export function runHasUnknownProperties(run: XmlElement): boolean {
 			const color = getW(property, 'color');
 			if (color && parseHexColor(color) === undefined) return true;
 		}
-		if (property.localName === 'sz' && value && parseHalfPoints(value) === undefined) return true;
+		if (
+			['sz', 'szCs'].includes(property.localName) &&
+			value &&
+			parseHalfPoints(value) === undefined
+		)
+			return true;
 		if (property.localName === 'spacing' && value && parseSignedTwips(value) === undefined)
 			return true;
 		if (property.localName === 'color' || property.localName === 'shd') {

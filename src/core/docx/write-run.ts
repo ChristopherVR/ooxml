@@ -98,6 +98,11 @@ function setRunProperties(
 			run.rtl !== undefined ||
 			run.fontSize ||
 			run.fontFamily ||
+			run.fontFamilyEastAsia ||
+			run.fontFamilyComplexScript ||
+			run.fontSizeComplexScript !== undefined ||
+			run.boldComplexScript !== undefined ||
+			run.italicComplexScript !== undefined ||
 			run.color ||
 			run.colorTheme ||
 			run.style ||
@@ -122,6 +127,16 @@ function setRunProperties(
 	writeRunFormatRevision(doc, props, run.revision);
 	if (changed('bold')) setToggle(doc, props, 'b', run.bold);
 	if (changed('italic')) setToggle(doc, props, 'i', run.italic);
+	if (changed('boldComplexScript')) setToggle(doc, props, 'bCs', run.boldComplexScript);
+	if (changed('italicComplexScript')) setToggle(doc, props, 'iCs', run.italicComplexScript);
+	if (changed('fontSizeComplexScript')) {
+		removeChildren(props, 'szCs');
+		if (run.fontSizeComplexScript !== undefined) {
+			const size = makeW(doc, 'szCs');
+			setAttribute(size, 'val', String(Math.round(run.fontSizeComplexScript * 2)));
+			props.appendChild(size);
+		}
+	}
 	if (changed('strike')) {
 		setToggle(doc, props, 'strike', run.strike);
 		// Single and double strikethrough are exclusive in Word's UI.
@@ -170,14 +185,21 @@ function setRunProperties(
 			props.appendChild(size);
 		}
 	}
-	if (changed('fontFamily') || changed('fontTheme')) {
+	if (
+		changed('fontFamily') ||
+		changed('fontTheme') ||
+		changed('fontFamilyEastAsia') ||
+		changed('fontFamilyComplexScript')
+	) {
 		removeChildren(props, 'rFonts');
-		if (run.fontFamily || run.fontTheme) {
+		if (run.fontFamily || run.fontTheme || run.fontFamilyEastAsia || run.fontFamilyComplexScript) {
 			const fonts = makeW(doc, 'rFonts');
 			if (run.fontFamily) {
 				setAttribute(fonts, 'ascii', run.fontFamily);
 				setAttribute(fonts, 'hAnsi', run.fontFamily);
 			}
+			if (run.fontFamilyEastAsia) setAttribute(fonts, 'eastAsia', run.fontFamilyEastAsia);
+			if (run.fontFamilyComplexScript) setAttribute(fonts, 'cs', run.fontFamilyComplexScript);
 			const themeAttribute: Record<'ascii' | 'hAnsi' | 'eastAsia' | 'cs', [string, string]> = {
 				ascii: ['asciiTheme', 'Ascii'],
 				hAnsi: ['hAnsiTheme', 'HAnsi'],
