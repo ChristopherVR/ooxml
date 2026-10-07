@@ -44,9 +44,12 @@ describe('Excel lookup of trailing blank cells', () => {
 		expect(calc('XMATCH(A2,B:B,0,-1)', { A1: 1 })).toBe(1_048_576);
 	});
 
-	it('does not replace an earlier stored empty-string match with the blank tail', () => {
-		expect(calc('XMATCH(A2,B1:B5)', { B1: '=""' })).toBe(1);
+	it('distinguishes stored empty strings from blank cells', () => {
+		expect(calc('XMATCH(A2,B1:B5)', { B1: '=""' })).toBe(2);
 		expect(calc('XMATCH(A2,B1:B5,0,-1)', { B1: '=""' })).toBe(5);
+		expect(calc('XMATCH(A2,B1)', { B1: '=""' })).toEqual(E.NA);
+		expect(calc('XMATCH(A2,{""})')).toEqual(E.NA);
+		expect(calc('XMATCH("",B1:B5)', { B1: '=""' })).toBe(1);
 	});
 
 	it('preserves blank XLOOKUP results and formulas through save and reopen', async () => {

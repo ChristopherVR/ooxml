@@ -75,7 +75,7 @@ export function exactMatcher(lookup: Scalar, wildcards: boolean): (v: Scalar) =>
 		const regex = wildcardRegex(lookup);
 		return (v) => typeof v === 'string' && regex.test(v);
 	}
-	if (lookup === null) return (v) => v === null || v === '';
+	if (lookup === null) return (v) => v === null;
 	return (v) =>
 		!isError(v) && v !== null && sameKind(v, lookup) && compareScalars(v, lookup as never) === 0;
 }
@@ -191,24 +191,31 @@ export function findNearest(
 	let best = -1;
 	let bestValue: Scalar = null;
 	const n = vector.length;
-	for (let k = 0; k < n; k++) {
-		const i = reverse ? n - 1 - k : k;
-		const v = vector.get(i);
-		if (v === null || isError(v) || !sameKind(v, lookup)) continue;
-		const c = compareScalars(v, lookup as never);
-		if (c === 0) return i;
+	// Lookup ordering differs from arithmetic: blanks sort after numbers, text and logicals.
+	const compare = (a: Scalar, b: Scalar): number =>
+		a === null ? (b === null ? 0 : 1) : b === null ? -1 : compareScalars(a as never, b as never);
+	const consider = (i: number, v: Scalar): boolean => {
+		if (isError(v)) return false;
+		const c = compare(v, lookup);
+		if (c === 0) {
+			best = i;
+			return true;
+		}
 		if (mode === -1 ? c < 0 : c > 0) {
-			if (
-				best < 0 ||
-				(mode === -1
-					? compareScalars(v, bestValue as never) > 0
-					: compareScalars(v, bestValue as never) < 0)
-			) {
+			if (best < 0 || (mode === -1 ? compare(v, bestValue) > 0 : compare(v, bestValue) < 0)) {
 				best = i;
 				bestValue = v;
 			}
 		}
+		return false;
+	};
+	const logicalLength = vector.logicalLength ?? n;
+	if (reverse && logicalLength > n && consider(logicalLength - 1, null)) return best;
+	for (let k = 0; k < n; k++) {
+		const i = reverse ? n - 1 - k : k;
+		if (consider(i, vector.get(i))) return best;
 	}
+	if (!reverse && logicalLength > n) consider(n, null);
 	return best;
 }
 
