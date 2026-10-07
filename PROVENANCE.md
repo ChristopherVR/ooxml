@@ -1921,3 +1921,23 @@ formula redirection. The existing six-binding menu/history/save/reload matrix
 uses the same native captures. Applications quit; the original user instance
 remains untouched. Exact paint, native menu gestures, inherited/group/master/glue
 transforms and Microsoft Visio reopen acceptance remain unverified.
+
+## Shared DrawingML paragraph spacing for XLSX chart titles
+
+Source: ChristopherVR/ooxml at `8499a584e`,
+`src/core/diagram/drawing-text.ts` and types, XLSX title view/line painter,
+chart unit conversion and whole-rich-body preservation. The existing reader
+now exposes points/percentage line/before/after spacing for every DrawingML
+text body; XLSX consumes the raw units with the same cached host font boxes.
+Its line expansion preserves spacing metadata. No second XML parser, chart
+serializer, canvas or framework-specific spacing engine was introduced.
+
+The native spacing recorder creates 12 independently reopened Excel 16.0
+build 20430 references retained in a test-only chart fixture. Core tests verify
+native height differences under 2 CSS pixels for these observed Arial boxes
+and exact rich-body preservation through a type change. The browser matrix
+covers these cases in six bindings before/after an actual chart edit and
+save/reload. Playwright MCP reviewed native imports; Excel reopened, resaved
+and reopened its UI export with 6/8-point before/after spacing unchanged.
+Compressed first-line placement, additional break/list/field cases, spacing
+authoring controls, wrapping and full raster parity remain open.

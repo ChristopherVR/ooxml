@@ -14,3 +14,27 @@ it('retains run, cached field and break order with paragraph defaults', () => {
 		runs: [{ text: 'Before' }, { text: 'Field', bold: true }, { text: '\n' }, { text: 'After' }],
 	});
 });
+
+it('retains fractional and absolute DrawingML paragraph spacing, including zero', () => {
+	const body = parseXml(
+		`<a:txBody xmlns:a="${NS.a}"><a:bodyPr/><a:p><a:pPr><a:lnSpc><a:spcPct val="150000"/></a:lnSpc><a:spcBef><a:spcPts val="600"/></a:spcBef><a:spcAft><a:spcPct val="25000"/></a:spcAft></a:pPr><a:r><a:t>One</a:t></a:r></a:p><a:p><a:pPr><a:lnSpc><a:spcPts val="0"/></a:lnSpc></a:pPr></a:p></a:txBody>`,
+	).documentElement;
+	expect(parseDrawingTextBody(body)!.paragraphs).toMatchObject([
+		{
+			lineSpacing: { unit: 'percent', value: 1.5 },
+			spaceBefore: { unit: 'points', value: 6 },
+			spaceAfter: { unit: 'percent', value: 0.25 },
+		},
+		{ lineSpacing: { unit: 'points', value: 0 } },
+	]);
+});
+
+it.each(['-100', '100x', 'Infinity', ''])(
+	'does not turn malformed spacing %s into layout values',
+	(value) => {
+		const body = parseXml(
+			`<a:txBody xmlns:a="${NS.a}"><a:p><a:pPr><a:lnSpc><a:spcPts val="${value}"/></a:lnSpc></a:pPr></a:p></a:txBody>`,
+		).documentElement;
+		expect(parseDrawingTextBody(body)!.paragraphs[0]!.lineSpacing).toBeUndefined();
+	},
+);

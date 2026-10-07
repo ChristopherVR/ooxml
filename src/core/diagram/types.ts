@@ -251,11 +251,20 @@ export interface DiagramTextRun {
 	typeface?: string;
 }
 
+/** DrawingML spacing, retaining absolute points or a fractional percentage. */
+export interface DiagramTextSpacing {
+	unit: 'points' | 'percent';
+	value: number;
+}
+
 export interface DiagramTextParagraph {
 	/** Paragraph default run properties, inherited by individual runs. */
 	defaultProperties?: Omit<DiagramTextRun, 'text'>;
 	/** `l`, `ctr`, `r`, `just`... */
 	align?: string;
+	lineSpacing?: DiagramTextSpacing;
+	spaceBefore?: DiagramTextSpacing;
+	spaceAfter?: DiagramTextSpacing;
 	runs: DiagramTextRun[];
 }
 

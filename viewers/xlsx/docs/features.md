@@ -59,7 +59,8 @@ plot area, title and legend. Supported gradient types, stops, transparency,
 brightness, direction previews and native presets share the same fill controls.
 
 Imported chart styles, supported shadows/gradients, axis visibility, inherited
-fonts and mixed-format title runs have rendering and preservation support.
+fonts, mixed-format title runs and point/percentage title paragraph spacing
+have rendering and preservation support.
 Native Excel comparisons verify specific edit/export paths. Exact chart text
 measurement, wrapping, placement and raster fidelity remain incomplete, as do
 many axes/labels/effects controls, advanced chart families and full native UI.

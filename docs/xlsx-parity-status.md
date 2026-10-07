@@ -1,7 +1,8 @@
 # XLSX parity status
 
 Updated 8 October 2026: mixed-title support at `4f3f87ea6`, followed by host
-font measurements for chart titles/legends and natural title baselines.
+font measurements for chart titles/legends, natural title baselines and imported
+paragraph spacing.
 
 **Full 1:1 Microsoft Excel parity has not been achieved.** The product is a
 working spreadsheet editor with substantial supported behavior and an expanding
@@ -69,6 +70,16 @@ title heights are within 2 CSS pixels of these native references and a native
 PNG comparison confirms improved second-line placement. This does not establish
 general text/raster parity; native paragraph spacing, wrapping, padding and
 overall chart geometry remain open.
+
+Imported title spacing now retains points/percentage line, before and after
+settings through the shared DrawingML reader and chart save path. Twelve native
+references cover expanded/compressed, fixed-point, before/after and single-line
+cases. The latest sweep passes **8,560 ordinary tests** with **17 expected
+failures**, and **164 focused chart browser checks** pass across six bindings.
+Core/UI typechecks, builds and package checks pass. Excel reopens and resaves
+the MCP-reviewed UI export with its 6/8-point before/after spacing unchanged.
+First-line placement under compressed spacing remains approximate, and spacing
+authoring controls, automatic wrapping and complete chart raster parity remain open.
 
 Native evidence uses owned hidden Excel instances, principally Excel 16.0
 build 20430. The current chart text corpus includes 96 built-in style

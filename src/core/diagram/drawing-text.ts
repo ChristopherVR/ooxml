@@ -2,7 +2,25 @@
 // destined for `drawingml`.
 import { parseDrawingColorIn } from './drawing-color';
 import { NS, booleanAttribute, children, elements, first, type XmlElement } from './dom';
-import type { DiagramTextBody, DiagramTextParagraph, DiagramTextRun } from './types';
+import type {
+	DiagramTextBody,
+	DiagramTextParagraph,
+	DiagramTextRun,
+	DiagramTextSpacing,
+} from './types';
+
+function parseSpacing(parent: XmlElement | undefined): DiagramTextSpacing | undefined {
+	for (const [name, unit, divisor] of [
+		['spcPts', 'points', 100],
+		['spcPct', 'percent', 100000],
+	] as const) {
+		const raw = first(parent, name, NS.a)?.getAttribute('val');
+		if (raw == null || !/^\d+$/.test(raw)) continue;
+		const value = Number(raw) / divisor;
+		if (Number.isFinite(value)) return { unit, value };
+	}
+	return undefined;
+}
 
 function parseProperties(properties: XmlElement | undefined): Omit<DiagramTextRun, 'text'> {
 	const parsed: Omit<DiagramTextRun, 'text'> = {};
@@ -34,11 +52,18 @@ function parseParagraph(paragraph: XmlElement): DiagramTextParagraph {
 	for (const child of elements(paragraph))
 		if (child.namespaceURI === NS.a && ['r', 'fld', 'br'].includes(child.localName))
 			runs.push(parseRun(child));
-	const align = first(paragraph, 'pPr', NS.a)?.getAttribute('algn');
-	const defaults = parseProperties(first(first(paragraph, 'pPr', NS.a), 'defRPr', NS.a));
+	const properties = first(paragraph, 'pPr', NS.a);
+	const align = properties?.getAttribute('algn');
+	const defaults = parseProperties(first(properties, 'defRPr', NS.a));
+	const lineSpacing = parseSpacing(first(properties, 'lnSpc', NS.a));
+	const spaceBefore = parseSpacing(first(properties, 'spcBef', NS.a));
+	const spaceAfter = parseSpacing(first(properties, 'spcAft', NS.a));
 	return {
 		...(align ? { align } : {}),
 		...(Object.keys(defaults).length ? { defaultProperties: defaults } : {}),
+		...(lineSpacing ? { lineSpacing } : {}),
+		...(spaceBefore ? { spaceBefore } : {}),
+		...(spaceAfter ? { spaceAfter } : {}),
 		runs,
 	};
 }

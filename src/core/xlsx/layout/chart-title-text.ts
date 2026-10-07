@@ -1,10 +1,13 @@
-import type { DiagramTextRun } from '../../diagram/types';
+import type { DiagramTextRun, DiagramTextParagraph } from '../../diagram/types';
 import type { ChartStyleEntry } from '../../chart/style-definition';
 import type { ChartObject, ThemePalette } from '../model';
 import { chartAppearance, type ChartAppearanceEntry } from './chart-appearance';
 
 export interface ChartTitleText {
-	paragraphs: { align?: string; runs: { text: string; appearance: ChartAppearanceEntry }[] }[];
+	paragraphs: (Pick<
+		DiagramTextParagraph,
+		'align' | 'lineSpacing' | 'spaceBefore' | 'spaceAfter'
+	> & { runs: { text: string; appearance: ChartAppearanceEntry }[] })[];
 }
 
 function properties(run: Partial<DiagramTextRun>): Partial<ChartStyleEntry> {
@@ -30,12 +33,18 @@ export function chartTitleText(
 	if (
 		body.paragraphs.length === 1 &&
 		body.paragraphs[0]!.runs.length <= 1 &&
-		!body.text.includes('\n')
+		!body.text.includes('\n') &&
+		!body.paragraphs[0]!.lineSpacing &&
+		!body.paragraphs[0]!.spaceBefore &&
+		!body.paragraphs[0]!.spaceAfter
 	)
 		return undefined;
 	return {
 		paragraphs: body.paragraphs.map((paragraph) => ({
 			...(paragraph.align ? { align: paragraph.align } : {}),
+			...(paragraph.lineSpacing ? { lineSpacing: paragraph.lineSpacing } : {}),
+			...(paragraph.spaceBefore ? { spaceBefore: paragraph.spaceBefore } : {}),
+			...(paragraph.spaceAfter ? { spaceAfter: paragraph.spaceAfter } : {}),
 			runs: paragraph.runs.map((run) => {
 				const direct = {
 					sourceXml: '',

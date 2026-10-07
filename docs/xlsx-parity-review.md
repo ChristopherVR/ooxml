@@ -1511,3 +1511,37 @@ The final diagram/chart/XLSX sweep passes 8,543 ordinary tests with the same
 actual mixed-line baseline checks before/after edits in all six bindings.
 Core/UI typechecks, builds and package import/registration checks pass. The
 native geometry fixture is absent from the published build output.
+
+The shared DrawingML reader now retains `a:lnSpc`, `a:spcBef` and `a:spcAft`
+in their original points/percentage units. XLSX title views carry that metadata
+into rich rendering, including single-line titles with spacing properties.
+The painter resolves percentage spacing against natural font line height and
+point spacing through the existing chart unit converter. Literal title line
+feeds and explicit paragraphs retain their spacing during line expansion.
+The existing rich-body XML preservation path keeps those properties through
+chart regeneration; no viewer-side spacing parser or serializer was added.
+
+`scripts/record-xlsx-chart-title-spacing.ps1` creates 12 owned Excel references:
+default, expanded/compressed percentage and fixed-point line spacing,
+point/percentage before/after spacing, explicit paragraphs, and single-line
+variants. Independently reopened parts and title rectangles are retained in
+`src/core/chart/excel-chart-title-spacing.json`, outside the published output.
+Core comparisons use independently observed Arial canvas font boxes; title
+heights differ from native by less than 2 CSS pixels for these references.
+Malformed spacing is ignored by the parsed view and remains in source XML.
+
+Playwright MCP reviewed the 75% and before/after references. The latter keeps
+baselines 40/85.67 CSS pixels before/after the actual Change Chart Type flow.
+Excel 16.0 build 20430 reopens its line-chart export, resaves and reopens the
+copy with SpaceWithin=1, SpaceBefore=6, SpaceAfter=8 and title height 72.4 points
+unchanged. Independently reopened native PNGs match the authoring PNG positions.
+The compressed-spacing comparison still shows a few pixels of first-line
+placement difference. Centered leading is approximate; automatic wrapping,
+empty/break/field/list-level spacing cases, manual text box layout, native
+padding and complete chart raster parity remain open. Paragraph-spacing
+editing controls are not implemented by this import/render/preservation work.
+
+The diagram/chart/XLSX sweep passes 8,560 ordinary tests with the same 17
+expected raster failures. All 164 focused chart browser cases pass, including
+72 new native-spacing cases across six bindings. Core/UI typechecks, builds
+and package checks pass. The spacing fixture is absent from published output.
