@@ -77,6 +77,30 @@ for (const name of [
 			av.dispatch(
 				av.state.tr.setSelection(TextSelection.create(av.state.doc, field.from, field.to)),
 			);
+			const cutData: Record<string, string> = {};
+			const cutEvent = new Event('cut', { bubbles: true, cancelable: true });
+			Object.defineProperty(cutEvent, 'clipboardData', {
+				value: {
+					clearData: () => {},
+					setData: (kind: string, value: string) => (cutData[kind] = value),
+				},
+			});
+			av.dom.dispatchEvent(cutEvent);
+			expect(cutData['text/plain']).toBe('ABCDE');
+			expect(cutData['text/html']).not.toContain('data-field');
+			expect(av.state.doc.eq(bv.state.doc)).toBe(true);
+			expect(
+				runsOf((await loadDocx(await b!.saveBytes())).model).filter(
+					(run) => run.fieldChar === 'begin',
+				),
+			).toHaveLength(1);
+			expect(ab.undo()).toBe(true);
+			expect(av.state.doc.eq(bv.state.doc)).toBe(true);
+			expect(fieldResultRanges(bv.state.doc)[0]!.text).toBe('ABCDE');
+			ab.stopCapturing();
+			av.dispatch(
+				av.state.tr.setSelection(TextSelection.create(av.state.doc, field.from, field.to)),
+			);
 			av.someProp('handleKeyDown', (handler) =>
 				handler(av, new KeyboardEvent('keydown', { key: 'Delete' })),
 			);

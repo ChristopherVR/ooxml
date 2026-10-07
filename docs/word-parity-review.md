@@ -583,3 +583,21 @@ the author's own pending result insertion removes it outright. Core and six-bind
 browser cases cover resolution and undo. The tracked export reopens in Word with
 matching body text, field codes/results, bold and revision count. Multi-author
 result replacements, partial pending insertions and cut remain separate work.
+
+### Shared field-aware cut
+
+Keyboard cut and the asynchronous ribbon/context-menu clipboard fallback now
+reuse `deleteFieldSelection` from the core field guard. Whole simple-result cuts
+retain an empty instruction, and result clipboard text remains literal. Successful
+clipboard writes precede deletion; denied fallback writes and read-only cut
+events preserve the document. Plain selections and complete complex-field
+selections retain their ordinary host behavior.
+
+Six bindings cover keyboard and forced fallback cut, clipboard text, saved field
+codes and undo for simple/complex fields. Mounted Yjs cases cover clipboard
+projection, convergence, saved empty codes and local restoration with adjacent
+simple fields. Two cut/paste hook exports match native formatted-range move
+references on reopen: field counts, complete text and copied bold. The native
+range operation does not certify Windows clipboard formats. Legacy cut events
+without clipboard data, multi-author tracked cut/paste and structural selections
+still require separate evidence.

@@ -11,6 +11,7 @@ import {
 	simpleFieldPasteSlice,
 } from './simple-field-input';
 import { fieldMarkerNodeSpec } from './break-note-schema';
+import { deleteFieldSelection, fieldsBalanced } from './field-guard';
 const schema = new Schema({
 	nodes: {
 		doc: { content: 'paragraph+' },
@@ -53,6 +54,31 @@ const doc = schema.node(
 		schema.text('R'),
 	]),
 );
+it('shares field-aware deletion while leaving ordinary and whole-field selections to the host', () => {
+	const complex = schema.node(
+		'doc',
+		null,
+		schema.node('paragraph', null, [
+			schema.text('L'),
+			...[
+				{ text: '', fieldChar: 'begin' as const },
+				{ text: '', fieldCode: 'REF Target' },
+				{ text: '', fieldChar: 'separate' as const },
+				{ text: 'AB', field: { instr: 'REF Target' } },
+				{ text: '', fieldChar: 'end' as const },
+				{ text: 'R' },
+			].flatMap((run) => runToInlineNodes(run, schema)),
+		]),
+	);
+	const state = (from: number, to: number) =>
+		EditorState.create({ doc: complex, selection: TextSelection.create(complex, from, to) });
+	const tr = deleteFieldSelection(state(6, 8))!;
+	expect(tr.doc.textContent).toBe('LAR');
+	expect(fieldsBalanced(tr.doc)).toBe(true);
+	expect(deleteFieldSelection(state(2, 8))).toBeNull();
+	expect(deleteFieldSelection(state(1, 2))).toBeNull();
+	expect(deleteFieldSelection(state(5, 5))).toBeNull();
+});
 it('retains full-result replacements without joining adjacent identical fields', () => {
 	const state = EditorState.create({ doc });
 	const tr = replaceSimpleFieldResult(state, 2, 4, 'X')!;

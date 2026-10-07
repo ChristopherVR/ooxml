@@ -1,5 +1,5 @@
 # Compare only synthetic range-transfer exports in an owned hidden Word instance.
-param([Parameter(Mandatory)][string]$ExportDirectory, [Parameter(Mandatory)][string]$ReferenceDirectory, [Parameter(Mandatory)][string]$ReportPath)
+param([Parameter(Mandatory)][string]$ExportDirectory, [Parameter(Mandatory)][string]$ReferenceDirectory, [Parameter(Mandatory)][string]$ReportPath, [switch]$MoveResult)
 $ErrorActionPreference = 'Stop'
 $application = New-Object -ComObject Word.Application
 $application.Visible = $false
@@ -10,6 +10,7 @@ try {
     $exports = (Resolve-Path -LiteralPath $ExportDirectory).Path
     $references = (Resolve-Path -LiteralPath $ReferenceDirectory).Path
     foreach ($kind in @('whole', 'result', 'partial')) {
+        if ($MoveResult -and $kind -eq 'whole') { continue }
         $reference = $null
         foreach ($directory in @($references, $exports)) {
             $document = $application.Documents.Open((Join-Path $directory "$kind.docx"), $false, $true, $false)

@@ -1,0 +1,18 @@
+{
+	"applicationVersion": "16.0",
+	"applicationBuild": "16.0.20430",
+	"cases": [
+		{
+			"name": "result",
+			"fields": 2,
+			"text": "BeforeABCDEABCDEAfter\r",
+			"copiedBold": -1
+		},
+		{
+			"name": "partial",
+			"fields": 2,
+			"text": "BeforeACDEBABCDEAfter\r",
+			"copiedBold": -1
+		}
+	]
+}

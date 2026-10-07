@@ -1,34 +1,17 @@
 // Run with Bun after building core. Exercise the same result input hooks as the editor.
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { EditorState, TextSelection } from 'prosemirror-state';
 import { DOMParser } from 'prosemirror-model';
 import { JSDOM } from 'jsdom';
-import { loadDocx } from 'ooxml-core/docx';
 import { fieldGuardPlugin, fieldResultRanges, trackChangesPlugin } from 'ooxml-core/docx/ui';
 import { modelToDoc, docToModel } from '../src/docx/model-adapter.ts';
+import { fieldExportSource } from './word-field-export-source.mjs';
 
 if (!process.argv[2]) throw new Error('Provide an output directory');
 const output = resolve(process.argv[2]);
 await mkdir(output, { recursive: true });
-const loaded = await loadDocx(
-	await readFile(
-		new URL('../../core/docx/__fixtures__/field-comments/adjacent-source.docx', import.meta.url),
-	),
-);
-const model = {
-	...loaded.model,
-	blocks: loaded.model.blocks.map((block) =>
-		block.type === 'paragraph'
-			? {
-					...block,
-					runs: block.runs.map((run, index) =>
-						run.field && index === 1 ? { ...run, bold: true } : run,
-					),
-				}
-			: block,
-	),
-};
+const { loaded, model } = await fieldExportSource();
 for (const [kind, offsets] of Object.entries({
 	partial: [1, 2],
 	whole: [0, 5],

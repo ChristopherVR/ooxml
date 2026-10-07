@@ -1636,3 +1636,20 @@ cancellation inside the gesture owner. The browser matrix checks source bytes
 after cancellation and during dragging, and compares preview coefficients to
 the committed/reopened scene. Native snapping, preview raster equivalence and
 Microsoft Visio reopen acceptance remain open.
+
+## Shared Word field-aware clipboard deletion
+
+Source: ChristopherVR/ooxml at `e3c06a736`, `field-guard.ts`, simple cached-result
+input and `src/ui/src/docx/context-menu-actions.ts`. The guard now exports one
+field-aware selection deletion operation. Its cut event and the UI asynchronous
+clipboard fallback both reuse it; clipboard projection stays in the core and
+clipboard permission/lifecycle handling stays in the existing UI host.
+
+The synthetic source setup moves from `write-word-field-result-exports.mjs` at
+that commit into `word-field-export-source.mjs`, reused by the cut export driver.
+No parser, serializer or Yjs engine was copied. Existing native range copy and
+reopen scripts add a move mode, recording full-result and partial-result moves
+without using the system clipboard. The two editor-hook exports match the native
+field counts, text and copied bold on reopen. Browser keyboard/fallback checks
+and mounted Yjs history cover the body paths; full Windows clipboard formats and
+all tracked cut/paste remain unverified.

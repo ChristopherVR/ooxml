@@ -1,5 +1,5 @@
 /** Clipboard operations for the context menu. Nothing here pretends a denied permission succeeded. */
-import { deleteSelection } from 'prosemirror-commands';
+import { deleteFieldSelection } from 'ooxml-core/docx/ui';
 import type { EditorView } from 'prosemirror-view';
 
 /**
@@ -34,8 +34,10 @@ export async function copyOrCut(view: EditorView, op: 'cut' | 'copy'): Promise<b
 		view.state.doc.eq(doc) &&
 		view.state.selection.eq(selection)
 	)
-		deleteSelection(view.state, (transaction) =>
-			view.dispatch(transaction.setMeta('uiEvent', 'cut')),
+		view.dispatch(
+			(deleteFieldSelection(view.state) ?? view.state.tr.deleteSelection())
+				.scrollIntoView()
+				.setMeta('uiEvent', 'cut'),
 		);
 	return true;
 }

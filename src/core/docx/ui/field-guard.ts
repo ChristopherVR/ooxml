@@ -45,6 +45,20 @@ export function fieldsBalanced(doc: ProseMirrorNode): boolean {
 export function fieldGuardPlugin(): Plugin {
 	return new Plugin({
 		props: {
+			handleDOMEvents: {
+				cut: (view, event) => {
+					if (!view.editable || !event.clipboardData) return false;
+					const tr = deleteFieldSelection(view.state);
+					if (!tr) return false;
+					const { dom, text } = view.serializeForClipboard(view.state.selection.content());
+					event.clipboardData.clearData();
+					event.clipboardData.setData('text/html', dom.innerHTML);
+					event.clipboardData.setData('text/plain', text);
+					event.preventDefault();
+					view.dispatch(tr.scrollIntoView().setMeta('uiEvent', 'cut'));
+					return true;
+				},
+			},
 			transformCopied: fieldClipboardSlice,
 			transformPasted: (slice, view) =>
 				simpleFieldPasteSlice(fieldClipboardSlice(slice), view?.state),
@@ -81,6 +95,14 @@ export function fieldGuardPlugin(): Plugin {
 			return fieldsBalanced(transaction.doc);
 		},
 	});
+}
+
+/** Field-aware selection deletion for clipboard hosts; null delegates ordinary deletion. */
+export function deleteFieldSelection(state: EditorState): Transaction | null {
+	const { from, to, empty } = state.selection;
+	return empty
+		? null
+		: (replaceAroundMarkers(state, from, to, '') ?? replaceSimpleFieldResult(state, from, to, ''));
 }
 
 /**
