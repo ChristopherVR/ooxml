@@ -39,7 +39,11 @@ ratios 0.5, 2 and 3 have 72 distinct API/pointer workflows across six frameworks
 including both endpoints, undo/redo, download and reload. Independent native SVG
 measurements verify physical paper sizes and saved endpoints, and page-scale
 metadata is preserved byte-for-byte. Other scales and unit conventions remain
-unverified.
+unverified. Native endpoint assignments also verify oblique linear stroke paint
+after API editing, undo/redo and save/reload: eight two/three-stop opaque and
+translucent cases across six frameworks, live and portable SVG. Interior errors
+meet existing bounds (maximum four, mean below 0.885), with exact pixels,
+pointer gesture paint and native Office reopen acceptance still open.
 
 Saved oblique linear fills now use the shared physical endpoint helper rather
 than native-SVG box rotation. Native 45-degree rectangle paint and 225-degree

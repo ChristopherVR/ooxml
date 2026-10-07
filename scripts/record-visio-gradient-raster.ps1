@@ -8,13 +8,15 @@ param(
  [ValidateSet('Fill','Line')][string]$Paint='Fill',
  [string]$GradientAngle='0 deg',
  [ValidateSet('rectangle','line')][string]$LinearShape='rectangle',
- [ValidateRange(0,1000000)][double]$LineShapeWidth=0
+ [ValidateRange(0,1000000)][double]$LineShapeWidth=0,
+ [ValidateSet('None','Begin','End')][string]$MoveEndpoint='None'
 )
 # Compare the real raster engine, rather than assuming native SVG is a paint oracle.
 $ErrorActionPreference='Stop'
 if($FirstDirection -gt $LastDirection){throw 'FirstDirection must not exceed LastDirection.'}
 if($LinearShape -eq 'line' -and $Paint -ne 'Line'){throw 'One-dimensional probes require line paint.'}
 if($LineShapeWidth -gt 0 -and $LinearShape -ne 'line'){throw 'LineShapeWidth requires a line probe.'}
+if($MoveEndpoint -ne 'None' -and ($LinearShape -ne 'line' -or $LineShapeWidth -gt 0 -or $ShapeAngle -ne 0 -or $LastDirection -ne 0)){throw 'Endpoint probes require native straight lines, derived Width/Angle and linear paint.'}
 . (Join-Path $PSScriptRoot 'visio-native-shape.ps1')
 . (Join-Path $PSScriptRoot 'visio-native-gradient.ps1')
 Add-Type -AssemblyName System.Drawing
@@ -54,7 +56,7 @@ try {
      if($ShapeAngle -ne 0){$name+='-angle-'+$ShapeAngle.ToString([cultureinfo]::InvariantCulture)}
      $shape=if($kind -eq 'line'){$page.DrawLine(1,1.5,3,1.5)}else{New-VisioNativeFillShape $page $kind}
      if($kind -eq 'line' -and $LineShapeWidth -gt 0){$shape.CellsU('Width').ResultIU=$LineShapeWidth}
-     $shape.CellsU('Angle').FormulaU=$ShapeAngle.ToString([cultureinfo]::InvariantCulture)+' deg'
+     if($MoveEndpoint -eq 'None'){$shape.CellsU('Angle').FormulaU=$ShapeAngle.ToString([cultureinfo]::InvariantCulture)+' deg'}
      $shape.CellsU('FillPattern').FormulaU='1'
      $shape.CellsU('LinePattern').FormulaU='0'
      if($Paint -eq 'Line'){
@@ -74,6 +76,14 @@ try {
       $shape.CellsSRC($gradientSection,2,0).FormulaU='RGB(0,0,255)'
       $shape.CellsSRC($gradientSection,2,1).FormulaU=$back
       $shape.CellsSRC($gradientSection,2,2).FormulaU='100%'
+     }
+     $endpoint=$null
+     if($MoveEndpoint -ne 'None'){
+      $beforeX=$shape.CellsU($MoveEndpoint+'X').ResultIU
+      $beforeY=$shape.CellsU($MoveEndpoint+'Y').ResultIU
+      $shape.CellsU($MoveEndpoint+'X').ResultIU=$beforeX+0.75
+      $shape.CellsU($MoveEndpoint+'Y').ResultIU=$beforeY-0.5
+      $endpoint=@{endpoint=$MoveEndpoint.ToLowerInvariant();x=$shape.CellsU($MoveEndpoint+'X').ResultIU;y=$shape.CellsU($MoveEndpoint+'Y').ResultIU;beforeX=$beforeX;beforeY=$beforeY}
      }
      $shape.Export((Join-Path $directory ($name+'.svg')))
      $shape.Export((Join-Path $directory ($name+'.png')))
@@ -101,7 +111,7 @@ try {
       $shape.XYToPage(1,0,[ref]$xx,[ref]$xy)
       $shape.XYToPage(0,1,[ref]$yx,[ref]$yy)
       $nativeTransform=@(($xx-$ox),($xy-$oy),($yx-$ox),($yy-$oy),$ox,$oy)
-      $cases+=,@{name=$name;paint=$Paint;gradientAngle=$shape.CellsU($Paint+'GradientAngle').ResultIU;direction=$direction;kind=$kind;outline=$outline;angle=$ShapeAngle;nativeShapeWidth=$shape.CellsU('Width').ResultIU;nativeExtents=$nativeExtents;nativeLineWidth=$shape.CellsU('LineWeight').ResultIU;nativeTransform=$nativeTransform;stopCount=$stopCount;alpha=$alpha;shapeId=[string]$shape.ID;width=$bitmap.Width;height=$bitmap.Height;samples=$samples}
+      $cases+=,@{name=$name;paint=$Paint;gradientAngle=$shape.CellsU($Paint+'GradientAngle').ResultIU;direction=$direction;kind=$kind;outline=$outline;angle=$ShapeAngle;nativeShapeWidth=$shape.CellsU('Width').ResultIU;nativeExtents=$nativeExtents;nativeLineWidth=$shape.CellsU('LineWeight').ResultIU;nativeTransform=$nativeTransform;stopCount=$stopCount;alpha=$alpha;shapeId=[string]$shape.ID;width=$bitmap.Width;height=$bitmap.Height;samples=$samples;endpointEdit=$endpoint}
      } finally {$bitmap.Dispose()}
     }
    }
@@ -110,6 +120,14 @@ try {
  $controlShapeId=$null
  if($LinearShape -eq 'line'){$control=$page.DrawRectangle(6,6,7,7);$controlShapeId=[string]$control.ID}
  $document.SaveAs((Join-Path $directory 'gradient-raster.vsdx')) | Out-Null
+ if($MoveEndpoint -ne 'None'){
+  foreach($case in $cases){
+   $shape=$page.Shapes.ItemFromID([int]$case.shapeId)
+   $shape.CellsU($MoveEndpoint+'X').ResultIU=$case.endpointEdit.beforeX
+   $shape.CellsU($MoveEndpoint+'Y').ResultIU=$case.endpointEdit.beforeY
+  }
+  $document.SaveAs((Join-Path $directory 'gradient-raster-before.vsdx')) | Out-Null
+ }
  [ordered]@{application='Microsoft Visio';version=$app.Version;dpi=144;controlShapeId=$controlShapeId;cases=$cases} | ConvertTo-Json -Depth 8 | Set-Content (Join-Path $directory 'evidence.json') -Encoding utf8
 } finally {
  try {

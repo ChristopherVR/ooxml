@@ -2,6 +2,52 @@
 
 Status: local Windows development evidence, 2026-10-03. Full Microsoft Visio parity is not established.
 
+## Native endpoint gradient paint after save/reload, 2026-10-08
+
+The existing gradient recorder now accepts MoveEndpoint for native unglued
+straight lines with derived Width/Angle and linear stroke paint. It assigns
+the selected endpoint by (+0.75, -0.5) drawing inches, records native XYToPage
+poses/extents and exports unchanged native PNG/SVG references. After saving
+the edited native document, it restores the selected coordinates and saves a
+matching source document with the same shape IDs and paint. The owned invisible
+Visio instances restored raster settings and quit; the user's instance stayed
+untouched.
+
+Captures in the local temporary directory:
+
+- Begin: visio-gradient-raster-f45c298ce47e48c2b432a495fbc3c985
+- End: visio-gradient-raster-ce5bd91d257e48d6ae430b97741de8a2
+
+Each contains four native cases: two/three stops, opaque/translucent paint and
+a 45-degree saved gradient angle. Both endpoint assignments change line length
+and orientation. The browser benchmark reuses its existing resize/edit stage
+and shared painter; no product coordinate or paint implementation changed.
+For endpoint captures it applies the shared command, verifies complete page
+models through undo/redo, exports the public VSDX bytes, compares native saved
+poses/widths to 12 digits and geometry/style exactly, and reloads the saved bytes
+before performing the live and portable-SVG native PNG comparisons.
+
+All twelve framework scenarios passed, producing 96 interior comparisons.
+Begin/end maximum channel errors are both four; maximum mean errors are
+0.871461 and 0.884248 (rounded up). Minimum compared pixels are 4,732 and 1,622;
+pose differences are below 3e-16. The original maximum-seven and mean-one/1.5
+linear gates and contour exclusions remain unchanged.
+
+Two optional core regressions, enabled by
+VISIO_NATIVE_GRADIENT_BEGIN_ENDPOINT_DIR and
+VISIO_NATIVE_GRADIENT_END_ENDPOINT_DIR, passed all eight cases. They compare
+native poses, geometry and paint, preserve the unrelated control and every
+unchanged package part byte-for-byte, and confirm only page1.xml changed.
+Core strict/PowerPoint type checks and viewer type checks passed. A fresh
+unedited native line-paint baseline was also rerun in vanilla using
+visio-gradient-raster-f0765a3a531a4a299f6a7484ceec5085. The first baseline attempt
+stopped before import because its historical temporary capture was missing.
+
+This proves the captured API edits and saved viewer output within existing
+interior error bounds. Exact pixels/contours, pointer gesture paint, other
+gradient directions/angles, glue/routing and native Office reopen acceptance
+remain unverified.
+
 ## Scaled-page endpoint editing, 2026-10-08
 
 Six fresh native Visio captures cover drawing-to-page ratios 0.5, 2 and 3,

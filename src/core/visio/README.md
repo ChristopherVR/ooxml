@@ -316,6 +316,12 @@ download and reload. Native exported SVG independently verifies physical paper
 dimensions and saved endpoint positions; unchanged page-scale metadata is
 preserved byte-for-byte. Other scales and unit conventions remain unverified.
 
+Native endpoint assignments also verify oblique linear stroke paint after API
+editing, undo/redo and save/reload. Eight begin/end cases with two/three stops
+and opacity cover six frameworks and live/portable output. Interior errors stay
+within the existing bounds (maximum channel error four, mean below 0.885); this does
+not prove exact pixels, pointer gesture paint or native Office reopening.
+
 Numeric ShapeSheet interpretation uses a bounded AST, never JavaScript execution.
 Arithmetic, comparisons, IF, GUARD, Width/Height scaling, local geometry/named-row
 references and static Sheet.ID references have dependency analysis. MODULUS,
