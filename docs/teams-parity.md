@@ -238,7 +238,7 @@ to counts; edits and reactions do not. Explicit unread marks persist locally.
 Tests cover foreign/self/deleted messages, no-op read updates, restoration, filtering
 and reopening. This is not a shared read receipt or notification delivery system;
 cross-device state, viewport-level reading detection, activity notifications and
-automatic following remain outstanding. These controls follow Microsoft's
+automatic following on mentions remain outstanding. These controls follow Microsoft's
 [followed-thread inbox workflow](https://support.microsoft.com/en-us/teams/teams-channels/follow-threads-in-microsoft-teams).
 
 ## Eleventh implemented slice: automatic following preferences
@@ -254,6 +254,26 @@ author action results and defensive preference copies; browser acceptance checks
 post following, opting out, reload and independently enabling reply following.
 Automatic following on mentions and following all content in a channel remain
 unsupported, alongside notifications and cross-device preference sync.
+
+## Twelfth implemented slice: personal message drafts
+
+Posts, thread replies and edits retain separate drafts through channel, thread and
+view navigation. A Drafts view lists unsent messages and resumes their original
+compose context. Drafts stay outside Yjs and persist per user and workspace in
+local storage. Text is restored after reload; file bytes stay in memory during a
+session. After reload, restored attachment names require reattaching or explicit
+discard before sending. The UI does not silently send a draft without those files.
+Successful sends clear their captured draft without clearing newer text typed
+during an upload; rejected edits retain the draft. Local storage is bounded to
+512 KiB of serialized text/metadata, 500 restored contexts and ten attachments per
+draft; blocked storage or larger snapshots preserve only session state. Cross-device
+draft sync, durable attachment bytes, unavailable-message recovery and shared read
+receipts remain outstanding. Unit tests cover context isolation, defensive copies,
+restoration, blocked storage and send races. Browser acceptance covers post/thread
+navigation, retained attachment bytes, central resume, reload, missing-attachment
+guard and sending. Microsoft's current
+[Drafts quick view](https://support.microsoft.com/en-us/teams/platform/what-s-new-in-microsoft-teams)
+is the workflow reference; this local implementation does not establish full parity.
 
 ## Next releasable slices
 

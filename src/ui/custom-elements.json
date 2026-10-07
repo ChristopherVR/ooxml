@@ -543,7 +543,7 @@
 					"name": "OfficeUiChatComposer",
 					"tagName": "office-ui-chat-composer",
 					"customElement": true,
-					"description": "The compose box: a growing text area, attach and emoji buttons, reply or edit banner and a typing line. Enter sends, Shift+Enter adds a line. Properties: `typing` (names), `replyingTo` (a label or null), `editing` (true while editing), `disabled`, `placeholder`, and `value`. Events: `office-chat-send` `{ text, files }`, `office-chat-typing` `{}` (throttled) and `office-chat-cancel` `{}` (the banner's close button or Escape). File bytes are never read here: the host stores them wherever its server says and posts a link.",
+					"description": "The compose box: a growing text area, attach and emoji buttons, reply or edit banner and a typing line. Enter sends, Shift+Enter adds a line. Properties: `typing` (names), `replyingTo` (a label or null), `editing` (true while editing), `disabled`, `placeholder`, and `value`. Events: `office-chat-draft` `{ text, files, missingFiles }` after a user change, `office-chat-send` `{ text, files }`, `office-chat-typing` `{}` (throttled) and `office-chat-cancel` `{}` (the banner's close button or Escape). File bytes are never read here: the host stores them wherever its server says and posts a link.",
 					"attributes": [
 						{
 							"name": "disabled"
@@ -583,6 +583,10 @@
 						},
 						{
 							"kind": "field",
+							"name": "missingFiles"
+						},
+						{
+							"kind": "field",
 							"name": "placeholder",
 							"type": {
 								"text": "string"
@@ -607,6 +611,9 @@
 					"events": [
 						{
 							"name": "office-chat-cancel"
+						},
+						{
+							"name": "office-chat-draft"
 						},
 						{
 							"name": "office-chat-send"

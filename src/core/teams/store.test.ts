@@ -14,6 +14,75 @@ afterEach(() => {
 });
 
 describe('teams client', () => {
+	it('retains independent post, thread and edit drafts across navigation', async () => {
+		const client = make('ada', 'draft-navigation');
+		client.createChannel('Project');
+		await tick();
+		const channel = client.getState().selectedChannelId;
+		const root = client.workspace.chat.post(channel, { text: 'Root' })!;
+		const file = Object.assign(new Blob(['xlsx']), { name: 'Budget.xlsx' });
+		client.setDraft({ text: 'New post draft', files: [file], missingFiles: [] });
+		client.openThread(root.id);
+		client.setDraft({ text: 'Thread draft', files: [], missingFiles: [] });
+		client.startEdit(root.id);
+		await tick();
+		expect(client.getState().draft.text).toBe('Root');
+		client.setDraft({ text: 'Edited draft', files: [], missingFiles: [] });
+		client.cancelCompose();
+		await tick();
+		expect(client.getState().draft.text).toBe('Thread draft');
+		client.closeThread();
+		await tick();
+		expect(client.getState().draft.text).toBe('New post draft');
+		expect(client.getState().draft.files[0]).toBe(file);
+		await client.send({ text: '' });
+		await tick();
+		expect(client.getState().draft.text).toBe('New post draft');
+		client.createChannel('Other');
+		client.setDraft({ text: 'Other channel', files: [], missingFiles: [] });
+		client.select(channel);
+		await tick();
+		expect(client.getState().draft.text).toBe('New post draft');
+		const edit = client.getState().drafts.find((draft) => draft.context.editId)!;
+		expect(client.openDraft(edit.context)).toBe(true);
+		await tick();
+		expect(client.getState().draft.text).toBe('Edited draft');
+	});
+	it('rejects sending restored attachment names until they are reattached or discarded', async () => {
+		const client = make('ada', 'draft-missing');
+		client.createChannel('Project');
+		await tick();
+		client.setDraft({ text: 'Unsent', files: [], missingFiles: ['Budget.xlsx'] });
+		await client.send({ text: 'Unsent' });
+		await tick();
+		expect(client.getState().messages).toEqual([]);
+		expect(client.getState().draft.text).toBe('Unsent');
+		client.setDraft({ text: 'Unsent', files: [], missingFiles: [] });
+		await client.send({ text: 'Unsent' });
+		await tick();
+		expect(client.getState().messages[0]?.text).toBe('Unsent');
+		expect(client.getState().drafts).toEqual([]);
+	});
+	it('keeps a newer draft while an earlier attachment send completes', async () => {
+		let finish!: (result: { url: string }) => void;
+		const client = make('ada', 'draft-pending-send', {
+			uploadFile: () =>
+				new Promise<{ url: string }>((resolve) => {
+					finish = resolve;
+				}),
+		});
+		client.createChannel('Project');
+		await tick();
+		const file = Object.assign(new Blob(['xlsx']), { name: 'Budget.xlsx' });
+		client.setDraft({ text: 'First', files: [file], missingFiles: [] });
+		const sending = client.send({ text: 'First', files: [file] });
+		client.setDraft({ text: 'Second', files: [], missingFiles: [] });
+		finish({ url: 'https://files.test/budget.xlsx' });
+		await sending;
+		await tick();
+		expect(client.getState().draft.text).toBe('Second');
+		expect(client.getState().messages[0]?.text).toBe('First');
+	});
 	it('automatically follows successful posts and replies according to personal settings', async () => {
 		const client = make('ada', 'auto-follow');
 		client.createChannel('Project');

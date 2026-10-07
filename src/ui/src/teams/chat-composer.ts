@@ -4,6 +4,7 @@ import { definer } from '../registry.js';
 import { TeamsElement, withStyles } from './base.js';
 import { icon } from './icons.js';
 import css from './chat-composer.css?raw';
+import type { ChatDraft } from 'ooxml-core/teams';
 
 export const EMOJI = [
 	'😀',
@@ -33,7 +34,8 @@ const MAX_FILES = 10;
  * The compose box: a growing text area, attach and emoji buttons, reply or edit banner and a
  * typing line. Enter sends, Shift+Enter adds a line. Properties: `typing` (names), `replyingTo`
  * (a label or null), `editing` (true while editing), `disabled`, `placeholder`, and `value`.
- * Events: `office-chat-send` `{ text, files }`, `office-chat-typing` `{}` (throttled) and
+ * Events: `office-chat-draft` `{ text, files, missingFiles }` after a user change,
+ * `office-chat-send` `{ text, files }`, `office-chat-typing` `{}` (throttled) and
  * `office-chat-cancel` `{}` (the banner's close button or Escape). File bytes are never read here:
  * the host stores them wherever its server says and posts a link.
  */
@@ -47,6 +49,7 @@ export class OfficeUiChatComposer extends TeamsElement {
 		placeholder: { type: String },
 		value: { type: String },
 		files: { state: true },
+		missingFiles: { attribute: false },
 		emojiOpen: { state: true },
 	};
 	declare typing: string[];
@@ -55,7 +58,8 @@ export class OfficeUiChatComposer extends TeamsElement {
 	declare disabled: boolean;
 	declare placeholder: string;
 	declare value: string;
-	declare files: File[];
+	declare files: ChatDraft['files'];
+	declare missingFiles: string[];
 	declare emojiOpen: boolean;
 	private lastTyping = 0;
 
@@ -68,6 +72,7 @@ export class OfficeUiChatComposer extends TeamsElement {
 		this.placeholder = 'Type a message';
 		this.value = '';
 		this.files = [];
+		this.missingFiles = [];
 		this.emojiOpen = false;
 	}
 
@@ -79,7 +84,11 @@ export class OfficeUiChatComposer extends TeamsElement {
 	}
 
 	private get canSend(): boolean {
-		return !this.disabled && (this.value.trim() !== '' || this.files.length > 0);
+		return (
+			!this.disabled &&
+			!this.missingFiles.length &&
+			(this.value.trim() !== '' || this.files.length > 0)
+		);
 	}
 
 	private submit(): void {
@@ -93,6 +102,7 @@ export class OfficeUiChatComposer extends TeamsElement {
 
 	private onInput(event: Event): void {
 		this.value = (event.target as HTMLTextAreaElement).value;
+		this.saveDraft();
 		const now = Date.now();
 		if (now - this.lastTyping > 2000) {
 			this.lastTyping = now;
@@ -113,6 +123,17 @@ export class OfficeUiChatComposer extends TeamsElement {
 		const input = event.target as HTMLInputElement;
 		this.files = [...this.files, ...Array.from(input.files ?? [])].slice(0, MAX_FILES);
 		input.value = '';
+		this.missingFiles = this.missingFiles.filter(
+			(name) => !this.files.some((file) => file.name === name),
+		);
+		this.saveDraft();
+	}
+	private saveDraft(): void {
+		this.fire('office-chat-draft', {
+			text: this.value,
+			files: [...this.files],
+			missingFiles: [...this.missingFiles],
+		});
 	}
 
 	private typingLine(): string {
@@ -130,6 +151,30 @@ export class OfficeUiChatComposer extends TeamsElement {
 		return html`
 			<div class="typing" aria-live="polite">${this.typingLine()}</div>
 			<div class="box">
+				${
+					this.missingFiles.length
+						? html`<div role="status">
+								Reattach or discard these draft attachments before sending:
+								<ul>
+									${this.missingFiles.map(
+										(name) =>
+											html`<li>
+												${name}<button
+													type="button"
+													aria-label=${`Discard missing ${name}`}
+													@click=${() => {
+														this.missingFiles = this.missingFiles.filter((item) => item !== name);
+														this.saveDraft();
+													}}
+												>
+													Discard
+												</button>
+											</li>`,
+									)}
+								</ul>
+							</div>`
+						: nothing
+				}
 				${
 					banner
 						? html`<div class="banner">
@@ -161,7 +206,10 @@ export class OfficeUiChatComposer extends TeamsElement {
 										<button
 											type="button"
 											aria-label=${`Remove ${f.name}`}
-											@click=${() => (this.files = this.files.filter((_, j) => j !== i))}
+											@click=${() => {
+												this.files = this.files.filter((_, j) => j !== i);
+												this.saveDraft();
+											}}
 										>
 											${f.name} ${icon('close')}
 										</button>
@@ -200,6 +248,7 @@ export class OfficeUiChatComposer extends TeamsElement {
 												role="menuitem"
 												@click=${() => {
 													this.value += e;
+													this.saveDraft();
 													this.emojiOpen = false;
 													this.renderRoot.querySelector('textarea')?.focus();
 												}}

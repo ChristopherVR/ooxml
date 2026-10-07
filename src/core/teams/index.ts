@@ -12,6 +12,7 @@ export * from './signaling.js';
 export * from './store.js';
 export * from './tabs.js';
 export * from './threads.js';
+export type { ChatDraft, DraftContext, SavedDraft } from './drafts.js';
 export type { FollowedThread, ThreadFollowSettings } from './followed-threads.js';
 export * from './view.js';
 export * from './workspace.js';

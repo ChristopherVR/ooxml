@@ -9,6 +9,7 @@ import {
 	type TeamsClient,
 	type TeamsServerConfig,
 	type TeamsState,
+	type DraftContext,
 	parseServerConfig,
 } from 'ooxml-core/teams';
 // Registered from the leaf modules, not the package root: the root imports this folder through
@@ -37,6 +38,7 @@ import {
 import css from './teams-app.css?raw';
 import { threadPane } from './thread-pane.js';
 import { followedThreads } from './followed-threads.js';
+import { draftList } from './draft-list.js';
 
 export type { FileUploader } from 'ooxml-core/teams';
 export interface OpenFileDetail {
@@ -54,13 +56,14 @@ export interface OpenFileDetail {
 }
 export type FileOpeners = Partial<Record<OfficeKind, (detail: OpenFileDetail) => void>>;
 
-type RailView = 'teams' | 'calls' | 'files' | 'followed';
+type RailView = 'teams' | 'calls' | 'files' | 'followed' | 'drafts';
 type Panel = '' | 'chat' | 'people';
 const RAIL = [
 	{ id: 'teams', label: 'Teams', icon: 'users' },
 	{ id: 'calls', label: 'Calls', icon: 'phone' },
 	{ id: 'files', label: 'Files', icon: 'folder' },
 	{ id: 'followed', label: 'Followed threads', icon: 'chat' },
+	{ id: 'drafts', label: 'Drafts', icon: 'chat' },
 ] as const;
 const AVAILABILITY = ['available', 'busy', 'away'] as const;
 
@@ -490,6 +493,8 @@ export class TeamsApp extends LitElement {
 	}
 
 	private main(s: TeamsState) {
+		if (this.rail === 'drafts' && this.teams.client)
+			return draftList(s, this.teams.client, (context) => void this.resumeDraft(context));
 		if (this.preview)
 			return html`<teams-content-preview
 				.detail=${this.preview}
@@ -646,12 +651,15 @@ export class TeamsApp extends LitElement {
 													.typing=${s.typing}
 													.replyingTo=${s.replyingTo?.authorName ?? null}
 													.editing=${s.editing !== null}
-													.value=${s.editing?.text ?? ''}
+													.value=${s.draft.text}
+													.files=${s.draft.files}
+													.missingFiles=${s.draft.missingFiles}
+													@office-chat-draft=${(e: CustomEvent<TeamsState['draft']>) => c?.setDraft(e.detail)}
 													?disabled=${!channel}
 													placeholder=${channel ? `Message # ${channel.name}` : 'Create a channel first'}
 													@office-chat-typing=${() => c?.notifyTyping()}
 													@office-chat-cancel=${() => c?.cancelCompose()}
-													@office-chat-send=${(e: CustomEvent<{ text: string; files: File[] }>) => void c?.send(e.detail)}
+													@office-chat-send=${(e: CustomEvent<TeamsState['draft']>) => void c?.send(e.detail)}
 													data-compose=${compose ? 'on' : 'off'}
 												></office-ui-chat-composer>`
 									}
@@ -685,6 +693,18 @@ export class TeamsApp extends LitElement {
 		await Promise.resolve();
 		await this.updateComplete;
 		this.shadowRoot?.querySelector<HTMLElement>('[data-thread-heading]')?.focus();
+	}
+	private async resumeDraft(context: DraftContext): Promise<void> {
+		if (!this.closePreview() || !this.teams.client?.openDraft(context)) return;
+		this.rail = 'teams';
+		this.tab = 'posts';
+		this.meeting = false;
+		await Promise.resolve();
+		await this.updateComplete;
+		this.shadowRoot
+			?.querySelector('office-ui-chat-composer')
+			?.shadowRoot?.querySelector('textarea')
+			?.focus();
 	}
 	private async closeThread(): Promise<void> {
 		const client = this.teams.client;

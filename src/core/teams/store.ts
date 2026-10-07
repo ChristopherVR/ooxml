@@ -13,6 +13,7 @@ import { createFileActions } from './files.js';
 import { checkFileAbort, withFileAbort, type FileOperationOptions } from './file-transfer.js';
 import type { ChannelTab, TabContent } from './tabs.js';
 import { channelThreads, type MessageThread } from './threads.js';
+import { createDraftStore, type ChatDraft, type DraftContext, type SavedDraft } from './drafts.js';
 import {
 	createThreadFollows,
 	type FollowedThread,
@@ -92,6 +93,8 @@ export interface TeamsState {
 	threadFollowed: boolean;
 	followedThreads: FollowedThread[];
 	threadFollowSettings: ThreadFollowSettings;
+	draft: ChatDraft;
+	drafts: SavedDraft[];
 	files: FileEntry[];
 	/** Every file in every channel, newest first. */
 	allFiles: FileEntry[];
@@ -138,6 +141,9 @@ export interface TeamsClient {
 		options?: FileOperationOptions,
 	) => Promise<Attachment>;
 	send: (input: { text: string; files?: (UploadableFile & Blob)[] }) => Promise<void>;
+	setDraft: (draft: ChatDraft) => void;
+	openDraft: (context: DraftContext) => boolean;
+	discardDraft: (context: DraftContext) => void;
 	startReply: (messageId: string) => void;
 	openThread: (messageId: string) => void;
 	closeThread: () => void;
@@ -194,6 +200,10 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 		`teams:followed:${encodeURIComponent(workspaceId)}:${encodeURIComponent(ws.user.id)}`,
 	);
 	const notices = new Emitter<{ notice: string }>();
+	const drafts = createDraftStore(
+		storage,
+		`teams:drafts:${encodeURIComponent(workspaceId)}:${encodeURIComponent(ws.user.id)}`,
+	);
 	const notice = (text: string): void => notices.emit('notice', text);
 	const listeners = new Set<() => void>();
 	let lastRead: Record<string, number> = {};
@@ -232,6 +242,17 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 
 	const messagesOf = (id: string): Message[] => ws.chat.messages(id);
 	let threadId = '';
+	const draftContext = (): DraftContext => {
+		const root =
+			threadId ||
+			(replyId ? channelThreads(messagesOf(selected)).thread(replyId)?.root.id : undefined);
+		return {
+			channelId: selected,
+			...(root ? { threadId: root } : {}),
+			...(editId ? { editId } : {}),
+			...(replyId ? { replyTo: replyId } : {}),
+		};
+	};
 	const peers = (): PeerLike[] => ws.session.peers() as unknown as PeerLike[];
 	const visibleChannels = (): Channel[] => ws.chat.channels().filter((c) => !c.archived);
 
@@ -278,6 +299,13 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 				!!thread && follows.has(selected, thread.root.id, (id) => threads.thread(id)?.root.id),
 			followedThreads: follows.view(channels, messagesOf, ws.user.id),
 			threadFollowSettings: follows.settings(),
+			draft: drafts.read(
+				draftContext(),
+				messages.find((message) => message.id === editId)?.text ?? '',
+			),
+			drafts: drafts
+				.list()
+				.filter((draft) => channels.some((channel) => channel.id === draft.context.channelId)),
 			files: filesOf(messages),
 			allFiles: allFilesOf(channels, messagesOf),
 			tabs: selected ? ws.tabs.tabs(selected) : [],
@@ -511,18 +539,32 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 		}),
 		async send({ text, files = [] }) {
 			if (!selected) return;
+			if (!editId && !text.trim() && !files.length) return;
+			const context = draftContext();
+			const previous = drafts.read(context);
+			if (previous.missingFiles.length) {
+				notice('Reattach or discard the missing draft attachments before sending');
+				return;
+			}
+			const sentDraft: ChatDraft = { text, files, missingFiles: [] };
+			const revision = drafts.clear(context);
 			const channelId = selected;
 			const replyingTo = replyId;
 			clearTimeout(typingTimer);
 			ws.setTyping(undefined);
 			if (editId) {
-				if (!ws.chat.edit(selected, editId, text)) notice('Only your own messages can be edited');
+				if (!ws.chat.edit(selected, editId, text)) {
+					drafts.restore(context, sentDraft, revision);
+					notice('The edit was not applied; the draft was retained');
+					return refresh();
+				}
 				editId = '';
 				return refresh();
 			}
 			const attachments: Attachment[] = [];
 			for (const file of files) attachments.push(await upload(file));
 			if (destroyed || !visibleChannels().some((c) => c.id === channelId)) {
+				drafts.restore(context, sentDraft, revision);
 				notice('The channel is no longer available; the message was not shared');
 				return;
 			}
@@ -532,12 +574,39 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 				attachments,
 			});
 			followAuthored(message);
+			if (!message) drafts.restore(context, sentDraft, revision);
 			if (selected === channelId && replyId === replyingTo) replyId = '';
 			refresh();
 		},
 		startReply: act((id) => {
 			if (find(id)) [replyId, editId] = [id, ''];
 		}),
+		setDraft: act((draft) => {
+			drafts.set(draftContext(), draft);
+		}),
+		discardDraft: act((context) => {
+			drafts.clear(context);
+		}),
+		openDraft(context) {
+			if (!visibleChannels().some((channel) => channel.id === context.channelId)) return false;
+			const index = channelThreads(messagesOf(context.channelId));
+			if (context.threadId && !index.thread(context.threadId)) return false;
+			if (
+				context.editId &&
+				!messagesOf(context.channelId).some(
+					(message) =>
+						message.id === context.editId && message.authorId === ws.user.id && !message.deleted,
+				)
+			)
+				return false;
+			selected = context.channelId;
+			threadId = context.threadId ?? '';
+			editId = context.editId ?? '';
+			replyId = context.replyTo ?? '';
+			ws.setActiveChannel(selected);
+			refresh();
+			return true;
+		},
 		openThread: act((id) => {
 			const thread = channelThreads(messagesOf(selected)).thread(id);
 			if (thread) {
