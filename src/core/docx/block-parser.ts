@@ -4,7 +4,7 @@
 import type { Block, Paragraph, Revision, Table, TextRun } from './model';
 import { first, getW, isElement, named, textContent, buildXml, type XmlElement } from './xml';
 import { runPropertiesHaveUnknownContent } from './write-run-validation';
-import { classifyBreak } from './breaks';
+import { classifyBreak, isCachedPageBreak } from './breaks';
 import { parseDirectRunProperties } from './run-properties';
 import { parseDirectParagraphProperties } from './paragraph-properties';
 import { parseTable as parseTableWithFidelity } from './parse-table';
@@ -47,7 +47,7 @@ let openMoves: OpenMoves | undefined;
 function runContent(node: XmlElement): XmlElement[] {
 	return Array.from(node.childNodes)
 		.filter(isElement)
-		.filter((child) => child.localName !== 'rPr');
+		.filter((child) => child.localName !== 'rPr' && !isCachedPageBreak(child));
 }
 
 /** The run's drawing, looking inside `mc:AlternateContent` at the `mc:Choice` Word 2010+ reads. */

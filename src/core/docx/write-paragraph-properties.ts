@@ -98,7 +98,11 @@ function updatePageBreakBefore(
 ): void {
 	if (base && paragraph.pageBreakBefore === base.pageBreakBefore) return;
 	for (const element of children(props, 'pageBreakBefore')) props.removeChild(element);
-	if (paragraph.pageBreakBefore) props.appendChild(makeW(doc, 'pageBreakBefore'));
+	if (paragraph.pageBreakBefore !== undefined) {
+		const element = makeW(doc, 'pageBreakBefore');
+		if (!paragraph.pageBreakBefore) element.setAttributeNS(WORD_NS, 'w:val', '0');
+		props.appendChild(element);
+	}
 }
 
 /** Pagination toggles: on, explicitly off (cancelling a style), or absent. */

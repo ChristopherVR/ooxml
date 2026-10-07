@@ -227,7 +227,7 @@ export function adaptDocumentModel(
 				hangingTwips: ownFirstLine ? resolved.hangingTwips : label?.hangingTwips,
 				styleId: paragraph.style,
 			}),
-			...(paragraph.pageBreakBefore ? { pageBreakBefore: true } : {}),
+			...(resolved.pageBreakBefore ? { pageBreakBefore: true } : {}),
 			...(resolved.keepNext ? { keepNext: true } : {}),
 			...(resolved.keepLines ? { keepLines: true } : {}),
 			...(resolved.widowControl === false ? { widowControl: false } : {}),

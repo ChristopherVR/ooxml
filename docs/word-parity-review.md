@@ -277,3 +277,19 @@ undo/redo, Yjs peer history and six browser bindings are covered. Desktop Word
 reopened all eight newly recorded package and standalone exports and rejected
 them to the native baseline. Mixed text/structural transactions and multi-author
 format attribution remain outside this slice.
+
+Style-inherited `pageBreakBefore` now resolves through paragraph style ancestry
+and layout, while explicit false cancels the style. The editor uses null for
+inheritance and retains false through model, DOM and OOXML conversion. A native
+three-paragraph reference establishes page assignments 1, 2, 2; core and all six
+browser bindings reproduce them. Word reopens the edited package export with
+the same pagination and explicit off override. This reference establishes page
+break semantics, not general font-metric or pixel-equivalent pagination.
+
+The same native fixture revealed that ordinary calculated pagination cache
+markers blocked edits. Parser and writer now share an empty-cache-marker check;
+edited runs invalidate the cache without treating it as an authored break.
+Unknown inline extensions stay guarded and untouched package saves preserve
+their bytes. Yjs tests cover a tracked explicit off override, export and shared
+rejection back to inheritance. Word recognizes that export's paragraph revision,
+places all paragraphs on page 1, and restores pages 1, 2, 2 on rejection.

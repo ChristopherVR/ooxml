@@ -33,7 +33,7 @@ export function paragraphFromAttrs(attrs: Attrs, id: string, runs: TextRun[]): P
 		...paragraphTwipsFromAttrs(attrs),
 		...(attrs.lineSpacingRule != null ? { lineSpacingRule: attrs.lineSpacingRule } : {}),
 		...(attrs.numId != null ? { numbering: { numId: attrs.numId, level: attrs.ilvl ?? 0 } } : {}),
-		...(attrs.pageBreakBefore ? { pageBreakBefore: true } : {}),
+		...(attrs.pageBreakBefore != null ? { pageBreakBefore: Boolean(attrs.pageBreakBefore) } : {}),
 		...(attrs.tabStops?.length ? { tabStops: structuredClone(attrs.tabStops) } : {}),
 		...Object.fromEntries(
 			PARAGRAPH_KEEP_KEYS.filter((key) => attrs[key] != null).map((key) => [key, attrs[key]]),
@@ -70,7 +70,7 @@ export function paragraphAttrs(paragraph: Paragraph): Attrs {
 		hangingTwips: paragraph.hangingTwips ?? null,
 		numId: paragraph.numbering?.numId ?? null,
 		ilvl: paragraph.numbering ? paragraph.numbering.level : null,
-		pageBreakBefore: paragraph.pageBreakBefore ?? false,
+		pageBreakBefore: paragraph.pageBreakBefore ?? null,
 		tabStops: paragraph.tabStops?.length ? paragraph.tabStops : null,
 		keepNext: paragraph.keepNext ?? null,
 		keepLines: paragraph.keepLines ?? null,

@@ -42,7 +42,7 @@ export interface Paragraph {
 	hangingTwips?: Twips;
 	/** Direct `w:numPr` on this paragraph; undefined may still inherit numbering through `style`. */
 	numbering?: { numId: number; level: number };
-	/** `w:pPr/w:pageBreakBefore`: forces this paragraph to start a new page. */
+	/** `w:pPr/w:pageBreakBefore`: start a new page; false cancels an inherited style. */
 	pageBreakBefore?: boolean;
 	/** Tracked insertion/deletion of the paragraph mark itself (the paragraph break). */
 	markRevision?: Revision;
@@ -97,6 +97,7 @@ export type ParagraphFormatting = Pick<
 	| 'indentEndTwips'
 	| 'firstLineTwips'
 	| 'hangingTwips'
+	| 'pageBreakBefore'
 	| 'keepNext'
 	| 'keepLines'
 	| 'widowControl'

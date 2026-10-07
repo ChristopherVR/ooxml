@@ -45,6 +45,8 @@ export function parseFormatting(pPr: XmlElement | undefined): ParagraphFormattin
 	if (align) result.align = align;
 	const bidi = enabled(first(pPr, 'bidi'));
 	if (bidi !== undefined) result.direction = bidi ? 'rtl' : 'ltr';
+	const pageBreakBefore = enabled(first(pPr, 'pageBreakBefore'));
+	if (pageBreakBefore !== undefined) result.pageBreakBefore = pageBreakBefore;
 	for (const key of PAGINATION_KEYS) {
 		const value = enabled(first(pPr, key));
 		if (value !== undefined) result[key] = value;
@@ -183,6 +185,7 @@ export function resolveParagraphFormatting(
 		'indentEndTwips',
 		'firstLineTwips',
 		'hangingTwips',
+		'pageBreakBefore',
 		...PAGINATION_KEYS,
 		'outlineLevel',
 		'borders',

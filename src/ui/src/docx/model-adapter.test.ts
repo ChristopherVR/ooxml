@@ -8,6 +8,23 @@ import { insertHardBreak } from './hard-break-command';
 import { schema } from './schema';
 
 describe('paragraph line breaks and spacing adapter', () => {
+	it('distinguishes an inherited page break from a direct off override through edits and DOM conversion', () => {
+		const model = createDocument();
+		model.blocks = [
+			{ type: 'paragraph', id: 'inherited', runs: [{ text: 'Text' }] },
+			{ type: 'paragraph', id: 'off', runs: [{ text: 'Off' }], pageBreakBefore: false },
+		];
+		const doc = modelToDoc(model);
+		expect(doc.firstChild!.attrs.pageBreakBefore).toBeNull();
+		expect(doc.lastChild!.attrs.pageBreakBefore).toBe(false);
+		const changed = EditorState.create({ doc }).tr.setNodeAttribute(0, 'pageBreakBefore', false);
+		expect(docToModel(changed.doc, model).blocks[0]).toMatchObject({ pageBreakBefore: false });
+		const container = document.createElement('div');
+		container.innerHTML = '<p data-page-break-before="false">Off</p><p>Inherited</p>';
+		const parsed = ProseMirrorDOMParser.fromSchema(schema).parse(container);
+		expect(parsed.firstChild!.attrs.pageBreakBefore).toBe(false);
+		expect(parsed.lastChild!.attrs.pageBreakBefore).toBeNull();
+	});
 	it('retains an explicit left override instead of treating it as inherited alignment', () => {
 		const model = createDocument();
 		model.blocks[0] = {

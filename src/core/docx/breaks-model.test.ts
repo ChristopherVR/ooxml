@@ -20,6 +20,42 @@ async function documentXml(bytes: Uint8Array): Promise<string> {
 }
 
 describe('page and column breaks', () => {
+	it('preserves pagination cache on no-op saves and invalidates it after text edits', async () => {
+		const { bytes } = await fixture(
+			'<w:p><w:r><w:lastRenderedPageBreak/><w:t>Cached page</w:t></w:r></w:p>',
+		);
+		const loaded = await loadDocx(bytes);
+		const paragraph = expectParagraph(loaded.model.blocks[0]);
+		expect(paragraph.runs).toEqual([{ text: 'Cached page' }]);
+		expect(await loaded.save()).toEqual(bytes);
+		paragraph.runs[0]!.text += '!';
+		const saved = await loaded.save();
+		expect(await documentXml(saved)).not.toContain('lastRenderedPageBreak');
+		expect((await loadDocx(saved)).model.blocks[0]).toMatchObject({
+			runs: [{ text: 'Cached page!' }],
+		});
+	});
+	it('recognizes an authored break beside a calculated marker and retains the authored break', async () => {
+		const { bytes } = await fixture(
+			'<w:p><w:r><w:lastRenderedPageBreak/><w:br w:type="page"/></w:r></w:p>',
+		);
+		const loaded = await loadDocx(bytes);
+		const paragraph = expectParagraph(loaded.model.blocks[0]);
+		expect(paragraph.runs).toEqual([{ text: '', break: 'page' }]);
+		paragraph.align = 'center';
+		const saved = await loaded.save();
+		expect(await documentXml(saved)).toContain('<w:br w:type="page"/>');
+		expect(await documentXml(saved)).not.toContain('lastRenderedPageBreak');
+	});
+	it('keeps guarded rejection for an extended cached marker with unknown attributes', async () => {
+		const { bytes } = await fixture(
+			'<w:p><w:r><w:lastRenderedPageBreak w:unknown="keep"/><w:t>Text</w:t></w:r></w:p>',
+		);
+		const loaded = await loadDocx(bytes);
+		expectParagraph(loaded.model.blocks[0]).runs[0]!.text += '!';
+		await expect(loaded.save()).rejects.toThrow('cannot safely relocate');
+		expect(await documentXml(bytes)).toContain('w:unknown="keep"');
+	});
 	it('models a page break run distinctly from a line break and edits it safely', async () => {
 		const { bytes } = await fixture(
 			'<w:p><w:r><w:t>Before</w:t></w:r><w:r><w:br w:type="page"/></w:r><w:r><w:t>After</w:t></w:r></w:p>',
@@ -65,7 +101,9 @@ describe('page and column breaks', () => {
 		expect(paragraph.pageBreakBefore).toBe(true);
 		paragraph.pageBreakBefore = false;
 		const xml = await documentXml(await loaded.save());
-		expect(xml).not.toContain('pageBreakBefore');
+		expect(xml).toContain('<w:pageBreakBefore w:val="0"/>');
+		delete paragraph.pageBreakBefore;
+		expect(await documentXml(await loaded.save())).not.toContain('pageBreakBefore');
 	});
 });
 

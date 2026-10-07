@@ -15,7 +15,7 @@ import {
 
 import { createRun } from './write-run';
 import { isEquationElement, preserveEquation } from './equation';
-import { hasSpecialBreak, isModeledBreak } from './breaks';
+import { hasSpecialBreak, isCachedPageBreak, isModeledBreak } from './breaks';
 import { isCommentReferenceRun } from './parse-revisions';
 import {
 	convertToDeleteText,
@@ -46,7 +46,8 @@ export interface InlineSlot {
 /** A run's own content is safe when it is plain text, a modeled break, or a lone picture. */
 function runIsSafe(run: XmlElement): boolean {
 	const content = Array.from(run.childNodes).filter(
-		(child): child is XmlElement => isElement(child) && !named(child, 'rPr'),
+		(child): child is XmlElement =>
+			isElement(child) && !named(child, 'rPr') && !isCachedPageBreak(child),
 	);
 	const only = content.length === 1 ? content[0] : undefined;
 	if (only && named(only, 'br') && isModeledBreak(only)) return true;

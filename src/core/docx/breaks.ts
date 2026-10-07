@@ -1,4 +1,15 @@
-import { getW, WORD_NS, type XmlElement } from './xml';
+import { getW, named, WORD_NS, type XmlElement } from './xml';
+
+/** A calculated pagination cache marker, not an authored break. Changed runs invalidate it. */
+export function isCachedPageBreak(element: XmlElement): boolean {
+	return (
+		named(element, 'lastRenderedPageBreak') &&
+		!element.childNodes.length &&
+		Array.from(element.attributes).every(
+			(attribute) => attribute.namespaceURI === 'http://www.w3.org/2000/xmlns/',
+		)
+	);
+}
 
 /** Only ordinary text-wrapping breaks are represented by a model newline. */
 export function hasSpecialBreak(element: XmlElement): boolean {

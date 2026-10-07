@@ -66,6 +66,34 @@ function start(
 }
 
 describe('Word Yjs collaboration', () => {
+	it('shares a direct off override of a native style page break and restores inheritance on rejection', async () => {
+		const bytes = new Uint8Array(
+			await readFile(resolve('../core/docx/__fixtures__/page-break-style/page-break-style.docx')),
+		);
+		const peers = pair();
+		const a = mount();
+		const b = mount();
+		await a.load(bytes);
+		await b.load(bytes);
+		start(a, b, peers);
+		toggleTrackChanges(viewOf(a).state, viewOf(a).dispatch, viewOf(a));
+		const pos = viewOf(b).state.doc.firstChild!.nodeSize;
+		expect(viewOf(b).state.doc.nodeAt(pos)!.attrs.pageBreakBefore).toBeNull();
+		viewOf(b).dispatch(viewOf(b).state.tr.setNodeAttribute(pos, 'pageBreakBefore', false));
+		expect(viewOf(a).state.doc.toJSON()).toEqual(viewOf(b).state.doc.toJSON());
+		expect(viewOf(a).state.doc.nodeAt(pos)!.attrs.pageBreakBefore).toBe(false);
+		const off = (await loadDocx(await a.saveBytes())).model.blocks[1];
+		expect(off).toMatchObject({
+			pageBreakBefore: false,
+			formatRevision: { kind: 'paragraphChange' },
+		});
+		rejectRevisionRange(viewOf(a), collectRevisionRanges(viewOf(a).state.doc)[0]!);
+		expect(viewOf(a).state.doc.toJSON()).toEqual(viewOf(b).state.doc.toJSON());
+		expect(viewOf(b).state.doc.nodeAt(pos)!.attrs.pageBreakBefore).toBeNull();
+		expect((await loadDocx(await b.saveBytes())).model.blocks[1]).not.toHaveProperty(
+			'pageBreakBefore',
+		);
+	});
 	it('shares newly recorded paragraph formatting with atomic peer undo, redo and rejection', async () => {
 		const bytes = new Uint8Array(
 			await readFile(

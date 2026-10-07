@@ -182,7 +182,7 @@ export function docToModel(
 			previous.hangingTwips === (node.attrs.hangingTwips ?? undefined) &&
 			(previous.numbering?.numId ?? null) === (node.attrs.numId ?? null) &&
 			(previous.numbering ? previous.numbering.level : null) === (node.attrs.ilvl ?? null) &&
-			Boolean(previous.pageBreakBefore) === Boolean(node.attrs.pageBreakBefore) &&
+			(previous.pageBreakBefore ?? null) === node.attrs.pageBreakBefore &&
 			sameJson(previous.tabStops ?? null, node.attrs.tabStops ?? null) &&
 			KEEP_KEYS.every((key) => (previous[key] ?? null) === (node.attrs[key] ?? null)) &&
 			sameJson(previous.dropCap ?? null, node.attrs.dropCap ?? null) &&

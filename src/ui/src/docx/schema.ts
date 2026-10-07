@@ -124,7 +124,7 @@ export const schema = new Schema({
 				listIndentLeftTwips: { default: null },
 				listHangingTwips: { default: null },
 				listFirstLineTwips: { default: null },
-				pageBreakBefore: { default: false },
+				pageBreakBefore: { default: null },
 				/** Pagination toggles (true, false = explicitly off, null = unset); no editor controls yet. */
 				keepNext: { default: null },
 				keepLines: { default: null },
@@ -170,7 +170,10 @@ export const schema = new Schema({
 						listIndentLeftTwips: null,
 						listHangingTwips: null,
 						listFirstLineTwips: null,
-						pageBreakBefore: (el as HTMLElement).dataset.pageBreakBefore === 'true',
+						pageBreakBefore:
+							(el as HTMLElement).dataset.pageBreakBefore == null
+								? null
+								: (el as HTMLElement).dataset.pageBreakBefore === 'true',
 						tabStops: null,
 						bookmarks: (el as HTMLElement).dataset.bookmarks
 							? (el as HTMLElement).dataset.bookmarks!.split(',')
@@ -191,7 +194,9 @@ export const schema = new Schema({
 								'data-list-label': `${safeCssValue(String(node.attrs.listLabelText))}${node.attrs.listSuffix === 'space' ? ' ' : node.attrs.listSuffix === 'none' ? '' : '\t'}`,
 							}
 						: {}),
-					...(node.attrs.pageBreakBefore ? { 'data-page-break-before': 'true' } : {}),
+					...(node.attrs.pageBreakBefore != null
+						? { 'data-page-break-before': String(node.attrs.pageBreakBefore) }
+						: {}),
 					...(Array.isArray(node.attrs.bookmarks) && node.attrs.bookmarks.length
 						? { 'data-bookmarks': node.attrs.bookmarks.join(',') }
 						: {}),

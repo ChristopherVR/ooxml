@@ -32,7 +32,8 @@ export function parseDirectParagraphProperties(
 	if (justification) paragraph.justification = justification;
 	const style = getW(first(props, 'pStyle'), 'val');
 	if (style) paragraph.style = style;
-	if (onOffElement(first(props, 'pageBreakBefore'))) paragraph.pageBreakBefore = true;
+	const pageBreakBefore = onOffElement(first(props, 'pageBreakBefore'));
+	if (pageBreakBefore !== undefined) paragraph.pageBreakBefore = pageBreakBefore;
 	for (const key of PAGINATION_KEYS) {
 		const value = onOffElement(first(props, key));
 		if (value !== undefined) paragraph[key] = value;

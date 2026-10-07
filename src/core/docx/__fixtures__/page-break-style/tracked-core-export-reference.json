@@ -1,0 +1,39 @@
+{
+	"applicationVersion": "16.0",
+	"applicationBuild": "16.0.20430",
+	"revisionTypes": [10],
+	"current": [
+		{
+			"text": "First paragraph\r",
+			"pageBreakBefore": 0,
+			"page": 1
+		},
+		{
+			"text": "Inherited page break\r",
+			"pageBreakBefore": 0,
+			"page": 1
+		},
+		{
+			"text": "Explicitly disabled\r",
+			"pageBreakBefore": 0,
+			"page": 1
+		}
+	],
+	"rejected": [
+		{
+			"text": "First paragraph\r",
+			"pageBreakBefore": 0,
+			"page": 1
+		},
+		{
+			"text": "Inherited page break\r",
+			"pageBreakBefore": -1,
+			"page": 2
+		},
+		{
+			"text": "Explicitly disabled\r",
+			"pageBreakBefore": 0,
+			"page": 2
+		}
+	]
+}

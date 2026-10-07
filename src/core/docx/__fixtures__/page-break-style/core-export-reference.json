@@ -1,0 +1,21 @@
+{
+	"applicationVersion": "16.0",
+	"applicationBuild": "16.0.20430",
+	"cases": [
+		{
+			"text": "First paragraph\r",
+			"pageBreakBefore": 0,
+			"page": 1
+		},
+		{
+			"text": "Inherited page break\r",
+			"pageBreakBefore": -1,
+			"page": 2
+		},
+		{
+			"text": "Explicitly disabled!\r",
+			"pageBreakBefore": 0,
+			"page": 2
+		}
+	]
+}

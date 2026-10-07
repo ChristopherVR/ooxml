@@ -43,7 +43,7 @@ describe('cover page', () => {
 		const title = view.state.doc.child(1);
 		expect(title.attrs).toMatchObject({ align: 'center', style: 'Title' });
 		expect(view.state.doc.child(5).attrs.pageBreakBefore).toBe(true);
-		expect(view.state.doc.child(6).attrs.pageBreakBefore).toBe(false);
+		expect(view.state.doc.child(6).attrs.pageBreakBefore).toBeNull();
 	});
 
 	it('works without a Title style and refuses a read-only view', () => {
