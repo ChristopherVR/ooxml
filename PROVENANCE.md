@@ -751,6 +751,7 @@ PowerPoint keeps compatible exports and its existing modal lifecycle and Escape
 rules. The traversal now excludes hidden ancestor subtrees, so collapsed channel
 rows cannot receive focus from OpenTeams' navigation drawer. No Office logic or
 product rendering moved into this helper.
+
 ## Shared Word formatting snapshot comparison
 
 Source: ChristopherVR/ooxml at `af2b24cfca36df8da11de71d9b6a62f0a76ba0de`,
@@ -759,3 +760,16 @@ function. It moved unchanged to `propertiesSignature` in
 `src/core/docx/revision-properties.ts`. Run and paragraph formatting recorders
 share it, the ordinary OOXML writer and the existing mark/paragraph conversions.
 The paragraph recorder is new core code; no viewer logic was copied.
+
+## Shared SVG outer-shadow primitive
+
+Source: ChristopherVR/ooxml at `50a928804`,
+`src/ui/src/pptx/render/ribbon-galleries/gallery-preview-svg.ts`, the outer
+`feDropShadow` primitive in `filterDefs`. It moved unchanged into
+`svgDropShadowElement` in strict `src/core/diagram/drawing-shadow.ts`, with the
+existing numeric and color formatters supplied by each caller. PowerPoint keeps
+its gallery filter composition and bounds; XLSX uses chart-space bounds so flat
+lines and short bars do not have degenerate object-bounding-box filter regions.
+The native DrawingML reader and themed resolver reuse shared XML, color and unit
+helpers. The ordinary-shadow primitive retains the existing radius-to-Gaussian
+deviation conversion; projected scale/skew shadows are not approximated by it.

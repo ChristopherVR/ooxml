@@ -93,6 +93,38 @@ export function patchChartColors(
 		const series = model.series[index];
 		if (!series) return;
 		const old = before.series[index];
+		if (old?.effectsXml !== series.effectsXml) {
+			let shape = first(ser, 'spPr', NS.c);
+			if (!shape && series.effectsXml) {
+				shape = doc.createElementNS(NS.c, 'c:spPr');
+				ser.insertBefore(
+					shape,
+					first(ser, 'marker', NS.c) ??
+						first(ser, 'invertIfNegative', NS.c) ??
+						first(ser, 'dPt', NS.c) ??
+						first(ser, 'cat', NS.c) ??
+						first(ser, 'xVal', NS.c) ??
+						first(ser, 'val', NS.c) ??
+						null,
+				);
+			}
+			if (shape) {
+				const existing = first(shape, 'effectLst', NS.a);
+				if (existing) shape.removeChild(existing);
+				if (series.effectsXml) {
+					const effect = parseXml(series.effectsXml).documentElement;
+					if (effect.namespaceURI !== NS.a || effect.localName !== 'effectLst')
+						throw new Error('Invalid chart effects XML');
+					shape.insertBefore(
+						doc.importNode(effect, true),
+						first(shape, 'scene3d', NS.a) ??
+							first(shape, 'sp3d', NS.a) ??
+							first(shape, 'extLst', NS.a) ??
+							null,
+					);
+				}
+			}
+		}
 		if (
 			!sameChartColor(old?.drawingColor, series.drawingColor) ||
 			JSON.stringify(old?.fill) !== JSON.stringify(series.fill) ||

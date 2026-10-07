@@ -6,6 +6,9 @@ $excel = $null; $book = $null
 function Hex-Color($rgb) {
     return '#{0:X2}{1:X2}{2:X2}' -f ($rgb -band 255),(($rgb -shr 8) -band 255),(($rgb -shr 16) -band 255)
 }
+function Read-Shadow($shadow) {
+    return @{ visible = ([int]$shadow.Visible -eq -1); color = (Hex-Color ([int]$shadow.ForeColor.RGB)); blurPoints = [double]$shadow.Blur; offsetXPoints = [double]$shadow.OffsetX; offsetYPoints = [double]$shadow.OffsetY; opacity = 1 - [double]$shadow.Transparency; size = [double]$shadow.Size }
+}
 try {
     $excel = New-Object -ComObject Excel.Application
     $excel.Visible = $false; $excel.DisplayAlerts = $false
@@ -50,9 +53,9 @@ try {
                     $stop = $stops.Item($n)
                     $colors += @{ color = (Hex-Color ([int]$stop.Color.RGB)); position = [double]$stop.Position; transparency = [double]$stop.Transparency }
                 }
-                $series += @{ stops = $colors }
+                $series += @{ stops = $colors; shadow = (Read-Shadow $native.SeriesCollection($s).Format.Shadow) }
             }
-            $cases += @{ palette = [int]$native.ChartColor; series = $series; parts = $parts }
+            $cases += @{ palette = [int]$native.ChartColor; series = $series; titleShadow = (Read-Shadow $native.ChartTitle.Format.TextFrame2.TextRange.Font.Shadow); parts = $parts }
             $native.Export((Join-Path $OutputFolder "gradient-$palette.png"),'PNG') | Out-Null
         } finally { $probe.Close($false) }
         $object.Delete()

@@ -53,7 +53,7 @@ export function pieSvg(model: ChartViewModel, area: Rect): string {
 			const sweep = (v / total) * Math.PI * 2;
 			const color = s.pointColors?.[i] ?? s.color;
 			out.push(
-				`<path d="${slicePath(cx, cy, outer, inner, angle, angle + sweep)}" fill="${color}" stroke="#FFFFFF" stroke-width="1"/>`,
+				`<path d="${slicePath(cx, cy, outer, inner, angle, angle + sweep)}" fill="${color}" stroke="#FFFFFF" stroke-width="1"${s.shadowFilter ? ` filter="${s.shadowFilter}"` : ''}/>`,
 			);
 			angle += sweep;
 		});
@@ -113,7 +113,9 @@ export function radarSvg(model: ChartViewModel, area: Rect): string {
 			.map((v, i) => polar(cx, cy, r(v ?? scale.min), angle(i)))
 			.map(([x, y]) => `${n(x)},${n(y)}`)
 			.join(' ');
-		out.push(`<polygon points="${points}" fill="none" stroke="${s.color}" stroke-width="2"/>`);
+		out.push(
+			`<polygon points="${points}" fill="none" stroke="${s.color}" stroke-width="2"${s.shadowFilter ? ` filter="${s.shadowFilter}"` : ''}/>`,
+		);
 	}
 	return out.join('');
 }

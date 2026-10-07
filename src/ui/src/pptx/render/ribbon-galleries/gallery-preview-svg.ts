@@ -12,6 +12,7 @@ export { escapeSvgText, safeColor, svgTile } from '../../../ribbon/svg-preview';
  * @module render/ribbon-galleries/gallery-preview-svg
  */
 import type { ShapeStyle } from 'ooxml-core/pptx';
+import { svgDropShadowElement } from 'ooxml-core/diagram';
 
 /** A paint for a tile: flat colour or a linear gradient. */
 export interface TilePaint {
@@ -89,9 +90,7 @@ function filterDefs(effects: TileEffects | undefined, id: string): { defs: strin
 	}
 	if (effects.shadow && !effects.shadow.inner) {
 		const s = effects.shadow;
-		parts.push(
-			`<feDropShadow dx="${num(s.dx)}" dy="${num(s.dy)}" stdDeviation="${num(s.blur / 2)}" flood-color="${safeColor(s.color, '#000000')}" flood-opacity="${num(s.opacity)}" result="shadow"/>`,
-		);
+		parts.push(svgDropShadowElement(s, { number: num, color: safeColor }));
 	}
 	if (effects.softEdge) {
 		parts.push(

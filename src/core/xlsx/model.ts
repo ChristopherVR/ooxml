@@ -543,6 +543,8 @@ export interface ChartSeries {
 	fill?: DiagramFill;
 	/** Non-solid individual point fills; solid point overrides use pointColors. */
 	pointFills?: Record<number, DiagramFill>;
+	/** Opaque imported DrawingML effect list, retained during chart regeneration. */
+	effectsXml?: string;
 }
 
 export interface ChartObject {

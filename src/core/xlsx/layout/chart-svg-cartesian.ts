@@ -141,6 +141,7 @@ function bars(model: ChartViewModel, frame: Frame, out: string[]): void {
 						Math.abs(b - a),
 						barSize,
 						s.pointColors?.[i] ?? s.color,
+						s.shadowFilter,
 					),
 				);
 			else
@@ -151,6 +152,7 @@ function bars(model: ChartViewModel, frame: Frame, out: string[]): void {
 						barSize,
 						Math.abs(b - a),
 						s.pointColors?.[i] ?? s.color,
+						s.shadowFilter,
 					),
 				);
 		});
@@ -162,7 +164,12 @@ function linesAndAreas(model: ChartViewModel, frame: Frame, out: string[]): void
 	const stacked = model.grouping === 'stacked' || model.grouping === 'percentStacked';
 	const acc = new Array<number>(model.categories.length).fill(0);
 	const area = model.type === 'area';
-	const layers: { points: [number, number][]; lower: [number, number][]; color: string }[] = [];
+	const layers: {
+		points: [number, number][];
+		lower: [number, number][];
+		color: string;
+		filter: string;
+	}[] = [];
 	model.series.forEach((s, si) => {
 		const points: [number, number][] = [];
 		const lower: [number, number][] = [];
@@ -178,21 +185,26 @@ function linesAndAreas(model: ChartViewModel, frame: Frame, out: string[]): void
 			points.push([frame.band(i), frame.value(top)]);
 			lower.push([frame.band(i), frame.value(below)]);
 		});
-		layers.push({ points, lower, color: s.color });
+		layers.push({
+			points,
+			lower,
+			color: s.color,
+			filter: s.shadowFilter ? ` filter="${s.shadowFilter}"` : '',
+		});
 	});
-	for (const { points, lower, color } of area ? [...layers].reverse() : layers) {
+	for (const { points, lower, color, filter } of area ? [...layers].reverse() : layers) {
 		if (area) {
 			const poly = [...points, ...[...lower].reverse()]
 				.map(([x, y]) => `${n(x)},${n(y)}`)
 				.join(' ');
-			out.push(`<polygon points="${poly}" fill="${color}" fill-opacity="0.85"/>`);
+			out.push(`<polygon points="${poly}" fill="${color}" fill-opacity="0.85"${filter}/>`);
 			continue;
 		}
 		let segment: string[] = [];
 		const flush = (): void => {
 			if (segment.length > 1)
 				out.push(
-					`<polyline points="${segment.join(' ')}" fill="none" stroke="${color}" stroke-width="2.25" stroke-linejoin="round"/>`,
+					`<polyline points="${segment.join(' ')}" fill="none" stroke="${color}" stroke-width="2.25" stroke-linejoin="round"${filter}/>`,
 				);
 			segment = [];
 		};
@@ -202,7 +214,8 @@ function linesAndAreas(model: ChartViewModel, frame: Frame, out: string[]): void
 		}
 		flush();
 		for (const [x, y] of points)
-			if (!Number.isNaN(x)) out.push(`<circle cx="${n(x)}" cy="${n(y)}" r="2.5" fill="${color}"/>`);
+			if (!Number.isNaN(x))
+				out.push(`<circle cx="${n(x)}" cy="${n(y)}" r="2.5" fill="${color}"${filter}/>`);
 	}
 }
 
@@ -263,7 +276,7 @@ function scatter(model: ChartViewModel, area: Rect, out: string[]): void {
 			const x = s.xValues?.[i] ?? null;
 			if (v === null || x === null) return;
 			out.push(
-				`<circle cx="${n(px(x, xs))}" cy="${n(py(v, ys))}" r="3" fill="${s.pointColors?.[i] ?? s.color}"/>`,
+				`<circle cx="${n(px(x, xs))}" cy="${n(py(v, ys))}" r="3" fill="${s.pointColors?.[i] ?? s.color}"${s.shadowFilter ? ` filter="${s.shadowFilter}"` : ''}/>`,
 			);
 		});
 }

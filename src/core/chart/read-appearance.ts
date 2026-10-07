@@ -1,6 +1,6 @@
 import { parseDrawingColorIn } from '../diagram/drawing-color';
 import { parseDrawingFill, parseDrawingLine } from '../diagram/drawing-fill';
-import { NS, first, type XmlElement } from '../xml/index';
+import { NS, buildXml, first, type XmlElement } from '../xml/index';
 import type { ChartStyleEntry } from './style-definition';
 
 /** Common DrawingML properties in chart styles and directly formatted chart elements. */
@@ -26,5 +26,7 @@ export function readChartAppearance(
 	const line = parseDrawingLine(first(properties, 'ln', NS.a));
 	if (fill) out.fill = fill;
 	if (line) out.line = line;
+	const effects = first(text, 'effectLst', NS.a);
+	if (effects) out.textEffectsXml = buildXml(effects);
 	return out;
 }

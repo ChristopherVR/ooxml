@@ -38,6 +38,8 @@ export interface ChartStyleEntry {
 	effectRef?: ChartStyleReference;
 	fill?: DiagramFill;
 	line?: DiagramLine;
+	/** Direct text-effect XML; an empty effect list suppresses inherited effects. */
+	textEffectsXml?: string;
 	sourceXml: string;
 }
 

@@ -10,8 +10,11 @@ import { EMU_PER_PIXEL, EMU_PER_POINT } from '../../units/constants';
 import type { ChartObject, ThemePalette } from '../model';
 import { chartColorScheme } from './chart-colors';
 import { resolveChartGradient, type ChartGradientFill } from '../../chart/gradient-definition';
+import { resolveDrawingShadowXml, type DrawingSvgShadow } from '../../diagram/drawing-shadow';
 
 export interface ChartAppearanceEntry extends ResolvedChartStyleEntry {
+	textShadow?: DrawingSvgShadow;
+	textShadowFilter?: string;
 	gradient?: ChartGradientFill;
 	typeface?: string;
 	axisVisible?: boolean;
@@ -74,6 +77,10 @@ export function chartAppearance(
 		const entry = entries[part];
 		if (!entry) continue;
 		const family = typeface(entry, theme);
+		const shadow = resolveDrawingShadowXml(entry.textEffectsXml, {
+			scheme: (name) => scheme[name],
+		});
+		if (shadow) (out[part] ??= {}).textShadow = shadow;
 		if (family) (out[part] ??= {}).typeface = family;
 		if (entry.axisVisible !== undefined) (out[part] ??= {}).axisVisible = entry.axisVisible;
 		if (entry.labelsVisible !== undefined) (out[part] ??= {}).labelsVisible = entry.labelsVisible;

@@ -36,10 +36,22 @@ function seriesXml(chart: ChartObject, series: ChartSeries, index: number): stri
 	else if (series.name !== undefined) out += `<c:tx><c:v>${escapeText(series.name)}</c:v></c:tx>`;
 	const lineLike = type === 'line' || type === 'scatter' || type === 'radar';
 	const fill = chartSeriesFill(chart, series, index);
-	if ((type !== 'pie' && type !== 'doughnut') || series.fill || series.color || series.drawingColor)
+	const effects = series.effectsXml ?? '';
+	if (effects) {
+		const root = parseXml(effects).documentElement;
+		if (root.namespaceURI !== NS.a || root.localName !== 'effectLst')
+			throw new Error('Invalid chart effects XML');
+	}
+	if (
+		(type !== 'pie' && type !== 'doughnut') ||
+		series.fill ||
+		series.color ||
+		series.drawingColor ||
+		effects
+	)
 		out += lineLike
-			? `<c:spPr><a:ln w="28575" cap="rnd">${fill}</a:ln></c:spPr>`
-			: `<c:spPr>${fill}</c:spPr>`;
+			? `<c:spPr><a:ln w="28575" cap="rnd">${fill}</a:ln>${effects}</c:spPr>`
+			: `<c:spPr>${fill}${effects}</c:spPr>`;
 	if (lineLike) out += '<c:marker><c:symbol val="none"/></c:marker>';
 	if (type === 'bar' || type === 'column') out += '<c:invertIfNegative val="0"/>';
 	for (const idx of new Set([

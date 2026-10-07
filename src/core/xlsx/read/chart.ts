@@ -4,6 +4,7 @@ import { att } from './xml-util';
 import { parseDrawingColorIn } from '../../diagram/drawing-color';
 import { readChartFormatting } from '../../chart/read-formatting';
 import { parseDrawingFill } from '../../diagram/drawing-fill';
+import { buildXml } from '../../xml/index';
 
 const c = (parent: ParentNode | null | undefined, local: string) => first(parent, local, NS.c);
 const val = (parent: ParentNode | null | undefined, local: string) => att(c(parent, local), 'val');
@@ -140,6 +141,8 @@ export function parseChart(
 		if (categories.ref) out.categoriesRef = categories.ref;
 		if (values.ref) out.valuesRef = values.ref;
 		const spPr = c(ser, 'spPr');
+		const effects = first(spPr, 'effectLst', NS.a);
+		if (effects) out.effectsXml = buildXml(effects);
 		const primary = ['line', 'scatter', 'radar'].includes(chartType)
 			? first(spPr, 'ln', NS.a)
 			: spPr;

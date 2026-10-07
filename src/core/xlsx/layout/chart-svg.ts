@@ -68,7 +68,7 @@ function legend(model: ChartViewModel, area: Rect, out: string[]): Rect {
  * of text is escaped. Unsupported chart types (bubble, stock, surface) render a labelled frame.
  */
 export function renderChartSvg(model: ChartViewModel, width: number, height: number): string {
-	const paint = chartGradientPaint(model);
+	const paint = chartGradientPaint(model, Math.max(1, width), Math.max(1, height));
 	model = paint.model;
 	const w = Math.max(1, width);
 	const h = Math.max(1, height);

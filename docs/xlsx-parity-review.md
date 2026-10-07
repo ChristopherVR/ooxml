@@ -745,3 +745,35 @@ browser tests passed, along with core and XLSX binding typechecks, the core
 build and clean-consumer imports of every core entry point. The native-style
 browser case verifies rendered series stops and a live palette change; the
 six-binding typography cases also remain green.
+
+## Imported ordinary chart shadows
+
+Series effect lists are now retained as opaque XML in the chart model, including
+effects not yet painted. They survive type/series regeneration, can be replaced
+or removed without replacing the series fill, and remain unchanged through
+palette edits. Imported title text effects also supply their native shadow.
+Cartesian, radial and radar SVG painters apply ordinary series drop shadows;
+text uses separate filters. Legends retain their own appearance. Filter IDs are
+unique across charts, and chart-space filter bounds keep horizontal lines and
+short bars visible. The shared `feDropShadow` primitive comes from PowerPoint's
+existing effect gallery; its original caller still uses the same primitive.
+
+Fresh Excel COM measurements record style 209's series and title shadow colors,
+blur, offsets, opacity and visibility for all three gradient palettes. SVG
+geometry matches those properties after converting points to pixels. COM also
+reopened a regenerated horizontal bar chart: both series remained, and its
+shadow retained 4.5-point blur, 1.5-point vertical offset and 63% opacity.
+Playwright MCP reviewed the visible title and eight bar shadows in production.
+
+This closes the ordinary series/title shadow gap recorded above. Style 204's
+scaled/skewed projected shadow still requires an affine effect painter. Point
+effect overrides, effect DAGs, inner shadows, glow, reflection, theme effect
+references and exact raster falloff remain incomplete. Title effects and rich
+text can still be lost when the entire chart is regenerated. Native plot
+placement, spacing and font availability continue to prevent pixel parity.
+
+Validation: 8,238 core regressions and all 76 production browser tests passed.
+After adding the effect-removal regression, all 14 focused native gradient and
+shadow tests passed. Core/UI typechecks and builds, 30 PowerPoint gallery tests,
+every core clean-consumer import, 93 UI entry imports and 45 custom-element
+registrations passed. The shared PowerPoint caller retains its existing output.

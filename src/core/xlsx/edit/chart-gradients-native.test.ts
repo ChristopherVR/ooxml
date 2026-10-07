@@ -109,10 +109,28 @@ it('replaces gradients with explicit RGB edits and preserves gradients on chart 
 	session.updateChart(0, 0, { chartType: 'bar' });
 	let saved = await loadXlsx(await saveXlsx(book));
 	expect(paints(saved)).toEqual(nativePaints(native.cases[0]!));
+	expect(chartOf(saved).series.map((series) => series.effectsXml)).toEqual(
+		chartOf(book).series.map((series) => series.effectsXml),
+	);
 	const series = structuredClone(chartOf(book).series);
 	series[0]!.color = { rgb: '123456' };
 	session.updateChart(0, 0, { series });
 	saved = await loadXlsx(await saveXlsx(book));
 	expect(chartOf(saved).series[0]!.fill).toBeUndefined();
 	expect(chartView(saved, 0, chartOf(saved), () => []).series[0]!.color).toBe('#123456');
+});
+
+it('removes imported series effects without discarding the fill or other chart detail', async () => {
+	const book = await workbookFrom();
+	const session = createEditSession(book);
+	const original = structuredClone(chartOf(book));
+	const series = structuredClone(original.series);
+	delete series[0]!.effectsXml;
+	session.updateChart(0, 0, { series });
+	const saved = await loadXlsx(await saveXlsx(book));
+	expect(chartOf(saved).series[0]!.effectsXml).toBeUndefined();
+	expect(chartOf(saved).series[1]!.effectsXml).toBe(original.series[1]!.effectsXml);
+	expect(paints(saved)).toEqual(nativePaints(native.cases[0]!));
+	session.undo();
+	expect(chartOf(book)).toEqual(original);
 });

@@ -4,13 +4,33 @@ import type { ChartViewModel } from './chart-view';
 import { AXIS_COLOR, GRID_COLOR, FONT_SIZE, n, esc, type Rect, type text } from './chart-svg-util';
 import { buildChartGradientDef, type ChartGradientFill } from '../../chart/gradient-definition';
 import { cssFontFamily } from './font-family';
+import { svgDropShadowElement, type DrawingSvgShadow } from '../../diagram/drawing-shadow';
 
 /** Each standalone SVG needs distinct gradient targets when inserted beside other charts. */
 let nextPaintId = 0;
-export function chartGradientPaint(model: ChartViewModel): { model: ChartViewModel; defs: string } {
+export function chartGradientPaint(
+	model: ChartViewModel,
+	width = 1024,
+	height = 768,
+): { model: ChartViewModel; defs: string } {
 	const prefix = `xlsx-chart-${++nextPaintId}`;
 	const appearance = { ...model.appearance };
 	const defs: string[] = [];
+	const shadowPaint = (shadow: DrawingSvgShadow, suffix: string) => {
+		const id = `${prefix}-${suffix}`;
+		const pad = Math.max(4, shadow.blur * 3 + Math.abs(shadow.dx) + Math.abs(shadow.dy));
+		defs.push(
+			`<filter id="${id}" filterUnits="userSpaceOnUse" x="${n(-pad)}" y="${n(-pad)}" width="${n(width + pad * 2)}" height="${n(height + pad * 2)}" color-interpolation-filters="sRGB">${svgDropShadowElement(shadow, { number: n, color: (value) => esc(value) })}</filter>`,
+		);
+		return `url(#${id})`;
+	};
+	for (const [part, entry] of Object.entries(appearance)) {
+		if (entry?.textShadow)
+			appearance[part as ChartStylePart] = {
+				...entry,
+				textShadowFilter: shadowPaint(entry.textShadow, `${part}-text-shadow`),
+			};
+	}
 	const paint = (gradient: ChartGradientFill, suffix: string) => {
 		const def = buildChartGradientDef(`${prefix}-${suffix}`, gradient);
 		const geometry =
@@ -33,6 +53,7 @@ export function chartGradientPaint(model: ChartViewModel): { model: ChartViewMod
 	}
 	const series = model.series.map((source, index) => {
 		const view = { ...source };
+		if (source.shadow) view.shadowFilter = shadowPaint(source.shadow, `s${index}-shadow`);
 		if (source.gradient) view.color = paint(source.gradient, `s${index}`);
 		if (source.pointGradients) {
 			view.pointColors = [...(source.pointColors ?? [])];
@@ -59,6 +80,7 @@ export function chartTextAttributes(
 		...(entry?.bold === undefined ? {} : { weight: entry.bold ? 'bold' : 'normal' }),
 		...(entry?.italic === undefined ? {} : { italic: entry.italic }),
 		...(entry?.typeface === undefined ? {} : { family: cssFontFamily(entry.typeface) }),
+		...(entry?.textShadowFilter === undefined ? {} : { filter: entry.textShadowFilter }),
 	};
 }
 

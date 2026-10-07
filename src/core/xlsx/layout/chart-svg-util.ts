@@ -40,6 +40,7 @@ export function text(
 		fill?: string;
 		family?: string;
 		italic?: boolean;
+		filter?: string;
 	} = {},
 ): string {
 	const parts = [`x="${n(x)}"`, `y="${n(y)}"`];
@@ -49,6 +50,7 @@ export function text(
 	if (attrs.weight) parts.push(`font-weight="${attrs.weight}"`);
 	if (attrs.baseline) parts.push(`dominant-baseline="${attrs.baseline}"`);
 	if (attrs.family) parts.push(`font-family="${esc(attrs.family)}"`);
+	if (attrs.filter) parts.push(`filter="${esc(attrs.filter)}"`);
 	if (attrs.italic !== undefined) parts.push(`font-style="${attrs.italic ? 'italic' : 'normal'}"`);
 	return `<text ${parts.join(' ')}>${esc(content)}</text>`;
 }
@@ -63,8 +65,15 @@ export const line = (
 ): string =>
 	`<line x1="${n(x1)}" y1="${n(y1)}" x2="${n(x2)}" y2="${n(y2)}" stroke="${stroke}" stroke-width="${width}"/>`;
 
-export const rect = (x: number, y: number, w: number, h: number, fill: string): string =>
-	`<rect x="${n(x)}" y="${n(y)}" width="${n(Math.max(0, w))}" height="${n(Math.max(0, h))}" fill="${fill}"/>`;
+export const rect = (
+	x: number,
+	y: number,
+	w: number,
+	h: number,
+	fill: string,
+	filter?: string,
+): string =>
+	`<rect x="${n(x)}" y="${n(y)}" width="${n(Math.max(0, w))}" height="${n(Math.max(0, h))}" fill="${fill}"${filter ? ` filter="${esc(filter)}"` : ''}/>`;
 
 /** Shortens text to fit `maxWidth` (estimated) with an ellipsis. */
 export function fit(content: string, maxWidth: number, size = FONT_SIZE): string {

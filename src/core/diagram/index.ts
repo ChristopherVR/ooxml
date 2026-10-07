@@ -17,3 +17,4 @@ export * from './load';
 export { attributeReader } from './dom';
 export * from './write-color';
 export * from './write-fill';
+export * from './drawing-shadow';

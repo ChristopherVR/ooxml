@@ -7,8 +7,11 @@ import { niceScale, PERCENT_SCALE, type AxisScale } from './chart-scale';
 import { resolveColor } from './colors';
 import { chartAppearance, type ChartAppearance } from './chart-appearance';
 import { resolveChartGradient, type ChartGradientFill } from '../../chart/gradient-definition';
+import { resolveDrawingShadowXml, type DrawingSvgShadow } from '../../diagram/drawing-shadow';
 
 export interface ChartSeriesView {
+	shadow?: DrawingSvgShadow;
+	shadowFilter?: string;
 	gradient?: ChartGradientFill;
 	pointGradients?: Record<number, ChartGradientFill>;
 	name: string;
@@ -140,6 +143,10 @@ export function chartView(
 					paletteColor ??
 					autoSeriesColor(theme, i));
 		const view: ChartSeriesView = { name: seriesName(s, i, evaluateRef), values, color };
+		const shadow = resolveDrawingShadowXml(s.effectsXml, {
+			scheme: (name) => (scheme as Readonly<Record<string, string>>)[name],
+		});
+		if (shadow) view.shadow = shadow;
 		const resolvedGradient = gradient(s.fill);
 		if (resolvedGradient) view.gradient = resolvedGradient;
 		const points = Object.fromEntries(
