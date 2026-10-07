@@ -1542,3 +1542,41 @@ gestures, native snapping and joining/glue, other default style documents,
 scaled browser creation, exact paint pixels and Office reopen acceptance are
 not proven. Native COM DrawLine is the geometry/style reference, not evidence
 that our pointer behavior matches every native gesture.
+
+## Scaled straight-line creation and paper-edge regression
+
+Fresh GridAligned native DrawLine references use DrawingScale/PageScale
+2/1 (`visio-line-movement-b6aea1eb0dd544f2ba23d485633a53eb`),
+1/2 (`visio-line-movement-c3f006d574e340a0a59b71f48d2f8a0c`) and
+1/3 (`visio-line-movement-0cd4f4e785474c309f0cdbb1bef1eb1c`).
+The recorder converts its grid coordinates and translations into drawing
+inches so all captures have the same physical line endpoints. Paper
+dimensions retain native scale behavior and are independently checked
+against exported SVG inch dimensions. Each owned invisible instance quit;
+the existing user Visio instance was untouched.
+
+The first comparison exposed a paper-edge clamp: the half-scale diagonal
+was recreated at a different angle because its physical EndX exceeded the
+paper width. Line gestures now use the shared page-point conversion without
+that clamp, retaining native endpoint coordinates beyond the paper edge.
+The native half-scale source retains its original dimensions and out-of-page
+lines; the regression does not enlarge the page to avoid the mismatch.
+
+Core has eleven passing checks with all four references enabled. Native
+caches and COM transforms agree to twelve decimal places after scaling
+translation components. Geometry and effective styles match the parsed
+native references, and every part outside the edited page contents remains
+byte-identical, including native page-scale metadata.
+
+The browser suite covers 24 workflows and 96 actual line drags across
+six frameworks and four ratios, with previews, per-line undo/redo, public
+save, reload and cancellation. Native physical SVG endpoint comparisons
+retain their three-decimal contract. Cancellation starts at an on-screen
+line endpoint after fitting the page; arbitrary client locations on large
+scaled pages are not assumed to be visible. The rectangle toolbar regression
+also passes. Core/shared UI builds and all compiler projects pass; the
+shared UI command/scaling suite passes thirteen checks with one optional skip.
+
+Other scales and unit conventions, native mouse gesture semantics beyond
+paper edges, outside-page paint visibility, native snapping/glue, exact
+pixels and native Office reopen acceptance remain unverified.

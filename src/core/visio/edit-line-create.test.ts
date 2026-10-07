@@ -90,7 +90,6 @@ it('snapshots line endpoints and converts physical page inches through shared sc
 	});
 });
 
-const directory = process.env.VISIO_NATIVE_LINE_CREATION_DIR;
 it('allocates shape IDs across descendants through the native unsigned limit', async () => {
 	const page = (await parseVsdx(await source())).pages[0]!;
 	const child = { ...page.shapes[0]!, id: '4294967294' };
@@ -99,51 +98,77 @@ it('allocates shape IDs across descendants through the native unsigned limit', a
 	child.id = '4294967295';
 	expect(() => visioNextShapeId(page)).toThrow('No shape IDs remain');
 });
-it.skipIf(!directory)(
-	'matches native DrawLine geometry, defaults and cached transforms',
-	async () => {
-		const bytes = await readFile(join(directory!, 'original.vsdx'));
-		const native = await parseVsdx(bytes);
-		const evidence = JSON.parse(await readFile(join(directory!, 'evidence.json'), 'utf8')) as {
-			cases: { shapeId: string; before: Record<string, { value: number }> }[];
-		};
-		const cleared = await editVsdx(
-			bytes,
-			evidence.cases.map((item) => ({
-				type: 'delete-shape',
-				pageId: native.pages[0]!.id,
-				shapeId: item.shapeId,
-			})),
-		);
-		const created = await editVsdx(
-			cleared.bytes,
-			evidence.cases.map((item) => ({
-				type: 'create-line',
-				pageId: native.pages[0]!.id,
-				shapeId: item.shapeId,
-				beginX: item.before.BeginX!.value,
-				beginY: item.before.BeginY!.value,
-				endX: item.before.EndX!.value,
-				endY: item.before.EndY!.value,
-			})),
-		);
-		const result = await parseVsdx(created.bytes);
-		const pkg = await VisioPackage.open(created.bytes);
-		const root = await pkg.readXml('visio/pages/page1.xml', 'PageContents');
-		for (const item of evidence.cases) {
-			const actual = result.pages[0]!.shapes.find((shape) => shape.id === item.shapeId)!;
-			const expected = native.pages[0]!.shapes.find((shape) => shape.id === item.shapeId)!;
-			for (let i = 0; i < 6; i++)
-				expect(actual.transform[i]).toBeCloseTo(expected.transform[i]!, 12);
-			expect(actual.width).toBeCloseTo(expected.width, 12);
-			expect(actual.geometry).toEqual(expected.geometry);
-			expect(actual.style).toEqual(expected.style);
-			const node = children(children(root, 'Shapes')[0], 'Shape').find(
-				(node) => attribute(node, 'ID') === item.shapeId,
-			)!;
-			const cells = new Map(children(node, 'Cell').map((node) => [attribute(node, 'N'), node]));
-			for (const [name, value] of Object.entries(item.before))
-				expect(Number(attribute(cells.get(name), 'V')), name).toBeCloseTo(value.value, 12);
-		}
-	},
-);
+for (const variable of [
+	'VISIO_NATIVE_LINE_CREATION_DIR',
+	'VISIO_NATIVE_LINE_CREATION_HALF_DIR',
+	'VISIO_NATIVE_LINE_CREATION_DOUBLE_DIR',
+	'VISIO_NATIVE_LINE_CREATION_TRIPLE_DIR',
+]) {
+	const directory = process.env[variable];
+	it.skipIf(!directory)(
+		`matches native DrawLine geometry, defaults and cached transforms (${variable})`,
+		async () => {
+			const bytes = await readFile(join(directory!, 'original.vsdx'));
+			const native = await parseVsdx(bytes);
+			const before = await VisioPackage.open(bytes);
+			const evidence = JSON.parse(await readFile(join(directory!, 'evidence.json'), 'utf8')) as {
+				pageScale: number;
+				drawingScale: number;
+				cases: {
+					shapeId: string;
+					before: Record<string, { value: number }>;
+					beforeTransform: number[];
+				}[];
+			};
+			const cleared = await editVsdx(
+				bytes,
+				evidence.cases.map((item) => ({
+					type: 'delete-shape',
+					pageId: native.pages[0]!.id,
+					shapeId: item.shapeId,
+				})),
+			);
+			const created = await editVsdx(
+				cleared.bytes,
+				evidence.cases.map((item) => ({
+					type: 'create-line',
+					pageId: native.pages[0]!.id,
+					shapeId: item.shapeId,
+					beginX: item.before.BeginX!.value,
+					beginY: item.before.BeginY!.value,
+					endX: item.before.EndX!.value,
+					endY: item.before.EndY!.value,
+				})),
+			);
+			const result = await parseVsdx(created.bytes);
+			const pkg = await VisioPackage.open(created.bytes);
+			expect(result.pages[0]!.drawingToPageScale).toBe(native.pages[0]!.drawingToPageScale);
+			for (const path of before.paths())
+				if (path !== 'visio/pages/page1.xml')
+					expect(await pkg.readBytes(path)).toEqual(await before.readBytes(path));
+			const root = await pkg.readXml('visio/pages/page1.xml', 'PageContents');
+			const ratio = evidence.pageScale / evidence.drawingScale;
+			for (const item of evidence.cases) {
+				const actual = result.pages[0]!.shapes.find((shape) => shape.id === item.shapeId)!;
+				const expected = native.pages[0]!.shapes.find((shape) => shape.id === item.shapeId)!;
+				for (let i = 0; i < 6; i++)
+					expect(actual.transform[i]).toBeCloseTo(expected.transform[i]!, 12);
+				expect(actual.width).toBeCloseTo(expected.width, 12);
+				for (let i = 0; i < 6; i++)
+					expect(actual.transform[i]).toBeCloseTo(
+						item.beforeTransform[i]! * (i >= 4 ? ratio : 1),
+						12,
+					);
+				expect(actual.width).toBeCloseTo(item.before.Width!.value * ratio, 12);
+				expect(actual.geometry).toEqual(expected.geometry);
+				expect(actual.style).toEqual(expected.style);
+				const node = children(children(root, 'Shapes')[0], 'Shape').find(
+					(node) => attribute(node, 'ID') === item.shapeId,
+				)!;
+				const cells = new Map(children(node, 'Cell').map((node) => [attribute(node, 'N'), node]));
+				for (const [name, value] of Object.entries(item.before))
+					expect(Number(attribute(cells.get(name), 'V')), name).toBeCloseTo(value.value, 12);
+			}
+		},
+	);
+}

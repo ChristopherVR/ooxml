@@ -37,9 +37,11 @@ try {
  $page.PageSheet.CellsU('PageScale').ResultIU=$PageScale
  $shapes=@()
  $cases=@()
+ # GridAligned references use identical physical-page coordinates across scales.
+ $coordinates=if($GridAligned){$DrawingScale/$PageScale}else{1}
  $diagonal=if($GridAligned){@(3,3.5)}else{@(2.732050807568877,2.5)}
  foreach($end in @(@(3,1.5),$diagonal,@(1,3.5),@(-1,1.5))){
-  $shape=$page.DrawLine(1,1.5,$end[0],$end[1])
+  $shape=$page.DrawLine($coordinates,1.5*$coordinates,$end[0]*$coordinates,$end[1]*$coordinates)
   if($shape.OneD -eq 0){throw 'Native probe is not a one-dimensional shape.'}
   $shapes+=,$shape
   $cases+=,[ordered]@{shapeId=[string]$shape.ID;oneD=$shape.OneD;before=(Get-LineCells $shape);beforeTransform=(Get-LineTransform $shape)}
@@ -51,7 +53,7 @@ try {
  for($i=0;$i -lt $shapes.Length;$i++){
   $shape=$shapes[$i]
   $before=$cases[$i].before
-  $dx=2.25;$dy=1.5
+  $dx=2.25*$coordinates;$dy=1.5*$coordinates
   foreach($name in @('BeginX','EndX')){$shape.CellsU($name).ResultIU=$before[$name].value+$dx}
   foreach($name in @('BeginY','EndY')){$shape.CellsU($name).ResultIU=$before[$name].value+$dy}
   $after=Get-LineCells $shape

@@ -55,8 +55,11 @@ allocation and physical-page conversion; the menu and Ctrl+6 select it. Four
 native orientations match core formulas, geometry, styles and cached poses.
 All six framework routes verify actual drag creation, undo/redo, cancellation,
 public save and reload, with independent native SVG endpoint measurements.
-The current browser capture uses unscaled drawing inches and grid-aligned
-coordinates. Native mouse snapping, adjoining-line glue, other creation styles,
+Native drawing-to-page ratios 0.5, 1, 2 and 3 now have creation comparisons
+across all six routes, including lines extending past the paper edge. Line
+gestures retain those endpoints rather than clamping them to paper dimensions.
+Native mouse snapping, outside-page gesture semantics and visibility,
+adjoining-line glue, other creation styles, other scales/unit conventions,
 exact paint pixels and native Office reopen acceptance remain unverified.
 
 Native endpoint-cell assignment after a Width override retains the fixed Width,

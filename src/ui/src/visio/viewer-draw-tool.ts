@@ -8,7 +8,7 @@ import {
 } from 'ooxml-core/visio/ui';
 export { visioNextShapeId as nextShapeId } from 'ooxml-core/visio/ui';
 
-/** Visio snaps new geometry to ruler subdivisions; 1/16 inch matches its default fine grid. */
+/** Creation snaps to 1/16-inch physical-page subdivisions. */
 const SNAP = 1 / 16;
 const MIN_SIZE = SNAP;
 const snap = (value: number) => Math.round(value / SNAP) * SNAP;
@@ -155,7 +155,7 @@ export class ShapeDrawTool {
 		const page = state.document?.pages[state.pageIndex];
 		const svg = this.viewport.querySelector<SVGSVGElement>('svg.paper');
 		if (!page || !svg || !state.edit.sourceAvailable || state.edit.busy) return;
-		const start = pagePoint(svg, page, event);
+		const start = pagePoint(svg, page, event, { bounded: kind !== 'line' });
 		if (!start) return;
 		event.preventDefault();
 		const rect = this.viewport.ownerDocument.createElementNS(
@@ -171,7 +171,9 @@ export class ShapeDrawTool {
 	}
 	#move(event: PointerEvent): void {
 		if (!this.#drag || event.pointerId !== this.#drag.pointer) return;
-		const point = pagePoint(this.#drag.svg, this.#drag.page, event);
+		const point = pagePoint(this.#drag.svg, this.#drag.page, event, {
+			bounded: this.#drag.kind !== 'line',
+		});
 		if (point) this.#update(point);
 	}
 	#update(point: { x: number; y: number }): void {
@@ -196,7 +198,7 @@ export class ShapeDrawTool {
 	async #finish(event: PointerEvent): Promise<void> {
 		const drag = this.#drag;
 		if (!drag || event.pointerId !== drag.pointer) return;
-		const end = pagePoint(drag.svg, drag.page, event) ?? drag;
+		const end = pagePoint(drag.svg, drag.page, event, { bounded: drag.kind !== 'line' }) ?? drag;
 		this.#cancel();
 		const width = Math.abs(end.x - drag.x),
 			height = Math.abs(end.y - drag.y);
