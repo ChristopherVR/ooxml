@@ -627,8 +627,18 @@ undo; native subscription-build keyboard equivalence remains unverified.
 Nested complex-field parsing uses independent instruction/result stack frames.
 Inner cached text, including deleted text, keeps its own metadata; the outer
 result resumes after the inner end. Tests cover split codes, nested instructions,
-PAGE display recalculation and edited save/reparse. Tracker lifetime remains
-paragraph-local, so fields spanning paragraphs require separate implementation.
+PAGE display recalculation and edited save/reparse.
+
+Story-local XML-order scanning now retains field result metadata across paragraph
+and table boundaries. Markers in preserved read-only nested tables participate in
+the scan; simple-field caches and textbox stories remain isolated. Six regressions
+cover split/nested instructions, deleted results, separate stories and edited
+save/reparse. This does not make nested tables or unsupported wrappers editable.
+
+Result-only clipboard projection also strips field instruction and source identity
+from supported inline objects using the existing shared run-property conversion.
+Copied line/page breaks and note references retain their own properties; complete
+complex field slices retain cached object metadata and effective formatting.
 
 ### Core style resolution follow-up
 
@@ -643,3 +653,20 @@ entire packed value, including explicit off, following Microsoft's documented
 precedence. Tests cover each flag, first-row/banding selection, malformed input
 and cell text edit/save/reload without rewriting the source packed flags. These
 are core semantic fixes, not native layout or current M365 certification.
+
+First-page and odd/even header/footer flags now use the shared on/off decoder:
+explicit `0`, `false` and `off` no longer select those stories. Enabling a source
+explicit-off `titlePg` clears its off value on export. Tests cover all on/off
+lexical forms, page-story selection, untouched package bytes, body-edit
+preservation and enable/save/reload. General header/footer geometry remains open.
+
+### Numbering override restart compatibility
+
+Resolved numbering levels now ignore `lvlRestart` inside a full level override,
+using the abstract level's policy instead. The parsed catalog and source XML keep
+the ignored value. Four native Word 16.0 build 20430 cases corroborate default,
+never, top-level and previous-level restart behavior; edit/save/reload tests retain
+both the labels and original numbering part. This follows Microsoft's documented
+Word compatibility behavior, which differs from the generic override rule.
+Conflicting full-level/startOverride start values remain a separate open issue;
+the native reference is perpetual desktop Word, not current M365 certification.
