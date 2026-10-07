@@ -1,8 +1,8 @@
-import type { VisioMetafileTreeConverter } from './convert-metafile.js';
-import { inspectEmbeddedVisioMetafile } from './prepare-metafiles.js';
-import { readVisioImage, type VisioImageOptions } from './media.js';
-import type { VisioPackage } from './package.js';
-import type { RawShape, Report } from './sheet.js';
+import type { VisioMetafileTreeConverter } from './convert-metafile';
+import { inspectEmbeddedVisioMetafile } from './prepare-metafiles';
+import { readVisioImage, type VisioImageOptions } from './media';
+import type { VisioPackage } from './package';
+import type { RawShape, Report } from './sheet';
 
 /** Resolve assets before master expansion, so all instances share one validated byte array. */
 export async function prepareImages(

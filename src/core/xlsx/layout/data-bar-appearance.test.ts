@@ -68,7 +68,12 @@ describe('Data-bar appearance from native Excel 16.0 workbooks', () => {
 			color: expected.negative,
 			negative: true,
 			gradient: expected.gradient,
-			direction: expected.direction,
+			direction:
+				expected.variant === 2
+					? expected.direction
+					: expected.direction === 'leftToRight'
+						? 'rightToLeft'
+						: 'leftToRight',
 		});
 		expect(positive.dataBar?.borderColor).toBe(expected.border);
 		expect(negative.dataBar?.borderColor).toBe(expected.negativeBorder);

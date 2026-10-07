@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import JSZip from 'jszip';
-import { editVsdx } from './edit.js';
-import { parseVsdx } from './parser.js';
-import { cell, fixture, shape } from './test-fixtures.js';
-import type { VisioPageInsert } from './edit-commands.js';
-import { parseAppProperties } from '../opc/properties/index.js';
+import { editVsdx } from './edit';
+import { parseVsdx } from './parser';
+import { cell, fixture, shape } from './test-fixtures';
+import type { VisioPageInsert } from './edit-commands';
+import { parseAppProperties } from '../opc/properties/index';
 import nativeEvidence from './__fixtures__/page-insertion-native.json';
 
 const insert: VisioPageInsert = {

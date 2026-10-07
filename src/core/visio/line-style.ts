@@ -1,6 +1,6 @@
-import type { VisioStyle } from './model.js';
-import { number, type Cells, type Report } from './sheet.js';
-import { themeFormat, type ThemeResources } from './theme-resolve.js';
+import type { VisioStyle } from './model';
+import { number, type Cells, type Report } from './sheet';
+import { themeFormat, type ThemeResources } from './theme-resolve';
 
 /**
  * MS-VSDX 2.4.4.170 names cached cap 0 Rounded, 1 Square, and 2 Extended:

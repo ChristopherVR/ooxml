@@ -5,7 +5,7 @@ import {
 	decodePath,
 	type Entry,
 	type VisioPackageLimits,
-} from './package-common.js';
+} from './package-common';
 
 /** Inspect central AND local headers before JSZip can sanitize names or inflate anything. */
 export function inspectZip(

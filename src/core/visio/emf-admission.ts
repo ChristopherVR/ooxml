@@ -1,17 +1,14 @@
-import { emfInputOptions, emfInputView } from './emf-admission-input.js';
-import { EmfAdmissionContext } from './emf-admission-context.js';
-import { inspectEmfComment } from './emf-admission-comment.js';
-import { inspectEmfGeometry } from './emf-admission-geometry.js';
+import { emfInputOptions, emfInputView } from './emf-admission-input';
+import { EmfAdmissionContext } from './emf-admission-context';
+import { inspectEmfComment } from './emf-admission-comment';
+import { inspectEmfGeometry } from './emf-admission-geometry';
 import {
 	EMF_FIXED_SIZES,
 	inspectEmfObjectRecord,
 	inspectEmfStateRecord,
-} from './emf-admission-records.js';
-import {
-	type VisioEmfAdmissionOptions,
-	type VisioEmfAdmissionResult,
-} from './emf-admission-types.js';
-export * from './emf-admission-types.js';
+} from './emf-admission-records';
+import { type VisioEmfAdmissionOptions, type VisioEmfAdmissionResult } from './emf-admission-types';
+export * from './emf-admission-types';
 
 /** Bounded, DOM-free classic EMF inspection. Never invokes a converter or enables rendering.
  * Unknown or unresolved semantics reject the entire asset; no partial drawing is returned.

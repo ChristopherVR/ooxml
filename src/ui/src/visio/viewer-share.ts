@@ -1,6 +1,6 @@
 import type { OfficeProfile } from '../controls';
 import type { PresenceParticipant } from '../presence';
-import type { ViewerController, ViewerState } from './controller.js';
+import type { ViewerController, ViewerState } from './controller';
 
 type Collab = typeof import('ooxml-core/collab');
 type Session = ReturnType<Collab['createCollabSession']>;

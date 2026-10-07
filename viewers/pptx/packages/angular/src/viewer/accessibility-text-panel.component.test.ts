@@ -9,9 +9,7 @@
  * No Angular TestBed here (see `media-properties-panel.component.test.ts`):
  * `.supports()` is a plain static method testable without DI, and the
  * remaining assertions pin the source to the wiring the template/computed
- * rely on (importing shared through the vendored `../internal/shared`
- * barrel, never the bare `'ooxml-ui/pptx'` specifier ng-packagr would
- * externalize; see `internal/shared.ts`'s docblock).
+ * rely on, importing the renderer through the public `ooxml-ui/pptx` dependency.
  */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -56,10 +54,10 @@ describe('accessibilityTextPanelComponent source wiring', () => {
 		'utf8',
 	);
 
-	it('reads its fields through the shared descriptor, via the vendored barrel', () => {
+	it('reads its fields through the public UI descriptor', () => {
 		expect(source).toMatch(/getNonVisualDescriptionFields/);
 		expect(source).toContain("from 'ooxml-ui/pptx'");
-		expect(source).not.toContain("from 'ooxml-ui/pptx'");
+		expect(source).not.toContain("from '../internal/shared'");
 	});
 
 	it('emits altText and title patches from their own inputs', () => {

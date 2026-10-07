@@ -8,7 +8,7 @@ import {
 	type VisioForeignVectorLimits,
 	type VisioForeignVectorNode,
 	type VisioForeignVectorPath,
-} from './foreign-vector-types.js';
+} from './foreign-vector-types';
 import {
 	finite,
 	limitsFor,
@@ -18,10 +18,10 @@ import {
 	record,
 	rule,
 	type RecordValue,
-} from './foreign-vector-values.js';
-import { pathCommands } from './foreign-vector-path.js';
-import { checkVectorGraph } from './foreign-vector-graph.js';
-export { VISIO_FOREIGN_VECTOR_LIMITS, VisioForeignVectorError } from './foreign-vector-types.js';
+} from './foreign-vector-values';
+import { pathCommands } from './foreign-vector-path';
+import { checkVectorGraph } from './foreign-vector-graph';
+export { VISIO_FOREIGN_VECTOR_LIMITS, VisioForeignVectorError } from './foreign-vector-types';
 export type {
 	VisioForeignVector,
 	VisioForeignVectorClip,
@@ -34,7 +34,7 @@ export type {
 	VisioForeignVectorPaint,
 	VisioForeignVectorPath,
 	VisioForeignVectorRule,
-} from './foreign-vector-types.js';
+} from './foreign-vector-types';
 
 const BASE = ['transform', 'clip-path'];
 const PAINT = [
@@ -236,4 +236,4 @@ function sanitize(root: unknown, limits: VisioForeignVectorLimits): VisioForeign
 	return Object.freeze(scene);
 }
 
-export { validateVisioForeignVector } from './foreign-vector-validation.js';
+export { validateVisioForeignVector } from './foreign-vector-validation';

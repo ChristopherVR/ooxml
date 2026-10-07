@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { parseVsdx } from './parser.js';
+import { parseVsdx } from './parser';
 
 // Generate locally using scripts/verify-visio-rounding.ps1. Native exports are
 // external evidence, not distributed fixtures or a requirement to install Visio in CI.

@@ -1,19 +1,19 @@
-import { children, attribute } from './sheet.js';
-import { fail } from './package-common.js';
+import { children, attribute } from './sheet';
+import { fail } from './package-common';
 import {
 	analyzeVisioFormula,
 	evaluateVisioFormula,
 	visioFormulaCachedValue,
 	type VisioFormulaValue,
-} from './formula.js';
+} from './formula';
 import {
 	indexCells,
 	key,
 	bound,
 	type VisioCellKey,
 	type VisioRecalculationOptions,
-} from './edit-recalculate-index.js';
-export type { VisioCellKey, VisioRecalculationOptions } from './edit-recalculate-index.js';
+} from './edit-recalculate-index';
+export type { VisioCellKey, VisioRecalculationOptions } from './edit-recalculate-index';
 
 /** Compute first, write caches only after the entire affected closure succeeds. F and U remain untouched. */
 export function recalculateVisioCells(

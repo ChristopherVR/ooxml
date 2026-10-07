@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import JSZip from 'jszip';
-import { parseVsdx } from './parser.js';
-import { editVsdx } from './edit.js';
-import { cell, fixture, shape, rectangle } from './test-fixtures.js';
-import { normalizeVisioPageGeometry, scaleVisioGeometryPath } from './page-scale.js';
-import { visioPageEditToDrawing } from './ui/page-edit.js';
+import { parseVsdx } from './parser';
+import { editVsdx } from './edit';
+import { cell, fixture, shape, rectangle } from './test-fixtures';
+import { normalizeVisioPageGeometry, scaleVisioGeometryPath } from './page-scale';
+import { visioPageEditToDrawing } from './ui/page-edit';
 import evidence from './__fixtures__/page-scales-native.json';
 
 const scaledFixture = (drawingScale = 2, pageScale = 1) =>

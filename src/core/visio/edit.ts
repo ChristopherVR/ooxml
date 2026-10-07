@@ -1,12 +1,12 @@
-import { DEFAULTS, fail, type VisioPackageLimits } from './package-common.js';
-import { visioXml, related } from './parts.js';
-import { openEditablePackage, writeEditedPackage } from './edit-package.js';
-import { replacePlainText, serializeEditedXml } from './edit-text.js';
-import { snapshotVisioEdits, isVisioPageEdit, type VisioEdit } from './edit-commands.js';
-import { applyGeometryEdit } from './edit-geometry.js';
-import { assertGeometryPackageScope } from './edit-scope.js';
-import { emptyMasterMoveProof } from './edit-master-move.js';
-import { editVsdxPages } from './edit-pages.js';
+import { DEFAULTS, fail, type VisioPackageLimits } from './package-common';
+import { visioXml, related } from './parts';
+import { openEditablePackage, writeEditedPackage } from './edit-package';
+import { replacePlainText, serializeEditedXml } from './edit-text';
+import { snapshotVisioEdits, isVisioPageEdit, type VisioEdit } from './edit-commands';
+import { applyGeometryEdit } from './edit-geometry';
+import { assertGeometryPackageScope } from './edit-scope';
+import { emptyMasterMoveProof } from './edit-master-move';
+import { editVsdxPages } from './edit-pages';
 export type {
 	VisioEdit,
 	VisioTextEdit,
@@ -16,7 +16,7 @@ export type {
 	VisioPageRename,
 	VisioPageDelete,
 	VisioPageEdit,
-} from './edit-commands.js';
+} from './edit-commands';
 
 export interface EditVsdxOptions {
 	limits?: Partial<VisioPackageLimits>;

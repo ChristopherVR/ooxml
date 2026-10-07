@@ -1,7 +1,7 @@
-import { elements } from '../xml/index.js';
-import type { VisioLinearGradient } from './model.js';
-import { number, sectionRows, type Report, type Sheet } from './sheet.js';
-import { themePaintContext, type ThemeResources } from './theme-resolve.js';
+import { elements } from '../xml/index';
+import type { VisioLinearGradient } from './model';
+import { number, sectionRows, type Report, type Sheet } from './sheet';
+import { themePaintContext, type ThemeResources } from './theme-resolve';
 import {
 	colorChoice,
 	drawingPaint,
@@ -9,7 +9,7 @@ import {
 	integer,
 	themeChild,
 	themeChildren,
-} from './theme-color.js';
+} from './theme-color';
 
 /**
  * DrawingML ang is clockwise; Visio local coordinates are y-up. Project the

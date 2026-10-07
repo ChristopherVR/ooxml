@@ -1,4 +1,4 @@
-import { buildHomePanel } from './ribbon-home.js';
+import { buildHomePanel } from './ribbon-home';
 import {
 	buildDataPanel,
 	buildDesignPanel,
@@ -6,12 +6,12 @@ import {
 	buildInsertPanel,
 	buildProcessPanel,
 	buildReviewPanel,
-} from './ribbon-other-tabs.js';
-import { command } from './ribbon-parts.js';
-import { buildViewPanel } from './ribbon-view.js';
-import { createTellMe } from './viewer-tell-me.js';
+} from './ribbon-other-tabs';
+import { command } from './ribbon-parts';
+import { buildViewPanel } from './ribbon-view';
+import { createTellMe } from './viewer-tell-me';
 
-export type { VisioRibbonAction } from './ribbon-action.js';
+export type { VisioRibbonAction } from './ribbon-action';
 
 /** Visio's ribbon tab order. File (backstage) belongs to the host application. */
 export const RIBBON_TABS = [

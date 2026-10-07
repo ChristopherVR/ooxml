@@ -238,7 +238,7 @@ to counts; edits and reactions do not. Explicit unread marks persist locally.
 Tests cover foreign/self/deleted messages, no-op read updates, restoration, filtering
 and reopening. This is not a shared read receipt or notification delivery system;
 cross-device state, viewport-level reading detection, activity notifications and
-automatic following remain outstanding. These controls follow Microsoft's
+automatic following on mentions remain outstanding. These controls follow Microsoft's
 [followed-thread inbox workflow](https://support.microsoft.com/en-us/teams/teams-channels/follow-threads-in-microsoft-teams).
 
 ## Eleventh implemented slice: automatic following preferences
@@ -255,19 +255,75 @@ post following, opting out, reload and independently enabling reply following.
 Automatic following on mentions and following all content in a channel remain
 unsupported, alongside notifications and cross-device preference sync.
 
+## Twelfth implemented slice: personal message drafts
+
+Posts, thread replies and edits retain separate drafts through channel, thread and
+view navigation. A Drafts view lists unsent messages and resumes their original
+compose context. Drafts stay outside Yjs and persist per user and workspace in
+local storage. Text is restored after reload; file bytes stay in memory during a
+session. After reload, restored attachment names require reattaching or explicit
+discard before sending. The UI does not silently send a draft without those files.
+Successful sends clear their captured draft without clearing newer text typed
+during an upload; rejected edits retain the draft. Local storage is bounded to
+512 KiB of serialized text/metadata, 500 restored contexts and twenty attachments per
+draft; blocked storage or larger snapshots preserve only session state. Cross-device
+draft sync, durable attachment bytes, unavailable-message recovery and shared read
+receipts remain outstanding. Unit tests cover context isolation, defensive copies,
+restoration, blocked storage and send races. Browser acceptance covers post/thread
+navigation, retained attachment bytes, central resume, reload, missing-attachment
+guard and sending. Microsoft's current
+[Drafts quick view](https://support.microsoft.com/en-us/teams/platform/what-s-new-in-microsoft-teams)
+is the workflow reference; this local implementation does not establish full parity.
+
+## Thirteenth implemented slice: reliable chat attachment transfers
+
+Message attachments use configured storage, retain their display names and receive
+fresh storage names on every attempt. A post or thread reply is published only
+after every file has a valid URL. Missing storage, invalid files and partial upload
+failures retain the complete draft instead of publishing filename-only cards.
+Channel transfer status shows completed file counts and supports cancellation,
+including adapters that ignore abort signals. Failures and cancellations recover
+the original text and attachment bytes in Drafts; newer text typed during the send
+is preserved as a separate draft. Resuming and sending uses the captured channel
+and thread context. Unit and browser coverage exercises partial failure, retry,
+cancellation, late adapter completion, preserved bytes and concurrent new text.
+Progress counts completed files rather than transferred bytes. Uploaded storage
+objects are not automatically removed after failure or cancellation because the
+storage contract has no deletion operation. Durable attachment recovery, shared
+storage permissions, folders and version/save-back contracts remain outstanding.
+
+## Fourteenth implemented slice: Shared and Files presentation
+
+Channel files use the current Shared tab label. The Files view presents a New menu,
+Upload command and search field above a semantic table of filenames, sharing
+dates, authors and channel locations. Clicking a filename opens the existing
+preview; pinning retains the existing channel-tab workflow. The native file picker
+is hidden behind Upload, and the prominent website URL form has been removed from
+Files. Websites remain available through Add tab and host content previews.
+Unavailable file bytes disable opening instead of pretending a filename is a file.
+Desktop and narrow-screen browser acceptance covers upload, retry, workbook
+creation, search, filename opening and table overflow. This is an incremental UI
+alignment with Microsoft's [Shared file workflow](https://support.microsoft.com/en-us/teams/files/collaborate-on-files-in-microsoft-teams),
+not pixel-perfect parity. Folder navigation, file selection/bulk actions, views,
+sorting and permission-aware sharing menus still need implementation.
+
 ## Next releasable slices
 
-1. Shared tab permissions: authenticated membership and server enforcement,
+1. UI parity: match the current Teams shell, Shared/Files commands, Settings
+   navigation, typography, spacing and responsive layouts against reference
+   screenshots. Keep implemented preferences functional and expose unsupported
+   settings honestly. Visual similarity alone does not establish workflow parity.
+2. Shared tab permissions: authenticated membership and server enforcement,
    approved web-app origins and a supported app messaging contract.
-2. Full PowerPoint adapter: expose the existing framework-neutral renderer
+3. Full PowerPoint adapter: expose the existing framework-neutral renderer
    through the UI package, then consume it here without copying format or render
    logic. Test actual slide content, navigation, media and teardown.
-3. Files workflow: permission-aware storage IDs, progress/cancel/retry, folders,
+4. Files workflow: permission-aware storage IDs, progress/cancel/retry, folders,
    version metadata, and save-back contracts. Add coediting only after identity,
    access control and revision handling are enforceable.
-4. Authenticated direct/group chats and activity: participant-scoped rooms,
+5. Authenticated direct/group chats and activity: participant-scoped rooms,
    mentions, notification preferences, read receipts and message-level search.
-5. Meetings and enterprise integration: scheduling and invitations, SFU/lobby
+6. Meetings and enterprise integration: scheduling and invitations, SFU/lobby
    and roles, captions/recording, then SSO/admin/retention/guest policy.
 
 For each slice: record the Microsoft reference workflow, implement in the owning

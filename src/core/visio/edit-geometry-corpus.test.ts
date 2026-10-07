@@ -4,9 +4,9 @@ import { join, relative, resolve } from 'node:path';
 import JSZip from 'jszip';
 import { DOMParser } from '@xmldom/xmldom';
 import { describe, expect, it } from 'vitest';
-import { editVsdx, type VisioEdit, type EditVsdxResult } from './edit.js';
-import { VisioPackageError } from './package-common.js';
-import { parseVsdx } from './parser.js';
+import { editVsdx, type VisioEdit, type EditVsdxResult } from './edit';
+import { VisioPackageError } from './package-common';
+import { parseVsdx } from './parser';
 
 // Opt-in public corpus only. Download/hash provenance belongs to the caller;
 // this test never fetches files or depends on another repository's checkout.

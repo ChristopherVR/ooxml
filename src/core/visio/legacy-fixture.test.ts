@@ -2,8 +2,8 @@ import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { buildOle2 } from '@christophervr/ole2/ole2-parser-write';
-import { loadVisio } from './load.js';
-import { parseLegacyVsd } from './legacy.js';
+import { loadVisio } from './load';
+import { parseLegacyVsd } from './legacy';
 
 const fixture = new URL('./__fixtures__/legacy-vsd/owned-v11.vsd', import.meta.url);
 

@@ -1,15 +1,15 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { VisioDocument, VisioLayer, VisioShape } from 'ooxml-core/visio';
-import { ViewerController } from './controller.js';
-import { mountViewer } from './binding.js';
+import { ViewerController } from './controller';
+import { mountViewer } from './binding';
 import { demoDocument } from 'ooxml-core/visio/ui';
-import { renderPage } from './render-svg.js';
+import { renderPage } from './render-svg';
 import {
 	VIEWER_LAYER_LIMITS,
 	documentVisibility,
 	layerOverrideMaps,
 	type LayerVisibilityOverride,
-} from './viewer-layers.js';
+} from './viewer-layers';
 
 const layer = (id: string, visible = true): VisioLayer => ({
 	id,

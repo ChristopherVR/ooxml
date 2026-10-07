@@ -1,0 +1,56 @@
+{
+  "applicationVersion": "16.0",
+  "applicationBuild": "16.0.20430",
+  "names": [
+    "move1",
+    "move2"
+  ],
+  "before": [
+    {
+      "type": 14,
+      "text": "FirstMove",
+      "author": "Ada"
+    },
+    {
+      "type": 14,
+      "text": "SecondMove",
+      "author": "Ada"
+    },
+    {
+      "type": 15,
+      "text": "FirstMove",
+      "author": "Ada"
+    },
+    {
+      "type": 15,
+      "text": "SecondMove",
+      "author": "Ada"
+    }
+  ],
+  "afterAcceptFirst": [
+    {
+      "type": 14,
+      "text": "SecondMove",
+      "author": "Ada"
+    },
+    {
+      "type": 15,
+      "text": "SecondMove",
+      "author": "Ada"
+    }
+  ],
+  "textAfterAcceptFirst": "\rSecondMove\rTarget FirstMove SecondMove\r",
+  "afterRejectFirst": [
+    {
+      "type": 14,
+      "text": "SecondMove",
+      "author": "Ada"
+    },
+    {
+      "type": 15,
+      "text": "SecondMove",
+      "author": "Ada"
+    }
+  ],
+  "textAfterRejectFirst": "FirstMove\rSecondMove\rTarget  SecondMove\r"
+}

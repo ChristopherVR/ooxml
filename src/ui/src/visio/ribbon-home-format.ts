@@ -1,4 +1,4 @@
-import { combo, command, group, menu, stack, type CommandSpec } from './ribbon-parts.js';
+import { combo, command, group, menu, stack, type CommandSpec } from './ribbon-parts';
 
 const TEXT = 'Needs core text formatting edits.';
 const CLIPBOARD = 'Needs core shape copy and paste.';

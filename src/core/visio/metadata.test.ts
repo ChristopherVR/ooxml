@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { diagnosticCollector } from './diagnostics.js';
-import { parseVsdx } from './index.js';
-import { cell, fixture, row, section, shape } from './test-fixtures.js';
+import { diagnosticCollector } from './diagnostics';
+import { parseVsdx } from './index';
+import { cell, fixture, row, section, shape } from './test-fixtures';
 
 describe('bounded Visio metadata and diagnostics', () => {
 	it.each([

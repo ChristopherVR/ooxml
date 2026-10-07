@@ -1,12 +1,10 @@
-import { createClientId } from '../collab/identity.js';
-import { contentUrl } from './content.js';
 import { checkFileAbort, withFileAbort, type FileOperationOptions } from './file-transfer.js';
 import {
-	MAX_ATTACHMENTS,
-	sanitizeAttachment,
-	sanitizeChannelName,
-	type Attachment,
-} from './model.js';
+	storeAttachment,
+	storageFileName as fileName,
+	validateStorageFile,
+} from './stored-file.js';
+import { MAX_ATTACHMENTS, type Attachment } from './model.js';
 import type { TeamsClient, UploadableFile } from './store.js';
 
 type FileBlob = UploadableFile & Blob;
@@ -26,30 +24,12 @@ export function createFileActions(
 		if (!context.available(channelId)) throw new Error('The channel is no longer available');
 		if (!context.canUpload()) throw new Error('Configure file storage before sharing files');
 	}
-	function fileName(raw: string): string {
-		return sanitizeChannelName(raw).replace(/[\/\\\u0000-\u001f\u007f]/gu, '');
-	}
 	async function stored(
 		file: FileBlob,
 		prefix: string,
 		options?: FileOperationOptions,
 	): Promise<Attachment> {
-		const name = fileName(file.name);
-		if (!name || file.size > 33_554_432)
-			throw new Error('This file cannot be saved to the channel');
-		const ext = name.includes('.') ? `.${name.split('.').pop()}` : '';
-		const unique = Object.assign(new Blob([file], { type: file.type ?? '' }), {
-			name: `${prefix}-${createClientId()}${ext}`,
-		});
-		const uploaded = await withFileAbort(
-			() => context.upload(unique, options?.signal),
-			options?.signal,
-		);
-		checkFileAbort(options?.signal);
-		const attachment = sanitizeAttachment({ ...uploaded, name });
-		if (!attachment?.url || !contentUrl(attachment.url, 'https://workspace.invalid'))
-			throw new Error('The file could not be uploaded');
-		return attachment;
+		return storeAttachment(file, prefix, context.upload, options);
 	}
 	function shared(
 		channelId: string,
@@ -86,8 +66,7 @@ export function createFileActions(
 			ready(channelId, options);
 			if (!files.length || files.length > MAX_ATTACHMENTS)
 				throw new Error(`Choose between 1 and ${MAX_ATTACHMENTS} files`);
-			if (files.some((file) => !fileName(file.name) || file.size > 33_554_432))
-				throw new Error('This file cannot be saved to the channel');
+			files.forEach(validateStorageFile);
 			const attachments: Attachment[] = [];
 			for (const file of files) {
 				ready(channelId, options);

@@ -54,7 +54,7 @@ describe('recording moves under Track Changes', () => {
 			['me ', 'moveTo'],
 		]);
 		const [firstMove, secondMove] = [at(moves, 0), at(moves, 1)];
-		expect(firstMove.move).toMatch(/^move\d+$/);
+		expect(firstMove.move).toMatch(/^move[a-z0-9]+$/i);
 		expect(secondMove.move).toBe(firstMove.move);
 	});
 

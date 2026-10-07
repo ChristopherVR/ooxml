@@ -1,4 +1,4 @@
-import type { ViewerController } from './controller.js';
+import type { ViewerController } from './controller';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 

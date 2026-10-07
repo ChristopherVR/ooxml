@@ -1,12 +1,12 @@
-import { attribute, children } from './sheet.js';
-import { fail } from './package-common.js';
+import { attribute, children } from './sheet';
+import { fail } from './package-common';
 import {
 	assertVisioShapeUnreferenced,
 	recalculateVisioCells,
 	type VisioCellKey,
-} from './edit-recalculate.js';
-import type { VisioGeometryEdit } from './edit-commands.js';
-import { emptyMasterMoveProof, type MasterMoveProof } from './edit-master-move.js';
+} from './edit-recalculate';
+import type { VisioGeometryEdit } from './edit-commands';
+import { emptyMasterMoveProof, type MasterMoveProof } from './edit-master-move';
 import {
 	numeric,
 	editableCell,
@@ -15,7 +15,7 @@ import {
 	admitted,
 	protectedShape,
 	resizeGeometry,
-} from './edit-geometry-admission.js';
+} from './edit-geometry-admission';
 
 function createRectangle(
 	root: Element,

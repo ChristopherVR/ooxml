@@ -56,8 +56,11 @@ describe('Insert Chart dialog', () => {
 		const result = ctx.dialogs.open('insert-chart', { type: 'column' });
 		const dialog = dialogEl(ctx, 'insert-chart');
 		expect(dialog.querySelector('.xve-preview svg')).not.toBeNull();
-		dialog.querySelector<HTMLButtonElement>('[data-type="line"]')!.click();
-		expect(dialog.querySelector('[data-type="line"]')!.getAttribute('aria-pressed')).toBe('true');
+		dialog.querySelector<HTMLButtonElement>('[data-gallery-item="line"]')!.click();
+		expect(dialog.querySelector('[data-gallery-item="line"]')!.getAttribute('aria-pressed')).toBe(
+			'true',
+		);
+		expect(dialog.querySelectorAll('office-ui-gallery .tile svg')).toHaveLength(8);
 		setValue(inputByLabel(dialog, 'Chart title'), 'Q1');
 		clickButton(dialog, 'OK');
 		await result;
@@ -94,11 +97,49 @@ describe('Insert Chart dialog', () => {
 		ctx.selection.set({ drawing: 0 });
 		const result = ctx.dialogs.open('insert-chart', { change: true });
 		const dialog = dialogEl(ctx, 'insert-chart');
-		dialog.querySelector<HTMLButtonElement>('[data-type="pie"]')!.click();
+		dialog.querySelector<HTMLButtonElement>('[data-gallery-item="pie"]')!.click();
 		clickButton(dialog, 'OK');
 		await result;
 		expect(ctx.workbook()!.sheets[0]!.drawings).toHaveLength(1);
 		expect(ctx.workbook()!.sheets[0]!.drawings[0]).toMatchObject({ chartType: 'pie' });
+	});
+
+	it('changes grouping without losing series and preserves it through undo and save', async () => {
+		const ctx = setup();
+		const original = buildChart(
+			ctx.workbook()!,
+			0,
+			{ start: { row: 0, col: 0 }, end: { row: 3, col: 2 } },
+			'column',
+			{ title: 'Keep me' },
+		);
+		ctx.session()!.addChart(0, original);
+		ctx.selection.set({ drawing: 0 });
+		const result = ctx.dialogs.open('insert-chart', { change: true });
+		const dialog = dialogEl(ctx, 'insert-chart');
+		const grouping = inputByLabel<HTMLSelectElement>(dialog, 'Grouping');
+		expect(grouping.closest('label')?.hidden).toBe(false);
+		dialog.querySelector<HTMLButtonElement>('[data-gallery-item="bar"]')!.click();
+		setValue(grouping, 'percentStacked');
+		clickButton(dialog, 'OK');
+		await result;
+		const chart = () => ctx.workbook()!.sheets[0]!.drawings[0]!;
+		expect(chart()).toMatchObject({
+			chartType: 'bar',
+			grouping: 'percentStacked',
+			title: 'Keep me',
+			series: original.series,
+		});
+		const loaded = await loadXlsx(await saveXlsx(ctx.workbook()!));
+		expect(loaded.sheets[0]!.drawings[0]).toMatchObject({
+			chartType: 'bar',
+			grouping: 'percentStacked',
+			series: original.series,
+		});
+		ctx.session()!.undo();
+		expect(chart()).toEqual(original);
+		ctx.session()!.redo();
+		expect(chart()).toMatchObject({ chartType: 'bar', grouping: 'percentStacked' });
 	});
 });
 

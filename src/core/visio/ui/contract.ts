@@ -1,4 +1,4 @@
-import type { VisioDocument } from '../index.js';
+import type { VisioDocument } from '../index';
 
 export interface ViewerProperties {
 	document: VisioDocument | null;

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { parseVsdx } from './parser.js';
-import { cell, fixture, rectangle, shape, xml, relations, relation } from './test-fixtures.js';
-import { generatedTheme, themeRelationship } from './theme-fixtures.js';
+import { parseVsdx } from './parser';
+import { cell, fixture, rectangle, shape, xml, relations, relation } from './test-fixtures';
+import { generatedTheme, themeRelationship } from './theme-fixtures';
 
 const names = ['LineWeight', 'LineCap', 'LinePattern', 'LineColor', 'FillForegnd'];
 const character = (contents: string) =>

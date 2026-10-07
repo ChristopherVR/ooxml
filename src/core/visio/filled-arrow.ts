@@ -1,4 +1,4 @@
-import { visioOpenArrowExtent } from './open-arrow.js';
+import { visioOpenArrowExtent } from './open-arrow';
 
 /** Native measured filled glyph and endpoint setback, in local y-up inches. */
 export interface VisioFilledArrow {

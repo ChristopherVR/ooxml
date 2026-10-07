@@ -305,20 +305,22 @@ export function adaptDocumentModel(
 				: {}),
 			...(sectionStart && { break: sectionStart }),
 			...(section.verticalAlign ? { verticalAlign: section.verticalAlign } : {}),
-			// Word puts an empty continuous-break marker on the preceding line; it is not
-			// a printed blank paragraph. Keep it in the model for round-trip and editing.
-			blocks: slice.filter(
-				(block) =>
-					!folded.has(block) &&
-					!(
-						model.sections?.[index + 1]?.type === 'continuous' &&
-						block.id === section.endsAtBlockId &&
-						block.kind === 'paragraph' &&
-						!block.footnotes?.length &&
-						!block.floats?.length &&
-						block.runs.every((run) => !run.text && !run.object && !run.breakAfter)
-					),
-			),
+			// Empty text break markers share the preceding line. The mandatory
+			// paragraph after a table has its own line, after balancing the table.
+			blocks: slice.flatMap((block, offset) => {
+				if (folded.has(block)) return [];
+				const marker =
+					model.sections?.[index + 1]?.type === 'continuous' &&
+					block.id === section.endsAtBlockId &&
+					block.kind === 'paragraph' &&
+					!block.footnotes?.length &&
+					!block.floats?.length &&
+					block.runs.every((run) => !run.text && !run.object && !run.breakAfter);
+				if (!marker) return [block];
+				return slice[offset - 1]?.kind === 'table'
+					? [{ ...block, afterTableSectionBreak: true }]
+					: [];
+			}),
 		};
 	});
 	return { sections: result };

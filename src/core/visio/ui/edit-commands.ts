@@ -1,4 +1,4 @@
-import type { VisioEdit } from '../index.js';
+import type { VisioEdit } from '../index';
 
 /** Bound cloning and strip arbitrary host properties. Semantic validation belongs to core. */
 export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {

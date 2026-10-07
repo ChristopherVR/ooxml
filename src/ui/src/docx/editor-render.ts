@@ -29,6 +29,7 @@ export function renderDocument(core: EditorCore): void {
 				showSearch: () => core.shell.searchPanel?.open(),
 				extraPlugins: core.inserts.plugins(),
 				yjs: Boolean(yjs),
+				revisionIds: core.collab.ids,
 				collaborationPlugins: [
 					...(yjs?.plugins ?? []),
 					...(core.collab.yjs ? [yjsPresence(core.collab.yjs.session, () => core.locale)] : []),

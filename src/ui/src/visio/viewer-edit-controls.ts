@@ -1,7 +1,7 @@
 import { editErrorMessage, isEditCancellation } from 'ooxml-core/visio/ui';
-import { geometryControlsTemplate, ViewerGeometryControls } from './viewer-geometry-controls.js';
-import type { ViewerController, ViewerState } from './controller.js';
-import { selectedShape } from './shape-inspector.js';
+import { geometryControlsTemplate, ViewerGeometryControls } from './viewer-geometry-controls';
+import type { ViewerController, ViewerState } from './controller';
+import { selectedShape } from './shape-inspector';
 
 /** Static markup only. Document text is assigned exclusively through value/textContent. */
 export const editControlsTemplate = `<details class="edit-controls"><summary>Edit diagram (experimental)</summary><p id="edit-warning">Experimental source-backed editing. Unsupported targets are rejected. Native Visio compatibility is not verified. Keep your original file.</p><p data-edit-target></p><label for="edit-text">Selected shape text</label><textarea id="edit-text" rows="3" aria-describedby="edit-warning edit-target edit-status"></textarea><div class="edit-actions"><button type="button" data-edit="apply">Apply text</button><button type="button" data-edit="cancel">Cancel</button><button type="button" data-edit="undo">Undo</button><button type="button" data-edit="redo">Redo</button></div><p id="edit-status" role="status" aria-live="polite"></p><p data-edit-error role="alert" hidden></p><ul data-edit-diagnostics></ul>${geometryControlsTemplate}</details>`;

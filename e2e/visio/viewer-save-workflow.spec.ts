@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { downloadCopy, taskPane } from './ribbon.js';
+import { downloadCopy, taskPane } from './ribbon';
 import JSZip from 'jszip';
 import { createVsdxFixture } from './fixture.mjs';
 

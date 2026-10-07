@@ -1,7 +1,7 @@
-import type { VisioForeignVector } from './foreign-vector.js';
-import { elements } from '../xml/index.js';
-import type { VisioDiagnostic, VisioImage } from './model.js';
-import { metadata, metadataAttributes } from './metadata.js';
+import type { VisioForeignVector } from './foreign-vector';
+import { elements } from '../xml/index';
+import type { VisioDiagnostic, VisioImage } from './model';
+import { metadata, metadataAttributes } from './metadata';
 
 export const VISIO_NS = 'http://schemas.microsoft.com/office/visio/2012/main';
 export const VISIO_LEGACY_NS = 'http://schemas.microsoft.com/office/visio/2011/1/core';

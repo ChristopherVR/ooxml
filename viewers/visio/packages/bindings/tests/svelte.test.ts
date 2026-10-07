@@ -1,5 +1,5 @@
 import { beforeEach, expect, it, vi } from 'vitest';
-import { current, emit, reset } from './mock-binding.js';
+import { current, emit, reset } from './mock-binding';
 import { mount, unmount, tick, flushSync } from 'svelte';
 import Harness from './SvelteHarness.svelte';
 beforeEach(reset);

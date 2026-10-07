@@ -1,7 +1,7 @@
-import type { ViewerController } from './controller.js';
+import type { ViewerController } from './controller';
 import { editErrorMessage, isEditCancellation } from 'ooxml-core/visio/ui';
-import { MASTER_MIME, masterSize } from './shapes-window.js';
-import { insertRectangle, pagePoint } from './viewer-draw-tool.js';
+import { MASTER_MIME, masterSize } from './shapes-window';
+import { insertRectangle, pagePoint } from './viewer-draw-tool';
 
 /**
  * Shapes window interaction: drag a master onto the page to drop it there, or activate it to add

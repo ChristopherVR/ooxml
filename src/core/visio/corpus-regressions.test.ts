@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { parseVsdx } from './index.js';
-import { cell, fixture, rectangle, section, shape } from './test-fixtures.js';
+import { parseVsdx } from './index';
+import { cell, fixture, rectangle, section, shape } from './test-fixtures';
 
 // Generated here from format rules. No third-party fixture bytes are redistributed.
 const textShape = (data = '', attributes = '') =>

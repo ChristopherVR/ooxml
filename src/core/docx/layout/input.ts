@@ -88,6 +88,8 @@ export type ParagraphAlign = 'left' | 'center' | 'right' | 'justify';
 export type LineSpacingRule = 'auto' | 'exact' | 'atLeast';
 
 export interface LayoutParagraph {
+	/** Mandatory paragraph after a table, outside the preceding table's column balance. */
+	afterTableSectionBreak?: boolean;
 	kind: 'paragraph';
 	id: string;
 	runs: LayoutRun[];

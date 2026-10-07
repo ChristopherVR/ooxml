@@ -6,8 +6,8 @@ import {
 	type VisioPage,
 	type VisioShape,
 	type VisioShapeVisibility,
-} from './index.js';
-import { fixture } from './test-fixtures.js';
+} from './index';
+import { fixture } from './test-fixtures';
 
 const template = (await parseVsdx(await fixture())).pages[0]!;
 const layer = (id: string, visible = true): VisioLayer => ({

@@ -1,4 +1,4 @@
-import { themeInputs } from './formula-theme.js';
+import { themeInputs } from './formula-theme';
 import {
 	finiteFormulaValue as finite,
 	compatibleFormulaUnits as compatible,
@@ -6,18 +6,18 @@ import {
 	formulaQuotientUnit,
 	formulaExponentUnit,
 	formulaSquareRootUnit,
-} from './formula-arithmetic.js';
+} from './formula-arithmetic';
 import {
 	numericFormulaFunctions,
 	evaluateNumericFormulaFunction,
-} from './formula-numeric-functions.js';
-import { formulaFailure, formulaLimit, parseVisioFormula } from './formula.js';
+} from './formula-numeric-functions';
+import { formulaFailure, formulaLimit, parseVisioFormula } from './formula';
 import type {
 	VisioFormulaAst,
 	VisioFormulaLimits,
 	VisioFormulaReference,
 	VisioFormulaValue,
-} from './formula.js';
+} from './formula';
 
 const supported = new Set([
 	'GUARD',

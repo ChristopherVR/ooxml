@@ -1,4 +1,4 @@
-import { VisioPackageError } from './package.js';
+import { VisioPackageError } from './package';
 
 /** Metadata has separate limits from document text and geometry formula content. */
 export function metadata(value: string, max: number, label: string): string {

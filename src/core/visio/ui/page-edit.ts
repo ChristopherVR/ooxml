@@ -1,5 +1,5 @@
-import type { VisioEdit, VisioPageInsert } from '../edit-commands.js';
-import type { VisioPage, VisioDocument } from '../model.js';
+import type { VisioEdit, VisioPageInsert } from '../edit-commands';
+import type { VisioPage, VisioDocument } from '../model';
 
 /** Allocate a stable page ID and a unique default name for a blank inserted page. */
 export function visioPageInsertCommand(

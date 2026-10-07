@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { parseVsdx } from './parser.js';
-import { cell, fixture, rectangle, row, section, shape } from './test-fixtures.js';
+import { parseVsdx } from './parser';
+import { cell, fixture, rectangle, row, section, shape } from './test-fixtures';
 
 const stop = (
 	index: number,

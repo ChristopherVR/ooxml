@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { demoDocument } from 'ooxml-core/visio/ui';
-import { renderPage } from './render-svg.js';
-import { mountViewer } from './binding.js';
+import { renderPage } from './render-svg';
+import { mountViewer } from './binding';
 import { rasterFixture } from './__fixtures__/raster-fixtures.mjs';
 
 function imageDocument() {

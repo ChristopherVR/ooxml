@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import type { VisioEdit } from 'ooxml-core/visio';
-import { ViewerController } from './controller.js';
+import { ViewerController } from './controller';
 import { demoDocument } from 'ooxml-core/visio/ui';
-import { BASIC_SHAPES, createShapesWindow } from './shapes-window.js';
-import { wireStencil } from './viewer-stencil.js';
-import type { CancellableEditor } from './worker-editor.js';
+import { BASIC_SHAPES, createShapesWindow } from './shapes-window';
+import { wireStencil } from './viewer-stencil';
+import type { CancellableEditor } from './worker-editor';
 
 afterEach(() => document.body.replaceChildren());
 

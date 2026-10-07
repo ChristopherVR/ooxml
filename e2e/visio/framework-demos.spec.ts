@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { createVsdxFixture } from './fixture.mjs';
-import { fileBackstage } from './ribbon.js';
+import { fileBackstage } from './ribbon';
 
 // GitHub Pages serves one demo per framework; each mounts the viewer through its own binding and
 // the shared demo workspace, so all of them must behave the same.

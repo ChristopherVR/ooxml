@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { openFind, taskPane, zoomPreset } from './ribbon.js';
+import { openFind, taskPane, zoomPreset } from './ribbon';
 
 test('shared editor matches compact chrome geometry and keeps all navigation functional', async ({
 	page,

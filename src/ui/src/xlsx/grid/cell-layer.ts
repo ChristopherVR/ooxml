@@ -164,14 +164,28 @@ export function paintCell(doc: Document, node: HTMLElement, item: CellItem, zoom
 		bar.style.width = `${width}px`;
 		const color = view.dataBar.color;
 		const rtl = view.dataBar.direction === 'rightToLeft';
-		bar.style.left = rtl ? 'auto' : '2px';
-		bar.style.right = rtl ? '2px' : 'auto';
+		bar.style.left =
+			view.dataBar.start === undefined
+				? rtl
+					? 'auto'
+					: '2px'
+				: `${2 + view.dataBar.start * (item.w - 4)}px`;
+		bar.style.right = view.dataBar.start === undefined && rtl ? '2px' : 'auto';
 		bar.style.background =
 			view.dataBar.gradient === false
 				? color
 				: `linear-gradient(${rtl ? 270 : 90}deg, ${color}, color-mix(in srgb, ${color} 15%, #fff))`;
 		bar.style.border = view.dataBar.borderColor ? `1px solid ${view.dataBar.borderColor}` : 'none';
 		node.append(bar);
+		if (view.dataBar.axis) {
+			const axis = h(doc, 'div', 'xg-db-axis');
+			axis.style.position = 'absolute';
+			axis.style.top = '1px';
+			axis.style.bottom = '1px';
+			axis.style.left = `${2 + view.dataBar.axis.fraction * (item.w - 4)}px`;
+			axis.style.borderLeft = `1px dashed ${view.dataBar.axis.color}`;
+			node.append(axis);
+		}
 	}
 	if (view.icon) {
 		const icon = svgNode(
