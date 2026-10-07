@@ -73,6 +73,18 @@ describe('bounded Visio ShapeSheet formulas', () => {
 	it('rejects unknown references rather than using stale cached inputs', () => {
 		expect(() => evaluateVisioFormula('Missing+1', resolve)).toThrow(/Unknown cell/);
 	});
+	it('tracks explicit font-name inputs without guessing system font identifiers', () => {
+		expect(analyzeVisioFormula('FONT("Arial")')).toMatchObject({
+			references: [],
+			dynamic: false,
+			unsupportedFunctions: ['FONT'],
+		});
+		expect(analyzeVisioFormula('FONT(Sheet.5!User.FontName)').references).toEqual([
+			{ shapeId: '5', cell: 'User.FontName' },
+		]);
+		expect(analyzeVisioFormula('FONT(INDIRECT("User.FontName"))').dynamic).toBe(true);
+		expect(() => evaluateVisioFormula('FONT("Arial")', resolve)).toThrow(/Unsupported function/);
+	});
 	it('records implicit theme selectors without pretending theme evaluation is supported', () => {
 		const themed = analyzeVisioFormula('THEMEGUARD(THEMEVAL("LineColor"))');
 		expect(themed.dynamic).toBe(false);
