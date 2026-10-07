@@ -5,8 +5,9 @@ import * as Y from 'yjs';
 import { WordYjsMedia } from './yjs-media';
 import type { Comment, PendingMediaPart } from '../model';
 import { WordYjsComments } from './yjs-comments';
-import { commentIdsFromMarks } from './comment-anchors';
 import { wordInlinePropertyCodec } from './inline-run-properties';
+import { independentCommentAnchors, seedEmptyParagraphText } from './yjs-bootstrap';
+import { guardDeletedNodeSelection } from './yjs-node-selection';
 import type { EditorView } from 'prosemirror-view';
 import {
 	initProseMirrorDoc,
@@ -41,6 +42,7 @@ export class WordYjsCollaboration {
 	readonly media: WordYjsMedia;
 	readonly comments: WordYjsComments;
 	readonly sharedComments: boolean;
+	readonly sharedInlineComments: boolean;
 	private readonly attributes: Y.Map<unknown>;
 	private readonly sourceAttributes: Node['attrs'];
 	private readonly roomFormat: ReturnType<typeof wordInlinePropertyCodec>;
@@ -79,6 +81,7 @@ export class WordYjsCollaboration {
 			() => !this.destroyed && this.sharedComments,
 			() => this.stopCapturing(),
 			this.fragment,
+			() => this.sharedInlineComments,
 		);
 		if (!identity.has('documentId')) {
 			if (!options.initializeIfEmpty || !session.canWrite() || this.fragment.length)
@@ -87,7 +90,10 @@ export class WordYjsCollaboration {
 				for (const [name, part] of options.initialMedia ?? []) this.media.publish(name, part);
 				identity.set('documentId', options.documentId);
 				identity.set('format', format);
-				identity.set('comments', 'independent-v1');
+				identity.set(
+					'comments',
+					format === 'word-yjs-v3' ? 'inline-relative-v1' : 'independent-v1',
+				);
 				for (const comment of options.initialComments ?? []) {
 					this.comments.records.set(comment.id, { ...comment });
 					if (comment.resolved !== undefined)
@@ -96,13 +102,21 @@ export class WordYjsCollaboration {
 				for (const [key, value] of Object.entries(initial.attrs)) this.attributes.set(key, value);
 				prosemirrorToYXmlFragment(independentCommentAnchors(initial), this.fragment);
 				seedEmptyParagraphText(this.fragment);
+				if (format === 'word-yjs-v3') {
+					const { doc, mapping } = initProseMirrorDoc(this.fragment, initial.type.schema);
+					this.comments.inlineAnchors.seed(doc, mapping);
+				}
 			}, this);
 		} else if (identity.get('documentId') !== options.documentId) {
 			throw new Error('Load the matching source package before joining this Word room.');
 		} else if (identity.get('format') !== format) {
 			throw new Error('Unsupported Word collaboration room format.');
 		}
-		this.sharedComments = identity.get('comments') === 'independent-v1';
+		this.sharedComments =
+			identity.get('comments') === 'independent-v1' ||
+			identity.get('comments') === 'inline-relative-v1';
+		this.sharedInlineComments =
+			format === 'word-yjs-v3' && identity.get('comments') === 'inline-relative-v1';
 		this.undoManager = new Y.UndoManager(
 			[
 				this.fragment,
@@ -110,6 +124,7 @@ export class WordYjsCollaboration {
 				this.comments.records,
 				this.comments.resolved,
 				this.comments.deleted,
+				this.comments.inlineAnchors.ranges,
 			],
 			{
 				trackedOrigins: new Set([ySyncPluginKey]),
@@ -129,11 +144,13 @@ export class WordYjsCollaboration {
 		return {
 			doc: schema.topNodeType.create(
 				{ ...this.sourceAttributes, ...this.attributes.toJSON() },
-				doc.content,
+				(this.sharedInlineComments ? this.comments.inlineAnchors.project(doc, mapping) : doc)
+					.content,
 			),
 			plugins: [
 				ySyncPlugin(this.fragment, { mapping }),
 				this.attributePlugin(),
+				...(this.sharedInlineComments ? [this.comments.inlineAnchors.plugin()] : []),
 				new Plugin({
 					key: wordYjsPluginKey,
 					state: {
@@ -150,6 +167,9 @@ export class WordYjsCollaboration {
 						(!this.destroyed && this.session.canWrite()),
 					view: (view) => {
 						const binding = ySyncPluginKey.getState(view.state)?.binding;
+						const unguard = binding
+							? guardDeletedNodeSelection(this.session.doc, view, binding)
+							: () => {};
 						const originalVisibility = binding?._isDomSelectionInView;
 						if (binding && options.selectionVisible)
 							binding._isDomSelectionInView = () => options.selectionVisible!(view);
@@ -171,6 +191,7 @@ export class WordYjsCollaboration {
 						);
 						return {
 							destroy: () => {
+								unguard();
 								if (binding && originalVisibility)
 									binding._isDomSelectionInView = originalVisibility;
 								for (const off of unsubscribe) off();
@@ -250,31 +271,6 @@ export class WordYjsCollaboration {
 		this.destroyed = true;
 		this.session.doc.off('afterTransaction', this.ensureTextContainers);
 		this.undoManager.destroy();
-	}
-}
-
-/** Normalize loaded legacy grouped marks before creating a new shared room. */
-function independentCommentAnchors(node: Node): Node {
-	const comment = node.type.schema.marks.comment;
-	const marks = comment
-		? [
-				...node.marks.filter((mark) => mark.type !== comment),
-				...commentIdsFromMarks(node.marks).map((id) => comment.create({ ids: [id] })),
-			]
-		: node.marks;
-	if (node.isLeaf) return node.mark(marks);
-	const children: Node[] = [];
-	node.forEach((child) => children.push(independentCommentAnchors(child)));
-	return node.type.create(node.attrs, children, marks);
-}
-
-/** A shared empty text container avoids concurrent first-insertion text-node merging
- * in y-prosemirror (issue 160), which otherwise loses the original undo ownership. */
-function seedEmptyParagraphText(fragment: Y.XmlFragment): void {
-	for (const child of fragment.toArray()) {
-		if (!(child instanceof Y.XmlElement)) continue;
-		if (child.nodeName === 'paragraph' && child.length === 0) child.insert(0, [new Y.XmlText()]);
-		else seedEmptyParagraphText(child);
 	}
 }
 

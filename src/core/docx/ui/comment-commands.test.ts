@@ -10,7 +10,7 @@ import {
 	noteReferenceNodeSpec,
 	fieldMarkerNodeSpec,
 } from './break-note-schema';
-import { runToInlineNodes } from './run-adapter';
+import { runToInlineNodes, inlineNodeRun } from './run-adapter';
 import type { TextRun } from '../model';
 import {
 	addComment,
@@ -85,6 +85,10 @@ describe('shared Word comment commands', () => {
 			);
 			const host = {
 				state: EditorState.create({ doc, selection: TextSelection.create(doc, 2, 3) }),
+				editable: true,
+				dispatch(transaction: Transaction) {
+					this.state = this.state.apply(transaction);
+				},
 			};
 			const editor = host as unknown as EditorView;
 			expect(commentIdsAtSelection(editor)).toEqual(['c1', 'c2', 'c3']);
@@ -93,6 +97,17 @@ describe('shared Word comment commands', () => {
 				{ id: 'c2', from: 2 },
 				{ id: 'c3', from: 2 },
 			]);
+			expect(addComment(editor, 'Ada', 'New anchor', () => 'c4')?.id).toBe('c4');
+			expect(inlineNodeRun(editor.state.doc.nodeAt(2)!)?.commentIds).toEqual([
+				'c1',
+				'c2',
+				'c3',
+				'c4',
+			]);
+			removeCommentAnchor(editor, 'c2');
+			expect(commentIdsAtSelection(editor)).toEqual(['c1', 'c3', 'c4']);
+			removeCommentAnchor(editor, 'c3');
+			expect(inlineNodeRun(editor.state.doc.nodeAt(2)!)?.commentIds).toEqual(['c1', 'c4']);
 		});
 	it('retains independent anchors when removing one id from a legacy grouped mark', () => {
 		const editor = view();

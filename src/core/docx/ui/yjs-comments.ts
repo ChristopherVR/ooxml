@@ -4,6 +4,7 @@ import type { Comment } from '../model';
 import type { EditorView } from 'prosemirror-view';
 import { ySyncPluginKey } from 'y-prosemirror';
 import { addComment } from './comment-commands';
+import { WordYjsInlineCommentAnchors } from './yjs-inline-comment-anchors';
 
 /** Independent records avoid replacing a whole thread when two authors reply offline.
  * Deletion hides concurrent replies until the root is explicitly restored by undo. */
@@ -11,15 +12,18 @@ export class WordYjsComments {
 	readonly records: Y.Map<Comment>;
 	readonly resolved: Y.Map<boolean>;
 	readonly deleted: Y.Map<boolean>;
+	readonly inlineAnchors: WordYjsInlineCommentAnchors;
 	constructor(
 		private readonly session: CollabSession,
 		private readonly writable: () => boolean,
 		private readonly stopCapturing: () => void,
 		private readonly fragment: Y.XmlFragment,
+		private readonly inlineEnabled: () => boolean = () => false,
 	) {
 		this.records = session.doc.getMap('docx:comments');
 		this.resolved = session.doc.getMap('docx:comments:resolved');
 		this.deleted = session.doc.getMap('docx:comments:deleted');
+		this.inlineAnchors = new WordYjsInlineCommentAnchors(fragment, this.deleted);
 	}
 
 	all(): Comment[] {
@@ -73,7 +77,9 @@ export class WordYjsComments {
 		if (!id || this.records.has(id)) return null;
 		let added: Comment | null = null;
 		this.change(() => {
-			added = addComment(view, author, text, () => id);
+			const elements = this.inlineEnabled() && this.inlineAnchors.add(view.state, id);
+			added = addComment(view, author, text, () => id, false);
+			if (!added && elements) added = { id, author, text, resolved: false };
 			if (added) this.records.set(id, added);
 		});
 		return added;

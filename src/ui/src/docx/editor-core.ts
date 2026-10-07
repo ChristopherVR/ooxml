@@ -216,13 +216,20 @@ export class EditorCore {
 		if (remote) transaction.setMeta(REMOTE_TRANSACTION_META, true);
 		const previousParts = view.state.doc.attrs.sectionParts;
 		const previousNotes = view.state.doc.attrs.noteParts;
-		const applied = view.state.applyTransaction(transaction).state;
+		const result = view.state.applyTransaction(transaction);
+		const applied = result.state;
+		const docChanged = !applied.doc.eq(view.state.doc);
+		remote ||= Boolean(
+			this.collab.yjs &&
+			!transaction.docChanged &&
+			result.transactions.some(isWordYjsRemoteTransaction),
+		);
 		if (applied === view.state) {
 			view.updateState(applied);
 			return;
 		}
 		const repaired =
-			remote || !transaction.docChanged
+			remote || !docChanged
 				? null
 				: this.collab.active
 					? repairCollaborativeDocumentIds(
@@ -232,7 +239,7 @@ export class EditorCore {
 						)
 					: assignMissingParagraphIds(applied);
 		view.updateState(repaired ? applied.apply(repaired) : applied);
-		if (transaction.docChanged) {
+		if (docChanged) {
 			this.model = docToModel(view.state.doc, this.model);
 			this.pages.refreshPageStyles();
 			this.pages.relayout();
@@ -246,9 +253,8 @@ export class EditorCore {
 				this.parts.render(this.shell.canvas, this.shell.paper, true);
 		}
 		this.refreshControls();
-		if (transaction.docChanged || remote) this.scheduleCollaborationSend();
-		if (transaction.docChanged || transaction.selectionSet || remote)
-			this.collab.presence?.schedule();
+		if (docChanged || remote) this.scheduleCollaborationSend();
+		if (docChanged || transaction.selectionSet || remote) this.collab.presence?.schedule();
 	}
 
 	refreshControls(): void {

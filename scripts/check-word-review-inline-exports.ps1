@@ -1,5 +1,5 @@
 # Reopen only synthetic exports in an owned hidden instance; leave their bytes unchanged.
-param([Parameter(Mandatory)][string]$ExportDirectory, [Parameter(Mandatory)][string]$ReportPath, [switch]$IncludeStories, [switch]$RejectAll, [switch]$IncludeObjectFormatting, [switch]$IncludeAdvancedFormatting, [string]$FilePattern = '*.docx')
+param([Parameter(Mandatory)][string]$ExportDirectory, [Parameter(Mandatory)][string]$ReportPath, [switch]$IncludeStories, [switch]$RejectAll, [switch]$IncludeObjectFormatting, [switch]$IncludeAdvancedFormatting, [switch]$IncludeComments, [string]$FilePattern = '*.docx')
 $ErrorActionPreference = 'Stop'
 if ($IncludeStories) { . (Join-Path $PSScriptRoot 'word-review-stories.ps1') }
 $directory = (Resolve-Path -LiteralPath $ExportDirectory).Path
@@ -37,6 +37,21 @@ try {
             for ($i = 1; $i -le $document.Footnotes.Count; $i++) { $noteRevisions += [int]$document.Footnotes.Item($i).Range.Revisions.Count }
             $entry = [ordered]@{ name = $file.BaseName; text = [string]$document.Content.Text; revisions = [int]$document.Revisions.Count; pictures = [int]$document.InlineShapes.Count; footnotes = [int]$document.Footnotes.Count; footnoteRevisions = $noteRevisions; pages = [int]$document.ComputeStatistics(2) }
             if ($IncludeStories) { $entry.stories = @(Get-WordReviewStories $document) }
+            if ($IncludeComments) {
+                $comments = @()
+                for ($i = 1; $i -le $document.Comments.Count; $i++) {
+                    $comment = $document.Comments.Item($i)
+                    $scope = $comment.Scope
+                    $range = $comment.Range
+                    try { $comments += [ordered]@{ author = [string]$comment.Author; text = [string]$range.Text; scope = [string]$scope.Text; start = [int]$scope.Start; end = [int]$scope.End } }
+                    finally {
+                        [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($range)
+                        [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($scope)
+                        [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($comment)
+                    }
+                }
+                $entry.comments = $comments
+            }
             if ($RejectAll) { $entry.beforeRevisions = $beforeRevisions }
             if ($IncludeObjectFormatting) {
                 $objects = @()

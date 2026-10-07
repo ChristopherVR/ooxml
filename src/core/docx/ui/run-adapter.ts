@@ -5,6 +5,7 @@ import { extraRunProperties } from './run-extra-mark';
 import { applyMarkFormatting, linkFromMarks } from './run-mark-properties';
 import { marksForRun } from './run-marks';
 import { inlineRunProperties } from './inline-run-properties';
+import { commentIdsFromNode } from './comment-anchors';
 
 /** A note reference's number in document order and its label in the document's number format. */
 export type NoteNumberLookup = (
@@ -122,6 +123,9 @@ function applyInlineFormat(run: TextRun, child: ProseMirrorNode): void {
 	applyMarkFormatting(marks, child);
 	const { text: _text, ...properties } = marks;
 	Object.assign(run, properties);
+	const ids = commentIdsFromNode(child);
+	if (ids.length) run.commentIds = ids;
+	else delete run.commentIds;
 }
 
 /** A single source run, including inline atoms with their own properties and revisions. */

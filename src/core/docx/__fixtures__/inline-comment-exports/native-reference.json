@@ -1,0 +1,271 @@
+{
+	"applicationVersion": "16.0",
+	"applicationBuild": "16.0.20430",
+	"cases": [
+		{
+			"name": "break-comments",
+			"text": "Before\r\f\rAfter\r",
+			"revisions": 0,
+			"pictures": 0,
+			"footnotes": 0,
+			"footnoteRevisions": 0,
+			"pages": 2,
+			"comments": [
+				{
+					"author": "Bob",
+					"text": "B comment",
+					"scope": "\f",
+					"start": 7,
+					"end": 8
+				},
+				{
+					"author": "Ada",
+					"text": "A comment",
+					"scope": "\f",
+					"start": 7,
+					"end": 8
+				}
+			]
+		},
+		{
+			"name": "break-deleted",
+			"text": "Before\r\f\rAfter\r",
+			"revisions": 0,
+			"pictures": 0,
+			"footnotes": 0,
+			"footnoteRevisions": 0,
+			"pages": 2,
+			"comments": []
+		},
+		{
+			"name": "break-restored",
+			"text": "Before\r\f\rAfter\r",
+			"revisions": 0,
+			"pictures": 0,
+			"footnotes": 0,
+			"footnoteRevisions": 0,
+			"pages": 2,
+			"comments": [
+				{
+					"author": "Ada",
+					"text": "A comment",
+					"scope": "\f",
+					"start": 7,
+					"end": 8
+				}
+			]
+		},
+		{
+			"name": "field-comments",
+			"text": "Before1After\r",
+			"revisions": 0,
+			"pictures": 0,
+			"footnotes": 0,
+			"footnoteRevisions": 0,
+			"pages": 1,
+			"comments": [
+				{
+					"author": "Bob",
+					"text": "B comment",
+					"scope": "",
+					"start": 6,
+					"end": 7
+				},
+				{
+					"author": "Ada",
+					"text": "A comment",
+					"scope": "",
+					"start": 7,
+					"end": 7
+				}
+			]
+		},
+		{
+			"name": "field-deleted",
+			"text": "Before1After\r",
+			"revisions": 0,
+			"pictures": 0,
+			"footnotes": 0,
+			"footnoteRevisions": 0,
+			"pages": 1,
+			"comments": []
+		},
+		{
+			"name": "field-restored",
+			"text": "Before1After\r",
+			"revisions": 0,
+			"pictures": 0,
+			"footnotes": 0,
+			"footnoteRevisions": 0,
+			"pages": 1,
+			"comments": [
+				{
+					"author": "Ada",
+					"text": "A comment",
+					"scope": "",
+					"start": 6,
+					"end": 7
+				}
+			]
+		},
+		{
+			"name": "line-break-comments",
+			"text": "Before\u000bAfter\r",
+			"revisions": 0,
+			"pictures": 0,
+			"footnotes": 0,
+			"footnoteRevisions": 0,
+			"pages": 1,
+			"comments": [
+				{
+					"author": "Bob",
+					"text": "B comment",
+					"scope": "\u000b",
+					"start": 6,
+					"end": 7
+				},
+				{
+					"author": "Ada",
+					"text": "A comment",
+					"scope": "\u000b",
+					"start": 6,
+					"end": 7
+				}
+			]
+		},
+		{
+			"name": "line-break-deleted",
+			"text": "Before\u000bAfter\r",
+			"revisions": 0,
+			"pictures": 0,
+			"footnotes": 0,
+			"footnoteRevisions": 0,
+			"pages": 1,
+			"comments": []
+		},
+		{
+			"name": "line-break-restored",
+			"text": "Before\u000bAfter\r",
+			"revisions": 0,
+			"pictures": 0,
+			"footnotes": 0,
+			"footnoteRevisions": 0,
+			"pages": 1,
+			"comments": [
+				{
+					"author": "Ada",
+					"text": "A comment",
+					"scope": "\u000b",
+					"start": 6,
+					"end": 7
+				}
+			]
+		},
+		{
+			"name": "note-comments",
+			"text": "Before\u0002After\r",
+			"revisions": 0,
+			"pictures": 0,
+			"footnotes": 1,
+			"footnoteRevisions": 0,
+			"pages": 1,
+			"comments": [
+				{
+					"author": "Bob",
+					"text": "B comment",
+					"scope": "\u0002",
+					"start": 6,
+					"end": 7
+				},
+				{
+					"author": "Ada",
+					"text": "A comment",
+					"scope": "\u0002",
+					"start": 6,
+					"end": 7
+				}
+			]
+		},
+		{
+			"name": "note-deleted",
+			"text": "Before\u0002After\r",
+			"revisions": 0,
+			"pictures": 0,
+			"footnotes": 1,
+			"footnoteRevisions": 0,
+			"pages": 1,
+			"comments": []
+		},
+		{
+			"name": "note-restored",
+			"text": "Before\u0002After\r",
+			"revisions": 0,
+			"pictures": 0,
+			"footnotes": 1,
+			"footnoteRevisions": 0,
+			"pages": 1,
+			"comments": [
+				{
+					"author": "Ada",
+					"text": "A comment",
+					"scope": "\u0002",
+					"start": 6,
+					"end": 7
+				}
+			]
+		},
+		{
+			"name": "picture-comments",
+			"text": "Before/After\r",
+			"revisions": 0,
+			"pictures": 1,
+			"footnotes": 0,
+			"footnoteRevisions": 0,
+			"pages": 1,
+			"comments": [
+				{
+					"author": "Bob",
+					"text": "B comment",
+					"scope": "/",
+					"start": 6,
+					"end": 7
+				},
+				{
+					"author": "Ada",
+					"text": "A comment",
+					"scope": "/",
+					"start": 6,
+					"end": 7
+				}
+			]
+		},
+		{
+			"name": "picture-deleted",
+			"text": "Before/After\r",
+			"revisions": 0,
+			"pictures": 1,
+			"footnotes": 0,
+			"footnoteRevisions": 0,
+			"pages": 1,
+			"comments": []
+		},
+		{
+			"name": "picture-restored",
+			"text": "Before/After\r",
+			"revisions": 0,
+			"pictures": 1,
+			"footnotes": 0,
+			"footnoteRevisions": 0,
+			"pages": 1,
+			"comments": [
+				{
+					"author": "Ada",
+					"text": "A comment",
+					"scope": "/",
+					"start": 6,
+					"end": 7
+				}
+			]
+		}
+	]
+}

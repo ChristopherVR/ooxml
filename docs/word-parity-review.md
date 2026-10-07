@@ -462,3 +462,19 @@ so pictures, breaks, note references and field markers can be located through
 Review navigation. Core tests cover five kinds and overlapping anchor IDs;
 mounted view tests cover four kinds. This read-path correction does not yet
 establish concurrent creation/deletion of comments anchored only to elements.
+
+V3 Yjs rooms now store element comment ranges independently per thread using
+shared relative positions. Five core cases cover pictures, line/page breaks,
+note references and field markers, including concurrent creation, deletion,
+local undo, adjacent typing and selected-picture deletion. Mounted editor tests
+verify immediate model updates as well as saved anchors. Six browser bindings
+exercise concurrent picture comments, export and ribbon undo. Appended review
+transactions now refresh the public document model, and deleted node selections
+fall back to a cursor before the Yjs view updates.
+
+Desktop Word reopened fifteen comment exports (two threads, deleted threads,
+and one author's restored thread for each element kind). Counts and restored
+authors match. The second overlapping field-marker comment has a zero-width
+native scope, so field-range parity remains unfinished. The installed perpetual
+Word build does not establish current Microsoft 365 parity. Existing v1/v2 rooms
+require export with their matching client and creation of a fresh v3 room.

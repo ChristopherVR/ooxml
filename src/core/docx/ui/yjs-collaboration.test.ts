@@ -10,6 +10,7 @@ import { WordYjsCollaboration } from './yjs-collaboration';
 import { markSpecs } from './schema-marks';
 import { runToInlineNodes, inlineNodeRun } from './run-adapter';
 import { hardBreakNodeSpec } from './break-note-schema';
+import { imageNodeSpec } from './inline-content-schema';
 
 const schema = new Schema({
 	nodes: {
@@ -56,6 +57,57 @@ function bind(
 }
 
 describe('Word room bootstrap', () => {
+	it('seeds legacy grouped element marks into independent inline anchors', () => {
+		const modern = new Schema({
+			nodes: {
+				doc: { content: 'paragraph+' },
+				paragraph: { content: 'inline*' },
+				text: { group: 'inline' },
+				image: imageNodeSpec,
+			},
+			marks: markSpecs,
+		});
+		const image = modern.node(
+			'image',
+			{ relId: 'rId1', partName: 'word/media/a.png', contentType: 'image/png' },
+			undefined,
+			[modern.marks.comment!.create({ ids: ['second', 'first'] })],
+		);
+		const initial = modern.node(
+			'doc',
+			null,
+			modern.node('paragraph', null, [modern.text('L'), image, modern.text('R')]),
+		);
+		const [a, b] = pair();
+		bind(a!, initial, true);
+		const joined = bind(b!, initial);
+		expect(joined.comments.inlineAnchors.ranges.size).toBe(2);
+		expect(inlineNodeRun(joined.state(modern).doc.nodeAt(2)!)?.commentIds).toEqual([
+			'first',
+			'second',
+		]);
+	});
+	it('requires matching inline anchor projection schemas for v3 rooms', () => {
+		const nodes = {
+			doc: { content: 'paragraph+' },
+			paragraph: { content: 'inline*' },
+			text: { group: 'inline' },
+			hardBreak: hardBreakNodeSpec,
+		};
+		const modern = new Schema({ nodes, marks: markSpecs });
+		const propertyOnly = new Schema({ nodes });
+		const [a, b] = pair();
+		const creator = bind(a!, modern.node('doc', null, modern.node('paragraph')), true);
+		expect(a!.doc.getMap('docx:identity').get('format')).toBe('word-yjs-v3');
+		expect(creator.sharedInlineComments).toBe(true);
+		expect(() => bind(b!, propertyOnly.node('doc', null, propertyOnly.node('paragraph')))).toThrow(
+			/Unsupported Word collaboration room format/,
+		);
+		expect(() => creator.state(propertyOnly)).toThrow(/Unsupported Word collaboration schema/);
+		expect(bind(b!, modern.node('doc', null, modern.node('paragraph'))).sharedInlineComments).toBe(
+			true,
+		);
+	});
 	it('rejects incompatible inline property codecs before exposing a document', () => {
 		const modern = new Schema({
 			nodes: {

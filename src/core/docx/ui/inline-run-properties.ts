@@ -20,6 +20,12 @@ export function inlineRunProperties(node: Node): Partial<TextRun> {
 		if (value === null) delete properties[key];
 		else properties[key] = value;
 	}
+	const projection = node.marks.find((mark) => mark.type.name === 'inlineCommentAnchors');
+	if (projection) {
+		const ids = projection.attrs.ids as string[];
+		if (ids.length) properties.commentIds = [...ids];
+		else delete properties.commentIds;
+	}
 	return properties as Partial<TextRun>;
 }
 
@@ -57,8 +63,10 @@ export function updatedInlineRunAttributes(node: Node, format: string | null): N
 
 export function wordInlinePropertyCodec(
 	schema: Node['type']['schema'],
-): 'word-yjs-v1' | 'word-yjs-v2' {
+): 'word-yjs-v1' | 'word-yjs-v2' | 'word-yjs-v3' {
 	return Object.values(schema.nodes).some((type) => type.spec.attrs?.[attributeName('bold')])
-		? 'word-yjs-v2'
+		? schema.marks.inlineCommentAnchors
+			? 'word-yjs-v3'
+			: 'word-yjs-v2'
 		: 'word-yjs-v1';
 }

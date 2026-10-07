@@ -6,7 +6,7 @@ export function startYjsDemo(peers: DocxEditorElement[]): void {
 	document.getElementById('collaboration-description')!.textContent =
 		'Two editors share a document through local Yjs providers. Pause delivery to try concurrent edits, then resume to merge them. Nothing is sent over the network.';
 	document.getElementById('collaboration-limitations')!.textContent =
-		'Colored selections use relative cursor positions. The demo shares text, formatting and inserted pictures in memory. Production hosts provide transport, access control and storage. Editing comments, notes and other stories together remains unsupported.';
+		'Colored selections use relative cursor positions. The demo shares text, formatting and inserted pictures in memory. Production hosts provide transport, access control and storage. Body comment threads and inline anchors are shared. Editing notes and other stories together remains unsupported.';
 	let paused = false;
 	const hub = createMemoryHub({ filter: () => !paused });
 	const sessions = peers.map((_peer, index) =>

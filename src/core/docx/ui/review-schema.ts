@@ -30,6 +30,31 @@ export function moveName(value: unknown): string | undefined {
 
 /** Marks for tracked-change insertions/deletions and comment-range anchors; merged into schema.ts. */
 export const reviewMarks = {
+	inlineCommentAnchors: {
+		inclusive: false,
+		attrs: { ids: { default: [] } },
+		parseDOM: [
+			{
+				tag: 'span[data-inline-comment-ids]',
+				getAttrs: (el) => ({
+					ids: ((el as HTMLElement).dataset.inlineCommentIds ?? '').split(',').filter(Boolean),
+				}),
+			},
+		],
+		toDOM: (mark) => [
+			'span',
+			{
+				'data-inline-comment-ids': (mark.attrs.ids as string[]).join(','),
+				...((mark.attrs.ids as string[]).length
+					? {
+							class: 'dve-comment-range',
+							'data-comment-ids': (mark.attrs.ids as string[]).join(','),
+						}
+					: {}),
+			},
+			0,
+		],
+	},
 	insertion: {
 		// `move`: JSON `{ name, rangeId? }` when this is one side of a tracked move (moveTo/moveFrom).
 		attrs: {

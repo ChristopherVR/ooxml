@@ -1,0 +1,107 @@
+// @vitest-environment jsdom
+import { readFile } from 'node:fs/promises';
+import { afterEach, expect, it } from 'vitest';
+import { TextSelection } from 'prosemirror-state';
+import type { EditorView } from 'prosemirror-view';
+import { loadDocx, type DocumentModel } from 'ooxml-core/docx';
+import {
+	createCollabSession,
+	createMemoryHub,
+	transportProvider,
+	type CollabSession,
+} from 'ooxml-core/collab';
+import { wordYjsPluginKey, commentIdsAtSelection } from 'ooxml-core/docx/ui';
+import { DocxEditorElement } from './index';
+import './index';
+import { applyFontFormat } from './font-format';
+
+const editors: DocxEditorElement[] = [];
+const sessions: CollabSession[] = [];
+const viewOf = (editor: DocxEditorElement) => (editor as unknown as { view: EditorView }).view;
+const runsOf = (model: DocumentModel) =>
+	model.blocks.flatMap((block) => (block.type === 'paragraph' ? block.runs : []));
+afterEach(() => {
+	for (const editor of editors.splice(0)) {
+		editor.stopCollaboration(true);
+		editor.remove();
+	}
+	for (const session of sessions.splice(0)) session.destroy();
+});
+
+for (const name of ['picture', 'note', 'break', 'line-break'])
+	it(`exports concurrent ${name} comments, deletes independently, and preserves anchors during font edits and detached saves`, async () => {
+		const bytes = new Uint8Array(
+			await readFile(
+				`../core/docx/__fixtures__/review-advanced-object-formatting/${name}-before.docx`,
+			),
+		);
+		let deliver = true;
+		const hub = createMemoryHub({ filter: () => deliver });
+		for (const author of ['Ada', 'Bob']) {
+			sessions.push(
+				createCollabSession({
+					roomId: 'inline-comments',
+					provider: transportProvider({ transport: hub.createTransport('inline-comments') }),
+					user: { name: author },
+					heartbeatMs: 0,
+					teardown: false,
+				}),
+			);
+			const editor = document.createElement('docx-editor') as DocxEditorElement;
+			document.body.append(editor);
+			editors.push(editor);
+			await editor.load(bytes);
+		}
+		const [a, b] = editors;
+		a!.startYjsCollaboration(sessions[0]!, { documentId: 'source', initializeIfEmpty: true });
+		b!.startYjsCollaboration(sessions[1]!, { documentId: 'source' });
+		const av = viewOf(a!);
+		const bv = viewOf(b!);
+		const ab = wordYjsPluginKey.getState(av.state)!;
+		const bb = wordYjsPluginKey.getState(bv.state)!;
+		let pos = -1;
+		av.state.doc.descendants((node, position) => {
+			if (pos < 0 && node.isInline && !node.isText) pos = position;
+		});
+		for (const view of [av, bv])
+			view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, pos, pos + 1)));
+		deliver = false;
+		expect(ab.comments.add(av, 'Ada', 'A comment', () => 'a')).not.toBeNull();
+		expect(bb.comments.add(bv, 'Bob', 'B comment', () => 'b')).not.toBeNull();
+		deliver = true;
+		sessions[0]!.resync();
+		expect(av.state.doc.eq(bv.state.doc)).toBe(true);
+		for (const editor of editors) {
+			expect(commentIdsAtSelection(viewOf(editor))).toEqual(['a', 'b']);
+			expect(runsOf(editor.documentModel!).flatMap((run) => run.commentIds ?? [])).toHaveLength(2);
+			const model = (await loadDocx(await editor.saveBytes())).model;
+			expect(model.comments?.map((comment) => comment.text).sort()).toEqual([
+				'A comment',
+				'B comment',
+			]);
+			const runs = runsOf(model);
+			expect(runs.flatMap((run) => run.commentIds ?? [])).toHaveLength(2);
+		}
+		bb.stopCapturing();
+		applyFontFormat(bv, { size: 18, smallCaps: true });
+		expect(commentIdsAtSelection(av)).toEqual(['a', 'b']);
+		expect(bb.undo()).toBe(true);
+		expect(commentIdsAtSelection(av)).toEqual(['a', 'b']);
+		deliver = false;
+		expect(ab.comments.delete(av, 'a')).toBe(true);
+		expect(bb.comments.delete(bv, 'b')).toBe(true);
+		deliver = true;
+		sessions[0]!.resync();
+		expect(commentIdsAtSelection(av)).toEqual([]);
+		expect(runsOf(a!.documentModel!).every((run) => !run.commentIds?.length)).toBe(true);
+		const deleted = (await loadDocx(await a!.saveBytes())).model;
+		expect(deleted.comments ?? []).toEqual([]);
+		expect(runsOf(deleted).every((run) => !run.commentIds?.length)).toBe(true);
+		expect(ab.undo()).toBe(true);
+		expect(commentIdsAtSelection(bv)).toEqual(['a']);
+		a!.remove();
+		expect(bb.comments.reply('a', 'Bob', 'Remote reply', () => 'reply')).toBe(true);
+		const detached = (await loadDocx(await a!.saveBytes())).model;
+		expect(detached.comments).toHaveLength(2);
+		expect(runsOf(detached).flatMap((run) => run.commentIds ?? [])).toHaveLength(1);
+	});

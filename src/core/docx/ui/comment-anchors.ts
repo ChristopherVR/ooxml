@@ -13,6 +13,8 @@ export function commentIdsFromMarks(marks: readonly Mark[]): string[] {
 
 /** Imported inline elements retain anchors in run metadata rather than element marks. */
 export function commentIdsFromNode(node: Node): string[] {
+	const projection = node.marks.find((mark) => mark.type.name === 'inlineCommentAnchors');
+	if (projection) return [...new Set(projection.attrs.ids as string[])].sort();
 	const ids = new Set(commentIdsFromMarks(node.marks));
 	const imported =
 		!node.isText && node.type.spec.attrs?.format ? inlineRunProperties(node).commentIds : undefined;

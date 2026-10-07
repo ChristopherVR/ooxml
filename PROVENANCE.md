@@ -1275,3 +1275,18 @@ into `src/core/visio/ui/shape-id.ts`. The shared allocator includes ten-digit
 unsigned IDs and reports exhaustion. The UI retains a compatibility re-export
 and uses one pointer lifecycle, coordinate conversion, creation transaction
 and selection flow for rectangles and lines.
+## Independent Word inline comment ranges
+
+Source: ChristopherVR/ooxml at `7ecbe15f2`, shared Word comment commands,
+run conversion, review schema and Yjs binding; `src/ui/src/docx/editor-core.ts`.
+Added `src/core/docx/ui/yjs-inline-comment-anchors.ts` using the existing Yjs
+relative-position mapping, one independent map key per comment, and a view-only
+mark projection. No Yjs binding code is copied or forked. Bootstrap helpers moved
+from `yjs-collaboration.ts` into `yjs-bootstrap.ts`, including normalization of
+legacy element marks. New `yjs-node-selection.ts` guards restoration of remotely
+deleted selected nodes through the binding's existing selection state.
+The UI model update now accounts for appended transactions. Core, mounted-view
+and six-binding browser regressions cover concurrent anchors and local history.
+The native reference records fifteen reopened synthetic exports, including the
+unresolved zero-width overlapping field scope. V3 rooms require matching clients;
+v1/v2 persistence migration, complete field scopes and M365 parity are unfinished.

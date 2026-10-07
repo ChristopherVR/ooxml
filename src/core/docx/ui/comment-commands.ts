@@ -3,6 +3,8 @@ import type { EditorView } from 'prosemirror-view';
 import { closeHistory } from 'prosemirror-history';
 import { TextSelection } from 'prosemirror-state';
 import { commentIdsFromNode } from './comment-anchors';
+import { hasInlineRunAttributes, setInlineRunFormatting } from './inline-formatting';
+import { inlineNodeRun } from './run-adapter';
 
 let commentSerial = 0;
 function nextCommentId(idGenerator?: (kind: string) => string): string {
@@ -11,12 +13,13 @@ function nextCommentId(idGenerator?: (kind: string) => string): string {
 		: `dve-comment-${Date.now().toString(36)}-${++commentSerial}`;
 }
 
-/** Wraps the current selection with a `comment` mark carrying a new comment id; returns the new entry. */
+/** Anchors a new comment to selected text or canonical inline run properties. */
 export function addComment(
 	view: EditorView,
 	author: string,
 	text: string,
 	idGenerator?: (kind: string) => string,
+	inlineElements = true,
 ): Comment | null {
 	if (!view.editable || !view.state.schema.marks.comment) return null;
 	const { from, to } = view.state.selection;
@@ -24,12 +27,24 @@ export function addComment(
 	const id = nextCommentId(idGenerator);
 	let tr = view.state.tr;
 	view.state.doc.nodesBetween(from, to, (node, pos) => {
+		if (!inlineElements && !node.isText) return;
+		if (hasInlineRunAttributes(node)) {
+			if (!inlineElements) return;
+			const run = inlineNodeRun(node);
+			if (run)
+				setInlineRunFormatting(tr, pos, {
+					...run,
+					commentIds: [...new Set([...(run.commentIds ?? []), id])].sort(),
+				});
+			return;
+		}
 		if (!node.isText && node.type.name !== 'hardBreak') return;
 		const start = Math.max(pos, from);
 		const end = Math.min(pos + node.nodeSize, to);
 		if (end <= start) return;
 		tr = tr.addMark(start, end, view.state.schema.marks.comment!.create({ ids: [id] }));
 	});
+	if (!tr.docChanged) return null;
 	view.dispatch(closeHistory(tr));
 	return { id, author, text, resolved: false };
 }
@@ -39,7 +54,16 @@ export function removeCommentAnchor(view: EditorView, id: string): void {
 	if (!view.editable || !view.state.schema.marks.comment) return;
 	let tr = view.state.tr;
 	view.state.doc.descendants((node, pos) => {
-		if (!node.isText && node.type.name !== 'hardBreak') return;
+		if (hasInlineRunAttributes(node)) {
+			const run = inlineNodeRun(node);
+			if (run?.commentIds?.includes(id)) {
+				const remaining = run.commentIds.filter((existing) => existing !== id);
+				delete run.commentIds;
+				if (remaining.length) run.commentIds = remaining;
+				setInlineRunFormatting(tr, pos, run);
+			}
+		}
+		if (!node.isInline) return;
 		for (const mark of node.marks) {
 			if (mark.type.name !== 'comment' || !(mark.attrs.ids as string[]).includes(id)) continue;
 			const remaining = (mark.attrs.ids as string[]).filter((existing) => existing !== id);

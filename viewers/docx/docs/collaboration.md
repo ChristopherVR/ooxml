@@ -73,7 +73,7 @@ adopt the existing body and page/section attributes instead of overwriting them
 with a local snapshot. A mismatched document ID or room format rejects the join.
 An authority session and a Yjs session cannot control one editor simultaneously.
 
-The current shared Word schema initializes `word-yjs-v2` rooms. Each modeled
+The current shared Word schema initializes `word-yjs-v3` rooms. Each modeled
 direct property of a picture, note reference, field marker or break has an
 independent attribute over its imported property basis. Concurrent changes to
 different properties merge, including property removal; local undo retains the
@@ -81,13 +81,7 @@ other author's changes. Same-property conflicts follow Yjs ordering. Formatting
 history still has one prior snapshot and author per run; complete concurrent
 multi-author review attribution remains unfinished.
 
-This changes room compatibility: the updated viewer rejects `word-yjs-v1`
-rooms, and v1 clients reject v2 rooms. Core consumers using legacy schemas can
-still read and edit matching v1 rooms. To upgrade a persisted room, export its
-current DOCX with the matching old client, load that package in updated clients,
-and let the designated creator initialize a new empty v2 room. Keep every
-participant on the matching schema. The binding does not rewrite a live room or
-migrate provider persistence automatically.
+This changes room compatibility: the updated viewer rejects v1 and v2 rooms, and old clients reject v3 rooms. Core consumers using legacy schemas can still use matching v1/v2 rooms, with text comment authoring only. To upgrade a persisted room, export its current DOCX with the matching old client, load that package in updated clients, and let the designated creator initialize a new empty v3 room. Keep every participant on the matching schema. The binding does not rewrite a live room or migrate provider persistence automatically.
 
 The Yjs mode uses the stable Yjs 13 binding, `y-prosemirror` 1.3.7. Root document
 attributes have a separate mapping because the binding does not synchronize
@@ -130,14 +124,14 @@ but multi-story collaboration and a complete package bootstrap are unfinished.
 
 New Yjs rooms also share comment anchors, replies, resolution and deletion through
 the existing review pane. The creator seeds the loaded comments. Each comment has
-an independent anchor attribute and record; concurrent replies retain their own
+independent text attributes, element-relative ranges and a record; concurrent replies retain their own
 IDs. Resolution uses Yjs map conflict ordering. Deleting a root hides its replies,
 including replies written concurrently while offline. Undo restores the root and
 its anchor together and reveals surviving replies; each author's undo retains
 other authors' operations. Export snapshots the latest shared threads even while
 the editor is detached.
 
-Rooms carry an `independent-v1` comment capability in their Word identity map.
+V3 rooms carry an `inline-relative-v1` comment capability in their Word identity map. Pictures, breaks, note references and field markers retain independent anchors through concurrent additions, deletions, neighboring text edits and local undo. Imported anchors seed these ranges when a new room is created. Matching legacy rooms retain their `independent-v1` text-only capability.
 Compatible rooms without it keep their loaded comments and disable comment editing.
 Create a new room from a canonical saved snapshot to upgrade; do not change the
 capability on a live room. Authority-step mode does not synchronize comment
