@@ -64,7 +64,8 @@ function repo({ ui = true, tagged = ['core', 'ui'], uiRange = 'workspace:*' } = 
 	}
 	commit('feat: initial', files);
 	for (const key of tagged) git('tag', `${PACKAGES[key].npm}@0.1.0`);
-	const plan = (npm, npmHead) => planRelease({ root, packages: PACKAGES, npm, npmHead });
+	const plan = (npm, npmHead, npmExists) =>
+		planRelease({ root, packages: PACKAGES, npm, npmHead, npmExists });
 	return { root, git, write, commit, touch, plan, head: () => git('rev-parse', 'HEAD') };
 }
 
@@ -118,6 +119,21 @@ test('core-only change releases core as a patch and leaves ui alone', () => {
 	assert.deepEqual(released(p), ['core']);
 	assert.equal(p.packages.core.version, '0.1.1');
 	assert.equal(p.packages.ui.release, false);
+});
+
+test('a tagged but unpublished package recovers with a fresh patch version', () => {
+	const r = repo();
+	const p = r.plan(bothPublished, undefined, (name) => name !== UI);
+	assert.deepEqual(released(p), ['ui']);
+	assert.equal(p.packages.ui.reason, 'previous tagged version was not published');
+	assert.equal(p.packages.ui.version, '0.1.1');
+	assert.equal(p.packages.ui.baseline, `${UI}@0.1.0`);
+});
+
+test('an existing tagged version does not recover merely because latest points elsewhere', () => {
+	const r = repo();
+	const p = r.plan(registry({ [CORE]: '0.0.9', [UI]: '0.0.9' }), undefined, () => true);
+	assert.equal(p.anyChanged, false);
 });
 
 test('a core minor at 0.x leaves the ui caret range, so ui is re-released (patch)', () => {

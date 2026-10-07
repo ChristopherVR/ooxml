@@ -113,6 +113,7 @@ jobs:
       - name: Build and smoke-test the package
         if: steps.plan.outputs.any_changed == 'true'
         run: |
+          node scripts/publish-released.mjs --plan release-plan.json --verify
           bun run build
           bun run test:package
           node scripts/build-released.mjs --smoke
@@ -464,8 +465,8 @@ jobs:
             node scripts/publish-released.mjs --plan release-plan.json --group "$GROUP"
           fi
 
-  # A package that was bumped and tagged but never published is skipped by every later planner
-  # run, so nothing retries it. Fail loudly (with the recovery command) whenever one exists.
+  # A package that was tagged but never published needs recovery. The next online planner cuts
+  # a fresh version; also fail loudly here with the command for retrying the existing version.
   verify-published:
     needs: [release, publish]
     if: always() && !cancelled()

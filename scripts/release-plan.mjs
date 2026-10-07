@@ -210,10 +210,11 @@ export function npmGitHead(name, version) {
  * @param {Record<string, {dir: string, npm: string, paths?: string[]}>} options.packages
  * @param {string[]} [options.globalTriggers]
  * @param {(name: string) => string | null} [options.npm] registry lookup; omit for offline
+ * @param {(name: string, version: string) => boolean} [options.npmExists] exact-version lookup
  * @param {(name: string, version: string) => string | null} [options.npmHead] `gitHead` of a
  *   published version, used to baseline a package that was published by hand and never tagged
  */
-export function planRelease({ root, packages: all, globalTriggers = [], npm, npmHead }) {
+export function planRelease({ root, packages: all, globalTriggers = [], npm, npmHead, npmExists }) {
 	const table = presentPackages(root, all);
 	const git = (args) =>
 		execFileSync('git', args, {
@@ -384,12 +385,19 @@ export function planRelease({ root, packages: all, globalTriggers = [], npm, npm
 			return range === null || !satisfies(range, plan[d].version);
 		});
 		const via = (cond, why) => (cond ? why : null);
+		// A failed publish can leave a valid tag without a registry artifact. Recover with a new
+		// version rather than moving that tag or publishing changed sources under its old version.
+		const baselineVersion = base?.startsWith(`${meta.npm}@`)
+			? base.slice(meta.npm.length + 1)
+			: null;
+		const unpublished = baselineVersion && npmExists && !npmExists(meta.npm, baselineVersion);
 		const reason =
 			via(!base, 'no previous tag') ||
 			via(touches(files, scopeOf(meta)), 'own files changed') ||
 			via(touches(files, triggersOf(meta)), 'bundled internal package changed') ||
 			via(staleDep, 'dependency range needs bump (major or out of range)') ||
-			via(touches(files, globalsOf(meta)), 'shared build pipeline changed');
+			via(touches(files, globalsOf(meta)), 'shared build pipeline changed') ||
+			via(unpublished, 'previous tagged version was not published');
 		const release = Boolean(reason);
 
 		const manifestVersion = readJson(manifestPath(meta)).version || '0.0.0';
@@ -464,7 +472,14 @@ function main() {
 	const argv = process.argv.slice(2);
 	const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 	const config = { root, packages: PACKAGES, globalTriggers: GLOBAL_TRIGGERS };
-	const plan = planRelease({ ...config, npm: argv.includes('--no-npm') ? undefined : npmVersion });
+	const offline = argv.includes('--no-npm');
+	const plan = planRelease({
+		...config,
+		npm: offline ? undefined : npmVersion,
+		npmExists: offline
+			? undefined
+			: (name, version) => npmVersion(`${name}@${version}`) === version,
+	});
 	writeJson(join(root, 'release-plan.json'), plan);
 	if (argv.includes('--write')) applyPlan(config, plan);
 

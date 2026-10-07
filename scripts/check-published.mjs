@@ -3,7 +3,7 @@
  * check-published.mjs: fail when a publishable package's version on disk is not on npm.
  *
  * A release that bumps and tags a package but dies before `npm publish` leaves it stranded: the
- * next planner run sees the tag and skips it, so nothing ever retries. This check runs at the end
+ * next online planner run recovers with a fresh version. This check runs at the end
  * of every release run (including the hourly no-op ones), waits for the registry to serve versions
  * published a moment ago, and prints the exact dispatch that publishes each missing package.
  *

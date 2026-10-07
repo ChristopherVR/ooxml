@@ -32,6 +32,7 @@
  * `--manual` publishes without provenance, for the one-off first publish from a maintainer machine
  * (the manifest rewrite and every check still run).
  * `--dry-run` runs all the checks and prints the `npm publish` commands without running them.
+ * `--verify` checks all selected manifests without registry queries or uploads, before tagging.
  * Node >= 22, npm >= 11.5.1 (trusted publishing) on the publishing runner.
  */
 
@@ -186,6 +187,11 @@ function main() {
 	const mine = group ? targets.filter((target) => groupOf(target) === group) : targets;
 	if (mine.length === 0) {
 		console.log('Nothing to publish.');
+		return;
+	}
+	if (argv.includes('--verify')) {
+		for (const target of mine) verifyManifest(target);
+		console.log(`Verified ${mine.length} release manifests.`);
 		return;
 	}
 	// Siblings released in this same run, possibly by another job: wait for them on the registry.

@@ -113,6 +113,14 @@ test('a real sibling range must be satisfied by the sibling version', () => {
 	assert.throws(() => verifyManifest(ui, versions, temp), /but that package is at 0.4.2/);
 });
 
+test('pre-release verification rejects a peer range that excludes the new core major', () => {
+	const major = new Map([['@x/core', '1.0.0']]);
+	writeUi({}, { peerDependencies: { '@x/core': '>=0.20.0 <1' } });
+	assert.throws(() => verifyManifest(ui, major, temp), /but that package is at 1.0.0/);
+	writeUi({}, { peerDependencies: { '@x/core': '^1.0.0' } });
+	assert.doesNotThrow(() => verifyManifest(ui, major, temp));
+});
+
 test('a workspace devDependency on a private package is dropped from the published manifest', () => {
 	writeUi({ lit: '^3.0.0' }, { devDependencies: { '@x/private': 'workspace:*' } });
 	assert.deepEqual(publishManifest(ui, versions, temp).devDependencies, {});
