@@ -375,6 +375,22 @@ six bindings. Microsoft's [profile status workflow](https://support.microsoft.co
 is the reference. Do not disturb, appear offline, status messages/duration,
 accounts and automatic meeting/activity-based presence remain outstanding.
 
+## Nineteenth implemented slice: Add a tab app and shared-file selection
+
+Add tab opens a modal app picker instead of an inline URL form. Word, Excel,
+PowerPoint, Visio, Markdown, static-site and text apps select files already shared
+in the current channel; Website configures a web address. Configuration offers
+a tab name, shared-file search, selection, Save, Back and Cancel. Type detection,
+URL validation and tab creation reuse the core. Name-only files are excluded.
+Removed sources disable Save, and the captured client/channel prevents a dialog
+from adding its content to another context. Canceling an unsaved-workbook prompt
+leaves the workbook and configuration intact. Browser acceptance renders actual
+XLSX, Markdown and static-site content, checks stale selections and cancellation,
+and verifies desktop/mobile layouts across all six bindings. Microsoft's
+[app and file tab workflow](https://support.microsoft.com/en-us/teams/teams-channels/use-a-tab-in-a-channel-or-chat-in-microsoft-teams)
+is the reference. Tab conversations and the post-to-channel option, app catalogs
+and permission enforcement, and Office coediting remain outstanding.
+
 ## Next releasable slices
 
 1. UI parity: match the current Teams shell, Shared/Files commands, Settings

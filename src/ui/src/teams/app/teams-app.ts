@@ -10,6 +10,7 @@ import {
 	type TeamsServerConfig,
 	type TeamsState,
 	type DraftContext,
+	type TabContent,
 	parseServerConfig,
 } from 'ooxml-core/teams';
 // Registered from the leaf modules, not the package root: the root imports this folder through
@@ -42,6 +43,7 @@ import { draftList } from './draft-list.js';
 import { filePopoutDetail, filePopoutUrl } from './file-popout.js';
 import { messageTransfers } from './message-transfers.js';
 import { defineTeamsProfileMenu } from './profile-menu.js';
+import { defineTeamsAddTabDialog } from './add-tab-dialog.js';
 
 export type { FileUploader } from 'ooxml-core/teams';
 export interface OpenFileDetail {
@@ -180,6 +182,7 @@ export class TeamsApp extends LitElement {
 		defineTeamsChannelTab();
 		defineTeamsFilesPanel();
 		defineTeamsProfileMenu();
+		defineTeamsAddTabDialog();
 		super.connectedCallback();
 	}
 
@@ -477,6 +480,26 @@ export class TeamsApp extends LitElement {
 						);
 					}}
 				></teams-settings>
+				<teams-add-tab-dialog
+					.open=${this.addingTab}
+					.client=${this.teams.client}
+					.channelId=${s.selectedChannelId}
+					.channelName=${s.channel?.name ?? ''}
+					.files=${s.files}
+					.add=${(name: string, content: TabContent, channelId: string, client: TeamsClient) => {
+						if (client !== this.teams.client || client.getState().selectedChannelId !== channelId)
+							return null;
+						if (!this.closePreview()) return 'canceled';
+						const tab = client.addTab(name, content);
+						if (tab) {
+							this.retainedTab = tab;
+							this.tab = tab.id;
+							this.addingTab = false;
+						}
+						return tab;
+					}}
+					@teams-add-tab-close=${() => (this.addingTab = false)}
+				></teams-add-tab-dialog>
 			</div>
 		`;
 	}
@@ -735,7 +758,6 @@ export class TeamsApp extends LitElement {
 							</button>
 						</header>`
 			}
-			${this.addingTab && !compact ? this.tabForm() : nothing}
 			${c ? messageTransfers(s, c) : nothing}
 			${activeTab && !sharedTab && !compact ? html`<p role="status">This tab was removed from the channel. Your open copy remains here until you close it.</p>` : nothing}
 			${
@@ -835,34 +857,6 @@ export class TeamsApp extends LitElement {
 			list?.shadowRoot?.querySelectorAll<HTMLElement>('[data-message-id]') ?? [],
 		).find((element) => element.dataset.messageId === root);
 		message?.querySelector<HTMLElement>('.thread-link, button[aria-label="Reply"]')?.focus();
-	}
-
-	private tabForm() {
-		return html`<form
-			class="site-preview"
-			aria-label="Add website tab"
-			@submit=${(event: SubmitEvent) => {
-				event.preventDefault();
-				const data = new FormData(event.target as HTMLFormElement);
-				const tab = this.teams.client?.addTab(String(data.get('name') ?? ''), {
-					type: 'website',
-					url: String(data.get('url') ?? ''),
-				});
-				if (tab) this.selectTab(tab.id);
-				else this.notify('Enter a tab name and a valid website URL');
-			}}
-		>
-			<input name="name" aria-label="Tab name" placeholder="Tab name" maxlength="80" required />
-			<input
-				name="url"
-				type="url"
-				aria-label="Tab website URL"
-				placeholder="https://example.com"
-				required
-			/>
-			<button type="submit">Add website tab</button
-			><button type="button" @click=${() => (this.addingTab = false)}>Cancel</button>
-		</form>`;
 	}
 
 	private pinFile(file: TeamsState['files'][number]): void {
