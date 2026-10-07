@@ -24,6 +24,9 @@ const config: TeamsServerConfig =
 			};
 
 export function App() {
+	// A file preview does not mount the raw-hook client or the demo notice.
+	if (params.get('openteams-file') === '1')
+		return <Teams workspaceId={workspaceId} userName={name} userId={userId} config={config} />;
 	return (
 		<div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
 			{staticSite ? <StaticNotice /> : null}

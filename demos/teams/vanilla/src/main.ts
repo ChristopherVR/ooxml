@@ -39,7 +39,7 @@ else if (!hasSaved)
 		iceServers,
 	};
 
-if (staticSite) showStaticNotice();
+if (staticSite && params.get('openteams-file') !== '1') showStaticNotice();
 
 app.addEventListener('teams-open-file', (event) => {
 	const { attachment, url } = (event as CustomEvent).detail;

@@ -25,7 +25,7 @@ export const config: TeamsServerConfig =
 
 /** Pages build only: say what runs where and offer a second person in a new tab. */
 export function showStaticNotice(): void {
-	if (!staticSite) return;
+	if (!staticSite || params.get('openteams-file') === '1') return;
 	const other = userName.toLowerCase() === 'bob' ? 'Ada' : 'Bob';
 	const next = new URLSearchParams(params);
 	next.set('name', other);
