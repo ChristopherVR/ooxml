@@ -7,7 +7,12 @@ import {
 } from './edit-recalculate';
 import type { VisioGeometryEdit } from './edit-commands';
 import { emptyMasterMoveProof, type MasterMoveProof } from './edit-master-move';
-import { moveLocalLine, assertLineTranslation, sameLineCoordinate } from './edit-line-move';
+import {
+	moveLocalLine,
+	proveLocalLine,
+	assertLineTranslation,
+	sameLineCoordinate,
+} from './edit-line-move';
 import {
 	numeric,
 	editableCell,
@@ -98,7 +103,7 @@ export function applyGeometryEdit(
 	if (!root) fail('EDIT_TARGET_NOT_FOUND', 'Page does not exist.');
 	const changed: VisioCellKey[] = [];
 	let expected: { width: number; height: number; x: number; y: number } | undefined;
-	const lineMoveShapes = new Set<Element>();
+	const lineEditShapes = new Set<Element>();
 	let fixedLine: ReadonlyMap<string, number> | undefined;
 	const add = (cell: string) => changed.push({ pageId: edit.pageId, shapeId: edit.shapeId, cell });
 	if (edit.type === 'create-rectangle') {
@@ -111,7 +116,7 @@ export function applyGeometryEdit(
 			edit.shapeId,
 			edit.type === 'move-shape' ? masterMovePins : new Set(),
 			edit.type === 'move-shape' ? masterDimensions : new Map(),
-			edit.type === 'move-shape' ? 'move' : edit.type === 'delete-shape' ? 'delete' : undefined,
+			edit.type === 'move-shape' ? 'move' : edit.type === 'delete-shape' ? 'delete' : 'resize',
 		);
 		const local = cells(shape);
 		const lineMove = edit.type === 'move-shape' && isLineSheet(local);
@@ -153,7 +158,7 @@ export function applyGeometryEdit(
 				const translation = moveLocalLine(shape, edit.pageId, edit.shapeId, edit.x, edit.y);
 				changed.push(...translation.changed);
 				fixedLine = translation.fixed;
-				lineMoveShapes.add(shape);
+				lineEditShapes.add(shape);
 			} else
 				for (const [name, value, lock] of [
 					['PinX', edit.x, 'LockMoveX'],
@@ -172,6 +177,16 @@ export function applyGeometryEdit(
 		} else {
 			const width = numeric(local.get('Width')),
 				height = numeric(local.get('Height'));
+			const lineResize = isLineSheet(local);
+			if (lineResize) {
+				if (edit.height !== 0)
+					fail('UNSUPPORTED_GEOMETRY_EDIT', 'Line Width-cell resizing requires zero Height.');
+				const proof = proveLocalLine(shape);
+				fixedLine = new Map(
+					[...proof].filter(([name]) => !['Width', 'LocPinX', 'LocPinY'].includes(name)),
+				);
+				lineEditShapes.add(shape);
+			} else if (edit.height <= 0) fail('INVALID_EDIT', '2D resizing requires positive Height.');
 			expected = {
 				width: edit.width,
 				height: edit.height,
@@ -179,7 +194,7 @@ export function applyGeometryEdit(
 				y: numeric(local.get('PinY'), height / 2),
 			};
 			if (width === edit.width && height === edit.height) return [];
-			resizeGeometry(shape, roots, edit, check);
+			resizeGeometry(shape, roots, edit, check, lineEditShapes);
 			if (
 				numeric(local.get('LockAspect'), 0) !== 0 &&
 				Math.abs(edit.width / width - edit.height / height) > 1e-9
@@ -197,7 +212,7 @@ export function applyGeometryEdit(
 			] as const) {
 				if (numeric(local.get(name)) === value) continue;
 				unlocked(lock);
-				editableCell(local.get(name));
+				if (!lineResize || name !== 'Width') editableCell(local.get(name));
 				setCell(shape, name, value);
 				add(name);
 			}
@@ -212,14 +227,14 @@ export function applyGeometryEdit(
 	const affectedPages = recalculateVisioCells(roots, changed, {
 		check,
 		masterMovePins,
-		lineMoveShapes,
+		lineEditShapes,
 	});
 	const resultShape = admitted(
 		root,
 		edit.shapeId,
 		edit.type === 'move-shape' ? masterMovePins : new Set(),
 		edit.type === 'move-shape' ? masterDimensions : new Map(),
-		fixedLine ? 'move' : undefined,
+		fixedLine ? (edit.type === 'resize-shape' ? 'resize' : 'move') : undefined,
 	);
 	if (fixedLine) assertLineTranslation(resultShape, fixedLine);
 	const result = cells(resultShape),

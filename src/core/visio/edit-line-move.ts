@@ -3,19 +3,32 @@ import { fail } from './package-common';
 import { cells, editableCell, numeric, setCell } from './edit-geometry-admission';
 import { executableCellFormula } from './cell-formula';
 import type { VisioCellKey } from './edit-recalculate';
-import { visioFormulaCachedValue } from './formula';
+import { visioFormulaCachedValue, evaluateVisioFormula } from './formula';
 
 export const sameLineCoordinate = (a: number, b: number) =>
 	Math.abs(a - b) <= 1e-12 * Math.max(1, Math.abs(a), Math.abs(b));
 
-/** Native DrawLine leaves: midpoint/length formulas survive endpoint translation. */
-export function moveLocalLine(
-	shape: Element,
-	pageId: string,
-	shapeId: string,
-	x: number,
-	y: number,
-): { changed: VisioCellKey[]; fixed: ReadonlyMap<string, number> } {
+function lengthUnit(node: Element | undefined): void {
+	const unit = attribute(node, 'U');
+	if (unit && visioFormulaCachedValue('0', unit).unit !== 'length')
+		fail('EDIT_FORMULA_UNIT', 'Line coordinates require length units.');
+}
+function staticLength(node: Element | undefined): void {
+	editableCell(node);
+	lengthUnit(node);
+	const source = executableCellFormula(attribute(node, 'F'));
+	if (!source) return;
+	const result = evaluateVisioFormula(source, () =>
+		fail('UNSUPPORTED_GEOMETRY_EDIT', 'Unexpected constant dependency.'),
+	);
+	if (result.unit !== 'scalar' && result.unit !== 'length')
+		fail('EDIT_FORMULA_UNIT', 'A line length formula has incompatible dimensions.');
+	if (!sameLineCoordinate(result.value, numeric(node)))
+		fail('UNSUPPORTED_GEOMETRY_EDIT', 'A constant line length cache is stale.');
+}
+
+/** Shared native DrawLine admission, including an explicit Width-cell override. */
+export function proveLocalLine(shape: Element): ReadonlyMap<string, number> {
 	const local = cells(shape);
 	const value = (name: string) => numeric(local.get(name));
 	const canonical = (name: string, expected: string) => {
@@ -28,16 +41,18 @@ export function moveLocalLine(
 	};
 	canonical('PinX', '(BeginX+EndX)/2');
 	canonical('PinY', '(BeginY+EndY)/2');
-	canonical('Width', 'SQRT((EndX-BeginX)^2+(EndY-BeginY)^2)');
+	const widthFormula = executableCellFormula(attribute(local.get('Width'), 'F'));
+	const endpointLength =
+		widthFormula?.replace(/\s+/g, '').toLowerCase() === 'sqrt((endx-beginx)^2+(endy-beginy)^2)';
+	if (!endpointLength) {
+		staticLength(local.get('Width'));
+	}
 	const bx = value('BeginX'),
 		by = value('BeginY'),
 		ex = value('EndX'),
 		ey = value('EndY');
 	for (const name of ['BeginX', 'BeginY', 'EndX', 'EndY']) {
-		const node = local.get(name)!;
-		const unit = attribute(node, 'U');
-		if (unit && visioFormulaCachedValue('0', unit).unit !== 'length')
-			fail('EDIT_FORMULA_UNIT', 'Line endpoints must use length units.');
+		lengthUnit(local.get(name));
 	}
 	const width = value('Width');
 	value('Angle');
@@ -47,7 +62,7 @@ export function moveLocalLine(
 	if (
 		!(width > 0) ||
 		value('Height') !== 0 ||
-		!sameLineCoordinate(width, Math.hypot(ex - bx, ey - by)) ||
+		(endpointLength && !sameLineCoordinate(width, Math.hypot(ex - bx, ey - by))) ||
 		!sameLineCoordinate(value('PinX'), (bx + ex) / 2) ||
 		!sameLineCoordinate(value('PinY'), (by + ey) / 2)
 	)
@@ -68,10 +83,11 @@ export function moveLocalLine(
 			const coordinates = cells(row);
 			for (const name of ['X', 'Y']) {
 				const node = coordinates.get(name);
+				lengthUnit(node);
 				const formula = executableCellFormula(attribute(node, 'F'))
 					?.replace(/\s+/g, '')
 					.toLowerCase();
-				if (name !== 'X' || formula !== `width*${index}`) editableCell(node);
+				if (name !== 'X' || formula !== `width*${index}`) staticLength(node);
 			}
 			return (
 				sameLineCoordinate(numeric(coordinates.get('X')), index ? width : 0) &&
@@ -83,11 +99,24 @@ export function moveLocalLine(
 			'UNSUPPORTED_GEOMETRY_EDIT',
 			'Only local straight-line geometry is proven for translation.',
 		);
-	const fixed = new Map(
+	return new Map(
 		['Width', 'Height', 'Angle', 'LocPinX', 'LocPinY', 'FlipX', 'FlipY'].map(
 			(name) => [name, numeric(local.get(name), name === 'LocPinX' ? width / 2 : 0)] as const,
 		),
 	);
+}
+
+/** Native DrawLine leaves: midpoint/length formulas survive endpoint translation. */
+export function moveLocalLine(
+	shape: Element,
+	pageId: string,
+	shapeId: string,
+	x: number,
+	y: number,
+): { changed: VisioCellKey[]; fixed: ReadonlyMap<string, number> } {
+	const fixed = proveLocalLine(shape);
+	const local = cells(shape);
+	const value = (name: string) => numeric(local.get(name));
 	const changed: VisioCellKey[] = [];
 	if (x !== value('PinX') || y !== value('PinY'))
 		for (const name of ['LockBegin', 'LockEnd'])

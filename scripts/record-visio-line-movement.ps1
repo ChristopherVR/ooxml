@@ -1,6 +1,7 @@
 param(
  [string]$OutputDirectory=(Join-Path $env:TEMP ('visio-line-movement-'+[guid]::NewGuid().ToString('N'))),
- [switch]$DeleteAfterMove
+ [switch]$DeleteAfterMove,
+ [ValidateRange(0,1000000)][double]$ResizeWidth=0
 )
 # Capture endpoint translation without replacing native transform formulas.
 $ErrorActionPreference='Stop'
@@ -52,6 +53,18 @@ try {
   $cases[$i].Add('delta',@($dx,$dy))
  }
  $document.SaveAs((Join-Path $directory 'moved.vsdx')) | Out-Null
+ if($ResizeWidth -gt 0){
+  for($i=0;$i -lt $shapes.Length;$i++){
+   $shapes[$i].CellsU('Width').ResultIU=$ResizeWidth
+   $cases[$i].Add('resized',(Get-LineCells $shapes[$i]))
+   $x0=0.0;$y0=0.0;$xx=0.0;$yx=0.0;$xy=0.0;$yy=0.0
+   $shapes[$i].XYToPage(0,0,[ref]$x0,[ref]$y0)
+   $shapes[$i].XYToPage(1,0,[ref]$xx,[ref]$yx)
+   $shapes[$i].XYToPage(0,1,[ref]$xy,[ref]$yy)
+   $cases[$i].Add('resizedTransform',@(($xx-$x0),($yx-$y0),($xy-$x0),($yy-$y0),$x0,$y0))
+  }
+  $document.SaveAs((Join-Path $directory 'resized.vsdx')) | Out-Null
+ }
  $evidence=[ordered]@{application='Microsoft Visio';version=$app.Version;cases=$cases}
  if($DeleteAfterMove){
   foreach($shape in $shapes){$shape.Delete()}

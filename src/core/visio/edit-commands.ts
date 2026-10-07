@@ -75,12 +75,12 @@ export function snapshotVisioEdits(
 			fail('INVALID_EDIT_TEXT', 'Replacement text contains invalid XML characters.');
 		return value;
 	};
-	const numeric = (value: unknown, dimension = false): number => {
+	const numeric = (value: unknown, dimension = false, allowZero = false): number => {
 		if (
 			typeof value !== 'number' ||
 			!Number.isFinite(value) ||
 			Math.abs(value) > 1e6 ||
-			(dimension && value <= 0)
+			(dimension && (value < 0 || (!allowZero && value === 0)))
 		)
 			fail(
 				'INVALID_EDIT',
@@ -143,7 +143,7 @@ export function snapshotVisioEdits(
 					...target,
 					type: edit.type,
 					width: numeric(edit.width, true),
-					height: numeric(edit.height, true),
+					height: numeric(edit.height, true, true),
 				};
 			case 'delete-shape':
 				return { ...target, type: edit.type };

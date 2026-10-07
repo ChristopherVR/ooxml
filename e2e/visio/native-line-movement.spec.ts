@@ -14,6 +14,76 @@ async function downloadBytes(page: Page): Promise<Buffer> {
 	for await (const chunk of stream!) chunks.push(Buffer.from(chunk));
 	return Buffer.concat(chunks);
 }
+
+const resizeDirectory = process.env.VISIO_NATIVE_LINE_RESIZE_DIR;
+for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
+	test(`${framework}: native Width-cell resize preserves endpoints and supports history and saved copies`, async ({
+		page,
+	}) => {
+		test.skip(!resizeDirectory, 'Set VISIO_NATIVE_LINE_RESIZE_DIR to the native resize capture.');
+		const evidence = JSON.parse(
+			await readFile(join(resizeDirectory!, 'evidence.json'), 'utf8'),
+		) as {
+			cases: {
+				shapeId: string;
+				resized: Record<string, { value: number }>;
+				resizedTransform: number[];
+			}[];
+		};
+		const native = await parseVsdx(await readFile(join(resizeDirectory!, 'resized.vsdx')));
+		await page.goto(framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`);
+		await page.locator('#file').setInputFiles(join(resizeDirectory!, 'moved.vsdx'));
+		await expect(page.locator('#file-name')).toHaveText('moved.vsdx');
+		const viewer = page.locator('visio-viewer');
+		await viewer.locator('.edit-controls summary').click();
+		for (const item of evidence.cases) {
+			const line = viewer.locator(`[data-shape-id="${item.shapeId}"]`);
+			await line.focus();
+			await line.press('Enter');
+			await expect(line).toHaveAttribute('data-selected', 'true');
+			const before = (await line.getAttribute('transform'))!;
+			await page
+				.getByLabel('Width (inches)', { exact: true })
+				.fill(String(item.resized.Width!.value));
+			await page.getByLabel('Height (inches)', { exact: true }).fill('0');
+			await page.getByRole('button', { name: 'Resize selected', exact: true }).click();
+			await expect(page.getByLabel('Width (inches)', { exact: true })).toHaveValue('');
+			await expect(viewer.locator('[data-geometry-error]')).toBeHidden();
+			const pose = await line.evaluate((node) => {
+				// SVGMatrix getters round to float32. Compare the emitted double-precision pose.
+				const source = /^matrix\(([^)]+)\)$/.exec(node.getAttribute('transform') ?? '');
+				if (!source) throw new Error('Missing serialized shape matrix.');
+				return source[1]!
+					.trim()
+					.split(/[\s,]+/)
+					.map(Number);
+			});
+			expect(pose).toHaveLength(6);
+			for (let i = 0; i < 6; i++) expect(pose[i]).toBeCloseTo(item.resizedTransform[i]!, 12);
+			const after = (await line.getAttribute('transform'))!;
+			await viewer
+				.locator('.edit-controls')
+				.getByRole('button', { name: 'Undo', exact: true })
+				.click();
+			await expect(line).toHaveAttribute('transform', before);
+			await viewer
+				.locator('.edit-controls')
+				.getByRole('button', { name: 'Redo', exact: true })
+				.click();
+			await expect(line).toHaveAttribute('transform', after);
+		}
+		const bytes = await downloadBytes(page);
+		const result = await parseVsdx(bytes);
+		expect(result.pages[0]!.shapes).toEqual(native.pages[0]!.shapes);
+		await page.locator('#file').setInputFiles({
+			name: 'core-resized.vsdx',
+			mimeType: 'application/vnd.ms-visio.drawing',
+			buffer: bytes,
+		});
+		await expect(page.locator('#file-name')).toHaveText('core-resized.vsdx');
+		await expect(viewer.locator('[data-shape-id]')).toHaveCount(4);
+	});
+}
 for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
 	test(`${framework}: native lines move, undo, redo, download and reload through the shared editor`, async ({
 		page,
@@ -128,13 +198,11 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		const bytes = await downloadBytes(page);
 		const result = await parseVsdx(bytes);
 		expect(result.pages[0]!.shapes).toEqual(native.pages[0]!.shapes);
-		await page
-			.locator('#file')
-			.setInputFiles({
-				name: 'core-deleted.vsdx',
-				mimeType: 'application/vnd.ms-visio.drawing',
-				buffer: bytes,
-			});
+		await page.locator('#file').setInputFiles({
+			name: 'core-deleted.vsdx',
+			mimeType: 'application/vnd.ms-visio.drawing',
+			buffer: bytes,
+		});
 		await expect(page.locator('#file-name')).toHaveText('core-deleted.vsdx');
 		await expect(viewer.locator('[data-shape-id]')).toHaveCount(1);
 		await expect(control).toHaveAttribute('transform', transform);

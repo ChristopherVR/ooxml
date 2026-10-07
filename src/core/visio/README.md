@@ -259,13 +259,14 @@ requirement that the viewer created the shape.
 Local unglued straight lines also admit `move-shape`: both endpoints translate
 while native midpoint and length formulas remain intact. This reuses the same
 protection and bounded dependency closure. Required evidence is explicit local
-endpoints, positive length, zero Height, canonical midpoint/length formulas,
+endpoints, positive Width, zero Height, canonical midpoint formulas, a native
+endpoint-length formula or a proven explicit Width override,
 an explicit Angle and one local MoveTo/LineTo geometry section. Length, angle,
 local rotation pins and flips remain fixed. Horizontal, diagonal, vertical and
 reversed native DrawLine cases match native caches after save/core reparse;
 all six demos cover controls, undo/redo, download and reload. Native Office
-reopening remains unverified. Broader 1D movement formulas, routing/glue and
-line resize remain unsupported. Endpoint LockBegin/LockEnd caches and style
+reopening remains unverified. Broader 1D movement formulas and routing/glue
+remain unsupported. Endpoint LockBegin/LockEnd caches and style
 ancestry participate in the shared movement protection checks.
 
 Unreferenced top-level local lines also admit `delete-shape` through the same
@@ -275,6 +276,17 @@ curved geometry do not need translation/resize admission. Formula or Connect
 references still refuse; cascading connector deletion remains unsupported.
 Native four-line deletion and all six framework save/reload routes preserve
 the surviving control shape. Native Office reopening remains unverified.
+
+Height-zero local straight lines also admit Width-cell `resize-shape` with
+positive Width and Height=0. This matches native Width assignment: replace the
+derived Width formula with the requested cached width, recalculate dependent
+geometry/local pins, and preserve endpoint cells, midpoint formulas and Angle.
+The rotation pin stays fixed. Shared line admission, protection, dimension
+dependency proof and cache writeback are reused. Resized lines can move and
+resize again. Four native orientations verify caches and XYToPage poses; all
+six routes cover controls/history/download/reload, plus native PNG interior
+comparisons for resized gradient paint. Endpoint dragging, nonzero line Height,
+broader 1D resize formulas, routing/glue and native reopening remain open.
 
 Numeric ShapeSheet interpretation uses a bounded AST, never JavaScript execution.
 Arithmetic, comparisons, IF, GUARD, Width/Height scaling, local geometry/named-row

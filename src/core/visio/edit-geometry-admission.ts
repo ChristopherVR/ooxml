@@ -69,7 +69,7 @@ export function admitted(
 	shapeId: string,
 	masterMovePins: ReadonlySet<Element> = new Set(),
 	masterDimensions: ReadonlyMap<Element, { width: number; height: number }> = new Map(),
-	lineOperation?: 'move' | 'delete',
+	lineOperation?: 'move' | 'delete' | 'resize',
 ): Element {
 	const containers = children(root, 'Shapes');
 	if (containers.length !== 1)
@@ -106,7 +106,7 @@ export function admitted(
 		if (unit && visioFormulaCachedValue('0', unit).unit !== 'length')
 			fail('EDIT_FORMULA_UNIT', 'Transform cells must use length units.');
 	}
-	if (line && lineOperation !== 'move')
+	if (line && lineOperation !== 'move' && lineOperation !== 'resize')
 		fail(
 			'UNSUPPORTED_GEOMETRY_EDIT',
 			'Only local 2D shapes are admitted; line routing and glue are unsupported.',
@@ -116,7 +116,7 @@ export function admitted(
 		!(numeric(local.get('Width'), proven?.width) > 0) ||
 		!(
 			numeric(local.get('Height'), proven?.height) > 0 ||
-			(line && lineOperation === 'move' && numeric(local.get('Height')) === 0)
+			(line && !!lineOperation && numeric(local.get('Height')) === 0)
 		)
 	)
 		fail('UNSUPPORTED_GEOMETRY_EDIT', 'Positive proven Width and Height caches are required.');
@@ -246,6 +246,7 @@ export function resizeGeometry(
 	roots: ReadonlyMap<string, Element>,
 	edit: VisioGeometryEdit,
 	check: () => void,
+	lineEditShapes: ReadonlySet<Element> = new Set(),
 ): void {
 	const sections = children(shape, 'Section').filter((node) => attribute(node, 'N') === 'Geometry');
 	if (!sections.length)
@@ -283,7 +284,7 @@ export function resizeGeometry(
 							shapeId: edit.shapeId,
 							cell,
 						})),
-						{ check },
+						{ check, lineEditShapes },
 					)
 				)
 					fail(

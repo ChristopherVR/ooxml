@@ -17,8 +17,8 @@ export interface VisioRecalculationOptions {
 	check?: () => void;
 	/** Internal post-proof authorization of explicit local master move leaves only. */
 	masterMovePins?: ReadonlySet<Element>;
-	/** Internal authorization after proving an unglued local straight-line translation. */
-	lineMoveShapes?: ReadonlySet<Element>;
+	/** Internal authorization after proving an unglued local straight-line edit. */
+	lineEditShapes?: ReadonlySet<Element>;
 }
 export interface IndexedCell extends VisioCellKey {
 	node?: Element;
@@ -89,7 +89,7 @@ export function indexCells(
 						connected.has(shapeId) ||
 						children(node, 'ForeignData').length > 0 ||
 						children(node, 'Rel').length > 0 ||
-						(!options.lineMoveShapes?.has(node) &&
+						(!options.lineEditShapes?.has(node) &&
 							children(node, 'Cell').some(
 								(cell) =>
 									/^(BeginX|BeginY|EndX|EndY)$/i.test(attribute(cell, 'N') ?? '') ||

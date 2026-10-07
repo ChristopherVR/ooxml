@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import type { VisioDocument } from 'ooxml-core/visio';
 
 const directory = process.env.VISIO_NATIVE_GRADIENT_RASTER_DIR;
+const resizeSourceDirectory = process.env.VISIO_NATIVE_GRADIENT_RESIZE_SOURCE_DIR;
 for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
 	for (const group of ['baseline', 'star', 'rotated-polygon'] as const) {
 		test(`${framework}: ${group === 'star' ? 'records unresolved star gradient fidelity' : group === 'rotated-polygon' ? 'records unresolved rotated polygon fidelity' : 'measures saved gradient interiors against native PNG'}`, async ({
@@ -34,6 +35,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 					angle?: number;
 					nativeExtents?: [number, number, number, number];
 					nativeLineWidth?: number;
+					nativeShapeWidth?: number;
 					nativeTransform?: [number, number, number, number, number, number];
 				}[];
 			};
@@ -65,8 +67,30 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			);
 			test.skip(samples.length === 0, 'The native capture has no cases for this outline group.');
 			await page.goto(framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`);
-			await page.locator('#file').setInputFiles(join(directory!, 'gradient-raster.vsdx'));
+			await page
+				.locator('#file')
+				.setInputFiles(join(resizeSourceDirectory ?? directory!, 'gradient-raster.vsdx'));
 			await expect(page.locator('#file-name')).toHaveText('gradient-raster.vsdx');
+			if (resizeSourceDirectory)
+				await page.evaluate(async (samples) => {
+					const viewer = document.querySelector('visio-viewer') as unknown as {
+						document: VisioDocument;
+						applyEdits(edits: import('ooxml-core/visio').VisioEdit[]): Promise<void>;
+					};
+					await viewer.applyEdits(
+						samples.map((item) => {
+							if (item.kind !== 'line' || !item.nativeShapeWidth)
+								throw new Error('Width-cell comparison requires native line sizes.');
+							return {
+								type: 'resize-shape',
+								pageId: viewer.document.pages[0]!.id,
+								shapeId: item.shapeId,
+								width: item.nativeShapeWidth,
+								height: 0,
+							};
+						}),
+					);
+				}, samples);
 			const results = await page.evaluate(async (samples) => {
 				const load = (path: string) => import(/* @vite-ignore */ path);
 				const { renderPage, exportPageSvg } = await load('/test-api.js');

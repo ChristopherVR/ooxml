@@ -3,12 +3,19 @@ import { ViewerController } from './controller';
 import { ViewerEditControls, editControlsTemplate } from './viewer-edit-controls';
 import { demoDocument } from 'ooxml-core/visio/ui';
 
-async function setup() {
+async function setup(line = false) {
 	const host = document.createElement('div');
 	document.body.append(host);
 	const root = host.attachShadow({ mode: 'open' });
 	root.innerHTML = editControlsTemplate;
-	const controller = new ViewerController(async () => structuredClone(demoDocument));
+	const controller = new ViewerController(async () => {
+		const model = structuredClone(demoDocument);
+		if (line) {
+			model.pages[0]!.shapes[0]!.kind = 'connector';
+			model.pages[0]!.shapes[0]!.height = 0;
+		}
+		return model;
+	});
 	await controller.load(new Uint8Array([1]));
 	controller.selectShape({ id: 's1', name: 'Start', pageId: '1' });
 	const controls = new ViewerEditControls(root, controller);
@@ -80,6 +87,22 @@ it('rejects incomplete dimensions, resets drafts on selection changes and permit
 	input('width', '1');
 	input('height', '2');
 	expect(button('create-rectangle').disabled).toBe(false);
+	dispose();
+});
+it('admits zero Height only for selected line width controls while rectangle creation stays positive', async () => {
+	const { controller, input, button, dispose } = await setup(true);
+	const apply = vi.spyOn(controller, 'applyEdits').mockResolvedValue();
+	input('width', '4');
+	input('height', '0');
+	expect(button('resize-shape').disabled).toBe(false);
+	button('resize-shape').click();
+	expect(apply).toHaveBeenCalledWith([
+		{ type: 'resize-shape', pageId: '1', shapeId: 's1', width: 4, height: 0 },
+	]);
+	input('id', '42');
+	input('x', '2');
+	input('y', '3');
+	expect(button('create-rectangle').disabled).toBe(true);
 	dispose();
 });
 it('shows safe core rejection text and forgets obsolete errors on navigation', async () => {

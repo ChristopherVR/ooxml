@@ -46,6 +46,56 @@ it.each([
 });
 
 const directory = process.env.VISIO_NATIVE_LINE_MOVEMENT_DIR;
+const resizeDirectory = process.env.VISIO_NATIVE_LINE_RESIZE_DIR;
+it.skipIf(!resizeDirectory)(
+	'matches native Width-cell resize caches and XYToPage poses',
+	async () => {
+		const bytes = await readFile(join(resizeDirectory!, 'moved.vsdx'));
+		const original = await parseVsdx(bytes);
+		const evidence = JSON.parse(
+			await readFile(join(resizeDirectory!, 'evidence.json'), 'utf8'),
+		) as {
+			cases: {
+				shapeId: string;
+				resized: Record<string, { value: number; formula: string }>;
+				resizedTransform: number[];
+			}[];
+		};
+		const saved = await editVsdx(
+			bytes,
+			evidence.cases.map((item) => ({
+				type: 'resize-shape',
+				pageId: original.pages[0]!.id,
+				shapeId: item.shapeId,
+				width: item.resized.Width!.value,
+				height: item.resized.Height!.value,
+			})),
+		);
+		const result = await parseVsdx(saved.bytes);
+		const pkg = await VisioPackage.open(saved.bytes);
+		const root = await pkg.readXml('visio/pages/page1.xml', 'PageContents');
+		for (const item of evidence.cases) {
+			const node = children(children(root, 'Shapes')[0], 'Shape').find(
+				(node) => attribute(node, 'ID') === item.shapeId,
+			);
+			const cells = new Map(children(node, 'Cell').map((cell) => [attribute(cell, 'N'), cell]));
+			for (const [name, native] of Object.entries(item.resized)) {
+				expect(Number(attribute(cells.get(name), 'V')), `${item.shapeId}/${name}`).toBeCloseTo(
+					native.value,
+					12,
+				);
+				const formula = attribute(cells.get(name), 'F');
+				if (formula) expect(formula, name).toBe(native.formula);
+			}
+			expect(attribute(cells.get('Width'), 'F')).toBeUndefined();
+			const shape = result.pages[0]!.shapes.find((shape) => shape.id === item.shapeId)!;
+			for (let i = 0; i < 6; i++)
+				expect(shape.transform[i]).toBeCloseTo(item.resizedTransform[i]!, 12);
+		}
+		const native = await parseVsdx(await readFile(join(resizeDirectory!, 'resized.vsdx')));
+		expect(result.pages[0]!.shapes).toEqual(native.pages[0]!.shapes);
+	},
+);
 it.skipIf(!directory)(
 	'moves genuine native lines with the same caches as native endpoint translation',
 	async () => {

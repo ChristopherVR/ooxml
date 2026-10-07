@@ -2,6 +2,60 @@
 
 Status: local Windows development evidence, 2026-10-03. Full Microsoft Visio parity is not established.
 
+## Native Width-cell line resizing, 2026-10-08
+
+Native Visio Width.ResultIU=4 on horizontal, diagonal, vertical and reversed
+DrawLine shapes replaces the endpoint-length Width formula with a cached width.
+Endpoint cells, midpoint formulas and Angle remain unchanged; Width-dependent
+local geometry and LocPinX update. This operation differs from endpoint dragging.
+The ResizeWidth option in the existing line recorder captures the before/after
+cells, resized.vsdx and native XYToPage basis points. The final capture is
+visio-line-movement-19edef4a85de4b73849c2e8a47f103e5; the optional core test uses
+VISIO_NATIVE_LINE_RESIZE_DIR. Core Width-cell resize matches all captured cells,
+native saved models and six-coefficient poses.
+
+The same line admission now serves movement and resizing, accepting native
+derived Width or a proven static override. Cell/unit checks, protection,
+absolute dimension-dependent geometry admission and dependency/cache writeback
+are reused. Width's unguarded native length formula may be replaced by this
+explicit command; midpoint and angle formulas remain intact. Requested Height
+must stay zero, and the rotation pin stays fixed. Moving or resizing the saved
+constant-width line remains admitted. Guards, locks, stale caches, incompatible
+units, pose-changing dependencies and unsupported geometry continue to refuse.
+The shared controls use the existing selected-shape lookup to permit zero Height
+for a selected height-zero connector; rectangle creation retains positive sizes.
+
+Six native Width-cell resize browser scenarios passed with worker execution,
+controls, double-precision serialized SVG pose comparisons, undo/redo,
+download/native-model comparisons and reload. The twelve movement/deletion
+scenarios also passed. The pose helper initially used a CSS parser on SVG matrix
+syntax, then SVGMatrix's float32 getters; it now checks emitted coefficients
+without reducing the 12-digit comparison precision.
+
+The native gradient recorder's LineShapeWidth option captures Width=4 stroke
+paint. visio-gradient-raster-78cef432133c4999907774b97f15a7b7 contains four
+two/three-stop opaque/translucent cases. The existing six-route raster test
+loads the Width=2 source from
+visio-line-1d-gradient-control-a20b437e4ca54d2e99a7a963f8db10f5 and applies real
+Width-cell edits before comparison. VISIO_NATIVE_GRADIENT_RESIZE_SOURCE_DIR
+selects this paired source while VISIO_NATIVE_GRADIENT_RASTER_DIR selects the
+native Width=4 reference. All 48 live/export comparisons meet the unchanged
+interior gates: maximum channel error four, maximum mean below 0.867, minimum
+1,056 compared pixels and exact measured pose agreement. The twelve star and
+rotated-polygon groups have no cases in this capture and are skipped.
+Unverified-gradient-raster remains; exact pixels, contours, other resize paints,
+endpoint dragging, broader resize formulas, glued routing and native Office
+reopening remain open.
+
+The core Visio suite passed 2,154 active tests with 60 unrelated optional skips.
+Both core typecheck projects, shared UI and viewer typechecks passed. The shared
+geometry/control tests passed, as did every clean core package entry-point
+import. A TypeScript source import audit found zero relative .js specifiers and
+zero unresolved relative imports.
+The Visio core bundles, shared UI build and all six production demos build.
+Packed viewer ESM, declarations, external consumer and production parser/edit
+worker checks pass.
+
 ## Line deletion and endpoint protection, 2026-10-08
 
 Unreferenced local 1D leaves now delete through the existing shared deletion
@@ -69,8 +123,9 @@ master, foreign, deleted, glued or inherited-cell checks. Midpoint and length
 formulas remain unchanged; length, angle, local pins and flips must remain
 fixed. Post-translation comparisons allow floating-point roundoff. Endpoint
 GUARD/reference overwrites, stale caches, curved geometry and pose-changing
-dependencies fail atomically. Line resizing and broader 1D movement formulas
-remain unsupported. Unreferenced local line deletion is now admitted as recorded
+dependencies fail atomically. Width-cell resizing is now admitted as recorded
+above; endpoint dragging and broader 1D movement formulas remain unsupported.
+Unreferenced local line deletion is now admitted as recorded
 above; glued or referenced deletion remains unsupported.
 
 The additional native editing test matches all saved transform caches to the

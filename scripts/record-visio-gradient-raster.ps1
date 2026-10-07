@@ -7,12 +7,14 @@ param(
  [ValidateRange(0,13)][int]$LastDirection=13,
  [ValidateSet('Fill','Line')][string]$Paint='Fill',
  [string]$GradientAngle='0 deg',
- [ValidateSet('rectangle','line')][string]$LinearShape='rectangle'
+ [ValidateSet('rectangle','line')][string]$LinearShape='rectangle',
+ [ValidateRange(0,1000000)][double]$LineShapeWidth=0
 )
 # Compare the real raster engine, rather than assuming native SVG is a paint oracle.
 $ErrorActionPreference='Stop'
 if($FirstDirection -gt $LastDirection){throw 'FirstDirection must not exceed LastDirection.'}
 if($LinearShape -eq 'line' -and $Paint -ne 'Line'){throw 'One-dimensional probes require line paint.'}
+if($LineShapeWidth -gt 0 -and $LinearShape -ne 'line'){throw 'LineShapeWidth requires a line probe.'}
 . (Join-Path $PSScriptRoot 'visio-native-shape.ps1')
 . (Join-Path $PSScriptRoot 'visio-native-gradient.ps1')
 Add-Type -AssemblyName System.Drawing
@@ -51,6 +53,7 @@ try {
      if($Paint -eq 'Line'){$name='line-'+$name}
      if($ShapeAngle -ne 0){$name+='-angle-'+$ShapeAngle.ToString([cultureinfo]::InvariantCulture)}
      $shape=if($kind -eq 'line'){$page.DrawLine(1,1.5,3,1.5)}else{New-VisioNativeFillShape $page $kind}
+     if($kind -eq 'line' -and $LineShapeWidth -gt 0){$shape.CellsU('Width').ResultIU=$LineShapeWidth}
      $shape.CellsU('Angle').FormulaU=$ShapeAngle.ToString([cultureinfo]::InvariantCulture)+' deg'
      $shape.CellsU('FillPattern').FormulaU='1'
      $shape.CellsU('LinePattern').FormulaU='0'
@@ -98,7 +101,7 @@ try {
       $shape.XYToPage(1,0,[ref]$xx,[ref]$xy)
       $shape.XYToPage(0,1,[ref]$yx,[ref]$yy)
       $nativeTransform=@(($xx-$ox),($xy-$oy),($yx-$ox),($yy-$oy),$ox,$oy)
-      $cases+=,@{name=$name;paint=$Paint;gradientAngle=$shape.CellsU($Paint+'GradientAngle').ResultIU;direction=$direction;kind=$kind;outline=$outline;angle=$ShapeAngle;nativeExtents=$nativeExtents;nativeLineWidth=$shape.CellsU('LineWeight').ResultIU;nativeTransform=$nativeTransform;stopCount=$stopCount;alpha=$alpha;shapeId=[string]$shape.ID;width=$bitmap.Width;height=$bitmap.Height;samples=$samples}
+      $cases+=,@{name=$name;paint=$Paint;gradientAngle=$shape.CellsU($Paint+'GradientAngle').ResultIU;direction=$direction;kind=$kind;outline=$outline;angle=$ShapeAngle;nativeShapeWidth=$shape.CellsU('Width').ResultIU;nativeExtents=$nativeExtents;nativeLineWidth=$shape.CellsU('LineWeight').ResultIU;nativeTransform=$nativeTransform;stopCount=$stopCount;alpha=$alpha;shapeId=[string]$shape.ID;width=$bitmap.Width;height=$bitmap.Height;samples=$samples}
      } finally {$bitmap.Dispose()}
     }
    }

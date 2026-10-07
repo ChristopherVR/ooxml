@@ -134,6 +134,8 @@ it.each([
 	{ Width: [3, 'SQRT((EndX-BeginX)^2+(EndY-BeginY)^2)'] },
 	{ Angle: [0, '(PinX-2in)/1in'] },
 	{ Height: [0, 'PinX-2in'] },
+	{ Width: [2, '2rad'] },
+	{ Width: [2, '3in'] },
 ] satisfies Record<string, [number, string?]>[])(
 	'rejects protected, stale or pose-changing line cells (%s) atomically',
 	async (overrides) => {
@@ -197,3 +199,42 @@ it.each(['LockBegin', 'LockEnd'])(
 		await expect(editVsdx(bytes, [move])).rejects.toThrow('Inherited protection');
 	},
 );
+
+it.each([
+	[3, 1.5],
+	[2.732050807568877, 2.5],
+	[1, 3.5],
+	[-1, 1.5],
+])('resizes Width while preserving endpoint cells for end (%s,%s)', async (x, y) => {
+	const bytes = await source(line(x!, y!));
+	const resized = await editVsdx(bytes, [
+		{ type: 'resize-shape', pageId: '0', shapeId: '1', width: 4, height: 0 },
+	]);
+	const before = await savedCells(bytes),
+		after = await savedCells(resized.bytes);
+	expect(Number(attribute(after.get('Width'), 'V'))).toBe(4);
+	expect(attribute(after.get('Width'), 'F')).toBeUndefined();
+	expect(Number(attribute(after.get('LocPinX'), 'V'))).toBe(2);
+	for (const name of ['BeginX', 'BeginY', 'EndX', 'EndY', 'PinX', 'PinY', 'Angle']) {
+		expect(attribute(after.get(name), 'V')).toBe(attribute(before.get(name), 'V'));
+		expect(attribute(after.get(name), 'F')).toBe(attribute(before.get(name), 'F'));
+	}
+	const moved = await editVsdx(resized.bytes, [move]);
+	expect(Number(attribute((await savedCells(moved.bytes)).get('Width'), 'V'))).toBe(4);
+	const restored = await editVsdx(moved.bytes, [
+		{ type: 'resize-shape', pageId: '0', shapeId: '1', width: 2, height: 0 },
+	]);
+	expect(Number(attribute((await savedCells(restored.bytes)).get('LocPinX'), 'V'))).toBe(1);
+});
+
+it('refuses locked/guarded width edits, nonzero line Height and zero 2D Height', async () => {
+	const resize = { type: 'resize-shape' as const, pageId: '0', shapeId: '1', width: 4, height: 0 };
+	for (const overrides of [{ LockWidth: [1] }, { Width: [2, 'GUARD(2)'] }] satisfies Record<
+		string,
+		[number, string?]
+	>[])
+		await expect(editVsdx(await source(line(3, 1.5, overrides)), [resize])).rejects.toThrow();
+	await expect(editVsdx(await source(), [{ ...resize, height: 1 }])).rejects.toThrow('zero Height');
+	const rectangleBytes = await source(shape('1', cell('Width', 2) + cell('Height', 1) + rectangle));
+	await expect(editVsdx(rectangleBytes, [resize])).rejects.toThrow('positive Height');
+});

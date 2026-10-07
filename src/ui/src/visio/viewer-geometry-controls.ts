@@ -1,6 +1,7 @@
 import { editErrorMessage, isEditCancellation } from 'ooxml-core/visio/ui';
 import type { VisioGeometryEdit } from 'ooxml-core/visio';
 import type { ViewerController, ViewerState } from './controller';
+import { selectedShape } from './shape-inspector';
 
 export const geometryControlsTemplate = `<fieldset data-geometry><legend>Geometry (experimental)</legend><p>Pin X/Y use drawing inches, bottom-left origin, Y up. Resize holds the rotation pin fixed. Core rejects unsupported formulas, protected cells, unsafe group/master dependencies and referenced deletion. Native Visio reopen fidelity is unverified.</p><label>New rectangle ID <input data-geometry-field="id" type="text" maxlength="256"></label><label>Rectangle text (optional) <input data-geometry-field="text" type="text" maxlength="1000000"></label><label>Pin X (inches) <input data-geometry-field="x" type="number" step="any"></label><label>Pin Y (inches) <input data-geometry-field="y" type="number" step="any"></label><label>Width (inches) <input data-geometry-field="width" type="number" min="0" step="any"></label><label>Height (inches) <input data-geometry-field="height" type="number" min="0" step="any"></label><div class="edit-actions"><button type="button" data-geometry-action="create-rectangle">Create rectangle</button><button type="button" data-geometry-action="move-shape">Move selected</button><button type="button" data-geometry-action="resize-shape">Resize selected</button><button type="button" data-geometry-action="delete-shape">Delete selected</button></div><p data-geometry-error role="alert" hidden></p></fieldset>`;
 
@@ -132,6 +133,13 @@ export class ViewerGeometryControls {
 		const size = [this.#fields.width, this.#fields.height].every(
 			(field) => Number.isFinite(field.valueAsNumber) && field.valueAsNumber > 0,
 		);
+		const selected = selectedShape(state.document, state.selectedShape, state.pageIndex);
+		const lineSize =
+			selected?.kind === 'connector' &&
+			selected.height === 0 &&
+			Number.isFinite(this.#fields.width.valueAsNumber) &&
+			this.#fields.width.valueAsNumber > 0 &&
+			this.#fields.height.valueAsNumber === 0;
 		for (const button of this.#buttons) {
 			const action = button.dataset.geometryAction;
 			button.disabled =
@@ -140,7 +148,7 @@ export class ViewerGeometryControls {
 					? !this.#fields.id.value || !position || !size
 					: !state.selectedShape ||
 						(action === 'move-shape' && !position) ||
-						(action === 'resize-shape' && !size));
+						(action === 'resize-shape' && !size && !lineSize));
 		}
 	}
 }
