@@ -216,6 +216,7 @@ export class EditorCore {
 		if (remote) transaction.setMeta(REMOTE_TRANSACTION_META, true);
 		const previousParts = view.state.doc.attrs.sectionParts;
 		const previousNotes = view.state.doc.attrs.noteParts;
+		const previousComments = view.state.doc.attrs.commentThreads;
 		const result = view.state.applyTransaction(transaction);
 		const applied = result.state;
 		const docChanged = !applied.doc.eq(view.state.doc);
@@ -241,6 +242,8 @@ export class EditorCore {
 		view.updateState(repaired ? applied.apply(repaired) : applied);
 		if (docChanged) {
 			this.model = docToModel(view.state.doc, this.model);
+			if (previousComments !== view.state.doc.attrs.commentThreads)
+				this.shell.review?.commentsPanel.refresh();
 			this.pages.refreshPageStyles();
 			this.pages.relayout();
 			this.shell.chrome?.setSaveState('dirty');

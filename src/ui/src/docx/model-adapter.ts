@@ -33,6 +33,7 @@ import { sectionLayoutJson, sectionsFromLayout } from 'ooxml-core/docx';
 import { sectionsOf } from './section-commands';
 import { sectionPartsJson, restoreSectionParts } from 'ooxml-core/docx/ui';
 import { notePartsJson, restoreNoteParts } from 'ooxml-core/docx/ui';
+import { commentThreadsFromDoc } from 'ooxml-core/docx/ui';
 
 type ListLabels = ReturnType<typeof computeListLabels>;
 
@@ -85,6 +86,7 @@ export function modelToDoc(model: DocumentModel) {
 			sections: model.sections ? sectionLayoutJson(model.sections) : null,
 			sectionParts: sectionPartsJson(model.sections),
 			noteParts: notePartsJson(model),
+			commentThreads: JSON.stringify(model.comments ?? []),
 			evenAndOddHeaders: Boolean(model.evenAndOddHeaders),
 			trackChanges: Boolean(model.trackChanges),
 			trackFormatting: model.trackFormatting !== false,
@@ -228,6 +230,7 @@ export function docToModel(
 		sections: priorSections,
 		footnotes: priorFootnotes,
 		endnotes: priorEndnotes,
+		comments: priorComments,
 		evenAndOddHeaders: _evenOdd,
 		trackChanges: _trackChanges,
 		trackFormatting: _trackFormatting,
@@ -244,8 +247,16 @@ export function docToModel(
 		typeof doc.attrs.sectionParts === 'string' && sectionLayout
 			? restoreSectionParts(sectionLayout, doc.attrs.sectionParts, blocks)
 			: sectionLayout;
+	const threads = commentThreadsFromDoc(doc);
 	return {
 		...rest,
+		...(threads === undefined
+			? priorComments !== undefined
+				? { comments: priorComments }
+				: {}
+			: threads.length
+				? { comments: threads }
+				: {}),
 		...restoreNoteParts(doc.attrs.noteParts, {
 			...(priorFootnotes ? { footnotes: priorFootnotes } : {}),
 			...(priorEndnotes ? { endnotes: priorEndnotes } : {}),

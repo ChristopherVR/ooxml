@@ -4,6 +4,7 @@ import {
 	noteReferenceNodeSpec,
 	pageBreakNodeSpec,
 	hardBreakNodeSpec,
+	commentHistoryAttributes,
 } from 'ooxml-core/docx/ui';
 import { paragraphBoxCss, tableStyle, tableCellStyle } from 'ooxml-core/docx/ui';
 import { imageNodeSpec } from 'ooxml-core/docx/ui';
@@ -97,6 +98,7 @@ export const schema = new Schema({
 				sections: { default: null },
 				sectionParts: { default: null },
 				noteParts: { default: null },
+				...commentHistoryAttributes,
 			},
 		},
 		paragraph: {

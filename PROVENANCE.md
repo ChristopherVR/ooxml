@@ -1349,3 +1349,15 @@ the default-style browser comparison shares native SVG registration. Native
 standard/custom captures and all six browser bindings verify creation, paint,
 history and saved reload. Shape-dependent inherited style formulas still
 pass through the existing dependency guard and can be refused.
+## Shared Word ordinary comment history
+
+Source: ChristopherVR/ooxml at `065cb5c1c`, core comment commands and
+`src/ui/src/docx/review-controller.ts`. Added schema-injected
+`src/core/docx/ui/comment-history.ts` for local thread snapshots and undoable
+updates. Creation/deletion now combine anchors and records in one transaction;
+the UI retains pane wiring and consumes shared commands. The shared schema/model
+adapter records local snapshots, and editor transactions refresh the pane when
+that snapshot changes. The Yjs binding excludes the local snapshot and retains
+its independent record maps. Core, mounted pane and six browser cases verify
+history and exports; a Yjs detach/stop/remount regression verifies continued
+ordinary thread history. Complete modern M365 comments are not established.

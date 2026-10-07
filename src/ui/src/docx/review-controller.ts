@@ -1,7 +1,12 @@
 import type { EditorView } from 'prosemirror-view';
 import type { Comment, DocumentModel } from 'ooxml-core/docx';
 import type { WordYjsCollaboration } from 'ooxml-core/docx/ui';
-import { toggleTrackChanges } from 'ooxml-core/docx/ui';
+import {
+	toggleTrackChanges,
+	commentThreadsFromDoc,
+	updateCommentThreads,
+	removeCommentThread,
+} from 'ooxml-core/docx/ui';
 import {
 	addComment,
 	commentIdsAtSelection,
@@ -93,11 +98,14 @@ export class ReviewController {
 			if (view) yjs.comments.delete(view, id);
 			return;
 		}
+		if (view && removeCommentThread(view, id)) return;
 		if (view) removeCommentAnchor(view, id);
 		this.updateComments(deleteComment(this.host.getModel().comments ?? [], id));
 	}
 
 	private updateComments(next: Comment[]) {
+		const view = this.host.getView();
+		if (view && updateCommentThreads(view, next)) return;
 		this.host.setModel({ ...this.host.getModel(), comments: next });
 		this.host.notifyChange();
 		this.host.refresh();
@@ -117,7 +125,8 @@ export class ReviewController {
 			text,
 			this.host.getCollaborationIds(),
 		);
-		if (comment) this.updateComments([...(this.host.getModel().comments ?? []), comment]);
+		if (comment && commentThreadsFromDoc(view.state.doc) === undefined)
+			this.updateComments([...(this.host.getModel().comments ?? []), comment]);
 	}
 
 	handleReview(key: Extract<RibbonAction, { type: 'review' }>['key']): void {

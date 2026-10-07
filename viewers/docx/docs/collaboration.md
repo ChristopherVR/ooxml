@@ -101,7 +101,7 @@ editing author's name and the recording transaction's UTC timestamp. Peers
 retain those values rather than reattributing remote edits; client-supplied
 names and clocks do not authenticate authorship or time.
 
-Ctrl/Cmd+Z and ribbon undo use local Yjs history. History survives editor detach
+Ctrl/Cmd+Z and ribbon undo use local Yjs history. Ordinary editing also keeps thread records and anchors in undoable transactions; local thread snapshots are excluded from Yjs document attributes. After stopping Yjs, its current threads become the ordinary history snapshot. History survives editor detach
 and remount; disconnected views adopt changes on remount. Awareness uses relative
 positions for cursor/selection mapping, with the existing localized cursor UI.
 `publishPresence` updates the awareness profile and returns `null` in Yjs mode;

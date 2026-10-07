@@ -99,7 +99,8 @@ export class WordYjsCollaboration {
 					if (comment.resolved !== undefined)
 						this.comments.resolved.set(comment.id, comment.resolved);
 				}
-				for (const [key, value] of Object.entries(initial.attrs)) this.attributes.set(key, value);
+				for (const [key, value] of Object.entries(initial.attrs))
+					if (key !== 'commentThreads') this.attributes.set(key, value);
 				prosemirrorToYXmlFragment(independentCommentAnchors(initial), this.fragment);
 				seedEmptyParagraphText(this.fragment);
 				if (format === 'word-yjs-v3') {
@@ -143,7 +144,7 @@ export class WordYjsCollaboration {
 		const { doc, mapping } = initProseMirrorDoc(this.fragment, schema);
 		return {
 			doc: schema.topNodeType.create(
-				{ ...this.sourceAttributes, ...this.attributes.toJSON() },
+				{ ...this.sourceAttributes, ...this.attributes.toJSON(), commentThreads: null },
 				(this.sharedInlineComments ? this.comments.inlineAnchors.project(doc, mapping) : doc)
 					.content,
 			),
@@ -211,6 +212,7 @@ export class WordYjsCollaboration {
 			const tr = state.tr;
 			for (const [key, value] of attrs.entries()) {
 				if (
+					key !== 'commentThreads' &&
 					key in (state.doc.type.spec.attrs ?? {}) &&
 					JSON.stringify(state.doc.attrs[key]) !== JSON.stringify(value)
 				)
@@ -234,7 +236,11 @@ export class WordYjsCollaboration {
 						this.session.doc.transact((transaction) => {
 							transaction.meta.set('addToHistory', thisPlugin.getState(next.state));
 							for (const [key, value] of Object.entries(next.state.doc.attrs))
-								if (JSON.stringify(attrs.get(key)) !== JSON.stringify(value)) attrs.set(key, value);
+								if (
+									key !== 'commentThreads' &&
+									JSON.stringify(attrs.get(key)) !== JSON.stringify(value)
+								)
+									attrs.set(key, value);
 						}, ySyncPluginKey);
 					},
 					destroy: () => attrs.unobserve(changed),

@@ -1,11 +1,12 @@
 import type { Comment } from '../model';
 import type { EditorView } from 'prosemirror-view';
 import { closeHistory } from 'prosemirror-history';
-import { TextSelection } from 'prosemirror-state';
+import { TextSelection, type Transaction } from 'prosemirror-state';
 import { commentIdsFromNode } from './comment-anchors';
 import { hasInlineRunAttributes, setInlineRunFormatting } from './inline-formatting';
 import { inlineNodeRun } from './run-adapter';
 import { commentSelectionRange } from './comment-selection';
+import { commentThreadsFromDoc, setCommentThreads } from './comment-history';
 
 let commentSerial = 0;
 function nextCommentId(idGenerator?: (kind: string) => string): string {
@@ -50,13 +51,32 @@ export function addComment(
 		tr = tr.addMark(start, end, view.state.schema.marks.comment!.create({ ids: [id] }));
 	});
 	if (!tr.docChanged) return null;
+	const comment: Comment = { id, author, text, resolved: false };
+	const threads = commentThreadsFromDoc(view.state.doc);
+	if (inlineElements && threads) setCommentThreads(tr, [...threads, comment]);
 	view.dispatch(closeHistory(tr));
-	return { id, author, text, resolved: false };
+	return comment;
 }
 
 /** Removes one comment id from every anchor range that carries it. */
 export function removeCommentAnchor(view: EditorView, id: string): void {
 	if (!view.editable || !view.state.schema.marks.comment) return;
+	const tr = commentAnchorTransaction(view, id);
+	if (tr.docChanged) view.dispatch(closeHistory(tr));
+}
+
+/** Delete local thread metadata and anchors in one undoable transaction. */
+export function removeCommentThread(view: EditorView, id: string): boolean {
+	if (!view.editable) return false;
+	const threads = commentThreadsFromDoc(view.state.doc);
+	if (!threads) return false;
+	const tr = commentAnchorTransaction(view, id);
+	setCommentThreads(tr, deleteComment(threads, id));
+	if (tr.docChanged) view.dispatch(closeHistory(tr));
+	return true;
+}
+
+function commentAnchorTransaction(view: EditorView, id: string): Transaction {
 	let tr = view.state.tr;
 	view.state.doc.descendants((node, pos) => {
 		if (hasInlineRunAttributes(node)) {
@@ -77,7 +97,7 @@ export function removeCommentAnchor(view: EditorView, id: string): void {
 				tr = tr.addMark(pos, pos + node.nodeSize, mark.type.create({ ids: remaining }));
 		}
 	});
-	if (tr.docChanged) view.dispatch(closeHistory(tr));
+	return tr;
 }
 
 export function deleteComment(comments: Comment[], id: string): Comment[] {

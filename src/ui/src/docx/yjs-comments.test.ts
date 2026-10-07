@@ -6,7 +6,14 @@ import {
 	transportProvider,
 	type CollabSession,
 } from 'ooxml-core/collab';
-import { wordYjsPluginKey, commentIdsAtSelection, toggleTrackChanges } from 'ooxml-core/docx/ui';
+import {
+	wordYjsPluginKey,
+	commentIdsAtSelection,
+	toggleTrackChanges,
+	commentThreadsFromDoc,
+	removeCommentThread,
+} from 'ooxml-core/docx/ui';
+import { undo } from 'prosemirror-history';
 import type { EditorView } from 'prosemirror-view';
 import { TextSelection } from 'prosemirror-state';
 import { DocxEditorElement } from './index';
@@ -257,6 +264,13 @@ describe('shared Word comment threads', () => {
 		expect(root?.resolved).toBe(true);
 		expect(model.comments?.find((comment) => comment.parentId)?.parentId).toBe(root?.id);
 		a.stopCollaboration();
+		expect(a.documentModel!.comments).toHaveLength(2);
+		document.body.append(a);
+		const local = viewOf(a);
+		expect(commentThreadsFromDoc(local.state.doc)).toHaveLength(2);
+		expect(removeCommentThread(local, 'root')).toBe(true);
+		expect(a.documentModel!.comments ?? []).toEqual([]);
+		expect(undo(local.state, local.dispatch)).toBe(true);
 		expect(a.documentModel!.comments).toHaveLength(2);
 	});
 	it('rejects thread mutations from viewer peers', () => {

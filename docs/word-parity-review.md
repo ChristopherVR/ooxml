@@ -496,3 +496,13 @@ marks when a comment spans text and inline elements in the same transaction.
 Ordinary comment undo currently removes range anchors but leaves thread metadata
 in the pane; Yjs undo restores both. The field browser cases verify anchor undo
 only. Ordinary thread metadata history is a separate remaining gap.
+
+Ordinary thread history now corrects that gap: creation and deletion put records
+and anchors in one document transaction, and replies/resolution have separate
+undo events. Core history tests cover text and pictures; a mounted pane verifies
+all four actions, saved restoration and redo. Six field browser cases now verify
+that undo removes both the thread and its package part, and redo restores the
+pane. Stopping Yjs and remounting retains shared threads for subsequent ordinary
+history. Local snapshots are excluded from shared Yjs document attributes, which
+continue to use independent thread maps. Modern comment notifications and task
+assignment remain unfinished.

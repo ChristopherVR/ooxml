@@ -41,6 +41,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		expect(xml.indexOf('<w:commentRangeEnd')).toBeGreaterThan(xml.indexOf('w:fldCharType="end"'));
 		expect(xml.match(/<w:commentRangeStart\b/g)).toHaveLength(1);
 		await editor.getByRole('button', { name: 'Undo', exact: true }).click();
+		await expect(pane).not.toContainText('Whole field');
 		const undone = await editor.evaluate(async (element) =>
 			Array.from(await (element as DocxEditorElement).saveBytes()),
 		);
@@ -48,6 +49,9 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		expect(await undoneZip.file('word/document.xml')!.async('string')).not.toContain(
 			'<w:commentRangeStart',
 		);
+		expect(undoneZip.file('word/comments.xml')).toBeNull();
+		await editor.getByRole('button', { name: 'Redo', exact: true }).click();
+		await expect(pane).toContainText('Whole field');
 	});
 
 async function fieldDocx(): Promise<Buffer> {
