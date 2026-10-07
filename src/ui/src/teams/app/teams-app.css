@@ -375,6 +375,67 @@ ul.plain li > :first-child:not(office-ui-avatar) {
 	gap: var(--office-space-2);
 	padding: var(--office-space-3);
 }
+.conversation-grid {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	flex: 1;
+	min-height: 0;
+}
+.conversation-grid[data-thread='true'] {
+	grid-template-columns: minmax(0, 1fr) minmax(18em, 0.8fr);
+}
+.conversation-main,
+.thread-pane {
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	min-width: 0;
+}
+.thread-pane {
+	border-inline-start: var(--office-border-width) solid var(--office-teams-divider);
+}
+.thread-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--office-space-3);
+	padding: var(--office-space-3);
+}
+.thread-head h2 {
+	margin: 0;
+	font-size: 1em;
+}
+.followed-threads {
+	overflow: auto;
+	padding: var(--office-space-4);
+}
+.followed-threads ul {
+	list-style: none;
+	padding: 0;
+}
+.followed-threads li {
+	display: flex;
+	align-items: center;
+	gap: var(--office-space-3);
+	padding-block: var(--office-space-3);
+	border-block-end: var(--office-border-width) solid var(--office-teams-divider);
+}
+.followed-threads li button:first-child {
+	display: grid;
+	gap: var(--office-space-2);
+	flex: 1;
+	text-align: start;
+	min-width: 0;
+	overflow-wrap: anywhere;
+}
+@media (max-width: 56em) {
+	.conversation-grid[data-thread='true'] {
+		grid-template-columns: minmax(0, 1fr);
+	}
+	.conversation-grid[data-thread='true'] .conversation-main {
+		display: none;
+	}
+}
 .tabs {
 	overflow-x: auto;
 	min-width: 0;

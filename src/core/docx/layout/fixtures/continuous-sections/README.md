@@ -11,17 +11,22 @@ PDFs for inspection, and saves the source DOCX packages. Only the DOCX packages
 and structured measurements are retained here. Font: Arial, 12 pt. Paragraph
 spacing: 0 before/after, exact 12 pt lines. Page: 612 by 792 pt, 72 pt margins.
 
-The six cases change nothing, the left margin, the top margin, column count,
+The first six cases change nothing, the left margin, the top margin, column count,
 page height, or orientation after a continuous section break. They verify that
 margin/column changes stay on the same physical page while page size and
 orientation changes start a new page. The empty break-marker paragraph occupies
 no additional printed line.
 
+Four further cases end a two-column section with a continuous break: six
+paragraphs, five paragraphs, 120 paragraphs spanning two pages, and a
+keep-with-next group. Word balances the last page's columns, leaves earlier
+pages filled normally, and retains the keep group in one column.
+
 `continuous-sections.test.ts` loads these real packages and compares every
 nonempty paragraph's physical page and origin with the recorded values. The
 test uses a deterministic measurer: these short paragraphs do not wrap, and
 exact line spacing controls their vertical advance. It does not validate glyph
-widths, raster appearance, multi-column balancing, headers, or footnotes.
+widths, raster appearance, table/float balancing, headers, or footnotes.
 
 Microsoft's M365 documentation describes same-page continuous sections and
 column changes:

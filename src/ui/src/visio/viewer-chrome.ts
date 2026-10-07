@@ -209,6 +209,10 @@ export class ViewerChrome {
 			reorder.setAttribute('command', 'reorder-pages');
 			reorder.setAttribute('label', 'Reorder Pages...');
 			this.#allPages.append(reorder);
+			const rename = doc.createElement('office-ui-menu-item');
+			rename.setAttribute('command', 'rename-page');
+			rename.setAttribute('label', 'Rename Page...');
+			this.#allPages.append(rename);
 		}
 		this.#pageTabs.selected = page ? String(state.pageIndex) : '';
 		this.#pageTabs.toggleAttribute(
@@ -225,6 +229,12 @@ export class ViewerChrome {
 				String(item.getAttribute('command') === `page-${state.pageIndex}`),
 			);
 		this.#allPages.disabled = !page;
+		this.#allPages
+			.querySelector('[command="rename-page"]')
+			?.toggleAttribute(
+				'disabled',
+				!state.edit.sourceAvailable || state.edit.busy || state.loading,
+			);
 		this.#allPages
 			.querySelector('[command="reorder-pages"]')
 			?.toggleAttribute(

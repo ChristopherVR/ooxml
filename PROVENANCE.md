@@ -482,3 +482,25 @@ The combo-chart and table-subscript follow-up in PR #15 adds five modules from
 `viewers/pptx/packages/shared/src/render`; they now live in
 `src/ui/src/pptx/render`. Type imports use `ooxml-core/pptx`, matching the
 renderer migration; their implementations and regression assertions are preserved.
+
+## Word pagination page fields
+
+Source: ChristopherVR/ooxml at `b0343f441fbaa6b211b02a712ad1c81ab983ed29`,
+`src/ui/src/docx/print-header-footer.ts`. The DOM-free page-number formatting,
+header/footer slot resolution, section-page counting and field-display logic
+now live in `src/core/docx/layout/page-fields.ts`. UI code retains compatibility
+exports and delegates to the shared core. Numeric page facts replace parsing
+formatted labels for odd/even slots. Continuous-section restart offsets and
+parity are corrected against twelve native Word PDF/DOCX references. Core
+reference tests accompany the extraction; existing UI facade tests remain.
+
+## Word comment editing commands
+
+Source: ChristopherVR/ooxml at `04cce34d7d6ce56deffffb05f124169e207344bb`,
+`src/ui/src/docx/comment-commands.ts`. Anchor editing/navigation and comment
+reply, resolve and delete operations moved to `src/core/docx/ui/comment-commands.ts`.
+Commands use the supplied view's schema, enforce its read-only state for anchor
+mutations, and no longer import the UI schema. The UI keeps a compatibility
+facade. DOM-free core regressions cover overlapping anchors, read-only edits
+and immutable thread operations; browser-model/export and ribbon tests remain
+beside the UI code they exercise. Yjs thread synchronization is a separate step.
