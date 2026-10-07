@@ -24,7 +24,7 @@ test('finds working settings and saves app labels per user and workspace', async
 	await search.fill('app bar icons');
 	await page.getByRole('button', { name: /^Show app names Appearance/ }).press('Enter');
 	await expect(page.getByRole('heading', { name: 'Show app names', exact: true })).toBeFocused();
-	await page.getByRole('checkbox', { name: 'Show app names', exact: true }).uncheck();
+	await page.getByRole('switch', { name: 'Show app names', exact: true }).uncheck();
 	const rail = page.getByRole('navigation', { name: 'App bar', exact: true });
 	await expect(rail).toHaveAttribute('hide-labels', '');
 	for (const label of await rail.locator('.label').all()) await expect(label).toBeHidden();

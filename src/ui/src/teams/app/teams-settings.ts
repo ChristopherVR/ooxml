@@ -7,6 +7,7 @@ import {
 	parseServerConfig,
 } from 'ooxml-core/teams';
 import css from './teams-settings.css?raw';
+import { defineSwitch, type OfficeUiSwitch } from '../../form/switch';
 import { iceToText, parseIceLines } from './settings-connection';
 import { densityChoices, type ChatDensity } from './settings-density';
 import { SETTINGS_CATEGORIES as CATEGORIES, settingsSearch } from './settings-search';
@@ -226,12 +227,12 @@ export class TeamsSettings extends LitElement {
 							<h3>Show app names</h3>
 							<label class="preference"
 								><span>Display labels beneath app bar icons</span
-								><input
-									type="checkbox"
+								><office-ui-switch
 									aria-label="Show app names"
 									.checked=${this.showAppNames}
-									@change=${(event: Event) => this.dispatchEvent(new CustomEvent('teams-settings-app-names', { detail: { show: (event.target as HTMLInputElement).checked }, bubbles: true, composed: true }))}
-							/></label>
+									@change=${(event: Event) => this.dispatchEvent(new CustomEvent('teams-settings-app-names', { detail: { show: (event.target as OfficeUiSwitch).checked }, bubbles: true, composed: true }))}
+								></office-ui-switch
+							></label>
 							<p class="description">
 								Changes apply immediately to this OpenTeams workspace. Keyboard focus and system
 								high-contrast preferences remain available.
@@ -246,7 +247,7 @@ export class TeamsSettings extends LitElement {
 							<h2>Notifications and activity</h2>
 							<h3>Followed threads</h3>
 							<p class="description">Choose which conversations appear in Followed threads.</p>
-							${(['started', 'replied'] as const).map((key) => html`<label class="preference"><span>${key === 'started' ? 'Threads I start' : 'Threads I reply to'}</span><input type="checkbox" .checked=${this.followSettings[key]} @change=${(event: Event) => this.dispatchEvent(new CustomEvent('teams-settings-follow', { detail: { [key]: (event.target as HTMLInputElement).checked }, bubbles: true, composed: true }))} /></label>`)}
+							${(['started', 'replied'] as const).map((key) => html`<label class="preference"><span>${key === 'started' ? 'Threads I start' : 'Threads I reply to'}</span><office-ui-switch aria-label=${key === 'started' ? 'Threads I start' : 'Threads I reply to'} .checked=${this.followSettings[key]} @change=${(event: Event) => this.dispatchEvent(new CustomEvent('teams-settings-follow', { detail: { [key]: (event.target as OfficeUiSwitch).checked }, bubbles: true, composed: true }))}></office-ui-switch></label>`)}
 							<p class="description">
 								Desktop, email and activity notifications are not available yet.
 							</p>
@@ -368,5 +369,7 @@ export class TeamsSettings extends LitElement {
 export function defineTeamsSettings(
 	registry: CustomElementRegistry | undefined = globalThis.customElements,
 ): void {
-	if (registry && !registry.get('teams-settings')) registry.define('teams-settings', TeamsSettings);
+	if (!registry) return;
+	defineSwitch(registry);
+	if (!registry.get('teams-settings')) registry.define('teams-settings', TeamsSettings);
 }

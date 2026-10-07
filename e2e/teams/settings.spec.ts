@@ -39,8 +39,8 @@ test('organizes settings, saves personal themes and thread choices, and preserve
 	).toBe(rootBackground);
 	await page.screenshot({ path: test.info().outputPath('settings-appearance.png') });
 	await page.getByRole('tab', { name: 'Notifications and activity', exact: true }).click();
-	await page.getByRole('checkbox', { name: 'Threads I start', exact: true }).uncheck();
-	await page.getByRole('checkbox', { name: 'Threads I reply to', exact: true }).uncheck();
+	await page.getByRole('switch', { name: 'Threads I start', exact: true }).uncheck();
+	await page.getByRole('switch', { name: 'Threads I reply to', exact: true }).uncheck();
 	await page.getByRole('button', { name: 'Close settings', exact: true }).click();
 	await page.reload();
 	await expect(page.getByRole('heading', { name: '# General', exact: true })).toBeVisible({
@@ -51,10 +51,10 @@ test('organizes settings, saves personal themes and thread choices, and preserve
 	await page.getByRole('menuitem', { name: 'Settings', exact: true }).click();
 	await page.getByRole('tab', { name: 'Notifications and activity', exact: true }).click();
 	await expect(
-		page.getByRole('checkbox', { name: 'Threads I start', exact: true }),
+		page.getByRole('switch', { name: 'Threads I start', exact: true }),
 	).not.toBeChecked();
 	await expect(
-		page.getByRole('checkbox', { name: 'Threads I reply to', exact: true }),
+		page.getByRole('switch', { name: 'Threads I reply to', exact: true }),
 	).not.toBeChecked();
 	await page
 		.getByRole('tab', { name: 'Notifications and activity', exact: true })

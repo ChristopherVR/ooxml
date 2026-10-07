@@ -422,6 +422,18 @@ deferred discussion, draft restoration and desktop/mobile layouts. Microsoft's
 is the reference. Tab-link deep routing, authenticated permissions, direct/group
 chat tabs and Office coediting remain outstanding.
 
+## Twenty-second slice: settings controls and scrolling
+
+Settings uses the shared switch controls for app names and thread preferences,
+with Space/Enter keyboard activation, accessible checked state and persisted
+preferences. Search and Close stay fixed above an independently scrollable
+content panel; category navigation remains reachable at compact desktop and
+mobile heights. Acceptance checks both viewport sizes, keyboard switches and
+connection draft preservation, alongside the existing settings search and
+preference restoration workflows across all six bindings. The category list
+still covers only implemented OpenTeams preferences; this does not establish
+full Teams settings parity.
+
 ## Next releasable slices
 
 1. UI parity: match the current Teams shell, Shared/Files commands, Settings
