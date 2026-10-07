@@ -17,6 +17,7 @@ export default {
 				? [
 						{ find: /^ooxml-core\/(.+)$/, replacement: `${ooxml}src/core/$1/index.ts` },
 						{ find: /^ooxml-ui$/, replacement: `${ooxml}src/ui/src/index.ts` },
+						{ find: /^ooxml-ui\/teams$/, replacement: `${ooxml}src/ui/src/teams/index.ts` },
 					]
 				: []),
 			{

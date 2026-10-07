@@ -1,0 +1,847 @@
+{
+	"application": "Microsoft Visio",
+	"version": "16.0",
+	"drawingScale": 1,
+	"cases": [
+		{
+			"code": 2,
+			"size": 0,
+			"lineWidth": 0.005,
+			"nativeScale": 5.0,
+			"extent": 0.025,
+			"nativeGlyph": "M 1 1 L 0 0 L 1 -1 L 1 1",
+			"setback": 0.025,
+			"linePath": "M0 5.09 L142.2 5.09"
+		},
+		{
+			"code": 2,
+			"size": 1,
+			"lineWidth": 0.005,
+			"nativeScale": 6.0,
+			"extent": 0.03,
+			"nativeGlyph": "M 1 1 L 0 0 L 1 -1 L 1 1",
+			"setback": 0.03,
+			"linePath": "M0 6.11 L141.84 6.11"
+		},
+		{
+			"code": 2,
+			"size": 2,
+			"lineWidth": 0.005,
+			"nativeScale": 8.0,
+			"extent": 0.04,
+			"nativeGlyph": "M 1 1 L 0 0 L 1 -1 L 1 1",
+			"setback": 0.04,
+			"linePath": "M0 8.15 L141.12 8.15"
+		},
+		{
+			"code": 2,
+			"size": 3,
+			"lineWidth": 0.005,
+			"nativeScale": 10.0,
+			"extent": 0.05,
+			"nativeGlyph": "M 1 1 L 0 0 L 1 -1 L 1 1",
+			"setback": 0.05,
+			"linePath": "M0 10.18 L140.4 10.18"
+		},
+		{
+			"code": 2,
+			"size": 4,
+			"lineWidth": 0.005,
+			"nativeScale": 12.0,
+			"extent": 0.06,
+			"nativeGlyph": "M 1 1 L 0 0 L 1 -1 L 1 1",
+			"setback": 0.06,
+			"linePath": "M0 12.22 L139.68 12.22"
+		},
+		{
+			"code": 2,
+			"size": 5,
+			"lineWidth": 0.005,
+			"nativeScale": 26.0,
+			"extent": 0.13,
+			"nativeGlyph": "M 1 1 L 0 0 L 1 -1 L 1 1",
+			"setback": 0.13,
+			"linePath": "M0 26.47 L134.64 26.47"
+		},
+		{
+			"code": 2,
+			"size": 6,
+			"lineWidth": 0.005,
+			"nativeScale": 51.0,
+			"extent": 0.255,
+			"nativeGlyph": "M 1 1 L 0 0 L 1 -1 L 1 1",
+			"setback": 0.255,
+			"linePath": "M0 51.93 L125.64 51.93"
+		},
+		{
+			"code": 2,
+			"size": 0,
+			"lineWidth": 0.01,
+			"nativeScale": 3.0,
+			"extent": 0.03,
+			"nativeGlyph": "M 1 1 L 0 0 L 1 -1 L 1 1",
+			"setback": 0.03,
+			"linePath": "M0 6.11 L141.84 6.11"
+		},
+		{
+			"code": 2,
+			"size": 1,
+			"lineWidth": 0.01,
+			"nativeScale": 3.5,
+			"extent": 0.035,
+			"nativeGlyph": "M 1 1 L 0 0 L 1 -1 L 1 1",
+			"setback": 0.035,
+			"linePath": "M0 7.13 L141.48 7.13"
+		},
+		{
+			"code": 2,
+			"size": 2,
+			"lineWidth": 0.01,
+			"nativeScale": 4.5,
+			"extent": 0.045,
+			"nativeGlyph": "M 1 1 L 0 0 L 1 -1 L 1 1",
+			"setback": 0.045,
+			"linePath": "M0 9.16 L140.76 9.16"
+		},
+		{
+			"code": 2,
+			"size": 3,
+			"lineWidth": 0.01,
+			"nativeScale": 5.5,
+			"extent": 0.055,
+			"nativeGlyph": "M 1 1 L 0 0 L 1 -1 L 1 1",
+			"setback": 0.055,
+			"linePath": "M0 11.2 L140.04 11.2"
+		},
+		{
+			"code": 2,
+			"size": 4,
+			"lineWidth": 0.01,
+			"nativeScale": 6.5,
+			"extent": 0.065,
+			"nativeGlyph": "M 1 1 L 0 0 L 1 -1 L 1 1",
+			"setback": 0.065,
+			"linePath": "M0 13.24 L139.32 13.24"
+		},
+		{
+			"code": 2,
+			"size": 5,
+			"lineWidth": 0.01,
+			"nativeScale": 13.5,
+			"extent": 0.135,
+			"nativeGlyph": "M 1 1 L 0 0 L 1 -1 L 1 1",
+			"setback": 0.135,
+			"linePath": "M0 27.49 L134.28 27.49"
+		},
+		{
+			"code": 2,
+			"size": 6,
+			"lineWidth": 0.01,
+			"nativeScale": 26.0,
+			"extent": 0.26,
+			"nativeGlyph": "M 1 1 L 0 0 L 1 -1 L 1 1",
+			"setback": 0.26,
+			"linePath": "M0 52.95 L125.28 52.95"
+		},
+		{
+			"code": 2,
+			"size": 0,
+			"lineWidth": 0.02,
+			"nativeScale": 2.0,
+			"extent": 0.04,
+			"nativeGlyph": "M 1 1 L 0 0 L 1 -1 L 1 1",
+			"setback": 0.04,
+			"linePath": "M0 8.15 L141.12 8.15"
+		},
+		{
+			"code": 2,
+			"size": 1,
+			"lineWidth": 0.02,
+			"nativeScale": 2.25,
+			"extent": 0.045,
+			"nativeGlyph": "M 1 1 L 0 0 L 1 -1 L 1 1",
+			"setback": 0.045,
+			"linePath": "M0 9.16 L140.76 9.16"
+		},
+		{
+			"code": 2,
+			"size": 2,
+			"lineWidth": 0.02,
+			"nativeScale": 2.75,
+			"extent": 0.055,
+			"nativeGlyph": "M 1 1 L 0 0 L 1 -1 L 1 1",
+			"setback": 0.055,
+			"linePath": "M0 11.2 L140.04 11.2"
+		},
+		{
+			"code": 2,
+			"size": 3,
+			"lineWidth": 0.02,
+			"nativeScale": 3.25,
+			"extent": 0.065,
+			"nativeGlyph": "M 1 1 L 0 0 L 1 -1 L 1 1",
+			"setback": 0.065,
+			"linePath": "M0 13.24 L139.32 13.24"
+		},
+		{
+			"code": 2,
+			"size": 4,
+			"lineWidth": 0.02,
+			"nativeScale": 3.75,
+			"extent": 0.075,
+			"nativeGlyph": "M 1 1 L 0 0 L 1 -1 L 1 1",
+			"setback": 0.075,
+			"linePath": "M0 15.27 L138.6 15.27"
+		},
+		{
+			"code": 2,
+			"size": 5,
+			"lineWidth": 0.02,
+			"nativeScale": 7.25,
+			"extent": 0.145,
+			"nativeGlyph": "M 1 1 L 0 0 L 1 -1 L 1 1",
+			"setback": 0.145,
+			"linePath": "M0 29.53 L133.56 29.53"
+		},
+		{
+			"code": 2,
+			"size": 6,
+			"lineWidth": 0.02,
+			"nativeScale": 13.5,
+			"extent": 0.27,
+			"nativeGlyph": "M 1 1 L 0 0 L 1 -1 L 1 1",
+			"setback": 0.27,
+			"linePath": "M0 54.98 L124.56 54.98"
+		},
+		{
+			"code": 4,
+			"size": 0,
+			"lineWidth": 0.005,
+			"nativeScale": 5.0,
+			"extent": 0.025,
+			"nativeGlyph": "M 2 1 L 0 0 L 2 -1 L 2 1",
+			"setback": 0.05,
+			"linePath": "M0 8.05 L140.4 8.05"
+		},
+		{
+			"code": 4,
+			"size": 1,
+			"lineWidth": 0.005,
+			"nativeScale": 6.0,
+			"extent": 0.03,
+			"nativeGlyph": "M 2 1 L 0 0 L 2 -1 L 2 1",
+			"setback": 0.06,
+			"linePath": "M0 9.66 L139.68 9.66"
+		},
+		{
+			"code": 4,
+			"size": 2,
+			"lineWidth": 0.005,
+			"nativeScale": 8.0,
+			"extent": 0.04,
+			"nativeGlyph": "M 2 1 L 0 0 L 2 -1 L 2 1",
+			"setback": 0.08,
+			"linePath": "M0 12.88 L138.24 12.88"
+		},
+		{
+			"code": 4,
+			"size": 3,
+			"lineWidth": 0.005,
+			"nativeScale": 10.0,
+			"extent": 0.05,
+			"nativeGlyph": "M 2 1 L 0 0 L 2 -1 L 2 1",
+			"setback": 0.1,
+			"linePath": "M0 16.1 L136.8 16.1"
+		},
+		{
+			"code": 4,
+			"size": 4,
+			"lineWidth": 0.005,
+			"nativeScale": 12.0,
+			"extent": 0.06,
+			"nativeGlyph": "M 2 1 L 0 0 L 2 -1 L 2 1",
+			"setback": 0.12,
+			"linePath": "M0 19.32 L135.36 19.32"
+		},
+		{
+			"code": 4,
+			"size": 5,
+			"lineWidth": 0.005,
+			"nativeScale": 26.0,
+			"extent": 0.13,
+			"nativeGlyph": "M 2 1 L 0 0 L 2 -1 L 2 1",
+			"setback": 0.26,
+			"linePath": "M0 41.86 L125.28 41.86"
+		},
+		{
+			"code": 4,
+			"size": 6,
+			"lineWidth": 0.005,
+			"nativeScale": 51.0,
+			"extent": 0.255,
+			"nativeGlyph": "M 2 1 L 0 0 L 2 -1 L 2 1",
+			"setback": 0.51,
+			"linePath": "M0 82.11 L107.28 82.11"
+		},
+		{
+			"code": 4,
+			"size": 0,
+			"lineWidth": 0.01,
+			"nativeScale": 3.0,
+			"extent": 0.03,
+			"nativeGlyph": "M 2 1 L 0 0 L 2 -1 L 2 1",
+			"setback": 0.06,
+			"linePath": "M0 9.66 L139.68 9.66"
+		},
+		{
+			"code": 4,
+			"size": 1,
+			"lineWidth": 0.01,
+			"nativeScale": 3.5,
+			"extent": 0.035,
+			"nativeGlyph": "M 2 1 L 0 0 L 2 -1 L 2 1",
+			"setback": 0.07,
+			"linePath": "M0 11.27 L138.96 11.27"
+		},
+		{
+			"code": 4,
+			"size": 2,
+			"lineWidth": 0.01,
+			"nativeScale": 4.5,
+			"extent": 0.045,
+			"nativeGlyph": "M 2 1 L 0 0 L 2 -1 L 2 1",
+			"setback": 0.09,
+			"linePath": "M0 14.49 L137.52 14.49"
+		},
+		{
+			"code": 4,
+			"size": 3,
+			"lineWidth": 0.01,
+			"nativeScale": 5.5,
+			"extent": 0.055,
+			"nativeGlyph": "M 2 1 L 0 0 L 2 -1 L 2 1",
+			"setback": 0.11,
+			"linePath": "M0 17.71 L136.08 17.71"
+		},
+		{
+			"code": 4,
+			"size": 4,
+			"lineWidth": 0.01,
+			"nativeScale": 6.5,
+			"extent": 0.065,
+			"nativeGlyph": "M 2 1 L 0 0 L 2 -1 L 2 1",
+			"setback": 0.13,
+			"linePath": "M0 20.93 L134.64 20.93"
+		},
+		{
+			"code": 4,
+			"size": 5,
+			"lineWidth": 0.01,
+			"nativeScale": 13.5,
+			"extent": 0.135,
+			"nativeGlyph": "M 2 1 L 0 0 L 2 -1 L 2 1",
+			"setback": 0.27,
+			"linePath": "M0 43.47 L124.56 43.47"
+		},
+		{
+			"code": 4,
+			"size": 6,
+			"lineWidth": 0.01,
+			"nativeScale": 26.0,
+			"extent": 0.26,
+			"nativeGlyph": "M 2 1 L 0 0 L 2 -1 L 2 1",
+			"setback": 0.52,
+			"linePath": "M0 83.72 L106.56 83.72"
+		},
+		{
+			"code": 4,
+			"size": 0,
+			"lineWidth": 0.02,
+			"nativeScale": 2.0,
+			"extent": 0.04,
+			"nativeGlyph": "M 2 1 L 0 0 L 2 -1 L 2 1",
+			"setback": 0.08,
+			"linePath": "M0 12.88 L138.24 12.88"
+		},
+		{
+			"code": 4,
+			"size": 1,
+			"lineWidth": 0.02,
+			"nativeScale": 2.25,
+			"extent": 0.045,
+			"nativeGlyph": "M 2 1 L 0 0 L 2 -1 L 2 1",
+			"setback": 0.09,
+			"linePath": "M0 14.49 L137.52 14.49"
+		},
+		{
+			"code": 4,
+			"size": 2,
+			"lineWidth": 0.02,
+			"nativeScale": 2.75,
+			"extent": 0.055,
+			"nativeGlyph": "M 2 1 L 0 0 L 2 -1 L 2 1",
+			"setback": 0.11,
+			"linePath": "M0 17.71 L136.08 17.71"
+		},
+		{
+			"code": 4,
+			"size": 3,
+			"lineWidth": 0.02,
+			"nativeScale": 3.25,
+			"extent": 0.065,
+			"nativeGlyph": "M 2 1 L 0 0 L 2 -1 L 2 1",
+			"setback": 0.13,
+			"linePath": "M0 20.93 L134.64 20.93"
+		},
+		{
+			"code": 4,
+			"size": 4,
+			"lineWidth": 0.02,
+			"nativeScale": 3.75,
+			"extent": 0.075,
+			"nativeGlyph": "M 2 1 L 0 0 L 2 -1 L 2 1",
+			"setback": 0.15,
+			"linePath": "M0 24.15 L133.2 24.15"
+		},
+		{
+			"code": 4,
+			"size": 5,
+			"lineWidth": 0.02,
+			"nativeScale": 7.25,
+			"extent": 0.145,
+			"nativeGlyph": "M 2 1 L 0 0 L 2 -1 L 2 1",
+			"setback": 0.29,
+			"linePath": "M0 46.69 L123.12 46.69"
+		},
+		{
+			"code": 4,
+			"size": 6,
+			"lineWidth": 0.02,
+			"nativeScale": 13.5,
+			"extent": 0.27,
+			"nativeGlyph": "M 2 1 L 0 0 L 2 -1 L 2 1",
+			"setback": 0.54,
+			"linePath": "M0 86.94 L105.12 86.94"
+		},
+		{
+			"code": 5,
+			"size": 0,
+			"lineWidth": 0.005,
+			"nativeScale": 5.0,
+			"extent": 0.025,
+			"nativeGlyph": "M 2 1 L 0 0 L 1.98117 -0.993387 C 1.67173 -0.364515 1.67301 0.372641 1.98465 1.00043",
+			"setback": 0.043750000000000004,
+			"linePath": "M0 8.05 L140.85 8.05"
+		},
+		{
+			"code": 5,
+			"size": 1,
+			"lineWidth": 0.005,
+			"nativeScale": 6.0,
+			"extent": 0.03,
+			"nativeGlyph": "M 2 1 L 0 0 L 1.98117 -0.993387 C 1.67173 -0.364515 1.67301 0.372641 1.98465 1.00043",
+			"setback": 0.0525,
+			"linePath": "M0 9.66 L140.22 9.66"
+		},
+		{
+			"code": 5,
+			"size": 2,
+			"lineWidth": 0.005,
+			"nativeScale": 8.0,
+			"extent": 0.04,
+			"nativeGlyph": "M 2 1 L 0 0 L 1.98117 -0.993387 C 1.67173 -0.364515 1.67301 0.372641 1.98465 1.00043",
+			"setback": 0.07,
+			"linePath": "M0 12.88 L138.96 12.88"
+		},
+		{
+			"code": 5,
+			"size": 3,
+			"lineWidth": 0.005,
+			"nativeScale": 10.0,
+			"extent": 0.05,
+			"nativeGlyph": "M 2 1 L 0 0 L 1.98117 -0.993387 C 1.67173 -0.364515 1.67301 0.372641 1.98465 1.00043",
+			"setback": 0.08750000000000001,
+			"linePath": "M0 16.1 L137.7 16.1"
+		},
+		{
+			"code": 5,
+			"size": 4,
+			"lineWidth": 0.005,
+			"nativeScale": 12.0,
+			"extent": 0.06,
+			"nativeGlyph": "M 2 1 L 0 0 L 1.98117 -0.993387 C 1.67173 -0.364515 1.67301 0.372641 1.98465 1.00043",
+			"setback": 0.105,
+			"linePath": "M0 19.32 L136.44 19.32"
+		},
+		{
+			"code": 5,
+			"size": 5,
+			"lineWidth": 0.005,
+			"nativeScale": 26.0,
+			"extent": 0.13,
+			"nativeGlyph": "M 2 1 L 0 0 L 1.98117 -0.993387 C 1.67173 -0.364515 1.67301 0.372641 1.98465 1.00043",
+			"setback": 0.2275,
+			"linePath": "M0 41.86 L127.62 41.86"
+		},
+		{
+			"code": 5,
+			"size": 6,
+			"lineWidth": 0.005,
+			"nativeScale": 51.0,
+			"extent": 0.255,
+			"nativeGlyph": "M 2 1 L 0 0 L 1.98117 -0.993387 C 1.67173 -0.364515 1.67301 0.372641 1.98465 1.00043",
+			"setback": 0.44625000000000004,
+			"linePath": "M0 82.11 L111.87 82.11"
+		},
+		{
+			"code": 5,
+			"size": 0,
+			"lineWidth": 0.01,
+			"nativeScale": 3.0,
+			"extent": 0.03,
+			"nativeGlyph": "M 2 1 L 0 0 L 1.98117 -0.993387 C 1.67173 -0.364515 1.67301 0.372641 1.98465 1.00043",
+			"setback": 0.0525,
+			"linePath": "M0 9.66 L140.22 9.66"
+		},
+		{
+			"code": 5,
+			"size": 1,
+			"lineWidth": 0.01,
+			"nativeScale": 3.5,
+			"extent": 0.035,
+			"nativeGlyph": "M 2 1 L 0 0 L 1.98117 -0.993387 C 1.67173 -0.364515 1.67301 0.372641 1.98465 1.00043",
+			"setback": 0.06125,
+			"linePath": "M0 11.27 L139.59 11.27"
+		},
+		{
+			"code": 5,
+			"size": 2,
+			"lineWidth": 0.01,
+			"nativeScale": 4.5,
+			"extent": 0.045,
+			"nativeGlyph": "M 2 1 L 0 0 L 1.98117 -0.993387 C 1.67173 -0.364515 1.67301 0.372641 1.98465 1.00043",
+			"setback": 0.07875,
+			"linePath": "M0 14.49 L138.33 14.49"
+		},
+		{
+			"code": 5,
+			"size": 3,
+			"lineWidth": 0.01,
+			"nativeScale": 5.5,
+			"extent": 0.055,
+			"nativeGlyph": "M 2 1 L 0 0 L 1.98117 -0.993387 C 1.67173 -0.364515 1.67301 0.372641 1.98465 1.00043",
+			"setback": 0.09625,
+			"linePath": "M0 17.71 L137.07 17.71"
+		},
+		{
+			"code": 5,
+			"size": 4,
+			"lineWidth": 0.01,
+			"nativeScale": 6.5,
+			"extent": 0.065,
+			"nativeGlyph": "M 2 1 L 0 0 L 1.98117 -0.993387 C 1.67173 -0.364515 1.67301 0.372641 1.98465 1.00043",
+			"setback": 0.11375,
+			"linePath": "M0 20.93 L135.81 20.93"
+		},
+		{
+			"code": 5,
+			"size": 5,
+			"lineWidth": 0.01,
+			"nativeScale": 13.5,
+			"extent": 0.135,
+			"nativeGlyph": "M 2 1 L 0 0 L 1.98117 -0.993387 C 1.67173 -0.364515 1.67301 0.372641 1.98465 1.00043",
+			"setback": 0.23625000000000002,
+			"linePath": "M0 43.47 L126.99 43.47"
+		},
+		{
+			"code": 5,
+			"size": 6,
+			"lineWidth": 0.01,
+			"nativeScale": 26.0,
+			"extent": 0.26,
+			"nativeGlyph": "M 2 1 L 0 0 L 1.98117 -0.993387 C 1.67173 -0.364515 1.67301 0.372641 1.98465 1.00043",
+			"setback": 0.455,
+			"linePath": "M0 83.72 L111.24 83.72"
+		},
+		{
+			"code": 5,
+			"size": 0,
+			"lineWidth": 0.02,
+			"nativeScale": 2.0,
+			"extent": 0.04,
+			"nativeGlyph": "M 2 1 L 0 0 L 1.98117 -0.993387 C 1.67173 -0.364515 1.67301 0.372641 1.98465 1.00043",
+			"setback": 0.07,
+			"linePath": "M0 12.88 L138.96 12.88"
+		},
+		{
+			"code": 5,
+			"size": 1,
+			"lineWidth": 0.02,
+			"nativeScale": 2.25,
+			"extent": 0.045,
+			"nativeGlyph": "M 2 1 L 0 0 L 1.98117 -0.993387 C 1.67173 -0.364515 1.67301 0.372641 1.98465 1.00043",
+			"setback": 0.07875,
+			"linePath": "M0 14.49 L138.33 14.49"
+		},
+		{
+			"code": 5,
+			"size": 2,
+			"lineWidth": 0.02,
+			"nativeScale": 2.75,
+			"extent": 0.055,
+			"nativeGlyph": "M 2 1 L 0 0 L 1.98117 -0.993387 C 1.67173 -0.364515 1.67301 0.372641 1.98465 1.00043",
+			"setback": 0.09625,
+			"linePath": "M0 17.71 L137.07 17.71"
+		},
+		{
+			"code": 5,
+			"size": 3,
+			"lineWidth": 0.02,
+			"nativeScale": 3.25,
+			"extent": 0.065,
+			"nativeGlyph": "M 2 1 L 0 0 L 1.98117 -0.993387 C 1.67173 -0.364515 1.67301 0.372641 1.98465 1.00043",
+			"setback": 0.11375,
+			"linePath": "M0 20.93 L135.81 20.93"
+		},
+		{
+			"code": 5,
+			"size": 4,
+			"lineWidth": 0.02,
+			"nativeScale": 3.75,
+			"extent": 0.075,
+			"nativeGlyph": "M 2 1 L 0 0 L 1.98117 -0.993387 C 1.67173 -0.364515 1.67301 0.372641 1.98465 1.00043",
+			"setback": 0.13125,
+			"linePath": "M0 24.15 L134.55 24.15"
+		},
+		{
+			"code": 5,
+			"size": 5,
+			"lineWidth": 0.02,
+			"nativeScale": 7.25,
+			"extent": 0.145,
+			"nativeGlyph": "M 2 1 L 0 0 L 1.98117 -0.993387 C 1.67173 -0.364515 1.67301 0.372641 1.98465 1.00043",
+			"setback": 0.25375000000000003,
+			"linePath": "M0 46.69 L125.73 46.69"
+		},
+		{
+			"code": 5,
+			"size": 6,
+			"lineWidth": 0.02,
+			"nativeScale": 13.5,
+			"extent": 0.27,
+			"nativeGlyph": "M 2 1 L 0 0 L 1.98117 -0.993387 C 1.67173 -0.364515 1.67301 0.372641 1.98465 1.00043",
+			"setback": 0.47250000000000003,
+			"linePath": "M0 86.94 L109.98 86.94"
+		},
+		{
+			"code": 6,
+			"size": 0,
+			"lineWidth": 0.005,
+			"nativeScale": 5.0,
+			"extent": 0.025,
+			"nativeGlyph": "M 2 1 L 0 0 L 2.01237 -1.00641 C 2.32921 -0.372876 2.32921 0.372869 2.01238 1.0064",
+			"setback": 0.05625,
+			"linePath": "M0 8.82 L139.95 8.82"
+		},
+		{
+			"code": 6,
+			"size": 1,
+			"lineWidth": 0.005,
+			"nativeScale": 6.0,
+			"extent": 0.03,
+			"nativeGlyph": "M 2 1 L 0 0 L 2.01237 -1.00641 C 2.32921 -0.372876 2.32921 0.372869 2.01238 1.0064",
+			"setback": 0.0675,
+			"linePath": "M0 10.58 L139.14 10.58"
+		},
+		{
+			"code": 6,
+			"size": 2,
+			"lineWidth": 0.005,
+			"nativeScale": 8.0,
+			"extent": 0.04,
+			"nativeGlyph": "M 2 1 L 0 0 L 2.01237 -1.00641 C 2.32921 -0.372876 2.32921 0.372869 2.01238 1.0064",
+			"setback": 0.09,
+			"linePath": "M0 14.11 L137.52 14.11"
+		},
+		{
+			"code": 6,
+			"size": 3,
+			"lineWidth": 0.005,
+			"nativeScale": 10.0,
+			"extent": 0.05,
+			"nativeGlyph": "M 2 1 L 0 0 L 2.01237 -1.00641 C 2.32921 -0.372876 2.32921 0.372869 2.01238 1.0064",
+			"setback": 0.1125,
+			"linePath": "M0 17.64 L135.9 17.64"
+		},
+		{
+			"code": 6,
+			"size": 4,
+			"lineWidth": 0.005,
+			"nativeScale": 12.0,
+			"extent": 0.06,
+			"nativeGlyph": "M 2 1 L 0 0 L 2.01237 -1.00641 C 2.32921 -0.372876 2.32921 0.372869 2.01238 1.0064",
+			"setback": 0.135,
+			"linePath": "M0 21.16 L134.28 21.16"
+		},
+		{
+			"code": 6,
+			"size": 5,
+			"lineWidth": 0.005,
+			"nativeScale": 26.0,
+			"extent": 0.13,
+			"nativeGlyph": "M 2 1 L 0 0 L 2.01237 -1.00641 C 2.32921 -0.372876 2.32921 0.372869 2.01238 1.0064",
+			"setback": 0.2925,
+			"linePath": "M0 45.85 L122.94 45.85"
+		},
+		{
+			"code": 6,
+			"size": 6,
+			"lineWidth": 0.005,
+			"nativeScale": 51.0,
+			"extent": 0.255,
+			"nativeGlyph": "M 2 1 L 0 0 L 2.01237 -1.00641 C 2.32921 -0.372876 2.32921 0.372869 2.01238 1.0064",
+			"setback": 0.57375,
+			"linePath": "M0 89.95 L102.69 89.95"
+		},
+		{
+			"code": 6,
+			"size": 0,
+			"lineWidth": 0.01,
+			"nativeScale": 3.0,
+			"extent": 0.03,
+			"nativeGlyph": "M 2 1 L 0 0 L 2.01237 -1.00641 C 2.32921 -0.372876 2.32921 0.372869 2.01238 1.0064",
+			"setback": 0.0675,
+			"linePath": "M0 10.58 L139.14 10.58"
+		},
+		{
+			"code": 6,
+			"size": 1,
+			"lineWidth": 0.01,
+			"nativeScale": 3.5,
+			"extent": 0.035,
+			"nativeGlyph": "M 2 1 L 0 0 L 2.01237 -1.00641 C 2.32921 -0.372876 2.32921 0.372869 2.01238 1.0064",
+			"setback": 0.07875,
+			"linePath": "M0 12.35 L138.33 12.35"
+		},
+		{
+			"code": 6,
+			"size": 2,
+			"lineWidth": 0.01,
+			"nativeScale": 4.5,
+			"extent": 0.045,
+			"nativeGlyph": "M 2 1 L 0 0 L 2.01237 -1.00641 C 2.32921 -0.372876 2.32921 0.372869 2.01238 1.0064",
+			"setback": 0.10125,
+			"linePath": "M0 15.87 L136.71 15.87"
+		},
+		{
+			"code": 6,
+			"size": 3,
+			"lineWidth": 0.01,
+			"nativeScale": 5.5,
+			"extent": 0.055,
+			"nativeGlyph": "M 2 1 L 0 0 L 2.01237 -1.00641 C 2.32921 -0.372876 2.32921 0.372869 2.01238 1.0064",
+			"setback": 0.12375,
+			"linePath": "M0 19.4 L135.09 19.4"
+		},
+		{
+			"code": 6,
+			"size": 4,
+			"lineWidth": 0.01,
+			"nativeScale": 6.5,
+			"extent": 0.065,
+			"nativeGlyph": "M 2 1 L 0 0 L 2.01237 -1.00641 C 2.32921 -0.372876 2.32921 0.372869 2.01238 1.0064",
+			"setback": 0.14625,
+			"linePath": "M0 22.93 L133.47 22.93"
+		},
+		{
+			"code": 6,
+			"size": 5,
+			"lineWidth": 0.01,
+			"nativeScale": 13.5,
+			"extent": 0.135,
+			"nativeGlyph": "M 2 1 L 0 0 L 2.01237 -1.00641 C 2.32921 -0.372876 2.32921 0.372869 2.01238 1.0064",
+			"setback": 0.30375,
+			"linePath": "M0 47.62 L122.13 47.62"
+		},
+		{
+			"code": 6,
+			"size": 6,
+			"lineWidth": 0.01,
+			"nativeScale": 26.0,
+			"extent": 0.26,
+			"nativeGlyph": "M 2 1 L 0 0 L 2.01237 -1.00641 C 2.32921 -0.372876 2.32921 0.372869 2.01238 1.0064",
+			"setback": 0.585,
+			"linePath": "M0 91.71 L101.88 91.71"
+		},
+		{
+			"code": 6,
+			"size": 0,
+			"lineWidth": 0.02,
+			"nativeScale": 2.0,
+			"extent": 0.04,
+			"nativeGlyph": "M 2 1 L 0 0 L 2.01237 -1.00641 C 2.32921 -0.372876 2.32921 0.372869 2.01238 1.0064",
+			"setback": 0.09,
+			"linePath": "M0 14.11 L137.52 14.11"
+		},
+		{
+			"code": 6,
+			"size": 1,
+			"lineWidth": 0.02,
+			"nativeScale": 2.25,
+			"extent": 0.045,
+			"nativeGlyph": "M 2 1 L 0 0 L 2.01237 -1.00641 C 2.32921 -0.372876 2.32921 0.372869 2.01238 1.0064",
+			"setback": 0.10125,
+			"linePath": "M0 15.87 L136.71 15.87"
+		},
+		{
+			"code": 6,
+			"size": 2,
+			"lineWidth": 0.02,
+			"nativeScale": 2.75,
+			"extent": 0.055,
+			"nativeGlyph": "M 2 1 L 0 0 L 2.01237 -1.00641 C 2.32921 -0.372876 2.32921 0.372869 2.01238 1.0064",
+			"setback": 0.12375,
+			"linePath": "M0 19.4 L135.09 19.4"
+		},
+		{
+			"code": 6,
+			"size": 3,
+			"lineWidth": 0.02,
+			"nativeScale": 3.25,
+			"extent": 0.065,
+			"nativeGlyph": "M 2 1 L 0 0 L 2.01237 -1.00641 C 2.32921 -0.372876 2.32921 0.372869 2.01238 1.0064",
+			"setback": 0.14625,
+			"linePath": "M0 22.93 L133.47 22.93"
+		},
+		{
+			"code": 6,
+			"size": 4,
+			"lineWidth": 0.02,
+			"nativeScale": 3.75,
+			"extent": 0.075,
+			"nativeGlyph": "M 2 1 L 0 0 L 2.01237 -1.00641 C 2.32921 -0.372876 2.32921 0.372869 2.01238 1.0064",
+			"setback": 0.16875,
+			"linePath": "M0 26.45 L131.85 26.45"
+		},
+		{
+			"code": 6,
+			"size": 5,
+			"lineWidth": 0.02,
+			"nativeScale": 7.25,
+			"extent": 0.145,
+			"nativeGlyph": "M 2 1 L 0 0 L 2.01237 -1.00641 C 2.32921 -0.372876 2.32921 0.372869 2.01238 1.0064",
+			"setback": 0.32625,
+			"linePath": "M0 51.15 L120.51 51.15"
+		},
+		{
+			"code": 6,
+			"size": 6,
+			"lineWidth": 0.02,
+			"nativeScale": 13.5,
+			"extent": 0.27,
+			"nativeGlyph": "M 2 1 L 0 0 L 2.01237 -1.00641 C 2.32921 -0.372876 2.32921 0.372869 2.01238 1.0064",
+			"setback": 0.6075,
+			"linePath": "M0 95.24 L100.26 95.24"
+		}
+	]
+}

@@ -62,7 +62,11 @@ export function bindDocument<TModel, P extends object>(
 		} else adoptRoom();
 	};
 	const stopReady = session.on('ready', settle);
-	if (session.canWrite()) settle();
+	// Read-only late joiners also adopt an already-synced room. Their role only gates writes.
+	const stopSynced = session.on('synced', (synced) => {
+		if (synced && !session.canWrite()) settle();
+	});
+	if (session.synced || session.canWrite()) settle();
 
 	return {
 		push: (model) => {
@@ -83,6 +87,7 @@ export function bindDocument<TModel, P extends object>(
 			disposed = true;
 			stopObserving();
 			stopReady();
+			stopSynced();
 		},
 	};
 }

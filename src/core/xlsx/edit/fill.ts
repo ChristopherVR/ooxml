@@ -4,6 +4,7 @@ import type { Cell } from '../model.js';
 import { type EditContext, sheetAt } from './context.js';
 import { translateFormula } from './deps.js';
 import { detectSeries, mod } from './fill-series.js';
+import type { FillMode } from './types.js';
 
 /** A formula moved by (`dRow`, `dCol`); unparseable formulas are kept as they are. */
 export function moveFormula(formula: string, dRow: number, dCol: number): string {
@@ -30,7 +31,13 @@ export function copyCell(cell: Cell, dRow: number, dCol: number): Cell {
  * up, right or left depending on where the target lies; each column (or row) of the source is a
  * lane whose series is detected separately. Formulas are translated relative to their new place.
  */
-export function fillRange(ctx: EditContext, s: number, source: CellRange, target: CellRange): void {
+export function fillRange(
+	ctx: EditContext,
+	s: number,
+	source: CellRange,
+	target: CellRange,
+	mode: FillMode = 'auto',
+): void {
 	const sheet = sheetAt(ctx.workbook, s);
 	const src = normalizeRange(source);
 	const tgt = normalizeRange(target);
@@ -60,7 +67,7 @@ export function fillRange(ctx: EditContext, s: number, source: CellRange, target
 						? [src.start.row + i, src.start.col + lane]
 						: [src.start.row + lane, src.start.col + i];
 				const cells = Array.from({ length }, (_v, i) => getCell(sheet, ...at(i)));
-				const series = detectSeries(ctx.workbook, cells);
+				const series = mode === 'auto' ? detectSeries(ctx.workbook, cells) : undefined;
 				const from = vertical ? all.start.row - src.start.row : all.start.col - src.start.col;
 				const to = vertical ? all.end.row - src.start.row : all.end.col - src.start.col;
 				for (let k = from; k <= to; k++) {
@@ -73,9 +80,9 @@ export function fillRange(ctx: EditContext, s: number, source: CellRange, target
 						continue;
 					}
 					const [srcRow, srcCol] = at(i);
-					const step = series(k);
+					const step = series?.(k);
 					const cell =
-						step.kind === 'copy'
+						!step || step.kind === 'copy'
 							? copyCell(origin, row - srcRow, col - srcCol)
 							: { value: step.value, ...(origin.styleId ? { styleId: origin.styleId } : {}) };
 					putCell(sheet, row, col, cell);

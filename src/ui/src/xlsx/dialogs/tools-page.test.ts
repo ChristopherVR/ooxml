@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { createWorkbook, getCell } from 'ooxml-core/xlsx';
 import { afterEach, describe, expect, it } from 'vitest';
-import { clipState } from 'ooxml-core/xlsx/ui';
+import { clipState, clipboardCommands } from 'ooxml-core/xlsx/ui';
 import {
 	clickButton,
 	createTestContext,
@@ -20,11 +20,33 @@ function setup(grid?: { zoom: number }) {
 		grid ? { grid: { zoom: () => grid.zoom, setZoom: (z: number) => (grid.zoom = z) } } : {},
 	);
 	registerToolDialogs(ctx);
+	ctx.commands.registerAll(clipboardCommands());
 	return ctx;
 }
 const radio = (root: HTMLElement, label: string) => inputByLabel(root, label);
 
 describe('Paste Special', () => {
+	it('combines values, transpose and skip blanks in one undo step', async () => {
+		const ctx = setup();
+		const s = ctx.session()!;
+		s.setCellInput(0, 1, 0, '=""');
+		s.setCellValue(0, 2, 0, 0);
+		clipState(ctx).payload = s.copy(0, { start: { row: 0, col: 0 }, end: { row: 2, col: 0 } });
+		s.setRangeValues(0, { row: 0, col: 2 }, [[9, 9, 9]]);
+		ctx.select('C1');
+		const result = ctx.commands.run('home.paste-special');
+		const dialog = dialogEl(ctx, 'paste-special');
+		radio(dialog, 'Values').click();
+		inputByLabel(dialog, 'Transpose').click();
+		inputByLabel(dialog, 'Skip blanks').click();
+		clickButton(dialog, 'OK');
+		await result;
+		const read = () => [2, 3, 4].map((col) => getCell(ctx.workbook()!.sheets[0]!, 0, col)?.value);
+		expect(read()).toEqual([9, '', 0]);
+		expect(getCell(ctx.workbook()!.sheets[0]!, 0, 3)?.formula).toBeUndefined();
+		s.undo();
+		expect(read()).toEqual([9, 9, 9]);
+	});
 	it('pastes values only, and Cancel pastes nothing', async () => {
 		const ctx = setup();
 		const s = ctx.session()!;
@@ -36,12 +58,12 @@ describe('Paste Special', () => {
 		clickButton(dialogEl(ctx, 'paste-special'), 'Cancel');
 		await cancelled;
 		expect(getCell(ctx.workbook()!.sheets[0]!, 2, 1)).toBeUndefined();
-		const result = ctx.dialogs.open('paste-special');
+		const result = ctx.commands.run('home.paste-special');
 		const dialog = dialogEl(ctx, 'paste-special');
 		expect(radio(dialog, 'All except borders').disabled).toBe(true);
 		radio(dialog, 'Values').click();
 		clickButton(dialog, 'OK');
-		expect(await result).toBe('values');
+		expect(await result).toBe(true);
 		const pasted = getCell(ctx.workbook()!.sheets[0]!, 2, 1);
 		expect(pasted?.value).toBe(4);
 		expect(pasted?.formula).toBeUndefined();

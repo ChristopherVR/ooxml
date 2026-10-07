@@ -135,9 +135,15 @@ button {
 	border-radius: 50%;
 	background: var(--office-presence-offline);
 }
-.conn[data-status="connected"] { background: var(--office-presence-available); }
-.conn[data-status="connecting"] { background: var(--office-presence-away); }
-.conn[data-status="error"] { background: var(--office-presence-busy); }
+.conn[data-status='connected'] {
+	background: var(--office-presence-available);
+}
+.conn[data-status='connecting'] {
+	background: var(--office-presence-away);
+}
+.conn[data-status='error'] {
+	background: var(--office-presence-busy);
+}
 
 /* ---- body ------------------------------------------------------------------------------- */
 .body {
@@ -223,7 +229,7 @@ ul.plain li > :first-child:not(office-ui-avatar) {
 	border-bottom: var(--office-border-width-thick) solid transparent;
 	background: transparent;
 }
-.tabs button[aria-selected="true"] {
+.tabs button[aria-selected='true'] {
 	border-bottom-color: var(--office-teams-brand);
 	font-weight: var(--office-font-weight-bold);
 }
@@ -276,58 +282,6 @@ ul.plain li > :first-child:not(office-ui-avatar) {
 }
 
 /* ---- files ------------------------------------------------------------------------------ */
-.files {
-	display: grid;
-	flex: 1;
-	align-content: start;
-	gap: var(--office-space-2);
-	margin: 0;
-	padding: var(--office-space-4) var(--office-space-5);
-	overflow: auto;
-	list-style: none;
-}
-.files li {
-	display: flex;
-	align-items: center;
-	gap: var(--office-space-3);
-	padding: var(--office-space-2) var(--office-space-3);
-	border: var(--office-border-width) solid var(--office-teams-divider);
-	border-radius: var(--office-radius-md);
-}
-.files .none {
-	justify-content: center;
-	border: 0;
-	color: var(--office-teams-text-subtle);
-}
-.files .meta {
-	display: grid;
-	flex: 1;
-	min-width: 0;
-}
-.files small {
-	color: var(--office-teams-text-subtle);
-}
-.files button {
-	padding: var(--office-space-1) var(--office-space-3);
-	border: var(--office-border-width) solid var(--office-teams-divider);
-	border-radius: var(--office-radius);
-	background: var(--office-teams-panel);
-}
-.badge {
-	display: grid;
-	place-items: center;
-	width: 2.2em;
-	height: 2.2em;
-	border-radius: var(--office-radius);
-	background: var(--office-file-other);
-	color: var(--office-call-foreground);
-	font-weight: var(--office-font-weight-bold);
-}
-.badge[data-kind="docx"] { background: var(--office-file-docx); }
-.badge[data-kind="xlsx"] { background: var(--office-file-xlsx); }
-.badge[data-kind="pptx"] { background: var(--office-file-pptx); }
-.badge[data-kind="vsdx"] { background: var(--office-file-vsdx); }
-
 /* ---- meeting ---------------------------------------------------------------------------- */
 .meeting {
 	display: grid;
@@ -414,6 +368,26 @@ ul.plain li > :first-child:not(office-ui-avatar) {
 	border-radius: var(--office-radius-md);
 	background: var(--office-call-background);
 	color: var(--office-call-foreground);
+}
+
+.site-preview {
+	display: flex;
+	gap: var(--office-space-2);
+	padding: var(--office-space-3);
+}
+.tabs {
+	overflow-x: auto;
+	min-width: 0;
+}
+.site-preview input {
+	flex: 1;
+	min-width: 0;
+	padding: var(--office-space-2);
+	font: inherit;
+	color: inherit;
+	background: var(--office-background);
+	border: var(--office-border-width) solid var(--office-teams-divider);
+	border-radius: var(--office-radius-md);
 }
 
 @media (max-width: 900px) {

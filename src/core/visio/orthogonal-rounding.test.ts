@@ -78,17 +78,6 @@ describe('bounded open orthogonal rounding', () => {
 		[
 			[0, 0],
 			[2, 0],
-			[2, 0.49],
-			[4, 0.49],
-		],
-		[
-			[0, 0],
-			[0.24, 0],
-			[0.24, 2],
-		],
-		[
-			[0, 0],
-			[2, 0],
 			[2, 0],
 			[2, 1],
 		],
@@ -109,7 +98,7 @@ describe('bounded open orthogonal rounding', () => {
 			[4, 0],
 		],
 	] as Point[][])(
-		'leaves insufficient space, duplicates, reversals, diagonals and straight paths diagnosed: %j',
+		'leaves duplicates, reversals, diagonals and straight paths diagnosed: %j',
 		(...points) => {
 			const content = source(points as Point[]);
 			expect(parse(content).paths).toEqual(parse(content, 0).paths);

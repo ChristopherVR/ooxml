@@ -19,6 +19,7 @@ import {
 	defineTeamsApp,
 	listenTeamsEvents,
 	type FileOpeners,
+	type FileEmbeds,
 	type FileUploader,
 	type TeamsApp,
 	type TeamsClient,
@@ -39,6 +40,7 @@ export const Teams = defineComponent({
 		config: Object as PropType<TeamsServerConfig | null>,
 		uploadFile: Function as PropType<FileUploader>,
 		openers: Object as PropType<FileOpeners>,
+		embeds: Object as PropType<FileEmbeds>,
 	},
 	emits: ['ready', 'open-file', 'config-change'],
 	setup(props, { emit, expose }) {
@@ -52,6 +54,7 @@ export const Teams = defineComponent({
 			...(props.config !== undefined ? { config: props.config } : {}),
 			...(props.uploadFile ? { uploadFile: props.uploadFile } : {}),
 			...(props.openers ? { openers: props.openers } : {}),
+			...(props.embeds ? { embeds: props.embeds } : {}),
 			onReady: (d) => emit('ready', d),
 			onOpenFile: (d, e) => emit('open-file', d, e),
 			onConfigChange: (d) => emit('config-change', d),
@@ -68,7 +71,7 @@ export const Teams = defineComponent({
 			sync();
 		});
 		watch(
-			() => [props.workspaceId, props.userName, props.userId, props.config, props.uploadFile, props.openers],
+			() => [props.workspaceId, props.userName, props.userId, props.config, props.uploadFile, props.openers, props.embeds],
 			sync,
 		);
 		onBeforeUnmount(() => stop());

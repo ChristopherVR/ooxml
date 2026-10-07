@@ -42,6 +42,8 @@ import {
 - `createCollabSession<P>({ roomId, provider, user: { name, color?, avatar?, role? }, doc?, initialPresence?, sanitizePayload?, onReady?, teardown?, heartbeatMs?, syncGraceMs?, connectionTimeoutMs?, autoConnect? })` returns a `CollabSession<P>`: `doc`, `awareness`, `clientId`, `status`, `synced`, `canWrite()`, `peers()`, `updatePresence(patch)`, `connect()`, `disconnect()`, `destroy()` and typed `on('status' | 'synced' | 'peers' | 'ready' | 'error', ...)`.
 - `P` is the product's "where am I" payload (Word: selection anchor/head; PowerPoint: slide index, cursor, selected shape). `sanitizePayload(raw)` validates what peers send and returns `null` to hide a peer.
 - `canWrite()` is true once the gate opened (provider synced, or the grace period passed for a lone peer on a mesh transport) and the role is not `viewer`. A user `disconnect()` resets the gate; a transient provider drop does not, so ordinary offline Yjs edits keep working and merge on reconnect.
+- `reconnect()` explicitly disconnects and reconnects while retaining the same document and offline updates. `resync()` returns false if disconnected or the provider lacks this optional capability. The stock transport provider requests remote differences and sends a local snapshot to repair missing updates in both directions without leaving the room. This can send more bytes than an ordinary incremental update. Sync completion is not a durable-save acknowledgement.
+- Attaching a provider that is already synced immediately opens the session gate. A read-only document binding also adopts an already-synced room; its role continues to prohibit publication.
 
 **Providers and transports**
 

@@ -9,6 +9,8 @@ import { Emitter } from '../collab/emitter.js';
 import type { ConnectionStatus } from '../collab/provider.js';
 import type { CallParticipant, CallSession, MediaDevicesLike } from './call.js';
 import type { Attachment, Channel, Message } from './model.js';
+import { createFileActions } from './files.js';
+import type { ChannelTab, TabContent } from './tabs.js';
 import type { StreamLike } from './peer.js';
 import {
 	type ChannelView,
@@ -80,6 +82,9 @@ export interface TeamsState {
 	files: FileEntry[];
 	/** Every file in every channel, newest first. */
 	allFiles: FileEntry[];
+	/** Shared tabs of the selected channel; selection remains local to each client. */
+	tabs: ChannelTab[];
+	canUploadFiles: boolean;
 	people: PersonView[];
 	typing: string[];
 	/** The message the composer is replying to or editing, if any. */
@@ -98,6 +103,15 @@ export interface TeamsClient {
 	readonly workspace: TeamsWorkspace;
 	select: (channelId: string) => void;
 	createChannel: (name: string, topic?: string) => void;
+	addTab: (name: string, content: TabContent) => ChannelTab | null;
+	renameTab: (id: string, name: string) => boolean;
+	removeTab: (id: string) => boolean;
+	/** Upload a uniquely named copy and post it in the specified channel. Never overwrites the source. */
+	saveFileCopy: (channelId: string, file: UploadableFile & Blob) => Promise<Attachment>;
+	/** Upload files directly into the captured channel under unique storage names. */
+	uploadFiles: (channelId: string, files: (UploadableFile & Blob)[]) => Promise<Attachment[]>;
+	/** Create a blank native Excel workbook and share it in the captured channel. */
+	createWorkbook: (channelId: string, name: string) => Promise<Attachment>;
 	send: (input: { text: string; files?: (UploadableFile & Blob)[] }) => Promise<void>;
 	startReply: (messageId: string) => void;
 	startEdit: (messageId: string) => void;
@@ -220,6 +234,10 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			messages,
 			files: filesOf(messages),
 			allFiles: allFilesOf(channels, messagesOf),
+			tabs: selected ? ws.tabs.tabs(selected) : [],
+			canUploadFiles: Boolean(
+				options.uploadFile || (ws.config.mode === 'server' && ws.config.syncUrl),
+			),
 			people: peopleViews(
 				{
 					id: ws.user.id,
@@ -369,6 +387,31 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 		},
 		on: (event, listener) => notices.on(event, listener),
 		workspace: ws,
+		addTab(name, content) {
+			const tab = ws.tabs.add(selected, name, content);
+			refresh();
+			return tab;
+		},
+		renameTab(id, name) {
+			const changed = ws.tabs.rename(id, name);
+			refresh();
+			return changed;
+		},
+		removeTab(id) {
+			const changed = ws.tabs.remove(id);
+			refresh();
+			return changed;
+		},
+		...createFileActions({
+			available: (id) => !destroyed && visibleChannels().some((c) => c.id === id),
+			canUpload: () => Boolean(options.uploadFile || server()),
+			upload,
+			post: (channelId, text, attachments) => {
+				const message = ws.chat.post(channelId, { text, attachments });
+				refresh();
+				return Boolean(message);
+			},
+		}),
 		select: act((id) => {
 			if (id === selected) return;
 			selected = id;
@@ -385,6 +428,8 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 		}),
 		async send({ text, files = [] }) {
 			if (!selected) return;
+			const channelId = selected;
+			const replyingTo = replyId;
 			clearTimeout(typingTimer);
 			ws.setTyping(undefined);
 			if (editId) {
@@ -394,8 +439,16 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			}
 			const attachments: Attachment[] = [];
 			for (const file of files) attachments.push(await upload(file));
-			ws.chat.post(selected, { text, ...(replyId ? { replyTo: replyId } : {}), attachments });
-			replyId = '';
+			if (destroyed || !visibleChannels().some((c) => c.id === channelId)) {
+				notice('The channel is no longer available; the message was not shared');
+				return;
+			}
+			ws.chat.post(channelId, {
+				text,
+				...(replyingTo ? { replyTo: replyingTo } : {}),
+				attachments,
+			});
+			if (selected === channelId && replyId === replyingTo) replyId = '';
 			refresh();
 		},
 		startReply: act((id) => {

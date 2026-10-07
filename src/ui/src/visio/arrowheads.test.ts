@@ -7,7 +7,7 @@ import { demoDocument } from 'ooxml-core/visio/ui';
 import { renderPage } from './render-svg.js';
 import { exportPageSvg } from './export-svg.js';
 
-function scene(path = 'M 0 0 L 1 0') {
+function scene(path = 'M 0 0 L 1 0 L 1 1') {
 	const model = structuredClone(demoDocument);
 	const shape = model.pages[0]!.shapes[1]!;
 	shape.geometry = [{ path, fill: false, stroke: true }];
@@ -20,6 +20,14 @@ function scene(path = 'M 0 0 L 1 0') {
 // These are SVG contract checks, not browser pixels or a Microsoft Visio oracle.
 function checkConcaveMarker(marker: Element) {
 	const glyph = marker.querySelector('path')!;
+	if (glyph.getAttribute('stroke') === 'none') {
+		// Native measured cubic base on admitted straight paths. Coordinate and
+		// setback equality are checked by the native filled-arrow matrix tests.
+		expect(glyph.getAttribute('d')!.match(/[A-Z]/g)).toEqual(['M', 'L', 'L', 'C']);
+		expect(Number(marker.getAttribute('refX'))).toBeLessThan(0);
+		expect(marker.getAttribute('orient')).toBe('auto-start-reverse');
+		return;
+	}
 	expect(glyph.getAttribute('stroke-linejoin')).toBe('round');
 	const tokens = glyph.getAttribute('d')!.split(/\s+/);
 	expect(tokens.filter((v) => /^[A-Z]$/.test(v))).toEqual(['M', 'L', 'L', 'Q', 'Z']);
@@ -68,24 +76,27 @@ function checkConcaveMarker(marker: Element) {
 }
 
 describe('code-5 concave arrows', () => {
-	it.each(['M 0 0 L 1 0', 'M 0 0 L 0 1', 'M 0 0 L -1 1', 'M 0 0 L 1 -1', 'M 0 0 L 0.000001 0'])(
-		'keeps both endpoint anchors and local orientation for %s',
-		(path) => {
-			const { model } = scene(path);
-			const result = renderPage(model, model.pages[0]!);
-			const line = result.svg.querySelector('[data-shape-id="c1"] path')!;
-			expect(line.getAttribute('d')).toBe(path);
-			const markers = [...result.svg.querySelectorAll('marker')];
-			expect(markers).toHaveLength(2);
-			expect(new Set(markers.map((m) => m.id)).size).toBe(2);
-			markers.forEach(checkConcaveMarker);
-			for (const [i, side] of ['start', 'end'].entries())
-				expect(line.getAttribute(`marker-${side}`)).toBe(`url(#${markers[i]!.id})`);
-			expect(result.warnings).not.toContain('Arrowhead style 5 is not rendered in this build.');
-			expect(result.warnings.some((w) => w.includes('sizing is approximate'))).toBe(true);
-			result.dispose();
-		},
-	);
+	it.each([
+		'M 0 0 L 1 0 L 1 1',
+		'M 0 0 Q 0 1 1 1',
+		'M 0 0 L -1 1 L -2 1',
+		'M 0 0 L 1 -1 L 2 -1',
+		'M 0 0 L 0.000001 0',
+	])('keeps both endpoint anchors and local orientation for %s', (path) => {
+		const { model } = scene(path);
+		const result = renderPage(model, model.pages[0]!);
+		const line = result.svg.querySelector('[data-shape-id="c1"] path')!;
+		expect(line.getAttribute('d')).toBe(path);
+		const markers = [...result.svg.querySelectorAll('marker')];
+		expect(markers).toHaveLength(2);
+		expect(new Set(markers.map((m) => m.id)).size).toBe(2);
+		markers.forEach(checkConcaveMarker);
+		for (const [i, side] of ['start', 'end'].entries())
+			expect(line.getAttribute(`marker-${side}`)).toBe(`url(#${markers[i]!.id})`);
+		expect(result.warnings).not.toContain('Arrowhead style 5 is not rendered in this build.');
+		expect(result.warnings.some((w) => w.includes('sizing is approximate'))).toBe(true);
+		result.dispose();
+	});
 	it.each([0, 0.35, 1])('uses safe paint and opacity %s once on the glyph', (opacity) => {
 		const { model, shape } = scene();
 		shape.style.lineColor = 'url(https://invalid.example/paint)';
@@ -107,7 +118,7 @@ describe('code-5 concave arrows', () => {
 		expect(result.svg.querySelectorAll('marker,[marker-start],[marker-end]')).toHaveLength(0);
 		result.dispose();
 	});
-	it.each([6, 17, 45, 254])('keeps unsupported code %s explicit', (code) => {
+	it.each([8, 17, 45, 254])('keeps unsupported code %s explicit', (code) => {
 		const { model, shape } = scene();
 		shape.style.startArrow = 0;
 		shape.style.endArrow = code;

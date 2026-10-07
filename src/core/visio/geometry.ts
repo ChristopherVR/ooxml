@@ -298,7 +298,7 @@ export function geometryPaths(
 		} else if (rounding > 0 && commands.length)
 			report(
 				'unsupported-corner-rounding',
-				'Corner rounding requires a closed axis-aligned rectangle or an open orthogonal line chain with space for the saved radius; this geometry was left unchanged.',
+				'Corner rounding requires a closed axis-aligned rectangle or an open orthogonal line chain with representable tangent arcs; this geometry was left unchanged.',
 			);
 		// SVG implicitly closes filled paths; leave strokes open unless the source returns to its origin.
 		if (commands.length)

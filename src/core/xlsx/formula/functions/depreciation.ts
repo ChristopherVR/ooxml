@@ -60,13 +60,12 @@ export const DEPRECIATION_FUNCTIONS: FunctionSpec[] = [
 		5,
 		(c, s = 0, l = 1, p = 1, f = 2) => {
 			if (c < 0 || s < 0 || l <= 0 || p <= 0 || p > l || f <= 0) fail(ERR.NUM);
-			let total = 0;
-			let dep = 0;
-			for (let i = 1; i <= Math.ceil(p); i++) {
-				dep = Math.max(0, Math.min(((c - total) * f) / l, c - s - total));
-				total += dep;
-			}
-			return dep;
+			// Native Excel retains fractional periods above one and applies the
+			// first-period amount below one. The closed form also bounds work for
+			// large life/period arguments, instead of iterating over every period.
+			const rate = Math.min(f / l, 1);
+			const book = c * Math.pow(1 - rate, Math.max(0, p - 1));
+			return Math.max(0, Math.min(book * rate, book - s));
 		},
 	),
 	spec(
@@ -111,19 +110,24 @@ export const DEPRECIATION_FUNCTIONS: FunctionSpec[] = [
 		5,
 		(c, s = 0, l = 1, p = 1, m = 12) => {
 			// A partial first year (month < 12) adds a final period after the life.
-			if (c < 0 || s < 0 || l <= 0 || p <= 0 || m < 1 || m > 12 || p > (m < 12 ? l + 1 : l))
+			const month = Math.trunc(m),
+				period = Math.trunc(p);
+			if (
+				c < 0 ||
+				s < 0 ||
+				l <= 0 ||
+				p <= 0 ||
+				month < 1 ||
+				month > 12 ||
+				period > (month < 12 ? l + 1 : l)
+			)
 				fail(ERR.NUM);
 			if (c === 0) return 0;
 			const rate = Math.round((1 - Math.pow(s / c, 1 / l)) * 1000) / 1000;
-			let total = 0;
-			let dep = 0;
-			for (let i = 1; i <= Math.trunc(p); i++) {
-				if (i === 1) dep = (c * rate * m) / 12;
-				else if (i === Math.trunc(l) + 1) dep = ((c - total) * rate * (12 - m)) / 12;
-				else dep = (c - total) * rate;
-				total += dep;
-			}
-			return dep;
+			const first = (c * rate * month) / 12;
+			if (period <= 1) return first;
+			const book = (c - first) * Math.pow(1 - rate, period - 2);
+			return period === Math.trunc(l) + 1 ? (book * rate * (12 - month)) / 12 : book * rate;
 		},
 	),
 	numeric(
