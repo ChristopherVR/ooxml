@@ -41,7 +41,7 @@ const TEAMS_FRAMEWORKS = [
  * @typedef {{ id: string, label: string, route: string }} Framework
  * @typedef {{
  *   id: string, name: string, letter: string, color: string, format: string,
- *   description: string, tag?: { label: string, tone: 'beta' | 'soon' | 'planned' },
+ *   description: string, tag?: { label: string, tone: 'alpha' | 'beta' | 'soon' | 'planned' },
  *   repo?: string, docs?: string, frameworks?: Framework[]
  * }} App
  */
@@ -90,7 +90,7 @@ export const APPS = [
 		color: '#8a6cf0',
 		format: '.vsdx',
 		description: 'Diagrams and flowcharts.',
-		tag: { label: 'Beta', tone: 'beta' },
+		tag: { label: 'Alpha', tone: 'alpha' },
 		repo: 'visio',
 		docs: `${PAGES}/ooxml/visio/`,
 		frameworks: VISIO_FRAMEWORKS,
@@ -102,7 +102,7 @@ export const APPS = [
 		color: '#0e8f8f',
 		format: 'chat',
 		description: 'Channels, chat and meetings on your own server.',
-		tag: { label: 'Beta', tone: 'beta' },
+		tag: { label: 'Alpha', tone: 'alpha' },
 		repo: 'teams',
 		docs: `${PAGES}/ooxml/teams/`,
 		frameworks: TEAMS_FRAMEWORKS,

@@ -35,6 +35,8 @@ import {
 	type Identity,
 } from './storage.js';
 import css from './teams-app.css?raw';
+import { threadPane } from './thread-pane.js';
+import { followedThreads } from './followed-threads.js';
 
 export type { FileUploader } from 'ooxml-core/teams';
 export interface OpenFileDetail {
@@ -52,12 +54,13 @@ export interface OpenFileDetail {
 }
 export type FileOpeners = Partial<Record<OfficeKind, (detail: OpenFileDetail) => void>>;
 
-type RailView = 'teams' | 'calls' | 'files';
+type RailView = 'teams' | 'calls' | 'files' | 'followed';
 type Panel = '' | 'chat' | 'people';
 const RAIL = [
 	{ id: 'teams', label: 'Teams', icon: 'users' },
 	{ id: 'calls', label: 'Calls', icon: 'phone' },
 	{ id: 'files', label: 'Files', icon: 'folder' },
+	{ id: 'followed', label: 'Followed threads', icon: 'chat' },
 ] as const;
 const AVAILABILITY = ['available', 'busy', 'away'] as const;
 
@@ -396,7 +399,15 @@ export class TeamsApp extends LitElement {
 											? html`<li class="none">No results</li>`
 											: s.searchResults.map(
 													(h) => html`<li>
-														<button type="button" @click=${() => this.selectChannel(h.channelId)}>
+														<button
+															type="button"
+															@click=${() => {
+																if (this.selectChannel(h.channelId)) {
+																	this.teams.client?.search('');
+																	void this.openThread(h.message.id);
+																}
+															}}
+														>
 															<strong>${h.message.authorName}</strong>
 															<span class="in">in # ${h.channelName}</span>
 															<span class="snippet">${h.message.text.slice(0, 100)}</span>
@@ -474,6 +485,10 @@ export class TeamsApp extends LitElement {
 				@teams-preview-close=${this.closePreview}
 			></teams-content-preview>`;
 		if (this.rail === 'files') return this.allFiles(s);
+		if (this.rail === 'followed' && this.teams.client)
+			return followedThreads(s, this.teams.client, (thread) => {
+				if (this.selectChannel(thread.channelId)) void this.openThread(thread.root.id);
+			});
 		if (s.call && this.meeting) return this.meetingView(s);
 		return html`
 			${
@@ -590,29 +605,47 @@ export class TeamsApp extends LitElement {
 						></teams-channel-tab>`
 					: this.tab === 'files' && !compact
 						? this.fileList(s.files, s)
-						: html`
-								<office-ui-chat-list
-									.messages=${s.messages}
-									self-id=${s.user.id}
-									@office-chat-react=${(e: CustomEvent<{ messageId: string; emoji: string }>) => c?.toggleReaction(e.detail.messageId, e.detail.emoji)}
-									@office-chat-reply=${(e: CustomEvent<{ messageId: string }>) => c?.startReply(e.detail.messageId)}
-									@office-chat-edit=${(e: CustomEvent<{ messageId: string }>) => c?.startEdit(e.detail.messageId)}
-									@office-chat-delete=${(e: CustomEvent<{ messageId: string }>) => globalThis.confirm?.('Delete this message?') !== false && c?.deleteMessage(e.detail.messageId)}
-									@office-chat-open-file=${(e: CustomEvent<{ attachment: OpenFileDetail['attachment'] & { kind: OfficeKind } }>) => this.openFile(e.detail.attachment)}
-								></office-ui-chat-list>
-								<office-ui-chat-composer
-									.typing=${s.typing}
-									.replyingTo=${s.replyingTo?.authorName ?? null}
-									.editing=${s.editing !== null}
-									.value=${s.editing?.text ?? ''}
-									?disabled=${!channel}
-									placeholder=${channel ? `Message # ${channel.name}` : 'Create a channel first'}
-									@office-chat-typing=${() => c?.notifyTyping()}
-									@office-chat-cancel=${() => c?.cancelCompose()}
-									@office-chat-send=${(e: CustomEvent<{ text: string; files: File[] }>) => void c?.send(e.detail)}
-									data-compose=${compose ? 'on' : 'off'}
-								></office-ui-chat-composer>
-							`
+						: html`<div class="conversation-grid" data-thread=${String(!!s.thread && !compact)}>
+								<div class="conversation-main">
+									<office-ui-chat-list
+										.messages=${compact ? s.messages : s.posts}
+										.replyCounts=${compact ? {} : s.replyCounts}
+										self-id=${s.user.id}
+										@office-chat-react=${(e: CustomEvent<{ messageId: string; emoji: string }>) => c?.toggleReaction(e.detail.messageId, e.detail.emoji)}
+										@office-chat-thread=${(e: CustomEvent<{ messageId: string }>) => void this.openThread(e.detail.messageId)}
+										@office-chat-reply=${(e: CustomEvent<{ messageId: string }>) => (compact ? c?.startReply(e.detail.messageId) : void this.openThread(e.detail.messageId, 'reply'))}
+										@office-chat-edit=${(e: CustomEvent<{ messageId: string }>) => (compact ? c?.startEdit(e.detail.messageId) : void this.openThread(e.detail.messageId, 'edit'))}
+										@office-chat-delete=${(e: CustomEvent<{ messageId: string }>) => globalThis.confirm?.('Delete this message?') !== false && c?.deleteMessage(e.detail.messageId)}
+										@office-chat-open-file=${(e: CustomEvent<{ attachment: OpenFileDetail['attachment'] & { kind: OfficeKind } }>) => this.openFile(e.detail.attachment)}
+									></office-ui-chat-list>
+									${
+										s.thread && !compact
+											? nothing
+											: html`<office-ui-chat-composer
+													.typing=${s.typing}
+													.replyingTo=${s.replyingTo?.authorName ?? null}
+													.editing=${s.editing !== null}
+													.value=${s.editing?.text ?? ''}
+													?disabled=${!channel}
+													placeholder=${channel ? `Message # ${channel.name}` : 'Create a channel first'}
+													@office-chat-typing=${() => c?.notifyTyping()}
+													@office-chat-cancel=${() => c?.cancelCompose()}
+													@office-chat-send=${(e: CustomEvent<{ text: string; files: File[] }>) => void c?.send(e.detail)}
+													data-compose=${compose ? 'on' : 'off'}
+												></office-ui-chat-composer>`
+									}
+								</div>
+								${
+									!compact && c
+										? threadPane(
+												s,
+												c,
+												(attachment) => void this.openFile(attachment),
+												() => void this.closeThread(),
+											)
+										: nothing
+								}
+							</div>`
 			}
 		`;
 	}
@@ -621,6 +654,28 @@ export class TeamsApp extends LitElement {
 		if (!this.closePreview()) return;
 		this.tab = id;
 		this.addingTab = false;
+	}
+
+	private async openThread(id: string, action?: 'reply' | 'edit'): Promise<void> {
+		const client = this.teams.client;
+		client?.openThread(id);
+		if (action === 'reply') client?.startReply(id);
+		if (action === 'edit') client?.startEdit(id);
+		await Promise.resolve();
+		await this.updateComplete;
+		this.shadowRoot?.querySelector<HTMLElement>('[data-thread-heading]')?.focus();
+	}
+	private async closeThread(): Promise<void> {
+		const client = this.teams.client;
+		const root = client?.getState().thread?.root.id;
+		client?.closeThread();
+		await Promise.resolve();
+		await this.updateComplete;
+		const list = this.shadowRoot?.querySelector('.conversation-main office-ui-chat-list');
+		const message = Array.from(
+			list?.shadowRoot?.querySelectorAll<HTMLElement>('[data-message-id]') ?? [],
+		).find((element) => element.dataset.messageId === root);
+		message?.querySelector<HTMLElement>('.thread-link, button[aria-label="Reply"]')?.focus();
 	}
 
 	private tabForm() {

@@ -36,10 +36,16 @@ export interface VisioPageReorder {
 	pageId: string;
 	index: number;
 }
-export type VisioPageEdit = VisioPageInsert | VisioPageReorder;
+/** Rename the local page name; an already custom universal name is preserved. */
+export interface VisioPageRename {
+	type: 'rename-page';
+	pageId: string;
+	name: string;
+}
+export type VisioPageEdit = VisioPageInsert | VisioPageReorder | VisioPageRename;
 export type VisioEdit = VisioTextEdit | VisioGeometryEdit | VisioPageEdit;
 export const isVisioPageEdit = (edit: VisioEdit): edit is VisioPageEdit =>
-	edit.type === 'insert-page' || edit.type === 'reorder-page';
+	edit.type === 'insert-page' || edit.type === 'reorder-page' || edit.type === 'rename-page';
 
 export function snapshotVisioEdits(
 	edits: readonly VisioEdit[],
@@ -96,6 +102,12 @@ export function snapshotVisioEdits(
 			)
 				fail('INVALID_EDIT', 'Invalid new page ID, name or insertion target.');
 			return { type: edit.type, pageId: edit.pageId, afterPageId: edit.afterPageId, name };
+		}
+		if (edit.type === 'rename-page') {
+			const name = text(edit.name);
+			if (!name.trim() || name.length > 255 || /[\t\n]/.test(name))
+				fail('INVALID_EDIT', 'Invalid page name.');
+			return { type: edit.type, pageId: edit.pageId, name };
 		}
 		if (typeof edit.shapeId !== 'string' || !edit.shapeId || edit.shapeId.length > 256)
 			fail('INVALID_EDIT', 'Invalid edit shape target.');

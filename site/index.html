@@ -6,7 +6,7 @@
 		<title>OOXML Office</title>
 		<meta
 			name="description"
-			content="Office files in your browser: PowerPoint, Word and the Visio and Excel betas, built on one shared OOXML core."
+			content="Office files in your browser: PowerPoint, Word and the Visio alpha and Excel beta, built on one shared OOXML core."
 		/>
 		<meta name="color-scheme" content="dark light" />
 		<link rel="icon" href="favicon.svg" type="image/svg+xml" />
@@ -16,8 +16,8 @@
 			rel="stylesheet"
 			href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:ital,wght@0,400..900;1,400..900&display=swap"
 		/>
-		<link rel="stylesheet" href="styles.css?v=teams-20261006" />
-		<link rel="stylesheet" href="desk.css" />
+		<link rel="stylesheet" href="styles.css?v=launcher-20261007" />
+		<link rel="stylesheet" href="desk.css?v=launcher-20261007" />
 		<link rel="stylesheet" href="chungus.css" />
 		<script>
 			// Apply a saved theme before first paint so the page never flashes. The key
@@ -35,7 +35,7 @@
 				}
 			}
 		</script>
-		<script type="module" src="app.js?v=teams-20261006"></script>
+		<script type="module" src="app.js?v=launcher-20261007"></script>
 	</head>
 	<body>
 		<header class="topbar">
@@ -73,27 +73,6 @@
 				</div>
 			</div>
 			<nav class="topbar__links">
-				<button
-					class="topbar__theme topbar__chungus"
-					id="chungus"
-					type="button"
-					hidden
-					aria-label="Chungus"
-					title="Chungus"
-				>
-					<svg viewBox="0 0 20 20" aria-hidden="true">
-						<rect x="5" y="15" width="10" height="4" rx="1" fill="#c48a1a" />
-						<rect x="3.5" y="5" width="13" height="11" rx="3.5" fill="#e3ad42" />
-						<rect x="4" y="1.5" width="3" height="5" rx="1.5" fill="#e3ad42" />
-						<rect x="7.7" y="1" width="3" height="5" rx="1.5" fill="#e3ad42" />
-						<rect x="11.4" y="1.5" width="3" height="5" rx="1.5" fill="#e3ad42" />
-						<circle cx="5.5" cy="7.3" r="1.1" fill="#9b4dff" />
-						<circle cx="8.5" cy="7.3" r="1.1" fill="#2f7dff" />
-						<circle cx="11.5" cy="7.3" r="1.1" fill="#ff3b4e" />
-						<circle cx="14.5" cy="7.3" r="1.1" fill="#ffd23f" />
-						<circle cx="10" cy="11.3" r="2" fill="#ff8a1f" />
-					</svg>
-				</button>
 				<a href="https://github.com/ChristopherVR/ooxml" target="_blank" rel="noreferrer">GitHub</a>
 				<button
 					class="topbar__theme"
@@ -118,190 +97,41 @@
 						Slides and documents that open, edit and present right here in your browser. Nothing to
 						install, and the files you open are read on your own machine.
 					</p>
-					<div class="hero__actions">
-						<a class="button button--slide" href="#/powerpoint">Open PowerPoint</a>
-						<a class="button button--page" href="#/word"
-							>Open Word <span class="button__tag">Beta</span></a
-						>
-						<a class="button button--visio" href="#/visio"
-							>Open Visio <span class="button__tag">Beta</span></a
-						>
-						<a class="button button--excel" href="#/excel"
-							>Open Excel <span class="button__tag">Beta</span></a
-						>
-						<a class="button button--teams" href="#/teams"
-							>Open OpenTeams <span class="button__tag">Beta</span></a
-						>
-					</div>
+					<div class="hero__actions" id="launch-actions"></div>
+					<p class="hero__note">Local files. Open source. Yours to build on.</p>
 				</div>
-
-				<div class="desk" aria-label="Apps">
-					<a class="paper paper--diagram" href="#/visio" aria-label="Open Visio (beta)">
-						<i class="node node--a"></i><i class="node node--b"></i><i class="node node--c"></i
-						><i class="wire wire--ab"></i><i class="wire wire--ac"></i>
-						<span class="sticker sticker--beta">Visio, beta</span>
-					</a>
-
-					<a class="paper paper--sheet" href="#/excel" aria-label="Open Excel (beta)">
-						<span class="sheet__grid"></span>
-						<span class="sticker sticker--beta">Excel, beta</span>
-					</a>
-
-					<a class="paper paper--slide" href="#/powerpoint" aria-label="Open PowerPoint">
-						<span class="slide__shape"></span>
-						<span class="slide__title"></span>
-						<span class="slide__title slide__title--short"></span>
-						<span class="slide__sub"></span>
-						<span class="paper__label">PowerPoint <small>.pptx</small></span>
-					</a>
-
-					<a class="paper paper--chat" href="#/teams" aria-label="Open OpenTeams (beta)">
-						<span class="chat__rail"></span>
-						<span class="chat__msg chat__msg--a"></span>
-						<span class="chat__msg chat__msg--b"></span>
-						<span class="chat__msg chat__msg--c"></span>
-						<span class="chat__composer"></span>
-						<span class="sticker sticker--beta">OpenTeams, beta</span>
-					</a>
-
-					<a class="paper paper--page" href="#/word" aria-label="Open Word (beta)">
-						<span class="page__heading"></span>
-						<span class="page__lines"></span>
-						<span class="page__figure"></span>
-						<span class="page__lines page__lines--short"></span>
-						<span class="sticker sticker--beta">Beta</span>
-						<span class="paper__label">Word <small>.docx</small></span>
-					</a>
-				</div>
+				<figure class="desk">
+					<img src="desk.svg" width="600" height="530" alt="" />
+					<figcaption>From the first idea to the finished file.</figcaption>
+				</figure>
 			</section>
 
 			<section class="dock" aria-labelledby="dock-title">
-				<h2 id="dock-title">All apps</h2>
-				<ul class="dock__grid" id="app-grid"></ul>
-			</section>
-
-			<section class="core" aria-labelledby="core-title">
-				<h2 id="core-title">One core under every app</h2>
-				<p class="core__lede">
-					OOXML owns the format logic. Each viewer owns its browser interface and framework
-					bindings, with shared controls and supporting codecs underneath. Coverage varies by
-					format; the beta apps document their current limits.
+				<p class="section-label">Explore the suite</p>
+				<h2 id="dock-title">Documents</h2>
+				<p class="section-lede">
+					Find demos, framework bindings and documentation for each file format.
 				</p>
-				<dl class="core__list">
+				<ul class="dock__grid" id="app-grid"></ul>
+				<div class="collaboration">
 					<div>
-						<dt>
-							<a href="https://www.npmjs.com/package/ooxml-core" target="_blank" rel="noreferrer"
-								>ooxml-core</a
-							>
-						</dt>
-						<dd>
-							The shared engine: file packaging, drawings, charts, SmartArt, editing and live
-							collaboration.
-						</dd>
+						<h3>Collaboration</h3>
+						<p class="section-lede">A place for the conversations around your work.</p>
 					</div>
-					<div>
-						<dt>
-							<a href="https://christophervr.github.io/ooxml/pptx/" target="_blank" rel="noreferrer"
-								>pptx-viewer</a
-							>
-						</dt>
-						<dd>PowerPoint components for React, Vue, Angular, Svelte and plain JavaScript.</dd>
-					</div>
-					<div>
-						<dt>
-							<a href="https://christophervr.github.io/ooxml/docx/" target="_blank" rel="noreferrer"
-								>docx-viewer</a
-							>
-						</dt>
-						<dd>
-							Word components for the same frameworks, plus Solid. Still in beta, so expect gaps.
-						</dd>
-					</div>
-					<div>
-						<dt>
-							<a
-								href="https://christophervr.github.io/ooxml/visio/"
-								target="_blank"
-								rel="noreferrer"
-								>visio-viewer</a
-							>
-						</dt>
-						<dd>
-							Public beta for local .vsdx diagrams, shared SVG rendering and experimental plain-text
-							editing. Published to npm as visio-*-viewer.
-						</dd>
-					</div>
-					<div>
-						<dt>
-							<a
-								href="https://christophervr.github.io/ooxml/teams/"
-								target="_blank"
-								rel="noreferrer"
-								>teams-viewer</a
-							>
-						</dt>
-						<dd>
-							OpenTeams: channels, chat and meetings on your own server, with six framework bindings
-							over ooxml-core/teams. The demos run in the browser; real use needs a server.
-						</dd>
-					</div>
-					<div>
-						<dt>
-							<a href="https://christophervr.github.io/ooxml/xlsx/" target="_blank" rel="noreferrer"
-								>xlsx-viewer</a
-							>
-						</dt>
-						<dd>
-							Excel UI and six framework bindings over ooxml-core/xlsx: the xlsx-editor web
-							component, live demos and docs. The public beta opens workbooks, edits cells and
-							calculates formulas in the browser.
-						</dd>
-					</div>
-					<div>
-						<dt>
-							<a href="https://www.npmjs.com/package/ooxml-ui" target="_blank" rel="noreferrer"
-								>ooxml-ui</a
-							>
-						</dt>
-						<dd>
-							Shared browser controls used across the viewer interfaces, maintained in the ooxml
-							repository.
-						</dd>
-					</div>
-					<div>
-						<dt>
-							<a href="https://github.com/ChristopherVR/ole2" target="_blank" rel="noreferrer"
-								>ole2</a
-							>
-						</dt>
-						<dd>
-							Compound-file containers and legacy binary Office codecs, included through the core's
-							format loaders.
-						</dd>
-					</div>
-					<div>
-						<dt>
-							<a
-								href="https://github.com/ChristopherVR/emf-converter"
-								target="_blank"
-								rel="noreferrer"
-								>emf-converter</a
-							>
-						</dt>
-						<dd>EMF and WMF graphics conversion for supported embedded metafiles.</dd>
-					</div>
-					<div>
-						<dt>
-							<a
-								href="https://github.com/ChristopherVR/mtx-decompressor"
-								target="_blank"
-								rel="noreferrer"
-								>mtx-decompressor</a
-							>
-						</dt>
-						<dd>MicroType Express decompression for supported embedded EOT fonts.</dd>
-					</div>
-				</dl>
+					<ul class="dock__grid" id="collaboration-grid"></ul>
+				</div>
+			</section>
+			<section class="core" aria-labelledby="core-title">
+				<div class="core__intro">
+					<p class="section-label">For developers</p>
+					<h2 id="core-title">One core under every app</h2>
+					<p class="core__lede">
+						OOXML owns the format logic. The viewers provide framework bindings, with shared browser
+						controls and supporting codecs underneath. Explore the source by layer. Coverage varies
+						by format; each app documents its current limits.
+					</p>
+				</div>
+				<div id="source-groups" class="source-groups"></div>
 			</section>
 
 			<footer class="footer">

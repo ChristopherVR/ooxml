@@ -10,6 +10,7 @@ const PASTE: ReadonlyArray<readonly [string, string]> = [
 	['values', 'Values'],
 	['formats', 'Formats'],
 	['noBorders', 'All except borders'],
+	['mergeFormats', 'All merging conditional formats'],
 	['widths', 'Column widths'],
 	['comments', 'Comments'],
 	['validation', 'Validation'],

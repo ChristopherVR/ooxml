@@ -10,7 +10,7 @@ function formatAt(sheet: Worksheet, index: number): ConditionalFormat {
 }
 
 /** Every rule of the sheet, highest priority (lowest number) first; ties keep sheet order. */
-function rulesByPriority(sheet: Worksheet): ConditionalRule[] {
+export function rulesByPriority(sheet: Worksheet): ConditionalRule[] {
 	return sheet.conditionalFormats
 		.flatMap((f) => f.rules)
 		.map((rule, order) => ({ rule, order }))
@@ -19,7 +19,7 @@ function rulesByPriority(sheet: Worksheet): ConditionalRule[] {
 }
 
 /** Renumbers the rules 1..n in the given order. */
-function renumber(rules: readonly ConditionalRule[]): void {
+export function renumber(rules: readonly ConditionalRule[]): void {
 	rules.forEach((rule, i) => {
 		rule.priority = i + 1;
 	});

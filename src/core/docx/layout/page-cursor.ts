@@ -38,6 +38,7 @@ export class PageCursor {
 		columns: LayoutColumns,
 		sectionIndex = 0,
 		continueAt?: number,
+		private readonly balance?: { pageIndex: number; heightPx: number },
 	) {
 		this.sectionIndex = sectionIndex;
 		this.pages = pages;
@@ -112,6 +113,9 @@ export class PageCursor {
 	get y(): number {
 		return this.yPx;
 	}
+	get usedColumnHeightPx(): number {
+		return this.yPx - this.columnTopPx;
+	}
 	get atColumnTop(): boolean {
 		return this.yPx === this.columnTopPx;
 	}
@@ -119,6 +123,12 @@ export class PageCursor {
 		return this.page.columns.some((column) => column.blocks.length > 0);
 	}
 	get columnHeightPx(): number {
+		const height = this.physicalColumnHeightPx;
+		return this.balance?.pageIndex === this.page.index
+			? Math.min(height, this.balance.heightPx)
+			: height;
+	}
+	get physicalColumnHeightPx(): number {
 		return Math.max(
 			1,
 			this.page.heightPx - this.page.marginTopPx - this.geometry.marginBottomPx - this.columnTopPx,

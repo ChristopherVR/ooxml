@@ -6,6 +6,7 @@ const MODES = [
 	'formats',
 	'formulas',
 	'noBorders',
+	'mergeFormats',
 	'widths',
 	'comments',
 	'validation',

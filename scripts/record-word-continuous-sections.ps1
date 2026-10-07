@@ -1,5 +1,9 @@
 # Native Word reference, using only newly created documents in a separate hidden instance.
-param([string]$OutputDirectory = (Join-Path $env:TEMP ('word-continuous-' + [guid]::NewGuid())))
+param(
+    [string]$OutputDirectory = (Join-Path $env:TEMP ('word-continuous-' + [guid]::NewGuid())),
+    [string[]]$CaseNames = @('same', 'left-margin', 'top-margin', 'columns', 'page-size', 'orientation',
+        'balanced-columns', 'balanced-odd', 'balanced-overflow', 'balanced-keep')
+)
 $ErrorActionPreference = 'Stop'
 New-Item -ItemType Directory -Force $OutputDirectory | Out-Null
 $wordReference = New-Object -ComObject Word.Application
@@ -7,10 +11,18 @@ $wordReference.Visible = $false
 $wordReference.DisplayAlerts = 0
 $cases = @()
 try {
-    foreach ($kind in @('same', 'left-margin', 'top-margin', 'columns', 'page-size', 'orientation')) {
+    foreach ($kind in $CaseNames) {
         $document = $wordReference.Documents.Add()
         try {
-            $document.Content.Text = "Before1`rBefore2`rAfter1`rAfter2`r"
+            $beforeCount = switch ($kind) {
+                'balanced-columns' { 6 }
+                'balanced-odd' { 5 }
+                'balanced-overflow' { 120 }
+                'balanced-keep' { 5 }
+                default { 2 }
+            }
+            $before = (1..$beforeCount | ForEach-Object { "Before$_`r" }) -join ''
+            $document.Content.Text = $before + "After1`rAfter2`r"
             $document.PageSetup.PageWidth = 612
             $document.PageSetup.PageHeight = 792
             $document.PageSetup.TopMargin = 72
@@ -23,7 +35,13 @@ try {
             $document.Content.ParagraphFormat.SpaceAfter = 0
             $document.Content.ParagraphFormat.LineSpacingRule = 4 # wdLineSpaceExactly
             $document.Content.ParagraphFormat.LineSpacing = 12
-            $document.Range(16,16).InsertBreak(3) # wdSectionBreakContinuous
+            $document.Range($before.Length,$before.Length).InsertBreak(3) # wdSectionBreakContinuous
+            if ($kind.StartsWith('balanced-')) {
+                $document.Sections.Item(1).PageSetup.TextColumns.SetCount(2)
+            }
+            if ($kind -eq 'balanced-keep') {
+                $document.Paragraphs.Item(3).KeepWithNext = -1
+            }
             $setup = $document.Sections.Item(2).PageSetup
             switch ($kind) {
                 'left-margin' { $setup.LeftMargin = 108 }

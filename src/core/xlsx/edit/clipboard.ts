@@ -26,6 +26,11 @@ import { copyColumnWidths } from './columns.js';
 import { pasteWidths } from './paste-widths.js';
 import { copyAnnotations, clearAnnotations, pasteAnnotations } from './clipboard-annotations.js';
 import { copyHyperlinks, clearHyperlinks, pasteHyperlinks } from './clipboard-links.js';
+import {
+	copyConditionalFormats,
+	removeConditionalArea,
+	pasteConditionalFormats,
+} from './clipboard-conditional.js';
 
 /** Copies a range into a self-contained payload (whole rows or columns stop at the used area). */
 export function copyRange(workbook: Workbook, s: number, range: CellRange): ClipboardPayload {
@@ -78,6 +83,7 @@ export function copyRange(workbook: Workbook, s: number, range: CellRange): Clip
 	const cells: ClipboardCells = { rows, cols, data, merges, source: { sheet: s, range: clipped } };
 	Object.assign(cells, copyAnnotations(sheet, clipped));
 	cells.hyperlinks = copyHyperlinks(sheet, clipped);
+	cells.conditionalFormats = copyConditionalFormats(sheet, clipped);
 	cells.columnWidthRows = r.end.row - r.start.row + 1;
 	cells.columnWidths = copyColumnWidths(sheet, r.start.col, r.end.col);
 	return {
@@ -144,8 +150,8 @@ export function pasteAt(
 	const dest: CellRange = { start: at, end: { row: at.row + height - 1, col: at.col + width - 1 } };
 	const cut = typeof payload !== 'string' && payload.cut && cells.source ? cells.source : undefined;
 	if (cut && skipBlanks) throw new RangeError('Skip blanks is not available for cut cells.');
-	if (cut && mode === 'noBorders')
-		throw new RangeError('All except borders is not available for cut cells.');
+	if (cut && (mode === 'noBorders' || mode === 'mergeFormats'))
+		throw new RangeError('This paste mode is not available for cut cells.');
 	if (cut && (mode === 'comments' || mode === 'validation'))
 		throw new RangeError('Annotation-only paste is not available for cut cells.');
 	if (cut && operation !== 'none')
@@ -157,7 +163,11 @@ export function pasteAt(
 		? [{ kind: 'refs' }, { kind: 'cells', sheet: cut.sheet, ranges: [cut.range] }, destCells]
 		: [
 				destCells,
-				{ kind: 'parts', sheet: s, parts: ['merges', 'comments', 'dataValidations', 'hyperlinks'] },
+				{
+					kind: 'parts',
+					sheet: s,
+					parts: ['merges', 'comments', 'dataValidations', 'hyperlinks', 'conditionalFormats'],
+				},
 			];
 	const move = cut && {
 		fromSheet: sheetAt(workbook, cut.sheet).name,
@@ -172,8 +182,10 @@ export function pasteAt(
 		scopes,
 		() => {
 			if (cut && move) {
-				rewriteFormulas(workbook, (f, fs) => moveReferencesInFormula(f, fs, move));
 				const from = sheetAt(workbook, cut.sheet);
+				// Rebase the surviving rule before reference rewrites see its old, moved anchor.
+				removeConditionalArea(from, cut.range);
+				rewriteFormulas(workbook, (f, fs) => moveReferencesInFormula(f, fs, move));
 				const doomed: [number, number][] = [];
 				forEachCellInRange(from, cut.range, (_c, row, col) => doomed.push([row, col]));
 				for (const [row, col] of doomed) deleteCell(from, row, col);
@@ -190,7 +202,7 @@ export function pasteAt(
 				skipBlanks,
 				move ? (f) => moveReferencesInFormula(f, move.fromSheet, move, move.toSheet) : undefined,
 			);
-			if (mode === 'all' || mode === 'noBorders')
+			if (mode === 'all' || mode === 'mergeFormats' || mode === 'noBorders')
 				pasteHyperlinks(
 					sheet,
 					dest,
@@ -200,6 +212,16 @@ export function pasteAt(
 					move ? (f) => moveReferencesInFormula(f, move.fromSheet, move, move.toSheet) : undefined,
 				);
 			const styleIds = new Map<object, number>();
+			if (mode === 'all' || mode === 'mergeFormats' || mode === 'noBorders' || mode === 'formats')
+				pasteConditionalFormats(
+					sheet,
+					dest,
+					cells,
+					transpose,
+					skipBlanks,
+					move ? (f) => moveReferencesInFormula(f, move.fromSheet, move, move.toSheet) : undefined,
+					mode === 'mergeFormats',
+				);
 			const styleOf = (clip: ClipboardCell): number | undefined => {
 				if (!clip.style) return undefined;
 				let id = styleIds.get(clip.style);
@@ -233,7 +255,7 @@ export function pasteAt(
 									: moveFormula(clip.formula, at.row - origin.row, at.col - origin.col);
 					writeClip(workbook, sheet, row, col, clip, mode, formula, styleOf, operation);
 				}
-			if (mode === 'all' || mode === 'noBorders' || mode === 'formats') {
+			if (mode === 'all' || mode === 'mergeFormats' || mode === 'noBorders' || mode === 'formats') {
 				sheet.merges = sheet.merges.filter((m) => !rangesIntersect(m, dest));
 				for (const m of cells.merges)
 					sheet.merges.push(

@@ -61,7 +61,10 @@ export function pasteAnnotations(
 		row: dest.start.row + (transpose ? at.col : at.row),
 		col: dest.start.col + (transpose ? at.row : at.col),
 	});
-	if ((mode === 'all' || mode === 'noBorders' || mode === 'comments') && cells.comments) {
+	if (
+		(mode === 'all' || mode === 'mergeFormats' || mode === 'noBorders' || mode === 'comments') &&
+		cells.comments
+	) {
 		if (!skipBlanks) sheet.comments = sheet.comments.filter((c) => !rangeContains(dest, c.address));
 		const key = (at: CellAddress) => `${at.row}:${at.col}`;
 		const comments = new Map(sheet.comments.map((c) => [key(c.address), c]));
@@ -72,7 +75,10 @@ export function pasteAnnotations(
 		}
 		sheet.comments = [...comments.values()];
 	}
-	if ((mode === 'all' || mode === 'noBorders' || mode === 'validation') && cells.dataValidations) {
+	if (
+		(mode === 'all' || mode === 'mergeFormats' || mode === 'noBorders' || mode === 'validation') &&
+		cells.dataValidations
+	) {
 		if (!skipBlanks) sheet.dataValidations = removeValidationArea(sheet.dataValidations, dest);
 		for (const rule of cells.dataValidations) {
 			const ranges = rule.ranges.map((r) => ({ start: point(r.start), end: point(r.end) }));

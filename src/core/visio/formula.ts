@@ -9,6 +9,9 @@ export interface VisioFormulaReference {
 	cell: string;
 }
 export interface VisioFormulaLimits {
+	/** Explicit document context, required for numeric page functions. */
+	pageNumber?: number;
+	pageCount?: number;
 	maxLength?: number;
 	maxNodes?: number;
 	maxDepth?: number;

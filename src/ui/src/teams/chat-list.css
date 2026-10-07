@@ -4,6 +4,16 @@
 	overflow: auto;
 	padding: var(--office-space-2) var(--office-space-5);
 }
+.thread-link {
+	align-self: flex-start;
+	font: inherit;
+	color: var(--office-foreground);
+	background: var(--office-background);
+	border: var(--office-border-width) solid var(--office-teams-divider);
+	border-radius: var(--office-radius-md);
+	padding: var(--office-space-2);
+	cursor: pointer;
+}
 .empty {
 	margin: var(--office-space-6) 0;
 	color: var(--office-teams-text-subtle);
