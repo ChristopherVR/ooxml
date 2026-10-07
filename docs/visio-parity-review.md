@@ -273,3 +273,87 @@ tests passed, and six browser workflows passed across every binding. All 48 docu
 checks passed. Strict core typechecking and core ESM/CJS plus shared UI ESM builds passed.
 UI typechecking continues to fail only on the existing Teams/PowerPoint declaration
 resolution errors. Native Visio reopen/save was verified independently of browser tests.
+
+## Numeric page-dependent cache recalculation (2026-10-07)
+
+Page insertion and reordering now refresh local numeric PAGENUMBER() and PAGECOUNT()
+caches, including their supported static dependency closure and PageSheet cells.
+Formula and unit attributes stay intact. Unchanged page contexts preserve their
+payloads. Foreground numbering ignores background pages; background page numbers
+are zero. PAGECOUNT counts foreground pages only, as specified by Microsoft's
+[PAGENUMBER reference](https://learn.microsoft.com/en-us/office/client-developer/visio/pagenumber-function)
+and [PAGECOUNT reference](https://learn.microsoft.com/en-us/office/client-developer/visio/pagecount-function).
+
+The numeric evaluator requires explicit document context for these functions.
+Affected cycles, unsupported functions, inherited or grouped dependencies and
+master/style page-dependent formulas fail the transaction before saved bytes are
+returned. Page changes without affected numeric page formulas retain their previous
+preservation behavior. This is a bounded local numeric subset: string page functions,
+inherited master materialization, general fields and foreground rendering of a
+background page's fields remain open.
+
+Native Visio 16.0 was exercised with two foreground pages and one background page.
+An actual Page.Index reorder left the moved page's PAGENUMBER user-cell cache stale,
+even after save/reopen and reassignment of the identical formula. Toggling to a literal
+and back forced native recalculation. The core output matches that freshly evaluated
+reference by stable page ID, including transitive User.Number+User.Count caches.
+The core-produced output then opened and saved in Visio with every expected value.
+An inserted foreground page was also accepted and saved: all existing foreground
+and background shapes reported a count of three with correct page numbers and sums.
+The change implements the documented numeric result, rather than reproducing this
+native stale-cache behavior.
+
+Reproduce with scripts/record-visio-page-formulas.ps1, set
+VISIO_NATIVE_PAGE_FORMULAS_DIR to its output directory, run
+visio/edit-page-formulas.test.ts, then run the script again with -CoreOutputPath
+pointing to core-reordered.vsdx. Native binaries remain local; the compact metrics
+are committed in `visio/__fixtures__/page-formulas-native.json`. To verify insertion
+too, pass -CoreInsertedOutputPath pointing to core-inserted.vsdx.
+
+Verification: 1,977 Visio core tests passed with the native numeric/arrow/scale
+references enabled (30 optional skips); strict core typechecking and Visio ESM/CJS
+builds passed. All 702 shared Visio UI tests passed (six optional native skips),
+all six browser insertion/reordering/history/save workflows passed, and all 48
+documentation checks passed.
+
+## Page renaming with references (2026-10-07)
+
+The shared All pages menu now opens a Rename Page modal. Its draft captures a stable
+page ID and document generation. Cancel leaves bytes unchanged, invalid names remain
+editable, source replacement closes stale drafts, and undo/redo preserve page and
+shape selection. The saved copy retains the renamed page after reopening in each
+of the six framework demos.
+
+Core `rename-page` changes the local name. When the universal name is not custom,
+the first rename changes both names and marks them custom. Subsequent local renames
+preserve a custom universal name, matching native Visio 16.0. The distinction is
+documented in Microsoft's [Page.Name](https://learn.microsoft.com/en-us/office/vba/api/visio.page.name)
+and [Page.NameU](https://learn.microsoft.com/en-us/office/vba/api/visio.page.nameu)
+references. Stable IDs, OPC targets and background assignments are preserved;
+the Pages category in app properties is refreshed.
+
+Static `Pages[NameU]!` references are rewritten outside formula string literals.
+Literal hyperlink subaddresses and direct local/cross-page `PAGENAME()` and
+`PAGENAME(750)` caches are updated with their local/universal names. Core follows
+relationships rather than assuming conventional page part paths, and preserves
+unrelated opaque XML. Complex page-name expressions, affected string-valued
+dependent formulas, dynamic dependencies and inherited page-name caches remain
+outside the admitted subset and reject the transaction atomically. General text
+field display recalculation and arbitrary page-name formula graphs remain open.
+
+Native acceptance covered a shape's page-name cache, a cross-page PageWidth formula
+and a hyperlink into the renamed page. Both the first rename and a subsequent local
+rename opened and saved in Microsoft Visio with every expected name, cache,
+reference and link target. Reproduce with `scripts/record-visio-page-rename.ps1`,
+set `VISIO_NATIVE_PAGE_RENAME_DIR`, run `visio/edit-page-rename.test.ts`, then pass
+`-CoreOutputPath` and `-CoreSecondOutputPath` to the oracle script. Compact results
+are in `visio/__fixtures__/page-rename-native.json`; native VSDX outputs stay local.
+
+Verification: 1,991 Visio core tests passed with native references enabled (30
+optional skips), 705 shared Visio UI tests passed (six optional skips), and all six
+browser page insertion/reorder/rename/history/save workflows passed. Strict core
+typechecking, core Visio ESM/CJS and shared UI ESM builds passed. Full Visio parity
+remains unproven; page deletion, inherited/string formula closure and the broader
+rendering/interaction corpus remain required.
+The broad UI typecheck still reports the existing Teams/PowerPoint declaration
+resolution errors; it reports no Visio errors.

@@ -35,6 +35,7 @@ export function visioPageEditToDrawing(page: VisioPage, edit: VisioEdit): VisioE
 	switch (edit.type) {
 		case 'insert-page':
 		case 'reorder-page':
+		case 'rename-page':
 			return edit;
 		case 'create-rectangle':
 			return {

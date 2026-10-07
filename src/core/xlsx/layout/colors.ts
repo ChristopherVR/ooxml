@@ -134,10 +134,20 @@ export function resolveColor(
 	return applyTint(base, color.tint);
 }
 
-/** Linear RGB interpolation between two `#RRGGBB` colours (`t` 0..1), as colour scales blend. */
-export function mixColors(a: string, b: string, t: number): string {
+/** Linear RGB interpolation; Excel conditional scales truncate each channel delta toward zero. */
+export function mixColors(
+	a: string,
+	b: string,
+	t: number,
+	rounding: 'nearest' | 'towardStart' = 'nearest',
+): string {
 	const ca = parseHex(a) ?? [0, 0, 0];
 	const cb = parseHex(b) ?? [0, 0, 0];
 	const k = Math.max(0, Math.min(1, t));
-	return toHexColor(ca.map((v, i) => v + ((cb[i] ?? 0) - v) * k));
+	return toHexColor(
+		ca.map((v, i) => {
+			const delta = ((cb[i] ?? 0) - v) * k;
+			return v + (rounding === 'towardStart' ? Math.trunc(delta) : delta);
+		}),
+	);
 }

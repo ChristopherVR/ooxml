@@ -29,6 +29,8 @@ export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
 			if (values.some((value) => typeof value !== 'number' || !Number.isFinite(value)))
 				throw new Error('Invalid geometry edit coordinates or dimensions.');
 		};
+		if (command.type === 'rename-page')
+			return { type: command.type, pageId: command.pageId, name: text(command.name) };
 		if (command.type === 'insert-page') {
 			if (
 				typeof command.afterPageId !== 'string' ||

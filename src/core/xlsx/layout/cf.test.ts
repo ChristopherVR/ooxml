@@ -192,7 +192,7 @@ describe('conditional format rules', () => {
 		);
 		const cf = evaluator(two);
 		expect(cf.at(0, 0)?.colorScale).toBe('#000000');
-		expect(cf.at(1, 0)?.colorScale).toBe('#808080');
+		expect(cf.at(1, 0)?.colorScale).toBe('#7F7F7F');
 		expect(cf.at(2, 0)?.colorScale).toBe('#FFFFFF');
 		const three = column(
 			[1, 2, 3, 4, 5],
@@ -209,7 +209,7 @@ describe('conditional format rules', () => {
 		expect(cf3.at(0, 0)?.colorScale).toBe('#F8696B');
 		expect(cf3.at(2, 0)?.colorScale).toBe('#FFEB84');
 		expect(cf3.at(4, 0)?.colorScale).toBe('#63BE7B');
-		expect(cf3.at(1, 0)?.colorScale).toBe('#FCAA78');
+		expect(cf3.at(1, 0)?.colorScale).toBe('#FBAA77');
 	});
 
 	it('uses num and percent thresholds', () => {
@@ -458,7 +458,7 @@ describe('conditional format rules', () => {
 	});
 
 	it('blends scale colours between cuts', () => {
-		expect(scaleColor(5, [0, 10], ['#000000', '#FFFFFF'])).toBe('#808080');
+		expect(scaleColor(5, [0, 10], ['#000000', '#FFFFFF'])).toBe('#7F7F7F');
 		expect(scaleColor(5, [5, 5], ['#000000', '#FFFFFF'])).toBe('#000000');
 		expect(scaleColor(5, [], [])).toBeUndefined();
 	});

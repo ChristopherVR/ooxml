@@ -473,3 +473,14 @@ and destination. Imports now use the published core/UI entry points, fixture
 references follow the moved tests, and shared palette/grid policy is reused.
 The private shared package retains compatibility exports. Angular consumes
 public UI entries instead of copying the renderer into its published output.
+
+## Word pagination page fields
+
+Source: ChristopherVR/ooxml at `b0343f441fbaa6b211b02a712ad1c81ab983ed29`,
+`src/ui/src/docx/print-header-footer.ts`. The DOM-free page-number formatting,
+header/footer slot resolution, section-page counting and field-display logic
+now live in `src/core/docx/layout/page-fields.ts`. UI code retains compatibility
+exports and delegates to the shared core. Numeric page facts replace parsing
+formatted labels for odd/even slots. Continuous-section restart offsets and
+parity are corrected against twelve native Word PDF/DOCX references. Core
+reference tests accompany the extraction; existing UI facade tests remain.

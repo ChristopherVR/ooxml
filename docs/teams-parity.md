@@ -9,20 +9,20 @@ No feature is considered equivalent solely because a control is present.
 
 ## Current coverage
 
-| Area                            | Evidence in the implementation                                                                               | Remaining work                                                                                                     |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
-| Channels and posts              | Yjs channel/message model, replies, reactions, author-side edit/delete checks                                | Teams hierarchy, private/shared channels, membership enforcement, threaded side pane, moderation                   |
-| Direct and group chats          | The channel model has a `direct` kind                                                                        | No participant-scoped chat workflow or server-enforced privacy                                                     |
-| Search and unread               | Message search, attachment metadata search, per-channel local read markers                                   | Indexed file contents, filters, mentions, activity feed, notifications, shared read receipts                       |
-| Presence                        | Awareness, availability and typing                                                                           | Authenticated identity, idle state, richer status and privacy controls                                             |
-| Meetings                        | Prejoin, microphone, camera, screen share, raised hand, mesh WebRTC                                          | Scheduling, invitations, SFU, lobby, host roles, recording, captions, backgrounds and large calls                  |
-| File sharing                    | Uploads with cancel/retry and file progress, workbook creation, unique storage names, signed download links  | Permissions, versions, folders, durable local-mode sharing, byte progress and storage cleanup                      |
-| Office content                  | Native Word, Excel and Visio previews; static PowerPoint preview; XLSX local editing and channel save copies | Full PowerPoint rendering/playback, coediting, write-back/version conflict handling and fidelity acceptance corpus |
-| Markdown                        | Safe blocks and flat inline formatting, task lists, pipe tables and relative web links                       | Full CommonMark/GFM, nested structure, reference links and inline precedence                                       |
-| Sites and web apps              | Sandboxed HTML/site previews and shared file/website channel tabs                                            | App permissions, approved origins, app messaging and authentication                                                |
-| Accounts and administration     | Reference server has optional shared token and origin allowlist                                              | User accounts, SSO, tenant/team/channel ACLs, guests, audit, retention and policy enforcement                      |
-| Bindings                        | Six lifecycle bindings share `TeamsProps` and the same app                                                   | Framework-by-framework browser acceptance for the new embedding prop                                               |
-| Accessibility and visual parity | Existing Lit controls and token styles                                                                       | Keyboard/focus review, screen-reader acceptance, responsive/mobile workflow coverage, reference screenshots        |
+| Area                            | Evidence in the implementation                                                                                 | Remaining work                                                                                                           |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Channels and posts              | Yjs posts and live thread panes, personal followed threads, replies, reactions, author-side edit/delete checks | Teams hierarchy, private/shared channels, membership enforcement, cross-device follows, thread notifications, moderation |
+| Direct and group chats          | The channel model has a `direct` kind                                                                          | No participant-scoped chat workflow or server-enforced privacy                                                           |
+| Search and unread               | Message search, attachment metadata search, per-channel local read markers                                     | Indexed file contents, filters, mentions, activity feed, notifications, shared read receipts                             |
+| Presence                        | Awareness, availability and typing                                                                             | Authenticated identity, idle state, richer status and privacy controls                                                   |
+| Meetings                        | Prejoin, microphone, camera, screen share, raised hand, mesh WebRTC                                            | Scheduling, invitations, SFU, lobby, host roles, recording, captions, backgrounds and large calls                        |
+| File sharing                    | Uploads with cancel/retry and file progress, workbook creation, unique storage names, signed download links    | Permissions, versions, folders, durable local-mode sharing, byte progress and storage cleanup                            |
+| Office content                  | Native Word, Excel and Visio previews; static PowerPoint preview; XLSX local editing and channel save copies   | Full PowerPoint rendering/playback, coediting, write-back/version conflict handling and fidelity acceptance corpus       |
+| Markdown                        | Safe blocks and flat inline formatting, task lists, pipe tables and relative web links                         | Full CommonMark/GFM, nested structure, reference links and inline precedence                                             |
+| Sites and web apps              | Sandboxed HTML/site previews and shared file/website channel tabs                                              | App permissions, approved origins, app messaging and authentication                                                      |
+| Accounts and administration     | Reference server has optional shared token and origin allowlist                                                | User accounts, SSO, tenant/team/channel ACLs, guests, audit, retention and policy enforcement                            |
+| Bindings                        | Six lifecycle bindings share `TeamsProps` and the same app                                                     | Framework-by-framework browser acceptance for the new embedding prop                                                     |
+| Accessibility and visual parity | Existing Lit controls and token styles                                                                         | Keyboard/focus review, screen-reader acceptance, responsive/mobile workflow coverage, reference screenshots              |
 
 ## First implemented slice: content previews
 
@@ -199,6 +199,33 @@ the [GFM specification](https://github.github.com/gfm/#tables-extension-);
 this subset does not establish Microsoft Teams rendering equivalence.
 Tables are limited to 128 columns and 16,384 generated cells (including headers).
 Wider tables and rows beyond that limit remain readable as ordinary source text.
+
+## Eighth implemented slice: channel thread panes
+
+Channel conversations now show root posts with live reply counts and open a focused
+thread pane. Nested reply chains resolve to their original post; deleted parents
+remain visible, and missing-parent/cyclic input retains a deterministic visible root.
+Only non-deleted replies contribute to counts. Thread selection stays local to each
+client and resets on a channel change. Replies, reactions, edits, deletion and file
+cards reuse existing core actions. Search results open the corresponding thread.
+The pane replaces the main conversation at narrow widths. Browser acceptance uses
+two real local clients and checks live replies, nested replies, deleted parents,
+search navigation and responsive layout. Thread notifications,
+cross-pane draft retention, authenticated membership and server enforcement remain
+unsupported. The reference workflow is Microsoft's
+[thread pane and followed threads](https://support.microsoft.com/en-us/teams/teams-channels/follow-threads-in-microsoft-teams).
+
+## Ninth implemented slice: personal followed threads
+
+The thread pane supports follow/unfollow. A personal Followed threads view lists
+channel roots, live non-deleted reply counts and latest activity, and opens the
+correct channel and thread. Preferences persist locally per user and workspace;
+they do not enter the shared channel document. Restored preferences tolerate
+missing messages until hydration, late parents, duplicate aliases and unavailable
+storage. Archived channels are excluded. Unit coverage checks restoration and user
+isolation; browser acceptance checks follow, live counts, reload, navigation and
+unfollow across six bindings. This is a device-local list: cross-device preference
+sync, automatic following and thread notifications remain unsupported.
 
 ## Next releasable slices
 

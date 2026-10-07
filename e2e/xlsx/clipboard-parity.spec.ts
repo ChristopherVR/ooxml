@@ -1,6 +1,40 @@
 import { expect, test } from '@playwright/test';
 import { editor, goToCell, grid, newWorkbook, ribbon, typeInActiveCell } from './helpers';
 
+test('Formats paste copies conditional rules through the native clipboard and refreshes the grid', async ({
+	page,
+}) => {
+	await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+	await newWorkbook(page);
+	for (const [ref, text] of [
+		['A1', '2'],
+		['C1', '9'],
+	]) {
+		await goToCell(page, ref!);
+		await typeInActiveCell(page, text!);
+	}
+	await goToCell(page, 'A1');
+	await ribbon(page).getByRole('button', { name: 'Conditional Formatting', exact: true }).click();
+	await editor(page).getByRole('menuitem', { name: 'Greater Than...', exact: true }).click();
+	const rule = editor(page).locator('[data-dialog="cf-quick"]');
+	await rule.getByLabel('Value', { exact: true }).fill('1');
+	await rule.getByRole('button', { name: 'OK', exact: true }).click();
+	await goToCell(page, 'A1');
+	await page.keyboard.press('Control+C');
+	await goToCell(page, 'C1');
+	await page.keyboard.press('Control+Alt+V');
+	const paste = editor(page).locator('[data-dialog="paste-special"]');
+	await paste.getByLabel('Formats', { exact: true }).check();
+	await paste.getByRole('button', { name: 'OK', exact: true }).click();
+	const cell = grid(page).locator('.xg-c').filter({ hasText: /^9$/ });
+	await expect(cell).toHaveCSS('background-color', 'rgb(255, 199, 206)');
+	await expect(cell).toContainText('9');
+	await page.keyboard.press('Control+Z');
+	await expect(cell).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+	await page.keyboard.press('Control+Y');
+	await expect(cell).toHaveCSS('background-color', 'rgb(255, 199, 206)');
+});
+
 test('native clipboard copies a hyperlink target and undo restores the destination link', async ({
 	page,
 }) => {

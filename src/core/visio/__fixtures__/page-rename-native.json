@@ -1,0 +1,38 @@
+{
+	"application": "Microsoft Visio",
+	"version": "16.0",
+	"first": {
+		"id": "0",
+		"name": "Renamed & Page",
+		"nameU": "Renamed & Page",
+		"cachedName": "Renamed & Page",
+		"formula": "Pages[Renamed & Page]!ThePage!PageWidth",
+		"subAddress": "Renamed & Page"
+	},
+	"second": {
+		"id": "0",
+		"name": "Second rename",
+		"nameU": "Renamed & Page",
+		"cachedName": "Second rename",
+		"formula": "Pages[Renamed & Page]!ThePage!PageWidth",
+		"subAddress": "Second rename"
+	},
+	"accepted": [
+		{
+			"id": "0",
+			"name": "Renamed & Page",
+			"nameU": "Renamed & Page",
+			"cachedName": "Renamed & Page",
+			"formula": "Pages[Renamed & Page]!ThePage!PageWidth",
+			"subAddress": "Renamed & Page"
+		},
+		{
+			"id": "0",
+			"name": "Second rename",
+			"nameU": "Renamed & Page",
+			"cachedName": "Second rename",
+			"formula": "Pages[Renamed & Page]!ThePage!PageWidth",
+			"subAddress": "Second rename"
+		}
+	]
+}

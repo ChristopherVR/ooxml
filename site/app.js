@@ -1,5 +1,6 @@
-import { APPS, appIcon, demoUrl, isLive } from './apps.js?v=teams-20261006';
-import { initChungus } from './chungus.js';
+import { initHome } from './home.js?v=launcher-20261007';
+import { APPS, appIcon, demoUrl, isLive } from './apps.js?v=launcher-20261007';
+import { initChungus } from './chungus.js?v=launcher-20261007';
 import { currentTheme, initTheme, shareTheme } from './theme.js';
 import {
 	activateSuiteTab,
@@ -36,7 +37,6 @@ const tabstrip = /** @type {HTMLElement} */ (document.getElementById('tabstrip')
 const newMenu = /** @type {HTMLElement} */ (document.getElementById('new-menu'));
 const newButton = /** @type {HTMLButtonElement} */ (document.getElementById('new-tab'));
 const tabMenu = /** @type {HTMLElement} */ (document.getElementById('tab-menu'));
-const grid = /** @type {HTMLElement} */ (document.getElementById('app-grid'));
 
 /** Per-viewer conveniences only; the page works the same when storage is blocked. */
 function readStore(key) {
@@ -80,20 +80,6 @@ const tabFrames = new Map();
 
 function save() {
 	writeStore(STORAGE_KEY, JSON.stringify(state));
-}
-
-function renderGrid() {
-	grid.innerHTML = APPS.map((app) => {
-		const tag = app.tag
-			? `<span class="tag tag--${app.tag.tone}">${escapeHtml(app.tag.label)}</span>`
-			: '';
-		const body = `${appIcon(app)}
-			<span class="app__name">${escapeHtml(app.name)}${tag}</span>
-			<span class="app__desc">${escapeHtml(app.description)}</span>`;
-		return app.repo
-			? `<li><a class="app" href="#/${app.id}" style="--app:${app.color}">${body}</a></li>`
-			: `<li><div class="app app--off" aria-disabled="true" style="--app:${app.color}">${body}</div></li>`;
-	}).join('');
 }
 
 function renderNewMenu() {
@@ -535,7 +521,7 @@ tabstrip.addEventListener('dragend', () => {
 initTheme(() => tabFrames.values());
 initChungus();
 window.addEventListener('hashchange', route);
-renderGrid();
+initHome();
 renderNewMenu();
 // A deep link wins over the remembered active tab; otherwise resume where the person left off.
 if (/^#\/[^/]+/.test(location.hash)) route();

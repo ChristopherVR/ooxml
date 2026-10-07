@@ -5,7 +5,8 @@ import { writeValue } from './cell-values.js';
 import { type EditContext, sheetAt } from './context.js';
 import { patchRange } from './format.js';
 import { removeValidationArea } from './validation-ranges.js';
-import { subtractRange } from './range-math.js';
+import { removeConditionalArea } from './clipboard-conditional.js';
+import { renumber, rulesByPriority } from './conditional-formats.js';
 
 /** Adds, replaces or (with `text` undefined) removes the comment on a cell. */
 export function setComment(
@@ -109,11 +110,9 @@ export function clearConditionalFormats(ctx: EditContext, s: number, range?: Cel
 		'format',
 		[{ kind: 'sheet', sheet: s }],
 		() => {
-			sheet.conditionalFormats = r
-				? sheet.conditionalFormats
-						.map((cf) => ({ ...cf, ranges: cf.ranges.flatMap((cr) => subtractRange(cr, r)) }))
-						.filter((cf) => cf.ranges.length > 0)
-				: [];
+			if (r) removeConditionalArea(sheet, r);
+			else sheet.conditionalFormats = [];
+			renumber(rulesByPriority(sheet));
 		},
 		{ sheet: s, ...(r ? { ranges: [r] } : {}) },
 	);

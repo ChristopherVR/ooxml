@@ -52,6 +52,7 @@ describe('shared Office-style viewer chrome', () => {
 			'Release workflow',
 			'Architecture',
 			'Reorder Pages...',
+			'Rename Page...',
 		]);
 		expect(items[0]!.getAttribute('checked')).toBe('true');
 		items[1]!.shadowRoot!.querySelector('button')!.click();

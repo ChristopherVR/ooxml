@@ -242,6 +242,39 @@ Verification: 5,078 core XLSX tests, all 311 shared XLSX UI tests, 47 viewer bin
 saved a generated workbook containing transposed copied links; library reload retained both target
 kinds and the tooltip. This focused probe does not establish complete hyperlink or export parity.
 
+## Conditional formatting clipboard follow-up
+
+Internal copy snapshots now carry modeled conditional rules in the shared XLSX core. All, Formats
+and All except borders replace destination rules, while All merging conditional formats retains
+them. Skip blanks replaces rules only where source rules apply, independently of blank cell values;
+native Excel applies this replacement behavior even when the merging option is selected. Other
+paste modes retain existing rules. Copied rules take the highest priorities, relative formulas
+follow their actual rule anchors, and clipped or split surviving ranges keep their semantics.
+Repeated paste creates one rule spanning the tiles, retaining shared color-scale and ranking
+statistics. Cut removes source coverage and uses the existing workbook reference rewrite. Clearing
+rules also rebases formulas when the original anchor disappears. Undo records all affected rules.
+Color-scale interpolation now truncates each channel delta toward the starting color, matching
+native Excel; the shared color helper's default rounding for other rendering stays unchanged.
+
+`scripts/record-xlsx-paste-cf.ps1` reproduces 216 Microsoft 365 Excel 16.0 build 20430 cases across
+nine paste modes, transpose, Skip blanks, arithmetic, partial source coverage and empty sources.
+Tests compare every sheet rule's ranges, formulas, priorities, fill, bold and Stop If True, plus
+1,512 cells' values, displayed fills and applicable priorities. Additional regressions cover tiling,
+cross-sheet cut, clearing, cross-workbook snapshots, formula-valued visual thresholds and save/reload.
+The shared dialog exposes the merging option and reuses the existing paste command.
+
+This covers modeled base conditional formats. Advanced x14 data-bar attributes and unsupported
+extension rules are not copied; new base data-bar rules deliberately do not reuse an original
+extension ID. Complete native clipboard interchange, drawings and full Excel parity remain open.
+Excel opened and saved a generated workbook with a repeated conditional-rule paste; the farthest
+destination cell displayed the expected red fill, and library reload retained the rule and priority.
+This is focused evidence, not a complete export-fidelity claim.
+
+Verification: 5,299 core XLSX tests, 312 shared XLSX UI tests, 47 binding tests and all 60 browser
+tests passed. Core/UI/viewer typechecks, builds, published-import guards and clean-consumer package
+smoke checks passed. The color-scale regression compares eight native colors from a repeated Formats
+paste, proving that destination color-scale statistics span the entire pasted selection.
+
 ## Evidence required for parity
 
 Track reading, display, editing, calculation and writing separately for each feature. A retained

@@ -57,8 +57,14 @@ function npm(args, cwd, capture = false) {
 try {
 	const tarballs = [];
 	const cjsBindings = [];
-	for (const target of packages) {
-		const sourceDir = join(root, 'packages', target.key);
+	// The bindings consume the core and UI built by this checkout. Registry
+	// versions can lack exports introduced by an unreleased migration.
+	const localDependencies = [
+		{ key: 'ooxml-core', name: 'ooxml-core', sourceDir: resolve(root, '../../src/core') },
+		{ key: 'ooxml-ui', name: 'ooxml-ui', sourceDir: resolve(root, '../../src/ui') },
+	];
+	for (const target of [...localDependencies, ...packages]) {
+		const sourceDir = target.sourceDir ?? join(root, 'packages', target.key);
 		const packDir = target.key === 'angular' ? join(sourceDir, 'dist') : sourceDir;
 		const packed = JSON.parse(
 			npm(
@@ -79,7 +85,7 @@ try {
 		const rootExport = shippedManifest.exports?.['.'];
 		const entryFile =
 			rootExport?.import ?? rootExport?.default ?? shippedManifest.module ?? shippedManifest.main;
-		if (target.key !== 'core' && typeof rootExport?.require === 'string') {
+		if (bindings.includes(target) && typeof rootExport?.require === 'string') {
 			cjsBindings.push({ name: target.name, entry: target.entry });
 		}
 		assert.ok(entryFile, `${target.name} has no declared root runtime entry`);

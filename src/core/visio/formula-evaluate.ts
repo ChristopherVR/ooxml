@@ -32,6 +32,8 @@ const supported = new Set([
 	'ATAN2',
 	'SIGN',
 	'PI',
+	'PAGENUMBER',
+	'PAGECOUNT',
 	...numericFormulaFunctions,
 ]);
 // Known pure numeric functions may be independent of an edit even when evaluation is unsupported.
@@ -220,6 +222,13 @@ export function evaluateVisioFormula(
 				return formulaFailure('arity', `Invalid ${name} argument count`);
 		};
 		const arg = (index: number) => evaluate(node.args[index]!, depth + 1);
+		if (name === 'PAGENUMBER' || name === 'PAGECOUNT') {
+			arity(0);
+			const value = name === 'PAGENUMBER' ? limits.pageNumber : limits.pageCount;
+			if (value === undefined || !Number.isSafeInteger(value) || value < 0)
+				return formulaFailure('context', `${name} requires a valid document context`);
+			return { value, unit: 'scalar' };
+		}
 		if (numericFormulaFunctions.has(name))
 			return evaluateNumericFormulaFunction(
 				name,
