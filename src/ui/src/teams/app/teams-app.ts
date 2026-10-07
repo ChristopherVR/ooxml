@@ -662,8 +662,8 @@ export class TeamsApp extends LitElement {
 		const client = this.teams.client;
 		const channelId = detail.channelId;
 		if (!client || !channelId || !state.canUploadFiles) return undefined;
-		return async (file) => {
-			await client.saveFileCopy(channelId, file);
+		return async (file, options) => {
+			await client.saveFileCopy(channelId, file, options);
 		};
 	}
 

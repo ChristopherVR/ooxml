@@ -205,3 +205,38 @@ including the native scale edit test, and strict core typechecking passed. After
 rebasing onto concurrent main changes, the relaxed PowerPoint typecheck fails on
 unresolved ooxml-core/pptx self-imports in newly moved editor modules; no Visio error
 was reported. The earlier scale increment's UI and documentation checks remain valid.
+
+## Source-backed page insertion
+
+The shared page bar now inserts a blank foreground page after the selected page,
+through the existing worker, controller and package history. Core owns stable page
+IDs, unique names, PageSheet copying, OPC relationships and content-type additions.
+Existing page parts and other untouched package payloads remain byte-preserved.
+The shared extended-property writer updates the existing Pages title/count category
+while preserving other categories and unknown extensions. Undo clamps selection when
+a removed page was the last page; redo restores the inserted page.
+
+Native Visio 16 reopened an inserted page in the genuine scale corpus at index 5
+of eight pages, with ID 99, literal name "Inserted & Page", zero shapes, cached size
+8.5 by 11 drawing inches, DrawingScale 2 and PageScale 1. It saved the drawing again.
+The expected physical dimensions are 4.25 by 5.5 inches. Core also accepts a subsequent
+rectangle insertion on the new page. The acceptance script is
+`scripts/verify-visio-page-insertion.ps1`. Set `VISIO_NATIVE_PAGE_SCALES_DIR` and
+`VISIO_NATIVE_PAGE_INSERT_OUTPUT_DIR`, run `visio/edit-pages.test.ts`, then pass its
+`core-inserted-page.vsdx` to that script with an output directory. Native binaries
+and generated renderings remain local.
+
+Insertion currently requires a separate transaction from shape edits. Page-number
+and page-count-dependent formula caches are reported as unrecalculated. Renaming,
+reordering, deleting pages, broader PageSheet/background semantics, and complete
+native save/render fidelity remain unfinished. Full Visio parity is not established.
+
+Verification: 1,958 Visio core tests passed (30 optional skips), 706 shared Visio UI
+tests passed, and all six browser insertion/history/download/reopen cases passed.
+The broader shared UI suite also passed 1,908 tests (six optional skips); its combined
+script then found no PowerPoint tests matching the Visio filter. Documentation checks
+passed all 48 tests. Strict core typechecking and ESM/CJS core plus ESM UI builds passed.
+UI typechecking still reports the pre-existing Teams/PowerPoint declaration-resolution
+errors from concurrent main changes, with no Visio errors. Native Visio acceptance
+was repeated after the extended-property update; reparsing its resaved drawing confirms
+page order, dimensions and the refreshed Pages property vectors.

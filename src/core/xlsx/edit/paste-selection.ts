@@ -45,7 +45,7 @@ export function pasteSelection(
 		'cells',
 		[
 			{ kind: 'cells', sheet, ranges: [dest] },
-			{ kind: 'parts', sheet, parts: ['merges'] },
+			{ kind: 'parts', sheet, parts: ['merges', 'comments', 'dataValidations'] },
 		],
 		() => {
 			for (let row = dest.start.row; row <= dest.end.row; row += height)

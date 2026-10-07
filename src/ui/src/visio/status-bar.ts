@@ -69,7 +69,7 @@ export function createStatusBar(doc: Document): HTMLElement {
 
 /**
  * Visio's page bar under the drawing: the All pages list, the shared document tab strip and
- * Insert Page, which stays disabled until core can add pages.
+ * Insert Page, enabled for an editable source-backed drawing.
  */
 export function createPageTabs(doc: Document): HTMLElement {
 	const bar = doc.createElement('div');
@@ -86,7 +86,7 @@ export function createPageTabs(doc: Document): HTMLElement {
 	strip.setAttribute('next-label', 'Next page');
 	strip.setAttribute('add-label', 'Insert Page');
 	strip.setAttribute('add-disabled', '');
-	strip.setAttribute('add-title', 'Insert Page: not available yet. Needs core page insertion.');
+	strip.setAttribute('add-title', 'Insert Page: open a .vsdx file to edit pages.');
 	bar.append(all, strip);
 	return bar;
 }

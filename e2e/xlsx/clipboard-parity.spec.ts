@@ -1,6 +1,89 @@
 import { expect, test } from '@playwright/test';
 import { editor, goToCell, grid, newWorkbook, ribbon, typeInActiveCell } from './helpers';
 
+test('Validation paste copies a blank cell rule and enforces it without replacing the value', async ({
+	page,
+}) => {
+	await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+	await newWorkbook(page);
+	await ribbon(page).getByRole('tab', { name: 'Data', exact: true }).click();
+	await ribbon(page).locator('[data-command="data.validation"]').first().click();
+	const settings = editor(page).locator('[data-dialog="data-validation"]');
+	await settings.getByLabel('Allow:', { exact: true }).selectOption('whole');
+	await settings.getByLabel('Minimum:', { exact: true }).fill('1');
+	await settings.getByLabel('Maximum:', { exact: true }).fill('5');
+	await settings.getByRole('button', { name: 'OK', exact: true }).click();
+	await goToCell(page, 'C1');
+	await typeInActiveCell(page, '9');
+	await goToCell(page, 'A1');
+	await page.keyboard.press('Control+C');
+	await goToCell(page, 'C1');
+	await page.keyboard.press('Control+Alt+V');
+	const dialog = editor(page).locator('[data-dialog="paste-special"]');
+	await dialog.getByLabel('Validation', { exact: true }).check();
+	await dialog.getByLabel('Skip blanks', { exact: true }).check();
+	await dialog.getByRole('button', { name: 'OK', exact: true }).click();
+	const value = () =>
+		editor(page).evaluate(
+			(node) =>
+				(
+					node as unknown as {
+						workbook: { sheets: { rows: Map<number, Map<number, { value: unknown }>> }[] };
+					}
+				).workbook.sheets[0]!.rows.get(0)?.get(2)?.value,
+		);
+	await expect.poll(value).toBe(9);
+	await typeInActiveCell(page, '10');
+	await expect.poll(value).toBe(9);
+	await page.keyboard.press('Escape');
+	await goToCell(page, 'C1');
+	await typeInActiveCell(page, '4');
+	await expect.poll(value).toBe(4);
+});
+
+test('Comments paste copies a blank cell note through the native clipboard and undoes once', async ({
+	page,
+}) => {
+	await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+	await newWorkbook(page);
+	await page.keyboard.press('Shift+F2');
+	const commentDialog = editor(page).locator('[data-dialog="comment"]');
+	await commentDialog.getByLabel('Comment', { exact: true }).fill('source note');
+	await commentDialog.getByRole('button', { name: 'OK', exact: true }).click();
+	await goToCell(page, 'C1');
+	await typeInActiveCell(page, '9');
+	await goToCell(page, 'A1');
+	await page.keyboard.press('Control+C');
+	await goToCell(page, 'C1');
+	await page.keyboard.press('Control+Alt+V');
+	const dialog = editor(page).locator('[data-dialog="paste-special"]');
+	await dialog.getByLabel('Comments', { exact: true }).check();
+	await dialog.getByLabel('Skip blanks', { exact: true }).check();
+	await dialog.getByRole('button', { name: 'OK', exact: true }).click();
+	const read = () =>
+		editor(page).evaluate((node) => {
+			const sheet = (
+				node as unknown as {
+					workbook: {
+						sheets: {
+							comments: { address: { row: number; col: number }; text: string }[];
+							rows: Map<number, Map<number, { value: unknown }>>;
+						}[];
+					};
+				}
+			).workbook.sheets[0]!;
+			return {
+				note: sheet.comments.find((c) => c.address.row === 0 && c.address.col === 2)?.text ?? null,
+				value: sheet.rows.get(0)?.get(2)?.value,
+			};
+		});
+	await expect.poll(read).toEqual({ note: 'source note', value: 9 });
+	await page.keyboard.press('Control+Z');
+	await expect.poll(read).toEqual({ note: null, value: 9 });
+	await page.keyboard.press('Control+Y');
+	await expect.poll(read).toEqual({ note: 'source note', value: 9 });
+});
+
 test('Column Widths uses the native clipboard, retains content and undoes once', async ({
 	page,
 }) => {

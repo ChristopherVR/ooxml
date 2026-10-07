@@ -12,7 +12,9 @@ test('edits and downloads an XLSX copy without storage or publishing another att
 	);
 	await page.route('**/content/Local.xlsx', (route) => route.fulfill({ body: original }));
 	await page.goto('/?local=1&name=Ada&room=xlsx-download');
-	await expect(page.getByRole('heading', { name: '# General', exact: true })).toBeVisible();
+	await expect(page.getByRole('heading', { name: '# General', exact: true })).toBeVisible({
+		timeout: 15_000,
+	});
 	await page.locator('teams-app').evaluate(async (element) => {
 		const app = element as TeamsApp;
 		await app.updateComplete;

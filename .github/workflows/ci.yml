@@ -88,12 +88,16 @@ jobs:
       - run: bun run typecheck:pptx
 
   typecheck-ui:
-    needs: plan
+    needs: [plan, build]
     if: fromJSON(needs.plan.outputs.plan).typecheck.ui
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
+      - uses: actions/download-artifact@v8
+        with:
+          name: core-dist
+          path: src/core/dist
       - run: bun run --cwd src/ui typecheck
 
   # The unit suite is ~1,200 files and most of its time is spent importing the pptx area into each
