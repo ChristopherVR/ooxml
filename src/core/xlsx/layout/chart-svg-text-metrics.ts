@@ -6,6 +6,27 @@ type TextAttributes = NonNullable<Parameters<typeof text>[3]>;
 export interface ChartSvgOptions {
 	/** Host width in CSS pixels for the painter's exact CSS font. Core never accesses a DOM. */
 	measureText?: (content: string, font: string) => number;
+	/** Natural font ascent/descent in CSS pixels, when the host has vertical metrics. */
+	measureFont?: (font: string) => { ascent: number; descent: number } | undefined;
+}
+
+function cssFont(attrs: TextAttributes): string {
+	return `${attrs.italic ? 'italic' : 'normal'} ${attrs.weight ?? 'normal'} ${attrs.size ?? 10}px ${attrs.family ?? CHART_FONT_FAMILY}`;
+}
+
+export function chartFontMetrics(
+	attrs: TextAttributes,
+	options: ChartSvgOptions,
+): { ascent: number; descent: number } | undefined {
+	const metrics = options.measureFont?.(cssFont(attrs));
+	return metrics &&
+		Number.isFinite(metrics.ascent) &&
+		Number.isFinite(metrics.descent) &&
+		metrics.ascent >= 0 &&
+		metrics.descent >= 0 &&
+		metrics.ascent + metrics.descent > 0
+		? metrics
+		: undefined;
 }
 
 /** Use the same family, size and emphasis for measurement and SVG painting. */
@@ -14,8 +35,7 @@ export function chartTextWidth(
 	attrs: TextAttributes,
 	options: ChartSvgOptions,
 ): number {
-	const font = `${attrs.italic ? 'italic' : 'normal'} ${attrs.weight ?? 'normal'} ${attrs.size ?? 10}px ${attrs.family ?? CHART_FONT_FAMILY}`;
-	const width = options.measureText?.(content, font);
+	const width = options.measureText?.(content, cssFont(attrs));
 	return width !== undefined && Number.isFinite(width) && width >= 0
 		? width
 		: textWidth(content, attrs.size);

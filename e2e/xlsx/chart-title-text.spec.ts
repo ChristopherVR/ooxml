@@ -61,6 +61,31 @@ for (const framework of FRAMEWORKS)
 					expect(Number(await forecast.getAttribute('y'))).toBeGreaterThan(
 						Number(await revenue.getAttribute('y')),
 					);
+					await expect
+						.poll(() =>
+							spans.evaluateAll((nodes) => {
+								const canvas = document.createElement('canvas').getContext('2d')!;
+								const metrics = nodes.map((node) => {
+									const style = getComputedStyle(node);
+									canvas.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+									const font = canvas.measureText('Mg');
+									return {
+										y: Number(node.getAttribute('y')),
+										ascent: font.fontBoundingBoxAscent,
+										descent: font.fontBoundingBoxDescent,
+									};
+								});
+								const first = metrics.slice(0, 3);
+								const last = metrics.at(-1)!;
+								return Math.abs(
+									last.y -
+										first[0]!.y -
+										Math.max(...first.map((font) => font.descent)) -
+										last.ascent,
+								);
+							}),
+						)
+						.toBeLessThan(0.5);
 				}
 			};
 			await verify();

@@ -136,7 +136,10 @@ export class DrawingLayer {
 								model,
 								Math.max(10, Math.round(box.w)),
 								Math.max(10, Math.round(box.h)),
-								{ measureText: (content, font) => view.measurer.measure(content, font) },
+								{
+									measureText: (content, font) => view.measurer.measure(content, font),
+									measureFont: (font) => view.measurer.fontMetrics(font),
+								},
 							),
 						),
 					);

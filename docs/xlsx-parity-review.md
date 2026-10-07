@@ -1479,3 +1479,35 @@ The follow-up diagram/chart/XLSX sweep passes 8,539 ordinary tests with the same
 chart browser checks pass across six bindings. Browser rich
 text regressions wait for SVG layout, then compare actual rendered advances
 and centering across six bindings before/after chart edits.
+
+Chart title vertical layout now reuses the grid canvas's font bounding ascent
+and descent through the optional `measureFont` SVG hook. Mixed lines align
+all runs on one baseline and advance by the previous line's largest descent
+plus the next line's largest ascent. The title's height sums natural font
+boxes plus the existing padding; plain title backgrounds use the same metrics.
+The first baseline keeps its existing anchor. Missing/invalid metrics retain
+the previous headless behavior. No second canvas or viewer layout algorithm
+was introduced.
+
+The native recorder captures title boxes on independent reopen. Three measured
+references are retained in test-only `excel-chart-title-geometry.json`. With
+font boxes measured in Chromium on Windows, single/multiline title heights are
+within 2 CSS pixels of Excel 16.0 build 20430's boxes (about 0.79 and 1.06 pixels
+respectively), compared with the previous larger font-size estimates. These
+are bounded comparisons for the three mixed references, not a general tolerance
+claim for other fonts or platforms.
+
+Playwright MCP imported the native paragraph reference: Forecast's baseline
+moves from 83.47 to 72 CSS pixels while Revenue remains at 40. In the owned
+Excel PNG (960 pixels wide), green title pixels occupy y=82..111; normalized
+to the viewer's 640-pixel chart this is y=54.67..74. The previous browser crop
+had y=66..88 and the updated crop has y=55..76. These color extents verify an
+improvement for that text, not complete chart raster parity. The chart's plot
+position, borders/gridlines, title padding, automatic wrapping, paragraph
+spacing and manual layout remain incomplete.
+
+The final diagram/chart/XLSX sweep passes 8,543 ordinary tests with the same
+17 expected raster failures. All 92 focused chart browser cases pass, including
+actual mixed-line baseline checks before/after edits in all six bindings.
+Core/UI typechecks, builds and package import/registration checks pass. The
+native geometry fixture is absent from the published build output.

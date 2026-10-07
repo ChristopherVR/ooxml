@@ -9,6 +9,8 @@ export interface TextMeasurer {
 	measure(text: string, font: string): number;
 	/** Width at 100% zoom of `text` in a core font view (for `autoFitColumnWidth`). */
 	measureFont(text: string, font: FontView): number;
+	/** Natural canvas font box for mixed-run baseline alignment. */
+	fontMetrics(font: string): { ascent: number; descent: number } | undefined;
 }
 
 const sizeOf = (font: string): number => Number(/(\d+(?:\.\d+)?)px/.exec(font)?.[1] ?? 14.67);
@@ -31,6 +33,7 @@ export function estimateWidth(text: string, font: string): number {
 export function createTextMeasurer(doc: Document | undefined): TextMeasurer {
 	let context: CanvasRenderingContext2D | null | undefined;
 	const cache = new Map<string, number>();
+	const metricsCache = new Map<string, { ascent: number; descent: number }>();
 	const ctx = (): CanvasRenderingContext2D | null => {
 		if (context !== undefined) return context;
 		try {
@@ -59,5 +62,26 @@ export function createTextMeasurer(doc: Document | undefined): TextMeasurer {
 	return {
 		measure,
 		measureFont: (text, font) => measure(text, cssFont(font, 100)),
+		fontMetrics: (font) => {
+			const hit = metricsCache.get(font);
+			if (hit) return hit;
+			const c = ctx();
+			if (!c) return undefined;
+			if (c.font !== font) c.font = font;
+			const result = c.measureText('Mg');
+			const metrics = {
+				ascent: result.fontBoundingBoxAscent,
+				descent: result.fontBoundingBoxDescent,
+			};
+			if (
+				!Number.isFinite(metrics.ascent) ||
+				!Number.isFinite(metrics.descent) ||
+				metrics.ascent + metrics.descent <= 0
+			)
+				return undefined;
+			if (metricsCache.size > 10_000) metricsCache.clear();
+			metricsCache.set(font, metrics);
+			return metrics;
+		},
 	};
 }

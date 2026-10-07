@@ -1,7 +1,7 @@
 # XLSX parity status
 
 Updated 8 October 2026: mixed-title support at `4f3f87ea6`, followed by host
-font measurements for chart titles and legends.
+font measurements for chart titles/legends and natural title baselines.
 
 **Full 1:1 Microsoft Excel parity has not been achieved.** The product is a
 working spreadsheet editor with substantial supported behavior and an expanding
@@ -58,6 +58,17 @@ passed again. Browser checks compare painted rich-run advances and centering
 before/after edits. Native placement, vertical metrics,
 wrapping and axis-label measurement still require work; headless callers without
 a supplied measurer retain the previous width estimates.
+
+The next font-box increment passes **8,543 ordinary tests** with the same
+**17 expected failures**, all **92 focused chart browser checks**, core/UI
+typechecks, builds and package checks. The grid reuses its canvas context to supply font
+ascent/descent for title heights and mixed-line baselines. Three independently
+reopened Excel title-box references are retained in
+`src/core/chart/excel-chart-title-geometry.json`. On the measured Windows fonts,
+title heights are within 2 CSS pixels of these native references and a native
+PNG comparison confirms improved second-line placement. This does not establish
+general text/raster parity; native paragraph spacing, wrapping, padding and
+overall chart geometry remain open.
 
 Native evidence uses owned hidden Excel instances, principally Excel 16.0
 build 20430. The current chart text corpus includes 96 built-in style

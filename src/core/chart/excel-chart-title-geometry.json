@@ -1,0 +1,33 @@
+{
+	"excelVersion": "16.0",
+	"excelBuild": "20430",
+	"cases": [
+		{
+			"referenceName": "mixed-single",
+			"titleGeometry": {
+				"topPt": 2.0,
+				"widthPt": 141.62496062992125,
+				"heightPt": 30.59503937007874,
+				"leftPt": 165.18748031496062
+			}
+		},
+		{
+			"referenceName": "mixed-lines",
+			"titleGeometry": {
+				"topPt": 2.0,
+				"widthPt": 141.62496062992125,
+				"heightPt": 54.04503937007874,
+				"leftPt": 165.18748031496062
+			}
+		},
+		{
+			"referenceName": "mixed-paragraphs",
+			"titleGeometry": {
+				"topPt": 2.0,
+				"widthPt": 141.62496062992125,
+				"heightPt": 54.04503937007874,
+				"leftPt": 165.18748031496062
+			}
+		}
+	]
+}

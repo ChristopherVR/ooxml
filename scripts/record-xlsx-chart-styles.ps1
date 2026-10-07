@@ -80,6 +80,10 @@ try {
                 $cases[-1].titleText = Read-ChartFont $probeChart.ChartTitle.Format.TextFrame2.TextRange.Font -TextRange
             }
             if ($CaptureTitleCharacters) {
+				$cases[-1].titleGeometry = @{
+					leftPt = [double]$probeChart.ChartTitle.Left; topPt = [double]$probeChart.ChartTitle.Top
+					widthPt = [double]$probeChart.ChartTitle.Width; heightPt = [double]$probeChart.ChartTitle.Height
+				}
                 $title = [string]$probeChart.ChartTitle.Text
                 $cases[-1].titleCharacters = @(for ($index = 0; $index -lt $title.Length; $index++) {
                     $font = $probeChart.ChartTitle.Characters($index+1,1).Font

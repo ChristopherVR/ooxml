@@ -1855,3 +1855,22 @@ no-op behavior. No native fully blocked-flip UI evidence is claimed.
 Dependent flip/angle formulas, broader protection inheritance, groups/master
 and glued transforms, native menu/pointer gestures, exact paint and Microsoft
 Visio reopen acceptance remain open. Existing imports remain extensionless.
+
+## Reuse of grid font boxes for XLSX chart baselines
+
+Source: ChristopherVR/ooxml at `e74cf9e85`, cached canvas measurer in
+`src/ui/src/xlsx/grid/measure.ts` and core chart SVG metrics/title painters.
+The existing canvas now caches natural ascent/descent per CSS font; the grid
+injects those metrics through the optional SVG hook. Core title layout derives
+mixed-run line boxes and baseline advances from them, and plain title bounds
+use the same font metrics. Headless/invalid-metric fallbacks remain unchanged.
+No second DOM measurer, canvas or framework-specific layout was added.
+
+The existing native style recorder captures three independently reopened Excel
+title rectangles in `src/core/chart/excel-chart-title-geometry.json`, a test-only
+fixture. Core comparisons use separately observed Chromium font boxes and
+verify native height differences under 2 CSS pixels for these references.
+Playwright MCP and native PNG color extents show the second-line placement
+improving; the six-binding browser cases compare actual baseline advances
+before/after type edits. Wrapping, paragraph spacing, manual layout and full
+chart raster parity remain open.

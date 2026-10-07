@@ -7,6 +7,7 @@ import { chartRichTitleSvg } from './chart-svg-title-text';
 import {
 	CHART_FONT_FAMILY,
 	chartTextWidth,
+	chartFontMetrics,
 	fitChartText,
 	type ChartSvgOptions,
 } from './chart-svg-text-metrics';
@@ -118,12 +119,14 @@ export function renderChartSvg(
 		const size = attrs.size ?? 14;
 		const label = fitChartText(model.title, w - 16, attrs, options);
 		const titleWidth = Math.min(w - 16, chartTextWidth(label, attrs, options) + 8);
+		const font = chartFontMetrics(attrs, options);
+		const titleHeight = Math.max(24, font ? font.ascent + font.descent + 4 : size * 1.4 + 4);
 		out.push(
 			chartAreaRect(model, 'title', {
 				x: (w - titleWidth) / 2,
 				y: 4,
 				w: Math.max(0, titleWidth),
-				h: size * 1.4 + 4,
+				h: font ? font.ascent + font.descent + 4 : size * 1.4 + 4,
 			}),
 		);
 		out.push(
@@ -133,7 +136,6 @@ export function renderChartSvg(
 				...attrs,
 			}),
 		);
-		const titleHeight = Math.max(24, size * 1.4 + 4);
 		area = { x: area.x, y: area.y + titleHeight, w: area.w, h: area.h - titleHeight };
 	}
 	if (!model.supported) {
