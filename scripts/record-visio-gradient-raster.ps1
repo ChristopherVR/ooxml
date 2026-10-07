@@ -1,10 +1,14 @@
 param(
  [string]$OutputDirectory=(Join-Path $env:TEMP ('visio-gradient-raster-'+[guid]::NewGuid().ToString('N'))),
  [ValidateSet('rectangle','ellipse','triangle','notched','pentagon','chevron','ushape','star')]
- [string[]]$PathShapes=@('rectangle','ellipse','triangle','notched')
+ [string[]]$PathShapes=@('rectangle','ellipse','triangle','notched'),
+ [ValidateRange(-180,180)][double]$ShapeAngle=0,
+ [ValidateRange(0,13)][int]$FirstDirection=0,
+ [ValidateRange(0,13)][int]$LastDirection=13
 )
 # Compare the real raster engine, rather than assuming native SVG is a paint oracle.
 $ErrorActionPreference='Stop'
+if($FirstDirection -gt $LastDirection){throw 'FirstDirection must not exceed LastDirection.'}
 . (Join-Path $PSScriptRoot 'visio-native-shape.ps1')
 . (Join-Path $PSScriptRoot 'visio-native-gradient.ps1')
 Add-Type -AssemblyName System.Drawing
@@ -36,11 +40,13 @@ try {
  $cases=@()
  foreach($stopCount in @(2,3)){
   foreach($alpha in @($false,$true)){
-   foreach($direction in 0..13){
+   foreach($direction in $FirstDirection..$LastDirection){
     $kinds=if($direction -eq 13){$PathShapes}else{@('rectangle')}
     foreach($kind in $kinds){
      $name="direction-$direction-$kind-stops-$stopCount-alpha-$alpha"
+     if($ShapeAngle -ne 0){$name+='-angle-'+$ShapeAngle.ToString([cultureinfo]::InvariantCulture)}
      $shape=New-VisioNativeFillShape $page $kind
+     $shape.CellsU('Angle').FormulaU=$ShapeAngle.ToString([cultureinfo]::InvariantCulture)+' deg'
      $shape.CellsU('FillPattern').FormulaU='1'
      $shape.CellsU('LinePattern').FormulaU='0'
      $front=if($alpha){'20%'}else{'0%'}
@@ -69,7 +75,18 @@ try {
        $points=[double[]](Get-VisioNativeFillPoints $kind)
        for($i=0;$i -lt $points.Length-2;$i+=2){$outline+=,@((($points[$i]-1)/2),($points[$i+1]-1))}
       }
-      $cases+=,@{name=$name;direction=$direction;kind=$kind;outline=$outline;stopCount=$stopCount;alpha=$alpha;shapeId=[string]$shape.ID;width=$bitmap.Width;height=$bitmap.Height;samples=$samples}
+      # Native page-space pose and extents register rotated fills without inferring them from our parser.
+      # https://learn.microsoft.com/en-us/office/vba/api/visio.shape.boundingbox
+      $left=0.0;$bottom=0.0;$right=0.0;$top=0.0
+      $shape.BoundingBox(8196,[ref]$left,[ref]$bottom,[ref]$right,[ref]$top)
+      $nativeExtents=@($left,$bottom,$right,$top)
+      if($left -gt $right -or $bottom -gt $top){throw 'Native geometry export bounds are empty.'}
+      $ox=0.0;$oy=0.0;$xx=0.0;$xy=0.0;$yx=0.0;$yy=0.0
+      $shape.XYToPage(0,0,[ref]$ox,[ref]$oy)
+      $shape.XYToPage(1,0,[ref]$xx,[ref]$xy)
+      $shape.XYToPage(0,1,[ref]$yx,[ref]$yy)
+      $nativeTransform=@(($xx-$ox),($xy-$oy),($yx-$ox),($yy-$oy),$ox,$oy)
+      $cases+=,@{name=$name;direction=$direction;kind=$kind;outline=$outline;angle=$ShapeAngle;nativeExtents=$nativeExtents;nativeLineWidth=$shape.CellsU('LineWeight').ResultIU;nativeTransform=$nativeTransform;stopCount=$stopCount;alpha=$alpha;shapeId=[string]$shape.ID;width=$bitmap.Width;height=$bitmap.Height;samples=$samples}
      } finally {$bitmap.Dispose()}
     }
    }

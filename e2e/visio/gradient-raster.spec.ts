@@ -5,8 +5,8 @@ import type { VisioDocument } from 'ooxml-core/visio';
 
 const directory = process.env.VISIO_NATIVE_GRADIENT_RASTER_DIR;
 for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
-	for (const starOnly of [false, true]) {
-		test(`${framework}: ${starOnly ? 'records unresolved star gradient fidelity' : 'measures saved gradient interiors against native PNG'}`, async ({
+	for (const group of ['baseline', 'star', 'rotated-polygon'] as const) {
+		test(`${framework}: ${group === 'star' ? 'records unresolved star gradient fidelity' : group === 'rotated-polygon' ? 'records unresolved rotated polygon fidelity' : 'measures saved gradient interiors against native PNG'}`, async ({
 			page,
 		}) => {
 			test.skip(!directory, 'Set VISIO_NATIVE_GRADIENT_RASTER_DIR to the native raster capture.');
@@ -29,11 +29,26 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 						| 'ushape'
 						| 'star';
 					outline?: [number, number][];
+					angle?: number;
+					nativeExtents?: [number, number, number, number];
+					nativeLineWidth?: number;
+					nativeTransform?: [number, number, number, number, number, number];
 				}[];
 			};
 			const samples = await Promise.all(
 				evidence.cases
-					.filter((item) => item.direction <= 13 && (item.kind === 'star') === starOnly)
+					.filter((item) => {
+						if (item.direction > 13) return false;
+						const unresolvedRotation =
+							!!item.angle &&
+							!item.alpha &&
+							(item.kind === 'pentagon' || (item.kind === 'triangle' && item.stopCount === 3));
+						return group === 'star'
+							? item.kind === 'star'
+							: group === 'rotated-polygon'
+								? unresolvedRotation
+								: item.kind !== 'star' && !unresolvedRotation;
+					})
 					.map(async (item) => {
 						const source = await readFile(join(directory!, item.name + '.svg'), 'utf8');
 						const frame = /viewBox="0 0 ([0-9.]+) ([0-9.]+)"/.exec(source);
@@ -76,17 +91,41 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 					const view = copy.pages[0]!;
 					view.shapes = view.shapes.filter((shape) => shape.id === sample.shapeId);
 					const shape = view.shapes[0]!;
-					const scaleX = 288 / sample.frameWidth,
-						scaleY = 144 / sample.frameHeight;
+					const extents = sample.nativeExtents;
+					if (
+						extents &&
+						(!Number.isFinite(sample.nativeLineWidth) ||
+							extents[0] > extents[2] ||
+							extents[1] > extents[3])
+					)
+						throw new Error('Invalid native raster bounds.');
+					const rasterFrameWidth = extents
+						? extents[2] - extents[0] + sample.nativeLineWidth!
+						: sample.frameWidth;
+					const rasterFrameHeight = extents
+						? extents[3] - extents[1] + sample.nativeLineWidth!
+						: sample.frameHeight;
+					const scaleX = extents
+							? Math.min(288 / rasterFrameWidth, 144 / rasterFrameHeight)
+							: 288 / sample.frameWidth,
+						scaleY = extents ? scaleX : 144 / sample.frameHeight;
 					// Native bounds include the saved line-width margin even when the line is hidden.
-					// SVG supplies only this export frame; PNG supplies every reference color.
-					const left = shape.transform[4] - (sample.frameWidth - shape.width) / 2;
-					const top =
-						view.height -
-						shape.transform[5] -
-						shape.height -
-						(sample.frameHeight - shape.height) / 2;
+					// Native geometry extents register PNGs; older captures retain their SVG frame.
+					// PNG supplies every reference color. Rotated SVG/PNG frames are different.
+					const left = extents
+						? (extents[0] + extents[2] - 288 / scaleX) / 2
+						: shape.transform[4] - (288 / scaleX - shape.width) / 2;
+					const top = extents
+						? view.height - (extents[1] + extents[3] + 144 / scaleY) / 2
+						: view.height - shape.transform[5] - shape.height - (144 / scaleY - shape.height) / 2;
 					const reference = await raster(`data:image/png;base64,${sample.png}`);
+					const pose = new DOMMatrix(sample.nativeTransform ?? [...shape.transform]);
+					const inverse = pose.inverse();
+					const transformDifference = sample.nativeTransform
+						? Math.max(
+								...sample.nativeTransform.map((value, i) => Math.abs(value - shape.transform[i]!)),
+							)
+						: 0;
 					// The capture script uses these exact outlines. Exclude their contour separately
 					// from the fill benchmark, including diagonal edges and the reentrant notch.
 					const corners = sample.outline?.length
@@ -112,21 +151,20 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 										[1, 0],
 										[0, 0],
 									];
-					const marginX = ((sample.frameWidth - shape.width) * scaleX) / 2,
-						marginY = ((sample.frameHeight - shape.height) * scaleY) / 2;
-					const vertices = corners.map(([x, y]) => [
-						marginX + x! * shape.width * scaleX,
-						marginY + y! * shape.height * scaleY,
-					]);
+					const vertices = corners.map(([x, y]) => {
+						const point = pose.transformPoint({ x: x! * shape.width, y: (1 - y!) * shape.height });
+						return [(point.x - left) * scaleX, (view.height - point.y - top) * scaleY];
+					});
 					const interior = (x: number, y: number) => {
-						if (sample.direction !== 13 || sample.kind === 'rectangle') return true;
-						if (sample.kind === 'ellipse')
-							return (
-								Math.hypot(
-									(x - marginX) / (shape.width * scaleX) - 0.5,
-									(y - marginY) / (shape.height * scaleY) - 0.5,
-								) < 0.4
-							);
+						if (!sample.angle && (sample.direction !== 13 || sample.kind === 'rectangle'))
+							return true;
+						if (sample.kind === 'ellipse') {
+							const point = inverse.transformPoint({
+								x: left + x / scaleX,
+								y: view.height - top - y / scaleY,
+							});
+							return Math.hypot(point.x / shape.width - 0.5, point.y / shape.height - 0.5) < 0.4;
+						}
 						let inside = false;
 						for (let i = 0; i < vertices.length; i++) {
 							const [ax, ay] = vertices[i]!,
@@ -180,6 +218,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 									maximum,
 									mean: total / channels,
 									pixels: channels / 4,
+									transformDifference,
 								});
 							} finally {
 								URL.revokeObjectURL(url);
@@ -197,9 +236,15 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 				.info()
 				.attach('native-raster-differences', { path: output, contentType: 'application/json' });
 			expect(results).toHaveLength(samples.length * 2);
-			for (const item of results) expect(item.pixels, item.name).toBeGreaterThan(1000);
+			for (const item of results) {
+				expect(item.pixels, item.name).toBeGreaterThan(1000);
+				expect(item.transformDifference, item.name).toBeLessThan(1e-9);
+			}
 			// Mark only the measured fidelity gate, after successful import/render/artifact checks.
-			test.fail(starOnly, 'Native star pixels exceed the existing path-fill fidelity bound.');
+			test.fail(
+				group !== 'baseline',
+				'These native pixels exceed the existing path-fill fidelity bound.',
+			);
 			// This bounds the measured improvement; nonzero differences remain parity gaps.
 			for (const item of results) {
 				expect(item.maximum, item.name).toBeLessThanOrEqual(item.direction === 13 ? 10 : 7);

@@ -27,6 +27,11 @@ The extended capture adds pentagons, chevrons, U-shapes and stars. The 80
 non-star cases meet the existing regression bounds; all six star scenarios
 remain explicit expected fidelity failures, with maximum channel errors of 43.
 These failures are recorded independently of successful import/render checks.
+A separate 32-case path capture verifies 30-degree shape rotation against native
+page-space poses. Twenty-five cases meet the existing regression bounds; stars
+and three opaque polygon cases remain explicit failures. Rotated PNGs register
+to native geometry extents with uniform fitting, rather than the different SVG
+export frame. Exact contour pixels and broader rotations/groups remain open.
 
 Implementation status is based on source inspection. Test filenames identify evidence; current pass counts and limitations are recorded in verification.md. Generated fixtures and the original demo scene do not establish visual parity with Microsoft Visio.
 

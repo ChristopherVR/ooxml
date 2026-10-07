@@ -81,6 +81,7 @@ describe('native opaque gradient sampling', () => {
 for (const [name, count, profiles] of [
 	['VISIO_NATIVE_GRADIENT_RASTER_DIR', 68, 17],
 	['VISIO_NATIVE_EXTENDED_GRADIENT_RASTER_DIR', 84, 21],
+	['VISIO_NATIVE_ROTATED_GRADIENT_RASTER_DIR', 32, 8],
 ] as const) {
 	const directory = process.env[name];
 	it.skipIf(!directory)(

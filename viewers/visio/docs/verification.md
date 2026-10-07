@@ -924,3 +924,51 @@ all 84 extended shapes and 21 opaque two-stop profiles. The shared optional
 regression covers both captures without copying the edit/preservation logic.
 Core and viewer type checks passed. This checkpoint broadens the native oracle
 and records a reproducible unresolved failure; it does not establish parity.
+
+## Native rotated path fills and independent PNG frames (2026-10-08)
+
+record-visio-gradient-raster.ps1 now accepts ShapeAngle and a direction range.
+The final 30-degree capture is visio-gradient-raster-rotated-b043733eb59041948bd3f2e97c3a7293
+in the local temporary directory: direction 13, eight outlines, two/three stops,
+opaque/translucent paint, for 32 cases. The owned InvisibleApp restored raster
+settings and quit. Additional setup captures were diagnostic only; empty or
+misregistered frames were not used as fidelity evidence.
+
+The recorder measures native page-space geometry extents with BoundingBox
+(visBBoxDrawingCoords | visBBoxExtents), the saved physical line width, and the
+local-to-page pose with three XYToPage calls. The browser uses DOMMatrix for the
+same coordinate conversion and inverse ellipse masks. It checks all six parsed
+pose coefficients against the independent native measurements, with error below
+1e-9, before applying any expected-failure status. No transform algorithm or
+production paint was copied or changed.
+
+This experiment exposed an exporter difference: native rotated SVG frames
+include more of the shape box than native PNG exports. PNGs fit the actual
+geometry extents uniformly into the requested 288-by-144 canvas. The benchmark
+now registers these captures using the measured geometry extents plus the saved
+line-width margin, including hidden-line caches, and centers any unused canvas
+space. PNG reference colors and pixels remain unchanged. Older captures without
+these measurements retain their historical SVG-frame registration; their
+small nonzero differences are not proof of exact pixel correspondence.
+
+All six routes produced live and portable renders: 384 interior comparisons.
+The 25 baseline cases meet the existing maximum-10/mean-below-2.5 path bounds.
+Four star cases and three opaque polygon cases exceed the unchanged maximum-10
+gate. Each route has one passing scenario and two explicit expected fidelity
+failures, separated after successful import/render/artifact/count/minimum-pixel
+and native-pose checks. Playwright reports 18 passing tests because it includes
+expected failures; that is six passing scenarios and twelve expected failures,
+not 18 native-fidelity successes.
+
+Worst observed rotated errors are star opaque three-stop 35/2.44,
+pentagon opaque two-stop 15/0.92, and triangle opaque three-stop 13/2.45
+(maximum/mean, means rounded up). The pentagon opaque three-stop live output
+also reaches 11. The passing group reaches maximum nine. Contour pixels remain
+excluded by the eight-pixel polygon margin or inner-80% ellipse mask. Native
+screens, other angles, flips/groups, exact colors and native reopen acceptance
+remain open. These measurements verify one rotation scope, not broad parity.
+
+Core optional regressions preserve all 32 rotated gradient models through
+move/save/reparse, with eight opaque two-stop profiles. The same parameterized
+regression also passed the original 68- and extended 84-case captures. Core
+strict types passed. The source warning for unverified gradient raster remains.
