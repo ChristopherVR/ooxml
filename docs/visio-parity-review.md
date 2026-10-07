@@ -273,3 +273,45 @@ tests passed, and six browser workflows passed across every binding. All 48 docu
 checks passed. Strict core typechecking and core ESM/CJS plus shared UI ESM builds passed.
 UI typechecking continues to fail only on the existing Teams/PowerPoint declaration
 resolution errors. Native Visio reopen/save was verified independently of browser tests.
+
+## Numeric page-dependent cache recalculation (2026-10-07)
+
+Page insertion and reordering now refresh local numeric PAGENUMBER() and PAGECOUNT()
+caches, including their supported static dependency closure and PageSheet cells.
+Formula and unit attributes stay intact. Unchanged page contexts preserve their
+payloads. Foreground numbering ignores background pages; background page numbers
+are zero. PAGECOUNT counts foreground pages only, as specified by Microsoft's
+[PAGENUMBER reference](https://learn.microsoft.com/en-us/office/client-developer/visio/pagenumber-function)
+and [PAGECOUNT reference](https://learn.microsoft.com/en-us/office/client-developer/visio/pagecount-function).
+
+The numeric evaluator requires explicit document context for these functions.
+Affected cycles, unsupported functions, inherited or grouped dependencies and
+master/style page-dependent formulas fail the transaction before saved bytes are
+returned. Page changes without affected numeric page formulas retain their previous
+preservation behavior. This is a bounded local numeric subset: string page functions,
+inherited master materialization, general fields and foreground rendering of a
+background page's fields remain open.
+
+Native Visio 16.0 was exercised with two foreground pages and one background page.
+An actual Page.Index reorder left the moved page's PAGENUMBER user-cell cache stale,
+even after save/reopen and reassignment of the identical formula. Toggling to a literal
+and back forced native recalculation. The core output matches that freshly evaluated
+reference by stable page ID, including transitive User.Number+User.Count caches.
+The core-produced output then opened and saved in Visio with every expected value.
+An inserted foreground page was also accepted and saved: all existing foreground
+and background shapes reported a count of three with correct page numbers and sums.
+The change implements the documented numeric result, rather than reproducing this
+native stale-cache behavior.
+
+Reproduce with scripts/record-visio-page-formulas.ps1, set
+VISIO_NATIVE_PAGE_FORMULAS_DIR to its output directory, run
+visio/edit-page-formulas.test.ts, then run the script again with -CoreOutputPath
+pointing to core-reordered.vsdx. Native binaries remain local; the compact metrics
+are committed in `visio/__fixtures__/page-formulas-native.json`. To verify insertion
+too, pass -CoreInsertedOutputPath pointing to core-inserted.vsdx.
+
+Verification: 1,977 Visio core tests passed with the native numeric/arrow/scale
+references enabled (30 optional skips); strict core typechecking and Visio ESM/CJS
+builds passed. All 702 shared Visio UI tests passed (six optional native skips),
+all six browser insertion/reordering/history/save workflows passed, and all 48
+documentation checks passed.

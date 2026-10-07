@@ -1,11 +1,12 @@
 import { attribute, child, children } from './sheet.js';
-import { related, visioXml } from './parts.js';
+import { indexedPart, related, visioXml } from './parts.js';
 import { VisioPackage } from './package.js';
 import { decodePath, fail, type VisioPackageLimits } from './package-common.js';
 import { openEditablePackage, writeEditedPackage } from './edit-package.js';
 import { serializeEditedXml } from './edit-text.js';
 import { parseXml } from '../xml/index.js';
 import { updatePageAppProperties } from './edit-page-properties.js';
+import { recalculatePageFormulas } from './edit-page-formulas.js';
 import type { VisioPageEdit } from './edit-commands.js';
 import type { EditVsdxResult } from './edit.js';
 
@@ -16,7 +17,7 @@ function copy(root: Element): Element {
 	return (root.ownerDocument!.cloneNode(true) as Document).documentElement;
 }
 
-/** Source-backed page metadata/OPC transaction. Existing page payloads stay untouched. */
+/** Source-backed page metadata/OPC transaction with bounded local numeric cache refresh. */
 export async function editVsdxPages(
 	original: Uint8Array,
 	pkg: VisioPackage,
@@ -34,6 +35,9 @@ export async function editVsdxPages(
 	const relsPart = `${directory}_rels/${pagesPart.slice(slash + 1)}.rels`;
 	const pages = copy(await visioXml(pkg, pagesPart, 'Pages'));
 	const priorCount = children(pages, 'Page').length;
+	const pagePaths = new Map<string, string>();
+	for (const page of children(pages, 'Page'))
+		pagePaths.set(attribute(page, 'ID')!, await indexedPart(pkg, pagesPart, page, 'page'));
 	const rels = copy(await pkg.readXml(relsPart, 'Relationships'));
 	const types = copy(await pkg.readXml('[Content_Types].xml', 'Types'));
 	const dirty = new Map<string, Element>();
@@ -83,6 +87,7 @@ export async function editVsdxPages(
 			path = `${directory}page${nextPart++}.xml`;
 		} while (paths.has(path.toLowerCase()));
 		paths.add(path.toLowerCase());
+		pagePaths.set(command.pageId, path);
 		let relId: string;
 		do {
 			check();
@@ -130,6 +135,7 @@ export async function editVsdxPages(
 		return { bytes: original, changedParts: [], diagnostics: [] };
 	}
 	await updatePageAppProperties(pkg, pages, priorCount, dirty, limits, check);
+	await recalculatePageFormulas(pkg, pagesPart, pages, pagePaths, dirty, check);
 	if (
 		parts.size + commands.filter((command) => command.type === 'insert-page').length >
 		limits.maxEntries
@@ -152,8 +158,9 @@ export async function editVsdxPages(
 		{ ...limits, maxInputBytes: maxOutput, maxRuntimeMs: Math.max(1, deadline - Date.now()) },
 		check,
 	);
-	for (const command of commands)
-		await visioXml(verified.pkg, verified.pages.get(command.pageId)!, 'PageContents');
+	const pageParts = new Set(verified.pages.values());
+	for (const path of dirty.keys())
+		if (pageParts.has(path)) await visioXml(verified.pkg, path, 'PageContents');
 	check();
 	return {
 		bytes,
@@ -162,7 +169,7 @@ export async function editVsdxPages(
 			{
 				code: 'edit-pages-experimental',
 				message:
-					'Page metadata was edited. Page-count/index-dependent formula caches were not recalculated.',
+					'Page metadata and supported local numeric page-dependent caches were updated. Inherited, string and background-render-context formulas remain unsupported.',
 			},
 		],
 	};

@@ -1,0 +1,128 @@
+{
+	"application": "Microsoft Visio",
+	"version": "16.0",
+	"initial": [
+		{
+			"id": "0",
+			"index": 1,
+			"background": false,
+			"number": 1.0,
+			"count": 2.0,
+			"combined": 3.0
+		},
+		{
+			"id": "5",
+			"index": 2,
+			"background": false,
+			"number": 2.0,
+			"count": 2.0,
+			"combined": 4.0
+		},
+		{
+			"id": "4",
+			"index": 3,
+			"background": true,
+			"number": 0.0,
+			"count": 2.0,
+			"combined": 2.0
+		}
+	],
+	"afterReorder": [
+		{
+			"id": "5",
+			"index": 1,
+			"background": false,
+			"number": 2.0,
+			"count": 2.0,
+			"combined": 4.0
+		},
+		{
+			"id": "0",
+			"index": 2,
+			"background": false,
+			"number": 2.0,
+			"count": 2.0,
+			"combined": 4.0
+		},
+		{
+			"id": "4",
+			"index": 3,
+			"background": true,
+			"number": 0.0,
+			"count": 2.0,
+			"combined": 2.0
+		}
+	],
+	"recalculated": [
+		{
+			"id": "5",
+			"index": 1,
+			"background": false,
+			"number": 1.0,
+			"count": 2.0,
+			"combined": 3.0
+		},
+		{
+			"id": "0",
+			"index": 2,
+			"background": false,
+			"number": 2.0,
+			"count": 2.0,
+			"combined": 4.0
+		},
+		{
+			"id": "4",
+			"index": 3,
+			"background": true,
+			"number": 0.0,
+			"count": 2.0,
+			"combined": 2.0
+		}
+	],
+	"accepted": [
+		{
+			"id": "5",
+			"index": 1,
+			"background": false,
+			"number": 1.0,
+			"count": 2.0,
+			"combined": 3.0
+		},
+		{
+			"id": "0",
+			"index": 2,
+			"background": false,
+			"number": 2.0,
+			"count": 2.0,
+			"combined": 4.0
+		},
+		{
+			"id": "4",
+			"index": 3,
+			"background": true,
+			"number": 0.0,
+			"count": 2.0,
+			"combined": 2.0
+		}
+	],
+	"insertedAccepted": [
+		{
+			"id": "0",
+			"number": 1.0,
+			"count": 3.0,
+			"combined": 4.0
+		},
+		{
+			"id": "5",
+			"number": 3.0,
+			"count": 3.0,
+			"combined": 6.0
+		},
+		{
+			"id": "4",
+			"number": 0.0,
+			"count": 3.0,
+			"combined": 3.0
+		}
+	]
+}
