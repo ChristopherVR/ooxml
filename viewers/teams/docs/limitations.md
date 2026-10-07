@@ -17,6 +17,22 @@ parity. It implements:
 It does **not** implement 1:1 or group chats outside channels, threads as separate panes,
 notifications, a calendar, recording, background blur or live captions.
 
+## Content workspace
+
+Word and Excel preview in native read-only editors; Visio uses its existing viewer.
+There is no shared editing or save-back to file storage. PowerPoint needs a
+host-configured embedded viewer page. Missing integrations are reported in the pane.
+Text reads are limited to 2 MiB and native Office reads to 32 MiB.
+
+Markdown supports headings, bullets, quotes, fenced code, basic emphasis and web
+links. It does not yet implement full CommonMark/GFM, tables, task lists, nested
+structures or relative links. Raw HTML is displayed as text.
+
+Websites and HTML attachments use a sandbox without same-origin, popup or top
+navigation permission. Some sites block embedding or require permissions this
+sandbox does not grant. External open remains available. This is a local preview,
+not a shared configurable channel tab or a Microsoft Teams app integration.
+
 ## Security and privacy
 
 - **No end-to-end encryption.** Chat travels as Yjs updates through your server, which can read

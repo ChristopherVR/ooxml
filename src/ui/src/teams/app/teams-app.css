@@ -135,9 +135,15 @@ button {
 	border-radius: 50%;
 	background: var(--office-presence-offline);
 }
-.conn[data-status="connected"] { background: var(--office-presence-available); }
-.conn[data-status="connecting"] { background: var(--office-presence-away); }
-.conn[data-status="error"] { background: var(--office-presence-busy); }
+.conn[data-status='connected'] {
+	background: var(--office-presence-available);
+}
+.conn[data-status='connecting'] {
+	background: var(--office-presence-away);
+}
+.conn[data-status='error'] {
+	background: var(--office-presence-busy);
+}
 
 /* ---- body ------------------------------------------------------------------------------- */
 .body {
@@ -223,7 +229,7 @@ ul.plain li > :first-child:not(office-ui-avatar) {
 	border-bottom: var(--office-border-width-thick) solid transparent;
 	background: transparent;
 }
-.tabs button[aria-selected="true"] {
+.tabs button[aria-selected='true'] {
 	border-bottom-color: var(--office-teams-brand);
 	font-weight: var(--office-font-weight-bold);
 }
@@ -323,10 +329,18 @@ ul.plain li > :first-child:not(office-ui-avatar) {
 	color: var(--office-call-foreground);
 	font-weight: var(--office-font-weight-bold);
 }
-.badge[data-kind="docx"] { background: var(--office-file-docx); }
-.badge[data-kind="xlsx"] { background: var(--office-file-xlsx); }
-.badge[data-kind="pptx"] { background: var(--office-file-pptx); }
-.badge[data-kind="vsdx"] { background: var(--office-file-vsdx); }
+.badge[data-kind='docx'] {
+	background: var(--office-file-docx);
+}
+.badge[data-kind='xlsx'] {
+	background: var(--office-file-xlsx);
+}
+.badge[data-kind='pptx'] {
+	background: var(--office-file-pptx);
+}
+.badge[data-kind='vsdx'] {
+	background: var(--office-file-vsdx);
+}
 
 /* ---- meeting ---------------------------------------------------------------------------- */
 .meeting {
@@ -414,6 +428,22 @@ ul.plain li > :first-child:not(office-ui-avatar) {
 	border-radius: var(--office-radius-md);
 	background: var(--office-call-background);
 	color: var(--office-call-foreground);
+}
+
+.site-preview {
+	display: flex;
+	gap: var(--office-space-2);
+	padding: var(--office-space-3);
+}
+.site-preview input {
+	flex: 1;
+	min-width: 0;
+	padding: var(--office-space-2);
+	font: inherit;
+	color: inherit;
+	background: var(--office-background);
+	border: var(--office-border-width) solid var(--office-teams-divider);
+	border-radius: var(--office-radius-md);
 }
 
 @media (max-width: 900px) {

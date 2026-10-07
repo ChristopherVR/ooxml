@@ -12,9 +12,37 @@ Every binding wraps the same `<teams-app>` custom element. The bindings forward 
 | `config`        | `server-config` | `{ mode: 'local' \| 'server', syncUrl?, signalingUrl?, iceServers, iceTransportPolicy?, token? }`. The attribute takes JSON. |
 | `uploadFile`    |                 | Where attachments go; defaults to the server's `/files` endpoint.                                                            |
 | `openers`       |                 | Per-Office-type handlers (`docx`, `xlsx`, `pptx`, `vsdx`).                                                                   |
+| `embeds`        |                 | Per-file-kind callbacks returning a sandbox-compatible viewer page URL; useful for PowerPoint.                              |
 | `client` (read) |                 | The core client behind the element (state in, actions out).                                                                  |
 
 Leave `config` out and the element offers a settings dialog (remembered in this browser) or runs in local mode.
+
+## Content previews
+
+Opening an attachment displays a workspace preview by default. Word and Excel use
+the native read-only editor elements; Visio uses its viewer. Markdown has a safe
+subset renderer; text files show literal text; HTML and websites use sandboxed
+frames. `openers` and the cancelable `teams-open-file` event still take precedence.
+
+PowerPoint requires an embedding page supplied by the host:
+
+```ts
+const embeds = {
+	pptx: ({ url }: { url: string | undefined }) =>
+		`https://viewer.example.com/embed?source=${encodeURIComponent(url ?? '')}`,
+};
+```
+
+Pass `embeds` to any component binding. The page must understand the file URL and
+support a sandbox with scripts/forms but no same-origin permission. File fetches
+omit credentials; cross-origin file servers must allow CORS. Without a configured
+PowerPoint viewer, the pane reports that limitation and offers external open.
+
+The element's `previewContent({ attachment, url })` method opens host-provided
+content locally. For a website use `attachment: { name: 'Project site', kind:
+'other', mime: 'text/html' }`. This does not create a shared channel tab. The
+Files view also offers **Preview website**. Sites that refuse framing can be
+opened externally.
 
 ## Events
 

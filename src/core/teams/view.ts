@@ -40,6 +40,7 @@ export interface FileEntry {
 	kind: OfficeKind;
 	size?: number;
 	url?: string;
+	mime?: string;
 	author: string;
 	ts: number;
 	messageId: string;
@@ -124,6 +125,7 @@ export function filesOf(messages: Message[]): FileEntry[] {
 				kind: a.kind,
 				...(a.size !== undefined ? { size: a.size } : {}),
 				...(a.url ? { url: a.url } : {}),
+				...(a.mime ? { mime: a.mime } : {}),
 				author: m.authorName,
 				ts: m.ts,
 				messageId: m.id,
