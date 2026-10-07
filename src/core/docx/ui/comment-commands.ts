@@ -2,7 +2,7 @@ import type { Comment } from '../model';
 import type { EditorView } from 'prosemirror-view';
 import { closeHistory } from 'prosemirror-history';
 import { TextSelection } from 'prosemirror-state';
-import { commentIdsFromMarks } from './comment-anchors';
+import { commentIdsFromNode } from './comment-anchors';
 
 let commentSerial = 0;
 function nextCommentId(idGenerator?: (kind: string) => string): string {
@@ -76,7 +76,7 @@ export function commentIdsAtSelection(view: EditorView): string[] {
 		empty ? Math.max(0, from - 1) : from,
 		empty ? from + 1 : to,
 		(node) => {
-			for (const id of commentIdsFromMarks(node.marks)) if (!ids.includes(id)) ids.push(id);
+			for (const id of commentIdsFromNode(node)) if (!ids.includes(id)) ids.push(id);
 		},
 	);
 	return ids;
@@ -87,7 +87,7 @@ export function commentAnchors(view: EditorView): Array<{ id: string; from: numb
 	const seen = new Set<string>();
 	const anchors: Array<{ id: string; from: number }> = [];
 	view.state.doc.descendants((node, pos) => {
-		for (const id of commentIdsFromMarks(node.marks))
+		for (const id of commentIdsFromNode(node))
 			if (!seen.has(id)) {
 				seen.add(id);
 				anchors.push({ id, from: pos });

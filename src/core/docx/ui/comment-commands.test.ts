@@ -3,6 +3,15 @@ import { EditorState, TextSelection, type Transaction } from 'prosemirror-state'
 import type { EditorView } from 'prosemirror-view';
 import { describe, expect, it } from 'vitest';
 import { reviewMarks } from './review-schema';
+import { imageNodeSpec } from './inline-content-schema';
+import {
+	hardBreakNodeSpec,
+	pageBreakNodeSpec,
+	noteReferenceNodeSpec,
+	fieldMarkerNodeSpec,
+} from './break-note-schema';
+import { runToInlineNodes } from './run-adapter';
+import type { TextRun } from '../model';
 import {
 	addComment,
 	commentAnchors,
@@ -34,6 +43,57 @@ function view(editable = true): EditorView {
 }
 
 describe('shared Word comment commands', () => {
+	for (const atom of [
+		{ text: '\n' },
+		{ text: '', break: 'page' },
+		{ text: '', noteReference: { kind: 'footnote', id: '1' } },
+		{ text: '', fieldChar: 'begin' },
+		{
+			text: '',
+			image: {
+				relId: 'rId1',
+				partName: 'word/media/a.png',
+				contentType: 'image/png',
+				widthPx: 10,
+				heightPx: 20,
+			},
+		},
+	] satisfies TextRun[])
+		it(`finds imported ${atom.text ? 'hard-break' : Object.keys(atom)[1]} anchors together with overlapping marks`, () => {
+			const inlineSchema = new Schema({
+				nodes: {
+					doc: { content: 'paragraph+' },
+					paragraph: { content: 'inline*' },
+					text: { group: 'inline' },
+					image: imageNodeSpec,
+					hardBreak: hardBreakNodeSpec,
+					pageBreak: pageBreakNodeSpec,
+					noteReference: noteReferenceNodeSpec,
+					fieldMarker: fieldMarkerNodeSpec,
+				},
+				marks: { comment: reviewMarks.comment },
+			});
+			const node = runToInlineNodes({ ...atom, commentIds: ['c2', 'c1', 'c1'] }, inlineSchema)[0]!;
+			const doc = inlineSchema.node(
+				'doc',
+				null,
+				inlineSchema.node('paragraph', null, [
+					inlineSchema.text('L'),
+					node.mark([inlineSchema.marks.comment!.create({ ids: ['c2', 'c3'] })]),
+					inlineSchema.text('R'),
+				]),
+			);
+			const host = {
+				state: EditorState.create({ doc, selection: TextSelection.create(doc, 2, 3) }),
+			};
+			const editor = host as unknown as EditorView;
+			expect(commentIdsAtSelection(editor)).toEqual(['c1', 'c2', 'c3']);
+			expect(commentAnchors(editor)).toEqual([
+				{ id: 'c1', from: 2 },
+				{ id: 'c2', from: 2 },
+				{ id: 'c3', from: 2 },
+			]);
+		});
 	it('retains independent anchors when removing one id from a legacy grouped mark', () => {
 		const editor = view();
 		editor.dispatch(

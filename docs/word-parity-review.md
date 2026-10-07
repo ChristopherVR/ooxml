@@ -456,3 +456,9 @@ picture targets and edits to supported inline elements survive Yjs joining,
 retargeting, removal, clipboard conversion and local undo. Six browser bindings
 verify peer picture-link export without losing shared media. Equation links and
 hyperlink change attribution still need separate implementation and evidence.
+
+Comment navigation now reads imported inline run anchors together with marks,
+so pictures, breaks, note references and field markers can be located through
+Review navigation. Core tests cover five kinds and overlapping anchor IDs;
+mounted view tests cover four kinds. This read-path correction does not yet
+establish concurrent creation/deletion of comments anchored only to elements.

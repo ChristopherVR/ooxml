@@ -5,6 +5,8 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { commentAnchors, commentIdsAtSelection, goToComment } from './comment-commands';
 import { createRibbon } from './ribbon';
 import { schema } from './schema';
+import { runToInlineNodes } from 'ooxml-core/docx/ui';
+import type { TextRun } from 'ooxml-core/docx';
 
 beforeAll(() => {
 	const rects = { length: 0, item: () => null, [Symbol.iterator]: function* () {} };
@@ -54,6 +56,44 @@ describe('comment anchors', () => {
 });
 
 describe('goToComment', () => {
+	for (const atom of [
+		{ text: '\n' },
+		{ text: '', break: 'page' },
+		{ text: '', noteReference: { kind: 'footnote', id: '1' } },
+		{
+			text: '',
+			image: {
+				relId: 'rId1',
+				partName: 'word/media/a.png',
+				contentType: 'image/png',
+				widthPx: 10,
+				heightPx: 20,
+			},
+		},
+	] satisfies TextRun[])
+		it(`navigates to an imported ${atom.text ? 'hard-break' : Object.keys(atom)[1]} comment without a mark`, () => {
+			const doc = schema.node(
+				'doc',
+				null,
+				schema.node('paragraph', { id: 'p' }, [
+					schema.text('L'),
+					...runToInlineNodes({ ...atom, commentIds: ['object-comment'] }, schema),
+					schema.text('R'),
+				]),
+			);
+			const view = new EditorView(document.createElement('div'), {
+				state: EditorState.create({ doc, selection: TextSelection.create(doc, 1) }),
+			});
+			try {
+				expect(view.state.doc.nodeAt(2)!.marks).toEqual([]);
+				expect(goToComment(view, 'next')).toBe('object-comment');
+				expect(view.state.selection.from).toBe(2);
+				expect(commentIdsAtSelection(view)).toEqual(['object-comment']);
+				expect(goToComment(view, 'previous')).toBe('object-comment');
+			} finally {
+				view.destroy();
+			}
+		});
 	it('moves forward and wraps to the first comment', () => {
 		const view = editor();
 		caret(view, 1);
