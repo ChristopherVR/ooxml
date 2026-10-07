@@ -100,7 +100,9 @@ native snapping and preview paint remain unverified. The shared quarter-turn
 command builder reuses local-shape admission and the existing rotation edit.
 Ten native per-shape Left/Right 90-degree comparisons cover custom pins,
 signed normalization, scaled pages and both half-turn boundaries. The nested
-Position > Rotate Shapes menu and its UI wiring remain unimplemented.
+Position > Rotate Shapes menu now uses the shared nested menu control and
+routes Left/Right 90-degree commands through the existing worker/history path.
+Flip Horizontal and Flip Vertical remain disabled pending native edit evidence.
 Native keyboard rotation
 commands, grouped/master/glued and 1D rotation, broader angle/formula
 and text/gradient paint cases, exact contours/pixels and native Office reopen

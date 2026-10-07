@@ -1710,3 +1710,24 @@ menu interaction. The Position > Rotate Shapes submenu, UI command wiring,
 native mouse/menu gesture evidence and Microsoft Visio reopen acceptance
 remain open. Six framework pointer-rotation cases pass after the admission
 extraction, including cancellation, history, save and reload.
+
+## Shared nested menus and Visio quarter-turn ribbon actions
+
+Source: ChristopherVR/ooxml at `c342e79b8`, the existing shared
+`office-ui-menu-button`, typed Visio ribbon builders/router and
+`ViewerCommands` edit lifecycle. The shared menu gains a submenu mode;
+product menu/item subclasses retain local keyboard navigation. Child panels
+reuse popovers, viewport placement, focus restoration and command events.
+Hover does not steal focus, ArrowRight enters, ArrowLeft/Escape returns and
+command selection closes the tree. No Visio-only popup implementation exists.
+
+Home > Position > Rotate Shapes routes its Left/Right 90-degree actions to
+the existing core quarter-turn builder and worker/history transaction. UI
+availability reuses the core local-shape admission; source protections still
+run in the edit transaction. Flip commands remain explicitly unavailable.
+Native references are the five owned Selection.Rotate exports recorded in
+the preceding entry. Browser tests compare both rectangle and ellipse saved
+poses and unchanged geometry/styles, plus undo/redo and public save/reload,
+through the actual nested menu in all six bindings. Literal native menu
+gestures, exact menu styling, grouped/master/glued rotation, flip editing and
+Microsoft Visio reopen acceptance remain open.

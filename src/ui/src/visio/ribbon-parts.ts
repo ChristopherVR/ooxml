@@ -20,6 +20,7 @@ export interface CommandSpec {
 	pressed?: boolean;
 	controls?: string;
 	checked?: boolean;
+	items?: readonly CommandSpec[];
 }
 export interface MenuSpec extends CommandSpec {
 	items: readonly CommandSpec[];
@@ -64,7 +65,7 @@ export function command(doc: Document, spec: CommandSpec): RibbonCommand {
 }
 
 /** A shared `office-ui-menu-button` (dropdown or split) with typed actions per item. */
-export function menu(doc: Document, spec: MenuSpec): RibbonCommand {
+export function menu(doc: Document, spec: MenuSpec, submenu = false): RibbonCommand {
 	const el = doc.createElement('office-ui-menu-button') as RibbonCommand;
 	const actions = new Map<string, VisioRibbonAction | undefined>();
 	const { action: _main, ...dropdown } = spec;
@@ -72,7 +73,8 @@ export function menu(doc: Document, spec: MenuSpec): RibbonCommand {
 	const reason = spec.unsupported ?? spec.items.find((item) => item.unsupported)?.unsupported;
 	decorate(el, spec.split ? spec : { ...dropdown, ...(reason ? { unsupported: reason } : {}) });
 	// A dropdown is usable when any item works; a split button follows its own action.
-	if (spec.split ? spec.action : spec.items.some((item) => item.action)) {
+	const usable = (item: CommandSpec): boolean => !!item.action || !!item.items?.some(usable);
+	if (spec.split ? spec.action : spec.items.some(usable)) {
 		el.removeAttribute('disabled');
 		delete el.dataset.unsupported;
 		el.setAttribute('title', spec.label);
@@ -82,18 +84,29 @@ export function menu(doc: Document, spec: MenuSpec): RibbonCommand {
 	if (spec.size === 'icon') el.setAttribute('icon-only', '');
 	el.dataset.size = spec.size ?? 'large';
 	el.dataset.menu = spec.id;
+	if (submenu) {
+		el.setAttribute('submenu', '');
+		el.removeAttribute('variant');
+	}
 	if (spec.split) actions.set(spec.id, spec.action);
-	for (const item of spec.items) {
-		const entry = doc.createElement('office-ui-menu-item');
-		decorate(entry, item);
+	const collect = (item: CommandSpec) => {
 		actions.set(item.id, item.action);
+		item.items?.forEach(collect);
+	};
+	for (const item of spec.items) {
+		const entry = item.items
+			? menu(doc, { ...item, items: item.items }, true)
+			: doc.createElement('office-ui-menu-item');
+		if (!item.items) decorate(entry, item);
+		collect(item);
 		el.append(entry);
 	}
-	el.addEventListener('office-command', (event) => {
-		event.stopPropagation();
-		const action = actions.get((event as CustomEvent<{ command: string }>).detail.command);
-		if (action) emitRibbonAction(el, action);
-	});
+	if (!submenu)
+		el.addEventListener('office-command', (event) => {
+			event.stopPropagation();
+			const action = actions.get((event as CustomEvent<{ command: string }>).detail.command);
+			if (action) emitRibbonAction(el, action);
+		});
 	return el;
 }
 

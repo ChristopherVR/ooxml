@@ -125,6 +125,12 @@ with an incompatible build of this package.
 
 ## Features: elements
 
+`office-ui-menu-button` accepts `submenu` when nested inside another menu.
+Its trigger becomes a menu item; hover, click or ArrowRight opens the child
+panel beside the parent, with viewport edge placement. ArrowLeft or Escape
+returns focus to its trigger; choosing a command closes the whole menu tree.
+Arrow navigation stays within the current menu and skips disabled entries.
+
 | Tag                                                   | Attributes / properties                                                                                                                                                                                                                                                                                                         | Events (all bubble, composed)                                                                                                                     |
 | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `office-ui-button`                                    | `label`, `icon`, `command`, `disabled`, `pressed`, `expanded`, `icon-only`, `variant="stacked"`, `keyshortcuts`                                                                                                                                                                                                                 | `office-command` `{ command }`                                                                                                                    |

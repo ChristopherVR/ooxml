@@ -4,9 +4,15 @@ import { OfficeElement, controlStyles, flag } from '../base';
 import { glyph } from '../glyph';
 import { definer, present } from '../registry';
 import css from './menu-button.css?raw';
+import { OfficeUiMenuItem } from './menu-item';
 
 type Item = HTMLElement & { disabled: boolean };
-const ENABLED_ITEMS = 'office-ui-menu-item:not([disabled]):not([hidden])';
+
+function menuOwner(element: Element): OfficeUiMenuButton | undefined {
+	for (let parent = element.parentElement; parent; parent = parent.parentElement)
+		if (parent instanceof OfficeUiMenuButton) return parent;
+	return undefined;
+}
 
 /**
  * Dropdown command with a menu of `office-ui-menu-item` children (Office's Find, Layers,
@@ -25,6 +31,7 @@ export class OfficeUiMenuButton extends OfficeElement {
 		command: { type: String, reflect: true },
 		keyshortcuts: { type: String },
 		disabled: flag,
+		submenu: flag,
 		iconOnly: { attribute: 'icon-only', ...flag },
 		open: { state: true },
 	};
@@ -33,6 +40,7 @@ export class OfficeUiMenuButton extends OfficeElement {
 	declare command: string | null;
 	declare keyshortcuts: string | null;
 	declare disabled: boolean;
+	declare submenu: boolean;
 	declare iconOnly: boolean;
 	declare open: boolean;
 	private outside: ((event: Event) => void) | undefined;
@@ -49,6 +57,7 @@ export class OfficeUiMenuButton extends OfficeElement {
 		this.command = null;
 		this.keyshortcuts = null;
 		this.disabled = false;
+		this.submenu = false;
 		this.iconOnly = false;
 		this.open = false;
 		// Item choices bubble on to the host; the menu only closes.
@@ -78,15 +87,38 @@ export class OfficeUiMenuButton extends OfficeElement {
 	}
 
 	private items(): Item[] {
-		return [...this.querySelectorAll<Item>(ENABLED_ITEMS)];
+		return [...this.querySelectorAll<Item>('*')].filter(
+			(item) =>
+				(item instanceof OfficeUiMenuItem ||
+					(item instanceof OfficeUiMenuButton && present(item.submenu))) &&
+				!present(item.disabled) &&
+				!item.hidden &&
+				menuOwner(item) === this,
+		);
+	}
+
+	override focus(options?: FocusOptions): void {
+		this.renderRoot.querySelector<HTMLElement>('.main')?.focus(options);
 	}
 
 	private toggle(): void {
+		if (present(this.submenu)) {
+			this.show(0);
+			return;
+		}
 		if (this.open) this.hide(true);
 		else this.show(0);
 	}
 
 	private show(focusIndex: number): void {
+		if (present(this.disabled)) return;
+		if (this.open) {
+			this.items()[focusIndex]?.focus();
+			return;
+		}
+		const parent = menuOwner(this);
+		for (const sibling of parent?.items() ?? [])
+			if (sibling !== this && sibling instanceof OfficeUiMenuButton) sibling.hide(false);
 		const panel = this.panel;
 		const wrap = this.renderRoot.querySelector('.wrap');
 		if (!panel || !wrap) return;
@@ -112,6 +144,11 @@ export class OfficeUiMenuButton extends OfficeElement {
 		const height = panel.offsetHeight;
 		if (!view || !width) return;
 		const maxLeft = view.innerWidth - width - 4;
+		if (present(this.submenu)) {
+			panel.style.left = `${Math.round(Math.max(4, Math.min(anchor.right + 2 + width > view.innerWidth ? anchor.left - width - 2 : anchor.right + 2, Math.max(4, maxLeft))))}px`;
+			panel.style.top = `${Math.round(Math.max(4, Math.min(anchor.top, view.innerHeight - height - 4)))}px`;
+			return;
+		}
 		const left = anchor.left > maxLeft ? Math.max(4, anchor.right - width) : anchor.left;
 		const top =
 			anchor.bottom + 2 + height > view.innerHeight && anchor.top - height - 2 > 0
@@ -137,6 +174,7 @@ export class OfficeUiMenuButton extends OfficeElement {
 	}
 
 	private closed(): void {
+		for (const item of this.items()) if (item instanceof OfficeUiMenuButton) item.hide(false);
 		if (this.outside) this.ownerDocument.removeEventListener('pointerdown', this.outside, true);
 		this.outside = undefined;
 		this.open = false;
@@ -149,8 +187,12 @@ export class OfficeUiMenuButton extends OfficeElement {
 	}
 
 	private onTriggerKey(event: KeyboardEvent): void {
-		if (event.key === 'ArrowDown' && !present(this.disabled)) {
+		if (
+			(event.key === 'ArrowDown' || (present(this.submenu) && event.key === 'ArrowRight')) &&
+			!present(this.disabled)
+		) {
 			event.preventDefault();
+			event.stopPropagation();
 			this.show(0);
 		}
 	}
@@ -162,14 +204,16 @@ export class OfficeUiMenuButton extends OfficeElement {
 		);
 		const move = (index: number) => {
 			event.preventDefault();
+			event.stopPropagation();
 			items[(index + items.length) % items.length]?.focus();
 		};
 		if (event.key === 'ArrowDown') move(from + 1);
 		else if (event.key === 'ArrowUp') move(from - 1);
 		else if (event.key === 'Home') move(0);
 		else if (event.key === 'End') move(items.length - 1);
-		else if (event.key === 'Escape') {
+		else if (event.key === 'Escape' || (present(this.submenu) && event.key === 'ArrowLeft')) {
 			event.preventDefault();
+			event.stopPropagation();
 			this.hide(true);
 		} else if (event.key === 'Tab') this.hide(false);
 	}
@@ -194,10 +238,13 @@ export class OfficeUiMenuButton extends OfficeElement {
 					aria-label=${ifDefined(iconOnly ? label : undefined)}
 					aria-keyshortcuts=${ifDefined(this.keyshortcuts || undefined)}
 					aria-haspopup=${ifDefined(split ? undefined : 'menu')}
+					role=${ifDefined(present(this.submenu) ? 'menuitem' : undefined)}
+					tabindex=${present(this.submenu) ? -1 : 0}
 					aria-expanded=${ifDefined(split ? undefined : String(open))}
 					?disabled=${disabled}
 					@click=${this.onMain}
 					@keydown=${this.onTriggerKey}
+					@pointerenter=${() => present(this.submenu) && this.show(-1)}
 					>${glyph(this.icon)}<span class="text" ?hidden=${iconOnly}>${label}</span></button
 				>
 				<!-- Without a split command the caret is decoration on one control, not a second button. -->
@@ -214,7 +261,7 @@ export class OfficeUiMenuButton extends OfficeElement {
 					?disabled=${disabled}
 					@click=${() => !disabled && this.toggle()}
 					@keydown=${this.onTriggerKey}
-					>${glyph('chevronDown', 'chevron')}</button
+					>${glyph(present(this.submenu) ? 'chevronRight' : 'chevronDown', 'chevron')}</button
 				>
 			</div>
 			<div

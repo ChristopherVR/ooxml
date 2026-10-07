@@ -6,6 +6,7 @@ export interface RibbonTargets {
 	controller: ViewerController;
 	history(key: 'undo' | 'redo'): void;
 	deleteSelection(): void;
+	rotateSelection(direction: 'left' | 'right'): void;
 	setTool(tool: CanvasTool): void;
 	toggleGrid(): void;
 	toggleRuler(): void;
@@ -26,6 +27,8 @@ export function routeRibbonAction(targets: RibbonTargets, action: VisioRibbonAct
 			return targets.history(action.key);
 		case 'delete':
 			return targets.deleteSelection();
+		case 'rotate':
+			return targets.rotateSelection(action.direction);
 		case 'tool':
 			return targets.setTool(action.tool);
 		case 'grid':

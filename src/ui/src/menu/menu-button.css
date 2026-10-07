@@ -2,6 +2,17 @@
 	display: inline-flex;
 	vertical-align: middle;
 }
+:host([submenu]) {
+	display: flex;
+}
+:host([submenu]) .wrap {
+	width: 100%;
+}
+:host([submenu]) .main {
+	flex: 1;
+	justify-content: flex-start;
+	padding-left: var(--office-space-6);
+}
 .wrap {
 	display: inline-flex;
 	align-items: stretch;

@@ -1,5 +1,7 @@
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { registerOfficeUi } from '../index';
+import { OfficeUiMenuButton } from './menu-button';
+import { OfficeUiMenuItem } from './menu-item';
 
 beforeAll(() => registerOfficeUi());
 afterEach(() => document.body.replaceChildren());
@@ -22,6 +24,60 @@ const commands = () => {
 type MenuButton = HTMLElement & { open: boolean; disabled: boolean };
 
 describe('office-ui-menu-button', () => {
+	it('retains keyboard navigation in product subclasses with custom tags', () => {
+		customElements.define('test-product-menu', class extends OfficeUiMenuButton {});
+		customElements.define('test-product-item', class extends OfficeUiMenuItem {});
+		const root = make<MenuButton>(
+			'<test-product-menu label="Position"><test-product-item label="First" command="first"></test-product-item><test-product-menu submenu label="Rotate"><test-product-item label="Left" command="left"></test-product-item></test-product-menu></test-product-menu>',
+		);
+		const nested = root.querySelector<MenuButton>('[submenu]')!;
+		root.shadowRoot!.querySelector<HTMLButtonElement>('.main')!.click();
+		key(root.querySelector('test-product-item')!, 'ArrowDown');
+		expect(document.activeElement).toBe(nested);
+		key(nested.shadowRoot!.querySelector('.main')!, 'ArrowRight');
+		expect(document.activeElement).toBe(nested.querySelector('test-product-item'));
+	});
+	it('keeps nested navigation local, returns to its parent and closes the whole tree on choice', () => {
+		const root = make<MenuButton>(`<office-ui-menu-button label="Position">
+			<office-ui-menu-item label="Align" command="align"></office-ui-menu-item>
+			<office-ui-menu-button submenu label="Rotate Shapes">
+				<office-ui-menu-item label="Left" command="left"></office-ui-menu-item>
+				<office-ui-menu-item label="Unavailable" command="skip" disabled></office-ui-menu-item>
+				<office-ui-menu-item label="Right" command="right"></office-ui-menu-item>
+			</office-ui-menu-button>
+		</office-ui-menu-button>`);
+		const seen = commands();
+		const nested = root.querySelector<MenuButton>('[submenu]')!;
+		const children = [...nested.querySelectorAll('office-ui-menu-item')];
+		root.shadowRoot!.querySelector<HTMLButtonElement>('.main')!.click();
+		key(root.querySelector('office-ui-menu-item')!, 'ArrowDown');
+		expect(document.activeElement).toBe(nested);
+		expect(nested.shadowRoot!.querySelector('.main')!.getAttribute('role')).toBe('menuitem');
+		key(nested.shadowRoot!.querySelector('.main')!, 'ArrowRight');
+		expect(nested.open).toBe(true);
+		expect(root.open).toBe(true);
+		expect(document.activeElement).toBe(children[0]);
+		key(children[0]!, 'ArrowDown');
+		expect(document.activeElement).toBe(children[2]);
+		key(children[2]!, 'ArrowLeft');
+		expect(nested.open).toBe(false);
+		expect(root.open).toBe(true);
+		expect(document.activeElement).toBe(nested);
+		nested.shadowRoot!.querySelector('.main')!.dispatchEvent(new Event('pointerenter'));
+		expect(nested.open).toBe(true);
+		// Hover must not steal focus from the parent, and clicking the hovered trigger keeps it open.
+		expect(document.activeElement).toBe(nested);
+		nested.shadowRoot!.querySelector<HTMLButtonElement>('.main')!.click();
+		expect(nested.open).toBe(true);
+		key(children[0]!, 'Escape');
+		expect(nested.open).toBe(false);
+		expect(root.open).toBe(true);
+		key(nested.shadowRoot!.querySelector('.main')!, 'ArrowRight');
+		children[2]!.shadowRoot!.querySelector<HTMLButtonElement>('button')!.click();
+		expect(seen).toEqual(['right']);
+		expect(root.open).toBe(false);
+		expect(nested.open).toBe(false);
+	});
 	const markup = (extra = '') =>
 		`<office-ui-menu-button label="Layers" icon="copy"${extra}>
 			<office-ui-menu-item command="layer-properties" label="Layer Properties"></office-ui-menu-item>

@@ -1,5 +1,11 @@
 import type { ViewerController, ViewerState } from './controller';
-import { editErrorMessage, isEditCancellation, visioPageInsertCommand } from 'ooxml-core/visio/ui';
+import {
+	editErrorMessage,
+	isEditCancellation,
+	visioPageInsertCommand,
+	visioQuarterTurnCommand,
+	visioLocalRotationShape,
+} from 'ooxml-core/visio/ui';
 import { RIBBON_ACTION_EVENT, type VisioRibbonAction, type CanvasTool } from './ribbon-action';
 import type { RibbonCommand } from './ribbon-parts';
 import { routeRibbonAction, type RibbonTargets } from './ribbon-router';
@@ -55,6 +61,7 @@ export class ViewerCommands {
 			controller: host.controller,
 			history: (key) => this.#history(key),
 			deleteSelection: () => this.#delete(),
+			rotateSelection: (direction) => this.#rotate(direction),
 			setTool: (tool) => this.setTool(tool),
 			toggleGrid: () => {
 				this.#grid = !this.#grid;
@@ -191,6 +198,17 @@ export class ViewerCommands {
 			if (index >= 0) this.host.controller.setPage(index);
 		}, 'Inserted a blank page.');
 	}
+	#rotate(direction: 'left' | 'right'): void {
+		const state = this.host.controller.state;
+		const page = state.document?.pages[state.pageIndex];
+		if (!page || !state.selectedShape || !this.#canEdit(state)) return;
+		const command = visioQuarterTurnCommand(page, state.selectedShape.id, direction);
+		if (command)
+			void this.#edit(
+				() => this.host.controller.applyEdits([command]),
+				`Rotated ${direction} 90°.`,
+			);
+	}
 	async #edit(action: () => Promise<void>, success?: string): Promise<void> {
 		const request = ++this.#pending;
 		const { root, viewport } = this.host;
@@ -263,6 +281,14 @@ export class ViewerCommands {
 		const editing = this.#canEdit(state);
 		if (this.#tool !== 'pointer' && !state.edit.sourceAvailable) this.#tool = 'pointer';
 		const page = state.document?.pages[state.pageIndex];
+		const rotating =
+			editing &&
+			!!page &&
+			!!state.selectedShape &&
+			!!visioLocalRotationShape(page, state.selectedShape.id);
+		for (const name of ['rotate-left', 'rotate-right']) button(name).disabled = !rotating;
+		root.querySelector<RibbonCommand>('[data-menu="rotate"]')!.disabled = !rotating;
+		root.querySelector<RibbonCommand>('[data-menu="position"]')!.disabled = !rotating;
 		button('undo').disabled = !state.edit.canUndo || state.edit.busy || state.loading;
 		button('redo').disabled = !state.edit.canRedo || state.edit.busy || state.loading;
 		button('pointer').setAttribute('pressed', String(this.#tool === 'pointer'));
