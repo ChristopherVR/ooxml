@@ -133,3 +133,23 @@ shared Visio UI tests passed, 48 documentation tests passed, and both core typec
 projects plus shared UI typechecking passed. The UI run enabled the native open,
 one-ended filled and two-ended filled VSDX matrices, plus the hash-pinned real
 code-5 corpus. Browser pixels and general native save/reopen parity were not tested.
+
+## Native short end-arrow increment
+
+One-ended straight filled arrows now match Visio when the arrow is longer than the
+line: the saved glyph keeps its size, its setback becomes zero, and the stem remains
+at the original endpoints. At equal length, Visio emits a duplicate origin and a
+small stem extension with a correspondingly reduced marker setback. Longer lines
+retain the previously verified trim. These cases are resolved in core; the UI uses
+the returned stem and marker anchors without changing the document model.
+
+The new matrix covers 168 exports (four styles, three sizes, two stroke weights and
+seven length ratios), including the exact boundary. Reproduce with
+`scripts/record-visio-short-arrows.ps1`; `VISIO_NATIVE_SHORT_ARROWS_DIR` enables the
+saved native VSDX parse/render check. Native SVG stem coordinates are compared at
+export precision. Zero-length paths, two-ended overlaps, curved paths, drawing-scale
+handling, browser pixels and full parity remain unverified or unsupported.
+
+Verification: 1,919 Visio core tests passed (34 optional skips), 703 shared UI tests
+passed, and both core typecheck projects plus shared UI typechecking passed. The UI
+run included all native arrow matrices and the hash-pinned code-5 document corpus.
