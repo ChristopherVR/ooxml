@@ -1,5 +1,6 @@
 import { XmlObject } from '../../types';
 import type { PptxTableCellStyle } from '../../types';
+import { ensureXmlChildOrCreate, ensureXmlChildren } from '../../utils/xml-access';
 import { TC_PR_BORDERS_ORDER, reorderObjectKeys } from '../../utils/xml-reorder';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeLayoutSwitching';
 import {
@@ -141,20 +142,19 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 
 		// Text alignment — set in first paragraph's pPr
 		if (style.align) {
-			const firstP = this.ensureArray(
-				(xmlCell['a:txBody'] as XmlObject | undefined)?.['a:p'],
-			)[0] as XmlObject | undefined;
+			const txBody = xmlCell['a:txBody'] as XmlObject | undefined;
+			const firstP = txBody ? ensureXmlChildren(txBody, 'a:p')[0] : undefined;
 			if (firstP) {
-				if (!firstP['a:pPr']) {
-					firstP['a:pPr'] = {};
-				}
+				// CT_TextParagraph requires pPr before runs and endParaRPr.
+				// Heal bare properties and merge existing properties in place.
+				const pPr = ensureXmlChildOrCreate(firstP, 'a:pPr', 'first');
 				const alignMap: Record<string, string> = {
 					left: 'l',
 					center: 'ctr',
 					right: 'r',
 					justify: 'just',
 				};
-				(firstP['a:pPr'] as XmlObject)['@_algn'] = alignMap[style.align] || 'l';
+				pPr['@_algn'] = alignMap[style.align] || 'l';
 			}
 		}
 

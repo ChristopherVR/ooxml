@@ -1,3 +1,4 @@
+import { XMLBuilder } from 'fast-xml-parser';
 import { describe, it, expect } from 'vitest';
 
 import type { XmlObject } from '../types';
@@ -260,6 +261,29 @@ describe('applyChartAxisTitleToXml', () => {
 });
 
 describe('applyChartAxisTitleStyleToXml', () => {
+	it.each(['a', 'x'])('inserts %s:pPr before runs and paragraph-end properties', (prefix) => {
+		const node: XmlObject = {
+			'c:title': {
+				'c:txPr': {
+					'a:bodyPr': {},
+					'a:lstStyle': {},
+					[`${prefix}:p`]: {
+						[`${prefix}:r`]: { [`${prefix}:t`]: 'Axis' },
+						[`${prefix}:endParaRPr`]: { '@_sz': '1400' },
+					},
+				},
+			},
+		};
+		applyChartAxisTitleStyleToXml(node, { fontSize: 18 }, getLocalName);
+		const body = (node['c:title'] as XmlObject)['c:txPr'] as XmlObject;
+		const paragraph = body[`${prefix}:p`] as XmlObject;
+		expect(Object.keys(paragraph).map(getLocalName)).toStrictEqual(['pPr', 'r', 'endParaRPr']);
+		expect(paragraph[`${prefix}:endParaRPr`]).toStrictEqual({ '@_sz': '1400' });
+		const xml = new XMLBuilder({ ignoreAttributes: false }).build(node) as string;
+		expect(xml).toContain(`<${prefix}:p><a:pPr><a:defRPr sz="1800"`);
+		expect(xml.match(/<a:pPr\b/g)).toHaveLength(1);
+	});
+
 	function axisWithTitle(): XmlObject {
 		return {
 			'c:axId': { '@_val': '1' },
