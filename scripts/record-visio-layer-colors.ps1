@@ -32,6 +32,7 @@ function Read-Paint($directory, $name) {
   gradientAngle=$angle;gradientStops=$stops;strokePixel=$strokePixel}
 }
 $ErrorActionPreference='Stop'
+. (Join-Path $PSScriptRoot 'visio-native-gradient.ps1')
 $directory=[IO.Path]::GetFullPath($OutputDirectory)
 if (-not $VerifyCore -and (Test-Path -LiteralPath $directory) -and @(Get-ChildItem -LiteralPath $directory).Count) { throw 'Use a fresh output directory to avoid native overwrite dialogs.' }
 if(-not (Test-Path -LiteralPath $directory)){New-Item -ItemType Directory -Path $directory | Out-Null}
@@ -108,19 +109,7 @@ try {
   if($name -eq 'hatch') { $shape.CellsU('FillPattern').FormulaU='2' }
   if($name -eq 'uncolored-alpha') { $layer.CellsC(2).FormulaU='255'; $shape.CellsU('Char.ColorTrans').FormulaU='50%' }
   if($name -like 'modern-gradient*') {
-   $shape.CellsU('FillGradientEnabled').FormulaU='1'
-   $shape.CellsU('FillGradientAngle').FormulaU='0 deg'
-   $shape.CellsU('FillGradientDir').FormulaU='0'
-   $shape.CellsU('RotateGradientWithShape').FormulaU='1'
-   $shape.CellsU('UseGroupGradient').FormulaU='0'
-   if($shape.SectionExists(249,0) -eq 0) { $shape.AddSection(249) | Out-Null }
-   while($shape.RowCount(249) -lt 2) { $shape.AddRow(249,-1,0) | Out-Null }
-   $shape.CellsSRC(249,0,0).FormulaU='RGB(0,255,0)'
-   $shape.CellsSRC(249,1,0).FormulaU='RGB(0,0,255)'
-   $shape.CellsSRC(249,0,1).FormulaU='20%'
-   $shape.CellsSRC(249,1,1).FormulaU='50%'
-   $shape.CellsSRC(249,0,2).FormulaU='0%'
-   $shape.CellsSRC(249,1,2).FormulaU='100%'
+   Set-VisioNativeLinearGradient $shape '0 deg' 'RGB(0,255,0)' 'RGB(0,0,255)' '20%' '50%'
    if($name -eq 'modern-gradient-partial') { $layer.CellsC(11).FormulaU='40%' }
   }
   $page.Export((Join-Path $directory "$name.svg"))

@@ -656,3 +656,12 @@ fixtures cover 16 independently created Excel style parts (201 through 216);
 COM font sizes establish 15 title defaults and all 16 axis/legend defaults.
 Style 204 omits a title size and COM returned a non-positive value, recorded
 as unavailable rather than treated as an expected font size.
+
+## Shared native Visio gradient setup (2026-10-07)
+
+Source: ChristopherVR/ooxml, scripts/record-visio-layer-colors.ps1 at
+92b92518ac72d67630cc961882a0eb64349f4aa5. The owned native ShapeSheet gradient
+setup moved into scripts/visio-native-gradient.ps1. The layer capture retains
+its original angle, colors and transparency; the fill capture reuses the same
+helper with explicit parameters. Section 249 and stop setup are unchanged.
+A fresh native run reproduced all 21 prior layer paint records exactly.

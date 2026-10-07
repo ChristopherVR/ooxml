@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { parseVsdx } from './parser';
+import { readFile, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { editVsdx } from './edit';
 import { cell, fixture, rectangle, row, section, shape } from './test-fixtures';
 
 const stop = (
@@ -23,6 +26,36 @@ const settings =
 	cell('FillGradientAngle', 0) +
 	cell('RotateGradientWithShape', 1) +
 	cell('UseGroupGradient', 0);
+
+const verticalNative = process.env.VISIO_NATIVE_LINEAR_VERTICAL_DIR;
+const reverseNative = process.env.VISIO_NATIVE_LINEAR_REVERSE_DIR;
+it.skipIf(!verticalNative || !reverseNative)(
+	'preserves genuine vertical saved gradients through core edits',
+	async () => {
+		for (const directory of [verticalNative!, reverseNative!]) {
+			const bytes = new Uint8Array(await readFile(join(directory, 'fill-patterns.vsdx')));
+			const original = await parseVsdx(bytes);
+			expect(original.pages).toHaveLength(6);
+			const saved = await editVsdx(bytes, [
+				{
+					type: 'move-shape',
+					pageId: original.pages[0]!.id,
+					shapeId: original.pages[0]!.shapes[0]!.id,
+					x: 2.25,
+					y: 1.5,
+				},
+			]);
+			const reopened = await parseVsdx(saved.bytes);
+			for (let index = 0; index < 6; index++) {
+				expect(original.pages[index]!.shapes[0]!.style.fillGradient?.type).toBe('linear');
+				expect(reopened.pages[index]!.shapes[0]!.style.fillGradient).toEqual(
+					original.pages[index]!.shapes[0]!.style.fillGradient,
+				);
+			}
+			await writeFile(join(directory, 'core-fill-patterns.vsdx'), saved.bytes);
+		}
+	},
+);
 async function parse(overrides = '', stops = stop(0, 0) + stop(1, 1, '#0000ff'), document = '') {
 	const parsed = await parseVsdx(
 		await fixture({
@@ -37,6 +70,35 @@ async function parse(overrides = '', stops = stop(0, 0) + stop(1, 1, '#0000ff'),
 	);
 	return { style: parsed.pages[0]!.shapes[0]!.style, diagnostics: parsed.diagnostics };
 }
+
+it.each([
+	[Math.PI / 2, [2, 2], [2, 0]],
+	[(3 * Math.PI) / 2, [2, 0], [2, 2]],
+	[-Math.PI / 2, [2, 0], [2, 2]],
+	[1.5707963267949, [2, 2], [2, 0]],
+])('normalizes native vertical angle %s with saved decimal rounding', async (angle, start, end) => {
+	const { style } = await parse(cell('FillGradientAngle', angle as number));
+	expect(style.fillGradient).toMatchObject({ type: 'linear', start, end });
+});
+
+it('ignores inherited wholly themed stop tails while diagnosing partly themed active rows', async () => {
+	const tail = Array.from({ length: 8 }, (_, index) =>
+		stop(index + 2, 'Themed', 'Themed', 'Themed'),
+	).join('');
+	const result = await parse('', stop(0, 0) + stop(1, 1, '#0000ff') + tail);
+	expect(result.style.fillGradient?.stops).toHaveLength(2);
+	expect(result.diagnostics.some((item) => item.code === 'unsupported-saved-fill-gradient')).toBe(
+		false,
+	);
+	const incomplete = await parse(
+		'',
+		stop(0, 0) + stop(1, 1, '#0000ff') + stop(2, 0.5, 'Themed', 'Themed'),
+	);
+	expect(incomplete.style.fillGradient).toBeUndefined();
+	expect(
+		incomplete.diagnostics.some((item) => item.code === 'unsupported-saved-fill-gradient'),
+	).toBe(true);
+});
 describe('saved horizontal fill gradients', () => {
 	it('normalizes complete saved stop caches into local inches', async () => {
 		const { style, diagnostics } = await parse();
@@ -95,7 +157,7 @@ describe('saved horizontal fill gradients', () => {
 	it.each([
 		cell('FillGradientDir', 3),
 		cell('FillGradientDir', 'Themed'),
-		cell('FillGradientAngle', Math.PI / 2),
+		cell('FillGradientAngle', Math.PI / 6),
 		cell('FillGradientAngle', 'Themed'),
 		cell('FillGradientAngle', 'bad'),
 		cell('RotateGradientWithShape', 0),
@@ -112,6 +174,7 @@ describe('saved horizontal fill gradients', () => {
 	it.each([
 		stop(0, 0),
 		stop(0, 0.8) + stop(1, 0.2),
+		stop(0, 0) + stop(1, 1) + row(2, '', ''),
 		stop(0, -0.1) + stop(1, 1),
 		stop(0, 0) + stop(1, 1.1),
 		stop(0, 0) + stop(1, 1, 'Themed'),

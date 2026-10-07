@@ -4,7 +4,7 @@ import { linearGradientEndpoints } from './theme-gradient';
 
 /**
  * Saved ShapeSheet gradients use radians and normalized [0,1] stop values.
- * Only complete local, shape-rotating linear caches are accepted. Theme and
+ * Only complete local, shape-rotating orthogonal linear caches are accepted. Theme and
  * root-style substitution happen before this function; missing caches are not
  * inferred from formulas, legacy pattern numbers, or an unrelated theme.
  * https://learn.microsoft.com/en-us/office/client-developer/visio/fill-gradient-section
@@ -20,7 +20,14 @@ export function savedFillGradient(
 ): VisioLinearGradient | undefined {
 	const cells = sheet.cells;
 	if (number(cells, 'FillGradientEnabled', NaN) !== 1) return undefined;
-	const rows = sectionRows(sheet, 'FillGradient').slice(0, 10);
+	// Native explicit stops override the active theme stops; wholly themed tail
+	// rows remain inherited placeholders and do not add colors to the gradient.
+	const rows = sectionRows(sheet, 'FillGradient')
+		.filter(
+			(row) =>
+				row.cells.size === 0 || ![...row.cells.values()].every((cell) => cell.value === 'Themed'),
+		)
+		.slice(0, 10);
 	// Pure theme placeholders belong to the DrawingML theme resolver.
 	if (!rows.some((row) => [...row.cells.values()].some((cell) => cell.value !== 'Themed')))
 		return undefined;
@@ -33,20 +40,16 @@ export function savedFillGradient(
 	};
 	const angle = number(cells, 'FillGradientAngle', NaN);
 	const wrapped = ((angle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
-	// Horizontal directions are sign-independent. Tolerate saved decimal rounding
-	// (for example 3.14159265358979); other angles still need orientation evidence.
-	const horizontal =
-		Math.min(wrapped, 2 * Math.PI - wrapped) < 1e-12
-			? 0
-			: Math.abs(wrapped - Math.PI) < 1e-12
-				? Math.PI
-				: undefined;
+	// Native quarter-turn SVG references establish clockwise, local y-up endpoints.
+	// Tolerate saved decimal rounding; oblique directions still need native evidence.
+	const quarter = Math.round(wrapped / (Math.PI / 2));
+	const orthogonal = Math.abs(wrapped - quarter * (Math.PI / 2)) < 1e-12;
 	if (
 		!Number.isFinite(width) ||
 		!Number.isFinite(height) ||
 		width <= 0 ||
 		height <= 0 ||
-		horizontal === undefined ||
+		!orthogonal ||
 		number(cells, 'FillGradientDir', NaN) !== 0 ||
 		number(cells, 'RotateGradientWithShape', NaN) !== 1 ||
 		number(cells, 'UseGroupGradient', NaN) !== 0
@@ -78,7 +81,7 @@ export function savedFillGradient(
 	}
 	return {
 		type: 'linear',
-		...linearGradientEndpoints(width, height, ((horizontal * 180) / Math.PI) * 60_000),
+		...linearGradientEndpoints(width, height, (quarter % 4) * 90 * 60_000),
 		stops,
 	};
 }

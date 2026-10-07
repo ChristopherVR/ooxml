@@ -17,11 +17,14 @@ for (const sample of [
 	{ name: 'radial-alpha', directory: process.env.VISIO_NATIVE_RADIAL_FILLS_ALPHA_DIR },
 	{ name: 'regions', directory: process.env.VISIO_NATIVE_REGION_FILLS_DIR },
 	{ name: 'regions-alpha', directory: process.env.VISIO_NATIVE_REGION_FILLS_ALPHA_DIR },
+	{ name: 'linear-vertical', directory: process.env.VISIO_NATIVE_LINEAR_VERTICAL_DIR },
+	{ name: 'linear-reverse', directory: process.env.VISIO_NATIVE_LINEAR_REVERSE_DIR },
 ]) {
 	const directory = sample.directory;
-	const radial = sample.name.startsWith('radial') || sample.name.startsWith('regions');
-	const firstPattern = sample.name.startsWith('regions') ? 31 : radial ? 36 : 2,
-		patternCount = radial ? 5 : 23;
+	const linear = sample.name.startsWith('linear');
+	const fullPage = linear || sample.name.startsWith('radial') || sample.name.startsWith('regions');
+	const firstPattern = linear ? 25 : sample.name.startsWith('regions') ? 31 : fullPage ? 36 : 2,
+		patternCount = linear ? 6 : fullPage ? 5 : 23;
 	for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
 		test(`${framework}: ${sample.name} native fills match live and exported SVG`, async ({
 			page,
@@ -36,7 +39,7 @@ for (const sample of [
 				),
 			);
 			const { results, groupDepths } = await page.evaluate(
-				async ({ references, firstPattern, radial }) => {
+				async ({ references, firstPattern, fullPage }) => {
 					const load = (path: string) => import(/* @vite-ignore */ path);
 					const { exportPageSvg, renderPage } = await load('/test-api.js');
 					const model = (
@@ -63,7 +66,7 @@ for (const sample of [
 							context.fillRect(0, 0, 576, 432);
 							context.drawImage(image, 0, 0, 576, 432);
 							return (
-								radial
+								fullPage
 									? context.getImageData(0, 0, 576, 432)
 									: context.getImageData(156, 156, 96, 96)
 							).data;
@@ -107,7 +110,7 @@ for (const sample of [
 						groupDepths: model.pages.map((page) => groupDepth(page.shapes)),
 					};
 				},
-				{ references, firstPattern, radial },
+				{ references, firstPattern, fullPage },
 			);
 			if (sample.name.startsWith('group')) expect(groupDepths).toEqual(Array(23).fill(2));
 			expect(results).toHaveLength(patternCount * 2);

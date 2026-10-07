@@ -588,3 +588,49 @@ now narrows the gradient discriminant before checking linear endpoints, fixing
 the test type errors introduced when radial paints were added. Its four focused tests passed. After generating the missing local PowerPoint
 declarations, the full UI typecheck passed for both the strict and relaxed PPTX
 projects. The seven missing-declaration errors were local build prerequisites.
+
+## Native saved vertical gradients and inherited placeholders (2026-10-07)
+
+Saved ShapeSheet linear gradients now accept all orthogonal cached angles,
+including saved decimal rounding. The existing shared linear endpoint helper
+normalizes 90 and 270 degrees in local y-up inches. Oblique saved angles, group
+gradients and gradients that do not rotate with their shape remain diagnosed.
+
+Native sources exposed an additional preservation/display issue: two explicit
+stop rows inherit eight wholly themed placeholder rows from the Theme style.
+Those unused tail rows are now excluded from active stop normalization. Empty
+active rows and partly themed active rows remain rejected, as do malformed
+colors, positions and transparency. Original XML rows remain unchanged on save.
+
+The native setup in the layer capture was extracted into a shared PowerShell
+helper; both capture scripts use it. A fresh 21-case layer run, in
+visio-layer-colors-8f6e96259c324d1ebda122de6e084662 in the local temporary
+directory, reproduced every original native paint record unchanged.
+The extraction is recorded in PROVENANCE.md.
+
+New modern gradient captures use legacy patterns 25-30 underneath explicit saved
+stops, proving that the modern gradient overrides all six legacy codes. They are
+visio-fill-patterns-8c74ec6e599846029ce5130cc14a194e (90 degrees, opaque) and
+visio-fill-patterns-7f4b843fd2494e19b82707140ba063c7 (270 degrees, alpha) in
+the local temporary directory. Enable VISIO_NATIVE_LINEAR_VERTICAL_DIR and
+VISIO_NATIVE_LINEAR_REVERSE_DIR for native browser and preservation comparisons.
+The core move/save/reparse test accepted both genuine sources and wrote
+core-fill-patterns.vsdx candidates without changing normalized gradient paint.
+
+A separate owned native reopen probe used OpenEx(456): hidden window, macros
+disabled, no recent-document entry and no workspace restoration. It still stalled
+on the native original, before reaching the core-edited file. Its owned Windows
+Visio process 28404 and PowerShell process 38376 were verified and terminated;
+the user's Visio process 43312 was left running. Native reopen acceptance remains
+unverified. Flag meanings follow Microsoft's Documents.OpenEx documentation:
+https://learn.microsoft.com/en-us/office/vba/api/visio.documents.openex
+
+All six framework routes passed both saved-gradient captures: 12 scenarios and
+144 exact full-page 576-by-432 RGBA live/export comparisons against native SVG
+rasterization. Core regressions cover wrapped and rounded quarter-turn angles,
+inherited wholly themed tails and malformed empty/partly themed active rows.
+The Visio core suite passed 2,048 tests with 45 optional skips; UI passed 712 tests
+with seven optional skips. Strict core types, the complete UI typecheck (strict
+and relaxed PPTX projects), viewer types, viewer formatting and root lint passed.
+Root lint retains its nine existing unrelated warnings. Native reopening and
+native PNG pipeline equivalence remain unverified.
