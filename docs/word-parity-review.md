@@ -564,3 +564,22 @@ cached results and bold formatting against four native replacement references.
 Word 16.0.20430 converts those imported simple fields to complex fields on save.
 Deleting an entire simple result, non-text/structural paste and current Microsoft
 365 subscription certification remain unfinished.
+
+Backspace/Delete now retain the instruction when removing the whole simple
+result or its final character. An empty result uses the existing complex-field
+markers, which native Word also writes when saving the empty imported field.
+Direct formatting from deleted result text is excluded from those structural
+markers; the empty export reopens with matching native result formatting. Ordinary
+history restores the original simple field, and mounted Yjs peers converge and
+restore it through local undo. Six bindings cover result deletion, saved code,
+undo/redo and subsequent typing. Cut, structural paste, imported explicit empty
+simple results and selection spanning multiple simple fields still need coverage.
+
+With Track Changes enabled, deleted result text stays inside one complex field,
+instead of retaining a simple field beside an empty duplicate. The shared revision
+recorder recognizes this structural replacement, and native deleted result text
+retains its field tag on import. Accept/reject preserve the instruction; deleting
+the author's own pending result insertion removes it outright. Core and six-binding
+browser cases cover resolution and undo. The tracked export reopens in Word with
+matching body text, field codes/results, bold and revision count. Multi-author
+result replacements, partial pending insertions and cut remain separate work.

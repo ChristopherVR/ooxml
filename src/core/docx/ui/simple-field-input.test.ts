@@ -5,14 +5,38 @@ import { markSpecs } from './schema-marks';
 import { runToInlineNodes, inlineNodeRun } from './run-adapter';
 import { fieldResultRanges } from './field-results';
 import { fieldClipboardSlice } from './field-clipboard';
-import { replaceSimpleFieldResult, simpleFieldPasteSlice } from './simple-field-input';
+import {
+	deleteSimpleFieldResult,
+	replaceSimpleFieldResult,
+	simpleFieldPasteSlice,
+} from './simple-field-input';
+import { fieldMarkerNodeSpec } from './break-note-schema';
 const schema = new Schema({
 	nodes: {
 		doc: { content: 'paragraph+' },
 		paragraph: { content: 'inline*' },
 		text: { group: 'inline' },
+		fieldMarker: fieldMarkerNodeSpec,
 	},
 	marks: markSpecs,
+});
+it('retains an empty instruction independently from an adjacent identical simple field', () => {
+	const state = EditorState.create({ doc, selection: TextSelection.create(doc, 2, 4) });
+	const tr = deleteSimpleFieldResult(state, true)!;
+	expect(tr.doc.textContent).toBe('LCDR');
+	expect(tr.selection.from).toBe(5);
+	expect(fieldResultRanges(tr.doc).map((run) => run.text)).toEqual(['CD']);
+	const runs = Array.from({ length: tr.doc.firstChild!.childCount }, (_, index) =>
+		inlineNodeRun(tr.doc.firstChild!.child(index))!,
+	);
+	expect(runs.filter((run) => run.fieldChar).map((run) => run.fieldChar)).toEqual([
+		'begin',
+		'separate',
+		'end',
+	]);
+	expect(runs.find((run) => run.fieldCode)?.fieldCode).toBe('REF Target');
+	expect(runs.find((run) => run.field)?.fieldInstanceId).toBe('second');
+	expect(replaceSimpleFieldResult(state, 2, 3, '')).toBeNull();
 });
 const field = (text: string, id: string) =>
 	runToInlineNodes(

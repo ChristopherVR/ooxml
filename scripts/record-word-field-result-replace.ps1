@@ -1,5 +1,5 @@
 # Record replacements inside synthetic cached field results in an owned hidden Word instance.
-param([Parameter(Mandatory)][string]$SourceDocument, [Parameter(Mandatory)][string]$OutputDirectory)
+param([Parameter(Mandatory)][string]$SourceDocument, [Parameter(Mandatory)][string]$OutputDirectory, [AllowEmptyString()][string]$Replacement = 'X', [switch]$TrackChanges)
 $ErrorActionPreference = 'Stop'
 $application = New-Object -ComObject Word.Application
 $application.Visible = $false
@@ -22,7 +22,8 @@ try {
             elseif ($kind -eq 'end') { $end = $result.End; $start = $end - 1 }
             else { $start = $result.Start + 1; $end = $start + 1 }
             $range = $document.Range($start, $end)
-            $range.Text = 'X'
+            $document.TrackRevisions = [bool]$TrackChanges
+            $range.Text = $Replacement
             $currentResult = $field.Result
             try { Write-Output "$kind fields: $($document.Fields.Count); result: $($currentResult.Text)" }
             finally { [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($currentResult) }

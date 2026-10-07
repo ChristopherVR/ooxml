@@ -75,6 +75,24 @@ for (const name of [
 			const field = fieldResultRanges(av.state.doc)[0]!;
 			ab.stopCapturing();
 			av.dispatch(
+				av.state.tr.setSelection(TextSelection.create(av.state.doc, field.from, field.to)),
+			);
+			av.someProp('handleKeyDown', (handler) =>
+				handler(av, new KeyboardEvent('keydown', { key: 'Delete' })),
+			);
+			expect(av.state.doc.eq(bv.state.doc)).toBe(true);
+			const emptySaved = (await loadDocx(await b!.saveBytes())).model;
+			expect(runsOf(emptySaved).filter((run) => run.fieldChar === 'begin')).toHaveLength(1);
+			expect(
+				runsOf(emptySaved)
+					.filter((run) => run.field)
+					.map((run) => run.text),
+			).toEqual(name === 'simple-field' ? [] : ['ABCDE']);
+			expect(ab.undo()).toBe(true);
+			expect(av.state.doc.eq(bv.state.doc)).toBe(true);
+			expect(fieldResultRanges(bv.state.doc)[0]!.text).toBe('ABCDE');
+			ab.stopCapturing();
+			av.dispatch(
 				av.state.tr.setSelection(
 					TextSelection.create(av.state.doc, field.from + 1, field.from + 2),
 				),

@@ -1,7 +1,11 @@
 import type { Node as ProseMirrorNode } from 'prosemirror-model';
 import { Plugin, TextSelection, type EditorState, type Transaction } from 'prosemirror-state';
 import { fieldClipboardSlice } from './field-clipboard';
-import { replaceSimpleFieldResult, simpleFieldPasteSlice } from './simple-field-input';
+import {
+	deleteSimpleFieldResult,
+	replaceSimpleFieldResult,
+	simpleFieldPasteSlice,
+} from './simple-field-input';
 
 /** Field marker kinds in document order. */
 function markerKinds(doc: ProseMirrorNode): string[] {
@@ -53,7 +57,9 @@ export function fieldGuardPlugin(): Plugin {
 			},
 			handleKeyDown: (view, event) => {
 				if (event.key !== 'Backspace' && event.key !== 'Delete') return false;
-				const transaction = deleteAroundMarkers(view.state, event.key === 'Backspace');
+				const transaction =
+					deleteAroundMarkers(view.state, event.key === 'Backspace') ??
+					deleteSimpleFieldResult(view.state, event.key === 'Backspace');
 				if (transaction) view.dispatch(transaction);
 				return Boolean(transaction);
 			},

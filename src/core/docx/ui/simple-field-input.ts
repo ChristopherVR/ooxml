@@ -1,6 +1,8 @@
 import { Fragment, Slice, type Mark, type Node } from 'prosemirror-model';
 import type { EditorState, Transaction } from 'prosemirror-state';
+import { TextSelection } from 'prosemirror-state';
 import { fieldResultRanges, type FieldResultRange } from './field-results';
+import { inlineNodeRun, runToInlineNodes } from './run-adapter';
 
 function targetField(state: EditorState, from: number, to: number): FieldResultRange | undefined {
 	return fieldResultRanges(state.doc).find(
@@ -66,8 +68,26 @@ export function replaceSimpleFieldResult(
 	to: number,
 	text: string,
 ): Transaction | null {
-	const field = text ? targetField(state, from, to) : undefined;
+	const field = targetField(state, from, to);
 	if (!field) return null;
+	if (!text) {
+		if (from !== field.from || to !== field.to || !state.schema.nodes.fieldMarker) return null;
+		const run = inlineNodeRun(state.doc.nodeAt(from)!);
+		if (!run) return null;
+		// A simple field has no separately formatted code runs. Its removed result's
+		// direct formatting must not become formatting on the structural markers.
+		const format = {
+			...(run.commentIds && { commentIds: run.commentIds }),
+		};
+		const markers = [
+			{ ...format, text: '', fieldChar: 'begin' as const },
+			{ ...format, text: '', fieldCode: field.mark.attrs.instr as string },
+			{ ...format, text: '', fieldChar: 'separate' as const },
+			{ ...format, text: '', fieldChar: 'end' as const },
+		].flatMap((item) => runToInlineNodes(item, state.schema));
+		const tr = state.tr.replaceWith(from, to, markers);
+		return tr.setSelection(TextSelection.create(tr.doc, from + 3));
+	}
 	const tr = state.tr.insertText(text, from, to);
 	tr.doc.nodesBetween(from, from + text.length, (node, pos) => {
 		if (!node.isText) return;
@@ -75,4 +95,15 @@ export function replaceSimpleFieldResult(
 			tr.addMark(Math.max(from, pos), Math.min(from + text.length, pos + node.nodeSize), mark);
 	});
 	return tr;
+}
+
+/** Preserve the instruction when Backspace/Delete removes the last cached result text. */
+export function deleteSimpleFieldResult(state: EditorState, backward: boolean): Transaction | null {
+	const { from, to, empty } = state.selection;
+	if (!empty) return replaceSimpleFieldResult(state, from, to, '');
+	const start = backward ? from - 1 : from;
+	const end = backward ? to : to + 1;
+	return start >= 0 && end <= state.doc.content.size
+		? replaceSimpleFieldResult(state, start, end, '')
+		: null;
 }

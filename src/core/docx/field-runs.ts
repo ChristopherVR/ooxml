@@ -35,7 +35,8 @@ export function createFieldTracker() {
 					if (depth === 0) inResult = false;
 				}
 			} else if (named(child, 'instrText') && depth === 1 && !inResult) instr += textContent(child);
-			else if (named(child, 't') && inResult && depth === 1) tagged = true;
+			else if ((named(child, 't') || named(child, 'delText')) && inResult && depth === 1)
+				tagged = true;
 		}
 		if (tagged && instr.trim()) run.field = { instr: instr.trim() };
 		return run;

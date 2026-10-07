@@ -59,6 +59,56 @@ const replacements = [
 	{ name: 'start', from: 0, to: 1, expected: 'XBCDE' },
 	{ name: 'end', from: 4, to: 5, expected: 'ABCDX' },
 ];
+for (const key of ['Backspace', 'Delete'])
+	it(`preserves the instruction when ${key} deletes the last result character`, () => {
+		const view = editor(true);
+		const field = fieldResultRanges(view.state.doc)[0]!;
+		const doc = view.state.tr.delete(field.from + 1, field.to).doc;
+		view.updateState(
+			EditorState.create({
+				doc,
+				selection: TextSelection.create(doc, key === 'Backspace' ? field.from + 1 : field.from),
+				plugins: [history(), fieldGuardPlugin()],
+			}),
+		);
+		let handled = false;
+		view.someProp(
+			'handleKeyDown',
+			(handler) => (handled = Boolean(handler(view, new KeyboardEvent('keydown', { key })))),
+		);
+		expect(handled).toBe(true);
+		expect(view.state.doc.textContent).toBe('LR');
+		const code: string[] = [];
+		view.state.doc.descendants((node) => {
+			if (node.attrs.kind === 'code') code.push(node.attrs.code);
+		});
+		expect(code).toEqual(['REF Bookmark']);
+		undo(view.state, view.dispatch);
+		expect(view.state.doc.eq(doc)).toBe(true);
+	});
+for (const key of ['Backspace', 'Delete'])
+	it(`preserves an empty simple field after ${key}, subsequent typing and undo`, () => {
+		const view = editor(true);
+		const original = view.state.doc;
+		const field = fieldResultRanges(original)[0]!;
+		view.dispatch(view.state.tr.setSelection(TextSelection.create(original, field.from, field.to)));
+		let handled = false;
+		view.someProp(
+			'handleKeyDown',
+			(handler) => (handled = Boolean(handler(view, new KeyboardEvent('keydown', { key })))),
+		);
+		expect(handled).toBe(true);
+		expect(view.state.doc.textContent).toBe('LR');
+		const kinds: string[] = [];
+		view.state.doc.descendants((node) => {
+			if (node.type.name === 'fieldMarker') kinds.push(node.attrs.kind);
+		});
+		expect(kinds).toEqual(['begin', 'code', 'separate', 'end']);
+		view.dispatch(view.state.tr.insertText('X'));
+		expect(fieldResultRanges(view.state.doc).map((run) => run.text)).toEqual(['X']);
+		undo(view.state, view.dispatch);
+		expect(view.state.doc.eq(original)).toBe(true);
+	});
 for (const simple of [true, false])
 	for (const replacement of replacements)
 		it(`retains a ${simple ? 'simple' : 'complex'} field during ${replacement.name} result paste`, () => {

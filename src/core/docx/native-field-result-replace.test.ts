@@ -8,6 +8,8 @@ for (const [kind, text] of Object.entries({
 	whole: 'X',
 	start: 'XBCDE',
 	end: 'ABCDX',
+	empty: '',
+	'tracked-empty': 'ABCDE',
 }))
 	it(`preserves native ${kind} cached field replacement through a neighboring edit`, async () => {
 		const loaded = await loadDocx(
@@ -19,6 +21,7 @@ for (const [kind, text] of Object.entries({
 		);
 		const paragraph = loaded.model.blocks[0] as Paragraph;
 		const fields = paragraph.runs.filter((run) => run.field);
+		if (kind === 'tracked-empty') expect(fields[0]!.revision?.kind).toBe('delete');
 		// Native Word converts imported simple fields to complex fields when saving.
 		const results: string[] = [];
 		let result = '';

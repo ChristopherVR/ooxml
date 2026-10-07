@@ -1593,3 +1593,26 @@ copy: line chart, 18-point bold Aptos Narrow title and 10-point legend/axis
 fonts. Built-in text defaults do not establish root chart text inheritance,
 mixed-run or East Asian/complex-script font parity, native font measurement,
 manual/automatic layout, built-in paint defaults or complete Excel parity.
+
+## Empty Word cached-result preservation
+
+Source: ChristopherVR/ooxml at `908c45ea9`, `simple-field-input.ts`, field guard,
+run adapter and existing complex-field schema. Whole-result and final-character
+Backspace/Delete replace a simple result with the existing begin/code/separate/end
+markers, retaining its instruction and comment metadata. Deleted result formatting
+is excluded from structural markers, matching the owned Word empty-result export.
+No new schema, collaboration protocol or viewer codec was introduced.
+
+The native replacement recorder now accepts empty replacement text. Its empty
+fixture retains two adjacent field instructions, and the editor-hook export
+matches native Word 16.0.20430 on reopen. Browser history/typing and mounted Yjs
+convergence/export/undo cover the existing body representation. Cut and explicit
+empty simple-field import remain outside these cases.
+
+`track-simple-field-deletion.ts` extends the existing revision replacement replay
+for this marker conversion. Retained deleted result text stays inside one field;
+the current author's pending insertion is removed. The parser's field tracker
+recognizes native `w:delText` alongside `w:t`. A native tracked deletion fixture
+and reopen comparison retain two fields and one text revision. Core resolution
+and six-binding browser cases cover accept/reject and undo; this does not establish
+all field editing with Track Changes or multi-author revision attribution.

@@ -9,6 +9,7 @@ import { trackRunFormatting } from './track-run-formatting';
 import { trackParagraphFormatting } from './track-paragraph-formatting';
 import { canonicalHardBreak, canonicalizeHardBreaks } from './hard-break-revisions';
 import { inlineTextRevision } from './review-inline-revisions';
+import { trackSimpleFieldDeletion } from './track-simple-field-deletion';
 
 /** Text removed by the latest tracked cut, so pasting it back records a move. */
 interface TrackState {
@@ -76,6 +77,16 @@ function applyTrackedReplace(
 	date: string,
 	nextRevisionId: () => string,
 ): TrackedChange {
+	const fieldDeletion = trackSimpleFieldDeletion(
+		transform,
+		from,
+		to,
+		slice,
+		author,
+		date,
+		nextRevisionId,
+	);
+	if (fieldDeletion) return fieldDeletion;
 	const schema = transform.doc.type.schema;
 	const change: TrackedChange = { deletionIds: [], deletedText: '', insertedText: '' };
 	const segments = segmentsOf(transform.doc, from, to, author);

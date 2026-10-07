@@ -9,9 +9,10 @@ $cases = @()
 try {
     $exports = (Resolve-Path -LiteralPath $ExportDirectory).Path
     $references = (Resolve-Path -LiteralPath $ReferenceDirectory).Path
-    foreach ($kind in @('partial', 'whole', 'start', 'end')) {
+    foreach ($kind in @('partial', 'whole', 'start', 'end', 'empty', 'tracked-empty')) {
         $reference = $null
-        foreach ($method in @('native', 'typing', 'paste')) {
+        $methods = if ($kind -in @('empty', 'tracked-empty')) { @('native', 'delete') } else { @('native', 'typing', 'paste') }
+        foreach ($method in $methods) {
             $path = if ($method -eq 'native') { Join-Path $references "$kind.docx" } else { Join-Path $exports "$kind-$method.docx" }
             $document = $application.Documents.Open($path, $false, $true, $false)
             $content = $document.Content
@@ -25,9 +26,9 @@ try {
                     try { $fields += [ordered]@{ result = [string]$result.Text; instruction = ([string]$code.Text).Trim(); bold = [int]$font.Bold } }
                     finally { foreach ($com in @($font, $code, $result, $field)) { [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($com) } }
                 }
-                $entry = [ordered]@{ name = "$kind-$method"; text = [string]$content.Text; fields = $fields }
-                $snapshot = [ordered]@{ text = $entry.text; fields = $fields } | ConvertTo-Json -Depth 5 -Compress
-                if ($reference -and $snapshot -cne $reference) { throw "Native cached-result comparison differs: $kind-$method" }
+                $entry = [ordered]@{ name = "$kind-$method"; text = [string]$content.Text; fields = $fields; revisions = [int]$document.Revisions.Count }
+                $snapshot = [ordered]@{ text = $entry.text; fields = $fields; revisions = $entry.revisions } | ConvertTo-Json -Depth 5 -Compress
+                if ($reference -and $snapshot -cne $reference) { throw "Native cached-result comparison differs: $kind-$method`nExpected: $reference`nActual: $snapshot" }
                 $reference = $snapshot
                 $cases += $entry
             } finally {

@@ -5,11 +5,11 @@ import { EditorState, TextSelection } from 'prosemirror-state';
 import { DOMParser } from 'prosemirror-model';
 import { JSDOM } from 'jsdom';
 import { loadDocx } from 'ooxml-core/docx';
-import { fieldGuardPlugin, fieldResultRanges } from 'ooxml-core/docx/ui';
+import { fieldGuardPlugin, fieldResultRanges, trackChangesPlugin } from 'ooxml-core/docx/ui';
 import { modelToDoc, docToModel } from '../src/docx/model-adapter.ts';
 
-const output = process.argv[2];
-if (!output) throw new Error('Provide an output directory');
+if (!process.argv[2]) throw new Error('Provide an output directory');
+const output = resolve(process.argv[2]);
 await mkdir(output, { recursive: true });
 const loaded = await loadDocx(
 	await readFile(
@@ -77,3 +77,43 @@ for (const [kind, offsets] of Object.entries({
 	}
 }
 console.log(resolve(output));
+
+const emptyDoc = modelToDoc(model);
+const emptyField = fieldResultRanges(emptyDoc)[0];
+const emptyGuard = fieldGuardPlugin();
+let emptyState = EditorState.create({
+	doc: emptyDoc,
+	selection: TextSelection.create(emptyDoc, emptyField.from, emptyField.to),
+	plugins: [emptyGuard],
+});
+const emptyView = {
+	get state() {
+		return emptyState;
+	},
+	dispatch(tr) {
+		emptyState = emptyState.applyTransaction(tr).state;
+	},
+};
+if (!emptyGuard.props.handleKeyDown.call(emptyGuard, emptyView, { key: 'Backspace' }))
+	throw new Error('Empty result deletion was not handled');
+await writeFile(
+	resolve(output, 'empty-delete.docx'),
+	await loaded.save(docToModel(emptyState.doc, model)),
+);
+
+emptyState = EditorState.create({
+	doc: emptyDoc,
+	selection: TextSelection.create(emptyDoc, emptyField.from, emptyField.to),
+	plugins: [
+		emptyGuard,
+		trackChangesPlugin(
+			() => 'Ada',
+			() => true,
+		),
+	],
+});
+emptyGuard.props.handleKeyDown.call(emptyGuard, emptyView, { key: 'Backspace' });
+await writeFile(
+	resolve(output, 'tracked-empty-delete.docx'),
+	await loaded.save(docToModel(emptyState.doc, model)),
+);
