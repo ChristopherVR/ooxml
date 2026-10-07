@@ -879,3 +879,17 @@ adapter tests stay with `load/source.ts`. Asset resolution and metadata are
 retained. The shared load options additionally forward the core's existing
 archive expansion limit for embedded consumers. No Office parser or asset
 resolution algorithm is copied into Teams.
+
+## Shared DrawingML CSS paint conversion
+
+Source: ChristopherVR/ooxml at `94c1f0f82`,
+`src/core/xlsx/layout/chart-appearance.ts`, the resolved hex/alpha-to-CSS conversion.
+It moved unchanged to `diagram/drawing-color-css.ts` and is used by chart
+appearance and series/point paint resolution. Ordered alpha transforms still
+come from the shared DrawingML color resolver, not a viewer-specific codec.
+Solid chart transparency was measured with Excel COM using
+`scripts/record-xlsx-chart-transparency.ps1`; its independently saved/reopened
+0%, 37% and 100% chart XML and color-change measurements are in
+`xlsx/__fixtures__/excel-chart-transparency.json`. The pane reuses the existing
+native range template and number fields. Gradient-to-solid conversion and
+transparency edits live in core, preserving DrawingML color choices.

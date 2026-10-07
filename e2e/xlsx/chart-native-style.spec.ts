@@ -122,9 +122,20 @@ for (const framework of FRAMEWORKS)
 		const fill = pane.getByRole('combobox', { name: 'Fill', exact: true });
 		await expect(series).toHaveValue('1');
 		await expect(fill).toHaveValue('gradient');
+		const transparency = pane.getByRole('spinbutton', { name: 'Transparency', exact: true });
+		await expect(transparency).toBeDisabled();
 		await fill.selectOption('solid');
 		await pane.getByRole('button', { name: 'Color', exact: true }).click();
 		await page.getByRole('menuitem', { name: 'Accent 1, Lighter 40%', exact: true }).click();
+		await transparency.fill('37');
+		await transparency.press('Tab');
+		await expect(chart.locator('g[data-chart-series="1"] rect').first()).toHaveAttribute(
+			'fill',
+			/^rgba\(.*0\.63\)$/,
+		);
+		await pane.getByRole('button', { name: 'Color', exact: true }).click();
+		await page.getByRole('menuitem', { name: 'Accent 1, Lighter 40%', exact: true }).click();
+		await expect(transparency).toHaveValue('37');
 		const bytes = await editor(page).evaluate(async (node) =>
 			Array.from(await (node as unknown as { saveBytes(): Promise<Uint8Array> }).saveBytes()),
 		);
@@ -139,6 +150,7 @@ for (const framework of FRAMEWORKS)
 			transforms: [
 				{ name: 'lumMod', value: '60000' },
 				{ name: 'lumOff', value: '40000' },
+				{ name: 'alpha', value: '63000' },
 			],
 		});
 		await fill.selectOption('none');
@@ -148,6 +160,13 @@ for (const framework of FRAMEWORKS)
 		);
 		await editor(page).evaluate((node) => (node as unknown as { undo(): void }).undo());
 		await expect(fill).toHaveValue('solid');
+		await expect(transparency).toHaveValue('37');
+		const transparencySlider = pane.getByRole('slider', { name: 'Transparency', exact: true });
+		await transparencySlider.focus();
+		await transparencySlider.press('Home');
+		await expect(transparency).toHaveValue('0');
+		await editor(page).evaluate((node) => (node as unknown as { undo(): void }).undo());
+		await expect(transparencySlider).toHaveValue('37');
 		await expect(series).toHaveValue('1');
 		await series.selectOption('0');
 		await expect(fill).toHaveValue('gradient');
@@ -155,6 +174,7 @@ for (const framework of FRAMEWORKS)
 			(node as unknown as { readOnly: boolean }).readOnly = true;
 		});
 		await expect(fill).toBeDisabled();
+		await expect(transparencySlider).toBeDisabled();
 		expect(errors).toEqual([]);
 	});
 

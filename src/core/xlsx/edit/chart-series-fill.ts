@@ -3,6 +3,7 @@ import type { ChartObject, Color } from '../model';
 import { THEME_SLOTS } from '../layout/colors';
 import type { ChartPatch } from './charts';
 import { sameChartColor } from './chart-colors';
+import { chartPaletteSeriesColorChoice, findChartColorPalette } from '../../chart/color-palettes';
 
 /** Spreadsheet theme tints use HSL luminance, represented by DrawingML lumMod/lumOff. */
 export function chartDrawingColor(color: Color | undefined): DiagramColor | undefined {
@@ -37,10 +38,52 @@ export function chartSeriesFillPatch(
 		throw new RangeError(`No chart series at index ${index}`);
 	const choice = color === null ? undefined : chartDrawingColor(color);
 	if (color !== null && !choice) throw new RangeError('Invalid chart fill color');
+	const previous = current.fill?.kind === 'solid' ? current.fill.color : current.drawingColor;
+	if (choice)
+		choice.transforms.push(
+			...structuredClone(
+				previous?.transforms.filter((transform) =>
+					['alpha', 'alphaMod', 'alphaOff'].includes(transform.name),
+				) ?? [],
+			),
+		);
+	return replaceSeriesPaint(chart, index, choice);
+}
+
+/** Flatten the primary paint to solid without converting a translucent CSS string back to RGB. */
+export function chartSeriesSolidFillPatch(
+	chart: ChartObject,
+	index: number,
+): ChartPatch | undefined {
+	const current = chart.series[index];
+	if (!Number.isInteger(index) || !current)
+		throw new RangeError(`No chart series at index ${index}`);
+	if (!current.fill || current.fill.kind === 'solid') return undefined;
+	const choice = current.fill.kind === 'gradient' ? current.fill.stops[0]?.color : undefined;
+	return replaceSeriesPaint(
+		chart,
+		index,
+		choice ??
+			current.drawingColor ??
+			chartDrawingColor(current.color) ??
+			chartPaletteSeriesColorChoice(
+				findChartColorPalette(chart.colorPalette ?? 10) ?? findChartColorPalette(10)!,
+				index,
+				chart.series.length,
+			),
+	);
+}
+
+function replaceSeriesPaint(
+	chart: ChartObject,
+	index: number,
+	choice: DiagramColor | undefined,
+): ChartPatch | undefined {
+	const current = chart.series[index]!;
 	if (
 		!Object.keys(current.pointColors ?? {}).length &&
 		!Object.keys(current.pointFills ?? {}).length &&
-		(color === null
+		(!choice
 			? current.fill?.kind === 'none'
 			: !current.fill && sameChartColor(current.drawingColor, choice))
 	)
@@ -52,7 +95,7 @@ export function chartSeriesFillPatch(
 	delete next.drawingColor;
 	delete next.pointColors;
 	delete next.pointFills;
-	if (choice) next.drawingColor = choice;
+	if (choice) next.drawingColor = structuredClone(choice);
 	else next.fill = { kind: 'none' };
 	return { series };
 }

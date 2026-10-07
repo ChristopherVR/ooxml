@@ -1,6 +1,6 @@
 import {
-	autoSeriesColor,
 	chartSeriesFillPatch,
+	chartSeriesSolidFillPatch,
 	type ChartObject,
 	type ChartViewModel,
 	type Color,
@@ -8,6 +8,7 @@ import {
 import { activeChart, type EditorContext } from 'ooxml-core/xlsx/ui';
 import { el, field, select } from './dialogs/fields';
 import { openColorGrid } from './ribbon/color-grid';
+import { createSeriesTransparency } from './chart-series-transparency';
 
 /** Primary series fill controls reuse the ribbon's themed color picker and core paint edits. */
 export function createSeriesFill(ctx: EditorContext, selected: () => number) {
@@ -18,9 +19,9 @@ export function createSeriesFill(ctx: EditorContext, selected: () => number) {
 	const color = el(ctx, 'button', 'xve-input xve-chart-series-color');
 	color.type = 'button';
 	const colorField = field(ctx, 'Color', color);
-	element.append(heading, kindField, colorField);
+	const transparency = createSeriesTransparency(ctx, selected);
+	element.append(heading, kindField, colorField, transparency.element);
 	let current: ChartObject | undefined;
-	let view: ChartViewModel | undefined;
 	const apply = (value: Color | null) => {
 		if (!current || !ctx.commands.isEnabled('chart.format-series')) return;
 		const found = activeChart(ctx);
@@ -31,15 +32,11 @@ export function createSeriesFill(ctx: EditorContext, selected: () => number) {
 	kind.addEventListener('change', () => {
 		if (kind.value === 'none') apply(null);
 		else if (kind.value === 'solid') {
-			const book = ctx.workbook();
-			const paint = view?.series[selected()]?.color;
-			if (book)
-				apply({
-					rgb: (paint && paint !== 'none'
-						? paint
-						: autoSeriesColor(book.theme, selected())
-					).replace(/^#/, ''),
-				});
+			if (!current || !ctx.commands.isEnabled('chart.format-series')) return;
+			const found = activeChart(ctx);
+			if (!found || found.chart !== current) return;
+			const patch = chartSeriesSolidFillPatch(current, selected());
+			if (patch) ctx.session()?.updateChart(ctx.activeSheet(), found.index, patch);
 		}
 	});
 	color.addEventListener('click', () => {
@@ -58,7 +55,7 @@ export function createSeriesFill(ctx: EditorContext, selected: () => number) {
 	});
 	const refresh = (chart: ChartObject | undefined, model: ChartViewModel | undefined) => {
 		current = chart;
-		view = model;
+		transparency.refresh(chart);
 		const series = chart?.series[selected()];
 		const fill = series?.fill;
 		const value =

@@ -57,4 +57,13 @@ export type {
 	WorkbookChangeKind,
 } from './types';
 export * from './chart-colors';
-export { chartSeriesFillPatch, chartDrawingColor } from './chart-series-fill';
+export {
+	chartSeriesFillPatch,
+	chartSeriesSolidFillPatch,
+	chartDrawingColor,
+} from './chart-series-fill';
+export {
+	chartSeriesSolidColor,
+	chartSeriesTransparency,
+	chartSeriesTransparencyPatch,
+} from './chart-series-transparency';

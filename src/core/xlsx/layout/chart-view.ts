@@ -3,6 +3,7 @@ import { isCellError } from '../model';
 import { autoSeriesColor, chartColorScheme } from './chart-colors';
 import { chartPaletteSeriesColor, findChartColorPalette } from '../../chart/color-palettes';
 import { resolveDrawingColor } from '../../diagram/drawing-color';
+import { drawingColorCss } from '../../diagram/drawing-color-css';
 import { niceScale, PERCENT_SCALE, type AxisScale } from './chart-scale';
 import { resolveColor } from './colors';
 import { chartAppearance, type ChartAppearance } from './chart-appearance';
@@ -111,9 +112,15 @@ export function chartView(
 	const scheme = chartColorScheme(theme);
 	const drawingColor = (color: ChartSeries['drawingColor']) =>
 		color &&
-		resolveDrawingColor(color, {
-			scheme: (name) => (scheme as Readonly<Record<string, string>>)[name],
-		})?.hex;
+		drawingColorCss(
+			resolveDrawingColor(
+				color,
+				{
+					scheme: (name) => (scheme as Readonly<Record<string, string>>)[name],
+				},
+				{ transformOrder: 'document' },
+			),
+		);
 	const gradient = (fill: ChartSeries['fill']) =>
 		fill?.kind === 'gradient'
 			? resolveChartGradient(fill, (color) =>
@@ -140,7 +147,7 @@ export function chartView(
 		const color =
 			s.fill?.kind === 'none'
 				? 'none'
-				: (drawingColor(s.drawingColor) ??
+				: (drawingColor(s.fill?.kind === 'solid' ? s.fill.color : s.drawingColor) ??
 					resolveColor(s.color, theme) ??
 					paletteColor ??
 					autoSeriesColor(theme, i));
@@ -192,6 +199,10 @@ export function chartView(
 		}
 		for (const [key, fill] of Object.entries(source.pointFills ?? {})) {
 			if (fill.kind === 'none') (s.pointColors ??= [])[Number(key)] = 'none';
+			else if (fill.kind === 'solid') {
+				const paint = drawingColor(fill.color);
+				if (paint) (s.pointColors ??= [])[Number(key)] = paint;
+			}
 		}
 	});
 

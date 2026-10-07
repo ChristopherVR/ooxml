@@ -896,3 +896,32 @@ Imported gradients remain displayed and preserved; gradient, pattern and picture
 fill authoring, point formatting, transparency, fill/effect tabs and axis
 assignment still need implementation. The pane layout and chart rendering do
 not yet establish pixel parity with Excel.
+
+## Solid chart fill transparency
+
+The series pane now pairs a Transparency percentage field with the shared range
+control. Core edits retain theme/tint transforms, replace ordered alpha transforms
+and support save/reload, undo and read-only/protection guards. Choosing another
+color keeps its opacity, matching a saved/reopened native Excel COM probe.
+Gradient-to-solid conversion stays in core and preserves the first stop's color
+and alpha instead of trying to turn a CSS rgba value back into RGB.
+
+Solid series and point rendering previously discarded the alpha from the shared
+DrawingML resolver. Both now reuse the CSS paint helper extracted from chart
+appearance, including explicit solid DiagramML fills. Native imported 0%, 37%
+and 100% fills render with their saved opacity. Gradient stops continue using
+their existing shared alpha handling; the UI enables transparency editing only
+for solid fills.
+
+Playwright MCP opened the full native 37% workbook, confirmed its rgba paint,
+changed the field to 23% and downloaded it. Excel COM reopened that file with
+transparency 0.23000002, a visible red fill and the original series. Core native
+regressions cover alpha rendering, round-trip and color-change preservation;
+six-binding browser checks cover percent editing, slider keyboard input, undo,
+save and disabled state. Mixed per-point fill behavior, gradient/pattern/picture
+authoring, fill/effect tabs and exact pane layout remain incomplete.
+
+Validation: all 6,116 XLSX core tests passed; the expanded native regression
+checks and 23 focused UI/locale tests passed. Core/UI typechecks and builds
+passed. The full production browser run passed 87 checks; its one failed
+new-workbook navigation reported `ERR_NO_BUFFER_SPACE` and passed on retry.

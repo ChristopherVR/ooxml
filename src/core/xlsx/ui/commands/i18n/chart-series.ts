@@ -1,6 +1,7 @@
 import type { Translations } from './types';
 
 export const CHART_SERIES_STRINGS: Translations = {
+	Transparency: ['Transparence', 'Transparenz', 'Transparencia', '透明度'],
 	Fill: ['Remplissage', 'Füllung', 'Relleno', '填充'],
 	Color: ['Couleur', 'Farbe', 'Color', '颜色'],
 	'No fill': ['Aucun remplissage', 'Keine Füllung', 'Sin relleno', '无填充'],

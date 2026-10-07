@@ -6,6 +6,7 @@ import {
 	type ResolvedChartStyleEntry,
 } from '../../chart/style-definition';
 import { resolveDrawingColor } from '../../diagram/drawing-color';
+import { drawingColorCss } from '../../diagram/drawing-color-css';
 import { EMU_PER_PIXEL, EMU_PER_POINT } from '../../units/constants';
 import type { ChartObject, ThemePalette } from '../model';
 import { chartColorScheme } from './chart-colors';
@@ -65,14 +66,9 @@ export function chartAppearance(
 			{ hslRounding: 'halfDown', transformOrder: 'document' },
 		);
 	const out: ChartAppearance =
-		resolveChartStyleDefinition({ entries, sourceXml: '' }, (color) => {
-			const value = resolve(color);
-			if (!value || value.alpha === 1) return value?.hex;
-			const channels = [1, 3, 5].map((offset) =>
-				Number.parseInt(value.hex.slice(offset, offset + 2), 16),
-			);
-			return `rgba(${channels.join(',')},${value.alpha})`;
-		}) ?? {};
+		resolveChartStyleDefinition({ entries, sourceXml: '' }, (color) =>
+			drawingColorCss(resolve(color)),
+		) ?? {};
 	for (const part of CHART_STYLE_PARTS) {
 		const entry = entries[part];
 		if (!entry) continue;
