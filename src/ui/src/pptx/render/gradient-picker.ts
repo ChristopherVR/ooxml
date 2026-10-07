@@ -11,6 +11,11 @@
 
 import type { PptxElement, PptxThemeColorRef, ShapeStyle } from 'ooxml-core/pptx';
 import { hasShapeProperties } from 'ooxml-core/pptx';
+import {
+	sortGradientStops as sortStops,
+	updateGradientStop,
+	removeGradientStop,
+} from 'ooxml-core/chart';
 
 // -- Defaults -----------------------------------------------------------------
 
@@ -125,10 +130,8 @@ export function removeGradientStopPatch(
 	index: number,
 ): Partial<PptxElement> | null {
 	const state = gradientStateOf(el);
-	if (state.stops.length <= 2) {
-		return null; // must keep at least 2 stops
-	}
-	const next = state.stops.filter((_, i) => i !== index);
+	const next = removeGradientStop(state.stops, index);
+	if (!next) return null;
 	return gradientStatePatch(el, { ...state, stops: next });
 }
 
@@ -141,8 +144,10 @@ export function updateGradientStopPatch(
 	changes: Partial<GradientStop>,
 ): Partial<PptxElement> {
 	const state = gradientStateOf(el);
-	const stops = state.stops.map((s, i) => (i === index ? { ...s, ...changes } : s));
-	return gradientStatePatch(el, { ...state, stops: sortStops(stops) });
+	return gradientStatePatch(el, {
+		...state,
+		stops: updateGradientStop(state.stops, index, changes),
+	});
 }
 
 // -- Private helpers ----------------------------------------------------------
@@ -150,10 +155,6 @@ export function updateGradientStopPatch(
 /** A default two-stop linear gradient (blue -> white), used when no gradient is configured yet. */
 export function defaultGradientState(): GradientState {
 	return { type: 'linear', angle: 90, stops: [{ ...DEFAULT_STOP_A }, { ...DEFAULT_STOP_B }] };
-}
-
-function sortStops(stops: GradientStop[]): GradientStop[] {
-	return stops.slice().sort((a, b) => a.position - b.position);
 }
 
 function sanitizeStops(

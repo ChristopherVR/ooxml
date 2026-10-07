@@ -1,5 +1,6 @@
 /** Resolved chart gradients, shared by Office chart painters. */
 import type { DiagramFill, DiagramColor } from '../diagram/types';
+import { sortGradientStops } from './gradient-stop-edit';
 
 export interface ChartGradientFill {
 	type: 'linear' | 'radial';
@@ -52,7 +53,7 @@ export function resolveChartGradient(
 
 /** Extracted from PowerPoint's COM-verified chart gradient painter. */
 export function buildChartGradientDef(id: string, fill: ChartGradientFill): ChartSvgGradientDef {
-	const stops = fill.stops.map((stop) => ({
+	const stops = sortGradientStops(fill.stops).map((stop) => ({
 		offset: Math.min(Math.max(stop.position / 100, 0), 1),
 		color: stop.color,
 		...(stop.opacity !== undefined ? { opacity: stop.opacity } : {}),

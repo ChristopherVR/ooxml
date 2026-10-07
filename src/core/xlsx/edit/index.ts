@@ -58,6 +58,11 @@ export type {
 } from './types';
 export * from './chart-colors';
 export {
+	chartSeriesGradientPatch,
+	chartGradientStopTransparency,
+	type ChartGradientEdit,
+} from './chart-series-gradient';
+export {
 	chartSeriesFillPatch,
 	chartSeriesSolidFillPatch,
 	chartDrawingColor,

@@ -122,9 +122,8 @@ for (const framework of FRAMEWORKS)
 		const fill = pane.getByRole('combobox', { name: 'Fill', exact: true });
 		await expect(series).toHaveValue('1');
 		await expect(fill).toHaveValue('gradient');
-		const transparency = pane.getByRole('spinbutton', { name: 'Transparency', exact: true });
-		await expect(transparency).toBeDisabled();
 		await fill.selectOption('solid');
+		const transparency = pane.getByRole('spinbutton', { name: 'Transparency', exact: true });
 		await pane.getByRole('button', { name: 'Color', exact: true }).click();
 		await page.getByRole('menuitem', { name: 'Accent 1, Lighter 40%', exact: true }).click();
 		await transparency.fill('37');
@@ -170,11 +169,78 @@ for (const framework of FRAMEWORKS)
 		await expect(series).toHaveValue('1');
 		await series.selectOption('0');
 		await expect(fill).toHaveValue('gradient');
+		await series.selectOption('1');
 		await editor(page).evaluate((node) => {
 			(node as unknown as { readOnly: boolean }).readOnly = true;
 		});
 		await expect(fill).toBeDisabled();
 		await expect(transparencySlider).toBeDisabled();
+		expect(errors).toEqual([]);
+	});
+
+for (const framework of FRAMEWORKS)
+	test(`native gradient authoring edits in ${framework}`, async ({ page }) => {
+		const errors = pageErrors(page);
+		const chart = await openNativeStyle(page, 209, framework);
+		await chart.locator('g[data-chart-series="1"][data-chart-point="0"] rect').dblclick();
+		const pane = editor(page).getByRole('complementary', { name: 'Format Data Series' });
+		const stops = pane.getByRole('group', { name: 'Gradient stops', exact: true });
+		await expect(stops.getByRole('button')).toHaveCount(3);
+		await stops.getByRole('button', { name: 'Gradient stop 2', exact: true }).click();
+		const angle = pane.getByRole('spinbutton', { name: 'Angle', exact: true });
+		await angle.fill('54');
+		await angle.press('Tab');
+		const position = pane.getByRole('spinbutton', { name: 'Position', exact: true });
+		await position.fill('23');
+		await position.press('Tab');
+		const transparency = pane.getByRole('spinbutton', { name: 'Transparency', exact: true });
+		await transparency.fill('37');
+		await transparency.press('Tab');
+		await pane.getByRole('button', { name: 'Color', exact: true }).click();
+		await page.getByRole('menuitem', { name: 'Red', exact: true }).click();
+		await expect(chart.locator('linearGradient[id$="-s1"] stop').nth(1)).toHaveAttribute(
+			'stop-opacity',
+			'0.63',
+		);
+		await expect(chart.locator('linearGradient[id$="-s1"] stop').nth(1)).toHaveAttribute(
+			'stop-color',
+			'#FF0000',
+		);
+		await pane.getByRole('button', { name: 'Add gradient stop', exact: true }).click();
+		await expect(stops.getByRole('button')).toHaveCount(4);
+		await expect(
+			stops.getByRole('button', { name: 'Gradient stop 4', exact: true }),
+		).toHaveAttribute('aria-pressed', 'true');
+		await pane.getByRole('button', { name: 'Remove gradient stop', exact: true }).click();
+		await pane.getByRole('button', { name: 'Remove gradient stop', exact: true }).click();
+		await expect(stops.getByRole('button')).toHaveCount(2);
+		await expect(
+			pane.getByRole('button', { name: 'Remove gradient stop', exact: true }),
+		).toBeDisabled();
+		const bytes = await editor(page).evaluate(async (node) =>
+			Array.from(await (node as unknown as { saveBytes(): Promise<Uint8Array> }).saveBytes()),
+		);
+		const drawing = (await loadXlsx(new Uint8Array(bytes))).sheets[0]!.drawings[0]!;
+		if (drawing.kind !== 'chart') throw new Error('Expected chart');
+		expect(drawing.series[0]!.fill?.kind).toBe('gradient');
+		expect(drawing.series[1]!.fill).toMatchObject({
+			kind: 'gradient',
+			angle: 54,
+			stops: [
+				{ position: 0 },
+				{
+					position: 23,
+					color: { kind: 'srgb', value: 'FF0000', transforms: [{ name: 'alpha', value: '63000' }] },
+				},
+			],
+		});
+		await editor(page).evaluate((node) => (node as unknown as { undo(): void }).undo());
+		await expect(stops.getByRole('button')).toHaveCount(3);
+		await editor(page).evaluate((node) => {
+			(node as unknown as { readOnly: boolean }).readOnly = true;
+		});
+		await expect(position).toBeDisabled();
+		await expect(stops.getByRole('button').first()).toBeDisabled();
 		expect(errors).toEqual([]);
 	});
 

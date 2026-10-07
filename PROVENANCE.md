@@ -937,3 +937,18 @@ run properties, including text/format revisions and opaque property bases.
 A single-run conversion also lets editable review displays reuse the same
 revision visibility policy as layout, including atom properties stored outside
 text marks. DOM image resolution and equation rendering stay in UI.
+
+## Shared gradient stop editing
+
+Source: ChristopherVR/ooxml at `60f5c51fc`,
+`src/ui/src/pptx/render/gradient-picker.ts`, the stop sorting, updating and
+two-stop minimum removal helpers. They moved to `src/core/chart/gradient-stop-edit.ts`.
+PowerPoint's existing shared picker delegates to them, keeping its normalized
+state contract for all five bindings. XLSX uses the removal minimum and both
+chart painters use stable visual sorting. XLSX keeps the native insertion-order
+identities in the model and source XML, measured by
+`scripts/record-xlsx-chart-gradient-edits.ps1` and its saved/reopened Excel
+16.0 build 20430 fixture `xlsx/__fixtures__/excel-chart-gradient-edits.json`.
+The new DOM stop strip is format-neutral; the XLSX pane pairs it with existing
+number fields and the themed color picker. All gradient model edits and source
+preservation remain in core.

@@ -925,3 +925,45 @@ Validation: all 6,116 XLSX core tests passed; the expanded native regression
 checks and 23 focused UI/locale tests passed. Core/UI typechecks and builds
 passed. The full production browser run passed 87 checks; its one failed
 new-workbook navigation reported `ERR_NO_BUFFER_SPACE` and passed on retry.
+
+## Gradient series fill authoring
+
+The pane can create a linear gradient and edit its angle, stop position, themed
+color and transparency, add stops and remove stops down to the native two-stop
+minimum. A shared DOM stop strip supports click and keyboard selection. Solid
+controls are hidden when gradient controls apply. Core preserves imported
+gradient flags, geometry, extensions and untouched chart parts; history and
+save/reload use the existing chart edit pipeline. Imported path gradients retain
+their geometry and allow stop edits, with the linear angle field disabled.
+
+PowerPoint's stop sorting/update/removal helpers now live in shared core and its
+existing picker delegates to them for all five bindings. Native Excel COM shows
+that inserted stops can remain in insertion order in both the collection and
+saved XML. The XLSX model keeps those identities; shared SVG/CSS painters sort
+only the visual paint. This fixes imported unsorted gradients without assigning
+an edit to a different stop.
+
+Playwright MCP edited a full native workbook and downloaded it. Excel COM
+reopened it with angle 54 degrees, two stops, the first at 23% with 37%
+transparency, and the original red/white colors. Native regressions include
+angle/position/transparency, insertion, deletion, minimum count, source flags
+and unsorted-stop rendering. Six-binding browser checks cover color/opacity,
+selection, add/remove, save, undo and disabled state. All 94 production checks
+and 6,122 XLSX/shared-gradient core tests passed before the final pane visibility
+adjustment; focused native-style browser checks cover that adjustment.
+
+Preset/type/direction controls, brightness, stop dragging and paired stop sliders,
+mixed point formatting, pattern/picture authoring and exact native pane layout
+remain incomplete. New gradients start as a 90-degree primary-color-to-white
+fill; this default does not claim full native preset parity. The source-alias
+workflow now also resolves shared PowerPoint editor leaf modules, required by
+embedded shared UI dependencies.
+
+Final validation: all 26 native-style browser checks passed after the visibility
+and compact stop-button adjustments. The 24 focused UI/locale checks, eight
+PowerPoint gradient-picker/paint regressions, three source-alias regressions,
+core/UI typechecks and builds passed. Clean-package checks imported 96 entries
+and registered 45 custom elements. A newly created gradient downloaded from
+Playwright MCP reopened in Excel with two stops at 90 degrees, red/white
+colors, and the first stop's retained 37% transparency. The additional no-fill
+creation regression verifies the chosen series' palette and unchanged siblings.

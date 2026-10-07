@@ -1,6 +1,34 @@
 import type { Translations } from './types';
 
 export const CHART_SERIES_STRINGS: Translations = {
+	'Gradient stops': ['Points de dégradé', 'Farbverlaufsstopps', 'Puntos de degradado', '渐变光圈'],
+	'Gradient stop {index}': [
+		'Point de dégradé {index}',
+		'Farbverlaufsstopp {index}',
+		'Punto de degradado {index}',
+		'渐变光圈 {index}',
+	],
+	'Add gradient stop': [
+		'Ajouter un point de dégradé',
+		'Farbverlaufsstopp hinzufügen',
+		'Agregar punto de degradado',
+		'添加渐变光圈',
+	],
+	'Remove gradient stop': [
+		'Supprimer un point de dégradé',
+		'Farbverlaufsstopp entfernen',
+		'Quitar punto de degradado',
+		'删除渐变光圈',
+	],
+	'Stop color': ['Couleur du point', 'Stoppfarbe', 'Color del punto', '光圈颜色'],
+	'Stop transparency': [
+		'Transparence du point',
+		'Stopptransparenz',
+		'Transparencia del punto',
+		'光圈透明度',
+	],
+	Position: ['Position', 'Position', 'Posición', '位置'],
+	Angle: ['Angle', 'Winkel', 'Ángulo', '角度'],
 	Transparency: ['Transparence', 'Transparenz', 'Transparencia', '透明度'],
 	Fill: ['Remplissage', 'Füllung', 'Relleno', '填充'],
 	Color: ['Couleur', 'Farbe', 'Color', '颜色'],

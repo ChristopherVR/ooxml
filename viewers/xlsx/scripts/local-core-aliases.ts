@@ -15,6 +15,10 @@ export function localCoreAliases(root: string): { find: RegExp; replacement: str
 		throw new Error(`OOXML_CORE_SRC=${checkout} has no src/core/xlsx/index.ts`);
 	return [
 		{ find: /^ooxml-core\/xlsx\/load$/, replacement: resolve(base, 'src/core/xlsx/load/index.ts') },
+		{
+			find: /^ooxml-core\/pptx\/editor\/(.+)$/,
+			replacement: resolve(base, 'src/core/pptx/editor/$1.ts'),
+		},
 		{ find: /^ooxml-core\/(.+)$/, replacement: resolve(base, 'src/core/$1/index.ts') },
 		{ find: /^ooxml-core$/, replacement: resolve(base, 'src/core/index.ts') },
 		{

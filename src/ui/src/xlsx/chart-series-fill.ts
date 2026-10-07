@@ -9,6 +9,7 @@ import { activeChart, type EditorContext } from 'ooxml-core/xlsx/ui';
 import { el, field, select } from './dialogs/fields';
 import { openColorGrid } from './ribbon/color-grid';
 import { createSeriesTransparency } from './chart-series-transparency';
+import { createSeriesGradient } from './chart-series-gradient';
 
 /** Primary series fill controls reuse the ribbon's themed color picker and core paint edits. */
 export function createSeriesFill(ctx: EditorContext, selected: () => number) {
@@ -20,7 +21,8 @@ export function createSeriesFill(ctx: EditorContext, selected: () => number) {
 	color.type = 'button';
 	const colorField = field(ctx, 'Color', color);
 	const transparency = createSeriesTransparency(ctx, selected);
-	element.append(heading, kindField, colorField, transparency.element);
+	const gradient = createSeriesGradient(ctx, selected);
+	element.append(heading, kindField, colorField, transparency.element, gradient.element);
 	let current: ChartObject | undefined;
 	const apply = (value: Color | null) => {
 		if (!current || !ctx.commands.isEnabled('chart.format-series')) return;
@@ -31,6 +33,7 @@ export function createSeriesFill(ctx: EditorContext, selected: () => number) {
 	};
 	kind.addEventListener('change', () => {
 		if (kind.value === 'none') apply(null);
+		else if (kind.value === 'gradient') gradient.create();
 		else if (kind.value === 'solid') {
 			if (!current || !ctx.commands.isEnabled('chart.format-series')) return;
 			const found = activeChart(ctx);
@@ -56,6 +59,7 @@ export function createSeriesFill(ctx: EditorContext, selected: () => number) {
 	const refresh = (chart: ChartObject | undefined, model: ChartViewModel | undefined) => {
 		current = chart;
 		transparency.refresh(chart);
+		gradient.refresh(chart, model);
 		const series = chart?.series[selected()];
 		const fill = series?.fill;
 		const value =
@@ -69,19 +73,21 @@ export function createSeriesFill(ctx: EditorContext, selected: () => number) {
 		const entries = [
 			['none', 'No fill'],
 			['solid', 'Solid fill'],
+			['gradient', 'Gradient fill'],
 		];
-		if (value === 'gradient') entries.push(['gradient', 'Gradient fill']);
-		else if (value === 'imported') entries.push(['imported', 'Imported fill']);
+		if (value === 'imported') entries.push(['imported', 'Imported fill']);
 		kind.replaceChildren(
 			...entries.map(([key, label]) => {
 				const option = el(ctx, 'option');
 				option.value = key!;
 				option.textContent = ctx.t(label!);
-				option.disabled = key === 'gradient' || key === 'imported';
+				option.disabled = key === 'imported';
 				return option;
 			}),
 		);
 		kind.value = value;
+		colorField.hidden = value !== 'solid';
+		transparency.element.hidden = value !== 'solid';
 		kind.disabled = !series || !ctx.commands.isEnabled('chart.format-series');
 		color.disabled = kind.disabled || value !== 'solid';
 		const paint = model?.series[selected()]?.color;
