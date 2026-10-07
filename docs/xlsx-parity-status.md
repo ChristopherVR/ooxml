@@ -1,10 +1,9 @@
 # XLSX parity status
 
-Updated 8 October 2026. The latest XLSX increment adds imported manual title
-positions and layout preservation, following wrapping at `14a33ed2e`,
-paragraph spacing at `4f0d6198d`, mixed titles, browser
-font measurements and natural title baselines. The evidence below identifies
-the scope of completed validation.
+Updated 8 October 2026. Latest completed XLSX implementation: `f12ee7ea6`,
+imported manual title positions and layout preservation. This assessment
+describes implemented behavior and recorded validation at that revision;
+it does not treat subsequent reference collection as a finished feature.
 
 **Full 1:1 Microsoft Excel parity has not been achieved.** The product is a
 working spreadsheet editor with substantial supported behavior and an expanding
@@ -40,12 +39,14 @@ complete end-to-end Excel comparison.
 
 ## Latest completed increments
 
-| Revision    | Implemented behavior                                                                         | Scope of evidence                                                                                              |
-| ----------- | -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `4f3f87ea6` | Import and preserve mixed-format chart-title runs and paragraphs through chart regeneration. | Native character formatting and actual UI type-change/save/reopen comparisons.                                 |
-| `e74cf9e85` | Use the grid's cached browser font measurer for chart-title and legend widths.               | Rich-run advances, centering and edit regressions. Headless estimates remain a fallback.                       |
-| `8499a584e` | Use measured font ascent/descent for title heights and mixed-line baselines.                 | Three native title-box references and a bounded PNG comparison.                                                |
-| `4f0d6198d` | Read, render and preserve title line/before/after spacing in points or percentages.          | Twelve native references, 72 additional browser cases and Excel reopen/resave checks. No spacing-authoring UI. |
+| Revision    | Implemented behavior                                                                         | Scope of evidence                                                                                                 |
+| ----------- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `4f3f87ea6` | Import and preserve mixed-format chart-title runs and paragraphs through chart regeneration. | Native character formatting and actual UI type-change/save/reopen comparisons.                                    |
+| `e74cf9e85` | Use the grid's cached browser font measurer for chart-title and legend widths.               | Rich-run advances, centering and edit regressions. Headless estimates remain a fallback.                          |
+| `8499a584e` | Use measured font ascent/descent for title heights and mixed-line baselines.                 | Three native title-box references and a bounded PNG comparison.                                                   |
+| `4f0d6198d` | Read, render and preserve title line/before/after spacing in points or percentages.          | Twelve native references, 72 additional browser cases and Excel reopen/resave checks. No spacing-authoring UI.    |
+| `14a33ed2e` | Wrap chart titles with shared styled-run text flow and retain fractional chart dimensions.   | Ten native references, six-binding wrapping/resize/history checks and an MCP-reviewed export reopened in Excel.   |
+| `f12ee7ea6` | Render imported manual title positions and overlays; preserve title/plot/legend layout XML.  | Seven native references, 42 additional browser cases, shared PowerPoint checks and two Excel-reopened UI exports. |
 
 ## Chart-title layout: implemented scope and remaining limits
 
@@ -72,7 +73,7 @@ to this corpus. Playwright MCP verified the native 200-point word reference
 before/after a type change. Excel reopens, resaves and reopens that export with
 the full title and 152.07 by 65.1-point title box unchanged.
 
-Manual title layout, autofit, other scripts/fonts and exact title/plot placement
+Manual title dimensions, autofit, other scripts/fonts and exact title/plot placement
 remain unverified or incomplete. The native and browser screenshots still
 show different plot geometry and gridline appearance. This is automatic
 wrapping support for the tested scope, not full chart or text parity.
@@ -116,43 +117,21 @@ logic reuse and extraction.
 - Modern OOXML logic stays in `ooxml-core`; legacy XLS/CFB codecs stay in `ole2`.
   Framework adapters do not contain duplicate spreadsheet engines.
 
-## What the latest validation proves
+## What the recorded validation proves
 
-At `4f3f87ea6`, the latest diagram/chart/XLSX sweep passed **8,534 ordinary
-tests**, with **17 existing expected raster failures**. Those failures remain
-explicit; this is not a clean pixel-parity result. **92 focused chart browser
-checks** passed across vanilla, React, Vue, Angular, Svelte and Solid. Core/UI
-typechecks, builds and package import/registration checks passed.
+The latest completed increment has the regression results listed above:
+8,581 ordinary core tests, 17 expected raster failures, 254 focused browser
+cases across vanilla, React, Vue, Angular, Svelte and Solid, and passing
+core/UI build, type and package checks. These are recorded implementation-run
+results; this documentation update does not rerun those suites. Historical
+results and their different scopes are retained in the implementation review.
 
-The subsequent host-measurement change reuses the grid's cached canvas measurer
-for chart titles and legends, removing uniform-character width estimates from
-their browser layout. The follow-up sweep passed **8,539 ordinary tests** plus
-the same **17 expected failures**, and all **92 focused chart browser checks**
-passed again. Browser checks compare painted rich-run advances and centering
-before/after edits. Native placement, vertical metrics,
-wrapping and axis-label measurement still require work; headless callers without
-a supplied measurer retain the previous width estimates.
-
-The next font-box increment passes **8,543 ordinary tests** with the same
-**17 expected failures**, all **92 focused chart browser checks**, core/UI
-typechecks, builds and package checks. The grid reuses its canvas context to supply font
-ascent/descent for title heights and mixed-line baselines. Three independently
-reopened Excel title-box references are retained in
-`src/core/chart/excel-chart-title-geometry.json`. On the measured Windows fonts,
-title heights are within 2 CSS pixels of these native references and a native
-PNG comparison confirms improved second-line placement. This does not establish
-general text/raster parity; native paragraph spacing, wrapping, padding and
-overall chart geometry remain open.
-
-Imported title spacing now retains points/percentage line, before and after
-settings through the shared DrawingML reader and chart save path. Twelve native
-references cover expanded/compressed, fixed-point, before/after and single-line
-cases. The latest sweep passes **8,560 ordinary tests** with **17 expected
-failures**, and **164 focused chart browser checks** pass across six bindings.
-Core/UI typechecks, builds and package checks pass. Excel reopens and resaves
-the MCP-reviewed UI export with its 6/8-point before/after spacing unchanged.
-First-line placement under compressed spacing remains approximate, and spacing
-authoring controls, automatic wrapping and complete chart raster parity remain open.
+Core tests cover supported parsing, editing, preservation and layout behavior.
+Browser tests cover selected painted geometry and actual edit/history/save
+flows. Excel COM and native PNG comparisons independently verify selected
+references. Passing those layers establishes their tested scope, not every
+option of a chart family or every Excel workflow. The 17 expected raster
+failures remain unresolved visual differences.
 
 Native evidence uses owned hidden Excel instances, principally Excel 16.0
 build 20430. The current chart text corpus includes 96 built-in style
@@ -169,6 +148,20 @@ These results establish the tested behavior on that Excel build. They do not
 prove every chart type, every workbook, every browser, Excel for Mac/web,
 all Microsoft 365 versions or complete UI equivalence. Test counts are not
 a parity percentage, and no defensible overall completion percentage exists yet.
+
+## Work in progress: manual legends
+
+Eight native Excel references have been collected for automatic, moved,
+overlay, wide and tall legends. They record source XML and native geometry.
+The XLSX painter still uses automatic legend placement; manual legend
+positioning, dimensions, entry flow and overlay reservation are not implemented
+by this reference collection. This work is separate from the completed layout
+XML preservation in `f12ee7ea6`.
+
+The next increment should reuse the shared chart-layout resolver, add rendering
+regressions against these references, exercise the actual UI through Playwright
+MCP and reopen its exports in Excel. It can only become a completed increment
+after implementation and validation.
 
 ## Major work still required
 
