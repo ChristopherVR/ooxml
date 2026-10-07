@@ -6,8 +6,8 @@
  * changes do not flow through the chat snapshot).
  */
 
-import type { ProposalView } from 'pptx-viewer-shared/ai';
-import { humanizeDiffLine } from 'pptx-viewer-shared/ai';
+import type { ProposalView } from 'ooxml-ui/pptx/ai';
+import { humanizeDiffLine } from 'ooxml-ui/pptx/ai';
 
 import type { Translator } from '../i18n';
 import { createEl } from '../render';

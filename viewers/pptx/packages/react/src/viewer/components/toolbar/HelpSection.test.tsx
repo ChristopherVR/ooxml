@@ -1,4 +1,4 @@
-import { resolveCustomization } from 'pptx-viewer-shared';
+import { resolveCustomization } from 'ooxml-ui/pptx';
 // @vitest-environment happy-dom
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';

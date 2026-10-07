@@ -1,5 +1,5 @@
-import type { InkPoint, InkStrokeView } from 'pptx-viewer-shared';
-import { buildLiveInkStrokeView } from 'pptx-viewer-shared';
+import type { InkPoint, InkStrokeView } from 'ooxml-ui/pptx';
+import { buildLiveInkStrokeView } from 'ooxml-ui/pptx';
 import { useMemo } from 'react';
 
 import type { DrawingTool } from '../../types-ui';

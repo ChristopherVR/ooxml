@@ -1,12 +1,12 @@
 import type { PptxElement, TextSegment, TextStyle } from 'pptx-viewer-core';
 import { hasTextProperties } from 'pptx-viewer-core';
-import type { InlineTextEditSnapshot, NormAutofitShrinkResult } from 'pptx-viewer-shared';
+import type { InlineTextEditSnapshot, NormAutofitShrinkResult } from 'ooxml-ui/pptx';
 import {
 	reconcileInlineListSnapshot,
 	remapTextToSegments,
 	resolveInlineEditAutoFitHeight,
 	resolveInlineEditNormAutofitShrink,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 /** Remap edited plain text back onto the element's original segments. */
 export function remapInlineText(

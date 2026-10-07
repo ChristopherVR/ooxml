@@ -1,7 +1,7 @@
 import { Directive, ElementRef, inject, input, OnDestroy, OnInit } from '@angular/core';
 
-import { attachRibbonOverflow } from '../internal/shared';
-import type { RibbonLaunchers } from '../internal/shared';
+import { attachRibbonOverflow } from 'ooxml-ui/pptx';
+import type { RibbonLaunchers } from 'ooxml-ui/pptx';
 
 /**
  * `[pptxRibbonOverflow]` - collapses ribbon groups into popup buttons when the window is too

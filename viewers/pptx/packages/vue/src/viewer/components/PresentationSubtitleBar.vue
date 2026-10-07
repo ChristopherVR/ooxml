@@ -6,12 +6,12 @@ import {
 	subtitleRecognitionLanguage,
 	subtitleSettingsFromOptions,
 	DEFAULT_VIEWER_OPTIONS,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type {
 	SpeechRecognitionEventLite,
 	SpeechRecognitionLite,
 	SpeechSupportState,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { computed, inject, onBeforeUnmount, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 

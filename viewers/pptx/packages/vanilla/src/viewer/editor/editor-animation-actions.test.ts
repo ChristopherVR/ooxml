@@ -4,7 +4,7 @@ import type {
 	PptxElementAnimation,
 	PptxSlide,
 } from 'pptx-viewer-core';
-import { bookmarkOptionValue, motionPathPresetById } from 'pptx-viewer-shared';
+import { bookmarkOptionValue, motionPathPresetById } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createInitialViewerState, createStore } from '../state';

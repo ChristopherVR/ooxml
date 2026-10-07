@@ -1,5 +1,5 @@
 import type { PptxSlide, PptxTextStyleLevels, TextSegment } from 'pptx-viewer-core';
-import type { NotesInlineCommand, NotesParagraphCommand } from 'pptx-viewer-shared';
+import type { NotesInlineCommand, NotesParagraphCommand } from 'ooxml-ui/pptx';
 import {
 	DEBOUNCE_MS,
 	applyInlineCommand,
@@ -14,7 +14,7 @@ import {
 	resolveNotesSegments,
 	segmentsToEditorHtml,
 	segmentsToPlainText,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type { Ref } from 'vue';
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 

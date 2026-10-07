@@ -1,6 +1,6 @@
 import type { PptxSmartArtNode } from 'pptx-viewer-core';
-import { computeInlineEditorRect, flattenNodes } from 'pptx-viewer-shared';
-import type { InlineEditRect } from 'pptx-viewer-shared';
+import { computeInlineEditorRect, flattenNodes } from 'ooxml-ui/pptx';
+import type { InlineEditRect } from 'ooxml-ui/pptx';
 import { computed, ref } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
 

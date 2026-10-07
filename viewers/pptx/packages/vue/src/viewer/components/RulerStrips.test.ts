@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils';
-import { PX_PER_INCH, RULER_THICKNESS } from 'pptx-viewer-shared';
+import { PX_PER_INCH, RULER_THICKNESS } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 
 import RulerStrips from './RulerStrips.vue';

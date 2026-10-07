@@ -1,5 +1,5 @@
-import type { DialogFooterAction, SlideTemplateId } from 'pptx-viewer-shared';
-import { modalActiveElement, modalFocusableElements, SLIDE_TEMPLATES } from 'pptx-viewer-shared';
+import type { DialogFooterAction, SlideTemplateId } from 'ooxml-ui/pptx';
+import { modalActiveElement, modalFocusableElements, SLIDE_TEMPLATES } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../../i18n';
 import { createEl } from '../../../render';

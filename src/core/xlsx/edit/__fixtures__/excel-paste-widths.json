@@ -1,0 +1,2487 @@
+{
+  "version": "16.0",
+  "build": 20430.0,
+  "defaultWidth": 8.09,
+  "cases": [
+    {
+      "source": "A1:B1",
+      "dest": "F4",
+      "transpose": false,
+      "skipBlanks": false,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:B1",
+      "dest": "F4",
+      "transpose": false,
+      "skipBlanks": true,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:B1",
+      "dest": "F4",
+      "transpose": true,
+      "skipBlanks": false,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:B1",
+      "dest": "F4",
+      "transpose": true,
+      "skipBlanks": true,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:B1",
+      "dest": "F4:I5",
+      "transpose": false,
+      "skipBlanks": false,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:B1",
+      "dest": "F4:I5",
+      "transpose": false,
+      "skipBlanks": true,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:B1",
+      "dest": "F4:I5",
+      "transpose": true,
+      "skipBlanks": false,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:B1",
+      "dest": "F4:I5",
+      "transpose": true,
+      "skipBlanks": true,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:B1",
+      "dest": "F4:I6",
+      "transpose": false,
+      "skipBlanks": false,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:B1",
+      "dest": "F4:I6",
+      "transpose": false,
+      "skipBlanks": true,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:B1",
+      "dest": "F4:I6",
+      "transpose": true,
+      "skipBlanks": false,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:B1",
+      "dest": "F4:I6",
+      "transpose": true,
+      "skipBlanks": true,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:B1",
+      "dest": "F:I",
+      "transpose": false,
+      "skipBlanks": false,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:B1",
+      "dest": "F:I",
+      "transpose": false,
+      "skipBlanks": true,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:B1",
+      "dest": "F:I",
+      "transpose": true,
+      "skipBlanks": false,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:B1",
+      "dest": "F:I",
+      "transpose": true,
+      "skipBlanks": true,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:A3",
+      "dest": "F4",
+      "transpose": false,
+      "skipBlanks": false,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:A3",
+      "dest": "F4",
+      "transpose": false,
+      "skipBlanks": true,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:A3",
+      "dest": "F4",
+      "transpose": true,
+      "skipBlanks": false,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:A3",
+      "dest": "F4",
+      "transpose": true,
+      "skipBlanks": true,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:A3",
+      "dest": "F4:I5",
+      "transpose": false,
+      "skipBlanks": false,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:A3",
+      "dest": "F4:I5",
+      "transpose": false,
+      "skipBlanks": true,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:A3",
+      "dest": "F4:I5",
+      "transpose": true,
+      "skipBlanks": false,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:A3",
+      "dest": "F4:I5",
+      "transpose": true,
+      "skipBlanks": true,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:A3",
+      "dest": "F4:I6",
+      "transpose": false,
+      "skipBlanks": false,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:A3",
+      "dest": "F4:I6",
+      "transpose": false,
+      "skipBlanks": true,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:A3",
+      "dest": "F4:I6",
+      "transpose": true,
+      "skipBlanks": false,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:A3",
+      "dest": "F4:I6",
+      "transpose": true,
+      "skipBlanks": true,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:A3",
+      "dest": "F:I",
+      "transpose": false,
+      "skipBlanks": false,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:A3",
+      "dest": "F:I",
+      "transpose": false,
+      "skipBlanks": true,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:A3",
+      "dest": "F:I",
+      "transpose": true,
+      "skipBlanks": false,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:A3",
+      "dest": "F:I",
+      "transpose": true,
+      "skipBlanks": true,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "C1:D2",
+      "dest": "F4",
+      "transpose": false,
+      "skipBlanks": false,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "C1:D2",
+      "dest": "F4",
+      "transpose": false,
+      "skipBlanks": true,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "C1:D2",
+      "dest": "F4",
+      "transpose": true,
+      "skipBlanks": false,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "C1:D2",
+      "dest": "F4",
+      "transpose": true,
+      "skipBlanks": true,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "C1:D2",
+      "dest": "F4:I5",
+      "transpose": false,
+      "skipBlanks": false,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "C1:D2",
+      "dest": "F4:I5",
+      "transpose": false,
+      "skipBlanks": true,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "C1:D2",
+      "dest": "F4:I5",
+      "transpose": true,
+      "skipBlanks": false,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "C1:D2",
+      "dest": "F4:I5",
+      "transpose": true,
+      "skipBlanks": true,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "C1:D2",
+      "dest": "F4:I6",
+      "transpose": false,
+      "skipBlanks": false,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "C1:D2",
+      "dest": "F4:I6",
+      "transpose": false,
+      "skipBlanks": true,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "C1:D2",
+      "dest": "F4:I6",
+      "transpose": true,
+      "skipBlanks": false,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "C1:D2",
+      "dest": "F4:I6",
+      "transpose": true,
+      "skipBlanks": true,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "C1:D2",
+      "dest": "F:I",
+      "transpose": false,
+      "skipBlanks": false,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "C1:D2",
+      "dest": "F:I",
+      "transpose": false,
+      "skipBlanks": true,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "C1:D2",
+      "dest": "F:I",
+      "transpose": true,
+      "skipBlanks": false,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "C1:D2",
+      "dest": "F:I",
+      "transpose": true,
+      "skipBlanks": true,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:C2",
+      "dest": "F4",
+      "transpose": false,
+      "skipBlanks": false,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:C2",
+      "dest": "F4",
+      "transpose": false,
+      "skipBlanks": true,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:C2",
+      "dest": "F4",
+      "transpose": true,
+      "skipBlanks": false,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:C2",
+      "dest": "F4",
+      "transpose": true,
+      "skipBlanks": true,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:C2",
+      "dest": "F4:I5",
+      "transpose": false,
+      "skipBlanks": false,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:C2",
+      "dest": "F4:I5",
+      "transpose": false,
+      "skipBlanks": true,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:C2",
+      "dest": "F4:I5",
+      "transpose": true,
+      "skipBlanks": false,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:C2",
+      "dest": "F4:I5",
+      "transpose": true,
+      "skipBlanks": true,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:C2",
+      "dest": "F4:I6",
+      "transpose": false,
+      "skipBlanks": false,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:C2",
+      "dest": "F4:I6",
+      "transpose": false,
+      "skipBlanks": true,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:C2",
+      "dest": "F4:I6",
+      "transpose": true,
+      "skipBlanks": false,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:C2",
+      "dest": "F4:I6",
+      "transpose": true,
+      "skipBlanks": true,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:C2",
+      "dest": "F:I",
+      "transpose": false,
+      "skipBlanks": false,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:C2",
+      "dest": "F:I",
+      "transpose": false,
+      "skipBlanks": true,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 8.09,
+          "hidden": false,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:C2",
+      "dest": "F:I",
+      "transpose": true,
+      "skipBlanks": false,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A1:C2",
+      "dest": "F:I",
+      "transpose": true,
+      "skipBlanks": true,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A:B",
+      "dest": "F4",
+      "transpose": false,
+      "skipBlanks": false,
+      "operation": "add",
+      "error": "You can't paste this here because the Copy area and paste area aren't the same size.\n\nSelect just one cell in the paste area or an area that's the same size, and try pasting again.",
+      "columns": [
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A:B",
+      "dest": "F4",
+      "transpose": false,
+      "skipBlanks": true,
+      "operation": "add",
+      "error": "You can't paste this here because the Copy area and paste area aren't the same size.\n\nSelect just one cell in the paste area or an area that's the same size, and try pasting again.",
+      "columns": [
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A:B",
+      "dest": "F4",
+      "transpose": true,
+      "skipBlanks": false,
+      "operation": "add",
+      "error": "You can't paste this here because the Copy area and paste area aren't the same size.\n\nSelect just one cell in the paste area or an area that's the same size, and try pasting again.",
+      "columns": [
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A:B",
+      "dest": "F4",
+      "transpose": true,
+      "skipBlanks": true,
+      "operation": "add",
+      "error": "You can't paste this here because the Copy area and paste area aren't the same size.\n\nSelect just one cell in the paste area or an area that's the same size, and try pasting again.",
+      "columns": [
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A:B",
+      "dest": "F4:I5",
+      "transpose": false,
+      "skipBlanks": false,
+      "operation": "add",
+      "error": "You can't paste this here because the Copy area and paste area aren't the same size.\n\nSelect just one cell in the paste area or an area that's the same size, and try pasting again.",
+      "columns": [
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A:B",
+      "dest": "F4:I5",
+      "transpose": false,
+      "skipBlanks": true,
+      "operation": "add",
+      "error": "You can't paste this here because the Copy area and paste area aren't the same size.\n\nSelect just one cell in the paste area or an area that's the same size, and try pasting again.",
+      "columns": [
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A:B",
+      "dest": "F4:I5",
+      "transpose": true,
+      "skipBlanks": false,
+      "operation": "add",
+      "error": "You can't paste this here because the Copy area and paste area aren't the same size.\n\nSelect just one cell in the paste area or an area that's the same size, and try pasting again.",
+      "columns": [
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A:B",
+      "dest": "F4:I5",
+      "transpose": true,
+      "skipBlanks": true,
+      "operation": "add",
+      "error": "You can't paste this here because the Copy area and paste area aren't the same size.\n\nSelect just one cell in the paste area or an area that's the same size, and try pasting again.",
+      "columns": [
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A:B",
+      "dest": "F4:I6",
+      "transpose": false,
+      "skipBlanks": false,
+      "operation": "add",
+      "error": "You can't paste this here because the Copy area and paste area aren't the same size.\n\nSelect just one cell in the paste area or an area that's the same size, and try pasting again.",
+      "columns": [
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A:B",
+      "dest": "F4:I6",
+      "transpose": false,
+      "skipBlanks": true,
+      "operation": "add",
+      "error": "You can't paste this here because the Copy area and paste area aren't the same size.\n\nSelect just one cell in the paste area or an area that's the same size, and try pasting again.",
+      "columns": [
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A:B",
+      "dest": "F4:I6",
+      "transpose": true,
+      "skipBlanks": false,
+      "operation": "add",
+      "error": "You can't paste this here because the Copy area and paste area aren't the same size.\n\nSelect just one cell in the paste area or an area that's the same size, and try pasting again.",
+      "columns": [
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A:B",
+      "dest": "F4:I6",
+      "transpose": true,
+      "skipBlanks": true,
+      "operation": "add",
+      "error": "You can't paste this here because the Copy area and paste area aren't the same size.\n\nSelect just one cell in the paste area or an area that's the same size, and try pasting again.",
+      "columns": [
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A:B",
+      "dest": "F:I",
+      "transpose": false,
+      "skipBlanks": false,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A:B",
+      "dest": "F:I",
+      "transpose": false,
+      "skipBlanks": true,
+      "operation": "add",
+      "error": null,
+      "columns": [
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        },
+        {
+          "width": 20.0,
+          "hidden": false,
+          "storedWidth": 20.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 8.09
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A:B",
+      "dest": "F:I",
+      "transpose": true,
+      "skipBlanks": false,
+      "operation": "add",
+      "error": "You can't paste this here because the Copy area and paste area aren't the same size.\n\nSelect just one cell in the paste area or an area that's the same size, and try pasting again.",
+      "columns": [
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    },
+    {
+      "source": "A:B",
+      "dest": "F:I",
+      "transpose": true,
+      "skipBlanks": true,
+      "operation": "add",
+      "error": "You can't paste this here because the Copy area and paste area aren't the same size.\n\nSelect just one cell in the paste area or an area that's the same size, and try pasting again.",
+      "columns": [
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 0.0,
+          "hidden": true,
+          "storedWidth": 12.0
+        },
+        {
+          "width": 12.0,
+          "hidden": false,
+          "storedWidth": 12.0
+        }
+      ],
+      "value": 9.0
+    }
+  ]
+}

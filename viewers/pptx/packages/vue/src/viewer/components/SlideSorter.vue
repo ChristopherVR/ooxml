@@ -15,8 +15,8 @@ import {
 	sorterSelectionIndexes,
 	sorterMenuContext,
 	sorterGridColumns,
-} from 'pptx-viewer-shared';
-import type { SlideSorterKeyActionName, SlideSorterContextMenuCommandId } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { SlideSorterKeyActionName, SlideSorterContextMenuCommandId } from 'ooxml-ui/pptx';
 import type { CSSProperties } from 'vue';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';

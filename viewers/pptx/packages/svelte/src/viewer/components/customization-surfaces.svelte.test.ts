@@ -1,5 +1,5 @@
-import { VIEWER_OPTIONS_TABS } from 'pptx-viewer-shared';
-import type { ViewerCustomization } from 'pptx-viewer-shared';
+import { VIEWER_OPTIONS_TABS } from 'ooxml-ui/pptx';
+import type { ViewerCustomization } from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount } from 'svelte';
 import type { Component } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';

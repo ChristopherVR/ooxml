@@ -20,7 +20,7 @@
  *  - `close` : the dialog was dismissed.
  */
 import type { PptxSlide } from 'pptx-viewer-core';
-import { DEFAULT_VIEWER_OPTIONS, resolveDefaultPrintSettings } from 'pptx-viewer-shared';
+import { DEFAULT_VIEWER_OPTIONS, resolveDefaultPrintSettings } from 'ooxml-ui/pptx';
 import { computed, inject, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 

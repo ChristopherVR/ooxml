@@ -26,12 +26,12 @@ import {
 	presenterConsoleAction,
 	presenterConsoleViewState,
 	stepPresenterZoom,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import type {
 	PresentationSnapshot,
 	PresenterConsoleRequestEvent,
 	PresenterConsoleViewState,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { translationsSignal } from './translations-signal';
 
 @Component({

@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
 import type { PptxElement } from 'pptx-viewer-core';
-import type { ElementAnimationState } from 'pptx-viewer-shared';
+import type { ElementAnimationState } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 import { ref } from 'vue';
 

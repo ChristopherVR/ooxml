@@ -5,7 +5,7 @@ import {
 	editorThumbnailHeight,
 	HIDDEN_SLIDE_SLASH_GRADIENT,
 	hiddenSlideCue,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LuEyeOff, LuMessageSquare } from 'react-icons/lu';

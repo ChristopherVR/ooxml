@@ -17,8 +17,8 @@ import {
 	actionAffordanceLabels,
 	ensureActionAffordanceStyles,
 	resolveElementActionAffordance,
-} from 'pptx-viewer-shared';
-import type { ElementActionAffordance } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { ElementActionAffordance } from 'ooxml-ui/pptx';
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 

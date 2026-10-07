@@ -1,5 +1,5 @@
 import type { PptxElement } from 'pptx-viewer-core';
-import type { CropElementUpdate, CropRestoreUpdate, CropSession } from 'pptx-viewer-shared';
+import type { CropElementUpdate, CropRestoreUpdate, CropSession } from 'ooxml-ui/pptx';
 import {
 	canCropElement,
 	cancelCropUpdate,
@@ -8,7 +8,7 @@ import {
 	cropSessionChanged,
 	readCropInsets,
 	startCropSession,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { EditorState } from './editor-state.svelte';
 

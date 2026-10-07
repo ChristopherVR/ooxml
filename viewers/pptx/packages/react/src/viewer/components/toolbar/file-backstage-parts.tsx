@@ -1,5 +1,5 @@
-import { BACKSTAGE_TEMPLATES, formatBackstageDate, formatBackstageSize } from 'pptx-viewer-shared';
-import type { BackstageRecentFile, ToolbarActionId } from 'pptx-viewer-shared';
+import { BACKSTAGE_TEMPLATES, formatBackstageDate, formatBackstageSize } from 'ooxml-ui/pptx';
+import type { BackstageRecentFile, ToolbarActionId } from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 

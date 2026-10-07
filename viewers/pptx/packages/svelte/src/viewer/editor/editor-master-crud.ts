@@ -15,8 +15,8 @@ import {
 	applyMasterViewCrudAction,
 	masterViewCrudActions,
 	masterViewCrudFailureKey,
-} from 'pptx-viewer-shared';
-import type { MasterViewCrudAction, MasterViewCrudActionId } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { MasterViewCrudAction, MasterViewCrudActionId } from 'ooxml-ui/pptx';
 
 import type { EditorState } from './editor-state.svelte';
 

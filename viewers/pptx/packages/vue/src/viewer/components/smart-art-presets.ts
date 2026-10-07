@@ -7,5 +7,5 @@
  * colocated tests are unchanged.
  */
 
-export type { SmartArtCategory, SmartArtPreset } from 'pptx-viewer-shared';
-export { PRESETS, CATEGORIES } from 'pptx-viewer-shared';
+export type { SmartArtCategory, SmartArtPreset } from 'ooxml-ui/pptx';
+export { PRESETS, CATEGORIES } from 'ooxml-ui/pptx';

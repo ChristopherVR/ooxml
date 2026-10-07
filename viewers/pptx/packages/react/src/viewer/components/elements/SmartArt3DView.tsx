@@ -12,14 +12,14 @@
  * @module SmartArt3DView
  */
 import type { PptxElement } from 'pptx-viewer-core';
-import type { ElementAnimationState } from 'pptx-viewer-shared';
+import type { ElementAnimationState } from 'ooxml-ui/pptx';
 import {
 	commitSmartArtNodeFill,
 	commitSmartArtNodeText,
 	measureSvgViewportRect,
 	resolvePalette,
 	resolveSmartArtThreeViewSpec,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React, { useMemo } from 'react';
 
 import { SmartArtEditableLayer } from './SmartArtEditableLayer';

@@ -5,4 +5,4 @@
  * (`render/connector-router-types`). This shim preserves the historical
  * import surface (`RouterPoint`, `RouterRect`, `ConnectorRouterOptions`).
  */
-export type { RouterPoint, RouterRect, ConnectorRouterOptions } from 'pptx-viewer-shared';
+export type { RouterPoint, RouterRect, ConnectorRouterOptions } from 'ooxml-ui/pptx';

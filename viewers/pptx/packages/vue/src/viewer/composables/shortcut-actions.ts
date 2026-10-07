@@ -8,7 +8,7 @@
  *
  * @module composables/shortcut-actions
  */
-import type { EditorKeyActionName } from 'pptx-viewer-shared';
+import type { EditorKeyActionName } from 'ooxml-ui/pptx';
 
 /**
  * The set of action identifiers the registry can dispatch: an alias of the

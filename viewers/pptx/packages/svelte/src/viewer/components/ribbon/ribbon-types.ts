@@ -4,7 +4,7 @@ import type {
 	CanvasSize,
 	ToolbarActionId,
 	ViewerPreferences,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { FindReplaceState } from '../../editor/editor-find-replace.svelte';
 import type { EditorState } from '../../editor/editor-state.svelte';

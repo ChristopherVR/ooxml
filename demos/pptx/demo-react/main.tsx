@@ -9,6 +9,12 @@ import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import { createRoot } from 'react-dom/client';
 import { useTranslation } from 'react-i18next';
 
+import { acknowledgeAutosaveRecovery } from '../../../src/ui/src/pptx/render/autosave-recovery-acknowledgement';
+import {
+	getAutosaveSnapshot,
+	listAutosaveSnapshots,
+	deleteAutosaveSnapshot,
+} from '../../../src/ui/src/pptx/render/autosave-store';
 // The openable-file allow list comes from the binding's public surface, not a
 // local regex: a hand-rolled `.pptx|.ppt|.json` refused a `.pptm` on drop that
 // the viewer's own File > Open accepted.
@@ -32,12 +38,6 @@ import {
 	storeAudienceContent,
 } from '../../../viewers/pptx/packages/react/src/viewer';
 import type { CollaborationConfig } from '../../../viewers/pptx/packages/react/src/viewer';
-import { acknowledgeAutosaveRecovery } from '../../../viewers/pptx/packages/shared/src/render/autosave-recovery-acknowledgement';
-import {
-	getAutosaveSnapshot,
-	listAutosaveSnapshots,
-	deleteAutosaveSnapshot,
-} from '../../../viewers/pptx/packages/shared/src/render/autosave-store';
 import { installDevViewerHandle } from '../dev-viewer-handle';
 import { currentDemoCustomization } from '../shared/demo-customization';
 import { externalSessionRequested } from '../shared/host-owned-collaboration';

@@ -11,13 +11,13 @@
  * @module collaboration/useYjsDocumentSync.test
  */
 import type { PptxSlide, PptxElement } from 'pptx-viewer-core';
-import type { YDocLike, YjsFactories } from 'pptx-viewer-shared';
+import type { YDocLike, YjsFactories } from 'ooxml-ui/pptx';
 import {
 	LOCAL_SYNC_ORIGIN,
 	observeYDocSlides,
 	reconcileSlidesInYDoc,
 	readSlidesFromYDoc,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { describe, it, expect, vi } from 'vitest';
 import * as Y from 'yjs';
 

@@ -3,8 +3,8 @@
  * (opened by the presenter via the audience window button) and auto-enters
  * fullscreen presentation mode, syncing slides via BroadcastChannel.
  */
-import { isPresentationSessionMessage, PRESENTATION_MESSAGE_ORIGIN } from 'pptx-viewer-shared';
-import type { PresentationSnapshot } from 'pptx-viewer-shared';
+import { isPresentationSessionMessage, PRESENTATION_MESSAGE_ORIGIN } from 'ooxml-ui/pptx';
+import type { PresentationSnapshot } from 'ooxml-ui/pptx';
 import { useEffect, useRef } from 'react';
 
 import type { ViewerMode } from '../../types-core';

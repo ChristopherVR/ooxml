@@ -6,10 +6,10 @@
  * preserves the historical Angular import surface so `HyperlinkDialogComponent`,
  * the viewer barrel, and the colocated tests are unchanged.
  */
-export type { HyperlinkDraft } from '../internal/shared';
+export type { HyperlinkDraft } from 'ooxml-ui/pptx';
 export {
 	hasExistingLink,
 	seedHyperlinkDraft,
 	buildHyperlinkPatch,
 	buildClearHyperlinkPatch,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';

@@ -5,8 +5,8 @@ import type {
 	CollaborationConfig,
 	ConnectionStatus,
 	ToolbarActionId,
-} from 'pptx-viewer-shared';
-import { publishLiveInlineText, resolveAutosaveFileKey } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import { publishLiveInlineText, resolveAutosaveFileKey } from 'ooxml-ui/pptx';
 
 import type { AutosaveStatus } from './autosave';
 import { createAutosaveSession } from './autosave';
@@ -59,7 +59,7 @@ export interface SessionControllers {
 	stopCollaboration(): void;
 	isCollaborationReadOnly(): boolean;
 	getCollaborationStatus(): ConnectionStatus;
-	getCollaborationLivePatcher(): import('pptx-viewer-shared').CollaborationLivePatcher;
+	getCollaborationLivePatcher(): import('ooxml-ui/pptx').CollaborationLivePatcher;
 	/** Publish a cursor move (slide-space px); no-op when no session is active. */
 	setCollaborationCursor(x: number, y: number): void;
 	/**

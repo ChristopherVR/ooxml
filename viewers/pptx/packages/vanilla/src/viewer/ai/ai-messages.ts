@@ -7,8 +7,8 @@
  * `Document`; the panel controller calls this on every snapshot change.
  */
 
-import type { PptxAiUIMessage } from 'pptx-viewer-shared/ai';
-import { toRenderableParts } from 'pptx-viewer-shared/ai';
+import type { PptxAiUIMessage } from 'ooxml-ui/pptx/ai';
+import { toRenderableParts } from 'ooxml-ui/pptx/ai';
 
 import type { Translator } from '../i18n';
 import { createEl } from '../render';

@@ -26,8 +26,8 @@ import {
 	resolveSmartArtThreeViewSpec,
 	shouldCommitSmartArtNodeText,
 	smartArtNodeAtPoint,
-} from 'pptx-viewer-shared';
-import type { TextStyleAnimationDescriptor } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { TextStyleAnimationDescriptor } from 'ooxml-ui/pptx';
 import { computed, nextTick, ref } from 'vue';
 import type { CSSProperties } from 'vue';
 import { useI18n } from 'vue-i18n';

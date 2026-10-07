@@ -31,12 +31,12 @@ import type {
 	PptxTheme,
 	PptxViewProperties,
 } from 'pptx-viewer-core';
-import type { CanvasSize } from 'pptx-viewer-shared';
+import type { CanvasSize } from 'ooxml-ui/pptx';
 import {
 	applyElementUpdate,
 	computeFocusTargets,
 	deckDataFieldChanged,
-} from 'pptx-viewer-shared/ai';
+} from 'ooxml-ui/pptx/ai';
 import type {
 	PptxAiBridge,
 	PptxAiDataUpdater,
@@ -45,7 +45,7 @@ import type {
 	PptxAiFocusedTarget,
 	PptxAiNotifyLevel,
 	PptxAiSlidesUpdater,
-} from 'pptx-viewer-shared/ai';
+} from 'ooxml-ui/pptx/ai';
 import type { Ref } from 'vue';
 
 /** Live reactive inputs the bridge closes over. */

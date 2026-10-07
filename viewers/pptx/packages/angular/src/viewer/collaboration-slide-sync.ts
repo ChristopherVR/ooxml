@@ -16,7 +16,7 @@ import type {
 	YDocLike,
 	YjsFactories,
 	YTransactionLike,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import {
 	createSyncGate,
 	LOCAL_SYNC_ORIGIN,
@@ -24,7 +24,7 @@ import {
 	reconcileSlidesInYDoc,
 	shouldRoomSlidesReplaceLoad,
 	YDOC_SLIDES_KEY,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import type { ProviderLike } from './collaboration-providers';
 
 /** Live-session references the engine writes into, set on connect. */

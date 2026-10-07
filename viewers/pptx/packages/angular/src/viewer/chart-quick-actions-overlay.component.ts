@@ -47,8 +47,8 @@ import {
 	CHART_QUICK_ACTION_BUTTON_SIZE,
 	hideChartSeries,
 	restoreFilteredSeries,
-} from '../internal/shared';
-import type { ChartQuickElementKey } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { ChartQuickElementKey } from 'ooxml-ui/pptx';
 import { commitChartElementData } from './chart-element-view-helpers';
 import { EditorStateService } from './editor-state.service';
 import { SLIDE_CONTEXT } from './slide-context';

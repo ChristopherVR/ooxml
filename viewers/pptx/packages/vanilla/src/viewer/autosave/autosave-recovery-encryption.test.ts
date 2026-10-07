@@ -20,7 +20,7 @@ const { savedSnapshots } = vi.hoisted(() => ({
 
 // No IndexedDB in this environment: intercept the write and keep the bytes.
 // Every other shared symbol (including the save decision) stays real.
-vi.mock(import('pptx-viewer-shared'), async (importOriginal) => ({
+vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => ({
 	...(await importOriginal()),
 	saveAutosaveSnapshot: async (key: string, data: Uint8Array) => {
 		savedSnapshots.push({ key, data });

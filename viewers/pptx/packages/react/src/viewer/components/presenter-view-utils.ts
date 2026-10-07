@@ -9,7 +9,7 @@
  * nodes.
  */
 import type { TextSegment } from 'pptx-viewer-core';
-import { notesSegmentsToSpans } from 'pptx-viewer-shared';
+import { notesSegmentsToSpans } from 'ooxml-ui/pptx';
 import React from 'react';
 
 export {
@@ -22,7 +22,7 @@ export {
 	NOTES_FONT_SIZE_STEP,
 	notesSegmentsToSpans,
 	presenterPaneAdvancesOnClick,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 /**
  * Render rich-text notes segments into React nodes, consuming the shared

@@ -23,7 +23,7 @@ import {
 	mediaSurfaceOf,
 	oleActionsVisible,
 	resolveOleType,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 
 // Re-export the shared pure helpers so existing local imports keep working.
 export {
@@ -36,8 +36,8 @@ export {
 	getPlaceholderStyle,
 	isBrowserOpenableMime,
 	resolveOleType,
-} from '../internal/shared';
-export type { ResolvedOleType } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+export type { ResolvedOleType } from 'ooxml-ui/pptx';
 
 // ==========================================================================
 // Embedded-payload actions (Download / Open) + richer info

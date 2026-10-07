@@ -1,6 +1,6 @@
 /* oxlint-disable eslint/one-var -- pre-existing throughout this file; independent concerns, not one statement */
-import type { CollaborationConfig, ConnectionStatus, ToolbarActionId } from 'pptx-viewer-shared';
-import { buildBroadcastViewerUrl, isActionHidden } from 'pptx-viewer-shared';
+import type { CollaborationConfig, ConnectionStatus, ToolbarActionId } from 'ooxml-ui/pptx';
+import { buildBroadcastViewerUrl, isActionHidden } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import { createEl } from '../render';

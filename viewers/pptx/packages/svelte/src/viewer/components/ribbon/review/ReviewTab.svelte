@@ -19,8 +19,8 @@
 
 	import { useTranslator } from '../../../../i18n/context';
 	import type { EditorState } from '../../../editor/editor-state.svelte';
-	import { buildReviewRibbon } from 'pptx-viewer-shared';
-	import type { RibbonCommandRequestEvent } from 'pptx-viewer-shared';
+	import { buildReviewRibbon } from 'ooxml-ui/pptx';
+	import type { RibbonCommandRequestEvent } from 'ooxml-ui/pptx';
 	import ReviewAccessibilityPanel from './ReviewAccessibilityPanel.svelte';
 	import ReviewCommentsPanel from './ReviewCommentsPanel.svelte';
 

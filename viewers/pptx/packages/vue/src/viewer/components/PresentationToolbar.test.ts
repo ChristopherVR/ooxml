@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils';
-import { PRESENT_TOOLBAR_ORDER } from 'pptx-viewer-shared';
+import { PRESENT_TOOLBAR_ORDER } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 
 import type { PresentationTool } from '../composables/usePresentationAnnotations';

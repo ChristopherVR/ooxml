@@ -5,7 +5,7 @@ import {
 	MORPH_CROSSFADE_GROUP_STYLE,
 	MORPH_CROSSFADE_HALF_BLEND_MODE,
 	morphOptionToMode,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type { CSSProperties } from 'vue';
 import { computed } from 'vue';
 

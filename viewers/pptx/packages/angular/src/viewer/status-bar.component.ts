@@ -22,13 +22,13 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { TranslateService } from '@ngx-translate/core';
 import { map, merge, startWith } from 'rxjs';
 
-import { isActionHidden, resolveStatusBarSave } from '../internal/shared';
+import { isActionHidden, resolveStatusBarSave } from 'ooxml-ui/pptx';
 import type {
 	StatusBarControlId,
 	StatusBarRequestEvent,
 	StatusBarViewState,
 	ToolbarActionId,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import type { AutosaveStatus } from './autosave.service';
 
 @Component({

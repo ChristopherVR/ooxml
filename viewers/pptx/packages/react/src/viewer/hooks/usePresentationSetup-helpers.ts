@@ -7,8 +7,8 @@ export {
 	computeEntranceAnimationDelay,
 	shouldLoopContinuously,
 	sortEntranceAnimations,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 export type {
 	EntranceAnimationEntry as AnimationEntry,
 	PresentationLoopInput,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

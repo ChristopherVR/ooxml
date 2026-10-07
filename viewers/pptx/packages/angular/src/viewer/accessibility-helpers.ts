@@ -6,7 +6,7 @@
  * every binding. This shim preserves the historical Angular import surface so
  * the accessibility panel/service and the colocated tests are unchanged.
  */
-export type { AccessibilityIssueGroup } from '../internal/shared';
+export type { AccessibilityIssueGroup } from 'ooxml-ui/pptx';
 export {
 	SEVERITY_GROUPS,
 	SEVERITY_LABELS,
@@ -16,4 +16,4 @@ export {
 	groupIssuesBySeverity,
 	issueTypeLabel,
 	issueTrackKey,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';

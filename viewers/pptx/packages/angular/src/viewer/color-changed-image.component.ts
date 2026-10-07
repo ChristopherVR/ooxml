@@ -6,7 +6,7 @@ import {
 	buildCacheKey,
 	getCachedResult,
 	setCachedResult,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import type { ClrChangeParams } from './color-changed-image-helpers';
 
 /**

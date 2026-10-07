@@ -23,7 +23,7 @@ import {
 import { TranslatePipe } from '@ngx-translate/core';
 import type { ChartPptxElement, PptxChartSeries, PptxChartType } from 'pptx-viewer-core';
 
-import { COMBO_SERIES_TYPE_OPTIONS, COMBO_SUPPORTED_TYPES } from '../internal/shared';
+import { COMBO_SERIES_TYPE_OPTIONS, COMBO_SUPPORTED_TYPES } from 'ooxml-ui/pptx';
 import { setSeriesChartType } from './chart-data-helpers';
 import { CHART_EDITOR_STYLES } from './chart-editor-styles';
 import { selectValue } from './chart-event-helpers';

@@ -9,7 +9,7 @@
 	 * shares `PowerPointViewer`'s single `themeKey` state with it so both stay
 	 * in sync.
 	 */
-	import type { ThemeCatalogEntry } from 'pptx-viewer-shared';
+	import type { ThemeCatalogEntry } from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../i18n/context';
 
 	const {

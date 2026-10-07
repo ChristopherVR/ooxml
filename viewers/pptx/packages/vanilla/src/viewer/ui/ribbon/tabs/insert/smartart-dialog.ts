@@ -1,11 +1,11 @@
 import type { SmartArtLayout } from 'pptx-viewer-core';
-import type { DialogFooterAction, SmartArtCategory, SmartArtPreset } from 'pptx-viewer-shared';
+import type { DialogFooterAction, SmartArtCategory, SmartArtPreset } from 'ooxml-ui/pptx';
 import {
 	CATEGORIES,
 	modalActiveElement,
 	modalFocusableElements,
 	PRESETS,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../../../i18n';
 import { createEl } from '../../../../render';

@@ -4,7 +4,7 @@
  * Re-imported as class-property function references so Angular template
  * type-checking continues to work without changes to the template.
  */
-import { smartArtConnectorPaint, smartArtNodeLabel } from '../internal/shared';
+import { smartArtConnectorPaint, smartArtNodeLabel } from 'ooxml-ui/pptx';
 import type {
 	RenderedCircleNode,
 	RenderedNode,
@@ -13,7 +13,7 @@ import type {
 	SmartArtConnectorPaint,
 	SmartArtLayoutResult,
 	SmartArtNodeLabel,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 
 /** Narrow a RenderedNode to a circle, or undefined. */
 export function narrowToCircle(node: RenderedNode): RenderedCircleNode | undefined {

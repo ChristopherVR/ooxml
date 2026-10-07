@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { PptxElement, PptxImageEffects } from 'pptx-viewer-core';
-import { ARTISTIC_EFFECTS } from 'pptx-viewer-shared';
+import { ARTISTIC_EFFECTS } from 'ooxml-ui/pptx';
 import { useI18n } from 'vue-i18n';
 
 import { humanizeEffectLabel, mergeEffectsPatch } from '../../composables/useImageEditing';

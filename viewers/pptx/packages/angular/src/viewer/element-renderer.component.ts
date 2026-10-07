@@ -9,8 +9,8 @@ import {
 	getGroupChildParentFill,
 	isElementHidden,
 	inlineElementPointerEvents,
-} from '../internal/shared';
-import type { ElementAnimationState, FieldSubstitutionContext } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { ElementAnimationState, FieldSubstitutionContext } from 'ooxml-ui/pptx';
 import { AnimationPlaybackService } from './animation-playback.service';
 import { resolveBevelLightingFilter } from './bevel-lighting-filter';
 import type { BevelLightingFilterDef } from './bevel-lighting-filter';

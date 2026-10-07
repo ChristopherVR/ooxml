@@ -1,5 +1,5 @@
-import type { AlignEdge, DistributeAxis, MergeShapeOperation } from 'pptx-viewer-shared';
-import { applyMergeShapesPlan, planMergeShapes } from 'pptx-viewer-shared';
+import type { AlignEdge, DistributeAxis, MergeShapeOperation } from 'ooxml-ui/pptx';
+import { applyMergeShapesPlan, planMergeShapes } from 'ooxml-ui/pptx';
 
 import {
 	alignSelectedOnSlide,

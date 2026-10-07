@@ -1,4 +1,4 @@
-import { SHAPE_QUICK_STYLES } from 'pptx-viewer-shared';
+import { SHAPE_QUICK_STYLES } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';

@@ -98,7 +98,7 @@ export type {
 	GestureKind,
 	GestureTransform,
 	PointerLike,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 export {
 	appendElementOnSlide,
 	cloneSlides,
@@ -117,7 +117,7 @@ export {
 	updateElement,
 	updateSlide,
 	updateSlideNotes,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 export type { EditorKeyboardDeps } from './editor-keyboard';
 export { createEditorKeydownHandler } from './editor-keyboard';

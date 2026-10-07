@@ -20,19 +20,19 @@
 
 import type { PptxTableData, TablePptxElement } from 'pptx-viewer-core';
 
-import type { CellCoord } from '../internal/shared';
+import type { CellCoord } from 'ooxml-ui/pptx';
 import {
 	computeMergeCellDown,
 	computeMergeCellRight,
 	computeSplitCell,
 	mergeCells,
 	splitCell,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 
 // `setCellText` is the framework-agnostic single-cell text edit. It lives in
 // `pptx-viewer-shared` (`render/table-cell-edit`); re-exported here so existing
 // consumers and the colocated test keep importing it from this module unchanged.
-export { setCellText } from '../internal/shared';
+export { setCellText } from 'ooxml-ui/pptx';
 
 export type { CellCoord };
 
@@ -73,7 +73,7 @@ export {
 	insertTableElementRow as insertRow,
 	removeTableElementColumn as removeColumn,
 	removeTableElementRow as removeRow,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 
 // ---------------------------------------------------------------------------
 // Merge / split operations

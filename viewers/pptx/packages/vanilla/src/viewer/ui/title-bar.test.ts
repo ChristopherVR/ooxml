@@ -1,4 +1,4 @@
-import { DEFAULT_VIEWER_OPTIONS } from 'pptx-viewer-shared';
+import { DEFAULT_VIEWER_OPTIONS } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../i18n';

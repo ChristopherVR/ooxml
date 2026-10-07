@@ -21,7 +21,7 @@ import {
 	actionAffordanceLabels,
 	applyElementActionAffordances,
 	isTemplateElement,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { affordanceElements } from './slide-canvas-helpers';
 
 const labels = actionAffordanceLabels((key) => key);

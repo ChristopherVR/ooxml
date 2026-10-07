@@ -20,8 +20,8 @@ import type {
 	AwarenessLike,
 	CollaborationConfig,
 	CollaborationTransport,
-} from 'pptx-viewer-shared';
-import { clearLocalAwareness, createDepartureChannel } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import { clearLocalAwareness, createDepartureChannel } from 'ooxml-ui/pptx';
 
 export type { AwarenessLike };
 

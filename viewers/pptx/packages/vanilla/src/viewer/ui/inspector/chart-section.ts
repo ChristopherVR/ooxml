@@ -2,7 +2,7 @@
    (an imperative DOM-builder with many independent `const`s), not one
    statement */
 import type { PptxChartData } from 'pptx-viewer-core';
-import type { ChartTypeSelectValue } from 'pptx-viewer-shared';
+import type { ChartTypeSelectValue } from 'ooxml-ui/pptx';
 import {
 	chartDataLabelsTogglePatch,
 	CHART_GROUPING_LABEL_KEYS,
@@ -11,7 +11,7 @@ import {
 	collapseChartTitleRunsForEdit,
 	patchChartData as sharedPatchChartData,
 	resolveDisplayedChartType,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import { createChartAdvancedSection } from './chart-advanced-section';

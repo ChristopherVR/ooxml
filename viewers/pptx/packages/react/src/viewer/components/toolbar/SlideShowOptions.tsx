@@ -1,9 +1,9 @@
 import type { PptxPresentationProperties } from 'pptx-viewer-core';
-import { SLIDE_SHOW_OPTIONS } from 'pptx-viewer-shared';
+import { SLIDE_SHOW_OPTIONS } from 'ooxml-ui/pptx';
 import type {
 	PptxUiSlideShowOptionsElement,
 	SlideShowOptionsChangeEvent,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React, { useEffect, useLayoutEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 

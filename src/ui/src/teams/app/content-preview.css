@@ -63,7 +63,8 @@ p[role],
 iframe,
 docx-editor,
 xlsx-editor,
-visio-viewer {
+visio-viewer,
+teams-presentation-preview {
 	display: block;
 	flex: 1;
 	width: 100%;

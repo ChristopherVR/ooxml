@@ -6,8 +6,8 @@
  * the template after the current slide via the caller's history-integrated
  * insert path.
  */
-import { SLIDE_TEMPLATES } from 'pptx-viewer-shared';
-import type { SlideTemplateId } from 'pptx-viewer-shared';
+import { SLIDE_TEMPLATES } from 'ooxml-ui/pptx';
+import type { SlideTemplateId } from 'ooxml-ui/pptx';
 import React, { useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LuX } from 'react-icons/lu';

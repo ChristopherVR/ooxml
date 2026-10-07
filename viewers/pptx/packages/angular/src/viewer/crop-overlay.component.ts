@@ -35,8 +35,8 @@ import {
 	getImageSrc,
 	panCropImage,
 	toElementAxes,
-} from '../internal/shared';
-import type { CropDragStart, CropHandleId } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { CropDragStart, CropHandleId } from 'ooxml-ui/pptx';
 import { PictureCropService } from './picture-crop.service';
 
 /** A live crop gesture: a handle drag, or a pan (`handle === null`). */

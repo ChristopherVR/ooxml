@@ -9,8 +9,8 @@
  * `payload.connected` for webrtc / `payload.status` for websocket).
  */
 
-import type { CollaborationTransport, ConnectionStatus } from '../internal/shared';
-import { CONNECTION_TIMEOUT_MS } from '../internal/shared';
+import type { CollaborationTransport, ConnectionStatus } from 'ooxml-ui/pptx';
+import { CONNECTION_TIMEOUT_MS } from 'ooxml-ui/pptx';
 import type { ProviderLike } from './collaboration-providers';
 
 export interface ConnectionWiringDeps {

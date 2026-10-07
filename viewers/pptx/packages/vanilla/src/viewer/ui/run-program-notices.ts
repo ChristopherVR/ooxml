@@ -1,5 +1,5 @@
-import { canUseClipboard, compatToastStackStyleAttr } from 'pptx-viewer-shared';
-import type { RunProgramNotice } from 'pptx-viewer-shared';
+import { canUseClipboard, compatToastStackStyleAttr } from 'ooxml-ui/pptx';
+import type { RunProgramNotice } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import { createEl } from '../render';

@@ -1,4 +1,4 @@
-import type { RunProgramNotice } from 'pptx-viewer-shared';
+import type { RunProgramNotice } from 'ooxml-ui/pptx';
 import { useCallback, useState } from 'react';
 
 /**

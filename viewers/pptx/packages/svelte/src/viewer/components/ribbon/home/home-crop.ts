@@ -1,6 +1,6 @@
 import type { PptxElement } from 'pptx-viewer-core';
-import { cropFill, cropFit, cropToAspectRatio, parseCropValue } from 'pptx-viewer-shared';
-import type { CropElementUpdate, NaturalImageSize } from 'pptx-viewer-shared';
+import { cropFill, cropFit, cropToAspectRatio, parseCropValue } from 'ooxml-ui/pptx';
+import type { CropElementUpdate, NaturalImageSize } from 'ooxml-ui/pptx';
 
 /** The rendered bitmap's natural size, when its <img> is on the canvas. */
 function naturalSizeOf(element: PptxElement): NaturalImageSize | undefined {

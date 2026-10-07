@@ -1,5 +1,5 @@
-import type { PptxUiSelectElement } from 'pptx-viewer-shared';
-import { EMPTY_RIBBON_TRANSITION_DRAFT, createRibbonControlIcon } from 'pptx-viewer-shared';
+import type { PptxUiSelectElement } from 'ooxml-ui/pptx';
+import { EMPTY_RIBBON_TRANSITION_DRAFT, createRibbonControlIcon } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { EditActions } from '../../editor/editor-edit-ops';

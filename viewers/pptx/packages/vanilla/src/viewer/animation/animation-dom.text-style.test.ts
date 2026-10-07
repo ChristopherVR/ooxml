@@ -1,4 +1,4 @@
-import type { ElementAnimationState } from 'pptx-viewer-shared';
+import type { ElementAnimationState } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 
 import { applyElementAnimationStyles } from './animation-dom';

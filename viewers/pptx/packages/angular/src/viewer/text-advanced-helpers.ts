@@ -14,5 +14,5 @@ export {
 	alignPatch,
 	vAlignPatch,
 	textDirectionPatch,
-} from '../internal/shared';
-export type { TextAdvancedState, TextAdvancedChanges } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+export type { TextAdvancedState, TextAdvancedChanges } from 'ooxml-ui/pptx';

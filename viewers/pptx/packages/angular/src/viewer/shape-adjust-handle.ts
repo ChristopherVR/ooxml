@@ -24,8 +24,8 @@ import {
 	beginShapeAdjustment,
 	getDraggedShapeAdjustments,
 	getShapeAdjustmentHandleDescriptors,
-} from '../internal/shared';
-import type { ShapeAdjustmentDragState, ShapeAdjustmentHandleDescriptor } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { ShapeAdjustmentDragState, ShapeAdjustmentHandleDescriptor } from 'ooxml-ui/pptx';
 import type { Box } from './drag-resize';
 
 /** One adjustment handle's render box in STAGE (unscaled slide) coordinates. */

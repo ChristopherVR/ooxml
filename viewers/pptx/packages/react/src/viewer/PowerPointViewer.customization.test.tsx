@@ -5,7 +5,7 @@
  * ribbon tab never renders, and `hideRibbonTab` / `showRibbonTab` on the
  * handle take effect live.
  */
-import { translationsEn } from 'pptx-viewer-shared/i18n';
+import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import React, { act, createRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';

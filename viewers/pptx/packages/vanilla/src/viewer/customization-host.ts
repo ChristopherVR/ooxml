@@ -28,7 +28,7 @@ import type {
 	ViewerFeatureId,
 	ViewerOptionPrimitive,
 	ViewerPanelId,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { ViewerCustomizationLifecycle } from './customization-lifecycle';
 import { ViewerExportHost } from './export-lifecycle';

@@ -1,5 +1,5 @@
 import type { PptxElement, PptxSlide, PptxSlideTransition } from 'pptx-viewer-core';
-import { buildMorphTransitionPlan } from 'pptx-viewer-shared';
+import { buildMorphTransitionPlan } from 'ooxml-ui/pptx';
 import React from 'react';
 /**
  * Wiring coverage for PresentationTransitionOverlay: it must inject the slide

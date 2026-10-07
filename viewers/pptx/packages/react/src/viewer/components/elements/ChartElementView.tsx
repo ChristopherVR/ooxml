@@ -8,8 +8,8 @@ import {
 	resolveRevealedChartData,
 	subscribeBarFacePicturePixelSamples,
 	withChartTitle,
-} from 'pptx-viewer-shared';
-import type { ElementAnimationState } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { ElementAnimationState } from 'ooxml-ui/pptx';
 import React, {
 	useContext,
 	useEffect,

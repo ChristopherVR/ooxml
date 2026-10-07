@@ -1,4 +1,4 @@
-import { keyToLabel, translationsEn } from 'pptx-viewer-shared/i18n';
+import { keyToLabel, translationsEn } from 'ooxml-ui/pptx/i18n';
 
 /**
  * Minimal, dependency-free translation layer for the Svelte binding.

@@ -1,7 +1,7 @@
 import { Injector, runInInjectionContext } from '@angular/core';
 import { describe, expect, it } from 'vitest';
 
-import type { RibbonControlId } from '../internal/shared';
+import type { RibbonControlId } from 'ooxml-ui/pptx';
 import { RibbonDesignSectionComponent } from './ribbon-design-section.component';
 
 function section(editable: boolean) {

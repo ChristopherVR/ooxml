@@ -13,9 +13,11 @@
 		"declaration": true,
 		"types": ["vitest/globals"],
 		"paths": {
+			"ooxml-core/pptx": ["../core/dist/pptx/index.d.ts"],
 			"ooxml-core/*": ["../core/*/index.ts"]
 		}
 	},
 	"include": ["src/**/*.ts"],
-	"exclude": ["dist", "node_modules"]
+	"exclude": ["dist", "node_modules", "src/pptx"],
+	"files": ["src/raw.d.ts"]
 }

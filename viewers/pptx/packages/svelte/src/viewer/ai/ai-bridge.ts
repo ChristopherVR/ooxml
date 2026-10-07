@@ -30,8 +30,8 @@ import type {
 	PptxAiElementUpdate,
 	PptxAiNotifyLevel,
 	PptxAiSlidesUpdater,
-} from 'pptx-viewer-shared/ai';
-import { applyElementUpdate, deckDataFieldChanged } from 'pptx-viewer-shared/ai';
+} from 'ooxml-ui/pptx/ai';
+import { applyElementUpdate, deckDataFieldChanged } from 'ooxml-ui/pptx/ai';
 
 /** Live editor accessors the bridge closes over (all read from viewer runes). */
 export interface SvelteAiBridgeDeps {

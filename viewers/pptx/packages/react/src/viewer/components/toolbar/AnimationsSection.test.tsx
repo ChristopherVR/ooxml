@@ -13,7 +13,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const playAnimationRibbonPreview = vi.fn();
 
-vi.mock(import('pptx-viewer-shared'), async (original) => ({
+vi.mock(import('ooxml-ui/pptx'), async (original) => ({
 	...(await original()),
 	playAnimationRibbonPreview,
 }));
@@ -22,7 +22,7 @@ vi.mock(import('react-i18next'), () => ({
 	useTranslation: () => ({ t: (key: string) => key }),
 }));
 
-const { registerPptxWebControls } = await import('pptx-viewer-shared');
+const { registerPptxWebControls } = await import('ooxml-ui/pptx');
 const { AnimationsSection } = await import('./AnimationsSection');
 type AnimationsSectionProps = import('./AnimationsSection').AnimationsSectionProps;
 

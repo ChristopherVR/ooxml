@@ -1,5 +1,5 @@
 import type { PptxSlide } from 'pptx-viewer-core';
-import type { RunProgramNotice } from 'pptx-viewer-shared';
+import type { RunProgramNotice } from 'ooxml-ui/pptx';
 import {
 	buildRunProgramNotice,
 	downloadDataUrl,
@@ -7,7 +7,7 @@ import {
 	resolveOleVerbTarget,
 	safeOpenUrl,
 	toggleStageElementMedia,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { useCallback, useEffect, useRef } from 'react';
 
 import type { ViewerMode } from '../../types';

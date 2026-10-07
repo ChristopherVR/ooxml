@@ -20,7 +20,7 @@ import {
 	resolveOleVerbTarget,
 	safeOpenUrl,
 	toggleStageElementMedia,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { ref, watch } from 'vue';
 import type { Ref } from 'vue';
 

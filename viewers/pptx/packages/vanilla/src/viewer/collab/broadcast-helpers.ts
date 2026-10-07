@@ -1,4 +1,4 @@
-import type { BroadcastConfig, CollaborationConfig } from 'pptx-viewer-shared';
+import type { BroadcastConfig, CollaborationConfig } from 'ooxml-ui/pptx';
 
 /**
  * broadcast-helpers.ts: vanilla-local helpers for the Broadcast dialog.
@@ -21,8 +21,8 @@ export {
 	generateBroadcastRoomId,
 	resolveTransportForServerUrl,
 	seedBroadcastFields,
-} from 'pptx-viewer-shared';
-export type { BroadcastConfig, BroadcastDefaults } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+export type { BroadcastConfig, BroadcastDefaults } from 'ooxml-ui/pptx';
 
 /** Presenter display name used when the host has not configured one. */
 const DEFAULT_PRESENTER_NAME = 'Presenter';

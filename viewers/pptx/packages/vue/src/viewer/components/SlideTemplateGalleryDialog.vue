@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { SLIDE_TEMPLATES } from 'pptx-viewer-shared';
-import type { SlideTemplateId } from 'pptx-viewer-shared';
+import { SLIDE_TEMPLATES } from 'ooxml-ui/pptx';
+import type { SlideTemplateId } from 'ooxml-ui/pptx';
 import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 

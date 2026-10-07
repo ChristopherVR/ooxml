@@ -17,8 +17,8 @@ import type {
 	ConnectionStatus,
 	ExternalCollaborationReadiness,
 	YDocLike,
-} from '../internal/shared';
-import { clearLocalAwareness, observeYDocSlides } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import { clearLocalAwareness, observeYDocSlides } from 'ooxml-ui/pptx';
 import { wireConnectionStatus } from './collaboration-connection';
 import { DEFAULT_CURSOR_COLOR } from './collaboration-helpers';
 import { LocalPresencePublisher } from './collaboration-local-presence';

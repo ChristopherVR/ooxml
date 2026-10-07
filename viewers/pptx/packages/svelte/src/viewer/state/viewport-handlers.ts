@@ -1,4 +1,4 @@
-import type { PresentationPointerTool } from 'pptx-viewer-shared';
+import type { PresentationPointerTool } from 'ooxml-ui/pptx';
 import {
 	acceptsPresentationInput,
 	createPresentationKeyBuffer,
@@ -7,7 +7,7 @@ import {
 	mapPresentationWheel,
 	mapSlideShowStartKey,
 	mayLeaveSlideShow,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { EditorController } from '../editor/editor-controller.svelte';
 import type { PresentationController } from '../presentation/presentation-controller.svelte';

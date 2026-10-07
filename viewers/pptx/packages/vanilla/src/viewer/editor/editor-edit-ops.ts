@@ -13,8 +13,8 @@ import {
 	isElementIdInteractive,
 	shapeFillChange,
 	shapeOutlineChange,
-} from 'pptx-viewer-shared';
-import type { Guide, InsertChartKind, ShapePresetType } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { Guide, InsertChartKind, ShapePresetType } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import type { Store, ViewerState } from '../state';

@@ -33,13 +33,13 @@
 		resetPresenterTimer,
 		stepPresenterZoom,
 		togglePresenterTimer,
-	} from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
 	import type {
 		AuthoredSlideRange,
 		CanvasSize,
 		PresentationSnapshot,
 		ShowOrderCustomShow,
-	} from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 	import { isPresenterPointerTool } from './presenter-console-strip';

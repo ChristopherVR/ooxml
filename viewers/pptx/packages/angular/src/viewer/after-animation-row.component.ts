@@ -21,7 +21,7 @@ import {
 import { TranslatePipe } from '@ngx-translate/core';
 import type { PptxAfterAnimationAction } from 'pptx-viewer-core';
 
-import { AFTER_ANIMATION_VALUES } from '../internal/shared';
+import { AFTER_ANIMATION_VALUES } from 'ooxml-ui/pptx';
 import { isSelectControl } from './control-event-targets';
 
 @Component({

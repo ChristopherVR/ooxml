@@ -8,8 +8,8 @@ import {
 	getImageFitStyle,
 	getImageSrc,
 	resolveGroupChildFill,
-} from 'pptx-viewer-shared';
-import type { ComputedFillStyle } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { ComputedFillStyle } from 'ooxml-ui/pptx';
 
 import { createEl } from '../dom';
 import { getShapeFillStrokeStyle, getTextBlockStyle } from '../element-styles';

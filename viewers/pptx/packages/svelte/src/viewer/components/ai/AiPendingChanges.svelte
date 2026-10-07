@@ -5,7 +5,7 @@
 	 * waiting. Split out of `AiChatPanel` to keep that file within the repo's
 	 * file-size budget; every action routes back to the chat's proposal store.
 	 */
-	import type { ProposalView } from 'pptx-viewer-shared/ai';
+	import type { ProposalView } from 'ooxml-ui/pptx/ai';
 
 	import { useTranslator } from '../../../i18n/context';
 	import AiProposalCard from './AiProposalCard.svelte';

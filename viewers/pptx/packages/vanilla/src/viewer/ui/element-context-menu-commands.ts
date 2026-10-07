@@ -13,12 +13,12 @@
  * and inspector operations, never a parallel implementation of them.
  */
 import type { PptxElement } from 'pptx-viewer-core';
-import type { ContextMenuCommandId, ContextMenuTableContext } from 'pptx-viewer-shared';
+import type { ContextMenuCommandId, ContextMenuTableContext } from 'ooxml-ui/pptx';
 import {
 	contextMenuInspectorAnchor,
 	hasMultipleSelectedTableCells,
 	mergeOperationForCommand,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { EditActions } from '../editor';
 import type { TableCellPosition } from '../editor/table-editor-mutations';

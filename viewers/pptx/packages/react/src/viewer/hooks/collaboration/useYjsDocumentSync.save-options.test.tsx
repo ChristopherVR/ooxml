@@ -7,8 +7,8 @@
  * `getSaveOptions` dep reaches the `handler.save(...)` call.
  */
 import type { PptxHandlerSaveOptions, PptxSlide } from 'pptx-viewer-core';
-import type { CollaborationConfig, YDocLike, YjsFactories } from 'pptx-viewer-shared';
-import { reconcileSlidesInYDoc } from 'pptx-viewer-shared';
+import type { CollaborationConfig, YDocLike, YjsFactories } from 'ooxml-ui/pptx';
+import { reconcileSlidesInYDoc } from 'ooxml-ui/pptx';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';

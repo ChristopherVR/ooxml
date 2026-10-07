@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { RibbonDrawRequestEvent } from 'pptx-viewer-shared';
+import type { RibbonDrawRequestEvent } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

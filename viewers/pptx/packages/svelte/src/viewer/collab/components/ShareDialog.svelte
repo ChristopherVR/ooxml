@@ -7,7 +7,7 @@
 	 * `ShareDialogActiveView.tsx`, built on shared's `buildActiveSessionUsers`.
 	 */
 	import DialogFooter from '../../components/DialogFooter.svelte';
-	import { buildActiveSessionUsers, buildCollaborationShareUrl, resolveTransportForServerUrl } from 'pptx-viewer-shared';
+	import { buildActiveSessionUsers, buildCollaborationShareUrl, resolveTransportForServerUrl } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 	import { useViewerOptions } from '../../state/viewer-options-context';

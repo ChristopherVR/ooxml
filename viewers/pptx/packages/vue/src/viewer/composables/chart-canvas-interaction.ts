@@ -7,8 +7,8 @@ import {
 	formatAxisValue,
 	resolveChartKind,
 	withChartTitle,
-} from 'pptx-viewer-shared';
-import type { ChartPartRef, ChartViewModel } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { ChartPartRef, ChartViewModel } from 'ooxml-ui/pptx';
 import type { ComputedRef, Ref } from 'vue';
 import { computed, onMounted, onUnmounted, onUpdated, ref, shallowRef, watch } from 'vue';
 

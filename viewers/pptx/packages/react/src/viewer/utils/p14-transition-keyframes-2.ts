@@ -3,4 +3,4 @@
  * now live in `pptx-viewer-shared` (`P14_TRANSITION_KEYFRAMES_2`). Kept so
  * existing importers/tests resolve unchanged.
  */
-export { P14_TRANSITION_KEYFRAMES_2 } from 'pptx-viewer-shared';
+export { P14_TRANSITION_KEYFRAMES_2 } from 'ooxml-ui/pptx';

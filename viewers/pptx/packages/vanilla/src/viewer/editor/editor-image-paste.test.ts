@@ -1,11 +1,11 @@
 import type { PptxHandler, PptxSlide } from 'pptx-viewer-core';
-import { attachEditorImagePaste } from 'pptx-viewer-shared';
+import { attachEditorImagePaste } from 'ooxml-ui/pptx';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createInitialViewerState, createStore } from '../state';
 import { attachCanvasImagePaste } from './editor-image-paste';
 
-vi.mock(import('pptx-viewer-shared'), async (importOriginal) => ({
+vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => ({
 	...(await importOriginal()),
 	attachEditorImagePaste: vi.fn(),
 }));

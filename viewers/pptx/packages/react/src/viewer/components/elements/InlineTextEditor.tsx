@@ -7,8 +7,8 @@ import {
 	placeCaretAt,
 	readEditableText,
 	takePendingCaretPoint,
-} from 'pptx-viewer-shared';
-import type { InlineTextEditSnapshot } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { InlineTextEditSnapshot } from 'ooxml-ui/pptx';
 import React, { useRef, useEffect, useLayoutEffect, useCallback } from 'react';
 
 import { DEFAULT_TEXT_COLOR } from '../../constants';

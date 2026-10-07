@@ -1,11 +1,11 @@
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 
-import type { MorphTransitionPlan } from '../internal/shared';
+import type { MorphTransitionPlan } from 'ooxml-ui/pptx';
 import {
 	MORPH_CROSSFADE_GROUP_STYLE,
 	MORPH_CROSSFADE_HALF_BLEND_MODE,
 	visibleTemplateElements as filterVisibleTemplateElements,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import type { StyleMap } from './element-style';
 
 /**

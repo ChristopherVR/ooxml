@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils';
-import { translationsEn } from 'pptx-viewer-shared/i18n';
+import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import { describe, expect, it, vi } from 'vitest';
 import { h } from 'vue';
 

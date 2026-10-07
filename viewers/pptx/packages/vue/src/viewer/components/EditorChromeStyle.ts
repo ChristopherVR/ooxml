@@ -1,4 +1,4 @@
-import { EDITOR_CHROME_CSS } from 'pptx-viewer-shared';
+import { EDITOR_CHROME_CSS } from 'ooxml-ui/pptx';
 import { defineComponent, h } from 'vue';
 
 export default defineComponent({

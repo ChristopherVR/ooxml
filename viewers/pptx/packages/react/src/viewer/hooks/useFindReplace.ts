@@ -4,13 +4,13 @@ import {
 	findInSlides,
 	isEditorTextInputTarget,
 	mapCustomizedEditorKey,
-} from 'pptx-viewer-shared';
-import type { FindResult, ResolvedKeyboardCustomization } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { FindResult, ResolvedKeyboardCustomization } from 'ooxml-ui/pptx';
 import { useState, useCallback, useEffect, useRef } from 'react';
 
 // The match descriptor and the search / replace implementations are shared with
 // the other bindings; this hook is the React state around them.
-export type { FindResult } from 'pptx-viewer-shared';
+export type { FindResult } from 'ooxml-ui/pptx';
 interface UseFindReplaceInput {
 	slides: PptxSlide[];
 	mode: string;

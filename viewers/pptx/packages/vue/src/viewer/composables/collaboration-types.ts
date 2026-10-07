@@ -5,7 +5,7 @@ import type {
 	CollaborationLivePatcher,
 	CollaborationRole,
 	CollaborationShellState,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 /**
  * Types for the `useCollaboration` composable.
  * Extracted here to keep useCollaboration.ts under the 300-line limit.
@@ -87,7 +87,7 @@ export interface UseCollaborationResult {
 	shellState: ComputedRef<CollaborationShellState>;
 	/** The configuration attached by start() or the reactive collaboration option. */
 	activeCollaboration: Ref<CollaborationConfig | null>;
-	status: Ref<import('pptx-viewer-shared').ConnectionStatus>;
+	status: Ref<import('ooxml-ui/pptx').ConnectionStatus>;
 	connected: Ref<boolean>;
 	cursors: Ref<RemoteCursor[]>;
 	remotePresences: Ref<RemotePresence[]>;

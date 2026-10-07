@@ -6,8 +6,8 @@ import {
 	findElementYMap,
 	readSlidesFromYDoc,
 	reconcileSlidesInYDoc,
-} from 'pptx-viewer-shared';
-import type { YjsFactories } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { YjsFactories } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 import { computed, ref, shallowRef } from 'vue';
 import * as Y from 'yjs';

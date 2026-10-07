@@ -30,12 +30,12 @@ import type {
 	PptxAiFocusedTarget,
 	PptxAiNotifyLevel,
 	PptxAiSlidesUpdater,
-} from 'pptx-viewer-shared/ai';
+} from 'ooxml-ui/pptx/ai';
 import {
 	applyElementUpdate,
 	computeFocusTargets,
 	deckDataFieldChanged,
-} from 'pptx-viewer-shared/ai';
+} from 'ooxml-ui/pptx/ai';
 import type { RefObject } from 'react';
 import { useMemo, useRef } from 'react';
 

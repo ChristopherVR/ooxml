@@ -1,5 +1,5 @@
-import type { ViewerOptions, ViewerOptionsStore } from 'pptx-viewer-shared';
-import { applyPreferenceToOptions, viewerOptionsToPreferences } from 'pptx-viewer-shared';
+import type { ViewerOptions, ViewerOptionsStore } from 'ooxml-ui/pptx';
+import { applyPreferenceToOptions, viewerOptionsToPreferences } from 'ooxml-ui/pptx';
 import { ref, watch } from 'vue';
 import type { Ref } from 'vue';
 

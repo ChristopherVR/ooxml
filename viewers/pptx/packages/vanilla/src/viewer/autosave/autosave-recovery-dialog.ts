@@ -1,4 +1,4 @@
-import type { AutosaveRecoveryPrompt } from 'pptx-viewer-shared';
+import type { AutosaveRecoveryPrompt } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import { appendDialogFooter } from '../ui/dialog-footer';

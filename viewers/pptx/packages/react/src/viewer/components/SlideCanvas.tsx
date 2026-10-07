@@ -5,7 +5,7 @@ import {
 	setMotionPath,
 	shouldShowElementHandles,
 	slideSpaceElement,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { useCallback, useMemo, useRef } from 'react';
 
 import type { ShapeAdjustmentHandleDescriptor } from '../types';

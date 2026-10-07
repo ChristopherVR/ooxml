@@ -1,12 +1,12 @@
 import type { PptxElement, SmartArtLayout } from 'pptx-viewer-core';
 import { createEditorId } from 'pptx-viewer-core';
-import type { CanvasSize, InsertChartKind } from 'pptx-viewer-shared';
+import type { CanvasSize, InsertChartKind } from 'ooxml-ui/pptx';
 import {
 	buildActionButtonElement,
 	buildSmartArtPresetData,
 	createDefaultChartElement,
 	substituteFieldText,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import { centerOnCanvas } from './editor-insert';
 

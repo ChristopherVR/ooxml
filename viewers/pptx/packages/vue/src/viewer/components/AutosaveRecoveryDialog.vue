@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { History } from 'lucide-vue-next';
-import type { AutosaveRecoveryPrompt } from 'pptx-viewer-shared';
+import type { AutosaveRecoveryPrompt } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

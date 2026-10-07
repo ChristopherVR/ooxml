@@ -6,8 +6,8 @@ import {
 	mediaTrimResetState,
 	trimmedMediaDurationMs,
 	validateMediaTrimRange,
-} from 'pptx-viewer-shared';
-import type { MediaTrimRangeError } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { MediaTrimRangeError } from 'ooxml-ui/pptx';
 import React, { useState, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LuClock, LuScissors } from 'react-icons/lu';

@@ -51,7 +51,7 @@ function state(overrides: Partial<InspectorState> = {}): InspectorState {
 
 describe('table style presets gallery', () => {
 	it('renders one swatch per shared preset', async () => {
-		const { TABLE_STYLE_PRESETS } = await import('pptx-viewer-shared');
+		const { TABLE_STYLE_PRESETS } = await import('ooxml-ui/pptx');
 		const section = createTableSection(document, createTranslator(), sectionFactory(), {
 			setTableOptions: vi.fn(),
 		} as unknown as InspectorHandlers);

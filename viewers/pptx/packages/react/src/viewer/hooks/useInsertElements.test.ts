@@ -5,7 +5,7 @@ import type {
 	ShapePptxElement,
 	TablePptxElement,
 } from 'pptx-viewer-core';
-import { createDefaultChartElement, INSERT_CHART_TYPES, newTableElement } from 'pptx-viewer-shared';
+import { createDefaultChartElement, INSERT_CHART_TYPES, newTableElement } from 'ooxml-ui/pptx';
 import { describe, it, expect, vi } from 'vitest';
 
 import { DEFAULT_TABLE_ROWS, DEFAULT_TABLE_COLUMNS, DEFAULT_TEXT_FONT_SIZE } from '../constants';

@@ -17,8 +17,8 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import type { PptxPresentationProperties } from 'pptx-viewer-core';
 
-import { describeFontEmbedding } from '../internal/shared';
-import type { CompareResult } from '../internal/shared';
+import { describeFontEmbedding } from 'ooxml-ui/pptx';
+import type { CompareResult } from 'ooxml-ui/pptx';
 import { LoadContentService } from './load-content.service';
 
 @Injectable()

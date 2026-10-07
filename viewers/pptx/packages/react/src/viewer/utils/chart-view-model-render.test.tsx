@@ -1,6 +1,6 @@
 import type { PptxChartData, PptxElement } from 'pptx-viewer-core';
-import type { ChartViewModel, SvgLine, SvgPrimitive, SvgRect, SvgText } from 'pptx-viewer-shared';
-import { buildChartViewModel } from 'pptx-viewer-shared';
+import type { ChartViewModel, SvgLine, SvgPrimitive, SvgRect, SvgText } from 'ooxml-ui/pptx';
+import { buildChartViewModel } from 'ooxml-ui/pptx';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, it, expect } from 'vitest';
 

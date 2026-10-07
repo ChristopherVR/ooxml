@@ -2,7 +2,7 @@ import type { PptxTableCellStyle, PptxTableData } from 'pptx-viewer-core';
 // `getCellDiagonalBorders` combines a cell's explicit diagonals with any
 // inherited from the applicable table-style sections; shared so the resolution
 // stays in sync with the other bindings.
-import { getCellDiagonalBorders as resolveCellDiagonalBorders } from 'pptx-viewer-shared';
+import { getCellDiagonalBorders as resolveCellDiagonalBorders } from 'ooxml-ui/pptx';
 import React from 'react';
 
 import type { TableStyleContext } from './table-band-style';

@@ -28,8 +28,8 @@ import type {
 	PptxChartAxisType,
 } from 'pptx-viewer-core';
 
-import type { ChartTickLabelPosition } from '../internal/shared';
-import { DISPLAY_UNITS_OPTIONS, TICK_LABEL_POSITION_OPTIONS } from '../internal/shared';
+import type { ChartTickLabelPosition } from 'ooxml-ui/pptx';
+import { DISPLAY_UNITS_OPTIONS, TICK_LABEL_POSITION_OPTIONS } from 'ooxml-ui/pptx';
 import { setAxis } from './chart-advanced-helpers';
 import { CHART_EDITOR_STYLES } from './chart-editor-styles';
 import { boolFromEvent, numFromEvent, selectValue, stringFromEvent } from './chart-event-helpers';

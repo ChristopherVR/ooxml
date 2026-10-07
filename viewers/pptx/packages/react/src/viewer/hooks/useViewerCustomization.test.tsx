@@ -4,8 +4,8 @@
  * receives the host's locks and defaults, a new `customization` prop replaces
  * imperative edits, and the legacy `hiddenActions` prop is unioned in.
  */
-import type { ToolbarActionId, ViewerCustomization, ViewerOptionsStore } from 'pptx-viewer-shared';
-import { createViewerOptionsStore } from 'pptx-viewer-shared';
+import type { ToolbarActionId, ViewerCustomization, ViewerOptionsStore } from 'ooxml-ui/pptx';
+import { createViewerOptionsStore } from 'ooxml-ui/pptx';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';

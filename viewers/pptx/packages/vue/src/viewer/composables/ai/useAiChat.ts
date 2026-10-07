@@ -6,8 +6,8 @@
  * bridge + config. The heavy `@ai-sdk/vue` `useChat` wiring lives in
  * {@link useAiConversation}, which the panel only mounts once `state === 'ready'`.
  */
-import { createAiChatSession, isAiAvailable } from 'pptx-viewer-shared/ai';
-import type { PptxAiBridge, PptxAiChatSession, PptxAiConfig } from 'pptx-viewer-shared/ai';
+import { createAiChatSession, isAiAvailable } from 'ooxml-ui/pptx/ai';
+import type { PptxAiBridge, PptxAiChatSession, PptxAiConfig } from 'ooxml-ui/pptx/ai';
 import { ref, shallowRef } from 'vue';
 import type { Ref, ShallowRef } from 'vue';
 

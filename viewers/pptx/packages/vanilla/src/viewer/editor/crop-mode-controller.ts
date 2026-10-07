@@ -7,8 +7,8 @@ import {
 	getImageSrc,
 	panCropImage,
 	toElementAxes,
-} from 'pptx-viewer-shared';
-import type { CropDragStart, CropElementUpdate, CropHandleId } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { CropDragStart, CropElementUpdate, CropHandleId } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import type { Store, ViewerState } from '../state';

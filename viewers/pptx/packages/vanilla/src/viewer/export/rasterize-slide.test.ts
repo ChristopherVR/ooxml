@@ -3,7 +3,7 @@ import {
 	rasterizeElement,
 	rasterizeElementTiledToCanvas,
 	rasterizeElementTiles,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../i18n';
@@ -46,7 +46,7 @@ async function viaHtml2CanvasFallback(
 	);
 }
 
-vi.mock(import('pptx-viewer-shared'), async (importOriginal) => {
+vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => {
 	const actual = await importOriginal();
 	return {
 		...actual,

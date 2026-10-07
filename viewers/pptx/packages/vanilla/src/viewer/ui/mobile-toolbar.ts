@@ -1,10 +1,10 @@
-import { isActionHidden, registerPptxWebControls } from 'pptx-viewer-shared';
+import { isActionHidden, registerPptxWebControls } from 'ooxml-ui/pptx';
 import type {
 	MobileToolbarId,
 	MobileToolbarRequestEvent,
 	PptxUiMobileToolbarElement,
 	ToolbarActionId,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import { createEl } from '../render';

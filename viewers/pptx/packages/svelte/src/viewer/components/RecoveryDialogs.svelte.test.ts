@@ -1,4 +1,4 @@
-import { autosaveRecoveryPrompt } from 'pptx-viewer-shared';
+import { autosaveRecoveryPrompt } from 'ooxml-ui/pptx';
 import { mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 

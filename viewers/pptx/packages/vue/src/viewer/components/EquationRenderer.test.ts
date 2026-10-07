@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
 import type { PptxElement } from 'pptx-viewer-core';
-import { convertOmmlToMathMl } from 'pptx-viewer-shared';
+import { convertOmmlToMathMl } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 
 import EquationRenderer from './EquationRenderer.vue';

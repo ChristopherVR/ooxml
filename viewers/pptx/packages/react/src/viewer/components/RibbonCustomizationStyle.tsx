@@ -7,8 +7,8 @@
  * `data-ribbon-control` the host named, confined to that root so a second
  * viewer on the page is untouched.
  */
-import type { ResolvedCustomization } from 'pptx-viewer-shared';
-import { ribbonCustomizationCss } from 'pptx-viewer-shared';
+import type { ResolvedCustomization } from 'ooxml-ui/pptx';
+import { ribbonCustomizationCss } from 'ooxml-ui/pptx';
 import React, { useId, useMemo } from 'react';
 
 /**

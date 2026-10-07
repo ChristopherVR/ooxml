@@ -1,10 +1,10 @@
 import type { PptxTableCellStyle } from 'pptx-viewer-core';
-import type { ThemeColorPickerCommit } from 'pptx-viewer-shared';
+import type { ThemeColorPickerCommit } from 'ooxml-ui/pptx';
 import {
 	schemaLabel,
 	tableCellFillColorCommitPatch,
 	tableCellTextColorCommitPatch,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import type { ThemeColorSwatchGridHandle } from '../theme-color-swatch-grid';

@@ -3,7 +3,7 @@ import type {
 	ViewerOptions,
 	ViewerOptionsStore,
 	ViewerOptionsStoreInit,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	applyAutoCorrect,
 	applyPreferenceToOptions,
@@ -15,7 +15,7 @@ import {
 	resolveScreenTip,
 	shouldOpenInProtectedView,
 	viewerOptionsToPreferences,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Store, ViewerState } from './state';
 

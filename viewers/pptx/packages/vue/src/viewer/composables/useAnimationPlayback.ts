@@ -35,8 +35,8 @@ import {
 	resolveMediaBookmarkTimesMs,
 	resolveMediaTimeNodeElementIds,
 	scheduleAutoAdvanceChain,
-} from 'pptx-viewer-shared';
-import type { BuildRafHandle, ElementAnimationState, PlaybackContext } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { BuildRafHandle, ElementAnimationState, PlaybackContext } from 'ooxml-ui/pptx';
 import { onScopeDispose, ref, shallowRef, toValue, watch } from 'vue';
 import type { MaybeRefOrGetter, Ref } from 'vue';
 
@@ -44,8 +44,8 @@ import { playAnimationSound, stopAnimationSound } from './animation-sound';
 
 // Re-export the older preset click-group model so existing importers (the editor
 // animation preview + the unstable composable surface) keep working unchanged.
-export type { AnimationClickGroup, CSSProperties } from 'pptx-viewer-shared';
-export { buildClickGroups } from 'pptx-viewer-shared';
+export type { AnimationClickGroup, CSSProperties } from 'ooxml-ui/pptx';
+export { buildClickGroups } from 'ooxml-ui/pptx';
 
 export interface UseAnimationPlaybackOptions {
 	/** The active slide to build the native-animation timeline for. */

@@ -38,12 +38,12 @@ import {
 	groupIntoParagraphs,
 	hasGlyphEnvelope,
 	substituteFieldText,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import type {
 	FieldSubstitutionContext,
 	WarpCategory as SharedWarpCategory,
 	WarpParagraph,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { buildGlyphWarpDef } from './text-warp-glyph';
 import type { TextWarpGlyphDef } from './text-warp-glyph';
 import { getWarpPath, shouldUseSvgWarp } from './warp-path-generators';

@@ -10,7 +10,7 @@
  * before they were shared).
  */
 import type { PptxSlide } from 'pptx-viewer-core';
-import { PRESENTER_CONSOLE_CLASSES, PRESENTER_NAVIGATOR_LABEL_KEYS } from 'pptx-viewer-shared';
+import { PRESENTER_CONSOLE_CLASSES, PRESENTER_NAVIGATOR_LABEL_KEYS } from 'ooxml-ui/pptx';
 import { useI18n } from 'vue-i18n';
 
 import type { CanvasSize } from '../types';

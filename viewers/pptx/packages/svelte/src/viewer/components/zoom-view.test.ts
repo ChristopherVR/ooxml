@@ -1,5 +1,5 @@
 import type { PptxElement } from 'pptx-viewer-core';
-import type { ZoomNavigationTarget } from 'pptx-viewer-shared';
+import type { ZoomNavigationTarget } from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 

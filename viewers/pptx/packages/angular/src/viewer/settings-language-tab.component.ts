@@ -9,7 +9,7 @@
  */
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 
-import type { LocaleCatalogEntry } from '../internal/shared-src/i18n';
+import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
 
 @Component({
 	selector: 'pptx-settings-language-tab',

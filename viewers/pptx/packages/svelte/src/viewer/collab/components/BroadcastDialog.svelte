@@ -17,7 +17,7 @@
 		canStartBroadcast,
 		resolveTransportForServerUrl,
 		seedBroadcastFields,
-	} from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 	import ModalDialog from './ModalDialog.svelte';

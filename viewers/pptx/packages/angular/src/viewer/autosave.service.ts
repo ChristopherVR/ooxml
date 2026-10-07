@@ -23,8 +23,8 @@ import {
 	resolveAutosaveIntervalMs,
 	saveAutosaveSnapshot,
 	shouldWriteAutosaveSnapshot,
-} from '../internal/shared';
-import type { AutosaveDisabledReason, AutosaveSnapshotMark } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { AutosaveDisabledReason, AutosaveSnapshotMark } from 'ooxml-ui/pptx';
 
 /** Lifecycle status of the autosave engine (mirrors React's `AutosaveStatus`). */
 export type AutosaveStatus =

@@ -16,7 +16,7 @@
 import type { PptxElement, PptxElementWithText, TextSegment } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 
-import { buildParagraphs } from '../internal/shared';
+import { buildParagraphs } from 'ooxml-ui/pptx';
 import { buildAngularParagraphs } from './paragraph-view';
 
 function textElement(segments: TextSegment[], extra: Record<string, unknown> = {}): PptxElement {

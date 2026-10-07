@@ -3,13 +3,13 @@ import {
 	createInlineListModelObserver,
 	overlayInlineTextSnapshot,
 	readEditableText,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type {
 	InlineListReadResult,
 	CollaborationLivePatcher,
 	InlineTextEditSnapshot,
 	PendingInlineTextEdit,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { ViewerState } from '../state';
 import type { InlineEditorSession } from './inline-text-editor';

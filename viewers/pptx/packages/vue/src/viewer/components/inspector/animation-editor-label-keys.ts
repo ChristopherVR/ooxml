@@ -21,7 +21,7 @@
 import type { PptxAnimationSequence, PptxAnimationTimingCurve } from 'pptx-viewer-core';
 
 /** Direction keys live in shared so every binding spells them alike. */
-export { ANIMATION_DIRECTION_LABEL_KEYS } from 'pptx-viewer-shared';
+export { ANIMATION_DIRECTION_LABEL_KEYS } from 'ooxml-ui/pptx';
 
 /** Text-build granularity (`byParagraph` / `byWord` / `byLetter`). */
 export const ANIMATION_SEQUENCE_LABEL_KEYS: Readonly<Record<PptxAnimationSequence, string>> = {

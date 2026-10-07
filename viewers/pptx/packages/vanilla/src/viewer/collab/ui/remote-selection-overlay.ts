@@ -1,6 +1,6 @@
 import type { PptxElement } from 'pptx-viewer-core';
-import type { SanitizedPresence } from 'pptx-viewer-shared';
-import { formatCursorLabel } from 'pptx-viewer-shared';
+import type { SanitizedPresence } from 'ooxml-ui/pptx';
+import { formatCursorLabel } from 'ooxml-ui/pptx';
 
 import { createEl } from '../../render';
 

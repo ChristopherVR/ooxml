@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
 import type { VueWrapper } from '@vue/test-utils';
-import type { CompatibilityWarningToast } from 'pptx-viewer-shared';
-import { compatToastStackStyle } from 'pptx-viewer-shared';
+import type { CompatibilityWarningToast } from 'ooxml-ui/pptx';
+import { compatToastStackStyle } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 
 import CompatibilityToasts from './CompatibilityToasts.vue';

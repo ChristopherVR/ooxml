@@ -17,8 +17,8 @@
 		readStoredViewerPrefs,
 		resolveProfileInitial,
 		saveViewerProfile,
-	} from 'pptx-viewer-shared';
-	import type { AccountAuthConfig, LocalStorageUsageSummary, ViewerProfile } from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
+	import type { AccountAuthConfig, LocalStorageUsageSummary, ViewerProfile } from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../../../i18n/context';
 
 	const { accountAuth }: { accountAuth?: AccountAuthConfig } = $props();

@@ -10,8 +10,8 @@
  * @module material-presets
  */
 
-import { getMaterialCssOverrides } from 'pptx-viewer-shared';
-import type { MaterialCssOverrides as SharedMaterialCssOverrides } from 'pptx-viewer-shared';
+import { getMaterialCssOverrides } from 'ooxml-ui/pptx';
+import type { MaterialCssOverrides as SharedMaterialCssOverrides } from 'ooxml-ui/pptx';
 import type React from 'react';
 
 /** React-typed view of {@link SharedMaterialCssOverrides} (`mixBlendMode` narrowed). */

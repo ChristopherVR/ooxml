@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { CollaborationConfig } from 'pptx-viewer-shared';
+import type { CollaborationConfig } from 'ooxml-ui/pptx';
 import {
 	buildActiveSessionUsers,
 	buildCollaborationShareUrl,
@@ -7,7 +7,7 @@ import {
 	buildJoinCollaborationConfig,
 	getDensePanelTouchTargetPx,
 	resolveTransportForServerUrl,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { computed, inject, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 

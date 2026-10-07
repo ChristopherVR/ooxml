@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils';
-import { PRESET_THEMES, registerPptxWebControls } from 'pptx-viewer-shared';
+import { PRESET_THEMES, registerPptxWebControls } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 
 import ThemeEditorPanel from './ThemeEditorPanel.vue';

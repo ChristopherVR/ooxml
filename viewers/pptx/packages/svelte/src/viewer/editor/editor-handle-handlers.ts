@@ -3,7 +3,7 @@ import type {
 	GestureController,
 	ResizeHandleId,
 	ShapeAdjustmentHandleDescriptor,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { AdjustGestureController } from './editor-adjust-gesture';
 import type { SelectionInteractivity } from './editor-selection-interactivity';

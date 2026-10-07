@@ -26,7 +26,7 @@
 
 import type { Chat as ChatType } from '@ai-sdk/svelte';
 import type { ChatStatus } from 'ai';
-import { createAiChatSession, isAiAvailable, toolCanvasTarget } from 'pptx-viewer-shared/ai';
+import { createAiChatSession, isAiAvailable, toolCanvasTarget } from 'ooxml-ui/pptx/ai';
 import type {
 	PptxAiBridge,
 	PptxAiChatSession,
@@ -34,7 +34,7 @@ import type {
 	PptxAiUIMessage,
 	ProposalView,
 	ToolCanvasTarget,
-} from 'pptx-viewer-shared/ai';
+} from 'ooxml-ui/pptx/ai';
 
 /** Lifecycle of the AI session bootstrap. */
 export type AiChatInitState = 'checking' | 'unavailable' | 'ready' | 'error';

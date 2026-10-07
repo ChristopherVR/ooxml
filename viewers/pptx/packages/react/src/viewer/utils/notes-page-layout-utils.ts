@@ -9,5 +9,5 @@ export {
 	computeNotesPageLayout,
 	computeAllNotesPages,
 	getNotesPrintableArea,
-} from 'pptx-viewer-shared';
-export type { NotesPageSlideArea, NotesPageTextArea, NotesPageData } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+export type { NotesPageSlideArea, NotesPageTextArea, NotesPageData } from 'ooxml-ui/pptx';

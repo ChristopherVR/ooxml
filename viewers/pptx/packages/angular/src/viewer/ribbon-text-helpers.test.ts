@@ -9,8 +9,8 @@ import {
 	createInlineListSeed,
 	initializeInlineListDom,
 	attachInlineListController,
-} from '../internal/shared';
-import { remapTextToSegments } from '../internal/shared-src/render/remap-text';
+} from 'ooxml-ui/pptx';
+import { remapTextToSegments } from 'ooxml-ui/pptx/render/remap-text';
 import { componentSource } from './component-source.test-support';
 import { EditorStateService } from './editor-state.service';
 import { RibbonParagraphControlsComponent } from './ribbon-paragraph-controls.component';

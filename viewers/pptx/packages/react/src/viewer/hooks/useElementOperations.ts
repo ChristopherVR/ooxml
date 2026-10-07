@@ -5,8 +5,8 @@ import {
 	replaceMasterViewElements,
 	updateElement as updateSlideElement,
 	updateMasterViewElement,
-} from 'pptx-viewer-shared';
-import type { MasterViewWrite } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { MasterViewWrite } from 'ooxml-ui/pptx';
 /**
  * useElementOperations: Element update callbacks for PowerPointViewer.
  *

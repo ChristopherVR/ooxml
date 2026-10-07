@@ -6,4 +6,4 @@
  * This module preserves the original public symbol surface so existing
  * imports (`../../constants`) keep working unchanged.
  */
-export { TABLE_STYLE_PRESETS, type TableStylePreset } from 'pptx-viewer-shared';
+export { TABLE_STYLE_PRESETS, type TableStylePreset } from 'ooxml-ui/pptx';

@@ -12,4 +12,4 @@ export {
 	getAriaRoleDescription,
 	prefersReducedMotion,
 	getReducedMotionStyles,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

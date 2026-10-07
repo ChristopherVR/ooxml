@@ -3,7 +3,7 @@ import {
 	DESIGN_RIBBON_GROUPS,
 	designCommandState,
 	FIXED_TAB_GALLERIES,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { LuPalette, LuType } from 'react-icons/lu';

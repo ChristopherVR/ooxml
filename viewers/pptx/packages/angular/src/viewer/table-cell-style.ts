@@ -21,7 +21,7 @@ import {
 	cellRunStyle as cellRunCss,
 	cellStyleToCss,
 	ooxmlDashToCssBorderStyle,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import type { StyleMap } from './element-style';
 
 export { ooxmlDashToCssBorderStyle };

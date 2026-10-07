@@ -7,7 +7,7 @@
  * driven by the framework-free {@link AiFocusController}.
  */
 import type { PptxSlide } from 'pptx-viewer-core';
-import { focusTargetChips, isTwoTableFocus, mergeTablesDirective } from 'pptx-viewer-shared/ai';
+import { focusTargetChips, isTwoTableFocus, mergeTablesDirective } from 'ooxml-ui/pptx/ai';
 
 import type { Translator } from '../i18n';
 import { createEl } from '../render';

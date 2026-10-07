@@ -29,7 +29,7 @@ import {
 	buildTitleBarState,
 	DEFAULT_VIEWER_OPTIONS,
 	extraQuickAccessCommands,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import type {
 	TitleBarCommandSearchEvent,
 	TitleBarEvent,
@@ -37,7 +37,7 @@ import type {
 	TitleBarViewState,
 	ToolbarActionId,
 	ViewerQuickAccessOptions,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import type { AutosaveStatus } from './autosave.service';
 import { ViewerOptionsService } from './viewer-options.service';
 

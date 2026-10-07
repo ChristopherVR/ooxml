@@ -11,8 +11,8 @@ import { TranslateService } from '@ngx-translate/core';
 import type { PptxElement, PptxElementAnimation } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
 
-import { bookmarkOptionValue, TRIGGER_OPTIONS } from '../internal/shared';
-import type { MediaBookmarkOption } from '../internal/shared';
+import { bookmarkOptionValue, TRIGGER_OPTIONS } from 'ooxml-ui/pptx';
+import type { MediaBookmarkOption } from 'ooxml-ui/pptx';
 import { AnimationAuthorPanelComponent } from './animation-author-panel.component';
 import { componentSource } from './component-source.test-support';
 

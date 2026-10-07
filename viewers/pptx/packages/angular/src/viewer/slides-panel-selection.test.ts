@@ -8,7 +8,7 @@ import { provideTranslateService, TranslatePipe, TranslateService } from '@ngx-t
 import type { PptxSlide } from 'pptx-viewer-core';
 import { afterEach, beforeAll, expect, test, vi } from 'vitest';
 
-import { translationsEn } from '../../../shared/src/i18n/translations-en';
+import { translationsEn } from '../../../../../../src/ui/src/pptx/i18n/translations-en';
 import { resolveViewerComponentResources } from './component-resources.test-support';
 import { EditorStateService } from './editor-state.service';
 import { SlidesPanelComponent } from './slides-panel.component';

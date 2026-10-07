@@ -7,8 +7,8 @@ import {
 	isGroupMember,
 	memberChainAtPoint,
 	setPendingCaretPoint,
-} from 'pptx-viewer-shared';
-import type { PendingInlineTextEdit } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { PendingInlineTextEdit } from 'ooxml-ui/pptx';
 
 import type { ViewerState } from '../state';
 import { findActiveElement, getActiveElements } from './editor-active-elements';

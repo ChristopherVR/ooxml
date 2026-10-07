@@ -12,7 +12,7 @@ import {
 	COMMENT_MENTION_ATTRIBUTE,
 	COMMENT_MENTION_CLASS,
 	commentTextSegments,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React from 'react';
 
 export interface CommentBodyProps {

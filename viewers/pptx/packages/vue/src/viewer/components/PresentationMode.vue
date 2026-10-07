@@ -19,7 +19,7 @@
  * and last slide, Esc exits, and a click on the stage advances.
  */
 import type { PptxCustomShow, PptxPresentationProperties, PptxSlide } from 'pptx-viewer-core';
-import type { AuthoredSlideRange, PresentationContextMenuActionId } from 'pptx-viewer-shared';
+import type { AuthoredSlideRange, PresentationContextMenuActionId } from 'ooxml-ui/pptx';
 import {
 	ANIMATION_KEYFRAMES_CSS,
 	applyHighlightClickStyle,
@@ -35,7 +35,7 @@ import {
 	shouldConfirmExternalHyperlink,
 	shouldLoopContinuously,
 	toggleBlackboard,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { computed, inject, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 

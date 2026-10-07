@@ -1,5 +1,5 @@
-import type { ViewerTheme } from 'pptx-viewer-shared';
-import { themeToCssVars } from 'pptx-viewer-shared';
+import type { ViewerTheme } from 'ooxml-ui/pptx';
+import { themeToCssVars } from 'ooxml-ui/pptx';
 
 /**
  * Apply a `ViewerTheme` to the viewer root as inline `--pptx-*` custom

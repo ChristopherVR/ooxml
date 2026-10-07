@@ -7,7 +7,7 @@
  * to tell "Title and Content" from "Two Content" in a themed deck.
  */
 import type { PptxLayoutOption, PptxLayoutPreview, PptxSlide } from 'pptx-viewer-core';
-import { buildLayoutPreviewGeometry, isCurrentLayout } from 'pptx-viewer-shared';
+import { buildLayoutPreviewGeometry, isCurrentLayout } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

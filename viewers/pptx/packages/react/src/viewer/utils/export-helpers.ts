@@ -15,18 +15,18 @@ import {
 	rasterizeElementTiles,
 	rasterResultToPngBlob,
 	rasterResultToPngDataUrl,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type {
 	RasterizeElementOptions,
 	RasterizeElementResult,
 	RasterizeElementTiledCanvasResult,
 	RasterizeElementTilesResult,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import { renderToCanvas } from '../../lib/canvas-export';
 
 export { downloadBlob, downloadDataUrl, rasterResultToPngBlob, rasterResultToPngDataUrl };
-export type { RasterizeElementResult, RasterizeElementTilesResult } from 'pptx-viewer-shared';
+export type { RasterizeElementResult, RasterizeElementTilesResult } from 'ooxml-ui/pptx';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                             */

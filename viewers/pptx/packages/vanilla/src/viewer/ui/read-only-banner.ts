@@ -1,9 +1,9 @@
-import { registerPptxWebControls } from 'pptx-viewer-shared';
+import { registerPptxWebControls } from 'ooxml-ui/pptx';
 import type {
 	PptxUiReadOnlyBannerElement,
 	ReadOnlyBannerRequestEvent,
 	ReadOnlyRecommendation,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 

@@ -8,8 +8,8 @@ import {
 	normalizeHexColor,
 	shouldUseSvgWarp,
 	substituteFieldText,
-} from 'pptx-viewer-shared';
-import type { EnvelopeGlyphPlacement, WarpParagraph } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { EnvelopeGlyphPlacement, WarpParagraph } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 
 import { injectFieldContext, resolveFieldContext } from '../composables/field-context';

@@ -22,13 +22,13 @@ import {
 	masterViewPseudoSlide,
 	setMasterViewBackgroundColor,
 	updateMasterViewElement,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type {
 	InlineTextEditSnapshot,
 	MasterViewDocument,
 	MasterViewTarget,
 	MasterViewWrite,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type { ComputedRef, ShallowRef } from 'vue';
 import { computed } from 'vue';
 

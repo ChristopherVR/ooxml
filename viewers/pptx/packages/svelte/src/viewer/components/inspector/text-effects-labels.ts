@@ -1,4 +1,4 @@
-import { BEVEL_PRESETS, MATERIAL_PRESETS, TEXT_WARP_PRESETS } from 'pptx-viewer-shared';
+import { BEVEL_PRESETS, MATERIAL_PRESETS, TEXT_WARP_PRESETS } from 'ooxml-ui/pptx';
 
 /**
  * text-effects-labels.ts: display labels for the three preset selects in

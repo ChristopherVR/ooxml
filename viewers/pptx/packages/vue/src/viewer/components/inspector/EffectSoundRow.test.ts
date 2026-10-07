@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils';
-import { EFFECT_SOUND_CATALOGUE } from 'pptx-viewer-shared';
+import { EFFECT_SOUND_CATALOGUE } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
 import { translationsEn } from '../../../i18n';

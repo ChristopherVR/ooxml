@@ -6,14 +6,14 @@
  * `settings/OptionsQuickAccessPane.tsx`.
  */
 import { ChevronDown, ChevronUp } from 'lucide-vue-next';
-import type { ViewerOptions } from 'pptx-viewer-shared';
+import type { ViewerOptions } from 'ooxml-ui/pptx';
 import {
 	addQuickAccessCommand,
 	availableQuickAccessCommands,
 	moveQuickAccessCommand,
 	QUICK_ACCESS_COMMAND_CATALOG,
 	removeQuickAccessCommand,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 

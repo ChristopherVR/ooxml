@@ -1,4 +1,4 @@
-import type { Computed3dStyle } from '../internal/shared';
+import type { Computed3dStyle } from 'ooxml-ui/pptx';
 import type { StyleMap } from './element-style';
 
 /**

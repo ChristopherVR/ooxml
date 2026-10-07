@@ -16,7 +16,7 @@
 	 * already assembles for `<Ribbon>`, plus a `close` callback, exactly like
 	 * the other four bindings thread their ribbon prop bundle twice.
 	 */
-	import { collectUsedFonts, createBackstagePresentation, filterVisibleTabs } from 'pptx-viewer-shared';
+	import { collectUsedFonts, createBackstagePresentation, filterVisibleTabs } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 	import AnimationsTab from './ribbon/animations/AnimationsTab.svelte';

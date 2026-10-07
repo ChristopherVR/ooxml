@@ -7,7 +7,7 @@
  * preserves the historical Angular import surface.
  */
 
-export type { ShapeStyleChanges, TextStyleChanges } from '../internal/shared';
+export type { ShapeStyleChanges, TextStyleChanges } from 'ooxml-ui/pptx';
 export {
 	fillColorOf,
 	strokeColorOf,
@@ -19,4 +19,4 @@ export {
 	shapeStylePatch,
 	textFontSizePatch,
 	textStylePatch,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';

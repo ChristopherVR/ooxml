@@ -14,7 +14,7 @@
  * recommended" prompt keeps the deck locked until the correct password is
  * entered, and a wrong one leaves it locked.
  */
-import type { ReadOnlyBannerRequestEvent, ReadOnlyRecommendationKind } from 'pptx-viewer-shared';
+import type { ReadOnlyBannerRequestEvent, ReadOnlyRecommendationKind } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

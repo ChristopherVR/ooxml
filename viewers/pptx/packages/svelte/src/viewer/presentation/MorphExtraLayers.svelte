@@ -13,7 +13,7 @@
 	 *    (issue #161).
 	 */
 	import type { PptxSlide } from 'pptx-viewer-core';
-	import type { CanvasSize } from 'pptx-viewer-shared';
+	import type { CanvasSize } from 'ooxml-ui/pptx';
 
 	import type { MorphCrossfadeGroupView } from './use-morph-transition-overlay.svelte';
 	import SlideStage from '../components/SlideStage.svelte';

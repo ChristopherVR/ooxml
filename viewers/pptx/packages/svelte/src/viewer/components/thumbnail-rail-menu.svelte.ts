@@ -9,8 +9,8 @@
  * reactive state around them.
  */
 import type { PptxSlide } from 'pptx-viewer-core';
-import type { SlidePaneContextMenuCommandId } from 'pptx-viewer-shared';
-import { buildSlidePaneContextMenuEntries, resolveSlidePaneClick } from 'pptx-viewer-shared';
+import type { SlidePaneContextMenuCommandId } from 'ooxml-ui/pptx';
+import { buildSlidePaneContextMenuEntries, resolveSlidePaneClick } from 'ooxml-ui/pptx';
 
 /** Position and target of an open thumbnail context menu. */
 export interface ThumbnailContextMenuState {

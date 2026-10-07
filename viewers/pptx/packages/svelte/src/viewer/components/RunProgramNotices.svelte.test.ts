@@ -1,4 +1,4 @@
-import type { RunProgramNotice } from 'pptx-viewer-shared';
+import type { RunProgramNotice } from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 

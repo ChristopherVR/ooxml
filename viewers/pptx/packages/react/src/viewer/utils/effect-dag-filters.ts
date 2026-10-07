@@ -18,4 +18,4 @@ export {
 	getEffectDagBlendMode,
 	getDuotoneSvgFilterMarkup,
 	hasEffectDagProperties,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

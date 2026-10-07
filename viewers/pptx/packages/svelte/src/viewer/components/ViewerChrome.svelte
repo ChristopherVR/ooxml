@@ -11,8 +11,8 @@
 	 * whole bag rather than ~40 individual props is deliberate; the bag is the
 	 * viewer's single composition root and the chrome reads most of it.
 	 */
-	import { createGuide, readBackstageRecentFile, toggleSheet } from 'pptx-viewer-shared';
-	import type { AccountAuthConfig, ToolbarActionId } from 'pptx-viewer-shared';
+	import { createGuide, readBackstageRecentFile, toggleSheet } from 'ooxml-ui/pptx';
+	import type { AccountAuthConfig, ToolbarActionId } from 'ooxml-ui/pptx';
 
 	import type { ViewerStateBag } from '../state/create-viewer-state-types';
 	import { nextGuideId } from '../state/guide-id';

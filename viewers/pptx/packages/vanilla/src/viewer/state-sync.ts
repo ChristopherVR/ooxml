@@ -1,4 +1,4 @@
-import { INSPECTOR_PANEL_DEFAULT_WIDTH } from 'pptx-viewer-shared';
+import { INSPECTOR_PANEL_DEFAULT_WIDTH } from 'ooxml-ui/pptx';
 
 import { getActiveElements } from './editor/editor-active-elements';
 import type { RenderController } from './render-controller';

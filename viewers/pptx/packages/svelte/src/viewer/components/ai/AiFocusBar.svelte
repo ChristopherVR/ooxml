@@ -15,14 +15,14 @@
 	import PinOff from '@lucide/svelte/icons/pin-off';
 	import X from '@lucide/svelte/icons/x';
 	import type { PptxSlide } from 'pptx-viewer-core';
-	import type { PptxAiFocusedTarget } from 'pptx-viewer-shared/ai';
+	import type { PptxAiFocusedTarget } from 'ooxml-ui/pptx/ai';
 
 	import { useTranslator } from '../../../i18n/context';
 	import {
 		focusTargetChips,
 		isTwoTableFocus,
 		mergeTablesDirective,
-	} from 'pptx-viewer-shared/ai';
+	} from 'ooxml-ui/pptx/ai';
 
 	const {
 		targets,

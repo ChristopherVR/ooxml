@@ -1,5 +1,5 @@
-import type { RunProgramNotice } from 'pptx-viewer-shared';
-import { canUseClipboard, runProgramNoticeStackStyle } from 'pptx-viewer-shared';
+import type { RunProgramNotice } from 'ooxml-ui/pptx';
+import { canUseClipboard, runProgramNoticeStackStyle } from 'ooxml-ui/pptx';
 import { useTranslation } from 'react-i18next';
 
 /**

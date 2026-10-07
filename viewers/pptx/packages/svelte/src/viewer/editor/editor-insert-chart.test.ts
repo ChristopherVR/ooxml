@@ -1,4 +1,4 @@
-import type { CanvasSize } from 'pptx-viewer-shared';
+import type { CanvasSize } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 
 import { buildChartInsertElement } from './editor-insert-chart';

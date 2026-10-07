@@ -22,14 +22,14 @@ import type {
 	CollaborationLivePatcher,
 	CollaborationRole,
 	ConnectionStatus,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import {
 	createCollaborationLivePatcher,
 	isMixedContentBlocked,
 	registerCollaborationTeardown,
 	resolveTransportForServerUrl,
 	validateRoomId,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { CollaborationPresenceState } from './collaboration-presence-state';
 import { connectSession } from './collaboration-session-connect';
 import type { ActiveSession, ConnectOptions } from './collaboration-session-setup';

@@ -1,3 +1,3 @@
-import { registerPptxWebControls } from 'pptx-viewer-shared';
+import { registerPptxWebControls } from 'ooxml-ui/pptx';
 
 registerPptxWebControls();

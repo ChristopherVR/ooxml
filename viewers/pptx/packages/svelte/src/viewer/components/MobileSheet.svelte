@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { SheetPointerEventLike } from 'pptx-viewer-shared';
-	import { activateModalFocus, createSheetDismissGesture } from 'pptx-viewer-shared';
+	import type { SheetPointerEventLike } from 'ooxml-ui/pptx';
+	import { activateModalFocus, createSheetDismissGesture } from 'ooxml-ui/pptx';
 
 	const { title, onclose, children }: {
 		title: string;

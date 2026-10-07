@@ -4,7 +4,7 @@
 	 * state to the element and routes its typed events to the host's callbacks. The
 	 * host keeps each menu's entries, gating and command handlers.
 	 */
-	import type { ContextMenuRequestEvent, ContextMenuViewItem, ContextMenuViewState } from 'pptx-viewer-shared';
+	import type { ContextMenuRequestEvent, ContextMenuViewItem, ContextMenuViewState } from 'ooxml-ui/pptx';
 
 	const {
 		x,

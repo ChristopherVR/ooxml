@@ -3,14 +3,14 @@ import type {
 	EditPointsCommandId,
 	EditPointsElementPatch,
 	EditPointsView,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	attachOverlayKeyboard,
 	EDIT_POINTS_STYLE,
 	EDIT_POINTS_TARGET_ATTR,
 	EditPointsSession,
 	overlayPointerInput,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import { createSvgEl, setSvgAttrs } from '../render';

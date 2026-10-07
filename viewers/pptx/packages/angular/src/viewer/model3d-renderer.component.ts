@@ -17,8 +17,8 @@ import type { PptxElement } from 'pptx-viewer-core';
 // Type-only import of the shared scene controller; the implementation (which
 // pulls the optional `three` peer) is loaded lazily via dynamic import so it
 // never lands in the main bundle.
-import { elementHitTargetStyle, shouldRenderHitTarget } from '../internal/shared';
-import type { Model3DHandle, mountModel3D as MountModel3D } from '../internal/shared';
+import { elementHitTargetStyle, shouldRenderHitTarget } from 'ooxml-ui/pptx';
+import type { Model3DHandle, mountModel3D as MountModel3D } from 'ooxml-ui/pptx';
 import type { StyleMap } from './element-style';
 import {
 	buildModel3DContainerStyle,
@@ -228,7 +228,7 @@ export class Model3DRendererComponent implements OnDestroy {
 			return; // No model data: stay on the poster fallback.
 		}
 		try {
-			const mod = await import('../internal/shared-src/render/model3d-scene');
+			const mod = await import('ooxml-ui/pptx/render/model3d-scene');
 			this.mountFn.set(mod.mountModel3D);
 		} catch {
 			this.failed.set(true);

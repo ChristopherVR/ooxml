@@ -6,7 +6,7 @@
  * should be able to read one slice of viewer state without the rest of the
  * state re-rendering it (issue #145), and only a render count can show that.
  */
-import { createViewerStore } from 'pptx-viewer-shared';
+import { createViewerStore } from 'ooxml-ui/pptx';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';

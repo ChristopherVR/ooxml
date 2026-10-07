@@ -8,11 +8,11 @@
  * re-serializes directly through it instead of reloading from scratch.
  */
 import type { PptxHandler, PptxHandlerSaveOptions } from 'pptx-viewer-core';
-import type { CollaborationConfig, YDocLike } from 'pptx-viewer-shared';
+import type { CollaborationConfig, YDocLike } from 'ooxml-ui/pptx';
 import {
 	createWriteBackScheduler as createSharedWriteBackScheduler,
 	readSlidesFromYDoc,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 export interface WriteBackDeps {
 	getYDoc: () => YDocLike | null;

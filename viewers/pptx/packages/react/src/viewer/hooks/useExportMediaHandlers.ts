@@ -18,7 +18,7 @@ import {
 	resolveExportCaptureDecision,
 	slideProgressPercent,
 	slideStatusLabel,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { useCallback } from 'react';
 import type { Dispatch, RefObject, SetStateAction } from 'react';
 

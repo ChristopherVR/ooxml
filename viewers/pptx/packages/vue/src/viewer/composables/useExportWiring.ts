@@ -4,7 +4,7 @@ import type {
 	RasterizeElementResult,
 	RasterizeElementTilesResult,
 	ViewerOptions,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	deleteAutosaveSnapshot,
 	downloadBlob,
@@ -12,7 +12,7 @@ import {
 	playFeedbackSound,
 	rasterResultToPngBlob,
 	shouldDiscardAutosaveOnSuccessfulSave,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { computed, ref } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
 

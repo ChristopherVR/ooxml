@@ -16,11 +16,11 @@ import {
 	buildMotionPathPreview,
 	buildPreviewAnimation,
 	measurePreviewGeometry,
-} from 'pptx-viewer-shared';
-import type { AnimationPreviewDescriptor } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { AnimationPreviewDescriptor } from 'ooxml-ui/pptx';
 
-export type { AnimationPreviewDescriptor } from 'pptx-viewer-shared';
-export { timingCurveToCss, buildPreviewAnimation, parseOoxmlBezierCurve } from 'pptx-viewer-shared';
+export type { AnimationPreviewDescriptor } from 'ooxml-ui/pptx';
+export { timingCurveToCss, buildPreviewAnimation, parseOoxmlBezierCurve } from 'ooxml-ui/pptx';
 
 // ==========================================================================
 // DOM-based preview player (binding-only)

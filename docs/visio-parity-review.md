@@ -133,3 +133,75 @@ shared Visio UI tests passed, 48 documentation tests passed, and both core typec
 projects plus shared UI typechecking passed. The UI run enabled the native open,
 one-ended filled and two-ended filled VSDX matrices, plus the hash-pinned real
 code-5 corpus. Browser pixels and general native save/reopen parity were not tested.
+
+## Native short end-arrow increment
+
+One-ended straight filled arrows now match Visio when the arrow is longer than the
+line: the saved glyph keeps its size, its setback becomes zero, and the stem remains
+at the original endpoints. At equal length, Visio emits a duplicate origin and a
+small stem extension with a correspondingly reduced marker setback. Longer lines
+retain the previously verified trim. These cases are resolved in core; the UI uses
+the returned stem and marker anchors without changing the document model.
+
+The new matrix covers 168 exports (four styles, three sizes, two stroke weights and
+seven length ratios), including the exact boundary. Reproduce with
+`scripts/record-visio-short-arrows.ps1`; `VISIO_NATIVE_SHORT_ARROWS_DIR` enables the
+saved native VSDX parse/render check. Native SVG stem coordinates are compared at
+export precision. Zero-length paths, two-ended overlaps, curved paths, drawing-scale
+handling, browser pixels and full parity remain unverified or unsupported.
+
+Verification: 1,919 Visio core tests passed (34 optional skips), 703 shared UI tests
+passed, and both core typecheck projects plus shared UI typechecking passed. The UI
+run included all native arrow matrices and the hash-pinned code-5 document corpus.
+
+## Native drawing/page-scale increment
+
+The parser now converts cached drawing geometry to physical page inches using
+PageScale/DrawingScale, including page bounds, paths, transforms and text frames.
+Stroke weights, font sizes, text margins and paragraph indents keep their physical
+sizes. Pointer-driven rectangle insertion converts page inches back to drawing
+inches; the source-backed edit API continues to accept drawing inches.
+
+Six native-authored pages verify page and rectangle dimensions, filled-arrow stems,
+rounded geometry, font size, margins and indents at different scale ratios. Reproduce
+with `scripts/record-visio-page-scales.ps1`; `VISIO_NATIVE_PAGE_SCALES_DIR` enables
+saved native VSDX parse/render checks against the committed numerical reference.
+Synthetic save/reparse and controller undo/redo checks verify scaled insertion and
+resize while preserving source scale metadata and untouched parts.
+
+Native save/reopen editing acceptance remains incomplete: resizing the native
+reference document fails with EDIT_UNKNOWN_DEPENDENCY because its ShapeSheet
+contains dynamic dependencies that the edit index cannot prove safe. This failure
+was retained as a remaining editing gap, without dropping formulas to bypass it.
+Grouped and foreign placements have normalization code, but broader native reference
+coverage and browser pixel comparisons remain outstanding. Full parity is unfinished.
+
+Verification: 1,942 Visio core tests passed (30 optional skips), 705 shared Visio UI
+tests passed, 48 documentation tests passed, and both core typecheck projects plus
+shared UI typechecking passed. Native arrow and page-scale matrices and the pinned
+real-document arrow/theme corpus were enabled. Browser pixel equivalence and native
+editing save/reopen acceptance remain unproven.
+
+## Native font-lookup edit increment
+
+The scaled reference document's dependency rejection was traced to FONT("Arial").
+Microsoft documents FONT as a font-name lookup, with identifiers that depend on the
+system/document, rather than an implicit ShapeSheet cell lookup:
+https://learn.microsoft.com/en-us/office/client-developer/visio/font-function.
+The dependency analyzer now admits its explicit AST references while retaining
+unsupported evaluation. An affected FONT formula still rejects recalculation, and
+an INDIRECT argument still rejects dependency proof. Independent font formulas and
+cached identifiers are preserved during geometry editing.
+
+A native acceptance probe resized page ID 6, shape ID 2 to 8 by 4 drawing inches and
+moved its pin to (6, 4). Visio 16 reopened the edited VSDX with those exact cached
+values, FONT("Arial"), DrawingScale 2 and PageScale 1, exported the rectangle and
+saved reopened-scales.vsdx. Core parsing reports physical size 4 by 2 inches and
+local translation (1, 1). This closes the specific font-lookup rejection above;
+general native editing/save fidelity and full parity remain unfinished.
+
+Verification after the font fix: 1,946 Visio core tests passed (30 optional skips),
+including the native scale edit test, and strict core typechecking passed. After
+rebasing onto concurrent main changes, the relaxed PowerPoint typecheck fails on
+unresolved ooxml-core/pptx self-imports in newly moved editor modules; no Visio error
+was reported. The earlier scale increment's UI and documentation checks remain valid.

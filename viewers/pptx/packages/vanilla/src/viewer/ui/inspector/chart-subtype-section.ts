@@ -17,7 +17,7 @@ import {
 	radarStylePatch,
 	SURFACE_WIREFRAME_OPTIONS,
 	surfaceWireframePatch,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import { optionSelect } from './chart-exhaustive-controls';

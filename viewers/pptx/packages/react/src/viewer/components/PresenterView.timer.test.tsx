@@ -8,9 +8,9 @@
  * translated string rather than the English template that was hard-coded here.
  */
 import type { PptxSlide } from 'pptx-viewer-core';
-import type { PresentationSnapshot } from 'pptx-viewer-shared';
-import { formatElapsed, presenterTimerProgress } from 'pptx-viewer-shared';
-import { translationsEn } from 'pptx-viewer-shared/i18n';
+import type { PresentationSnapshot } from 'ooxml-ui/pptx';
+import { formatElapsed, presenterTimerProgress } from 'ooxml-ui/pptx';
+import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';

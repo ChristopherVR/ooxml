@@ -1,7 +1,7 @@
 <script lang="ts">
 	import GripVertical from '@lucide/svelte/icons/grip-vertical';
 	import type { PptxAnimationDirection, PptxAnimationRepeatMode, PptxAnimationSequence, PptxAnimationTimingCurve, PptxAnimationTrigger, PptxElementAnimation } from 'pptx-viewer-core';
-	import { bookmarkTriggerPatch, buildAnimationTimelineRows, directionValuesFor, effectiveDirection, effectiveTimingCurve, listMediaBookmarkOptions, REPEAT_MODE_VALUES, schemaLabel, selectedBookmarkOptionValue, SEQUENCE_VALUES, TIMING_CURVE_VALUES, TRIGGER_VALUES } from 'pptx-viewer-shared';
+	import { bookmarkTriggerPatch, buildAnimationTimelineRows, directionValuesFor, effectiveDirection, effectiveTimingCurve, listMediaBookmarkOptions, REPEAT_MODE_VALUES, schemaLabel, selectedBookmarkOptionValue, SEQUENCE_VALUES, TIMING_CURVE_VALUES, TRIGGER_VALUES } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../../i18n/context';
 	import type { EditorState } from '../../../editor/editor-state.svelte';

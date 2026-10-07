@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils';
-import type { ConnectionStatus } from 'pptx-viewer-shared';
+import type { ConnectionStatus } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 
 import CollaborationStatusIndicator from './CollaborationStatusIndicator.vue';

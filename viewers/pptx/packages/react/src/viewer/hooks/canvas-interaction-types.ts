@@ -1,5 +1,5 @@
 import type { PptxElement, TextStyle } from 'pptx-viewer-core';
-import type { ShapeAdjustmentHandleDescriptor } from 'pptx-viewer-shared';
+import type { ShapeAdjustmentHandleDescriptor } from 'ooxml-ui/pptx';
 
 /**
  * Shared type for canvas interaction handler signatures.

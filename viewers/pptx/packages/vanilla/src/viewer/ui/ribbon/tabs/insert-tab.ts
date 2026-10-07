@@ -1,11 +1,11 @@
-import { DEFAULT_INSERT_CHART_KIND, registerPptxWebControls } from 'pptx-viewer-shared';
+import { DEFAULT_INSERT_CHART_KIND, registerPptxWebControls } from 'ooxml-ui/pptx';
 import type {
 	FreeformToolKind,
 	InsertChartKind,
 	RibbonInsertRequestEvent,
 	RibbonInsertState,
 	ShapePresetType,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../../i18n';
 import type { RibbonInsertHandlers } from '../ribbon-types';

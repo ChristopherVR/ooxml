@@ -7,7 +7,7 @@ import {
 	moveSectionUp,
 	moveSlidesToSection,
 	renameSection,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { EditorState } from './editor-state.svelte';
 

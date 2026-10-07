@@ -6,7 +6,7 @@
  *
  * @module viewer/components/presenter-console-strip
  */
-import type { PresentationPointerTool } from 'pptx-viewer-shared';
+import type { PresentationPointerTool } from 'ooxml-ui/pptx';
 
 /** The four annotation tools, which are also their own control ids. */
 const POINTER_TOOLS: readonly PresentationPointerTool[] = ['laser', 'pen', 'highlighter', 'eraser'];

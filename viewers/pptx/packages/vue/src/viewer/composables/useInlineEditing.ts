@@ -5,7 +5,7 @@ import type {
 	InlineListController,
 	InlineTextEditSnapshot,
 	ViewerProofingOptions,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	applyAutoCorrect,
 	buildInlineTextCommitPatch,
@@ -14,7 +14,7 @@ import {
 	resolveInlineEditAutoFitHeight,
 	resolveInlineEditNormAutofitShrink,
 	setCellText,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { computed, ref, shallowRef, watch } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
 

@@ -9,8 +9,8 @@
 	 */
 	import Check from '@lucide/svelte/icons/check';
 	import X from '@lucide/svelte/icons/x';
-	import { humanizeDiffLine } from 'pptx-viewer-shared/ai';
-	import type { ProposalView } from 'pptx-viewer-shared/ai';
+	import { humanizeDiffLine } from 'ooxml-ui/pptx/ai';
+	import type { ProposalView } from 'ooxml-ui/pptx/ai';
 
 	import { useTranslator } from '../../../i18n/context';
 

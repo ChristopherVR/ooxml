@@ -1,12 +1,12 @@
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
-import type { ElementClipboardPayload, PasteSpecialFormat } from 'pptx-viewer-shared';
+import type { ElementClipboardPayload, PasteSpecialFormat } from 'ooxml-ui/pptx';
 import {
 	applyPasteSpecialFormat,
 	buildElementClipboardPayload,
 	cloneElementForPaste,
 	findSlideElement,
 	mapSlideElements,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 /**
  * Pure clipboard mutations for the Svelte editor's Ctrl+C/X/V and Home tab

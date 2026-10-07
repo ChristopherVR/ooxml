@@ -25,8 +25,8 @@ import {
 	PRESENTATION_NONCE_KEY,
 	resolveAudienceScreenPlacement,
 	swapPresentationWindows,
-} from 'pptx-viewer-shared';
-import type { PresentationSnapshot } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { PresentationSnapshot } from 'ooxml-ui/pptx';
 import { useRef, useCallback, useEffect } from 'react';
 
 import { storeAudienceContent, clearAudienceContent } from './audience-content-store';

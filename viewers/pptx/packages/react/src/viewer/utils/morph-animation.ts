@@ -8,7 +8,7 @@
  *
  * @module utils/morph-animation
  */
-import type { MorphAnimationStyle } from 'pptx-viewer-shared';
+import type { MorphAnimationStyle } from 'ooxml-ui/pptx';
 
 export {
 	buildColorInterpolationProps,
@@ -18,7 +18,7 @@ export {
 	generateUnmatchedFadeInAnimations,
 	generateTextMorphAnimations,
 	generateFullMorphTransition,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 // ---------------------------------------------------------------------------
 // Inject morph keyframes into the document (DOM-bound; stays in React)

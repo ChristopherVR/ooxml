@@ -26,7 +26,7 @@
 	 * carries all four).
 	 */
 	import type { ElementAction, ElementActionType, PptxCustomShow } from 'pptx-viewer-core';
-	import { ELEMENT_ACTION_TYPE_OPTIONS, resolveActionType, toSlideIndex } from 'pptx-viewer-shared';
+	import { ELEMENT_ACTION_TYPE_OPTIONS, resolveActionType, toSlideIndex } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 

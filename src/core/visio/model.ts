@@ -175,6 +175,10 @@ export interface VisioConnection {
 }
 export interface VisioPage {
 	id: string;
+	/** Cached PageScale/DrawingScale. Scene geometry is in physical page inches;
+	 * source-backed geometry edits continue to accept drawing inches. Omitted means 1.
+	 */
+	drawingToPageScale?: number;
 	name: string;
 	width: number;
 	height: number;

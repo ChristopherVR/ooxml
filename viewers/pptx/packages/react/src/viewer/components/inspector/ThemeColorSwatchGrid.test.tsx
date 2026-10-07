@@ -5,7 +5,7 @@
  * hard-coded Office palette, highlights the swatch matching the element's
  * current ref/hex, and commits both the resolved hex and the ref on click.
  */
-import type { ThemeColorPickerCommit } from 'pptx-viewer-shared';
+import type { ThemeColorPickerCommit } from 'ooxml-ui/pptx';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';

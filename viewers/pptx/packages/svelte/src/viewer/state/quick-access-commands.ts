@@ -1,5 +1,5 @@
-import { isDialogAvailable, isFeatureEnabled } from 'pptx-viewer-shared';
-import type { ResolvedCustomization } from 'pptx-viewer-shared';
+import { isDialogAvailable, isFeatureEnabled } from 'ooxml-ui/pptx';
+import type { ResolvedCustomization } from 'ooxml-ui/pptx';
 
 import type { DeckApi } from '../editor/deck-api';
 import type { ExportingApi } from '../export/exporting-api';

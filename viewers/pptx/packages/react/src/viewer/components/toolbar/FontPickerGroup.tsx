@@ -1,5 +1,5 @@
-import type { FontCatalogInput, RibbonHomeIntent } from 'pptx-viewer-shared';
-import { fontPickerHomeControls } from 'pptx-viewer-shared';
+import type { FontCatalogInput, RibbonHomeIntent } from 'ooxml-ui/pptx';
+import { fontPickerHomeControls } from 'ooxml-ui/pptx';
 import React, { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 

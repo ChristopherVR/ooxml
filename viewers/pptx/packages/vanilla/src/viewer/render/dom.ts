@@ -1,4 +1,4 @@
-import type { CssStyleMap } from 'pptx-viewer-shared';
+import type { CssStyleMap } from 'ooxml-ui/pptx';
 
 /**
  * Small DOM helpers shared by the render + UI layers. All creation goes

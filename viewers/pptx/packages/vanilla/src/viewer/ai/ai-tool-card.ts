@@ -7,8 +7,8 @@
  * built on the shared {@link describeToolActivity} / {@link summarizeToolArgs}.
  */
 
-import type { RenderableToolPart, ToolActivityIcon } from 'pptx-viewer-shared/ai';
-import { describeToolActivity, summarizeToolArgs, toolLabel } from 'pptx-viewer-shared/ai';
+import type { RenderableToolPart, ToolActivityIcon } from 'ooxml-ui/pptx/ai';
+import { describeToolActivity, summarizeToolArgs, toolLabel } from 'ooxml-ui/pptx/ai';
 
 import type { Translator } from '../i18n';
 import { createEl } from '../render';

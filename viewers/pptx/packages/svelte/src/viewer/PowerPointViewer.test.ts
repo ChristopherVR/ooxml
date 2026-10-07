@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import type { ExternalCollaborationSession } from 'pptx-viewer-shared';
-import { readSlidesFromYDoc, reconcileSlidesInYDoc } from 'pptx-viewer-shared';
+import type { ExternalCollaborationSession } from 'ooxml-ui/pptx';
+import { readSlidesFromYDoc, reconcileSlidesInYDoc } from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount } from 'svelte';
 import { SvelteMap } from 'svelte/reactivity';
 import { afterEach, describe, expect, it, vi } from 'vitest';

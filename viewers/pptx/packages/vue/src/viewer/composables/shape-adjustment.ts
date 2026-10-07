@@ -7,7 +7,7 @@
  * the historical Vue import surface so `SelectionOverlay.vue` and the colocated
  * tests keep importing the same names unchanged.
  */
-export type { ShapeAdjustmentHandleDescriptor, ShapeAdjustmentDragState } from 'pptx-viewer-shared';
+export type { ShapeAdjustmentHandleDescriptor, ShapeAdjustmentDragState } from 'ooxml-ui/pptx';
 export {
 	beginShapeAdjustment,
 	getShapeAdjustmentHandleDescriptors,
@@ -20,4 +20,4 @@ export {
 	getRoundRectRadiusPx,
 	getShapeAdjustmentHandleDescriptor,
 	getDraggedShapeAdjustmentValue,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

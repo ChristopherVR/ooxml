@@ -23,8 +23,8 @@ import {
 	resolveSmartArtThreeViewSpec,
 	shouldRenderHitTarget,
 	smartArtNodeAtPoint,
-} from '../internal/shared';
-import type { InlineEditRect, TextStyleAnimationDescriptor } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { InlineEditRect, TextStyleAnimationDescriptor } from 'ooxml-ui/pptx';
 import { EditorStateService } from './editor-state.service';
 import { getContainerStyle } from './element-style';
 import type { StyleMap } from './element-style';

@@ -10,7 +10,7 @@
  * The subscription is torn down with the owning scope, so a component using
  * this needs no explicit cleanup.
  */
-import type { ViewerStore, ViewerStoreEquality } from 'pptx-viewer-shared';
+import type { ViewerStore, ViewerStoreEquality } from 'ooxml-ui/pptx';
 import { onScopeDispose, shallowRef } from 'vue';
 import type { ShallowRef } from 'vue';
 

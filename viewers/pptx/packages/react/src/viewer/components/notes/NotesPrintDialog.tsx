@@ -1,5 +1,5 @@
 import type { PptxSlide, PptxTextStyleLevels } from 'pptx-viewer-core';
-import { buildNotesPrintHtml, resolveNotesSegments } from 'pptx-viewer-shared';
+import { buildNotesPrintHtml, resolveNotesSegments } from 'ooxml-ui/pptx';
 import React, { useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 

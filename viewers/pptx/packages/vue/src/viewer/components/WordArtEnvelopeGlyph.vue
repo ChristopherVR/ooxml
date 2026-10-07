@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { EnvelopeGlyphPlacement } from 'pptx-viewer-shared';
+import type { EnvelopeGlyphPlacement } from 'ooxml-ui/pptx';
 
 /**
  * One glyph of the true two-curve WordArt envelope renderer (see

@@ -11,7 +11,7 @@ import {
 import { TranslatePipe } from '@ngx-translate/core';
 import type { PptxHeaderFooter } from 'pptx-viewer-core';
 
-import { cloneHeaderFooterDraft, patchHeaderFooterDraft } from '../internal/shared';
+import { cloneHeaderFooterDraft, patchHeaderFooterDraft } from 'ooxml-ui/pptx';
 import type { DialogFooterActionSpec } from './dialog-footer.component';
 import { DialogFooterComponent } from './dialog-footer.component';
 

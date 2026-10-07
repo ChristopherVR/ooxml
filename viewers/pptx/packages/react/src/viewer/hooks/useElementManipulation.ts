@@ -5,7 +5,7 @@
  * Handler logic is split across sub-hooks; this module composes them and
  * provides the context-menu dispatch.
  */
-import { contextMenuInspectorAnchor, scrollInspectorSectionIntoView } from 'pptx-viewer-shared';
+import { contextMenuInspectorAnchor, scrollInspectorSectionIntoView } from 'ooxml-ui/pptx';
 
 import type { ElementContextMenuAction } from '../types';
 import type {

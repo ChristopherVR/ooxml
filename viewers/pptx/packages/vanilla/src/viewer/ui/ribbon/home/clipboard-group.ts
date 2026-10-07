@@ -1,5 +1,5 @@
-import { clipboardHomeControls, registerPptxWebControls } from 'pptx-viewer-shared';
-import type { RibbonHomeRequestEvent } from 'pptx-viewer-shared';
+import { clipboardHomeControls, registerPptxWebControls } from 'ooxml-ui/pptx';
+import type { RibbonHomeRequestEvent } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../../i18n';
 

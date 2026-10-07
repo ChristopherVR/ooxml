@@ -15,12 +15,12 @@ import type {
 	PresencePublisher,
 	RemoteCursor,
 	SanitizedPresence,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	createPresencePublisher,
 	createPresenceProjector,
 	PRESENCE_HEARTBEAT_MS,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 const DEFAULT_CANVAS_BOUND = 100_000;
 

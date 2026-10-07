@@ -1,6 +1,6 @@
 import type { InkPptxElement, PptxSlide, ShapePptxElement } from 'pptx-viewer-core';
-import type { InkStrokeView } from 'pptx-viewer-shared';
-import { findEraserHitElementId } from 'pptx-viewer-shared';
+import type { InkStrokeView } from 'ooxml-ui/pptx';
+import { findEraserHitElementId } from 'ooxml-ui/pptx';
 import React, { useCallback, useState } from 'react';
 
 import type { DrawingTool } from '../../types-ui';

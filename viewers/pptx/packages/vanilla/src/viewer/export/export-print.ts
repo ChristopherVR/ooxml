@@ -1,4 +1,4 @@
-import type { PrintSettings } from 'pptx-viewer-shared';
+import type { PrintSettings } from 'ooxml-ui/pptx';
 import {
 	buildHandoutsHtml,
 	buildNotesHtml,
@@ -13,7 +13,7 @@ import {
 	openPendingPrintWindow as openPendingWindow,
 	openPrintWindow as defaultOpenPrintWindow,
 	validatePrintSettings,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import { createTranslator } from '../i18n';
 import { exportSlideToSvg } from './export-svg';

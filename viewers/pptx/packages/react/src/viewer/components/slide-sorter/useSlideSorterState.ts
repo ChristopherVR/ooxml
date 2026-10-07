@@ -7,7 +7,7 @@ import {
 	selectSorterSlide,
 	sorterGridColumns,
 	slideSorterPasteIndexes,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import type React from 'react';
 

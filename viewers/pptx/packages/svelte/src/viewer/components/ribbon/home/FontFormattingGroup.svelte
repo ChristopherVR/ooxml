@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { hasTextProperties } from 'pptx-viewer-core';
-	import { fontHomeControls, homeSnapshotTranslator, textColorOf } from 'pptx-viewer-shared';
-	import type { RibbonHomeRequestEvent } from 'pptx-viewer-shared';
+	import { fontHomeControls, homeSnapshotTranslator, textColorOf } from 'ooxml-ui/pptx';
+	import type { RibbonHomeRequestEvent } from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../../../i18n/context';
 	import type { EditorState } from '../../../editor/editor-state.svelte';
 	import FontPickerGroup from './FontPickerGroup.svelte';
@@ -18,7 +18,7 @@
 		toggleTextFlagPatch,
 		toggleTextShadowPatch,
 	} from '../../../editor';
-	import { transformInlineListCase } from 'pptx-viewer-shared';
+	import { transformInlineListCase } from 'ooxml-ui/pptx';
 
 	/**
 	 * The whole Home Font strip is the shared `pptx-ui-ribbon-home-font` element:

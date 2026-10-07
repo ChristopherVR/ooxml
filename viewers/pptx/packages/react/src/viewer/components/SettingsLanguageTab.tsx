@@ -1,4 +1,4 @@
-import type { LocaleCatalogEntry } from 'pptx-viewer-shared/i18n';
+import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
 import React from 'react';
 
 import { cn } from '../utils';

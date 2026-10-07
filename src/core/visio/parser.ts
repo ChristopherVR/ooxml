@@ -12,6 +12,7 @@ import { metadata, metadataAttributes } from './metadata.js';
 import { createMetadataBudget, type VisioMetadataOptions } from './shape-metadata.js';
 import { VisioPackage, VisioPackageError, type VisioPackageLimits } from './package.js';
 import { normalizeShapes, type ShapeContext } from './shapes.js';
+import { normalizeVisioPageGeometry, visioPageGeometryScale } from './page-scale.js';
 import { styleSheet, type StyleRecord } from './style-inheritance.js';
 import {
 	attribute,
@@ -233,9 +234,10 @@ export async function parseVsdx(
 		resources.pageCells = new Map([...pageCells, ...sheet.cells]);
 		const layers = pageLayers(sheet, resources, localReport);
 		context.layers = indexLayers(layers);
-		const width = number(sheet.cells, 'PageWidth', 8.5, localReport),
-			height = number(sheet.cells, 'PageHeight', 11, localReport);
-		if (width <= 0 || height <= 0)
+		const drawingToPageScale = visioPageGeometryScale(sheet.cells, localReport);
+		const width = number(sheet.cells, 'PageWidth', 8.5, localReport) * drawingToPageScale,
+			height = number(sheet.cells, 'PageHeight', 11, localReport) * drawingToPageScale;
+		if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0)
 			throw new VisioPackageError('INVALID_PAGE_SIZE', 'Page dimensions must be positive.');
 		const backgroundPageId = attribute(page, 'BackPage');
 		if (backgroundPageId !== undefined) metadata(backgroundPageId, 256, 'Background page ID');
@@ -249,6 +251,7 @@ export async function parseVsdx(
 			options.metafileConverter,
 		);
 		const shapes = normalizeShapes(rawShapes, context);
+		normalizeVisioPageGeometry(shapes, drawingToPageScale, checkTime);
 		const seen = new Set<string>();
 		const visit = (items: typeof shapes): void => {
 			for (const shape of items) {
@@ -268,6 +271,7 @@ export async function parseVsdx(
 				localReport('dangling-connection', 'A connection references a missing shape.');
 		pages.push({
 			id,
+			...(drawingToPageScale === 1 ? {} : { drawingToPageScale }),
 			name: metadata(
 				attribute(page, 'Name') ?? attribute(page, 'NameU') ?? `Page ${id}`,
 				4096,

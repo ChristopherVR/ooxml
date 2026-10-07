@@ -1,4 +1,4 @@
-import { createTouchGestureRecognizer } from 'pptx-viewer-shared';
+import { createTouchGestureRecognizer } from 'ooxml-ui/pptx';
 
 /** Vanilla's zoom bounds, shared with the regular zoom controls. */
 const MIN_ZOOM_SCALE = 0.1;

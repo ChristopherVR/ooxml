@@ -2,8 +2,8 @@ import {
 	keyToLabel,
 	LOCALE_CATALOG,
 	translationsEn as sharedTranslationsEn,
-} from 'pptx-viewer-shared/i18n';
-import type { LocaleCatalogEntry, TranslationKey } from 'pptx-viewer-shared/i18n';
+} from 'ooxml-ui/pptx/i18n';
+import type { LocaleCatalogEntry, TranslationKey } from 'ooxml-ui/pptx/i18n';
 
 export type { LocaleCatalogEntry, TranslationKey };
 export { LOCALE_CATALOG };

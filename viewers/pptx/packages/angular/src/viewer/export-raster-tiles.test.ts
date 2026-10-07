@@ -33,7 +33,7 @@ vi.mock(import('jspdf'), () => {
 // `Image`/SVG decoding, so the foreignObject attempt they would otherwise
 // make first never resolves. Mocking them keeps these tests focused on this
 // module's own delegation, which is what it owns.
-vi.mock(import('../internal/shared'), async (importOriginal) => ({
+vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => ({
 	...(await importOriginal()),
 	rasterizeElement: vi.fn(),
 	rasterizeElementTiledToCanvas: vi.fn(),
@@ -95,7 +95,7 @@ describe('html2canvasFallbackFor', () => {
 
 describe('renderElementPngBlob', () => {
 	it('wraps the single-canvas result as a PNG blob', async () => {
-		const { rasterizeElement } = await import('../internal/shared');
+		const { rasterizeElement } = await import('ooxml-ui/pptx');
 		const canvas = document.createElement('canvas');
 		const png = new Blob(['png'], { type: 'image/png' });
 		vi.spyOn(canvas, 'toBlob').mockImplementation((callback) => callback(png));
@@ -121,7 +121,7 @@ describe('renderElementPngBlob', () => {
 	});
 
 	it('wraps pre-encoded PNG bytes from a tiled export without touching a canvas', async () => {
-		const { rasterizeElement } = await import('../internal/shared');
+		const { rasterizeElement } = await import('ooxml-ui/pptx');
 		vi.mocked(rasterizeElement).mockResolvedValue({
 			kind: 'png-bytes',
 			bytes: new Uint8Array([0x89, 0x50, 0x4e, 0x47]),
@@ -139,7 +139,7 @@ describe('renderElementPngBlob', () => {
 
 describe('renderElementTiled', () => {
 	it('rasterises via the tiled shared pipeline and returns its canvas', async () => {
-		const { rasterizeElementTiledToCanvas } = await import('../internal/shared');
+		const { rasterizeElementTiledToCanvas } = await import('ooxml-ui/pptx');
 		const canvas = document.createElement('canvas');
 		vi.mocked(rasterizeElementTiledToCanvas).mockResolvedValue({
 			kind: 'canvas',
@@ -165,7 +165,7 @@ describe('renderElementTiled', () => {
 
 describe('renderElementTilesRaster', () => {
 	it('returns the raw tiled result from the shared rasterizer', async () => {
-		const { rasterizeElementTiles } = await import('../internal/shared');
+		const { rasterizeElementTiles } = await import('ooxml-ui/pptx');
 		const tilesResult = { fullWidth: 3840, fullHeight: 2160, tiled: true, tiles: [] as never[] };
 		vi.mocked(rasterizeElementTiles).mockResolvedValue(tilesResult);
 

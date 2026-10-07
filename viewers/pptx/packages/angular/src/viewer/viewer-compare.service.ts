@@ -12,8 +12,8 @@ import { Injectable, inject } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { PptxHandler } from 'pptx-viewer-core';
 
-import { compareSlides } from '../internal/shared';
-import type { SlideDiff } from '../internal/shared';
+import { compareSlides } from 'ooxml-ui/pptx';
+import type { SlideDiff } from 'ooxml-ui/pptx';
 import { EditorStateService } from './editor-state.service';
 import { ViewerDialogsService } from './viewer-dialogs.service';
 import { applyAcceptedDiff } from './viewer-extra-dialogs-helpers';

@@ -5,7 +5,7 @@
  * five bindings offer the same recovery with the same words. Every string is a
  * key chosen by `pptx-viewer-shared`; this component picks none of them.
  */
-import type { AutosaveRecoveryPrompt } from 'pptx-viewer-shared';
+import type { AutosaveRecoveryPrompt } from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { LuHistory } from 'react-icons/lu';

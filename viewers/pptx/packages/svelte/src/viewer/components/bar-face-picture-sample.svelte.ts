@@ -18,7 +18,7 @@
 import {
 	getBarFacePicturePixelSampleVersion,
 	subscribeBarFacePicturePixelSamples,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 export class BarFacePictureSampleVersion {
 	private current = $state(getBarFacePicturePixelSampleVersion());

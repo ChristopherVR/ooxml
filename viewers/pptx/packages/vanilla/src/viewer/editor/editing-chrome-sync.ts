@@ -3,8 +3,8 @@
    merging them isn't a style choice here. */
 import type { PptxElement, PptxHandler, PptxLayoutPreview } from 'pptx-viewer-core';
 import { buildThemeColorMap } from 'pptx-viewer-core';
-import { canCropElement, canInteractWithElement, canMergeShapes } from 'pptx-viewer-shared';
-import type { RibbonGalleryContext } from 'pptx-viewer-shared';
+import { canCropElement, canInteractWithElement, canMergeShapes } from 'ooxml-ui/pptx';
+import type { RibbonGalleryContext } from 'ooxml-ui/pptx';
 
 import type { Store, ViewerState } from '../state';
 import type { ViewerChrome } from '../ui';

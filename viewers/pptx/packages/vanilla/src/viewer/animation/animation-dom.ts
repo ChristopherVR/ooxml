@@ -4,8 +4,8 @@ import {
 	PRESENTATION_ANIM_TRIGGER_ATTRIBUTE,
 	PRESENTATION_HIT_TEST_CSS,
 	SLIDE_TRANSITION_KEYFRAMES_CSS,
-} from 'pptx-viewer-shared';
-import type { ElementAnimationState } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { ElementAnimationState } from 'ooxml-ui/pptx';
 
 import { applyThreeViewTextStyle } from '../render/elements/three-view';
 

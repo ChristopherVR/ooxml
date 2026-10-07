@@ -1,6 +1,6 @@
 import type { PptxSmartArtChrome } from 'pptx-viewer-core';
-import { buildChromeStyle, centeredSvgTextLines } from 'pptx-viewer-shared';
-import type { CssStyleMap, RenderedGradient, SvgTextLine } from 'pptx-viewer-shared';
+import { buildChromeStyle, centeredSvgTextLines } from 'ooxml-ui/pptx';
+import type { CssStyleMap, RenderedGradient, SvgTextLine } from 'ooxml-ui/pptx';
 import React from 'react';
 
 /**
@@ -59,7 +59,7 @@ export function smartArtNodeGroupProps(
 
 // `fitFontSize` and `chevronPoints` are shared geometry; re-exported here so
 // the historical React import surface is unchanged.
-export { chevronPoints, fitFontSize } from 'pptx-viewer-shared';
+export { chevronPoints, fitFontSize } from 'ooxml-ui/pptx';
 
 // ── Gradient paint server ───────────────────────────────────────────────────
 

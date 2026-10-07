@@ -1,4 +1,4 @@
-import { EDITOR_THUMBNAIL_WIDTH, editorThumbnailStep } from 'pptx-viewer-shared';
+import { EDITOR_THUMBNAIL_WIDTH, editorThumbnailStep } from 'ooxml-ui/pptx';
 
 import { DEFAULT_SECTION_GROUP_ID, UNGROUPED_SECTION_ID } from '../../constants';
 import type { SlideSectionGroup } from '../../types';

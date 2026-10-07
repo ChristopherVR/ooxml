@@ -13,8 +13,8 @@
  * a top-level `relSizeAnchor` row already edits.
  */
 import type { PptxChartData } from 'pptx-viewer-core';
-import type { ChartUserShapeRow, ChartUserShapeRowPatch } from 'pptx-viewer-shared';
-import { getChartUserShapeRowChartBox } from 'pptx-viewer-shared';
+import type { ChartUserShapeRow, ChartUserShapeRowPatch } from 'ooxml-ui/pptx';
+import { getChartUserShapeRowChartBox } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import {

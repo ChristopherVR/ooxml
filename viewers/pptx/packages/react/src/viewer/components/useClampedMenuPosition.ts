@@ -1,4 +1,4 @@
-import { clampFlyoutPosition } from 'pptx-viewer-shared';
+import { clampFlyoutPosition } from 'ooxml-ui/pptx';
 import { useCallback, useState } from 'react';
 
 /**

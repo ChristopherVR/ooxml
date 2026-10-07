@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { PptxChartData } from 'pptx-viewer-core';
-import type { ChartUserShapeRow, ChartUserShapeRowPatch } from 'pptx-viewer-shared';
+import type { ChartUserShapeRow, ChartUserShapeRowPatch } from 'ooxml-ui/pptx';
 import {
 	createDefaultChartUserShape,
 	createDefaultChartUserShapeGroupChild,
@@ -14,7 +14,7 @@ import {
 	withChartUserShapeRowRotationUpdated,
 	withChartUserShapeRowTextUpdated,
 	withChartUserShapeRowUpdated,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

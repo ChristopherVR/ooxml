@@ -1,5 +1,5 @@
 import type { Model3DPptxElement } from 'pptx-viewer-core';
-import { getContainerStyle, modelDataToBlobUrl, mountModel3D } from 'pptx-viewer-shared';
+import { getContainerStyle, modelDataToBlobUrl, mountModel3D } from 'ooxml-ui/pptx';
 
 import { createEl, createSvgEl } from '../dom';
 import type { ElementRenderContext, ElementRenderer } from '../types';

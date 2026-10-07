@@ -1,5 +1,5 @@
 import type { PptxElement, PptxNativeAnimation, PptxSlide } from 'pptx-viewer-core';
-import { hasPersistentAudio, registerPersistentAudio } from 'pptx-viewer-shared';
+import { hasPersistentAudio, registerPersistentAudio } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
 import * as animationSound from './animation-sound';

@@ -3,12 +3,12 @@ import type {
 	ExternalCollaborationSession,
 	ExternalCollaborationReadiness,
 	YjsFactories,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import {
 	borrowExternalCollaborationAwareness,
 	DEFAULT_CURSOR_COLOR,
 	observeExternalCollaborationReadiness,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { LocalPresencePublisher } from './collaboration-local-presence';
 import type { ActiveSession, ActivateSessionDeps } from './collaboration-session-setup';
 

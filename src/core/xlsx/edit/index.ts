@@ -49,6 +49,7 @@ export type {
 	MergeMode,
 	PasteMode,
 	PasteOptions,
+	PasteOperation,
 	PasteRequest,
 	ValidationFailure,
 	ValidationResult,

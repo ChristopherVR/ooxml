@@ -5,7 +5,7 @@
  * the menu itself (the viewer's callbacks do not), or the invisible backdrop
  * is left mounted, eating the next click.
  */
-import { buildCanvasContextMenuEntries } from 'pptx-viewer-shared';
+import { buildCanvasContextMenuEntries } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
 import {

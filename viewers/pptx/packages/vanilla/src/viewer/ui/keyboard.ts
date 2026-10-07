@@ -1,4 +1,4 @@
-import type { PresentationPointerTool } from 'pptx-viewer-shared';
+import type { PresentationPointerTool } from 'ooxml-ui/pptx';
 import {
 	acceptsPresentationInput,
 	createPresentationKeyBuffer,
@@ -6,7 +6,7 @@ import {
 	mapPresentationKey,
 	mapPresentationWheel,
 	mapSlideShowStartKey,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 export interface KeyboardHandlers {
 	next(): void;

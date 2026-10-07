@@ -15,8 +15,8 @@
  */
 import { signal } from '@angular/core';
 
-import { buildRunProgramNotice } from '../internal/shared';
-import type { RunProgramNotice } from '../internal/shared';
+import { buildRunProgramNotice } from 'ooxml-ui/pptx';
+import type { RunProgramNotice } from 'ooxml-ui/pptx';
 
 export class RunProgramNoticeStore {
 	/** Notices currently on screen, oldest first. */

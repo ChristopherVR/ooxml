@@ -11,7 +11,7 @@
  * builder's own geometry rules (covered at the shared layer).
  */
 import type { PptxElement, PptxSmartArtData } from 'pptx-viewer-core';
-import type { ElementAnimationState, ThreeViewSpec } from 'pptx-viewer-shared';
+import type { ElementAnimationState, ThreeViewSpec } from 'ooxml-ui/pptx';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
@@ -19,7 +19,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const resolveSmartArtThreeViewSpec = vi.hoisted(() => vi.fn());
 
-vi.mock(import('pptx-viewer-shared'), async (importOriginal) => {
+vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => {
 	const actual = await importOriginal();
 	return { ...actual, resolveSmartArtThreeViewSpec };
 });

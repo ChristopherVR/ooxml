@@ -1,6 +1,6 @@
 import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
 import { hasShapeProperties } from 'pptx-viewer-core';
-import type { RibbonHomeIntent } from 'pptx-viewer-shared';
+import type { RibbonHomeIntent } from 'ooxml-ui/pptx';
 import {
 	drawingHomeControls,
 	homeGalleryApply,
@@ -8,7 +8,7 @@ import {
 	shapeFillChange,
 	shapeOutlineChange,
 	withHomeGalleries,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React, { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 

@@ -39,8 +39,8 @@ import {
 	applyOutlineEdit,
 	buildOutline,
 	mapOutlineKey,
-} from '../internal/shared';
-import type { CanvasSize, OutlineEdit, OutlineRow } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { CanvasSize, OutlineEdit, OutlineRow } from 'ooxml-ui/pptx';
 import { OUTLINE_VIEW_OVERLAY_STYLES } from './outline-view-overlay.styles';
 
 /** Indent per outline level, in pixels. Level 0 (a title) sits flush left. */

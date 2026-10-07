@@ -6,7 +6,7 @@
  *
  * @module angular-viewer/slide-pane-context-menu-dispatch
  */
-import type { SlidePaneContextMenuCommandId } from '../internal/shared';
+import type { SlidePaneContextMenuCommandId } from 'ooxml-ui/pptx';
 
 /** Everything the thumbnail menu can ask the viewer to do. */
 export interface SlidePaneContextMenuActions {

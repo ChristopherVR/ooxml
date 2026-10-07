@@ -1,5 +1,5 @@
 import type { PptxSlide, PptxSlideMaster } from 'pptx-viewer-core';
-import { masterViewPseudoSlide } from 'pptx-viewer-shared';
+import { masterViewPseudoSlide } from 'ooxml-ui/pptx';
 import React, { useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 

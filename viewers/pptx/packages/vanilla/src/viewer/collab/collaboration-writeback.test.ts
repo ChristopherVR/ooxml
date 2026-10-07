@@ -6,10 +6,10 @@
  * `getSaveOptions` dep reaches the `handler.save(...)` call.
  */
 import type { PptxHandler, PptxHandlerSaveOptions } from 'pptx-viewer-core';
-import type { CollaborationConfig, YDocLike } from 'pptx-viewer-shared';
+import type { CollaborationConfig, YDocLike } from 'ooxml-ui/pptx';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock(import('pptx-viewer-shared'), async (importOriginal) => {
+vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => {
 	const actual = await importOriginal();
 	return {
 		...actual,

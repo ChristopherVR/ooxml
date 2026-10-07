@@ -4,7 +4,7 @@ import {
 	seedRecentColors,
 	viewerPreferencesFromViewProperties,
 	viewPropertiesPatchFromPreferences,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { untrack } from 'svelte';
 
 import type { CollaborationController } from '../collab';

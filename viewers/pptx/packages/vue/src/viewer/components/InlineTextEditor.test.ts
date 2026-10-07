@@ -6,8 +6,8 @@ import {
 	findElementYMap,
 	reconcileSlidesInYDoc,
 	setElementBullets,
-} from 'pptx-viewer-shared';
-import type { YjsFactories } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { YjsFactories } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
 

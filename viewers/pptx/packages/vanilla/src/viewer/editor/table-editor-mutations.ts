@@ -11,7 +11,7 @@ import {
 	insertTableElementRow,
 	mergeCells,
 	redistributeColumnWidth,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 export interface TableCellPosition {
 	row: number;

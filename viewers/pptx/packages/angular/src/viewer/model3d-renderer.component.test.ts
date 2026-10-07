@@ -141,7 +141,7 @@ describe('deriveModel3DBlobUrl', () => {
 
 describe('shared model3d-scene contract', () => {
 	it('exports mountModel3D and a no-op THREE_UNAVAILABLE sentinel', async () => {
-		const mod = await import('../internal/shared-src/render/model3d-scene');
+		const mod = await import('ooxml-ui/pptx/render/model3d-scene');
 		expect(mod.mountModel3D).toBeTypeOf('function');
 		expect(mod.THREE_UNAVAILABLE.ok).toBeFalsy();
 		expect(() => mod.THREE_UNAVAILABLE.dispose()).not.toThrow();

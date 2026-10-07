@@ -1,5 +1,5 @@
 import type { PptxElement } from 'pptx-viewer-core';
-import { hasPersistentAudio, stopAllPersistentAudio } from 'pptx-viewer-shared';
+import { hasPersistentAudio, stopAllPersistentAudio } from 'ooxml-ui/pptx';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../../i18n';

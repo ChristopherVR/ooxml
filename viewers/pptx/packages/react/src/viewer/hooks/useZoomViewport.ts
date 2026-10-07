@@ -4,8 +4,8 @@ import {
 	createViewerZoomStore,
 	createWheelStepBuffer,
 	mapEditingWheel,
-} from 'pptx-viewer-shared';
-import type { ViewerZoomState, ViewerZoomStore, ViewportFitOptions } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { ViewerZoomState, ViewerZoomStore, ViewportFitOptions } from 'ooxml-ui/pptx';
 import { useRef, useCallback, useEffect } from 'react';
 
 import { MIN_ELEMENT_SIZE, ZOOM_TO_SELECTION_PADDING } from '../constants';

@@ -15,7 +15,7 @@ import {
 	getMultiLayerShadowCss,
 	getOuterShadowCss,
 	normalizeHexColor,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 
 function shape(shapeStyle?: ShapeStyle, overrides: Partial<PptxElement> = {}): PptxElement {
 	return {

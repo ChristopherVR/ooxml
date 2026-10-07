@@ -1,4 +1,4 @@
-import type { BackstagePage } from 'pptx-viewer-shared';
+import type { BackstagePage } from 'ooxml-ui/pptx';
 import type { IconType } from 'react-icons';
 import {
 	LuDownload,

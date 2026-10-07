@@ -6,8 +6,8 @@ import type {
 	PptxSlideTransition,
 	TextSegment,
 } from 'pptx-viewer-core';
-import { applyMotionPathPreset } from 'pptx-viewer-shared';
-import type { AnimationApplyGroup } from 'pptx-viewer-shared';
+import { applyMotionPathPreset } from 'ooxml-ui/pptx';
+import type { AnimationApplyGroup } from 'ooxml-ui/pptx';
 import type { ComputedRef, Ref } from 'vue';
 
 import { applyAnimationPreset, removeElementAnimation } from './element-animation';

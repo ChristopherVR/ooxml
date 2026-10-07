@@ -1,4 +1,4 @@
-import { getDensePanelTouchTargetPx } from 'pptx-viewer-shared';
+import { getDensePanelTouchTargetPx } from 'ooxml-ui/pptx';
 import { useTranslation } from 'react-i18next';
 import { LuWifiOff } from 'react-icons/lu';
 

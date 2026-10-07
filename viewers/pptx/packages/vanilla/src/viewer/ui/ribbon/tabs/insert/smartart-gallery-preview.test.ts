@@ -1,4 +1,4 @@
-import { PRESETS } from 'pptx-viewer-shared';
+import { PRESETS } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 
 import { createTranslator } from '../../../../i18n';

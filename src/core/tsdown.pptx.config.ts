@@ -2,6 +2,109 @@ import { defineConfig } from 'tsdown';
 
 export default defineConfig({
 	entry: {
+		'pptx/automation/schemas/chart-formatting-schemas':
+			'pptx/automation/schemas/chart-formatting-schemas.ts',
+		'pptx/automation/schemas/chart-schemas': 'pptx/automation/schemas/chart-schemas.ts',
+		'pptx/automation/schemas/chart-user-shape-schemas':
+			'pptx/automation/schemas/chart-user-shape-schemas.ts',
+		'pptx/automation/schemas/element-schemas': 'pptx/automation/schemas/element-schemas.ts',
+		'pptx/automation/schemas/export-schemas': 'pptx/automation/schemas/export-schemas.ts',
+		'pptx/automation/schemas/geometry-schemas': 'pptx/automation/schemas/geometry-schemas.ts',
+		'pptx/automation/schemas/hyperlink-schemas': 'pptx/automation/schemas/hyperlink-schemas.ts',
+		'pptx/automation/schemas/index': 'pptx/automation/schemas/index.ts',
+		'pptx/automation/schemas/json-schemas': 'pptx/automation/schemas/json-schemas.ts',
+		'pptx/automation/schemas/layout-schemas': 'pptx/automation/schemas/layout-schemas.ts',
+		'pptx/automation/schemas/lock-schemas': 'pptx/automation/schemas/lock-schemas.ts',
+		'pptx/automation/schemas/metadata-schemas': 'pptx/automation/schemas/metadata-schemas.ts',
+		'pptx/automation/schemas/ole-schemas': 'pptx/automation/schemas/ole-schemas.ts',
+		'pptx/automation/schemas/presentation-schemas':
+			'pptx/automation/schemas/presentation-schemas.ts',
+		'pptx/automation/schemas/section-schemas': 'pptx/automation/schemas/section-schemas.ts',
+		'pptx/automation/schemas/slide-schemas': 'pptx/automation/schemas/slide-schemas.ts',
+		'pptx/automation/schemas/smartart-schemas': 'pptx/automation/schemas/smartart-schemas.ts',
+		'pptx/automation/schemas/table-style-schemas': 'pptx/automation/schemas/table-style-schemas.ts',
+		'pptx/automation/schemas/template-schemas': 'pptx/automation/schemas/template-schemas.ts',
+		'pptx/automation/schemas/theme-schemas': 'pptx/automation/schemas/theme-schemas.ts',
+		'pptx/automation/schemas/validation-schemas': 'pptx/automation/schemas/validation-schemas.ts',
+
+		'pptx/editor/ai/table-merge': 'pptx/editor/ai/table-merge.ts',
+		'pptx/editor/loader/element-patch-walker': 'pptx/editor/loader/element-patch-walker.ts',
+		'pptx/editor/loader/is-external-url': 'pptx/editor/loader/is-external-url.ts',
+		'pptx/editor/loader/lazy-image-resolution': 'pptx/editor/loader/lazy-image-resolution.ts',
+		'pptx/editor/loader/load-content-helpers': 'pptx/editor/loader/load-content-helpers.ts',
+		'pptx/editor/loader/table-style-image-paths': 'pptx/editor/loader/table-style-image-paths.ts',
+		'pptx/editor/loader/text-fill-image-paths': 'pptx/editor/loader/text-fill-image-paths.ts',
+		'pptx/editor/render/bullet-autonum': 'pptx/editor/render/bullet-autonum.ts',
+		'pptx/editor/render/bullet-list': 'pptx/editor/render/bullet-list.ts',
+		'pptx/editor/render/bullet-toggle': 'pptx/editor/render/bullet-toggle.ts',
+		'pptx/editor/render/chart-user-shape-edit': 'pptx/editor/render/chart-user-shape-edit.ts',
+		'pptx/editor/render/collaboration-active-session':
+			'pptx/editor/render/collaboration-active-session.ts',
+		'pptx/editor/render/collaboration-assets': 'pptx/editor/render/collaboration-assets.ts',
+		'pptx/editor/render/collaboration-departure': 'pptx/editor/render/collaboration-departure.ts',
+		'pptx/editor/render/collaboration-live-patch-target':
+			'pptx/editor/render/collaboration-live-patch-target.ts',
+		'pptx/editor/render/collaboration-load-origin':
+			'pptx/editor/render/collaboration-load-origin.ts',
+		'pptx/editor/render/collaboration-reconcile': 'pptx/editor/render/collaboration-reconcile.ts',
+		'pptx/editor/render/collaboration-sync': 'pptx/editor/render/collaboration-sync.ts',
+		'pptx/editor/render/collaboration-text-codec': 'pptx/editor/render/collaboration-text-codec.ts',
+		'pptx/editor/render/collaboration-text-lease': 'pptx/editor/render/collaboration-text-lease.ts',
+		'pptx/editor/render/collaboration-text-merge': 'pptx/editor/render/collaboration-text-merge.ts',
+		'pptx/editor/render/collaboration-text-native-edit':
+			'pptx/editor/render/collaboration-text-native-edit.ts',
+		'pptx/editor/render/collaboration-text-positions':
+			'pptx/editor/render/collaboration-text-positions.ts',
+		'pptx/editor/render/collaboration-text-projection':
+			'pptx/editor/render/collaboration-text-projection.ts',
+		'pptx/editor/render/collaboration-text-session-apply':
+			'pptx/editor/render/collaboration-text-session-apply.ts',
+		'pptx/editor/render/collaboration-text-session-delta':
+			'pptx/editor/render/collaboration-text-session-delta.ts',
+		'pptx/editor/render/collaboration-text-session-paragraph':
+			'pptx/editor/render/collaboration-text-session-paragraph.ts',
+		'pptx/editor/render/collaboration-text-session':
+			'pptx/editor/render/collaboration-text-session.ts',
+		'pptx/editor/render/collaboration-text-snapshot-positions':
+			'pptx/editor/render/collaboration-text-snapshot-positions.ts',
+		'pptx/editor/render/deck-save-encryption': 'pptx/editor/render/deck-save-encryption.ts',
+		'pptx/editor/render/editor-history': 'pptx/editor/render/editor-history.ts',
+		'pptx/editor/render/editor-mutations': 'pptx/editor/render/editor-mutations.ts',
+		'pptx/editor/render/element-locks': 'pptx/editor/render/element-locks.ts',
+		'pptx/editor/render/element-operations': 'pptx/editor/render/element-operations.ts',
+		'pptx/editor/render/element': 'pptx/editor/render/element.ts',
+		'pptx/editor/render/find-replace': 'pptx/editor/render/find-replace.ts',
+		'pptx/editor/render/group-drill': 'pptx/editor/render/group-drill.ts',
+		'pptx/editor/render/group-ops': 'pptx/editor/render/group-ops.ts',
+		'pptx/editor/render/inline-list-body': 'pptx/editor/render/inline-list-body.ts',
+		'pptx/editor/render/remap-empty-paragraph': 'pptx/editor/render/remap-empty-paragraph.ts',
+		'pptx/editor/render/remap-paragraph-sources': 'pptx/editor/render/remap-paragraph-sources.ts',
+		'pptx/editor/render/remap-text-bullets': 'pptx/editor/render/remap-text-bullets.ts',
+		'pptx/editor/render/remap-text': 'pptx/editor/render/remap-text.ts',
+		'pptx/editor/render/schema-label-keys': 'pptx/editor/render/schema-label-keys.ts',
+		'pptx/editor/render/section-operations': 'pptx/editor/render/section-operations.ts',
+		'pptx/editor/render/slide-background-patch': 'pptx/editor/render/slide-background-patch.ts',
+		'pptx/editor/render/slide-operations': 'pptx/editor/render/slide-operations.ts',
+		'pptx/editor/render/slide-search': 'pptx/editor/render/slide-search.ts',
+		'pptx/editor/render/slide-size-rescale': 'pptx/editor/render/slide-size-rescale.ts',
+		'pptx/editor/render/slide-transition-edits': 'pptx/editor/render/slide-transition-edits.ts',
+		'pptx/editor/render/table-cell-edit': 'pptx/editor/render/table-cell-edit.ts',
+		'pptx/editor/render/table-cell-merge': 'pptx/editor/render/table-cell-merge.ts',
+		'pptx/editor/render/table-data-grid-ops': 'pptx/editor/render/table-data-grid-ops.ts',
+		'pptx/editor/render/table-layout': 'pptx/editor/render/table-layout.ts',
+		'pptx/editor/render/table-merge': 'pptx/editor/render/table-merge.ts',
+		'pptx/editor/render/table-style-editor-descriptor':
+			'pptx/editor/render/table-style-editor-descriptor.ts',
+		'pptx/editor/render/table-style-editor-edit': 'pptx/editor/render/table-style-editor-edit.ts',
+		'pptx/editor/render/table-style-editor-parts': 'pptx/editor/render/table-style-editor-parts.ts',
+		'pptx/editor/render/table-style-map-edits': 'pptx/editor/render/table-style-map-edits.ts',
+		'pptx/editor/render/template-editing': 'pptx/editor/render/template-editing.ts',
+		'pptx/editor/render/text-segment-paragraph-break':
+			'pptx/editor/render/text-segment-paragraph-break.ts',
+		'pptx/editor/render/text-theme': 'pptx/editor/render/text-theme.ts',
+		'pptx/editor/render/theme-editor-model': 'pptx/editor/render/theme-editor-model.ts',
+		'pptx/editor/render/theme-editor-presets': 'pptx/editor/render/theme-editor-presets.ts',
+
 		'pptx/automation/index': 'pptx/automation/index.ts',
 		'pptx/ui/index': 'pptx/ui/index.ts',
 		'pptx/index': 'pptx/index.ts',
@@ -19,5 +122,5 @@ export default defineConfig({
 	treeshake: true,
 	platform: 'neutral',
 	outputOptions: { chunkFileNames: 'pptx/chunks/[name]-[hash].js' },
-	deps: { alwaysBundle: [/^@christophervr\/ole2(?:\/|$)/] },
+	deps: { neverBundle: [/^ooxml-core(?:\/|$)/], alwaysBundle: [/^@christophervr\/ole2(?:\/|$)/] },
 });

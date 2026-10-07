@@ -15,7 +15,7 @@
 
 import type { PptxElement } from 'pptx-viewer-core';
 
-import { hexToRgbUnit } from '../internal/shared';
+import { hexToRgbUnit } from 'ooxml-ui/pptx';
 
 // ── Filter primitive descriptors ──────────────────────────────────────────────
 

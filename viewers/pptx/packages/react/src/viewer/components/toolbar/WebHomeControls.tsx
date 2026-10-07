@@ -6,7 +6,7 @@ import type {
 	RibbonHomeIntent,
 	RibbonHomeRequestEvent,
 	RibbonHomeViewState,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 

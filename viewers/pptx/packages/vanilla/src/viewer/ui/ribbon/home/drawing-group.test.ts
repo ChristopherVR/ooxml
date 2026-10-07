@@ -1,4 +1,4 @@
-import { RIBBON_SHAPE_SWATCHES, SHAPE_PRESET_DEFS } from 'pptx-viewer-shared';
+import { RIBBON_SHAPE_SWATCHES, SHAPE_PRESET_DEFS } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../../../i18n';

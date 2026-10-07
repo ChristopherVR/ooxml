@@ -1,4 +1,4 @@
-import { HIDDEN_SLIDE_SLASH_GRADIENT } from 'pptx-viewer-shared';
+import { HIDDEN_SLIDE_SLASH_GRADIENT } from 'ooxml-ui/pptx';
 
 export const PARITY_DIALOG_CSS = `
 /* Hidden slide in the sorter: the card is already dimmed by \`.is-hidden\`, so

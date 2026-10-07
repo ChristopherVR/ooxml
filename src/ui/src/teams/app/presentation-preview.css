@@ -1,0 +1,58 @@
+:host {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	min-height: 0;
+	overflow: auto;
+}
+nav {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-wrap: wrap;
+	gap: var(--office-space-3);
+	padding: var(--office-space-2);
+}
+button {
+	font: inherit;
+	color: inherit;
+	padding: var(--office-space-2);
+	border: var(--office-border-width) solid var(--office-teams-divider);
+	border-radius: var(--office-radius-md);
+	background: var(--office-background);
+	cursor: pointer;
+}
+button:disabled {
+	cursor: default;
+	opacity: 0.5;
+}
+.hint,
+details {
+	padding: var(--office-space-2) var(--office-space-3);
+	margin: 0;
+}
+.hint {
+	color: var(--office-teams-text-subtle);
+}
+.stage {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	place-items: center;
+	flex: 1;
+	min-width: 0;
+	min-height: 12em;
+	padding: var(--office-space-3);
+	background: var(--office-background);
+}
+img {
+	display: block;
+	width: 100%;
+	min-width: 0;
+	height: auto;
+	object-fit: contain;
+}
+pre {
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+	font: inherit;
+}

@@ -1,12 +1,12 @@
 import type { PptxSlideTransition, PptxTransitionType } from 'pptx-viewer-core';
-import type { RibbonTransitionDraft } from 'pptx-viewer-shared';
+import type { RibbonTransitionDraft } from 'ooxml-ui/pptx';
 import {
 	applyRibbonTransitionDraft,
 	mergeSlideTransition,
 	ribbonTransitionTargets,
 	updateAllSlides,
 	updateSlide,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { EditorState } from './editor-state.svelte';
 

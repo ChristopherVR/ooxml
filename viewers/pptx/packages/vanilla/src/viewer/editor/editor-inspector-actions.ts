@@ -45,8 +45,8 @@ import {
 	updateGradientStopPatch,
 	vAlignPatch,
 	switchSmartArtLayoutData,
-} from 'pptx-viewer-shared';
-import type { GradientState, InlineTextSelection, TextAdvancedChanges } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { GradientState, InlineTextSelection, TextAdvancedChanges } from 'ooxml-ui/pptx';
 
 import type { ApplyToSelected } from './editor-apply-to-selected';
 import { patchShapeStyle } from './editor-format-mutations';

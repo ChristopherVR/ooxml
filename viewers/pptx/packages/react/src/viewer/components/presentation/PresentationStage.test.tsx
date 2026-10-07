@@ -9,7 +9,7 @@
  * live slide content (a hyperlink, an action shape) is NOT also an advance.
  */
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
-import { isPresentationAdvanceClick, PRESENTATION_STAGE_ATTRIBUTE } from 'pptx-viewer-shared';
+import { isPresentationAdvanceClick, PRESENTATION_STAGE_ATTRIBUTE } from 'ooxml-ui/pptx';
 import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';

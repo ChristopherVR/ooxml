@@ -12,7 +12,7 @@ import {
 	resolveRevealedDrawingShapes,
 	resolveRevealedSmartArtNodes,
 	styleShadowFilter,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import { createEl, createSvgEl } from '../dom';
 import type { ElementRenderer } from '../types';

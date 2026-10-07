@@ -4,7 +4,7 @@ import {
 	elementContainerHeightStyle,
 	MEDIA_FULLSCREEN_OVERLAY_STYLE,
 	paintedElementSize,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React from 'react';
 import type { CSSProperties } from 'react';
 
@@ -24,7 +24,7 @@ import type { ElementAnimationState } from '../../utils/animation-timeline';
  * Re-exported from `pptx-viewer-shared`: it is one half of the actionable-element
  * rule, which every binding now shares so they classify a deck identically.
  */
-export { elementHasTextHyperlink } from 'pptx-viewer-shared';
+export { elementHasTextHyperlink } from 'ooxml-ui/pptx';
 
 /* ───────────────────────── DagDuotone SVG filter ──────────────────────── */
 

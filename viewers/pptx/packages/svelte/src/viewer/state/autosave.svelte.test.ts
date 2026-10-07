@@ -12,7 +12,7 @@ import { AutosaveController } from './autosave.svelte';
  */
 
 const { saveSnapshot } = vi.hoisted(() => ({ saveSnapshot: vi.fn().mockResolvedValue(true) }));
-vi.mock(import('pptx-viewer-shared'), async (importOriginal) => ({
+vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => ({
 	...(await importOriginal()),
 	saveAutosaveSnapshot: saveSnapshot,
 }));

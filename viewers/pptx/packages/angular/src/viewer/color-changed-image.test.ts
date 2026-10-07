@@ -91,8 +91,8 @@ describe('getClrChangeParams', () => {
 
 const applyColorChange = vi.fn();
 
-vi.mock(import('../internal/shared'), async (importOriginal) => {
-	const actual = await importOriginal<typeof import('../internal/shared')>();
+vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => {
+	const actual = await importOriginal<typeof import('ooxml-ui/pptx')>();
 	return { ...actual, applyColorChange: (...args: unknown[]) => applyColorChange(...args) };
 });
 
@@ -106,7 +106,7 @@ describe('clrChange async processing contract', () => {
 	});
 
 	it('shows the original src until applyColorChange resolves, then swaps', async () => {
-		const shared = await import('../internal/shared');
+		const shared = await import('ooxml-ui/pptx');
 		const SRC = 'data:image/png;base64,ORIGINAL';
 		const PROCESSED = 'data:image/png;base64,PROCESSED';
 		const params = getClrChangeParams(
@@ -154,7 +154,7 @@ describe('clrChange async processing contract', () => {
 	});
 
 	it('reuses a cached result without calling applyColorChange again', async () => {
-		const shared = await import('../internal/shared');
+		const shared = await import('ooxml-ui/pptx');
 		const SRC = 'data:image/png;base64,CACHEME';
 		const PROCESSED = 'data:image/png;base64,CACHED';
 		const params = getClrChangeParams(
@@ -175,7 +175,7 @@ describe('clrChange async processing contract', () => {
 	});
 
 	it('falls back to the original src when applyColorChange rejects', async () => {
-		const shared = await import('../internal/shared');
+		const shared = await import('ooxml-ui/pptx');
 		const SRC = 'data:image/png;base64,FAIL';
 		const params = getClrChangeParams(
 			image({ clrChange: { clrFrom: '#777777', clrTo: '#888888' } }),

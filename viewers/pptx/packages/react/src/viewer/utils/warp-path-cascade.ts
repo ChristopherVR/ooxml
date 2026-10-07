@@ -5,4 +5,4 @@
  * (`render/text-warp`), consumed by every binding. Kept here so existing React
  * import paths (`./warp-path-cascade`) keep working unchanged.
  */
-export { cascadeUpPath, cascadeDownPath } from 'pptx-viewer-shared';
+export { cascadeUpPath, cascadeDownPath } from 'ooxml-ui/pptx';

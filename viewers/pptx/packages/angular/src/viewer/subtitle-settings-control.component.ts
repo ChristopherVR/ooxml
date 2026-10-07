@@ -5,8 +5,8 @@ import {
 	subtitleSettingsFromOptions,
 	subtitleSettingsLabels,
 	updateSubtitleSettings,
-} from '../internal/shared';
-import type { SubtitleSettingsChangeEvent } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { SubtitleSettingsChangeEvent } from 'ooxml-ui/pptx';
 import { ViewerOptionsService } from './viewer-options.service';
 
 @Component({

@@ -21,8 +21,8 @@ import {
 	buildChartMarkDragGeometry,
 	findChartPartTarget,
 	resolveChartKind,
-} from 'pptx-viewer-shared';
-import type { ChartMarkDragState, ChartValueDragState, ChartViewModel } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { ChartMarkDragState, ChartValueDragState, ChartViewModel } from 'ooxml-ui/pptx';
 import type { Dispatch, RefObject, SetStateAction } from 'react';
 import React, { useEffect, useRef, useState } from 'react';
 

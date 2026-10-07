@@ -58,7 +58,7 @@ import {
 	replaceOleFile,
 } from 'pptx-viewer-core';
 
-import { buildOleContentUpdatePatch, buildOleEditDialogDescriptor } from '../internal/shared';
+import { buildOleContentUpdatePatch, buildOleEditDialogDescriptor } from 'ooxml-ui/pptx';
 import type { DialogFooterActionSpec } from './dialog-footer.component';
 import { DialogFooterComponent } from './dialog-footer.component';
 import { ModalDialogComponent } from './modal-dialog.component';

@@ -1,11 +1,11 @@
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
-import type { AuthoredSlideRange, ShowOrderCustomShow } from 'pptx-viewer-shared';
+import type { AuthoredSlideRange, ShowOrderCustomShow } from 'ooxml-ui/pptx';
 import {
 	nextPresentedSlide,
 	PRESENTER_CONSOLE_CLASSES,
 	presenterNextDisabled,
 	presenterPrevDisabled,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LuChevronLeft, LuChevronRight, LuMinus, LuPlus } from 'react-icons/lu';

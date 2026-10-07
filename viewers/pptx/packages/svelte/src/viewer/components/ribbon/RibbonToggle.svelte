@@ -7,7 +7,7 @@
 	 * `aria-label` on the input, which is what makes the accessible name the
 	 * user-visible one in every binding.
 	 */
-	import type { RibbonControlId } from 'pptx-viewer-shared';
+	import type { RibbonControlId } from 'ooxml-ui/pptx';
 
 	const {
 		label,

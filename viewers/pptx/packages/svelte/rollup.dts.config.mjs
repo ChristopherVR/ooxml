@@ -4,13 +4,10 @@ import { fileURLToPath } from 'node:url';
 import { dts } from 'rollup-plugin-dts';
 
 const entries = ['index', 'viewer/index', 'i18n', 'internals'];
-const bundledPackages = ['pptx-viewer-core', 'pptx-viewer-shared'];
+const bundledPackages = ['pptx-viewer-core'];
 const packageDirectory = dirname(fileURLToPath(import.meta.url));
 const internalTypes = new Map([
 	['pptx-viewer-core', resolve(packageDirectory, '../core/dist/index.d.ts')],
-	['pptx-viewer-shared', resolve(packageDirectory, '../shared/dist/index.d.ts')],
-	['pptx-viewer-shared/i18n', resolve(packageDirectory, '../shared/dist/i18n/index.d.ts')],
-	['pptx-viewer-shared/ai', resolve(packageDirectory, '../shared/dist/ai/index.d.ts')],
 ]);
 
 const resolveInternalTypes = {

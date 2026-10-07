@@ -10,8 +10,8 @@
 		buildSlideSorterContextMenuEntries,
 		clampFlyoutPosition,
 		slideSorterContextMenuLabel,
-	} from 'pptx-viewer-shared';
-	import type { SlideSorterContextMenuContext, SlideSorterContextMenuCommandId } from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
+	import type { SlideSorterContextMenuContext, SlideSorterContextMenuCommandId } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 

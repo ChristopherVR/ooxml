@@ -3,8 +3,8 @@ import {
 	DEFAULT_BROADCAST_SERVER_URL,
 	generateBroadcastRoomId,
 	resolveTransportForServerUrl,
-} from 'pptx-viewer-shared';
-import type { CollaborationTransport } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { CollaborationTransport } from 'ooxml-ui/pptx';
 /**
  * BroadcastDialog: start / stop a one-way live broadcast for the Vue viewer.
  *

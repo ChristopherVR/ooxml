@@ -4,8 +4,8 @@
 	 * plus the right-side quick actions React keeps on the tab row
 	 * (`TabRowActions`): Record and the highlighted Share button.
 	 */
-	import { contextualTabLabelKey, filterVisibleTabs, isActionHidden } from 'pptx-viewer-shared';
-	import type { RibbonContextualTabId, ToolbarActionId } from 'pptx-viewer-shared';
+	import { contextualTabLabelKey, filterVisibleTabs, isActionHidden } from 'ooxml-ui/pptx';
+	import type { RibbonContextualTabId, ToolbarActionId } from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../../i18n/context';
 	import { useViewerOptions } from '../../state/viewer-options-context';
 	import { RIBBON_TABS } from './ribbon-tabs';

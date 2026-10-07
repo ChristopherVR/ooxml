@@ -12,7 +12,7 @@ import {
 	UserRound,
 	X,
 } from 'lucide-vue-next';
-import type { BackstagePage } from 'pptx-viewer-shared';
+import type { BackstagePage } from 'ooxml-ui/pptx';
 import type { Component } from 'vue';
 
 const ICONS: Partial<Record<BackstagePage, Component>> = {

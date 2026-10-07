@@ -24,13 +24,13 @@ import {
 	readListActivationSelection,
 	restoreInlineListBodySelection,
 	takePendingCaretPoint,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type {
 	CollaborationInlineEditor,
 	CollaborationLivePatcher,
 	InlineListController,
 	InlineTextEditSnapshot,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, toRaw, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 

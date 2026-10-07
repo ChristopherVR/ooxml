@@ -2,7 +2,7 @@ import {
 	mayLeaveSlideShow,
 	resolveAuthoredSlideRange,
 	shouldLoopContinuously,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n/translator';
 import type { EditorController } from '../editor/editor-controller.svelte';

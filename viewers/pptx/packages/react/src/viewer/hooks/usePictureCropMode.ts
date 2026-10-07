@@ -18,7 +18,7 @@
  * @module usePictureCropMode
  */
 import type { PptxElement } from 'pptx-viewer-core';
-import type { CropElementUpdate, NaturalImageSize } from 'pptx-viewer-shared';
+import type { CropElementUpdate, NaturalImageSize } from 'ooxml-ui/pptx';
 import {
 	canCropElement,
 	cancelCropUpdate,
@@ -28,7 +28,7 @@ import {
 	cropSessionChanged,
 	cropToAspectRatio,
 	startCropSession,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { useCallback, useEffect, useRef } from 'react';
 
 import type { CropSessionState } from './useCropSessionState';

@@ -6,6 +6,63 @@ export interface VisioFilledArrow {
 	setback: number;
 	beginSetback: number;
 }
+
+export interface VisioArrowLineLayout {
+	path: string;
+	startSetback: number;
+	endSetback: number;
+}
+
+/** Native stem and marker anchors for a straight filled connector. */
+export function layoutVisioFilledArrowLine(
+	path: string,
+	start: VisioFilledArrow | undefined,
+	end: VisioFilledArrow | undefined,
+): VisioArrowLineLayout | undefined {
+	for (const arrow of [start, end]) {
+		if (
+			arrow &&
+			(!Number.isFinite(arrow.setback) ||
+				!Number.isFinite(arrow.beginSetback) ||
+				arrow.setback < 0 ||
+				arrow.beginSetback < 0 ||
+				arrow.beginSetback > arrow.setback)
+		)
+			return undefined;
+	}
+	const coordinates = straightLine(path);
+	if (!coordinates || (!start && !end)) return undefined;
+	const [x, y, ex, ey] = coordinates;
+	const length = Math.hypot(ex - x, ey - y);
+	if (!Number.isFinite(length) || length === 0) return undefined;
+	if (!start && end) {
+		const difference = length - end.setback;
+		if (Math.abs(difference) <= 1e-9) {
+			const extension = end.setback - end.beginSetback;
+			return {
+				path: `M ${x} ${y} L ${x} ${y} L ${x + ((ex - x) * extension) / length} ${y + ((ey - y) * extension) / length}`,
+				startSetback: 0,
+				endSetback: length - extension,
+			};
+		}
+		if (difference < 0) return { path, startSetback: 0, endSetback: 0 };
+	}
+	const trimmed = trimVisioArrowLine(
+		path,
+		start?.beginSetback ?? 0,
+		end?.setback ?? 0,
+		start ? start.setback - start.beginSetback : 0,
+	);
+	return trimmed
+		? { path: trimmed, startSetback: start?.beginSetback ?? 0, endSetback: end?.setback ?? 0 }
+		: undefined;
+}
+
+function straightLine(path: string): readonly [number, number, number, number] | undefined {
+	const n = '([-+]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][-+]?\\d+)?)';
+	const match = new RegExp(`^\\s*M\\s*${n}[ ,]+${n}\\s*L\\s*${n}[ ,]+${n}\\s*$`).exec(path);
+	return match ? (match.slice(1).map(Number) as [number, number, number, number]) : undefined;
+}
 // Native numerical geometry at unit scale. Closed fill implicitly closes each path.
 const glyphs: Readonly<Record<number, readonly [string, number]>> = {
 	2: ['M 1 1 L 0 0 L 1 -1 L 1 1', 1],
@@ -42,11 +99,10 @@ export function trimVisioArrowLine(
 	end: number,
 	beginExtension = 0,
 ): string | undefined {
-	const n = '([-+]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][-+]?\\d+)?)';
-	const match = new RegExp(`^\\s*M\\s*${n}[ ,]+${n}\\s*L\\s*${n}[ ,]+${n}\\s*$`).exec(path);
-	if (!match || ![start, end, beginExtension].every((v) => Number.isFinite(v) && v >= 0))
+	const coordinates = straightLine(path);
+	if (!coordinates || ![start, end, beginExtension].every((v) => Number.isFinite(v) && v >= 0))
 		return undefined;
-	const [x, y, ex, ey] = match.slice(1).map(Number) as [number, number, number, number];
+	const [x, y, ex, ey] = coordinates;
 	const dx = ex - x,
 		dy = ey - y,
 		length = Math.hypot(dx, dy);

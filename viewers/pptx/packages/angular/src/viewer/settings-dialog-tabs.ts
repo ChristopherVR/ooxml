@@ -6,8 +6,8 @@
  * requested tab id onto one that is still visible, so a hidden page can never
  * stay selected.
  */
-import { VIEWER_OPTIONS_TABS } from '../internal/shared';
-import type { ViewerOptionsTabDefinition, ViewerOptionsTabId } from '../internal/shared';
+import { VIEWER_OPTIONS_TABS } from 'ooxml-ui/pptx';
+import type { ViewerOptionsTabDefinition, ViewerOptionsTabId } from 'ooxml-ui/pptx';
 
 /** The ten File > Options categories the dialog's rail renders, in order. */
 export const OPTIONS_DIALOG_TABS: readonly ViewerOptionsTabDefinition[] = VIEWER_OPTIONS_TABS;

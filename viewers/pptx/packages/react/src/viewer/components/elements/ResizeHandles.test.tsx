@@ -15,7 +15,7 @@ import {
 	attachRotateHandlePlacement,
 	RESIZE_HANDLE_GEOMETRY,
 	RESIZE_HANDLES,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -24,7 +24,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { ignoreExportOverlayElements } from '../../utils/export-helpers';
 import { CORNER_HANDLES, EDGE_HANDLES, ResizeHandles } from './ResizeHandles';
 
-vi.mock(import('pptx-viewer-shared'), async (original) => ({
+vi.mock(import('ooxml-ui/pptx'), async (original) => ({
 	...(await original()),
 	attachRotateHandlePlacement: vi.fn(() => vi.fn()),
 }));

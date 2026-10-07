@@ -11,7 +11,7 @@
 	 * lean, taking priority over plain pressure circles, matching
 	 * `ContentPartView.svelte`'s loaded-`p:contentPart` counterpart.
 	 */
-	import { INK_REPLAY_KEYFRAMES, shouldRenderHitTarget } from 'pptx-viewer-shared';
+	import { INK_REPLAY_KEYFRAMES, shouldRenderHitTarget } from 'ooxml-ui/pptx';
 
 	import { buildInkStrokes, inkViewBox } from '../render';
 	import { getContainerStyle, getElementHitTargetStyle, styleToString } from '../style';

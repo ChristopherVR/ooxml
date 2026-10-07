@@ -1,5 +1,5 @@
 import type { PptxElement, ShapePptxElement } from 'pptx-viewer-core';
-import { registerPptxWebControls } from 'pptx-viewer-shared';
+import { registerPptxWebControls } from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it } from 'vitest';
 

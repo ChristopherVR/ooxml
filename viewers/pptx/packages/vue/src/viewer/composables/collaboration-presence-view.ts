@@ -7,8 +7,8 @@
  * output to the binding's `RemotePresence` shape and filters cursors to the
  * local user's active slide (so peers on other slides paint no stray cursors).
  */
-import { createPresenceProjector } from 'pptx-viewer-shared';
-import type { SanitizedPresence } from 'pptx-viewer-shared';
+import { createPresenceProjector } from 'ooxml-ui/pptx';
+import type { SanitizedPresence } from 'ooxml-ui/pptx';
 import type { Ref } from 'vue';
 
 import type { RemoteCursor } from '../components/CollaborationCursors.vue';

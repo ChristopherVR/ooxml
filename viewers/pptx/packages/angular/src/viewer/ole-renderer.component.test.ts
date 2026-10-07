@@ -12,7 +12,7 @@ import type { InputSignal } from '@angular/core';
 import type { OlePptxElement, PptxElement } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 
-import { getOleIconShapes } from '../internal/shared';
+import { getOleIconShapes } from 'ooxml-ui/pptx';
 import { OleRendererComponent } from './ole-renderer.component';
 
 function oleElement(overrides: Partial<OlePptxElement> = {}): PptxElement {

@@ -6,5 +6,5 @@
  * binding. This shim preserves the historical Angular import surface so the
  * mobile chrome components and the colocated tests are unchanged.
  */
-export type { MobileSheetKey, ActionDescriptor } from '../internal/shared';
-export { toggleSheet, buildBarActions, sheetAfterNavigate } from '../internal/shared';
+export type { MobileSheetKey, ActionDescriptor } from 'ooxml-ui/pptx';
+export { toggleSheet, buildBarActions, sheetAfterNavigate } from 'ooxml-ui/pptx';

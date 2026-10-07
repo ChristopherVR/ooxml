@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils';
-import { registerPptxWebControls } from 'pptx-viewer-shared';
+import { registerPptxWebControls } from 'ooxml-ui/pptx';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 import ViewSection from './ViewSection.vue';

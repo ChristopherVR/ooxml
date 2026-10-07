@@ -12,7 +12,7 @@ import {
 	isPatternPaint,
 	strokeOutlineViewBox,
 	svgGradientMarkup,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import { createEl, createSvgEl } from '../dom';
 import { buildReflectionMirrorContent } from './reflection-mirror-content';

@@ -1,4 +1,4 @@
-import { createWriteBackScheduler } from 'pptx-viewer-shared';
+import { createWriteBackScheduler } from 'ooxml-ui/pptx';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { buildSaveSlides } from '../../utils/template-editing';

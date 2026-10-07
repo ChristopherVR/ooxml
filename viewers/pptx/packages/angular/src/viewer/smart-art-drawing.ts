@@ -12,7 +12,7 @@
  * the colocated tests are unchanged.
  */
 
-export type { RenderedShape, DrawingViewBox } from '../internal/shared';
+export type { RenderedShape, DrawingViewBox } from 'ooxml-ui/pptx';
 
 export {
 	PALETTES,
@@ -23,4 +23,4 @@ export {
 	computeDrawingViewBox,
 	projectDrawingShapes,
 	styleShadowFilter,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';

@@ -9,7 +9,7 @@
 	 * Every rendered string goes through `sanitizeMathMl` (inside shared's
 	 * `compileEquationTemplateMathMl`) before the `{@html ...}` binding.
 	 */
-	import { compileEquationTemplateMathMl, EQUATION_TEMPLATES } from 'pptx-viewer-shared';
+	import { compileEquationTemplateMathMl, EQUATION_TEMPLATES } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../../i18n/context';
 

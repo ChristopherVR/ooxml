@@ -5,8 +5,8 @@
  * arguments are hidden behind an optional, collapsed "Details" disclosure for
  * power users. Purely presentational.
  */
-import type { ToolActivityIcon } from 'pptx-viewer-shared/ai';
-import { describeToolActivity, summarizeToolArgs, toolLabel } from 'pptx-viewer-shared/ai';
+import type { ToolActivityIcon } from 'ooxml-ui/pptx/ai';
+import { describeToolActivity, summarizeToolArgs, toolLabel } from 'ooxml-ui/pptx/ai';
 import type { ComponentType } from 'react';
 import { useTranslation } from 'react-i18next';
 import {

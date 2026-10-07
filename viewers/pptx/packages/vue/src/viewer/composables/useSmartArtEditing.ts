@@ -19,8 +19,8 @@ import {
 	rebuildDrawingShapesIfCleared,
 	resolvePalette,
 	smartArtLayoutSwitchPatch,
-} from 'pptx-viewer-shared';
-import type { BoundingBox } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { BoundingBox } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
 

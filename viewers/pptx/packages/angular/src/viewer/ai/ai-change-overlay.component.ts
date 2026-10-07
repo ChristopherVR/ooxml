@@ -30,8 +30,8 @@ import {
 	ViewEncapsulation,
 } from '@angular/core';
 
-import { aiChangeAnimationCss, changeGhostStyle } from '../../internal/shared-ai';
-import type { AiChangeBatch, AiElementChange } from '../../internal/shared-ai';
+import { aiChangeAnimationCss, changeGhostStyle } from 'ooxml-ui/pptx/ai';
+import type { AiChangeBatch, AiElementChange } from 'ooxml-ui/pptx/ai';
 import type { StyleMap } from '../element-style';
 
 @Component({

@@ -1,4 +1,4 @@
-import type { ParagraphRun } from 'pptx-viewer-shared';
+import type { ParagraphRun } from 'ooxml-ui/pptx';
 import type React from 'react';
 import { describe, expect, it, vi } from 'vitest';
 

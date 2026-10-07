@@ -11,7 +11,7 @@
  * the flag), so all cross-slide "play across slides" persistent audio stops:
  * a track that spans slides still ends with the show, never after it.
  */
-import { attachPresentationVisibilityPause, stopAllPersistentAudio } from 'pptx-viewer-shared';
+import { attachPresentationVisibilityPause, stopAllPersistentAudio } from 'ooxml-ui/pptx';
 
 export interface ShowVisibilityDeps {
 	/** Read the live `presenting` flag. */

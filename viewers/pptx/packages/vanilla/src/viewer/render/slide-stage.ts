@@ -15,7 +15,7 @@ import type {
 	ElementAnimationState,
 	FieldSubstitutionContext,
 	ZoomNavigationTarget,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	actionAffordanceLabels,
 	applyElementActionAffordances,
@@ -25,7 +25,7 @@ import {
 	isElementRendered,
 	isTemplateElementId,
 	shouldRenderHitTarget,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import { buildActiveXControlsOverlay } from './activex-controls-overlay';

@@ -14,7 +14,7 @@
 	 * per-frame JS. Mirrors the React binding's `FragmentedTransitionLayer.tsx`.
 	 */
 	import type { PptxSlide } from 'pptx-viewer-core';
-	import type { CanvasSize, FragmentedLayer, TransitionFragment } from 'pptx-viewer-shared';
+	import type { CanvasSize, FragmentedLayer, TransitionFragment } from 'ooxml-ui/pptx';
 
 	import SlideStage from '../components/SlideStage.svelte';
 	import { styleToString } from '../style';

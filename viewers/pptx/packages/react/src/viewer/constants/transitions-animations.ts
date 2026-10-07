@@ -15,7 +15,7 @@ import type { AnimationPresetOption } from '../types';
  * bindings' inspector sections read one list; re-exported here to preserve the
  * React package's historical symbol surface.
  */
-export { SLIDE_TRANSITION_OPTIONS } from 'pptx-viewer-shared';
+export { SLIDE_TRANSITION_OPTIONS } from 'ooxml-ui/pptx';
 
 export const ANIMATION_PRESET_OPTIONS: (AnimationPresetOption & { i18nKey: string })[] = [
 	{ value: 'fadeIn', label: 'Fade In', i18nKey: 'pptx.animation.preset.fadeIn' },

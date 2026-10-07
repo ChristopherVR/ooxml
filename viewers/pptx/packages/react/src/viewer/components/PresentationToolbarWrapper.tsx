@@ -5,7 +5,7 @@
  * - Always shows when hovering over the toolbar itself
  * - Uses CSS opacity transitions for smooth fade in/out
  */
-import { PRESENT_TOOLBAR_CLASSES } from 'pptx-viewer-shared';
+import { PRESENT_TOOLBAR_CLASSES } from 'ooxml-ui/pptx';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { AUTO_HIDE_DELAY_MS, isInBottomTriggerZone } from './presentation-toolbar-utils';

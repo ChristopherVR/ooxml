@@ -6,8 +6,8 @@
 	 * (via `ThumbnailRailMenu#menuEntries`); the rows are drawn by the shared
 	 * `pptx-ui-context-menu`.
 	 */
-	import { slidePaneViewItems } from 'pptx-viewer-shared';
-	import type { SlidePaneContextMenuCommandId } from 'pptx-viewer-shared';
+	import { slidePaneViewItems } from 'ooxml-ui/pptx';
+	import type { SlidePaneContextMenuCommandId } from 'ooxml-ui/pptx';
 	import type { PptxSlide } from 'pptx-viewer-core';
 
 	import { useTranslator } from '../../i18n/context';

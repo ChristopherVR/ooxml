@@ -12,13 +12,13 @@
  * Svelte's own concern (each binding wires replay differently).
  */
 import type { InkPptxElement } from 'pptx-viewer-core';
-import type { InkGroupStrokeView, InkStrokeAnimationStyle } from 'pptx-viewer-shared';
+import type { InkGroupStrokeView, InkStrokeAnimationStyle } from 'ooxml-ui/pptx';
 import {
 	buildInkGroupStrokes,
 	DEFAULT_STROKE_COLOR,
 	getInkReplayStyles,
 	inkGroupViewBox,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 /** One rendered ink stroke: a constant-width path, pressure circles, or tilt nib marks. */
 export interface InkStrokeView extends InkGroupStrokeView {

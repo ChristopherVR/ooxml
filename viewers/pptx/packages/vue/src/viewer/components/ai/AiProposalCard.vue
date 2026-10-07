@@ -7,8 +7,8 @@
  * clip. The accept/reject callbacks route through the proposal store.
  */
 import { Check, X } from 'lucide-vue-next';
-import type { ProposalView } from 'pptx-viewer-shared/ai';
-import { humanizeDiffLine } from 'pptx-viewer-shared/ai';
+import type { ProposalView } from 'ooxml-ui/pptx/ai';
+import { humanizeDiffLine } from 'ooxml-ui/pptx/ai';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

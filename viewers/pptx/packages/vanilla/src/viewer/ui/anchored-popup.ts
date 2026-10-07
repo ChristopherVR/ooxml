@@ -1,4 +1,4 @@
-import { computeAnchoredPopupPosition } from 'pptx-viewer-shared';
+import { computeAnchoredPopupPosition } from 'ooxml-ui/pptx';
 
 /**
  * Pins a ribbon dropdown/swatch menu to its trigger with `position: fixed`,

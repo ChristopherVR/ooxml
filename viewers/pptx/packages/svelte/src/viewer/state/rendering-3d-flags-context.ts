@@ -1,4 +1,4 @@
-import type { Rendering3DFlags } from 'pptx-viewer-shared';
+import type { Rendering3DFlags } from 'ooxml-ui/pptx';
 import { getContext, setContext } from 'svelte';
 
 /**

@@ -13,8 +13,8 @@
 		deleteTableStyleFromMap,
 		normalizeTableStyleGuid,
 	} from 'pptx-viewer-core';
-	import type { TableStyleEditorFieldEdit, TableStyleEditorPartId } from 'pptx-viewer-shared';
-	import { applyTableStyleFieldEdit, describeTableStyleEditor, TABLE_STYLE_EDITOR_PARTS } from 'pptx-viewer-shared';
+	import type { TableStyleEditorFieldEdit, TableStyleEditorPartId } from 'ooxml-ui/pptx';
+	import { applyTableStyleFieldEdit, describeTableStyleEditor, TABLE_STYLE_EDITOR_PARTS } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 	import TableStyleEditorFields from './TableStyleEditorFields.svelte';

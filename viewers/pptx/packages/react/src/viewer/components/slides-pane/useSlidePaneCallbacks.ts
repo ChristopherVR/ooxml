@@ -1,4 +1,4 @@
-import { resolveSlidePaneClick } from 'pptx-viewer-shared';
+import { resolveSlidePaneClick } from 'ooxml-ui/pptx';
 import { useCallback, useEffect, useState } from 'react';
 
 import type { SectionContextMenuState, SlideContextMenuState } from './types';

@@ -15,9 +15,9 @@ import type {
 	ViewerCustomizationApi,
 	ViewerFontSource,
 	ViewportFitOptions,
-} from 'pptx-viewer-shared';
-import type { PptxAiConfig } from 'pptx-viewer-shared/ai';
-import type { LocaleCatalogEntry } from 'pptx-viewer-shared/i18n';
+} from 'ooxml-ui/pptx';
+import type { PptxAiConfig } from 'ooxml-ui/pptx/ai';
+import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
 /**
  * UI-related and interaction types for the PowerPoint viewer/editor plugin.
  *
@@ -277,7 +277,7 @@ export interface PowerPointViewerProps extends ViewportFitOptions {
 	/** Callback when active slide changes */
 	onActiveSlideChange?: (slideIndex: number) => void;
 	/** Callback when the viewer mode changes (e.g. edit to present). */
-	onModeChange?: (mode: import('pptx-viewer-shared').ViewerMode) => void;
+	onModeChange?: (mode: import('ooxml-ui/pptx').ViewerMode) => void;
 	/** Callback when the zoom level changes. */
 	onZoomChange?: (zoom: number) => void;
 	/** Callback when element selection changes. */

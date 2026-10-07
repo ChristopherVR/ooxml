@@ -13,7 +13,7 @@ import {
 	resolveTableCellImageUrls,
 	resolveTableStyleImageUrls,
 	resolveTextFillBlipUrls,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 /**
  * Pure async helpers for the load pipeline, ported from the Vue binding's

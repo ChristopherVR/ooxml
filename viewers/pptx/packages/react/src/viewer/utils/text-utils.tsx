@@ -1,5 +1,5 @@
 import { PptxElement, TextSegment, TextStyle, hasTextProperties } from 'pptx-viewer-core';
-import { buildTextBlockStyle } from 'pptx-viewer-shared';
+import { buildTextBlockStyle } from 'ooxml-ui/pptx';
 import React from 'react';
 
 import { cloneTextStyle } from './clone';
@@ -12,7 +12,7 @@ export {
 	toCssTextOrientation,
 	toCssVerticalDirection,
 	isVerticalTextDirection,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 export type ListMode = 'none' | 'bullet' | 'number';
 

@@ -8,7 +8,7 @@
  * back by `inverseScale`, so it stays screen-sized at every zoom without a
  * teleport. Item classes mirror `ContextMenu.vue`.
  */
-import type { EditPointsCommandId, EditPointsMenuView } from 'pptx-viewer-shared';
+import type { EditPointsCommandId, EditPointsMenuView } from 'ooxml-ui/pptx';
 import { useI18n } from 'vue-i18n';
 
 defineProps<{ menu: EditPointsMenuView }>();

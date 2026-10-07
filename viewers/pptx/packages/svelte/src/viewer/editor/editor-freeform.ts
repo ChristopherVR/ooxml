@@ -1,6 +1,6 @@
 import type { ShapePptxElement } from 'pptx-viewer-core';
-import type { InkPoint } from 'pptx-viewer-shared';
-import { buildFreeformShapeElement } from 'pptx-viewer-shared';
+import type { InkPoint } from 'ooxml-ui/pptx';
+import { buildFreeformShapeElement } from 'ooxml-ui/pptx';
 
 /**
  * Turn a completed freehand stroke into a custom-geometry (`a:custGeom`)

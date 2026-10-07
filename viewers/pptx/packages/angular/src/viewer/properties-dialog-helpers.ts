@@ -13,7 +13,7 @@
 
 import type { PptxCoreProperties } from 'pptx-viewer-core';
 
-import { formatIsoDate } from '../internal/shared';
+import { formatIsoDate } from 'ooxml-ui/pptx';
 
 /**
  * Subset of {@link PptxCoreProperties} surfaced by the Properties dialog: the

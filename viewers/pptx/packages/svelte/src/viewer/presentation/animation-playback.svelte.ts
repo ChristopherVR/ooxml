@@ -1,5 +1,5 @@
 import type { PptxSlide } from 'pptx-viewer-core';
-import type { BuildRafHandle, ElementAnimationState, PlaybackContext } from 'pptx-viewer-shared';
+import type { BuildRafHandle, ElementAnimationState, PlaybackContext } from 'ooxml-ui/pptx';
 import {
 	advanceMainSequence,
 	clearPlaybackTimers,
@@ -9,7 +9,7 @@ import {
 	resolveMediaBookmarkTimesMs,
 	resolveMediaTimeNodeElementIds,
 	scheduleAutoAdvanceChain,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import { playAnimationSound, stopAnimationSound } from './animation-sound';
 

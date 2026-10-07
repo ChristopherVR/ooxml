@@ -28,7 +28,7 @@ import type {
 	PptxChartType,
 } from 'pptx-viewer-core';
 
-import { MARKER_SUPPORTED_TYPES, MARKER_SYMBOL_OPTIONS } from '../internal/shared';
+import { MARKER_SUPPORTED_TYPES, MARKER_SYMBOL_OPTIONS } from 'ooxml-ui/pptx';
 import { setSeriesMarker } from './chart-data-helpers';
 import { CHART_EDITOR_STYLES } from './chart-editor-styles';
 import { numFromEvent, selectValue, stringFromEvent } from './chart-event-helpers';

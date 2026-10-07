@@ -12,8 +12,8 @@ import {
 	storePresentationDeck,
 	mergePresentationSnapshot,
 	swapPresentationWindows,
-} from 'pptx-viewer-shared';
-import type { PresentationSnapshot } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { PresentationSnapshot } from 'ooxml-ui/pptx';
 
 export interface PresenterSessionOptions {
 	getSource: () => Uint8Array | ArrayBuffer | null | undefined;

@@ -1,5 +1,5 @@
-import { buildReviewRibbon } from 'pptx-viewer-shared';
-import type { RibbonControlId } from 'pptx-viewer-shared';
+import { buildReviewRibbon } from 'ooxml-ui/pptx';
+import type { RibbonControlId } from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 

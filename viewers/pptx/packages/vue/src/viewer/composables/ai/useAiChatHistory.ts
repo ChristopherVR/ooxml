@@ -5,8 +5,8 @@
  * chats, and swaps the active transcript when the user resumes / starts /
  * clears a chat. Mirrors the React binding's `useAiHistory`.
  */
-import { createAiChatHistoryController } from 'pptx-viewer-shared/ai';
-import type { PptxAiChatStore, PptxAiChatSummary, PptxAiUIMessage } from 'pptx-viewer-shared/ai';
+import { createAiChatHistoryController } from 'ooxml-ui/pptx/ai';
+import type { PptxAiChatStore, PptxAiChatSummary, PptxAiUIMessage } from 'ooxml-ui/pptx/ai';
 import { onBeforeUnmount, ref, watch } from 'vue';
 import type { Ref } from 'vue';
 

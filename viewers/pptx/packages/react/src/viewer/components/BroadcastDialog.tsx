@@ -3,7 +3,7 @@ import {
 	buildBroadcastViewerUrl,
 	generateBroadcastRoomId,
 	resolveTransportForServerUrl,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 /**
  * BroadcastDialog: Modal dialog for starting / managing a live broadcast.
  *

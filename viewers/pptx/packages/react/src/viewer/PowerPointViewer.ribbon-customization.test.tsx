@@ -6,8 +6,8 @@
  * tagged with the catalogue ids, and the handle's `hideRibbonGroup` updates
  * the sheet live.
  */
-import { RIBBON_SCOPE_ATTR } from 'pptx-viewer-shared';
-import { translationsEn } from 'pptx-viewer-shared/i18n';
+import { RIBBON_SCOPE_ATTR } from 'ooxml-ui/pptx';
+import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import React, { act, createRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';

@@ -17,8 +17,8 @@ import {
 	readStoredViewerPrefs,
 	resolveProfileInitial,
 	saveViewerProfile,
-} from 'pptx-viewer-shared';
-import type { ViewerProfile } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { ViewerProfile } from 'ooxml-ui/pptx';
 import { onMounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 

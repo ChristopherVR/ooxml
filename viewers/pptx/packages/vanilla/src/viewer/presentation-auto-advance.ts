@@ -13,7 +13,7 @@
  * binding advances a deck at exactly the moment every other binding does.
  */
 import type { PptxPresentationProperties, PptxSlide } from 'pptx-viewer-core';
-import { resolveAutoAdvanceDelayMs } from 'pptx-viewer-shared';
+import { resolveAutoAdvanceDelayMs } from 'ooxml-ui/pptx';
 
 /** The slice of viewer state the scheduler reads. */
 export interface AutoAdvanceState {

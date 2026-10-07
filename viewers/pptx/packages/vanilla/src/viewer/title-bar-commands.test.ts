@@ -1,4 +1,4 @@
-import { COMMAND_SEARCH_ENTRIES } from 'pptx-viewer-shared';
+import { COMMAND_SEARCH_ENTRIES } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { EditActions } from './editor/editor-edit-ops';

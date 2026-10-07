@@ -11,7 +11,7 @@
  * aligned page number). Used inside `SlideTextRun`'s span / anchor / ruby base
  * text, so all three carry the same content logic.
  */
-import type { ParagraphRun } from 'pptx-viewer-shared';
+import type { ParagraphRun } from 'ooxml-ui/pptx';
 
 const props = defineProps<{ run: ParagraphRun }>();
 </script>

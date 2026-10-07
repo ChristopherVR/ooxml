@@ -5,8 +5,8 @@ import {
 	getConnectorEndpointHandles,
 	resolveConnectorEndpointUpdate,
 	withConnectorEndpointUpdate,
-} from 'pptx-viewer-shared';
-import type { ConnectorEndpointKind } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { ConnectorEndpointKind } from 'ooxml-ui/pptx';
 
 import type { Store, ViewerState } from '../state';
 import { getActiveElements, replaceActiveElements } from './editor-active-elements';

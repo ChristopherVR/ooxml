@@ -1,5 +1,5 @@
 import type { PptxSlide } from 'pptx-viewer-core';
-import { toggleSheet } from 'pptx-viewer-shared';
+import { toggleSheet } from 'ooxml-ui/pptx';
 import React from 'react';
 
 import type { EditorOperationsResult } from '../../hooks/useEditorOperations';

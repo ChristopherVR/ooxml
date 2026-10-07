@@ -11,4 +11,4 @@ export {
 	buildContentPartStrokes,
 	contentPartViewBox,
 	type ContentPartStrokeView,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

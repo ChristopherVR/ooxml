@@ -4,12 +4,12 @@ import {
 	overlayInlineTextSnapshot,
 	overlayMasterViewInlineSnapshot,
 	remapTextToSegments,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type {
 	InlineTextEditSnapshot,
 	MasterViewDocument,
 	MasterViewTarget,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 interface InlineSaveDocument extends MasterViewDocument {
 	slides: PptxSlide[];

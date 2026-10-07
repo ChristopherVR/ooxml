@@ -3,7 +3,7 @@
 	import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
 	import LockKeyhole from '@lucide/svelte/icons/lock-keyhole';
 	import X from '@lucide/svelte/icons/x';
-	import { getPasswordStrength, validatePasswordPair } from 'pptx-viewer-shared';
+	import { getPasswordStrength, validatePasswordPair } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../../i18n/context';
 

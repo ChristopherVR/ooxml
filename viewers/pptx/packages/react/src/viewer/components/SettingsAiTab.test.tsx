@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import type { PptxAiChatStore, PptxAiStoredChat } from 'pptx-viewer-shared/ai';
+import type { PptxAiChatStore, PptxAiStoredChat } from 'ooxml-ui/pptx/ai';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';

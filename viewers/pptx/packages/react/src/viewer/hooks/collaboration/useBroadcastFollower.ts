@@ -7,7 +7,7 @@
  *
  * @module collaboration/useBroadcastFollower
  */
-import { shouldAutoFollowBroadcaster } from 'pptx-viewer-shared';
+import { shouldAutoFollowBroadcaster } from 'ooxml-ui/pptx';
 import { useEffect, useRef } from 'react';
 
 import type { CollaborationContextValue } from './types';

@@ -14,6 +14,6 @@ export {
 	RULER_THICKNESS,
 	RULER_FONT_SIZE,
 	rulerDragToGuidePosition,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
-export type { RulerUnit, Tick } from 'pptx-viewer-shared';
+export type { RulerUnit, Tick } from 'ooxml-ui/pptx';

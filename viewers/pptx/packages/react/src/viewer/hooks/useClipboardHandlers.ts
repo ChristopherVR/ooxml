@@ -7,7 +7,7 @@
  * payload building + paste cloning (fresh template-aware ids, cascade offset).
  */
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
-import { buildElementClipboardPayload, cloneElementForPaste } from 'pptx-viewer-shared';
+import { buildElementClipboardPayload, cloneElementForPaste } from 'ooxml-ui/pptx';
 
 import type { ClipboardHandlers } from './element-manipulation-types';
 import type { EditorHistoryResult } from './useEditorHistory';

@@ -9,14 +9,14 @@
 		customizeOptionsTabs,
 		isOptionsPageVisible,
 		resolveViewerAddinStatus,
-	} from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
 	import type {
 		ThemeCatalogEntry,
 		ViewerOptions,
 		ViewerOptionsSection,
 		ViewerOptionsTabId,
-	} from 'pptx-viewer-shared';
-	import type { LocaleCatalogEntry } from 'pptx-viewer-shared/i18n';
+	} from 'ooxml-ui/pptx';
+	import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
 	import { useTranslator } from '../../i18n/context';
 	import { useViewerCustomization } from '../state/viewer-customization.svelte';
 	import type { ViewerOptionsState } from '../state/viewer-options.svelte';

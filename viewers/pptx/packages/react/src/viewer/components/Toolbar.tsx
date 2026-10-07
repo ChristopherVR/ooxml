@@ -1,4 +1,4 @@
-import { attachRibbonOverflow, homeLaunchers, isPanelVisible } from 'pptx-viewer-shared';
+import { attachRibbonOverflow, homeLaunchers, isPanelVisible } from 'ooxml-ui/pptx';
 import React, { useCallback, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 

@@ -5,8 +5,8 @@
 	 * file under the repo's file-size budget; state stays owned by the viewer's
 	 * composition bag.
 	 */
-	import { isActionHidden } from 'pptx-viewer-shared';
-	import type { CollaborationConfig, ToolbarActionId } from 'pptx-viewer-shared';
+	import { isActionHidden } from 'ooxml-ui/pptx';
+	import type { CollaborationConfig, ToolbarActionId } from 'ooxml-ui/pptx';
 
 	import CollaborationStatusIndicator from '../collab/components/CollaborationStatusIndicator.svelte';
 	import type { ViewerStateBag } from '../state/create-viewer-state-types';

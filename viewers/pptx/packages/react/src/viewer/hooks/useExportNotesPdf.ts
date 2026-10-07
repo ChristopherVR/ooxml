@@ -4,7 +4,7 @@ import {
 	isExportAbortError,
 	slideProgressPercent,
 	slideStatusLabel,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { useCallback } from 'react';
 
 import { exportAllSlidesAsNotesPdf } from '../utils/export';

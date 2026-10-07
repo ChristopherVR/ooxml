@@ -8,8 +8,8 @@
  * `pointer-events: none` so normal selection/drag works. The in-progress stroke
  * is drawn live. Vue counterpart of React's `canvas/DrawingOverlaySvg`.
  */
-import type { InkPoint, InkStrokeView } from 'pptx-viewer-shared';
-import { buildLiveInkStrokeView, pointFromPointerEvent } from 'pptx-viewer-shared';
+import type { InkPoint, InkStrokeView } from 'ooxml-ui/pptx';
+import { buildLiveInkStrokeView, pointFromPointerEvent } from 'ooxml-ui/pptx';
 import { computed, ref } from 'vue';
 
 import type { CanvasSize } from '../types';

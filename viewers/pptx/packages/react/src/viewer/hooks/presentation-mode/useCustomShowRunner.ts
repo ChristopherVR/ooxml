@@ -1,5 +1,5 @@
 import type { PptxSlide } from 'pptx-viewer-core';
-import { firstShowSlideIndex, resolveShowSlideIndexes } from 'pptx-viewer-shared';
+import { firstShowSlideIndex, resolveShowSlideIndexes } from 'ooxml-ui/pptx';
 import { useRef } from 'react';
 
 /**

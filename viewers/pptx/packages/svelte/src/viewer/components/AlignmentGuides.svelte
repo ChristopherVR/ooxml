@@ -18,7 +18,7 @@
 	 * with no keyboard-reachable delete was a real accessibility gap, not scope
 	 * creep, so it stays here for Svelte too.
 	 */
-	import type { Guide } from 'pptx-viewer-shared';
+	import type { Guide } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 

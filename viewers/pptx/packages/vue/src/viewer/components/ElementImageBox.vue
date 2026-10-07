@@ -16,7 +16,7 @@ import {
 	getImageOverflow,
 	getImageTilingStyle,
 	resolveShapeGeometry,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type { CSSProperties } from 'vue';
 import { computed } from 'vue';
 

@@ -1,4 +1,4 @@
-import { registerPptxWebControls } from 'pptx-viewer-shared';
+import { registerPptxWebControls } from 'ooxml-ui/pptx';
 // @vitest-environment happy-dom
 /**
  * Home > Paragraph and Editing: the shared strips reflect state; this binding

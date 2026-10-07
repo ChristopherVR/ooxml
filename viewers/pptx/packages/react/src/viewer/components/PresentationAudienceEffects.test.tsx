@@ -10,7 +10,7 @@
  * hanging `pointer-events: none` on the wrapper rather than on each sheet,
  * which is easy to lose in a refactor: hence this guard.
  */
-import type { PresentationSnapshot } from 'pptx-viewer-shared';
+import type { PresentationSnapshot } from 'ooxml-ui/pptx';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 

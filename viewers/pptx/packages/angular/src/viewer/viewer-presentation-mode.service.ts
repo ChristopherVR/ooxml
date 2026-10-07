@@ -19,7 +19,7 @@
 
 import { inject, Injectable, signal } from '@angular/core';
 
-import type { AuthoredSlideRange } from '../internal/shared';
+import type { AuthoredSlideRange } from 'ooxml-ui/pptx';
 import type { SlideAnnotationMap } from './presentation-annotations-helpers';
 import { endShowMediaCleanup } from './presentation-overlay-helpers';
 import { PresenterWindowService } from './presenter-window.service';

@@ -115,7 +115,7 @@ const { rasterizeElement, rasterizeElementTiledToCanvas, rasterizeElementTiles }
 	}),
 );
 
-vi.mock(import('pptx-viewer-shared'), async (importOriginal) => {
+vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => {
 	const actual = await importOriginal();
 	return { ...actual, rasterizeElement, rasterizeElementTiledToCanvas, rasterizeElementTiles };
 });

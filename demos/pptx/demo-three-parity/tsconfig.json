@@ -22,8 +22,8 @@
 			"pptx-viewer-core/math": ["../../../viewers/pptx/packages/core/src/math/index.ts"],
 			"pptx-viewer-core/text": ["../../../viewers/pptx/packages/core/src/text/index.ts"],
 			"pptx-viewer-core": ["../../../viewers/pptx/packages/core/src/index.ts"],
-			"pptx-viewer-shared": ["../../../viewers/pptx/packages/shared/src/index.ts"],
-			"pptx-viewer-shared/*": ["../../../viewers/pptx/packages/shared/src/*"],
+			"pptx-viewer-shared": ["../../../src/ui/src/pptx/index.ts"],
+			"pptx-viewer-shared/*": ["../../../src/ui/src/pptx/*"],
 			"pptx-viewer-locales": ["../../../viewers/pptx/packages/locales/src/index.ts"],
 			"pptx-viewer-locales/*": ["../../../viewers/pptx/packages/locales/src/*"]
 		}

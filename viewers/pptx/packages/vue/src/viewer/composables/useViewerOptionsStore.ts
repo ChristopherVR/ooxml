@@ -1,5 +1,5 @@
-import type { ViewerOptions, ViewerOptionsStore } from 'pptx-viewer-shared';
-import { createViewerOptionsStore, resolveScreenTip } from 'pptx-viewer-shared';
+import type { ViewerOptions, ViewerOptionsStore } from 'ooxml-ui/pptx';
+import { createViewerOptionsStore, resolveScreenTip } from 'ooxml-ui/pptx';
 import { onScopeDispose, provide, shallowRef } from 'vue';
 import type { InjectionKey, ShallowRef } from 'vue';
 

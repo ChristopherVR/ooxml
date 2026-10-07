@@ -33,7 +33,7 @@ import type {
 	ReadOnlyBannerRequestEvent,
 	ReadOnlyBannerViewState,
 	ReadOnlyRecommendationKind,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import type { ModifyPasswordErrorReason } from './load-notices.service';
 import { translationsSignal } from './translations-signal';
 

@@ -12,7 +12,7 @@ import {
 	ACTION_INDICATOR_CLASS,
 	LINK_TOOLTIP_CLASS,
 	LINK_TOOLTIP_HOST_CLASS,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 
 import { createTranslator } from '../i18n';

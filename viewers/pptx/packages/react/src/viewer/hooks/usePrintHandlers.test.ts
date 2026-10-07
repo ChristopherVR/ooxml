@@ -2,7 +2,7 @@
    (many independent short-lived `const`s per test case); merging them isn't a
    style choice here. */
 import type { PptxHandoutMaster, PptxSlide } from 'pptx-viewer-core';
-import { buildHandoutsHtml, computeColorFilter, computeSlideIndices } from 'pptx-viewer-shared';
+import { buildHandoutsHtml, computeColorFilter, computeSlideIndices } from 'ooxml-ui/pptx';
 import { describe, it, expect, vi, expectTypeOf } from 'vitest';
 
 import { escapeHtml } from '../utils/dom-helpers';

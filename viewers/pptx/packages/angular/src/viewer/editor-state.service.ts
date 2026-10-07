@@ -29,9 +29,9 @@ import {
 	rerouteConnectorsForMovedElements,
 	slideSpaceElement,
 	templateSchemeFromTheme,
-} from '../internal/shared';
-import type { PasteSpecialFormat, SlideTemplateId } from '../internal/shared';
-import { translationsEn } from '../internal/shared-src/i18n';
+} from 'ooxml-ui/pptx';
+import type { PasteSpecialFormat, SlideTemplateId } from 'ooxml-ui/pptx';
+import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import { computeAlign, computeDistribute } from './align-distribute';
 import type { AlignMode, DistributeMode } from './align-distribute';
 import { EditorHistory } from './editor-history';

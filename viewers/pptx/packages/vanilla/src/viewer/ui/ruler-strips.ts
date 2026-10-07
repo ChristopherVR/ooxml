@@ -1,10 +1,10 @@
-import type { CanvasSize, RulerUnit } from 'pptx-viewer-shared';
+import type { CanvasSize, RulerUnit } from 'ooxml-ui/pptx';
 import {
 	generateTicks,
 	RULER_FONT_SIZE,
 	RULER_THICKNESS,
 	rulerDragToGuidePosition,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import { createEl, createSvgEl, setSvgAttrs } from '../render';
 

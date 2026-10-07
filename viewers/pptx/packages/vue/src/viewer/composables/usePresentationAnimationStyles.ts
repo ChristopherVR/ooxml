@@ -1,4 +1,4 @@
-import { PRESENTATION_ANIM_TRIGGER_ATTRIBUTE } from 'pptx-viewer-shared';
+import { PRESENTATION_ANIM_TRIGGER_ATTRIBUTE } from 'ooxml-ui/pptx';
 /**
  * usePresentationAnimationStyles: pushes each element's native-animation state
  * onto its rendered DOM node, and routes the two pointer triggers

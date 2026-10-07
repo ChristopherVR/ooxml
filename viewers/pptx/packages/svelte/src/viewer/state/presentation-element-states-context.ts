@@ -1,4 +1,4 @@
-import type { ElementAnimationState } from 'pptx-viewer-shared';
+import type { ElementAnimationState } from 'ooxml-ui/pptx';
 import { getContext, setContext } from 'svelte';
 
 /**
