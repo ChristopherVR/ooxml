@@ -8,6 +8,7 @@ export {
 export { TeamsSettings, defineTeamsSettings, parseIceLines } from './teams-settings.js';
 export { TeamsController } from './controller.js';
 export { TeamsChannelTab, defineTeamsChannelTab } from './channel-tab.js';
+export { TeamsFilesPanel, defineTeamsFilesPanel } from './files-panel.js';
 export {
 	TeamsContentPreview,
 	defineTeamsContentPreview,

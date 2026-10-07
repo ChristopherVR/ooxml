@@ -25,6 +25,13 @@ There is no coediting, overwrite or versioned save-back. PowerPoint needs a
 host-configured embedded viewer page. Missing integrations are reported in the pane.
 Text reads are limited to 2 MiB and native Office reads to 32 MiB.
 
+Files views support direct upload, blank Excel creation and metadata search when
+storage is configured. Uploads show a busy state and allow retry, with no byte
+progress or cancellation. Failed batches can leave unreferenced storage objects;
+the reference server has no cleanup contract for these objects. Folders, document
+content indexing, file version history and authenticated file permissions are
+not implemented.
+
 Markdown supports headings, bullets, quotes, fenced code, basic emphasis and web
 links. It does not yet implement full CommonMark/GFM, tables, task lists, nested
 structures or relative links. Raw HTML is displayed as text.

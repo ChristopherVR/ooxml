@@ -9,20 +9,20 @@ No feature is considered equivalent solely because a control is present.
 
 ## Current coverage
 
-| Area                            | Evidence in the implementation                                                    | Remaining work                                                                                              |
-| ------------------------------- | --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| Channels and posts              | Yjs channel/message model, replies, reactions, author-side edit/delete checks     | Teams hierarchy, private/shared channels, membership enforcement, threaded side pane, moderation            |
-| Direct and group chats          | The channel model has a `direct` kind                                             | No participant-scoped chat workflow or server-enforced privacy                                              |
-| Search and unread               | Message search, per-channel local read markers                                    | File search, filters, mentions, activity feed, notifications, shared read receipts                          |
-| Presence                        | Awareness, availability and typing                                                | Authenticated identity, idle state, richer status and privacy controls                                      |
-| Meetings                        | Prejoin, microphone, camera, screen share, raised hand, mesh WebRTC               | Scheduling, invitations, SFU, lobby, host roles, recording, captions, backgrounds and large calls           |
-| File sharing                    | Upload adapter, file cards, Files views, signed download links                    | Permissions, versions, folders, durable local-mode sharing and upload progress                              |
-| Office content                  | Native Word, Excel and Visio previews; XLSX local editing and channel save copies | PowerPoint default renderer, coediting, write-back/version conflict handling and fidelity acceptance corpus |
-| Markdown                        | Safe block and flat inline subset added in this change                            | Full CommonMark/GFM, tables, task lists, nested structure and relative links                                |
-| Sites and web apps              | Sandboxed HTML/site previews and shared file/website channel tabs                 | App permissions, approved origins, app messaging and authentication                                         |
-| Accounts and administration     | Reference server has optional shared token and origin allowlist                   | User accounts, SSO, tenant/team/channel ACLs, guests, audit, retention and policy enforcement               |
-| Bindings                        | Six lifecycle bindings share `TeamsProps` and the same app                        | Framework-by-framework browser acceptance for the new embedding prop                                        |
-| Accessibility and visual parity | Existing Lit controls and token styles                                            | Keyboard/focus review, screen-reader acceptance, responsive/mobile workflow coverage, reference screenshots |
+| Area                            | Evidence in the implementation                                                                         | Remaining work                                                                                              |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| Channels and posts              | Yjs channel/message model, replies, reactions, author-side edit/delete checks                          | Teams hierarchy, private/shared channels, membership enforcement, threaded side pane, moderation            |
+| Direct and group chats          | The channel model has a `direct` kind                                                                  | No participant-scoped chat workflow or server-enforced privacy                                              |
+| Search and unread               | Message search, attachment metadata search, per-channel local read markers                             | Indexed file contents, filters, mentions, activity feed, notifications, shared read receipts                |
+| Presence                        | Awareness, availability and typing                                                                     | Authenticated identity, idle state, richer status and privacy controls                                      |
+| Meetings                        | Prejoin, microphone, camera, screen share, raised hand, mesh WebRTC                                    | Scheduling, invitations, SFU, lobby, host roles, recording, captions, backgrounds and large calls           |
+| File sharing                    | Direct uploads with retry, workbook creation, Files views, unique storage names, signed download links | Permissions, versions, folders, durable local-mode sharing, byte progress and cancellation                  |
+| Office content                  | Native Word, Excel and Visio previews; XLSX local editing and channel save copies                      | PowerPoint default renderer, coediting, write-back/version conflict handling and fidelity acceptance corpus |
+| Markdown                        | Safe block and flat inline subset added in this change                                                 | Full CommonMark/GFM, tables, task lists, nested structure and relative links                                |
+| Sites and web apps              | Sandboxed HTML/site previews and shared file/website channel tabs                                      | App permissions, approved origins, app messaging and authentication                                         |
+| Accounts and administration     | Reference server has optional shared token and origin allowlist                                        | User accounts, SSO, tenant/team/channel ACLs, guests, audit, retention and policy enforcement               |
+| Bindings                        | Six lifecycle bindings share `TeamsProps` and the same app                                             | Framework-by-framework browser acceptance for the new embedding prop                                        |
+| Accessibility and visual parity | Existing Lit controls and token styles                                                                 | Keyboard/focus review, screen-reader acceptance, responsive/mobile workflow coverage, reference screenshots |
 
 ## First implemented slice: content previews
 
@@ -99,13 +99,36 @@ replacing the component, identity or workspace configuration.
 Evidence: core tab merge/snapshot and upload tests; UI lifecycle tests; browser
 tests with two same-browser clients adding, renaming and removing a website tab;
 and an actual XLSX fixture edited, saved, parsed and reopened, including upload
-failure/retry and editing during upload. Browser coverage currently uses vanilla;
-the six bindings share the app and are built/typechecked, but are not each tested
-against this workflow in a browser.
+failure/retry and editing during upload. The six workflow specs now run against
+each of vanilla, React, Vue, Angular, Svelte and Solid with
+`bun run test:browser:bindings` in `viewers/teams` (36 passing browser checks).
+The suite uses local mode and test upload adapters; it is not evidence of
+authenticated remote coediting or renderer fidelity across all files.
 
 Microsoft Teams supports editing and coediting files from channel tabs and uses
 SharePoint-backed channel folders. Save copies are an incremental OpenTeams
 workflow, not evidence of matching those collaboration or storage semantics.
+
+## Third implemented slice: creating, uploading and finding files
+
+The channel and workspace Files views now offer **Upload files**, **New Excel
+workbook** and file search by name, author, channel and type. New files target
+the channel named beside the controls. Workbook creation delegates to the
+SpreadsheetML engine, stores a real blank XLSX, posts it in the captured channel
+and opens it locally. Existing same-name files keep their own storage URLs.
+
+Uploads and new workbooks require configured storage. Failures retain the selected
+files for retry, with the original destination named in the error. Uploaded batches
+are posted only when every upload succeeds; a failed batch can leave unreferenced
+storage objects and currently has no server cleanup contract. The size limit is
+32 MiB per file, with at most 20 files in a batch. This implementation reports a
+busy state, not byte-level progress or cancellation. File search covers loaded
+attachment metadata, not indexed document contents or folders.
+
+Message attachments now also keep their original channel and reply target while
+uploads are pending, without clearing a newer reply started in another channel.
+Browser evidence covers workbook creation, same-name upload preservation, upload
+failure/retry, file search and opening uploaded Markdown bytes.
 
 ## Next releasable slices
 

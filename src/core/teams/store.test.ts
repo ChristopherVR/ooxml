@@ -1,5 +1,5 @@
 import { createTeamsClient, type TeamsClient } from './store.js';
-import { searchMessages, channelViews, filesOf } from './view.js';
+import { searchMessages, channelViews, filesOf, filterFiles } from './view.js';
 import type { Channel, Message } from './model.js';
 
 const tick = (ms = 0): Promise<void> => new Promise((r) => setTimeout(r, ms));
@@ -14,6 +14,35 @@ afterEach(() => {
 });
 
 describe('teams client', () => {
+	it('keeps a pending attachment message and reply in its original channel', async () => {
+		let finish!: (result: { url: string }) => void;
+		const a = make('ada', 'store-captured-send', {
+			uploadFile: () => new Promise<{ url: string }>((resolve) => (finish = resolve)),
+		});
+		a.createChannel('Source');
+		await tick();
+		const source = a.getState().selectedChannelId;
+		const message = a.workspace.chat.post(source, { text: 'Original discussion' })!;
+		a.startReply(message.id);
+		const pending = a.send({
+			text: 'Attached budget',
+			files: [Object.assign(new Blob(['xlsx']), { name: 'Budget.xlsx' })],
+		});
+		a.createChannel('Other');
+		await tick();
+		const other = a.getState().selectedChannelId;
+		const reply = a.workspace.chat.post(other, { text: 'Other discussion' })!;
+		a.startReply(reply.id);
+		finish({ url: 'https://files.test/Budget.xlsx' });
+		await pending;
+		await tick();
+		expect(a.workspace.chat.messages(source).at(-1)).toMatchObject({
+			text: 'Attached budget',
+			replyTo: message.id,
+		});
+		expect(a.workspace.chat.messages(other)).toHaveLength(1);
+		expect(a.getState().replyingTo?.id).toBe(reply.id);
+	});
 	it('shares tabs while leaving each client selection local', async () => {
 		const a = make('ada', 'store-tabs');
 		const b = make('bob', 'store-tabs');
@@ -237,6 +266,30 @@ describe('teams client', () => {
 });
 
 describe('view projections', () => {
+	it('filters files by all search words without changing the source ordering', () => {
+		const files = [
+			{
+				name: 'Budget.xlsx',
+				kind: 'xlsx' as const,
+				author: 'Ada',
+				channelName: 'Finance',
+				ts: 2,
+				messageId: 'a',
+			},
+			{
+				name: 'Notes.md',
+				kind: 'other' as const,
+				author: 'Bob',
+				channelName: 'Finance',
+				ts: 1,
+				messageId: 'b',
+			},
+		];
+		expect(filterFiles(files, 'BUDGET ada')).toEqual([files[0]]);
+		expect(filterFiles(files, 'finance')).toEqual(files);
+		expect(filterFiles(files, 'budget bob')).toEqual([]);
+		expect(filterFiles(files, '  ')).toEqual(files);
+	});
 	const ch = (id: string, archived = false): Channel => ({
 		id,
 		name: id,

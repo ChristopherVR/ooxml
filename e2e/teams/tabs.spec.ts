@@ -14,6 +14,10 @@ test('channel website tabs synchronize while selection and open copies stay loca
 	const peer = await context.newPage();
 	await peer.goto(`/?local=1&name=Bob&room=${room}`);
 	await peer.locator('teams-app').evaluate((element) => ((element as TeamsApp).userId = 'bob'));
+	await peer
+		.locator('office-ui-channel-list')
+		.getByRole('button', { name: 'Project', exact: true })
+		.click();
 	await expect(peer.getByRole('heading', { name: '# Project' })).toBeVisible();
 	await page.getByRole('button', { name: 'Add tab', exact: true }).click();
 	await page.getByRole('textbox', { name: 'Tab name', exact: true }).fill('Project site');

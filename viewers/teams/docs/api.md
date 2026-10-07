@@ -12,7 +12,7 @@ Every binding wraps the same `<teams-app>` custom element. The bindings forward 
 | `config`        | `server-config` | `{ mode: 'local' \| 'server', syncUrl?, signalingUrl?, iceServers, iceTransportPolicy?, token? }`. The attribute takes JSON. |
 | `uploadFile`    |                 | Where attachments go; defaults to the server's `/files` endpoint.                                                            |
 | `openers`       |                 | Per-Office-type handlers (`docx`, `xlsx`, `pptx`, `vsdx`).                                                                   |
-| `embeds`        |                 | Per-file-kind callbacks returning a sandbox-compatible viewer page URL; useful for PowerPoint.                              |
+| `embeds`        |                 | Per-file-kind callbacks returning a sandbox-compatible viewer page URL; useful for PowerPoint.                               |
 | `client` (read) |                 | The core client behind the element (state in, actions out).                                                                  |
 
 Leave `config` out and the element offers a settings dialog (remembered in this browser) or runs in local mode.
@@ -73,6 +73,24 @@ await teams.saveFileCopy(channelId, file);
 the channel captured when opening. `previewContent` also accepts this field when
 a host wants to enable channel save copies. Ownership checks require server-side
 authorization before they can be treated as access control.
+
+## File creation, upload and search
+
+Both Files views offer upload, blank Excel workbook creation and search. Uploads
+and new workbooks target the selected channel, which is named beside the controls.
+They need configured storage; failures can be retried in the original channel.
+Same-name files use separate storage URLs. Uploads accept up to 20 files of 32 MiB
+each; the UI reports activity but does not offer byte progress or cancellation.
+
+```ts
+await teams.uploadFiles(channelId, files);
+const workbook = await teams.createWorkbook(channelId, 'Budget'); // Budget.xlsx
+```
+
+Creation posts an attachment backed by a real XLSX file. Search filters the loaded
+metadata by file name, author, channel and recognized kind. It does not search
+inside file contents. These actions capture the explicit channel before asynchronous
+creation or upload, so selecting another channel cannot redirect the result.
 
 ## Events
 

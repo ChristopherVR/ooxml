@@ -9,7 +9,7 @@ import { Emitter } from '../collab/emitter.js';
 import type { ConnectionStatus } from '../collab/provider.js';
 import type { CallParticipant, CallSession, MediaDevicesLike } from './call.js';
 import type { Attachment, Channel, Message } from './model.js';
-import { sanitizeAttachment, sanitizeChannelName } from './model.js';
+import { createFileActions } from './files.js';
 import type { ChannelTab, TabContent } from './tabs.js';
 import type { StreamLike } from './peer.js';
 import {
@@ -108,6 +108,10 @@ export interface TeamsClient {
 	removeTab: (id: string) => boolean;
 	/** Upload a uniquely named copy and post it in the specified channel. Never overwrites the source. */
 	saveFileCopy: (channelId: string, file: UploadableFile & Blob) => Promise<Attachment>;
+	/** Upload files directly into the captured channel under unique storage names. */
+	uploadFiles: (channelId: string, files: (UploadableFile & Blob)[]) => Promise<Attachment[]>;
+	/** Create a blank native Excel workbook and share it in the captured channel. */
+	createWorkbook: (channelId: string, name: string) => Promise<Attachment>;
 	send: (input: { text: string; files?: (UploadableFile & Blob)[] }) => Promise<void>;
 	startReply: (messageId: string) => void;
 	startEdit: (messageId: string) => void;
@@ -398,28 +402,16 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			refresh();
 			return changed;
 		},
-		async saveFileCopy(channelId, file) {
-			if (destroyed || !visibleChannels().some((c) => c.id === channelId))
-				throw new Error('The channel is no longer available');
-			if (!options.uploadFile && !server())
-				throw new Error('Configure file storage before saving a copy');
-			const name = sanitizeChannelName(file.name);
-			if (!name || file.size > 33_554_432)
-				throw new Error('This file cannot be saved to the channel');
-			const ext = name.includes('.') ? `.${name.split('.').pop()}` : '';
-			const unique = Object.assign(new Blob([file], { type: file.type ?? '' }), {
-				name: `copy-${crypto.randomUUID()}${ext}`,
-			});
-			const uploaded = await upload(unique);
-			const attachment = sanitizeAttachment({ ...uploaded, name });
-			if (!attachment?.url) throw new Error('The copy could not be uploaded');
-			if (destroyed || !visibleChannels().some((c) => c.id === channelId))
-				throw new Error('The channel is no longer available; the uploaded copy was not shared');
-			if (!ws.chat.post(channelId, { text: `Saved a copy of ${name}`, attachments: [attachment] }))
-				throw new Error('The copy could not be shared');
-			refresh();
-			return attachment;
-		},
+		...createFileActions({
+			available: (id) => !destroyed && visibleChannels().some((c) => c.id === id),
+			canUpload: () => Boolean(options.uploadFile || server()),
+			upload,
+			post: (channelId, text, attachments) => {
+				const message = ws.chat.post(channelId, { text, attachments });
+				refresh();
+				return Boolean(message);
+			},
+		}),
 		select: act((id) => {
 			if (id === selected) return;
 			selected = id;
@@ -436,6 +428,8 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 		}),
 		async send({ text, files = [] }) {
 			if (!selected) return;
+			const channelId = selected;
+			const replyingTo = replyId;
 			clearTimeout(typingTimer);
 			ws.setTyping(undefined);
 			if (editId) {
@@ -445,8 +439,16 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			}
 			const attachments: Attachment[] = [];
 			for (const file of files) attachments.push(await upload(file));
-			ws.chat.post(selected, { text, ...(replyId ? { replyTo: replyId } : {}), attachments });
-			replyId = '';
+			if (destroyed || !visibleChannels().some((c) => c.id === channelId)) {
+				notice('The channel is no longer available; the message was not shared');
+				return;
+			}
+			ws.chat.post(channelId, {
+				text,
+				...(replyingTo ? { replyTo: replyingTo } : {}),
+				attachments,
+			});
+			if (selected === channelId && replyId === replyingTo) replyId = '';
 			refresh();
 		},
 		startReply: act((id) => {

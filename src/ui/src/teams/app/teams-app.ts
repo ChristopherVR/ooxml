@@ -24,6 +24,7 @@ import {
 	type SaveFileCopy,
 } from './content-preview.js';
 import { defineTeamsChannelTab } from './channel-tab.js';
+import { defineTeamsFilesPanel } from './files-panel.js';
 import { defineTeamsSettings } from './teams-settings.js';
 import {
 	loadConfig,
@@ -143,6 +144,7 @@ export class TeamsApp extends LitElement {
 		defineTeamsSettings();
 		defineTeamsContentPreview();
 		defineTeamsChannelTab();
+		defineTeamsFilesPanel();
 		super.connectedCallback();
 	}
 
@@ -587,7 +589,7 @@ export class TeamsApp extends LitElement {
 							@teams-preview-close=${() => this.selectTab('posts')}
 						></teams-channel-tab>`
 					: this.tab === 'files' && !compact
-						? this.fileList(s.files)
+						? this.fileList(s.files, s)
 						: html`
 								<office-ui-chat-list
 									.messages=${s.messages}
@@ -665,33 +667,16 @@ export class TeamsApp extends LitElement {
 		};
 	}
 
-	private fileList(files: TeamsState['files']) {
-		return html`
-			<ul class="files">
-				${
-					files.length === 0
-						? html`<li class="none">No files shared yet.</li>`
-						: files.map(
-								(f) => html`<li>
-									<span class="badge" data-kind=${f.kind}
-										>${f.kind === 'other' ? 'F' : f.kind[0]!.toUpperCase()}</span
-									>
-									<span class="meta">
-										<strong>${f.name}</strong>
-										<small
-											>${f.author} ·
-											${new Date(f.ts).toLocaleString()}${f.channelName ? ` · # ${f.channelName}` : ''}</small
-										>
-									</span>
-									<button type="button" @click=${() => this.openFile(f)}>Open</button>
-									<button type="button" ?disabled=${!f.url} @click=${() => this.pinFile(f)}>
-										Pin as tab
-									</button>
-								</li>`,
-							)
-				}
-			</ul>
-		`;
+	private fileList(files: TeamsState['files'], state: TeamsState) {
+		return html`<teams-files-panel
+			.client=${this.teams.client}
+			.files=${files}
+			.channelId=${state.selectedChannelId}
+			.channelName=${state.channel?.name ?? ''}
+			.canUpload=${state.canUploadFiles}
+			@teams-files-open=${(event: CustomEvent<{ attachment: OpenFileDetail['attachment'] }>) => void this.openFile(event.detail.attachment)}
+			@teams-files-pin=${(event: CustomEvent<{ attachment: TeamsState['files'][number] }>) => this.pinFile(event.detail.attachment)}
+		></teams-files-panel>`;
 	}
 
 	private allFiles(s: TeamsState) {
@@ -716,7 +701,7 @@ export class TeamsApp extends LitElement {
 					required
 				/><button type="submit">Preview website</button>
 			</form>
-			${this.fileList(s.allFiles)}`;
+			${this.fileList(s.allFiles, s)}`;
 	}
 
 	private meetingView(s: TeamsState) {
