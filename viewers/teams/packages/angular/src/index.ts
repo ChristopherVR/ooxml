@@ -16,6 +16,7 @@ import {
 	defineTeamsApp,
 	listenTeamsEvents,
 	type FileOpeners,
+	type FileEmbeds,
 	type FileUploader,
 	type OpenFileDetail,
 	type TeamsApp,
@@ -37,6 +38,7 @@ export class TeamsWorkspaceComponent implements AfterViewInit, OnChanges, OnDest
 	@Input() config?: TeamsServerConfig | null;
 	@Input() uploadFile?: FileUploader;
 	@Input() openers?: FileOpeners;
+	@Input() embeds?: FileEmbeds;
 	@Output() ready = new EventEmitter<{ user: { id: string; name: string } }>();
 	@Output() openFile = new EventEmitter<{
 		detail: OpenFileDetail;
@@ -56,6 +58,7 @@ export class TeamsWorkspaceComponent implements AfterViewInit, OnChanges, OnDest
 			...(this.config !== undefined ? { config: this.config } : {}),
 			...(this.uploadFile ? { uploadFile: this.uploadFile } : {}),
 			...(this.openers ? { openers: this.openers } : {}),
+			...(this.embeds ? { embeds: this.embeds } : {}),
 			onReady: (d) => this.ready.emit(d),
 			onOpenFile: (detail, event) => this.openFile.emit({ detail, event }),
 			onConfigChange: (d) => this.configChange.emit(d),

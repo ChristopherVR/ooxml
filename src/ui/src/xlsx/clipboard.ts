@@ -6,7 +6,7 @@ import {
 	parseHtmlTable,
 	type CellRange,
 	type ClipboardPayload,
-	type PasteMode,
+	type PasteRequest,
 } from 'ooxml-core/xlsx';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
 
@@ -25,8 +25,8 @@ export interface GridClipboard {
 	copy(cut: boolean): ClipboardPayload | undefined;
 	prepareNativeCopy(cut: boolean): void;
 	writeSystem(cut: boolean): Promise<boolean>;
-	pasteSystem(mode?: PasteMode): Promise<boolean>;
-	paste(data: { html?: string; text?: string }, mode?: PasteMode): boolean;
+	pasteSystem(mode?: PasteRequest): Promise<boolean>;
+	paste(data: { html?: string; text?: string }, mode?: PasteRequest): boolean;
 	clearMarquee(): boolean;
 	internal(): ClipboardPayload | undefined;
 	destroy(): void;
@@ -71,14 +71,19 @@ export function createGridClipboard(host: ClipboardHost): GridClipboard {
 		return true;
 	};
 
-	const apply = (payload: ClipboardPayload | string, mode: PasteMode): boolean => {
+	const apply = (payload: ClipboardPayload | string, mode: PasteRequest): boolean => {
 		const session = ctx.session();
-		const at = ctx.selection.get().ranges[ctx.selection.get().ranges.length - 1]?.start;
+		const at = lastRange();
 		if (!session || !at || ctx.readOnly()) return false;
+		if (ctx.selection.get().ranges.length > 1) {
+			ctx.toast(ctx.t("This action won't work on multiple selections."), 'warning');
+			return false;
+		}
 		try {
+			const wasCut = typeof payload !== 'string' && payload.cut;
 			const range = session.paste(ctx.activeSheet(), at, payload, mode);
 			host.selectRange(range);
-			if (typeof payload !== 'string' && payload.cut) {
+			if (typeof payload !== 'string' && wasCut) {
 				internal = { ...payload, cut: false };
 				clearMarquee();
 			}
@@ -89,7 +94,7 @@ export function createGridClipboard(host: ClipboardHost): GridClipboard {
 		}
 	};
 
-	const paste = (data: { html?: string; text?: string }, mode: PasteMode = 'all'): boolean => {
+	const paste = (data: { html?: string; text?: string }, mode: PasteRequest = 'all'): boolean => {
 		const text = data.text ?? '';
 		if (internal && (text === '' || normalize(text) === normalize(internal.tsv)))
 			return apply(internal, mode);

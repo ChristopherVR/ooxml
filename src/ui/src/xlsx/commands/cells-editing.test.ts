@@ -119,6 +119,42 @@ describe('editing commands', () => {
 		await ctx.commands.run('home.fill-right');
 		expect(value(ctx, 0, 2)).toBe(1);
 	});
+	it.each([
+		['down', 0, 0, 'A1:A3', 2, 0],
+		['right', 0, 0, 'A1:C1', 0, 2],
+		['up', 2, 0, 'A1:A3', 0, 0],
+		['left', 0, 2, 'A1:C1', 0, 0],
+	] as const)(
+		'Fill %s repeats weekday text, formulas and formatting',
+		async (dir, row, col, ref, destRow, destCol) => {
+			const ctx = setup();
+			const session = ctx.session()!;
+			session.setCellValue(0, row, col, 'Monday');
+			ctx.select(ref);
+			await ctx.commands.run(`home.fill-${dir}`);
+			expect(value(ctx, destRow, destCol)).toBe('Monday');
+			session.undo();
+			expect(value(ctx, destRow, destCol)).toBeNull();
+			session.redo();
+			expect(value(ctx, destRow, destCol)).toBe('Monday');
+			session.setCellInput(0, row, col, '=D4+$E$5');
+			const source = { start: { row, col }, end: { row, col } };
+			session.applyStyle(0, [source], { font: { bold: true } });
+			ctx.select(ref);
+			await ctx.commands.run(`home.fill-${dir}`);
+			const sheet = ctx.workbook()!.sheets[0]!;
+			expect(getCell(sheet, destRow, destCol)?.formula).toBe(
+				dir === 'down'
+					? 'D6+$E$5'
+					: dir === 'right'
+						? 'F4+$E$5'
+						: dir === 'up'
+							? 'D2+$E$5'
+							: 'B4+$E$5',
+			);
+			expect(getCell(sheet, destRow, destCol)?.styleId).toBe(getCell(sheet, row, col)?.styleId);
+		},
+	);
 
 	it('clears contents, formats and everything', async () => {
 		const ctx = setup();

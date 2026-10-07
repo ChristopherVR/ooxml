@@ -1,6 +1,7 @@
 import * as Y from 'yjs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { applyUpdateSafe } from './codec.js';
+import { adaptYjsProvider } from './external-provider.js';
 import { createMemoryHub } from './memory-transport.js';
 import { createCollabSession, type CollabSession } from './session.js';
 import { transportProvider } from './transport-provider.js';
@@ -198,6 +199,52 @@ describe('malformed input', () => {
 });
 
 describe('write gating', () => {
+	it('adopts an external provider that completed sync before attachment', () => {
+		const connect = vi.fn();
+		const session = createCollabSession<Cursor>({
+			roomId: 'room-1',
+			user: { name: 'Ada' },
+			heartbeatMs: 0,
+			provider: () =>
+				adaptYjsProvider({
+					on: () => {},
+					off: () => {},
+					wsconnected: true,
+					synced: true,
+					connect,
+				}),
+		});
+		open.push(session);
+		expect(session.canWrite()).toBe(true);
+		expect(connect).not.toHaveBeenCalled();
+	});
+
+	it('resync repairs dropped updates without leaving and reconnect retains document identity', () => {
+		let drop = false;
+		const hub = createMemoryHub({ filter: () => !drop });
+		const a = join(hub, 'Ada');
+		const b = join(hub, 'Bob');
+		drop = true;
+		a.doc.getText('t').insert(0, 'missed');
+		b.doc.getMap('m').set('missed-local', true);
+		expect(b.doc.getText('t').toString()).toBe('');
+		drop = false;
+		expect(b.resync()).toBe(true);
+		expect(b.doc.getText('t').toString()).toBe('missed');
+		expect(a.doc.getMap('m').get('missed-local')).toBe(true);
+		expect(hub.size('room-1')).toBe(2);
+		const doc = b.doc;
+		b.reconnect();
+		expect(b.doc).toBe(doc);
+		expect(b.canWrite()).toBe(true);
+		b.disconnect();
+		expect(b.resync()).toBe(false);
+		b.destroy();
+		b.reconnect();
+		expect(b.resync()).toBe(false);
+		expect(hub.size('room-1')).toBe(1);
+	});
+
 	it('opens the gate on sync, blocks viewers, and falls back to the grace period alone', () => {
 		vi.useFakeTimers();
 		const hub = createMemoryHub();

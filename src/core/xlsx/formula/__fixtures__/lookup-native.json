@@ -1,0 +1,2598 @@
+{
+	"cases": [
+		{
+			"value": 5.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(A7,A1:A6,0,1)"
+		},
+		{
+			"value": 6.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(A7,A1:A6,0,-1)"
+		},
+		{
+			"value": 5.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(A7,A1:A6,0,2)"
+		},
+		{
+			"value": 5.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(A7,A1:A6,-1,1)"
+		},
+		{
+			"value": 6.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(A7,A1:A6,-1,-1)"
+		},
+		{
+			"value": 5.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(A7,A1:A6,-1,2)"
+		},
+		{
+			"value": 5.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(A7,A1:A6,1,1)"
+		},
+		{
+			"value": 6.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(A7,A1:A6,1,-1)"
+		},
+		{
+			"value": 5.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(A7,A1:A6,1,2)"
+		},
+		{
+			"value": 5.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(A7,A1:A6,2,1)"
+		},
+		{
+			"value": 6.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(A7,A1:A6,2,-1)"
+		},
+		{
+			"value": "#VALUE!",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(A7,A1:A6,2,2)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(\"\",A1:A6,0,1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(\"\",A1:A6,0,-1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(\"\",A1:A6,0,2)"
+		},
+		{
+			"value": 2.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(\"\",A1:A6,-1,1)"
+		},
+		{
+			"value": 2.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(\"\",A1:A6,-1,-1)"
+		},
+		{
+			"value": 2.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(\"\",A1:A6,-1,2)"
+		},
+		{
+			"value": 3.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(\"\",A1:A6,1,1)"
+		},
+		{
+			"value": 3.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(\"\",A1:A6,1,-1)"
+		},
+		{
+			"value": 3.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(\"\",A1:A6,1,2)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(\"\",A1:A6,2,1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(\"\",A1:A6,2,-1)"
+		},
+		{
+			"value": "#VALUE!",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(\"\",A1:A6,2,2)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(0,A1:A6,0,1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(0,A1:A6,0,-1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(0,A1:A6,0,2)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(0,A1:A6,-1,1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(0,A1:A6,-1,-1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(0,A1:A6,-1,2)"
+		},
+		{
+			"value": 1.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(0,A1:A6,1,1)"
+		},
+		{
+			"value": 1.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(0,A1:A6,1,-1)"
+		},
+		{
+			"value": 1.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(0,A1:A6,1,2)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(0,A1:A6,2,1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(0,A1:A6,2,-1)"
+		},
+		{
+			"value": "#VALUE!",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(0,A1:A6,2,2)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(2,A1:A6,0,1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(2,A1:A6,0,-1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(2,A1:A6,0,2)"
+		},
+		{
+			"value": 1.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(2,A1:A6,-1,1)"
+		},
+		{
+			"value": 1.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(2,A1:A6,-1,-1)"
+		},
+		{
+			"value": 1.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(2,A1:A6,-1,2)"
+		},
+		{
+			"value": 2.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(2,A1:A6,1,1)"
+		},
+		{
+			"value": 2.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(2,A1:A6,1,-1)"
+		},
+		{
+			"value": 2.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(2,A1:A6,1,2)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(2,A1:A6,2,1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(2,A1:A6,2,-1)"
+		},
+		{
+			"value": "#VALUE!",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(2,A1:A6,2,2)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(4,A1:A6,0,1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(4,A1:A6,0,-1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(4,A1:A6,0,2)"
+		},
+		{
+			"value": 2.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(4,A1:A6,-1,1)"
+		},
+		{
+			"value": 2.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(4,A1:A6,-1,-1)"
+		},
+		{
+			"value": 2.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(4,A1:A6,-1,2)"
+		},
+		{
+			"value": 3.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(4,A1:A6,1,1)"
+		},
+		{
+			"value": 3.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(4,A1:A6,1,-1)"
+		},
+		{
+			"value": 3.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(4,A1:A6,1,2)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(4,A1:A6,2,1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(4,A1:A6,2,-1)"
+		},
+		{
+			"value": "#VALUE!",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(4,A1:A6,2,2)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(\"b\",A1:A6,0,1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(\"b\",A1:A6,0,-1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(\"b\",A1:A6,0,2)"
+		},
+		{
+			"value": 3.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(\"b\",A1:A6,-1,1)"
+		},
+		{
+			"value": 3.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(\"b\",A1:A6,-1,-1)"
+		},
+		{
+			"value": 3.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(\"b\",A1:A6,-1,2)"
+		},
+		{
+			"value": 4.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(\"b\",A1:A6,1,1)"
+		},
+		{
+			"value": 4.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(\"b\",A1:A6,1,-1)"
+		},
+		{
+			"value": 4.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(\"b\",A1:A6,1,2)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(\"b\",A1:A6,2,1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(\"b\",A1:A6,2,-1)"
+		},
+		{
+			"value": "#VALUE!",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(\"b\",A1:A6,2,2)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(TRUE,A1:A6,0,1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(TRUE,A1:A6,0,-1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(TRUE,A1:A6,0,2)"
+		},
+		{
+			"value": 4.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(TRUE,A1:A6,-1,1)"
+		},
+		{
+			"value": 4.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(TRUE,A1:A6,-1,-1)"
+		},
+		{
+			"value": 4.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(TRUE,A1:A6,-1,2)"
+		},
+		{
+			"value": 5.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(TRUE,A1:A6,1,1)"
+		},
+		{
+			"value": 6.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(TRUE,A1:A6,1,-1)"
+		},
+		{
+			"value": 5.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(TRUE,A1:A6,1,2)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(TRUE,A1:A6,2,1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(TRUE,A1:A6,2,-1)"
+		},
+		{
+			"value": "#VALUE!",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(TRUE,A1:A6,2,2)"
+		},
+		{
+			"value": 4.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(FALSE,A1:A6,0,1)"
+		},
+		{
+			"value": 4.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(FALSE,A1:A6,0,-1)"
+		},
+		{
+			"value": 4.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(FALSE,A1:A6,0,2)"
+		},
+		{
+			"value": 4.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(FALSE,A1:A6,-1,1)"
+		},
+		{
+			"value": 4.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(FALSE,A1:A6,-1,-1)"
+		},
+		{
+			"value": 4.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(FALSE,A1:A6,-1,2)"
+		},
+		{
+			"value": 4.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(FALSE,A1:A6,1,1)"
+		},
+		{
+			"value": 4.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(FALSE,A1:A6,1,-1)"
+		},
+		{
+			"value": 4.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(FALSE,A1:A6,1,2)"
+		},
+		{
+			"value": 4.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(FALSE,A1:A6,2,1)"
+		},
+		{
+			"value": 4.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(FALSE,A1:A6,2,-1)"
+		},
+		{
+			"value": "#VALUE!",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(FALSE,A1:A6,2,2)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(\"a*\",A1:A6,0,1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(\"a*\",A1:A6,0,-1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(\"a*\",A1:A6,0,2)"
+		},
+		{
+			"value": 3.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(\"a*\",A1:A6,-1,1)"
+		},
+		{
+			"value": 3.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(\"a*\",A1:A6,-1,-1)"
+		},
+		{
+			"value": 3.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(\"a*\",A1:A6,-1,2)"
+		},
+		{
+			"value": 4.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(\"a*\",A1:A6,1,1)"
+		},
+		{
+			"value": 4.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(\"a*\",A1:A6,1,-1)"
+		},
+		{
+			"value": 4.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(\"a*\",A1:A6,1,2)"
+		},
+		{
+			"value": 3.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(\"a*\",A1:A6,2,1)"
+		},
+		{
+			"value": 3.0,
+			"type": "number",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(\"a*\",A1:A6,2,-1)"
+		},
+		{
+			"value": "#VALUE!",
+			"type": "error",
+			"cells": {
+				"A3": "a",
+				"A1": 1,
+				"A4": false,
+				"A2": 3
+			},
+			"scenario": "ascending mixed values and blank tail",
+			"formula": "XMATCH(\"a*\",A1:A6,2,2)"
+		},
+		{
+			"value": 1.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(A7,A1:A6,0,1)"
+		},
+		{
+			"value": 2.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(A7,A1:A6,0,-1)"
+		},
+		{
+			"value": 2.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(A7,A1:A6,0,-2)"
+		},
+		{
+			"value": 1.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(A7,A1:A6,-1,1)"
+		},
+		{
+			"value": 2.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(A7,A1:A6,-1,-1)"
+		},
+		{
+			"value": 2.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(A7,A1:A6,-1,-2)"
+		},
+		{
+			"value": 1.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(A7,A1:A6,1,1)"
+		},
+		{
+			"value": 2.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(A7,A1:A6,1,-1)"
+		},
+		{
+			"value": 2.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(A7,A1:A6,1,-2)"
+		},
+		{
+			"value": 1.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(A7,A1:A6,2,1)"
+		},
+		{
+			"value": 2.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(A7,A1:A6,2,-1)"
+		},
+		{
+			"value": "#VALUE!",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(A7,A1:A6,2,-2)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(\"\",A1:A6,0,1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(\"\",A1:A6,0,-1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(\"\",A1:A6,0,-2)"
+		},
+		{
+			"value": 5.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(\"\",A1:A6,-1,1)"
+		},
+		{
+			"value": 5.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(\"\",A1:A6,-1,-1)"
+		},
+		{
+			"value": 5.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(\"\",A1:A6,-1,-2)"
+		},
+		{
+			"value": 4.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(\"\",A1:A6,1,1)"
+		},
+		{
+			"value": 4.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(\"\",A1:A6,1,-1)"
+		},
+		{
+			"value": 4.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(\"\",A1:A6,1,-2)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(\"\",A1:A6,2,1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(\"\",A1:A6,2,-1)"
+		},
+		{
+			"value": "#VALUE!",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(\"\",A1:A6,2,-2)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(0,A1:A6,0,1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(0,A1:A6,0,-1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(0,A1:A6,0,-2)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(0,A1:A6,-1,1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(0,A1:A6,-1,-1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(0,A1:A6,-1,-2)"
+		},
+		{
+			"value": 6.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(0,A1:A6,1,1)"
+		},
+		{
+			"value": 6.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(0,A1:A6,1,-1)"
+		},
+		{
+			"value": 6.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(0,A1:A6,1,-2)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(0,A1:A6,2,1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(0,A1:A6,2,-1)"
+		},
+		{
+			"value": "#VALUE!",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(0,A1:A6,2,-2)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(2,A1:A6,0,1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(2,A1:A6,0,-1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(2,A1:A6,0,-2)"
+		},
+		{
+			"value": 6.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(2,A1:A6,-1,1)"
+		},
+		{
+			"value": 6.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(2,A1:A6,-1,-1)"
+		},
+		{
+			"value": 6.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(2,A1:A6,-1,-2)"
+		},
+		{
+			"value": 5.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(2,A1:A6,1,1)"
+		},
+		{
+			"value": 5.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(2,A1:A6,1,-1)"
+		},
+		{
+			"value": 5.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(2,A1:A6,1,-2)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(2,A1:A6,2,1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(2,A1:A6,2,-1)"
+		},
+		{
+			"value": "#VALUE!",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(2,A1:A6,2,-2)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(4,A1:A6,0,1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(4,A1:A6,0,-1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(4,A1:A6,0,-2)"
+		},
+		{
+			"value": 5.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(4,A1:A6,-1,1)"
+		},
+		{
+			"value": 5.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(4,A1:A6,-1,-1)"
+		},
+		{
+			"value": 5.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(4,A1:A6,-1,-2)"
+		},
+		{
+			"value": 4.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(4,A1:A6,1,1)"
+		},
+		{
+			"value": 4.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(4,A1:A6,1,-1)"
+		},
+		{
+			"value": 4.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(4,A1:A6,1,-2)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(4,A1:A6,2,1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(4,A1:A6,2,-1)"
+		},
+		{
+			"value": "#VALUE!",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(4,A1:A6,2,-2)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(\"b\",A1:A6,0,1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(\"b\",A1:A6,0,-1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(\"b\",A1:A6,0,-2)"
+		},
+		{
+			"value": 4.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(\"b\",A1:A6,-1,1)"
+		},
+		{
+			"value": 4.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(\"b\",A1:A6,-1,-1)"
+		},
+		{
+			"value": 4.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(\"b\",A1:A6,-1,-2)"
+		},
+		{
+			"value": 3.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(\"b\",A1:A6,1,1)"
+		},
+		{
+			"value": 3.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(\"b\",A1:A6,1,-1)"
+		},
+		{
+			"value": 3.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(\"b\",A1:A6,1,-2)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(\"b\",A1:A6,2,1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(\"b\",A1:A6,2,-1)"
+		},
+		{
+			"value": "#VALUE!",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(\"b\",A1:A6,2,-2)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(TRUE,A1:A6,0,1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(TRUE,A1:A6,0,-1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(TRUE,A1:A6,0,-2)"
+		},
+		{
+			"value": 3.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(TRUE,A1:A6,-1,1)"
+		},
+		{
+			"value": 3.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(TRUE,A1:A6,-1,-1)"
+		},
+		{
+			"value": 3.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(TRUE,A1:A6,-1,-2)"
+		},
+		{
+			"value": 1.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(TRUE,A1:A6,1,1)"
+		},
+		{
+			"value": 2.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(TRUE,A1:A6,1,-1)"
+		},
+		{
+			"value": 2.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(TRUE,A1:A6,1,-2)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(TRUE,A1:A6,2,1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(TRUE,A1:A6,2,-1)"
+		},
+		{
+			"value": "#VALUE!",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(TRUE,A1:A6,2,-2)"
+		},
+		{
+			"value": 3.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(FALSE,A1:A6,0,1)"
+		},
+		{
+			"value": 3.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(FALSE,A1:A6,0,-1)"
+		},
+		{
+			"value": 3.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(FALSE,A1:A6,0,-2)"
+		},
+		{
+			"value": 3.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(FALSE,A1:A6,-1,1)"
+		},
+		{
+			"value": 3.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(FALSE,A1:A6,-1,-1)"
+		},
+		{
+			"value": 3.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(FALSE,A1:A6,-1,-2)"
+		},
+		{
+			"value": 3.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(FALSE,A1:A6,1,1)"
+		},
+		{
+			"value": 3.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(FALSE,A1:A6,1,-1)"
+		},
+		{
+			"value": 3.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(FALSE,A1:A6,1,-2)"
+		},
+		{
+			"value": 3.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(FALSE,A1:A6,2,1)"
+		},
+		{
+			"value": 3.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(FALSE,A1:A6,2,-1)"
+		},
+		{
+			"value": "#VALUE!",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(FALSE,A1:A6,2,-2)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(\"a*\",A1:A6,0,1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(\"a*\",A1:A6,0,-1)"
+		},
+		{
+			"value": "#N/A",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(\"a*\",A1:A6,0,-2)"
+		},
+		{
+			"value": 4.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(\"a*\",A1:A6,-1,1)"
+		},
+		{
+			"value": 4.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(\"a*\",A1:A6,-1,-1)"
+		},
+		{
+			"value": 4.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(\"a*\",A1:A6,-1,-2)"
+		},
+		{
+			"value": 3.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(\"a*\",A1:A6,1,1)"
+		},
+		{
+			"value": 3.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(\"a*\",A1:A6,1,-1)"
+		},
+		{
+			"value": 3.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(\"a*\",A1:A6,1,-2)"
+		},
+		{
+			"value": 4.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(\"a*\",A1:A6,2,1)"
+		},
+		{
+			"value": 4.0,
+			"type": "number",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(\"a*\",A1:A6,2,-1)"
+		},
+		{
+			"value": "#VALUE!",
+			"type": "error",
+			"cells": {
+				"A3": false,
+				"A4": "a",
+				"A6": 1,
+				"A5": 3
+			},
+			"scenario": "descending mixed values and blank head",
+			"formula": "XMATCH(\"a*\",A1:A6,2,-2)"
+		}
+	],
+	"version": "16.0",
+	"build": 20430.0
+}

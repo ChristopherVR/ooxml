@@ -3,6 +3,7 @@
 // Legacy .xls and CSV loading live in the `xlsx/load` subpath so this entry never pulls in ole2.
 export * from './model.js';
 export * from './address.js';
+export * from './address-r1c1.js';
 export * from './cells.js';
 export * from './workbook.js';
 export * from './styles.js';

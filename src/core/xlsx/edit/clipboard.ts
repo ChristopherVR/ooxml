@@ -20,7 +20,14 @@ import { rewriteFormulas } from './shift-formulas.js';
 import { moveFormula } from './fill.js';
 import type { EditScope } from './history.js';
 import { rangeWithin } from './range-math.js';
-import type { ClipboardCell, ClipboardCells, ClipboardPayload, PasteMode } from './types.js';
+import type {
+	ClipboardCell,
+	ClipboardCells,
+	ClipboardPayload,
+	PasteMode,
+	PasteRequest,
+} from './types.js';
+import { resolvePasteOptions } from './paste-options.js';
 
 /** Copies a range into a self-contained payload (whole rows or columns stop at the used area). */
 export function copyRange(workbook: Workbook, s: number, range: CellRange): ClipboardPayload {
@@ -36,8 +43,14 @@ export function copyRange(workbook: Workbook, s: number, range: CellRange): Clip
 			lastCol = Math.max(lastCol, m.end.col);
 		}
 	const end = {
-		row: Math.max(r.start.row, Math.min(r.end.row, lastRow)),
-		col: Math.max(r.start.col, Math.min(r.end.col, lastCol)),
+		row:
+			r.start.row === 0 && r.end.row === MAX_ROW
+				? Math.max(r.start.row, Math.min(r.end.row, lastRow))
+				: r.end.row,
+		col:
+			r.start.col === 0 && r.end.col === MAX_COL
+				? Math.max(r.start.col, Math.min(r.end.col, lastCol))
+				: r.end.col,
 	};
 	const clipped: CellRange = { start: r.start, end };
 	const rows = end.row - r.start.row + 1;
@@ -103,12 +116,12 @@ export function pasteAt(
 	s: number,
 	at: CellAddress,
 	payload: ClipboardPayload | string,
-	mode: PasteMode,
+	request: PasteRequest,
 ): CellRange {
 	const { workbook } = ctx;
 	const sheet = sheetAt(workbook, s);
 	const cells = typeof payload === 'string' ? cellsFromText(workbook, payload) : payload.cells;
-	const transpose = mode === 'transpose';
+	const { mode, transpose, skipBlanks } = resolvePasteOptions(request);
 	const height = transpose ? cells.cols : cells.rows;
 	const width = transpose ? cells.rows : cells.cols;
 	if (!height || !width) return { start: at, end: at };
@@ -116,6 +129,7 @@ export function pasteAt(
 		throw new RangeError('The paste area extends beyond the sheet.');
 	const dest: CellRange = { start: at, end: { row: at.row + height - 1, col: at.col + width - 1 } };
 	const cut = typeof payload !== 'string' && payload.cut && cells.source ? cells.source : undefined;
+	if (cut && skipBlanks) throw new RangeError('Skip blanks is not available for cut cells.');
 	// A move rewrites references anywhere in the workbook: it records the references that change
 	// (and every sheet's merges) besides the cells it empties and fills.
 	const destCells: EditScope = { kind: 'cells', sheet: s, ranges: [dest] };
@@ -155,6 +169,9 @@ export function pasteAt(
 			for (let r = 0; r < cells.rows; r++)
 				for (let c = 0; c < cells.cols; c++) {
 					const copied = cells.data[r]?.[c] ?? null;
+					// A formula returning empty text is content; a formatted empty cell is blank.
+					if (skipBlanks && (!copied || (copied.value === null && copied.formula === undefined)))
+						continue;
 					// A spilled result is recreated by its pasted anchor; only `values` writes it.
 					const clip =
 						copied?.spilled && mode !== 'values' && mode !== 'formats'
@@ -176,7 +193,7 @@ export function pasteAt(
 									: moveFormula(clip.formula, row - origin.row, col - origin.col);
 					writeClip(workbook, sheet, row, col, clip, mode, formula, styleOf);
 				}
-			if (mode === 'all' || mode === 'transpose' || mode === 'formats') {
+			if (mode === 'all' || mode === 'formats') {
 				sheet.merges = sheet.merges.filter((m) => !rangesIntersect(m, dest));
 				for (const m of cells.merges)
 					sheet.merges.push(

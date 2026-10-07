@@ -365,13 +365,22 @@ jobs:
           # The changed spec files when only specs changed; empty runs every spec.
           SPECS: ${{ fromJSON(needs.plan.outputs.plan).pptx.e2e.specs }}
         run: |
+          retry_args=()
           for attempt in 1 2; do
             # SPECS is a space-separated list of spec file names, split on purpose.
             # shellcheck disable=SC2086
             bun run e2e -- $SPECS --project="$PROJECT" --project="$PROJECT-headless" \
-              --shard="$SHARD/$TOTAL" --workers=2 --reporter=list,html,github && exit 0
+              --shard="$SHARD/$TOTAL" --workers=2 --reporter=list,html,github \
+              "${retry_args[@]}" && exit 0
             status=$?
             echo "::warning::attempt $attempt of $PROJECT shard $SHARD/$TOTAL failed (exit $status)"
+            # Avoid repeating a whole shard when Playwright recorded the failures.
+            # A crash before that report exists still retries the complete shard.
+            if node -e 'try { const run = JSON.parse(require("node:fs").readFileSync("test-results/.last-run.json", "utf8")); process.exit(run.status !== "passed" && run.failedTests?.length > 0 ? 0 : 1); } catch { process.exit(1); }'; then
+              retry_args=(--last-failed)
+            else
+              retry_args=()
+            fi
             sleep 15
           done
           exit $status

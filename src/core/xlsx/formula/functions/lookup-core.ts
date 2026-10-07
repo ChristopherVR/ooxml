@@ -6,7 +6,10 @@ import { hasWildcards, wildcardRegex } from './helpers.js';
 
 /** A lazily read row or column of values. */
 export interface Vector {
+	/** Readable prefix; reference vectors omit their all-blank tail. */
 	length: number;
+	/** Full reference length, including omitted trailing blank cells. */
+	logicalLength?: number;
 	get(index: number): Scalar;
 }
 
@@ -34,11 +37,19 @@ export function line(ctx: CallContext, value: Value, axis: 'row' | 'col', index:
 		if (axis === 'col') {
 			const col = start.col + index;
 			const length = Math.max(0, Math.min(end.row, bounds.rows - 1) - start.row + 1);
-			return { length, get: (i) => ctx.readCell(area.sheet, start.row + i, col) };
+			return {
+				length,
+				logicalLength: end.row - start.row + 1,
+				get: (i) => ctx.readCell(area.sheet, start.row + i, col),
+			};
 		}
 		const row = start.row + index;
 		const length = Math.max(0, Math.min(end.col, bounds.cols - 1) - start.col + 1);
-		return { length, get: (i) => ctx.readCell(area.sheet, row, start.col + i) };
+		return {
+			length,
+			logicalLength: end.col - start.col + 1,
+			get: (i) => ctx.readCell(area.sheet, row, start.col + i),
+		};
 	}
 	const m = value instanceof Matrix ? value : new Matrix([[value as Scalar]]);
 	if (axis === 'col') return { length: m.rows, get: (i) => m.get(i, index) };
@@ -58,13 +69,17 @@ const sameKind = (a: Scalar, b: Scalar): boolean =>
 	(typeof a === 'string' && typeof b === 'string') ||
 	(typeof a === 'boolean' && typeof b === 'boolean');
 
+/** Modern lookup ordering places blank cells after numbers, text and logicals. */
+const compareLookup = (a: Scalar, b: Scalar): number =>
+	a === null ? (b === null ? 0 : 1) : b === null ? -1 : compareScalars(a as never, b as never);
+
 /** An exact-match predicate (case-insensitive text, optional wildcards). */
 export function exactMatcher(lookup: Scalar, wildcards: boolean): (v: Scalar) => boolean {
 	if (typeof lookup === 'string' && wildcards && hasWildcards(lookup)) {
 		const regex = wildcardRegex(lookup);
 		return (v) => typeof v === 'string' && regex.test(v);
 	}
-	if (lookup === null) return (v) => v === null || v === '';
+	if (lookup === null) return (v) => v === null;
 	return (v) =>
 		!isError(v) && v !== null && sameKind(v, lookup) && compareScalars(v, lookup as never) === 0;
 }
@@ -76,11 +91,14 @@ export function findExact(
 	reverse = false,
 ): number {
 	const test = exactMatcher(lookup, wildcards);
+	const logicalLength = vector.logicalLength ?? vector.length;
 	if (reverse) {
+		if (lookup === null && logicalLength > vector.length) return logicalLength - 1;
 		for (let i = vector.length - 1; i >= 0; i--) if (test(vector.get(i))) return i;
 		return -1;
 	}
 	for (let i = 0; i < vector.length; i++) if (test(vector.get(i))) return i;
+	if (lookup === null && logicalLength > vector.length) return vector.length;
 	return -1;
 }
 
@@ -131,32 +149,35 @@ export function findDescending(vector: Vector, lookup: Scalar): number {
 }
 
 /**
- * XMATCH binary search (search_mode 2 / -2), which compares across types: on ascending data the
- * last position whose value is <= `lookup` (`descending`: the last one whose value is >= it).
+ * XMATCH binary search (search_mode 2 / -2), comparing across types. Ascending data selects
+ * the first exact match, otherwise the last smaller item; descending selects the last >= item.
  */
 export function findSorted(vector: Vector, lookup: Scalar, descending = false): number {
 	if (isError(lookup)) fail(lookup);
 	let lo = 0;
-	let hi = vector.length - 1;
+	let hi = (vector.logicalLength ?? vector.length) - 1;
 	let best = -1;
+	let exact = -1;
 	while (lo <= hi) {
 		const mid = (lo + hi) >> 1;
-		let v = vector.get(mid);
-		// Blank and error cells are stepped over toward the low end.
+		let v = mid < vector.length ? vector.get(mid) : null;
+		// Error cells are stepped over toward the low end.
 		let probe = mid;
-		while ((v === null || isError(v)) && probe > lo) {
+		while (isError(v) && probe > lo) {
 			probe--;
 			v = vector.get(probe);
 		}
-		if (v === null || isError(v) || !sameKind(v, lookup)) {
-			if (v !== null && !isError(v) && compareScalars(v, lookup as never) > 0 !== descending) {
-				hi = probe - 1;
-			} else {
-				lo = mid + 1;
-			}
+		if (isError(v)) {
+			lo = mid + 1;
 			continue;
 		}
-		const c = compareScalars(v, lookup as never);
+		const c = compareLookup(v, lookup);
+		// Ascending searches choose the first equal item; descending searches choose the last.
+		if (c === 0 && !descending) {
+			exact = probe;
+			hi = probe - 1;
+			continue;
+		}
 		if (descending ? c >= 0 : c <= 0) {
 			best = probe;
 			lo = mid + 1;
@@ -164,7 +185,7 @@ export function findSorted(vector: Vector, lookup: Scalar, descending = false): 
 			hi = probe - 1;
 		}
 	}
-	return best;
+	return exact >= 0 ? exact : best;
 }
 
 /** XLOOKUP / XMATCH next-smaller (-1) or next-larger (1) match by a linear scan. */
@@ -177,24 +198,31 @@ export function findNearest(
 	let best = -1;
 	let bestValue: Scalar = null;
 	const n = vector.length;
-	for (let k = 0; k < n; k++) {
-		const i = reverse ? n - 1 - k : k;
-		const v = vector.get(i);
-		if (v === null || isError(v) || !sameKind(v, lookup)) continue;
-		const c = compareScalars(v, lookup as never);
-		if (c === 0) return i;
+	const consider = (i: number, v: Scalar): boolean => {
+		if (isError(v)) return false;
+		const c = compareLookup(v, lookup);
+		if (c === 0) {
+			best = i;
+			return true;
+		}
 		if (mode === -1 ? c < 0 : c > 0) {
 			if (
 				best < 0 ||
-				(mode === -1
-					? compareScalars(v, bestValue as never) > 0
-					: compareScalars(v, bestValue as never) < 0)
+				(mode === -1 ? compareLookup(v, bestValue) > 0 : compareLookup(v, bestValue) < 0)
 			) {
 				best = i;
 				bestValue = v;
 			}
 		}
+		return false;
+	};
+	const logicalLength = vector.logicalLength ?? n;
+	if (reverse && logicalLength > n && consider(logicalLength - 1, null)) return best;
+	for (let k = 0; k < n; k++) {
+		const i = reverse ? n - 1 - k : k;
+		if (consider(i, vector.get(i))) return best;
 	}
+	if (!reverse && logicalLength > n) consider(n, null);
 	return best;
 }
 
@@ -210,12 +238,15 @@ export function xsearch(
 		if (matchMode === 2) fail(ERR.VALUE);
 		const descending = searchMode === -2;
 		const at = findSorted(vector, lookup, descending);
+		const found =
+			at >= 0 && exactMatcher(lookup, false)(at < vector.length ? vector.get(at) : null);
 		if (matchMode === 0) {
-			return at >= 0 && exactMatcher(lookup, false)(vector.get(at)) ? at : -1;
+			return found ? at : -1;
 		}
-		if (at >= 0 && exactMatcher(lookup, false)(vector.get(at))) return at;
-		if (matchMode === -1) return descending ? (at + 1 < vector.length ? at + 1 : -1) : at;
-		return descending ? at : at + 1 < vector.length ? at + 1 : -1;
+		if (found) return at;
+		const length = vector.logicalLength ?? vector.length;
+		if (matchMode === -1) return descending ? (at + 1 < length ? at + 1 : -1) : at;
+		return descending ? at : at + 1 < length ? at + 1 : -1;
 	}
 	const reverse = searchMode === -1;
 	if (matchMode === 0 || matchMode === 2)

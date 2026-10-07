@@ -116,7 +116,7 @@ function fillDirection(ctx: EditorContext, dir: 'down' | 'right' | 'up' | 'left'
 	t.session.batch('Fill', () => {
 		for (const r of t.ranges) {
 			const spec = fillSource(r, dir);
-			if (spec) t.session.fill(t.sheet, spec.source, spec.target);
+			if (spec) t.session.fill(t.sheet, spec.source, spec.target, 'copy');
 		}
 	});
 }

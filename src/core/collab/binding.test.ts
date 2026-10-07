@@ -38,6 +38,22 @@ function join(hub: ReturnType<typeof createMemoryHub>, role?: 'viewer') {
 }
 
 describe('bindDocument', () => {
+	it('adopts an already-synced room for a read-only late joiner', () => {
+		const hub = createMemoryHub();
+		const author = join(hub);
+		author.doc.getArray('titles').push(['canonical']);
+		const viewer = join(hub, 'viewer');
+		expect(viewer.synced).toBe(true);
+		const adopted: string[][] = [];
+		const binding = bindDocument(viewer, adapter, {
+			getLocalModel: () => ['bootstrap'],
+			onRemoteModel: (model) => adopted.push(model),
+		});
+		expect(adopted).toEqual([['canonical']]);
+		expect(binding.push(['overwrite'])).toBe(false);
+		expect(author.doc.getArray('titles').toJSON()).toEqual(['canonical']);
+		binding.dispose();
+	});
 	it('seeds an empty room, adopts it on the late joiner, and skips local echoes', async () => {
 		const hub = createMemoryHub();
 		const a = join(hub);
