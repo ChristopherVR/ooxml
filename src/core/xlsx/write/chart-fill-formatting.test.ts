@@ -41,7 +41,7 @@ const chart = (fill: DiagramFill): ChartObject => ({
 });
 const modeled = (fill: DiagramFill | undefined) => {
 	if (fill?.kind !== 'gradient') return fill;
-	const { sourceXml, ...rest } = fill;
+	const { sourceXml: _sourceXml, ...rest } = fill;
 	return rest;
 };
 

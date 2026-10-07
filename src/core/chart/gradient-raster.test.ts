@@ -46,8 +46,9 @@ for (const sample of samples) {
 			!sample.name.includes('angle-180-') &&
 			!sample.name.includes('angle-270-')) ||
 		sample.name === 'coincident-angle-135-480x300';
-	(knownGap ? it.fails : it)(
+	it(
 		`${knownGap ? 'known native mismatch: ' : ''}matches native Excel raster samples for ${sample.name}`,
+		{ fails: knownGap },
 		() => {
 			const fill = parseDrawingFill(
 				parseXml(`<a:spPr xmlns:a="${NS.a}">${sample.fillXml}</a:spPr>`).documentElement,

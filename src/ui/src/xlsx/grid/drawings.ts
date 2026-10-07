@@ -94,7 +94,7 @@ export class DrawingLayer {
 				const sig = `${drawing.kind}:${Math.round(box.w)}x${Math.round(box.h)}:${this.#generation}`;
 				if (node.xgSig !== sig) {
 					node.xgSig = sig;
-					this.#paint(node, drawing, box, index);
+					this.#paint(node, drawing, box);
 				}
 				this.#selection(node, index);
 			}
@@ -106,7 +106,7 @@ export class DrawingLayer {
 			}
 	}
 
-	#paint(node: HTMLElement, drawing: DrawingObject, box: Box, index: number): void {
+	#paint(node: HTMLElement, drawing: DrawingObject, box: Box): void {
 		const view = this.#view;
 		const doc = view.doc;
 		node.replaceChildren();
