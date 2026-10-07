@@ -430,3 +430,19 @@ The viewer copies of `chart-axis-nice.ts`, `chart-histogram-binning.ts`, `theme-
 - Microsoft's [Creating Custom SmartArt Layouts](<https://learn.microsoft.com/en-us/previous-versions/office/developer/office-2010/gg583880(v=office.14)>) article says the `.glox` files for all built-in layouts are available for download and tells developers to copy the layout parts of existing documents as the starting point for their own layouts. It states no licence or terms of use and is archived.
 
 No explicit licence for redistribution was found. If Microsoft objects, remove `catalog.ts` and `data.ts` and author the definitions in the repository's own words instead (`smartart-fabrication-layouts.ts` is the precedent); the engine runs any definition.
+
+## PowerPoint chart grid editing policy
+
+Source: ChristopherVR/ooxml, commit `862a71733d7b2015589ea25df07c6a9a4e2afc49`.
+
+- `viewers/pptx/packages/shared/src/render/chart-data-grid-ops.ts` moved to
+  `src/core/pptx/core/utils/chart-grid-operations.ts`. Imports now use the core
+  chart model and immutable transforms directly. Public exports use the
+  `chartGrid` prefix to avoid collisions with mutating element SDK functions.
+  Invalid non-integer and out-of-range indices return null, including cell
+  category indices that previously reached the throwing primitive.
+- The adjacent source tests moved to `chart-grid-operations.test.ts`; the viewer
+  tests remain to verify the compatibility facade. Added guards, immutability
+  and point-formatting follow/pin policy regressions.
+- The old viewer module is a re-export facade that preserves its six function
+  names for all five framework bindings. No DOM or framework code moved to core.
