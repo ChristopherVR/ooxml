@@ -101,6 +101,11 @@ export function shapeStyle(
 			'unsupported-fill-pattern',
 			`Fill pattern ${pattern} is approximated by its foreground color.`,
 		);
+	if (fillPattern && Math.abs(Math.sin(2 * number(cells, 'Angle', 0, report))) > 1e-10)
+		report(
+			'unverified-hatch-angle',
+			'Native pixel equality for oblique hatch fills is not established.',
+		);
 	if (
 		(!fillGradient && number(cells, 'FillGradientEnabled', 0, report)) ||
 		number(cells, 'LineGradientEnabled', 0, report)

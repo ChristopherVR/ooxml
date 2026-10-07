@@ -1,4 +1,5 @@
 export * from './adjustment-aware-shapes.js';
+export * from './affine';
 export * from './callout-geometry.js';
 export * from './cloud-bezier-paths.js';
 export * from './com-avlst-ground-truth.js';

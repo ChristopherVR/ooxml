@@ -21,6 +21,7 @@ it('shares bounded pattern resources between live rendering, portable exports an
 	expect(tile).toBeDefined();
 	const live = renderPage(document, document.pages[0]!);
 	expect(live.svg.querySelector('pattern image')!.getAttribute('href')).toMatch(/^blob:/);
+	expect(live.svg.querySelector('path')!.getAttribute('shape-rendering')).toBe('crispEdges');
 	const output = exportPageSvg(document);
 	expect(output.svg).toContain('data:image/png;base64,');
 	expect(output.svg).toContain('patternUnits="userSpaceOnUse"');

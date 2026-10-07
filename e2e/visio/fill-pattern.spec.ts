@@ -6,6 +6,9 @@ import type { VisioDocument } from 'ooxml-core/visio';
 for (const sample of [
 	{ name: 'opaque', directory: process.env.VISIO_NATIVE_FILL_PATTERNS_DIR },
 	{ name: 'alpha', directory: process.env.VISIO_NATIVE_FILL_PATTERNS_ALPHA_DIR },
+	{ name: 'rotated', directory: process.env.VISIO_NATIVE_FILL_PATTERNS_ROTATED_DIR },
+	{ name: 'scaled', directory: process.env.VISIO_NATIVE_FILL_PATTERNS_SCALED_DIR },
+	{ name: 'oblique', directory: process.env.VISIO_NATIVE_FILL_PATTERNS_OBLIQUE_DIR },
 ]) {
 	const directory = sample.directory;
 	for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
@@ -79,6 +82,15 @@ for (const sample of [
 				return differences;
 			}, references);
 			expect(results).toHaveLength(46);
+			expect(
+				Math.max(...results.map((result) => result.maximum)),
+				`${results.reduce((sum, result) => sum + result.count, 0)} differing channels across 46 renders`,
+			).toBe(0);
+			if (results.some((result) => result.maximum))
+				await test.info().attach('native-hatch-differences', {
+					body: JSON.stringify(results, null, 2),
+					contentType: 'application/json',
+				});
 			for (const result of results)
 				expect(
 					result.maximum,

@@ -585,3 +585,12 @@ Restoration keeps prior opaque XML as the writer's basis, overlays later known
 property edits, and retains text, bookmarks and paragraph mark revisions.
 Native rejected documents, both export paths and editor conversion cover the
 new caller; existing paragraph, style, decoration and table tests cover parsing.
+
+## Shared affine composition for Visio hatch transforms
+
+Source: ChristopherVR/ooxml at `1bf7486161cb286f15ec0775bae7aa1cad1124d8`,
+`src/core/visio/foreign-vector-values.ts`, `compose`. Its six-coefficient
+multiplication moved into `src/core/geometry/affine.ts`. Foreign vector composition
+retains its existing bounded-value checks; Visio rendering reuses the same
+composition through the DOM-free Visio UI contract to accumulate group transforms.
+Regression tests cover composition order and rotated child translations.

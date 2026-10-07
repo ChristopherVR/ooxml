@@ -1,7 +1,8 @@
 param(
  [string]$OutputDirectory = (Join-Path $env:TEMP ('visio-fill-patterns-' + [guid]::NewGuid().ToString('N'))),
  [string]$Foreground = 'RGB(255,0,0)', [string]$Background = 'RGB(0,0,255)',
- [string]$ForegroundTransparency = '0%', [string]$BackgroundTransparency = '0%'
+ [string]$ForegroundTransparency = '0%', [string]$BackgroundTransparency = '0%',
+ [string]$Angle = '0 deg', [double]$DrawingScale = 1, [double]$PageScale = 1
 )
 # Capture native pattern tiles and full-page exports from an owned application.
 $ErrorActionPreference='Stop'
@@ -19,9 +20,12 @@ try {
  for($pattern=2;$pattern -le 24;$pattern++) {
   $page=if($pattern -eq 2){$document.Pages.Item(1)}else{$document.Pages.Add()}
   $page.Name="Pattern-$pattern"
+  $page.PageSheet.CellsU('DrawingScale').FormulaU="$DrawingScale in"
+  $page.PageSheet.CellsU('PageScale').FormulaU="$PageScale in"
   $page.PageSheet.CellsU('PageWidth').FormulaU='4 in'
   $page.PageSheet.CellsU('PageHeight').FormulaU='3 in'
   $shape=$page.DrawRectangle(1,1,3,2)
+  $shape.CellsU('Angle').FormulaU=$Angle
   $shape.CellsU('FillPattern').FormulaU=[string]$pattern
   $shape.CellsU('FillForegnd').FormulaU=$Foreground
   $shape.CellsU('FillBkgnd').FormulaU=$Background
@@ -55,6 +59,6 @@ try {
   } finally {$bitmap.Dispose();$stream.Dispose()}
  }
  $document.SaveAs((Join-Path $directory 'fill-patterns.vsdx')) | Out-Null
- [ordered]@{application='Microsoft Visio';version=$app.Version;foreground=$Foreground;background=$Background;foregroundTransparency=$ForegroundTransparency;backgroundTransparency=$BackgroundTransparency;cases=$records} | ConvertTo-Json -Depth 8 | Set-Content (Join-Path $directory 'evidence.json') -Encoding utf8
+ [ordered]@{application='Microsoft Visio';version=$app.Version;foreground=$Foreground;background=$Background;foregroundTransparency=$ForegroundTransparency;backgroundTransparency=$BackgroundTransparency;angle=$Angle;drawingScale=$DrawingScale;pageScale=$PageScale;cases=$records} | ConvertTo-Json -Depth 8 | Set-Content (Join-Path $directory 'evidence.json') -Encoding utf8
 } finally {if($document){$document.Saved=$true;$document.Close()};$app.Quit()}
 Write-Output $directory

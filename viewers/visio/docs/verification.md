@@ -398,3 +398,43 @@ reparses it and verifies identical normalized tile bytes for every page. All thr
 focused pattern tests passed with that native corpus enabled. The saved acceptance
 candidate is `core-fill-patterns.vsdx` in the local oracle directory; opening it in
 Microsoft Visio remains an outstanding native acceptance step.
+
+## Page-aligned hatch orientation and phase (2026-10-07)
+
+Native rotation references exposed an incorrect behavior: hatch axes rotated with
+shapes. Rendering now composes shape/group transforms through the same affine
+helper used by bounded foreign vectors, counter-transforms the hatch axes and
+retains the native bottom-based page-height tile origin. Hatch geometry uses the
+native crisp-edge rendering flag. The shared affine extraction is recorded in
+PROVENANCE.md. Drawing-scale normalization retains physical tile dimensions.
+
+The native capture script now accepts angle and drawing/page scale. Four captures
+(opaque, translucent, 90-degree rotation and drawing scale 2:1) cover 92 native
+pages. All six framework routes passed 24 scenarios and 1,104 exact live/export
+96-by-96 interior comparisons. Six optional oblique scenarios were skipped in
+that run; they were separately enabled for vanilla to investigate the next gap.
+
+At 30 degrees, counter-rotation and tile phase removed the large color/placement
+mismatch, and crisp-edge rendering removed the large boundary mismatch. Exact
+comparison still fails: 2,916 channels across 46 renders differ by one byte
+(maximum difference 1). The zero-tolerance test is retained under
+VISIO_NATIVE_FILL_PATTERNS_OBLIQUE_DIR; it is not counted as passing. Core parsing
+reports unverified-hatch-angle for oblique angles. The remaining cause and native
+nested group/flip behavior need stronger evidence before claiming pixel parity.
+
+The latest native reopen probe initialized an owned invisible application with a
+blank document first, then used normal events and OpenEx(128). It still stalled on
+the native original, so opening the core-edited file was not reached. The probe's
+own Windows Visio and PowerShell processes were terminated; the existing user
+Visio instance was left running. Native acceptance remains unverified.
+
+Before the final two focused regressions, local checks passed 2,000 core/shared
+geometry tests (43 optional skips), 710 UI tests (seven optional skips) and strict
+core types. The shared geometry ESM export smoke also passed. Existing seven
+Teams/PPTX declaration errors remain outside this change.
+Final core/shared geometry verification passed 2,004 tests with the native layer
+and pattern source environments enabled (41 optional skips). Root lint passed
+with the existing nine unrelated warnings. Viewer types are rechecked after
+rebasing the separately published browser-test type-import fix.
+Viewer typecheck passed after rebasing the public-package browser-test type import
+fix. Binding verification passed 79 client tests, five SSR tests and Svelte checks.

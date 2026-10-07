@@ -1,11 +1,14 @@
-import type { VisioStyle } from 'ooxml-core/visio';
-import { safeColor, svgElement } from './render-svg';
+import type { VisioStyle, VisioMatrix } from 'ooxml-core/visio';
+import { visioFillPatternTransform } from 'ooxml-core/visio/ui';
+import { safeColor, svgElement, matrix } from './render-svg';
 import type { RenderResources } from './render-resources';
 let gradientId = 0;
 export function fillPaint(
 	style: VisioStyle,
 	defs: SVGDefsElement,
 	resources: RenderResources,
+	world: VisioMatrix,
+	pageHeight: number,
 ): string {
 	if (style.fillPattern) {
 		const paint = style.fillPattern,
@@ -15,7 +18,8 @@ export function fillPaint(
 		pattern.setAttribute('width', String(paint.width));
 		pattern.setAttribute('height', String(paint.height));
 		pattern.setAttribute('viewBox', '0 0 64 64');
-		pattern.setAttribute('patternTransform', 'scale(1 -1)');
+		const transform = visioFillPatternTransform(world, pageHeight);
+		if (transform) pattern.setAttribute('patternTransform', matrix(transform));
 		const node = svgElement(resources.portable ? 'use' : 'image');
 		const url = resources.imageUrl(paint);
 		if (resources.portable) node.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', url);

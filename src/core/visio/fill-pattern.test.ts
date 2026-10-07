@@ -21,6 +21,20 @@ it('matches every pixel of all 23 native opaque and translucent pattern tiles', 
 });
 
 const nativeDirectory = process.env.VISIO_NATIVE_FILL_PATTERNS_DIR;
+
+it('reports the remaining oblique raster fidelity gap while accepting quarter-turn hatch axes', async () => {
+	const document = await parseVsdx(
+		await fixture({
+			pages: [Math.PI / 2, Math.PI / 6].map((angle, index) => ({
+				id: String(index),
+				contents: `<Shapes>${shape('1', rectangle + cell('FillPattern', 2) + cell('FillForegnd', '#ff0000') + cell('FillBkgnd', '#0000ff') + cell('Angle', angle))}</Shapes>`,
+			})),
+		}),
+	);
+	const warnings = document.diagnostics.filter((item) => item.code === 'unverified-hatch-angle');
+	expect(warnings).toHaveLength(1);
+	expect(warnings[0]!.pageId).toBe('1');
+});
 it.skipIf(!nativeDirectory)(
 	'moves and saves the genuine 23-page native drawing without changing its pattern resources',
 	async () => {
