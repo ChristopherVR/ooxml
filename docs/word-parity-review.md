@@ -130,10 +130,16 @@ the authoritative model, revision records, text positions, selection and undo
 history. All six browser bindings match the native before document's paragraph
 appearance and retain pending revisions on export.
 
-Prior run formatting has a tested core projection but still needs editor rendering.
-Print Layout, non-body stories and structural revisions still need review-display
-integration. These checks establish the covered formatting semantics, not pixel
-parity with current Microsoft 365 Word.
+Print Layout now projects prior run and paragraph formatting through the same
+core helpers, including table cells, section stories and notes. Native before
+references cover bold, combined run properties and combined paragraph properties.
+The projection retains text offsets for click-to-cursor mapping and reports
+unavailable snapshots through layout diagnostics and print warnings. Print Layout
+still retains tracked text and paragraph marks in every mode; non-All-Markup
+modes report that limitation when those revisions are present. Prior run
+formatting in the body editor, non-body editing views and structural review
+display still need implementation. These checks establish the covered formatting
+semantics, not pixel parity with current Microsoft 365 Word.
 
 ## Next implementation sequence
 
@@ -146,8 +152,9 @@ Accepting a run-format revision clears the snapshot. Shared editor Review
 commands now navigate, accept and reject imported run-format revisions,
 including undo/redo, peer synchronization and export. Supported run-formatting
 changes and pure paragraph-format changes now record revisions. Original display
-projects prior paragraph formatting in the body editor; prior run formatting
-and print display remain unfinished. Shared Review commands
+projects prior paragraph formatting in the body editor and prior run/paragraph
+formatting in Print Layout. Prior run formatting in the editable body and text
+revision display in Print Layout remain unfinished. Shared Review commands
 now navigate, accept and reject imported paragraph changes, with undo/redo,
 Yjs peer synchronization and package export. Core
 paragraph rejection now restores the full prior properties and matches all four

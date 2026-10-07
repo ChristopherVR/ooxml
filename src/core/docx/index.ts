@@ -55,6 +55,7 @@ export {
 } from './numbering-editing';
 export { formatNoteNumber, numberNotesInOrder } from './notes';
 export * from './review-formatting-display';
+export * from './review-document-formatting';
 export {
 	acceptAllRevisions,
 	acceptRevision,

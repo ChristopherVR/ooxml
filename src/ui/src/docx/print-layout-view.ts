@@ -1,5 +1,10 @@
 import type { DocumentModel } from 'ooxml-core/docx';
-import { resolveParagraphFormatting } from 'ooxml-core/docx';
+import {
+	resolveParagraphFormatting,
+	listRevisions,
+	reviewDocumentFormatting,
+	type ReviewDisplayMode,
+} from 'ooxml-core/docx';
 import { layoutDocumentModel, type LayoutResult } from 'ooxml-core/docx/layout';
 import { createCanvasMeasurer } from './canvas-measurer';
 import { renderPrintLayout, type PictureUrl, type PrintLayoutHandle } from './print-layout';
@@ -42,6 +47,7 @@ export function createPrintLayoutController(
 	onRequestCursor: (blockId: string, offset: number) => void,
 	pictureUrl?: PictureUrl,
 	onLayout?: () => void,
+	getReviewMode: () => ReviewDisplayMode = () => 'all',
 ): PrintLayoutController {
 	let measurer = createCanvasMeasurer();
 	let lastModel: DocumentModel | null = null;
@@ -61,10 +67,28 @@ export function createPrintLayoutController(
 	let currentPage = 1;
 	let version = 0;
 	let timer: ReturnType<typeof setTimeout> | undefined;
+	let projectionWarnings: string[] = [];
 
 	function relayout(model: DocumentModel) {
 		lastModel = model;
+		const mode = getReviewMode();
+		const projected = reviewDocumentFormatting(model, mode);
+		model = projected.model;
 		result = layoutDocumentModel(model, measurer);
+		projectionWarnings = projected.diagnostics.map(
+			(diagnostic) =>
+				`Original formatting unavailable in paragraph ${diagnostic.paragraphId}${diagnostic.runIndex === undefined ? '' : `, run ${diagnostic.runIndex}`}: ${diagnostic.message}`,
+		);
+		if (
+			mode !== 'all' &&
+			listRevisions(model).some(
+				(revision) => revision.kind !== 'formatChange' && revision.kind !== 'paragraphChange',
+			)
+		)
+			projectionWarnings.push(
+				'Print Layout retains tracked text and paragraph marks; this review display projects formatting only.',
+			);
+		result.approximations.push(...projectionWarnings);
 		handle = renderPrintLayout(result, pictureUrl, {
 			lineNumbers: (model.sections ?? []).map((section) => section.lineNumberSettings),
 			pageBorders: (model.sections ?? []).map((section) => section.pageBorders),
@@ -148,6 +172,7 @@ export function createPrintLayoutController(
 		print(model, note) {
 			if (timer) clearTimeout(timer);
 			relayout(model);
+			for (const warning of projectionWarnings) note(warning);
 			printLayoutResult(result, note);
 		},
 		destroy() {

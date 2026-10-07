@@ -160,6 +160,7 @@ export function routeRibbonAction(core: EditorCore, action: RibbonAction): void 
 	} else if (action.type === 'reviewDisplay') {
 		core.reviewDisplayMode = action.value;
 		core.view?.dispatch(core.view.state.tr);
+		core.pages.relayout();
 	} else if (action.type === 'review') shell.review?.handleReview(action.key);
 	else if (action.type === 'comments') shell.review?.handleComments(action.key);
 	else if (target) {

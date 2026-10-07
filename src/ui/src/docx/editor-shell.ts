@@ -121,6 +121,7 @@ export function buildShell(core: EditorCore, api: ShellApi): void {
 		},
 		(partName, contentType) => core.imageMedia.urlFor(partName, contentType),
 		() => core.refreshControls(),
+		() => core.reviewDisplayMode,
 	);
 	canvas.append(printLayout.element);
 	canvas.addEventListener('scroll', () => {
