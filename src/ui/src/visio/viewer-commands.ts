@@ -1,6 +1,6 @@
 import type { ViewerController, ViewerState } from './controller';
 import { editErrorMessage, isEditCancellation, visioPageInsertCommand } from 'ooxml-core/visio/ui';
-import { RIBBON_ACTION_EVENT, type VisioRibbonAction } from './ribbon-action';
+import { RIBBON_ACTION_EVENT, type VisioRibbonAction, type CanvasTool } from './ribbon-action';
 import type { RibbonCommand } from './ribbon-parts';
 import { routeRibbonAction, type RibbonTargets } from './ribbon-router';
 import { ShapeDrawTool } from './viewer-draw-tool';
@@ -9,7 +9,7 @@ import { ViewerPageOrder } from './viewer-page-order';
 import { ViewerPageRename } from './viewer-page-rename';
 import { ViewerPageDelete } from './viewer-page-delete';
 
-export type CanvasTool = 'pointer' | 'rectangle' | 'line';
+export type { CanvasTool } from './ribbon-action';
 interface CommandHost {
 	root: ShadowRoot;
 	viewport: HTMLElement;
@@ -236,6 +236,7 @@ export class ViewerCommands {
 			return { type: 'history', key: 'redo' };
 		if (control && key === '1') return { type: 'tool', tool: 'pointer' };
 		if (control && key === '8') return { type: 'tool', tool: 'rectangle' };
+		if (control && key === '9') return { type: 'tool', tool: 'ellipse' };
 		if (control && key === '6') return { type: 'tool', tool: 'line' };
 		if (!control && key === 'Delete' && state.selectedShape) return { type: 'delete' };
 		if (!control && key === 'F2' && state.document)
@@ -272,6 +273,8 @@ export class ViewerCommands {
 		button('rectangle-item').setAttribute('checked', String(this.#tool === 'rectangle'));
 		button('rectangle-item').disabled = !editing || !page;
 		button('line-tool').setAttribute('checked', String(this.#tool === 'line'));
+		button('ellipse').setAttribute('checked', String(this.#tool === 'ellipse'));
+		button('ellipse').disabled = !editing || !page;
 		button('line-tool').disabled = !editing || !page;
 		rectangle.title = state.edit.sourceAvailable
 			? 'Rectangle (Ctrl+8)'

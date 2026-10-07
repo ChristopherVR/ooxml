@@ -53,7 +53,13 @@ export function buildHomePanel(doc: Document, panel: HTMLElement): void {
 						action: { type: 'tool', tool: 'rectangle' },
 						checked: false,
 					},
-					{ id: 'ellipse', label: 'Ellipse', unsupported: SHAPES },
+					{
+						id: 'ellipse',
+						label: 'Ellipse',
+						action: { type: 'tool', tool: 'ellipse' },
+						keys: ['Control+9', 'Ctrl+9'],
+						checked: false,
+					},
 					{
 						id: 'line-tool',
 						label: 'Line',

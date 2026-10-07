@@ -1,3 +1,6 @@
+import { cells, numeric } from './edit-geometry-cells';
+export { cells, numeric, setCell } from './edit-geometry-cells';
+import { assertEllipseResizeRow } from './edit-ellipse-geometry';
 import { attribute, children } from './sheet';
 import { fail } from './package-common';
 import { analyzeVisioFormula, evaluateVisioFormula, visioFormulaCachedValue } from './formula';
@@ -13,17 +16,6 @@ const locks = [
 	'LockAspect',
 	'LockDelete',
 ] as const;
-export const cells = (shape: Element) =>
-	new Map(children(shape, 'Cell').map((node) => [attribute(node, 'N') ?? '', node]));
-export function numeric(node: Element | undefined, fallback?: number): number {
-	if (!node && fallback !== undefined) return fallback;
-	if (!node || node.hasAttribute('E'))
-		fail('UNSUPPORTED_GEOMETRY_EDIT', 'A usable local numeric transform cache is required.');
-	const value = visioFormulaCachedValue(attribute(node, 'V') ?? '', attribute(node, 'U')).value;
-	if (Math.abs(value) > 1e6)
-		fail('UNSUPPORTED_GEOMETRY_EDIT', 'Geometry cache exceeds coordinate limits.');
-	return value;
-}
 export function editableCell(node: Element | undefined): void {
 	if (!node) return;
 	if (node.hasAttribute('E')) fail('UNSUPPORTED_GEOMETRY_EDIT', 'Cannot overwrite an error cell.');
@@ -46,20 +38,6 @@ export function editableCell(node: Element | undefined): void {
 	evaluateVisioFormula(formula, () =>
 		fail('UNSUPPORTED_GEOMETRY_EDIT', 'Unexpected formula dependency.'),
 	);
-}
-export function setCell(shape: Element, name: string, value: number, formula?: string): void {
-	let node = cells(shape).get(name);
-	if (!node) {
-		node = shape.ownerDocument!.createElementNS(shape.namespaceURI, 'Cell');
-		node.setAttribute('N', name);
-		const before = Array.from(shape.childNodes).find(
-			(child) => child.nodeType === 1 && (child as Element).localName !== 'Cell',
-		);
-		shape.insertBefore(node, before ?? null);
-	}
-	node.setAttribute('V', String(value));
-	if (formula) node.setAttribute('F', formula);
-	else if (attribute(node, 'F') !== 'No Formula') node.removeAttribute('F');
 }
 export const isLineSheet = (local: ReadonlyMap<string, Element>): boolean =>
 	['BeginX', 'BeginY', 'EndX', 'EndY'].some((name) => local.has(name)) ||
@@ -256,13 +234,21 @@ export function resizeGeometry(
 			fail('UNSUPPORTED_GEOMETRY_EDIT', 'Deleted geometry is unsupported.');
 		for (const row of children(section, 'Row')) {
 			const type = attribute(row, 'T');
+			if (type === 'Ellipse') assertEllipseResizeRow(shape, row);
 			if (
 				row.hasAttribute('Del') ||
-				!['MoveTo', 'LineTo', 'RelMoveTo', 'RelLineTo'].includes(type ?? '')
+				!['MoveTo', 'LineTo', 'RelMoveTo', 'RelLineTo', 'Ellipse'].includes(type ?? '')
 			)
-				fail('UNSUPPORTED_GEOMETRY_EDIT', 'This bundle resizes only local line-based geometry.');
+				fail(
+					'UNSUPPORTED_GEOMETRY_EDIT',
+					'Only local line-based geometry and canonical ellipses can be resized.',
+				);
 			for (const node of children(row, 'Cell')) {
-				if (!['X', 'Y'].includes(attribute(node, 'N') ?? ''))
+				if (
+					!(type === 'Ellipse' ? ['X', 'Y', 'A', 'B', 'C', 'D'] : ['X', 'Y']).includes(
+						attribute(node, 'N') ?? '',
+					)
+				)
 					fail('UNSUPPORTED_GEOMETRY_EDIT', 'Unknown geometry row cells are unsupported.');
 				if ((type ?? '').startsWith('Rel')) continue;
 				const formula = executableCellFormula(attribute(node, 'F'));

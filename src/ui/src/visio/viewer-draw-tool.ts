@@ -1,4 +1,5 @@
 import type { VisioPage, VisioGeometryEdit } from 'ooxml-core/visio';
+import type { CanvasTool } from './ribbon-action';
 import type { ViewerController } from './controller';
 import {
 	editErrorMessage,
@@ -40,9 +41,19 @@ export async function insertRectangle(
 	centre: { x: number; y: number },
 	size: { width: number; height: number },
 ): Promise<string> {
+	return insertBox(controller, page, centre, size, 'rectangle');
+}
+
+async function insertBox(
+	controller: ViewerController,
+	page: VisioPage,
+	centre: { x: number; y: number },
+	size: { width: number; height: number },
+	kind: 'rectangle' | 'ellipse',
+): Promise<string> {
 	const shapeId = nextShapeId(page);
 	return insertGeometry(controller, page, {
-		type: 'create-rectangle',
+		type: kind === 'ellipse' ? 'create-ellipse' : 'create-rectangle',
 		pageId: page.id,
 		shapeId,
 		x: centre.x,
@@ -92,8 +103,8 @@ export class ShapeDrawTool {
 				page: VisioPage;
 				x: number;
 				y: number;
-				rect: SVGRectElement | SVGLineElement;
-				kind: 'rectangle' | 'line';
+				rect: SVGRectElement | SVGEllipseElement | SVGLineElement;
+				kind: Exclude<CanvasTool, 'pointer'>;
 		  }
 		| undefined;
 	#request = 0;
@@ -101,7 +112,7 @@ export class ShapeDrawTool {
 		private readonly viewport: HTMLElement,
 		private readonly controller: ViewerController,
 		private readonly options: {
-			tool(): 'rectangle' | 'line' | undefined;
+			tool(): Exclude<CanvasTool, 'pointer'> | undefined;
 			announce(message: string): void;
 		},
 	) {}
@@ -160,7 +171,7 @@ export class ShapeDrawTool {
 		event.preventDefault();
 		const rect = this.viewport.ownerDocument.createElementNS(
 			'http://www.w3.org/2000/svg',
-			kind === 'line' ? 'line' : 'rect',
+			kind === 'line' ? 'line' : kind === 'ellipse' ? 'ellipse' : 'rect',
 		);
 		rect.classList.add('draw-preview');
 		rect.setAttribute('vector-effect', 'non-scaling-stroke');
@@ -180,6 +191,16 @@ export class ShapeDrawTool {
 		const { x, y, rect, kind } = this.#drag!;
 		if (kind === 'line') {
 			for (const [name, value] of Object.entries({ x1: x, y1: y, x2: point.x, y2: point.y }))
+				rect.setAttribute(name, String(value));
+			return;
+		}
+		if (kind === 'ellipse') {
+			for (const [name, value] of Object.entries({
+				cx: (x + point.x) / 2,
+				cy: (y + point.y) / 2,
+				rx: Math.abs(point.x - x) / 2,
+				ry: Math.abs(point.y - y) / 2,
+			}))
 				rect.setAttribute(name, String(value));
 			return;
 		}
@@ -218,17 +239,18 @@ export class ShapeDrawTool {
 			const shapeId =
 				drag.kind === 'line'
 					? await insertLine(this.controller, drag.page, drag, end)
-					: await insertRectangle(
+					: await insertBox(
 							this.controller,
 							drag.page,
 							{ x: (drag.x + end.x) / 2, y: (drag.y + end.y) / 2 },
 							{ width, height },
+							drag.kind,
 						);
 			if (request !== this.#request) return;
 			this.options.announce(
 				drag.kind === 'line'
 					? `Line ${shapeId} added.`
-					: `Rectangle ${shapeId} added (${+width.toFixed(4)} × ${+height.toFixed(4)} in).`,
+					: `${drag.kind === 'ellipse' ? 'Ellipse' : 'Rectangle'} ${shapeId} added (${+width.toFixed(4)} × ${+height.toFixed(4)} in).`,
 			);
 		} catch (error) {
 			if (request === this.#request && !isEditCancellation(error))

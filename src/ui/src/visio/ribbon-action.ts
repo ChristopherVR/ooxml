@@ -1,7 +1,8 @@
+export type CanvasTool = 'pointer' | 'rectangle' | 'ellipse' | 'line';
 /** Every command the Visio ribbon, status bar or a shortcut can raise, as a `ribbon-action` event. */
 export type VisioRibbonAction =
 	| { type: 'history'; key: 'undo' | 'redo' }
-	| { type: 'tool'; tool: 'pointer' | 'rectangle' | 'line' }
+	| { type: 'tool'; tool: CanvasTool }
 	| { type: 'delete' }
 	| { type: 'pane'; pane: 'shapes' | 'inspector' }
 	| { type: 'reveal'; panel: 'edit' | 'notes' | 'selection' | 'layers'; focusText?: boolean }

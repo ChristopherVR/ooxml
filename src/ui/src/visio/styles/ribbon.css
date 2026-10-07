@@ -202,12 +202,15 @@ office-ui-status-item[data-page-status] {
 	flex: 1;
 	min-width: 0;
 }
+.viewport[data-tool='ellipse'],
+.viewport[data-tool='ellipse'] .paper [data-shape-id],
 .viewport[data-tool='rectangle'],
 .viewport[data-tool='rectangle'] .paper [data-shape-id],
 .viewport[data-tool='line'],
 .viewport[data-tool='line'] .paper [data-shape-id] {
 	cursor: crosshair;
 }
+.viewport[data-tool='ellipse'],
 .viewport[data-tool='rectangle'],
 .viewport[data-tool='line'] {
 	touch-action: none;

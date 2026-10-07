@@ -82,6 +82,7 @@ export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
 				numbers(command.width, command.height);
 				return { type: command.type, ...target, width: command.width, height: command.height };
 			case 'create-rectangle':
+			case 'create-ellipse':
 				numbers(command.x, command.y, command.width, command.height);
 				return {
 					type: command.type,

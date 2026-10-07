@@ -10,17 +10,12 @@ interface Target {
 	pageId: string;
 	shapeId: string;
 }
+type BoxCreation = Target & { x: number; y: number; width: number; height: number; text?: string };
 /** Drawing inches; bottom-left origin, up-positive rotation pin. */
 export type VisioGeometryEdit =
 	| (Target & { type: 'create-line'; beginX: number; beginY: number; endX: number; endY: number })
-	| (Target & {
-			type: 'create-rectangle';
-			x: number;
-			y: number;
-			width: number;
-			height: number;
-			text?: string;
-	  })
+	| (BoxCreation & { type: 'create-rectangle' })
+	| (BoxCreation & { type: 'create-ellipse' })
 	| (Target & { type: 'move-shape'; x: number; y: number })
 	| (Target & { type: 'resize-shape'; width: number; height: number })
 	| (Target & { type: 'move-line-endpoint'; endpoint: 'begin' | 'end'; x: number; y: number })
@@ -163,6 +158,7 @@ export function snapshotVisioEdits(
 				return { ...target, type: edit.type, beginX, beginY, endX, endY };
 			}
 			case 'create-rectangle':
+			case 'create-ellipse':
 				return {
 					...target,
 					type: edit.type,

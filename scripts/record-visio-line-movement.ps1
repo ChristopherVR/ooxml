@@ -7,6 +7,7 @@ param(
  [ValidateRange(0.000001,1000000)][double]$PageScale=1,
  [switch]$GridAligned,
  [switch]$IncludeRectangle,
+ [switch]$IncludeEllipse,
  [switch]$CustomDefaults
 )
 # Capture endpoint translation without replacing native transform formulas.
@@ -16,14 +17,12 @@ if(Test-Path -LiteralPath $directory){throw 'Use a fresh output directory.'}
 New-Item -ItemType Directory -Path $directory | Out-Null
 $app=New-Object -ComObject Visio.InvisibleApp
 $document=$null
-function Get-LineCells($shape){
+function Get-ShapeCells($shape,[string[]]$names){
  $result=[ordered]@{}
- foreach($name in @('BeginX','BeginY','EndX','EndY','Width','Height','PinX','PinY','LocPinX','LocPinY','Angle','FlipX','FlipY')){
-  $cell=$shape.CellsU($name)
-  $result[$name]=[ordered]@{formula=$cell.FormulaU;value=$cell.ResultIU}
- }
+ foreach($name in $names){$cell=$shape.CellsU($name);$result[$name]=[ordered]@{formula=$cell.FormulaU;value=$cell.ResultIU}}
  return $result
 }
+function Get-LineCells($shape){return Get-ShapeCells $shape @('BeginX','BeginY','EndX','EndY','Width','Height','PinX','PinY','LocPinX','LocPinY','Angle','FlipX','FlipY')}
 function Get-LineTransform($shape){
  $x0=0.0;$y0=0.0;$xx=0.0;$yx=0.0;$xy=0.0;$yy=0.0
  $shape.XYToPage(0,0,[ref]$x0,[ref]$y0)
@@ -65,12 +64,15 @@ try {
  $rectangleEvidence=$null
  if($IncludeRectangle){
   $rectangle=$page.DrawRectangle(5.5*$coordinates,2*$coordinates,7.5*$coordinates,3*$coordinates)
-  $rectangleCells=[ordered]@{}
-  foreach($name in @('PinX','PinY','Width','Height','LocPinX','LocPinY','Angle','FlipX','FlipY','ResizeMode','QuickStyleLineMatrix','QuickStyleFillMatrix','QuickStyleEffectsMatrix','QuickStyleFontMatrix')){
-   $cell=$rectangle.CellsU($name)
-   $rectangleCells[$name]=[ordered]@{formula=$cell.FormulaU;value=$cell.ResultIU}
-  }
+  $rectangleCells=Get-ShapeCells $rectangle @('PinX','PinY','Width','Height','LocPinX','LocPinY','Angle','FlipX','FlipY','ResizeMode','QuickStyleLineMatrix','QuickStyleFillMatrix','QuickStyleEffectsMatrix','QuickStyleFontMatrix')
   $rectangleEvidence=[ordered]@{shapeId=[string]$rectangle.ID;cells=$rectangleCells;transform=(Get-LineTransform $rectangle)}
+ }
+ $ellipseEvidence=$null
+ if($IncludeEllipse){
+  $ellipse=$page.DrawOval(5.5*$coordinates,5*$coordinates,7.5*$coordinates,6*$coordinates)
+  $ellipseNames=@('PinX','PinY','Width','Height','LocPinX','LocPinY','Angle','FlipX','FlipY','ResizeMode')
+  $ellipseCells=Get-ShapeCells $ellipse $ellipseNames
+  $ellipseEvidence=[ordered]@{shapeId=[string]$ellipse.ID;cells=$ellipseCells;transform=(Get-LineTransform $ellipse)}
  }
  $control=$null
  if($DeleteAfterMove){$control=$page.DrawRectangle(6,6,7,7)}
@@ -119,12 +121,24 @@ try {
   $document.SaveAs((Join-Path $directory 'endpoint.vsdx')) | Out-Null
   $page.Export((Join-Path $directory 'endpoint-page.svg'))
  }
+ if($IncludeEllipse){
+  $ellipse.CellsU('Width').ResultIU=3*$coordinates
+  $ellipse.CellsU('Height').ResultIU=2*$coordinates
+  $ellipse.CellsU('PinX').ResultIU+=0.5*$coordinates
+  $ellipse.CellsU('PinY').ResultIU+=0.5*$coordinates
+  $ellipseEvidence.Add('editedCells',(Get-ShapeCells $ellipse $ellipseNames))
+  $ellipseEvidence.Add('editedTransform',(Get-LineTransform $ellipse))
+  $document.SaveAs((Join-Path $directory 'ellipse-edited.vsdx')) | Out-Null
+  $page.Export((Join-Path $directory 'ellipse-edited-page.svg'))
+ }
  $evidence=[ordered]@{application='Microsoft Visio';version=$app.Version;cases=$cases;drawingScale=$page.PageSheet.CellsU('DrawingScale').ResultIU;pageScale=$page.PageSheet.CellsU('PageScale').ResultIU}
  if($rectangleEvidence){$evidence.Add('rectangle',$rectangleEvidence)}
+ if($ellipseEvidence){$evidence.Add('ellipse',$ellipseEvidence)}
  if($DeleteAfterMove){
   foreach($shape in $shapes){$shape.Delete()}
   $retainedIds=@($control.ID)
   if($IncludeRectangle){$retainedIds+=,$rectangle.ID}
+  if($IncludeEllipse){$retainedIds+=,$ellipse.ID}
   if($page.Shapes.Count -ne $retainedIds.Count){throw 'Deletion altered retained shapes.'}
   foreach($retained in $page.Shapes){if($retained.ID -notin $retainedIds){throw 'Deletion altered retained shapes.'}}
   $document.SaveAs((Join-Path $directory 'deleted.vsdx')) | Out-Null

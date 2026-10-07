@@ -1420,3 +1420,27 @@ field code. Adjacent identical simple fields still lack distinct model identity.
 Simple-field parsing now reuses `collectParagraphRuns` for comment ranges and
 revision wrappers, preserving inner ids when the outer collector adds its active
 comments. The partial-scope regression covers that shared collector path.
+
+## Shared Visio ellipse creation and resize
+
+Source: ChristopherVR/ooxml at `13d6830d0`,
+`src/core/visio/edit-geometry-admission.ts`. Local numeric cache reading,
+cell lookup and writing moved unchanged into `edit-geometry-cells.ts`, with
+compatibility re-exports. Admission and the new native ellipse construction/
+resize proof use this module without a circular dependency. Integration
+regressions remain beside the editing commands they exercise.
+
+Source: ChristopherVR/ooxml at `13d6830d0`,
+`src/core/visio/edit-shape-create.ts`. The rectangle's transform/default-style
+construction is now shared by rectangle and ellipse creation. Native DrawOval
+control-axis factors are shared between ellipse creation and resize proof;
+existing dependency analysis and formula recalculation perform the updates.
+No second formula engine, XML model or style resolver was added.
+
+The UI extends its existing ShapeDrawTool, coordinate conversion, ID allocation
+and command transaction to ellipse previews/creation. CanvasTool is shared
+by ribbon actions, router and gesture state. The native rectangle browser
+workflow moved to `e2e/visio/native-shape-create.spec.ts` and parameterizes both
+shape kinds and default-style captures. Native SVG registration also measures
+primitive extents. Canonical-axis coverage does not establish arbitrary ellipse
+resize, snapping, exact pixels or native reopen parity.

@@ -1,7 +1,8 @@
 import { attribute, children } from './sheet';
 import { fail } from './package-common';
-import { setCell } from './edit-geometry-admission';
+import { setCell } from './edit-geometry-cells';
 import type { VisioGeometryEdit } from './edit-commands';
+import { appendEllipseGeometry } from './edit-ellipse-geometry';
 
 function createShape(root: Element, shapeId: string): Element {
 	const doc = root.ownerDocument!;
@@ -29,15 +30,13 @@ function createShape(root: Element, shapeId: string): Element {
 	return shape;
 }
 
-export function createRectangle(
+function createBox(
 	root: Element,
 	document: Element,
-	edit: Extract<VisioGeometryEdit, { type: 'create-rectangle' }>,
+	edit: Extract<VisioGeometryEdit, { type: 'create-rectangle' | 'create-ellipse' }>,
 ): Element {
 	const shape = createShape(root, edit.shapeId);
 	applyShapeCreationStyles(shape, document);
-	const doc = root.ownerDocument!;
-	const node = (name: string) => doc.createElementNS(root.namespaceURI, name);
 	for (const [name, value] of Object.entries({
 		PinX: edit.x,
 		PinY: edit.y,
@@ -53,6 +52,17 @@ export function createRectangle(
 			value,
 			name === 'LocPinX' ? 'Width*0.5' : name === 'LocPinY' ? 'Height*0.5' : undefined,
 		);
+	return shape;
+}
+
+export function createRectangle(
+	root: Element,
+	document: Element,
+	edit: Extract<VisioGeometryEdit, { type: 'create-rectangle' }>,
+): Element {
+	const shape = createBox(root, document, edit);
+	const doc = root.ownerDocument!;
+	const node = (name: string) => doc.createElementNS(root.namespaceURI, name);
 	const section = node('Section');
 	section.setAttribute('N', 'Geometry');
 	section.setAttribute('IX', '0');
@@ -74,6 +84,21 @@ export function createRectangle(
 	const text = node('Text');
 	text.appendChild(doc.createTextNode(edit.text ?? ''));
 	shape.appendChild(text);
+	return shape;
+}
+
+export function createEllipse(
+	root: Element,
+	document: Element,
+	edit: Extract<VisioGeometryEdit, { type: 'create-ellipse' }>,
+): Element {
+	const shape = createBox(root, document, edit);
+	appendEllipseGeometry(shape, edit.width, edit.height);
+	if (edit.text !== undefined) {
+		const text = root.ownerDocument!.createElementNS(root.namespaceURI, 'Text');
+		text.appendChild(root.ownerDocument!.createTextNode(edit.text));
+		shape.appendChild(text);
+	}
 	return shape;
 }
 

@@ -228,7 +228,9 @@ export async function assertGeometryPackageScope(
 		const shapes = Array.from(root.getElementsByTagNameNS(root.namespaceURI!, 'Shape'));
 		for (const command of commands)
 			if (
-				(command.type === 'create-rectangle' || command.type === 'create-line') &&
+				(command.type === 'create-rectangle' ||
+					command.type === 'create-ellipse' ||
+					command.type === 'create-line') &&
 				command.pageId === pageId &&
 				!shapes.some((shape) => attribute(shape, 'ID') === command.shapeId)
 			) {

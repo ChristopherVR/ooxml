@@ -1,4 +1,4 @@
-import { createRectangle, createLine } from './edit-shape-create';
+import { createRectangle, createEllipse, createLine } from './edit-shape-create';
 import { attribute, children } from './sheet';
 import { fail } from './package-common';
 import {
@@ -54,8 +54,9 @@ export function applyGeometryEdit(
 			y: (edit.beginY + edit.endY) / 2,
 		};
 		for (const name of geometryChangedCells(edit)) add(name);
-	} else if (edit.type === 'create-rectangle') {
-		createRectangle(root, document, edit);
+	} else if (edit.type === 'create-rectangle' || edit.type === 'create-ellipse') {
+		if (edit.type === 'create-ellipse') createEllipse(root, document, edit);
+		else createRectangle(root, document, edit);
 		expected = { width: edit.width, height: edit.height, x: edit.x, y: edit.y };
 		for (const name of ['Width', 'Height', 'PinX', 'PinY']) add(name);
 	} else {

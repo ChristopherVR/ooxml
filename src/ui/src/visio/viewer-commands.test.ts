@@ -114,6 +114,18 @@ describe('Visio ribbon commands', () => {
 		expect(raw).toEqual([]);
 	});
 
+	it('routes Ellipse menu and Ctrl+9 through the same editable tool state', async () => {
+		const { press, key, viewport, command, controller } = await setup();
+		press('ellipse');
+		expect(viewport.dataset.tool).toBe('ellipse');
+		expect(command('ellipse').getAttribute('checked')).toBe('true');
+		key({ key: '1', ctrlKey: true });
+		expect(viewport.dataset.tool).toBe('pointer');
+		key({ key: '9', ctrlKey: true });
+		expect(viewport.dataset.tool).toBe('ellipse');
+		controller.setDocument(structuredClone(demoDocument));
+		expect(command('ellipse').disabled).toBe(true);
+	});
 	it('routes shared office-command buttons to pane, zoom and tool commands', async () => {
 		const { calls, command, press, check, viewport, controller } = await setup();
 		press('shapes');

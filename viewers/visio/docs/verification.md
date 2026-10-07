@@ -1618,3 +1618,49 @@ Other default styles and documents, text paint, gradients/effects, exact
 pixels, native UI gesture semantics and native Office reopen acceptance
 remain unverified. Each fresh owned invisible Visio instance quit; the
 user's existing instance remained untouched.
+
+## Native ellipse creation, resize and movement
+
+The recorder's `-GridAligned -IncludeRectangle -IncludeEllipse` captures
+`visio-line-movement-89d6ed4b25e74a448081428d6f98f06d` (standard defaults)
+and `visio-line-movement-1fbaebe10f6144649668cd0e169b5fc2` (distinct custom
+defaults) contain native rectangle and ellipse references. The ellipse starts
+with Width 2, Height 1, PinX 6.5 and PinY 5.5. Native edits set Width 3,
+Height 2, PinX 7 and PinY 6 and save/export `ellipse-edited.vsdx` and SVG.
+[DrawOval](https://learn.microsoft.com/en-us/office/vba/api/visio.page.drawoval)
+uses the native ellipse drawing method; the
+[documented shortcut](https://support.microsoft.com/en-us/accessibility/visio/keyboard-shortcuts-for-visio)
+is Ctrl+9. COM authoring is not proof of every native pointer gesture.
+
+`create-ellipse` shares rectangle transform/default-style construction and
+command snapshot/scaling validation. The native Geometry1 Ellipse row uses
+X/C = Width*0.5, Y/B = Height*0.5, A = Width*1 and D = Height*1, with drawing
+length units on A-D. Construction and resize proof share these control factors.
+The existing dependency graph and recalculator update these formulas; altered
+axes or missing native cache/formula proof are refused.
+
+Five focused core checks pass, including creation/move/resize/delete with
+round-trip part preservation, snapshots/scaling/invalid input, changed-axis
+refusal and two native style-family comparisons. Native geometry/styles
+match exactly and COM poses agree to twelve decimals before/after edits.
+The full Visio suite passes 2,194 checks, with 76 optional skips.
+Core/shared UI builds and types pass. UI command/scaling tests pass fourteen
+checks with one optional native scale skip. The clean local core/UI package smoke test
+also passes all 96 SSR entry imports and registration of 45 DOM tags.
+
+`native-shape-create.spec.ts` shares the former rectangle workflow. Twenty-four
+standard/custom workflows cover both shapes across six frameworks, including
+twelve ellipse drags and resize/move control sequences, per-step history and
+public save/reload. Native SVG physical geometry extents agree to three
+decimals; unselected fill/stroke colors and opacity match computed native SVG
+styles. The independent SVG extent registration uses each primitive's own
+geometry box, not the page viewBox. A line creation regression and the rectangle
+toolbar workflow also pass: 26 passing browser checks in total.
+
+Core move/resize comparison targets the native ellipse; other native line
+references in the recorder also move as part of its original probe. It is not
+a whole-document equality claim. Other control axes and formulas, rotated or
+scaled browser ellipse authoring, gradients/effects, text paint, contour and
+exact pixels, native snapping/gesture semantics and native Office reopen
+acceptance remain unverified. Fresh owned invisible instances quit; the
+existing user Visio instance remained untouched.

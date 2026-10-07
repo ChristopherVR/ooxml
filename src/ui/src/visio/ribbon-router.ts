@@ -1,12 +1,12 @@
 import type { ViewerController } from './controller';
-import type { VisioRibbonAction } from './ribbon-action';
+import type { VisioRibbonAction, CanvasTool } from './ribbon-action';
 
 /** The controllers a ribbon action can reach. The element supplies each one. */
 export interface RibbonTargets {
 	controller: ViewerController;
 	history(key: 'undo' | 'redo'): void;
 	deleteSelection(): void;
-	setTool(tool: 'pointer' | 'rectangle' | 'line'): void;
+	setTool(tool: CanvasTool): void;
 	toggleGrid(): void;
 	toggleRuler(): void;
 	togglePanZoom(): void;
