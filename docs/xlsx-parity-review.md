@@ -967,3 +967,30 @@ and registered 45 custom elements. A newly created gradient downloaded from
 Playwright MCP reopened in Excel with two stops at 90 degrees, red/white
 colors, and the first stop's retained 37% transparency. The additional no-fill
 creation regression verifies the chosen series' palette and unchanged siblings.
+
+## Gradient stop brightness
+
+The series pane now exposes brightness from -100% to 100%. Gradient edits and
+SpreadsheetML theme tints reuse one format-neutral DrawingML luminance helper.
+Native stop identity, theme choice, transparency, geometry and the other stops
+survive edits, saving and undo. Zero brightness uses Excel's explicit 100%
+luminance multiplier. Arbitrary imported luminance expressions are preserved;
+the brightness field is blank and disabled when no canonical value is known.
+
+Excel COM saved/reopened -42%, 0%, 100%, -100% and 37% cases independently.
+Core round trips match their stop transforms exactly, and rendered stop colors
+match the native RGB getters. Playwright MCP reviewed the pane and downloaded
+a 37% edit: Excel reopened it with 37% brightness, 37% transparency, angle 54,
+positions 23% and 56%, and the untouched green stop's 13% transparency.
+Six browser checks cover all XLSX bindings, brightness extremes, invalid values,
+retained opacity and read-only controls. The broader core selection passed
+6,388 tests; 24 focused UI checks and core/UI typechecks passed.
+Core/UI builds and clean-package checks also passed, importing 96 entries and
+registering 45 custom elements.
+
+This does not close the remaining gradient gaps: native presets, type and
+direction galleries, dragging, paired position/brightness/transparency sliders,
+mixed point formatting and exact pane layout. COM's explicit RGB property
+replacement also reset brightness and opacity in the new recorder case;
+the viewer's color-menu opacity retention is an existing policy whose native
+interactive-menu equivalence remains unverified.

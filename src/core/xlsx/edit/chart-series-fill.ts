@@ -1,4 +1,5 @@
 import type { DiagramColor } from '../../diagram/types';
+import { withDrawingColorBrightness } from '../../diagram/drawing-color-brightness';
 import type { ChartObject, Color } from '../model';
 import { THEME_SLOTS } from '../layout/colors';
 import type { ChartPatch } from './charts';
@@ -16,15 +17,7 @@ export function chartDrawingColor(color: Color | undefined): DiagramColor | unde
 	else return undefined;
 	const tint = color.tint ?? 0;
 	if (!Number.isFinite(tint) || tint < -1 || tint > 1) return undefined;
-	if (tint !== 0) {
-		choice.transforms.push({
-			name: 'lumMod',
-			value: String(Math.round((1 - Math.abs(tint)) * 100000)),
-		});
-		if (tint > 0)
-			choice.transforms.push({ name: 'lumOff', value: String(Math.round(tint * 100000)) });
-	}
-	return choice;
+	return tint !== 0 ? withDrawingColorBrightness(choice, tint * 100) : choice;
 }
 
 /** Native series fill edits replace point paints, retaining effects, references and other series. */

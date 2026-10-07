@@ -5,7 +5,7 @@ import {
 	type ChartObject,
 	type ChartViewModel,
 } from 'ooxml-core/xlsx';
-import { drawingColorCss } from 'ooxml-core/diagram';
+import { drawingColorCss, drawingColorBrightness } from 'ooxml-core/diagram';
 import { activeChart, type EditorContext } from 'ooxml-core/xlsx/ui';
 import { createGradientStopTrack } from '../form/gradient-stop-track';
 import { el, field, numberInput } from './dialogs/fields';
@@ -16,6 +16,7 @@ export function createSeriesGradient(ctx: EditorContext, selected: () => number)
 	const angle = numberInput(ctx, 90, 0, 360);
 	const position = numberInput(ctx, 0, 0, 100);
 	const transparency = numberInput(ctx, 0, 0, 100);
+	const brightness = numberInput(ctx, 0, -100, 100);
 	const color = el(ctx, 'button', 'xve-input xve-chart-series-color');
 	color.type = 'button';
 	const track = createGradientStopTrack(element.ownerDocument);
@@ -24,8 +25,9 @@ export function createSeriesGradient(ctx: EditorContext, selected: () => number)
 		[field(ctx, 'Position', position), position, 'Position'],
 		[field(ctx, 'Transparency', transparency), transparency, 'Transparency'],
 		[field(ctx, 'Color', color), color, 'Color'],
+		[field(ctx, 'Brightness', brightness), brightness, 'Brightness'],
 	] as const;
-	for (const [row, , label] of rows.slice(0, 3)) {
+	for (const [row, , label] of rows.filter(([, input]) => input !== color)) {
 		const unit = el(ctx, 'span');
 		unit.textContent = label === 'Angle' ? '°' : '%';
 		row.append(unit);
@@ -79,8 +81,16 @@ export function createSeriesGradient(ctx: EditorContext, selected: () => number)
 		angle.disabled = disabled || !!fill.path;
 		position.value = String(fill.stops[stopIndex]?.position ?? 0);
 		transparency.value = String(chartGradientStopTransparency(fill, stopIndex));
-		position.disabled = transparency.disabled = color.disabled = disabled || !fill.stops.length;
+		const stopColor = fill.stops[stopIndex]?.color;
+		const stopBrightness = stopColor && drawingColorBrightness(stopColor);
+		brightness.value = stopBrightness === undefined ? '' : String(stopBrightness);
+		position.disabled =
+			transparency.disabled =
+			color.disabled =
+			brightness.disabled =
+				disabled || !fill.stops.length;
 		const stops = view?.series[selected()]?.gradient?.stops ?? [];
+		brightness.disabled ||= stopBrightness === undefined;
 		color.style.setProperty('--series-fill', stops[stopIndex]?.color ?? 'transparent');
 		track.update({
 			stops: stops.map((stop) => ({
@@ -111,6 +121,7 @@ export function createSeriesGradient(ctx: EditorContext, selected: () => number)
 		[angle, 'angle'],
 		[position, 'position'],
 		[transparency, 'transparency'],
+		[brightness, 'brightness'],
 	] as const) {
 		input.addEventListener('change', () => {
 			if (input.disabled || !ctx.commands.isEnabled('chart.format-series'))

@@ -1,6 +1,7 @@
 import { removeGradientStop } from '../../chart/gradient-stop-edit';
 import { chartPaletteSeriesColorChoice, findChartColorPalette } from '../../chart/color-palettes';
 import { resolveDrawingColor } from '../../diagram/drawing-color';
+import { withDrawingColorBrightness } from '../../diagram/drawing-color-brightness';
 import type { DiagramFill } from '../../diagram/types';
 import type { ChartObject, Color } from '../model';
 import type { ChartPatch } from './charts';
@@ -10,7 +11,14 @@ import { chartSeriesSolidColor } from './chart-series-transparency';
 export type ChartGradientEdit =
 	| { kind: 'create' }
 	| { kind: 'angle'; value: number }
-	| { kind: 'stop'; index: number; position?: number; color?: Color; transparency?: number }
+	| {
+			kind: 'stop';
+			index: number;
+			position?: number;
+			color?: Color;
+			transparency?: number;
+			brightness?: number;
+	  }
 	| { kind: 'add'; index: number }
 	| { kind: 'remove'; index: number };
 
@@ -98,6 +106,8 @@ export function chartSeriesGradientPatch(
 					);
 					target.color = color;
 				}
+				if (edit.brightness !== undefined)
+					target.color = withDrawingColorBrightness(target.color, edit.brightness);
 				if (edit.transparency !== undefined) {
 					percent(edit.transparency);
 					target.color.transforms = target.color.transforms.filter(

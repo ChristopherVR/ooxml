@@ -29,6 +29,7 @@ export const CHART_SERIES_STRINGS: Translations = {
 	],
 	Position: ['Position', 'Position', 'Posición', '位置'],
 	Angle: ['Angle', 'Winkel', 'Ángulo', '角度'],
+	Brightness: ['Luminosité', 'Helligkeit', 'Brillo', '亮度'],
 	Transparency: ['Transparence', 'Transparenz', 'Transparencia', '透明度'],
 	Fill: ['Remplissage', 'Füllung', 'Relleno', '填充'],
 	Color: ['Couleur', 'Farbe', 'Color', '颜色'],

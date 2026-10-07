@@ -10,7 +10,7 @@ function Capture($name) {
         $fill=$probe.Worksheets.Item(1).ChartObjects(1).Chart.SeriesCollection(1).Format.Fill
         $stops=@(); foreach($index in 1..$fill.GradientStops.Count){
             $stop=$fill.GradientStops.Item($index)
-            $stops+=@{position=[double]$stop.Position*100;transparency=[double]$stop.Transparency*100;rgb=[int]$stop.Color.RGB}
+            $stops+=@{position=[double]$stop.Position*100;transparency=[double]$stop.Transparency*100;brightness=[double]$stop.Color.Brightness*100;rgb=[int]$stop.Color.RGB}
         }
         $zip=[IO.Compression.ZipFile]::OpenRead($path)
         try{$reader=[IO.StreamReader]::new($zip.GetEntry('xl/charts/chart1.xml').Open());try{$xml=$reader.ReadToEnd()}finally{$reader.Dispose()}}finally{$zip.Dispose()}
@@ -37,6 +37,12 @@ try {
     $fill.GradientStops.Delete(2); $cases+=Capture 'removed'
     $minimumRejected=$false
     try{$fill.GradientStops.Delete(1)}catch{$minimumRejected=$true}
+    foreach($value in @(-42,0,100,-100,37)) {
+        $fill.GradientStops.Item(1).Color.Brightness=[single]($value/100)
+        $cases+=Capture "brightness-$value"
+    }
+    $fill.GradientStops.Item(1).Color.RGB=16711680
+    $cases+=Capture 'brightness-recolor'
     @{excelVersion=[string]$excel.Version;excelBuild=[string]$excel.Build;cases=$cases;minimumRejected=$minimumRejected} |
         ConvertTo-Json -Depth 6 | Set-Content -Encoding utf8 (Join-Path $OutputFolder 'gradient-edits.json')
     Write-Output "Recorded gradient edits in $OutputFolder"

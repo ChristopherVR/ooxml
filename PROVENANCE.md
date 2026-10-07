@@ -952,3 +952,15 @@ identities in the model and source XML, measured by
 The new DOM stop strip is format-neutral; the XLSX pane pairs it with existing
 number fields and the themed color picker. All gradient model edits and source
 preservation remain in core.
+
+## Shared Office color brightness
+
+Source: ChristopherVR/ooxml at `a932dbd72`, the luminance conversion in
+`src/core/xlsx/edit/chart-series-fill.ts`. It moved to
+`src/core/diagram/drawing-color-brightness.ts`, retaining the theme-tint mapping
+and adding native brightness replacement and canonical-value reading. Both
+SpreadsheetML tints and gradient editing consume the same helper. The existing
+DrawingML resolver paints the result; no color engine was copied into the UI.
+`scripts/record-xlsx-chart-gradient-edits.ps1` now records Excel 16.0 build 20430
+brightness extremes, reset, opacity preservation and explicit COM RGB replacement
+in the independently saved/reopened native gradient fixture.

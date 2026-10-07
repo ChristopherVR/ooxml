@@ -9,6 +9,7 @@ export * from './data-model';
 export * from './definitions';
 export * from './drawing-color';
 export * from './drawing-color-css';
+export * from './drawing-color-brightness';
 export * from './drawing-fill';
 export * from './drawing-text';
 export * from './drawing-geometry';

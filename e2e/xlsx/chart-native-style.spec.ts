@@ -206,6 +206,24 @@ for (const framework of FRAMEWORKS)
 			'stop-color',
 			'#FF0000',
 		);
+		const brightness = pane.getByRole('spinbutton', { name: 'Brightness', exact: true });
+		for (const [value, paint] of [
+			[-42, '#940000'],
+			[100, '#FFFFFF'],
+			[-100, '#000000'],
+			[37, '#FF5E5E'],
+		] as const) {
+			await brightness.fill(String(value));
+			await brightness.press('Tab');
+			await expect(chart.locator('linearGradient[id$="-s1"] stop').nth(1)).toHaveAttribute(
+				'stop-color',
+				paint,
+			);
+			await expect(transparency).toHaveValue('37');
+		}
+		await brightness.fill('101');
+		await brightness.press('Tab');
+		await expect(brightness).toHaveValue('37');
 		await pane.getByRole('button', { name: 'Add gradient stop', exact: true }).click();
 		await expect(stops.getByRole('button')).toHaveCount(4);
 		await expect(
@@ -230,7 +248,15 @@ for (const framework of FRAMEWORKS)
 				{ position: 0 },
 				{
 					position: 23,
-					color: { kind: 'srgb', value: 'FF0000', transforms: [{ name: 'alpha', value: '63000' }] },
+					color: {
+						kind: 'srgb',
+						value: 'FF0000',
+						transforms: [
+							{ name: 'alpha', value: '63000' },
+							{ name: 'lumMod', value: '63000' },
+							{ name: 'lumOff', value: '37000' },
+						],
+					},
 				},
 			],
 		});
@@ -240,6 +266,7 @@ for (const framework of FRAMEWORKS)
 			(node as unknown as { readOnly: boolean }).readOnly = true;
 		});
 		await expect(position).toBeDisabled();
+		await expect(brightness).toBeDisabled();
 		await expect(stops.getByRole('button').first()).toBeDisabled();
 		expect(errors).toEqual([]);
 	});
