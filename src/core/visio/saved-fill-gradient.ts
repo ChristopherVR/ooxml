@@ -47,8 +47,8 @@ export function savedShapeGradient(
 	const angle = number(cells, `${paint}GradientAngle`, NaN);
 	const direction = number(cells, `${paint}GradientDir`, NaN);
 	const wrapped = ((angle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
-	// Quarter turns retain physical endpoints. Native oblique SVG references use
-	// bounding-box rotation, which differs from physical projection on rectangles.
+	// Native raster paint uses physical projection. Stroke descriptors retain
+	// normalized angles until the renderer supplies the physical line-width margin.
 	const quarter = Math.round(wrapped / (Math.PI / 2));
 	const orthogonal = Math.abs(wrapped - quarter * (Math.PI / 2)) < 1e-12;
 	if (
@@ -98,8 +98,12 @@ export function savedShapeGradient(
 					? radialFillGradient(direction, stops, [width, height])
 					: {
 							type: 'linear',
-							...(orthogonal
-								? linearGradientEndpoints(width, height, (quarter % 4) * 90 * 60_000)
+							...(orthogonal || paint === 'Fill'
+								? linearGradientEndpoints(
+										width,
+										height,
+										orthogonal ? (quarter % 4) * 90 * 60_000 : (wrapped * 180 * 60_000) / Math.PI,
+									)
 								: {
 										start: [0, 1] as const,
 										end: [1, 1] as const,

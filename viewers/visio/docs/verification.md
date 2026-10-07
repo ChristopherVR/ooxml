@@ -2,6 +2,44 @@
 
 Status: local Windows development evidence, 2026-10-03. Full Microsoft Visio parity is not established.
 
+## Physical oblique fill projection, 2026-10-08
+
+Two independent native raster captures cover 45-degree fill and 225-degree fill
+on a 30-degree rotated rectangle, each with two/three stops and opaque/translucent
+paint. Local directories are
+visio-fill-gradient-oblique-26c8157ed1c84e76963dffa1e62a2c9e and
+visio-fill-gradient-oblique-rotated-af4ad7a04ec34d41bff6fbcb48170211.
+The recorder owns its invisible application, restores raster settings and quits.
+
+All six routes pass live and portable SVG comparisons against unchanged native
+PNGs: 96 comparisons. Maximum channel error is four; means are below 0.773 and
+0.785 respectively. Comparisons cover 34,816 pixels in the unrotated capture
+and at least 8,350 in the rotated capture. Existing error bounds, native extents
+and independent pose checks are unchanged. Exact native pixel parity is open.
+
+Before the change, normalized native-SVG rotation reached maximum channel error
+81 for the 45-degree opaque two-stop fill. Saved linear fills now call the existing
+physical linearGradientEndpoints helper for oblique angles, as themed gradients
+already do. Stops and source XML remain intact; the existing scaling, SVG paint,
+snapshot and sigma/gamma paths consume physical endpoints. Generated tests check
+analytic endpoints and parser-to-SVG coordinates. The shared optional native
+regression preserves all four models from each new capture through move/save/core
+reparse, alongside the existing 68-, 84- and 32-case captures. Native-SVG export
+rotation is no longer the oblique saved-fill rendering oracle.
+
+A smaller native save/reopen probe used the genuine four-shape source and an
+edited candidate, in local directory
+visio-small-reopen-0f9404f5-0eb5-4fe4-b1de-e0aa83a17788. It hit a 25-second timeout
+while opening the original source, before opening or examining the candidate.
+The probe's owned processes were cleaned up; the user's existing Visio instance
+remained running. This establishes no native repair or candidate acceptance
+result. Native Office save/reopen acceptance remains unverified.
+
+Core Visio regressions passed 2,114 tests with 54 optional skips; UI passed 719
+with seven skips. Core/UI/viewer typechecks and fast builds pass. All gradients
+retain unverified-gradient-raster. Other shapes/angles, groups/flips, contour
+pixels and exact colors remain open.
+
 ## Saved linear stroke paint, 2026-10-08
 
 Additional native captures cover 45-degree paint and 225-degree paint on a

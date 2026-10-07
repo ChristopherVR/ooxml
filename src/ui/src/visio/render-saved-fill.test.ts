@@ -12,6 +12,7 @@ describe('saved gradient import and SVG paint', () => {
 		['Line', 0],
 		['Line', Math.PI],
 		['Line', Math.PI / 4],
+		['Fill', Math.PI / 4],
 	] as const)('renders %s angle %s with independent stop alpha', async (kind, angle) => {
 		const zip = await JSZip.loadAsync(await createVsdxFixture('Saved gradient'));
 		const cells = Object.entries({
@@ -36,11 +37,12 @@ describe('saved gradient import and SVG paint', () => {
 		const paint = result.svg.querySelector('linearGradient')!;
 		expect(paint).not.toBeNull();
 		if (angle === Math.PI / 4) {
+			const margin = kind === 'Line' ? 0.05 : 0;
 			expect(paint.getAttribute('gradientUnits')).toBe('userSpaceOnUse');
-			expect(Number(paint.getAttribute('x1'))).toBeCloseTo(0.45);
-			expect(Number(paint.getAttribute('y1'))).toBeCloseTo(1.55);
-			expect(Number(paint.getAttribute('x2'))).toBeCloseTo(2.55);
-			expect(Number(paint.getAttribute('y2'))).toBeCloseTo(-0.55);
+			expect(Number(paint.getAttribute('x1'))).toBeCloseTo(0.5 - margin);
+			expect(Number(paint.getAttribute('y1'))).toBeCloseTo(1.5 + margin);
+			expect(Number(paint.getAttribute('x2'))).toBeCloseTo(2.5 + margin);
+			expect(Number(paint.getAttribute('y2'))).toBeCloseTo(-0.5 - margin);
 		} else {
 			const margin = kind === 'Line' ? 0.05 : 0;
 			expect(Number(paint.getAttribute('x1'))).toBeCloseTo(angle === 0 ? -margin : 3 + margin);

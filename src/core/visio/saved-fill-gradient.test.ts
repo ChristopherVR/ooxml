@@ -147,18 +147,19 @@ it.each([
 });
 
 it.each([
-	[Math.PI / 6, -30],
-	[0.5235987755983, -30],
-	[-Math.PI / 4, -315],
-	[(5 * Math.PI) / 4, -225],
-])('retains native bounding-box rotation for oblique angle %s', async (angle, expected) => {
+	[Math.PI / 6, [0.0669872981, 2.1160254038], [3.9330127019, -0.1160254038]],
+	[0.5235987755983, [0.0669872981, 2.1160254038], [3.9330127019, -0.1160254038]],
+	[-Math.PI / 4, [0.5, -0.5], [3.5, 2.5]],
+	[(5 * Math.PI) / 4, [3.5, -0.5], [0.5, 2.5]],
+] as const)('projects native raster fill paint for oblique angle %s', async (angle, start, end) => {
 	const { style, diagnostics } = await parse(cell('FillGradientAngle', angle));
-	expect(style.fillGradient).toMatchObject({
-		type: 'linear',
-		start: [0, 1],
-		end: [1, 1],
-		boundingBoxAngle: expected,
-	});
+	const gradient = style.fillGradient;
+	if (gradient?.type !== 'linear') throw new Error('Expected an oblique linear gradient.');
+	expect(gradient.boundingBoxAngle).toBeUndefined();
+	for (let index = 0; index < 2; index++) {
+		expect(gradient.start[index]).toBeCloseTo(start[index]!, 9);
+		expect(gradient.end[index]).toBeCloseTo(end[index]!, 9);
+	}
 	expect(diagnostics.some((item) => item.code === 'unsupported-saved-fill-gradient')).toBe(false);
 });
 
