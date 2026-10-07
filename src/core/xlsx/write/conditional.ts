@@ -87,7 +87,11 @@ function ruleXml(rule: ConditionalRule, styles: StyleWriter, anchor: string): st
 				: '';
 			const bar = el(
 				'dataBar',
-				{ showValue: rule.showValue === false ? false : undefined },
+				{
+					showValue: rule.showValue === false ? false : undefined,
+					minLength: rule.minLength,
+					maxLength: rule.maxLength,
+				},
 				cfvoXml(rule.min) + cfvoXml(rule.max) + colorXml(rule.color),
 			);
 			return el('cfRule', { ...base, ...stop }, bar + ext);

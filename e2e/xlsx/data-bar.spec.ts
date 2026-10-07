@@ -40,7 +40,10 @@ test('native solid RTL data bars retain colors and borders through clipboard pas
 	// All five original bars use the same explicit direction and hide their values.
 	for (let i = 0; i < 5; i++) {
 		await expect(bars.nth(i)).toHaveCSS('background-image', 'none');
-		await expect(bars.nth(i)).toHaveCSS('right', '2px');
+		await expect(bars.nth(i).locator('..').locator('.xg-db-axis')).toHaveCSS(
+			'border-left-color',
+			'rgb(255, 0, 255)',
+		);
 	}
 	await expect(bars.nth(1)).toHaveCSS('background-color', 'rgb(0, 0, 255)');
 	await expect(bars.nth(1)).toHaveCSS('border-top-color', 'rgb(255, 255, 0)');

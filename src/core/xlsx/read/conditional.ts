@@ -101,6 +101,10 @@ function readRuleBody(
 				priority,
 			};
 			if (boolAttr(bar, 'showValue') === false) out.showValue = false;
+			const minLength = numAttr(bar, 'minLength');
+			const maxLength = numAttr(bar, 'maxLength');
+			if (minLength !== undefined) out.minLength = minLength;
+			if (maxLength !== undefined) out.maxLength = maxLength;
 			const ext = xFirst(rule, 'extLst');
 			const id = ext ? first(xFirst(ext, 'ext'), 'id', NS.x14) : undefined;
 			if (id?.textContent) out.extensionId = id.textContent.trim();

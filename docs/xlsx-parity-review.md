@@ -333,6 +333,41 @@ passed. The new data-bar browser regression and the 12 clipboard/file browser
 checks passed. Core/UI/viewer typechecks, strict core ESM/CJS/declaration builds,
 the UI build and all seven viewer package builds passed.
 
+## Data-bar axis and length follow-up
+
+The core now calculates normalized bar starts, lengths, growth direction and axis
+positions. Automatic axes separate positive and negative bars at zero; middle axes
+allocate half the cell width to each side. Explicit RTL mirrors that geometry.
+Automatic minimum/maximum limits include zero for one-sided ranges. Equal limits
+produce half-length bars, while all-zero axis ranges show the axis without a bar.
+The grid consumes these coordinates and paints the rule's dashed axis color.
+
+`scripts/record-xlsx-databar-geometry.ps1` uses a fresh hidden Excel application to
+record 72 worksheet/PDF cases, spanning three axis modes, both directions,
+automatic versus numeric limits, mixed/one-sided values and constant ranges.
+`scripts/extract-xlsx-databar-geometry.py` uses PyMuPDF to extract native solid-fill
+vectors, normalized to a full-length native reference bar. Committed JSON retains
+the source worksheet XML and measured coordinates, not generated workbooks/PDFs.
+Regression comparisons allow 0.015 for axis gaps and print quantization. All 72
+native comparisons and the legacy-length save/reload regression passed.
+
+Legacy base rules now retain explicit minimum/maximum length percentages and use
+their specified interpolation (defaults 10/90). That formula is documented in
+[Microsoft's base data-bar reference](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.databar?view=openxml-3.0.1).
+Automatic limits and axis options use the preserved extension and shared XML/color
+readers rather than introducing a second OOXML model.
+
+This covers the measured normalized geometry. Advanced non-default length
+percentages, thresholds outside the measured cases, contextual reading direction,
+gradient endpoint intensity and pixel-level insets/dashes still need native
+comparisons. Dedicated editor controls remain incomplete.
+
+Verification: 5,404 core XLSX tests, 313 shared UI tests, 47 binding tests and
+13 clipboard/file/data-bar browser checks passed. Core/UI/viewer typechecks,
+core ESM/CJS/declaration builds, the UI build and all seven binding package builds
+passed. Excel also opened and saved a library-authored legacy bar with explicit
+20/80 lengths, reporting those same percentages through its native object model.
+
 ## Evidence required for parity
 
 Track reading, display, editing, calculation and writing separately for each feature. A retained
