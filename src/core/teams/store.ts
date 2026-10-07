@@ -12,6 +12,7 @@ import type { Attachment, Channel, Message } from './model.js';
 import { createFileActions } from './files.js';
 import { checkFileAbort, withFileAbort, type FileOperationOptions } from './file-transfer.js';
 import type { ChannelTab, TabContent } from './tabs.js';
+import { channelThreads, type MessageThread } from './threads.js';
 import type { StreamLike } from './peer.js';
 import {
 	type ChannelView,
@@ -80,6 +81,9 @@ export interface TeamsState {
 	selectedChannelId: string;
 	channel: Channel | null;
 	messages: Message[];
+	posts: Message[];
+	replyCounts: Record<string, number>;
+	thread: MessageThread | null;
 	files: FileEntry[];
 	/** Every file in every channel, newest first. */
 	allFiles: FileEntry[];
@@ -127,6 +131,8 @@ export interface TeamsClient {
 	) => Promise<Attachment>;
 	send: (input: { text: string; files?: (UploadableFile & Blob)[] }) => Promise<void>;
 	startReply: (messageId: string) => void;
+	openThread: (messageId: string) => void;
+	closeThread: () => void;
 	startEdit: (messageId: string) => void;
 	cancelCompose: () => void;
 	deleteMessage: (messageId: string) => void;
@@ -209,18 +215,21 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			?.mediaDevices;
 
 	const messagesOf = (id: string): Message[] => ws.chat.messages(id);
+	let threadId = '';
 	const peers = (): PeerLike[] => ws.session.peers() as unknown as PeerLike[];
 	const visibleChannels = (): Channel[] => ws.chat.channels().filter((c) => !c.archived);
 
 	const compute = (): TeamsState => {
 		const channels = visibleChannels();
 		if (!channels.some((c) => c.id === selected)) {
+			threadId = replyId = editId = '';
 			selected = channels[0]?.id ?? '';
 			if (selected) ws.setActiveChannel(selected);
 		}
 		if (selected) lastRead[selected] = Date.now();
 		const p = peers();
 		const messages = selected ? messagesOf(selected) : [];
+		const threads = channelThreads(messages);
 		const channel = channels.find((c) => c.id === selected) ?? null;
 		const session = call?.session ?? null;
 		const participants = session?.participants() ?? [];
@@ -245,6 +254,9 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			selectedChannelId: selected,
 			channel,
 			messages,
+			posts: threads.posts,
+			replyCounts: threads.replyCounts,
+			thread: threads.thread(threadId),
 			files: filesOf(messages),
 			allFiles: allFilesOf(channels, messagesOf),
 			tabs: selected ? ws.tabs.tabs(selected) : [],
@@ -436,13 +448,14 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 		select: act((id) => {
 			if (id === selected) return;
 			selected = id;
-			replyId = editId = '';
+			threadId = replyId = editId = '';
 			ws.setActiveChannel(id);
 			scheduleSave();
 		}),
 		createChannel: act((name, topic = '') => {
 			const channel = ws.chat.createChannel({ name, topic });
 			if (channel) {
+				threadId = replyId = editId = '';
 				selected = channel.id;
 				ws.setActiveChannel(channel.id);
 			}
@@ -474,6 +487,16 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 		},
 		startReply: act((id) => {
 			if (find(id)) [replyId, editId] = [id, ''];
+		}),
+		openThread: act((id) => {
+			const thread = channelThreads(messagesOf(selected)).thread(id);
+			if (thread) {
+				threadId = thread.root.id;
+				replyId = editId = '';
+			}
+		}),
+		closeThread: act(() => {
+			threadId = replyId = editId = '';
 		}),
 		startEdit: act((id) => {
 			const m = find(id);

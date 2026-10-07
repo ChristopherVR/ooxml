@@ -14,6 +14,29 @@ afterEach(() => {
 });
 
 describe('teams client', () => {
+	it('keeps thread selection local and resets it when switching channels', async () => {
+		const client = make('ada', 'store-threads');
+		client.createChannel('Source');
+		await tick();
+		const channel = client.getState().selectedChannelId;
+		const root = client.workspace.chat.post(channel, { text: 'Root' })!;
+		const reply = client.workspace.chat.post(channel, { text: 'Reply', replyTo: root.id })!;
+		client.openThread(reply.id);
+		await tick();
+		expect(client.getState().thread?.root.id).toBe(root.id);
+		expect(client.getState().posts.map((post) => post.id)).toEqual([root.id]);
+		client.startReply(reply.id);
+		await client.send({ text: 'Nested reply' });
+		await tick();
+		expect(client.getState().thread?.replies).toHaveLength(2);
+		client.deleteMessage(root.id);
+		await tick();
+		expect(client.getState().thread?.root.deleted).toBe(true);
+		client.createChannel('Other');
+		await tick();
+		expect(client.getState().thread).toBeNull();
+		expect(client.getState().replyingTo).toBeNull();
+	});
 	it('passes cancellation to host storage and does not post a canceled copy', async () => {
 		const controller = new AbortController();
 		let seen: AbortSignal | undefined;
