@@ -88,10 +88,15 @@ test.describe('field substitution', () => {
 		browser,
 	}, testInfo) => {
 		test.slow();
-		const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
-			await loadDeckAt(page, origin, DECK);
-			return textPerSlide(page);
-		});
+		const results = await acrossFrameworks(
+			browser,
+			testInfo,
+			async (page, origin) => {
+				await loadDeckAt(page, origin, DECK);
+				return textPerSlide(page);
+			},
+			{ concurrency: 'sequential' },
+		);
 
 		const problems: string[] = [];
 		for (const result of results) {
@@ -127,10 +132,15 @@ test.describe('field substitution', () => {
 		browser,
 	}, testInfo) => {
 		test.slow();
-		const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
-			await loadDeckAt(page, origin, DECK);
-			return textPerSlide(page);
-		});
+		const results = await acrossFrameworks(
+			browser,
+			testInfo,
+			async (page, origin) => {
+				await loadDeckAt(page, origin, DECK);
+				return textPerSlide(page);
+			},
+			{ concurrency: 'sequential' },
+		);
 
 		const problems: string[] = [];
 		for (const result of results) {
@@ -152,14 +162,19 @@ test.describe('field substitution', () => {
 		browser,
 	}, testInfo) => {
 		test.slow();
-		const results = await acrossFrameworks(browser, testInfo, async (page, origin) => {
-			await loadDeckAt(page, origin, DECK);
-			// Move off slide 1 first: a binding that resolves every stage against the
-			// active slide still looks correct while slide 1 is the active slide.
-			await thumbnail(page, 3).click();
-			await expect.poll(() => stageText(page)).toContain(FIELD_SLIDE_TITLES[2]);
-			return thumbnailFieldNumbers(page);
-		});
+		const results = await acrossFrameworks(
+			browser,
+			testInfo,
+			async (page, origin) => {
+				await loadDeckAt(page, origin, DECK);
+				// Move off slide 1 first: a binding that resolves every stage against the
+				// active slide still looks correct while slide 1 is the active slide.
+				await thumbnail(page, 3).click();
+				await expect.poll(() => stageText(page)).toContain(FIELD_SLIDE_TITLES[2]);
+				return thumbnailFieldNumbers(page);
+			},
+			{ concurrency: 'sequential' },
+		);
 
 		const expected = FIELD_SLIDE_TITLES.map((_, index) => String(index + 1));
 		const problems: string[] = [];

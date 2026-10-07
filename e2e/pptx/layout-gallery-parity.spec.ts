@@ -33,7 +33,7 @@ import type { FrameworkDemo } from './support/frameworks';
 
 const DECK = fixture('sample-deck.pptx');
 
-/** Generous: five demos load the same deck concurrently in one test. */
+/** Per-menu budget; the five demos are loaded sequentially. */
 const MENU_TIMEOUT_MS = 15_000;
 
 /**
@@ -92,6 +92,8 @@ test.describe('layout gallery parity', () => {
 	test('every binding draws layout artwork and marks the current layout', async ({
 		browser,
 	}, testInfo) => {
+		// Five sequential cold loads exceed the ordinary single-demo test budget.
+		test.slow();
 		const frameworks = comparisonSet(testInfo.project.name);
 		const results: Array<{ framework: string; count: number; marked: number; artwork: number }> =
 			[];
