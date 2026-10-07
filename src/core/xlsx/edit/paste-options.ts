@@ -1,6 +1,15 @@
 import type { PasteOptions } from './types.js';
 
-const MODES = ['all', 'values', 'formats', 'formulas', 'noBorders', 'widths'] as const;
+const MODES = [
+	'all',
+	'values',
+	'formats',
+	'formulas',
+	'noBorders',
+	'widths',
+	'comments',
+	'validation',
+] as const;
 const OPERATIONS = ['none', 'add', 'subtract', 'multiply', 'divide'] as const;
 
 /** Normalizes command arguments and public paste options without coercing invalid values. */

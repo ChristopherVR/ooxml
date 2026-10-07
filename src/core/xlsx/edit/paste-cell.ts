@@ -16,6 +16,7 @@ export function writeClip(
 	styleOf: (clip: ClipboardCell) => number | undefined,
 	operation: PasteOperation,
 ): void {
+	if (mode === 'comments' || mode === 'validation') return;
 	if (mode === 'formats') {
 		const id = clip ? styleOf(clip) : 0;
 		if (id === undefined) return;
