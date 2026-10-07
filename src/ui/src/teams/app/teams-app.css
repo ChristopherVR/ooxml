@@ -413,6 +413,15 @@ ul.plain li > :first-child:not(office-ui-avatar) {
 	list-style: none;
 	padding: 0;
 }
+.followed-threads fieldset {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--office-space-4);
+	padding: var(--office-space-3);
+	margin-block: var(--office-space-3);
+	border: var(--office-border-width) solid var(--office-teams-divider);
+	border-radius: var(--office-radius-md);
+}
 .followed-threads li {
 	display: flex;
 	flex-wrap: wrap;
@@ -421,6 +430,18 @@ ul.plain li > :first-child:not(office-ui-avatar) {
 	padding-block: var(--office-space-3);
 	border-block-end: var(--office-border-width) solid var(--office-teams-divider);
 }
+.followed-threads button {
+	font: inherit;
+	color: inherit;
+	background: var(--office-background);
+	border: var(--office-border-width) solid var(--office-teams-divider);
+	border-radius: var(--office-radius-md);
+	padding: var(--office-space-2) var(--office-space-3);
+	cursor: pointer;
+}
+.followed-threads button:hover {
+	background: var(--office-selected);
+}
 .followed-threads li button:first-child {
 	display: grid;
 	gap: var(--office-space-2);
@@ -428,6 +449,7 @@ ul.plain li > :first-child:not(office-ui-avatar) {
 	text-align: start;
 	min-width: 0;
 	overflow-wrap: anywhere;
+	border-color: transparent;
 }
 .followed-threads li[data-unread='true'] button:first-child span {
 	font-weight: var(--office-font-weight-bold);

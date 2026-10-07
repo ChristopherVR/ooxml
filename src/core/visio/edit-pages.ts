@@ -8,6 +8,8 @@ import { parseXml } from '../xml/index.js';
 import { updatePageAppProperties } from './edit-page-properties.js';
 import { recalculatePageFormulas } from './edit-page-formulas.js';
 import { renameVisioPage } from './edit-page-rename.js';
+import { deleteVisioPage } from './edit-page-delete.js';
+import { relationshipsPartFor } from '../opc/relationships.js';
 import type { VisioPageEdit } from './edit-commands.js';
 import type { EditVsdxResult } from './edit.js';
 
@@ -33,7 +35,7 @@ export async function editVsdxPages(
 	const pagesPart = (await related(pkg, documentPart, 'pages'))!;
 	const slash = pagesPart.lastIndexOf('/');
 	const directory = pagesPart.slice(0, slash + 1);
-	const relsPart = `${directory}_rels/${pagesPart.slice(slash + 1)}.rels`;
+	const relsPart = relationshipsPartFor(pagesPart);
 	const pages = copy(await visioXml(pkg, pagesPart, 'Pages'));
 	const priorCount = children(pages, 'Page').length;
 	const pagePaths = new Map<string, string>();
@@ -42,6 +44,7 @@ export async function editVsdxPages(
 	const rels = copy(await pkg.readXml(relsPart, 'Relationships'));
 	const types = copy(await pkg.readXml('[Content_Types].xml', 'Types'));
 	const dirty = new Map<string, Element>();
+	const removed = new Set<string>();
 	const paths = new Set([...parts.keys()].map((path) => decodePath(path).toLowerCase()));
 	// An unused content-type override also reserves its part name.
 	for (const node of Array.from(types.childNodes)) {
@@ -59,6 +62,22 @@ export async function editVsdxPages(
 	for (const command of commands) {
 		check();
 		const existing = children(pages, 'Page');
+		if (command.type === 'delete-page') {
+			await deleteVisioPage(
+				pkg,
+				pagesPart,
+				pages,
+				rels,
+				types,
+				pagePaths,
+				parts,
+				dirty,
+				removed,
+				command.pageId,
+				check,
+			);
+			continue;
+		}
 		if (command.type === 'rename-page') {
 			await renameVisioPage(
 				pkg,
@@ -150,10 +169,7 @@ export async function editVsdxPages(
 	}
 	await updatePageAppProperties(pkg, pages, priorCount, dirty, limits, check);
 	await recalculatePageFormulas(pkg, pagesPart, pages, pagePaths, dirty, check);
-	if (
-		parts.size + commands.filter((command) => command.type === 'insert-page').length >
-		limits.maxEntries
-	)
+	if (new Set([...parts.keys(), ...dirty.keys()]).size > limits.maxEntries)
 		fail('LIMIT_ENTRIES', 'Page insertion exceeds package entry limit.');
 	let total = [...parts.values()].reduce((sum, bytes) => sum + bytes.length, 0),
 		nodes = 0;
@@ -178,7 +194,7 @@ export async function editVsdxPages(
 	check();
 	return {
 		bytes,
-		changedParts: [...dirty.keys()],
+		changedParts: [...new Set([...removed, ...dirty.keys()])],
 		diagnostics: [
 			{
 				code: 'edit-pages-experimental',

@@ -306,6 +306,33 @@ the additional automatic-limit case. The 12 shared GUID/PowerPoint identity test
 47 binding tests and 12 clipboard/file browser tests passed. Core (strict and PowerPoint), UI and
 viewer typechecks, core builds, published-import guards and packed-consumer smoke checks passed.
 
+## Data-bar appearance rendering follow-up
+
+The shared conditional-format evaluator now resolves linked x14 fill settings,
+explicit direction, positive/negative colors, enabled borders and their separate
+colors, and value visibility. It reuses the shared XML parser, SpreadsheetML color
+reader and theme/tint resolver, caching decoded appearance per rule. The DOM painter
+consumes those resolved settings: solid bars stay solid, explicit RTL bars anchor
+at the right, negative fills no longer always become red, and disabled borders
+remain absent. Legacy bars inherit their base fill for negative values.
+
+Three appearance variants from the existing native Excel fixture are checked with
+the real calculation engine. A grid regression loads the native worksheet and
+checks appearance changes repaint correctly. A browser regression imports the
+native sheet XML into a workbook and checks actual CSS, copy/paste and undo/redo.
+
+This establishes the tested appearance settings, not pixel parity. Axis placement,
+negative/positive bar lengths, minimum/maximum lengths and automatic thresholds
+still use incomplete geometry. Gradient endpoint intensity and outline dimensions
+need native visual comparisons. Context direction currently falls back to the
+sheet's RTL flag and still needs native comparisons against reading order and
+locale. Dedicated appearance editor controls and a complete typed model remain open.
+
+Verification: 5,331 core XLSX tests, 313 shared XLSX UI tests and 47 binding tests
+passed. The new data-bar browser regression and the 12 clipboard/file browser
+checks passed. Core/UI/viewer typechecks, strict core ESM/CJS/declaration builds,
+the UI build and all seven viewer package builds passed.
+
 ## Evidence required for parity
 
 Track reading, display, editing, calculation and writing separately for each feature. A retained

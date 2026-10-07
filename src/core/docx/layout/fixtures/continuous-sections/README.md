@@ -22,6 +22,14 @@ paragraphs, five paragraphs, 120 paragraphs spanning two pages, and a
 keep-with-next group. Word balances the last page's columns, leaves earlier
 pages filled normally, and retains the keep group in one column.
 
+Four unequal-column cases use 144 and 288 pt columns with a 36 pt gap, then
+reverse those widths. They cover even and odd paragraph counts and earlier-page
+overflow. Word balances the final page for these explicit widths as well. The
+short reference paragraphs do not wrap; separate deterministic engine tests
+exercise wrapped-text reflow across the balanced widths without losing tokens.
+The recorder uses the documented `TextColumns.Add` sequence for unequal widths:
+https://learn.microsoft.com/en-us/office/vba/api/word.pagesetup.textcolumns
+
 `continuous-sections.test.ts` loads these real packages and compares every
 nonempty paragraph's physical page and origin with the recorded values. The
 test uses a deterministic measurer: these short paragraphs do not wrap, and

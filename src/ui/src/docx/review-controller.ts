@@ -1,5 +1,6 @@
 import type { EditorView } from 'prosemirror-view';
 import type { Comment, DocumentModel } from 'ooxml-core/docx';
+import type { WordYjsCollaboration } from 'ooxml-core/docx/ui';
 import {
 	addComment,
 	commentIdsAtSelection,
@@ -27,6 +28,8 @@ export interface ReviewHost {
 	getView(): EditorView | undefined;
 	getReviewAuthor(): string;
 	getCollaborationIds(): ((kind: string) => string) | undefined;
+	getYjs(): WordYjsCollaboration | undefined;
+	canEditComments(): boolean;
 	notifyChange(): void;
 	refresh(): void;
 }
@@ -37,12 +40,19 @@ export class ReviewController {
 	constructor(private host: ReviewHost) {
 		this.commentsPanel = createCommentsPanel({
 			getModel: () => host.getModel(),
+			canEdit: () => host.canEditComments(),
 			canAdd: () => {
 				const view = host.getView();
-				return Boolean(view && !view.state.selection.empty);
+				return Boolean(host.canEditComments() && view && !view.state.selection.empty);
 			},
 			onAdd: (text) => this.addComment(text),
-			onReply: (parentId, text) =>
+			onReply: (parentId, text) => {
+				if (!host.canEditComments()) return;
+				const yjs = host.getYjs();
+				if (yjs) {
+					yjs.comments.reply(parentId, host.getReviewAuthor(), text, host.getCollaborationIds()!);
+					return;
+				}
 				this.updateComments(
 					replyToComment(
 						host.getModel().comments ?? [],
@@ -51,9 +61,17 @@ export class ReviewController {
 						text,
 						host.getCollaborationIds(),
 					),
-				),
-			onResolve: (id, resolved) =>
-				this.updateComments(resolveComment(host.getModel().comments ?? [], id, resolved)),
+				);
+			},
+			onResolve: (id, resolved) => {
+				if (!host.canEditComments()) return;
+				const yjs = host.getYjs();
+				if (yjs) {
+					yjs.comments.resolve(id, resolved);
+					return;
+				}
+				this.updateComments(resolveComment(host.getModel().comments ?? [], id, resolved));
+			},
 			onDelete: (id) => this.deleteById(id),
 			onClose: () => host.getView()?.focus(),
 		});
@@ -67,7 +85,13 @@ export class ReviewController {
 
 	/** Removes a comment, its replies and its anchored range in one go. */
 	private deleteById(id: string) {
+		if (!this.host.canEditComments()) return;
 		const view = this.host.getView();
+		const yjs = this.host.getYjs();
+		if (yjs) {
+			if (view) yjs.comments.delete(view, id);
+			return;
+		}
 		if (view) removeCommentAnchor(view, id);
 		this.updateComments(deleteComment(this.host.getModel().comments ?? [], id));
 	}
@@ -78,8 +102,14 @@ export class ReviewController {
 		this.host.refresh();
 	}
 	private addComment(text: string) {
+		if (!this.host.canEditComments()) return;
 		const view = this.host.getView();
 		if (!view) return;
+		const yjs = this.host.getYjs();
+		if (yjs) {
+			yjs.comments.add(view, this.host.getReviewAuthor(), text, this.host.getCollaborationIds()!);
+			return;
+		}
 		const comment = addComment(
 			view,
 			this.host.getReviewAuthor(),

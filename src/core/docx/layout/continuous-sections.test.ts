@@ -35,6 +35,10 @@ describe('native Word continuous section references', () => {
 		'balanced-odd',
 		'balanced-overflow',
 		'balanced-keep',
+		'balanced-unequal',
+		'balanced-unequal-odd',
+		'balanced-unequal-overflow',
+		'balanced-unequal-reverse',
 	])('matches paragraph page and origin in the %s reference', async (name) => {
 		const evidence = JSON.parse(await readFile(fixture('evidence.json'), 'utf8')) as {
 			cases: {
