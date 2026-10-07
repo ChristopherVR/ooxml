@@ -13,6 +13,7 @@ export type {
 	VisioGeometryEdit,
 	VisioPageInsert,
 	VisioPageReorder,
+	VisioPageRename,
 	VisioPageEdit,
 } from './edit-commands.js';
 

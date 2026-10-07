@@ -56,6 +56,7 @@ export {
 	type VisioTextEdit,
 	type VisioPageInsert,
 	type VisioPageReorder,
+	type VisioPageRename,
 	type VisioPageEdit,
 	type EditVsdxOptions,
 	type EditVsdxResult,

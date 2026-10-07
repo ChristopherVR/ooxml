@@ -7,6 +7,7 @@ import { serializeEditedXml } from './edit-text.js';
 import { parseXml } from '../xml/index.js';
 import { updatePageAppProperties } from './edit-page-properties.js';
 import { recalculatePageFormulas } from './edit-page-formulas.js';
+import { renameVisioPage } from './edit-page-rename.js';
 import type { VisioPageEdit } from './edit-commands.js';
 import type { EditVsdxResult } from './edit.js';
 
@@ -58,6 +59,19 @@ export async function editVsdxPages(
 	for (const command of commands) {
 		check();
 		const existing = children(pages, 'Page');
+		if (command.type === 'rename-page') {
+			await renameVisioPage(
+				pkg,
+				pagesPart,
+				pages,
+				pagePaths,
+				dirty,
+				command.pageId,
+				command.name,
+				check,
+			);
+			continue;
+		}
 		if (command.type === 'reorder-page') {
 			const target = existing.find((page) => attribute(page, 'ID') === command.pageId);
 			if (!target) fail('EDIT_TARGET_NOT_FOUND', 'Page does not exist.');

@@ -315,3 +315,45 @@ references enabled (30 optional skips); strict core typechecking and Visio ESM/C
 builds passed. All 702 shared Visio UI tests passed (six optional native skips),
 all six browser insertion/reordering/history/save workflows passed, and all 48
 documentation checks passed.
+
+## Page renaming with references (2026-10-07)
+
+The shared All pages menu now opens a Rename Page modal. Its draft captures a stable
+page ID and document generation. Cancel leaves bytes unchanged, invalid names remain
+editable, source replacement closes stale drafts, and undo/redo preserve page and
+shape selection. The saved copy retains the renamed page after reopening in each
+of the six framework demos.
+
+Core `rename-page` changes the local name. When the universal name is not custom,
+the first rename changes both names and marks them custom. Subsequent local renames
+preserve a custom universal name, matching native Visio 16.0. The distinction is
+documented in Microsoft's [Page.Name](https://learn.microsoft.com/en-us/office/vba/api/visio.page.name)
+and [Page.NameU](https://learn.microsoft.com/en-us/office/vba/api/visio.page.nameu)
+references. Stable IDs, OPC targets and background assignments are preserved;
+the Pages category in app properties is refreshed.
+
+Static `Pages[NameU]!` references are rewritten outside formula string literals.
+Literal hyperlink subaddresses and direct local/cross-page `PAGENAME()` and
+`PAGENAME(750)` caches are updated with their local/universal names. Core follows
+relationships rather than assuming conventional page part paths, and preserves
+unrelated opaque XML. Complex page-name expressions, affected string-valued
+dependent formulas, dynamic dependencies and inherited page-name caches remain
+outside the admitted subset and reject the transaction atomically. General text
+field display recalculation and arbitrary page-name formula graphs remain open.
+
+Native acceptance covered a shape's page-name cache, a cross-page PageWidth formula
+and a hyperlink into the renamed page. Both the first rename and a subsequent local
+rename opened and saved in Microsoft Visio with every expected name, cache,
+reference and link target. Reproduce with `scripts/record-visio-page-rename.ps1`,
+set `VISIO_NATIVE_PAGE_RENAME_DIR`, run `visio/edit-page-rename.test.ts`, then pass
+`-CoreOutputPath` and `-CoreSecondOutputPath` to the oracle script. Compact results
+are in `visio/__fixtures__/page-rename-native.json`; native VSDX outputs stay local.
+
+Verification: 1,991 Visio core tests passed with native references enabled (30
+optional skips), 705 shared Visio UI tests passed (six optional skips), and all six
+browser page insertion/reorder/rename/history/save workflows passed. Strict core
+typechecking, core Visio ESM/CJS and shared UI ESM builds passed. Full Visio parity
+remains unproven; page deletion, inherited/string formula closure and the broader
+rendering/interaction corpus remain required.
+The broad UI typecheck still reports the existing Teams/PowerPoint declaration
+resolution errors; it reports no Visio errors.
