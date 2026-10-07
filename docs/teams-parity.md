@@ -346,6 +346,21 @@ outstanding. Microsoft's [file-open preferences](https://support.microsoft.com/e
 and [Shared file downloads](https://support.microsoft.com/en-us/teams/files/download-a-file-from-microsoft-teams)
 are the workflow references.
 
+## Seventeenth implemented slice: personal chat density and reload persistence
+
+Appearance and accessibility offers Comfy and Compact with native radio controls.
+Compact reduces actual message gaps and bubble padding in channel posts and open
+threads. The choice persists per user/workspace on this device without changing
+other users' preferences. Browser acceptance measures rendered spacing, keyboard
+selection, reload restoration and switching back to Comfy across all six bindings.
+The app flushes pending document snapshots on pagehide so immediately reloading
+after sending a message preserves it. The core exposes flushStorage for hosts
+that own their own lifecycle, without closing the client or interrupting a
+back/forward-cache return. This remains browser-local persistence, not a server
+durability guarantee. Microsoft's [chat density settings](https://support.microsoft.com/en-us/accessibility/teams/customize-your-teams-chat-interface-with-chat-density-settings)
+are the reference; chat-list previews and account-synchronized preferences remain
+outstanding.
+
 ## Next releasable slices
 
 1. UI parity: match the current Teams shell, Shared/Files commands, Settings

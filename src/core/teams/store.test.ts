@@ -14,6 +14,31 @@ afterEach(() => {
 });
 
 describe('teams client', () => {
+	it('flushes a snapshot without closing the client and persists subsequent edits', async () => {
+		const values = new Map<string, string>();
+		const storage = {
+			getItem: (key: string) => values.get(key) ?? null,
+			setItem: (key: string, value: string) => void values.set(key, value),
+		};
+		const client = make('ada', 'page-exit-persistence', { storage });
+		client.createChannel('Project');
+		await tick();
+		await client.send({ text: 'Before page exit' });
+		client.flushStorage();
+		const restored = make('bob', 'page-exit-persistence', { storage });
+		await tick();
+		expect(restored.getState().messages.map((message) => message.text)).toEqual([
+			'Before page exit',
+		]);
+		await client.send({ text: 'After returning' });
+		client.flushStorage();
+		const returned = make('charlie', 'page-exit-persistence', { storage });
+		await tick();
+		expect(returned.getState().messages.map((message) => message.text)).toEqual([
+			'Before page exit',
+			'After returning',
+		]);
+	});
 	it('flushes recent posts and shared tabs before a client is replaced', async () => {
 		const values = new Map<string, string>();
 		const storage = {

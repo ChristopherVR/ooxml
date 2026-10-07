@@ -176,6 +176,8 @@ export interface TeamsClient {
 	toggleCamera: () => Promise<void>;
 	toggleScreenShare: () => Promise<void>;
 	toggleHand: () => void;
+	/** Persist pending local snapshots before navigation, without closing the client. */
+	flushStorage: () => void;
 	destroy: () => void;
 }
 
@@ -797,6 +799,11 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			refresh();
 		},
 		toggleHand: act(() => call?.session?.toggleHand()),
+		flushStorage() {
+			if (destroyed) return;
+			clearTimeout(saveTimer);
+			saveSnapshot();
+		},
 		destroy() {
 			if (destroyed) return;
 			saveSnapshot();

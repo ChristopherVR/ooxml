@@ -13,6 +13,7 @@ export class TeamsController implements ReactiveController {
 	client: TeamsClient | null = null;
 	state: TeamsState | null = null;
 	private off: (() => void)[] = [];
+	private readonly flush = (): void => this.client?.flushStorage();
 
 	constructor(
 		private readonly host: ReactiveControllerHost,
@@ -44,6 +45,11 @@ export class TeamsController implements ReactiveController {
 	}
 
 	hostDisconnected(): void {
+		globalThis.removeEventListener('pagehide', this.flush);
 		this.stop();
+	}
+
+	hostConnected(): void {
+		globalThis.addEventListener('pagehide', this.flush);
 	}
 }

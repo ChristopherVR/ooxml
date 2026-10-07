@@ -8,6 +8,7 @@ import {
 } from 'ooxml-core/teams';
 import css from './teams-settings.css?raw';
 import { iceToText, parseIceLines } from './settings-connection.js';
+import { densityChoices, type ChatDensity } from './settings-density.js';
 export { iceToText, parseIceLines } from './settings-connection.js';
 
 const CATEGORIES = [
@@ -34,6 +35,7 @@ export class TeamsSettings extends LitElement {
 		followSettings: { attribute: false },
 		userName: { attribute: false },
 		fileOpenPreference: { attribute: false },
+		chatDensity: { attribute: false },
 	};
 	declare config: TeamsServerConfig;
 	declare open: boolean;
@@ -43,6 +45,7 @@ export class TeamsSettings extends LitElement {
 	declare followSettings: ThreadFollowSettings;
 	declare userName: string;
 	declare fileOpenPreference: 'teams' | 'browser';
+	declare chatDensity: ChatDensity;
 
 	constructor() {
 		super();
@@ -54,6 +57,7 @@ export class TeamsSettings extends LitElement {
 		this.followSettings = { started: true, replied: true };
 		this.userName = '';
 		this.fileOpenPreference = 'teams';
+		this.chatDensity = 'comfy';
 	}
 
 	protected override updated(changed: PropertyValues<this>): void {
@@ -172,6 +176,7 @@ export class TeamsSettings extends LitElement {
 							<div class="theme-options">
 								${(['system', 'light', 'dark'] as const).map((theme) => html`<button type="button" aria-pressed=${String(this.theme === theme)} @click=${() => this.dispatchEvent(new CustomEvent('teams-settings-theme', { detail: { theme }, bubbles: true, composed: true }))}><span class="theme-swatch" data-theme=${theme}></span>${theme === 'system' ? 'Follow system' : theme === 'light' ? 'Light' : 'Dark'}</button>`)}
 							</div>
+							${densityChoices(this.chatDensity, (density) => this.dispatchEvent(new CustomEvent('teams-settings-density', { detail: { density }, bubbles: true, composed: true })))}
 							<p class="description">
 								Changes apply immediately to this OpenTeams workspace. Keyboard focus and system
 								high-contrast preferences remain available.

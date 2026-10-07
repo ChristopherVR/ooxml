@@ -98,6 +98,7 @@ export class TeamsApp extends LitElement {
 		followedUnreadOnly: { state: true },
 		theme: { state: true },
 		fileOpenPreference: { state: true },
+		chatDensity: { state: true },
 	};
 	declare workspaceId: string;
 	declare userName: string;
@@ -123,6 +124,7 @@ export class TeamsApp extends LitElement {
 	declare followedUnreadOnly: boolean;
 	declare theme: TeamsTheme;
 	declare fileOpenPreference: 'teams' | 'browser';
+	declare chatDensity: 'comfy' | 'compact';
 
 	private readonly teams = new TeamsController(this, (text) => this.notify(text));
 	private toastTimer: ReturnType<typeof setTimeout> | undefined;
@@ -160,6 +162,7 @@ export class TeamsApp extends LitElement {
 		this.followedUnreadOnly = false;
 		this.theme = 'system';
 		this.fileOpenPreference = 'teams';
+		this.chatDensity = 'comfy';
 	}
 
 	/** The core client behind this element, for hosts that want the raw actions. */
@@ -218,6 +221,11 @@ export class TeamsApp extends LitElement {
 		this.theme =
 			rememberedTheme === 'dark' || rememberedTheme === 'light' ? rememberedTheme : 'system';
 		this.applyTheme();
+		this.chatDensity =
+			safeStorage.getItem(this.themeStorageKey.replace('teams:theme:', 'teams:density:')) ===
+			'compact'
+				? 'compact'
+				: 'comfy';
 		this.fileOpenPreference =
 			safeStorage.getItem(this.themeStorageKey.replace('teams:theme:', 'teams:file-open:')) ===
 			'browser'
@@ -236,6 +244,7 @@ export class TeamsApp extends LitElement {
 	}
 
 	protected override updated(): void {
+		this.setAttribute('data-chat-density', this.chatDensity);
 		const state = this.teams.state;
 		if (
 			state?.thread &&
@@ -426,6 +435,15 @@ export class TeamsApp extends LitElement {
 					.config=${this.resolveConfig()}
 					.theme=${this.theme}
 					.fileOpenPreference=${this.fileOpenPreference}
+					.chatDensity=${this.chatDensity}
+					@teams-settings-density=${(event: CustomEvent<{ density: 'comfy' | 'compact' }>) => {
+						if (!['comfy', 'compact'].includes(event.detail.density)) return;
+						this.chatDensity = event.detail.density;
+						safeStorage.setItem(
+							this.themeStorageKey.replace('teams:theme:', 'teams:density:'),
+							this.chatDensity,
+						);
+					}}
 					@teams-settings-file-open=${(event: CustomEvent<{ preference: 'teams' | 'browser' }>) => {
 						if (!['teams', 'browser'].includes(event.detail.preference)) return;
 						this.fileOpenPreference = event.detail.preference;

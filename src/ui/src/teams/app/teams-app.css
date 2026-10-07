@@ -13,6 +13,10 @@
 	--office-surface: var(--office-teams-bubble);
 	--office-popover: var(--office-teams-panel);
 }
+:host([data-chat-density='compact']) {
+	--office-teams-message-gap: var(--office-space-1);
+	--office-teams-message-padding: var(--office-space-1) var(--office-space-2);
+}
 @media (prefers-color-scheme: dark) {
 	:host(:not([data-office-theme='light'])) {
 		--office-background: var(--office-teams-panel);
