@@ -1,12 +1,12 @@
-import { APPS, appIcon, isLive } from './apps.js';
+import { APPS, appIcon, isLive } from './apps.js?v=launcher-20261007';
 import { disintegrate } from './chungus-dust.js';
 import { createSound } from './chungus-sound.js';
 
 /**
- * The Chungus button: a very large rabbit walks in, snaps a gold gauntlet and
+ * The console-only Chungus easter egg: a very large rabbit walks in, snaps a gold gauntlet and
  * turns the subscription suite to dust, leaving the open-source apps behind.
  * Pure decoration; it holds no Office logic and never touches the apps. The
- * 3D scene (three.js from a CDN) loads only when the button is pressed.
+ * 3D scene (three.js from a CDN) loads only when window.chungus() is called.
  */
 
 /** The suite being snapped. Plain letter tiles drawn here, not vendor logos. */
@@ -18,9 +18,6 @@ const OLD_SUITE = [
 ];
 
 const LOCK = `<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5" fill="currentColor"/><path d="M5 7V5a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>`;
-
-/** How often the button turns up on a page load; `?chungus` always shows it. */
-const APPEARANCE_CHANCE = 0.2;
 
 const ABORT = Symbol('abort');
 const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -92,10 +89,7 @@ function pin(el, point) {
 }
 
 export function initChungus() {
-	const trigger = document.getElementById('chungus');
-	// An easter egg: the gauntlet only shows up now and then.
-	const forced = new URLSearchParams(location.search).has('chungus');
-	if (trigger && (forced || Math.random() < APPEARANCE_CHANCE)) trigger.hidden = false;
+	let previousFocus = null;
 	/** @type {HTMLElement | null} */
 	let root = null;
 	let run = 0;
@@ -113,7 +107,7 @@ export function initChungus() {
 		root = null;
 		document.body.classList.remove('chungus-open');
 		document.removeEventListener('keydown', onKey);
-		trigger?.focus();
+		previousFocus?.focus();
 	}
 
 	function onKey(event) {
@@ -185,6 +179,7 @@ export function initChungus() {
 
 	function open() {
 		if (root) return;
+		previousFocus = document.activeElement;
 		sound = createSound();
 		root = document.createElement('div');
 		root.className = 'chungus';
@@ -201,7 +196,8 @@ export function initChungus() {
 		void play(root);
 	}
 
-	trigger?.addEventListener('click', open);
+	// Run window.chungus() in the console to open the easter egg.
+	window.chungus = open;
 	// Any link inside (an app, or back to the suite) changes the route.
 	window.addEventListener('hashchange', close);
 }

@@ -46,15 +46,18 @@ export class OfficeUiChatList extends TeamsElement {
 	static override properties = {
 		messages: { attribute: false },
 		selfId: { type: String, attribute: 'self-id' },
+		replyCounts: { attribute: false },
 	};
 	declare messages: ChatMessage[];
 	declare selfId: string;
+	declare replyCounts: Record<string, number>;
 	private stickToBottom = true;
 
 	constructor() {
 		super();
 		this.messages = [];
 		this.selfId = '';
+		this.replyCounts = {};
 	}
 
 	override connectedCallback(): void {
@@ -95,7 +98,12 @@ export class OfficeUiChatList extends TeamsElement {
 		const own = m.authorId === this.selfId;
 		const reactions = Object.entries(m.reactions ?? {}).filter(([, users]) => users.length > 0);
 		return html`
-			<article class="msg" data-own=${String(own)} data-grouped=${String(grouped)}>
+			<article
+				class="msg"
+				data-message-id=${m.id}
+				data-own=${String(own)}
+				data-grouped=${String(grouped)}
+			>
 				<div class="gutter">
 					${
 						grouped
@@ -150,6 +158,7 @@ export class OfficeUiChatList extends TeamsElement {
 							: nothing
 					}
 					${m.deleted ? nothing : this.toolbar(m, own)}
+					${this.replyCounts[m.id] === undefined ? nothing : html`<button type="button" class="thread-link" @click=${() => this.fire('office-chat-thread', { messageId: m.id })}>${this.replyCounts[m.id]} ${this.replyCounts[m.id] === 1 ? 'reply' : 'replies'}</button>`}
 				</div>
 			</article>
 		`;

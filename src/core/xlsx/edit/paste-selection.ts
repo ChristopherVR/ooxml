@@ -4,6 +4,8 @@ import type { EditContext } from './context.js';
 import type { ClipboardPayload, PasteRequest } from './types.js';
 import { resolvePasteOptions } from './paste-options.js';
 import { pasteWidths } from './paste-widths.js';
+import { pasteConditionalFormats } from './clipboard-conditional.js';
+import { sheetAt } from './context.js';
 
 /** Repeat a copied block over a compatible selection, using one undoable paste. */
 export function pasteSelection(
@@ -40,17 +42,33 @@ export function pasteSelection(
 	if (rows * cols > 250_000) throw new RangeError('The selected paste area is too large.');
 	// The outer step captures every destination cell and merge once, rather than per tile.
 	const tileContext: EditContext = { ...ctx, run: (_label, _kind, _scopes, fn) => fn() };
+	const tileClip = { ...clip, cells: { ...clip.cells } };
+	delete tileClip.cells.conditionalFormats;
 	return ctx.run(
 		'Paste',
 		'cells',
 		[
 			{ kind: 'cells', sheet, ranges: [dest] },
-			{ kind: 'parts', sheet, parts: ['merges', 'comments', 'dataValidations', 'hyperlinks'] },
+			{
+				kind: 'parts',
+				sheet,
+				parts: ['merges', 'comments', 'dataValidations', 'hyperlinks', 'conditionalFormats'],
+			},
 		],
 		() => {
 			for (let row = dest.start.row; row <= dest.end.row; row += height)
 				for (let col = dest.start.col; col <= dest.end.col; col += width)
-					pasteAt(tileContext, sheet, { row, col }, clip, options);
+					pasteAt(tileContext, sheet, { row, col }, tileClip, options);
+			if (['all', 'formats', 'noBorders', 'mergeFormats'].includes(options.mode))
+				pasteConditionalFormats(
+					sheetAt(ctx.workbook, sheet),
+					dest,
+					clip.cells,
+					options.transpose,
+					options.skipBlanks,
+					undefined,
+					options.mode === 'mergeFormats',
+				);
 			return dest;
 		},
 		{ sheet, ranges: [dest] },

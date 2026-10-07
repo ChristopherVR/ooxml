@@ -47,6 +47,19 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await expect(tabs.getByRole('tab').last()).toHaveAttribute('aria-selected', 'true');
 		await viewer.locator('[command="redo"]').getByRole('button').click();
 		await expect(tabs.getByRole('tab').first()).toHaveText('Page-2');
+		await viewer
+			.locator('[data-menu="all-pages"]')
+			.getByRole('button', { name: 'All', exact: true })
+			.click();
+		await viewer.locator('office-ui-menu-item[command="rename-page"]').click();
+		const renameDialog = viewer.locator('.page-rename-dialog');
+		await renameDialog.getByRole('textbox', { name: 'Page name' }).fill('Renamed & Page');
+		await renameDialog.getByRole('button', { name: 'OK', exact: true }).click();
+		await expect(tabs.getByRole('tab').first()).toHaveText('Renamed & Page');
+		await viewer.locator('[command="undo"]').getByRole('button').click();
+		await expect(tabs.getByRole('tab').first()).toHaveText('Page-2');
+		await viewer.locator('[command="redo"]').getByRole('button').click();
+		await expect(tabs.getByRole('tab').first()).toHaveText('Renamed & Page');
 		const downloadButton = await downloadCopy(viewer);
 		const pending = page.waitForEvent('download');
 		await downloadButton.click();
@@ -60,6 +73,6 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		});
 		await expect(page.locator('#file-name')).toHaveText('reopened-pages.vsdx');
 		await expect(tabs.getByRole('tab')).toHaveCount(2);
-		await expect(tabs.getByRole('tab', { name: 'Page-2', exact: true })).toHaveCount(1);
+		await expect(tabs.getByRole('tab', { name: 'Renamed & Page', exact: true })).toHaveCount(1);
 	});
 }

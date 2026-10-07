@@ -40,6 +40,12 @@ export const TOOLS_STRINGS: Translations = {
 	Formulas: ['Formules', 'Formeln', 'Fórmulas', '公式'],
 	Values: ['Valeurs', 'Werte', 'Valores', '数值'],
 	Formats: ['Formats', 'Formate', 'Formatos', '格式'],
+	'All merging conditional formats': [
+		'Tout, fusionner les mises en forme conditionnelles',
+		'Alles, bedingte Formate zusammenführen',
+		'Todo, combinar formatos condicionales',
+		'全部并合并条件格式',
+	],
 	'All except borders': [
 		'Tout sauf la bordure',
 		'Alles außer Rahmen',

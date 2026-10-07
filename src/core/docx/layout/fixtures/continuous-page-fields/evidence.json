@@ -1,0 +1,224 @@
+{
+  "application": "Microsoft Word",
+  "version": "16.0",
+  "build": "16.0.20430",
+  "measurement": "visible text in Word ExportAsFixedFormat PDFs, extracted with pypdf",
+  "cases": [
+    {
+      "name": "default",
+      "pages": [
+        {
+          "header": "H-A-default",
+          "footer": "F-A-default P:1 S:1"
+        },
+        {
+          "header": "H-B-default",
+          "footer": "F-B-default P:2 S:3"
+        },
+        {
+          "header": "H-B-default",
+          "footer": "F-B-default P:3 S:3"
+        }
+      ]
+    },
+    {
+      "name": "even-odd",
+      "pages": [
+        {
+          "header": "H-A-default",
+          "footer": "F-A-default P:1 S:1"
+        },
+        {
+          "header": "H-B-even",
+          "footer": "F-B-even P:2 S:3"
+        },
+        {
+          "header": "H-B-default",
+          "footer": "F-B-default P:3 S:3"
+        }
+      ]
+    },
+    {
+      "name": "even-page-restart-odd",
+      "pages": [
+        {
+          "header": "H-A-default",
+          "footer": "F-A-default P:1 S:2"
+        },
+        {
+          "header": "H-A-even",
+          "footer": "F-A-even P:2 S:2"
+        },
+        {
+          "header": "H-B-default",
+          "footer": "F-B-default P:11 S:3"
+        },
+        {
+          "header": "H-B-even",
+          "footer": "F-B-even P:12 S:3"
+        }
+      ]
+    },
+    {
+      "name": "even-page-restart",
+      "pages": [
+        {
+          "header": "H-A-default",
+          "footer": "F-A-default P:1 S:2"
+        },
+        {
+          "header": "H-A-even",
+          "footer": "F-A-even P:2 S:2"
+        },
+        {
+          "header": "H-B-default",
+          "footer": "F-B-default P:11 S:3"
+        },
+        {
+          "header": "H-B-even",
+          "footer": "F-B-even P:12 S:3"
+        }
+      ]
+    },
+    {
+      "name": "even-restart-odd",
+      "pages": [
+        {
+          "header": "H-A-default",
+          "footer": "F-A-default P:1 S:1"
+        },
+        {
+          "header": "H-B-even",
+          "footer": "F-B-even P:12 S:3"
+        },
+        {
+          "header": "H-B-default",
+          "footer": "F-B-default P:13 S:3"
+        }
+      ]
+    },
+    {
+      "name": "even-restart-one",
+      "pages": [
+        {
+          "header": "H-A-default",
+          "footer": "F-A-default P:1 S:1"
+        },
+        {
+          "header": "H-B-even",
+          "footer": "F-B-even P:2 S:3"
+        },
+        {
+          "header": "H-B-default",
+          "footer": "F-B-default P:3 S:3"
+        }
+      ]
+    },
+    {
+      "name": "even-restart",
+      "pages": [
+        {
+          "header": "H-A-default",
+          "footer": "F-A-default P:1 S:1"
+        },
+        {
+          "header": "H-B-even",
+          "footer": "F-B-even P:10 S:3"
+        },
+        {
+          "header": "H-B-default",
+          "footer": "F-B-default P:11 S:3"
+        }
+      ]
+    },
+    {
+      "name": "restart",
+      "pages": [
+        {
+          "header": "H-A-default",
+          "footer": "F-A-default P:1 S:1"
+        },
+        {
+          "header": "H-B-default",
+          "footer": "F-B-default P:11 S:3"
+        },
+        {
+          "header": "H-B-default",
+          "footer": "F-B-default P:12 S:3"
+        }
+      ]
+    },
+    {
+      "name": "roman-even-page-restart",
+      "pages": [
+        {
+          "header": "H-A-default",
+          "footer": "F-A-default P:1 S:2"
+        },
+        {
+          "header": "H-A-even",
+          "footer": "F-A-even P:2 S:2"
+        },
+        {
+          "header": "H-B-default",
+          "footer": "F-B-default P:xi S:3"
+        },
+        {
+          "header": "H-B-even",
+          "footer": "F-B-even P:xii S:3"
+        }
+      ]
+    },
+    {
+      "name": "roman-even-restart",
+      "pages": [
+        {
+          "header": "H-A-default",
+          "footer": "F-A-default P:1 S:1"
+        },
+        {
+          "header": "H-B-even",
+          "footer": "F-B-even P:x S:3"
+        },
+        {
+          "header": "H-B-default",
+          "footer": "F-B-default P:xi S:3"
+        }
+      ]
+    },
+    {
+      "name": "title-page",
+      "pages": [
+        {
+          "header": "H-A-default",
+          "footer": "F-A-default P:1 S:1"
+        },
+        {
+          "header": "H-B-default",
+          "footer": "F-B-default P:2 S:3"
+        },
+        {
+          "header": "H-B-default",
+          "footer": "F-B-default P:3 S:3"
+        }
+      ]
+    },
+    {
+      "name": "title-restart",
+      "pages": [
+        {
+          "header": "H-A-default",
+          "footer": "F-A-default P:1 S:1"
+        },
+        {
+          "header": "H-B-default",
+          "footer": "F-B-default P:11 S:3"
+        },
+        {
+          "header": "H-B-default",
+          "footer": "F-B-default P:12 S:3"
+        }
+      ]
+    }
+  ]
+}

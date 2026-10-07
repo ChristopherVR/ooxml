@@ -9,6 +9,7 @@ export interface VisioCellKey {
 	cell: string;
 }
 export interface VisioRecalculationOptions {
+	pageContext?: ReadonlyMap<string, { pageNumber: number; pageCount: number }>;
 	maxCells?: number;
 	maxAffectedCells?: number;
 	maxSteps?: number;

@@ -1,78 +1,31 @@
 import {
-	dateFieldResult,
 	fieldName,
-	formatNoteNumber,
 	type Block,
 	type DocumentModel,
 	type HeaderFooterContent,
-	type HeaderFooterSlots,
 	type Paragraph,
 	type TextRun,
 } from 'ooxml-core/docx';
-import { floatPosition, paragraphFloats, type LayoutPageBox } from 'ooxml-core/docx/layout';
+import {
+	floatPosition,
+	paragraphFloats,
+	pageNumbers,
+	pageNumberValues,
+	sectionPageCounts,
+	headerFooterForPage,
+	fieldDisplayText,
+	type PageFieldContext,
+	type LayoutPageBox,
+} from 'ooxml-core/docx/layout';
 import type { PictureUrl } from './print-layout';
 
 /** Page facts a header or footer field can show. */
-export interface PageFieldValues {
-	page: string;
-	numPages: string;
-	sectionPages: string;
-	/** When the layout was produced; DATE and TIME fields update to it, as Word updates them. */
-	now?: Date;
+export interface PageFieldValues extends PageFieldContext {
 	/** Resolves header/footer pictures to displayable URLs. */
 	pictureUrl?: PictureUrl;
 }
 
-/** Word page numbers per laid-out page, honoring each section's restart value and number format. */
-export function pageNumbers(model: DocumentModel, pages: LayoutPageBox[]): string[] {
-	let previous = 0;
-	return pages.map((page) => {
-		const numbering = model.sections?.[page.sectionIndex]?.pageNumbering;
-		const value =
-			page.pageInSection === 0 && numbering?.start !== undefined ? numbering.start : previous + 1;
-		previous = value;
-		return formatNoteNumber(value, numbering?.format ?? 'decimal');
-	});
-}
-
-/**
- * The header or footer Word shows on a page: the first-page slot on a section's first page when
- * `titlePg` is set, the even slot on even pages when `evenAndOddHeaders` is on, else the default.
- * Sections without their own reference inherit the previous section's.
- */
-export function headerFooterForPage(
-	model: DocumentModel,
-	page: LayoutPageBox,
-	pageNumber: number,
-	kind: 'headers' | 'footers',
-): HeaderFooterContent | undefined {
-	const sections = model.sections ?? [];
-	const section = sections[page.sectionIndex];
-	if (!section) return undefined;
-	const slot: keyof HeaderFooterSlots =
-		page.pageInSection === 0 && section.titlePage
-			? 'first'
-			: model.evenAndOddHeaders && pageNumber % 2 === 0
-				? 'even'
-				: 'default';
-	for (let index = page.sectionIndex; index >= 0; index--) {
-		const content = sections[index]?.[kind]?.[slot];
-		if (content) return content;
-	}
-	return undefined;
-}
-
-/** Recalculates page fields; other fields keep the result Word last saved. */
-export function fieldDisplayText(run: TextRun, values: PageFieldValues): string {
-	if (!run.field) return run.text;
-	const name = fieldName(run.field.instr);
-	if (name === 'PAGE') return values.page;
-	if (name === 'NUMPAGES') return values.numPages;
-	if (name === 'SECTIONPAGES') return values.sectionPages;
-	if (name === 'DATE' || name === 'TIME')
-		return dateFieldResult(name, run.field.instr, values.now ?? new Date());
-	return run.text;
-}
+export { pageNumbers, headerFooterForPage, fieldDisplayText } from 'ooxml-core/docx/layout';
 
 /** An inline header/footer picture, or a placeholder box when its bytes are unavailable. */
 function inlinePicture(image: NonNullable<TextRun['image']>, values: PageFieldValues): HTMLElement {
@@ -227,10 +180,8 @@ export function decoratePages(
 	pictureUrl?: PictureUrl,
 ) {
 	const numbers = pageNumbers(model, pages);
-	const sectionPageCounts = new Map<number, number>();
-	for (const page of pages)
-		for (const sectionIndex of page.sectionIndices ?? [page.sectionIndex])
-			sectionPageCounts.set(sectionIndex, (sectionPageCounts.get(sectionIndex) ?? 0) + 1);
+	const numericValues = pageNumberValues(model, pages);
+	const counts = sectionPageCounts(pages);
 	pages.forEach((page, index) => {
 		const sheet = sheets[index];
 		if (!sheet) return;
@@ -238,12 +189,12 @@ export function decoratePages(
 		const values: PageFieldValues = {
 			page: label,
 			numPages: String(pages.length),
-			sectionPages: String(sectionPageCounts.get(page.sectionIndex) ?? 1),
+			sectionPages: String(counts.get(page.sectionIndex) ?? 1),
 			now,
 			...(pictureUrl ? { pictureUrl } : {}),
 		};
 		const section = model.sections?.[page.sectionIndex];
-		const pageNumber = Number.parseInt(label, 10) || index + 1;
+		const pageNumber = numericValues[index] ?? index + 1;
 		for (const kind of ['header', 'footer'] as const) {
 			const content = headerFooterForPage(model, page, pageNumber, `${kind}s`);
 			if (!content) continue;

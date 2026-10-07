@@ -3,6 +3,7 @@ import {
 	detectContentKind,
 	markdownBlocks,
 	markdownInline,
+	markdownUrl,
 	readContent,
 } from './content.js';
 import { filesOf } from './view.js';
@@ -54,6 +55,72 @@ describe('content routing', () => {
 });
 
 describe('Markdown blocks', () => {
+	it('bounds sparse table expansion while preserving the remaining source', () => {
+		const header = `|${Array(128).fill('A').join('|')}|`;
+		const delimiter = `|${Array(128).fill('-').join('|')}|`;
+		const blocks = markdownBlocks(`${header}\n${delimiter}\n${Array(200).fill('row').join('\n')}`);
+		expect(blocks[0]?.table?.rows).toHaveLength(127);
+		expect(blocks.filter((block) => block.kind === 'paragraph')).toHaveLength(73);
+		expect(
+			markdownBlocks(`${header.slice(0, -1)}|Extra|\n${delimiter.slice(0, -1)}|-|`)[0]?.kind,
+		).toBe('paragraph');
+	});
+	it('parses table alignment, escaped pipes and uneven body rows', () => {
+		const [block, quote] = markdownBlocks(
+			'| Name | Value | Status |\n| :--- | ---: | :---: |\n| A\\|B | **12** | `x\\|y` |\nshort\n| Extra | 2 | Done | ignored |\n> after',
+		);
+		expect(block?.table).toEqual({
+			headers: ['Name', 'Value', 'Status'],
+			align: ['left', 'right', 'center'],
+			rows: [
+				['A|B', '**12**', '`x|y`'],
+				['short', '', ''],
+				['Extra', '2', 'Done'],
+			],
+		});
+		expect(quote?.kind).toBe('quote');
+	});
+	it('leaves invalid table delimiters as text and does not parse tables in fences', () => {
+		expect(markdownBlocks('| A | B |\n| --- |').some((block) => block.kind === 'table')).toBe(
+			false,
+		);
+		expect(markdownBlocks('| A |\n| wrong |').some((block) => block.kind === 'table')).toBe(false);
+		expect(markdownBlocks('```\n| A |\n| --- |\n```')[0]?.kind).toBe('code');
+		expect(markdownBlocks('A\n---')[0]?.kind).not.toBe('table');
+	});
+	it('renders task state only for valid flat list markers', () => {
+		expect(
+			markdownBlocks(
+				'- [x] Done\n- [X] Also done\n- [ ] Pending\n- [z] Literal\n[x] Paragraph',
+			).map((block) => [block.text, block.checked]),
+		).toEqual([
+			['Done', true],
+			['Also done', true],
+			['Pending', false],
+			['[z] Literal', undefined],
+			['[x] Paragraph', undefined],
+		]);
+	});
+	it('resolves file-relative links without forwarding signed queries or allowing unsafe schemes', () => {
+		const base = 'https://files.test/project/notes.md?sig=secret';
+		expect(markdownUrl('./Budget.xlsx', base)).toBe('https://files.test/project/Budget.xlsx');
+		expect(markdownUrl('../docs/guide.md#review', base)).toBe(
+			'https://files.test/docs/guide.md#review',
+		);
+		expect(markdownInline('[Budget](./Budget.xlsx)', base)[0]?.url).toBe(
+			'https://files.test/project/Budget.xlsx',
+		);
+		for (const url of [
+			'//evil.test/file',
+			'javascript:x',
+			'data:x',
+			'mailto:x',
+			'https://user:pass@host/file',
+			'https:\\evil.test',
+			'file\nname',
+		])
+			expect(markdownUrl(url, base)).toBeNull();
+	});
 	it('renders inline formatting and rejects unsafe links', () => {
 		const tokens = markdownInline(
 			'**bold** *italic* `code` [safe](https://host/a) [bad](javascript:x)',
