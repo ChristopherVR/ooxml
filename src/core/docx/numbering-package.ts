@@ -16,6 +16,7 @@ import {
 	WORD_NS,
 } from './xml';
 import { registerNumberingPart } from './numbering-parts';
+import { numberingStartChanges, patchNumberingStarts } from './numbering-start-patch';
 
 function setAttribute(element: XmlElement, local: string, value: string): void {
 	element.setAttributeNS(WORD_NS, `w:${local}`, value);
@@ -115,10 +116,10 @@ function buildNumElement(doc: XmlDocument, def: NumDefinition): XmlElement {
 }
 
 /**
- * Applies additive changes to the numbering catalog onto the package's `word/numbering.xml`.
- * Existing `abstractNum`/`num` entries are read-only: any difference from the loaded baseline is
- * rejected. New entries are appended in schema order and the part/relationship/content-type are
- * created the first time a document gains numbering.
+ * Applies additive definitions and supported instance start changes to `word/numbering.xml`.
+ * Existing abstract definitions and full level overrides remain read-only. Other mutations are
+ * rejected before patching the original XML. New entries are appended in schema order and the
+ * part/relationship/content-type are created the first time a document gains numbering.
  */
 export async function applyNumberingCatalog(
 	zip: JSZip,
@@ -141,19 +142,16 @@ export async function applyNumberingCatalog(
 			throw new Error(
 				`Cannot edit numbering definition abstractNum "${id}"; the original numbering.xml is preserved unchanged.`,
 			);
-	for (const id of Object.keys(prior?.nums ?? {}))
-		if (JSON.stringify(next.nums[id]) !== JSON.stringify(prior?.nums[id]))
-			throw new Error(
-				`Cannot edit numbering definition num "${id}"; the original numbering.xml is preserved unchanged.`,
-			);
+	const startChanges = numberingStartChanges(prior, next);
 	const newAbstractIds = Object.keys(next.abstractNums).filter((id) => !prior?.abstractNums[id]);
 	const newNumIds = Object.keys(next.nums).filter((id) => !prior?.nums[id]);
-	if (!newAbstractIds.length && !newNumIds.length) return;
+	if (!newAbstractIds.length && !newNumIds.length && !startChanges.length) return;
 	const existingFile = zip.file('word/numbering.xml');
 	const doc: XmlDocument = existingFile
 		? parseXml(await existingFile.async('string'))
 		: parseXml(`<w:numbering xmlns:w="${WORD_NS}"/>`);
 	const root = doc.documentElement;
+	patchNumberingStarts(doc, startChanges);
 	const cleanup = children(root, 'numIdMacAtCleanup')[0] ?? null;
 	// CT_Numbering: abstractNum* precede num*, which precede numIdMacAtCleanup.
 	const firstNum = children(root, 'num')[0] ?? cleanup;

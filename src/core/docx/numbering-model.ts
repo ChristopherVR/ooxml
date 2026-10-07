@@ -55,7 +55,7 @@ export interface NumDefinition {
 	abstractNumId: string;
 	levelOverrides?: Record<number, NumLevelOverride>;
 }
-/** Parsed source `word/numbering.xml`. Existing entries are read-only; only additive entries can be saved. */
+/** Parsed source numbering: additive definitions and supported instance start overrides can be saved. */
 export interface NumberingCatalog {
 	abstractNums: Record<string, AbstractNumDefinition>;
 	nums: Record<string, NumDefinition>;

@@ -1,0 +1,46 @@
+{
+	"wordVersion": "16.0",
+	"wordBuild": "16.0.20430",
+	"recordedDate": "2026-10-08",
+	"scope": "installed perpetual Word; not current Microsoft 365 subscription certification",
+	"generator": "bun scripts/generate-word-numbering-overrides.mjs <directory> edit; authoredNumberingStartFixture changes imported start7 using setListStartOverride and core save",
+	"recorder": "scripts/record-word-numbering-overrides.ps1 -FixtureDirectory <directory> -OutputPath <reference> -Kind edit",
+	"cases": [
+		{
+			"name": "default-authored-four",
+			"abstractRestart": null,
+			"abstractStart": 3,
+			"fullLevel": false,
+			"fullStart": null,
+			"startOverride": 4,
+			"labels": ["1.", "1.", "4.", "5.", "2.", "4.", "2.", "4."]
+		},
+		{
+			"name": "default-authored-zero",
+			"abstractRestart": null,
+			"abstractStart": 3,
+			"fullLevel": false,
+			"fullStart": null,
+			"startOverride": 0,
+			"labels": ["1.", "1.", "0.", "1.", "2.", "0.", "2.", "0."]
+		},
+		{
+			"name": "never-authored-four",
+			"abstractRestart": 0,
+			"abstractStart": 3,
+			"fullLevel": false,
+			"fullStart": null,
+			"startOverride": 4,
+			"labels": ["1.", "1.", "4.", "5.", "2.", "6.", "2.", "7."]
+		},
+		{
+			"name": "never-authored-zero",
+			"abstractRestart": 0,
+			"abstractStart": 3,
+			"fullLevel": false,
+			"fullStart": null,
+			"startOverride": 0,
+			"labels": ["1.", "1.", "0.", "1.", "2.", "2.", "2.", "3."]
+		}
+	]
+}

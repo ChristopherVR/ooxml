@@ -47,6 +47,7 @@ export {
 	resolveParagraphNumbering,
 } from './numbering-format';
 export { headingListLevels, isHeadingListKind, type HeadingListKind } from './heading-list-kinds';
+export { setListStartOverride } from './numbering-start-edit';
 export {
 	ensureListDefinition,
 	createListDefinition,
