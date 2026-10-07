@@ -626,3 +626,39 @@ DrawingML writer and native editing tests, 326 XLSX/shared-gallery UI tests,
 Core, shared UI and viewer typechecks, production builds and clean-consumer
 package checks also passed. Generated native acceptance workbooks were temporary
 and are not part of the published package or committed fixture set.
+
+## Native chart-style model
+
+PowerPoint's existing Chart Styles gallery is six recolor presets, so using it
+unchanged would not supply native Excel styles. The native style definition
+reader and resolved contract now live in the shared strict chart area;
+PowerPoint keeps compatibility adapters. XLSX imports the same theme-relative
+font, fill, line, reference and opaque-XML model. Existing style-part bytes
+survive title edits and save/reload. Style authoring is excluded from ChartPatch
+until the native picker and rendering are wired.
+
+The native recorder `scripts/record-xlsx-chart-styles.ps1` creates each chart
+independently, sets styles 201 through 216, fixes palette 10, saves and reopens
+owned copies through a hidden Excel instance. Recorded style XML and COM font
+sizes cover different title sizes and major/minor font references. Style 204
+leaves the title size inherited and COM returns a non-positive size; the fixture
+records that measurement as unavailable. It is not evidence for its displayed
+title size. The 16 chart import/edit/round-trip regressions retain source style
+parts exactly, while shared reader and PowerPoint compatibility tests cover
+explicit formatting precedence and preserved transforms/effects.
+
+This step supplies the shared model, not a working native style gallery. XLSX
+still needs style rendering, explicit chart formatting overrides, style
+application, applicable per-chart-family catalogs and gallery previews. The
+legacy 1 through 48 COM range is documented by
+[Microsoft Chart.ChartStyle](https://learn.microsoft.com/en-us/office/vba/api/excel.chart.chartstyle);
+the modern ids used here were established by the local Excel 16.0 build 20430
+probe, not inferred from that older reference.
+
+Validation: the full XLSX suite passed 6,062 tests before the final unreadable-style
+regression was added; all 48 focused reader, import/preservation and PowerPoint
+runtime tests then passed. Strict and PowerPoint typechecks, the core build and
+clean-consumer package imports passed. Seven chart-gallery browser tests passed
+across all six bindings. A Playwright MCP review of the native style 212 workbook
+confirmed chart selection and the contextual ribbon, and exposed the remaining
+style-rendering gap described above.

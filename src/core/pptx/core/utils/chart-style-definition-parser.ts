@@ -1,131 +1,60 @@
-/**
- * Pure parser for an Office 2013+ chart-style part (`ppt/charts/style#.xml`,
- * root `cs:chartStyle`). See `types/chart-style-definition.ts` for why this
- * matters: it is the part that spells out per-element font/line/fill
- * defaults for whichever built-in "Chart Styles" gallery entry is active.
- *
- * Dependency-light (an `XmlLookupLike` plus two colour resolvers) so it can
- * be unit-tested without a full chart part / theme.
- *
- * @module utils/chart-style-definition-parser
- */
-import type { PptxChartStyleDefinition, PptxChartStylePartEntry, XmlObject } from '../types';
+/** Compatibility adapter: shared XML chart-style reader and formatting precedence. */
+import { XMLBuilder } from 'fast-xml-parser';
+import { CHART_COLOR_STYLE_NS } from '../../../chart/color-style';
+import { readChartStyle } from '../../../chart/read-style';
+import { CHART_STYLE_PARTS, resolveChartStyleDefinition } from '../../../chart/style-definition';
+import { drawingColorXml } from '../../../diagram/write-color';
+import { NS, elements, parseXml } from '../../../xml/index';
+import type { PptxChartStyleDefinition, XmlObject } from '../types';
 
 interface XmlLookupLike {
 	getChildByLocalName: (parent: XmlObject | undefined, name: string) => XmlObject | undefined;
 }
-
-/** Resolves a `cs:*Ref/a:schemeClr` (or `a:srgbClr`) child to a hex colour. */
 type ResolveSchemeColor = (schemeClrNode: unknown) => string | undefined;
-/** Resolves a `a:solidFill` node to a hex colour, matching the classic-chart colour parser. */
 type ParseColor = (fillNode: XmlObject | undefined) => string | undefined;
 
-/** The `cs:*` part names this viewer renders distinct defaults for. */
-const PART_NAMES: ReadonlyArray<keyof PptxChartStyleDefinition> = [
-	'title',
-	'axisTitle',
-	'categoryAxis',
-	'valueAxis',
-	'legend',
-	'dataLabel',
-	'dataPoint',
-	'dataPointLine',
-	'gridlineMajor',
-	'gridlineMinor',
-	'chartArea',
-	'plotArea',
-];
-
-/** Resolve a `cs:*Ref`'s scheme-colour child, if any. */
-function refColor(
-	part: XmlObject,
-	refName: string,
-	xmlLookup: XmlLookupLike,
-	resolveSchemeColor: ResolveSchemeColor,
-): string | undefined {
-	const ref = xmlLookup.getChildByLocalName(part, refName);
-	const schemeClr = ref ? xmlLookup.getChildByLocalName(ref, 'schemeClr') : undefined;
-	return schemeClr ? resolveSchemeColor(schemeClr) : undefined;
+const CS_CHILDREN = new Set(['defRPr', 'lnRef', 'fillRef', 'effectRef', 'fontRef', 'spPr']);
+function normalize(value: unknown): unknown {
+	if (Array.isArray(value)) return value.map(normalize);
+	if (!value || typeof value !== 'object') return value;
+	return Object.fromEntries(
+		Object.entries(value).map(([key, item]) => {
+			if (key.startsWith('@_') || key.startsWith('#')) return [key, item];
+			const local = key.replace(/^.*:/u, '');
+			return [`${CS_CHILDREN.has(local) ? 'cs' : 'a'}:${local}`, normalize(item)];
+		}),
+	);
 }
 
-function parsePart(
-	part: XmlObject,
-	xmlLookup: XmlLookupLike,
-	resolveSchemeColor: ResolveSchemeColor,
-	parseColor: ParseColor,
-): PptxChartStylePartEntry | undefined {
-	const entry: PptxChartStylePartEntry = {};
-
-	const defRPr = xmlLookup.getChildByLocalName(part, 'defRPr');
-	if (defRPr) {
-		const size = Number.parseInt(String(defRPr['@_sz'] ?? ''), 10);
-		if (Number.isFinite(size)) {
-			entry.fontSize = size / 100;
-		}
-		if (defRPr['@_b'] !== undefined) {
-			entry.bold = defRPr['@_b'] === '1' || defRPr['@_b'] === 'true';
-		}
-		if (defRPr['@_i'] !== undefined) {
-			entry.italic = defRPr['@_i'] === '1' || defRPr['@_i'] === 'true';
-		}
-		const ownColor = parseColor(xmlLookup.getChildByLocalName(defRPr, 'solidFill'));
-		if (ownColor) {
-			entry.color = ownColor;
-		}
-	}
-	// `cs:fontRef`'s scheme colour is the text-colour fallback a style entry
-	// carries when `cs:defRPr` itself has no explicit `a:solidFill`.
-	if (entry.color === undefined) {
-		const fontColor = refColor(part, 'fontRef', xmlLookup, resolveSchemeColor);
-		if (fontColor) {
-			entry.color = fontColor;
-		}
-	}
-	const lineColor = refColor(part, 'lnRef', xmlLookup, resolveSchemeColor);
-	if (lineColor) {
-		entry.lineColor = lineColor;
-	}
-	const fillColor = refColor(part, 'fillRef', xmlLookup, resolveSchemeColor);
-	if (fillColor) {
-		entry.fillColor = fillColor;
-	}
-	// `cs:lnRef` names a theme line-style matrix INDEX, which this parser
-	// (deliberately, per the type's own doc comment) does not resolve; the
-	// directly-authored case is `cs:spPr/a:ln/@w`, a style entry's own
-	// explicit width override, which every style-part sample this codebase
-	// has seen for `dataPoint`/`dataPointLine` carries alongside the index
-	// reference (C2 wave-1 skip: `lineWidth` was typed but never populated).
-	const spPr = xmlLookup.getChildByLocalName(part, 'spPr');
-	const ln = xmlLookup.getChildByLocalName(spPr, 'ln');
-	const width = Number.parseInt(String(ln?.['@_w'] ?? ''), 10);
-	if (Number.isFinite(width) && width > 0) {
-		entry.lineWidth = width / 12700;
-	}
-
-	return Object.keys(entry).length > 0 ? entry : undefined;
-}
-
-/**
- * Parse a `cs:chartStyle` root into the subset of per-element style defaults
- * this viewer renders. Returns `undefined` when none of the known parts
- * carried a recognised style entry.
- */
 export function parseChartStyleDefinition(
 	styleRoot: XmlObject,
 	xmlLookup: XmlLookupLike,
 	resolveSchemeColor: ResolveSchemeColor,
 	parseColor: ParseColor,
 ): PptxChartStyleDefinition | undefined {
-	const result: PptxChartStyleDefinition = {};
-	for (const name of PART_NAMES) {
+	const parts: Record<string, unknown> = { '@_xmlns:cs': CHART_COLOR_STYLE_NS, '@_xmlns:a': NS.a };
+	for (const name of CHART_STYLE_PARTS) {
 		const node = xmlLookup.getChildByLocalName(styleRoot, name);
-		if (!node) {
-			continue;
-		}
-		const parsed = parsePart(node, xmlLookup, resolveSchemeColor, parseColor);
-		if (parsed) {
-			result[name] = parsed;
-		}
+		if (node) parts[`cs:${name}`] = normalize(node);
 	}
-	return Object.keys(result).length > 0 ? result : undefined;
+	const xml = new XMLBuilder({ ignoreAttributes: false, attributeNamePrefix: '@_' }).build({
+		'cs:chartStyle': parts,
+	});
+	const style = readChartStyle(xml);
+	if (!style) return undefined;
+	return resolveChartStyleDefinition(style, (color) => {
+		const element = parseXml(drawingColorXml(color)).documentElement;
+		const raw: XmlObject = {};
+		for (const attribute of Array.from(element.attributes))
+			if (attribute.localName !== 'xmlns' && attribute.prefix !== 'xmlns')
+				raw[`@_${attribute.localName}`] = attribute.value;
+		for (const transform of elements(element))
+			raw[`a:${transform.localName}`] = transform.hasAttribute('val')
+				? { '@_val': transform.getAttribute('val') ?? '' }
+				: {};
+		const fill: XmlObject = {};
+		const key = `a:${element.localName}` as `a:${string}`;
+		fill[key] = raw;
+		return color.kind === 'scheme' ? resolveSchemeColor(raw) : parseColor(fill);
+	});
 }

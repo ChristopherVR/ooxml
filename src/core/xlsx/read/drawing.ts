@@ -1,7 +1,7 @@
 import { NS, elements, first, parseXml, relAttr, type XmlElement } from '../../xml/index.js';
 import type { DrawingAnchor, DrawingObject } from '../model.js';
 import { parseChart } from './chart.js';
-import { readChartPaletteId } from './chart-colors';
+import { readChartPaletteId, readChartStylePart } from './chart-colors';
 import type { SourceIndex } from './package.js';
 import { SMART_ART_GRAPHIC_URI, smartArtFrame } from './smart-art.js';
 import { att, selfContainedXml } from './xml-util.js';
@@ -128,6 +128,8 @@ export function parseDrawing(
 					const chart = parseChart(chartXml, anchor, target, name);
 					const id = readChartPaletteId(source, target);
 					if (id !== undefined) chart.colorPalette = id;
+					const style = readChartStylePart(source, target, warn);
+					if (style) chart.styleDefinition = style;
 					out.push(chart);
 				} catch {
 					warn(`Chart ${target} could not be read; it is kept but not shown.`);

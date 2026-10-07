@@ -12,3 +12,5 @@ export * from './pie-best-fit.js';
 export * from './pie-label-collision.js';
 export * from './color-palettes';
 export * from './color-style';
+export * from './style-definition';
+export * from './read-style';

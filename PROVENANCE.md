@@ -619,3 +619,24 @@ aggregate metadata accounting are passed in, rather than copied. The helper adds
 bounded triangle-region validation and exposes the number of independently
 rendered gradients. Scene stop limits, SVG byte estimates and print work budgets
 reuse that count so multi-region paints do not bypass the existing limits.
+
+## Shared native chart-style reader and contract
+
+Source: ChristopherVR/ooxml at `c0e42f0b611371ffef7334fa950db5ce9a98cbdd`,
+`src/core/pptx/core/types/chart-style-definition.ts` and
+`src/core/pptx/core/utils/chart-style-definition-parser.ts` (original product:
+ChristopherVR/pptx-viewer). Their resolved contract and per-element parsing
+rules moved to strict `src/core/chart/style-definition.ts` and `read-style.ts`.
+PowerPoint retains compatibility type names and an XML-object adapter; the
+actual reader uses shared XML and DrawingML color, fill and line readers.
+
+The shared model retains theme choices, ordered color transforms, reference
+indices, direct fills/lines and original XML, including entries and effects
+the painters do not yet interpret. Resolved defaults prefer direct properties
+over references, including explicit no-fill overrides. PowerPoint's earlier
+reader used only reference line/fill colors. XLSX imports the same style-part
+model and preserves its package bytes while editing chart titles. New native
+fixtures cover 16 independently created Excel style parts (201 through 216);
+COM font sizes establish 15 title defaults and all 16 axis/legend defaults.
+Style 204 omits a title size and COM returned a non-positive value, recorded
+as unavailable rather than treated as an expected font size.
