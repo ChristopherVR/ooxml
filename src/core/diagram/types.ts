@@ -217,6 +217,8 @@ export type DiagramFill =
 			path?: string;
 			/** DrawingML path-gradient focus rectangle, as fractions of the shape box. */
 			fillToRect?: { l: number; t: number; r: number; b: number };
+			/** Gradient tile insets; corner directions can extend beyond the shape box. */
+			tileRect?: { l: number; t: number; r: number; b: number };
 	  }
 	| { kind: 'pattern'; preset: string; foreground?: DiagramColor; background?: DiagramColor }
 	| { kind: 'picture'; relId?: string }

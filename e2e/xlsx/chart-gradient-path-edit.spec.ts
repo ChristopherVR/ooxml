@@ -28,7 +28,7 @@ for (const framework of FRAMEWORKS)
 		await host.locator('g[data-chart-series="0"][data-chart-point="0"] rect').first().dblclick();
 		const pane = host.getByRole('complementary', { name: 'Format Data Series' });
 		await expect(pane.getByRole('spinbutton', { name: 'Angle', exact: true })).toBeDisabled();
-		await expect(pane.getByRole('button', { name: 'Direction', exact: true })).toBeDisabled();
+		await expect(pane.getByRole('button', { name: 'Direction', exact: true })).toBeEnabled();
 		const paint = host.locator('pattern[id$="-s0"] image').first();
 		const original = await paint.getAttribute('href');
 		const stops = pane.getByRole('group', { name: 'Gradient stops', exact: true });
@@ -65,5 +65,52 @@ for (const framework of FRAMEWORKS)
 			.toBe(true);
 		await host.evaluate((node) => (node as unknown as { undo(): void }).undo());
 		await expect(paint).toHaveAttribute('href', original!);
+		const type = pane.getByRole('combobox', { name: 'Type', exact: true });
+		await expect(type).toHaveValue('rect');
+		await stops.getByRole('button', { name: 'Gradient stop 2', exact: true }).click();
+		await type.selectOption('linear');
+		await expect(host.locator('linearGradient[id$="-s0"]').first()).toBeAttached();
+		await expect(pane.getByRole('spinbutton', { name: 'Angle', exact: true })).toBeEnabled();
+		await expect(pane.getByRole('spinbutton', { name: 'Position', exact: true })).toHaveValue(
+			'100',
+		);
+		await type.selectOption('rect');
+		await expect(paint).toHaveAttribute('href', original!);
+		for (const [index, label] of [
+			[0, 'From Center'],
+			[4, 'From Top Left Corner'],
+			[5, 'From Top Right Corner'],
+			[6, 'From Bottom Left Corner'],
+			[7, 'From Bottom Right Corner'],
+		] as const) {
+			await pane.getByRole('button', { name: 'Direction', exact: true }).click();
+			const popup = host.getByRole('dialog', { name: 'Direction', exact: true });
+			await expect(popup.getByRole('button')).toHaveCount(5);
+			await popup.getByRole('button', { name: label, exact: true }).click();
+			await expect(popup).toBeHidden();
+			await expect(pane.getByRole('spinbutton', { name: 'Position', exact: true })).toHaveValue(
+				'100',
+			);
+			const bytes = await host.evaluate(async (node) =>
+				Array.from(await (node as unknown as { saveBytes(): Promise<Uint8Array> }).saveBytes()),
+			);
+			const saved = (await loadXlsx(new Uint8Array(bytes))).sheets[0]!.drawings[0]!;
+			const expected = parseDrawingFill(
+				parseXml(`<a:spPr xmlns:a="${NS.a}">${native.cases[index]!.fillXml}</a:spPr>`)
+					.documentElement,
+			)!;
+			if (
+				saved.kind !== 'chart' ||
+				saved.series[0]!.fill?.kind !== 'gradient' ||
+				expected.kind !== 'gradient'
+			)
+				throw new Error('Expected native geometry');
+			expect(saved.series[0]!.fill.fillToRect).toEqual(expected.fillToRect);
+			expect(saved.series[0]!.fill.tileRect).toEqual(expected.tileRect);
+			expect(saved.series[0]!.fill.stops).toEqual(preview.series[0]!.fill.stops);
+		}
+		await host.evaluate((node) => ((node as unknown as { readOnly: boolean }).readOnly = true));
+		await expect(type).toBeDisabled();
+		await expect(pane.getByRole('button', { name: 'Direction', exact: true })).toBeDisabled();
 		expect(errors).toEqual([]);
 	});

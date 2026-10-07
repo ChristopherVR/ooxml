@@ -1,6 +1,41 @@
 import type { Translations } from './types';
 
 export const CHART_SERIES_STRINGS: Translations = {
+	'Linear gradient': ['Linéaire', 'Linear', 'Lineal', '线性'],
+	Rectangular: ['Rectangulaire', 'Rechteckig', 'Rectangular', '矩形'],
+	Radial: ['Radial', 'Radial', 'Radial', '射线'],
+	Path: ['Trajectoire', 'Pfad', 'Trayectoria', '路径'],
+	'Imported gradient type': [
+		'Type de dégradé importé',
+		'Importierter Farbverlaufstyp',
+		'Tipo de degradado importado',
+		'导入的渐变类型',
+	],
+	'From Center': ['Depuis le centre', 'Von der Mitte', 'Desde el centro', '从中心'],
+	'From Top Left Corner': [
+		'Depuis le coin supérieur gauche',
+		'Von der oberen linken Ecke',
+		'Desde la esquina superior izquierda',
+		'从左上角',
+	],
+	'From Top Right Corner': [
+		'Depuis le coin supérieur droit',
+		'Von der oberen rechten Ecke',
+		'Desde la esquina superior derecha',
+		'从右上角',
+	],
+	'From Bottom Left Corner': [
+		'Depuis le coin inférieur gauche',
+		'Von der unteren linken Ecke',
+		'Desde la esquina inferior izquierda',
+		'从左下角',
+	],
+	'From Bottom Right Corner': [
+		'Depuis le coin inférieur droit',
+		'Von der unteren rechten Ecke',
+		'Desde la esquina inferior derecha',
+		'从右下角',
+	],
 	'Preset gradients': [
 		'Dégradés prédéfinis',
 		'Voreingestellte Farbverläufe',

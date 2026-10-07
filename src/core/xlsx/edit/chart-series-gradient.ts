@@ -3,6 +3,10 @@ import { chartPaletteSeriesColorChoice, findChartColorPalette } from '../../char
 import { resolveDrawingColor } from '../../diagram/drawing-color';
 import { withDrawingColorBrightness } from '../../diagram/drawing-color-brightness';
 import { officeGradientPresetFill } from '../../diagram/gradient-presets';
+import {
+	withDrawingGradientGeometry,
+	type RectGradientDirection,
+} from '../../diagram/gradient-geometry';
 import type { DiagramFill } from '../../diagram/types';
 import type { ChartObject, Color } from '../model';
 import type { ChartPatch } from './charts';
@@ -13,6 +17,7 @@ export type ChartGradientEdit =
 	| { kind: 'create' }
 	| { kind: 'preset'; id: number }
 	| { kind: 'angle'; value: number }
+	| { kind: 'geometry'; type: 'linear' | 'rect'; direction?: RectGradientDirection }
 	| {
 			kind: 'stop';
 			index: number;
@@ -78,6 +83,11 @@ export function chartSeriesGradientPatch(
 			throw new RangeError('Gradient angle must be from 0 to 360');
 		if (fill.path) return undefined;
 		fill.angle = edit.value % 360;
+	} else if (edit.kind === 'geometry') {
+		if (edit.type === 'linear' && !fill.path) return undefined;
+		if (edit.type === 'rect' && fill.path === 'rect' && edit.direction === undefined)
+			return undefined;
+		fill = withDrawingGradientGeometry(fill, edit.type, edit.direction);
 	} else if (edit.kind !== 'create' && edit.kind !== 'preset') {
 		const stop = fill.stops[edit.index];
 		if (!Number.isInteger(edit.index) || !stop)

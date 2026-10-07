@@ -1,4 +1,10 @@
 import type { ChartGradientFill } from 'ooxml-core/chart';
+import {
+	RECT_GRADIENT_DIRECTIONS,
+	rectGradientFocus,
+	rectGradientDirection,
+	type RectGradientDirection,
+} from 'ooxml-core/diagram';
 import { gradientGalleryPreview } from './gradient-gallery-preview';
 import {
 	defineGallery,
@@ -23,6 +29,7 @@ interface DirectionOptions {
 	label: string;
 	translate(label: string): string;
 	onPick(angle: number): void;
+	onRectPick?(direction: RectGradientDirection): void;
 }
 let sequence = 0;
 
@@ -34,12 +41,40 @@ export function createGradientDirectionGallery(doc: Document) {
 	let current: DirectionOptions | undefined;
 	element.addEventListener('office-gallery-pick', (event) => {
 		const id = (event as OfficeGalleryPickEvent).detail.itemId;
+		if (current?.gradient.path === 'rect') {
+			const direction = RECT_GRADIENT_DIRECTIONS.find((direction) => direction.id === id);
+			if (direction && !current.disabled) current.onRectPick?.(direction.id);
+			return;
+		}
 		const direction = DIRECTIONS.find(([angle]) => String(angle) === id);
 		if (direction && current && !current.disabled) current.onPick(direction[0]);
 	});
 	const update = (options: DirectionOptions) => {
 		current = options;
 		if (options.disabled) element.open = false;
+		const rectangular = options.gradient.path === 'rect';
+		const items = rectangular
+			? RECT_GRADIENT_DIRECTIONS.map(({ id, label }) => ({
+					id,
+					label: options.translate(label),
+					applied: rectGradientDirection(options.gradient.fillToRect) === id,
+					preview: gradientGalleryPreview(`${prefix}-${id}`, {
+						...options.gradient,
+						type: 'radial',
+						path: 'rect',
+						fillToRect: rectGradientFocus(id),
+					}),
+				}))
+			: DIRECTIONS.map(([angle, label]) => ({
+					id: String(angle),
+					label: options.translate(label),
+					applied: options.gradient.angle === angle,
+					preview: gradientGalleryPreview(`${prefix}-${angle}`, {
+						...options.gradient,
+						type: 'linear',
+						angle,
+					}),
+				}));
 		element.state = {
 			id: 'gradient-direction',
 			label: options.label,
@@ -50,19 +85,7 @@ export function createGradientDirectionGallery(doc: Document) {
 					columns: 4,
 					tileWidth: 44,
 					tileHeight: 44,
-					items: DIRECTIONS.map(([angle, label]) => {
-						const preview = gradientGalleryPreview(`${prefix}-${angle}`, {
-							...options.gradient,
-							type: 'linear',
-							angle,
-						});
-						return {
-							id: String(angle),
-							label: options.translate(label),
-							applied: options.gradient.angle === angle,
-							preview,
-						};
-					}),
+					items,
 				},
 			],
 		};

@@ -1196,3 +1196,31 @@ reopened its viewer download as center style 7, variant 1, with the expected
 to be implemented; circle/shape paths, arbitrary target rectangles and
 additional multi-stop path profiles remain unverified. The earlier linear
 translucent and coincident-edge discrepancies are still explicit.
+
+## Rectangular gradient authoring controls
+
+The series fill pane now switches between Linear and Rectangular types and
+offers the measured center and four corner directions through the existing
+Office gallery. It preserves the selected stop, all stop values and color
+transforms. Each geometry change uses one core history operation; repeated
+selection of the current type/direction is a no-op. Switching back to Linear
+clears the path target and resets tile insets instead of carrying corner
+extension flags into the linear fill.
+
+DrawingML tile insets are now typed data in the shared model and patched by
+the shared writer. The format-neutral geometry helper retains original root
+flags and extensions. Tests compare target/tile values against all 24 native
+captures and verify saving, undo and redo. All six bindings exercise both
+types, every rectangular direction, selected-stop retention and read-only
+guards. Imported Radial, Path and unknown types remain selected without
+conversion; Radial/Path authoring choices are disabled until independently
+measured and implemented.
+
+Playwright MCP reviewed the popup and exported a five-stop bottom-right fill.
+Excel COM reopened it as corner style 5, variant 4, with all five original
+positions and RGB colors. The pane has no horizontal overflow. The broader
+diagram/chart/XLSX core sweep passes 8,074 tests, with the existing 17 expected
+raster failures. The 62 browser checks pass, including the existing 12
+expected-failure repros. These results establish the implemented geometry and
+editing behavior, not full native pane layout, every gradient type or every
+multi-stop raster profile.

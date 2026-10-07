@@ -45,6 +45,15 @@ export function parseDrawingFill(properties: XmlElement | undefined): DiagramFil
 			const scaled = first(fill, 'lin', NS.a)?.getAttribute('scaled');
 			const path = first(fill, 'path', NS.a)?.getAttribute('path');
 			const focus = first(first(fill, 'path', NS.a), 'fillToRect', NS.a);
+			const tile = first(fill, 'tileRect', NS.a);
+			const tileRect = tile
+				? {
+						l: Number(tile.getAttribute('l') ?? 0) / 100000,
+						t: Number(tile.getAttribute('t') ?? 0) / 100000,
+						r: Number(tile.getAttribute('r') ?? 0) / 100000,
+						b: Number(tile.getAttribute('b') ?? 0) / 100000,
+					}
+				: undefined;
 			const fillToRect = focus
 				? {
 						l: Number(focus.getAttribute('l') ?? 0) / 100000,
@@ -62,6 +71,7 @@ export function parseDrawingFill(properties: XmlElement | undefined): DiagramFil
 				...(scaled === '0' || scaled === 'false' ? { scaled: false } : {}),
 				...(path ? { path } : {}),
 				...(fillToRect && Object.values(fillToRect).every(Number.isFinite) ? { fillToRect } : {}),
+				...(tileRect && Object.values(tileRect).every(Number.isFinite) ? { tileRect } : {}),
 			};
 		}
 		case 'pattFill': {

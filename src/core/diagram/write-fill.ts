@@ -73,5 +73,14 @@ export function drawingFillXml(fill: DiagramFill): string | undefined {
 				focus.setAttribute(key, String(Math.round(value * 100000)));
 		}
 	}
+	if (fill.tileRect) {
+		let tile = first(root, 'tileRect', NS.a);
+		if (!tile) {
+			tile = doc.createElementNS(NS.a, 'a:tileRect');
+			root.insertBefore(tile, first(root, 'extLst', NS.a) ?? null);
+		}
+		for (const [key, value] of Object.entries(fill.tileRect))
+			tile.setAttribute(key, String(Math.round(value * 100000)));
+	}
 	return buildXml(doc);
 }

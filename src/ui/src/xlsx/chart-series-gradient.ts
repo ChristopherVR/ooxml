@@ -11,6 +11,7 @@ import { createGradientStopTrack } from '../form/gradient-stop-track';
 import { createGradientDirectionGallery } from '../form/gradient-direction-gallery';
 import { createGradientPresetGallery } from '../form/gradient-preset-gallery';
 import { el, field, numberInput } from './dialogs/fields';
+import { createGradientTypeField } from './chart-series-gradient-type';
 import { openColorGrid } from './ribbon/color-grid';
 import { createChartGradientPreview } from './chart-gradient-preview';
 import { createNumberRange } from '../form/number-range';
@@ -28,6 +29,10 @@ export function createSeriesGradient(ctx: EditorContext, selected: () => number)
 	const direction = createGradientDirectionGallery(element.ownerDocument);
 	const preset = createGradientPresetGallery(element.ownerDocument);
 	const presetRow = field(ctx, 'Preset gradients', preset.element);
+	const type = createGradientTypeField(ctx, (type) => {
+		direction.close();
+		apply({ kind: 'geometry', type });
+	});
 	const rows = [
 		[field(ctx, 'Angle', angle), angle, 'Angle'],
 		[field(ctx, 'Color', color), color, 'Color'],
@@ -77,6 +82,7 @@ export function createSeriesGradient(ctx: EditorContext, selected: () => number)
 	}
 	element.append(
 		presetRow,
+		type.element,
 		directionRow,
 		rows[0][0],
 		selector,
@@ -92,13 +98,14 @@ export function createSeriesGradient(ctx: EditorContext, selected: () => number)
 	let drawingIndex = -1;
 	let shownBook = ctx.workbook();
 	let shownSheet = -1;
+	let shownPath: string | undefined;
 	const apply = (edit: ChartGradientEdit) => {
 		if (!current || !ctx.commands.isEnabled('chart.format-series')) return;
 		const found = activeChart(ctx);
 		if (!found || found.chart !== current) return;
 		const result = chartSeriesGradientPatch(current, selected(), edit);
 		if (!result) return;
-		if (edit.kind !== 'angle') stopIndex = result.stopIndex;
+		if (edit.kind !== 'angle' && edit.kind !== 'geometry') stopIndex = result.stopIndex;
 		ctx.session()?.updateChart(ctx.activeSheet(), found.index, result.patch);
 	};
 	const refresh = (chart: ChartObject | undefined, view: ChartViewModel | undefined) => {
@@ -139,6 +146,9 @@ export function createSeriesGradient(ctx: EditorContext, selected: () => number)
 			translate: ctx.t,
 			onPick: (id) => apply({ kind: 'preset', id }),
 		});
+		type.refresh(fill, disabled);
+		if (shownPath !== fill.path) direction.close();
+		shownPath = fill.path;
 		angle.value = String(fill.angle ?? 90);
 		angle.disabled = disabled || !!fill.path;
 		position.value = String(fill.stops[stopIndex]?.position ?? 0);
@@ -155,10 +165,11 @@ export function createSeriesGradient(ctx: EditorContext, selected: () => number)
 		directionRow.querySelector('span')!.textContent = ctx.t('Direction');
 		direction.update({
 			gradient: view?.series[selected()]?.gradient ?? { type: 'linear', stops: [] },
-			disabled: disabled || !!fill.path,
+			disabled: disabled || (!!fill.path && fill.path !== 'rect'),
 			label: ctx.t('Direction'),
 			translate: ctx.t,
 			onPick: (value) => apply({ kind: 'angle', value }),
+			onRectPick: (direction) => apply({ kind: 'geometry', type: 'rect', direction }),
 		});
 		brightness.disabled ||= stopBrightness === undefined;
 		const previewSeries = selected();

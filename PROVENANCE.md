@@ -1150,3 +1150,16 @@ introduced. The native advanced references and reopen/rejection reports in
 `review-advanced-object-formatting` came from owned hidden Word 16.0 build 20430.
 They cover seven advanced properties on five inline kinds, not current M365
 certification or general shape/OMML formatting.
+
+## Shared native rectangular gradient geometry controls
+
+Source: ChristopherVR/ooxml at `af81015bc`, the saved Excel center/corner
+geometry in `src/core/chart/__fixtures__/native-gradient-path-profiles.json`
+and the existing `src/ui/src/form/gradient-direction-gallery.ts`.
+The new diagram geometry helper derives target and tile insets from those
+captures and keeps stop identities, colors and imported root flags/extensions.
+The shared DrawingML reader/writer now models tile insets, so geometry edits
+do not rewrite source XML in UI. No gradient or gallery engine was copied.
+The existing gallery now renders rectangular directions through the same
+core chart painter. XLSX uses that shared helper for one-step type/direction
+commands and keeps the selected stop through those changes.

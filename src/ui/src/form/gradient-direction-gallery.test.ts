@@ -48,3 +48,50 @@ it('namespaces each preview, retains stop opacity and guards invalid or disabled
 	first.element.remove();
 	second.element.remove();
 });
+
+it('previews native rectangular directions without flattening the gradient or accepting angle IDs', () => {
+	const gallery = createGradientDirectionGallery(document);
+	let picked = '';
+	const options = {
+		gradient: {
+			type: 'radial' as const,
+			path: 'rect',
+			fillToRect: { l: 1, t: 0, r: 0, b: 1 },
+			stops: [
+				{ position: 0, color: '#FF0000', opacity: 0.63 },
+				{ position: 100, color: '#FFFFFF' },
+			],
+		},
+		disabled: false,
+		label: 'Direction',
+		translate: (label: string) => label,
+		onPick: () => {
+			throw new Error('Expected rectangular direction');
+		},
+		onRectPick: (direction: string) => {
+			picked = direction;
+		},
+	};
+	gallery.update(options);
+	const items = gallery.element.state!.sections[0]!.items;
+	expect(items).toHaveLength(5);
+	expect(items.find((item) => item.applied)?.id).toBe('top-right');
+	for (const item of items) {
+		const preview = new DOMParser().parseFromString(item.preview!, 'image/svg+xml');
+		expect(preview.querySelector('pattern')).not.toBeNull();
+		expect(
+			decodeURIComponent(preview.querySelector('image')!.getAttribute('href')!.split(',')[1]!),
+		).toContain('<mask');
+	}
+	const pick = (itemId: string) =>
+		gallery.element.dispatchEvent(
+			new CustomEvent('office-gallery-pick', { detail: { gallery: 'gradient-direction', itemId } }),
+		);
+	pick('bottom-right');
+	expect(picked).toBe('bottom-right');
+	pick('90');
+	expect(picked).toBe('bottom-right');
+	gallery.update({ ...options, disabled: true });
+	pick('center');
+	expect(picked).toBe('bottom-right');
+});
