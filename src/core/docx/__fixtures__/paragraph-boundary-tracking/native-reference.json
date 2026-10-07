@@ -1,0 +1,36 @@
+{
+	"cases": [
+		{
+			"paragraphs": [
+				{
+					"text": "He",
+					"alignment": 1
+				},
+				{
+					"text": "llo",
+					"alignment": 1
+				}
+			],
+			"action": "split"
+		},
+		{
+			"paragraphs": [
+				{
+					"text": "He",
+					"alignment": 1
+				},
+				{
+					"text": "llo",
+					"alignment": 1
+				}
+			],
+			"action": "join"
+		}
+	],
+	"wordVersion": "16.0",
+	"scope": "installed perpetual Word Range.Text CR and Range.Delete APIs, not interactive Enter or current Microsoft 365 certification",
+	"wordBuild": "16.0.20430",
+	"recordedDate": "2026-10-08",
+	"recorder": "scripts/record-word-paragraph-boundaries.ps1",
+	"generator": "src/core/docx/test-support/paragraph-boundary-fixture.ts"
+}

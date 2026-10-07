@@ -10,6 +10,7 @@ import { trackParagraphFormatting } from './track-paragraph-formatting';
 import { canonicalHardBreak, canonicalizeHardBreaks } from './hard-break-revisions';
 import { inlineTextRevision } from './review-inline-revisions';
 import { trackSimpleFieldDeletion } from './track-simple-field-deletion';
+import { trackParagraphBoundary } from './track-paragraph-boundaries';
 
 /** Text removed by the latest tracked cut, so pasting it back records a move. */
 interface TrackState {
@@ -219,6 +220,8 @@ export function trackChangesPlugin(
 			const steps = relevant.flatMap((tr) => tr.steps);
 			const author = getAuthor() || 'Author';
 			const date = new Date(Date.now()).toISOString();
+			const boundary = trackParagraphBoundary(steps, oldState, newState, author, date, idGenerator);
+			if (boundary) return boundary.setMeta(trackChangesPluginKey, { tracked: true });
 			if (!steps.length || !steps.every((step) => step instanceof ReplaceStep)) {
 				if (newState.doc.attrs.trackFormatting === false) return null;
 				const formatting =
