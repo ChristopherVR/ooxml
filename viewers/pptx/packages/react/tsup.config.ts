@@ -46,12 +46,10 @@ export default defineConfig((options) => ({
 		// SVG outside a browser; optional peer, never part of a browser bundle.
 		'@napi-rs/canvas',
 	],
-	// Bundle the internal workspace packages so consumers can install just
-	// `pptx-react-viewer` without also pulling `pptx-viewer-core` from npm.
-	// (`emf-converter` / `mtx-decompressor` are no longer bundled into core's
-	// dist (core now imports them from npm) but since they're not listed as
-	// external above, they get inlined here too, keeping this package
-	// self-contained.)
+	// Bundle the internal workspace package `pptx-viewer-core` (a thin
+	// re-export of `ooxml-core/pptx`) so consumers can install just
+	// `pptx-react-viewer`. The core itself, and with it `emf-converter` and
+	// `mtx-decompressor`, stays external above.
 	noExternal: ['pptx-viewer-core'],
 	treeshake: true,
 	platform: 'browser',

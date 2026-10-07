@@ -127,8 +127,8 @@ How they connect:
 
 Never copy an implementation from the core or ole2 into this viewer to "fix it
 locally". An engine fix and the viewer change that uses it can land together
-here; the release planner releases the core and, because the bindings inline
-it, the bindings too.
+here; the release planner releases the core and, because the bindings depend
+on it, the bindings too.
 
 ### Working on the engine and the viewer together
 
