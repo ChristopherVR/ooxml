@@ -1,10 +1,12 @@
 import {
 	fieldName,
+	isRunHiddenForReview,
 	type Block,
 	type DocumentModel,
 	type HeaderFooterContent,
 	type Paragraph,
 	type TextRun,
+	type ReviewDisplayMode,
 } from 'ooxml-core/docx';
 import {
 	floatPosition,
@@ -21,6 +23,7 @@ import type { PictureUrl } from './print-layout';
 
 /** Page facts a header or footer field can show. */
 export interface PageFieldValues extends PageFieldContext {
+	reviewDisplayMode?: ReviewDisplayMode;
 	/** Resolves header/footer pictures to displayable URLs. */
 	pictureUrl?: PictureUrl;
 }
@@ -62,7 +65,12 @@ function paragraphElement(paragraph: Paragraph, values: PageFieldValues): HTMLEl
 	if (paragraph.direction) element.dir = paragraph.direction;
 	// Floating pictures are placed on the sheet by `decoratePages`, not in the text flow.
 	for (const run of paragraph.runs)
-		if (!run.break && !run.image?.anchored && !run.image?.watermark)
+		if (
+			!isRunHiddenForReview(run, values.reviewDisplayMode ?? 'all') &&
+			!run.break &&
+			!run.image?.anchored &&
+			!run.image?.watermark
+		)
 			element.append(runElement(run, values));
 	return element;
 }
@@ -111,7 +119,12 @@ function floatingPictures(
 	);
 	const column = { xPx: 0, widthPx: page.widthPx - page.marginLeftPx - page.marginRightPx };
 	return paragraphs.flatMap((paragraph) =>
-		paragraphFloats(paragraph).map((float) => {
+		paragraphFloats({
+			...paragraph,
+			runs: paragraph.runs.filter(
+				(run) => !isRunHiddenForReview(run, values.reviewDisplayMode ?? 'all'),
+			),
+		}).map((float) => {
 			const { xPx, yPx } = floatPosition(float, page, column, { topPx: anchorTopPx, heightPx: 0 });
 			const url = values.pictureUrl?.(float.partName, float.contentType);
 			const element = document.createElement(url ? 'img' : 'div');
@@ -135,10 +148,12 @@ function floatingPictures(
 export function watermarkElement(
 	content: HeaderFooterContent,
 	page: Pick<LayoutPageBox, 'widthPx' | 'heightPx'>,
+	reviewDisplayMode: ReviewDisplayMode = 'all',
 ): HTMLElement | null {
 	const spec = content.blocks
 		.flatMap((block) => (block.type === 'paragraph' ? block.runs : []))
-		.find((run) => run.image?.watermark)?.image?.watermark;
+		.find((run) => !isRunHiddenForReview(run, reviewDisplayMode) && run.image?.watermark)
+		?.image?.watermark;
 	if (!spec?.text) return null;
 	const chars = Math.max(1, [...spec.text].length);
 	const span = Math.min(page.widthPx * (spec.layout === 'diagonal' ? 0.78 : 0.7), 560);
@@ -178,6 +193,7 @@ export function decoratePages(
 	sheets: HTMLElement[],
 	now: Date = new Date(),
 	pictureUrl?: PictureUrl,
+	reviewDisplayMode: ReviewDisplayMode = 'all',
 ) {
 	const numbers = pageNumbers(model, pages);
 	const numericValues = pageNumberValues(model, pages);
@@ -187,6 +203,7 @@ export function decoratePages(
 		if (!sheet) return;
 		const label = numbers[index] ?? String(index + 1);
 		const values: PageFieldValues = {
+			reviewDisplayMode,
 			page: label,
 			numPages: String(pages.length),
 			sectionPages: String(counts.get(page.sectionIndex) ?? 1),
@@ -210,7 +227,7 @@ export function decoratePages(
 			const anchorTop = kind === 'header' ? distancePx : page.heightPx - distancePx - 20;
 			sheet.append(...floatingPictures(content, page, anchorTop, values));
 			if (kind === 'header') {
-				const mark = watermarkElement(content, page);
+				const mark = watermarkElement(content, page, reviewDisplayMode);
 				// First in the sheet so the page text paints over it, as a Word watermark sits behind text.
 				if (mark) sheet.prepend(mark);
 			}

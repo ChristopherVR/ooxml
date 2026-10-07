@@ -6,6 +6,8 @@ import { sameExclusions, wrapExclusions } from './wrap';
 import type { LayoutDocumentInput } from './input';
 import type { LayoutResult } from './result';
 import type { TextMeasurer } from './measure';
+import type { LayoutReviewOptions } from './review-display';
+import { reviewDocumentFormatting, reviewFormattingWarnings } from '../review-document-formatting';
 
 /** Paginates an engine-native `LayoutDocumentInput` (bypasses the DocumentModel adapter). */
 export function layoutDocument(input: LayoutDocumentInput, measurer: TextMeasurer): LayoutResult {
@@ -25,9 +27,18 @@ export function layoutDocument(input: LayoutDocumentInput, measurer: TextMeasure
 }
 
 /** Paginates a `docx-core` `DocumentModel` directly: `adaptDocumentModel` + `layoutDocument`. */
-export function layoutDocumentModel(model: DocumentModel, measurer: TextMeasurer): LayoutResult {
-	const approximations: string[] = [];
-	const input = adaptDocumentModel(model, (message) => approximations.push(message));
+export function layoutDocumentModel(
+	model: DocumentModel,
+	measurer: TextMeasurer,
+	options: LayoutReviewOptions = {},
+): LayoutResult {
+	const projected = reviewDocumentFormatting(model, options.reviewDisplayMode ?? 'all');
+	const approximations = reviewFormattingWarnings(projected.diagnostics);
+	const input = adaptDocumentModel(
+		projected.model,
+		(message) => approximations.push(message),
+		options,
+	);
 	const result = layoutDocument(input, measurer);
 	return {
 		pages: result.pages,

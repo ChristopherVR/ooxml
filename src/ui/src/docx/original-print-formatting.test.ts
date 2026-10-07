@@ -60,6 +60,7 @@ describe('Original formatting in Print Layout', () => {
 				type: 'paragraph',
 				id: 'p',
 				align: 'center',
+				markRevision: { id: 'mark', kind: 'insert', author: 'Ada' },
 				formatRevision: { id: '7', kind: 'paragraphChange', author: 'Ada' },
 				runs: [
 					{
@@ -84,13 +85,14 @@ describe('Original formatting in Print Layout', () => {
 			controller.scheduleRelayout(model);
 			vi.runAllTimers();
 			expect(controller.element.textContent).toContain('Text');
+			expect(controller.element.textContent).not.toContain('Added');
 			expect(
 				controller
 					.approximations()
 					.filter((message) => message.startsWith('Original formatting unavailable')),
 			).toHaveLength(2);
 			expect(controller.approximations()).toContain(
-				'Print Layout retains tracked text and paragraph marks; this review display projects formatting only.',
+				'Print Layout retains revised paragraph marks; merging them for review display is not yet supported.',
 			);
 			const note = vi.fn();
 			controller.print(model, note);

@@ -4,6 +4,14 @@ import { restoreRunFormatting } from './restore-run-format';
 
 export type ReviewDisplayMode = 'all' | 'simple' | 'final' | 'original';
 
+/** Text and move revision visibility, shared by editable and paginated displays. */
+export function isRunHiddenForReview(run: TextRun, mode: ReviewDisplayMode): boolean {
+	const kind = run.revision?.kind;
+	return mode === 'original'
+		? kind === 'insert' || kind === 'moveTo'
+		: (mode === 'final' || mode === 'simple') && (kind === 'delete' || kind === 'moveFrom');
+}
+
 export interface ReviewFormattingProjection<T> {
 	value: T;
 	/** A missing or unsupported snapshot leaves the current formatting visible. */

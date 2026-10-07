@@ -11,6 +11,10 @@ import type { SignedTwips, Twips } from '../index';
 
 export interface LayoutRun {
 	text: string;
+	/** Omit from layout while retaining its text length in source ranges for following runs. */
+	hidden?: boolean;
+	/** Source length when displayed text is absent or generated; otherwise defaults to text.length. */
+	sourceLength?: number;
 	bold?: boolean;
 	italic?: boolean;
 	fontFamily?: string;

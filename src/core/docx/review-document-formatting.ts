@@ -12,6 +12,13 @@ export interface ReviewFormattingDiagnostic {
 	message: string;
 }
 
+export function reviewFormattingWarnings(diagnostics: ReviewFormattingDiagnostic[]): string[] {
+	return diagnostics.map(
+		(diagnostic) =>
+			`Original formatting unavailable in paragraph ${diagnostic.paragraphId}${diagnostic.runIndex === undefined ? '' : `, run ${diagnostic.runIndex}`}: ${diagnostic.message}`,
+	);
+}
+
 /**
  * Project formatting across every story while retaining text and structure. Keeping source
  * offsets unchanged lets read-only layouts map clicks back to the authoritative editor.

@@ -71,6 +71,10 @@ export function tokenizeParagraph(paragraph: LayoutParagraph): {
 	let cursor = 0;
 	paragraph.runs.forEach((run, runIndex) => {
 		runOffsets.push(cursor);
+		if (run.hidden) {
+			if (!run.synthetic) cursor += run.sourceLength ?? run.text.length;
+			return;
+		}
 		if (run.object) tokens.push({ kind: 'object', runIndex, sourceStart: 0 });
 		else if (run.marker) {
 			// A marker such as "Chapter 1.2" is indivisible; its separator still acts
@@ -87,7 +91,7 @@ export function tokenizeParagraph(paragraph: LayoutParagraph): {
 		// A list label maps to the start of the paragraph's text for click-to-cursor.
 		if (run.synthetic) {
 			for (const token of tokens) if (token.runIndex === runIndex) token.sourceStart = 0;
-		} else cursor += run.text.length;
+		} else cursor += run.sourceLength ?? run.text.length;
 	});
 	return { tokens, runOffsets };
 }

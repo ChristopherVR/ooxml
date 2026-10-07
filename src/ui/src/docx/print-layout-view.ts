@@ -3,6 +3,7 @@ import {
 	resolveParagraphFormatting,
 	listRevisions,
 	reviewDocumentFormatting,
+	reviewFormattingWarnings,
 	type ReviewDisplayMode,
 } from 'ooxml-core/docx';
 import { layoutDocumentModel, type LayoutResult } from 'ooxml-core/docx/layout';
@@ -74,21 +75,18 @@ export function createPrintLayoutController(
 		const mode = getReviewMode();
 		const projected = reviewDocumentFormatting(model, mode);
 		model = projected.model;
-		result = layoutDocumentModel(model, measurer);
-		projectionWarnings = projected.diagnostics.map(
-			(diagnostic) =>
-				`Original formatting unavailable in paragraph ${diagnostic.paragraphId}${diagnostic.runIndex === undefined ? '' : `, run ${diagnostic.runIndex}`}: ${diagnostic.message}`,
-		);
+		result = layoutDocumentModel(model, measurer, { reviewDisplayMode: mode });
+		projectionWarnings = reviewFormattingWarnings(projected.diagnostics);
 		if (
 			mode !== 'all' &&
 			listRevisions(model).some(
-				(revision) => revision.kind !== 'formatChange' && revision.kind !== 'paragraphChange',
+				(revision) => revision.runIndex === undefined && revision.kind !== 'paragraphChange',
 			)
 		)
 			projectionWarnings.push(
-				'Print Layout retains tracked text and paragraph marks; this review display projects formatting only.',
+				'Print Layout retains revised paragraph marks; merging them for review display is not yet supported.',
 			);
-		result.approximations.push(...projectionWarnings);
+		result.approximations = [...new Set([...result.approximations, ...projectionWarnings])];
 		handle = renderPrintLayout(result, pictureUrl, {
 			lineNumbers: (model.sections ?? []).map((section) => section.lineNumberSettings),
 			pageBorders: (model.sections ?? []).map((section) => section.pageBorders),
@@ -112,6 +110,7 @@ export function createPrintLayoutController(
 			[...handle.element.querySelectorAll<HTMLElement>('.dve-print-page')],
 			new Date(),
 			pictureUrl,
+			mode,
 		);
 		element.replaceChildren(handle.element);
 		version++;

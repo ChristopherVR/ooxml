@@ -134,9 +134,16 @@ Print Layout now projects prior run and paragraph formatting through the same
 core helpers, including table cells, section stories and notes. Native before
 references cover bold, combined run properties and combined paragraph properties.
 The projection retains text offsets for click-to-cursor mapping and reports
-unavailable snapshots through layout diagnostics and print warnings. Print Layout
-still retains tracked text and paragraph marks in every mode; non-All-Markup
-modes report that limitation when those revisions are present. Prior run
+unavailable snapshots through layout diagnostics and print warnings. The shared
+layout API now accepts review display options: Original hides insertions and move
+destinations; No Markup and Simple Markup hide deletions and move sources. Hidden
+runs retain their UTF-16 source length for following fragments, including one
+position for hidden inline atoms. Hidden breaks and pictures consume no layout
+space, and note numbering uses only visible references. Headers and footers use
+the same visibility policy, including floating pictures and watermarks. Native
+move references pass across all six browser bindings, including click-to-cursor
+and retained revisions on export. Print Layout still retains revised paragraph
+marks and reports that display-time merging remains unsupported. Prior run
 formatting in the body editor, non-body editing views and structural review
 display still need implementation. These checks establish the covered formatting
 semantics, not pixel parity with current Microsoft 365 Word.
@@ -153,8 +160,9 @@ commands now navigate, accept and reject imported run-format revisions,
 including undo/redo, peer synchronization and export. Supported run-formatting
 changes and pure paragraph-format changes now record revisions. Original display
 projects prior paragraph formatting in the body editor and prior run/paragraph
-formatting in Print Layout. Prior run formatting in the editable body and text
-revision display in Print Layout remain unfinished. Shared Review commands
+formatting in Print Layout. Print Layout also filters text and move revisions by
+review mode. Prior run formatting in the editable body and revised paragraph-mark
+merging for display remain unfinished. Shared Review commands
 now navigate, accept and reject imported paragraph changes, with undo/redo,
 Yjs peer synchronization and package export. Core
 paragraph rejection now restores the full prior properties and matches all four

@@ -51,6 +51,48 @@ function section(overrides: Partial<SectionProperties>): SectionProperties {
 }
 
 describe('Print Layout headers, footers and page fields', () => {
+	it('hides tracked text and moves in headers and footers without changing the source stories', () => {
+		const story: Paragraph = {
+			type: 'paragraph',
+			id: 'story',
+			runs: [
+				{ text: 'Keep' },
+				{ text: 'Add', revision: { id: 'i', kind: 'insert', author: 'Ada' } },
+				{ text: 'Delete', revision: { id: 'd', kind: 'delete', author: 'Ada' } },
+				{
+					text: 'From',
+					revision: { id: 'f', kind: 'moveFrom', author: 'Ada', move: { name: 'move' } },
+				},
+				{
+					text: 'To',
+					revision: { id: 't', kind: 'moveTo', author: 'Ada', move: { name: 'move' } },
+				},
+			],
+		};
+		const model = {
+			...createDocument(),
+			sections: [
+				section({
+					headers: { default: { blocks: [story] } },
+					footers: { default: { blocks: [story] } },
+				}),
+			],
+		};
+		const before = structuredClone(model);
+		for (const [mode, expected] of [
+			['all', 'KeepAddDeleteFromTo'],
+			['original', 'KeepDeleteFrom'],
+			['final', 'KeepAddTo'],
+			['simple', 'KeepAddTo'],
+		] as const) {
+			const sheet = document.createElement('div');
+			decoratePages(model, [page(0, 0, 0)], [sheet], new Date(), undefined, mode);
+			expect(sheet.querySelector('.dve-print-header')!.textContent).toBe(expected);
+			expect(sheet.querySelector('.dve-print-footer')!.textContent).toBe(expected);
+		}
+		expect(model).toEqual(before);
+	});
+
 	it('numbers pages across sections, honoring restarts and number formats', () => {
 		const model: DocumentModel = {
 			...createDocument(),

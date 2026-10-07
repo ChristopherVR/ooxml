@@ -17,6 +17,13 @@ import { adaptTable } from './adapt-table';
 import { foldDropCaps } from './adapt-drop-cap';
 import { groupParagraphBorders, paragraphBox } from './adapt-paragraph-box';
 import { endnoteParagraphs, noteLabels, paragraphFootnotes } from './adapt-notes';
+import { isRunHiddenForReview } from '../review-formatting-display';
+import {
+	visibleReviewModel,
+	visibleReviewParagraph,
+	reviewSourceLength,
+	type LayoutReviewOptions,
+} from './review-display';
 import type {
 	LayoutBlock,
 	LayoutDocumentInput,
@@ -55,7 +62,10 @@ function sectionBreak(
 export function adaptDocumentModel(
 	model: DocumentModel,
 	note: (message: string) => void = () => {},
+	options: LayoutReviewOptions = {},
 ): LayoutDocumentInput {
+	const reviewMode = options.reviewDisplayMode ?? 'all';
+	const visibleModel = visibleReviewModel(model, reviewMode);
 	const catalog = model.paragraphStyles;
 	const noted = new Set<string>();
 	const reportOnce = (message: string) => {
@@ -83,12 +93,14 @@ export function adaptDocumentModel(
 				: undefined);
 		return { formatting, family, color };
 	}
-	const noteLabel = noteLabels(model);
+	const noteLabel = noteLabels(visibleModel);
 	function adaptRun(
 		run: TextRun,
 		paragraphStyleId: string | undefined,
 		markLabel?: string,
 	): LayoutRun {
+		if (isRunHiddenForReview(run, reviewMode))
+			return { text: run.text, hidden: true, sourceLength: reviewSourceLength(run) };
 		const { formatting, family, color } = effective(run, paragraphStyleId);
 		if (run.equation) reportOnce(EQUATION_NOTE);
 		// DATE and TIME update when Word paginates for display or printing.
@@ -189,7 +201,8 @@ export function adaptDocumentModel(
 		const ownFirstLine =
 			resolved.firstLineTwips !== undefined || resolved.hangingTwips !== undefined;
 		const runs = paragraph.runs.map((run) => adaptRun(run, paragraph.style, markLabel));
-		const footnotes = paragraphFootnotes(paragraph, model, noteLabel, adaptParagraph);
+		const visible = visibleReviewParagraph(paragraph, reviewMode);
+		const footnotes = paragraphFootnotes(visible, visibleModel, noteLabel, adaptParagraph);
 		const { betweenBorder: _between, ...box } = paragraphBox(resolved, model.theme);
 		return {
 			kind: 'paragraph',
@@ -211,7 +224,7 @@ export function adaptDocumentModel(
 						].sort((a, b) => a.posPx - b.posPx),
 					}
 				: {}),
-			...floatsOf(paragraph),
+			...floatsOf(visible),
 			...definedProps({
 				align: resolved.align,
 				direction: resolved.direction,
@@ -243,7 +256,7 @@ export function adaptDocumentModel(
 
 	const blocks = [
 		...model.blocks.map(adaptBlock),
-		...endnoteParagraphs(model, noteLabel, adaptParagraph),
+		...endnoteParagraphs(visibleModel, noteLabel, adaptParagraph),
 	];
 	groupParagraphBorders(blocks, betweenBorders);
 	const folded = foldDropCaps(model.blocks, blocks);
