@@ -165,9 +165,31 @@ function parseParagraph(node: XmlElement, id: string): Paragraph {
 			if (link) return results.map((run) => ({ ...run, link }));
 			const field = { instr: instr.trim(), simple: true };
 			const fieldInstanceId = `${id}:simple-field-${simpleFieldIndex++}`;
-			// Show Word's cached result; fall back to a readable placeholder when none was saved.
-			if (!results.some((run) => run.text || run.equation))
-				return [{ text: fieldPlaceholderText(instr), field, fieldInstanceId }];
+			// A missing cache can show a placeholder; an explicitly empty cache must stay empty.
+			if (!results.length) return [{ text: fieldPlaceholderText(instr), field, fieldInstanceId }];
+			if (
+				results.every(
+					(run) =>
+						!run.text &&
+						!run.equation &&
+						!run.image &&
+						!run.break &&
+						!run.noteReference &&
+						!run.noteMark &&
+						!run.fieldChar &&
+						run.fieldCode === undefined,
+				)
+			) {
+				// Empty text cannot carry a field mark in an editor. Reuse complex field markers
+				// so the instruction survives the model/editor round trip without visible text.
+				return [
+					{ text: '', fieldChar: 'begin' },
+					{ text: '', fieldCode: instr },
+					{ text: '', fieldChar: 'separate' },
+					...results,
+					{ text: '', fieldChar: 'end' },
+				];
+			}
 			return results.map((run) => ({ ...run, field, fieldInstanceId }));
 		},
 		(hyperlink) => {
