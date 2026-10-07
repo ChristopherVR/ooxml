@@ -44,6 +44,11 @@ function runFontFamily(runProperties: XmlObject | undefined): string | undefined
 	return undefined;
 }
 
+/** The `lang` of a run (or default run) property set, if it names one. */
+function runLanguage(runProperties: XmlObject | undefined): string | undefined {
+	return String(runProperties?.['@_lang'] ?? '').trim() || undefined;
+}
+
 /** Map one `a:rPr` onto the run-level formatting fields. */
 function applyRunProperties(
 	run: PptxTableCellTextRun,
@@ -105,6 +110,12 @@ export function extractTableCellTextRuns(
 		return undefined;
 	}
 
+	const lstStyle = (tableCell?.['a:txBody'] as XmlObject | undefined)?.['a:lstStyle'] as
+		| XmlObject
+		| undefined;
+	const cellLanguage = runLanguage(
+		(lstStyle?.['a:lvl1pPr'] as XmlObject | undefined)?.['a:defRPr'] as XmlObject | undefined,
+	);
 	const runs: PptxTableCellTextRun[] = [];
 	let contentRunCount = 0;
 	paragraphs.forEach((paragraph, paragraphIndex) => {
@@ -124,6 +135,11 @@ export function extractTableCellTextRuns(
 				run.isField = true;
 			}
 			applyRunProperties(run, node?.['a:rPr'] as XmlObject | undefined, context);
+			// Kept so the renderer can wrap Korean between words, as PowerPoint does.
+			const language = runLanguage(node?.['a:rPr'] as XmlObject | undefined) ?? cellLanguage;
+			if (language) {
+				run.language = language;
+			}
 			runs.push(run);
 			contentRunCount++;
 		}

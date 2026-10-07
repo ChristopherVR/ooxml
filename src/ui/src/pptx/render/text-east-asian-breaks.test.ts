@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+	eastAsianBreaksForRun,
 	followingText,
 	isEastAsianChar,
 	resolveEastAsianBreakOptions,
@@ -213,5 +214,47 @@ describe('isEastAsianChar', () => {
 		for (const ch of ['a', ',', ' ', '1']) {
 			expect(isEastAsianChar(ch)).toBeFalsy();
 		}
+	});
+});
+
+describe('eastAsianBreaksForRun', () => {
+	it('marks only Korean runs', () => {
+		const korean = eastAsianBreaksForRun(ANYWHERE, 'ko-KR');
+		expect(korean).toStrictEqual({ ...ANYWHERE, keepHangulWords: true });
+		expect(eastAsianBreaksForRun(ANYWHERE, 'ko')).toStrictEqual(korean);
+		expect(eastAsianBreaksForRun(ANYWHERE, 'ja-JP')).toBe(ANYWHERE);
+		expect(eastAsianBreaksForRun(ANYWHERE, 'kok-IN')).toBe(ANYWHERE);
+		expect(eastAsianBreaksForRun(ANYWHERE, undefined)).toBe(ANYWHERE);
+		expect(eastAsianBreaksForRun(undefined, 'ko-KR')).toBeUndefined();
+	});
+
+	it('leaves the options alone when the paragraph lets words break (latinLnBrk="1")', () => {
+		const breakWords = { ...ANYWHERE, latinLineBreak: true };
+		expect(eastAsianBreaksForRun(breakWords, 'ko-KR')).toBe(breakWords);
+	});
+});
+
+describe('splitEastAsianBreaks: Korean runs', () => {
+	const KOREAN = eastAsianBreaksForRun(ANYWHERE, 'ko-KR');
+
+	it('inserts no break opportunity between Hangul syllables (eaLnBrk="0")', () => {
+		expect(splitEastAsianBreaks('회의 일정 안내입니다.', KOREAN, FONT)).toStrictEqual([
+			{ text: '회의 일정 안내입니다.', sourceLength: 12 },
+		]);
+	});
+
+	it('still breaks around Han and kana inside a Korean run', () => {
+		expect(splitEastAsianBreaks('한國語', KOREAN, FONT).map((piece) => piece.text)).toStrictEqual([
+			`한${ZW}國${ZW}語`,
+		]);
+	});
+
+	it('still hangs punctuation in a Korean run', () => {
+		const hanging = eastAsianBreaksForRun(HANG, 'ko-KR');
+		expect(splitEastAsianBreaks('가나。', hanging, FONT).map((piece) => piece.text)).toStrictEqual([
+			`가나${WJ}`,
+			'。',
+			' ',
+		]);
 	});
 });

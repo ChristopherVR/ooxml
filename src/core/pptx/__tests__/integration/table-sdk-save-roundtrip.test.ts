@@ -101,9 +101,9 @@ describe('sDK-created table survives save round-trip', () => {
 			}
 			const richRuns = structuredClone(table.tableData!.rows[1].cells[0].textRuns);
 			expect(richRuns).toStrictEqual([
-				{ text: 'Rich', bold: true },
+				{ text: 'Rich', bold: true, language: 'en-US' },
 				{ text: '1', isField: true },
-				{ text: 'Text', italic: true },
+				{ text: 'Text', italic: true, language: 'en-US' },
 			]);
 			table.tableData!.columnWidths = [0.25, 0.75];
 
@@ -154,9 +154,9 @@ describe('sDK-created table survives save round-trip', () => {
 		// the rich run model retains the authored run/field/run order.
 		expect(cell.text).toBe(' Lead  Tail  Field ');
 		expect(cell.textRuns).toStrictEqual([
-			{ text: ' Lead ', bold: true },
+			{ text: ' Lead ', bold: true, language: 'en-US' },
 			{ text: ' Field ', isField: true },
-			{ text: ' Tail ', italic: true },
+			{ text: ' Tail ', italic: true, language: 'en-US' },
 		]);
 
 		table.x += 1;
@@ -178,9 +178,9 @@ describe('sDK-created table survives save round-trip', () => {
 		expect(table.tableData!.rows[0].cells[0]).toMatchObject({
 			text: ' Lead  Tail  Field ',
 			textRuns: [
-				{ text: ' Lead ', bold: true },
+				{ text: ' Lead ', bold: true, language: 'en-US' },
 				{ text: ' Field ', isField: true },
-				{ text: ' Tail ', italic: true },
+				{ text: ' Tail ', italic: true, language: 'en-US' },
 			],
 		});
 	});
@@ -571,9 +571,9 @@ describe('sDK-created table survives save round-trip', () => {
 		) as TablePptxElement;
 		const richRuns = structuredClone(table.tableData!.rows[1].cells[0].textRuns);
 		expect(richRuns).toStrictEqual([
-			{ text: 'Rich', bold: true },
+			{ text: 'Rich', bold: true, language: 'en-US' },
 			{ text: '1', isField: true },
-			{ text: 'Text', italic: true },
+			{ text: 'Text', italic: true, language: 'en-US' },
 		]);
 
 		const merged = structuredClone(table.tableData!);

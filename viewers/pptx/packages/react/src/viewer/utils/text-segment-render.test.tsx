@@ -262,3 +262,40 @@ describe('renderParagraphRun - normAutofit fontScale rounds to a whole point', (
 		expect(style.fontSize).toBe(11);
 	});
 });
+
+// PowerPoint wraps a Korean run at the spaces between words even with
+// `eaLnBrk="0"`, so React must not cut Hangul words up with break
+// opportunities when it rebuilds a run's East Asian pieces itself.
+describe('renderParagraphRun - Korean runs with eaLnBrk="0"', () => {
+	function markupWithBreaks(style: TextStyle, text: string): string {
+		const segment: TextSegment = { text, style };
+		const element = makeElement();
+		const run = buildParagraphs(
+			{ ...element, textSegments: [segment] } as PptxElement,
+			undefined,
+			undefined,
+			{
+				eastAsianRunPieces: false,
+			},
+		)[0].runs[0];
+		return renderToStaticMarkup(
+			<>
+				{renderParagraphRun(run, segment, {
+					element,
+					fallbackColor: '#000000',
+					eastAsianBreaks: { hangingPunctuation: false, breakAnywhere: true },
+				})}
+			</>,
+		);
+	}
+
+	it('keeps Hangul words whole in a ko-KR run', () => {
+		const markup = markupWithBreaks({ language: 'ko-KR' }, '회의일정안내');
+		expect(markup).not.toContain('\u200B');
+		expect(markup).toContain('word-break:keep-all');
+	});
+
+	it('still breaks between Japanese characters', () => {
+		expect(markupWithBreaks({ language: 'ja-JP' }, 'あいう')).toContain('\u200B');
+	});
+});

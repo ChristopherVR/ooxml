@@ -193,6 +193,14 @@ describe('cellStyleToCss', () => {
 	});
 });
 
+describe('cellRunStyle', () => {
+	it('keeps Korean words together (word-break: keep-all) only for a Korean run', () => {
+		expect(cellRunStyle({ text: '회의 일정', language: 'ko-KR' }).wordBreak).toBe('keep-all');
+		expect(cellRunStyle({ text: '温室効果ガス', language: 'ja-JP' }).wordBreak).toBeUndefined();
+		expect(cellRunStyle({ text: 'Schedule' }).wordBreak).toBeUndefined();
+	});
+});
+
 describe('getDiagonalBorders', () => {
 	it('returns null when neither cell nor style diagonals are present', () => {
 		expect(getDiagonalBorders(undefined)).toBeNull();

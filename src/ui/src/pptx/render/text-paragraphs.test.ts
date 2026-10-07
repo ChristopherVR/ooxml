@@ -470,6 +470,44 @@ describe('per-paragraph kinsoku / tab-default override', () => {
 		expect(paras[0].runs.map((run) => run.text)).toStrictEqual(['ま​み​', '」​や']);
 	});
 
+	it('lets Hangul break anywhere in a latinLnBrk="1" paragraph, as PowerPoint does', () => {
+		const paras = buildParagraphs(
+			textEl(
+				[
+					{
+						text: '회의 일정 안내',
+						style: { language: 'ko-KR' },
+						paragraphProperties: { latinLineBreak: true },
+					},
+				],
+				{ textStyle: {} },
+			),
+		);
+		// `normal`, not the paragraph's `break-all`: a Latin word in a Korean run
+		// still moves down whole before it splits.
+		expect(paras[0].runs.every((run) => run.style.wordBreak === 'normal')).toBeTruthy();
+	});
+
+	it('keeps Korean words whole with eaLnBrk="0"', () => {
+		// PowerPoint wraps a `lang="ko-KR"` run at the spaces between words, with
+		// `eaLnBrk` on or off. A browser breaks Hangul between any two syllables.
+		const paras = buildParagraphs(
+			textEl(
+				[
+					{
+						text: '회의 일정 안내',
+						style: { language: 'ko-KR' },
+						paragraphProperties: { eaLineBreak: false },
+					},
+				],
+				{ textStyle: {} },
+			),
+		);
+		const runs = paras[0].runs;
+		expect(runs.map((run) => run.text).join('')).toBe('회의 일정 안내');
+		expect(runs.every((run) => run.style.wordBreak === 'keep-all')).toBeTruthy();
+	});
+
 	it('does not hang a run-final mark when the next run opens with a closing bracket', () => {
 		const paras = buildParagraphs(
 			textEl(
