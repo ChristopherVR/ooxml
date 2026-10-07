@@ -10,9 +10,14 @@ import {
 import { paragraphStyle } from './schema';
 import { listMarkerDisplay } from './list-marker-display';
 import { scaleMeasurer } from './run-scale';
+import type { ReviewDisplayMode } from './review-display';
+import { displayParagraph, ORIGINAL_PARAGRAPH_RESET } from './review-paragraph-display';
 
 /** Derived display formatting stays out of document attributes and collaboration steps. */
-export function paragraphStylesPlugin(getModel: () => DocumentModel) {
+export function paragraphStylesPlugin(
+	getModel: () => DocumentModel,
+	getMode: () => ReviewDisplayMode = () => 'all',
+) {
 	let measurer = scaleMeasurer();
 	return new Plugin({
 		view(view) {
@@ -32,40 +37,22 @@ export function paragraphStylesPlugin(getModel: () => DocumentModel) {
 		props: {
 			decorations(state) {
 				const model = getModel();
+				const mode = getMode();
 				const catalog = model.paragraphStyles;
 				const paragraphs: Paragraph[] = [];
 				state.doc.descendants((node) => {
-					if (node.type.name === 'paragraph')
-						paragraphs.push({
-							type: 'paragraph',
-							id: String(node.attrs.id),
-							runs: [],
-							style: node.attrs.style,
-							...(node.attrs.numId != null
-								? {
-										numbering: {
-											numId: Number(node.attrs.numId),
-											level: Number(node.attrs.ilvl ?? 0),
-										},
-									}
-								: {}),
-						});
+					if (node.type.name === 'paragraph') paragraphs.push(displayParagraph(node, mode).value);
 				});
 				const labels = computeListLabels({ ...model, blocks: paragraphs });
 				const decorations: Decoration[] = [];
 				state.doc.descendants((node, pos) => {
 					if (node.type.name !== 'paragraph') return;
-					const direct = Object.fromEntries(
-						Object.entries(node.attrs).filter(
-							([key, value]) => value != null && (key !== 'style' || value !== ''),
-						),
-					);
-					const paragraph = {
-						...direct,
-						id: String(node.attrs.id),
-						type: 'paragraph',
-						runs: [],
-					} as Paragraph;
+					const projected = displayParagraph(node, mode);
+					const paragraph = projected.value;
+					const reset =
+						mode === 'original' && node.attrs.formatRevision && !projected.error
+							? `${ORIGINAL_PARAGRAPH_RESET};`
+							: '';
 					const effective = catalog ? resolveParagraphFormatting(paragraph, catalog) : paragraph;
 					const label = labels.get(String(node.attrs.id));
 					const marker = listMarkerDisplay(
@@ -84,7 +71,8 @@ export function paragraphStylesPlugin(getModel: () => DocumentModel) {
 						: { listIndentLeftTwips: null, listHangingTwips: null, listFirstLineTwips: null };
 					decorations.push(
 						Decoration.node(pos, pos + node.nodeSize, {
-							style: `${paragraphStyle({ ...effective, ...list })};${marker.css}`,
+							style: `${reset}${paragraphStyle({ ...effective, ...list })};${marker.css}`,
+							...(projected.error ? { 'data-review-format-error': projected.error } : {}),
 							...marker.attributes,
 							...(label || node.attrs.listLabelText != null
 								? {
@@ -93,7 +81,7 @@ export function paragraphStylesPlugin(getModel: () => DocumentModel) {
 											: '',
 									}
 								: {}),
-							...(effective.direction ? { dir: effective.direction } : {}),
+							...(effective.direction || reset ? { dir: effective.direction ?? 'ltr' } : {}),
 						}),
 					);
 				});

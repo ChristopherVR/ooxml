@@ -46,11 +46,7 @@ export {
 	formatListNumber,
 	resolveParagraphNumbering,
 } from './numbering-format';
-export {
-	headingListLevels,
-	isHeadingListKind,
-	type HeadingListKind,
-} from './heading-list-kinds';
+export { headingListLevels, isHeadingListKind, type HeadingListKind } from './heading-list-kinds';
 export {
 	ensureListDefinition,
 	createListDefinition,
@@ -58,6 +54,7 @@ export {
 	type ListKind,
 } from './numbering-editing';
 export { formatNoteNumber, numberNotesInOrder } from './notes';
+export * from './review-formatting-display';
 export {
 	acceptAllRevisions,
 	acceptRevision,

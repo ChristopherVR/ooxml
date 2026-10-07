@@ -5,11 +5,13 @@ import { formattingRevision, paragraphFormattingRevision } from 'ooxml-core/docx
 /**
  * All Markup shows insertions/deletions as authored (default CSS from schema.ts's marks).
  * No Markup (final) hides deleted text and shows insertions unmarked, matching the resulting document.
- * Original hides inserted text and shows deletions unmarked, matching the document before the changes.
+ * Original hides inserted text and shows deletions unmarked. Style plugins project prior paragraph
+ * formatting; prior run formatting and structural revision display still need implementation.
  * Simple Markup is approximated as No Markup with a change indicator; per-line change bars are not
  * implemented, so it is visually identical to No Markup today (see docs/parity-roadmap.md).
  */
-export type ReviewDisplayMode = 'all' | 'simple' | 'final' | 'original';
+export type { ReviewDisplayMode } from 'ooxml-core/docx';
+import type { ReviewDisplayMode } from 'ooxml-core/docx';
 
 function hiddenMarkName(mode: ReviewDisplayMode): 'deletion' | 'insertion' | null {
 	if (mode === 'final' || mode === 'simple') return 'deletion';

@@ -14,6 +14,8 @@ import { appendInlineNode } from './run-adapter';
 import { ligatureStyle } from 'ooxml-core/docx/ui';
 import { scaledSegments, scaleMeasurer } from './run-scale';
 import { scaledParagraphBreaks } from './scaled-paragraph-breaks';
+import type { ReviewDisplayMode } from './review-display';
+import { displayParagraph } from './review-paragraph-display';
 
 type Theme = NonNullable<DocumentModel['theme']>;
 
@@ -106,7 +108,10 @@ export function styleModelOf(state: EditorState): DocumentModel | undefined {
 	)?.getModel?.();
 }
 
-export function runStylesPlugin(getModel: () => DocumentModel) {
+export function runStylesPlugin(
+	getModel: () => DocumentModel,
+	getMode: () => ReviewDisplayMode = () => 'all',
+) {
 	let measurer = scaleMeasurer();
 	return new Plugin({
 		key: runStylesKey,
@@ -131,6 +136,7 @@ export function runStylesPlugin(getModel: () => DocumentModel) {
 					start: number,
 					tableStyleRun?: RunFormatting,
 				) => {
+					const paragraphStyleId = displayParagraph(paragraph, getMode()).value.style;
 					let hasScale = false;
 					paragraph.forEach((child, offset) => {
 						if (!child.isText) return;
@@ -139,7 +145,7 @@ export function runStylesPlugin(getModel: () => DocumentModel) {
 						const resolved = resolveRunFormatting(run, {
 							runCatalog: model.characterStyles,
 							paragraphCatalog: model.paragraphStyles,
-							paragraphStyleId: paragraph.attrs.style || undefined,
+							paragraphStyleId,
 							...(tableStyleRun ? { tableStyleRun } : {}),
 						});
 						const style = runFormattingCss(resolved, model.theme, run);

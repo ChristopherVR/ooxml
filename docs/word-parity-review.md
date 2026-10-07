@@ -117,6 +117,24 @@ The four DOCX fixtures and native build/revision report are kept in
 `src/core/docx/__fixtures__/review-moves`. This is desktop-build interoperation
 evidence, with current M365 subscription validation still required.
 
+## Original formatting display
+
+Shared core projections now read prior run and paragraph properties through the
+same restoration logic as Reject Changes, without modifying the source model.
+Missing, invalid or unsupported snapshots return a diagnostic and retain current
+formatting. Native Word rejected references cover four paragraph cases and two
+run cases. The body editor uses paragraph projections in Original mode, including
+prior paragraph style inheritance, numbering inputs and removal of current direct
+spacing, indentation, direction, borders and shading. Display changes preserve
+the authoritative model, revision records, text positions, selection and undo
+history. All six browser bindings match the native before document's paragraph
+appearance and retain pending revisions on export.
+
+Prior run formatting has a tested core projection but still needs editor rendering.
+Print Layout, non-body stories and structural revisions still need review-display
+integration. These checks establish the covered formatting semantics, not pixel
+parity with current Microsoft 365 Word.
+
 ## Next implementation sequence
 
 Native bold and combined font-change references now retain the full prior
@@ -127,11 +145,11 @@ and standalone rejected exports with the expected formatting and no revisions.
 Accepting a run-format revision clears the snapshot. Shared editor Review
 commands now navigate, accept and reject imported run-format revisions,
 including undo/redo, peer synchronization and export. Supported run-formatting
-changes and pure paragraph-format changes now record revisions; prior formatting
-in Original display remains unfinished. Shared Review commands
+changes and pure paragraph-format changes now record revisions. Original display
+projects prior paragraph formatting in the body editor; prior run formatting
+and print display remain unfinished. Shared Review commands
 now navigate, accept and reject imported paragraph changes, with undo/redo,
-Yjs peer synchronization and package export. Original display still needs to
-project the prior formatting. Core
+Yjs peer synchronization and package export. Core
 paragraph rejection now restores the full prior properties and matches all four
 native rejected documents. Imported
 paragraph snapshots now survive text editing, editor conversion and both export

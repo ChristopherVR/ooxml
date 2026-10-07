@@ -39,8 +39,14 @@ export function bodyPlugins(host: BodyPluginHost): Plugin[] {
 			'Mod-Alt-f': () => (host.insertNote('footnote'), true),
 			'Mod-Alt-d': () => (host.insertNote('endnote'), true),
 		}),
-		runStylesPlugin(() => host.model()),
-		paragraphStylesPlugin(() => host.model()),
+		runStylesPlugin(
+			() => host.model(),
+			() => host.reviewDisplayMode(),
+		),
+		paragraphStylesPlugin(
+			() => host.model(),
+			() => host.reviewDisplayMode(),
+		),
 		trackChangesPlugin(
 			() => host.reviewAuthor(),
 			() => Boolean(host.model().trackChanges),
