@@ -1,6 +1,6 @@
 /* oxlint-disable vitest/prefer-importing-vitest-globals -- Playwright spec, `test`/`expect` come from @playwright/test */
 /**
- * Does the shared theme-colour picker (`packages/shared/src/render/
+ * Does the shared theme-colour picker (`src/ui/src/pptx/render/
  * theme-color-swatches.ts`, wired into every binding's `ThemeColorSwatchGrid`
  * per W3-G2) actually resolve and save a theme swatch the same way in all
  * five, rather than each binding painting its own guess at the Office
@@ -43,13 +43,9 @@ test.describe.configure({ timeout: 120_000 });
 const FIXTURE = fixture('theme-color-picker.pptx');
 const SWATCH_LABEL = 'Accent 1, Lighter 80%';
 
-// `pptx-viewer-shared` is a private, unpublished workspace package (see
-// CLAUDE.md's "Angular port + shared inlining" note): it is not hoisted to the
-// repo root, so it cannot be imported from e2e's own package.json scope. It IS
-// a real dependency of every binding package, so resolve it through one of
-// theirs, the same trick `support/pptx-integrity.ts` uses for `jszip` via
-// `pptx-viewer-core`.
-const sharedRequire = createRequire(
+// Resolve the built public UI dependency from a binding's package scope,
+// matching the package consumed by the framework renderers.
+const uiRequire = createRequire(
 	resolve(
 		fileURLToPath(new URL('../../viewers/pptx/packages/react/package.json', import.meta.url)),
 	),
@@ -62,7 +58,7 @@ interface ThemeColumn {
 	scheme: string;
 	variants: readonly ThemeSwatch[];
 }
-const { buildThemeColorSwatchGrid } = sharedRequire('pptx-viewer-shared') as {
+const { buildThemeColorSwatchGrid } = uiRequire('ooxml-ui/pptx') as {
 	buildThemeColorSwatchGrid: (map: Readonly<Record<string, string>>) => readonly ThemeColumn[];
 };
 

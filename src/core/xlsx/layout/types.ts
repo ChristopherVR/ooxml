@@ -50,6 +50,11 @@ export interface DataBarView {
 	fraction: number;
 	color: string;
 	negative?: boolean;
+	/** Solid when false; gradient when true (the legacy default). */
+	gradient?: boolean;
+	direction?: 'leftToRight' | 'rightToLeft';
+	/** Absent means no outline. */
+	borderColor?: string;
 }
 
 export interface IconView {

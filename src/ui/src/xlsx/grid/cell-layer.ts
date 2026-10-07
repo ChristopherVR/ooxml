@@ -162,9 +162,15 @@ export function paintCell(doc: Document, node: HTMLElement, item: CellItem, zoom
 		const bar = h(doc, 'div', 'xg-db');
 		const width = Math.max(0, Math.min(1, view.dataBar.fraction)) * (item.w - 4);
 		bar.style.width = `${width}px`;
-		const color = view.dataBar.negative ? '#ff0000' : view.dataBar.color;
-		bar.style.background = `linear-gradient(90deg, ${color}, color-mix(in srgb, ${color} 15%, #fff))`;
-		bar.style.borderColor = color;
+		const color = view.dataBar.color;
+		const rtl = view.dataBar.direction === 'rightToLeft';
+		bar.style.left = rtl ? 'auto' : '2px';
+		bar.style.right = rtl ? '2px' : 'auto';
+		bar.style.background =
+			view.dataBar.gradient === false
+				? color
+				: `linear-gradient(${rtl ? 270 : 90}deg, ${color}, color-mix(in srgb, ${color} 15%, #fff))`;
+		bar.style.border = view.dataBar.borderColor ? `1px solid ${view.dataBar.borderColor}` : 'none';
 		node.append(bar);
 	}
 	if (view.icon) {

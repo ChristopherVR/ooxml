@@ -18,6 +18,7 @@ export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
 				throw new Error('Invalid page order index.');
 			return { type: command.type, pageId: command.pageId, index: command.index };
 		}
+		if (command.type === 'delete-page') return { type: command.type, pageId: command.pageId };
 		const text = (value: unknown): string => {
 			if (typeof value !== 'string') throw new Error('Invalid edit text.');
 			characters += value.length;

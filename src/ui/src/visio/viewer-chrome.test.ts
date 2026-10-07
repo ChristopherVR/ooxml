@@ -53,6 +53,7 @@ describe('shared Office-style viewer chrome', () => {
 			'Architecture',
 			'Reorder Pages...',
 			'Rename Page...',
+			'Delete Page...',
 		]);
 		expect(items[0]!.getAttribute('checked')).toBe('true');
 		items[1]!.shadowRoot!.querySelector('button')!.click();

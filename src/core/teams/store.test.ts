@@ -14,6 +14,37 @@ afterEach(() => {
 });
 
 describe('teams client', () => {
+	it('automatically follows successful posts and replies according to personal settings', async () => {
+		const client = make('ada', 'auto-follow');
+		client.createChannel('Project');
+		await tick();
+		const channel = client.getState().selectedChannelId;
+		await client.send({ text: 'Started thread' });
+		await tick();
+		const root = client.getState().posts[0]!;
+		expect(client.getState().followedThreads[0]?.root.id).toBe(root.id);
+		client.setThreadFollowSettings({ started: false });
+		await client.send({ text: 'Unfollowed post' });
+		await tick();
+		expect(client.getState().followedThreads).toHaveLength(1);
+		client.followThread(channel, root.id, false);
+		client.startReply(root.id);
+		await client.send({ text: 'Automatically followed reply' });
+		await tick();
+		expect(client.getState().followedThreads[0]?.root.id).toBe(root.id);
+		client.setThreadFollowSettings({ replied: false });
+		client.followThread(channel, root.id, false);
+		client.startReply(root.id);
+		await client.send({ text: 'Reply without following' });
+		await tick();
+		expect(client.getState().followedThreads).toEqual([]);
+		client.setThreadFollowSettings({ started: true });
+		await client.send({ text: '' });
+		client.startEdit(root.id);
+		await client.send({ text: 'Edited original post' });
+		await tick();
+		expect(client.getState().followedThreads).toEqual([]);
+	});
 	it('restores followed threads per user and workspace and follows the root', async () => {
 		const values = new Map<string, string>();
 		const storage = {

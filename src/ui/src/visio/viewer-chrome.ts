@@ -213,6 +213,10 @@ export class ViewerChrome {
 			rename.setAttribute('command', 'rename-page');
 			rename.setAttribute('label', 'Rename Page...');
 			this.#allPages.append(rename);
+			const remove = doc.createElement('office-ui-menu-item');
+			remove.setAttribute('command', 'delete-page');
+			remove.setAttribute('label', 'Delete Page...');
+			this.#allPages.append(remove);
 		}
 		this.#pageTabs.selected = page ? String(state.pageIndex) : '';
 		this.#pageTabs.toggleAttribute(
@@ -229,6 +233,12 @@ export class ViewerChrome {
 				String(item.getAttribute('command') === `page-${state.pageIndex}`),
 			);
 		this.#allPages.disabled = !page;
+		this.#allPages
+			.querySelector('[command="delete-page"]')
+			?.toggleAttribute(
+				'disabled',
+				!state.edit.sourceAvailable || state.edit.busy || state.loading,
+			);
 		this.#allPages
 			.querySelector('[command="rename-page"]')
 			?.toggleAttribute(
