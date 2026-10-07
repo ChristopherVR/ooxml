@@ -2,6 +2,30 @@
 
 Status: local Windows development evidence, 2026-10-03. Full Microsoft Visio parity is not established.
 
+## Native line translation oracle, 2026-10-08
+
+`scripts/record-visio-line-movement.ps1` creates four real one-dimensional
+DrawLine shapes: horizontal, 30-degree diagonal, vertical and reversed
+horizontal. It saves original.vsdx, translates each endpoint by (2.25, 1.5)
+internal inches, then saves moved.vsdx and records native formulas and caches.
+It owns and closes an InvisibleApp without changing raster settings.
+
+The native formulas are `(BeginX+EndX)/2`, `(BeginY+EndY)/2`,
+`SQRT((EndX-BeginX)^2+(EndY-BeginY)^2)` and
+`ATAN2(EndY-BeginY,EndX-BeginX)`. Translation preserves those formulas,
+length, angle, local rotation pins and flips. Both saved packages agree with
+the recorded caches. The existing shared formula interpreter matches the
+native midpoint, length and angle for all four orientations before and after
+translation, including dimensional square roots and ATAN2 argument order.
+
+`native-line-transform.test.ts` passed five tests with
+VISIO_NATIVE_LINE_MOVEMENT_DIR pointing to the local capture
+visio-line-movement-a6330ef9743145c096db40a901d12302. The capture test is
+optional; four measured formula regressions run without native Visio.
+This establishes the transform oracle for the next editing change. It does
+not admit direct line movement in the editor or establish native reopening
+of editor output; those requirements remain open.
+
 ## Height-zero gradient strokes, 2026-10-08
 
 Native DrawLine captures establish Width=2, Height=0 and local M 0 0 L 2 0
