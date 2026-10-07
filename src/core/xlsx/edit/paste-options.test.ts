@@ -17,7 +17,7 @@ interface NativeCell {
 	italic: boolean;
 	fill: string | null;
 }
-interface NativeCase extends Required<PasteOptions> {
+interface NativeCase extends Required<Omit<PasteOptions, 'operation'>> {
 	cells: NativeCell[];
 }
 const fixture = JSON.parse(
@@ -100,12 +100,14 @@ describe('paste options recorded in Microsoft Excel', () => {
 			{ mode: 'bogus' },
 			{ skipBlanks: 'false' },
 			{ transpose: 1 },
+			{ operation: 'bogus' },
 		])
 			expect(() => resolvePasteOptions(invalid)).toThrow(RangeError);
 		expect(resolvePasteOptions('transpose')).toEqual({
 			mode: 'all',
 			transpose: true,
 			skipBlanks: false,
+			operation: 'none',
 		});
 	});
 	it('tiles transposed values while preserving skipped destinations', () => {

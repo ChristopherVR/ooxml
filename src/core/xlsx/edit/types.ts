@@ -48,12 +48,14 @@ export type BorderPreset =
 export type ClearWhat = 'all' | 'contents' | 'formats' | 'comments' | 'hyperlinks';
 
 export type PasteMode = 'all' | 'values' | 'formats' | 'formulas' | 'transpose';
+export type PasteOperation = 'none' | 'add' | 'subtract' | 'multiply' | 'divide';
 
 /** Paste content and independent modifiers. Legacy string modes remain supported. */
 export interface PasteOptions {
 	mode?: Exclude<PasteMode, 'transpose'>;
 	transpose?: boolean;
 	skipBlanks?: boolean;
+	operation?: PasteOperation;
 }
 export type PasteRequest = PasteMode | PasteOptions;
 

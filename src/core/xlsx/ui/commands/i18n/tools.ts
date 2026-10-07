@@ -55,11 +55,11 @@ export const TOOLS_STRINGS: Translations = {
 	Divide: ['Division', 'Dividieren', 'Dividir', '除'],
 	'Skip blanks': ['Blancs non compris', 'Leerzellen überspringen', 'Saltar blancos', '跳过空单元'],
 	Transpose: ['Transposé', 'Transponieren', 'Transponer', '转置'],
-	'Operations, all except borders and column widths are not supported yet.': [
-		'Les opérations, Tout sauf les bordures et les largeurs de colonnes ne sont pas encore pris en charge.',
-		'Vorgänge, Alles außer Rahmen und Spaltenbreiten werden noch nicht unterstützt.',
-		'Las operaciones, Todo excepto bordes y los anchos de columna aún no se admiten.',
-		'尚不支持运算、边框除外及列宽。',
+	'All except borders and column widths are not supported yet.': [
+		'Tout sauf les bordures et les largeurs de colonnes ne sont pas encore pris en charge.',
+		'Alles außer Rahmen und Spaltenbreiten werden noch nicht unterstützt.',
+		'Todo excepto bordes y los anchos de columna aún no se admiten.',
+		'尚不支持边框除外及列宽。',
 	],
 	// Page Setup
 	'Page Setup': ['Mise en page', 'Seite einrichten', 'Configurar página', '页面设置'],

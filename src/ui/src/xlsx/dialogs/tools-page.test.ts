@@ -26,6 +26,26 @@ function setup(grid?: { zoom: number }) {
 const radio = (root: HTMLElement, label: string) => inputByLabel(root, label);
 
 describe('Paste Special', () => {
+	it('multiplies a selection and retains destination formulas with Values', async () => {
+		const ctx = setup();
+		const s = ctx.session()!;
+		s.setCellInput(0, 0, 0, '=1+1');
+		s.setRangeValues(0, { row: 0, col: 2 }, [[10, 'text', 10]]);
+		s.setCellInput(0, 0, 4, '=5+5');
+		clipState(ctx).payload = s.copy(0, { start: { row: 0, col: 0 }, end: { row: 0, col: 0 } });
+		ctx.select('C1:E1');
+		const result = ctx.commands.run('home.paste-special');
+		const dialog = dialogEl(ctx, 'paste-special');
+		radio(dialog, 'Values').click();
+		radio(dialog, 'Multiply').click();
+		clickButton(dialog, 'OK');
+		await result;
+		const read = () => [2, 3, 4].map((col) => getCell(ctx.workbook()!.sheets[0]!, 0, col)?.value);
+		expect(read()).toEqual([20, 'text', 20]);
+		expect(getCell(ctx.workbook()!.sheets[0]!, 0, 4)?.formula).toBe('(5+5)*2');
+		s.undo();
+		expect(read()).toEqual([10, 'text', 10]);
+	});
 	it('combines values, transpose and skip blanks in one undo step', async () => {
 		const ctx = setup();
 		const s = ctx.session()!;

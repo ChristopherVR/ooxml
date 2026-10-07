@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { editor, grid, newWorkbook, typeInActiveCell } from './helpers';
+import { editor, goToCell, grid, newWorkbook, typeInActiveCell } from './helpers';
 
 test('native clipboard repeats one copied cell across the selected rectangle', async ({ page }) => {
 	await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
@@ -30,6 +30,37 @@ test('native clipboard repeats one copied cell across the selected rectangle', a
 			}),
 		)
 		.toEqual(['Monday', 'Monday', 'Monday', 'Monday']);
+});
+
+test('Paste Special Multiply applies native clipboard values and undoes once', async ({ page }) => {
+	await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+	await newWorkbook(page);
+	await typeInActiveCell(page, '2');
+	await goToCell(page, 'C1');
+	await typeInActiveCell(page, '=5+5');
+	await goToCell(page, 'A1');
+	await page.keyboard.press('Control+C');
+	await goToCell(page, 'C1');
+	await page.keyboard.press('Control+Alt+V');
+	const dialog = editor(page).locator('[data-dialog="paste-special"]');
+	await dialog.getByLabel('Values', { exact: true }).check();
+	await dialog.getByLabel('Multiply', { exact: true }).check();
+	await dialog.getByRole('button', { name: 'OK', exact: true }).click();
+	const result = () =>
+		editor(page).evaluate((node) => {
+			const sheet = (
+				node as unknown as {
+					workbook: {
+						sheets: { rows: Map<number, Map<number, { value: unknown; formula?: string }>> }[];
+					};
+				}
+			).workbook.sheets[0]!;
+			const cell = sheet.rows.get(0)?.get(2);
+			return [cell?.value, cell?.formula];
+		});
+	await expect.poll(result).toEqual([20, '(5+5)*2']);
+	await page.keyboard.press('Control+Z');
+	await expect.poll(result).toEqual([10, '5+5']);
 });
 
 test('Paste Special combines values, transpose and Skip Blanks with one undo', async ({ page }) => {

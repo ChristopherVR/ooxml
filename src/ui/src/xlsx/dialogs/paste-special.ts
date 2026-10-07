@@ -25,7 +25,6 @@ export function openPasteSpecial(ctx: EditorContext): Promise<PasteOptions | und
 	for (const input of paste.inputs)
 		if (input.value === 'noBorders' || input.value === 'widths') input.disabled = true;
 	const operation = radios(ctx, 'Operation', OPERATIONS, 'none');
-	for (const input of operation.inputs) if (input.value !== 'none') input.disabled = true;
 	const skip = checkbox(ctx, 'Skip blanks');
 	const transpose = checkbox(ctx, 'Transpose');
 	return showDialog<PasteOptions>(ctx, {
@@ -34,7 +33,7 @@ export function openPasteSpecial(ctx: EditorContext): Promise<PasteOptions | und
 		body: [
 			row(ctx, paste.element, operation.element),
 			row(ctx, skip.wrapper, transpose.wrapper),
-			text(ctx, 'Operations, all except borders and column widths are not supported yet.'),
+			text(ctx, 'All except borders and column widths are not supported yet.'),
 		],
 		opened: () => paste.inputs[0]?.focus(),
 		submit: () => {
@@ -42,6 +41,7 @@ export function openPasteSpecial(ctx: EditorContext): Promise<PasteOptions | und
 				mode: paste.get() as NonNullable<PasteOptions['mode']>,
 				transpose: transpose.input.checked,
 				skipBlanks: skip.input.checked,
+				operation: operation.get() as NonNullable<PasteOptions['operation']>,
 			};
 		},
 	});
