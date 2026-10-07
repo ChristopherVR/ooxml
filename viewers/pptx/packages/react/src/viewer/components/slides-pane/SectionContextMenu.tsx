@@ -1,5 +1,5 @@
-import { buildSectionContextMenuEntries, sectionAddAfterSlideIndex } from 'pptx-viewer-shared';
-import type { SectionContextMenuCommandId } from 'pptx-viewer-shared';
+import { buildSectionContextMenuEntries, sectionAddAfterSlideIndex } from 'ooxml-ui/pptx';
+import type { SectionContextMenuCommandId } from 'ooxml-ui/pptx';
 import type React from 'react';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';

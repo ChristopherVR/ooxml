@@ -7,13 +7,13 @@
  * element's controlled state and routes its typed events to the host handlers.
  * `placement="belowRibbon"` renders only the options-driven extras row.
  */
-import { buildTitleBarState } from 'pptx-viewer-shared';
+import { buildTitleBarState } from 'ooxml-ui/pptx';
 import type {
 	TitleBarCommandSearchEvent,
 	TitleBarEvent,
 	TitleBarPlacement,
 	ToolbarActionId,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { computed, useSlots } from 'vue';
 import { useI18n } from 'vue-i18n';
 

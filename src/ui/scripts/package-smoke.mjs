@@ -53,8 +53,10 @@ try {
 		'a runtime dependency uses file:, workspace: or link:',
 	);
 	assert(
-		!manifest.peerDependencies,
-		'users must never install anything next to the editor package',
+		Object.keys(manifest.peerDependencies ?? {}).every(
+			(name) => manifest.peerDependenciesMeta?.[name]?.optional,
+		),
+		'product integrations must remain optional',
 	);
 
 	await writeFile(
@@ -77,7 +79,15 @@ try {
 	);
 
 	// Data files (package.json, the Custom Elements Manifest) are not modules; they are read below.
-	const entries = Object.keys(manifest.exports).filter((entry) => !entry.endsWith('.json'));
+	const entries = Object.keys(manifest.exports)
+		.filter((entry) => !entry.endsWith('.json'))
+		.flatMap((entry) => {
+			if (!entry.includes('*')) return [entry];
+			const [prefix, suffix] = manifest.exports[entry].import.slice(2).split('*');
+			return [...files]
+				.filter((file) => file.startsWith(prefix) && file.endsWith(suffix))
+				.map((file) => entry.replace('*', file.slice(prefix.length, -suffix.length)));
+		});
 	const specifiers = entries.map((entry) =>
 		path.posix.join(manifest.name, entry === '.' ? '' : entry),
 	);
@@ -108,6 +118,13 @@ const ui = await import('${manifest.name}');
 ui.registerOfficeUi();
 ui.registerOfficeUi();
 for (const tag of ui.OFFICE_UI_TAGS) assert.ok(customElements.get(tag), tag + ' is not defined');
+const pptx = await import('${manifest.name}/pptx');
+pptx.registerPptxWebControls();
+pptx.registerPptxWebControls();
+assert.ok(customElements.get('pptx-ui-title-bar'), 'the PowerPoint title bar is not defined');
+assert.ok(customElements.get('pptx-ui-search'), 'the PowerPoint search alias is not defined');
+assert.equal(typeof pptx.canDrillDown, 'function');
+assert.ok(pptx.vermilionDarkTheme.colors);
 const smartart = document.createElement('office-ui-smartart');
 document.body.append(smartart);
 smartart.drawing = { issues: [], shapes: [{ modelId: '1', frame: { x: 0, y: 0, width: 952500, height: 476250 }, geometry: 'rect', has3d: false,

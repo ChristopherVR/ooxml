@@ -19,7 +19,7 @@ import type { PptxCustomProperty } from 'pptx-viewer-core';
 import { PptxHandler } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 
-import type { PendingInlineTextEdit } from '../internal/shared';
+import type { PendingInlineTextEdit } from 'ooxml-ui/pptx';
 import { LoadContentService } from './load-content.service';
 
 /** Build the service in a throwaway injection context with a DestroyRef stub. */

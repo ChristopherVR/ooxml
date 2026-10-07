@@ -14,8 +14,8 @@ import { ChangeDetectionStrategy, Component, inject, input, output, signal } fro
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import type { PptxElement } from 'pptx-viewer-core';
 
-import { homeLaunchers } from '../internal/shared';
-import type { AccountAuthConfig, ToolbarActionId } from '../internal/shared';
+import { homeLaunchers } from 'ooxml-ui/pptx';
+import type { AccountAuthConfig, ToolbarActionId } from 'ooxml-ui/pptx';
 import { RibbonContentSecondaryComponent } from './ribbon-content-secondary.component';
 import { RibbonContentComponent } from './ribbon-content.component';
 import { createRibbonTabState } from './ribbon-contextual-tabs';

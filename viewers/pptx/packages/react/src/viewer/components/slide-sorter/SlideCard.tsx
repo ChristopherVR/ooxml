@@ -3,7 +3,7 @@ import {
 	HIDDEN_SLIDE_LABEL_KEY,
 	HIDDEN_SLIDE_SLASH_GRADIENT,
 	hiddenSlideCue,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { LuEyeOff } from 'react-icons/lu';

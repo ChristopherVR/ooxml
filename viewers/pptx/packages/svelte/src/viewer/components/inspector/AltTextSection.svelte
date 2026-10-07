@@ -17,7 +17,7 @@
 	 * `InspectorPanel.svelte`.
 	 */
 	import type { PptxElement } from 'pptx-viewer-core';
-	import { getNonVisualDescriptionFields } from 'pptx-viewer-shared';
+	import { getNonVisualDescriptionFields } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 	import type { EditorState } from '../../editor/editor-state.svelte';

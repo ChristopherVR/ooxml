@@ -2,7 +2,7 @@ import {
 	computeMarqueeHitIds,
 	isAdditiveSelectionPress,
 	mergeAdditiveSelection,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Store, ViewerState } from '../state';
 import { getActiveElements } from './editor-active-elements';

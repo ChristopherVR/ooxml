@@ -21,7 +21,7 @@
 		PptxChartTrendline,
 	} from 'pptx-viewer-core';
 	import { setChartDataPointMarker } from 'pptx-viewer-core';
-	import type { ChartTypeSelectValue } from 'pptx-viewer-shared';
+	import type { ChartTypeSelectValue } from 'ooxml-ui/pptx';
 	import {
 		chartDataLabelsTogglePatch,
 		bar3DShapePatch,
@@ -40,7 +40,7 @@
 		setDataLabelsRangeCache,
 		surfaceWireframePatch,
 		SURFACE_WIREFRAME_OPTIONS,
-	} from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 	import type { EditorState } from '../../editor/editor-state.svelte';

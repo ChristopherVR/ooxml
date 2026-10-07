@@ -1,5 +1,5 @@
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
-import type { AuthoredSlideRange, ShowOrderCustomShow } from 'pptx-viewer-shared';
+import type { AuthoredSlideRange, ShowOrderCustomShow } from 'ooxml-ui/pptx';
 import {
 	formatMobileElapsed,
 	mobileElapsedSince,
@@ -7,7 +7,7 @@ import {
 	nextPresentedSlide,
 	presenterNextDisabled,
 	presenterPrevDisabled,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 /**
  * MobilePresenterView: single-column phone layout for presenter/speaker view.
  *

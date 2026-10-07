@@ -1,4 +1,4 @@
-import type { ViewerOptionsStore } from 'pptx-viewer-shared';
+import type { ViewerOptionsStore } from 'ooxml-ui/pptx';
 import {
 	DEFAULT_QUICK_ACCESS_COMMAND_IDS,
 	QUICK_ACCESS_COMMAND_CATALOG,
@@ -6,7 +6,7 @@ import {
 	availableQuickAccessCommands,
 	moveQuickAccessCommand,
 	removeQuickAccessCommand,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';

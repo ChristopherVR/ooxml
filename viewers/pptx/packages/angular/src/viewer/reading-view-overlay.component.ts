@@ -43,8 +43,8 @@ import {
 	handleReadingViewKey,
 	openReadingView,
 	readingViewFitScale,
-} from '../internal/shared';
-import type { CanvasSize, ReadingViewCommand, ReadingViewState } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { CanvasSize, ReadingViewCommand, ReadingViewState } from 'ooxml-ui/pptx';
 import { READING_VIEW_OVERLAY_STYLES } from './reading-view-overlay.styles';
 import { SlideCanvasComponent } from './slide-canvas.component';
 

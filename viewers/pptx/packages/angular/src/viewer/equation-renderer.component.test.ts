@@ -20,8 +20,8 @@
 import type { SafeHtml } from '@angular/platform-browser';
 import { describe, expect, it } from 'vitest';
 
-import type { OmmlNode } from '../internal/shared';
-import { ommlToMathml, sanitizeMathMl } from '../internal/shared';
+import type { OmmlNode } from 'ooxml-ui/pptx';
+import { ommlToMathml, sanitizeMathMl } from 'ooxml-ui/pptx';
 
 // ---------------------------------------------------------------------------
 // Stub DomSanitizer

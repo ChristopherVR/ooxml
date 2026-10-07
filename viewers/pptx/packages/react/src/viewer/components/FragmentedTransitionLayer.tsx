@@ -12,7 +12,7 @@ import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
  * parameterised by CSS custom properties, so the whole set stays
  * transform/opacity-only and GPU-composited with no per-frame JS.
  */
-import type { FragmentedLayer } from 'pptx-viewer-shared';
+import type { FragmentedLayer } from 'ooxml-ui/pptx';
 import React from 'react';
 
 import type { CanvasSize } from '../types';

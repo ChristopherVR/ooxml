@@ -1,4 +1,4 @@
-import { DIRECTION_VALUES } from 'pptx-viewer-shared';
+import { DIRECTION_VALUES } from 'ooxml-ui/pptx';
 import { describe, it, expect, expectTypeOf } from 'vitest';
 
 import {

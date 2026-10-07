@@ -36,7 +36,7 @@ import {
 	setChartCategoryLabel,
 	setChartCellValue,
 	setDataLabelsRangeCache,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { useCallback } from 'react';
 
 import { useChartPartSelection } from '../chart-part-selection';

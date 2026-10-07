@@ -4,7 +4,7 @@
  * the shared triggers.
  */
 import { mount } from '@vue/test-utils';
-import { registerPptxWebControls } from 'pptx-viewer-shared';
+import { registerPptxWebControls } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
 import SlidesGroup from './SlidesGroup.vue';

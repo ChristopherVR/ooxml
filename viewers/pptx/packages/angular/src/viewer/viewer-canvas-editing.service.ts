@@ -30,8 +30,8 @@ import {
 	overlayInlineTextSnapshot,
 	publishLiveInlineText,
 	slideSpaceElement,
-} from '../internal/shared';
-import type { InlineListController, InlineTextEditSnapshot } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { InlineListController, InlineTextEditSnapshot } from 'ooxml-ui/pptx';
 import { CollaborationService } from './collaboration.service';
 import { EditorStateService } from './editor-state.service';
 import { InlineListSession } from './inline-list-session';

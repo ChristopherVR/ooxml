@@ -1,6 +1,6 @@
-import { createViewerOptionsStore, resolveCustomization, THEME_CATALOG } from 'pptx-viewer-shared';
-import type { ViewerCustomization, ViewerOptionsStore } from 'pptx-viewer-shared';
-import { LOCALE_CATALOG } from 'pptx-viewer-shared/i18n';
+import { createViewerOptionsStore, resolveCustomization, THEME_CATALOG } from 'ooxml-ui/pptx';
+import type { ViewerCustomization, ViewerOptionsStore } from 'ooxml-ui/pptx';
+import { LOCALE_CATALOG } from 'ooxml-ui/pptx/i18n';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { EditActions } from './editor';

@@ -13,8 +13,8 @@ import {
 	resolveAutosaveActivation,
 	resolveAutosaveIntervalMs,
 	saveAutosaveSnapshot,
-} from 'pptx-viewer-shared';
-import type { AutosaveDisabledReason } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { AutosaveDisabledReason } from 'ooxml-ui/pptx';
 import type { ComputedRef, Ref, ShallowRef } from 'vue';
 import { computed, ref, watch } from 'vue';
 

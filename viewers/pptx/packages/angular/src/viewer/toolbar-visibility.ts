@@ -10,8 +10,8 @@
  */
 import type { Signal } from '@angular/core';
 
-import { isActionHidden } from '../internal/shared';
-import type { ToolbarActionId } from '../internal/shared';
+import { isActionHidden } from 'ooxml-ui/pptx';
+import type { ToolbarActionId } from 'ooxml-ui/pptx';
 
 export interface ToolbarVisibility {
 	/** True when `id` is present in the host's `hiddenActions` list. */

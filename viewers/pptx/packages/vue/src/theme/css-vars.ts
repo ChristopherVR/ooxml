@@ -3,4 +3,4 @@
  *
  * Re-exported here so existing `./theme` import paths stay stable.
  */
-export { themeToCssVars, defaultCssVars } from 'pptx-viewer-shared';
+export { themeToCssVars, defaultCssVars } from 'ooxml-ui/pptx';

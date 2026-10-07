@@ -16,13 +16,13 @@ import { provideTranslateService, TranslateService } from '@ngx-translate/core';
 import type { PptxElement, PptxSlide, ShapePptxElement } from 'pptx-viewer-core';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 
-import { translationsEn } from '../../../shared/src/i18n/translations-en';
+import { translationsEn } from '../../../../../../src/ui/src/pptx/i18n/translations-en';
 import {
 	EMPTY_RESOLVED_CUSTOMIZATION,
 	RIBBON_HOME_FAMILIES,
 	resolveCustomization,
 	ribbonCustomizationCss,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import {
 	readViewerTestResource,
 	resolveViewerComponentResources,

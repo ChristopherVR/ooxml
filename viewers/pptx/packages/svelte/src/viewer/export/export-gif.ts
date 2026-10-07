@@ -1,11 +1,11 @@
-import type { GifFrame } from 'pptx-viewer-shared';
+import type { GifFrame } from 'ooxml-ui/pptx';
 import {
 	clampGifDimensions,
 	encodeGif,
 	exportAbortError,
 	GIF_POST_CAPTURE_MAX_SIDE,
 	planGifFrames,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { ExportProgress, RasterizeSlide } from './export-controller.svelte';
 

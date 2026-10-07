@@ -19,7 +19,7 @@
 	import DialogFooter from '../DialogFooter.svelte';
 	import type { OlePptxElement, PptxElement } from 'pptx-viewer-core';
 	import { replaceOleFile } from 'pptx-viewer-core';
-	import { buildOleContentUpdatePatch, buildOleEditDialogDescriptor } from 'pptx-viewer-shared';
+	import { buildOleContentUpdatePatch, buildOleEditDialogDescriptor } from 'ooxml-ui/pptx';
 	import { onDestroy } from 'svelte';
 
 	import { useTranslator } from '../../../i18n/context';

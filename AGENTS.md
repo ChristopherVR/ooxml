@@ -7,13 +7,14 @@ file and never fork the two (the viewer repositories drifted that way once).
 ## Working agreements
 
 - `mcp/` owns the `ooxml-mcp` combined server. Each viewer owns its
-  standalone MCP package, schemas and registration. The combined server composes
+  standalone MCP package, transport schemas and registration. PowerPoint document-tool
+  schemas live with their operations in `src/core/pptx/automation/schemas`. The combined server composes
   those registrations without duplicating tools. Shared headless document operations
   and filesystem execution live in `src/core/automation/`; all format logic stays in core.
 
 - The repository root is a private Bun workspace root (scripts, CI, docs, `site/`); the library is the workspace package `src/core` (manifest, tsconfigs, bundler configs and build scripts live there) and `src/ui` is `ooxml-ui`. The root `bun run` scripts delegate to `src/core`.
 - This repository is the **single published package `ooxml-core`**. It owns **all the logic** of the Office products: OOXML (ECMA-376 / ISO 29500) packaging, XML, WordprocessingML, PresentationML and SpreadsheetML models, parsing and serialization, DrawingML, charts, diagrams (SmartArt), maths, geometry, layout, editing commands, validation, and collaboration (Yjs and the sync protocol). It is a sibling of `ole2`.
-- The viewers (`viewers/pptx`, `viewers/docx`, `viewers/xlsx`, `viewers/visio` and `viewers/teams`) own **only the framework bindings** (hooks, wrappers, framework state), demos, end-to-end tests and docs sites. Logic lives in `src/<area>/`; the product editors' DOM code (the custom elements, ribbons, dialogs, grids) lives in `src/ui/src/<product>/` and ships as the `ooxml-ui/<product>` subpath (today `ooxml-ui/xlsx`, `ooxml-ui/docx` and `ooxml-ui/visio`, the editor and viewer elements moved verbatim from their repositories; `<teams-app>` lives in `ooxml-ui/teams`). Those product editors are imperative custom elements, not Lit classes, and keep their own `?raw` CSS; the Lit rule below applies to the shared primitives. DOM-free pieces of a product editor move on to `src/<area>/` over time. Viewers consume this package and must not keep, copy or fork logic that belongs here. Where a viewer still holds logic (today: the Word model, parser, serializer, editing and layout live here in `docx`, and the PowerPoint engine in `pptx`; the PowerPoint `shared` render logic in `viewers/pptx/packages/shared` and the Word editor's view code still live in the viewers), `docx-viewer/docs/ooxml-core-plan.md` says when it moves.
+- The viewers (`viewers/pptx`, `viewers/docx`, `viewers/xlsx`, `viewers/visio` and `viewers/teams`) own **only the framework bindings** (hooks, wrappers, framework state), demos, end-to-end tests and docs sites. Logic lives in `src/<area>/`; the product editors' DOM code (the custom elements, ribbons, dialogs, grids) lives in `src/ui/src/<product>/` and ships as the `ooxml-ui/<product>` subpath (today `ooxml-ui/pptx`, `ooxml-ui/xlsx`, `ooxml-ui/docx` and `ooxml-ui/visio`, the editor and viewer elements moved verbatim from their repositories; `<teams-app>` lives in `ooxml-ui/teams`). Those product editors are imperative custom elements, not Lit classes, and keep their own `?raw` CSS; the Lit rule below applies to the shared primitives. DOM-free pieces of a product editor move on to `src/<area>/` over time. Viewers consume this package and must not keep, copy or fork logic that belongs here. PowerPoint shared rendering now lives in `src/ui/src/pptx`; its private shared package is a compatibility facade.
 - `ole2` owns the legacy compound-file and binary formats (DOC, XLS, PPT, CFB, RC4/MD4). Never move modern OOXML into `ole2`, and never move binary codecs here. The encrypted-package container is CFB (ole2); the encryption primitives are modern OOXML (here).
 - One shared XML model and one structure for every Office type. Parsers and writers are written once against it; type-specific code lives in its own area (`docx`, `pptx`, `xlsx`) of this package, shared code in `xml`, `opc`, `drawingml`, `chart`, `diagram`, and so on.
 - Layout: `src/core/<area>/` with its own `index.ts`; each area is a subpath export (`ooxml-core/xml`) and the root entry groups them by namespace. Do not add a second logic package; add an area. The one exception is `src/ui`: it is not an area but the separate, DOM-only `ooxml-ui` package (see `docs/ooxml-ui-plan.md`), a Bun workspace that sits in this tree. Core never imports it, and the core's tsconfig, vitest, release planner (`exclude` in `scripts/release-plan.mjs`) and CI planner all treat `src/ui` as outside the core, so a change there never releases or tests `ooxml-core`.
@@ -203,3 +204,12 @@ shipping fields and the licence files do; `site/`, docs, tests and CI never do).
   hyphen. The only exception is content that intentionally renders or asserts
   that character.
 - Formatting is `oxfmt`; run `bun run fmt` before committing.
+
+### PowerPoint shared UI
+
+The framework-independent PowerPoint renderer and web components live in
+`src/ui/src/pptx` and are published through `ooxml-ui/pptx`. The viewer shared
+package is a compatibility facade. DOM-free document operations and tool
+schemas live in `src/core/pptx/editor` and `src/core/pptx/automation/schemas`.
+The migrated product UI has a separate legacy compiler project; never weaken
+the strict shared UI project to accommodate it. See `docs/pptx-shared-migration.md`.

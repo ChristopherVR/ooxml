@@ -18,7 +18,7 @@ import {
 	formatSlideCounter,
 	READING_VIEW_ATTR,
 	READING_VIEW_COUNTER_ATTR,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { LuChevronLeft, LuChevronRight, LuX } from 'react-icons/lu';

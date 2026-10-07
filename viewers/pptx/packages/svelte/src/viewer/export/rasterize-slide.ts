@@ -3,12 +3,12 @@ import type {
 	CanvasSize,
 	RasterizeElementResult,
 	RasterizeElementTilesResult,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	rasterizeElement,
 	rasterizeElementTiledToCanvas,
 	rasterizeElementTiles,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { mount, unmount } from 'svelte';
 
 import { I18N_CONTEXT_KEY } from '../../i18n/context';

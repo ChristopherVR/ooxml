@@ -9,7 +9,7 @@
  * @module ui/context-menu-format-actions
  */
 import type { PptxElement } from 'pptx-viewer-core';
-import type { InspectorSectionAnchor, RasterStrategyOptions } from 'pptx-viewer-shared';
+import type { InspectorSectionAnchor, RasterStrategyOptions } from 'ooxml-ui/pptx';
 import {
 	buildRasterPictureElement,
 	elementPictureFilename,
@@ -17,7 +17,7 @@ import {
 	rasterizeElementToDataUrl,
 	saveElementAsPicture,
 	scrollInspectorSectionIntoView,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import { findActiveElement } from '../editor/editor-active-elements';
 import { renderToCanvas } from '../export/render-to-canvas';

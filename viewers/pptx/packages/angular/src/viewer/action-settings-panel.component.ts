@@ -22,7 +22,7 @@ import {
 	ELEMENT_ACTION_TYPE_OPTIONS,
 	resolveActionType,
 	toSlideIndex,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { ActionTargetFieldsComponent } from './action-target-fields.component';
 import { LoadContentService } from './load-content.service';
 

@@ -9,7 +9,7 @@
  * Note: shared also exports `routeOrthogonalConnector` / `waypointsToPathD`
  * (Angular-style positional API / comma-separated path), unused by React.
  */
-export type { RouterPoint, RouterRect, ConnectorRouterOptions } from 'pptx-viewer-shared';
+export type { RouterPoint, RouterRect, ConnectorRouterOptions } from 'ooxml-ui/pptx';
 
 export {
 	PADDING_DEFAULT,
@@ -24,4 +24,4 @@ export {
 	simplifyPath,
 	routeConnector,
 	waypointsToPathData,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

@@ -20,8 +20,8 @@ import {
 	EFFECT_SOUND_CATALOGUE,
 	TRANSITION_PREVIEW_ATTR,
 	transitionSoundOptions,
-} from '../internal/shared';
-import type { RibbonTransitionsIntent } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { RibbonTransitionsIntent } from 'ooxml-ui/pptx';
 import { EditorStateService } from './editor-state.service';
 import { RibbonTransitionsSectionComponent } from './ribbon-transitions-section.component';
 

@@ -19,7 +19,7 @@ export default defineConfig((options) => ({
 	splitting: true,
 	sourcemap: false,
 	clean: !options.watch,
-	external: [
+	external: [/^ooxml-ui(?:\/|$)/,
 		'react',
 		'react-dom',
 		'framer-motion',
@@ -51,7 +51,7 @@ export default defineConfig((options) => ({
 	// dist (core now imports them from npm) but since they're not listed as
 	// external above, they get inlined here too, keeping this package
 	// self-contained.)
-	noExternal: ['pptx-viewer-core', 'pptx-viewer-shared'],
+	noExternal: ['pptx-viewer-core'],
 	treeshake: true,
 	platform: 'browser',
 }));

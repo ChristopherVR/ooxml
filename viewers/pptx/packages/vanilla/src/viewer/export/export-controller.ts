@@ -7,7 +7,7 @@ import {
 	rasterResultToPngBlob,
 	rasterResultToPngDataUrl,
 	resolveExportBaseName,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Store, ViewerState } from '../state';
 import type { ExportGifOptions } from './export-gif';

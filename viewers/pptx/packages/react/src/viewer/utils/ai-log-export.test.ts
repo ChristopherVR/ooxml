@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import type { PptxAiChatStore, PptxAiStoredChat } from 'pptx-viewer-shared/ai';
+import type { PptxAiChatStore, PptxAiStoredChat } from 'ooxml-ui/pptx/ai';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const downloaded: { blob: Blob; filename: string }[] = [];

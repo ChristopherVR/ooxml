@@ -1,5 +1,5 @@
 import type { PptxChartData, PptxElement } from 'pptx-viewer-core';
-import { buildChartViewModel } from 'pptx-viewer-shared';
+import { buildChartViewModel } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 
 import { renderChartViewModelSvg } from './chart-svg';

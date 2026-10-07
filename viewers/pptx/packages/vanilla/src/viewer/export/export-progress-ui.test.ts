@@ -1,4 +1,4 @@
-import { exportAbortError } from 'pptx-viewer-shared';
+import { exportAbortError } from 'ooxml-ui/pptx';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../i18n';

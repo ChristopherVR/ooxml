@@ -1,6 +1,6 @@
 import type { PptxSlide } from 'pptx-viewer-core';
-import { PRESENT_ANNOTATION_OVER_BLACKOUT_Z, PRESENT_ANNOTATION_Z } from 'pptx-viewer-shared';
-import type { PresentationInkStroke } from 'pptx-viewer-shared';
+import { PRESENT_ANNOTATION_OVER_BLACKOUT_Z, PRESENT_ANNOTATION_Z } from 'ooxml-ui/pptx';
+import type { PresentationInkStroke } from 'ooxml-ui/pptx';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../i18n';

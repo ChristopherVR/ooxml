@@ -6,8 +6,8 @@ import type {
 	RemoteCursor,
 	RulerUnit,
 	SanitizedPresence,
-} from 'pptx-viewer-shared';
-import type { AiChangeBatch } from 'pptx-viewer-shared/ai';
+} from 'ooxml-ui/pptx';
+import type { AiChangeBatch } from 'ooxml-ui/pptx/ai';
 
 import type { Translator } from '../../i18n/translator';
 import type { AiCanvasHighlight } from '../ai/ai-panel-controller.svelte';

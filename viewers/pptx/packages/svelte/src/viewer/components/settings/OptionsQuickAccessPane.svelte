@@ -5,14 +5,14 @@
 	 */
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import ChevronUp from '@lucide/svelte/icons/chevron-up';
-	import type { ViewerOptions } from 'pptx-viewer-shared';
+	import type { ViewerOptions } from 'ooxml-ui/pptx';
 	import {
 		QUICK_ACCESS_COMMAND_CATALOG,
 		addQuickAccessCommand,
 		availableQuickAccessCommands,
 		moveQuickAccessCommand,
 		removeQuickAccessCommand,
-	} from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../../i18n/context';
 
 	const {

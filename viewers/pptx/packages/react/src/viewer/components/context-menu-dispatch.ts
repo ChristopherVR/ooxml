@@ -1,10 +1,10 @@
 import type { TablePptxElement } from 'pptx-viewer-core';
-import type { ContextMenuCommandId, ContextMenuContext } from 'pptx-viewer-shared';
+import type { ContextMenuCommandId, ContextMenuContext } from 'ooxml-ui/pptx';
 import {
 	canCropElement,
 	hasMultipleSelectedTableCells,
 	MERGE_SHAPES_MENU_ITEMS,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { ContextMenuProps } from './context-menu-types';
 import type { ShapeFormatCommands } from './shape-format-context';

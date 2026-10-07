@@ -6,8 +6,8 @@ import {
 	resolveOleVerbTarget,
 	safeOpenUrl,
 	toggleStageElementMedia,
-} from 'pptx-viewer-shared';
-import type { PresentationActionRunner, RunProgramNotice } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { PresentationActionRunner, RunProgramNotice } from 'ooxml-ui/pptx';
 
 import type { CustomShowRunner } from './presenter/presentation-custom-show-runner';
 

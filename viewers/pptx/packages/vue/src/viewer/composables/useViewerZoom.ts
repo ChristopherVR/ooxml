@@ -16,8 +16,8 @@
  * routed through the store's semantic commands, which also means a pinch is now
  * clamped by the same bounds as every other zoom entry point.
  */
-import { createViewerZoomStore } from 'pptx-viewer-shared';
-import type { ViewerZoomStore } from 'pptx-viewer-shared';
+import { createViewerZoomStore } from 'ooxml-ui/pptx';
+import type { ViewerZoomStore } from 'ooxml-ui/pptx';
 import type { ComputedRef, Ref, WritableComputedRef } from 'vue';
 import { computed } from 'vue';
 

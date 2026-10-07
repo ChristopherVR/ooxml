@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ChevronLeft, ChevronRight, X } from 'lucide-vue-next';
 import type { PptxSlide } from 'pptx-viewer-core';
-import type { AuthoredSlideRange } from 'pptx-viewer-shared';
+import type { AuthoredSlideRange } from 'ooxml-ui/pptx';
 import {
 	formatMobileElapsed,
 	mobileElapsedSince,
@@ -10,7 +10,7 @@ import {
 	nextPresentedSlide,
 	presenterNextDisabled,
 	presenterPrevDisabled,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 

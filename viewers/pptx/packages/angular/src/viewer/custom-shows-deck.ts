@@ -17,7 +17,7 @@
  */
 import type { PptxCustomShow } from 'pptx-viewer-core';
 
-import type { CustomShow, ShowOrderCustomShow } from '../internal/shared';
+import type { CustomShow, ShowOrderCustomShow } from 'ooxml-ui/pptx';
 
 /** The two slide keys a custom show can be expressed in. */
 export interface CustomShowSlideKeys {

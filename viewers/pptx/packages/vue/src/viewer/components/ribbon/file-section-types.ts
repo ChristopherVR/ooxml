@@ -1,4 +1,4 @@
-import type { ToolbarActionId } from 'pptx-viewer-shared';
+import type { ToolbarActionId } from 'ooxml-ui/pptx';
 
 export interface FileSectionProps {
 	fileName?: string;

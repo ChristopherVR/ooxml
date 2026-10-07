@@ -15,7 +15,7 @@ export default defineConfig((options) => ({
 	splitting: true,
 	sourcemap: false,
 	clean: !options.watch,
-	external: [
+	external: [/^ooxml-ui(?:\/|$)/,
 		'jszip',
 		'fast-xml-parser',
 		'dompurify',
@@ -47,7 +47,7 @@ export default defineConfig((options) => ({
 	],
 	// Bundle the internal workspace packages so consumers can install just
 	// `pptx-vanilla-viewer` without also pulling `pptx-viewer-core` from npm.
-	noExternal: [/^pptx-viewer-core(?:\/|$)/u, /^pptx-viewer-shared(?:\/|$)/u],
+	noExternal: [/^pptx-viewer-core(?:\/|$)/u],
 	treeshake: true,
 	platform: 'browser',
 }));

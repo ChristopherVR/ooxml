@@ -1,5 +1,5 @@
-import { registerPptxWebControls } from 'pptx-viewer-shared';
-import type { RibbonDrawRequestEvent, RibbonDrawViewState } from 'pptx-viewer-shared';
+import { registerPptxWebControls } from 'ooxml-ui/pptx';
+import type { RibbonDrawRequestEvent, RibbonDrawViewState } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../../i18n';
 import type { RibbonDrawHandlers, RibbonDrawState } from '../ribbon-types';

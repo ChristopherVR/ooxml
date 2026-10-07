@@ -3,6 +3,9 @@ import { expect, test, type Page } from '@playwright/test';
 import { fixture, shape, cell, rectangle } from '../../src/core/visio/test-fixtures';
 
 async function open(page: Page, name: string, kind: 'docx' | 'xlsx' | 'vsdx' | 'other') {
+	await page.locator('teams-app').evaluate(async (element) => {
+		await (element as HTMLElement & { updateComplete: Promise<boolean> }).updateComplete;
+	});
 	await page.locator('teams-app').evaluate(
 		(element, detail) => {
 			(element as HTMLElement & { previewContent(detail: unknown): void }).previewContent(detail);
@@ -77,6 +80,7 @@ test('native Office viewers load actual bytes in the workspace', async ({ page }
 			route.fulfill({ body: Buffer.from(bytes), contentType: 'application/octet-stream' }),
 		);
 	await page.goto('/?local=1&name=Ada&room=office-preview');
+	await expect(page.getByRole('heading', { name: '# General', exact: true })).toBeVisible();
 	for (const [name, kind, tag] of [
 		['plan.docx', 'docx', 'docx-editor'],
 		['budget.xlsx', 'xlsx', 'xlsx-editor'],

@@ -1,10 +1,10 @@
-import type { ToolbarActionId, ToolbarTabDefinition, ViewerOptions } from 'pptx-viewer-shared';
+import type { ToolbarActionId, ToolbarTabDefinition, ViewerOptions } from 'ooxml-ui/pptx';
 import {
 	filterVisibleTabs,
 	isActionHidden,
 	resolveVisibleRibbonTabs,
 	TOOLBAR_TABS,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import type { ComputedRef } from 'vue';
 

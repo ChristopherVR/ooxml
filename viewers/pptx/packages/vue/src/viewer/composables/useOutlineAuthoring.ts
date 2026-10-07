@@ -3,8 +3,8 @@ import type {
 	EditPointsElementPatch,
 	FreeformToolKind,
 	ResolvedCustomization,
-} from 'pptx-viewer-shared';
-import { canEditElementPoints, isEditPointsEnabled } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import { canEditElementPoints, isEditPointsEnabled } from 'ooxml-ui/pptx';
 import { inject, provide, ref } from 'vue';
 import type { InjectionKey, Ref } from 'vue';
 

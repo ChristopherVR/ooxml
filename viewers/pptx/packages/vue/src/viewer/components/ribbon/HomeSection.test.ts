@@ -1,7 +1,7 @@
 import { enableAutoUnmount, mount } from '@vue/test-utils';
 import type { PptxElement } from 'pptx-viewer-core';
-import type { PptxUiSelectElement } from 'pptx-viewer-shared';
-import { createRibbonControlIcon } from 'pptx-viewer-shared';
+import type { PptxUiSelectElement } from 'ooxml-ui/pptx';
+import { createRibbonControlIcon } from 'ooxml-ui/pptx';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { nextTick } from 'vue';
 

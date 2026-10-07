@@ -4,7 +4,7 @@ import {
 	DISPLAY_UNITS_OPTIONS,
 	EDITABLE_AXIS_ROWS,
 	TICK_LABEL_POSITION_OPTIONS,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

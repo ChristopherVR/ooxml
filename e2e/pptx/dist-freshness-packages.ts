@@ -18,6 +18,8 @@ export const repoRoot = resolve(fileURLToPath(new URL('../../viewers/pptx', impo
 export interface DistPackage {
 	/** Workspace directory under `packages/`. */
 	dir: string;
+	/** Authored source folder, defaulting to src. */
+	source?: string;
 	/** npm name, for the build command in the failure message. */
 	name: string;
 	/** A file that must exist and be newer than the package's newest source. */
@@ -41,10 +43,17 @@ export const DIST_PACKAGES: readonly DistPackage[] = [
 		consumers: 'the Angular demo and the e2e fixture generators',
 	},
 	{
-		dir: 'shared',
-		name: 'pptx-viewer-shared',
-		artifact: 'dist/index.mjs',
-		consumers: 'the React demo',
+		dir: '../../../src/ui',
+		name: 'ooxml-ui',
+		artifact: 'dist/pptx/index.mjs',
+		consumers: 'all five demos, through the shared renderer',
+	},
+	{
+		dir: '../../../src/core',
+		name: 'ooxml-core',
+		source: 'pptx',
+		artifact: 'dist/pptx/index.mjs',
+		consumers: 'all five demos, through the engine and editing helpers',
 	},
 	{
 		dir: 'locales',
@@ -52,12 +61,7 @@ export const DIST_PACKAGES: readonly DistPackage[] = [
 		artifact: 'dist/index.js',
 		consumers: 'the Angular demo',
 	},
-	{
-		dir: 'tools',
-		name: 'pptx-viewer-mcp',
-		artifact: 'dist/index.js',
-		consumers: 'all five demos, through the shared MCP registry',
-	},
+
 	{
 		dir: 'angular',
 		name: 'pptx-angular-viewer',

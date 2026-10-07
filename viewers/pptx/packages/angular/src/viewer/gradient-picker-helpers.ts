@@ -6,7 +6,7 @@
  * binding. This shim preserves the historical Angular import surface so
  * `GradientPickerComponent` and the colocated tests are unchanged.
  */
-export type { GradientStop, GradientState } from '../internal/shared';
+export type { GradientStop, GradientState } from 'ooxml-ui/pptx';
 export {
 	gradientStateOf,
 	gradientStateFromStyle,
@@ -16,4 +16,4 @@ export {
 	removeGradientStopPatch,
 	updateGradientStopPatch,
 	gradientStopColorCommitPatch,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';

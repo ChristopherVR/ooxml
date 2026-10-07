@@ -13,8 +13,8 @@ import {
 	oleActionsVisible,
 	openUrlInNewTab,
 	resolveOleType,
-} from 'pptx-viewer-shared';
-import type { OleIconShape, ResolvedOleType } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { OleIconShape, ResolvedOleType } from 'ooxml-ui/pptx';
 import type { CSSProperties } from 'vue';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';

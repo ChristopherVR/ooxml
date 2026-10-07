@@ -27,7 +27,7 @@ import {
 	animationFor,
 	directionValuesFor,
 	effectiveDirection,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 
 // ── Pure authoring functions (consolidated in shared) ──
 export {
@@ -61,8 +61,8 @@ export {
 	setTriggerShapeId,
 	showDirectionPicker,
 	TRIGGER_OPTIONS,
-} from '../internal/shared';
-export type { AnimationGroup, EffectSoundState } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+export type { AnimationGroup, EffectSoundState } from 'ooxml-ui/pptx';
 
 // ==========================================================================
 // Option catalogs (Angular display labels: view metadata, not shared)

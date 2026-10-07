@@ -15,6 +15,8 @@ const local = (path: string): string =>
 
 export function sharedConfig(port: number): UserConfig {
 	return {
+		// Discover the lazy presentation engine before first open, avoiding a dev-server reload.
+		optimizeDeps: { include: ['ooxml-core/pptx', 'emf-converter'] },
 		resolve: {
 			// Yjs and Lit break (instanceof, double registration) if two copies load: force one.
 			dedupe: [

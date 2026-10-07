@@ -16,8 +16,8 @@ import {
 } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 
-import { SHORTCUT_REFERENCE_ITEMS, TOOLBAR_TABS } from '../internal/shared';
-import type { ToolbarTabId, ViewerOptions } from '../internal/shared';
+import { SHORTCUT_REFERENCE_ITEMS, TOOLBAR_TABS } from 'ooxml-ui/pptx';
+import type { ToolbarTabId, ViewerOptions } from 'ooxml-ui/pptx';
 
 /** One Customize Ribbon checkbox edit. */
 export interface RibbonTabHiddenChange {

@@ -12,7 +12,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 const capturedDeps: { getSaveOptions?: () => PptxHandlerSaveOptions | undefined }[] = [];
 
-vi.mock(import('pptx-viewer-shared'), async (importOriginal) => {
+vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => {
 	const actual = await importOriginal();
 	return {
 		...actual,

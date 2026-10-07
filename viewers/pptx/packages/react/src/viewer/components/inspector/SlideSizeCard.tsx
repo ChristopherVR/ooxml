@@ -11,8 +11,8 @@ import {
 	slideSizeFromPreset,
 	SLIDE_SIZE_PRESETS,
 	withSlideSizeOrientation,
-} from 'pptx-viewer-shared';
-import type { SlideSizeEmu, SlideSizeOrientation, SlideSizeRescaleMode } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { SlideSizeEmu, SlideSizeOrientation, SlideSizeRescaleMode } from 'ooxml-ui/pptx';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

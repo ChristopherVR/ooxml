@@ -5,7 +5,7 @@
  * re-render. A component reading one slice of viewer state must not be woken by
  * an unrelated slice moving (issue #145).
  */
-import { createViewerStore } from 'pptx-viewer-shared';
+import { createViewerStore } from 'ooxml-ui/pptx';
 import { describe, it, expect, vi } from 'vitest';
 import { effectScope, watchSyncEffect } from 'vue';
 

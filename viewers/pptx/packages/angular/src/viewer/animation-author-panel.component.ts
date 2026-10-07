@@ -52,7 +52,7 @@ import {
 	moveAnimationTimelineRowBy,
 	selectedBookmarkOptionValue,
 	setTriggerBookmark,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { AfterAnimationRowComponent } from './after-animation-row.component';
 import {
 	ANIMATION_NUMBER_SETTERS,

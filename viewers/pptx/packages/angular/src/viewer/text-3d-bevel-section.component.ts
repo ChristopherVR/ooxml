@@ -28,7 +28,7 @@ import {
 	clampText3dPt,
 	text3dEmuToPt,
 	text3dPtToEmu,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 
 /** The three `Text3DStyle` fields one bevel block owns. */
 export interface Text3DBevelKeys {

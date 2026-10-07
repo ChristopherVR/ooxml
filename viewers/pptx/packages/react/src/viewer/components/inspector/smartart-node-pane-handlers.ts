@@ -21,5 +21,5 @@ export {
 	reorder,
 	siblingCount,
 	siblingIndex,
-} from 'pptx-viewer-shared';
-export type { NodePaneKeyResult } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+export type { NodePaneKeyResult } from 'ooxml-ui/pptx';

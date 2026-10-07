@@ -1,4 +1,4 @@
-import { DEFAULT_VIEWER_PREFERENCES, registerPptxWebControls } from 'pptx-viewer-shared';
+import { DEFAULT_VIEWER_PREFERENCES, registerPptxWebControls } from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 

@@ -1,7 +1,7 @@
 import { hasTextProperties } from 'pptx-viewer-core';
 import type { PptxElement, TextStyle } from 'pptx-viewer-core';
-import { buildInlineListStylePatch, getInlineEditorSelectionResult } from 'pptx-viewer-shared';
-import type { InlineTextEditSnapshot } from 'pptx-viewer-shared';
+import { buildInlineListStylePatch, getInlineEditorSelectionResult } from 'ooxml-ui/pptx';
+import type { InlineTextEditSnapshot } from 'ooxml-ui/pptx';
 import { computed, ref, shallowRef } from 'vue';
 
 import { useInlineListSession } from './useInlineListSession';

@@ -2,11 +2,11 @@ import {
 	borrowExternalCollaborationAwareness,
 	observeExternalCollaborationSession,
 	registerCollaborationTeardown,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type {
 	BorrowedCollaborationAwareness,
 	ExternalCollaborationSession,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { useEffect, useState } from 'react';
 
 import type { UseYjsProviderResult } from './useYjsProvider';

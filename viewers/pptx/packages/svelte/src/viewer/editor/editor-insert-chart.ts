@@ -1,6 +1,6 @@
 import type { PptxChartType, PptxElement } from 'pptx-viewer-core';
-import type { CanvasSize, InsertChartKind } from 'pptx-viewer-shared';
-import { createDefaultChartElement } from 'pptx-viewer-shared';
+import type { CanvasSize, InsertChartKind } from 'ooxml-ui/pptx';
+import { createDefaultChartElement } from 'ooxml-ui/pptx';
 
 import { centerOnCanvas } from './editor-insert';
 

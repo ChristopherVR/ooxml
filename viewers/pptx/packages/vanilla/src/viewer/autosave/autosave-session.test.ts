@@ -4,8 +4,8 @@
  * rather than only to a callback the embedder may never have wired.
  */
 import type { PptxHandler } from 'pptx-viewer-core';
-import { getAcknowledgedAutosaveRecoveryTimestamp } from 'pptx-viewer-shared';
-import type { AutosaveRecoveryOffer } from 'pptx-viewer-shared';
+import { getAcknowledgedAutosaveRecoveryTimestamp } from 'ooxml-ui/pptx';
+import type { AutosaveRecoveryOffer } from 'ooxml-ui/pptx';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../i18n';
@@ -22,7 +22,7 @@ const probeAutosaveRecovery =
 const discardAutosaveRecovery =
 	vi.fn<(record: { key: string; timestamp: number }) => Promise<void>>();
 
-vi.mock(import('pptx-viewer-shared'), async (importOriginal) => ({
+vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => ({
 	...(await importOriginal()),
 	saveAutosaveSnapshot: (path: string, data: Uint8Array) => saveAutosaveSnapshot(path, data),
 	probeAutosaveRecovery: (path: string, now?: number, displayName?: string) =>

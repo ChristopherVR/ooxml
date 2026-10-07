@@ -5,8 +5,8 @@
 	 * `FindReplacePanel` (both toggle the same panel, matching React); the Select
 	 * menu's "Select All" selects every element on the current slide.
 	 */
-	import { editingHomeControls, homeSnapshotTranslator } from 'pptx-viewer-shared';
-	import type { RibbonHomeRequestEvent } from 'pptx-viewer-shared';
+	import { editingHomeControls, homeSnapshotTranslator } from 'ooxml-ui/pptx';
+	import type { RibbonHomeRequestEvent } from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../../../i18n/context';
 	import type { EditorState } from '../../../editor/editor-state.svelte';
 	import type { FindReplaceState } from '../../../editor/editor-find-replace.svelte';

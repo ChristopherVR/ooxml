@@ -7,4 +7,4 @@
  *
  * Reference: ECMA-376 Part 1, §20.1.10.33 (ST_PresetPatternVal).
  */
-export { getPatternSvg } from 'pptx-viewer-shared';
+export { getPatternSvg } from 'ooxml-ui/pptx';

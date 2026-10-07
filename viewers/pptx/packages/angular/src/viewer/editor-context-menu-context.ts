@@ -14,8 +14,8 @@
 
 import type { TablePptxElement } from 'pptx-viewer-core';
 
-import type { ContextMenuTableContext } from '../internal/shared';
-import { hasMultipleSelectedTableCells } from '../internal/shared';
+import type { ContextMenuTableContext } from 'ooxml-ui/pptx';
+import { hasMultipleSelectedTableCells } from 'ooxml-ui/pptx';
 import type { TableCellSelection } from './table-selection.service';
 
 /**

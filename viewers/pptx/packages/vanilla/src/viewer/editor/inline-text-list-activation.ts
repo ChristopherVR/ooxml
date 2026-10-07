@@ -6,8 +6,8 @@ import {
 	readEditableText,
 	readListActivationSelection,
 	restoreInlineListBodySelection,
-} from 'pptx-viewer-shared';
-import type { InlineListSeed } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { InlineListSeed } from 'ooxml-ui/pptx';
 
 /** One explicit plain-to-list command boundary, never an input-event rewrite. */
 export function activateInlineTextList(

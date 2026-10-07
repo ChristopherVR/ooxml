@@ -3,12 +3,12 @@ import type {
 	TableStyleBorderSide,
 	TableStyleEditorDescriptor,
 	TableStyleEditorFieldEdit,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	TABLE_STYLE_BORDER_SIDE_LABEL_KEYS,
 	TABLE_STYLE_BORDER_SIDES,
 	TABLE_STYLE_DASH_PRESETS,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { useI18n } from 'vue-i18n';
 
 import ThemeColorSwatchGrid from './ThemeColorSwatchGrid.vue';

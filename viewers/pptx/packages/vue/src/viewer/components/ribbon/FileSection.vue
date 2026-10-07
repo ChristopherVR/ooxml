@@ -9,8 +9,8 @@ import {
 	formatBackstageDate,
 	formatBackstageSize,
 	listBackstageRecentFiles,
-} from 'pptx-viewer-shared';
-import type { BackstagePage, BackstageRecentFile } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { BackstagePage, BackstageRecentFile } from 'ooxml-ui/pptx';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 

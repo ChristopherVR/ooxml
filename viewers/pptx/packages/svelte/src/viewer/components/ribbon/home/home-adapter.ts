@@ -1,5 +1,5 @@
-import { homeFamilyControls } from 'pptx-viewer-shared';
-import type { HomeLayoutArtwork, RibbonGalleryId, RibbonHomeFamily } from 'pptx-viewer-shared';
+import { homeFamilyControls } from 'ooxml-ui/pptx';
+import type { HomeLayoutArtwork, RibbonGalleryId, RibbonHomeFamily } from 'ooxml-ui/pptx';
 import { getAllContexts, mount, unmount } from 'svelte';
 
 import LayoutArtwork from './LayoutArtwork.svelte';

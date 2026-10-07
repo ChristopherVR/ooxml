@@ -1,4 +1,4 @@
-import type { AccountAuthConfig } from 'pptx-viewer-shared';
+import type { AccountAuthConfig } from 'ooxml-ui/pptx';
 /**
  * Optional sign-in hook point for File > Account (Vue).
  *

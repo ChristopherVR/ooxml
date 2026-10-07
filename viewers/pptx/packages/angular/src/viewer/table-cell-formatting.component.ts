@@ -16,7 +16,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, output } f
 import { TranslatePipe } from '@ngx-translate/core';
 import type { PptxTableCellStyle, PptxTableData, TablePptxElement } from 'pptx-viewer-core';
 
-import type { ThemeColorPickerCommit } from '../internal/shared';
+import type { ThemeColorPickerCommit } from 'ooxml-ui/pptx';
 import { RecentColorsService } from './recent-colors.service';
 import { TableCellAdvancedFillComponent } from './table-cell-advanced-fill.component';
 import { TableCellColorFieldComponent } from './table-cell-color-field.component';

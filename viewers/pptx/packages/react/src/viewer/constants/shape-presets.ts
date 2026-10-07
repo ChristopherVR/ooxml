@@ -13,8 +13,8 @@
  * a render site can switch to `t(preset.i18nKey)` without a data-shape change.
  */
 
-import { SHAPE_PRESET_DEFS } from 'pptx-viewer-shared';
-import type { ShapePresetGlyph } from 'pptx-viewer-shared';
+import { SHAPE_PRESET_DEFS } from 'ooxml-ui/pptx';
+import type { ShapePresetGlyph } from 'ooxml-ui/pptx';
 import React from 'react';
 import {
 	LuCircle,

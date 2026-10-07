@@ -33,7 +33,7 @@ import type { Page } from '@playwright/test';
 import {
 	PRESENTER_CONSOLE_ORDER,
 	PRESENTER_RAIL_CONTROLS,
-} from '../../viewers/pptx/packages/shared/src/render/presenter-chrome';
+} from '../../src/ui/src/pptx/render/presenter-chrome';
 import { fixture, loadDeckAt } from './support/deck';
 import { acrossFrameworks, splitReference } from './support/parity';
 

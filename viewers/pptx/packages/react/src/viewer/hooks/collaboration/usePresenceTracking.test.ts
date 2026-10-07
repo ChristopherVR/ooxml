@@ -6,7 +6,7 @@
  *
  * @module collaboration/usePresenceTracking.test
  */
-import { sanitizePresence } from 'pptx-viewer-shared';
+import { sanitizePresence } from 'ooxml-ui/pptx';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // ---------------------------------------------------------------------------

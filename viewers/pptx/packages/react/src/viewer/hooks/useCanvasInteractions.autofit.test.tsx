@@ -5,8 +5,8 @@ import {
 	createSnapshotTextPositions,
 	findElementYMap,
 	reconcileSlidesInYDoc,
-} from 'pptx-viewer-shared';
-import type { CollaborationLivePatcher, InlineTextEditSnapshot } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { CollaborationLivePatcher, InlineTextEditSnapshot } from 'ooxml-ui/pptx';
 import React, { act, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
@@ -248,7 +248,7 @@ describe('inline edit permission transitions', () => {
 				createMap: () => new Y.Map(),
 				createArray: () => new Y.Array(),
 				createText: () => new Y.Text(),
-				createTextPositions: (text: import('pptx-viewer-shared').YTextEditableLike) =>
+				createTextPositions: (text: import('ooxml-ui/pptx').YTextEditableLike) =>
 					createSnapshotTextPositions(text as unknown as Y.Text, {
 						read: () => Y.snapshot(doc),
 						equal: Y.equalSnapshots,

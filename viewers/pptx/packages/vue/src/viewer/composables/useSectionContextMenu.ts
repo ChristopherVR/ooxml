@@ -7,8 +7,8 @@
  * is only the Vue-side reactive state around them, the same split as
  * `useSlidePaneRailMenu` for the thumbnail menu.
  */
-import { buildSectionContextMenuEntries, sectionAddAfterSlideIndex } from 'pptx-viewer-shared';
-import type { SectionContextMenuCommandId } from 'pptx-viewer-shared';
+import { buildSectionContextMenuEntries, sectionAddAfterSlideIndex } from 'ooxml-ui/pptx';
+import type { SectionContextMenuCommandId } from 'ooxml-ui/pptx';
 import { computed, ref } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
 import { useI18n } from 'vue-i18n';

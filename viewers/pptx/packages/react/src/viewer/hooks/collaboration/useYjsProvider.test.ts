@@ -15,7 +15,7 @@
  *
  * @module collaboration/useYjsProvider.test
  */
-import { createSyncGate } from 'pptx-viewer-shared';
+import { createSyncGate } from 'ooxml-ui/pptx';
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it, test, vi } from 'vitest';
 import type { Awareness } from 'y-protocols/awareness';
 

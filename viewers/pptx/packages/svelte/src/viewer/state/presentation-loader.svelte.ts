@@ -24,12 +24,12 @@ import type {
 	PptxViewProperties,
 } from 'pptx-viewer-core';
 import { EncryptedFileError, PptxHandler } from 'pptx-viewer-core';
-import type { CanvasSize, CollabLoadOrigin, SlideSizeEmu } from 'pptx-viewer-shared';
+import type { CanvasSize, CollabLoadOrigin, SlideSizeEmu } from 'ooxml-ui/pptx';
 import {
 	DEFAULT_CANVAS_HEIGHT,
 	DEFAULT_CANVAS_WIDTH,
 	createPresentationLoadResources,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import { glyphOutlineFontCache } from './glyph-outline-cache.svelte';
 import {

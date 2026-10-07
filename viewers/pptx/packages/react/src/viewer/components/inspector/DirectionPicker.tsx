@@ -1,4 +1,4 @@
-import { buildDirectionGrid, TRANSITION_DIR_ARROWS } from 'pptx-viewer-shared';
+import { buildDirectionGrid, TRANSITION_DIR_ARROWS } from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 

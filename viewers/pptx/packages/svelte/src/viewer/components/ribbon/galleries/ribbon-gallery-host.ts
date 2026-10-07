@@ -13,13 +13,13 @@
  */
 import type { PptxTheme, PptxThemePreset, XmlObject } from 'pptx-viewer-core';
 import { THEME_PRESETS } from 'pptx-viewer-core';
-import { applyRibbonGalleryItem, buildRibbonGallery } from 'pptx-viewer-shared';
+import { applyRibbonGalleryItem, buildRibbonGallery } from 'ooxml-ui/pptx';
 import type {
 	RibbonGalleryApplyResult,
 	RibbonGalleryContext,
 	RibbonGalleryDescriptor,
 	RibbonGalleryId,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { getContext, setContext } from 'svelte';
 
 import type { EditorState } from '../../../editor/editor-state.svelte';

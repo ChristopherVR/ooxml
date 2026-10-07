@@ -18,7 +18,7 @@ import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { mediaTrimEndAbsoluteMs, mediaTrimEndMsFromAbsoluteMs } from '../internal/shared';
+import { mediaTrimEndAbsoluteMs, mediaTrimEndMsFromAbsoluteMs } from 'ooxml-ui/pptx';
 
 describe('mediaPropertiesPanelComponent trim-end field', () => {
 	it('reads the absolute end position through the shared conversion, not the raw field', () => {

@@ -1,6 +1,6 @@
 import { hasTextProperties } from 'pptx-viewer-core';
 import type { PptxElement, TextStyle } from 'pptx-viewer-core';
-import type { InlineTextEditSnapshot } from 'pptx-viewer-shared';
+import type { InlineTextEditSnapshot } from 'ooxml-ui/pptx';
 import {
 	beginShapeAdjustment,
 	buildInlineTextCommitPatch,
@@ -14,7 +14,7 @@ import {
 	resolveInlineEditAutoFitHeight,
 	resolveInlineEditNormAutofitShrink,
 	setPendingCaretPoint,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 /** useCanvasInteractions: Canvas interaction handlers for the PowerPoint editor. */
 import { useLayoutEffect, useRef } from 'react';
 

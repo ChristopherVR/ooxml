@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { hasTextProperties } from 'pptx-viewer-core';
-	import { buildFontCatalog, resolveDefaultFontFamily } from 'pptx-viewer-shared';
-	import type { PptxUiSelectElement } from 'pptx-viewer-shared';
+	import { buildFontCatalog, resolveDefaultFontFamily } from 'ooxml-ui/pptx';
+	import type { PptxUiSelectElement } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../../i18n/context';
 	import { setFontFamilyPatch } from '../../../editor';

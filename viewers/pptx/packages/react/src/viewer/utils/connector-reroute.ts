@@ -6,9 +6,9 @@
  * (`render/connector-reroute`). This shim preserves the historical import
  * surface so the editor hooks and colocated tests are unchanged.
  */
-export type { ReroutedConnector } from 'pptx-viewer-shared';
+export type { ReroutedConnector } from 'ooxml-ui/pptx';
 export {
 	rerouteConnectorsForMovedElements,
 	computeConnectorGeometry,
 	applyReroutedConnectors,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

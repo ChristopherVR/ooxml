@@ -16,7 +16,7 @@ import {
 	segmentFrameCount,
 	stopCaptureStream,
 	WEBM_MIME_CANDIDATES,
-} from '../internal/shared-src/export/video-plan';
+} from 'ooxml-ui/pptx/export/video-plan';
 
 export {
 	planVideoSegments,
@@ -24,8 +24,8 @@ export {
 	fpsToFrameIntervalMs,
 	segmentFrameCount,
 	WEBM_MIME_CANDIDATES,
-} from '../internal/shared-src/export/video-plan';
-export type { VideoSegmentPlan, VideoPlanOptions } from '../internal/shared-src/export/video-plan';
+} from 'ooxml-ui/pptx/export/video-plan';
+export type { VideoSegmentPlan, VideoPlanOptions } from 'ooxml-ui/pptx/export/video-plan';
 
 /** Options for {@link recordWebm}. */
 export interface RecordWebmOptions {

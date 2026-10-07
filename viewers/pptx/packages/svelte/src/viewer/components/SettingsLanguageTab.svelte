@@ -7,8 +7,8 @@
 	 * registered dictionary. A host can override the list with
 	 * `availableLocales`.
 	 */
-	import { LOCALE_CATALOG } from 'pptx-viewer-shared/i18n';
-	import type { LocaleCatalogEntry } from 'pptx-viewer-shared/i18n';
+	import { LOCALE_CATALOG } from 'ooxml-ui/pptx/i18n';
+	import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
 	import { getRegisteredLocales } from '../../i18n/translator';
 	import { useTranslator } from '../../i18n/context';
 

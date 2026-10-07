@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { HELP_RIBBON_COMMANDS, isDialogAvailable } from 'pptx-viewer-shared';
+import { HELP_RIBBON_COMMANDS, isDialogAvailable } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

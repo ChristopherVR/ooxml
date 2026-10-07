@@ -1,5 +1,5 @@
-import { attachEditorImagePaste } from 'pptx-viewer-shared';
-import type { EditorImagePasteOptions } from 'pptx-viewer-shared';
+import { attachEditorImagePaste } from 'ooxml-ui/pptx';
+import type { EditorImagePasteOptions } from 'ooxml-ui/pptx';
 import type { Ref } from 'vue';
 import { watch } from 'vue';
 

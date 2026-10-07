@@ -134,8 +134,7 @@ export class TeamsContentPreview extends LitElement {
 				this.status = 'ready';
 				return;
 			}
-			if (kind === 'pptx' || kind === 'other')
-				throw new Error('No embedded viewer is configured for this file type');
+			if (kind === 'other') throw new Error('No embedded viewer is configured for this file type');
 			const bytes = await readContent(
 				url,
 				request.signal,
@@ -148,13 +147,15 @@ export class TeamsContentPreview extends LitElement {
 				if (kind === 'docx') (await import('../../docx/index.js')).registerDocxEditor();
 				if (kind === 'xlsx') (await import('../../xlsx/index.js')).defineXlsxEditor();
 				if (kind === 'vsdx') (await import('../../visio/index.js')).registerVisioViewer();
+				if (kind === 'pptx')
+					(await import('./presentation-preview.js')).defineTeamsPresentationPreview();
 				if (request.signal.aborted) return;
 				this.native = kind;
 				await this.updateComplete;
 				if (request.signal.aborted) return;
 				const viewer = this.shadowRoot?.querySelector<
 					HTMLElement & { load(bytes: Uint8Array, name?: string): Promise<void> }
-				>('docx-editor, xlsx-editor, visio-viewer');
+				>('docx-editor, xlsx-editor, visio-viewer, teams-presentation-preview');
 				if (!viewer) throw new Error('The viewer could not be mounted');
 				await viewer.load(bytes, detail.attachment.name);
 			}
@@ -289,7 +290,9 @@ export class TeamsContentPreview extends LitElement {
 							></xlsx-editor>`
 						: this.native === 'vsdx'
 							? html`<visio-viewer .showToolbar=${false}></visio-viewer>`
-							: nothing,
+							: this.native === 'pptx'
+								? html`<teams-presentation-preview></teams-presentation-preview>`
+								: nothing,
 			)}
 			${
 				this.status === 'ready' && !this.frame && !this.native

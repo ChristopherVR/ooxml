@@ -7,8 +7,8 @@
  *
  *  - the Angular demo reads `packages/angular/dist` (ng-packagr), plus
  *    `packages/core/dist` and `packages/locales/dist`,
- *  - the React demo reads `packages/shared/dist`,
- *  - every demo reaches `packages/tools/dist` through the shared MCP registry,
+ *  - all demos read the shared renderer from `src/ui/dist/pptx`,
+ *  - document tools and editing helpers are read from `src/core/dist/pptx`,
  *  - and the fixture generators import `pptx-viewer-core` under plain Node.
  *
  * Running the suite after editing one of those without rebuilding tests the OLD
@@ -35,7 +35,7 @@ import {
 } from './dist-freshness-packages';
 
 /** Dependency order for the combined fix command. Build left to right. */
-const BUILD_ORDER = ['pptx-viewer-core', 'pptx-viewer-locales', 'pptx-viewer-shared'];
+const BUILD_ORDER = ['ooxml-core', 'ooxml-ui', 'pptx-viewer-core', 'pptx-viewer-locales'];
 
 function buildOrderRank(name: string): number {
 	const at = BUILD_ORDER.indexOf(name);
@@ -97,7 +97,7 @@ function collectProblems(): Array<{ name: string; message: string }> {
 			});
 			continue;
 		}
-		const sourceDir = join(packageDir, 'src');
+		const sourceDir = join(packageDir, pkg.source ?? 'src');
 		const skip = new Set((pkg.generated ?? []).map((entry) => join(sourceDir, entry)));
 		const sourced = newestMtime(sourceDir, skip);
 		if (sourced > built) {

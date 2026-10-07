@@ -11,11 +11,11 @@
  * `ppt/viewProps.xml`.
  */
 import type { PptxViewProperties } from 'pptx-viewer-core';
-import type { DeckViewPreferences } from 'pptx-viewer-shared';
+import type { DeckViewPreferences } from 'ooxml-ui/pptx';
 import {
 	viewerPreferencesFromViewProperties,
 	viewPropertiesPatchFromPreferences,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { ViewerState } from '../state';
 

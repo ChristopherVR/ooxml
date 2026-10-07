@@ -15,7 +15,7 @@ import {
 	canCommitActionType,
 	ELEMENT_ACTION_TYPE_OPTIONS,
 	resolveActionType,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

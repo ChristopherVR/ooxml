@@ -14,5 +14,5 @@ export {
 	calculateContinuationPageMaxLines,
 	escapePdfText,
 	buildNotesTextStream,
-} from 'pptx-viewer-shared';
-export type { NotesPdfPageLayout } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+export type { NotesPdfPageLayout } from 'ooxml-ui/pptx';

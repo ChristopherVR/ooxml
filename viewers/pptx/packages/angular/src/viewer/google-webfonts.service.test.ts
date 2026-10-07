@@ -11,7 +11,7 @@ import { DestroyRef, Injector, runInInjectionContext } from '@angular/core';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { resetGoogleWebfontSessionCache } from '../internal/shared';
+import { resetGoogleWebfontSessionCache } from 'ooxml-ui/pptx';
 import { GoogleWebfontsService, GOOGLE_WEBFONTS_LINK_ID } from './google-webfonts.service';
 
 beforeEach(() => {

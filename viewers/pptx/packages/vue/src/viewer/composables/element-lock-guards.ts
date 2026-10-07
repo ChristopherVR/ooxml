@@ -16,8 +16,8 @@
  * @module composables/element-lock-guards
  */
 import type { PptxElement } from 'pptx-viewer-core';
-import { resolveElementInteractivity } from 'pptx-viewer-shared';
-import type { ElementInteractivity } from 'pptx-viewer-shared';
+import { resolveElementInteractivity } from 'ooxml-ui/pptx';
+import type { ElementInteractivity } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 
 /** The geometry a transform gesture reports, minus the element id. */

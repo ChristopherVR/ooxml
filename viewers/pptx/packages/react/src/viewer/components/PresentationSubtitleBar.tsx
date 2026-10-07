@@ -10,8 +10,8 @@ import {
 	mergeCaptionResults,
 	subtitleRecognitionLanguage,
 	subtitleSettingsFromOptions,
-} from 'pptx-viewer-shared';
-import type { SpeechRecognitionLite, SpeechRecognitionEventLite } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { SpeechRecognitionLite, SpeechRecognitionEventLite } from 'ooxml-ui/pptx';
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

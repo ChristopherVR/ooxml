@@ -16,7 +16,7 @@
 	 */
 	import type { ElementAction, ElementActionType, PptxElement } from 'pptx-viewer-core';
 	import { elementActionToPptxAction, pptxActionToElementAction } from 'pptx-viewer-core';
-	import { canCommitActionType } from 'pptx-viewer-shared';
+	import { canCommitActionType } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 	import type { EditorState } from '../../editor/editor-state.svelte';

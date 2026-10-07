@@ -12,7 +12,7 @@
 	 */
 	import type { OlePptxElement, OleSheetGrid, PptxElement } from 'pptx-viewer-core';
 	import { applyOleSheetCellEdit, getOleSheetGrid } from 'pptx-viewer-core';
-	import { buildOleContentUpdatePatch } from 'pptx-viewer-shared';
+	import { buildOleContentUpdatePatch } from 'ooxml-ui/pptx';
 	import { onDestroy } from 'svelte';
 
 	import { useTranslator } from '../../../i18n/context';

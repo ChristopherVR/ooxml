@@ -1,8 +1,8 @@
 import { Injectable, computed, inject } from '@angular/core';
 import type { PptxSlide } from 'pptx-viewer-core';
 
-import type { FieldSubstitutionContext } from '../internal/shared';
-import { buildFieldSubstitutionContext, resolveSlideTitle } from '../internal/shared';
+import type { FieldSubstitutionContext } from 'ooxml-ui/pptx';
+import { buildFieldSubstitutionContext, resolveSlideTitle } from 'ooxml-ui/pptx';
 import { LoadContentService } from './load-content.service';
 
 /**

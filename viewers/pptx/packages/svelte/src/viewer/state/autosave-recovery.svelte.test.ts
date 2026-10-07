@@ -1,5 +1,5 @@
-import { getAcknowledgedAutosaveRecoveryTimestamp } from 'pptx-viewer-shared';
-import type { AutosaveRecord } from 'pptx-viewer-shared';
+import { getAcknowledgedAutosaveRecoveryTimestamp } from 'ooxml-ui/pptx';
+import type { AutosaveRecord } from 'ooxml-ui/pptx';
 import { flushSync } from 'svelte';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -21,7 +21,7 @@ const { snapshots, discardGates } = vi.hoisted(() => ({
 	snapshots: new Map<string, AutosaveRecord>(),
 	discardGates: [] as Array<Promise<void>>,
 }));
-vi.mock(import('pptx-viewer-shared'), async (importOriginal) => {
+vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => {
 	const actual = await importOriginal();
 	return {
 		...actual,

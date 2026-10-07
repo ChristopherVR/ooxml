@@ -22,8 +22,8 @@ import {
 	registerCollaborationTeardown,
 	resolveTransportForServerUrl,
 	validateRoomId,
-} from 'pptx-viewer-shared';
-import type { DepartureChannel, SyncGate } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { DepartureChannel, SyncGate } from 'ooxml-ui/pptx';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import type { Awareness } from 'y-protocols/awareness';
 import type { WebrtcProvider } from 'y-webrtc';

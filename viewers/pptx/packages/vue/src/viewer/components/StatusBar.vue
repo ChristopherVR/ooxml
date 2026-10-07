@@ -6,8 +6,8 @@
  * cluster live in the shared view. This component maps viewer state onto the
  * element's controlled state and re-emits its typed intents.
  */
-import { resolveStatusBarSave, statusBarViewMode } from 'pptx-viewer-shared';
-import type { StatusBarRequestEvent, ToolbarActionId } from 'pptx-viewer-shared';
+import { resolveStatusBarSave, statusBarViewMode } from 'ooxml-ui/pptx';
+import type { StatusBarRequestEvent, ToolbarActionId } from 'ooxml-ui/pptx';
 import { computed, useSlots } from 'vue';
 import { useI18n } from 'vue-i18n';
 

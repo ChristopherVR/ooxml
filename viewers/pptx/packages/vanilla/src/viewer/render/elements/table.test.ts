@@ -1,6 +1,6 @@
 import type { PptxElement, PptxTableCell, PptxTableData } from 'pptx-viewer-core';
-import type { CellTextRun } from 'pptx-viewer-shared';
-import { DEFAULT_FONT_FAMILY } from 'pptx-viewer-shared';
+import type { CellTextRun } from 'ooxml-ui/pptx';
+import { DEFAULT_FONT_FAMILY } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 
 import { createTranslator } from '../../i18n';

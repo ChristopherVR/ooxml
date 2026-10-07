@@ -13,8 +13,8 @@ import {
 	handleReadingViewKey,
 	openReadingView,
 	readingViewFitScale,
-} from 'pptx-viewer-shared';
-import type { ReadingViewCommand, ReadingViewState } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { ReadingViewCommand, ReadingViewState } from 'ooxml-ui/pptx';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
 

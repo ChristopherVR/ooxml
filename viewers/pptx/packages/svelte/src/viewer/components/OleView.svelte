@@ -16,7 +16,7 @@
 		oleActionsVisible,
 		openUrlInNewTab,
 		shouldRenderHitTarget,
-	} from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 	import { buildOleView, getOleIconShapes } from '../render';

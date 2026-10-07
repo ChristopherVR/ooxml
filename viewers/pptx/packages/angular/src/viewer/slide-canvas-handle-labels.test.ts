@@ -12,11 +12,11 @@ import { join } from 'node:path';
 import { ElementRef, Injector, runInInjectionContext } from '@angular/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { attachRotateHandlePlacement } from '../internal/shared';
+import { attachRotateHandlePlacement } from 'ooxml-ui/pptx';
 import { RotateHandlePlacementDirective } from './rotate-handle-placement.directive';
 import { selectionControlArtwork } from './selection-control-artwork';
 
-vi.mock(import('../internal/shared'), async (importOriginal) => ({
+vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => ({
 	...(await importOriginal()),
 	attachRotateHandlePlacement: vi.fn(),
 }));

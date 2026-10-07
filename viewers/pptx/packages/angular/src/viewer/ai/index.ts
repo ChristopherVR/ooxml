@@ -34,5 +34,5 @@ export {
 	focusTargetChips,
 	isTwoTableFocus,
 	mergeTablesDirective,
-} from '../../internal/shared-ai';
-export type { AiCanvasHighlight, FocusChip, FocusSelectionInput } from '../../internal/shared-ai';
+} from 'ooxml-ui/pptx/ai';
+export type { AiCanvasHighlight, FocusChip, FocusSelectionInput } from 'ooxml-ui/pptx/ai';

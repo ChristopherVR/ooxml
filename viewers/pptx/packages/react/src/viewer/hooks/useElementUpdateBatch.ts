@@ -2,8 +2,8 @@ import {
 	assertElementUpdateTarget,
 	cloneElementUpdates,
 	prepareElementUpdateBatch,
-} from 'pptx-viewer-shared';
-import type { PowerPointViewerAPI } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { PowerPointViewerAPI } from 'ooxml-ui/pptx';
 import { useCallback, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 

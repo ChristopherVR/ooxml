@@ -3,7 +3,7 @@ import {
 	LINE_CAP_OPTIONS as SHARED_LINE_CAP_OPTIONS,
 	LINE_JOIN_OPTIONS as SHARED_LINE_JOIN_OPTIONS,
 	PATTERN_PRESET_OPTIONS as SHARED_PATTERN_PRESET_OPTIONS,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type React from 'react';
 
 // ---------------------------------------------------------------------------

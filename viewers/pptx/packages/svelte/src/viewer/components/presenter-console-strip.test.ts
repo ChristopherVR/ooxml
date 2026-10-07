@@ -14,8 +14,8 @@ import {
 	PRESENTER_CONSOLE_CONTROLS,
 	PRESENTER_CONSOLE_LABEL_KEYS,
 	PRESENTER_CONSOLE_ORDER,
-} from 'pptx-viewer-shared';
-import type { PresentationSnapshot } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { PresentationSnapshot } from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 

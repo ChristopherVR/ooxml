@@ -4,7 +4,7 @@
  * `table-render-data-banding.test.tsx` exercises for banding.
  */
 import type { PptxTableCellStyle, TablePptxElement } from 'pptx-viewer-core';
-import { translationsEn } from 'pptx-viewer-shared/i18n';
+import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 

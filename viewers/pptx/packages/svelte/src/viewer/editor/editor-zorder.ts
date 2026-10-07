@@ -5,7 +5,7 @@ import {
 	reorderElementOnSlide,
 	sendBackward,
 	sendToBack,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 /**
  * Z-order (paint-order) reordering for the Svelte editor.

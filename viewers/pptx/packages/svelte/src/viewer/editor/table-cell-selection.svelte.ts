@@ -1,6 +1,6 @@
 import type { PptxTableData } from 'pptx-viewer-core';
-import type { CellCoord, CellRect } from 'pptx-viewer-shared';
-import { computeSelectionRect, isCellInRect, rectToCells } from 'pptx-viewer-shared';
+import type { CellCoord, CellRect } from 'ooxml-ui/pptx';
+import { computeSelectionRect, isCellInRect, rectToCells } from 'ooxml-ui/pptx';
 
 /**
  * The block of table cells the user has marquee'd on the canvas.

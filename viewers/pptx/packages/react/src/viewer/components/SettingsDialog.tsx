@@ -5,7 +5,7 @@ import type {
 	ViewerOptions,
 	ViewerOptionsGroupId,
 	ViewerOptionsTabId,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	DEFAULT_QUICK_ACCESS_COMMAND_IDS,
 	VIEWER_OPTIONS_TABS,
@@ -13,9 +13,9 @@ import {
 	getDensePanelTouchTargetPx,
 	isOptionsPageVisible,
 	shouldStickyActionRow,
-} from 'pptx-viewer-shared';
-import type { PptxAiChatStore } from 'pptx-viewer-shared/ai';
-import type { LocaleCatalogEntry } from 'pptx-viewer-shared/i18n';
+} from 'ooxml-ui/pptx';
+import type { PptxAiChatStore } from 'ooxml-ui/pptx/ai';
+import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LuSettings, LuX } from 'react-icons/lu';

@@ -22,7 +22,7 @@ import {
 	chartPartToAttrs,
 	computeChartLegendLayout,
 	getChartStylePalette,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type {
 	ChartPartRef,
 	ChartViewModel,
@@ -34,7 +34,7 @@ import type {
 	SvgPrimitive,
 	SvgRect,
 	SvgText,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React from 'react';
 
 import { renderGradientStops } from './chart-gradient-stops';

@@ -4,7 +4,7 @@ import {
 	insertTableElementRow,
 	removeTableElementColumn,
 	removeTableElementRow,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 
 // Regression: TableSection.svelte used to import its own local, non-merge-aware

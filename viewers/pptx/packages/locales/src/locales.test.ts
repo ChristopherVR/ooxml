@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { translationsDe, translationsEs, translationsFr, translationsZhCN } from '.';
-import { translationsEn } from '../../shared/src/i18n';
+import { translationsEn } from '../../../../../src/ui/src/pptx/i18n';
 
 const PLACEHOLDER_RE = /\{\{[^}]+\}\}/gu;
 const locales = {

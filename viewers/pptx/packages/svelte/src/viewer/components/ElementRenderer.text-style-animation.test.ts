@@ -1,5 +1,5 @@
 import type { PptxElement } from 'pptx-viewer-core';
-import type { ElementAnimationState } from 'pptx-viewer-shared';
+import type { ElementAnimationState } from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it } from 'vitest';
 

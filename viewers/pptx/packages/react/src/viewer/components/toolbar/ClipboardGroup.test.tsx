@@ -1,4 +1,4 @@
-import { registerPptxWebControls } from 'pptx-viewer-shared';
+import { registerPptxWebControls } from 'ooxml-ui/pptx';
 // @vitest-environment happy-dom
 /**
  * Home > Clipboard is the shared `pptx-ui-ribbon-home-clipboard` strip: this

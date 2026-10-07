@@ -7,7 +7,7 @@
 	 * `buildCanvasMenuEntries`); the rows are drawn by the shared
 	 * `pptx-ui-context-menu`.
 	 */
-	import { contextMenuViewItems, customizeCanvasContextMenuEntries } from 'pptx-viewer-shared';
+	import { contextMenuViewItems, customizeCanvasContextMenuEntries } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 	import {

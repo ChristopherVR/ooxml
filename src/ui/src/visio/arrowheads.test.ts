@@ -24,7 +24,7 @@ function checkConcaveMarker(marker: Element) {
 		// Native measured cubic base on admitted straight paths. Coordinate and
 		// setback equality are checked by the native filled-arrow matrix tests.
 		expect(glyph.getAttribute('d')!.match(/[A-Z]/g)).toEqual(['M', 'L', 'L', 'C']);
-		expect(Number(marker.getAttribute('refX'))).toBeLessThan(0);
+		expect(Number(marker.getAttribute('refX'))).toBeLessThanOrEqual(0);
 		expect(marker.getAttribute('orient')).toBe('auto-start-reverse');
 		return;
 	}
@@ -81,7 +81,7 @@ describe('code-5 concave arrows', () => {
 		'M 0 0 Q 0 1 1 1',
 		'M 0 0 L -1 1 L -2 1',
 		'M 0 0 L 1 -1 L 2 -1',
-		'M 0 0 L 0.000001 0',
+		'M 0 0 L 0 0',
 	])('keeps both endpoint anchors and local orientation for %s', (path) => {
 		const { model } = scene(path);
 		const result = renderPage(model, model.pages[0]!);

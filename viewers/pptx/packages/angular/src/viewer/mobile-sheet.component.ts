@@ -37,7 +37,7 @@ import {
 } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 
-import { activateModalFocus } from '../internal/shared';
+import { activateModalFocus } from 'ooxml-ui/pptx';
 
 /** Drag-down distance in pixels that triggers dismissal. */
 const DISMISS_THRESHOLD = 120;

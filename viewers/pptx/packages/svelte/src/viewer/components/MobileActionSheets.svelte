@@ -5,8 +5,8 @@
 		MobileBarRequestEvent,
 		MobileBarViewState,
 		MobileSheetKey,
-	} from 'pptx-viewer-shared';
-	import { toggleSheet } from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
+	import { toggleSheet } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 	import { newTextElement } from '../editor';

@@ -17,4 +17,4 @@ export {
 	getShapeAdjustmentHandleDescriptors,
 	getDraggedShapeAdjustmentValue,
 	getDraggedShapeAdjustments,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

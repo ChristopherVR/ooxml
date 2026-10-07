@@ -1,6 +1,6 @@
 import type { PptxCustomProperty, PptxModifyVerifier } from 'pptx-viewer-core';
-import type { ModifyPasswordCheckResult, ReadOnlyRecommendation } from 'pptx-viewer-shared';
-import { checkModifyPassword, readOnlyRecommendation } from 'pptx-viewer-shared';
+import type { ModifyPasswordCheckResult, ReadOnlyRecommendation } from 'ooxml-ui/pptx';
+import { checkModifyPassword, readOnlyRecommendation } from 'ooxml-ui/pptx';
 
 /** Why the last password attempt failed; see `checkModifyPassword` (`pptx-viewer-shared`). */
 export type ModifyPasswordErrorReason = Extract<ModifyPasswordCheckResult, { ok: false }>['reason'];

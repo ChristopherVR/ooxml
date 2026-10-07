@@ -6,7 +6,7 @@
  * This shim preserves the historical Angular import surface so
  * `editor-state.service.ts` and the colocated test are unchanged. Angular
  * imports shared from `../internal/shared` (the vendored barrel), never the
- * bare `'pptx-viewer-shared'` specifier (which ng-packagr would externalize).
+ * bare `'ooxml-ui/pptx'` specifier (which ng-packagr would externalize).
  */
-export type { GroupResult, UngroupResult } from '../internal/shared';
-export { groupElements, ungroupElements } from '../internal/shared';
+export type { GroupResult, UngroupResult } from 'ooxml-ui/pptx';
+export { groupElements, ungroupElements } from 'ooxml-ui/pptx';

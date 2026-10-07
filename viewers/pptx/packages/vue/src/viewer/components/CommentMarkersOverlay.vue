@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { PptxComment } from 'pptx-viewer-core';
-import { buildCommentMarkers, COMMENT_MARKER_SIZE } from 'pptx-viewer-shared';
+import { buildCommentMarkers, COMMENT_MARKER_SIZE } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

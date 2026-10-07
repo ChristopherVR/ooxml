@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils';
-import type { RenderParagraph } from 'pptx-viewer-shared';
+import type { RenderParagraph } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 
 import SlideTextBlock from './SlideTextBlock.vue';

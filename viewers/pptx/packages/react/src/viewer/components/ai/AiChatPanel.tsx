@@ -9,7 +9,7 @@
  * The panel is a thin shell: it builds/guards the session via {@link useAiChat}
  * and, once ready, delegates the whole conversation to {@link AiConversation}.
  */
-import type { PptxAiBridge, PptxAiConfig } from 'pptx-viewer-shared/ai';
+import type { PptxAiBridge, PptxAiConfig } from 'ooxml-ui/pptx/ai';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LuLoaderCircle, LuSparkles, LuTriangleAlert, LuX } from 'react-icons/lu';

@@ -12,7 +12,7 @@ import type {
 	PptxAnimationTrigger,
 	PptxElementAnimation,
 } from 'pptx-viewer-core';
-import type { AnimationGroup } from 'pptx-viewer-shared';
+import type { AnimationGroup } from 'ooxml-ui/pptx';
 import {
 	applyAnimationPreset,
 	applyAnimationTimelineOrder,
@@ -41,7 +41,7 @@ import {
 	setTriggerBookmark,
 	setTriggerShapeId,
 	updateSlide,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Store, ViewerState } from '../state';
 import type { EditorOps } from './editor-operations';

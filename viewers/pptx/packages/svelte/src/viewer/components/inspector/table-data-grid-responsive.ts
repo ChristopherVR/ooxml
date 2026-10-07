@@ -10,8 +10,8 @@
  * `getDensePanelTouchTargetPx` decision-function output into the CSS the
  * component needs.
  */
-import type { DenseGridLayoutPlan } from 'pptx-viewer-shared';
-import { getDenseGridLayoutPlan, getDensePanelTouchTargetPx } from 'pptx-viewer-shared';
+import type { DenseGridLayoutPlan } from 'ooxml-ui/pptx';
+import { getDenseGridLayoutPlan, getDensePanelTouchTargetPx } from 'ooxml-ui/pptx';
 
 export interface TableDataGridResponsive {
 	/** The raw shared decision, in case a caller needs a specific field. */

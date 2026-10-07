@@ -11,7 +11,7 @@ import {
 	COMMENT_MENTION_ATTRIBUTE,
 	COMMENT_MENTION_CLASS,
 	commentTextSegments,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 
 const props = defineProps<{

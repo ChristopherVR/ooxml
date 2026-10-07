@@ -7,8 +7,8 @@ import {
 	gradientStatePatch,
 	removeGradientStopPatch,
 	updateGradientStopPatch,
-} from 'pptx-viewer-shared';
-import type { GradientStop, ThemeColorPickerCommit } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { GradientStop, ThemeColorPickerCommit } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

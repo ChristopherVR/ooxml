@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Play } from 'lucide-vue-next';
-import { EFFECT_SOUND_CATALOGUE, getEffectSoundAsset } from 'pptx-viewer-shared';
-import type { EffectSoundState } from 'pptx-viewer-shared';
+import { EFFECT_SOUND_CATALOGUE, getEffectSoundAsset } from 'ooxml-ui/pptx';
+import type { EffectSoundState } from 'ooxml-ui/pptx';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 

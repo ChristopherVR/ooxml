@@ -10,8 +10,8 @@
 import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 
-import { resolveViewerAddinRows } from '../internal/shared';
-import type { ViewerAddinRow, ViewerAddinStatus } from '../internal/shared';
+import { resolveViewerAddinRows } from 'ooxml-ui/pptx';
+import type { ViewerAddinRow, ViewerAddinStatus } from 'ooxml-ui/pptx';
 
 @Component({
 	selector: 'pptx-options-add-ins-pane',

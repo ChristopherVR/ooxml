@@ -3,8 +3,8 @@
  * Commits marquee selections, drag moves, resizes, and resets state.
  */
 import type { PptxElement } from 'pptx-viewer-core';
-import { computeMarqueeHitIds, mergeAdditiveSelection } from 'pptx-viewer-shared';
-import type { MarqueeElementRect, MarqueeRect as SharedMarqueeRect } from 'pptx-viewer-shared';
+import { computeMarqueeHitIds, mergeAdditiveSelection } from 'ooxml-ui/pptx';
+import type { MarqueeElementRect, MarqueeRect as SharedMarqueeRect } from 'ooxml-ui/pptx';
 
 import {
 	rerouteConnectorsForMovedElements,

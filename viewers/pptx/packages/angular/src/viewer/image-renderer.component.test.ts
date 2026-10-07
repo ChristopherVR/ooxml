@@ -21,7 +21,7 @@ import type { SafeHtml } from '@angular/platform-browser';
 import type { PptxElement } from 'pptx-viewer-core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { _resetNativeImageSizeCacheForTests } from '../internal/shared';
+import { _resetNativeImageSizeCacheForTests } from 'ooxml-ui/pptx';
 import { ImageRendererComponent } from './image-renderer.component';
 
 /** Minimal stub: `hitTargetStyle` never calls the sanitizer, so this is unused. */

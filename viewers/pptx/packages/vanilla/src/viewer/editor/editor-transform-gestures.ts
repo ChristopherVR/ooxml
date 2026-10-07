@@ -3,14 +3,14 @@ import type {
 	GestureKind,
 	InteractionBox,
 	SelectionTransformBox,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	computeGridSpacingPx,
 	createGestureController,
 	moveSelection,
 	resizeSelection,
 	selectionBounds,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Store, ViewerState } from '../state';
 import { findActiveElement, findActiveElementsByIds } from './editor-active-elements';

@@ -1,5 +1,5 @@
 import type { ConnectorPptxElement, PptxSlide } from 'pptx-viewer-core';
-import { authorConnectorBetweenSites } from 'pptx-viewer-shared';
+import { authorConnectorBetweenSites } from 'ooxml-ui/pptx';
 import React, { useCallback, useState } from 'react';
 
 import type { ZoomViewport } from './canvas-types';

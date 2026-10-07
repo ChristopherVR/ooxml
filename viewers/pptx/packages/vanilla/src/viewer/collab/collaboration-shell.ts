@@ -1,5 +1,5 @@
-import type { CollaborationConfig, CollaborationShellState } from 'pptx-viewer-shared';
-import { resolveCollaborationShellState } from 'pptx-viewer-shared';
+import type { CollaborationConfig, CollaborationShellState } from 'ooxml-ui/pptx';
+import { resolveCollaborationShellState } from 'ooxml-ui/pptx';
 
 import { createCollaborationController } from './collaboration-controller';
 import type {

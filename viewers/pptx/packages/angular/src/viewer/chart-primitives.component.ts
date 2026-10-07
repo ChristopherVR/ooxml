@@ -19,7 +19,7 @@ import {
 	CHART_PART_POINT_ATTR,
 	CHART_PART_SERIES_ATTR,
 	chartPartToAttrs,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import type {
 	ChartPartRef,
 	SvgCircle,

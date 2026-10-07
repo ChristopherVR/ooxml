@@ -5,7 +5,7 @@
  * selection already carries an animation entry (the button click itself is a
  * safe no-op otherwise).
  */
-import { registerPptxWebControls } from 'pptx-viewer-shared';
+import { registerPptxWebControls } from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it } from 'vitest';
 

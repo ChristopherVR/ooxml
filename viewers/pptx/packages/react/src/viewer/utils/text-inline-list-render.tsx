@@ -1,12 +1,12 @@
 import type { TextSegment } from 'pptx-viewer-core';
-import type { InlineListRun, ParagraphRun } from 'pptx-viewer-shared';
+import type { InlineListRun, ParagraphRun } from 'ooxml-ui/pptx';
 import {
 	segmentStyleToCss,
 	resolveAutoFitFontScale,
 	withInlineListDecorationDefaults,
 	applyUnderlineVariant,
 	nestedTextDecorationStyle,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React from 'react';
 
 import { renderParagraphRun } from './text-segment-render';

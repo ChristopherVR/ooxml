@@ -1,4 +1,4 @@
-import type { ConnectionStatus } from 'pptx-viewer-shared';
+import type { ConnectionStatus } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';

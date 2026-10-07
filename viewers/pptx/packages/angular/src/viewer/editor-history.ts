@@ -8,5 +8,5 @@
  * future importers are unchanged.
  */
 
-export { EditorHistory } from '../internal/shared';
-export type { EditorHistoryOptions, UndoRedoResult } from '../internal/shared';
+export { EditorHistory } from 'ooxml-ui/pptx';
+export type { EditorHistoryOptions, UndoRedoResult } from 'ooxml-ui/pptx';

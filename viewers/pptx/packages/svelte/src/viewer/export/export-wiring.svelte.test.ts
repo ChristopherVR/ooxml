@@ -3,7 +3,7 @@ import {
 	rasterizeElement,
 	rasterizeElementTiledToCanvas,
 	rasterizeElementTiles,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../../i18n/translator';
@@ -53,7 +53,7 @@ interface FallbackOptions {
 // decode), so all three are short-circuited straight to the injected
 // `html2canvasFallback` here too. Each stub is a `vi.fn` so a test can
 // assert WHICH variant a given export path reached.
-vi.mock(import('pptx-viewer-shared'), async (importOriginal) => {
+vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => {
 	const actual = await importOriginal();
 	async function viaFallback(
 		naturalWidth: number,

@@ -4,7 +4,7 @@ import {
 	registerCrossSlideAudio,
 	scheduleMediaTrimAndFade,
 	shouldShowMediaFullscreenStopButton,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

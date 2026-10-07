@@ -1,4 +1,4 @@
-import type { PptxAiChatStore, PptxAiStoredChat, PptxAiUIMessage } from 'pptx-viewer-shared/ai';
+import type { PptxAiChatStore, PptxAiStoredChat, PptxAiUIMessage } from 'ooxml-ui/pptx/ai';
 import { mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 

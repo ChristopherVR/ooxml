@@ -28,7 +28,7 @@ import {
 	finishPrintWindow,
 	openPendingPrintWindow,
 	openPrintWindow,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { addSvgSlideFrame, exportSlideToSvg } from './export-svg';
 import {
 	DEFAULT_PRINT_SETTINGS,

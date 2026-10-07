@@ -7,4 +7,4 @@ export type {
 	TimelineClickGroup,
 	AnimationTimeline,
 	ElementAnimationState,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

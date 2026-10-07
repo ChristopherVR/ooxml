@@ -16,8 +16,8 @@ import {
 import { LucideBot, LucideSparkles, LucideUser } from '@lucide/angular';
 import { TranslatePipe } from '@ngx-translate/core';
 
-import { toRenderableParts } from '../../internal/shared-ai';
-import type { PptxAiUIMessage, RenderablePart } from '../../internal/shared-ai';
+import { toRenderableParts } from 'ooxml-ui/pptx/ai';
+import type { PptxAiUIMessage, RenderablePart } from 'ooxml-ui/pptx/ai';
 import { AiToolCallCardComponent } from './ai-tool-call-card.component';
 
 /** One rendered transcript row: a message flattened to its renderable parts. */

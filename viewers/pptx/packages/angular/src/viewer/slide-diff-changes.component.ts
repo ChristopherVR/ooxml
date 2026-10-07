@@ -11,7 +11,7 @@
 
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
-import type { ElementChange } from '../internal/shared';
+import type { ElementChange } from 'ooxml-ui/pptx';
 import { changeIcon } from './slide-diff-helpers';
 
 @Component({

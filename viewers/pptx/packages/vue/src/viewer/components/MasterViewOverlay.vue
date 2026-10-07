@@ -9,7 +9,7 @@
  * dozen individual props.
  */
 import type { PptxHandoutMaster, PptxNotesMaster, PptxSlideMaster } from 'pptx-viewer-core';
-import { masterViewOwnerElementId } from 'pptx-viewer-shared';
+import { masterViewOwnerElementId } from 'ooxml-ui/pptx';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 

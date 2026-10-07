@@ -8,7 +8,7 @@ import type {
 	CollaborationRole,
 	ConnectionStatus,
 	YjsFactories,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	borrowExternalCollaborationAwareness,
 	CONNECTION_TIMEOUT_MS,
@@ -18,7 +18,7 @@ import {
 	resolveTransportForServerUrl,
 	resolveCollaborationShellState,
 	validateRoomId,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { computed, onScopeDispose, ref, shallowRef, toValue, watch } from 'vue';
 
 import { createCollabProvider } from './collaboration-provider';

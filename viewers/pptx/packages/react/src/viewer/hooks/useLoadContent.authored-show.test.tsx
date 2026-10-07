@@ -41,7 +41,7 @@ import type {
 	CompatibilityWarningToast,
 	ReadOnlyRecommendation,
 	SlideSizeEmu,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React, { act, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';

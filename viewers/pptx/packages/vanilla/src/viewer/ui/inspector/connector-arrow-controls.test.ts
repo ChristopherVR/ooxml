@@ -1,5 +1,5 @@
-import { CONNECTOR_ARROW_CONTROLS } from 'pptx-viewer-shared';
-import { translationsEn } from 'pptx-viewer-shared/i18n';
+import { CONNECTOR_ARROW_CONTROLS } from 'ooxml-ui/pptx';
+import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createConnectorArrowControls } from './connector-arrow-controls';

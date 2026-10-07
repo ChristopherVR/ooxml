@@ -19,8 +19,8 @@
 		homeSnapshotTranslator,
 		isActionHidden,
 		strokeWidthOf,
-	} from 'pptx-viewer-shared';
-	import type { RibbonHomeRequestEvent, ToolbarActionId } from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
+	import type { RibbonHomeRequestEvent, ToolbarActionId } from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../../../i18n/context';
 	import type { EditorState } from '../../../editor/editor-state.svelte';
 	import { setStrokeWidthPatch } from '../../../editor';

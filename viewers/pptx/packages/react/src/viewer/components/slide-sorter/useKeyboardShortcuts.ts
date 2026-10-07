@@ -31,7 +31,7 @@ import type { PptxSlide } from 'pptx-viewer-core';
  * editor keymap while the sorter is up, so nothing re-rendered and the listener
  * survived to be called. A stable listener identity removes the race outright.
  */
-import { clampSorterZoom, isEditorTextInputTarget, mapSlideSorterKey } from 'pptx-viewer-shared';
+import { clampSorterZoom, isEditorTextInputTarget, mapSlideSorterKey } from 'ooxml-ui/pptx';
 import { useEffect, useRef } from 'react';
 import type React from 'react';
 

@@ -3,7 +3,7 @@ import {
 	MOTION_PATH_PRESETS,
 	motionPathFamilyLabelKey,
 	motionPathPresetById,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../../i18n';

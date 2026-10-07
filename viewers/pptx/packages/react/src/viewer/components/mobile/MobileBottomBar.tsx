@@ -1,4 +1,4 @@
-import type { MobileBarIntent, PptxUiMobileBarElement } from 'pptx-viewer-shared';
+import type { MobileBarIntent, PptxUiMobileBarElement } from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 

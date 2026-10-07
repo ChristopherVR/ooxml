@@ -1,5 +1,5 @@
-import type { MobileSheetKey } from 'pptx-viewer-shared';
-import { toggleSheet } from 'pptx-viewer-shared';
+import type { MobileSheetKey } from 'ooxml-ui/pptx';
+import { toggleSheet } from 'ooxml-ui/pptx';
 import { computed, ref } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
 

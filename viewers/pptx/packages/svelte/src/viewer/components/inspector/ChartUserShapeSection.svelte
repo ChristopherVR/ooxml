@@ -23,8 +23,8 @@
 		withChartUserShapeRowRotationUpdated,
 		withChartUserShapeRowTextUpdated,
 		withChartUserShapeRowUpdated,
-	} from 'pptx-viewer-shared';
-	import type { ChartUserShapeRowPatch } from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
+	import type { ChartUserShapeRowPatch } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 	import ChartUserShapePositionFields from './ChartUserShapePositionFields.svelte';

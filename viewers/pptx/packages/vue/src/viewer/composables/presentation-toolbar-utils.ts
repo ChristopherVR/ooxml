@@ -15,4 +15,4 @@ export {
 	isInBottomTriggerZone,
 	shouldAutoHide,
 	formatSlideCounter,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

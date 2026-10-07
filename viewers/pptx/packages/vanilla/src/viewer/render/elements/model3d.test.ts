@@ -14,7 +14,7 @@ const { mountModel3D } = vi.hoisted(() => ({ mountModel3D: vi.fn() }));
 // Partial mock: the renderer pulls real helpers (getContainerStyle) from
 // `pptx-viewer-shared`, so keep the original module and override only the 3D
 // controller surface.
-vi.mock(import('pptx-viewer-shared'), async (importOriginal) => {
+vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => {
 	const actual = await importOriginal();
 	return {
 		...actual,

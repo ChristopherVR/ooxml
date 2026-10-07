@@ -25,8 +25,8 @@ import type {
 	ContextMenuViewState,
 	SlidePaneContextMenuCommandId,
 	SlidePaneContextMenuEntry,
-} from '../internal/shared';
-import { buildSlidePaneContextMenuEntries, slidePaneViewItems } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import { buildSlidePaneContextMenuEntries, slidePaneViewItems } from 'ooxml-ui/pptx';
 import type { MenuTranslate } from './context-menu-translate';
 import { injectMenuTranslate } from './context-menu-translate';
 import type { SlidePaneContextMenuActions } from './slide-pane-context-menu-dispatch';

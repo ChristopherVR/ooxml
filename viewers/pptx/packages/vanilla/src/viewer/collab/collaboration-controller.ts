@@ -4,7 +4,7 @@ import type {
 	ConnectionStatus,
 	YDocLike,
 	YjsFactories,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	createCollaborationLivePatcher,
 	createSyncGate,
@@ -17,7 +17,7 @@ import {
 	resolveTransportForServerUrl,
 	shouldRoomSlidesReplaceLoad,
 	validateRoomId,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { ConnectionWiring } from './collaboration-connection';
 import { wireConnectionStatus } from './collaboration-connection';

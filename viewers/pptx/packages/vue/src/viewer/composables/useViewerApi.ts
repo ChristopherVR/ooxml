@@ -14,8 +14,8 @@ import {
 	clampZoomScale,
 	prepareElementForInsertion,
 	slideSpaceElement,
-} from 'pptx-viewer-shared';
-import type { ViewerCustomizationApi, ViewerMode } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { ViewerCustomizationApi, ViewerMode } from 'ooxml-ui/pptx';
 import type { ComputedRef, Ref, ShallowRef } from 'vue';
 
 import type { PowerPointViewerExpose } from '../types';

@@ -20,7 +20,7 @@ import { Injector, runInInjectionContext, signal } from '@angular/core';
 import type { InputSignal, OutputEmitterRef } from '@angular/core';
 import { describe, expect, it, vi } from 'vitest';
 
-import { motionPathPresetById } from '../internal/shared';
+import { motionPathPresetById } from 'ooxml-ui/pptx';
 import { MotionPathRowComponent, motionPathSelectValue } from './motion-path-row.component';
 
 const ROW_SOURCE = readFileSync(path.join(__dirname, 'motion-path-row.component.ts'), 'utf8');

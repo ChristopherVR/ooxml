@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import type { PptxElement, PptxTextWarpPreset, TextStyle } from 'pptx-viewer-core';
 import { hasTextProperties } from 'pptx-viewer-core';
-import type { ThemeColorPickerCommit } from 'pptx-viewer-shared';
-import { textFontSizePatch, textFontSizePtToPx, textFontSizePxToPt } from 'pptx-viewer-shared';
+import type { ThemeColorPickerCommit } from 'ooxml-ui/pptx';
+import { textFontSizePatch, textFontSizePtToPx, textFontSizePxToPt } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

@@ -30,8 +30,8 @@ import type {
 	PptxAiChatSession,
 	PptxAiConfig,
 	PptxAiUIMessage,
-} from 'pptx-viewer-shared/ai';
-import { deckIdFromBridge } from 'pptx-viewer-shared/ai';
+} from 'ooxml-ui/pptx/ai';
+import { deckIdFromBridge } from 'ooxml-ui/pptx/ai';
 import { computed, onBeforeUnmount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 

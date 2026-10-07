@@ -5,13 +5,13 @@ import type {
 	ResolvedCustomization,
 	ViewerCustomizationApi,
 	ViewerMode,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	clampZoomScale,
 	createCustomizationController,
 	prepareElementForInsertion,
 	slideSpaceElement,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 /**
  * useViewerIntegration: Wires pointer handling, content lifecycle,
  * I/O, annotations, recovery, imperative handle, parent callbacks,

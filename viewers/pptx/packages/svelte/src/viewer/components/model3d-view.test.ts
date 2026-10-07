@@ -16,7 +16,7 @@ import ElementRenderer from './ElementRenderer.svelte';
 // vi.hoisted so the hoisted vi.mock factory can reference it.
 const { mountModel3D } = vi.hoisted(() => ({ mountModel3D: vi.fn() }));
 
-vi.mock(import('pptx-viewer-shared'), async (importOriginal) => {
+vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => {
 	const actual = await importOriginal();
 	return {
 		...actual,

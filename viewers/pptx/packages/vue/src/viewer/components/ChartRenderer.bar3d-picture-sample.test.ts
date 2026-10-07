@@ -16,7 +16,7 @@ import {
 	getCachedBarFacePicturePixelColor,
 	resetBarFacePicturePixelCacheForTests,
 	resolveUntargetedBarFaceFill,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import ChartRenderer from './ChartRenderer.vue';

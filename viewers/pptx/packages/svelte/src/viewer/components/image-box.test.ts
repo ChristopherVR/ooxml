@@ -5,8 +5,8 @@ import { describe, expect, it, vi } from 'vitest';
 import ImageBox from './ImageBox.svelte';
 
 const resolveSource = vi.fn(async () => 'data:image/png;base64,processed');
-vi.mock(import('pptx-viewer-shared'), async (importOriginal) => ({
-	...(await importOriginal<typeof import('pptx-viewer-shared')>()),
+vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => ({
+	...(await importOriginal<typeof import('ooxml-ui/pptx')>()),
 	resolveColorChangedImageSource: (...args: unknown[]) => resolveSource(...args),
 }));
 

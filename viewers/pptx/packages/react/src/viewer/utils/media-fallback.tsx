@@ -5,9 +5,9 @@ import {
 	mediaFallbackIcon,
 	mediaFallbackLabelKey,
 	mediaFallbackVisual,
-} from 'pptx-viewer-shared';
-import type { MediaFallbackVisual, MediaSurface } from 'pptx-viewer-shared';
-import { translationsEn } from 'pptx-viewer-shared/i18n';
+} from 'ooxml-ui/pptx';
+import type { MediaFallbackVisual, MediaSurface } from 'ooxml-ui/pptx';
+import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import React from 'react';
 
 /**

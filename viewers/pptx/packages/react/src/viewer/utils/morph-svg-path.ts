@@ -11,4 +11,4 @@ export {
 	serializeSvgPath,
 	equalizePaths,
 	interpolatePaths,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

@@ -27,8 +27,8 @@ import {
 	isEditorTextInputTarget,
 	readCropInsets,
 	startCropSession,
-} from '../internal/shared';
-import type { CropElementUpdate, CropSession } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { CropElementUpdate, CropSession } from 'ooxml-ui/pptx';
 import { EditorStateService } from './editor-state.service';
 
 /** A live crop session and the slide its picture sits on. */

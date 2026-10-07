@@ -12,7 +12,7 @@
 
 // The filter id and the "does this preset need an SVG filter" predicate are
 // shared with the other bindings.
-import { getArtisticFilterId, needsSvgArtisticFilter } from 'pptx-viewer-shared';
+import { getArtisticFilterId, needsSvgArtisticFilter } from 'ooxml-ui/pptx';
 import React from 'react';
 
 export { getArtisticFilterId, needsSvgArtisticFilter };

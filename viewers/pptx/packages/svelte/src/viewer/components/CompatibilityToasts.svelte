@@ -26,7 +26,7 @@
 		CompatibilityWarningToast,
 		CompatToastsRequestEvent,
 		CompatToastsViewState,
-	} from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 

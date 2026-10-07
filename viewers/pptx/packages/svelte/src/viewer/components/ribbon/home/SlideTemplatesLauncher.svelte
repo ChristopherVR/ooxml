@@ -9,8 +9,8 @@
 	 * history-integrated `EditorSlidesController.insertSlideFromTemplate` and
 	 * navigates to the new slide.
 	 */
-	import { templateSchemeFromTheme } from 'pptx-viewer-shared';
-	import type { SlideTemplateId } from 'pptx-viewer-shared';
+	import { templateSchemeFromTheme } from 'ooxml-ui/pptx';
+	import type { SlideTemplateId } from 'ooxml-ui/pptx';
 
 	import type { EditorState } from '../../../editor/editor-state.svelte';
 	import { getRenderContextSource } from '../../../state/render-context';

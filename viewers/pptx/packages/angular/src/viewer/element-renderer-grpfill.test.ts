@@ -19,7 +19,7 @@ import { fileURLToPath } from 'node:url';
 import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 
-import { getGroupChildParentFill, resolveGroupChildFill } from '../internal/shared';
+import { getGroupChildParentFill, resolveGroupChildFill } from 'ooxml-ui/pptx';
 import { componentSource as readComponentSource } from './component-source.test-support';
 
 const componentSource = readComponentSource(

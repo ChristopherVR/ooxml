@@ -19,8 +19,8 @@ import {
 	handleReadingViewKey,
 	openReadingView,
 	readingViewFitScale,
-} from 'pptx-viewer-shared';
-import type { CanvasSize, ReadingViewCommand, ReadingViewState } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { CanvasSize, ReadingViewCommand, ReadingViewState } from 'ooxml-ui/pptx';
 
 /** Breathing room between the slide and the window edge, in CSS pixels. */
 export const READING_VIEW_PADDING = 24;

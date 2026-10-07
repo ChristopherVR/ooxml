@@ -4,7 +4,7 @@
  * continuous `input` stream keeps driving the live pen colour only.
  */
 import { mount } from '@vue/test-utils';
-import { registerPptxWebControls } from 'pptx-viewer-shared';
+import { registerPptxWebControls } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
 import { RecentColorsKey } from '../../composables/recent-colors-context';

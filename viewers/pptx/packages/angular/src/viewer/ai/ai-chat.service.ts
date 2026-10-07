@@ -20,7 +20,7 @@ import {
 	isAiAvailable,
 	toolCanvasTarget,
 	toRenderableParts,
-} from '../../internal/shared-ai';
+} from 'ooxml-ui/pptx/ai';
 import type {
 	PptxAiBridge,
 	PptxAiConfig,
@@ -29,7 +29,7 @@ import type {
 	ToolCanvasTarget,
 	VanillaChatController,
 	VanillaChatSnapshot,
-} from '../../internal/shared-ai';
+} from 'ooxml-ui/pptx/ai';
 
 /** Lifecycle of the AI session bootstrap. */
 export type AiChatInitState = 'checking' | 'unavailable' | 'ready' | 'error';

@@ -7,7 +7,7 @@ import {
 	openPptxFile,
 	resolveAuthoredCustomShowId,
 	resolveDefaultPrintSettings,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type {
 	ResolvedCustomization,
 	ThemeCatalogEntry,
@@ -15,8 +15,8 @@ import type {
 	ViewerOptionsStore,
 	ViewerOptionsTabId,
 	ViewerTheme,
-} from 'pptx-viewer-shared';
-import type { LocaleCatalogEntry } from 'pptx-viewer-shared/i18n';
+} from 'ooxml-ui/pptx';
+import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
 
 import type { EditorController } from './editor';
 import type { PrintOptions } from './export/export-print';
@@ -322,7 +322,7 @@ async function comparePresentation(host: ParityWorkflowHost): Promise<void> {
  */
 function openSorter(
 	host: ParityWorkflowHost,
-	clipboard: { ids: string[]; state?: import('pptx-viewer-shared').SlideSorterState } = { ids: [] },
+	clipboard: { ids: string[]; state?: import('ooxml-ui/pptx').SlideSorterState } = { ids: [] },
 ): void {
 	const current = host.store.get();
 	const refresh = (): void => openSorter(host, clipboard);

@@ -38,7 +38,7 @@ import {
 	LINE_CAP_OPTIONS,
 	LINE_JOIN_OPTIONS,
 	STROKE_DASH_OPTIONS,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { isSelectControl } from './control-event-targets';
 
 @Component({

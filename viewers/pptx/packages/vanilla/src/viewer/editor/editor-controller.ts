@@ -23,12 +23,12 @@ import {
 	parentSelection,
 	removeGuide,
 	savedPresentationFileName,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type {
 	FreeformToolKind,
 	ResolvedCustomization,
 	ResolvedKeyboardCustomization,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import type { DrawTool, Store, ViewerState } from '../state';
@@ -74,7 +74,7 @@ export interface EditorControllerDeps {
 	getChrome(): ViewerChrome;
 	getTranslator(): Translator;
 	getScale(): number;
-	getLivePatcher?(): import('pptx-viewer-shared').CollaborationLivePatcher | undefined;
+	getLivePatcher?(): import('ooxml-ui/pptx').CollaborationLivePatcher | undefined;
 	getHandler(): PptxHandler | null;
 	/** Adopt a handler produced by an in-session mutation (Slide Master view CRUD). */
 	setHandler(handler: PptxHandler): void;

@@ -28,7 +28,7 @@ import {
 	setEffectStockSound,
 	setTrigger,
 	setTriggerBookmark,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React, { useCallback, useMemo } from 'react';
 
 import { getElementLabel } from '../../utils';

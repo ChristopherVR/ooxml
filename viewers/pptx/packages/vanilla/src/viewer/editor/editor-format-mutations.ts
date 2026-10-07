@@ -8,7 +8,7 @@ import type {
 	TextStyle,
 } from 'pptx-viewer-core';
 import { hasShapeProperties, hasTextProperties } from 'pptx-viewer-core';
-import type { ChangeCaseMode } from 'pptx-viewer-shared';
+import type { ChangeCaseMode } from 'ooxml-ui/pptx';
 import {
 	applyCaseTransformToSegments,
 	elementBulletKind,
@@ -17,7 +17,7 @@ import {
 	textFontSizePtToPx,
 	textFontSizePxToPt,
 	updateTextSegmentStyle,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import { currentInlineEditorText } from './inline-text-editor';
 

@@ -1,4 +1,4 @@
-import { MIN_TOUCH_TARGET_PX } from 'pptx-viewer-shared';
+import { MIN_TOUCH_TARGET_PX } from 'ooxml-ui/pptx';
 import React, { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 

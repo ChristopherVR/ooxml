@@ -7,7 +7,7 @@
  * region. Both rules now come from `pptx-viewer-shared`.
  */
 import type { PptxElement } from 'pptx-viewer-core';
-import { getCropShapeClipPath } from 'pptx-viewer-shared';
+import { getCropShapeClipPath } from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it } from 'vitest';
 

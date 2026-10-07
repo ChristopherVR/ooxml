@@ -9,8 +9,8 @@ import {
 	getEffectStyleSource,
 	getSoftEdgeSvgFilter,
 	strokeOutlineViewBox,
-} from 'pptx-viewer-shared';
-import type { StrokeOutlinePaint } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { StrokeOutlinePaint } from 'ooxml-ui/pptx';
 import React from 'react';
 import type { CSSProperties } from 'react';
 

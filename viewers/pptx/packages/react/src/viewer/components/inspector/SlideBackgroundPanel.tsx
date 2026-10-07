@@ -3,7 +3,7 @@ import {
 	resolveTemplateBackgroundRows,
 	slideBackgroundClearPatch,
 	slideBackgroundClearState,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React, { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LuX } from 'react-icons/lu';

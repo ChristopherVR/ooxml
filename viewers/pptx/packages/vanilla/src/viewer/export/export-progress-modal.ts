@@ -1,4 +1,4 @@
-import { clampPercent } from 'pptx-viewer-shared';
+import { clampPercent } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import { createEl } from '../render';

@@ -12,7 +12,7 @@ import {
 	removeCommentFromList,
 	replyToCommentInList,
 	toggleCommentResolvedInList,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Store, ViewerState } from '../state';
 import type { EditorOps } from './editor-operations';

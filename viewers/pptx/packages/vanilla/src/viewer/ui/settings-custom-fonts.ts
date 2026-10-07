@@ -1,4 +1,4 @@
-import { CUSTOM_FONT_ACCEPT, registerCustomFont } from 'pptx-viewer-shared';
+import { CUSTOM_FONT_ACCEPT, registerCustomFont } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import { createEl } from '../render';

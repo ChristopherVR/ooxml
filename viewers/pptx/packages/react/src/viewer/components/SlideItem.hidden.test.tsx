@@ -11,8 +11,8 @@
  */
 import { createInstance } from 'i18next';
 import type { PptxSlide } from 'pptx-viewer-core';
-import { EDITOR_THUMBNAIL_WIDTH, HIDDEN_SLIDE_SLASH_GRADIENT } from 'pptx-viewer-shared';
-import { translationsEn } from 'pptx-viewer-shared/i18n';
+import { EDITOR_THUMBNAIL_WIDTH, HIDDEN_SLIDE_SLASH_GRADIENT } from 'ooxml-ui/pptx';
+import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';

@@ -12,7 +12,7 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 
-import type { CanvasSize, SlideDiff } from '../internal/shared';
+import type { CanvasSize, SlideDiff } from 'ooxml-ui/pptx';
 import { SlideCanvasComponent } from './slide-canvas.component';
 import { thumbnailHeight, thumbnailZoom } from './slide-sorter-overlay-helpers';
 

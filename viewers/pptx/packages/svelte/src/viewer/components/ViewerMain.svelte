@@ -12,8 +12,8 @@
 	 * to stay owned by the component that constructed it.
 	 */
 	import type { Translator } from '../../i18n/translator';
-	import { computeGridSpacingPx, createGuide, moveGuide, removeGuide } from 'pptx-viewer-shared';
-	import type { PptxAiConfig } from 'pptx-viewer-shared/ai';
+	import { computeGridSpacingPx, createGuide, moveGuide, removeGuide } from 'ooxml-ui/pptx';
+	import type { PptxAiConfig } from 'ooxml-ui/pptx/ai';
 
 	import type { ViewerStateBag } from '../state/create-viewer-state-types';
 	import { nextGuideId } from '../state/guide-id';

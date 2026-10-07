@@ -12,7 +12,7 @@
 	 * `pptx-viewer-shared`; this SFC only emits SVG.
 	 */
 	import type { ChartPptxElement } from 'pptx-viewer-core';
-	import type { Chart3DSelectionBridge } from 'pptx-viewer-shared';
+	import type { Chart3DSelectionBridge } from 'ooxml-ui/pptx';
 	import {
 		applyChart3DDrag,
 		applyChart3DSelect,
@@ -21,7 +21,7 @@
 		resolveChartThreeViewSpec,
 		resolveRevealedChartData,
 		shouldRenderHitTarget,
-	} from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 	import { buildChartView, buildLegendItems } from '../render';

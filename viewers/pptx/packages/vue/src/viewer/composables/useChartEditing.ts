@@ -35,7 +35,7 @@ import {
 	setChartCategoryLabel,
 	setChartCellValue,
 	setDataLabelsRangeCache,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type { ComputedRef } from 'vue';
 
 import { useChartOpEditing } from './useChartOpEditing';

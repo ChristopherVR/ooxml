@@ -6,7 +6,7 @@
  * the nested-rectangle-band tile for a freeform `a:path type="rect"`
  * gradient) is made in shared; this only maps each descriptor to JSX.
  */
-import type { SvgGradientDef } from 'pptx-viewer-shared';
+import type { SvgGradientDef } from 'ooxml-ui/pptx';
 import React from 'react';
 
 export function renderSvgGradientDefs(gradient: SvgGradientDef | undefined): React.ReactNode {

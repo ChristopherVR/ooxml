@@ -1,10 +1,10 @@
 import type { PptxViewProperties } from 'pptx-viewer-core';
-import type { DeckViewPreferences } from 'pptx-viewer-shared';
+import type { DeckViewPreferences } from 'ooxml-ui/pptx';
 import {
 	DEFAULT_VIEWER_PREFERENCES,
 	viewerPreferencesFromViewProperties,
 	viewPropertiesPatchFromPreferences,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { useCallback, useEffect } from 'react';
 import type React from 'react';
 

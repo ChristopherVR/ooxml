@@ -19,7 +19,7 @@
  * @module viewer/presentation-keyframes
  */
 
-import { ANIMATION_KEYFRAMES_CSS, PRESENTATION_HIT_TEST_CSS } from '../internal/shared';
+import { ANIMATION_KEYFRAMES_CSS, PRESENTATION_HIT_TEST_CSS } from 'ooxml-ui/pptx';
 
 let presetInjected = false;
 

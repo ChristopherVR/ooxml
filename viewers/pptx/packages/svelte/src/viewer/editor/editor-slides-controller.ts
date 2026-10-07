@@ -3,8 +3,8 @@
    `await`); merging them isn't a style choice here. */
 import { cloneElement } from 'pptx-viewer-core';
 import type { PptxLayoutOption, PptxLayoutPreview } from 'pptx-viewer-core';
-import { resetSlideLayoutPath } from 'pptx-viewer-shared';
-import type { SlideTemplateBuildOptions, SlideTemplateId } from 'pptx-viewer-shared';
+import { resetSlideLayoutPath } from 'ooxml-ui/pptx';
+import type { SlideTemplateBuildOptions, SlideTemplateId } from 'ooxml-ui/pptx';
 
 import {
 	deleteSlideAt,

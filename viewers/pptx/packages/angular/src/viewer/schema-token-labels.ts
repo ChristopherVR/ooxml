@@ -32,7 +32,7 @@ import {
 	SMARTART_LAYOUT_LABEL_KEYS,
 	SMARTART_STYLE_LABEL_KEYS,
 	THEME_COLOR_SLOT_LABEL_KEYS,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 
 /** Identity `translate`, so `schemaLabel` hands back the key it looked up. */
 function asKey(key: string): string {

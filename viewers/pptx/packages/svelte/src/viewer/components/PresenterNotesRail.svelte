@@ -41,8 +41,8 @@
 		PRESENTER_RAIL_LABEL_KEYS,
 		presenterNextDisabled,
 		presenterPrevDisabled,
-	} from 'pptx-viewer-shared';
-	import type { AuthoredSlideRange, CanvasSize, ShowOrderCustomShow } from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
+	import type { AuthoredSlideRange, CanvasSize, ShowOrderCustomShow } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 	import { styleToString } from '../style';

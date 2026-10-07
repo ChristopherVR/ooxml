@@ -16,8 +16,8 @@
 
 import type { TablePptxElement } from 'pptx-viewer-core';
 
-import type { ContextMenuCommandId, MergeShapeOperation } from '../internal/shared';
-import { mergeOperationForCommand } from '../internal/shared';
+import type { ContextMenuCommandId, MergeShapeOperation } from 'ooxml-ui/pptx';
+import { mergeOperationForCommand } from 'ooxml-ui/pptx';
 import {
 	insertColumn,
 	insertRow,

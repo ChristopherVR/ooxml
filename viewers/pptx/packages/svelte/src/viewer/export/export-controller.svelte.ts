@@ -3,7 +3,7 @@ import type {
 	CanvasSize,
 	RasterizeElementResult,
 	RasterizeElementTilesResult,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	downloadBlob,
 	downloadDataUrl,
@@ -12,7 +12,7 @@ import {
 	rasterResultToPngBlob,
 	rasterResultToPngDataUrl,
 	resolveExportBaseName,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { ExportGifOptions } from './export-gif';
 import { exportSlidesToGifBlob } from './export-gif';

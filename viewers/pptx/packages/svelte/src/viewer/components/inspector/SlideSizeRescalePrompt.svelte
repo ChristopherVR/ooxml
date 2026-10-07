@@ -7,7 +7,7 @@
 	 * `scaleSlidesForSizeChange` transform (via the caller) together with the
 	 * size change, as one undo step.
 	 */
-	import type { SlideSizeRescaleMode } from 'pptx-viewer-shared';
+	import type { SlideSizeRescaleMode } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 

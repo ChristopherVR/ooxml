@@ -5,7 +5,7 @@
 	 * `belowRibbon` placement, which renders only the configured extras and hides
 	 * itself when there are none. Save/Undo/Redo stay in the title bar.
 	 */
-	import type { TitleBarEventDetails } from 'pptx-viewer-shared';
+	import type { TitleBarEventDetails } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 	import { useViewerCustomization } from '../state/viewer-customization.svelte';

@@ -53,14 +53,14 @@ import {
 	resolveTextFillBlipUrls,
 	saveDeckWithPassword,
 	slideSizeToCanvasPx,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import type {
 	CanvasSize,
 	DeckSaveIntent,
 	DeckSaveState,
 	PendingInlineTextEdit,
 	SlideSizeEmu,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { ViewerOptionsService } from './viewer-options.service';
 
 /**

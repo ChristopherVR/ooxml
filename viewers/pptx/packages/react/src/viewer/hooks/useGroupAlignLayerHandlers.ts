@@ -13,8 +13,8 @@ import {
 	sendBackward,
 	sendToBack,
 	ungroupElements,
-} from 'pptx-viewer-shared';
-import type { AlignEdge, DistributeAxis } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { AlignEdge, DistributeAxis } from 'ooxml-ui/pptx';
 
 import { isTemplateElementId } from '../utils';
 import { generateElementId } from '../utils/generate-id';

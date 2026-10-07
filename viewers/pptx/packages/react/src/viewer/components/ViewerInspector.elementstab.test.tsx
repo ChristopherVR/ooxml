@@ -9,7 +9,7 @@
  * object to select (or to un-hide one you can no longer click).
  */
 import type { PptxSlide } from 'pptx-viewer-core';
-import { translationsEn } from 'pptx-viewer-shared/i18n';
+import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';

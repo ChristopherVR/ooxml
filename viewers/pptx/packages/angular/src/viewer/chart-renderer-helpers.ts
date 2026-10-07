@@ -15,4 +15,4 @@
  * share names with `chart-helpers.ts` and are therefore not flattened into the
  * shared barrel.
  */
-export * from '../internal/shared-src/render/chart-view-model';
+export * from 'ooxml-ui/pptx/render/chart-view-model';

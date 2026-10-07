@@ -27,7 +27,7 @@ import {
 	isSameChartPart,
 	resolveRevealedChartData,
 	withChartTitle,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import {
 	chartCanEditParts,
 	chartDragCommitData,

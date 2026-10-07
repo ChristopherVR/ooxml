@@ -8,7 +8,7 @@ import type {
 	ViewerOptionsStore,
 	ViewerOptionsStoreInit,
 	ViewerPreferences,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	applyPreferenceToOptions,
 	createViewerOptionsStore,
@@ -25,7 +25,7 @@ import {
 	shouldConfirmExternalHyperlink,
 	shouldDiscardAutosaveOnSuccessfulSave,
 	viewerOptionsToPreferences,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 /**
  * ViewerOptionsState: the runes wrapper around the shared File > Options

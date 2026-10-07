@@ -14,7 +14,7 @@
 -->
 <script setup lang="ts">
 import type { MergeShapeOperation, PptxElement, ShapeStyle } from 'pptx-viewer-core';
-import type { RibbonHomeRequestEvent, ToolbarActionId } from 'pptx-viewer-shared';
+import type { RibbonHomeRequestEvent, ToolbarActionId } from 'ooxml-ui/pptx';
 import {
 	arrangeAlignAction,
 	arrangeHomeControls,
@@ -26,7 +26,7 @@ import {
 	homeSnapshotTranslator,
 	parseCropValue,
 	strokeWidthOf,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { computed, inject } from 'vue';
 import { useI18n } from 'vue-i18n';
 

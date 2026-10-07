@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { hasShapeProperties } from 'pptx-viewer-core';
-	import { getDuotoneSvgFilter } from 'pptx-viewer-shared';
+	import { getDuotoneSvgFilter } from 'ooxml-ui/pptx';
 
 	import type { ElementRendererProps } from './props';
 

@@ -15,8 +15,8 @@
  * compete for the same screen.
  */
 import { X } from 'lucide-vue-next';
-import type { RunProgramNotice } from 'pptx-viewer-shared';
-import { canUseClipboard, compatToastStackStyle } from 'pptx-viewer-shared';
+import type { RunProgramNotice } from 'ooxml-ui/pptx';
+import { canUseClipboard, compatToastStackStyle } from 'ooxml-ui/pptx';
 import { useI18n } from 'vue-i18n';
 
 const props = defineProps<{

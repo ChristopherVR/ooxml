@@ -1,5 +1,5 @@
-import { attachRibbonOverflow } from 'pptx-viewer-shared';
-import type { RibbonLaunchers } from 'pptx-viewer-shared';
+import { attachRibbonOverflow } from 'ooxml-ui/pptx';
+import type { RibbonLaunchers } from 'ooxml-ui/pptx';
 
 /**
  * Svelte action: collapse the ribbon row's groups into popup buttons when the window is too

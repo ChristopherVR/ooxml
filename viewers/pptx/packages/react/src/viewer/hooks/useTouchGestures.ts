@@ -6,8 +6,8 @@ import {
 	SWIPE_MAX_VERTICAL_PX,
 	LONG_PRESS_DURATION_MS,
 	LONG_PRESS_MOVE_TOLERANCE_PX,
-} from 'pptx-viewer-shared';
-import type { TouchGestureCallbacks } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { TouchGestureCallbacks } from 'ooxml-ui/pptx';
 /**
  * useTouchGestures: Multi-touch gesture detection for the viewer canvas.
  *

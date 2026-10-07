@@ -1,4 +1,4 @@
-import type { PptxAiConfig } from 'pptx-viewer-shared/ai';
+import type { PptxAiConfig } from 'ooxml-ui/pptx/ai';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { createPptxViewer, PptxViewer } from '../PptxViewer';

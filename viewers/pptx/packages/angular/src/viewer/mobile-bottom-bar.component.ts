@@ -35,7 +35,7 @@ import type {
 	MobileBarIntent,
 	MobileBarRequestEvent,
 	MobileBarViewState,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { translationsSignal } from './translations-signal';
 
 /** Which mobile sheet/panel is currently active (highlights its button). */

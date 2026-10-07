@@ -7,6 +7,6 @@
  * `PowerPointViewer.vue` and the colocated test are unchanged.
  */
 
-export type { SnapBox } from 'pptx-viewer-shared';
+export type { SnapBox } from 'ooxml-ui/pptx';
 
-export { snapValue, snapBox } from 'pptx-viewer-shared';
+export { snapValue, snapBox } from 'ooxml-ui/pptx';

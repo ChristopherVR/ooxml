@@ -1,4 +1,4 @@
-import { computeAnchoredPopupPosition } from 'pptx-viewer-shared';
+import { computeAnchoredPopupPosition } from 'ooxml-ui/pptx';
 import type { Directive } from 'vue';
 
 /**

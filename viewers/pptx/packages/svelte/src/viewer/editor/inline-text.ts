@@ -1,15 +1,15 @@
 import type { PptxElement, TextSegment, TextStyle } from 'pptx-viewer-core';
 import { hasTextProperties } from 'pptx-viewer-core';
-import type { InlineTextEditSnapshot, NormAutofitShrinkResult } from 'pptx-viewer-shared';
+import type { InlineTextEditSnapshot, NormAutofitShrinkResult } from 'ooxml-ui/pptx';
 import {
 	canInteractWithElement,
 	remapTextToSegments,
 	reconcileInlineListSnapshot,
 	resolveInlineEditAutoFitHeight,
 	resolveInlineEditNormAutofitShrink,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
-export { readEditableText } from 'pptx-viewer-shared';
+export { readEditableText } from 'ooxml-ui/pptx';
 
 /**
  * Pure helpers for inline text editing. The editable surface itself is a

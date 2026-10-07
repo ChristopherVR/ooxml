@@ -50,4 +50,4 @@ export {
 	sanitizeAvatarUrl,
 	sanitizeSlideIndex,
 	sanitizePresence,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

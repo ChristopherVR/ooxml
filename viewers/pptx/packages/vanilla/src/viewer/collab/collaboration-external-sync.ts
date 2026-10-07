@@ -7,8 +7,8 @@ import type {
 	ExternalCollaborationSession,
 	SyncGate,
 	YjsFactories,
-} from 'pptx-viewer-shared';
-import { observeExternalCollaborationReadiness } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import { observeExternalCollaborationReadiness } from 'ooxml-ui/pptx';
 
 interface ExternalSyncDeps {
 	factories: YjsFactories;

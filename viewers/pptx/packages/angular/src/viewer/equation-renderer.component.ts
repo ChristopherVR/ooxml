@@ -2,8 +2,8 @@ import { ChangeDetectionStrategy, Component, computed, inject, input } from '@an
 import { DomSanitizer } from '@angular/platform-browser';
 import type { SafeHtml } from '@angular/platform-browser';
 
-import type { OmmlNode } from '../internal/shared';
-import { ommlToMathml, sanitizeMathMl } from '../internal/shared';
+import type { OmmlNode } from 'ooxml-ui/pptx';
+import { ommlToMathml, sanitizeMathMl } from 'ooxml-ui/pptx';
 
 /**
  * EquationRendererComponent: Angular port of the Vue `EquationRenderer.vue`

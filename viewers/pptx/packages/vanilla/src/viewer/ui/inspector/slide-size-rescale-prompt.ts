@@ -1,4 +1,4 @@
-import type { SlideSizeRescaleMode } from 'pptx-viewer-shared';
+import type { SlideSizeRescaleMode } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';

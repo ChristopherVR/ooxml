@@ -13,7 +13,7 @@ import {
 	isWedgeCalloutPresetShape,
 	svgGradientFillRef,
 	svgLineCap,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React from 'react';
 
 import { colorWithOpacity } from './color';

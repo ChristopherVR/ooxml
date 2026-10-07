@@ -22,7 +22,7 @@ import {
 	OUTLINE_ROW_ATTR,
 	OUTLINE_SLIDE_ATTR,
 	OUTLINE_VIEW_ATTR,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { LuX } from 'react-icons/lu';

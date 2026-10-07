@@ -4,8 +4,8 @@
 	 * like PowerPoint's add-in inventory (grouped active/inactive, details for
 	 * the selected row).
 	 */
-	import type { ViewerAddinRow, ViewerAddinStatus } from 'pptx-viewer-shared';
-	import { resolveViewerAddinRows } from 'pptx-viewer-shared';
+	import type { ViewerAddinRow, ViewerAddinStatus } from 'ooxml-ui/pptx';
+	import { resolveViewerAddinRows } from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../../i18n/context';
 
 	const {

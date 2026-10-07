@@ -13,7 +13,7 @@
  * and a superseded deck's late result never applies.
  */
 
-import { syncGoogleWebfontStylesheet } from 'pptx-viewer-shared';
+import { syncGoogleWebfontStylesheet } from 'ooxml-ui/pptx';
 
 /** DOM id of the managed `<link>` element (distinct from the other bindings'). */
 export const VANILLA_GOOGLE_FONTS_LINK_ID = 'pptx-vanilla-google-fonts';

@@ -6,7 +6,7 @@ import {
 	readRibbonTransitionDraft,
 	safeOpenUrl,
 	toggleBlackboard,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type {
 	FreeformToolKind,
 	PresentationPointerState,
@@ -17,7 +17,7 @@ import type {
 	ViewerQuickAccessOptions,
 	ViewerOptionsStore,
 	ViewerTheme,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import { buildChromeCallbacks } from './chrome-callbacks';
 import type { ChromeCallbackDeps } from './chrome-callbacks';

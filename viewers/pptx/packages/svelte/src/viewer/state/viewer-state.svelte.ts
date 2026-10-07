@@ -1,4 +1,4 @@
-import { createViewerZoomStore, viewerZoomPercent } from 'pptx-viewer-shared';
+import { createViewerZoomStore, viewerZoomPercent } from 'ooxml-ui/pptx';
 
 import { clampSlideIndex, resolveNavigationKey } from './navigation';
 import { viewerStoreSelection } from './viewer-store.svelte';

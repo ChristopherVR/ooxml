@@ -8,7 +8,7 @@
  * the shared module exists to prevent.
  */
 import type { PptxLayoutOption, PptxSlide } from 'pptx-viewer-core';
-import { scopeLayoutOptionsToSlide } from 'pptx-viewer-shared';
+import { scopeLayoutOptionsToSlide } from 'ooxml-ui/pptx';
 
 export function scopeLayoutOptionsToActiveSlide(
 	options: PptxLayoutOption[],

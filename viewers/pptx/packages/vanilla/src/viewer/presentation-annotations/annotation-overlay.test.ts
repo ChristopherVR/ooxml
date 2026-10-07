@@ -1,4 +1,4 @@
-import type { PresentationInkStroke } from 'pptx-viewer-shared';
+import type { PresentationInkStroke } from 'ooxml-ui/pptx';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { mountAnnotationOverlay } from './annotation-overlay';

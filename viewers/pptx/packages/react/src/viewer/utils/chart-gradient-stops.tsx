@@ -1,4 +1,4 @@
-import type { ChartSvgGradientStop } from 'pptx-viewer-shared';
+import type { ChartSvgGradientStop } from 'ooxml-ui/pptx';
 import React from 'react';
 
 /** The `<stop>` children of a chart gradient def (see `chart-gradient-defs.ts` in shared). */

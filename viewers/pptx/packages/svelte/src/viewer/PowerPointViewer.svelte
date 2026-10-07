@@ -16,8 +16,8 @@
 		buildUserFontFaceStyles,
 		INSPECTOR_PANEL_DEFAULT_WIDTH,
 		themeToCssVars,
-	} from 'pptx-viewer-shared';
-	import type { ViewerMode } from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
+	import type { ViewerMode } from 'ooxml-ui/pptx';
 
 	import { createTranslator } from '../i18n/translator';
 	import { provideNotesBarHeight } from './state/notes-bar-height.svelte';

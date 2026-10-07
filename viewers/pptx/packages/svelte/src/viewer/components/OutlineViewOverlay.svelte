@@ -24,8 +24,8 @@
 		OUTLINE_ROW_ATTR,
 		OUTLINE_SLIDE_ATTR,
 		OUTLINE_VIEW_ATTR,
-	} from 'pptx-viewer-shared';
-	import type { CanvasSize, OutlineRow } from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
+	import type { CanvasSize, OutlineRow } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 	import { OutlineViewSession } from '../state/outline-view.svelte';

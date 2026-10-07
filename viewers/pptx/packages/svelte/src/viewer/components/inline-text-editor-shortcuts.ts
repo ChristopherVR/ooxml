@@ -4,8 +4,8 @@ import {
 	mapEditorKey,
 	mapInlineTextFormatKey,
 	stepFontSizePt,
-} from 'pptx-viewer-shared';
-import type { EditorKeyInput } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { EditorKeyInput } from 'ooxml-ui/pptx';
 
 import { setFontSizePatch, toggleTextFlagPatch } from '../editor/editor-format-mutations';
 import { setAlignPatch } from '../editor/editor-paragraph-mutations';

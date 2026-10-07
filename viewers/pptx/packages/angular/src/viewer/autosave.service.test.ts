@@ -10,12 +10,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AutosaveService } from './autosave.service';
 
-vi.mock(import('../internal/shared'), async () => {
-	const actual = await vi.importActual<typeof import('../internal/shared')>('../internal/shared');
+vi.mock(import('ooxml-ui/pptx'), async () => {
+	const actual = await vi.importActual<typeof import('ooxml-ui/pptx')>('ooxml-ui/pptx');
 	return { ...actual, saveAutosaveSnapshot: vi.fn(async () => true) };
 });
 
-const { saveAutosaveSnapshot } = await import('../internal/shared');
+const { saveAutosaveSnapshot } = await import('ooxml-ui/pptx');
 
 /**
  * The autosave TIMER contract, the Angular half of the polling pair.

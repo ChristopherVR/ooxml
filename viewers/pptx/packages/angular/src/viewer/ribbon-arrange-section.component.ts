@@ -20,12 +20,12 @@ import {
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import type { PptxElement } from 'pptx-viewer-core';
 
-import type { RibbonHomeRequestEvent, ToolbarActionId } from '../internal/shared';
+import type { RibbonHomeRequestEvent, ToolbarActionId } from 'ooxml-ui/pptx';
 import {
 	arrangeAlignAction,
 	arrangeHomeControls,
 	arrangePainterHomeControls,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { EditorStateService } from './editor-state.service';
 import { homeLanguage, homeTranslator } from './ribbon-home-lang';
 import { RibbonShapeExtrasComponent } from './ribbon-shape-extras.component';

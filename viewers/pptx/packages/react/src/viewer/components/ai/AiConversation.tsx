@@ -5,7 +5,7 @@
  * focused-target bar, the transcript, the staged-proposal review strip, an error
  * banner, and the composer.
  */
-import type { PptxAiBridge, PptxAiChatSession, PptxAiConfig } from 'pptx-viewer-shared/ai';
+import type { PptxAiBridge, PptxAiChatSession, PptxAiConfig } from 'ooxml-ui/pptx/ai';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LuHistory, LuMessageSquarePlus, LuTrash2, LuTriangleAlert } from 'react-icons/lu';

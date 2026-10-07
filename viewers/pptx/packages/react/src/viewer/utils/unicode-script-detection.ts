@@ -7,10 +7,10 @@
  * surface so `text-segment-render`, `text-segment-helpers`, and the colocated
  * test are unchanged.
  */
-export type { FontScriptCategory, ScriptRun } from 'pptx-viewer-shared';
+export type { FontScriptCategory, ScriptRun } from 'ooxml-ui/pptx';
 export {
 	detectFontScript,
 	segmentByScript,
 	resolveFontForScript,
 	hasDistinctScriptFonts,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

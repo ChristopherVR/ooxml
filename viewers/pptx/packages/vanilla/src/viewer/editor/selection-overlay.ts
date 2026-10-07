@@ -1,4 +1,4 @@
-import type { ResizeHandleId, ShapeAdjustmentHandleDescriptor, SnapLine } from 'pptx-viewer-shared';
+import type { ResizeHandleId, ShapeAdjustmentHandleDescriptor, SnapLine } from 'ooxml-ui/pptx';
 import {
 	attachRotateHandlePlacement,
 	getResizeHandleHitAreaStyle,
@@ -6,7 +6,7 @@ import {
 	RESIZE_HANDLE_GEOMETRY,
 	RESIZE_HANDLES,
 	ROTATE_STEM_PX,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import { createEl } from '../render';

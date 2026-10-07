@@ -1,5 +1,5 @@
 import type { PptxPresentationProperties } from 'pptx-viewer-core';
-import { mruColorsPatch, pushRecentColor } from 'pptx-viewer-shared';
+import { mruColorsPatch, pushRecentColor } from 'ooxml-ui/pptx';
 import { useCallback } from 'react';
 import type React from 'react';
 

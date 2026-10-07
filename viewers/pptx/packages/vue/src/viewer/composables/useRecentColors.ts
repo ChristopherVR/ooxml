@@ -10,7 +10,7 @@
  * shape edit should not also un-remember the colour it used.
  */
 import type { PptxPresentationProperties } from 'pptx-viewer-core';
-import { mruColorsPatch, pushRecentColor, seedRecentColors } from 'pptx-viewer-shared';
+import { mruColorsPatch, pushRecentColor, seedRecentColors } from 'ooxml-ui/pptx';
 import { ref, watch } from 'vue';
 import type { Ref } from 'vue';
 

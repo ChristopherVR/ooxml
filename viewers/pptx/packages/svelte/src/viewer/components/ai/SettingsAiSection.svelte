@@ -6,9 +6,9 @@
 	 */
 	import Bug from '@lucide/svelte/icons/bug';
 	import Download from '@lucide/svelte/icons/download';
-	import { downloadBlob } from 'pptx-viewer-shared';
-	import { collectStoredChats, createChatHistoryStore, exportAiChatLogs } from 'pptx-viewer-shared/ai';
-	import type { AiLogFormat, PptxAiChatStore } from 'pptx-viewer-shared/ai';
+	import { downloadBlob } from 'ooxml-ui/pptx';
+	import { collectStoredChats, createChatHistoryStore, exportAiChatLogs } from 'ooxml-ui/pptx/ai';
+	import type { AiLogFormat, PptxAiChatStore } from 'ooxml-ui/pptx/ai';
 	import { untrack } from 'svelte';
 
 	import { useTranslator } from '../../../i18n/context';

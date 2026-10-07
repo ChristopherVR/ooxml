@@ -14,8 +14,8 @@ import type {
  *   - table-render-data.tsx       - renderTableFromTableData (programmatic tables)
  *   - table-render.tsx            - renderTableElement (XML-based tables)
  */
-import { canDrillDown, DEFAULT_FONT_FAMILY, tableContainerCss } from 'pptx-viewer-shared';
-import { translationsEn } from 'pptx-viewer-shared/i18n';
+import { canDrillDown, DEFAULT_FONT_FAMILY, tableContainerCss } from 'ooxml-ui/pptx';
+import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import React from 'react';
 
 import { cn } from '../../utils';

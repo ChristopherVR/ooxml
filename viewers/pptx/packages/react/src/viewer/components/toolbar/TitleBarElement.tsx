@@ -1,9 +1,9 @@
-import { buildTitleBarState, isPanelVisible, resolveScreenTip } from 'pptx-viewer-shared';
+import { buildTitleBarState, isPanelVisible, resolveScreenTip } from 'ooxml-ui/pptx';
 import type {
 	PptxUiTitleBarElement,
 	TitleBarCommandSearchEvent,
 	TitleBarHostInput,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 

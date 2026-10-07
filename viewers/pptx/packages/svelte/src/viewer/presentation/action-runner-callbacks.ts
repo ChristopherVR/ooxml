@@ -1,4 +1,4 @@
-import type { PresentationActionRunner } from 'pptx-viewer-shared';
+import type { PresentationActionRunner } from 'ooxml-ui/pptx';
 import {
 	applyMediaCommandVerb,
 	downloadDataUrl,
@@ -8,7 +8,7 @@ import {
 	resolveOleVerbTarget,
 	resolveShowSlideIndexes,
 	safeOpenUrl,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { PresentationControllerDeps } from './presentation-controller.svelte';
 

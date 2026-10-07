@@ -20,4 +20,4 @@ export type {
 	ExternalCollaborationAwareness,
 	ExternalCollaborationSession,
 	ExternalCollaborationSnapshot,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';

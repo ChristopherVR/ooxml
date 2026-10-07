@@ -1,6 +1,6 @@
 import type { PptxElement, PptxThemeColorRef, TextStyle } from 'pptx-viewer-core';
-import { fontHomeControls, nextToggleValue, textFontSizePtToPx } from 'pptx-viewer-shared';
-import type { RibbonHomeIntent } from 'pptx-viewer-shared';
+import { fontHomeControls, nextToggleValue, textFontSizePtToPx } from 'ooxml-ui/pptx';
+import type { RibbonHomeIntent } from 'ooxml-ui/pptx';
 import React, { useCallback, useMemo } from 'react';
 
 import type { TableCellEditorState } from '../../types';

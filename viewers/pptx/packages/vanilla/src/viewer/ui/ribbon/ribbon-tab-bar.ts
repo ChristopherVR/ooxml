@@ -1,10 +1,10 @@
-import type { RibbonContextualTabId, ToolbarActionId } from 'pptx-viewer-shared';
+import type { RibbonContextualTabId, ToolbarActionId } from 'ooxml-ui/pptx';
 import {
 	contextualTabLabelKey,
 	filterVisibleTabs,
 	isActionHidden,
 	RIBBON_CONTEXTUAL_TAB_ATTR,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';

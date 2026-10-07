@@ -12,8 +12,8 @@
  * `roomId`/`serverUrl` rather than the (possibly unrelated) `collaboration`
  * prop.
  */
-import type { BroadcastConfig, CollaborationConfig } from 'pptx-viewer-shared';
-import { buildBroadcastViewerUrl } from 'pptx-viewer-shared';
+import type { BroadcastConfig, CollaborationConfig } from 'ooxml-ui/pptx';
+import { buildBroadcastViewerUrl } from 'ooxml-ui/pptx';
 
 import type { CollaborationController } from './collaboration.svelte';
 

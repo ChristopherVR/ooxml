@@ -6,7 +6,7 @@ import {
 	radarStylePatch,
 	SURFACE_WIREFRAME_OPTIONS,
 	surfaceWireframePatch,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { useTranslation } from 'react-i18next';
 
 import { WebSelect } from '../WebControls';

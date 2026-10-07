@@ -16,7 +16,7 @@ import {
 	SHAPE_ADJUSTMENT_MIN,
 	SHAPE_PRESET_DEFS,
 	SHAPE_QUICK_STYLES,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 
 export function shapeTypePatch(element: PptxElement, shapeType: string): Partial<PptxElement> {
 	if (!hasShapeProperties(element)) {

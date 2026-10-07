@@ -5,7 +5,7 @@
 	import Text from '@lucide/svelte/icons/text';
 	import X from '@lucide/svelte/icons/x';
 	import type { PptxHeaderFooter } from 'pptx-viewer-core';
-	import { cloneHeaderFooterDraft, patchHeaderFooterDraft } from 'pptx-viewer-shared';
+	import { cloneHeaderFooterDraft, patchHeaderFooterDraft } from 'ooxml-ui/pptx';
 	import { untrack } from 'svelte';
 	import { useTranslator } from '../../i18n/context';
 

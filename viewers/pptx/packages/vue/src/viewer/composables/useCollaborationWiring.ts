@@ -3,8 +3,8 @@ import type {
 	CollabLoadOrigin,
 	CollaborationConfig,
 	CollaborationTransport,
-} from 'pptx-viewer-shared';
-import { buildBroadcastViewerUrl, shouldAutoFollowBroadcaster } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import { buildBroadcastViewerUrl, shouldAutoFollowBroadcaster } from 'ooxml-ui/pptx';
 import { computed, ref, watch } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
 

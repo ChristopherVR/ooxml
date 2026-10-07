@@ -4,7 +4,7 @@ import {
 	motionPathEndPixel,
 	motionPathToSvgD,
 	setMotionPathEnd,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React, { useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 

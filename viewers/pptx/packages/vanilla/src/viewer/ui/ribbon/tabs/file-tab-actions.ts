@@ -22,13 +22,13 @@ import type {
 	BackstagePage,
 	ResolvedCustomization,
 	ToolbarActionId,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	backstageCardsFor,
 	customizeBackstageCards,
 	EMPTY_RESOLVED_CUSTOMIZATION,
 	isActionHidden,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../../i18n';
 import { createEl } from '../../../render';

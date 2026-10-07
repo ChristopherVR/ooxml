@@ -13,7 +13,7 @@ import { effectScope, ref } from 'vue';
 
 const capturedDeps: { getSaveOptions?: () => PptxHandlerSaveOptions }[] = [];
 
-vi.mock(import('pptx-viewer-shared'), async (importOriginal) => {
+vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => {
 	const actual = await importOriginal();
 	return {
 		...actual,

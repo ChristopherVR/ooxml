@@ -26,7 +26,7 @@ import type {
 	DeckSaveState,
 	ViewerAddinStatus,
 	ViewerSettings,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	applyAutoCorrect,
 	applyPreferenceToOptions,
@@ -52,9 +52,9 @@ import {
 	resolveAutosaveIntervalSeconds,
 	viewerOptionsToPreferences,
 	writeStoredViewerPrefs,
-} from 'pptx-viewer-shared';
-import type { LocaleCatalogEntry } from 'pptx-viewer-shared/i18n';
-import { LOCALE_CATALOG } from 'pptx-viewer-shared/i18n';
+} from 'ooxml-ui/pptx';
+import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
+import { LOCALE_CATALOG } from 'ooxml-ui/pptx/i18n';
 import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

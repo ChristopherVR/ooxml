@@ -16,14 +16,14 @@ import type {
 	MasterViewDocument,
 	MasterViewTarget,
 	MasterViewWrite,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import {
 	buildInlineTextCommitPatch,
 	DEFAULT_MASTER_PAGE_SIZE,
 	deleteMasterViewElements,
 	masterViewPseudoSlide,
 	updateMasterViewElement,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { InlineListSession } from './inline-list-session';
 import { formatInlineListStyle } from './ribbon-text-helpers';
 import { SlideCanvasComponent } from './slide-canvas.component';

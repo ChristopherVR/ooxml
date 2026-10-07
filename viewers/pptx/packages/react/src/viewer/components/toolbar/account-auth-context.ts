@@ -7,7 +7,7 @@
  * component chain and the separate mobile `MobileMenuSheet` path.
  */
 
-import type { AccountAuthConfig } from 'pptx-viewer-shared';
+import type { AccountAuthConfig } from 'ooxml-ui/pptx';
 import { createContext } from 'react';
 
 /** `undefined` when the host has not opted in to a sign-in flow. */

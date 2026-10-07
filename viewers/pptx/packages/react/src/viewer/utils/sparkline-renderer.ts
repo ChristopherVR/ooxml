@@ -6,5 +6,5 @@
  * historical React import surface so consumers and colocated tests keep
  * importing the same names unchanged.
  */
-export type { SparklineData } from 'pptx-viewer-shared';
-export { renderSparklineSvg } from 'pptx-viewer-shared';
+export type { SparklineData } from 'ooxml-ui/pptx';
+export { renderSparklineSvg } from 'ooxml-ui/pptx';

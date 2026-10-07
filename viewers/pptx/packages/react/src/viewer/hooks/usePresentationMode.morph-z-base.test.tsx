@@ -18,7 +18,7 @@ import type { UsePresentationModeResult } from './usePresentationMode';
 
 const buildMorphTransitionPlan = vi.hoisted(() => vi.fn());
 
-vi.mock(import('pptx-viewer-shared'), async (importOriginal) => {
+vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => {
 	const actual = await importOriginal();
 	buildMorphTransitionPlan.mockImplementation(actual.buildMorphTransitionPlan);
 	return { ...actual, buildMorphTransitionPlan };

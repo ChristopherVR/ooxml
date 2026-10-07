@@ -1,4 +1,4 @@
-import type { ToolbarActionId } from 'pptx-viewer-shared';
+import type { ToolbarActionId } from 'ooxml-ui/pptx';
 import React, { useMemo } from 'react';
 
 import type { AutosaveStatus } from '../../hooks/useAutosave';

@@ -28,5 +28,5 @@ export {
 	resolveNotesSegments,
 	segmentsToParagraphs,
 	segmentsToPlainText,
-} from 'pptx-viewer-shared';
-export type { NotesParagraph } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+export type { NotesParagraph } from 'ooxml-ui/pptx';

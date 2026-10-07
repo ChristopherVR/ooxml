@@ -8,10 +8,10 @@
  * signature from the shared coordinate-only fallback.
  */
 
-import type { EyedropperResult } from 'pptx-viewer-shared';
+import type { EyedropperResult } from 'ooxml-ui/pptx';
 
-export type { EyedropperResult } from 'pptx-viewer-shared';
-export { openNativeEyeDropper } from 'pptx-viewer-shared';
+export type { EyedropperResult } from 'ooxml-ui/pptx';
+export { openNativeEyeDropper } from 'ooxml-ui/pptx';
 
 /**
  * Sample the colour of a pixel from a rendered slide element.

@@ -18,8 +18,8 @@ import {
 	homeLaunchers,
 	resolveActiveRibbonTab,
 	visibleContextualTabs,
-} from 'pptx-viewer-shared';
-import type { RibbonContextualTabId } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { RibbonContextualTabId } from 'ooxml-ui/pptx';
 import { computed, inject, onBeforeUnmount, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 

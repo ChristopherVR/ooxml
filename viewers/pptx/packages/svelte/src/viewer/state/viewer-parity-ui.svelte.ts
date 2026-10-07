@@ -1,5 +1,5 @@
-import type { DeckViewPreferences, Guide } from 'pptx-viewer-shared';
-import { DEFAULT_VIEWER_PREFERENCES } from 'pptx-viewer-shared';
+import type { DeckViewPreferences, Guide } from 'ooxml-ui/pptx';
+import { DEFAULT_VIEWER_PREFERENCES } from 'ooxml-ui/pptx';
 
 import { CompareController } from '../compare/compare-controller.svelte';
 import { PresentToolbarChrome } from '../components/presentation-toolbar.svelte';

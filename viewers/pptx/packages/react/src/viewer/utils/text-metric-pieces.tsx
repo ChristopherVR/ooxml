@@ -1,10 +1,10 @@
-import type { EastAsianBreakOptions, RunFontSpec } from 'pptx-viewer-shared';
+import type { EastAsianBreakOptions, RunFontSpec } from 'ooxml-ui/pptx';
 import {
 	followingText,
 	pieceLetterSpacing,
 	splitEastAsianBreaks,
 	splitRunForMetrics,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React from 'react';
 
 /** What a caller needs to give a run's pieces their own metric tracking. */

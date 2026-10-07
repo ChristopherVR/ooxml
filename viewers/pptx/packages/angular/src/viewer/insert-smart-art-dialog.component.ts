@@ -30,8 +30,8 @@ import {
 import { TranslatePipe } from '@ngx-translate/core';
 import type { SmartArtLayout } from 'pptx-viewer-core';
 
-import { CATEGORIES } from '../internal/shared';
-import type { SmartArtCategory } from '../internal/shared';
+import { CATEGORIES } from 'ooxml-ui/pptx';
+import type { SmartArtCategory } from 'ooxml-ui/pptx';
 import type { DialogFooterActionSpec } from './dialog-footer.component';
 import { DialogFooterComponent } from './dialog-footer.component';
 import { ModalDialogComponent } from './modal-dialog.component';

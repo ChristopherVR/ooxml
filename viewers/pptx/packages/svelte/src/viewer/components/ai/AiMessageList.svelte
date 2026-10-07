@@ -7,8 +7,8 @@
 	import Bot from '@lucide/svelte/icons/bot';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import User from '@lucide/svelte/icons/user';
-	import { toRenderableParts } from 'pptx-viewer-shared/ai';
-	import type { PptxAiUIMessage } from 'pptx-viewer-shared/ai';
+	import { toRenderableParts } from 'ooxml-ui/pptx/ai';
+	import type { PptxAiUIMessage } from 'ooxml-ui/pptx/ai';
 
 	import { useTranslator } from '../../../i18n/context';
 	import AiToolCallCard from './AiToolCallCard.svelte';

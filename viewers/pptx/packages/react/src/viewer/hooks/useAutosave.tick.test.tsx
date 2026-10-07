@@ -16,12 +16,12 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { useAutosave } from './useAutosave';
 
-vi.mock(import('pptx-viewer-shared'), async () => {
-	const actual = await vi.importActual<typeof import('pptx-viewer-shared')>('pptx-viewer-shared');
+vi.mock(import('ooxml-ui/pptx'), async () => {
+	const actual = await vi.importActual<typeof import('ooxml-ui/pptx')>('ooxml-ui/pptx');
 	return { ...actual, saveAutosaveSnapshot: vi.fn(async () => true) };
 });
 
-const { saveAutosaveSnapshot } = await import('pptx-viewer-shared');
+const { saveAutosaveSnapshot } = await import('ooxml-ui/pptx');
 
 let container: HTMLDivElement;
 let root: Root;

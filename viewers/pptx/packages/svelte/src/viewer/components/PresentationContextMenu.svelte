@@ -14,11 +14,11 @@
 		CONTEXT_MENU_PRESENTATION_LAYER,
 		getPresentationContextMenuSections,
 		presentationViewItems,
-	} from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
 	import type {
 		PresentationContextMenuActionId,
 		PresentationContextMenuCapabilities,
-	} from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 	import ContextMenuSurface from './ContextMenuSurface.svelte';

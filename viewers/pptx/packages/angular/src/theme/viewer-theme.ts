@@ -1,8 +1,8 @@
 import { InjectionToken } from '@angular/core';
 import type { Provider } from '@angular/core';
 
-import { themeToCssVars } from '../internal/shared';
-import type { ViewerTheme } from '../internal/shared';
+import { themeToCssVars } from 'ooxml-ui/pptx';
+import type { ViewerTheme } from 'ooxml-ui/pptx';
 
 /**
  * Theme system for the Angular PowerPoint viewer.

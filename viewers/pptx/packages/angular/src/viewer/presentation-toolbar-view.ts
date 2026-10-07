@@ -6,8 +6,8 @@
  *
  * Framework-free (no Angular imports) so it can be unit-tested without TestBed.
  */
-import { AUTO_HIDE_DELAY_MS, toggleBlackboard } from '../internal/shared';
-import type { PresentationBlackout, PresentationPointerTool } from '../internal/shared';
+import { AUTO_HIDE_DELAY_MS, toggleBlackboard } from 'ooxml-ui/pptx';
+import type { PresentationBlackout, PresentationPointerTool } from 'ooxml-ui/pptx';
 
 // ---------------------------------------------------------------------------
 // Control ids

@@ -21,7 +21,7 @@ import {
 	getCachedBarFacePicturePixelColor,
 	resetBarFacePicturePixelCacheForTests,
 	resolveUntargetedBarFaceFill,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';

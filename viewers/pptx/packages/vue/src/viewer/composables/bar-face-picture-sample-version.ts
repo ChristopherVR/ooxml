@@ -15,7 +15,7 @@
 import {
 	getBarFacePicturePixelSampleVersion,
 	subscribeBarFacePicturePixelSamples,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type { Ref } from 'vue';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 

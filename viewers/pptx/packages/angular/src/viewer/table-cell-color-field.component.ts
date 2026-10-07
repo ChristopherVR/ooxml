@@ -16,8 +16,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
 import type { PptxThemeColorRef } from 'pptx-viewer-core';
 
-import type { ThemeColorPickerCommit } from '../internal/shared';
-import { normalizeHexColor } from '../internal/shared';
+import type { ThemeColorPickerCommit } from 'ooxml-ui/pptx';
+import { normalizeHexColor } from 'ooxml-ui/pptx';
 import { RecentColorsService } from './recent-colors.service';
 import { ThemeColorSwatchGridComponent } from './theme-color-swatch-grid.component';
 

@@ -5,7 +5,7 @@
  * `$effect` re-runs only when the value it tracked actually changed, so an
  * unrelated slice moving must cost this nothing (issue #145).
  */
-import { createViewerStore } from 'pptx-viewer-shared';
+import { createViewerStore } from 'ooxml-ui/pptx';
 import { flushSync } from 'svelte';
 import { describe, it, expect, vi } from 'vitest';
 

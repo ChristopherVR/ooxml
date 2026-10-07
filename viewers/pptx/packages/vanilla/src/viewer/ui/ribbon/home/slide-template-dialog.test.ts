@@ -1,4 +1,4 @@
-import { SLIDE_TEMPLATES } from 'pptx-viewer-shared';
+import { SLIDE_TEMPLATES } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../../../i18n';

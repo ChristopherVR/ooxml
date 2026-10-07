@@ -1,5 +1,5 @@
 import type { PptxSection, PptxSlide, PptxTextStyleLevels, TextSegment } from 'pptx-viewer-core';
-import type { CanvasSize, ToolbarActionId } from 'pptx-viewer-shared';
+import type { CanvasSize, ToolbarActionId } from 'ooxml-ui/pptx';
 
 import type { ExportUiState } from '../export/export-ui.svelte';
 import type { AutosaveStatus } from '../state/autosave.svelte';

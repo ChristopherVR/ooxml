@@ -1,5 +1,5 @@
 import type { PptxHandoutMaster, PptxSlide } from 'pptx-viewer-core';
-import type { CanvasSize, PrintSettings } from 'pptx-viewer-shared';
+import type { CanvasSize, PrintSettings } from 'ooxml-ui/pptx';
 import {
 	buildHandoutsHtml,
 	buildNotesHtml,
@@ -10,7 +10,7 @@ import {
 	computeSlideIndices,
 	filterHiddenSlideIndices,
 	validatePrintSettings,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { RasterizeSlide } from './export-controller.svelte';
 import { exportSlideToSvg } from './export-svg';

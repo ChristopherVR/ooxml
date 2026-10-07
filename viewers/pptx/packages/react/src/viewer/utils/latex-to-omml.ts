@@ -11,4 +11,4 @@
  * No deliberate divergence: React's previous local modules were behaviourally
  * equivalent to shared's consolidated implementation.
  */
-export { convertLatexToOmml, convertOmmlToLatex } from 'pptx-viewer-shared';
+export { convertLatexToOmml, convertOmmlToLatex } from 'ooxml-ui/pptx';

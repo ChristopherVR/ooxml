@@ -30,7 +30,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import type { PptxElement } from 'pptx-viewer-core';
 import { ooxmlGradientAngleToCssDegrees } from 'pptx-viewer-core';
 
-import type { ThemeColorPickerCommit } from '../internal/shared';
+import type { ThemeColorPickerCommit } from 'ooxml-ui/pptx';
 import { isSelectControl } from './control-event-targets';
 import {
 	addGradientStopPatch,

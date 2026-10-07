@@ -1,5 +1,5 @@
-import { DEFAULT_VIEWER_OPTIONS, isPanelVisible } from 'pptx-viewer-shared';
-import type { ViewerQuickAccessOptions } from 'pptx-viewer-shared';
+import { DEFAULT_VIEWER_OPTIONS, isPanelVisible } from 'ooxml-ui/pptx';
+import type { ViewerQuickAccessOptions } from 'ooxml-ui/pptx';
 import { computed, inject } from 'vue';
 import type { ComputedRef } from 'vue';
 

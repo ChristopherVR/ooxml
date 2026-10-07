@@ -1,4 +1,4 @@
-import type { FragmentedLayer, TransitionFragment } from 'pptx-viewer-shared';
+import type { FragmentedLayer, TransitionFragment } from 'ooxml-ui/pptx';
 
 /**
  * Build one transition layer (outgoing or incoming) as N clipped clones of the

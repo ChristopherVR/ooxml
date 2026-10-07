@@ -19,12 +19,12 @@ import {
 	applyMasterViewCrudAction,
 	masterViewCrudActions,
 	masterViewCrudFailureKey,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type {
 	MasterViewCrudAction,
 	MasterViewCrudActionId,
 	MasterViewTarget,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { computed, ref } from 'vue';
 import type { ComputedRef, Ref, ShallowRef } from 'vue';
 import { useI18n } from 'vue-i18n';

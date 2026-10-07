@@ -6,7 +6,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import type { CollaborationConfig } from '../internal/shared';
+import type { CollaborationConfig } from 'ooxml-ui/pptx';
 import {
 	buildCollaborationConfig,
 	buildShareUrl,

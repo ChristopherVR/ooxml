@@ -3,7 +3,7 @@ import type {
 	InlineTextEditSnapshot,
 	PlaceholderPromptMode,
 	ZoomNavigationTarget,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type React from 'react';
 
 import type { TableCellEditorState } from '../../types';

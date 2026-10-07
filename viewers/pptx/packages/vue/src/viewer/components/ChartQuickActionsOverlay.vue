@@ -27,7 +27,7 @@ import {
 	CHART_QUICK_ACTION_BUTTON_SIZE,
 	hideChartSeries,
 	restoreFilteredSeries,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 

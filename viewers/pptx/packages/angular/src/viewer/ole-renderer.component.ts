@@ -3,8 +3,8 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 import { TranslatePipe } from '@ngx-translate/core';
 import type { OlePptxElement, PptxElement } from 'pptx-viewer-core';
 
-import { getOleIconShapes, openUrlInNewTab } from '../internal/shared';
-import type { OleIconShape } from '../internal/shared';
+import { getOleIconShapes, openUrlInNewTab } from 'ooxml-ui/pptx';
+import type { OleIconShape } from 'ooxml-ui/pptx';
 import type { StyleMap } from './element-style';
 import {
 	buildOleActionModel,

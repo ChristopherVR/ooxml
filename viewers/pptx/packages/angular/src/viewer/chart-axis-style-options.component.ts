@@ -24,7 +24,7 @@ import type {
 	PptxChartAxisType,
 } from 'pptx-viewer-core';
 
-import { GRIDLINE_DASH_OPTIONS } from '../internal/shared';
+import { GRIDLINE_DASH_OPTIONS } from 'ooxml-ui/pptx';
 import { setAxisLogScale, setAxisTitleStyle, setGridlineStyle } from './chart-data-helpers';
 import { CHART_EDITOR_STYLES } from './chart-editor-styles';
 import { boolFromEvent, numFromEvent, selectValue, stringFromEvent } from './chart-event-helpers';

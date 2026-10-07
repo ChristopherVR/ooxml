@@ -42,8 +42,8 @@ import {
 } from '@lucide/angular';
 import { TranslatePipe } from '@ngx-translate/core';
 
-import { isActionHidden } from '../internal/shared';
-import type { ToolbarActionId } from '../internal/shared';
+import { isActionHidden } from 'ooxml-ui/pptx';
+import type { ToolbarActionId } from 'ooxml-ui/pptx';
 import { toolbarVisibility } from './toolbar-visibility';
 import { ViewerCustomizationService } from './viewer-customization.service';
 

@@ -3,7 +3,7 @@ import {
 	schemaLabel,
 	SMARTART_COLOR_SCHEME_LABEL_KEYS,
 	SMARTART_STYLE_LABEL_KEYS,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 

@@ -2,8 +2,8 @@ import type {
 	RibbonGalleryApplyResult,
 	RibbonGalleryContext,
 	RibbonGalleryId,
-} from 'pptx-viewer-shared';
-import { applyRibbonGalleryItem } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import { applyRibbonGalleryItem } from 'ooxml-ui/pptx';
 
 /** A mounted gallery control the hub keeps in step with the selection. */
 export interface RibbonGalleryView {

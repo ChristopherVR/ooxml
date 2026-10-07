@@ -7,16 +7,16 @@ import type {
 	ViewerOptionsTabDefinition,
 	ViewerOptionsTabId,
 	ViewerTheme,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	cloneViewerOptions,
 	customizeOptionsTabs,
 	EMPTY_RESOLVED_CUSTOMIZATION,
 	isOptionsPageVisible,
 	VIEWER_OPTIONS_TABS,
-} from 'pptx-viewer-shared';
-import type { PptxAiChatStore } from 'pptx-viewer-shared/ai';
-import type { LocaleCatalogEntry } from 'pptx-viewer-shared/i18n';
+} from 'ooxml-ui/pptx';
+import type { PptxAiChatStore } from 'ooxml-ui/pptx/ai';
+import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
 
 import { createAiSettingsSection } from '../ai/ai-settings-section';
 import type { Translator } from '../i18n';

@@ -13,7 +13,7 @@
  * bumps its own state once they land so components re-render and pick them
  * up from this same cache.
  */
-import { GlyphOutlineFontCache, createGlyphOutlineLookup } from 'pptx-viewer-shared';
+import { GlyphOutlineFontCache, createGlyphOutlineLookup } from 'ooxml-ui/pptx';
 
 export const glyphOutlineFontCache = new GlyphOutlineFontCache();
 

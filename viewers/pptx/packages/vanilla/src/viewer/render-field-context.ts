@@ -1,6 +1,6 @@
 import type { PptxSlide } from 'pptx-viewer-core';
-import type { FieldSubstitutionContext } from 'pptx-viewer-shared';
-import { buildFieldSubstitutionContext } from 'pptx-viewer-shared';
+import type { FieldSubstitutionContext } from 'ooxml-ui/pptx';
+import { buildFieldSubstitutionContext } from 'ooxml-ui/pptx';
 
 import type { ViewerState } from './state';
 

@@ -1,6 +1,6 @@
 import type { AccessibilityIssue } from 'pptx-viewer-core';
-import type { AccessibilityIssueGroup } from 'pptx-viewer-shared';
-import { groupIssuesBySeverity, issueTrackKey, issueTypeLabel } from 'pptx-viewer-shared';
+import type { AccessibilityIssueGroup } from 'ooxml-ui/pptx';
+import { groupIssuesBySeverity, issueTrackKey, issueTypeLabel } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import { createEl } from '../render';

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { chartPartToAttrs, computeChartLegendLayout } from 'pptx-viewer-shared';
+import { chartPartToAttrs, computeChartLegendLayout } from 'ooxml-ui/pptx';
 import type {
 	ChartPartRef,
 	ChartViewModel,
@@ -11,7 +11,7 @@ import type {
 	SvgPrimitive,
 	SvgRect,
 	SvgText,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 
 /**

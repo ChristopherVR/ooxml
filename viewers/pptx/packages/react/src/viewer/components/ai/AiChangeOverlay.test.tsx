@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
-import type { AiChangeBatch } from 'pptx-viewer-shared/ai';
-import { resolveChangeAnimationConfig } from 'pptx-viewer-shared/ai';
+import type { AiChangeBatch } from 'ooxml-ui/pptx/ai';
+import { resolveChangeAnimationConfig } from 'ooxml-ui/pptx/ai';
 import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';

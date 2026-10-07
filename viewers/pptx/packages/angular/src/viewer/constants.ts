@@ -8,4 +8,4 @@ export {
 	DEFAULT_TEXT_COLOR,
 	DEFAULT_FILL_COLOR,
 	DEFAULT_STROKE_COLOR,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';

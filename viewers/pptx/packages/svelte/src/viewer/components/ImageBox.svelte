@@ -19,8 +19,8 @@
 		resolveColorChangedImageSource,
 		resolveShapeGeometry,
 		shouldRenderHitTarget,
-	} from 'pptx-viewer-shared';
-	import type { NativeImageSize } from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
+	import type { NativeImageSize } from 'ooxml-ui/pptx';
 
 	import { getContainerStyle, getElementHitTargetStyle, getImageSrc, styleToString } from '../style';
 	import type { ElementRendererProps } from './props';

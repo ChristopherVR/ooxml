@@ -9,7 +9,7 @@
 	 * member is gated by exactly one flag, which reads far better as its own
 	 * component than as eight sibling `{#if}` blocks buried in the body.
 	 */
-	import { motionPathFor } from 'pptx-viewer-shared';
+	import { motionPathFor } from 'ooxml-ui/pptx';
 
 	import CollaborationCursors from '../collab/components/CollaborationCursors.svelte';
 	import RemoteSelectionOverlay from '../collab/components/RemoteSelectionOverlay.svelte';

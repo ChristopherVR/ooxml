@@ -5,7 +5,7 @@
 	 * tile, scale and placeholder frames; this binding owns element rendering).
 	 */
 	import type { PptxLayoutPreview, PptxSlide } from 'pptx-viewer-core';
-	import type { LayoutPreviewGeometry } from 'pptx-viewer-shared';
+	import type { LayoutPreviewGeometry } from 'ooxml-ui/pptx';
 
 	import SlideStage from '../../SlideStage.svelte';
 

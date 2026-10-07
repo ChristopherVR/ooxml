@@ -1,5 +1,5 @@
-import { smartArtConnectorPaint, smartArtNodeLabel } from 'pptx-viewer-shared';
-import type { RenderedNode, SmartArtLayoutResult, SmartArtNodeA11y } from 'pptx-viewer-shared';
+import { smartArtConnectorPaint, smartArtNodeLabel } from 'ooxml-ui/pptx';
+import type { RenderedNode, SmartArtLayoutResult, SmartArtNodeA11y } from 'ooxml-ui/pptx';
 
 import { createSvgEl } from '../dom';
 import { appendSvgTextLines, SMARTART_SVG_STYLE } from './smartart-svg';

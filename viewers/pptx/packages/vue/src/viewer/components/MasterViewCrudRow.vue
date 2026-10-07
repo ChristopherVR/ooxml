@@ -9,7 +9,7 @@
  * PowerPoint's own rules. Split out of `MasterViewSidebar.vue` to keep that
  * file under the repo's ~300 LOC convention.
  */
-import type { MasterViewCrudAction, MasterViewCrudActionId } from 'pptx-viewer-shared';
+import type { MasterViewCrudAction, MasterViewCrudActionId } from 'ooxml-ui/pptx';
 import { useI18n } from 'vue-i18n';
 
 defineProps<{

@@ -11,7 +11,7 @@ import type {
 /**
  * SlideCanvas: Type definitions for the canvas component props.
  */
-import type { InlineTextEditSnapshot, ZoomNavigationTarget } from 'pptx-viewer-shared';
+import type { InlineTextEditSnapshot, ZoomNavigationTarget } from 'ooxml-ui/pptx';
 import type React from 'react';
 
 import type {

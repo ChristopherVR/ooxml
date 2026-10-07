@@ -14,7 +14,7 @@ import {
 	OUTLINE_ROW_ATTR,
 	OUTLINE_SLIDE_ATTR,
 	OUTLINE_VIEW_ATTR,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../i18n';

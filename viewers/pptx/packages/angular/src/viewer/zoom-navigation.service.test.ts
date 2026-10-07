@@ -7,7 +7,7 @@
  */
 import { describe, expect, it, vi } from 'vitest';
 
-import type { ZoomNavigationTarget } from '../internal/shared';
+import type { ZoomNavigationTarget } from 'ooxml-ui/pptx';
 import { ZoomNavigationService } from './zoom-navigation.service';
 
 function target(overrides: Partial<ZoomNavigationTarget> = {}): ZoomNavigationTarget {

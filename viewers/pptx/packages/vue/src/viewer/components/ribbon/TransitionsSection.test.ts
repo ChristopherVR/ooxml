@@ -4,7 +4,7 @@ import {
 	EFFECT_SOUND_CATALOGUE,
 	registerPptxWebControls,
 	TRANSITION_PREVIEW_ATTR,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
 import { setControlValue } from '../inspector/test-control-value';

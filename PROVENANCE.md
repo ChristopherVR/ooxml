@@ -459,3 +459,26 @@ existing module until the new UI exports are published. No product palette is ch
 The chart-grid viewer facade was restored to its original implementation in
 the follow-up commit to remain compatible with published core versions. Both
 viewer adoption steps are tracked in `docs/pptx-shared-migration.md`.
+
+## PowerPoint shared renderer and document operations
+
+Extracted the complete `viewers/pptx/packages/shared/src` implementation at
+`c666f2ee933be0b0be83a0ef4e3e094c1620fe61` (original repository `ChristopherVR/pptx-viewer`) into
+`src/ui/src/pptx`, with DOM-free document operations in `src/core/pptx/editor`.
+Tool schemas moved from `viewers/pptx/packages/tools/src/schemas` into
+`src/core/pptx/automation/schemas` at the same commit.
+
+[The module inventory](docs/pptx-migration-provenance.json) records each source
+and destination. Imports now use the published core/UI entry points, fixture
+references follow the moved tests, and shared palette/grid policy is reused.
+The private shared package retains compatibility exports. Angular consumes
+public UI entries instead of copying the renderer into its published output.
+
+The combo-chart and table-subscript follow-up in PR #15 adds five modules from
+`IHAGI-c/ooxml` at `824b9366dae65664316082dcfce4b7aebdfe44f7`:
+`chart-bar-cluster-geometry.ts`, `chart-combo-format.test.ts`,
+`chart-series-line-style.ts`, `chart-series-line-style.test.ts` and
+`table-cell-padding.ts`. Their source directory was
+`viewers/pptx/packages/shared/src/render`; they now live in
+`src/ui/src/pptx/render`. Type imports use `ooxml-core/pptx`, matching the
+renderer migration; their implementations and regression assertions are preserved.

@@ -1,33 +1,9 @@
-/**
- * Inline the internal, non-published `pptx-viewer-shared` package into this
- * Angular library before compilation.
- *
- * ng-packagr externalizes bare-specifier dependencies and cannot reliably
- * compile source from outside the package directory. So we copy
- * `packages/shared/src` into `packages/angular/src/internal/shared-src` (a
- * generated, git-ignored directory) and import it locally. The result is that
- * the shared code ships **inlined** in the FESM and `pptx-viewer-shared` never
- * appears in the published `package.json`; it stays a private workspace
- * package.
- *
- * Runs before `build`, `typecheck`, and `test`. Test files are excluded.
- */
-import { cpSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+// Stamp the binding version; the renderer is imported from ooxml-ui/pptx.
+import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const src = resolve(here, '../../shared/src');
-const dest = resolve(here, '../src/internal/shared-src');
-
-rmSync(dest, { recursive: true, force: true });
-cpSync(src, dest, {
-	recursive: true,
-	filter: (path) => !path.endsWith('.test.ts'),
-});
-
-console.log(`[inline-shared] copied ${src} -> ${dest}`);
-
 // Also stamp this package's own `package.json` version into a tiny generated
 // module (`internal/version.ts`), so File > Account's About panel can show a
 // real version without ng-packagr trying to compile source from outside

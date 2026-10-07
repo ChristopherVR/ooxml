@@ -1,4 +1,4 @@
-import type { ZoomNavigationTarget } from 'pptx-viewer-shared';
+import type { ZoomNavigationTarget } from 'ooxml-ui/pptx';
 import type { InjectionKey } from 'vue';
 import { inject, provide } from 'vue';
 

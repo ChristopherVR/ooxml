@@ -6,8 +6,8 @@
  * budget; this module holds no state of its own, only callbacks into the
  * controller's fields.
  */
-import type { ConnectionStatus, SyncGate } from 'pptx-viewer-shared';
-import { CONNECTION_TIMEOUT_MS } from 'pptx-viewer-shared';
+import type { ConnectionStatus, SyncGate } from 'ooxml-ui/pptx';
+import { CONNECTION_TIMEOUT_MS } from 'ooxml-ui/pptx';
 
 import type { CollabProviderHandle } from './collaboration-provider';
 

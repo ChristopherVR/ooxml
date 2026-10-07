@@ -1,4 +1,4 @@
-import { getPasswordStrength, validatePasswordPair } from 'pptx-viewer-shared';
+import { getPasswordStrength, validatePasswordPair } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import { createEl } from '../render';

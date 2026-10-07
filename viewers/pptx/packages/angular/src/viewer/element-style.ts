@@ -14,7 +14,7 @@ import {
 	getContainerStyle as sharedGetContainerStyle,
 	getImageSrc as sharedGetImageSrc,
 	px,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { buildDuotoneFilter } from './duotone-filter';
 import type { DuotoneFilterDef } from './duotone-filter';
 import { getSoftEdgeFilterDef, resolveShapeFilterCss } from './element-effect-defs';

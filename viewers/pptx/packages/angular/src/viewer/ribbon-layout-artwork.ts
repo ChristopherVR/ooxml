@@ -8,7 +8,7 @@ import { ChangeDetectionStrategy, Component, createComponent, input } from '@ang
 import type { ApplicationRef, EnvironmentInjector, Injector } from '@angular/core';
 import type { PptxLayoutPreview } from 'pptx-viewer-core';
 
-import type { HomeLayoutArtwork } from '../internal/shared';
+import type { HomeLayoutArtwork } from 'ooxml-ui/pptx';
 import { ElementRendererComponent } from './element-renderer.component';
 
 /** Cap on artwork drawn per thumbnail; layouts never legitimately exceed this. */

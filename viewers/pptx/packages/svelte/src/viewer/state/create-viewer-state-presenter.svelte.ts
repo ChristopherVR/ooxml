@@ -1,4 +1,4 @@
-import { endAudienceDisplay } from 'pptx-viewer-shared';
+import { endAudienceDisplay } from 'ooxml-ui/pptx';
 import { onDestroy, onMount } from 'svelte';
 
 import { PresenterSession } from '../presentation';

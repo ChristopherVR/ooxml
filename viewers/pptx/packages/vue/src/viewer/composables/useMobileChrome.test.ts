@@ -2,7 +2,7 @@
 // Vue composable under test, which the react-hooks plugin mistakes for a React
 // hook call site (same false positive suppressed the same way in
 // useAccessibility.test.ts and its siblings in this directory).
-import { toggleSheet } from 'pptx-viewer-shared';
+import { toggleSheet } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 import { ref } from 'vue';
 

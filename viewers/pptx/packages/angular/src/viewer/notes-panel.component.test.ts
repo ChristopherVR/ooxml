@@ -21,7 +21,7 @@ import {
 	buildNotesPrintHtml,
 	resolveNotesSegments,
 	segmentsToEditorHtml,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 

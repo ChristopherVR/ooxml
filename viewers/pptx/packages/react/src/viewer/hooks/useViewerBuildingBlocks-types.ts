@@ -3,7 +3,7 @@ import type {
 	CollaborationShellState,
 	ToolbarActionId,
 	ViewportFitOptions,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type React from 'react';
 
 import type { SlideCanvasProps } from '../components/canvas/canvas-types';

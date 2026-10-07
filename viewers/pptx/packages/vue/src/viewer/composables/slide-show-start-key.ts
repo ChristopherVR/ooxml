@@ -1,4 +1,4 @@
-import { mapSlideShowStartKey } from 'pptx-viewer-shared';
+import { mapSlideShowStartKey } from 'ooxml-ui/pptx';
 
 /**
  * The "From Beginning" / "From Current Slide" entry points, named exactly like

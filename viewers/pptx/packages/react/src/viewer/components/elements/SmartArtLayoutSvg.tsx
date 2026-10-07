@@ -1,4 +1,4 @@
-import type { RenderedConnector, RenderedNode, SmartArtLayoutResult } from 'pptx-viewer-shared';
+import type { RenderedConnector, RenderedNode, SmartArtLayoutResult } from 'ooxml-ui/pptx';
 import React from 'react';
 
 import { smartArtNodeGroupProps, SmartArtNodeText } from './smartart-renderer-utils';

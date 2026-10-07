@@ -1,5 +1,5 @@
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
-import { readCropInsets as insets } from 'pptx-viewer-shared';
+import { readCropInsets as insets } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createInitialViewerState, createStore } from '../state';

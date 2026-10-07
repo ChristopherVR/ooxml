@@ -10,8 +10,8 @@ import {
 	resolveImageResolutionScale,
 	resolveSlideSizeSelection,
 	tableStyleSaveOptions,
-} from 'pptx-viewer-shared';
-import type { FieldSubstitutionContext } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { FieldSubstitutionContext } from 'ooxml-ui/pptx';
 
 import { provideTranslator } from '../../i18n/context';
 import { createDeckApi } from '../editor/deck-api';

@@ -2,13 +2,13 @@ import {
 	buildTitleBarState,
 	registerPptxWebControls,
 	resolveTitleBarStrip,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type {
 	PptxUiTitleBarElement,
 	TitleBarCommandSearchEvent,
 	TitleBarEvent,
 	ToolbarActionId,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import type { RibbonEditState } from './ribbon/ribbon-types';

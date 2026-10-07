@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
 import type { PptxSlide } from 'pptx-viewer-core';
-import type { PptxAiFocusedTarget } from 'pptx-viewer-shared/ai';
+import type { PptxAiFocusedTarget } from 'ooxml-ui/pptx/ai';
 import { describe, expect, it } from 'vitest';
 
 import AiFocusBar from './AiFocusBar.vue';
