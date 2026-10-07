@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 
 import ts from 'typescript';
 
-import { translationsEn } from '../packages/shared/src/i18n/translations-en';
+import { translationsEn } from '../../../src/ui/src/pptx/i18n/translations-en';
 import { localeSectionNameForKey, MAX_LOCALE_SECTION_ENTRIES } from './locale-sections';
 
 const ROOT = resolve(import.meta.dir, '..');
@@ -63,7 +63,10 @@ async function loadLiteralObject(
 }
 
 async function loadCurated(exportName: string): Promise<Record<string, string>> {
-	return loadLiteralObject(resolve(ROOT, '..', '..', 'demos', 'pptx', 'demo-react', 'i18n-locales.ts'), exportName);
+	return loadLiteralObject(
+		resolve(ROOT, '..', '..', 'demos', 'pptx', 'demo-react', 'i18n-locales.ts'),
+		exportName,
+	);
 }
 
 async function loadGenerated(locale: string): Promise<Record<string, string>> {

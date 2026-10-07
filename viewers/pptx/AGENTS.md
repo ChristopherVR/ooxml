@@ -9,7 +9,7 @@ file adds what is specific to the PowerPoint viewer. `CLAUDE.md` only imports
 it, so edit this file and never fork the two.
 
 Paths below are relative to `viewers/pptx` unless they start at the repository
-root (`src/core/...`, `demos/pptx/...`, `e2e/pptx/...`).
+root (`src/core/...`, `src/ui/...`, `demos/pptx/...`, `e2e/pptx/...`).
 
 ## READ FIRST: the two rules that govern every UI change
 
@@ -51,13 +51,13 @@ framework-specific" means Angular change detection, Svelte 5 runes, React effect
 ordering, and the like. A wrong colour, a mis-clipped shape, an off-by-one drag
 handle, or a dialog that will not open is almost never framework-specific.
 
-### Rule 2: share Office logic in OOXML and view behavior in `pptx-viewer-shared`
+### Rule 2: share Office logic in OOXML and view behavior in `ooxml-ui/pptx`
 
 When you touch logic in a binding, **first decide whether it is Office logic or
 view behavior**. Pure document, chart-data, color, geometry and text algorithms
 belong in the core at `src/core/` of this repository, under a neutral area
 when other formats can use them. Framework-independent view descriptors and editor interaction belong in
-`packages/shared/src/render/`. Move the implementation to its owner. This is
+`src/ui/src/pptx/render/`. Move the implementation to its owner. This is
 not a cleanup task to schedule later; it is how the parity rule above is made
 cheap. Logic that lives in shared is fixed once for all five bindings, and never
 drifts.
@@ -82,14 +82,14 @@ Both rules are expanded, with the concrete failures that motivated them, under
 
 The viewer is UI only. Everything else is in this repository or a sibling one:
 
-| Where                                         | npm package                         | Owns                                                                                                                                                                                                          |
-| --------------------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `viewers/pptx` (this folder)                  | `pptx-*-viewer`, `pptx-viewer-core` | The five bindings, the internal `shared` view logic, locales, MCP tools, installer, docs site. `packages/core` is only a thin public entry point.                                                              |
-| `demos/pptx/`, `e2e/pptx/` (repository root)  | not published                       | The five framework demos (and the files they share) and the Playwright specs with their fixtures. Playwright is still configured and run from here.                                                           |
+| Where                                         | npm package                         | Owns                                                                                                                                                                                                           |
+| --------------------------------------------- | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `viewers/pptx` (this folder)                  | `pptx-*-viewer`, `pptx-viewer-core` | The five bindings, compatibility facades, locales, MCP tools, installer, docs site. `packages/core` is only a thin public entry point.                                                                         |
+| `demos/pptx/`, `e2e/pptx/` (repository root)  | not published                       | The five framework demos (and the files they share) and the Playwright specs with their fixtures. Playwright is still configured and run from here.                                                            |
 | `src/core` (repository root)                  | `ooxml-core`                        | **All OOXML logic.** The PowerPoint engine (parse, edit, serialize, theme resolution, geometry, charts, SmartArt, animation model, converter, CLI, signatures) is its `pptx` area; shared areas sit beside it. |
-| `src/ui` (repository root)                    | `ooxml-ui`                          | The shared Lit elements (ribbon, dialogs, menus) the bindings subclass.                                                                                                                                       |
-| ChristopherVR/ole2                            | `@christophervr/ole2`               | **Legacy binary formats**: CFB/OLE2, `.doc`, `.xls`, `.ppt` reading and writing, RC4 CryptoAPI. A pinned dev dependency of the core whose codecs are inlined into its bundles.                                |
-| ChristopherVR/emf-converter, mtx-decompressor | `emf-converter`, `mtx-decompressor` | EMF/WMF rendering and embedded EOT font decompression.                                                                                                                                                        |
+| `src/ui` (repository root)                    | `ooxml-ui`                          | Shared Lit elements and the PowerPoint renderer, web components, browser lifecycle and themes.                                                                                                                 |
+| ChristopherVR/ole2                            | `@christophervr/ole2`               | **Legacy binary formats**: CFB/OLE2, `.doc`, `.xls`, `.ppt` reading and writing, RC4 CryptoAPI. A pinned dev dependency of the core whose codecs are inlined into its bundles.                                 |
+| ChristopherVR/emf-converter, mtx-decompressor | `emf-converter`, `mtx-decompressor` | EMF/WMF rendering and embedded EOT font decompression.                                                                                                                                                         |
 
 How they connect:
 
@@ -99,9 +99,9 @@ How they connect:
   `/geometry` and `/color` APIs. Its `src/` holds thin entry files and an
   entry-point contract test, nothing else. In the workspace it links to
   `src/core` itself, so it always sees the current engine.
-- The bindings bundle `pptx-viewer-core`, `pptx-viewer-shared`,
-  `pptx-viewer-locales` and the core code they reach; their packages declare
-  none of them. That is why a change to the core's `pptx` area (or a shared
+- The bindings bundle `pptx-viewer-core`, `pptx-viewer-locales` and the core
+  code they reach. They declare `ooxml-ui` as a runtime dependency and consume
+  its public PowerPoint entries. A change to the core's `pptx` area (or a shared
   area it uses) releases the bindings (`scripts/viewer-packages.mjs` at the
   repository root).
 - Modern OOXML never goes into ole2; binary codecs never go into the core;
@@ -109,17 +109,18 @@ How they connect:
 
 ### Where does my change go?
 
-| The change is about...                                                                                                | Make it in                                                     |
-| --------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| Parsed model is wrong: a value missing/misread from the XML, theme/placeholder inheritance, save/round-trip loss      | `src/core/pptx/` at the root (with a round-trip test there)    |
-| Unit, colour, geometry or preset-shape maths reused across Office formats                                             | `src/core/{units,color,geometry,chart,...}/` at the root       |
-| `.ppt` / `.doc` / `.xls` binary reading or writing, CFB containers, RC4 encryption                                    | ChristopherVR/ole2 (with a fixture-based test there)           |
-| EMF/WMF pictures or embedded EOT fonts render wrong                                                                   | ChristopherVR/emf-converter / mtx-decompressor                 |
-| How a correctly parsed element is drawn, laid out, hit-tested, animated or exported; any UI decision 2+ bindings need | `packages/shared/src/render/`                                  |
-| Template/JSX wiring, framework reactivity, binding-only chrome                                                        | `packages/{react,vue,angular,svelte,vanilla}/src/` (all five)  |
-| UI strings                                                                                                            | `packages/shared/src/i18n/` + `packages/locales/src/<locale>/` |
-| AI/MCP tool functions and schemas                                                                                     | `packages/tools/src/`                                          |
-| A demo app, or a browser test and its fixtures                                                                        | `demos/pptx/demo-*` / `e2e/pptx/` at the root                  |
+| The change is about...                                                                                                | Make it in                                                                  |
+| --------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Parsed model is wrong: a value missing/misread from the XML, theme/placeholder inheritance, save/round-trip loss      | `src/core/pptx/` at the root (with a round-trip test there)                 |
+| Unit, colour, geometry or preset-shape maths reused across Office formats                                             | `src/core/{units,color,geometry,chart,...}/` at the root                    |
+| `.ppt` / `.doc` / `.xls` binary reading or writing, CFB containers, RC4 encryption                                    | ChristopherVR/ole2 (with a fixture-based test there)                        |
+| EMF/WMF pictures or embedded EOT fonts render wrong                                                                   | ChristopherVR/emf-converter / mtx-decompressor                              |
+| How a correctly parsed element is drawn, laid out, hit-tested, animated or exported; any UI decision 2+ bindings need | `src/ui/src/pptx/render/`                                                   |
+| Template/JSX wiring, framework reactivity, binding-only chrome                                                        | `packages/{react,vue,angular,svelte,vanilla}/src/` (all five)               |
+| UI strings                                                                                                            | `src/ui/src/pptx/i18n/` + `packages/locales/src/<locale>/`                  |
+| AI/MCP tool functions                                                                                                 | `packages/tools/src/`                                                       |
+| Tool schemas and DOM-free document operations                                                                         | `src/core/pptx/automation/schemas/` and `src/core/pptx/editor/` at the root |
+| A demo app, or a browser test and its fixtures                                                                        | `demos/pptx/demo-*` / `e2e/pptx/` at the root                               |
 
 Never copy an implementation from the core or ole2 into this viewer to "fix it
 locally". An engine fix and the viewer change that uses it can land together
@@ -138,20 +139,16 @@ and the demos read the core's `dist`), then rebuild the pptx packages you need
 ```
 packages/
   core/             pptx-viewer-core     - Thin entry point re-exporting ooxml-core/pptx
-  shared/           pptx-viewer-shared   - Framework-agnostic viewer logic (INTERNAL, bundled into each binding, never published)
-    src/render/       decision functions + descriptors every binding maps onto its view layer
-    src/i18n/         canonical English dictionary (translations-en.ts)
-    src/ai/           AI panel; ai/tools/mcp-registry.ts imports pptx-viewer-mcp
-    src/export/ loader/ theme/ three-view/ smartart-3d/ web-components/
+  shared/           pptx-viewer-shared   - Private compatibility exports from ooxml-ui/pptx
   locales/          pptx-viewer-locales  - de/es/fr/zh-CN dictionaries (internal)
   react/            pptx-react-viewer    - React viewer/editor component
   react-compat/     (private, no build)  - React 18 peer set; `packages/react` aliases onto it to
                                            re-run its suite + declaration check (`bun run test:react18`)
   vue/              pptx-vue-viewer      - Vue 3 viewer/editor component
-  angular/          pptx-angular-viewer  - Angular viewer/editor component (ng-packagr; vendors shared into src/internal/shared-src)
+  angular/          pptx-angular-viewer  - Angular viewer/editor component (ng-packagr; consumes ooxml-ui/pptx)
   vanilla/          pptx-vanilla-viewer  - Zero-framework (VanillaJS) viewer
   svelte/           pptx-svelte-viewer   - Svelte 5 viewer component
-  tools/            pptx-viewer-mcp      - MCP server / tooling (codec, schemas, tools)
+  tools/            pptx-viewer-mcp      - MCP server / tooling (uses core automation schemas)
   cli/              @christophervr/pptx-viewer - Installer and React compatibility re-export
 scripts/            build and check scripts, fixture generators (make-*.mjs/.ps1),
                     COM acceptance against real PowerPoint (com-acceptance*.mjs, Windows + bun only)
@@ -159,6 +156,10 @@ docs/               VitePress documentation site (built into the shared Pages si
 playwright*.config.ts  Playwright configs; testDir is ../../e2e/pptx
 
 At the repository root:
+
+src/ui/src/pptx/    renderer, web components, browser lifecycle, themes and English dictionary
+src/core/pptx/editor/  DOM-free editing, loading and collaboration operations
+src/core/pptx/automation/schemas/  shared assistant and MCP tool schemas
 demos/pptx/demo-{react,vue,angular,vanilla,svelte}/  Vite demo apps (ports 4173/4175/4174/4176/4177)
 demos/pptx/shared/  files every demo imports (the `pptx-demos` package declares their dependencies)
 e2e/pptx/           Playwright specs (framework-neutral; `bun run e2e:contract` enforces it),
@@ -228,13 +229,13 @@ The five demo apps are the runtime surface for binding work. Each demo's
 `vite.config.ts` aliases bare package specifiers, but **not uniformly**, and the
 difference decides whether your edit is live on reload or needs a build first.
 
-| Specifier                     | react      | vue        | angular      | vanilla    | svelte     |
-| ----------------------------- | ---------- | ---------- | ------------ | ---------- | ---------- |
-| the binding (`pptx-*-viewer`) | source     | source     | **`dist`**   | source     | source     |
-| `pptx-viewer-core`            | source     | source     | **`dist`**   | source     | source     |
-| `pptx-viewer-shared`          | **`dist`** | source     | **vendored** | source     | source     |
-| `pptx-viewer-locales`         | source     | source     | **`dist`**   | source     | source     |
-| `pptx-viewer-mcp`             | **`dist`** | **`dist`** | **`dist`**   | **`dist`** | **`dist`** |
+| Specifier                     | react      | vue        | angular    | vanilla    | svelte     |
+| ----------------------------- | ---------- | ---------- | ---------- | ---------- | ---------- |
+| the binding (`pptx-*-viewer`) | source     | source     | **`dist`** | source     | source     |
+| `pptx-viewer-core`            | source     | source     | **`dist`** | source     | source     |
+| `ooxml-ui/pptx`               | **`dist`** | source     | **`dist`** | source     | source     |
+| `pptx-viewer-locales`         | source     | source     | **`dist`** | source     | source     |
+| `pptx-viewer-mcp`             | **`dist`** | **`dist`** | **`dist`** | **`dist`** | **`dist`** |
 
 `pptx-viewer-core` "source" is only the thin entry file: the engine behind it
 always comes from the core's `dist` (`src/core/dist`, linked by the
@@ -249,8 +250,8 @@ output, so **source edits are invisible until you build that package**:
   `packages/angular/dist`. Editing `packages/angular/src` changes nothing on
   screen until `bun run build` in `packages/angular`. This is the single most
   common way to waste an hour concluding "my change doesn't work in Angular".
-  Angular also vendors shared source into `src/internal/shared-src` at build
-  time, so shared edits need the same rebuild. **Its `pptx-viewer-core` is
+  Angular imports the public `ooxml-ui/pptx` entries, so shared UI edits need
+  a build in `src/ui` at the repository root. **Its `pptx-viewer-core` is
   `dist` too**: the demo never aliases core, unlike the other four, so a core
   change needs `bun run --filter pptx-viewer-core build` before this demo sees
   it at all. Core is also in the demo's `optimizeDeps.include`, so vite
@@ -261,14 +262,11 @@ output, so **source edits are invisible until you build that package**:
   Angular alone disagrees with the other four demos, delete that demo's
   `node_modules/.vite` and restart before suspecting your code.
   `e2e/pptx/dist-freshness.ts` checks both axes before every e2e run.
-- **`pptx-viewer-mcp`** (`packages/tools`) is aliased by no demo. It is reachable
-  from the browser because `packages/shared/src/ai/tools/mcp-registry.ts` imports
-  it, so a **stale `packages/tools/dist` breaks all five demos at once** with
-  `Module "path" has been externalized for browser compatibility`. The giveaway
-  is a demo that renders only its version footer. Fix with `bun run build` in
-  `packages/tools`.
-- **`pptx-viewer-shared`**: after adding a NEW export, run `bun run build` in
-  `packages/shared` once, or the React and Angular demos will not see it.
+- **Assistant schemas and document operations** are imported from
+  `ooxml-core/pptx/automation`, not the viewer MCP server. Build the core
+  before building shared UI so the browser receives current exports.
+- **`ooxml-ui/pptx`**: after adding a NEW export, run `bun run build` in
+  `src/ui` at the repository root, then rebuild the bindings that read `dist`.
 
 Other demo gotchas:
 
@@ -288,7 +286,7 @@ Other demo gotchas:
   while the page itself returns HTTP 200: the shell serves, the app never
   mounts. Diagnose by checking which port actually 500s rather than assuming the
   suite found a real regression:
-  `curl -s http://localhost:4176/@fs/<abs-path>/packages/shared/src/render/index.ts`
+  `curl -s http://localhost:4176/@fs/<abs-path>/src/ui/src/pptx/render/index.ts`
   names the unresolved import. Then kill that port, delete that demo's
   `node_modules/.vite`, and restart it. This has masked "all parity specs
   failed" more than once; four of five demos being healthy is the clue.
@@ -347,8 +345,8 @@ primitives come from the `geometry`, `color` and `units` areas of the core.
 
 ### Viewer layer (this repo)
 
-- **`pptx-viewer-shared`** decides; bindings render. Shared exports pure
-  decision functions and descriptors (`packages/shared/src/render/`), the
+- **`ooxml-ui/pptx`** decides; bindings render. Shared exports pure
+  decision functions and descriptors (`src/ui/src/pptx/render/`), the
   ribbon/dialog view models, i18n, export, the AI panel, and the three.js
   views.
 - **React** (`packages/react/src/`): `PowerPointViewer` is the forwardRef
@@ -387,12 +385,12 @@ primitives come from the `geometry`, `color` and `units` areas of the core.
   or non-trivial computation is a smell; that logic belongs in a composable or a
   shared module, leaving the SFC as thin presentation. Prefer many small,
   single-purpose files over one large one.
-- **Share framework-agnostic logic; default to `pptx-viewer-shared`.**
+- **Share framework-agnostic logic; default to `ooxml-ui/pptx`.**
   (Rule 2 above; the extraction triggers are listed there.) The vast
   majority of each binding's code is _not_ framework-specific: geometry,
   style/colour/gradient resolution, text/paragraph/bullet building, chart/axis
   maths, connector routing, animation, OMML/LaTeX, export data, etc. All of that
-  belongs in **`pptx-viewer-shared`** (`packages/shared/src/render/...`),
+  belongs in **`ooxml-ui/pptx`** (`src/ui/src/pptx/render/...`),
   consumed by every binding, or further down in the core when it is about the
   document model rather than its presentation. Only the actual view layer (SFC
   templates / JSX / Angular templates + the thin reactive wiring) should live in
@@ -433,7 +431,7 @@ primitives come from the `geometry`, `color` and `units` areas of the core.
   repo.
   - **A new UI feature** (ribbon control, dialog, inspector panel, context-menu
     entry, keyboard shortcut, gesture, on-canvas affordance) is not done when it
-    works in React. Put the logic in `pptx-viewer-shared`, then implement the
+    works in React. Put the logic in `ooxml-ui/pptx`, then implement the
     view layer in **react, vue, angular, svelte, and vanilla**, with unit tests
     per binding and a framework-neutral spec in `e2e/pptx/`.
   - **A UI fix** must be checked against the other four bindings before it is
@@ -445,7 +443,7 @@ primitives come from the `geometry`, `color` and `units` areas of the core.
     causes the drift.
   - **Prefer fixing a UI bug in shared over fixing it five times.** When the
     buggy behaviour is decided by logic that could live in
-    `packages/shared/src/render/`, move it there as part of the fix so the
+    `src/ui/src/pptx/render/`, move it there as part of the fix so the
     correction lands once and cannot drift again. A bug you are about to patch
     in more than one binding is the strongest possible extraction signal.
   - "Genuinely framework-specific" means Angular change detection, Svelte 5
@@ -467,7 +465,7 @@ primitives come from the `geometry`, `color` and `units` areas of the core.
   `fmt` skip `viewers/`. Run `bun run lint` here, including on `.vue` files,
   and `bunx oxfmt <the files you changed>`.
 - **Adding an English i18n key requires every locale too.** New entries in
-  `packages/shared/src/i18n/translations-en.ts` need matching entries under
+  `src/ui/src/pptx/i18n/translations-en.ts` need matching entries under
   `packages/locales/src/<locale>/`; `packages/locales/src/locales.test.ts`
   enforces that every locale covers every canonical key.
 
@@ -511,6 +509,6 @@ the same change as the viewer steps.
 4. Add a parsing module in `core/core/runtime/`.
 5. Add serialization in the `*SaveElementWriter.ts` modules.
 6. Add a converter processor in `converter/elements/`.
-7. Add framework-independent rendering logic in `packages/shared/src/render/`,
+7. Add framework-independent rendering logic in `src/ui/src/pptx/render/`,
    then wire renderers in all five bindings with per-binding and
    framework-neutral e2e coverage.
