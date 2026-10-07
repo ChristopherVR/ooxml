@@ -52,7 +52,7 @@ export function fillPaint(
 		for (const region of paint.regions) {
 			const path = svgElement('path');
 			// Shared triangle edges must not expose antialiased transparent seams.
-			if (paint.interpolation) path.setAttribute('shape-rendering', 'crispEdges');
+			path.setAttribute('shape-rendering', 'crispEdges');
 			path.setAttribute(
 				'd',
 				region.points

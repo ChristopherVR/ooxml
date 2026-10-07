@@ -96,7 +96,7 @@ export function shapeStyle(
 	const fillPattern = fillGradient
 		? undefined
 		: cachedFillPattern(cells, (name) => color(cells, name, '', resources, report));
-	if (fillGradient && (legacyGradient || fillGradient.stops.length === 2))
+	if (fillGradient)
 		report(
 			'unverified-gradient-raster',
 			"Gradient colors may differ from Microsoft Visio's native rendering.",

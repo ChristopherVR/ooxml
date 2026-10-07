@@ -806,3 +806,43 @@ Strict core, complete UI and viewer types passed, as did the full UI build,
 fresh Visio ESM/CJS bundles, PowerShell syntax and formatting. A Node public-ESM
 smoke check edited/reparsed all 68 native shapes, retained 13 opaque profiles and
 changed only visio/pages/page1.xml. Root lint retains nine unrelated warnings.
+
+## Translucent and three-stop region seams (2026-10-08)
+
+Every triangular region now uses crisp shared internal edges, including
+translucent and three-stop fills. The enclosing shape still supplies its normal
+outer contour. This reuses the existing renderer, stop serializer, color model
+and snapshot/export pipeline; no second interpolation engine was introduced.
+An experimental dense RGB/alpha ramp did not improve translucent linear paint
+and was not adopted.
+
+The native PNG benchmark now covers all 52 rectangle cases from the existing
+68-case capture: directions 0-12, two/three stops and opaque/translucent colors.
+All six framework routes passed both live and portable export comparisons:
+624 comparisons of 272-by-128-pixel interiors within the 288-by-144 PNG exports.
+The benchmark writes native-raster-differences.json per route, including each
+case's name, stop count, alpha flag, maximum channel error and mean error.
+
+Native export bounds include a saved line-width margin even when LinePattern
+is zero. The benchmark now reads the native SVG viewBox only to register that
+frame against the core shape placement. All expected colors come from the
+unchanged native PNG. This corrected the centered opaque three-stop case's
+maximum error from eight levels in the unregistered comparison to seven in the
+registered core comparison. The original opaque two-stop maximum bound remains
+seven, with mean below one; newly measured translucent and three-stop cases have
+mean bounds below 1.5. These are regression bounds, not parity tolerances.
+
+Maximum/mean errors observed on every route are: opaque two-stop 7/0.65,
+opaque three-stop 7/1.36, translucent two-stop 6/1.26 and translucent three-stop
+7/1.25 (means rounded up to two decimals). All normalized gradients now report
+unverified-gradient-raster, since the three-stop corpus also demonstrates
+nonzero native raster differences. Path-following fills, outer contour pixels,
+broader colors/positions/transforms and native reopen acceptance remain open.
+Classic rectangular native-SVG equality scenarios were retired: their exported
+transparent seams are not a reference for the native PNG renderer. Classic
+radial and hatch SVG compatibility checks remain separately identified.
+
+Core passed 2,071 tests with 53 optional skips; UI passed 714 with seven skips.
+Strict core, complete UI and viewer types, the UI build and viewer formatting
+passed. Root lint retains nine unrelated warnings. This checkpoint fixes shared
+region seams and strengthens native evidence; exact pixel parity is unproven.

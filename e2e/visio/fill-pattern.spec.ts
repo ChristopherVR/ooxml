@@ -15,14 +15,13 @@ for (const sample of [
 	{ name: 'oblique', directory: process.env.VISIO_NATIVE_FILL_PATTERNS_OBLIQUE_DIR },
 	{ name: 'radial', directory: process.env.VISIO_NATIVE_RADIAL_FILLS_DIR },
 	{ name: 'radial-alpha', directory: process.env.VISIO_NATIVE_RADIAL_FILLS_ALPHA_DIR },
-	{ name: 'regions', directory: process.env.VISIO_NATIVE_REGION_FILLS_DIR },
-	{ name: 'regions-alpha', directory: process.env.VISIO_NATIVE_REGION_FILLS_ALPHA_DIR },
 ]) {
 	const directory = sample.directory;
 	// Saved gradients use the native PNG benchmark in gradient-raster.spec.ts.
-	// Classic SVG compatibility remains measured here, without a native-paint claim.
-	const fullPage = sample.name.startsWith('radial') || sample.name.startsWith('regions');
-	const firstPattern = sample.name.startsWith('regions') ? 31 : fullPage ? 36 : 2,
+	// Classic radial SVG compatibility remains measured without a native-paint claim.
+	// Rectangular native-SVG seams are not an oracle for the native raster engine.
+	const fullPage = sample.name.startsWith('radial');
+	const firstPattern = fullPage ? 36 : 2,
 		patternCount = fullPage ? 5 : 23;
 	for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
 		test(`${framework}: ${sample.name} native fills match live and exported SVG`, async ({

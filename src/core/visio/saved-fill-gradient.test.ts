@@ -219,7 +219,7 @@ describe('saved horizontal fill gradients', () => {
 	it('preserves coincident and non-boundary stops', async () => {
 		const { style, diagnostics } = await parse('', stop(0, 0.2) + stop(1, 0.2) + stop(2, 0.8));
 		expect(style.fillGradient?.stops.map((s) => s.offset)).toEqual([0.2, 0.2, 0.8]);
-		expect(diagnostics.map((d) => d.code)).not.toContain('unverified-gradient-raster');
+		expect(diagnostics.map((d) => d.code)).toContain('unverified-gradient-raster');
 	});
 	it('ignores rows beyond the first ten and deleted rows', async () => {
 		const rows = Array.from({ length: 10 }, (_, i) => stop(i, i / 10)).join('');
