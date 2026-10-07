@@ -84,7 +84,11 @@ async function inspectTarball(name, packed, directory) {
 		);
 		// `*` tracks the latest release in this repository; the publish step rewrites it to a caret.
 		for (const dep of ['ooxml-core', 'ooxml-ui'])
-			assert.match(manifest.dependencies[dep], /^(?:\*|\^\d+\.\d+\.\d+)$/u, `${packed.name} ${dep}`);
+			assert.match(
+				manifest.dependencies[dep],
+				/^(?:\*|\^\d+\.\d+\.\d+)$/u,
+				`${packed.name} ${dep}`,
+			);
 	} else {
 		assert.equal(manifest.bin['openteams-server'], 'bin.mjs');
 	}
@@ -275,5 +279,5 @@ try {
 		'Packed consumer imports, typings, the Svelte component, the server command and bundle checks succeeded for all seven OpenTeams packages.',
 	);
 } finally {
-	await rm(work, { recursive: true, force: true });
+	await rm(work, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 }
