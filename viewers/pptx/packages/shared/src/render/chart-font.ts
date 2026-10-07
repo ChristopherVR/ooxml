@@ -20,6 +20,8 @@
  *
  * @module chart-font
  */
+import type { PptxChartLegendTextStyle } from 'pptx-viewer-core';
+import { buildFontFamilyString, getSubstituteFonts } from 'pptx-viewer-core';
 
 /** CSS pixels per typographic point (96 dpi / 72 dpi = 4/3). */
 export const CHART_PX_PER_PT = 4 / 3;
@@ -44,3 +46,45 @@ export const DEFAULT_CHART_TEXT_PX = chartFontPx(10);
  * category / percent labels attached to data marks fall back to this.
  */
 export const DEFAULT_CHART_DATA_LABEL_PX = chartFontPx(9);
+
+/** CSS generic families, which match every character and so must come last. */
+function isGenericFamily(name: string): boolean {
+	return /^(?:serif|sans-serif|monospace|cursive|fantasy|system-ui|ui-[a-z-]+|emoji|math|fangsong)$/iu.test(
+		name.trim(),
+	);
+}
+
+/**
+ * CSS `font-family` for chart text from its `a:latin` and `a:ea` faces.
+ * PowerPoint draws CJK characters in the East Asian face and the rest in the
+ * Latin one. Listing the Latin face first lets the browser fall through to the
+ * East Asian face for characters the Latin face has no glyph for, which
+ * approximates that split.
+ *
+ * Each face brings its substitutes (as shape text does), so a theme font that
+ * is not installed, such as Calibri, falls back to a look-alike instead of the
+ * browser's serif. Generic families go last: one in the middle would catch
+ * CJK characters before they reach the East Asian face. Every name is quoted,
+ * so a name such as `HY견고딕` does not invalidate the declaration.
+ */
+export function chartTextFontFamily(
+	style: Pick<PptxChartLegendTextStyle, 'fontFamily' | 'eastAsiaFontFamily'> | undefined,
+): string | undefined {
+	// An unresolved theme token such as `+mn-lt` is not a font name.
+	const faces = [style?.fontFamily?.trim(), style?.eastAsiaFontFamily?.trim()].filter(
+		(face): face is string => face !== undefined && face !== '' && !face.startsWith('+'),
+	);
+	const [first] = faces;
+	if (first === undefined) {
+		return undefined;
+	}
+	const named: string[] = [];
+	const generic: string[] = [];
+	for (const face of faces) {
+		named.push(face);
+		for (const substitute of getSubstituteFonts(face)) {
+			(isGenericFamily(substitute) ? generic : named).push(substitute);
+		}
+	}
+	return buildFontFamilyString(first, [...named.slice(1), ...generic]);
+}

@@ -18,6 +18,7 @@ import { findPointLabel, resolveLabelPosition } from './chart-data-label-anchor'
 import { buildDataLabelDecorations } from './chart-data-label-callout';
 import { buildDataLabelText, resolveDataLabelTextStyle } from './chart-data-label-text';
 import { resolveDataPointExplosion, resolveVaryColorFill } from './chart-datapoint-style';
+import { chartTextFontFamily } from './chart-font';
 import { resolveLegendPlacement } from './chart-legend-placement';
 import { buildPieDataLabels } from './chart-pie-labels';
 import { chartTitleReservePx } from './chart-title-band';
@@ -169,9 +170,10 @@ export function buildPieViewModel(
 								return undefined;
 							}
 							const style = resolveDataLabelTextStyle(chartData, pieSeries, pointIndex);
+							const fontFamily = chartTextFontFamily(style);
 							return {
 								...built,
-								...(style?.fontFamily ? { fontFamily: style.fontFamily } : {}),
+								...(fontFamily ? { fontFamily } : {}),
 								...(style?.fontSize !== undefined ? { fontSize: style.fontSize } : {}),
 								...(style?.bold !== undefined ? { bold: style.bold } : {}),
 								// The label's own `txPr` colour (a number-format colour wins).

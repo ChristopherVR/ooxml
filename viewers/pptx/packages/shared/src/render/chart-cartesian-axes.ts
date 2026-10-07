@@ -3,6 +3,7 @@ import type { PptxChartData } from 'pptx-viewer-core';
 import { getSecondaryValueAxis } from './chart-axis';
 import { verticalAxisX } from './chart-axis-crossing';
 import { buildPrimaryAxis, buildSecondaryAxis } from './chart-axis-render';
+import { chartAxisTextStyle } from './chart-axis-style';
 import { shouldRenderMajorGridlines } from './chart-gridlines-toggle';
 import type { PlotLayout, SvgLine, SvgText, ValueRange } from './chart-view-model';
 import { buildGridlinesAndLabels } from './chart-view-model';
@@ -60,6 +61,7 @@ export function buildCartesianAxes(
 			primaryRange,
 			layout,
 			showMajorGridlines,
+			chartAxisTextStyle(chartData.axes?.find((axis) => axis.axisType === 'valAx')),
 		);
 		return { gridlines, axisLabels, secondaryGridlines: undefined, secondaryAxisLabels: undefined };
 	}

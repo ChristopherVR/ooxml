@@ -54,6 +54,18 @@ export function setChartTextMeasurer(measurer: ChartTextMeasurer | undefined): v
 	injected = measurer;
 }
 
+/**
+ * The family part of a canvas `font` shorthand. A single face is quoted here;
+ * a Latin and East Asian pair arrives as a quoted list already
+ * (`chartTextFontFamily`).
+ */
+export function canvasFontFamily(fontFamily: string | undefined): string {
+	if (!fontFamily) {
+		return 'sans-serif';
+	}
+	return fontFamily.includes('"') ? `${fontFamily}, sans-serif` : `"${fontFamily}", sans-serif`;
+}
+
 function canvasMeasure(text: string, font: ChartTextFont): number | undefined {
 	if (canvasContext === undefined) {
 		try {
@@ -68,8 +80,7 @@ function canvasMeasure(text: string, font: ChartTextFont): number | undefined {
 	}
 	const style = font.fontStyle === 'italic' ? 'italic ' : '';
 	const weight = font.fontWeight === 'bold' ? 'bold ' : '';
-	const family = font.fontFamily ? `"${font.fontFamily}", sans-serif` : 'sans-serif';
-	canvasContext.font = `${style}${weight}${font.fontSize}px ${family}`;
+	canvasContext.font = `${style}${weight}${font.fontSize}px ${canvasFontFamily(font.fontFamily)}`;
 	const width = canvasContext.measureText(text).width;
 	return Number.isFinite(width) && width > 0 ? width : undefined;
 }

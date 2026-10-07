@@ -1,6 +1,7 @@
 import type { PptxChartData } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 
+import { chartTextFontFamily } from './chart-font';
 import { resolveChartTitleTextStyle, titleBaselineFor } from './chart-title-style';
 import { buildChartViewModel } from './chart-view-model-build';
 
@@ -33,7 +34,12 @@ describe('resolveChartTitleTextStyle', () => {
 					titleFontFamily: 'Georgia',
 				}),
 			),
-		).toStrictEqual({ fontSize: 24, fontWeight: 400, fill: '#FF0000', fontFamily: 'Georgia' });
+		).toStrictEqual({
+			fontSize: 24,
+			fontWeight: 400,
+			fill: '#FF0000',
+			fontFamily: chartTextFontFamily({ fontFamily: 'Georgia' }),
+		});
 	});
 
 	it('maps titleFontBold=true to a bold weight', () => {

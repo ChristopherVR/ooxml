@@ -7,6 +7,7 @@ import {
 	DATA_TABLE_ROW_H,
 	computeDataTablePrimitives,
 } from './chart-data-table-render';
+import { chartTextFontFamily } from './chart-font';
 import type { PlotLayout, SvgText } from './chart-view-model';
 
 const LAYOUT: PlotLayout = {
@@ -238,7 +239,7 @@ describe('computeDataTablePrimitives', () => {
 		const result = computeDataTablePrimitives(chartData, LAYOUT);
 		for (const label of texts(result)) {
 			expect(label.fill).toBe('#123456');
-			expect(label.fontFamily).toBe('Georgia');
+			expect(label.fontFamily).toBe(chartTextFontFamily({ fontFamily: 'Georgia' }));
 			expect(label.fontSize).toBeCloseTo(16); // 12pt * 4/3
 		}
 	});

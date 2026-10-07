@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
 import {
+	canvasFontFamily,
 	dataLabelBox,
 	dataLabelBoxSize,
 	estimateChartTextWidth,
@@ -103,5 +104,15 @@ describe('dataLabelBox', () => {
 		const box = dataLabelBox(label('x', { textAnchor: 'start', dominantBaseline: undefined }));
 		expect(box.x).toBe(96);
 		expect(box.y).toBeCloseTo(50 - 16 * 0.952 - 2, 5);
+	});
+});
+
+describe('canvasFontFamily', () => {
+	it('quotes a single face and keeps an already quoted pair as it is', () => {
+		expect(canvasFontFamily(undefined)).toBe('sans-serif');
+		expect(canvasFontFamily('Segoe UI')).toBe('"Segoe UI", sans-serif');
+		expect(canvasFontFamily('"Arial", "Malgun Gothic"')).toBe(
+			'"Arial", "Malgun Gothic", sans-serif',
+		);
 	});
 });
