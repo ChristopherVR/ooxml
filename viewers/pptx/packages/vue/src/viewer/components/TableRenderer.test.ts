@@ -371,7 +371,7 @@ describe('tableRenderer', () => {
 			rows: [{ cells: [{ text: '42', style: { marginRight: 6, borderRightWidth: 2 } }] }],
 		};
 		const wrapper = mount(TableRenderer, { props: { element: table(data), zIndex: 0 } });
-		expect(wrapper.get('td').attributes('style')).toContain('padding-right: 5px');
+		expect((wrapper.get('td').element as HTMLTableCellElement).style.paddingRight).toBe('5px');
 	});
 
 	it('renders strikethrough run with text-decoration: line-through', () => {
