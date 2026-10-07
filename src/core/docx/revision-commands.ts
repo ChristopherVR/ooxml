@@ -176,34 +176,16 @@ function rejectOne(model: DocumentModel, id: string): DocumentModel {
 function applyAll(
 	model: DocumentModel,
 	apply: (model: DocumentModel, id: string) => DocumentModel,
-	fallbackWarning?: string,
 ): DocumentModel {
 	let current = model;
-	let warned = false;
 	for (const entry of listRevisions(model).reverse()) {
 		if (!findRevision(current, entry.id)) continue;
-		try {
-			current = apply(current, entry.id);
-		} catch (error) {
-			if (!fallbackWarning) throw error;
-			const next = structuredClone(current);
-			const paragraph = paragraphsOf(next.blocks).find((p) => p.id === entry.paragraphId)!;
-			if (entry.runIndex !== undefined) clearRunRevision(paragraph, entry.runIndex);
-			else delete paragraph.formatRevision;
-			current = next;
-			warned = true;
-		}
+		current = apply(current, entry.id);
 	}
-	if (warned && !current.warnings.includes(fallbackWarning!))
-		current.warnings.push(fallbackWarning!);
 	return current;
 }
 
 export const acceptAllRevisions = (model: DocumentModel): DocumentModel =>
 	applyAll(model, acceptRevision);
 export const rejectAllRevisions = (model: DocumentModel): DocumentModel =>
-	applyAll(
-		model,
-		rejectRevision,
-		'Rejecting all changes cleared formatting-change markers without restoring their prior formatting, because the prior formatting snapshot is not modeled.',
-	);
+	applyAll(model, rejectRevision);
