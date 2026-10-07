@@ -38,14 +38,18 @@ export function text(
 		weight?: string;
 		baseline?: string;
 		fill?: string;
+		family?: string;
+		italic?: boolean;
 	} = {},
 ): string {
 	const parts = [`x="${n(x)}"`, `y="${n(y)}"`];
 	parts.push(`font-size="${attrs.size ?? FONT_SIZE}"`);
-	parts.push(`fill="${attrs.fill ?? TEXT_COLOR}"`);
+	parts.push(`fill="${esc(attrs.fill ?? TEXT_COLOR)}"`);
 	if (attrs.anchor && attrs.anchor !== 'start') parts.push(`text-anchor="${attrs.anchor}"`);
 	if (attrs.weight) parts.push(`font-weight="${attrs.weight}"`);
 	if (attrs.baseline) parts.push(`dominant-baseline="${attrs.baseline}"`);
+	if (attrs.family) parts.push(`font-family="${esc(attrs.family)}"`);
+	if (attrs.italic !== undefined) parts.push(`font-style="${attrs.italic ? 'italic' : 'normal'}"`);
 	return `<text ${parts.join(' ')}>${esc(content)}</text>`;
 }
 

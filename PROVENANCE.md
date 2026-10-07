@@ -675,3 +675,22 @@ private helpers. These DOM-free model conversions moved unchanged to
 mapping. The Word UI imports them through the core subpath; schema construction
 and inline DOM views stay in UI. Existing editor conversion and review/Yjs tests
 cover the caller, and core tests cover an independent caller-provided schema.
+
+## Shared chart gradient geometry and workbook font stacks
+
+Source: ChristopherVR/ooxml at `3ad172db60523a8a4d49b16e9b75b2f80a351e7f`,
+`src/ui/src/pptx/render/chart-gradient-defs.ts`, `chart-svg-def-types.ts`,
+and `src/core/pptx/core/types/chart.ts` (original product: pptx-viewer).
+Their resolved gradient contract and bounding-box geometry moved to strict
+`src/core/chart/gradient-definition.ts`. PowerPoint keeps compatible names and
+uses the same builder. Linear vectors and centered circle gradients retain
+their behavior; off-box focal points now use the farthest corner radius.
+XLSX resolves its imported DrawingML stops and focus rectangle into that contract.
+
+The workbook font-stack helper moved unchanged from
+`src/core/xlsx/ui/grid/cell-paint.ts` at the same commit to
+`src/core/xlsx/layout/font-family.ts`. Cell painting retains its compatibility
+export; chart text uses the same fallback stack instead of falling back to a
+serif font when an authored Office font is unavailable. No font binaries were
+copied or added. Shared chart style and direct-formatting readers now use one
+DrawingML text/fill/line property reader in `chart/read-appearance.ts`.

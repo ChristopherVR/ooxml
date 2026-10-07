@@ -14,45 +14,12 @@
  *
  * @module chart-gradient-defs
  */
-import type { PptxChartData, PptxChartGradientFill } from 'ooxml-core/pptx';
+import type { PptxChartData } from 'ooxml-core/pptx';
+import { buildChartGradientDef as buildGradientDef } from 'ooxml-core/chart';
+export { buildGradientDef };
 
 import type { ChartSvgGradientDef } from './chart-svg-def-types';
 import type { ChartViewModel, SvgPrimitive } from './chart-view-model-types';
-
-/** Build the def for `fill` under `id`. */
-export function buildGradientDef(id: string, fill: PptxChartGradientFill): ChartSvgGradientDef {
-	const stops = fill.stops.map((stop) => ({
-		offset: Math.min(Math.max(stop.position / 100, 0), 1),
-		color: stop.color,
-		...(stop.opacity !== undefined ? { opacity: stop.opacity } : {}),
-	}));
-	if (fill.type === 'radial') {
-		return {
-			kind: 'radialGradient',
-			id,
-			cx: fill.focalPoint?.x ?? 0.5,
-			cy: fill.focalPoint?.y ?? 0.5,
-			// `a:path path="circle"` reaches the box corners, not its edges.
-			r: Math.SQRT1_2,
-			stops,
-		};
-	}
-	// `a:lin/@ang` is clockwise from left-to-right; in bounding-box space the
-	// vector through the centre at that angle spans the unit box.
-	const rad = ((fill.angle ?? 0) * Math.PI) / 180;
-	const dx = Math.cos(rad) / 2;
-	const dy = Math.sin(rad) / 2;
-	const r = (v: number) => Math.round(v * 10000) / 10000;
-	return {
-		kind: 'linearGradient',
-		id,
-		x1: r(0.5 - dx),
-		y1: r(0.5 - dy),
-		x2: r(0.5 + dx),
-		y2: r(0.5 + dy),
-		stops,
-	};
-}
 
 function paintSeries(
 	primitive: SvgPrimitive,

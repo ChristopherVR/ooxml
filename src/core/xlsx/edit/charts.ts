@@ -16,7 +16,9 @@ export const IMAGE_EXTENSIONS: Readonly<Record<string, string>> = {
 };
 
 /** What `updateChart` may change (the chart keeps its kind and source part). */
-export type ChartPatch = Partial<Omit<ChartObject, 'kind' | 'partName' | 'styleDefinition'>>;
+export type ChartPatch = Partial<
+	Omit<ChartObject, 'kind' | 'partName' | 'styleDefinition' | 'formatting'>
+>;
 
 /** Adds a chart drawn from the model (a new chart part is written on save); returns its index. */
 export function addChart(ctx: EditContext, s: number, chart: Omit<ChartObject, 'kind'>): number {

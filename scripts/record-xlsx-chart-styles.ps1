@@ -3,6 +3,17 @@ $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 New-Item -ItemType Directory -Force -Path $OutputFolder | Out-Null
 $excel = $null; $book = $null
+function Read-ChartFont($font) {
+    $size = [double]$font.Size
+    $rgb = [int]$font.Color
+    return @{ size = $(if ($size -gt 0) { $size } else { $null }); name = [string]$font.Name; bold = [bool]$font.Bold; italic = [bool]$font.Italic; color = '#{0:X2}{1:X2}{2:X2}' -f ($rgb -band 255),(($rgb -shr 8) -band 255),(($rgb -shr 16) -band 255) }
+}
+function Read-ChartPaint($format) {
+    $fillRgb = [int]$format.Fill.ForeColor.RGB
+    $lineRgb = [int]$format.Line.ForeColor.RGB
+    $weight = [double]$format.Line.Weight
+    return @{ fillColor = '#{0:X2}{1:X2}{2:X2}' -f ($fillRgb -band 255),(($fillRgb -shr 8) -band 255),(($fillRgb -shr 16) -band 255); lineColor = $(if ($weight -gt 0) { '#{0:X2}{1:X2}{2:X2}' -f ($lineRgb -band 255),(($lineRgb -shr 8) -band 255),(($lineRgb -shr 16) -band 255) } else { $null }); lineWeight = $(if ($weight -gt 0) { $weight } else { $null }) }
+}
 try {
     $excel = New-Object -ComObject Excel.Application
     $excel.Visible = $false; $excel.DisplayAlerts = $false
@@ -39,7 +50,9 @@ try {
         $probeBook = $excel.Workbooks.Open($path,0,$true)
         try {
             $probeChart = $probeBook.Worksheets.Item(1).ChartObjects(1).Chart
-            $cases += @{ requestedStyle = $id; style = [int]$probeChart.ChartStyle; titleFontSize = $(if ([double]$probeChart.ChartTitle.Font.Size -gt 0) { [double]$probeChart.ChartTitle.Font.Size } else { $null }); axisFontSize = [double]$probeChart.Axes(1).TickLabels.Font.Size; legendFontSize = [double]$probeChart.Legend.Font.Size; parts = $parts }
+            $cases += @{ requestedStyle = $id; style = [int]$probeChart.ChartStyle; titleFontSize = $(if ([double]$probeChart.ChartTitle.Font.Size -gt 0) { [double]$probeChart.ChartTitle.Font.Size } else { $null }); axisFontSize = [double]$probeChart.Axes(1).TickLabels.Font.Size; legendFontSize = [double]$probeChart.Legend.Font.Size; titleText = (Read-ChartFont $probeChart.ChartTitle.Font); categoryText = (Read-ChartFont $probeChart.Axes(1).TickLabels.Font); valueText = (Read-ChartFont $probeChart.Axes(2).TickLabels.Font); legendText = (Read-ChartFont $probeChart.Legend.Font); parts = $parts }
+            $cases[-1].hasValueAxis = [bool]$probeChart.HasAxis(2,1)
+            $cases[-1].chartArea = Read-ChartPaint $probeChart.ChartArea.Format
         } finally { $probeBook.Close($false) }
         $object.Delete()
     }

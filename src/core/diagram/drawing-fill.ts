@@ -42,11 +42,21 @@ export function parseDrawingFill(properties: XmlElement | undefined): DiagramFil
 			});
 			const angle = Number.parseInt(first(fill, 'lin', NS.a)?.getAttribute('ang') ?? '', 10);
 			const path = first(fill, 'path', NS.a)?.getAttribute('path');
+			const focus = first(first(fill, 'path', NS.a), 'fillToRect', NS.a);
+			const fillToRect = focus
+				? {
+						l: Number(focus.getAttribute('l') ?? 0) / 100000,
+						t: Number(focus.getAttribute('t') ?? 0) / 100000,
+						r: Number(focus.getAttribute('r') ?? 0) / 100000,
+						b: Number(focus.getAttribute('b') ?? 0) / 100000,
+					}
+				: undefined;
 			return {
 				kind: 'gradient',
 				stops,
 				...(Number.isFinite(angle) ? { angle: angle / 60000 } : {}),
 				...(path ? { path } : {}),
+				...(fillToRect && Object.values(fillToRect).every(Number.isFinite) ? { fillToRect } : {}),
 			};
 		}
 		case 'pattFill': {

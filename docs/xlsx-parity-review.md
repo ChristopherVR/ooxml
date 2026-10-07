@@ -662,3 +662,47 @@ clean-consumer package imports passed. Seven chart-gallery browser tests passed
 across all six bindings. A Playwright MCP review of the native style 212 workbook
 confirmed chart selection and the contextual ribbon, and exposed the remaining
 style-rendering gap described above.
+
+## Imported native chart appearance
+
+XLSX now paints imported title, legend and axis font sizes, theme-relative
+major/minor fonts, colors, bold and italic settings. Direct chart-part formatting
+overrides external style defaults, including no-fill and zero-width lines.
+Deleted axes and hidden tick labels are respected. Chart and plot backgrounds,
+axis/gridline colors and widths now follow imported formatting. Linear and
+circle-path background gradients reuse the extracted PowerPoint chart gradient
+contract and geometry. Each painted chart receives distinct gradient targets.
+
+The recorder now saves COM title, legend and both axis font properties,
+value-axis availability, and chart-area colors/positive line weights after
+reopening each workbook. All 16 native column styles match the recorded text
+properties in SVG, including the three deleted value axes and unavailable
+style-204 title size. A shared DrawingML resolver option reproduces Excel's
+half-channel HSL rounding for this appearance path; existing callers retain
+their rounding default. This does not resolve the separately recorded extended
+palette rounding gap.
+
+Playwright MCP reviewed style 209's dark gradient and contrasting text. It also
+exposed missing Office fonts falling back to serif; chart and cell text now
+share the workbook font-stack helper. Matching font properties does not prove
+pixel parity when the authored font is unavailable. Layout still uses estimated
+text widths. Native style authoring/gallery previews, mixed-run rich text,
+theme style-matrix references, series gradients/effects, rectangular path
+gradients, exact focus/radius mapping, native plot placement and complete chart
+families remain incomplete. Direct formatting is imported read-only; chart type
+or series-count regeneration can still lose unmodelled chart-part details.
+
+An Excel COM PNG export of style 209 supplied a direct visual reference.
+That comparison exposed dropped alpha on its gridlines, now rendered at the
+saved 10% opacity. The export also shows series gradients/shadows and native
+plot positioning still differ; it is evidence of remaining work, not a claim
+of pixel parity.
+
+Validation: 6,081 XLSX core tests, 2,270 chart/color/diagram and PowerPoint
+regressions, 315 XLSX UI tests, and 11 PowerPoint gradient/style UI tests passed.
+The full browser suite passed 76 tests across six bindings; after the final
+gridline-alpha correction, all 18 focused appearance tests and eight native-style
+browser tests passed. Core and UI typechecks/builds and clean-consumer imports
+passed (93 UI entry points and 45 custom-element registrations). Font-stack
+extraction also passed the existing cell-paint tests. Native workbooks and the
+COM-rendered PNG remain temporary acceptance artifacts.

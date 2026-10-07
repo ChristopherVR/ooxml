@@ -2,23 +2,8 @@
 // borders, alignment). The DOM painter only copies these onto recycled nodes.
 import type { BordersView, EdgeView, FillView, FontView, PatternType } from '../../index.js';
 
-const FALLBACKS: Record<string, string> = {
-	calibri: '"Calibri", "Carlito", "Segoe UI", Arial, sans-serif',
-	'calibri light': '"Calibri Light", "Calibri", "Carlito", "Segoe UI", Arial, sans-serif',
-	cambria: '"Cambria", "Caladea", Georgia, serif',
-	arial: 'Arial, "Liberation Sans", Helvetica, sans-serif',
-	'times new roman': '"Times New Roman", "Liberation Serif", Times, serif',
-	'courier new': '"Courier New", "Liberation Mono", monospace',
-	aptos: '"Aptos", "Calibri", "Carlito", "Segoe UI", sans-serif',
-};
-
-/** A CSS font-family list for a workbook font name. */
-export function cssFontFamily(name: string): string {
-	const known = FALLBACKS[name.toLowerCase()];
-	if (known) return known;
-	const quoted = `"${name.replace(/["\\]/g, '')}"`;
-	return `${quoted}, "Calibri", "Carlito", "Segoe UI", sans-serif`;
-}
+import { cssFontFamily } from '../../layout/font-family';
+export { cssFontFamily };
 
 /** CSS `font` shorthand for a font at a zoom (percent). */
 export function cssFont(font: FontView, zoom = 100): string {

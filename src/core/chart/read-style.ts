@@ -1,6 +1,6 @@
 import { parseDrawingColorIn } from '../diagram/drawing-color';
-import { parseDrawingFill, parseDrawingLine } from '../diagram/drawing-fill';
-import { NS, buildXml, elements, first, parseXml, type XmlElement } from '../xml/index';
+import { buildXml, elements, first, parseXml, type XmlElement } from '../xml/index';
+import { readChartAppearance } from './read-appearance';
 import { CHART_COLOR_STYLE_NS } from './color-style';
 import type {
 	ChartStyleDefinition,
@@ -20,30 +20,14 @@ function reference(node: XmlElement | undefined): ChartStyleReference | undefine
 }
 
 function entry(node: XmlElement): ChartStyleEntry {
-	const out: ChartStyleEntry = { sourceXml: buildXml(node) };
-	const text = child(node, 'defRPr');
-	const size = Number(text?.getAttribute('sz') ?? NaN);
-	if (Number.isFinite(size)) out.fontSize = size / 100;
-	for (const [attribute, key] of [
-		['b', 'bold'],
-		['i', 'italic'],
-	] as const) {
-		const value = text?.getAttribute(attribute);
-		if (value !== null && value !== undefined) out[key] = value === '1' || value === 'true';
-	}
-	const typeface = first(text, 'latin', NS.a)?.getAttribute('typeface');
-	if (typeface) out.typeface = typeface;
-	const color = parseDrawingColorIn(first(text, 'solidFill', NS.a));
-	if (color) out.textColor = color;
+	const out: ChartStyleEntry = {
+		sourceXml: buildXml(node),
+		...readChartAppearance(child(node, 'defRPr'), child(node, 'spPr')),
+	};
 	for (const key of ['fontRef', 'lineRef', 'fillRef', 'effectRef'] as const) {
 		const ref = reference(child(node, key === 'lineRef' ? 'lnRef' : key));
 		if (ref) out[key] = ref;
 	}
-	const properties = child(node, 'spPr');
-	const fill = parseDrawingFill(properties);
-	const line = parseDrawingLine(first(properties, 'ln', NS.a));
-	if (fill) out.fill = fill;
-	if (line) out.line = line;
 	return out;
 }
 

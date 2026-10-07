@@ -2,6 +2,7 @@ import { NS, children, elements, first, parseXml, type XmlElement } from '../../
 import type { ChartObject, ChartSeries, ChartType, Color, DrawingAnchor } from '../model.js';
 import { att } from './xml-util.js';
 import { parseDrawingColorIn } from '../../diagram/drawing-color';
+import { readChartFormatting } from '../../chart/read-formatting';
 
 const c = (parent: ParentNode | null | undefined, local: string) => first(parent, local, NS.c);
 const val = (parent: ParentNode | null | undefined, local: string) => att(c(parent, local), 'val');
@@ -181,5 +182,7 @@ export function parseChart(
 	if (legendPos && ['r', 'l', 't', 'b', 'tr'].includes(legendPos))
 		object.legendPosition = legendPos as NonNullable<ChartObject['legendPosition']>;
 	if (name) object.name = name;
+	const formatting = readChartFormatting(root);
+	if (formatting) object.formatting = formatting;
 	return object;
 }

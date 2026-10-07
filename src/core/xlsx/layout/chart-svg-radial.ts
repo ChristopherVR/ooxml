@@ -1,6 +1,7 @@
 import { formatAxisValue } from './chart-scale.js';
-import { AXIS_COLOR, fit, GRID_COLOR, line, n, text, type Rect } from './chart-svg-util.js';
+import { fit, line, n, text, type Rect } from './chart-svg-util.js';
 import type { ChartViewModel } from './chart-view.js';
+import { chartAreaRect, chartStroke, chartTextAttributes } from './chart-svg-appearance';
 
 const polar = (cx: number, cy: number, r: number, angle: number): [number, number] => [
 	cx + r * Math.sin(angle),
@@ -34,7 +35,7 @@ function slicePath(
 
 /** Pie (first series) and doughnut (one ring per series) charts. */
 export function pieSvg(model: ChartViewModel, area: Rect): string {
-	const out: string[] = [];
+	const out: string[] = [chartAreaRect(model, 'plotArea', area)];
 	const cx = area.x + area.w / 2;
 	const cy = area.y + area.h / 2;
 	const radius = Math.max(1, Math.min(area.w, area.h) / 2 - 4);
@@ -62,13 +63,19 @@ export function pieSvg(model: ChartViewModel, area: Rect): string {
 
 /** Radar charts: one closed polyline per series over category spokes. */
 export function radarSvg(model: ChartViewModel, area: Rect): string {
-	const out: string[] = [];
+	const out: string[] = [chartAreaRect(model, 'plotArea', area)];
 	const scale = model.valueAxis;
 	const count = model.categories.length;
 	if (!scale || count < 1) return '';
+	const valueAttrs = chartTextAttributes(model, 'valueAxis', 9);
+	const categoryAttrs = chartTextAttributes(model, 'categoryAxis');
+	const valueSize = valueAttrs.size ?? 9;
+	const categorySize = categoryAttrs.size ?? 10;
+	const grid = chartStroke(model, 'gridlineMajor');
+	const axis = chartStroke(model, 'categoryAxis');
 	const cx = area.x + area.w / 2;
 	const cy = area.y + area.h / 2 + 4;
-	const radius = Math.max(1, Math.min(area.w, area.h) / 2 - 18);
+	const radius = Math.max(1, Math.min(area.w, area.h) / 2 - Math.max(18, categorySize * 1.8));
 	const angle = (i: number): number => (i / count) * Math.PI * 2;
 	const r = (v: number): number => ((v - scale.min) / (scale.max - scale.min || 1)) * radius;
 	const labelEvery = Math.max(
@@ -79,16 +86,26 @@ export function radarSvg(model: ChartViewModel, area: Rect): string {
 		const ring = Array.from({ length: count }, (_, i) => polar(cx, cy, r(t), angle(i)))
 			.map(([x, y]) => `${n(x)},${n(y)}`)
 			.join(' ');
-		out.push(`<polygon points="${ring}" fill="none" stroke="${GRID_COLOR}" stroke-width="1"/>`);
-		if (k % labelEvery === 0)
-			out.push(text(cx + 3, cy - r(t) + 3, formatAxisValue(t, scale.percent), { size: 9 }));
+		out.push(
+			`<polygon points="${ring}" fill="none" stroke="${grid.color}" stroke-width="${n(grid.width)}"/>`,
+		);
+		if (model.appearance?.valueAxis?.labelsVisible !== false && k % labelEvery === 0)
+			out.push(
+				text(cx + 3, cy - r(t) + valueSize * 0.3, formatAxisValue(t, scale.percent), valueAttrs),
+			);
 	}
 	model.categories.forEach((c, i) => {
 		const [x, y] = polar(cx, cy, radius, angle(i));
-		out.push(line(cx, cy, x, y, AXIS_COLOR));
+		out.push(line(cx, cy, x, y, axis.color, axis.width));
 		const [lx, ly] = polar(cx, cy, radius + 10, angle(i));
 		const anchor = Math.abs(lx - cx) < 2 ? 'middle' : lx > cx ? 'start' : 'end';
-		out.push(text(lx, ly + 3, fit(c, area.w / 4), { anchor }));
+		if (model.appearance?.categoryAxis?.labelsVisible !== false)
+			out.push(
+				text(lx, ly + categorySize * 0.3, fit(c, area.w / 4, categorySize), {
+					anchor,
+					...categoryAttrs,
+				}),
+			);
 	});
 	for (const s of model.series) {
 		const points = s.values

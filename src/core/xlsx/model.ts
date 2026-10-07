@@ -555,6 +555,8 @@ export interface ChartObject {
 	colorPalette?: number;
 	/** Imported Office chart-style metadata. Style authoring is not yet supported. */
 	styleDefinition?: ChartStyleDefinition;
+	/** Imported direct chart formatting. Editing this metadata is not supported. */
+	formatting?: ChartStyleDefinition;
 	/** Package part of the chart (`xl/charts/chart1.xml`), kept so unmodelled detail survives. */
 	partName?: string;
 	name?: string;

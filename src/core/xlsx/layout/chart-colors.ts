@@ -11,9 +11,16 @@ import { THEME_SLOTS } from './colors';
 
 /** Workbook theme in DrawingML slot order, including missing-slot fallbacks. */
 export function chartColorScheme(theme: ThemePalette): ChartColorScheme {
-	return Object.fromEntries(
+	const slots = Object.fromEntries(
 		THEME_SLOTS.map((slot, index) => [slot, `#${themeColor(theme, index) ?? '000000'}`]),
-	) as unknown as ChartColorScheme;
+	);
+	return {
+		...slots,
+		bg1: slots.lt1,
+		tx1: slots.dk1,
+		bg2: slots.lt2,
+		tx2: slots.dk2,
+	} as unknown as ChartColorScheme;
 }
 
 /** DrawingML `lumMod`/`lumOff` on HSL luminance. */

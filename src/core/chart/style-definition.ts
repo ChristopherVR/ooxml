@@ -24,6 +24,9 @@ export interface ChartStyleReference {
 
 /** Theme-relative formatting; opaque XML retains properties not yet interpreted. */
 export interface ChartStyleEntry {
+	/** Direct axis formatting, when imported from a chart part. */
+	axisVisible?: boolean;
+	labelsVisible?: boolean;
 	fontSize?: number;
 	bold?: boolean;
 	italic?: boolean;

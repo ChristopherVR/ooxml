@@ -357,6 +357,7 @@
         "@playwright/test": "^1.63.0",
         "@types/node": "^24.0.0",
         "jszip": "^3.10.2",
+        "ooxml-core": "workspace:*",
       },
     },
     "mcp": {

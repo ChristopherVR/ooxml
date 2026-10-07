@@ -5,6 +5,7 @@ import { chartPaletteSeriesColor, findChartColorPalette } from '../../chart/colo
 import { resolveDrawingColor } from '../../diagram/drawing-color';
 import { niceScale, PERCENT_SCALE, type AxisScale } from './chart-scale.js';
 import { resolveColor } from './colors.js';
+import { chartAppearance, type ChartAppearance } from './chart-appearance';
 
 export interface ChartSeriesView {
 	name: string;
@@ -23,6 +24,8 @@ export interface ValueAxisView extends AxisScale {
 
 /** Neutral data for a chart painter: series resolved, colours chosen, axes scaled. */
 export interface ChartViewModel {
+	/** Native defaults and direct element formatting, resolved against the workbook theme. */
+	appearance?: ChartAppearance;
 	type: ChartType;
 	grouping: 'clustered' | 'stacked' | 'percentStacked' | 'standard';
 	title?: string;
@@ -156,6 +159,8 @@ export function chartView(
 		supported: SUPPORTED.has(type),
 	};
 	if (chart.title) model.title = chart.title;
+	const appearance = chartAppearance(chart, theme);
+	if (appearance) model.appearance = appearance;
 
 	if (type === 'scatter') {
 		series.forEach((s, i) => {

@@ -296,7 +296,12 @@ export function rgbToHsl(r: number, g: number, b: number): HslColor {
  * @param l - Lightness in [0, 1].
  * @returns An object with `r`, `g`, `b` channels (0-255 each).
  */
-export function hslToRgb(h: number, s: number, l: number): { r: number; g: number; b: number } {
+export function hslToRgb(
+	h: number,
+	s: number,
+	l: number,
+	roundChannel: (value: number) => number = Math.round,
+): { r: number; g: number; b: number } {
 	const sC = clampUnitInterval(s);
 	const lC = clampUnitInterval(l);
 	// Normalise hue to [0, 360) handling negative values
@@ -341,9 +346,9 @@ export function hslToRgb(h: number, s: number, l: number): { r: number; g: numbe
 	}
 
 	return {
-		r: Math.round((rP + m) * 255),
-		g: Math.round((gP + m) * 255),
-		b: Math.round((bP + m) * 255),
+		r: roundChannel((rP + m) * 255),
+		g: roundChannel((gP + m) * 255),
+		b: roundChannel((bP + m) * 255),
 	};
 }
 

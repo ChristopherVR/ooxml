@@ -151,6 +151,7 @@ const APPLIED = new Set([
 export function resolveDrawingColor(
 	color: DiagramColor,
 	theme?: DrawingColorTheme,
+	options?: { hslRounding?: 'nearest' | 'halfDown' },
 ): ResolvedDrawingColor | undefined {
 	const base = baseHex(color, theme);
 	const rgb = base ? hexToRgbChannels(base) : null;
@@ -200,7 +201,10 @@ export function resolveDrawingColor(
 		if (lumMod !== undefined) hsl.l = clampUnitInterval(hsl.l * lumMod);
 		const lumOff = parseDrawingFraction(find('lumOff'));
 		if (lumOff !== undefined) hsl.l = clampUnitInterval(hsl.l + lumOff);
-		({ r, g, b } = hslToRgb(hsl.h, hsl.s, hsl.l));
+		// Excel chart text rounds half-channel HSL ties downward (native 50% gray is #7F7F7F).
+		const round =
+			options?.hslRounding === 'halfDown' ? (value: number) => Math.ceil(value - 0.5) : Math.round;
+		({ r, g, b } = hslToRgb(hsl.h, hsl.s, hsl.l, round));
 	}
 
 	let alpha = parseDrawingPercent(find('alpha')) ?? 1;

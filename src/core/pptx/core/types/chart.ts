@@ -6,6 +6,7 @@
  */
 
 import type { PptxChartAxisLabelFormatting } from './chart-axis';
+import type { ChartGradientFill } from '../../../chart/gradient-definition';
 import type { PptxChartDataPointPicture } from './chart-ex';
 import type { PptxChartPivotFormats } from './chart-pivot-format';
 import type { PptxChartPivotSource } from './chart-pivot-source';
@@ -275,12 +276,7 @@ export type PptxChartScatterStyle =
  * gradient centres on `focalPoint` (0..1 fractions of the box), the middle
  * when absent.
  */
-export interface PptxChartGradientFill {
-	type: 'linear' | 'radial';
-	stops: Array<{ color: string; position: number; opacity?: number }>;
-	angle?: number;
-	focalPoint?: { x: number; y: number };
-}
+export type PptxChartGradientFill = ChartGradientFill;
 
 export interface PptxChartShapeProps {
 	fillColor?: string;

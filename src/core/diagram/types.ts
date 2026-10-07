@@ -211,6 +211,8 @@ export type DiagramFill =
 			/** Linear angle in degrees, when `a:lin` is present. */
 			angle?: number;
 			path?: string;
+			/** DrawingML path-gradient focus rectangle, as fractions of the shape box. */
+			fillToRect?: { l: number; t: number; r: number; b: number };
 	  }
 	| { kind: 'pattern'; preset: string; foreground?: DiagramColor; background?: DiagramColor }
 	| { kind: 'picture'; relId?: string }
