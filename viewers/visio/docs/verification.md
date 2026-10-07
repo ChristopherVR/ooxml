@@ -2,6 +2,43 @@
 
 Status: local Windows development evidence, 2026-10-03. Full Microsoft Visio parity is not established.
 
+## Saved linear stroke paint, 2026-10-08
+
+The native recorder shares stop setup between Fill section 249 and Line section
+248 and accepts Paint and GradientAngle. Two genuine four-case rectangle captures
+cover two/three stops and opaque/translucent paint at zero and 90 degrees. Their
+local directories are visio-line-gradient-ba051c12890c4b4c94be53fc88bba162 and
+visio-line-gradient-vertical-2d88777d33234f9a9eadf1774f6974a5.
+Owned InvisibleApp instances restore raster settings and quit.
+
+Unchanged native PNGs are registered using measured geometry extents, physical
+line width and XYToPage pose. The benchmark excludes two pixels along stroke
+edges and eight pixels near joins. Each comparison covers 6,480 pixels. Both
+live and portable SVG pass on all six routes: 96 comparisons across the captures.
+Horizontal maximum channel error is seven, mean below 1.11; vertical maximum is
+five, mean below 1.39. Existing maximum-seven and mean-below-one for opaque
+two-stop paint, or 1.5 otherwise, bounds remain unchanged. Exact parity is open.
+
+The initial geometry-only span reached maximum 20 and mean 2.55. Native pixels
+show that stroke paint includes the physical half-width outside the geometry.
+The core descriptor now expands orthogonal endpoints after page scaling, keeping
+line width physical and preserving source stops. The shared fill painter and
+sigma/gamma sampler consume that descriptor.
+
+An owned native SVG probe confirms that a green layer with 40 percent transparency
+overrides red-to-blue line stops with solid #00ff00 and opacity 0.6. Another shows
+that LineColorTrans does not multiply gradient stop alpha. Probe directories are
+visio-line-layer-30532dc9eb1342f4964c21108d649c16 and
+visio-line-opacity-2c0c19f48c9947c89934b6048c73214f. Core tests preserve all four
+native gradients in each capture through move/save/reparse. Regression coverage
+also checks independent fill/line caches, scaling, layer overrides, detached
+snapshots and combined stop budgets. Core reparse is not native Office acceptance.
+
+Arrowheads retain solid fallback paint and report unsupported-gradient-arrows.
+Nonlinear directions report unsupported-saved-line-gradient. Oblique spans,
+groups/flips, contours, exact colors, editing UI and native Office reopening
+remain unverified. Accepted gradients retain unverified-gradient-raster.
+
 ## Draft safety and bounded formula follow-up
 
 The viewer now pins published core

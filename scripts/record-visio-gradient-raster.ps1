@@ -4,7 +4,9 @@ param(
  [string[]]$PathShapes=@('rectangle','ellipse','triangle','notched'),
  [ValidateRange(-180,180)][double]$ShapeAngle=0,
  [ValidateRange(0,13)][int]$FirstDirection=0,
- [ValidateRange(0,13)][int]$LastDirection=13
+ [ValidateRange(0,13)][int]$LastDirection=13,
+ [ValidateSet('Fill','Line')][string]$Paint='Fill',
+ [string]$GradientAngle='0 deg'
 )
 # Compare the real raster engine, rather than assuming native SVG is a paint oracle.
 $ErrorActionPreference='Stop'
@@ -44,22 +46,29 @@ try {
     $kinds=if($direction -eq 13){$PathShapes}else{@('rectangle')}
     foreach($kind in $kinds){
      $name="direction-$direction-$kind-stops-$stopCount-alpha-$alpha"
+     if($Paint -eq 'Line'){$name='line-'+$name}
      if($ShapeAngle -ne 0){$name+='-angle-'+$ShapeAngle.ToString([cultureinfo]::InvariantCulture)}
      $shape=New-VisioNativeFillShape $page $kind
      $shape.CellsU('Angle').FormulaU=$ShapeAngle.ToString([cultureinfo]::InvariantCulture)+' deg'
      $shape.CellsU('FillPattern').FormulaU='1'
      $shape.CellsU('LinePattern').FormulaU='0'
+     if($Paint -eq 'Line'){
+      $shape.CellsU('FillPattern').FormulaU='0'
+      $shape.CellsU('LinePattern').FormulaU='1'
+      $shape.CellsU('LineWeight').FormulaU='0.1 in'
+     }
      $front=if($alpha){'20%'}else{'0%'}
      $back=if($alpha){'50%'}else{'0%'}
-     Set-VisioNativeFillGradient $shape '0 deg' 'RGB(255,0,0)' 'RGB(0,0,255)' $front $back $direction
+     Set-VisioNativeGradient $shape $Paint $GradientAngle 'RGB(255,0,0)' 'RGB(0,0,255)' $front $back $direction
+     $gradientSection=if($Paint -eq 'Line'){248}else{249}
      if($stopCount -eq 3){
-      while($shape.RowCount(249) -lt 3){$shape.AddRow(249,-1,0) | Out-Null}
-      $shape.CellsSRC(249,1,0).FormulaU='RGB(0,255,0)'
-      $shape.CellsSRC(249,1,1).FormulaU=if($alpha){'35%'}else{'0%'}
-      $shape.CellsSRC(249,1,2).FormulaU='50%'
-      $shape.CellsSRC(249,2,0).FormulaU='RGB(0,0,255)'
-      $shape.CellsSRC(249,2,1).FormulaU=$back
-      $shape.CellsSRC(249,2,2).FormulaU='100%'
+      while($shape.RowCount($gradientSection) -lt 3){$shape.AddRow($gradientSection,-1,0) | Out-Null}
+      $shape.CellsSRC($gradientSection,1,0).FormulaU='RGB(0,255,0)'
+      $shape.CellsSRC($gradientSection,1,1).FormulaU=if($alpha){'35%'}else{'0%'}
+      $shape.CellsSRC($gradientSection,1,2).FormulaU='50%'
+      $shape.CellsSRC($gradientSection,2,0).FormulaU='RGB(0,0,255)'
+      $shape.CellsSRC($gradientSection,2,1).FormulaU=$back
+      $shape.CellsSRC($gradientSection,2,2).FormulaU='100%'
      }
      $shape.Export((Join-Path $directory ($name+'.svg')))
      $shape.Export((Join-Path $directory ($name+'.png')))
@@ -86,7 +95,7 @@ try {
       $shape.XYToPage(1,0,[ref]$xx,[ref]$xy)
       $shape.XYToPage(0,1,[ref]$yx,[ref]$yy)
       $nativeTransform=@(($xx-$ox),($xy-$oy),($yx-$ox),($yy-$oy),$ox,$oy)
-      $cases+=,@{name=$name;direction=$direction;kind=$kind;outline=$outline;angle=$ShapeAngle;nativeExtents=$nativeExtents;nativeLineWidth=$shape.CellsU('LineWeight').ResultIU;nativeTransform=$nativeTransform;stopCount=$stopCount;alpha=$alpha;shapeId=[string]$shape.ID;width=$bitmap.Width;height=$bitmap.Height;samples=$samples}
+      $cases+=,@{name=$name;paint=$Paint;direction=$direction;kind=$kind;outline=$outline;angle=$ShapeAngle;nativeExtents=$nativeExtents;nativeLineWidth=$shape.CellsU('LineWeight').ResultIU;nativeTransform=$nativeTransform;stopCount=$stopCount;alpha=$alpha;shapeId=[string]$shape.ID;width=$bitmap.Width;height=$bitmap.Height;samples=$samples}
      } finally {$bitmap.Dispose()}
     }
    }

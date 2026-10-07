@@ -12,7 +12,7 @@ import {
 	EMPTY_LAYER_OVERRIDES,
 	type LayerVisibilityOverride,
 } from './viewer-layers';
-import { fillPaint } from './render-fill';
+import { fillPaint, linePaint } from './render-fill';
 import { renderImage } from './render-image';
 import { renderForeignVectorShape } from './render-foreign-vector-shape';
 import { ForeignVectorBudget } from 'ooxml-core/visio/ui';
@@ -181,6 +181,10 @@ function drawOwn(
 	const fill = shape.geometry.some((geometry) => geometry.fill)
 		? fillPaint(shape.style, defs, resources, world, context.pageHeight)
 		: 'none';
+	const stroke =
+		shape.geometry.some((geometry) => geometry.stroke) && shape.style.linePattern !== 0
+			? linePaint(shape.style, defs, resources, world, context.pageHeight)
+			: 'none';
 	for (const geometry of shape.geometry) {
 		if (++context.nodes > 50_000) {
 			warnings.add(
@@ -195,7 +199,7 @@ function drawOwn(
 		path.setAttribute('fill', geometry.fill ? fill : 'none');
 		path.setAttribute('fill-opacity', String(shape.style.fillOpacity));
 		const stroked = geometry.stroke && shape.style.linePattern !== 0;
-		path.setAttribute('stroke', stroked ? safeColor(shape.style.lineColor) : 'none');
+		path.setAttribute('stroke', stroked ? stroke : 'none');
 		path.setAttribute('stroke-width', String(shape.style.lineWidth));
 		path.setAttribute('stroke-opacity', String(shape.style.lineOpacity));
 		path.setAttribute('stroke-linejoin', 'round');

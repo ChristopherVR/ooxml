@@ -1,5 +1,19 @@
 # Provenance
 
+## Shared Visio stroke gradient descriptors
+
+Source: ChristopherVR/ooxml at `e567a4a8a`, the existing fill-gradient parser in
+`src/core/visio/saved-fill-gradient.ts`, native stop helper in
+`scripts/visio-native-gradient.ps1`, and SVG painter in
+`src/ui/src/visio/render-fill.ts`. They now serve both fills and strokes without
+copied parsing or stop serialization. The new physical stroke span descriptor
+was moved from the in-progress UI painter into
+`src/core/visio/native-gradient-stops.ts`; UI delegates through the existing
+`ooxml-core/visio/ui` export. Source stop caches remain unchanged. Native section
+248, layer overrides and horizontal/vertical PNG measurements motivate the
+stroke-specific behavior; nonlinear directions and arrow paint remain explicit
+limitations.
+
 Every module moved into this repository is recorded here: source repository and path, the commit it was taken at, and what was changed on the way in. Entries name the area (`src/<area>/`) of the single package `ooxml-core`. Consumers replace their own copy only after the moved module's tests pass here.
 
 | Package    | Module                                                                                                                                                                 | Source                                                                                            | Source commit                                  | Changes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |

@@ -8,6 +8,13 @@ comparisons below do not establish native raster parity. See verification.md
 for the 68-case and extended 84-case raster captures and the
 unverified-gradient-raster diagnostic.
 
+Saved linear strokes now reuse the fill-gradient parser, sampler and painter.
+Native horizontal and vertical rectangle strokes with two/three stops and
+independent transparency meet the existing interior error bounds across all six
+routes for live rendering and portable SVG. Colored layers override them with
+solid layer paint. Exact pixels, contours, oblique strokes, arrowheads, nonlinear
+directions, editing controls and native save/reopen acceptance remain open.
+
 Saved opaque two-stop fills now use the measured sigma/gamma profile, and saved
 radial fills use physical circular radii. The native PNG interior benchmark
 still has nonzero channel differences; transparency and exact edge pixels

@@ -5,6 +5,22 @@ import { renderText } from './render-text';
 import { rasterFixture } from './__fixtures__/raster-fixtures.mjs';
 
 describe('defensive scene limits', () => {
+	it('counts fill and stroke stops together against the scene resource limit', () => {
+		const model = structuredClone(demoDocument);
+		model.pages = [model.pages[0]!];
+		const shape = model.pages[0]!.shapes[0]!;
+		const gradient = {
+			type: 'linear' as const,
+			start: [0, 0] as const,
+			end: [1, 1] as const,
+			stops: Array.from({ length: 128 }, () => ({ offset: 0, color: '#000', opacity: 1 })),
+		};
+		shape.style.fillGradient = gradient;
+		model.pages[0]!.shapes = Array.from({ length: 400 }, (_, i) => ({ ...shape, id: String(i) }));
+		assertViewableDocument(model);
+		shape.style.lineGradient = gradient;
+		expect(() => assertViewableDocument(model)).toThrow('gradient stop limits');
+	});
 	it('validates bounding-box gradient rotation and normalized endpoints', () => {
 		const model = structuredClone(demoDocument);
 		const gradient = {

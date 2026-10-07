@@ -104,9 +104,51 @@ export function copySnapshotScene(model: VisioDocument): VisioDocument {
 			'endArrowSize',
 		]);
 		const dash = source.lineDash;
-		const gradient = source.fillGradient;
+		const gradients: Pick<VisioStyle, 'fillGradient' | 'lineGradient'> = {};
+		for (const key of ['fillGradient', 'lineGradient'] as const) {
+			const gradient = source[key];
+			if (!gradient) continue;
+			gradients[key] = {
+				...fields(gradient, ['interpolation']),
+				...(gradient.type === 'linear'
+					? {
+							type: 'linear' as const,
+							start: [gradient.start[0], gradient.start[1]] as const,
+							end: [gradient.end[0], gradient.end[1]] as const,
+							...(gradient.boundingBoxAngle === undefined
+								? {}
+								: { boundingBoxAngle: gradient.boundingBoxAngle }),
+						}
+					: gradient.type === 'radial'
+						? {
+								type: 'radial' as const,
+								center: [gradient.center[0], gradient.center[1]] as const,
+								radius: gradient.radius,
+								...fields(gradient, ['coordinateSpace']),
+							}
+						: {
+								type: 'regions' as const,
+								...fields(gradient, ['coordinateSpace']),
+								regions: list(gradient.regions, 'gradient regions', 100_000, (region) => ({
+									points: list(
+										region.points,
+										'gradient vertices',
+										300_000,
+										(point) => [point[0], point[1]] as const,
+									),
+									start: [region.start[0], region.start[1]] as const,
+									end: [region.end[0], region.end[1]] as const,
+									angle: region.angle,
+								})),
+							}),
+				stops: list(gradient.stops, 'gradient stops', 100_000, (stop) =>
+					fields(stop, ['offset', 'color', 'opacity']),
+				),
+			};
+		}
 		return {
 			...result,
+			...gradients,
 			...(source.fillPattern
 				? {
 						fillPattern: {
@@ -119,47 +161,6 @@ export function copySnapshotScene(model: VisioDocument): VisioDocument {
 			...(dash === undefined
 				? {}
 				: { lineDash: list(dash, 'dash values', 150_000, (value) => value) }),
-			...(gradient
-				? {
-						fillGradient: {
-							...fields(gradient, ['interpolation']),
-							...(gradient.type === 'linear'
-								? {
-										type: 'linear' as const,
-										start: [gradient.start[0], gradient.start[1]] as const,
-										end: [gradient.end[0], gradient.end[1]] as const,
-										...(gradient.boundingBoxAngle === undefined
-											? {}
-											: { boundingBoxAngle: gradient.boundingBoxAngle }),
-									}
-								: gradient.type === 'radial'
-									? {
-											type: 'radial' as const,
-											center: [gradient.center[0], gradient.center[1]] as const,
-											radius: gradient.radius,
-											...fields(gradient, ['coordinateSpace']),
-										}
-									: {
-											type: 'regions' as const,
-											...fields(gradient, ['coordinateSpace']),
-											regions: list(gradient.regions, 'gradient regions', 100_000, (region) => ({
-												points: list(
-													region.points,
-													'gradient vertices',
-													300_000,
-													(point) => [point[0], point[1]] as const,
-												),
-												start: [region.start[0], region.start[1]] as const,
-												end: [region.end[0], region.end[1]] as const,
-												angle: region.angle,
-											})),
-										}),
-							stops: list(gradient.stops, 'gradient stops', 100_000, (stop) =>
-								fields(stop, ['offset', 'color', 'opacity']),
-							),
-						},
-					}
-				: {}),
 		};
 	};
 	const paragraph = (source: VisioParagraph): VisioParagraph => ({

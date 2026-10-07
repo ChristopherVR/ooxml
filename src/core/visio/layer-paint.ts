@@ -27,6 +27,7 @@ export function layerPaintSheet(
 		['FillBkgndTrans', String(transparency)],
 		// Native colored layers use the legacy fill pattern, not modern cached stop colors.
 		['FillGradientEnabled', '0'],
+		['LineGradientEnabled', '0'],
 	])
 		cells.set(name!, { value: value! });
 	const sections = new Map(sheet.sections);

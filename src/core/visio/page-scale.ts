@@ -75,14 +75,18 @@ export function normalizeVisioPageGeometry(
 			check();
 			geometry.path = scaleVisioGeometryPath(geometry.path, ratio);
 		}
-		const gradient = shape.style.fillGradient;
-		if (gradient?.type === 'linear' && gradient.boundingBoxAngle === undefined) {
-			gradient.start = [distance(gradient.start[0], ratio), distance(gradient.start[1], ratio)];
-			gradient.end = [distance(gradient.end[0], ratio), distance(gradient.end[1], ratio)];
-		}
-		if (gradient?.type === 'radial' && gradient.coordinateSpace === 'local') {
-			gradient.center = [distance(gradient.center[0], ratio), distance(gradient.center[1], ratio)];
-			gradient.radius = distance(gradient.radius, ratio);
+		for (const gradient of [shape.style.fillGradient, shape.style.lineGradient]) {
+			if (gradient?.type === 'linear' && gradient.boundingBoxAngle === undefined) {
+				gradient.start = [distance(gradient.start[0], ratio), distance(gradient.start[1], ratio)];
+				gradient.end = [distance(gradient.end[0], ratio), distance(gradient.end[1], ratio)];
+			}
+			if (gradient?.type === 'radial' && gradient.coordinateSpace === 'local') {
+				gradient.center = [
+					distance(gradient.center[0], ratio),
+					distance(gradient.center[1], ratio),
+				];
+				gradient.radius = distance(gradient.radius, ratio);
+			}
 		}
 		shape.text.width = distance(shape.text.width, ratio);
 		shape.text.height = distance(shape.text.height, ratio);

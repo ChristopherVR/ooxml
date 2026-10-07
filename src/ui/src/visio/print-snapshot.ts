@@ -302,18 +302,17 @@ function validationCost(model: VisioDocument): {
 			);
 			for (const geometry of shape.geometry) strings(geometry.path);
 			if (shape.style.fillPattern) work += 64;
-			const gradients = visioGradientInstances(shape.style.fillGradient);
-			work += gradients * 16;
-			for (const stop of shape.style.fillGradient?.stops ?? []) {
-				work += 3 * gradients;
-				strings(stop.color);
+			for (const gradient of [shape.style.fillGradient, shape.style.lineGradient]) {
+				const gradients = visioGradientInstances(gradient);
+				work += gradients * 16;
+				for (const stop of gradient?.stops ?? []) {
+					work += 3 * gradients;
+					strings(stop.color);
+				}
+				if (gradient)
+					work +=
+						gradients * 10 * (visioRenderedGradientStopCount(gradient) - gradient.stops.length);
 			}
-			if (shape.style.fillGradient)
-				work +=
-					gradients *
-					10 *
-					(visioRenderedGradientStopCount(shape.style.fillGradient) -
-						shape.style.fillGradient.stops.length);
 			for (const run of shape.text.runs) {
 				work += 8;
 				strings(run.text, run.fontFamily, run.color);

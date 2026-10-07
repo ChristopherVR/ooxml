@@ -15,19 +15,20 @@ import { canUseVisioSigmaInterpolation } from './native-gradient-stops';
  * https://learn.microsoft.com/en-us/openspecs/sharepoint_protocols/ms-vsdx/e19c498a-5277-4add-9953-8b85cb2af250
  * https://learn.microsoft.com/en-us/openspecs/sharepoint_protocols/ms-vsdx/64030657-ec1c-4bcd-adbb-701bb24004fa
  */
-export function savedFillGradient(
+export function savedShapeGradient(
 	sheet: Sheet,
 	width: number,
 	height: number,
 	resolveColor: (cells: Cells) => string,
 	report: Report,
 	geometry: readonly VisioGeometry[] = [],
+	paint: 'Fill' | 'Line' = 'Fill',
 ): VisioFillGradient | undefined {
 	const cells = sheet.cells;
-	if (number(cells, 'FillGradientEnabled', NaN) !== 1) return undefined;
+	if (number(cells, `${paint}GradientEnabled`, NaN) !== 1) return undefined;
 	// Native explicit stops override the active theme stops; wholly themed tail
 	// rows remain inherited placeholders and do not add colors to the gradient.
-	const rows = sectionRows(sheet, 'FillGradient')
+	const rows = sectionRows(sheet, `${paint}Gradient`)
 		.filter(
 			(row) =>
 				row.cells.size === 0 || ![...row.cells.values()].every((cell) => cell.value === 'Themed'),
@@ -38,13 +39,13 @@ export function savedFillGradient(
 		return undefined;
 	const reject = () => {
 		report(
-			'unsupported-saved-fill-gradient',
-			'The saved fill gradient has incomplete or unsupported settings; its foreground color is used.',
+			`unsupported-saved-${paint.toLowerCase()}-gradient`,
+			`The saved ${paint.toLowerCase()} gradient has incomplete or unsupported settings; its foreground color is used.`,
 		);
 		return undefined;
 	};
-	const angle = number(cells, 'FillGradientAngle', NaN);
-	const direction = number(cells, 'FillGradientDir', NaN);
+	const angle = number(cells, `${paint}GradientAngle`, NaN);
+	const direction = number(cells, `${paint}GradientDir`, NaN);
 	const wrapped = ((angle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
 	// Quarter turns retain physical endpoints. Native oblique SVG references use
 	// bounding-box rotation, which differs from physical projection on rectangles.
@@ -59,6 +60,7 @@ export function savedFillGradient(
 		!Number.isInteger(direction) ||
 		direction < 0 ||
 		direction > 13 ||
+		(paint === 'Line' && direction !== 0) ||
 		number(cells, 'RotateGradientWithShape', NaN) !== 1 ||
 		number(cells, 'UseGroupGradient', NaN) !== 0
 	)
@@ -109,3 +111,5 @@ export function savedFillGradient(
 	if (canUseVisioSigmaInterpolation(gradient)) gradient.interpolation = 'sigma-gamma22';
 	return gradient;
 }
+
+export { savedShapeGradient as savedFillGradient };

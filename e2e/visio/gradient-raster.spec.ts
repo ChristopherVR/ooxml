@@ -18,6 +18,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 					direction: number;
 					stopCount: number;
 					alpha: boolean;
+					paint?: 'Fill' | 'Line';
 					shapeId: string;
 					kind:
 						| 'rectangle'
@@ -91,6 +92,8 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 					const view = copy.pages[0]!;
 					view.shapes = view.shapes.filter((shape) => shape.id === sample.shapeId);
 					const shape = view.shapes[0]!;
+					if (sample.paint === 'Line' && shape.style.lineGradient?.type !== 'linear')
+						throw new Error('The native stroke gradient was not parsed.');
 					const extents = sample.nativeExtents;
 					if (
 						extents &&
@@ -156,6 +159,21 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 						return [(point.x - left) * scaleX, (view.height - point.y - top) * scaleY];
 					});
 					const interior = (x: number, y: number) => {
+						if (sample.paint === 'Line') {
+							const radius = (sample.nativeLineWidth! * scaleX) / 2 - 2;
+							return vertices.some(([ax, ay], index) => {
+								const [bx, by] = vertices[(index + 1) % vertices.length]!;
+								const dx = bx! - ax!,
+									dy = by! - ay!;
+								const length = Math.hypot(dx, dy);
+								const along = ((x - ax!) * dx + (y - ay!) * dy) / length;
+								return (
+									along > 8 &&
+									along < length - 8 &&
+									Math.abs((x - ax!) * dy - (y - ay!) * dx) / length < radius
+								);
+							});
+						}
 						if (!sample.angle && (sample.direction !== 13 || sample.kind === 'rectangle'))
 							return true;
 						if (sample.kind === 'ellipse') {
@@ -199,8 +217,9 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 									total = 0,
 									channels = 0;
 								// Interior benchmark excludes the export bounds and outer-edge antialiasing.
-								for (let y = 8; y < 136; y++)
-									for (let x = 8; x < 280; x++) {
+								const margin = sample.paint === 'Line' ? 1 : 8;
+								for (let y = margin; y < 144 - margin; y++)
+									for (let x = margin; x < 288 - margin; x++) {
 										if (!interior(x + 0.5, y + 0.5)) continue;
 										for (let c = 0; c < 4; c++) {
 											const i = 4 * (y * 288 + x) + c,

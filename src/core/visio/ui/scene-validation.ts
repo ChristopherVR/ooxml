@@ -172,11 +172,9 @@ export function assertViewableDocument(model: VisioDocument): void {
 			if (imageBytes > 64 * 1024 * 1024)
 				throw new Error('The scene exceeds safe raster byte limits.');
 		}
-		if (
-			shape.style.fillGradient &&
-			(gradientStops += assertVisioFillGradient(shape.style.fillGradient, finite, label)) > 100_000
-		)
-			throw new Error('The scene exceeds aggregate gradient stop limits.');
+		for (const gradient of [shape.style.fillGradient, shape.style.lineGradient])
+			if (gradient && (gradientStops += assertVisioFillGradient(gradient, finite, label)) > 100_000)
+				throw new Error('The scene exceeds aggregate gradient stop limits.');
 		if (typeof shape.text.plainText !== 'string')
 			throw new Error('The scene has invalid plain text.');
 		textBytes += shape.text.plainText.length;

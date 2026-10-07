@@ -133,17 +133,17 @@ export function estimatePageSvgBytes(
 					shape.style.lineColor.length * 24 +
 					shape.style.fill.length * 6,
 			);
-		const gradients = visioGradientInstances(shape.style.fillGradient);
-		reserve(1024 * gradients);
-		for (const stop of shape.style.fillGradient?.stops ?? [])
-			reserve(gradients * (256 + stop.color.length * 6));
-		if (shape.style.fillGradient)
-			reserve(
-				gradients *
-					(visioRenderedGradientStopCount(shape.style.fillGradient) -
-						shape.style.fillGradient.stops.length) *
-					(256 + 7 * 6),
-			);
+		for (const gradient of [shape.style.fillGradient, shape.style.lineGradient]) {
+			const gradients = visioGradientInstances(gradient);
+			reserve(1024 * gradients);
+			for (const stop of gradient?.stops ?? []) reserve(gradients * (256 + stop.color.length * 6));
+			if (gradient)
+				reserve(
+					gradients *
+						(visioRenderedGradientStopCount(gradient) - gradient.stops.length) *
+						(256 + 7 * 6),
+				);
+		}
 		if (shape.style.fillPattern)
 			reserve(1536 + 4 * Math.ceil(shape.style.fillPattern.bytes.byteLength / 3));
 		if (shape.image) {

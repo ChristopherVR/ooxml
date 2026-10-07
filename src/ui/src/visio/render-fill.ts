@@ -4,12 +4,16 @@ import type {
 	VisioLinearGradient,
 	VisioRadialGradient,
 } from 'ooxml-core/visio';
-import { visioFillPatternTransform, visioRenderedGradientStops } from 'ooxml-core/visio/ui';
+import {
+	visioFillPatternTransform,
+	visioRenderedGradientStops,
+	visioStrokeGradient,
+} from 'ooxml-core/visio/ui';
 import { safeColor, svgElement, matrix } from './render-svg';
 import type { RenderResources } from './render-resources';
 let gradientId = 0;
 export function fillPaint(
-	style: VisioStyle,
+	style: Pick<VisioStyle, 'fill' | 'fillPattern' | 'fillGradient'>,
 	defs: SVGDefsElement,
 	resources: RenderResources,
 	world: VisioMatrix,
@@ -83,6 +87,24 @@ export function fillPaint(
 		return `url(#${pattern.id})`;
 	}
 	return gradientPaint(paint, defs);
+}
+
+export function linePaint(
+	style: VisioStyle,
+	defs: SVGDefsElement,
+	resources: RenderResources,
+	world: VisioMatrix,
+	pageHeight: number,
+): string {
+	const gradient = visioStrokeGradient(style.lineGradient, style.lineWidth);
+	if (!gradient) return safeColor(style.lineColor);
+	return fillPaint(
+		{ fill: style.lineColor, fillGradient: gradient },
+		defs,
+		resources,
+		world,
+		pageHeight,
+	);
 }
 
 /** All gradient kinds share the existing stop, color and alpha serialization. */

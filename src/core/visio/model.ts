@@ -65,6 +65,8 @@ export interface VisioStyle {
 	fillGradient?: VisioFillGradient;
 	fillPattern?: VisioFillPattern;
 	lineColor: string;
+	/** Saved gradient paint; lineColor remains the fallback and arrow-marker color. */
+	lineGradient?: VisioFillGradient;
 	lineWidth: number;
 	/** Normalized SVG-compatible cap; absent means the effective cap is unresolved. */
 	lineCap?: 'round' | 'butt' | 'square';

@@ -22,6 +22,7 @@ function scene() {
 			{ offset: 1, color: '#fff', opacity: 0.5 },
 		],
 	};
+	shape.style.lineGradient = structuredClone(shape.style.fillGradient);
 	shape.text.runs = [
 		{
 			text: shape.text.plainText,
@@ -83,6 +84,9 @@ describe('bounded private rendering-scene copy', () => {
 			[gradient.end, copiedGradient.end],
 			[shape.style.fillGradient!.stops, copy.style.fillGradient!.stops],
 			[shape.style.fillGradient!.stops[0], copy.style.fillGradient!.stops[0]],
+			[shape.style.lineGradient, copy.style.lineGradient],
+			[shape.style.lineGradient!.stops, copy.style.lineGradient!.stops],
+			[shape.style.lineGradient!.stops[0], copy.style.lineGradient!.stops[0]],
 			[shape.text, copy.text],
 			[shape.text.transform, copy.text.transform],
 			[shape.text.margins, copy.text.margins],

@@ -14,5 +14,6 @@ export * from './fill-pattern-transform';
 export { visioGradientInstances } from './gradient-details';
 export {
 	visioRenderedGradientStops,
+	visioStrokeGradient,
 	visioRenderedGradientStopCount,
 } from '../native-gradient-stops';

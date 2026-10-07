@@ -1,4 +1,4 @@
-import { savedFillGradient } from './saved-fill-gradient';
+import { savedShapeGradient } from './saved-fill-gradient';
 import { legacyFillGradient } from './legacy-fill-gradient';
 import { cachedFillPattern } from './fill-pattern';
 import { clampUnitInterval } from '../color/color-primitives';
@@ -79,7 +79,7 @@ export function shapeStyle(
 		pattern = number(cells, 'FillPattern', 1, report);
 	const savedGradient =
 		pattern !== 0
-			? savedFillGradient(
+			? savedShapeGradient(
 					sheet,
 					width,
 					height,
@@ -98,7 +98,19 @@ export function shapeStyle(
 	const fillPattern = fillGradient
 		? undefined
 		: cachedFillPattern(cells, (name) => color(cells, name, '', resources, report));
-	if (fillGradient)
+	const lineGradient =
+		number(cells, 'LinePattern', 1) !== 0
+			? savedShapeGradient(
+					sheet,
+					width,
+					height,
+					(stops) => color(stops, 'GradientStopColor', '', resources, report),
+					report,
+					geometry,
+					'Line',
+				)
+			: undefined;
+	if (fillGradient || lineGradient)
 		report(
 			'unverified-gradient-raster',
 			"Gradient colors may differ from Microsoft Visio's native rendering.",
@@ -115,12 +127,14 @@ export function shapeStyle(
 		);
 	if (
 		(!fillGradient && number(cells, 'FillGradientEnabled', 0, report)) ||
-		number(cells, 'LineGradientEnabled', 0, report)
+		(!lineGradient && number(cells, 'LineGradientEnabled', 0, report))
 	)
 		report(
 			'unsupported-gradient',
 			'Gradient fills and strokes are approximated with their foreground colors.',
 		);
+	if (lineGradient && (number(cells, 'BeginArrow', 0) || number(cells, 'EndArrow', 0)))
+		report('unsupported-gradient-arrows', 'Arrow markers retain the solid line fallback color.');
 	reportThemeEffects(cells, resources, report);
 	if (number(cells, 'ShdwPattern', 0, report))
 		report('unsupported-shadow', 'Shape shadows are not rendered.');
@@ -133,6 +147,7 @@ export function shapeStyle(
 		...(fillGradient ? { fillGradient } : {}),
 		...(fillPattern ? { fillPattern } : {}),
 		lineColor: color(cells, 'LineColor', '#000000', resources, report),
+		...(lineGradient ? { lineGradient } : {}),
 		lineWidth:
 			themeLineWeight(cells, resources, report) ??
 			Math.max(0, number(cells, 'LineWeight', 0.01, report)),
@@ -143,7 +158,7 @@ export function shapeStyle(
 			savedGradient || legacyGradient || fillPattern
 				? 1
 				: opacity(number(cells, 'FillForegndTrans', 0, report)),
-		lineOpacity: opacity(number(cells, 'LineColorTrans', 0, report)),
+		lineOpacity: lineGradient ? 1 : opacity(number(cells, 'LineColorTrans', 0, report)),
 		startArrow: number(cells, 'BeginArrow', 0, report),
 		endArrow: number(cells, 'EndArrow', 0, report),
 		startArrowSize: number(cells, 'BeginArrowSize', 2, report),

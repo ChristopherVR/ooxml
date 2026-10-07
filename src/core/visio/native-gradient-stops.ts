@@ -1,4 +1,4 @@
-import type { VisioGradientPaint } from './model';
+import type { VisioGradientPaint, VisioFillGradient } from './model';
 import { hexToRgbChannels, toHex } from '../color/color-primitives';
 import { VISIO_SIGMA_FACTORS } from './native-gradient-curve';
 
@@ -35,4 +35,29 @@ export function visioRenderedGradientStops(paint: VisioGradientPaint): VisioGrad
 			opacity: 1,
 		};
 	});
+}
+
+/** Native orthogonal stroke paint includes the physical half-width on each side. */
+export function visioStrokeGradient(
+	source: VisioFillGradient | undefined,
+	lineWidth: number,
+): VisioFillGradient | undefined {
+	let gradient = source;
+	if (gradient?.type === 'linear' && gradient.boundingBoxAngle === undefined) {
+		// Native stroke paint spans the stroke's outer bounds, including its physical half-width.
+		const dx = gradient.end[0] - gradient.start[0],
+			dy = gradient.end[1] - gradient.start[1],
+			length = Math.hypot(dx, dy),
+			margin = lineWidth / 2;
+		if (length > 0)
+			gradient = {
+				...gradient,
+				start: [
+					gradient.start[0] - (dx / length) * margin,
+					gradient.start[1] - (dy / length) * margin,
+				],
+				end: [gradient.end[0] + (dx / length) * margin, gradient.end[1] + (dy / length) * margin],
+			};
+	}
+	return gradient;
 }
