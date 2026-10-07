@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { parseVsdx } from 'ooxml-core/visio';
 import { downloadCopy } from './ribbon';
 import { nativeSvgLineEndpoints } from './native-line-svg';
+import { dragLineEndpoint } from './line-endpoint';
 
 interface NativeEndpointEvidence {
 	pageScale?: number;
@@ -94,38 +95,13 @@ for (const variable of endpointDirectories) {
 			const viewer = page.locator('visio-viewer');
 			await viewer.locator('.edit-controls summary').click();
 			for (const item of evidence.cases) {
-				const line = viewer.locator(`[data-shape-id="${item.shapeId}"]`);
-				await line.focus();
-				await line.press('Enter');
-				const handle = viewer.locator(
-					`[data-line-shape-id="${item.shapeId}"][data-line-endpoint="${item.endpoint.toLowerCase()}"]`,
+				const { line, handle, before, after } = await dragLineEndpoint(
+					page,
+					item.shapeId,
+					item.endpoint === 'Begin' ? 'begin' : 'end',
+					item.endpointAfter[`${item.endpoint}X`]!.value,
+					item.endpointAfter[`${item.endpoint}Y`]!.value,
 				);
-				await expect(handle).toBeVisible();
-				const before = (await line.getAttribute('transform'))!;
-				const origin = (await handle.boundingBox())!;
-				const target = await viewer.evaluate((node, item) => {
-					const element = node as unknown as {
-						document: import('ooxml-core/visio').VisioDocument;
-						shadowRoot: ShadowRoot;
-					};
-					const page = element.document.pages[0]!;
-					const svg = element.shadowRoot.querySelector<SVGSVGElement>('svg.paper')!;
-					const matrix = svg.getScreenCTM()!;
-					const point = new DOMPoint(
-						item.endpointAfter[`${item.endpoint}X`]!.value * (page.drawingToPageScale ?? 1),
-						page.height -
-							item.endpointAfter[`${item.endpoint}Y`]!.value * (page.drawingToPageScale ?? 1),
-					).matrixTransform(matrix);
-					return { x: point.x, y: point.y };
-				}, item);
-				await page.mouse.move(origin.x + origin.width / 2, origin.y + origin.height / 2);
-				await page.mouse.down();
-				await page.mouse.move(target.x, target.y, { steps: 4 });
-				await expect(viewer.locator('.endpoint-preview')).toBeVisible();
-				await page.mouse.up();
-				await expect(viewer.locator('.endpoint-preview')).toHaveCount(0);
-				await expect(line).not.toHaveAttribute('transform', before);
-				const after = (await line.getAttribute('transform'))!;
 				const pose = after
 					.slice('matrix('.length, -1)
 					.trim()

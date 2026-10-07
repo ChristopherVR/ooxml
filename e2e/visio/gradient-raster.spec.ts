@@ -1,13 +1,15 @@
 import { test, expect } from '@playwright/test';
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { parseVsdx, type VisioDocument } from 'ooxml-core/visio';
+import type { VisioDocument } from 'ooxml-core/visio';
+import { prepareNativeGradientEdit } from './gradient-edit';
 
 const directory = process.env.VISIO_NATIVE_GRADIENT_RASTER_DIR;
 const resizeSourceDirectory = process.env.VISIO_NATIVE_GRADIENT_RESIZE_SOURCE_DIR;
+const pointerEditing = process.env.VISIO_NATIVE_GRADIENT_ENDPOINT_GESTURE === '1';
 for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
 	for (const group of ['baseline', 'star', 'rotated-polygon'] as const) {
-		test(`${framework}: ${group === 'star' ? 'records unresolved star gradient fidelity' : group === 'rotated-polygon' ? 'records unresolved rotated polygon fidelity' : 'measures saved gradient interiors against native PNG'}`, async ({
+		test(`${framework}: ${group === 'star' ? 'records unresolved star gradient fidelity' : group === 'rotated-polygon' ? 'records unresolved rotated polygon fidelity' : 'measures saved gradient interiors against native PNG'}${pointerEditing ? ' after pointer endpoint editing' : ''}`, async ({
 			page,
 		}) => {
 			test.skip(!directory, 'Set VISIO_NATIVE_GRADIENT_RASTER_DIR to the native raster capture.');
@@ -68,82 +70,13 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			);
 			test.skip(samples.length === 0, 'The native capture has no cases for this outline group.');
 			await page.goto(framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`);
-			const endpointEditing = samples.some((item) => item.endpointEdit);
-			const filename = endpointEditing ? 'gradient-raster-before.vsdx' : 'gradient-raster.vsdx';
-			await page
-				.locator('#file')
-				.setInputFiles(join(resizeSourceDirectory ?? directory!, filename));
-			await expect(page.locator('#file-name')).toHaveText(filename);
-			if (resizeSourceDirectory || endpointEditing)
-				await page.evaluate(async (samples) => {
-					const viewer = document.querySelector('visio-viewer') as unknown as {
-						document: VisioDocument;
-						applyEdits(edits: import('ooxml-core/visio').VisioEdit[]): Promise<void>;
-						undo(): Promise<void>;
-						redo(): Promise<void>;
-					};
-					const before = JSON.stringify(viewer.document.pages);
-					await viewer.applyEdits(
-						samples.map((item) => {
-							if (item.endpointEdit)
-								return {
-									type: 'move-line-endpoint',
-									pageId: viewer.document.pages[0]!.id,
-									shapeId: item.shapeId,
-									...item.endpointEdit,
-								};
-							if (item.kind !== 'line' || !item.nativeShapeWidth)
-								throw new Error('Width-cell comparison requires native line sizes.');
-							return {
-								type: 'resize-shape',
-								pageId: viewer.document.pages[0]!.id,
-								shapeId: item.shapeId,
-								width: item.nativeShapeWidth,
-								height: 0,
-							};
-						}),
-					);
-					if (samples.some((item) => item.endpointEdit)) {
-						const after = JSON.stringify(viewer.document.pages);
-						if (after === before) throw new Error('Endpoint edits did not change the drawing.');
-						await viewer.undo();
-						if (JSON.stringify(viewer.document.pages) !== before)
-							throw new Error('Undo did not restore the original gradient drawing.');
-						await viewer.redo();
-						if (JSON.stringify(viewer.document.pages) !== after)
-							throw new Error('Redo did not restore the endpoint gradient edit.');
-					}
-				}, samples);
-			if (endpointEditing) {
-				const bytes = Buffer.from(
-					await page.evaluate(() =>
-						Array.from(
-							(
-								document.querySelector('visio-viewer') as unknown as {
-									exportVsdx(): { bytes: Uint8Array };
-								}
-							).exportVsdx().bytes,
-						),
-					),
-				);
-				const actual = await parseVsdx(bytes);
-				const native = await parseVsdx(await readFile(join(directory!, 'gradient-raster.vsdx')));
-				expect(actual.pages[0]!.shapes).toHaveLength(native.pages[0]!.shapes.length);
-				for (const shape of actual.pages[0]!.shapes) {
-					const expected = native.pages[0]!.shapes.find((item) => item.id === shape.id)!;
-					for (let i = 0; i < 6; i++)
-						expect(shape.transform[i]).toBeCloseTo(expected.transform[i]!, 12);
-					expect(shape.width).toBeCloseTo(expected.width, 12);
-					expect(shape.geometry).toEqual(expected.geometry);
-					expect(shape.style).toEqual(expected.style);
-				}
-				await page.locator('#file').setInputFiles({
-					name: 'endpoint-gradient.vsdx',
-					mimeType: 'application/vnd.ms-visio.drawing',
-					buffer: bytes,
-				});
-				await expect(page.locator('#file-name')).toHaveText('endpoint-gradient.vsdx');
-			}
+			await prepareNativeGradientEdit(
+				page,
+				directory!,
+				samples,
+				resizeSourceDirectory,
+				pointerEditing,
+			);
 			const results = await page.evaluate(async (samples) => {
 				const load = (path: string) => import(/* @vite-ignore */ path);
 				const { renderPage, exportPageSvg } = await load('/test-api.js');
@@ -335,7 +268,9 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			expect(results).toHaveLength(samples.length * 2);
 			for (const item of results) {
 				expect(item.pixels, item.name).toBeGreaterThan(1000);
-				expect(item.transformDifference, item.name).toBeLessThan(1e-9);
+				// Pointer coordinates retain the existing four-decimal native gesture contract.
+				// API/reference registration still requires the tighter native-pose bound.
+				expect(item.transformDifference, item.name).toBeLessThan(pointerEditing ? 5e-5 : 1e-9);
 			}
 			// Mark only the measured fidelity gate, after successful import/render/artifact checks.
 			test.fail(

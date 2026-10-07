@@ -309,8 +309,8 @@ change the model; release commits once. Escape/pointer cancellation and disposal
 remove it. Twelve native pointer workflows cover both endpoints across six
 frameworks, with four-decimal pose/length comparisons for browser-coordinate
 roundoff; the underlying API's 12-digit native tests remain unchanged. Native
-snapping, keyboard handles and gradient-paint comparisons after dragging remain
-unverified. Native drawing-to-page ratios 0.5, 2 and 3 now have 72 distinct
+snapping and keyboard handles remain unverified. Native drawing-to-page ratios
+0.5, 2 and 3 now have 72 distinct
 all-framework API and pointer workflows covering both endpoints, history,
 download and reload. Native exported SVG independently verifies physical paper
 dimensions and saved endpoint positions; unchanged page-scale metadata is
@@ -320,7 +320,11 @@ Native endpoint assignments also verify oblique linear stroke paint after API
 editing, undo/redo and save/reload. Eight begin/end cases with two/three stops
 and opacity cover six frameworks and live/portable output. Interior errors stay
 within the existing bounds (maximum channel error four, mean below 0.885); this does
-not prove exact pixels, pointer gesture paint or native Office reopening.
+not prove exact pixels or native Office reopening. Actual pointer edits also
+cover these eight paint cases across six frameworks, with saved output reloaded
+before the unchanged native interior paint comparisons. Pointer poses, lengths
+and physical gradient endpoints use the existing four-decimal contract; API
+comparisons retain 12 digits. Other paint directions and angles remain open.
 
 Numeric ShapeSheet interpretation uses a bounded AST, never JavaScript execution.
 Arithmetic, comparisons, IF, GUARD, Width/Height scaling, local geometry/named-row

@@ -2,6 +2,45 @@
 
 Status: local Windows development evidence, 2026-10-03. Full Microsoft Visio parity is not established.
 
+## Pointer endpoint gradient paint after save/reload, 2026-10-08
+
+The native begin/end paint captures below now also drive actual pointer gestures
+in all six frameworks. Set VISIO_NATIVE_GRADIENT_ENDPOINT_GESTURE=1 alongside
+VISIO_NATIVE_GRADIENT_RASTER_DIR to run this mode. Geometry and paint tests reuse
+one dragLineEndpoint helper, including handle selection, drawing/page conversion,
+mouse movement, preview and release checks. Shared gradient benchmark setup
+handles API edits, Width-cell edits and pointer edits without separate painters
+or copied pixel comparisons.
+
+Each pointer case checks undo/redo and usable handles, saves through the public
+VSDX API, compares the saved native geometry/paint model and reloads before live
+and portable SVG raster comparisons. Pointer poses, widths and physical linear
+gradient endpoints use the existing four-decimal gesture contract. Canonical
+straight geometry reuses the core eligibility helper; stops, opacity,
+interpolation and non-gradient style remain exact. API model comparisons retain
+12 digits and exact geometry/style. Reference PNGs, registration, contour masks,
+minimum pixel counts and all paint-error bounds remain unchanged.
+
+All twelve pointer paint scenarios passed, producing 96 interior comparisons.
+Both endpoint groups reached maximum channel error four. Begin/end maximum
+means are 0.871514 and 0.884248 (rounded up); minimum pixel counts are 4,732 and
+1,622. Observed pose differences are below 4.43e-7 and 1.15e-7 respectively.
+The initial pointer diagnostic failed the API registration bound of 1e-9;
+pointer registration now explicitly matches its existing four-decimal contract
+(5e-5), while API registration retains 1e-9. No native paint tolerance was raised.
+
+The shared-helper extraction passed 18 existing geometry workflows: both
+endpoints across all frameworks and both endpoints at three scales in vanilla.
+Six end-endpoint API paint workflows also passed with the original tighter
+registration/model checks. The Width-cell paint setup is checked in vanilla
+against a fresh native Width-four capture,
+visio-gradient-raster-2f0b4945edf543cb88544a97fa474fb4, paired with the Width-two
+source visio-gradient-raster-f0765a3a531a4a299f6a7484ceec5085.
+Viewer type checks pass. This establishes the captured gestures and saved viewer
+paint within current interior bounds, not exact pixels, native interactive
+snapping, keyboard manipulation, other paint directions/angles or native Office
+reopen acceptance.
+
 ## Native endpoint gradient paint after save/reload, 2026-10-08
 
 The existing gradient recorder now accepts MoveEndpoint for native unglued
