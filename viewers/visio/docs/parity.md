@@ -105,7 +105,10 @@ routes Left/Right 90-degree commands through the existing worker/history path.
 Flip Horizontal and Flip Vertical now use one atomic core edit that toggles
 the local flip flag and negates Angle while retaining the saved pin. Four native
 rectangle/ellipse comparisons cover a custom pivot at 30 degrees and scaled
-pages at 210 degrees. Locked/guarded Angle flips, guarded/dependent flip flags,
+pages at 210 degrees. Native locked and guarded-angle horizontal flips now
+retain the original Angle cell while toggling the flip flag; both shapes pass
+core comparisons and six-binding menu/history/save/reload checks. Scalar
+inherited rotation locks also have core regression coverage. Guarded/dependent flip flags,
 inherited transforms, groups/masters/glue, broader native flip gestures and
 Microsoft Visio reopen acceptance remain open. Source protections are refused
 instead of being overwritten.

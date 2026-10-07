@@ -1791,3 +1791,28 @@ reopened its copy with all 23 character font properties unchanged. Native
 horizontal text measurement, automatic wrapping, line spacing/layout,
 advanced text effects, list-level defaults, mixed-format font authoring UI
 and full Excel parity remain open.
+
+## Visio protected-angle flip preservation
+
+Source: ChristopherVR/ooxml at `cffd415a9`, `protectedShape` scalar/style
+protection resolution and the shared rotate/flip geometry transaction.
+The resolver can now report a validated active rotation lock when a flip
+retains Angle. All other callers retain the previous strict admission.
+The flip branch reuses existing formula analysis to recognize GUARD and
+leaves Angle's attributes untouched, toggles the local flip flag through
+the existing cell writer and verifies the retained cached angle after
+dependency recalculation. Malformed/error lock or angle caches remain refused.
+
+The two owned Visio 16 protected references recorded with the preceding
+flip work demonstrate horizontal rectangle/ellipse flips with LockRotate
+and GUARD(30 deg). Core comparisons match native matrices, geometry, styles
+and angle/pin metadata. Additional local/inherited-lock and guard cases
+assert exact retained Angle attributes, unchanged package payloads and
+reversibility. Existing rotation and certified-master-move regressions
+remain passing. The same shared menu browser matrix now covers both protected
+references in all six bindings, with Escape, hover, history and save/reload.
+
+This resolves the recorded horizontal protected-angle cases, not all
+protected shape transforms. Guarded flip flags, dependent angle/flip formulas,
+broader inherited protections, groups/masters/glue, native UI gesture and
+paint evidence, and Microsoft Visio reopen acceptance remain open.

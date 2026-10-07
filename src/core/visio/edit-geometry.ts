@@ -1,7 +1,8 @@
 import { createRectangle, createEllipse, createLine } from './edit-shape-create';
 import { attribute, children } from './sheet';
 import { fail } from './package-common';
-import { visioFormulaCachedValue } from './formula';
+import { visioFormulaCachedValue, analyzeVisioFormula } from './formula';
+import { executableCellFormula } from './cell-formula';
 import {
 	assertVisioShapeUnreferenced,
 	recalculateVisioCells,
@@ -72,7 +73,7 @@ export function applyGeometryEdit(
 		);
 		const local = cells(shape);
 		const lineMove = edit.type === 'move-shape' && isLineSheet(local);
-		protectedShape(
+		const rotationLocked = protectedShape(
 			shape,
 			document,
 			edit.type === 'move-shape' ? masterMovePins : new Set(),
@@ -85,6 +86,7 @@ export function applyGeometryEdit(
 						: edit.type === 'rotate-shape'
 							? ['LockRotate']
 							: [],
+			edit.type === 'flip-shape',
 		);
 		if (edit.type !== 'delete-shape')
 			for (const connections of children(root, 'Connects'))
@@ -117,14 +119,24 @@ export function applyGeometryEdit(
 			if (isLineSheet(local))
 				fail('UNSUPPORTED_GEOMETRY_EDIT', 'Line rotation requires endpoint proof.');
 			const angle = local.get('Angle');
+			if (angle?.hasAttribute('E'))
+				fail('UNSUPPORTED_GEOMETRY_EDIT', 'Cannot transform an erroneous Angle cache.');
 			if (
 				angle?.hasAttribute('U') &&
 				visioFormulaCachedValue('0', attribute(angle, 'U')).unit !== 'angle'
 			)
 				fail('EDIT_FORMULA_UNIT', 'Angle must use angular units.');
-			unlocked('LockRotate');
-			editableCell(angle);
-			const targetAngle = edit.type === 'flip-shape' ? -numeric(angle, 0) : edit.angle;
+			const sourceAngleFormula = executableCellFormula(attribute(angle, 'F'));
+			const retainAngle =
+				edit.type === 'flip-shape' &&
+				(rotationLocked ||
+					!!(sourceAngleFormula && analyzeVisioFormula(sourceAngleFormula).guarded));
+			if (!retainAngle) {
+				unlocked('LockRotate');
+				editableCell(angle);
+			}
+			const targetAngle =
+				edit.type === 'flip-shape' ? numeric(angle, 0) * (retainAngle ? 1 : -1) : edit.angle;
 			if (edit.type === 'flip-shape') {
 				const name = edit.axis === 'horizontal' ? 'FlipX' : 'FlipY';
 				const flag = local.get(name);
@@ -147,9 +159,11 @@ export function applyGeometryEdit(
 				y: numeric(local.get('PinY'), numeric(local.get('Height')) / 2),
 			};
 			expectedAngle = targetAngle;
-			setCell(shape, 'Angle', targetAngle);
-			cells(shape).get('Angle')!.setAttribute('U', 'RAD');
-			add('Angle');
+			if (!retainAngle) {
+				setCell(shape, 'Angle', targetAngle);
+				cells(shape).get('Angle')!.setAttribute('U', 'RAD');
+				add('Angle');
+			}
 		} else if (edit.type === 'move-shape') {
 			const proven = masterDimensions.get(shape);
 			expected = {

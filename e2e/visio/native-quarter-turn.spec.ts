@@ -11,6 +11,8 @@ for (const variable of [
 	'VISIO_NATIVE_QUARTER_HALF_RIGHT_DIR',
 	'VISIO_NATIVE_FLIP_HORIZONTAL_DIR',
 	'VISIO_NATIVE_FLIP_VERTICAL_DIR',
+	'VISIO_NATIVE_FLIP_LOCK_DIR',
+	'VISIO_NATIVE_FLIP_GUARD_DIR',
 ]) {
 	const flip = variable.includes('_FLIP_');
 	for (const kind of ['rectangle', 'ellipse']) {

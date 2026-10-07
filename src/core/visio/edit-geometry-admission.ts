@@ -100,13 +100,16 @@ export function admitted(
 		fail('UNSUPPORTED_GEOMETRY_EDIT', 'Positive proven Width and Height caches are required.');
 	return shape;
 }
-/** Validate scalar protection; certified master moves preserve active non-movement locks. */
+/** Validate scalar protection; return effective rotation lock for flips that retain Angle.
+ * Certified master moves preserve active non-movement locks.
+ */
 export function protectedShape(
 	shape: Element,
 	document: Element,
 	masterMovePins: ReadonlySet<Element> = new Set(),
 	additionalLocks: readonly ('LockBegin' | 'LockEnd' | 'LockRotate')[] = [],
-): void {
+	preserveRotation = false,
+): boolean {
 	const local = cells(shape);
 	const protectionLocks = [...locks, ...additionalLocks];
 	const certifiedMove =
@@ -126,10 +129,11 @@ export function protectedShape(
 		try {
 			const cached = numeric(cell);
 			const operationIndependent =
-				certifiedMove &&
-				['LockWidth', 'LockHeight', 'LockAspect', 'LockDelete'].includes(
-					attribute(cell, 'N') ?? '',
-				);
+				(preserveRotation && attribute(cell, 'N') === 'LockRotate') ||
+				(certifiedMove &&
+					['LockWidth', 'LockHeight', 'LockAspect', 'LockDelete'].includes(
+						attribute(cell, 'N') ?? '',
+					));
 			if (
 				cell.hasAttribute('E') ||
 				visioFormulaCachedValue(attribute(cell, 'V') ?? '', attribute(cell, 'U')).unit !==
@@ -188,13 +192,17 @@ export function protectedShape(
 			: undefined;
 	};
 	const defaults = children(document, 'DocumentSheet')[0];
+	let inheritedRotationLocked = false;
 	for (const category of ['LineStyle', 'FillStyle', 'TextStyle']) {
 		const id =
 			attribute(shape, category) ??
 			attribute(defaults, category) ??
 			(styles.has('0') ? '0' : undefined);
 		if (id === undefined) continue;
-		for (const lock of protectionLocks) resolve(id, category, lock);
+		for (const lock of protectionLocks) {
+			const cell = resolve(id, category, lock);
+			if (lock === 'LockRotate' && cell && numeric(cell) === 1) inheritedRotationLocked = true;
+		}
 	}
 	for (const lock of protectionLocks)
 		if (attribute(local.get(lock), 'F') === 'Inh')
@@ -203,6 +211,12 @@ export function protectedShape(
 	for (const lock of protectionLocks) {
 		const cell = local.get(lock);
 		if (!cell) continue;
+		if (
+			preserveRotation &&
+			lock === 'LockRotate' &&
+			(cell.hasAttribute('E') || ![0, 1].includes(numeric(cell)))
+		)
+			fail('EDIT_PROTECTED_CELL', 'Rotation protection must be a scalar boolean.');
 		if (visioFormulaCachedValue('0', attribute(cell, 'U')).unit !== 'scalar')
 			fail('EDIT_FORMULA_UNIT', 'Protection cells must use scalar units.');
 		const formula = executableCellFormula(attribute(cell, 'F'));
@@ -218,6 +232,9 @@ export function protectedShape(
 				fail('EDIT_PROTECTED_CELL', 'Protection cache is stale.');
 		}
 	}
+	return local.has('LockRotate')
+		? numeric(local.get('LockRotate'), 0) !== 0
+		: inheritedRotationLocked;
 }
 export function resizeGeometry(
 	shape: Element,
