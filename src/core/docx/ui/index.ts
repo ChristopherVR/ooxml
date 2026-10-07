@@ -22,6 +22,7 @@ export * from './review-settings.js';
 export * from './command-history.js';
 export * from './review-commands.js';
 export { formattingRevision } from './review-formatting.js';
+export { paragraphFormattingRevision } from './review-paragraph-formatting.js';
 export * from './track-changes-mode.js';
 export * from './ribbon-action-ids.js';
 export * from './ribbon-colors.js';

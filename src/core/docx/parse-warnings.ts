@@ -29,7 +29,7 @@ export function warningsFor(document: XmlDocument): string[] {
 		],
 		[
 			['pPrChange'],
-			'Paragraph-formatting-change revisions retain their prior properties snapshots through text edits; recording, navigation and rejection of paragraph formatting changes in the editor are not supported yet.',
+			'Paragraph-formatting-change revisions retain their prior properties snapshots and support acceptance and rejection; recording new paragraph formatting changes and showing prior formatting in Original display are not supported yet.',
 		],
 		[
 			['tblPrChange', 'trPrChange', 'tcPrChange'],

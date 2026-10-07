@@ -13,7 +13,9 @@ settings are untouched.
 
 Regression tests cover preserving `w:pPrChange` and its complete prior `w:pPr`
 through text edits, editor conversion and export, and core acceptance. Paragraph
-format recording and editor review commands remain unfinished. Core rejection
+format recording and prior formatting in Original display remain unfinished.
+Shared editor Review commands support navigation, acceptance, rejection,
+undo/redo and Yjs peer synchronization. Core rejection
 restores prior properties and matches native rejected documents; later known
 edits overlay the complete restored XML basis.
 

@@ -61,6 +61,45 @@ function start(
 }
 
 describe('Word Yjs collaboration', () => {
+	it('shares paragraph formatting rejection, peer export and undo/redo', async () => {
+		const native = await loadDocx(
+			new Uint8Array(
+				await readFile(
+					resolve('../core/docx/__fixtures__/review-paragraph-formatting/multiple-rejected.docx'),
+				),
+			),
+		);
+		const bytes = new Uint8Array(
+			await readFile(
+				resolve('../core/docx/__fixtures__/review-paragraph-formatting/multiple-tracked.docx'),
+			),
+		);
+		const peers = pair();
+		const a = mount();
+		const b = mount();
+		await a.load(bytes);
+		await b.load(bytes);
+		start(a, b, peers);
+		const first = viewOf(a);
+		const before = first.state.doc;
+		rejectRevisionRange(first, collectRevisionRanges(before)[0]!);
+		for (const editor of [a, b]) {
+			const paragraph = editor.documentModel!.blocks[0]!;
+			if (paragraph.type !== 'paragraph') throw new Error('Expected paragraph');
+			const { restoredParagraphPropertiesXml: _snapshot, ...actual } = paragraph;
+			expect(actual).toEqual(native.model.blocks[0]);
+			expect(paragraph.formatRevision).toBeUndefined();
+		}
+		const reopened = await loadDocx(await b.saveBytes());
+		const paragraph = reopened.model.blocks[0]!;
+		if (paragraph.type !== 'paragraph') throw new Error('Expected paragraph');
+		expect(paragraph).toEqual(native.model.blocks[0]);
+		expect(paragraph.formatRevision).toBeUndefined();
+		expect(wordYjsPluginKey.getState(first.state)!.undo()).toBe(true);
+		for (const editor of [a, b]) expect(viewOf(editor).state.doc.eq(before)).toBe(true);
+		expect(wordYjsPluginKey.getState(first.state)!.redo()).toBe(true);
+		expect(collectRevisionRanges(viewOf(b).state.doc)).toEqual([]);
+	});
 	it('retains native paragraph formatting history during untracked peer typing and export', async () => {
 		const bytes = new Uint8Array(
 			await readFile(

@@ -42,6 +42,8 @@ function paragraphNode(paragraph: Paragraph, labels: ListLabels, noteNumber?: No
 			formatRevision: paragraph.formatRevision ?? null,
 			restoredParagraphPropertiesXml: paragraph.restoredParagraphPropertiesXml ?? null,
 			align: paragraph.align ?? null,
+			justification: paragraph.justification ?? null,
+			outlineLevel: paragraph.outlineLevel ?? null,
 			direction: paragraph.direction ?? null,
 			style: paragraph.style || '',
 			spacingBeforeTwips: paragraph.spacingBeforeTwips ?? null,
@@ -196,6 +198,8 @@ export function docToModel(
 			sameJson(previous.formatRevision ?? null, node.attrs.formatRevision ?? null) &&
 			sameRuns(previous.runs, runs) &&
 			previous.align === (node.attrs.align ?? undefined) &&
+			previous.justification === (node.attrs.justification ?? undefined) &&
+			previous.outlineLevel === (node.attrs.outlineLevel ?? undefined) &&
 			previous.direction === (node.attrs.direction ?? undefined) &&
 			(previous.style || '') === (node.attrs.style || '') &&
 			previous.spacingBeforeTwips === (node.attrs.spacingBeforeTwips ?? undefined) &&
@@ -233,6 +237,8 @@ export function docToModel(
 				? { formatRevision: structuredClone(node.attrs.formatRevision) }
 				: {}),
 			...(node.attrs.align != null ? { align: node.attrs.align } : {}),
+			...(node.attrs.justification != null ? { justification: node.attrs.justification } : {}),
+			...(node.attrs.outlineLevel != null ? { outlineLevel: Number(node.attrs.outlineLevel) } : {}),
 			...(node.attrs.direction != null ? { direction: node.attrs.direction } : {}),
 			...(node.attrs.style ? { style: node.attrs.style } : {}),
 			...paragraphTwipsFromAttrs(node.attrs),

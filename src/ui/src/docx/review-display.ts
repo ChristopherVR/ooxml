@@ -1,6 +1,6 @@
 import { Plugin } from 'prosemirror-state';
 import { Decoration, DecorationSet } from 'prosemirror-view';
-import { formattingRevision } from 'ooxml-core/docx/ui';
+import { formattingRevision, paragraphFormattingRevision } from 'ooxml-core/docx/ui';
 
 /**
  * All Markup shows insertions/deletions as authored (default CSS from schema.ts's marks).
@@ -26,6 +26,10 @@ export function reviewDisplayPlugin(getMode: () => ReviewDisplayMode): Plugin {
 				const hidden = hiddenMarkName(mode);
 				const decorations: Decoration[] = [];
 				state.doc.descendants((node, pos) => {
+					if (mode === 'all' && paragraphFormattingRevision(node))
+						decorations.push(
+							Decoration.node(pos, pos + node.nodeSize, { class: 'dve-revision-format-markup' }),
+						);
 					if (!node.isText && node.type.name !== 'hardBreak') return;
 					if (mode === 'all' && formattingRevision(node))
 						decorations.push(

@@ -5,6 +5,7 @@ import { rejectRevision } from './revision-commands.js';
 import { restoreParagraphFormatting } from './restore-paragraph-format.js';
 import { expectParagraph } from './test-support/access.js';
 import type { Paragraph } from './model.js';
+import { twips } from './units.js';
 
 describe('complete paragraph formatting restoration', () => {
 	it('retains opaque properties, text, bookmarks and paragraph-mark history while restoring formatting', async () => {
@@ -28,7 +29,7 @@ describe('complete paragraph formatting restoration', () => {
 			runs: [{ text: 'Text' }],
 		});
 		expect(paragraph.keepNext).toBeUndefined();
-		paragraph.spacingAfterTwips = 120;
+		paragraph.spacingAfterTwips = twips(120);
 		paragraph.runs[0]!.text += '!';
 		const bytes = await loaded.save(model);
 		const xml = await (await JSZip.loadAsync(bytes)).file('word/document.xml')!.async('string');

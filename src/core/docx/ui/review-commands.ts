@@ -4,10 +4,16 @@ import { dispatchIsolatedCommand } from './command-history.js';
 import { moveName } from './review-schema.js';
 import { trackChangesPluginKey } from './track-changes-mode.js';
 import { formattingRevision, resolveFormattingRange } from './review-formatting.js';
+import {
+	paragraphFormattingRevision,
+	resolveParagraphFormatting,
+} from './review-paragraph-formatting.js';
 
 export interface RevisionRange {
 	id: string;
-	kind: 'insert' | 'delete' | 'formatChange';
+	kind: 'insert' | 'delete' | 'formatChange' | 'paragraphChange';
+	/** Node position for a paragraph-format change, mapped before applying a command. */
+	paragraphPos?: number;
 	from: number;
 	to: number;
 	author: string;
@@ -19,6 +25,16 @@ export interface RevisionRange {
 export function collectRevisionRanges(doc: import('prosemirror-model').Node): RevisionRange[] {
 	const ranges: RevisionRange[] = [];
 	doc.descendants((node, pos) => {
+		const paragraph = paragraphFormattingRevision(node);
+		if (paragraph)
+			ranges.push({
+				id: paragraph.id,
+				kind: 'paragraphChange',
+				author: paragraph.author,
+				from: pos + 1,
+				to: pos + node.nodeSize - 1,
+				paragraphPos: pos,
+			});
 		if (!node.isText && node.type.name !== 'hardBreak') return;
 		const mark = node.marks.find(
 			(item) => item.type.name === 'insertion' || item.type.name === 'deletion',
@@ -88,6 +104,10 @@ function resolveRanges(view: EditorView, ranges: RevisionRange[], mode: 'accept'
 	for (const range of ranges) {
 		const from = tr.mapping.map(range.from);
 		const to = tr.mapping.map(range.to);
+		if (range.kind === 'paragraphChange' && range.paragraphPos !== undefined) {
+			resolveParagraphFormatting(tr, tr.mapping.map(range.paragraphPos), mode);
+			continue;
+		}
 		if (range.kind === 'formatChange') {
 			resolveFormattingRange(tr, from, to, mode);
 			continue;

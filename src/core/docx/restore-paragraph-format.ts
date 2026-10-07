@@ -2,7 +2,7 @@ import type { Paragraph } from './model.js';
 import { parseDirectParagraphProperties } from './paragraph-properties.js';
 import { parsePropertiesSnapshot } from './revision-properties.js';
 
-const FORMAT_KEYS = [
+export const PARAGRAPH_FORMAT_KEYS = [
 	'align',
 	'justification',
 	'direction',
@@ -39,7 +39,7 @@ export function restoreParagraphFormatting(paragraph: Paragraph): void {
 			'Cannot reject a paragraph formatting revision without its prior properties snapshot.',
 		);
 	const previous = parseDirectParagraphProperties(parsePropertiesSnapshot(xml, 'pPr'));
-	for (const key of FORMAT_KEYS) delete paragraph[key];
+	for (const key of PARAGRAPH_FORMAT_KEYS) delete paragraph[key];
 	Object.assign(paragraph, previous);
 	paragraph.restoredParagraphPropertiesXml = xml;
 	delete paragraph.formatRevision;
