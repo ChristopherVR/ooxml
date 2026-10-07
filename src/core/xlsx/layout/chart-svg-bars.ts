@@ -2,6 +2,7 @@ import type { ChartViewModel } from './chart-view';
 import type { Frame } from './chart-svg-cartesian';
 import { rect } from './chart-svg-util';
 import { clusteredBarGeometry } from '../../chart/bar-cluster-geometry';
+import { chartBarSpacing } from './chart-spacing';
 
 export function bars(
 	model: ChartViewModel,
@@ -11,10 +12,7 @@ export function bars(
 ): void {
 	const stacked = model.grouping === 'stacked' || model.grouping === 'percentStacked';
 	const count = Math.max(1, model.series.length);
-	const geometry = clusteredBarGeometry(frame.bandSize, count, {
-		barGapWidth: model.barGapWidth ?? 150,
-		barOverlap: model.barOverlap ?? (stacked ? 100 : 0),
-	});
+	const geometry = clusteredBarGeometry(frame.bandSize, count, chartBarSpacing(model));
 	const barSize = geometry.singleBarWidth;
 	const base = frame.value(0);
 	const pos = new Array<number>(model.categories.length).fill(0);

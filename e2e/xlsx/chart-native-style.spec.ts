@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import JSZip from 'jszip';
-import { createWorkbook, createEditSession, saveXlsx } from 'ooxml-core/xlsx';
+import { createWorkbook, createEditSession, loadXlsx, saveXlsx } from 'ooxml-core/xlsx';
 import native from '../../src/core/chart/excel-chart-styles.json' with { type: 'json' };
 import { FRAMEWORKS, editor, openLanding, pageErrors } from './helpers';
 
@@ -44,6 +44,61 @@ async function openNativeStyle(page: Page, style: number, framework = 'vanilla')
 	await expect(chart).toBeVisible();
 	return chart;
 }
+
+for (const framework of FRAMEWORKS)
+	test(`native series spacing edits in ${framework}`, async ({ page }) => {
+		const errors = pageErrors(page);
+		const chart = await openNativeStyle(page, 209, framework);
+		await page.getByRole('img', { name: 'Native style', exact: true }).first().click();
+		await editor(page).getByRole('tab', { name: 'Chart Design', exact: true }).click();
+		await editor(page).getByRole('button', { name: 'Format Data Series', exact: true }).click();
+		const pane = editor(page).getByRole('complementary', { name: 'Format Data Series' });
+		const gap = pane.getByRole('spinbutton', { name: 'Gap Width', exact: true });
+		const overlap = pane.getByRole('spinbutton', { name: 'Series Overlap', exact: true });
+		await expect(gap).toHaveValue('100');
+		await expect(overlap).toHaveValue('-24');
+		await gap.fill('5');
+		await gap.press('Tab');
+		await overlap.fill('23');
+		await overlap.press('Tab');
+		const first = chart.locator('g[data-chart-series="0"][data-chart-point="0"] rect');
+		await expect
+			.poll(() =>
+				chart.evaluate((svg) => {
+					const a = svg.querySelector('g[data-chart-series="0"][data-chart-point="0"] rect')!;
+					const b = svg.querySelector('g[data-chart-series="0"][data-chart-point="1"] rect')!;
+					return (
+						Number(a.getAttribute('width')) /
+						(Number(b.getAttribute('x')) - Number(a.getAttribute('x')))
+					);
+				}),
+			)
+			.toBeCloseTo(1 / 1.82, 3);
+		const bytes = await editor(page).evaluate(async (node) =>
+			Array.from(await (node as unknown as { saveBytes(): Promise<Uint8Array> }).saveBytes()),
+		);
+		const saved = await loadXlsx(new Uint8Array(bytes));
+		expect(saved.sheets[0]!.drawings[0]).toMatchObject({ barGapWidth: 5, barOverlap: 23 });
+		await editor(page).evaluate((node) => (node as unknown as { undo(): void }).undo());
+		await expect(overlap).toHaveValue('-24');
+		await editor(page).evaluate((node) => (node as unknown as { redo(): void }).redo());
+		await expect(overlap).toHaveValue('23');
+		await editor(page).evaluate((node) => {
+			(node as unknown as { readOnly: boolean }).readOnly = true;
+		});
+		await expect(gap).toBeDisabled();
+		await editor(page).evaluate((node) => {
+			(node as unknown as { readOnly: boolean }).readOnly = false;
+		});
+		await expect(gap).toBeEnabled();
+		await pane.getByRole('button', { name: 'Close', exact: true }).click();
+		await expect(pane).toBeHidden();
+		await first.dblclick();
+		await expect(pane).toBeVisible();
+		await overlap.press('Escape');
+		await expect(pane).toBeHidden();
+		expect(errors).toEqual([]);
+	});
 
 for (const framework of FRAMEWORKS)
 	test(`native title and legend typography render in ${framework}`, async ({ page }) => {

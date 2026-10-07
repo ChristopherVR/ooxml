@@ -95,6 +95,11 @@ export function chartDesignTab(): RibbonTab {
 				],
 			},
 			{
+				id: 'series-options',
+				label: 'Series Options',
+				controls: [{ kind: 'button', command: 'chart.format-series', size: 'large' }],
+			},
+			{
 				id: 'chart-delete',
 				label: 'Delete',
 				controls: [{ kind: 'button', command: 'chart.delete', size: 'large' }],

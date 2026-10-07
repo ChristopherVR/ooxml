@@ -817,3 +817,34 @@ passed all eight tests across six bindings. Existing PowerPoint bar tests (16),
 core/UI typechecks and builds, every core clean-consumer import, 93 UI imports and
 45 custom-element registrations passed. Exact plot dimensions remain a separate
 acceptance gap; normalized bar spacing does not establish whole-chart pixel parity.
+
+## Docked chart series spacing controls
+
+Chart Design now opens a docked Format Data Series pane for bar and column charts.
+Double-clicking a painted bar opens it too. The pane reuses the editor's labelled
+number fields, command registry, localization, theme tokens, protection checks,
+core chart edit/history and source-preserving chart writer. Effective spacing
+defaults are shared with the SVG painter through `chartBarSpacing` in core.
+Five locales include the new labels and validation messages.
+
+Changes repaint the chart, follow undo/redo and survive save/reload. A selection
+change disables the fields or shows the appropriate empty state. Read-only and
+protected-object settings prevent writes, even while the pane is already open.
+Escape and Close return focus to the grid. Drawing selection now updates grips
+without rebuilding chart contents, and a click with no movement no longer writes
+a redundant anchor edit. Bar hit targets preserve their identity through selection;
+pointer capture retains the actual series hit for double-click handling.
+
+Playwright MCP reviewed the docked pane in production with a full native horizontal
+chart. Excel COM reopened the workbook edited and downloaded from that browser:
+gap width was 5, overlap 23 and all three series remained. Browser checks cover
+editing, rendered spacing, save/reload and double-click/close in all six bindings.
+
+This is the spacing section of the native pane. Its slider controls, axis assignment,
+individual series/point formatting, fill/effect tabs and broader chart Format tab
+remain incomplete; this increment does not establish full pane or UI parity.
+
+Validation: all 82 production browser tests and 318 XLSX UI regressions passed.
+After extracting effective spacing and adding the protected-pane regression,
+all 14 native-style browser tests, 21 focused UI/locale tests and 15 native core
+spacing tests passed. Core and UI typechecks and builds passed.

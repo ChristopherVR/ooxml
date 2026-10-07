@@ -6,6 +6,7 @@ import shell from './shell.css?raw';
 import ribbon from './ribbon.css?raw';
 import popups from './popups.css?raw';
 import backstage from './backstage.css?raw';
+import chartSeries from './chart-series.css?raw';
 
 const declarations = (theme: XlsxTheme, scheme: 'light' | 'dark') =>
 	Object.entries(themeToCssVars(theme))
@@ -29,4 +30,5 @@ export const editorStyleText = [
 	ribbon,
 	popups,
 	backstage,
+	chartSeries,
 ].join('\n');

@@ -47,14 +47,7 @@ export type {
 	MergeView,
 	VAlignView,
 } from './types';
-export {
-	BORDER_STYLES,
-	bordersView,
-	edgeView,
-	fillView,
-	fontView,
-	mergeFont,
-} from './style-view';
+export { BORDER_STYLES, bordersView, edgeView, fillView, fontView, mergeFont } from './style-view';
 export {
 	cellView,
 	effectiveStyleId,
@@ -97,6 +90,7 @@ export {
 	type ValueAxisView,
 } from './chart-view';
 export { renderChartSvg } from './chart-svg';
+export { chartBarSpacing } from './chart-spacing';
 export { createRefEvaluator, type RefEvaluatorOptions } from './ref-evaluator';
 export {
 	approximateMeasure,

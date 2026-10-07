@@ -24,6 +24,7 @@ import { editorStyleText } from './theme';
 import { createTitleBar, type SaveState, type TitleBar } from './title-bar';
 import { createToaster } from './toast';
 import { packagePassword } from './dialogs/package-password';
+import { createChartSeriesPane } from './chart-series-pane';
 
 /** Element properties the shell's options and customize pages change. */
 export interface ShellElement extends HTMLElement {
@@ -166,6 +167,8 @@ export function buildShell(core: EditorCore): Shell {
 	const toaster = createToaster(doc, () => ctx.t('Close'));
 
 	const workspace = el(doc, 'div', 'xve-workspace');
+	const chartSeriesPane = createChartSeriesPane(ctx);
+	const canvasRow = el(doc, 'div', 'xve-canvas-row');
 	const formulaRow = el(doc, 'div', 'xve-formula-row');
 	const gridHost = el(doc, 'div', 'xve-grid-host');
 	const tabsRow = el(doc, 'div', 'xve-tabs-row');
@@ -173,10 +176,11 @@ export function buildShell(core: EditorCore): Shell {
 	const emptyText = el(doc, 'p');
 	empty.append(emptyText);
 	workspace.append(formulaRow, gridHost, tabsRow, empty);
+	canvasRow.append(workspace, chartSeriesPane.element);
 	frame.append(
 		titleBar.element,
 		ribbon.element,
-		workspace,
+		canvasRow,
 		statusBar.element,
 		backstage.element,
 		help.element,
@@ -195,9 +199,14 @@ export function buildShell(core: EditorCore): Shell {
 		formulaRow.setAttribute('part', 'formula-bar');
 
 	const regions = () =>
-		[ribbon.element, formulaRow, gridHost, tabsRow, statusBar.element].filter(
-			(region) => region.getClientRects().length,
-		);
+		[
+			ribbon.element,
+			formulaRow,
+			gridHost,
+			tabsRow,
+			chartSeriesPane.element,
+			statusBar.element,
+		].filter((region) => region.getClientRects().length);
 	const focusRegion = (region: HTMLElement) => {
 		if (region === ribbon.element) return ribbon.focus();
 		if (region === gridHost) return ctx.grid()?.focus();
@@ -235,6 +244,7 @@ export function buildShell(core: EditorCore): Shell {
 			ribbon.refresh();
 			titleBar.refresh();
 			statusBar.refresh();
+			chartSeriesPane.refresh();
 			titleBar.setFileName(core.fileName);
 			if (core.dirty.dirty && saveState !== 'dirty' && saveState !== 'saving')
 				chrome.setSaveState('dirty');
@@ -249,6 +259,7 @@ export function buildShell(core: EditorCore): Shell {
 			titleBar.relocalize();
 			statusBar.relocalize();
 			backstage.relocalize();
+			chartSeriesPane.relocalize();
 			core.requestRender();
 		},
 	};

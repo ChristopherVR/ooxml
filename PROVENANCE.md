@@ -835,3 +835,12 @@ retaining dictionary fallback and interpolation. The relocated rendering tests
 select happy-dom explicitly; UI tests resolve core source subpaths without
 depending on stale package builds. This extraction makes the actual DOM renderer
 available to OpenTeams; it does not establish embedded playback or Teams parity.
+
+## Shared XLSX effective chart spacing
+
+Source: ChristopherVR/ooxml at `42b7d63d9`,
+`src/core/xlsx/layout/chart-svg-bars.ts`, the default gap and overlap expressions.
+They moved unchanged to `chartBarSpacing` in `layout/chart-spacing.ts`. The SVG
+painter and the docked series pane use the same values, so the UI does not keep
+a second grouping/default calculation. Imported spacing still comes from the
+native OOXML parser; all edits and history use the existing core chart commands.

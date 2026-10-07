@@ -18,6 +18,7 @@ import { paintSmartArt } from './smartart';
 
 interface ObjectNode extends HTMLDivElement {
 	xgSig?: string | undefined;
+	xgSeriesHit?: boolean;
 }
 
 export class DrawingLayer {
@@ -72,14 +73,24 @@ export class DrawingLayer {
 					node = h(view.doc, 'div', 'xg-obj') as ObjectNode;
 					node.dataset.index = String(index);
 					node.addEventListener('pointerdown', (event) => this.#press(event, index));
+					node.addEventListener('dblclick', (event) => {
+						// Pointer capture retargets dblclick to the drawing container. Keep the
+						// actual hit from pointerdown so a background click stays distinct.
+						if (!(event.currentTarget as ObjectNode).xgSeriesHit) return;
+						event.stopPropagation();
+						view.ctx.selection.set({ drawing: index });
+						void view.ctx.commands.run('chart.format-series');
+					});
 					this.#nodes.set(key, node);
 				}
 				if (node.parentNode !== parent) parent.append(node);
 				place(node, box.x, box.y, box.w, box.h);
-				const sig = `${drawing.kind}:${Math.round(box.w)}x${Math.round(box.h)}:${this.#generation}:${this.#selected === index}`;
-				if (node.xgSig === sig) continue;
-				node.xgSig = sig;
-				this.#paint(node, drawing, box, index);
+				const sig = `${drawing.kind}:${Math.round(box.w)}x${Math.round(box.h)}:${this.#generation}`;
+				if (node.xgSig !== sig) {
+					node.xgSig = sig;
+					this.#paint(node, drawing, box, index);
+				}
+				this.#selection(node, index);
 			}
 		});
 		for (const [key, node] of this.#nodes)
@@ -134,10 +145,16 @@ export class DrawingLayer {
 			node.classList.add('xg-obj-unsupported');
 			node.textContent = view.ctx.t('{name} (not shown)', { name: drawing.description });
 		}
-		if (this.#selected === index) {
-			node.classList.add('xg-obj-sel');
+	}
+
+	#selection(node: HTMLElement, index: number): void {
+		const selected = this.#selected === index;
+		node.classList.toggle('xg-obj-sel', selected);
+		if (!selected) {
+			for (const grip of node.querySelectorAll('.xg-grip')) grip.remove();
+		} else if (!node.querySelector('.xg-grip')) {
 			for (const pos of ['nw', 'ne', 'sw', 'se']) {
-				const grip = h(doc, 'div', 'xg-grip', { 'data-grip': pos });
+				const grip = h(this.#view.doc, 'div', 'xg-grip', { 'data-grip': pos });
 				grip.style.left = pos.includes('w') ? '-4px' : 'calc(100% - 4px)';
 				grip.style.top = pos.includes('n') ? '-4px' : 'calc(100% - 4px)';
 				grip.style.cursor = pos === 'nw' || pos === 'se' ? 'nwse-resize' : 'nesw-resize';
@@ -159,6 +176,8 @@ export class DrawingLayer {
 		const sheet = view.sheet();
 		const drawing = sheet?.drawings[index];
 		if (!sheet || !drawing) return;
+		const node = event.currentTarget as ObjectNode;
+		node.xgSeriesHit = !!(event.target as Element).closest('[data-chart-series]');
 		view.ctx.selection.set({ drawing: index });
 		view.ctx.grid()?.focus();
 		const session = view.ctx.session();
@@ -166,7 +185,6 @@ export class DrawingLayer {
 		const grip = (event.target as Element).closest<HTMLElement>('[data-grip]')?.dataset.grip;
 		const start = view.clientToView(event.clientX, event.clientY);
 		const origin = anchorToPixelBox(sheet, drawing.anchor, view.metrics);
-		const node = event.currentTarget as HTMLElement;
 		let box = origin;
 		node.setPointerCapture?.(event.pointerId);
 		const move = (e: PointerEvent) => {
@@ -195,7 +213,7 @@ export class DrawingLayer {
 			node.removeEventListener('pointermove', move);
 			node.removeEventListener('pointerup', up);
 			node.releasePointerCapture?.(e.pointerId);
-			if (box !== origin)
+			if (box.x !== origin.x || box.y !== origin.y || box.w !== origin.w || box.h !== origin.h)
 				session.setDrawingAnchor(
 					view.sheetIndex(),
 					index,

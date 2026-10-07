@@ -1,0 +1,49 @@
+.xve-canvas-row {
+	display: flex;
+	flex: 1;
+	min-width: 0;
+	min-height: 0;
+}
+.xve-chart-series-pane {
+	box-sizing: border-box;
+	width: 300px;
+	max-width: 45%;
+	flex: none;
+	overflow: auto;
+	border-left: 1px solid var(--line);
+	background: var(--surface);
+}
+.xve-chart-series-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 12px 12px 12px 18px;
+	border-bottom: 1px solid var(--line);
+}
+.xve-chart-series-header h2 {
+	margin: 0;
+	font-size: 18px;
+	font-weight: 400;
+}
+.xve-chart-series-body,
+.xve-chart-series-pane > .xve-note {
+	margin: 0;
+	padding: 18px;
+}
+.xve-chart-series-body h3 {
+	margin: 0 0 20px;
+	font-size: 13px;
+	font-weight: 600;
+}
+.xve-chart-series-body .xve-field {
+	display: grid;
+	grid-template-columns: 1fr 70px 12px;
+	align-items: center;
+	gap: 6px;
+	margin: 14px 0;
+}
+.xve-chart-series-body .xve-input-number {
+	box-sizing: border-box;
+	width: 70px;
+	min-width: 0;
+}

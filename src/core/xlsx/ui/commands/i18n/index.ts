@@ -1,5 +1,6 @@
 // Every UI-COMMANDS translation table, flattened per locale for `locales/<lang>/commands.ts`.
 import { CORE_FEATURE_STRINGS } from './core-features';
+import { CHART_SERIES_STRINGS } from './chart-series';
 import { FORMAT_CELLS_STRINGS } from './format-cells';
 import { MESSAGE_STRINGS } from './messages';
 import { NAVIGATION_STRINGS } from './navigation';
@@ -18,6 +19,7 @@ export const COMMAND_TABLES: readonly Translations[] = [
 	FORMAT_CELLS_STRINGS,
 	RULES_STRINGS,
 	CORE_FEATURE_STRINGS,
+	CHART_SERIES_STRINGS,
 ];
 
 export const commandStrings = (locale: CommandLocale): Record<string, string> =>
