@@ -13,8 +13,9 @@
 	--dve-revision-color: #2e7d32;
 	text-decoration-style: double;
 }
-.dve-revision-hidden {
-	display: none;
+.ProseMirror .dve-revision-hidden {
+	/* Review visibility takes precedence over picture/equation node-view display rules. */
+	display: none !important;
 }
 [data-review-display]:not([data-review-display='all']) .dve-revision-insert,
 [data-review-display]:not([data-review-display='all']) .dve-revision-delete {

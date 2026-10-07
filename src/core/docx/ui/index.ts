@@ -31,6 +31,7 @@ export * from './ribbon-legacy-labels';
 export * from './run-compare';
 export * from './run-extra-mark';
 export * from './run-marks';
+export * from './run-adapter';
 export * from './run-mark-properties';
 export * from './schema-marks';
 export * from './smartart-theme';

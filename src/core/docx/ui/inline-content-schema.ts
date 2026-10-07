@@ -52,6 +52,7 @@ export const imageNodeSpec: NodeSpec = {
 	atom: true,
 	selectable: true,
 	attrs: {
+		format: { default: null },
 		relId: { default: '' },
 		partName: { default: '' },
 		contentType: { default: '' },
@@ -77,6 +78,7 @@ export const imageNodeSpec: NodeSpec = {
 		{
 			tag: 'img[data-docx-image], span[data-docx-image-placeholder]',
 			getAttrs: (el) => ({
+				format: (el as HTMLElement).dataset.runProperties ?? null,
 				relId: (el as HTMLElement).dataset.relId || '',
 				partName: (el as HTMLElement).dataset.partName || '',
 				contentType: (el as HTMLElement).dataset.contentType || '',
@@ -95,6 +97,7 @@ export const imageNodeSpec: NodeSpec = {
 					'span',
 					{
 						'data-docx-image-placeholder': '1',
+						...(node.attrs.format ? { 'data-run-properties': node.attrs.format } : {}),
 						...(node.attrs.diagram ? { 'data-docx-smartart': '1' } : {}),
 						class: 'dve-image-placeholder',
 						style: `width:${node.attrs.widthPx}px;height:${node.attrs.heightPx}px`,
@@ -106,6 +109,7 @@ export const imageNodeSpec: NodeSpec = {
 					'img',
 					{
 						'data-docx-image': '1',
+						...(node.attrs.format ? { 'data-run-properties': node.attrs.format } : {}),
 						'data-rel-id': node.attrs.relId,
 						'data-part-name': node.attrs.partName,
 						'data-content-type': node.attrs.contentType,

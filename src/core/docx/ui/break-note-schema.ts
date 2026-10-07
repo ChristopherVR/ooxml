@@ -6,19 +6,25 @@ export const pageBreakNodeSpec: NodeSpec = {
 	inline: true,
 	atom: true,
 	selectable: true,
-	attrs: { kind: { default: 'page' } },
+	attrs: { kind: { default: 'page' }, format: { default: null } },
 	leafText: () => '',
 	parseDOM: [
 		{
 			tag: 'span[data-docx-break]',
 			getAttrs: (el) => ({
 				kind: (el as HTMLElement).dataset.docxBreak === 'column' ? 'column' : 'page',
+				format: (el as HTMLElement).dataset.runProperties ?? null,
 			}),
 		},
 	],
 	toDOM: (node) => [
 		'span',
-		{ class: 'dve-break-marker', 'data-docx-break': node.attrs.kind, contenteditable: 'false' },
+		{
+			class: 'dve-break-marker',
+			'data-docx-break': node.attrs.kind,
+			contenteditable: 'false',
+			...(node.attrs.format ? { 'data-run-properties': node.attrs.format } : {}),
+		},
 		node.attrs.kind === 'column' ? 'Column Break' : 'Page Break',
 	],
 };

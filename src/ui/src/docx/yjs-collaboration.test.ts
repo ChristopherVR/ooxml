@@ -66,6 +66,62 @@ function start(
 }
 
 describe('Word Yjs collaboration', () => {
+	it('retains revised picture and break properties through shared typing and export', async () => {
+		const model = createDocument();
+		model.blocks = [
+			{
+				type: 'paragraph',
+				id: 'p',
+				runs: [
+					{ text: '', break: 'page', revision: { id: 'break', kind: 'insert', author: 'Ada' } },
+					{
+						text: '',
+						image: {
+							relId: 'rId1',
+							partName: 'word/media/image.png',
+							contentType: 'image/png',
+							widthPx: 20,
+							heightPx: 20,
+						},
+						revision: { id: 'picture', kind: 'delete', author: 'Ada' },
+					},
+					{ text: 'Keep' },
+				],
+			},
+		];
+		const peers = pair();
+		const a = mount();
+		const b = mount();
+		a.documentModel = model;
+		b.documentModel = structuredClone(model);
+		start(a, b, peers);
+		wordYjsPluginKey.getState(viewOf(a).state)!.media.publish('word/media/image.png', {
+			contentType: 'image/png',
+			bytes: new Uint8Array([137, 80, 78, 71]),
+		});
+		viewOf(b).dispatch(viewOf(b).state.tr.insertText('!', 7));
+		expect(a.documentModel).toEqual(b.documentModel);
+		expect(a.documentModel!.blocks[0]).toMatchObject({
+			runs: [
+				{ break: 'page', revision: { kind: 'insert', author: 'Ada' } },
+				{
+					image: { partName: 'word/media/image.png' },
+					revision: { kind: 'delete', author: 'Ada' },
+				},
+				{ text: 'Keep!' },
+			],
+		});
+		for (const editor of [a, b]) {
+			const reopened = (await loadDocx(await editor.saveBytes())).model;
+			expect(reopened.blocks[0]).toMatchObject({
+				runs: [
+					{ break: 'page', revision: { kind: 'insert', author: 'Ada' } },
+					{ image: {}, revision: { kind: 'delete', author: 'Ada' } },
+					{ text: 'Keep!' },
+				],
+			});
+		}
+	});
 	it('keeps Original formatting display local without changing shared content or undo', async () => {
 		const bytes = new Uint8Array(
 			await readFile(resolve('../core/docx/__fixtures__/review-formatting/bold-tracked.docx')),

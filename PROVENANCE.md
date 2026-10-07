@@ -926,3 +926,14 @@ moved to `Get-VisioNativeFillPoints`; native drawing and raster capture metadata
 consume the same helper. New pentagon, chevron, U-shape and star probes extend
 the independent native corpus. No production geometry or paint algorithm was
 copied. Native settings/owned-process cleanup remain in the existing recorder.
+
+## Word inline run conversion and revision preservation
+
+Source: ChristopherVR/ooxml at `8d4c40cc4`,
+`src/ui/src/docx/run-adapter.ts`. The conversion moved to
+`src/core/docx/ui/run-adapter.ts`, taking a caller-supplied schema. The UI keeps
+only its schema-bound wrapper. Core now retains picture and page/column-break
+run properties, including text/format revisions and opaque property bases.
+A single-run conversion also lets editable review displays reuse the same
+revision visibility policy as layout, including atom properties stored outside
+text marks. DOM image resolution and equation rendering stay in UI.

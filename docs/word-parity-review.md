@@ -140,6 +140,15 @@ Mode changes preserve an active story's selection, source properties and history
 closing it retains the selected display mode. Preview paragraph attributes reuse
 the complete core conversion instead of a separate alignment-only mapping.
 
+Inline run conversion now lives in core and takes the caller's schema. Pictures
+and page/column breaks retain run properties and revision history through editor
+conversion, peer synchronization and export. Review visibility covers inline
+atoms as well as text, using the same core policy as layout. Browser checks cover
+pictures, breaks, equations and note references across all six bindings. The
+visibility rule overrides node-view display styles. Atom revision resolution,
+recording and prior formatting display still require dedicated editor coverage;
+these checks do not establish native Word object-review parity.
+
 Print Layout now projects prior run and paragraph formatting through the same
 core helpers, including table cells, section stories and notes. Native before
 references cover bold, combined run properties and combined paragraph properties.
