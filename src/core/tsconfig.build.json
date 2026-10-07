@@ -13,6 +13,8 @@
 	"include": ["**/*.ts"],
 	"exclude": [
 		"**/*.test.ts",
+		"**/test-support/**",
+		"**/__fixtures__/**",
 		"visio/*-fixtures.ts",
 		"xlsx/**/*-fixtures.ts",
 		"pptx",

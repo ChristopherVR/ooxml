@@ -33,7 +33,7 @@ try {
 	for (const required of ['LICENSE', 'NOTICE', 'README.md', 'dist/index.mjs', 'dist/index.d.ts'])
 		assert(files.has(required), `the package is missing ${required}`);
 	assert(
-		![...files].some((file) => /__tests__|\.test\.|fixtures\//.test(file)),
+		![...files].some((file) => /__tests__|\.test\.|fixtures\/|test-support\//.test(file)),
 		'tests or fixtures were packed',
 	);
 	assert(
