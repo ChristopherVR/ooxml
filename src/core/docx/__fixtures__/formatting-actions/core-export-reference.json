@@ -1,0 +1,116 @@
+{
+	"applicationVersion": "16.0",
+	"applicationBuild": "16.0.20430",
+	"cases": [
+		{
+			"name": "core-bold-italic.docx",
+			"revisions": [
+				{
+					"type": 3,
+					"author": "Codex",
+					"text": "Format"
+				}
+			],
+			"beforeText": "Format me\r",
+			"rejectedText": "Format me\r",
+			"rejectedBold": 0,
+			"rejectedItalic": 0
+		},
+		{
+			"name": "core-bold-off.docx",
+			"revisions": [],
+			"beforeText": "Format me\r",
+			"rejectedText": "Format me\r",
+			"rejectedBold": 0,
+			"rejectedItalic": 0
+		},
+		{
+			"name": "core-bold.docx",
+			"revisions": [
+				{
+					"type": 3,
+					"author": "Codex",
+					"text": "Format"
+				}
+			],
+			"beforeText": "Format me\r",
+			"rejectedText": "Format me\r",
+			"rejectedBold": 0,
+			"rejectedItalic": 0
+		},
+		{
+			"name": "core-own-insertion.docx",
+			"revisions": [
+				{
+					"type": 1,
+					"author": "Codex",
+					"text": "!"
+				},
+				{
+					"type": 3,
+					"author": "Codex",
+					"text": "!"
+				}
+			],
+			"beforeText": "Format me!\r",
+			"rejectedText": "Format me\r",
+			"rejectedBold": 0,
+			"rejectedItalic": 0
+		},
+		{
+			"name": "standalone-bold-italic.docx",
+			"revisions": [
+				{
+					"type": 3,
+					"author": "Codex",
+					"text": "Format"
+				}
+			],
+			"beforeText": "Format me\r",
+			"rejectedText": "Format me\r",
+			"rejectedBold": 0,
+			"rejectedItalic": 0
+		},
+		{
+			"name": "standalone-bold-off.docx",
+			"revisions": [],
+			"beforeText": "Format me\r",
+			"rejectedText": "Format me\r",
+			"rejectedBold": 0,
+			"rejectedItalic": 0
+		},
+		{
+			"name": "standalone-bold.docx",
+			"revisions": [
+				{
+					"type": 3,
+					"author": "Codex",
+					"text": "Format"
+				}
+			],
+			"beforeText": "Format me\r",
+			"rejectedText": "Format me\r",
+			"rejectedBold": 0,
+			"rejectedItalic": 0
+		},
+		{
+			"name": "standalone-own-insertion.docx",
+			"revisions": [
+				{
+					"type": 1,
+					"author": "Codex",
+					"text": "!"
+				},
+				{
+					"type": 3,
+					"author": "Codex",
+					"text": "!"
+				}
+			],
+			"beforeText": "Format me!\r",
+			"rejectedText": "Format me\r",
+			"rejectedBold": 0,
+			"rejectedItalic": 0
+		}
+	]
+}

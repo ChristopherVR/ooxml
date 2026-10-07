@@ -5,6 +5,7 @@ import { Fragment, Slice, type Mark, type Node as ProseMirrorNode } from 'prosem
 import { createClientId } from '../../collab/identity';
 import { createCollaborationIdGenerator } from './collaboration-identity';
 import { isHistoryTransaction } from 'prosemirror-history';
+import { trackRunFormatting } from './track-run-formatting.js';
 
 /** Text removed by the latest tracked cut, so pasting it back records a move. */
 interface TrackState {
@@ -134,9 +135,9 @@ function markMove(tr: Transaction, ids: ReadonlySet<string>, name: string): void
 /**
  * When enabled, rewrites local editing transactions so insertions/deletions become tracked-change
  * marks (see applyTrackedReplace) instead of directly changing the visible text. Handles the common
- * case of a transaction made of `ReplaceStep`s only (typing, IME, backspace/delete, cut, paste);
- * anything else (structural table edits, attribute changes, remote collaboration steps) passes
- * through untouched.
+ * cases of pure text replacement (typing, IME, backspace/delete, cut, paste) and supported
+ * run-formatting mark changes. Structural table edits, paragraph attribute changes and remote
+ * collaboration steps pass through untouched.
  */
 export function trackChangesPlugin(
 	getAuthor: () => string,
@@ -186,9 +187,14 @@ export function trackChangesPlugin(
 			const relevant = transactions.filter((tr) => tr.docChanged);
 			if (!relevant.length) return null;
 			const steps = relevant.flatMap((tr) => tr.steps);
-			if (!steps.length || !steps.every((step) => step instanceof ReplaceStep)) return null;
 			const author = getAuthor() || 'Author';
 			const date = new Date(Date.now()).toISOString();
+			if (!steps.length || !steps.every((step) => step instanceof ReplaceStep)) {
+				const formatting = trackRunFormatting(steps, oldState, newState, author, date, () =>
+					idGenerator('revision'),
+				);
+				return formatting?.setMeta(trackChangesPluginKey, { tracked: true }) ?? null;
+			}
 			const transform = new Transform(oldState.doc);
 			// Each step's positions refer to the document after the earlier untracked steps; map them
 			// back to the original document, then forward through the tracked edits (which keep

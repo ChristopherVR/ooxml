@@ -1,0 +1,57 @@
+{
+	"applicationVersion": "16.0",
+	"applicationBuild": "16.0.20430",
+	"cases": [
+		{
+			"name": "bold",
+			"revisions": [
+				{
+					"type": 3,
+					"author": "Christopher van Rooyen",
+					"text": "Format"
+				}
+			],
+			"rejectedText": "Format me\r",
+			"rejectedBold": 0,
+			"rejectedItalic": 0
+		},
+		{
+			"name": "bold-italic",
+			"revisions": [
+				{
+					"type": 3,
+					"author": "Christopher van Rooyen",
+					"text": "Format"
+				}
+			],
+			"rejectedText": "Format me\r",
+			"rejectedBold": 0,
+			"rejectedItalic": 0
+		},
+		{
+			"name": "bold-off",
+			"revisions": [],
+			"rejectedText": "Format me\r",
+			"rejectedBold": 0,
+			"rejectedItalic": 0
+		},
+		{
+			"name": "own-insertion",
+			"revisions": [
+				{
+					"type": 1,
+					"author": "Christopher van Rooyen",
+					"text": "!"
+				},
+				{
+					"type": 3,
+					"author": "Christopher van Rooyen",
+					"text": "!"
+				}
+			],
+			"rejectedText": "Format me\r",
+			"rejectedBold": 0,
+			"rejectedItalic": 0
+		}
+	]
+}

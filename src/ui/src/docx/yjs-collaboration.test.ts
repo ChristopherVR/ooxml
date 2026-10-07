@@ -61,6 +61,47 @@ function start(
 }
 
 describe('Word Yjs collaboration', () => {
+	it('records peer formatting with one reversible revision and both peers export its prior properties', async () => {
+		const bytes = new Uint8Array(
+			await readFile(
+				resolve(
+					import.meta.dirname,
+					'../../../core/docx/__fixtures__/formatting-actions/baseline.docx',
+				),
+			),
+		);
+		const peers = pair();
+		const a = mount();
+		const b = mount();
+		a.reviewAuthor = 'Ada';
+		b.reviewAuthor = 'Bob';
+		await a.load(bytes);
+		await b.load(bytes);
+		start(a, b, peers);
+		const view = viewOf(b);
+		toggleTrackChanges(view.state, view.dispatch, view);
+		const before = view.state.doc;
+		view.dispatch(view.state.tr.addMark(1, 7, view.state.schema.marks.bold!.create()));
+		const changed = view.state.doc;
+		for (const editor of [a, b]) {
+			expect(viewOf(editor).state.doc.eq(changed)).toBe(true);
+			expect(collectRevisionRanges(viewOf(editor).state.doc)).toMatchObject([
+				{ kind: 'formatChange', author: 'Bob' },
+			]);
+			const exported = await loadDocx(await editor.saveBytes());
+			const paragraph = exported.model.blocks[0]!;
+			if (paragraph.type !== 'paragraph') throw new Error('Expected paragraph');
+			expect(paragraph.runs[0]?.bold).toBe(true);
+			expect(paragraph.runs[0]?.revision?.previousRunPropertiesXml).toContain('rPr');
+		}
+		expect(wordYjsPluginKey.getState(view.state)!.undo()).toBe(true);
+		for (const editor of [a, b]) expect(viewOf(editor).state.doc.eq(before)).toBe(true);
+		expect(wordYjsPluginKey.getState(view.state)!.redo()).toBe(true);
+		for (const editor of [a, b]) expect(viewOf(editor).state.doc.eq(changed)).toBe(true);
+		rejectRevisionRange(view, collectRevisionRanges(view.state.doc)[0]!);
+		for (const editor of [a, b])
+			expect(collectRevisionRanges(viewOf(editor).state.doc)).toEqual([]);
+	});
 	it('retains opaque current run properties through tracked peer typing, export and history', async () => {
 		const zip = new JSZip();
 		zip.file(

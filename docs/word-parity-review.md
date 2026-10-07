@@ -105,8 +105,8 @@ reuse the client identity generator. Resolution separates legacy IDs by author,
 ignores stale ranges, blocks read-only writes and bypasses recording, as do
 undo/redo transactions. A two-peer partition/reject regression retains the other
 author's insertion. Browser review contracts pass in all six bindings.
-Formatting-change snapshots and paragraph-mark recording still need implementation
-and native reference evidence.
+Run-formatting recording now retains prior snapshots through supported mark
+transactions. Paragraph-mark recording still needs implementation and native evidence.
 
 Move names now reuse shared identity generation during editing, with numeric
 names assigned only on export. A fixed-clock regression covers 101 independent
@@ -126,8 +126,8 @@ XML, and matches Word's rejected documents. Word opens both package-preserving
 and standalone rejected exports with the expected formatting and no revisions.
 Accepting a run-format revision clears the snapshot. Shared editor Review
 commands now navigate, accept and reject imported run-format revisions,
-including undo/redo, peer synchronization and export. New formatting-change
-recording and prior formatting in Original display remain unfinished;
+including undo/redo, peer synchronization and export. Supported run-formatting
+changes now record revisions; prior formatting in Original display remains unfinished;
 paragraph-format recording also needs implementation. Shared Review commands
 now navigate, accept and reject imported paragraph changes, with undo/redo,
 Yjs peer synchronization and package export. Original display still needs to
@@ -226,8 +226,20 @@ resolving formatting retains the pending text revision. Modern Word UTC timestam
 are preserved separately from legacy revision dates. Core, editor, Yjs and six
 browser bindings cover overlapping tracked typing. Desktop Word reopened four
 exports combining run formatting with insertion or deletion and rejected them
-back to native baseline text and formatting. Recording new formatting revisions
-and displaying their prior properties in Original mode remain unfinished.
+back to native baseline text and formatting. Displaying their prior properties
+in Original mode remains unfinished.
+
+The shared Track Changes plugin now records supported run-formatting mark edits,
+including the explicit-off properties used by UI toggles. It reuses shared mark
+conversion and the ordinary OOXML writer for complete prior snapshots, retaining
+script fonts, opaque source properties, text revisions, links and comments.
+Successive formatting retains the earliest snapshot, reverting to that snapshot
+removes the revision, and undo/redo includes both formatting and history. Native
+Word action references cover bold, bold followed by italic, reverting bold and
+formatting a pending insertion. Desktop Word reopened all eight package and
+standalone exports with matching revision types and Reject All results. These
+references do not establish current M365 certification, multi-author attribution
+rules, paragraph-format recording or mixed structural/formatting transactions.
 
 Core revision enumeration and resolution now include headers, footers, footnotes,
 endnotes and table cells through the shared document-story traversal. Synthetic
