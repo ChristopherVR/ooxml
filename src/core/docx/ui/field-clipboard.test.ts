@@ -2,14 +2,22 @@ import { expect, it } from 'vitest';
 import { Fragment, Schema, Slice } from 'prosemirror-model';
 import { fieldClipboardSlice } from './field-clipboard';
 import { markSpecs } from './schema-marks';
-import { fieldMarkerNodeSpec } from './break-note-schema';
-import { runToInlineNodes } from './run-adapter';
+import {
+	fieldMarkerNodeSpec,
+	hardBreakNodeSpec,
+	pageBreakNodeSpec,
+	noteReferenceNodeSpec,
+} from './break-note-schema';
+import { runToInlineNodes, inlineNodeRun } from './run-adapter';
 const schema = new Schema({
 	nodes: {
 		doc: { content: 'paragraph+' },
 		paragraph: { content: 'inline*' },
 		text: { group: 'inline' },
 		fieldMarker: fieldMarkerNodeSpec,
+		hardBreak: hardBreakNodeSpec,
+		pageBreak: pageBreakNodeSpec,
+		noteReference: noteReferenceNodeSpec,
 	},
 	marks: markSpecs,
 });
@@ -18,6 +26,47 @@ const result = runToInlineNodes(
 	schema,
 )[0]!;
 const marker = (kind: 'begin' | 'end') => schema.node('fieldMarker', { kind });
+it.each([
+	{ text: '\n' },
+	{ text: '', break: 'page' as const },
+	{ text: '', noteReference: { kind: 'footnote' as const, id: '7' } },
+])(
+	'projects standalone cached inline objects without losing their own properties: %j',
+	(content) => {
+		const atom = runToInlineNodes(
+			{
+				...content,
+				bold: true,
+				field: { instr: 'REF Target', simple: true },
+				fieldInstanceId: 'source',
+			},
+			schema,
+		)[0]!;
+		const copied = fieldClipboardSlice(new Slice(Fragment.from(atom), 0, 0)).content.firstChild!;
+		expect(inlineNodeRun(copied)).toEqual({ ...content, bold: true });
+		expect(inlineNodeRun(atom)?.field).toEqual({ instr: 'REF Target', simple: true });
+	},
+);
+it('retains a complete complex field cached line break and its effective formatting', () => {
+	const atom = runToInlineNodes(
+		{ text: '\n', bold: true, field: { instr: 'REF Target' } },
+		schema,
+	)[0]!;
+	const effective = atom.type.create(
+		{ ...atom.attrs, runFormat_bold: 'false' },
+		undefined,
+		atom.marks,
+	);
+	const slice = new Slice(Fragment.fromArray([marker('begin'), effective, marker('end')]), 0, 0);
+	const copied = fieldClipboardSlice(slice);
+	expect(inlineNodeRun(copied.content.child(1))).toMatchObject({
+		text: '\n',
+		bold: false,
+		field: { instr: 'REF Target' },
+	});
+	const literal = fieldClipboardSlice(new Slice(Fragment.from(effective), 0, 0));
+	expect(inlineNodeRun(literal.content.firstChild!)).toEqual({ text: '\n', bold: false });
+});
 it('strips field metadata from an incomplete complex field without changing slice openness', () => {
 	const doc = schema.node('doc', null, schema.node('paragraph', null, [marker('begin'), result]));
 	const slice = new Slice(doc.content, 1, 1);
