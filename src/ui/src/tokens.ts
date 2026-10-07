@@ -250,6 +250,8 @@ export const OFFICE_TOKENS = {
 	'--office-teams-bubble-own': '#e8ebfa',
 	'--office-teams-divider': '#e0e0e0',
 	'--office-teams-text-subtle': '#616161',
+	'--office-teams-message-gap': 'var(--office-space-3)',
+	'--office-teams-message-padding': 'var(--office-space-2) var(--office-space-3)',
 	'--office-presence-available': '#6bb700',
 	'--office-presence-busy': '#c50f1f',
 	'--office-presence-away': '#eaa300',
