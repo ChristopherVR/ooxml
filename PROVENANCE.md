@@ -844,3 +844,14 @@ They moved unchanged to `chartBarSpacing` in `layout/chart-spacing.ts`. The SVG
 painter and the docked series pane use the same values, so the UI does not keep
 a second grouping/default calculation. Imported spacing still comes from the
 native OOXML parser; all edits and history use the existing core chart commands.
+
+## Shared native range control
+
+Source: ChristopherVR/ooxml at `19ef348e7`,
+`src/ui/src/form/zoom-slider.ts` and `zoom-slider.css`, the native range input
+template, focus ring, disabled appearance and accent color. They moved to
+`form/range-control.ts` and `range-control.css`, preserving zoom's input/change
+callbacks and existing shadow-DOM input. The chart series pane uses the same
+Lit template and stylesheet for its percentage sliders. The range helper adds
+an optional step and suppresses synthetic disabled callbacks. Chart spacing
+values, validation, saving and history remain in core.

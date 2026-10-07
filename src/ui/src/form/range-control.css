@@ -1,0 +1,11 @@
+.office-range-control {
+	accent-color: var(--office-accent);
+}
+.office-range-control:focus-visible {
+	outline: var(--office-focus-width) solid var(--office-ring);
+	outline-offset: calc(var(--office-focus-offset) / 2);
+}
+.office-range-control:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}

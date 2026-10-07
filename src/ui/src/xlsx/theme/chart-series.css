@@ -47,3 +47,8 @@
 	width: 70px;
 	min-width: 0;
 }
+.xve-chart-series-range .office-range-control {
+	box-sizing: border-box;
+	width: 100%;
+	margin: 0 0 8px;
+}

@@ -25,13 +25,11 @@ button {
 button:hover:not(:disabled) {
 	background: var(--office-background);
 }
-button:focus-visible,
-input:focus-visible {
+button:focus-visible {
 	outline: var(--office-focus-width) solid var(--office-ring);
 	outline-offset: calc(var(--office-focus-offset) / 2);
 }
-button:disabled,
-input:disabled {
+button:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
 }
@@ -39,7 +37,6 @@ input {
 	width: var(--office-zoom-slider-width);
 	min-width: var(--office-zoom-slider-min-width);
 	margin: 0 var(--office-space-0);
-	accent-color: var(--office-accent);
 }
 output {
 	min-width: var(--office-zoom-value-width);

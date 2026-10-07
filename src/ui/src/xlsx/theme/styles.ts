@@ -7,6 +7,8 @@ import ribbon from './ribbon.css?raw';
 import popups from './popups.css?raw';
 import backstage from './backstage.css?raw';
 import chartSeries from './chart-series.css?raw';
+import rangeControl from '../../form/range-control.css?raw';
+import { withTokens } from '../../base';
 
 const declarations = (theme: XlsxTheme, scheme: 'light' | 'dark') =>
 	Object.entries(themeToCssVars(theme))
@@ -31,4 +33,5 @@ export const editorStyleText = [
 	popups,
 	backstage,
 	chartSeries,
+	withTokens(rangeControl),
 ].join('\n');

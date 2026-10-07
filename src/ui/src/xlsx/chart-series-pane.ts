@@ -9,6 +9,8 @@ import {
 	type EditorContext,
 } from 'ooxml-core/xlsx/ui';
 import { el, field, numberInput } from './dialogs/fields';
+import { render } from 'lit';
+import { rangeControl } from '../form/range-control';
 
 export function chartSeriesCommand(): Command {
 	return editing({
@@ -44,6 +46,32 @@ export function createChartSeriesPane(ctx: EditorContext) {
 	const gap = numberInput(ctx, 150, 0, 500);
 	const overlapField = field(ctx, 'Series Overlap', overlap);
 	const gapField = field(ctx, 'Gap Width', gap);
+	const overlapRange = el(ctx, 'div', 'xve-chart-series-range');
+	const gapRange = el(ctx, 'div', 'xve-chart-series-range');
+	const ranges = [
+		[overlapRange, overlap, 'Series Overlap'],
+		[gapRange, gap, 'Gap Width'],
+	] as const;
+	const paintRange = (host: HTMLElement, input: HTMLInputElement, key: string) => {
+		const value = input.valueAsNumber;
+		render(
+			rangeControl({
+				label: ctx.t(key),
+				value,
+				valueText: `${value}%`,
+				min: Number(input.min),
+				max: Number(input.max),
+				disabled: input.disabled,
+				onInput: (next) => {
+					if (!ctx.commands.isEnabled('chart.format-series')) return refresh();
+					input.value = String(next);
+					paintRange(host, input, key);
+				},
+				onChange: () => input.dispatchEvent(new Event('change')),
+			}),
+			host,
+		);
+	};
 	for (const row of [overlapField, gapField]) {
 		const unit = el(ctx, 'span');
 		unit.textContent = '%';
@@ -51,7 +79,7 @@ export function createChartSeriesPane(ctx: EditorContext) {
 	}
 	const empty = el(ctx, 'p', 'xve-note');
 	header.append(title, closeButton);
-	body.append(section, overlapField, gapField);
+	body.append(section, overlapField, overlapRange, gapField, gapRange);
 	element.append(header, body, empty);
 	element.addEventListener('keydown', (event) => {
 		if (event.key !== 'Escape') return;
@@ -72,6 +100,7 @@ export function createChartSeriesPane(ctx: EditorContext) {
 			row.querySelector('span')!.textContent = ctx.t(key);
 			input.setAttribute('aria-label', ctx.t(key));
 		}
+		for (const [host, input, key] of ranges) paintRange(host, input, key);
 	};
 	const refresh = () => {
 		if (element.hidden) return;
@@ -83,6 +112,7 @@ export function createChartSeriesPane(ctx: EditorContext) {
 		gap.value = String(spacing.barGapWidth);
 		overlap.value = String(spacing.barOverlap);
 		gap.disabled = overlap.disabled = !ctx.commands.isEnabled('chart.format-series');
+		for (const [host, input, key] of ranges) paintRange(host, input, key);
 	};
 	for (const [input, property] of [
 		[gap, 'barGapWidth'],

@@ -90,4 +90,32 @@ describe('chart series pane', () => {
 		expect(input('Gap Width').value).toBe('100');
 		expect(await ctx.commands.run('chart.format-series')).toBe(false);
 	});
+
+	it('pairs slider input with the percentage field and commits one undo step', async () => {
+		const { ctx, pane, input } = setup();
+		await ctx.commands.run('chart.format-series');
+		const range = pane.element.querySelector<HTMLInputElement>(
+			'input[type="range"][aria-label="Gap Width"]',
+		)!;
+		const original = ctx.workbook()!.sheets[0]!.drawings[0];
+		for (const value of ['250', '300', '500']) {
+			range.value = value;
+			range.dispatchEvent(new Event('input'));
+			expect(input('Gap Width').value).toBe(value);
+			expect(range.getAttribute('aria-valuetext')).toBe(`${value}%`);
+		}
+		expect(original).toMatchObject({ barGapWidth: 100 });
+		range.dispatchEvent(new Event('change'));
+		expect(ctx.workbook()!.sheets[0]!.drawings[0]).toMatchObject({ barGapWidth: 500 });
+		ctx.session()!.undo();
+		expect(input('Gap Width').value).toBe('100');
+		expect(range.value).toBe('100');
+		ctx.setReadOnly(true);
+		pane.refresh();
+		expect(range.disabled).toBe(true);
+		range.value = '5';
+		range.dispatchEvent(new Event('input'));
+		range.dispatchEvent(new Event('change'));
+		expect(ctx.workbook()!.sheets[0]!.drawings[0]).toMatchObject({ barGapWidth: 100 });
+	});
 });

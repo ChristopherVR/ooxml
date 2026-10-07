@@ -3,6 +3,8 @@ import { OfficeElement, controlStyles, flag } from '../base';
 import { glyph } from '../glyph';
 import { definer, present } from '../registry';
 import css from './zoom-slider.css?raw';
+import rangeCss from './range-control.css?raw';
+import { rangeControl } from './range-control';
 
 const clampTo = (value: number, min: number, max: number) =>
 	Math.min(max, Math.max(min, Math.round(value)));
@@ -19,7 +21,7 @@ const finite = (value: number, fallback: number) => (Number.isFinite(value) ? va
  * the fit button emits `office-command` `{ command: 'zoom-fit' }`. Setting `value` never emits.
  */
 export class OfficeUiZoomSlider extends OfficeElement {
-	static override styles = controlStyles(css);
+	static override styles = controlStyles(css, rangeCss);
 	static override properties = {
 		// `value` clamps to the range, so it has a hand-written accessor below.
 		value: { type: Number, reflect: true, noAccessor: true },
@@ -114,18 +116,16 @@ export class OfficeUiZoomSlider extends OfficeElement {
 				@click=${() => this.stepBy(-1)}
 				>−</button
 			>
-			<input
-				type="range"
-				aria-label=${this.sliderLabel || 'Zoom'}
-				aria-valuetext="${value}%"
-				min=${this.low}
-				max=${this.high}
-				.value=${String(value)}
-				?disabled=${disabled}
-				@input=${(event: Event) =>
-					this.commit((event.target as HTMLInputElement).valueAsNumber, 'input')}
-				@change=${() => this.dispatchEvent(new Event('change', { bubbles: true, composed: true }))}
-			/>
+			${rangeControl({
+				label: this.sliderLabel || 'Zoom',
+				value,
+				valueText: `${value}%`,
+				min: this.low,
+				max: this.high,
+				disabled,
+				onInput: (next) => this.commit(next, 'input'),
+				onChange: () => this.dispatchEvent(new Event('change', { bubbles: true, composed: true })),
+			})}
 			<button
 				type="button"
 				aria-label=${inn}

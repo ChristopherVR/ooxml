@@ -83,10 +83,22 @@ for (const framework of FRAMEWORKS)
 		await expect(overlap).toHaveValue('-24');
 		await editor(page).evaluate((node) => (node as unknown as { redo(): void }).redo());
 		await expect(overlap).toHaveValue('23');
+		const gapSlider = pane.getByRole('slider', { name: 'Gap Width', exact: true });
+		await expect(gapSlider).toHaveValue('5');
+		await expect(pane.getByRole('slider', { name: 'Series Overlap', exact: true })).toHaveValue(
+			'23',
+		);
+		await gapSlider.focus();
+		await gapSlider.press('End');
+		await expect(gap).toHaveValue('500');
+		await editor(page).evaluate((node) => (node as unknown as { undo(): void }).undo());
+		await expect(gap).toHaveValue('5');
+		await expect(gapSlider).toHaveValue('5');
 		await editor(page).evaluate((node) => {
 			(node as unknown as { readOnly: boolean }).readOnly = true;
 		});
 		await expect(gap).toBeDisabled();
+		await expect(gapSlider).toBeDisabled();
 		await editor(page).evaluate((node) => {
 			(node as unknown as { readOnly: boolean }).readOnly = false;
 		});

@@ -848,3 +848,24 @@ Validation: all 82 production browser tests and 318 XLSX UI regressions passed.
 After extracting effective spacing and adding the protected-pane regression,
 all 14 native-style browser tests, 21 focused UI/locale tests and 15 native core
 spacing tests passed. Core and UI typechecks and builds passed.
+
+## Shared chart spacing sliders
+
+The pane pairs native sliders with Gap Width and Series Overlap percentage fields.
+Both use the range input template and focus/disabled styles extracted from the
+shared Office zoom slider; the zoom control keeps its DOM and event contract.
+Keyboard Home/End and arrow handling come from the native input. Input updates
+the percentage and accessible value text; release commits one chart edit. Undo,
+selection, locale and protection changes keep the paired controls synchronized.
+
+Playwright MCP reviewed and dragged the slider in the production UI. Excel COM
+reopened its downloaded full native workbook with gap width 500, overlap -24 and
+three series. Six-binding browser checks cover keyboard End, paired values,
+undo and disabled state. Continuous chart preview during pointer dragging,
+axis assignment and the remaining individual series formatting controls are
+still incomplete.
+
+Validation: all 82 production browser checks passed, along with 31 shared range,
+zoom, subclassing, chart-pane, chrome and manifest regressions. The UI typecheck,
+refreshed core build and UI build passed. A real pointer drag in Playwright MCP
+changed overlap from -24 to 85; one undo restored -24.
