@@ -127,8 +127,8 @@ and standalone rejected exports with the expected formatting and no revisions.
 Accepting a run-format revision clears the snapshot. Shared editor Review
 commands now navigate, accept and reject imported run-format revisions,
 including undo/redo, peer synchronization and export. Supported run-formatting
-changes now record revisions; prior formatting in Original display remains unfinished;
-paragraph-format recording also needs implementation. Shared Review commands
+changes and pure paragraph-format changes now record revisions; prior formatting
+in Original display remains unfinished. Shared Review commands
 now navigate, accept and reject imported paragraph changes, with undo/redo,
 Yjs peer synchronization and package export. Original display still needs to
 project the prior formatting. Core
@@ -239,7 +239,7 @@ Word action references cover bold, bold followed by italic, reverting bold and
 formatting a pending insertion. Desktop Word reopened all eight package and
 standalone exports with matching revision types and Reject All results. These
 references do not establish current M365 certification, multi-author attribution
-rules, paragraph-format recording or mixed structural/formatting transactions.
+rules or mixed structural/formatting transactions.
 
 Word's document-level Track Formatting and Track Moves preferences now parse
 and export their negative settings flags. The editor retains them as shared
@@ -267,3 +267,13 @@ formatting that snapshot records. Raw-property regressions cover opaque
 attributes, borders and section metadata. Desktop Word reopened all eight native
 paragraph rejection exports with zero revisions and the expected paragraph-mark
 fonts; all six browser bindings cover Review rejection and undo.
+
+The shared Track Changes plugin now also records pure paragraph-format changes,
+including alignment, spacing, indentation and pagination attributes. Snapshots
+use the shared paragraph conversion and writer, excluding independently tracked
+paragraph-mark and section properties. Successive edits retain the prior snapshot;
+full reversion clears history. Empty paragraphs, per-paragraph snapshots, ordinary
+undo/redo, Yjs peer history and six browser bindings are covered. Desktop Word
+reopened all eight newly recorded package and standalone exports and rejected
+them to the native baseline. Mixed text/structural transactions and multi-author
+format attribution remain outside this slice.

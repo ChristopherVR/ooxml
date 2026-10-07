@@ -1,0 +1,214 @@
+{
+	"applicationVersion": "16.0",
+	"applicationBuild": "16.0.20430",
+	"cases": [
+		{
+			"name": "alignment-package.docx",
+			"revisionTypes": [10],
+			"current": {
+				"alignment": 1,
+				"spacingBefore": 0.0,
+				"spacingAfter": 0.0,
+				"indentLeft": 0.0,
+				"firstLine": 0.0,
+				"lineSpacing": 12.0,
+				"keepNext": 0
+			},
+			"rejected": {
+				"revisionCount": 0,
+				"alignment": 0,
+				"spacingBefore": 0.0,
+				"spacingAfter": 0.0,
+				"indentLeft": 0.0,
+				"firstLine": 0.0,
+				"lineSpacing": 12.0,
+				"keepNext": 0,
+				"paragraphMarkFont": "Arial",
+				"paragraphMarkComplexScriptFont": "Arial",
+				"text": "Paragraph formatting\r"
+			}
+		},
+		{
+			"name": "alignment-standalone.docx",
+			"revisionTypes": [10],
+			"current": {
+				"alignment": 1,
+				"spacingBefore": 0.0,
+				"spacingAfter": 0.0,
+				"indentLeft": 0.0,
+				"firstLine": 0.0,
+				"lineSpacing": 12.0,
+				"keepNext": 0
+			},
+			"rejected": {
+				"revisionCount": 0,
+				"alignment": 0,
+				"spacingBefore": 0.0,
+				"spacingAfter": 0.0,
+				"indentLeft": 0.0,
+				"firstLine": 0.0,
+				"lineSpacing": 12.0,
+				"keepNext": 0,
+				"paragraphMarkFont": "Arial",
+				"paragraphMarkComplexScriptFont": "Arial",
+				"text": "Paragraph formatting\r"
+			}
+		},
+		{
+			"name": "indent-package.docx",
+			"revisionTypes": [10],
+			"current": {
+				"alignment": 0,
+				"spacingBefore": 0.0,
+				"spacingAfter": 0.0,
+				"indentLeft": 36.0,
+				"firstLine": 18.0,
+				"lineSpacing": 12.0,
+				"keepNext": 0
+			},
+			"rejected": {
+				"revisionCount": 0,
+				"alignment": 0,
+				"spacingBefore": 0.0,
+				"spacingAfter": 0.0,
+				"indentLeft": 0.0,
+				"firstLine": 0.0,
+				"lineSpacing": 12.0,
+				"keepNext": 0,
+				"paragraphMarkFont": "Arial",
+				"paragraphMarkComplexScriptFont": "Arial",
+				"text": "Paragraph formatting\r"
+			}
+		},
+		{
+			"name": "indent-standalone.docx",
+			"revisionTypes": [10],
+			"current": {
+				"alignment": 0,
+				"spacingBefore": 0.0,
+				"spacingAfter": 0.0,
+				"indentLeft": 36.0,
+				"firstLine": 18.0,
+				"lineSpacing": 12.0,
+				"keepNext": 0
+			},
+			"rejected": {
+				"revisionCount": 0,
+				"alignment": 0,
+				"spacingBefore": 0.0,
+				"spacingAfter": 0.0,
+				"indentLeft": 0.0,
+				"firstLine": 0.0,
+				"lineSpacing": 12.0,
+				"keepNext": 0,
+				"paragraphMarkFont": "Arial",
+				"paragraphMarkComplexScriptFont": "Arial",
+				"text": "Paragraph formatting\r"
+			}
+		},
+		{
+			"name": "multiple-package.docx",
+			"revisionTypes": [10],
+			"current": {
+				"alignment": 1,
+				"spacingBefore": 18.0,
+				"spacingAfter": 6.0,
+				"indentLeft": 36.0,
+				"firstLine": 18.0,
+				"lineSpacing": 24.0,
+				"keepNext": -1
+			},
+			"rejected": {
+				"revisionCount": 0,
+				"alignment": 0,
+				"spacingBefore": 0.0,
+				"spacingAfter": 0.0,
+				"indentLeft": 0.0,
+				"firstLine": 0.0,
+				"lineSpacing": 12.0,
+				"keepNext": 0,
+				"paragraphMarkFont": "Arial",
+				"paragraphMarkComplexScriptFont": "Arial",
+				"text": "Paragraph formatting\r"
+			}
+		},
+		{
+			"name": "multiple-standalone.docx",
+			"revisionTypes": [10],
+			"current": {
+				"alignment": 1,
+				"spacingBefore": 18.0,
+				"spacingAfter": 6.0,
+				"indentLeft": 36.0,
+				"firstLine": 18.0,
+				"lineSpacing": 24.0,
+				"keepNext": -1
+			},
+			"rejected": {
+				"revisionCount": 0,
+				"alignment": 0,
+				"spacingBefore": 0.0,
+				"spacingAfter": 0.0,
+				"indentLeft": 0.0,
+				"firstLine": 0.0,
+				"lineSpacing": 12.0,
+				"keepNext": 0,
+				"paragraphMarkFont": "Arial",
+				"paragraphMarkComplexScriptFont": "Arial",
+				"text": "Paragraph formatting\r"
+			}
+		},
+		{
+			"name": "spacing-package.docx",
+			"revisionTypes": [10],
+			"current": {
+				"alignment": 0,
+				"spacingBefore": 18.0,
+				"spacingAfter": 6.0,
+				"indentLeft": 0.0,
+				"firstLine": 0.0,
+				"lineSpacing": 24.0,
+				"keepNext": 0
+			},
+			"rejected": {
+				"revisionCount": 0,
+				"alignment": 0,
+				"spacingBefore": 0.0,
+				"spacingAfter": 0.0,
+				"indentLeft": 0.0,
+				"firstLine": 0.0,
+				"lineSpacing": 12.0,
+				"keepNext": 0,
+				"paragraphMarkFont": "Arial",
+				"paragraphMarkComplexScriptFont": "Arial",
+				"text": "Paragraph formatting\r"
+			}
+		},
+		{
+			"name": "spacing-standalone.docx",
+			"revisionTypes": [10],
+			"current": {
+				"alignment": 0,
+				"spacingBefore": 18.0,
+				"spacingAfter": 6.0,
+				"indentLeft": 0.0,
+				"firstLine": 0.0,
+				"lineSpacing": 24.0,
+				"keepNext": 0
+			},
+			"rejected": {
+				"revisionCount": 0,
+				"alignment": 0,
+				"spacingBefore": 0.0,
+				"spacingAfter": 0.0,
+				"indentLeft": 0.0,
+				"firstLine": 0.0,
+				"lineSpacing": 12.0,
+				"keepNext": 0,
+				"paragraphMarkFont": "Arial",
+				"paragraphMarkComplexScriptFont": "Arial",
+				"text": "Paragraph formatting\r"
+			}
+		}
+	]
+}

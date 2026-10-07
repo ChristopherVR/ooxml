@@ -13,7 +13,8 @@ settings are untouched.
 
 Regression tests cover preserving `w:pPrChange` and its complete prior `w:pPr`
 through text edits, editor conversion and export, and core acceptance. Paragraph
-format recording and prior formatting in Original display remain unfinished.
+format recording now uses the shared Track Changes plugin; prior formatting in
+Original display remains unfinished.
 Shared editor Review commands support navigation, acceptance, rejection,
 undo/redo and Yjs peer synchronization. Core rejection
 restores prior properties and matches native rejected documents; later known
@@ -31,6 +32,14 @@ font in all eight rejected exports. Rejection retains the current paragraph-mark
 and section properties when the prior paragraph snapshot omits them. The model
 and editor retain complete source paragraph properties through text edits and
 export, including opaque attributes and independently tracked properties.
+
+`recorded-core-export-reference.json` records Word reopening all eight exports
+created by the shared paragraph-format recorder from the native before files.
+Applying each native tracked case's formatting produces one paragraph property
+revision (10). Word Reject All restores the original alignment, spacing, indents,
+line spacing, keep-with-next and Arial paragraph-mark fonts. Core tests exercise
+the same editor actions and both export paths. This establishes desktop export
+interop for these cases, not complete M365 parity.
 
 # Tracked text export check
 

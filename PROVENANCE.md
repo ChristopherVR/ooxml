@@ -751,3 +751,11 @@ PowerPoint keeps compatible exports and its existing modal lifecycle and Escape
 rules. The traversal now excludes hidden ancestor subtrees, so collapsed channel
 rows cannot receive focus from OpenTeams' navigation drawer. No Office logic or
 product rendering moved into this helper.
+## Shared Word formatting snapshot comparison
+
+Source: ChristopherVR/ooxml at `af2b24cfca36df8da11de71d9b6a62f0a76ba0de`,
+`src/core/docx/ui/track-run-formatting.ts`, the namespace-aware `signature`
+function. It moved unchanged to `propertiesSignature` in
+`src/core/docx/revision-properties.ts`. Run and paragraph formatting recorders
+share it, the ordinary OOXML writer and the existing mark/paragraph conversions.
+The paragraph recorder is new core code; no viewer logic was copied.

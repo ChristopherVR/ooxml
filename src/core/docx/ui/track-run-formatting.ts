@@ -1,3 +1,4 @@
+import { propertiesSignature } from '../revision-properties';
 import type { Node as ProseMirrorNode } from 'prosemirror-model';
 import type { EditorState, Transaction } from 'prosemirror-state';
 import { AddMarkStep, RemoveMarkStep, type Step } from 'prosemirror-transform';
@@ -30,25 +31,6 @@ function properties(node: ProseMirrorNode): XmlElement {
 	delete run.formatRevision;
 	const doc = parseXml(`<w:r xmlns:w="${WORD_NS}"/>`);
 	return first(createRun(doc, run), 'rPr') ?? makeW(doc, 'rPr');
-}
-
-/** Namespace-aware comparison ignores serialization prefixes and attribute ordering. */
-function signature(element: XmlElement): string {
-	return JSON.stringify([
-		element.namespaceURI,
-		element.localName,
-		Array.from(element.attributes)
-			.filter((attribute) => attribute.namespaceURI !== 'http://www.w3.org/2000/xmlns/')
-			.map((attribute) => [attribute.namespaceURI, attribute.localName, attribute.value])
-			.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b))),
-		Array.from(element.childNodes).flatMap((child) =>
-			child.nodeType === 1
-				? [signature(child as XmlElement)]
-				: child.textContent?.trim()
-					? [child.textContent]
-					: [],
-		),
-	]);
 }
 
 /** Records pure, supported formatting transactions without changing text or inline identities. */
@@ -94,10 +76,11 @@ export function trackRunFormatting(
 				const end = Math.min(to, previousPos + previous.nodeSize);
 				const before = properties(previous);
 				const after = properties(node);
-				if (signature(before) === signature(after)) return;
+				if (propertiesSignature(before) === propertiesSignature(after)) return;
 				const pending = formattingRevision(previous);
 				const priorXml = pending?.previousRunPropertiesXml ?? buildXml(before);
-				const restored = signature(after) === signature(parseRunPropertiesSnapshot(priorXml));
+				const restored =
+					propertiesSignature(after) === propertiesSignature(parseRunPropertiesSnapshot(priorXml));
 				const mark = node.marks.find((item) => item.type === markType);
 				const props = structuredClone(mark?.attrs.props ?? {}) as Partial<TextRun>;
 				delete props.formatRevision;

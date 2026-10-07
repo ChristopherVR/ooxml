@@ -66,6 +66,60 @@ function start(
 }
 
 describe('Word Yjs collaboration', () => {
+	it('shares newly recorded paragraph formatting with atomic peer undo, redo and rejection', async () => {
+		const bytes = new Uint8Array(
+			await readFile(
+				resolve('../core/docx/__fixtures__/review-paragraph-formatting/multiple-before.docx'),
+			),
+		);
+		const peers = pair();
+		const a = mount();
+		const b = mount();
+		await a.load(bytes);
+		await b.load(bytes);
+		a.reviewAuthor = 'Ada';
+		b.reviewAuthor = 'Bob';
+		start(a, b, peers);
+		toggleTrackChanges(viewOf(a).state, viewOf(a).dispatch, viewOf(a));
+		wordYjsPluginKey.getState(viewOf(b).state)!.stopCapturing();
+		const paragraph = viewOf(b).state.doc.firstChild!;
+		viewOf(b).dispatch(
+			viewOf(b).state.tr.setNodeMarkup(0, undefined, {
+				...paragraph.attrs,
+				align: 'center',
+				keepNext: true,
+			}),
+		);
+		expect(viewOf(a).state.doc.toJSON()).toEqual(viewOf(b).state.doc.toJSON());
+		expect(viewOf(a).state.doc.firstChild!.attrs.formatRevision).toMatchObject({
+			kind: 'paragraphChange',
+			author: 'Bob',
+		});
+		const xml = await (
+			await JSZip.loadAsync(await a.saveBytes())
+		)
+			.file('word/document.xml')!
+			.async('string');
+		expect(xml).toContain('pPrChange');
+		expect(xml).toContain('dateUtc');
+		const tracked = viewOf(a).state.doc;
+		expect(editorBindings['Mod-z']!(viewOf(b).state, viewOf(b).dispatch, viewOf(b))).toBe(true);
+		expect(viewOf(a).state.doc.firstChild!.attrs.formatRevision).toBeNull();
+		expect(editorBindings['Mod-Shift-z']!(viewOf(b).state, viewOf(b).dispatch, viewOf(b))).toBe(
+			true,
+		);
+		expect(viewOf(a).state.doc.eq(tracked)).toBe(true);
+		const range = collectRevisionRanges(viewOf(a).state.doc)[0]!;
+		rejectRevisionRange(viewOf(a), range);
+		expect(viewOf(a).state.doc.toJSON()).toEqual(viewOf(b).state.doc.toJSON());
+		expect(viewOf(b).state.doc.firstChild!.attrs.align).toBe(paragraph.attrs.align);
+		expect(viewOf(b).state.doc.firstChild!.attrs.keepNext).toBe(paragraph.attrs.keepNext);
+		const reopened = await loadDocx(await b.saveBytes());
+		const result = reopened.model.blocks[0]!;
+		if (result.type !== 'paragraph') throw new Error('Expected paragraph');
+		expect(result.formatRevision).toBeUndefined();
+		expect(result.sourceParagraphPropertiesXml).toContain('Arial');
+	});
 	it('shares native recording preferences, honors them in edits, and undoes preference changes', async () => {
 		const bytes = new Uint8Array(
 			await readFile(

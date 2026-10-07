@@ -6,6 +6,7 @@ import { createClientId } from '../../collab/identity';
 import { createCollaborationIdGenerator } from './collaboration-identity';
 import { isHistoryTransaction } from 'prosemirror-history';
 import { trackRunFormatting } from './track-run-formatting';
+import { trackParagraphFormatting } from './track-paragraph-formatting';
 
 /** Text removed by the latest tracked cut, so pasting it back records a move. */
 interface TrackState {
@@ -136,7 +137,7 @@ function markMove(tr: Transaction, ids: ReadonlySet<string>, name: string): void
  * When enabled, rewrites local editing transactions so insertions/deletions become tracked-change
  * marks (see applyTrackedReplace) instead of directly changing the visible text. Handles the common
  * cases of pure text replacement (typing, IME, backspace/delete, cut, paste) and supported
- * run-formatting mark changes. Structural table edits, paragraph attribute changes and remote
+ * run-formatting mark changes and paragraph formatting. Structural table edits and remote
  * collaboration steps pass through untouched.
  */
 export function trackChangesPlugin(
@@ -191,9 +192,13 @@ export function trackChangesPlugin(
 			const date = new Date(Date.now()).toISOString();
 			if (!steps.length || !steps.every((step) => step instanceof ReplaceStep)) {
 				if (newState.doc.attrs.trackFormatting === false) return null;
-				const formatting = trackRunFormatting(steps, oldState, newState, author, date, () =>
-					idGenerator('revision'),
-				);
+				const formatting =
+					trackRunFormatting(steps, oldState, newState, author, date, () =>
+						idGenerator('revision'),
+					) ??
+					trackParagraphFormatting(steps, oldState, newState, author, date, () =>
+						idGenerator('revision'),
+					);
 				return formatting?.setMeta(trackChangesPluginKey, { tracked: true }) ?? null;
 			}
 			const transform = new Transform(oldState.doc);
