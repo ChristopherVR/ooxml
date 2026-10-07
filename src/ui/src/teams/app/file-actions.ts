@@ -2,6 +2,7 @@ import { LitElement, html, nothing, unsafeCSS, type PropertyValues } from 'lit';
 import { contentUrl, readContent, type FileEntry, type TeamsClient } from 'ooxml-core/teams';
 import { downloadBytes } from '../../xlsx/file-commands.js';
 import css from './file-actions.css?raw';
+import { toggleAnchoredPopover } from './anchored-popover.js';
 const fileKey = (file: FileEntry | null | undefined): string =>
 	JSON.stringify([file?.channelId, file?.messageId, file?.url, file?.name]);
 
@@ -26,17 +27,7 @@ export class TeamsFileActions extends LitElement {
 	private abort: AbortController | undefined;
 	private toggleMenu(): void {
 		const menu = this.renderRoot.querySelector<HTMLElement>('[popover]')!;
-		if (menu.matches(':popover-open')) {
-			menu.hidePopover();
-			return;
-		}
-		menu.showPopover();
-		const button = this.renderRoot.querySelector('button')!.getBoundingClientRect();
-		const bounds = menu.getBoundingClientRect();
-		menu.style.inset = 'auto';
-		menu.style.margin = '0';
-		menu.style.left = `${Math.max(0, Math.min(button.right - bounds.width, innerWidth - bounds.width))}px`;
-		menu.style.top = `${Math.max(0, Math.min(button.bottom, innerHeight - bounds.height))}px`;
+		toggleAnchoredPopover(menu, this.renderRoot.querySelector('button')!);
 	}
 	constructor() {
 		super();

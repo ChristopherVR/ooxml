@@ -28,7 +28,8 @@ test('saves personal chat density and changes real posts and thread spacing', as
 			}),
 		);
 	const comfy = await sizes();
-	await page.getByRole('button', { name: 'Settings', exact: true }).click();
+	await page.getByRole('button', { name: 'Settings and more', exact: true }).click();
+	await page.getByRole('menuitem', { name: 'Settings', exact: true }).click();
 	await page.getByRole('tab', { name: 'Appearance and accessibility', exact: true }).click();
 	await expect(page.getByRole('radio', { name: /Comfy/ })).toBeChecked();
 	await page.getByRole('radio', { name: /Comfy/ }).focus();
@@ -49,7 +50,8 @@ test('saves personal chat density and changes real posts and thread spacing', as
 	await page.reload();
 	await expect(page.locator('teams-app')).toHaveAttribute('data-chat-density', 'compact');
 	await expect(page.getByText('Keep this immediate reload', { exact: true })).toBeVisible();
-	await page.getByRole('button', { name: 'Settings', exact: true }).click();
+	await page.getByRole('button', { name: 'Settings and more', exact: true }).click();
+	await page.getByRole('menuitem', { name: 'Settings', exact: true }).click();
 	await page.getByRole('tab', { name: 'Appearance and accessibility', exact: true }).click();
 	await expect(page.getByRole('radio', { name: /Compact/ })).toBeChecked();
 	await page.getByRole('button', { name: 'Close settings', exact: true }).click();
@@ -64,7 +66,8 @@ test('saves personal chat density and changes real posts and thread spacing', as
 		(element as TeamsApp).userId = id;
 	}, original);
 	await expect(page.locator('teams-app')).toHaveAttribute('data-chat-density', 'compact');
-	await page.getByRole('button', { name: 'Settings', exact: true }).click();
+	await page.getByRole('button', { name: 'Settings and more', exact: true }).click();
+	await page.getByRole('menuitem', { name: 'Settings', exact: true }).click();
 	await page.getByRole('tab', { name: 'Appearance and accessibility', exact: true }).click();
 	await page.getByRole('radio', { name: /Comfy/ }).check();
 	await page.getByRole('button', { name: 'Close settings', exact: true }).click();

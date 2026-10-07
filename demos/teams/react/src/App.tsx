@@ -9,6 +9,7 @@ const params = new URLSearchParams(location.search);
 const name = params.get('name') ?? 'Ada';
 const userId = params.get('id') ?? `demo-${name.toLowerCase()}`;
 const workspaceId = params.get('room') ?? 'react-demo';
+const panelDemo = params.get('panel') === '1';
 const iceServers = [{ urls: 'stun:stun.l.google.com:19302' }];
 // The GitHub Pages build (VITE_TEAMS_STATIC=1) has no server behind it: it runs in local mode, where
 // tabs of this browser (and the two clients on this page) share state over BroadcastChannel.
@@ -33,13 +34,13 @@ export function App() {
 			<div
 				style={{
 					display: 'grid',
-					gridTemplateColumns: 'minmax(0, 1fr) 22em',
+					gridTemplateColumns: panelDemo ? 'minmax(0, 1fr) 22em' : 'minmax(0, 1fr)',
 					flex: 1,
 					minHeight: 0,
 				}}
 			>
 				<Teams workspaceId={workspaceId} userName={name} userId={userId} config={config} />
-				<CustomPanel />
+				{panelDemo ? <CustomPanel /> : null}
 			</div>
 		</div>
 	);
@@ -57,9 +58,9 @@ function StaticNotice() {
 		<div className="static-notice" role="note">
 			<p>
 				<strong>This demo runs entirely in your browser.</strong> There is no server behind this
-				page: the full UI on the left and the <code>useTeams()</code> panel on the right are two
-				clients that sync over BroadcastChannel, and nothing leaves this browser. Real use needs a
-				server:{' '}
+				page: workspace tabs sync over BroadcastChannel, and nothing leaves this browser. Add
+				<code>?panel=1</code> to show the raw <code>useTeams()</code> example alongside the app.
+				Real use needs a server:{' '}
 				<a href="/ooxml/teams/server" target="_top">
 					run your own
 				</a>

@@ -62,7 +62,8 @@ test('opens actual workbook bytes in a browser viewer, downloads and copies link
 	await expect(browser.getByRole('note')).toHaveCount(0);
 	await browser.screenshot({ path: test.info().outputPath('browser-workbook.png') });
 	await browser.close();
-	await page.getByRole('button', { name: 'Settings', exact: true }).click();
+	await page.getByRole('button', { name: 'Settings and more', exact: true }).click();
+	await page.getByRole('menuitem', { name: 'Settings', exact: true }).click();
 	await page.getByRole('tab', { name: 'Files and links', exact: true }).click();
 	await page
 		.getByRole('combobox', { name: 'Office file open preference', exact: true })

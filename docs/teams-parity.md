@@ -361,6 +361,20 @@ durability guarantee. Microsoft's [chat density settings](https://support.micros
 are the reference; chat-list previews and account-synchronized preferences remain
 outstanding.
 
+## Eighteenth implemented slice: shell menus and profile status
+
+Settings opens through the top-bar Settings and more menu, using the shared
+keyboard-accessible menu primitive. The profile avatar opens a card containing
+the supported availability choices and workspace connection status. Status
+changes synchronize with peers; Escape restores focus and the card is clamped
+inside narrow viewports. Channel-header and thread commands use token-based
+button styling. The React demo shows the full workspace by default; its raw-hook
+example is available with panel=1. Browser acceptance covers keyboard entry,
+dismissal, peer status propagation and desktop/mobile presentation across all
+six bindings. Microsoft's [profile status workflow](https://support.microsoft.com/en-us/teams/notifications-settings/change-your-status-in-microsoft-teams)
+is the reference. Do not disturb, appear offline, status messages/duration,
+accounts and automatic meeting/activity-based presence remain outstanding.
+
 ## Next releasable slices
 
 1. UI parity: match the current Teams shell, Shared/Files commands, Settings

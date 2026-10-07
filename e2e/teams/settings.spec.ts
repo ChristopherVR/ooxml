@@ -9,11 +9,13 @@ test('organizes settings, saves personal themes and thread choices, and preserve
 	await expect(page.getByRole('heading', { name: '# General', exact: true })).toBeVisible({
 		timeout: 15_000,
 	});
-	await page.getByRole('button', { name: 'Settings', exact: true }).click();
+	await page.getByRole('button', { name: 'Settings and more', exact: true }).click();
+	await page.getByRole('menuitem', { name: 'Settings', exact: true }).click();
 	await page.getByRole('tab', { name: 'Connection', exact: true }).click();
 	await page.getByRole('combobox', { name: 'Mode', exact: true }).selectOption('server');
 	await page.getByRole('button', { name: 'Cancel', exact: true }).click();
-	await page.getByRole('button', { name: 'Settings', exact: true }).click();
+	await page.getByRole('button', { name: 'Settings and more', exact: true }).click();
+	await page.getByRole('menuitem', { name: 'Settings', exact: true }).click();
 	await expect(page.getByRole('combobox', { name: 'Mode', exact: true })).toHaveValue('local');
 	await expect(page.getByRole('dialog', { name: 'Settings', exact: true })).toBeVisible();
 	await page.getByRole('tab', { name: 'Appearance and accessibility', exact: true }).click();
@@ -45,7 +47,8 @@ test('organizes settings, saves personal themes and thread choices, and preserve
 		timeout: 15_000,
 	});
 	await expect(page.locator('teams-app')).toHaveAttribute('data-office-theme', 'dark');
-	await page.getByRole('button', { name: 'Settings', exact: true }).click();
+	await page.getByRole('button', { name: 'Settings and more', exact: true }).click();
+	await page.getByRole('menuitem', { name: 'Settings', exact: true }).click();
 	await page.getByRole('tab', { name: 'Notifications and activity', exact: true }).click();
 	await expect(
 		page.getByRole('checkbox', { name: 'Threads I start', exact: true }),
@@ -65,14 +68,16 @@ test('organizes settings, saves personal themes and thread choices, and preserve
 		await Promise.resolve();
 		await app.client!.send({ text: 'Keep this when applying connection settings' });
 	});
-	await page.getByRole('button', { name: 'Settings', exact: true }).click();
+	await page.getByRole('button', { name: 'Settings and more', exact: true }).click();
+	await page.getByRole('menuitem', { name: 'Settings', exact: true }).click();
 	await page.getByRole('tab', { name: 'Connection', exact: true }).click();
 	await page.getByRole('button', { name: 'Apply and reconnect', exact: true }).click();
 	await page.getByRole('button', { name: 'Keep changes', exact: true }).click();
 	await expect(
 		page.getByText('Keep this when applying connection settings', { exact: true }),
 	).toBeVisible();
-	await page.getByRole('button', { name: 'Settings', exact: true }).click();
+	await page.getByRole('button', { name: 'Settings and more', exact: true }).click();
+	await page.getByRole('menuitem', { name: 'Settings', exact: true }).click();
 	await page.setViewportSize({ width: 390, height: 844 });
 	await page.getByRole('tab', { name: 'Appearance and accessibility', exact: true }).click();
 	await page.getByRole('button', { name: 'Follow system', exact: true }).click();

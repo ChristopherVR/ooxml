@@ -1,0 +1,57 @@
+:host {
+	display: inline-flex;
+	font: inherit;
+	color: inherit;
+}
+.profile {
+	display: inline-flex;
+	align-items: center;
+	padding: var(--office-space-1);
+	border: 0;
+	border-radius: var(--office-radius-full);
+	background: transparent;
+	cursor: pointer;
+}
+.profile:hover {
+	background: var(--office-selected);
+}
+[popover] {
+	min-width: 20em;
+	max-width: 90vw;
+	padding: var(--office-space-4);
+	border: var(--office-border-width) solid var(--office-teams-divider);
+	border-radius: var(--office-radius-md);
+	background: var(--office-popover);
+	color: var(--office-foreground);
+	box-shadow: var(--office-shadow-teams);
+}
+.identity {
+	display: flex;
+	gap: var(--office-space-3);
+	align-items: center;
+	margin-bottom: var(--office-space-4);
+}
+.identity strong {
+	overflow-wrap: anywhere;
+}
+label {
+	display: grid;
+	gap: var(--office-space-2);
+}
+select {
+	font: inherit;
+	padding: var(--office-space-2);
+	color: inherit;
+	border: var(--office-border-width) solid var(--office-field-border);
+	border-radius: var(--office-radius);
+	background: var(--office-field-background);
+}
+.connection {
+	color: var(--office-teams-text-subtle);
+	margin-bottom: 0;
+	font-size: var(--office-font-size-sm);
+}
+:focus-visible {
+	outline: var(--office-focus-width) solid var(--office-ring);
+	outline-offset: var(--office-focus-offset);
+}

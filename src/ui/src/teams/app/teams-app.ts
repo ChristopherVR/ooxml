@@ -41,6 +41,7 @@ import { followedThreads } from './followed-threads.js';
 import { draftList } from './draft-list.js';
 import { filePopoutDetail, filePopoutUrl } from './file-popout.js';
 import { messageTransfers } from './message-transfers.js';
+import { defineTeamsProfileMenu } from './profile-menu.js';
 
 export type { FileUploader } from 'ooxml-core/teams';
 export interface OpenFileDetail {
@@ -73,7 +74,6 @@ const RAIL = [
 	{ id: 'followed', label: 'Followed threads', icon: 'chat' },
 	{ id: 'drafts', label: 'Drafts', icon: 'chat' },
 ] as const;
-const AVAILABILITY = ['available', 'busy', 'away'] as const;
 
 export class TeamsApp extends LitElement {
 	static override styles = [unsafeCSS(LOCAL_THEME), unsafeCSS(css)];
@@ -179,6 +179,7 @@ export class TeamsApp extends LitElement {
 		defineTeamsContentPreview();
 		defineTeamsChannelTab();
 		defineTeamsFilesPanel();
+		defineTeamsProfileMenu();
 		super.connectedCallback();
 	}
 
@@ -551,24 +552,25 @@ export class TeamsApp extends LitElement {
 					}
 				</div>
 				<div class="me">
-					<span
-						class="conn"
-						data-status=${s.status}
-						title=${s.mode === 'server' ? `Server: ${s.status}` : 'Local: tabs of this browser'}
-					></span>
-					<button type="button" class="link" @click=${this.askSettings}>Settings</button>
-					<select
-						aria-label="Availability"
-						.value=${s.availability}
-						@change=${(e: Event) => this.teams.client?.setAvailability((e.target as HTMLSelectElement).value as 'available')}
+					<office-ui-menu-button
+						label="Settings and more"
+						icon="more"
+						icon-only
+						@office-command=${(event: CustomEvent<{ command: string }>) => {
+							if (event.detail.command === 'teams-settings') this.askSettings();
+						}}
 					>
-						${AVAILABILITY.map((a) => html`<option value=${a} ?selected=${a === s.availability}>${a[0]!.toUpperCase() + a.slice(1)}</option>`)}
-					</select>
-					<office-ui-avatar
-						name=${s.user.name}
-						seed=${s.user.id}
-						presence=${s.availability}
-					></office-ui-avatar>
+						<office-ui-menu-item label="Settings" command="teams-settings"></office-ui-menu-item>
+					</office-ui-menu-button>
+					<teams-profile-menu
+						.state=${s}
+						@teams-profile-status=${(
+							event: CustomEvent<{ availability: 'available' | 'busy' | 'away' }>,
+						) => {
+							if (['available', 'busy', 'away'].includes(event.detail.availability))
+								this.teams.client?.setAvailability(event.detail.availability);
+						}}
+					></teams-profile-menu>
 				</div>
 			</header>
 		`;
