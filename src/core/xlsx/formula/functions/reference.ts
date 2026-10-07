@@ -85,7 +85,7 @@ function address(args: Value[]): string {
 	const row = int(args[0]);
 	const col = int(args[1]);
 	const abs = Math.trunc(optNum(args, 2, 1));
-	const a1 = args.length > 3 && args[3] !== null ? bool(args[3]) : true;
+	const a1 = args.length > 3 ? bool(args[3]) : true;
 	if (row < 1 || col < 1 || row > MAX_ROW + 1 || col > MAX_COL + 1 || abs < 1 || abs > 4)
 		fail(ERR.VALUE);
 	const absRow = abs === 1 || abs === 2;
@@ -135,7 +135,7 @@ export const REFERENCE_FUNCTIONS: FunctionSpec[] = [
 		2,
 		(args, ctx) => {
 			const text = str(args[0]).trim();
-			const a1 = args.length > 1 && args[1] !== null ? bool(args[1]) : true;
+			const a1 = args.length > 1 ? bool(args[1]) : true;
 			const ref = a1 ? ctx.parseReference(text) : parseR1C1(text, ctx);
 			return ref ?? ERR.REF;
 		},
@@ -198,15 +198,18 @@ export const REFERENCE_FUNCTIONS: FunctionSpec[] = [
 		(args) => refArg(args[0]).areas.length,
 		['any'],
 	),
-	spec(
-		'ADDRESS',
-		C,
-		'ADDRESS(row_num, column_num, [abs_num], [a1], [sheet_text])',
-		'A cell address as text.',
-		2,
-		5,
-		(args) => address(args),
-	),
+	{
+		...spec(
+			'ADDRESS',
+			C,
+			'ADDRESS(row_num, column_num, [abs_num], [a1], [sheet_text])',
+			'A cell address as text.',
+			2,
+			5,
+			(args) => address(args),
+		),
+		missingDefaults: { 2: 1, 3: true },
+	},
 	spec(
 		'HYPERLINK',
 		C,
