@@ -367,7 +367,12 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				// `c:barDir` / `c:gapWidth` / `c:overlap` / `c:axId`, and the axes the
 				// old type referenced are left orphaned under `c:plotArea`. Rebuild the
 				// container against the new content model, keeping what is legal.
-				const expectedXmlTag = this.chartTypeToXmlTag(chartData.chartType);
+				// Both surface containers load as "surface". Keep the projection so
+				// saving an imported 3-D surface does not turn it into a contour chart.
+				const expectedXmlTag =
+					chartData.chartType === 'surface' && chartData.surfaceTopView === false
+						? 'surface3DChart'
+						: this.chartTypeToXmlTag(chartData.chartType);
 				const currentLocalName = this.compatibilityService.getXmlLocalName(chartTypeKey);
 				let containerLocalName = currentLocalName;
 				if (expectedXmlTag && currentLocalName !== expectedXmlTag) {

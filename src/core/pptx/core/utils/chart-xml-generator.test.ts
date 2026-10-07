@@ -236,9 +236,10 @@ describe('buildChartSpaceXml', () => {
 		const pa = plotArea(buildChartSpaceXml(makeData({ chartType: 'surface' })));
 		const container = pa['c:surfaceChart'] as XmlObject;
 		expect(container).toBeDefined();
-		expect(container['c:axId']).toHaveLength(2);
+		expect(container['c:axId']).toHaveLength(3);
 		expect(pa['c:catAx']).toBeDefined();
 		expect(pa['c:valAx']).toBeDefined();
+		expect(pa['c:serAx']).toBeDefined();
 	});
 
 	it('emits an ofPieChart container with an ofPieType and no axes', () => {
