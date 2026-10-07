@@ -1,4 +1,5 @@
-import { buildChartGradientDef, type ChartGradientFill } from 'ooxml-core/chart';
+import type { ChartGradientFill } from 'ooxml-core/chart';
+import { gradientGalleryPreview } from './gradient-gallery-preview';
 import {
 	defineGallery,
 	type OfficeUiGallery,
@@ -50,23 +51,16 @@ export function createGradientDirectionGallery(doc: Document) {
 					tileWidth: 44,
 					tileHeight: 44,
 					items: DIRECTIONS.map(([angle, label]) => {
-						const def = buildChartGradientDef(`${prefix}-${angle}`, {
+						const preview = gradientGalleryPreview(`${prefix}-${angle}`, {
 							...options.gradient,
 							type: 'linear',
 							angle,
 						});
-						if (def.kind !== 'linearGradient') throw new Error('Expected linear gradient');
-						const stops = def.stops
-							.map(
-								(stop) =>
-									`<stop offset="${stop.offset}" stop-color="${stop.color}" stop-opacity="${stop.opacity ?? 1}"/>`,
-							)
-							.join('');
 						return {
 							id: String(angle),
 							label: options.translate(label),
 							applied: options.gradient.angle === angle,
-							preview: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><linearGradient id="${def.id}" x1="${def.x1}" y1="${def.y1}" x2="${def.x2}" y2="${def.y2}">${stops}</linearGradient></defs><rect x="1" y="1" width="38" height="38" fill="url(#${def.id})" stroke="#999"/></svg>`,
+							preview,
 						};
 					}),
 				},

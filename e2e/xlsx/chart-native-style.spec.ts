@@ -187,6 +187,7 @@ for (const framework of FRAMEWORKS)
 		const stops = pane.getByRole('group', { name: 'Gradient stops', exact: true });
 		await expect(stops.getByRole('button')).toHaveCount(3);
 		const dragPosition = pane.getByRole('spinbutton', { name: 'Position', exact: true });
+		await stops.scrollIntoViewIfNeeded();
 		const paintBox = await stops.locator('.office-gradient-stop-paint').boundingBox();
 		const markerBox = await stops
 			.getByRole('button', { name: 'Gradient stop 1', exact: true })

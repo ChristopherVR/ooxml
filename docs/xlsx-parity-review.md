@@ -1144,3 +1144,27 @@ all six bindings, 2,975 points per binding pass strict browser comparisons;
 twelve additional browser repros remain expected failures (the two gaps in
 each binding). Strict core typechecks pass. Unscaled/path gradients, additional
 translucent profiles, presets and native pane layout still need work.
+
+## Native named gradient presets
+
+The series fill pane now offers all 24 standard named Office gradient presets,
+using the shared Office gallery, keyboard navigation and gradient thumbnails.
+The palette and factory live in the format-neutral diagram area; the XLSX
+editing command applies a complete preset as one undoable change. Selecting
+a preset retains other series and clears individual point overrides consistently
+with other series fill edits. The pane fits without horizontal scrolling.
+
+Excel COM captures all 24 presets using horizontal style 1, variant 1, then
+saves and reopens each workbook. Tests compare the factory's exact saved stops,
+colors and scaled 90-degree geometry with those captures, and check round trip,
+undo, redo and repeated no-op application. All six bindings exercise every
+preset, popup keyboard selection, read-only behavior and download serialization.
+Playwright MCP downloaded the Rainbow preset; Excel COM recognized preset 16,
+with its seven expected stops and 90-degree angle after reopening.
+
+The 32 chart browser checks pass, including the existing gradient drag/preview
+regressions. The controls reuse the same gallery as PowerPoint and the same
+core paint helpers as other Office consumers. This covers the standard named
+presets, not the modern theme-dependent preset menu, other native preset style
+variants, path-gradient controls or a pixel comparison of every preset. The
+previous translucent and coincident-edge raster gaps remain open.

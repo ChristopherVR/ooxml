@@ -2,6 +2,7 @@ import { removeGradientStop } from '../../chart/gradient-stop-edit';
 import { chartPaletteSeriesColorChoice, findChartColorPalette } from '../../chart/color-palettes';
 import { resolveDrawingColor } from '../../diagram/drawing-color';
 import { withDrawingColorBrightness } from '../../diagram/drawing-color-brightness';
+import { officeGradientPresetFill } from '../../diagram/gradient-presets';
 import type { DiagramFill } from '../../diagram/types';
 import type { ChartObject, Color } from '../model';
 import type { ChartPatch } from './charts';
@@ -10,6 +11,7 @@ import { chartSeriesSolidColor } from './chart-series-transparency';
 
 export type ChartGradientEdit =
 	| { kind: 'create' }
+	| { kind: 'preset'; id: number }
 	| { kind: 'angle'; value: number }
 	| {
 			kind: 'stop';
@@ -47,7 +49,8 @@ export function chartSeriesGradientPatch(
 		throw new RangeError(`No chart series at index ${index}`);
 	const old = current.fill;
 	let fill: Gradient;
-	if (old?.kind === 'gradient') fill = structuredClone(old);
+	if (edit.kind === 'preset') fill = officeGradientPresetFill(edit.id);
+	else if (old?.kind === 'gradient') fill = structuredClone(old);
 	else {
 		if (edit.kind !== 'create') return undefined;
 		const color = structuredClone(
@@ -75,7 +78,7 @@ export function chartSeriesGradientPatch(
 			throw new RangeError('Gradient angle must be from 0 to 360');
 		if (fill.path) return undefined;
 		fill.angle = edit.value % 360;
-	} else if (edit.kind !== 'create') {
+	} else if (edit.kind !== 'create' && edit.kind !== 'preset') {
 		const stop = fill.stops[edit.index];
 		if (!Number.isInteger(edit.index) || !stop)
 			throw new RangeError(`No gradient stop at index ${edit.index}`);

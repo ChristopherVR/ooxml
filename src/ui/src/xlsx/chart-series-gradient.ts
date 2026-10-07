@@ -9,6 +9,7 @@ import { drawingColorCss, drawingColorBrightness } from 'ooxml-core/diagram';
 import { activeChart, type EditorContext } from 'ooxml-core/xlsx/ui';
 import { createGradientStopTrack } from '../form/gradient-stop-track';
 import { createGradientDirectionGallery } from '../form/gradient-direction-gallery';
+import { createGradientPresetGallery } from '../form/gradient-preset-gallery';
 import { el, field, numberInput } from './dialogs/fields';
 import { openColorGrid } from './ribbon/color-grid';
 import { createChartGradientPreview } from './chart-gradient-preview';
@@ -25,6 +26,8 @@ export function createSeriesGradient(ctx: EditorContext, selected: () => number)
 	color.type = 'button';
 	const track = createGradientStopTrack(element.ownerDocument);
 	const direction = createGradientDirectionGallery(element.ownerDocument);
+	const preset = createGradientPresetGallery(element.ownerDocument);
+	const presetRow = field(ctx, 'Preset gradients', preset.element);
 	const rows = [
 		[field(ctx, 'Angle', angle), angle, 'Angle'],
 		[field(ctx, 'Color', color), color, 'Color'],
@@ -73,6 +76,7 @@ export function createSeriesGradient(ctx: EditorContext, selected: () => number)
 		ranges.set(input, range);
 	}
 	element.append(
+		presetRow,
 		directionRow,
 		rows[0][0],
 		selector,
@@ -110,6 +114,7 @@ export function createSeriesGradient(ctx: EditorContext, selected: () => number)
 		) {
 			stopIndex = 0;
 			direction.close();
+			preset.close();
 		}
 		shownBook = ctx.workbook();
 		shownSheet = ctx.activeSheet();
@@ -121,10 +126,19 @@ export function createSeriesGradient(ctx: EditorContext, selected: () => number)
 		element.hidden = fill?.kind !== 'gradient';
 		if (fill?.kind !== 'gradient') {
 			direction.close();
+			preset.close();
 			return;
 		}
 		stopIndex = Math.max(0, Math.min(stopIndex, fill.stops.length - 1));
 		const disabled = !ctx.commands.isEnabled('chart.format-series');
+		presetRow.querySelector('span')!.textContent = ctx.t('Preset gradients');
+		preset.update({
+			fill,
+			disabled,
+			label: ctx.t('Preset gradients'),
+			translate: ctx.t,
+			onPick: (id) => apply({ kind: 'preset', id }),
+		});
 		angle.value = String(fill.angle ?? 90);
 		angle.disabled = disabled || !!fill.path;
 		position.value = String(fill.stops[stopIndex]?.position ?? 0);

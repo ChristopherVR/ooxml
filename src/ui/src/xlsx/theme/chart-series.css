@@ -58,8 +58,14 @@
 	border-top: 1px solid var(--line);
 }
 .xve-chart-series-body .xve-field:has(select),
-.xve-chart-series-body .xve-field:has(.xve-chart-series-color) {
+.xve-chart-series-body .xve-field:has(.xve-chart-series-color),
+.xve-chart-series-body .xve-field:has(office-ui-gallery) {
 	grid-template-columns: 1fr minmax(100px, 1fr);
+}
+.xve-chart-series-body office-ui-gallery .trigger {
+	box-sizing: border-box;
+	width: 100%;
+	white-space: normal;
 }
 .xve-chart-series-color {
 	height: 28px;

@@ -1082,3 +1082,20 @@ inline objects and retains explicit-off overrides for imported atom properties.
 Native run-formatting recording and restoration reuse the shared run adapter
 and writer rather than adding an atom-specific property codec. UI integration
 tests remain with the component; native command regressions live in core.
+
+## Shared native Office gradient presets
+
+Source: Excel 16.0 build 20430, `FillFormat.PresetGradient(1, 1, id)` for
+all 24 `MsoPresetGradientType` values. The independent COM recorder
+`scripts/record-xlsx-gradient-presets.ps1` saves and reopens each workbook.
+Saved chart XML and COM getters are retained in
+`src/core/xlsx/__fixtures__/excel-gradient-presets.json`. The shared diagram
+catalog preserves the saved positions and absolute sRGB colors, with the
+native 90-degree scaled linear geometry. No theme-dependent preset palette
+or other style/variant is inferred from these captures.
+
+Source extraction: ChristopherVR/ooxml at `ccc4cebc6`,
+`src/ui/src/form/gradient-direction-gallery.ts`. Its SVG thumbnail code moved
+to `gradient-gallery-preview.ts`, used by both direction and preset galleries.
+The new preset UI consumes the existing shared Office gallery and shared
+core gradient painter; editing and serialization remain in the core XLSX area.
