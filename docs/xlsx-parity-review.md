@@ -87,3 +87,27 @@ until each passes its acceptance checks.
 - Production demo build and the browser Fill Down/Right keyboard/undo/redo regression passed.
 - Core and UI strict typechecks and `git diff --check` passed; changed code was formatted.
 - Native Excel COM acceptance and a new real-Excel recording were not run for this slice.
+
+## AMORLINC
+
+Added the shared financial function, automatically discoverable by every editor's
+existing function catalog. Its direct implementation handles the initial prorated
+period, regular depreciation, the final salvage remainder and exhausted assets.
+It runs in constant time even for large requested periods. Native Excel 16.0
+results establish valid bases 0/1/3/4, fractional argument behavior, equal-date
+full periods, actual-day February 29 normalization, purchase-year denominators
+for basis 1, and required omitted-slot errors distinct from empty cell references.
+The generic function-call boundary now lets a function declare that error policy.
+
+Primary reference: [Microsoft AMORLINC](https://support.microsoft.com/en-us/excel/functions/amorlinc-function).
+Reproduce the committed 130-result fixture with
+`scripts/record-xlsx-amorlinc.ps1 -OutputFile <temporary-json-path>` on Windows
+with Excel installed. The recorder uses its own hidden application/workbook.
+It never attaches to an existing workbook. The recorded JSON is intentional test
+data; generated native workbooks and distribution bundles are not committed.
+
+Verification: 130 native-result comparisons plus catalog discovery, incremental
+recalculation, dynamic arrays and save/reload in both date systems. All 135
+function tests passed. The broader XLSX suite passed 3,748 tests before the two
+additional date-system round-trip tests; the strict core typecheck also passed.
+These checks establish the tested function subset, not whole-workbook native parity.

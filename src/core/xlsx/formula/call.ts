@@ -10,6 +10,7 @@ import { parseFormula } from './parser.js';
 import { implicitIntersection, toMatrix } from './references.js';
 import {
 	ERR,
+	err,
 	ErrorSignal,
 	LambdaValue,
 	Matrix,
@@ -51,6 +52,11 @@ export function callFunction(node: Extract<FormulaAst, { type: 'call' }>, frame:
 		return ERR.NAME;
 	}
 	if (node.args.length < spec.minArgs || node.args.length > spec.maxArgs) return ERR.VALUE;
+	if (
+		spec.missingRequiredError &&
+		node.args.slice(0, spec.minArgs).some((arg) => arg.type === 'missing')
+	)
+		return err(spec.missingRequiredError);
 	const ctx = createContext(frame);
 	if (spec.lazy) {
 		const lazy = spec.lazy;
