@@ -6,11 +6,13 @@ param(
  [ValidateRange(0,13)][int]$FirstDirection=0,
  [ValidateRange(0,13)][int]$LastDirection=13,
  [ValidateSet('Fill','Line')][string]$Paint='Fill',
- [string]$GradientAngle='0 deg'
+ [string]$GradientAngle='0 deg',
+ [ValidateSet('rectangle','line')][string]$LinearShape='rectangle'
 )
 # Compare the real raster engine, rather than assuming native SVG is a paint oracle.
 $ErrorActionPreference='Stop'
 if($FirstDirection -gt $LastDirection){throw 'FirstDirection must not exceed LastDirection.'}
+if($LinearShape -eq 'line' -and $Paint -ne 'Line'){throw 'One-dimensional probes require line paint.'}
 . (Join-Path $PSScriptRoot 'visio-native-shape.ps1')
 . (Join-Path $PSScriptRoot 'visio-native-gradient.ps1')
 Add-Type -AssemblyName System.Drawing
@@ -33,7 +35,7 @@ try {
  $settingsCaptured=$true
  $previous=[ordered]@{size=$size;width=$width;height=$height;sizeUnits=$sizeUnits;resolution=$resolution;resolutionWidth=$resolutionWidth;resolutionHeight=$resolutionHeight;resolutionUnits=$resolutionUnits}
  $previous | ConvertTo-Json | Set-Content (Join-Path $directory 'previous-settings.json') -Encoding utf8
- # Capture the same 2-by-1-inch shape at exactly 144 dpi.
+ # Capture each shape into a 288-by-144 canvas at 144 dpi, including height-zero lines.
  $app.Settings.SetRasterExportSize(3,288,144,0)
  $app.Settings.SetRasterExportResolution(3,144,144,0)
  $app.AlertResponse=7
@@ -43,12 +45,12 @@ try {
  foreach($stopCount in @(2,3)){
   foreach($alpha in @($false,$true)){
    foreach($direction in $FirstDirection..$LastDirection){
-    $kinds=if($direction -eq 13){$PathShapes}else{@('rectangle')}
+    $kinds=if($direction -eq 13){$PathShapes}else{@($LinearShape)}
     foreach($kind in $kinds){
      $name="direction-$direction-$kind-stops-$stopCount-alpha-$alpha"
      if($Paint -eq 'Line'){$name='line-'+$name}
      if($ShapeAngle -ne 0){$name+='-angle-'+$ShapeAngle.ToString([cultureinfo]::InvariantCulture)}
-     $shape=New-VisioNativeFillShape $page $kind
+     $shape=if($kind -eq 'line'){$page.DrawLine(1,1.5,3,1.5)}else{New-VisioNativeFillShape $page $kind}
      $shape.CellsU('Angle').FormulaU=$ShapeAngle.ToString([cultureinfo]::InvariantCulture)+' deg'
      $shape.CellsU('FillPattern').FormulaU='1'
      $shape.CellsU('LinePattern').FormulaU='0'
@@ -80,7 +82,8 @@ try {
        $samples+=,@{x=$point[0];y=$point[1];rgba=@($color.R,$color.G,$color.B,$color.A)}
       }
       $outline=@()
-      if($kind -ne 'ellipse'){
+      if($kind -eq 'line'){$outline=@(@(0,0),@(1,0))}
+      elseif($kind -ne 'ellipse'){
        $points=[double[]](Get-VisioNativeFillPoints $kind)
        for($i=0;$i -lt $points.Length-2;$i+=2){$outline+=,@((($points[$i]-1)/2),($points[$i+1]-1))}
       }
@@ -101,8 +104,10 @@ try {
    }
   }
  }
+ $controlShapeId=$null
+ if($LinearShape -eq 'line'){$control=$page.DrawRectangle(6,6,7,7);$controlShapeId=[string]$control.ID}
  $document.SaveAs((Join-Path $directory 'gradient-raster.vsdx')) | Out-Null
- [ordered]@{application='Microsoft Visio';version=$app.Version;dpi=144;cases=$cases} | ConvertTo-Json -Depth 8 | Set-Content (Join-Path $directory 'evidence.json') -Encoding utf8
+ [ordered]@{application='Microsoft Visio';version=$app.Version;dpi=144;controlShapeId=$controlShapeId;cases=$cases} | ConvertTo-Json -Depth 8 | Set-Content (Join-Path $directory 'evidence.json') -Encoding utf8
 } finally {
  try {
   if($settingsCaptured){

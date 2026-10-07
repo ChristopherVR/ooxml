@@ -8,6 +8,12 @@ comparisons below do not establish native raster parity. See verification.md
 for the 68-case and extended 84-case raster captures and the
 unverified-gradient-raster diagnostic.
 
+Linear gradient viewing also covers native height-zero line shapes. Along-line,
+perpendicular and rotated oblique captures meet the existing interior bounds
+on all six routes for live and portable SVG. Save/core reparse preserves their
+paint while an unrelated 2D control is moved. Direct line movement, routing/glue,
+arrow paint, point-sized strokes and native Office reopen acceptance remain open.
+
 Saved oblique linear fills now use the shared physical endpoint helper rather
 than native-SVG box rotation. Native 45-degree rectangle paint and 225-degree
 paint on a 30-degree rotated rectangle meet the existing interior bounds across

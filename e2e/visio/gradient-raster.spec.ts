@@ -21,6 +21,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 					paint?: 'Fill' | 'Line';
 					shapeId: string;
 					kind:
+						| 'line'
 						| 'rectangle'
 						| 'ellipse'
 						| 'triangle'

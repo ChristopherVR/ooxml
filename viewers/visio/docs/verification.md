@@ -2,6 +2,50 @@
 
 Status: local Windows development evidence, 2026-10-03. Full Microsoft Visio parity is not established.
 
+## Height-zero gradient strokes, 2026-10-08
+
+Native DrawLine captures establish Width=2, Height=0 and local M 0 0 L 2 0
+geometry. The former positive-width-and-height gradient admission rejected these
+complete caches and produced solid line fallback. The existing shared parser now
+admits nonnegative one-dimensional stroke sizes with one nonzero axis, retaining
+the normalized cached angle until the physical stroke descriptor includes line
+width. The existing endpoint helper, stop sampler, SVG painter, snapshots and
+resource accounting handle them. Zero-area fills and point-sized strokes remain
+rejected; nonlinear stroke directions remain diagnosed.
+
+The recorder accepts LinearShape=line and draws with the native API. It records
+the two-vertex outline, native extents and XYToPage pose using the same registration
+and stroke-interior mask as rectangle strokes. Three genuine four-case captures
+cover two/three stops and opaque/translucent paint at zero and 90 degrees, plus
+225-degree paint on a line rotated by 30 degrees. Local directories are
+visio-line-1d-gradient-control-a20b437e4ca54d2e99a7a963f8db10f5,
+visio-line-1d-gradient-perpendicular-control-614d5a4fcfd44e9b92f67df26cb4aab6 and
+visio-line-1d-gradient-oblique-control-b204ea91801040f9b45febb650333632.
+Owned invisible applications restore raster settings and quit.
+
+All six routes pass live and portable SVG comparisons: 144 comparisons against
+unchanged native PNGs, with unchanged error bounds and independent pose checks.
+Along-line paint reaches maximum channel error four and mean below 0.868 over
+2,580 pixels per comparison. Rotated oblique paint reaches maximum five and mean
+below 0.925 over 2,234 pixels. The perpendicular cases also satisfy the existing
+maximum-seven and mean-below-one for opaque two-stop paint, or 1.5 otherwise,
+bounds. These nonzero errors do not establish exact native pixel parity. Earlier
+four-line setup captures are diagnostic; final captures also include the control
+described below.
+
+Direct movement of the native lines is still rejected by geometry admission.
+The recorder adds an unrelated native 2D rectangle so preservation tests exercise
+a genuine page-XML edit through move/save/core reparse without bypassing that
+guard. Tests explicitly assert the line-movement rejection, move the 2D control
+and verify all four gradient models remain intact in each final capture.
+Generated regressions check cached angles and continued fill/point rejection.
+This is paint viewing and source preservation evidence, not line editing parity
+or native Office reopening. Routing/glue, arrows, other poses and exact contours
+remain open; unverified-gradient-raster remains on every accepted gradient.
+
+Core Visio tests pass 2,115 with 58 optional skips. Core/UI/viewer typechecks,
+fast core/UI builds and the 62 relevant UI regressions pass.
+
 ## Physical oblique fill projection, 2026-10-08
 
 Two independent native raster captures cover 45-degree fill and 225-degree fill

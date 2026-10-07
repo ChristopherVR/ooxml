@@ -88,6 +88,40 @@ it('disables line gradient paint when the line is hidden', async () => {
 	expect(parsed.pages[0]!.shapes[0]!.style.lineGradient).toBeUndefined();
 });
 
+it.each([0, Math.PI / 2, Math.PI / 4])(
+	'retains the paint angle for a height-zero line at %s',
+	async (angle) => {
+		const parsed = await parseVsdx(
+			await source(cell('Height', 0) + cell('LineGradientAngle', angle)),
+		);
+		expect(parsed.pages[0]!.shapes[0]!.style.lineGradient).toMatchObject({
+			type: 'linear',
+			start: [0, 1],
+			end: [1, 1],
+			boundingBoxAngle: (-angle * 180) / Math.PI,
+		});
+		expect(parsed.diagnostics.some((item) => item.code === 'unsupported-saved-line-gradient')).toBe(
+			false,
+		);
+	},
+);
+
+it('rejects a point-sized stroke and retains zero-area fill rejection', async () => {
+	const point = await parseVsdx(await source(cell('Width', 0) + cell('Height', 0)));
+	expect(point.pages[0]!.shapes[0]!.style.lineGradient).toBeUndefined();
+	const fill = await parseVsdx(
+		await source(
+			cell('Height', 0) +
+				cell('FillGradientEnabled', 1) +
+				cell('FillGradientDir', 0) +
+				cell('FillGradientAngle', 0) +
+				stops('Fill'),
+		),
+	);
+	expect(fill.pages[0]!.shapes[0]!.style.fillGradient).toBeUndefined();
+	expect(fill.pages[0]!.shapes[0]!.style.lineGradient).toBeDefined();
+});
+
 it('reports the solid arrow marker fallback', async () => {
 	const parsed = await parseVsdx(await source(cell('EndArrow', 1)));
 	expect(parsed.pages[0]!.shapes[0]!.style.lineGradient).toBeDefined();
@@ -129,23 +163,48 @@ it('preserves saved stroke paint through editing and package reparse', async () 
 	);
 });
 
-const nativeDirectory = process.env.VISIO_NATIVE_LINE_GRADIENT_DIR;
-it.skipIf(!nativeDirectory)(
-	'preserves all genuine native line stop caches through editing',
-	async () => {
-		const bytes = new Uint8Array(await readFile(join(nativeDirectory!, 'gradient-raster.vsdx')));
-		const original = await parseVsdx(bytes);
-		const shapes = original.pages[0]!.shapes;
-		expect(shapes).toHaveLength(4);
-		expect(shapes.every((shape) => shape.style.lineGradient?.type === 'linear')).toBe(true);
-		expect(
-			shapes.filter((shape) => shape.style.lineGradient?.interpolation === 'sigma-gamma22'),
-		).toHaveLength(1);
-		const saved = await editVsdx(bytes, [
-			{ type: 'move-shape', pageId: original.pages[0]!.id, shapeId: shapes[0]!.id, x: 4, y: 3 },
-		]);
-		expect(
-			(await parseVsdx(saved.bytes)).pages[0]!.shapes.map((shape) => shape.style.lineGradient),
-		).toEqual(shapes.map((shape) => shape.style.lineGradient));
-	},
-);
+for (const name of ['VISIO_NATIVE_LINE_GRADIENT_DIR', 'VISIO_NATIVE_1D_LINE_GRADIENT_DIR']) {
+	const nativeDirectory = process.env[name];
+	it.skipIf(!nativeDirectory)(
+		`preserves all genuine native line stop caches through editing (${name})`,
+		async () => {
+			const bytes = new Uint8Array(await readFile(join(nativeDirectory!, 'gradient-raster.vsdx')));
+			const original = await parseVsdx(bytes);
+			const shapes = original.pages[0]!.shapes;
+			const oneDimensional = name === 'VISIO_NATIVE_1D_LINE_GRADIENT_DIR';
+			expect(shapes).toHaveLength(oneDimensional ? 5 : 4);
+			if (oneDimensional) {
+				expect(shapes.slice(0, 4).every((shape) => shape.height === 0)).toBe(true);
+				await expect(
+					editVsdx(bytes, [
+						{
+							type: 'move-shape',
+							pageId: original.pages[0]!.id,
+							shapeId: shapes[0]!.id,
+							x: 4,
+							y: 3,
+						},
+					]),
+				).rejects.toThrow('Only local 2D shapes');
+			}
+			expect(shapes.slice(0, 4).every((shape) => shape.style.lineGradient?.type === 'linear')).toBe(
+				true,
+			);
+			expect(
+				shapes.filter((shape) => shape.style.lineGradient?.interpolation === 'sigma-gamma22'),
+			).toHaveLength(1);
+			const saved = await editVsdx(bytes, [
+				{
+					type: 'move-shape',
+					pageId: original.pages[0]!.id,
+					shapeId: shapes[oneDimensional ? 4 : 0]!.id,
+					x: 4,
+					y: 3,
+				},
+			]);
+			expect(
+				(await parseVsdx(saved.bytes)).pages[0]!.shapes.map((shape) => shape.style.lineGradient),
+			).toEqual(shapes.map((shape) => shape.style.lineGradient));
+		},
+	);
+}

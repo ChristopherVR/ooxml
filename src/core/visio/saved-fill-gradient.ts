@@ -54,8 +54,9 @@ export function savedShapeGradient(
 	if (
 		!Number.isFinite(width) ||
 		!Number.isFinite(height) ||
-		width <= 0 ||
-		height <= 0 ||
+		width < 0 ||
+		height < 0 ||
+		(paint === 'Fill' ? width === 0 || height === 0 : width === 0 && height === 0) ||
 		(direction === 0 && !Number.isFinite(angle)) ||
 		!Number.isInteger(direction) ||
 		direction < 0 ||
@@ -98,7 +99,7 @@ export function savedShapeGradient(
 					? radialFillGradient(direction, stops, [width, height])
 					: {
 							type: 'linear',
-							...(orthogonal || paint === 'Fill'
+							...((orthogonal && width > 0 && height > 0) || paint === 'Fill'
 								? linearGradientEndpoints(
 										width,
 										height,
