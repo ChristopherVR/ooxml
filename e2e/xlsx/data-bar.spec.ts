@@ -1,12 +1,8 @@
 import { expect, test } from '@playwright/test';
 import { readFileSync } from 'node:fs';
-import { createRequire } from 'node:module';
+import JSZip from 'jszip';
 import { editor, goToCell, grid, newWorkbook } from './helpers';
 
-// These tests run from the viewer workspace, which owns the JSZip dependency.
-const JSZip: typeof import('jszip') = createRequire(
-	new URL('../../viewers/xlsx/package.json', import.meta.url),
-)('jszip');
 const native = JSON.parse(
 	readFileSync(
 		new URL('../../src/core/xlsx/edit/__fixtures__/excel-databar-clipboard.json', import.meta.url),
