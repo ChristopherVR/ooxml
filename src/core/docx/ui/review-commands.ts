@@ -40,6 +40,14 @@ export function collectRevisionRanges(doc: import('prosemirror-model').Node): Re
 			(item) => item.type.name === 'insertion' || item.type.name === 'deletion',
 		);
 		const format = formattingRevision(node);
+		if (mark && format)
+			ranges.push({
+				id: format.id,
+				kind: 'formatChange',
+				author: format.author,
+				from: pos,
+				to: pos + node.nodeSize,
+			});
 		if (!mark && !format) return;
 		const kind = mark ? (mark.type.name === 'insertion' ? 'insert' : 'delete') : 'formatChange';
 		const id = String(mark?.attrs.id ?? format!.id);

@@ -61,6 +61,54 @@ function start(
 }
 
 describe('Word Yjs collaboration', () => {
+	it.each(['bold', 'multiple'])(
+		'preserves overlapping %s formatting and tracked peer typing',
+		async (name) => {
+			const bytes = new Uint8Array(
+				await readFile(
+					resolve('../core/docx/__fixtures__/review-formatting', `${name}-tracked.docx`),
+				),
+			);
+			const peers = pair();
+			const a = mount();
+			const b = mount();
+			await a.load(bytes);
+			await b.load(bytes);
+			start(a, b, peers);
+			const typing = viewOf(b);
+			typing.dispatch(typing.state.tr.insertText('!', 5));
+			const beforeResolution = viewOf(a).state.doc;
+			for (const editor of [a, b]) {
+				const reopened = await loadDocx(await editor.saveBytes());
+				const paragraph = reopened.model.blocks[0]!;
+				if (paragraph.type !== 'paragraph') throw new Error('Expected paragraph');
+				const insertion = paragraph.runs.find((run) => run.revision?.kind === 'insert');
+				expect(insertion?.text).toBe('!');
+				expect(insertion?.formatRevision?.kind).toBe('formatChange');
+				expect(paragraph.runs.filter((run) => run.revision?.kind === 'formatChange')).toHaveLength(
+					2,
+				);
+			}
+			const view = viewOf(a);
+			rejectRevisionRange(
+				view,
+				collectRevisionRanges(view.state.doc).find((range) => range.kind === 'formatChange')!,
+			);
+			for (const editor of [a, b]) {
+				const reopened = await loadDocx(await editor.saveBytes());
+				const paragraph = reopened.model.blocks[0]!;
+				if (paragraph.type !== 'paragraph') throw new Error('Expected paragraph');
+				expect(paragraph.runs.map((run) => run.text).join('')).toBe('Form!at me');
+				expect(
+					paragraph.runs.some((run) => run.formatRevision || run.revision?.kind === 'formatChange'),
+				).toBe(false);
+				expect(paragraph.runs.find((run) => run.revision?.kind === 'insert')?.text).toBe('!');
+			}
+			expect(wordYjsPluginKey.getState(view.state)!.undo()).toBe(true);
+			for (const editor of [a, b]) expect(viewOf(editor).state.doc.eq(beforeResolution)).toBe(true);
+			expect(wordYjsPluginKey.getState(view.state)!.redo()).toBe(true);
+		},
+	);
 	it('shares paragraph formatting rejection, peer export and undo/redo', async () => {
 		const native = await loadDocx(
 			new Uint8Array(

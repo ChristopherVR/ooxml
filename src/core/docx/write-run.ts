@@ -79,7 +79,8 @@ function setRunProperties(
 	const changed = (key: keyof TextRun): boolean => !base || run[key] !== base[key];
 	if (
 		!props &&
-		(run.revision?.kind === 'formatChange' ||
+		(run.formatRevision?.kind === 'formatChange' ||
+			run.revision?.kind === 'formatChange' ||
 			[
 				run.bold,
 				run.italic,
@@ -124,7 +125,7 @@ function setRunProperties(
 		runNode.insertBefore(props, runNode.firstChild);
 	}
 	if (!props) return;
-	writeRunFormatRevision(doc, props, run.revision);
+	writeRunFormatRevision(doc, props, run.formatRevision ?? run.revision);
 	if (changed('bold')) setToggle(doc, props, 'b', run.bold);
 	if (changed('italic')) setToggle(doc, props, 'i', run.italic);
 	if (changed('boldComplexScript')) setToggle(doc, props, 'bCs', run.boldComplexScript);

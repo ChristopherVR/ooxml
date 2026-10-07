@@ -1,5 +1,5 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-import { elements, first, getW, type XmlElement, WORD_NS } from './xml.js';
+import { elements, first, getW, type XmlElement, WORD_NS, WORD_DATE_UTC_NS } from './xml.js';
 import { isWordHighlightToken } from './highlight.js';
 import { isValidLanguageTag } from './language.js';
 import { isWordUnderlineStyle } from './underline.js';
@@ -77,9 +77,19 @@ const allowedRunPropertyAttributes: Record<string, string[]> = {
 	color: ['val', 'themeColor', 'themeTint', 'themeShade'],
 	shd: ['val', 'fill', 'color', 'themeFill', 'themeFillTint', 'themeFillShade'],
 };
-function hasUnexpectedAttributes(element: XmlElement, allowed: string[]): boolean {
+function hasUnexpectedAttributes(
+	element: XmlElement,
+	allowed: string[],
+	allowDateUtc = false,
+): boolean {
 	for (const attribute of Array.from(element.attributes)) {
 		if (attribute.namespaceURI === 'http://www.w3.org/2000/xmlns/') continue;
+		if (
+			allowDateUtc &&
+			attribute.namespaceURI === WORD_DATE_UTC_NS &&
+			attribute.localName === 'dateUtc'
+		)
+			continue;
 		if (attribute.namespaceURI !== WORD_NS || !allowed.includes(attribute.localName)) return true;
 	}
 	return false;
@@ -96,6 +106,21 @@ export function runHasUnknownProperties(run: XmlElement): boolean {
 			continue;
 		}
 		const property = node as XmlElement;
+		if (property.namespaceURI === WORD_NS && property.localName === 'rPrChange') {
+			// Its complete prior subtree is modeled as XML, including unsupported historical properties.
+			if (
+				hasUnexpectedAttributes(property, ['id', 'author', 'date'], true) ||
+				Array.from(property.childNodes).some(
+					(child) => child.nodeType === 3 && child.textContent?.trim(),
+				) ||
+				elements(property).length !== 1 ||
+				!first(property, 'rPr') ||
+				!getW(property, 'id') ||
+				!getW(property, 'author')
+			)
+				return true;
+			continue;
+		}
 		if (property.namespaceURI === WORD_2010_NS && property.localName === 'ligatures') {
 			if (!isLigatures(property.getAttributeNS(WORD_2010_NS, 'val')) || elements(property).length)
 				return true;

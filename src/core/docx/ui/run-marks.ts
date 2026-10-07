@@ -64,6 +64,7 @@ export function marksForRun(run: TextRun, schema: Schema): Mark[] {
 			expectDefined(schema.marks.insertion, 'insertion mark').create({
 				author: revision.author,
 				date: revision.date ?? null,
+				dateUtc: revision.dateUtc ?? null,
 				id: revision.id,
 				move: revision.kind === 'moveTo' ? move : null,
 			}),
@@ -73,6 +74,7 @@ export function marksForRun(run: TextRun, schema: Schema): Mark[] {
 			expectDefined(schema.marks.deletion, 'deletion mark').create({
 				author: revision.author,
 				date: revision.date ?? null,
+				dateUtc: revision.dateUtc ?? null,
 				id: revision.id,
 				move: revision.kind === 'moveFrom' ? move : null,
 			}),

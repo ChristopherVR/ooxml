@@ -119,6 +119,10 @@ function parseRun(node: XmlElement, revision?: Revision): TextRun {
 	if (fieldCode !== undefined) run.fieldCode = fieldCode;
 	const runRevision = revision ?? runFormatRevision(props);
 	if (runRevision) run.revision = runRevision;
+	if (revision) {
+		const formatRevision = runFormatRevision(props);
+		if (formatRevision) run.formatRevision = formatRevision;
+	}
 	return run;
 }
 

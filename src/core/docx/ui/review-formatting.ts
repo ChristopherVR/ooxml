@@ -6,8 +6,10 @@ import { marksForRun } from './run-marks.js';
 
 /** Imported formatting history travels with the opaque run properties mark. */
 export function formattingRevision(node: ProseMirrorNode): Revision | undefined {
-	const revision = node.marks.find((mark) => mark.type.name === 'runProperties')?.attrs.props
-		?.revision as Revision | undefined;
+	const props = node.marks.find((mark) => mark.type.name === 'runProperties')?.attrs.props as
+		| TextRun
+		| undefined;
+	const revision = props?.formatRevision ?? props?.revision;
 	return revision?.kind === 'formatChange' ? revision : undefined;
 }
 
@@ -47,7 +49,9 @@ export function resolveFormattingRange(
 	for (const piece of pieces) {
 		const properties = piece.node.marks.find((mark) => mark.type.name === 'runProperties')!;
 		if (mode === 'accept') {
-			const { revision: _revision, ...props } = properties.attrs.props as TextRun;
+			const props = { ...properties.attrs.props } as TextRun;
+			if (props.formatRevision) delete props.formatRevision;
+			else delete props.revision;
 			tr.removeMark(piece.from, piece.to, properties);
 			if (Object.keys(props).length)
 				tr.addMark(piece.from, piece.to, properties.type.create({ props }));

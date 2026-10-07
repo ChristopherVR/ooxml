@@ -9,6 +9,7 @@ import { ligatureStyle } from './ligature-style.js';
  */
 export const extraRunFields = [
 	'restoredRunPropertiesXml',
+	'formatRevision',
 	'fontFamilyEastAsia',
 	'fontFamilyComplexScript',
 	'fontSizeComplexScript',
@@ -99,26 +100,24 @@ export const runPropertiesMark: MarkSpec = {
 	],
 	toDOM: (mark) => {
 		const props = (mark.attrs.props ?? {}) as ExtraRunProperties;
+		const revision = props.formatRevision ?? props.revision;
 		const style = extraRunStyle(props);
 		return [
 			'span',
 			{
 				'data-run-props': JSON.stringify(props),
-				...(props.vanish || props.revision
+				...(props.vanish || revision
 					? {
-							class: [
-								props.vanish ? 'dve-hidden-text' : '',
-								props.revision ? 'dve-revision-format' : '',
-							]
+							class: [props.vanish ? 'dve-hidden-text' : '', revision ? 'dve-revision-format' : '']
 								.filter(Boolean)
 								.join(' '),
 						}
 					: {}),
-				...(props.revision
+				...(revision
 					? {
-							'data-revision-id': props.revision.id,
-							'data-author': props.revision.author,
-							...(props.revision.date ? { 'data-date': props.revision.date } : {}),
+							'data-revision-id': revision.id,
+							'data-author': revision.author,
+							...(revision.date ? { 'data-date': revision.date } : {}),
 						}
 					: {}),
 				...(style ? { style } : {}),

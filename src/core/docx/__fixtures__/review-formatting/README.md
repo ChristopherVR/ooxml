@@ -19,3 +19,13 @@ Core rejection now restores the complete prior properties. The installed Word
 build opened four core-rejected exports (both package-preserving and standalone
 for both cases), reporting zero revisions and the same fonts as native rejection.
 `core-rejected-reference.json` records this additional interoperability check.
+
+`overlapping-text-export-reference.json` records Word reopening four core
+exports: each source tracked fixture is split after four characters, then receives
+an inserted `!` or a deletion of `at`. The text revision is authored by Codex,
+while each piece retains the source formatting revision and its prior properties.
+The writer preserves `w16du:dateUtc` separately from `w:date` and renumbers the
+new text revision ID. Word recognizes one formatting change and one insertion or
+deletion, then Reject All restores `Format me`, baseline bold/color and Arial for
+complex scripts, with zero revisions. The adjacent overlap regression tests
+reproduce the core exports and compare rejection with the native rejected fixture.

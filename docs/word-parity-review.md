@@ -211,6 +211,15 @@ scripts, and rejected both revisions back to the original text. All six browser
 bindings exercise tracked and untracked typing. Script shaping, font fallback and
 glyph metrics still require separate rendering parity work.
 
+Text runs now preserve formatting history independently when they are inside
+insertion, deletion or move wrappers. Both histories receive valid export IDs;
+resolving formatting retains the pending text revision. Modern Word UTC timestamps
+are preserved separately from legacy revision dates. Core, editor, Yjs and six
+browser bindings cover overlapping tracked typing. Desktop Word reopened four
+exports combining run formatting with insertion or deletion and rejected them
+back to native baseline text and formatting. Recording new formatting revisions
+and displaying their prior properties in Original mode remain unfinished.
+
 Core revision enumeration and resolution now include headers, footers, footnotes,
 endnotes and table cells through the shared document-story traversal. Synthetic
 package tests verify accept/reject/save/reopen, including headers shared across

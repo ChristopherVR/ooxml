@@ -1,7 +1,16 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import { expectDefined } from './expect-defined.js';
 import type { Revision, TextRun } from './model.js';
-import { buildXml, first, getW, isElement, named, type XmlElement, WORD_NS } from './xml.js';
+import {
+	buildXml,
+	first,
+	getW,
+	isElement,
+	named,
+	type XmlElement,
+	WORD_NS,
+	WORD_DATE_UTC_NS,
+} from './xml.js';
 
 const REVISION_WRAPPERS: Record<string, Revision['kind']> = {
 	ins: 'insert',
@@ -56,6 +65,8 @@ function revisionFrom(node: XmlElement, kind: Revision['kind']): Revision {
 	};
 	const date = getW(node, 'date');
 	if (date) revision.date = date;
+	const dateUtc = node.getAttributeNS(WORD_DATE_UTC_NS, 'dateUtc');
+	if (dateUtc) revision.dateUtc = dateUtc;
 	return revision;
 }
 

@@ -35,6 +35,7 @@ export const reviewMarks = {
 		attrs: {
 			author: { default: '' },
 			date: { default: null },
+			dateUtc: { default: null },
 			id: { default: '' },
 			move: { default: null },
 		},
@@ -44,6 +45,7 @@ export const reviewMarks = {
 				getAttrs: (el) => ({
 					author: (el as HTMLElement).dataset.author || '',
 					date: (el as HTMLElement).dataset.date || null,
+					dateUtc: (el as HTMLElement).dataset.dateUtc || null,
 					id: (el as HTMLElement).dataset.revisionId || '',
 					move: null,
 				}),
@@ -55,6 +57,7 @@ export const reviewMarks = {
 				'data-revision-id': mark.attrs.id,
 				'data-author': mark.attrs.author,
 				...(mark.attrs.date ? { 'data-date': mark.attrs.date } : {}),
+				...(mark.attrs.dateUtc ? { 'data-date-utc': mark.attrs.dateUtc } : {}),
 				class: mark.attrs.move ? 'dve-revision-insert dve-revision-move' : 'dve-revision-insert',
 				...(mark.attrs.move ? { 'data-move': moveName(mark.attrs.move) } : {}),
 				style: `--dve-revision-color:${authorColor(mark.attrs.author)}`,
@@ -67,6 +70,7 @@ export const reviewMarks = {
 		attrs: {
 			author: { default: '' },
 			date: { default: null },
+			dateUtc: { default: null },
 			id: { default: '' },
 			move: { default: null },
 		},
@@ -76,6 +80,7 @@ export const reviewMarks = {
 				getAttrs: (el) => ({
 					author: (el as HTMLElement).dataset.author || '',
 					date: (el as HTMLElement).dataset.date || null,
+					dateUtc: (el as HTMLElement).dataset.dateUtc || null,
 					id: (el as HTMLElement).dataset.revisionId || '',
 					move: null,
 				}),
@@ -87,6 +92,7 @@ export const reviewMarks = {
 				'data-revision-id': mark.attrs.id,
 				'data-author': mark.attrs.author,
 				...(mark.attrs.date ? { 'data-date': mark.attrs.date } : {}),
+				...(mark.attrs.dateUtc ? { 'data-date-utc': mark.attrs.dateUtc } : {}),
 				class: mark.attrs.move ? 'dve-revision-delete dve-revision-move' : 'dve-revision-delete',
 				...(mark.attrs.move ? { 'data-move': moveName(mark.attrs.move) } : {}),
 				style: `--dve-revision-color:${authorColor(mark.attrs.author)}`,

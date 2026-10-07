@@ -10,7 +10,8 @@ export function parseRunPropertiesSnapshot(xml: string): XmlElement {
 
 /** Restores modeled and opaque properties without changing text, anchors or inline content. */
 export function restoreRunFormatting(run: TextRun): void {
-	const xml = run.revision?.previousRunPropertiesXml;
+	const nested = run.formatRevision;
+	const xml = (nested ?? run.revision)?.previousRunPropertiesXml;
 	if (!xml)
 		throw new Error(
 			'Cannot reject a formatting revision without its prior run-properties snapshot.',
@@ -20,5 +21,6 @@ export function restoreRunFormatting(run: TextRun): void {
 	for (const key of DIRECT_RUN_PROPERTY_KEYS) delete run[key];
 	Object.assign(run, previous);
 	run.restoredRunPropertiesXml = xml;
-	delete run.revision;
+	if (nested) delete run.formatRevision;
+	else delete run.revision;
 }

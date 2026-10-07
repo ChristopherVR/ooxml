@@ -23,12 +23,16 @@ export interface Revision {
 	move?: { name: string; rangeId?: string };
 	author: string;
 	date?: string;
+	/** Modern Word's UTC revision timestamp (`w16du:dateUtc`). */
+	dateUtc?: string;
 	/** Source `w:id`; not guaranteed unique outside the paragraph it was parsed from. */
 	id: string;
 }
 
 export interface TextRun {
 	text: string;
+	/** Run-format history inside an insertion, deletion or move wrapper. */
+	formatRevision?: Revision;
 	/** Complete XML basis restored by rejecting a run-format revision; known property edits overlay it. */
 	restoredRunPropertiesXml?: string;
 	/** Imported, display-only equation. Source OMML is preserved; equation editing is unsupported. */

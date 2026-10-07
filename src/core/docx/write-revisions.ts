@@ -1,6 +1,14 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import type { Paragraph, Revision } from './model.js';
-import { children, first, makeW, type XmlDocument, type XmlElement, WORD_NS } from './xml.js';
+import {
+	children,
+	first,
+	makeW,
+	type XmlDocument,
+	type XmlElement,
+	WORD_NS,
+	WORD_DATE_UTC_NS,
+} from './xml.js';
 import { parsePropertiesSnapshot } from './revision-properties.js';
 
 const REVISION_WRAPPER_NAMES = ['ins', 'del', 'moveFrom', 'moveTo'];
@@ -30,6 +38,13 @@ function setAttribute(element: XmlElement, local: string, value: string): void {
 }
 function removeChildren(element: XmlElement, local: string): void {
 	for (const child of children(element, local)) element.removeChild(child);
+}
+
+function writeRevisionMetadata(element: XmlElement, revision: Revision): void {
+	setAttribute(element, 'id', revision.id);
+	setAttribute(element, 'author', revision.author);
+	if (revision.date) setAttribute(element, 'date', revision.date);
+	if (revision.dateUtc) element.setAttributeNS(WORD_DATE_UTC_NS, 'w16du:dateUtc', revision.dateUtc);
 }
 function revisionTag(kind: Revision['kind']): string {
 	return kind === 'delete'
@@ -77,9 +92,7 @@ function writeFormatRevision(
 		throw new Error(`Cannot write a formatting revision without its prior ${local} snapshot.`);
 	const previous = parsePropertiesSnapshot(xml, local);
 	const change = makeW(doc, `${local}Change`);
-	setAttribute(change, 'id', revision.id);
-	setAttribute(change, 'author', revision.author);
-	if (revision.date) setAttribute(change, 'date', revision.date);
+	writeRevisionMetadata(change, revision);
 	change.appendChild(doc.importNode(previous, true));
 	props.appendChild(change);
 }
@@ -89,9 +102,7 @@ export function revisionWrapper(
 	content: XmlElement,
 ): XmlElement {
 	const wrapper = makeW(doc, revisionTag(revision.kind));
-	setAttribute(wrapper, 'id', revision.id);
-	setAttribute(wrapper, 'author', revision.author);
-	if (revision.date) setAttribute(wrapper, 'date', revision.date);
+	writeRevisionMetadata(wrapper, revision);
 	wrapper.appendChild(content);
 	return wrapper;
 }
@@ -129,8 +140,6 @@ export function writeParagraphMarkRevision(
 	}
 	const revision = paragraph.markRevision;
 	const element = makeW(doc, revision.kind === 'delete' ? 'del' : 'ins');
-	setAttribute(element, 'id', revision.id);
-	setAttribute(element, 'author', revision.author);
-	if (revision.date) setAttribute(element, 'date', revision.date);
+	writeRevisionMetadata(element, revision);
 	rPr.insertBefore(element, rPr.firstChild);
 }

@@ -38,6 +38,8 @@ export function listRevisions(model: DocumentModel): RevisionEntry[] {
 			entries.push({ ...paragraph.formatRevision, paragraphId: paragraph.id });
 		paragraph.runs.forEach((run, runIndex) => {
 			if (run.revision) entries.push({ ...run.revision, paragraphId: paragraph.id, runIndex });
+			if (run.formatRevision)
+				entries.push({ ...run.formatRevision, paragraphId: paragraph.id, runIndex });
 		});
 	}
 	return entries;
@@ -62,7 +64,7 @@ function mergeIntoNext(blocks: Block[], paragraphId: string): Block[] {
 /** All runs carrying one revision share the same wrapper `id`; ordered indices for splicing. */
 function matchingRunIndices(paragraph: Paragraph, id: string): number[] {
 	return paragraph.runs.reduce<number[]>((indices, run, index) => {
-		if (run.revision?.id === id) indices.push(index);
+		if (run.revision?.id === id || run.formatRevision?.id === id) indices.push(index);
 		return indices;
 	}, []);
 }
@@ -152,7 +154,9 @@ function acceptOne(model: DocumentModel, id: string): DocumentModel {
 	if (!entry) throw new Error(`No revision with id ${id} was found.`);
 	if (entry.kind === 'formatChange')
 		return updateRuns(model, id, (paragraph, runIndex) => {
-			clearRunRevision(paragraph, runIndex);
+			const run = paragraph.runs[runIndex]!;
+			if (run.formatRevision?.id === id) delete run.formatRevision;
+			else delete run.revision;
 		});
 	if (entry.kind === 'paragraphChange') {
 		const next = structuredClone(model);

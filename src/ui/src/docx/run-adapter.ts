@@ -141,6 +141,7 @@ function applyMarkFormatting(run: TextRun, child: ProseMirrorNode): void {
 			author: String(revisionMark.attrs.author || ''),
 			id: String(revisionMark.attrs.id || ''),
 			...(revisionMark.attrs.date ? { date: String(revisionMark.attrs.date) } : {}),
+			...(revisionMark.attrs.dateUtc ? { dateUtc: String(revisionMark.attrs.dateUtc) } : {}),
 			...(move ? { move } : {}),
 		};
 	}
@@ -159,7 +160,11 @@ function applyMarkFormatting(run: TextRun, child: ProseMirrorNode): void {
 		for (const [key, value] of Object.entries(structuredClone(extra.attrs.props) as TextRun)) {
 			// An explicit off never overrides a mark the user applied (bold on text that was unbolded).
 			const field = key as keyof TextRun;
-			if (key === 'revision' && run.revision) continue;
+			if (key === 'revision' && run.revision) {
+				if ((value as TextRun['revision'])?.kind === 'formatChange')
+					run.formatRevision = value as NonNullable<TextRun['revision']>;
+				continue;
+			}
 			if ((explicitOffFields as readonly string[]).includes(key) && run[field] !== undefined)
 				continue;
 			setRunField(run, field, value);
