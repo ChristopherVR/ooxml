@@ -82,8 +82,9 @@ selection remains local. Creator-side rename/remove checks are advisory, just li
 message ownership, and do not provide authenticated server authorization. Peer data
 is validated before rendering. Name-only attachments cannot become file tabs.
 
-With server storage or a host upload adapter configured, Excel opens in viewing
-mode and offers **Edit workbook** and **Save copy to channel**. Saving serializes
+Excel opens in viewing mode and offers **Edit workbook** and **Download workbook
+copy**, including without channel storage. With server storage or a host upload
+adapter configured, it also offers **Save copy to channel**. Channel saving serializes
 the native workbook, uploads under a unique storage name, and posts a new attachment
 in the channel captured when the file opened. It does not overwrite the original,
 switch the tab to the saved copy, or coedit with other users. Macro workbooks keep
@@ -99,7 +100,7 @@ replacing the component, identity or workspace configuration.
 Evidence: core tab merge/snapshot and upload tests; UI lifecycle tests; browser
 tests with two same-browser clients adding, renaming and removing a website tab;
 and an actual XLSX fixture edited, saved, parsed and reopened, including upload
-failure/retry and editing during upload. The seven workflow specs now run against
+failure/retry and editing during upload. The eight workflow specs now run against
 each of vanilla, React, Vue, Angular, Svelte and Solid with
 `bun run test:browser:bindings` in `viewers/teams`. Each run forces fresh Vite
 dependency optimization to cover first-open behavior, including the lazy
@@ -154,6 +155,19 @@ states these limits and exposes text so layout differences do not hide all
 readable content. Browser acceptance checks actual deck bytes, visible slide
 images, navigation, text and cleanup; it does not compare Microsoft reference
 screenshots or prove layout equivalence.
+
+## Fifth implemented slice: local workbook copies
+
+The latest XLSX increment adds local copy downloads. Downloads serialize through
+the existing workbook engine and do not upload or post a new attachment. The
+explicit copy-download action reports that the download started and keeps its local dirty state;
+browser delivery does not prove that the user retained the file. Invalid pending
+cell edits block both downloads and channel saves instead of exporting the old
+cell value. Switching viewing/editing mode also commits or rejects pending edits.
+Browser acceptance covers a real stop-validation rule, downloading and parsing
+edited bytes, source preservation, absence of a shared attachment, and navigation
+confirmation. This remains a copy workflow, with the engine's existing format
+support and preservation limitations.
 
 ## Next releasable slices
 

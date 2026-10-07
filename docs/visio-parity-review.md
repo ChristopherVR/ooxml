@@ -181,3 +181,27 @@ tests passed, 48 documentation tests passed, and both core typecheck projects pl
 shared UI typechecking passed. Native arrow and page-scale matrices and the pinned
 real-document arrow/theme corpus were enabled. Browser pixel equivalence and native
 editing save/reopen acceptance remain unproven.
+
+## Native font-lookup edit increment
+
+The scaled reference document's dependency rejection was traced to FONT("Arial").
+Microsoft documents FONT as a font-name lookup, with identifiers that depend on the
+system/document, rather than an implicit ShapeSheet cell lookup:
+https://learn.microsoft.com/en-us/office/client-developer/visio/font-function.
+The dependency analyzer now admits its explicit AST references while retaining
+unsupported evaluation. An affected FONT formula still rejects recalculation, and
+an INDIRECT argument still rejects dependency proof. Independent font formulas and
+cached identifiers are preserved during geometry editing.
+
+A native acceptance probe resized page ID 6, shape ID 2 to 8 by 4 drawing inches and
+moved its pin to (6, 4). Visio 16 reopened the edited VSDX with those exact cached
+values, FONT("Arial"), DrawingScale 2 and PageScale 1, exported the rectangle and
+saved reopened-scales.vsdx. Core parsing reports physical size 4 by 2 inches and
+local translation (1, 1). This closes the specific font-lookup rejection above;
+general native editing/save fidelity and full parity remain unfinished.
+
+Verification after the font fix: 1,946 Visio core tests passed (30 optional skips),
+including the native scale edit test, and strict core typechecking passed. After
+rebasing onto concurrent main changes, the relaxed PowerPoint typecheck fails on
+unresolved ooxml-core/pptx self-imports in newly moved editor modules; no Visio error
+was reported. The earlier scale increment's UI and documentation checks remain valid.
