@@ -27,6 +27,29 @@ function message(id: string, ts: number, replyTo?: string): Message {
 }
 
 describe('personal followed threads', () => {
+	it('restores independent automatic follow settings without sharing another user preference', () => {
+		const values = new Map<string, string>();
+		const storage = {
+			getItem: (key: string) => values.get(key) ?? null,
+			setItem: (key: string, value: string) => {
+				values.set(key, value);
+			},
+		};
+		const follows = createThreadFollows(storage, 'ada');
+		expect(follows.settings()).toEqual({ started: true, replied: true });
+		follows.configure({ started: false });
+		expect(createThreadFollows(storage, 'ada').settings()).toEqual({
+			started: false,
+			replied: true,
+		});
+		expect(createThreadFollows(storage, 'bob').settings()).toEqual({
+			started: true,
+			replied: true,
+		});
+		const snapshot = follows.settings();
+		snapshot.replied = false;
+		expect(follows.settings().replied).toBe(true);
+	});
 	it('tracks foreign unread messages independently and persists explicit unread marks', () => {
 		const values = new Map<string, string>();
 		const storage = {

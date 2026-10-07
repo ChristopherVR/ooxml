@@ -9,6 +9,7 @@ import {
 export interface CommentsPanelOptions {
 	getModel: () => DocumentModel;
 	canAdd: () => boolean;
+	canEdit?: () => boolean;
 	onAdd: (text: string) => void;
 	onReply: (parentId: string, text: string) => void;
 	onResolve: (id: string, resolved: boolean) => void;
@@ -60,16 +61,19 @@ function row(
 	text.className = 'dve-comment-text';
 	text.textContent = comment.text;
 	const actions = document.createElement('div');
+	const canEdit = options.canEdit?.() ?? true;
 	actions.className = 'dve-comment-actions';
 	if (!comment.parentId) {
 		const resolve = document.createElement('button');
 		resolve.type = 'button';
+		resolve.disabled = !canEdit;
 		resolve.textContent = translate(locale, comment.resolved ? 'Reopen' : 'Resolve');
 		resolve.addEventListener('click', () => options.onResolve(comment.id, !comment.resolved));
 		actions.append(resolve);
 	}
 	const del = document.createElement('button');
 	del.type = 'button';
+	del.disabled = !canEdit;
 	del.textContent = translate(locale, 'Delete');
 	del.addEventListener('click', () => options.onDelete(comment.id));
 	actions.append(del);
@@ -78,10 +82,12 @@ function row(
 		const replyForm = document.createElement('div');
 		replyForm.className = 'dve-comment-reply';
 		const input = document.createElement('textarea');
+		input.disabled = !canEdit;
 		input.setAttribute('aria-label', translate(locale, 'Reply'));
 		input.placeholder = translate(locale, 'Reply');
 		const send = document.createElement('button');
 		send.type = 'button';
+		send.disabled = !canEdit;
 		send.textContent = translate(locale, 'Reply');
 		send.addEventListener('click', () => {
 			if (!input.value.trim()) return;

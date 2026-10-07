@@ -357,3 +357,57 @@ remains unproven; page deletion, inherited/string formula closure and the broade
 rendering/interaction corpus remain required.
 The broad UI typecheck still reports the existing Teams/PowerPoint declaration
 resolution errors; it reports no Visio errors.
+
+## Page deletion and reuse review (2026-10-07)
+
+The shared All pages menu now includes Delete Page with an Office dialog, Cancel,
+source-generation checks and pending-operation guards. The controller drops shape
+selection from a removed page, keeps surviving page identity when possible, and
+uses a surviving page when the current page is removed. Undo/redo restore the
+source-backed document. The six-binding workflow deletes a page, restores and
+reapplies the deletion, then downloads and reopens the remaining drawing.
+
+Core deletion implements native `Page.Delete(0)`: surviving page names stay intact,
+static formulas pointing to the removed page become their cached constants, and
+hyperlink destination text remains intact. Deleting an assigned background clears
+its BackPage assignments. Page XML, its owned relationship part, incoming page
+relationships and content-type overrides are removed. Unrelated opaque XML and
+shared assets are preserved. Drawing windows pointing at a deleted page are moved
+to a surviving foreground page. Local numeric page-count/index caches use the
+existing bounded dependency recalculator.
+
+Deleting the last foreground page leaves a new blank foreground page. The observed
+native default in this corpus is 8.5 by 11 inches with unit drawing/page scale;
+core uses those defaults. Native replacement IDs are allocated by Visio, whereas
+core chooses a fresh package-owned ID. Template/locale-specific default settings,
+Visio's historical default-name allocator and the optional native renumber-pages
+mode remain open. Dynamic references, error caches and unsupported explicit XML
+relationship uses fail atomically rather than leave dangling relationships.
+
+Native Visio 16.0 independently accepted and saved core-produced referenced-page,
+assigned-background and last-page deletion outputs. Metrics include surviving IDs,
+names, background assignments, dimensions, scales, shape counts and frozen formula
+and link values. Reproduce with `scripts/record-visio-page-delete.ps1`, set
+`VISIO_NATIVE_PAGE_DELETE_DIR`, run `visio/edit-page-delete.test.ts`, then rerun the
+script with `-VerifyCore`. The compact record is
+`visio/__fixtures__/page-delete-native.json`; native files remain local.
+
+The reuse review replaced duplicate relationship-path and relationship-ID code
+with existing OPC helpers. Rename and deletion now share one relationship-driven
+inventory of editable page/master/document parts and one formula-string scanner.
+The existing XML model, page-properties writer, dependency graph, package writer,
+controller/history and shared Office dialog/menu/button controls remain the common
+implementations. AGENTS.md now explicitly requires checking for reusable logic
+and reviewing helpers/imports for duplication before committing.
+
+Relative `.js` imports are intentional ESM specifiers: TypeScript resolves them
+against the `.ts` source. The repository's ESNext/Bundler configuration also allows
+extensionless imports, but the existing `.js` convention supports JavaScript
+runtime paths. A direct Node ESM import of the built `ooxml-core/visio` entry passed.
+
+Verification: 2,001 Visio core tests passed with native references enabled (30
+optional skips), 708 shared Visio UI tests passed (six optional skips), and all six
+browser page/history/save workflows passed. Strict core declarations/typechecking,
+core Visio ESM/CJS and shared UI ESM builds passed. A later native verification
+rerun stalled during reopening and was terminated; the record above is from the
+completed earlier run. Full parity remains unproven.

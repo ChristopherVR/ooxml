@@ -42,10 +42,18 @@ export interface VisioPageRename {
 	pageId: string;
 	name: string;
 }
-export type VisioPageEdit = VisioPageInsert | VisioPageReorder | VisioPageRename;
+/** Delete a page, preserving remaining page names (native Page.Delete(0)). */
+export interface VisioPageDelete {
+	type: 'delete-page';
+	pageId: string;
+}
+export type VisioPageEdit = VisioPageInsert | VisioPageReorder | VisioPageRename | VisioPageDelete;
 export type VisioEdit = VisioTextEdit | VisioGeometryEdit | VisioPageEdit;
 export const isVisioPageEdit = (edit: VisioEdit): edit is VisioPageEdit =>
-	edit.type === 'insert-page' || edit.type === 'reorder-page' || edit.type === 'rename-page';
+	edit.type === 'insert-page' ||
+	edit.type === 'reorder-page' ||
+	edit.type === 'rename-page' ||
+	edit.type === 'delete-page';
 
 export function snapshotVisioEdits(
 	edits: readonly VisioEdit[],
@@ -83,6 +91,7 @@ export function snapshotVisioEdits(
 	return Array.from(edits, (edit) => {
 		if (!edit || typeof edit.pageId !== 'string' || !edit.pageId || edit.pageId.length > 256)
 			fail('INVALID_EDIT', 'Invalid edit target.');
+		if (edit.type === 'delete-page') return { type: edit.type, pageId: edit.pageId };
 		if (edit.type === 'reorder-page') {
 			if (!Number.isSafeInteger(edit.index) || edit.index < 0 || edit.index > 1_000_000)
 				fail('INVALID_EDIT', 'Page order requires a bounded zero-based integer index.');

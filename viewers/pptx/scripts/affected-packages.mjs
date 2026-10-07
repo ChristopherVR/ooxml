@@ -46,7 +46,7 @@ export const BINDINGS = ['react', 'vue', 'angular', 'vanilla', 'svelte'];
 const DEPENDS_ON = {
 	core: [],
 	tools: ['core'],
-	shared: ['core', 'tools'],
+	shared: ['core'],
 	locales: ['shared'],
 	react: ['core', 'shared', 'locales'],
 	vue: ['core', 'shared', 'locales'],

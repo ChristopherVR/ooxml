@@ -13,7 +13,11 @@ import { createFileActions } from './files.js';
 import { checkFileAbort, withFileAbort, type FileOperationOptions } from './file-transfer.js';
 import type { ChannelTab, TabContent } from './tabs.js';
 import { channelThreads, type MessageThread } from './threads.js';
-import { createThreadFollows, type FollowedThread } from './followed-threads.js';
+import {
+	createThreadFollows,
+	type FollowedThread,
+	type ThreadFollowSettings,
+} from './followed-threads.js';
 import type { StreamLike } from './peer.js';
 import {
 	type ChannelView,
@@ -87,6 +91,7 @@ export interface TeamsState {
 	thread: MessageThread | null;
 	threadFollowed: boolean;
 	followedThreads: FollowedThread[];
+	threadFollowSettings: ThreadFollowSettings;
 	files: FileEntry[];
 	/** Every file in every channel, newest first. */
 	allFiles: FileEntry[];
@@ -139,6 +144,7 @@ export interface TeamsClient {
 	followThread: (channelId: string, messageId: string, followed: boolean) => boolean;
 	/** Personal read state for a followed thread, independent of channel read markers. */
 	markThreadRead: (channelId: string, messageId: string, read?: boolean) => boolean;
+	setThreadFollowSettings: (settings: Partial<ThreadFollowSettings>) => void;
 	startEdit: (messageId: string) => void;
 	cancelCompose: () => void;
 	deleteMessage: (messageId: string) => void;
@@ -271,6 +277,7 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			threadFollowed:
 				!!thread && follows.has(selected, thread.root.id, (id) => threads.thread(id)?.root.id),
 			followedThreads: follows.view(channels, messagesOf, ws.user.id),
+			threadFollowSettings: follows.settings(),
 			files: filesOf(messages),
 			allFiles: allFilesOf(channels, messagesOf),
 			tabs: selected ? ws.tabs.tabs(selected) : [],
@@ -433,6 +440,16 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 		if (changed) refresh();
 		return changed;
 	};
+	const followAuthored = (message: Message | null): void => {
+		if (!message || !follows.settings()[message.replyTo ? 'replied' : 'started']) return;
+		const index = channelThreads(messagesOf(message.channelId));
+		const thread = index.thread(message.id);
+		if (
+			thread &&
+			follows.set(message.channelId, thread.root.id, true, (id) => index.thread(id)?.root.id)
+		)
+			markThreadRead(message.channelId, thread.root.id);
+	};
 
 	const leave = (): void => {
 		const active = call;
@@ -472,6 +489,7 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			upload,
 			post: (channelId, text, attachments) => {
 				const message = ws.chat.post(channelId, { text, attachments });
+				followAuthored(message);
 				refresh();
 				return Boolean(message);
 			},
@@ -508,11 +526,12 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 				notice('The channel is no longer available; the message was not shared');
 				return;
 			}
-			ws.chat.post(channelId, {
+			const message = ws.chat.post(channelId, {
 				text,
 				...(replyingTo ? { replyTo: replyingTo } : {}),
 				attachments,
 			});
+			followAuthored(message);
 			if (selected === channelId && replyId === replyingTo) replyId = '';
 			refresh();
 		},
@@ -546,6 +565,9 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			return changed;
 		},
 		markThreadRead,
+		setThreadFollowSettings: act((settings) => {
+			follows.configure(settings);
+		}),
 		startEdit: act((id) => {
 			const m = find(id);
 			if (m && m.authorId === ws.user.id) [editId, replyId] = [id, ''];

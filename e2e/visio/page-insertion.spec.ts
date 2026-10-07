@@ -60,6 +60,20 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await expect(tabs.getByRole('tab').first()).toHaveText('Page-2');
 		await viewer.locator('[command="redo"]').getByRole('button').click();
 		await expect(tabs.getByRole('tab').first()).toHaveText('Renamed & Page');
+		await tabs.getByRole('tab', { name: 'Imported page', exact: true }).click();
+		await viewer
+			.locator('[data-menu="all-pages"]')
+			.getByRole('button', { name: 'All', exact: true })
+			.click();
+		await viewer.locator('office-ui-menu-item[command="delete-page"]').click();
+		const deleteDialog = viewer.locator('.page-delete-dialog');
+		await deleteDialog.getByRole('button', { name: 'Delete', exact: true }).click();
+		await expect(tabs.getByRole('tab')).toHaveCount(1);
+		await expect(tabs.getByRole('tab').first()).toHaveText('Renamed & Page');
+		await viewer.locator('[command="undo"]').getByRole('button').click();
+		await expect(tabs.getByRole('tab')).toHaveCount(2);
+		await viewer.locator('[command="redo"]').getByRole('button').click();
+		await expect(tabs.getByRole('tab')).toHaveCount(1);
 		const downloadButton = await downloadCopy(viewer);
 		const pending = page.waitForEvent('download');
 		await downloadButton.click();
@@ -72,7 +86,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			buffer: Buffer.concat(chunks),
 		});
 		await expect(page.locator('#file-name')).toHaveText('reopened-pages.vsdx');
-		await expect(tabs.getByRole('tab')).toHaveCount(2);
 		await expect(tabs.getByRole('tab', { name: 'Renamed & Page', exact: true })).toHaveCount(1);
+		await expect(tabs.getByRole('tab')).toHaveCount(1);
 	});
 }
