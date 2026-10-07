@@ -21,15 +21,13 @@ export type {
 	AuthorityResult,
 } from 'ooxml-core/docx/ui';
 export type { CollaborationAuthorityConfig } from 'ooxml-core/docx/ui';
+export type { WordYjsOptions } from 'ooxml-core/docx/ui';
 export { createCollaborationAuthority } from './collaboration-model';
 export { PresenceClient, PRESENCE_PALETTE } from './presence';
 export type { PresenceMessage, PresenceConfig, PresenceReceiveResult } from './presence';
 export { EDITOR_LOCALES, normalizeEditorLocale } from './localization';
 export type { EditorLocale, EditorLocaleInput } from './localization';
-export {
-	createCollaborationIdGenerator,
-	repairCollaborativeDocumentIds,
-} from 'ooxml-core/docx/ui';
+export { createCollaborationIdGenerator, repairCollaborativeDocumentIds } from 'ooxml-core/docx/ui';
 export type { ReviewDisplayMode } from './review-display';
 export type { RevisionRange } from './review-commands';
 export { lightTheme, darkTheme, themeToCssVars } from 'ooxml-core/docx/ui';

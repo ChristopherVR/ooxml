@@ -27,15 +27,15 @@ review. They do not establish pixel-equivalent Word output.
 
 ## Principal gaps
 
-| Area                  | Evidence and remaining work                                                                                                                                                                                                    | Reuse boundary                                                                                                        |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
-| Editable pages        | Editing remains continuous; Print Layout is read-only. Caret, selection, IME and keyboard mappings need contracts before editable page surfaces.                                                                               | Shared docx layout; one Word editor                                                                                   |
-| Layout                | Continuous section breaks are explicitly approximated as page breaks in `docx/layout/page-flow.ts`. Complex typography and Word font metrics need reference documents.                                                         | Injectable measurer and shared layout engine                                                                          |
-| Tables                | Complex/merged structural editing and collaborative table changes remain limited. Header pagination was incorrectly repeating noncontiguous marked rows.                                                                       | Word model, editing and layout in core                                                                                |
-| Drawing objects       | The viewer roadmap identifies missing general shape, chart and SmartArt editing. Equations are display-only in the newer editor.                                                                                               | Geometry, diagram and future shared DrawingML/chart/math areas, rather than imports of PowerPoint UI internals        |
-| Proofing and review   | Browser spelling is not a Word grammar engine. Compare, protection, richer references and automatic field calculation need explicit implementations.                                                                           | Product logic in docx; host service contracts where appropriate                                                       |
-| Collaboration         | Word uses authority-ordered ProseMirror steps and separate transient presence. Shared collab already has Yjs, awareness, WebSocket protocol and external WebRTC/WebSocket adapters. No Word CRDT editor binding is wired here. | Format-neutral lifecycle/providers in collab; Word schema mapping in docx; cursor DOM and Share/status controls in UI |
-| Save and preservation | The model alone does not carry the loaded package's opaque parts or media. CRDT synchronization of model JSON cannot establish preservation or shared export reliability.                                                      | LoadedDocument/package preservation and assets in core                                                                |
+| Area                  | Evidence and remaining work                                                                                                                                                                                                                                                                        | Reuse boundary                                                                                                        |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Editable pages        | Editing remains continuous; Print Layout is read-only. Caret, selection, IME and keyboard mappings need contracts before editable page surfaces.                                                                                                                                                   | Shared docx layout; one Word editor                                                                                   |
+| Layout                | Continuous section breaks are explicitly approximated as page breaks in `docx/layout/page-flow.ts`. Complex typography and Word font metrics need reference documents.                                                                                                                             | Injectable measurer and shared layout engine                                                                          |
+| Tables                | Complex/merged structural editing and collaborative table changes remain limited. Header pagination was incorrectly repeating noncontiguous marked rows.                                                                                                                                           | Word model, editing and layout in core                                                                                |
+| Drawing objects       | The viewer roadmap identifies missing general shape, chart and SmartArt editing. Equations are display-only in the newer editor.                                                                                                                                                                   | Geometry, diagram and future shared DrawingML/chart/math areas, rather than imports of PowerPoint UI internals        |
+| Proofing and review   | Browser spelling is not a Word grammar engine. Compare, protection, richer references and automatic field calculation need explicit implementations.                                                                                                                                               | Product logic in docx; host service contracts where appropriate                                                       |
+| Collaboration         | Word uses authority-ordered ProseMirror steps and separate transient presence. Shared collab already has Yjs, awareness, WebSocket protocol and external WebRTC/WebSocket adapters. Opt-in Word Yjs binding is now wired through the shared session; multi-story collaboration remains incomplete. | Format-neutral lifecycle/providers in collab; Word schema mapping in docx; cursor DOM and Share/status controls in UI |
+| Save and preservation | The model alone does not carry the loaded package's opaque parts or media. CRDT synchronization of model JSON cannot establish preservation or shared export reliability.                                                                                                                          | LoadedDocument/package preservation and assets in core                                                                |
 
 ## Implemented first slice
 
@@ -58,26 +58,50 @@ retained document identity, read-only adoption, external provider event shapes,
 and multi-page table fragments. These are core behavior tests, not Word-rendered
 visual comparisons or production networking tests.
 
+## Implemented Yjs editor slice
+
+The shared Word editor now exposes `startYjsCollaboration(session, options)`,
+`reconnectCollaboration()` and `resyncCollaboration()`. The Word mapping lives
+in `src/core/docx/ui`, over the stable Yjs 13 ProseMirror binding; provider
+lifecycle, identities, sanitization and asset routing are reused from `collab`.
+The shared asset router now handles raw binary payloads without changing its
+existing string/version-counter contract. The UI reuses localized cursor DOM
+and the existing image cache. No Office logic was added to framework adapters.
+
+Body text, formatting and revision marks synchronize through a Y.XmlFragment;
+root page and section attributes use a separate map. Bootstrap requires actual
+provider synchronization, matching source package identity and one designated
+creator. Read-only peers cannot publish local document transactions. Local undo,
+relative cursor positions and history across detach/remount are covered. New
+picture parts synchronize separately and survive export and stopping while
+unmounted. The host retains ownership of the provider/session.
+
+The browser convergence and export contract passed in all six framework mounts.
+Core and UI regressions also cover simultaneous first insertions in empty
+paragraphs, formatting, page settings, recovery, loaded opaque parts and new
+picture bytes. This is bounded evidence, not a complete M365 comparison. The
+matching loaded package remains necessary for styles, notes, comments and
+existing assets. Editing outside the body and structural table commands remain
+disabled; canonical multi-author saving, authorization and persistence remain
+host responsibilities. See `viewers/docx/docs/collaboration.md` for the API and
+limitations.
+
 ## Next implementation sequence
 
-1. Use the consolidated editor in `src/ui/src/docx` and headless Word helpers in
-   `src/core/docx/ui`, preserving existing APIs and the six thin bindings.
-2. Add opt-in Yjs collaboration to that single editor using
-   [y-prosemirror](https://github.com/yjs/y-prosemirror), the existing Word schema,
-   and shared CollabSession/provider lifecycle. Keep the authority-step mode
-   available and prevent both engines from controlling one editor state.
-3. Use Yjs relative positions for selections and collaborative undo restricted to
-   local changes. Seed only after initial sync, define late-join and file-load
-   policy, and test concurrent text/formatting edits and offline reconnects before
-   exposing richer table commands. Include headers, footnotes and comments in the
-   schema/ownership design rather than synchronizing only the body silently.
-4. Define package/media bootstrap, authenticated provider permissions,
-   persistence and canonical export contracts. The current client role is
-   advisory; neither provider sync nor awareness proves server authorization or
-   durable persistence.
-5. Establish a Word-authored corpus with Word-rendered pages and semantic
-   expectations. Gate each feature on import diagnostics, edit/undo, export,
-   save/reopen preservation, measured layout tolerances and all six bindings.
+1. Extend collaboration to comments, note content, headers/footers, style and
+   numbering definitions, using granular mappings and explicit conflict rules.
+   Add granular table transactions before enabling structural table editing.
+2. Define full package bootstrap, authenticated provider permissions,
+   persistence and canonical export contracts. A client role or document ID
+   is not server authorization or proof of matching source bytes.
+3. Establish a corpus authored and rendered by current Microsoft 365 Word.
+   Record the Office build, fonts, semantic expectations and measured layout
+   tolerances. Import/edit/undo/export/save-reopen and all six bindings must be
+   checked for every feature.
+4. Replace continuous-section approximations and develop editable pages with
+   caret, selection, IME and keyboard contracts.
+5. Fill DrawingML, chart, SmartArt, equations, proofing, references and protection
+   gaps through shared core areas and one shared Word UI.
 
-End-to-end Word Yjs editing, editable pages and 1:1 Word parity remain unfinished.
-The first slice improves the shared foundation without advertising them as done.
+Full M365 Word parity remains unfinished and must not be claimed without this
+reference evidence.

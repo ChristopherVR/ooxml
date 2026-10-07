@@ -1,5 +1,8 @@
 import { applyShellLabels } from './shell-labels';
 import { EditorState } from 'prosemirror-state';
+import { docToModel } from './model-adapter';
+import { schema } from './schema';
+import { refreshWordYjsPresence } from 'ooxml-core/docx/ui';
 import type { DocumentModel } from 'ooxml-core/docx';
 import { createDocument } from 'ooxml-core/docx';
 import { loadDocument } from 'ooxml-core/docx/load';
@@ -148,22 +151,8 @@ export class DocxEditorElement extends DocxEditorApi {
 		applyShellLabels(this, paper, core.locale);
 		core.refreshControls();
 		core.collab.presence?.relocalize();
+		if (core.collab.yjs && core.view) core.view.dispatch(refreshWordYjsPresence(core.view.state));
 		reflectAttribute(this, 'locale', core.locale);
-	}
-
-	publishPresence(profile: { name: string; color: string }) {
-		if (!this.core.collab.presence)
-			throw new Error('Start collaboration before publishing presence.');
-		this.reviewAuthor = profile.name || this.reviewAuthor;
-		return this.core.collab.presence.publish(profile);
-	}
-	receivePresence(message: unknown) {
-		if (!this.core.collab.presence)
-			throw new Error('Start collaboration before receiving presence.');
-		return this.core.collab.presence.receive(message);
-	}
-	leavePresence() {
-		return this.core.collab.presence?.leave() ?? null;
 	}
 
 	get documentModel() {
@@ -181,7 +170,7 @@ export class DocxEditorElement extends DocxEditorApi {
 	}
 	set readOnly(value: boolean) {
 		this.core.readOnly = Boolean(value);
-		this.core.view?.setProps({ editable: () => !this.core.readOnly });
+		this.core.view?.setProps({ editable: () => this.core.canEditBody() });
 		if (this.core.readOnly)
 			this.core.parts.closeHeaderFooter(this.core.shell.canvas, this.core.shell.paper);
 		this.core.refreshControls();
@@ -257,13 +246,18 @@ export class DocxEditorElement extends DocxEditorApi {
 			throw new Error(
 				'Acknowledge pending collaboration edits before stopping, or explicitly discard the queue.',
 			);
+		if (core.collab.yjs) {
+			core.model = docToModel(core.collab.yjs.state(schema).doc, core.model);
+			for (const [name, part] of core.collab.yjs.media.all())
+				core.inserts.pendingMedia.set(name, part);
+		}
 		core.collab.stop();
 		core.detachedState = undefined;
 		if (this.isConnected) renderDocument(core);
 	}
 
 	private assertDocumentReplaceable() {
-		if (this.core.collab.client)
+		if (this.core.collab.active)
 			throw new Error('Stop collaboration before replacing the document.');
 	}
 
