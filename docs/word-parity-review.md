@@ -108,14 +108,14 @@ orientation changes still start a new page, matching native Word measurements.
 Print Layout limits column separators to their bands and retains per-section
 line numbering and section-page counts.
 
-Ten committed native DOCX references record paragraph page numbers and origins
+Fourteen committed native DOCX references record paragraph page numbers and origins
 from desktop Word `16.0.20430.20140`, with Arial 12 pt and exact line spacing.
 The installed licenses are 2021/2024, so this is explicit desktop Word evidence,
 not a current M365 subscription certification or a glyph/raster comparison.
-Equal-width paragraph columns now balance their final page before a continuous
+Equal and unequal-width paragraph columns now balance their final page before a continuous
 break, reusing the same paragraph flow, widow/orphan and keep-together rules.
 The native corpus verifies even and odd distributions, earlier-page overflow,
-and keep-with-next groups. Tables, unequal columns, floating pictures and
+keep-with-next groups and reversed unequal widths. Tables, floating pictures and
 explicit breaks still report unsupported balancing. Vertical alignment changes
 and shared-page footnote cases also retain reported approximations. Floats
 relative to changed margins and remaining complex layouts need native references.
