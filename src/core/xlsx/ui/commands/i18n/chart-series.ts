@@ -1,6 +1,17 @@
 import type { Translations } from './types';
 
 export const CHART_SERIES_STRINGS: Translations = {
+	Fill: ['Remplissage', 'Füllung', 'Relleno', '填充'],
+	Color: ['Couleur', 'Farbe', 'Color', '颜色'],
+	'No fill': ['Aucun remplissage', 'Keine Füllung', 'Sin relleno', '无填充'],
+	'Solid fill': ['Remplissage uni', 'Einfarbige Füllung', 'Relleno sólido', '纯色填充'],
+	'Gradient fill': ['Remplissage dégradé', 'Farbverlaufsfüllung', 'Relleno degradado', '渐变填充'],
+	'Imported fill': [
+		'Remplissage importé',
+		'Importierte Füllung',
+		'Relleno importado',
+		'导入的填充',
+	],
 	'Format Data Series': [
 		'Mettre en forme une série de données',
 		'Datenreihen formatieren',

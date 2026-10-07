@@ -1,0 +1,31 @@
+{
+	"excelVersion": "16.0",
+	"series": [
+		{
+			"rgb": 255,
+			"firstPointVisible": -1,
+			"visible": -1,
+			"index": 0,
+			"firstPointRgb": 255,
+			"brightness": 0.0
+		},
+		{
+			"rgb": 14790982,
+			"firstPointVisible": -1,
+			"visible": -1,
+			"index": 1,
+			"firstPointRgb": 14790982,
+			"brightness": 0.4000000059604645
+		},
+		{
+			"rgb": 2386713,
+			"firstPointVisible": 0,
+			"visible": 0,
+			"index": 2,
+			"firstPointRgb": 65280,
+			"brightness": 0.0
+		}
+	],
+	"accent1Rgb": 8544277,
+	"excelBuild": "20430"
+}

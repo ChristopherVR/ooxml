@@ -113,6 +113,52 @@ for (const framework of FRAMEWORKS)
 	});
 
 for (const framework of FRAMEWORKS)
+	test(`native individual series fills edit in ${framework}`, async ({ page }) => {
+		const errors = pageErrors(page);
+		const chart = await openNativeStyle(page, 209, framework);
+		await chart.locator('g[data-chart-series="1"][data-chart-point="0"] rect').dblclick();
+		const pane = editor(page).getByRole('complementary', { name: 'Format Data Series' });
+		const series = pane.getByRole('combobox', { name: 'Series', exact: true });
+		const fill = pane.getByRole('combobox', { name: 'Fill', exact: true });
+		await expect(series).toHaveValue('1');
+		await expect(fill).toHaveValue('gradient');
+		await fill.selectOption('solid');
+		await pane.getByRole('button', { name: 'Color', exact: true }).click();
+		await page.getByRole('menuitem', { name: 'Accent 1, Lighter 40%', exact: true }).click();
+		const bytes = await editor(page).evaluate(async (node) =>
+			Array.from(await (node as unknown as { saveBytes(): Promise<Uint8Array> }).saveBytes()),
+		);
+		const saved = await loadXlsx(new Uint8Array(bytes));
+		const drawing = saved.sheets[0]!.drawings[0]!;
+		expect(drawing.kind).toBe('chart');
+		if (drawing.kind !== 'chart') throw new Error('Expected a chart');
+		expect(drawing.series[0]!.fill?.kind).toBe('gradient');
+		expect(drawing.series[1]!.drawingColor).toEqual({
+			kind: 'scheme',
+			value: 'accent1',
+			transforms: [
+				{ name: 'lumMod', value: '60000' },
+				{ name: 'lumOff', value: '40000' },
+			],
+		});
+		await fill.selectOption('none');
+		await expect(chart.locator('g[data-chart-series="1"] rect').first()).toHaveAttribute(
+			'fill',
+			'none',
+		);
+		await editor(page).evaluate((node) => (node as unknown as { undo(): void }).undo());
+		await expect(fill).toHaveValue('solid');
+		await expect(series).toHaveValue('1');
+		await series.selectOption('0');
+		await expect(fill).toHaveValue('gradient');
+		await editor(page).evaluate((node) => {
+			(node as unknown as { readOnly: boolean }).readOnly = true;
+		});
+		await expect(fill).toBeDisabled();
+		expect(errors).toEqual([]);
+	});
+
+for (const framework of FRAMEWORKS)
 	test(`native title and legend typography render in ${framework}`, async ({ page }) => {
 		const errors = pageErrors(page);
 		const chart = await openNativeStyle(page, 212, framework);

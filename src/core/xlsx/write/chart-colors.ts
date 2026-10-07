@@ -12,7 +12,7 @@ import type { DiagramColor } from '../../diagram/types';
 import { NS, children, elements, first, parseXml, type XmlElement } from '../../xml/index';
 import { sameChartColor } from '../edit/chart-colors';
 import type { ChartObject, ChartSeries } from '../model';
-import { THEME_SLOTS } from '../layout/colors';
+import { chartDrawingColor } from '../edit/chart-series-fill';
 import { RelationshipSet, type PackageWriter } from './package-writer';
 
 type Doc = ReturnType<typeof parseXml>;
@@ -25,16 +25,7 @@ export function chartSeriesFill(chart: ChartObject, series: ChartSeries, index: 
 	const palette = findChartColorPalette(chart.colorPalette ?? 10)!;
 	const choice =
 		series.drawingColor ??
-		(series.color?.rgb
-			? { kind: 'srgb' as const, value: series.color.rgb.slice(-6), transforms: [] }
-			: undefined) ??
-		(series.color?.theme !== undefined
-			? {
-					kind: 'scheme' as const,
-					value: THEME_SLOTS[series.color.theme] ?? 'accent1',
-					transforms: [],
-				}
-			: undefined) ??
+		chartDrawingColor(series.color) ??
 		chartPaletteSeriesColorChoice(
 			palette ?? findChartColorPalette(10)!,
 			index,

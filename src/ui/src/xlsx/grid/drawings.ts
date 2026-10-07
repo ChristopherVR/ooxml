@@ -18,7 +18,7 @@ import { paintSmartArt } from './smartart';
 
 interface ObjectNode extends HTMLDivElement {
 	xgSig?: string | undefined;
-	xgSeriesHit?: boolean;
+	xgSeriesHit?: number | undefined;
 }
 
 export class DrawingLayer {
@@ -76,10 +76,11 @@ export class DrawingLayer {
 					node.addEventListener('dblclick', (event) => {
 						// Pointer capture retargets dblclick to the drawing container. Keep the
 						// actual hit from pointerdown so a background click stays distinct.
-						if (!(event.currentTarget as ObjectNode).xgSeriesHit) return;
+						const series = (event.currentTarget as ObjectNode).xgSeriesHit;
+						if (series === undefined) return;
 						event.stopPropagation();
 						view.ctx.selection.set({ drawing: index });
-						void view.ctx.commands.run('chart.format-series');
+						void view.ctx.commands.run('chart.format-series', series);
 					});
 					this.#nodes.set(key, node);
 				}
@@ -177,7 +178,9 @@ export class DrawingLayer {
 		const drawing = sheet?.drawings[index];
 		if (!sheet || !drawing) return;
 		const node = event.currentTarget as ObjectNode;
-		node.xgSeriesHit = !!(event.target as Element).closest('[data-chart-series]');
+		const series = (event.target as Element).closest<SVGElement>('[data-chart-series]')?.dataset
+			.chartSeries;
+		node.xgSeriesHit = series === undefined ? undefined : Number(series);
 		view.ctx.selection.set({ drawing: index });
 		view.ctx.grid()?.focus();
 		const session = view.ctx.session();

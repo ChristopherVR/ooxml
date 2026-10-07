@@ -869,3 +869,30 @@ Validation: all 82 production browser checks passed, along with 31 shared range,
 zoom, subclassing, chart-pane, chrome and manifest regressions. The UI typecheck,
 refreshed core build and UI build passed. A real pointer drag in Playwright MCP
 changed overlap from -24 to 85; one undo restored -24.
+
+## Individual chart series fills
+
+Double-clicking a bar now opens the pane for that specific series. A Series
+selector uses the core chart view's current names and keeps its choice through
+edits and undo. Solid fill and No fill reuse core chart edits and the ribbon's
+existing theme/tint/standard color picker. Stale color menus cannot edit another
+series or workbook. Read-only and object protection disable these controls.
+
+Excel COM confirms that series-level solid/no-fill edits replace point paint
+overrides. The core helper matches this behavior while retaining series effects,
+references, untouched series and native axes. Theme tints now serialize as
+DrawingML luminance transforms instead of losing their tint. Saved/reopened COM
+measurements verify the rendered tint color independently of the implementation.
+The recording script and fixture retain the Excel version and build.
+
+Playwright MCP reviewed a full native horizontal chart, selected its second
+series, chose Accent 1 lighter 40% and downloaded it. Excel reopened the file
+with three series and brightness 0.4. All 88 production browser checks passed,
+including series selection, fill editing, saving, undo and protection across
+six bindings. All 6,111 XLSX core regressions passed before the additional COM
+fixture regression, which also passed. Core/UI typechecks and builds passed.
+
+Imported gradients remain displayed and preserved; gradient, pattern and picture
+fill authoring, point formatting, transparency, fill/effect tabs and axis
+assignment still need implementation. The pane layout and chart rendering do
+not yet establish pixel parity with Excel.

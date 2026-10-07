@@ -855,3 +855,15 @@ callbacks and existing shadow-DOM input. The chart series pane uses the same
 Lit template and stylesheet for its percentage sliders. The range helper adds
 an optional step and suppresses synthetic disabled callbacks. Chart spacing
 values, validation, saving and history remain in core.
+
+## XLSX chart series fill controls
+
+Source: ChristopherVR/ooxml at `6d3140bdc`, the legacy RGB/theme conversion in
+`src/core/xlsx/write/chart-colors.ts`. It moved into `chartDrawingColor` in
+`xlsx/edit/chart-series-fill.ts`, adding DrawingML luminance transforms for
+SpreadsheetML tints. The writer and edit helper now use one conversion.
+The pane reuses the existing `src/ui/src/xlsx/ribbon/color-grid.ts` without
+copying its theme, tint, swatch, keyboard or popover logic. Native series fill
+replacement was measured using `scripts/record-xlsx-chart-series-fill.ps1`;
+its saved/reopened Excel 16.0 build 20430 measurements are in
+`xlsx/__fixtures__/excel-chart-series-fill.json`.

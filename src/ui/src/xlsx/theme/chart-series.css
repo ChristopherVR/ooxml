@@ -52,3 +52,22 @@
 	width: 100%;
 	margin: 0 0 8px;
 }
+.xve-chart-series-fill {
+	margin-top: 20px;
+	padding-top: 18px;
+	border-top: 1px solid var(--line);
+}
+.xve-chart-series-body .xve-field:has(select),
+.xve-chart-series-body .xve-field:has(.xve-chart-series-color) {
+	grid-template-columns: 1fr minmax(100px, 1fr);
+}
+.xve-chart-series-color {
+	height: 28px;
+	background: var(--series-fill);
+	border: 1px solid var(--line);
+	cursor: pointer;
+}
+.xve-chart-series-color:disabled {
+	opacity: 0.5;
+	cursor: default;
+}
