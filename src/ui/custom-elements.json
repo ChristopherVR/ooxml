@@ -2418,7 +2418,7 @@
 					"name": "OfficeUiSmartArt",
 					"tagName": "office-ui-smartart",
 					"customElement": true,
-					"description": "`<office-ui-smartart>` draws the cached drawing of a SmartArt diagram (core `DiagramDrawing`, from `ooxml-core/diagram`) as SVG. Set `drawing` (and optionally `schemeColors`, resolved theme colours such as `{ accent1: '#4472c4' }`); `label` becomes the accessible name (`role=\"img\"`). It never re-lays-out a diagram: it shows what the producing application last computed. Approximations (preset outlines drawn as rectangles, gradient and pattern fills, 3D) are reported honestly in the `office-smartart-render` event detail and in `data-approximated` attributes, never hidden.",
+					"description": "`<office-ui-smartart>` draws the cached drawing of a SmartArt diagram (core `DiagramDrawing`, from `ooxml-core/diagram`) as SVG. Set `drawing` (and optionally `schemeColors`, resolved theme colours such as `{ accent1: '#4472c4' }`, and `schemeFonts`, the theme's `major`/`minor` Latin typefaces); `label` becomes the accessible name (`role=\"img\"`). It never re-lays-out a diagram: it shows what the producing application last computed. Approximations (preset outlines drawn as rectangles, gradient and pattern fills, 3D) are reported honestly in the `office-smartart-render` event detail and in `data-approximated` attributes, never hidden.",
 					"attributes": [
 						{
 							"name": "label"
@@ -2439,6 +2439,10 @@
 						{
 							"kind": "field",
 							"name": "schemeColors"
+						},
+						{
+							"kind": "field",
+							"name": "schemeFonts"
 						}
 					],
 					"events": [

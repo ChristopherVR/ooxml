@@ -1,0 +1,30 @@
+{
+  "diagrams": [
+    {
+      "layout": "Basic Block List",
+      "nodes": [
+        {
+          "fontSizePt": 59.0,
+          "fontColor": "#FFFFFF",
+          "fontName": "Aptos Narrow",
+          "text": "Plan"
+        },
+        {
+          "fontSizePt": 59.0,
+          "fontColor": "#FFFFFF",
+          "fontName": "Aptos Narrow",
+          "text": "Build"
+        },
+        {
+          "fontSizePt": 59.0,
+          "fontColor": "#FFFFFF",
+          "fontName": "Aptos Narrow",
+          "text": "Ship"
+        }
+      ],
+      "name": "Process Diagram"
+    }
+  ],
+  "excelBuild": "20430",
+  "excelVersion": "16.0"
+}

@@ -8,8 +8,10 @@ svg {
 	max-height: 100%;
 }
 text {
-	font-family: var(--office-font);
 	pointer-events: none;
+}
+text:not([font-family]) {
+	font-family: var(--office-font);
 }
 .empty {
 	padding: var(--office-space-2);

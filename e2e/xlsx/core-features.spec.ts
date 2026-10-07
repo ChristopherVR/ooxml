@@ -47,6 +47,12 @@ test('Excel SmartArt uses the shared renderer and declares display-only support'
 	await expect(drawing).toContainText('Plan');
 	await expect(drawing).toContainText('Build');
 	await expect(drawing).toContainText('Ship');
+	for (const text of await drawing.locator('svg text').all()) {
+		await expect(text).toHaveCSS('fill', 'rgb(255, 255, 255)');
+		expect(await text.evaluate((node) => getComputedStyle(node).fontFamily)).toContain(
+			'Aptos Narrow',
+		);
+	}
 	await expect(editor(page).locator('.xg-smartart-notice').first()).toHaveText(
 		'SmartArt (display only)',
 	);

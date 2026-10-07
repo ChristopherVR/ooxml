@@ -22,6 +22,12 @@ dependencies are `ooxml-core` (types and a few pure helpers) and `lit`, which ev
 
 ## How the elements are built
 
+`office-ui-smartart` accepts `schemeFonts` (`major` and `minor` Latin typefaces)
+alongside `schemeColors`. Cached shape font references provide inherited text
+color and font; explicit run formatting takes precedence. Color transforms and
+alpha reuse the core DrawingML resolver, with unsupported transforms reported in
+`unappliedColorTransforms` on the render report.
+
 Every element is a Lit class that reads like a component, in a folder named for what it is:
 `<name>.ts` holds the reactive properties and a `render()` template, `<name>.css` the styles (a real
 stylesheet imported as `?raw`, tokens only). The folders are `form/` (checkbox, switch, radio, select,

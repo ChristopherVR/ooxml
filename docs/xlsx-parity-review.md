@@ -452,6 +452,35 @@ all 62 browser tests passed, including the six-framework matrix.
 
 ## Evidence required for parity
 
+### Native SmartArt appearance follow-up
+
+COM found that the Basic Block List fixture uses white 59 pt Aptos Narrow text;
+the shared renderer previously inherited black shell text and the shell font.
+`office-ui-smartart` now uses each cached shape's font-reference color and theme
+Latin font, with explicit run formatting taking precedence. Its stylesheet no
+longer overrides a declared typeface. XLSX supplies its workbook's major/minor
+fonts through a format-neutral `schemeFonts` property.
+
+The same renderer now calls `resolveDrawingColor` in the shared `diagram` core
+for DrawingML colors and transforms, instead of resolving base colors again in
+UI. Alpha becomes an SVG rgba paint. Unsupported transforms are reported in
+`unappliedColorTransforms`; gradient geometry and other existing approximations
+remain reported separately. No PowerPoint product engine is imported or copied.
+
+`scripts/record-xlsx-smartart-appearance.ps1` reproduces the committed three-node
+font/color measurement against the existing native workbook with its own hidden
+Excel application. Playwright MCP confirmed white text, Aptos Narrow and a
+computed 78.6667 px font size (59 pt at 96 dpi). Browser coverage checks those
+colors and the actual computed font family. This does not establish typography
+layout, mixed runs, wrapping, effects, editing/reflow or whole-diagram pixel parity.
+
+Verification: 321 combined XLSX/SmartArt UI tests, 47 binding tests and all 62
+browser tests passed. Core/UI/viewer typechecks and builds, viewer script/import
+guards and package smoke checks passed. The shared UI tarball imported all 93
+entry points in a clean SSR consumer and registered 45 element tags in a DOM
+consumer. Generated native output remains temporary; only measurements are
+committed alongside the existing workbook fixture.
+
 Track reading, display, editing, calculation and writing separately for each feature. A retained
 part does not count as rendering or editing support. Each completed feature needs representative
 Excel-produced fixtures, behavioral assertions, editing and round-trip checks, and browser coverage

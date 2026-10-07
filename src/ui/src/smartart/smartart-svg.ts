@@ -1,4 +1,5 @@
-import { normalizeHexColor } from 'ooxml-core/color';
+import { hexToRgbChannels } from 'ooxml-core/color';
+import { resolveDrawingColor } from 'ooxml-core/diagram';
 import type {
 	DiagramColor,
 	DiagramDrawing,
@@ -18,28 +19,38 @@ export interface SmartArtRenderReport {
 	flattened3d: number;
 	/** Fill kinds drawn as a neutral placeholder (gradient is approximated by its first stop). */
 	approximatedFills: string[];
+	/** DrawingML transforms the shared resolver cannot apply yet. */
+	unappliedColorTransforms?: string[];
 }
 
 /** Theme colours the host resolved (`accent1` -> `#4472c4`); unresolved scheme colours are grey. */
 export type SchemeColors = Readonly<Record<string, string>>;
+export interface SchemeFonts {
+	major?: string;
+	minor?: string;
+}
 
 export function colorToCss(
 	color: DiagramColor | undefined,
 	scheme: SchemeColors,
+	report?: SmartArtRenderReport,
 ): string | undefined {
 	if (!color) return undefined;
-	switch (color.kind) {
-		case 'srgb':
-			return normalizeHexColor(color.value, '#808080');
-		case 'scheme':
-			return scheme[color.value] ? normalizeHexColor(scheme[color.value], '#808080') : '#9ca3af';
-		case 'system':
-			return color.fallback ? normalizeHexColor(color.fallback, '#808080') : undefined;
-		case 'preset':
-			return /^[a-z]+$/i.test(color.value) ? color.value.toLowerCase() : '#808080';
-		default:
-			return '#9ca3af';
+	const resolved = resolveDrawingColor(color, { scheme: (name) => scheme[name] });
+	const unapplied = resolved?.unapplied ?? color.transforms.map((transform) => transform.name);
+	if (report && unapplied.length)
+		report.unappliedColorTransforms = [
+			...new Set([...(report.unappliedColorTransforms ?? []), ...unapplied]),
+		];
+	if (resolved) {
+		if (resolved.alpha === 1) return resolved.hex;
+		const rgb = hexToRgbChannels(resolved.hex)!;
+		return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${resolved.alpha})`;
 	}
+	if (color.kind === 'preset')
+		return /^[a-z]+$/i.test(color.value) ? color.value.toLowerCase() : '#808080';
+	if (color.kind === 'system' && !color.fallback) return undefined;
+	return '#9ca3af';
 }
 
 function fillToCss(
@@ -49,9 +60,9 @@ function fillToCss(
 ): string {
 	if (!fill) return 'none';
 	if (fill.kind === 'none') return 'none';
-	if (fill.kind === 'solid') return colorToCss(fill.color, scheme) ?? 'none';
+	if (fill.kind === 'solid') return colorToCss(fill.color, scheme, report) ?? 'none';
 	if (!report.approximatedFills.includes(fill.kind)) report.approximatedFills.push(fill.kind);
-	if (fill.kind === 'gradient') return colorToCss(fill.stops[0]?.color, scheme) ?? 'none';
+	if (fill.kind === 'gradient') return colorToCss(fill.stops[0]?.color, scheme, report) ?? 'none';
 	return '#d1d5db';
 }
 
@@ -122,6 +133,7 @@ export function renderDiagramDrawing(
 	doc: Document,
 	drawing: DiagramDrawing,
 	scheme: SchemeColors = {},
+	fonts: SchemeFonts = {},
 ): { svg: SVGSVGElement; report: SmartArtRenderReport } {
 	const report: SmartArtRenderReport = {
 		shapeCount: drawing.shapes.length,
@@ -151,7 +163,9 @@ export function renderDiagramDrawing(
 		const body = shapeElement(doc, shape, report);
 		body.setAttribute('fill', fillToCss(shape.fill, scheme, report));
 		const stroke =
-			shape.line?.fill?.kind === 'solid' ? colorToCss(shape.line.fill.color, scheme) : undefined;
+			shape.line?.fill?.kind === 'solid'
+				? colorToCss(shape.line.fill.color, scheme, report)
+				: undefined;
 		body.setAttribute('stroke', stroke ?? 'none');
 		if (stroke)
 			body.setAttribute(
@@ -163,14 +177,20 @@ export function renderDiagramDrawing(
 			report.flattened3d += 1;
 			group.setAttribute('data-flattened-3d', '');
 		}
-		if (shape.text?.text) group.append(textElement(doc, shape, scheme));
+		if (shape.text?.text) group.append(textElement(doc, shape, scheme, fonts, report));
 		svg.append(group);
 	}
 	svg.setAttribute('viewBox', `0 0 ${Math.max(right, 1)} ${Math.max(bottom, 1)}`);
 	return { svg, report };
 }
 
-function textElement(doc: Document, shape: DiagramDrawingShape, scheme: SchemeColors): SVGElement {
+function textElement(
+	doc: Document,
+	shape: DiagramDrawingShape,
+	scheme: SchemeColors,
+	fonts: SchemeFonts,
+	report: SmartArtRenderReport,
+): SVGElement {
 	const frame = shape.textFrame ?? {
 		x: shape.frame.x,
 		y: shape.frame.y,
@@ -189,10 +209,22 @@ function textElement(doc: Document, shape: DiagramDrawingShape, scheme: SchemeCo
 	text.setAttribute('text-anchor', 'middle');
 	text.setAttribute('dominant-baseline', 'central');
 	text.setAttribute('font-size', String(sizePx));
-	text.setAttribute('fill', colorToCss(first?.color, scheme) ?? 'currentColor');
+	text.setAttribute(
+		'fill',
+		colorToCss(first?.color ?? shape.style?.font?.color, scheme, report) ?? 'currentColor',
+	);
 	if (first?.bold) text.setAttribute('font-weight', '700');
 	if (first?.italic) text.setAttribute('font-style', 'italic');
-	if (first?.typeface) text.setAttribute('font-family', first.typeface);
+	const ref = shape.style?.font?.fontIndex;
+	const inherited = ref === 'major' ? fonts.major : ref === 'minor' ? fonts.minor : undefined;
+	const typeface = first?.typeface;
+	const font =
+		typeface === '+mj-lt'
+			? fonts.major
+			: typeface === '+mn-lt'
+				? fonts.minor
+				: (typeface ?? inherited);
+	if (font) text.setAttribute('font-family', font);
 	text.textContent =
 		shape.text?.paragraphs.map((p) => p.runs.map((r) => r.text).join('')).join(' ') ?? '';
 	return text;

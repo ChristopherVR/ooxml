@@ -3,7 +3,7 @@
 // draws it; the layout is never recomputed and the content is not editable, which the object's
 // notice says. Without a cached drawing a placeholder lists the diagram's text nodes.
 import { THEME_SLOTS, type SmartArtObject, type ThemePalette } from 'ooxml-core/xlsx';
-import { defineSmartArt, type SchemeColors } from '../../index';
+import { defineSmartArt, type SchemeColors, type SchemeFonts } from '../../index';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { h } from './dom.js';
 
@@ -51,11 +51,13 @@ export function paintSmartArt(
 		const art = doc.createElement('office-ui-smartart') as HTMLElement & {
 			drawing?: SmartArtObject['diagram'];
 			schemeColors?: SchemeColors;
+			schemeFonts?: SchemeFonts;
 		};
 		art.setAttribute('label', label);
 		art.style.width = '100%';
 		art.style.height = '100%';
 		art.schemeColors = smartArtSchemeColors(theme);
+		art.schemeFonts = theme ? { major: theme.majorFont, minor: theme.minorFont } : {};
 		art.drawing = diagram;
 		node.append(art);
 	} else {
