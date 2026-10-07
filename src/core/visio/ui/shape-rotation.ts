@@ -1,18 +1,37 @@
 import type { VisioEdit } from '../edit';
 import type { VisioPage, VisioShape } from '../model';
 /** The model-level scope of local rotation. Source protections remain enforced by core edits. */
-export function visioLocalRotationShape(page: VisioPage, shapeId: string): VisioShape | undefined {
+export function visioLocalRotationShape(
+	page: VisioPage,
+	shapeId: string,
+	includeGroups = true,
+): VisioShape | undefined {
 	const shape = page.shapes.find((shape) => shape.id === shapeId);
+	if (!shape || shape.hidden) return undefined;
+	const pending = [shape],
+		ids = new Set<string>();
+	while (pending.length) {
+		const node = pending.pop()!;
+		if (
+			ids.size >= 10000 ||
+			ids.has(node.id) ||
+			node.masterId ||
+			!node.rotation ||
+			!(node.width > 0 && node.height > 0) ||
+			![...node.transform, node.rotation.pinX, node.rotation.pinY, node.rotation.angle].every(
+				Number.isFinite,
+			) ||
+			(node.kind === 'group'
+				? !includeGroups || !node.children.length
+				: node.kind !== 'shape' || !!node.children.length)
+		)
+			return undefined;
+		ids.add(node.id);
+		pending.push(...node.children);
+	}
 	if (
-		!shape ||
-		shape.kind !== 'shape' ||
-		shape.children.length ||
-		shape.masterId ||
-		shape.hidden ||
-		!shape.rotation ||
-		!(shape.width > 0 && shape.height > 0) ||
 		page.connectors.some(
-			(connection) => connection.fromShapeId === shape.id || connection.toShapeId === shape.id,
+			(connection) => ids.has(connection.fromShapeId) || ids.has(connection.toShapeId),
 		)
 	)
 		return undefined;

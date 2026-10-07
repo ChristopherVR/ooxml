@@ -43,6 +43,45 @@ it('shares local rotation admission and preserves the sign at half-turn boundari
 	delete shape.rotation;
 	expect(visioQuarterTurnCommand(page, shape.id, 'left')).toBeUndefined();
 });
+it('admits local nested groups for rotation while retaining leaf-only flip admission', () => {
+	const page = structuredClone(demoDocument.pages[0]!);
+	const leaf = structuredClone(page.shapes[0]!);
+	leaf.rotation = { pinX: 1, pinY: 1, angle: 0 };
+	const group = { ...structuredClone(leaf), id: 'group', kind: 'group' as const, children: [leaf] };
+	const outer = { ...structuredClone(group), id: 'outer', children: [group] };
+	page.shapes = [outer];
+	expect(visioLocalRotationShape(page, outer.id)).toBe(outer);
+	expect(visioLocalRotationShape(page, outer.id, false)).toBeUndefined();
+	expect(visioQuarterTurnCommand(page, outer.id, 'left')!.angle).toBe(Math.PI / 2);
+	leaf.masterId = '1';
+	expect(visioLocalRotationShape(page, outer.id)).toBeUndefined();
+	delete leaf.masterId;
+	page.connectors = [{ fromShapeId: leaf.id, toShapeId: 'x', fromCell: 'BeginX', toCell: 'PinX' }];
+	expect(visioLocalRotationShape(page, outer.id)).toBeUndefined();
+});
+for (const variable of [
+	'VISIO_NATIVE_GROUP_QUARTER_LEFT_DIR',
+	'VISIO_NATIVE_GROUP_QUARTER_RIGHT_DIR',
+]) {
+	it.skipIf(!process.env[variable])(`matches native group quarter turn ${variable}`, async () => {
+		const directory = process.env[variable]!;
+		const source = await readFile(join(directory, 'source.vsdx'));
+		const page = (await parseVsdx(source)).pages[0]!;
+		const evidence = JSON.parse(await readFile(join(directory, 'evidence.json'), 'utf8'));
+		const command = visioQuarterTurnCommand(
+			page,
+			evidence.source.id,
+			evidence.quarterTurn === 'Left' ? 'left' : 'right',
+		)!;
+		expect(command.angle).toBeCloseTo(evidence.rotated.cells.Angle.value, 12);
+		const actual = (await parseVsdx((await editVsdx(source, [command])).bytes)).pages[0]!
+			.shapes[0]!;
+		const native = (await parseVsdx(await readFile(join(directory, 'rotated.vsdx')))).pages[0]!
+			.shapes[0]!;
+		expect(actual.children).toEqual(native.children);
+		for (let i = 0; i < 6; i++) expect(actual.transform[i]).toBeCloseTo(native.transform[i]!, 12);
+	});
+}
 for (const variable of [
 	'VISIO_NATIVE_QUARTER_LEFT_DIR',
 	'VISIO_NATIVE_QUARTER_RIGHT_PIN_DIR',

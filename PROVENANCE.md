@@ -2040,3 +2040,27 @@ moved/overlay references through Change Chart Type; Excel reopens/resaves and
 reopens both exports at Left=40 points, Top=60/120 points and
 IncludeInLayout=true/false unchanged. Existing PowerPoint layout integration
 tests continue to exercise the extracted resolver.
+
+## Shared local group rotation interaction admission
+
+Source: ChristopherVR/ooxml at `cd7e429a2`,
+`src/core/visio/ui/shape-rotation.ts`, `src/ui/src/visio/viewer-commands.ts`,
+the existing geometry controls, rotation gesture and renderer-backed preview.
+The model helper now scans bounded local 2D trees, including descendant master
+and glue checks. Core source admission remains authoritative for formulas and
+protection. The same helper feeds pointer handles and quarter-turn commands;
+its leaf-only mode retains flip admission. No group-specific gesture, preview,
+history or framework implementation is added.
+
+The native group recorder reuses Selection.Rotate from the existing line
+recorder for left/right quarter turns. Owned Visio captures include a custom
+pivot and a nested scaled group. The existing six-binding API/history/reload
+matrix is extended to controls, actual pointer gestures with cancellation and
+preview/source isolation, and nested quarter-turn menus. Independent native
+parent/descendant matrices remain the geometric reference. Browser pointer
+rounding is bounded explicitly; native snapping/selection gestures, other group
+edits, exact paint and native Visio reopening remain open. The shared submenu
+manifest is refreshed from existing component definitions. Endpoint/rotation
+overlays also reuse the canvas change signal and relevant viewer state changes,
+avoiding needless subtree scans on search updates; the existing regression
+checks this behavior.

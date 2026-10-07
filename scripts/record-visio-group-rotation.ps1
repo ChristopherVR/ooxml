@@ -4,7 +4,8 @@ param(
  [double]$PageScale=1,
  [double]$RotationDegrees=30,
  [switch]$Nested,
- [switch]$OffCentrePin
+ [switch]$OffCentrePin,
+ [ValidateSet('None','Left','Right')][string]$QuarterTurn='None'
 )
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'visio-capture-geometry.ps1')
@@ -45,11 +46,17 @@ try {
  $source=Get-CaptureTree $group
  $document.SaveAs((Join-Path $directory 'source.vsdx')) | Out-Null
  $page.Export((Join-Path $directory 'source-page.svg'))
- $group.CellsU('Angle').ResultIU=$RotationDegrees*[Math]::PI/180
+ if($QuarterTurn -eq 'None'){$group.CellsU('Angle').ResultIU=$RotationDegrees*[Math]::PI/180}
+ else {
+  $selection=$page.CreateSelection(0,256)
+  $selection.Select($group,2)
+  $degrees=if($QuarterTurn -eq 'Left'){90}else{-90}
+  $selection.Rotate($degrees,'deg',$false,2)
+ }
  $rotated=Get-CaptureTree $group
  $document.SaveAs((Join-Path $directory 'rotated.vsdx')) | Out-Null
  $page.Export((Join-Path $directory 'rotated-page.svg'))
- $evidence=[ordered]@{application='Microsoft Visio';version=$app.Version;drawingScale=$DrawingScale;pageScale=$PageScale;source=$source;rotated=$rotated}
+ $evidence=[ordered]@{application='Microsoft Visio';version=$app.Version;drawingScale=$DrawingScale;pageScale=$PageScale;quarterTurn=$QuarterTurn;source=$source;rotated=$rotated}
  [IO.File]::WriteAllText((Join-Path $directory 'evidence.json'),($evidence | ConvertTo-Json -Depth 16),[Text.UTF8Encoding]::new($false))
  Write-Output $directory
 } finally {

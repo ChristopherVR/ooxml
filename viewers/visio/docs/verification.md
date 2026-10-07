@@ -1,6 +1,53 @@
 # Verification record
 
-Status: local Windows development evidence, 2026-10-03. Full Microsoft Visio parity is not established.
+Status: local Windows development evidence, 2026-10-08. Full Microsoft Visio parity is not established.
+
+## Native local group rotation interactions, 2026-10-08
+
+Two further owned Visio 16 references use Selection.Rotate on the parent group:
+
+- Left 90 degrees with a custom pivot:
+  visio-group-rotation-1096573a39cf447e9f9c53389e664d89.
+- Right 90 degrees with nested descendants and drawing-to-page ratio 0.5:
+  visio-group-rotation-64d1e9b2b8b1485695a818b77cbba34e.
+
+The shared model admission now checks the full local 2D tree before exposing the
+existing rotation pointer handle and quarter-turn menu. The existing angle
+control already forwards the shared command. Flips explicitly retain leaf-only
+admission. Source protections/formula proof remain in the atomic core edit.
+No group-specific renderer, pointer lifecycle or history path is added.
+
+The core suite passed 2,242 checks, with 145 optional checks skipped. Focused
+core checks prove both native group quarter turns and retain flip/refusal scope.
+The wider UI run exposed stale shared submenu manifest metadata and overlay
+rescans while typing a search query. Metadata was regenerated from the shared
+component definitions; endpoint/rotation overlays now refresh only for relevant
+canvas, selection, zoom, loading or edit-availability changes. The focused
+manifest/search/rotation-preview rerun passed all 14 checks. The initial broad UI
+run passed 2,174 checks, skipped seven, and failed those two checks before their
+fixes; the PowerPoint stage of that combined script did not run. The initial
+browser matrix passed 36 API/pointer/menu workflows but all 12 control tests
+attempted to fill the collapsed edit panel. The test now opens that panel first.
+Another focused run passed 22 command, geometry-control and handle-event checks.
+After rebuilding the UI, the clean 48-workflow browser run passed: twelve each
+for API, angle controls, actual pointer gestures and native quarter-turn menus,
+across all six bindings. Each compares every native descendant pose, unchanged
+child models, byte-exact undo/redo, public export and saved reload. Pointer
+previews retain child local matrices and remain source-free and cancellable.
+Root/UI/viewer typechecks and source import audit passed (zero .js TypeScript
+imports and zero unresolved relative imports).
+After rebasing onto main's shared overlay cleanup and manifest refresh, builds
+and typechecks passed again. All 36 focused UI checks passed, as did 16 focused
+core checks (14 older optional capture checks skipped). The final twelve native
+group pointer workflows passed across all six bindings with the combined code.
+
+Browser pointer comparisons bound target-angle error below 2e-6 radians due to
+Chromium pointer coordinate rounding. Descendant native matrix bounds derive
+from that observed angle error and the maximum distance to the saved parent pin.
+Cancellation and preview/source isolation retain original source bytes. Native
+assignments supply geometric references, not proof of native mouse snapping or
+group-selection semantics. Other group edits, masters/glue, exact paint and
+native Visio reopen acceptance remain open.
 
 ## Native local group API rotation, 2026-10-08
 

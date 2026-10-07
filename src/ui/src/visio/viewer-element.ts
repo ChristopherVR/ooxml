@@ -53,6 +53,7 @@ export class VisioViewerElement extends BaseElement {
 	#commands: ViewerCommands;
 	#lineEndpoints: ViewerLineEndpoints;
 	#rotationHandle: ViewerRotationHandle;
+	#handleState: ViewerState | undefined;
 	#rulers: Rulers;
 	#canvas: ViewerCanvas;
 	#panZoom: ViewerPanZoom;
@@ -405,8 +406,20 @@ export class VisioViewerElement extends BaseElement {
 		if (this.#suspended) return;
 		const page = state.document?.pages[state.pageIndex];
 		const changed = this.#canvas.render(state);
-		this.#lineEndpoints.render(state);
-		this.#rotationHandle.render(state);
+		const previous = this.#handleState;
+		this.#handleState = state;
+		if (
+			changed ||
+			!previous ||
+			previous.zoom !== state.zoom ||
+			previous.selectedShape !== state.selectedShape ||
+			previous.loading !== state.loading ||
+			previous.edit.busy !== state.edit.busy ||
+			previous.edit.sourceAvailable !== state.edit.sourceAvailable
+		) {
+			this.#lineEndpoints.render(state);
+			this.#rotationHandle.render(state);
+		}
 		if (changed) this.#announcement = undefined;
 		this.#zoomSlider.value = Math.round(state.zoom * 100);
 		this.#zoomSlider.disabled = !page;

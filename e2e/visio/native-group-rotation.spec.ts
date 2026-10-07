@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { parseVsdx, type VisioEdit } from 'ooxml-core/visio';
 import { composeAffine, IDENTITY_AFFINE, type AffineMatrix } from 'ooxml-core/geometry';
+import { rotateGroup } from './group-rotation-interaction';
 interface Tree {
 	id: string;
 	transform: number[];
@@ -15,7 +16,7 @@ type Host = HTMLElement & {
 	redo(): Promise<void>;
 	exportVsdx(): { bytes: Uint8Array };
 };
-async function compareDom(viewer: Locator, node: Tree, ratio: number): Promise<void> {
+async function compareDom(viewer: Locator, node: Tree, ratio: number, error = 0): Promise<void> {
 	const transforms = await viewer.locator(`[data-shape-id="${node.id}"]`).evaluate((element) => {
 		const result: number[][] = [];
 		for (let ancestor: Element | null = element; ancestor; ancestor = ancestor.parentElement) {
@@ -46,7 +47,9 @@ async function compareDom(viewer: Locator, node: Tree, ratio: number): Promise<v
 		]);
 	}
 	for (let i = 0; i < 6; i++)
-		expect(authored[i]).toBeCloseTo(node.transform[i]! * (i >= 4 ? ratio : 1), 12);
+		expect(Math.abs(authored[i]! - node.transform[i]! * (i >= 4 ? ratio : 1))).toBeLessThan(
+			error + 5e-13,
+		);
 	const matrix = await viewer.locator(`[data-shape-id="${node.id}"]`).evaluate((element) => {
 		const shape = element as SVGGraphicsElement,
 			paper = shape.closest('svg')!;
@@ -58,12 +61,22 @@ async function compareDom(viewer: Locator, node: Tree, ratio: number): Promise<v
 	});
 	for (let i = 0; i < 6; i++)
 		// Chromium exposes float-rounded screen matrices; authored geometry is checked above.
-		expect(matrix[i]).toBeCloseTo(node.transform[i]! * (i >= 4 ? ratio : 1), 5);
-	for (const child of node.children) await compareDom(viewer, child, ratio);
+		expect(Math.abs(matrix[i]! - node.transform[i]! * (i >= 4 ? ratio : 1))).toBeLessThan(
+			error + 5e-6,
+		);
+	for (const child of node.children) await compareDom(viewer, child, ratio, error);
 }
-for (const variable of ['VISIO_NATIVE_GROUP_ROTATE_DIR', 'VISIO_NATIVE_GROUP_ROTATE_NESTED_DIR'])
+const cases = [
+	...['VISIO_NATIVE_GROUP_ROTATE_DIR', 'VISIO_NATIVE_GROUP_ROTATE_NESTED_DIR'].flatMap((variable) =>
+		(['api', 'control', 'pointer'] as const).map((mode) => ({ variable, mode })),
+	),
+	...['VISIO_NATIVE_GROUP_QUARTER_LEFT_DIR', 'VISIO_NATIVE_GROUP_QUARTER_RIGHT_DIR'].map(
+		(variable) => ({ variable, mode: 'menu' as const }),
+	),
+];
+for (const { variable, mode } of cases)
 	for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'])
-		test(`${framework}: native group API rotation/history/reload (${variable})`, async ({
+		test(`${framework}: native group ${mode} rotation/history/reload (${variable})`, async ({
 			page,
 		}) => {
 			const directory = process.env[variable];
@@ -74,6 +87,7 @@ for (const variable of ['VISIO_NATIVE_GROUP_ROTATE_DIR', 'VISIO_NATIVE_GROUP_ROT
 				rotated: Tree;
 				pageScale: number;
 				drawingScale: number;
+				quarterTurn?: 'Left' | 'Right';
 			};
 			const ratio = evidence.pageScale / evidence.drawingScale;
 			await page.goto(framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`);
@@ -85,12 +99,23 @@ for (const variable of ['VISIO_NATIVE_GROUP_ROTATE_DIR', 'VISIO_NATIVE_GROUP_ROT
 			await expect(page.locator('#file-name')).toHaveText('group.vsdx');
 			const viewer = page.locator('visio-viewer');
 			await compareDom(viewer, evidence.source, ratio);
-			await viewer.evaluate(
-				(element, { id, angle }) =>
-					(element as Host).applyEdits([{ type: 'rotate-shape', pageId: '0', shapeId: id, angle }]),
-				{ id: evidence.source.id, angle: evidence.rotated.cells.Angle!.value },
-			);
-			await compareDom(viewer, evidence.rotated, ratio);
+			if (mode === 'api')
+				await viewer.evaluate(
+					(element, { id, angle }) =>
+						(element as Host).applyEdits([
+							{ type: 'rotate-shape', pageId: '0', shapeId: id, angle },
+						]),
+					{ id: evidence.source.id, angle: evidence.rotated.cells.Angle!.value },
+				);
+			else
+				await rotateGroup(
+					page,
+					viewer,
+					evidence.source.id,
+					evidence.rotated.cells.Angle!.value,
+					mode,
+					evidence.quarterTurn,
+				);
 			const exported = async () =>
 				Buffer.from(
 					await viewer.evaluate((element) => Array.from((element as Host).exportVsdx().bytes)),
@@ -98,6 +123,19 @@ for (const variable of ['VISIO_NATIVE_GROUP_ROTATE_DIR', 'VISIO_NATIVE_GROUP_ROT
 			const saved = await exported();
 			const originalModel = await parseVsdx(source),
 				model = await parseVsdx(saved);
+			const angleError = Math.abs(
+				model.pages[0]!.shapes[0]!.rotation!.angle - evidence.rotated.cells.Angle!.value,
+			);
+			expect(angleError).toBeLessThan(mode === 'pointer' ? 2e-6 : 5e-13);
+			const pinX = evidence.rotated.cells.PinX!.value * ratio,
+				pinY = evidence.rotated.cells.PinY!.value * ratio;
+			const radius = (node: Tree): number =>
+				Math.max(
+					Math.hypot(node.transform[4]! * ratio - pinX, node.transform[5]! * ratio - pinY),
+					...node.children.map(radius),
+				);
+			const error = mode === 'pointer' ? angleError * (1 + radius(evidence.rotated)) : 0;
+			await compareDom(viewer, evidence.rotated, ratio, error);
 			expect(model.pages[0]!.shapes[0]!.children).toEqual(
 				originalModel.pages[0]!.shapes[0]!.children,
 			);
@@ -108,7 +146,9 @@ for (const variable of ['VISIO_NATIVE_GROUP_ROTATE_DIR', 'VISIO_NATIVE_GROUP_ROT
 			) => {
 				const world = composeAffine(parent, shape.transform);
 				for (let i = 0; i < 6; i++)
-					expect(world[i]).toBeCloseTo(node.transform[i]! * (i >= 4 ? ratio : 1), 12);
+					expect(Math.abs(world[i]! - node.transform[i]! * (i >= 4 ? ratio : 1))).toBeLessThan(
+						error + 5e-13,
+					);
 				for (const child of shape.children)
 					compare(
 						child,
@@ -122,12 +162,12 @@ for (const variable of ['VISIO_NATIVE_GROUP_ROTATE_DIR', 'VISIO_NATIVE_GROUP_ROT
 			await compareDom(viewer, evidence.source, ratio);
 			await viewer.evaluate((element) => (element as Host).redo());
 			expect(await exported()).toEqual(saved);
-			await compareDom(viewer, evidence.rotated, ratio);
+			await compareDom(viewer, evidence.rotated, ratio, error);
 			await page.locator('#file').setInputFiles({
 				name: 'group-copy.vsdx',
 				mimeType: 'application/vnd.ms-visio.drawing',
 				buffer: saved,
 			});
 			await expect(page.locator('#file-name')).toHaveText('group-copy.vsdx');
-			await compareDom(viewer, evidence.rotated, ratio);
+			await compareDom(viewer, evidence.rotated, ratio, error);
 		});

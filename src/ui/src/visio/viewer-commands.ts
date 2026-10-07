@@ -206,7 +206,7 @@ export class ViewerCommands {
 		const command =
 			action.type === 'rotate'
 				? visioQuarterTurnCommand(page, state.selectedShape.id, action.direction)
-				: visioLocalRotationShape(page, state.selectedShape.id)
+				: visioLocalRotationShape(page, state.selectedShape.id, false)
 					? {
 							type: 'flip-shape' as const,
 							pageId: page.id,
@@ -303,8 +303,13 @@ export class ViewerCommands {
 			!!page &&
 			!!state.selectedShape &&
 			!!visioLocalRotationShape(page, state.selectedShape.id);
-		for (const name of ['rotate-left', 'rotate-right', 'flip-horizontal', 'flip-vertical'])
-			button(name).disabled = !rotating;
+		for (const name of ['rotate-left', 'rotate-right']) button(name).disabled = !rotating;
+		const flipping =
+			rotating &&
+			!!page &&
+			!!state.selectedShape &&
+			!!visioLocalRotationShape(page, state.selectedShape.id, false);
+		for (const name of ['flip-horizontal', 'flip-vertical']) button(name).disabled = !flipping;
 		root.querySelector<RibbonCommand>('[data-menu="rotate"]')!.disabled = !rotating;
 		root.querySelector<RibbonCommand>('[data-menu="position"]')!.disabled = !rotating;
 		button('undo').disabled = !state.edit.canUndo || state.edit.busy || state.loading;
