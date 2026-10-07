@@ -14,6 +14,37 @@ afterEach(() => {
 });
 
 describe('teams client', () => {
+	it('restores followed threads per user and workspace and follows the root', async () => {
+		const values = new Map<string, string>();
+		const storage = {
+			getItem: (key: string) => values.get(key) ?? null,
+			setItem: (key: string, value: string) => {
+				values.set(key, value);
+			},
+		};
+		const client = make('ada', 'follow-persistence', { storage });
+		client.createChannel('Followed');
+		await tick();
+		const channel = client.getState().selectedChannelId;
+		const root = client.workspace.chat.post(channel, { text: 'Root' })!;
+		const reply = client.workspace.chat.post(channel, { text: 'Reply', replyTo: root.id })!;
+		expect(client.followThread(channel, reply.id, true)).toBe(true);
+		client.openThread(reply.id);
+		await tick();
+		expect(client.getState().threadFollowed).toBe(true);
+		expect(client.getState().followedThreads[0]?.root.id).toBe(root.id);
+		await tick(900);
+		const restored = make('ada', 'follow-persistence', { storage });
+		await tick();
+		expect(restored.getState().followedThreads).toHaveLength(1);
+		expect(make('bob', 'follow-persistence', { storage }).getState().followedThreads).toEqual([]);
+		expect(make('ada', 'other-follow-workspace', { storage }).getState().followedThreads).toEqual(
+			[],
+		);
+		expect(restored.followThread(channel, root.id, false)).toBe(true);
+		await tick();
+		expect(restored.getState().followedThreads).toEqual([]);
+	});
 	it('keeps thread selection local and resets it when switching channels', async () => {
 		const client = make('ada', 'store-threads');
 		client.createChannel('Source');

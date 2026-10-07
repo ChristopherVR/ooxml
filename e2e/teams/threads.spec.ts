@@ -28,6 +28,13 @@ test('opens channel threads, synchronizes replies and retains deleted parents', 
 	await expect(thread.getByRole('heading', { name: 'Thread', exact: true })).toBeFocused();
 	await expect(thread.getByText('Initial review', { exact: true })).toBeVisible();
 	await expect(thread.getByText('Nested review', { exact: true })).toBeVisible();
+	await thread.getByRole('button', { name: 'Follow thread', exact: true }).click();
+	await expect(thread.getByRole('button', { name: 'Unfollow thread', exact: true })).toBeVisible();
+	await page.getByRole('button', { name: 'Followed threads', exact: true }).click();
+	const followed = page.getByRole('region', { name: 'Followed threads', exact: true });
+	await expect(followed.getByText('Budget discussion', { exact: true })).toBeVisible();
+	await followed.getByRole('button', { name: 'Open thread in Threads: Budget discussion' }).click();
+	await expect(thread.getByText('Nested review', { exact: true })).toBeVisible();
 	await thread.getByRole('textbox', { name: 'Message', exact: true }).fill('Thread response');
 	await thread.getByRole('button', { name: 'Send message', exact: true }).click();
 	await expect(thread.getByText('Thread response', { exact: true })).toBeVisible();
@@ -52,6 +59,13 @@ test('opens channel threads, synchronizes replies and retains deleted parents', 
 		client.workspace.chat.post(ids.channel, { text: 'Peer review', replyTo: ids.root });
 	}, ids);
 	await expect(thread.getByText('Peer review', { exact: true })).toBeVisible();
+	await page.getByRole('button', { name: 'Followed threads', exact: true }).click();
+	await expect(followed.getByText(/4 replies/)).toBeVisible();
+	await page.reload();
+	await expect(page.getByRole('button', { name: 'Followed threads', exact: true })).toBeVisible();
+	await page.getByRole('button', { name: 'Followed threads', exact: true }).click();
+	await followed.getByRole('button', { name: 'Open thread in Threads: Budget discussion' }).click();
+	await expect(thread.getByRole('button', { name: 'Unfollow thread', exact: true })).toBeVisible();
 	await page.screenshot({ path: test.info().outputPath('channel-thread.png') });
 	await page.setViewportSize({ width: 800, height: 800 });
 	await expect(page.locator('.conversation-main')).toBeHidden();
@@ -73,5 +87,10 @@ test('opens channel threads, synchronizes replies and retains deleted parents', 
 	await page.getByRole('searchbox', { name: 'Search messages', exact: true }).fill('Peer review');
 	await page.getByRole('listbox', { name: 'Search results' }).getByRole('button').click();
 	await expect(thread.getByText('Peer review', { exact: true })).toBeVisible();
+	await thread.getByRole('button', { name: 'Unfollow thread', exact: true }).click();
+	await page.getByRole('button', { name: 'Followed threads', exact: true }).click();
+	await expect(
+		followed.getByText('No followed threads yet. Open a thread and choose Follow thread.'),
+	).toBeVisible();
 	await peer.close();
 });

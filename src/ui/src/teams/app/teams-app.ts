@@ -36,6 +36,7 @@ import {
 } from './storage.js';
 import css from './teams-app.css?raw';
 import { threadPane } from './thread-pane.js';
+import { followedThreads } from './followed-threads.js';
 
 export type { FileUploader } from 'ooxml-core/teams';
 export interface OpenFileDetail {
@@ -53,12 +54,13 @@ export interface OpenFileDetail {
 }
 export type FileOpeners = Partial<Record<OfficeKind, (detail: OpenFileDetail) => void>>;
 
-type RailView = 'teams' | 'calls' | 'files';
+type RailView = 'teams' | 'calls' | 'files' | 'followed';
 type Panel = '' | 'chat' | 'people';
 const RAIL = [
 	{ id: 'teams', label: 'Teams', icon: 'users' },
 	{ id: 'calls', label: 'Calls', icon: 'phone' },
 	{ id: 'files', label: 'Files', icon: 'folder' },
+	{ id: 'followed', label: 'Followed threads', icon: 'chat' },
 ] as const;
 const AVAILABILITY = ['available', 'busy', 'away'] as const;
 
@@ -483,6 +485,10 @@ export class TeamsApp extends LitElement {
 				@teams-preview-close=${this.closePreview}
 			></teams-content-preview>`;
 		if (this.rail === 'files') return this.allFiles(s);
+		if (this.rail === 'followed' && this.teams.client)
+			return followedThreads(s, this.teams.client, (thread) => {
+				if (this.selectChannel(thread.channelId)) void this.openThread(thread.root.id);
+			});
 		if (s.call && this.meeting) return this.meetingView(s);
 		return html`
 			${

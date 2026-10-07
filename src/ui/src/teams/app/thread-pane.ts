@@ -13,6 +13,12 @@ export function threadPane(
 	return html`<aside class="thread-pane" aria-label="Thread">
 		<header class="thread-head">
 			<h2 tabindex="-1" data-thread-heading>Thread</h2>
+			<button
+				type="button"
+				@click=${() => client.followThread(state.selectedChannelId, thread.root.id, !state.threadFollowed)}
+			>
+				${state.threadFollowed ? 'Unfollow thread' : 'Follow thread'}
+			</button>
 			<button type="button" @click=${close}>Close thread</button>
 		</header>
 		<office-ui-chat-list
