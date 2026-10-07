@@ -368,6 +368,44 @@ core ESM/CJS/declaration builds, the UI build and all seven binding package buil
 passed. Excel also opened and saved a library-authored legacy bar with explicit
 20/80 lengths, reporting those same percentages through its native object model.
 
+## Advanced data-bar percentages and context follow-up
+
+Native measurements now cover seven additional percentage pairs: 20/80, 10/90,
+40/40, 0/0, 5/55, 40/80 and 100/100. These 504 cases exposed and fixed minimum
+lengths around zero, percentage-dependent automatic axis positions, one-sided
+negative axis placement and capped middle-axis lengths. A nonzero minimum gives
+zero a half-minimum-length bar. Equal percentage bounds and zero/full lengths
+are included. The existing shared geometry helper applies the resulting rules.
+
+Another 108 cases record contextual direction on both sheet directions and all
+three cell reading orders. They retain native worksheet and style XML as well as
+PDF vectors. Context follows the sheet's RTL setting even when a cell's reading
+order differs, confirming the existing fallback. That measured behavior agrees
+with [Microsoft's spreadsheet rendering protocol](https://learn.microsoft.com/en-us/openspecs/sharepoint_protocols/ms-exspxml3/a32e609d-a33b-460a-b2db-b1153730699b).
+Together with the earlier 72 cases, 684 native geometry comparisons pass.
+
+Logical length percentages now come from the linked x14 rule on read. One shared
+resolver supplies layout and the legacy fallback writer. Typed edits update the
+extension when saving; full-width 0/100 bars retain Excel's required legacy 10/90
+fallback. Editing, clipboard paste, undo/redo and save/reload tests cover those
+representations. Excel accepted four library-authored edits (5/55, 0/100, 40/40
+and 0/0), saved them, and the library reloaded the same logical percentages.
+
+Reproduce each length profile with `scripts/record-xlsx-databar-geometry.ps1`
+using `-PercentMin`, `-PercentMax` and a separate `-OutputFolder`. Extract each
+folder with `scripts/extract-xlsx-databar-geometry.py <folder> <output-json>`;
+use `--append` after the first profile to merge disjoint cases from the same Excel
+build. Context profiles use `-Context -Kinds mixed,positive,negative` and
+`-ReadingOrder -5002`, `-5003` or `-5004`. Native PDFs/workbooks stay in temporary
+folders. The committed fixtures retain measurements and the source XML.
+
+Verification: 6,020 core XLSX tests, 313 shared UI tests, 47 binding tests and
+13 focused browser checks passed, along with core/UI/viewer typechecks and core
+ESM/CJS/declaration builds. The geometry comparison tolerance remains 0.015 for
+axis gaps and print quantization. Other threshold configurations, gradient
+endpoint intensity, pixel-level insets/dashes and dedicated editor controls
+still need work; these checks do not establish whole-workbook Excel parity.
+
 ## Evidence required for parity
 
 Track reading, display, editing, calculation and writing separately for each feature. A retained

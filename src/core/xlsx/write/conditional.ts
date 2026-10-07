@@ -1,5 +1,6 @@
 import { NS } from '../../xml/index.js';
 import { formatAddress, formatRange } from '../address.js';
+import { dataBarBaseLengths } from '../conditional-extensions.js';
 import type {
 	CfvoThreshold,
 	ConditionalFormat,
@@ -89,8 +90,7 @@ function ruleXml(rule: ConditionalRule, styles: StyleWriter, anchor: string): st
 				'dataBar',
 				{
 					showValue: rule.showValue === false ? false : undefined,
-					minLength: rule.minLength,
-					maxLength: rule.maxLength,
+					...dataBarBaseLengths(rule),
 				},
 				cfvoXml(rule.min) + cfvoXml(rule.max) + colorXml(rule.color),
 			);

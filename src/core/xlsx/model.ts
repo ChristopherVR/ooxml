@@ -322,7 +322,7 @@ export type ConditionalRule =
 			priority: number;
 			stopIfTrue?: boolean;
 			showValue?: boolean;
-			/** Bar lengths as percentages of the cell width (legacy defaults: 10 and 90). */
+			/** Logical bar length percentages; linked x14 values override the legacy fallback on read. */
 			minLength?: number;
 			maxLength?: number;
 			/** GUID linking this rule to its Excel 2010 (`x14:dataBar`) extension, kept for round trip. */

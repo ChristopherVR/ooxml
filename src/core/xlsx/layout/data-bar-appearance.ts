@@ -1,6 +1,7 @@
 import { NS, first, parseXml, elements } from '../../xml/index.js';
 import type { ConditionalRule, Workbook } from '../model.js';
-import { boolAttr, numAttr } from '../read/xml-util.js';
+import { boolAttr } from '../read/xml-util.js';
+import { dataBarLengths } from '../conditional-extensions.js';
 import { parseColor } from '../read/style-parts.js';
 import { resolveColor } from './colors.js';
 
@@ -49,6 +50,7 @@ export function dataBarAppearance(
 		: color('negativeBorderColor', negative);
 	const direction = node?.getAttribute('direction');
 	const axis = node?.getAttribute('axisPosition');
+	const lengths = dataBarLengths(rule, node);
 	const thresholds = node
 		? elements(node).filter((n) => n.localName === 'cfvo' && n.namespaceURI === NS.x14)
 		: [];
@@ -65,7 +67,7 @@ export function dataBarAppearance(
 		axisColor: color('axisColor', '#000000'),
 		autoMin: rule.min.type === 'min' && thresholds[0]?.getAttribute('type') === 'autoMin',
 		autoMax: rule.max.type === 'max' && thresholds[1]?.getAttribute('type') === 'autoMax',
-		minLength: (numAttr(node, 'minLength') ?? rule.minLength ?? 10) / 100,
-		maxLength: (numAttr(node, 'maxLength') ?? rule.maxLength ?? 90) / 100,
+		minLength: lengths.minLength / 100,
+		maxLength: lengths.maxLength / 100,
 	};
 }
