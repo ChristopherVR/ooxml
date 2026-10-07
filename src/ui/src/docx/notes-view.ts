@@ -19,6 +19,7 @@ function noteList(
 	for (const { note, number } of numbered) {
 		const item = document.createElement('li');
 		item.dataset.docxNoteId = note.id;
+		item.dataset.docxNoteKind = kind;
 		item.value = number;
 		const marker = document.createElement('span');
 		marker.className = 'dve-note-marker';

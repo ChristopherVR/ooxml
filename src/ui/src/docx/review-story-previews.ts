@@ -27,10 +27,11 @@ export function refreshStoryPreviews(
 				effectiveHeaderFooter(model, sectionIndex, kind, slot.dataset.slot as HeaderFooterSlotName)
 					?.blocks,
 			);
-	const notes = [...(model.footnotes ?? []), ...(model.endnotes ?? [])];
-	for (const item of elements.notes?.querySelectorAll<HTMLElement>('[data-docx-note-id]') ?? [])
+	for (const item of elements.notes?.querySelectorAll<HTMLElement>('[data-docx-note-id]') ?? []) {
+		const notes = item.dataset.docxNoteKind === 'endnote' ? model.endnotes : model.footnotes;
 		refresh(
 			item.querySelector('.dve-note-body'),
-			notes.find((note) => note.id === item.dataset.docxNoteId)?.blocks,
+			notes?.find((note) => note.id === item.dataset.docxNoteId)?.blocks,
 		);
+	}
 }

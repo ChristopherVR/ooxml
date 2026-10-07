@@ -10,6 +10,48 @@ import { insertNote } from './note-commands';
 import { DocxEditorElement } from './index';
 import './index';
 
+it('edits and refreshes a note by kind when both note types use the same id', () => {
+	const editor = document.createElement('docx-editor') as DocxEditorElement;
+	document.body.append(editor);
+	try {
+		const model = createDocument();
+		model.footnotes = [
+			{ id: '1', blocks: [{ type: 'paragraph', id: 'fn', runs: [{ text: 'Footnote text' }] }] },
+		];
+		model.endnotes = [
+			{ id: '1', blocks: [{ type: 'paragraph', id: 'en', runs: [{ text: 'Endnote text' }] }] },
+		];
+		editor.documentModel = model;
+		const root = editor.shadowRoot!;
+		const footnote = root.querySelector<HTMLElement>(
+			'.dve-notes-footnote [data-docx-note-id="1"]',
+		)!;
+		const endnote = root.querySelector<HTMLElement>('.dve-notes-endnote [data-docx-note-id="1"]')!;
+		expect(footnote.textContent).toContain('Footnote text');
+		expect(endnote.textContent).toContain('Endnote text');
+		endnote.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+		const active = (
+			editor as unknown as { core: { parts: { activeView(): EditorView } } }
+		).core.parts.activeView();
+		expect(active.state.doc.textContent).toBe('Endnote text');
+		active.dispatch(
+			active.state.tr.insertText('Updated endnote', 1, active.state.doc.content.size - 1),
+		);
+		expect(editor.documentModel!.endnotes![0]!.blocks[0]).toMatchObject({
+			runs: [{ text: 'Updated endnote' }],
+		});
+		expect(editor.documentModel!.footnotes).toEqual(model.footnotes);
+		active.dom.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+		const mode = root.querySelector<HTMLSelectElement>('[aria-label="Display for review"]')!;
+		mode.value = 'original';
+		mode.dispatchEvent(new Event('change', { bubbles: true }));
+		expect(footnote.textContent).toContain('Footnote text');
+		expect(endnote.textContent).toContain('Updated endnote');
+	} finally {
+		editor.remove();
+	}
+});
+
 for (const kind of ['footnote', 'endnote'] as const)
 	it(`inserts the ${kind} reference and content into one document history event`, () => {
 		let model = createDocument();

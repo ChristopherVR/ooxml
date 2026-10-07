@@ -158,8 +158,11 @@ reopened the ten exports with zero body and footnote revisions. One local or Yjs
 undo restores both the reference and note content. Note insertion includes its
 content in the reference's history, note edits update the stored snapshot, and
 history/provider updates refresh previews. Existing unreferenced notes remain
-untouched unless their own revisions are resolved. Picture parsing now carries its run
-property basis; removing a picture may remove its own opaque properties without
+untouched unless their own revisions are resolved.
+Note preview and editing identities include the note kind, so a footnote and an
+endnote sharing the same numeric ID retain independent content during editing
+and review-mode refreshes. Component and six-binding browser checks cover this.
+Picture parsing now carries its run property basis; removing a picture may remove its own opaque properties without
 weakening the guard for unsupported retained text or copying picture properties
 onto neighboring text. Native page-break
 insertion also revises paragraph marks, which remain outside this slice. Atom

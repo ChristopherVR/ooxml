@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { fileURLToPath } from 'node:url';
 import type { DocxEditorElement } from '../../viewers/docx/packages/web-component/src';
+import { newDocument } from './helpers';
 
 const fixture = fileURLToPath(
 	new URL(
@@ -44,4 +45,43 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		}
 		await body.press('Control+z');
 		expect(await editor.evaluate((el) => (el as DocxEditorElement).documentModel)).toEqual(source);
+	});
+
+for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'])
+	test(`${framework}: notes with the same id keep their separate text`, async ({ page }) => {
+		await page.setViewportSize({ width: 2400, height: 1000 });
+		await page.goto(`/?framework=${framework}`);
+		await newDocument(page);
+		const editor = page.locator('docx-editor');
+		await expect(editor.locator('.dve-paper > .ProseMirror')).toBeVisible();
+		await editor.evaluate((el) => {
+			const host = el as DocxEditorElement;
+			host.documentModel = {
+				...host.documentModel!,
+				footnotes: [
+					{ id: '1', blocks: [{ type: 'paragraph', id: 'fn', runs: [{ text: 'Footnote text' }] }] },
+				],
+				endnotes: [
+					{ id: '1', blocks: [{ type: 'paragraph', id: 'en', runs: [{ text: 'Endnote text' }] }] },
+				],
+			};
+		});
+		const footnote = editor.locator('.dve-notes-footnote .dve-note-body');
+		const endnote = editor.locator('.dve-notes-endnote .dve-note-body');
+		await expect(footnote).toContainText('Footnote text');
+		await expect(endnote).toContainText('Endnote text');
+		await endnote.dblclick();
+		const active = endnote.locator('.ProseMirror');
+		await expect(active).toContainText('Endnote text');
+		await active.fill('Updated endnote');
+		await active.press('Escape');
+		await editor.getByRole('tab', { name: 'Review', exact: true }).click();
+		await editor
+			.getByRole('combobox', { name: 'Display for review', exact: true })
+			.selectOption('original', { force: true });
+		await expect(footnote).toContainText('Footnote text');
+		await expect(endnote).toContainText('Updated endnote');
+		const model = await editor.evaluate((el) => (el as DocxEditorElement).documentModel);
+		expect(model!.footnotes![0]!.blocks[0]).toMatchObject({ runs: [{ text: 'Footnote text' }] });
+		expect(model!.endnotes![0]!.blocks[0]).toMatchObject({ runs: [{ text: 'Updated endnote' }] });
 	});

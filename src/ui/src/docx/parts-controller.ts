@@ -228,13 +228,13 @@ export class PartsController {
 				});
 		if (this.notesEl)
 			attachNoteEditing(this.notesEl, {
-				note: (id) => {
+				note: (kind, id) => {
 					const current = this.host.model();
-					return [...(current.footnotes ?? []), ...(current.endnotes ?? [])].find(
+					return current[kind === 'footnote' ? 'footnotes' : 'endnotes']?.find(
 						(note) => note.id === id,
 					);
 				},
-				change: (id, blocks) => this.updateNote(id, blocks),
+				change: (kind, id, blocks) => this.updateNote(kind, id, blocks),
 				editable,
 				editor: this.editorOptions(),
 			});
@@ -277,16 +277,16 @@ export class PartsController {
 	}
 
 	/** Replaces one footnote's or endnote's blocks. */
-	private updateNote(id: string, blocks: Block[]): void {
+	private updateNote(kind: NoteKind, id: string, blocks: Block[]): void {
 		const view = this.host.view();
 		if (!view?.editable || !this.host.canEditOutsideBody()) return;
 		const replace = (notes: Note[]) =>
 			notes.map((note) => (note.id === id ? { ...note, blocks: structuredClone(blocks) } : note));
 		const model = this.host.model();
+		const key = kind === 'footnote' ? 'footnotes' : 'endnotes';
 		const next = {
 			...model,
-			...(model.footnotes && { footnotes: replace(model.footnotes) }),
-			...(model.endnotes && { endnotes: replace(model.endnotes) }),
+			...(model[key] && { [key]: replace(model[key]) }),
 		};
 		view.dispatch(
 			view.state.tr.step(new NotePartsStep(notePartsJson(next))).setMeta(HEADER_FOOTER_INPUT, true),
