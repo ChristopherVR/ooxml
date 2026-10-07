@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { parseVsdx } from './parser.js';
-import { generatedTheme, themeFixture } from './theme-fixtures.js';
-import { cell } from './test-fixtures.js';
+import { parseVsdx } from './parser';
+import { generatedTheme, themeFixture } from './theme-fixtures';
+import { cell } from './test-fixtures';
 async function parse(
 	options: { width?: string; line?: string; effects?: string; contents?: string } = {},
 ) {

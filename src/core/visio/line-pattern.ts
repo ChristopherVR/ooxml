@@ -1,5 +1,5 @@
-import type { VisioStyle } from './model.js';
-import { number, type Cells, type Report } from './sheet.js';
+import type { VisioStyle } from './model';
+import { number, type Cells, type Report } from './sheet';
 
 /**
  * MS-VSDX 2.4.4.180 defines 0 transparent, 1 solid, pictured built-ins 2-23,

@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import JSZip from 'jszip';
-import { editVsdx, type VisioEdit } from './edit.js';
-import { parseVsdx } from './parser.js';
-import { fixture, shape } from './test-fixtures.js';
-import { snapshotEdits } from './ui/edit-commands.js';
-import { parseAppProperties } from '../opc/properties/index.js';
+import { editVsdx, type VisioEdit } from './edit';
+import { parseVsdx } from './parser';
+import { fixture, shape } from './test-fixtures';
+import { snapshotEdits } from './ui/edit-commands';
+import { parseAppProperties } from '../opc/properties/index';
 
 const source = () =>
 	fixture({

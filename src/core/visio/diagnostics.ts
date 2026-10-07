@@ -1,5 +1,5 @@
-import type { VisioDiagnostic } from './model.js';
-import type { Report } from './sheet.js';
+import type { VisioDiagnostic } from './model';
+import type { Report } from './sheet';
 
 const MAX_CHARACTERS = 1_000_000;
 const marker: VisioDiagnostic = {

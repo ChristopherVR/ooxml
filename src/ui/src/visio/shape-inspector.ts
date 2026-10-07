@@ -1,5 +1,5 @@
 import type { VisioDocument, VisioShape } from 'ooxml-core/visio';
-import type { ViewerState } from './controller.js';
+import type { ViewerState } from './controller';
 export function selectedShape(
 	document: VisioDocument | null,
 	selection: ViewerState['selectedShape'],

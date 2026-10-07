@@ -1,9 +1,9 @@
-import { convertVisioMetafile, type VisioMetafileTreeConverter } from './convert-metafile.js';
-import type { VisioForeignVector } from './foreign-vector.js';
-import { NS } from '../xml/index.js';
-import { inspectVisioEmfAdmission } from './emf-admission.js';
-import type { VisioPackage } from './package.js';
-import { children, type Report } from './sheet.js';
+import { convertVisioMetafile, type VisioMetafileTreeConverter } from './convert-metafile';
+import type { VisioForeignVector } from './foreign-vector';
+import { NS } from '../xml/index';
+import { inspectVisioEmfAdmission } from './emf-admission';
+import type { VisioPackage } from './package';
+import { children, type Report } from './sheet';
 
 /** Inspection budgets across unique internal media parts, independently of ZIP/XML limits. */
 export const VISIO_METAFILE_INSPECTION_LIMITS = Object.freeze({

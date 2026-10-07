@@ -1,34 +1,13 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Word requires decimal revision ids (`w:ins/@w:id`, `w:del/@w:id`, …; ST_DecimalNumber).
-import type { Block, DocumentModel, Paragraph, Revision } from './model.js';
+import type { DocumentModel, Paragraph, Revision } from './model.js';
+import {
+	documentBlockLists,
+	mapBlockParagraphs,
+	mapDocumentParagraphs,
+} from './document-paragraphs.js';
 
 const DECIMAL_ID = /^\d{1,9}$/;
-
-function mapParagraphs(blocks: Block[], map: (paragraph: Paragraph) => Paragraph): Block[] {
-	return blocks.map((block) =>
-		block.type === 'paragraph'
-			? map(block)
-			: {
-					...block,
-					rows: block.rows.map((row) =>
-						row.map((cell) => ({ ...cell, paragraphs: cell.paragraphs.map(map) })),
-					),
-				},
-	);
-}
-
-/** Every block list in the model: body, header/footer slots and notes. */
-function blockLists(model: DocumentModel): Block[][] {
-	return [
-		model.blocks,
-		...(model.sections ?? []).flatMap((section) =>
-			[section.headers, section.footers].flatMap((slots) =>
-				Object.values(slots ?? {}).flatMap((content) => (content ? [content.blocks] : [])),
-			),
-		),
-		...[...(model.footnotes ?? []), ...(model.endnotes ?? [])].map((note) => note.blocks),
-	];
-}
 
 /**
  * Renumbers editor-minted revision ids (such as `dve-rev-…`) to unused decimals, consistently
@@ -38,8 +17,8 @@ function blockLists(model: DocumentModel): Block[][] {
 export function numberRevisionIds(model: DocumentModel, reservedMax = -1): DocumentModel {
 	const ids = new Set<string>();
 	const collect = (revision: Revision | undefined) => revision && ids.add(revision.id);
-	for (const blocks of blockLists(model))
-		mapParagraphs(blocks, (paragraph) => {
+	for (const blocks of documentBlockLists(model))
+		mapBlockParagraphs(blocks, (paragraph) => {
 			collect(paragraph.markRevision);
 			collect(paragraph.formatRevision);
 			for (const run of paragraph.runs) collect(run.revision);
@@ -66,46 +45,7 @@ export function numberRevisionIds(model: DocumentModel, reservedMax = -1): Docum
 			run.revision ? { ...run, revision: rename(run.revision) } : run,
 		),
 	});
-	return {
-		...model,
-		blocks: mapParagraphs(model.blocks, paragraph),
-		...(model.sections
-			? {
-					sections: model.sections.map((section) => ({
-						...section,
-						...(section.headers ? { headers: renameSlots(section.headers, paragraph) } : {}),
-						...(section.footers ? { footers: renameSlots(section.footers, paragraph) } : {}),
-					})),
-				}
-			: {}),
-		...(model.footnotes
-			? {
-					footnotes: model.footnotes.map((note) => ({
-						...note,
-						blocks: mapParagraphs(note.blocks, paragraph),
-					})),
-				}
-			: {}),
-		...(model.endnotes
-			? {
-					endnotes: model.endnotes.map((note) => ({
-						...note,
-						blocks: mapParagraphs(note.blocks, paragraph),
-					})),
-				}
-			: {}),
-	};
-}
-
-function renameSlots<T extends object>(slots: T, paragraph: (block: Paragraph) => Paragraph): T {
-	return Object.fromEntries(
-		Object.entries(slots as Record<string, { blocks: Block[] } | undefined>).map(
-			([slot, content]) => [
-				slot,
-				content ? { ...content, blocks: mapParagraphs(content.blocks, paragraph) } : content,
-			],
-		),
-	) as T;
+	return mapDocumentParagraphs(model, paragraph);
 }
 
 /** The largest decimal `w:id` in a part's XML, so new ids never collide with existing markers. */

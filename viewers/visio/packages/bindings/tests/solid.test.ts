@@ -1,9 +1,9 @@
 import { beforeEach, expect, it, vi } from 'vitest';
-import { current, emit, reset } from './mock-binding.js';
+import { current, emit, reset } from './mock-binding';
 import { createComponent, createSignal } from 'solid-js';
 import { render } from 'solid-js/web';
-import { VisioViewer } from '../src/solid.jsx';
-import type { ViewerCallbacks, ViewerHandle } from '../src/common.js';
+import { VisioViewer } from '../src/solid';
+import type { ViewerCallbacks, ViewerHandle } from '../src/common';
 beforeEach(reset);
 it('Solid tracks props and callbacks, releases refs and destroys its native owner', async () => {
 	const host = document.createElement('div');

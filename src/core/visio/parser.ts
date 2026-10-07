@@ -1,19 +1,19 @@
-import type { VisioMetafileTreeConverter } from './convert-metafile.js';
-import { connections, indexedPart, related, validateBackgrounds, visioXml } from './parts.js';
-import { prepareImages } from './prepare-images.js';
-import type { VisioImageOptions } from './media.js';
-import { createLayerBudget, indexLayers, pageLayers } from './layers.js';
-import { loadVisioThemes } from './theme.js';
-import type { Resources } from './style.js';
-import { elements } from '../xml/index.js';
-import type { VisioDocument, VisioPage } from './model.js';
-import { diagnosticCollector } from './diagnostics.js';
-import { metadata, metadataAttributes } from './metadata.js';
-import { createMetadataBudget, type VisioMetadataOptions } from './shape-metadata.js';
-import { VisioPackage, VisioPackageError, type VisioPackageLimits } from './package.js';
-import { normalizeShapes, type ShapeContext } from './shapes.js';
-import { normalizeVisioPageGeometry, visioPageGeometryScale } from './page-scale.js';
-import { styleSheet, type StyleRecord } from './style-inheritance.js';
+import type { VisioMetafileTreeConverter } from './convert-metafile';
+import { connections, indexedPart, related, validateBackgrounds, visioXml } from './parts';
+import { prepareImages } from './prepare-images';
+import type { VisioImageOptions } from './media';
+import { createLayerBudget, indexLayers, pageLayers } from './layers';
+import { loadVisioThemes } from './theme';
+import type { Resources } from './style';
+import { elements } from '../xml/index';
+import type { VisioDocument, VisioPage } from './model';
+import { diagnosticCollector } from './diagnostics';
+import { metadata, metadataAttributes } from './metadata';
+import { createMetadataBudget, type VisioMetadataOptions } from './shape-metadata';
+import { VisioPackage, VisioPackageError, type VisioPackageLimits } from './package';
+import { normalizeShapes, type ShapeContext } from './shapes';
+import { normalizeVisioPageGeometry, visioPageGeometryScale } from './page-scale';
+import { styleSheet, type StyleRecord } from './style-inheritance';
 import {
 	attribute,
 	child,
@@ -25,7 +25,7 @@ import {
 	yes,
 	type RawShape,
 	type Report,
-} from './sheet.js';
+} from './sheet';
 
 export interface ParseVsdxOptions {
 	/** Trusted converter package injection. Only supply inside a disposable, externally timed worker. */

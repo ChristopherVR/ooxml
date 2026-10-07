@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { parseVsdx } from './parser.js';
-import { linearGradientEndpoints } from './theme-gradient.js';
-import { generatedTheme, themeFixture } from './theme-fixtures.js';
-import { cell, row, section } from './test-fixtures.js';
+import { parseVsdx } from './parser';
+import { linearGradientEndpoints } from './theme-gradient';
+import { generatedTheme, themeFixture } from './theme-fixtures';
+import { cell, row, section } from './test-fixtures';
 
 const stop = (position: number, color = '<a:schemeClr val="phClr"/>') =>
 	`<a:gs pos="${position}">${color}</a:gs>`;

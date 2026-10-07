@@ -1,5 +1,5 @@
-import { normalizedNurbs } from './nurbs.js';
-import { number, type Report, type Row } from './sheet.js';
+import { normalizedNurbs } from './nurbs';
+import { number, type Report, type Row } from './sheet';
 
 // Literal data only, never a ShapeSheet expression evaluator. Syntax and units:
 // https://learn.microsoft.com/en-us/office/client-developer/visio/polyline-function

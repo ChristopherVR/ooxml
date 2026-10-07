@@ -54,6 +54,23 @@ function pair() {
 	};
 }
 describe('DOM-free Word Yjs thread records', () => {
+	it('retains source review settings missing from an older room attribute map', () => {
+		const { b } = pair();
+		const settingsSchema = new Schema({
+			nodes: {
+				doc: { content: 'paragraph+', attrs: { trackChanges: { default: false } } },
+				paragraph: { content: 'text*' },
+				text: {},
+			},
+		});
+		const source = settingsSchema.node('doc', { trackChanges: true }, [
+			settingsSchema.node('paragraph', null, settingsSchema.text('Text')),
+		]);
+		const joined = new WordYjsCollaboration(b.session, source, { documentId: 'source' });
+		bindings.push(joined);
+		expect(joined.state(settingsSchema).doc.attrs.trackChanges).toBe(true);
+		expect(b.session.doc.getMap('docx:attributes').has('trackChanges')).toBe(false);
+	});
 	it('merges independent replies and resolution without replacing the thread snapshot', () => {
 		const { a, b, partition, sync } = pair();
 		partition();

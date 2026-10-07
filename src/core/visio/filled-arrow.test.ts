@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { visioFilledArrow, trimVisioArrowLine } from './filled-arrow.js';
+import { visioFilledArrow, trimVisioArrowLine } from './filled-arrow';
 import evidence from './__fixtures__/filled-arrows-native.json';
 import bothEvidence from './__fixtures__/filled-arrows-both-native.json';
 

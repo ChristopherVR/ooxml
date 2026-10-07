@@ -2,8 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 import {
 	sanitizeVisioForeignVectorTree as sanitize,
 	VisioForeignVectorError,
-} from './foreign-vector.js';
-import { root, path, group, clip, defs } from './foreign-vector-test-fixtures.js';
+} from './foreign-vector';
+import { root, path, group, clip, defs } from './foreign-vector-test-fixtures';
 
 const rejected = (input: unknown, code: 'unsafe-vector' | 'vector-limit' = 'unsafe-vector') => {
 	expect(() => sanitize(input)).toThrowError(

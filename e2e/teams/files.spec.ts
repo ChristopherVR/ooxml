@@ -38,7 +38,12 @@ test('creates a workbook and uploads, retries and searches channel files', async
 		.locator('teams-app')
 		.evaluate((element) => (element as TeamsApp).client!.createChannel('Finance'));
 	await expect(page.getByRole('heading', { name: '# Finance' })).toBeVisible();
-	await page.getByRole('tab', { name: 'Files', exact: true }).click();
+	await page.getByRole('tab', { name: 'Shared', exact: true }).click();
+	await expect(page.getByRole('toolbar', { name: 'File actions' })).toBeVisible();
+	await expect(page.getByRole('textbox', { name: 'Website URL' })).toHaveCount(0);
+	await expect(page.getByRole('table', { name: 'Shared files' })).toBeVisible();
+	await expect(page.getByRole('columnheader', { name: 'Name', exact: true })).toBeVisible();
+	await page.getByRole('button', { name: '+ New', exact: true }).click();
 	await page.getByRole('button', { name: 'New Excel workbook', exact: true }).click();
 	await page.getByRole('textbox', { name: 'Workbook name', exact: true }).fill('Budget');
 	await page.getByRole('button', { name: 'Create workbook', exact: true }).click();
@@ -75,14 +80,33 @@ test('creates a workbook and uploads, retries and searches channel files', async
 	]);
 	await expect(page.getByRole('alert')).toContainText('could not be uploaded');
 	await page.getByRole('button', { name: 'Retry sharing files', exact: true }).click();
-	await expect(page.getByRole('button', { name: 'Open', exact: true })).toHaveCount(3);
+	await expect(page.getByRole('button', { name: /^Open / })).toHaveCount(3);
+	await page.screenshot({ path: test.info().outputPath('shared-files-desktop.png') });
+	await page.setViewportSize({ width: 390, height: 844 });
+	await expect(page.getByRole('button', { name: 'Upload', exact: true })).toBeVisible();
+	await page.screenshot({ path: test.info().outputPath('shared-files-mobile.png') });
+	const bounds = await page.locator('teams-app').evaluate((element) => {
+		const root = element.shadowRoot!;
+		const panel = root.querySelector('teams-files-panel')!;
+		return {
+			width: innerWidth,
+			scroll: document.documentElement.scrollWidth,
+			main: root.querySelector('.main')!.getBoundingClientRect().right,
+			panel: panel.getBoundingClientRect().right,
+			list: panel.shadowRoot!.querySelector('.file-list')!.getBoundingClientRect().right,
+		};
+	});
+	expect(bounds.scroll).toBeLessThanOrEqual(bounds.width);
+	for (const edge of [bounds.main, bounds.panel, bounds.list])
+		expect(edge).toBeLessThanOrEqual(bounds.width);
+	await page.setViewportSize({ width: 1280, height: 720 });
 	await page.getByRole('searchbox', { name: 'Search files', exact: true }).fill('notes ada');
-	await expect(page.getByRole('button', { name: 'Open', exact: true })).toHaveCount(1);
-	await page.getByRole('button', { name: 'Open', exact: true }).click();
+	await expect(page.getByRole('button', { name: /^Open / })).toHaveCount(1);
+	await page.getByRole('button', { name: /^Open / }).click();
 	await expect(page.getByRole('heading', { name: 'Project notes', exact: true })).toBeVisible();
 	await page.getByRole('button', { name: 'Close preview', exact: true }).click();
 	await page.getByRole('searchbox', { name: 'Search files', exact: true }).fill('budget');
-	await expect(page.getByRole('button', { name: 'Open', exact: true })).toHaveCount(2);
+	await expect(page.getByRole('button', { name: /^Open / })).toHaveCount(2);
 	const budgets = await page.locator('teams-app').evaluate((element) =>
 		(element as TeamsApp)
 			.client!.getState()

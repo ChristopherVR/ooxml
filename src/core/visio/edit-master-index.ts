@@ -1,6 +1,6 @@
-import { attribute, children } from './sheet.js';
-import { fail } from './package-common.js';
-import { visioFormulaCachedValue } from './formula.js';
+import { attribute, children } from './sheet';
+import { fail } from './package-common';
+import { visioFormulaCachedValue } from './formula';
 
 function inheritedProtection(node: Element, ancestor: Element | undefined): void {
 	try {

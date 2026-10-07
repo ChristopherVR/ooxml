@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { renderPage, safeColor } from './render-svg.js';
+import { renderPage, safeColor } from './render-svg';
 import { demoDocument } from 'ooxml-core/visio/ui';
 
 describe('SVG renderer', () => {

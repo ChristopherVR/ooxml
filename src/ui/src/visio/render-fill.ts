@@ -1,5 +1,5 @@
 import type { VisioStyle } from 'ooxml-core/visio';
-import { safeColor, svgElement } from './render-svg.js';
+import { safeColor, svgElement } from './render-svg';
 let gradientId = 0;
 export function fillPaint(style: VisioStyle, defs: SVGDefsElement): string {
 	if (!style.fillGradient) return safeColor(style.fill, '#fff');

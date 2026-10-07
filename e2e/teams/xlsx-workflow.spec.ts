@@ -63,7 +63,7 @@ test('pins a workbook, edits a cell, saves a new channel copy, and opens the sav
 			],
 		});
 	});
-	await page.getByRole('tab', { name: 'Files', exact: true }).click();
+	await page.getByRole('tab', { name: 'Shared', exact: true }).click();
 	await page.getByRole('button', { name: 'Pin as tab' }).click();
 	await expect(page.getByRole('tab', { name: 'Budget.xlsx' })).toHaveAttribute(
 		'aria-selected',
@@ -107,8 +107,11 @@ test('pins a workbook, edits a cell, saves a new channel copy, and opens the sav
 	expect(getCell((await loadXlsx(original)).sheets[0]!, 0, 0)?.value).not.toBe(
 		'Teams workbook edit',
 	);
-	await page.getByRole('tab', { name: 'Files', exact: true }).click();
-	await page.getByRole('button', { name: 'Open', exact: true }).first().click();
+	await page.getByRole('tab', { name: 'Shared', exact: true }).click();
+	await page
+		.getByRole('button', { name: /^Open / })
+		.first()
+		.click();
 	await expect
 		.poll(
 			() =>

@@ -1,11 +1,11 @@
-import { attribute, children } from './sheet.js';
-import { fail } from './package-common.js';
-import type { VisioGeometryEdit } from './edit-commands.js';
-import type { MasterCellSource } from './edit-master-index.js';
-import { cells, editableCell, numeric } from './edit-geometry-admission.js';
-import { analyzeVisioFormula, evaluateVisioFormula, visioFormulaCachedValue } from './formula.js';
-import { executableCellFormula } from './cell-formula.js';
-import { indexCells, key } from './edit-recalculate-index.js';
+import { attribute, children } from './sheet';
+import { fail } from './package-common';
+import type { VisioGeometryEdit } from './edit-commands';
+import type { MasterCellSource } from './edit-master-index';
+import { cells, editableCell, numeric } from './edit-geometry-admission';
+import { analyzeVisioFormula, evaluateVisioFormula, visioFormulaCachedValue } from './formula';
+import { executableCellFormula } from './cell-formula';
+import { indexCells, key } from './edit-recalculate-index';
 
 interface MoveBinding {
 	instance?: Element;

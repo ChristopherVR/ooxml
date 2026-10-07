@@ -9,9 +9,9 @@
  * https://learn.microsoft.com/en-us/openspecs/sharepoint_protocols/ms-vsdx/edfd9f33-fea3-4bf5-8cd5-a91a3d677b03
  * Resolve saved selectors only. Missing or malformed selectors are not root selection.
  */
-import type { Cells, Report, Sheet } from './sheet.js';
-import { integer } from './theme-color.js';
-import { rootThemeSelected, type ThemeResources } from './theme-resolve.js';
+import type { Cells, Report, Sheet } from './sheet';
+import { integer } from './theme-color';
+import { rootThemeSelected, type ThemeResources } from './theme-resolve';
 
 const LINE_PROPERTIES = [
 	'LineWeight',

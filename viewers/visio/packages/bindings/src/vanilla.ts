@@ -1,4 +1,4 @@
-export { mountViewer, eventKeys, propertyKeys } from './common.js';
+export { mountViewer, eventKeys, propertyKeys } from './common';
 export type {
 	MountedViewer,
 	ViewerHandle,
@@ -9,4 +9,4 @@ export type {
 	VsdxSource,
 	ViewerEditState,
 	VsdxExportResult,
-} from './common.js';
+} from './common';

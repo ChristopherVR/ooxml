@@ -4,9 +4,9 @@ import { renderToString as renderReact } from 'react-dom/server';
 import { hydrateRoot } from 'react-dom/client';
 import { createSSRApp, h, nextTick } from 'vue';
 import { renderToString as renderVue } from '@vue/server-renderer';
-import { VisioViewer as ReactViewer } from '../src/react.js';
-import { VisioViewer as VueViewer } from '../src/vue.js';
-import type { ViewerHandle } from '../src/common.js';
+import { VisioViewer as ReactViewer } from '../src/react';
+import { VisioViewer as VueViewer } from '../src/vue';
+import type { ViewerHandle } from '../src/common';
 it('React hydrates its actual server markup, mounts one viewer, and tears down cleanly', async () => {
 	const host = document.createElement('div');
 	document.body.append(host);

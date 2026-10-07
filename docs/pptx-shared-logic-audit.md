@@ -35,14 +35,20 @@ The viewer copies of the automatic axis, histogram binning and theme swatch modu
 
 ## Remaining candidates and prerequisites
 
-| Candidate in `pptx-viewer/packages/shared/src/render`     | Destination                                      | Required separation                                                                      |
-| --------------------------------------------------------- | ------------------------------------------------ | ---------------------------------------------------------------------------------------- |
-| `chart-date-format.ts` and chart number formatting        | Existing `xlsx/numfmt` plus shared chart adapter | Resolve Excel serial-60 behavior and format-code contracts before consolidation          |
-| `smartart-drawing-viewbox.ts`                             | `diagram`                                        | Adapt from the PowerPoint model to shared drawing bounds, including separate text frames |
-| Remaining SmartArt family layout approximations           | Neutral core diagram model/engine first          | Avoid treating the viewer's approximate family rendering as a complete layout engine     |
-| Font-picker catalogs and grouping                         | `ooxml-ui`                                       | Inject localization keys, theme/embedded fonts and product defaults                      |
-| `editor-history.ts`, `secure-random.ts`                   | a neutral editor area (to decide)                | Visio and xlsx keep their own history; agree one snapshot contract first                 |
-| `path-gradient-rect.ts`, `chart-number-format-pattern.ts` | `drawingml` / `xlsx/numfmt`                      | Emits SVG markup today; number formats must reconcile with `xlsx/numfmt` first           |
+On 2026-10-07, the shared renderer moved into `src/ui/src/pptx` and DOM-free
+editing helpers into `src/core/pptx/editor`. Snapshot cloning now belongs to
+the core editor entry as well. Cached drawing bounds are shared through
+`diagram/computeDiagramDrawingBounds`, with a PowerPoint adapter preserving
+the independent text-frame fallback behavior. These bounds use authored
+rectangles, without rotated geometry or effect extents.
+
+| Candidate in `src/ui/src/pptx/render`                     | Destination                                      | Required separation                                                                                           |
+| --------------------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| `chart-date-format.ts` and chart number formatting        | Existing `xlsx/numfmt` plus shared chart adapter | Resolve Excel serial-60 behavior and format-code contracts before consolidation                               |
+| Remaining SmartArt family layout approximations           | Neutral core diagram model/engine first          | Avoid treating the viewer's approximate family rendering as a complete layout engine                          |
+| Font-picker catalogs and grouping                         | `ooxml-ui`                                       | Inject localization keys, theme/embedded fonts and product defaults                                           |
+| Cross-product history contracts and `secure-random.ts`    | Neutral editor / crypto areas                    | PowerPoint history is already in core; agree cross-product snapshots and preserve strong RNG failure behavior |
+| `path-gradient-rect.ts`, `chart-number-format-pattern.ts` | `drawingml` / `xlsx/numfmt`                      | Emits SVG markup today; number formats must reconcile with `xlsx/numfmt` first                                |
 
 OMML equation converters are already in `math`. Preset shape evaluators and
 boolean operations already live in `geometry`. SmartArt interpreter compatibility

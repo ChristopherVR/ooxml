@@ -14,6 +14,8 @@ viewer packages contain framework adapters and consume `ooxml-ui/pptx`.
 - `ooxml-core/pptx/editor/<module>`: DOM-free editing, loading and collaboration
   helpers, preserving existing function names through compatibility exports.
 - `ooxml-core/pptx/automation/schemas`: the assistant/MCP tool contracts.
+- `ooxml-core/pptx/editor/render/clone`: document and undo snapshot cloning.
+- `ooxml-core/diagram`: cached drawing bounds shared across Office formats.
 
 The private `pptx-viewer-shared` package is a compatibility facade. It owns no
 renderer or document operations. Angular no longer vendors a source copy.

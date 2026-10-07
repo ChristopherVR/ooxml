@@ -3,10 +3,10 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
-import { parseVsdx } from './parser.js';
-import { parseXml } from '../xml/index.js';
-import { children, child, readSheet } from './sheet.js';
-import type { VisioShape } from './model.js';
+import { parseVsdx } from './parser';
+import { parseXml } from '../xml/index';
+import { children, child, readSheet } from './sheet';
+import type { VisioShape } from './model';
 
 // Optional read-only external corpus check. No third-party fixture bytes are redistributed.
 // Apache POI 732120980140d5ed64b482c470e0b625cdb1ab15, test-data/diagram/{60489,60973}.vsdx.

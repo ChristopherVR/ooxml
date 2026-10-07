@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { parseXml } from '../xml/index.js';
-import { geometryPaths } from './geometry.js';
-import { readSheet } from './sheet.js';
-import { parseVsdx } from './index.js';
-import { cell, fixture, rectangle, row, section, shape, xml } from './test-fixtures.js';
+import { parseXml } from '../xml/index';
+import { geometryPaths } from './geometry';
+import { readSheet } from './sheet';
+import { parseVsdx } from './index';
+import { cell, fixture, rectangle, row, section, shape, xml } from './test-fixtures';
 
 type Point = readonly [number, number];
 const ccw: Point[] = [

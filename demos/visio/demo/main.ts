@@ -1,5 +1,5 @@
-import { mountViewer } from '../../../viewers/visio/src/index.js';
-import { createWorkspace } from './workspace.js';
+import { mountViewer } from '../../../viewers/visio/src/index';
+import { createWorkspace } from './workspace';
 
 // The vanilla demo: the element through the browser binding. The React, Vue, Angular, Svelte and
 // Solid demos (packages/bindings/demos) attach the same workspace through their own bindings.

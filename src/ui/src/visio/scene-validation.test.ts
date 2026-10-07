@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { assertViewableDocument } from 'ooxml-core/visio/ui';
 import { demoDocument } from 'ooxml-core/visio/ui';
-import { renderText } from './render-text.js';
+import { renderText } from './render-text';
 import { rasterFixture } from './__fixtures__/raster-fixtures.mjs';
 
 describe('defensive scene limits', () => {

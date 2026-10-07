@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { mountViewer } from './binding.js';
+import { mountViewer } from './binding';
 import { demoDocument } from 'ooxml-core/visio/ui';
 
 afterEach(() => {

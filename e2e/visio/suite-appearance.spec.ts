@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { taskPane } from './ribbon.js';
+import { taskPane } from './ribbon';
 
 for (const theme of ['light', 'dark'] as const) {
 	for (const width of [1440, 768, 390]) {

@@ -1,9 +1,9 @@
 import type { VisioDocument, VisioShape } from 'ooxml-core/visio';
-import type { ViewerState } from './controller.js';
+import type { ViewerState } from './controller';
 import { compatibilityNotes, compatibilityText } from 'ooxml-core/visio/ui';
 import type { TextSearchResult } from 'ooxml-core/visio/ui';
-import { renderPage } from './render-svg.js';
-import { selectedShape, shapeDetails } from './shape-inspector.js';
+import { renderPage } from './render-svg';
+import { selectedShape, shapeDetails } from './shape-inspector';
 
 /**
  * The drawing window: renders the current page, owns its resources, lists compatibility notes

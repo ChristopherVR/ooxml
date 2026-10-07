@@ -1,5 +1,5 @@
 import { html, nothing } from 'lit';
-import type { Attachment, TeamsClient, TeamsState } from 'ooxml-core/teams';
+import type { Attachment, ChatDraft, TeamsClient, TeamsState } from 'ooxml-core/teams';
 
 /** A thread shares the existing message controls and core actions. No document mapping lives here. */
 export function threadPane(
@@ -34,11 +34,14 @@ export function threadPane(
 			.typing=${state.typing}
 			.replyingTo=${state.replyingTo?.authorName ?? null}
 			.editing=${state.editing !== null}
-			.value=${state.editing?.text ?? ''}
+			.value=${state.draft.text}
+			.files=${state.draft.files}
+			.missingFiles=${state.draft.missingFiles}
+			@office-chat-draft=${(e: CustomEvent<ChatDraft>) => client.setDraft(e.detail)}
 			placeholder="Reply in thread"
 			@office-chat-typing=${() => client.notifyTyping()}
 			@office-chat-cancel=${() => client.cancelCompose()}
-			@office-chat-send=${(e: CustomEvent<{ text: string; files: File[] }>) => {
+			@office-chat-send=${(e: CustomEvent<ChatDraft>) => {
 				const current = client.getState();
 				if (!current.editing && !current.replyingTo) client.startReply(thread.root.id);
 				void client.send(e.detail);

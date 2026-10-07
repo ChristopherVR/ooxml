@@ -4,8 +4,8 @@ import {
 	sanitizeVisioForeignVectorTree as sanitize,
 	validateVisioForeignVector as validate,
 	VisioForeignVectorError,
-} from './foreign-vector.js';
-import { root, path, group, clip, defs } from './foreign-vector-test-fixtures.js';
+} from './foreign-vector';
+import { root, path, group, clip, defs } from './foreign-vector-test-fixtures';
 
 function canonical(): Record<string, any> {
 	return structuredClone(

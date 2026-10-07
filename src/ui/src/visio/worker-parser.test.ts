@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { createWorkerParser, type WorkerLike } from './worker-parser.js';
+import { createWorkerParser, type WorkerLike } from './worker-parser';
 import { demoDocument } from 'ooxml-core/visio/ui';
 function fake(): WorkerLike {
 	return { onmessage: null, onerror: null, postMessage: vi.fn(), terminate: vi.fn() };

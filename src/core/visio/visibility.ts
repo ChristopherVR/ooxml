@@ -1,5 +1,5 @@
-import type { VisioLayer, VisioPage, VisioShape } from './model.js';
-import { VisioPackageError } from './package-common.js';
+import type { VisioLayer, VisioPage, VisioShape } from './model';
+import { VisioPackageError } from './package-common';
 
 /** Fixed work/allocation budgets, including for caller-constructed scenes. */
 export const VISIO_VISIBILITY_LIMITS = Object.freeze({

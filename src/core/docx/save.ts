@@ -21,6 +21,7 @@ import { ensureContentTypeOverride, ensureDocumentRelationship } from './zip-par
 
 const DEFAULT_STYLES_PATH = 'word/styles.xml';
 import { maxWordId, numberRevisionIds } from './revision-ids.js';
+import { numberMoveNames } from './move-names.js';
 import { parseRelationships } from './package-parts.js';
 
 const RELS_PART = 'word/_rels/document.xml.rels';
@@ -61,7 +62,9 @@ export async function saveDocx(
 	if (binding && JSON.stringify(model) === JSON.stringify(binding.base))
 		return new Uint8Array(binding.context.original);
 	assertValidDocumentModel(model);
-	model = numberRevisionIds(numberCommentIds(model), maxWordId(binding?.context.sourceXml));
+	model = numberMoveNames(
+		numberRevisionIds(numberCommentIds(model), maxWordId(binding?.context.sourceXml)),
+	);
 	if (binding && !differsOnlyByStyleNumbering(model.paragraphStyles, binding.base.paragraphStyles))
 		throw new Error(
 			'Editing the paragraph style catalog is not supported; source styles.xml is preserved unchanged.',

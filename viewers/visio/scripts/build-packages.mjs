@@ -5,6 +5,7 @@ import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
 import { build } from 'vite';
 import { VIEWER_PACKAGES } from './viewer-packages.mjs';
+import { rewriteEsmDeclarationImports } from '../../../scripts/esm-declarations.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 const bindingsRequire = createRequire(resolve(root, 'packages/bindings/package.json'));
@@ -124,14 +125,14 @@ for (const [key, meta] of Object.entries(VIEWER_PACKAGES)) {
 			);
 			// Svelte compiles its component in the host project; its shared UI runtime is prebuilt.
 			const component = readFileSync(resolve(outDir, 'VisioViewer.svelte'), 'utf8').replace(
-				"'./common.js'",
+				"'./common'",
 				"'./runtime.js'",
 			);
 			writeFileSync(resolve(outDir, 'VisioViewer.svelte'), component);
 			const runtimeEntry = resolve(temporary, 'svelte-runtime.ts');
 			writeFileSync(
 				runtimeEntry,
-				"export * from '../src/index.js';\nexport * from '../packages/bindings/src/common.js';\nexport * from 'visio-core';\n",
+				"export * from '../src/index';\nexport * from '../packages/bindings/src/common';\nexport * from 'visio-core';\n",
 			);
 			await build({
 				configFile: false,
@@ -185,6 +186,7 @@ export default VisioViewer;
 			);
 		}
 	}
+	rewriteEsmDeclarationImports(resolve(directory, 'dist'));
 	for (const name of ['LICENSE', 'NOTICE']) cpSync(resolve(root, name), resolve(directory, name));
 }
 console.log('Built seven installable Visio packages.');

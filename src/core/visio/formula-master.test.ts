@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { analyzeVisioMasterFormula } from './formula-master.js';
-import { analyzeVisioFormula } from './formula.js';
+import { analyzeVisioMasterFormula } from './formula-master';
+import { analyzeVisioFormula } from './formula';
 
 const local = (formula: string) => analyzeVisioMasterFormula(formula, { textFieldFree: true });
 describe('bounded master-context formula locality', () => {

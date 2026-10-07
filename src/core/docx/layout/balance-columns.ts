@@ -1,4 +1,21 @@
 import type { LayoutPageBox } from './result.js';
+import type { LayoutBlock } from './input.js';
+
+/** Only layouts whose trial flow can preserve every indivisible unit are balanced. */
+export function canBalanceBlock(block: LayoutBlock): boolean {
+	if (block.kind === 'paragraph')
+		return !block.floats?.length && !block.runs.some((run) => run.breakAfter);
+	return (
+		block.rows.length > 0 &&
+		block.rows.every((row) =>
+			row.cells.every((cell) =>
+				cell.paragraphs.every(
+					(paragraph) => !paragraph.footnotes?.length && canBalanceBlock(paragraph),
+				),
+			),
+		)
+	);
+}
 
 /** Reflow only the final page at a lower column capacity, retaining earlier pages' capacity. */
 export function balanceColumns<T extends { balanceValid: boolean }>(

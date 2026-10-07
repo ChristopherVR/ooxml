@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { VisioDocument } from 'ooxml-core/visio';
-import { ViewerController } from './controller.js';
+import { ViewerController } from './controller';
 import { demoDocument } from 'ooxml-core/visio/ui';
 
 function model(): VisioDocument {

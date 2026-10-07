@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { createVsdxFixture } from './fixture.mjs';
-import { downloadCopy } from './ribbon.js';
+import { downloadCopy } from './ribbon';
 
 for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
 	test(`${framework}: inserts a page through the worker, restores history and reopens the saved package`, async ({

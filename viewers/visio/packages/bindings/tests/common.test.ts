@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { current, mocks, reset } from './mock-binding.js';
+import { current, mocks, reset } from './mock-binding';
 import {
 	viewerOptions,
 	viewerHandle,
 	propertyKeys,
 	eventKeys,
 	withEventEmitter,
-} from '../src/common.js';
-import { mountViewer } from '../src/vanilla.js';
-import type { MountedViewer, ViewerProps } from '../src/common.js';
+} from '../src/common';
+import { mountViewer } from '../src/vanilla';
+import type { MountedViewer, ViewerProps } from '../src/common';
 import { vi } from 'vitest';
 beforeEach(reset);
 describe('complete shared adapter contract', () => {
@@ -81,7 +81,7 @@ describe('complete shared adapter contract', () => {
 	});
 });
 
-import { mountFrameworkViewer } from '../src/common.js';
+import { mountFrameworkViewer } from '../src/common';
 it('native prop snapshots do not overwrite loaded documents or user zoom during unrelated updates', () => {
 	const a = { format: 'vsdx' as const, pages: [], diagnostics: [] };
 	const b = { format: 'vsdx' as const, pages: [], diagnostics: [] };

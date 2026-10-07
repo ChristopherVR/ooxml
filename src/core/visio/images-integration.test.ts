@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { parseVsdx } from './index.js';
-import { cell, fixture, relations, shape } from './test-fixtures.js';
+import { parseVsdx } from './index';
+import { cell, fixture, relations, shape } from './test-fixtures';
 const pixel = Uint8Array.from(
 	Buffer.from(
 		'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABHNCSVQICAgIfAhkiAAAAAFzUkdCAK7OHOkAAAALSURBVAiZY2AAAgAABQABYlUyiAAAAABJRU5ErkJggg==',

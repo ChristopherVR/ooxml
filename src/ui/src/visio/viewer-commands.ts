@@ -1,13 +1,13 @@
-import type { ViewerController, ViewerState } from './controller.js';
+import type { ViewerController, ViewerState } from './controller';
 import { editErrorMessage, isEditCancellation, visioPageInsertCommand } from 'ooxml-core/visio/ui';
-import { RIBBON_ACTION_EVENT, type VisioRibbonAction } from './ribbon-action.js';
-import type { RibbonCommand } from './ribbon-parts.js';
-import { routeRibbonAction, type RibbonTargets } from './ribbon-router.js';
-import { RectangleDrawTool } from './viewer-draw-tool.js';
-import type { Rulers } from './viewer-ruler.js';
-import { ViewerPageOrder } from './viewer-page-order.js';
-import { ViewerPageRename } from './viewer-page-rename.js';
-import { ViewerPageDelete } from './viewer-page-delete.js';
+import { RIBBON_ACTION_EVENT, type VisioRibbonAction } from './ribbon-action';
+import type { RibbonCommand } from './ribbon-parts';
+import { routeRibbonAction, type RibbonTargets } from './ribbon-router';
+import { RectangleDrawTool } from './viewer-draw-tool';
+import type { Rulers } from './viewer-ruler';
+import { ViewerPageOrder } from './viewer-page-order';
+import { ViewerPageRename } from './viewer-page-rename';
+import { ViewerPageDelete } from './viewer-page-delete';
 
 export type CanvasTool = 'pointer' | 'rectangle';
 interface CommandHost {

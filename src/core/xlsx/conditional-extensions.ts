@@ -9,19 +9,21 @@ import {
 } from '../xml/index.js';
 import type { ConditionalRule, Worksheet } from './model.js';
 import { formatRange } from './address.js';
-import { descendants, selfContainedXml } from './read/xml-util.js';
+import { descendants, selfContainedXml, numAttr } from './read/xml-util.js';
 import { inlineFragment } from './write/xml-out.js';
 
 const XM = 'http://schemas.microsoft.com/office/excel/2006/main';
 const URI = '{78C0D931-6437-407d-A8EE-F0AAD7539E65}';
 
-/** Keep typed threshold edits authoritative without downgrading untouched automatic limits. */
-function writeThresholds(
+/** Keep typed edits authoritative without downgrading untouched automatic limits. */
+function writeSettings(
 	node: XmlElement,
 	rule: Extract<ConditionalRule, { type: 'dataBar' }>,
 ): void {
 	const bar = first(node, 'dataBar', NS.x14);
 	if (!bar) return;
+	if (rule.minLength !== undefined) bar.setAttribute('minLength', String(rule.minLength));
+	if (rule.maxLength !== undefined) bar.setAttribute('maxLength', String(rule.maxLength));
 	const thresholds = children(bar, 'cfvo', NS.x14);
 	for (const [index, threshold] of [rule.min, rule.max].entries()) {
 		const target = thresholds[index];
@@ -58,6 +60,11 @@ export function readConditionalExtensions(sheet: Worksheet): void {
 			const rule = rules.get(node.getAttribute('id') ?? '');
 			if (!rule || node.getAttribute('type') !== 'dataBar') continue;
 			rule.extensionXml = selfContainedXml(node);
+			const bar = first(node, 'dataBar', NS.x14);
+			if (bar) {
+				rule.minLength = numAttr(bar, 'minLength') ?? 10;
+				rule.maxLength = numAttr(bar, 'maxLength') ?? 90;
+			}
 			const parent = node.parentNode;
 			parent?.removeChild(node);
 			if (parent && !elements(parent).some((e) => e.localName === 'cfRule')) {
@@ -76,6 +83,32 @@ export function readConditionalExtensions(sheet: Worksheet): void {
 	}
 	if (kept.length) sheet.preserved.set('extLst', kept);
 	else sheet.preserved.delete('extLst');
+}
+
+/** Excel 2007 fallback percentages for the linked full-width Excel 2010 bar. */
+export function dataBarBaseLengths(rule: Extract<ConditionalRule, { type: 'dataBar' }>) {
+	if (!rule.extensionId || !rule.extensionXml)
+		return { minLength: rule.minLength, maxLength: rule.maxLength };
+	const lengths = dataBarLengths(rule);
+	return lengths.minLength === 0 && lengths.maxLength === 100
+		? { minLength: 10, maxLength: 90 }
+		: lengths;
+}
+
+/** Resolve logical percentages once for both layout and the legacy fallback writer. */
+export function dataBarLengths(
+	rule: Extract<ConditionalRule, { type: 'dataBar' }>,
+	node?: XmlElement,
+) {
+	const bar =
+		node ??
+		(rule.extensionXml
+			? first(parseXml(rule.extensionXml).documentElement, 'dataBar', NS.x14)
+			: undefined);
+	return {
+		minLength: rule.minLength ?? numAttr(bar, 'minLength') ?? 10,
+		maxLength: rule.maxLength ?? numAttr(bar, 'maxLength') ?? 90,
+	};
 }
 
 /** Rewrite extension formulas through the same product formula engine as the base rule. */
@@ -120,7 +153,7 @@ export function conditionalExtensionsXml(sheet: Worksheet): string {
 			}
 			const group = doc.createElementNS(NS.x14, 'x14:conditionalFormatting');
 			const node = doc.importNode(parseXml(rule.extensionXml).documentElement, true);
-			writeThresholds(node, rule);
+			writeSettings(node, rule);
 			node.setAttribute('id', rule.extensionId);
 			if (node.hasAttribute('priority')) node.setAttribute('priority', String(rule.priority));
 			group.appendChild(node);

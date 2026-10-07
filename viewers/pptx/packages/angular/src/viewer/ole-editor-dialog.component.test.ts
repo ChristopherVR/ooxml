@@ -342,8 +342,8 @@ describe('oleEditorDialogComponent shell wiring', () => {
 		expect(COMPONENT_SOURCE).toContain("'pptx.ole.editDialog.unsupported' | translate");
 	});
 
-	it('imports shared through the vendored barrel, never the bare specifier', () => {
+	it('imports the renderer through the public UI dependency', () => {
 		expect(COMPONENT_SOURCE).toContain("from 'ooxml-ui/pptx'");
-		expect(COMPONENT_SOURCE).not.toContain("from 'ooxml-ui/pptx'");
+		expect(COMPONENT_SOURCE).not.toContain("from '../internal/shared'");
 	});
 });

@@ -1,7 +1,7 @@
 import { it, expect } from 'vitest';
 import JSZip from 'jszip';
-import { editVsdx } from './edit.js';
-import { fixture, shape, xml } from './test-fixtures.js';
+import { editVsdx } from './edit';
+import { fixture, shape, xml } from './test-fixtures';
 const command = { type: 'replace-plain-text' as const, pageId: '0', shapeId: '1', text: 'new' };
 const base = (
 	contents = `<Shapes>${shape('1', '<Text>old</Text>')}</Shapes>`,
@@ -69,8 +69,8 @@ it('review rejects duplicated Page Rel', async () => {
 	).toBe(true);
 });
 it('review enforces final aggregate XML budget', async () => {
-	const { inspectXml } = await import('./xml-validation.js');
-	const { DEFAULTS } = await import('./package-common.js');
+	const { inspectXml } = await import('./xml-validation');
+	const { DEFAULTS } = await import('./package-common');
 	const input = await base(`<Shapes>${shape('1', '<Text/>')}</Shapes>`),
 		zip = await JSZip.loadAsync(input);
 	let total = 0;

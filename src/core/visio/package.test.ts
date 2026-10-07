@@ -1,7 +1,7 @@
 import { deflateRawSync } from 'node:zlib';
 import JSZip from 'jszip';
 import { describe, expect, it, vi } from 'vitest';
-import { VisioPackage, VisioPackageError, type VisioPackageLimits } from './package.js';
+import { VisioPackage, VisioPackageError, type VisioPackageLimits } from './package';
 
 const encode = (value: string) => new TextEncoder().encode(value);
 function crc32(data: Uint8Array): number {

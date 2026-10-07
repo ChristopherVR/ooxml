@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { parseXml } from '../xml/index.js';
-import { parseVsdx } from './parser.js';
-import { readSheet, type Sheet } from './sheet.js';
-import { rootThemeSheet } from './theme-root.js';
-import { cell, fixture, rectangle, row, section, shape, xml } from './test-fixtures.js';
+import { parseXml } from '../xml/index';
+import { parseVsdx } from './parser';
+import { readSheet, type Sheet } from './sheet';
+import { rootThemeSheet } from './theme-root';
+import { cell, fixture, rectangle, row, section, shape, xml } from './test-fixtures';
 
 const gradient = (contents: string) => section('FillGradient', contents);
 const stop = (

@@ -24,7 +24,7 @@ import {
 	type VisioEdit,
 	type SvgExportOptions,
 	type CurrentPagePrintSnapshotOptions,
-} from './common.js';
+} from './common';
 /** Angular input/output and lifecycle wiring over the one shared browser binding. */
 @Component({ selector: 'visio-viewer-host', standalone: true, template: '' })
 export class VisioViewerComponent implements AfterViewInit, OnChanges, OnDestroy {
@@ -127,7 +127,7 @@ export type {
 	ViewerEvents,
 	ViewerEditState,
 	VsdxExportResult,
-} from './common.js';
+} from './common';
 
 // A new shared property must also become an actual Angular input on this class.
 const completeInputs: Record<

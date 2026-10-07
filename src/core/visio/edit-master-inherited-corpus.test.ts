@@ -4,10 +4,10 @@ import { join } from 'node:path';
 import JSZip from 'jszip';
 import { XMLSerializer, type Node as XmlNode } from '@xmldom/xmldom';
 import { describe, expect, it } from 'vitest';
-import { parseXml, buildXml } from '../xml/index.js';
-import { editVsdx } from './edit.js';
-import { parseVsdx } from './parser.js';
-import { children } from './sheet.js';
+import { parseXml, buildXml } from '../xml/index';
+import { editVsdx } from './edit';
+import { parseVsdx } from './parser';
+import { children } from './sheet';
 const directory = process.env['VISIO_EDIT_CORPUS_DIR'];
 const targets = [
 	[

@@ -1,14 +1,14 @@
-import { attribute, child, children, yes } from './sheet.js';
-import { related, visioXml } from './parts.js';
-import { fail, decodePath } from './package-common.js';
-import type { VisioPackage } from './package.js';
-import { unquotedVisioFormula } from './formula-source.js';
-import { editableVisioPageRoots } from './edit-page-roots.js';
+import { attribute, child, children, yes } from './sheet';
+import { related, visioXml } from './parts';
+import { fail, decodePath } from './package-common';
+import type { VisioPackage } from './package';
+import { unquotedVisioFormula } from './formula-source';
+import { editableVisioPageRoots } from './edit-page-roots';
 import {
 	relationshipsPartFor as pageRelationshipsPath,
 	nextRelationshipId,
-} from '../opc/relationships.js';
-import { parseXml } from '../xml/index.js';
+} from '../opc/relationships';
+import { parseXml } from '../xml/index';
 
 const officeRel = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
 const pageType = 'http://schemas.microsoft.com/visio/2010/relationships/page';

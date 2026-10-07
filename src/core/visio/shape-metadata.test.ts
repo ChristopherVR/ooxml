@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
-import { parseXml } from '../xml/index.js';
-import { parseVsdx } from './index.js';
-import { createMetadataBudget, shapeMetadata } from './shape-metadata.js';
-import { mergeSheets, readSheet } from './sheet.js';
-import { cell, fixture, section, shape, xml } from './test-fixtures.js';
+import { parseXml } from '../xml/index';
+import { parseVsdx } from './index';
+import { createMetadataBudget, shapeMetadata } from './shape-metadata';
+import { mergeSheets, readSheet } from './sheet';
+import { cell, fixture, section, shape, xml } from './test-fixtures';
 
 const sheet = (data: string) => readSheet(parseXml(xml('Shape', data)).documentElement);
 const named = (name: string, data: string, attributes = '') =>

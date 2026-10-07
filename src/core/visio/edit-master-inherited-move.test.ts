@@ -1,10 +1,10 @@
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
-import { editVsdx, type VisioEdit } from './edit.js';
-import { parseVsdx } from './parser.js';
-import { parseXml } from '../xml/index.js';
-import { VisioPackageError } from './package-common.js';
-import { cell, fixture, rectangle, shape } from './test-fixtures.js';
+import { editVsdx, type VisioEdit } from './edit';
+import { parseVsdx } from './parser';
+import { parseXml } from '../xml/index';
+import { VisioPackageError } from './package-common';
+import { cell, fixture, rectangle, shape } from './test-fixtures';
 const pins = cell('PinX', 2) + cell('PinY', 3);
 const dimensions =
 	cell('Width', 3) +

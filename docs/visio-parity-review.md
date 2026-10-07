@@ -411,3 +411,35 @@ browser page/history/save workflows passed. Strict core declarations/typecheckin
 core Visio ESM/CJS and shared UI ESM builds passed. A later native verification
 rerun stalled during reopening and was terminated; the record above is from the
 completed earlier run. Full parity remains unproven.
+
+## Extensionless imports (2026-10-07)
+
+Following the explicit repository preference, Visio TypeScript sources now use
+extensionless relative imports, including core, shared UI, framework bindings,
+demos and tests. This supersedes the `.js` source convention described above.
+The existing ESNext/Bundler configurations support these paths. Runtime `.mjs`
+script imports, package subpaths, JSON imports and built asset/worker URLs retain
+their required extensions. The published runtime remains bundled ESM/CJS;
+JavaScript source output is not emitted as an unbundled runtime module tree.
+
+The clean NodeNext consumer check exposed unresolved exports when declarations
+retained extensionless relative paths. One shared declaration normalizer now runs
+in core, UI and Visio package builds; it changes generated declaration paths to
+ESM extensions only when matching emitted declarations exist. Source imports stay
+extensionless. Comments, string literals, explicit asset extensions and package
+subpaths are preserved. Its regression compiles a strict NodeNext consumer and
+checks that public types do not silently become `any`. The Svelte package builder
+also rewrites its extensionless common source import to the built runtime URL.
+
+Verification: strict core typechecking/declaration generation, direct Node ESM/CJS
+imports and a strict NodeNext consumer of the local core package passed. All 2,001
+core tests and 708 shared UI tests passed (30 and six optional skips respectively).
+Binding typechecks, Svelte checks, 79 client tests, five SSR tests, viewer
+TypeScript, all seven package builds and the six browser page/history/save
+workflows passed. All 129 repository script tests passed. The broad UI declaration
+build retains its existing Teams/PowerPoint resolution errors; Visio declarations
+were emitted and the binding checks passed against them.
+
+All seven tarballs also passed a clean registry-only consumer install, ESM
+imports, NodeNext declarations, Svelte consumer compilation and production parser
+and edit-worker checks after the shared declaration step.

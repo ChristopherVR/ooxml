@@ -3,6 +3,7 @@
 // declaration merge needs all of them.
 import { spawn } from 'node:child_process';
 import { rmSync } from 'node:fs';
+import { rewriteEsmDeclarationImports } from '../../../scripts/esm-declarations.mjs';
 
 const run = (cmd, args) =>
 	new Promise((resolve, reject) => {
@@ -22,3 +23,4 @@ await Promise.all([
 	run('tsdown', ['--config', 'tsdown.pptx.config.ts']),
 ]);
 await run('node', ['scripts/pptx/merge-declarations.mjs']);
+rewriteEsmDeclarationImports('dist');

@@ -1,7 +1,7 @@
-import { parseLegacyVsd } from './legacy.js';
-import { parseVsdx, type ParseVsdxOptions } from './parser.js';
-import { VisioPackageError } from './package.js';
-import type { VisioDocument } from './model.js';
+import { parseLegacyVsd } from './legacy';
+import { parseVsdx, type ParseVsdxOptions } from './parser';
+import { VisioPackageError } from './package';
+import type { VisioDocument } from './model';
 
 /** Dispatch on container bytes, keeping the VSDX parser and its options intact. */
 export async function loadVisio(

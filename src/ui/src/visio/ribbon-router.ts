@@ -1,5 +1,5 @@
-import type { ViewerController } from './controller.js';
-import type { VisioRibbonAction } from './ribbon-action.js';
+import type { ViewerController } from './controller';
+import type { VisioRibbonAction } from './ribbon-action';
 
 /** The controllers a ribbon action can reach. The element supplies each one. */
 export interface RibbonTargets {

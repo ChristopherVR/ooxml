@@ -1,6 +1,7 @@
 import type { EditorView } from 'prosemirror-view';
 import type { Comment, DocumentModel } from 'ooxml-core/docx';
 import type { WordYjsCollaboration } from 'ooxml-core/docx/ui';
+import { toggleTrackChanges } from 'ooxml-core/docx/ui';
 import {
 	addComment,
 	commentIdsAtSelection,
@@ -121,12 +122,8 @@ export class ReviewController {
 
 	handleReview(key: Extract<RibbonAction, { type: 'review' }>['key']): void {
 		if (key === 'trackChanges') {
-			this.host.setModel({
-				...this.host.getModel(),
-				trackChanges: !this.host.getModel().trackChanges,
-			});
-			this.host.notifyChange();
-			this.host.refresh();
+			const view = this.host.getView();
+			if (view) toggleTrackChanges(view.state, view.dispatch, view);
 			return;
 		}
 		const view = this.host.getView();

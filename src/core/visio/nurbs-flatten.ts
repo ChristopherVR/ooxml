@@ -1,4 +1,4 @@
-import type { NurbsControl, NurbsPoint } from './nurbs.js';
+import type { NurbsControl, NurbsPoint } from './nurbs';
 
 // Knot insertion preserves the curve. Positive-weight rational Bezier curves stay
 // inside the Euclidean control hull, so hull-to-segment distance bounds deviation.

@@ -1,5 +1,5 @@
 import { beforeEach, expect, it, vi } from 'vitest';
-import { current, emit, reset } from './mock-binding.js';
+import { current, emit, reset } from './mock-binding';
 import '@angular/compiler';
 import { createApplication } from '@angular/platform-browser';
 import {
@@ -7,8 +7,8 @@ import {
 	provideZonelessChangeDetection,
 	reflectComponentType,
 } from '@angular/core';
-import { VisioViewerComponent } from '../src/angular.js';
-import { propertyKeys } from '../src/common.js';
+import { VisioViewerComponent } from '../src/angular';
+import { propertyKeys } from '../src/common';
 beforeEach(reset);
 it('Angular mounts with real native lifecycle and zoneless input/output updates', async () => {
 	expect(
