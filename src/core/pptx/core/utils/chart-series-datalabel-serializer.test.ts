@@ -123,6 +123,34 @@ describe('applySeriesDataLabelsToXml', () => {
 		expect((t['a:t'] as string) ?? t['a:t']).toBe('Peak');
 	});
 
+	it('leaves an unchanged rich label untouched', () => {
+		const ser = seriesNode();
+		const tx: XmlObject = {
+			'c:rich': {
+				'a:bodyPr': {},
+				'a:lstStyle': {},
+				'a:p': { 'a:r': { 'a:rPr': { '@_sz': '800', '@_b': '1' }, 'a:t': '1,444' } },
+			},
+		};
+		ser['c:dLbls'] = { 'c:dLbl': { 'c:idx': { '@_val': '0' }, 'c:tx': structuredClone(tx) } };
+		applySeriesDataLabelsToXml(
+			ser,
+			labels([{ idx: 0, text: '1,444', showVal: true, position: 'outEnd' }]),
+			getLocalName,
+		);
+		expect(((ser['c:dLbls'] as XmlObject)['c:dLbl'] as XmlObject)['c:tx']).toStrictEqual(tx);
+	});
+
+	it('writes no c:tx for a label whose text comes from its "Value From Cells" range', () => {
+		const ser = seriesNode();
+		applySeriesDataLabelsToXml(
+			ser,
+			labels([{ idx: 0, text: 'Alpha', textFromCells: true, showVal: true }]),
+			getLocalName,
+		);
+		expect('c:tx' in ((ser['c:dLbls'] as XmlObject)['c:dLbl'] as XmlObject)).toBe(false);
+	});
+
 	it('preserves group-level dLbls settings while reconciling c:dLbl', () => {
 		const ser = seriesNode();
 		ser['c:dLbls'] = {

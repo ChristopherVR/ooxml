@@ -229,7 +229,8 @@ export function decoratePages(
 	const numbers = pageNumbers(model, pages);
 	const sectionPageCounts = new Map<number, number>();
 	for (const page of pages)
-		sectionPageCounts.set(page.sectionIndex, (sectionPageCounts.get(page.sectionIndex) ?? 0) + 1);
+		for (const sectionIndex of page.sectionIndices ?? [page.sectionIndex])
+			sectionPageCounts.set(sectionIndex, (sectionPageCounts.get(sectionIndex) ?? 0) + 1);
 	pages.forEach((page, index) => {
 		const sheet = sheets[index];
 		if (!sheet) return;

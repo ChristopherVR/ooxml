@@ -6,7 +6,7 @@ import { openEditablePackage, writeEditedPackage } from './edit-package.js';
 import { serializeEditedXml } from './edit-text.js';
 import { parseXml } from '../xml/index.js';
 import { updatePageAppProperties } from './edit-page-properties.js';
-import type { VisioPageInsert } from './edit-commands.js';
+import type { VisioPageEdit } from './edit-commands.js';
 import type { EditVsdxResult } from './edit.js';
 
 const officeRel = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
@@ -17,10 +17,11 @@ function copy(root: Element): Element {
 }
 
 /** Source-backed page metadata/OPC transaction. Existing page payloads stay untouched. */
-export async function insertVsdxPages(
+export async function editVsdxPages(
+	original: Uint8Array,
 	pkg: VisioPackage,
 	parts: Map<string, Uint8Array>,
-	commands: readonly VisioPageInsert[],
+	commands: readonly VisioPageEdit[],
 	limits: VisioPackageLimits,
 	maxOutput: number,
 	deadline: number,
@@ -53,6 +54,17 @@ export async function insertVsdxPages(
 	for (const command of commands) {
 		check();
 		const existing = children(pages, 'Page');
+		if (command.type === 'reorder-page') {
+			const target = existing.find((page) => attribute(page, 'ID') === command.pageId);
+			if (!target) fail('EDIT_TARGET_NOT_FOUND', 'Page does not exist.');
+			if (command.index >= existing.length)
+				fail('INVALID_EDIT', 'Page index exceeds the page list.');
+			if (existing.indexOf(target) === command.index) continue;
+			const remaining = existing.filter((page) => page !== target);
+			pages.insertBefore(target, remaining[command.index] ?? null);
+			dirty.set(pagesPart, pages);
+			continue;
+		}
 		if (existing.some((page) => attribute(page, 'ID') === command.pageId))
 			fail('EDIT_DUPLICATE_PAGE', 'New page ID already exists.');
 		if (
@@ -108,12 +120,20 @@ export async function insertVsdxPages(
 			'preserve',
 		);
 		dirty.set(path, contentDoc.documentElement);
+		dirty.set(pagesPart, pages);
+		dirty.set(relsPart, rels);
+		dirty.set('[Content_Types].xml', types);
 	}
-	dirty.set(pagesPart, pages);
-	dirty.set(relsPart, rels);
-	dirty.set('[Content_Types].xml', types);
+	if (!dirty.size) {
+		if (original.length > maxOutput)
+			fail('LIMIT_EDIT_OUTPUT', 'Saved package exceeds output limit.');
+		return { bytes: original, changedParts: [], diagnostics: [] };
+	}
 	await updatePageAppProperties(pkg, pages, priorCount, dirty, limits, check);
-	if (parts.size + commands.length > limits.maxEntries)
+	if (
+		parts.size + commands.filter((command) => command.type === 'insert-page').length >
+		limits.maxEntries
+	)
 		fail('LIMIT_ENTRIES', 'Page insertion exceeds package entry limit.');
 	let total = [...parts.values()].reduce((sum, bytes) => sum + bytes.length, 0),
 		nodes = 0;
@@ -142,7 +162,7 @@ export async function insertVsdxPages(
 			{
 				code: 'edit-pages-experimental',
 				message:
-					'Blank pages were inserted with copied page settings. Page-count/index-dependent formula caches were not recalculated.',
+					'Page metadata was edited. Page-count/index-dependent formula caches were not recalculated.',
 			},
 		],
 	};

@@ -1,6 +1,7 @@
 import type { EditorView } from 'prosemirror-view';
 import type { InlineImage, PendingMediaPart } from 'ooxml-core/docx';
 import { schema } from './schema';
+import { wordYjsPluginKey } from 'ooxml-core/docx/ui';
 
 /** Raster formats Word stores directly; SVG would need a PNG fallback part, which is not produced. */
 export const PICTURE_TYPES: Record<string, string> = {
@@ -89,14 +90,18 @@ export interface StagedPicture {
 }
 
 /** Prepares an inline picture and the media bytes that must be written with it on save. */
-export async function stagePicture(file: File, maxWidthPx: number): Promise<StagedPicture> {
+export async function stagePicture(
+	file: File,
+	maxWidthPx: number,
+	partNameFor = newPicturePartName,
+): Promise<StagedPicture> {
 	const contentType = file.type.toLowerCase();
 	const altText = file.name.replace(/\.[^.]+$/, '');
 	if (contentType === 'image/svg+xml') {
 		const svg = await readBytes(file);
 		const { png, width, height } = await rasterizeSvg(svg);
 		const size = fitPicture(width, height, maxWidthPx);
-		const partName = newPicturePartName('image/png');
+		const partName = partNameFor('image/png');
 		return {
 			image: {
 				relId: '',
@@ -120,7 +125,7 @@ export async function stagePicture(file: File, maxWidthPx: number): Promise<Stag
 	return {
 		image: {
 			relId: '',
-			partName: newPicturePartName(contentType),
+			partName: partNameFor(contentType),
 			contentType,
 			widthPx,
 			heightPx,
@@ -132,6 +137,8 @@ export async function stagePicture(file: File, maxWidthPx: number): Promise<Stag
 
 /** Inserts an inline picture at the selection, replacing any selected content. */
 export function insertPicture(view: EditorView, image: InlineImage): boolean {
+	const history = wordYjsPluginKey.getState(view.state);
+	history?.stopCapturing();
 	const node = schema.nodes.image.create({
 		relId: image.relId,
 		partName: image.partName,
@@ -145,5 +152,6 @@ export function insertPicture(view: EditorView, image: InlineImage): boolean {
 		svgPartName: image.svgPartName ?? null,
 	});
 	view.dispatch(view.state.tr.replaceSelectionWith(node, false).scrollIntoView());
+	history?.stopCapturing();
 	return true;
 }

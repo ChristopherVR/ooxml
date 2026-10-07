@@ -5,6 +5,7 @@ import type { RibbonCommand } from './ribbon-parts.js';
 import { routeRibbonAction, type RibbonTargets } from './ribbon-router.js';
 import { RectangleDrawTool } from './viewer-draw-tool.js';
 import type { Rulers } from './viewer-ruler.js';
+import { ViewerPageOrder } from './viewer-page-order.js';
 
 export type CanvasTool = 'pointer' | 'rectangle';
 interface CommandHost {
@@ -35,8 +36,10 @@ export class ViewerCommands {
 	#ruler = false;
 	#pending = 0;
 	#draw: RectangleDrawTool;
+	#pageOrder: ViewerPageOrder;
 	readonly #targets: RibbonTargets;
 	constructor(private readonly host: CommandHost) {
+		this.#pageOrder = new ViewerPageOrder(host.root, host.controller);
 		this.#draw = new RectangleDrawTool(host.viewport, host.controller, {
 			active: () => this.#tool === 'rectangle',
 			announce: host.announce,
@@ -84,6 +87,8 @@ export class ViewerCommands {
 		root.addEventListener(
 			'office-command',
 			(event) => {
+				if ((event as CustomEvent<{ command?: unknown }>).detail?.command === 'reorder-pages')
+					this.#pageOrder.show();
 				if (
 					(event as CustomEvent<{ command?: unknown }>).detail?.command === 'tab-add' &&
 					(event.target as Element)?.matches?.('.page-tabs')
@@ -129,6 +134,7 @@ export class ViewerCommands {
 		);
 		const disposeDraw = this.#draw.wire();
 		return () => {
+			this.#pageOrder.close();
 			++this.#pending;
 			events.abort();
 			disposeDraw();
@@ -231,6 +237,7 @@ export class ViewerCommands {
 		this.run(action);
 	}
 	render(state: ViewerState): void {
+		this.#pageOrder.render(state);
 		const { root, viewport } = this.host;
 		const button = (name: string) => root.querySelector<RibbonCommand>(`[command="${name}"]`)!;
 		const box = (name: string) =>

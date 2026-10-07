@@ -60,8 +60,17 @@ export interface AssetSync {
 	read: (owner: YMapLike, assets: YMapLike, target: Record<string, unknown>) => void;
 }
 
-const isPayload = (value: unknown): value is string =>
-	typeof value === 'string' && value.length > 0;
+type AssetPayload = string | Uint8Array;
+const isPayload = (value: unknown): value is AssetPayload =>
+	(typeof value === 'string' || value instanceof Uint8Array) && value.length > 0;
+const copyPayload = (value: AssetPayload): AssetPayload =>
+	typeof value === 'string' ? value : value.slice();
+const samePayload = (a: unknown, b: AssetPayload): boolean =>
+	a === b ||
+	(a instanceof Uint8Array &&
+		b instanceof Uint8Array &&
+		a.length === b.length &&
+		a.every((byte, index) => byte === b[index]));
 
 export function createAssetSync(spec: AssetSpec): AssetSync {
 	const suffix = spec.versionSuffix ?? '__v';
@@ -83,7 +92,7 @@ export function createAssetSync(spec: AssetSpec): AssetSync {
 				const value = record[field];
 				if (!isPayload(value)) continue;
 				const key = assetKey(ownerId, field);
-				if (assets.get(key) !== value) assets.set(key, value);
+				if (!samePayload(assets.get(key), value)) assets.set(key, copyPayload(value));
 				owner.set(refOf(field), key);
 			}
 		},
@@ -93,8 +102,8 @@ export function createAssetSync(spec: AssetSpec): AssetSync {
 				const value = record[field];
 				if (isPayload(value)) {
 					const key = assetKey(ownerId, field);
-					if (assets.get(key) !== value) {
-						assets.set(key, value);
+					if (!samePayload(assets.get(key), value)) {
+						assets.set(key, copyPayload(value));
 						// An in-place swap leaves the ref unchanged, so nothing on the owner would move
 						// and no peer would re-read the payload: bump a counter to force a transaction.
 						const current = owner.get(versionKey(field));
@@ -115,7 +124,8 @@ export function createAssetSync(spec: AssetSpec): AssetSync {
 				const ref = owner.get(refKey);
 				if (typeof ref !== 'string') continue;
 				const value = assets.get(ref);
-				if (typeof value === 'string') target[field] = value;
+				if (typeof value === 'string' || value instanceof Uint8Array)
+					target[field] = copyPayload(value);
 			}
 		},
 	};

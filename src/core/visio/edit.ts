@@ -2,16 +2,18 @@ import { DEFAULTS, fail, type VisioPackageLimits } from './package-common.js';
 import { visioXml, related } from './parts.js';
 import { openEditablePackage, writeEditedPackage } from './edit-package.js';
 import { replacePlainText, serializeEditedXml } from './edit-text.js';
-import { snapshotVisioEdits, type VisioEdit } from './edit-commands.js';
+import { snapshotVisioEdits, isVisioPageEdit, type VisioEdit } from './edit-commands.js';
 import { applyGeometryEdit } from './edit-geometry.js';
 import { assertGeometryPackageScope } from './edit-scope.js';
 import { emptyMasterMoveProof } from './edit-master-move.js';
-import { insertVsdxPages } from './edit-pages.js';
+import { editVsdxPages } from './edit-pages.js';
 export type {
 	VisioEdit,
 	VisioTextEdit,
 	VisioGeometryEdit,
 	VisioPageInsert,
+	VisioPageReorder,
+	VisioPageEdit,
 } from './edit-commands.js';
 
 export interface EditVsdxOptions {
@@ -49,7 +51,7 @@ export async function editVsdx(
 	};
 	// Copy commands before the first await: caller mutation cannot change the transaction.
 	const allCommands = snapshotVisioEdits(edits, maxEdits, maxText);
-	const commands = allCommands.filter((command) => command.type !== 'insert-page');
+	const commands = allCommands.filter((command) => !isVisioPageEdit(command));
 	const source = input instanceof Uint8Array ? input : new Uint8Array(input);
 	if (source.length > limits.maxInputBytes) fail('LIMIT_INPUT', 'ZIP input exceeds limit.');
 	const original = new Uint8Array(source);
@@ -58,12 +60,13 @@ export async function editVsdx(
 		if (commands.length)
 			fail(
 				'EDIT_MIXED_PAGE_TRANSACTION',
-				'Page insertion and shape edits require separate transactions.',
+				'Page edits and shape edits require separate transactions.',
 			);
-		return insertVsdxPages(
+		return editVsdxPages(
+			original,
 			pkg,
 			parts,
-			allCommands.filter((command) => command.type === 'insert-page'),
+			allCommands.filter(isVisioPageEdit),
 			limits,
 			maxOutput,
 			deadline,

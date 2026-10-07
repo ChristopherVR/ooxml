@@ -1,10 +1,4 @@
-import type {
-	Block,
-	DocumentModel,
-	Paragraph,
-	SectionProperties,
-	TextRun,
-} from '../index.js';
+import type { Block, DocumentModel, Paragraph, SectionProperties, TextRun } from '../index.js';
 import {
 	computeListLabels,
 	dateFieldResult,
@@ -311,7 +305,20 @@ export function adaptDocumentModel(
 				: {}),
 			...(sectionStart && { break: sectionStart }),
 			...(section.verticalAlign ? { verticalAlign: section.verticalAlign } : {}),
-			blocks: slice.filter((block) => !folded.has(block)),
+			// Word puts an empty continuous-break marker on the preceding line; it is not
+			// a printed blank paragraph. Keep it in the model for round-trip and editing.
+			blocks: slice.filter(
+				(block) =>
+					!folded.has(block) &&
+					!(
+						model.sections?.[index + 1]?.type === 'continuous' &&
+						block.id === section.endsAtBlockId &&
+						block.kind === 'paragraph' &&
+						!block.footnotes?.length &&
+						!block.floats?.length &&
+						block.runs.every((run) => !run.text && !run.object && !run.breakAfter)
+					),
+			),
 		};
 	});
 	return { sections: result };
