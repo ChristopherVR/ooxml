@@ -16,6 +16,11 @@ export interface NumberingLevelDefinition {
 	/** 0-based `w:ilvl`. */
 	level: number;
 	start: number;
+	/**
+	 * Parser provenance: absent w:start uses fallback 1. Other start values are authored edits;
+	 * remove this flag to author an explicit 1. Programmatic values without the flag are explicit.
+	 */
+	startWasOmitted?: true;
 	/** `w:numFmt/@w:val` (`ST_NumberFormat`), such as `decimal`, `bullet`, `lowerRoman`. Invalid values fall back to `decimal` with a parse warning. */
 	numFmt: StNumberFormat;
 	/** Raw `w:lvlText/@w:val`, with `%1`..`%9` placeholders (1-based ancestor levels) or a bullet glyph. */

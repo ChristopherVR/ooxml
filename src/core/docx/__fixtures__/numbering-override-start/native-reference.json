@@ -1,0 +1,147 @@
+{
+	"cases": [
+		{
+			"name": "default-start-only",
+			"abstractRestart": null,
+			"abstractStart": 3,
+			"fullLevel": false,
+			"fullStart": null,
+			"startOverride": 7,
+			"labels": ["1.", "1.", "7.", "8.", "2.", "7.", "2.", "7."]
+		},
+		{
+			"name": "default-full-conflict",
+			"abstractRestart": null,
+			"abstractStart": 3,
+			"fullLevel": true,
+			"fullStart": 5,
+			"startOverride": 7,
+			"labels": ["1.", "1.", "5.", "6.", "2.", "5.", "2.", "5."]
+		},
+		{
+			"name": "default-full-missing-start",
+			"abstractRestart": null,
+			"abstractStart": 3,
+			"fullLevel": true,
+			"fullStart": null,
+			"startOverride": 7,
+			"labels": ["1.", "1.", "7.", "8.", "2.", "7.", "2.", "7."]
+		},
+		{
+			"name": "default-full-without-override",
+			"abstractRestart": null,
+			"abstractStart": 3,
+			"fullLevel": true,
+			"fullStart": 5,
+			"startOverride": null,
+			"labels": ["1.", "1.", "5.", "6.", "2.", "5.", "2.", "5."]
+		},
+		{
+			"name": "default-full-matching",
+			"abstractRestart": null,
+			"abstractStart": 3,
+			"fullLevel": true,
+			"fullStart": 7,
+			"startOverride": 7,
+			"labels": ["1.", "1.", "7.", "8.", "2.", "7.", "2.", "7."]
+		},
+		{
+			"name": "never-start-only",
+			"abstractRestart": 0,
+			"abstractStart": 3,
+			"fullLevel": false,
+			"fullStart": null,
+			"startOverride": 7,
+			"labels": ["1.", "1.", "7.", "8.", "2.", "9.", "2.", "10."]
+		},
+		{
+			"name": "never-full-conflict",
+			"abstractRestart": 0,
+			"abstractStart": 3,
+			"fullLevel": true,
+			"fullStart": 5,
+			"startOverride": 7,
+			"labels": ["1.", "1.", "5.", "6.", "2.", "7.", "2.", "8."]
+		},
+		{
+			"name": "never-full-missing-start",
+			"abstractRestart": 0,
+			"abstractStart": 3,
+			"fullLevel": true,
+			"fullStart": null,
+			"startOverride": 7,
+			"labels": ["1.", "1.", "7.", "8.", "2.", "9.", "2.", "10."]
+		},
+		{
+			"name": "never-full-without-override",
+			"abstractRestart": 0,
+			"abstractStart": 3,
+			"fullLevel": true,
+			"fullStart": 5,
+			"startOverride": null,
+			"labels": ["1.", "1.", "3.", "4.", "2.", "5.", "2.", "6."]
+		},
+		{
+			"name": "never-full-matching",
+			"abstractRestart": 0,
+			"abstractStart": 3,
+			"fullLevel": true,
+			"fullStart": 7,
+			"startOverride": 7,
+			"labels": ["1.", "1.", "7.", "8.", "2.", "9.", "2.", "10."]
+		},
+		{
+			"name": "default-full-no-start-no-override",
+			"abstractRestart": null,
+			"abstractStart": 3,
+			"fullLevel": true,
+			"fullStart": null,
+			"startOverride": null,
+			"labels": ["1.", "1.", "0.", "1.", "2.", "0.", "2.", "0."]
+		},
+		{
+			"name": "never-full-no-start-no-override",
+			"abstractRestart": 0,
+			"abstractStart": 3,
+			"fullLevel": true,
+			"fullStart": null,
+			"startOverride": null,
+			"labels": ["1.", "1.", "3.", "4.", "2.", "5.", "2.", "6."]
+		},
+		{
+			"name": "abstract-default-missing",
+			"abstractRestart": null,
+			"abstractStart": null,
+			"fullLevel": false,
+			"fullStart": null,
+			"startOverride": null,
+			"labels": ["1.", "1.", "0.", "1.", "2.", "0.", "2.", "0."]
+		},
+		{
+			"name": "abstract-never-missing",
+			"abstractRestart": 0,
+			"abstractStart": null,
+			"fullLevel": false,
+			"fullStart": null,
+			"startOverride": null,
+			"labels": ["1.", "1.", "0.", "1.", "2.", "2.", "2.", "3."]
+		},
+		{
+			"name": "never-omitted-abstract-full-start",
+			"abstractRestart": 0,
+			"abstractStart": null,
+			"fullLevel": true,
+			"fullStart": 5,
+			"startOverride": null,
+			"labels": ["1.", "1.", "0.", "1.", "2.", "2.", "2.", "3."]
+		}
+	],
+	"wordVersion": "16.0",
+	"wordBuild": "16.0.20430",
+	"recordedDate": "2026-10-08",
+	"scope": "installed perpetual Word; not current Microsoft 365 subscription certification",
+	"source": "https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oi29500/8f145055-5422-4df0-933d-e67a81c633cd",
+	"evidenceLimit": "Observed explicit full-level start precedence differs from the documented ignored override-start behavior; use this bounded build evidence without claiming universal Word behavior.",
+	"generator": "bun scripts/generate-word-numbering-overrides.mjs <fixture-directory> start; shared numberingStartFixture(case)",
+	"recorder": "scripts/record-word-numbering-overrides.ps1 -FixtureDirectory <fixture-directory> -OutputPath <reference> -Kind start"
+}

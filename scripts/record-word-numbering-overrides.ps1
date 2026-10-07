@@ -1,9 +1,9 @@
 # Generate fixtures with bun scripts/generate-word-numbering-overrides.mjs <fixture-directory>.
 # Record labels with an owned hidden Word application, opening synthetic sources read-only.
-param([Parameter(Mandatory)][string]$FixtureDirectory, [Parameter(Mandatory)][string]$OutputPath)
+param([Parameter(Mandatory)][string]$FixtureDirectory, [Parameter(Mandatory)][string]$OutputPath, [ValidateSet('restart', 'start')][string]$Kind = 'restart')
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
-$referencePath = Join-Path $root 'src/core/docx/__fixtures__/numbering-override-restart/native-reference.json'
+$referencePath = Join-Path $root "src/core/docx/__fixtures__/numbering-override-$Kind/native-reference.json"
 $reference = Get-Content -LiteralPath $referencePath -Raw | ConvertFrom-Json
 $fixtures = (Resolve-Path -LiteralPath $FixtureDirectory).Path
 $application = $null

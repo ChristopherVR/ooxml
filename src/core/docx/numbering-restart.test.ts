@@ -50,7 +50,9 @@ it('resolves restart and start overrides per numbering instance without sharing 
 	catalog.nums['2'] = {
 		id: '2',
 		abstractNumId: '0',
-		levelOverrides: { 2: { startOverride: 7, lvl: { ...level, lvlRestart: 0 } } },
+		// Keep both starts consistent here: this case tests independent instances.
+		// Conflicting start values have their own native Word compatibility cases.
+		levelOverrides: { 2: { startOverride: 7, lvl: { ...level, start: 7, lvlRestart: 0 } } },
 	};
 	model.blocks = [2, 1, 2, 1, 2].map((numId, i) => ({
 		type: 'paragraph',

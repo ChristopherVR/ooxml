@@ -30,7 +30,8 @@ function buildLevelElement(doc: XmlDocument, def: NumberingLevelDefinition): Xml
 	const lvl = makeW(doc, 'lvl');
 	setAttribute(lvl, 'ilvl', String(def.level));
 	// CT_Lvl order: start, numFmt, lvlRestart, pStyle, isLgl, suff, lvlText, lvlPicBulletId, legacy, lvlJc, pPr, rPr.
-	lvl.appendChild(valueElement(doc, 'start', String(def.start)));
+	if (!def.startWasOmitted || def.start !== 1)
+		lvl.appendChild(valueElement(doc, 'start', String(def.start)));
 	lvl.appendChild(valueElement(doc, 'numFmt', def.numFmt));
 	if (def.lvlRestart !== undefined)
 		lvl.appendChild(valueElement(doc, 'lvlRestart', String(def.lvlRestart)));

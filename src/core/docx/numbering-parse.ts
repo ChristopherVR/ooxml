@@ -46,6 +46,7 @@ export function parseNumberingLevel(lvl: XmlElement): NumberingLevelDefinition {
 	const ind = first(first(lvl, 'pPr'), 'ind');
 	const suffRaw = getW(first(lvl, 'suff'), 'val');
 	const result: NumberingLevelDefinition = { level, start, numFmt, lvlText };
+	if (!first(lvl, 'start')) result.startWasOmitted = true;
 	const paragraphStyleId = getW(first(lvl, 'pStyle'), 'val');
 	if (paragraphStyleId) result.paragraphStyleId = paragraphStyleId;
 	if (jc === 'left' || jc === 'center' || jc === 'right') result.lvlJc = jc;
@@ -139,7 +140,12 @@ export function resolveNumberingLevel(
 	const num = catalog.nums[numId];
 	if (!num) return undefined;
 	const override = num.levelOverrides?.[level];
-	const abstract = catalog.abstractNums[num.abstractNumId]?.levels[level];
+	const sourceAbstract = catalog.abstractNums[num.abstractNumId]?.levels[level];
+	// An omitted abstract start displays zero in Word; keep raw parser provenance unchanged.
+	const abstract =
+		sourceAbstract?.startWasOmitted && sourceAbstract.start === 1
+			? { ...sourceAbstract, start: 0 }
+			: sourceAbstract;
 	let base = override?.lvl ?? abstract;
 	if (!base) return undefined;
 	if (override?.lvl) {
@@ -151,5 +157,13 @@ export function resolveNumberingLevel(
 			...(abstract?.lvlRestart !== undefined ? { lvlRestart: abstract.lvlRestart } : {}),
 		};
 	}
-	return override?.startOverride !== undefined ? { ...base, start: override.startOverride } : base;
+	let start = override?.startOverride ?? base.start;
+	if (override?.lvl) {
+		// Native Word 16.0.20430 gives an explicit full-level start precedence over
+		// startOverride. A missing full-level start leaves startOverride effective.
+		if (abstract?.lvlRestart === 0 && override.startOverride === undefined) start = abstract.start;
+		else if (!override.lvl.startWasOmitted || override.lvl.start !== 1) start = override.lvl.start;
+		else start = override.startOverride ?? 0;
+	}
+	return start !== base.start ? { ...base, start } : base;
 }
