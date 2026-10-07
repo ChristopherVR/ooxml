@@ -1,3 +1,5 @@
+import type { CollaborationConfig, YDocLike, YjsFactories } from 'ooxml-ui/pptx';
+import { reconcileSlidesInYDoc } from 'ooxml-ui/pptx';
 // @vitest-environment happy-dom
 /**
  * The elected-writer (`role: 'owner'`) write-back scheduler used to call
@@ -7,8 +9,6 @@
  * `getSaveOptions` dep reaches the `handler.save(...)` call.
  */
 import type { PptxHandlerSaveOptions, PptxSlide } from 'pptx-viewer-core';
-import type { CollaborationConfig, YDocLike, YjsFactories } from 'ooxml-ui/pptx';
-import { reconcileSlidesInYDoc } from 'ooxml-ui/pptx';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
@@ -22,7 +22,7 @@ const saveMock = vi.fn().mockResolvedValue(new Uint8Array([0x50, 0x4b, 0x03, 0x0
 // Web-control setup may preload the render barrel before this test installs its core mock.
 vi.hoisted(() => vi.resetModules());
 
-vi.mock(import('pptx-viewer-core'), async (importOriginal) => {
+vi.mock(import('ooxml-core/pptx'), async (importOriginal) => {
 	const actual = await importOriginal();
 	return {
 		...actual,
