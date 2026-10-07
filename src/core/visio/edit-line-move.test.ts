@@ -126,6 +126,10 @@ it.each([
 	{ EndY: [1.5, 'Sheet.2!PinY'] },
 	{ LockMoveX: [1] },
 	{ LockMoveY: [1] },
+	{ LockBegin: [1] },
+	{ LockEnd: [1] },
+	{ LockBegin: [0, '1'] },
+	{ LockEnd: [0, 'Sheet.2!User.lock'] },
 	{ PinX: [99, '(BeginX+EndX)/2'] },
 	{ Width: [3, 'SQRT((EndX-BeginX)^2+(EndY-BeginY)^2)'] },
 	{ Angle: [0, '(PinX-2in)/1in'] },
@@ -146,7 +150,7 @@ it('keeps an exact no-op unchanged even when endpoint constants are guarded', as
 	expect(saved.bytes).toEqual(bytes);
 });
 
-it('rejects glued lines, curved geometry, endpoint angle units, resizing and deletion', async () => {
+it('rejects glued lines, curved movement geometry, endpoint angle units and resizing', async () => {
 	await expect(
 		editVsdx(
 			await source(
@@ -181,7 +185,15 @@ it('rejects glued lines, curved geometry, endpoint angle units, resizing and del
 	await expect(
 		editVsdx(bytes, [{ type: 'resize-shape', pageId: '0', shapeId: '1', width: 3, height: 1 }]),
 	).rejects.toThrow();
-	await expect(
-		editVsdx(bytes, [{ type: 'delete-shape', pageId: '0', shapeId: '1' }]),
-	).rejects.toThrow();
 });
+
+it.each(['LockBegin', 'LockEnd'])(
+	'resolves inherited %s through shared style protection',
+	async (lock) => {
+		const bytes = await fixture({
+			document: `<StyleSheets><StyleSheet ID="0">${cell(lock, 1)}</StyleSheet></StyleSheets>`,
+			pages: [{ id: '0', contents: `<Shapes>${line()}</Shapes>` }],
+		});
+		await expect(editVsdx(bytes, [move])).rejects.toThrow('Inherited protection');
+	},
+);

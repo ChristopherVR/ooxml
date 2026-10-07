@@ -1,5 +1,6 @@
 param(
- [string]$OutputDirectory=(Join-Path $env:TEMP ('visio-line-movement-'+[guid]::NewGuid().ToString('N')))
+ [string]$OutputDirectory=(Join-Path $env:TEMP ('visio-line-movement-'+[guid]::NewGuid().ToString('N'))),
+ [switch]$DeleteAfterMove
 )
 # Capture endpoint translation without replacing native transform formulas.
 $ErrorActionPreference='Stop'
@@ -28,6 +29,8 @@ try {
   $shapes+=,$shape
   $cases+=,[ordered]@{shapeId=[string]$shape.ID;oneD=$shape.OneD;before=(Get-LineCells $shape)}
  }
+ $control=$null
+ if($DeleteAfterMove){$control=$page.DrawRectangle(6,6,7,7)}
  $document.SaveAs((Join-Path $directory 'original.vsdx')) | Out-Null
  for($i=0;$i -lt $shapes.Length;$i++){
   $shape=$shapes[$i]
@@ -49,7 +52,15 @@ try {
   $cases[$i].Add('delta',@($dx,$dy))
  }
  $document.SaveAs((Join-Path $directory 'moved.vsdx')) | Out-Null
- [ordered]@{application='Microsoft Visio';version=$app.Version;cases=$cases} | ConvertTo-Json -Depth 7 | Set-Content (Join-Path $directory 'evidence.json') -Encoding utf8
+ $evidence=[ordered]@{application='Microsoft Visio';version=$app.Version;cases=$cases}
+ if($DeleteAfterMove){
+  foreach($shape in $shapes){$shape.Delete()}
+  if($page.Shapes.Count -ne 1 -or $page.Shapes.Item(1).ID -ne $control.ID){throw 'Deletion altered the control shape.'}
+  $document.SaveAs((Join-Path $directory 'deleted.vsdx')) | Out-Null
+  $evidence.Add('deletedShapeIds',@($cases | ForEach-Object shapeId))
+  $evidence.Add('controlShapeId',[string]$control.ID)
+ }
+ $evidence | ConvertTo-Json -Depth 7 | Set-Content (Join-Path $directory 'evidence.json') -Encoding utf8
  Write-Output $directory
 } finally {
  try {if($document){$document.Close()}} finally {$app.Quit()}

@@ -2,6 +2,45 @@
 
 Status: local Windows development evidence, 2026-10-03. Full Microsoft Visio parity is not established.
 
+## Line deletion and endpoint protection, 2026-10-08
+
+Unreferenced local 1D leaves now delete through the existing shared deletion
+path: shape ownership admission, protection resolution, LockDelete, bounded
+ShapeSheet reference analysis and Connect checks. Whole-leaf removal does not
+rewrite a transform or geometry, so height-zero, point-sized or curved local
+line geometry does not require translation admission. Master, group, foreign
+and referenced or connected deletion remain excluded. Untouched package part
+payloads remain byte-preserved.
+
+The native line recorder's DeleteAfterMove option adds a control rectangle,
+saves the source and translated package, deletes the four native DrawLine
+shapes and saves deleted.vsdx. The local capture is
+visio-line-movement-1ff35609e7df46ef934e2afbc5aa1bd0. Core deletion matches
+the native surviving model exactly. The optional capture test uses
+VISIO_NATIVE_LINE_DELETION_DIR. Regular tests cover zero-sized/curved leaves,
+endpoint GUARD, LockDelete, inherited protection, formula references,
+Connect records, atomic refusal and untouched part payloads.
+
+Movement also now checks local LockBegin/LockEnd and resolves their style
+ancestry using the existing shared protection helper. Microsoft's
+[LockBegin reference](https://learn.microsoft.com/en-us/office/client-developer/visio/lockbegin-cell-protection-section)
+and [LockEnd reference](https://learn.microsoft.com/en-us/office/client-developer/visio/lockend-cell-protection-section)
+define these as fixed 1D endpoint locations. Static active locks, stale
+protection caches, unproven dependency formulas and inherited active locks
+refuse translation. Deletion does not overwrite the locked endpoints.
+These lock regressions are source-backed checks against the documented cell
+semantics, not native interactive UI recordings.
+
+All twelve native-line-movement.spec.ts scenarios passed: movement plus
+deletion on six frameworks, real worker execution, keyboard selection,
+controls, undo/redo, download, saved-model comparisons and reload. The core
+Visio suite passed 2,146 active tests with 60 unrelated optional skips; both
+core typecheck projects and viewer types passed. Production viewer/demos builds,
+packed viewer ESM/types/consumer/worker checks and every core package entry-point
+import passed. Native Office reopening,
+glued cascading deletion, broader 1D movement/resize and full parity remain
+unverified or unsupported.
+
 ## Native line translation oracle, 2026-10-08
 
 `scripts/record-visio-line-movement.ps1` creates four real one-dimensional
@@ -30,8 +69,9 @@ master, foreign, deleted, glued or inherited-cell checks. Midpoint and length
 formulas remain unchanged; length, angle, local pins and flips must remain
 fixed. Post-translation comparisons allow floating-point roundoff. Endpoint
 GUARD/reference overwrites, stale caches, curved geometry and pose-changing
-dependencies fail atomically. Line resizing/deletion and broader 1D formulas
-remain unsupported.
+dependencies fail atomically. Line resizing and broader 1D movement formulas
+remain unsupported. Unreferenced local line deletion is now admitted as recorded
+above; glued or referenced deletion remains unsupported.
 
 The additional native editing test matches all saved transform caches to the
 native after-values. Fifteen regular editing regressions cover four orientations,

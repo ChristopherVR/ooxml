@@ -264,8 +264,17 @@ an explicit Angle and one local MoveTo/LineTo geometry section. Length, angle,
 local rotation pins and flips remain fixed. Horizontal, diagonal, vertical and
 reversed native DrawLine cases match native caches after save/core reparse;
 all six demos cover controls, undo/redo, download and reload. Native Office
-reopening remains unverified. Broader 1D formulas, routing/glue, line resize
-and deletion remain unsupported.
+reopening remains unverified. Broader 1D movement formulas, routing/glue and
+line resize remain unsupported. Endpoint LockBegin/LockEnd caches and style
+ancestry participate in the shared movement protection checks.
+
+Unreferenced top-level local lines also admit `delete-shape` through the same
+LockDelete and reference guards as 2D deletion. Deletion removes a whole leaf
+without modifying its transform, so a height-zero or point-sized cache and
+curved geometry do not need translation/resize admission. Formula or Connect
+references still refuse; cascading connector deletion remains unsupported.
+Native four-line deletion and all six framework save/reload routes preserve
+the surviving control shape. Native Office reopening remains unverified.
 
 Numeric ShapeSheet interpretation uses a bounded AST, never JavaScript execution.
 Arithmetic, comparisons, IF, GUARD, Width/Height scaling, local geometry/named-row

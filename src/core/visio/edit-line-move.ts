@@ -89,6 +89,10 @@ export function moveLocalLine(
 		),
 	);
 	const changed: VisioCellKey[] = [];
+	if (x !== value('PinX') || y !== value('PinY'))
+		for (const name of ['LockBegin', 'LockEnd'])
+			if (numeric(local.get(name), 0) !== 0)
+				fail('EDIT_PROTECTED_CELL', `${name} prevents moving a locked endpoint.`);
 	for (const [axis, target] of [
 		['X', x],
 		['Y', y],

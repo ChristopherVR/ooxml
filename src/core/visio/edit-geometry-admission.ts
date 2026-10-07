@@ -61,12 +61,15 @@ export function setCell(shape: Element, name: string, value: number, formula?: s
 	if (formula) node.setAttribute('F', formula);
 	else if (attribute(node, 'F') !== 'No Formula') node.removeAttribute('F');
 }
+export const isLineSheet = (local: ReadonlyMap<string, Element>): boolean =>
+	['BeginX', 'BeginY', 'EndX', 'EndY'].some((name) => local.has(name)) ||
+	numeric(local.get('OneD'), 0) !== 0;
 export function admitted(
 	root: Element,
 	shapeId: string,
 	masterMovePins: ReadonlySet<Element> = new Set(),
 	masterDimensions: ReadonlyMap<Element, { width: number; height: number }> = new Map(),
-	allowLineMove = false,
+	lineOperation?: 'move' | 'delete',
 ): Element {
 	const containers = children(root, 'Shapes');
 	if (containers.length !== 1)
@@ -94,16 +97,16 @@ export function admitted(
 			'Master, group, foreign, deleted and non-shape operations are unsupported.',
 		);
 	const local = cells(shape);
+	const line = isLineSheet(local);
+	// Removing a leaf does not rewrite or rely on its geometry caches.
+	if (line && lineOperation === 'delete') return shape;
 	for (const name of ['Width', 'Height', 'PinX', 'PinY', 'LocPinX', 'LocPinY']) {
 		const cell = local.get(name),
 			unit = attribute(cell, 'U');
 		if (unit && visioFormulaCachedValue('0', unit).unit !== 'length')
 			fail('EDIT_FORMULA_UNIT', 'Transform cells must use length units.');
 	}
-	const line =
-		numeric(local.get('OneD'), 0) !== 0 ||
-		['BeginX', 'BeginY', 'EndX', 'EndY'].some((name) => local.has(name));
-	if (line && !allowLineMove)
+	if (line && lineOperation !== 'move')
 		fail(
 			'UNSUPPORTED_GEOMETRY_EDIT',
 			'Only local 2D shapes are admitted; line routing and glue are unsupported.',
@@ -113,7 +116,7 @@ export function admitted(
 		!(numeric(local.get('Width'), proven?.width) > 0) ||
 		!(
 			numeric(local.get('Height'), proven?.height) > 0 ||
-			(line && allowLineMove && numeric(local.get('Height')) === 0)
+			(line && lineOperation === 'move' && numeric(local.get('Height')) === 0)
 		)
 	)
 		fail('UNSUPPORTED_GEOMETRY_EDIT', 'Positive proven Width and Height caches are required.');
@@ -124,8 +127,10 @@ export function protectedShape(
 	shape: Element,
 	document: Element,
 	masterMovePins: ReadonlySet<Element> = new Set(),
+	endpointLocks: readonly ('LockBegin' | 'LockEnd')[] = [],
 ): void {
 	const local = cells(shape);
+	const protectionLocks = [...locks, ...endpointLocks];
 	const certifiedMove =
 		shape.hasAttribute('Master') &&
 		['PinX', 'PinY'].every((name) => {
@@ -211,13 +216,13 @@ export function protectedShape(
 			attribute(defaults, category) ??
 			(styles.has('0') ? '0' : undefined);
 		if (id === undefined) continue;
-		for (const lock of locks) resolve(id, category, lock);
+		for (const lock of protectionLocks) resolve(id, category, lock);
 	}
-	for (const lock of locks)
+	for (const lock of protectionLocks)
 		if (attribute(local.get(lock), 'F') === 'Inh')
 			fail('EDIT_PROTECTED_CELL', 'Local inherited protection cannot be overridden.');
 
-	for (const lock of locks) {
+	for (const lock of protectionLocks) {
 		const cell = local.get(lock);
 		if (!cell) continue;
 		if (visioFormulaCachedValue('0', attribute(cell, 'U')).unit !== 'scalar')

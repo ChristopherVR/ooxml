@@ -13,6 +13,7 @@ import {
 	editableCell,
 	setCell,
 	cells,
+	isLineSheet,
 	admitted,
 	protectedShape,
 	resizeGeometry,
@@ -110,9 +111,16 @@ export function applyGeometryEdit(
 			edit.shapeId,
 			edit.type === 'move-shape' ? masterMovePins : new Set(),
 			edit.type === 'move-shape' ? masterDimensions : new Map(),
-			edit.type === 'move-shape',
+			edit.type === 'move-shape' ? 'move' : edit.type === 'delete-shape' ? 'delete' : undefined,
 		);
-		protectedShape(shape, document, edit.type === 'move-shape' ? masterMovePins : new Set());
+		const local = cells(shape);
+		const lineMove = edit.type === 'move-shape' && isLineSheet(local);
+		protectedShape(
+			shape,
+			document,
+			edit.type === 'move-shape' ? masterMovePins : new Set(),
+			lineMove ? ['LockBegin', 'LockEnd'] : [],
+		);
 		if (edit.type !== 'delete-shape')
 			for (const connections of children(root, 'Connects'))
 				for (const connection of children(connections, 'Connect'))
@@ -121,7 +129,6 @@ export function applyGeometryEdit(
 							'UNSUPPORTED_GEOMETRY_EDIT',
 							'Glued connections need routing and endpoint recalculation outside this subset.',
 						);
-		const local = cells(shape);
 		const unlocked = (
 			name: 'LockMoveX' | 'LockMoveY' | 'LockWidth' | 'LockHeight' | 'LockAspect' | 'LockDelete',
 		) => {
@@ -142,10 +149,7 @@ export function applyGeometryEdit(
 				x: edit.x,
 				y: edit.y,
 			};
-			if (
-				numeric(local.get('OneD'), 0) !== 0 ||
-				['BeginX', 'BeginY', 'EndX', 'EndY'].some((name) => local.has(name))
-			) {
+			if (lineMove) {
 				const translation = moveLocalLine(shape, edit.pageId, edit.shapeId, edit.x, edit.y);
 				changed.push(...translation.changed);
 				fixedLine = translation.fixed;
@@ -215,7 +219,7 @@ export function applyGeometryEdit(
 		edit.shapeId,
 		edit.type === 'move-shape' ? masterMovePins : new Set(),
 		edit.type === 'move-shape' ? masterDimensions : new Map(),
-		!!fixedLine,
+		fixedLine ? 'move' : undefined,
 	);
 	if (fixedLine) assertLineTranslation(resultShape, fixedLine);
 	const result = cells(resultShape),

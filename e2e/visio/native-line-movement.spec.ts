@@ -1,10 +1,19 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { parseVsdx } from 'ooxml-core/visio';
 import { downloadCopy } from './ribbon';
 
 const directory = process.env.VISIO_NATIVE_LINE_MOVEMENT_DIR;
+async function downloadBytes(page: Page): Promise<Buffer> {
+	const command = await downloadCopy(page.locator('visio-viewer'));
+	const pending = page.waitForEvent('download');
+	await command.click();
+	const stream = await (await pending).createReadStream();
+	const chunks: Buffer[] = [];
+	for await (const chunk of stream!) chunks.push(Buffer.from(chunk));
+	return Buffer.concat(chunks);
+}
 for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
 	test(`${framework}: native lines move, undo, redo, download and reload through the shared editor`, async ({
 		page,
@@ -45,14 +54,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			await expect(line).toHaveAttribute('transform', moved);
 			transforms.set(item.shapeId, moved);
 		}
-		const command = await downloadCopy(viewer);
-		const pending = page.waitForEvent('download');
-		await command.click();
-		const download = await pending;
-		const stream = await download.createReadStream();
-		const chunks: Buffer[] = [];
-		for await (const chunk of stream!) chunks.push(Buffer.from(chunk));
-		const bytes = Buffer.concat(chunks);
+		const bytes = await downloadBytes(page);
 		const saved = await parseVsdx(bytes);
 		expect(saved.pages[0]!.shapes).toHaveLength(4);
 		for (const actual of saved.pages[0]!.shapes) {
@@ -64,18 +66,77 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			expect(actual.geometry).toEqual(expected.geometry);
 			expect(actual.style).toEqual(expected.style);
 		}
-		await page
-			.locator('#file')
-			.setInputFiles({
-				name: 'core-moved.vsdx',
-				mimeType: 'application/vnd.ms-visio.drawing',
-				buffer: bytes,
-			});
+		await page.locator('#file').setInputFiles({
+			name: 'core-moved.vsdx',
+			mimeType: 'application/vnd.ms-visio.drawing',
+			buffer: bytes,
+		});
 		await expect(page.locator('#file-name')).toHaveText('core-moved.vsdx');
 		for (const [id, transform] of transforms)
 			await expect(viewer.locator(`[data-shape-id="${id}"]`)).toHaveAttribute(
 				'transform',
 				transform,
 			);
+	});
+}
+
+const deletionDirectory = process.env.VISIO_NATIVE_LINE_DELETION_DIR;
+for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
+	test(`${framework}: native line deletion supports undo, redo, download and reload`, async ({
+		page,
+	}) => {
+		test.skip(
+			!deletionDirectory,
+			'Set VISIO_NATIVE_LINE_DELETION_DIR to the native deletion capture.',
+		);
+		const evidence = JSON.parse(
+			await readFile(join(deletionDirectory!, 'evidence.json'), 'utf8'),
+		) as {
+			deletedShapeIds: string[];
+			controlShapeId: string;
+		};
+		const native = await parseVsdx(await readFile(join(deletionDirectory!, 'deleted.vsdx')));
+		await page.goto(framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`);
+		await page.locator('#file').setInputFiles(join(deletionDirectory!, 'original.vsdx'));
+		await expect(page.locator('#file-name')).toHaveText('original.vsdx');
+		const viewer = page.locator('visio-viewer');
+		await expect(viewer.locator('[data-shape-id]')).toHaveCount(5);
+		await viewer.locator('.edit-controls summary').click();
+		for (const id of evidence.deletedShapeIds) {
+			const line = viewer.locator(`[data-shape-id="${id}"]`);
+			await line.focus();
+			await line.press('Enter');
+			await expect(line).toHaveAttribute('data-selected', 'true');
+			const transform = (await line.getAttribute('transform'))!;
+			await page.getByRole('button', { name: 'Delete selected', exact: true }).click();
+			await expect(line).toHaveCount(0);
+			await expect(viewer.locator('[data-geometry-error]')).toBeHidden();
+			await viewer
+				.locator('.edit-controls')
+				.getByRole('button', { name: 'Undo', exact: true })
+				.click();
+			await expect(line).toHaveAttribute('transform', transform);
+			await viewer
+				.locator('.edit-controls')
+				.getByRole('button', { name: 'Redo', exact: true })
+				.click();
+			await expect(line).toHaveCount(0);
+		}
+		await expect(viewer.locator('[data-shape-id]')).toHaveCount(1);
+		const control = viewer.locator(`[data-shape-id="${evidence.controlShapeId}"]`);
+		const transform = (await control.getAttribute('transform'))!;
+		const bytes = await downloadBytes(page);
+		const result = await parseVsdx(bytes);
+		expect(result.pages[0]!.shapes).toEqual(native.pages[0]!.shapes);
+		await page
+			.locator('#file')
+			.setInputFiles({
+				name: 'core-deleted.vsdx',
+				mimeType: 'application/vnd.ms-visio.drawing',
+				buffer: bytes,
+			});
+		await expect(page.locator('#file-name')).toHaveText('core-deleted.vsdx');
+		await expect(viewer.locator('[data-shape-id]')).toHaveCount(1);
+		await expect(control).toHaveAttribute('transform', transform);
 	});
 }
