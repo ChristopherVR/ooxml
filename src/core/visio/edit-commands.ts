@@ -30,7 +30,16 @@ export interface VisioPageInsert {
 	afterPageId: string;
 	name: string;
 }
-export type VisioEdit = VisioTextEdit | VisioGeometryEdit | VisioPageInsert;
+/** Move an existing page to a zero-based index in the complete page list. */
+export interface VisioPageReorder {
+	type: 'reorder-page';
+	pageId: string;
+	index: number;
+}
+export type VisioPageEdit = VisioPageInsert | VisioPageReorder;
+export type VisioEdit = VisioTextEdit | VisioGeometryEdit | VisioPageEdit;
+export const isVisioPageEdit = (edit: VisioEdit): edit is VisioPageEdit =>
+	edit.type === 'insert-page' || edit.type === 'reorder-page';
 
 export function snapshotVisioEdits(
 	edits: readonly VisioEdit[],
@@ -68,6 +77,11 @@ export function snapshotVisioEdits(
 	return Array.from(edits, (edit) => {
 		if (!edit || typeof edit.pageId !== 'string' || !edit.pageId || edit.pageId.length > 256)
 			fail('INVALID_EDIT', 'Invalid edit target.');
+		if (edit.type === 'reorder-page') {
+			if (!Number.isSafeInteger(edit.index) || edit.index < 0 || edit.index > 1_000_000)
+				fail('INVALID_EDIT', 'Page order requires a bounded zero-based integer index.');
+			return { type: edit.type, pageId: edit.pageId, index: edit.index };
+		}
 		if (edit.type === 'insert-page') {
 			const name = text(edit.name);
 			if (

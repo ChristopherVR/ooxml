@@ -1,6 +1,6 @@
 # Collaboration protocol
 
-The web component provides a transport-neutral collaborative editing foundation built on `prosemirror-collab`. It exchanges validated ProseMirror steps through an authority that assigns a single ordered version stream. It does not connect to a network or provide authentication, persistence, or availability guarantees; transient presence is a separate channel (below).
+The web component supports two exclusive collaboration modes: authority-ordered ProseMirror steps, and opt-in Yjs merging through an application-owned `CollabSession`. Both use the same editor and six framework adapters. The host owns transport, authentication, persistence and export timing.
 
 ## Live demo: two windows, any framework
 
@@ -35,8 +35,78 @@ There is also a [single-page demo](/demo/collaboration.html){target="_self"} wit
 | Supported                                                        | Not supported                                                                    |
 | ---------------------------------------------------------------- | -------------------------------------------------------------------------------- |
 | Ordered, validated ProseMirror step batches through an authority | A hosted server, networking, authentication or persistence (the host owns these) |
-| Transient presence: names, colors, cursors, selections           | Yjs/CRDT merging for Word documents (PowerPoint uses a Yjs CRDT, Word does not)  |
+| Yjs text/formatting merging, relative cursors and local undo     | Concurrent editing of comments, styles, numbering definitions and notes outside the body |
 | A reference in-memory authority for tests and the local demo     | Structural table commands while collaborating                                    |
+
+## Yjs mode
+
+Load the same source DOCX package in each editor, including its media, styles,
+comments, notes and opaque parts. The host supplies a stable `documentId` for
+that package and designates exactly one room creator. This identifier is a host
+contract, not an authentication token or an automatic package checksum.
+
+```ts
+import { createCollabSession, transportProvider } from 'ooxml-core/collab';
+
+const session = createCollabSession({
+  roomId,
+  provider: transportProvider({ transport }), // Application-owned transport
+  user: { name: 'Ada', role: 'collaborator' },
+});
+if (!session.synced) {
+  await new Promise<void>((resolve) => {
+    const off = session.on('synced', (synced) => {
+      if (synced) { off(); resolve(); }
+    });
+  });
+}
+editor.startYjsCollaboration(session, {
+  documentId: sourcePackageId,
+  initializeIfEmpty: designatedCreator,
+});
+editor.publishPresence({ name: 'Ada', color: '#2563eb' });
+```
+
+Wait for actual initial provider synchronization, rather than the grace-period
+write gate, before joining. The creator seeds an empty room; other participants
+adopt the existing body and page/section attributes instead of overwriting them
+with a local snapshot. A mismatched document ID or room format rejects the join.
+An authority session and a Yjs session cannot control one editor simultaneously.
+
+The Yjs mode uses the stable Yjs 13 binding, `y-prosemirror` 1.3.7. Root document
+attributes have a separate mapping because the binding does not synchronize
+them. Text, formatting and tracked revision marks travel through the body
+fragment. Newly inserted PNG, JPEG, GIF, BMP and SVG picture parts use the shared
+core asset routing with raw binary payloads; names are unique per client and
+parts are immutable. Picture bytes remain available for undo/redo and exports
+after stopping collaboration. Existing package assets remain in each editor's
+matching loaded source. The host still controls export synchronization and room
+persistence; this does not coordinate simultaneous saves or prove lossless export.
+
+Ctrl/Cmd+Z and ribbon undo use local Yjs history. History survives editor detach
+and remount; disconnected views adopt changes on remount. Awareness uses relative
+positions for cursor/selection mapping, with the existing localized cursor UI.
+`publishPresence` updates the awareness profile and returns `null` in Yjs mode;
+`leavePresence` clears the cursor. The provider transports awareness directly,
+so `presence-send` and `receivePresence` remain authority-mode APIs.
+
+`reconnectCollaboration()` restarts the Yjs provider while retaining the shared
+document. `resyncCollaboration()` requests state exchange and returns `false`
+when the provider cannot do so. The host can also use `session.connect()`,
+`disconnect()`, `peers()`, status/sync/error subscriptions and `destroy()`.
+`stopCollaboration()` detaches the Word binding and retains its current content
+and new picture assets, including while unmounted; it does not destroy the
+host-owned session. Destroy that session when the host leaves the room.
+
+Read-only editors and viewer roles receive remote updates while blocking local
+document writes. Client roles are advisory: enforce authorization in the server
+or provider as well. Editing outside the body and structural table commands
+remain disabled. Page and section attributes are preserved and synchronized,
+but multi-story collaboration and a complete package bootstrap are unfinished.
+
+Try the [Yjs two-peer demo](/demo/collaboration.html?mode=yjs){target="_self"}.
+Its Pause delivery, Reconnect providers and Resync providers actions exercise
+in-memory recovery. It provides no production networking or durable storage.
 
 ## Protocol
 

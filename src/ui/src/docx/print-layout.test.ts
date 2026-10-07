@@ -47,6 +47,49 @@ function sampleResult(): LayoutResult {
 }
 
 describe('renderPrintLayout', () => {
+	it('limits separators to their continuous-section band and numbers each section', () => {
+		const result = sampleResult();
+		const page = result.pages[0]!;
+		const first = page.columns[0]!;
+		page.sectionIndices = [0, 1];
+		page.columns = [
+			{ ...first, sectionIndex: 0, startYPx: 0, endYPx: 20, separator: false },
+			{
+				xPx: 0,
+				widthPx: 120,
+				sectionIndex: 1,
+				startYPx: 20,
+				endYPx: 80,
+				separator: true,
+				blocks: first.blocks.map((block) => ({ ...block, blockId: 'p2', yPx: 20 })),
+			},
+			{
+				xPx: 160,
+				widthPx: 120,
+				sectionIndex: 1,
+				startYPx: 20,
+				endYPx: 80,
+				separator: true,
+				blocks: [],
+			},
+		];
+		const rendered = renderPrintLayout(result, undefined, {
+			lineNumbers: [
+				{ countBy: 1, start: 1, restart: 'newSection' },
+				{ countBy: 1, start: 10, restart: 'newSection' },
+			],
+		});
+		const rules = rendered.element.querySelectorAll<HTMLElement>('.dve-print-column-rule');
+		expect(rules).toHaveLength(1);
+		expect(rules[0]!.style.top).toBe('30px');
+		expect(rules[0]!.style.height).toBe('60px');
+		expect(
+			Array.from(
+				rendered.element.querySelectorAll('.dve-print-line-number'),
+				(label) => label.textContent,
+			),
+		).toEqual(['1', '10']);
+	});
 	it('renders scaled text with independent spacing and threshold-controlled kerning', () => {
 		const result = sampleResult();
 		const block = result.pages[0]!.columns[0]!.blocks[0]!;

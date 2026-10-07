@@ -131,7 +131,7 @@ describe.skipIf(!directory)('public VSDX geometry edit corpus', () => {
 			};
 			const attempt = async (
 				name: 'create' | 'move' | 'resize' | 'delete',
-				edits: Exclude<VisioEdit, { type: 'insert-page' }>[],
+				edits: Exclude<VisioEdit, { type: 'insert-page' | 'reorder-page' }>[],
 			) => {
 				let result: EditVsdxResult;
 				try {

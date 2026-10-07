@@ -25,6 +25,7 @@ import { writeClip } from './paste-cell.js';
 import { copyColumnWidths } from './columns.js';
 import { pasteWidths } from './paste-widths.js';
 import { copyAnnotations, clearAnnotations, pasteAnnotations } from './clipboard-annotations.js';
+import { copyHyperlinks, clearHyperlinks, pasteHyperlinks } from './clipboard-links.js';
 
 /** Copies a range into a self-contained payload (whole rows or columns stop at the used area). */
 export function copyRange(workbook: Workbook, s: number, range: CellRange): ClipboardPayload {
@@ -76,6 +77,7 @@ export function copyRange(workbook: Workbook, s: number, range: CellRange): Clip
 		}));
 	const cells: ClipboardCells = { rows, cols, data, merges, source: { sheet: s, range: clipped } };
 	Object.assign(cells, copyAnnotations(sheet, clipped));
+	cells.hyperlinks = copyHyperlinks(sheet, clipped);
 	cells.columnWidthRows = r.end.row - r.start.row + 1;
 	cells.columnWidths = copyColumnWidths(sheet, r.start.col, r.end.col);
 	return {
@@ -153,7 +155,10 @@ export function pasteAt(
 	const destCells: EditScope = { kind: 'cells', sheet: s, ranges: [dest] };
 	const scopes: EditScope[] = cut
 		? [{ kind: 'refs' }, { kind: 'cells', sheet: cut.sheet, ranges: [cut.range] }, destCells]
-		: [destCells, { kind: 'parts', sheet: s, parts: ['merges', 'comments', 'dataValidations'] }];
+		: [
+				destCells,
+				{ kind: 'parts', sheet: s, parts: ['merges', 'comments', 'dataValidations', 'hyperlinks'] },
+			];
 	const move = cut && {
 		fromSheet: sheetAt(workbook, cut.sheet).name,
 		range: cut.range,
@@ -174,6 +179,7 @@ export function pasteAt(
 				for (const [row, col] of doomed) deleteCell(from, row, col);
 				from.merges = from.merges.filter((m) => !rangeWithin(m, cut.range));
 				clearAnnotations(from, cut.range);
+				clearHyperlinks(from, cut.range);
 			}
 			pasteAnnotations(
 				sheet,
@@ -184,6 +190,15 @@ export function pasteAt(
 				skipBlanks,
 				move ? (f) => moveReferencesInFormula(f, move.fromSheet, move, move.toSheet) : undefined,
 			);
+			if (mode === 'all' || mode === 'noBorders')
+				pasteHyperlinks(
+					sheet,
+					dest,
+					cells,
+					transpose,
+					skipBlanks,
+					move ? (f) => moveReferencesInFormula(f, move.fromSheet, move, move.toSheet) : undefined,
+				);
 			const styleIds = new Map<object, number>();
 			const styleOf = (clip: ClipboardCell): number | undefined => {
 				if (!clip.style) return undefined;

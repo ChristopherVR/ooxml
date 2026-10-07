@@ -35,7 +35,7 @@ export function placeParagraph(
 	const { paragraph, spacingBeforePx, requiredTogetherPx, reflow } = placement;
 	let layout = placement.layout;
 	let width = cursor.columnWidthPx;
-	if (paragraph.pageBreakBefore && !cursor.atColumnTop) cursor.newPage();
+	if (paragraph.pageBreakBefore && cursor.hasPageContent) cursor.newPage();
 	if (
 		requiredTogetherPx > 0 &&
 		requiredTogetherPx <= cursor.columnHeightPx &&

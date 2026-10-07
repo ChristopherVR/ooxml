@@ -1400,6 +1400,15 @@ describe('setChartDataPointLabel', () => {
 		expect(chart.chartData!.series[0].dataLabels![0].text).toBeUndefined();
 	});
 
+	it('saves typed text over a "Value From Cells" label as literal text', () => {
+		const chart = makeTestChart();
+		chart.chartData!.series[0].dataLabels = [{ idx: 0, text: 'Alpha', textFromCells: true }];
+		setChartDataPointLabel(chart, 0, 0, { text: 'Typed' });
+		const label = chart.chartData!.series[0].dataLabels![0];
+		expect(label.text).toBe('Typed');
+		expect(label.textFromCells).toBeUndefined();
+	});
+
 	it('removes the override when passed null', () => {
 		const chart = makeTestChart();
 		setChartDataPointLabel(chart, 0, 1, { showValue: true });

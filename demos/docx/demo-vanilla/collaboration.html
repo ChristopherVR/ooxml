@@ -19,9 +19,10 @@
 			</button>
 		</header>
 		<main class="collab-workspace">
-			<p>
+			<p id="collaboration-description">
 				Two editors share one document through a local, in-memory authority. Pause delivery to try
 				concurrent edits, then resume to merge them. Nothing is sent over the network.
+				<a href="?mode=yjs">Try Yjs coauthoring</a>
 			</p>
 			<div class="collab-actions">
 				<button id="pause-delivery" type="button" aria-pressed="false">Pause delivery</button>
@@ -70,7 +71,7 @@
 					<div id="peer-b"></div>
 				</section>
 			</div>
-			<p>
+			<p id="collaboration-limitations">
 				Colored selections show transient presence. The demo relays editor changes in memory;
 				production hosts must provide transport, access control, storage and reconnect recovery.
 			</p>

@@ -22,33 +22,7 @@ export function peerDecorations(
 				}),
 			);
 		}
-		const cursor = document.createElement('span');
-		cursor.className = 'dve-peer-cursor';
-		cursor.style.borderColor = peer.color;
-		cursor.style.position = 'relative';
-		cursor.style.borderLeftWidth = '2px';
-		cursor.style.borderLeftStyle = 'solid';
-		cursor.style.marginInline = '-1px';
-		cursor.setAttribute('role', 'img');
-		cursor.setAttribute(
-			'aria-label',
-			translateTemplate(locale, 'presence.cursor', { name: peer.name }),
-		);
-		cursor.contentEditable = 'false';
-		const label = document.createElement('span');
-		label.className = 'dve-peer-cursor-label';
-		label.textContent = peer.name;
-		label.style.backgroundColor = peer.color;
-		label.style.position = 'absolute';
-		label.style.left = '-2px';
-		label.style.bottom = '100%';
-		label.style.padding = '2px 6px';
-		label.style.borderRadius = '3px 3px 3px 0';
-		label.style.color = '#fff';
-		label.style.font = '600 10px/1.4 system-ui, sans-serif';
-		label.style.whiteSpace = 'nowrap';
-		label.style.pointerEvents = 'none';
-		cursor.append(label);
+		const cursor = peerCursor(peer, locale);
 		decorations.push(
 			Decoration.widget(peer.head, cursor, {
 				key: `peer-${peer.clientId}-${peer.sequence}-${locale}`,
@@ -57,4 +31,57 @@ export function peerDecorations(
 		);
 	}
 	return DecorationSet.create(doc, decorations);
+}
+
+/** Shared cursor DOM for step and Yjs collaboration. */
+export function peerCursor(
+	peer: { name: string; color: string },
+	locale: EditorLocale,
+): HTMLElement {
+	const cursor = document.createElement('span');
+	cursor.className = 'dve-peer-cursor';
+	cursor.style.borderColor = peer.color;
+	cursor.style.position = 'relative';
+	cursor.style.borderLeftWidth = '2px';
+	cursor.style.borderLeftStyle = 'solid';
+	cursor.style.marginInline = '-1px';
+	cursor.setAttribute('role', 'img');
+	cursor.setAttribute(
+		'aria-label',
+		translateTemplate(locale, 'presence.cursor', { name: peer.name }),
+	);
+	cursor.contentEditable = 'false';
+	const label = document.createElement('span');
+	label.className = 'dve-peer-cursor-label';
+	label.textContent = peer.name;
+	label.style.backgroundColor = peer.color;
+	label.style.position = 'absolute';
+	label.style.left = '-2px';
+	label.style.bottom = '100%';
+	label.style.padding = '2px 6px';
+	label.style.borderRadius = '3px 3px 3px 0';
+	label.style.color = '#fff';
+	label.style.font = '600 10px/1.4 system-ui, sans-serif';
+	label.style.whiteSpace = 'nowrap';
+	label.style.pointerEvents = 'none';
+	cursor.append(label);
+	return cursor;
+}
+
+/** Update a keyed widget in place when profile or display locale changes. */
+export function updatePeerCursor(
+	cursor: HTMLElement,
+	peer: { name: string; color: string },
+	locale: EditorLocale,
+): void {
+	cursor.style.borderColor = peer.color;
+	cursor.setAttribute(
+		'aria-label',
+		translateTemplate(locale, 'presence.cursor', { name: peer.name }),
+	);
+	const label = cursor.querySelector<HTMLElement>('.dve-peer-cursor-label');
+	if (label) {
+		label.textContent = peer.name;
+		label.style.backgroundColor = peer.color;
+	}
 }

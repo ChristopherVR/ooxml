@@ -1,5 +1,6 @@
 import type { CellRange } from '../address.js';
-import type { CellStyle, Color, ThemePalette } from '../model.js';
+import type { CellStyle, Color, Hyperlink, ThemePalette } from '../model.js';
+import { htmlHref } from './clipboard-links.js';
 import type { ClipboardCells } from './types.js';
 
 export const escapeHtml = (text: string): string =>
@@ -46,6 +47,10 @@ function cssFor(style: CellStyle | undefined, theme: ThemePalette): string {
 
 /** An HTML table for the system clipboard, with inline styles and merged cells as spans. */
 export function toHtml(cells: ClipboardCells, theme: ThemePalette): string {
+	const links = new Map<string, Hyperlink>();
+	for (const link of cells.hyperlinks ?? [])
+		for (let r = link.range.start.row; r <= link.range.end.row; r++)
+			for (let c = link.range.start.col; c <= link.range.end.col; c++) links.set(`${r},${c}`, link);
 	const covered = new Set<string>();
 	const spans = new Map<string, CellRange>();
 	for (const m of cells.merges) {
@@ -69,7 +74,11 @@ export function toHtml(cells: ClipboardCells, theme: ThemePalette): string {
 			if (cell && typeof cell.value === 'number') attrs.push(`x:num="${cell.value}"`);
 			const css = cssFor(cell?.style, theme);
 			if (css) attrs.push(`style="${escapeHtml(css)}"`);
-			const text = escapeHtml(cell?.text ?? '').replace(/\n/g, '<br>');
+			let text = escapeHtml(cell?.text ?? '').replace(/\n/g, '<br>');
+			const link = links.get(`${r},${c}`);
+			const href = htmlHref(link);
+			if (href)
+				text = `<a href="${escapeHtml(href)}"${link?.tooltip ? ` title="${escapeHtml(link.tooltip)}"` : ''}>${text}</a>`;
 			tds.push(`<td${attrs.length ? ` ${attrs.join(' ')}` : ''}>${text}</td>`);
 		}
 		rows.push(`<tr>${tds.join('')}</tr>`);

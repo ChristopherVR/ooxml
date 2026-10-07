@@ -1,6 +1,56 @@
 import { expect, test } from '@playwright/test';
 import { editor, goToCell, grid, newWorkbook, ribbon, typeInActiveCell } from './helpers';
 
+test('native clipboard copies a hyperlink target and undo restores the destination link', async ({
+	page,
+}) => {
+	await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+	await newWorkbook(page);
+	for (const [ref, text, url] of [
+		['A1', '2', 'source'],
+		['C1', '9', 'destination'],
+	]) {
+		await goToCell(page, ref!);
+		await typeInActiveCell(page, text!);
+		await goToCell(page, ref!);
+		await page.keyboard.press('Control+K');
+		const dialog = editor(page).locator('[data-dialog="hyperlink"]');
+		await dialog.getByLabel('Address:', { exact: true }).fill(`https://example.com/${url}`);
+		await dialog.getByRole('button', { name: 'OK', exact: true }).click();
+	}
+	await goToCell(page, 'A1');
+	await page.keyboard.press('Control+C');
+	await goToCell(page, 'C1');
+	await page.keyboard.press('Control+V');
+	const read = () =>
+		editor(page).evaluate((node) => {
+			const sheet = (
+				node as unknown as {
+					workbook: {
+						sheets: {
+							hyperlinks: {
+								range: { start: { row: number; col: number }; end: { row: number; col: number } };
+								target?: string;
+							}[];
+							rows: Map<number, Map<number, { value: unknown }>>;
+						}[];
+					};
+				}
+			).workbook.sheets[0]!;
+			return {
+				value: sheet.rows.get(0)?.get(2)?.value,
+				target: sheet.hyperlinks.find(
+					(link) => link.range.start.row === 0 && link.range.start.col === 2,
+				)?.target,
+			};
+		});
+	await expect.poll(read).toEqual({ value: 2, target: 'https://example.com/source' });
+	await page.keyboard.press('Control+Z');
+	await expect.poll(read).toEqual({ value: 9, target: 'https://example.com/destination' });
+	await page.keyboard.press('Control+Y');
+	await expect.poll(read).toEqual({ value: 2, target: 'https://example.com/source' });
+});
+
 test('Validation paste copies a blank cell rule and enforces it without replacing the value', async ({
 	page,
 }) => {
