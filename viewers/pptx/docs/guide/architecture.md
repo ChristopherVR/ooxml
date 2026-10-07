@@ -18,7 +18,7 @@ description: How pptx-viewer is structured - the load and save pipelines, the mi
                                |
                                v
 +---------------------------------------------------------------+
-|            Shared rendering layer (pptx-viewer-shared)        |
+|            Shared rendering layer (ooxml-ui/pptx)        |
 |     geometry, styles, gradients, charts, connectors, text     |
 +------------------------------+--------------------------------+
                                |
@@ -33,13 +33,13 @@ description: How pptx-viewer is structured - the load and save pipelines, the mi
 
 ## Framework bindings
 
-The binding packages are thin presentation layers. They consume pre-computed rendering data from `pptx-viewer-shared` and translate it into framework-specific templates (JSX, Vue SFCs, Angular components, Svelte 5 runes, or plain DOM calls for the vanilla binding). Slides render as scaled HTML/SVG with CSS transforms, giving sharp text at any zoom, native accessibility, and full DOM interactivity.
+The binding packages are thin presentation layers. They consume pre-computed rendering data from `ooxml-ui/pptx` and translate it into framework-specific templates (JSX, Vue SFCs, Angular components, Svelte 5 runes, or plain DOM calls for the vanilla binding). Slides render as scaled HTML/SVG with CSS transforms, giving sharp text at any zoom, native accessibility, and full DOM interactivity.
 
 Each binding exposes a top-level viewer/editor entry point that orchestrates state, editing, loading, export, and presentation mode through the idiom native to its framework: hooks in React, composables in Vue, services in Angular, runes in Svelte, and a plain factory function plus imperative instance API in vanilla JS. Because they all consume the same shared layer, the rendering output is identical across all five.
 
-## Shared rendering layer (`pptx-viewer-shared`)
+## Shared rendering layer (`ooxml-ui/pptx`)
 
-Most viewer logic is not framework-specific, and all of it lives in `packages/shared/src/`. The `render/` directory alone holds roughly 250 focused modules, including:
+Shared rendering lives in `src/ui/src/pptx/` at the repository root and is published through `ooxml-ui/pptx`. DOM-free document operations live in `src/core/pptx/editor/`, and tool schemas live in `src/core/pptx/automation/schemas/`. The renderer includes:
 
 - **Connector routing**: an A* router over an obstacle graph (`connector-router-astar.ts`, `connector-router-graph.ts`) plus path building and rerouting.
 - **Chart mathematics**: axis ranges, category positioning, cartesian/polar plot builders, box-whisker statistics, combo/stock composition (the `chart-*` module family).
@@ -50,15 +50,15 @@ Most viewer logic is not framework-specific, and all of it lives in `packages/sh
 
 Sibling directories cover `export/`, `i18n/`, `loader/`, `theme/`, and the opt-in `smartart-3d/` renderer.
 
-::: info An internal package
-`pptx-viewer-shared` is private and never published to npm. Its source is bundled (or vendored, for Angular) into each binding at build time. This guarantees feature parity across React, Vue, Angular, Svelte, and vanilla JS without duplicating logic, while keeping the public install surface to one package per framework.
+::: info Shared public packages
+Every binding declares `ooxml-ui` as a runtime dependency and imports its PowerPoint entries. Angular uses the same public API without vendoring a source copy. The private `pptx-viewer-shared` package remains a compatibility facade and owns no implementation.
 :::
 
 ## Core engine (`pptx-viewer-core`)
 
 The core package is entirely framework-agnostic. It runs in any JavaScript environment: browser, Node.js, Web Worker, or serverless function. Its public entry point is `PptxHandler`.
 
-> **Where the code lives.** The engine is the `pptx` area of the shared, public `ooxml-core` package (`src/pptx/`, subpaths `/pptx`, `/pptx/converter`, `/pptx/cli`, `/pptx/signature-node`); this repository only keeps the UI. `pptx-viewer-core` is a thin package that re-exports those subpaths with an unchanged public API, so every path below that starts with `ooxml-core/src/pptx/` refers to that repository. The engine still uses its own `fast-xml-parser` object model and is compiled with relaxed TypeScript flags; unifying its XML model with the shared `xml` area and tightening the flags are the next steps of the migration. Colour primitives, preset-shape geometry and EMU constants are shared with the other Office areas (`color`, `geometry`, `units`).
+> **Where the code lives.** The engine is the `pptx` area of the shared, public `ooxml-core` package (`src/core/pptx/`, subpaths `/pptx`, `/pptx/converter`, `/pptx/cli`, `/pptx/signature-node`); the viewer folder keeps the framework adapters. `pptx-viewer-core` is a thin package that re-exports those subpaths with an unchanged public API, so every path below that starts with `src/core/pptx/` is relative to the monorepo root. The engine still uses its own `fast-xml-parser` object model and is compiled with relaxed TypeScript flags; unifying its XML model with the shared `xml` area and tightening the flags are the next steps of the migration. Colour primitives, preset-shape geometry and EMU constants are shared with the other Office areas (`color`, `geometry`, `units`).
 
 ### The facade and the mixin-composed runtime
 
@@ -70,9 +70,9 @@ PptxHandler                    static factories (create / createBlank)
        └─ IPptxHandlerRuntime  the actual engine, assembled from ~98 mixin modules
 ```
 
-- **`PptxHandler`** (`ooxml-core/src/pptx/core/PptxHandler.ts`) adds the static `create()` / `createBlank()` builder entry points.
+- **`PptxHandler`** (`src/core/pptx/core/PptxHandler.ts`) adds the static `create()` / `createBlank()` builder entry points.
 - **`PptxHandlerCore`** delegates all heavy parsing, serialization, and XML manipulation to an injected `IPptxHandlerRuntime`. The runtime is replaceable via constructor dependencies (`runtime` or `runtimeFactory`), which is how tests and alternate hosts swap implementations.
-- **`PptxHandlerRuntime`** is not one class in one file. It is composed from roughly **98 focused modules** in `ooxml-core/src/pptx/core/core/runtime/`, each named `PptxHandlerRuntime<Concern>.ts` and each handling exactly one concern: `PptxHandlerRuntimeChartParsing.ts`, `PptxHandlerRuntimeThemeLoading.ts`, `PptxHandlerRuntimeSaveElementWriter.ts`, `PptxHandlerRuntimeSmartArtParsing.ts`, and so on.
+- **`PptxHandlerRuntime`** is not one class in one file. It is composed from roughly **98 focused modules** in `src/core/pptx/core/core/runtime/`, each named `PptxHandlerRuntime<Concern>.ts` and each handling exactly one concern: `PptxHandlerRuntimeChartParsing.ts`, `PptxHandlerRuntimeThemeLoading.ts`, `PptxHandlerRuntimeSaveElementWriter.ts`, `PptxHandlerRuntimeSmartArtParsing.ts`, and so on.
 
 Each module declares a class that extends the class exported by the previous module, forming a linear inheritance chain that layers capability on capability:
 
@@ -167,7 +167,7 @@ The chain is implemented by dedicated runtime mixins: `PptxHandlerRuntimeThemeLo
 
 ### Geometry engine
 
-`ooxml-core/src/pptx/core/geometry/` (plus the shared `ooxml-core/src/geometry/` preset tables) turns DrawingML geometry into renderable paths:
+`src/core/pptx/core/geometry/` (plus the shared `src/core/geometry/` preset tables) turns DrawingML geometry into renderable paths:
 
 - **Preset shapes**: definitions for the ECMA-376 preset shape catalogue, grouped by family (`preset-shape-definitions-arrows.ts`, `-flowchart.ts`, `-action-buttons.ts`, `-callouts`, ...), each expressed with the spec's guide formulas.
 - **Guide formula evaluation** (`guide-formula-eval.ts` and friends): implements the ECMA-376 formula language (`*/`, `+-`, `pin`, `at2`, `cos`, ...) so shape geometry responds correctly to adjustment values, the yellow diamond handles you can drag in PowerPoint.
@@ -177,7 +177,7 @@ The chain is implemented by dedicated runtime mixins: `PptxHandlerRuntimeThemeLo
 
 ### Converter
 
-`ooxml-core/src/pptx/converter/` implements PPTX to Markdown conversion with a registry pattern: each element type has a processor (`shape-element-processor`, `table-element-processor`, `ole-element-processor`, ...) registered against its `type` discriminant, and `PptxMarkdownConverter` dispatches per element. The same directory houses the SVG exporter and the OMML to LaTeX converter used for equations.
+`src/core/pptx/converter/` implements PPTX to Markdown conversion with a registry pattern: each element type has a processor (`shape-element-processor`, `table-element-processor`, `ole-element-processor`, ...) registered against its `type` discriminant, and `PptxMarkdownConverter` dispatches per element. The same directory houses the SVG exporter and the OMML to LaTeX converter used for equations.
 
 ## Key design decisions
 
@@ -189,7 +189,7 @@ The chain is implemented by dedicated runtime mixins: `PptxHandlerRuntimeThemeLo
 | **Theme resolution chain**           | Element, Placeholder, Layout, Master, Theme mirrors PowerPoint's own style inheritance.                                                                                                                                             |
 | **EMU units internally**             | PowerPoint uses English Metric Units (914,400 EMU per inch; 9,525 EMU per pixel at 96 DPI). Parsed elements expose pixel values for convenient layout math; exact EMU values are preserved where round-trip fidelity requires them. |
 | **Passthrough saving**               | Only edited parts are rewritten; everything else round-trips verbatim, so unknown markup and vendor extensions survive.                                                                                                             |
-| **Shared logic, thin bindings**      | All framework-agnostic viewer logic lives once in `pptx-viewer-shared`; bindings are view layers only, which keeps the five frameworks at parity.                                                                                   |
+| **Shared logic, thin bindings**      | All framework-agnostic viewer logic lives once in `ooxml-ui/pptx`; bindings are view layers only, which keeps the five frameworks at parity.                                                                                        |
 
 ## Related reading
 

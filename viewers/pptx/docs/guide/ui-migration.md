@@ -1,8 +1,9 @@
 # Shared UI migration evidence
 
 The migration uses shared logic, open-shadow views and CSS from
-`pptx-viewer-shared`. Native adapters retain document mutations, history,
-persistence and framework lifecycle. The contributor's 126 work units are an
+`ooxml-ui/pptx`. Native adapters coordinate core document commands, history,
+persistence and framework lifecycle. DOM-free editing lives in `src/core/pptx/editor`.
+The contributor's 126 work units are an
 inventory of surfaces, not 126 required public custom-element tags.
 
 ## Theme editor (#364)
@@ -26,7 +27,7 @@ current host theme. Close and Escape discard the draft and restore opener
 focus. Secondary inline placements use the same view without automatic focus.
 
 The property/event/lifecycle contract is documented in
-`packages/shared/src/web-components/README.md`. The neutral browser spec is
+`src/ui/src/pptx/web-components/README.md`. The neutral browser spec is
 `e2e/theme-editor-migration.spec.ts`; it checks docking, focus, draft dismissal,
 Reset, Apply, saved theme XML, narrow actions and forced colors. Adapter unit
 tests cover native callbacks, disabled state and React 18/19 compatibility.
@@ -74,7 +75,7 @@ when native state changes. Gallery descriptors supply previews and selection;
 the shared view owns popup placement, keyboard navigation, dismissal, touch
 targets and forced-color styling. Native hosts still own document edits,
 history, selection, comments, dialogs and saving. The property/event contract
-is in `packages/shared/src/web-components/README.md`.
+is in `src/ui/src/pptx/web-components/README.md`.
 
 Comparable screenshots use the same decks and 1440 x 900 viewport. Baseline
 files are in `/assets/ui-migration/ribbon-baseline/`; completed views are in
@@ -381,7 +382,7 @@ view switching, presentation, the slide sorter and zoom stay native in each
 binding. A collaboration indicator is slotted through the named `collaboration`
 slot. `resolveStatusBarSave` is the one save-indicator rule (autosave state, then
 the dirty flag) and `statusBarViewMode` maps a viewer mode to the pressed button.
-The property and event contract is in `packages/shared/src/web-components/README.md`.
+The property and event contract is in `src/ui/src/pptx/web-components/README.md`.
 
 Why this is not a ribbon command: the bar is one row with live readouts, a
 slotted indicator and clusters whose visibility depends on three host actions
@@ -430,7 +431,7 @@ select popups, mismatched checkbox accents) were fixed per surface in #346 to
 kind, all reading one set of design tokens, with a cross-binding check that fails
 when any surface drifts.
 
-Tokens live in `packages/shared/src/web-components/control-tokens.ts` and are
+Tokens live in `src/ui/src/pptx/web-components/control-tokens.ts` and are
 read through `tok(name)`, which emits `var(--pptx-..., <default>)`. Defaults
 resolve where they are used, so viewer-root themes still reach them. Any token
 can be overridden by the host or a theme.
@@ -503,7 +504,7 @@ nearest enabled option), and no longer rebuilds an open popup when a host re-syn
 the same value: React re-renders the Insert ribbon on every focus change, which
 replaced the option under the pointer and dropped the click.
 
-The guard is `packages/shared/src/web-components/native-controls.test.ts`, which
+The guard is `src/ui/src/pptx/web-components/native-controls.test.ts`, which
 scans every binding source (and the shared web components) for a native `<select>`
 or `<input type="checkbox">` and fails unless the file is listed with a technical
 reason (the list is empty). `e2e/dialog-controls.spec.ts` opens Print, Hyperlink,
@@ -575,7 +576,7 @@ colors and the hyperlink popover. Hosts keep the contenteditable editor, the
 paragraph and inline edit commands, history and persistence, printing and the
 collapse header, and route one typed `notes-request` intent per activation.
 The property and event contract is in
-`packages/shared/src/web-components/README.md`.
+`src/ui/src/pptx/web-components/README.md`.
 
 ### Recorded differences before the change
 
@@ -717,7 +718,7 @@ button strip, and its section header and sorter are right-click menus. So:
   removed. Copy and Paste also answer Ctrl+C and Ctrl+V (the shared sorter
   keymap).
 
-Shared logic lives in `pptx-viewer-shared`: `buildSectionContextMenuEntries` and
+Shared logic lives in `ooxml-ui/pptx`: `buildSectionContextMenuEntries` and
 `sectionAddAfterSlideIndex` (`section-context-menu.ts`),
 `buildSlideSorterContextMenuEntries`, `slideSorterContextMenuLabel`,
 `slideSorterPasteIndexes` and `SLIDE_RAIL_FOOTER_ACTIONS`
@@ -752,7 +753,7 @@ Vanilla; Reset trim in Angular, Svelte and Vanilla; Clear series colour in
 Svelte and Vanilla; Clear Background in the Svelte and Vanilla inspectors (both
 had it only on the Format Background ribbon dock).
 
-`pptx-viewer-shared` now owns the contract in `inspector-reset-actions.ts`: the
+`ooxml-ui/pptx` now owns the contract in `inspector-reset-actions.ts`: the
 label keys, the gating (`imageResetState`, `cropResetState`,
 `mediaTrimResetState`, `seriesColorClearState`, `slideBackgroundClearState`) and
 the exact patch each action applies (`imageResetPatch`, `cropResetPatch`,
@@ -798,7 +799,7 @@ optional below-the-ribbon strip. Hosts supply a `TitleBarViewState` (built with
 `quick-command` and `command-search` events to their native handlers. The
 collaboration indicator and account parts are host-owned and slotted through the
 named `collaboration` and `account` slots. The property, event and keyboard contract
-is in `packages/shared/src/web-components/README.md`.
+is in `src/ui/src/pptx/web-components/README.md`.
 
 What the five bindings did before, as audited in this change:
 
@@ -877,7 +878,7 @@ the Vanilla read-only AI menu). Each binding keeps its entry lists
 customization, gating and command dispatch (clipboard, table, crop, merge,
 inspector focus); an adapter maps those entries to rows and routes the typed
 `menu-request { id }` and `menu-close` events. The property and event contract is
-in `packages/shared/src/web-components/README.md`. The sorter and section menus
+in `src/ui/src/pptx/web-components/README.md`. The sorter and section menus
 are different in each binding (see the section and sorter parity issue) and stay
 native; Vue's sorter reuses the generic `ContextMenu.vue` and so also gets the
 shared look and keyboard model.
@@ -983,7 +984,7 @@ issue. Ribbon commands are out of scope (#363); the File backstage belongs to #3
 
 ### What the new elements own
 
-The eight new elements are in `packages/shared/src/web-components/`; their typed
+The eight new elements are in `src/ui/src/pptx/web-components/`; their typed
 `state`, events and behaviour are in that directory's README. They follow the
 existing pattern: an open shadow root, a structured `state` property, bubbling
 composed events and no events for programmatic updates. Adapters keep each

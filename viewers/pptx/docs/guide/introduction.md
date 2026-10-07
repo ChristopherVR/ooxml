@@ -70,13 +70,13 @@ All five UI binding packages build on a shared rendering layer, which in turn bu
 ```
 pptx-react-viewer   ┐
 pptx-vue-viewer     │
-pptx-angular-viewer ├── pptx-viewer-shared ── pptx-viewer-core
+pptx-angular-viewer ├── ooxml-ui/pptx ── ooxml-core/pptx
 pptx-vanilla-viewer │                               ├── emf-converter
 pptx-svelte-viewer  ┘                               └── mtx-decompressor
 ```
 
 - **`pptx-viewer-core`** owns everything about the file format: the load and save pipelines, the typed data model, theme resolution, the geometry engine, encryption, and the Markdown/SVG converters. It has no UI and runs anywhere JavaScript runs.
-- **`pptx-viewer-shared`** holds the framework-agnostic viewer logic: style and gradient resolution, chart and axis maths, connector routing, animation and morph engines, export preparation. It is an **internal** package: private, never published to npm, and bundled into each binding at build time. You never install it directly.
+- **`ooxml-ui/pptx`** publishes shared rendering, styling, web components, browser loading, and export views from `src/ui/src/pptx`. Every binding imports this public API. DOM-free editing and collaboration operations live in `ooxml-core/pptx/editor`; the private `pptx-viewer-shared` package is only a compatibility facade.
 - **The bindings** are thin view layers. Each translates the same shared render data into its framework's idiom (JSX, SFC templates, Angular templates, Svelte runes, or plain DOM), which is why the five bindings render identically and stay at feature parity.
 - **`emf-converter`** (EMF/WMF metafile to PNG) and **`mtx-decompressor`** (MicroType Express embedded fonts) are standalone npm dependencies of Core.
 - **`pptx-viewer-mcp`** builds on `pptx-viewer-core` to expose tool-call and collaboration surfaces for AI agents.

@@ -5,6 +5,7 @@ import type { Worksheet } from '../model.js';
 import { CONTENT_TYPES } from '../read/package.js';
 import { printOptionsXml } from '../read/print-options.js';
 import { conditionalFormatsXml, dataValidationsXml } from './conditional.js';
+import { conditionalExtensionsXml } from '../conditional-extensions.js';
 import { RelationshipSet } from './package-writer.js';
 import { pageXml } from './page-setup.js';
 import { sheetDataXml } from './sheet-data.js';
@@ -155,6 +156,7 @@ export function writeWorksheet(
 	blocks.set('drawing', writeSheetDrawing(ctx, sheet, partName, rels, sourceDrawing));
 	blocks.set('legacyDrawing', writeComments(ctx, sheet, index, partName, rels));
 	blocks.set('tableParts', tableParts);
+	blocks.set('extLst', conditionalExtensionsXml(sheet));
 	for (const [key, list] of sheet.preserved) {
 		if (key.startsWith('source:') || !ORDER.includes(key) || (blocks.get(key) ?? '') !== '')
 			continue;

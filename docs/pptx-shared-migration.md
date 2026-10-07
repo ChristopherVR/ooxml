@@ -26,6 +26,13 @@ Tightening these legacy flags is a separate correctness task, as with the
 existing PowerPoint engine. Importing the main UI entry does not load PowerPoint.
 The optional Three.js and AI SDK integrations remain optional peers.
 
+Viewer maintenance scripts read the migrated UI source. Bun commands that
+import these modules use `viewers/pptx/scripts/tsconfig.runtime.json` through
+`--tsconfig-override`: compiler-only aliases target declarations and must not
+be used for runtime resolution. The locale and customization package commands
+apply this configuration automatically. Catalogue generators write into
+`src/ui/src/pptx`, rather than recreating the viewer's old shared tree.
+
 The original tests moved with their implementations. Tests spanning DOM and
 model operations remain in UI; core unit tests stay DOM-free. Product tests run
 with `bun run --cwd src/ui test:pptx`, against built package exports. Build core

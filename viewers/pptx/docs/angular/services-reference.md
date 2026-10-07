@@ -151,9 +151,8 @@ Composed by `RibbonComponent`, itself composed by `PowerPointViewerComponent`.
 
 ### Slide-transition helpers
 
-`pptx-viewer-shared` (the framework-agnostic logic every binding bundles) is a private,
-unpublished workspace package, so a host embedding its own presentation stage cannot `import`
-from it directly. Unlike the rest of this page, these are exported from `transition-helpers.ts`
+The framework-independent renderer is published as `ooxml-ui/pptx`, which hosts can import
+directly. Angular also re-exports these helpers from `transition-helpers.ts`
 via the CURATED `pptx-angular-viewer` root (`viewer/index.ts`), not only `internals`: ng-packagr
 compiles this library from a single entry file, so `pptx-angular-viewer/internals` is the exact
 same built bundle as the root (see `src/internals.ts`'s own header comment) and both resolve to

@@ -22,7 +22,7 @@ Evidence lives in `/assets/ribbon-parity/<tab>/`:
 Everything visual is one change reaching all five bindings, because every binding already emits the same
 `data-ribbon-group`, `data-ribbon-control` and `data-pptx-chrome` hooks:
 
-- `packages/shared/src/render/editor-chrome/` (`controls-css`, `home-layout-css`, `font-picker-css`,
+- `src/ui/src/pptx/render/editor-chrome/` (`controls-css`, `home-layout-css`, `font-picker-css`,
   `cluster-css`, `ribbon-collapse-css`): flat Office buttons, small rows (22-24px) and large tiles (66px),
   two-row Font and Paragraph via `order` plus a zero-height line break, stacked Editing and Drawing
   columns, group shells that stretch the ribbon with an inset hairline and an 11px caption. The ribbon
@@ -125,8 +125,8 @@ Severity: H = obvious at a glance, M = noticeable, L = detail.
   assigns `element.label = ...` when the property exists and silently breaks the element.
 - The viewer's baseline `button { min-height: 24px }` outranks 22px rows in Svelte; the Home rules repeat
   `[data-pptx-chrome]` on the content hook to win.
-- React reads shared from `dist`, Angular from its built `dist` plus `inline-shared`: rebuild
-  (`bun run --filter pptx-viewer-shared build`, `bun run --filter pptx-angular-viewer build`), then restart
+- React and Angular read shared UI from its built `dist`: rebuild
+  (`bun run --cwd src/ui build`, `bun run --filter pptx-angular-viewer build`), then restart
   the Angular demo after clearing `demos/demo-angular/node_modules/.vite`.
 - Collapse is opt-in per group id prefix; extend `COLLAPSING_GROUPS` when the other tabs get their pass, and
   update `ribbon-compact-layout` for Transitions.

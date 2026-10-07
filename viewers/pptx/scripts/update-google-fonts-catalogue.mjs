@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * Regenerate `packages/shared/src/render/google-fonts-catalogue.ts` from the
+ * Regenerate `src/ui/src/pptx/render/google-fonts-catalogue.ts` from the
  * Google Fonts metadata feed.
  *
- * The viewer's webfont fallback (`packages/shared/src/render/google-webfonts.ts`)
+ * The viewer's webfont fallback (`src/ui/src/pptx/render/google-webfonts.ts`)
  * decides which referenced-but-missing families to load from the Google
  * Fonts CSS2 API by looking them up in this bundled catalogue. A bundled list
  * means no per-family network probe: nothing about the deck reaches Google
@@ -20,7 +20,7 @@ import { fileURLToPath } from 'node:url';
 const METADATA_URL = 'https://fonts.google.com/metadata/fonts';
 const OUT_PATH = resolve(
 	dirname(fileURLToPath(import.meta.url)),
-	'../packages/shared/src/render/google-fonts-catalogue.ts',
+	'../../../src/ui/src/pptx/render/google-fonts-catalogue.ts',
 );
 
 const response = await fetch(METADATA_URL);

@@ -415,6 +415,7 @@ ul.plain li > :first-child:not(office-ui-avatar) {
 }
 .followed-threads li {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
 	gap: var(--office-space-3);
 	padding-block: var(--office-space-3);
@@ -427,6 +428,9 @@ ul.plain li > :first-child:not(office-ui-avatar) {
 	text-align: start;
 	min-width: 0;
 	overflow-wrap: anywhere;
+}
+.followed-threads li[data-unread='true'] button:first-child span {
+	font-weight: var(--office-font-weight-bold);
 }
 @media (max-width: 56em) {
 	.conversation-grid[data-thread='true'] {
