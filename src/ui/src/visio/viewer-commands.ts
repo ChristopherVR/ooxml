@@ -22,6 +22,7 @@ interface CommandHost {
 	togglePanZoom(): void;
 	/** Transient command feedback for the status bar; document text is never interpreted as markup. */
 	announce(message: string): void;
+	toolChanged?(): void;
 }
 const editable = (target: EventTarget | null) =>
 	target instanceof Element &&
@@ -156,6 +157,7 @@ export class ViewerCommands {
 		if (tool === 'rectangle' && !this.#canEdit(this.host.controller.state)) return;
 		this.#tool = tool;
 		this.render(this.host.controller.state);
+		this.host.toolChanged?.();
 	}
 	#canEdit(state: ViewerState): boolean {
 		return state.edit.sourceAvailable && !state.loading && !state.edit.busy;

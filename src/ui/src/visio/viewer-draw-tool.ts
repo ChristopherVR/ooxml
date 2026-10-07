@@ -24,14 +24,16 @@ export function pagePoint(
 	svg: SVGSVGElement,
 	page: VisioPage,
 	event: Pick<MouseEvent, 'clientX' | 'clientY'>,
+	options: { snap?: boolean; bounded?: boolean } = {},
 ) {
 	const matrix = svg.getScreenCTM?.();
 	if (!matrix) return undefined;
 	const point = new DOMPoint(event.clientX, event.clientY).matrixTransform(matrix.inverse());
-	return {
-		x: snap(Math.max(0, Math.min(page.width, point.x))),
-		y: snap(Math.max(0, Math.min(page.height, point.y))),
+	const coordinate = (value: number, maximum: number) => {
+		const bounded = options.bounded === false ? value : Math.max(0, Math.min(maximum, value));
+		return options.snap === false ? bounded : snap(bounded);
 	};
+	return { x: coordinate(point.x, page.width), y: coordinate(point.y, page.height) };
 }
 
 /**

@@ -16,6 +16,126 @@ async function downloadBytes(page: Page): Promise<Buffer> {
 }
 
 const resizeDirectory = process.env.VISIO_NATIVE_LINE_RESIZE_DIR;
+test('vanilla: endpoint drag cancellation and clicks preserve source bytes and history', async ({
+	page,
+}) => {
+	const directory = process.env.VISIO_NATIVE_LINE_END_DIR;
+	test.skip(!directory, 'Set VISIO_NATIVE_LINE_END_DIR to the native capture.');
+	await page.goto('/demo/?sample=1');
+	await page.locator('#file').setInputFiles(join(directory!, 'moved.vsdx'));
+	await expect(page.locator('#file-name')).toHaveText('moved.vsdx');
+	const viewer = page.locator('visio-viewer');
+	await viewer.locator('.edit-controls summary').click();
+	const line = viewer.locator('[data-shape-id="1"]');
+	await line.focus();
+	await line.press('Enter');
+	const handle = viewer.locator('[data-line-shape-id="1"][data-line-endpoint="end"]');
+	await handle.click();
+	const origin = (await handle.boundingBox())!;
+	await page.mouse.move(origin.x + origin.width / 2, origin.y + origin.height / 2);
+	await page.mouse.down();
+	await page.mouse.move(origin.x + 50, origin.y + 30);
+	await expect(viewer.locator('.endpoint-preview')).toBeVisible();
+	await page.keyboard.press('Escape');
+	await expect(viewer.locator('.endpoint-preview')).toHaveCount(0);
+	await page.mouse.up();
+	await expect(
+		viewer.locator('.edit-controls').getByRole('button', { name: 'Undo', exact: true }),
+	).toBeDisabled();
+	expect(await downloadBytes(page)).toEqual(await readFile(join(directory!, 'moved.vsdx')));
+});
+for (const variable of ['VISIO_NATIVE_LINE_BEGIN_DIR', 'VISIO_NATIVE_LINE_END_DIR']) {
+	for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
+		test(`${framework}: native endpoint canvas drag supports history and saved copies (${variable})`, async ({
+			page,
+		}) => {
+			const directory = process.env[variable];
+			test.skip(!directory, `Set ${variable} to the native endpoint capture.`);
+			const evidence = JSON.parse(
+				(await readFile(join(directory!, 'evidence.json'), 'utf8')).replace(/^\uFEFF/, ''),
+			) as {
+				cases: {
+					shapeId: string;
+					endpoint: 'Begin' | 'End';
+					endpointAfter: Record<string, { value: number }>;
+					endpointTransform: number[];
+				}[];
+			};
+			await page.goto(framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`);
+			await page.locator('#file').setInputFiles(join(directory!, 'moved.vsdx'));
+			await expect(page.locator('#file-name')).toHaveText('moved.vsdx');
+			const viewer = page.locator('visio-viewer');
+			await viewer.locator('.edit-controls summary').click();
+			for (const item of evidence.cases) {
+				const line = viewer.locator(`[data-shape-id="${item.shapeId}"]`);
+				await line.focus();
+				await line.press('Enter');
+				const handle = viewer.locator(
+					`[data-line-shape-id="${item.shapeId}"][data-line-endpoint="${item.endpoint.toLowerCase()}"]`,
+				);
+				await expect(handle).toBeVisible();
+				const before = (await line.getAttribute('transform'))!;
+				const origin = (await handle.boundingBox())!;
+				const target = await viewer.evaluate((node, item) => {
+					const element = node as unknown as {
+						document: import('ooxml-core/visio').VisioDocument;
+						shadowRoot: ShadowRoot;
+					};
+					const page = element.document.pages[0]!;
+					const svg = element.shadowRoot.querySelector<SVGSVGElement>('svg.paper')!;
+					const matrix = svg.getScreenCTM()!;
+					const point = new DOMPoint(
+						item.endpointAfter[`${item.endpoint}X`]!.value * (page.drawingToPageScale ?? 1),
+						page.height -
+							item.endpointAfter[`${item.endpoint}Y`]!.value * (page.drawingToPageScale ?? 1),
+					).matrixTransform(matrix);
+					return { x: point.x, y: point.y };
+				}, item);
+				await page.mouse.move(origin.x + origin.width / 2, origin.y + origin.height / 2);
+				await page.mouse.down();
+				await page.mouse.move(target.x, target.y, { steps: 4 });
+				await expect(viewer.locator('.endpoint-preview')).toBeVisible();
+				await page.mouse.up();
+				await expect(viewer.locator('.endpoint-preview')).toHaveCount(0);
+				await expect(line).not.toHaveAttribute('transform', before);
+				const after = (await line.getAttribute('transform'))!;
+				const pose = after
+					.slice('matrix('.length, -1)
+					.trim()
+					.split(/[\s,]+/)
+					.map(Number);
+				for (let i = 0; i < 6; i++) expect(pose[i]).toBeCloseTo(item.endpointTransform[i]!, 4);
+				await viewer
+					.locator('.edit-controls')
+					.getByRole('button', { name: 'Undo', exact: true })
+					.click();
+				await expect(line).toHaveAttribute('transform', before);
+				await viewer
+					.locator('.edit-controls')
+					.getByRole('button', { name: 'Redo', exact: true })
+					.click();
+				await expect(line).toHaveAttribute('transform', after);
+			}
+			const bytes = await downloadBytes(page);
+			const actual = await parseVsdx(bytes),
+				native = await parseVsdx(await readFile(join(directory!, 'endpoint.vsdx')));
+			for (const shape of actual.pages[0]!.shapes) {
+				const expected = native.pages[0]!.shapes.find((item) => item.id === shape.id)!;
+				for (let i = 0; i < 6; i++)
+					expect(shape.transform[i]).toBeCloseTo(expected.transform[i]!, 4);
+				expect(shape.width).toBeCloseTo(expected.width, 4);
+				expect(shape.style).toEqual(expected.style);
+			}
+			await page.locator('#file').setInputFiles({
+				name: 'core-dragged.vsdx',
+				mimeType: 'application/vnd.ms-visio.drawing',
+				buffer: bytes,
+			});
+			await expect(page.locator('#file-name')).toHaveText('core-dragged.vsdx');
+			await expect(viewer.locator('[data-shape-id]')).toHaveCount(4);
+		});
+	}
+}
 for (const variable of ['VISIO_NATIVE_LINE_BEGIN_DIR', 'VISIO_NATIVE_LINE_END_DIR']) {
 	for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
 		test(`${framework}: native endpoint API supports history and saved copies (${variable})`, async ({
@@ -87,13 +207,11 @@ for (const variable of ['VISIO_NATIVE_LINE_BEGIN_DIR', 'VISIO_NATIVE_LINE_END_DI
 				expect(shape.geometry).toEqual(expected.geometry);
 				expect(shape.style).toEqual(expected.style);
 			}
-			await page
-				.locator('#file')
-				.setInputFiles({
-					name: 'core-endpoint.vsdx',
-					mimeType: 'application/vnd.ms-visio.drawing',
-					buffer: bytes,
-				});
+			await page.locator('#file').setInputFiles({
+				name: 'core-endpoint.vsdx',
+				mimeType: 'application/vnd.ms-visio.drawing',
+				buffer: bytes,
+			});
 			await expect(page.locator('#file-name')).toHaveText('core-endpoint.vsdx');
 			await expect(viewer.locator('[data-shape-id]')).toHaveCount(4);
 		});

@@ -12,3 +12,17 @@
 	stroke-width: 0.04 !important;
 	stroke-dasharray: 0.08 0.05;
 }
+
+.paper [data-line-endpoint] {
+	fill: var(--_vv-accent);
+	stroke: white;
+	stroke-width: 1.5px;
+	cursor: crosshair;
+	pointer-events: all;
+}
+.paper .endpoint-preview {
+	stroke: var(--_vv-accent);
+	stroke-width: 1.5px;
+	stroke-dasharray: 5 3;
+	pointer-events: none;
+}

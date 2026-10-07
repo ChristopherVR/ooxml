@@ -2,6 +2,46 @@
 
 Status: local Windows development evidence, 2026-10-03. Full Microsoft Visio parity is not established.
 
+## Canvas endpoint dragging, 2026-10-08
+
+Selected visible top-level straight connectors with source bytes now expose begin
+and end pointer handles. The new core UI helper checks visual geometry eligibility;
+it does not certify source formulas or protection. Connected lines are excluded.
+Source-backed endpoint admission remains authoritative and can refuse a drag.
+DOM controls live in the shared ooxml-ui/visio element, with no framework copies.
+
+The gesture reuses pagePoint from the rectangle tool with unsnapped/unbounded
+coordinates and the existing page-to-drawing conversion. Rectangle creation keeps
+its snapping/bounds defaults. Handles sit in an SVG overlay above all shapes:
+the native four-line fixture shares a begin point, and ordinary shape stacking
+initially hid the selected line's hit target. SVG matrices provide the placement
+and screen scale, keeping the circles five pixels in radius through zoom.
+
+The preview is separate DOM; one core transaction commits on release. Escape,
+pointer cancellation, lost capture, page/document/selection replacement, tool
+changes and disposal cancel the preview. Clicks with no drag retain original
+bytes/history. The full source-backed protection/formula checks stay in core.
+
+All twelve pointer workflows passed: begin and end editing across six frameworks,
+four native orientations each, preview, native pose/length comparisons, undo/redo,
+download and reload. They use the prior Begin/End native COM captures recorded
+below. Browser pointer-coordinate comparisons use four-decimal tolerance; native
+API/cache comparisons still use 12 digits. This verifies gesture results against
+native cell assignments, not native interactive snapping or handle appearance.
+Cancellation/click byte preservation and the existing rectangle draw/delete/history
+workflow also passed: 14 browser scenarios total. An initial run used stale UI
+bundles; after rebuilding, the shared-point stacking failure exposed the need for
+the overlay. Both were corrected before the final passing run.
+
+The core Visio suite passed 2,180 active tests with 60 unrelated optional skips;
+eleven shared UI handle/command tests and all core/shared UI/viewer typechecks pass.
+Core bundles and shared UI build pass. Source imports remain extensionless.
+All six demo builds, clean core package entry-point imports and packed viewer
+ESM/declarations/external-consumer/parser/edit-worker checks pass.
+Native snapping, keyboard endpoint manipulation, scaled-page gestures, gradient
+paint after dragging, broader formulas, glue/routing and native Office reopening
+remain open.
+
 ## Native endpoint-cell editing, 2026-10-08
 
 The existing line recorder now takes MoveEndpoint=Begin or End, assigning the

@@ -285,7 +285,7 @@ The rotation pin stays fixed. Shared line admission, protection, dimension
 dependency proof and cache writeback are reused. Resized lines can move and
 resize again. Four native orientations verify caches and XYToPage poses; all
 six routes cover controls/history/download/reload, plus native PNG interior
-comparisons for resized gradient paint. Endpoint dragging, nonzero line Height,
+comparisons for resized gradient paint. Nonzero line Height,
 broader 1D resize formulas, routing/glue and native reopening remain open.
 
 `move-line-endpoint` assigns either `endpoint: 'begin'` or `'end'` to drawing-inch
@@ -297,8 +297,20 @@ mapping, and worker snapshots and page-to-drawing conversion support the command
 Eight native cases verify caches and poses; twelve browser API scenarios cover
 history, download and reload across six frameworks. Numeric model comparisons
 allow 12-digit floating-point roundoff. Static Width overrides, flips, coincident
-endpoints, broader formulas, glue and canvas endpoint handles remain unsupported
+endpoints, broader formulas and glue remain unsupported
 or unverified. Native Office reopen acceptance remains unverified.
+
+The shared UI now offers pointer endpoint handles on selected visible top-level
+straight connectors with editable source bytes. This is visual eligibility,
+not a source-formula/protection certificate: core can refuse the edit. Handles
+sit above overlapping shapes, retain five-pixel radii through zoom, and use the
+existing page-point and page-to-drawing conversion helpers. A preview does not
+change the model; release commits once. Escape/pointer cancellation and disposal
+remove it. Twelve native pointer workflows cover both endpoints across six
+frameworks, with four-decimal pose/length comparisons for browser-coordinate
+roundoff; the underlying API's 12-digit native tests remain unchanged. Native
+snapping, keyboard handles, scaled-page gestures and gradient-paint comparisons
+after dragging remain unverified.
 
 Numeric ShapeSheet interpretation uses a bounded AST, never JavaScript execution.
 Arithmetic, comparisons, IF, GUARD, Width/Height scaling, local geometry/named-row
