@@ -6,6 +6,7 @@
 // Moved from the pptx area (`src/core/pptx/core/utils/ooxml-crypto*.ts`, `encryption-detection.ts`;
 // see PROVENANCE.md). Not re-exported from the root entry: it pulls the CFB codec in.
 import { parseOle2 } from '@christophervr/ole2/ole2-parser-read';
+export { createOfficeGuid } from './uuid.js';
 import {
 	decryptAgilePackage,
 	decryptStandardPackage,

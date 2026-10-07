@@ -17,19 +17,18 @@
  * `fit-bevel-profile-com.mjs`'s doc comment for why, and the closed-form
  * derivation this reuses).
  *
- *   bun run scripts/score-bevel-material-com.mjs <measuredJson>
+ *   bun --tsconfig-override scripts/tsconfig.runtime.json scripts/score-bevel-material-com.mjs <measuredJson>
  */
 import { readFile } from 'node:fs/promises';
-import { pathToFileURL } from 'node:url';
 
 const REPO = new URL('../', import.meta.url);
-const importFrom = (p) => import(pathToFileURL(new URL(p, REPO).pathname).href);
+const importFrom = (p) => import(new URL(p, REPO).href);
 
 const { resolveLayer } = await importFrom(
-	'packages/shared/src/render/visual-3d-bevel-lighting-layer.ts',
+	'../../src/ui/src/pptx/render/visual-3d-bevel-lighting-layer.ts',
 );
 const { getBevelHighlightDirection, isBevelProfileInverted } = await importFrom(
-	'packages/shared/src/render/visual-3d-bevel-light.ts',
+	'../../src/ui/src/pptx/render/visual-3d-bevel-light.ts',
 );
 
 const measuredPath = process.argv[2];

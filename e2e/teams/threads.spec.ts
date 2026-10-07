@@ -40,6 +40,16 @@ test('opens channel threads, synchronizes replies and retains deleted parents', 
 	await expect(thread.getByText('Thread response', { exact: true })).toBeVisible();
 	const peer = await page.context().newPage();
 	await peer.goto(page.url().replace('name=Ada', 'name=Bob'));
+	await peer.locator('teams-app').evaluate((element) => {
+		(element as TeamsApp).userId = 'bob-thread-peer';
+	});
+	await expect
+		.poll(() =>
+			peer
+				.locator('teams-app')
+				.evaluate((element) => (element as TeamsApp).client?.getState().user.id),
+		)
+		.toBe('bob-thread-peer');
 	await expect
 		.poll(
 			() =>
@@ -61,11 +71,29 @@ test('opens channel threads, synchronizes replies and retains deleted parents', 
 	await expect(thread.getByText('Peer review', { exact: true })).toBeVisible();
 	await page.getByRole('button', { name: 'Followed threads', exact: true }).click();
 	await expect(followed.getByText(/4 replies/)).toBeVisible();
+	await peer.locator('teams-app').evaluate((element, ids) => {
+		(element as TeamsApp).client!.workspace.chat.post(ids.channel, {
+			text: 'Unread peer update',
+			replyTo: ids.root,
+		});
+	}, ids);
+	await expect(followed.getByText('1 unread', { exact: true })).toBeVisible();
+	await expect(followed.getByText(/5 replies/)).toBeVisible();
+	await followed.getByRole('button', { name: 'Mark as read', exact: true }).click();
+	await followed.getByRole('button', { name: 'Mark as unread', exact: true }).click();
+	await expect(followed.getByText('1 unread', { exact: true })).toBeVisible();
+	await followed.getByRole('checkbox', { name: 'Unread only', exact: true }).check();
 	await page.reload();
 	await expect(page.getByRole('button', { name: 'Followed threads', exact: true })).toBeVisible();
 	await page.getByRole('button', { name: 'Followed threads', exact: true }).click();
+	await expect(followed.getByText('1 unread', { exact: true })).toBeVisible();
 	await followed.getByRole('button', { name: 'Open thread in Threads: Budget discussion' }).click();
 	await expect(thread.getByRole('button', { name: 'Unfollow thread', exact: true })).toBeVisible();
+	await page.getByRole('button', { name: 'Followed threads', exact: true }).click();
+	await followed.getByRole('checkbox', { name: 'Unread only', exact: true }).check();
+	await expect(followed.getByText('No unread followed threads.', { exact: true })).toBeVisible();
+	await followed.getByRole('checkbox', { name: 'Unread only', exact: true }).uncheck();
+	await followed.getByRole('button', { name: 'Open thread in Threads: Budget discussion' }).click();
 	await page.screenshot({ path: test.info().outputPath('channel-thread.png') });
 	await page.setViewportSize({ width: 800, height: 800 });
 	await expect(page.locator('.conversation-main')).toBeHidden();
@@ -82,8 +110,8 @@ test('opens channel threads, synchronizes replies and retains deleted parents', 
 	await expect(thread.getByText('Peer review', { exact: true })).toBeVisible();
 	await thread.getByRole('button', { name: 'Close thread', exact: true }).click();
 	await expect(thread).toHaveCount(0);
-	await expect(page.getByRole('button', { name: '4 replies', exact: true })).toBeVisible();
-	await expect(page.getByRole('button', { name: '4 replies', exact: true })).toBeFocused();
+	await expect(page.getByRole('button', { name: '5 replies', exact: true })).toBeVisible();
+	await expect(page.getByRole('button', { name: '5 replies', exact: true })).toBeFocused();
 	await page.getByRole('searchbox', { name: 'Search messages', exact: true }).fill('Peer review');
 	await page.getByRole('listbox', { name: 'Search results' }).getByRole('button').click();
 	await expect(thread.getByText('Peer review', { exact: true })).toBeVisible();

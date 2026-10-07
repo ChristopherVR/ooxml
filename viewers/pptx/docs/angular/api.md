@@ -43,7 +43,7 @@ Either way you get the same component instance and the same methods.
 ## Contract shared across bindings
 
 The methods below implement the same `PowerPointViewerAPI` contract (defined in
-`pptx-viewer-shared`) that React's `PowerPointViewerHandle` and Vue's `defineExpose` surface also
+`ooxml-ui/pptx`) that React's `PowerPointViewerHandle` and Vue's `defineExpose` surface also
 implement - all three framework bindings expose an equivalent API surface, just through each
 framework's own idiom (React `forwardRef` handle, Vue `defineExpose`, Angular public methods).
 

@@ -37,6 +37,12 @@ describe('teams client', () => {
 		const restored = make('ada', 'follow-persistence', { storage });
 		await tick();
 		expect(restored.getState().followedThreads).toHaveLength(1);
+		expect(restored.markThreadRead(channel, reply.id, false)).toBe(true);
+		await tick();
+		expect(restored.getState().followedThreads[0]?.unread).toBe(1);
+		restored.openThread(reply.id);
+		await tick();
+		expect(restored.getState().followedThreads[0]?.unread).toBe(0);
 		expect(make('bob', 'follow-persistence', { storage }).getState().followedThreads).toEqual([]);
 		expect(make('ada', 'other-follow-workspace', { storage }).getState().followedThreads).toEqual(
 			[],
