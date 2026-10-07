@@ -1,3 +1,4 @@
+export { swatchStripSvg } from '../../../ribbon/color-preview';
 /**
  * Tile previews for the chart galleries (Chart Styles, Change Colors, Quick
  * Layout): a small clustered-column chart in the given colours, and a
@@ -37,21 +38,6 @@ export function columnChartTileSvg(
 	const axis = `<line x1="${pad}" y1="${num(pad + plotH)}" x2="${num(pad + plotW)}" y2="${num(pad + plotH)}" stroke="#A6A6A6" stroke-width="0.75"/>`;
 	const bg = `<rect x="0" y="0" width="${size.width}" height="${size.height}" fill="#FFFFFF"/>`;
 	return svgTile(size.width, size.height, '', bg + bars.join('') + axis);
-}
-
-/** A horizontal strip of colour swatches (Change Colors rows). */
-export function swatchStripSvg(
-	colors: readonly string[],
-	size: { width: number; height: number },
-): string {
-	const w = size.width / Math.max(colors.length, 1);
-	const body = colors
-		.map(
-			(color, i) =>
-				`<rect x="${num(i * w)}" y="0" width="${num(w)}" height="${size.height}" fill="${safeColor(color, '#808080')}"/>`,
-		)
-		.join('');
-	return svgTile(size.width, size.height, '', body);
 }
 
 /** The elements a Quick Layout switches on, as its schematic tile draws them. */

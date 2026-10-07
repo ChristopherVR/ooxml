@@ -27,6 +27,7 @@
  * @module chart/color-palettes
  */
 import { resolveDrawingColor } from '../diagram/drawing-color';
+import type { DiagramColor } from '../diagram/types';
 
 export type ChartThemeColor =
 	| 'dk1'
@@ -116,21 +117,6 @@ export function findChartColorPalette(id: number): ChartColorPalette | undefined
 	return CHART_COLOR_PALETTES.find((palette) => palette.id === id);
 }
 
-function resolve(scheme: ChartColorScheme, key: ChartThemeColor, transform: Transform): string {
-	return (
-		resolveDrawingColor(
-			{
-				kind: 'scheme',
-				value: key,
-				transforms: Object.entries(transform).map(([name, value]) => ({
-					name,
-					value: String(value),
-				})),
-			},
-			{ scheme: (name) => scheme[name as ChartThemeColor] },
-		)?.hex ?? scheme[key]
-	).toUpperCase();
-}
 /** The `a:shade` / `a:tint` PowerPoint writes for series `i` of `n` (withinLinear order). */
 export function withinLinearTransform(i: number, n: number): Transform {
 	if (n <= 1) {
@@ -149,25 +135,44 @@ export function withinLinearTransform(i: number, n: number): Transform {
 }
 
 /** The colour of series `i` of `n` under `palette`, in the deck's theme. */
+export function chartPaletteSeriesColorChoice(
+	palette: ChartColorPalette,
+	i: number,
+	n: number,
+): DiagramColor {
+	let base: ChartThemeColor | undefined;
+	let transform: Transform;
+	if (palette.meth === 'cycle') {
+		base = palette.base[i % palette.base.length];
+		const round = Math.floor(i / palette.base.length);
+		transform =
+			(palette.variations.length ? palette.variations[round % palette.variations.length] : {}) ??
+			{};
+	} else {
+		const index = palette.meth === 'withinLinearReversed' ? n - 1 - i : i;
+		base = palette.base[0];
+		transform = withinLinearTransform(index, n);
+	}
+	if (!base) throw new RangeError('A chart palette must have a base color');
+	return {
+		kind: 'scheme',
+		value: base,
+		transforms: Object.entries(transform).map(([name, value]) => ({ name, value: String(value) })),
+	};
+}
+
+/** Resolve the same theme-relative choice used by chart writers. */
 export function chartPaletteSeriesColor(
 	palette: ChartColorPalette,
 	i: number,
 	n: number,
 	scheme: ChartColorScheme,
 ): string {
-	if (palette.meth === 'cycle') {
-		const base = palette.base[i % palette.base.length];
-		const round = Math.floor(i / palette.base.length);
-		const transform = palette.variations.length
-			? palette.variations[round % palette.variations.length]
-			: {};
-		if (!base) throw new RangeError('A chart palette must have a base color');
-		return resolve(scheme, base, transform ?? {});
-	}
-	const index = palette.meth === 'withinLinearReversed' ? n - 1 - i : i;
-	const base = palette.base[0];
-	if (!base) throw new RangeError('A chart palette must have a base color');
-	return resolve(scheme, base, withinLinearTransform(index, n));
+	const choice = chartPaletteSeriesColorChoice(palette, i, n);
+	return (
+		resolveDrawingColor(choice, { scheme: (name) => scheme[name as ChartThemeColor] })?.hex ??
+		scheme[choice.value as ChartThemeColor]
+	).toUpperCase();
 }
 
 /** The first `n` colours of `palette`. */

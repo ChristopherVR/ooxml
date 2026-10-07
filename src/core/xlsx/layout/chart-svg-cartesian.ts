@@ -118,8 +118,25 @@ function bars(model: ChartViewModel, frame: Frame, out: string[]): void {
 			const offset = stacked ? -barSize / 2 : -((count * barSize) / 2) + si * barSize;
 			const center = frame.band(i);
 			if (model.horizontal)
-				out.push(rect(Math.min(a, b), center + offset, Math.abs(b - a), barSize, s.color));
-			else out.push(rect(center + offset, Math.min(a, b), barSize, Math.abs(b - a), s.color));
+				out.push(
+					rect(
+						Math.min(a, b),
+						center + offset,
+						Math.abs(b - a),
+						barSize,
+						s.pointColors?.[i] ?? s.color,
+					),
+				);
+			else
+				out.push(
+					rect(
+						center + offset,
+						Math.min(a, b),
+						barSize,
+						Math.abs(b - a),
+						s.pointColors?.[i] ?? s.color,
+					),
+				);
 		});
 	});
 }
@@ -203,7 +220,9 @@ function scatter(model: ChartViewModel, area: Rect, out: string[]): void {
 		s.values.forEach((v, i) => {
 			const x = s.xValues?.[i] ?? null;
 			if (v === null || x === null) return;
-			out.push(`<circle cx="${n(px(x, xs))}" cy="${n(py(v, ys))}" r="3" fill="${s.color}"/>`);
+			out.push(
+				`<circle cx="${n(px(x, xs))}" cy="${n(py(v, ys))}" r="3" fill="${s.pointColors?.[i] ?? s.color}"/>`,
+			);
 		});
 }
 

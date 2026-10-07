@@ -1,27 +1,8 @@
 import { NS, buildXml, children, elements, first, parseXml } from '../../xml/index.js';
-import type { ChartObject, ChartSeries, Color } from '../model.js';
+import type { ChartObject, ChartSeries } from '../model.js';
 import { XML_HEADER, escapeAttr, escapeText } from './xml-out.js';
-
-const THEME_NAMES = [
-	'bg1',
-	'tx1',
-	'bg2',
-	'tx2',
-	'accent1',
-	'accent2',
-	'accent3',
-	'accent4',
-	'accent5',
-	'accent6',
-	'hlink',
-	'folHlink',
-];
-
-function colorFill(color: Color | undefined, index: number): string {
-	if (color?.rgb) return `<a:solidFill><a:srgbClr val="${color.rgb.slice(-6)}"/></a:solidFill>`;
-	const name = THEME_NAMES[color?.theme ?? 4 + (index % 6)] ?? 'accent1';
-	return `<a:solidFill><a:schemeClr val="${name}"/></a:solidFill>`;
-}
+import { chartSeriesFill } from './chart-colors';
+import { drawingColorXml } from '../../diagram/write-color';
 
 const pt = (values: readonly (string | number | null)[]) =>
 	values
@@ -53,13 +34,17 @@ function seriesXml(chart: ChartObject, series: ChartSeries, index: number): stri
 		out += `<c:tx>${strSource(series.nameRef, series.name === undefined ? [] : [series.name])}</c:tx>`;
 	else if (series.name !== undefined) out += `<c:tx><c:v>${escapeText(series.name)}</c:v></c:tx>`;
 	const lineLike = type === 'line' || type === 'scatter' || type === 'radar';
-	const fill = colorFill(series.color, index);
+	const fill = chartSeriesFill(chart, series, index);
 	if (type !== 'pie' && type !== 'doughnut')
 		out += lineLike
 			? `<c:spPr><a:ln w="28575" cap="rnd">${fill}</a:ln></c:spPr>`
 			: `<c:spPr>${fill}</c:spPr>`;
 	if (lineLike) out += '<c:marker><c:symbol val="none"/></c:marker>';
 	if (type === 'bar' || type === 'column') out += '<c:invertIfNegative val="0"/>';
+	for (const [idx, color] of Object.entries(series.pointColors ?? {})) {
+		if (/^\d+$/.test(idx))
+			out += `<c:dPt><c:idx val="${idx}"/><c:spPr><a:solidFill>${drawingColorXml(color)}</a:solidFill></c:spPr></c:dPt>`;
+	}
 	const numericCats =
 		series.categories.length > 0 && series.categories.every((c) => typeof c === 'number');
 	const hasCats = series.categoriesRef !== undefined || series.categories.length > 0;

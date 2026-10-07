@@ -1,6 +1,7 @@
 import { NS, children, elements, first, parseXml, type XmlElement } from '../../xml/index.js';
 import type { ChartObject, ChartSeries, ChartType, Color, DrawingAnchor } from '../model.js';
 import { att } from './xml-util.js';
+import { parseDrawingColorIn } from '../../diagram/drawing-color';
 
 const c = (parent: ParentNode | null | undefined, local: string) => first(parent, local, NS.c);
 const val = (parent: ParentNode | null | undefined, local: string) => att(c(parent, local), 'val');
@@ -136,8 +137,27 @@ export function parseChart(
 		if (nameRef) out.nameRef = nameRef;
 		if (categories.ref) out.categoriesRef = categories.ref;
 		if (values.ref) out.valuesRef = values.ref;
-		const color = solidFillColor(c(ser, 'spPr'));
+		const spPr = c(ser, 'spPr');
+		const primary = ['line', 'scatter', 'radar'].includes(chartType)
+			? first(spPr, 'ln', NS.a)
+			: spPr;
+		const colorContainer =
+			chartType === 'scatter' && !first(primary, 'solidFill', NS.a)
+				? c(c(ser, 'marker'), 'spPr')
+				: primary;
+		const color = solidFillColor(colorContainer);
 		if (color) out.color = color;
+		const drawingColor = parseDrawingColorIn(first(colorContainer, 'solidFill', NS.a));
+		if (drawingColor) out.drawingColor = drawingColor;
+		const points: NonNullable<ChartSeries['pointColors']> = {};
+		for (const point of children(ser, 'dPt', NS.c)) {
+			const pointColor = parseDrawingColorIn(
+				first(c(point, 'spPr') ?? c(c(point, 'marker'), 'spPr'), 'solidFill', NS.a),
+			);
+			const index = Number(val(point, 'idx'));
+			if (pointColor && Number.isInteger(index) && index >= 0) points[index] = pointColor;
+		}
+		if (Object.keys(points).length) out.pointColors = points;
 		return out;
 	});
 	const object: ChartObject = {

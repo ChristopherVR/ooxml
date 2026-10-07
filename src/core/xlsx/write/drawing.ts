@@ -4,6 +4,8 @@ import type { ChartObject, DrawingAnchor, DrawingObject, ImageObject } from '../
 import { CONTENT_TYPES } from '../read/package.js';
 import { chartXml } from './chart.js';
 import { patchChartPart } from './chart-patch.js';
+import { readChartPaletteId } from '../read/chart-colors';
+import { writeChartColorStyle } from './chart-colors';
 import { RelationshipSet, type PackageWriter } from './package-writer.js';
 import { XML_HEADER, escapeAttr } from './xml-out.js';
 
@@ -87,9 +89,14 @@ function writeChart(writer: PackageWriter, chart: ChartObject): string {
 	const source = writer.source;
 	if (chart.partName && source?.has(chart.partName)) {
 		if (writer.has(chart.partName)) return chart.partName;
-		const patched = patchChartPart(source.text(chart.partName) ?? '', chart);
+		const patched = patchChartPart(
+			source.text(chart.partName) ?? '',
+			chart,
+			readChartPaletteId(source, chart.partName),
+		);
 		writer.carry(chart.partName);
 		if (patched) writer.add(chart.partName, patched, CONTENT_TYPES.chart);
+		writeChartColorStyle(writer, chart.partName, chart);
 		return chart.partName;
 	}
 	const part = writer.uniqueName(
@@ -97,6 +104,7 @@ function writeChart(writer: PackageWriter, chart: ChartObject): string {
 		source ? new Set(source.parts.keys()) : undefined,
 	);
 	writer.add(part, chartXml(chart), CONTENT_TYPES.chart);
+	writeChartColorStyle(writer, part, chart);
 	return part;
 }
 

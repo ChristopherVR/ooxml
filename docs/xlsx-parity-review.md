@@ -571,13 +571,58 @@ up to 10 series matches exactly. Across both fixtures, 224 cases match exactly;
 rounding gap remains open. A temporary before/after comparison confirmed that
 all 3,332 shared-catalog outputs match the previous PowerPoint implementation.
 
-Playwright MCP review of XLSX's current Chart Design ribbon confirms that it
-still exposes title, legend, type and delete controls without Change Colors.
-The next slice must add persistent palette editing, handle series and point
-colors and existing marker overrides, then bind the shared Office gallery.
-Importing this catalog alone does not implement that UI or chart-style parity.
+The catalog extraction initially left XLSX without a Change Colors control.
+The following iteration adds its authoring command and shared gallery.
 
 Validation: 239 palette regressions, the prior broader 1,525 chart-related core
 tests, 14 PowerPoint gallery/style tests, strict/legacy core and UI typechecks,
 a full core build and clean package imports. Native JSON fixtures are test data
 and absent from the published distribution.
+
+## Change Colors authoring and shared gallery
+
+Chart Design now exposes the shared Office gallery with four Colorful and
+13 Monochromatic palettes. XLSX supplies theme colors, translations and its
+command adapter; the gallery and SVG swatch helpers are shared with PowerPoint.
+Dropdown arrows/Home/End move focus across sections, activation applies the
+palette, and Escape returns focus to the trigger. The editing command supports
+undo/redo, read-only restrictions, and save/reopen across all six bindings.
+
+Core stores native chart color-style ids and DrawingML series/point choices,
+including transforms. Palette edits replace matching automatic choices while
+preserving custom RGB fills and marker overrides. Existing chart XML is patched
+in place so axes, labels, effects and extension data survive. A changed palette
+gets a private color-style part, avoiding changes to other charts sharing the
+source style. Unedited chart parts remain byte-identical. Type changes also
+serialize the explicit point colors now carried by the model.
+
+`scripts/record-xlsx-chart-palette-edits.ps1` records 32 states from eight native
+families: column, bar, line, area, pie, doughnut, scatter and radar, each before
+and after automatic/manual palette edits. It uses a fresh hidden Excel instance
+and reopens its saved copies to measure the visible marker colors correctly.
+The committed fixture came from Excel 16.0 build 20430. Regression tests compare
+the tested series/point colors exactly and check editing history, save/reload,
+native axes/extensions, legacy color edits and shared-style isolation.
+
+A separate temporary acceptance probe opened all 16 library-authored palette-12
+workbooks in Excel, compared their series and point colors to the native
+recording, saved native copies and reloaded those copies with unchanged chart
+views. Excel's saved manual line/radar examples report COM ChartColor 2 rather
+than 12, identically for native and library edits; their color-style metadata
+and displayed colors still match. This is evidence for the measured slice.
+
+Playwright MCP reviewed the actual ribbon, palette previews and chart rendering.
+The browser regressions check all six bindings, keyboard focus, selection state,
+small-viewport popup bounds, undo/redo and save/reopen. Whole-Excel UI parity
+remains open: chart styles, Quick Layout, extended chart families and richer
+SmartArt authoring are still outstanding, along with the previously measured
+palette rounding differences. Arbitrary gradients, scheme colors indistinguishable
+from automatic choices, combination-chart plots and all marker styles have not
+been established by these fixtures.
+
+Validation for this iteration: 6,046 XLSX core tests, 283 focused palette/style,
+DrawingML writer and native editing tests, 326 XLSX/shared-gallery UI tests,
+125 PowerPoint gallery regressions, 47 binding tests and 68 browser tests passed.
+Core, shared UI and viewer typechecks, production builds and clean-consumer
+package checks also passed. Generated native acceptance workbooks were temporary
+and are not part of the published package or committed fixture set.

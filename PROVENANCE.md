@@ -594,3 +594,17 @@ multiplication moved into `src/core/geometry/affine.ts`. Foreign vector composit
 retains its existing bounded-value checks; Visio rendering reuses the same
 composition through the DOM-free Visio UI contract to accumulate group transforms.
 Regression tests cover composition order and rotated child translations.
+
+## Shared ribbon SVG color previews
+
+Source: ChristopherVR/ooxml at `bd436dd9dc392805f84a2c483c67f09e424b2e5d`,
+`src/ui/src/pptx/render/ribbon-galleries/gallery-preview-svg.ts` and
+`chart-gallery-tiles.ts` (original product: ChristopherVR/pptx-viewer).
+The SVG shell, escaping and safe-color helpers moved to
+`src/ui/src/ribbon/svg-preview.ts`; the swatch-strip painter moved to
+`src/ui/src/ribbon/color-preview.ts`. Their behavior is unchanged and the
+PowerPoint paths retain compatibility exports. XLSX reuses these painters and
+the existing OfficeUiGallery, with a thin translated command adapter. Chart
+palettes and color-style XML remain in core; no PowerPoint engine dependency
+was introduced into the XLSX UI. Existing PowerPoint gallery regressions cover
+the compatibility paths and XLSX browser tests cover the shared control.

@@ -1,6 +1,8 @@
 import type { CellValue, ChartObject, ChartSeries, ChartType, Workbook } from '../model.js';
 import { isCellError } from '../model.js';
-import { autoSeriesColor } from './chart-colors.js';
+import { autoSeriesColor, chartColorScheme } from './chart-colors.js';
+import { chartPaletteSeriesColor, findChartColorPalette } from '../../chart/color-palettes';
+import { resolveDrawingColor } from '../../diagram/drawing-color';
 import { niceScale, PERCENT_SCALE, type AxisScale } from './chart-scale.js';
 import { resolveColor } from './colors.js';
 
@@ -93,6 +95,14 @@ export function chartView(
 	const type = chart.chartType;
 	const theme = workbook.theme;
 	const radial = type === 'pie' || type === 'doughnut';
+	const palette =
+		chart.colorPalette === undefined ? undefined : findChartColorPalette(chart.colorPalette);
+	const scheme = chartColorScheme(theme);
+	const drawingColor = (color: ChartSeries['drawingColor']) =>
+		color &&
+		resolveDrawingColor(color, {
+			scheme: (name) => (scheme as Readonly<Record<string, string>>)[name],
+		})?.hex;
 	const grouping =
 		chart.grouping ?? (type === 'bar' || type === 'column' ? 'clustered' : 'standard');
 	let categories: string[] = [];
@@ -102,7 +112,13 @@ export function chartView(
 			s.values.map(toNumber)) as (number | null)[];
 		const cats = resolveRef(s.categoriesRef, evaluateRef) ?? s.categories;
 		rawCategories.push(cats);
-		const color = resolveColor(s.color, theme) ?? autoSeriesColor(theme, i);
+		const paletteColor =
+			palette && chartPaletteSeriesColor(palette, i, chart.series.length, scheme);
+		const color =
+			drawingColor(s.drawingColor) ??
+			resolveColor(s.color, theme) ??
+			paletteColor ??
+			autoSeriesColor(theme, i);
 		return { name: seriesName(s, i, evaluateRef), values, color };
 	});
 	const longest = Math.max(0, ...series.map((s) => s.values.length));
@@ -112,11 +128,22 @@ export function chartView(
 	);
 
 	if (radial) {
-		const first = series[0];
-		if (first) first.pointColors = first.values.map((_, i) => autoSeriesColor(theme, i));
-		for (const s of series.slice(1))
-			s.pointColors = s.values.map((_, i) => autoSeriesColor(theme, i));
-	}
+		series.forEach((s, seriesIndex) => {
+			s.pointColors = s.values.map((_, i) => {
+				const explicit = drawingColor(chart.series[seriesIndex]?.pointColors?.[i]);
+				return (
+					explicit ??
+					(palette
+						? chartPaletteSeriesColor(palette, i, s.values.length, scheme)
+						: autoSeriesColor(theme, i))
+				);
+			});
+		});
+	} else
+		series.forEach((s, seriesIndex) => {
+			const points = chart.series[seriesIndex]?.pointColors;
+			if (points) s.pointColors = s.values.map((_, i) => drawingColor(points[i]) ?? s.color);
+		});
 
 	const model: ChartViewModel = {
 		type,

@@ -4,6 +4,7 @@ import type { RibbonTab } from 'ooxml-core/xlsx/ui';
 import { activeChart, activeTable } from 'ooxml-core/xlsx/ui';
 import { CHART_TYPES } from '../../commands/insert.js';
 import { tableStyleGalleryItems } from '../../commands/styles.js';
+import { chartColorGalleryItems, chartColorGallerySections } from '../../commands/chart-colors';
 
 export function tableDesignTab(): RibbonTab {
 	return {
@@ -61,6 +62,18 @@ export function chartDesignTab(): RibbonTab {
 		label: 'Chart Design',
 		contextual: (ctx) => !!activeChart(ctx),
 		groups: [
+			{
+				id: 'chart-styles',
+				label: 'Chart Styles',
+				controls: [
+					{
+						kind: 'gallery',
+						command: 'chart.colors',
+						items: chartColorGalleryItems,
+						sections: chartColorGallerySections,
+					},
+				],
+			},
 			{
 				id: 'chart-layouts',
 				label: 'Chart Layouts',

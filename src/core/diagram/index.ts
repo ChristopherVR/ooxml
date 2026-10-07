@@ -15,3 +15,4 @@ export * from './drawing.js';
 export * from './drawing-bounds.js';
 export * from './load.js';
 export { attributeReader } from './dom.js';
+export * from './write-color';

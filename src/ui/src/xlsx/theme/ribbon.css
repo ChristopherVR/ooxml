@@ -1,4 +1,19 @@
 /* Ribbon: tabs, panels, groups and controls. Mirrors docx-viewer's styles/ribbon*.css. */
+.xve-ribbon-gallery[data-office-gallery] .trigger {
+	flex-direction: column;
+	justify-content: center;
+	min-width: 56px;
+	height: 78px;
+	white-space: normal;
+	text-align: center;
+}
+.xve-ribbon-gallery[data-office-gallery] .trigger > svg {
+	width: 28px;
+	height: 28px;
+}
+.xve-ribbon-gallery[data-office-gallery] .trigger > span:not([aria-hidden]) {
+	max-width: 56px;
+}
 .xve-ribbon {
 	position: relative;
 	display: flex;

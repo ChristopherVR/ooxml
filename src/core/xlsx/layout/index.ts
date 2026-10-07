@@ -80,7 +80,7 @@ export {
 } from './sheet-queries.js';
 export { navigate, type NavigationKey } from './navigate.js';
 export { autoFitColumnWidth, type MeasureText } from './autofit.js';
-export { autoSeriesColor, modulateLuminance } from './chart-colors.js';
+export { autoSeriesColor, modulateLuminance, chartColorScheme } from './chart-colors.js';
 export {
 	formatAxisValue,
 	niceScale,

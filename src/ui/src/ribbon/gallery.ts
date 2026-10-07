@@ -56,7 +56,8 @@ const HOST_CSS = ':host { display: inline-flex; position: relative; flex: none; 
  * chevron, `icon` names its glyph). The popup opens below the trigger, keeps inside the window
  * and closes on Escape, an outside press or a pick. `mode="panel"` shows labelled sections directly
  * for modal pickers, with arrow/Home/End selection and no dropdown trigger. ArrowDown on the trigger opens it and focuses
- * the first tile. A pick emits `office-gallery-pick` `{ gallery, itemId }`.
+ * the first tile. Dropdown arrows/Home/End move focus across sections without applying a choice.
+ * A pick emits `office-gallery-pick` `{ gallery, itemId }`.
  *
  * Tiles render in the light DOM beside the host's children (Lit renders the template into the
  * host itself) so products can query them (`data-gallery-item`); the rules join the host's root
@@ -206,12 +207,15 @@ export class OfficeUiGallery extends OfficeElement {
 	}
 
 	private onKey(event: KeyboardEvent): void {
-		if (this.getAttribute('mode') === 'panel') {
+		const panel = this.getAttribute('mode') === 'panel';
+		if (panel || this.open) {
 			const target = event.target as HTMLElement;
 			const tile = target.closest<HTMLButtonElement>('.tile');
 			const section = tile?.closest('.section');
 			const items = Array.from(
-				section?.querySelectorAll<HTMLButtonElement>('.tile:not(:disabled)') ?? [],
+				(panel ? section : this.popup)?.querySelectorAll<HTMLButtonElement>(
+					'.tile:not(:disabled)',
+				) ?? [],
 			);
 			const index = tile ? items.indexOf(tile) : -1;
 			const columns =
@@ -232,9 +236,10 @@ export class OfficeUiGallery extends OfficeElement {
 				event.preventDefault();
 				event.stopPropagation();
 				items[next]?.focus();
-				items[next]?.click();
+				if (panel) items[next]?.click();
+				return;
 			}
-			return;
+			if (panel) return;
 		}
 		const trigger = this.trigger;
 		if (event.key === 'Escape' && this.open) {
