@@ -40,6 +40,19 @@ describe('buildGradientDef (COM: charts-com.pptx slide 23)', () => {
 		expect(node.tagName).toBe('linearGradient');
 		expect(node.querySelectorAll('stop')).toHaveLength(2);
 	});
+
+	it('stretches a rectangular chart gradient across its painted bounds', () => {
+		const node = renderPatternDef(document, {
+			kind: 'rectPath',
+			id: 'g-rect',
+			href: 'data:image/svg+xml,rect',
+			stops: [],
+		});
+		expect(node.tagName).toBe('pattern');
+		expect(node.getAttribute('patternContentUnits')).toBe('objectBoundingBox');
+		expect(node.querySelector('image')?.getAttribute('width')).toBe('1');
+		expect(node.querySelector('image')?.getAttribute('preserveAspectRatio')).toBe('none');
+	});
 });
 
 describe('withGradientFills through buildChartViewModel', () => {

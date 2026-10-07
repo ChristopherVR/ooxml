@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
-import type { PptxChartData, PptxElement } from 'pptx-viewer-core';
 import type { ChartViewModel, SvgLine, SvgPrimitive, SvgRect, SvgText } from 'ooxml-ui/pptx';
 import { buildChartViewModel } from 'ooxml-ui/pptx';
+import type { PptxChartData, PptxElement } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 
 import ChartViewModelSvg from './ChartViewModelSvg.vue';
@@ -327,6 +327,7 @@ describe('chartViewModelSvg: gradient defs (COM: charts-com.pptx slide 23)', () 
 			baseViewModel({
 				areaFill: 'url(#g-rad)',
 				defs: [
+					{ kind: 'rectPath', id: 'g-rect', href: 'data:image/svg+xml;base64,rect', stops: [] },
 					{
 						kind: 'linearGradient',
 						id: 'g-lin',
@@ -353,6 +354,11 @@ describe('chartViewModelSvg: gradient defs (COM: charts-com.pptx slide 23)', () 
 				],
 			}),
 		);
+		expect(wrapper.find('pattern#g-rect').attributes('patternContentUnits')).toBe(
+			'objectBoundingBox',
+		);
+		expect(wrapper.find('pattern#g-rect image').attributes('width')).toBe('1');
+		expect(wrapper.find('pattern#g-rect image').attributes('preserveAspectRatio')).toBe('none');
 		expect(wrapper.find('linearGradient#g-lin').attributes('y2')).toBe('1');
 		expect(wrapper.findAll('radialGradient#g-rad stop')).toHaveLength(2);
 		expect(wrapper.find('rect').attributes('fill')).toBe('url(#g-rad)');

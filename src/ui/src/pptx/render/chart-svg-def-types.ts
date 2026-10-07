@@ -19,7 +19,8 @@ export interface ChartSvgPatternDef {
 	id: string;
 	/** Image source (a `data:`/`blob:` URL). */
 	href: string;
-	patternUnits: 'userSpaceOnUse';
+	patternUnits: 'userSpaceOnUse' | 'objectBoundingBox';
+	patternContentUnits?: 'objectBoundingBox';
 	x: number;
 	y: number;
 	width: number;
@@ -31,3 +32,20 @@ import type { ChartSvgGradientDef } from 'ooxml-core/chart';
 export type { ChartSvgGradientDef, ChartSvgGradientStop } from 'ooxml-core/chart';
 
 export type ChartSvgDef = ChartSvgPatternDef | ChartSvgGradientDef;
+
+/** Resolve rasterized rectangular gradients to the SVG pattern all bindings project. */
+export function resolveChartSvgDef(def: ChartSvgDef): Exclude<ChartSvgDef, { kind: 'rectPath' }> {
+	if (def.kind !== 'rectPath') return def;
+	return {
+		kind: 'pattern',
+		id: def.id,
+		href: def.href,
+		patternUnits: 'objectBoundingBox',
+		patternContentUnits: 'objectBoundingBox',
+		x: 0,
+		y: 0,
+		width: 1,
+		height: 1,
+		preserveAspectRatio: 'none',
+	};
+}

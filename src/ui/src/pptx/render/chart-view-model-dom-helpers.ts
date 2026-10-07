@@ -6,6 +6,7 @@
  *
  * @module chart-view-model-dom-helpers
  */
+import { resolveChartSvgDef } from './chart-svg-def-types';
 import { chartPartToAttrs } from './chart-interaction';
 import type { ChartPartRef, ChartSvgDef } from './chart-view-model';
 
@@ -38,25 +39,8 @@ export function createSvgEl<K extends keyof SVGElementTagNameMap>(
  * `<pattern>`, or a chart gradient (`<linearGradient>` / `<radialGradient>`
  * in bounding-box units, see `chart-gradient-defs.ts`).
  */
-export function renderPatternDef(doc: Document, def: ChartSvgDef): SVGElement {
-	if (def.kind === 'rectPath') {
-		const pattern = createSvgEl(doc, 'pattern', {
-			id: def.id,
-			patternUnits: 'objectBoundingBox',
-			patternContentUnits: 'objectBoundingBox',
-			width: 1,
-			height: 1,
-		});
-		pattern.appendChild(
-			createSvgEl(doc, 'image', {
-				href: def.href,
-				width: 1,
-				height: 1,
-				preserveAspectRatio: 'none',
-			}),
-		);
-		return pattern;
-	}
+export function renderPatternDef(doc: Document, input: ChartSvgDef): SVGElement {
+	const def = resolveChartSvgDef(input);
 	if (def.kind !== 'pattern') {
 		const gradient =
 			def.kind === 'linearGradient'
@@ -82,6 +66,7 @@ export function renderPatternDef(doc: Document, def: ChartSvgDef): SVGElement {
 	const pattern = createSvgEl(doc, 'pattern', {
 		id: def.id,
 		patternUnits: def.patternUnits,
+		patternContentUnits: def.patternContentUnits,
 		x: def.x,
 		y: def.y,
 		width: def.width,

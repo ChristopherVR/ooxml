@@ -1,3 +1,22 @@
+import {
+	buildChartViewModel,
+	chartPartToAttrs,
+	computeChartLegendLayout,
+	resolveChartSvgDef,
+	getChartStylePalette,
+} from 'ooxml-ui/pptx';
+import type {
+	ChartPartRef,
+	ChartViewModel,
+	SvgCircle,
+	SvgLine,
+	SvgPath,
+	SvgPolygon,
+	SvgPolyline,
+	SvgPrimitive,
+	SvgRect,
+	SvgText,
+} from 'ooxml-ui/pptx';
 /**
  * React projector for the framework-agnostic chart view-model engine.
  *
@@ -17,24 +36,6 @@
  * @module chart-view-model-render
  */
 import type { PptxChartData, PptxElement } from 'pptx-viewer-core';
-import {
-	buildChartViewModel,
-	chartPartToAttrs,
-	computeChartLegendLayout,
-	getChartStylePalette,
-} from 'ooxml-ui/pptx';
-import type {
-	ChartPartRef,
-	ChartViewModel,
-	SvgCircle,
-	SvgLine,
-	SvgPath,
-	SvgPolygon,
-	SvgPolyline,
-	SvgPrimitive,
-	SvgRect,
-	SvgText,
-} from 'ooxml-ui/pptx';
 import React from 'react';
 
 import { renderGradientStops } from './chart-gradient-stops';
@@ -269,7 +270,7 @@ export function renderChartViewModel(
 		>
 			{vm.defs && vm.defs.length > 0 && (
 				<defs>
-					{vm.defs.map((def, i) =>
+					{vm.defs.map(resolveChartSvgDef).map((def, i) =>
 						def.kind === 'linearGradient' ? (
 							<linearGradient
 								key={`${elementId}-def-${i}`}
@@ -296,6 +297,7 @@ export function renderChartViewModel(
 								key={`${elementId}-def-${i}`}
 								id={def.id}
 								patternUnits={def.patternUnits}
+								patternContentUnits={def.patternContentUnits}
 								x={def.x}
 								y={def.y}
 								width={def.width}

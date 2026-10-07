@@ -253,6 +253,7 @@ export type {
 // fraction-to-pixel resolver the chart engine uses to honour a hand-placed
 // title, plot area or legend, plus the title / legend post-pass.
 export * from './chart-manual-layout';
+export { resolveChartSvgDef } from './chart-svg-def-types';
 export { withManualLayouts } from './chart-view-model-manual';
 // Pure-DOM projector of a ChartViewModel (vanilla's chart renderer and the 3D
 // chart scene's SVG chrome overlay).

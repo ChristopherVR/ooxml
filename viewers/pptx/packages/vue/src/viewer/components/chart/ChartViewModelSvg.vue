@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { chartPartToAttrs, computeChartLegendLayout } from 'ooxml-ui/pptx';
+import { chartPartToAttrs, computeChartLegendLayout, resolveChartSvgDef } from 'ooxml-ui/pptx';
 import type {
 	ChartPartRef,
 	ChartViewModel,
@@ -79,6 +79,7 @@ function partAttrs(part: ChartPartRef | undefined): Record<string, string> {
 	return part ? chartPartToAttrs(part) : {};
 }
 
+const svgDefs = computed(() => (props.vm.defs ?? []).map(resolveChartSvgDef));
 const legendItems = computed(() => computeChartLegendLayout(props.vm));
 </script>
 
@@ -89,7 +90,7 @@ const legendItems = computed(() => computeChartLegendLayout(props.vm));
 		:preserveAspectRatio="preserveAspectRatio"
 	>
 		<defs v-if="vm.defs && vm.defs.length > 0">
-			<template v-for="(def, i) in vm.defs" :key="`${elementId}-def-${i}`">
+			<template v-for="(def, i) in svgDefs" :key="`${elementId}-def-${i}`">
 				<linearGradient
 					v-if="def.kind === 'linearGradient'"
 					:id="def.id"
@@ -125,6 +126,7 @@ const legendItems = computed(() => computeChartLegendLayout(props.vm));
 					v-else
 					:id="def.id"
 					:patternUnits="def.patternUnits"
+					:patternContentUnits="def.patternContentUnits"
 					:x="def.x"
 					:y="def.y"
 					:width="def.width"

@@ -78,6 +78,7 @@ describe('chartSvgView gradient defs (COM: charts-com.pptx slide 23)', () => {
 					...viewModel(),
 					areaFill: 'url(#g-rad)',
 					defs: [
+						{ kind: 'rectPath', id: 'g-rect', href: 'data:image/svg+xml;base64,rect', stops: [] },
 						{
 							kind: 'linearGradient',
 							id: 'g-lin',
@@ -112,6 +113,13 @@ describe('chartSvgView gradient defs (COM: charts-com.pptx slide 23)', () => {
 			void unmount(component);
 			target.remove();
 		};
+		expect(target.querySelector('pattern#g-rect')?.getAttribute('patternContentUnits')).toBe(
+			'objectBoundingBox',
+		);
+		expect(target.querySelector('pattern#g-rect image')?.getAttribute('width')).toBe('1');
+		expect(target.querySelector('pattern#g-rect image')?.getAttribute('preserveAspectRatio')).toBe(
+			'none',
+		);
 		expect(target.querySelector('linearGradient#g-lin')?.getAttribute('y2')).toBe('1');
 		expect(target.querySelectorAll('radialGradient#g-rad stop')).toHaveLength(2);
 	});

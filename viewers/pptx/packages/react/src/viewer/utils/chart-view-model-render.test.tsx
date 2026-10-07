@@ -1,6 +1,6 @@
-import type { PptxChartData, PptxElement } from 'pptx-viewer-core';
 import type { ChartViewModel, SvgLine, SvgPrimitive, SvgRect, SvgText } from 'ooxml-ui/pptx';
 import { buildChartViewModel } from 'ooxml-ui/pptx';
+import type { PptxChartData, PptxElement } from 'pptx-viewer-core';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, it, expect } from 'vitest';
 
@@ -374,6 +374,7 @@ describe('renderChartViewModel gradient defs (COM: charts-com.pptx slide 23)', (
 				baseViewModel({
 					areaFill: 'url(#g-rad)',
 					defs: [
+						{ kind: 'rectPath', id: 'g-rect', href: 'data:image/svg+xml;base64,rect', stops: [] },
 						{
 							kind: 'linearGradient',
 							id: 'g-lin',
@@ -400,6 +401,12 @@ describe('renderChartViewModel gradient defs (COM: charts-com.pptx slide 23)', (
 					],
 				}),
 			),
+		);
+		expect(html).toContain(
+			'id="g-rect" patternUnits="objectBoundingBox" patternContentUnits="objectBoundingBox"',
+		);
+		expect(html).toContain(
+			'href="data:image/svg+xml;base64,rect" x="0" y="0" width="1" height="1" preserveAspectRatio="none"',
 		);
 		expect(html).toContain('<linearGradient id="g-lin" x1="0.5" y1="0" x2="0.5" y2="1">');
 		expect(html).toContain('<radialGradient id="g-rad"');

@@ -5,7 +5,7 @@
 	 * Pure presentational markup, no state of its own; all maths already
 	 * happened in `buildChartView` / `buildChartViewModel`.
 	 */
-	import type { ChartViewModel } from 'ooxml-ui/pptx';
+	import { resolveChartSvgDef, type ChartViewModel } from 'ooxml-ui/pptx';
 
 	import type { ChartLegendItem } from '../render';
 	import { partAttrs } from '../render';
@@ -26,7 +26,7 @@
 	     references them via fill="url(#...)" -->
 	{#if vm.defs && vm.defs.length > 0}
 		<defs>
-			{#each vm.defs as def (def.id)}
+			{#each vm.defs.map(resolveChartSvgDef) as def (def.id)}
 				{#if def.kind === 'linearGradient'}
 					<linearGradient id={def.id} x1={def.x1} y1={def.y1} x2={def.x2} y2={def.y2}>
 						{#each def.stops as stop, si (si)}
@@ -40,7 +40,7 @@
 						{/each}
 					</radialGradient>
 				{:else}
-					<pattern id={def.id} patternUnits={def.patternUnits} x={def.x} y={def.y} width={def.width} height={def.height}>
+					<pattern id={def.id} patternUnits={def.patternUnits} patternContentUnits={def.patternContentUnits} x={def.x} y={def.y} width={def.width} height={def.height}>
 						<image href={def.href} x="0" y="0" width={def.width} height={def.height} preserveAspectRatio={def.preserveAspectRatio} />
 					</pattern>
 				{/if}

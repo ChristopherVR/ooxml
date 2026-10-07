@@ -32,13 +32,14 @@ import {
 	input,
 	signal,
 } from '@angular/core';
-import type { PptxElement } from 'pptx-viewer-core';
-
 import {
 	computeChartLegendLayout,
+	resolveChartSvgDef,
 	getBarFacePicturePixelSampleVersion,
 	subscribeBarFacePicturePixelSamples,
 } from 'ooxml-ui/pptx';
+import type { PptxElement } from 'pptx-viewer-core';
+
 import { ChartPrimitivesComponent } from './chart-primitives.component';
 import { buildChartViewModel } from './chart-renderer-helpers';
 import type { ChartViewModel } from './chart-renderer-helpers';
@@ -64,7 +65,7 @@ const LEGEND_SWATCH_SIZE = 10;
 				references them via fill="url(#...)" -->
 			@if ((vm().defs ?? []).length > 0) {
 				<defs>
-					@for (def of vm().defs ?? []; track def.id) {
+					@for (def of svgDefs(); track def.id) {
 						@if (def.kind === 'linearGradient') {
 							<linearGradient
 								[attr.id]="def.id"
@@ -100,6 +101,7 @@ const LEGEND_SWATCH_SIZE = 10;
 							<pattern
 								[attr.id]="def.id"
 								[attr.patternUnits]="def.patternUnits"
+								[attr.patternContentUnits]="def.patternContentUnits"
 								[attr.x]="def.x"
 								[attr.y]="def.y"
 								[attr.width]="def.width"
@@ -323,6 +325,7 @@ export class ChartRendererComponent {
 		this.sampleVersion();
 		return buildChartViewModel(this.element());
 	});
+	readonly svgDefs = computed(() => (this.vm().defs ?? []).map(resolveChartSvgDef));
 	readonly viewBox = computed(() => `0 0 ${this.vm().svgWidth} ${this.vm().svgHeight}`);
 	readonly swatchSize = LEGEND_SWATCH_SIZE;
 	readonly legendItems = computed(() => computeChartLegendLayout(this.vm()));
