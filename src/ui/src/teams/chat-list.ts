@@ -20,6 +20,7 @@ export interface ChatMessage {
 	editedAt?: number;
 	deleted?: boolean;
 	replyTo?: string;
+	tabId?: string;
 	attachments?: ChatAttachment[];
 	reactions?: Record<string, string[]>;
 }
@@ -39,7 +40,8 @@ const GROUP_MS = 5 * 60_000;
  * reaction pills, Office file cards and a hover toolbar. Properties: `messages`, `selfId`.
  * Events (bubbling, composed): `office-chat-react` `{ messageId, emoji }` (toggle),
  * `office-chat-reply` / `office-chat-edit` / `office-chat-delete` `{ messageId }` and
- * `office-chat-open-file` `{ attachment }`. Message text is always rendered as text.
+ * `office-chat-open-file` `{ attachment }`, `office-chat-open-tab` `{ tabId }`.
+ * Message text is always rendered as text.
  */
 export class OfficeUiChatList extends TeamsElement {
 	static override styles = withStyles(css);
@@ -137,6 +139,7 @@ export class OfficeUiChatList extends TeamsElement {
 										}`
 						}
 						${!m.deleted && m.attachments?.length ? this.files(m.attachments) : nothing}
+						${!m.deleted && m.tabId ? html`<button class="thread-link" type="button" @click=${() => this.fire('office-chat-open-tab', { tabId: m.tabId })}>Open tab</button>` : nothing}
 					</div>
 					${
 						!m.deleted && reactions.length

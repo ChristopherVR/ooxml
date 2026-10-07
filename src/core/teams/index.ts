@@ -11,6 +11,7 @@ export * from './server-config';
 export * from './signaling';
 export * from './store';
 export * from './tabs';
+export * from './tab-conversation';
 export * from './threads';
 export type { ChatDraft, DraftContext, SavedDraft } from './drafts';
 export type { MessageTransfer } from './message-transfer';

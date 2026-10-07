@@ -654,7 +654,7 @@
 					"name": "OfficeUiChatList",
 					"tagName": "office-ui-chat-list",
 					"customElement": true,
-					"description": "The conversation: messages as Teams-style bubbles with day separators, quoted replies, reaction pills, Office file cards and a hover toolbar. Properties: `messages`, `selfId`. Events (bubbling, composed): `office-chat-react` `{ messageId, emoji }` (toggle), `office-chat-reply` / `office-chat-edit` / `office-chat-delete` `{ messageId }` and `office-chat-open-file` `{ attachment }`. Message text is always rendered as text.",
+					"description": "The conversation: messages as Teams-style bubbles with day separators, quoted replies, reaction pills, Office file cards and a hover toolbar. Properties: `messages`, `selfId`. Events (bubbling, composed): `office-chat-react` `{ messageId, emoji }` (toggle), `office-chat-reply` / `office-chat-edit` / `office-chat-delete` `{ messageId }` and `office-chat-open-file` `{ attachment }`, `office-chat-open-tab` `{ tabId }`. Message text is always rendered as text.",
 					"attributes": [
 						{
 							"name": "self-id"
@@ -687,6 +687,9 @@
 						},
 						{
 							"name": "office-chat-open-file"
+						},
+						{
+							"name": "office-chat-open-tab"
 						},
 						{
 							"name": "office-chat-react"

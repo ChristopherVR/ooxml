@@ -37,6 +37,8 @@ export interface Message {
 	deleted: boolean;
 	/** Id of the thread root this message answers. */
 	replyTo?: string;
+	/** Shared tab discussed by this root post. Replies use replyTo as usual. */
+	tabId?: string;
 	attachments: Attachment[];
 	/** emoji -> user ids, derived from the reaction map. */
 	reactions: Record<string, string[]>;

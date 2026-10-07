@@ -20,11 +20,7 @@ import { definePresence } from '../../presence';
 import { installOfficeUiTheme, THEME_CSS } from '../../theme';
 import { registerTeams } from '../index';
 import { TeamsController } from './controller';
-import {
-	defineTeamsContentPreview,
-	type FileEmbeds,
-	type SaveFileCopy,
-} from './content-preview';
+import { defineTeamsContentPreview, type FileEmbeds, type SaveFileCopy } from './content-preview';
 import { defineTeamsChannelTab } from './channel-tab';
 import { defineTeamsFilesPanel } from './files-panel';
 import { defineTeamsSettings, type TeamsTheme } from './teams-settings';
@@ -44,6 +40,7 @@ import { filePopoutDetail, filePopoutUrl } from './file-popout';
 import { messageTransfers } from './message-transfers';
 import { defineTeamsProfileMenu } from './profile-menu';
 import { defineTeamsAddTabDialog } from './add-tab-dialog';
+import { icon } from '../icons';
 
 export type { FileUploader } from 'ooxml-core/teams';
 export interface OpenFileDetail {
@@ -424,7 +421,14 @@ export class TeamsApp extends LitElement {
 		const s = this.teams.state;
 		if (!s) return this.welcome();
 		return html`
-			<div class="shell">
+			<div
+				class="shell"
+				@office-chat-open-tab=${(event: CustomEvent<{ tabId: string }>) => {
+					if (this.teams.state?.tabs.some((entry) => entry.id === event.detail.tabId))
+						this.selectTab(event.detail.tabId);
+					else this.notify('This tab is no longer available in this channel');
+				}}
+			>
 				${this.topbar(s)}
 				<div class="body">
 					<office-ui-app-rail
@@ -502,11 +506,17 @@ export class TeamsApp extends LitElement {
 					.channelId=${s.selectedChannelId}
 					.channelName=${s.channel?.name ?? ''}
 					.files=${s.files}
-					.add=${(name: string, content: TabContent, channelId: string, client: TeamsClient) => {
+					.add=${(
+						name: string,
+						content: TabContent,
+						channelId: string,
+						client: TeamsClient,
+						postToChannel: boolean,
+					) => {
 						if (client !== this.teams.client || client.getState().selectedChannelId !== channelId)
 							return null;
 						if (!this.closePreview()) return 'canceled';
-						const tab = client.addTab(name, content);
+						const tab = client.addTab(name, content, { postToChannel });
 						if (tab) {
 							this.retainedTab = tab;
 							this.tab = tab.id;
@@ -724,25 +734,52 @@ export class TeamsApp extends LitElement {
 							</nav>
 							<button
 								type="button"
+								aria-label="Add tab"
+								title="Add tab"
 								?disabled=${!channel}
 								@click=${() => (this.addingTab = !this.addingTab)}
 							>
-								Add tab
+								+
 							</button>
 							${
+								sharedTab
+									? html`<button
+											type="button"
+											data-tab-conversation
+											aria-label="Show tab conversation"
+											title="Show tab conversation"
+											aria-expanded=${String(s.thread?.root.tabId === sharedTab.id)}
+											@click=${async () => {
+												if (s.thread?.root.tabId === sharedTab.id) {
+													await this.closeThread();
+													return;
+												}
+												if (!c?.openTabConversation(sharedTab.id)) {
+													this.notify('Could not open this tab conversation');
+													return;
+												}
+												await Promise.resolve();
+												await this.updateComplete;
+												this.shadowRoot
+													?.querySelector<HTMLElement>('[data-thread-heading]')
+													?.focus();
+											}}
+										>
+											${icon('chat')}
+										</button>`
+									: nothing
+							}
+							${
 								sharedTab?.createdBy === s.user.id
-									? html` <button
-												type="button"
-												@click=${() => {
+									? html`<office-ui-menu-button
+											label="Tab options"
+											icon="more"
+											icon-only
+											@office-command=${(event: CustomEvent<{ command: string }>) => {
+												if (event.detail.command === 'rename-tab') {
 													const name = globalThis.prompt?.('Tab name', sharedTab.name)?.trim();
 													if (name) c?.renameTab(sharedTab.id, name);
-												}}
-											>
-												Rename tab
-											</button>
-											<button
-												type="button"
-												@click=${() => {
+												} else if (event.detail.command === 'remove-tab') {
 													if (!this.canLeaveContent()) return;
 													if (
 														globalThis.confirm?.(`Remove ${sharedTab.name} from this channel?`) ===
@@ -753,10 +790,17 @@ export class TeamsApp extends LitElement {
 														this.preview = null;
 														this.tab = 'posts';
 													}
-												}}
-											>
-												Remove tab
-											</button>`
+												}
+											}}
+											><office-ui-menu-item
+												label="Rename tab"
+												command="rename-tab"
+											></office-ui-menu-item
+											><office-ui-menu-item
+												label="Remove tab"
+												command="remove-tab"
+											></office-ui-menu-item
+										></office-ui-menu-button>`
 									: nothing
 							}
 							<span class="topic">${channel?.topic ?? ''}</span>
@@ -778,13 +822,30 @@ export class TeamsApp extends LitElement {
 			${activeTab && !sharedTab && !compact ? html`<p role="status">This tab was removed from the channel. Your open copy remains here until you close it.</p>` : nothing}
 			${
 				activeTab && !compact
-					? html`<teams-channel-tab
-							.tab=${activeTab}
-							.client=${c ?? null}
-							.embeds=${this.embeds}
-							.canSave=${s.canUploadFiles}
-							@teams-preview-close=${() => this.selectTab('posts')}
-						></teams-channel-tab>`
+					? html`<div
+							class="conversation-grid tab-conversation"
+							data-thread=${String(s.thread?.root.tabId === activeTab.id)}
+						>
+							<div class="conversation-main">
+								<teams-channel-tab
+									.tab=${activeTab}
+									.client=${c ?? null}
+									.embeds=${this.embeds}
+									.canSave=${s.canUploadFiles}
+									@teams-preview-close=${() => this.selectTab('posts')}
+								></teams-channel-tab>
+							</div>
+							${
+								s.thread?.root.tabId === activeTab.id && c
+									? threadPane(
+											s,
+											c,
+											(attachment) => void this.openFile(attachment),
+											() => void this.closeThread(),
+										)
+									: nothing
+							}
+						</div>`
 					: this.tab === 'files' && !compact
 						? this.fileList(s.files, s)
 						: html`<div class="conversation-grid" data-thread=${String(!!s.thread && !compact)}>
@@ -837,6 +898,7 @@ export class TeamsApp extends LitElement {
 
 	private selectTab(id: string): void {
 		if (!this.closePreview()) return;
+		this.teams.client?.closeThread();
 		this.tab = id;
 		this.addingTab = false;
 	}
@@ -868,6 +930,11 @@ export class TeamsApp extends LitElement {
 		client?.closeThread();
 		await Promise.resolve();
 		await this.updateComplete;
+		const tabButton = this.shadowRoot?.querySelector<HTMLElement>('[data-tab-conversation]');
+		if (tabButton) {
+			tabButton.focus();
+			return;
+		}
 		const list = this.shadowRoot?.querySelector('.conversation-main office-ui-chat-list');
 		const message = Array.from(
 			list?.shadowRoot?.querySelectorAll<HTMLElement>('[data-message-id]') ?? [],
@@ -877,7 +944,11 @@ export class TeamsApp extends LitElement {
 
 	private pinFile(file: TeamsState['files'][number]): void {
 		if (!this.selectChannel(file.channelId ?? this.teams.state?.selectedChannelId ?? '')) return;
-		const tab = this.teams.client?.addTab(file.name, { type: 'file', attachment: file });
+		const tab = this.teams.client?.addTab(
+			file.name,
+			{ type: 'file', attachment: file },
+			{ postToChannel: true },
+		);
 		if (tab) this.selectTab(tab.id);
 		else this.notify('This file needs an uploaded URL before it can be pinned');
 	}

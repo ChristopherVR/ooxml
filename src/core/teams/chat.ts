@@ -5,6 +5,8 @@
 import * as Y from 'yjs';
 import { createIdGenerator } from '../collab/identity';
 import { isValidId } from '../collab/validation';
+import { tabConversationId } from './tab-conversation';
+import type { ChannelTab } from './tabs';
 import {
 	type Attachment,
 	type Channel,
@@ -41,6 +43,8 @@ export interface ChatStore {
 		channelId: string,
 		input: { text: string; replyTo?: string; attachments?: Attachment[] },
 	) => Message | null;
+	/** Idempotent root creation. Concurrent peers use one stable message id; existing rows survive. */
+	ensureTabConversation: (tab: ChannelTab) => Message | null;
 	/** Only the author can edit. Returns whether the edit applied. */
 	edit: (channelId: string, messageId: string, text: string) => boolean;
 	/** Soft delete (the row stays so threads keep their shape). Only the author can delete. */
@@ -93,6 +97,9 @@ function readMessage(
 		reactions,
 	};
 	if (isValidId(replyTo)) message.replyTo = replyTo;
+	const tabId = raw.get('tabId');
+	if (typeof tabId === 'string' && !message.replyTo && tabConversationId(tabId) === id)
+		message.tabId = tabId;
 	if (editedAt > 0) message.editedAt = editedAt;
 	return message;
 }
@@ -189,6 +196,26 @@ export function createChatStore(doc: Y.Doc, user: ChatUser): ChatStore {
 				channelMessages(channelId).set(id, m);
 			});
 			return readMessage(channelId, id, channelMessages(channelId).get(id), {});
+		},
+		ensureTabConversation(tab) {
+			const id = tabConversationId(tab.id);
+			const name = sanitizeChannelName(tab.name);
+			if (!id || !name || !isChannelId(tab.channelId) || !channelMap.has(tab.channelId))
+				return null;
+			const rows = channelMessages(tab.channelId);
+			if (!rows.has(id))
+				doc.transact(() => {
+					const row = new Y.Map<unknown>();
+					row.set('authorId', user.id);
+					row.set('authorName', user.name);
+					row.set('text', `Discuss the ${name} tab here.`);
+					row.set('ts', Date.now());
+					row.set('deleted', false);
+					row.set('tabId', tab.id);
+					rows.set(id, row);
+				});
+			const message = readMessage(tab.channelId, id, rows.get(id), reactionsFor(id));
+			return message?.tabId === tab.id ? message : null;
 		},
 		edit(channelId, messageId, text) {
 			if (!isChannelId(channelId)) return false;

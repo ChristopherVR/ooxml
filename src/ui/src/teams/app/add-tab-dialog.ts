@@ -26,6 +26,7 @@ type AddTab = (
 	content: TabContent,
 	channelId: string,
 	client: TeamsClient,
+	postToChannel: boolean,
 ) => ChannelTab | 'canceled' | null;
 const fileKey = (file: FileEntry): string => JSON.stringify([file.messageId, file.name, file.url]);
 
@@ -45,6 +46,7 @@ export class TeamsAddTabDialog extends LitElement {
 		name: { state: true },
 		url: { state: true },
 		error: { state: true },
+		postToChannel: { state: true },
 	};
 	declare open: boolean;
 	declare client: TeamsClient | null;
@@ -58,6 +60,7 @@ export class TeamsAddTabDialog extends LitElement {
 	declare name: string;
 	declare url: string;
 	declare error: string;
+	declare postToChannel: boolean;
 	private owner: TeamsClient | null = null;
 	private context = '';
 	private contextName = '';
@@ -75,6 +78,7 @@ export class TeamsAddTabDialog extends LitElement {
 		this.name = '';
 		this.url = '';
 		this.error = '';
+		this.postToChannel = true;
 	}
 	protected override willUpdate(changed: PropertyValues<this>): void {
 		if (changed.has('open') && this.open) {
@@ -87,6 +91,7 @@ export class TeamsAddTabDialog extends LitElement {
 			this.name = '';
 			this.url = '';
 			this.error = '';
+			this.postToChannel = true;
 		}
 	}
 	protected override updated(changed: PropertyValues<this>): void {
@@ -156,7 +161,7 @@ export class TeamsAddTabDialog extends LitElement {
 			this.error = 'Choose a file shared in this channel.';
 			return;
 		}
-		const result = this.add(this.name, content, this.context, this.owner);
+		const result = this.add(this.name, content, this.context, this.owner, this.postToChannel);
 		if (!result) this.error = 'Enter a tab name and valid content.';
 	}
 	protected override render() {
@@ -269,6 +274,13 @@ export class TeamsAddTabDialog extends LitElement {
 							}
 							${!this.current ? html`<p role="alert">The channel changed. Close this dialog and try again.</p>` : nothing}
 							${this.error ? html`<p role="alert">${this.error}</p>` : nothing}
+							<label class="post-choice"
+								><input
+									type="checkbox"
+									.checked=${this.postToChannel}
+									@change=${(event: Event) => (this.postToChannel = (event.target as HTMLInputElement).checked)}
+								/>Post to the channel about this tab</label
+							>
 							<footer>
 								<button type="button" @click=${this.close}>Cancel</button
 								><button

@@ -134,6 +134,18 @@ button {
 .me office-ui-menu-button::part(caret) {
 	display: none;
 }
+.channel-head office-ui-menu-button::part(caret) {
+	display: none;
+}
+.channel-head svg {
+	width: 1em;
+	height: 1em;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: var(--office-icon-stroke);
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
 
 /* ---- body ------------------------------------------------------------------------------- */
 .body {
@@ -204,6 +216,7 @@ ul.plain li > :first-child:not(office-ui-avatar) {
 /* ---- conversation ----------------------------------------------------------------------- */
 .channel-head {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
 	gap: var(--office-space-4);
 	padding: var(--office-space-2) var(--office-space-5);
@@ -399,6 +412,10 @@ ul.plain li > :first-child:not(office-ui-avatar) {
 	min-height: 0;
 	min-width: 0;
 }
+.tab-conversation teams-channel-tab {
+	flex: 1;
+	min-height: 0;
+}
 .thread-pane {
 	border-inline-start: var(--office-border-width) solid var(--office-teams-divider);
 }
@@ -495,9 +512,17 @@ ul.plain li > :first-child:not(office-ui-avatar) {
 .tabs {
 	overflow-x: auto;
 	min-width: 0;
+	flex: 1 1 16em;
 }
 
 @media (max-width: 900px) {
+	.channel-head .topic,
+	.channel-head .people {
+		display: none;
+	}
+	.channel-head .tabs {
+		flex-basis: 100%;
+	}
 	.body {
 		grid-template-columns: auto minmax(0, 1fr);
 	}

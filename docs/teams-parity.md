@@ -388,8 +388,8 @@ leaves the workbook and configuration intact. Browser acceptance renders actual
 XLSX, Markdown and static-site content, checks stale selections and cancellation,
 and verifies desktop/mobile layouts across all six bindings. Microsoft's
 [app and file tab workflow](https://support.microsoft.com/en-us/teams/teams-channels/use-a-tab-in-a-channel-or-chat-in-microsoft-teams)
-is the reference. Tab conversations and the post-to-channel option, app catalogs
-and permission enforcement, and Office coediting remain outstanding.
+is the reference. App catalogs and permission enforcement, and Office coediting
+remain outstanding. Tab conversations are covered by the later slice below.
 
 ## Twentieth implemented slice: Settings search and app labels
 
@@ -404,6 +404,23 @@ reload and identity/workspace isolation, plus desktop and mobile layouts.
 Microsoft's [Settings workflow](https://support.microsoft.com/en-us/teams/notifications-settings/change-settings-in-microsoft-teams)
 is the reference. Automatic app-bar collapse, regional formats, efficiency mode,
 system startup and the wider Teams Settings catalog remain outstanding.
+
+## Twenty-first implemented slice: shared tab conversations
+
+Adding a tab includes the selected-by-default Post to the channel about this tab
+option. Its channel post links back to the tab. Show tab conversation opens the
+same thread beside the file; replies also appear under that post in Posts.
+An unchecked option defers the post until someone starts the conversation.
+Core uses one deterministic root per tab, preserving replies when peers start
+discussions concurrently, restoring snapshots and retaining deleted roots.
+Opening and closing the discussion preserves workbook edits and thread drafts.
+Tab rename/remove commands use the keyboard-accessible Tab options menu; compact
+header commands and responsive wrapping keep the tab strip reachable on mobile.
+Acceptance covers two users discussing an actual edited XLSX, channel replies,
+deferred discussion, draft restoration and desktop/mobile layouts. Microsoft's
+[tab conversation workflow](https://support.microsoft.com/en-us/teams/teams-channels/use-a-tab-in-a-channel-or-chat-in-microsoft-teams)
+is the reference. Tab-link deep routing, authenticated permissions, direct/group
+chat tabs and Office coediting remain outstanding.
 
 ## Next releasable slices
 

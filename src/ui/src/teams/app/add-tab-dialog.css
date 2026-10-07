@@ -141,6 +141,11 @@ small {
 footer {
 	justify-content: flex-end;
 }
+.post-choice {
+	display: flex;
+	align-items: center;
+	gap: var(--office-space-2);
+}
 button.primary {
 	color: var(--office-teams-brand-foreground);
 	border-color: var(--office-teams-brand);

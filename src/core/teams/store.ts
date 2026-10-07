@@ -15,6 +15,7 @@ import { createMessageTransfers, type MessageTransfer } from './message-transfer
 import { checkFileAbort, withFileAbort, type FileOperationOptions } from './file-transfer';
 import type { ChannelTab, TabContent } from './tabs';
 import { channelThreads, type MessageThread } from './threads';
+import { tabConversationId } from './tab-conversation';
 import { createDraftStore, type ChatDraft, type DraftContext, type SavedDraft } from './drafts';
 import {
 	createThreadFollows,
@@ -122,7 +123,13 @@ export interface TeamsClient {
 	readonly workspace: TeamsWorkspace;
 	select: (channelId: string) => void;
 	createChannel: (name: string, topic?: string) => void;
-	addTab: (name: string, content: TabContent) => ChannelTab | null;
+	addTab: (
+		name: string,
+		content: TabContent,
+		options?: { postToChannel?: boolean },
+	) => ChannelTab | null;
+	/** Open or start a tab discussion in the selected channel. Preserves other thread drafts. */
+	openTabConversation: (tabId: string) => boolean;
 	renameTab: (id: string, name: string) => boolean;
 	removeTab: (id: string) => boolean;
 	/** Upload a uniquely named copy and post it in the specified channel. Never overwrites the source. */
@@ -514,10 +521,27 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 		},
 		on: (event, listener) => notices.on(event, listener),
 		workspace: ws,
-		addTab(name, content) {
+		addTab(name, content, options) {
+			if (destroyed) return null;
 			const tab = ws.tabs.add(selected, name, content);
+			if (tab && options?.postToChannel) followAuthored(ws.chat.ensureTabConversation(tab));
 			refresh();
 			return tab;
+		},
+		openTabConversation(id) {
+			if (destroyed) return false;
+			const tab = ws.tabs.tabs(selected).find((entry) => entry.id === id);
+			if (!tab) return false;
+			const existing = messagesOf(selected).some((message) => message.id === tabConversationId(id));
+			const message = ws.chat.ensureTabConversation(tab);
+			if (!message) return false;
+			if (!existing) followAuthored(message);
+			activeDraftId = '';
+			threadId = message.id;
+			replyId = editId = '';
+			markThreadRead(selected, message.id);
+			refresh();
+			return true;
 		},
 		renameTab(id, name) {
 			const changed = ws.tabs.rename(id, name);
