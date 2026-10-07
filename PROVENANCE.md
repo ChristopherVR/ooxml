@@ -1653,3 +1653,34 @@ without using the system clipboard. The two editor-hook exports match the native
 field counts, text and copied bold on reopen. Browser keyboard/fallback checks
 and mounted Yjs history cover the body paths; full Windows clipboard formats and
 all tracked cut/paste remain unverified.
+
+## Shared chart-space text inheritance and regenerated text bodies
+
+Source: ChristopherVR/ooxml at `f3b93358b`, the shared chart formatting reader,
+XLSX appearance resolver and chart topology writer. Chart-space text defaults
+are read with the existing DrawingML appearance parser and applied by
+`src/core/chart/text-inheritance.ts` before direct element formatting. The
+shared element mapping and XML import path preserve imported text bodies and
+first title paragraph/run properties during regeneration. No font resolver,
+XML tree or chart-specific UI engine was copied into a viewer.
+
+`scripts/record-xlsx-chart-styles.ps1` now also accepts reference files, reusing
+its font/paint capture. For these references it reads the actual title
+TextFrame2 range, since the title-wide Font property can report a different
+inherited size. Preparation uses the shared XML model to vary partial
+chart-space defaults and direct overrides. Twenty-four native references
+from Excel 16.0 build 20430 are retained in the test-only
+`src/core/chart/excel-chart-text-inheritance.json`; theme-font tokens remain
+unflattened in source XML. The browser workbook shell moved from
+`e2e/xlsx/chart-built-in-text.spec.ts` into `native-chart-fixture.ts` for reuse
+by both font matrices, retaining the native chart parts and fixed chart size.
+
+Twenty-five regressions compare native inherited/direct fonts and regenerated
+text properties, including minimal charts without fill/axis patches. All 74
+focused browser checks pass in six bindings. Playwright MCP changed native
+inherited and explicit-font charts to line charts and saved through the UI
+API. Excel reopened/resaved both exports and reopened those copies, retaining
+24-point italic Arial inheritance and a 32-point bold major-theme title with
+direct 9-point legend/axis fonts. Mixed rich runs, multiple paragraphs,
+native font measurement/layout, text effects authoring and full Excel parity
+remain unfinished.

@@ -1,33 +1,20 @@
 import { expect, test } from '@playwright/test';
-import JSZip from 'jszip';
 import native from '../../src/core/chart/excel-built-in-text-styles.json' with { type: 'json' };
-import { createWorkbook, createEditSession, saveXlsx, loadXlsx, chartView } from 'ooxml-core/xlsx';
+import { loadXlsx, chartView } from 'ooxml-core/xlsx';
 import { FRAMEWORKS, editor, openLanding, pageErrors } from './helpers';
+import { nativeChartFixture } from './native-chart-fixture';
 
 for (const framework of FRAMEWORKS)
 	for (const id of [2, 102, 141])
 		test(`built-in text style ${id} survives a type edit in ${framework}`, async ({ page }) => {
 			const errors = pageErrors(page);
 			const sample = native.cases.find((item) => item.requestedStyle === id)!;
-			const book = createWorkbook();
-			book.theme.minorFont = sample.titleText.name;
-			createEditSession(book).addChart(0, {
-				chartType: 'column',
-				showLegend: true,
-				series: [],
-				anchor: {
-					from: { row: 1, col: 1, rowOffset: 0, colOffset: 0 },
-					ext: { cx: 600 * 9525, cy: 400 * 9525 },
-				},
-			});
-			const zip = await JSZip.loadAsync(await saveXlsx(book));
-			for (const [part, xml] of Object.entries(sample.parts)) zip.file(part, xml);
 			await openLanding(page, framework);
 			const name = `built-in-${id}.xlsx`;
 			await page.locator('#landing-file').setInputFiles({
 				name,
 				mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-				buffer: Buffer.from(await zip.generateAsync({ type: 'uint8array' })),
+				buffer: await nativeChartFixture(sample.parts, sample.titleText.name),
 			});
 			const host = editor(page);
 			await expect(host.getByText(name, { exact: true })).toBeVisible();

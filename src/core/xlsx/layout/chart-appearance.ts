@@ -13,6 +13,7 @@ import { chartColorScheme } from './chart-colors';
 import { resolveChartGradient, type ChartGradientFill } from '../../chart/gradient-definition';
 import { resolveDrawingShadowXml, type DrawingSvgShadow } from '../../diagram/drawing-shadow';
 import { builtInChartTextStyle, effectiveBuiltInChartStyle } from '../../chart/built-in-text-style';
+import { inheritChartText } from '../../chart/text-inheritance';
 
 export interface ChartAppearanceEntry extends ResolvedChartStyleEntry {
 	textShadow?: DrawingSvgShadow;
@@ -52,8 +53,12 @@ export function chartAppearance(
 		const direct = chart.formatting?.entries[part];
 		if (!defaults[part] && !base && !direct) continue;
 		const entry: ChartStyleEntry = {
-			...defaults[part],
-			...base,
+			...inheritChartText(
+				part,
+				{ ...defaults[part], ...base, sourceXml: base?.sourceXml ?? '' },
+				defaults[part],
+				chart.formatting?.textDefaults,
+			),
 			...direct,
 			sourceXml: direct?.sourceXml ?? base?.sourceXml ?? '',
 		};

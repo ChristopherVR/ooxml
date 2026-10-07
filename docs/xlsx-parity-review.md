@@ -1396,4 +1396,31 @@ the modern title renders at 24 pixels and legend/axes at 13.33 pixels. Excel
 reopened and resaved its UI export as a line chart with the expected 18-point
 bold Aptos Narrow title and 10-point legend/axis fonts. Root chart text
 inheritance, mixed rich-text runs, East Asian/complex-script font choices,
-native text measurement/layout and built-in paint defaults remain open.
+native text measurement/layout and built-in paint defaults remained open at
+that revision. Chart-space inheritance is addressed below.
+
+Chart-space text bodies now supply inherited font size, weight, italic, face
+and color through the shared chart resolver. An inherited title uses 1.2 times
+an explicit chart-space size; direct title/legend/axis properties override it.
+The reference preparation/COM recorder now covers 24 cases across legacy,
+modern and external chart styles, with partial defaults and direct rich-text
+overrides. The recorder reads the title's actual TextFrame2 text-range font:
+its title-wide Font property can report the inherited size while a rich run
+displays a different explicit size.
+
+Chart regeneration preserves imported text bodies and the first title
+paragraph/run properties using the existing XML element mapping. This retains
+root, title, legend and axis fonts through chart type edits. It does not add a
+second text engine, and source-only formatting metadata is not a new font
+authoring UI. Mixed-run/multiple-paragraph titles, font measurement, text
+effects authoring and native title/legend layout remain incomplete.
+
+The chart/XLSX sweep passes 8,461 ordinary tests and 17 existing expected
+raster failures. All 74 focused browser checks pass across six bindings.
+Playwright MCP reviewed inherited italic Arial and explicit title formatting
+through chart type edits and the save API. Excel 16.0 build 20430 reopened
+both line-chart exports, resaved them, and reopened those copies: inherited
+title 24 points, legend/axes 20 points, all italic Arial and color #123456;
+explicit title 32 points, bold, major theme font and color #595959, with
+9-point legend/axes. These checks establish those font inheritance and
+preservation paths, not exact raster or complete Excel parity.

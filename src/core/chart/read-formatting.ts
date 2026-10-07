@@ -36,11 +36,19 @@ export function readChartFormatting(root: XmlElement): ChartStyleDefinition | un
 		Object.entries(nodes).flatMap(([name, node]) => (node ? [[name, entry(node)]] : [])),
 	);
 	const builtInStyle = readBuiltInChartStyle(root);
+	const textBody = c(root, 'txPr');
+	const textDefaults = textBody
+		? {
+				sourceXml: buildXml(textBody),
+				...readChartAppearance(a(a(a(textBody, 'p'), 'pPr'), 'defRPr'), undefined),
+			}
+		: undefined;
 	return Object.keys(entries).length
 		? {
 				entries,
 				sourceXml: buildXml(root),
 				...(builtInStyle === undefined ? {} : { builtInStyle }),
+				...(textDefaults ? { textDefaults } : {}),
 			}
 		: undefined;
 }

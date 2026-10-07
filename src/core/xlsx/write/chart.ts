@@ -9,6 +9,7 @@ import { writeChartAxisFormatting } from '../../chart/write-axis-formatting';
 import { writeChartFillFormatting } from '../../chart/write-fill-formatting';
 import { builtInChartStyleXml, effectiveBuiltInChartStyle } from '../../chart/built-in-text-style';
 import { chartTitleXml } from './chart-title';
+import { writeChartTextFormatting } from '../../chart/write-text-formatting';
 
 const pt = (values: readonly (string | number | null)[]) =>
 	values
@@ -145,9 +146,10 @@ export function chartXml(chart: ChartObject): string {
 	const xml = `${XML_HEADER}<c:chartSpace xmlns:c="${NS.c}" xmlns:a="${NS.a}" xmlns:r="${NS.r}"><c:roundedCorners val="0"/>${builtInChartStyleXml(effectiveBuiltInChartStyle(chart.formatting))}<c:chart>${title}<c:plotArea><c:layout/>${plotXml(chart)}</c:plotArea>${legend}<c:plotVisOnly val="1"/><c:dispBlanksAs val="gap"/></c:chart></c:chartSpace>`;
 	if (!chart.formatting) return xml;
 	const doc = parseXml(xml);
+	const textChanged = writeChartTextFormatting(doc.documentElement, chart.formatting);
 	const axesChanged = writeChartAxisFormatting(doc.documentElement, chart.formatting);
 	const fillsChanged = writeChartFillFormatting(doc.documentElement, chart.formatting);
-	return axesChanged || fillsChanged ? buildXml(doc) : xml;
+	return textChanged || axesChanged || fillsChanged ? buildXml(doc) : xml;
 }
 
 /**

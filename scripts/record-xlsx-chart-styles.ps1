@@ -1,7 +1,8 @@
 param(
     [string]$OutputFolder = (Join-Path $env:TEMP 'ooxml-native-chart-styles'),
     [int[]]$StyleIds = (201..216),
-    [switch]$BuiltInReferences
+    [switch]$BuiltInReferences,
+    [string[]]$ReferenceFiles = @()
 )
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -10,9 +11,9 @@ $excel = $null; $book = $null
 if ($BuiltInReferences -and -not $PSBoundParameters.ContainsKey('StyleIds')) {
     $StyleIds = (1..48) + (101..148)
 }
-function Read-ChartFont($font) {
+function Read-ChartFont($font, [switch]$TextRange) {
     $size = [double]$font.Size
-    $rgb = [int]$font.Color
+    $rgb = if ($TextRange) { [int]$font.Fill.ForeColor.RGB } else { [int]$font.Color }
     return @{ size = $(if ($size -gt 0) { $size } else { $null }); name = [string]$font.Name; bold = [bool]$font.Bold; italic = [bool]$font.Italic; color = '#{0:X2}{1:X2}{2:X2}' -f ($rgb -band 255),(($rgb -shr 8) -band 255),(($rgb -shr 16) -band 255) }
 }
 function Read-ChartPaint($format) {
@@ -37,8 +38,14 @@ try {
     $names = @('dk1','lt1','dk2','lt2','accent1','accent2','accent3','accent4','accent5','accent6','hlink','folHlink')
     for ($i=0; $i -lt $names.Count; $i++) { $rgb=[int]$book.Theme.ThemeColorScheme.Colors($i+1).RGB; $scheme[$names[$i]] = '#{0:X2}{1:X2}{2:X2}' -f ($rgb -band 255),(($rgb -shr 8) -band 255),(($rgb -shr 16) -band 255) }
     $cases = @()
-    foreach ($id in $StyleIds) {
-        if ($BuiltInReferences) {
+    $references = if ($ReferenceFiles.Count) {
+        @($ReferenceFiles | ForEach-Object { @{ path = (Resolve-Path -LiteralPath $_).Path } })
+    } else { @($StyleIds | ForEach-Object { @{ id = $_ } }) }
+    foreach ($reference in $references) {
+        $id = $reference.id
+        if ($reference.path) {
+            $path = $reference.path
+        } elseif ($BuiltInReferences) {
             $path = Join-Path $OutputFolder "builtin-$id.xlsx"
         } else {
             $object = $sheet.ChartObjects().Add(260,20,480,300)
@@ -65,10 +72,16 @@ try {
             $cases += @{ requestedStyle = $id; style = [int]$probeChart.ChartStyle; titleFontSize = $(if ([double]$probeChart.ChartTitle.Font.Size -gt 0) { [double]$probeChart.ChartTitle.Font.Size } else { $null }); axisFontSize = [double]$probeChart.Axes(1).TickLabels.Font.Size; legendFontSize = [double]$probeChart.Legend.Font.Size; titleText = (Read-ChartFont $probeChart.ChartTitle.Font); categoryText = (Read-ChartFont $probeChart.Axes(1).TickLabels.Font); valueText = (Read-ChartFont $probeChart.Axes(2).TickLabels.Font); legendText = (Read-ChartFont $probeChart.Legend.Font); parts = $parts }
             $cases[-1].hasValueAxis = [bool]$probeChart.HasAxis(2,1)
             $cases[-1].chartArea = Read-ChartPaint $probeChart.ChartArea.Format
+            if ($reference.path) {
+                $cases[-1].Remove('requestedStyle')
+                $cases[-1].referenceName = [System.IO.Path]::GetFileNameWithoutExtension($path)
+                # The title-wide Font can differ from the actual rich-text range.
+                $cases[-1].titleText = Read-ChartFont $probeChart.ChartTitle.Format.TextFrame2.TextRange.Font -TextRange
+            }
         } finally { $probeBook.Close($false) }
-        if (-not $BuiltInReferences) { $object.Delete() }
+        if (-not $BuiltInReferences -and -not $reference.path) { $object.Delete() }
     }
-    $outputName = if ($BuiltInReferences) { 'built-in-styles.json' } else { 'styles.json' }
+    $outputName = if ($ReferenceFiles.Count) { 'references.json' } elseif ($BuiltInReferences) { 'built-in-styles.json' } else { 'styles.json' }
     @{ excelVersion = [string]$excel.Version; excelBuild = [string]$excel.Build; scheme = $scheme; cases = $cases } |
         ConvertTo-Json -Depth 8 | Set-Content -Encoding utf8 (Join-Path $OutputFolder $outputName)
     Write-Output "Recorded $($cases.Count) independent native style parts in $OutputFolder"
