@@ -232,9 +232,9 @@ describe('tableRenderer', () => {
 			rows: [{ cells: [{ text: 'Dense', style: { marginLeft: 0, marginTop: 0 } }] }],
 		};
 		const wrapper = mount(TableRenderer, { props: { element: table(dense), zIndex: 0 } });
-		const style = wrapper.get('td').attributes('style') ?? '';
-		expect(style).toContain('padding-left: 0px');
-		expect(style).toContain('padding-top: 0px');
+		const { style } = wrapper.get('td').element as HTMLTableCellElement;
+		expect(style.paddingLeft).toBe('0px');
+		expect(style.paddingTop).toBe('0px');
 	});
 
 	it('applies header-row banding (bold + background) when firstRowHeader is set', () => {

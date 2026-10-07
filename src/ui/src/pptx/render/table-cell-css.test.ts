@@ -21,6 +21,25 @@ function insertedTable(): PptxTableData {
 const POS = { rowIndex: 0, cellIndex: 0, rowCount: 4, columnCount: 2 };
 
 describe('tableCellCss', () => {
+	it("lays cell text out with PowerPoint's single line spacing and default margins", () => {
+		expect(tableCellCss(insertedTable(), undefined, POS)).toMatchObject({
+			lineHeight: 1.2,
+			paddingLeft: '9.6px',
+			paddingRight: '9.6px',
+			paddingTop: '4.8px',
+			paddingBottom: '4.8px',
+		});
+	});
+
+	it("keeps a cell's own margins", () => {
+		const cell = { text: 'A', style: { marginLeft: 0, marginTop: 2 } };
+		expect(tableCellCss(insertedTable(), cell, POS)).toMatchObject({
+			paddingLeft: '0px',
+			paddingTop: '2px',
+			paddingRight: '9.6px',
+		});
+	});
+
 	it('applies the header emphasis a programmatic table declares', () => {
 		const css = tableCellCss(insertedTable(), undefined, POS);
 		expect(css.fontWeight).toBe(700);
