@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.2.0](https://github.com/ChristopherVR/ooxml/releases/tag/openteams-angular-viewer@0.2.0) - 2026-10-07
+
+### Features
+
+- **teams:** Add embedded content previews ([c127224](https://github.com/ChristopherVR/ooxml/commit/c127224861720dd2d37e24390f940e642588b559))
+
 ## [0.1.3](https://github.com/ChristopherVR/ooxml/releases/tag/openteams-angular-viewer@0.1.3) - 2026-10-07
 
 ## [0.1.2](https://github.com/ChristopherVR/ooxml/releases/tag/openteams-angular-viewer@0.1.2) - 2026-10-06

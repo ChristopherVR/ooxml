@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [2.8.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-viewer-mcp@2.8.0) - 2026-10-07
+
+### Features
+
+- **pptx:** Migrate shared renderer and editing into core and ui ([ba4cd0d](https://github.com/ChristopherVR/ooxml/commit/ba4cd0dc64707ed32d4386c14b80b0ad8a50300a))
+
 ## [2.7.2](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-viewer-mcp@2.7.2) - 2026-10-06
 
 ### Documentation

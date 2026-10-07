@@ -1,6 +1,6 @@
 {
 	"name": "visio-vanilla-viewer",
-	"version": "0.5.6",
+	"version": "0.5.7",
 	"description": "Local-first Visio viewer for vanilla",
 	"homepage": "https://christophervr.github.io/ooxml/visio/",
 	"bugs": {
@@ -33,6 +33,6 @@
 		"emf-converter": "4.8.21",
 		"ooxml-core": "*",
 		"ooxml-ui": "*",
-		"visio-core": "^0.3.4"
+		"visio-core": "^0.3.5"
 	}
 }

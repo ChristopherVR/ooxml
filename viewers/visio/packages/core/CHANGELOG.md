@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.3.5](https://github.com/ChristopherVR/ooxml/releases/tag/visio-core@0.3.5) - 2026-10-07
+
+### Refactor
+
+- **visio:** Use extensionless relative source imports ([2495aa9](https://github.com/ChristopherVR/ooxml/commit/2495aa92d52a0135106695a2a39a72c9f98cf177))
+
 ## [0.3.4](https://github.com/ChristopherVR/ooxml/releases/tag/visio-core@0.3.4) - 2026-10-07
 
 ## [0.3.3](https://github.com/ChristopherVR/ooxml/releases/tag/visio-core@0.3.3) - 2026-10-06

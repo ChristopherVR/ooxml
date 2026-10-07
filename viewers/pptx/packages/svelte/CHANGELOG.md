@@ -7,6 +7,41 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.27.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-svelte-viewer@4.27.0) - 2026-10-07
+
+### Features
+
+- **pptx:** Migrate shared renderer and editing into core and ui ([ba4cd0d](https://github.com/ChristopherVR/ooxml/commit/ba4cd0dc64707ed32d4386c14b80b0ad8a50300a))
+- **pptx:** Move snapshots and cached drawing bounds into core ([f13d837](https://github.com/ChristopherVR/ooxml/commit/f13d83743ce937b5b8c5c66d0abc130d78da8dbb))
+- **chart:** Share Office chart color palettes ([bd436dd](https://github.com/ChristopherVR/ooxml/commit/bd436dd9dc392805f84a2c483c67f09e424b2e5d))
+- **visio:** Preserve page hatch orientation and tile phase ([8b13665](https://github.com/ChristopherVR/ooxml/commit/8b13665ad715f703a983938b47c6b82ba87a6aee))
+- **xlsx:** Add shared Change Colors gallery and native palette edits ([c0e42f0](https://github.com/ChristopherVR/ooxml/commit/c0e42f0b611371ffef7334fa950db5ce9a98cbdd))
+- **chart:** Share native chart style definitions ([f8a6c9e](https://github.com/ChristopherVR/ooxml/commit/f8a6c9eecc12432d91de025b355f8ab1e1e1a673))
+- **xlsx:** Render imported native chart appearance ([c14f42d](https://github.com/ChristopherVR/ooxml/commit/c14f42d99db1aad93ff522a4436aab29606d52d6))
+- **xlsx:** Preserve and render native chart series gradients ([50a9288](https://github.com/ChristopherVR/ooxml/commit/50a928804960c1ab373498a78ef3aab66ff5fbca))
+- **xlsx:** Render imported native chart shadows ([ab83de0](https://github.com/ChristopherVR/ooxml/commit/ab83de0bc39002955cf915922d4b027f13da760e))
+- **xlsx:** Honor native chart gap width and overlap ([42b7d63](https://github.com/ChristopherVR/ooxml/commit/42b7d63d9bd025ca0113b6f84c9f22ea37a986ab))
+- **xlsx:** Add solid chart fill transparency controls ([60f5c51](https://github.com/ChristopherVR/ooxml/commit/60f5c51fcc46e8edd48d0a25c9189113d7e799b1))
+
+### Bug Fixes
+
+- **pptx:** Retain grid policy until core exports are released ([82e0fd0](https://github.com/ChristopherVR/ooxml/commit/82e0fd07dddee8e06d8576b1ae017fafa939de57))
+- **pptx:** Wrap text in static svg exports ([ece906e](https://github.com/ChristopherVR/ooxml/commit/ece906e50e8e19d41b062453ed0f898ea18abf77))
+- **ci:** Allow migrated UI sources in viewer tests ([e1283a1](https://github.com/ChristopherVR/ooxml/commit/e1283a1ecb7b57db464f4356be2843b242300837))
+- **pptx:** Preserve rich data label formatting when saving ([0cc1c69](https://github.com/ChristopherVR/ooxml/commit/0cc1c694ff9df5c5b88ce165f1d5602e29dd0da0))
+- **pptx:** Finish migrated package dependency wiring ([ab8d12d](https://github.com/ChristopherVR/ooxml/commit/ab8d12dd241c131409a8ddf33548d2ffd92d3fdb))
+- **docx:** Preserve tracked run formatting through text edits ([ecfde3c](https://github.com/ChristopherVR/ooxml/commit/ecfde3c526ce16a41246f1ec26b22fe0a1921463))
+- **pptx:** Preserve combo chart formatting and table subscripts ([7518420](https://github.com/ChristopherVR/ooxml/commit/75184207b96f061a557f675ef061c4c9a838393a))
+- **pptx:** Resolve chart text fonts across runs and scripts ([6d00580](https://github.com/ChristopherVR/ooxml/commit/6d00580398c698e2cf4140ed2f709883b29f475d))
+- **pptx:** Include bullet text runs in paragraph strut sizing ([b10c8cd](https://github.com/ChristopherVR/ooxml/commit/b10c8cd89ae3ed4ee87cf1a38f7892928858bac1))
+- **pptx:** Wrap Korean text at word boundaries ([cfa6b1d](https://github.com/ChristopherVR/ooxml/commit/cfa6b1d9d27b43685b6b5e1a6ef7cf7a63a73229))
+
+### Refactor
+
+- **pptx:** Move chart grid editing policy into core ([0d8e23f](https://github.com/ChristopherVR/ooxml/commit/0d8e23f8cf62ed11d01d9ab0417df12d23b9b213))
+- **crypto:** Share Office GUID generation ([7d4ceeb](https://github.com/ChristopherVR/ooxml/commit/7d4ceeb07fcad2f55eef2cba73514f01af7cc2f3))
+- Use extensionless relative typescript imports ([ef81f39](https://github.com/ChristopherVR/ooxml/commit/ef81f394cd2f275bcc9db87830db24b0adb2ec8b))
+
 ## [4.26.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-svelte-viewer@4.26.0) - 2026-10-07
 
 ### Features
