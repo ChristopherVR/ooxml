@@ -157,7 +157,8 @@ test('records cut and paste under Track Changes as a tracked move and saves it',
 	const name = /<w:moveFromRangeStart w:id="\d+"[^>]* w:name="(move\d+)"\/>/.exec(xml)?.[1];
 	expect(name).toBeTruthy();
 	expect(xml).toContain(`<w:moveToRangeStart`);
-	expect(xml).toMatch(/<w:moveFrom w:id="\d+"[^>]*><w:r><w:delText>Beta<\/w:delText>/);
+	// Native Word represents moved source text with w:t, rather than a deletion run.
+	expect(xml).toMatch(/<w:moveFrom w:id="\d+"[^>]*><w:r>(?:<w:rPr>.*?<\/w:rPr>)?<w:t>Beta<\/w:t>/);
 	expect(xml).toMatch(/<w:moveTo w:id="\d+"[^>]*><w:r>(?:<w:rPr>.*?<\/w:rPr>)?<w:t>Beta<\/w:t>/);
 	// Pasted CSS values are converted to what Word accepts, never written verbatim.
 	expect(xml).not.toMatch(/rgb\(|sans-serif/);
