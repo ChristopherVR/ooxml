@@ -215,6 +215,7 @@ export class EditorCore {
 		}
 		if (remote) transaction.setMeta(REMOTE_TRANSACTION_META, true);
 		const previousParts = view.state.doc.attrs.sectionParts;
+		const previousNotes = view.state.doc.attrs.noteParts;
 		const applied = view.state.applyTransaction(transaction).state;
 		if (applied === view.state) {
 			view.updateState(applied);
@@ -238,7 +239,8 @@ export class EditorCore {
 			this.shell.chrome?.setSaveState('dirty');
 			this.notifyChange();
 			if (
-				previousParts !== view.state.doc.attrs.sectionParts &&
+				(previousParts !== view.state.doc.attrs.sectionParts ||
+					previousNotes !== view.state.doc.attrs.noteParts) &&
 				!transaction.getMeta(HEADER_FOOTER_INPUT)
 			)
 				this.parts.render(this.shell.canvas, this.shell.paper, true);

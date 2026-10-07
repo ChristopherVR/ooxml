@@ -50,16 +50,23 @@ export async function applyNoteEdits(
 		(typeof PARTS)[keyof typeof PARTS],
 	][]) {
 		const baseNotes = new Map<string, Note>((base[key] ?? []).map((note) => [note.id, note]));
+		const retained = new Set((model[key] ?? []).map((note) => note.id));
+		const removed = model[key] ? [...baseNotes.keys()].filter((id) => !retained.has(id)) : [];
 		const edited = (model[key] ?? []).filter((note) => {
 			const original = baseNotes.get(note.id);
 			return !original || JSON.stringify(original.blocks) !== JSON.stringify(note.blocks);
 		});
-		if (!edited.length) continue;
+		if (!edited.length && !removed.length) continue;
 		const file = zip.file(part);
 		const doc = parseXml(file ? await file.async('string') : await createNotesPart(zip, kind));
 		const elements = new Map(
 			children(doc.documentElement, kind).map((element) => [getW(element, 'id'), element]),
 		);
+		for (const id of removed) {
+			const element = elements.get(id);
+			if (element && (!getW(element, 'type') || getW(element, 'type') === 'normal'))
+				doc.documentElement.removeChild(element);
+		}
 		const allocator = await allocatorForPart(zip, part, doc, docPrIds);
 		for (const note of edited) {
 			let element = elements.get(note.id);

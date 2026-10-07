@@ -12,8 +12,9 @@ profile settings and closes only its own instance.
 
 Shared editor regression tests compare body object/text content with native
 accept/reject results for both picture cases, both note cases and page-break
-deletion. This does not establish style or pixel equality, orphan-note cleanup,
-or resolution of every related non-body revision. The insertion of a page break
+deletion. Note snapshots also resolve retained note-story revisions and remove
+notes whose revised body reference was removed. This does not establish style
+or pixel equality or resolution of every related non-body revision. The insertion of a page break
 also inserted two tracked paragraph marks in this Word build; the fixture is
 retained for the separate paragraph-mark implementation, not claimed as covered.
 
@@ -21,7 +22,8 @@ retained for the separate paragraph-mark implementation, not claimed as covered.
 editor exports using the shared adapter and commands. The separate hidden
 `scripts/check-word-review-inline-exports.ps1` reopens them read-only.
 `core-export-reference.json` records matching body text, pictures, footnote counts
-and pagination, with zero body revisions. Retained notes still have one pending
-revision in their own story; body acceptance/rejection does not yet resolve it.
+and pagination, with zero body and footnote revisions after body and note
+acceptance/rejection. Local and Yjs history restore reference and note content
+with one undo operation.
 Regression exports preserve the native picture bytes and `w:noProof` on retained
 pictures, remove it with removed pictures, and keep it off neighboring text.

@@ -14,6 +14,7 @@ export * from './defined';
 export * from './dirty-state';
 export * from './field-guard';
 export * from './header-footer-history';
+export * from './note-parts';
 export * from './inline-content-schema';
 export * from './ligature-style';
 export * from './node-numbering';

@@ -91,6 +91,7 @@ export const schema = new Schema({
 				/** Section layout (no header/footer content) as JSON, so page setup is undoable. */
 				sections: { default: null },
 				sectionParts: { default: null },
+				noteParts: { default: null },
 			},
 		},
 		paragraph: {

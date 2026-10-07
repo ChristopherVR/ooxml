@@ -19,6 +19,7 @@ import { buildNotesElement } from './notes-view';
 import { attachNoteEditing } from './note-editor';
 import { insertNote, type NoteKind } from './note-commands';
 import { sectionPartsJson, HEADER_FOOTER_INPUT, SectionPartsStep } from 'ooxml-core/docx/ui';
+import { notePartsJson, NotePartsStep } from 'ooxml-core/docx/ui';
 import { effectiveHeaderFooter, withHeaderFooterLink } from './header-footer-link';
 import type { HeaderFooterContext } from './header-footer-ribbon';
 import { storyPreview, selectSectionStart } from './header-footer-navigation';
@@ -265,9 +266,7 @@ export class PartsController {
 	insertNote(kind: NoteKind, canvas?: HTMLElement, paper?: HTMLElement): void {
 		const view = this.host.view();
 		if (!view?.editable || !this.host.canEditOutsideBody()) return;
-		const { model, id } = insertNote(view, this.host.model(), kind);
-		const key = kind === 'footnote' ? 'footnotes' : 'endnotes';
-		this.host.setModel({ ...this.host.model(), [key]: model[key] });
+		const { id } = insertNote(view, this.host.model(), kind);
 		this.render(canvas, paper);
 		const item = this.notesEl?.querySelector<HTMLElement>(
 			`.dve-notes-${kind} li[data-docx-note-id="${id}"]`,
@@ -279,15 +278,19 @@ export class PartsController {
 
 	/** Replaces one footnote's or endnote's blocks. */
 	private updateNote(id: string, blocks: Block[]): void {
+		const view = this.host.view();
+		if (!view?.editable || !this.host.canEditOutsideBody()) return;
 		const replace = (notes: Note[]) =>
 			notes.map((note) => (note.id === id ? { ...note, blocks: structuredClone(blocks) } : note));
 		const model = this.host.model();
-		this.host.setModel({
+		const next = {
 			...model,
 			...(model.footnotes && { footnotes: replace(model.footnotes) }),
 			...(model.endnotes && { endnotes: replace(model.endnotes) }),
-		});
-		this.host.edited();
+		};
+		view.dispatch(
+			view.state.tr.step(new NotePartsStep(notePartsJson(next))).setMeta(HEADER_FOOTER_INPUT, true),
+		);
 	}
 
 	/** Applies header/footer edits to every section slot that shares the edited part. */

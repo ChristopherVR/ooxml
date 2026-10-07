@@ -3,7 +3,7 @@ import { expect, it } from 'vitest';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import JSZip from 'jszip';
-import { createDocument, loadDocx, saveDocx, type TextRun } from 'ooxml-core/docx';
+import { createDocument, listRevisions, loadDocx, saveDocx, type TextRun } from 'ooxml-core/docx';
 import { EditorState, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { modelToDoc, docToModel } from './model-adapter';
@@ -134,6 +134,7 @@ for (const name of [
 				const model = docToModel(view.state.doc, loaded.model);
 				const bytes = await loaded.save(model);
 				const reopened = (await loadDocx(bytes)).model;
+				expect(listRevisions(reopened)).toHaveLength(0);
 				const paragraphs = reopened.blocks.flatMap((block) =>
 					block.type === 'paragraph' ? [block] : [],
 				);

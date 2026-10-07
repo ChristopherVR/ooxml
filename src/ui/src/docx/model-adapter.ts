@@ -32,6 +32,7 @@ import { parseBordersJson } from 'ooxml-core/docx/ui';
 import { sectionLayoutJson, sectionsFromLayout } from 'ooxml-core/docx';
 import { sectionsOf } from './section-commands';
 import { sectionPartsJson, restoreSectionParts } from 'ooxml-core/docx/ui';
+import { notePartsJson, restoreNoteParts } from 'ooxml-core/docx/ui';
 
 type ListLabels = ReturnType<typeof computeListLabels>;
 
@@ -83,6 +84,7 @@ export function modelToDoc(model: DocumentModel) {
 			marginLeft: model.page.marginLeft,
 			sections: model.sections ? sectionLayoutJson(model.sections) : null,
 			sectionParts: sectionPartsJson(model.sections),
+			noteParts: notePartsJson(model),
 			evenAndOddHeaders: Boolean(model.evenAndOddHeaders),
 			trackChanges: Boolean(model.trackChanges),
 			trackFormatting: model.trackFormatting !== false,
@@ -224,6 +226,8 @@ export function docToModel(
 	// The editor document is the source of truth for section layout (so undo covers page setup).
 	const {
 		sections: priorSections,
+		footnotes: priorFootnotes,
+		endnotes: priorEndnotes,
 		evenAndOddHeaders: _evenOdd,
 		trackChanges: _trackChanges,
 		trackFormatting: _trackFormatting,
@@ -242,6 +246,10 @@ export function docToModel(
 			: sectionLayout;
 	return {
 		...rest,
+		...restoreNoteParts(doc.attrs.noteParts, {
+			...(priorFootnotes ? { footnotes: priorFootnotes } : {}),
+			...(priorEndnotes ? { endnotes: priorEndnotes } : {}),
+		}),
 		blocks,
 		...(doc.attrs.evenAndOddHeaders ? { evenAndOddHeaders: true } : {}),
 		trackChanges: Boolean(doc.attrs.trackChanges),

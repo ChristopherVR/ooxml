@@ -8,6 +8,7 @@ import {
 	type TextRun,
 } from 'ooxml-core/docx';
 import { schema } from './schema';
+import { notePartsJson } from 'ooxml-core/docx/ui';
 
 export type NoteKind = 'footnote' | 'endnote';
 
@@ -64,7 +65,12 @@ export function insertNote(
 		number: 1,
 		format: JSON.stringify(formatting),
 	});
-	view.dispatch(view.state.tr.replaceSelectionWith(reference, false).scrollIntoView());
+	view.dispatch(
+		view.state.tr
+			.replaceSelectionWith(reference, false)
+			.setDocAttribute('noteParts', notePartsJson(next))
+			.scrollIntoView(),
+	);
 	return { model: next, id };
 }
 

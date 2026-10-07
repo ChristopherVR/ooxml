@@ -19,6 +19,20 @@ async function fixture(): Promise<Uint8Array> {
 }
 
 describe('footnote editing', () => {
+	it('removes a deleted note without removing either separator', async () => {
+		const loaded = await loadDocx(await fixture());
+		const next = structuredClone(loaded.model);
+		next.footnotes = [];
+		const paragraph = expectParagraph(next.blocks[0]);
+		paragraph.runs = paragraph.runs.filter((run) => !run.noteReference);
+		const bytes = await loaded.save(next);
+		const xml = await (await JSZip.loadAsync(bytes)).file('word/footnotes.xml')!.async('string');
+		expect(xml).not.toContain('w:id="2"');
+		expect(xml).toContain('<w:separator/>');
+		expect(xml).toContain('<w:continuationSeparator/>');
+		expect((await loadDocx(bytes)).model.footnotes).toEqual([]);
+		expect(loaded.model.footnotes).toHaveLength(1);
+	});
 	it('models the note number mark and rewrites only the edited note', async () => {
 		const loaded = await loadDocx(await fixture());
 		const note = at(loaded.model.footnotes, 0);

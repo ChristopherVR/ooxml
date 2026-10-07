@@ -151,14 +151,20 @@ isolated undo/redo, read-only access and reused IDs from different authors. Yjs
 peers converge on acceptance/rejection and local undo. Ten native Word comparisons
 cover body picture/note insertion/deletion and page-break deletion. Desktop Word
 reopened all ten editor exports with matching body content, object counts and
-pagination and zero body revisions. The check exposed pending revisions inside
-retained notes, which remain unfinished. Picture parsing now carries its run
+pagination and zero body revisions. Follow-up note snapshots now let Accept All
+and Reject All resolve retained footnote/endnote stories in the same transaction
+as the body. Removed references also remove their note entries on export; Word
+reopened the ten exports with zero body and footnote revisions. One local or Yjs
+undo restores both the reference and note content. Note insertion includes its
+content in the reference's history, note edits update the stored snapshot, and
+history/provider updates refresh previews. Existing unreferenced notes remain
+untouched unless their own revisions are resolved. Picture parsing now carries its run
 property basis; removing a picture may remove its own opaque properties without
 weakening the guard for unsupported retained text or copying picture properties
 onto neighboring text. Native page-break
 insertion also revises paragraph marks, which remain outside this slice. Atom
 format-revision resolution, recording, prior formatting display and related
-non-body revision cleanup still require dedicated coverage. These checks do not
+header/footer revision cleanup still require dedicated coverage. These checks do not
 establish complete native Word object-review parity.
 
 Print Layout now projects prior run and paragraph formatting through the same

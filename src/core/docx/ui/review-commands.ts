@@ -3,6 +3,7 @@ import type { EditorView } from 'prosemirror-view';
 import { dispatchIsolatedCommand } from './command-history';
 import { inlineTextRevision, clearInlineTextRevisions } from './review-inline-revisions';
 import { trackChangesPluginKey } from './track-changes-mode';
+import { hasNoteRevisions, resolveNoteRevisions } from './note-parts';
 import { formattingRevision, resolveFormattingRange } from './review-formatting';
 import {
 	paragraphFormattingRevision,
@@ -87,7 +88,9 @@ function revisionNear(view: EditorView): RevisionRange | undefined {
 }
 
 export function hasAnyChange(view: EditorView | undefined): boolean {
-	return Boolean(view && collectRevisionRanges(view.state.doc).length);
+	return Boolean(
+		view && (collectRevisionRanges(view.state.doc).length || hasNoteRevisions(view.state.doc)),
+	);
 }
 export function hasChangeAtCursor(view: EditorView | undefined): boolean {
 	return Boolean(view && revisionNear(view));
@@ -175,12 +178,11 @@ export function rejectChangeAtCursor(view: EditorView): boolean {
 function applyToAll(view: EditorView, mode: 'accept' | 'reject'): boolean {
 	if (!view.editable) return false;
 	const ranges = collectRevisionRanges(view.state.doc);
-	if (!ranges.length) return false;
-	dispatchIsolatedCommand(
-		view.state,
-		(transaction) => view.dispatch(transaction),
-		resolveRanges(view, ranges, mode),
-	);
+	const tr = resolveRanges(view, ranges, mode);
+	const notes = resolveNoteRevisions(view.state.doc, tr.doc, mode);
+	if (!ranges.length && !notes) return false;
+	if (notes) tr.step(notes);
+	dispatchIsolatedCommand(view.state, (transaction) => view.dispatch(transaction), tr);
 	return true;
 }
 export const acceptAllChanges = (view: EditorView): boolean => applyToAll(view, 'accept');

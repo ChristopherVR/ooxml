@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { loadDocx } from 'ooxml-core/docx';
+import { loadDocx, listRevisions } from 'ooxml-core/docx';
 import {
 	collectRevisionRanges,
 	rejectRevisionRange,
@@ -71,6 +71,40 @@ function start(
 }
 
 describe('Word Yjs collaboration', () => {
+	for (const name of ['note-insert', 'note-delete'])
+		for (const mode of ['accept', 'reject'] as const)
+			it(`shares native ${name} ${mode} and note history as one undo operation`, async () => {
+				const bytes = new Uint8Array(
+					await readFile(resolve(`../core/docx/__fixtures__/review-inline/${name}-tracked.docx`)),
+				);
+				const peers = pair();
+				const a = mount();
+				const b = mount();
+				await a.load(bytes);
+				await b.load(bytes);
+				start(a, b, peers);
+				const initial = viewOf(a).state.doc;
+				expect((mode === 'accept' ? acceptAllChanges : rejectAllChanges)(viewOf(a))).toBe(true);
+				const resolved = viewOf(a).state.doc;
+				expect(viewOf(b).state.doc.eq(resolved)).toBe(true);
+				const retained = (name === 'note-insert') === (mode === 'accept');
+				for (const editor of [a, b]) {
+					expect(listRevisions(editor.documentModel!)).toHaveLength(0);
+					expect(editor.documentModel!.footnotes).toHaveLength(retained ? 1 : 0);
+					const exported = (await loadDocx(await editor.saveBytes())).model;
+					expect(listRevisions(exported)).toHaveLength(0);
+					expect(exported.footnotes).toHaveLength(retained ? 1 : 0);
+				}
+				const collab = wordYjsPluginKey.getState(viewOf(a).state)!;
+				expect(collab.undo()).toBe(true);
+				for (const editor of [a, b]) {
+					expect(viewOf(editor).state.doc.eq(initial)).toBe(true);
+					expect(editor.documentModel!.footnotes).toHaveLength(1);
+					expect(listRevisions(editor.documentModel!).length).toBeGreaterThan(1);
+				}
+				expect(collab.redo()).toBe(true);
+				expect(viewOf(b).state.doc.eq(resolved)).toBe(true);
+			});
 	it('retains revised picture and break properties through shared typing and export', async () => {
 		const model = createDocument();
 		model.blocks = [
