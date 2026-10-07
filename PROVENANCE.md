@@ -2064,3 +2064,20 @@ manifest is refreshed from existing component definitions. Endpoint/rotation
 overlays also reuse the canvas change signal and relevant viewer state changes,
 avoiding needless subtree scans on search updates; the existing regression
 checks this behavior.
+
+## XLSX manual legend rendering through shared chart geometry
+
+Source: ChristopherVR/ooxml at `6832b8c68`,
+`src/core/xlsx/layout/chart-svg.ts`. The existing automatic legend painter
+moves to `src/core/xlsx/layout/chart-svg-legend.ts` within the same core area.
+Imported legend rectangles reuse `src/core/chart/manual-layout.ts`, extracted
+from PowerPoint in the preceding increment, rather than adding new rectangle
+resolution logic. PowerPoint's current fixed-width legend entry painter was
+reviewed; it does not implement the native Excel resized-box flow exercised
+here. XLSX adds measured horizontal/vertical flow for the tested legend boxes.
+
+Eight owned Excel references and preserved source parts cover moved legends,
+overlay reservation and wide/tall dimensions. Playwright MCP exercises actual
+imports and a Line edit/export; Excel resave/reopen retains the tested tall
+legend's geometry, font and overlay flag. This work does not complete native
+legend packing, paint ordering, swatches, authoring controls or chart parity.

@@ -62,7 +62,10 @@ Imported chart styles, supported shadows/gradients, axis visibility, inherited
 fonts, mixed-format title runs, automatic title wrapping and point/percentage title paragraph spacing
 have rendering and preservation support. Imported manual title positions and
 title overlays render; title/plot/legend layout XML is preserved through
-chart type changes. Manual dimensions, complete plot/legend placement and
+chart type changes. Imported manual legend rectangles and overlays render,
+including the tested horizontal/vertical entry arrangements. Manual title
+dimensions, complete plot placement, automatic legend geometry, multi-row/column
+legend packing and
 position-authoring controls remain incomplete.
 Native Excel comparisons verify specific edit/export paths. Exact chart text
 measurement, wrapping, placement and raster fidelity remain incomplete, as do

@@ -33,6 +33,8 @@ export interface ValueAxisView extends AxisScale {
 
 /** Neutral data for a chart painter: series resolved, colours chosen, axes scaled. */
 export interface ChartViewModel {
+	legendLayout?: ChartManualLayout;
+	legendOverlay?: boolean;
 	titleLayout?: ChartManualLayout;
 	titleOverlay?: boolean;
 	titleText?: ChartTitleText;
@@ -227,6 +229,9 @@ export function chartView(
 	const titleFormatting = chart.formatting?.entries.title;
 	if (titleFormatting?.layout) model.titleLayout = titleFormatting.layout;
 	if (titleFormatting?.overlay !== undefined) model.titleOverlay = titleFormatting.overlay;
+	const legendFormatting = chart.formatting?.entries.legend;
+	if (legendFormatting?.layout) model.legendLayout = legendFormatting.layout;
+	if (legendFormatting?.overlay !== undefined) model.legendOverlay = legendFormatting.overlay;
 	const titleText = chartTitleText(chart, theme);
 	if (titleText) model.titleText = titleText;
 	const appearance = chartAppearance(chart, theme);

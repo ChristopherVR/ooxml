@@ -1,9 +1,9 @@
 # XLSX parity status
 
-Updated 8 October 2026. Latest completed XLSX implementation: `f12ee7ea6`,
-imported manual title positions and layout preservation. This assessment
-describes implemented behavior and recorded validation at that revision;
-it does not treat subsequent reference collection as a finished feature.
+Updated 8 October 2026. The latest XLSX increment renders imported manual
+legend rectangles and overlay reservation, following title placement and
+layout preservation at `f12ee7ea6`. Native references, core and browser
+regressions, and selected Excel reopen checks bound the implemented scope.
 
 **Full 1:1 Microsoft Excel parity has not been achieved.** The product is a
 working spreadsheet editor with substantial supported behavior and an expanding
@@ -28,10 +28,11 @@ Excel options, interactions or visual details in that area are implemented.
 | Whole-product parity           | Not achieved | Missing pivots, advanced data features, native page views, collaboration and macro execution prevent this claim.                                                  |
 
 The latest diagram/chart/XLSX and PowerPoint layout-parser sweep passed
-**8,581 ordinary tests**, with **17 existing expected raster failures**.
+**8,591 ordinary tests**, with **17 existing expected raster failures**.
 The updated seven-reference title-layout tests and **16 PowerPoint UI layout
-checks** also passed. Focused chart browser checks passed **254 cases** across
-six bindings. Core/UI typechecks, builds and package checks passed. The earlier
+checks** also passed. Focused chart browser checks passed **302 unique cases**
+across six bindings, including 48 new legend cases. Core/UI typechecks, builds
+and package checks passed. The earlier
 9,938-test sweep used a broader shared-text filter; these counts have different
 scopes.
 These counts describe regression coverage, not a completion percentage or a
@@ -55,7 +56,7 @@ chart type regeneration. Title/plot/legend layout XML and its extensions are
 preserved through that path. Seven native references and two MCP-reviewed UI
 exports reopened/resaved in Excel verify the selected cases. Title position
 parsing and rectangle geometry reuse the PowerPoint implementation through
-shared core chart helpers. Manual dimensions, plot/legend placement rendering,
+shared core chart helpers. Manual title dimensions, plot placement rendering,
 position authoring controls and full chart geometry remain incomplete.
 
 Automatic chart-title wrapping now uses one shared text-flow helper in XLSX
@@ -120,10 +121,10 @@ logic reuse and extraction.
 ## What the recorded validation proves
 
 The latest completed increment has the regression results listed above:
-8,581 ordinary core tests, 17 expected raster failures, 254 focused browser
+8,591 ordinary core tests, 17 expected raster failures, 302 focused browser
 cases across vanilla, React, Vue, Angular, Svelte and Solid, and passing
-core/UI build, type and package checks. These are recorded implementation-run
-results; this documentation update does not rerun those suites. Historical
+core/UI build, type and package checks. These are scoped implementation-run
+results, rather than a full-product equivalence suite. Historical
 results and their different scopes are retained in the implementation review.
 
 Core tests cover supported parsing, editing, preservation and layout behavior.
@@ -149,19 +150,23 @@ prove every chart type, every workbook, every browser, Excel for Mac/web,
 all Microsoft 365 versions or complete UI equivalence. Test counts are not
 a parity percentage, and no defensible overall completion percentage exists yet.
 
-## Work in progress: manual legends
+## Imported manual legends
 
 Eight native Excel references have been collected for automatic, moved,
 overlay, wide and tall legends. They record source XML and native geometry.
-The XLSX painter still uses automatic legend placement; manual legend
-positioning, dimensions, entry flow and overlay reservation are not implemented
-by this reference collection. This work is separate from the completed layout
-XML preservation in `f12ee7ea6`.
+The XLSX painter now uses the shared chart rectangle resolver for imported
+legend positions and dimensions. The tested wide legends use horizontal
+entry flow; tall legends use vertically spaced entries with aligned keys.
+Moving a non-overlay legend retains the automatic side reservation, while an
+overlay releases that band. Manual/overlay legends paint after the plot.
 
-The next increment should reuse the shared chart-layout resolver, add rendering
-regressions against these references, exercise the actual UI through Playwright
-MCP and reopen its exports in Excel. It can only become a completed increment
-after implementation and validation.
+Core checks retain layout and overlay source XML through type regeneration.
+MCP reviewed actual tall/wide workbook imports and a type-change export.
+Excel reopens, resaves and reopens the tall Line export with Left=40pt,
+Top=100pt, Width=90pt, Height=150pt, Arial 12pt and IncludeInLayout=false.
+Native PNG comparisons expose remaining label-spacing and paint differences.
+Automatic geometry, multi-row/column packing, entry-specific formatting,
+line/marker swatches and position-authoring controls remain incomplete.
 
 ## Major work still required
 

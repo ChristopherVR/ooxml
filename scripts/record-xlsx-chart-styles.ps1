@@ -87,6 +87,9 @@ try {
                     plotArea = @{ leftPt = [double]$probeChart.PlotArea.Left; topPt = [double]$probeChart.PlotArea.Top; widthPt = [double]$probeChart.PlotArea.Width; heightPt = [double]$probeChart.PlotArea.Height }
                     insidePlotArea = @{ leftPt = [double]$probeChart.PlotArea.InsideLeft; topPt = [double]$probeChart.PlotArea.InsideTop; widthPt = [double]$probeChart.PlotArea.InsideWidth; heightPt = [double]$probeChart.PlotArea.InsideHeight }
                     titleIncludeInLayout = [bool]$probeChart.ChartTitle.IncludeInLayout
+                    legend = @{ leftPt = [double]$probeChart.Legend.Left; topPt = [double]$probeChart.Legend.Top; widthPt = [double]$probeChart.Legend.Width; heightPt = [double]$probeChart.Legend.Height }
+                    legendIncludeInLayout = [bool]$probeChart.Legend.IncludeInLayout
+                    legendPosition = [int]$probeChart.Legend.Position
                 }
             }
             if ($CaptureTitleCharacters) {

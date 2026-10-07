@@ -1629,3 +1629,39 @@ pass all seven native references; the extracted PowerPoint UI integration
 passes 16 checks. All 254 focused chart browser cases pass across six bindings,
 including 42 new native-layout cases. Core/UI typechecks, builds and package
 checks pass, and the native layout fixture is absent from published chart output.
+
+### Imported manual legend rectangles (8 October 2026)
+
+Imported legend layout and overlay metadata now reach the XLSX view model and
+SVG painter. Rectangle geometry reuses `chart/resolveManualLayoutRect`, already
+shared with PowerPoint. The existing automatic legend painter moves to a
+dedicated XLSX layout module without changing its ordinary positioning path.
+Moved non-overlay legends retain the automatic side reservation; overlays
+release it. Manual and overlay legend markup paints after the plot.
+
+Eight independently reopened Excel 16.0 build 20430 references cover right and
+bottom automatic, moved and overlay legends plus wide/tall overlays. The
+recording scripts capture legend position, dimensions, IncludeInLayout and
+source parts. Native PNGs demonstrate horizontal wide-box flow and vertically
+spaced tall-box flow. Core checks compare manual bounds against COM measurements
+and source fractions, verify source layout/overlay preservation through type
+regeneration, and bound horizontal label origins within 6 CSS pixels of these
+native PNG measurements using captured Chromium Arial 16px widths. This bound
+is specific to this corpus and does not establish exact label or raster parity.
+
+Playwright MCP reviewed actual tall/wide imports and changed the tall chart to
+Line through the shared dialog. Excel reopens that UI export, resaves and
+reopens it with Left=40pt, Top=100pt, Width=90pt, Height=150pt, Arial 12pt and
+IncludeInLayout=false unchanged. The actual native workbook still paints into
+a 393px-high frame rather than the normalized 400px reference. Native/browser
+images differ in chart geometry, gridlines, background layering and text.
+
+The broad diagram/chart/XLSX and PowerPoint layout-parser sweep passes 8,591
+ordinary tests with 17 existing expected raster failures. The updated eight
+legend core checks also pass. Core/UI types, builds and package smoke checks
+pass. Focused browser runs pass 302 unique cases across six bindings, including
+48 new legend cases. The final horizontal-flow correction passes the eight
+native core cases and all 48 legend browser cases again. Automatic legend
+geometry, arbitrary multi-row/column packing, entry text
+overrides, line/marker swatches, position-authoring UI and complete chart parity
+remain open.
