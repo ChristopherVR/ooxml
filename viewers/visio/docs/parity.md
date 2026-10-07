@@ -1,6 +1,6 @@
 # Visio capability ledger
 
-Full Microsoft Visio parity is a target, not a current claim. Snapshot: 2026-10-07.
+Full Microsoft Visio parity is a target, not a current claim. Snapshot: 2026-10-08.
 
 Gradient fidelity remains open: native PNG captures show that two-stop colors
 and path-following contours differ from native SVG export. Exact native-SVG
@@ -9,13 +9,19 @@ for the 68-case raster capture and the unverified-gradient-raster diagnostic.
 
 Saved opaque two-stop fills now use the measured sigma/gamma profile, and saved
 radial fills use physical circular radii. The native PNG interior benchmark
-still has nonzero channel differences; transparency, exact edge pixels and
-path-following paint remain open. This improvement does not establish parity.
+still has nonzero channel differences; transparency and exact edge pixels
+remain open. This improvement does not establish parity.
 
-The saved-gradient native PNG benchmark now covers all 52 rectangle cases
-(directions 0-12, two/three stops, opaque/translucent) across six frameworks.
+The saved-gradient native PNG benchmark now covers all 68 captured cases:
+52 rectangles (directions 0-12) and 16 path fills (direction 13 on rectangles,
+ellipses, triangles and notched polygons), with two/three stops and
+opaque/translucent paint, across six frameworks.
 Internal region seams are suppressed for every region fill. Native export bounds
 are registered explicitly; all gradients retain a raster-fidelity warning.
+Path fills reuse the evaluated outline and shared region/radial renderer.
+Measured path-fill interior errors remain as high as 10 channel levels, with
+mean below 2.5. Curves beyond canonical ellipses, holes, offset outlines,
+broader concave topologies and transformed native comparisons remain open.
 
 Implementation status is based on source inspection. Test filenames identify evidence; current pass counts and limitations are recorded in verification.md. Generated fixtures and the original demo scene do not establish visual parity with Microsoft Visio.
 

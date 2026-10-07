@@ -92,5 +92,5 @@ it.skipIf(!directory)('preserves all 68 genuine native raster cases through edit
 		expect(after.pages[0]!.shapes[i]!.style.fillGradient).toEqual(
 			page.shapes[i]!.style.fillGradient,
 		);
-	expect(page.shapes.filter((shape) => shape.style.fillGradient?.interpolation)).toHaveLength(13);
+	expect(page.shapes.filter((shape) => shape.style.fillGradient?.interpolation)).toHaveLength(17);
 });

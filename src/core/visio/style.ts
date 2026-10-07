@@ -9,7 +9,7 @@ import { linePattern } from './line-pattern';
 import { themeColor, type ThemeResources } from './theme-resolve';
 import { textBackground } from './text-background';
 import { textParagraphs, type ParagraphMarker } from './paragraphs';
-import type { VisioStyle, VisioText, VisioTextRun } from './model';
+import type { VisioStyle, VisioText, VisioTextRun, VisioGeometry } from './model';
 import { transform } from './geometry';
 import { number, sectionRows, type Cells, type Report, type Sheet } from './sheet';
 
@@ -73,6 +73,7 @@ export function shapeStyle(
 	report: Report,
 	width = number(sheet.cells, 'Width', 1),
 	height = number(sheet.cells, 'Height', 1),
+	geometry: readonly VisioGeometry[] = [],
 ): VisioStyle {
 	const cells = sheet.cells,
 		pattern = number(cells, 'FillPattern', 1, report);
@@ -84,6 +85,7 @@ export function shapeStyle(
 					height,
 					(stops) => color(stops, 'GradientStopColor', '', resources, report),
 					report,
+					geometry,
 				)
 			: undefined;
 	const legacyGradient = savedGradient

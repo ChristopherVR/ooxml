@@ -893,3 +893,17 @@ Solid chart transparency was measured with Excel COM using
 `xlsx/__fixtures__/excel-chart-transparency.json`. The pane reuses the existing
 native range template and number fields. Gradient-to-solid conversion and
 transparency edits live in core, preserving DrawingML color choices.
+
+## Visio native path-fill reuse
+
+Source: ChristopherVR/ooxml at `562e07e8b`, `src/core/geometry/svg-path-flatten.ts`,
+`shape-boolean-types.ts`, `shape-boolean-clipping.ts`, `shape-boolean-union.ts`,
+`src/core/visio/geometry.ts` and `src/ui/src/visio/render-fill.ts`.
+No modules were moved or copied. The new core `path-fill-gradient.ts` consumes
+already evaluated paths and reuses shared flattening, winding, intersection and
+line projection helpers. Direction 13 uses the existing region paint with
+optional normalized shape coordinates, or the existing radial paint for a
+canonical ellipse. Shared gradient stop/color/opacity serialization remains in
+one renderer. Snapshot copying, validation and generated-stop accounting retain
+the new coordinate space. Native PNG comparisons cover four captured outlines;
+other topology, exact pixels and native reopen parity remain unverified.

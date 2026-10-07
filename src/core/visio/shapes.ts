@@ -251,7 +251,7 @@ export function normalizeShapes(
 				...(groupDisplayMode === undefined ? {} : { groupDisplayMode }),
 				transform: shapeTransform(sheet.cells, width, height, report),
 				geometry,
-				style: shapeStyle(paintSheet, context.resources, report, width, height),
+				style: shapeStyle(paintSheet, context.resources, report, width, height, geometry),
 				text: shapeText(
 					paintSheet,
 					shape.text,

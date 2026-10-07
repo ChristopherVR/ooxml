@@ -39,7 +39,7 @@ export interface VisioRadialGradient extends VisioGradientPaint {
 	coordinateSpace?: 'local';
 }
 export interface VisioGradientRegion {
-	/** Normalized local y-up triangle vertices; endpoints use each triangle's bounding box. */
+	/** Normalized local y-up triangle vertices; endpoint space comes from the owning paint. */
 	points: readonly (readonly [number, number])[];
 	start: readonly [number, number];
 	end: readonly [number, number];
@@ -48,6 +48,8 @@ export interface VisioGradientRegion {
 }
 export interface VisioRegionGradient extends VisioGradientPaint {
 	type: 'regions';
+	/** Shape uses normalized y-up endpoints shared by every triangle; absent uses triangle bounds. */
+	coordinateSpace?: 'shape';
 	regions: VisioGradientRegion[];
 }
 export type VisioFillGradient = VisioLinearGradient | VisioRadialGradient | VisioRegionGradient;

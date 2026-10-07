@@ -141,6 +141,7 @@ export function copySnapshotScene(model: VisioDocument): VisioDocument {
 										}
 									: {
 											type: 'regions' as const,
+											...fields(gradient, ['coordinateSpace']),
 											regions: list(gradient.regions, 'gradient regions', 100_000, (region) => ({
 												points: list(
 													region.points,

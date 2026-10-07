@@ -1,4 +1,5 @@
-import type { VisioFillGradient, VisioLinearGradient } from './model';
+import type { VisioFillGradient, VisioLinearGradient, VisioGeometry } from './model';
+import { pathFillGradient } from './path-fill-gradient';
 import { radialFillGradient } from './radial-fill-gradient';
 import { regionFillGradient } from './region-fill-gradient';
 import { number, sectionRows, type Cells, type Report, type Sheet } from './sheet';
@@ -7,7 +8,7 @@ import { canUseVisioSigmaInterpolation } from './native-gradient-stops';
 
 /**
  * Saved ShapeSheet gradients use radians and normalized [0,1] stop values.
- * Only complete local, shape-rotating linear, radial and rectangular caches are accepted. Theme and
+ * Only complete local, shape-rotating caches with supported geometry are accepted. Theme and
  * root-style substitution happen before this function; missing caches are not
  * inferred from formulas, legacy pattern numbers, or an unrelated theme.
  * https://learn.microsoft.com/en-us/office/client-developer/visio/fill-gradient-section
@@ -20,6 +21,7 @@ export function savedFillGradient(
 	height: number,
 	resolveColor: (cells: Cells) => string,
 	report: Report,
+	geometry: readonly VisioGeometry[] = [],
 ): VisioFillGradient | undefined {
 	const cells = sheet.cells;
 	if (number(cells, 'FillGradientEnabled', NaN) !== 1) return undefined;
@@ -56,7 +58,7 @@ export function savedFillGradient(
 		(direction === 0 && !Number.isFinite(angle)) ||
 		!Number.isInteger(direction) ||
 		direction < 0 ||
-		direction > 12 ||
+		direction > 13 ||
 		number(cells, 'RotateGradientWithShape', NaN) !== 1 ||
 		number(cells, 'UseGroupGradient', NaN) !== 0
 	)
@@ -86,21 +88,24 @@ export function savedFillGradient(
 		stops.push({ offset, color, opacity: 1 - transparency });
 	}
 	const gradient: VisioFillGradient | undefined =
-		direction >= 8
-			? regionFillGradient(direction, stops)
-			: direction !== 0
-				? radialFillGradient(direction, stops, [width, height])
-				: {
-						type: 'linear',
-						...(orthogonal
-							? linearGradientEndpoints(width, height, (quarter % 4) * 90 * 60_000)
-							: {
-									start: [0, 1] as const,
-									end: [1, 1] as const,
-									boundingBoxAngle: -Math.round((wrapped * 180 * 1e10) / Math.PI) / 1e10,
-								}),
-						stops,
-					};
-	if (gradient && canUseVisioSigmaInterpolation(gradient)) gradient.interpolation = 'sigma-gamma22';
+		direction === 13
+			? pathFillGradient(geometry, width, height, stops)
+			: direction >= 8
+				? regionFillGradient(direction, stops)
+				: direction !== 0
+					? radialFillGradient(direction, stops, [width, height])
+					: {
+							type: 'linear',
+							...(orthogonal
+								? linearGradientEndpoints(width, height, (quarter % 4) * 90 * 60_000)
+								: {
+										start: [0, 1] as const,
+										end: [1, 1] as const,
+										boundingBoxAngle: -Math.round((wrapped * 180 * 1e10) / Math.PI) / 1e10,
+									}),
+							stops,
+						};
+	if (!gradient) return reject();
+	if (canUseVisioSigmaInterpolation(gradient)) gradient.interpolation = 'sigma-gamma22';
 	return gradient;
 }

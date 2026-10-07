@@ -76,6 +76,18 @@ async function parse(overrides = '', stops = stop(0, 0) + stop(1, 1, '#0000ff'),
 	return { style: parsed.pages[0]!.shapes[0]!.style, diagnostics: parsed.diagnostics };
 }
 
+it('normalizes saved path fills using the already evaluated outline', async () => {
+	const { style, diagnostics } = await parse(cell('FillGradientDir', 13));
+	expect(style.fillGradient).toMatchObject({
+		type: 'regions',
+		coordinateSpace: 'shape',
+		interpolation: 'sigma-gamma22',
+	});
+	expect(style.fillGradient?.type === 'regions' && style.fillGradient.regions).toHaveLength(4);
+	expect(diagnostics.some((item) => item.code === 'unsupported-saved-fill-gradient')).toBe(false);
+	expect(diagnostics.some((item) => item.code === 'unverified-gradient-raster')).toBe(true);
+});
+
 it.each([
 	[1, [4, 0], Math.hypot(4, 2)],
 	[2, [0, 0], Math.hypot(4, 2)],
@@ -228,7 +240,7 @@ describe('saved horizontal fill gradients', () => {
 	});
 	it.each([
 		cell('FillGradientDir', -1),
-		cell('FillGradientDir', 13),
+		cell('FillGradientDir', 14),
 		cell('FillGradientDir', 1.5),
 		cell('FillGradientDir', 'Themed'),
 		cell('FillGradientAngle', 'invalid'),

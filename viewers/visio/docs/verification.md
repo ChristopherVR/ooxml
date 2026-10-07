@@ -846,3 +846,39 @@ Core passed 2,071 tests with 53 optional skips; UI passed 714 with seven skips.
 Strict core, complete UI and viewer types, the UI build and viewer formatting
 passed. Root lint retains nine unrelated warnings. This checkpoint fixes shared
 region seams and strengthens native evidence; exact pixel parity is unproven.
+
+## Native path-fill interiors (2026-10-08)
+
+Saved FillGradientDir 13 now reuses the already evaluated single filled outline.
+Straight closed bounds-filling polygons use the existing region gradient model
+with normalized shape coordinates, bounding-box center and perpendicular
+projections onto their outline edges. Shared flattening, winding, intersection
+and projection helpers supply the geometry. Reentrant or degenerate faces are
+skipped. Canonical axis-aligned bounds-filling ellipses retain analytic radial
+paint with normalized radius 0.5. Curves beyond that ellipse, open/multiple
+outlines, holes, self intersections and offset contours remain diagnosed rather
+than inferred from Visio's rectangular SVG fallback.
+
+The existing 68-case Visio 16 PNG capture now feeds every case into the shared
+live and portable SVG renderers on all six framework routes: 816 comparisons.
+The original 52-case rectangle benchmark and its bounds are retained. The 16
+path cases exclude contour pixels: ellipse samples use the inner 80% radius;
+polygon samples lie inside their captured outline and more than eight pixels
+from every edge. The notched capture comes from native DrawPolyline, whose PNG
+contains the actual fill. Native PNG colors remain unchanged; SVG supplies only
+the export frame. Every output records its measured pixel count and errors.
+
+All six routes passed. Maximum path-fill channel errors were 10, with worst mean
+2.35 in the opaque three-stop triangle (rounded up). Regression bounds are 10
+maximum and mean below 2.5; these are not parity tolerances. Native SVG fallback
+experiments had much larger contour errors, but that exporter is not the native
+paint oracle. Exact colors, contour antialiasing, arbitrary curves/holes,
+broader concave outlines, rotations/groups and native save/reopen acceptance
+remain open. All normalized gradients retain unverified-gradient-raster.
+
+Core passed 2,076 tests with 53 optional skips, including genuine 68-case
+move/save/reparse preservation and 17 opaque two-stop interpolation profiles.
+UI passed 714 with seven skips. Core/UI/viewer types and UI builds passed.
+The root lint run found an existing unused index parameter in XLSX drawings;
+this Visio change does not modify that file. Path fan snapshot isolation,
+normalized page scaling and generated-stop budget accounting have regressions.

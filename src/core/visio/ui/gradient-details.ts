@@ -47,10 +47,18 @@ export function assertVisioFillGradient(
 			finite(value, 'gradient center', 0, gradient.coordinateSpace === 'local' ? 20_000 : 1);
 		finite(gradient.radius, 'gradient radius', Number.MIN_VALUE, 20_000);
 	} else {
-		if (!Array.isArray(gradient.regions) || ![2, 4].includes(gradient.regions.length))
+		if (gradient.coordinateSpace !== undefined && gradient.coordinateSpace !== 'shape')
+			throw new Error('The scene has invalid region gradient coordinates.');
+		const shapeCoordinates = gradient.coordinateSpace === 'shape';
+		if (
+			!Array.isArray(gradient.regions) ||
+			(shapeCoordinates
+				? gradient.regions.length < 1 || gradient.regions.length > 256
+				: ![2, 4].includes(gradient.regions.length))
+		)
 			throw new Error('The scene has invalid gradient regions.');
 		for (const region of gradient.regions) {
-			finite(region.angle, 'gradient region angle', 0, 360);
+			finite(region.angle, 'gradient region angle', 0, shapeCoordinates ? 0 : 360);
 			if (
 				!Array.isArray(region.points) ||
 				region.points.length !== 3 ||
@@ -63,7 +71,12 @@ export function assertVisioFillGradient(
 				for (const value of point) finite(value, 'gradient vertex', 0, 1);
 			}
 			for (const value of [...region.start, ...region.end])
-				finite(value, 'gradient region endpoint', 0, 1);
+				finite(
+					value,
+					'gradient region endpoint',
+					shapeCoordinates ? -2 : 0,
+					shapeCoordinates ? 2 : 1,
+				);
 		}
 	}
 	let offset = -1;

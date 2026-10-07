@@ -16,11 +16,12 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 				stopCount: number;
 				alpha: boolean;
 				shapeId: string;
+				kind: 'rectangle' | 'ellipse' | 'triangle' | 'notched';
 			}[];
 		};
 		const samples = await Promise.all(
 			evidence.cases
-				.filter((item) => item.direction < 13)
+				.filter((item) => item.direction <= 13)
 				.map(async (item) => {
 					const source = await readFile(join(directory!, item.name + '.svg'), 'utf8');
 					const frame = /viewBox="0 0 ([0-9.]+) ([0-9.]+)"/.exec(source);
@@ -70,6 +71,60 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 				const top =
 					view.height - shape.transform[5] - shape.height - (sample.frameHeight - shape.height) / 2;
 				const reference = await raster(`data:image/png;base64,${sample.png}`);
+				// The capture script uses these exact outlines. Exclude their contour separately
+				// from the fill benchmark, including diagonal edges and the reentrant notch.
+				const corners =
+					sample.kind === 'triangle'
+						? [
+								[0, 1],
+								[1, 1],
+								[0.5, 0],
+							]
+						: sample.kind === 'notched'
+							? [
+									[0, 1],
+									[1, 1],
+									[1, 0.6],
+									[0.5, 0.6],
+									[0.5, 0],
+									[0, 0],
+								]
+							: [
+									[0, 1],
+									[1, 1],
+									[1, 0],
+									[0, 0],
+								];
+				const marginX = ((sample.frameWidth - shape.width) * scaleX) / 2,
+					marginY = ((sample.frameHeight - shape.height) * scaleY) / 2;
+				const vertices = corners.map(([x, y]) => [
+					marginX + x! * shape.width * scaleX,
+					marginY + y! * shape.height * scaleY,
+				]);
+				const interior = (x: number, y: number) => {
+					if (sample.direction !== 13 || sample.kind === 'rectangle') return true;
+					if (sample.kind === 'ellipse')
+						return (
+							Math.hypot(
+								(x - marginX) / (shape.width * scaleX) - 0.5,
+								(y - marginY) / (shape.height * scaleY) - 0.5,
+							) < 0.4
+						);
+					let inside = false;
+					for (let i = 0; i < vertices.length; i++) {
+						const [ax, ay] = vertices[i]!,
+							[bx, by] = vertices[(i + 1) % vertices.length]!;
+						const dx = bx! - ax!,
+							dy = by! - ay!;
+						const t = Math.max(
+							0,
+							Math.min(1, ((x - ax!) * dx + (y - ay!) * dy) / (dx * dx + dy * dy)),
+						);
+						if (Math.hypot(x - ax! - t * dx, y - ay! - t * dy) <= 8) return false;
+						if (ay! > y !== by! > y && x < ax! + ((y - ay!) * dx) / dy) inside = !inside;
+					}
+					return inside;
+				};
 				const live = renderPage(copy, view);
 				try {
 					for (const source of [
@@ -86,23 +141,28 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 								-top * scaleY,
 							);
 							let maximum = 0,
-								total = 0;
+								total = 0,
+								channels = 0;
 							// Interior benchmark excludes the export bounds and outer-edge antialiasing.
 							for (let y = 8; y < 136; y++)
-								for (let x = 8; x < 280; x++)
+								for (let x = 8; x < 280; x++) {
+									if (!interior(x + 0.5, y + 0.5)) continue;
 									for (let c = 0; c < 4; c++) {
 										const i = 4 * (y * 288 + x) + c,
 											delta = Math.abs(actual[i]! - reference[i]!);
 										maximum = Math.max(maximum, delta);
 										total += delta;
+										channels++;
 									}
+								}
 							results.push({
 								name: sample.name,
 								direction: sample.direction,
 								alpha: sample.alpha,
 								stopCount: sample.stopCount,
 								maximum,
-								mean: total / (272 * 128 * 4),
+								mean: total / channels,
+								pixels: channels / 4,
 							});
 						} finally {
 							URL.revokeObjectURL(url);
@@ -119,11 +179,14 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await test
 			.info()
 			.attach('native-raster-differences', { path: output, contentType: 'application/json' });
-		expect(results).toHaveLength(104);
+		expect(results).toHaveLength(136);
 		// This bounds the measured improvement; nonzero differences remain parity gaps.
 		for (const item of results) {
-			expect(item.maximum, item.name).toBeLessThanOrEqual(7);
-			expect(item.mean, item.name).toBeLessThan(item.alpha || item.stopCount > 2 ? 1.5 : 1);
+			expect(item.pixels, item.name).toBeGreaterThan(1000);
+			expect(item.maximum, item.name).toBeLessThanOrEqual(item.direction === 13 ? 10 : 7);
+			expect(item.mean, item.name).toBeLessThan(
+				item.direction === 13 ? 2.5 : item.alpha || item.stopCount > 2 ? 1.5 : 1,
+			);
 		}
 	});
 }

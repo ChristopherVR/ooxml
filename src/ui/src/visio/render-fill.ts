@@ -48,7 +48,8 @@ export function fillPaint(
 		pattern.setAttribute('patternContentUnits', 'objectBoundingBox');
 		pattern.setAttribute('width', '1');
 		pattern.setAttribute('height', '1');
-		pattern.setAttribute('patternTransform', 'scale(1 -1)');
+		const shapeCoordinates = paint.coordinateSpace === 'shape';
+		if (!shapeCoordinates) pattern.setAttribute('patternTransform', 'scale(1 -1)');
 		for (const region of paint.regions) {
 			const path = svgElement('path');
 			// Shared triangle edges must not expose antialiased transparent seams.
@@ -56,16 +57,24 @@ export function fillPaint(
 			path.setAttribute(
 				'd',
 				region.points
-					.map((point, index) => `${index ? 'L' : 'M'} ${point[0]} ${1 - point[1]}`)
+					.map(
+						(point, index) =>
+							`${index ? 'L' : 'M'} ${point[0]} ${shapeCoordinates ? point[1] : 1 - point[1]}`,
+					)
 					.join(' ') + ' z',
 			);
 			path.setAttribute(
 				'fill',
 				gradientPaint(
-					{ type: 'linear', start: [0, 0], end: [1, 0], stops },
+					{
+						type: 'linear',
+						start: shapeCoordinates ? region.start : [0, 0],
+						end: shapeCoordinates ? region.end : [1, 0],
+						stops,
+					},
 					defs,
-					true,
-					region.angle,
+					!shapeCoordinates,
+					shapeCoordinates ? undefined : region.angle,
 				),
 			);
 			pattern.append(path);
