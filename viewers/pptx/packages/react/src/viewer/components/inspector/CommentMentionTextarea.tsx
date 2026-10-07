@@ -12,7 +12,7 @@ import {
 	commentMentionQuery,
 	insertCommentMention,
 	matchCommentMentionAuthors,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React, { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

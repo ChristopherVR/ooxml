@@ -8,7 +8,7 @@
  * double-click goes straight to the member under the pointer.
  */
 import type { PptxElement } from 'pptx-viewer-core';
-import { takePendingCaretPoint } from 'pptx-viewer-shared';
+import { takePendingCaretPoint } from 'ooxml-ui/pptx';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';

@@ -1,4 +1,4 @@
-import { calculateViewportFit } from 'pptx-viewer-shared';
+import { calculateViewportFit } from 'ooxml-ui/pptx';
 // @vitest-environment happy-dom
 /**
  * Tests for pure computation logic extracted from useZoomViewport.

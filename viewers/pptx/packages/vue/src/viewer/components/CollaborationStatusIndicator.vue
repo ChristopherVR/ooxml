@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ConnectionStatus } from 'pptx-viewer-shared';
+import type { ConnectionStatus } from 'ooxml-ui/pptx';
 /**
  * CollaborationStatusIndicator: a small status pill showing the WebSocket
  * connection state and connected-participant count. Presentational only: the

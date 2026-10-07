@@ -22,7 +22,7 @@ import {
 	resetBarFacePicturePixelCacheForTests,
 	resolveUntargetedBarFaceFill,
 	subscribeBarFacePicturePixelSamples,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { buildChartViewModel } from './chart-renderer-helpers';
 
 const IMAGE_URL = 'data:image/png;base64,angular-sample-test-image';

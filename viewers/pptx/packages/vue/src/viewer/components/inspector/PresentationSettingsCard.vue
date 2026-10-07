@@ -5,7 +5,7 @@ import {
 	printPropertiesSlidesPerPage,
 	withFrameSlides,
 	withSlidesPerPage,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { useI18n } from 'vue-i18n';
 
 /**

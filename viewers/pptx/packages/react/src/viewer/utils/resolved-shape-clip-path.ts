@@ -12,4 +12,4 @@ export {
 	getResolvedShapeClipPath,
 	getResolvedShapeClipPathFor,
 	isIdentityRectClip,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

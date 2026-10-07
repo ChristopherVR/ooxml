@@ -1,4 +1,4 @@
-import { PRESET_THEMES } from 'pptx-viewer-shared';
+import { PRESET_THEMES } from 'ooxml-ui/pptx';
 // @vitest-environment happy-dom
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';

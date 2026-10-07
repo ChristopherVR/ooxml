@@ -21,8 +21,8 @@
 	 * revoked once the mount attempt settles, and the scene handle is
 	 * disposed when the component unmounts.
 	 */
-	import type { Model3DHandle } from 'pptx-viewer-shared';
-	import { mountModel3D, shouldRenderHitTarget } from 'pptx-viewer-shared';
+	import type { Model3DHandle } from 'ooxml-ui/pptx';
+	import { mountModel3D, shouldRenderHitTarget } from 'ooxml-ui/pptx';
 	import { onDestroy, tick } from 'svelte';
 
 	import { useTranslator } from '../../i18n/context';

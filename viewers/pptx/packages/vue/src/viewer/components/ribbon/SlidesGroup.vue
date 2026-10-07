@@ -14,8 +14,8 @@ import type {
 	RibbonHomePopupEvent,
 	RibbonHomeRequestEvent,
 	SlideTemplateId,
-} from 'pptx-viewer-shared';
-import { homeSnapshotTranslator, slidesHomeControls } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import { homeSnapshotTranslator, slidesHomeControls } from 'ooxml-ui/pptx';
 import { computed, ref, shallowRef } from 'vue';
 import { useI18n } from 'vue-i18n';
 

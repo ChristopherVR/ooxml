@@ -1,5 +1,5 @@
 import type { ShapeStyle } from 'pptx-viewer-core';
-import { SHAPE_PRESET_DEFS } from 'pptx-viewer-shared';
+import { SHAPE_PRESET_DEFS } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';

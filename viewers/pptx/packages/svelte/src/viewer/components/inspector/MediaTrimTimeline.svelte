@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { MediaBookmark } from 'pptx-viewer-core';
-	import { mediaTimelineGeometry, mediaTrimEndSeconds, mediaTrimRangeForDrag } from 'pptx-viewer-shared';
+	import { mediaTimelineGeometry, mediaTrimEndSeconds, mediaTrimRangeForDrag } from 'ooxml-ui/pptx';
 
 	const { duration, startMs, endMs, currentTime, bookmarks, onchange, onseek }: { duration: number; startMs: number; endMs?: number; currentTime: number; bookmarks: MediaBookmark[]; onchange: (startMs: number, endMs: number) => void; onseek: (seconds: number) => void } = $props();
 	// eslint-disable-next-line prefer-const

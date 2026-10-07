@@ -19,8 +19,8 @@
 import { inject, Injectable, signal } from '@angular/core';
 import type { PptxSaveFormat, PptxSection, PptxSlide } from 'pptx-viewer-core';
 
-import type { DeckSaveIntent } from '../internal/shared';
-import { exportDeckJson, openPptxFile } from '../internal/shared';
+import type { DeckSaveIntent } from 'ooxml-ui/pptx';
+import { exportDeckJson, openPptxFile } from 'ooxml-ui/pptx';
 import { ExportService } from './export.service';
 import { LoadContentService } from './load-content.service';
 import { buildSaveSlides } from './template-mode';

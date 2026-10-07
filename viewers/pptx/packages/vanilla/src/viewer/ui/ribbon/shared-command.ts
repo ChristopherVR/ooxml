@@ -1,4 +1,4 @@
-import type { RibbonControlId } from 'pptx-viewer-shared';
+import type { RibbonControlId } from 'ooxml-ui/pptx';
 
 /** Native callbacks remain in the caller; this adapter has no document state. */
 export function createSharedRibbonCommand(

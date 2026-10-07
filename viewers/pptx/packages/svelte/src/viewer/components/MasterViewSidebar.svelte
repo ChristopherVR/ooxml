@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { MasterViewTab } from 'pptx-viewer-core';
-	import { masterViewBackgroundColor } from 'pptx-viewer-shared';
-	import type { CanvasSize } from 'pptx-viewer-shared';
+	import { masterViewBackgroundColor } from 'ooxml-ui/pptx';
+	import type { CanvasSize } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 	import type { EditorState } from '../editor/editor-state.svelte';

@@ -4,8 +4,8 @@ import {
 	calculateViewportFit,
 	EDITOR_VIEWPORT_FIT,
 	getSlideBackgroundStyle,
-} from 'pptx-viewer-shared';
-import type { ViewportFitPadding } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { ViewportFitPadding } from 'ooxml-ui/pptx';
 import type { CSSProperties } from 'vue';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';

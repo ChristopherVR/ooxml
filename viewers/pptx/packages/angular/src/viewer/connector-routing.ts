@@ -17,7 +17,7 @@ export type {
 	RouterPoint as Point,
 	RouterRect as Rect,
 	OrthogonalRouterOptions,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 
 export {
 	ROUTING_PADDING_DEFAULT,
@@ -32,4 +32,4 @@ export {
 	simplifyPath,
 	routeOrthogonalConnector,
 	waypointsToPathD,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';

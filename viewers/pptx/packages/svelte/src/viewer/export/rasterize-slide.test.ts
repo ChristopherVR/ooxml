@@ -1,5 +1,5 @@
 import type { PptxSlide } from 'pptx-viewer-core';
-import { rasterizeElementTiledToCanvas, rasterizeElementTiles } from 'pptx-viewer-shared';
+import { rasterizeElementTiledToCanvas, rasterizeElementTiles } from 'ooxml-ui/pptx';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../../i18n/translator';
@@ -42,7 +42,7 @@ async function callFallback(
 	);
 }
 
-vi.mock(import('pptx-viewer-shared'), async (importOriginal) => {
+vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => {
 	const actual = await importOriginal();
 	return {
 		...actual,

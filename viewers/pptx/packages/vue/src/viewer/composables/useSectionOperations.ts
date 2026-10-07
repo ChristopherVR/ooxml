@@ -7,8 +7,8 @@ import {
 	moveSectionUp as moveSectionUpTransform,
 	moveSlidesToSection as moveSlidesToSectionTransform,
 	renameSection as renameSectionTransform,
-} from 'pptx-viewer-shared';
-import type { SectionSlideGroup } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { SectionSlideGroup } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
 

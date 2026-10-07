@@ -17,7 +17,7 @@
 	 * calligraphic lean or pressure-variable width shows up while the pointer
 	 * is still down, not only after `pointerup` commits the stroke.
 	 */
-	import type { CanvasSize } from 'pptx-viewer-shared';
+	import type { CanvasSize } from 'ooxml-ui/pptx';
 
 	import type { EditorInkController } from '../editor/editor-ink-controller.svelte';
 

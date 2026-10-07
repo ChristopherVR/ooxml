@@ -11,7 +11,7 @@ import {
 	isExportAbortError,
 	slideProgressPercent,
 	slideStatusLabel,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { useState, useRef, useCallback } from 'react';
 
 import { exportSlideAsPng, exportAllSlidesAsPdf, copySlideToClipboard } from '../utils/export';

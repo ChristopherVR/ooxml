@@ -5,7 +5,7 @@ import {
 	planVideoSegments,
 	stopCaptureStream,
 	WEBM_MIME_CANDIDATES,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { ExportProgress, RasterizeSlide } from './export-controller.svelte';
 

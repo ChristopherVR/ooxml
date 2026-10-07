@@ -20,7 +20,7 @@ export type {
 	RemoteCursor,
 	RawPresenceData,
 	SanitizedPresence as RemotePresence,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 
 export {
 	DEFAULT_CURSOR_COLOR,
@@ -40,4 +40,4 @@ export {
 	presenceToCursors,
 	mapAwarenessCursors,
 	formatCursorLabel,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';

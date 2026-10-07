@@ -23,7 +23,7 @@ import type { StaticProvider } from '@angular/core';
 import type { PptxChartData, PptxElement, PptxSmartArtData } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { ChartPartRef, Rendering3DFlags, ThreeViewSpec } from '../internal/shared';
+import type { ChartPartRef, Rendering3DFlags, ThreeViewSpec } from 'ooxml-ui/pptx';
 import { ChartElementViewComponent } from './chart-element-view.component';
 import { ChartPartSelectionService } from './chart-part-selection.service';
 import { EditorStateService } from './editor-state.service';

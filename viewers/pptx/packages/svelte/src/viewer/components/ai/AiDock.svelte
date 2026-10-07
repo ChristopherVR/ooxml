@@ -8,7 +8,7 @@
 	 * Split out of `PowerPointViewer.svelte` (with its own placement styles) to
 	 * keep that file within the repo's file-size budget.
 	 */
-	import type { PptxAiBridge, PptxAiConfig } from 'pptx-viewer-shared/ai';
+	import type { PptxAiBridge, PptxAiConfig } from 'ooxml-ui/pptx/ai';
 
 	import type { AiPanelController } from '../../ai/ai-panel-controller.svelte';
 

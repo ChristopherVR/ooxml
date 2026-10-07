@@ -1,4 +1,4 @@
-import { activateModalFocus, defaultCssVars } from 'pptx-viewer-shared';
+import { activateModalFocus, defaultCssVars } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';

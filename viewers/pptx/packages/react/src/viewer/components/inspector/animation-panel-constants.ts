@@ -5,7 +5,7 @@ import type {
 	PptxAnimationSequence,
 	PptxAnimationTimingCurve,
 } from 'pptx-viewer-core';
-import { ANIMATION_DIRECTION_LABEL_KEYS } from 'pptx-viewer-shared';
+import { ANIMATION_DIRECTION_LABEL_KEYS } from 'ooxml-ui/pptx';
 import type React from 'react';
 import {
 	LuArrowDown,
@@ -156,4 +156,4 @@ export const AFTER_ANIMATION_OPTIONS: ReadonlyArray<{
  * Presets that support direction picking, and trigger options (both
  * re-exported from shared; see the doc comments on `TRIGGER_OPTIONS` there).
  */
-export { DIRECTIONAL_PRESETS, TRIGGER_OPTIONS } from 'pptx-viewer-shared';
+export { DIRECTIONAL_PRESETS, TRIGGER_OPTIONS } from 'ooxml-ui/pptx';

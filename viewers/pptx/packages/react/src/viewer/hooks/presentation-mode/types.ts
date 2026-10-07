@@ -5,7 +5,7 @@ import type {
 	PresentationSnapshot,
 	RunProgramNotice,
 	ZoomNavigationTarget,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { ViewerMode, PresentationAnimationRuntime } from '../../types';
 import type { ElementAnimationState } from '../../utils/animation-timeline';

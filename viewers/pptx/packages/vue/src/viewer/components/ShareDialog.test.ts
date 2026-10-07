@@ -1,6 +1,6 @@
 /* oxlint-disable eslint/one-var -- independent per-test locals, not intended as one statement */
 import { flushPromises, mount } from '@vue/test-utils';
-import type { CollaborationConfig } from 'pptx-viewer-shared';
+import type { CollaborationConfig } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 import { computed, ref } from 'vue';
 

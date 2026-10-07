@@ -4,4 +4,4 @@
  * by Vue and Angular); this module re-exports it to preserve the React package's
  * historical public symbol surface.
  */
-export { SHAPE_QUICK_STYLES } from 'pptx-viewer-shared';
+export { SHAPE_QUICK_STYLES } from 'ooxml-ui/pptx';

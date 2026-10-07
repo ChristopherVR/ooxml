@@ -1,4 +1,4 @@
-import type { RenderParagraph } from 'pptx-viewer-shared';
+import type { RenderParagraph } from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it } from 'vitest';
 

@@ -1,4 +1,4 @@
-import { resetSlideLayoutPath, resolveEditPointsAvailability } from 'pptx-viewer-shared';
+import { resetSlideLayoutPath, resolveEditPointsAvailability } from 'ooxml-ui/pptx';
 
 import { ContextMenu, CanvasContextMenu } from '.';
 import type { ViewerMainContentProps } from './viewer-main-content-types';

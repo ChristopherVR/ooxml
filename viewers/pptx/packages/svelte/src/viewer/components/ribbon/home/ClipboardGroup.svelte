@@ -5,8 +5,8 @@
 	 * element; every mutation still routes through `EditorState`
 	 * (`clipboardOps`, `formatPainter`) so undo/redo covers each action.
 	 */
-	import { clipboardHomeControls, homeSnapshotTranslator } from 'pptx-viewer-shared';
-	import type { RibbonHomeRequestEvent } from 'pptx-viewer-shared';
+	import { clipboardHomeControls, homeSnapshotTranslator } from 'ooxml-ui/pptx';
+	import type { RibbonHomeRequestEvent } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../../i18n/context';
 	import type { EditorState } from '../../../editor/editor-state.svelte';

@@ -10,7 +10,7 @@
  * @module angular-viewer/slide-canvas-context-menu-dispatch
  */
 
-import type { CanvasContextMenuCommandId } from '../internal/shared';
+import type { CanvasContextMenuCommandId } from 'ooxml-ui/pptx';
 
 /** Everything the empty-canvas menu can ask the viewer to do. */
 export interface CanvasContextMenuActions {

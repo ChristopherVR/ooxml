@@ -1,6 +1,6 @@
 import type { PptxElement } from 'pptx-viewer-core';
 import { hasTextProperties } from 'pptx-viewer-core';
-import { inlineListBodyText, updateTextSegmentStyle } from 'pptx-viewer-shared';
+import { inlineListBodyText, updateTextSegmentStyle } from 'ooxml-ui/pptx';
 
 import type { Store, ViewerState } from '../state';
 import { getActiveElements, replaceActiveElements } from './editor-active-elements';
@@ -16,7 +16,7 @@ import type { EditorOps } from './editor-operations';
 export type ApplyToSelected = (
 	build: (
 		el: PptxElement,
-		snapshot?: import('pptx-viewer-shared').InlineTextEditSnapshot,
+		snapshot?: import('ooxml-ui/pptx').InlineTextEditSnapshot,
 	) => Partial<PptxElement>,
 ) => void;
 

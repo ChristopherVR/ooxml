@@ -11,8 +11,8 @@
  * Vue panels which do not thread `useTranslation`.
  */
 import type { MediaBookmark } from 'pptx-viewer-core';
-import { trimmedMediaDurationMs, validateMediaTrimRange } from 'pptx-viewer-shared';
-import type { MediaTrimRangeError } from 'pptx-viewer-shared';
+import { trimmedMediaDurationMs, validateMediaTrimRange } from 'ooxml-ui/pptx';
+import type { MediaTrimRangeError } from 'ooxml-ui/pptx';
 
 /**
  * Format a duration in seconds as `m:ss.d` (tenths of a second), matching the

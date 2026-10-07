@@ -18,8 +18,8 @@
 		buildSummaryZoomView,
 		resolveZoomNavigationTarget,
 		shouldRenderHitTarget,
-	} from 'pptx-viewer-shared';
-	import type { SummaryZoomTileView } from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
+	import type { SummaryZoomTileView } from 'ooxml-ui/pptx';
 	import { resolveZoomView } from '../render';
 	import { resolveZoomTargetInfo, useZoomNavigation } from '../state/zoom-navigation-context';
 	import { getContainerStyle, getElementHitTargetStyle, styleToString } from '../style';

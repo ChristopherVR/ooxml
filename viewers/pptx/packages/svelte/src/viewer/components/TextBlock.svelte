@@ -7,8 +7,8 @@
 	 */
 	import { styleToString } from '../style';
 	import type { TextBlockProps } from './props';
-	import { buildTextBuildSpec, textBuildSpanStyle } from 'pptx-viewer-shared';
-	import type { CssStyleMap, RenderParagraph } from 'pptx-viewer-shared';
+	import { buildTextBuildSpec, textBuildSpanStyle } from 'ooxml-ui/pptx';
+	import type { CssStyleMap, RenderParagraph } from 'ooxml-ui/pptx';
 	import TextRun from './TextRun.svelte';
 
 	const { paragraphs, textStyle, elementId, subElementAnimStates }: TextBlockProps = $props();

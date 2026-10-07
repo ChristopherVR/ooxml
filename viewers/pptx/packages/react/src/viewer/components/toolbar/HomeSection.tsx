@@ -1,5 +1,5 @@
 import type { PptxElement, PptxLayoutOption, PptxLayoutPreview } from 'pptx-viewer-core';
-import type { SlideTemplateId } from 'pptx-viewer-shared';
+import type { SlideTemplateId } from 'ooxml-ui/pptx';
 import React from 'react';
 
 import type { ElementClipboardPayload } from '../../types';

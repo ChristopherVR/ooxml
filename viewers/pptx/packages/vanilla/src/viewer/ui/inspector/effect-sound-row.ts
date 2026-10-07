@@ -1,5 +1,5 @@
-import { EFFECT_SOUND_CATALOGUE, getEffectSoundAsset } from 'pptx-viewer-shared';
-import type { EffectSoundState } from 'pptx-viewer-shared';
+import { EFFECT_SOUND_CATALOGUE, getEffectSoundAsset } from 'ooxml-ui/pptx';
+import type { EffectSoundState } from 'ooxml-ui/pptx';
 
 import { playAnimationSound } from '../../animation/animation-sound';
 import type { Translator } from '../../i18n';

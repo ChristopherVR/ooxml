@@ -1,6 +1,6 @@
 import type { VisioPage, VisioShape } from 'ooxml-core/visio';
 import type { ViewerController } from './controller.js';
-import { editErrorMessage, isEditCancellation } from 'ooxml-core/visio/ui';
+import { editErrorMessage, isEditCancellation, visioPageEditToDrawing } from 'ooxml-core/visio/ui';
 
 /** Visio snaps new geometry to ruler subdivisions; 1/16 inch matches its default fine grid. */
 const SNAP = 1 / 16;
@@ -47,7 +47,7 @@ export async function insertRectangle(
 	const shapeId = nextShapeId(page);
 	const pageId = page.id;
 	await controller.applyEdits([
-		{
+		visioPageEditToDrawing(page, {
 			type: 'create-rectangle',
 			pageId,
 			shapeId,
@@ -55,7 +55,7 @@ export async function insertRectangle(
 			y: page.height - centre.y,
 			width: size.width,
 			height: size.height,
-		},
+		}),
 	]);
 	const created = controller.state.document?.pages
 		.find((candidate) => candidate.id === pageId)

@@ -12,7 +12,7 @@
  * binding agrees on when a deck advances by itself.
  */
 import type { PptxSlide } from 'pptx-viewer-core';
-import { resolveAutoAdvanceDelayMs } from 'pptx-viewer-shared';
+import { resolveAutoAdvanceDelayMs } from 'ooxml-ui/pptx';
 import { onBeforeUnmount, toValue, watch } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
 

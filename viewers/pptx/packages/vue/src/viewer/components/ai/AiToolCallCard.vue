@@ -25,8 +25,8 @@ import {
 	Type,
 	Wrench,
 } from 'lucide-vue-next';
-import type { RenderableToolPart, ToolActivityIcon } from 'pptx-viewer-shared/ai';
-import { describeToolActivity, summarizeToolArgs, toolLabel } from 'pptx-viewer-shared/ai';
+import type { RenderableToolPart, ToolActivityIcon } from 'ooxml-ui/pptx/ai';
+import { describeToolActivity, summarizeToolArgs, toolLabel } from 'ooxml-ui/pptx/ai';
 import type { Component } from 'vue';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';

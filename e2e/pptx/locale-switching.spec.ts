@@ -29,14 +29,14 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
+import { LOCALE_CATALOG } from '../../src/ui/src/pptx/i18n/locale-catalog';
+import { translationsEn } from '../../src/ui/src/pptx/i18n/translations-en';
 import {
 	translationsDe,
 	translationsEs,
 	translationsFr,
 	translationsZhCN,
 } from '../../viewers/pptx/packages/locales/src';
-import { LOCALE_CATALOG } from '../../viewers/pptx/packages/shared/src/i18n/locale-catalog';
-import { translationsEn } from '../../viewers/pptx/packages/shared/src/i18n/translations-en';
 import { loadDeck, resetTabSession } from './support/deck';
 import {
 	openOptionsDialog,

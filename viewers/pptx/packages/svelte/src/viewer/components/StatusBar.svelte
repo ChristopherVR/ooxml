@@ -5,8 +5,8 @@
 	 * typed intents to the callbacks. Kept independent from the top toolbar so
 	 * read-only viewers retain PowerPoint's navigation and zoom chrome.
 	 */
-	import { resolveStatusBarSave } from 'pptx-viewer-shared';
-	import type { StatusBarRequestEvent, StatusBarViewState } from 'pptx-viewer-shared';
+	import { resolveStatusBarSave } from 'ooxml-ui/pptx';
+	import type { StatusBarRequestEvent, StatusBarViewState } from 'ooxml-ui/pptx';
 	import type { Snippet } from 'svelte';
 	import { useTranslator } from '../../i18n/context';
 	import type { AutosaveStatus } from '../state/autosave.svelte';

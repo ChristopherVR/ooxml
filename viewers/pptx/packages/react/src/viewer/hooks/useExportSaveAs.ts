@@ -14,13 +14,13 @@ import type {
 	PptxTagCollection,
 	PptxTheme,
 } from 'pptx-viewer-core';
-import type { SlideSizeEmu } from 'pptx-viewer-shared';
+import type { SlideSizeEmu } from 'ooxml-ui/pptx';
 import {
 	downloadBlob,
 	exportDeckJson,
 	resolveSlideSizeSelection,
 	savedPresentationFileName,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { CanvasSize } from '../types';
 import { buildSaveSlides } from '../utils/template-editing';

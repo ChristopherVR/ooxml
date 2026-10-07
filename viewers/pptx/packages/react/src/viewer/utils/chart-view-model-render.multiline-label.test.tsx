@@ -1,5 +1,5 @@
 import type { ChartPptxElement, PptxChartData } from 'pptx-viewer-core';
-import { buildChartViewModel } from 'pptx-viewer-shared';
+import { buildChartViewModel } from 'ooxml-ui/pptx';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 

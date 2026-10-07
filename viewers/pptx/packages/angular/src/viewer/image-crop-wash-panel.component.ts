@@ -11,7 +11,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import type { PptxCropShape, PptxElement, PptxImageEffects } from 'pptx-viewer-core';
 import { isImageLikeElement } from 'pptx-viewer-core';
 
-import { cropResetPatch, cropResetState } from '../internal/shared';
+import { cropResetPatch, cropResetState } from 'ooxml-ui/pptx';
 import { RecentColorsService } from './recent-colors.service';
 
 const SIDES = ['Left', 'Top', 'Right', 'Bottom'] as const;

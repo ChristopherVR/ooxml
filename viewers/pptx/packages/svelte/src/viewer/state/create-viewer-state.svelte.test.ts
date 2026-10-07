@@ -2,7 +2,7 @@ import type {
 	CollaborationConfig,
 	ExternalCollaborationSnapshot,
 	ViewportFitOptions,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as Y from 'yjs';

@@ -13,7 +13,7 @@ import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { buildContextMenuEntries } from '../internal/shared';
+import { buildContextMenuEntries } from 'ooxml-ui/pptx';
 
 const SOURCE = readFileSync(
 	path.join(import.meta.dirname, 'editor-context-menu.component.ts'),

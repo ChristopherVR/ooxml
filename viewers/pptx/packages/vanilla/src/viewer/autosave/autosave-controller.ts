@@ -4,7 +4,7 @@ import type {
 	AutosaveRecord,
 	AutosaveRecoveryOffer,
 	DeckSaveIntent,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	nextAutosaveDelayMs,
 	probeAutosaveRecovery,
@@ -12,7 +12,7 @@ import {
 	saveAutosaveSnapshot,
 	saveDeckWithPassword,
 	shouldProbeAutosaveRecovery,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Store, ViewerState } from '../state';
 

@@ -22,12 +22,12 @@ import {
 } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 
-import { findCanvasElementNode } from '../internal/shared';
+import { findCanvasElementNode } from 'ooxml-ui/pptx';
 import type {
 	PasteOptionsRequestEvent,
 	PasteOptionsViewState,
 	PasteSpecialFormat,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { translationsSignal } from './translations-signal';
 
 @Component({

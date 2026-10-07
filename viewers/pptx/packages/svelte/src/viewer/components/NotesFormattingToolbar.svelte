@@ -9,7 +9,7 @@
 		NotesParagraphCommand,
 		NotesToolbarRequestEvent,
 		NotesToolbarViewState,
-	} from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../i18n/context';
 
 	const { rich, disabled = false, oninline, onparagraph, onlink, onprint, ontogglemode }: {

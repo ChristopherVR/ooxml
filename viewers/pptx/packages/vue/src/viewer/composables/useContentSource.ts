@@ -7,8 +7,8 @@
  * is cleared whenever the host supplies a fresh `content`, so an external reload
  * always wins over a locally-opened file.
  */
-import type { CollabLoadOrigin } from 'pptx-viewer-shared';
-import { openPptxFile, readBackstageRecentFile } from 'pptx-viewer-shared';
+import type { CollabLoadOrigin } from 'ooxml-ui/pptx';
+import { openPptxFile, readBackstageRecentFile } from 'ooxml-ui/pptx';
 import type { ComputedRef, Ref } from 'vue';
 import { computed, ref, watch } from 'vue';
 

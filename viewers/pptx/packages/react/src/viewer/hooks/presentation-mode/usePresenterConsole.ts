@@ -6,8 +6,8 @@ import {
 	resetPresenterTimer,
 	stepPresenterZoom,
 	togglePresenterTimer,
-} from 'pptx-viewer-shared';
-import type { PresentationSnapshot } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { PresentationSnapshot } from 'ooxml-ui/pptx';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 export interface UsePresenterConsoleResult {

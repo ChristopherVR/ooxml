@@ -4,7 +4,7 @@ import {
 	getContainerStyle,
 	getOverflowSegments,
 	placeholderPromptDescriptor,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import { composeTransforms, createEl } from '../dom';
 import { getShapeFillStrokeStyle, getTextBlockStyle } from '../element-styles';

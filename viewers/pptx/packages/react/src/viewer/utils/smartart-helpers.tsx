@@ -2,7 +2,7 @@ import type { PptxElement, PptxSmartArtData, SmartArtStyle } from 'pptx-viewer-c
 import {
 	resolvePalette as sharedResolvePalette,
 	SMARTART_DEFAULT_PALETTE,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 /**
  * Thin element-level adapters over the shared SmartArt palette/style helpers.

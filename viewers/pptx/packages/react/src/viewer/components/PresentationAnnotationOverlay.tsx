@@ -5,8 +5,8 @@
  * mode. Captures pointer events for pen/highlighter/eraser tools and
  * displays the laser pointer dot.
  */
-import { annotationOverlayZIndex, buildStrokePathD, cursorForTool } from 'pptx-viewer-shared';
-import type { PresentationBlackout } from 'pptx-viewer-shared';
+import { annotationOverlayZIndex, buildStrokePathD, cursorForTool } from 'ooxml-ui/pptx';
+import type { PresentationBlackout } from 'ooxml-ui/pptx';
 import React, { useCallback, useRef } from 'react';
 
 import type {

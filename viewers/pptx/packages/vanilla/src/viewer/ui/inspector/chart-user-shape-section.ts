@@ -25,8 +25,8 @@ import {
 	withChartUserShapeRowRotationUpdated,
 	withChartUserShapeRowTextUpdated,
 	withChartUserShapeRowUpdated,
-} from 'pptx-viewer-shared';
-import type { ChartUserShapeRow } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { ChartUserShapeRow } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import { buildPositionControls } from './chart-user-shape-position-controls';

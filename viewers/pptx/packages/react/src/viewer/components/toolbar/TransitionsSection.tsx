@@ -2,7 +2,7 @@ import type { PptxSlide, PptxSlideTransition } from 'pptx-viewer-core';
 import type {
 	PptxUiRibbonTransitionsElement,
 	RibbonTransitionsRequestEvent,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	playSlideTransitionPreview,
 	readRibbonTransitionDraft,
@@ -10,7 +10,7 @@ import {
 	ribbonTransitionsSoundChange,
 	ribbonTransitionStockSoundUrl,
 	ribbonTransitionUpdates,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React, { useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 

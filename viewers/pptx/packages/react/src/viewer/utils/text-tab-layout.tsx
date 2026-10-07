@@ -10,8 +10,8 @@
  * import surface for `text-segment-helpers` / `text-segment-render`.
  */
 
-import type { RunStyle, TabRenderContext } from 'pptx-viewer-shared';
-import { buildRunTabLines } from 'pptx-viewer-shared';
+import type { RunStyle, TabRenderContext } from 'ooxml-ui/pptx';
+import { buildRunTabLines } from 'ooxml-ui/pptx';
 import React from 'react';
 
 export type {
@@ -20,8 +20,8 @@ export type {
 	TabStopSpec,
 	TabbedPiece,
 	TabRenderContext,
-} from 'pptx-viewer-shared';
-export { buildTabContext, leaderGlyph, computeTabbedLayout } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+export { buildTabContext, leaderGlyph, computeTabbedLayout } from 'ooxml-ui/pptx';
 
 /**
  * Render a single tab-containing line as inline-block pieces with leader-filled

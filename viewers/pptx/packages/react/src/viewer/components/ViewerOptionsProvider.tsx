@@ -1,4 +1,4 @@
-import type { ViewerOptions, ViewerOptionsStore } from 'pptx-viewer-shared';
+import type { ViewerOptions, ViewerOptionsStore } from 'ooxml-ui/pptx';
 import React from 'react';
 
 import { ViewerOptionsContext, ViewerOptionsStoreContext } from './viewer-options-context';

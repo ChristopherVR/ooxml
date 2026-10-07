@@ -17,8 +17,8 @@ import {
 	beginZoomExcursion,
 	buildZoomTransitionOverride,
 	resolveForwardSlideWithZoomReturn,
-} from '../internal/shared';
-import type { ZoomExcursion, ZoomNavigationTarget } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { ZoomExcursion, ZoomNavigationTarget } from 'ooxml-ui/pptx';
 import type { AnimationPlaybackService } from './animation-playback.service';
 import type { PresentationAnnotationsService } from './presentation-annotations.service';
 import {

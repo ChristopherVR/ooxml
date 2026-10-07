@@ -15,8 +15,8 @@
 		gradientStopColorCommitPatch,
 		removeGradientStopPatch,
 		updateGradientStopPatch,
-	} from 'pptx-viewer-shared';
-	import type { GradientState, ThemeColorPickerCommit } from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
+	import type { GradientState, ThemeColorPickerCommit } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 	import type { EditorState } from '../../editor/editor-state.svelte';

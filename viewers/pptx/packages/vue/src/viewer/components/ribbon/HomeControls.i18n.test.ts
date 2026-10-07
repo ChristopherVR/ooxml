@@ -5,7 +5,7 @@
  */
 import { config, mount } from '@vue/test-utils';
 import type { VueWrapper } from '@vue/test-utils';
-import { registerPptxWebControls } from 'pptx-viewer-shared';
+import { registerPptxWebControls } from 'ooxml-ui/pptx';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { nextTick } from 'vue';
 import { createI18n } from 'vue-i18n';

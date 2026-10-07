@@ -14,7 +14,7 @@
  * plain object does not unwrap.
  */
 import type { PptxLayoutOption, PptxLayoutPreview, PptxTheme } from 'pptx-viewer-core';
-import { isDialogAvailable } from 'pptx-viewer-shared';
+import { isDialogAvailable } from 'ooxml-ui/pptx';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 

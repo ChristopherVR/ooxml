@@ -9,8 +9,8 @@ import {
 	cropToAspectRatio,
 	readCropInsets,
 	startCropSession,
-} from 'pptx-viewer-shared';
-import type { CropElementUpdate, CropRestoreUpdate, NaturalImageSize } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { CropElementUpdate, CropRestoreUpdate, NaturalImageSize } from 'ooxml-ui/pptx';
 
 import type { Store, ViewerState } from '../state';
 import { getActiveElements, replaceActiveElements } from './editor-active-elements';

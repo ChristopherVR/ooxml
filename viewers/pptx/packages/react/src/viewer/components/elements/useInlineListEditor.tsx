@@ -10,8 +10,8 @@ import {
 	readEditableText,
 	readListActivationSelection,
 	restoreInlineListBodySelection,
-} from 'pptx-viewer-shared';
-import type { InlineTextEditSnapshot } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { InlineTextEditSnapshot } from 'ooxml-ui/pptx';
 import { useContext, useLayoutEffect, useRef } from 'react';
 import type { RefObject } from 'react';
 

@@ -8,8 +8,8 @@ import {
 	buildAnimationTimelineBars,
 	getElementLabel,
 	updateSlide,
-} from 'pptx-viewer-shared';
-import type { AnimationLabelTranslate } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { AnimationLabelTranslate } from 'ooxml-ui/pptx';
 
 import type { EditorState } from '../../editor/editor-state.svelte';
 

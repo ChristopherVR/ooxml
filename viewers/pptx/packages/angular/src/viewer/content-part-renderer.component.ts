@@ -3,16 +3,16 @@ import { ChangeDetectionStrategy, Component, computed, inject, input } from '@an
 import { TranslateService } from '@ngx-translate/core';
 import type { ContentPartPptxElement, PptxElement } from 'pptx-viewer-core';
 
-import { elementHitTargetStyle, shouldRenderHitTarget } from '../internal/shared';
-import type { ContentPartStrokeView } from '../internal/shared-src/render/content-part-strokes';
+import { elementHitTargetStyle, shouldRenderHitTarget } from 'ooxml-ui/pptx';
+import type { ContentPartStrokeView } from 'ooxml-ui/pptx/render/content-part-strokes';
 import {
 	buildContentPartStrokes,
 	contentPartViewBox,
-} from '../internal/shared-src/render/content-part-strokes';
+} from 'ooxml-ui/pptx/render/content-part-strokes';
 import {
 	getContentPartReplayStyles,
 	INK_REPLAY_KEYFRAMES,
-} from '../internal/shared-src/render/ink-rendering';
+} from 'ooxml-ui/pptx/render/ink-rendering';
 import { DynamicStyleComponent } from './dynamic-style.component';
 import type { StyleMap } from './element-style';
 import { buildInkContainerStyle } from './ink-renderer-helpers';

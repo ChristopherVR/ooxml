@@ -21,7 +21,7 @@ import type {
 	PptxViewProperties,
 	ParsedTableStyleMap,
 } from 'pptx-viewer-core';
-import type { CollaborationLivePatcher, SlideSizeEmu } from 'pptx-viewer-shared';
+import type { CollaborationLivePatcher, SlideSizeEmu } from 'ooxml-ui/pptx';
 /** Document refs, state, setters, and derived values for useViewerCoreState. */
 import type React from 'react';
 

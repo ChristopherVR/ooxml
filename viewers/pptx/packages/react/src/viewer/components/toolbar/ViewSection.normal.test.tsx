@@ -3,7 +3,7 @@
  * View tab adapter: the shared `pptx-ui-ribbon-view` owns markup and state
  * reflection; this adapter only routes typed intents to the native handlers.
  */
-import { registerPptxWebControls } from 'pptx-viewer-shared';
+import { registerPptxWebControls } from 'ooxml-ui/pptx';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';

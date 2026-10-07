@@ -5,8 +5,8 @@
  * shared, framework-agnostic `buildParagraphs`; this component is pure
  * presentation. Extracted from `ElementRenderer` to keep it thin.
  */
-import { buildTextBuildSpec, textBuildSpanStyle } from 'pptx-viewer-shared';
-import type { ElementAnimationState, RenderParagraph } from 'pptx-viewer-shared';
+import { buildTextBuildSpec, textBuildSpanStyle } from 'ooxml-ui/pptx';
+import type { ElementAnimationState, RenderParagraph } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import type { CSSProperties } from 'vue';
 

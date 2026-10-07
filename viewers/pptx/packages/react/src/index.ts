@@ -1,4 +1,4 @@
-export type { ElementUpdate, ElementUpdateOptions } from 'pptx-viewer-shared';
+export type { ElementUpdate, ElementUpdateOptions } from 'ooxml-ui/pptx';
 // ── React-based PowerPoint viewer/editor ──
 export { PowerPointViewer, getAnimationInitialStyle } from './viewer/PowerPointViewer';
 export type { PowerPointViewerProps, PowerPointViewerHandle } from './viewer/PowerPointViewer';
@@ -23,17 +23,17 @@ export type {
 
 // ── Shared API types ──
 export type { CollaborationContextValue } from './viewer/hooks/collaboration/types';
-export type { ViewerMode, PowerPointViewerAPI } from 'pptx-viewer-shared';
+export type { ViewerMode, PowerPointViewerAPI } from 'ooxml-ui/pptx';
 export type {
 	CollaborationConfig,
 	CollaborationShellState,
 	ExternalCollaborationSession,
 	ExternalCollaborationSnapshot,
 	ExternalCollaborationAwareness,
-} from 'pptx-viewer-shared';
-export { describeCollaborationShellState } from 'pptx-viewer-shared';
-export type { ViewportFitOptions, ViewportFitPadding } from 'pptx-viewer-shared';
-export { createImageElementFromFile } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+export { describeCollaborationShellState } from 'ooxml-ui/pptx';
+export type { ViewportFitOptions, ViewportFitPadding } from 'ooxml-ui/pptx';
+export { createImageElementFromFile } from 'ooxml-ui/pptx';
 
 // ── Slide template gallery (New Slide starter slides) ──
 export { SlideTemplateGalleryDialog } from './viewer/components/SlideTemplateGalleryDialog';
@@ -44,8 +44,8 @@ export {
 	SLIDE_TEMPLATES,
 	buildSlideTemplateContent,
 	buildSlideTemplateSlide,
-} from 'pptx-viewer-shared';
-export type { SlideTemplateId, SlideTemplateSpec } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+export type { SlideTemplateId, SlideTemplateSpec } from 'ooxml-ui/pptx';
 
 // ── AI assistant (optional; requires the `ai` + `@ai-sdk/react` peers) ──
 export type {
@@ -55,10 +55,10 @@ export type {
 	PptxAiContextStrategy,
 	PptxAiToolName,
 	PptxAiWritePolicy,
-} from 'pptx-viewer-shared/ai';
+} from 'ooxml-ui/pptx/ai';
 
 // ── Toolbar visibility (hiddenActions) ──
-export type { ToolbarActionId, ToolbarButtonId, ToolbarTabId } from 'pptx-viewer-shared';
+export type { ToolbarActionId, ToolbarButtonId, ToolbarTabId } from 'ooxml-ui/pptx';
 
 // ── UI customisation (`customization` prop + handle helpers) ──
 export type {
@@ -82,7 +82,7 @@ export type {
 	ViewerExportFormatId,
 	ViewerFeatureId,
 	ViewerPanelId,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 export {
 	BACKSTAGE_CARD_IDS,
 	BACKSTAGE_PAGE_IDS,
@@ -98,7 +98,7 @@ export {
 	VIEWER_EXPORT_FORMAT_IDS,
 	VIEWER_FEATURE_IDS,
 	VIEWER_PANEL_IDS,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 // ── Canvas export (html2canvas oklch wrapper) ──
 export { renderToCanvas } from './lib/canvas-export';
@@ -122,8 +122,8 @@ export {
 } from './theme';
 
 // ── Locale catalog (File > Options > Language) ──
-export { LOCALE_CATALOG } from 'pptx-viewer-shared/i18n';
-export type { LocaleCatalogEntry } from 'pptx-viewer-shared/i18n';
+export { LOCALE_CATALOG } from 'ooxml-ui/pptx/i18n';
+export type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
 
 // ── Viewer preferences & account (File > Options / File > Account) ──
 export {
@@ -137,13 +137,13 @@ export {
 	getLocalStorageUsageSummary,
 	clearAllLocalViewerData,
 	saveViewerProfile,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 export type {
 	StoredViewerPrefs,
 	ViewerProfile,
 	AccountAuthConfig,
 	LocalStorageUsageSummary,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 // ── Openable-file allow list ───────────────────────────────────────────
 // The one answer to "can the viewer open this file?", so a host's drop target
@@ -159,5 +159,5 @@ export {
 	isLegacyBinaryPresentation,
 	presentationBaseName,
 	savedPresentationFileName,
-} from 'pptx-viewer-shared';
-export type { SavedPresentationFormat } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+export type { SavedPresentationFormat } from 'ooxml-ui/pptx';

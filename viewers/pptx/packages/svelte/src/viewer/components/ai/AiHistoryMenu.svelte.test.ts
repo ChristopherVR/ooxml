@@ -3,8 +3,8 @@ import type {
 	PptxAiChatSummary,
 	PptxAiStoredChat,
 	PptxAiUIMessage,
-} from 'pptx-viewer-shared/ai';
-import { createAiChatHistoryController } from 'pptx-viewer-shared/ai';
+} from 'ooxml-ui/pptx/ai';
+import { createAiChatHistoryController } from 'ooxml-ui/pptx/ai';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 

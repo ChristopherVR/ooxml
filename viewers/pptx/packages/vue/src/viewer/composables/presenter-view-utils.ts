@@ -7,7 +7,7 @@
  * `PresenterView.vue` and the colocated tests are unchanged.
  */
 
-export type { NotesSpan } from 'pptx-viewer-shared';
+export type { NotesSpan } from 'ooxml-ui/pptx';
 export {
 	NOTES_FONT_SIZE_MIN,
 	NOTES_FONT_SIZE_MAX,
@@ -17,4 +17,4 @@ export {
 	formatTime,
 	formatElapsed,
 	notesSegmentsToSpans,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

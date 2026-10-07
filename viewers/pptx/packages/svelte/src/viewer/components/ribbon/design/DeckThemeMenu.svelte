@@ -7,7 +7,7 @@
 	 * Picking one re-themes the PRESENTATION, never the viewer chrome.
 	 */
 	import type { PptxTheme, PptxThemePreset } from 'pptx-viewer-core';
-	import { activeGalleryThemePreset, GALLERY_THEME_PRESETS } from 'pptx-viewer-shared';
+	import { activeGalleryThemePreset, GALLERY_THEME_PRESETS } from 'ooxml-ui/pptx';
 
 	const {
 		theme,

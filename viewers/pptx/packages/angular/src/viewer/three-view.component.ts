@@ -11,7 +11,7 @@ import {
 	viewChild,
 } from '@angular/core';
 
-import { defineThreeViewElement, THREE_VIEW_EVENTS } from '../internal/shared';
+import { defineThreeViewElement, THREE_VIEW_EVENTS } from 'ooxml-ui/pptx';
 import type {
 	ChartPartRef,
 	PptxThreeViewElement,
@@ -19,7 +19,7 @@ import type {
 	ThreeViewDragDetail,
 	ThreeViewSpec,
 	ThreeViewState,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 
 defineThreeViewElement();
 

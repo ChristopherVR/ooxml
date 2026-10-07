@@ -9,4 +9,4 @@ export {
 	vermilionLightTheme,
 	vermilionDarkTheme,
 	vermilionRadius,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

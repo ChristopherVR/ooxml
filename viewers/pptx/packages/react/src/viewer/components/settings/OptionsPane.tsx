@@ -1,13 +1,13 @@
 /* oxlint-disable eslint/one-var -- this module predates the rule and combining
    every sibling const in a function into one comma-list would hurt
    readability, not help it (see chart-view-model.ts for the same rationale). */
-import { clampOptionNumber, getDensePanelTouchTargetPx } from 'pptx-viewer-shared';
+import { clampOptionNumber, getDensePanelTouchTargetPx } from 'ooxml-ui/pptx';
 import type {
 	ViewerOptions,
 	ViewerOptionsControl,
 	ViewerOptionsSection,
 	ViewerOptionsTabDefinition,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { LuInfo } from 'react-icons/lu';

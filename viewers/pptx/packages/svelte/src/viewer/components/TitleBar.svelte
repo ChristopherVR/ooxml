@@ -5,7 +5,7 @@
 	 * typed events to the callbacks; command dispatch and document mutation stay in
 	 * the viewer host.
 	 */
-	import type { TitleBarEventDetails, ToolbarActionId } from 'pptx-viewer-shared';
+	import type { TitleBarEventDetails, ToolbarActionId } from 'ooxml-ui/pptx';
 	import type { Snippet } from 'svelte';
 
 	import { useTranslator } from '../../i18n/context';

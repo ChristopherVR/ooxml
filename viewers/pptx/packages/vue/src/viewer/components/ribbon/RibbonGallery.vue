@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { RibbonControlId, RibbonGalleryId, RibbonGalleryPickEvent } from 'pptx-viewer-shared';
+import type { RibbonControlId, RibbonGalleryId, RibbonGalleryPickEvent } from 'ooxml-ui/pptx';
 
 import { useRibbonGallery } from './use-ribbon-gallery';
 

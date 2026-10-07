@@ -16,8 +16,8 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import type { PptxComment } from 'pptx-viewer-core';
 
-import type { CommentTextSegment } from '../internal/shared';
-import { commentTextSegments } from '../internal/shared';
+import type { CommentTextSegment } from 'ooxml-ui/pptx';
+import { commentTextSegments } from 'ooxml-ui/pptx';
 
 const COMMENT_BODY_TEMPLATE = `@for (segment of segments(); track $index) {@if (segment.kind === 'mention') {<span class="pptx-comment-mention" [attr.data-pptx-comment-mention]="segment.personId || ''" [attr.title]="segment.authorName || null">{{ segment.text }}</span>} @else {<span>{{ segment.text }}</span>}}`;
 

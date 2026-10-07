@@ -19,8 +19,8 @@ import {
 	buildOutline,
 	mapOutlineKey,
 	OUTLINE_ROW_ATTR,
-} from 'pptx-viewer-shared';
-import type { OutlineEdit, OutlineRow } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { OutlineEdit, OutlineRow } from 'ooxml-ui/pptx';
 import { computed, nextTick, ref } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
 

@@ -18,8 +18,8 @@ import {
 	buildOutline,
 	mapOutlineKey,
 	OUTLINE_ROW_ATTR,
-} from 'pptx-viewer-shared';
-import type { OutlineEdit, OutlineRow } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { OutlineEdit, OutlineRow } from 'ooxml-ui/pptx';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import type { CanvasSize } from '../../types';

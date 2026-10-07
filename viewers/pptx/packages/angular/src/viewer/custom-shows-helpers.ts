@@ -6,5 +6,5 @@
  * surface.
  */
 
-export type { CustomShow } from '../internal/shared';
-export { generateCustomShowId, createCustomShow } from '../internal/shared';
+export type { CustomShow } from 'ooxml-ui/pptx';
+export { generateCustomShowId, createCustomShow } from 'ooxml-ui/pptx';

@@ -1,4 +1,4 @@
-import { attachRotateHandlePlacement } from 'pptx-viewer-shared';
+import { attachRotateHandlePlacement } from 'ooxml-ui/pptx';
 import type { ObjectDirective } from 'vue';
 
 const cleanups = new WeakMap<HTMLElement, () => void>();

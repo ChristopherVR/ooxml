@@ -1,4 +1,4 @@
-import type { CollabLoadOrigin } from 'pptx-viewer-shared';
+import type { CollabLoadOrigin } from 'ooxml-ui/pptx';
 
 /**
  * Whether the slide stage should be replaced by the "Loading" message.

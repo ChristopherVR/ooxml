@@ -42,12 +42,12 @@ import type {
 	ContextMenuRequestEvent,
 	ContextMenuViewState,
 	CustomizedCanvasContextMenuEntry,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import {
 	buildCanvasContextMenuEntries,
 	contextMenuViewItems,
 	customizeCanvasContextMenuEntries,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import type { MenuTranslate } from './context-menu-translate';
 import { injectMenuTranslate } from './context-menu-translate';
 import type { CanvasContextMenuActions } from './slide-canvas-context-menu-dispatch';

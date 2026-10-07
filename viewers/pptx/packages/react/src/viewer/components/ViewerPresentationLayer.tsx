@@ -3,7 +3,7 @@
  * rehearsal summary overlays that sit above the main editor UI.
  */
 import type { PptxSlide, PptxElement } from 'pptx-viewer-core';
-import type { AuthoredSlideRange, ShowOrderCustomShow } from 'pptx-viewer-shared';
+import type { AuthoredSlideRange, ShowOrderCustomShow } from 'ooxml-ui/pptx';
 
 import { PresenterView, RehearseTimingsHud, RehearseTimingsSummary } from '.';
 import type { UsePresentationModeResult } from '../hooks/usePresentationMode';

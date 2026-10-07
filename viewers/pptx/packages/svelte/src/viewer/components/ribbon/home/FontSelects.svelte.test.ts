@@ -1,5 +1,5 @@
 import type { PptxElement } from 'pptx-viewer-core';
-import { createRibbonControlIcon, registerPptxWebControls } from 'pptx-viewer-shared';
+import { createRibbonControlIcon, registerPptxWebControls } from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount } from 'svelte';
 import { describe, expect, it, vi } from 'vitest';
 

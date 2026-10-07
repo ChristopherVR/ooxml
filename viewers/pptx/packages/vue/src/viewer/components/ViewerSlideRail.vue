@@ -12,7 +12,7 @@
  */
 import { Plus } from 'lucide-vue-next';
 import type { PptxSlide } from 'pptx-viewer-core';
-import { EDITOR_THUMBNAIL_WIDTH } from 'pptx-viewer-shared';
+import { EDITOR_THUMBNAIL_WIDTH } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

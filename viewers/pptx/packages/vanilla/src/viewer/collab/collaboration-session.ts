@@ -4,11 +4,11 @@ import type {
 	CollaborationTransport,
 	YDocLike,
 	YjsFactories,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	borrowExternalCollaborationAwareness,
 	createSnapshotTextPositions,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { CollabProviderHandle } from './collaboration-provider';
 import { createCollabProvider } from './collaboration-provider';

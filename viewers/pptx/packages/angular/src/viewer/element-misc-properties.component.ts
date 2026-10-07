@@ -11,7 +11,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import type { GroupPptxElement, OlePptxElement, PptxElement, ShapeStyle } from 'pptx-viewer-core';
 import { getOleObjectTypeLabel } from 'pptx-viewer-core';
 
-import type { ConnectorArrowControl } from '../internal/shared';
+import type { ConnectorArrowControl } from 'ooxml-ui/pptx';
 import {
 	buildOleObjectNamePatch,
 	canInteractWithElement,
@@ -19,7 +19,7 @@ import {
 	CONNECTOR_ARROW_SIZE_VALUES,
 	connectorArrowPatch,
 	connectorArrowValue,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { OleEditorDialogComponent } from './ole-editor-dialog.component';
 import { schemaLabelKey } from './schema-token-labels';
 

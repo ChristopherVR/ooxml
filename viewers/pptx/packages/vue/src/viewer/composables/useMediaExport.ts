@@ -6,7 +6,7 @@ import {
 	pickSupportedMimeType,
 	stopCaptureStream,
 	WEBM_MIME_CANDIDATES,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { ref } from 'vue';
 import type { Ref } from 'vue';
 

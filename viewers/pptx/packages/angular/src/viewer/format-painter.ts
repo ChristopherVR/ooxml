@@ -6,4 +6,4 @@
  * This shim keeps the historical Angular import path for the component and its
  * tests.
  */
-export * from '../internal/shared-src/render/format-painter';
+export * from 'ooxml-ui/pptx/render/format-painter';

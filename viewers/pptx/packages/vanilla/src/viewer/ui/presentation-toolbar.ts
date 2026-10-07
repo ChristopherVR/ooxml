@@ -5,13 +5,13 @@ import {
 	PEN_COLORS,
 	presentToolbarCssVars,
 	registerPptxWebControls,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type {
 	PresentationBlackout,
 	PresentationPointerTool,
 	PresentToolbarRequestEvent,
 	PptxUiPresentToolbarElement,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import { createEl } from '../render';

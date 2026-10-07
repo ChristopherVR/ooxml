@@ -1,4 +1,4 @@
-import { galleryTextLabel } from 'pptx-viewer-shared';
+import { galleryTextLabel } from 'ooxml-ui/pptx';
 import { useTranslation } from 'react-i18next';
 
 export function useTranslateOr(): (key: string | undefined, fallback: string) => string {

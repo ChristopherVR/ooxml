@@ -1,4 +1,4 @@
-import { computeAnchoredPopupPosition } from 'pptx-viewer-shared';
+import { computeAnchoredPopupPosition } from 'ooxml-ui/pptx';
 
 /**
  * `use:anchoredPopup` - pins a ribbon dropdown to its trigger with

@@ -11,8 +11,8 @@ import type {
 	PptxHandoutMaster,
 	PptxTagCollection,
 } from 'pptx-viewer-core';
-import type { SlideSizeEmu, SlideSizeRescaleMode } from 'pptx-viewer-shared';
-import { mergeSlideTransition } from 'pptx-viewer-shared';
+import type { SlideSizeEmu, SlideSizeRescaleMode } from 'ooxml-ui/pptx';
+import { mergeSlideTransition } from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 

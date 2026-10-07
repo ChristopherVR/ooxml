@@ -4,7 +4,7 @@
  * clear that history lives in this browser. Thin: the list is
  * {@link AiHistoryList}, all persistence lives in `useAiHistory`.
  */
-import type { PptxAiChatSummary } from 'pptx-viewer-shared/ai';
+import type { PptxAiChatSummary } from 'ooxml-ui/pptx/ai';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LuPlus } from 'react-icons/lu';

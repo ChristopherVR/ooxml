@@ -11,7 +11,7 @@ import { provideTranslateService, TranslateService } from '@ngx-translate/core';
 import type { PptxElement, PptxImageEffects, PptxSlide } from 'pptx-viewer-core';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 
-import { translationsEn } from '../../../shared/src/i18n/translations-en';
+import { translationsEn } from '../../../../../../src/ui/src/pptx/i18n/translations-en';
 import { resolveViewerComponentResources } from './component-resources.test-support';
 import { EditorStateService } from './editor-state.service';
 import { RibbonContextualSectionComponent } from './ribbon-contextual-section.component';

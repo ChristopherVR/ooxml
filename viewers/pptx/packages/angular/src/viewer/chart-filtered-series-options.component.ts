@@ -31,7 +31,7 @@ import {
 	hideChartSeries,
 	restoreFilteredSeries,
 	setDataLabelsRangeCache,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { patchChartData } from './chart-data-helpers';
 import { CHART_EDITOR_STYLES } from './chart-editor-styles';
 import { stringFromEvent } from './chart-event-helpers';

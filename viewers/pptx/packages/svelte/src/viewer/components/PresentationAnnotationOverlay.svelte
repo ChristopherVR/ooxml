@@ -6,8 +6,8 @@
 	 * moved into `PresentationToolbar.svelte`, so the show has one toolbar with
 	 * translated labels instead of a second, competing strip.
 	 */
-	import { annotationCapturesPointer, annotationOverlayZIndex, cursorForTool, pointsToSvgPathD } from 'pptx-viewer-shared';
-	import type { CanvasSize, PresentationBlackout } from 'pptx-viewer-shared';
+	import { annotationCapturesPointer, annotationOverlayZIndex, cursorForTool, pointsToSvgPathD } from 'ooxml-ui/pptx';
+	import type { CanvasSize, PresentationBlackout } from 'ooxml-ui/pptx';
 	import type { PresentationAnnotations } from '../presentation/presentation-annotations.svelte';
 
 	const { annotations, current, canvasSize, blackout = 'none' }: { annotations: PresentationAnnotations; current: number; canvasSize: CanvasSize; blackout?: PresentationBlackout } = $props();

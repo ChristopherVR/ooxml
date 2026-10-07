@@ -20,7 +20,7 @@ import path from 'node:path';
 import type { PptxTransitionType } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 
-import { getFragmentedTransitionDescriptor } from '../internal/shared';
+import { getFragmentedTransitionDescriptor } from 'ooxml-ui/pptx';
 import { buildFragmentViews } from './fragmented-transition-layer.component';
 
 const COMPONENT_SOURCE = readFileSync(

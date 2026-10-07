@@ -6,8 +6,8 @@ import {
 	firstShowSlideIndex,
 	morphOptionToMode,
 	presentationEntrySlideIndex,
-} from 'pptx-viewer-shared';
-import type { ZoomExcursion } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { ZoomExcursion } from 'ooxml-ui/pptx';
 import { useState, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 
 import { acceptsPresentationInput } from './presentation-mode/audience-content-store';

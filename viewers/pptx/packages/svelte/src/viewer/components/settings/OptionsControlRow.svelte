@@ -6,8 +6,8 @@
 	 * model via the control's `group` + `key`.
 	 */
 	import Info from '@lucide/svelte/icons/info';
-	import { clampOptionNumber, getDensePanelTouchTargetPx } from 'pptx-viewer-shared';
-	import type { ViewerOptions, ViewerOptionsControl, ViewerOptionsGroupId } from 'pptx-viewer-shared';
+	import { clampOptionNumber, getDensePanelTouchTargetPx } from 'ooxml-ui/pptx';
+	import type { ViewerOptions, ViewerOptionsControl, ViewerOptionsGroupId } from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../../i18n/context';
 	import { useWindowViewport } from '../../state/window-viewport.svelte';
 

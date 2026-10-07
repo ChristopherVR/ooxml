@@ -1,5 +1,5 @@
 import type { OlePptxElement } from 'pptx-viewer-core';
-import { formatBytes, isBrowserOpenableMime, openUrlInNewTab } from 'pptx-viewer-shared';
+import { formatBytes, isBrowserOpenableMime, openUrlInNewTab } from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 

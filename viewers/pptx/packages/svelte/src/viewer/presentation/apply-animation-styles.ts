@@ -1,5 +1,5 @@
-import { PRESENTATION_ANIM_TRIGGER_ATTRIBUTE } from 'pptx-viewer-shared';
-import type { ElementAnimationState } from 'pptx-viewer-shared';
+import { PRESENTATION_ANIM_TRIGGER_ATTRIBUTE } from 'ooxml-ui/pptx';
+import type { ElementAnimationState } from 'ooxml-ui/pptx';
 
 /**
  * `apply-animation-styles`: imperatively push each element's native-animation

@@ -19,7 +19,7 @@ import { fileURLToPath } from 'node:url';
 import type { PptxElement, PptxElementWithText, TextSegment } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 
-import { buildTextBlockStyle, getOverflowSegments } from '../internal/shared';
+import { buildTextBlockStyle, getOverflowSegments } from 'ooxml-ui/pptx';
 import { componentSource } from './component-source.test-support';
 
 const here = dirname(fileURLToPath(import.meta.url));

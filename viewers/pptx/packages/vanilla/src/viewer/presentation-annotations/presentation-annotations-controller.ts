@@ -1,12 +1,12 @@
 import type { PptxSlide } from 'pptx-viewer-core';
-import { annotationOverlayZIndex, strokeToInkElement } from 'pptx-viewer-shared';
+import { annotationOverlayZIndex, strokeToInkElement } from 'ooxml-ui/pptx';
 import type {
 	CanvasSize,
 	PresentationBlackout,
 	PresentationInkPoint,
 	PresentationInkStroke,
 	PresentationPointerState,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import { mountAnnotationOverlay } from './annotation-overlay';

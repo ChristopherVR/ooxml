@@ -2,7 +2,7 @@
  * AiHistoryList: the scrollable list of saved chats inside the history menu.
  * Purely presentational; each row resumes on click and exposes a delete button.
  */
-import type { PptxAiChatSummary } from 'pptx-viewer-shared/ai';
+import type { PptxAiChatSummary } from 'ooxml-ui/pptx/ai';
 import { useTranslation } from 'react-i18next';
 import { LuMessageSquare, LuTrash2 } from 'react-icons/lu';
 

@@ -1,5 +1,5 @@
 import type { ParsedTableStyleMap } from 'pptx-viewer-core';
-import { applyTableStyleDelete, applyTableStyleMapChange } from 'pptx-viewer-shared';
+import { applyTableStyleDelete, applyTableStyleMapChange } from 'ooxml-ui/pptx';
 import type React from 'react';
 
 /**

@@ -1,6 +1,6 @@
 // oxlint-disable react-hooks/rules-of-hooks
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
-import { motionPathPresetById } from 'pptx-viewer-shared';
+import { motionPathPresetById } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 import { computed, ref } from 'vue';
 

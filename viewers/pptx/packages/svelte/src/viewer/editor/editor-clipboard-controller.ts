@@ -1,6 +1,6 @@
 import type { PptxElement } from 'pptx-viewer-core';
-import type { PasteSpecialFormat } from 'pptx-viewer-shared';
-import { applyPasteSpecialFormat } from 'pptx-viewer-shared';
+import type { PasteSpecialFormat } from 'ooxml-ui/pptx';
+import { applyPasteSpecialFormat } from 'ooxml-ui/pptx';
 
 import {
 	copyElementToClipboard,

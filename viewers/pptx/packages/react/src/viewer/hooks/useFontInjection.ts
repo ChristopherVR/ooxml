@@ -5,7 +5,7 @@ import {
 	resolveGoogleWebfontHref,
 	selectGoogleWebfontFamilies,
 	syncGoogleWebfontStylesheet,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 /**
  * useFontInjection: Injects @font-face declarations for embedded PPTX fonts
  * and loads Google Fonts fallbacks for referenced families the API serves.

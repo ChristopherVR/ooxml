@@ -1,5 +1,5 @@
 import type { PptxSlide } from 'pptx-viewer-core';
-import { resolveAutoAdvanceDelayMs } from 'pptx-viewer-shared';
+import { resolveAutoAdvanceDelayMs } from 'ooxml-ui/pptx';
 
 /**
  * PowerPoint's "Advance slide: After <n>" timing (`p:transition/@advTm`),

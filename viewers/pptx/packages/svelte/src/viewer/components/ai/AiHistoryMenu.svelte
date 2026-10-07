@@ -12,7 +12,7 @@
 	import MessageSquarePlus from '@lucide/svelte/icons/message-square-plus';
 	import Plus from '@lucide/svelte/icons/plus';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
-	import type { PptxAiChatSummary } from 'pptx-viewer-shared/ai';
+	import type { PptxAiChatSummary } from 'ooxml-ui/pptx/ai';
 
 	import { useTranslator } from '../../../i18n/context';
 

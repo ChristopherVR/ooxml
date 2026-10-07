@@ -89,7 +89,7 @@ export const OV: Array<{ labelKey: string; icon: Component | null; k: string }> 
  * now builds itself from `buildFontCatalog`, so nothing in this package should
  * need the flat list at all; the alias remains only for external importers.
  */
-export { COMMON_FONT_FAMILIES as COMMON_FONTS } from 'pptx-viewer-shared';
+export { COMMON_FONT_FAMILIES as COMMON_FONTS } from 'ooxml-ui/pptx';
 
 export const COMMON_SIZES = [
 	8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 36, 40, 44, 48, 54, 60, 72, 96,

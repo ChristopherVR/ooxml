@@ -1,4 +1,4 @@
-import { PRESENTATION_ANIM_TRIGGER_ATTRIBUTE } from 'pptx-viewer-shared';
+import { PRESENTATION_ANIM_TRIGGER_ATTRIBUTE } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 
 import { applyElementAnimationStyles } from './animation-dom';

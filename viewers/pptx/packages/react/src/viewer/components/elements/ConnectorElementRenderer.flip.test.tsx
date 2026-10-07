@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import type { PptxElement } from 'pptx-viewer-core';
-import { prepareExportClone } from 'pptx-viewer-shared';
+import { prepareExportClone } from 'ooxml-ui/pptx';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, it, expect } from 'vitest';
 

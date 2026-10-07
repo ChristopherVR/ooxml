@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
 import type { PptxElement } from 'pptx-viewer-core';
-import type { FieldSubstitutionContext } from 'pptx-viewer-shared';
+import type { FieldSubstitutionContext } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 
 import { FieldContextKey } from '../composables/field-context';

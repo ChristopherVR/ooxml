@@ -7,8 +7,8 @@ import {
 	readStoredViewerPrefs,
 	resolveProfileInitial,
 	saveViewerProfile,
-} from 'pptx-viewer-shared';
-import type { LocalStorageUsageSummary, ViewerProfile } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { LocalStorageUsageSummary, ViewerProfile } from 'ooxml-ui/pptx';
 import React, { useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LuHardDrive, LuInfo, LuLogIn, LuUser } from 'react-icons/lu';

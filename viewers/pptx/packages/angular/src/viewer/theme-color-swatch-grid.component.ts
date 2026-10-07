@@ -20,13 +20,13 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, output } f
 import { TranslatePipe } from '@ngx-translate/core';
 import type { PptxThemeColorRef } from 'pptx-viewer-core';
 
-import type { ThemeColorPickerCommit } from '../internal/shared';
+import type { ThemeColorPickerCommit } from 'ooxml-ui/pptx';
 import {
 	buildThemeColorSwatchGrid,
 	findSelectedThemeSwatch,
 	themeColorSwatchRows,
 	themeSwatchCommit,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { LoadContentService } from './load-content.service';
 
 @Component({

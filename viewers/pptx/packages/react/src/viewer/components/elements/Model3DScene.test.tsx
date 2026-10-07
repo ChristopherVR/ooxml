@@ -13,7 +13,7 @@ import Model3DScene from './Model3DScene';
 
 const { mountModel3D } = vi.hoisted(() => ({ mountModel3D: vi.fn() }));
 
-vi.mock(import('pptx-viewer-shared'), async (importOriginal) => {
+vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => {
 	const actual = await importOriginal();
 	return {
 		...actual,

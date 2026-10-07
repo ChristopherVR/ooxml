@@ -1,10 +1,10 @@
 // @vitest-environment happy-dom
-import type { ViewerOptions } from 'pptx-viewer-shared';
+import type { ViewerOptions } from 'ooxml-ui/pptx';
 import {
 	cloneViewerOptions,
 	DEFAULT_VIEWER_OPTIONS,
 	VIEWER_OPTIONS_TABS,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';

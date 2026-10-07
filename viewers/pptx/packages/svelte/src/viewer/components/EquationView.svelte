@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { hasTextProperties } from 'pptx-viewer-core';
-	import type { OmmlNode } from 'pptx-viewer-shared';
-	import { convertOmmlToMathMl, sanitizeMathMl, shouldRenderHitTarget } from 'pptx-viewer-shared';
+	import type { OmmlNode } from 'ooxml-ui/pptx';
+	import { convertOmmlToMathMl, sanitizeMathMl, shouldRenderHitTarget } from 'ooxml-ui/pptx';
 
 	import { getContainerStyle, getElementHitTargetStyle, styleToString } from '../style';
 	import type { ElementRendererProps } from './props';

@@ -1,4 +1,4 @@
-import type { ChartViewModel, SvgText } from 'pptx-viewer-shared';
+import type { ChartViewModel, SvgText } from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it } from 'vitest';
 

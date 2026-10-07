@@ -1,6 +1,6 @@
 import type { PptxAction, PptxElement, PptxSlide } from 'pptx-viewer-core';
-import { PRESENTATION_HIT_TEST_CSS, PRESENTATION_STAGE_ATTRIBUTE } from 'pptx-viewer-shared';
-import type { ZoomNavigationTarget } from 'pptx-viewer-shared';
+import { PRESENTATION_HIT_TEST_CSS, PRESENTATION_STAGE_ATTRIBUTE } from 'ooxml-ui/pptx';
+import type { ZoomNavigationTarget } from 'ooxml-ui/pptx';
 /**
  * PresentationStage: the slide show surface.
  *

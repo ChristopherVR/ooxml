@@ -12,8 +12,8 @@ import {
 	withChartUserShapeRowRotationUpdated,
 	withChartUserShapeRowTextUpdated,
 	withChartUserShapeRowUpdated,
-} from 'pptx-viewer-shared';
-import type { ChartUserShapeRowPatch } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { ChartUserShapeRowPatch } from 'ooxml-ui/pptx';
 import { useTranslation } from 'react-i18next';
 
 import { BTN, CARD, HEADING, INPUT } from './chart-panel-constants';

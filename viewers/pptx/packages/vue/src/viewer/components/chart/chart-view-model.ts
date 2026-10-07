@@ -19,8 +19,8 @@
  * @module chart-view-model
  */
 import type { PptxChartData, PptxElement } from 'pptx-viewer-core';
-import { buildChartViewModel, getChartStylePalette } from 'pptx-viewer-shared';
-import type { ChartViewModel } from 'pptx-viewer-shared';
+import { buildChartViewModel, getChartStylePalette } from 'ooxml-ui/pptx';
+import type { ChartViewModel } from 'ooxml-ui/pptx';
 
 /**
  * Resolve the colour palette Vue uses for a chart, mirroring the precedence of

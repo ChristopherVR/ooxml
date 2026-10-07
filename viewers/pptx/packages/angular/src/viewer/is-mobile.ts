@@ -25,7 +25,7 @@ import {
 	MOBILE_LANDSCAPE_MAX_HEIGHT,
 	readViewportMetrics,
 	TABLET_BREAKPOINT,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 
 // ---------------------------------------------------------------------------
 // Constants + pure helpers

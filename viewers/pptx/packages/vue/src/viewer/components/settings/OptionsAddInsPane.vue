@@ -5,8 +5,8 @@
  * state, details for the selected row). Vue counterpart of React's
  * `settings/OptionsAddInsPane.tsx`.
  */
-import type { ViewerAddinStatus } from 'pptx-viewer-shared';
-import { resolveViewerAddinRows } from 'pptx-viewer-shared';
+import type { ViewerAddinStatus } from 'ooxml-ui/pptx';
+import { resolveViewerAddinRows } from 'ooxml-ui/pptx';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 

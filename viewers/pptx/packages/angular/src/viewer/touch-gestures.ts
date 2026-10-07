@@ -26,8 +26,8 @@ import {
 	LONG_PRESS_MOVE_TOLERANCE_PX,
 	SWIPE_MAX_VERTICAL_PX,
 	SWIPE_THRESHOLD_PX,
-} from '../internal/shared';
-import type { TouchGestureCallbacks } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { TouchGestureCallbacks } from 'ooxml-ui/pptx';
 
 // ---------------------------------------------------------------------------
 // Re-exports (kept stable for consumers and colocated tests)

@@ -15,7 +15,7 @@ import type {
 	SmartArtLayout,
 } from 'pptx-viewer-core';
 import { elementActionToPptxAction } from 'pptx-viewer-core';
-import { buildSmartArtPresetData } from 'pptx-viewer-shared';
+import { buildSmartArtPresetData } from 'ooxml-ui/pptx';
 
 import type { HyperlinkEditData } from '../components/hyperlink-edit-types';
 import { resolveHyperlinkEditResult } from '../components/hyperlink-edit-utils';

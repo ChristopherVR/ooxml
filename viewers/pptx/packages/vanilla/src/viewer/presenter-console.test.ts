@@ -8,8 +8,8 @@
  * sheet that swallowed presses would strand a blacked-out show with nothing
  * clickable, which is exactly what three of the five bindings shipped.
  */
-import { PRESENT_BLACKOUT_Z } from 'pptx-viewer-shared';
-import type { PresentationSnapshot } from 'pptx-viewer-shared';
+import { PRESENT_BLACKOUT_Z } from 'ooxml-ui/pptx';
+import type { PresentationSnapshot } from 'ooxml-ui/pptx';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { renderAudienceEffects } from './presenter-console';

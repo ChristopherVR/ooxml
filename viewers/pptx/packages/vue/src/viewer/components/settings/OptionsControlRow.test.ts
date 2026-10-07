@@ -2,8 +2,8 @@
    local; merging unrelated declarations across this file would hurt
    readability, not help it (see chart-view-model.ts for the same rationale). */
 import { mount } from '@vue/test-utils';
-import { DEFAULT_VIEWER_OPTIONS } from 'pptx-viewer-shared';
-import type { ViewerOptionsNumberControl } from 'pptx-viewer-shared';
+import { DEFAULT_VIEWER_OPTIONS } from 'ooxml-ui/pptx';
+import type { ViewerOptionsNumberControl } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
 import OptionsControlRow from './OptionsControlRow.vue';

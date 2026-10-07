@@ -15,8 +15,8 @@ import {
 	OUTLINE_ROW_ATTR,
 	OUTLINE_VIEW_ATTR,
 	registerPptxWebControls,
-} from 'pptx-viewer-shared';
-import { translationsEn } from 'pptx-viewer-shared/i18n';
+} from 'ooxml-ui/pptx';
+import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';

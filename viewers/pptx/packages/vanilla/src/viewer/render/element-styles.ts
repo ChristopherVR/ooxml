@@ -1,6 +1,6 @@
 import type { PptxElement } from 'pptx-viewer-core';
 import { hasShapeProperties, hasTextProperties } from 'pptx-viewer-core';
-import type { Computed3dStyle, CssStyleMap } from 'pptx-viewer-shared';
+import type { Computed3dStyle, CssStyleMap } from 'ooxml-ui/pptx';
 import {
 	DEFAULT_STROKE_COLOR,
 	DEFAULT_TEXT_COLOR,
@@ -14,7 +14,7 @@ import {
 	isHollowShapeElement,
 	resolveShapeGeometry,
 	px,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import { composeTransforms } from './dom';
 

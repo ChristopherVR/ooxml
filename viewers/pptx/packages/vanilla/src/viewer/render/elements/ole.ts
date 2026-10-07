@@ -1,5 +1,5 @@
 import type { OlePptxElement } from 'pptx-viewer-core';
-import type { ResolvedOleType } from 'pptx-viewer-shared';
+import type { ResolvedOleType } from 'ooxml-ui/pptx';
 import {
 	formatBytes,
 	getContainerStyle,
@@ -14,7 +14,7 @@ import {
 	oleActionsVisible,
 	openUrlInNewTab,
 	resolveOleType,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import { createEl, createSvgEl } from '../dom';
 import type { ElementRenderContext, ElementRenderer } from '../types';

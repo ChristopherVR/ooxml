@@ -1,5 +1,5 @@
 import type { PptxElement } from 'pptx-viewer-core';
-import { DEFAULT_ROUND_RECT_ADJUSTMENT } from 'pptx-viewer-shared';
+import { DEFAULT_ROUND_RECT_ADJUSTMENT } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 
 import type { EditorControllerDeps } from './editor-controller-deps';

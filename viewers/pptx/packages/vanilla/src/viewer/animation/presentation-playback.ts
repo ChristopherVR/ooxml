@@ -5,7 +5,7 @@ import type {
 	PlaybackContext,
 	ZoomExcursion,
 	ZoomNavigationTarget,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	advanceMainSequence,
 	applySlideTransitionSound,
@@ -19,7 +19,7 @@ import {
 	resolveMediaBookmarkTimesMs,
 	resolveMediaTimeNodeElementIds,
 	scheduleAutoAdvanceChain,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import {
 	applyElementAnimationStyles,

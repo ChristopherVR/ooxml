@@ -12,7 +12,7 @@ import {
 	Type,
 	Wand,
 } from 'lucide-vue-next';
-import type { RibbonContextualTabId } from 'pptx-viewer-shared';
+import type { RibbonContextualTabId } from 'ooxml-ui/pptx';
 import type { Component } from 'vue';
 
 import type { ToolbarSection } from './ribbon-types';

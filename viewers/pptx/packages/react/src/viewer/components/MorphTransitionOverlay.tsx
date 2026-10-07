@@ -9,8 +9,8 @@ import type { PptxSlide } from 'pptx-viewer-core';
  * project's per-file LOC budget; this is the whole `morphPlan` branch,
  * unchanged in behaviour.
  */
-import type { MorphTransitionPlan } from 'pptx-viewer-shared';
-import { MORPH_CROSSFADE_GROUP_STYLE, MORPH_CROSSFADE_HALF_STYLE } from 'pptx-viewer-shared';
+import type { MorphTransitionPlan } from 'ooxml-ui/pptx';
+import { MORPH_CROSSFADE_GROUP_STYLE, MORPH_CROSSFADE_HALF_STYLE } from 'ooxml-ui/pptx';
 import React from 'react';
 
 import type { CanvasSize } from '../types';

@@ -1,5 +1,5 @@
 import type { PptxElement, PptxElementAnimation } from 'pptx-viewer-core';
-import { listMediaBookmarkOptions, selectedBookmarkOptionValue } from 'pptx-viewer-shared';
+import { listMediaBookmarkOptions, selectedBookmarkOptionValue } from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 

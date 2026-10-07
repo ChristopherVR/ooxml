@@ -4,8 +4,8 @@ import {
 	projectDrawingShapes,
 	resolveRevealedDrawingShapeNodeIds,
 	styleShadowFilter,
-} from 'pptx-viewer-shared';
-import type { RenderedShape } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { RenderedShape } from 'ooxml-ui/pptx';
 import React from 'react';
 
 import {

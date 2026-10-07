@@ -1,5 +1,5 @@
 import type { PptxElement, TextSegment, TextStyle } from 'pptx-viewer-core';
-import { buildParagraphs } from 'pptx-viewer-shared';
+import { buildParagraphs } from 'ooxml-ui/pptx';
 import { describe, it, expect } from 'vitest';
 
 import {

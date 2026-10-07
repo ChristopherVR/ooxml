@@ -5,8 +5,8 @@
 	 * shared element; every mutation still routes through `EditorState` so
 	 * history, selection and read-only rules are unchanged.
 	 */
-	import { arrangeAlignAction, arrangeHomeControls, homeSnapshotTranslator } from 'pptx-viewer-shared';
-	import type { RibbonHomeRequestEvent } from 'pptx-viewer-shared';
+	import { arrangeAlignAction, arrangeHomeControls, homeSnapshotTranslator } from 'ooxml-ui/pptx';
+	import type { RibbonHomeRequestEvent } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../../i18n/context';
 	import type { EditorState } from '../../../editor/editor-state.svelte';

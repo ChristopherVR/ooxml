@@ -9,7 +9,7 @@
  * arbitrary objects). This keeps the JSX usage in `ThreeView.tsx` free of an
  * `any`/`as` escape hatch.
  */
-import type { PptxThreeViewElement } from 'pptx-viewer-shared';
+import type { PptxThreeViewElement } from 'ooxml-ui/pptx';
 import type * as React from 'react';
 
 declare module 'react' {

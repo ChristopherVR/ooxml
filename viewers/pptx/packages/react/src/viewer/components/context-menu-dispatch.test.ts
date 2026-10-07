@@ -7,7 +7,7 @@
  * ai-ask/ai-fix and the z-order commands).
  */
 import type { TablePptxElement } from 'pptx-viewer-core';
-import { buildContextMenuEntries } from 'pptx-viewer-shared';
+import { buildContextMenuEntries } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
 import { contextMenuContext, contextMenuHandlers } from './context-menu-dispatch';

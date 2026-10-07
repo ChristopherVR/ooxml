@@ -4,8 +4,8 @@ import {
 	elementBulletKind,
 	getInlineEditorSelectionResult,
 	selectedParagraphBulletKind,
-} from 'pptx-viewer-shared';
-import type { ElementBulletKind } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { ElementBulletKind } from 'ooxml-ui/pptx';
 import { useCallback, useSyncExternalStore } from 'react';
 
 function subscribe(onChange: () => void): () => void {

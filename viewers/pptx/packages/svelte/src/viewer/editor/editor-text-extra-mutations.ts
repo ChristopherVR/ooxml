@@ -1,12 +1,12 @@
 import type { PptxElement, TextStyle } from 'pptx-viewer-core';
 import { hasTextProperties } from 'pptx-viewer-core';
-import type { ChangeCaseMode } from 'pptx-viewer-shared';
+import type { ChangeCaseMode } from 'ooxml-ui/pptx';
 import {
 	applyCaseTransformToSegments,
 	readEditableText,
 	remapTextToSegments,
 	textStylePatch,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 /**
  * Pure font-formatting patch builders that extend `editor-format-mutations.ts`

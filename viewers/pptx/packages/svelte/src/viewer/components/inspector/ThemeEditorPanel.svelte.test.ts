@@ -1,4 +1,4 @@
-import { PRESET_THEMES, registerPptxWebControls } from 'pptx-viewer-shared';
+import { PRESET_THEMES, registerPptxWebControls } from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 

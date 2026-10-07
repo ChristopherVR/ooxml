@@ -28,7 +28,7 @@ import {
 	getGroupChildParentFill,
 	getImageFitStyle,
 	getImageSrc as sharedGetImageSrc,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type { CSSProperties } from 'vue';
 import { computed } from 'vue';
 

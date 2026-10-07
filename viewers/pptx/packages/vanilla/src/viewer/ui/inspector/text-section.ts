@@ -1,4 +1,4 @@
-import type { TextAdvancedChanges } from 'pptx-viewer-shared';
+import type { TextAdvancedChanges } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import { makeColorControl, makeNumberField } from '../controls';

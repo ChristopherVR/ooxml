@@ -8,7 +8,7 @@
  * `CSSProperties` object (combining shadows/filters/backgrounds rather than
  * overwriting them).
  */
-import type { Computed3dStyle } from 'pptx-viewer-shared';
+import type { Computed3dStyle } from 'ooxml-ui/pptx';
 import type { CSSProperties } from 'vue';
 
 export {
@@ -19,7 +19,7 @@ export {
 	getMaterialFilter,
 	getComputed3dStyle,
 	build3DExtrusionData,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 export type {
 	Transform3dCss,
 	BevelCss,
@@ -27,7 +27,7 @@ export type {
 	Extrusion3DData,
 	ExtrusionPanel,
 	Extrusion3dCss,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 /**
  * Merge a {@link Computed3dStyle} into an existing `CSSProperties` object,

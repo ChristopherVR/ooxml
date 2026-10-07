@@ -2,7 +2,7 @@ import type {
 	DialogFooterAction,
 	DialogFooterIntent,
 	PptxUiDialogFooterElement,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React from 'react';
 
 import { useWebControl } from '../hooks/useWebControl';

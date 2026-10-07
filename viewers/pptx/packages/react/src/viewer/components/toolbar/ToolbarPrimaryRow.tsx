@@ -1,4 +1,4 @@
-import { isDialogAvailable, isFeatureEnabled, isPanelVisible } from 'pptx-viewer-shared';
+import { isDialogAvailable, isFeatureEnabled, isPanelVisible } from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { LuMessageSquare, LuPanelLeft, LuPanelRight, LuSettings, LuSparkles } from 'react-icons/lu';

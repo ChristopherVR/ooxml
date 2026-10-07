@@ -37,13 +37,13 @@ import type {
 	EditPointsCommandId,
 	EditPointsElementPatch,
 	EditPointsView,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import {
 	attachOverlayKeyboard,
 	EDIT_POINTS_STYLE,
 	EditPointsSession,
 	overlayPointerInput,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { EditPointsMenuComponent } from './edit-points-menu.component';
 
 /** One Edit Points commit, addressed to its shape. */

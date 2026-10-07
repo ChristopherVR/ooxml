@@ -1,4 +1,4 @@
-import type { FieldSubstitutionContext } from 'pptx-viewer-shared';
+import type { FieldSubstitutionContext } from 'ooxml-ui/pptx';
 import { getContext, setContext } from 'svelte';
 
 /**

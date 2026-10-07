@@ -8,7 +8,7 @@
  * catalogue does not know it. Nothing may reach the network.
  */
 import type { PptxElement, PptxEmbeddedFont, PptxSlide } from 'pptx-viewer-core';
-import { resetGoogleWebfontSessionCache } from 'pptx-viewer-shared';
+import { resetGoogleWebfontSessionCache } from 'ooxml-ui/pptx';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';

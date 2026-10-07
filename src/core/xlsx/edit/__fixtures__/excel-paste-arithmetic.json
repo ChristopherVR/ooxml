@@ -1,0 +1,5298 @@
+{
+  "version": "16.0",
+  "build": 20430.0,
+  "cases": [
+    {
+      "mode": "all",
+      "operation": "add",
+      "source": "2",
+      "destination": "10",
+      "value": 12.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "add",
+      "source": "",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "add",
+      "source": "2",
+      "destination": "",
+      "value": 2.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "add",
+      "source": "",
+      "destination": "",
+      "value": null,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "add",
+      "source": "'2",
+      "destination": "10",
+      "value": 12.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "add",
+      "source": "text",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "add",
+      "source": "2",
+      "destination": "text",
+      "value": "text",
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "add",
+      "source": "TRUE",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "add",
+      "source": "2",
+      "destination": "FALSE",
+      "value": false,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "add",
+      "source": "=1+1",
+      "destination": "10",
+      "value": 12.0,
+      "formula": "10+(1+1)",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "add",
+      "source": "2",
+      "destination": "=5+5",
+      "value": 12.0,
+      "formula": "(5+5)+2",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "add",
+      "source": "=1+1",
+      "destination": "=5+5",
+      "value": 12.0,
+      "formula": "(5+5)+(1+1)",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "add",
+      "source": "=\"\"",
+      "destination": "10",
+      "value": {
+        "error": "#VALUE!"
+      },
+      "formula": "10+(\"\")",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "add",
+      "source": "2",
+      "destination": "=\"\"",
+      "value": {
+        "error": "#VALUE!"
+      },
+      "formula": "(\"\")+2",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "add",
+      "source": "=1/0",
+      "destination": "10",
+      "value": {
+        "error": "#DIV/0!"
+      },
+      "formula": "10+(1/0)",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "add",
+      "source": "2",
+      "destination": "=NA()",
+      "value": {
+        "error": "#N/A"
+      },
+      "formula": "(NA())+2",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "add",
+      "source": "0",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "add",
+      "source": "2",
+      "destination": "'10",
+      "value": 12.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "add",
+      "source": "=TRUE()",
+      "destination": "10",
+      "value": 11.0,
+      "formula": "10+(TRUE())",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "add",
+      "source": "=\"2\"",
+      "destination": "10",
+      "value": 12.0,
+      "formula": "10+(\"2\")",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "add",
+      "source": "=\"text\"",
+      "destination": "10",
+      "value": {
+        "error": "#VALUE!"
+      },
+      "formula": "10+(\"text\")",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "add",
+      "source": "-2",
+      "destination": "=5+5",
+      "value": 8.0,
+      "formula": "(5+5)+-2",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "add",
+      "source": "=1+1",
+      "destination": "-10",
+      "value": -8.0,
+      "formula": "-10+(1+1)",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "add",
+      "source": "'1,000",
+      "destination": "=5+5",
+      "value": 1010.0,
+      "formula": "(5+5)+1000",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "add",
+      "source": "=1+1",
+      "destination": "'1,000",
+      "value": 1002.0,
+      "formula": "1000+(1+1)",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "add",
+      "source": "",
+      "destination": "=\"\"",
+      "value": {
+        "error": "#VALUE!"
+      },
+      "formula": "(\"\")+0",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "add",
+      "source": "0.1",
+      "destination": "0.2",
+      "value": 0.30000000000000004,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "add",
+      "source": "1.2",
+      "destination": "1.2",
+      "value": 2.4,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "add",
+      "source": "#N/A",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "add",
+      "source": "2",
+      "destination": "#N/A",
+      "value": {
+        "error": "#N/A"
+      },
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "add",
+      "source": "=1+1",
+      "destination": "TRUE",
+      "value": true,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "add",
+      "source": "=\"text\"",
+      "destination": "text",
+      "value": "text",
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "subtract",
+      "source": "2",
+      "destination": "10",
+      "value": 8.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "subtract",
+      "source": "",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "subtract",
+      "source": "2",
+      "destination": "",
+      "value": -2.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "subtract",
+      "source": "",
+      "destination": "",
+      "value": null,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "subtract",
+      "source": "'2",
+      "destination": "10",
+      "value": 8.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "subtract",
+      "source": "text",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "subtract",
+      "source": "2",
+      "destination": "text",
+      "value": "text",
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "subtract",
+      "source": "TRUE",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "subtract",
+      "source": "2",
+      "destination": "FALSE",
+      "value": false,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "subtract",
+      "source": "=1+1",
+      "destination": "10",
+      "value": 8.0,
+      "formula": "10-(1+1)",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "subtract",
+      "source": "2",
+      "destination": "=5+5",
+      "value": 8.0,
+      "formula": "(5+5)-2",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "subtract",
+      "source": "=1+1",
+      "destination": "=5+5",
+      "value": 8.0,
+      "formula": "(5+5)-(1+1)",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "subtract",
+      "source": "=\"\"",
+      "destination": "10",
+      "value": {
+        "error": "#VALUE!"
+      },
+      "formula": "10-(\"\")",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "subtract",
+      "source": "2",
+      "destination": "=\"\"",
+      "value": {
+        "error": "#VALUE!"
+      },
+      "formula": "(\"\")-2",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "subtract",
+      "source": "=1/0",
+      "destination": "10",
+      "value": {
+        "error": "#DIV/0!"
+      },
+      "formula": "10-(1/0)",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "subtract",
+      "source": "2",
+      "destination": "=NA()",
+      "value": {
+        "error": "#N/A"
+      },
+      "formula": "(NA())-2",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "subtract",
+      "source": "0",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "subtract",
+      "source": "2",
+      "destination": "'10",
+      "value": 8.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "subtract",
+      "source": "=TRUE()",
+      "destination": "10",
+      "value": 9.0,
+      "formula": "10-(TRUE())",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "subtract",
+      "source": "=\"2\"",
+      "destination": "10",
+      "value": 8.0,
+      "formula": "10-(\"2\")",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "subtract",
+      "source": "=\"text\"",
+      "destination": "10",
+      "value": {
+        "error": "#VALUE!"
+      },
+      "formula": "10-(\"text\")",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "subtract",
+      "source": "-2",
+      "destination": "=5+5",
+      "value": 12.0,
+      "formula": "(5+5)--2",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "subtract",
+      "source": "=1+1",
+      "destination": "-10",
+      "value": -12.0,
+      "formula": "-10-(1+1)",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "subtract",
+      "source": "'1,000",
+      "destination": "=5+5",
+      "value": -990.0,
+      "formula": "(5+5)-1000",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "subtract",
+      "source": "=1+1",
+      "destination": "'1,000",
+      "value": 998.0,
+      "formula": "1000-(1+1)",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "subtract",
+      "source": "",
+      "destination": "=\"\"",
+      "value": {
+        "error": "#VALUE!"
+      },
+      "formula": "(\"\")-0",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "subtract",
+      "source": "0.1",
+      "destination": "0.2",
+      "value": 0.1,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "subtract",
+      "source": "1.2",
+      "destination": "1.2",
+      "value": 0.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "subtract",
+      "source": "#N/A",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "subtract",
+      "source": "2",
+      "destination": "#N/A",
+      "value": {
+        "error": "#N/A"
+      },
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "subtract",
+      "source": "=1+1",
+      "destination": "TRUE",
+      "value": true,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "subtract",
+      "source": "=\"text\"",
+      "destination": "text",
+      "value": "text",
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "multiply",
+      "source": "2",
+      "destination": "10",
+      "value": 20.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "multiply",
+      "source": "",
+      "destination": "10",
+      "value": 0.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "multiply",
+      "source": "2",
+      "destination": "",
+      "value": 0.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "multiply",
+      "source": "",
+      "destination": "",
+      "value": null,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "multiply",
+      "source": "'2",
+      "destination": "10",
+      "value": 20.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "multiply",
+      "source": "text",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "multiply",
+      "source": "2",
+      "destination": "text",
+      "value": "text",
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "multiply",
+      "source": "TRUE",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "multiply",
+      "source": "2",
+      "destination": "FALSE",
+      "value": false,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "multiply",
+      "source": "=1+1",
+      "destination": "10",
+      "value": 20.0,
+      "formula": "10*(1+1)",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "multiply",
+      "source": "2",
+      "destination": "=5+5",
+      "value": 20.0,
+      "formula": "(5+5)*2",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "multiply",
+      "source": "=1+1",
+      "destination": "=5+5",
+      "value": 20.0,
+      "formula": "(5+5)*(1+1)",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "multiply",
+      "source": "=\"\"",
+      "destination": "10",
+      "value": {
+        "error": "#VALUE!"
+      },
+      "formula": "10*(\"\")",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "multiply",
+      "source": "2",
+      "destination": "=\"\"",
+      "value": {
+        "error": "#VALUE!"
+      },
+      "formula": "(\"\")*2",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "multiply",
+      "source": "=1/0",
+      "destination": "10",
+      "value": {
+        "error": "#DIV/0!"
+      },
+      "formula": "10*(1/0)",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "multiply",
+      "source": "2",
+      "destination": "=NA()",
+      "value": {
+        "error": "#N/A"
+      },
+      "formula": "(NA())*2",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "multiply",
+      "source": "0",
+      "destination": "10",
+      "value": 0.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "multiply",
+      "source": "2",
+      "destination": "'10",
+      "value": 20.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "multiply",
+      "source": "=TRUE()",
+      "destination": "10",
+      "value": 10.0,
+      "formula": "10*(TRUE())",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "multiply",
+      "source": "=\"2\"",
+      "destination": "10",
+      "value": 20.0,
+      "formula": "10*(\"2\")",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "multiply",
+      "source": "=\"text\"",
+      "destination": "10",
+      "value": {
+        "error": "#VALUE!"
+      },
+      "formula": "10*(\"text\")",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "multiply",
+      "source": "-2",
+      "destination": "=5+5",
+      "value": -20.0,
+      "formula": "(5+5)*-2",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "multiply",
+      "source": "=1+1",
+      "destination": "-10",
+      "value": -20.0,
+      "formula": "-10*(1+1)",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "multiply",
+      "source": "'1,000",
+      "destination": "=5+5",
+      "value": 10000.0,
+      "formula": "(5+5)*1000",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "multiply",
+      "source": "=1+1",
+      "destination": "'1,000",
+      "value": 2000.0,
+      "formula": "1000*(1+1)",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "multiply",
+      "source": "",
+      "destination": "=\"\"",
+      "value": {
+        "error": "#VALUE!"
+      },
+      "formula": "(\"\")*0",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "multiply",
+      "source": "0.1",
+      "destination": "0.2",
+      "value": 0.020000000000000004,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "multiply",
+      "source": "1.2",
+      "destination": "1.2",
+      "value": 1.44,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "multiply",
+      "source": "#N/A",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "multiply",
+      "source": "2",
+      "destination": "#N/A",
+      "value": {
+        "error": "#N/A"
+      },
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "multiply",
+      "source": "=1+1",
+      "destination": "TRUE",
+      "value": true,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "multiply",
+      "source": "=\"text\"",
+      "destination": "text",
+      "value": "text",
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "divide",
+      "source": "2",
+      "destination": "10",
+      "value": 5.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "divide",
+      "source": "",
+      "destination": "10",
+      "value": {
+        "error": "#DIV/0!"
+      },
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "divide",
+      "source": "2",
+      "destination": "",
+      "value": 0.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "divide",
+      "source": "",
+      "destination": "",
+      "value": null,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "divide",
+      "source": "'2",
+      "destination": "10",
+      "value": 5.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "divide",
+      "source": "text",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "divide",
+      "source": "2",
+      "destination": "text",
+      "value": "text",
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "divide",
+      "source": "TRUE",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "divide",
+      "source": "2",
+      "destination": "FALSE",
+      "value": false,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "divide",
+      "source": "=1+1",
+      "destination": "10",
+      "value": 5.0,
+      "formula": "10/(1+1)",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "divide",
+      "source": "2",
+      "destination": "=5+5",
+      "value": 5.0,
+      "formula": "(5+5)/2",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "divide",
+      "source": "=1+1",
+      "destination": "=5+5",
+      "value": 5.0,
+      "formula": "(5+5)/(1+1)",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "divide",
+      "source": "=\"\"",
+      "destination": "10",
+      "value": {
+        "error": "#VALUE!"
+      },
+      "formula": "10/(\"\")",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "divide",
+      "source": "2",
+      "destination": "=\"\"",
+      "value": {
+        "error": "#VALUE!"
+      },
+      "formula": "(\"\")/2",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "divide",
+      "source": "=1/0",
+      "destination": "10",
+      "value": {
+        "error": "#DIV/0!"
+      },
+      "formula": "10/(1/0)",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "divide",
+      "source": "2",
+      "destination": "=NA()",
+      "value": {
+        "error": "#N/A"
+      },
+      "formula": "(NA())/2",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "divide",
+      "source": "0",
+      "destination": "10",
+      "value": {
+        "error": "#DIV/0!"
+      },
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "divide",
+      "source": "2",
+      "destination": "'10",
+      "value": 5.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "divide",
+      "source": "=TRUE()",
+      "destination": "10",
+      "value": 10.0,
+      "formula": "10/(TRUE())",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "divide",
+      "source": "=\"2\"",
+      "destination": "10",
+      "value": 5.0,
+      "formula": "10/(\"2\")",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "divide",
+      "source": "=\"text\"",
+      "destination": "10",
+      "value": {
+        "error": "#VALUE!"
+      },
+      "formula": "10/(\"text\")",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "divide",
+      "source": "-2",
+      "destination": "=5+5",
+      "value": -5.0,
+      "formula": "(5+5)/-2",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "divide",
+      "source": "=1+1",
+      "destination": "-10",
+      "value": -5.0,
+      "formula": "-10/(1+1)",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "divide",
+      "source": "'1,000",
+      "destination": "=5+5",
+      "value": 0.01,
+      "formula": "(5+5)/1000",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "divide",
+      "source": "=1+1",
+      "destination": "'1,000",
+      "value": 500.0,
+      "formula": "1000/(1+1)",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "divide",
+      "source": "",
+      "destination": "=\"\"",
+      "value": {
+        "error": "#VALUE!"
+      },
+      "formula": "(\"\")/0",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "divide",
+      "source": "0.1",
+      "destination": "0.2",
+      "value": 2.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "divide",
+      "source": "1.2",
+      "destination": "1.2",
+      "value": 1.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "divide",
+      "source": "#N/A",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "divide",
+      "source": "2",
+      "destination": "#N/A",
+      "value": {
+        "error": "#N/A"
+      },
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "divide",
+      "source": "=1+1",
+      "destination": "TRUE",
+      "value": true,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "all",
+      "operation": "divide",
+      "source": "=\"text\"",
+      "destination": "text",
+      "value": "text",
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "values",
+      "operation": "add",
+      "source": "2",
+      "destination": "10",
+      "value": 12.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "add",
+      "source": "",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "add",
+      "source": "2",
+      "destination": "",
+      "value": 2.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "add",
+      "source": "",
+      "destination": "",
+      "value": null,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "add",
+      "source": "'2",
+      "destination": "10",
+      "value": 12.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "add",
+      "source": "text",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "add",
+      "source": "2",
+      "destination": "text",
+      "value": "text",
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "add",
+      "source": "TRUE",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "add",
+      "source": "2",
+      "destination": "FALSE",
+      "value": false,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "add",
+      "source": "=1+1",
+      "destination": "10",
+      "value": 12.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "add",
+      "source": "2",
+      "destination": "=5+5",
+      "value": 12.0,
+      "formula": "(5+5)+2",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "add",
+      "source": "=1+1",
+      "destination": "=5+5",
+      "value": 12.0,
+      "formula": "(5+5)+2",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "add",
+      "source": "=\"\"",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "add",
+      "source": "2",
+      "destination": "=\"\"",
+      "value": {
+        "error": "#VALUE!"
+      },
+      "formula": "(\"\")+2",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "add",
+      "source": "=1/0",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "add",
+      "source": "2",
+      "destination": "=NA()",
+      "value": {
+        "error": "#N/A"
+      },
+      "formula": "(NA())+2",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "add",
+      "source": "0",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "add",
+      "source": "2",
+      "destination": "'10",
+      "value": 12.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "add",
+      "source": "=TRUE()",
+      "destination": "10",
+      "value": 11.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "add",
+      "source": "=\"2\"",
+      "destination": "10",
+      "value": 12.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "add",
+      "source": "=\"text\"",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "add",
+      "source": "-2",
+      "destination": "=5+5",
+      "value": 8.0,
+      "formula": "(5+5)+-2",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "add",
+      "source": "=1+1",
+      "destination": "-10",
+      "value": -8.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "add",
+      "source": "'1,000",
+      "destination": "=5+5",
+      "value": 1010.0,
+      "formula": "(5+5)+1000",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "add",
+      "source": "=1+1",
+      "destination": "'1,000",
+      "value": 1002.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "add",
+      "source": "",
+      "destination": "=\"\"",
+      "value": {
+        "error": "#VALUE!"
+      },
+      "formula": "(\"\")+0",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "add",
+      "source": "0.1",
+      "destination": "0.2",
+      "value": 0.30000000000000004,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "add",
+      "source": "1.2",
+      "destination": "1.2",
+      "value": 2.4,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "add",
+      "source": "#N/A",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "add",
+      "source": "2",
+      "destination": "#N/A",
+      "value": {
+        "error": "#N/A"
+      },
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "add",
+      "source": "=1+1",
+      "destination": "TRUE",
+      "value": true,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "add",
+      "source": "=\"text\"",
+      "destination": "text",
+      "value": "text",
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "subtract",
+      "source": "2",
+      "destination": "10",
+      "value": 8.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "subtract",
+      "source": "",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "subtract",
+      "source": "2",
+      "destination": "",
+      "value": -2.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "subtract",
+      "source": "",
+      "destination": "",
+      "value": null,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "subtract",
+      "source": "'2",
+      "destination": "10",
+      "value": 8.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "subtract",
+      "source": "text",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "subtract",
+      "source": "2",
+      "destination": "text",
+      "value": "text",
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "subtract",
+      "source": "TRUE",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "subtract",
+      "source": "2",
+      "destination": "FALSE",
+      "value": false,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "subtract",
+      "source": "=1+1",
+      "destination": "10",
+      "value": 8.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "subtract",
+      "source": "2",
+      "destination": "=5+5",
+      "value": 8.0,
+      "formula": "(5+5)-2",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "subtract",
+      "source": "=1+1",
+      "destination": "=5+5",
+      "value": 8.0,
+      "formula": "(5+5)-2",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "subtract",
+      "source": "=\"\"",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "subtract",
+      "source": "2",
+      "destination": "=\"\"",
+      "value": {
+        "error": "#VALUE!"
+      },
+      "formula": "(\"\")-2",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "subtract",
+      "source": "=1/0",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "subtract",
+      "source": "2",
+      "destination": "=NA()",
+      "value": {
+        "error": "#N/A"
+      },
+      "formula": "(NA())-2",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "subtract",
+      "source": "0",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "subtract",
+      "source": "2",
+      "destination": "'10",
+      "value": 8.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "subtract",
+      "source": "=TRUE()",
+      "destination": "10",
+      "value": 9.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "subtract",
+      "source": "=\"2\"",
+      "destination": "10",
+      "value": 8.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "subtract",
+      "source": "=\"text\"",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "subtract",
+      "source": "-2",
+      "destination": "=5+5",
+      "value": 12.0,
+      "formula": "(5+5)--2",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "subtract",
+      "source": "=1+1",
+      "destination": "-10",
+      "value": -12.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "subtract",
+      "source": "'1,000",
+      "destination": "=5+5",
+      "value": -990.0,
+      "formula": "(5+5)-1000",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "subtract",
+      "source": "=1+1",
+      "destination": "'1,000",
+      "value": 998.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "subtract",
+      "source": "",
+      "destination": "=\"\"",
+      "value": {
+        "error": "#VALUE!"
+      },
+      "formula": "(\"\")-0",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "subtract",
+      "source": "0.1",
+      "destination": "0.2",
+      "value": 0.1,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "subtract",
+      "source": "1.2",
+      "destination": "1.2",
+      "value": 0.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "subtract",
+      "source": "#N/A",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "subtract",
+      "source": "2",
+      "destination": "#N/A",
+      "value": {
+        "error": "#N/A"
+      },
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "subtract",
+      "source": "=1+1",
+      "destination": "TRUE",
+      "value": true,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "subtract",
+      "source": "=\"text\"",
+      "destination": "text",
+      "value": "text",
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "multiply",
+      "source": "2",
+      "destination": "10",
+      "value": 20.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "multiply",
+      "source": "",
+      "destination": "10",
+      "value": 0.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "multiply",
+      "source": "2",
+      "destination": "",
+      "value": 0.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "multiply",
+      "source": "",
+      "destination": "",
+      "value": null,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "multiply",
+      "source": "'2",
+      "destination": "10",
+      "value": 20.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "multiply",
+      "source": "text",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "multiply",
+      "source": "2",
+      "destination": "text",
+      "value": "text",
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "multiply",
+      "source": "TRUE",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "multiply",
+      "source": "2",
+      "destination": "FALSE",
+      "value": false,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "multiply",
+      "source": "=1+1",
+      "destination": "10",
+      "value": 20.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "multiply",
+      "source": "2",
+      "destination": "=5+5",
+      "value": 20.0,
+      "formula": "(5+5)*2",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "multiply",
+      "source": "=1+1",
+      "destination": "=5+5",
+      "value": 20.0,
+      "formula": "(5+5)*2",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "multiply",
+      "source": "=\"\"",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "multiply",
+      "source": "2",
+      "destination": "=\"\"",
+      "value": {
+        "error": "#VALUE!"
+      },
+      "formula": "(\"\")*2",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "multiply",
+      "source": "=1/0",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "multiply",
+      "source": "2",
+      "destination": "=NA()",
+      "value": {
+        "error": "#N/A"
+      },
+      "formula": "(NA())*2",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "multiply",
+      "source": "0",
+      "destination": "10",
+      "value": 0.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "multiply",
+      "source": "2",
+      "destination": "'10",
+      "value": 20.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "multiply",
+      "source": "=TRUE()",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "multiply",
+      "source": "=\"2\"",
+      "destination": "10",
+      "value": 20.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "multiply",
+      "source": "=\"text\"",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "multiply",
+      "source": "-2",
+      "destination": "=5+5",
+      "value": -20.0,
+      "formula": "(5+5)*-2",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "multiply",
+      "source": "=1+1",
+      "destination": "-10",
+      "value": -20.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "multiply",
+      "source": "'1,000",
+      "destination": "=5+5",
+      "value": 10000.0,
+      "formula": "(5+5)*1000",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "multiply",
+      "source": "=1+1",
+      "destination": "'1,000",
+      "value": 2000.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "multiply",
+      "source": "",
+      "destination": "=\"\"",
+      "value": {
+        "error": "#VALUE!"
+      },
+      "formula": "(\"\")*0",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "multiply",
+      "source": "0.1",
+      "destination": "0.2",
+      "value": 0.020000000000000004,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "multiply",
+      "source": "1.2",
+      "destination": "1.2",
+      "value": 1.44,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "multiply",
+      "source": "#N/A",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "multiply",
+      "source": "2",
+      "destination": "#N/A",
+      "value": {
+        "error": "#N/A"
+      },
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "multiply",
+      "source": "=1+1",
+      "destination": "TRUE",
+      "value": true,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "multiply",
+      "source": "=\"text\"",
+      "destination": "text",
+      "value": "text",
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "divide",
+      "source": "2",
+      "destination": "10",
+      "value": 5.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "divide",
+      "source": "",
+      "destination": "10",
+      "value": {
+        "error": "#DIV/0!"
+      },
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "divide",
+      "source": "2",
+      "destination": "",
+      "value": 0.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "divide",
+      "source": "",
+      "destination": "",
+      "value": null,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "divide",
+      "source": "'2",
+      "destination": "10",
+      "value": 5.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "divide",
+      "source": "text",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "divide",
+      "source": "2",
+      "destination": "text",
+      "value": "text",
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "divide",
+      "source": "TRUE",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "divide",
+      "source": "2",
+      "destination": "FALSE",
+      "value": false,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "divide",
+      "source": "=1+1",
+      "destination": "10",
+      "value": 5.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "divide",
+      "source": "2",
+      "destination": "=5+5",
+      "value": 5.0,
+      "formula": "(5+5)/2",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "divide",
+      "source": "=1+1",
+      "destination": "=5+5",
+      "value": 5.0,
+      "formula": "(5+5)/2",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "divide",
+      "source": "=\"\"",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "divide",
+      "source": "2",
+      "destination": "=\"\"",
+      "value": {
+        "error": "#VALUE!"
+      },
+      "formula": "(\"\")/2",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "divide",
+      "source": "=1/0",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "divide",
+      "source": "2",
+      "destination": "=NA()",
+      "value": {
+        "error": "#N/A"
+      },
+      "formula": "(NA())/2",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "divide",
+      "source": "0",
+      "destination": "10",
+      "value": {
+        "error": "#DIV/0!"
+      },
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "divide",
+      "source": "2",
+      "destination": "'10",
+      "value": 5.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "divide",
+      "source": "=TRUE()",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "divide",
+      "source": "=\"2\"",
+      "destination": "10",
+      "value": 5.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "divide",
+      "source": "=\"text\"",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "divide",
+      "source": "-2",
+      "destination": "=5+5",
+      "value": -5.0,
+      "formula": "(5+5)/-2",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "divide",
+      "source": "=1+1",
+      "destination": "-10",
+      "value": -5.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "divide",
+      "source": "'1,000",
+      "destination": "=5+5",
+      "value": 0.01,
+      "formula": "(5+5)/1000",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "divide",
+      "source": "=1+1",
+      "destination": "'1,000",
+      "value": 500.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "divide",
+      "source": "",
+      "destination": "=\"\"",
+      "value": {
+        "error": "#VALUE!"
+      },
+      "formula": "(\"\")/0",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "divide",
+      "source": "0.1",
+      "destination": "0.2",
+      "value": 2.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "divide",
+      "source": "1.2",
+      "destination": "1.2",
+      "value": 1.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "divide",
+      "source": "#N/A",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "divide",
+      "source": "2",
+      "destination": "#N/A",
+      "value": {
+        "error": "#N/A"
+      },
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "divide",
+      "source": "=1+1",
+      "destination": "TRUE",
+      "value": true,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "values",
+      "operation": "divide",
+      "source": "=\"text\"",
+      "destination": "text",
+      "value": "text",
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "add",
+      "source": "2",
+      "destination": "10",
+      "value": 12.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "add",
+      "source": "",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "add",
+      "source": "2",
+      "destination": "",
+      "value": 2.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "add",
+      "source": "",
+      "destination": "",
+      "value": null,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "add",
+      "source": "'2",
+      "destination": "10",
+      "value": 12.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "add",
+      "source": "text",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "add",
+      "source": "2",
+      "destination": "text",
+      "value": "text",
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "add",
+      "source": "TRUE",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "add",
+      "source": "2",
+      "destination": "FALSE",
+      "value": false,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "add",
+      "source": "=1+1",
+      "destination": "10",
+      "value": 12.0,
+      "formula": "10+(1+1)",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "add",
+      "source": "2",
+      "destination": "=5+5",
+      "value": 12.0,
+      "formula": "(5+5)+2",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "add",
+      "source": "=1+1",
+      "destination": "=5+5",
+      "value": 12.0,
+      "formula": "(5+5)+(1+1)",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "add",
+      "source": "=\"\"",
+      "destination": "10",
+      "value": {
+        "error": "#VALUE!"
+      },
+      "formula": "10+(\"\")",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "add",
+      "source": "2",
+      "destination": "=\"\"",
+      "value": {
+        "error": "#VALUE!"
+      },
+      "formula": "(\"\")+2",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "add",
+      "source": "=1/0",
+      "destination": "10",
+      "value": {
+        "error": "#DIV/0!"
+      },
+      "formula": "10+(1/0)",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "add",
+      "source": "2",
+      "destination": "=NA()",
+      "value": {
+        "error": "#N/A"
+      },
+      "formula": "(NA())+2",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "add",
+      "source": "0",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "add",
+      "source": "2",
+      "destination": "'10",
+      "value": 12.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "add",
+      "source": "=TRUE()",
+      "destination": "10",
+      "value": 11.0,
+      "formula": "10+(TRUE())",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "add",
+      "source": "=\"2\"",
+      "destination": "10",
+      "value": 12.0,
+      "formula": "10+(\"2\")",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "add",
+      "source": "=\"text\"",
+      "destination": "10",
+      "value": {
+        "error": "#VALUE!"
+      },
+      "formula": "10+(\"text\")",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "add",
+      "source": "-2",
+      "destination": "=5+5",
+      "value": 8.0,
+      "formula": "(5+5)+-2",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "add",
+      "source": "=1+1",
+      "destination": "-10",
+      "value": -8.0,
+      "formula": "-10+(1+1)",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "add",
+      "source": "'1,000",
+      "destination": "=5+5",
+      "value": 1010.0,
+      "formula": "(5+5)+1000",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "add",
+      "source": "=1+1",
+      "destination": "'1,000",
+      "value": 1002.0,
+      "formula": "1000+(1+1)",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "add",
+      "source": "",
+      "destination": "=\"\"",
+      "value": {
+        "error": "#VALUE!"
+      },
+      "formula": "(\"\")+0",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "add",
+      "source": "0.1",
+      "destination": "0.2",
+      "value": 0.30000000000000004,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "add",
+      "source": "1.2",
+      "destination": "1.2",
+      "value": 2.4,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "add",
+      "source": "#N/A",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "add",
+      "source": "2",
+      "destination": "#N/A",
+      "value": {
+        "error": "#N/A"
+      },
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "add",
+      "source": "=1+1",
+      "destination": "TRUE",
+      "value": true,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "add",
+      "source": "=\"text\"",
+      "destination": "text",
+      "value": "text",
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "subtract",
+      "source": "2",
+      "destination": "10",
+      "value": 8.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "subtract",
+      "source": "",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "subtract",
+      "source": "2",
+      "destination": "",
+      "value": -2.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "subtract",
+      "source": "",
+      "destination": "",
+      "value": null,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "subtract",
+      "source": "'2",
+      "destination": "10",
+      "value": 8.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "subtract",
+      "source": "text",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "subtract",
+      "source": "2",
+      "destination": "text",
+      "value": "text",
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "subtract",
+      "source": "TRUE",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "subtract",
+      "source": "2",
+      "destination": "FALSE",
+      "value": false,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "subtract",
+      "source": "=1+1",
+      "destination": "10",
+      "value": 8.0,
+      "formula": "10-(1+1)",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "subtract",
+      "source": "2",
+      "destination": "=5+5",
+      "value": 8.0,
+      "formula": "(5+5)-2",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "subtract",
+      "source": "=1+1",
+      "destination": "=5+5",
+      "value": 8.0,
+      "formula": "(5+5)-(1+1)",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "subtract",
+      "source": "=\"\"",
+      "destination": "10",
+      "value": {
+        "error": "#VALUE!"
+      },
+      "formula": "10-(\"\")",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "subtract",
+      "source": "2",
+      "destination": "=\"\"",
+      "value": {
+        "error": "#VALUE!"
+      },
+      "formula": "(\"\")-2",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "subtract",
+      "source": "=1/0",
+      "destination": "10",
+      "value": {
+        "error": "#DIV/0!"
+      },
+      "formula": "10-(1/0)",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "subtract",
+      "source": "2",
+      "destination": "=NA()",
+      "value": {
+        "error": "#N/A"
+      },
+      "formula": "(NA())-2",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "subtract",
+      "source": "0",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "subtract",
+      "source": "2",
+      "destination": "'10",
+      "value": 8.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "subtract",
+      "source": "=TRUE()",
+      "destination": "10",
+      "value": 9.0,
+      "formula": "10-(TRUE())",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "subtract",
+      "source": "=\"2\"",
+      "destination": "10",
+      "value": 8.0,
+      "formula": "10-(\"2\")",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "subtract",
+      "source": "=\"text\"",
+      "destination": "10",
+      "value": {
+        "error": "#VALUE!"
+      },
+      "formula": "10-(\"text\")",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "subtract",
+      "source": "-2",
+      "destination": "=5+5",
+      "value": 12.0,
+      "formula": "(5+5)--2",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "subtract",
+      "source": "=1+1",
+      "destination": "-10",
+      "value": -12.0,
+      "formula": "-10-(1+1)",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "subtract",
+      "source": "'1,000",
+      "destination": "=5+5",
+      "value": -990.0,
+      "formula": "(5+5)-1000",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "subtract",
+      "source": "=1+1",
+      "destination": "'1,000",
+      "value": 998.0,
+      "formula": "1000-(1+1)",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "subtract",
+      "source": "",
+      "destination": "=\"\"",
+      "value": {
+        "error": "#VALUE!"
+      },
+      "formula": "(\"\")-0",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "subtract",
+      "source": "0.1",
+      "destination": "0.2",
+      "value": 0.1,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "subtract",
+      "source": "1.2",
+      "destination": "1.2",
+      "value": 0.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "subtract",
+      "source": "#N/A",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "subtract",
+      "source": "2",
+      "destination": "#N/A",
+      "value": {
+        "error": "#N/A"
+      },
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "subtract",
+      "source": "=1+1",
+      "destination": "TRUE",
+      "value": true,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "subtract",
+      "source": "=\"text\"",
+      "destination": "text",
+      "value": "text",
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "multiply",
+      "source": "2",
+      "destination": "10",
+      "value": 20.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "multiply",
+      "source": "",
+      "destination": "10",
+      "value": 0.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "multiply",
+      "source": "2",
+      "destination": "",
+      "value": 0.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "multiply",
+      "source": "",
+      "destination": "",
+      "value": null,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "multiply",
+      "source": "'2",
+      "destination": "10",
+      "value": 20.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "multiply",
+      "source": "text",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "multiply",
+      "source": "2",
+      "destination": "text",
+      "value": "text",
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "multiply",
+      "source": "TRUE",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "multiply",
+      "source": "2",
+      "destination": "FALSE",
+      "value": false,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "multiply",
+      "source": "=1+1",
+      "destination": "10",
+      "value": 20.0,
+      "formula": "10*(1+1)",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "multiply",
+      "source": "2",
+      "destination": "=5+5",
+      "value": 20.0,
+      "formula": "(5+5)*2",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "multiply",
+      "source": "=1+1",
+      "destination": "=5+5",
+      "value": 20.0,
+      "formula": "(5+5)*(1+1)",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "multiply",
+      "source": "=\"\"",
+      "destination": "10",
+      "value": {
+        "error": "#VALUE!"
+      },
+      "formula": "10*(\"\")",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "multiply",
+      "source": "2",
+      "destination": "=\"\"",
+      "value": {
+        "error": "#VALUE!"
+      },
+      "formula": "(\"\")*2",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "multiply",
+      "source": "=1/0",
+      "destination": "10",
+      "value": {
+        "error": "#DIV/0!"
+      },
+      "formula": "10*(1/0)",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "multiply",
+      "source": "2",
+      "destination": "=NA()",
+      "value": {
+        "error": "#N/A"
+      },
+      "formula": "(NA())*2",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "multiply",
+      "source": "0",
+      "destination": "10",
+      "value": 0.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "multiply",
+      "source": "2",
+      "destination": "'10",
+      "value": 20.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "multiply",
+      "source": "=TRUE()",
+      "destination": "10",
+      "value": 10.0,
+      "formula": "10*(TRUE())",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "multiply",
+      "source": "=\"2\"",
+      "destination": "10",
+      "value": 20.0,
+      "formula": "10*(\"2\")",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "multiply",
+      "source": "=\"text\"",
+      "destination": "10",
+      "value": {
+        "error": "#VALUE!"
+      },
+      "formula": "10*(\"text\")",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "multiply",
+      "source": "-2",
+      "destination": "=5+5",
+      "value": -20.0,
+      "formula": "(5+5)*-2",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "multiply",
+      "source": "=1+1",
+      "destination": "-10",
+      "value": -20.0,
+      "formula": "-10*(1+1)",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "multiply",
+      "source": "'1,000",
+      "destination": "=5+5",
+      "value": 10000.0,
+      "formula": "(5+5)*1000",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "multiply",
+      "source": "=1+1",
+      "destination": "'1,000",
+      "value": 2000.0,
+      "formula": "1000*(1+1)",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "multiply",
+      "source": "",
+      "destination": "=\"\"",
+      "value": {
+        "error": "#VALUE!"
+      },
+      "formula": "(\"\")*0",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "multiply",
+      "source": "0.1",
+      "destination": "0.2",
+      "value": 0.020000000000000004,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "multiply",
+      "source": "1.2",
+      "destination": "1.2",
+      "value": 1.44,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "multiply",
+      "source": "#N/A",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "multiply",
+      "source": "2",
+      "destination": "#N/A",
+      "value": {
+        "error": "#N/A"
+      },
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "multiply",
+      "source": "=1+1",
+      "destination": "TRUE",
+      "value": true,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "multiply",
+      "source": "=\"text\"",
+      "destination": "text",
+      "value": "text",
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "divide",
+      "source": "2",
+      "destination": "10",
+      "value": 5.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "divide",
+      "source": "",
+      "destination": "10",
+      "value": {
+        "error": "#DIV/0!"
+      },
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "divide",
+      "source": "2",
+      "destination": "",
+      "value": 0.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "divide",
+      "source": "",
+      "destination": "",
+      "value": null,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "divide",
+      "source": "'2",
+      "destination": "10",
+      "value": 5.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "divide",
+      "source": "text",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "divide",
+      "source": "2",
+      "destination": "text",
+      "value": "text",
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "divide",
+      "source": "TRUE",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "divide",
+      "source": "2",
+      "destination": "FALSE",
+      "value": false,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "divide",
+      "source": "=1+1",
+      "destination": "10",
+      "value": 5.0,
+      "formula": "10/(1+1)",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "divide",
+      "source": "2",
+      "destination": "=5+5",
+      "value": 5.0,
+      "formula": "(5+5)/2",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "divide",
+      "source": "=1+1",
+      "destination": "=5+5",
+      "value": 5.0,
+      "formula": "(5+5)/(1+1)",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "divide",
+      "source": "=\"\"",
+      "destination": "10",
+      "value": {
+        "error": "#VALUE!"
+      },
+      "formula": "10/(\"\")",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "divide",
+      "source": "2",
+      "destination": "=\"\"",
+      "value": {
+        "error": "#VALUE!"
+      },
+      "formula": "(\"\")/2",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "divide",
+      "source": "=1/0",
+      "destination": "10",
+      "value": {
+        "error": "#DIV/0!"
+      },
+      "formula": "10/(1/0)",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "divide",
+      "source": "2",
+      "destination": "=NA()",
+      "value": {
+        "error": "#N/A"
+      },
+      "formula": "(NA())/2",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "divide",
+      "source": "0",
+      "destination": "10",
+      "value": {
+        "error": "#DIV/0!"
+      },
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "divide",
+      "source": "2",
+      "destination": "'10",
+      "value": 5.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "divide",
+      "source": "=TRUE()",
+      "destination": "10",
+      "value": 10.0,
+      "formula": "10/(TRUE())",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "divide",
+      "source": "=\"2\"",
+      "destination": "10",
+      "value": 5.0,
+      "formula": "10/(\"2\")",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "divide",
+      "source": "=\"text\"",
+      "destination": "10",
+      "value": {
+        "error": "#VALUE!"
+      },
+      "formula": "10/(\"text\")",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "divide",
+      "source": "-2",
+      "destination": "=5+5",
+      "value": -5.0,
+      "formula": "(5+5)/-2",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "divide",
+      "source": "=1+1",
+      "destination": "-10",
+      "value": -5.0,
+      "formula": "-10/(1+1)",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "divide",
+      "source": "'1,000",
+      "destination": "=5+5",
+      "value": 0.01,
+      "formula": "(5+5)/1000",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "divide",
+      "source": "=1+1",
+      "destination": "'1,000",
+      "value": 500.0,
+      "formula": "1000/(1+1)",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "divide",
+      "source": "",
+      "destination": "=\"\"",
+      "value": {
+        "error": "#VALUE!"
+      },
+      "formula": "(\"\")/0",
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "divide",
+      "source": "0.1",
+      "destination": "0.2",
+      "value": 2.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "divide",
+      "source": "1.2",
+      "destination": "1.2",
+      "value": 1.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "divide",
+      "source": "#N/A",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "divide",
+      "source": "2",
+      "destination": "#N/A",
+      "value": {
+        "error": "#N/A"
+      },
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "divide",
+      "source": "=1+1",
+      "destination": "TRUE",
+      "value": true,
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formulas",
+      "operation": "divide",
+      "source": "=\"text\"",
+      "destination": "text",
+      "value": "text",
+      "formula": null,
+      "bold": false,
+      "italic": true
+    },
+    {
+      "mode": "formats",
+      "operation": "add",
+      "source": "2",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "add",
+      "source": "",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "add",
+      "source": "2",
+      "destination": "",
+      "value": null,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "add",
+      "source": "",
+      "destination": "",
+      "value": null,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "add",
+      "source": "'2",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "add",
+      "source": "text",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "add",
+      "source": "2",
+      "destination": "text",
+      "value": "text",
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "add",
+      "source": "TRUE",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "add",
+      "source": "2",
+      "destination": "FALSE",
+      "value": false,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "add",
+      "source": "=1+1",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "add",
+      "source": "2",
+      "destination": "=5+5",
+      "value": 10.0,
+      "formula": "5+5",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "add",
+      "source": "=1+1",
+      "destination": "=5+5",
+      "value": 10.0,
+      "formula": "5+5",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "add",
+      "source": "=\"\"",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "add",
+      "source": "2",
+      "destination": "=\"\"",
+      "value": "",
+      "formula": "\"\"",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "add",
+      "source": "=1/0",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "add",
+      "source": "2",
+      "destination": "=NA()",
+      "value": {
+        "error": "#N/A"
+      },
+      "formula": "NA()",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "add",
+      "source": "0",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "add",
+      "source": "2",
+      "destination": "'10",
+      "value": "10",
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "add",
+      "source": "=TRUE()",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "add",
+      "source": "=\"2\"",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "add",
+      "source": "=\"text\"",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "add",
+      "source": "-2",
+      "destination": "=5+5",
+      "value": 10.0,
+      "formula": "5+5",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "add",
+      "source": "=1+1",
+      "destination": "-10",
+      "value": -10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "add",
+      "source": "'1,000",
+      "destination": "=5+5",
+      "value": 10.0,
+      "formula": "5+5",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "add",
+      "source": "=1+1",
+      "destination": "'1,000",
+      "value": "1,000",
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "add",
+      "source": "",
+      "destination": "=\"\"",
+      "value": "",
+      "formula": "\"\"",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "add",
+      "source": "0.1",
+      "destination": "0.2",
+      "value": 0.2,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "add",
+      "source": "1.2",
+      "destination": "1.2",
+      "value": 1.2,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "add",
+      "source": "#N/A",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "add",
+      "source": "2",
+      "destination": "#N/A",
+      "value": {
+        "error": "#N/A"
+      },
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "add",
+      "source": "=1+1",
+      "destination": "TRUE",
+      "value": true,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "add",
+      "source": "=\"text\"",
+      "destination": "text",
+      "value": "text",
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "subtract",
+      "source": "2",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "subtract",
+      "source": "",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "subtract",
+      "source": "2",
+      "destination": "",
+      "value": null,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "subtract",
+      "source": "",
+      "destination": "",
+      "value": null,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "subtract",
+      "source": "'2",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "subtract",
+      "source": "text",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "subtract",
+      "source": "2",
+      "destination": "text",
+      "value": "text",
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "subtract",
+      "source": "TRUE",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "subtract",
+      "source": "2",
+      "destination": "FALSE",
+      "value": false,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "subtract",
+      "source": "=1+1",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "subtract",
+      "source": "2",
+      "destination": "=5+5",
+      "value": 10.0,
+      "formula": "5+5",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "subtract",
+      "source": "=1+1",
+      "destination": "=5+5",
+      "value": 10.0,
+      "formula": "5+5",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "subtract",
+      "source": "=\"\"",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "subtract",
+      "source": "2",
+      "destination": "=\"\"",
+      "value": "",
+      "formula": "\"\"",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "subtract",
+      "source": "=1/0",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "subtract",
+      "source": "2",
+      "destination": "=NA()",
+      "value": {
+        "error": "#N/A"
+      },
+      "formula": "NA()",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "subtract",
+      "source": "0",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "subtract",
+      "source": "2",
+      "destination": "'10",
+      "value": "10",
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "subtract",
+      "source": "=TRUE()",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "subtract",
+      "source": "=\"2\"",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "subtract",
+      "source": "=\"text\"",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "subtract",
+      "source": "-2",
+      "destination": "=5+5",
+      "value": 10.0,
+      "formula": "5+5",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "subtract",
+      "source": "=1+1",
+      "destination": "-10",
+      "value": -10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "subtract",
+      "source": "'1,000",
+      "destination": "=5+5",
+      "value": 10.0,
+      "formula": "5+5",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "subtract",
+      "source": "=1+1",
+      "destination": "'1,000",
+      "value": "1,000",
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "subtract",
+      "source": "",
+      "destination": "=\"\"",
+      "value": "",
+      "formula": "\"\"",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "subtract",
+      "source": "0.1",
+      "destination": "0.2",
+      "value": 0.2,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "subtract",
+      "source": "1.2",
+      "destination": "1.2",
+      "value": 1.2,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "subtract",
+      "source": "#N/A",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "subtract",
+      "source": "2",
+      "destination": "#N/A",
+      "value": {
+        "error": "#N/A"
+      },
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "subtract",
+      "source": "=1+1",
+      "destination": "TRUE",
+      "value": true,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "subtract",
+      "source": "=\"text\"",
+      "destination": "text",
+      "value": "text",
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "multiply",
+      "source": "2",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "multiply",
+      "source": "",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "multiply",
+      "source": "2",
+      "destination": "",
+      "value": null,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "multiply",
+      "source": "",
+      "destination": "",
+      "value": null,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "multiply",
+      "source": "'2",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "multiply",
+      "source": "text",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "multiply",
+      "source": "2",
+      "destination": "text",
+      "value": "text",
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "multiply",
+      "source": "TRUE",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "multiply",
+      "source": "2",
+      "destination": "FALSE",
+      "value": false,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "multiply",
+      "source": "=1+1",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "multiply",
+      "source": "2",
+      "destination": "=5+5",
+      "value": 10.0,
+      "formula": "5+5",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "multiply",
+      "source": "=1+1",
+      "destination": "=5+5",
+      "value": 10.0,
+      "formula": "5+5",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "multiply",
+      "source": "=\"\"",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "multiply",
+      "source": "2",
+      "destination": "=\"\"",
+      "value": "",
+      "formula": "\"\"",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "multiply",
+      "source": "=1/0",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "multiply",
+      "source": "2",
+      "destination": "=NA()",
+      "value": {
+        "error": "#N/A"
+      },
+      "formula": "NA()",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "multiply",
+      "source": "0",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "multiply",
+      "source": "2",
+      "destination": "'10",
+      "value": "10",
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "multiply",
+      "source": "=TRUE()",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "multiply",
+      "source": "=\"2\"",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "multiply",
+      "source": "=\"text\"",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "multiply",
+      "source": "-2",
+      "destination": "=5+5",
+      "value": 10.0,
+      "formula": "5+5",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "multiply",
+      "source": "=1+1",
+      "destination": "-10",
+      "value": -10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "multiply",
+      "source": "'1,000",
+      "destination": "=5+5",
+      "value": 10.0,
+      "formula": "5+5",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "multiply",
+      "source": "=1+1",
+      "destination": "'1,000",
+      "value": "1,000",
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "multiply",
+      "source": "",
+      "destination": "=\"\"",
+      "value": "",
+      "formula": "\"\"",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "multiply",
+      "source": "0.1",
+      "destination": "0.2",
+      "value": 0.2,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "multiply",
+      "source": "1.2",
+      "destination": "1.2",
+      "value": 1.2,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "multiply",
+      "source": "#N/A",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "multiply",
+      "source": "2",
+      "destination": "#N/A",
+      "value": {
+        "error": "#N/A"
+      },
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "multiply",
+      "source": "=1+1",
+      "destination": "TRUE",
+      "value": true,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "multiply",
+      "source": "=\"text\"",
+      "destination": "text",
+      "value": "text",
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "divide",
+      "source": "2",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "divide",
+      "source": "",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "divide",
+      "source": "2",
+      "destination": "",
+      "value": null,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "divide",
+      "source": "",
+      "destination": "",
+      "value": null,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "divide",
+      "source": "'2",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "divide",
+      "source": "text",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "divide",
+      "source": "2",
+      "destination": "text",
+      "value": "text",
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "divide",
+      "source": "TRUE",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "divide",
+      "source": "2",
+      "destination": "FALSE",
+      "value": false,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "divide",
+      "source": "=1+1",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "divide",
+      "source": "2",
+      "destination": "=5+5",
+      "value": 10.0,
+      "formula": "5+5",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "divide",
+      "source": "=1+1",
+      "destination": "=5+5",
+      "value": 10.0,
+      "formula": "5+5",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "divide",
+      "source": "=\"\"",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "divide",
+      "source": "2",
+      "destination": "=\"\"",
+      "value": "",
+      "formula": "\"\"",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "divide",
+      "source": "=1/0",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "divide",
+      "source": "2",
+      "destination": "=NA()",
+      "value": {
+        "error": "#N/A"
+      },
+      "formula": "NA()",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "divide",
+      "source": "0",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "divide",
+      "source": "2",
+      "destination": "'10",
+      "value": "10",
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "divide",
+      "source": "=TRUE()",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "divide",
+      "source": "=\"2\"",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "divide",
+      "source": "=\"text\"",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "divide",
+      "source": "-2",
+      "destination": "=5+5",
+      "value": 10.0,
+      "formula": "5+5",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "divide",
+      "source": "=1+1",
+      "destination": "-10",
+      "value": -10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "divide",
+      "source": "'1,000",
+      "destination": "=5+5",
+      "value": 10.0,
+      "formula": "5+5",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "divide",
+      "source": "=1+1",
+      "destination": "'1,000",
+      "value": "1,000",
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "divide",
+      "source": "",
+      "destination": "=\"\"",
+      "value": "",
+      "formula": "\"\"",
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "divide",
+      "source": "0.1",
+      "destination": "0.2",
+      "value": 0.2,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "divide",
+      "source": "1.2",
+      "destination": "1.2",
+      "value": 1.2,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "divide",
+      "source": "#N/A",
+      "destination": "10",
+      "value": 10.0,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "divide",
+      "source": "2",
+      "destination": "#N/A",
+      "value": {
+        "error": "#N/A"
+      },
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "divide",
+      "source": "=1+1",
+      "destination": "TRUE",
+      "value": true,
+      "formula": null,
+      "bold": true,
+      "italic": false
+    },
+    {
+      "mode": "formats",
+      "operation": "divide",
+      "source": "=\"text\"",
+      "destination": "text",
+      "value": "text",
+      "formula": null,
+      "bold": true,
+      "italic": false
+    }
+  ]
+}

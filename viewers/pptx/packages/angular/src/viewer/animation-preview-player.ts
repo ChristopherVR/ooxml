@@ -8,8 +8,8 @@
  */
 import type { PptxElementAnimation } from 'pptx-viewer-core';
 
-import { buildAnimationRibbonPreview } from '../internal/shared';
-import type { AnimationPreviewDescriptor } from '../internal/shared';
+import { buildAnimationRibbonPreview } from 'ooxml-ui/pptx';
+import type { AnimationPreviewDescriptor } from 'ooxml-ui/pptx';
 
 interface ActiveAnimationPreview {
 	element: HTMLElement;

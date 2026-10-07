@@ -21,7 +21,7 @@ import {
 	isFeatureEnabled,
 	isPanelVisible,
 	resolveEffectiveHiddenActions,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type {
 	ResolvedCustomization,
 	ToolbarActionId,
@@ -32,8 +32,8 @@ import type {
 	ViewerFeatureId,
 	ViewerOptionsStore,
 	ViewerPanelId,
-} from 'pptx-viewer-shared';
-import type { PptxAiConfig } from 'pptx-viewer-shared/ai';
+} from 'ooxml-ui/pptx';
+import type { PptxAiConfig } from 'ooxml-ui/pptx/ai';
 import { computed, inject, onScopeDispose, provide, shallowRef, watch } from 'vue';
 import type { ComputedRef, InjectionKey, ShallowRef } from 'vue';
 

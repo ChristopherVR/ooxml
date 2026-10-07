@@ -2,12 +2,12 @@ import type {
 	CanvasSize,
 	RasterizeElementResult,
 	RasterizeElementTilesResult,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	rasterizeElement,
 	rasterizeElementTiledToCanvas,
 	rasterizeElementTiles,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { nextTick } from 'vue';
 import type { Ref } from 'vue';
 

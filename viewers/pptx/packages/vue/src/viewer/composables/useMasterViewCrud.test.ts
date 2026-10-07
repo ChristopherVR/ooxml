@@ -5,7 +5,7 @@ import type {
 	MasterLayoutCrudFailure,
 	MasterViewCrudApplySuccess,
 	MasterViewTarget,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, h, shallowRef } from 'vue';
 
@@ -15,7 +15,7 @@ const { applyMasterViewCrudActionMock } = vi.hoisted(() => ({
 	applyMasterViewCrudActionMock: vi.fn(),
 }));
 
-vi.mock(import('pptx-viewer-shared'), async (importOriginal) => ({
+vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => ({
 	...(await importOriginal()),
 	applyMasterViewCrudAction: applyMasterViewCrudActionMock,
 }));

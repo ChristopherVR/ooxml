@@ -38,15 +38,15 @@ import { setSmartArtNodeStyle } from 'pptx-viewer-core';
 import {
 	describeSmartArtBounds as describeSmartArtBoundsNeutral,
 	getSmartArtNodeBounds,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 
 export {
 	DEFAULT_BOUNDS,
 	canAddTopLevelNode,
 	canRemoveTopLevelNode,
 	getSmartArtNodeBounds,
-} from '../internal/shared';
-export type { SmartArtNodeBounds } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+export type { SmartArtNodeBounds } from 'ooxml-ui/pptx';
 
 // ── Per-node style overrides ────────────────────────────────────────────────
 

@@ -1,5 +1,5 @@
 import type { MediaPptxElement } from 'pptx-viewer-core';
-import * as shared from 'pptx-viewer-shared';
+import * as shared from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 
 import {

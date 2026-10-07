@@ -1,5 +1,5 @@
-import { CONNECTOR_ARROW_CONTROLS, connectorArrowPatch, schemaLabel } from 'pptx-viewer-shared';
-import type { ConnectorArrowControl } from 'pptx-viewer-shared';
+import { CONNECTOR_ARROW_CONTROLS, connectorArrowPatch, schemaLabel } from 'ooxml-ui/pptx';
+import type { ConnectorArrowControl } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import { createInspectorSelect } from './controls-extra';

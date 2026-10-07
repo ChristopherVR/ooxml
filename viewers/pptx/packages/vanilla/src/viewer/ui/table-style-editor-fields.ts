@@ -2,12 +2,12 @@ import type {
 	TableStyleBorderSide,
 	TableStyleEditorDescriptor,
 	TableStyleEditorFieldEdit,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	TABLE_STYLE_BORDER_SIDE_LABEL_KEYS,
 	TABLE_STYLE_BORDER_SIDES,
 	TABLE_STYLE_DASH_PRESETS,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import { createEl } from '../render';

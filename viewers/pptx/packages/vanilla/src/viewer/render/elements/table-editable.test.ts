@@ -1,5 +1,5 @@
 import type { PptxElement, PptxTableData } from 'pptx-viewer-core';
-import { computeResizedColumnWidths, computeResizedRowHeight } from 'pptx-viewer-shared';
+import { computeResizedColumnWidths, computeResizedRowHeight } from 'ooxml-ui/pptx';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../../i18n';

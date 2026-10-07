@@ -12,7 +12,7 @@
  * is how PowerPoint's own Paste Options toolbar behaves.
  */
 import type { PptxElement } from 'pptx-viewer-core';
-import type { PasteSpecialFormat } from 'pptx-viewer-shared';
+import type { PasteSpecialFormat } from 'ooxml-ui/pptx';
 import {
 	applyPasteSpecialFormat,
 	buildRasterPictureElement,
@@ -20,7 +20,7 @@ import {
 	findCanvasElementNode,
 	isTemplateElementId,
 	rasterizeElementToDataUrl,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { ref, shallowRef } from 'vue';
 import type { Ref, ShallowRef } from 'vue';
 

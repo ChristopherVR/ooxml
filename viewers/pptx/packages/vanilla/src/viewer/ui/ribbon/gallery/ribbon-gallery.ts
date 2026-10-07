@@ -1,5 +1,5 @@
-import { armEditorKeyboard, buildRibbonGallery } from 'pptx-viewer-shared';
-import type { RibbonGalleryPickEvent, RibbonGalleryPlacement } from 'pptx-viewer-shared';
+import { armEditorKeyboard, buildRibbonGallery } from 'ooxml-ui/pptx';
+import type { RibbonGalleryPickEvent, RibbonGalleryPlacement } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../../i18n';
 import type { RibbonGalleryHub, RibbonGalleryView } from './gallery-hub';

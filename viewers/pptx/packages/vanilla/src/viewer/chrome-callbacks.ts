@@ -9,13 +9,13 @@ import {
 	EMPTY_RESOLVED_CUSTOMIZATION,
 	FREEFORM_TOOL_IDS,
 	isDrawingToolVisible,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type {
 	FreeformToolKind,
 	ResolvedCustomization,
 	RibbonTransitionDraft,
 	ViewerOptionsStore,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { EditActions } from './editor/editor-edit-ops';
 import type { FindReplaceActions } from './editor/editor-find-replace-actions';

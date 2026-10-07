@@ -13,8 +13,8 @@
 
 import { computed, inject, Injectable } from '@angular/core';
 
-import { BROADCAST_THROTTLE_MS, presenceToCursors } from '../internal/shared';
-import type { CanvasSize } from '../internal/shared';
+import { BROADCAST_THROTTLE_MS, presenceToCursors } from 'ooxml-ui/pptx';
+import type { CanvasSize } from 'ooxml-ui/pptx';
 import { clientPointToSlide } from './collaboration-overlay-geometry';
 import { CollaborationService } from './collaboration.service';
 

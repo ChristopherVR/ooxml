@@ -5,7 +5,7 @@
  * assembly) now live in `pptx-viewer-shared` (`render/share-form`). This shim
  * preserves the historical import surface for `ShareDialog.svelte`.
  */
-export type { JoinSessionFields, ShareDefaults, ShareFormFields } from 'pptx-viewer-shared';
+export type { JoinSessionFields, ShareDefaults, ShareFormFields } from 'ooxml-ui/pptx';
 export {
 	buildJoinConfig,
 	buildShareConfig,
@@ -13,4 +13,4 @@ export {
 	canStartShare,
 	isPeerToPeerShare,
 	seedShareFields,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

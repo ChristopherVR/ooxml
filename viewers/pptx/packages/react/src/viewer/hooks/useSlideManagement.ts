@@ -8,8 +8,8 @@ import {
 	createBlankSlide,
 	makeSlideId,
 	templateSchemeFromTheme,
-} from 'pptx-viewer-shared';
-import type { SlideTemplateId } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { SlideTemplateId } from 'ooxml-ui/pptx';
 import type React from 'react';
 
 import type { EditorHistoryResult } from './useEditorHistory';

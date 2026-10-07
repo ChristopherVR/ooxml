@@ -9,7 +9,7 @@ import {
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
 
-import type { RibbonHomeRequestEvent } from '../internal/shared';
+import type { RibbonHomeRequestEvent } from 'ooxml-ui/pptx';
 import {
 	drawingHomeControls,
 	homeGalleryApply,
@@ -18,7 +18,7 @@ import {
 	shapeFillChange,
 	shapeOutlineChange,
 	withHomeGalleries,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { newPresetShapeElement } from './editor-insert';
 import { EditorStateService } from './editor-state.service';
 import { LoadContentService } from './load-content.service';

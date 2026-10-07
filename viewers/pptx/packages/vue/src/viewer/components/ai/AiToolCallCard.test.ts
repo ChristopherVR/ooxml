@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils';
-import type { RenderableToolPart } from 'pptx-viewer-shared/ai';
+import type { RenderableToolPart } from 'ooxml-ui/pptx/ai';
 import { describe, expect, it } from 'vitest';
 
 import AiToolCallCard from './AiToolCallCard.vue';

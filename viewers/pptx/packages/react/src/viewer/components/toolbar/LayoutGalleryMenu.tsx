@@ -1,5 +1,5 @@
 import type { PptxLayoutOption, PptxLayoutPreview, PptxSlide } from 'pptx-viewer-core';
-import { buildLayoutPreviewGeometry, isCurrentLayout } from 'pptx-viewer-shared';
+import { buildLayoutPreviewGeometry, isCurrentLayout } from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 

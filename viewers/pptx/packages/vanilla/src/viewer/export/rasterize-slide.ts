@@ -3,12 +3,12 @@ import type {
 	RasterizeElementResult,
 	RasterizeElementTiledCanvasResult,
 	RasterizeElementTilesResult,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	rasterizeElement,
 	rasterizeElementTiledToCanvas,
 	rasterizeElementTiles,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import type { ElementRendererRegistry } from '../render';

@@ -3,11 +3,11 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 import type { PptxElement } from 'pptx-viewer-core';
 import { isInkElement } from 'pptx-viewer-core';
 
-import { elementHitTargetStyle, shouldRenderHitTarget } from '../internal/shared';
+import { elementHitTargetStyle, shouldRenderHitTarget } from 'ooxml-ui/pptx';
 import {
 	getInkReplayStyles,
 	INK_REPLAY_KEYFRAMES,
-} from '../internal/shared-src/render/ink-rendering';
+} from 'ooxml-ui/pptx/render/ink-rendering';
 import type { StyleMap } from './element-style';
 import { buildInkContainerStyle, buildInkStrokes, inkViewBox } from './ink-renderer-helpers';
 import type { InkStroke } from './ink-renderer-helpers';

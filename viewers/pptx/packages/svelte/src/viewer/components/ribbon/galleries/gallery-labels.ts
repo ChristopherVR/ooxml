@@ -1,4 +1,4 @@
-import { keyToLabel } from 'pptx-viewer-shared/i18n';
+import { keyToLabel } from 'ooxml-ui/pptx/i18n';
 
 import type { Translator } from '../../../../i18n/translator';
 

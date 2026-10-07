@@ -10,12 +10,12 @@
  * returned `{ text, style }` only, so a linked run rendered as ordinary text, an
  * inline `m:oMath` rendered as nothing at all, and a furigana reading vanished.
  */
-import type { ParagraphRun } from 'pptx-viewer-shared';
+import type { ParagraphRun } from 'ooxml-ui/pptx';
 import {
 	DEFAULT_VIEWER_OPTIONS,
 	runEquationMathMl,
 	shouldConfirmExternalHyperlink,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { computed, inject } from 'vue';
 import { useI18n } from 'vue-i18n';
 

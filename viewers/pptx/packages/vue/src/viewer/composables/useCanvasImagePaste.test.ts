@@ -1,12 +1,12 @@
 // oxlint-disable react-hooks/rules-of-hooks
-import { attachEditorImagePaste } from 'pptx-viewer-shared';
-import type { EditorImagePasteOptions } from 'pptx-viewer-shared';
+import { attachEditorImagePaste } from 'ooxml-ui/pptx';
+import type { EditorImagePasteOptions } from 'ooxml-ui/pptx';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { effectScope, ref, shallowRef } from 'vue';
 
 import { useCanvasImagePaste } from './useCanvasImagePaste';
 
-vi.mock(import('pptx-viewer-shared'), () => ({ attachEditorImagePaste: vi.fn() }));
+vi.mock(import('ooxml-ui/pptx'), () => ({ attachEditorImagePaste: vi.fn() }));
 const cleanups: (() => void)[] = [];
 let detach = vi.fn();
 beforeEach(() => {

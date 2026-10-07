@@ -3,7 +3,7 @@ import {
 	buildSmartArtPreviewElement,
 	SMARTART_PREVIEW_ELEMENT_HEIGHT,
 	SMARTART_PREVIEW_ELEMENT_WIDTH,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React from 'react';
 
 import { SmartArtRenderer } from './elements/SmartArtRenderer';

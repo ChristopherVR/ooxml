@@ -11,7 +11,7 @@ import {
 	LINK_TOOLTIP_HOST_CLASS,
 	resolveElementInteractivity,
 	shouldRenderHitTarget,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React, { useState, useCallback, useMemo } from 'react';
 import type { CSSProperties } from 'react';
 

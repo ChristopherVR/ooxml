@@ -2,7 +2,7 @@ import { NgStyle } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import type { PptxSlide } from 'pptx-viewer-core';
 
-import type { CanvasSize } from '../internal/shared';
+import type { CanvasSize } from 'ooxml-ui/pptx';
 import type { StyleMap } from './element-style';
 import type { MorphCrossfadeGroupSlides } from './presentation-transition-overlay-morph';
 import { SlideCanvasComponent } from './slide-canvas.component';

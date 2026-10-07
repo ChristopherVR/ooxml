@@ -12,7 +12,7 @@
  * static English lookup with `{{name}}` interpolation, matching the shared
  * dictionary's placeholder syntax.
  */
-import { translationsEn } from 'pptx-viewer-shared/i18n';
+import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import { getCurrentInstance } from 'vue';
 import { useI18n } from 'vue-i18n';
 

@@ -1,5 +1,5 @@
-import { COMPAT_TOAST_METRICS, STATUS_BAR_METRICS } from 'pptx-viewer-shared';
-import type { CompatibilityWarningToast } from 'pptx-viewer-shared';
+import { COMPAT_TOAST_METRICS, STATUS_BAR_METRICS } from 'ooxml-ui/pptx';
+import type { CompatibilityWarningToast } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createCompatToastStack } from './compat-toasts';

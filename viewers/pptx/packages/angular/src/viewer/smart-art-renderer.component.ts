@@ -27,7 +27,7 @@ import {
 	resolveRevealedDrawingShapeNodeIds,
 	resolveRevealedDrawingShapes,
 	resolveRevealedSmartArtNodes,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import type {
 	ElementAnimationState,
 	InlineEditRect,
@@ -36,7 +36,7 @@ import type {
 	SmartArtConnectorPaint,
 	SmartArtLayoutResult,
 	SmartArtNodeLabel,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { EditorStateService } from './editor-state.service';
 import type { StyleMap } from './element-style';
 import { SLIDE_CONTEXT } from './slide-context';

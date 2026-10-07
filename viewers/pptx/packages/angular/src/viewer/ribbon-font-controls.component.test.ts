@@ -8,7 +8,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { COMMON_FONT_SIZES } from '../internal/shared';
+import { COMMON_FONT_SIZES } from 'ooxml-ui/pptx';
 import { componentSource } from './component-source.test-support';
 import { FONT_SIZES, steppedFontSizePt } from './ribbon-font-controls.component';
 

@@ -9,7 +9,7 @@
 	 */
 	import RibbonIcon from './RibbonIcon.svelte';
 	import type { PptxThemeColorRef } from 'pptx-viewer-core';
-	import type { RibbonControlId, ThemeColorPickerCommit } from 'pptx-viewer-shared';
+	import type { RibbonControlId, ThemeColorPickerCommit } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 	import RecentColorsRow from '../inspector/RecentColorsRow.svelte';

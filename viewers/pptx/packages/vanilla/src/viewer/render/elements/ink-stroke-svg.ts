@@ -1,4 +1,4 @@
-import type { InkStrokeAnimationStyle, InkStrokeView } from 'pptx-viewer-shared';
+import type { InkStrokeAnimationStyle, InkStrokeView } from 'ooxml-ui/pptx';
 
 import { createSvgEl } from '../dom';
 

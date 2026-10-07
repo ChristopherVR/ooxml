@@ -1,5 +1,5 @@
-import type { RunProgramNotice } from 'pptx-viewer-shared';
-import { buildRunProgramNotice } from 'pptx-viewer-shared';
+import type { RunProgramNotice } from 'ooxml-ui/pptx';
+import { buildRunProgramNotice } from 'ooxml-ui/pptx';
 import { ref } from 'vue';
 import type { Ref } from 'vue';
 

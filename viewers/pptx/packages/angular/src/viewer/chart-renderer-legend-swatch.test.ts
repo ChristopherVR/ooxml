@@ -11,7 +11,7 @@
 import type { ChartPptxElement, PptxChartData } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 
-import { computeChartLegendLayout } from '../internal/shared';
+import { computeChartLegendLayout } from 'ooxml-ui/pptx';
 import { buildChartViewModel } from './chart-renderer-helpers';
 
 function lineChartElement(): ChartPptxElement {

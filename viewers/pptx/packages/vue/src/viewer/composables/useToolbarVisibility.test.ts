@@ -1,4 +1,4 @@
-import type { ToolbarActionId } from 'pptx-viewer-shared';
+import type { ToolbarActionId } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 import { ref } from 'vue';
 

@@ -20,8 +20,8 @@ const { THREE_UNAVAILABLE, mountModel3D } = vi.hoisted(() => ({
 // Partial mock: the SFC's `element-style` composable pulls many real helpers
 // from `pptx-viewer-shared`, so keep the original module and override only the
 // 3D controller surface (so the optional `three` peer dep is never loaded).
-vi.mock(import('pptx-viewer-shared'), async (importOriginal) => {
-	const actual = await importOriginal<typeof import('pptx-viewer-shared')>();
+vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => {
+	const actual = await importOriginal<typeof import('ooxml-ui/pptx')>();
 	return {
 		...actual,
 		mountModel3D: (...args: unknown[]) => mountModel3D(...args),

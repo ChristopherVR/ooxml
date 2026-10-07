@@ -9,7 +9,7 @@
  * function boundary by value (the reactivity is lost on destructure), so the
  * binding has to hand back an object whose property read is the tracked access.
  */
-import type { ViewerStore, ViewerStoreEquality } from 'pptx-viewer-shared';
+import type { ViewerStore, ViewerStoreEquality } from 'ooxml-ui/pptx';
 
 export class ViewerStoreSelection<T> {
 	#value = $state() as T;

@@ -1,5 +1,5 @@
 import type { PptxElement } from 'pptx-viewer-core';
-import type { AlignEdge } from 'pptx-viewer-shared';
+import type { AlignEdge } from 'ooxml-ui/pptx';
 import {
 	bringForward,
 	bringToFront,
@@ -7,7 +7,7 @@ import {
 	makeCloneId,
 	sendBackward,
 	sendToBack,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Store, ViewerState } from '../state';
 import {

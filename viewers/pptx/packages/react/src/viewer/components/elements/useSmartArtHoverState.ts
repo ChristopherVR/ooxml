@@ -9,8 +9,8 @@
  * @module useSmartArtHoverState
  */
 
-import { computeInlineEditorRect, smartArtNodeAtPoint } from 'pptx-viewer-shared';
-import type { InlineEditRect } from 'pptx-viewer-shared';
+import { computeInlineEditorRect, smartArtNodeAtPoint } from 'ooxml-ui/pptx';
+import type { InlineEditRect } from 'ooxml-ui/pptx';
 import React from 'react';
 
 // ── Shared attribute constant ─────────────────────────────────────────────────

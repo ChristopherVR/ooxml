@@ -1,5 +1,5 @@
 import type { PptxHandler, PptxSlideMaster } from 'pptx-viewer-core';
-import type { MasterViewCrudAction, MasterViewCrudActionId } from 'pptx-viewer-shared';
+import type { MasterViewCrudAction, MasterViewCrudActionId } from 'ooxml-ui/pptx';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { MasterViewCrudPrompts } from './editor-master-crud';
@@ -10,7 +10,7 @@ const { applyMasterViewCrudAction, masterViewCrudActions } = vi.hoisted(() => ({
 	masterViewCrudActions: vi.fn(),
 }));
 
-vi.mock(import('pptx-viewer-shared'), async (importOriginal) => {
+vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => {
 	const actual = await importOriginal();
 	return { ...actual, applyMasterViewCrudAction, masterViewCrudActions };
 });

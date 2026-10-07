@@ -1,4 +1,4 @@
-import { ARTISTIC_EFFECTS } from 'pptx-viewer-shared';
+import { ARTISTIC_EFFECTS } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';

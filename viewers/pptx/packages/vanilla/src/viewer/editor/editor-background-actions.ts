@@ -1,4 +1,4 @@
-import { updateSlide } from 'pptx-viewer-shared';
+import { updateSlide } from 'ooxml-ui/pptx';
 
 import type { Store, ViewerState } from '../state';
 import type { EditorOps } from './editor-operations';

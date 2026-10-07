@@ -17,7 +17,7 @@ import {
 	MOTION_PATH_PRESETS,
 	motionPathFor,
 	motionPathPresetById,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { EditorStateService } from './editor-state.service';
 import { MOTION_PATH_COLUMNS } from './motion-path-columns';
 import { RibbonAnimationsSectionComponent } from './ribbon-animations-section.component';

@@ -8,8 +8,8 @@ import {
 	hasPressureVariation,
 	interpolateWidth,
 	pressuresToWidths,
-} from '../internal/shared';
-import type { InkGroupStrokeView, PathPoint, PressureCircle } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { InkGroupStrokeView, PathPoint, PressureCircle } from 'ooxml-ui/pptx';
 import { DEFAULT_STROKE_COLOR } from './constants';
 import type { StyleMap } from './element-style';
 import { getContainerStyle } from './element-style';

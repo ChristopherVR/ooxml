@@ -14,9 +14,9 @@ import {
 	getOleTypeLabel,
 	resolveGroupChildFill,
 	resolveOleType,
-} from 'pptx-viewer-shared';
-import type { ResolvedOleType } from 'pptx-viewer-shared';
-import { translationsEn } from 'pptx-viewer-shared/i18n';
+} from 'ooxml-ui/pptx';
+import type { ResolvedOleType } from 'ooxml-ui/pptx';
+import { translationsEn } from 'ooxml-ui/pptx/i18n';
 
 import { DEFAULT_TEXT_COLOR, MIN_ELEMENT_SIZE } from '../../constants';
 import {

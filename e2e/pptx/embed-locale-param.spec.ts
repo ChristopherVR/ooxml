@@ -18,8 +18,8 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 
+import { translationsEn } from '../../src/ui/src/pptx/i18n/translations-en';
 import { translationsFr } from '../../viewers/pptx/packages/locales/src';
-import { translationsEn } from '../../viewers/pptx/packages/shared/src/i18n/translations-en';
 
 const HOME_TAB_KEY = 'pptx.ribbon.tab.home';
 

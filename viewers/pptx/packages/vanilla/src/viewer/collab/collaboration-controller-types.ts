@@ -10,7 +10,7 @@ import type {
 	CollaborationConfig,
 	CollaborationLivePatcher,
 	ConnectionStatus,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Store, ViewerState } from '../state';
 

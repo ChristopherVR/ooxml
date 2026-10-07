@@ -1,4 +1,4 @@
-import { AUTO_HIDE_DELAY_MS } from 'pptx-viewer-shared';
+import { AUTO_HIDE_DELAY_MS } from 'ooxml-ui/pptx';
 import { onBeforeUnmount, onMounted, readonly, ref } from 'vue';
 import type { Ref } from 'vue';
 

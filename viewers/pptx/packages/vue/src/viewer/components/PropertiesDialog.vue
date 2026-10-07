@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { PptxCoreProperties } from 'pptx-viewer-core';
-import { formatIsoDate as formatDate } from 'pptx-viewer-shared';
+import { formatIsoDate as formatDate } from 'ooxml-ui/pptx';
 import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 

@@ -6,4 +6,4 @@
  * extracted to `pptx-viewer-shared` (`render/chart-waterfall-map.ts`). This shim
  * keeps the historical Angular import path for the chart engine and its tests.
  */
-export * from '../internal/shared-src/render/chart-waterfall-map';
+export * from 'ooxml-ui/pptx/render/chart-waterfall-map';

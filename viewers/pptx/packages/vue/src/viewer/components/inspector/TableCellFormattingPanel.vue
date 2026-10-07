@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { PptxTableCellStyle, PptxTableData } from 'pptx-viewer-core';
-import { computeMergeCellDown, computeMergeCellRight, computeSplitCell } from 'pptx-viewer-shared';
+import { computeMergeCellDown, computeMergeCellRight, computeSplitCell } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

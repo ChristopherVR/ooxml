@@ -10,7 +10,7 @@
  */
 import { Injectable, signal } from '@angular/core';
 
-import type { ChartPartRef } from '../internal/shared';
+import type { ChartPartRef } from 'ooxml-ui/pptx';
 
 /** A selected chart sub-part, scoped to the chart element that owns it. */
 export interface ChartPartSelection {

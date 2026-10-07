@@ -8,7 +8,7 @@
  * exports the richer string-literal union of the same name, which is a strict
  * subset-compatible replacement for the call sites in this binding.
  */
-export type { EffectName } from 'pptx-viewer-shared';
+export type { EffectName } from 'ooxml-ui/pptx';
 export {
 	resolveEffect,
 	buildDynamicKeyframe,
@@ -23,4 +23,4 @@ export {
 	hslToRgb,
 	interpolateColor,
 	buildColorAnimationKeyframes,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

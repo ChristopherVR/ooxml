@@ -20,8 +20,8 @@
 		getFragmentedTransitionDescriptor,
 		resolveSlideTransition,
 		resolveTransitionDurationMs,
-	} from 'pptx-viewer-shared';
-	import type { CanvasSize, CssStyleMap } from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
+	import type { CanvasSize, CssStyleMap } from 'ooxml-ui/pptx';
 	import { onDestroy, onMount } from 'svelte';
 
 	import { playAnimationSound, stopAnimationSound } from './animation-sound';

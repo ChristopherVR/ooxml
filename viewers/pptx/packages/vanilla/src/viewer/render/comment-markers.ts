@@ -1,6 +1,6 @@
 import type { PptxComment } from 'pptx-viewer-core';
-import type { CanvasSize } from 'pptx-viewer-shared';
-import { buildCommentMarkers, COMMENT_MARKER_SIZE } from 'pptx-viewer-shared';
+import type { CanvasSize } from 'ooxml-ui/pptx';
+import { buildCommentMarkers, COMMENT_MARKER_SIZE } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import { createEl } from './dom';

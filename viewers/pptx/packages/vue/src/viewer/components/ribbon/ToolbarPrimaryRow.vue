@@ -14,7 +14,7 @@
  * ribbon-level context), so that purely-decorative avatar cluster is omitted.
  */
 import { MessageSquare, PanelLeft, PanelRight, Settings, Sparkles } from 'lucide-vue-next';
-import { isDialogAvailable, isPanelVisible } from 'pptx-viewer-shared';
+import { isDialogAvailable, isPanelVisible } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

@@ -1,4 +1,4 @@
-import type { RibbonTransitionsRequestEvent } from 'pptx-viewer-shared';
+import type { RibbonTransitionsRequestEvent } from 'ooxml-ui/pptx';
 import {
 	applyRibbonTransitionDraft,
 	playSlideTransitionPreview,
@@ -6,7 +6,7 @@ import {
 	ribbonTransitionsSoundChange,
 	registerPptxWebControls,
 	ribbonTransitionStockSoundUrl,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import { playAnimationSound } from '../../../animation/animation-sound';
 import type { Translator } from '../../../i18n';

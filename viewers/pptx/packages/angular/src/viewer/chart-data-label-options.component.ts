@@ -23,8 +23,8 @@ import {
 import { TranslatePipe } from '@ngx-translate/core';
 import type { ChartPptxElement, PptxChartDataLabelOptions } from 'pptx-viewer-core';
 
-import type { ChartDataLabelContentKey } from '../internal/shared';
-import { DATA_LABEL_CONTENT_OPTIONS, DATA_LABEL_POSITION_OPTIONS } from '../internal/shared';
+import type { ChartDataLabelContentKey } from 'ooxml-ui/pptx';
+import { DATA_LABEL_CONTENT_OPTIONS, DATA_LABEL_POSITION_OPTIONS } from 'ooxml-ui/pptx';
 import { setDataLabels } from './chart-advanced-helpers';
 import { CHART_EDITOR_STYLES } from './chart-editor-styles';
 import { boolFromEvent, selectValue } from './chart-event-helpers';

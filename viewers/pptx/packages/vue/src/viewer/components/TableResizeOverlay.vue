@@ -5,7 +5,7 @@ import {
 	computeResizedRowHeight,
 	DEFAULT_ROW_HEIGHT,
 	getTableResizeScale,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 
 /**

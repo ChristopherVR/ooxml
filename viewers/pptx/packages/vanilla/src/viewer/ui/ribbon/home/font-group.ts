@@ -1,11 +1,11 @@
 import type { PptxThemeColorRef } from 'pptx-viewer-core';
-import type { ChangeCaseMode } from 'pptx-viewer-shared';
+import type { ChangeCaseMode } from 'ooxml-ui/pptx';
 import {
 	fontHomeControls,
 	fontPickerHomeControls,
 	registerPptxWebControls,
 	resolveDefaultFontFamily,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { TextFormatState } from '../../../editor/editor-format-mutations';
 import type { Translator } from '../../../i18n';

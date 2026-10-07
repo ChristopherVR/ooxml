@@ -6,4 +6,4 @@
  * without colliding across obviously-different decks. The derivation is shared
  * with the other bindings' chat-history controllers.
  */
-export { deckIdFromBridge } from 'pptx-viewer-shared/ai';
+export { deckIdFromBridge } from 'ooxml-ui/pptx/ai';

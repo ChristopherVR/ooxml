@@ -5,8 +5,8 @@ import {
 	readEditableText,
 	remapTextToSegments,
 	toggleSelectionBullets,
-} from 'pptx-viewer-shared';
-import type { InlineTextEditSnapshot } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { InlineTextEditSnapshot } from 'ooxml-ui/pptx';
 
 /**
  * Paragraph-level patch builders for the Home tab's Paragraph group:

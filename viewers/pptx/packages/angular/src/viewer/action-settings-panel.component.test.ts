@@ -17,7 +17,7 @@ import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { canCommitActionType } from '../internal/shared';
+import { canCommitActionType } from 'ooxml-ui/pptx';
 import {
 	displayedActionType,
 	NO_PENDING_ACTION_TYPE,

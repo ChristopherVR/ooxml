@@ -13,7 +13,7 @@
  * it once that import resolves.
  */
 import { LoaderCircle, Sparkles, TriangleAlert, X } from 'lucide-vue-next';
-import type { PptxAiBridge, PptxAiConfig } from 'pptx-viewer-shared/ai';
+import type { PptxAiBridge, PptxAiConfig } from 'ooxml-ui/pptx/ai';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 

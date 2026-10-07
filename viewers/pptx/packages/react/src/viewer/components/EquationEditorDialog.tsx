@@ -3,7 +3,7 @@ import {
 	compileLatexEquation,
 	EQUATION_TEMPLATES,
 	sanitizeMathMl,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React, { useState, useMemo, useCallback, useRef, useEffect, useDeferredValue } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LuX } from 'react-icons/lu';

@@ -9,7 +9,7 @@
  * are diffed against.
  */
 import type { PptxTableCellStyle } from 'pptx-viewer-core';
-import { PATTERN_OPTIONS } from 'pptx-viewer-shared';
+import { PATTERN_OPTIONS } from 'ooxml-ui/pptx';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';

@@ -195,7 +195,15 @@ export function copySnapshotScene(model: VisioDocument): VisioDocument {
 			fields(note, ['code', 'message', 'severity']),
 		),
 		pages: list(model.pages, 'pages', 256, (page) => ({
-			...fields(page, ['id', 'name', 'width', 'height', 'isBackground', 'backgroundPageId']),
+			...fields(page, [
+				'id',
+				'name',
+				'width',
+				'height',
+				'isBackground',
+				'backgroundPageId',
+				'drawingToPageScale',
+			]),
 			shapes: shapes(page.shapes),
 			connectors: [],
 		})),

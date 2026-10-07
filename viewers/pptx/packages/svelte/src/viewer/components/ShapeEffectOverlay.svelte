@@ -52,8 +52,8 @@
 		getSoftEdgeSvgFilter,
 		buildHollowHitOutline,
 		strokeOutlineViewBox,
-	} from 'pptx-viewer-shared';
-	import type { CssStyleMap } from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
+	import type { CssStyleMap } from 'ooxml-ui/pptx';
 
 	import { styleToString } from '../style';
 	import type { ElementRendererProps } from './props';

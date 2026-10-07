@@ -1,6 +1,6 @@
 import type { PptxElementAnimation } from 'pptx-viewer-core';
-import type { AnimationPreviewDescriptor } from 'pptx-viewer-shared';
-import { buildAnimationRibbonPreview, findCanvasElementNode } from 'pptx-viewer-shared';
+import type { AnimationPreviewDescriptor } from 'ooxml-ui/pptx';
+import { buildAnimationRibbonPreview, findCanvasElementNode } from 'ooxml-ui/pptx';
 
 /**
  * Cancellable DOM preview player for the docked AnimationPanel: the Svelte

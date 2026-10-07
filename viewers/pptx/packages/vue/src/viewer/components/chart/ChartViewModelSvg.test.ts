@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
 import type { PptxChartData, PptxElement } from 'pptx-viewer-core';
-import type { ChartViewModel, SvgLine, SvgPrimitive, SvgRect, SvgText } from 'pptx-viewer-shared';
-import { buildChartViewModel } from 'pptx-viewer-shared';
+import type { ChartViewModel, SvgLine, SvgPrimitive, SvgRect, SvgText } from 'ooxml-ui/pptx';
+import { buildChartViewModel } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 
 import ChartViewModelSvg from './ChartViewModelSvg.vue';

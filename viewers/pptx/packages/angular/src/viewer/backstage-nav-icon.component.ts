@@ -15,7 +15,7 @@ import {
 	LucideX,
 } from '@lucide/angular';
 
-import type { BackstagePage } from '../internal/shared';
+import type { BackstagePage } from 'ooxml-ui/pptx';
 
 @Component({
 	selector: 'pptx-backstage-nav-icon',

@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { buildRibbonGallery } from 'pptx-viewer-shared';
-	import type { RibbonGalleryPickEvent, RibbonGalleryPlacement } from 'pptx-viewer-shared';
+	import { buildRibbonGallery } from 'ooxml-ui/pptx';
+	import type { RibbonGalleryPickEvent, RibbonGalleryPlacement } from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../../../i18n/context';
 	import { refocusViewerRoot } from '../anchored-popup';
 	import { strictTranslator } from './gallery-labels';

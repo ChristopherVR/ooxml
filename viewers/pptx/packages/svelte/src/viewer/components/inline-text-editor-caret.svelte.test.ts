@@ -5,13 +5,13 @@
  * which is the parity bug this pins.
  */
 import type { PptxElement } from 'pptx-viewer-core';
-import type { InlineListController, YjsFactories } from 'pptx-viewer-shared';
+import type { InlineListController, YjsFactories } from 'ooxml-ui/pptx';
 import {
 	createCollaborationLivePatcher,
 	createSnapshotTextPositions,
 	findElementYMap,
 	reconcileSlidesInYDoc,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount, untrack } from 'svelte';
 import { describe, expect, it, vi } from 'vitest';
 import * as Y from 'yjs';

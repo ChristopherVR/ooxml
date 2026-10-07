@@ -1,5 +1,5 @@
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
-import type { AlignEdge, AlignSlideSize, DistributeAxis } from 'pptx-viewer-shared';
+import type { AlignEdge, AlignSlideSize, DistributeAxis } from 'ooxml-ui/pptx';
 import {
 	alignElements,
 	canInteractWithElement,
@@ -9,7 +9,7 @@ import {
 	makeCloneId,
 	mapSlideElements,
 	ungroupElements,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 /**
  * Pure, multi-select-aware arrange mutations for the Home tab's Arrange

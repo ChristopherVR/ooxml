@@ -1,0 +1,3054 @@
+{
+  "version": "16.0",
+  "build": 20430.0,
+  "cases": [
+    {
+      "mode": "noBorders",
+      "operation": "none",
+      "transpose": false,
+      "skipBlanks": false,
+      "cells": [
+        {
+          "row": 0,
+          "col": 0,
+          "value": 2.0,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 0,
+          "col": 1,
+          "value": "text",
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 1,
+          "col": 0,
+          "value": 3.0,
+          "formula": "E5+$J$1",
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 1,
+          "col": 1,
+          "value": null,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "mode": "noBorders",
+      "operation": "none",
+      "transpose": false,
+      "skipBlanks": true,
+      "cells": [
+        {
+          "row": 0,
+          "col": 0,
+          "value": 2.0,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 0,
+          "col": 1,
+          "value": "text",
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 1,
+          "col": 0,
+          "value": 12.0,
+          "formula": "E5+$J$1",
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 1,
+          "col": 1,
+          "value": 9.0,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "numFmt": "General",
+          "fill": 65280.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "mode": "noBorders",
+      "operation": "none",
+      "transpose": true,
+      "skipBlanks": false,
+      "cells": [
+        {
+          "row": 0,
+          "col": 0,
+          "value": 2.0,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 0,
+          "col": 1,
+          "value": 3.0,
+          "formula": "E5+$J$1",
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 1,
+          "col": 0,
+          "value": "text",
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 1,
+          "col": 1,
+          "value": null,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "mode": "noBorders",
+      "operation": "none",
+      "transpose": true,
+      "skipBlanks": true,
+      "cells": [
+        {
+          "row": 0,
+          "col": 0,
+          "value": 2.0,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 0,
+          "col": 1,
+          "value": 12.0,
+          "formula": "E5+$J$1",
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 1,
+          "col": 0,
+          "value": "text",
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 1,
+          "col": 1,
+          "value": 9.0,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "numFmt": "General",
+          "fill": 65280.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "mode": "noBorders",
+      "operation": "add",
+      "transpose": false,
+      "skipBlanks": false,
+      "cells": [
+        {
+          "row": 0,
+          "col": 0,
+          "value": 11.0,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 0,
+          "col": 1,
+          "value": 9.0,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 1,
+          "col": 0,
+          "value": 21.0,
+          "formula": "9+(E5+$J$1)",
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 1,
+          "col": 1,
+          "value": 9.0,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "mode": "noBorders",
+      "operation": "add",
+      "transpose": false,
+      "skipBlanks": true,
+      "cells": [
+        {
+          "row": 0,
+          "col": 0,
+          "value": 11.0,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 0,
+          "col": 1,
+          "value": 9.0,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 1,
+          "col": 0,
+          "value": 21.0,
+          "formula": "9+(E5+$J$1)",
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 1,
+          "col": 1,
+          "value": 9.0,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "numFmt": "General",
+          "fill": 65280.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "mode": "noBorders",
+      "operation": "add",
+      "transpose": true,
+      "skipBlanks": false,
+      "cells": [
+        {
+          "row": 0,
+          "col": 0,
+          "value": 11.0,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 0,
+          "col": 1,
+          "value": 21.0,
+          "formula": "9+(E5+$J$1)",
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 1,
+          "col": 0,
+          "value": 9.0,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 1,
+          "col": 1,
+          "value": 9.0,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "mode": "noBorders",
+      "operation": "add",
+      "transpose": true,
+      "skipBlanks": true,
+      "cells": [
+        {
+          "row": 0,
+          "col": 0,
+          "value": 11.0,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 0,
+          "col": 1,
+          "value": 21.0,
+          "formula": "9+(E5+$J$1)",
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 1,
+          "col": 0,
+          "value": 9.0,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 1,
+          "col": 1,
+          "value": 9.0,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "numFmt": "General",
+          "fill": 65280.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "mode": "noBorders",
+      "operation": "subtract",
+      "transpose": false,
+      "skipBlanks": false,
+      "cells": [
+        {
+          "row": 0,
+          "col": 0,
+          "value": 7.0,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 0,
+          "col": 1,
+          "value": 9.0,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 1,
+          "col": 0,
+          "value": -3.0,
+          "formula": "9-(E5+$J$1)",
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 1,
+          "col": 1,
+          "value": 9.0,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "mode": "noBorders",
+      "operation": "subtract",
+      "transpose": false,
+      "skipBlanks": true,
+      "cells": [
+        {
+          "row": 0,
+          "col": 0,
+          "value": 7.0,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 0,
+          "col": 1,
+          "value": 9.0,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 1,
+          "col": 0,
+          "value": -3.0,
+          "formula": "9-(E5+$J$1)",
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 1,
+          "col": 1,
+          "value": 9.0,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "numFmt": "General",
+          "fill": 65280.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "mode": "noBorders",
+      "operation": "subtract",
+      "transpose": true,
+      "skipBlanks": false,
+      "cells": [
+        {
+          "row": 0,
+          "col": 0,
+          "value": 7.0,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 0,
+          "col": 1,
+          "value": -3.0,
+          "formula": "9-(E5+$J$1)",
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 1,
+          "col": 0,
+          "value": 9.0,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 1,
+          "col": 1,
+          "value": 9.0,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "mode": "noBorders",
+      "operation": "subtract",
+      "transpose": true,
+      "skipBlanks": true,
+      "cells": [
+        {
+          "row": 0,
+          "col": 0,
+          "value": 7.0,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 0,
+          "col": 1,
+          "value": -3.0,
+          "formula": "9-(E5+$J$1)",
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 1,
+          "col": 0,
+          "value": 9.0,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 1,
+          "col": 1,
+          "value": 9.0,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "numFmt": "General",
+          "fill": 65280.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "mode": "noBorders",
+      "operation": "multiply",
+      "transpose": false,
+      "skipBlanks": false,
+      "cells": [
+        {
+          "row": 0,
+          "col": 0,
+          "value": 18.0,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 0,
+          "col": 1,
+          "value": 9.0,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 1,
+          "col": 0,
+          "value": 27.0,
+          "formula": "9*(E5+$J$1)",
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 1,
+          "col": 1,
+          "value": 0.0,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "mode": "noBorders",
+      "operation": "multiply",
+      "transpose": false,
+      "skipBlanks": true,
+      "cells": [
+        {
+          "row": 0,
+          "col": 0,
+          "value": 18.0,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 0,
+          "col": 1,
+          "value": 9.0,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 1,
+          "col": 0,
+          "value": 108.0,
+          "formula": "9*(E5+$J$1)",
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 1,
+          "col": 1,
+          "value": 9.0,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "numFmt": "General",
+          "fill": 65280.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "mode": "noBorders",
+      "operation": "multiply",
+      "transpose": true,
+      "skipBlanks": false,
+      "cells": [
+        {
+          "row": 0,
+          "col": 0,
+          "value": 18.0,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 0,
+          "col": 1,
+          "value": 27.0,
+          "formula": "9*(E5+$J$1)",
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 1,
+          "col": 0,
+          "value": 9.0,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 1,
+          "col": 1,
+          "value": 0.0,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "mode": "noBorders",
+      "operation": "multiply",
+      "transpose": true,
+      "skipBlanks": true,
+      "cells": [
+        {
+          "row": 0,
+          "col": 0,
+          "value": 18.0,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 0,
+          "col": 1,
+          "value": 108.0,
+          "formula": "9*(E5+$J$1)",
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 1,
+          "col": 0,
+          "value": 9.0,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 1,
+          "col": 1,
+          "value": 9.0,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "numFmt": "General",
+          "fill": 65280.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "mode": "noBorders",
+      "operation": "divide",
+      "transpose": false,
+      "skipBlanks": false,
+      "cells": [
+        {
+          "row": 0,
+          "col": 0,
+          "value": 4.5,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 0,
+          "col": 1,
+          "value": 9.0,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 1,
+          "col": 0,
+          "value": {
+            "error": "#DIV/0!"
+          },
+          "formula": "9/(E5+$J$1)",
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 1,
+          "col": 1,
+          "value": {
+            "error": "#DIV/0!"
+          },
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "mode": "noBorders",
+      "operation": "divide",
+      "transpose": false,
+      "skipBlanks": true,
+      "cells": [
+        {
+          "row": 0,
+          "col": 0,
+          "value": 4.5,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 0,
+          "col": 1,
+          "value": 9.0,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 1,
+          "col": 0,
+          "value": 0.75,
+          "formula": "9/(E5+$J$1)",
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 1,
+          "col": 1,
+          "value": 9.0,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "numFmt": "General",
+          "fill": 65280.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "mode": "noBorders",
+      "operation": "divide",
+      "transpose": true,
+      "skipBlanks": false,
+      "cells": [
+        {
+          "row": 0,
+          "col": 0,
+          "value": 4.5,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 0,
+          "col": 1,
+          "value": {
+            "error": "#DIV/0!"
+          },
+          "formula": "9/(E5+$J$1)",
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 1,
+          "col": 0,
+          "value": 9.0,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 1,
+          "col": 1,
+          "value": {
+            "error": "#DIV/0!"
+          },
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "mode": "noBorders",
+      "operation": "divide",
+      "transpose": true,
+      "skipBlanks": true,
+      "cells": [
+        {
+          "row": 0,
+          "col": 0,
+          "value": 4.5,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 0,
+          "col": 1,
+          "value": 0.75,
+          "formula": "9/(E5+$J$1)",
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 1,
+          "col": 0,
+          "value": 9.0,
+          "formula": null,
+          "bold": true,
+          "italic": false,
+          "numFmt": "0.00",
+          "fill": 255.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        },
+        {
+          "row": 1,
+          "col": 1,
+          "value": 9.0,
+          "formula": null,
+          "bold": false,
+          "italic": true,
+          "numFmt": "General",
+          "fill": 65280.0,
+          "borders": {
+            "left": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "right": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "top": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "bottom": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalDown": {
+              "style": -4119,
+              "color": "0000FF"
+            },
+            "diagonalUp": {
+              "style": -4119,
+              "color": "0000FF"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

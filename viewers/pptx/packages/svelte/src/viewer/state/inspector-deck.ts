@@ -6,7 +6,7 @@ import type {
 	PptxPresentationProperties,
 	PptxThemeOption,
 } from 'pptx-viewer-core';
-import type { CanvasSize, SlideSizeEmu, SlideSizeRescaleMode } from 'pptx-viewer-shared';
+import type { CanvasSize, SlideSizeEmu, SlideSizeRescaleMode } from 'ooxml-ui/pptx';
 import {
 	applyTableStyleDelete,
 	applyTableStyleMapChange,
@@ -14,7 +14,7 @@ import {
 	scaleSlidesForSizeChange,
 	slideSizeToCanvasPx,
 	tableStyleSaveOptions,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { getContext, setContext } from 'svelte';
 
 import { createEditorSnapshot, saveEditorDocument } from '../editor/editor-document-state';

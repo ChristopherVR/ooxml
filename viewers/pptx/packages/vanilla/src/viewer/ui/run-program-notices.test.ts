@@ -1,4 +1,4 @@
-import type { RunProgramNotice } from 'pptx-viewer-shared';
+import type { RunProgramNotice } from 'ooxml-ui/pptx';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createRunProgramNoticeStack } from './run-program-notices';

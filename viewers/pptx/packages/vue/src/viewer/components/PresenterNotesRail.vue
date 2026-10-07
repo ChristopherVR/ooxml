@@ -13,14 +13,14 @@
  */
 import { ChevronLeft, ChevronRight, Minus, Plus, X } from 'lucide-vue-next';
 import type { PptxSlide } from 'pptx-viewer-core';
-import type { AuthoredSlideRange } from 'pptx-viewer-shared';
+import type { AuthoredSlideRange } from 'ooxml-ui/pptx';
 import {
 	nextPresentedSlide,
 	PRESENTER_CONSOLE_CLASSES,
 	PRESENTER_RAIL_LABEL_KEYS,
 	presenterNextDisabled,
 	presenterPrevDisabled,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 

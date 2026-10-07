@@ -14,8 +14,8 @@ import {
 	formatAxisValue,
 	resolveChartKind,
 	withChartTitle,
-} from 'pptx-viewer-shared';
-import type { ChartMarkDragState, ChartPartRef, ChartValueDragState } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { ChartMarkDragState, ChartPartRef, ChartValueDragState } from 'ooxml-ui/pptx';
 
 /**
  * chart-drag (Svelte): direct on-canvas chart editing, the Svelte port of Vue's

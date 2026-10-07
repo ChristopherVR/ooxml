@@ -3,7 +3,7 @@ import {
 	commentMentionQuery,
 	insertCommentMention,
 	matchCommentMentionAuthors,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 /**
  * CommentComposeState: the `@`-mention typeahead over ONE comment/reply

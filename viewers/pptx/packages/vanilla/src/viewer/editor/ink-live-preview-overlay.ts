@@ -1,4 +1,4 @@
-import type { InkStrokeView } from 'pptx-viewer-shared';
+import type { InkStrokeView } from 'ooxml-ui/pptx';
 
 import { buildStrokeSvg, createSvgEl } from '../render';
 

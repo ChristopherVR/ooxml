@@ -10,8 +10,8 @@
  * config) comes from the shared {@link AiChangeAnimator} via the panel
  * controller. The ghosts carry their own geometry, so no element lookup needed.
  */
-import type { AiChangeBatch } from 'pptx-viewer-shared/ai';
-import { aiChangeAnimationCss, changeGhostStyle } from 'pptx-viewer-shared/ai';
+import type { AiChangeBatch } from 'ooxml-ui/pptx/ai';
+import { aiChangeAnimationCss, changeGhostStyle } from 'ooxml-ui/pptx/ai';
 import { useEffect, useState } from 'react';
 
 export interface AiChangeOverlayProps {

@@ -38,7 +38,7 @@ import {
 	computeChartLegendLayout,
 	getBarFacePicturePixelSampleVersion,
 	subscribeBarFacePicturePixelSamples,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { ChartPrimitivesComponent } from './chart-primitives.component';
 import { buildChartViewModel } from './chart-renderer-helpers';
 import type { ChartViewModel } from './chart-renderer-helpers';

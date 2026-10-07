@@ -1,4 +1,4 @@
-import { mruColorsPatch, pushRecentColor, seedRecentColors } from 'pptx-viewer-shared';
+import { mruColorsPatch, pushRecentColor, seedRecentColors } from 'ooxml-ui/pptx';
 
 import type { Store, ViewerState } from '../state';
 

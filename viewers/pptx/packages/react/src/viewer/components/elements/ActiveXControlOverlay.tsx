@@ -14,7 +14,7 @@
  * maps the returned view onto JSX.
  */
 import type { PptxActiveXControl } from 'pptx-viewer-core';
-import { getActiveXControlOverlayView } from 'pptx-viewer-shared';
+import { getActiveXControlOverlayView } from 'ooxml-ui/pptx';
 
 import type { CanvasSize } from '../../types';
 

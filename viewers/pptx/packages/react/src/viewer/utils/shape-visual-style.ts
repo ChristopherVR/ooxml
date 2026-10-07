@@ -8,7 +8,7 @@ import {
 	isWedgeCalloutPresetShape,
 	isStrokeOnlyPresetElement,
 	resolveShapeGeometry,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 /**
  * Shape visual style computation.
  *

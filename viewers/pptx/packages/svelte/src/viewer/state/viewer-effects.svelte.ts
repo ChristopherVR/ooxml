@@ -2,7 +2,7 @@ import {
 	collectReferencedFontFamilies,
 	fetchGoogleWebfontOutlineBytes,
 	selectGoogleWebfontFamilies,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { untrack } from 'svelte';
 
 import type { Translator } from '../../i18n/translator';

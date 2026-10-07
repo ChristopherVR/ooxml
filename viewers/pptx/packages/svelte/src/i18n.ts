@@ -5,8 +5,8 @@
  * translator helpers so hosts can register additional locales or override
  * individual strings.
  */
-export { keyToLabel, LOCALE_CATALOG, translationsEn } from 'pptx-viewer-shared/i18n';
-export type { LocaleCatalogEntry, TranslationKey } from 'pptx-viewer-shared/i18n';
+export { keyToLabel, LOCALE_CATALOG, translationsEn } from 'ooxml-ui/pptx/i18n';
+export type { LocaleCatalogEntry, TranslationKey } from 'ooxml-ui/pptx/i18n';
 export {
 	createTranslator,
 	getRegisteredLocales,

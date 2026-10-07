@@ -15,8 +15,8 @@ import { Injector, runInInjectionContext, signal } from '@angular/core';
 import type { InputSignal } from '@angular/core';
 import { describe, expect, it, vi } from 'vitest';
 
-import { canUseClipboard } from '../internal/shared';
-import type { RunProgramNotice } from '../internal/shared';
+import { canUseClipboard } from 'ooxml-ui/pptx';
+import type { RunProgramNotice } from 'ooxml-ui/pptx';
 import { RUN_PROGRAM_NOTICE_STACK_STYLE } from './presentation-overlay-chrome-styles';
 import { RunProgramNoticesComponent } from './run-program-notices.component';
 

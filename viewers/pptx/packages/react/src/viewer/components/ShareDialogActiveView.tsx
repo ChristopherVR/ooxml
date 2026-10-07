@@ -1,4 +1,4 @@
-import { buildActiveSessionUsers, buildCollaborationShareUrl } from 'pptx-viewer-shared';
+import { buildActiveSessionUsers, buildCollaborationShareUrl } from 'ooxml-ui/pptx';
 import { useTranslation } from 'react-i18next';
 import { LuCheck, LuCopy, LuUsers, LuWifi, LuWifiOff } from 'react-icons/lu';
 

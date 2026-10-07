@@ -3,7 +3,7 @@ import {
 	effectiveDirection,
 	effectiveTimingCurve,
 	getDensePanelTouchTargetPx,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { LuPlay } from 'react-icons/lu';

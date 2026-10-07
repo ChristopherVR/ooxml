@@ -8,8 +8,8 @@ import type {
 	PptxElementAnimation,
 } from 'pptx-viewer-core';
 import { ooxmlToPresetName } from 'pptx-viewer-core';
-import { animationEffectLabel } from 'pptx-viewer-shared';
-import type { AnimationLabelTranslate } from 'pptx-viewer-shared';
+import { animationEffectLabel } from 'ooxml-ui/pptx';
+import type { AnimationLabelTranslate } from 'ooxml-ui/pptx';
 
 export type AnimationCategory = 'entrance' | 'emphasis' | 'exit';
 

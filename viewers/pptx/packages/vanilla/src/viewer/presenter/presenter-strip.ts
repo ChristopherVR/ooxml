@@ -2,13 +2,13 @@ import {
 	presenterConsoleAction,
 	presenterConsoleViewState,
 	registerPptxWebControls,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type {
 	PptxUiPresenterConsoleElement,
 	PresentationPointerTool,
 	PresentationSnapshot,
 	PresenterConsoleRequestEvent,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 

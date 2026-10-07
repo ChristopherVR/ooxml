@@ -1,5 +1,5 @@
-import type { ToolbarActionId } from 'pptx-viewer-shared';
-import { buildPresentationTouchControlState, isActionHidden } from 'pptx-viewer-shared';
+import type { ToolbarActionId } from 'ooxml-ui/pptx';
+import { buildPresentationTouchControlState, isActionHidden } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import { createEl } from '../render';

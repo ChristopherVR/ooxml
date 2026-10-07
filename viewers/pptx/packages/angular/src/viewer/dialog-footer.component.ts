@@ -25,7 +25,7 @@ import type {
 	DialogFooterAction,
 	DialogFooterRequestEvent,
 	DialogFooterViewState,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { translationsSignal } from './translations-signal';
 
 /** A footer action whose label is a translation key. */

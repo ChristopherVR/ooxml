@@ -9,8 +9,8 @@ import {
 	getImageFitStyle,
 	getImageTilingStyle,
 	resolveShapeGeometry,
-} from '../internal/shared';
-import type { ImageSvgFilterDefinition, NativeImageSize } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { ImageSvgFilterDefinition, NativeImageSize } from 'ooxml-ui/pptx';
 import { getClrChangeParams } from './color-changed-image-helpers';
 import type { ClrChangeParams } from './color-changed-image-helpers';
 import type { StyleMap } from './element-style';

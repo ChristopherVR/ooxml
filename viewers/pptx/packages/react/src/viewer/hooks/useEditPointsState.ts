@@ -1,4 +1,4 @@
-import type { FreeformToolKind } from 'pptx-viewer-shared';
+import type { FreeformToolKind } from 'ooxml-ui/pptx';
 import { useCallback, useState } from 'react';
 
 /**

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { BevelPresetType, MaterialPresetType, Text3DStyle, TextStyle } from 'pptx-viewer-core';
-import { MATERIAL_PRESETS, normalizeHexColor } from 'pptx-viewer-shared';
+import { MATERIAL_PRESETS, normalizeHexColor } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

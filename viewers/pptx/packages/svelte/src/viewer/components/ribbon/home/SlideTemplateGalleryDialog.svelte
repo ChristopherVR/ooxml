@@ -7,8 +7,8 @@
 	 * button inserts, Escape / backdrop / Cancel dismiss.
 	 */
 	import DialogFooter from '../../DialogFooter.svelte';
-	import { SLIDE_TEMPLATES } from 'pptx-viewer-shared';
-	import type { SlideTemplateId } from 'pptx-viewer-shared';
+	import { SLIDE_TEMPLATES } from 'ooxml-ui/pptx';
+	import type { SlideTemplateId } from 'ooxml-ui/pptx';
 	import { onMount } from 'svelte';
 
 	import { useTranslator } from '../../../../i18n/context';

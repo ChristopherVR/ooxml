@@ -21,8 +21,8 @@ import {
 	getConnectorEndpointHandles,
 	resolveConnectorEndpointUpdate,
 	withConnectorEndpointUpdate,
-} from 'pptx-viewer-shared';
-import type { ConnectorEndpointKind } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { ConnectorEndpointKind } from 'ooxml-ui/pptx';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 

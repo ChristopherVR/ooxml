@@ -8,7 +8,7 @@
  * section) instead of clear of it. Mirrors React's/Vue's/Angular's
  * equivalent regression test.
  */
-import type { CompatibilityWarningToast } from 'pptx-viewer-shared';
+import type { CompatibilityWarningToast } from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 

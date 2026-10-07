@@ -12,7 +12,7 @@
  */
 import { signal } from '@angular/core';
 
-import { resolveSlidePaneClick } from '../internal/shared';
+import { resolveSlidePaneClick } from 'ooxml-ui/pptx';
 
 /** Position and target of an open thumbnail context menu. */
 export interface SlidePaneContextMenuState {

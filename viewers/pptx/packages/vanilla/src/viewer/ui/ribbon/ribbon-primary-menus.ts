@@ -1,9 +1,9 @@
-import type { ToolbarActionId } from 'pptx-viewer-shared';
+import type { ToolbarActionId } from 'ooxml-ui/pptx';
 import {
 	EMPTY_RESOLVED_CUSTOMIZATION,
 	isActionHidden,
 	isDialogAvailable,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';

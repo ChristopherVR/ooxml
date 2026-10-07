@@ -7,8 +7,8 @@ import {
 	detectOrientation,
 	detectTouchDevice,
 	MIN_TOUCH_TARGET_PX,
-} from 'pptx-viewer-shared';
-import type { DeviceOrientation } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { DeviceOrientation } from 'ooxml-ui/pptx';
 /**
  * useIsMobile: Detects viewport size and touch capability for responsive layout.
  *

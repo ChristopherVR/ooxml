@@ -7,7 +7,7 @@
 	 * agnostic `buildConnectorGeometry`; this component only emits SVG.
 	 */
 	import { hasShapeProperties, hasTextProperties } from 'pptx-viewer-core';
-	import { buildConnectorGeometry, getLineGlowFilterCss, getLineShadowParams } from 'pptx-viewer-shared';
+	import { buildConnectorGeometry, getLineGlowFilterCss, getLineShadowParams } from 'ooxml-ui/pptx';
 
 	import { styleToString } from '../style';
 	import type { ElementRendererProps } from './props';

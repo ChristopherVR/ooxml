@@ -4,9 +4,9 @@ import {
 	ONLINE_VIDEO_IFRAME_SANDBOX,
 	getOnlineVideoEmbed,
 	mediaPlaybackAttributes,
-} from 'pptx-viewer-shared';
-import type { MediaSurface } from 'pptx-viewer-shared';
-import { translationsEn } from 'pptx-viewer-shared/i18n';
+} from 'ooxml-ui/pptx';
+import type { MediaSurface } from 'ooxml-ui/pptx';
+import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import React from 'react';
 
 import { VideoWithMetadata, AudioWithMetadata } from './media-components';

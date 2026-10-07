@@ -1,4 +1,4 @@
-import type { NotesToolbarRequestEvent } from 'pptx-viewer-shared';
+import type { NotesToolbarRequestEvent } from 'ooxml-ui/pptx';
 import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 

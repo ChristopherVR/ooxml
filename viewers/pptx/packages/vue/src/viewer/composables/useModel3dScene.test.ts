@@ -23,7 +23,7 @@ const { THREE_UNAVAILABLE, mountModel3D } = vi.hoisted(() => ({
 // real `parseDataUrlToBytes`) so these tests exercise the actual repointed
 // data-URL -> Blob URL conversion, not a re-hand-rolled stand-in; only the
 // three.js-touching `mountModel3D` / `THREE_UNAVAILABLE` are mocked out.
-vi.mock(import('pptx-viewer-shared'), async (importOriginal) => {
+vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => {
 	const actual = await importOriginal();
 	return {
 		...actual,

@@ -1,4 +1,4 @@
-import type { AwarenessLike } from 'pptx-viewer-shared';
+import type { AwarenessLike } from 'ooxml-ui/pptx';
 import { flushSync } from 'svelte';
 import { describe, expect, it, vi } from 'vitest';
 

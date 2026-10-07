@@ -7,7 +7,7 @@
 	 * `slideBackgroundClearState`, and one click is one undo step through
 	 * `EditorState.backgroundOps`.
 	 */
-	import { normalizeHexColor, slideBackgroundClearState } from 'pptx-viewer-shared';
+	import { normalizeHexColor, slideBackgroundClearState } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 	import type { EditorState } from '../../editor/editor-state.svelte';

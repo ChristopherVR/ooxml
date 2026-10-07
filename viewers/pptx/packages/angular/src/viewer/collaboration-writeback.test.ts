@@ -21,7 +21,7 @@ vi.mock(import('pptx-viewer-core'), async (importOriginal) => {
 	};
 });
 
-vi.mock(import('../internal/shared'), async (importOriginal) => {
+vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => {
 	const actual = await importOriginal();
 	return {
 		...actual,

@@ -12,8 +12,8 @@ import { provideTranslateService, TranslateService } from '@ngx-translate/core';
 import type { PptxElement, PptxSlide, ShapePptxElement } from 'pptx-viewer-core';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 
-import { translationsEn } from '../../../shared/src/i18n/translations-en';
-import { registerPptxWebControls } from '../internal/shared';
+import { translationsEn } from '../../../../../../src/ui/src/pptx/i18n/translations-en';
+import { registerPptxWebControls } from 'ooxml-ui/pptx';
 import {
 	readViewerTestResource,
 	resolveViewerComponentResources,

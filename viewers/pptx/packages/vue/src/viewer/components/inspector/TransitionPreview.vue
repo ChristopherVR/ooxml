@@ -14,7 +14,7 @@
  * the settings did not change.
  */
 import type { PptxSlideTransition } from 'pptx-viewer-core';
-import { getSlideTransitionAnimations, SLIDE_TRANSITION_KEYFRAMES } from 'pptx-viewer-shared';
+import { getSlideTransitionAnimations, SLIDE_TRANSITION_KEYFRAMES } from 'ooxml-ui/pptx';
 import { computed, onBeforeUnmount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 

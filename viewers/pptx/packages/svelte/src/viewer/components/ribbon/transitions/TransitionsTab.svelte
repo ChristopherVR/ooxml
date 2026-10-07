@@ -6,7 +6,7 @@
   * replays the transition on the stage without writing, and sound picks are raw
   * patches through `transitionOps.applyChange`.
   */
- import type { RibbonTransitionsRequestEvent } from 'pptx-viewer-shared';
+ import type { RibbonTransitionsRequestEvent } from 'ooxml-ui/pptx';
  import {
   applyRibbonTransitionDraft,
   playSlideTransitionPreview,
@@ -14,7 +14,7 @@
   ribbonTransitionsDraftPatch,
   ribbonTransitionsSoundChange,
   ribbonTransitionStockSoundUrl,
- } from 'pptx-viewer-shared';
+ } from 'ooxml-ui/pptx';
 
  import { useTranslator } from '../../../../i18n/context';
  import type { EditorState } from '../../../editor/editor-state.svelte';

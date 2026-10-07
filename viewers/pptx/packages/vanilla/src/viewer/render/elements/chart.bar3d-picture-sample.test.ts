@@ -7,13 +7,13 @@
  * the document (vanilla has no unmount hook to drive cleanup from).
  */
 import type { PptxChartData, PptxElement } from 'pptx-viewer-core';
-import * as pptxViewerShared from 'pptx-viewer-shared';
+import * as pptxViewerShared from 'ooxml-ui/pptx';
 import {
 	ensureBarFacePicturePixelSampled,
 	getCachedBarFacePicturePixelColor,
 	resetBarFacePicturePixelCacheForTests,
 	resolveUntargetedBarFaceFill,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../../i18n';

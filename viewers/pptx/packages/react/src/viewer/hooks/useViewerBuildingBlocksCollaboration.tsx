@@ -1,5 +1,5 @@
-import type { CollabLoadOrigin, CollaborationConfig } from 'pptx-viewer-shared';
-import { resolveSlideSizeSelection } from 'pptx-viewer-shared';
+import type { CollabLoadOrigin, CollaborationConfig } from 'ooxml-ui/pptx';
+import { resolveSlideSizeSelection } from 'ooxml-ui/pptx';
 import React from 'react';
 
 import { CollaborationCursorOverlay } from '../components/collaboration/CollaborationCursorOverlay';

@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils';
-import { AFTER_ANIMATION_VALUES } from 'pptx-viewer-shared';
+import { AFTER_ANIMATION_VALUES } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 import { ref } from 'vue';
 

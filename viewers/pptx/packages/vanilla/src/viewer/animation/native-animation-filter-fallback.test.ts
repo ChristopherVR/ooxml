@@ -7,7 +7,7 @@
  * shared (`render/animation-filter-effects.ts`).
  */
 import type { PptxNativeAnimation } from 'pptx-viewer-core';
-import { buildTimeline } from 'pptx-viewer-shared';
+import { buildTimeline } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 
 describe('vanilla: native animation @filter fallback', () => {

@@ -1,5 +1,5 @@
 import { config } from '@vue/test-utils';
-import { registerPptxWebControls } from 'pptx-viewer-shared';
+import { registerPptxWebControls } from 'ooxml-ui/pptx';
 import { createI18n } from 'vue-i18n';
 
 import { keyToLabel, translationsEn } from './i18n';

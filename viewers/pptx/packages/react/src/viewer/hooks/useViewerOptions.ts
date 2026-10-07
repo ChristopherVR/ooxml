@@ -1,5 +1,5 @@
-import type { ViewerOptions, ViewerOptionsStore } from 'pptx-viewer-shared';
-import { createViewerOptionsStore } from 'pptx-viewer-shared';
+import type { ViewerOptions, ViewerOptionsStore } from 'ooxml-ui/pptx';
+import { createViewerOptionsStore } from 'ooxml-ui/pptx';
 import { useRef, useSyncExternalStore } from 'react';
 
 export interface UseViewerOptionsResult {

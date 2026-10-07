@@ -1,5 +1,5 @@
-import type { RibbonControlId, RibbonGroupId } from 'pptx-viewer-shared';
-import { RIBBON_CONTROL_ATTR, RIBBON_GROUP_ATTR } from 'pptx-viewer-shared';
+import type { RibbonControlId, RibbonGroupId } from 'ooxml-ui/pptx';
+import { RIBBON_CONTROL_ATTR, RIBBON_GROUP_ATTR } from 'ooxml-ui/pptx';
 import React from 'react';
 
 import { cn } from '../../utils';

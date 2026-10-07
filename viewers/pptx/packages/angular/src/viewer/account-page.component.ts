@@ -23,12 +23,12 @@ import {
 	readStoredViewerPrefs,
 	resolveProfileInitial,
 	saveViewerProfile,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import type {
 	AccountAuthConfig,
 	LocalStorageUsageSummary,
 	ViewerProfile,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { PPTX_ANGULAR_VIEWER_VERSION } from '../internal/version';
 
 @Component({

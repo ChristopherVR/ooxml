@@ -10,8 +10,8 @@ import type {
 	ViewerFontSource,
 	ViewportFitOptions,
 	ViewportFitPadding,
-} from 'pptx-viewer-shared';
-import type { PptxAiConfig } from 'pptx-viewer-shared/ai';
+} from 'ooxml-ui/pptx';
+import type { PptxAiConfig } from 'ooxml-ui/pptx/ai';
 
 import type { LocaleCatalogEntry } from '../i18n';
 import type { ThemeCatalogEntry, ViewerTheme } from '../theme';
@@ -20,7 +20,7 @@ export type {
 	ExternalCollaborationSession,
 	ExternalCollaborationSnapshot,
 	ExternalCollaborationAwareness,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 /**
  * Public component types for the Vue PowerPoint viewer.

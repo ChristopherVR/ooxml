@@ -6,8 +6,8 @@ import {
 	partitionTemplateElements,
 	readOnlyRecommendation,
 	resolveAuthoredCustomShowId,
-} from 'pptx-viewer-shared';
-import type { CollabLoadOrigin } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { CollabLoadOrigin } from 'ooxml-ui/pptx';
 
 import type { EditorController } from './editor';
 import { seedDeckViewPreferences } from './editor';

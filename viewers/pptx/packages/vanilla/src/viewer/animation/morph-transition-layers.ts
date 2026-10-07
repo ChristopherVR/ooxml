@@ -1,8 +1,8 @@
-import type { MorphTransitionPlan } from 'pptx-viewer-shared';
+import type { MorphTransitionPlan } from 'ooxml-ui/pptx';
 import {
 	MORPH_CROSSFADE_GROUP_CSS_TEXT,
 	MORPH_CROSSFADE_HALF_BLEND_MODE,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import { buildLayer } from './transition-layer';
 

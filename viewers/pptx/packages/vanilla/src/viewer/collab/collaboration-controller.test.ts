@@ -11,7 +11,7 @@ const reconcileSlidesInYDoc = vi.fn();
 const readSlidesFromYDoc = vi.fn<() => PptxSlide[]>(() => []);
 let capturedObserve: ((events: unknown, tx: { origin?: unknown }) => void) | null = null;
 
-vi.mock(import('pptx-viewer-shared'), async (importOriginal) => ({
+vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => ({
 	...(await importOriginal()),
 	reconcileSlidesInYDoc: (...args: unknown[]) => reconcileSlidesInYDoc(...args),
 	readSlidesFromYDoc: () => readSlidesFromYDoc(),
@@ -66,7 +66,7 @@ vi.mock(import('./collaboration-provider'), () => ({
 }));
 
 const { createCollaborationController } = await import('./collaboration-controller');
-const { LOCAL_SYNC_ORIGIN } = await import('pptx-viewer-shared');
+const { LOCAL_SYNC_ORIGIN } = await import('ooxml-ui/pptx');
 
 function slide(id: string): PptxSlide {
 	return { id, elements: [] } as unknown as PptxSlide;

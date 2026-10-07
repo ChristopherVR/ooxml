@@ -4,8 +4,8 @@
  * are the shared `pptx-ui-ribbon-home-editing` element (Select is its own
  * popover menu); this adapter opens the find panel and runs Select All.
  */
-import { editingHomeControls, homeSnapshotTranslator } from 'pptx-viewer-shared';
-import type { RibbonHomeRequestEvent } from 'pptx-viewer-shared';
+import { editingHomeControls, homeSnapshotTranslator } from 'ooxml-ui/pptx';
+import type { RibbonHomeRequestEvent } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

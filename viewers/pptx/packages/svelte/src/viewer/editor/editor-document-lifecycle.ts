@@ -17,7 +17,7 @@ import {
 	overlayInlineTextSnapshot,
 	overlayMasterViewInlineSnapshot,
 	partitionTemplateElements,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import { createEditorSnapshot, saveEditorDocument } from './editor-document-state';
 import type { EditorSnapshot } from './editor-document-state';

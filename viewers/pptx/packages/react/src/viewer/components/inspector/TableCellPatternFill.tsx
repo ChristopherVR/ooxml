@@ -1,5 +1,5 @@
 import type { PptxTableCellStyle } from 'pptx-viewer-core';
-import { FILL_PATTERN_LABEL_KEYS, schemaLabel } from 'pptx-viewer-shared';
+import { FILL_PATTERN_LABEL_KEYS, schemaLabel } from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 

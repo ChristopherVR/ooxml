@@ -9,3 +9,4 @@ export * from './foreign-vector-budget.js';
 export * from './scene-details.js';
 export * from './scene-validation.js';
 export * from './snapshot-scene.js';
+export * from './page-edit.js';

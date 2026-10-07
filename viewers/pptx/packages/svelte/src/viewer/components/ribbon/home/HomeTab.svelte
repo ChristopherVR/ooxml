@@ -9,7 +9,7 @@
 	 * Every group wrapper carries its catalogue `data-ribbon-group` id so a
 	 * host customisation can hide it (shared `ribbonCustomizationCss`).
 	 */
-	import type { ToolbarActionId } from 'pptx-viewer-shared';
+	import type { ToolbarActionId } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../../i18n/context';
 	import type { EditorState } from '../../../editor/editor-state.svelte';

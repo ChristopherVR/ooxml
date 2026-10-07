@@ -17,7 +17,7 @@
  * @module animation-timeline-labels
  */
 
-import { ANIMATION_DIRECTION_LABEL_KEYS, TRIGGER_OPTIONS } from 'pptx-viewer-shared';
+import { ANIMATION_DIRECTION_LABEL_KEYS, TRIGGER_OPTIONS } from 'ooxml-ui/pptx';
 
 /**
  * `PptxAnimationTrigger` -> dictionary key, derived from shared's

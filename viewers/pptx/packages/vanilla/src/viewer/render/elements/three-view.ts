@@ -6,7 +6,7 @@ import type {
 	Rendering3DFlags,
 	TextStyleAnimationDescriptor,
 	ThreeViewSpec,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	applyChart3DDrag,
 	applyChart3DSelect,
@@ -15,7 +15,7 @@ import {
 	formatAxisValue,
 	THREE_VIEW_EVENTS,
 	THREE_VIEW_TAG,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { ElementRenderContext } from '../types';
 import { takeReusableThreeView } from './three-view-reuse';

@@ -67,7 +67,7 @@ import {
 	viewerPreferencesFromViewProperties,
 	viewPropertiesPatchFromPreferences,
 	writeStoredViewerPrefs,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import type {
 	ElementUpdate,
 	ElementUpdateOptions,
@@ -86,10 +86,10 @@ import type {
 	ViewerSettings,
 	ViewerTheme,
 	ViewportFitPadding,
-} from '../internal/shared';
-import type { PptxAiBridge, PptxAiConfig } from '../internal/shared-ai';
-import { LOCALE_CATALOG } from '../internal/shared-src/i18n';
-import type { LocaleCatalogEntry } from '../internal/shared-src/i18n';
+} from 'ooxml-ui/pptx';
+import type { PptxAiBridge, PptxAiConfig } from 'ooxml-ui/pptx/ai';
+import { LOCALE_CATALOG } from 'ooxml-ui/pptx/i18n';
+import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
 import { themeStyle } from '../theme/viewer-theme';
 import { AccessibilityPanelComponent } from './accessibility-panel.component';
 import { AccessibilityService } from './accessibility.service';
@@ -1369,7 +1369,7 @@ export class PowerPointViewerComponent
 	/** PowerPoint content as Uint8Array (or ArrayBuffer). */
 	readonly content = input<Uint8Array | ArrayBuffer | null>(null);
 	/** Licensed fonts supplied by the host application. No fonts are bundled. */
-	readonly fontsInput = input<import('../internal/shared').ViewerFontSource[]>([], {
+	readonly fontsInput = input<import('ooxml-ui/pptx').ViewerFontSource[]>([], {
 		alias: 'fonts',
 	});
 	/** Whether editing actions are enabled (host input; see {@link canEdit}). */
@@ -2853,7 +2853,7 @@ export class PowerPointViewerComponent
 		this.themeEditorRequested.update((open) => !open);
 	}
 	protected async applyThemeEditor(
-		edit: import('../internal/shared').ThemeEditorEdit,
+		edit: import('ooxml-ui/pptx').ThemeEditorEdit,
 	): Promise<void> {
 		if (!this.canEdit()) {
 			return;

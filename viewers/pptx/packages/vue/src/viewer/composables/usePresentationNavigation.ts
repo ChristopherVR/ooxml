@@ -15,8 +15,8 @@ import {
 	buildZoomTransitionOverride,
 	isClickAdvanceAllowed,
 	resolveForwardSlideWithZoomReturn,
-} from 'pptx-viewer-shared';
-import type { ZoomExcursion, ZoomNavigationTarget } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { ZoomExcursion, ZoomNavigationTarget } from 'ooxml-ui/pptx';
 import type { ComputedRef, Ref } from 'vue';
 import { computed, ref, watch } from 'vue';
 

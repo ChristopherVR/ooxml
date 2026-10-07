@@ -13,4 +13,4 @@
  * delegates to core's `deriveSlideTitle` instead, which is the same resolution
  * `docProps/app.xml` is written from.
  */
-export { deriveSlideFieldContext } from 'pptx-viewer-shared';
+export { deriveSlideFieldContext } from 'ooxml-ui/pptx';

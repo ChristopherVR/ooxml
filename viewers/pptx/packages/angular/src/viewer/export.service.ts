@@ -17,8 +17,8 @@
 import { Injectable } from '@angular/core';
 import type { PptxData, PptxSaveFormat, PptxSlide, SvgExportOptions } from 'pptx-viewer-core';
 
-import { downloadBlob } from '../internal/shared';
-import type { RasterizeElementTilesResult } from '../internal/shared';
+import { downloadBlob } from 'ooxml-ui/pptx';
+import type { RasterizeElementTilesResult } from 'ooxml-ui/pptx';
 import {
 	buildTiledPdf,
 	renderElementPngBlob,

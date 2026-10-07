@@ -10,7 +10,7 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 
-import type { ThemeCatalogEntry } from '../internal/shared';
+import type { ThemeCatalogEntry } from 'ooxml-ui/pptx';
 
 @Component({
 	selector: 'pptx-settings-appearance-tab',

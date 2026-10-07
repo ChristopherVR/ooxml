@@ -40,13 +40,13 @@ import {
 	slideSizeFromPreset,
 	slideSizeToCanvasPx,
 	withSlideSizeOrientation,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import type {
 	SlideSizeEmu,
 	SlideSizeOrientation,
 	SlideSizePreset,
 	SlideSizeRescaleMode,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { EditorStateService } from './editor-state.service';
 import { INSPECTOR_CARD_STYLES } from './inspector-card-styles';
 import { LoadContentService } from './load-content.service';

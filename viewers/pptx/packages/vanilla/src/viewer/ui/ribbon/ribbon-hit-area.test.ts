@@ -1,4 +1,4 @@
-import { EMPTY_RIBBON_TRANSITION_DRAFT } from 'pptx-viewer-shared';
+import { EMPTY_RIBBON_TRANSITION_DRAFT } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { EditActions } from '../../editor/editor-edit-ops';

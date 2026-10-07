@@ -14,8 +14,8 @@
  */
 import type { Options as Html2CanvasOptions } from 'html2canvas-pro';
 
-import { _testing } from '../internal/shared-src/export/canvas-color-fix';
-import { prepareHtml2CanvasClone } from '../internal/shared-src/export/html2canvas-clone';
+import { _testing } from 'ooxml-ui/pptx/export/canvas-color-fix';
+import { prepareHtml2CanvasClone } from 'ooxml-ui/pptx/export/html2canvas-clone';
 
 export { _testing };
 

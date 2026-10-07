@@ -14,8 +14,8 @@
 	 * hatch), so the navigator has to offer them too.
 	 */
 	import type { PptxSlide } from 'pptx-viewer-core';
-	import { PRESENTER_LAYOUT_METRICS, PRESENTER_NAVIGATOR_LABEL_KEYS } from 'pptx-viewer-shared';
-	import type { CanvasSize } from 'pptx-viewer-shared';
+	import { PRESENTER_LAYOUT_METRICS, PRESENTER_NAVIGATOR_LABEL_KEYS } from 'ooxml-ui/pptx';
+	import type { CanvasSize } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 	import SlideStage from './SlideStage.svelte';

@@ -19,12 +19,12 @@ import type {
 	AiChangeBatch,
 	PptxAiFocusedTarget,
 	ToolCanvasTarget,
-} from 'pptx-viewer-shared/ai';
-import { computeFocusTargets } from 'pptx-viewer-shared/ai';
+} from 'ooxml-ui/pptx/ai';
+import { computeFocusTargets } from 'ooxml-ui/pptx/ai';
 import { computed, onScopeDispose, ref } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
 
-export type { AiCanvasHighlight } from 'pptx-viewer-shared/ai';
+export type { AiCanvasHighlight } from 'ooxml-ui/pptx/ai';
 
 /** Live reactive inputs the controller derives its focus from. */
 export interface UseAiPanelControllerInput {

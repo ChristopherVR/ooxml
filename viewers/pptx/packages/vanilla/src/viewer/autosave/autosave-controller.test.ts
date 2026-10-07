@@ -1,5 +1,5 @@
 import type { PptxHandler, PptxSlide } from 'pptx-viewer-core';
-import type { AutosaveActivation, AutosaveRecoveryOffer } from 'pptx-viewer-shared';
+import type { AutosaveActivation, AutosaveRecoveryOffer } from 'ooxml-ui/pptx';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createInitialViewerState, createStore } from '../state';
@@ -11,7 +11,7 @@ const probeAutosaveRecovery =
 		(path: string, now?: number, displayName?: string) => Promise<AutosaveRecoveryOffer | null>
 	>();
 
-vi.mock(import('pptx-viewer-shared'), async (importOriginal) => ({
+vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => ({
 	...(await importOriginal()),
 	saveAutosaveSnapshot: (path: string, data: Uint8Array) => saveAutosaveSnapshot(path, data),
 	probeAutosaveRecovery: (path: string, now?: number, displayName?: string) =>

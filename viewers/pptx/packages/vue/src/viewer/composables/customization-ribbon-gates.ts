@@ -8,8 +8,8 @@
  * Language, File > Options) and turns the rest into no-ops, from one place.
  * The decision itself is the shared `isDialogAvailable`.
  */
-import { isDialogAvailable } from 'pptx-viewer-shared';
-import type { ResolvedCustomization } from 'pptx-viewer-shared';
+import { isDialogAvailable } from 'ooxml-ui/pptx';
+import type { ResolvedCustomization } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
 

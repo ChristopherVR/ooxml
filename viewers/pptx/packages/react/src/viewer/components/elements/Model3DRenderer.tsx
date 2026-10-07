@@ -13,7 +13,7 @@
  */
 
 import type { Model3DPptxElement } from 'pptx-viewer-core';
-import { modelDataToBlobUrl } from 'pptx-viewer-shared';
+import { modelDataToBlobUrl } from 'ooxml-ui/pptx';
 import React, { Suspense, useState, useEffect, useMemo } from 'react';
 
 // ---------------------------------------------------------------------------

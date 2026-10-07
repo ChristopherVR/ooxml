@@ -13,7 +13,7 @@ export type {
 	ReflectionState,
 	SoftEdgeState,
 	EffectsState,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 
 export {
 	effectsStateOf,
@@ -31,4 +31,4 @@ export {
 	updateReflectionPatch,
 	enableSoftEdgePatch,
 	disableSoftEdgePatch,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';

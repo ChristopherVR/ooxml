@@ -13,7 +13,7 @@ import {
 	READING_VIEW_ATTR,
 	READING_VIEW_COUNTER_ATTR,
 	READING_VIEW_STAGE_ATTR,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../i18n';

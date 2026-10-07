@@ -2,13 +2,13 @@ import {
 	DEFAULT_INSERT_CHART_KIND,
 	FREEFORM_TOOL_IDS,
 	isDrawingToolVisible,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type {
 	FreeformToolKind,
 	InsertChartKind,
 	PptxUiRibbonInsertElement,
 	RibbonInsertRequestEvent,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

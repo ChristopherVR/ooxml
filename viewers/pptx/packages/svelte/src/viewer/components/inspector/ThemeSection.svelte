@@ -24,7 +24,7 @@
 		THEME_COLOR_SCHEME_KEYS,
 		THEME_PRESETS,
 	} from 'pptx-viewer-core';
-	import { schemaLabel, THEME_COLOR_SLOT_LABEL_KEYS } from 'pptx-viewer-shared';
+	import { schemaLabel, THEME_COLOR_SLOT_LABEL_KEYS } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 	import type { EditorState } from '../../editor/editor-state.svelte';

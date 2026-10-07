@@ -23,9 +23,9 @@
  */
 import { expect, test } from '@playwright/test';
 
-import { translationsEn } from '../../viewers/pptx/packages/shared/src/i18n/translations-en';
-import { THEME_CATALOG } from '../../viewers/pptx/packages/shared/src/theme/theme-catalog';
-import type { ThemeCatalogEntry } from '../../viewers/pptx/packages/shared/src/theme/theme-catalog';
+import { translationsEn } from '../../src/ui/src/pptx/i18n/translations-en';
+import { THEME_CATALOG } from '../../src/ui/src/pptx/theme/theme-catalog';
+import type { ThemeCatalogEntry } from '../../src/ui/src/pptx/theme/theme-catalog';
 import { loadDeck } from './support/deck';
 import {
 	openOptionsDialog,

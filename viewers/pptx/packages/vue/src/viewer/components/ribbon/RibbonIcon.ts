@@ -1,5 +1,5 @@
-import { RIBBON_CONTROL_ICONS } from 'pptx-viewer-shared';
-import type { RibbonIconNode } from 'pptx-viewer-shared';
+import { RIBBON_CONTROL_ICONS } from 'ooxml-ui/pptx';
+import type { RibbonIconNode } from 'ooxml-ui/pptx';
 import { defineComponent, h } from 'vue';
 import type { VNode } from 'vue';
 

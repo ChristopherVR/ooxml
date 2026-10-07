@@ -8,8 +8,8 @@
  * AiHistoryMenu / AiHistoryList.
  */
 
-import { createAiChatHistoryController } from 'pptx-viewer-shared/ai';
-import type { PptxAiChatStore, PptxAiUIMessage } from 'pptx-viewer-shared/ai';
+import { createAiChatHistoryController } from 'ooxml-ui/pptx/ai';
+import type { PptxAiChatStore, PptxAiUIMessage } from 'ooxml-ui/pptx/ai';
 
 import type { Translator } from '../i18n';
 import { createEl } from '../render';

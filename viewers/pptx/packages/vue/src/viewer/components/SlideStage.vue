@@ -6,7 +6,7 @@ import {
 	applyRenderedElementAccessibility,
 	getSlideBackgroundStyle,
 	visibleTemplateElements,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type { CSSProperties } from 'vue';
 import { computed, ref, watchPostEffect } from 'vue';
 import { useI18n } from 'vue-i18n';

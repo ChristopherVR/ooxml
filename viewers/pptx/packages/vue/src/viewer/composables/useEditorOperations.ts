@@ -13,7 +13,7 @@ import {
 	sendBackward as sharedSendBackward,
 	sendToBack as sharedSendToBack,
 	updateElementInTree,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { computed, ref } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
 

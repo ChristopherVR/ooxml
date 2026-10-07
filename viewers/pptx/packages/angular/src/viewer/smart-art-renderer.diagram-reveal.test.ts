@@ -14,7 +14,7 @@ import {
 	resolveRevealedDrawingShapeNodeIds,
 	resolveRevealedDrawingShapes,
 	resolveRevealedSmartArtNodes,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 
 function node(id: string, text: string): PptxSmartArtNode {
 	return { id, text };

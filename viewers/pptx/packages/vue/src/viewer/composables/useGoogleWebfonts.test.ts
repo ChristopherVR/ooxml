@@ -1,6 +1,6 @@
 // oxlint-disable react-hooks/rules-of-hooks
 import type { PptxElement, PptxEmbeddedFont, PptxSlide } from 'pptx-viewer-core';
-import { resetGoogleWebfontSessionCache } from 'pptx-viewer-shared';
+import { resetGoogleWebfontSessionCache } from 'ooxml-ui/pptx';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { effectScope, nextTick, ref } from 'vue';
 

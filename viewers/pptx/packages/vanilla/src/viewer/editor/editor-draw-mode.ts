@@ -1,4 +1,4 @@
-import { buildLiveInkStrokeView } from 'pptx-viewer-shared';
+import { buildLiveInkStrokeView } from 'ooxml-ui/pptx';
 
 import type { DrawTool, Store, ViewerState } from '../state';
 import { createDrawGestures } from './editor-draw-gestures';

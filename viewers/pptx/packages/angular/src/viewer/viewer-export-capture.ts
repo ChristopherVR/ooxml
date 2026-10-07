@@ -12,8 +12,8 @@
 import type { WritableSignal } from '@angular/core';
 import type { PptxSlide } from 'pptx-viewer-core';
 
-import type { RasterizeElementTilesResult } from '../internal/shared';
-import { slideProgressPercent, slideStatusLabel } from '../internal/shared';
+import type { RasterizeElementTilesResult } from 'ooxml-ui/pptx';
+import { slideProgressPercent, slideStatusLabel } from 'ooxml-ui/pptx';
 import type { ExportService } from './export.service';
 
 /** Live accessors the export loop needs from the host component. */

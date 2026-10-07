@@ -1,4 +1,4 @@
-import type { CanvasSize, ViewportFitPadding } from 'pptx-viewer-shared';
+import type { CanvasSize, ViewportFitPadding } from 'ooxml-ui/pptx';
 
 import { fitScale } from './navigation';
 

@@ -8,7 +8,7 @@
 	 * no path to this at all before.
 	 */
 	import type { PptxSlide, PptxSlideMaster } from 'pptx-viewer-core';
-	import { normalizeHexColor, resolveTemplateBackgroundRows } from 'pptx-viewer-shared';
+	import { normalizeHexColor, resolveTemplateBackgroundRows } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 	import type { EditorState } from '../../editor/editor-state.svelte';

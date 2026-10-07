@@ -212,11 +212,16 @@ become aliases of `office-ui-*`.
 
 ```
 bun install
+bun run build                              # build core declarations first
 bun run --cwd src/ui typecheck
 bun run --cwd src/ui test
-bun run build && bun run --cwd src/ui build   # core first: the declarations read ../../dist
+bun run --cwd src/ui build
 bun run --cwd src/ui test:package
 ```
+
+The Teams PowerPoint preview consumes `src/core/dist/pptx` declarations during
+UI typechecking. The core PPTX area still uses relaxed compiler settings;
+importing its source into the strict UI project would bypass that boundary.
 
 ## Documentation
 

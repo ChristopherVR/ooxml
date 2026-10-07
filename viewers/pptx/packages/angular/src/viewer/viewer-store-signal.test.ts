@@ -14,7 +14,7 @@
 import { Injector, runInInjectionContext } from '@angular/core';
 import { describe, expect, it } from 'vitest';
 
-import { createViewerStore } from '../internal/shared';
+import { createViewerStore } from 'ooxml-ui/pptx';
 import { viewerStoreSignal } from './viewer-store-signal';
 
 interface State {

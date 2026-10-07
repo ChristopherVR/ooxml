@@ -10,7 +10,7 @@
  */
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 
-import { canInteractWithElement } from '../internal/shared';
+import { canInteractWithElement } from 'ooxml-ui/pptx';
 
 /**
  * May every one of `ids` be grouped together?

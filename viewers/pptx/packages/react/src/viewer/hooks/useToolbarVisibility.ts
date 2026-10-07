@@ -9,8 +9,8 @@
  * membership check to the shared `isActionHidden` helper so every binding
  * (React/Vue/Angular) agrees on what "hidden" means for a given id.
  */
-import { isActionHidden, TOOLBAR_TABS } from 'pptx-viewer-shared';
-import type { ToolbarActionId, ToolbarTabId } from 'pptx-viewer-shared';
+import { isActionHidden, TOOLBAR_TABS } from 'ooxml-ui/pptx';
+import type { ToolbarActionId, ToolbarTabId } from 'ooxml-ui/pptx';
 import { useMemo } from 'react';
 
 import { useViewerOptionsContext } from '../components/viewer-options-context';

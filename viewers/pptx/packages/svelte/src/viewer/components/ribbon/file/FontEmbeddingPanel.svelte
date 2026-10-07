@@ -3,7 +3,7 @@
 	import Check from '@lucide/svelte/icons/check';
 	import Type from '@lucide/svelte/icons/type';
 	import X from '@lucide/svelte/icons/x';
-	import { scanAvailableFontFamilies } from 'pptx-viewer-shared';
+	import { scanAvailableFontFamilies } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../../i18n/context';
 

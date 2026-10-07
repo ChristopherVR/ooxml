@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { captionDisplayText, getSpeechRecognitionCtor, mergeCaptionResults, subtitleRecognitionLanguage, subtitleSettingsFromOptions } from 'pptx-viewer-shared';
-	import type { SpeechSupportState } from 'pptx-viewer-shared';
+	import { captionDisplayText, getSpeechRecognitionCtor, mergeCaptionResults, subtitleRecognitionLanguage, subtitleSettingsFromOptions } from 'ooxml-ui/pptx';
+	import type { SpeechSupportState } from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../i18n/context';
 	import { useViewerOptions } from '../state/viewer-options-context';
 

@@ -12,7 +12,7 @@ import type { PptxElement, TextSegment, TextStyle } from 'pptx-viewer-core';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, it, expect, vi } from 'vitest';
 
-vi.mock(import('pptx-viewer-shared'), async (importOriginal) => {
+vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => {
 	const actual = await importOriginal();
 	return {
 		...actual,
@@ -24,7 +24,7 @@ vi.mock(import('pptx-viewer-shared'), async (importOriginal) => {
 	};
 });
 
-const { buildParagraphs } = await import('pptx-viewer-shared');
+const { buildParagraphs } = await import('ooxml-ui/pptx');
 const { renderParagraphRun } = await import('./text-segment-render');
 
 const element = {

@@ -17,8 +17,8 @@ import {
 	filterVisibleTabs,
 	TAB_ROW_ACTION_CLASSES,
 	TOOLBAR_TABS,
-} from '../internal/shared';
-import type { RibbonContextualTabId, ToolbarActionId } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { RibbonContextualTabId, ToolbarActionId } from 'ooxml-ui/pptx';
 import type { RibbonTab } from './ribbon-types';
 import { toolbarVisibility } from './toolbar-visibility';
 import { ViewerOptionsService } from './viewer-options.service';

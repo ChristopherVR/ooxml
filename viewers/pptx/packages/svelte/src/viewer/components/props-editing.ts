@@ -4,7 +4,7 @@ import type {
 	ResizeHandleId,
 	ShapeAdjustmentHandleDescriptor,
 	SnapLine,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { ContextMenuCellTarget } from '../editor/context-menu-dispatch';
 import type { EditorController } from '../editor/editor-controller.svelte';
@@ -62,16 +62,16 @@ export interface InlineTextEditorProps {
 	spellCheck?: boolean;
 	/** Existing session channel; omitted outside connected slide editing. */
 	collaboration?: {
-		patcher: import('pptx-viewer-shared').CollaborationLivePatcher;
+		patcher: import('ooxml-ui/pptx').CollaborationLivePatcher;
 		slideId?: string;
 	};
 	/** Called with the edited plain text on every keystroke (live preview only). */
-	oninput?: (text: string, snapshot?: import('pptx-viewer-shared').InlineTextEditSnapshot) => void;
+	oninput?: (text: string, snapshot?: import('ooxml-ui/pptx').InlineTextEditSnapshot) => void;
 	/** Called with the edited plain text on commit (only when it changed). */
-	oncommit: (text: string, snapshot?: import('pptx-viewer-shared').InlineTextEditSnapshot) => void;
+	oncommit: (text: string, snapshot?: import('ooxml-ui/pptx').InlineTextEditSnapshot) => void;
 	/** Current reader, scoped to this mounted editor session; absent after close. */
 	onregister?: (
-		controller: import('pptx-viewer-shared').InlineListController | undefined,
+		controller: import('ooxml-ui/pptx').InlineListController | undefined,
 		cancel?: () => void,
 	) => void;
 	/** Retain accepted connected text before framework-driven unmount, without a commit. */

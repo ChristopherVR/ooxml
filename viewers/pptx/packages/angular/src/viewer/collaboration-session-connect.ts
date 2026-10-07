@@ -1,5 +1,5 @@
-import type { CollaborationConfig, CollaborationTransport } from '../internal/shared';
-import { createSnapshotTextPositions } from '../internal/shared';
+import type { CollaborationConfig, CollaborationTransport } from 'ooxml-ui/pptx';
+import { createSnapshotTextPositions } from 'ooxml-ui/pptx';
 import { activateExternalSession } from './collaboration-external-session';
 import { createWebrtcBundle, createWebsocketBundle } from './collaboration-providers';
 import type { ActiveSession, ActivateSessionDeps } from './collaboration-session-setup';

@@ -9,12 +9,12 @@
 	 * `presenterConsoleViewState`; `onselect` receives the shared control id and the
 	 * console owns what each one does.
 	 */
-	import { presenterConsoleViewState } from 'pptx-viewer-shared';
+	import { presenterConsoleViewState } from 'ooxml-ui/pptx';
 	import type {
 		PresentationSnapshot,
 		PresenterConsoleRequestEvent,
 		PresenterConsoleViewState,
-	} from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 

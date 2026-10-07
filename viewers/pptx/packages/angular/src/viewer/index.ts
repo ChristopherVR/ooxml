@@ -1,4 +1,4 @@
-export type { ElementUpdate, ElementUpdateOptions } from '../internal/shared';
+export type { ElementUpdate, ElementUpdateOptions } from 'ooxml-ui/pptx';
 export { PowerPointViewerComponent } from './power-point-viewer.component';
 export { POWER_POINT_VIEWER_PROVIDERS } from './power-point-viewer.providers';
 export * from './ai';
@@ -135,7 +135,7 @@ export {
 export { applyMove, applyResize, RESIZE_HANDLES, type ResizeHandle, type Box } from './drag-resize';
 export { resolveParagraphBullet, formatAutoNumber, bulletIndentPx } from './text-bullets';
 export { EquationRendererComponent } from './equation-renderer.component';
-export { ommlToMathml, convertOmmlToMathMl } from '../internal/shared';
+export { ommlToMathml, convertOmmlToMathMl } from 'ooxml-ui/pptx';
 export { LoadContentService } from './load-content.service';
 export { ViewerCollaborationShellService } from './viewer-collaboration-shell.service';
 export { RemoteSelectionOverlayComponent } from './remote-selection-overlay.component';
@@ -145,8 +145,8 @@ export type {
 	ConnectionStatus,
 	SanitizedPresence,
 	DeckSaveState,
-} from '../internal/shared';
-export { describeCollaborationShellState } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+export { describeCollaborationShellState } from 'ooxml-ui/pptx';
 
 // Comments
 export { CommentMarkersOverlayComponent } from './comment-markers-overlay.component';
@@ -336,12 +336,12 @@ export {
 	getLocalStorageUsageSummary,
 	resolveProfileInitial,
 	saveViewerProfile,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 export type {
 	AccountAuthConfig,
 	LocalStorageUsageSummary,
 	ViewerProfile,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 export { KeepAnnotationsDialogComponent } from './keep-annotations-dialog.component';
 export { AutosaveRecoveryDialogComponent } from './autosave-recovery-dialog.component';
 export { SignatureStrippedDialogComponent } from './signature-stripped-dialog.component';
@@ -463,8 +463,8 @@ export {
 	loadSessionDeck,
 	rememberSessionDeck,
 	restoreSessionDeck,
-} from '../internal/shared';
-export type { SessionDeck } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+export type { SessionDeck } from 'ooxml-ui/pptx';
 export {
 	PresenterWindowService,
 	PRESENTER_CHANNEL_NAME,
@@ -487,7 +487,7 @@ export type {
 	ExternalCollaborationSession,
 	ExternalCollaborationSnapshot,
 } from './types';
-export type { ViewerMode, PowerPointViewerAPI, ToolbarActionId } from '../internal/shared';
+export type { ViewerMode, PowerPointViewerAPI, ToolbarActionId } from 'ooxml-ui/pptx';
 export type { StyleMap } from './element-style';
 export {
 	getContainerStyle,

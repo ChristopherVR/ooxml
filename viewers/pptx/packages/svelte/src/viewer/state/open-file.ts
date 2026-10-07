@@ -1,4 +1,4 @@
-import { openPptxFile } from 'pptx-viewer-shared';
+import { openPptxFile } from 'ooxml-ui/pptx';
 
 import type { PresentationLoader } from './presentation-loader.svelte';
 

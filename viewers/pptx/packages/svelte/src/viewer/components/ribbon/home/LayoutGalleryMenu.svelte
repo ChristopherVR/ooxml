@@ -7,7 +7,7 @@
 	 * enough to tell "Title and Content" from "Two Content" in a themed deck.
 	 */
 	import type { PptxLayoutOption, PptxLayoutPreview, PptxSlide } from 'pptx-viewer-core';
-	import { buildLayoutPreviewGeometry, isCurrentLayout } from 'pptx-viewer-shared';
+	import { buildLayoutPreviewGeometry, isCurrentLayout } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../../i18n/context';
 	import SlideStage from '../../SlideStage.svelte';

@@ -1,5 +1,5 @@
-import { registerPptxWebControls, isActionHidden } from 'pptx-viewer-shared';
-import type { RibbonViewRequestEvent, RibbonViewState, ToolbarActionId } from 'pptx-viewer-shared';
+import { registerPptxWebControls, isActionHidden } from 'ooxml-ui/pptx';
+import type { RibbonViewRequestEvent, RibbonViewState, ToolbarActionId } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../../i18n';
 import type { RibbonNavHandlers } from '../ribbon-types';

@@ -5,7 +5,7 @@
  * active-tab styling, `react-icons/lu` glyphs mapped to `lucide-vue-next`).
  */
 import { Layers, MessageSquare, Settings2, X } from 'lucide-vue-next';
-import { getDensePanelTouchTargetPx } from 'pptx-viewer-shared';
+import { getDensePanelTouchTargetPx } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

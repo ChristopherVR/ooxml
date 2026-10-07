@@ -17,14 +17,14 @@ import {
 	resolveForwardSlideWithZoomReturn,
 	resolveShowSlideIndexes,
 	stopAllPersistentAudio,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type {
 	AuthoredSlideRange,
 	ElementAnimationState,
 	RunProgramNotice,
 	ZoomExcursion,
 	ZoomNavigationTarget,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { CustomShowReturnState } from './action-runner-callbacks';
 import { buildWaveFourActionCallbacks } from './action-runner-callbacks';

@@ -28,8 +28,8 @@
 		shouldRenderHitTarget,
 		smartArtConnectorPaint,
 		smartArtNodeLabel,
-	} from 'pptx-viewer-shared';
-	import type { RenderedNode } from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
+	import type { RenderedNode } from 'ooxml-ui/pptx';
 	import { getContainerStyle, getElementHitTargetStyle, styleToString } from '../style';
 	import type { ElementRendererProps } from './props';
 	import SmartArtDrawingView from './SmartArtDrawingView.svelte';

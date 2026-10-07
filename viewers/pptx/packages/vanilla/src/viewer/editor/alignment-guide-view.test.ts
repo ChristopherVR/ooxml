@@ -1,4 +1,4 @@
-import type { Guide } from 'pptx-viewer-shared';
+import type { Guide } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
 import { syncAlignmentGuides } from './alignment-guide-view';

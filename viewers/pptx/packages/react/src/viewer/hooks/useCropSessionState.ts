@@ -12,7 +12,7 @@
  *
  * @module useCropSessionState
  */
-import type { CropSession } from 'pptx-viewer-shared';
+import type { CropSession } from 'ooxml-ui/pptx';
 import { useCallback, useRef, useState } from 'react';
 
 export interface CropSessionState {

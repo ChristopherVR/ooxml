@@ -5,8 +5,8 @@
 	 * shell under the file-size budget; it owns no state and reads everything
 	 * off the shell's own props.
 	 */
-	import type { RibbonContextualTabId } from 'pptx-viewer-shared';
-	import { RIBBON_CONTEXTUAL_TABS, homeLaunchers } from 'pptx-viewer-shared';
+	import type { RibbonContextualTabId } from 'ooxml-ui/pptx';
+	import { RIBBON_CONTEXTUAL_TABS, homeLaunchers } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 

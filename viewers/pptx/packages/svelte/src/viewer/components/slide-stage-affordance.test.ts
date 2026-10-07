@@ -12,7 +12,7 @@ import {
 	ACTION_INDICATOR_CLASS,
 	LINK_TOOLTIP_CLASS,
 	LINK_TOOLTIP_HOST_CLASS,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it } from 'vitest';
 

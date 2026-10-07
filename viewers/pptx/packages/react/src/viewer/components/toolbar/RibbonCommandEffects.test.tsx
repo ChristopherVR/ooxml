@@ -9,8 +9,8 @@
  * wrong dialog, a font preset emitting the wrong unit, and Transitions >
  * Preview re-committing the slide's existing transition.
  */
-import { registerPptxWebControls } from 'pptx-viewer-shared';
-import type { PptxUiSelectElement } from 'pptx-viewer-shared';
+import { registerPptxWebControls } from 'ooxml-ui/pptx';
+import type { PptxUiSelectElement } from 'ooxml-ui/pptx';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
@@ -23,7 +23,7 @@ vi.mock(import('react-i18next'), () => ({
 const { DesignSection } = await import('./DesignTransitionsReviewSection');
 const { TextSection } = await import('./TextSection');
 const { TransitionsSection } = await import('./TransitionsSection');
-const { TRANSITION_PREVIEW_ATTR } = await import('pptx-viewer-shared');
+const { TRANSITION_PREVIEW_ATTR } = await import('ooxml-ui/pptx');
 
 registerPptxWebControls();
 

@@ -1,6 +1,6 @@
 import type { PptxSlide } from 'pptx-viewer-core';
-import type { FindResult } from 'pptx-viewer-shared';
-import { findInSlides, replaceInSlides, replaceMatch } from 'pptx-viewer-shared';
+import type { FindResult } from 'ooxml-ui/pptx';
+import { findInSlides, replaceInSlides, replaceMatch } from 'ooxml-ui/pptx';
 
 /**
  * Reactive Find & Replace panel state for the Home tab's Editing group.

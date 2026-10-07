@@ -15,7 +15,7 @@ import { Injector, runInInjectionContext } from '@angular/core';
 import type { PptxSlide, PptxSlideTransition } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 
-import { TRANSITION_MORPH_OPTIONS, TRANSITION_SPEED_OPTIONS } from '../internal/shared';
+import { TRANSITION_MORPH_OPTIONS, TRANSITION_SPEED_OPTIONS } from 'ooxml-ui/pptx';
 import { EditorStateService } from './editor-state.service';
 import { SlideTransitionCardComponent } from './slide-transition-card.component';
 

@@ -6,10 +6,10 @@
  * preserves the historical Angular import surface so the ink overlay and the
  * colocated tests are unchanged.
  */
-export type { InkPoint, InkStrokeView, StrokeToInkElementOpts } from '../internal/shared';
+export type { InkPoint, InkStrokeView, StrokeToInkElementOpts } from 'ooxml-ui/pptx';
 export {
 	buildLiveInkStrokeView,
 	pointFromPointerEvent,
 	pointsToSvgPathD,
 	strokeToInkElement,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';

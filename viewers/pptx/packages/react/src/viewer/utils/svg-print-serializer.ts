@@ -28,8 +28,8 @@ import {
 	buildPrintStyleSheet,
 	escapeXml,
 	svgToDataUrl,
-} from 'pptx-viewer-shared';
-import type { SvgPrintOptions, SvgPrintResult } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { SvgPrintOptions, SvgPrintResult } from 'ooxml-ui/pptx';
 
 export { escapeXml, buildPrintStyleSheet, buildPrintDocument, svgToDataUrl };
 export type { SvgPrintOptions, SvgPrintResult };

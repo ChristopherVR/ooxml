@@ -1,4 +1,4 @@
-import type { ProposalView } from 'pptx-viewer-shared/ai';
+import type { ProposalView } from 'ooxml-ui/pptx/ai';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../i18n';

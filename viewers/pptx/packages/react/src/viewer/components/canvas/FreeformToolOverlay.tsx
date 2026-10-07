@@ -1,6 +1,6 @@
 import type { ShapePptxElement } from 'pptx-viewer-core';
-import type { FreeformToolKind } from 'pptx-viewer-shared';
-import { attachOverlayKeyboard, clientToSlidePoint, FreeformToolSession } from 'pptx-viewer-shared';
+import type { FreeformToolKind } from 'ooxml-ui/pptx';
+import { attachOverlayKeyboard, clientToSlidePoint, FreeformToolSession } from 'ooxml-ui/pptx';
 import React, { useEffect, useReducer, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 

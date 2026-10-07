@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { PptxTableData } from 'pptx-viewer-core';
-import { evenColumnWidths, evenRowHeights, redistributeColumnWidth } from 'pptx-viewer-shared';
+import { evenColumnWidths, evenRowHeights, redistributeColumnWidth } from 'ooxml-ui/pptx';
 import { useI18n } from 'vue-i18n';
 
 /**

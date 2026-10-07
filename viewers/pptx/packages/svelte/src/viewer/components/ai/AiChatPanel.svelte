@@ -13,7 +13,7 @@
 	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 	import X from '@lucide/svelte/icons/x';
-	import type { PptxAiBridge, PptxAiConfig, ToolCanvasTarget } from 'pptx-viewer-shared/ai';
+	import type { PptxAiBridge, PptxAiConfig, ToolCanvasTarget } from 'ooxml-ui/pptx/ai';
 	import { onMount, untrack } from 'svelte';
 
 	import { useTranslator } from '../../../i18n/context';

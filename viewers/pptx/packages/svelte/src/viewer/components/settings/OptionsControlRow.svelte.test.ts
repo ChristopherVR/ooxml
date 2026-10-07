@@ -1,8 +1,8 @@
 /* oxlint-disable eslint/one-var -- each fixture/lookup below is an independent
    local; merging unrelated declarations across this file would hurt
    readability, not help it (see chart-view-model.ts for the same rationale). */
-import { DEFAULT_VIEWER_OPTIONS } from 'pptx-viewer-shared';
-import type { ViewerOptionsGroupId, ViewerOptionsNumberControl } from 'pptx-viewer-shared';
+import { DEFAULT_VIEWER_OPTIONS } from 'ooxml-ui/pptx';
+import type { ViewerOptionsGroupId, ViewerOptionsNumberControl } from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 

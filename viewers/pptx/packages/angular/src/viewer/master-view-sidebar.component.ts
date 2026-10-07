@@ -8,8 +8,8 @@ import type {
 	PptxSlideMaster,
 } from 'pptx-viewer-core';
 
-import { masterViewBackgroundColor } from '../internal/shared';
-import type { MasterViewCrudAction, MasterViewCrudActionId } from '../internal/shared';
+import { masterViewBackgroundColor } from 'ooxml-ui/pptx';
+import type { MasterViewCrudAction, MasterViewCrudActionId } from 'ooxml-ui/pptx';
 import { MasterViewCrudRowComponent } from './master-view-crud-row.component';
 
 const HANDOUT_COUNTS = [1, 2, 3, 4, 6, 9] as const;

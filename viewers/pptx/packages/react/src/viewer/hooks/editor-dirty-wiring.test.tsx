@@ -19,7 +19,7 @@
  * `useAutosave` itself is replaced, and only so the value it receives can be
  * read; every other hook in the chain is production code.
  */
-import { translationsEn } from 'pptx-viewer-shared/i18n';
+import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import React, { act, createRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';

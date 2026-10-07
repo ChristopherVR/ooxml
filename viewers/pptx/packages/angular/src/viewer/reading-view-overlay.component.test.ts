@@ -30,8 +30,8 @@ import {
 	READING_VIEW_ATTR,
 	READING_VIEW_COUNTER_ATTR,
 	READING_VIEW_STAGE_ATTR,
-} from '../internal/shared';
-import type { CanvasSize } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { CanvasSize } from 'ooxml-ui/pptx';
 import { ReadingViewOverlayComponent } from './reading-view-overlay.component';
 
 const CANVAS: CanvasSize = { width: 960, height: 540 };

@@ -6,8 +6,8 @@ import {
 	newFieldElement,
 	newTableElement,
 	resolveInsertedFieldText,
-} from 'pptx-viewer-shared';
-import type { InsertChartKind } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { InsertChartKind } from 'ooxml-ui/pptx';
 import { ref } from 'vue';
 import type { Ref, ShallowRef } from 'vue';
 

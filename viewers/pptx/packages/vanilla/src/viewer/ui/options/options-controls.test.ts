@@ -1,8 +1,8 @@
 /* oxlint-disable eslint/one-var -- each fixture/lookup below is an independent
    local; merging unrelated declarations across this file would hurt
    readability, not help it (see chart-view-model.ts for the same rationale). */
-import type { ViewerOptionsNumberControl } from 'pptx-viewer-shared';
-import { createViewerOptionsStore } from 'pptx-viewer-shared';
+import type { ViewerOptionsNumberControl } from 'ooxml-ui/pptx';
+import { createViewerOptionsStore } from 'ooxml-ui/pptx';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { createTranslator } from '../../i18n';

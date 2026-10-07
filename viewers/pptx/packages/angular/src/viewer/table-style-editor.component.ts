@@ -24,12 +24,12 @@ import {
 	normalizeTableStyleGuid,
 } from 'pptx-viewer-core';
 
-import type { TableStyleEditorFieldEdit, TableStyleEditorPartId } from '../internal/shared';
+import type { TableStyleEditorFieldEdit, TableStyleEditorPartId } from 'ooxml-ui/pptx';
 import {
 	applyTableStyleFieldEdit,
 	describeTableStyleEditor,
 	TABLE_STYLE_EDITOR_PARTS,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { LoadContentService } from './load-content.service';
 import { TableStyleEditorFieldsComponent } from './table-style-editor-fields.component';
 
