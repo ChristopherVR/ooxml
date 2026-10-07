@@ -99,9 +99,11 @@ replacing the component, identity or workspace configuration.
 Evidence: core tab merge/snapshot and upload tests; UI lifecycle tests; browser
 tests with two same-browser clients adding, renaming and removing a website tab;
 and an actual XLSX fixture edited, saved, parsed and reopened, including upload
-failure/retry and editing during upload. The six workflow specs now run against
+failure/retry and editing during upload. The seven workflow specs now run against
 each of vanilla, React, Vue, Angular, Svelte and Solid with
-`bun run test:browser:bindings` in `viewers/teams`.
+`bun run test:browser:bindings` in `viewers/teams`. Each run forces fresh Vite
+dependency optimization to cover first-open behavior, including the lazy
+PowerPoint engine and Word metafile converter.
 The suite uses local mode and test upload adapters; it is not evidence of
 authenticated remote coediting or renderer fidelity across all files.
 
