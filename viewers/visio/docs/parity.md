@@ -111,7 +111,11 @@ core comparisons and six-binding menu/history/save/reload checks. Scalar
 inherited rotation locks also have core regression coverage. Guarded FlipX/FlipY
 flags now retain their formula/cache while an unprotected Angle negates, matching
 four further native rectangle/ellipse poses. Fully blocked flips preserve source
-bytes without a dirty part. Dependent flip flags,
+bytes without a dirty part. Two native fully blocked references (guarded Angle
+plus flag, and rotation lock plus guarded flag) now verify unchanged poses and
+source bytes for rectangle/ellipse, including scaled/custom pivots. Six-binding
+menu checks preserve generation, clean state and undo/redo branches and report
+that no change occurred. Dependent flip flags,
 inherited transforms, groups/masters/glue, broader native flip gestures and
 Microsoft Visio reopen acceptance remain open. Source protections are refused
 instead of being overwritten.

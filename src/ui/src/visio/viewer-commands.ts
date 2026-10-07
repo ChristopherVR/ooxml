@@ -224,12 +224,18 @@ export class ViewerCommands {
 		const request = ++this.#pending;
 		const { root, viewport } = this.host;
 		const canvasFocused = viewport.contains(root.activeElement);
+		const generation = this.host.controller.documentGeneration;
 		try {
 			await action();
 			// A re-rendered page drops the focused shape; keep shortcuts on the drawing window.
 			if (canvasFocused && !viewport.contains(root.activeElement))
 				viewport.focus({ preventScroll: true });
-			if (success && request === this.#pending) this.host.announce(success);
+			if (success && request === this.#pending)
+				this.host.announce(
+					this.host.controller.documentGeneration === generation
+						? 'No changes were made.'
+						: success,
+				);
 		} catch (error) {
 			// The controller records refused edits in state.edit.error for the status bar.
 			if (

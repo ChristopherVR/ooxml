@@ -93,6 +93,8 @@ for (const variable of [
 	'VISIO_NATIVE_FLIP_GUARD_DIR',
 	'VISIO_NATIVE_FLIP_X_GUARD_DIR',
 	'VISIO_NATIVE_FLIP_Y_GUARD_DIR',
+	'VISIO_NATIVE_FLIP_BLOCKED_GUARD_DIR',
+	'VISIO_NATIVE_FLIP_BLOCKED_LOCK_DIR',
 ])
 	it.skipIf(!process.env[variable]).each(['rectangle', 'ellipse'])(
 		`matches native ${variable} %s`,
@@ -107,6 +109,10 @@ for (const variable of [
 			const result = await editVsdx(source, [
 				{ type: 'flip-shape', pageId: '0', shapeId: id, axis: evidence.flip.toLowerCase() },
 			]);
+			if (variable.includes('_BLOCKED_')) {
+				expect(Buffer.from(result.bytes).equals(source)).toBe(true);
+				expect(result.changedParts).toEqual([]);
+			}
 			const actual = (await parseVsdx(result.bytes)).pages[0]!.shapes.find(
 				(shape) => shape.id === id,
 			)!;

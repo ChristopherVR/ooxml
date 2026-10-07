@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { parseVsdx } from 'ooxml-core/visio';
+import { verifyBlockedMenuTransform } from './native-menu-noop';
 
 for (const variable of [
 	'VISIO_NATIVE_QUARTER_LEFT_DIR',
@@ -15,6 +16,8 @@ for (const variable of [
 	'VISIO_NATIVE_FLIP_GUARD_DIR',
 	'VISIO_NATIVE_FLIP_X_GUARD_DIR',
 	'VISIO_NATIVE_FLIP_Y_GUARD_DIR',
+	'VISIO_NATIVE_FLIP_BLOCKED_GUARD_DIR',
+	'VISIO_NATIVE_FLIP_BLOCKED_LOCK_DIR',
 ]) {
 	const flip = variable.includes('_FLIP_');
 	for (const kind of ['rectangle', 'ellipse']) {
@@ -71,6 +74,15 @@ for (const variable of [
 				await expect(
 					nested.getByRole('menuitem', { name: 'Flip Horizontal', exact: true }),
 				).toBeEnabled();
+				if (variable.includes('_BLOCKED_')) {
+					await verifyBlockedMenuTransform(page, viewer, target, source, id, before);
+					const actual = (await parseVsdx(source)).pages[0]!.shapes.find(
+						(shape) => shape.id === id,
+					)!;
+					for (let i = 0; i < 6; i++)
+						expect(actual.transform[i]).toBeCloseTo(expected.transform[i]!, 12);
+					return;
+				}
 				await target.click();
 				await expect(shape).not.toHaveAttribute('transform', before);
 				await expect(position.locator('[role="menu"]').first()).not.toBeVisible();

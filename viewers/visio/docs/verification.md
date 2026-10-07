@@ -2,6 +2,35 @@
 
 Status: local Windows development evidence, 2026-10-03. Full Microsoft Visio parity is not established.
 
+## Fully blocked flip history and feedback, 2026-10-08
+
+Two fresh owned native Visio 16 captures verify fully blocked transforms:
+
+- Horizontal, guarded Angle and FlipX: visio-line-movement-6ec8fefd514941a188748a1eba7bfab3.
+- Vertical, LockRotate and guarded FlipY: visio-line-movement-8d63c8d252544283a0c52ab9ce6a9d8a.
+
+Both include rectangle and ellipse references, with a custom pivot or a
+0.5 drawing-to-page ratio. Native assignments retain the protected cells and
+poses. Capture applications closed; the original user instance stayed intact.
+These captures do not represent native pointer/menu gestures or Office reopening.
+
+All 24 browser scenarios passed across six framework bindings. Actual viewer
+menu commands retain source bytes, document generation, clean state and history.
+A move followed by undo creates a redo branch; another blocked flip retains it,
+and redo still applies the move. Public source export and reload retain the
+unchanged document. Feedback now reports "No changes were made." through the
+existing controller generation and command announcement path.
+
+The associated core run passed 76 checks covering all eight optional native flip
+captures, rotation and master-move regressions. The final UI run passed 20 command/menu
+checks. Core and UI builds, root and UI typechecks, and the configured Visio viewer
+typecheck passed. Running the child e2e configuration directly from the root
+cannot resolve its viewer-local vite/client type; the viewer typecheck includes
+the same e2e sources and resolves those dependencies.
+
+Dependent or inherited transforms, groups/master/glue, broader protection
+combinations, exact paint and Microsoft Visio reopening remain unverified.
+
 ## Native endpoint cells after an explicit Width override, 2026-10-08
 
 The existing line recorder accepts combined ResizeWidth=4 and MoveEndpoint

@@ -12,7 +12,7 @@ param(
  [switch]$OffCentrePin,
  [ValidateSet('None','Left','Right')][string]$QuarterTurn='None',
  [ValidateSet('None','Horizontal','Vertical')][string]$Flip='None',
- [ValidateSet('None','LockRotate','GuardAngle','GuardFlipX','GuardFlipY')][string]$FlipProtection='None',
+ [ValidateSet('None','LockRotate','GuardAngle','GuardFlipX','GuardFlipY','GuardBoth','LockAndGuardFlip')][string]$FlipProtection='None',
  [switch]$CustomDefaults
 )
 # Capture endpoint translation without replacing native transform formulas.
@@ -179,6 +179,12 @@ try {
     if($FlipProtection -eq 'GuardAngle'){$shape.CellsU('Angle').FormulaU='GUARD('+ $shape.CellsU('Angle').FormulaU +')'}
     elseif($FlipProtection -eq 'GuardFlipX'){$shape.CellsU('FlipX').FormulaU='GUARD(0)'}
     elseif($FlipProtection -eq 'GuardFlipY'){$shape.CellsU('FlipY').FormulaU='GUARD(1)'}
+    elseif($FlipProtection -in @('GuardBoth','LockAndGuardFlip')){
+     if($FlipProtection -eq 'GuardBoth'){$shape.CellsU('Angle').FormulaU='GUARD('+ $shape.CellsU('Angle').FormulaU +')'}
+     else{$shape.CellsU('LockRotate').ResultIU=1.0}
+     $cell=if($Flip -eq 'Horizontal'){'FlipX'}else{'FlipY'}
+     $shape.CellsU($cell).FormulaU='GUARD(0)'
+    }
     else{$shape.CellsU($FlipProtection).ResultIU=1.0}
    }
   }

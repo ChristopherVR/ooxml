@@ -11,7 +11,7 @@ import type { CancellableEditor } from './worker-editor';
 
 afterEach(() => document.body.replaceChildren());
 
-async function setup(source = true) {
+async function setup(source = true, noOp = false) {
 	registerViewerControls();
 	const edits: VisioEdit[][] = [];
 	const editor: CancellableEditor = async (_bytes, commands) => {
@@ -19,7 +19,7 @@ async function setup(source = true) {
 		return {
 			bytes: new Uint8Array([edits.length + 1]),
 			document: structuredClone(demoDocument),
-			changedParts: ['visio/pages/page1.xml'],
+			changedParts: noOp ? [] : ['visio/pages/page1.xml'],
 			diagnostics: [],
 		};
 	};
@@ -83,6 +83,16 @@ async function setup(source = true) {
 }
 
 describe('Visio ribbon commands', () => {
+	it('announces unchanged commands without claiming a successful mutation', async () => {
+		const { controller, key, settle, calls } = await setup(true, true);
+		controller.selectShape({ id: 's1', name: 'Start', pageId: '1' });
+		const generation = controller.documentGeneration;
+		key({ key: 'Delete' });
+		await settle();
+		expect(calls).toEqual(['No changes were made.']);
+		expect(controller.documentGeneration).toBe(generation);
+		expect(controller.state.edit).toMatchObject({ dirty: false, canUndo: false, canRedo: false });
+	});
 	it('shares line ribbon and Ctrl+6 tool state, while read-only sources refuse drawing', async () => {
 		const { press, key, commands, command } = await setup();
 		press('line-tool');

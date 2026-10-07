@@ -1874,3 +1874,26 @@ Playwright MCP and native PNG color extents show the second-line placement
 improving; the six-binding browser cases compare actual baseline advances
 before/after type edits. Wrapping, paragraph spacing, manual layout and full
 chart raster parity remain open.
+
+## Native fully blocked Visio flip history and feedback
+
+Source: ChristopherVR/ooxml at `ed7c98774`, the existing recorder, atomic flip
+transaction, controller no-op handling and `ViewerCommands` feedback lifecycle.
+The same recorder adds guarded-Angle/flag and rotation-lock/guarded-flag cases.
+Native Visio 16 retains both cells and the rectangle/ellipse pose, including
+a custom pivot and a drawing-to-page ratio of 0.5. The core already returns
+original bytes with no dirty part; these native source comparisons verify it.
+
+The UI feedback now checks the existing controller document generation before
+announcing a successful mutation. Unchanged commands instead report no change.
+No second no-op detector or history engine was introduced. The browser matrix
+adds a shared `native-menu-noop.ts` workflow: actual menu activation, exact
+source/generation/history checks, a move/undo to create a redo branch, a blocked
+flip retaining that branch, redo and public save/reload. All six bindings use
+the same helper. The original Visio instance remains untouched; owned capture
+applications close through the existing recorder finally block.
+
+This covers the two native fully blocked references and honest command feedback.
+It does not establish all protection combinations, literal native menu gestures,
+dependent transforms, groups/master/glue, exact paint or native Visio reopen
+acceptance. Full Visio parity remains incomplete.
