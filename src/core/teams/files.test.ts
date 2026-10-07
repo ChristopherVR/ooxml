@@ -7,7 +7,7 @@ function setup() {
 	const messages: { channelId: string; text: string; attachments: Attachment[] }[] = [];
 	const available = vi.fn(() => true);
 	const canUpload = vi.fn(() => true);
-	const upload = vi.fn(async (file: Blob & { name: string }) => {
+	const upload = vi.fn(async (file: Blob & { name: string }): Promise<Attachment> => {
 		uploads.push(file);
 		return {
 			name: file.name,
@@ -29,6 +29,65 @@ function setup() {
 }
 
 describe('channel file actions', () => {
+	it('reports completed files and cancels a batch before publishing partial results', async () => {
+		const actions = setup();
+		const controller = new AbortController();
+		const file = Object.assign(new Blob(['x']), { name: 'Notes.md' });
+		const progress: number[] = [];
+		await expect(
+			actions.uploadFiles('finance', [file, file], {
+				signal: controller.signal,
+				onProgress: (event) => {
+					progress.push(event.completed);
+					expect(event.total).toBe(2);
+					expect(event.fileName).toBe('Notes.md');
+					if (event.phase === 'uploaded') controller.abort();
+				},
+			}),
+		).rejects.toMatchObject({ name: 'AbortError' });
+		expect(progress).toEqual([0, 1]);
+		expect(actions.upload).toHaveBeenCalledTimes(1);
+		expect(actions.messages).toEqual([]);
+	});
+	it('stops waiting for adapters that ignore abort and never publishes their late result', async () => {
+		const actions = setup();
+		const controller = new AbortController();
+		let finish!: (attachment: Attachment) => void;
+		actions.upload.mockImplementationOnce(
+			() =>
+				new Promise((resolve) => {
+					finish = resolve;
+				}),
+		);
+		const pending = actions.saveFileCopy(
+			'finance',
+			Object.assign(new Blob(['x']), { name: 'Budget.xlsx' }),
+			{ signal: controller.signal },
+		);
+		await vi.waitFor(() => expect(actions.upload).toHaveBeenCalledTimes(1));
+		controller.abort();
+		await expect(pending).rejects.toMatchObject({ name: 'AbortError' });
+		finish({ name: 'copy.xlsx', kind: 'xlsx', url: 'https://files.test/copy.xlsx' });
+		await Promise.resolve();
+		expect(actions.messages).toEqual([]);
+	});
+	it('does no work for an aborted request or a workbook canceled during preparation', async () => {
+		const actions = setup();
+		const controller = new AbortController();
+		controller.abort();
+		await expect(
+			actions.createWorkbook('finance', 'Budget', { signal: controller.signal }),
+		).rejects.toMatchObject({ name: 'AbortError' });
+		const preparing = new AbortController();
+		await expect(
+			actions.createWorkbook('finance', 'Budget', {
+				signal: preparing.signal,
+				onProgress: () => preparing.abort(),
+			}),
+		).rejects.toMatchObject({ name: 'AbortError' });
+		expect(actions.upload).not.toHaveBeenCalled();
+		expect(actions.messages).toEqual([]);
+	});
 	it('creates valid native workbook bytes and never overwrites an existing name', async () => {
 		const actions = setup();
 		const first = await actions.createWorkbook('finance', 'Budget.xlsx');

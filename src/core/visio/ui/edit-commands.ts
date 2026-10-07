@@ -10,13 +10,9 @@ export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
 			!command ||
 			typeof command.pageId !== 'string' ||
 			!command.pageId ||
-			command.pageId.length > 256 ||
-			typeof command.shapeId !== 'string' ||
-			!command.shapeId ||
-			command.shapeId.length > 256
+			command.pageId.length > 256
 		)
 			throw new Error('Invalid edit command.');
-		const target = { pageId: command.pageId, shapeId: command.shapeId };
 		const text = (value: unknown): string => {
 			if (typeof value !== 'string') throw new Error('Invalid edit text.');
 			characters += value.length;
@@ -28,6 +24,23 @@ export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
 			if (values.some((value) => typeof value !== 'number' || !Number.isFinite(value)))
 				throw new Error('Invalid geometry edit coordinates or dimensions.');
 		};
+		if (command.type === 'insert-page') {
+			if (
+				typeof command.afterPageId !== 'string' ||
+				!command.afterPageId ||
+				command.afterPageId.length > 256
+			)
+				throw new Error('Invalid insertion target.');
+			return {
+				type: command.type,
+				pageId: command.pageId,
+				afterPageId: command.afterPageId,
+				name: text(command.name),
+			};
+		}
+		if (typeof command.shapeId !== 'string' || !command.shapeId || command.shapeId.length > 256)
+			throw new Error('Invalid edit shape target.');
+		const target = { pageId: command.pageId, shapeId: command.shapeId };
 		switch (command.type) {
 			case 'replace-plain-text':
 				return { type: command.type, ...target, text: text(command.text) };

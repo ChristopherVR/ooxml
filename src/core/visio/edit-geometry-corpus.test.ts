@@ -129,7 +129,10 @@ describe.skipIf(!directory)('public VSDX geometry edit corpus', () => {
 				delete: 'no-local-2d-candidate',
 				reasons: {},
 			};
-			const attempt = async (name: 'create' | 'move' | 'resize' | 'delete', edits: VisioEdit[]) => {
+			const attempt = async (
+				name: 'create' | 'move' | 'resize' | 'delete',
+				edits: Exclude<VisioEdit, { type: 'insert-page' }>[],
+			) => {
 				let result: EditVsdxResult;
 				try {
 					result = await editVsdx(original, edits);

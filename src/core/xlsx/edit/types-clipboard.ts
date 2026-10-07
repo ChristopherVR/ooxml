@@ -1,6 +1,6 @@
 // Clipboard and find/replace payload types of the edit session.
 import type { CellRange } from '../address.js';
-import type { CellStyle, CellValue, RichTextRun } from '../model.js';
+import type { CellStyle, CellValue, Comment, DataValidation, RichTextRun } from '../model.js';
 
 /** One copied cell, self-contained so it can be pasted into another workbook. */
 export interface ClipboardCell {
@@ -33,6 +33,9 @@ export interface ClipboardCells {
 	columnWidths?: number[];
 	/** Original row extent for width-only transpose, including whole-column copies. */
 	columnWidthRows?: number;
+	/** Annotation snapshots with addresses/ranges relative to the copied block. */
+	comments?: Comment[];
+	dataValidations?: DataValidation[];
 	/** Where the cells were copied from, when they came from a session. */
 	source?: { sheet: number; range: CellRange };
 }

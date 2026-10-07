@@ -6,6 +6,7 @@
 	overflow: auto;
 }
 .toolbar,
+.transfer,
 form {
 	display: flex;
 	flex-wrap: wrap;

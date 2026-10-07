@@ -1,5 +1,12 @@
 import { LitElement, html, nothing, unsafeCSS, type PropertyValues } from 'lit';
-import { filterFiles, type Attachment, type FileEntry, type TeamsClient } from 'ooxml-core/teams';
+import {
+	filterFiles,
+	type Attachment,
+	type FileEntry,
+	type TeamsClient,
+	type FileOperationOptions,
+	type FileTransferProgress,
+} from 'ooxml-core/teams';
 import css from './files-panel.css?raw';
 
 /** File controls bind to channel-capturing core actions; uploaded bytes never enter UI state. */
@@ -16,6 +23,8 @@ export class TeamsFilesPanel extends LitElement {
 		busy: { state: true },
 		error: { state: true },
 		destination: { state: true },
+		transfer: { state: true },
+		canceled: { state: true },
 	};
 	declare client: TeamsClient | null;
 	declare files: FileEntry[];
@@ -27,7 +36,10 @@ export class TeamsFilesPanel extends LitElement {
 	declare busy: boolean;
 	declare error: string;
 	declare destination: string;
-	private retry: (() => Promise<unknown>) | undefined;
+	declare transfer: FileTransferProgress | null;
+	declare canceled: boolean;
+	private active: AbortController | undefined;
+	private retry: ((options: FileOperationOptions) => Promise<unknown>) | undefined;
 
 	constructor() {
 		super();
@@ -41,9 +53,20 @@ export class TeamsFilesPanel extends LitElement {
 		this.busy = false;
 		this.error = '';
 		this.destination = '';
+		this.transfer = null;
+		this.canceled = false;
+	}
+	override disconnectedCallback(): void {
+		this.active?.abort();
+		super.disconnectedCallback();
 	}
 	protected override updated(changed: PropertyValues<this>): void {
 		if (changed.has('client')) {
+			this.active?.abort();
+			this.active = undefined;
+			this.busy = false;
+			this.transfer = null;
+			this.canceled = false;
 			this.retry = undefined;
 			this.error = '';
 		}
@@ -60,21 +83,37 @@ export class TeamsFilesPanel extends LitElement {
 			}),
 		);
 	}
-	private async run(task: () => Promise<unknown>): Promise<void> {
+	private async run(task: (options: FileOperationOptions) => Promise<unknown>): Promise<void> {
 		if (this.busy) return;
 		const client = this.client;
+		const controller = new AbortController();
+		this.active = controller;
 		if (this.retry !== task) this.destination = this.channelName;
 		this.busy = true;
 		this.error = '';
+		this.canceled = false;
+		this.transfer = null;
 		this.retry = task;
 		try {
-			await task();
-			if (this.client === client) this.retry = undefined;
+			await task({
+				signal: controller.signal,
+				onProgress: (progress) => {
+					if (this.active === controller && this.client === client && this.isConnected)
+						this.transfer = progress;
+				},
+			});
+			if (this.client === client && this.active === controller) this.retry = undefined;
 		} catch (error) {
-			if (this.client === client)
-				this.error = error instanceof Error ? error.message : 'Could not share files';
+			if (this.client === client && this.active === controller && this.isConnected) {
+				this.canceled = controller.signal.aborted;
+				if (!this.canceled)
+					this.error = error instanceof Error ? error.message : 'Could not share files';
+			}
 		} finally {
-			this.busy = false;
+			if (this.active === controller) {
+				this.active = undefined;
+				this.busy = false;
+			}
 		}
 	}
 	private upload(event: Event): void {
@@ -83,15 +122,15 @@ export class TeamsFilesPanel extends LitElement {
 		input.value = '';
 		const { client, channelId } = this;
 		if (!client || !files.length) return;
-		void this.run(() => client.uploadFiles(channelId, files));
+		void this.run((options) => client.uploadFiles(channelId, files, options));
 	}
 	private create(event: SubmitEvent): void {
 		event.preventDefault();
 		const name = String(new FormData(event.target as HTMLFormElement).get('name') ?? '');
 		const { client, channelId } = this;
 		if (!client) return;
-		void this.run(async () => {
-			const attachment = await client.createWorkbook(channelId, name);
+		void this.run(async (options) => {
+			const attachment = await client.createWorkbook(channelId, name, options);
 			if (!this.isConnected || this.client !== client || this.channelId !== channelId) return;
 			this.creating = false;
 			this.emit('open', { ...attachment, channelId });
@@ -146,10 +185,23 @@ export class TeamsFilesPanel extends LitElement {
 						</form>`
 					: nothing
 			}
-			${this.busy ? html`<p role="status">Sharing files in # ${this.destination}...</p>` : nothing}
 			${
-				this.error
-					? html`<p role="alert">Sharing in # ${this.destination} failed: ${this.error}</p>
+				this.busy
+					? html`<div class="transfer">
+							<p role="status">
+								Sharing files in # ${this.destination}:
+								${this.transfer?.phase === 'preparing' ? 'Preparing' : 'Uploading'}
+								${this.transfer?.fileName ?? ''} (${this.transfer?.completed ?? 0} of
+								${this.transfer?.total ?? 0} uploaded)
+							</p>
+							${this.transfer ? html`<progress aria-label="Files uploaded" max=${this.transfer.total} value=${this.transfer.completed}></progress>` : nothing}
+							<button type="button" @click=${() => this.active?.abort()}>Cancel sharing</button>
+						</div>`
+					: nothing
+			}
+			${
+				this.error || this.canceled
+					? html`${this.canceled ? html`<p role="status">Sharing in # ${this.destination} canceled.</p>` : html`<p role="alert">Sharing in # ${this.destination} failed: ${this.error}</p>`}
 							<button
 								type="button"
 								?disabled=${this.busy}
