@@ -1114,3 +1114,22 @@ history instead of losing element marks. The native recorder generated the
 four line-break references in `review-line-break-formatting` with owned hidden
 Word 16.0 build 20430; the companion export reports record reopening and native
 Reject All. This installed perpetual build does not certify current M365 parity.
+
+## Shared rectangular DrawingML gradient paint
+
+Source: ChristopherVR/ooxml at `47ec69208`,
+`src/ui/src/pptx/render/path-gradient-rect.ts` and its adjacent test. Both moved
+to `src/core/diagram/rect-path-gradient.ts` and its test under strict flags.
+The original UI entry is a thin re-export; existing PowerPoint callers retain
+their 40-band defaults. Color conversion reuses core's color primitives.
+An optional independent opacity mask avoids compositing translucent bands
+on top of each other. XLSX chart paint uses 1,024 bands and the shared native
+sigma curve only for measured opaque endpoint pairs.
+
+Excel 16.0 build 20430 independently saved/reopened and exported 24 native
+center/corner captures, opaque and translucent, in square and wide bounds.
+Their DrawingML and 600 native RGBA points are retained in
+`src/core/chart/__fixtures__/native-gradient-path-profiles.json`.
+`scripts/record-xlsx-chart-gradient-raster.ps1` reproduces those profiles.
+No generic rectangular paint engine or color engine was copied into XLSX UI.
+Chart SVG and gallery serialization now share `chart/gradient-markup.ts`.

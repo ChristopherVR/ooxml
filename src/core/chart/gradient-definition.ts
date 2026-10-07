@@ -2,6 +2,10 @@
 import type { DiagramFill, DiagramColor } from '../diagram/types';
 import { sortGradientStops } from './gradient-stop-edit';
 import { sigmaGradientStops } from '../color/sigma-gradient-stops';
+import {
+	buildRectPathGradientSvg,
+	type RectPathGradientFillToRect,
+} from '../diagram/rect-path-gradient';
 
 export interface ChartGradientFill {
 	type: 'linear' | 'radial';
@@ -10,6 +14,8 @@ export interface ChartGradientFill {
 	scaled?: boolean;
 	interpolation?: 'sigma-gamma22';
 	focalPoint?: { x: number; y: number };
+	path?: string;
+	fillToRect?: RectPathGradientFillToRect;
 }
 export interface ChartSvgGradientStop {
 	offset: number;
@@ -17,6 +23,7 @@ export interface ChartSvgGradientStop {
 	opacity?: number;
 }
 export type ChartSvgGradientDef =
+	| { kind: 'rectPath'; id: string; href: string; stops: ChartSvgGradientStop[] }
 	| {
 			kind: 'linearGradient';
 			id: string;
@@ -50,9 +57,10 @@ export function resolveChartGradient(
 		stops,
 		...(fill.angle === undefined ? {} : { angle: fill.angle }),
 		...(fill.scaled === undefined ? {} : { scaled: fill.scaled }),
-		// Only the native opaque two-endpoint linear profile has raster evidence.
-		...(!fill.path &&
-		fill.scaled === true &&
+		...(fill.path === undefined ? {} : { path: fill.path }),
+		...(focus === undefined ? {} : { fillToRect: { ...focus } }),
+		// Native opaque endpoint-pair linear and rectangular profiles share this curve.
+		...(((!fill.path && fill.scaled === true) || fill.path === 'rect') &&
 		fill.stops.length === 2 &&
 		stops.length === 2 &&
 		stops.every((stop) => stop.opacity === 1) &&
@@ -77,6 +85,24 @@ export function buildChartGradientDef(id: string, fill: ChartGradientFill): Char
 		fill.interpolation === 'sigma-gamma22'
 			? (sigmaGradientStops(sourceStops) ?? sourceStops)
 			: sourceStops;
+	if (fill.type === 'radial' && fill.path === 'rect') {
+		const markup = buildRectPathGradientSvg(
+			stops.map((stop) => ({
+				position: stop.offset * 100,
+				color: stop.color,
+				...(stop.opacity === undefined ? {} : { opacity: stop.opacity }),
+			})),
+			undefined,
+			fill.fillToRect,
+			{ bands: 1024, independentOpacity: true },
+		);
+		return {
+			kind: 'rectPath',
+			id,
+			href: `data:image/svg+xml,${encodeURIComponent(markup)}`,
+			stops,
+		};
+	}
 	if (fill.type === 'radial') {
 		const cx = fill.focalPoint?.x ?? 0.5;
 		const cy = fill.focalPoint?.y ?? 0.5;

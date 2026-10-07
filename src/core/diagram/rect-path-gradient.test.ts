@@ -5,8 +5,8 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import type { RectPathGradientStop } from './path-gradient-rect';
-import { buildRectPathGradientImage, buildRectPathGradientSvg } from './path-gradient-rect';
+import type { RectPathGradientStop } from './rect-path-gradient';
+import { buildRectPathGradientImage, buildRectPathGradientSvg } from './rect-path-gradient';
 
 const whiteToBlack: RectPathGradientStop[] = [
 	{ color: '#ffffff', position: 0 },
@@ -27,7 +27,7 @@ function parseRects(
 		y: Number(m[2]),
 		w: Number(m[3]),
 		h: Number(m[4]),
-		fill: m[5],
+		fill: m[5]!,
 		opacity: m[6] === undefined ? 1 : Number(m[6]),
 	}));
 }
@@ -51,7 +51,7 @@ describe('buildRectPathGradientSvg', () => {
 		// Outer band (first drawn) spans the full box and carries the LAST stop's
 		// colour; PowerPoint's rect path gradient runs stop 0 at the centre and
 		// the final stop at the outer edge.
-		const outer = rects[0];
+		const outer = rects[0]!;
 		expect(outer.x).toBeCloseTo(0, 1);
 		expect(outer.y).toBeCloseTo(0, 1);
 		expect(outer.w).toBeCloseTo(100, 1);
@@ -59,7 +59,7 @@ describe('buildRectPathGradientSvg', () => {
 		expect(outer.fill.toLowerCase()).toBe('#000000');
 		// Innermost band (last drawn, painted on top) is a point at dead centre
 		// carrying the first stop's colour.
-		const inner = rects[rects.length - 1];
+		const inner = rects[rects.length - 1]!;
 		expect(inner.w).toBeCloseTo(0, 1);
 		expect(inner.h).toBeCloseTo(0, 1);
 		expect(inner.x).toBeCloseTo(50, 1);
@@ -72,7 +72,7 @@ describe('buildRectPathGradientSvg', () => {
 		// consumer via `background-size: <w>px <h>px` / `100% 100%` stretching the
 		// whole image, exactly like the CSS radial-gradient string it replaces.
 		const rects = parseRects(buildRectPathGradientSvg(whiteToBlack));
-		const outer = rects[0];
+		const outer = rects[0]!;
 		expect(outer.w).toBeCloseTo(outer.h, 1);
 	});
 
@@ -81,7 +81,7 @@ describe('buildRectPathGradientSvg', () => {
 		// index (Chebyshev isolines are literal nested rectangles), unlike an
 		// ellipse whose iso-distance curves are never axis-aligned rectangles.
 		const rects = parseRects(buildRectPathGradientSvg(whiteToBlack));
-		const mid = rects[Math.floor(rects.length / 2)];
+		const mid = rects[Math.floor(rects.length / 2)]!;
 		// A band at fractional distance t has side length 100*t; the midpoint
 		// band (t ~= 0.5) should have side length close to 50.
 		expect(mid.w).toBeCloseTo(50, 0);
@@ -90,7 +90,7 @@ describe('buildRectPathGradientSvg', () => {
 
 	it('shifts the centre toward an authored focal point', () => {
 		const rects = parseRects(buildRectPathGradientSvg(whiteToBlack, { x: 0.8, y: 0.2 }));
-		const inner = rects[rects.length - 1];
+		const inner = rects[rects.length - 1]!;
 		expect(inner.x).toBeCloseTo(80, 0);
 		expect(inner.y).toBeCloseTo(20, 0);
 	});
@@ -101,7 +101,7 @@ describe('buildRectPathGradientSvg', () => {
 		const rects = parseRects(
 			buildRectPathGradientSvg(whiteToBlack, undefined, { l: 0, t: 0, r: 1, b: 1 }),
 		);
-		const inner = rects[rects.length - 1];
+		const inner = rects[rects.length - 1]!;
 		expect(inner.x).toBeCloseTo(0, 0);
 		expect(inner.y).toBeCloseTo(0, 0);
 	});
@@ -113,7 +113,7 @@ describe('buildRectPathGradientSvg', () => {
 		// keywords, which this module's first draft mirrored and which this test
 		// guards against regressing to).
 		const rects = parseRects(buildRectPathGradientSvg(whiteToBlack, { x: 0.8, y: 0.5 }));
-		const outer = rects[0];
+		const outer = rects[0]!;
 		expect(outer.x).toBeCloseTo(0, 6);
 		expect(outer.y).toBeCloseTo(0, 6);
 		expect(outer.w).toBeCloseTo(100, 6);
@@ -127,7 +127,7 @@ describe('buildRectPathGradientSvg', () => {
 		const rects = parseRects(
 			buildRectPathGradientSvg(whiteToBlack, undefined, { l: 0.25, t: 0.25, r: 0.25, b: 0.25 }),
 		);
-		const inner = rects[rects.length - 1];
+		const inner = rects[rects.length - 1]!;
 		expect(inner.x).toBeCloseTo(25, 0);
 		expect(inner.y).toBeCloseTo(25, 0);
 		expect(inner.w).toBeCloseTo(50, 0);
@@ -142,7 +142,7 @@ describe('buildRectPathGradientSvg', () => {
 		const rects = parseRects(
 			buildRectPathGradientSvg(whiteToBlack, undefined, { l: 0.1, t: 0.3, r: 0.1, b: 0.3 }),
 		);
-		const inner = rects[rects.length - 1];
+		const inner = rects[rects.length - 1]!;
 		expect(inner.w).toBeCloseTo(80, 0);
 		expect(inner.h).toBeCloseTo(40, 0);
 		expect(inner.w).not.toBeCloseTo(inner.h, 0);
@@ -155,7 +155,7 @@ describe('buildRectPathGradientSvg', () => {
 			{ color: '#0000ff', position: 100 },
 		];
 		const rects = parseRects(buildRectPathGradientSvg(stops));
-		const mid = rects[Math.floor(rects.length / 2)];
+		const mid = rects[Math.floor(rects.length / 2)]!;
 		// Around the midpoint band the colour should be close to green, not a
 		// linear red/blue blend (i.e. the multi-stop shape is honoured).
 		const midHex = mid.fill.toLowerCase();
@@ -169,7 +169,7 @@ describe('buildRectPathGradientSvg', () => {
 			{ color: '#0000ff', position: 100 },
 		];
 		const rects = parseRects(buildRectPathGradientSvg(stops));
-		const inner = rects[rects.length - 1];
+		const inner = rects[rects.length - 1]!;
 		expect(inner.opacity).toBeCloseTo(0.4, 1);
 	});
 });

@@ -33,3 +33,21 @@ has a strict passing sweep plus separate expected-failure repros for each of
 these two problems in every binding. Those markers must be removed once the
 renderer matches the native pixels; the tolerances must not be raised to hide
 the remaining discrepancies.
+
+## Rectangular path profiles
+
+`native-gradient-path-profiles.json` contains 24 additional Excel 16.0 build
+20430 captures and 600 RGBA points. Reproduce each output directory with
+`scripts/record-xlsx-chart-gradient-raster.ps1 -Profile <profile>`, selecting
+`path-center`, `path-corner`, `path-center-transparent` or
+`path-corner-transparent`. Center styles use `TwoColorGradient(7, variant)`
+and corner styles use `TwoColorGradient(5, variant)`. In these file names,
+`angle-1` through `angle-4` identify the COM variant; each case's `angle` getter
+is not used to derive path geometry. Saved `path="rect"` and `fillToRect`
+values are the geometry evidence.
+
+Opaque endpoint pairs match the shared sigma/gamma curve. Translucent pairs
+use direct color/alpha interpolation and an independent opacity mask.
+Comparisons retain the existing two-level opaque and three-level translucent
+premultiplied tolerances, with alpha within two levels. These profiles do not
+prove circle/shape paths, every target rectangle or all multi-stop path fills.

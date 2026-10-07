@@ -1,7 +1,10 @@
 import { expect, test } from '@playwright/test';
 import JSZip from 'jszip';
 import { createWorkbook, createEditSession, saveXlsx } from 'ooxml-core/xlsx';
-import { buildChartGradientDef } from 'ooxml-core/chart';
+import { buildChartGradientDef, resolveChartGradient } from 'ooxml-core/chart';
+import { parseXml, NS } from 'ooxml-core/xml';
+import { parseDrawingFill, resolveDrawingColor } from 'ooxml-core/diagram';
+import paths from '../../src/core/chart/__fixtures__/native-gradient-path-profiles.json' with { type: 'json' };
 import native from '../../src/core/chart/__fixtures__/native-gradient-raster.json' with { type: 'json' };
 import profiles from '../../src/core/chart/__fixtures__/native-gradient-linear-profiles.json' with { type: 'json' };
 import { FRAMEWORKS, editor, openLanding, pageErrors } from './helpers';
@@ -19,6 +22,11 @@ const samples = [
 ];
 
 const runs = [
+	{
+		name: 'native rectangular chart gradient raster',
+		gap: false,
+		cases: paths.cases.map((sample) => ({ ...sample, paintStops: 256 })),
+	},
 	{
 		name: 'native scaled chart gradient raster',
 		gap: false,
@@ -66,17 +74,26 @@ for (const run of runs)
 					mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 					buffer: await zip.generateAsync({ type: 'nodebuffer' }),
 				});
-				const gradient = editor(page).locator('linearGradient[id$="-chartArea"]').first();
-				const expected = buildChartGradientDef('native', {
-					type: 'linear',
-					angle: sample.angle,
-					scaled: true,
-					stops: [],
-				});
-				if (expected.kind !== 'linearGradient') throw new Error('Expected linear gradient');
-				for (const attr of ['x1', 'y1', 'x2', 'y2'] as const)
-					await expect(gradient).toHaveAttribute(attr, String(expected[attr]));
-				await expect(gradient.locator('stop')).toHaveCount(sample.paintStops);
+				const nativeFill = parseDrawingFill(
+					parseXml(`<a:spPr xmlns:a="${NS.a}">${sample.fillXml}</a:spPr>`).documentElement,
+				)!;
+				if (nativeFill.kind !== 'gradient') throw new Error('Expected native gradient');
+				const expected = buildChartGradientDef(
+					'native',
+					resolveChartGradient(nativeFill, (color) => resolveDrawingColor(color)),
+				);
+				const gradient = editor(page)
+					.locator(
+						`${expected.kind === 'rectPath' ? 'pattern' : 'linearGradient'}[id$="-chartArea"]`,
+					)
+					.first();
+				if (expected.kind === 'rectPath') {
+					await expect(gradient.locator('image')).toHaveAttribute('href', expected.href);
+				} else if (expected.kind === 'linearGradient') {
+					for (const attr of ['x1', 'y1', 'x2', 'y2'] as const)
+						await expect(gradient).toHaveAttribute(attr, String(expected[attr]));
+					await expect(gradient.locator('stop')).toHaveCount(sample.paintStops);
+				} else throw new Error('Unexpected native paint');
 				const pixels = await gradient.evaluate(async (element, sample) => {
 					const image = new Image();
 					const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${sample.width}" height="${sample.height}"><defs>${element.outerHTML}</defs><rect width="100%" height="100%" fill="url(#${element.id})"/></svg>`;

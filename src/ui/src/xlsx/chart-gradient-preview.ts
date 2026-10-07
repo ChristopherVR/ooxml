@@ -9,7 +9,7 @@ export function createChartGradientPreview(
 ) {
 	const nodes = Array.from(
 		root.querySelectorAll<SVGElement>(
-			`.xg-obj[data-index="${drawing}"] :is(linearGradient,radialGradient)[id$="-s${series}"]`,
+			`.xg-obj[data-index="${drawing}"] :is(linearGradient,radialGradient,pattern)[id$="-s${series}"]`,
 		),
 	);
 	const originals = nodes.map((node) => ({
@@ -20,6 +20,15 @@ export function createChartGradientPreview(
 		const def = buildChartGradientDef('preview', fill);
 		for (const node of nodes) {
 			if (!node.isConnected) continue;
+			if (def.kind === 'rectPath') {
+				const image = node.ownerDocument.createElementNS('http://www.w3.org/2000/svg', 'image');
+				image.setAttribute('href', def.href);
+				image.setAttribute('width', '1');
+				image.setAttribute('height', '1');
+				image.setAttribute('preserveAspectRatio', 'none');
+				node.replaceChildren(image);
+				continue;
+			}
 			node.replaceChildren(
 				...def.stops.map((stop) => {
 					const element = node.ownerDocument.createElementNS('http://www.w3.org/2000/svg', 'stop');

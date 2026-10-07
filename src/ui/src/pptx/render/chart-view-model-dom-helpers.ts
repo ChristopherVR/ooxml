@@ -39,6 +39,24 @@ export function createSvgEl<K extends keyof SVGElementTagNameMap>(
  * in bounding-box units, see `chart-gradient-defs.ts`).
  */
 export function renderPatternDef(doc: Document, def: ChartSvgDef): SVGElement {
+	if (def.kind === 'rectPath') {
+		const pattern = createSvgEl(doc, 'pattern', {
+			id: def.id,
+			patternUnits: 'objectBoundingBox',
+			patternContentUnits: 'objectBoundingBox',
+			width: 1,
+			height: 1,
+		});
+		pattern.appendChild(
+			createSvgEl(doc, 'image', {
+				href: def.href,
+				width: 1,
+				height: 1,
+				preserveAspectRatio: 'none',
+			}),
+		);
+		return pattern;
+	}
 	if (def.kind !== 'pattern') {
 		const gradient =
 			def.kind === 'linearGradient'

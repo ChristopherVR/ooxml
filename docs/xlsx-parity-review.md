@@ -1168,3 +1168,31 @@ core paint helpers as other Office consumers. This covers the standard named
 presets, not the modern theme-dependent preset menu, other native preset style
 variants, path-gradient controls or a pixel comparison of every preset. The
 previous translucent and coincident-edge raster gaps remain open.
+
+## Rectangular path-gradient rendering
+
+The shared chart resolver previously converted every DrawingML path gradient
+into an elliptical SVG radial gradient, even when Excel saved `path="rect"`.
+Chart paint now preserves the path and target rectangle and uses the existing
+PowerPoint nested-rectangle painter, extracted into the shared diagram area.
+PowerPoint retains its existing defaults through a thin compatibility entry.
+XLSX uses higher-resolution bands; an independent alpha mask prevents
+translucent bands from accumulating opacity. Existing stop editing previews
+and cancellation now update and restore the rectangular pattern's image.
+
+Excel COM supplies 24 independent opaque/translucent center/corner captures
+in square and wide bounds, with 600 RGBA points. Core and all six browser
+bindings match these captures within the existing tolerances. The focused
+core selection passes 230 tests, with the existing 17 expected raster failures;
+PowerPoint's two affected rendering suites pass 21 tests. Browser coverage
+passes 50 ordinary checks plus the existing 12 expected-failure repros.
+Six of the ordinary checks cover rectangular stop-drag previews without
+premature workbook edits, Escape restoration, transparency changes and undo.
+
+Playwright MCP independently measured a translucent center fill with alpha
+error of one byte and premultiplied color error below 2.3 levels. Excel COM
+reopened its viewer download as center style 7, variant 1, with the expected
+37%/13% stop transparency. Native type/direction authoring controls remain
+to be implemented; circle/shape paths, arbitrary target rectangles and
+additional multi-stop path profiles remain unverified. The earlier linear
+translucent and coincident-edge discrepancies are still explicit.

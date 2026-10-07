@@ -16,5 +16,6 @@ export * from './style-definition';
 export * from './read-style';
 export * from './read-formatting';
 export * from './gradient-definition';
+export * from './gradient-markup';
 export * from './gradient-stop-edit';
 export * from './bar-cluster-geometry';

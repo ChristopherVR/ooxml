@@ -3,6 +3,7 @@ import { chartPointsToPixels } from './chart-appearance';
 import type { ChartViewModel } from './chart-view';
 import { AXIS_COLOR, GRID_COLOR, FONT_SIZE, n, esc, type Rect, type text } from './chart-svg-util';
 import { buildChartGradientDef, type ChartGradientFill } from '../../chart/gradient-definition';
+import { chartGradientMarkup } from '../../chart/gradient-markup';
 import { cssFontFamily } from './font-family';
 import { svgDropShadowElement, type DrawingSvgShadow } from '../../diagram/drawing-shadow';
 
@@ -33,17 +34,7 @@ export function chartGradientPaint(
 	}
 	const paint = (gradient: ChartGradientFill, suffix: string) => {
 		const def = buildChartGradientDef(`${prefix}-${suffix}`, gradient);
-		const geometry =
-			def.kind === 'linearGradient'
-				? `x1="${def.x1}" y1="${def.y1}" x2="${def.x2}" y2="${def.y2}"`
-				: `cx="${def.cx}" cy="${def.cy}" r="${def.r}"`;
-		const stops = def.stops
-			.map(
-				(stop) =>
-					`<stop offset="${stop.offset}" stop-color="${esc(stop.color)}" stop-opacity="${stop.opacity ?? 1}"/>`,
-			)
-			.join('');
-		defs.push(`<${def.kind} id="${def.id}" ${geometry}>${stops}</${def.kind}>`);
+		defs.push(chartGradientMarkup(def));
 		return `url(#${def.id})`;
 	};
 	for (const part of ['chartArea', 'plotArea'] as const) {

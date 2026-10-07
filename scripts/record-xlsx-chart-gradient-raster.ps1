@@ -1,6 +1,6 @@
 param(
     [string]$OutputFolder = (Join-Path $env:TEMP 'ooxml-chart-gradient-raster'),
-    [ValidateSet('opaque','transparent','interior','three','three-transparent','crossed','coincident')]
+    [ValidateSet('opaque','transparent','interior','three','three-transparent','crossed','coincident','path-corner','path-center','path-corner-transparent','path-center-transparent')]
     [string]$Profile = 'opaque'
 )
 $ErrorActionPreference = 'Stop'
@@ -16,7 +16,12 @@ try {
     $sheet.Cells.Item(2,1).Value2=[double]1
     $cases=@()
     foreach($size in @(@(300,300),@(480,300))) {
-        foreach($angle in @(0,45,90,135,180,225,270,315,30,60)) {
+        $directions = switch -Wildcard ($Profile) {
+            'path-corner*' {@(1,2,3,4)}
+            'path-center*' {@(1,2)}
+            default {@(0,45,90,135,180,225,270,315,30,60)}
+        }
+        foreach($angle in $directions) {
             $object=$sheet.ChartObjects().Add(20,20,$size[0],$size[1]); $chart=$object.Chart
             $chart.ChartType=51; $chart.SetSourceData($sheet.Range('A1:A2'),2)
             $chart.HasTitle=$false; $chart.HasLegend=$false
@@ -26,6 +31,8 @@ try {
             $chart.SeriesCollection(1).Format.Line.Visible=0
             $fill=$chart.ChartArea.Format.Fill; $fill.Solid()
             $fill.ForeColor.RGB=255; $fill.TwoColorGradient(1,1)
+            if($Profile -like 'path-corner*') {$fill.TwoColorGradient(5,$angle)}
+            if($Profile -like 'path-center*') {$fill.TwoColorGradient(7,$angle)}
             $fill.GradientStops.Item(1).Color.RGB=255
             $fill.GradientStops.Item(2).Color.RGB=16777215
             switch($Profile) {
@@ -51,7 +58,11 @@ try {
                     $fill.GradientStops.Item(2).Position=[single]0.5
                 }
             }
-            $fill.GradientAngle=[single]$angle
+            if($Profile -like 'path-*-transparent') {
+                $fill.GradientStops.Item(1).Transparency=[single]0.37
+                $fill.GradientStops.Item(2).Transparency=[single]0.13
+            }
+            if($Profile -notlike 'path-*') {$fill.GradientAngle=[single]$angle}
             $chart.ChartArea.Format.Line.Visible=0
             $name="angle-$angle-$($size[0])x$($size[1])"
             if($Profile -ne 'opaque') {$name="$Profile-$name"}
