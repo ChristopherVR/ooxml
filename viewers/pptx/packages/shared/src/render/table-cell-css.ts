@@ -35,6 +35,7 @@ import type { PptxTableCell, PptxTableData } from 'pptx-viewer-core';
 import { DEFAULT_TEXT_COLOR } from '../constants';
 import type { TableCellCss, TableStyleContext } from './table-style';
 import { cellStyleToCss, getTableCellBandStyle } from './table-style';
+import { DEFAULT_LINE_HEIGHT } from './text-line-height';
 
 /** Where a cell sits in its table, which is what the band cascade keys on. */
 export interface TableCellPosition {
@@ -45,6 +46,21 @@ export interface TableCellPosition {
 	/** Total columns, needed for the last-column emphasis. */
 	columnCount: number;
 }
+
+/**
+ * How PowerPoint lays out cell text the deck says nothing about: single line
+ * spacing (as for shape text; the browser's `normal` depends on the font and
+ * runs taller) and the default cell margins of `a:tcPr` (`marL`/`marR`
+ * 91440 EMU, `marT`/`marB` 45720 EMU). A cell's own margins win. Line
+ * spacing authored inside a cell (`a:lnSpc`) is not modelled for tables yet.
+ */
+export const TABLE_CELL_TEXT_DEFAULTS: Readonly<TableCellCss> = {
+	lineHeight: DEFAULT_LINE_HEIGHT,
+	paddingLeft: '9.6px',
+	paddingRight: '9.6px',
+	paddingTop: '4.8px',
+	paddingBottom: '4.8px',
+};
 
 /**
  * Resolve the full CSS for one table cell.
@@ -81,5 +97,5 @@ export function tableCellCss(
 	if (css.color === undefined) {
 		css.color = DEFAULT_TEXT_COLOR;
 	}
-	return css;
+	return { ...TABLE_CELL_TEXT_DEFAULTS, ...css };
 }
