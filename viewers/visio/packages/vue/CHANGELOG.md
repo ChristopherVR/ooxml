@@ -7,6 +7,8 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.5.6](https://github.com/ChristopherVR/ooxml/releases/tag/visio-vue-viewer@0.5.6) - 2026-10-07
+
 ## [0.5.5](https://github.com/ChristopherVR/ooxml/releases/tag/visio-vue-viewer@0.5.5) - 2026-10-06
 
 ### Refactor

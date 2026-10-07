@@ -7,6 +7,19 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.26.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.26.0) - 2026-10-07
+
+### Features
+
+- **pptx:** Add PowerPoint's built-in SmartArt layout definitions ([9c6cd97](https://github.com/ChristopherVR/ooxml/commit/9c6cd97ba6276a441aadf0d527d3bdc81fabce5e))
+- **pptx:** Apply built-in SmartArt layouts synchronously and save them ([4ddf31c](https://github.com/ChristopherVR/ooxml/commit/4ddf31c5f2f2a1b17e8af411ecd42bee7deaa491))
+- **shared:** Offer PowerPoint's built-in SmartArt layouts in every binding ([29100c4](https://github.com/ChristopherVR/ooxml/commit/29100c431c61983400e5af19ffd7d85ec2653463))
+
+### Bug Fixes
+
+- **shared:** Size SmartArt 3D labels to their text and sharpen them ([79318b6](https://github.com/ChristopherVR/ooxml/commit/79318b60fe12b81612c16de58e1c47584a2af008))
+- **shared:** Draw SmartArt connectors in the 3D view ([5795dcf](https://github.com/ChristopherVR/ooxml/commit/5795dcff0b489e9e79722781d000bba6d9b2f7a7))
+
 ## [4.25.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-angular-viewer@4.25.0) - 2026-10-06
 
 ### Features

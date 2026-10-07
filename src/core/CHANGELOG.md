@@ -7,6 +7,13 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [0.23.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@0.23.0) - 2026-10-07
+
+### Features
+
+- **pptx:** Add PowerPoint's built-in SmartArt layout definitions ([9c6cd97](https://github.com/ChristopherVR/ooxml/commit/9c6cd97ba6276a441aadf0d527d3bdc81fabce5e))
+- **pptx:** Apply built-in SmartArt layouts synchronously and save them ([4ddf31c](https://github.com/ChristopherVR/ooxml/commit/4ddf31c5f2f2a1b17e8af411ecd42bee7deaa491))
+
 ## [0.22.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@0.22.1) - 2026-10-06
 
 ### Bug Fixes

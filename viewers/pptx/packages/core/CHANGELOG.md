@@ -7,6 +7,12 @@ A release listed with no entries carried no Conventional Commit in this package'
 scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
 conventional commits.
 
+## [4.13.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-viewer-core@4.13.0) - 2026-10-07
+
+### Features
+
+- **shared:** Offer PowerPoint's built-in SmartArt layouts in every binding ([29100c4](https://github.com/ChristopherVR/ooxml/commit/29100c431c61983400e5af19ffd7d85ec2653463))
+
 ## [4.12.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-viewer-core@4.12.0) - 2026-10-06
 
 ### Features
