@@ -131,3 +131,28 @@ recalculation, dynamic arrays and save/reload in both date systems. All 135
 function tests passed. The broader XLSX suite passed 3,748 tests before the two
 additional date-system round-trip tests; the strict core typecheck also passed.
 These checks establish the tested function subset, not whole-workbook native parity.
+
+## DB and DDB follow-up
+
+Native comparisons found existing fractional-argument bugs. DDB rounded periods
+up to whole periods; Excel keeps fractional exponents above period 1 and uses
+first-period depreciation below period 1. DB incorrectly returned zero below
+period 1 and used fractional months instead of truncating them. Both functions
+iterated once per period, allowing enormous finite life/period arguments to tie
+up calculation. Their declining-balance closed forms now take constant work,
+preserve the salvage behavior, and retain the rounded fixed rate for DB.
+
+The [DDB reference](https://support.microsoft.com/en-us/excel/functions/ddb-function)
+and [DB reference](https://support.microsoft.com/en-us/excel/functions/db-function)
+supply the depreciation formulas. `scripts/record-xlsx-depreciation.ps1` reproduces
+184 results from native Excel 16.0, covering fractions, final periods, optional
+arguments, coercion, errors, salvage and a trillion-period lifetime. The committed
+fixture and dynamic-array/round-trip tests establish this measured subset.
+
+The full XLSX core suite passed 3,958 tests across 116 files before adding the last
+round-trip assertion; all 297 shared XLSX UI tests passed. Both core TypeScript
+projects passed. A five-formula workbook containing AMORLINC, DB and DDB was saved
+by the library, opened/recalculated/saved by Excel 16.0, then reloaded/recalculated
+by the library with unchanged values. This was a generated native acceptance
+probe, not a general save-fidelity claim. Browser tests were not rerun because
+these changes are in shared calculation code and add no new UI controls.
