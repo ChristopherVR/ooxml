@@ -89,13 +89,15 @@ export function createTransportProvider(
 		if (local !== null) awareness.setLocalState(local);
 	};
 
-	const onDocUpdate = (update: Uint8Array, updateOrigin: unknown): void => {
-		if (updateOrigin === origin || !open) return;
+	const sendUpdate = (update: Uint8Array): void => {
 		const encoder = encoding.createEncoder();
 		encoding.writeVarUint(encoder, MESSAGE_SYNC);
 		encoding.writeVarUint(encoder, SYNC_UPDATE);
 		encoding.writeVarUint8Array(encoder, update);
 		send(encoder);
+	};
+	const onDocUpdate = (update: Uint8Array, updateOrigin: unknown): void => {
+		if (updateOrigin !== origin && open) sendUpdate(update);
 	};
 	const onAwarenessUpdate = (
 		change: { added: number[]; updated: number[]; removed: number[] },
@@ -191,6 +193,13 @@ export function createTransportProvider(
 			return synced;
 		},
 		connect,
+		resync: () => {
+			if (destroyed || !open) return;
+			setSynced(false);
+			handshake();
+			// Step 1 pulls missing remote updates. Also repair local updates that the remote missed.
+			sendUpdate(Y.encodeStateAsUpdate(doc));
+		},
 		disconnect: () => {
 			if (destroyed) return;
 			// Tell peers we are gone before the channel closes.
