@@ -9,6 +9,7 @@ import { ligatureStyle } from './ligature-style';
  */
 export const extraRunFields = [
 	'fieldInstanceId',
+	'fieldFlags',
 	'restoredRunPropertiesXml',
 	'sourceRunPropertiesXml',
 	'formatRevision',

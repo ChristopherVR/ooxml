@@ -13,6 +13,7 @@ import { resolveHyperlink, parseSimpleHyperlinkField } from './hyperlink';
 import { paragraphBookmarkNames } from './bookmarks';
 import { createFieldTracker, storyFieldResults, type FieldResultMetadata } from './field-runs';
 import { parseEquation } from './equation';
+import { parseFieldFlags } from './field-flags';
 import {
 	collectParagraphRuns,
 	type OpenMoves,
@@ -127,7 +128,11 @@ function parseRun(node: XmlElement, revision?: Revision): TextRun {
 	if (breakKind) run.break = breakKind;
 	if (noteReference) run.noteReference = noteReference;
 	if (noteMark) run.noteMark = noteMark;
-	if (fieldChar) run.fieldChar = fieldChar;
+	if (fieldChar) {
+		run.fieldChar = fieldChar;
+		const flags = parseFieldFlags(only!);
+		if (flags) run.fieldFlags = flags;
+	}
 	if (fieldCode !== undefined) run.fieldCode = fieldCode;
 	const runRevision = revision ?? runFormatRevision(props);
 	if (runRevision) run.revision = runRevision;
@@ -147,8 +152,11 @@ function parseParagraph(node: XmlElement, id: string, fields?: FieldResultMetada
 		(element, revision) => {
 			const run = parseRun(element, revision);
 			if (!fields) return trackField(element, run);
-			const field = fields.get(element);
-			if (field) run.field = { ...field };
+			const metadata = fields.get(element);
+			if (metadata) {
+				run.field = { ...metadata.field };
+				if (metadata.fieldFlags) run.fieldFlags = { ...metadata.fieldFlags };
+			}
 			return run;
 		},
 		(item) => {
@@ -170,9 +178,12 @@ function parseParagraph(node: XmlElement, id: string, fields?: FieldResultMetada
 			);
 			if (link) return results.map((run) => ({ ...run, link }));
 			const field = { instr: instr.trim(), simple: true };
+			const flags = parseFieldFlags(item);
+			const fieldState = flags ? { fieldFlags: flags } : {};
 			const fieldInstanceId = `${id}:simple-field-${simpleFieldIndex++}`;
 			// A missing cache can show a placeholder; an explicitly empty cache must stay empty.
-			if (!results.length) return [{ text: fieldPlaceholderText(instr), field, fieldInstanceId }];
+			if (!results.length)
+				return [{ text: fieldPlaceholderText(instr), field, fieldInstanceId, ...fieldState }];
 			if (
 				results.every(
 					(run) =>
@@ -189,14 +200,14 @@ function parseParagraph(node: XmlElement, id: string, fields?: FieldResultMetada
 				// Empty text cannot carry a field mark in an editor. Reuse complex field markers
 				// so the instruction survives the model/editor round trip without visible text.
 				return [
-					{ text: '', fieldChar: 'begin' },
+					{ text: '', fieldChar: 'begin', ...fieldState },
 					{ text: '', fieldCode: instr },
 					{ text: '', fieldChar: 'separate' },
 					...results,
 					{ text: '', fieldChar: 'end' },
 				];
 			}
-			return results.map((run) => ({ ...run, field, fieldInstanceId }));
+			return results.map((run) => ({ ...run, field, fieldInstanceId, ...fieldState }));
 		},
 		(hyperlink) => {
 			if (!activeContext) return undefined;

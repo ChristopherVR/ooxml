@@ -16,6 +16,7 @@ import {
 import { createRun } from './write-run';
 import { inlineSourceLookup } from './inline-source';
 import { takeSimpleFieldCommentEdges } from './simple-field-comments';
+import { writeFieldFlags } from './field-flags';
 import { isEquationElement, preserveEquation } from './equation';
 import { hasSpecialBreak, isCachedPageBreak, isModeledBreak } from './breaks';
 import { isCommentReferenceRun } from './parse-revisions';
@@ -263,6 +264,7 @@ export function buildInlineContent(
 			container = makeW(doc, 'fldSimple');
 			setW(container, 'instr', ` ${group.instr} `);
 		}
+		if (group.kind === 'simpleField') writeFieldFlags(container, runAt(start).fieldFlags);
 		const edges =
 			group.kind === 'simpleField'
 				? takeSimpleFieldCommentEdges(doc, runs, start, index, opens, closes)

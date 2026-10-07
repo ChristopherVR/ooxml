@@ -19,17 +19,20 @@ function targetField(state: EditorState, from: number, to: number): FieldResultR
 
 function resultMarks(node: Node, field: FieldResultRange): readonly Mark[] {
 	let marks = field.mark.addToSet(node.marks);
-	const id = field.marks.find((mark) => mark.type.name === 'runProperties')?.attrs.props
-		?.fieldInstanceId;
+	const source = field.marks.find((mark) => mark.type.name === 'runProperties')?.attrs.props;
+	const id = source?.fieldInstanceId;
+	const state = {
+		...(typeof id === 'string' && { fieldInstanceId: id }),
+		...(source?.fieldFlags && { fieldFlags: source.fieldFlags }),
+	};
 	const properties = node.type.schema.marks.runProperties;
-	if (typeof id === 'string' && properties) {
+	if (properties) {
 		const old = properties.isInSet(marks);
-		marks = properties
-			.create({
-				...(old?.attrs ?? {}),
-				props: { ...(old?.attrs.props ?? {}), fieldInstanceId: id },
-			})
-			.addToSet(marks);
+		const { fieldInstanceId: _identity, fieldFlags: _flags, ...other } = old?.attrs.props ?? {};
+		const props = { ...other, ...state };
+		marks = properties.removeFromSet(marks);
+		if (Object.keys(props).length)
+			marks = properties.create({ ...(old?.attrs ?? {}), props }).addToSet(marks);
 	}
 	return marks;
 }
@@ -102,7 +105,12 @@ export function emptySimpleFieldResult(transform: Transform, from: number, to: n
 	// Result formatting and revisions do not belong to the structural markers.
 	const format = { ...(run.commentIds && { commentIds: run.commentIds }) };
 	const markers = [
-		{ ...format, text: '', fieldChar: 'begin' as const },
+		{
+			...format,
+			text: '',
+			fieldChar: 'begin' as const,
+			...(run.fieldFlags && { fieldFlags: run.fieldFlags }),
+		},
 		{ ...format, text: '', fieldCode: field.mark.attrs.instr as string },
 		{ ...format, text: '', fieldChar: 'separate' as const },
 		{ ...format, text: '', fieldChar: 'end' as const },

@@ -45,12 +45,12 @@ export function fieldClipboardSlice(slice: Slice): Slice {
 		if (!(field?.attrs.simple ?? cached?.simple) && complete.has(pos)) return node;
 		const marks = node.marks.flatMap((mark) => {
 			if (mark.type === field?.type) return [];
-			if (mark.type.name !== 'runProperties' || !mark.attrs.props?.fieldInstanceId) return [mark];
-			const { fieldInstanceId: _identity, ...props } = mark.attrs.props;
+			if (mark.type.name !== 'runProperties') return [mark];
+			const { fieldInstanceId: _identity, fieldFlags: _flags, ...props } = mark.attrs.props ?? {};
 			return Object.keys(props).length ? [mark.type.create({ ...mark.attrs, props })] : [];
 		});
 		if (!properties || !cached) return node.mark(marks);
-		const { field: _field, fieldInstanceId: _id, ...literal } = properties;
+		const { field: _field, fieldInstanceId: _id, fieldFlags: _flags, ...literal } = properties;
 		return node.type.create(
 			updatedInlineRunAttributes(
 				node,

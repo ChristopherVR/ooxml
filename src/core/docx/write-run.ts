@@ -9,6 +9,7 @@ import type { RelationshipAllocator } from './relationship-allocator';
 import { writeRunFormatRevision } from './write-revisions';
 import { parseRunPropertiesSnapshot } from './restore-run-format';
 import { parseDirectRunProperties, runPropertyChanged } from './run-properties';
+import { writeFieldFlags } from './field-flags';
 
 function setAttribute(element: XmlElement, local: string, value: string): void {
 	element.setAttributeNS(WORD_NS, `w:${local}`, value);
@@ -273,6 +274,7 @@ export function createRun(
 	if (run.fieldChar) {
 		const marker = makeW(doc, 'fldChar');
 		setAttribute(marker, 'fldCharType', run.fieldChar);
+		writeFieldFlags(marker, run.fieldFlags);
 		node.appendChild(marker);
 		return node;
 	}

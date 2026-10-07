@@ -87,6 +87,8 @@ export interface TextRun {
 	field?: { instr: string; simple?: boolean };
 	/** Imported simple-field boundary identity, shared by its result runs; not an OOXML attribute. */
 	fieldInstanceId?: string;
+	/** Structural flags on a simple wrapper or a complex marker, not cached-result formatting. */
+	fieldFlags?: { locked?: boolean; dirty?: boolean };
 	/** A complex field's `w:fldChar` marker run (begin, separate or end); `text` is empty. */
 	fieldChar?: 'begin' | 'separate' | 'end';
 	/** A complex field's instruction text run (`w:instrText`), e.g. ` TOC \o "1-3" `; `text` is empty. */
