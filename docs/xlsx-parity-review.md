@@ -554,3 +554,30 @@ by the library, opened/recalculated/saved by Excel 16.0, then reloaded/recalcula
 by the library with unchanged values. This was a generated native acceptance
 probe, not a general save-fidelity claim. Browser tests were not rerun because
 these changes are in shared calculation code and add no new UI controls.
+
+## Shared Change Colors catalog
+
+PowerPoint's 17 Chart Design > Change Colors palettes now live in the shared,
+strict `ooxml-core/chart` area. PowerPoint imports compatibility exports and keeps
+its UI descriptors and product-specific edits. The catalog reuses the shared
+DrawingML color resolver instead of maintaining its own color conversion math.
+
+`scripts/record-xlsx-chart-colors.ps1` records all 17 palettes with 1, 2, 4, 7,
+10, 19 and 55 series. Run it again with `-CustomTheme` for the second fixture.
+Both probes use a new hidden Excel application and close their own workbook.
+Excel 16.0 build 20430 provided 238 cases and 3,332 colors. The Office baseline
+up to 10 series matches exactly. Across both fixtures, 224 cases match exactly;
+38 individual colors in 14 cases differ by one RGB channel step. That native
+rounding gap remains open. A temporary before/after comparison confirmed that
+all 3,332 shared-catalog outputs match the previous PowerPoint implementation.
+
+Playwright MCP review of XLSX's current Chart Design ribbon confirms that it
+still exposes title, legend, type and delete controls without Change Colors.
+The next slice must add persistent palette editing, handle series and point
+colors and existing marker overrides, then bind the shared Office gallery.
+Importing this catalog alone does not implement that UI or chart-style parity.
+
+Validation: 239 palette regressions, the prior broader 1,525 chart-related core
+tests, 14 PowerPoint gallery/style tests, strict/legacy core and UI typechecks,
+a full core build and clean package imports. Native JSON fixtures are test data
+and absent from the published distribution.

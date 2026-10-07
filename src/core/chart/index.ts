@@ -10,3 +10,4 @@ export * from './trendline-equation.js';
 export * from './radar-geometry.js';
 export * from './pie-best-fit.js';
 export * from './pie-label-collision.js';
+export * from './color-palettes';

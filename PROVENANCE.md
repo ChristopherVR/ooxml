@@ -545,3 +545,22 @@ document-wide paragraph mapping moved to `src/core/docx/document-paragraphs.ts`.
 Revision ID export retains its existing behavior through those helpers, and
 move-name export reuses them. Regression tests cover the body, table cells,
 headers, footers, footnotes and endnotes with one shared identity map.
+
+## Shared chart color palette catalog
+
+Source: ChristopherVR/ooxml at `9daa589d8dddba52c810efead7d7314886b580fb`,
+`src/ui/src/pptx/render/ribbon-galleries/chart-color-palette-catalog.ts`
+(original product: ChristopherVR/pptx-viewer). The 17 Office Change Colors
+palettes and series-count interpolation moved to strict, DOM-free
+`src/core/chart/color-palettes.ts`. The PowerPoint path keeps compatibility
+exports. Product-specific chart patching and gallery descriptors stay in UI.
+
+The shared catalog uses the existing `diagram/resolveDrawingColor` instead of
+the PowerPoint XML-object adapter and duplicate sRGB transfer functions.
+A before/after probe confirmed identical output for all 3,332 colors in the
+two recorded native Excel fixtures. The new recorder uses its own hidden COM
+instance and records all palettes under Office and custom themes with
+1, 2, 4, 7, 10, 19 and 55 series. Of 238 cases, 224 match Excel exactly;
+38 individual colors in the remaining 14 cases have unresolved one-channel-step
+rounding differences. The regression distinguishes the exact 85-case Office
+baseline from extended comparisons that permit that measured difference.
