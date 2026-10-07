@@ -147,7 +147,7 @@ export function buildMarkerPrimitive(input: MarkerShapeInput): MarkerPrimitive |
 	}
 	const r = markerRadius(input.size, input.defaultRadius);
 	const outline = input.stroke
-		? { stroke: input.stroke, strokeWidth: input.strokeWidth ?? 1 }
+		? { stroke: input.stroke, strokeWidth: input.strokeWidth ?? DEFAULT_MARKER_OUTLINE_PT * CHART_PX_PER_PT }
 		: undefined;
 	// Filled polygons are stroked in their own colour at zero width when unoutlined.
 	const polygonStroke = outline ?? { stroke: fill, strokeWidth: 0 };
