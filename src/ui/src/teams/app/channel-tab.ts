@@ -74,8 +74,8 @@ export class TeamsChannelTab extends LitElement {
 	private saveCopy(): SaveFileCopy | undefined {
 		const { client, tab } = this;
 		if (!this.canSave || !client || !tab) return undefined;
-		return async (file) => {
-			await client.saveFileCopy(tab.channelId, file);
+		return async (file, options) => {
+			await client.saveFileCopy(tab.channelId, file, options);
 		};
 	}
 	protected override render() {

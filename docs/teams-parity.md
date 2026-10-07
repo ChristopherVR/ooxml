@@ -173,13 +173,16 @@ support and preservation limitations.
 
 The Files controls now cancel uploads and workbook creation, retain their captured
 destination for retry, and show completed-file progress. Core copy-save actions
-also accept cancellation and progress callbacks; the workbook save-copy toolbar
-does not yet expose these controls. Closing the Files panel or replacing its client
+also accept cancellation and progress callbacks. The workbook save-copy toolbar
+offers cancellation during serialization or upload, retains local edits, and allows
+retry. It does not yet display byte or file-count progress. Closing the Files panel or replacing its client
 aborts its active operation. Cancellation stops waiting even when a host storage
 adapter ignores its optional abort signal, and guards prevent late attachment
 publication. Already written objects can remain in storage because there is no
 cleanup contract. Browser tests exercise pending cancellation, late completion,
-retry, and progress between files across all six bindings.
+retry, and progress between files across all six bindings. Workbook browser acceptance
+also checks canceled save copies, ignored late storage writes, retained dirty edits,
+and a successful retry without publishing the canceled copy.
 
 ## Next releasable slices
 
