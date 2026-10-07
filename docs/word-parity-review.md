@@ -115,10 +115,20 @@ not a current M365 subscription certification or a glyph/raster comparison.
 Equal and unequal-width paragraph columns now balance their final page before a continuous
 break, reusing the same paragraph flow, widow/orphan and keep-together rules.
 The native corpus verifies even and odd distributions, earlier-page overflow,
-keep-with-next groups and reversed unequal widths. Tables, floating pictures and
+keep-with-next groups and reversed unequal widths. Splittable or repeated-header
+tables, floating pictures and
 explicit breaks still report unsupported balancing. Vertical alignment changes
 and shared-page footnote cases also retain reported approximations. Floats
 relative to changed margins and remaining complex layouts need native references.
+
+Three additional native table references cover four, five and 120 exact-height
+kept rows before a continuous break. The table flow now balances those rows on
+the final page and retains full capacity on earlier pages. Word's mandatory
+paragraph after the table adds its own line after balancing, unlike an empty
+break marker after ordinary text. Trial validation checks earlier columns so a
+kept row cannot silently overflow a reduced capacity. Core and six-framework
+browser tests compare every nonempty row and following paragraph origin.
+Splittable rows and repeated-header tables remain reported approximations.
 
 Twelve additional native DOCX/PDF references cover visible headers, footers,
 PAGE and SECTIONPAGES values across shared section pages. Page-number restarts

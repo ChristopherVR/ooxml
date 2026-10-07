@@ -128,8 +128,11 @@ export class SectionFlow {
 			const block = expectDefined(this.blocks[index], 'flow block index');
 			if (block.kind === 'table') {
 				placeTable(this.cursor, block, this.measurer, this.note);
+				if (this.balance?.pageIndex === this.cursor.page.index && !this.cursor.columnContentFits)
+					this.balanceValid = false;
 				continue;
 			}
+			if (block.afterTableSectionBreak) this.cursor.endBalance();
 			const spacingBeforePx = this.spacingBeforeFor(index);
 			const layout = this.wrappedLayout(index, spacingBeforePx) ?? this.paragraphLayout(index);
 			if (block.footnotes?.length)

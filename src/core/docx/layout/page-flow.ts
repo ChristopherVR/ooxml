@@ -1,5 +1,5 @@
 import { SectionFlow } from './section-flow.js';
-import { balanceColumns } from './balance-columns.js';
+import { balanceColumns, canBalanceBlock } from './balance-columns.js';
 import type { TextMeasurer } from './measure.js';
 import type { LayoutDocumentInput, LayoutSection } from './input.js';
 import type { LayoutPageBox, LayoutResult } from './result.js';
@@ -80,7 +80,7 @@ export function layoutSections(
 				note('Continuous sections with vertical alignment changes start a new page.');
 			else if ((previous.columns?.count ?? 1) > 1 && !previousFlow.balanced)
 				note(
-					'Continuous breaks after multi-column sections requiring unsupported balancing start a new page; balancing those layouts (tables, floats or explicit breaks) is not yet modeled.',
+					'Continuous breaks after multi-column sections requiring unsupported balancing start a new page; balancing those layouts (splittable or repeated-header tables, floats or explicit breaks) is not yet modeled.',
 				);
 			else continueAt = previousFlow.cursor.finishBand();
 		}
@@ -91,12 +91,7 @@ export function layoutSections(
 			next.page.widthPx === section.page.widthPx &&
 			next.page.heightPx === section.page.heightPx &&
 			(!section.verticalAlign || section.verticalAlign === 'top') &&
-			section.blocks.every(
-				(block) =>
-					block.kind === 'paragraph' &&
-					!block.floats?.length &&
-					!block.runs.some((run) => run.breakAfter),
-			);
+			section.blocks.every(canBalanceBlock);
 		const basePages = canBalance ? structuredClone(pages) : [];
 		let flow = new SectionFlow(section, pages, measurer, note, index, exclusions, continueAt);
 		flow.run();
