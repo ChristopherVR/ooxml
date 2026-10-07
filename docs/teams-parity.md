@@ -292,19 +292,38 @@ objects are not automatically removed after failure or cancellation because the
 storage contract has no deletion operation. Durable attachment recovery, shared
 storage permissions, folders and version/save-back contracts remain outstanding.
 
+## Fourteenth implemented slice: Shared and Files presentation
+
+Channel files use the current Shared tab label. The Files view presents a New menu,
+Upload command and search field above a semantic table of filenames, sharing
+dates, authors and channel locations. Clicking a filename opens the existing
+preview; pinning retains the existing channel-tab workflow. The native file picker
+is hidden behind Upload, and the prominent website URL form has been removed from
+Files. Websites remain available through Add tab and host content previews.
+Unavailable file bytes disable opening instead of pretending a filename is a file.
+Desktop and narrow-screen browser acceptance covers upload, retry, workbook
+creation, search, filename opening and table overflow. This is an incremental UI
+alignment with Microsoft's [Shared file workflow](https://support.microsoft.com/en-us/teams/files/collaborate-on-files-in-microsoft-teams),
+not pixel-perfect parity. Folder navigation, file selection/bulk actions, views,
+sorting and permission-aware sharing menus still need implementation.
+
 ## Next releasable slices
 
-1. Shared tab permissions: authenticated membership and server enforcement,
+1. UI parity: match the current Teams shell, Shared/Files commands, Settings
+   navigation, typography, spacing and responsive layouts against reference
+   screenshots. Keep implemented preferences functional and expose unsupported
+   settings honestly. Visual similarity alone does not establish workflow parity.
+2. Shared tab permissions: authenticated membership and server enforcement,
    approved web-app origins and a supported app messaging contract.
-2. Full PowerPoint adapter: expose the existing framework-neutral renderer
+3. Full PowerPoint adapter: expose the existing framework-neutral renderer
    through the UI package, then consume it here without copying format or render
    logic. Test actual slide content, navigation, media and teardown.
-3. Files workflow: permission-aware storage IDs, progress/cancel/retry, folders,
+4. Files workflow: permission-aware storage IDs, progress/cancel/retry, folders,
    version metadata, and save-back contracts. Add coediting only after identity,
    access control and revision handling are enforceable.
-4. Authenticated direct/group chats and activity: participant-scoped rooms,
+5. Authenticated direct/group chats and activity: participant-scoped rooms,
    mentions, notification preferences, read receipts and message-level search.
-5. Meetings and enterprise integration: scheduling and invitations, SFU/lobby
+6. Meetings and enterprise integration: scheduling and invitations, SFU/lobby
    and roles, captions/recording, then SSO/admin/retention/guest policy.
 
 For each slice: record the Microsoft reference workflow, implement in the owning

@@ -562,7 +562,7 @@ export class TeamsApp extends LitElement {
 										aria-selected=${String(this.tab === t)}
 										@click=${() => this.selectTab(t)}
 									>
-										${t === 'posts' ? 'Posts' : 'Files'}
+										${t === 'posts' ? 'Posts' : 'Shared'}
 									</button>`,
 								)}
 								${s.tabs.map((t) => html`<button type="button" role="tab" aria-selected=${String(this.tab === t.id)} @click=${() => this.selectTab(t.id)}>${t.name}</button>`)}
@@ -778,27 +778,10 @@ export class TeamsApp extends LitElement {
 	}
 
 	private allFiles(s: TeamsState) {
-		return html`<header class="channel-head"><h1>Files</h1></header>
-			<form
-				class="site-preview"
-				@submit=${(event: SubmitEvent) => {
-					event.preventDefault();
-					const url = new FormData(event.target as HTMLFormElement).get('url')?.toString();
-					if (url)
-						this.previewContent({
-							attachment: { name: 'Website', kind: 'other', mime: 'text/html' },
-							url,
-						});
-				}}
-			>
-				<input
-					type="url"
-					name="url"
-					aria-label="Website URL"
-					placeholder="https://example.com"
-					required
-				/><button type="submit">Preview website</button>
-			</form>
+		return html`<header class="channel-head">
+				<h1>Files</h1>
+				<span class="topic">Shared across your channels</span>
+			</header>
 			${this.fileList(s.allFiles, s)}`;
 	}
 
