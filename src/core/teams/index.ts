@@ -17,4 +17,5 @@ export type { ChatDraft, DraftContext, SavedDraft } from './drafts';
 export type { MessageTransfer } from './message-transfer';
 export type { FollowedThread, ThreadFollowSettings } from './followed-threads';
 export * from './view';
+export * from './file-order';
 export * from './workspace';

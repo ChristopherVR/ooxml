@@ -43,8 +43,16 @@ test('creates a workbook and uploads, retries and searches channel files', async
 	await expect(page.getByRole('textbox', { name: 'Website URL' })).toHaveCount(0);
 	await expect(page.getByRole('table', { name: 'Shared files' })).toBeVisible();
 	await expect(page.getByRole('columnheader', { name: 'Name', exact: true })).toBeVisible();
-	await page.getByRole('button', { name: '+ New', exact: true }).click();
-	await page.getByRole('button', { name: 'New Excel workbook', exact: true }).click();
+	const newCommand = page.getByRole('button', { name: '+ New', exact: true });
+	const newWorkbook = page.getByRole('menuitem', { name: 'New Excel workbook', exact: true });
+	await newCommand.press('ArrowDown');
+	await expect(newWorkbook).toBeFocused();
+	await newWorkbook.press('Escape');
+	await expect(newCommand).toBeFocused();
+	await expect(newWorkbook).toBeHidden();
+	await newCommand.press('Enter');
+	await newWorkbook.press('Enter');
+	await expect(page.getByRole('textbox', { name: 'Workbook name', exact: true })).toBeFocused();
 	await page.getByRole('textbox', { name: 'Workbook name', exact: true }).fill('Budget');
 	await page.getByRole('button', { name: 'Create workbook', exact: true }).click();
 	await expect(page.getByRole('button', { name: 'Edit workbook', exact: true })).toBeVisible({
@@ -81,9 +89,33 @@ test('creates a workbook and uploads, retries and searches channel files', async
 	await expect(page.getByRole('alert')).toContainText('could not be uploaded');
 	await page.getByRole('button', { name: 'Retry sharing files', exact: true }).click();
 	await expect(page.getByRole('button', { name: /^Open / })).toHaveCount(3);
+	const nameColumn = page.getByRole('columnheader', { name: 'Name', exact: true });
+	const nameSort = nameColumn.getByRole('button', { name: 'Name', exact: true });
+	await nameSort.press('Enter');
+	await expect(nameColumn).toHaveAttribute('aria-sort', 'ascending');
+	expect(
+		(await page.getByRole('button', { name: /^Open / }).allTextContents()).map((name) =>
+			name.trim(),
+		),
+	).toEqual(['Budget.xlsx', 'Budget.xlsx', 'Notes.md']);
+	await nameSort.press('Enter');
+	await expect(nameColumn).toHaveAttribute('aria-sort', 'descending');
+	expect(
+		(await page.getByRole('button', { name: /^Open / }).allTextContents()).map((name) =>
+			name.trim(),
+		),
+	).toEqual(['Notes.md', 'Budget.xlsx', 'Budget.xlsx']);
+	await page
+		.getByRole('columnheader', { name: 'Shared on', exact: true })
+		.getByRole('button')
+		.click();
+	await expect(nameColumn).toHaveAttribute('aria-sort', 'none');
 	await page.screenshot({ path: test.info().outputPath('shared-files-desktop.png') });
 	await page.setViewportSize({ width: 390, height: 844 });
 	await expect(page.getByRole('button', { name: 'Upload', exact: true })).toBeVisible();
+	const mobileAction = page.getByRole('button', { name: 'More actions for Notes.md', exact: true });
+	const actionBounds = (await mobileAction.boundingBox())!;
+	expect(actionBounds.x + actionBounds.width).toBeLessThanOrEqual(390);
 	await page.screenshot({ path: test.info().outputPath('shared-files-mobile.png') });
 	const bounds = await page.locator('teams-app').evaluate((element) => {
 		const root = element.shadowRoot!;

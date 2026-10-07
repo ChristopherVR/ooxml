@@ -1,6 +1,9 @@
 import { LitElement, html, nothing, unsafeCSS, type PropertyValues } from 'lit';
 import {
 	filterFiles,
+	sortFiles,
+	type FileSortField,
+	type FileSortDirection,
 	type Attachment,
 	type FileEntry,
 	type TeamsClient,
@@ -9,6 +12,9 @@ import {
 } from 'ooxml-core/teams';
 import css from './files-panel.css?raw';
 import { defineTeamsFileActions } from './file-actions';
+import { defineMenuButton } from '../../menu/menu-button';
+import { defineMenuItem } from '../../menu/menu-item';
+import { icon } from '../icons';
 
 /** File controls bind to channel-capturing core actions; uploaded bytes never enter UI state. */
 export class TeamsFilesPanel extends LitElement {
@@ -21,7 +27,8 @@ export class TeamsFilesPanel extends LitElement {
 		canUpload: { type: Boolean },
 		query: { state: true },
 		creating: { state: true },
-		newMenu: { state: true },
+		sortField: { state: true },
+		sortDirection: { state: true },
 		busy: { state: true },
 		error: { state: true },
 		destination: { state: true },
@@ -35,7 +42,8 @@ export class TeamsFilesPanel extends LitElement {
 	declare canUpload: boolean;
 	declare query: string;
 	declare creating: boolean;
-	declare newMenu: boolean;
+	declare sortField: FileSortField;
+	declare sortDirection: FileSortDirection;
 	declare busy: boolean;
 	declare error: string;
 	declare destination: string;
@@ -53,7 +61,8 @@ export class TeamsFilesPanel extends LitElement {
 		this.canUpload = false;
 		this.query = '';
 		this.creating = false;
-		this.newMenu = false;
+		this.sortField = 'ts';
+		this.sortDirection = 'descending';
 		this.busy = false;
 		this.error = '';
 		this.destination = '';
@@ -66,6 +75,8 @@ export class TeamsFilesPanel extends LitElement {
 	}
 	override connectedCallback(): void {
 		defineTeamsFileActions();
+		defineMenuButton();
+		defineMenuItem();
 		super.connectedCallback();
 	}
 	protected override updated(changed: PropertyValues<this>): void {
@@ -144,55 +155,54 @@ export class TeamsFilesPanel extends LitElement {
 			this.emit('open', { ...attachment, channelId });
 		});
 	}
+	private sortHeading(field: FileSortField, label: string) {
+		const active = this.sortField === field;
+		return html`<th scope="col" aria-sort=${active ? this.sortDirection : 'none'}>
+			<button
+				type="button"
+				class="sort-command"
+				@click=${() => {
+					this.sortDirection =
+						active && this.sortDirection === 'ascending' ? 'descending' : 'ascending';
+					this.sortField = field;
+				}}
+			>
+				${label}<span aria-hidden="true"
+					>${active ? (this.sortDirection === 'ascending' ? '↑' : '↓') : '↕'}</span
+				>
+			</button>
+		</th>`;
+	}
 	protected override render() {
-		const files = filterFiles(this.files, this.query);
+		const files = sortFiles(
+			filterFiles(this.files, this.query),
+			this.sortField,
+			this.sortDirection,
+		);
 		const disabled = this.busy || !this.canUpload || !this.channelId;
 		return html`<div class="toolbar" role="toolbar" aria-label="File actions">
-				<div class="new-control">
-					<button
-						type="button"
-						class="primary"
-						?disabled=${disabled}
-						@click=${() => (this.newMenu = !this.newMenu)}
-						aria-expanded=${String(this.newMenu)}
-						aria-controls="new-options"
-					>
-						+ New
-					</button>
-					${
-						this.newMenu
-							? html`<div
-									id="new-options"
-									class="new-menu"
-									role="group"
-									aria-label="New file"
-									@keydown=${(event: KeyboardEvent) => {
-										if (event.key === 'Escape') {
-											this.newMenu = false;
-											this.renderRoot.querySelector<HTMLButtonElement>('.primary')?.focus();
-										}
-									}}
-								>
-									<button
-										type="button"
-										?disabled=${disabled}
-										@click=${() => {
-											this.newMenu = false;
-											this.creating = true;
-										}}
-									>
-										New Excel workbook
-									</button>
-								</div>`
-							: nothing
-					}
-				</div>
+				<office-ui-menu-button
+					class="new-command"
+					label="+ New"
+					.disabled=${disabled}
+					@office-command=${async (event: CustomEvent<{ command: string }>) => {
+						if (event.detail.command !== 'new-workbook' || disabled) return;
+						this.creating = true;
+						await this.updateComplete;
+						this.renderRoot.querySelector<HTMLInputElement>('input[name="name"]')?.focus();
+					}}
+				>
+					<office-ui-menu-item
+						label="New Excel workbook"
+						command="new-workbook"
+					></office-ui-menu-item>
+				</office-ui-menu-button>
 				<button
 					type="button"
 					?disabled=${disabled}
 					@click=${() => this.renderRoot.querySelector<HTMLInputElement>('input[type="file"]')?.click()}
 				>
-					Upload
+					${icon('upload')} Upload
 				</button>
 				<input
 					type="file"
@@ -262,9 +272,8 @@ export class TeamsFilesPanel extends LitElement {
 				<table aria-label="Shared files">
 					<thead>
 						<tr>
-							<th scope="col">Name</th>
-							<th scope="col">Shared on</th>
-							<th scope="col">Shared by</th>
+							${this.sortHeading('name', 'Name')} ${this.sortHeading('ts', 'Shared on')}
+							${this.sortHeading('author', 'Shared by')}
 							<th scope="col">Location</th>
 							<th scope="col"><span class="visually-hidden">Actions</span></th>
 						</tr>

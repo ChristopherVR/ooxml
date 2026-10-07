@@ -73,7 +73,7 @@ test('cancels pending uploads, ignores late completion and retries with file pro
 	);
 	await expect(page.getByRole('button', { name: /^Open / })).toHaveCount(2);
 	await page.getByRole('button', { name: '+ New', exact: true }).click();
-	await page.getByRole('button', { name: 'New Excel workbook', exact: true }).click();
+	await page.getByRole('menuitem', { name: 'New Excel workbook', exact: true }).click();
 	await page.getByRole('textbox', { name: 'Workbook name', exact: true }).fill('Canceled budget');
 	await page.getByRole('button', { name: 'Create workbook', exact: true }).click();
 	await expect

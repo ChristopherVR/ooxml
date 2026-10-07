@@ -530,6 +530,29 @@ navigation, focus return, retained drafts and unsaved XLSX state across the six
 framework bindings. The new page structure is one part of UI parity: unsupported
 Settings categories and workflow gaps listed above remain outstanding.
 
+## Twenty-eighth slice: Shared file commands and sorting
+
+The Shared/Files toolbar uses the shared menu control for New, including arrow
+navigation, Enter activation, Escape dismissal, focus return and a top-layer
+popup. Creating a workbook focuses its name field. Upload uses a common icon;
+file-type badges use a document silhouette. Name, Shared on and Shared by are
+sortable table headings with accessible direction state. Sorting reuses the
+DOM-free `sortFiles` core helper, preserves equal-key order and duplicate files,
+and applies after the existing multi-word search. Newest shared date remains
+the initial order.
+
+The toolbar and table headings stay reachable during long-list scrolling.
+Compact layouts hide secondary author/location columns to keep file actions
+inside the viewport. Browser acceptance covers keyboard commands, sorting,
+duplicate names, creation, upload/retry/cancel, download, copy link and preview
+workflows across all six bindings, plus desktop and compact list geometry.
+
+Microsoft's [Shared file workflow](https://support.microsoft.com/en-us/teams/files/share-files-in-microsoft-teams)
+distinguishes posted content from a SharePoint library. OpenTeams still exposes a
+flat attachment list; library folders, Recent/Files/Links views, permission-aware
+sharing, versions, file move/copy and storage-backed rename/delete remain gaps.
+These command and layout improvements do not establish full Files UI parity.
+
 ## Next releasable slices
 
 The PowerPoint DOM renderer, element registry and asset-loading pipeline ship
