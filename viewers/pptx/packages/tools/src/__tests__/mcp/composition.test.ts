@@ -7,8 +7,8 @@ import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { expect, it } from 'vitest';
 
-import { registerTools } from '../../mcp/index.js';
-import { createTestPptxBytes } from '../helpers/create-test-pptx.js';
+import { registerTools } from '../../mcp/index';
+import { createTestPptxBytes } from '../helpers/create-test-pptx';
 
 it('the importable MCP entry registers tools and honors a composed server root', async () => {
 	const rootDir = await mkdtemp(join(tmpdir(), 'pptx-composed-'));

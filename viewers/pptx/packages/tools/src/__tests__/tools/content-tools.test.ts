@@ -1,8 +1,8 @@
 import type { PptxData } from 'ooxml-core/pptx';
 import { describe, it, expect } from 'vitest';
 
-import { findText, replaceText, manageComments } from '../../tools/content-tools.js';
-import type { ToolContext } from '../../types.js';
+import { findText, replaceText, manageComments } from '../../tools/content-tools';
+import type { ToolContext } from '../../types';
 
 function makeTestPresentation(): PptxData {
 	return {

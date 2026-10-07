@@ -1,8 +1,8 @@
 import type { PptxData } from 'ooxml-core/pptx';
 import { describe, expect, it } from 'vitest';
 
-import { exportToJson, importFromJson } from '../../tools/json-tools.js';
-import type { ToolContext } from '../../types.js';
+import { exportToJson, importFromJson } from '../../tools/json-tools';
+import type { ToolContext } from '../../types';
 
 function makeTestPresentation(): PptxData {
 	return {

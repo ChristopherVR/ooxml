@@ -3,8 +3,8 @@ import type { ChartPptxElement, PptxData } from 'ooxml-core/pptx';
 import { PptxHandler } from 'ooxml-core/pptx';
 import { describe, it, expect } from 'vitest';
 
-import { createChart, updateChart } from '../../tools/chart-tools.js';
-import type { ToolContext } from '../../types.js';
+import { createChart, updateChart } from '../../tools/chart-tools';
+import type { ToolContext } from '../../types';
 
 function makeTestPresentation(): PptxData {
 	return {

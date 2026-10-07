@@ -2,7 +2,7 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { describe, it, expect, beforeAll } from 'vitest';
 
-import { createServer } from '../../mcp/server.js';
+import { createServer } from '../../mcp/server';
 
 describe('mcp server', () => {
 	it('creates a server instance', () => {

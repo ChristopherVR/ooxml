@@ -11,9 +11,9 @@ import {
 	PptxCodec,
 	SCALAR_ELEMENT_KEYS,
 	SCALAR_SLIDE_KEYS,
-} from '../../codec/index.js';
-import { decodeTextBodyFromYText, encodeTextBodyToYText } from '../../codec/text-body-codec.js';
-import { createTestPptxBytes } from '../helpers/create-test-pptx.js';
+} from '../../codec/index';
+import { decodeTextBodyFromYText, encodeTextBodyToYText } from '../../codec/text-body-codec';
+import { createTestPptxBytes } from '../helpers/create-test-pptx';
 
 describe('text body codec', () => {
 	it('preserves paragraph formatting without inheriting it into following runs', () => {

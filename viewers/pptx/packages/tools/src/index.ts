@@ -1,12 +1,12 @@
-export type { ToolContext, ToolResult } from './types.js';
+export type { ToolContext, ToolResult } from './types';
 export type {
 	CollaborationProvider,
 	FileSystemProvider,
 	ViewerProvider,
 	ExecutionContext,
-} from './types.js';
-export { loadPresentation, savePresentation, executeToolWithContext } from './execution.js';
-export * from './tools/index.js';
+} from './types';
+export { loadPresentation, savePresentation, executeToolWithContext } from './execution';
+export * from './tools/index';
 
 // Re-export the core engine so consumers can load/save PPTX files without a
 // separate `ooxml-core` install. The engine ships as a dependency, so a

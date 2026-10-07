@@ -1,1 +1,1 @@
-export { createServer, registerTools } from './server.js';
+export { createServer, registerTools } from './server';

@@ -12,9 +12,9 @@ import {
 	groupElements,
 	ungroupElements,
 	batchUpdateElements,
-} from '../../tools/element-tools.js';
-import type { ToolContext } from '../../types.js';
-import { makeTablePresentation } from '../helpers/create-test-pptx.js';
+} from '../../tools/element-tools';
+import type { ToolContext } from '../../types';
+import { makeTablePresentation } from '../helpers/create-test-pptx';
 
 function makeTestPresentation(): PptxData {
 	return {

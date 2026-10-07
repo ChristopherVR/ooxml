@@ -81,4 +81,4 @@ export class TeamsWorkspaceComponent implements AfterViewInit, OnChanges, OnDest
 		this.stop();
 	}
 }
-export * from './service.js';
+export * from './service';

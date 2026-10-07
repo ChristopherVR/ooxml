@@ -2,9 +2,9 @@ import { PptxHandler, PresentationBuilder } from 'ooxml-core/pptx';
 import type { PptxData, TablePptxElement, XmlObject } from 'ooxml-core/pptx';
 import { describe, it, expect } from 'vitest';
 
-import { updateTableCells, manageTableStructure } from '../../tools/table-tools.js';
-import type { ToolContext } from '../../types.js';
-import { makeTablePresentation } from '../helpers/create-test-pptx.js';
+import { updateTableCells, manageTableStructure } from '../../tools/table-tools';
+import type { ToolContext } from '../../types';
+import { makeTablePresentation } from '../helpers/create-test-pptx';
 
 function ctx(pptxData?: PptxData): ToolContext {
 	return { pptxData: pptxData ?? makeTablePresentation() };

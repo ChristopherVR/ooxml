@@ -1,8 +1,8 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { isAbsolute, resolve, sep } from 'node:path';
 
-import { executeToolWithContext } from '../execution.js';
-import type { ExecutionContext, ToolContext, ToolResult } from '../types.js';
+import { executeToolWithContext } from '../execution';
+import type { ExecutionContext, ToolContext, ToolResult } from '../types';
 
 const ALLOWED_EXTENSIONS = new Set(['.pptx', '.ppt']);
 

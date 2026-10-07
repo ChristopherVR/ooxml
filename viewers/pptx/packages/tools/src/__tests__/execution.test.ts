@@ -1,9 +1,9 @@
 import { PptxHandler } from 'ooxml-core/pptx';
 import { describe, it, expect, vi } from 'vitest';
 
-import { loadPresentation, savePresentation, executeToolWithContext } from '../execution.js';
-import type { ExecutionContext, FileSystemProvider, ToolContext, ToolResult } from '../types.js';
-import { createTestPptxBytes } from './helpers/create-test-pptx.js';
+import { loadPresentation, savePresentation, executeToolWithContext } from '../execution';
+import type { ExecutionContext, FileSystemProvider, ToolContext, ToolResult } from '../types';
+import { createTestPptxBytes } from './helpers/create-test-pptx';
 
 async function makeInMemoryFs(): Promise<{
 	fs: FileSystemProvider;

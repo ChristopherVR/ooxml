@@ -6,8 +6,8 @@ import {
 	DeleteElementsSchema,
 	GroupElementsSchema,
 	BatchUpdateElementsSchema,
-} from '../../schemas/element-schemas.js';
-import { ExportToJsonSchema, ImportFromJsonSchema } from '../../schemas/json-schemas.js';
+} from '../../schemas/element-schemas';
+import { ExportToJsonSchema, ImportFromJsonSchema } from '../../schemas/json-schemas';
 import {
 	GetSlideSchema,
 	AddSlideSchema,
@@ -16,7 +16,7 @@ import {
 	SetCanvasSizeSchema,
 	ConvertToMarkdownSchema,
 	AccessibilityCheckSchema,
-} from '../../schemas/slide-schemas.js';
+} from '../../schemas/slide-schemas';
 import {
 	UpdateTableCellsSchema,
 	ManageTableStructureSchema,
@@ -24,7 +24,7 @@ import {
 	FindTextSchema,
 	ReplaceTextSchema,
 	ManageCommentsSchema,
-} from '../../schemas/table-style-schemas.js';
+} from '../../schemas/table-style-schemas';
 
 // ── Slide schemas ───────────────────────────────────────────────────────────
 

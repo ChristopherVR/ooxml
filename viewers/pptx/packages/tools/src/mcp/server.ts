@@ -1,36 +1,36 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
-import * as schemas from '../schemas/index.js';
-import * as chartFormattingTools from '../tools/chart-formatting-tools.js';
-import * as chartTools from '../tools/chart-tools.js';
-import * as chartUserShapeTools from '../tools/chart-user-shape-tools.js';
-import * as contentTools from '../tools/content-tools.js';
-import * as conversionTools from '../tools/conversion-tools.js';
-import * as elementTools from '../tools/element-tools.js';
-import * as exportTools from '../tools/export-tools.js';
-import * as geometryTools from '../tools/geometry-tools.js';
-import * as hyperlinkTools from '../tools/hyperlink-tools.js';
-import * as jsonTools from '../tools/json-tools.js';
-import * as layoutTools from '../tools/layout-tools.js';
-import * as lockTools from '../tools/lock-tools.js';
-import * as metadataTools from '../tools/metadata-tools.js';
-import * as oleTools from '../tools/ole-tools.js';
-import * as presentationTools from '../tools/presentation-tools.js';
-import * as sectionTools from '../tools/section-tools.js';
-import * as slideTools from '../tools/slide-tools.js';
-import * as smartartTools from '../tools/smartart-tools.js';
-import * as styleTools from '../tools/style-tools.js';
-import * as tableStyleTools from '../tools/table-style-tools.js';
-import * as tableTools from '../tools/table-tools.js';
-import * as templateTools from '../tools/template-tools.js';
-import * as themeTools from '../tools/theme-tools.js';
-import * as validationTools from '../tools/validation-tools.js';
+import * as schemas from '../schemas/index';
+import * as chartFormattingTools from '../tools/chart-formatting-tools';
+import * as chartTools from '../tools/chart-tools';
+import * as chartUserShapeTools from '../tools/chart-user-shape-tools';
+import * as contentTools from '../tools/content-tools';
+import * as conversionTools from '../tools/conversion-tools';
+import * as elementTools from '../tools/element-tools';
+import * as exportTools from '../tools/export-tools';
+import * as geometryTools from '../tools/geometry-tools';
+import * as hyperlinkTools from '../tools/hyperlink-tools';
+import * as jsonTools from '../tools/json-tools';
+import * as layoutTools from '../tools/layout-tools';
+import * as lockTools from '../tools/lock-tools';
+import * as metadataTools from '../tools/metadata-tools';
+import * as oleTools from '../tools/ole-tools';
+import * as presentationTools from '../tools/presentation-tools';
+import * as sectionTools from '../tools/section-tools';
+import * as slideTools from '../tools/slide-tools';
+import * as smartartTools from '../tools/smartart-tools';
+import * as styleTools from '../tools/style-tools';
+import * as tableStyleTools from '../tools/table-style-tools';
+import * as tableTools from '../tools/table-tools';
+import * as templateTools from '../tools/template-tools';
+import * as themeTools from '../tools/theme-tools';
+import * as validationTools from '../tools/validation-tools';
 import {
 	runMcpTool as runTool,
 	resolveScopedDir as scopedDir,
 	resolveScopedFilePath as scopedFile,
 	type McpContextOptions,
-} from './handlers.js';
+} from './handlers';
 
 export function createServer(options?: McpContextOptions): McpServer {
 	const server = new McpServer({

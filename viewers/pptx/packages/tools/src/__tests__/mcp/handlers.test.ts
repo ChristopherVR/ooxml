@@ -2,7 +2,7 @@ import { resolve } from 'node:path';
 
 import { describe, it, expect } from 'vitest';
 
-import { resolveScopedDir, resolveScopedFilePath } from '../../mcp/handlers.js';
+import { resolveScopedDir, resolveScopedFilePath } from '../../mcp/handlers';
 
 const ROOT = resolve('/srv/decks');
 

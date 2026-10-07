@@ -1,7 +1,7 @@
 import type { PptxElementWithText } from 'ooxml-core/pptx';
 import { describe, expect, it } from 'vitest';
 
-import { replaceElementText, setElementText } from './text-editing.js';
+import { replaceElementText, setElementText } from './text-editing';
 
 function element(): PptxElementWithText {
 	return {

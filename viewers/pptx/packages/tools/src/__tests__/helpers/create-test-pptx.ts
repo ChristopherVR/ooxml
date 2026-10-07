@@ -1,7 +1,7 @@
 import { PptxHandler } from 'ooxml-core/pptx';
 import type { PptxData } from 'ooxml-core/pptx';
 
-import type { ToolContext } from '../../types.js';
+import type { ToolContext } from '../../types';
 
 /**
  * Create a real PPTX as Uint8Array using PptxHandler.createBlank().
