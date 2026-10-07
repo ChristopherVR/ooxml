@@ -1,4 +1,5 @@
-import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
+import type { ChartPptxElement, PptxElement, PptxSlide } from 'pptx-viewer-core';
+import { createChartElement } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -64,6 +65,22 @@ describe('editor-slide-ops insertTemplateSlideAfter', () => {
 });
 
 describe('editor-slide-ops duplicateSlideAt', () => {
+	it.each(['single', 'bulk'])(
+		'retains source identity and isolates %s-copy chart data before saving',
+		(mode) => {
+			const original = slide('ppt/slides/slide1.xml', 1, [
+				createChartElement('line', { categories: ['A'], series: [{ name: 'One', values: [1] }] }),
+			]);
+			const next =
+				mode === 'single'
+					? duplicateSlideAt([original], 0)!.slides
+					: duplicateSlidesAt([original], [0]);
+			expect(next[1].sourceSlideId).toBe(original.id);
+			(next[1].elements[0] as ChartPptxElement).chartData!.series[0].values[0] = 2;
+			expect((original.elements[0] as ChartPptxElement).chartData!.series[0].values[0]).toBe(1);
+		},
+	);
+
 	it('clones the slide with a fresh id, inserted right after', () => {
 		const slides = [slide('a', 1, [el('e1')]), slide('b', 2)];
 		const result = duplicateSlideAt(slides, 0)!;

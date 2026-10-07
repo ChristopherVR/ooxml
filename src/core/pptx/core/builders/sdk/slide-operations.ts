@@ -92,6 +92,12 @@ export function duplicateSlide(slide: PptxSlide, newSlideNumber: number): PptxSl
 	// Deep-clone the slide to break all shared references
 	const cloned = cloneSlideDeep(slide);
 
+	// Retain the package source before changing identity. Pending copies can
+	// still point to the original source; saved copies own their new parts.
+	cloned.sourceSlideId = slide.id.startsWith('ppt/slides/')
+		? slide.id
+		: (slide.sourceSlideId ?? slide.id);
+
 	// Assign new slide identity
 	cloned.id = `slide${newSlideNumber}`;
 	cloned.rId = `rId${newSlideNumber + 1}`;

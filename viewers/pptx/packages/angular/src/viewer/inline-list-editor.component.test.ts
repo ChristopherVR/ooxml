@@ -1,9 +1,4 @@
 import { DestroyRef, ElementRef, Injector, runInInjectionContext } from '@angular/core';
-import { cloneSlide } from 'pptx-viewer-core';
-import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
-import { describe, expect, it, vi } from 'vitest';
-import * as Y from 'yjs';
-
 import {
 	createCollaborationLivePatcher,
 	createInlineListSeed,
@@ -12,6 +7,11 @@ import {
 	reconcileSlidesInYDoc,
 } from 'ooxml-ui/pptx';
 import type { CollaborationLivePatcher, YjsFactories } from 'ooxml-ui/pptx';
+import { cloneSlide } from 'pptx-viewer-core';
+import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
+import { describe, expect, it, vi } from 'vitest';
+import * as Y from 'yjs';
+
 import { CollaborationService } from './collaboration.service';
 import { EditorStateService } from './editor-state.service';
 import { InlineListEditorComponent } from './inline-list-editor.component';
@@ -99,7 +99,7 @@ describe('angular list editor', () => {
 					},
 				],
 			};
-			// EditorStateService.duplicateSlide assigns a new slide ID, not new element IDs.
+			// Imported or remote copies can retain element IDs from their source.
 			const duplicate = { ...cloneSlide(source), id: 's2' };
 			const factories: YjsFactories = {
 				createMap: () => new Y.Map(),

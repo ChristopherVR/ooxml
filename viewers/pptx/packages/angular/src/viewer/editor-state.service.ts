@@ -14,9 +14,6 @@
 
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
-import { cloneElement, cloneSlide, cloneTemplateElementsBySlideId } from 'pptx-viewer-core';
-import type { PptxElement, PptxHeaderFooter, PptxSection, PptxSlide } from 'pptx-viewer-core';
-
 import {
 	applyPasteSpecialFormat,
 	applyReroutedConnectors,
@@ -32,6 +29,14 @@ import {
 } from 'ooxml-ui/pptx';
 import type { PasteSpecialFormat, SlideTemplateId } from 'ooxml-ui/pptx';
 import { translationsEn } from 'ooxml-ui/pptx/i18n';
+import {
+	cloneElement,
+	cloneSlide,
+	cloneTemplateElementsBySlideId,
+	duplicateSlide,
+} from 'pptx-viewer-core';
+import type { PptxElement, PptxHeaderFooter, PptxSection, PptxSlide } from 'pptx-viewer-core';
+
 import { computeAlign, computeDistribute } from './align-distribute';
 import type { AlignMode, DistributeMode } from './align-distribute';
 import { EditorHistory } from './editor-history';
@@ -976,7 +981,7 @@ export class EditorStateService {
 		}
 		this.history.record(this.captureSnapshot(), this.t('pptx.undoAction.duplicateSlide'));
 		const id = this.newId();
-		const copy: PptxSlide = { ...cloneSlide(slides[index]), id, rId: id };
+		const copy: PptxSlide = { ...duplicateSlide(slides[index], slides.length + 1), id, rId: id };
 		const next = [...slides];
 		next.splice(index + 1, 0, copy);
 		this.slides.set(this.renumber(next));

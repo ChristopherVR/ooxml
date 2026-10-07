@@ -1,12 +1,8 @@
 import type { PptxSlideTransition, PptxTransitionType } from '../../index';
+import { duplicateSlide as duplicateSdkSlide } from '../../core/builders/sdk/slide-operations';
 
 import type { ToolContext, ToolResult } from '../types';
-import {
-	generateSlideId,
-	generateElementId,
-	describeElement,
-	validateSlideIndex,
-} from './helpers';
+import { generateSlideId, describeElement, validateSlideIndex } from './helpers';
 
 export interface GetSlideResult {
 	slideIndex: number;
@@ -172,12 +168,9 @@ export function duplicateSlide(
 	}
 
 	const original = slides[params.slideIndex];
-	const clone = structuredClone(original);
+	const clone = duplicateSdkSlide(original, slides.length + 1);
 	clone.id = generateSlideId();
 	clone.rId = '';
-	for (const el of clone.elements) {
-		el.id = generateElementId();
-	}
 
 	const insertIndex = params.targetIndex ?? params.slideIndex + 1;
 	slides.splice(insertIndex, 0, clone);

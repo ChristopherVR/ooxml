@@ -3,6 +3,7 @@
  * duplicate, toggle-hide, insert-from-layout, and context menu.
  */
 import type { PptxElement, PptxHandler, PptxSlide, PptxTheme } from 'pptx-viewer-core';
+import { duplicateSlide } from 'pptx-viewer-core';
 import {
 	buildSlideTemplateSlide,
 	createBlankSlide,
@@ -144,14 +145,7 @@ export function useSlideManagement(input: UseSlideManagementInput): SlideManagem
 				if (!src) {
 					continue;
 				}
-				const clone: PptxSlide = {
-					...src,
-					id: makeSlideId(),
-					elements: src.elements.map((el) => ({
-						...el,
-						id: `${el.id}-dup-${Math.random().toString(36).slice(2, 6)}`,
-					})),
-				};
+				const clone = { ...duplicateSlide(src, next.length + 1), id: makeSlideId() };
 				next.splice(i + offset + 1, 0, clone);
 				offset++;
 			}

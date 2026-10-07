@@ -1,5 +1,6 @@
 // oxlint-disable react-hooks/rules-of-hooks
-import type { PptxSlide } from 'pptx-viewer-core';
+import type { ChartPptxElement, PptxSlide } from 'pptx-viewer-core';
+import { createChartElement } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
 import { ref } from 'vue';
 
@@ -81,7 +82,20 @@ describe('useSlideOperations', () => {
 			// Deep clone: element array + elements are fresh references.
 			expect(clone.elements).not.toBe(original.elements);
 			expect(clone.elements[0]).not.toBe(original.elements[0]);
-			expect(clone.elements[0].id).toBe('el1');
+			expect(clone.elements[0].id).not.toBe('el1');
+			expect(clone.sourceSlideId).toBe(original.id);
+		});
+
+		it('isolates chart data before saving and retains the package source', () => {
+			const original = makeSlide('ppt/slides/slide1.xml', 1);
+			original.elements = [
+				createChartElement('line', { categories: ['A'], series: [{ name: 'One', values: [1] }] }),
+			];
+			const { slides, ops } = setup([original]);
+			ops.duplicateSlide(0);
+			expect(slides.value[1].sourceSlideId).toBe(original.id);
+			(slides.value[1].elements[0] as ChartPptxElement).chartData!.series[0].values[0] = 2;
+			expect((original.elements[0] as ChartPptxElement).chartData!.series[0].values[0]).toBe(1);
 		});
 
 		it('is a no-op for an out-of-range index', () => {

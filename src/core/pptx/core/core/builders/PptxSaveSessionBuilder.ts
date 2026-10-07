@@ -61,6 +61,11 @@ export class PptxSaveState {
 		this.initializeCommentAuthorState(config.commentAuthorMap);
 	}
 
+	/** Include parts copied during slide reconciliation before allocating new parts. */
+	public refreshPackageState(zip: JSZip): void {
+		this.initializeZipState(zip);
+	}
+
 	public nextSlideNumber(): number {
 		let candidate = 1;
 		while (this.usedSlideNumbers.has(candidate)) {

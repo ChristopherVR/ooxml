@@ -3,7 +3,7 @@
    isn't a style choice here. */
 import {
 	buildThemeColorMap,
-	cloneSlide,
+	duplicateSlide,
 	setSmartArtNodeStyle,
 	updateSmartArtNodeText,
 } from 'pptx-viewer-core';
@@ -1035,7 +1035,9 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		const next = this.store
 			.get()
 			.slides.flatMap((slide, index) =>
-				selected.has(index) ? [slide, { ...cloneSlide(slide), id: makeSlideId() }] : [slide],
+				selected.has(index)
+					? [slide, { ...duplicateSlide(slide, index + 1), id: makeSlideId() }]
+					: [slide],
 			);
 		this.editor.commitSlides(this.renumber(next));
 	};

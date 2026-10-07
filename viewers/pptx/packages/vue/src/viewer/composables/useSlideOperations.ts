@@ -1,6 +1,6 @@
-import type { PptxSlide } from 'pptx-viewer-core';
-import { cloneSlide } from 'pptx-viewer-core';
 import { createBlankSlide, makeSlideId } from 'ooxml-ui/pptx';
+import type { PptxSlide } from 'pptx-viewer-core';
+import { duplicateSlide as duplicateCoreSlide } from 'pptx-viewer-core';
 import type { Ref } from 'vue';
 
 /**
@@ -16,7 +16,7 @@ import type { Ref } from 'vue';
  * Blank slides are created via a minimal object literal matching the
  * `PptxSlide` shape (the same approach the React `handleAddSlide` uses):
  * a fresh `id`, empty `rId`, `slideNumber` and an empty `elements` array.
- * Duplication reuses the framework-agnostic `cloneSlide` helper from
+ * Duplication reuses the framework-agnostic `duplicateSlide` helper from
  * `pptx-viewer-core` for a deep, reference-independent copy.
  */
 export interface UseSlideOperationsInput {
@@ -68,7 +68,10 @@ export function useSlideOperations(input: UseSlideOperationsInput): UseSlideOper
 		}
 		pushHistory();
 		const source = slides.value[index];
-		const copy: PptxSlide = { ...cloneSlide(source), id: makeSlideId() };
+		const copy: PptxSlide = {
+			...duplicateCoreSlide(source, slides.value.length + 1),
+			id: makeSlideId(),
+		};
 		const next = [...slides.value];
 		next.splice(index + 1, 0, copy);
 		slides.value = next;
