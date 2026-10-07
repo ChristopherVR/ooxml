@@ -49,6 +49,9 @@ export type ClearWhat = 'all' | 'contents' | 'formats' | 'comments' | 'hyperlink
 
 export type PasteMode = 'all' | 'values' | 'formats' | 'formulas' | 'transpose';
 
+/** AutoFill infers a series; Fill Down / Right repeat cells with translated formulas. */
+export type FillMode = 'auto' | 'copy';
+
 export type MergeMode = 'merge' | 'center' | 'across';
 
 export type {
@@ -140,7 +143,7 @@ export interface EditSession {
 		keys: { col: number; descending?: boolean }[],
 		hasHeader: boolean,
 	): void;
-	fill(sheet: number, source: CellRange, target: CellRange): void;
+	fill(sheet: number, source: CellRange, target: CellRange, mode?: FillMode): void;
 	copy(sheet: number, range: CellRange): ClipboardPayload;
 	cut(sheet: number, range: CellRange): ClipboardPayload;
 	paste(

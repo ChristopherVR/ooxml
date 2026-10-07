@@ -44,6 +44,7 @@ export type {
 	EditSessionOptions,
 	FindMatch,
 	FindQuery,
+	FillMode,
 	MergeMode,
 	PasteMode,
 	ValidationFailure,

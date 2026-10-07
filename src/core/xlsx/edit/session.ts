@@ -193,7 +193,7 @@ export function createEditSession(
 		merge: (s, range, mode) => merge.merge(ctx, s, range, mode),
 		unmerge: (s, range) => merge.unmerge(ctx, s, range),
 		sort: (s, range, keys, hasHeader) => sort.sortRange(ctx, s, range, keys, hasHeader),
-		fill: (s, source, target) => fill.fillRange(ctx, s, source, target),
+		fill: (s, source, target, mode) => fill.fillRange(ctx, s, source, target, mode),
 		copy: (s, range) => clipboard.copyRange(workbook, s, range),
 		cut: (s, range) => ({ ...clipboard.copyRange(workbook, s, range), cut: true }),
 		paste: (s, at, payload, mode) => clipboard.pasteAt(ctx, s, at, payload, mode ?? 'all'),

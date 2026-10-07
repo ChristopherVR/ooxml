@@ -36,8 +36,14 @@ export function copyRange(workbook: Workbook, s: number, range: CellRange): Clip
 			lastCol = Math.max(lastCol, m.end.col);
 		}
 	const end = {
-		row: Math.max(r.start.row, Math.min(r.end.row, lastRow)),
-		col: Math.max(r.start.col, Math.min(r.end.col, lastCol)),
+		row:
+			r.start.row === 0 && r.end.row === MAX_ROW
+				? Math.max(r.start.row, Math.min(r.end.row, lastRow))
+				: r.end.row,
+		col:
+			r.start.col === 0 && r.end.col === MAX_COL
+				? Math.max(r.start.col, Math.min(r.end.col, lastCol))
+				: r.end.col,
 	};
 	const clipped: CellRange = { start: r.start, end };
 	const rows = end.row - r.start.row + 1;

@@ -73,7 +73,7 @@ export function gridCommands(host: CommandHost): Command[] {
 		session.batch(axis === 'down' ? 'Fill Down' : 'Fill Right', () => {
 			for (const range of ctx.selection.get().ranges) {
 				const plan = fillPlan(range, axis);
-				if (plan) session.fill(sheet, plan.source, plan.target);
+				if (plan) session.fill(sheet, plan.source, plan.target, 'copy');
 			}
 		});
 	};
