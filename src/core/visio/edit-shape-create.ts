@@ -31,9 +31,11 @@ function createShape(root: Element, shapeId: string): Element {
 
 export function createRectangle(
 	root: Element,
+	document: Element,
 	edit: Extract<VisioGeometryEdit, { type: 'create-rectangle' }>,
 ): Element {
 	const shape = createShape(root, edit.shapeId);
+	applyShapeCreationStyles(shape, document);
 	const doc = root.ownerDocument!;
 	const node = (name: string) => doc.createElementNS(root.namespaceURI, name);
 	for (const [name, value] of Object.entries({
@@ -75,8 +77,8 @@ export function createRectangle(
 	return shape;
 }
 
-/** Native drawing defaults for newly drawn lines, shared with detached scope admission. */
-export function applyLineCreationStyles(shape: Element, document: Element): void {
+/** Native drawing style references for newly drawn geometry, shared with detached scope admission. */
+export function applyShapeCreationStyles(shape: Element, document: Element): void {
 	const settings = children(document, 'DocumentSettings')[0];
 	for (const category of ['LineStyle', 'FillStyle', 'TextStyle']) {
 		const id = attribute(settings, `Default${category}`);
@@ -90,7 +92,7 @@ export function createLine(
 	edit: Extract<VisioGeometryEdit, { type: 'create-line' }>,
 ): Element {
 	const shape = createShape(root, edit.shapeId);
-	applyLineCreationStyles(shape, document);
+	applyShapeCreationStyles(shape, document);
 	const width = Math.hypot(edit.endX - edit.beginX, edit.endY - edit.beginY);
 	const entries: [string, number, string?][] = [
 		['BeginX', edit.beginX],

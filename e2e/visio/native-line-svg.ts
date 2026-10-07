@@ -22,8 +22,10 @@ export async function nativeSvgLineEndpoints(page: Page, source: string) {
 			const root = svg.getScreenCTM()!.inverse();
 			const lines = Array.from(svg.querySelectorAll<SVGGElement>('g[id]')).map((group) => {
 				const id = /^shape(\d+)-/.exec(group.id)?.[1];
-				const path = group.querySelector<SVGPathElement>('path');
-				if (!id || !path) throw new Error('Unexpected native line SVG group.');
+				const path = group.querySelector<SVGGeometryElement>(
+					'path,rect,polygon,line,ellipse,circle,polyline',
+				);
+				if (!id || !path) throw new Error('Unexpected native shape SVG group.');
 				const matrix = root.multiply(path.getScreenCTM()!);
 				const point = (length: number) => {
 					const local = path.getPointAtLength(length);
@@ -33,7 +35,18 @@ export async function nativeSvgLineEndpoints(page: Page, source: string) {
 						y: height - ((transformed.y - box.y) * height) / box.height,
 					};
 				};
-				return { id, begin: point(0), end: point(path.getTotalLength()) };
+				const style = getComputedStyle(path);
+				return {
+					id,
+					begin: point(0),
+					end: point(path.getTotalLength()),
+					paint: {
+						fill: style.fill,
+						stroke: style.stroke,
+						fillOpacity: style.fillOpacity,
+						strokeOpacity: style.strokeOpacity,
+					},
+				};
 			});
 			return { width, height, lines };
 		} finally {

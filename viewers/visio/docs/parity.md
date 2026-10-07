@@ -62,6 +62,14 @@ Native mouse snapping, outside-page gesture semantics and visibility,
 adjoining-line glue, other creation styles, other scales/unit conventions,
 exact paint pixels and native Office reopen acceptance remain unverified.
 
+Rectangle creation now shares the line command's DocumentSettings style
+references and inherited-style admission. Native standard and distinct custom
+line/fill/text default IDs verify effective rectangle geometry, color, line
+weight and poses. All six browser routes compare unselected fill/stroke colors
+and opacity with native SVG, then verify undo/redo and saved reload.
+Shape-dependent inherited style formulas remain refused. Other default styles,
+text paint, exact pixels and native Office reopen acceptance remain unverified.
+
 Native endpoint-cell assignment after a Width override retains the fixed Width,
 changing midpoint and angle while displayed endpoints diverge from raw cells.
 Eight saved native cases verify viewing geometry across six frameworks, with

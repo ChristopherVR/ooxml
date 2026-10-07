@@ -5,7 +5,9 @@ param(
  [ValidateSet('None','Begin','End')][string]$MoveEndpoint='None',
  [ValidateRange(0.000001,1000000)][double]$DrawingScale=1,
  [ValidateRange(0.000001,1000000)][double]$PageScale=1,
- [switch]$GridAligned
+ [switch]$GridAligned,
+ [switch]$IncludeRectangle,
+ [switch]$CustomDefaults
 )
 # Capture endpoint translation without replacing native transform formulas.
 $ErrorActionPreference='Stop'
@@ -32,6 +34,20 @@ function Get-LineTransform($shape){
 try {
  $app.AlertResponse=7
  $document=$app.Documents.Add('')
+ if($CustomDefaults){
+  $base=$document.DefaultStyle
+  $line=$document.Styles.Add('Parity line default',$base,1,1,1)
+  $fill=$document.Styles.Add('Parity fill default',$base,1,1,1)
+  $text=$document.Styles.Add('Parity text default',$base,1,1,1)
+  $line.CellsU('LineColor').FormulaU='RGB(24,96,168)'
+  $line.CellsU('LineWeight').ResultIU=0.05
+  $fill.CellsU('FillForegnd').FormulaU='RGB(240,176,80)'
+  $fill.CellsU('FillPattern').ResultIU=1
+  $text.CellsU('Char.Color').FormulaU='RGB(128,32,96)'
+  $document.DefaultLineStyle=$line.Name
+  $document.DefaultFillStyle=$fill.Name
+  $document.DefaultTextStyle=$text.Name
+ }
  $page=$document.Pages.Item(1)
  $page.PageSheet.CellsU('DrawingScale').ResultIU=$DrawingScale
  $page.PageSheet.CellsU('PageScale').ResultIU=$PageScale
@@ -45,6 +61,16 @@ try {
   if($shape.OneD -eq 0){throw 'Native probe is not a one-dimensional shape.'}
   $shapes+=,$shape
   $cases+=,[ordered]@{shapeId=[string]$shape.ID;oneD=$shape.OneD;before=(Get-LineCells $shape);beforeTransform=(Get-LineTransform $shape)}
+ }
+ $rectangleEvidence=$null
+ if($IncludeRectangle){
+  $rectangle=$page.DrawRectangle(5.5*$coordinates,2*$coordinates,7.5*$coordinates,3*$coordinates)
+  $rectangleCells=[ordered]@{}
+  foreach($name in @('PinX','PinY','Width','Height','LocPinX','LocPinY','Angle','FlipX','FlipY','ResizeMode','QuickStyleLineMatrix','QuickStyleFillMatrix','QuickStyleEffectsMatrix','QuickStyleFontMatrix')){
+   $cell=$rectangle.CellsU($name)
+   $rectangleCells[$name]=[ordered]@{formula=$cell.FormulaU;value=$cell.ResultIU}
+  }
+  $rectangleEvidence=[ordered]@{shapeId=[string]$rectangle.ID;cells=$rectangleCells;transform=(Get-LineTransform $rectangle)}
  }
  $control=$null
  if($DeleteAfterMove){$control=$page.DrawRectangle(6,6,7,7)}
@@ -94,9 +120,13 @@ try {
   $page.Export((Join-Path $directory 'endpoint-page.svg'))
  }
  $evidence=[ordered]@{application='Microsoft Visio';version=$app.Version;cases=$cases;drawingScale=$page.PageSheet.CellsU('DrawingScale').ResultIU;pageScale=$page.PageSheet.CellsU('PageScale').ResultIU}
+ if($rectangleEvidence){$evidence.Add('rectangle',$rectangleEvidence)}
  if($DeleteAfterMove){
   foreach($shape in $shapes){$shape.Delete()}
-  if($page.Shapes.Count -ne 1 -or $page.Shapes.Item(1).ID -ne $control.ID){throw 'Deletion altered the control shape.'}
+  $retainedIds=@($control.ID)
+  if($IncludeRectangle){$retainedIds+=,$rectangle.ID}
+  if($page.Shapes.Count -ne $retainedIds.Count){throw 'Deletion altered retained shapes.'}
+  foreach($retained in $page.Shapes){if($retained.ID -notin $retainedIds){throw 'Deletion altered retained shapes.'}}
   $document.SaveAs((Join-Path $directory 'deleted.vsdx')) | Out-Null
   $evidence.Add('deletedShapeIds',@($cases | ForEach-Object shapeId))
   $evidence.Add('controlShapeId',[string]$control.ID)

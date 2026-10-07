@@ -1317,6 +1317,7 @@ six variants. Playwright MCP reviewed a circular chart/plot background and
 downloaded it. Excel COM resaved the download with circle paths, center focus,
 two endpoint stops and red/white RGB intact on all four elements. Native chart
 layout and complete Excel parity are not established by these checks.
+
 ## Shared Word field comment selection
 
 Source: ChristopherVR/ooxml at `4397b4bf5`, shared comment commands, field guard
@@ -1331,3 +1332,20 @@ Projection observers now use the existing Yjs binding mutex to avoid writing
 older text state back during remote map notifications. No binding implementation
 was copied. Nested/simple-field behavior and M365 subscription builds remain
 unverified.
+
+## Shared Visio drawing style defaults
+
+Source: ChristopherVR/ooxml at `6cc370875`,
+`src/core/visio/edit-shape-create.ts` and `edit-scope.ts`. The line-only
+DocumentSettings style-reference helper is now shared by rectangle and line
+creation and their detached package admission. This fixes rectangle creation
+falling back to white fill/black line instead of distinct document drawing
+style IDs. Native line-local QuickStyle matrices and rectangle-inherited
+matrices retain their existing per-type behavior. No style codec moved into UI.
+
+The native SVG endpoint helper in `e2e/visio/native-line-svg.ts` now reads
+primitive rectangle geometry and computed fill/stroke opacity as well, so
+the default-style browser comparison shares native SVG registration. Native
+standard/custom captures and all six browser bindings verify creation, paint,
+history and saved reload. Shape-dependent inherited style formulas still
+pass through the existing dependency guard and can be refused.

@@ -1580,3 +1580,41 @@ shared UI command/scaling suite passes thirteen checks with one optional skip.
 Other scales and unit conventions, native mouse gesture semantics beyond
 paper edges, outside-page paint visibility, native snapping/glue, exact
 pixels and native Office reopen acceptance remain unverified.
+
+## Rectangle document drawing defaults
+
+Native Visio 16 captures `visio-line-movement-3da75dd25cc14af3bf3643997071521c`
+and `visio-line-movement-08e67d1ab8e24e408e7ece914e731f03` use the existing
+recorder's `-GridAligned -IncludeRectangle` options, with `-CustomDefaults`
+for the latter. Three distinct native styles provide line RGB(24,96,168),
+line weight 0.05 inch, fill RGB(240,176,80), and a separate text style.
+The document's defaults use these IDs rather than DocumentSheet fallback IDs.
+[Microsoft documents](https://learn.microsoft.com/en-us/office/vba/api/visio.document.defaultstyle)
+that drawing methods and drawing tools use the document drawing defaults.
+
+Before the fix, the native custom rectangle comparison failed with white
+fill, black line and 0.01041666666666667-inch weight. Rectangle creation and
+detached scope admission now share the existing line default-style helper.
+The native line has local QuickStyle matrices of one; the native rectangle
+inherits its matrices (100 in the custom capture). These are deliberately
+not copied from line creation into rectangles.
+
+Core native standard/custom geometry, style and twelve-decimal COM poses
+match. Every part outside the edited page remains byte-identical. Native
+custom-style line recreation also passes the existing line regression.
+The full Visio suite passes 2,188 checks with 76 optional skips, followed by
+four passing drawing-default checks including an additional regression for
+the shared inherited-style dependency refusal. Core and viewer types and
+the Visio ESM/CJS/declaration build pass.
+
+Twelve browser workflows compare actual unselected fill/stroke colors and
+opacity against native SVG, with real rectangle drags, undo/redo, public save
+and reload in all six frameworks. The comparison clears selection before
+measuring paint, because selection intentionally substitutes the accent
+stroke. The shared native SVG helper supports native rect primitives as
+well as paths. The existing vanilla line creation comparison also passes.
+
+Other default styles and documents, text paint, gradients/effects, exact
+pixels, native UI gesture semantics and native Office reopen acceptance
+remain unverified. Each fresh owned invisible Visio instance quit; the
+user's existing instance remained untouched.
