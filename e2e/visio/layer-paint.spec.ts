@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { join } from 'node:path';
-import type { VisioViewerElement } from '../../src/ui/src/visio/index';
+import type { VisioViewerElement } from 'ooxml-ui/visio';
 import reference from '../../src/core/visio/__fixtures__/layer-colors-native.json' with { type: 'json' };
 
 const nativeDirectory = process.env.VISIO_NATIVE_LAYER_COLORS_DIR;
