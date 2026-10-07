@@ -186,6 +186,28 @@ for (const framework of FRAMEWORKS)
 		const pane = editor(page).getByRole('complementary', { name: 'Format Data Series' });
 		const stops = pane.getByRole('group', { name: 'Gradient stops', exact: true });
 		await expect(stops.getByRole('button')).toHaveCount(3);
+		const direction = pane.getByRole('button', { name: 'Direction', exact: true });
+		const initialAngle = await pane
+			.getByRole('spinbutton', { name: 'Angle', exact: true })
+			.inputValue();
+		await direction.press('ArrowDown');
+		const directionPopup = editor(page).getByRole('dialog', { name: 'Direction', exact: true });
+		await expect(directionPopup.getByRole('button')).toHaveCount(8);
+		const ids = await directionPopup
+			.locator('linearGradient')
+			.evaluateAll((nodes) => nodes.map((node) => node.id));
+		expect(new Set(ids).size).toBe(8);
+		await page.keyboard.press('End');
+		await expect(
+			directionPopup.getByRole('button', { name: 'Linear Diagonal - Top Right', exact: true }),
+		).toBeFocused();
+		await page.keyboard.press('Enter');
+		await expect(directionPopup).toBeHidden();
+		await expect(pane.getByRole('spinbutton', { name: 'Angle', exact: true })).toHaveValue('315');
+		await editor(page).evaluate((node) => (node as unknown as { undo(): void }).undo());
+		await expect(pane.getByRole('spinbutton', { name: 'Angle', exact: true })).toHaveValue(
+			initialAngle,
+		);
 		await stops.getByRole('button', { name: 'Gradient stop 2', exact: true }).click();
 		const angle = pane.getByRole('spinbutton', { name: 'Angle', exact: true });
 		await angle.fill('54');
@@ -267,6 +289,7 @@ for (const framework of FRAMEWORKS)
 		});
 		await expect(position).toBeDisabled();
 		await expect(brightness).toBeDisabled();
+		await expect(direction).toBeDisabled();
 		await expect(stops.getByRole('button').first()).toBeDisabled();
 		expect(errors).toEqual([]);
 	});

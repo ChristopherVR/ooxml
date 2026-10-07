@@ -8,6 +8,7 @@ import {
 import { drawingColorCss, drawingColorBrightness } from 'ooxml-core/diagram';
 import { activeChart, type EditorContext } from 'ooxml-core/xlsx/ui';
 import { createGradientStopTrack } from '../form/gradient-stop-track';
+import { createGradientDirectionGallery } from '../form/gradient-direction-gallery';
 import { el, field, numberInput } from './dialogs/fields';
 import { openColorGrid } from './ribbon/color-grid';
 
@@ -20,6 +21,7 @@ export function createSeriesGradient(ctx: EditorContext, selected: () => number)
 	const color = el(ctx, 'button', 'xve-input xve-chart-series-color');
 	color.type = 'button';
 	const track = createGradientStopTrack(element.ownerDocument);
+	const direction = createGradientDirectionGallery(element.ownerDocument);
 	const rows = [
 		[field(ctx, 'Angle', angle), angle, 'Angle'],
 		[field(ctx, 'Position', position), position, 'Position'],
@@ -40,7 +42,8 @@ export function createSeriesGradient(ctx: EditorContext, selected: () => number)
 	remove.type = 'button';
 	buttons.append(add, remove);
 	selector.append(track.element, buttons);
-	element.append(rows[0][0], selector, ...rows.slice(1).map(([row]) => row));
+	const directionRow = field(ctx, 'Direction', direction.element);
+	element.append(directionRow, rows[0][0], selector, ...rows.slice(1).map(([row]) => row));
 	let current: ChartObject | undefined;
 	let model: ChartViewModel | undefined;
 	let stopIndex = 0;
@@ -64,8 +67,10 @@ export function createSeriesGradient(ctx: EditorContext, selected: () => number)
 			drawingIndex !== nextDrawing ||
 			shownBook !== ctx.workbook() ||
 			shownSheet !== ctx.activeSheet()
-		)
+		) {
 			stopIndex = 0;
+			direction.close();
+		}
 		shownBook = ctx.workbook();
 		shownSheet = ctx.activeSheet();
 		seriesIndex = selected();
@@ -74,7 +79,10 @@ export function createSeriesGradient(ctx: EditorContext, selected: () => number)
 		model = view;
 		const fill = chart?.series[selected()]?.fill;
 		element.hidden = fill?.kind !== 'gradient';
-		if (fill?.kind !== 'gradient') return;
+		if (fill?.kind !== 'gradient') {
+			direction.close();
+			return;
+		}
 		stopIndex = Math.max(0, Math.min(stopIndex, fill.stops.length - 1));
 		const disabled = !ctx.commands.isEnabled('chart.format-series');
 		angle.value = String(fill.angle ?? 90);
@@ -90,6 +98,14 @@ export function createSeriesGradient(ctx: EditorContext, selected: () => number)
 			brightness.disabled =
 				disabled || !fill.stops.length;
 		const stops = view?.series[selected()]?.gradient?.stops ?? [];
+		directionRow.querySelector('span')!.textContent = ctx.t('Direction');
+		direction.update({
+			gradient: view?.series[selected()]?.gradient ?? { type: 'linear', stops: [] },
+			disabled: disabled || !!fill.path,
+			label: ctx.t('Direction'),
+			translate: ctx.t,
+			onPick: (value) => apply({ kind: 'angle', value }),
+		});
 		brightness.disabled ||= stopBrightness === undefined;
 		color.style.setProperty('--series-fill', stops[stopIndex]?.color ?? 'transparent');
 		track.update({

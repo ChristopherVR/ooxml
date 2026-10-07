@@ -994,3 +994,30 @@ mixed point formatting and exact pane layout. COM's explicit RGB property
 replacement also reset brightness and opacity in the new recorder case;
 the viewer's color-menu opacity retention is an existing policy whose native
 interactive-menu equivalence remains unverified.
+
+## Linear gradient direction gallery
+
+The pane now offers eight standard linear direction tiles. It reuses the
+PowerPoint/shared Office gallery's popup, focus, keyboard navigation and safe
+SVG preview handling; the common chart painter generates each preview. Every
+preview has its own ID, including across multiple editor instances. Direction
+picks use the existing core angle command and preserve stops and opacity.
+Imported path gradients keep this linear-only control disabled.
+
+Excel COM saved/reopened angles 0, 45, 90, 135, 180, 225, 270 and 315. Core
+editing round trips match these angles and retain the native stops and flags.
+Playwright MCP reviewed all eight distinct previews and downloaded a 315-degree
+edit: Excel reopened it with the original 37% brightness/opacity, 23% position
+and the other stop's 56% position and 13% transparency. Six framework browser
+checks cover keyboard selection, popup closure, undo and read-only behavior.
+The focused UI/gallery selection passed 30 tests and the gradient core suite
+passed 22 tests.
+Core/UI typechecks and builds passed. Clean-package checks imported 96 entries
+and registered 45 custom elements.
+
+This closes linear direction authoring, not exact raster parity. A separate
+Excel-exported 45-degree red/white chart revealed a diagonal paint difference;
+gradient interpolation and endpoint behavior need a measured pixel corpus
+before adjusting the shared renderer. The recorder now exports native direction
+PNGs for that comparison. Radial/rectangular/path direction controls, exact
+native gallery arrangement, preset/type galleries and stop dragging remain open.

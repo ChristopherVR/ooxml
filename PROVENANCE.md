@@ -964,3 +964,14 @@ DrawingML resolver paints the result; no color engine was copied into the UI.
 `scripts/record-xlsx-chart-gradient-edits.ps1` now records Excel 16.0 build 20430
 brightness extremes, reset, opacity preservation and explicit COM RGB replacement
 in the independently saved/reopened native gradient fixture.
+
+## Shared Office gradient direction gallery
+
+Source: ChristopherVR/ooxml at `a932dbd72`, `src/ui/src/ribbon/gallery.ts` and
+`src/core/chart/gradient-definition.ts`. No gallery or paint engine was copied.
+The new format-neutral DOM adapter `src/ui/src/form/gradient-direction-gallery.ts`
+uses the shared Office gallery for popup positioning, focus, keyboard selection
+and sanitization, and the shared chart painter for independently namespaced
+previews. XLSX routes its picks through the existing core gradient angle edits.
+The Excel COM recorder now captures the eight linear angles and their native
+PNG references without changing stop identities or inventing native presets.

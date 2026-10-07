@@ -8,13 +8,16 @@ function Capture($name) {
     $probe=$excel.Workbooks.Open($path,0,$true)
     try {
         $fill=$probe.Worksheets.Item(1).ChartObjects(1).Chart.SeriesCollection(1).Format.Fill
+        if($name -like 'direction-*') {
+            [void]$probe.Worksheets.Item(1).ChartObjects(1).Chart.Export((Join-Path $OutputFolder "$name.png"),'PNG')
+        }
         $stops=@(); foreach($index in 1..$fill.GradientStops.Count){
             $stop=$fill.GradientStops.Item($index)
-            $stops+=@{position=[double]$stop.Position*100;transparency=[double]$stop.Transparency*100;brightness=[double]$stop.Color.Brightness*100;rgb=[int]$stop.Color.RGB}
+            $stops+=[ordered]@{position=[double]$stop.Position*100;transparency=[double]$stop.Transparency*100;brightness=[double]$stop.Color.Brightness*100;rgb=[int]$stop.Color.RGB}
         }
         $zip=[IO.Compression.ZipFile]::OpenRead($path)
         try{$reader=[IO.StreamReader]::new($zip.GetEntry('xl/charts/chart1.xml').Open());try{$xml=$reader.ReadToEnd()}finally{$reader.Dispose()}}finally{$zip.Dispose()}
-        return @{name=$name;angle=[double]$fill.GradientAngle;stops=$stops;chartXml=$xml}
+        return [ordered]@{name=$name;angle=[double]$fill.GradientAngle;stops=$stops;chartXml=$xml}
     } finally {$probe.Close($false)}
 }
 try {
@@ -43,7 +46,11 @@ try {
     }
     $fill.GradientStops.Item(1).Color.RGB=16711680
     $cases+=Capture 'brightness-recolor'
-    @{excelVersion=[string]$excel.Version;excelBuild=[string]$excel.Build;cases=$cases;minimumRejected=$minimumRejected} |
+    foreach($angle in @(0,45,90,135,180,225,270,315)) {
+        $fill.GradientAngle=[single]$angle
+        $cases+=Capture "direction-$angle"
+    }
+    [ordered]@{excelVersion=[string]$excel.Version;excelBuild=[string]$excel.Build;cases=$cases;minimumRejected=$minimumRejected} |
         ConvertTo-Json -Depth 6 | Set-Content -Encoding utf8 (Join-Path $OutputFolder 'gradient-edits.json')
     Write-Output "Recorded gradient edits in $OutputFolder"
 } finally {
