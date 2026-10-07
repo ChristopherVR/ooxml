@@ -2,6 +2,7 @@ import type { XmlObject } from 'pptx-viewer-core';
 import { xmlText } from 'pptx-viewer-core';
 import React from 'react';
 
+import { EMU_PER_PX } from '../constants';
 import { colorWithOpacity } from './color';
 import { parseDrawingColor, parseDrawingColorOpacity } from './drawing-color';
 import { ensureArrayValue } from './geometry';
@@ -188,24 +189,27 @@ export function extractTableCellStyle(
 		}
 	}
 
-	// Cell margins / padding from `marL`, `marR`, `marT`, `marB` (in EMU)
+	// Cell margins / padding from `marL`, `marR`, `marT`, `marB` (in EMU). An
+	// explicit `0` is a deliberately zeroed margin and must win over the
+	// PowerPoint default the table path lays underneath.
 	if (cellProperties) {
-		const marL = Number.parseInt(String(cellProperties['@_marL'] || ''), 10);
-		const marR = Number.parseInt(String(cellProperties['@_marR'] || ''), 10);
-		const marT = Number.parseInt(String(cellProperties['@_marT'] || ''), 10);
-		const marB = Number.parseInt(String(cellProperties['@_marB'] || ''), 10);
-		const toPx = (emu: number) => Math.round(emu / 12700);
-		if (Number.isFinite(marL) && marL > 0) {
-			cellStyle.paddingLeft = toPx(marL);
+		const margin = (key: string) =>
+			Number.parseInt(String(cellProperties[key] ?? ''), 10) / EMU_PER_PX;
+		const marL = margin('@_marL');
+		const marR = margin('@_marR');
+		const marT = margin('@_marT');
+		const marB = margin('@_marB');
+		if (marL >= 0) {
+			cellStyle.paddingLeft = marL;
 		}
-		if (Number.isFinite(marR) && marR > 0) {
-			cellStyle.paddingRight = toPx(marR);
+		if (marR >= 0) {
+			cellStyle.paddingRight = marR;
 		}
-		if (Number.isFinite(marT) && marT > 0) {
-			cellStyle.paddingTop = toPx(marT);
+		if (marT >= 0) {
+			cellStyle.paddingTop = marT;
 		}
-		if (Number.isFinite(marB) && marB > 0) {
-			cellStyle.paddingBottom = toPx(marB);
+		if (marB >= 0) {
+			cellStyle.paddingBottom = marB;
 		}
 	}
 
