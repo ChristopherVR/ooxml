@@ -89,6 +89,7 @@ export function renderText(
 			span.setAttribute('font-family', run.fontFamily);
 			span.setAttribute('font-size', String(run.fontSize));
 			span.setAttribute('fill', safeColor(run.color));
+			span.setAttribute('fill-opacity', String(run.opacity ?? text.opacity ?? 1));
 			if (run.bold) span.setAttribute('font-weight', 'bold');
 			if (run.italic) span.setAttribute('font-style', 'italic');
 			if (run.underline) span.setAttribute('text-decoration', 'underline');
@@ -103,6 +104,7 @@ export function renderText(
 			bullet.setAttribute('font-family', line.bullet.fontFamily);
 			bullet.setAttribute('font-size', String(line.bullet.fontSize));
 			bullet.setAttribute('fill', safeColor(text.color));
+			bullet.setAttribute('fill-opacity', String(text.opacity ?? 1));
 			bullets.append(bullet);
 		}
 	}

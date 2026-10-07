@@ -105,6 +105,7 @@ export function assertViewableDocument(model: VisioDocument): void {
 		label(shape.style.fill, 256);
 		label(shape.style.lineColor, 256);
 		label(shape.text.color, 256);
+		if (shape.text.opacity !== undefined) finite(shape.text.opacity, 'text opacity', 0, 1);
 		if (shape.text.backgroundColor) label(shape.text.backgroundColor, 256);
 		if (shape.text.backgroundOpacity !== undefined)
 			finite(shape.text.backgroundOpacity, 'text background opacity', 0, 1);
@@ -183,6 +184,7 @@ export function assertViewableDocument(model: VisioDocument): void {
 		for (const run of shape.text.runs) {
 			label(run.fontFamily, 1024);
 			label(run.color, 256);
+			if (run.opacity !== undefined) finite(run.opacity, 'text run opacity', 0, 1);
 			if (typeof run.text !== 'string') throw new Error('The scene has invalid run text.');
 			textBytes += run.text.length;
 			++runCount;

@@ -69,7 +69,7 @@ describe('Visio cached layers', () => {
 			false,
 		);
 	});
-	it('reports missing or malformed memberships and unapplied colors', () => {
+	it('reports missing or malformed memberships without overriding mixed-layer colors', () => {
 		const messages: string[] = [],
 			report = (code: string) => messages.push(code);
 		const layers = pageLayers(
@@ -81,11 +81,7 @@ describe('Visio cached layers', () => {
 			shapeLayers(sheet(cell('LayerMember', 'RUN()')), indexLayers(layers), report).layerIds,
 		).toEqual([]);
 		shapeLayers(sheet(cell('LayerMember', '0;99')), indexLayers(layers), report);
-		expect(messages).toEqual([
-			'invalid-layer-membership',
-			'missing-layer',
-			'unsupported-layer-color',
-		]);
+		expect(messages).toEqual(['invalid-layer-membership', 'missing-layer']);
 	});
 	it('integrates page layer metadata and inherited shape membership', async () => {
 		const bytes = await fixture({

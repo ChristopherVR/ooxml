@@ -1,4 +1,6 @@
 import { savedFillGradient } from './saved-fill-gradient';
+import { legacyFillGradient } from './legacy-fill-gradient';
+import { clampUnitInterval } from '../color/color-primitives';
 import { themeLinearGradient } from './theme-gradient';
 import { themeLineWeight, reportThemeEffects, themeSolidLinePattern } from './theme-line';
 import { lineCap } from './line-style';
@@ -83,8 +85,12 @@ export function shapeStyle(
 					report,
 				)
 			: undefined;
+	const legacyGradient = savedGradient
+		? undefined
+		: legacyFillGradient(cells, width, height, (name) => color(cells, name, '', resources, report));
 	const fillGradient =
 		savedGradient ??
+		legacyGradient ??
 		(pattern === 1 ? themeLinearGradient(sheet, resources, width, height, report) : undefined);
 	if (pattern > 1 && !fillGradient)
 		report(
@@ -115,8 +121,9 @@ export function shapeStyle(
 			Math.max(0, number(cells, 'LineWeight', 0.01, report)),
 		...(cap === undefined ? {} : { lineCap: cap }),
 		...(themeSolidLinePattern(cells, resources) ?? linePattern(cells, report)),
-		// Saved stop transparencies are the fill opacity, not a second alpha layer.
-		fillOpacity: savedGradient ? 1 : opacity(number(cells, 'FillForegndTrans', 0, report)),
+		// Saved and legacy stop transparencies already supply the fill opacity.
+		fillOpacity:
+			savedGradient || legacyGradient ? 1 : opacity(number(cells, 'FillForegndTrans', 0, report)),
 		lineOpacity: opacity(number(cells, 'LineColorTrans', 0, report)),
 		startArrow: number(cells, 'BeginArrow', 0, report),
 		endArrow: number(cells, 'EndArrow', 0, report),
@@ -140,10 +147,12 @@ function runStyle(
 	themeCells: Cells,
 ): Omit<VisioTextRun, 'text'> {
 	const bits = number(cells, 'Style', 0, report);
+	const transparency = clampUnitInterval(number(cells, 'ColorTrans', 0, report));
 	return {
 		fontFamily: font(cells, resources),
 		fontSize: Math.max(0.001, number(cells, 'Size', 10 / 72, report)),
 		color: color(cells, 'Color', '#000000', resources, report, themeCells),
+		...(transparency > 0 ? { opacity: 1 - Math.round(transparency * 255) / 255 } : {}),
 		bold: !!(bits & 1),
 		italic: !!(bits & 2),
 		underline: !!(bits & 4),

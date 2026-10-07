@@ -146,6 +146,7 @@ export function copySnapshotScene(model: VisioDocument): VisioDocument {
 			'plainText',
 			'backgroundColor',
 			'backgroundOpacity',
+			'opacity',
 			'fontFamily',
 			'fontSize',
 			'color',
@@ -157,7 +158,7 @@ export function copySnapshotScene(model: VisioDocument): VisioDocument {
 		transform: matrix(source.transform),
 		margins: fields(source.margins, ['left', 'right', 'top', 'bottom']),
 		runs: list(source.runs, 'text runs', 100_000, (run) => ({
-			...fields(run, ['text', 'fontFamily', 'fontSize', 'color']),
+			...fields(run, ['text', 'fontFamily', 'fontSize', 'color', 'opacity']),
 			bold: !!run.bold,
 			italic: !!run.italic,
 			underline: !!run.underline,

@@ -52,6 +52,8 @@ export interface VisioTextRun {
 	fontFamily: string;
 	fontSize: number;
 	color: string;
+	/** Native character color alpha, including a single colored layer override. */
+	opacity?: number;
 	bold: boolean;
 	italic: boolean;
 	underline: boolean;
@@ -81,6 +83,7 @@ export interface VisioText {
 	fontFamily: string;
 	fontSize: number;
 	color: string;
+	opacity?: number;
 	horizontalAlign: 'left' | 'center' | 'right';
 	verticalAlign: 'top' | 'middle' | 'bottom';
 	/** Local text box transform (y-up), dimensions and margins in inches. */
