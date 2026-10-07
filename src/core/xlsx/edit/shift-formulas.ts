@@ -1,5 +1,6 @@
-import type { ConditionalRule, Workbook, Worksheet } from '../model.js';
+import type { Workbook, Worksheet } from '../model.js';
 import { rewritePreservedFormulas } from './shift-preserved.js';
+import { rewriteConditionalRule } from './conditional-formulas.js';
 
 /** Rewrites one formula; `formulaSheet` is the sheet unqualified references point at. */
 export type FormulaRewrite = (formula: string, formulaSheet: string) => string;
@@ -11,18 +12,6 @@ function safe(rewrite: FormulaRewrite, formula: string, formulaSheet: string): s
 	} catch {
 		return formula;
 	}
-}
-
-function rewriteRule(rule: ConditionalRule, sheetName: string, rewrite: FormulaRewrite): void {
-	if (rule.type === 'cellIs') rule.formulas = rule.formulas.map((f) => safe(rewrite, f, sheetName));
-	else if (rule.type === 'expression') rule.formula = safe(rewrite, rule.formula, sheetName);
-	if (rule.type === 'colorScale' || rule.type === 'iconSet') {
-		for (const t of rule.thresholds)
-			if (t.type === 'formula' && t.value) t.value = safe(rewrite, t.value, sheetName);
-	}
-	if (rule.type === 'dataBar')
-		for (const t of [rule.min, rule.max])
-			if (t.type === 'formula' && t.value) t.value = safe(rewrite, t.value, sheetName);
 }
 
 /**
@@ -55,7 +44,7 @@ export function rewriteSheetFormulas(sheet: Worksheet, rewrite: FormulaRewrite):
 			for (const cell of cells.values())
 				if (cell.formula !== undefined) cell.formula = safe(rewrite, cell.formula, name);
 		for (const cf of sheet.conditionalFormats)
-			for (const rule of cf.rules) rewriteRule(rule, name, rewrite);
+			for (const rule of cf.rules) rewriteConditionalRule(rule, (f) => rewrite(f, name));
 		for (const dv of sheet.dataValidations) {
 			if (dv.formula1 !== undefined) dv.formula1 = safe(rewrite, dv.formula1, name);
 			if (dv.formula2 !== undefined) dv.formula2 = safe(rewrite, dv.formula2, name);

@@ -4,6 +4,7 @@ import type {
 	CellStyle,
 	CellValue,
 	Comment,
+	ConditionalFormat,
 	DataValidation,
 	Hyperlink,
 	RichTextRun,
@@ -45,6 +46,8 @@ export interface ClipboardCells {
 	dataValidations?: DataValidation[];
 	/** Hyperlinks with ranges relative to the copied block. */
 	hyperlinks?: Hyperlink[];
+	/** Conditional rules with relative ranges and formulas anchored in the original sheet. */
+	conditionalFormats?: ConditionalFormat[];
 	/** Where the cells were copied from, when they came from a session. */
 	source?: { sheet: number; range: CellRange };
 }

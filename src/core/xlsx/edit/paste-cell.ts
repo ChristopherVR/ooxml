@@ -28,7 +28,8 @@ export function writeClip(
 	}
 	const existing = getCell(sheet, row, col);
 	if (!clip && operation === 'none' && mode !== 'noBorders') {
-		if (mode === 'all' || mode === 'transpose') deleteCell(sheet, row, col);
+		if (mode === 'all' || mode === 'mergeFormats' || mode === 'transpose')
+			deleteCell(sheet, row, col);
 		else if (existing) {
 			clearContents(existing);
 			pruneCell(sheet, row, col);

@@ -53,6 +53,7 @@ export type PasteMode =
 	| 'formats'
 	| 'formulas'
 	| 'noBorders'
+	| 'mergeFormats'
 	| 'widths'
 	| 'comments'
 	| 'validation'

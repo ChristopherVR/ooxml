@@ -76,6 +76,7 @@ export function recalculateVisioCells(
 						key({ pageId: item.pageId, shapeId: ref.shapeId ?? item.shapeId, cell: ref.cell }),
 					),
 				{
+					...options.pageContext?.get(item.pageId),
 					onStep: () => {
 						if (--steps < 0)
 							fail('LIMIT_FORMULA_STEPS', 'ShapeSheet dependency evaluation limit exceeded.');

@@ -5,6 +5,7 @@ export { ligatureCss } from './ligatures.js';
 export * from './text-breaks.js';
 export * from './input.js';
 export * from './result.js';
+export * from './page-fields.js';
 export { layoutParagraph, type ParagraphLayoutResult } from './paragraph-layout.js';
 export { adjustForWidowOrphan, suppressesSpacing, widowControlEnabled } from './keep-rules.js';
 export { layoutRow, splitRowAtHeight, type RowLayout, type RowSplit } from './table-layout.js';

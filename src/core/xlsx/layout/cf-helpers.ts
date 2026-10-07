@@ -70,7 +70,7 @@ export function scaleColor(
 		if (value >= lo && value <= hi) {
 			const a = colors[i] ?? '#FFFFFF';
 			const b = colors[i + 1] ?? a;
-			return hi > lo ? mixColors(a, b, (value - lo) / (hi - lo)) : b;
+			return hi > lo ? mixColors(a, b, (value - lo) / (hi - lo), 'towardStart') : b;
 		}
 	}
 	return colors[last];
