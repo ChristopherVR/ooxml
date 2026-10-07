@@ -14,6 +14,7 @@ import { buildInlineContent, collectInlineSlots, replaceableInlineChildren } fro
 import type { RelationshipAllocator } from './relationship-allocator';
 import { parseDirectParagraphProperties } from './paragraph-properties';
 import { parsePropertiesSnapshot } from './revision-properties';
+import { samePictureSource } from './inline-source';
 
 export function setAttribute(element: XmlElement, local: string, value: string): void {
 	element.setAttributeNS(WORD_NS, `w:${local}`, value);
@@ -28,18 +29,23 @@ function rejectUnsafeRunSegmentation(
 	oldRuns: XmlElement[],
 ): void {
 	if (!base || !oldRuns.some(runHasUnknownProperties)) return;
-	// Removing a picture deliberately removes its own opaque properties. Retained text must
-	// still pass the ordinary preservation guard; never reinterpret an unknown text run as an object.
+	// Pictures are matched by their media source, so splitting surrounding text does not move
+	// their opaque properties to a different run. Retained opaque text still needs its own basis.
 	if (
 		oldRuns.length === base.runs.length &&
 		oldRuns.every((node, index) => {
 			if (!runHasUnknownProperties(node)) return true;
 			const image = base.runs[index]?.image;
+			if (!image) return false;
+			const remaining = paragraph.runs.filter((run) =>
+				image.partName
+					? samePictureSource(run.image, image)
+					: run.image?.relId === image.relId && run.image?.partName === image.partName,
+			);
 			return (
-				image &&
-				!paragraph.runs.some(
-					(run) => run.image?.relId === image.relId && run.image?.partName === image.partName,
-				)
+				!remaining.length ||
+				(!!image.partName &&
+					remaining.every((run) => run.restoredRunPropertiesXml || run.sourceRunPropertiesXml))
 			);
 		})
 	)

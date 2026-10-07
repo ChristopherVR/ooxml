@@ -183,8 +183,19 @@ and endnote formatting acceptance/rejection, and both editor exports reopen in
 Word with matching story text and zero revisions in every inspected story.
 Local and Yjs undo restore all five stories together; six browser bindings cover
 resolution and preview refresh. Unsupported boundary removal fails before
-dispatch, preserving the body and history. Atom format-revision resolution,
-recording and prior formatting display still require dedicated coverage. These checks do not
+dispatch, preserving the body and history. Shared review also resolves run-format
+history on pictures, page breaks, note references and field markers/codes. The
+resolver uses the same complete prior-property restoration and run conversion as
+text; it retains independent insertion history, links, comments and note labels.
+Native Word fixtures cover four object types and eight accepted/rejected exports.
+Word reopens every export with native story text and zero inspected revisions.
+Picture media bytes, drawing XML and opaque run properties survive resolution.
+Pictures also retain their source drawing when preceding text is split or removed.
+Changing the number of pictures sharing one media relationship is guarded until
+the model carries a stable identity for each drawing.
+Component history, Yjs peer undo and all six browser bindings cover these cases.
+Atom formatting recording and prior formatting display, and OMML formatting,
+still need implementation. These checks do not
 establish complete native Word object-review parity.
 
 Print Layout now projects prior run and paragraph formatting through the same

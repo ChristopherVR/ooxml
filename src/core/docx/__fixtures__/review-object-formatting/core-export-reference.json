@@ -1,0 +1,154 @@
+{
+  "applicationVersion": "16.0",
+  "applicationBuild": "16.0.20430",
+  "cases": [
+    {
+      "name": "break-accept",
+      "text": "Before\r\f\rAfter\r",
+      "revisions": 0,
+      "pictures": 0,
+      "footnotes": 0,
+      "footnoteRevisions": 0,
+      "pages": 2,
+      "stories": [
+        {
+          "type": 1,
+          "index": 0,
+          "text": "Before\r\f\rAfter\r",
+          "revisions": 0
+        }
+      ]
+    },
+    {
+      "name": "break-reject",
+      "text": "Before\r\f\rAfter\r",
+      "revisions": 0,
+      "pictures": 0,
+      "footnotes": 0,
+      "footnoteRevisions": 0,
+      "pages": 2,
+      "stories": [
+        {
+          "type": 1,
+          "index": 0,
+          "text": "Before\r\f\rAfter\r",
+          "revisions": 0
+        }
+      ]
+    },
+    {
+      "name": "field-accept",
+      "text": "Before1After\r",
+      "revisions": 0,
+      "pictures": 0,
+      "footnotes": 0,
+      "footnoteRevisions": 0,
+      "pages": 1,
+      "stories": [
+        {
+          "type": 1,
+          "index": 0,
+          "text": "Before1After\r",
+          "revisions": 0
+        }
+      ]
+    },
+    {
+      "name": "field-reject",
+      "text": "Before1After\r",
+      "revisions": 0,
+      "pictures": 0,
+      "footnotes": 0,
+      "footnoteRevisions": 0,
+      "pages": 1,
+      "stories": [
+        {
+          "type": 1,
+          "index": 0,
+          "text": "Before1After\r",
+          "revisions": 0
+        }
+      ]
+    },
+    {
+      "name": "note-accept",
+      "text": "Before\u0002After\r",
+      "revisions": 0,
+      "pictures": 0,
+      "footnotes": 1,
+      "footnoteRevisions": 0,
+      "pages": 1,
+      "stories": [
+        {
+          "type": 1,
+          "index": 0,
+          "text": "Before\u0002After\r",
+          "revisions": 0
+        },
+        {
+          "type": 2,
+          "index": 0,
+          "text": "\u0002 Note text\r",
+          "revisions": 0
+        }
+      ]
+    },
+    {
+      "name": "note-reject",
+      "text": "Before\u0002After\r",
+      "revisions": 0,
+      "pictures": 0,
+      "footnotes": 1,
+      "footnoteRevisions": 0,
+      "pages": 1,
+      "stories": [
+        {
+          "type": 1,
+          "index": 0,
+          "text": "Before\u0002After\r",
+          "revisions": 0
+        },
+        {
+          "type": 2,
+          "index": 0,
+          "text": "\u0002 Note text\r",
+          "revisions": 0
+        }
+      ]
+    },
+    {
+      "name": "picture-accept",
+      "text": "Before/After\r",
+      "revisions": 0,
+      "pictures": 1,
+      "footnotes": 0,
+      "footnoteRevisions": 0,
+      "pages": 1,
+      "stories": [
+        {
+          "type": 1,
+          "index": 0,
+          "text": "Before/After\r",
+          "revisions": 0
+        }
+      ]
+    },
+    {
+      "name": "picture-reject",
+      "text": "Before/After\r",
+      "revisions": 0,
+      "pictures": 1,
+      "footnotes": 0,
+      "footnoteRevisions": 0,
+      "pages": 1,
+      "stories": [
+        {
+          "type": 1,
+          "index": 0,
+          "text": "Before/After\r",
+          "revisions": 0
+        }
+      ]
+    }
+  ]
+}

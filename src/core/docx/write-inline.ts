@@ -14,6 +14,7 @@ import {
 } from './write-ranges';
 
 import { createRun } from './write-run';
+import { inlineSourceLookup } from './inline-source';
 import { isEquationElement, preserveEquation } from './equation';
 import { hasSpecialBreak, isCachedPageBreak, isModeledBreak } from './breaks';
 import { isCommentReferenceRun } from './parse-revisions';
@@ -215,16 +216,10 @@ export function buildInlineContent(
 	// Ranges continuing from an earlier paragraph or into a later one open or close there instead.
 	const { opens, closes } = rangeEdges(runs, ranges);
 	const runAt = (at: number) => expectDefined(runs[at], `run ${at}`);
+	const sourceFor = inlineSourceLookup(runs, base);
 	const nodesFor = (index: number) => {
 		const run = runAt(index);
-		// Text edits can split runs before an equation. Find its source by OMML, not position.
-		const sourceIndex = run.equation
-			? base?.findIndex(
-					(source) =>
-						source.equation?.omml === run.equation?.omml &&
-						source.equation?.display === run.equation?.display,
-				)
-			: index;
+		const sourceIndex = sourceFor(index);
 		const source = sourceIndex === undefined ? undefined : base?.[sourceIndex];
 		const old = sourceIndex === undefined ? undefined : slots[sourceIndex]?.element;
 		return runNodes(

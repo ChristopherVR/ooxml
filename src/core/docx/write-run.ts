@@ -244,8 +244,9 @@ export function createRun(
 	old?: XmlElement,
 	allocator?: RelationshipAllocator,
 ): XmlElement {
-	if (run.image) return createImageRun(doc, run.image, base?.image, old, allocator);
-	const node = old ?? makeW(doc, 'r');
+	const node = run.image
+		? createImageRun(doc, run.image, base?.image, old, allocator)
+		: (old ?? makeW(doc, 'r'));
 	const propertiesXml = run.restoredRunPropertiesXml ?? run.sourceRunPropertiesXml;
 	if (
 		propertiesXml &&
@@ -260,6 +261,7 @@ export function createRun(
 		base = { text: run.text, ...parseDirectRunProperties(restored) };
 	}
 	setRunProperties(doc, node, run, base);
+	if (run.image) return node;
 	for (const child of Array.from(node.childNodes))
 		if (child.nodeType !== 1 || (child as XmlElement).localName !== 'rPr') node.removeChild(child);
 	if (run.break) {

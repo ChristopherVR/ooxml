@@ -71,6 +71,34 @@ function start(
 }
 
 describe('Word Yjs collaboration', () => {
+	for (const name of ['picture', 'note', 'break', 'field'])
+		for (const mode of ['accept', 'reject'] as const)
+			it(`shares native ${name} formatting ${mode} and one undo operation`, async () => {
+				const bytes = new Uint8Array(
+					await readFile(
+						resolve(`../core/docx/__fixtures__/review-object-formatting/${name}-tracked.docx`),
+					),
+				);
+				const peers = pair();
+				const a = mount();
+				const b = mount();
+				await a.load(bytes);
+				await b.load(bytes);
+				start(a, b, peers);
+				const initial = viewOf(a).state.doc;
+				expect(collectRevisionRanges(initial)).toHaveLength(1);
+				expect((mode === 'accept' ? acceptAllChanges : rejectAllChanges)(viewOf(a))).toBe(true);
+				const resolved = viewOf(a).state.doc;
+				for (const editor of [a, b]) {
+					expect(viewOf(editor).state.doc.eq(resolved)).toBe(true);
+					expect(listRevisions((await loadDocx(await editor.saveBytes())).model)).toHaveLength(0);
+				}
+				const collab = wordYjsPluginKey.getState(viewOf(a).state)!;
+				expect(collab.undo()).toBe(true);
+				expect(viewOf(b).state.doc.eq(initial)).toBe(true);
+				expect(collab.redo()).toBe(true);
+				expect(viewOf(b).state.doc.eq(resolved)).toBe(true);
+			});
 	for (const mode of ['accept', 'reject'] as const)
 		it(`shares native all-story ${mode} with one undo operation`, async () => {
 			const bytes = new Uint8Array(

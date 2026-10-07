@@ -10,21 +10,24 @@ const output = process.argv[2];
 if (!output) throw new Error('Provide an output directory for synthetic exports');
 await mkdir(output, { recursive: true });
 const stories = process.argv[3] === '--stories';
-for (const name of stories
-	? ['all-stories']
-	: [
-			'picture-insert',
-			'picture-delete',
-			'note-insert',
-			'note-delete',
-			'break-delete',
-			'break-insert',
-		]) {
+const objects = process.argv[3] === '--object-formatting';
+for (const name of objects
+	? ['picture', 'note', 'break', 'field']
+	: stories
+		? ['all-stories']
+		: [
+				'picture-insert',
+				'picture-delete',
+				'note-insert',
+				'note-delete',
+				'break-delete',
+				'break-insert',
+			]) {
 	for (const mode of ['accept', 'reject']) {
 		const loaded = await loadDocx(
 			await readFile(
 				new URL(
-					`../../core/docx/__fixtures__/${stories ? 'review-stories' : 'review-inline'}/${name}-tracked.docx`,
+					`../../core/docx/__fixtures__/${objects ? 'review-object-formatting' : stories ? 'review-stories' : 'review-inline'}/${name}-tracked.docx`,
 					import.meta.url,
 				),
 			),

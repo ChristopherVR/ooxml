@@ -18,7 +18,6 @@ export function restoreRunFormatting(run: TextRun): void {
 		throw new Error(
 			'Cannot reject a formatting revision without its prior run-properties snapshot.',
 		);
-	if (run.image) throw new Error('Rejecting image formatting revisions is not supported yet.');
 	const snapshot = parseRunPropertiesSnapshot(xml);
 	const previous = parseDirectRunProperties(snapshot);
 	for (const key of DIRECT_RUN_PROPERTY_KEYS) delete run[key];

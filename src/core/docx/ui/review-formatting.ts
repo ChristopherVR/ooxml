@@ -3,12 +3,12 @@ import type { Transaction } from 'prosemirror-state';
 import type { Revision, TextRun } from '../model';
 import { restoreRunFormatting } from '../restore-run-format';
 import { marksForRun } from './run-marks';
+import { inlineNodeRun, runToInlineNodes } from './run-adapter';
 
-/** Imported formatting history travels with the opaque run properties mark. */
+/** Imported formatting history travels with run marks or inline object attributes. */
 export function formattingRevision(node: ProseMirrorNode): Revision | undefined {
-	const props = node.marks.find((mark) => mark.type.name === 'runProperties')?.attrs.props as
-		| TextRun
-		| undefined;
+	if (node.type.name === 'equation') return undefined;
+	const props = inlineNodeRun(node);
 	const revision = props?.formatRevision ?? props?.revision;
 	return revision?.kind === 'formatChange' ? revision : undefined;
 }
@@ -36,7 +36,7 @@ export function resolveFormattingRange(
 ): void {
 	const pieces: { from: number; to: number; node: ProseMirrorNode; revision: Revision }[] = [];
 	tr.doc.nodesBetween(from, to, (node, pos) => {
-		if (!node.isText && node.type.name !== 'hardBreak') return;
+		if (!node.isInline) return;
 		const revision = formattingRevision(node);
 		if (revision)
 			pieces.push({
@@ -47,6 +47,22 @@ export function resolveFormattingRange(
 			});
 	});
 	for (const piece of pieces) {
+		if (!piece.node.isText && piece.node.type.name !== 'hardBreak') {
+			const run = inlineNodeRun(piece.node)!;
+			if (mode === 'reject') restoreRunFormatting(run);
+			else if (run.formatRevision) delete run.formatRevision;
+			else delete run.revision;
+			const projected = runToInlineNodes(run, tr.doc.type.schema)[0]!;
+			tr.setNodeMarkup(
+				piece.from,
+				undefined,
+				{ ...piece.node.attrs, format: projected.attrs.format },
+				mode === 'reject'
+					? piece.node.marks.filter((mark) => !FORMAT_MARKS.has(mark.type.name))
+					: piece.node.marks,
+			);
+			continue;
+		}
 		const properties = piece.node.marks.find((mark) => mark.type.name === 'runProperties')!;
 		if (mode === 'accept') {
 			const props = { ...properties.attrs.props } as TextRun;
