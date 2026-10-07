@@ -1990,3 +1990,24 @@ grid drawing dimensions are retained because whole-pixel rounding moved a
 word break. Six-binding pointer resizing checks reflow and undo/redo.
 Manual layout, autofit, other scripts/fonts and full raster
 equivalence remain unverified or incomplete.
+
+## Shared transaction and native capture reuse for Visio group rotation
+
+Source: ChristopherVR/ooxml at `5f905400b`,
+`src/core/visio/edit-geometry.ts`, `edit-geometry-admission.ts`,
+`edit-recalculate-index.ts`, `edit-recalculate-values.ts`,
+`edit-transform-formula.ts`, `src/core/geometry/affine.ts` and
+`scripts/record-visio-line-movement.ps1`. The length-unit admission check is
+extracted for reuse by group descendants. A local group-tree proof admits only
+the parent Angle through the existing atomic transaction and evaluator; affected
+descendant dependencies remain unsafe. No second geometry, worker, history or
+rendering engine is introduced. Child cells/formulas and unrelated package parts
+are preserved.
+
+The native cell/matrix measurement helpers move from the line recorder into
+`scripts/visio-capture-geometry.ps1`, shared with the group recorder. Native
+Visio 16 assignments cover a custom-pivot parent and a nested tree on a scaled
+page. Shared affine composition compares every descendant against independent
+native XYToPage measurements. Public API, undo/redo and saved reload are checked
+across six bindings. GUI group authoring, masters/glue, foreign or 1D trees,
+broader formulas, exact paint and native Visio reopen acceptance remain open.

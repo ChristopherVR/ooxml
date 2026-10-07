@@ -1,0 +1,91 @@
+import { visioFormulaCachedValue } from './formula';
+import { attribute, children } from './sheet';
+import { cells, numeric, isLineSheet, assertLengthTransformCells } from './edit-geometry-admission';
+import { fail } from './package-common';
+import type { VisioGeometryEdit } from './edit-commands';
+
+/** Authorize only a local group Angle leaf; descendants remain read-only/unsafe to recalculate. */
+export function proveLocalGroupRotation(root: Element, edit: VisioGeometryEdit, check: () => void) {
+	const groups = new Set<Element>(),
+		angleCells = new Set<Element>();
+	if (edit.type !== 'rotate-shape') return { groups, angleCells };
+	const candidates = children(children(root, 'Shapes')[0], 'Shape').filter(
+		(node) => attribute(node, 'ID') === edit.shapeId,
+	);
+	if (candidates.length !== 1 || attribute(candidates[0], 'Type') !== 'Group')
+		return { groups, angleCells };
+	const group = candidates[0]!;
+	const pending = [group],
+		ids = new Set<string>();
+	while (pending.length) {
+		check();
+		const shape = pending.pop()!;
+		const id = attribute(shape, 'ID');
+		const local = cells(shape),
+			containers = children(shape, 'Shapes');
+		const descendants = containers.flatMap((container) => children(container, 'Shape'));
+		if (
+			!id ||
+			ids.has(id) ||
+			ids.size >= 10000 ||
+			shape.hasAttribute('Master') ||
+			shape.hasAttribute('MasterShape') ||
+			['1', 'true'].includes(attribute(shape, 'Del') ?? '') ||
+			children(shape, 'ForeignData').length ||
+			children(shape, 'Rel').length ||
+			containers.length > 1 ||
+			isLineSheet(local) ||
+			(descendants.length
+				? attribute(shape, 'Type') !== 'Group'
+				: attribute(shape, 'Type') !== 'Shape')
+		)
+			fail(
+				'UNSUPPORTED_GEOMETRY_EDIT',
+				'Group rotation requires a local unglued 2D tree without masters or foreign objects.',
+			);
+		ids.add(id);
+		for (const name of [
+			'PinX',
+			'PinY',
+			'Width',
+			'Height',
+			'LocPinX',
+			'LocPinY',
+			'Angle',
+			'FlipX',
+			'FlipY',
+		]) {
+			const cell = local.get(name);
+			if (cell?.hasAttribute('E') || attribute(cell, 'F')?.trim().toLowerCase() === 'inh')
+				fail('UNSUPPORTED_GEOMETRY_EDIT', 'Group transforms require local error-free caches.');
+		}
+		assertLengthTransformCells(local);
+		const angleUnit = attribute(local.get('Angle'), 'U');
+		if (angleUnit && visioFormulaCachedValue('0', angleUnit).unit !== 'angle')
+			fail('EDIT_FORMULA_UNIT', 'Group descendant angles require angular units.');
+		for (const name of ['FlipX', 'FlipY']) {
+			const flag = local.get(name),
+				unit = attribute(flag, 'U');
+			if (
+				![0, 1].includes(numeric(flag, 0)) ||
+				(unit && visioFormulaCachedValue('0', unit).unit !== 'scalar')
+			)
+				fail('EDIT_FORMULA_UNIT', 'Group descendant flip flags must be scalar booleans.');
+		}
+
+		if (!(numeric(local.get('Width')) > 0 && numeric(local.get('Height')) > 0))
+			fail('UNSUPPORTED_GEOMETRY_EDIT', 'Group descendants require positive local dimensions.');
+		for (const name of ['PinX', 'PinY', 'LocPinX', 'LocPinY', 'Angle']) numeric(local.get(name));
+		pending.push(...descendants);
+	}
+	for (const container of children(root, 'Connects'))
+		for (const connection of children(container, 'Connect'))
+			if (['FromSheet', 'ToSheet'].some((name) => ids.has(attribute(connection, name) ?? '')))
+				fail(
+					'UNSUPPORTED_GEOMETRY_EDIT',
+					'Group rotation cannot update glued descendant connections.',
+				);
+	groups.add(group);
+	angleCells.add(cells(group).get('Angle')!);
+	return { groups, angleCells };
+}

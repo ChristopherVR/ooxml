@@ -1,3 +1,4 @@
+import { proveLocalGroupRotation } from './edit-group-rotation';
 import { executableCellFormula } from './cell-formula';
 import { editableTransformCell } from './edit-transform-formula';
 import { createRectangle, createEllipse, createLine } from './edit-shape-create';
@@ -42,6 +43,7 @@ export function applyGeometryEdit(
 	check();
 	const root = roots.get(edit.pageId);
 	if (!root) fail('EDIT_TARGET_NOT_FOUND', 'Page does not exist.');
+	const groupRotation = proveLocalGroupRotation(root, edit, check);
 	const changed: VisioCellKey[] = [];
 	let expected: { width: number; height: number; x: number; y: number } | undefined;
 	const lineEditShapes = new Set<Element>();
@@ -72,6 +74,7 @@ export function applyGeometryEdit(
 			edit.type === 'move-shape' ? masterMovePins : new Set(),
 			edit.type === 'move-shape' ? masterDimensions : new Map(),
 			edit.type === 'move-shape' ? 'move' : edit.type === 'delete-shape' ? 'delete' : 'resize',
+			groupRotation.groups,
 		);
 		const local = cells(shape);
 		const lineMove = edit.type === 'move-shape' && isLineSheet(local);
@@ -131,7 +134,9 @@ export function applyGeometryEdit(
 			const retainAngle = edit.type === 'flip-shape' && (rotationLocked || guardedCell(angle));
 			if (!retainAngle) {
 				unlocked('LockRotate');
-				editableTransformCell(roots, edit, angle, check);
+				editableTransformCell(roots, edit, angle, check, {
+					groupRotationCells: groupRotation.angleCells,
+				});
 			}
 			const replaceAngleFormula =
 				edit.type === 'rotate-shape' && !!executableCellFormula(attribute(angle, 'F'));
@@ -261,6 +266,7 @@ export function applyGeometryEdit(
 		check,
 		masterMovePins,
 		lineEditShapes,
+		groupRotationCells: groupRotation.angleCells,
 	});
 	const resultShape = admitted(
 		root,
@@ -268,6 +274,7 @@ export function applyGeometryEdit(
 		edit.type === 'move-shape' ? masterMovePins : new Set(),
 		edit.type === 'move-shape' ? masterDimensions : new Map(),
 		fixedLine ? (edit.type === 'resize-shape' ? 'resize' : 'move') : undefined,
+		groupRotation.groups,
 	);
 	if (fixedLine) assertLineTranslation(resultShape, fixedLine);
 	if (edit.type === 'move-line-endpoint') proveLocalLine(resultShape);

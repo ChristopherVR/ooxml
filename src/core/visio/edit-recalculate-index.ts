@@ -19,6 +19,8 @@ export interface VisioRecalculationOptions {
 	masterMovePins?: ReadonlySet<Element>;
 	/** Internal authorization after proving an unglued local straight-line edit. */
 	lineEditShapes?: ReadonlySet<Element>;
+	/** Internal authorization of the proven local parent-group Angle leaf only. */
+	groupRotationCells?: ReadonlySet<Element>;
 }
 export interface IndexedCell extends VisioCellKey {
 	node?: Element;

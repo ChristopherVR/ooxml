@@ -2,7 +2,7 @@ import { attribute } from './sheet';
 import { executableCellFormula } from './cell-formula';
 import { analyzeVisioFormula } from './formula';
 import { editableCell } from './edit-geometry-admission';
-import { indexCells, key } from './edit-recalculate-index';
+import { indexCells, key, type VisioRecalculationOptions } from './edit-recalculate-index';
 import { createVisioCellEvaluator } from './edit-recalculate-values';
 import type { VisioGeometryEdit } from './edit-commands';
 
@@ -12,10 +12,15 @@ export function editableTransformCell(
 	edit: VisioGeometryEdit,
 	node: Element | undefined,
 	check: () => void,
+	options: VisioRecalculationOptions = {},
 ): void {
 	const formula = executableCellFormula(attribute(node, 'F'));
 	if (!formula || !analyzeVisioFormula(formula).references.length) return editableCell(node);
-	const evaluate = createVisioCellEvaluator(indexCells(roots, { check }), { check }, true);
+	const evaluate = createVisioCellEvaluator(
+		indexCells(roots, { ...options, check }),
+		{ ...options, check },
+		true,
+	);
 	editableCell(node, (reference) =>
 		evaluate(
 			key({

@@ -2,6 +2,42 @@
 
 Status: local Windows development evidence, 2026-10-03. Full Microsoft Visio parity is not established.
 
+## Native local group API rotation, 2026-10-08
+
+Two owned Visio 16 captures record source and rotated parent/descendant cells,
+independent XYToPage matrices and native SVGs:
+
+- Custom-pivot group, 30 degrees: visio-group-rotation-670cfd645e7c4e618ad10247d89459b4.
+- Two-level group, 210 degrees, drawing-to-page ratio 0.5:
+  visio-group-rotation-9d5f9d76db764ae289bbf484b1e18bae.
+
+The parent Angle assignment retains child local geometry and formulas while
+changing descendant world positions. The existing parser, shared affine composer
+and renderer already match those native matrices. The edit extends the existing
+geometry transaction with a bounded local-tree proof and a parent-Angle exception
+to the existing dependency evaluator. Affected descendant formulas still cause
+atomic refusal. Masters, glue, foreign/1D descendants, inherited/error transform
+caches and rotation protection are covered by refusal regressions. Other group
+commands remain outside this proof.
+
+The final post-rebase Visio core run passed 2,239 checks, with 145 optional checks skipped.
+The final focused group run passed all 12 checks, including both native captures
+and the additional inherited/error-cache regressions. Core/UI builds and root,
+UI and viewer typechecks passed. Twelve browser workflows cover the public API,
+worker, undo/redo, byte-exact history, public export and saved reload across six
+bindings. Every authored parent/descendant SVG matrix is compared to native at
+12 decimal places; actual screen matrices are separately checked at five decimal
+places because Chromium rounds them. The initial ten-decimal screen check failed
+on a coefficient difference around 4.4e-8, prompting the separate authored check.
+
+Native measurement helpers are shared with the existing line recorder; its
+post-extraction rotation capture completed successfully in
+visio-line-movement-f107345af7b54d33be31431da0c8a439. Owned capture apps quit.
+Native assignments are not literal native GUI gestures. Group controls/pointer/
+menus, other group edits, broader formulas/display modes, exact paint and native
+Visio reopening remain unverified. The post-rebase source import audit found
+zero .js TypeScript imports and zero unresolved relative imports.
+
 ## Native static rotation formulas, 2026-10-08
 
 Four owned Visio 16 captures supply rectangle and ellipse references:

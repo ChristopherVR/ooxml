@@ -27,22 +27,11 @@ if(Test-Path -LiteralPath $directory){throw 'Use a fresh output directory.'}
 New-Item -ItemType Directory -Path $directory | Out-Null
 $app=New-Object -ComObject Visio.InvisibleApp
 $document=$null
-function Get-ShapeCells($shape,[string[]]$names){
- $result=[ordered]@{}
- foreach($name in $names){$cell=$shape.CellsU($name);$result[$name]=[ordered]@{formula=$cell.FormulaU;value=$cell.ResultIU}}
- return $result
-}
+. (Join-Path $PSScriptRoot 'visio-capture-geometry.ps1')
 function Set-SourceAngle($shapes,$formula){
  foreach($shape in $shapes){if($shape -and $formula){$shape.CellsU('Angle').FormulaU=$formula}}
 }
 function Get-LineCells($shape){return Get-ShapeCells $shape @('BeginX','BeginY','EndX','EndY','Width','Height','PinX','PinY','LocPinX','LocPinY','Angle','FlipX','FlipY')}
-function Get-LineTransform($shape){
- $x0=0.0;$y0=0.0;$xx=0.0;$yx=0.0;$xy=0.0;$yy=0.0
- $shape.XYToPage(0,0,[ref]$x0,[ref]$y0)
- $shape.XYToPage(1,0,[ref]$xx,[ref]$yx)
- $shape.XYToPage(0,1,[ref]$xy,[ref]$yy)
- return @(($xx-$x0),($yx-$y0),($xy-$x0),($yy-$y0),$x0,$y0)
-}
 try {
  $app.AlertResponse=7
  $document=$app.Documents.Add('')

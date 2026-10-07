@@ -63,6 +63,7 @@ export function admitted(
 	masterMovePins: ReadonlySet<Element> = new Set(),
 	masterDimensions: ReadonlyMap<Element, { width: number; height: number }> = new Map(),
 	lineOperation?: 'move' | 'delete' | 'resize',
+	rotationGroups: ReadonlySet<Element> = new Set(),
 ): Element {
 	const containers = children(root, 'Shapes');
 	if (containers.length !== 1)
@@ -80,10 +81,12 @@ export function admitted(
 				return cell && masterMovePins.has(cell);
 			})) ||
 		['1', 'true'].includes(attribute(shape, 'Del') ?? '') ||
-		children(shape, 'Shapes').length ||
+		(children(shape, 'Shapes').length && !rotationGroups.has(shape)) ||
 		children(shape, 'ForeignData').length ||
 		children(shape, 'Rel').length ||
-		(attribute(shape, 'Type') && attribute(shape, 'Type') !== 'Shape')
+		(attribute(shape, 'Type') &&
+			attribute(shape, 'Type') !== 'Shape' &&
+			!(attribute(shape, 'Type') === 'Group' && rotationGroups.has(shape)))
 	)
 		fail(
 			'UNSUPPORTED_GEOMETRY_EDIT',
@@ -93,12 +96,7 @@ export function admitted(
 	const line = isLineSheet(local);
 	// Removing a leaf does not rewrite or rely on its geometry caches.
 	if (line && lineOperation === 'delete') return shape;
-	for (const name of ['Width', 'Height', 'PinX', 'PinY', 'LocPinX', 'LocPinY']) {
-		const cell = local.get(name),
-			unit = attribute(cell, 'U');
-		if (unit && visioFormulaCachedValue('0', unit).unit !== 'length')
-			fail('EDIT_FORMULA_UNIT', 'Transform cells must use length units.');
-	}
+	assertLengthTransformCells(local);
 	if (line && lineOperation !== 'move' && lineOperation !== 'resize')
 		fail(
 			'UNSUPPORTED_GEOMETRY_EDIT',
@@ -311,5 +309,15 @@ export function resizeGeometry(
 					);
 			}
 		}
+	}
+}
+
+/** Shared unit admission for local leaf and group descendant transforms. */
+export function assertLengthTransformCells(local: ReadonlyMap<string, Element>): void {
+	for (const name of ['Width', 'Height', 'PinX', 'PinY', 'LocPinX', 'LocPinY']) {
+		const cell = local.get(name),
+			unit = attribute(cell, 'U');
+		if (unit && visioFormulaCachedValue('0', unit).unit !== 'length')
+			fail('EDIT_FORMULA_UNIT', 'Transform cells must use length units.');
 	}
 }
