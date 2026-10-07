@@ -205,6 +205,10 @@ export class ViewerChrome {
 					return item;
 				}),
 			);
+			const reorder = doc.createElement('office-ui-menu-item');
+			reorder.setAttribute('command', 'reorder-pages');
+			reorder.setAttribute('label', 'Reorder Pages...');
+			this.#allPages.append(reorder);
 		}
 		this.#pageTabs.selected = page ? String(state.pageIndex) : '';
 		this.#pageTabs.toggleAttribute(
@@ -221,6 +225,12 @@ export class ViewerChrome {
 				String(item.getAttribute('command') === `page-${state.pageIndex}`),
 			);
 		this.#allPages.disabled = !page;
+		this.#allPages
+			.querySelector('[command="reorder-pages"]')
+			?.toggleAttribute(
+				'disabled',
+				!state.edit.sourceAvailable || state.edit.busy || state.loading,
+			);
 		this.#root
 			.querySelector('[data-page-status]')!
 			.setAttribute(
