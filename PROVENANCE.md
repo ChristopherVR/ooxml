@@ -1406,3 +1406,17 @@ the editor save API: seven-stop circle chart area (bottom-right, first-stop
 37 percent transparency) and two-stop shape plot area (top-left) preserve
 paths, stops, RGB, alpha and rectangle geometry exactly. Native pane layout,
 chart layout and full M365 parity are not claimed.
+
+## Shared Word field result ranges and simple-field comment scopes
+
+Source: ChristopherVR/ooxml at `62d3fbd3a`, `src/ui/src/docx/field-update.ts`.
+The DOM-free field result scanner moved to `src/core/docx/ui/field-results.ts`.
+It uses the supplied document's schema; field updates and comment selection share
+it. Whole simple-field comment edges now enclose `w:fldSimple` in the writer.
+Synthetic source and a native result-comment recording live in field-comments;
+Word 16.0.20430 expands a selected result character to scope 6:29, including the
+field code. Adjacent identical simple fields still lack distinct model identity.
+
+Simple-field parsing now reuses `collectParagraphRuns` for comment ranges and
+revision wrappers, preserving inner ids when the outer collector adds its active
+comments. The partial-scope regression covers that shared collector path.

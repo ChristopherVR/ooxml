@@ -513,3 +513,18 @@ notification from writing an older body snapshot back before the body observer
 runs. Regressions cover both notification orders, editing/read-only peers and
 local undo, plus mounted public-model and saved-package checks. The mapping is
 split into a small core module; provider lifecycle remains format-neutral.
+
+### Simple-field comment scope and shared result scanning
+
+Comments selected within a simple field's text result expand to the full result
+across formatting splits. Whole-field comment edges enclose the simple-field
+wrapper on export. Native Word 16.0.20430 expands result-character comments to
+include the code (scope 6:29 in the synthetic QUOTE fixture); previously our
+export covered only displayed text (23:28). The field update command now reuses
+the core result scanner. Adjacent simple fields with identical instructions,
+non-text results and nested field behavior still need separate evidence.
+
+Simple-field imports also reuse the paragraph range/revision collector instead
+of flattening only direct runs. Internal partial comment scopes and overlapping
+outer comments survive parse/save; comment-reference runs no longer become
+empty field results. The writer retains those imported partial scopes.

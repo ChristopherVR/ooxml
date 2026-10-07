@@ -1,19 +1,12 @@
 import { closeHistory } from 'prosemirror-history';
-import type { Mark, Node as ProseMirrorNode } from 'prosemirror-model';
+import type { Node as ProseMirrorNode } from 'prosemirror-model';
+import { fieldResultRanges, type FieldResultRange } from 'ooxml-core/docx/ui';
 import type { Transaction } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import { renumberCaptions, seqLabelOf } from './caption-commands';
 import { schema } from './schema';
 
 const REFERENCE = /^\s*(REF|PAGEREF)\s+("[^"]+"|\S+)(.*)$/i;
-
-interface FieldRun {
-	from: number;
-	to: number;
-	mark: Mark;
-	text: string;
-	marks: readonly Mark[];
-}
 
 /**
  * Switches that do not change a REF/PAGEREF result (`\h` hyperlink, `\* MERGEFORMAT`). Any other
@@ -22,36 +15,6 @@ interface FieldRun {
  */
 function plainSwitches(rest: string): boolean {
 	return !/\\/.test(rest.replace(/\\h\b/gi, '').replace(/\\\*\s+\S+/g, ''));
-}
-
-/** Every body field result as one run: adjacent text nodes carrying the same field mark. */
-function fieldRuns(doc: ProseMirrorNode): FieldRun[] {
-	const runs: FieldRun[] = [];
-	doc.descendants((node, pos) => {
-		if (node.type.name !== 'paragraph') return true;
-		let open: FieldRun | undefined;
-		node.forEach((child, offset) => {
-			const mark = child.isText
-				? child.marks.find((item) => item.type === schema.marks.field)
-				: undefined;
-			const start = pos + 1 + offset;
-			if (mark && open?.mark.eq(mark)) {
-				open.to = start + child.nodeSize;
-				open.text += child.text ?? '';
-			} else if (mark) {
-				open = {
-					from: start,
-					to: start + child.nodeSize,
-					mark,
-					text: child.text ?? '',
-					marks: child.marks,
-				};
-				runs.push(open);
-			} else open = undefined;
-		});
-		return false;
-	});
-	return runs;
 }
 
 /** The paragraph a bookmark sits on, with its id and text. */
@@ -108,15 +71,15 @@ export function refreshFieldResults(
 	captionsOnly = false,
 ): Transaction {
 	for (const label of new Set(
-		fieldRuns(tr.doc)
+		fieldResultRanges(tr.doc)
 			.map((run) => seqLabelOf(schema.text('x', [run.mark])))
 			.filter((label): label is string => label !== undefined)
 			.map((label) => label.toLowerCase()),
 	))
 		renumberCaptions(tr, label);
 	const targets = bookmarkTargets(tr.doc);
-	const changes: Array<{ run: FieldRun; text: string }> = [];
-	for (const run of fieldRuns(tr.doc)) {
+	const changes: Array<{ run: FieldResultRange; text: string }> = [];
+	for (const run of fieldResultRanges(tr.doc)) {
 		const match = REFERENCE.exec(String(run.mark.attrs.instr ?? ''));
 		if (!match || !plainSwitches(match[3] ?? '')) continue;
 		const target = targets.get((match[2] ?? '').replace(/^"|"$/g, ''));

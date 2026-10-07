@@ -7,54 +7,59 @@ import type { DocxEditorElement } from '../../viewers/docx/packages/web-componen
 const w = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 
 for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'])
-	test(`${framework}: commenting on part of a field result anchors the complete field`, async ({
-		page,
-	}) => {
-		await page.goto(`/?framework=${framework}`);
-		await (
-			await fileInput(page)
-		).setInputFiles({
-			name: 'field.docx',
-			mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-			buffer: await fieldDocx(),
+	for (const kind of ['complex', 'simple'] as const)
+		test(`${framework}: commenting on part of a ${kind} field result anchors the complete field`, async ({
+			page,
+		}) => {
+			await page.goto(`/?framework=${framework}`);
+			await (
+				await fileInput(page)
+			).setInputFiles({
+				name: 'field.docx',
+				mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+				buffer: await fieldDocx(kind === 'simple'),
+			});
+			const editor = page.locator('docx-editor');
+			const result = editor.locator('[data-field="AUTHOR"]');
+			await expect(result).toContainText('Ann');
+			await editor.locator('.ProseMirror').focus();
+			await result.evaluate((element) => {
+				const text = document.createTreeWalker(element, NodeFilter.SHOW_TEXT).nextNode()!;
+				const selection = window.getSelection();
+				selection!.setBaseAndExtent(text, 1, text, 2);
+			});
+			await expect.poll(() => page.evaluate(() => window.getSelection()?.toString())).toBe('n');
+			await editor.getByRole('button', { name: 'Show comments', exact: true }).click();
+			const pane = editor.locator('.dve-comments-panel');
+			await pane.getByRole('textbox', { name: 'New comment', exact: true }).fill('Whole field');
+			await pane.getByRole('button', { name: 'Add comment', exact: true }).click();
+			const bytes = await editor.evaluate(async (element) =>
+				Array.from(await (element as DocxEditorElement).saveBytes()),
+			);
+			const zip = await JSZip.loadAsync(new Uint8Array(bytes));
+			const xml = await zip.file('word/document.xml')!.async('string');
+			expect(xml.indexOf('<w:commentRangeStart')).toBeLessThan(
+				xml.indexOf(kind === 'simple' ? '<w:fldSimple' : 'w:fldCharType="begin"'),
+			);
+			expect(xml.indexOf('<w:commentRangeEnd')).toBeGreaterThan(
+				xml.indexOf(kind === 'simple' ? '</w:fldSimple>' : 'w:fldCharType="end"'),
+			);
+			expect(xml.match(/<w:commentRangeStart\b/g)).toHaveLength(1);
+			await editor.getByRole('button', { name: 'Undo', exact: true }).click();
+			await expect(pane).not.toContainText('Whole field');
+			const undone = await editor.evaluate(async (element) =>
+				Array.from(await (element as DocxEditorElement).saveBytes()),
+			);
+			const undoneZip = await JSZip.loadAsync(new Uint8Array(undone));
+			expect(await undoneZip.file('word/document.xml')!.async('string')).not.toContain(
+				'<w:commentRangeStart',
+			);
+			expect(undoneZip.file('word/comments.xml')).toBeNull();
+			await editor.getByRole('button', { name: 'Redo', exact: true }).click();
+			await expect(pane).toContainText('Whole field');
 		});
-		const editor = page.locator('docx-editor');
-		const result = editor.locator('[data-field="AUTHOR"]');
-		await expect(result).toContainText('Ann');
-		await editor.locator('.ProseMirror').focus();
-		await result.evaluate((element) => {
-			const text = document.createTreeWalker(element, NodeFilter.SHOW_TEXT).nextNode()!;
-			const selection = window.getSelection();
-			selection!.setBaseAndExtent(text, 1, text, 2);
-		});
-		await expect.poll(() => page.evaluate(() => window.getSelection()?.toString())).toBe('n');
-		await editor.getByRole('button', { name: 'Show comments', exact: true }).click();
-		const pane = editor.locator('.dve-comments-panel');
-		await pane.getByRole('textbox', { name: 'New comment', exact: true }).fill('Whole field');
-		await pane.getByRole('button', { name: 'Add comment', exact: true }).click();
-		const bytes = await editor.evaluate(async (element) =>
-			Array.from(await (element as DocxEditorElement).saveBytes()),
-		);
-		const zip = await JSZip.loadAsync(new Uint8Array(bytes));
-		const xml = await zip.file('word/document.xml')!.async('string');
-		expect(xml.indexOf('<w:commentRangeStart')).toBeLessThan(xml.indexOf('w:fldCharType="begin"'));
-		expect(xml.indexOf('<w:commentRangeEnd')).toBeGreaterThan(xml.indexOf('w:fldCharType="end"'));
-		expect(xml.match(/<w:commentRangeStart\b/g)).toHaveLength(1);
-		await editor.getByRole('button', { name: 'Undo', exact: true }).click();
-		await expect(pane).not.toContainText('Whole field');
-		const undone = await editor.evaluate(async (element) =>
-			Array.from(await (element as DocxEditorElement).saveBytes()),
-		);
-		const undoneZip = await JSZip.loadAsync(new Uint8Array(undone));
-		expect(await undoneZip.file('word/document.xml')!.async('string')).not.toContain(
-			'<w:commentRangeStart',
-		);
-		expect(undoneZip.file('word/comments.xml')).toBeNull();
-		await editor.getByRole('button', { name: 'Redo', exact: true }).click();
-		await expect(pane).toContainText('Whole field');
-	});
 
-async function fieldDocx(): Promise<Buffer> {
+async function fieldDocx(simple = false): Promise<Buffer> {
 	const zip = new JSZip();
 	zip.file(
 		'[Content_Types].xml',
@@ -68,6 +73,16 @@ async function fieldDocx(): Promise<Buffer> {
 		'word/document.xml',
 		`<w:document xmlns:w="${w}"><w:body><w:p><w:r><w:t xml:space="preserve">Author: </w:t></w:r><w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve"> AUTHOR </w:instrText></w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:t>Ann</w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r><w:r><w:t xml:space="preserve"> wrote this.</w:t></w:r></w:p><w:sectPr><w:pgSz w:w="12240" w:h="15840"/></w:sectPr></w:body></w:document>`,
 	);
+	if (simple) {
+		const xml = await zip.file('word/document.xml')!.async('string');
+		zip.file(
+			'word/document.xml',
+			xml.replace(
+				/<w:r><w:fldChar w:fldCharType="begin"\/><\/w:r>[\s\S]*?<w:r><w:fldChar w:fldCharType="end"\/><\/w:r>/,
+				'<w:fldSimple w:instr=" AUTHOR "><w:r><w:t>Ann</w:t></w:r></w:fldSimple>',
+			),
+		);
+	}
 	return zip.generateAsync({ type: 'nodebuffer' });
 }
 

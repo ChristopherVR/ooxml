@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { expect, it } from 'vitest';
 import { loadDocx } from './parse';
 import type { Paragraph } from './model';
-for (const name of ['begin', 'result', 'whole'])
+for (const name of ['begin', 'result', 'whole', 'simple-result'])
 	it(`retains native ${name} field comments through a neighboring text edit`, async () => {
 		const bytes = new Uint8Array(
 			await readFile(new URL(`./__fixtures__/field-comments/${name}.docx`, import.meta.url)),

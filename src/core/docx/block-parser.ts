@@ -150,12 +150,17 @@ function parseParagraph(node: XmlElement, id: string): Paragraph {
 			if (!named(item, 'fldSimple')) return undefined;
 			const instr = getW(item, 'instr') ?? '';
 			const link = parseSimpleHyperlinkField(instr);
-			const results = Array.from(item.childNodes)
-				.filter(isElement)
-				.flatMap((child) => {
+			const { runs: results } = collectParagraphRuns(
+				item,
+				parseRun,
+				(child) => {
 					const equation = parseEquation(child);
-					return equation ? [equation] : named(child, 'r') ? [parseRun(child)] : [];
-				});
+					return equation ? [equation] : undefined;
+				},
+				undefined,
+				openComments,
+				openMoves,
+			);
 			if (link) return results.map((run) => ({ ...run, link }));
 			const field = { instr: instr.trim(), simple: true };
 			// Show Word's cached result; fall back to a readable placeholder when none was saved.

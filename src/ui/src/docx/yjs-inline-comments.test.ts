@@ -28,11 +28,13 @@ afterEach(() => {
 	for (const session of sessions.splice(0)) session.destroy();
 });
 
-for (const name of ['picture', 'note', 'break', 'line-break', 'field'])
+for (const name of ['picture', 'note', 'break', 'line-break', 'field', 'simple-field'])
 	it(`exports concurrent ${name} comments, deletes independently, and preserves anchors during font edits and detached saves`, async () => {
 		const bytes = new Uint8Array(
 			await readFile(
-				`../core/docx/__fixtures__/review-advanced-object-formatting/${name}-before.docx`,
+				name === 'simple-field'
+					? '../core/docx/__fixtures__/field-comments/simple-source.docx'
+					: `../core/docx/__fixtures__/review-advanced-object-formatting/${name}-before.docx`,
 			),
 		);
 		let deliver = true;
@@ -63,7 +65,7 @@ for (const name of ['picture', 'note', 'break', 'line-break', 'field'])
 		av.state.doc.descendants((node, position) => {
 			if (
 				pos < 0 &&
-				(name === 'field'
+				(name === 'field' || name === 'simple-field'
 					? node.isText && node.marks.some((mark) => mark.type.name === 'field')
 					: node.isInline && !node.isText)
 			)

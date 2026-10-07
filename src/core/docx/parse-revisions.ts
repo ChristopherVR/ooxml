@@ -118,7 +118,7 @@ export function collectParagraphRuns(
 	const runs: TextRun[] = [];
 	let hasMove = false;
 	const push = (run: TextRun) => {
-		if (active.length) run.commentIds = [...active];
+		if (active.length) run.commentIds = [...new Set([...active, ...(run.commentIds ?? [])])];
 		runs.push(run);
 	};
 	for (const item of Array.from(node.childNodes).filter(isElement)) {
