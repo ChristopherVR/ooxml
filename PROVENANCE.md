@@ -1021,3 +1021,15 @@ updates only temporary rendered stops, including frozen-pane copies. Release
 uses the existing core position command for one history step. Excel COM captures
 now cover a stop crossing its neighbor and the 0%/100% endpoints; they remain
 independent native files in the gradient recorder's fixture.
+
+## Shared number and range pairing
+
+Source: ChristopherVR/ooxml at `03fe589bf`,
+`src/ui/src/xlsx/chart-series-transparency.ts`. Its number/range synchronization
+moved into `src/ui/src/form/number-range.ts`, reusing the existing shared native
+`rangeControl` rather than adding a second slider component. Solid transparency
+and gradient position, brightness and transparency use the same pairing,
+commit-on-change and cancellation behavior. The new XLSX range-preview adapter
+computes prospective fills through core's gradient edit and chart-view functions;
+it changes temporary SVG stops and strip paint without duplicating color logic
+or mutating the workbook before commit.

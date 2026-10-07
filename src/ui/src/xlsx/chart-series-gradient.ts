@@ -12,6 +12,8 @@ import { createGradientDirectionGallery } from '../form/gradient-direction-galle
 import { el, field, numberInput } from './dialogs/fields';
 import { openColorGrid } from './ribbon/color-grid';
 import { createChartGradientPreview } from './chart-gradient-preview';
+import { createNumberRange } from '../form/number-range';
+import { seriesRangePreview } from './chart-series-range-preview';
 
 export function createSeriesGradient(ctx: EditorContext, selected: () => number) {
 	const element = el(ctx, 'div', 'xve-chart-series-gradient');
@@ -25,10 +27,10 @@ export function createSeriesGradient(ctx: EditorContext, selected: () => number)
 	const direction = createGradientDirectionGallery(element.ownerDocument);
 	const rows = [
 		[field(ctx, 'Angle', angle), angle, 'Angle'],
-		[field(ctx, 'Position', position), position, 'Position'],
-		[field(ctx, 'Transparency', transparency), transparency, 'Transparency'],
 		[field(ctx, 'Color', color), color, 'Color'],
+		[field(ctx, 'Position', position), position, 'Position'],
 		[field(ctx, 'Brightness', brightness), brightness, 'Brightness'],
+		[field(ctx, 'Transparency', transparency), transparency, 'Transparency'],
 	] as const;
 	for (const [row, , label] of rows.filter(([, input]) => input !== color)) {
 		const unit = el(ctx, 'span');
@@ -44,7 +46,41 @@ export function createSeriesGradient(ctx: EditorContext, selected: () => number)
 	buttons.append(add, remove);
 	selector.append(track.element, buttons);
 	const directionRow = field(ctx, 'Direction', direction.element);
-	element.append(directionRow, rows[0][0], selector, ...rows.slice(1).map(([row]) => row));
+	let previewRange: ReturnType<typeof seriesRangePreview> | undefined;
+	const ranges = new Map<HTMLElement, ReturnType<typeof createNumberRange>>();
+	for (const [property, input] of [
+		['position', position],
+		['brightness', brightness],
+		['transparency', transparency],
+	] as const) {
+		const range = createNumberRange(input, {
+			label: () => input.getAttribute('aria-label') ?? '',
+			enabled: () => {
+				const fill = current?.series[selected()]?.fill;
+				return (
+					ctx.commands.isEnabled('chart.format-series') &&
+					fill?.kind === 'gradient' &&
+					fill.stops.length === model?.series[selected()]?.gradient?.stops.length
+				);
+			},
+			onPreview: (value) => {
+				if (value !== undefined)
+					for (const other of ranges.values()) if (other !== range) other.cancel();
+				previewRange?.(property, value);
+			},
+		});
+		range.element.className = 'xve-chart-series-range';
+		ranges.set(input, range);
+	}
+	element.append(
+		directionRow,
+		rows[0][0],
+		selector,
+		...rows.slice(1).flatMap(([row, input]) => {
+			const range = ranges.get(input);
+			return range ? [row, range.element] : [row];
+		}),
+	);
 	let current: ChartObject | undefined;
 	let model: ChartViewModel | undefined;
 	let stopIndex = 0;
@@ -63,6 +99,8 @@ export function createSeriesGradient(ctx: EditorContext, selected: () => number)
 	};
 	const refresh = (chart: ChartObject | undefined, view: ChartViewModel | undefined) => {
 		track.cancel();
+		for (const range of ranges.values()) range.cancel();
+		previewRange = undefined;
 		const nextDrawing = activeChart(ctx)?.index ?? -1;
 		if (
 			seriesIndex !== selected() ||
@@ -109,6 +147,24 @@ export function createSeriesGradient(ctx: EditorContext, selected: () => number)
 			onPick: (value) => apply({ kind: 'angle', value }),
 		});
 		brightness.disabled ||= stopBrightness === undefined;
+		const previewSeries = selected();
+		const previewStop = stopIndex;
+		if (chart && view)
+			previewRange = seriesRangePreview(
+				ctx,
+				chart,
+				view,
+				previewSeries,
+				previewStop,
+				drawingIndex,
+				track,
+				color,
+				() =>
+					current === chart &&
+					selected() === previewSeries &&
+					stopIndex === previewStop &&
+					chart.series[previewSeries]?.fill === fill,
+			);
 		color.style.setProperty('--series-fill', stops[stopIndex]?.color ?? 'transparent');
 		let preview: ReturnType<typeof createChartGradientPreview> | undefined;
 		const gradient = view?.series[selected()]?.gradient;
@@ -149,6 +205,7 @@ export function createSeriesGradient(ctx: EditorContext, selected: () => number)
 			row.querySelector('span')!.textContent = ctx.t(label);
 			input.setAttribute('aria-label', ctx.t(label));
 		}
+		for (const range of ranges.values()) range.refresh();
 	};
 	for (const [input, property] of [
 		[angle, 'angle'],

@@ -147,5 +147,20 @@ export function createGradientStopTrack(doc: Document) {
 			cancel();
 		}
 	});
-	return { element, update, cancel };
+	return {
+		element,
+		update,
+		cancel,
+		preview: (stops: GradientStopTrackOptions['stops']) => {
+			paintStops(stops);
+			const buttons = element.querySelectorAll<HTMLButtonElement>('button');
+			stops.forEach((stop, index) => {
+				const button = buttons[index];
+				if (button) {
+					button.style.left = `calc(${stop.position}% - 7px)`;
+					button.style.background = stop.color;
+				}
+			});
+		},
+	};
 }

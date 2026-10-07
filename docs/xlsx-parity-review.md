@@ -1051,3 +1051,30 @@ Mouse drag behavior is verified across all six bindings. Exact native fractional
 drag quantization and touch/pen behavior remain unverified. Stop sliders,
 preset/type galleries, path direction controls and diagonal raster parity remain
 open. This increment adds interaction without changing gradient interpolation.
+
+## Paired gradient sliders
+
+Position, brightness and transparency now pair number fields with native range
+controls. Their shared number/range binding also serves solid fill transparency.
+The gradient fields follow Color, Position, Brightness, Transparency order.
+Dragging previews chart paint, stop markers and color through prospective core
+edits while preserving the workbook. Change commits one history step; Escape,
+pointer cancellation, selection refresh and read-only transitions discard the
+preview. Unknown stop colors and unsupported brightness transforms keep the
+corresponding controls disabled.
+
+Playwright MCP reviewed the pane and exercised slider keyboard endpoints.
+Excel 16.0 build 20430 reopened its downloaded file with the edited stop at
+100% position, -100% brightness and 100% transparency, retaining the other
+stop's 56% position and 13% transparency and the 54-degree angle. Browser tests
+exercise Home/End, undo and read-only controls in all six bindings. Eight focused
+UI suites passed 28 tests, including cancellation and preview without model
+mutation. Strict UI typechecks and core/UI builds passed.
+All 26 chart browser checks passed; clean-package checks imported 96 entries
+and registered 45 custom elements. A Playwright MCP input-event preview changed
+the transparency readout to 37% while leaving the workbook unchanged; Escape
+restored the original 100% readout.
+
+This closes paired slider authoring. Exact native pane tabs/layout, presets,
+path-gradient controls, mixed point formatting, fractional/touch behavior and
+diagonal raster parity remain open.

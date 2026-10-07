@@ -341,11 +341,33 @@ for (const framework of FRAMEWORKS)
 		await editor(page).evaluate((node) => (node as unknown as { undo(): void }).undo());
 		await expect(stops.getByRole('button')).toHaveCount(3);
 		await editor(page).evaluate((node) => {
+			(node as unknown as { readOnly: boolean }).readOnly = false;
+		});
+		for (const [label, min, original] of [
+			['Position', '0', '23'],
+			['Brightness', '-100', '37'],
+			['Transparency', '0', '37'],
+		] as const) {
+			const slider = pane.getByRole('slider', { name: label, exact: true });
+			const number = pane.getByRole('spinbutton', { name: label, exact: true });
+			await expect(slider).toHaveValue(original);
+			await slider.press('Home');
+			await expect(number).toHaveValue(min);
+			await editor(page).evaluate((node) => (node as unknown as { undo(): void }).undo());
+			await expect(number).toHaveValue(original);
+			await slider.press('End');
+			await expect(number).toHaveValue('100');
+			await editor(page).evaluate((node) => (node as unknown as { undo(): void }).undo());
+			await expect(number).toHaveValue(original);
+		}
+		await editor(page).evaluate((node) => {
 			(node as unknown as { readOnly: boolean }).readOnly = true;
 		});
 		await expect(position).toBeDisabled();
 		await expect(brightness).toBeDisabled();
 		await expect(direction).toBeDisabled();
+		for (const label of ['Position', 'Brightness', 'Transparency'])
+			await expect(pane.getByRole('slider', { name: label, exact: true })).toBeDisabled();
 		await expect(stops.getByRole('button').first()).toBeDisabled();
 		expect(errors).toEqual([]);
 	});

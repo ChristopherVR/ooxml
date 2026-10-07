@@ -85,6 +85,27 @@ it('keeps the chosen series through fill edits and undo and guards stale color m
 	fill.dispatchEvent(new Event('change'));
 	const stopButtons = pane.element.querySelectorAll<HTMLButtonElement>('.office-gradient-stop');
 	expect(stopButtons).toHaveLength(2);
+	const opacitySlider = pane.element.querySelector<HTMLInputElement>(
+		'.xve-chart-series-gradient input[type="range"][aria-label="Transparency"]',
+	)!;
+	const opacityNumber = pane.element.querySelector<HTMLInputElement>(
+		'.xve-chart-series-gradient input[type="number"][aria-label="Transparency"]',
+	)!;
+	opacitySlider.value = '23';
+	opacitySlider.dispatchEvent(new Event('input'));
+	expect(opacityNumber.value).toBe('23');
+	const previewDrawing = ctx.workbook()!.sheets[0]!.drawings[0]!;
+	if (previewDrawing.kind !== 'chart' || previewDrawing.series[1]!.fill?.kind !== 'gradient')
+		throw new Error('Expected gradient');
+	expect(previewDrawing.series[1]!.fill.stops[0]!.color.transforms).toEqual([
+		{ name: 'alpha', value: '63000' },
+	]);
+	opacitySlider.dispatchEvent(new Event('change'));
+	expect(previewDrawing.series[1]!.fill.stops[0]!.color.transforms).toEqual([
+		{ name: 'alpha', value: '77000' },
+	]);
+	ctx.session()!.undo();
+	expect(opacityNumber.value).toBe('37');
 	const brightness = pane.element.querySelector<HTMLInputElement>('[aria-label="Brightness"]')!;
 	brightness.value = '-42';
 	brightness.dispatchEvent(new Event('change'));

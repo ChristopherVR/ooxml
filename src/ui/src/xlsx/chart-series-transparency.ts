@@ -1,11 +1,10 @@
-import { render } from 'lit';
 import {
 	chartSeriesTransparency,
 	chartSeriesTransparencyPatch,
 	type ChartObject,
 } from 'ooxml-core/xlsx';
 import { activeChart, type EditorContext } from 'ooxml-core/xlsx/ui';
-import { rangeControl } from '../form/range-control';
+import { createNumberRange } from '../form/number-range';
 import { el, field, numberInput } from './dialogs/fields';
 
 /** The shared native range input pairs with the existing validated percentage field. */
@@ -16,35 +15,22 @@ export function createSeriesTransparency(ctx: EditorContext, selected: () => num
 	const unit = el(ctx, 'span');
 	unit.textContent = '%';
 	row.append(unit);
-	const host = el(ctx, 'div', 'xve-chart-series-range');
-	element.append(row, host);
+	const range = createNumberRange(input, {
+		label: () => ctx.t('Transparency'),
+		enabled: () => ctx.commands.isEnabled('chart.format-series'),
+	});
+	range.element.className = 'xve-chart-series-range';
+	element.append(row, range.element);
 	let current: ChartObject | undefined;
-	const paint = () =>
-		render(
-			rangeControl({
-				label: ctx.t('Transparency'),
-				value: input.valueAsNumber,
-				valueText: `${input.value}%`,
-				min: 0,
-				max: 100,
-				disabled: input.disabled,
-				onInput: (value) => {
-					if (!ctx.commands.isEnabled('chart.format-series')) return;
-					input.value = String(value);
-					paint();
-				},
-				onChange: () => input.dispatchEvent(new Event('change')),
-			}),
-			host,
-		);
 	const refresh = (chart: ChartObject | undefined) => {
+		range.cancel();
 		current = chart;
 		const value = chart ? chartSeriesTransparency(chart, selected()) : undefined;
 		input.value = String(value ?? 0);
 		input.disabled = value === undefined || !ctx.commands.isEnabled('chart.format-series');
 		row.querySelector('span')!.textContent = ctx.t('Transparency');
 		input.setAttribute('aria-label', ctx.t('Transparency'));
-		paint();
+		range.refresh();
 	};
 	input.addEventListener('change', () => {
 		if (!current || input.disabled || !ctx.commands.isEnabled('chart.format-series'))

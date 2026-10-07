@@ -16,27 +16,28 @@ export function createChartGradientPreview(
 		node,
 		children: Array.from(node.childNodes).map((child) => child.cloneNode(true)),
 	}));
+	const paint = (fill: ChartGradientFill) => {
+		const def = buildChartGradientDef('preview', fill);
+		for (const node of nodes) {
+			if (!node.isConnected) continue;
+			node.replaceChildren(
+				...def.stops.map((stop) => {
+					const element = node.ownerDocument.createElementNS('http://www.w3.org/2000/svg', 'stop');
+					element.setAttribute('offset', String(stop.offset));
+					element.setAttribute('stop-color', stop.color);
+					element.setAttribute('stop-opacity', String(stop.opacity ?? 1));
+					return element;
+				}),
+			);
+		}
+	};
 	return {
+		paint,
 		position(index: number, position: number) {
-			const def = buildChartGradientDef('preview', {
+			paint({
 				...gradient,
 				stops: gradient.stops.map((stop, i) => (i === index ? { ...stop, position } : stop)),
 			});
-			for (const node of nodes) {
-				if (!node.isConnected) continue;
-				node.replaceChildren(
-					...def.stops.map((stop) => {
-						const element = node.ownerDocument.createElementNS(
-							'http://www.w3.org/2000/svg',
-							'stop',
-						);
-						element.setAttribute('offset', String(stop.offset));
-						element.setAttribute('stop-color', stop.color);
-						element.setAttribute('stop-opacity', String(stop.opacity ?? 1));
-						return element;
-					}),
-				);
-			}
 		},
 		restore() {
 			for (const { node, children } of originals)
