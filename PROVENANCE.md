@@ -446,3 +446,16 @@ Source: ChristopherVR/ooxml, commit `862a71733d7b2015589ea25df07c6a9a4e2afc49`.
   and point-formatting follow/pin policy regressions.
 - The old viewer module is a re-export facade that preserves its six function
   names for all five framework bindings. No DOM or framework code moved to core.
+
+## Shared colour-picker palette
+
+Source: ChristopherVR/ooxml, commit `862a71733d7b2015589ea25df07c6a9a4e2afc49`.
+`viewers/pptx/packages/shared/src/render/color-swatches.ts` and its adjacent
+regression tests moved to `src/ui/src/form/color-swatches.ts` and `.test.ts`.
+The palette, labels, order and public types are preserved. The controls entry
+exports the catalogue for other product colour pickers. The viewer retains its
+existing module until the new UI exports are published. No product palette is changed.
+
+The chart-grid viewer facade was restored to its original implementation in
+the follow-up commit to remain compatible with published core versions. Both
+viewer adoption steps are tracked in `docs/pptx-shared-migration.md`.
