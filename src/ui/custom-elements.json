@@ -1295,6 +1295,9 @@
 							"name": "label"
 						},
 						{
+							"name": "submenu"
+						},
+						{
 							"name": "title"
 						}
 					],
@@ -1345,6 +1348,13 @@
 						{
 							"kind": "field",
 							"name": "open"
+						},
+						{
+							"kind": "field",
+							"name": "submenu",
+							"type": {
+								"text": "boolean"
+							}
 						}
 					],
 					"events": [
