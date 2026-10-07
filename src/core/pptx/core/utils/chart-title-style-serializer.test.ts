@@ -1,3 +1,4 @@
+import { XMLBuilder } from 'fast-xml-parser';
 import { describe, expect, it } from 'vitest';
 
 import type { XmlObject } from '../types';
@@ -16,6 +17,56 @@ function chartWithTitle(): XmlObject {
 }
 
 describe('applyChartTitleStyleToXml', () => {
+	it.each(['rich', 'txPr'])(
+		'puts paragraph and run properties first when styling %s text',
+		(kind) => {
+			const paragraphs: XmlObject[] = [
+				{ 'a:r': { 'a:t': 'First' }, 'a:endParaRPr': { '@_sz': '1400' } },
+				{
+					'a:pPr': { '@_algn': 'ctr', 'a:spcAft': { 'a:spcPts': { '@_val': '600' } } },
+					'a:r': [{ 'a:t': 'Second' }, { 'a:rPr': { '@_i': '1' }, 'a:t': ' run' }],
+					'a:endParaRPr': {},
+				},
+			];
+			const body: XmlObject = { 'a:bodyPr': {}, 'a:lstStyle': {}, 'a:p': paragraphs };
+			const chart: XmlObject = {
+				'c:title': kind === 'rich' ? { 'c:tx': { 'c:rich': body } } : { 'c:txPr': body },
+			};
+			applyChartTitleStyleToXml(chart, { fontSize: 18 }, getLocalName);
+			const title = chart['c:title'] as XmlObject;
+			const nextBody =
+				kind === 'rich'
+					? ((title['c:tx'] as XmlObject)['c:rich'] as XmlObject)
+					: (title['c:txPr'] as XmlObject);
+			const next = nextBody['a:p'];
+			const list = Array.isArray(next) ? (next as XmlObject[]) : [next as XmlObject];
+			for (const paragraph of list) {
+				expect(Object.keys(paragraph)).toStrictEqual(['a:pPr', 'a:r', 'a:endParaRPr']);
+				if (kind === 'rich') {
+					const runs = paragraph['a:r'];
+					for (const run of Array.isArray(runs) ? (runs as XmlObject[]) : [runs as XmlObject]) {
+						expect(Object.keys(run)).toStrictEqual(['a:rPr', 'a:t']);
+					}
+				}
+			}
+			expect(list[0]['a:endParaRPr']).toStrictEqual({ '@_sz': '1400' });
+			if (kind === 'rich') {
+				expect((list[1]['a:pPr'] as XmlObject)['@_algn']).toBe('ctr');
+				expect((list[1]['a:pPr'] as XmlObject)['a:spcAft']).toStrictEqual({
+					'a:spcPts': { '@_val': '600' },
+				});
+			}
+			const xml = new XMLBuilder({ ignoreAttributes: false }).build(chart) as string;
+			const saved = [...xml.matchAll(/<a:p>([\s\S]*?)<\/a:p>/g)];
+			expect(saved).toHaveLength(list.length);
+			for (const paragraph of saved) {
+				expect(paragraph[1]).toMatch(/^<a:pPr\b/);
+				expect(paragraph[1].match(/<a:pPr\b/g)).toHaveLength(1);
+				expect(paragraph[1]).toMatch(/<a:endParaRPr\b[^>]*(?:\/>|><\/a:endParaRPr>)$/);
+			}
+		},
+	);
+
 	it('writes font family/size/bold/colour into a rich title body (defRPr and every run rPr)', () => {
 		const chart = chartWithTitle();
 		applyChartTitleStyleToXml(

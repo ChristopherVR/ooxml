@@ -15,6 +15,7 @@ import type { XmlObject } from '../types';
 import type { ResolveChartColor } from './chart-color-choice';
 import { writeChartColorChoice } from './chart-color-choice';
 import { collectAllText, findKey, insertAt } from './chart-title-xml-ops';
+import { ensureXmlChildOrCreate } from './xml-access';
 
 type GetLocalName = (key: string) => string;
 
@@ -273,7 +274,7 @@ export function applyChartAxisTitleStyleToXml(
 		...((Array.isArray(existingP) ? existingP[0] : (existingP as XmlObject | undefined)) ?? {}),
 	};
 	const pPrKey = findKey(para, 'pPr', getLocalName) ?? 'a:pPr';
-	const pPr: XmlObject = { ...((para[pPrKey] as XmlObject | undefined) ?? {}) };
+	const pPr: XmlObject = { ...ensureXmlChildOrCreate(para, pPrKey, 'first') };
 	const defRPrKey = findKey(pPr, 'defRPr', getLocalName) ?? 'a:defRPr';
 	const existingDefRPr = (pPr[defRPrKey] as XmlObject | undefined) ?? {};
 	pPr[defRPrKey] = { ...existingDefRPr, ...buildDefRPr(style, existingDefRPr, resolveColor) };

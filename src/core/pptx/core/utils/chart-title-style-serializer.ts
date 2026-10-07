@@ -16,6 +16,7 @@ import type { ResolveChartColor } from './chart-color-choice';
 import { writeChartColorChoice } from './chart-color-choice';
 import { writeChartShapeProps } from './chart-shape-props-writer';
 import type { ChartTitleOptions } from './chart-title-serializer';
+import { ensureXmlChildOrCreate } from './xml-access';
 
 type GetLocalName = (key: string) => string;
 
@@ -136,7 +137,8 @@ function applyRichTitleFont(
 	const paragraphs = asArray(rich[pKey]).map((para) => {
 		const next: XmlObject = { ...para };
 		const pPrKey = findKey(next, 'pPr', getLocalName) ?? 'a:pPr';
-		const pPr: XmlObject = { ...((next[pPrKey] as XmlObject | undefined) ?? {}) };
+		// Properties precede paragraph content, even when added by a font edit.
+		const pPr: XmlObject = { ...ensureXmlChildOrCreate(next, pPrKey, 'first') };
 		const defRPrKey = findKey(pPr, 'defRPr', getLocalName) ?? 'a:defRPr';
 		const existingDefRPr = (pPr[defRPrKey] as XmlObject | undefined) ?? {};
 		pPr[defRPrKey] = {
@@ -150,6 +152,7 @@ function applyRichTitleFont(
 				const rPrKey = findKey(run, 'rPr', getLocalName) ?? 'a:rPr';
 				const existingRPr = (run[rPrKey] as XmlObject | undefined) ?? {};
 				const nextRun: XmlObject = { ...run };
+				ensureXmlChildOrCreate(nextRun, rPrKey, 'first');
 				nextRun[rPrKey] = { ...existingRPr, ...buildTitleDefRPr(style, existingRPr, resolveColor) };
 				return nextRun;
 			});
@@ -230,7 +233,7 @@ export function applyChartTitleStyleToXml(
 			...((Array.isArray(existingP) ? existingP[0] : (existingP as XmlObject | undefined)) ?? {}),
 		};
 		const pPrKey = findKey(para, 'pPr', getLocalName) ?? 'a:pPr';
-		const pPr: XmlObject = { ...((para[pPrKey] as XmlObject | undefined) ?? {}) };
+		const pPr: XmlObject = { ...ensureXmlChildOrCreate(para, pPrKey, 'first') };
 		const defRPrKey = findKey(pPr, 'defRPr', getLocalName) ?? 'a:defRPr';
 		const existingDefRPr = (pPr[defRPrKey] as XmlObject | undefined) ?? {};
 		pPr[defRPrKey] = {
