@@ -1,5 +1,12 @@
 import { DOMSerializer } from 'prosemirror-model';
-import type { Block, DocumentModel, HeaderFooterContent, HeaderFooterSlots } from 'ooxml-core/docx';
+import type {
+	Block,
+	DocumentModel,
+	HeaderFooterContent,
+	HeaderFooterSlots,
+	ReviewDisplayMode,
+} from 'ooxml-core/docx';
+import { paragraphAttrs } from 'ooxml-core/docx/ui';
 import { schema } from './schema';
 import { runToInlineNodes } from './run-adapter';
 import { translateUiText } from './localization';
@@ -9,11 +16,7 @@ import { stylePreviewRuns } from './preview-run-styles';
 function blockNode(block: Block): ReturnType<typeof schema.node> {
 	if (block.type === 'paragraph') {
 		const children = block.runs.flatMap((run) => runToInlineNodes(run));
-		return schema.node(
-			'paragraph',
-			{ id: block.id, align: block.align ?? null, direction: block.direction ?? null },
-			children,
-		);
+		return schema.node('paragraph', paragraphAttrs(block), children);
 	}
 	const rows = block.rows.map((row) =>
 		schema.node(
@@ -31,12 +34,17 @@ function blockNode(block: Block): ReturnType<typeof schema.node> {
 	return schema.node('table', { id: block.id, structureEditable: false }, rows);
 }
 
-export function renderBlocks(blocks: Block[], model?: DocumentModel): DocumentFragment {
+export function renderBlocks(
+	blocks: Block[],
+	model?: DocumentModel,
+	mode: ReviewDisplayMode = 'all',
+): DocumentFragment {
 	const serializer = DOMSerializer.fromSchema(schema);
 	const fragment = document.createDocumentFragment();
 	for (const block of blocks) {
 		const element = serializer.serializeNode(blockNode(block)) as HTMLElement;
-		if (model) stylePreviewRuns(element, block, model, serializer);
+		element.dataset.reviewDisplay = mode;
+		if (model) stylePreviewRuns(element, block, model, serializer, mode);
 		fragment.append(element);
 	}
 	return fragment;

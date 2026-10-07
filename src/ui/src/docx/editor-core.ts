@@ -150,6 +150,7 @@ export class EditorCore {
 		};
 		this.parts = new PartsController({
 			...this.host,
+			reviewDisplayMode: () => this.reviewDisplayMode,
 			images: () => this.imageMedia,
 			plugins: () => this.inserts.plugins(),
 			sectionIndex: () => (this.view ? currentSectionIndex(this.view, this.model) : 0),

@@ -7,6 +7,7 @@ import {
 	type Block,
 	type DocumentModel,
 	type HeaderFooterContent,
+	type ReviewDisplayMode,
 } from 'ooxml-core/docx';
 import { assignMissingParagraphIds, docToModel, modelToDoc } from './model-adapter';
 import { editorKeymap } from './editor-commands';
@@ -20,6 +21,7 @@ export type HeaderFooterSlotName = 'default' | 'first' | 'even';
 export interface InlineEditorOptions {
 	/** Owner document formatting for the preview after this editor closes. */
 	contextModel?(): DocumentModel;
+	reviewDisplayMode?(): ReviewDisplayMode;
 	nodeViews?: EditorProps['nodeViews'];
 	decorate?(preview: HTMLElement): void;
 	/** Extra plugins, e.g. the editor's Ctrl+K link shortcut. */
@@ -114,7 +116,9 @@ export function openBlocksEditor(
 		container.classList.remove('dve-header-footer-editing');
 		options.deactivate?.(view);
 		view.destroy();
-		body.replaceChildren(renderBlocks(model.blocks, options.contextModel?.()));
+		body.replaceChildren(
+			renderBlocks(model.blocks, options.contextModel?.(), options.reviewDisplayMode?.()),
+		);
 		options.decorate?.(body);
 	};
 	host.addEventListener('keydown', (event) => {

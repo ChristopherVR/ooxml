@@ -1,11 +1,14 @@
-import type { Block, HeaderFooterContent, Note } from 'ooxml-core/docx';
+import type { Block, HeaderFooterContent, Note, ReviewDisplayMode } from 'ooxml-core/docx';
 import { TextSelection, type Plugin } from 'prosemirror-state';
 import { closeHistory, undo, redo } from 'prosemirror-history';
 import { runStylesPlugin } from './run-styles';
 import { paragraphStylesPlugin } from './paragraph-styles';
+import { reviewDisplayPlugin } from './review-display';
+import { reviewRunMarksPlugin } from './review-run-marks';
 import type { EditorView } from 'prosemirror-view';
 import type { EditorHost } from './editor-host';
 import { buildFooterElement, buildHeaderElement } from './header-footer-view';
+import { refreshStoryPreviews } from './review-story-previews';
 import {
 	attachHeaderFooterEditing,
 	type HeaderFooterSlotName,
@@ -30,6 +33,7 @@ export interface PartsControllerHost extends EditorHost {
 	keepOpenWithin(): (Element | undefined)[];
 	sectionIndex?(): number;
 	refreshControls?(): void;
+	reviewDisplayMode?(): ReviewDisplayMode;
 }
 
 /** Headers, footers, footnotes and endnotes around the continuous editing surface. */
@@ -44,6 +48,19 @@ export class PartsController {
 	private renderingContext?: HeaderFooterContext | undefined;
 
 	constructor(private readonly host: PartsControllerHost) {}
+	private readonly reviewMode = (): ReviewDisplayMode => this.host.reviewDisplayMode?.() ?? 'all';
+
+	/** Refresh appearance in place, retaining the active story's selection and history. */
+	refreshReviewDisplay(): void {
+		this.active?.dispatch(this.active.state.tr.setMeta('addToHistory', false));
+		refreshStoryPreviews(
+			this.host.model(),
+			this.shownSection,
+			{ headers: this.headerEl, footers: this.footerEl, notes: this.notesEl },
+			this.reviewMode(),
+			this.decorate,
+		);
+	}
 
 	/** The in-place header/footer/note editor currently open, which the ribbon then targets. */
 	activeView(): EditorView | undefined {
@@ -116,14 +133,17 @@ export class PartsController {
 	private editorOptions(header = false): InlineEditorOptions {
 		return {
 			contextModel: () => this.host.model(),
+			reviewDisplayMode: this.reviewMode,
 			nodeViews: {
 				image: imageNodeView(this.host.images(), { theme: () => this.host.model().theme }),
 			},
 			decorate: this.decorate,
 			plugins: [
 				...this.host.plugins(),
-				runStylesPlugin(() => this.host.model()),
-				paragraphStylesPlugin(() => this.host.model()),
+				reviewDisplayPlugin(this.reviewMode),
+				reviewRunMarksPlugin(this.reviewMode),
+				runStylesPlugin(() => this.host.model(), this.reviewMode),
+				paragraphStylesPlugin(() => this.host.model(), this.reviewMode),
 			],
 			keepOpenWithin: () => this.host.keepOpenWithin(),
 			activate: (view) => {
@@ -236,6 +256,7 @@ export class PartsController {
 				);
 			} else this.host.view()?.focus();
 		}
+		this.refreshReviewDisplay();
 		this.renderingContext = undefined;
 		this.host.refreshControls?.();
 	}

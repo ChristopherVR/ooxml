@@ -134,7 +134,11 @@ while deferring appearance to the shared resolved formatting. This removes curre
 underline, highlight and script positioning without importing display properties
 into text edits. Native bold and combined font references match the before
 documents across all six bindings. Display modes remain local to each Yjs peer
-and do not create shared undo entries.
+and do not create shared undo entries. Continuous header/footer/note previews and
+their in-place editors now use the same projections and review visibility policy.
+Mode changes preserve an active story's selection, source properties and history;
+closing it retains the selected display mode. Preview paragraph attributes reuse
+the complete core conversion instead of a separate alignment-only mapping.
 
 Print Layout now projects prior run and paragraph formatting through the same
 core helpers, including table cells, section stories and notes. Native before
@@ -149,8 +153,7 @@ space, and note numbering uses only visible references. Headers and footers use
 the same visibility policy, including floating pictures and watermarks. Native
 move references pass across all six browser bindings, including click-to-cursor
 and retained revisions on export. Print Layout still retains revised paragraph
-marks and reports that display-time merging remains unsupported. Non-body
-editing views and structural review
+marks and reports that display-time merging remains unsupported. Structural review
 display still need implementation. These checks establish the covered formatting
 semantics, not pixel parity with current Microsoft 365 Word.
 
@@ -166,8 +169,9 @@ commands now navigate, accept and reject imported run-format revisions,
 including undo/redo, peer synchronization and export. Supported run-formatting
 changes and pure paragraph-format changes now record revisions. Original display
 projects prior run and paragraph formatting in the body editor and Print Layout.
-Print Layout also filters text and move revisions by review mode. Non-body editing
-views and revised paragraph-mark merging for display remain unfinished. Shared Review commands
+Print Layout also filters text and move revisions by review mode. Continuous story
+previews and editing views now project prior formatting too. Revised paragraph-mark
+merging for display remains unfinished. Shared Review commands
 now navigate, accept and reject imported paragraph changes, with undo/redo,
 Yjs peer synchronization and package export. Core
 paragraph rejection now restores the full prior properties and matches all four

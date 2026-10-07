@@ -1,9 +1,20 @@
-import { resolveRunFormatting, type Block, type DocumentModel, type Paragraph } from 'ooxml-core/docx';
+import {
+	resolveRunFormatting,
+	resolveParagraphFormatting,
+	reviewParagraphFormatting,
+	reviewRunFormatting,
+	isRunHiddenForReview,
+	type ReviewDisplayMode,
+	type Block,
+	type DocumentModel,
+	type Paragraph,
+} from 'ooxml-core/docx';
 import { DOMSerializer, Fragment } from 'prosemirror-model';
 import { runToInlineNodes } from './run-adapter';
 import { runFormattingCss, themeFontOf } from './run-styles';
 import { scaledSegments, scaleMeasurer } from './run-scale';
 import { refreshPreviewScaleWithFonts } from './preview-scale-fonts';
+import { paragraphStyle } from './schema';
 
 /** Read-only story previews resolve styles for display without changing the source runs. */
 export function stylePreviewRuns(
@@ -11,6 +22,7 @@ export function stylePreviewRuns(
 	block: Block,
 	model: DocumentModel,
 	serializer: DOMSerializer,
+	mode: ReviewDisplayMode = 'all',
 ): void {
 	const measurer = scaleMeasurer();
 	const paragraphs: Paragraph[] =
@@ -19,11 +31,21 @@ export function stylePreviewRuns(
 			: block.rows.flatMap((row) => row.flatMap((cell) => cell.paragraphs));
 	const elements =
 		block.type === 'paragraph' ? [element] : [...element.querySelectorAll<HTMLElement>('p')];
-	paragraphs.forEach((paragraph, index) => {
+	paragraphs.forEach((current, index) => {
 		const target = elements[index];
 		if (!target) return;
+		const projected = reviewParagraphFormatting(current, mode);
+		const paragraph = projected.value;
+		const effective = model.paragraphStyles
+			? resolveParagraphFormatting(paragraph, model.paragraphStyles)
+			: paragraph;
+		target.style.cssText = paragraphStyle({ ...paragraph, ...effective });
+		if (projected.error) target.dataset.reviewFormatError = projected.error;
 		target.replaceChildren();
-		for (const run of paragraph.runs) {
+		for (const currentRun of paragraph.runs) {
+			if (isRunHiddenForReview(currentRun, mode)) continue;
+			const projectedRun = reviewRunFormatting(currentRun, mode);
+			const run = projectedRun.value;
 			const resolved = resolveRunFormatting(run, {
 				runCatalog: model.characterStyles,
 				paragraphCatalog: model.paragraphStyles,
@@ -69,12 +91,13 @@ export function stylePreviewRuns(
 				}
 			}
 			const css = runFormattingCss(resolved, model.theme, run);
-			if (!css && !resolved.vanish) {
+			if (!css && !resolved.vanish && !projectedRun.error) {
 				target.append(contents);
 				continue;
 			}
 			const span = document.createElement('span');
 			span.style.cssText = css;
+			if (projectedRun.error) span.dataset.reviewFormatError = projectedRun.error;
 			if (resolved.vanish && run.vanish === undefined) span.className = 'dve-hidden-text';
 			span.append(contents);
 			target.append(span);
