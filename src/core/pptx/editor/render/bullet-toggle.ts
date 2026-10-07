@@ -32,7 +32,9 @@ export function bulletInfoForKind(kind: ParagraphBulletKind, ordinal = 0): Bulle
 }
 
 /** Matches core's synthetic prefix, including picture and suppressed markers. */
-export function isBulletMarkerSegment(segment: TextSegment): boolean {
+export function isBulletMarkerSegment(
+	segment: Pick<TextSegment, 'bulletInfo' | 'text' | 'fieldType' | 'isLineBreak'>,
+): boolean {
 	const info = segment.bulletInfo;
 	if (!info || info.none || segment.fieldType || segment.isLineBreak) {
 		return false;
