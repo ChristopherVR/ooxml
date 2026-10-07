@@ -1784,3 +1784,15 @@ and shape size. Geometry and effective styles match native targets exactly.
 This does not prove that native Visio uses the same gesture, snapping, handle
 placement or preview paint. Group/master/glued/1D rotation, exact contour
 pixels, text/gradient paint and Microsoft Visio reopen remain open.
+
+All 60 pointer-rotation workflows pass across the six bindings, five native
+captures and both shape kinds, including a viewport resize before each drag.
+The extracted event lifecycle also passes 49 native endpoint workflows.
+Six scroll-boundary checks retain the selected handle and a stable canvas extent.
+Thirty-six focused core checks pass (one optional capture skipped), including
+source-pin scaling and nonfinite metadata rejection; 62 PowerPoint compatibility
+checks and two handle ownership checks pass. The broad Visio checkpoint passes
+2,218 checks with 95 optional skips. Core/UI builds, strict/PowerPoint types,
+all packed core entry imports and the full Visio viewer check pass. Published
+viewer-package checks still consume released dependencies; browser workflows
+exercise rebuilt local core/UI. The existing user Visio instance was untouched.
