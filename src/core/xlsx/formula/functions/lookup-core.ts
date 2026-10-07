@@ -6,7 +6,10 @@ import { hasWildcards, wildcardRegex } from './helpers.js';
 
 /** A lazily read row or column of values. */
 export interface Vector {
+	/** Readable prefix; reference vectors omit their all-blank tail. */
 	length: number;
+	/** Full reference length, including omitted trailing blank cells. */
+	logicalLength?: number;
 	get(index: number): Scalar;
 }
 
@@ -34,11 +37,19 @@ export function line(ctx: CallContext, value: Value, axis: 'row' | 'col', index:
 		if (axis === 'col') {
 			const col = start.col + index;
 			const length = Math.max(0, Math.min(end.row, bounds.rows - 1) - start.row + 1);
-			return { length, get: (i) => ctx.readCell(area.sheet, start.row + i, col) };
+			return {
+				length,
+				logicalLength: end.row - start.row + 1,
+				get: (i) => ctx.readCell(area.sheet, start.row + i, col),
+			};
 		}
 		const row = start.row + index;
 		const length = Math.max(0, Math.min(end.col, bounds.cols - 1) - start.col + 1);
-		return { length, get: (i) => ctx.readCell(area.sheet, row, start.col + i) };
+		return {
+			length,
+			logicalLength: end.col - start.col + 1,
+			get: (i) => ctx.readCell(area.sheet, row, start.col + i),
+		};
 	}
 	const m = value instanceof Matrix ? value : new Matrix([[value as Scalar]]);
 	if (axis === 'col') return { length: m.rows, get: (i) => m.get(i, index) };
@@ -76,11 +87,14 @@ export function findExact(
 	reverse = false,
 ): number {
 	const test = exactMatcher(lookup, wildcards);
+	const logicalLength = vector.logicalLength ?? vector.length;
 	if (reverse) {
+		if (lookup === null && logicalLength > vector.length) return logicalLength - 1;
 		for (let i = vector.length - 1; i >= 0; i--) if (test(vector.get(i))) return i;
 		return -1;
 	}
 	for (let i = 0; i < vector.length; i++) if (test(vector.get(i))) return i;
+	if (lookup === null && logicalLength > vector.length) return vector.length;
 	return -1;
 }
 
