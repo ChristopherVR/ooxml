@@ -148,7 +148,7 @@ export interface EditSession {
 	cut(sheet: number, range: CellRange): ClipboardPayload;
 	paste(
 		sheet: number,
-		at: CellAddress,
+		at: CellAddress | CellRange,
 		payload: ClipboardPayload | string,
 		mode?: PasteMode,
 	): CellRange;

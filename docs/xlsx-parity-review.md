@@ -21,7 +21,7 @@ product surface. A function count or ribbon button count does not establish comp
 | -------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | P0             | Everyday editing        | `edit/clipboard.ts` clipped every copied rectangle to used cells; `grid/grid-commands.ts` routed Fill Down/Right through series inference. Fixed in this slice.                                                                             | Trailing blanks overwrite the full finite destination; date and weekday fills repeat content, retain formatting and translate formulas.                                      |
 | P0             | Save fidelity           | The reader/writer retain unsupported XML and parts, and patch some carried references. This does not prove preservation across every edit. Default clipboard payloads also do not cover all Excel metadata such as validation and comments. | Excel-produced fixtures for metadata, structural edits, tables, drawings, external links and unsupported parts; compare package contents and reopen in Excel without repair. |
-| P1             | Clipboard and selection | The UI pastes at the selection's start, without repeating a source over a larger destination selection. Whole-row/column copies are intentionally bounded to used content. Clipboard payloads are dense arrays.                             | Tiled paste, incompatible-size handling, skip blanks, full metadata semantics and bounded large-selection performance.                                                       |
+| P1             | Clipboard and selection | Compatible selection paste now repeats copied blocks, with size checks and one undo step. Whole-row/column copies are intentionally bounded to used content. Clipboard payloads are dense arrays.                                           | Skip blanks, full metadata semantics and bounded large-selection performance.                                                                                                |
 | P1             | Formula compatibility   | A substantial function catalogue and recorded Excel corpus exist; missing functions and cached external references remain documented.                                                                                                       | Expand real-Excel differential cases for coercion, errors, arrays, names, tables, dates and structural edits before treating any function as complete.                       |
 | P1             | Grid and print fidelity | The core supplies grid metrics and cell views; printing uses a browser-rendered range. Page Layout and page-break preview are absent.                                                                                                       | Reference workbooks and screenshots for widths, fonts, wrapping, merges, panes and number formats; paginated print with repeating titles and scaling.                        |
 | P2             | Charts and drawings     | Live chart rendering and limited chart edits exist; many drawing types remain placeholders. SmartArt primarily uses cached drawings.                                                                                                        | Shared chart/DrawingML support for axes, labels, series formatting and geometry, with read/edit/save fixtures.                                                               |
@@ -40,7 +40,7 @@ product surface. A function count or ribbon button count does not establish comp
 | Collaboration          | `collab` provider/session infrastructure; implement only the spreadsheet mapping in XLSX. Coordinate shared lifecycle work with the other product sessions.                             |
 | Legacy/encryption      | Keep binary XLS/CFB codecs in `ole2` and modern OOXML encryption in shared `crypto`.                                                                                                    |
 
-## Implemented first slice
+## Implemented slices
 
 Finite copies now retain their entire rectangle, including trailing blank rows and columns, in
 internal payloads, TSV and HTML. Whole-row and whole-column copies retain the existing used-area
@@ -67,6 +67,20 @@ blank-cell replacement unless Skip blanks is selected. Its
 define Fill Down/Right as copying contents and formatting. These references specify the intended
 behavior; the new tests are not a substitute for new recorded real-Excel differential fixtures.
 
+### Selection paste and cut completion
+
+`EditSession.paste` now accepts either a top-left address or a destination range. A copied block
+repeats across compatible finite selections, with translated formulas and tiled merges. Values-only
+paste retains destination formatting. The operation captures one destination snapshot, recalculates
+once and makes one undo step. Incompatible sizes fail before edits. Repeated selections above
+250,000 cells are explicitly rejected; full-sheet axes retain the existing bounded behavior.
+
+The shared editor passes the selection to this core operation and reports failures. It now captures
+cut state before the core consumes the move flag, so a successful cut/paste clears the marquee.
+Multi-area paste is explicitly rejected until its semantics are supported. Tests cover formulas,
+blanks, transposition, merged cells, formatting, undo/redo, UI errors and native browser copy/paste.
+Skip blanks and complete clipboard metadata support remain outstanding.
+
 ## Evidence required for parity
 
 Track reading, display, editing, calculation and writing separately for each feature. A retained
@@ -86,7 +100,13 @@ until each passes its acceptance checks.
 - Focused UI command/grid/keyboard suites: 16 tests passed. Local-source alias tests: 2 passed.
 - Production demo build and the browser Fill Down/Right keyboard/undo/redo regression passed.
 - Core and UI strict typechecks and `git diff --check` passed; changed code was formatted.
-- Native Excel COM acceptance and a new real-Excel recording were not run for this slice.
+- A focused live Excel COM check on Microsoft 365 Excel 16.0 build 20430 confirmed weekday
+  Fill Down repeats `Monday`, tiled formula paste produces `=F6+$C$1`, and trailing copied
+  blanks clear destination values. Full native save acceptance and new differential fixtures
+  remain outstanding.
+- The selection-paste iteration passed 1,675 editing and recorded formula-corpus tests after
+  rebasing onto current main, 47 viewer unit/binding tests, all 51 browser tests, core/UI/viewer
+  typechecks, package builds, published-import guards and clean-consumer package smoke checks.
 
 ## AMORLINC
 

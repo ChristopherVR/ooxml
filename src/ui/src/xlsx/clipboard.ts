@@ -73,12 +73,17 @@ export function createGridClipboard(host: ClipboardHost): GridClipboard {
 
 	const apply = (payload: ClipboardPayload | string, mode: PasteMode): boolean => {
 		const session = ctx.session();
-		const at = ctx.selection.get().ranges[ctx.selection.get().ranges.length - 1]?.start;
+		const at = lastRange();
 		if (!session || !at || ctx.readOnly()) return false;
+		if (ctx.selection.get().ranges.length > 1) {
+			ctx.toast(ctx.t("This action won't work on multiple selections."), 'warning');
+			return false;
+		}
 		try {
+			const wasCut = typeof payload !== 'string' && payload.cut;
 			const range = session.paste(ctx.activeSheet(), at, payload, mode);
 			host.selectRange(range);
-			if (typeof payload !== 'string' && payload.cut) {
+			if (typeof payload !== 'string' && wasCut) {
 				internal = { ...payload, cut: false };
 				clearMarquee();
 			}
