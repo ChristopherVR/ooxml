@@ -5,6 +5,7 @@ import {
 	displayListLabel,
 	type ParagraphListLabel,
 	fieldName,
+	isFieldLocked,
 	resolveParagraphFormatting,
 	resolveRunFormatting,
 	resolveThemeColorReference,
@@ -113,7 +114,7 @@ export function adaptDocumentModel(
 				: undefined;
 		const text =
 			noteText ??
-			(run.field && (name === 'DATE' || name === 'TIME')
+			(run.field && !isFieldLocked(run) && (name === 'DATE' || name === 'TIME')
 				? dateFieldResult(name, run.field.instr, now)
 				: run.equation
 					? '[Equation]'

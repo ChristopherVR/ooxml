@@ -1,4 +1,6 @@
 import { closeHistory } from 'prosemirror-history';
+import { isFieldLocked } from 'ooxml-core/docx';
+import { inlineNodeRun } from 'ooxml-core/docx/ui';
 import type { Node as ProseMirrorNode } from 'prosemirror-model';
 import type { Transaction } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
@@ -32,6 +34,7 @@ export function renumberCaptions(tr: Transaction, label: string): Transaction {
 	// Later fields first, so replacing one never shifts the positions still to be processed.
 	for (let index = fields.length - 1; index >= 0; index--) {
 		const { from, to, node } = fields[index]!;
+		if (isFieldLocked(inlineNodeRun(node))) continue;
 		if (node.text !== String(index + 1))
 			tr.replaceWith(from, to, schema.text(String(index + 1), node.marks));
 	}

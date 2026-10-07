@@ -3,6 +3,7 @@ import { Schema } from 'prosemirror-model';
 import { fieldResultRanges } from './field-results';
 import { commentSelectionRange } from './comment-selection';
 import { markSpecs } from './schema-marks';
+import { runToInlineNodes } from './run-adapter';
 
 const schema = new Schema({
 	nodes: {
@@ -35,3 +36,31 @@ it('expands simple field comments across result formatting, without touching adj
 	expect(commentSelectionRange(doc, 1, 2)).toEqual({ from: 1, to: 2 });
 	expect(commentSelectionRange(doc, 4, 4)).toEqual({ from: 4, to: 4 });
 });
+
+it.each([
+	[undefined, { locked: false }],
+	[
+		{ locked: false, dirty: true },
+		{ locked: true, dirty: true },
+	],
+	[
+		{ locked: true, dirty: false },
+		{ locked: true, dirty: true },
+	],
+] as const)(
+	'keeps anonymous adjacent field caches with unequal flags separate (%j, %j)',
+	(first, second) => {
+		const runs = [first, second].flatMap((fieldFlags, index) =>
+			runToInlineNodes(
+				{
+					text: String(index),
+					field: { instr: 'REF Target', simple: true },
+					...(fieldFlags && { fieldFlags }),
+				},
+				schema,
+			),
+		);
+		const adjacent = schema.node('doc', null, schema.node('paragraph', null, runs));
+		expect(fieldResultRanges(adjacent).map((range) => range.text)).toEqual(['0', '1']);
+	},
+);

@@ -68,6 +68,7 @@ export {
 } from './revision-commands';
 export { DEFAULT_TABLE_BORDERS } from './table-defaults';
 export { fieldName } from './field-runs';
+export { isFieldLocked } from './field-lock';
 export { dateFieldResult, datePicture, formatWordDate } from './field-date';
 export * from './table-of-contents';
 export { resolveCellVisuals, type CellPlacement } from './table-visuals';

@@ -1,6 +1,7 @@
 import { closeHistory } from 'prosemirror-history';
 import type { Node as ProseMirrorNode } from 'prosemirror-model';
-import { fieldResultRanges, type FieldResultRange } from 'ooxml-core/docx/ui';
+import { isFieldLocked } from 'ooxml-core/docx';
+import { fieldResultRanges, inlineNodeRun, type FieldResultRange } from 'ooxml-core/docx/ui';
 import type { Transaction } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import { renumberCaptions, seqLabelOf } from './caption-commands';
@@ -80,6 +81,7 @@ export function refreshFieldResults(
 	const targets = bookmarkTargets(tr.doc);
 	const changes: Array<{ run: FieldResultRange; text: string }> = [];
 	for (const run of fieldResultRanges(tr.doc)) {
+		if (isFieldLocked(inlineNodeRun(schema.text('x', run.marks)))) continue;
 		const match = REFERENCE.exec(String(run.mark.attrs.instr ?? ''));
 		if (!match || !plainSwitches(match[3] ?? '')) continue;
 		const target = targets.get((match[2] ?? '').replace(/^"|"$/g, ''));

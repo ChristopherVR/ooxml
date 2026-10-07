@@ -1,4 +1,5 @@
 import type { Mark, Node } from 'prosemirror-model';
+import { sameFieldFlags } from '../field-lock';
 
 export interface FieldResultRange {
 	from: number;
@@ -15,13 +16,20 @@ export function fieldResultRanges(doc: Node): FieldResultRange[] {
 	if (!field) return runs;
 	const identityOf = (marks: readonly Mark[]) =>
 		marks.find((mark) => mark.type.name === 'runProperties')?.attrs.props?.fieldInstanceId;
+	const flagsOf = (marks: readonly Mark[]) =>
+		marks.find((mark) => mark.type.name === 'runProperties')?.attrs.props?.fieldFlags;
 	doc.descendants((node, pos) => {
 		if (node.type.name !== 'paragraph') return true;
 		let open: FieldResultRange | undefined;
 		node.forEach((child, offset) => {
 			const mark = child.isText ? child.marks.find((item) => item.type === field) : undefined;
 			const start = pos + 1 + offset;
-			if (mark && open?.mark.eq(mark) && identityOf(open.marks) === identityOf(child.marks)) {
+			if (
+				mark &&
+				open?.mark.eq(mark) &&
+				identityOf(open.marks) === identityOf(child.marks) &&
+				sameFieldFlags(flagsOf(open.marks), flagsOf(child.marks))
+			) {
 				open.to = start + child.nodeSize;
 				open.text += child.text ?? '';
 			} else if (mark) {

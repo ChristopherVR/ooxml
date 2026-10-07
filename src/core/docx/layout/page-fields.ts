@@ -1,6 +1,7 @@
 import type { DocumentModel, HeaderFooterContent, HeaderFooterSlots, TextRun } from '../model';
 import { formatNoteNumber } from '../notes';
 import { fieldName } from '../field-runs';
+import { isFieldLocked } from '../field-lock';
 import { dateFieldResult } from '../field-date';
 import type { LayoutPageBox } from './result';
 
@@ -14,7 +15,7 @@ export interface PageFieldContext {
 
 /** Recalculate page/date fields; other fields retain their saved result. */
 export function fieldDisplayText(run: TextRun, values: PageFieldContext): string {
-	if (!run.field) return run.text;
+	if (!run.field || isFieldLocked(run)) return run.text;
 	const name = fieldName(run.field.instr);
 	if (name === 'PAGE') return values.page;
 	if (name === 'NUMPAGES') return values.numPages;

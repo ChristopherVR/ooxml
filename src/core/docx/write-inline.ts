@@ -17,6 +17,7 @@ import { createRun } from './write-run';
 import { inlineSourceLookup } from './inline-source';
 import { takeSimpleFieldCommentEdges } from './simple-field-comments';
 import { writeFieldFlags } from './field-flags';
+import { sameFieldFlags } from './field-lock';
 import { isEquationElement, preserveEquation } from './equation';
 import { hasSpecialBreak, isCachedPageBreak, isModeledBreak } from './breaks';
 import { isCommentReferenceRun } from './parse-revisions';
@@ -278,13 +279,23 @@ export function buildInlineContent(
 
 type ContainerGroup =
 	| { kind: 'link'; link: HyperlinkInfo }
-	| { kind: 'simpleField'; instr: string; instanceId: string | undefined };
+	| {
+			kind: 'simpleField';
+			instr: string;
+			instanceId: string | undefined;
+			fieldFlags: TextRun['fieldFlags'];
+	  };
 
 /** The wrapper a run is written inside: a hyperlink, or a simple field (`w:fldSimple`). */
 function containerGroup(run: TextRun): ContainerGroup | undefined {
 	if (run.link) return { kind: 'link', link: run.link };
 	if (run.field?.simple)
-		return { kind: 'simpleField', instr: run.field.instr, instanceId: run.fieldInstanceId };
+		return {
+			kind: 'simpleField',
+			instr: run.field.instr,
+			instanceId: run.fieldInstanceId,
+			fieldFlags: run.fieldFlags,
+		};
 	return undefined;
 }
 
@@ -295,6 +306,7 @@ function sameGroup(a: ContainerGroup | undefined, b: ContainerGroup | undefined)
 		a.kind === 'simpleField' &&
 		b.kind === 'simpleField' &&
 		a.instr === b.instr &&
-		a.instanceId === b.instanceId
+		a.instanceId === b.instanceId &&
+		sameFieldFlags(a.fieldFlags, b.fieldFlags)
 	);
 }

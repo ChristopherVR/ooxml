@@ -1,0 +1,87 @@
+{
+	"wordVersion": "16.0",
+	"wordBuild": "16.0.20430",
+	"recordedDate": "2026-10-08",
+	"scope": "installed perpetual Word; not current Microsoft 365 subscription certification",
+	"generator": "bun scripts/generate-word-field-locks.mjs <directory>; fieldLockFixture defines 6 dirty fields including locked SEQ cache 42",
+	"recorder": "scripts/record-word-field-locks.ps1 -FixtureDirectory <directory> -OutputPath <reference>; open dirty fields, seed only Field.Result.Text with original stale caches, then real Field.Update and Fields.Update on separate fresh documents",
+	"dirtyObservation": "WordOpenXML omits all source dirty=true flags already after opening, before reseeding or explicit update. Their absence after update cannot establish that explicit update cleared them.",
+	"cases": [
+		{
+			"kind": "simple",
+			"method": "individual",
+			"instructions": [
+				"SEQ Figure",
+				"SEQ Figure",
+				"REF Target",
+				"REF Target",
+				"PAGEREF Target",
+				"PAGEREF Target"
+			],
+			"locked": [true, false, true, false, true, false],
+			"opened": ["42", "2", "Old title", "New title", "9", "1"],
+			"before": ["42", "9", "Old title", "Old title", "9", "9"],
+			"after": ["42", "2", "Old title", "New title", "9", "1"],
+			"openedDirty": ["absent", "absent", "absent", "absent", "absent", "absent"],
+			"beforeDirty": ["absent", "absent", "absent", "absent", "absent", "absent"],
+			"afterDirty": ["absent", "absent", "absent", "absent", "absent", "absent"]
+		},
+		{
+			"kind": "simple",
+			"method": "collection",
+			"instructions": [
+				"SEQ Figure",
+				"SEQ Figure",
+				"REF Target",
+				"REF Target",
+				"PAGEREF Target",
+				"PAGEREF Target"
+			],
+			"locked": [true, false, true, false, true, false],
+			"opened": ["42", "2", "Old title", "New title", "9", "1"],
+			"before": ["42", "9", "Old title", "Old title", "9", "9"],
+			"after": ["42", "2", "Old title", "New title", "9", "1"],
+			"openedDirty": ["absent", "absent", "absent", "absent", "absent", "absent"],
+			"beforeDirty": ["absent", "absent", "absent", "absent", "absent", "absent"],
+			"afterDirty": ["absent", "absent", "absent", "absent", "absent", "absent"]
+		},
+		{
+			"kind": "complex",
+			"method": "individual",
+			"instructions": [
+				"SEQ Figure",
+				"SEQ Figure",
+				"REF Target",
+				"REF Target",
+				"PAGEREF Target",
+				"PAGEREF Target"
+			],
+			"locked": [true, false, true, false, true, false],
+			"opened": ["42", "2", "Old title", "New title", "9", "1"],
+			"before": ["42", "9", "Old title", "Old title", "9", "9"],
+			"after": ["42", "2", "Old title", "New title", "9", "1"],
+			"openedDirty": ["absent", "absent", "absent", "absent", "absent", "absent"],
+			"beforeDirty": ["absent", "absent", "absent", "absent", "absent", "absent"],
+			"afterDirty": ["absent", "absent", "absent", "absent", "absent", "absent"]
+		},
+		{
+			"kind": "complex",
+			"method": "collection",
+			"instructions": [
+				"SEQ Figure",
+				"SEQ Figure",
+				"REF Target",
+				"REF Target",
+				"PAGEREF Target",
+				"PAGEREF Target"
+			],
+			"locked": [true, false, true, false, true, false],
+			"opened": ["42", "2", "Old title", "New title", "9", "1"],
+			"before": ["42", "9", "Old title", "Old title", "9", "9"],
+			"after": ["42", "2", "Old title", "New title", "9", "1"],
+			"openedDirty": ["absent", "absent", "absent", "absent", "absent", "absent"],
+			"beforeDirty": ["absent", "absent", "absent", "absent", "absent", "absent"],
+			"afterDirty": ["absent", "absent", "absent", "absent", "absent", "absent"]
+		}
+	]
+}
