@@ -40,11 +40,22 @@ export interface FileEntry {
 	kind: OfficeKind;
 	size?: number;
 	url?: string;
+	mime?: string;
 	author: string;
 	ts: number;
 	messageId: string;
 	channelId?: string;
 	channelName?: string;
+}
+
+/** All query words must match the file name, author, channel or recognized kind. */
+export function filterFiles(files: readonly FileEntry[], query: string): FileEntry[] {
+	const terms = query.trim().toLocaleLowerCase().split(/\s+/u).filter(Boolean);
+	return files.filter((file) => {
+		const text =
+			`${file.name} ${file.author} ${file.channelName ?? ''} ${file.kind}`.toLocaleLowerCase();
+		return terms.every((term) => text.includes(term));
+	});
 }
 
 export interface SearchHit {
@@ -124,6 +135,7 @@ export function filesOf(messages: Message[]): FileEntry[] {
 				kind: a.kind,
 				...(a.size !== undefined ? { size: a.size } : {}),
 				...(a.url ? { url: a.url } : {}),
+				...(a.mime ? { mime: a.mime } : {}),
 				author: m.authorName,
 				ts: m.ts,
 				messageId: m.id,

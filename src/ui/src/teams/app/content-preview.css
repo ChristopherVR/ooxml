@@ -1,0 +1,75 @@
+:host {
+	display: flex;
+	flex: 1;
+	min-height: 0;
+	min-width: 0;
+}
+section {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	min-height: 0;
+	min-width: 0;
+}
+header {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: var(--office-space-3);
+	padding: var(--office-space-3);
+	border-bottom: var(--office-border-width) solid var(--office-teams-divider);
+}
+h2 {
+	margin: 0;
+	font-size: 1em;
+	flex: 1;
+	overflow-wrap: anywhere;
+}
+button,
+a {
+	font: inherit;
+	color: var(--office-foreground);
+}
+button {
+	padding: var(--office-space-2);
+	background: var(--office-background);
+	border: var(--office-border-width) solid var(--office-teams-divider);
+	border-radius: var(--office-radius-md);
+	cursor: pointer;
+}
+article {
+	overflow: auto;
+	padding: var(--office-space-4);
+}
+pre {
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+	padding: var(--office-space-3);
+	background: var(--office-background);
+}
+blockquote {
+	border-inline-start: var(--office-space-1) solid var(--office-teams-divider);
+	padding-inline-start: var(--office-space-3);
+}
+.heading {
+	font-size: 1.3em;
+	font-weight: bold;
+	margin-block: var(--office-space-3);
+}
+p[role],
+.hint {
+	padding-inline: var(--office-space-3);
+}
+iframe,
+docx-editor,
+xlsx-editor,
+visio-viewer {
+	display: block;
+	flex: 1;
+	width: 100%;
+	min-height: 0;
+	border: 0;
+}
+iframe {
+	background: var(--office-background);
+}

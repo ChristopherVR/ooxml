@@ -5,6 +5,7 @@ import * as borders from './borders.js';
 import * as cellShift from './cell-shift.js';
 import * as values from './cell-values.js';
 import * as clipboard from './clipboard.js';
+import { pasteSelection } from './paste-selection.js';
 import type { EditContext, RunInfo } from './context.js';
 import { createCalcEngine } from './deps.js';
 import * as dimensions from './dimensions.js';
@@ -193,10 +194,13 @@ export function createEditSession(
 		merge: (s, range, mode) => merge.merge(ctx, s, range, mode),
 		unmerge: (s, range) => merge.unmerge(ctx, s, range),
 		sort: (s, range, keys, hasHeader) => sort.sortRange(ctx, s, range, keys, hasHeader),
-		fill: (s, source, target) => fill.fillRange(ctx, s, source, target),
+		fill: (s, source, target, mode) => fill.fillRange(ctx, s, source, target, mode),
 		copy: (s, range) => clipboard.copyRange(workbook, s, range),
 		cut: (s, range) => ({ ...clipboard.copyRange(workbook, s, range), cut: true }),
-		paste: (s, at, payload, mode) => clipboard.pasteAt(ctx, s, at, payload, mode ?? 'all'),
+		paste: (s, at, payload, mode) =>
+			'start' in at
+				? pasteSelection(ctx, s, at, payload, mode ?? 'all')
+				: clipboard.pasteAt(ctx, s, at, payload, mode ?? 'all'),
 		findAll: (query) => find.findAll(workbook, query),
 		replaceAll: (query, replacement) => find.replaceAll(ctx, query, replacement),
 		replaceOne: (query, replacement, at) => find.replaceOne(ctx, query, replacement, at),

@@ -32,8 +32,7 @@ export function deleteCell(sheet: Worksheet, row: number, col: number): void {
 
 /** Whether a cell holds nothing worth saving (no value, no formula, default style). */
 export const isEmptyCell = (cell: Cell | undefined): boolean =>
-	!cell ||
-	((cell.value === null || cell.value === '') && !cell.formula && !cell.styleId && !cell.richText);
+	!cell || (cell.value === null && !cell.formula && !cell.styleId && !cell.richText);
 
 /** Visits every stored cell in row-major order. */
 export function forEachCell(

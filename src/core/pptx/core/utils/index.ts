@@ -713,3 +713,5 @@ export {
 	toEa1ChtNumeral,
 	toEa1ChsNumeral,
 } from './auto-number-scripts';
+
+export * from './chart-grid-operations';

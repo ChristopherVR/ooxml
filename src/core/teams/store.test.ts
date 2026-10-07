@@ -1,5 +1,5 @@
 import { createTeamsClient, type TeamsClient } from './store.js';
-import { searchMessages, channelViews, filesOf } from './view.js';
+import { searchMessages, channelViews, filesOf, filterFiles } from './view.js';
 import type { Channel, Message } from './model.js';
 
 const tick = (ms = 0): Promise<void> => new Promise((r) => setTimeout(r, ms));
@@ -14,6 +14,111 @@ afterEach(() => {
 });
 
 describe('teams client', () => {
+	it('keeps a pending attachment message and reply in its original channel', async () => {
+		let finish!: (result: { url: string }) => void;
+		const a = make('ada', 'store-captured-send', {
+			uploadFile: () => new Promise<{ url: string }>((resolve) => (finish = resolve)),
+		});
+		a.createChannel('Source');
+		await tick();
+		const source = a.getState().selectedChannelId;
+		const message = a.workspace.chat.post(source, { text: 'Original discussion' })!;
+		a.startReply(message.id);
+		const pending = a.send({
+			text: 'Attached budget',
+			files: [Object.assign(new Blob(['xlsx']), { name: 'Budget.xlsx' })],
+		});
+		a.createChannel('Other');
+		await tick();
+		const other = a.getState().selectedChannelId;
+		const reply = a.workspace.chat.post(other, { text: 'Other discussion' })!;
+		a.startReply(reply.id);
+		finish({ url: 'https://files.test/Budget.xlsx' });
+		await pending;
+		await tick();
+		expect(a.workspace.chat.messages(source).at(-1)).toMatchObject({
+			text: 'Attached budget',
+			replyTo: message.id,
+		});
+		expect(a.workspace.chat.messages(other)).toHaveLength(1);
+		expect(a.getState().replyingTo?.id).toBe(reply.id);
+	});
+	it('shares tabs while leaving each client selection local', async () => {
+		const a = make('ada', 'store-tabs');
+		const b = make('bob', 'store-tabs');
+		a.createChannel('Project');
+		await tick(200);
+		const channel = a.getState().selectedChannelId;
+		b.select(channel);
+		const tab = a.addTab('Project site', { type: 'website', url: 'https://site.test' });
+		await tick(200);
+		expect(b.getState().tabs[0]?.id).toBe(tab?.id);
+		expect(b.removeTab(tab!.id)).toBe(false);
+		expect(a.renameTab(tab!.id, 'Design site')).toBe(true);
+		await tick(100);
+		expect(b.getState().tabs[0]?.name).toBe('Design site');
+	});
+	it('saves unique file copies to the captured channel without replacing the original', async () => {
+		const uploaded: (Blob & { name: string })[] = [];
+		const a = make('ada', 'store-copies', {
+			uploadFile: async (file: Blob & { name: string }) => {
+				uploaded.push(file);
+				return { url: `https://files.test/${file.name}` };
+			},
+		});
+		a.createChannel('Budget');
+		await tick();
+		const channelId = a.getState().selectedChannelId;
+		const file = Object.assign(
+			new Blob(['workbook'], {
+				type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+			}),
+			{ name: 'Budget.xlsx' },
+		);
+		a.createChannel('Other');
+		const first = await a.saveFileCopy(channelId, file);
+		const second = await a.saveFileCopy(channelId, file);
+		expect(first.name).toBe('Budget.xlsx');
+		expect(first.kind).toBe('xlsx');
+		expect(first.url).not.toBe(second.url);
+		expect(
+			uploaded
+				.map((f) => f.name)
+				.every((name) => name.startsWith('copy-') && name.endsWith('.xlsx')),
+		).toBe(true);
+		expect(await uploaded[0]!.text()).toBe('workbook');
+		expect(a.workspace.chat.messages(channelId)).toHaveLength(2);
+		expect(a.getState().messages).toHaveLength(0);
+	});
+	it('does not share a failed upload or a copy whose channel disappeared', async () => {
+		const failed = make('ada', 'store-failed-copy', {
+			uploadFile: async () => {
+				throw new Error('Storage offline');
+			},
+		});
+		failed.createChannel('Files');
+		await tick();
+		const file = Object.assign(new Blob(['workbook']), { name: 'Budget.xlsx' });
+		await expect(failed.saveFileCopy(failed.getState().selectedChannelId, file)).rejects.toThrow(
+			'could not be uploaded',
+		);
+		expect(failed.getState().files).toEqual([]);
+		let resolve!: (value: { url: string }) => void;
+		const pending = make('ada', 'store-removed-copy', {
+			uploadFile: () =>
+				new Promise<{ url: string }>((r) => {
+					resolve = r;
+				}),
+		});
+		pending.createChannel('Files');
+		await tick();
+		const channelId = pending.getState().selectedChannelId;
+		const result = pending.saveFileCopy(channelId, file);
+		pending.workspace.chat.archiveChannel(channelId);
+		resolve({ url: 'https://files.test/copy.xlsx' });
+		await expect(result).rejects.toThrow('not shared');
+		expect(pending.workspace.chat.messages(channelId)).toEqual([]);
+	});
 	it('seeds General, posts, and notifies subscribers once per burst', async () => {
 		const a = make('ada', 'store-seed');
 		await tick(3300);
@@ -161,6 +266,30 @@ describe('teams client', () => {
 });
 
 describe('view projections', () => {
+	it('filters files by all search words without changing the source ordering', () => {
+		const files = [
+			{
+				name: 'Budget.xlsx',
+				kind: 'xlsx' as const,
+				author: 'Ada',
+				channelName: 'Finance',
+				ts: 2,
+				messageId: 'a',
+			},
+			{
+				name: 'Notes.md',
+				kind: 'other' as const,
+				author: 'Bob',
+				channelName: 'Finance',
+				ts: 1,
+				messageId: 'b',
+			},
+		];
+		expect(filterFiles(files, 'BUDGET ada')).toEqual([files[0]]);
+		expect(filterFiles(files, 'finance')).toEqual(files);
+		expect(filterFiles(files, 'budget bob')).toEqual([]);
+		expect(filterFiles(files, '  ')).toEqual(files);
+	});
 	const ch = (id: string, archived = false): Channel => ({
 		id,
 		name: id,

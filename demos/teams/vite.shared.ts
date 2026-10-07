@@ -33,6 +33,7 @@ export function sharedConfig(port: number): UserConfig {
 					? [
 							{ find: /^ooxml-core\/(.+)$/, replacement: `${ooxml}src/core/$1/index.ts` },
 							{ find: /^ooxml-ui$/, replacement: `${ooxml}src/ui/src/index.ts` },
+							{ find: /^ooxml-ui\/teams$/, replacement: `${ooxml}src/ui/src/teams/index.ts` },
 						]
 					: []),
 				// The bindings import the private web component by name; the build inlines it.

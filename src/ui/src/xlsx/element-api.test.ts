@@ -5,6 +5,7 @@ import { resolve } from 'node:path';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { createEditSession, createWorkbook, saveXlsx } from 'ooxml-core/xlsx';
 import type { EditorContext, GridController } from 'ooxml-core/xlsx/ui';
+import type { EditorCore } from './editor-core';
 
 // The feature modules have their own tests; here they are doubles so the element is tested alone.
 const mounted: string[] = [];
@@ -76,6 +77,20 @@ async function xlsxBytes(sheets = ['Data', 'Second']) {
 beforeAll(() => defineXlsxEditor());
 
 describe('<xlsx-editor> shell', () => {
+	it('allows hosts to commit pending edits and respects validation failures', () => {
+		const { element } = editor();
+		element.newWorkbook();
+		const grid = (element as unknown as { core: EditorCore }).core.ctx.grid()!;
+		const editing = vi.spyOn(grid, 'isEditing').mockReturnValue(false);
+		const commit = vi.spyOn(grid, 'commitEdit').mockReturnValue(false);
+		expect(element.commitEdit()).toBe(true);
+		expect(commit).not.toHaveBeenCalled();
+		editing.mockReturnValue(true);
+		expect(element.commitEdit()).toBe(false);
+		commit.mockReturnValue(true);
+		expect(element.commitEdit()).toBe(true);
+		element.remove();
+	});
 	it('builds the parts in the shadow root and mounts the modules', () => {
 		const { element } = editor();
 		const root = element.shadowRoot!;

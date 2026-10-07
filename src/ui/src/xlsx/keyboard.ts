@@ -31,6 +31,7 @@ export const SHORTCUTS: readonly Shortcut[] = [
 	{ keys: ['Mod+G', 'F5'], label: 'Go To', command: 'home.go-to' },
 	{ keys: ['Mod+Z'], label: 'Undo', command: 'edit.undo' },
 	{ keys: ['Mod+Y', 'Mod+Shift+Z'], label: 'Redo', command: 'edit.redo' },
+	{ keys: ['Mod+Alt+V'], label: 'Paste Special', command: 'home.paste-special' },
 	{ keys: ['Mod+1'], label: 'Format Cells', command: 'format.cells' },
 	{ keys: ['Mod+B', 'Mod+2'], label: 'Bold', command: 'home.bold' },
 	{ keys: ['Mod+I', 'Mod+3'], label: 'Italic', command: 'home.italic' },

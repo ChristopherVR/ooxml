@@ -2,7 +2,7 @@
 // Copy and Format Painter. The system clipboard belongs to the grid's `edit.*` commands; these
 // commands delegate to them when the grid registered them and also keep the core payload so the
 // paste variants can use it.
-import type { ClipboardPayload, PasteMode } from '../../index.js';
+import { resolvePasteOptions, type ClipboardPayload, type PasteRequest } from '../../index.js';
 import type { Command } from '../commands.js';
 import type { EditorContext } from '../context.js';
 import { icon } from './icons.js';
@@ -36,18 +36,19 @@ function copy(ctx: EditorContext, cut: boolean): void {
 }
 
 /** Pastes the kept payload with a mode; falls back to the grid's system-clipboard paste. */
-export function pasteWith(ctx: EditorContext, mode: PasteMode): void {
+export function pasteWith(ctx: EditorContext, mode: PasteRequest): void | Promise<void> {
 	const t = target(ctx);
 	if (!t) return;
 	const state = clipState(ctx);
+	if (delegated(ctx, 'edit.paste'))
+		return ctx.commands.run('edit.paste', mode).then(() => undefined);
 	if (!state.payload) {
-		if (mode === 'all' && delegated(ctx, 'edit.paste')) void ctx.commands.run('edit.paste');
-		else if (mode === 'values' && delegated(ctx, 'edit.paste-values'))
-			void ctx.commands.run('edit.paste-values');
+		if (resolvePasteOptions(mode).mode === 'values' && delegated(ctx, 'edit.paste-values'))
+			return ctx.commands.run('edit.paste-values').then(() => undefined);
 		else ctx.toast(ctx.t('Copy cells first, then paste them.'), 'info');
 		return;
 	}
-	const range = t.session.paste(t.sheet, t.active, state.payload, mode);
+	const range = t.session.paste(t.sheet, t.range, state.payload, mode);
 	if (state.payload.cut) state.payload = { ...state.payload, cut: false };
 	ctx.selection.set({ ranges: [range], anchor: range.start, active: range.start });
 }
@@ -61,10 +62,8 @@ export function clipboardCommands(): Command[] {
 			shortcut: 'Ctrl+V',
 			lock: false,
 			run: (ctx, arg) => {
-				const mode = typeof arg === 'string' ? (arg as PasteMode) : 'all';
-				if (mode === 'all' && !clipState(ctx).payload && delegated(ctx, 'edit.paste'))
-					return void ctx.commands.run('edit.paste');
-				pasteWith(ctx, mode);
+				const mode = resolvePasteOptions(arg);
+				return pasteWith(ctx, mode);
 			},
 		}),
 		editing({
@@ -101,7 +100,11 @@ export function clipboardCommands(): Command[] {
 			icon: icon('paste'),
 			shortcut: 'Ctrl+Alt+V',
 			lock: false,
-			run: (ctx) => void ctx.dialogs.open('paste-special'),
+			run: async (ctx) => {
+				const result = await ctx.dialogs.open('paste-special');
+				if (result !== undefined) await pasteWith(ctx, resolvePasteOptions(result));
+				ctx.grid()?.focus();
+			},
 		}),
 		editing({
 			id: 'home.cut',

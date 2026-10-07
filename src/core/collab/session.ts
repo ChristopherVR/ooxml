@@ -89,6 +89,10 @@ export interface CollabSession<P extends object = object> {
 	) => () => void;
 	connect: () => void;
 	disconnect: () => void;
+	/** Restart the connection while retaining the document and queued offline updates. */
+	reconnect: () => void;
+	/** Request state exchange on an open provider. False when unavailable or disconnected. */
+	resync: () => boolean;
 	/** Leave the room and release everything; a session created with `doc` leaves that doc alive. */
 	destroy: () => void;
 }
@@ -204,6 +208,16 @@ export function createCollabSession<P extends object = object>(
 			gate.reset();
 			provider.disconnect();
 		},
+		reconnect: () => {
+			if (destroyed) return;
+			session.disconnect();
+			session.connect();
+		},
+		resync: () => {
+			if (destroyed || provider.status !== 'connected' || !provider.resync) return false;
+			provider.resync();
+			return true;
+		},
 		destroy: () => {
 			if (destroyed) return;
 			departure.announce();
@@ -222,6 +236,9 @@ export function createCollabSession<P extends object = object>(
 			if (ownsDoc) doc.destroy();
 		},
 	};
-	if (options.autoConnect !== false) provider.connect();
+	// External providers can already have completed their handshake before we subscribed.
+	if (provider.synced) gate.open();
+	else if (provider.status === 'connected') gate.arm();
+	if (options.autoConnect !== false && provider.status !== 'connected') provider.connect();
 	return session;
 }
