@@ -87,7 +87,9 @@ The Track Changes recording setting also travels through document transactions.
 Toggling it updates peers, participates in local undo/redo and exports as
 `w:trackRevisions`. Joining an older room that lacks the setting retains the
 loaded package value until a participant changes it. Revision marks retain the
-editing author's name; this does not authenticate that identity.
+editing author's name and the recording transaction's UTC timestamp. Peers
+retain those values rather than reattributing remote edits; client-supplied
+names and clocks do not authenticate authorship or time.
 
 Ctrl/Cmd+Z and ribbon undo use local Yjs history. History survives editor detach
 and remount; disconnected views adopt changes on remount. Awareness uses relative

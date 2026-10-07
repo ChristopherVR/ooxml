@@ -121,17 +121,29 @@ describe('shared Word comment threads', () => {
 		toggleTrackChanges(view.state, view.dispatch, view);
 		for (const editor of [a, b]) expect(editor.documentModel!.trackChanges).toBe(true);
 		const peer = viewOf(b);
-		peer.dispatch(peer.state.tr.insertText('!', 12));
+		const clock = vi.spyOn(Date, 'now').mockReturnValue(Date.UTC(2026, 9, 7, 10, 0, 0));
+		try {
+			peer.dispatch(peer.state.tr.insertText('!', 12));
+		} finally {
+			clock.mockRestore();
+		}
 		for (const editor of [a, b]) {
 			const paragraph = editor.documentModel!.blocks[0]!;
 			if (paragraph.type !== 'paragraph') throw new Error('Expected paragraph');
 			expect(paragraph.runs.find((run) => run.text === '!')?.revision).toMatchObject({
 				kind: 'insert',
 				author: 'Grace',
+				date: '2026-10-07T10:00:00.000Z',
 			});
 		}
 		const { model } = await loadDocx(await a.saveBytes());
 		expect(model.trackChanges).toBe(true);
+		const exported = model.blocks[0]!;
+		if (exported.type !== 'paragraph') throw new Error('Expected paragraph');
+		expect(exported.runs.find((run) => run.text === '!')?.revision).toMatchObject({
+			author: 'Grace',
+			date: '2026-10-07T10:00:00.000Z',
+		});
 		binding(a).undo();
 		for (const editor of [a, b]) {
 			expect(editor.documentModel!.trackChanges).toBe(false);

@@ -24,6 +24,25 @@ function state(author = 'Ada', client?: string) {
 }
 
 describe('shared revision recording', () => {
+	it('records the same UTC timestamp for both sides of a replacement', () => {
+		const clock = vi.spyOn(Date, 'now').mockReturnValue(Date.UTC(2026, 9, 7, 10, 0, 0));
+		try {
+			const editor = state();
+			const next = editor.apply(editor.tr.insertText('New', 1, 3));
+			const marks: { author: string; date: string }[] = [];
+			next.doc.descendants((node) => {
+				for (const mark of node.marks)
+					if (mark.type.name === 'insertion' || mark.type.name === 'deletion')
+						marks.push({ author: mark.attrs.author, date: mark.attrs.date });
+			});
+			expect(marks).toEqual([
+				{ author: 'Ada', date: '2026-10-07T10:00:00.000Z' },
+				{ author: 'Ada', date: '2026-10-07T10:00:00.000Z' },
+			]);
+		} finally {
+			clock.mockRestore();
+		}
+	});
 	it('keeps more than 100 moves at a fixed time independently named', () => {
 		const clock = vi.spyOn(Date, 'now').mockReturnValue(1);
 		try {
