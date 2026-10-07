@@ -363,18 +363,20 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 		});
 	};
 
-	const scheduleSave = (): void => {
+	const saveSnapshot = (): void => {
 		if (!storage) return;
+		try {
+			const text = toBase64(Y.encodeStateAsUpdate(doc));
+			if (text.length <= MAX_SNAPSHOT_CHARS) storage.setItem(STORAGE_DOC + workspaceId, text);
+			storage.setItem(STORAGE_READ + workspaceId, JSON.stringify(lastRead));
+		} catch {
+			// Blocked or over quota: the convenience is lost, the app keeps working.
+		}
+	};
+	const scheduleSave = (): void => {
+		if (!storage || destroyed) return;
 		clearTimeout(saveTimer);
-		saveTimer = setTimeout(() => {
-			try {
-				const text = toBase64(Y.encodeStateAsUpdate(doc));
-				if (text.length <= MAX_SNAPSHOT_CHARS) storage.setItem(STORAGE_DOC + workspaceId, text);
-				storage.setItem(STORAGE_READ + workspaceId, JSON.stringify(lastRead));
-			} catch {
-				// Blocked or over quota: the convenience is lost, the app keeps working.
-			}
-		}, 800);
+		saveTimer = setTimeout(saveSnapshot, 800);
 	};
 	doc.on('update', scheduleSave);
 
@@ -796,6 +798,8 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 		},
 		toggleHand: act(() => call?.session?.toggleHand()),
 		destroy() {
+			if (destroyed) return;
+			saveSnapshot();
 			destroyed = true;
 			transfers?.destroy();
 			clearTimeout(typingTimer);

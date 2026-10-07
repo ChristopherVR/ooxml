@@ -307,6 +307,23 @@ alignment with Microsoft's [Shared file workflow](https://support.microsoft.com/
 not pixel-perfect parity. Folder navigation, file selection/bulk actions, views,
 sorting and permission-aware sharing menus still need implementation.
 
+## Fifteenth implemented slice: Settings navigation and personal appearance
+
+The Settings shell now separates General, Appearance and accessibility,
+Notifications and activity, Files and links, and Connection. Light/dark/system
+choices apply within OpenTeams and persist per user/workspace on this device;
+they do not change the host document theme. Followed-thread preferences share the
+existing core personal settings. Keyboard category navigation and mobile layouts
+are covered in browser acceptance. Connection settings preserve validation and
+explicit Apply/Cancel behavior; cancel discards unapplied edits. Replacing the
+client flushes pending local document snapshots so reconnect does not discard
+recent posts or tabs. Files and links currently explains the built-in preview;
+desktop/browser defaults, density, notification delivery, account/privacy controls
+and device selection still require implementation. Microsoft's
+[settings categories](https://support.microsoft.com/en-us/accessibility/teams/customize-your-teams-chat-interface-with-chat-density-settings)
+and [notification preferences](https://support.microsoft.com/en-us/teams/notifications-settings/manage-notifications-in-microsoft-teams)
+are references, not evidence of complete visual or feature parity.
+
 ## Next releasable slices
 
 1. UI parity: match the current Teams shell, Shared/Files commands, Settings

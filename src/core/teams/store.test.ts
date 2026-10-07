@@ -14,6 +14,29 @@ afterEach(() => {
 });
 
 describe('teams client', () => {
+	it('flushes recent posts and shared tabs before a client is replaced', async () => {
+		const values = new Map<string, string>();
+		const storage = {
+			getItem: (key: string) => values.get(key) ?? null,
+			setItem: (key: string, value: string) => void values.set(key, value),
+		};
+		const client = make('ada', 'replace-persistence', { storage });
+		client.createChannel('Project');
+		await tick();
+		await client.send({ text: 'Preserve this immediately' });
+		client.addTab('Project site', { type: 'website', url: 'https://example.com' });
+		client.destroy();
+		client.destroy();
+		const restored = make('ada', 'replace-persistence', { storage });
+		await tick();
+		const channel = restored.getState().channels.find((entry) => entry.name === 'Project')!;
+		restored.select(channel.id);
+		await tick();
+		expect(restored.getState().messages.map((message) => message.text)).toEqual([
+			'Preserve this immediately',
+		]);
+		expect(restored.getState().tabs[0]?.name).toBe('Project site');
+	});
 	it('retains an entire attachment message after a partial upload and retries with unique names', async () => {
 		let offline = true;
 		const names: string[] = [];

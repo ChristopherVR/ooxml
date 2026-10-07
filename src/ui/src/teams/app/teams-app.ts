@@ -16,7 +16,7 @@ import {
 // `teams/index`, so importing it back would make `OFFICE_UI_TAGS` read `TEAMS_TAGS` too early.
 import { registerControls } from '../../controls.js';
 import { definePresence } from '../../presence.js';
-import { installOfficeUiTheme } from '../../theme.js';
+import { installOfficeUiTheme, THEME_CSS } from '../../theme.js';
 import { registerTeams } from '../index.js';
 import { TeamsController } from './controller.js';
 import {
@@ -26,7 +26,7 @@ import {
 } from './content-preview.js';
 import { defineTeamsChannelTab } from './channel-tab.js';
 import { defineTeamsFilesPanel } from './files-panel.js';
-import { defineTeamsSettings } from './teams-settings.js';
+import { defineTeamsSettings, type TeamsTheme } from './teams-settings.js';
 import {
 	loadConfig,
 	loadIdentity,
@@ -59,6 +59,12 @@ export type FileOpeners = Partial<Record<OfficeKind, (detail: OpenFileDetail) =>
 
 type RailView = 'teams' | 'calls' | 'files' | 'followed' | 'drafts';
 type Panel = '' | 'chat' | 'people';
+const LOCAL_THEME = THEME_CSS.replaceAll(
+	':root[data-office-theme="dark"]',
+	':host([data-office-theme="dark"])',
+)
+	.replaceAll(':root:not([data-office-theme="light"])', ':host([data-office-theme="system"])')
+	.replaceAll(':root', ':host([data-office-theme])');
 const RAIL = [
 	{ id: 'teams', label: 'Teams', icon: 'users' },
 	{ id: 'calls', label: 'Calls', icon: 'phone' },
@@ -69,7 +75,7 @@ const RAIL = [
 const AVAILABILITY = ['available', 'busy', 'away'] as const;
 
 export class TeamsApp extends LitElement {
-	static override styles = unsafeCSS(css);
+	static override styles = [unsafeCSS(LOCAL_THEME), unsafeCSS(css)];
 	static override properties = {
 		workspaceId: { type: String, attribute: 'workspace-id' },
 		userName: { type: String, attribute: 'user-name' },
@@ -89,6 +95,7 @@ export class TeamsApp extends LitElement {
 		toast: { state: true },
 		identity: { state: true },
 		followedUnreadOnly: { state: true },
+		theme: { state: true },
 	};
 	declare workspaceId: string;
 	declare userName: string;
@@ -112,11 +119,13 @@ export class TeamsApp extends LitElement {
 	declare toast: string;
 	declare identity: Identity | null;
 	declare followedUnreadOnly: boolean;
+	declare theme: TeamsTheme;
 
 	private readonly teams = new TeamsController(this, (text) => this.notify(text));
 	private toastTimer: ReturnType<typeof setTimeout> | undefined;
 	private openRequest = 0;
 	private retainedTab: ChannelTab | undefined;
+	private themeStorageKey = '';
 
 	constructor() {
 		super();
@@ -139,6 +148,7 @@ export class TeamsApp extends LitElement {
 		this.toast = '';
 		this.identity = null;
 		this.followedUnreadOnly = false;
+		this.theme = 'system';
 	}
 
 	/** The core client behind this element, for hosts that want the raw actions. */
@@ -191,6 +201,11 @@ export class TeamsApp extends LitElement {
 		if (this.userName && !this.userId) saveIdentity(named!);
 		if (!named) return this.teams.stop();
 		const workspaceId = /^[\w-]{1,100}$/u.test(this.workspaceId) ? this.workspaceId : 'demo';
+		this.themeStorageKey = `teams:theme:${encodeURIComponent(workspaceId)}:${encodeURIComponent(named.id)}`;
+		const rememberedTheme = safeStorage.getItem(this.themeStorageKey);
+		this.theme =
+			rememberedTheme === 'dark' || rememberedTheme === 'light' ? rememberedTheme : 'system';
+		this.applyTheme();
 		this.teams.start({
 			workspaceId,
 			user: named,
@@ -323,6 +338,11 @@ export class TeamsApp extends LitElement {
 		this.settingsOpen = true;
 	}
 
+	private applyTheme(): void {
+		if (this.theme === 'system') this.removeAttribute('data-office-theme');
+		else this.setAttribute('data-office-theme', this.theme);
+	}
+
 	// ---- template ---------------------------------------------------------------------------
 	protected override render() {
 		const s = this.teams.state;
@@ -347,6 +367,16 @@ export class TeamsApp extends LitElement {
 				<teams-settings
 					?open=${this.settingsOpen}
 					.config=${this.resolveConfig()}
+					.theme=${this.theme}
+					.followSettings=${s.threadFollowSettings}
+					.userName=${s.user.name}
+					@teams-settings-theme=${(event: CustomEvent<{ theme: TeamsTheme }>) => {
+						if (!['system', 'light', 'dark'].includes(event.detail.theme)) return;
+						this.theme = event.detail.theme;
+						this.applyTheme();
+						safeStorage.setItem(this.themeStorageKey, this.theme);
+					}}
+					@teams-settings-follow=${(event: CustomEvent<Partial<typeof s.threadFollowSettings>>) => this.teams.client?.setThreadFollowSettings(event.detail)}
 					@teams-settings-close=${() => (this.settingsOpen = false)}
 					@teams-settings-apply=${(e: CustomEvent<{ config: TeamsServerConfig }>) => {
 						if (!this.closePreview()) return;
@@ -442,7 +472,7 @@ export class TeamsApp extends LitElement {
 						data-status=${s.status}
 						title=${s.mode === 'server' ? `Server: ${s.status}` : 'Local: tabs of this browser'}
 					></span>
-					<button type="button" class="link" @click=${this.askSettings}>Server</button>
+					<button type="button" class="link" @click=${this.askSettings}>Settings</button>
 					<select
 						aria-label="Availability"
 						.value=${s.availability}

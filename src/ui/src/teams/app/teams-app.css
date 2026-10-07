@@ -8,6 +8,18 @@
 	color: var(--office-foreground);
 	background: var(--office-background);
 }
+:host([data-office-theme='dark']) {
+	--office-background: var(--office-teams-panel);
+	--office-surface: var(--office-teams-bubble);
+	--office-popover: var(--office-teams-panel);
+}
+@media (prefers-color-scheme: dark) {
+	:host(:not([data-office-theme='light'])) {
+		--office-background: var(--office-teams-panel);
+		--office-surface: var(--office-teams-bubble);
+		--office-popover: var(--office-teams-panel);
+	}
+}
 *,
 *::before,
 *::after {
