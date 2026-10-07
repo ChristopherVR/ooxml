@@ -28,6 +28,7 @@ import { applyLegendEntryOverrides } from './chart-legend-entries';
 import { manualLayoutOf } from './chart-manual-layout';
 import { buildOfPieViewModel } from './chart-ofpie';
 import { buildSurfaceViewModel, buildTreemapViewModel } from './chart-surface-treemap';
+import { resolveChartTextStyle, withChartTextDefaults } from './chart-text-defaults';
 import { withChartTitleBand } from './chart-title-band';
 import { resolveChartTitleRunSpans } from './chart-title-runs';
 import { fitTitleBand, resolveChartTitleTextStyle } from './chart-title-style';
@@ -59,7 +60,9 @@ function buildChartViewModelInner(element: PptxElement): ChartViewModel {
 		return buildFallbackViewModel(element.width, element.height, 'Chart');
 	}
 	const chartEl = element as ChartPptxElement,
-		chartData = chartEl.chartData ? withAutoTitle(chartEl.chartData) : chartEl.chartData;
+		chartData = chartEl.chartData
+			? withChartTextDefaults(withAutoTitle(chartEl.chartData))
+			: chartEl.chartData;
 
 	if (!chartData || chartData.series.length === 0) {
 		return buildFallbackViewModel(element.width, element.height, chartData?.title ?? 'Chart');
@@ -187,7 +190,7 @@ function withLegendEntries(vm: ChartViewModel, chartData: PptxChartData): ChartV
 	const legend = applyLegendEntryOverrides(
 		vm.legend,
 		chartData.style?.legendEntries,
-		chartData.style?.legendTextStyle,
+		resolveChartTextStyle(chartData, chartData.style?.legendTextStyle),
 	);
 	return legend === vm.legend ? vm : { ...vm, legend };
 }

@@ -56,3 +56,4 @@ export type {
 	WorkbookChange,
 	WorkbookChangeKind,
 } from './types.js';
+export * from './chart-colors';

@@ -1,0 +1,38 @@
+[
+	{
+		"file": "bold-loaded.docx",
+		"revisions": 0,
+		"text": "Format me",
+		"bold": 0,
+		"italic": 0,
+		"size": 12.0,
+		"color": -16777216
+	},
+	{
+		"file": "bold-standalone.docx",
+		"revisions": 0,
+		"text": "Format me",
+		"bold": 0,
+		"italic": 0,
+		"size": 12.0,
+		"color": -16777216
+	},
+	{
+		"file": "multiple-loaded.docx",
+		"revisions": 0,
+		"text": "Format me",
+		"bold": -1,
+		"italic": 0,
+		"size": 12.0,
+		"color": 16711680
+	},
+	{
+		"file": "multiple-standalone.docx",
+		"revisions": 0,
+		"text": "Format me",
+		"bold": -1,
+		"italic": 0,
+		"size": 12.0,
+		"color": 16711680
+	}
+]

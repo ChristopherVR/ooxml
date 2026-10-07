@@ -45,6 +45,16 @@ export type RibbonControl =
 			kind: 'gallery';
 			command: string;
 			items: (ctx: EditorContext) => { id: string; label: string; preview?: string }[];
+			/** Sectioned dropdown rendered through the shared Office gallery. */
+			sections?: (
+				ctx: EditorContext,
+			) => {
+				title?: string;
+				columns: number;
+				tileWidth: number;
+				tileHeight: number;
+				items: { id: string; label: string; preview?: string; applied?: boolean }[];
+			}[];
 	  }
 	/** Vertical stack of small controls. */
 	| { kind: 'stack'; controls: RibbonControl[] }

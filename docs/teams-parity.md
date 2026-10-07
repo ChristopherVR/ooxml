@@ -307,6 +307,90 @@ alignment with Microsoft's [Shared file workflow](https://support.microsoft.com/
 not pixel-perfect parity. Folder navigation, file selection/bulk actions, views,
 sorting and permission-aware sharing menus still need implementation.
 
+## Fifteenth implemented slice: Settings navigation and personal appearance
+
+The Settings shell now separates General, Appearance and accessibility,
+Notifications and activity, Files and links, and Connection. Light/dark/system
+choices apply within OpenTeams and persist per user/workspace on this device;
+they do not change the host document theme. Followed-thread preferences share the
+existing core personal settings. Keyboard category navigation and mobile layouts
+are covered in browser acceptance. Connection settings preserve validation and
+explicit Apply/Cancel behavior; cancel discards unapplied edits. Replacing the
+client flushes pending local document snapshots so reconnect does not discard
+recent posts or tabs. Files and links initially explains the built-in preview;
+the next slice adds the browser default. Desktop defaults, density, notification delivery, account/privacy controls
+and device selection still require implementation. Microsoft's
+[settings categories](https://support.microsoft.com/en-us/accessibility/teams/customize-your-teams-chat-interface-with-chat-density-settings)
+and [notification preferences](https://support.microsoft.com/en-us/teams/notifications-settings/manage-notifications-in-microsoft-teams)
+are references, not evidence of complete visual or feature parity.
+
+## Sixteenth implemented slice: file actions and browser viewer preference
+
+Shared file rows expose a More actions popover with Open in OpenTeams, Open in
+browser, Download, Copy link and Pin as tab. Downloads reuse bounded content reads,
+request a fresh signed URL and preserve original bytes and filenames. Clipboard
+failure retains a selectable link. Menus remain open through unrelated presence
+updates, and a changed file/client cancels the pending action. Settings > Files
+and links saves the Office open preference per user and workspace on this device.
+Browser opens the same native content renderer in a separate tab, not a raw Office
+URL. The viewer carries its bounded, validated payload in the fragment, does not
+join the collaboration room, and has no opener. Local XLSX editing and download
+remain available there; channel save-back and host callback adapters are available
+in the main workspace only. Explicit Open in OpenTeams bypasses the personal
+browser default; existing host open handlers retain precedence. Browser acceptance
+checks actual workbook rendering in both contexts, exact downloaded bytes, link
+copying, preference restoration and pin/save-copy behavior. Signed links can expire;
+copying does not grant or manage recipient permissions. Desktop defaults, folder
+and bulk actions, version/save-back contracts and permission-aware sharing remain
+outstanding. Microsoft's [file-open preferences](https://support.microsoft.com/en-us/office/collab-files/open-file-links-directly-in-microsoft-365-desktop-apps-from-teams-and-classic-outlook)
+and [Shared file downloads](https://support.microsoft.com/en-us/teams/files/download-a-file-from-microsoft-teams)
+are the workflow references.
+
+## Seventeenth implemented slice: personal chat density and reload persistence
+
+Appearance and accessibility offers Comfy and Compact with native radio controls.
+Compact reduces actual message gaps and bubble padding in channel posts and open
+threads. The choice persists per user/workspace on this device without changing
+other users' preferences. Browser acceptance measures rendered spacing, keyboard
+selection, reload restoration and switching back to Comfy across all six bindings.
+The app flushes pending document snapshots on pagehide so immediately reloading
+after sending a message preserves it. The core exposes flushStorage for hosts
+that own their own lifecycle, without closing the client or interrupting a
+back/forward-cache return. This remains browser-local persistence, not a server
+durability guarantee. Microsoft's [chat density settings](https://support.microsoft.com/en-us/accessibility/teams/customize-your-teams-chat-interface-with-chat-density-settings)
+are the reference; chat-list previews and account-synchronized preferences remain
+outstanding.
+
+## Eighteenth implemented slice: shell menus and profile status
+
+Settings opens through the top-bar Settings and more menu, using the shared
+keyboard-accessible menu primitive. The profile avatar opens a card containing
+the supported availability choices and workspace connection status. Status
+changes synchronize with peers; Escape restores focus and the card is clamped
+inside narrow viewports. Channel-header and thread commands use token-based
+button styling. The React demo shows the full workspace by default; its raw-hook
+example is available with panel=1. Browser acceptance covers keyboard entry,
+dismissal, peer status propagation and desktop/mobile presentation across all
+six bindings. Microsoft's [profile status workflow](https://support.microsoft.com/en-us/teams/notifications-settings/change-your-status-in-microsoft-teams)
+is the reference. Do not disturb, appear offline, status messages/duration,
+accounts and automatic meeting/activity-based presence remain outstanding.
+
+## Nineteenth implemented slice: Add a tab app and shared-file selection
+
+Add tab opens a modal app picker instead of an inline URL form. Word, Excel,
+PowerPoint, Visio, Markdown, static-site and text apps select files already shared
+in the current channel; Website configures a web address. Configuration offers
+a tab name, shared-file search, selection, Save, Back and Cancel. Type detection,
+URL validation and tab creation reuse the core. Name-only files are excluded.
+Removed sources disable Save, and the captured client/channel prevents a dialog
+from adding its content to another context. Canceling an unsaved-workbook prompt
+leaves the workbook and configuration intact. Browser acceptance renders actual
+XLSX, Markdown and static-site content, checks stale selections and cancellation,
+and verifies desktop/mobile layouts across all six bindings. Microsoft's
+[app and file tab workflow](https://support.microsoft.com/en-us/teams/teams-channels/use-a-tab-in-a-channel-or-chat-in-microsoft-teams)
+is the reference. Tab conversations and the post-to-channel option, app catalogs
+and permission enforcement, and Office coediting remain outstanding.
+
 ## Next releasable slices
 
 1. UI parity: match the current Teams shell, Shared/Files commands, Settings

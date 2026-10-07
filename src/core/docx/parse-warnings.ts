@@ -24,8 +24,12 @@ export function warningsFor(document: XmlDocument): string[] {
 			'Moved text is linked by its move name: accepting or rejecting either side resolves both. Moves are shown and saved with their range markers.',
 		],
 		[
-			['rPrChange', 'pPrChange'],
-			'Formatting-change revisions are recorded but their prior formatting snapshot is not modeled or rendered; editing the affected run or paragraph drops the recorded snapshot.',
+			['rPrChange'],
+			'Formatting-change revisions retain their prior run-properties snapshots and support acceptance and rejection; recording new formatting changes and showing prior formatting in Original display are not supported yet.',
+		],
+		[
+			['pPrChange'],
+			'Paragraph-formatting-change revisions retain their prior properties snapshots and support acceptance and rejection; recording new paragraph formatting changes and showing prior formatting in Original display are not supported yet.',
 		],
 		[
 			['tblPrChange', 'trPrChange', 'tcPrChange'],

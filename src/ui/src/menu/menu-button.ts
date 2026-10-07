@@ -203,6 +203,7 @@ export class OfficeUiMenuButton extends OfficeElement {
 				<!-- Without a split command the caret is decoration on one control, not a second button. -->
 				<button
 					class="caret"
+					part="caret"
 					type="button"
 					title=${split ? `${label} options` : title}
 					aria-label=${ifDefined(split ? `${label} options` : undefined)}

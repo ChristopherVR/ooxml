@@ -95,6 +95,11 @@ export const schema = new Schema({
 			content: 'inline*',
 			group: 'block',
 			attrs: {
+				markRevision: { default: null },
+				formatRevision: { default: null },
+				restoredParagraphPropertiesXml: { default: null },
+				justification: { default: null },
+				outlineLevel: { default: null },
 				align: { default: null },
 				direction: { default: null },
 				id: { default: '' },

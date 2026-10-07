@@ -1,5 +1,6 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import type { RunFormatting } from './run-style-model.js';
+import type { TextRun } from './model.js';
 import {
 	isStHighlightColor,
 	isStThemeColor,
@@ -19,6 +20,28 @@ import { first, getW, type XmlElement } from './xml.js';
 import { isWordUnderlineStyle } from './underline.js';
 import { parseLigatures } from './ligatures.js';
 
+/** Direct properties shared by ordinary runs and restored formatting snapshots. */
+export function parseDirectRunProperties(
+	props: XmlElement | undefined,
+): RunFormatting &
+	Pick<TextRun, 'language' | 'eastAsiaLanguage' | 'bidiLanguage' | 'rtl' | 'style'> {
+	const result: ReturnType<typeof parseDirectRunProperties> = parseRunProperties(props);
+	const language = first(props, 'lang');
+	for (const [attribute, key] of [
+		['val', 'language'],
+		['eastAsia', 'eastAsiaLanguage'],
+		['bidi', 'bidiLanguage'],
+	] as const) {
+		const value = getW(language, attribute);
+		if (value !== undefined) result[key] = value;
+	}
+	const rtl = onOffElement(first(props, 'rtl'));
+	if (rtl !== undefined) result.rtl = rtl;
+	const style = getW(first(props, 'rStyle'), 'val');
+	if (style) result.style = style;
+	return result;
+}
+
 /** Shared `w:rPr` -> `RunFormatting` parsing, used for direct runs, docDefaults and style catalogs. */
 export function parseRunProperties(props: XmlElement | undefined): RunFormatting {
 	const result: RunFormatting = {};
@@ -32,6 +55,8 @@ export function parseRunProperties(props: XmlElement | undefined): RunFormatting
 	for (const [local, key] of [
 		['b', 'bold'],
 		['i', 'italic'],
+		['bCs', 'boldComplexScript'],
+		['iCs', 'italicComplexScript'],
 		['caps', 'caps'],
 		['smallCaps', 'smallCaps'],
 		['vanish', 'vanish'],
@@ -69,9 +94,15 @@ export function parseRunProperties(props: XmlElement | undefined): RunFormatting
 	if (isStVerticalAlignRun(verticalAlign)) result.verticalAlign = verticalAlign;
 	const size = parseHalfPoints(getW(first(props, 'sz'), 'val'));
 	if (size !== undefined) result.fontSize = size / 2;
+	const complexSize = parseHalfPoints(getW(first(props, 'szCs'), 'val'));
+	if (complexSize !== undefined) result.fontSizeComplexScript = complexSize / 2;
 	const fonts = first(props, 'rFonts');
 	const family = getW(fonts, 'ascii') ?? getW(fonts, 'hAnsi');
 	if (family) result.fontFamily = family;
+	const eastAsia = getW(fonts, 'eastAsia');
+	if (eastAsia) result.fontFamilyEastAsia = eastAsia;
+	const complexScript = getW(fonts, 'cs');
+	if (complexScript) result.fontFamilyComplexScript = complexScript;
 	const fontTheme: RunFormatting['fontTheme'] = {};
 	for (const [xmlKey, script] of [
 		['asciiTheme', 'ascii'],

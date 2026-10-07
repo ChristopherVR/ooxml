@@ -1,15 +1,11 @@
 // Contextual Table Design and Chart Design commands. A table is "selected" when the active cell is
 // inside it; a chart when it is the selected drawing (`selection.drawing`, set by clicking it).
-import {
-	type ChartObject,
-	type ChartPatch,
-	type ChartType,
-	type Table,
-} from '../../index.js';
+import { type ChartObject, type ChartPatch, type ChartType, type Table } from '../../index.js';
 import type { Command } from '../commands.js';
 import type { EditorContext } from '../context.js';
 import { icon } from './icons.js';
 import { editing, tableAt, target } from './util.js';
+import { chartColorPalettePatch } from '../../edit/chart-colors';
 
 export const activeTable = (ctx: EditorContext): Table | undefined => {
 	const t = target(ctx);
@@ -67,6 +63,19 @@ export function contextualCommands(): Command[] {
 			enabled: (ctx) => !!activeChart(ctx) && (command.enabled?.(ctx) ?? true),
 		});
 	return [
+		chartCmd({
+			id: 'chart.colors',
+			label: 'Change Colors',
+			icon: icon('fillColor'),
+			run: (ctx, arg) => {
+				const id = Number(arg);
+				const t = target(ctx);
+				const found = activeChart(ctx);
+				if (!t || !found) return;
+				const patch = chartColorPalettePatch(found.chart, id);
+				if (patch) t.session.updateChart(t.sheet, found.index, patch);
+			},
+		}),
 		tableCmd({
 			id: 'table.name',
 			label: 'Table Name',

@@ -21,7 +21,10 @@ export function numberRevisionIds(model: DocumentModel, reservedMax = -1): Docum
 		mapBlockParagraphs(blocks, (paragraph) => {
 			collect(paragraph.markRevision);
 			collect(paragraph.formatRevision);
-			for (const run of paragraph.runs) collect(run.revision);
+			for (const run of paragraph.runs) {
+				collect(run.revision);
+				collect(run.formatRevision);
+			}
 			return paragraph;
 		});
 	const invalid = [...ids].filter((id) => !DECIMAL_ID.test(id));
@@ -41,9 +44,11 @@ export function numberRevisionIds(model: DocumentModel, reservedMax = -1): Docum
 		...block,
 		...(block.markRevision ? { markRevision: rename(block.markRevision) } : {}),
 		...(block.formatRevision ? { formatRevision: rename(block.formatRevision) } : {}),
-		runs: block.runs.map((run) =>
-			run.revision ? { ...run, revision: rename(run.revision) } : run,
-		),
+		runs: block.runs.map((run) => ({
+			...run,
+			...(run.revision ? { revision: rename(run.revision) } : {}),
+			...(run.formatRevision ? { formatRevision: rename(run.formatRevision) } : {}),
+		})),
 	});
 	return mapDocumentParagraphs(model, paragraph);
 }

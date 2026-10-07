@@ -18,7 +18,11 @@ import { renderForeignVectorShape } from './render-foreign-vector-shape';
 import { ForeignVectorBudget } from 'ooxml-core/visio/ui';
 import { RenderResources } from './render-resources';
 import { applyArrowheads } from './arrowheads';
-import { assertViewableDocument } from 'ooxml-core/visio/ui';
+import {
+	assertViewableDocument,
+	composeVisioTransform,
+	VISIO_IDENTITY_TRANSFORM,
+} from 'ooxml-core/visio/ui';
 import { createTextLayoutBudget, type TextLayoutBudget } from './text-layout';
 import { renderText } from './render-text';
 
@@ -44,6 +48,7 @@ export interface RenderOptions {
 	layerVisibilityOverrides?: readonly LayerVisibilityOverride[];
 }
 interface RenderContext {
+	pageHeight: number;
 	defs: SVGDefsElement;
 	warnings: Set<string>;
 	resources: RenderResources;
@@ -97,6 +102,7 @@ export function renderPage(
 	root.setAttribute('transform', `translate(0 ${page.height}) scale(1 -1)`);
 	svg.append(root);
 	const context: RenderContext = {
+		pageHeight: page.height,
 		defs,
 		warnings: new Set(),
 		resources: new RenderResources(options.static ? defs : undefined),
@@ -125,6 +131,7 @@ function drawShape(
 	parent: SVGElement,
 	context: RenderContext,
 	pageId: string,
+	parentTransform: VisioMatrix = VISIO_IDENTITY_TRANSFORM,
 ): void {
 	if (!hasVisibleShapeContent(shape, context.visible, context.renderable)) return;
 	if (++context.nodes > 50_000) {
@@ -147,9 +154,10 @@ function drawShape(
 	title.textContent = shape.text.plainText || shape.name;
 	group.append(title);
 	parent.append(group);
-	const own = () => drawOwn(shape, group, context);
+	const world = composeVisioTransform(parentTransform, shape.transform);
+	const own = () => drawOwn(shape, group, context, world);
 	const children = () => {
-		for (const child of shape.children) drawShape(child, group, context, pageId);
+		for (const child of shape.children) drawShape(child, group, context, pageId, world);
 	};
 	if (shape.kind === 'group' && shape.groupDisplayMode === 0) {
 		children();
@@ -163,10 +171,15 @@ function drawShape(
 	own();
 	children();
 }
-function drawOwn(shape: VisioShape, group: SVGElement, context: RenderContext): void {
+function drawOwn(
+	shape: VisioShape,
+	group: SVGElement,
+	context: RenderContext,
+	world: VisioMatrix,
+): void {
 	const { warnings, defs, resources } = context;
 	const fill = shape.geometry.some((geometry) => geometry.fill)
-		? fillPaint(shape.style, defs)
+		? fillPaint(shape.style, defs, resources, world, context.pageHeight)
 		: 'none';
 	for (const geometry of shape.geometry) {
 		if (++context.nodes > 50_000) {
@@ -176,6 +189,7 @@ function drawOwn(shape: VisioShape, group: SVGElement, context: RenderContext): 
 			return;
 		}
 		const path = svgElement('path');
+		if (shape.style.fillPattern) path.setAttribute('shape-rendering', 'crispEdges');
 		if (context.interactive) path.dataset.geometry = '';
 		path.setAttribute('d', geometry.path);
 		path.setAttribute('fill', geometry.fill ? fill : 'none');

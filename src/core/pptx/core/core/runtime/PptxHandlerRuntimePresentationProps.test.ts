@@ -48,12 +48,14 @@ interface ExtractChartStyleHost {
 function extractChartStyle(
 	chartSpace: XmlObject | undefined,
 	chartRoot: XmlObject | undefined,
+	themeFontMap: Record<string, string> = {},
 ): PptxChartStyle | undefined {
 	const instance = Object.create(PptxHandlerRuntime.prototype) as ExtractChartStyleHost &
 		Record<string, unknown>;
 	instance.xmlLookupService = xmlLookupService;
 	instance.compatibilityService = compatibilityService;
 	instance.parseColor = () => undefined;
+	instance.themeFontMap = themeFontMap;
 	return instance.extractChartStyle(chartSpace, chartRoot);
 }
 
@@ -175,5 +177,48 @@ describe('extractChartStyle legend text style (chart-level c:txPr default)', () 
 		const chartRoot: XmlObject = { 'c:legend': { 'c:legendPos': { '@_val': 'b' } } };
 		const style = extractChartStyle(undefined, chartRoot);
 		expect(style?.legendTextStyle).toBeUndefined();
+	});
+});
+
+describe('extractChartStyle chart-wide text style', () => {
+	it('reads c:chartSpace/c:txPr, East Asian face included', () => {
+		const chartSpace: XmlObject = {
+			'c:txPr': {
+				'a:bodyPr': {},
+				'a:p': {
+					'a:pPr': {
+						'a:defRPr': {
+							'@_sz': '900',
+							'a:latin': { '@_typeface': 'Arial' },
+							'a:ea': { '@_typeface': 'Malgun Gothic' },
+						},
+					},
+				},
+			},
+		};
+		expect(extractChartStyle(chartSpace, {})?.textStyle).toStrictEqual({
+			fontSize: 9,
+			fontFamily: 'Arial',
+			eastAsiaFontFamily: 'Malgun Gothic',
+		});
+	});
+
+	it('leaves it unset when the chart has no c:txPr and the theme no fonts', () => {
+		expect(extractChartStyle({}, { 'c:legend': {} })?.textStyle).toBeUndefined();
+	});
+
+	it("starts from the theme's minor fonts", () => {
+		const theme = { 'mn-lt': 'Calibri', 'mn-ea': 'Malgun Gothic' };
+		expect(extractChartStyle({}, {}, theme)?.textStyle).toStrictEqual({
+			fontFamily: 'Calibri',
+			eastAsiaFontFamily: 'Malgun Gothic',
+		});
+		const chartSpace: XmlObject = {
+			'c:txPr': { 'a:p': { 'a:pPr': { 'a:defRPr': { 'a:latin': { '@_typeface': 'Arial' } } } } },
+		};
+		expect(extractChartStyle(chartSpace, {}, theme)?.textStyle).toStrictEqual({
+			fontFamily: 'Arial',
+			eastAsiaFontFamily: 'Malgun Gothic',
+		});
 	});
 });

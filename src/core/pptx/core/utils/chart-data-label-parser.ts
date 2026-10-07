@@ -15,7 +15,7 @@ import {
 	parseDataLabelsRange,
 	parseXForSave,
 } from './chart-data-labels-range';
-import { parseDefRPrTextStyle, resolveTxPrDefRPr } from './chart-def-rpr-style';
+import { parseDefRPrTextStyle, parseRichTextStyle, resolveTxPrDefRPr } from './chart-def-rpr-style';
 import { parseChartManualLayout } from './chart-layout';
 import { parseShapeProps } from './chart-series-detail-parser';
 import { collectAllText } from './chart-title-xml-ops';
@@ -207,6 +207,10 @@ export function parseSeriesDataLabels(
 			);
 			if (txPrStyle) {
 				result.txPr = txPrStyle;
+			}
+			const richStyle = parseRichTextStyle(rich, xmlLookup, colorParser, resolveTypeface);
+			if (richStyle) {
+				result.richTextStyle = richStyle;
 			}
 			const spPr = parseShapeProps(
 				xmlLookup.getChildByLocalName(node, 'spPr'),

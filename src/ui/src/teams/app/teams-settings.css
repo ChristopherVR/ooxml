@@ -3,7 +3,8 @@
 	color: var(--office-foreground);
 }
 dialog {
-	width: min(36em, 94vw);
+	width: min(66em, 94vw);
+	max-height: 90vh;
 	padding: 0;
 	border: var(--office-border-width) solid var(--office-teams-divider);
 	border-radius: var(--office-radius-lg);
@@ -18,6 +19,117 @@ form {
 	display: grid;
 	gap: var(--office-space-3);
 	padding: var(--office-space-5);
+}
+header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: var(--office-space-4) var(--office-space-5);
+	border-block-end: var(--office-border-width) solid var(--office-teams-divider);
+}
+h1 {
+	margin: 0;
+	font-size: var(--office-font-size-lg);
+}
+.settings-layout {
+	display: grid;
+	grid-template-columns: 18em minmax(0, 1fr);
+	min-height: 32em;
+}
+nav {
+	display: flex;
+	flex-direction: column;
+	gap: var(--office-space-1);
+	padding: var(--office-space-3);
+	background: var(--office-teams-panel);
+	border-inline-end: var(--office-border-width) solid var(--office-teams-divider);
+}
+nav button {
+	text-align: start;
+	border: 0;
+	background: transparent;
+}
+nav button[aria-selected='true'] {
+	background: var(--office-teams-brand-subtle);
+	color: var(--office-teams-brand);
+	font-weight: var(--office-font-weight-bold);
+}
+.settings-content {
+	min-width: 0;
+}
+section {
+	padding: var(--office-space-5);
+}
+[hidden] {
+	display: none !important;
+}
+.description {
+	color: var(--office-teams-text-subtle);
+	line-height: 1.5;
+}
+.preference {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding-block: var(--office-space-3);
+	border-block-end: var(--office-border-width) solid var(--office-teams-divider);
+	font-weight: normal;
+}
+.theme-options {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--office-space-3);
+}
+.density-options {
+	margin: var(--office-space-5) 0 0;
+	border: 0;
+	padding: 0;
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--office-space-3);
+}
+.density-options legend {
+	font-weight: var(--office-font-weight-bold);
+	margin-bottom: var(--office-space-3);
+}
+.density-choice {
+	display: flex;
+	align-items: center;
+	gap: var(--office-space-2);
+	padding: var(--office-space-3);
+	border: var(--office-border-width) solid var(--office-teams-divider);
+	border-radius: var(--office-radius-md);
+	cursor: pointer;
+}
+.density-choice:has(input:checked) {
+	border-color: var(--office-teams-brand);
+	background: var(--office-teams-brand-subtle);
+}
+.density-choice span {
+	display: grid;
+	gap: var(--office-space-1);
+}
+.theme-options button {
+	display: grid;
+	gap: var(--office-space-2);
+}
+.theme-options button[aria-pressed='true'] {
+	border-color: var(--office-teams-brand);
+	box-shadow: inset 0 0 0 var(--office-border-width) var(--office-teams-brand);
+}
+.theme-swatch {
+	display: block;
+	width: 6em;
+	height: 3em;
+	border-radius: var(--office-radius);
+	background: var(--office-background);
+	border: var(--office-border-width) solid var(--office-teams-divider);
+}
+.theme-swatch[data-theme='dark'] {
+	background: var(--office-call-background);
+}
+.theme-swatch[data-theme='light'] {
+	background: var(--office-call-foreground);
 }
 h2 {
 	margin: 0;
@@ -78,4 +190,14 @@ button.primary:hover {
 :focus-visible {
 	outline: var(--office-focus-width) solid var(--office-ring);
 	outline-offset: var(--office-focus-offset);
+}
+@media (max-width: 48em) {
+	.settings-layout {
+		grid-template-columns: minmax(0, 1fr);
+		min-height: 0;
+	}
+	nav {
+		border-inline-end: 0;
+		border-block-end: var(--office-border-width) solid var(--office-teams-divider);
+	}
 }

@@ -107,15 +107,47 @@ export function copySnapshotScene(model: VisioDocument): VisioDocument {
 		const gradient = source.fillGradient;
 		return {
 			...result,
+			...(source.fillPattern
+				? {
+						fillPattern: {
+							...image(source.fillPattern),
+							width: source.fillPattern.width,
+							height: source.fillPattern.height,
+						},
+					}
+				: {}),
 			...(dash === undefined
 				? {}
 				: { lineDash: list(dash, 'dash values', 150_000, (value) => value) }),
 			...(gradient
 				? {
 						fillGradient: {
-							type: gradient.type,
-							start: [gradient.start[0], gradient.start[1]] as const,
-							end: [gradient.end[0], gradient.end[1]] as const,
+							...(gradient.type === 'linear'
+								? {
+										type: 'linear' as const,
+										start: [gradient.start[0], gradient.start[1]] as const,
+										end: [gradient.end[0], gradient.end[1]] as const,
+									}
+								: gradient.type === 'radial'
+									? {
+											type: 'radial' as const,
+											center: [gradient.center[0], gradient.center[1]] as const,
+											radius: gradient.radius,
+										}
+									: {
+											type: 'regions' as const,
+											regions: list(gradient.regions, 'gradient regions', 100_000, (region) => ({
+												points: list(
+													region.points,
+													'gradient vertices',
+													300_000,
+													(point) => [point[0], point[1]] as const,
+												),
+												start: [region.start[0], region.start[1]] as const,
+												end: [region.end[0], region.end[1]] as const,
+												angle: region.angle,
+											})),
+										}),
 							stops: list(gradient.stops, 'gradient stops', 100_000, (stop) =>
 								fields(stop, ['offset', 'color', 'opacity']),
 							),

@@ -362,3 +362,229 @@ All six Chromium framework routes passed the 21-case live/exported SVG native
 stroke-pixel comparison (252 RGBA comparisons). All six page insertion, history
 and saved-package browser regressions also passed. These are sampled stroke
 comparisons, not complete image or text-layout parity.
+
+## Native hatch tiles and transparency (2026-10-07)
+
+The core now normalizes all built-in bitmap fill patterns 2-24 into bounded
+8-by-8 PNG tiles. The native coverage table comes from
+`scripts/record-visio-fill-patterns.ps1`, with compact pixel evidence in
+`fill-patterns-native.json`. Separate red/blue opaque and mixed-color/translucent
+captures cover 46 Visio 16 pages. The implementation reuses shared color parsing
+and clamping and the existing ole2 PNG encoder. The shared UI reuses its raster
+URL, embedded-resource, disposal, validation and immutable snapshot machinery.
+No viewer binding contains pattern logic.
+
+Every RGBA byte in both captures matches. Eighteen Chromium scenarios pass:
+12 opaque/translucent hatch scenarios across all six frameworks and six existing
+layer-stroke scenarios. Hatch tests compare 96-by-96 interiors of every native
+page with both live SVG (inlining its existing blob resources for rasterization)
+and portable exported SVG: 552 exact interior comparisons, with no channel
+threshold or tolerance. Flipping the complete pattern instead of its child image
+resolved the initial one-byte interpolation differences.
+
+Core move/save/reparse tests retain every normalized tile. The full local Visio
+suites pass 1,999 core tests (41 optional skips) and 711 UI tests (six optional
+skips), strict core/viewer types, 79 framework binding tests and five SSR tests.
+The existing seven Teams/PPTX declaration errors remain outside this change.
+The earlier seven-package registry-only consumer verification also completed
+successfully, including packed ESM/declarations and production worker checks.
+
+Native rotated/scaled hatch placement and edit/save/reopen still need evidence.
+These interior comparisons establish this captured subset, not complete Visio
+visual, editing or printing parity. The earlier layer-paint record's hatch
+limitation is superseded for patterns 2-24 by this follow-up.
+A further optional native-corpus test moves and saves the genuine 23-page source,
+reparses it and verifies identical normalized tile bytes for every page. All three
+focused pattern tests passed with that native corpus enabled. The saved acceptance
+candidate is `core-fill-patterns.vsdx` in the local oracle directory; opening it in
+Microsoft Visio remains an outstanding native acceptance step.
+
+## Page-aligned hatch orientation and phase (2026-10-07)
+
+Native rotation references exposed an incorrect behavior: hatch axes rotated with
+shapes. Rendering now composes shape/group transforms through the same affine
+helper used by bounded foreign vectors, counter-transforms the hatch axes and
+retains the native bottom-based page-height tile origin. Hatch geometry uses the
+native crisp-edge rendering flag. The shared affine extraction is recorded in
+PROVENANCE.md. Drawing-scale normalization retains physical tile dimensions.
+
+The native capture script now accepts angle and drawing/page scale. Four captures
+(opaque, translucent, 90-degree rotation and drawing scale 2:1) cover 92 native
+pages. All six framework routes passed 24 scenarios and 1,104 exact live/export
+96-by-96 interior comparisons. Six optional oblique scenarios were skipped in
+that run; they were separately enabled for vanilla to investigate the next gap.
+
+At 30 degrees, counter-rotation and tile phase removed the large color/placement
+mismatch, and crisp-edge rendering removed the large boundary mismatch. Exact
+comparison still fails: 2,916 channels across 46 renders differ by one byte
+(maximum difference 1). The zero-tolerance test is retained under
+VISIO_NATIVE_FILL_PATTERNS_OBLIQUE_DIR; it is not counted as passing. Core parsing
+reports unverified-hatch-angle for oblique angles. The remaining cause and native
+nested group/flip behavior need stronger evidence before claiming pixel parity.
+
+The latest native reopen probe initialized an owned invisible application with a
+blank document first, then used normal events and OpenEx(128). It still stalled on
+the native original, so opening the core-edited file was not reached. The probe's
+own Windows Visio and PowerShell processes were terminated; the existing user
+Visio instance was left running. Native acceptance remains unverified.
+
+Before the final two focused regressions, local checks passed 2,000 core/shared
+geometry tests (43 optional skips), 710 UI tests (seven optional skips) and strict
+core types. The shared geometry ESM export smoke also passed. Existing seven
+Teams/PPTX declaration errors remain outside this change.
+Final core/shared geometry verification passed 2,004 tests with the native layer
+and pattern source environments enabled (41 optional skips). Root lint passed
+with the existing nine unrelated warnings. Viewer types are rechecked after
+rebasing the separately published browser-test type-import fix.
+Viewer typecheck passed after rebasing the public-package browser-test type import
+fix. Binding verification passed 79 client tests, five SSR tests and Svelte checks.
+
+## Native hatch reflections (2026-10-07)
+
+The existing shared affine and hatch counter-transform logic was checked against
+46 additional pages exported by Microsoft Visio 16: all 23 hatch patterns with
+horizontal flips, then all 23 with vertical flips. The capture script now accepts
+FlipX and FlipY and records both in evidence.json. Native sources were created in
+an owned invisible Visio application and saved as VSDX, SVG and PNG references.
+
+The horizontal capture is visio-fill-patterns-d8955fdfd1a8466ba78908011765ef96
+in the local temporary directory; the vertical capture is
+visio-fill-patterns-cc4ee2b703af44689ccc13d706266afb. Set
+VISIO_NATIVE_FILL_PATTERNS_FLIP_X_DIR and VISIO_NATIVE_FILL_PATTERNS_FLIP_Y_DIR
+to reproduce the optional fill-pattern.spec.ts comparisons.
+
+All six framework routes passed for both captures: 12 scenarios, 552 exact
+96-by-96 interior comparisons across live and portable exported SVG, including
+all RGBA channels. Viewer typecheck passed. No new rendering implementation was
+needed. Difference attachments now run before the aggregate assertion, so a
+failing optional native comparison retains its per-pattern evidence.
+
+This establishes only single-shape, axis-aligned reflection interiors. Nested
+groups, reflected oblique shapes, full-page boundary fidelity and native reopening
+of core-edited hatch documents remain unverified. The existing 30-degree native
+comparison still fails by one byte and its zero-tolerance gate is unchanged.
+
+## Native nested hatch groups (2026-10-07)
+
+The native capture script can now build up to eight real group levels through
+Page.CreateSelection and Selection.Group. Each level has an invisible sibling;
+GroupAngle and GroupFlipX/GroupFlipY apply to the native parent. The evidence file
+records settings and actual group IDs. The optional browser comparison now also
+asserts that every page preserves the expected two-level hierarchy after worker
+parsing, rather than only checking pixels.
+
+Two captures used two 90-degree parent rotations, with and without a horizontal
+reflection at each level. These cover 46 native pages in
+visio-fill-patterns-4e96a0ec7e7f4cadb69f40361ebe0a32 and
+visio-fill-patterns-412c142e096146f3ac419e78094ae7fa in the local temporary
+directory. All six framework routes passed 12 scenarios and 552 exact live/export
+96-by-96 interior comparisons. Existing shared transform composition handles
+these cases without another implementation. Viewer typecheck passed.
+
+The capture parameters follow Microsoft's Page.CreateSelection and
+Selection.Group APIs:
+https://learn.microsoft.com/en-us/office/vba/api/visio.page.createselection
+https://learn.microsoft.com/en-us/office/vba/api/visio.selection.group
+
+These references establish bounded quarter-turn group interiors only. Arbitrary
+group rotations, parent resizing, clipping, full-page boundaries, grouped editing
+and native reopening remain unverified. Native pixel equality at 30 degrees
+continues to fail by one byte; its zero-tolerance test remains unchanged.
+
+Two further captures rotated the child by 90 degrees as well, giving a total
+270-degree orientation for the unreflected case and a quarter-turn child inside
+the reflected hierarchy. These are
+visio-fill-patterns-4076f84791094f11b7e2143ae131337d and
+visio-fill-patterns-cc5b82f96b8c4e8485037eaca0b8aaba. Both passed all six
+framework routes with hierarchy assertions and zero differing channels.
+Across all four grouped captures, 92 native pages passed 24 scenarios and 1,104
+exact live/export interior comparisons. Use VISIO_NATIVE_FILL_PATTERNS_GROUPED_DIR
+and VISIO_NATIVE_FILL_PATTERNS_GROUP_FLIPPED_DIR for either corresponding pair.
+
+## Native classic radial fills (2026-10-07)
+
+Classic fill patterns 36-40 now normalize to radial gradients with native
+object-bounding-box centers and radii (1.4 for the four corners, 0.73 for the
+center). Centers use local y-up coordinates. Stops reuse the existing color,
+transparency, validation and SVG stop paths. Linear gradient behavior is retained;
+normalized radial geometry does not change with drawing/page scale. Live SVG,
+portable SVG and immutable print snapshots share the same paint implementation.
+
+The native capture script accepts FirstPattern and LastPattern while keeping the
+original hatch defaults. Non-raster native patterns are retained as SVG/PNG/VSDX
+references without assuming their pattern definitions contain a bitmap. The first
+31-40 capture showed that patterns 31-35 use multiple linear-gradient triangles;
+those remain explicitly unsupported.
+
+Microsoft Visio 16 opaque and translucent 36-40 captures are respectively
+visio-fill-patterns-0b9cfd92659d4f5dbddd2f16b5f8a97a and
+visio-fill-patterns-2ee45429452b400f8e9ae224cffc96cd in the local temporary
+directory. The alpha capture uses RGB(27,139,211) at 20 percent transparency and
+RGB(231,61,83) at 50 percent transparency. Enable VISIO_NATIVE_RADIAL_FILLS_DIR
+and VISIO_NATIVE_RADIAL_FILLS_ALPHA_DIR to reproduce browser comparisons.
+
+All six framework routes passed both samples: 12 scenarios, 120 full-page
+576-by-432 RGBA comparisons across live and portable SVG. Every channel matched
+the native exported SVG raster exactly, with zero tolerance. This evidence is
+native SVG browser rasterization, not a claim that browser output equals the
+separately exported native PNG pipeline. Group rotation, nonrectangular geometry,
+colored layers, modern radial ShapeSheet settings and native reopening of
+core-edited radial documents still need authoritative acceptance evidence.
+
+Core regressions cover all five centers, separate stop alpha, physical page-scale
+normalization, move/save/reparse preservation and independent snapshot copies.
+Scene validation rejects invalid radial radii; DOM tests check shared live/export
+and immutable print output. Strict core types and viewer types passed. The Visio
+core suite passed 2,029 tests with 43 optional skips. The UI suite initially had
+one new test failure from omitting the print snapshot's required pageIndices;
+that test was corrected and both focused paint tests passed. Seven existing
+Teams/PPTX declaration errors remain outside this change. Viewer formatting also
+identified the pre-existing parity.md table formatting issue; another session is
+handling that isolated formatting fix.
+
+The corrected complete UI suite passed 711 tests with seven optional skips. The
+optional native radial regression passed for both captures, producing
+core-fill-patterns.vsdx acceptance candidates and preserving all normalized paint
+through move/save/reparse. That is parser/serializer preservation evidence; it
+does not establish native Visio reopen acceptance. Root lint passed with the nine
+existing unrelated warnings.
+
+## Native classic region gradients (2026-10-07)
+
+Classic fill patterns 31-35 now preserve native triangle regions and their
+triangle-local linear gradients. The core normalizes two triangles for patterns
+31-34 and four for pattern 35, including region-local endpoints, native rotation,
+foreground/background colors and independent stop alpha. Existing linear endpoint
+and color/opacity helpers are reused. The renderer shares its linear/radial stop
+serialization; no framework-specific painter was added.
+
+Native SVG uses top-down pattern coordinates. Flipping the pattern transform,
+rather than the triangle content, is required by these captured pixel references.
+The latter differed by one byte for opaque patterns and up to two for alpha;
+the final transform matches both references exactly without a tolerance change.
+Snapshots copy the region vertices and endpoints independently. Existing scene
+validation moved into a reusable gradient helper, with the extraction recorded in
+PROVENANCE.md. Export estimates and print work budgets count all rendered regions.
+
+Microsoft Visio 16 captures in the local temporary directory are
+visio-fill-patterns-6f5fdd0b579c4171ae17dd584c3ca7ef (opaque) and
+visio-fill-patterns-74695b6af9d84dd59f80a4415f6ea7dc (alpha). The alpha values
+are RGB(27,139,211) at 20 percent transparency and RGB(231,61,83) at 50 percent.
+Enable VISIO_NATIVE_REGION_FILLS_DIR and VISIO_NATIVE_REGION_FILLS_ALPHA_DIR
+for the optional browser and native-source preservation tests.
+
+All six framework routes passed both captures: 12 scenarios and 120 exact
+576-by-432 full-page RGBA live/export comparisons against native SVG rasterization.
+The genuine native documents also passed core move/save/reparse preservation;
+core-fill-patterns.vsdx candidates were written alongside their native sources.
+This is not native Visio reopen acceptance, nor native PNG pipeline equivalence.
+Grouped, rotated, nonrectangular and colored-layer region fills still need native
+comparisons. Modern gradient settings and broader effects remain separate gaps.
+
+Strict core types, viewer types and viewer formatting passed. Visio core passed
+2,031 tests with 44 optional skips; UI passed 712 tests with seven optional skips.
+Root lint passed with nine existing unrelated warnings. The snapshot regression
+now narrows the gradient discriminant before checking linear endpoints, fixing
+the test type errors introduced when radial paints were added. Its four focused tests passed. After generating the missing local PowerPoint
+declarations, the full UI typecheck passed for both the strict and relaxed PPTX
+projects. The seven missing-declaration errors were local build prerequisites.

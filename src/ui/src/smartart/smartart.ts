@@ -5,18 +5,20 @@ import { definer } from '../registry.js';
 import {
 	renderDiagramDrawing,
 	type SchemeColors,
+	type SchemeFonts,
 	type SmartArtRenderReport,
 } from './smartart-svg.js';
 import css from './smartart.css?raw';
 
-export type { SchemeColors, SmartArtRenderReport } from './smartart-svg.js';
+export type { SchemeColors, SchemeFonts, SmartArtRenderReport } from './smartart-svg.js';
 export { renderDiagramDrawing } from './smartart-svg.js';
 export type OfficeSmartArtRenderEvent = CustomEvent<SmartArtRenderReport>;
 
 /**
  * `<office-ui-smartart>` draws the cached drawing of a SmartArt diagram (core
  * `DiagramDrawing`, from `ooxml-core/diagram`) as SVG. Set `drawing` (and
- * optionally `schemeColors`, resolved theme colours such as `{ accent1: '#4472c4' }`);
+ * optionally `schemeColors`, resolved theme colours such as `{ accent1: '#4472c4' }`,
+ * and `schemeFonts`, the theme's `major`/`minor` Latin typefaces);
  * `label` becomes the accessible name (`role="img"`). It never re-lays-out a diagram: it shows
  * what the producing application last computed. Approximations (preset outlines drawn as
  * rectangles, gradient and pattern fills, 3D) are reported honestly in the
@@ -27,10 +29,12 @@ export class OfficeUiSmartArt extends OfficeElement {
 	static override properties = {
 		drawing: { attribute: false },
 		schemeColors: { attribute: false },
+		schemeFonts: { attribute: false },
 		label: { type: String },
 	};
 	declare drawing: DiagramDrawing | undefined;
 	declare schemeColors: SchemeColors;
+	declare schemeFonts: SchemeFonts;
 	declare label: string | null;
 	private figure: SVGSVGElement | undefined;
 	private lastReport: SmartArtRenderReport | undefined;
@@ -39,6 +43,7 @@ export class OfficeUiSmartArt extends OfficeElement {
 		super();
 		this.drawing = undefined;
 		this.schemeColors = {};
+		this.schemeFonts = {};
 		this.label = null;
 	}
 
@@ -49,7 +54,7 @@ export class OfficeUiSmartArt extends OfficeElement {
 
 	/** The SVG is rebuilt only when the drawing or the scheme colours change. */
 	protected override willUpdate(changed: PropertyValues<this>): void {
-		if (changed.has('drawing') || changed.has('schemeColors')) {
+		if (changed.has('drawing') || changed.has('schemeColors') || changed.has('schemeFonts')) {
 			if (!this.drawing || this.drawing.shapes.length === 0) {
 				this.figure = undefined;
 				this.lastReport = undefined;
@@ -58,6 +63,7 @@ export class OfficeUiSmartArt extends OfficeElement {
 					this.ownerDocument,
 					this.drawing,
 					this.schemeColors,
+					this.schemeFonts,
 				);
 				svg.setAttribute('role', 'img');
 				this.figure = svg;
@@ -68,7 +74,10 @@ export class OfficeUiSmartArt extends OfficeElement {
 	}
 
 	protected override updated(changed: PropertyValues<this>): void {
-		if (this.lastReport && (changed.has('drawing') || changed.has('schemeColors')))
+		if (
+			this.lastReport &&
+			(changed.has('drawing') || changed.has('schemeColors') || changed.has('schemeFonts'))
+		)
 			this.fire('office-smartart-render', this.lastReport);
 	}
 

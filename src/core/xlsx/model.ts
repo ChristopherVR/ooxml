@@ -1,6 +1,7 @@
 import type { AppProperties, CoreProperties, CustomProperty } from '../opc/properties/types.js';
-import type { DiagramDrawing, DiagramIssue } from '../diagram/types.js';
+import type { DiagramColor, DiagramDrawing, DiagramIssue } from '../diagram/types.js';
 import type { CellAddress, CellRange } from './address.js';
+import type { ChartStyleDefinition } from '../chart/style-definition';
 
 /** Excel error values. */
 export const ERROR_CODES = [
@@ -534,6 +535,10 @@ export interface ChartSeries {
 	categories: (string | number)[];
 	values: (number | null)[];
 	color?: Color;
+	/** DrawingML fill/line color, including theme transforms. */
+	drawingColor?: DiagramColor;
+	/** Explicit colors of individual points (indexed by c:dPt/c:idx). */
+	pointColors?: Record<number, DiagramColor>;
 }
 
 export interface ChartObject {
@@ -546,6 +551,10 @@ export interface ChartObject {
 	series: ChartSeries[];
 	showLegend: boolean;
 	legendPosition?: 'r' | 'l' | 't' | 'b' | 'tr';
+	/** Office color-style id (ChartColor). Manual series/point colors retain precedence. */
+	colorPalette?: number;
+	/** Imported Office chart-style metadata. Style authoring is not yet supported. */
+	styleDefinition?: ChartStyleDefinition;
 	/** Package part of the chart (`xl/charts/chart1.xml`), kept so unmodelled detail survives. */
 	partName?: string;
 	name?: string;

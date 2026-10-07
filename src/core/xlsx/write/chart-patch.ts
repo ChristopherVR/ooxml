@@ -13,6 +13,7 @@ import type { ChartObject } from '../model.js';
 import { parseChart } from '../read/chart.js';
 import { chartXml, patchChartReferences } from './chart.js';
 import { escapeText } from './xml-out.js';
+import { patchChartColors } from './chart-colors';
 
 type Doc = ReturnType<typeof parseXml>;
 
@@ -97,10 +98,15 @@ function patchSeriesNames(chart: XmlElement, model: ChartObject): void {
  * references changed; returns a regenerated part (losing unmodelled detail) when the chart type,
  * grouping or number of series changed.
  */
-export function patchChartPart(xml: string, model: ChartObject): string | undefined {
+export function patchChartPart(
+	xml: string,
+	model: ChartObject,
+	originalPalette?: number,
+): string | undefined {
 	let before: ChartObject;
 	try {
 		before = parseChart(xml, model.anchor, model.partName ?? '');
+		if (originalPalette !== undefined) before.colorPalette = originalPalette;
 	} catch {
 		return undefined;
 	}
@@ -112,11 +118,22 @@ export function patchChartPart(xml: string, model: ChartObject): string | undefi
 		return chartXml(model);
 	const refs = patchChartReferences(xml, model) ?? xml;
 	const sameNames = before.series.every((s, i) => s.name === model.series[i]?.name);
+	const sameColors = before.series.every(
+		(s, i) =>
+			JSON.stringify([s.color, s.drawingColor, s.pointColors]) ===
+			JSON.stringify([
+				model.series[i]?.color,
+				model.series[i]?.drawingColor,
+				model.series[i]?.pointColors,
+			]),
+	);
 	if (
 		before.title === model.title &&
 		before.showLegend === model.showLegend &&
 		(model.legendPosition === undefined || before.legendPosition === model.legendPosition) &&
-		sameNames
+		sameNames &&
+		sameColors &&
+		before.colorPalette === model.colorPalette
 	)
 		return refs === xml ? undefined : refs;
 	const doc = parseXml(refs, { label: 'XLSX chart' });
@@ -125,5 +142,7 @@ export function patchChartPart(xml: string, model: ChartObject): string | undefi
 	if (before.title !== model.title) patchTitle(doc, chart, model.title);
 	patchLegend(doc, chart, model);
 	if (!sameNames) patchSeriesNames(chart, model);
+	if (!sameColors || before.colorPalette !== model.colorPalette)
+		patchChartColors(doc, chart, model, before);
 	return buildXml(doc);
 }

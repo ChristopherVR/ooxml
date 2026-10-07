@@ -452,6 +452,35 @@ all 62 browser tests passed, including the six-framework matrix.
 
 ## Evidence required for parity
 
+### Native SmartArt appearance follow-up
+
+COM found that the Basic Block List fixture uses white 59 pt Aptos Narrow text;
+the shared renderer previously inherited black shell text and the shell font.
+`office-ui-smartart` now uses each cached shape's font-reference color and theme
+Latin font, with explicit run formatting taking precedence. Its stylesheet no
+longer overrides a declared typeface. XLSX supplies its workbook's major/minor
+fonts through a format-neutral `schemeFonts` property.
+
+The same renderer now calls `resolveDrawingColor` in the shared `diagram` core
+for DrawingML colors and transforms, instead of resolving base colors again in
+UI. Alpha becomes an SVG rgba paint. Unsupported transforms are reported in
+`unappliedColorTransforms`; gradient geometry and other existing approximations
+remain reported separately. No PowerPoint product engine is imported or copied.
+
+`scripts/record-xlsx-smartart-appearance.ps1` reproduces the committed three-node
+font/color measurement against the existing native workbook with its own hidden
+Excel application. Playwright MCP confirmed white text, Aptos Narrow and a
+computed 78.6667 px font size (59 pt at 96 dpi). Browser coverage checks those
+colors and the actual computed font family. This does not establish typography
+layout, mixed runs, wrapping, effects, editing/reflow or whole-diagram pixel parity.
+
+Verification: 321 combined XLSX/SmartArt UI tests, 47 binding tests and all 62
+browser tests passed. Core/UI/viewer typechecks and builds, viewer script/import
+guards and package smoke checks passed. The shared UI tarball imported all 93
+entry points in a clean SSR consumer and registered 45 element tags in a DOM
+consumer. Generated native output remains temporary; only measurements are
+committed alongside the existing workbook fixture.
+
 Track reading, display, editing, calculation and writing separately for each feature. A retained
 part does not count as rendering or editing support. Each completed feature needs representative
 Excel-produced fixtures, behavioral assertions, editing and round-trip checks, and browser coverage
@@ -525,3 +554,111 @@ by the library, opened/recalculated/saved by Excel 16.0, then reloaded/recalcula
 by the library with unchanged values. This was a generated native acceptance
 probe, not a general save-fidelity claim. Browser tests were not rerun because
 these changes are in shared calculation code and add no new UI controls.
+
+## Shared Change Colors catalog
+
+PowerPoint's 17 Chart Design > Change Colors palettes now live in the shared,
+strict `ooxml-core/chart` area. PowerPoint imports compatibility exports and keeps
+its UI descriptors and product-specific edits. The catalog reuses the shared
+DrawingML color resolver instead of maintaining its own color conversion math.
+
+`scripts/record-xlsx-chart-colors.ps1` records all 17 palettes with 1, 2, 4, 7,
+10, 19 and 55 series. Run it again with `-CustomTheme` for the second fixture.
+Both probes use a new hidden Excel application and close their own workbook.
+Excel 16.0 build 20430 provided 238 cases and 3,332 colors. The Office baseline
+up to 10 series matches exactly. Across both fixtures, 224 cases match exactly;
+38 individual colors in 14 cases differ by one RGB channel step. That native
+rounding gap remains open. A temporary before/after comparison confirmed that
+all 3,332 shared-catalog outputs match the previous PowerPoint implementation.
+
+The catalog extraction initially left XLSX without a Change Colors control.
+The following iteration adds its authoring command and shared gallery.
+
+Validation: 239 palette regressions, the prior broader 1,525 chart-related core
+tests, 14 PowerPoint gallery/style tests, strict/legacy core and UI typechecks,
+a full core build and clean package imports. Native JSON fixtures are test data
+and absent from the published distribution.
+
+## Change Colors authoring and shared gallery
+
+Chart Design now exposes the shared Office gallery with four Colorful and
+13 Monochromatic palettes. XLSX supplies theme colors, translations and its
+command adapter; the gallery and SVG swatch helpers are shared with PowerPoint.
+Dropdown arrows/Home/End move focus across sections, activation applies the
+palette, and Escape returns focus to the trigger. The editing command supports
+undo/redo, read-only restrictions, and save/reopen across all six bindings.
+
+Core stores native chart color-style ids and DrawingML series/point choices,
+including transforms. Palette edits replace matching automatic choices while
+preserving custom RGB fills and marker overrides. Existing chart XML is patched
+in place so axes, labels, effects and extension data survive. A changed palette
+gets a private color-style part, avoiding changes to other charts sharing the
+source style. Unedited chart parts remain byte-identical. Type changes also
+serialize the explicit point colors now carried by the model.
+
+`scripts/record-xlsx-chart-palette-edits.ps1` records 32 states from eight native
+families: column, bar, line, area, pie, doughnut, scatter and radar, each before
+and after automatic/manual palette edits. It uses a fresh hidden Excel instance
+and reopens its saved copies to measure the visible marker colors correctly.
+The committed fixture came from Excel 16.0 build 20430. Regression tests compare
+the tested series/point colors exactly and check editing history, save/reload,
+native axes/extensions, legacy color edits and shared-style isolation.
+
+A separate temporary acceptance probe opened all 16 library-authored palette-12
+workbooks in Excel, compared their series and point colors to the native
+recording, saved native copies and reloaded those copies with unchanged chart
+views. Excel's saved manual line/radar examples report COM ChartColor 2 rather
+than 12, identically for native and library edits; their color-style metadata
+and displayed colors still match. This is evidence for the measured slice.
+
+Playwright MCP reviewed the actual ribbon, palette previews and chart rendering.
+The browser regressions check all six bindings, keyboard focus, selection state,
+small-viewport popup bounds, undo/redo and save/reopen. Whole-Excel UI parity
+remains open: chart styles, Quick Layout, extended chart families and richer
+SmartArt authoring are still outstanding, along with the previously measured
+palette rounding differences. Arbitrary gradients, scheme colors indistinguishable
+from automatic choices, combination-chart plots and all marker styles have not
+been established by these fixtures.
+
+Validation for this iteration: 6,046 XLSX core tests, 283 focused palette/style,
+DrawingML writer and native editing tests, 326 XLSX/shared-gallery UI tests,
+125 PowerPoint gallery regressions, 47 binding tests and 68 browser tests passed.
+Core, shared UI and viewer typechecks, production builds and clean-consumer
+package checks also passed. Generated native acceptance workbooks were temporary
+and are not part of the published package or committed fixture set.
+
+## Native chart-style model
+
+PowerPoint's existing Chart Styles gallery is six recolor presets, so using it
+unchanged would not supply native Excel styles. The native style definition
+reader and resolved contract now live in the shared strict chart area;
+PowerPoint keeps compatibility adapters. XLSX imports the same theme-relative
+font, fill, line, reference and opaque-XML model. Existing style-part bytes
+survive title edits and save/reload. Style authoring is excluded from ChartPatch
+until the native picker and rendering are wired.
+
+The native recorder `scripts/record-xlsx-chart-styles.ps1` creates each chart
+independently, sets styles 201 through 216, fixes palette 10, saves and reopens
+owned copies through a hidden Excel instance. Recorded style XML and COM font
+sizes cover different title sizes and major/minor font references. Style 204
+leaves the title size inherited and COM returns a non-positive size; the fixture
+records that measurement as unavailable. It is not evidence for its displayed
+title size. The 16 chart import/edit/round-trip regressions retain source style
+parts exactly, while shared reader and PowerPoint compatibility tests cover
+explicit formatting precedence and preserved transforms/effects.
+
+This step supplies the shared model, not a working native style gallery. XLSX
+still needs style rendering, explicit chart formatting overrides, style
+application, applicable per-chart-family catalogs and gallery previews. The
+legacy 1 through 48 COM range is documented by
+[Microsoft Chart.ChartStyle](https://learn.microsoft.com/en-us/office/vba/api/excel.chart.chartstyle);
+the modern ids used here were established by the local Excel 16.0 build 20430
+probe, not inferred from that older reference.
+
+Validation: the full XLSX suite passed 6,062 tests before the final unreadable-style
+regression was added; all 48 focused reader, import/preservation and PowerPoint
+runtime tests then passed. Strict and PowerPoint typechecks, the core build and
+clean-consumer package imports passed. Seven chart-gallery browser tests passed
+across all six bindings. A Playwright MCP review of the native style 212 workbook
+confirmed chart selection and the contextual ribbon, and exposed the remaining
+style-rendering gap described above.

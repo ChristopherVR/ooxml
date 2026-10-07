@@ -1,0 +1,70 @@
+{
+	"applicationVersion": "16.0",
+	"applicationBuild": "16.0.20430",
+	"cases": [
+		{
+			"name": "bold",
+			"kind": "insert",
+			"tracked": {
+				"text": "Form!at me\r",
+				"revisionTypes": [3, 1]
+			},
+			"rejected": {
+				"text": "Format me\r",
+				"revisions": 0,
+				"bold": 0,
+				"italic": 0,
+				"color": -16777216,
+				"complexScriptFont": "Arial"
+			}
+		},
+		{
+			"name": "bold",
+			"kind": "delete",
+			"tracked": {
+				"text": "Format me\r",
+				"revisionTypes": [3, 2]
+			},
+			"rejected": {
+				"text": "Format me\r",
+				"revisions": 0,
+				"bold": 0,
+				"italic": 0,
+				"color": -16777216,
+				"complexScriptFont": "Arial"
+			}
+		},
+		{
+			"name": "multiple",
+			"kind": "insert",
+			"tracked": {
+				"text": "Form!at me\r",
+				"revisionTypes": [3, 1]
+			},
+			"rejected": {
+				"text": "Format me\r",
+				"revisions": 0,
+				"bold": -1,
+				"italic": 0,
+				"color": 16711680,
+				"complexScriptFont": "Arial"
+			}
+		},
+		{
+			"name": "multiple",
+			"kind": "delete",
+			"tracked": {
+				"text": "Format me\r",
+				"revisionTypes": [3, 2]
+			},
+			"rejected": {
+				"text": "Format me\r",
+				"revisions": 0,
+				"bold": -1,
+				"italic": 0,
+				"color": 16711680,
+				"complexScriptFont": "Arial"
+			}
+		}
+	]
+}

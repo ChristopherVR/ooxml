@@ -330,6 +330,26 @@ describe('buildParagraphs', () => {
 		expect(paras[0].strutFontSizePx).toBeUndefined();
 	});
 
+	it('re-bases a smaller a:buNone body paragraph under a larger heading', () => {
+		// Heading 12.75pt over 9pt body, both `<a:buNone/>`: the body paragraph
+		// needs its own 12px strut. Without it, fixed line spacing is measured
+		// against the 17px body default.
+		const noBullet = { none: true, ownedByParagraph: true };
+		const paras = buildParagraphs(
+			textEl(
+				[
+					{ text: 'Heading', style: { fontSize: 17 }, bulletInfo: noBullet },
+					{ text: '\n', style: {} },
+					{ text: 'Body text', style: { fontSize: 12 }, bulletInfo: noBullet },
+				],
+				{ textStyle: { fontSize: 17 } },
+			),
+		);
+		expect(paras).toHaveLength(2);
+		expect(paras[0].strutFontSizePx).toBeUndefined();
+		expect(paras[1].strutFontSizePx).toBe(12);
+	});
+
 	it('drops blank paragraphs that trail the last content', () => {
 		const paras = buildParagraphs(
 			textEl([

@@ -176,6 +176,8 @@ export interface TeamsClient {
 	toggleCamera: () => Promise<void>;
 	toggleScreenShare: () => Promise<void>;
 	toggleHand: () => void;
+	/** Persist pending local snapshots before navigation, without closing the client. */
+	flushStorage: () => void;
 	destroy: () => void;
 }
 
@@ -363,18 +365,20 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 		});
 	};
 
-	const scheduleSave = (): void => {
+	const saveSnapshot = (): void => {
 		if (!storage) return;
+		try {
+			const text = toBase64(Y.encodeStateAsUpdate(doc));
+			if (text.length <= MAX_SNAPSHOT_CHARS) storage.setItem(STORAGE_DOC + workspaceId, text);
+			storage.setItem(STORAGE_READ + workspaceId, JSON.stringify(lastRead));
+		} catch {
+			// Blocked or over quota: the convenience is lost, the app keeps working.
+		}
+	};
+	const scheduleSave = (): void => {
+		if (!storage || destroyed) return;
 		clearTimeout(saveTimer);
-		saveTimer = setTimeout(() => {
-			try {
-				const text = toBase64(Y.encodeStateAsUpdate(doc));
-				if (text.length <= MAX_SNAPSHOT_CHARS) storage.setItem(STORAGE_DOC + workspaceId, text);
-				storage.setItem(STORAGE_READ + workspaceId, JSON.stringify(lastRead));
-			} catch {
-				// Blocked or over quota: the convenience is lost, the app keeps working.
-			}
-		}, 800);
+		saveTimer = setTimeout(saveSnapshot, 800);
 	};
 	doc.on('update', scheduleSave);
 
@@ -795,7 +799,14 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			refresh();
 		},
 		toggleHand: act(() => call?.session?.toggleHand()),
+		flushStorage() {
+			if (destroyed) return;
+			clearTimeout(saveTimer);
+			saveSnapshot();
+		},
 		destroy() {
+			if (destroyed) return;
+			saveSnapshot();
 			destroyed = true;
 			transfers?.destroy();
 			clearTimeout(typingTimer);

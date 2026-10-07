@@ -10,13 +10,14 @@ import {
 	type TeamsServerConfig,
 	type TeamsState,
 	type DraftContext,
+	type TabContent,
 	parseServerConfig,
 } from 'ooxml-core/teams';
 // Registered from the leaf modules, not the package root: the root imports this folder through
 // `teams/index`, so importing it back would make `OFFICE_UI_TAGS` read `TEAMS_TAGS` too early.
 import { registerControls } from '../../controls.js';
 import { definePresence } from '../../presence.js';
-import { installOfficeUiTheme } from '../../theme.js';
+import { installOfficeUiTheme, THEME_CSS } from '../../theme.js';
 import { registerTeams } from '../index.js';
 import { TeamsController } from './controller.js';
 import {
@@ -26,7 +27,7 @@ import {
 } from './content-preview.js';
 import { defineTeamsChannelTab } from './channel-tab.js';
 import { defineTeamsFilesPanel } from './files-panel.js';
-import { defineTeamsSettings } from './teams-settings.js';
+import { defineTeamsSettings, type TeamsTheme } from './teams-settings.js';
 import {
 	loadConfig,
 	loadIdentity,
@@ -39,7 +40,10 @@ import css from './teams-app.css?raw';
 import { threadPane } from './thread-pane.js';
 import { followedThreads } from './followed-threads.js';
 import { draftList } from './draft-list.js';
+import { filePopoutDetail, filePopoutUrl } from './file-popout.js';
 import { messageTransfers } from './message-transfers.js';
+import { defineTeamsProfileMenu } from './profile-menu.js';
+import { defineTeamsAddTabDialog } from './add-tab-dialog.js';
 
 export type { FileUploader } from 'ooxml-core/teams';
 export interface OpenFileDetail {
@@ -59,6 +63,12 @@ export type FileOpeners = Partial<Record<OfficeKind, (detail: OpenFileDetail) =>
 
 type RailView = 'teams' | 'calls' | 'files' | 'followed' | 'drafts';
 type Panel = '' | 'chat' | 'people';
+const LOCAL_THEME = THEME_CSS.replaceAll(
+	':root[data-office-theme="dark"]',
+	':host([data-office-theme="dark"])',
+)
+	.replaceAll(':root:not([data-office-theme="light"])', ':host([data-office-theme="system"])')
+	.replaceAll(':root', ':host([data-office-theme])');
 const RAIL = [
 	{ id: 'teams', label: 'Teams', icon: 'users' },
 	{ id: 'calls', label: 'Calls', icon: 'phone' },
@@ -66,10 +76,9 @@ const RAIL = [
 	{ id: 'followed', label: 'Followed threads', icon: 'chat' },
 	{ id: 'drafts', label: 'Drafts', icon: 'chat' },
 ] as const;
-const AVAILABILITY = ['available', 'busy', 'away'] as const;
 
 export class TeamsApp extends LitElement {
-	static override styles = unsafeCSS(css);
+	static override styles = [unsafeCSS(LOCAL_THEME), unsafeCSS(css)];
 	static override properties = {
 		workspaceId: { type: String, attribute: 'workspace-id' },
 		userName: { type: String, attribute: 'user-name' },
@@ -89,6 +98,9 @@ export class TeamsApp extends LitElement {
 		toast: { state: true },
 		identity: { state: true },
 		followedUnreadOnly: { state: true },
+		theme: { state: true },
+		fileOpenPreference: { state: true },
+		chatDensity: { state: true },
 	};
 	declare workspaceId: string;
 	declare userName: string;
@@ -112,11 +124,22 @@ export class TeamsApp extends LitElement {
 	declare toast: string;
 	declare identity: Identity | null;
 	declare followedUnreadOnly: boolean;
+	declare theme: TeamsTheme;
+	declare fileOpenPreference: 'teams' | 'browser';
+	declare chatDensity: 'comfy' | 'compact';
 
 	private readonly teams = new TeamsController(this, (text) => this.notify(text));
 	private toastTimer: ReturnType<typeof setTimeout> | undefined;
 	private openRequest = 0;
 	private retainedTab: ChannelTab | undefined;
+	private themeStorageKey = '';
+	private readonly popoutRequested =
+		new URL(globalThis.location?.href ?? 'https://workspace.invalid').searchParams.get(
+			'openteams-file',
+		) === '1';
+	private readonly popout = filePopoutDetail(
+		globalThis.location?.href ?? 'https://workspace.invalid',
+	);
 
 	constructor() {
 		super();
@@ -139,6 +162,9 @@ export class TeamsApp extends LitElement {
 		this.toast = '';
 		this.identity = null;
 		this.followedUnreadOnly = false;
+		this.theme = 'system';
+		this.fileOpenPreference = 'teams';
+		this.chatDensity = 'comfy';
 	}
 
 	/** The core client behind this element, for hosts that want the raw actions. */
@@ -155,6 +181,8 @@ export class TeamsApp extends LitElement {
 		defineTeamsContentPreview();
 		defineTeamsChannelTab();
 		defineTeamsFilesPanel();
+		defineTeamsProfileMenu();
+		defineTeamsAddTabDialog();
 		super.connectedCallback();
 	}
 
@@ -172,6 +200,7 @@ export class TeamsApp extends LitElement {
 	}
 
 	protected override willUpdate(changed: PropertyValues<this>): void {
+		if (this.popoutRequested) return;
 		const restart = [
 			'workspaceId',
 			'userName',
@@ -191,6 +220,21 @@ export class TeamsApp extends LitElement {
 		if (this.userName && !this.userId) saveIdentity(named!);
 		if (!named) return this.teams.stop();
 		const workspaceId = /^[\w-]{1,100}$/u.test(this.workspaceId) ? this.workspaceId : 'demo';
+		this.themeStorageKey = `teams:theme:${encodeURIComponent(workspaceId)}:${encodeURIComponent(named.id)}`;
+		const rememberedTheme = safeStorage.getItem(this.themeStorageKey);
+		this.theme =
+			rememberedTheme === 'dark' || rememberedTheme === 'light' ? rememberedTheme : 'system';
+		this.applyTheme();
+		this.chatDensity =
+			safeStorage.getItem(this.themeStorageKey.replace('teams:theme:', 'teams:density:')) ===
+			'compact'
+				? 'compact'
+				: 'comfy';
+		this.fileOpenPreference =
+			safeStorage.getItem(this.themeStorageKey.replace('teams:theme:', 'teams:file-open:')) ===
+			'browser'
+				? 'browser'
+				: 'teams';
 		this.teams.start({
 			workspaceId,
 			user: named,
@@ -204,6 +248,7 @@ export class TeamsApp extends LitElement {
 	}
 
 	protected override updated(): void {
+		this.setAttribute('data-chat-density', this.chatDensity);
 		const state = this.teams.state;
 		if (
 			state?.thread &&
@@ -220,13 +265,28 @@ export class TeamsApp extends LitElement {
 	}
 
 	// ---- intent -> client actions -----------------------------------------------------------
-	private async openFile(a: OpenFileDetail['attachment']): Promise<void> {
+	private async openFile(
+		a: OpenFileDetail['attachment'],
+		mode?: 'teams' | 'browser',
+	): Promise<void> {
+		if (!this.canLeaveContent()) return;
+		const browser =
+			mode === 'browser' ||
+			(!mode && a.kind !== 'other' && a.kind !== 'vsdx' && this.fileOpenPreference === 'browser');
+		const popout = browser ? globalThis.open('about:blank', '_blank') : null;
+		if (popout) popout.opener = null;
 		const request = ++this.openRequest;
 		const channelId =
 			(a as { channelId?: string }).channelId ?? this.teams.state?.selectedChannelId;
 		const url = await this.teams.client?.fileUrl(a);
-		if (request !== this.openRequest || !this.isConnected) return;
-		if (!this.canLeaveContent()) return;
+		if (request !== this.openRequest || !this.isConnected) {
+			popout?.close();
+			return;
+		}
+		if (!this.canLeaveContent()) {
+			popout?.close();
+			return;
+		}
 		const detail: OpenFileDetail = { attachment: a, url, ...(channelId ? { channelId } : {}) };
 		if (
 			!this.dispatchEvent(
@@ -237,10 +297,26 @@ export class TeamsApp extends LitElement {
 					cancelable: true,
 				}),
 			)
-		)
+		) {
+			popout?.close();
 			return;
+		}
 		const opener = this.openers[a.kind];
-		if (opener) return opener(detail);
+		if (opener) {
+			popout?.close();
+			return opener(detail);
+		}
+		if (browser && url) {
+			const target = filePopoutUrl(detail, this.ownerDocument.location.href);
+			if (popout && target) {
+				popout.location.replace(target);
+				return;
+			}
+			popout?.close();
+			this.notify('Allow popups to open this file in a browser tab');
+			return;
+		}
+		popout?.close();
 		if (url) this.preview = detail;
 		else this.notify('This file was shared by name only');
 	}
@@ -323,8 +399,22 @@ export class TeamsApp extends LitElement {
 		this.settingsOpen = true;
 	}
 
+	private applyTheme(): void {
+		if (this.theme === 'system') this.removeAttribute('data-office-theme');
+		else this.setAttribute('data-office-theme', this.theme);
+	}
+
 	// ---- template ---------------------------------------------------------------------------
 	protected override render() {
+		if (this.popoutRequested)
+			return this.popout
+				? html`<div class="popout-view">
+						<teams-content-preview
+							.detail=${this.popout}
+							@teams-preview-close=${() => globalThis.close()}
+						></teams-content-preview>
+					</div>`
+				: html`<p role="alert">The file preview link is invalid.</p>`;
 		const s = this.teams.state;
 		if (!s) return this.welcome();
 		return html`
@@ -347,6 +437,34 @@ export class TeamsApp extends LitElement {
 				<teams-settings
 					?open=${this.settingsOpen}
 					.config=${this.resolveConfig()}
+					.theme=${this.theme}
+					.fileOpenPreference=${this.fileOpenPreference}
+					.chatDensity=${this.chatDensity}
+					@teams-settings-density=${(event: CustomEvent<{ density: 'comfy' | 'compact' }>) => {
+						if (!['comfy', 'compact'].includes(event.detail.density)) return;
+						this.chatDensity = event.detail.density;
+						safeStorage.setItem(
+							this.themeStorageKey.replace('teams:theme:', 'teams:density:'),
+							this.chatDensity,
+						);
+					}}
+					@teams-settings-file-open=${(event: CustomEvent<{ preference: 'teams' | 'browser' }>) => {
+						if (!['teams', 'browser'].includes(event.detail.preference)) return;
+						this.fileOpenPreference = event.detail.preference;
+						safeStorage.setItem(
+							this.themeStorageKey.replace('teams:theme:', 'teams:file-open:'),
+							this.fileOpenPreference,
+						);
+					}}
+					.followSettings=${s.threadFollowSettings}
+					.userName=${s.user.name}
+					@teams-settings-theme=${(event: CustomEvent<{ theme: TeamsTheme }>) => {
+						if (!['system', 'light', 'dark'].includes(event.detail.theme)) return;
+						this.theme = event.detail.theme;
+						this.applyTheme();
+						safeStorage.setItem(this.themeStorageKey, this.theme);
+					}}
+					@teams-settings-follow=${(event: CustomEvent<Partial<typeof s.threadFollowSettings>>) => this.teams.client?.setThreadFollowSettings(event.detail)}
 					@teams-settings-close=${() => (this.settingsOpen = false)}
 					@teams-settings-apply=${(e: CustomEvent<{ config: TeamsServerConfig }>) => {
 						if (!this.closePreview()) return;
@@ -362,6 +480,26 @@ export class TeamsApp extends LitElement {
 						);
 					}}
 				></teams-settings>
+				<teams-add-tab-dialog
+					.open=${this.addingTab}
+					.client=${this.teams.client}
+					.channelId=${s.selectedChannelId}
+					.channelName=${s.channel?.name ?? ''}
+					.files=${s.files}
+					.add=${(name: string, content: TabContent, channelId: string, client: TeamsClient) => {
+						if (client !== this.teams.client || client.getState().selectedChannelId !== channelId)
+							return null;
+						if (!this.closePreview()) return 'canceled';
+						const tab = client.addTab(name, content);
+						if (tab) {
+							this.retainedTab = tab;
+							this.tab = tab.id;
+							this.addingTab = false;
+						}
+						return tab;
+					}}
+					@teams-add-tab-close=${() => (this.addingTab = false)}
+				></teams-add-tab-dialog>
 			</div>
 		`;
 	}
@@ -437,24 +575,25 @@ export class TeamsApp extends LitElement {
 					}
 				</div>
 				<div class="me">
-					<span
-						class="conn"
-						data-status=${s.status}
-						title=${s.mode === 'server' ? `Server: ${s.status}` : 'Local: tabs of this browser'}
-					></span>
-					<button type="button" class="link" @click=${this.askSettings}>Server</button>
-					<select
-						aria-label="Availability"
-						.value=${s.availability}
-						@change=${(e: Event) => this.teams.client?.setAvailability((e.target as HTMLSelectElement).value as 'available')}
+					<office-ui-menu-button
+						label="Settings and more"
+						icon="more"
+						icon-only
+						@office-command=${(event: CustomEvent<{ command: string }>) => {
+							if (event.detail.command === 'teams-settings') this.askSettings();
+						}}
 					>
-						${AVAILABILITY.map((a) => html`<option value=${a} ?selected=${a === s.availability}>${a[0]!.toUpperCase() + a.slice(1)}</option>`)}
-					</select>
-					<office-ui-avatar
-						name=${s.user.name}
-						seed=${s.user.id}
-						presence=${s.availability}
-					></office-ui-avatar>
+						<office-ui-menu-item label="Settings" command="teams-settings"></office-ui-menu-item>
+					</office-ui-menu-button>
+					<teams-profile-menu
+						.state=${s}
+						@teams-profile-status=${(
+							event: CustomEvent<{ availability: 'available' | 'busy' | 'away' }>,
+						) => {
+							if (['available', 'busy', 'away'].includes(event.detail.availability))
+								this.teams.client?.setAvailability(event.detail.availability);
+						}}
+					></teams-profile-menu>
 				</div>
 			</header>
 		`;
@@ -619,7 +758,6 @@ export class TeamsApp extends LitElement {
 							</button>
 						</header>`
 			}
-			${this.addingTab && !compact ? this.tabForm() : nothing}
 			${c ? messageTransfers(s, c) : nothing}
 			${activeTab && !sharedTab && !compact ? html`<p role="status">This tab was removed from the channel. Your open copy remains here until you close it.</p>` : nothing}
 			${
@@ -721,34 +859,6 @@ export class TeamsApp extends LitElement {
 		message?.querySelector<HTMLElement>('.thread-link, button[aria-label="Reply"]')?.focus();
 	}
 
-	private tabForm() {
-		return html`<form
-			class="site-preview"
-			aria-label="Add website tab"
-			@submit=${(event: SubmitEvent) => {
-				event.preventDefault();
-				const data = new FormData(event.target as HTMLFormElement);
-				const tab = this.teams.client?.addTab(String(data.get('name') ?? ''), {
-					type: 'website',
-					url: String(data.get('url') ?? ''),
-				});
-				if (tab) this.selectTab(tab.id);
-				else this.notify('Enter a tab name and a valid website URL');
-			}}
-		>
-			<input name="name" aria-label="Tab name" placeholder="Tab name" maxlength="80" required />
-			<input
-				name="url"
-				type="url"
-				aria-label="Tab website URL"
-				placeholder="https://example.com"
-				required
-			/>
-			<button type="submit">Add website tab</button
-			><button type="button" @click=${() => (this.addingTab = false)}>Cancel</button>
-		</form>`;
-	}
-
 	private pinFile(file: TeamsState['files'][number]): void {
 		if (!this.selectChannel(file.channelId ?? this.teams.state?.selectedChannelId ?? '')) return;
 		const tab = this.teams.client?.addTab(file.name, { type: 'file', attachment: file });
@@ -772,7 +882,8 @@ export class TeamsApp extends LitElement {
 			.channelId=${state.selectedChannelId}
 			.channelName=${state.channel?.name ?? ''}
 			.canUpload=${state.canUploadFiles}
-			@teams-files-open=${(event: CustomEvent<{ attachment: OpenFileDetail['attachment'] }>) => void this.openFile(event.detail.attachment)}
+			@teams-files-open=${(event: CustomEvent<{ attachment: OpenFileDetail['attachment']; mode?: 'teams' | 'browser' }>) => void this.openFile(event.detail.attachment, event.detail.mode)}
+			@teams-files-browser=${(event: CustomEvent<{ attachment: OpenFileDetail['attachment'] }>) => void this.openFile(event.detail.attachment, 'browser')}
 			@teams-files-pin=${(event: CustomEvent<{ attachment: TeamsState['files'][number] }>) => this.pinFile(event.detail.attachment)}
 		></teams-files-panel>`;
 	}

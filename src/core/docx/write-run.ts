@@ -6,6 +6,9 @@ import { setExtendedRunProperties } from './write-run-extra.js';
 import { fractionToThemeByte } from './theme-color.js';
 import { createImageRun } from './write-drawing.js';
 import type { RelationshipAllocator } from './relationship-allocator.js';
+import { writeRunFormatRevision } from './write-revisions.js';
+import { parseRunPropertiesSnapshot } from './restore-run-format.js';
+import { parseDirectRunProperties } from './run-properties.js';
 
 function setAttribute(element: XmlElement, local: string, value: string): void {
 	element.setAttributeNS(WORD_NS, `w:${local}`, value);
@@ -76,16 +79,18 @@ function setRunProperties(
 	const changed = (key: keyof TextRun): boolean => !base || run[key] !== base[key];
 	if (
 		!props &&
-		([
-			run.bold,
-			run.italic,
-			run.underline,
-			run.strike,
-			run.caps,
-			run.smallCaps,
-			run.doubleStrike,
-			run.vanish,
-		].some((value) => value !== undefined) ||
+		(run.formatRevision?.kind === 'formatChange' ||
+			run.revision?.kind === 'formatChange' ||
+			[
+				run.bold,
+				run.italic,
+				run.underline,
+				run.strike,
+				run.caps,
+				run.smallCaps,
+				run.doubleStrike,
+				run.vanish,
+			].some((value) => value !== undefined) ||
 			run.highlight ||
 			run.verticalAlign ||
 			run.language !== undefined ||
@@ -94,6 +99,11 @@ function setRunProperties(
 			run.rtl !== undefined ||
 			run.fontSize ||
 			run.fontFamily ||
+			run.fontFamilyEastAsia ||
+			run.fontFamilyComplexScript ||
+			run.fontSizeComplexScript !== undefined ||
+			run.boldComplexScript !== undefined ||
+			run.italicComplexScript !== undefined ||
 			run.color ||
 			run.colorTheme ||
 			run.style ||
@@ -115,11 +125,19 @@ function setRunProperties(
 		runNode.insertBefore(props, runNode.firstChild);
 	}
 	if (!props) return;
-	// A rewritten run drops any recorded formatting-change snapshot; reconstructing historical
-	// rPrChange diffs is not supported (see model.ts Revision / parse-revisions.ts).
-	removeChildren(props, 'rPrChange');
+	writeRunFormatRevision(doc, props, run.formatRevision ?? run.revision);
 	if (changed('bold')) setToggle(doc, props, 'b', run.bold);
 	if (changed('italic')) setToggle(doc, props, 'i', run.italic);
+	if (changed('boldComplexScript')) setToggle(doc, props, 'bCs', run.boldComplexScript);
+	if (changed('italicComplexScript')) setToggle(doc, props, 'iCs', run.italicComplexScript);
+	if (changed('fontSizeComplexScript')) {
+		removeChildren(props, 'szCs');
+		if (run.fontSizeComplexScript !== undefined) {
+			const size = makeW(doc, 'szCs');
+			setAttribute(size, 'val', String(Math.round(run.fontSizeComplexScript * 2)));
+			props.appendChild(size);
+		}
+	}
 	if (changed('strike')) {
 		setToggle(doc, props, 'strike', run.strike);
 		// Single and double strikethrough are exclusive in Word's UI.
@@ -168,14 +186,21 @@ function setRunProperties(
 			props.appendChild(size);
 		}
 	}
-	if (changed('fontFamily') || changed('fontTheme')) {
+	if (
+		changed('fontFamily') ||
+		changed('fontTheme') ||
+		changed('fontFamilyEastAsia') ||
+		changed('fontFamilyComplexScript')
+	) {
 		removeChildren(props, 'rFonts');
-		if (run.fontFamily || run.fontTheme) {
+		if (run.fontFamily || run.fontTheme || run.fontFamilyEastAsia || run.fontFamilyComplexScript) {
 			const fonts = makeW(doc, 'rFonts');
 			if (run.fontFamily) {
 				setAttribute(fonts, 'ascii', run.fontFamily);
 				setAttribute(fonts, 'hAnsi', run.fontFamily);
 			}
+			if (run.fontFamilyEastAsia) setAttribute(fonts, 'eastAsia', run.fontFamilyEastAsia);
+			if (run.fontFamilyComplexScript) setAttribute(fonts, 'cs', run.fontFamilyComplexScript);
 			const themeAttribute: Record<'ascii' | 'hAnsi' | 'eastAsia' | 'cs', [string, string]> = {
 				ascii: ['asciiTheme', 'Ascii'],
 				hAnsi: ['hAnsiTheme', 'HAnsi'],
@@ -221,6 +246,16 @@ export function createRun(
 ): XmlElement {
 	if (run.image) return createImageRun(doc, run.image, base?.image, old, allocator);
 	const node = old ?? makeW(doc, 'r');
+	if (
+		run.restoredRunPropertiesXml &&
+		(!old || run.restoredRunPropertiesXml !== base?.restoredRunPropertiesXml)
+	) {
+		const restored = parseRunPropertiesSnapshot(run.restoredRunPropertiesXml);
+		const props = first(node, 'rPr');
+		if (props) node.removeChild(props);
+		node.insertBefore(doc.importNode(restored, true), node.firstChild);
+		base = { text: run.text, ...parseDirectRunProperties(restored) };
+	}
 	setRunProperties(doc, node, run, base);
 	for (const child of Array.from(node.childNodes))
 		if (child.nodeType !== 1 || (child as XmlElement).localName !== 'rPr') node.removeChild(child);

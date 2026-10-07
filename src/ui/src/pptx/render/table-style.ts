@@ -30,6 +30,7 @@ import type {
 } from 'ooxml-core/pptx';
 
 import { getPatternSvg, normalizeHexColor } from './fill-style';
+import { cellPaddingCss } from './table-cell-padding';
 import type { CellBorderPosition } from './table-style-borders';
 import { resolveCellBorderCss, resolveStyleDiagonalBorders } from './table-style-borders';
 import { getBuiltinTableStyle } from './table-style-builtins';
@@ -43,6 +44,7 @@ import {
 import { cellImageFillCss } from './table-style-image';
 import { styleDeclaresFills } from './table-style-scheme';
 import { isKoreanLanguage } from './text-east-asian-breaks';
+import { BASELINE_FONT_SCALE } from './text-run-style';
 
 export { resolveStyleDiagonalBorders } from './table-style-borders';
 export { resolveTableStyleCell3D } from './table-style-cell3d';
@@ -86,6 +88,8 @@ export interface CellTextRun {
 	fontFamily?: string;
 	/** Run language (`a:rPr/@lang`), such as `ko-KR`. */
 	language?: string;
+	/** Baseline shift from `a:rPr/@baseline`: positive for superscript, negative for subscript. */
+	baseline?: number;
 }
 
 /**
@@ -97,8 +101,15 @@ export function cellRunStyle(run: CellTextRun): TableCellCss {
 	if (run.fontFamily) {
 		css.fontFamily = run.fontFamily;
 	}
+	// Super/subscript as shape text draws it (`text-run-style.ts`).
+	const shift = run.baseline ? (run.baseline > 0 ? 'super' : 'sub') : undefined;
 	if (typeof run.fontSize === 'number') {
-		css.fontSize = `${run.fontSize}pt`;
+		css.fontSize = `${run.fontSize * (shift ? BASELINE_FONT_SCALE : 1)}pt`;
+	} else if (shift) {
+		css.fontSize = `${BASELINE_FONT_SCALE * 100}%`;
+	}
+	if (shift) {
+		css.verticalAlign = shift;
 	}
 	if (run.color) {
 		css.color = run.color;
@@ -427,22 +438,7 @@ export function cellStyleToCss(style?: PptxTableCellStyle): TableCellCss {
 		}
 	}
 
-	// Cell margins → padding. `!== undefined` (not truthy) so an explicitly
-	// zeroed margin (`<a:marL w="0"/>`, common in dense or image-filled
-	// tables) still renders as `0px` padding instead of falling through to
-	// the browser's default cell padding.
-	if (style.marginLeft !== undefined) {
-		css.paddingLeft = `${style.marginLeft}px`;
-	}
-	if (style.marginRight !== undefined) {
-		css.paddingRight = `${style.marginRight}px`;
-	}
-	if (style.marginTop !== undefined) {
-		css.paddingTop = `${style.marginTop}px`;
-	}
-	if (style.marginBottom !== undefined) {
-		css.paddingBottom = `${style.marginBottom}px`;
-	}
+	Object.assign(css, cellPaddingCss(style));
 
 	// Text effects (shadow / glow) via CSS text-shadow.
 	const textShadowParts: string[] = [];

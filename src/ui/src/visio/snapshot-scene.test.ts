@@ -63,6 +63,10 @@ describe('bounded private rendering-scene copy', () => {
 			copy = copied.pages[0]!.shapes[0]!;
 		assertViewableDocument(copied);
 		expect(copied).toEqual(source);
+		const gradient = shape.style.fillGradient,
+			copiedGradient = copy.style.fillGradient;
+		if (gradient?.type !== 'linear' || copiedGradient?.type !== 'linear')
+			throw new Error('Expected the linear-gradient snapshot fixture.');
 		for (const [first, second] of [
 			[source.pages, copied.pages],
 			[source.pages[0], copied.pages[0]],
@@ -74,8 +78,8 @@ describe('bounded private rendering-scene copy', () => {
 			[shape.style, copy.style],
 			[shape.style.lineDash, copy.style.lineDash],
 			[shape.style.fillGradient, copy.style.fillGradient],
-			[shape.style.fillGradient!.start, copy.style.fillGradient!.start],
-			[shape.style.fillGradient!.end, copy.style.fillGradient!.end],
+			[gradient.start, copiedGradient.start],
+			[gradient.end, copiedGradient.end],
 			[shape.style.fillGradient!.stops, copy.style.fillGradient!.stops],
 			[shape.style.fillGradient!.stops[0], copy.style.fillGradient!.stops[0]],
 			[shape.text, copy.text],

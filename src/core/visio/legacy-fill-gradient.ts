@@ -1,19 +1,19 @@
-import type { VisioLinearGradient } from './model';
+import type { VisioFillGradient, VisioGradientRegion } from './model';
 import { linearGradientEndpoints } from './theme-gradient';
 import { number, type Cells } from './sheet';
 import { clampUnitInterval } from '../color/color-primitives';
 
-/** Native cached orthogonal patterns 25-30, including symmetric center-color patterns. */
+/** Native cached classic gradients 25-40. */
 export function legacyFillGradient(
 	cells: Cells,
 	width: number,
 	height: number,
 	resolve: (name: string) => string,
-): VisioLinearGradient | undefined {
+): VisioFillGradient | undefined {
 	const pattern = number(cells, 'FillPattern', 1);
 	if (
 		pattern < 25 ||
-		pattern > 30 ||
+		pattern > 40 ||
 		!Number.isInteger(pattern) ||
 		!Number.isFinite(width) ||
 		width <= 0 ||
@@ -33,6 +33,102 @@ export function legacyFillGradient(
 		color: background,
 		opacity: clampUnitInterval(1 - number(cells, 'FillBkgndTrans', 0)),
 	};
+	if (pattern >= 31 && pattern <= 35) {
+		// Native SVG uses triangle-local bounding-box linear gradients.
+		const triangle = (
+			points: VisioGradientRegion['points'],
+			angle: number,
+		): VisioGradientRegion => ({
+			points,
+			angle: angle === 0 ? 360 : angle,
+			...linearGradientEndpoints(1, 1, angle * 60_000),
+		});
+		const rising: VisioGradientRegion['points'][] = [
+			[
+				[0, 1],
+				[0, 0],
+				[1, 0],
+			],
+			[
+				[0, 1],
+				[1, 1],
+				[1, 0],
+			],
+		];
+		const falling: VisioGradientRegion['points'][] = [
+			[
+				[0, 0],
+				[0, 1],
+				[1, 1],
+			],
+			[
+				[0, 0],
+				[1, 0],
+				[1, 1],
+			],
+		];
+		const regions =
+			pattern === 35
+				? [
+						triangle(
+							[
+								[0.5, 0.5],
+								[0, 1],
+								[0, 0],
+							],
+							180,
+						),
+						triangle(
+							[
+								[0.5, 0.5],
+								[1, 1],
+								[1, 0],
+							],
+							0,
+						),
+						triangle(
+							[
+								[0.5, 0.5],
+								[0, 1],
+								[1, 1],
+							],
+							270,
+						),
+						triangle(
+							[
+								[0.5, 0.5],
+								[0, 0],
+								[1, 0],
+							],
+							90,
+						),
+					]
+				: pattern === 31
+					? [triangle(rising[0]!, 90), triangle(rising[1]!, 0)]
+					: pattern === 32
+						? [triangle(falling[0]!, 180), triangle(falling[1]!, 90)]
+						: pattern === 33
+							? [triangle(falling[0]!, 270), triangle(falling[1]!, 0)]
+							: [triangle(rising[1]!, 270), triangle(rising[0]!, 180)];
+		return {
+			type: 'regions',
+			regions,
+			stops: [
+				{ offset: 0, ...front },
+				{ offset: 1, ...back },
+			],
+		};
+	}
+	if (pattern >= 36)
+		return {
+			type: 'radial',
+			center: pattern === 40 ? [0.5, 0.5] : [(pattern - 36) % 2, pattern <= 37 ? 1 : 0],
+			radius: pattern === 40 ? 0.73 : 1.4,
+			stops: [
+				{ offset: 0, ...front },
+				{ offset: 1, ...back },
+			],
+		};
 	const angle = pattern <= 26 ? 0 : pattern === 27 ? 180 : pattern <= 29 ? 90 : 270;
 	return {
 		type: 'linear',

@@ -460,6 +460,13 @@ The chart-grid viewer facade was restored to its original implementation in
 the follow-up commit to remain compatible with published core versions. Both
 viewer adoption steps are tracked in `docs/pptx-shared-migration.md`.
 
+## Chart text defaults added during the renderer migration
+
+Source: `IHAGI-c/ooxml`, commit `d29c143e65f0200dc9894a77c220d804c8cd100d` (PR #13).
+The new `chart-text-defaults.ts` and `.test.ts` modules move from
+`viewers/pptx/packages/shared/src/render` to `src/ui/src/pptx/render`.
+Their core type imports use `ooxml-core/pptx`; chart font behavior is preserved.
+
 ## PowerPoint shared renderer and document operations
 
 Extracted the complete `viewers/pptx/packages/shared/src` implementation at
@@ -473,6 +480,15 @@ and destination. Imports now use the published core/UI entry points, fixture
 references follow the moved tests, and shared palette/grid policy is reused.
 The private shared package retains compatibility exports. Angular consumes
 public UI entries instead of copying the renderer into its published output.
+
+The combo-chart and table-subscript follow-up in PR #15 adds five modules from
+`IHAGI-c/ooxml` at `824b9366dae65664316082dcfce4b7aebdfe44f7`:
+`chart-bar-cluster-geometry.ts`, `chart-combo-format.test.ts`,
+`chart-series-line-style.ts`, `chart-series-line-style.test.ts` and
+`table-cell-padding.ts`. Their source directory was
+`viewers/pptx/packages/shared/src/render`; they now live in
+`src/ui/src/pptx/render`. Type imports use `ooxml-core/pptx`, matching the
+renderer migration; their implementations and regression assertions are preserved.
 
 ## Word pagination page fields
 
@@ -545,3 +561,98 @@ document-wide paragraph mapping moved to `src/core/docx/document-paragraphs.ts`.
 Revision ID export retains its existing behavior through those helpers, and
 move-name export reuses them. Regression tests cover the body, table cells,
 headers, footers, footnotes and endnotes with one shared identity map.
+
+## Shared chart color palette catalog
+
+Source: ChristopherVR/ooxml at `9daa589d8dddba52c810efead7d7314886b580fb`,
+`src/ui/src/pptx/render/ribbon-galleries/chart-color-palette-catalog.ts`
+(original product: ChristopherVR/pptx-viewer). The 17 Office Change Colors
+palettes and series-count interpolation moved to strict, DOM-free
+`src/core/chart/color-palettes.ts`. The PowerPoint path keeps compatibility
+exports. Product-specific chart patching and gallery descriptors stay in UI.
+
+The shared catalog uses the existing `diagram/resolveDrawingColor` instead of
+the PowerPoint XML-object adapter and duplicate sRGB transfer functions.
+A before/after probe confirmed identical output for all 3,332 colors in the
+two recorded native Excel fixtures. The new recorder uses its own hidden COM
+instance and records all palettes under Office and custom themes with
+1, 2, 4, 7, 10, 19 and 55 series. Of 238 cases, 224 match Excel exactly;
+38 individual colors in the remaining 14 cases have unresolved one-channel-step
+rounding differences. The regression distinguishes the exact 85-case Office
+baseline from extended comparisons that permit that measured difference.
+
+## Word run-to-mark mapping
+
+Source: ChristopherVR/ooxml at `94274409912976a358179ee79a16e3c5da9f88dc`,
+`src/ui/src/docx/run-marks.ts`. The model-to-ProseMirror mark mapping moved to
+`src/core/docx/ui/run-marks.ts`, with the caller's schema replacing the global
+UI schema. The UI keeps a compatibility facade. Imported formatting-revision
+rejection reuses this mapping to restore formatting without replacing text,
+links or comment anchors. Existing model conversion tests and native formatting
+references verify both callers.
+
+## Word direct paragraph property parsing
+
+Source: ChristopherVR/ooxml at `30d586d1893090538aa45dfe8bc1f42652638071`,
+`src/core/docx/block-parser.ts`. Direct paragraph property parsing moved to
+`src/core/docx/paragraph-properties.ts`, preserving its existing behavior and
+native units. All stories and paragraph-format rejection use this one parser.
+Restoration keeps prior opaque XML as the writer's basis, overlays later known
+property edits, and retains text, bookmarks and paragraph mark revisions.
+Native rejected documents, both export paths and editor conversion cover the
+new caller; existing paragraph, style, decoration and table tests cover parsing.
+
+## Shared affine composition for Visio hatch transforms
+
+Source: ChristopherVR/ooxml at `1bf7486161cb286f15ec0775bae7aa1cad1124d8`,
+`src/core/visio/foreign-vector-values.ts`, `compose`. Its six-coefficient
+multiplication moved into `src/core/geometry/affine.ts`. Foreign vector composition
+retains its existing bounded-value checks; Visio rendering reuses the same
+composition through the DOM-free Visio UI contract to accumulate group transforms.
+Regression tests cover composition order and rotated child translations.
+
+## Shared ribbon SVG color previews
+
+Source: ChristopherVR/ooxml at `bd436dd9dc392805f84a2c483c67f09e424b2e5d`,
+`src/ui/src/pptx/render/ribbon-galleries/gallery-preview-svg.ts` and
+`chart-gallery-tiles.ts` (original product: ChristopherVR/pptx-viewer).
+The SVG shell, escaping and safe-color helpers moved to
+`src/ui/src/ribbon/svg-preview.ts`; the swatch-strip painter moved to
+`src/ui/src/ribbon/color-preview.ts`. Their behavior is unchanged and the
+PowerPoint paths retain compatibility exports. XLSX reuses these painters and
+the existing OfficeUiGallery, with a thin translated command adapter. Chart
+palettes and color-style XML remain in core; no PowerPoint engine dependency
+was introduced into the XLSX UI. Existing PowerPoint gallery regressions cover
+the compatibility paths and XLSX browser tests cover the shared control.
+
+## Visio gradient scene validation extraction (2026-10-07)
+
+Source: ChristopherVR/ooxml, src/core/visio/ui/scene-validation.ts at
+e26a6f5e7464f3f37b940e36137e13531be55c7b.
+The existing linear/radial gradient validation moved to
+src/core/visio/ui/gradient-details.ts. The original finite-number checks and
+aggregate metadata accounting are passed in, rather than copied. The helper adds
+bounded triangle-region validation and exposes the number of independently
+rendered gradients. Scene stop limits, SVG byte estimates and print work budgets
+reuse that count so multi-region paints do not bypass the existing limits.
+
+## Shared native chart-style reader and contract
+
+Source: ChristopherVR/ooxml at `c0e42f0b611371ffef7334fa950db5ce9a98cbdd`,
+`src/core/pptx/core/types/chart-style-definition.ts` and
+`src/core/pptx/core/utils/chart-style-definition-parser.ts` (original product:
+ChristopherVR/pptx-viewer). Their resolved contract and per-element parsing
+rules moved to strict `src/core/chart/style-definition.ts` and `read-style.ts`.
+PowerPoint retains compatibility type names and an XML-object adapter; the
+actual reader uses shared XML and DrawingML color, fill and line readers.
+
+The shared model retains theme choices, ordered color transforms, reference
+indices, direct fills/lines and original XML, including entries and effects
+the painters do not yet interpret. Resolved defaults prefer direct properties
+over references, including explicit no-fill overrides. PowerPoint's earlier
+reader used only reference line/fill colors. XLSX imports the same style-part
+model and preserves its package bytes while editing chart titles. New native
+fixtures cover 16 independently created Excel style parts (201 through 216);
+COM font sizes establish 15 title defaults and all 16 axis/legend defaults.
+Style 204 omits a title size and COM returned a non-positive value, recorded
+as unavailable rather than treated as an expected font size.

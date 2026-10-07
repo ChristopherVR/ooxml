@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { chartTextFontFamily } from './chart-font';
 import { computeChartLegendLayout } from './chart-legend-layout';
 import type { ChartViewModel, LegendEntry } from './chart-view-model';
 
@@ -140,7 +141,7 @@ describe('computeChartLegendLayout', () => {
 			fill: '#111827',
 			fontWeight: 'bold',
 			fontStyle: 'italic',
-			fontFamily: 'Georgia',
+			fontFamily: chartTextFontFamily({ fontFamily: 'Georgia' }),
 		});
 		// The un-overridden entry keeps the historical defaults.
 		expect(items[1]).toMatchObject(DEFAULT_TEXT);

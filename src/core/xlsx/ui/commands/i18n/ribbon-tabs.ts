@@ -2,6 +2,27 @@
 import type { Translations } from './types.js';
 
 export const RIBBON_TAB_STRINGS: Translations = {
+	'Chart Styles': [
+		'Styles de graphique',
+		'Diagrammformatvorlagen',
+		'Estilos de gráfico',
+		'图表样式',
+	],
+	'Change Colors': ['Modifier les couleurs', 'Farben ändern', 'Cambiar colores', '更改颜色'],
+	Colorful: ['Coloré', 'Bunt', 'Multicolor', '彩色'],
+	Monochromatic: ['Monochrome', 'Einfarbig', 'Monocromático', '单色'],
+	'Colorful Palette {n}': [
+		'Palette colorée {n}',
+		'Bunte Palette {n}',
+		'Paleta multicolor {n}',
+		'彩色调色板 {n}',
+	],
+	'Monochromatic Palette {n}': [
+		'Palette monochrome {n}',
+		'Einfarbige Palette {n}',
+		'Paleta monocromática {n}',
+		'单色调色板 {n}',
+	],
 	Insert: ['Insertion', 'Einfügen', 'Insertar', '插入'],
 	Tables: ['Tableaux', 'Tabellen', 'Tablas', '表格'],
 	Illustrations: ['Illustrations', 'Illustrationen', 'Ilustraciones', '插图'],

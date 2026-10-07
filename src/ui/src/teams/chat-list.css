@@ -44,7 +44,7 @@
 	padding: var(--office-space-0) 0;
 }
 .msg[data-grouped='false'] {
-	margin-top: var(--office-space-3);
+	margin-top: var(--office-teams-message-gap, var(--office-space-3));
 }
 .gutter {
 	padding-top: var(--office-space-1);
@@ -68,7 +68,7 @@ time,
 .bubble {
 	display: inline-block;
 	max-width: min(100%, 44em);
-	padding: var(--office-space-2) var(--office-space-3);
+	padding: var(--office-teams-message-padding, var(--office-space-2) var(--office-space-3));
 	border-radius: var(--office-radius-md);
 	background: var(--office-teams-bubble);
 	line-height: var(--office-line-height);

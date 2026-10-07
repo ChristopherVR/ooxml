@@ -11,6 +11,10 @@ import type { HalfPoints, SignedTwips } from './units.js';
 
 /** A tracked-change revision recorded on a run or paragraph mark. */
 export interface Revision {
+	/** Prior `w:rPr` snapshot for an imported run-formatting change. */
+	previousRunPropertiesXml?: string;
+	/** Prior `w:pPr` snapshot for an imported paragraph-formatting change. */
+	previousParagraphPropertiesXml?: string;
 	kind: 'insert' | 'delete' | 'moveFrom' | 'moveTo' | 'formatChange' | 'paragraphChange';
 	/**
 	 * For `moveFrom`/`moveTo`: the move this text belongs to. Both sides share `name` (from
@@ -19,12 +23,18 @@ export interface Revision {
 	move?: { name: string; rangeId?: string };
 	author: string;
 	date?: string;
+	/** Modern Word's UTC revision timestamp (`w16du:dateUtc`). */
+	dateUtc?: string;
 	/** Source `w:id`; not guaranteed unique outside the paragraph it was parsed from. */
 	id: string;
 }
 
 export interface TextRun {
 	text: string;
+	/** Run-format history inside an insertion, deletion or move wrapper. */
+	formatRevision?: Revision;
+	/** Complete XML basis restored by rejecting a run-format revision; known property edits overlay it. */
+	restoredRunPropertiesXml?: string;
 	/** Imported, display-only equation. Source OMML is preserved; equation editing is unsupported. */
 	equation?: { omml: string; display: boolean };
 	bold?: boolean;
@@ -45,6 +55,14 @@ export interface TextRun {
 	/** Font size in points (whole or half points, e.g. 10.5); `HalfPoints` is the on-disk `w:sz`. */
 	fontSize?: number;
 	fontFamily?: string;
+	/** Direct East Asian font (`w:rFonts/@w:eastAsia`). */
+	fontFamilyEastAsia?: string;
+	/** Direct complex-script font (`w:rFonts/@w:cs`). */
+	fontFamilyComplexScript?: string;
+	/** Complex-script font size in points (`w:szCs`). */
+	fontSizeComplexScript?: number;
+	boldComplexScript?: boolean;
+	italicComplexScript?: boolean;
 	/** Direct RGB color, e.g. #28665E. May coexist with `colorTheme` as Word's stored fallback. */
 	color?: string;
 	/**

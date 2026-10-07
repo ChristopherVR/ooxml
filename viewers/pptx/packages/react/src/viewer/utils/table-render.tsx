@@ -14,7 +14,12 @@ import type {
  *   - table-render-data.tsx       - renderTableFromTableData (programmatic tables)
  *   - table-render.tsx            - renderTableElement (XML-based tables)
  */
-import { canDrillDown, DEFAULT_FONT_FAMILY, tableContainerCss } from 'ooxml-ui/pptx';
+import {
+	canDrillDown,
+	DEFAULT_FONT_FAMILY,
+	TABLE_CELL_TEXT_DEFAULTS,
+	tableContainerCss,
+} from 'ooxml-ui/pptx';
 import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import React from 'react';
 
@@ -196,6 +201,9 @@ export function renderTableElement(
 											// is the only source when neither the table style band nor
 											// an explicit run/cell colour applies.
 											color: textStyle.color,
+											// PowerPoint's line spacing and default margins, as
+											// `tableCellCss` gives the structured-model path.
+											...TABLE_CELL_TEXT_DEFAULTS,
 											...bandStyle,
 											...xmlCellStyle,
 											...(tdCellOverride ? cellStyleToCss(tdCellOverride) : undefined),

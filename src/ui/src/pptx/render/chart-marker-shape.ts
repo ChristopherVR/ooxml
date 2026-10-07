@@ -14,6 +14,7 @@
 
 import type { PptxChartMarkerSymbol } from 'ooxml-core/pptx';
 
+import { CHART_PX_PER_PT } from './chart-font';
 import type { ChartPartRef, SvgCircle, SvgPath, SvgPolygon, SvgRect } from './chart-view-model';
 
 /** The concrete primitive kinds a marker can resolve to (all support `opacity`). */
@@ -31,6 +32,30 @@ export interface MarkerShapeInput {
 	/** Radius used when no marker size is present (preserves the legacy dot size). */
 	defaultRadius: number;
 	part?: ChartPartRef;
+	/** Outline colour. Without it the marker has no outline. */
+	stroke?: string;
+	/** Outline width in px. */
+	strokeWidth?: number;
+}
+
+/** PowerPoint draws a marker outline at 0.75pt when `a:ln` gives a colour but no width. */
+const DEFAULT_MARKER_OUTLINE_PT = 0.75;
+
+/**
+ * The outline fields of {@link MarkerShapeInput} for a resolved marker, or
+ * nothing when the marker has no `a:ln` colour. Widths are authored in points.
+ */
+export function markerOutline(marker: {
+	stroke?: string | undefined;
+	strokeWidth?: number | undefined;
+}): Pick<MarkerShapeInput, 'stroke' | 'strokeWidth'> {
+	if (!marker.stroke) {
+		return {};
+	}
+	return {
+		stroke: marker.stroke,
+		strokeWidth: (marker.strokeWidth ?? DEFAULT_MARKER_OUTLINE_PT) * CHART_PX_PER_PT,
+	};
 }
 
 /**
@@ -101,9 +126,19 @@ function starVertices(cx: number, cy: number, r: number): Array<[number, number]
 	return out;
 }
 
+/** Rectangle points for an outlined square or dash marker (`SvgRect` has no stroke). */
+function rectPolygon(x: number, y: number, w: number, h: number): string {
+	return polygonPoints([
+		[x, y],
+		[x + w, y],
+		[x + w, y + h],
+		[x, y + h],
+	]);
+}
+
 /**
- * Build the marker primitive for one data point, honouring `symbol` and `size`.
- * Returns `null` when `symbol === 'none'` (draw nothing).
+ * Build the marker primitive for one data point, honouring `symbol`, `size`
+ * and the outline. Returns `null` when `symbol === 'none'` (draw nothing).
  */
 export function buildMarkerPrimitive(input: MarkerShapeInput): MarkerPrimitive | null {
 	const { symbol, cx, cy, fill, part } = input;
@@ -111,13 +146,30 @@ export function buildMarkerPrimitive(input: MarkerShapeInput): MarkerPrimitive |
 		return null;
 	}
 	const r = markerRadius(input.size, input.defaultRadius);
-	const stroke = fill;
+	const outline = input.stroke
+		? { stroke: input.stroke, strokeWidth: input.strokeWidth ?? DEFAULT_MARKER_OUTLINE_PT * CHART_PX_PER_PT }
+		: undefined;
+	// Filled polygons are stroked in their own colour at zero width when unoutlined.
+	const polygonStroke = outline ?? { stroke: fill, strokeWidth: 0 };
+	// The x and plus markers are drawn with a stroke alone.
+	const lineStroke = input.stroke ?? fill;
 
 	switch (symbol) {
 		case 'square':
-			return { kind: 'rect', x: cx - r, y: cy - r, w: r * 2, h: r * 2, fill, part };
-		case 'dash':
-			return { kind: 'rect', x: cx - r, y: cy - r * 0.32, w: r * 2, h: r * 0.64, fill, part };
+		case 'dash': {
+			const h = symbol === 'dash' ? r * 0.64 : r * 2;
+			const y = cy - h / 2;
+			if (outline) {
+				return {
+					kind: 'polygon',
+					points: rectPolygon(cx - r, y, r * 2, h),
+					fill,
+					...outline,
+					part,
+				};
+			}
+			return { kind: 'rect', x: cx - r, y, w: r * 2, h, fill, part };
+		}
 		case 'diamond':
 			return {
 				kind: 'polygon',
@@ -128,8 +180,7 @@ export function buildMarkerPrimitive(input: MarkerShapeInput): MarkerPrimitive |
 					[cx - r, cy],
 				]),
 				fill,
-				stroke,
-				strokeWidth: 0,
+				...polygonStroke,
 				part,
 			};
 		case 'triangle':
@@ -141,8 +192,7 @@ export function buildMarkerPrimitive(input: MarkerShapeInput): MarkerPrimitive |
 					[cx - r * 0.9, cy + r * 0.75],
 				]),
 				fill,
-				stroke,
-				strokeWidth: 0,
+				...polygonStroke,
 				part,
 			};
 		case 'star':
@@ -150,8 +200,7 @@ export function buildMarkerPrimitive(input: MarkerShapeInput): MarkerPrimitive |
 				kind: 'polygon',
 				points: polygonPoints(starVertices(cx, cy, r)),
 				fill,
-				stroke,
-				strokeWidth: 0,
+				...polygonStroke,
 				part,
 			};
 		case 'plus':
@@ -159,7 +208,7 @@ export function buildMarkerPrimitive(input: MarkerShapeInput): MarkerPrimitive |
 				kind: 'path',
 				d: `M${(cx - r).toFixed(2)},${cy.toFixed(2)} L${(cx + r).toFixed(2)},${cy.toFixed(2)} M${cx.toFixed(2)},${(cy - r).toFixed(2)} L${cx.toFixed(2)},${(cy + r).toFixed(2)}`,
 				fill: 'none',
-				stroke,
+				stroke: lineStroke,
 				strokeWidth: Math.max(1, r * 0.4),
 				part,
 			};
@@ -168,14 +217,14 @@ export function buildMarkerPrimitive(input: MarkerShapeInput): MarkerPrimitive |
 				kind: 'path',
 				d: `M${(cx - r).toFixed(2)},${(cy - r).toFixed(2)} L${(cx + r).toFixed(2)},${(cy + r).toFixed(2)} M${(cx + r).toFixed(2)},${(cy - r).toFixed(2)} L${(cx - r).toFixed(2)},${(cy + r).toFixed(2)}`,
 				fill: 'none',
-				stroke,
+				stroke: lineStroke,
 				strokeWidth: Math.max(1, r * 0.4),
 				part,
 			};
 		case 'dot':
-			return { kind: 'circle', cx, cy, r: Math.max(r * 0.6, 1), fill, part };
+			return { kind: 'circle', cx, cy, r: Math.max(r * 0.6, 1), fill, part, ...outline };
 		default:
 			// circle / auto / picture / undefined -> filled circle.
-			return { kind: 'circle', cx, cy, r, fill, part };
+			return { kind: 'circle', cx, cy, r, fill, part, ...outline };
 	}
 }

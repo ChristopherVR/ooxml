@@ -2,25 +2,14 @@
 // Paragraph/table/run parsing shared by the main document body, headers, footers, footnotes and
 // endnotes (moved out of parse.ts so every container can reuse the identical parser).
 import type { Block, Paragraph, Revision, Table, TextRun } from './model.js';
-import {
-	first,
-	getW,
-	isElement,
-	named,
-	textContent,
-	type XmlElement,
-} from './xml.js';
+import { first, getW, isElement, named, textContent, type XmlElement } from './xml.js';
 import { classifyBreak } from './breaks.js';
-import { parseRunProperties } from './run-properties.js';
+import { parseDirectRunProperties } from './run-properties.js';
+import { parseDirectParagraphProperties } from './paragraph-properties.js';
 import { parseTable as parseTableWithFidelity } from './parse-table.js';
 import { parseDrawing, type DrawingContext } from './drawing.js';
 import { resolveHyperlink, parseSimpleHyperlinkField } from './hyperlink.js';
 import { paragraphBookmarkNames } from './bookmarks.js';
-import { parseTabStops } from './tab-stops.js';
-import { parseJustification } from './paragraph-alignment.js';
-import { onOffElement, parseInteger, parseSignedTwips, parseTwips } from './simple-types.js';
-import { PAGINATION_KEYS, parseOutlineLevel } from './paragraph-styles.js';
-import { parseParagraphBorders, parseShadingFill } from './table-borders.js';
 import { createFieldTracker } from './field-runs.js';
 import { parseEquation } from './equation.js';
 import {
@@ -30,9 +19,6 @@ import {
 	paragraphMarkRevision,
 	runFormatRevision,
 } from './parse-revisions.js';
-
-const signedTwipValue = parseSignedTwips;
-const twipValue = parseTwips;
 
 const FIELD_PLACEHOLDERS: Record<string, string> = {
 	PAGE: '[Page #]',
@@ -125,7 +111,7 @@ function parseRun(node: XmlElement, revision?: Revision): TextRun {
 						return '';
 					})
 					.join('');
-	const run: TextRun = { text, ...parseRunProperties(props) };
+	const run: TextRun = { text, ...parseDirectRunProperties(props) };
 	if (breakKind) run.break = breakKind;
 	if (noteReference) run.noteReference = noteReference;
 	if (noteMark) run.noteMark = noteMark;
@@ -133,17 +119,10 @@ function parseRun(node: XmlElement, revision?: Revision): TextRun {
 	if (fieldCode !== undefined) run.fieldCode = fieldCode;
 	const runRevision = revision ?? runFormatRevision(props);
 	if (runRevision) run.revision = runRevision;
-	const language = first(props, 'lang');
-	const languageValue = getW(language, 'val');
-	const eastAsiaLanguage = getW(language, 'eastAsia');
-	const bidiLanguage = getW(language, 'bidi');
-	if (languageValue !== undefined) run.language = languageValue;
-	if (eastAsiaLanguage !== undefined) run.eastAsiaLanguage = eastAsiaLanguage;
-	if (bidiLanguage !== undefined) run.bidiLanguage = bidiLanguage;
-	const rtl = onOffElement(first(props, 'rtl'));
-	if (rtl !== undefined) run.rtl = rtl;
-	const styleRef = getW(first(props, 'rStyle'), 'val');
-	if (styleRef) run.style = styleRef;
+	if (revision) {
+		const formatRevision = runFormatRevision(props);
+		if (formatRevision) run.formatRevision = formatRevision;
+	}
 	return run;
 }
 
@@ -188,70 +167,7 @@ function parseParagraph(node: XmlElement, id: string): Paragraph {
 	if (markRevision) paragraph.markRevision = markRevision;
 	const formatRevision = paragraphFormatRevision(props);
 	if (formatRevision) paragraph.formatRevision = formatRevision;
-	const bidi = onOffElement(first(props, 'bidi'));
-	if (bidi !== undefined) paragraph.direction = bidi ? 'rtl' : 'ltr';
-	const { align, justification } = parseJustification(props);
-	if (align) paragraph.align = align;
-	if (justification) paragraph.justification = justification;
-	const style = getW(first(props, 'pStyle'), 'val');
-	if (style) paragraph.style = style;
-	if (onOffElement(first(props, 'pageBreakBefore'))) paragraph.pageBreakBefore = true;
-	for (const key of PAGINATION_KEYS) {
-		const value = onOffElement(first(props, key));
-		if (value !== undefined) paragraph[key] = value;
-	}
-	const outline = parseOutlineLevel(first(props, 'outlineLvl'));
-	if (outline !== undefined) paragraph.outlineLevel = outline;
-	const frame = first(props, 'framePr');
-	const dropCap = getW(frame, 'dropCap');
-	if (dropCap === 'drop' || dropCap === 'margin') {
-		const lines = Number(getW(frame, 'lines') ?? 3);
-		paragraph.dropCap = {
-			style: dropCap,
-			lines: Number.isInteger(lines) && lines >= 1 && lines <= 10 ? lines : 3,
-			...(twipValue(getW(frame, 'hSpace')) !== undefined
-				? { distanceTwips: twipValue(getW(frame, 'hSpace'))! }
-				: {}),
-		};
-	}
-	const borders = parseParagraphBorders(first(props, 'pBdr'));
-	if (borders) paragraph.borders = borders;
-	const shading = parseShadingFill(first(props, 'shd'));
-	if (shading) paragraph.shadingFill = shading;
-	const tabStops = parseTabStops(first(props, 'tabs'));
-	if (tabStops.length) paragraph.tabStops = tabStops;
-	const spacing = first(props, 'spacing');
-	const before = twipValue(getW(spacing, 'before'));
-	const after = twipValue(getW(spacing, 'after'));
-	const line = signedTwipValue(getW(spacing, 'line'));
-	if (before !== undefined) paragraph.spacingBeforeTwips = before;
-	if (after !== undefined) paragraph.spacingAfterTwips = after;
-	if (line !== undefined) {
-		paragraph.lineSpacingTwips = line;
-	}
-	const rule = getW(spacing, 'lineRule');
-	if (rule === 'auto' || rule === 'exact' || rule === 'atLeast') paragraph.lineSpacingRule = rule;
-	else if (line !== undefined) paragraph.lineSpacingRule = 'auto';
-	const indent = first(props, 'ind');
-	const indentLeft = signedTwipValue(getW(indent, 'left'));
-	const indentRight = signedTwipValue(getW(indent, 'right'));
-	const indentStart = signedTwipValue(getW(indent, 'start'));
-	const indentEnd = signedTwipValue(getW(indent, 'end'));
-	const firstLine = twipValue(getW(indent, 'firstLine'));
-	const hanging = twipValue(getW(indent, 'hanging'));
-	if (indentLeft !== undefined) paragraph.indentLeftTwips = indentLeft;
-	if (indentRight !== undefined) paragraph.indentRightTwips = indentRight;
-	if (indentStart !== undefined) paragraph.indentStartTwips = indentStart;
-	if (indentEnd !== undefined) paragraph.indentEndTwips = indentEnd;
-	if (firstLine !== undefined) paragraph.firstLineTwips = firstLine;
-	if (hanging !== undefined) paragraph.hangingTwips = hanging;
-	const numPr = first(props, 'numPr');
-	const numId = parseInteger(getW(first(numPr, 'numId'), 'val'));
-	if (numPr && numId !== undefined && numId >= 0)
-		paragraph.numbering = {
-			numId,
-			level: parseInteger(getW(first(numPr, 'ilvl'), 'val')) ?? 0,
-		};
+	Object.assign(paragraph, parseDirectParagraphProperties(props));
 	return paragraph;
 }
 

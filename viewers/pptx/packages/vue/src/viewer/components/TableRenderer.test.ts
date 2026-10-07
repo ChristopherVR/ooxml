@@ -232,9 +232,9 @@ describe('tableRenderer', () => {
 			rows: [{ cells: [{ text: 'Dense', style: { marginLeft: 0, marginTop: 0 } }] }],
 		};
 		const wrapper = mount(TableRenderer, { props: { element: table(dense), zIndex: 0 } });
-		const style = wrapper.get('td').attributes('style') ?? '';
-		expect(style).toContain('padding-left: 0px');
-		expect(style).toContain('padding-top: 0px');
+		const { style } = wrapper.get('td').element as HTMLTableCellElement;
+		expect(style.paddingLeft).toBe('0px');
+		expect(style.paddingTop).toBe('0px');
 	});
 
 	it('applies header-row banding (bold + background) when firstRowHeader is set', () => {
@@ -348,6 +348,30 @@ describe('tableRenderer', () => {
 		const span = wrapper.get('td span.pptx-vue-table__run');
 		expect(span.attributes('style')).toContain('font-size: 16pt');
 		expect(span.attributes('style')).toContain('font-family: Arial');
+	});
+
+	it('lowers and shrinks a subscript run', () => {
+		const runs: CellTextRun[] = [
+			{ text: 'CO', fontSize: 10 },
+			{ text: '2', fontSize: 10, baseline: -25000 },
+		];
+		const data: PptxTableData = {
+			columnWidths: [1],
+			rows: [{ cells: [richCell({ text: 'CO2' }, runs)] }],
+		};
+		const wrapper = mount(TableRenderer, { props: { element: table(data), zIndex: 0 } });
+		const style = wrapper.findAll('td span.pptx-vue-table__run')[1].attributes('style');
+		expect(style).toContain('font-size: 6.5pt');
+		expect(style).toContain('vertical-align: sub');
+	});
+
+	it('takes half of the border width out of the cell padding', () => {
+		const data: PptxTableData = {
+			columnWidths: [1],
+			rows: [{ cells: [{ text: '42', style: { marginRight: 6, borderRightWidth: 2 } }] }],
+		};
+		const wrapper = mount(TableRenderer, { props: { element: table(data), zIndex: 0 } });
+		expect((wrapper.get('td').element as HTMLTableCellElement).style.paddingRight).toBe('5px');
 	});
 
 	it('renders strikethrough run with text-decoration: line-through', () => {

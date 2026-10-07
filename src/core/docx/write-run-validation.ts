@@ -1,5 +1,5 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-import { elements, first, getW, type XmlElement, WORD_NS } from './xml.js';
+import { elements, first, getW, type XmlElement, WORD_NS, WORD_DATE_UTC_NS } from './xml.js';
 import { isWordHighlightToken } from './highlight.js';
 import { isValidLanguageTag } from './language.js';
 import { isWordUnderlineStyle } from './underline.js';
@@ -17,6 +17,9 @@ import {
 const modeledRunProperties = new Set([
 	'b',
 	'i',
+	'bCs',
+	'iCs',
+	'szCs',
 	'strike',
 	'u',
 	'highlight',
@@ -37,13 +40,33 @@ const modeledRunProperties = new Set([
 	'position',
 	'shd',
 ]);
-const simpleToggleProperties = ['b', 'i', 'strike', 'caps', 'smallCaps', 'dstrike', 'vanish'];
+const simpleToggleProperties = [
+	'b',
+	'i',
+	'bCs',
+	'iCs',
+	'strike',
+	'caps',
+	'smallCaps',
+	'dstrike',
+	'vanish',
+];
 const allowedRunPropertyAttributes: Record<string, string[]> = {
-	rFonts: ['ascii', 'hAnsi', 'asciiTheme', 'hAnsiTheme', 'eastAsiaTheme', 'cstheme'],
+	rFonts: [
+		'ascii',
+		'hAnsi',
+		'eastAsia',
+		'cs',
+		'asciiTheme',
+		'hAnsiTheme',
+		'eastAsiaTheme',
+		'cstheme',
+	],
 	lang: ['val', 'eastAsia', 'bidi'],
 	highlight: ['val'],
 	vertAlign: ['val'],
 	sz: ['val'],
+	szCs: ['val'],
 	rtl: ['val'],
 	rStyle: ['val'],
 	spacing: ['val'],
@@ -54,9 +77,19 @@ const allowedRunPropertyAttributes: Record<string, string[]> = {
 	color: ['val', 'themeColor', 'themeTint', 'themeShade'],
 	shd: ['val', 'fill', 'color', 'themeFill', 'themeFillTint', 'themeFillShade'],
 };
-function hasUnexpectedAttributes(element: XmlElement, allowed: string[]): boolean {
+function hasUnexpectedAttributes(
+	element: XmlElement,
+	allowed: string[],
+	allowDateUtc = false,
+): boolean {
 	for (const attribute of Array.from(element.attributes)) {
 		if (attribute.namespaceURI === 'http://www.w3.org/2000/xmlns/') continue;
+		if (
+			allowDateUtc &&
+			attribute.namespaceURI === WORD_DATE_UTC_NS &&
+			attribute.localName === 'dateUtc'
+		)
+			continue;
 		if (attribute.namespaceURI !== WORD_NS || !allowed.includes(attribute.localName)) return true;
 	}
 	return false;
@@ -73,6 +106,21 @@ export function runHasUnknownProperties(run: XmlElement): boolean {
 			continue;
 		}
 		const property = node as XmlElement;
+		if (property.namespaceURI === WORD_NS && property.localName === 'rPrChange') {
+			// Its complete prior subtree is modeled as XML, including unsupported historical properties.
+			if (
+				hasUnexpectedAttributes(property, ['id', 'author', 'date'], true) ||
+				Array.from(property.childNodes).some(
+					(child) => child.nodeType === 3 && child.textContent?.trim(),
+				) ||
+				elements(property).length !== 1 ||
+				!first(property, 'rPr') ||
+				!getW(property, 'id') ||
+				!getW(property, 'author')
+			)
+				return true;
+			continue;
+		}
 		if (property.namespaceURI === WORD_2010_NS && property.localName === 'ligatures') {
 			if (!isLigatures(property.getAttributeNS(WORD_2010_NS, 'val')) || elements(property).length)
 				return true;
@@ -124,7 +172,12 @@ export function runHasUnknownProperties(run: XmlElement): boolean {
 			const color = getW(property, 'color');
 			if (color && parseHexColor(color) === undefined) return true;
 		}
-		if (property.localName === 'sz' && value && parseHalfPoints(value) === undefined) return true;
+		if (
+			['sz', 'szCs'].includes(property.localName) &&
+			value &&
+			parseHalfPoints(value) === undefined
+		)
+			return true;
 		if (property.localName === 'spacing' && value && parseSignedTwips(value) === undefined)
 			return true;
 		if (property.localName === 'color' || property.localName === 'shd') {

@@ -16,7 +16,7 @@ export const IMAGE_EXTENSIONS: Readonly<Record<string, string>> = {
 };
 
 /** What `updateChart` may change (the chart keeps its kind and source part). */
-export type ChartPatch = Partial<Omit<ChartObject, 'kind' | 'partName'>>;
+export type ChartPatch = Partial<Omit<ChartObject, 'kind' | 'partName' | 'styleDefinition'>>;
 
 /** Adds a chart drawn from the model (a new chart part is written on save); returns its index. */
 export function addChart(ctx: EditContext, s: number, chart: Omit<ChartObject, 'kind'>): number {
@@ -50,7 +50,18 @@ export function updateChart(ctx: EditContext, s: number, index: number, patch: C
 		[{ kind: 'sheet', sheet: s }],
 		() => {
 			const live = sheet.drawings[index] as ChartObject;
-			for (const [key, value] of Object.entries(structuredClone(patch))) {
+			const changes = structuredClone(patch);
+			// A legacy color edit replaces the parsed DrawingML choice unless the caller edits both.
+			changes.series?.forEach((series, i) => {
+				const before = live.series[i];
+				if (
+					before &&
+					JSON.stringify(before.color) !== JSON.stringify(series.color) &&
+					JSON.stringify(before.drawingColor) === JSON.stringify(series.drawingColor)
+				)
+					delete series.drawingColor;
+			});
+			for (const [key, value] of Object.entries(changes)) {
 				if (key === 'kind' || key === 'partName' || key === '__proto__') continue;
 				if (key === 'constructor' || key === 'prototype') continue;
 				if (value === undefined) Reflect.deleteProperty(live, key);

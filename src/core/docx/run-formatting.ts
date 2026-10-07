@@ -11,6 +11,8 @@ import type { RunFormatting, RunStyleCatalog } from './run-style-model.js';
 const TOGGLE_KEYS = [
 	'bold',
 	'italic',
+	'boldComplexScript',
+	'italicComplexScript',
 	'caps',
 	'smallCaps',
 	'strike',
@@ -25,6 +27,9 @@ const OVERRIDE_KEYS = [
 	'verticalAlign',
 	'fontSize',
 	'fontFamily',
+	'fontFamilyEastAsia',
+	'fontFamilyComplexScript',
+	'fontSizeComplexScript',
 	'fontTheme',
 	'color',
 	'colorTheme',
@@ -36,6 +41,17 @@ const OVERRIDE_KEYS = [
 	'shadingFill',
 	'shadingThemeFill',
 ] as const satisfies readonly (keyof RunFormatting)[];
+
+/** Every modeled direct run property, including values absent from a restored snapshot. */
+export const DIRECT_RUN_PROPERTY_KEYS = [
+	...TOGGLE_KEYS,
+	...OVERRIDE_KEYS,
+	'language',
+	'eastAsiaLanguage',
+	'bidiLanguage',
+	'rtl',
+	'style',
+] as const satisfies readonly (keyof TextRun)[];
 
 function paragraphStyleRunChain(
 	styleId: string | undefined,

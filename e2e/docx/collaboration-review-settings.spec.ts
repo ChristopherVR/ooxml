@@ -80,6 +80,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 								text: run.text,
 								kind: run.revision!.kind,
 								author: run.revision!.author,
+								date: run.revision!.date,
 							}))
 					: [],
 			),
@@ -88,12 +89,16 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		expect(
 			revisions.every((revision) => revision.kind === 'insert' && revision.author === 'Grace'),
 		).toBe(true);
+		expect(
+			revisions.every((revision) => revision.date && Number.isFinite(Date.parse(revision.date))),
+		).toBe(true);
 		const bytes = await a.evaluate(async (element) =>
 			Array.from(await (element as DocxEditorElement).saveBytes()),
 		);
 		const zip = await JSZip.loadAsync(new Uint8Array(bytes));
 		expect(await zip.file('word/settings.xml')!.async('string')).toContain('trackRevisions');
 		expect(await zip.file('word/document.xml')!.async('string')).toContain('w:ins');
+		expect(await zip.file('word/document.xml')!.async('string')).toContain('w:date=');
 		await a.locator('.ProseMirror').click();
 		await page.keyboard.press('Control+z');
 		await expect(toggle).toHaveAttribute('aria-pressed', 'false');

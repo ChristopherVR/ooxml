@@ -8,6 +8,7 @@ import {
 	type FileTransferProgress,
 } from 'ooxml-core/teams';
 import css from './files-panel.css?raw';
+import { defineTeamsFileActions } from './file-actions.js';
 
 /** File controls bind to channel-capturing core actions; uploaded bytes never enter UI state. */
 export class TeamsFilesPanel extends LitElement {
@@ -62,6 +63,10 @@ export class TeamsFilesPanel extends LitElement {
 	override disconnectedCallback(): void {
 		this.active?.abort();
 		super.disconnectedCallback();
+	}
+	override connectedCallback(): void {
+		defineTeamsFileActions();
+		super.connectedCallback();
 	}
 	protected override updated(changed: PropertyValues<this>): void {
 		if (changed.has('client')) {
@@ -292,13 +297,10 @@ export class TeamsFilesPanel extends LitElement {
 												${file.channelName ? `# ${file.channelName}` : `# ${this.channelName}`}
 											</td>
 											<td>
-												<button
-													type="button"
-													?disabled=${!file.url}
-													@click=${() => this.emit('pin', file)}
-												>
-													Pin as tab
-												</button>
+												<teams-file-actions
+													.file=${file}
+													.client=${this.client}
+												></teams-file-actions>
 											</td>
 										</tr>`,
 									)

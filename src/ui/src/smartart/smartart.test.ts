@@ -1,4 +1,10 @@
 import type { DiagramDrawing, DiagramDrawingShape } from 'ooxml-core/diagram';
+import { readFileSync } from 'node:fs';
+import { URL as NodeURL } from 'node:url';
+import { loadXlsx } from 'ooxml-core/xlsx';
+import { createTestContext } from '../xlsx/commands/test-support.js';
+import { paintSmartArt } from '../xlsx/grid/smartart.js';
+import { colorToCss } from './smartart-svg.js';
 import { registerOfficeUi, type SmartArtRenderReport } from '../index.js';
 
 beforeAll(() => registerOfficeUi());
@@ -22,6 +28,109 @@ const mount = (): SmartArt => {
 };
 
 describe('office-ui-smartart', () => {
+	it('uses the native Excel font reference instead of black shell text', async () => {
+		const workbook = await loadXlsx(
+			new Uint8Array(
+				readFileSync(
+					new NodeURL('../../../core/xlsx/__fixtures__/excel-smartart.xlsx', import.meta.url),
+				),
+			),
+		);
+		const obj = workbook.sheets[0]!.drawings.find((item) => item.kind === 'smartArt');
+		if (!obj || obj.kind !== 'smartArt') throw new Error('Missing native SmartArt fixture');
+		const node = document.createElement('div');
+		document.body.append(node);
+		paintSmartArt(createTestContext(workbook), node, obj, workbook.theme);
+		const art = node.querySelector('office-ui-smartart')!;
+		const texts = Array.from(art.shadowRoot!.querySelectorAll('text'));
+		const native = JSON.parse(
+			readFileSync(new NodeURL('./excel-appearance.json', import.meta.url), 'utf8'),
+		) as {
+			diagrams: {
+				nodes: { text: string; fontColor: string; fontName: string; fontSizePt: number }[];
+			}[];
+		};
+		const nodes = native.diagrams[0]!.nodes;
+		expect(texts.map((text) => text.textContent)).toEqual(nodes.map((node) => node.text));
+		for (const [index, text] of texts.entries()) {
+			const expected = nodes[index]!;
+			expect(text.getAttribute('fill')).toBe(expected.fontColor);
+			expect(Number(text.getAttribute('font-size'))).toBeCloseTo((expected.fontSizePt * 96) / 72);
+			expect(text.getAttribute('font-family')).toBe(expected.fontName);
+		}
+	});
+
+	it('keeps explicit run colors and fonts above theme references and refreshes font changes', () => {
+		const art = mount() as SmartArt & {
+			schemeColors: Record<string, string>;
+			schemeFonts: { major?: string; minor?: string };
+		};
+		art.schemeColors = { lt1: '#FFFFFF' };
+		art.schemeFonts = { minor: 'Aptos Narrow', major: 'Aptos Display' };
+		const base = shape({
+			style: {
+				font: { fontIndex: 'minor', color: { kind: 'scheme', value: 'lt1', transforms: [] } },
+			},
+			text: {
+				text: 'Run',
+				paragraphs: [
+					{
+						runs: [
+							{
+								text: 'Run',
+								typeface: 'Courier New',
+								color: { kind: 'srgb', value: 'FF0000', transforms: [] },
+							},
+						],
+					},
+				],
+			},
+		});
+		art.drawing = { issues: [], shapes: [base] };
+		let text = art.shadowRoot!.querySelector('text')!;
+		expect(text.getAttribute('fill')).toBe('#FF0000');
+		expect(text.getAttribute('font-family')).toBe('Courier New');
+		base.text!.paragraphs[0]!.runs[0]!.typeface = '+mj-lt';
+		art.drawing = { issues: [], shapes: [base] };
+		expect(art.shadowRoot!.querySelector('text')!.getAttribute('font-family')).toBe(
+			'Aptos Display',
+		);
+		art.schemeFonts = { major: 'Cambria' };
+		text = art.shadowRoot!.querySelector('text')!;
+		expect(text.getAttribute('font-family')).toBe('Cambria');
+	});
+
+	it('reuses DrawingML color transforms for fills and reports unsupported transforms', () => {
+		expect(
+			colorToCss(
+				{ kind: 'scheme', value: 'accent1', transforms: [{ name: 'lumMod', value: '50000' }] },
+				{ accent1: '#FF0000' },
+			),
+		).toBe('#800000');
+		expect(
+			colorToCss(
+				{ kind: 'srgb', value: 'FF0000', transforms: [{ name: 'alpha', value: '50000' }] },
+				{},
+			),
+		).toBe('rgba(255, 0, 0, 0.5)');
+		const art = mount();
+		art.drawing = {
+			issues: [],
+			shapes: [
+				shape({
+					fill: {
+						kind: 'solid',
+						color: {
+							kind: 'srgb',
+							value: 'FF0000',
+							transforms: [{ name: 'redMod', value: '50000' }],
+						},
+					},
+				}),
+			],
+		};
+		expect(art.report?.unappliedColorTransforms).toEqual(['redMod']);
+	});
 	it('draws a core DiagramDrawing as an SVG image with an accessible name', () => {
 		const el = mount();
 		el.drawing = {

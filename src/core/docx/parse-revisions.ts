@@ -1,7 +1,16 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import { expectDefined } from './expect-defined.js';
 import type { Revision, TextRun } from './model.js';
-import { first, getW, isElement, named, type XmlElement, WORD_NS } from './xml.js';
+import {
+	buildXml,
+	first,
+	getW,
+	isElement,
+	named,
+	type XmlElement,
+	WORD_NS,
+	WORD_DATE_UTC_NS,
+} from './xml.js';
 
 const REVISION_WRAPPERS: Record<string, Revision['kind']> = {
 	ins: 'insert',
@@ -56,6 +65,8 @@ function revisionFrom(node: XmlElement, kind: Revision['kind']): Revision {
 	};
 	const date = getW(node, 'date');
 	if (date) revision.date = date;
+	const dateUtc = node.getAttributeNS(WORD_DATE_UTC_NS, 'dateUtc');
+	if (dateUtc) revision.dateUtc = dateUtc;
 	return revision;
 }
 
@@ -69,16 +80,24 @@ export function paragraphMarkRevision(pPr: XmlElement | undefined): Revision | u
 	return undefined;
 }
 
-/** Marks that `w:pPrChange` recorded a prior paragraph formatting snapshot (not itself modeled). */
+/** Preserve prior paragraph properties alongside their revision identity. */
 export function paragraphFormatRevision(pPr: XmlElement | undefined): Revision | undefined {
 	const change = first(pPr, 'pPrChange');
-	return change ? revisionFrom(change, 'paragraphChange') : undefined;
+	if (!change) return undefined;
+	const revision = revisionFrom(change, 'paragraphChange');
+	const previous = first(change, 'pPr');
+	if (previous) revision.previousParagraphPropertiesXml = buildXml(previous);
+	return revision;
 }
 
-/** Marks that `w:rPrChange` recorded a prior run formatting snapshot (not itself modeled). */
+/** Preserve the prior run-properties subtree alongside its revision identity. */
 export function runFormatRevision(rPr: XmlElement | undefined): Revision | undefined {
 	const change = first(rPr, 'rPrChange');
-	return change ? revisionFrom(change, 'formatChange') : undefined;
+	if (!change) return undefined;
+	const revision = revisionFrom(change, 'formatChange');
+	const previous = first(change, 'rPr');
+	if (previous) revision.previousRunPropertiesXml = buildXml(previous);
+	return revision;
 }
 
 /**

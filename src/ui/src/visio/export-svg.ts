@@ -8,6 +8,7 @@ import { compatibilityNotes, compatibilityText, type CompatibilityNote } from 'o
 import { renderPage, svgElement } from './render-svg';
 import { assertViewableDocument } from 'ooxml-core/visio/ui';
 import { inspectForeignVectorResource } from 'ooxml-core/visio/ui';
+import { visioGradientInstances } from 'ooxml-core/visio/ui';
 
 export const MAX_SVG_EXPORT_BYTES = 16 * 1024 * 1024;
 export interface SvgExportOptions {
@@ -132,7 +133,12 @@ export function estimatePageSvgBytes(
 					shape.style.lineColor.length * 24 +
 					shape.style.fill.length * 6,
 			);
-		for (const stop of shape.style.fillGradient?.stops ?? []) reserve(256 + stop.color.length * 6);
+		const gradients = visioGradientInstances(shape.style.fillGradient);
+		reserve(1024 * gradients);
+		for (const stop of shape.style.fillGradient?.stops ?? [])
+			reserve(gradients * (256 + stop.color.length * 6));
+		if (shape.style.fillPattern)
+			reserve(1536 + 4 * Math.ceil(shape.style.fillPattern.bytes.byteLength / 3));
 		if (shape.image) {
 			reserve(1536);
 			const image = shape.image;

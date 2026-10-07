@@ -57,6 +57,7 @@ export interface SvgPolyline {
 	points: string;
 	stroke: string;
 	strokeWidth: number;
+	dashArray?: string;
 	fill: string;
 	opacity?: number;
 	part?: ChartPartRef;
@@ -69,6 +70,9 @@ export interface SvgCircle {
 	cy: number;
 	r: number;
 	fill: string;
+	/** Marker outline (`c:marker/c:spPr/a:ln`). Omitted means no outline. */
+	stroke?: string;
+	strokeWidth?: number;
 	opacity?: number;
 	part?: ChartPartRef;
 	title?: string;

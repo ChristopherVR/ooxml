@@ -6,6 +6,7 @@ import { el, tagCommand, tooltip, type RenderScope } from './controls';
 import { ribbonIcon } from './icons';
 import type { RibbonControl, RibbonOption } from 'ooxml-core/xlsx/ui';
 import { arrowNavigation, closeRibbonPopover, mountPopover, openList } from './popover';
+import { renderSharedGallery } from './shared-gallery';
 
 type SelectControl = Extract<RibbonControl, { kind: 'select' }>;
 type GalleryControl = Extract<RibbonControl, { kind: 'gallery' }>;
@@ -192,6 +193,7 @@ export function renderGallery(
 	control: GalleryControl,
 	command: Command,
 ): HTMLElement {
+	if (control.sections) return renderSharedGallery(scope, control, command);
 	const { ctx, doc } = scope;
 	const label = ctx.t(command.label);
 	const button = el(doc, 'button', 'ribbon-large ribbon-gallery-button');

@@ -20,6 +20,8 @@ import {
 } from '../xml/index.js';
 
 export const WORD_NS = NS.w;
+/** Word 2023 revision timestamps, separate from legacy `w:date`. */
+export const WORD_DATE_UTC_NS = 'http://schemas.microsoft.com/office/word/2023/wordml/word16du';
 /** OOXML relationships namespace used for `r:id`/`r:embed` attributes on drawings and hyperlinks. */
 export const REL_NS = NS.r;
 export type { XmlDocument, XmlElement, XmlNode };

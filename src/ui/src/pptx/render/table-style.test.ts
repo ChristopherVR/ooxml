@@ -134,6 +134,19 @@ describe('cellStyleToCss', () => {
 			expect(css.paddingTop).toBeUndefined();
 			expect(css.paddingBottom).toBeUndefined();
 		});
+
+		it('takes half of each border out of the padding, as border-collapse puts it inside the cell', () => {
+			const css = cellStyleToCss({
+				marginRight: 3.787,
+				borderRightWidth: 2,
+				marginLeft: 0,
+				borderLeftWidth: 2,
+			});
+			// PowerPoint measures the margin from the grid line. The inner half of
+			// the 2px collapsed border already covers 1px of it.
+			expect(css.paddingRight).toBe(`${3.787 - 1}px`);
+			expect(css.paddingLeft).toBe('0px');
+		});
 	});
 
 	describe('image fill (a:tcPr/a:blipFill)', () => {
@@ -668,5 +681,25 @@ describe('cellStyleToCss vertical text direction', () => {
 			textOrientation: 'mixed',
 		});
 		expect(cellStyleToCss({ textDirection: 'mongolianVert' }).direction).toBeUndefined();
+	});
+});
+
+describe('cellRunStyle', () => {
+	it('lowers and shrinks a subscript run, such as the 2 in CO2', () => {
+		expect(cellRunStyle({ text: '2', fontSize: 10, baseline: -25000 })).toMatchObject({
+			fontSize: '6.5pt',
+			verticalAlign: 'sub',
+		});
+	});
+
+	it('raises a superscript run that has no size of its own', () => {
+		expect(cellRunStyle({ text: 'TM', baseline: 30000 })).toMatchObject({
+			fontSize: '65%',
+			verticalAlign: 'super',
+		});
+	});
+
+	it('leaves a run without a baseline shift alone', () => {
+		expect(cellRunStyle({ text: 'x', fontSize: 10 })).toStrictEqual({ fontSize: '10pt' });
 	});
 });

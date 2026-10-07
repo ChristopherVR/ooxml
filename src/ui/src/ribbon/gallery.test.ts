@@ -46,6 +46,38 @@ function mount(state: OfficeGalleryState = STYLES, inline = true): Gallery {
 }
 
 describe('office-ui-gallery', () => {
+	it('navigates dropdown sections without applying a choice until activation', () => {
+		const gallery = mount(
+			{
+				...STYLES,
+				sections: [
+					...STYLES.sections,
+					{ ...STYLES.sections[0]!, items: [{ id: 'next', label: 'Next' }] },
+				],
+			},
+			false,
+		);
+		const pick = vi.fn();
+		gallery.addEventListener('office-gallery-pick', pick);
+		gallery.trigger.dispatchEvent(
+			new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }),
+		);
+		for (const [key, expected] of [
+			['End', 'next'],
+			['Home', 'style0'],
+			['ArrowUp', 'style4'],
+			['ArrowRight', 'style5'],
+			['ArrowRight', 'next'],
+		] as const) {
+			document.activeElement!.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
+			expect(document.activeElement?.getAttribute('data-gallery-item')).toBe(expected);
+		}
+		expect(pick).not.toHaveBeenCalled();
+		(document.activeElement as HTMLButtonElement).click();
+		expect(pick).toHaveBeenCalledOnce();
+		expect(gallery.open).toBe(false);
+		expect(document.activeElement).toBe(gallery.trigger);
+	});
 	it('reuses labelled tiles in a panel and keeps focus while the selection refreshes', () => {
 		const gallery = mount();
 		gallery.setAttribute('mode', 'panel');

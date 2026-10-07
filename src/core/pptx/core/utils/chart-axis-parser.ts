@@ -270,6 +270,11 @@ function parseTxPr(
 		const raw = String(latin['@_typeface']);
 		target.fontFamily = resolveTypeface ? resolveTypeface(raw) : raw;
 	}
+	const ea = xmlLookup.getChildByLocalName(defRPr, 'ea');
+	if (ea?.['@_typeface']) {
+		const raw = String(ea['@_typeface']);
+		target.eastAsiaFontFamily = resolveTypeface ? resolveTypeface(raw) : raw;
+	}
 
 	const solidFill = xmlLookup.getChildByLocalName(defRPr, 'solidFill');
 	const fontColor = colorParser.parseColor(solidFill);

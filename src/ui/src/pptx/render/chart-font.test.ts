@@ -6,6 +6,7 @@ import {
 	DEFAULT_CHART_DATA_LABEL_PX,
 	DEFAULT_CHART_TEXT_PX,
 	chartFontPx,
+	chartTextFontFamily,
 } from './chart-font';
 
 // Regression for issue #132: core parses chart text sizes in POINTS
@@ -37,5 +38,35 @@ describe('chartAxisTextStyle font-size unit', () => {
 	it('falls back to the 10 pt PowerPoint default (already px, not converted again)', () => {
 		expect(chartAxisTextStyle(undefined).fontSize).toBe(DEFAULT_CHART_TEXT_PX);
 		expect(chartAxisTextStyle({ axisType: 'catAx' }).fontSize).toBe(DEFAULT_CHART_TEXT_PX);
+	});
+});
+
+describe('chartTextFontFamily', () => {
+	it('quotes a face and adds its substitutes, generic family last', () => {
+		expect(chartTextFontFamily({ fontFamily: 'Calibri' })).toBe(
+			'"Calibri", "Carlito", "Liberation Sans", "Arial", sans-serif',
+		);
+		expect(chartTextFontFamily(undefined)).toBeUndefined();
+	});
+
+	it('keeps the East Asian face ahead of every generic family', () => {
+		const family = chartTextFontFamily({ fontFamily: 'Georgia', eastAsiaFontFamily: 'Batang' });
+		expect(family).toMatch(/^"Georgia", .*"Batang", .*, serif$/u);
+		expect(family).not.toMatch(/serif, .*"Batang"/u);
+	});
+
+	it('leaves out an unresolved theme token and a blank name', () => {
+		expect(chartTextFontFamily({ fontFamily: '  ', eastAsiaFontFamily: 'Batang' })).toMatch(
+			/^"Batang"/u,
+		);
+		expect(chartTextFontFamily({ fontFamily: '+mn-lt', eastAsiaFontFamily: 'Batang' })).toMatch(
+			/^"Batang"/u,
+		);
+	});
+
+	it('quotes a face that starts with a digit or is not ASCII', () => {
+		expect(chartTextFontFamily({ fontFamily: '3M Sans', eastAsiaFontFamily: 'HY견고딕' })).toMatch(
+			/^"3M Sans", .*"HY견고딕"/u,
+		);
 	});
 });

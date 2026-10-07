@@ -8,6 +8,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
+import { chartTextFontFamily } from './chart-font';
 import type { PlotLayout, ValueRange } from './chart-view-model';
 import {
 	buildChartViewModel,
@@ -1044,7 +1045,7 @@ describe('buildChartViewModel - data table (c:dTable)', () => {
 		expect(cells.length).toBeGreaterThan(0);
 		for (const cell of cells) {
 			expect(cell.fill).toBe('#123456');
-			expect(cell.fontFamily).toBe('Georgia');
+			expect(cell.fontFamily).toBe(chartTextFontFamily({ fontFamily: 'Georgia' }));
 		}
 	});
 

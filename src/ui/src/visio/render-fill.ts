@@ -1,16 +1,101 @@
-import type { VisioStyle } from 'ooxml-core/visio';
-import { safeColor, svgElement } from './render-svg';
+import type {
+	VisioStyle,
+	VisioMatrix,
+	VisioLinearGradient,
+	VisioRadialGradient,
+} from 'ooxml-core/visio';
+import { visioFillPatternTransform } from 'ooxml-core/visio/ui';
+import { safeColor, svgElement, matrix } from './render-svg';
+import type { RenderResources } from './render-resources';
 let gradientId = 0;
-export function fillPaint(style: VisioStyle, defs: SVGDefsElement): string {
+export function fillPaint(
+	style: VisioStyle,
+	defs: SVGDefsElement,
+	resources: RenderResources,
+	world: VisioMatrix,
+	pageHeight: number,
+): string {
+	if (style.fillPattern) {
+		const paint = style.fillPattern,
+			pattern = svgElement('pattern');
+		pattern.id = `visio-fill-${++gradientId}`;
+		pattern.setAttribute('patternUnits', 'userSpaceOnUse');
+		pattern.setAttribute('width', String(paint.width));
+		pattern.setAttribute('height', String(paint.height));
+		pattern.setAttribute('viewBox', '0 0 64 64');
+		const transform = visioFillPatternTransform(world, pageHeight);
+		if (transform) pattern.setAttribute('patternTransform', matrix(transform));
+		const node = svgElement(resources.portable ? 'use' : 'image');
+		const url = resources.imageUrl(paint);
+		if (resources.portable) node.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', url);
+		else node.setAttribute('href', url);
+		node.setAttribute('width', '64');
+		node.setAttribute('height', '64');
+		node.setAttribute('image-rendering', 'optimizeSpeed');
+		node.setAttribute('preserveAspectRatio', 'none');
+		// Flip the native top-down tile back into local y-up shape coordinates.
+		pattern.append(node);
+		defs.append(pattern);
+		return `url(#${pattern.id})`;
+	}
 	if (!style.fillGradient) return safeColor(style.fill, '#fff');
-	const gradient = svgElement('linearGradient'),
-		paint = style.fillGradient;
+	const paint = style.fillGradient;
+	if (paint.type === 'regions') {
+		const pattern = svgElement('pattern');
+		pattern.id = `visio-fill-${++gradientId}`;
+		pattern.setAttribute('patternUnits', 'objectBoundingBox');
+		pattern.setAttribute('patternContentUnits', 'objectBoundingBox');
+		pattern.setAttribute('width', '1');
+		pattern.setAttribute('height', '1');
+		pattern.setAttribute('patternTransform', 'scale(1 -1)');
+		for (const region of paint.regions) {
+			const path = svgElement('path');
+			path.setAttribute(
+				'd',
+				region.points
+					.map((point, index) => `${index ? 'L' : 'M'} ${point[0]} ${1 - point[1]}`)
+					.join(' ') + ' z',
+			);
+			path.setAttribute(
+				'fill',
+				gradientPaint(
+					{ type: 'linear', start: [0, 0], end: [1, 0], stops: paint.stops },
+					defs,
+					true,
+					region.angle,
+				),
+			);
+			pattern.append(path);
+		}
+		defs.append(pattern);
+		return `url(#${pattern.id})`;
+	}
+	return gradientPaint(paint, defs);
+}
+
+/** All gradient kinds share the existing stop, color and alpha serialization. */
+function gradientPaint(
+	paint: VisioLinearGradient | VisioRadialGradient,
+	defs: SVGDefsElement,
+	normalized = false,
+	rotation?: number,
+): string {
+	const gradient = svgElement(paint.type === 'radial' ? 'radialGradient' : 'linearGradient');
 	gradient.id = `visio-fill-${++gradientId}`;
-	gradient.setAttribute('gradientUnits', 'userSpaceOnUse');
-	gradient.setAttribute('x1', String(paint.start[0]));
-	gradient.setAttribute('y1', String(paint.start[1]));
-	gradient.setAttribute('x2', String(paint.end[0]));
-	gradient.setAttribute('y2', String(paint.end[1]));
+	if (paint.type === 'radial') {
+		gradient.setAttribute('gradientUnits', 'objectBoundingBox');
+		gradient.setAttribute('cx', String(paint.center[0]));
+		gradient.setAttribute('cy', String(paint.center[1]));
+		gradient.setAttribute('r', String(paint.radius));
+	} else {
+		gradient.setAttribute('gradientUnits', normalized ? 'objectBoundingBox' : 'userSpaceOnUse');
+		gradient.setAttribute('x1', String(paint.start[0]));
+		gradient.setAttribute('y1', String(paint.start[1]));
+		gradient.setAttribute('x2', String(paint.end[0]));
+		gradient.setAttribute('y2', String(paint.end[1]));
+		if (rotation !== undefined)
+			gradient.setAttribute('gradientTransform', `rotate(${rotation} 0.5 0.5)`);
+	}
 	for (const color of paint.stops) {
 		const stop = svgElement('stop');
 		stop.setAttribute('offset', String(color.offset));

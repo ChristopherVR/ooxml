@@ -37,6 +37,7 @@ describe('parseChartTitleStyle', () => {
 								'@_b': '1',
 								'a:solidFill': { 'a:srgbClr': { '@_val': 'FF0000' } },
 								'a:latin': { '@_typeface': '+mn-lt' },
+								'a:ea': { '@_typeface': 'Malgun Gothic' },
 							},
 						},
 						'a:r': { 'a:t': 'Revenue' },
@@ -52,6 +53,7 @@ describe('parseChartTitleStyle', () => {
 		).toStrictEqual({
 			titleSpPr: { fillColor: '#334455' },
 			titleFontFamily: 'Calibri',
+			titleEastAsiaFontFamily: 'Malgun Gothic',
 			titleFontSize: 18,
 			titleFontBold: true,
 			titleFontColor: '#FF0000',

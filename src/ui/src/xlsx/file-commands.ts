@@ -44,9 +44,16 @@ export function blobFor(bytes: Uint8Array, fileName: string): Blob {
 }
 
 /** Starts a browser download of `bytes` named `fileName`. */
-export function downloadBytes(doc: Document, bytes: Uint8Array, fileName: string): void {
+export function downloadBytes(
+	doc: Document,
+	bytes: Uint8Array,
+	fileName: string,
+	mime?: string,
+): void {
 	if (typeof URL.createObjectURL !== 'function') return;
-	const url = URL.createObjectURL(blobFor(bytes, fileName));
+	const url = URL.createObjectURL(
+		mime ? new Blob([new Uint8Array(bytes)], { type: mime }) : blobFor(bytes, fileName),
+	);
 	const anchor = doc.createElement('a');
 	anchor.href = url;
 	anchor.download = fileName;

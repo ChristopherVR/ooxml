@@ -8,6 +8,22 @@
 	color: var(--office-foreground);
 	background: var(--office-background);
 }
+:host([data-office-theme='dark']) {
+	--office-background: var(--office-teams-panel);
+	--office-surface: var(--office-teams-bubble);
+	--office-popover: var(--office-teams-panel);
+}
+:host([data-chat-density='compact']) {
+	--office-teams-message-gap: var(--office-space-1);
+	--office-teams-message-padding: var(--office-space-1) var(--office-space-2);
+}
+@media (prefers-color-scheme: dark) {
+	:host(:not([data-office-theme='light'])) {
+		--office-background: var(--office-teams-panel);
+		--office-surface: var(--office-teams-bubble);
+		--office-popover: var(--office-teams-panel);
+	}
+}
 *,
 *::before,
 *::after {
@@ -115,34 +131,8 @@ button {
 	align-items: center;
 	gap: var(--office-space-3);
 }
-.me select {
-	padding: var(--office-space-1) var(--office-space-2);
-	border: var(--office-border-width) solid var(--office-teams-divider);
-	border-radius: var(--office-radius);
-	background: var(--office-background);
-	color: inherit;
-	font: inherit;
-}
-.link {
-	border: 0;
-	background: transparent;
-	text-decoration: underline;
-	color: var(--office-teams-brand);
-}
-.conn {
-	width: 0.7em;
-	height: 0.7em;
-	border-radius: 50%;
-	background: var(--office-presence-offline);
-}
-.conn[data-status='connected'] {
-	background: var(--office-presence-available);
-}
-.conn[data-status='connecting'] {
-	background: var(--office-presence-away);
-}
-.conn[data-status='error'] {
-	background: var(--office-presence-busy);
+.me office-ui-menu-button::part(caret) {
+	display: none;
 }
 
 /* ---- body ------------------------------------------------------------------------------- */
@@ -167,6 +157,14 @@ button {
 	flex-direction: column;
 	min-width: 0;
 	min-height: 0;
+}
+.popout-view {
+	display: flex;
+	height: 100%;
+	min-height: 0;
+}
+.popout-view teams-content-preview {
+	flex: 1;
 }
 .main office-ui-chat-list,
 .main office-ui-prejoin {
@@ -210,6 +208,21 @@ ul.plain li > :first-child:not(office-ui-avatar) {
 	gap: var(--office-space-4);
 	padding: var(--office-space-2) var(--office-space-5);
 	border-bottom: var(--office-border-width) solid var(--office-teams-divider);
+}
+.channel-head > button:not(.meet),
+.thread-head button {
+	padding: var(--office-space-2) var(--office-space-3);
+	border: var(--office-border-width) solid var(--office-teams-divider);
+	border-radius: var(--office-radius-md);
+	background: var(--office-background);
+}
+.channel-head > button:hover:not(:disabled),
+.thread-head button:hover {
+	background: var(--office-selected);
+}
+.channel-head > button:disabled {
+	opacity: 0.5;
+	cursor: default;
 }
 .channel-head h1 {
 	margin: 0;

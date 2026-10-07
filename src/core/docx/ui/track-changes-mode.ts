@@ -67,6 +67,7 @@ function applyTrackedReplace(
 	transform: Transform,
 	{ from, to, slice }: Pick<ReplaceStep, 'from' | 'to' | 'slice'>,
 	author: string,
+	date: string,
 	nextRevisionId: () => string,
 ): TrackedChange {
 	const schema = transform.doc.type.schema;
@@ -87,7 +88,7 @@ function applyTrackedReplace(
 			transform.addMark(
 				segment.from,
 				segment.to,
-				expectDefined(schema.marks.deletion, 'deletion mark').create({ author, id }),
+				expectDefined(schema.marks.deletion, 'deletion mark').create({ author, date, id }),
 			);
 		}
 	}
@@ -95,7 +96,11 @@ function applyTrackedReplace(
 		const id = nextRevisionId();
 		change.insertionId = id;
 		change.insertedText = slice.content.textBetween(0, slice.content.size, '\n');
-		const mark = expectDefined(schema.marks.insertion, 'insertion mark').create({ author, id });
+		const mark = expectDefined(schema.marks.insertion, 'insertion mark').create({
+			author,
+			date,
+			id,
+		});
 		transform.replace(
 			insertAt,
 			insertAt,
@@ -183,6 +188,7 @@ export function trackChangesPlugin(
 			const steps = relevant.flatMap((tr) => tr.steps);
 			if (!steps.length || !steps.every((step) => step instanceof ReplaceStep)) return null;
 			const author = getAuthor() || 'Author';
+			const date = new Date(Date.now()).toISOString();
 			const transform = new Transform(oldState.doc);
 			// Each step's positions refer to the document after the earlier untracked steps; map them
 			// back to the original document, then forward through the tracked edits (which keep
@@ -194,8 +200,12 @@ export function trackChangesPlugin(
 				const from = transform.mapping.map(back.map(replace.from, 1), 1);
 				const to = Math.max(from, transform.mapping.map(back.map(replace.to, -1), -1));
 				untracked.appendMap(replace.getMap());
-				return applyTrackedReplace(transform, { from, to, slice: replace.slice }, author, () =>
-					idGenerator('revision'),
+				return applyTrackedReplace(
+					transform,
+					{ from, to, slice: replace.slice },
+					author,
+					date,
+					() => idGenerator('revision'),
 				);
 			});
 			if (!transform.docChanged) return null;

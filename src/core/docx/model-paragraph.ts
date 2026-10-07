@@ -14,6 +14,8 @@ export interface Paragraph {
 	/** Stable identity across edits, unique throughout the document. */
 	id: string;
 	runs: TextRun[];
+	/** Complete XML basis restored by paragraph-format rejection; known edits overlay it. */
+	restoredParagraphPropertiesXml?: string;
 	align?: 'left' | 'center' | 'right' | 'justify';
 	/**
 	 * The exact `w:jc` value read from the file (`start`, `end`, `distribute`, kashida variants...).
@@ -42,7 +44,7 @@ export interface Paragraph {
 	pageBreakBefore?: boolean;
 	/** Tracked insertion/deletion of the paragraph mark itself (the paragraph break). */
 	markRevision?: Revision;
-	/** Marks that `w:pPrChange` recorded a prior paragraph formatting snapshot; the snapshot itself is not modeled. */
+	/** Tracked paragraph formatting, including the prior `w:pPr` XML snapshot. */
 	formatRevision?: Revision;
 	/** Custom tab stops (`w:tabs`), in document order. */
 	tabStops?: TabStop[];

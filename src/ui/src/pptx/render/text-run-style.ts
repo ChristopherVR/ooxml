@@ -31,7 +31,7 @@ import { scaleFontSizeForAutoFit } from './text-style-helpers';
 export type RunStyle = Record<string, string | number>;
 
 /** Super/subscript glyphs render at ~65% of the run font size (matches React). */
-const BASELINE_FONT_SCALE = 0.65;
+export const BASELINE_FONT_SCALE = 0.65;
 
 /**
  * Combine the authored `a:rPr/@spc` character spacing with the measured

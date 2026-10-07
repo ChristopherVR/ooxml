@@ -59,7 +59,12 @@ import { xml, opc } from 'ooxml-core'; // or by namespace (shared building block
 Legacy binary formats (`.doc`, `.xls`, `.ppt`) and the compound-file container live in the sibling package [`ole2`](https://github.com/ChristopherVR/ole2); this package never contains binary codecs, and `ole2` never contains modern OOXML.
 
 The `chart` subpath provides shared chart data calculations (regression, quartiles,
-blank values and stacked series). The `text` subpath provides script-category
+blank values and stacked series), plus Office's 17 Change Colors palettes through
+`CHART_COLOR_PALETTES` and `chartPaletteColors(palette, seriesCount, scheme)`.
+Palette interpolation reuses the shared DrawingML color resolver. Native Excel
+comparisons expose remaining one-channel-step rounding differences for some
+themes and large series counts; this is not a claim of exact color parity.
+The `text` subpath provides script-category
 segmentation primitives. These areas are DOM-free and do not import a product model.
 SVG curve flattening is available from `geometry`. See the
 [PowerPoint reuse audit](../../docs/pptx-shared-logic-audit.md) for extraction evidence

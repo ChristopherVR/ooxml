@@ -163,6 +163,7 @@ export function renderChartPrimitiveSvg(doc: Document, prim: SvgPrimitive): SVGE
 				points: prim.points,
 				stroke: prim.stroke,
 				'stroke-width': prim.strokeWidth,
+				'stroke-dasharray': prim.dashArray,
 				fill: prim.fill,
 				opacity: prim.opacity ?? 1,
 			});
@@ -176,6 +177,8 @@ export function renderChartPrimitiveSvg(doc: Document, prim: SvgPrimitive): SVGE
 				cy: prim.cy,
 				r: prim.r,
 				fill: prim.fill,
+				stroke: prim.stroke,
+				'stroke-width': prim.strokeWidth,
 				opacity: prim.opacity ?? 1,
 			});
 			appendTitle(doc, el, prim.title);

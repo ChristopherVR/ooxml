@@ -20,11 +20,12 @@ test('channel website tabs synchronize while selection and open copies stay loca
 		.click();
 	await expect(peer.getByRole('heading', { name: '# Project' })).toBeVisible();
 	await page.getByRole('button', { name: 'Add tab', exact: true }).click();
+	await page.getByRole('button', { name: 'Choose Website', exact: true }).click();
 	await page.getByRole('textbox', { name: 'Tab name', exact: true }).fill('Project site');
 	await page
 		.getByRole('textbox', { name: 'Tab website URL', exact: true })
 		.fill('https://example.com/project');
-	await page.getByRole('button', { name: 'Add website tab', exact: true }).click();
+	await page.getByRole('button', { name: 'Save', exact: true }).click();
 	await expect(page.getByRole('tab', { name: 'Project site', exact: true })).toHaveAttribute(
 		'aria-selected',
 		'true',

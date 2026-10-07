@@ -259,6 +259,11 @@ describe('cellTdStyle', () => {
 		const style = cellTdStyle(cell);
 		expect(style['background-color']).toBe('#FF0000');
 	});
+
+	it('takes half of the border width out of the cell padding', () => {
+		const cell: PptxTableCell = { text: '42', style: { marginRight: 6, borderRightWidth: 2 } };
+		expect(cellTdStyle(cell)['padding-right']).toBe('5px');
+	});
 });
 
 // ==========================================================================
@@ -685,6 +690,14 @@ describe('buildCellParagraphs', () => {
 		expect(paras).toHaveLength(2);
 		expect(paras[0][1].isLineBreak).toBeTruthy();
 		expect(paras[1][0].text).toBe('b');
+	});
+
+	it('lowers and shrinks a subscript run', () => {
+		const sub = { text: '2', fontSize: 10, baseline: -25000 };
+		const cell: PptxTableCell = { text: 'CO2', textRuns: [{ text: 'CO', fontSize: 10 }, sub] };
+		const run = buildCellParagraphs(cell)[0][1];
+		expect(run.style['font-size']).toBe('6.5pt');
+		expect(run.style['vertical-align']).toBe('sub');
 	});
 
 	it('cell with paragraph break (newline in text) produces two paragraphs', () => {

@@ -8,6 +8,13 @@ import { ligatureStyle } from './ligature-style.js';
  * so the writer never strips them from the source XML).
  */
 export const extraRunFields = [
+	'restoredRunPropertiesXml',
+	'formatRevision',
+	'fontFamilyEastAsia',
+	'fontFamilyComplexScript',
+	'fontSizeComplexScript',
+	'boldComplexScript',
+	'italicComplexScript',
 	'caps',
 	'smallCaps',
 	'doubleStrike',
@@ -33,13 +40,14 @@ export const explicitOffFields = ['bold', 'italic', 'strike', 'underline'] as co
 
 export type ExtraRunProperties = Pick<
 	TextRun,
-	(typeof extraRunFields)[number] | (typeof explicitOffFields)[number]
+	(typeof extraRunFields)[number] | (typeof explicitOffFields)[number] | 'revision'
 >;
 
 export function extraRunProperties(run: TextRun): ExtraRunProperties | undefined {
 	const extra: Record<string, unknown> = {};
 	for (const field of extraRunFields) if (run[field] !== undefined) extra[field] = run[field];
 	for (const field of explicitOffFields) if (run[field] === false) extra[field] = false;
+	if (run.revision?.kind === 'formatChange') extra.revision = run.revision;
 	return Object.keys(extra).length ? (extra as ExtraRunProperties) : undefined;
 }
 
@@ -92,12 +100,26 @@ export const runPropertiesMark: MarkSpec = {
 	],
 	toDOM: (mark) => {
 		const props = (mark.attrs.props ?? {}) as ExtraRunProperties;
+		const revision = props.formatRevision ?? props.revision;
 		const style = extraRunStyle(props);
 		return [
 			'span',
 			{
 				'data-run-props': JSON.stringify(props),
-				...(props.vanish ? { class: 'dve-hidden-text' } : {}),
+				...(props.vanish || revision
+					? {
+							class: [props.vanish ? 'dve-hidden-text' : '', revision ? 'dve-revision-format' : '']
+								.filter(Boolean)
+								.join(' '),
+						}
+					: {}),
+				...(revision
+					? {
+							'data-revision-id': revision.id,
+							'data-author': revision.author,
+							...(revision.date ? { 'data-date': revision.date } : {}),
+						}
+					: {}),
 				...(style ? { style } : {}),
 			},
 			0,

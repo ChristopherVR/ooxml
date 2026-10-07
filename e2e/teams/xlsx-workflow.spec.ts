@@ -64,6 +64,7 @@ test('pins a workbook, edits a cell, saves a new channel copy, and opens the sav
 		});
 	});
 	await page.getByRole('tab', { name: 'Shared', exact: true }).click();
+	await page.getByRole('button', { name: 'More actions for Budget.xlsx', exact: true }).click();
 	await page.getByRole('button', { name: 'Pin as tab' }).click();
 	await expect(page.getByRole('tab', { name: 'Budget.xlsx' })).toHaveAttribute(
 		'aria-selected',

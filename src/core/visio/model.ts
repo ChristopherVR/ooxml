@@ -24,10 +24,38 @@ export interface VisioLinearGradient {
 	end: readonly [number, number];
 	stops: { offset: number; color: string; opacity: number }[];
 }
+export interface VisioRadialGradient {
+	type: 'radial';
+	/** Normalized local y-up object-bounding-box coordinates. */
+	center: readonly [number, number];
+	radius: number;
+	stops: VisioLinearGradient['stops'];
+}
+export interface VisioGradientRegion {
+	/** Normalized local y-up triangle vertices; endpoints use each triangle's bounding box. */
+	points: readonly (readonly [number, number])[];
+	start: readonly [number, number];
+	end: readonly [number, number];
+	/** Native clockwise SVG rotation in degrees, retained for exact rasterization. */
+	angle: number;
+}
+export interface VisioRegionGradient {
+	type: 'regions';
+	regions: VisioGradientRegion[];
+	stops: VisioLinearGradient['stops'];
+}
+export type VisioFillGradient = VisioLinearGradient | VisioRadialGradient | VisioRegionGradient;
+export interface VisioFillPattern extends VisioImage {
+	/** Physical tile dimensions in local inches; bytes encode a normalized 8-by-8 PNG. */
+	width: number;
+	height: number;
+	bytes: Uint8Array;
+}
 export interface VisioStyle {
 	fill: string;
 	/** Supported normalized gradient; fill remains the solid fallback color. */
-	fillGradient?: VisioLinearGradient;
+	fillGradient?: VisioFillGradient;
+	fillPattern?: VisioFillPattern;
 	lineColor: string;
 	lineWidth: number;
 	/** Normalized SVG-compatible cap; absent means the effective cap is unresolved. */

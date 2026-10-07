@@ -1161,7 +1161,7 @@
 					"name": "OfficeUiGallery",
 					"tagName": "office-ui-gallery",
 					"customElement": true,
-					"description": "`<office-ui-gallery>`: Office's ribbon gallery (Shape Styles, Themes, Table Styles). Set `state` (`OfficeGalleryState`, translated). `mode=\"inline\"` shows a strip of tiles beside a More button; otherwise the trigger is a labelled dropdown (`chevron-only` keeps just the chevron, `icon` names its glyph). The popup opens below the trigger, keeps inside the window and closes on Escape, an outside press or a pick. `mode=\"panel\"` shows labelled sections directly for modal pickers, with arrow/Home/End selection and no dropdown trigger. ArrowDown on the trigger opens it and focuses the first tile. A pick emits `office-gallery-pick` `{ gallery, itemId }`. Tiles render in the light DOM beside the host's children (Lit renders the template into the host itself) so products can query them (`data-gallery-item`); the rules join the host's root once. Static `pickEvent`, `triggerAttribute`, `popupAttribute`, `itemAttribute` and `compactAttribute` keep a product's published names; override `triggerIcon()` to draw a product glyph.",
+					"description": "`<office-ui-gallery>`: Office's ribbon gallery (Shape Styles, Themes, Table Styles). Set `state` (`OfficeGalleryState`, translated). `mode=\"inline\"` shows a strip of tiles beside a More button; otherwise the trigger is a labelled dropdown (`chevron-only` keeps just the chevron, `icon` names its glyph). The popup opens below the trigger, keeps inside the window and closes on Escape, an outside press or a pick. `mode=\"panel\"` shows labelled sections directly for modal pickers, with arrow/Home/End selection and no dropdown trigger. ArrowDown on the trigger opens it and focuses the first tile. Dropdown arrows/Home/End move focus across sections without applying a choice. A pick emits `office-gallery-pick` `{ gallery, itemId }`. Tiles render in the light DOM beside the host's children (Lit renders the template into the host itself) so products can query them (`data-gallery-item`); the rules join the host's root once. Static `pickEvent`, `triggerAttribute`, `popupAttribute`, `itemAttribute` and `compactAttribute` keep a product's published names; override `triggerIcon()` to draw a product glyph.",
 					"attributes": [
 						{
 							"name": "chevron-only"
@@ -2418,7 +2418,7 @@
 					"name": "OfficeUiSmartArt",
 					"tagName": "office-ui-smartart",
 					"customElement": true,
-					"description": "`<office-ui-smartart>` draws the cached drawing of a SmartArt diagram (core `DiagramDrawing`, from `ooxml-core/diagram`) as SVG. Set `drawing` (and optionally `schemeColors`, resolved theme colours such as `{ accent1: '#4472c4' }`); `label` becomes the accessible name (`role=\"img\"`). It never re-lays-out a diagram: it shows what the producing application last computed. Approximations (preset outlines drawn as rectangles, gradient and pattern fills, 3D) are reported honestly in the `office-smartart-render` event detail and in `data-approximated` attributes, never hidden.",
+					"description": "`<office-ui-smartart>` draws the cached drawing of a SmartArt diagram (core `DiagramDrawing`, from `ooxml-core/diagram`) as SVG. Set `drawing` (and optionally `schemeColors`, resolved theme colours such as `{ accent1: '#4472c4' }`, and `schemeFonts`, the theme's `major`/`minor` Latin typefaces); `label` becomes the accessible name (`role=\"img\"`). It never re-lays-out a diagram: it shows what the producing application last computed. Approximations (preset outlines drawn as rectangles, gradient and pattern fills, 3D) are reported honestly in the `office-smartart-render` event detail and in `data-approximated` attributes, never hidden.",
 					"attributes": [
 						{
 							"name": "label"
@@ -2439,6 +2439,10 @@
 						{
 							"kind": "field",
 							"name": "schemeColors"
+						},
+						{
+							"kind": "field",
+							"name": "schemeFonts"
 						}
 					],
 					"events": [
