@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from 'vitest';
-import { createWorkerEditor, type EditWorkerLike } from './worker-editor.js';
+import { createWorkerEditor, type EditWorkerLike } from './worker-editor';
 import { demoDocument } from 'ooxml-core/visio/ui';
 const command = { type: 'replace-plain-text' as const, pageId: '1', shapeId: '1', text: 'new' };
 const fake = (): EditWorkerLike => ({

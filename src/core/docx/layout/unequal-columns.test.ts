@@ -27,6 +27,48 @@ const paragraph = (text: string, extra: Partial<LayoutParagraph> = {}): LayoutPa
 	...extra,
 });
 describe('unequal columns', () => {
+	it.each([false, true])(
+		'balances wrapped text before a continuous break (reverse widths: %s)',
+		(reverse) => {
+			const words = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
+			const unequal = reverse
+				? {
+						...columns,
+						widths: [
+							{ widthPx: 200, gapPx: 20 },
+							{ widthPx: 100, gapPx: 0 },
+						],
+					}
+				: columns;
+			const tallPage = { ...page, heightPx: 120 };
+			const result = layoutSections(
+				{
+					sections: [
+						{ page: tallPage, columns: unequal, blocks: [paragraph(words.join(' '))] },
+						{ page: tallPage, break: 'continuous', blocks: [paragraph('After', { id: 'after' })] },
+					],
+				},
+				measure,
+			);
+			expect(result.pages).toHaveLength(1);
+			const sheet = result.pages[0]!;
+			const source = sheet.columns
+				.slice(0, 2)
+				.flatMap((column) =>
+					column.blocks.flatMap((block) => (block.kind === 'paragraph' ? block.lines : [])),
+				);
+			expect(
+				source
+					.map((line) => line.fragments.map((fragment) => fragment.text).join(''))
+					.join(' ')
+					.split(/\s+/),
+			).toEqual(words);
+			expect(sheet.columns[2]!.blocks[0]!.yPx).toBe(60);
+			expect(sheet.columns[0]!.widthPx).toBe(reverse ? 200 : 100);
+			expect(sheet.columns[1]!.widthPx).toBe(reverse ? 100 : 200);
+			expect(result.approximations).toEqual([]);
+		},
+	);
 	it('reflows split auto-width table cells without repeating consumed text', () => {
 		const words = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
 		const result = layoutSections(

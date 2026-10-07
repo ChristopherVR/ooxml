@@ -1,6 +1,6 @@
 <script lang="ts">
   import { readonly, writable } from 'svelte/store';
-  import { mountFrameworkViewer, viewerHandle, viewerOptions, viewerStateSource, type ViewerState, type MountedViewer, type ViewerProps, type VsdxSource, type VisioEdit, type SvgExportOptions, type CurrentPagePrintSnapshotOptions } from './common.js';
+  import { mountFrameworkViewer, viewerHandle, viewerOptions, viewerStateSource, type ViewerState, type MountedViewer, type ViewerProps, type VsdxSource, type VisioEdit, type SvgExportOptions, type CurrentPagePrintSnapshotOptions } from './common';
   type Props = ViewerProps & { class?: string; style?: string };
   let { document, pageIndex, zoom, showToolbar, events, class: className, style }: Props = $props();
   const options = $derived({ document, pageIndex, zoom, showToolbar, events } satisfies Required<ViewerProps>);

@@ -31,7 +31,7 @@ test('cancels pending uploads, ignores late completion and retries with file pro
 		.locator('teams-app')
 		.evaluate((element) => (element as TeamsApp).client!.createChannel('Transfers'));
 	await expect(page.getByRole('heading', { name: '# Transfers' })).toBeVisible();
-	await page.getByRole('tab', { name: 'Files', exact: true }).click();
+	await page.getByRole('tab', { name: 'Shared', exact: true }).click();
 	await page.getByLabel('Upload files', { exact: true }).setInputFiles([
 		{ name: 'Budget.xlsx', mimeType: 'application/octet-stream', buffer: Buffer.from('workbook') },
 		{ name: 'Notes.md', mimeType: 'text/markdown', buffer: Buffer.from('# Notes') },
@@ -48,7 +48,7 @@ test('cancels pending uploads, ignores late completion and retries with file pro
 			return transfers[0]!.signal?.aborted;
 		}),
 	).toBe(true);
-	await expect(page.getByRole('button', { name: 'Open', exact: true })).toHaveCount(0);
+	await expect(page.getByRole('button', { name: /^Open / })).toHaveCount(0);
 	await page.getByRole('button', { name: 'Retry sharing files', exact: true }).click();
 	await expect
 		.poll(() =>
@@ -71,7 +71,8 @@ test('cancels pending uploads, ignores late completion and retries with file pro
 	await page.evaluate(() =>
 		(window as unknown as { transfers: { finish: () => void }[] }).transfers[2]!.finish(),
 	);
-	await expect(page.getByRole('button', { name: 'Open', exact: true })).toHaveCount(2);
+	await expect(page.getByRole('button', { name: /^Open / })).toHaveCount(2);
+	await page.getByRole('button', { name: '+ New', exact: true }).click();
 	await page.getByRole('button', { name: 'New Excel workbook', exact: true }).click();
 	await page.getByRole('textbox', { name: 'Workbook name', exact: true }).fill('Canceled budget');
 	await page.getByRole('button', { name: 'Create workbook', exact: true }).click();
@@ -90,7 +91,7 @@ test('cancels pending uploads, ignores late completion and retries with file pro
 			return pending.signal?.aborted;
 		}),
 	).toBe(true);
-	await page.getByRole('tab', { name: 'Files', exact: true }).click();
-	await expect(page.getByRole('button', { name: 'Open', exact: true })).toHaveCount(2);
+	await page.getByRole('tab', { name: 'Shared', exact: true }).click();
+	await expect(page.getByRole('button', { name: /^Open / })).toHaveCount(2);
 	await expect(page.getByRole('button', { name: 'Close preview', exact: true })).toHaveCount(0);
 });

@@ -1,9 +1,9 @@
 import { beforeEach, expect, it, vi } from 'vitest';
-import { current, emit, mocks, reset } from './mock-binding.js';
+import { current, emit, mocks, reset } from './mock-binding';
 import { act, createElement, createRef, StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { VisioViewer } from '../src/react.js';
-import type { ViewerHandle } from '../src/common.js';
+import { VisioViewer } from '../src/react';
+import type { ViewerHandle } from '../src/common';
 beforeEach(reset);
 it('React StrictMode mounts safely, updates all props and latest callbacks, and invalidates retained handles', async () => {
 	const host = document.createElement('div');

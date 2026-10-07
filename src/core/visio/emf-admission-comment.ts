@@ -1,4 +1,4 @@
-import { type EmfAdmissionContext as Context } from './emf-admission-context.js';
+import { type EmfAdmissionContext as Context } from './emf-admission-context';
 
 /** Original-equivalent WMF comments only: GdiComment documents checksum and placement.
  * https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-gdicomment

@@ -2,12 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import JSZip from 'jszip';
-import { editVsdx } from './edit.js';
-import { evaluateVisioFormula } from './formula.js';
-import { cell, fixture, shape } from './test-fixtures.js';
-import { VisioPackage } from './package.js';
-import { indexedPart, related, visioXml } from './parts.js';
-import { attribute, children } from './sheet.js';
+import { editVsdx } from './edit';
+import { evaluateVisioFormula } from './formula';
+import { cell, fixture, shape } from './test-fixtures';
+import { VisioPackage } from './package';
+import { indexedPart, related, visioXml } from './parts';
+import { attribute, children } from './sheet';
 import evidence from './__fixtures__/page-formulas-native.json';
 
 const user = (name: string, value: number, formula: string) =>

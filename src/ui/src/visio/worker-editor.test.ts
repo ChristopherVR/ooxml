@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from 'vitest';
-import { createWorkerEditor, type EditWorkerLike } from './worker-editor.js';
+import { createWorkerEditor, type EditWorkerLike } from './worker-editor';
 import { demoDocument } from 'ooxml-core/visio/ui';
 function fake(): EditWorkerLike {
 	return { onmessage: null, onerror: null, postMessage: vi.fn(), terminate: vi.fn() };

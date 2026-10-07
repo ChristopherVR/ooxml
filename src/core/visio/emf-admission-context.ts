@@ -6,7 +6,7 @@ import {
 	type VisioEmfAdmissionHeader,
 	type VisioEmfAdmissionMetrics,
 	type VisioEmfDiagnosticCode,
-} from './emf-admission-types.js';
+} from './emf-admission-types';
 
 export interface EmfState {
 	mapMode: number;

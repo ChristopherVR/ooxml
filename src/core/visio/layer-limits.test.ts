@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import { parseXml } from '../xml/index.js';
-import { parseVsdx } from './index.js';
-import { createLayerBudget, indexLayers, pageLayers, shapeLayers } from './layers.js';
-import type { VisioLayer } from './model.js';
-import { readSheet, type Sheet } from './sheet.js';
-import { cell, fixture, row, section, shape, xml } from './test-fixtures.js';
+import { parseXml } from '../xml/index';
+import { parseVsdx } from './index';
+import { createLayerBudget, indexLayers, pageLayers, shapeLayers } from './layers';
+import type { VisioLayer } from './model';
+import { readSheet, type Sheet } from './sheet';
+import { cell, fixture, row, section, shape, xml } from './test-fixtures';
 
 const resources = { colors: new Map<string, string>(), fonts: new Map<string, string>() };
 const layer = (id: string, visible = true): VisioLayer => ({
@@ -118,7 +118,7 @@ describe('Visio bounded cached layer membership', () => {
 			'Layer membership character budget exceeded.',
 		);
 	});
-	it('retains hidden status and emits missing/color diagnostics once for mixed membership', () => {
+	it('retains hidden status and emits missing diagnostics once for mixed membership', () => {
 		const report = vi.fn();
 		const index = indexLayers([
 			{ ...layer('0'), color: '#ff0000' },
@@ -126,10 +126,7 @@ describe('Visio bounded cached layer membership', () => {
 			{ ...layer('2'), color: '#00ff00' },
 		]);
 		expect(shapeLayers(sheet('0;1;2;3;4;0'), index, report).hidden).toBe(true);
-		expect(report.mock.calls.map(([code]) => code)).toEqual([
-			'missing-layer',
-			'unsupported-layer-color',
-		]);
+		expect(report.mock.calls.map(([code]) => code)).toEqual(['missing-layer']);
 	});
 	it.each(['Name', 'NameUniv'])('bounds %s even for a constructed Sheet', (name) => {
 		const source = readSheet(

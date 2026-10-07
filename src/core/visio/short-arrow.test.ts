@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { layoutVisioFilledArrowLine, visioFilledArrow } from './filled-arrow.js';
+import { layoutVisioFilledArrowLine, visioFilledArrow } from './filled-arrow';
 import evidence from './__fixtures__/short-arrows-native.json';
 
 describe('native short one-ended arrow stems', () => {

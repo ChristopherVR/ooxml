@@ -1,5 +1,5 @@
-import { normalizedNurbs, type NurbsControl } from './nurbs.js';
-import { number, type Row, type Report } from './sheet.js';
+import { normalizedNurbs, type NurbsControl } from './nurbs';
+import { number, type Row, type Report } from './sheet';
 
 // Microsoft defines one cached control point per row, with implicit unit weights:
 // https://learn.microsoft.com/en-us/office/client-developer/visio/splinestart-row-geometry-section

@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
 	inspectVisioEmfAdmission as inspect,
 	type VisioEmfAdmissionOptions,
-} from './emf-admission.js';
-import { emf, record, setWord } from './emf-admission.test-fixtures.js';
+} from './emf-admission';
+import { emf, record, setWord } from './emf-admission.test-fixtures';
 const rect = record(43, [0, 0, 10, 10]);
 const mapping = [record(17, [8]), record(9, [1, 1]), record(11, [2, 2])];
 const codes = (bytes: Uint8Array) => inspect(bytes).diagnostics.map((d) => d.code);

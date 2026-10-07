@@ -3,8 +3,8 @@ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { parseVsdx } from 'ooxml-core/visio';
 import { demoDocument } from 'ooxml-core/visio/ui';
-import { renderPage } from './render-svg.js';
-import { exportPageSvg } from './export-svg.js';
+import { renderPage } from './render-svg';
+import { exportPageSvg } from './export-svg';
 
 describe('filled native straight-line markers', () => {
 	it.each([2, 4, 5, 6])('uses native asymmetric begin/end setback for code %s', (code) => {

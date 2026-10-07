@@ -1,5 +1,5 @@
-import { textGroups } from './ribbon-home-format.js';
-import { command, commandRow, group, menu, stack, type CommandSpec } from './ribbon-parts.js';
+import { textGroups } from './ribbon-home-format';
+import { command, commandRow, group, menu, stack, type CommandSpec } from './ribbon-parts';
 
 const TEXT = 'Needs core text formatting edits.';
 const STYLE = 'Needs core fill, line and effect edits.';

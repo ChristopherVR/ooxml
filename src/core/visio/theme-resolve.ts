@@ -6,9 +6,9 @@
  * https://learn.microsoft.com/en-us/openspecs/sharepoint_protocols/ms-vsdx/25689058-b1e7-4d3c-a833-0a4c7180f5f2
  * https://learn.microsoft.com/en-us/openspecs/sharepoint_protocols/ms-vsdx/550dd5fb-2388-41c9-867d-3a8af03c94b8
  */
-import type { Cells, Report, Sheet } from './sheet.js';
-import type { VisioTheme } from './theme.js';
-import { colorChoice, drawingColor, integer, themeChild, THEME_NS } from './theme-color.js';
+import type { Cells, Report, Sheet } from './sheet';
+import type { VisioTheme } from './theme';
+import { colorChoice, drawingColor, integer, themeChild, THEME_NS } from './theme-color';
 
 export interface ThemeResources {
 	themes?: VisioTheme[];

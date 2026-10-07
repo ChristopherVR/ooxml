@@ -1,8 +1,8 @@
-import { attribute, children } from './sheet.js';
-import { fail } from './package-common.js';
-import type { VisioPackage } from './package.js';
-import { editableVisioPageRoots } from './edit-page-roots.js';
-import { mapVisioFormulaSyntax as syntax, unquotedVisioFormula } from './formula-source.js';
+import { attribute, children } from './sheet';
+import { fail } from './package-common';
+import type { VisioPackage } from './package';
+import { editableVisioPageRoots } from './edit-page-roots';
+import { mapVisioFormulaSyntax as syntax, unquotedVisioFormula } from './formula-source';
 
 const escape = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 function localCell(node: Element): string | undefined {

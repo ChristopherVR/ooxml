@@ -98,6 +98,25 @@ editing disabled. Tests cover partitioned edits, imported threads, author undo,
 read-only peers and detached DOCX export, plus the review pane in six browser
 bindings. This does not implement M365 mentions, notifications or assigned tasks.
 
+The Track Changes recording setting now uses document transactions, shares
+through Yjs, supports local undo/redo and exports `w:trackRevisions`. Recording
+and revision resolution live in core and use the caller's schema. Revision IDs
+reuse the client identity generator. Resolution separates legacy IDs by author,
+ignores stale ranges, blocks read-only writes and bypasses recording, as do
+undo/redo transactions. A two-peer partition/reject regression retains the other
+author's insertion. Browser review contracts pass in all six bindings.
+Formatting-change snapshots and paragraph-mark recording still need implementation
+and native reference evidence.
+
+Move names now reuse shared identity generation during editing, with numeric
+names assigned only on export. A fixed-clock regression covers 101 independent
+moves. Native Word opened the corrected core export, saved both linked moves
+and accepted or rejected the first without resolving the second. Moved-from runs now retain
+`w:t`; the earlier `w:delText` export caused Word to reject the package as corrupt.
+The four DOCX fixtures and native build/revision report are kept in
+`src/core/docx/__fixtures__/review-moves`. This is desktop-build interoperation
+evidence, with current M365 subscription validation still required.
+
 ## Next implementation sequence
 
 Continuous-section pagination now shares a physical page after a single-column
@@ -108,17 +127,30 @@ orientation changes still start a new page, matching native Word measurements.
 Print Layout limits column separators to their bands and retains per-section
 line numbering and section-page counts.
 
-Ten committed native DOCX references record paragraph page numbers and origins
+Fourteen committed native DOCX references record paragraph page numbers and origins
 from desktop Word `16.0.20430.20140`, with Arial 12 pt and exact line spacing.
 The installed licenses are 2021/2024, so this is explicit desktop Word evidence,
 not a current M365 subscription certification or a glyph/raster comparison.
-Equal-width paragraph columns now balance their final page before a continuous
+Equal and unequal-width paragraph columns now balance their final page before a continuous
 break, reusing the same paragraph flow, widow/orphan and keep-together rules.
 The native corpus verifies even and odd distributions, earlier-page overflow,
-and keep-with-next groups. Tables, unequal columns, floating pictures and
+keep-with-next groups and reversed unequal widths. Floating pictures and
 explicit breaks still report unsupported balancing. Vertical alignment changes
 and shared-page footnote cases also retain reported approximations. Floats
 relative to changed margins and remaining complex layouts need native references.
+
+Six additional native table references cover four, five and 120 exact-height
+kept rows, multiline splittable rows and repeated headers before a continuous
+break. The table flow now balances those rows on
+the final page and retains full capacity on earlier pages. Word's mandatory
+paragraph after the table adds its own line after balancing, unlike an empty
+break marker after ordinary text. Trial validation checks earlier columns so a
+kept row cannot silently overflow a reduced capacity. Core and six-framework
+browser tests compare every nonempty row and following paragraph origin.
+Native PDFs also establish header repeat counts in each column on both pages.
+Trials that cannot fit one table line make progress with a reported oversized-row
+fallback rather than looping. Complex row splits, nested tables and merged-cell
+layout still need broader reference coverage.
 
 Twelve additional native DOCX/PDF references cover visible headers, footers,
 PAGE and SECTIONPAGES values across shared section pages. Page-number restarts

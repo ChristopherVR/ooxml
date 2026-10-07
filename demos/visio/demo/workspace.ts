@@ -1,11 +1,11 @@
-import { compatibilityNotes, compatibilityText } from '../../../viewers/visio/src/index.js';
+import { compatibilityNotes, compatibilityText } from '../../../viewers/visio/src/index';
 import type { ViewerCallbacks } from 'ooxml-ui/visio';
 import type { MountedViewer } from 'ooxml-ui/visio';
 import type { VisioDocument } from 'ooxml-core/visio';
 import { demoDocument } from 'ooxml-core/visio/ui';
-import { sharedSampleBytes } from './shared-sample.js';
-import { wireWorkspaceShell } from './workspace-shell.js';
-import { wireWorkspaceTheme } from './workspace-theme.js';
+import { sharedSampleBytes } from './shared-sample';
+import { wireWorkspaceShell } from './workspace-shell';
+import { wireWorkspaceTheme } from './workspace-theme';
 
 /** What the workspace needs from a mounted viewer: any binding's handle provides it. */
 export type WorkspaceViewer = Pick<

@@ -1,6 +1,6 @@
-import type { VisioLinearGradient } from './model.js';
-import { number, sectionRows, type Cells, type Report, type Sheet } from './sheet.js';
-import { linearGradientEndpoints } from './theme-gradient.js';
+import type { VisioLinearGradient } from './model';
+import { number, sectionRows, type Cells, type Report, type Sheet } from './sheet';
+import { linearGradientEndpoints } from './theme-gradient';
 
 /**
  * Saved ShapeSheet gradients use radians and normalized [0,1] stop values.

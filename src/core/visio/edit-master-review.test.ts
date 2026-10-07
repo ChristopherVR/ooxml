@@ -1,10 +1,10 @@
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
-import { editVsdx } from './edit.js';
-import { analyzeVisioMasterFormula } from './formula-master.js';
-import { assertVisioMasterIndependence } from './edit-master-scope.js';
-import { VisioPackage } from './package.js';
-import { cell, fixture, rectangle, section, row, shape } from './test-fixtures.js';
+import { editVsdx } from './edit';
+import { analyzeVisioMasterFormula } from './formula-master';
+import { assertVisioMasterIndependence } from './edit-master-scope';
+import { VisioPackage } from './package';
+import { cell, fixture, rectangle, section, row, shape } from './test-fixtures';
 
 const dimensions = cell('PinX', 2) + cell('PinY', 3) + cell('Width', 2) + cell('Height', 1);
 const target = shape('1', dimensions + rectangle + '<Text>Local</Text>');

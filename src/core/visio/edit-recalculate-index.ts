@@ -1,7 +1,7 @@
-import { children, attribute } from './sheet.js';
-import { fail } from './package-common.js';
-import { parseVisioFormula, analyzeVisioFormula, type VisioFormulaValue } from './formula.js';
-import { executableCellFormula, inertDoubleClickFormula } from './cell-formula.js';
+import { children, attribute } from './sheet';
+import { fail } from './package-common';
+import { parseVisioFormula, analyzeVisioFormula, type VisioFormulaValue } from './formula';
+import { executableCellFormula, inertDoubleClickFormula } from './cell-formula';
 
 export interface VisioCellKey {
 	pageId: string;

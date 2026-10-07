@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
-import { linePattern } from './line-pattern.js';
-import { parseVsdx } from './parser.js';
-import type { Cells } from './sheet.js';
-import { cell, fixture, shape } from './test-fixtures.js';
-import { generatedTheme, themeFixture } from './theme-fixtures.js';
+import { linePattern } from './line-pattern';
+import { parseVsdx } from './parser';
+import type { Cells } from './sheet';
+import { cell, fixture, shape } from './test-fixtures';
+import { generatedTheme, themeFixture } from './theme-fixtures';
 
 const cells = (value: string): Cells => new Map([['LinePattern', { value }]]);
 const expected: [number, number[]][] = [

@@ -4,7 +4,7 @@ import {
 	type VisioForeignVectorClip,
 	type VisioForeignVectorClipPath,
 	type VisioForeignVectorNode,
-} from '../index.js';
+} from '../index';
 
 /** UI allocation limits, charged for every instance, including repeated shared resources. */
 export const FOREIGN_VECTOR_SCENE_LIMITS = Object.freeze({

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { taskPane, zoomPreset } from './ribbon.js';
+import { taskPane, zoomPreset } from './ribbon';
 
 test('closed Shapes window leaves a strip that reopens it', async ({ page }) => {
 	await page.setViewportSize({ width: 1440, height: 900 });

@@ -78,6 +78,8 @@ export const schema = new Schema({
 				marginLeft: { default: 96 },
 				/** Footnote/endnote number formats (`w:numFmt`), for reference labels. */
 				evenAndOddHeaders: { default: false },
+				/** Document-wide revision recording (`w:trackRevisions`). */
+				trackChanges: { default: false },
 				/** Page colour (`w:background`) as hex without `#`. */
 				pageColor: { default: null },
 				/** `w:autoHyphenation` from settings.xml. */

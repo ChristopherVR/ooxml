@@ -88,6 +88,12 @@ document.body.append(button);
 
 ## API: entries (ESM only)
 
+The shared `office-ui-gallery` also supports `mode="panel"` for modal pickers.
+It displays labelled preview tiles directly, keeps focus when a pick refreshes the
+selection, and supports arrow, Home and End keys. Panel mode has no dropdown
+trigger or popup; `open` remains false. XLSX uses this mode for chart types while
+PowerPoint continues to use the same component for ribbon galleries.
+
 | Entry               | Contents                                                                                                     |
 | ------------------- | ------------------------------------------------------------------------------------------------------------ |
 | `ooxml-ui`          | everything below plus `registerOfficeUi()` and `OFFICE_UI_TAGS`                                              |

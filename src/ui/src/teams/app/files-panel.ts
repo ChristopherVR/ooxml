@@ -20,6 +20,7 @@ export class TeamsFilesPanel extends LitElement {
 		canUpload: { type: Boolean },
 		query: { state: true },
 		creating: { state: true },
+		newMenu: { state: true },
 		busy: { state: true },
 		error: { state: true },
 		destination: { state: true },
@@ -33,6 +34,7 @@ export class TeamsFilesPanel extends LitElement {
 	declare canUpload: boolean;
 	declare query: string;
 	declare creating: boolean;
+	declare newMenu: boolean;
 	declare busy: boolean;
 	declare error: string;
 	declare destination: string;
@@ -50,6 +52,7 @@ export class TeamsFilesPanel extends LitElement {
 		this.canUpload = false;
 		this.query = '';
 		this.creating = false;
+		this.newMenu = false;
 		this.busy = false;
 		this.error = '';
 		this.destination = '';
@@ -139,7 +142,62 @@ export class TeamsFilesPanel extends LitElement {
 	protected override render() {
 		const files = filterFiles(this.files, this.query);
 		const disabled = this.busy || !this.canUpload || !this.channelId;
-		return html`<div class="toolbar">
+		return html`<div class="toolbar" role="toolbar" aria-label="File actions">
+				<div class="new-control">
+					<button
+						type="button"
+						class="primary"
+						?disabled=${disabled}
+						@click=${() => (this.newMenu = !this.newMenu)}
+						aria-expanded=${String(this.newMenu)}
+						aria-controls="new-options"
+					>
+						+ New
+					</button>
+					${
+						this.newMenu
+							? html`<div
+									id="new-options"
+									class="new-menu"
+									role="group"
+									aria-label="New file"
+									@keydown=${(event: KeyboardEvent) => {
+										if (event.key === 'Escape') {
+											this.newMenu = false;
+											this.renderRoot.querySelector<HTMLButtonElement>('.primary')?.focus();
+										}
+									}}
+								>
+									<button
+										type="button"
+										?disabled=${disabled}
+										@click=${() => {
+											this.newMenu = false;
+											this.creating = true;
+										}}
+									>
+										New Excel workbook
+									</button>
+								</div>`
+							: nothing
+					}
+				</div>
+				<button
+					type="button"
+					?disabled=${disabled}
+					@click=${() => this.renderRoot.querySelector<HTMLInputElement>('input[type="file"]')?.click()}
+				>
+					Upload
+				</button>
+				<input
+					type="file"
+					class="file-picker"
+					aria-label="Upload files"
+					multiple
+					?disabled=${disabled}
+					@change=${this.upload}
+				/>
+				<span class="toolbar-space"></span>
 				<input
 					type="search"
 					aria-label="Search files"
@@ -147,22 +205,6 @@ export class TeamsFilesPanel extends LitElement {
 					.value=${this.query}
 					@input=${(e: Event) => (this.query = (e.target as HTMLInputElement).value)}
 				/>
-				<label
-					>Upload files
-					<input
-						type="file"
-						aria-label="Upload files"
-						multiple
-						?disabled=${disabled}
-						@change=${this.upload}
-				/></label>
-				<button
-					type="button"
-					?disabled=${disabled}
-					@click=${() => (this.creating = !this.creating)}
-				>
-					New Excel workbook
-				</button>
 			</div>
 			<p class="hint">
 				${this.canUpload ? `New files are shared in # ${this.channelName}.` : 'Configure file storage to upload files or create workbooks.'}
@@ -211,36 +253,64 @@ export class TeamsFilesPanel extends LitElement {
 							</button>`
 					: nothing
 			}
-			<ul class="files">
-				${
-					files.length
-						? files.map(
-								(file) => html`<li>
-									<span class="badge" data-kind=${file.kind}
-										>${file.kind === 'other' ? 'F' : file.kind[0]!.toUpperCase()}</span
-									>
-									<span class="meta"
-										><strong>${file.name}</strong
-										><small
-											>${file.author} ·
-											${new Date(file.ts).toLocaleString()}${file.channelName ? ` · # ${file.channelName}` : ''}</small
-										></span
-									>
-									<button type="button" @click=${() => this.emit('open', file)}>Open</button>
-									<button
-										type="button"
-										?disabled=${!file.url}
-										@click=${() => this.emit('pin', file)}
-									>
-										Pin as tab
-									</button>
-								</li>`,
-							)
-						: html`<li class="none">
-								${this.query.trim() ? 'No matching files.' : 'No files shared yet.'}
-							</li>`
-				}
-			</ul>`;
+			<div class="file-list">
+				<table aria-label="Shared files">
+					<thead>
+						<tr>
+							<th scope="col">Name</th>
+							<th scope="col">Shared on</th>
+							<th scope="col">Shared by</th>
+							<th scope="col">Location</th>
+							<th scope="col"><span class="visually-hidden">Actions</span></th>
+						</tr>
+					</thead>
+					<tbody>
+						${
+							files.length
+								? files.map(
+										(file) => html`<tr>
+											<td>
+												<div class="file-name">
+													<span class="badge" data-kind=${file.kind}
+														>${{ docx: 'W', xlsx: 'X', pptx: 'P', vsdx: 'V', other: 'F' }[file.kind]}</span
+													>
+													<button
+														class="file-open"
+														type="button"
+														aria-label=${`Open ${file.name}`}
+														title=${file.name}
+														?disabled=${!file.url}
+														@click=${() => this.emit('open', file)}
+													>
+														${file.name}
+													</button>
+												</div>
+											</td>
+											<td><time>${new Date(file.ts).toLocaleDateString()}</time></td>
+											<td>${file.author}</td>
+											<td>
+												${file.channelName ? `# ${file.channelName}` : `# ${this.channelName}`}
+											</td>
+											<td>
+												<button
+													type="button"
+													?disabled=${!file.url}
+													@click=${() => this.emit('pin', file)}
+												>
+													Pin as tab
+												</button>
+											</td>
+										</tr>`,
+									)
+								: html`<tr>
+										<td colspan="5" class="none">
+											${this.query.trim() ? 'No matching files.' : 'No files shared yet.'}
+										</td>
+									</tr>`
+						}
+					</tbody>
+				</table>
+			</div>`;
 	}
 }
 

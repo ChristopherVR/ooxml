@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { demoDocument } from 'ooxml-core/visio/ui';
-import { renderPage } from './render-svg.js';
-import { exportPageSvg } from './export-svg.js';
+import { renderPage } from './render-svg';
+import { exportPageSvg } from './export-svg';
 import evidence from '../../../core/visio/__fixtures__/open-arrows-native.json';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';

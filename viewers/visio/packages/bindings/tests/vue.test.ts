@@ -1,8 +1,8 @@
 import { beforeEach, expect, it, vi } from 'vitest';
-import { current, emit, reset } from './mock-binding.js';
+import { current, emit, reset } from './mock-binding';
 import { createApp, h, nextTick, reactive } from 'vue';
-import { VisioViewer } from '../src/vue.js';
-import { viewerOptions, type ViewerHandle, type ViewerProps } from '../src/common.js';
+import { VisioViewer } from '../src/vue';
+import { viewerOptions, type ViewerHandle, type ViewerProps } from '../src/common';
 beforeEach(reset);
 it('Vue watches native props, forwards all native events and clears callbacks on unmount', async () => {
 	const host = document.createElement('div');

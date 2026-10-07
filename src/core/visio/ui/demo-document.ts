@@ -1,4 +1,4 @@
-import type { VisioDocument, VisioShape } from '../index.js';
+import type { VisioDocument, VisioShape } from '../index';
 
 function box(
 	id: string,

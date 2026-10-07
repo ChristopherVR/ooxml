@@ -1,14 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { VisioDocument } from 'ooxml-core/visio';
 import { demoDocument } from 'ooxml-core/visio/ui';
-import { exportPageSvg } from './export-svg.js';
-import * as exporter from './export-svg.js';
+import { exportPageSvg } from './export-svg';
+import * as exporter from './export-svg';
 import {
 	createPrintSnapshot,
 	PRINT_SNAPSHOT_LIMITS,
 	type PrintSnapshotLimits,
 	type PrintSnapshotOptions,
-} from './print-snapshot.js';
+} from './print-snapshot';
 import { rasterFixture } from './__fixtures__/raster-fixtures.mjs';
 
 function scene(count = 2): VisioDocument {

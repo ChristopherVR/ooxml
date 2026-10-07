@@ -1,4 +1,4 @@
-import { fail, type VisioPackageLimits } from './package-common.js';
+import { fail, type VisioPackageLimits } from './package-common';
 
 const xmlName = '[\\p{L}_:][\\p{L}\\p{N}\\p{M}_.:\\-\\u00b7]*';
 const tagName = new RegExp(`^(${xmlName})`, 'u');

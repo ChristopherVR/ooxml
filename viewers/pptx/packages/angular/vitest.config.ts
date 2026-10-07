@@ -1,3 +1,5 @@
+import { resolve } from 'node:path';
+
 import { defineConfig } from 'vitest/config';
 
 /**
@@ -11,6 +13,12 @@ import { defineConfig } from 'vitest/config';
  * JIT compiler for these import-time-only tests.
  */
 export default defineConfig({
+	server: { fs: { allow: [resolve(import.meta.dirname, '../../../..')] } },
+	resolve: {
+		// Keep leaf-module mocks attached to the renderer implementation rather
+		// than a separately bundled copy of the same helper.
+		alias: { 'ooxml-ui/pptx': resolve(import.meta.dirname, '../../../../src/ui/src/pptx') },
+	},
 	test: {
 		environment: 'happy-dom',
 		maxWorkers: 4,

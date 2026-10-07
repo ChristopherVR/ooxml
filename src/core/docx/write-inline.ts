@@ -195,7 +195,7 @@ function runNodes(
 		: createRun(doc, run, base, old, allocator);
 	const revision = run.revision;
 	if (revision && ['insert', 'delete', 'moveFrom', 'moveTo'].includes(revision.kind)) {
-		if (revision.kind === 'delete' || revision.kind === 'moveFrom') convertToDeleteText(doc, node);
+		if (revision.kind === 'delete') convertToDeleteText(doc, node);
 		nodes.push(revisionWrapper(doc, revision, node));
 	} else nodes.push(node);
 	for (const edge of [...closes].reverse()) nodes.push(...rangeEndNodes(doc, edge));

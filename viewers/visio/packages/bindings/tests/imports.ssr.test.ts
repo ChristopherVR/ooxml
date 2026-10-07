@@ -7,12 +7,12 @@ import { renderToString as renderVue } from '@vue/server-renderer';
 import { createComponent } from 'solid-js';
 import { renderToString as renderSolid } from 'solid-js/web';
 import { render as renderSvelte } from 'svelte/server';
-import { VisioViewer as ReactViewer } from '../src/react.js';
-import { VisioViewer as VueViewer } from '../src/vue.js';
-import { VisioViewerComponent } from '../src/angular.js';
-import { VisioViewer as SolidViewer } from '../src/solid.jsx';
+import { VisioViewer as ReactViewer } from '../src/react';
+import { VisioViewer as VueViewer } from '../src/vue';
+import { VisioViewerComponent } from '../src/angular';
+import { VisioViewer as SolidViewer } from '../src/solid';
 import SvelteViewer from '../src/VisioViewer.svelte';
-import { mountViewer } from '../src/vanilla.js';
+import { mountViewer } from '../src/vanilla';
 it('all six entry points import with no browser globals or element registration', () => {
 	expect(typeof globalThis.document).toBe('undefined');
 	// ooxml-ui builds on Lit, whose server build installs an inert customElements stub: what matters is that

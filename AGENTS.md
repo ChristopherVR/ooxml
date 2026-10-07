@@ -204,6 +204,7 @@ shipping fields and the licence files do; `site/`, docs, tests and CI never do).
   messages or UI copy; use a colon, comma, semicolon, parentheses or a spaced
   hyphen. The only exception is content that intentionally renders or asserts
   that character.
+- Use extensionless relative imports in bundled TypeScript source. Keep extensions for JavaScript runtime scripts, package subpaths and actual asset/worker URLs.
 - Formatting is `oxfmt`; run `bun run fmt` before committing.
 
 ### PowerPoint shared UI

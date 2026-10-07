@@ -7,7 +7,7 @@ import {
 	type TextLayoutBudget,
 	type MeasureText,
 	type TextLine,
-} from './text-layout.js';
+} from './text-layout';
 export interface PositionedLine extends TextLine {
 	x: number;
 	y: number;

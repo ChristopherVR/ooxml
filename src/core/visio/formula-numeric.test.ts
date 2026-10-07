@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { analyzeVisioFormula, evaluateVisioFormula, VisioFormulaError } from './formula.js';
-import type { VisioFormulaValue } from './formula.js';
+import { analyzeVisioFormula, evaluateVisioFormula, VisioFormulaError } from './formula';
+import type { VisioFormulaValue } from './formula';
 
 const resolve = ({ cell }: { cell: string }): VisioFormulaValue => {
 	const values: Record<string, VisioFormulaValue> = {

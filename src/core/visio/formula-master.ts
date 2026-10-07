@@ -3,7 +3,7 @@ import {
 	parseVisioFormula,
 	type VisioFormulaAst,
 	type VisioFormulaReference,
-} from './formula.js';
+} from './formula';
 
 /** Locality proof only, never numeric evaluation or permission to overwrite a redirect. */
 export function analyzeVisioMasterFormula(source: string, options: { textFieldFree: boolean }) {

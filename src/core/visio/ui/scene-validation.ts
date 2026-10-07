@@ -4,9 +4,9 @@ import {
 	type VisioDocument,
 	type VisioShape,
 	type VisioImage,
-} from '../index.js';
-import { assertShapeDetails } from './scene-details.js';
-import { ForeignVectorBudget } from './foreign-vector-budget.js';
+} from '../index';
+import { assertShapeDetails } from './scene-details';
+import { ForeignVectorBudget } from './foreign-vector-budget';
 
 export const MAX_INPUT_BYTES = 32 * 1024 * 1024;
 const MAX_DIMENSION = 10_000;
@@ -105,6 +105,7 @@ export function assertViewableDocument(model: VisioDocument): void {
 		label(shape.style.fill, 256);
 		label(shape.style.lineColor, 256);
 		label(shape.text.color, 256);
+		if (shape.text.opacity !== undefined) finite(shape.text.opacity, 'text opacity', 0, 1);
 		if (shape.text.backgroundColor) label(shape.text.backgroundColor, 256);
 		if (shape.text.backgroundOpacity !== undefined)
 			finite(shape.text.backgroundOpacity, 'text background opacity', 0, 1);
@@ -183,6 +184,7 @@ export function assertViewableDocument(model: VisioDocument): void {
 		for (const run of shape.text.runs) {
 			label(run.fontFamily, 1024);
 			label(run.color, 256);
+			if (run.opacity !== undefined) finite(run.opacity, 'text run opacity', 0, 1);
 			if (typeof run.text !== 'string') throw new Error('The scene has invalid run text.');
 			textBytes += run.text.length;
 			++runCount;

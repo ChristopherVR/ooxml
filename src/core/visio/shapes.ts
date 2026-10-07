@@ -1,12 +1,13 @@
-import { rootThemeSheet } from './theme-root.js';
-import { styleSheet, type StyleContext } from './style-inheritance.js';
-import { metadata } from './metadata.js';
-import { shapeMetadata, type VisioMetadataBudget } from './shape-metadata.js';
-import { shapeLayers, type LayerBudget } from './layers.js';
-import type { VisioLayer, VisioShape } from './model.js';
-import { shapeTransform, geometryPaths } from './geometry.js';
-import { VisioPackageError } from './package.js';
-import { shapeStyle, shapeText, type Resources } from './style.js';
+import { rootThemeSheet } from './theme-root';
+import { styleSheet, type StyleContext } from './style-inheritance';
+import { metadata } from './metadata';
+import { shapeMetadata, type VisioMetadataBudget } from './shape-metadata';
+import { shapeLayers, type LayerBudget } from './layers';
+import { layerPaintSheet } from './layer-paint';
+import type { VisioLayer, VisioShape } from './model';
+import { shapeTransform, geometryPaths } from './geometry';
+import { VisioPackageError } from './package';
+import { shapeStyle, shapeText, type Resources } from './style';
 import {
 	emptySheet,
 	mergeSheets,
@@ -14,7 +15,7 @@ import {
 	reportCachedErrors,
 	type RawShape,
 	type Report,
-} from './sheet.js';
+} from './sheet';
 
 export interface ShapeContext extends StyleContext {
 	metadataBudget: VisioMetadataBudget;
@@ -189,6 +190,23 @@ export function normalizeShapes(
 					'Arbitrary image clipping paths are not applied; only the shape frame is used.',
 				);
 			const membership = shapeLayers(sheet, context.layers, report, context.layerBudget);
+			const paintSheet = layerPaintSheet(sheet, membership.layerIds, context.layers);
+			if (paintSheet !== sheet && (shape.image || shape.foreignVector))
+				report(
+					'unverified-layer-foreign-paint',
+					'Colored-layer rendering of embedded images and foreign vectors has not been verified against Visio.',
+				);
+			const textBackdrop = sheet.cells.get('TextBkgnd')?.value;
+			if (
+				paintSheet !== sheet &&
+				(type === 'Group' ||
+					shape.children.length ||
+					(textBackdrop !== undefined && textBackdrop !== '0' && textBackdrop !== '255'))
+			)
+				report(
+					'unverified-layer-group-text-paint',
+					'Colored-layer group inheritance and text backgrounds have not been verified against Visio.',
+				);
 			const cachedNoShow = number(sheet.cells, 'NoShow', sheet.cells.has('NoShow') ? NaN : 0);
 			const nonPrinting = number(sheet.cells, 'NonPrinting', NaN);
 			const geometry = geometryPaths(
@@ -233,9 +251,9 @@ export function normalizeShapes(
 				...(groupDisplayMode === undefined ? {} : { groupDisplayMode }),
 				transform: shapeTransform(sheet.cells, width, height, report),
 				geometry,
-				style: shapeStyle(sheet, context.resources, report, width, height),
+				style: shapeStyle(paintSheet, context.resources, report, width, height),
 				text: shapeText(
-					sheet,
+					paintSheet,
 					shape.text,
 					width,
 					height,

@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-	inspectVisioEmfAdmission as inspect,
-	VISIO_EMF_ADMISSION_LIMITS,
-} from './emf-admission.js';
+import { inspectVisioEmfAdmission as inspect, VISIO_EMF_ADMISSION_LIMITS } from './emf-admission';
 import {
 	checksumComment,
 	emf,
@@ -11,7 +8,7 @@ import {
 	setWord,
 	sourceComment,
 	triangle,
-} from './emf-admission.test-fixtures.js';
+} from './emf-admission.test-fixtures';
 
 const codes = (bytes: Uint8Array) => inspect(bytes).diagnostics.map((d) => d.code);
 const map = [

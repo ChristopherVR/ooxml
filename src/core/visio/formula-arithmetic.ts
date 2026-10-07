@@ -1,5 +1,5 @@
-import { formulaFailure } from './formula.js';
-import type { VisioFormulaUnit, VisioFormulaValue } from './formula.js';
+import { formulaFailure } from './formula';
+import type { VisioFormulaUnit, VisioFormulaValue } from './formula';
 
 export function finiteFormulaValue(value: VisioFormulaValue): VisioFormulaValue {
 	if (!Number.isFinite(value.value)) return formulaFailure('value', 'Formula result is not finite');

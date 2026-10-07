@@ -54,7 +54,8 @@ const HOST_CSS = ':host { display: inline-flex; position: relative; flex: none; 
  * `state` (`OfficeGalleryState`, translated). `mode="inline"` shows a strip of tiles beside a
  * More button; otherwise the trigger is a labelled dropdown (`chevron-only` keeps just the
  * chevron, `icon` names its glyph). The popup opens below the trigger, keeps inside the window
- * and closes on Escape, an outside press or a pick. ArrowDown on the trigger opens it and focuses
+ * and closes on Escape, an outside press or a pick. `mode="panel"` shows labelled sections directly
+ * for modal pickers, with arrow/Home/End selection and no dropdown trigger. ArrowDown on the trigger opens it and focuses
  * the first tile. A pick emits `office-gallery-pick` `{ gallery, itemId }`.
  *
  * Tiles render in the light DOM beside the host's children (Lit renders the template into the
@@ -80,6 +81,7 @@ export class OfficeUiGallery extends OfficeElement {
 
 	override attributeChangedCallback(name: string, old: string | null, value: string | null): void {
 		super.attributeChangedCallback(name, old, value);
+		if (name === 'mode' && value === 'panel') this.close();
 		this.requestUpdate();
 	}
 
@@ -103,7 +105,7 @@ export class OfficeUiGallery extends OfficeElement {
 		return this.opened;
 	}
 	set open(value: unknown) {
-		const next = present(value) && !this.unavailable();
+		const next = present(value) && !this.unavailable() && this.getAttribute('mode') !== 'panel';
 		if (next === this.opened) return;
 		this.opened = next;
 		this.cleanup();
@@ -188,8 +190,10 @@ export class OfficeUiGallery extends OfficeElement {
 			!state?.sections.some((section) => section.items.some((item) => item.id === itemId))
 		)
 			return;
-		this.close();
-		this.trigger.focus();
+		if (this.getAttribute('mode') !== 'panel') {
+			this.close();
+			this.trigger.focus();
+		}
 		this.fire((this.constructor as unknown as Statics).pickEvent, { gallery: state.id, itemId });
 	}
 
@@ -202,6 +206,36 @@ export class OfficeUiGallery extends OfficeElement {
 	}
 
 	private onKey(event: KeyboardEvent): void {
+		if (this.getAttribute('mode') === 'panel') {
+			const target = event.target as HTMLElement;
+			const tile = target.closest<HTMLButtonElement>('.tile');
+			const section = tile?.closest('.section');
+			const items = Array.from(
+				section?.querySelectorAll<HTMLButtonElement>('.tile:not(:disabled)') ?? [],
+			);
+			const index = tile ? items.indexOf(tile) : -1;
+			const columns =
+				this.model?.sections[Array.from(this.querySelectorAll('.section')).indexOf(section!)]
+					?.columns ?? 1;
+			const delta = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: columns, ArrowUp: -columns }[
+				event.key
+			];
+			const next =
+				event.key === 'Home'
+					? 0
+					: event.key === 'End'
+						? items.length - 1
+						: delta === undefined
+							? -1
+							: (index + delta + items.length) % items.length;
+			if (index >= 0 && next >= 0) {
+				event.preventDefault();
+				event.stopPropagation();
+				items[next]?.focus();
+				items[next]?.click();
+			}
+			return;
+		}
 		const trigger = this.trigger;
 		if (event.key === 'Escape' && this.open) {
 			event.stopPropagation();
@@ -264,15 +298,23 @@ export class OfficeUiGallery extends OfficeElement {
 			aria-pressed=${String(item.applied === true)}
 			aria-label=${item.label}
 			title=${item.label}
-			style="width:${width + 6}px;height:${height + 6}px"
+			style="width:${width + 6}px;height:${height + 6}px;--office-gallery-preview-width:${width}px;--office-gallery-preview-height:${height}px"
 			@click=${() => this.pick(item.id)}
-		>${preview}</button>`;
+		>${preview}${this.getAttribute('mode') === 'panel' ? html`<span class="tile-label">${item.label}</span>` : ''}</button>`;
 	}
 
 	private lightTemplate(): TemplateResult {
 		const statics = this.constructor as unknown as Statics;
 		const state = this.model;
 		const disabled = this.unavailable();
+		if (this.getAttribute('mode') === 'panel')
+			return html`<div
+				class="gallery-panel"
+				role="group"
+				aria-label=${state?.label ?? ''}
+				@keydown=${this.onKey}
+				>${(state?.sections ?? []).map((section) => this.section(section, disabled))}</div
+			>`;
 		const inline = this.getAttribute('mode') === 'inline' && !this.hasAttribute('chevron-only');
 		const chevronOnly = this.hasAttribute('chevron-only');
 		const command = state?.command;

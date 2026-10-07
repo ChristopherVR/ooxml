@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, untrack } from 'svelte';
   import VisioViewer from '../../../viewers/visio/packages/bindings/src/VisioViewer.svelte';
-  import type { Workspace } from '../demo/workspace.js';
+  import type { Workspace } from '../demo/workspace';
 
   // The Svelte demo: the VisioViewer component, its handle and the document as $state.
   let { workspace }: { workspace: Workspace } = $props();
