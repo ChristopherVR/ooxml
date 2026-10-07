@@ -44,6 +44,7 @@ export function applyGeometryEdit(
 	const lineEditShapes = new Set<Element>();
 	let fixedLine: ReadonlyMap<string, number> | undefined;
 	let expectedAngle: number | undefined;
+	let expectedFlip: { cell: string; value: number } | undefined;
 	const add = (cell: string) => changed.push({ pageId: edit.pageId, shapeId: edit.shapeId, cell });
 	if (edit.type === 'create-line') {
 		const shape = createLine(root, document, edit);
@@ -79,9 +80,11 @@ export function applyGeometryEdit(
 				? ['LockBegin', 'LockEnd']
 				: edit.type === 'move-line-endpoint'
 					? [edit.endpoint === 'begin' ? 'LockBegin' : 'LockEnd']
-					: edit.type === 'rotate-shape'
+					: edit.type === 'flip-shape'
 						? ['LockRotate']
-						: [],
+						: edit.type === 'rotate-shape'
+							? ['LockRotate']
+							: [],
 		);
 		if (edit.type !== 'delete-shape')
 			for (const connections of children(root, 'Connects'))
@@ -110,7 +113,7 @@ export function applyGeometryEdit(
 			shape.parentNode!.removeChild(shape);
 			return [edit.pageId];
 		}
-		if (edit.type === 'rotate-shape') {
+		if (edit.type === 'rotate-shape' || edit.type === 'flip-shape') {
 			if (isLineSheet(local))
 				fail('UNSUPPORTED_GEOMETRY_EDIT', 'Line rotation requires endpoint proof.');
 			const angle = local.get('Angle');
@@ -121,15 +124,30 @@ export function applyGeometryEdit(
 				fail('EDIT_FORMULA_UNIT', 'Angle must use angular units.');
 			unlocked('LockRotate');
 			editableCell(angle);
-			if (numeric(angle, 0) === edit.angle) return [];
+			const targetAngle = edit.type === 'flip-shape' ? -numeric(angle, 0) : edit.angle;
+			if (edit.type === 'flip-shape') {
+				const name = edit.axis === 'horizontal' ? 'FlipX' : 'FlipY';
+				const flag = local.get(name);
+				editableCell(flag);
+				const value = numeric(flag, 0);
+				if (
+					(value !== 0 && value !== 1) ||
+					(flag?.hasAttribute('U') &&
+						visioFormulaCachedValue('0', attribute(flag, 'U')).unit !== 'scalar')
+				)
+					fail('EDIT_FORMULA_UNIT', 'Flip flags must be scalar booleans.');
+				expectedFlip = { cell: name, value: 1 - value };
+				setCell(shape, name, expectedFlip.value);
+				add(name);
+			} else if (numeric(angle, 0) === targetAngle) return [];
 			expected = {
 				width: numeric(local.get('Width')),
 				height: numeric(local.get('Height')),
 				x: numeric(local.get('PinX'), numeric(local.get('Width')) / 2),
 				y: numeric(local.get('PinY'), numeric(local.get('Height')) / 2),
 			};
-			expectedAngle = edit.angle;
-			setCell(shape, 'Angle', edit.angle);
+			expectedAngle = targetAngle;
+			setCell(shape, 'Angle', targetAngle);
 			cells(shape).get('Angle')!.setAttribute('U', 'RAD');
 			add('Angle');
 		} else if (edit.type === 'move-shape') {
@@ -238,6 +256,8 @@ export function applyGeometryEdit(
 		provenResult = masterDimensions.get(resultShape);
 	if (expectedAngle !== undefined && numeric(result.get('Angle')) !== expectedAngle)
 		fail('EDIT_UNSUPPORTED_DEPENDENCY', 'Dependent formulas would violate the requested rotation.');
+	if (expectedFlip && numeric(result.get(expectedFlip.cell), 0) !== expectedFlip.value)
+		fail('EDIT_UNSUPPORTED_DEPENDENCY', 'Dependent formulas would violate the requested flip.');
 	const equal = fixedLine ? sameLineCoordinate : (a: number, b: number) => a === b;
 	if (
 		expected &&

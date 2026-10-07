@@ -19,6 +19,7 @@ export type VisioGeometryEdit =
 	| (Target & { type: 'move-shape'; x: number; y: number })
 	| (Target & { type: 'resize-shape'; width: number; height: number })
 	| (Target & { type: 'rotate-shape'; angle: number })
+	| (Target & { type: 'flip-shape'; axis: 'horizontal' | 'vertical' })
 	| (Target & { type: 'move-line-endpoint'; endpoint: 'begin' | 'end'; x: number; y: number })
 	| (Target & { type: 'delete-shape' });
 /** Insert a blank foreground page after an existing page, copying its PageSheet settings. */
@@ -77,6 +78,7 @@ export function geometryChangedCells(edit: VisioGeometryEdit): string[] {
 	if (edit.type === 'move-shape') return ['PinX', 'PinY'];
 	if (edit.type === 'resize-shape') return ['Width', 'Height'];
 	if (edit.type === 'rotate-shape') return ['Angle'];
+	if (edit.type === 'flip-shape') return ['Angle', edit.axis === 'horizontal' ? 'FlipX' : 'FlipY'];
 	return ['PinX', 'PinY', 'Width', 'Height'];
 }
 
@@ -172,6 +174,10 @@ export function snapshotVisioEdits(
 				};
 			case 'rotate-shape':
 				return { ...target, type: edit.type, angle: numeric(edit.angle) };
+			case 'flip-shape':
+				if (edit.axis !== 'horizontal' && edit.axis !== 'vertical')
+					fail('INVALID_EDIT', 'Invalid flip axis.');
+				return { ...target, type: edit.type, axis: edit.axis };
 			case 'move-shape':
 				return { ...target, type: edit.type, x: numeric(edit.x), y: numeric(edit.y) };
 			case 'move-line-endpoint':

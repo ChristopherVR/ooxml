@@ -67,6 +67,10 @@ export function snapshotEdits(edits: readonly VisioEdit[]): VisioEdit[] {
 			case 'rotate-shape':
 				numbers(command.angle);
 				return { type: command.type, ...target, angle: command.angle };
+			case 'flip-shape':
+				if (command.axis !== 'horizontal' && command.axis !== 'vertical')
+					throw new Error('Invalid flip axis.');
+				return { type: command.type, ...target, axis: command.axis };
 			case 'move-shape':
 				numbers(command.x, command.y);
 				return { type: command.type, ...target, x: command.x, y: command.y };

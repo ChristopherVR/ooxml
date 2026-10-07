@@ -1637,6 +1637,37 @@ after cancellation and during dragging, and compares preview coefficients to
 the committed/reopened scene. Native snapping, preview raster equivalence and
 Microsoft Visio reopen acceptance remain open.
 
+## Atomic local Visio flip editing
+
+Source: ChristopherVR/ooxml at `b1c737749`, the existing rotation branch in
+`edit-geometry.ts`, geometry command snapshots, protection admission and
+dependency recalculator, plus the shared Rotate Shapes menu. `flip-shape`
+extends the same atomic geometry transaction; it toggles the requested local
+scalar boolean and negates the source Angle, preserves dimensions/pins, and
+verifies requested caches after recalculation. It does not add another XML,
+geometry or history engine. UI actions use the existing worker transaction
+and the same core local-shape admission as rotation. Source imports remain
+extensionless.
+
+The existing owned Visio 16 recorder now captures
+[Selection.Flip](https://learn.microsoft.com/en-us/office/vba/api/visio.selection.flip)
+with per-shape pins and guards respected. Two saved references cover horizontal
+30-degree custom-pin and vertical 210-degree scaled-page rectangle/ellipse
+flips. Additional native captures show LockRotate or GUARD on Angle can retain
+Angle while still toggling the flip flag; those cases remain refused by this
+initial edit path and require further implementation. One exploratory attempt
+to address a nonexistent LockFlip cell failed before saving a reference; no
+such cell is used by the implementation. Each owned instance exits through
+the recorder finally block. The user's existing Visio instance is untouched.
+
+Core regressions cover both axes, toggling twice, snapshot isolation and
+unsupported guards/formulas/units/dependencies. Native comparisons verify
+saved angles, pins, matrices, local geometry and styles. The quarter-turn
+browser matrix is reused for actual menu flip actions, hover/cancellation,
+undo/redo and public save/reload across six bindings. Locked/guarded-angle
+flip semantics, groups/masters/glue, inherited transforms, native UI gesture
+evidence, exact paint and Microsoft Visio reopen acceptance remain open.
+
 ## Shared Word field-aware clipboard deletion
 
 Source: ChristopherVR/ooxml at `e3c06a736`, `field-guard.ts`, simple cached-result

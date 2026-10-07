@@ -5,6 +5,7 @@ export type VisioRibbonAction =
 	| { type: 'tool'; tool: CanvasTool }
 	| { type: 'delete' }
 	| { type: 'rotate'; direction: 'left' | 'right' }
+	| { type: 'flip'; axis: 'horizontal' | 'vertical' }
 	| { type: 'pane'; pane: 'shapes' | 'inspector' }
 	| { type: 'reveal'; panel: 'edit' | 'notes' | 'selection' | 'layers'; focusText?: boolean }
 	| { type: 'grid' }

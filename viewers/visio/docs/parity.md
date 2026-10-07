@@ -102,7 +102,13 @@ Ten native per-shape Left/Right 90-degree comparisons cover custom pins,
 signed normalization, scaled pages and both half-turn boundaries. The nested
 Position > Rotate Shapes menu now uses the shared nested menu control and
 routes Left/Right 90-degree commands through the existing worker/history path.
-Flip Horizontal and Flip Vertical remain disabled pending native edit evidence.
+Flip Horizontal and Flip Vertical now use one atomic core edit that toggles
+the local flip flag and negates Angle while retaining the saved pin. Four native
+rectangle/ellipse comparisons cover a custom pivot at 30 degrees and scaled
+pages at 210 degrees. Locked/guarded Angle flips, guarded/dependent flip flags,
+inherited transforms, groups/masters/glue, broader native flip gestures and
+Microsoft Visio reopen acceptance remain open. Source protections are refused
+instead of being overwritten.
 Native keyboard rotation
 commands, grouped/master/glued and 1D rotation, broader angle/formula
 and text/gradient paint cases, exact contours/pixels and native Office reopen

@@ -11,6 +11,8 @@ param(
  [ValidateRange(-360000,360000)][double]$RotationDegrees=0,
  [switch]$OffCentrePin,
  [ValidateSet('None','Left','Right')][string]$QuarterTurn='None',
+ [ValidateSet('None','Horizontal','Vertical')][string]$Flip='None',
+ [ValidateSet('None','LockRotate','GuardAngle')][string]$FlipProtection='None',
  [switch]$CustomDefaults
 )
 # Capture endpoint translation without replacing native transform formulas.
@@ -170,6 +172,28 @@ try {
   $page.Export((Join-Path $directory 'quarter-page.svg'))
   $evidence.Add('quarterTurn',$QuarterTurn)
   $evidence.Add('quarterTurned',$turned)
+ }
+ if($Flip -ne 'None'){
+  foreach($shape in @($rectangle,$ellipse)){
+   if($shape -and $FlipProtection -ne 'None'){
+    if($FlipProtection -eq 'GuardAngle'){$shape.CellsU('Angle').FormulaU='GUARD('+ $shape.CellsU('Angle').FormulaU +')'}
+    else{$shape.CellsU($FlipProtection).ResultIU=1.0}
+   }
+  }
+  $document.SaveAs((Join-Path $directory 'flip-source.vsdx')) | Out-Null
+  $flipped=[ordered]@{}
+  $direction=if($Flip -eq 'Horizontal'){1}else{2}
+  foreach($entry in @(@('rectangle',$rectangle),@('ellipse',$ellipse))){
+   if($entry[1]){
+    $selection=$page.CreateSelection(2,256,$entry[1])
+    $selection.Flip($direction,2,$false)
+    $flipped[$entry[0]]=[ordered]@{shapeId=[string]$entry[1].ID;cells=(Get-ShapeCells $entry[1] @('Width','Height','PinX','PinY','LocPinX','LocPinY','Angle','FlipX','FlipY'));transform=(Get-LineTransform $entry[1])}
+   }
+  }
+  $document.SaveAs((Join-Path $directory 'flipped.vsdx')) | Out-Null
+  $page.Export((Join-Path $directory 'flipped-page.svg'))
+  $evidence.Add('flip',$Flip)
+  $evidence.Add('flipped',$flipped)
  }
  if($DeleteAfterMove){
   foreach($shape in $shapes){$shape.Delete()}

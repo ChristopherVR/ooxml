@@ -61,7 +61,8 @@ export class ViewerCommands {
 			controller: host.controller,
 			history: (key) => this.#history(key),
 			deleteSelection: () => this.#delete(),
-			rotateSelection: (direction) => this.#rotate(direction),
+			rotateSelection: (direction) => this.#transform({ type: 'rotate', direction }),
+			flipSelection: (axis) => this.#transform({ type: 'flip', axis }),
 			setTool: (tool) => this.setTool(tool),
 			toggleGrid: () => {
 				this.#grid = !this.#grid;
@@ -198,15 +199,25 @@ export class ViewerCommands {
 			if (index >= 0) this.host.controller.setPage(index);
 		}, 'Inserted a blank page.');
 	}
-	#rotate(direction: 'left' | 'right'): void {
+	#transform(action: Extract<VisioRibbonAction, { type: 'rotate' | 'flip' }>): void {
 		const state = this.host.controller.state;
 		const page = state.document?.pages[state.pageIndex];
 		if (!page || !state.selectedShape || !this.#canEdit(state)) return;
-		const command = visioQuarterTurnCommand(page, state.selectedShape.id, direction);
+		const command =
+			action.type === 'rotate'
+				? visioQuarterTurnCommand(page, state.selectedShape.id, action.direction)
+				: visioLocalRotationShape(page, state.selectedShape.id)
+					? {
+							type: 'flip-shape' as const,
+							pageId: page.id,
+							shapeId: state.selectedShape.id,
+							axis: action.axis,
+						}
+					: undefined;
 		if (command)
 			void this.#edit(
 				() => this.host.controller.applyEdits([command]),
-				`Rotated ${direction} 90°.`,
+				action.type === 'rotate' ? `Rotated ${action.direction} 90°.` : `Flipped ${action.axis}.`,
 			);
 	}
 	async #edit(action: () => Promise<void>, success?: string): Promise<void> {
@@ -286,7 +297,8 @@ export class ViewerCommands {
 			!!page &&
 			!!state.selectedShape &&
 			!!visioLocalRotationShape(page, state.selectedShape.id);
-		for (const name of ['rotate-left', 'rotate-right']) button(name).disabled = !rotating;
+		for (const name of ['rotate-left', 'rotate-right', 'flip-horizontal', 'flip-vertical'])
+			button(name).disabled = !rotating;
 		root.querySelector<RibbonCommand>('[data-menu="rotate"]')!.disabled = !rotating;
 		root.querySelector<RibbonCommand>('[data-menu="position"]')!.disabled = !rotating;
 		button('undo').disabled = !state.edit.canUndo || state.edit.busy || state.loading;

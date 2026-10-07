@@ -9,16 +9,23 @@ for (const variable of [
 	'VISIO_NATIVE_QUARTER_WRAP_DIR',
 	'VISIO_NATIVE_QUARTER_HALF_LEFT_DIR',
 	'VISIO_NATIVE_QUARTER_HALF_RIGHT_DIR',
+	'VISIO_NATIVE_FLIP_HORIZONTAL_DIR',
+	'VISIO_NATIVE_FLIP_VERTICAL_DIR',
 ]) {
+	const flip = variable.includes('_FLIP_');
 	for (const kind of ['rectangle', 'ellipse']) {
 		for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
-			test(`${framework}: native quarter turn ${kind} (${variable})`, async ({ page }) => {
+			test(`${framework}: native menu transform ${kind} (${variable})`, async ({ page }) => {
 				const directory = process.env[variable];
 				test.skip(!directory, `Set ${variable} to a native quarter-turn capture.`);
-				const source = await readFile(join(directory!, 'quarter-source.vsdx'));
-				const native = await parseVsdx(await readFile(join(directory!, 'quarter-turned.vsdx')));
+				const source = await readFile(
+					join(directory!, flip ? 'flip-source.vsdx' : 'quarter-source.vsdx'),
+				);
+				const native = await parseVsdx(
+					await readFile(join(directory!, flip ? 'flipped.vsdx' : 'quarter-turned.vsdx')),
+				);
 				const evidence = JSON.parse(await readFile(join(directory!, 'evidence.json'), 'utf8'));
-				const id = evidence.quarterTurned[kind].shapeId;
+				const id = (flip ? evidence.flipped : evidence.quarterTurned)[kind].shapeId;
 				const expected = native.pages[0]!.shapes.find((shape) => shape.id === id)!;
 				await page.goto(
 					framework === 'vanilla' ? '/demo/?sample=1' : `/demo-${framework}/?sample=1`,
@@ -41,7 +48,7 @@ for (const variable of [
 					.getByRole('menuitem', { name: 'Rotate Shapes', exact: true })
 					.press('ArrowRight');
 				const target = nested.getByRole('menuitem', {
-					name: `Rotate ${evidence.quarterTurn} 90°`,
+					name: flip ? `Flip ${evidence.flip}` : `Rotate ${evidence.quarterTurn} 90°`,
 					exact: true,
 				});
 				await expect(target).toBeVisible();
@@ -59,7 +66,7 @@ for (const variable of [
 				await expect(target).toBeVisible();
 				await expect(
 					nested.getByRole('menuitem', { name: 'Flip Horizontal', exact: true }),
-				).toBeDisabled();
+				).toBeEnabled();
 				await target.click();
 				await expect(shape).not.toHaveAttribute('transform', before);
 				await expect(position.locator('[role="menu"]').first()).not.toBeVisible();

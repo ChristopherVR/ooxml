@@ -168,8 +168,16 @@ export function buildHomePanel(doc: Document, panel: HTMLElement): void {
 							label: 'Rotate Right 90°',
 							action: { type: 'rotate', direction: 'right' },
 						},
-						{ id: 'flip-horizontal', label: 'Flip Horizontal', unsupported: ARRANGE },
-						{ id: 'flip-vertical', label: 'Flip Vertical', unsupported: ARRANGE },
+						{
+							id: 'flip-horizontal',
+							label: 'Flip Horizontal',
+							action: { type: 'flip', axis: 'horizontal' },
+						},
+						{
+							id: 'flip-vertical',
+							label: 'Flip Vertical',
+							action: { type: 'flip', axis: 'vertical' },
+						},
 					],
 				},
 			],
