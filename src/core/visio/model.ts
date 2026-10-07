@@ -24,6 +24,14 @@ export interface VisioLinearGradient {
 	end: readonly [number, number];
 	stops: { offset: number; color: string; opacity: number }[];
 }
+export interface VisioRadialGradient {
+	type: 'radial';
+	/** Normalized local y-up object-bounding-box coordinates. */
+	center: readonly [number, number];
+	radius: number;
+	stops: VisioLinearGradient['stops'];
+}
+export type VisioFillGradient = VisioLinearGradient | VisioRadialGradient;
 export interface VisioFillPattern extends VisioImage {
 	/** Physical tile dimensions in local inches; bytes encode a normalized 8-by-8 PNG. */
 	width: number;
@@ -33,7 +41,7 @@ export interface VisioFillPattern extends VisioImage {
 export interface VisioStyle {
 	fill: string;
 	/** Supported normalized gradient; fill remains the solid fallback color. */
-	fillGradient?: VisioLinearGradient;
+	fillGradient?: VisioFillGradient;
 	fillPattern?: VisioFillPattern;
 	lineColor: string;
 	lineWidth: number;

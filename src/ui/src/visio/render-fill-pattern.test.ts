@@ -5,6 +5,40 @@ import { assertViewableDocument, copySnapshotScene } from 'ooxml-core/visio/ui';
 import { createVsdxFixture } from './__fixtures__/fixture.mjs';
 import { exportPageSvg } from './export-svg';
 import { renderPage } from './render-svg';
+import { createPrintSnapshot } from './print-snapshot';
+
+it('shares normalized radial stops between live, export and immutable print snapshots', async () => {
+	const document = await parseVsdx(await createVsdxFixture('Radial'));
+	const paint = document.pages[0]!.shapes[0]!.style;
+	paint.fillOpacity = 1;
+	paint.fillGradient = {
+		type: 'radial',
+		center: [0, 1],
+		radius: 1.4,
+		stops: [
+			{ offset: 0, color: '#ff0000', opacity: 0.8 },
+			{ offset: 1, color: '#0000ff', opacity: 0.5 },
+		],
+	};
+	const live = renderPage(document, document.pages[0]!);
+	const gradient = live.svg.querySelector('radialGradient')!;
+	expect(gradient.getAttribute('gradientUnits')).toBe('objectBoundingBox');
+	expect(gradient.getAttribute('cx')).toBe('0');
+	expect(gradient.getAttribute('cy')).toBe('1');
+	expect(gradient.getAttribute('r')).toBe('1.4');
+	expect(
+		[...gradient.querySelectorAll('stop')].map((stop) => stop.getAttribute('stop-opacity')),
+	).toEqual(['0.8', '0.5']);
+	const exported = exportPageSvg(document).svg;
+	const snapshot = createPrintSnapshot(document, { pageIndices: [0] });
+	paint.fillGradient.radius = 0.73;
+	for (const source of [exported, snapshot.pages[0]!.svg]) {
+		expect(source).toContain('radialGradient');
+		expect(source).toContain('r="1.4"');
+		expect(source).toContain('stop-opacity="0.8"');
+	}
+	live.dispose();
+});
 
 it('shares bounded pattern resources between live rendering, portable exports and snapshots', async () => {
 	const zip = await JSZip.loadAsync(await createVsdxFixture('Pattern'));

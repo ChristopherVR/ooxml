@@ -122,9 +122,17 @@ export function copySnapshotScene(model: VisioDocument): VisioDocument {
 			...(gradient
 				? {
 						fillGradient: {
-							type: gradient.type,
-							start: [gradient.start[0], gradient.start[1]] as const,
-							end: [gradient.end[0], gradient.end[1]] as const,
+							...(gradient.type === 'linear'
+								? {
+										type: 'linear' as const,
+										start: [gradient.start[0], gradient.start[1]] as const,
+										end: [gradient.end[0], gradient.end[1]] as const,
+									}
+								: {
+										type: 'radial' as const,
+										center: [gradient.center[0], gradient.center[1]] as const,
+										radius: gradient.radius,
+									}),
 							stops: list(gradient.stops, 'gradient stops', 100_000, (stop) =>
 								fields(stop, ['offset', 'color', 'opacity']),
 							),

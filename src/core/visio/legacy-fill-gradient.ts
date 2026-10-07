@@ -1,19 +1,20 @@
-import type { VisioLinearGradient } from './model';
+import type { VisioFillGradient } from './model';
 import { linearGradientEndpoints } from './theme-gradient';
 import { number, type Cells } from './sheet';
 import { clampUnitInterval } from '../color/color-primitives';
 
-/** Native cached orthogonal patterns 25-30, including symmetric center-color patterns. */
+/** Native orthogonal patterns 25-30 and object-bounding-box radial patterns 36-40. */
 export function legacyFillGradient(
 	cells: Cells,
 	width: number,
 	height: number,
 	resolve: (name: string) => string,
-): VisioLinearGradient | undefined {
+): VisioFillGradient | undefined {
 	const pattern = number(cells, 'FillPattern', 1);
 	if (
 		pattern < 25 ||
-		pattern > 30 ||
+		pattern > 40 ||
+		(pattern > 30 && pattern < 36) ||
 		!Number.isInteger(pattern) ||
 		!Number.isFinite(width) ||
 		width <= 0 ||
@@ -33,6 +34,16 @@ export function legacyFillGradient(
 		color: background,
 		opacity: clampUnitInterval(1 - number(cells, 'FillBkgndTrans', 0)),
 	};
+	if (pattern >= 36)
+		return {
+			type: 'radial',
+			center: pattern === 40 ? [0.5, 0.5] : [(pattern - 36) % 2, pattern <= 37 ? 1 : 0],
+			radius: pattern === 40 ? 0.73 : 1.4,
+			stops: [
+				{ offset: 0, ...front },
+				{ offset: 1, ...back },
+			],
+		};
 	const angle = pattern <= 26 ? 0 : pattern === 27 ? 180 : pattern <= 29 ? 90 : 270;
 	return {
 		type: 'linear',

@@ -500,3 +500,51 @@ framework routes with hierarchy assertions and zero differing channels.
 Across all four grouped captures, 92 native pages passed 24 scenarios and 1,104
 exact live/export interior comparisons. Use VISIO_NATIVE_FILL_PATTERNS_GROUPED_DIR
 and VISIO_NATIVE_FILL_PATTERNS_GROUP_FLIPPED_DIR for either corresponding pair.
+
+## Native classic radial fills (2026-10-07)
+
+Classic fill patterns 36-40 now normalize to radial gradients with native
+object-bounding-box centers and radii (1.4 for the four corners, 0.73 for the
+center). Centers use local y-up coordinates. Stops reuse the existing color,
+transparency, validation and SVG stop paths. Linear gradient behavior is retained;
+normalized radial geometry does not change with drawing/page scale. Live SVG,
+portable SVG and immutable print snapshots share the same paint implementation.
+
+The native capture script accepts FirstPattern and LastPattern while keeping the
+original hatch defaults. Non-raster native patterns are retained as SVG/PNG/VSDX
+references without assuming their pattern definitions contain a bitmap. The first
+31-40 capture showed that patterns 31-35 use multiple linear-gradient triangles;
+those remain explicitly unsupported.
+
+Microsoft Visio 16 opaque and translucent 36-40 captures are respectively
+visio-fill-patterns-0b9cfd92659d4f5dbddd2f16b5f8a97a and
+visio-fill-patterns-2ee45429452b400f8e9ae224cffc96cd in the local temporary
+directory. The alpha capture uses RGB(27,139,211) at 20 percent transparency and
+RGB(231,61,83) at 50 percent transparency. Enable VISIO_NATIVE_RADIAL_FILLS_DIR
+and VISIO_NATIVE_RADIAL_FILLS_ALPHA_DIR to reproduce browser comparisons.
+
+All six framework routes passed both samples: 12 scenarios, 120 full-page
+576-by-432 RGBA comparisons across live and portable SVG. Every channel matched
+the native exported SVG raster exactly, with zero tolerance. This evidence is
+native SVG browser rasterization, not a claim that browser output equals the
+separately exported native PNG pipeline. Group rotation, nonrectangular geometry,
+colored layers, modern radial ShapeSheet settings and native reopening of
+core-edited radial documents still need authoritative acceptance evidence.
+
+Core regressions cover all five centers, separate stop alpha, physical page-scale
+normalization, move/save/reparse preservation and independent snapshot copies.
+Scene validation rejects invalid radial radii; DOM tests check shared live/export
+and immutable print output. Strict core types and viewer types passed. The Visio
+core suite passed 2,029 tests with 43 optional skips. The UI suite initially had
+one new test failure from omitting the print snapshot's required pageIndices;
+that test was corrected and both focused paint tests passed. Seven existing
+Teams/PPTX declaration errors remain outside this change. Viewer formatting also
+identified the pre-existing parity.md table formatting issue; another session is
+handling that isolated formatting fix.
+
+The corrected complete UI suite passed 711 tests with seven optional skips. The
+optional native radial regression passed for both captures, producing
+core-fill-patterns.vsdx acceptance candidates and preserving all normalized paint
+through move/save/reparse. That is parser/serializer preservation evidence; it
+does not establish native Visio reopen acceptance. Root lint passed with the nine
+existing unrelated warnings.

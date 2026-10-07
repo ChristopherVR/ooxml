@@ -13,10 +13,15 @@ for (const sample of [
 	{ name: 'grouped', directory: process.env.VISIO_NATIVE_FILL_PATTERNS_GROUPED_DIR },
 	{ name: 'group-flipped', directory: process.env.VISIO_NATIVE_FILL_PATTERNS_GROUP_FLIPPED_DIR },
 	{ name: 'oblique', directory: process.env.VISIO_NATIVE_FILL_PATTERNS_OBLIQUE_DIR },
+	{ name: 'radial', directory: process.env.VISIO_NATIVE_RADIAL_FILLS_DIR },
+	{ name: 'radial-alpha', directory: process.env.VISIO_NATIVE_RADIAL_FILLS_ALPHA_DIR },
 ]) {
 	const directory = sample.directory;
+	const radial = sample.name.startsWith('radial');
+	const firstPattern = radial ? 36 : 2,
+		patternCount = radial ? 5 : 23;
 	for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
-		test(`${framework}: ${sample.name} native hatch interiors match live and exported SVG`, async ({
+		test(`${framework}: ${sample.name} native fills match live and exported SVG`, async ({
 			page,
 		}) => {
 			test.skip(!directory, 'Set VISIO_NATIVE_FILL_PATTERNS_DIR to the native oracle directory.');
@@ -24,77 +29,86 @@ for (const sample of [
 			await page.locator('#file').setInputFiles(join(directory!, 'fill-patterns.vsdx'));
 			await expect(page.locator('#file-name')).toHaveText('fill-patterns.vsdx');
 			const references = await Promise.all(
-				Array.from({ length: 23 }, (_, index) =>
-					readFile(join(directory!, `pattern-${index + 2}.svg`), 'utf8'),
+				Array.from({ length: patternCount }, (_, index) =>
+					readFile(join(directory!, `pattern-${index + firstPattern}.svg`), 'utf8'),
 				),
 			);
-			const { results, groupDepths } = await page.evaluate(async (references) => {
-				const load = (path: string) => import(/* @vite-ignore */ path);
-				const { exportPageSvg, renderPage } = await load('/test-api.js');
-				const model = (
-					document.querySelector('visio-viewer') as unknown as { document: VisioDocument }
-				).document;
-				const groupDepth = (shapes: readonly VisioShape[]): number =>
-					Math.max(
-						0,
-						...shapes.map((shape) => (shape.kind === 'group' ? 1 + groupDepth(shape.children) : 0)),
-					);
-				const raster = async (source: string) => {
-					const url = URL.createObjectURL(new Blob([source], { type: 'image/svg+xml' }));
-					try {
-						const image = new Image();
-						image.src = url;
-						await image.decode();
-						const canvas = document.createElement('canvas');
-						canvas.width = 576;
-						canvas.height = 432;
-						const context = canvas.getContext('2d')!;
-						context.fillStyle = 'white';
-						context.fillRect(0, 0, 576, 432);
-						context.drawImage(image, 0, 0, 576, 432);
-						return context.getImageData(156, 156, 96, 96).data;
-					} finally {
-						URL.revokeObjectURL(url);
-					}
-				};
-				const differences = [];
-				for (let index = 0; index < model.pages.length; index++) {
-					const expected = await raster(references[index]!);
-					const live = renderPage(model, model.pages[index]);
-					const copy = live.svg.cloneNode(true) as SVGSVGElement;
-					for (const image of copy.querySelectorAll('image')) {
-						const href = image.getAttribute('href');
-						if (!href?.startsWith('blob:')) continue;
-						const bytes = new Uint8Array(await (await fetch(href)).arrayBuffer());
-						image.setAttribute(
-							'href',
-							`data:image/png;base64,${btoa(String.fromCharCode(...bytes))}`,
+			const { results, groupDepths } = await page.evaluate(
+				async ({ references, firstPattern, radial }) => {
+					const load = (path: string) => import(/* @vite-ignore */ path);
+					const { exportPageSvg, renderPage } = await load('/test-api.js');
+					const model = (
+						document.querySelector('visio-viewer') as unknown as { document: VisioDocument }
+					).document;
+					const groupDepth = (shapes: readonly VisioShape[]): number =>
+						Math.max(
+							0,
+							...shapes.map((shape) =>
+								shape.kind === 'group' ? 1 + groupDepth(shape.children) : 0,
+							),
 						);
-					}
-					const sources = [
-						new XMLSerializer().serializeToString(copy),
-						exportPageSvg(model, index).svg,
-					];
-					for (const source of sources) {
-						const actual = await raster(source);
-						let maximum = 0,
-							count = 0;
-						for (let byte = 0; byte < expected.length; byte++) {
-							const difference = Math.abs(actual[byte]! - expected[byte]!);
-							maximum = Math.max(maximum, difference);
-							if (difference) count++;
+					const raster = async (source: string) => {
+						const url = URL.createObjectURL(new Blob([source], { type: 'image/svg+xml' }));
+						try {
+							const image = new Image();
+							image.src = url;
+							await image.decode();
+							const canvas = document.createElement('canvas');
+							canvas.width = 576;
+							canvas.height = 432;
+							const context = canvas.getContext('2d')!;
+							context.fillStyle = 'white';
+							context.fillRect(0, 0, 576, 432);
+							context.drawImage(image, 0, 0, 576, 432);
+							return (
+								radial
+									? context.getImageData(0, 0, 576, 432)
+									: context.getImageData(156, 156, 96, 96)
+							).data;
+						} finally {
+							URL.revokeObjectURL(url);
 						}
-						differences.push({ pattern: index + 2, maximum, count });
+					};
+					const differences = [];
+					for (let index = 0; index < model.pages.length; index++) {
+						const expected = await raster(references[index]!);
+						const live = renderPage(model, model.pages[index]);
+						const copy = live.svg.cloneNode(true) as SVGSVGElement;
+						for (const image of copy.querySelectorAll('image')) {
+							const href = image.getAttribute('href');
+							if (!href?.startsWith('blob:')) continue;
+							const bytes = new Uint8Array(await (await fetch(href)).arrayBuffer());
+							image.setAttribute(
+								'href',
+								`data:image/png;base64,${btoa(String.fromCharCode(...bytes))}`,
+							);
+						}
+						const sources = [
+							new XMLSerializer().serializeToString(copy),
+							exportPageSvg(model, index).svg,
+						];
+						for (const source of sources) {
+							const actual = await raster(source);
+							let maximum = 0,
+								count = 0;
+							for (let byte = 0; byte < expected.length; byte++) {
+								const difference = Math.abs(actual[byte]! - expected[byte]!);
+								maximum = Math.max(maximum, difference);
+								if (difference) count++;
+							}
+							differences.push({ pattern: index + firstPattern, maximum, count });
+						}
+						live.dispose();
 					}
-					live.dispose();
-				}
-				return {
-					results: differences,
-					groupDepths: model.pages.map((page) => groupDepth(page.shapes)),
-				};
-			}, references);
+					return {
+						results: differences,
+						groupDepths: model.pages.map((page) => groupDepth(page.shapes)),
+					};
+				},
+				{ references, firstPattern, radial },
+			);
 			if (sample.name.startsWith('group')) expect(groupDepths).toEqual(Array(23).fill(2));
-			expect(results).toHaveLength(46);
+			expect(results).toHaveLength(patternCount * 2);
 			if (results.some((result) => result.maximum))
 				await test.info().attach('native-hatch-differences', {
 					body: JSON.stringify(results, null, 2),
@@ -102,7 +116,7 @@ for (const sample of [
 				});
 			expect(
 				Math.max(...results.map((result) => result.maximum)),
-				`${results.reduce((sum, result) => sum + result.count, 0)} differing channels across 46 renders`,
+				`${results.reduce((sum, result) => sum + result.count, 0)} differing channels across ${patternCount * 2} renders`,
 			).toBe(0);
 			for (const result of results)
 				expect(

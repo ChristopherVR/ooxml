@@ -34,14 +34,21 @@ export function fillPaint(
 		return `url(#${pattern.id})`;
 	}
 	if (!style.fillGradient) return safeColor(style.fill, '#fff');
-	const gradient = svgElement('linearGradient'),
-		paint = style.fillGradient;
+	const paint = style.fillGradient,
+		gradient = svgElement(paint.type === 'radial' ? 'radialGradient' : 'linearGradient');
 	gradient.id = `visio-fill-${++gradientId}`;
-	gradient.setAttribute('gradientUnits', 'userSpaceOnUse');
-	gradient.setAttribute('x1', String(paint.start[0]));
-	gradient.setAttribute('y1', String(paint.start[1]));
-	gradient.setAttribute('x2', String(paint.end[0]));
-	gradient.setAttribute('y2', String(paint.end[1]));
+	if (paint.type === 'radial') {
+		gradient.setAttribute('gradientUnits', 'objectBoundingBox');
+		gradient.setAttribute('cx', String(paint.center[0]));
+		gradient.setAttribute('cy', String(paint.center[1]));
+		gradient.setAttribute('r', String(paint.radius));
+	} else {
+		gradient.setAttribute('gradientUnits', 'userSpaceOnUse');
+		gradient.setAttribute('x1', String(paint.start[0]));
+		gradient.setAttribute('y1', String(paint.start[1]));
+		gradient.setAttribute('x2', String(paint.end[0]));
+		gradient.setAttribute('y2', String(paint.end[1]));
+	}
 	for (const color of paint.stops) {
 		const stop = svgElement('stop');
 		stop.setAttribute('offset', String(color.offset));

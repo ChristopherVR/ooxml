@@ -109,6 +109,7 @@ export function expectNativeLayerPaint(actual: VisioShape, index: number): void 
 		const gradient = actual.style.fillGradient!;
 		expect(gradient?.stops).toEqual(native.gradientStops);
 		expect(actual.style.fillOpacity).toBe(1);
+		if (gradient.type !== 'linear') throw new Error('Expected a native linear fill.');
 		const direction = [gradient.end[0] - gradient.start[0], gradient.end[1] - gradient.start[1]];
 		const expected =
 			native.gradientAngle === 0
