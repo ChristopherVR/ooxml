@@ -13,6 +13,7 @@
 		"declaration": true,
 		"types": ["vitest/globals"],
 		"paths": {
+			"ooxml-core/pptx": ["../core/dist/pptx/index.d.ts"],
 			"ooxml-core/*": ["../core/*/index.ts"]
 		}
 	},
