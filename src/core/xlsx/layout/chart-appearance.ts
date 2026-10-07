@@ -9,7 +9,7 @@ import { resolveDrawingColor } from '../../diagram/drawing-color';
 import { EMU_PER_PIXEL, EMU_PER_POINT } from '../../units/constants';
 import type { ChartObject, ThemePalette } from '../model';
 import { chartColorScheme } from './chart-colors';
-import type { ChartGradientFill } from '../../chart/gradient-definition';
+import { resolveChartGradient, type ChartGradientFill } from '../../chart/gradient-definition';
 
 export interface ChartAppearanceEntry extends ResolvedChartStyleEntry {
 	gradient?: ChartGradientFill;
@@ -56,7 +56,11 @@ export function chartAppearance(
 	}
 	const scheme = chartColorScheme(theme) as unknown as Readonly<Record<string, string>>;
 	const resolve = (color: Parameters<typeof resolveDrawingColor>[0]) =>
-		resolveDrawingColor(color, { scheme: (name) => scheme[name] }, { hslRounding: 'halfDown' });
+		resolveDrawingColor(
+			color,
+			{ scheme: (name) => scheme[name] },
+			{ hslRounding: 'halfDown', transformOrder: 'document' },
+		);
 	const out: ChartAppearance =
 		resolveChartStyleDefinition({ entries, sourceXml: '' }, (color) => {
 			const value = resolve(color);
@@ -75,20 +79,7 @@ export function chartAppearance(
 		if (entry.labelsVisible !== undefined) (out[part] ??= {}).labelsVisible = entry.labelsVisible;
 		if (entry.line?.widthEmu === 0) (out[part] ??= {}).lineWidth = 0;
 		if (entry.fill?.kind === 'gradient') {
-			const fill = entry.fill;
-			const stops = fill.stops.flatMap((stop) => {
-				const color = resolve(stop.color);
-				return color ? [{ position: stop.position, color: color.hex, opacity: color.alpha }] : [];
-			});
-			const focus = fill.fillToRect;
-			(out[part] ??= {}).gradient = {
-				type: fill.path ? 'radial' : 'linear',
-				stops,
-				...(fill.angle === undefined ? {} : { angle: fill.angle }),
-				...(focus
-					? { focalPoint: { x: (1 + focus.l - focus.r) / 2, y: (1 + focus.t - focus.b) / 2 } }
-					: {}),
-			};
+			(out[part] ??= {}).gradient = resolveChartGradient(entry.fill, resolve);
 		}
 	}
 	return out;

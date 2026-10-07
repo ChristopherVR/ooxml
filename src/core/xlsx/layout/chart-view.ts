@@ -6,8 +6,11 @@ import { resolveDrawingColor } from '../../diagram/drawing-color';
 import { niceScale, PERCENT_SCALE, type AxisScale } from './chart-scale';
 import { resolveColor } from './colors';
 import { chartAppearance, type ChartAppearance } from './chart-appearance';
+import { resolveChartGradient, type ChartGradientFill } from '../../chart/gradient-definition';
 
 export interface ChartSeriesView {
+	gradient?: ChartGradientFill;
+	pointGradients?: Record<number, ChartGradientFill>;
 	name: string;
 	values: (number | null)[];
 	/** Scatter X values (numeric categories, or 1..n when the categories are text). */
@@ -106,6 +109,18 @@ export function chartView(
 		resolveDrawingColor(color, {
 			scheme: (name) => (scheme as Readonly<Record<string, string>>)[name],
 		})?.hex;
+	const gradient = (fill: ChartSeries['fill']) =>
+		fill?.kind === 'gradient'
+			? resolveChartGradient(fill, (color) =>
+					resolveDrawingColor(
+						color,
+						{
+							scheme: (name) => (scheme as Readonly<Record<string, string>>)[name],
+						},
+						{ transformOrder: 'document' },
+					),
+				)
+			: undefined;
 	const grouping =
 		chart.grouping ?? (type === 'bar' || type === 'column' ? 'clustered' : 'standard');
 	let categories: string[] = [];
@@ -118,11 +133,23 @@ export function chartView(
 		const paletteColor =
 			palette && chartPaletteSeriesColor(palette, i, chart.series.length, scheme);
 		const color =
-			drawingColor(s.drawingColor) ??
-			resolveColor(s.color, theme) ??
-			paletteColor ??
-			autoSeriesColor(theme, i);
-		return { name: seriesName(s, i, evaluateRef), values, color };
+			s.fill?.kind === 'none'
+				? 'none'
+				: (drawingColor(s.drawingColor) ??
+					resolveColor(s.color, theme) ??
+					paletteColor ??
+					autoSeriesColor(theme, i));
+		const view: ChartSeriesView = { name: seriesName(s, i, evaluateRef), values, color };
+		const resolvedGradient = gradient(s.fill);
+		if (resolvedGradient) view.gradient = resolvedGradient;
+		const points = Object.fromEntries(
+			Object.entries(s.pointFills ?? {}).flatMap(([key, fill]) => {
+				const value = gradient(fill);
+				return value ? [[key, value]] : [];
+			}),
+		);
+		if (Object.keys(points).length) view.pointGradients = points;
+		return view;
 	});
 	const longest = Math.max(0, ...series.map((s) => s.values.length));
 	const firstCats = rawCategories.find((c) => c.length > 0) ?? [];
@@ -147,6 +174,17 @@ export function chartView(
 			const points = chart.series[seriesIndex]?.pointColors;
 			if (points) s.pointColors = s.values.map((_, i) => drawingColor(points[i]) ?? s.color);
 		});
+	series.forEach((s, index) => {
+		const source = chart.series[index]!;
+		if (s.gradient && !radial && s.pointColors) {
+			// Holes inherit the series paint, which becomes a gradient URL at the painter boundary.
+			for (let i = 0; i < s.pointColors.length; i++)
+				if (!source.pointColors?.[i]) delete s.pointColors[i];
+		}
+		for (const [key, fill] of Object.entries(source.pointFills ?? {})) {
+			if (fill.kind === 'none') (s.pointColors ??= [])[Number(key)] = 'none';
+		}
+	});
 
 	const model: ChartViewModel = {
 		type,

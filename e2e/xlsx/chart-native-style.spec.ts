@@ -76,11 +76,27 @@ test('native dark chart styles retain gradient backgrounds and contrasting text'
 }) => {
 	const chart = await openNativeStyle(page, 209);
 	await expect(chart.locator('radialGradient')).toHaveCount(1);
-	await expect(chart.locator('stop')).toHaveCount(2);
+	await expect(chart.locator('radialGradient stop')).toHaveCount(2);
 	await expect(chart.locator('text').filter({ hasText: 'Native style' })).toHaveAttribute(
 		'fill',
 		'#F2F2F2',
 	);
 	await expect(chart.locator('rect').first()).toHaveAttribute('fill', /^url\(#xlsx-chart-.*\)$/);
 	await expect(chart.locator('line[stroke="rgba(242,242,242,0.1)"]')).toHaveCount(7);
+	await expect(chart.locator('linearGradient')).toHaveCount(2);
+	await expect(chart.locator('linearGradient stop')).toHaveCount(6);
+	await expect(chart.locator('linearGradient stop').first()).toHaveAttribute(
+		'stop-color',
+		'#497491',
+	);
+	await expect(chart.locator('rect[fill*="-s0)"]')).toHaveCount(5);
+	await page.getByRole('img', { name: 'Native style', exact: true }).first().click();
+	await editor(page).getByRole('tab', { name: 'Chart Design', exact: true }).click();
+	await editor(page).getByRole('button', { name: 'Change Colors', exact: true }).click();
+	await page.getByRole('button', { name: 'Colorful Palette 3', exact: true }).click();
+	await expect(chart.locator('linearGradient stop').first()).toHaveAttribute(
+		'stop-color',
+		'#ED8256',
+	);
+	await expect(chart.locator('radialGradient stop')).toHaveCount(2);
 });

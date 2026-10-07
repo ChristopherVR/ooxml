@@ -301,8 +301,10 @@ export function hslToRgb(
 	s: number,
 	l: number,
 	roundChannel: (value: number) => number = Math.round,
+	options?: { clampSaturation?: boolean },
 ): { r: number; g: number; b: number } {
-	const sC = clampUnitInterval(s);
+	// Native gradient transforms can temporarily exceed the sRGB gamut before shading.
+	const sC = options?.clampSaturation === false ? s : clampUnitInterval(s);
 	const lC = clampUnitInterval(l);
 	// Normalise hue to [0, 360) handling negative values
 	const hN = ((h % 360) + 360) % 360;

@@ -2,7 +2,7 @@ import type { ChartStylePart } from '../../chart/style-definition';
 import { chartPointsToPixels } from './chart-appearance';
 import type { ChartViewModel } from './chart-view';
 import { AXIS_COLOR, GRID_COLOR, FONT_SIZE, n, esc, type Rect, type text } from './chart-svg-util';
-import { buildChartGradientDef } from '../../chart/gradient-definition';
+import { buildChartGradientDef, type ChartGradientFill } from '../../chart/gradient-definition';
 import { cssFontFamily } from './font-family';
 
 /** Each standalone SVG needs distinct gradient targets when inserted beside other charts. */
@@ -11,10 +11,8 @@ export function chartGradientPaint(model: ChartViewModel): { model: ChartViewMod
 	const prefix = `xlsx-chart-${++nextPaintId}`;
 	const appearance = { ...model.appearance };
 	const defs: string[] = [];
-	for (const part of ['chartArea', 'plotArea'] as const) {
-		const entry = appearance[part];
-		if (!entry?.gradient) continue;
-		const def = buildChartGradientDef(`${prefix}-${part}`, entry.gradient);
+	const paint = (gradient: ChartGradientFill, suffix: string) => {
+		const def = buildChartGradientDef(`${prefix}-${suffix}`, gradient);
 		const geometry =
 			def.kind === 'linearGradient'
 				? `x1="${def.x1}" y1="${def.y1}" x2="${def.x2}" y2="${def.y2}"`
@@ -26,10 +24,25 @@ export function chartGradientPaint(model: ChartViewModel): { model: ChartViewMod
 			)
 			.join('');
 		defs.push(`<${def.kind} id="${def.id}" ${geometry}>${stops}</${def.kind}>`);
-		appearance[part] = { ...entry, fillColor: `url(#${def.id})` };
+		return `url(#${def.id})`;
+	};
+	for (const part of ['chartArea', 'plotArea'] as const) {
+		const entry = appearance[part];
+		if (!entry?.gradient) continue;
+		appearance[part] = { ...entry, fillColor: paint(entry.gradient, part) };
 	}
+	const series = model.series.map((source, index) => {
+		const view = { ...source };
+		if (source.gradient) view.color = paint(source.gradient, `s${index}`);
+		if (source.pointGradients) {
+			view.pointColors = [...(source.pointColors ?? [])];
+			for (const [key, gradient] of Object.entries(source.pointGradients))
+				view.pointColors[Number(key)] = paint(gradient, `s${index}-p${key}`);
+		}
+		return view;
+	});
 	return defs.length
-		? { model: { ...model, appearance }, defs: `<defs>${defs.join('')}</defs>` }
+		? { model: { ...model, appearance, series }, defs: `<defs>${defs.join('')}</defs>` }
 		: { model, defs: '' };
 }
 

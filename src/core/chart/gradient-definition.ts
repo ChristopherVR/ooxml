@@ -1,4 +1,6 @@
 /** Resolved chart gradients, shared by Office chart painters. */
+import type { DiagramFill, DiagramColor } from '../diagram/types';
+
 export interface ChartGradientFill {
 	type: 'linear' | 'radial';
 	stops: Array<{ color: string; position: number; opacity?: number }>;
@@ -28,6 +30,25 @@ export type ChartSvgGradientDef =
 			r: number;
 			stops: ChartSvgGradientStop[];
 	  };
+
+/** Resolve imported DrawingML gradient stops once for every Office chart painter. */
+export function resolveChartGradient(
+	fill: Extract<DiagramFill, { kind: 'gradient' }>,
+	resolve: (color: DiagramColor) => { hex: string; alpha: number } | undefined,
+): ChartGradientFill {
+	const focus = fill.fillToRect;
+	return {
+		type: fill.path ? 'radial' : 'linear',
+		stops: fill.stops.flatMap((stop) => {
+			const color = resolve(stop.color);
+			return color ? [{ position: stop.position, color: color.hex, opacity: color.alpha }] : [];
+		}),
+		...(fill.angle === undefined ? {} : { angle: fill.angle }),
+		...(focus
+			? { focalPoint: { x: (1 + focus.l - focus.r) / 2, y: (1 + focus.t - focus.b) / 2 } }
+			: {}),
+	};
+}
 
 /** Extracted from PowerPoint's COM-verified chart gradient painter. */
 export function buildChartGradientDef(id: string, fill: ChartGradientFill): ChartSvgGradientDef {

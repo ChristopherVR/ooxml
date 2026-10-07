@@ -120,11 +120,13 @@ export function patchChartPart(
 	const sameNames = before.series.every((s, i) => s.name === model.series[i]?.name);
 	const sameColors = before.series.every(
 		(s, i) =>
-			JSON.stringify([s.color, s.drawingColor, s.pointColors]) ===
+			JSON.stringify([s.color, s.drawingColor, s.pointColors, s.fill, s.pointFills]) ===
 			JSON.stringify([
 				model.series[i]?.color,
 				model.series[i]?.drawingColor,
 				model.series[i]?.pointColors,
+				model.series[i]?.fill,
+				model.series[i]?.pointFills,
 			]),
 	);
 	if (

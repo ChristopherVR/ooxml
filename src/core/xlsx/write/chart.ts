@@ -3,6 +3,7 @@ import type { ChartObject, ChartSeries } from '../model';
 import { XML_HEADER, escapeAttr, escapeText } from './xml-out';
 import { chartSeriesFill } from './chart-colors';
 import { drawingColorXml } from '../../diagram/write-color';
+import { drawingFillXml } from '../../diagram/write-fill';
 
 const pt = (values: readonly (string | number | null)[]) =>
 	values
@@ -35,15 +36,25 @@ function seriesXml(chart: ChartObject, series: ChartSeries, index: number): stri
 	else if (series.name !== undefined) out += `<c:tx><c:v>${escapeText(series.name)}</c:v></c:tx>`;
 	const lineLike = type === 'line' || type === 'scatter' || type === 'radar';
 	const fill = chartSeriesFill(chart, series, index);
-	if (type !== 'pie' && type !== 'doughnut')
+	if ((type !== 'pie' && type !== 'doughnut') || series.fill || series.color || series.drawingColor)
 		out += lineLike
 			? `<c:spPr><a:ln w="28575" cap="rnd">${fill}</a:ln></c:spPr>`
 			: `<c:spPr>${fill}</c:spPr>`;
 	if (lineLike) out += '<c:marker><c:symbol val="none"/></c:marker>';
 	if (type === 'bar' || type === 'column') out += '<c:invertIfNegative val="0"/>';
-	for (const [idx, color] of Object.entries(series.pointColors ?? {})) {
-		if (/^\d+$/.test(idx))
-			out += `<c:dPt><c:idx val="${idx}"/><c:spPr><a:solidFill>${drawingColorXml(color)}</a:solidFill></c:spPr></c:dPt>`;
+	for (const idx of new Set([
+		...Object.keys(series.pointColors ?? {}),
+		...Object.keys(series.pointFills ?? {}),
+	])) {
+		const fill = series.pointFills?.[Number(idx)];
+		const color = series.pointColors?.[Number(idx)];
+		const xml = fill
+			? drawingFillXml(fill)
+			: color
+				? `<a:solidFill>${drawingColorXml(color)}</a:solidFill>`
+				: undefined;
+		if (/^\d+$/.test(idx) && xml)
+			out += `<c:dPt><c:idx val="${idx}"/><c:spPr>${xml}</c:spPr></c:dPt>`;
 	}
 	const numericCats =
 		series.categories.length > 0 && series.categories.every((c) => typeof c === 'number');

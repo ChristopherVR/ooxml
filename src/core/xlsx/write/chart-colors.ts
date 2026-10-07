@@ -7,6 +7,7 @@ import {
 } from '../../chart/color-style';
 import { parseDrawingColorIn } from '../../diagram/drawing-color';
 import { drawingColorXml } from '../../diagram/write-color';
+import { drawingFillXml } from '../../diagram/write-fill';
 import type { DiagramColor } from '../../diagram/types';
 import { NS, children, elements, first, parseXml, type XmlElement } from '../../xml/index';
 import { sameChartColor } from '../edit/chart-colors';
@@ -19,6 +20,8 @@ const FILLS = new Set(['solidFill', 'gradFill', 'pattFill', 'blipFill', 'grpFill
 
 /** Primary color of a series, preserving a manual fill before palette defaults. */
 export function chartSeriesFill(chart: ChartObject, series: ChartSeries, index: number): string {
+	const imported = series.fill && drawingFillXml(series.fill);
+	if (imported) return imported;
 	const palette = findChartColorPalette(chart.colorPalette ?? 10)!;
 	const choice =
 		series.drawingColor ??
@@ -92,6 +95,7 @@ export function patchChartColors(
 		const old = before.series[index];
 		if (
 			!sameChartColor(old?.drawingColor, series.drawingColor) ||
+			JSON.stringify(old?.fill) !== JSON.stringify(series.fill) ||
 			JSON.stringify(old?.color) !== JSON.stringify(series.color)
 		) {
 			let spPr = markerOnly
@@ -133,13 +137,60 @@ export function patchChartColors(
 			for (const point of children(ser, 'dPt', NS.c))
 				recolorMarker(doc, first(first(point, 'marker', NS.c), 'spPr', NS.c), previous, next);
 		}
-		if (JSON.stringify(old?.pointColors) !== JSON.stringify(series.pointColors)) {
-			for (const point of children(ser, 'dPt', NS.c)) {
-				const pointIndex = Number(first(point, 'idx', NS.c)?.getAttribute('val'));
+		if (
+			JSON.stringify([old?.pointColors, old?.pointFills]) !==
+			JSON.stringify([series.pointColors, series.pointFills])
+		) {
+			const points = children(ser, 'dPt', NS.c);
+			const indices = new Set([
+				...Object.keys(old?.pointColors ?? {}),
+				...Object.keys(old?.pointFills ?? {}),
+				...Object.keys(series.pointColors ?? {}),
+				...Object.keys(series.pointFills ?? {}),
+			]);
+			for (const key of indices) {
+				if (!/^\d+$/.test(key)) continue;
+				const pointIndex = Number(key);
+				let point = points.find(
+					(node) => Number(first(node, 'idx', NS.c)?.getAttribute('val')) === pointIndex,
+				);
 				const color = series.pointColors?.[pointIndex];
-				const spPr = first(point, 'spPr', NS.c);
-				if (color && spPr)
-					setFill(doc, spPr, `<a:solidFill>${drawingColorXml(color)}</a:solidFill>`);
+				const fill = series.pointFills?.[pointIndex];
+				const xml = fill
+					? drawingFillXml(fill)
+					: color
+						? `<a:solidFill>${drawingColorXml(color)}</a:solidFill>`
+						: undefined;
+				let spPr = first(point, 'spPr', NS.c);
+				if (!xml) {
+					for (const paint of spPr ? elements(spPr) : [])
+						if (paint.namespaceURI === NS.a && FILLS.has(paint.localName)) spPr!.removeChild(paint);
+					continue;
+				}
+				if (!point) {
+					point = doc.createElementNS(NS.c, 'c:dPt');
+					const idx = doc.createElementNS(NS.c, 'c:idx');
+					idx.setAttribute('val', key);
+					point.appendChild(idx);
+					ser.insertBefore(
+						point,
+						first(ser, 'dLbls', NS.c) ??
+							first(ser, 'trendline', NS.c) ??
+							first(ser, 'errBars', NS.c) ??
+							first(ser, 'cat', NS.c) ??
+							first(ser, 'xVal', NS.c) ??
+							first(ser, 'val', NS.c) ??
+							null,
+					);
+				}
+				if (!spPr) {
+					spPr = doc.createElementNS(NS.c, 'c:spPr');
+					point.insertBefore(
+						spPr,
+						first(point, 'pictureOptions', NS.c) ?? first(point, 'extLst', NS.c) ?? null,
+					);
+				}
+				setFill(doc, spPr, xml);
 			}
 		}
 	});

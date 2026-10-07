@@ -1,5 +1,5 @@
 import type { AppProperties, CoreProperties, CustomProperty } from '../opc/properties/types';
-import type { DiagramColor, DiagramDrawing, DiagramIssue } from '../diagram/types';
+import type { DiagramColor, DiagramDrawing, DiagramIssue, DiagramFill } from '../diagram/types';
 import type { CellAddress, CellRange } from './address';
 import type { ChartStyleDefinition } from '../chart/style-definition';
 
@@ -539,6 +539,10 @@ export interface ChartSeries {
 	drawingColor?: DiagramColor;
 	/** Explicit colors of individual points (indexed by c:dPt/c:idx). */
 	pointColors?: Record<number, DiagramColor>;
+	/** Non-solid primary DrawingML fill/line paint. Solid fills use drawingColor. */
+	fill?: DiagramFill;
+	/** Non-solid individual point fills; solid point overrides use pointColors. */
+	pointFills?: Record<number, DiagramFill>;
 }
 
 export interface ChartObject {

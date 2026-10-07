@@ -56,12 +56,29 @@ export function updateChart(ctx: EditContext, s: number, index: number, patch: C
 			// A legacy color edit replaces the parsed DrawingML choice unless the caller edits both.
 			changes.series?.forEach((series, i) => {
 				const before = live.series[i];
+				if (!before) return;
+				const legacyChanged = JSON.stringify(before.color) !== JSON.stringify(series.color);
+				const drawingChanged =
+					JSON.stringify(before.drawingColor) !== JSON.stringify(series.drawingColor);
+				if (legacyChanged && !drawingChanged) delete series.drawingColor;
 				if (
-					before &&
-					JSON.stringify(before.color) !== JSON.stringify(series.color) &&
-					JSON.stringify(before.drawingColor) === JSON.stringify(series.drawingColor)
+					(legacyChanged || drawingChanged) &&
+					JSON.stringify(before.fill) === JSON.stringify(series.fill)
 				)
-					delete series.drawingColor;
+					delete series.fill;
+				for (const key of new Set([
+					...Object.keys(before.pointColors ?? {}),
+					...Object.keys(series.pointColors ?? {}),
+				])) {
+					const point = Number(key);
+					if (
+						JSON.stringify(before.pointColors?.[point]) !==
+							JSON.stringify(series.pointColors?.[point]) &&
+						JSON.stringify(before.pointFills?.[point]) ===
+							JSON.stringify(series.pointFills?.[point])
+					)
+						delete series.pointFills?.[point];
+				}
 			});
 			for (const [key, value] of Object.entries(changes)) {
 				if (key === 'kind' || key === 'partName' || key === '__proto__') continue;

@@ -2,6 +2,7 @@
 import { parseDrawingColorIn } from './drawing-color';
 import { NS, children, elements, first, type XmlElement } from './dom';
 import type { DiagramFill, DiagramLine } from './types';
+import { buildXml } from '../xml/index';
 
 const FILL_ELEMENTS = new Set([
 	'noFill',
@@ -53,6 +54,7 @@ export function parseDrawingFill(properties: XmlElement | undefined): DiagramFil
 				: undefined;
 			return {
 				kind: 'gradient',
+				sourceXml: buildXml(fill),
 				stops,
 				...(Number.isFinite(angle) ? { angle: angle / 60000 } : {}),
 				...(path ? { path } : {}),

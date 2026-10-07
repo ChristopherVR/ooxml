@@ -706,3 +706,42 @@ browser tests passed. Core and UI typechecks/builds and clean-consumer imports
 passed (93 UI entry points and 45 custom-element registrations). Font-stack
 extraction also passed the existing cell-paint tests. Native workbooks and the
 COM-rendered PNG remain temporary acceptance artifacts.
+
+## Imported series and point gradients
+
+Imported series and point gradients now use the shared PowerPoint gradient
+contract and SVG geometry. Cartesian series paints and explicit point paints
+receive distinct gradient targets, with stop alpha retained. Chart color edits
+replace the automatic theme base while retaining the ordered native shading
+transforms; explicit RGB edits replace the gradient. Custom or mixed-base
+gradients are retained. Point paint additions, replacements and removals are
+patched into existing chart parts. Series gradients survive chart regeneration,
+although regeneration still loses other unmodelled chart properties.
+
+The shared DrawingML writer retains source gradient flags (including `scaled`
+and `rotWithShape`), opaque stops, tile rectangles and extensions. Palette edits
+retain existing series effects and axes. The document-order color resolver keeps
+fractional intermediate channels and applies repeated transforms in order.
+Native saturation can temporarily exceed the sRGB gamut before shading; this
+path reuses the shared HSL conversion with an opt-in saturation setting.
+
+`scripts/record-xlsx-chart-gradients.ps1` creates owned hidden Excel workbooks,
+saves and reopens them, then records style 209 under palettes 10, 12 and 14.
+The committed `excel-chart-gradients.json` fixture contains native parts and
+all 18 COM-measured gradient stops. Rendering, palette edits, save/reload and
+undo/redo match those measured stops. Reopening an edited full native workbook
+in Excel also returned palette 14 and all six expected stop colors.
+
+Playwright MCP reviewed the production chart and the Change Colors interaction.
+Its screenshot confirms visible series gradients; the native PNG comparison
+still shows missing rendered shadows, differing plot placement and bar widths,
+and font-dependent differences. Source effects are preserved, not yet painted.
+Series gradients on vary-colors pie/doughnut charts, complete scatter marker
+paint semantics, rectangular path gradients and exact unscaled gradient geometry
+remain incomplete. These checks do not establish full chart or Excel parity.
+
+Validation: all 8,233 XLSX/chart/diagram/color core tests and 76 production
+browser tests passed, along with core and XLSX binding typechecks, the core
+build and clean-consumer imports of every core entry point. The native-style
+browser case verifies rendered series stops and a live palette change; the
+six-binding typography cases also remain green.

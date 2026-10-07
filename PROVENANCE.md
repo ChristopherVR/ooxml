@@ -730,3 +730,14 @@ and modern saved direction numbers map into this one implementation. Both reuse
 the shared DrawingML linear endpoint helper and the existing region SVG renderer.
 Stop color, position and transparency normalization remain in the saved parser.
 Path-following direction 13 remains explicitly unsupported.
+
+## Shared imported chart gradient resolution
+
+Source: ChristopherVR/ooxml at `c14f42d99db1aad93ff522a4436aab29606d52d6`,
+`src/core/xlsx/layout/chart-appearance.ts`, the imported gradient stop and focus
+rectangle conversion. It moved unchanged into `resolveChartGradient` in
+`src/core/chart/gradient-definition.ts`. XLSX chart backgrounds, series and point
+fills use that resolver and the existing geometry extracted from PowerPoint.
+The DrawingML writer and ordered color-transform mode are new shared core code;
+they reuse the existing color conversion helpers rather than a viewer-local
+color engine. Existing callers keep their default conversion behavior.

@@ -3,6 +3,7 @@ import type { ChartObject, ChartSeries, ChartType, Color, DrawingAnchor } from '
 import { att } from './xml-util';
 import { parseDrawingColorIn } from '../../diagram/drawing-color';
 import { readChartFormatting } from '../../chart/read-formatting';
+import { parseDrawingFill } from '../../diagram/drawing-fill';
 
 const c = (parent: ParentNode | null | undefined, local: string) => first(parent, local, NS.c);
 const val = (parent: ParentNode | null | undefined, local: string) => att(c(parent, local), 'val');
@@ -150,15 +151,23 @@ export function parseChart(
 		if (color) out.color = color;
 		const drawingColor = parseDrawingColorIn(first(colorContainer, 'solidFill', NS.a));
 		if (drawingColor) out.drawingColor = drawingColor;
+		const fill = parseDrawingFill(colorContainer);
+		if (fill && fill.kind !== 'solid' && !(chartType === 'scatter' && fill.kind === 'none'))
+			out.fill = fill;
 		const points: NonNullable<ChartSeries['pointColors']> = {};
+		const pointFills: NonNullable<ChartSeries['pointFills']> = {};
 		for (const point of children(ser, 'dPt', NS.c)) {
 			const pointColor = parseDrawingColorIn(
 				first(c(point, 'spPr') ?? c(c(point, 'marker'), 'spPr'), 'solidFill', NS.a),
 			);
 			const index = Number(val(point, 'idx'));
 			if (pointColor && Number.isInteger(index) && index >= 0) points[index] = pointColor;
+			const pointFill = parseDrawingFill(c(point, 'spPr') ?? c(c(point, 'marker'), 'spPr'));
+			if (pointFill && pointFill.kind !== 'solid' && Number.isInteger(index) && index >= 0)
+				pointFills[index] = pointFill;
 		}
 		if (Object.keys(points).length) out.pointColors = points;
+		if (Object.keys(pointFills).length) out.pointFills = pointFills;
 		return out;
 	});
 	const object: ChartObject = {

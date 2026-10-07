@@ -207,6 +207,8 @@ export type DiagramFill =
 	| { kind: 'solid'; color: DiagramColor }
 	| {
 			kind: 'gradient';
+			/** Original gradient XML, retaining flags and unsupported properties for editing. */
+			sourceXml?: string;
 			stops: { position: number; color: DiagramColor }[];
 			/** Linear angle in degrees, when `a:lin` is present. */
 			angle?: number;

@@ -56,7 +56,11 @@ for (const sample of native.cases)
 		);
 		if (area?.gradient) {
 			expect(svg.getElementsByTagName('defs')).toHaveLength(1);
-			expect(svg.getElementsByTagName('stop')).toHaveLength(area.gradient.stops.length);
+			const background = [
+				...svg.getElementsByTagName('linearGradient'),
+				...svg.getElementsByTagName('radialGradient'),
+			].find((node) => node.getAttribute('id')?.endsWith('-chartArea'))!;
+			expect(background.getElementsByTagName('stop')).toHaveLength(area.gradient.stops.length);
 		}
 		if (sample.chartArea.lineWeight !== null) {
 			expect(view.appearance?.chartArea?.lineWidth).toBe(sample.chartArea.lineWeight);

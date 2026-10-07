@@ -14,6 +14,7 @@ import {
 import { linearToSrgb255, srgb255ToLinear } from '../color/color-linear';
 import { NS, elements, type XmlElement } from './dom';
 import type { DiagramColor } from './types';
+import { orderedColorTransforms } from './ordered-color-transforms';
 
 const COLOR_ELEMENTS: Record<string, DiagramColor['kind']> = {
 	srgbClr: 'srgb',
@@ -147,15 +148,31 @@ const APPLIED = new Set([
  * (structural, shade/tint in linear light, one HSL round trip, alpha) and lists those it does not
  * apply (`red*`, `green*`, `blue*`, `gamma`) in `unapplied`. Returns `undefined` when the base
  * colour cannot be determined (an unknown theme slot, `phClr` with no host value, ...).
+ * `transformOrder: 'document'` applies repeated transforms in XML order with fractional
+ * intermediate channels, matching measured native Excel gradient stops.
  */
 export function resolveDrawingColor(
 	color: DiagramColor,
 	theme?: DrawingColorTheme,
-	options?: { hslRounding?: 'nearest' | 'halfDown' },
+	options?: { hslRounding?: 'nearest' | 'halfDown'; transformOrder?: 'legacy' | 'document' },
 ): ResolvedDrawingColor | undefined {
 	const base = baseHex(color, theme);
 	const rgb = base ? hexToRgbChannels(base) : null;
 	if (!rgb) return undefined;
+	if (options?.transformOrder === 'document') {
+		const value = orderedColorTransforms(rgb, color.transforms);
+		const round =
+			options.hslRounding === 'halfDown'
+				? (channel: number) => Math.ceil(channel - 0.5)
+				: Math.round;
+		return {
+			hex: `#${toHex(round(value.r))}${toHex(round(value.g))}${toHex(round(value.b))}`,
+			alpha: value.alpha,
+			unapplied: [...new Set(color.transforms.map((transform) => transform.name))].filter(
+				(name) => !APPLIED.has(name),
+			),
+		};
+	}
 	let { r, g, b } = rgb;
 	const find = (name: string) => color.transforms.find((entry) => entry.name === name)?.value;
 	const has = (name: string) => color.transforms.some((entry) => entry.name === name);
