@@ -26,6 +26,32 @@ function setup(grid?: { zoom: number }) {
 const radio = (root: HTMLElement, label: string) => inputByLabel(root, label);
 
 describe('Paste Special', () => {
+	it('pastes column widths through the shared dialog without changing cells', async () => {
+		const ctx = setup();
+		const session = ctx.session()!;
+		const sheet = ctx.workbook()!.sheets[0]!;
+		session.setColumnWidth(0, [0], 20);
+		session.setColumnWidth(0, [2], 12);
+		session.setCellValue(0, 0, 2, 9);
+		clipState(ctx).payload = session.copy(0, {
+			start: { row: 0, col: 0 },
+			end: { row: 0, col: 0 },
+		});
+		ctx.select('C1');
+		const result = ctx.commands.run('home.paste-special');
+		const dialog = dialogEl(ctx, 'paste-special');
+		expect(radio(dialog, 'Column widths').disabled).toBe(false);
+		radio(dialog, 'Column widths').click();
+		radio(dialog, 'Multiply').click();
+		inputByLabel(dialog, 'Skip blanks').click();
+		clickButton(dialog, 'OK');
+		await result;
+		const width = () => sheet.columns.find((c) => c.min <= 2 && c.max >= 2)?.width;
+		expect(width()).toBe(20);
+		expect(getCell(sheet, 0, 2)?.value).toBe(9);
+		session.undo();
+		expect(width()).toBe(12);
+	});
 	it('copies all except destination borders through the shared dialog', async () => {
 		const ctx = setup();
 		const session = ctx.session()!;

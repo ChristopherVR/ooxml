@@ -55,12 +55,6 @@ export const TOOLS_STRINGS: Translations = {
 	Divide: ['Division', 'Dividieren', 'Dividir', '除'],
 	'Skip blanks': ['Blancs non compris', 'Leerzellen überspringen', 'Saltar blancos', '跳过空单元'],
 	Transpose: ['Transposé', 'Transponieren', 'Transponer', '转置'],
-	'Column widths are not supported yet.': [
-		'Les largeurs de colonnes ne sont pas encore prises en charge.',
-		'Spaltenbreiten werden noch nicht unterstützt.',
-		'Los anchos de columna aún no se admiten.',
-		'尚不支持列宽。',
-	],
 	// Page Setup
 	'Page Setup': ['Mise en page', 'Seite einrichten', 'Configurar página', '页面设置'],
 	Page: ['Page', 'Seite', 'Página', '页面'],

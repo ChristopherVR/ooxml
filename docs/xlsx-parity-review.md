@@ -94,8 +94,8 @@ including one with formatting, leaves destination content and formatting untouch
 skipped. A formula returning an empty string, zero and FALSE still paste. Cut with Skip Blanks
 is rejected before edits, matching a separate native check. Empty string constants produced
 by Paste Values now survive cell pruning and save/reload. Tests cover tiled selections and
-one-step undo/redo. Column widths and full
-clipboard metadata remain unsupported.
+one-step undo/redo. Column widths are implemented in the later slice below; full
+clipboard metadata remains incomplete.
 
 Reproduce the fixture with `scripts/record-xlsx-paste-options.ps1 -OutputFile <temporary-json-path>`
 on Windows with Excel installed. The recorder creates its own hidden Excel instance and
@@ -172,6 +172,24 @@ core/UI builds, seven package builds, published-import guards and clean-consumer
 checks passed. A subsequent native
 check confirmed All Except Borders rejects cut cells; the atomic rejection regression and
 the full 26-test border suite passed after adding that guard.
+
+### Column Widths paste
+
+The shared dialog now enables Column widths. Clipboard snapshots carry visible column metrics and
+the original row extent, independently of the used-area optimization for copied cells. Core paste
+reuses column-span editing and history, changes only destination dimensions, and preserves cell
+contents, formatting, merges and column outline properties. Hidden source columns paste as zero
+width; unhiding their destination reveals the receiving sheet's default width. Transpose repeats
+the original column-width pattern, while incompatible selections fall back to one block. Arithmetic
+and Skip blanks do not change width-only paste behavior.
+
+`scripts/record-xlsx-paste-widths.ps1` reproduces 80 cases from Microsoft 365 Excel 16.0 build 20430:
+finite and whole-column copies, visible/hidden/default widths, transpose, compatible/incompatible
+selections and sheet limits. Tests compare stored width and visibility, unchanged cell contents,
+one-step undo/redo, cross-workbook clipboard snapshots and save/reload. The browser test copies
+through the system clipboard, applies the shared dialog, and checks undo/redo. Text-only clipboard
+sources lack column metrics and are rejected explicitly; complete external Excel clipboard format
+interoperability remains outstanding.
 
 ## Evidence required for parity
 

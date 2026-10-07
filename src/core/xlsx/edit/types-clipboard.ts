@@ -29,6 +29,10 @@ export interface ClipboardCells {
 	data: (ClipboardCell | null)[][];
 	/** Merged areas, relative to the top-left of the copied block. */
 	merges: CellRange[];
+	/** Visible widths captured at copy time; hidden columns have zero width. */
+	columnWidths?: number[];
+	/** Original row extent for width-only transpose, including whole-column copies. */
+	columnWidthRows?: number;
 	/** Where the cells were copied from, when they came from a session. */
 	source?: { sheet: number; range: CellRange };
 }

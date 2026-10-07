@@ -22,6 +22,8 @@ import { rangeWithin } from './range-math.js';
 import type { ClipboardCell, ClipboardCells, ClipboardPayload, PasteRequest } from './types.js';
 import { resolvePasteOptions } from './paste-options.js';
 import { writeClip } from './paste-cell.js';
+import { copyColumnWidths } from './columns.js';
+import { pasteWidths } from './paste-widths.js';
 
 /** Copies a range into a self-contained payload (whole rows or columns stop at the used area). */
 export function copyRange(workbook: Workbook, s: number, range: CellRange): ClipboardPayload {
@@ -72,6 +74,8 @@ export function copyRange(workbook: Workbook, s: number, range: CellRange): Clip
 			end: { row: m.end.row - r.start.row, col: m.end.col - r.start.col },
 		}));
 	const cells: ClipboardCells = { rows, cols, data, merges, source: { sheet: s, range: clipped } };
+	cells.columnWidthRows = r.end.row - r.start.row + 1;
+	cells.columnWidths = copyColumnWidths(sheet, r.start.col, r.end.col);
 	return {
 		tsv: toTsv(data.map((line) => line.map((c) => c?.text ?? ''))),
 		html: toHtml(cells, workbook.theme),
@@ -102,6 +106,7 @@ export function cellsFromText(workbook: Workbook, text: string): ClipboardCells 
 /**
  * Pastes clipboard cells at `at`. `all` pastes values, formulas (moved relative to the copy) and
  * formats; `values` the results only; `formulas` formulas without formats; `formats` formats only;
+ * `widths` column dimensions only;
  * `transpose` everything with rows and columns swapped. A cut payload clears its source on the
  * first paste and keeps formulas unchanged. Returns the pasted range.
  */
@@ -116,6 +121,15 @@ export function pasteAt(
 	const sheet = sheetAt(workbook, s);
 	const cells = typeof payload === 'string' ? cellsFromText(workbook, payload) : payload.cells;
 	const { mode, transpose, skipBlanks, operation } = resolvePasteOptions(request);
+	if (mode === 'widths')
+		return pasteWidths(
+			ctx,
+			s,
+			{ start: at, end: at },
+			cells,
+			transpose,
+			typeof payload !== 'string' && !!payload.cut,
+		);
 	const height = transpose ? cells.cols : cells.rows;
 	const width = transpose ? cells.rows : cells.cols;
 	if (!height || !width) return { start: at, end: at };

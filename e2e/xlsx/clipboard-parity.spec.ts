@@ -1,6 +1,52 @@
 import { expect, test } from '@playwright/test';
 import { editor, goToCell, grid, newWorkbook, ribbon, typeInActiveCell } from './helpers';
 
+test('Column Widths uses the native clipboard, retains content and undoes once', async ({
+	page,
+}) => {
+	await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+	await newWorkbook(page);
+	await goToCell(page, 'A1');
+	await ribbon(page).getByRole('button', { name: 'Format', exact: true }).click();
+	await editor(page).getByRole('menuitem', { name: 'Column Width...', exact: true }).click();
+	const widthDialog = editor(page).locator('[data-dialog="column-width"]');
+	await widthDialog.getByLabel('Column width:', { exact: true }).fill('20');
+	await widthDialog.getByRole('button', { name: 'OK', exact: true }).click();
+	await goToCell(page, 'C1');
+	await typeInActiveCell(page, '9');
+	const read = () =>
+		editor(page).evaluate((node) => {
+			const sheet = (
+				node as unknown as {
+					workbook: {
+						sheets: {
+							columns: { min: number; max: number; width?: number }[];
+							rows: Map<number, Map<number, { value: unknown }>>;
+						}[];
+					};
+				}
+			).workbook.sheets[0]!;
+			return {
+				width: sheet.columns.find((c) => c.min <= 2 && c.max >= 2)?.width ?? null,
+				value: sheet.rows.get(0)?.get(2)?.value,
+			};
+		});
+	const before = await read();
+	await goToCell(page, 'A1');
+	await page.keyboard.press('Control+C');
+	await goToCell(page, 'C1');
+	await page.keyboard.press('Control+Alt+V');
+	const dialog = editor(page).locator('[data-dialog="paste-special"]');
+	await dialog.getByLabel('Column widths', { exact: true }).check();
+	await dialog.getByLabel('Skip blanks', { exact: true }).check();
+	await dialog.getByRole('button', { name: 'OK', exact: true }).click();
+	await expect.poll(read).toEqual({ width: 20, value: 9 });
+	await page.keyboard.press('Control+Z');
+	await expect.poll(read).toEqual(before);
+	await page.keyboard.press('Control+Y');
+	await expect.poll(read).toEqual({ width: 20, value: 9 });
+});
+
 test('native clipboard repeats one copied cell across the selected rectangle', async ({ page }) => {
 	await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
 	await newWorkbook(page);
