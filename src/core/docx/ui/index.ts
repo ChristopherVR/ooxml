@@ -30,6 +30,7 @@ export * from './ribbon-legacy-labels.js';
 export * from './run-compare.js';
 export * from './run-extra-mark.js';
 export * from './run-marks.js';
+export * from './run-mark-properties.js';
 export * from './schema-marks.js';
 export * from './smartart-theme.js';
 export * from './table-render.js';

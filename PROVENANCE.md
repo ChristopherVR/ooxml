@@ -665,3 +665,13 @@ setup moved into scripts/visio-native-gradient.ps1. The layer capture retains
 its original angle, colors and transparency; the fill capture reuses the same
 helper with explicit parameters. Section 249 and stop setup are unchanged.
 A fresh native run reproduced all 21 prior layer paint records exactly.
+
+## Shared Word mark-to-run formatting mapping
+
+Source: ChristopherVR/ooxml at `88582ed132cd20ef1620f1b3c59904e8650eb34c`,
+`src/ui/src/docx/run-adapter.ts`, `applyMarkFormatting`, `linkFromMarks` and their
+private helpers. These DOM-free model conversions moved unchanged to
+`src/core/docx/ui/run-mark-properties.ts`, alongside the shared run-to-mark
+mapping. The Word UI imports them through the core subpath; schema construction
+and inline DOM views stay in UI. Existing editor conversion and review/Yjs tests
+cover the caller, and core tests cover an independent caller-provided schema.
