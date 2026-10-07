@@ -9,13 +9,14 @@ import {
 import { FRAMEWORKS, editor, openLanding, pageErrors } from './helpers';
 
 for (const framework of FRAMEWORKS)
-	test(`chart and plot backgrounds use shared fill controls in ${framework}`, async ({ page }) => {
+	test(`chart elements use shared fill controls in ${framework}`, async ({ page }) => {
 		const errors = pageErrors(page);
 		await openLanding(page, framework);
 		const book = createWorkbook();
 		createEditSession(book).addChart(0, {
 			chartType: 'column',
-			showLegend: false,
+			showLegend: true,
+			title: 'Sales chart',
 			anchor: {
 				from: { row: 0, col: 0, rowOffset: 0, colOffset: 0 },
 				ext: { cx: 600 * 9525, cy: 400 * 9525 },
@@ -32,7 +33,9 @@ for (const framework of FRAMEWORKS)
 		await host.locator('[data-chart-series="0"][data-chart-point="0"] rect').first().click();
 		await host.getByRole('tab', { name: 'Chart Design', exact: true }).click();
 		await host.getByRole('button', { name: 'Format Chart Area', exact: true }).click();
-		const pane = host.getByRole('complementary', { name: /^Format (Chart|Plot) Area$/ });
+		const pane = host.getByRole('complementary', {
+			name: /^Format (Chart Area|Plot Area|Chart Title|Legend)$/,
+		});
 		const saved = async () => {
 			const bytes = await host.evaluate(async (node) =>
 				Array.from(await (node as unknown as { saveBytes(): Promise<Uint8Array> }).saveBytes()),
@@ -41,7 +44,7 @@ for (const framework of FRAMEWORKS)
 			if (drawing.kind !== 'chart') throw new Error('Missing exported chart');
 			return drawing;
 		};
-		for (const part of ['chartArea', 'plotArea'] as const) {
+		for (const part of ['chartArea', 'plotArea', 'title', 'legend'] as const) {
 			await pane.getByRole('combobox', { name: 'Chart element', exact: true }).selectOption(part);
 			const kind = pane.getByRole('combobox', { name: 'Fill', exact: true });
 			await kind.selectOption('none');
@@ -187,6 +190,16 @@ for (const framework of FRAMEWORKS)
 			.first()
 			.dblclick({ position: { x: 8, y: 8 } });
 		await expect(pane).toHaveAttribute('aria-label', 'Format Plot Area');
+		for (const [part, label] of [
+			['title', 'Format Chart Title'],
+			['legend', 'Format Legend'],
+		] as const) {
+			await host
+				.locator(`rect[data-chart-part="${part}"]`)
+				.first()
+				.dblclick({ position: { x: 2, y: 2 } });
+			await expect(pane).toHaveAttribute('aria-label', label);
+		}
 		await host.locator('[data-chart-series="0"][data-chart-point="0"] rect').first().dblclick();
 		await expect(
 			host.getByRole('complementary', { name: 'Format Data Series', exact: true }),

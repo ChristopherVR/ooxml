@@ -35,6 +35,14 @@ function legend(model: ChartViewModel, area: Rect, out: string[]): Rect {
 		const total = widths.reduce((a, b) => a + b, 0);
 		let x = area.x + Math.max(0, (area.w - total) / 2);
 		const y = pos === 't' ? area.y + 4 : area.y + area.h - rowH + 4;
+		out.push(
+			chartAreaRect(model, 'legend', {
+				x: x - 4,
+				y: y - 4,
+				w: Math.min(total, area.w) + 8,
+				h: rowH + 4,
+			}),
+		);
 		entries.forEach((e, i) => {
 			const w = widths[i] ?? 0;
 			out.push(rect(x, y, 8, 8, e.color));
@@ -52,6 +60,14 @@ function legend(model: ChartViewModel, area: Rect, out: string[]): Rect {
 	const height = entries.length * rowH;
 	const x = pos === 'l' ? area.x + 4 : area.x + area.w - width;
 	const y0 = pos === 'tr' ? area.y + 4 : area.y + Math.max(0, (area.h - height) / 2);
+	out.push(
+		chartAreaRect(model, 'legend', {
+			x: x - 4,
+			y: y0,
+			w: width + 4,
+			h: Math.min(height, area.y + area.h - y0),
+		}),
+	);
 	entries.forEach((e, i) => {
 		const y = y0 + i * rowH;
 		if (y + rowH > area.y + area.h + 2) return;
@@ -83,8 +99,18 @@ export function renderChartSvg(model: ChartViewModel, width: number, height: num
 	if (model.title) {
 		const attrs = chartTextAttributes(model, 'title', 14)!;
 		const size = attrs.size ?? 14;
+		const label = fit(model.title, w - 16, size);
+		const titleWidth = Math.min(w - 16, textWidth(label, size) + 8);
 		out.push(
-			text(w / 2, 8 + size, fit(model.title, w - 16, size), {
+			chartAreaRect(model, 'title', {
+				x: (w - titleWidth) / 2,
+				y: 4,
+				w: Math.max(0, titleWidth),
+				h: size * 1.4 + 4,
+			}),
+		);
+		out.push(
+			text(w / 2, 8 + size, label, {
 				anchor: 'middle',
 				fill: '#404040',
 				...attrs,

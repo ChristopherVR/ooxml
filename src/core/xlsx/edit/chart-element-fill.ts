@@ -5,7 +5,8 @@ import type { ChartPatch } from './charts';
 import { chartDrawingColor } from './chart-series-fill';
 import { chartGradientFillEdit, type ChartGradientEdit } from './chart-series-gradient';
 
-export type ChartFillPart = 'chartArea' | 'plotArea';
+export const CHART_FILL_PARTS = ['chartArea', 'plotArea', 'title', 'legend'] as const;
+export type ChartFillPart = (typeof CHART_FILL_PARTS)[number];
 export type ChartElementFills = Partial<Record<ChartFillPart, DiagramFill>>;
 const white = (): DiagramColor => ({ kind: 'scheme', value: 'lt1', transforms: [] });
 
@@ -22,7 +23,7 @@ export function chartElementFill(chart: ChartObject, part: ChartFillPart): Diagr
 export function chartWithElementFills(chart: ChartObject, fills: ChartElementFills): ChartObject {
 	const formatting = structuredClone(chart.formatting ?? { sourceXml: '', entries: {} });
 	for (const [part, fill] of Object.entries(fills)) {
-		if (part !== 'chartArea' && part !== 'plotArea')
+		if (!CHART_FILL_PARTS.includes(part as ChartFillPart))
 			throw new RangeError('Unsupported chart fill target');
 		if (!fill || !['none', 'solid', 'gradient'].includes(fill.kind))
 			throw new RangeError('Unsupported chart fill');

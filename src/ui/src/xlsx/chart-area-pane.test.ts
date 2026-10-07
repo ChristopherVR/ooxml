@@ -5,6 +5,43 @@ import { createTestContext } from './commands/test-support';
 import { chartAreaCommand, createChartAreaPane } from './chart-area-pane';
 afterEach(() => document.body.replaceChildren());
 
+it('offers present titles and legends and falls back when the target disappears', async () => {
+	const ctx = createTestContext();
+	const index = ctx.session()!.addChart(0, {
+		chartType: 'column',
+		title: 'Sales',
+		showLegend: true,
+		anchor: { from: { row: 0, col: 0, rowOffset: 0, colOffset: 0 } },
+		series: [],
+	});
+	ctx.selection.set({ drawing: index });
+	ctx.commands.register(chartAreaCommand());
+	const pane = createChartAreaPane(ctx, () => {});
+	ctx.root.append(pane.element);
+	ctx.onModelChange(pane.refresh);
+	const select = pane.element.querySelector<HTMLSelectElement>('[aria-label="Chart element"]')!;
+	for (const [part, label] of [
+		['title', 'Format Chart Title'],
+		['legend', 'Format Legend'],
+	] as const) {
+		await ctx.commands.run('chart.format-area', part);
+		expect(pane.element.getAttribute('aria-label')).toBe(label);
+		const fill = pane.element.querySelector<HTMLSelectElement>('[aria-label="Fill"]')!;
+		fill.value = 'gradient';
+		fill.dispatchEvent(new Event('change'));
+		const chart = ctx.workbook()!.sheets[0]!.drawings[index]!;
+		if (chart.kind !== 'chart') throw new Error('Missing chart');
+		expect(chartElementFill(chart, part).kind).toBe('gradient');
+	}
+	ctx.session()!.updateChart(0, index, { showLegend: false });
+	expect(select.value).toBe('chartArea');
+	expect([...select.options].find((option) => option.value === 'legend')!.disabled).toBe(true);
+	ctx.session()!.updateChart(0, index, { title: '' });
+	expect([...select.options].find((option) => option.value === 'title')!.disabled).toBe(true);
+	await ctx.commands.run('chart.format-area', 'title');
+	expect(select.value).toBe('chartArea');
+});
+
 it('uses shared fill controls on both backgrounds, follows history and guards read-only changes', async () => {
 	const ctx = createTestContext();
 	const index = ctx.session()!.addChart(0, {

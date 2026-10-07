@@ -1468,3 +1468,31 @@ comment/export and field-update/history regressions exercise the same mapping.
 Synthetic adjacent-source and native adjacent-result fixtures record Word's
 first-field-only scope (6:29). Copies/pasted field identity and newly authored
 fields without identities still require separate handling.
+
+## Shared chart fill controls for titles and legends
+
+Source: ChristopherVR/ooxml at `9237f7f2e`, the chart element-fill edits,
+background pane and SVG rectangle painter. `CHART_FILL_PARTS` extends the
+existing narrow patch, pane binding and preview path with title and legend
+targets; no fill editor or codec was copied. The shared rectangle painter
+uses each decoration's current layout bounds for its gradient definition,
+paints before text and retains the same hit identity for double-clicks.
+Absent titles and hidden legends are disabled in the selector, and removing
+the selected element falls back to chart area. Borders/effects authoring and
+transparent hit regions remain open.
+
+`scripts/record-xlsx-chart-decoration-fill.ps1` creates and reopens a native
+workbook for five legend positions, exports PNGs and records geometry, fonts
+and fills. Measurements from Excel 16.0 build 20430 are retained in
+`src/core/xlsx/layout/__fixtures__/excel-decoration-fills.json`. Native title
+font inheritance and text box geometry differ from the current approximate
+layout: the reference title is 18 points, while the current fallback is 14
+pixels. This change does not certify native chart placement or raster parity.
+
+Eighteen browser checks cover four fill targets and existing series controls
+across six bindings; core regressions cover five legend positions, gradient
+bounds, paint order and save/undo. Playwright MCP reviewed the native import
+and edited title/legend through the reused pane. Excel reopened/resaved its
+editor-API export: bottom-right circle title with 37 percent first-stop alpha
+and top-left shape legend retain paths, stops, scheme/RGB colors, alpha and
+target/tile rectangles exactly. Full native UI parity remains unfinished.

@@ -9,6 +9,8 @@ import {
 	createRefEvaluator,
 	pixelBoxToAnchor,
 	renderChartSvg,
+	CHART_FILL_PARTS,
+	type ChartFillPart,
 	type DrawingObject,
 } from 'ooxml-core/xlsx';
 import { h, place, svgNode, viewOf } from './dom';
@@ -19,7 +21,7 @@ import { paintSmartArt } from './smartart';
 interface ObjectNode extends HTMLDivElement {
 	xgSig?: string | undefined;
 	xgSeriesHit?: number | undefined;
-	xgChartPart?: 'chartArea' | 'plotArea' | undefined;
+	xgChartPart?: ChartFillPart | undefined;
 }
 
 export class DrawingLayer {
@@ -186,7 +188,9 @@ export class DrawingLayer {
 		node.xgSeriesHit = series === undefined ? undefined : Number(series);
 		const part = (event.target as Element).closest<SVGElement>('[data-chart-part]')?.dataset
 			.chartPart;
-		node.xgChartPart = part === 'chartArea' || part === 'plotArea' ? part : undefined;
+		node.xgChartPart = CHART_FILL_PARTS.includes(part as ChartFillPart)
+			? (part as ChartFillPart)
+			: undefined;
 		view.ctx.selection.set({ drawing: index });
 		view.ctx.grid()?.focus();
 		const session = view.ctx.session();

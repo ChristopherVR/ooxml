@@ -103,18 +103,19 @@ export function chartStroke(
 
 export function chartAreaRect(
 	model: ChartViewModel,
-	part: 'chartArea' | 'plotArea',
+	part: 'chartArea' | 'plotArea' | 'title' | 'legend',
 	area: Rect,
 ): string {
+	if (area.w <= 0 || area.h <= 0) return '';
 	const entry = model.appearance?.[part];
 	let fill = entry?.fillColor ?? (part === 'chartArea' ? '#FFFFFF' : 'none');
 	let defs = '';
 	if (
-		part === 'plotArea' &&
+		part !== 'chartArea' &&
 		entry?.gradient &&
-		['circle', 'shape'].includes(entry.gradient.path ?? '')
+		(part !== 'plotArea' || ['circle', 'shape'].includes(entry.gradient.path ?? ''))
 	) {
-		const def = buildChartGradientDef(`xlsx-chart-${++nextPaintId}-plotArea`, entry.gradient, {
+		const def = buildChartGradientDef(`xlsx-chart-${++nextPaintId}-${part}`, entry.gradient, {
 			width: area.w,
 			height: area.h,
 			shape: 'rect',

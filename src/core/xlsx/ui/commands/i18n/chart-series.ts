@@ -1,6 +1,18 @@
 import type { Translations } from './types';
 
 export const CHART_SERIES_STRINGS: Translations = {
+	'Format Chart Title': [
+		'Format du titre du graphique',
+		'Diagrammtitel formatieren',
+		'Formato del título del gráfico',
+		'设置图表标题格式',
+	],
+	'Format Legend': [
+		'Format de la légende',
+		'Legende formatieren',
+		'Formato de leyenda',
+		'设置图例格式',
+	],
 	'Format Chart Area': [
 		'Format de la zone de graphique',
 		'Diagrammbereich formatieren',

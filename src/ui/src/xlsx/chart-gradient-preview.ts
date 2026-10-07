@@ -1,10 +1,11 @@
 import { buildChartGradientDef, type ChartGradientFill } from 'ooxml-core/chart';
+import type { ChartFillPart } from 'ooxml-core/xlsx';
 
 /** Preview a gesture in the rendered SVG; the workbook is edited once on release. */
 export function createChartGradientPreview(
 	root: ShadowRoot,
 	drawing: number,
-	series: number | 'chartArea' | 'plotArea',
+	series: number | ChartFillPart,
 	gradient: ChartGradientFill,
 ) {
 	const target = typeof series === 'number' ? `s${series}` : series;

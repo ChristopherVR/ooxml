@@ -1351,3 +1351,24 @@ transparency, and a top-left two-stop shape on plot area retains its red/white
 colors. Paths, stops, color transforms and target/tile rectangles match the
 pre-resave export exactly. This proves those edits and their serialization,
 not native full-chart raster fidelity or complete formatting parity.
+
+The same fill pane now includes present chart titles and visible legends.
+Their backgrounds paint behind text, and their gradient geometry uses their
+own layout boxes rather than the whole chart. Five legend positions have
+paint-order regressions. Target removal disables its option and falls back
+to chart area; painted title/legend double-clicks open the corresponding
+pane. Eighteen browser checks cover all four fill targets and existing
+series controls in six bindings.
+
+The repeatable COM recorder `scripts/record-xlsx-chart-decoration-fill.ps1`
+captures five native legend positions, PNGs, fills and font/box measurements.
+The JSON reference records Excel 16.0 build 20430. It exposes a concrete
+remaining gap: native title font is 18 points and legend font is 10 points,
+while current renderer fallbacks are 14 and 10 pixels. Native font
+inheritance, actual font measurement, manual/automatic title and legend
+layout, borders/effects and transparent hit targets remain incomplete.
+Playwright MCP reviewed and edited the native import. Excel reopened/resaved
+the editor's export with a bottom-right circle title (37 percent first-stop
+transparency) and top-left shape legend, retaining all modeled fill metadata
+exactly. These checks establish fill authoring and preservation, not exact
+native geometry or whole-product parity.

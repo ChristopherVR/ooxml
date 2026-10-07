@@ -58,10 +58,12 @@ it('edits background fills atomically, preserving series overrides and other for
 	expect(book.sheets[0]!.drawings[0]).toEqual(before);
 });
 
-it.each(['chartArea', 'plotArea'] as const)(
+it.each(['chartArea', 'plotArea', 'title', 'legend'] as const)(
 	'shares geometry and stop edits for %s without mutating preview models',
 	async (part) => {
 		const { book, session, chart } = setup();
+		chart.title = 'Sales';
+		chart.showLegend = true;
 		const before = structuredClone(chart);
 		const created = chartElementGradientPatch(chart, part, { kind: 'create' })!;
 		const preview = chartWithElementFills(chart, created.patch.elementFills!);
@@ -106,7 +108,7 @@ it('rejects unsupported fill targets before changing the workbook or history', (
 		before = structuredClone(chart),
 		label = session.undoLabel();
 	expect(() =>
-		session.updateChart(0, 0, { elementFills: { title: { kind: 'none' } } } as never),
+		session.updateChart(0, 0, { elementFills: { dataLabel: { kind: 'none' } } } as never),
 	).toThrow('Unsupported chart fill target');
 	expect(() => chartElementTransparencyPatch(chart, 'chartArea', NaN)).toThrow();
 	expect(chart).toEqual(before);

@@ -1,0 +1,126 @@
+{
+	"cases": [
+		{
+			"position": "l",
+			"legend": {
+				"top": 152.44354330708663,
+				"height": 18.08291338582677,
+				"fontName": "Aptos Narrow",
+				"fontSize": 10.0,
+				"width": 38.7596062992126,
+				"left": 2.0,
+				"background": 16777215,
+				"foreground": 65280,
+				"gradientStyle": 1
+			},
+			"title": {
+				"left": 176.33244094488188,
+				"top": 2.0,
+				"fontSize": 18.0,
+				"height": 24.97,
+				"rgb": 255,
+				"transparency": 0.3700000047683716,
+				"width": 89.33503937007875,
+				"fontName": "Aptos Narrow"
+			}
+		},
+		{
+			"position": "r",
+			"legend": {
+				"top": 152.44354330708663,
+				"height": 18.08291338582677,
+				"fontName": "Aptos Narrow",
+				"fontSize": 10.0,
+				"width": 38.7596062992126,
+				"left": 401.2403937007874,
+				"background": 16777215,
+				"foreground": 65280,
+				"gradientStyle": 1
+			},
+			"title": {
+				"left": 176.33244094488188,
+				"top": 2.0,
+				"fontSize": 18.0,
+				"height": 24.97,
+				"rgb": 255,
+				"transparency": 0.3700000047683716,
+				"width": 89.33503937007875,
+				"fontName": "Aptos Narrow"
+			}
+		},
+		{
+			"position": "t",
+			"legend": {
+				"top": 32.97,
+				"height": 18.08291338582677,
+				"fontName": "Aptos Narrow",
+				"fontSize": 10.0,
+				"width": 39.31149606299213,
+				"left": 201.34425196850393,
+				"background": 16777215,
+				"foreground": 65280,
+				"gradientStyle": 1
+			},
+			"title": {
+				"left": 176.33244094488188,
+				"top": 2.0,
+				"fontSize": 18.0,
+				"height": 24.97,
+				"rgb": 255,
+				"transparency": 0.3700000047683716,
+				"width": 89.33503937007875,
+				"fontName": "Aptos Narrow"
+			}
+		},
+		{
+			"position": "b",
+			"legend": {
+				"top": 271.91708661417323,
+				"height": 18.08291338582677,
+				"fontName": "Aptos Narrow",
+				"fontSize": 10.0,
+				"width": 39.31149606299213,
+				"left": 201.34425196850393,
+				"background": 16777215,
+				"foreground": 65280,
+				"gradientStyle": 1
+			},
+			"title": {
+				"left": 176.33244094488188,
+				"top": 2.0,
+				"fontSize": 18.0,
+				"height": 24.97,
+				"rgb": 255,
+				"transparency": 0.3700000047683716,
+				"width": 89.33503937007875,
+				"fontName": "Aptos Narrow"
+			}
+		},
+		{
+			"position": "tr",
+			"legend": {
+				"top": 32.97,
+				"height": 18.08291338582677,
+				"fontName": "Aptos Narrow",
+				"fontSize": 10.0,
+				"width": 38.7596062992126,
+				"left": 401.2403937007874,
+				"background": 16777215,
+				"foreground": 65280,
+				"gradientStyle": 1
+			},
+			"title": {
+				"left": 176.33244094488188,
+				"top": 2.0,
+				"fontSize": 18.0,
+				"height": 24.97,
+				"rgb": 255,
+				"transparency": 0.3700000047683716,
+				"width": 89.33503937007875,
+				"fontName": "Aptos Narrow"
+			}
+		}
+	],
+	"excelVersion": "16.0",
+	"excelBuild": "20430"
+}

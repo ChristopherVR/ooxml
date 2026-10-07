@@ -1,8 +1,20 @@
-import { chartView, createRefEvaluator, type ChartFillPart } from 'ooxml-core/xlsx';
+import {
+	chartView,
+	createRefEvaluator,
+	CHART_FILL_PARTS,
+	type ChartFillPart,
+} from 'ooxml-core/xlsx';
 import { activeChart, editing, icon, type Command, type EditorContext } from 'ooxml-core/xlsx/ui';
 import { el, field, select } from './dialogs/fields';
 import { createSeriesFill } from './chart-series-fill';
 import { backgroundFillBinding } from './chart-fill-binding';
+
+const names: Record<ChartFillPart, [string, string]> = {
+	chartArea: ['Chart Area', 'Format Chart Area'],
+	plotArea: ['Plot Area', 'Format Plot Area'],
+	title: ['Chart Title', 'Format Chart Title'],
+	legend: ['Legend', 'Format Legend'],
+};
 
 export function chartAreaCommand(): Command {
 	return editing({
@@ -58,7 +70,12 @@ export function createChartAreaPane(ctx: EditorContext, onOpen: () => void) {
 			close();
 			return;
 		}
-		title.textContent = ctx.t(selected === 'chartArea' ? 'Format Chart Area' : 'Format Plot Area');
+		const available = (part: ChartFillPart) =>
+			part === 'title' ? !!found.chart.title : part === 'legend' ? found.chart.showLegend : true;
+		for (const option of target.options)
+			option.disabled = !available(option.value as ChartFillPart);
+		if (!available(selected)) selected = 'chartArea';
+		title.textContent = ctx.t(names[selected][1]);
 		element.setAttribute('aria-label', title.textContent);
 		target.value = selected;
 		target.disabled = !ctx.commands.isEnabled('chart.format-area');
@@ -77,24 +94,26 @@ export function createChartAreaPane(ctx: EditorContext, onOpen: () => void) {
 		targetField.querySelector('span')!.textContent = ctx.t('Chart element');
 		target.setAttribute('aria-label', ctx.t('Chart element'));
 		target.replaceChildren(
-			...(['chartArea', 'plotArea'] as const).map((part) => {
+			...CHART_FILL_PARTS.map((part) => {
 				const option = el(ctx, 'option');
 				option.value = part;
-				option.textContent = ctx.t(part === 'chartArea' ? 'Chart Area' : 'Plot Area');
+				option.textContent = ctx.t(names[part][0]);
 				return option;
 			}),
 		);
 		refresh();
 	};
 	target.addEventListener('change', () => {
-		if (!target.disabled && (target.value === 'chartArea' || target.value === 'plotArea'))
-			selected = target.value;
+		if (!target.disabled && CHART_FILL_PARTS.includes(target.value as ChartFillPart))
+			selected = target.value as ChartFillPart;
 		refresh();
 	});
 	ctx.dialogs.register('format-chart-area', async (_ctx, part) => {
 		if (!ctx.commands.isEnabled('chart.format-area')) return;
 		onOpen();
-		selected = part === 'plotArea' ? 'plotArea' : 'chartArea';
+		selected = CHART_FILL_PARTS.includes(part as ChartFillPart)
+			? (part as ChartFillPart)
+			: 'chartArea';
 		element.hidden = false;
 		refresh();
 		target.focus();
