@@ -208,26 +208,29 @@ export const LOOKUP_FUNCTIONS: FunctionSpec[] = [
 		(args, ctx) => match(args, ctx),
 		['value', 'any', 'value'],
 	),
-	spec(
-		'XMATCH',
-		C,
-		'XMATCH(lookup_value, lookup_array, [match_mode], [search_mode])',
-		'The position of a value with flexible matching.',
-		2,
-		4,
-		(args, ctx) => {
-			const value = lookupValue(args);
-			const { vector } = vectorOf(ctx, args[1] ?? null);
-			const at = xsearch(
-				vector,
-				value,
-				Math.trunc(optNum(args, 2, 0)),
-				Math.trunc(optNum(args, 3, 1)),
-			);
-			return at < 0 ? fail(ERR.NA) : at + 1;
-		},
-		['value', 'any', 'value', 'value'],
-	),
+	{
+		...spec(
+			'XMATCH',
+			C,
+			'XMATCH(lookup_value, lookup_array, [match_mode], [search_mode])',
+			'The position of a value with flexible matching.',
+			2,
+			4,
+			(args, ctx) => {
+				const value = lookupValue(args);
+				const { vector } = vectorOf(ctx, args[1] ?? null);
+				const at = xsearch(
+					vector,
+					value,
+					Math.trunc(optNum(args, 2, 0)),
+					Math.trunc(optNum(args, 3, 1)),
+				);
+				return at < 0 ? fail(ERR.NA) : at + 1;
+			},
+			['value', 'any', 'value', 'value'],
+		),
+		missingDefaults: { 3: 1 },
+	},
 	spec(
 		'XLOOKUP',
 		C,

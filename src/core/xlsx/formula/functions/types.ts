@@ -1,5 +1,5 @@
 import type { CallContext, LazyArg } from '../context.js';
-import type { Value } from '../values.js';
+import type { Scalar, Value } from '../values.js';
 import type { ErrorCode } from '../../model.js';
 
 /**
@@ -17,6 +17,8 @@ export interface FunctionSpec {
 	maxArgs: number;
 	/** Error for an explicitly empty required slot; an empty referenced cell still coerces normally. */
 	missingRequiredError?: ErrorCode;
+	/** Defaults for explicitly omitted slots, before empty referenced cells lose their origin. */
+	missingDefaults?: Readonly<Record<number, Scalar>>;
 	/** Per position; the last entry repeats. Defaults to every parameter `value`. */
 	params?: readonly ParamKind[];
 	/** Recalculated on every recalculation (NOW, RAND, OFFSET, INDIRECT, ...). */

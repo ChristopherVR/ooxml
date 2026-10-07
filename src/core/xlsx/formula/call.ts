@@ -68,7 +68,9 @@ export function callFunction(node: Extract<FormulaAst, { type: 'call' }>, frame:
 	}
 	const arrayFrame = frame.legacy ? { ...frame, legacy: false } : frame;
 	const args = node.args.map((arg, i) =>
-		evaluateNode(arg, paramKind(spec, i) === 'any' ? arrayFrame : frame),
+		arg.type === 'missing' && spec.missingDefaults?.[i] !== undefined
+			? spec.missingDefaults[i]
+			: evaluateNode(arg, paramKind(spec, i) === 'any' ? arrayFrame : frame),
 	);
 	return applyFunction(spec, args, ctx);
 }
