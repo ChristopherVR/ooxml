@@ -9,7 +9,12 @@ function Capture($name) {
     try {
         $fill=$probe.Worksheets.Item(1).ChartObjects(1).Chart.SeriesCollection(1).Format.Fill
         if($name -like 'direction-*') {
-            [void]$probe.Worksheets.Item(1).ChartObjects(1).Chart.Export((Join-Path $OutputFolder "$name.png"),'PNG')
+            $native=$probe.Worksheets.Item(1).ChartObjects(1).Chart
+            $native.Parent.Activate(); $native.Refresh()
+            $png=Join-Path $OutputFolder "$name.png"
+            if(!$native.Export($png,'PNG') -or (Get-Item -LiteralPath $png).Length -eq 0) {
+                throw "Excel did not export a usable raster for $name"
+            }
         }
         $stops=@(); foreach($index in 1..$fill.GradientStops.Count){
             $stop=$fill.GradientStops.Item($index)

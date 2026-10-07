@@ -1033,3 +1033,23 @@ commit-on-change and cancellation behavior. The new XLSX range-preview adapter
 computes prospective fills through core's gradient edit and chart-view functions;
 it changes temporary SVG stops and strip paint without duplicating color logic
 or mutating the workbook before commit.
+
+## Shared native Office sigma gradient paint
+
+Source: ChristopherVR/ooxml at `dba018245`,
+`src/core/visio/native-gradient-curve.ts` and
+`src/core/visio/native-gradient-stops.ts`. The measured GDI+ factor table moved
+to `src/core/color/native-gradient-curve.ts`; the gamma-2.2 sampling algorithm
+moved to `src/core/color/sigma-gradient-stops.ts`. Visio delegates to the shared
+helper and retains its eligibility checks and generated-stop count. XLSX's
+shared chart painter now consumes the same helper for resolved, opaque, scaled
+linear gradients with two endpoint stops. The editable model keeps its original
+stops. DrawingML's scaled flag is now modelled and serialized, enabling the
+native bounding-box vector projection without reparsing source XML in the UI.
+
+The independent recorder `scripts/record-xlsx-chart-gradient-raster.ps1`
+saved/reopened Excel 16.0 build 20430 charts at ten angles in square and wide
+bounds. Its saved fill XML and 500 background pixels are committed in the chart
+fixture. Core sampling and all six browser SVG painters match within two RGB
+levels. Existing direction captures now activate/refresh the native chart and
+reject empty or failed PNG exports.

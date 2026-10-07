@@ -1078,3 +1078,38 @@ restored the original 100% readout.
 This closes paired slider authoring. Exact native pane tabs/layout, presets,
 path-gradient controls, mixed point formatting, fractional/touch behavior and
 diagonal raster parity remain open.
+
+## Measured scaled gradient raster correction
+
+DrawingML's linear `scaled` flag now survives parsing, model edits and saves.
+Scaled chart gradients extend their vector across the normalized bounding box;
+the previous unit-length diagonal vector clipped the outer colors too early.
+Opaque two-endpoint scaled linear gradients use the native sigma/gamma-2.2
+paint curve extracted from Visio into shared color logic. Source/model stops
+remain unchanged; only the rendered SVG uses additional sampled stops.
+Newly authored series gradients explicitly save the scaled flag.
+
+Excel COM recorded ten angles in square and wide chart areas, with independent
+SaveCopyAs/reopen checks and valid PNG exports. Core regressions parse the
+native saved fill XML and match 500 background sample pixels within two RGB
+levels. Browser raster checks use the actual chart DOM definitions and match
+the same corpus across all six bindings. Playwright MCP reviewed a wide native
+45-degree workbook, confirming corner-to-corner endpoints and 256 paint stops.
+The gradient's lighter intermediate colors now match native Excel's profile.
+Excel reopened the browser download with exactly two original red/white stops
+at 0%/100% and the unchanged 45-degree angle; sampled paint is not serialized.
+
+The core selection covering chart/color/DrawingML/XLSX and relevant Visio
+regressions passed 8,372 tests (13 skipped). Core/UI typechecks and builds
+passed, as did 11 focused UI tests and four PowerPoint gradient regression
+tests. The 26 existing chart browser checks passed; the six new raster checks
+passed after synchronizing each file load with its new gradient geometry.
+Clean UI package checks imported 96 entries and registered 45 custom elements.
+The clean core package check imported every entry point.
+
+The measured raster correction covers opaque endpoint-pair scaled linear
+gradients. Transparent, interior/multiple-stop, unscaled and path profiles
+still need independent raster measurements. PowerPoint's existing descriptors
+keep their prior paint behavior until their native profile is measured and
+explicitly enabled. Presets, path-gradient controls and native pane layout
+remain open; this evidence does not establish full Excel UI parity.

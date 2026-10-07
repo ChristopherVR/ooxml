@@ -1,11 +1,14 @@
 /** Resolved chart gradients, shared by Office chart painters. */
 import type { DiagramFill, DiagramColor } from '../diagram/types';
 import { sortGradientStops } from './gradient-stop-edit';
+import { sigmaGradientStops } from '../color/sigma-gradient-stops';
 
 export interface ChartGradientFill {
 	type: 'linear' | 'radial';
 	stops: Array<{ color: string; position: number; opacity?: number }>;
 	angle?: number;
+	scaled?: boolean;
+	interpolation?: 'sigma-gamma22';
 	focalPoint?: { x: number; y: number };
 }
 export interface ChartSvgGradientStop {
@@ -38,13 +41,25 @@ export function resolveChartGradient(
 	resolve: (color: DiagramColor) => { hex: string; alpha: number } | undefined,
 ): ChartGradientFill {
 	const focus = fill.fillToRect;
+	const stops = fill.stops.flatMap((stop) => {
+		const color = resolve(stop.color);
+		return color ? [{ position: stop.position, color: color.hex, opacity: color.alpha }] : [];
+	});
 	return {
 		type: fill.path ? 'radial' : 'linear',
-		stops: fill.stops.flatMap((stop) => {
-			const color = resolve(stop.color);
-			return color ? [{ position: stop.position, color: color.hex, opacity: color.alpha }] : [];
-		}),
+		stops,
 		...(fill.angle === undefined ? {} : { angle: fill.angle }),
+		...(fill.scaled === undefined ? {} : { scaled: fill.scaled }),
+		// Only the native opaque two-endpoint linear profile has raster evidence.
+		...(!fill.path &&
+		fill.scaled === true &&
+		fill.stops.length === 2 &&
+		stops.length === 2 &&
+		stops.every((stop) => stop.opacity === 1) &&
+		stops.some((stop) => stop.position === 0) &&
+		stops.some((stop) => stop.position === 100)
+			? { interpolation: 'sigma-gamma22' as const }
+			: {}),
 		...(focus
 			? { focalPoint: { x: (1 + focus.l - focus.r) / 2, y: (1 + focus.t - focus.b) / 2 } }
 			: {}),
@@ -53,11 +68,15 @@ export function resolveChartGradient(
 
 /** Extracted from PowerPoint's COM-verified chart gradient painter. */
 export function buildChartGradientDef(id: string, fill: ChartGradientFill): ChartSvgGradientDef {
-	const stops = sortGradientStops(fill.stops).map((stop) => ({
+	const sourceStops = sortGradientStops(fill.stops).map((stop) => ({
 		offset: Math.min(Math.max(stop.position / 100, 0), 1),
 		color: stop.color,
 		...(stop.opacity !== undefined ? { opacity: stop.opacity } : {}),
 	}));
+	const stops =
+		fill.interpolation === 'sigma-gamma22'
+			? (sigmaGradientStops(sourceStops) ?? sourceStops)
+			: sourceStops;
 	if (fill.type === 'radial') {
 		const cx = fill.focalPoint?.x ?? 0.5;
 		const cy = fill.focalPoint?.y ?? 0.5;
@@ -71,8 +90,9 @@ export function buildChartGradientDef(id: string, fill: ChartGradientFill): Char
 		};
 	}
 	const rad = ((fill.angle ?? 0) * Math.PI) / 180;
-	const dx = Math.cos(rad) / 2;
-	const dy = Math.sin(rad) / 2;
+	const span = fill.scaled ? Math.abs(Math.cos(rad)) + Math.abs(Math.sin(rad)) : 1;
+	const dx = (Math.cos(rad) * span) / 2;
+	const dy = (Math.sin(rad) * span) / 2;
 	const round = (value: number) => Math.round(value * 10000) / 10000;
 	return {
 		kind: 'linearGradient',

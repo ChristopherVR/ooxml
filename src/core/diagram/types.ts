@@ -212,6 +212,8 @@ export type DiagramFill =
 			stops: { position: number; color: DiagramColor }[];
 			/** Linear angle in degrees, when `a:lin` is present. */
 			angle?: number;
+			/** Whether the linear vector scales with the shape's bounding box. */
+			scaled?: boolean;
 			path?: string;
 			/** DrawingML path-gradient focus rectangle, as fractions of the shape box. */
 			fillToRect?: { l: number; t: number; r: number; b: number };

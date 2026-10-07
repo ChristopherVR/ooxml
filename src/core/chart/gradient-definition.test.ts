@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest';
-import { buildChartGradientDef } from './gradient-definition';
+import { buildChartGradientDef, resolveChartGradient } from './gradient-definition';
+import type { DiagramFill } from '../diagram/types';
 it('retains the native vertical vector and resolves off-box circle focus', () => {
 	expect(buildChartGradientDef('g', { type: 'linear', angle: 90, stops: [] })).toMatchObject({
 		x1: 0.5,
@@ -10,4 +11,31 @@ it('retains the native vertical vector and resolves off-box circle focus', () =>
 	expect(
 		buildChartGradientDef('g', { type: 'radial', focalPoint: { x: 0.5, y: -0.8 }, stops: [] }),
 	).toMatchObject({ cx: 0.5, cy: -0.8, r: Math.hypot(0.5, 1.8) });
+});
+
+it('restricts native interpolation to resolved opaque scaled linear endpoint pairs', () => {
+	const fill: Extract<DiagramFill, { kind: 'gradient' }> = {
+		kind: 'gradient',
+		angle: 45,
+		scaled: true,
+		stops: [
+			{ position: 100, color: { kind: 'srgb', value: 'FFFFFF', transforms: [] } },
+			{ position: 0, color: { kind: 'srgb', value: 'FF0000', transforms: [] } },
+		],
+	};
+	const resolve = (alpha = 1) =>
+		resolveChartGradient(fill, (color) => ({ hex: `#${color.value}`, alpha }));
+	expect(resolve().interpolation).toBe('sigma-gamma22');
+	expect(buildChartGradientDef('g', resolve())).toMatchObject({ x1: 0, y1: 0, x2: 1, y2: 1 });
+	expect(resolve(0.5).interpolation).toBeUndefined();
+	expect(buildChartGradientDef('g', resolve(0.5)).stops).toHaveLength(2);
+	fill.scaled = false;
+	expect(resolve().interpolation).toBeUndefined();
+	fill.scaled = true;
+	fill.path = 'circle';
+	expect(resolve().interpolation).toBeUndefined();
+	delete fill.path;
+	fill.stops[0]!.position = 80;
+	expect(resolve().interpolation).toBeUndefined();
+	expect(fill.stops.map((stop) => stop.position)).toEqual([80, 0]);
 });

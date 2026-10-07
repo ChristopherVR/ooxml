@@ -10,10 +10,15 @@ it('patches gradient stops while retaining source flags and extensions', () => {
 		).documentElement,
 	)!;
 	if (fill.kind !== 'gradient') throw new Error('Expected gradient');
+	expect(fill.scaled).toBe(false);
 	fill.stops[0]!.color.value = 'ABCDEF';
 	const root = parseXml(drawingFillXml(fill)!).documentElement;
 	expect(root.getAttribute('rotWithShape')).toBe('1');
 	expect(first(root, 'lin', NS.a)?.getAttribute('scaled')).toBe('0');
+	fill.scaled = true;
+	expect(
+		first(parseXml(drawingFillXml(fill)!).documentElement, 'lin', NS.a)?.getAttribute('scaled'),
+	).toBe('1');
 	expect(first(root, 'tileRect', NS.a)?.getAttribute('l')).toBe('100');
 	expect(first(root, 'extLst', NS.a)).toBeDefined();
 	expect(root.getElementsByTagNameNS(NS.a, 'srgbClr')[0]?.getAttribute('val')).toBe('ABCDEF');

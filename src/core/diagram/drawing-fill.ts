@@ -42,6 +42,7 @@ export function parseDrawingFill(properties: XmlElement | undefined): DiagramFil
 				return color && Number.isFinite(position) ? [{ position: position / 1000, color }] : [];
 			});
 			const angle = Number.parseInt(first(fill, 'lin', NS.a)?.getAttribute('ang') ?? '', 10);
+			const scaled = first(fill, 'lin', NS.a)?.getAttribute('scaled');
 			const path = first(fill, 'path', NS.a)?.getAttribute('path');
 			const focus = first(first(fill, 'path', NS.a), 'fillToRect', NS.a);
 			const fillToRect = focus
@@ -57,6 +58,8 @@ export function parseDrawingFill(properties: XmlElement | undefined): DiagramFil
 				sourceXml: buildXml(fill),
 				stops,
 				...(Number.isFinite(angle) ? { angle: angle / 60000 } : {}),
+				...(scaled === '1' || scaled === 'true' ? { scaled: true } : {}),
+				...(scaled === '0' || scaled === 'false' ? { scaled: false } : {}),
 				...(path ? { path } : {}),
 				...(fillToRect && Object.values(fillToRect).every(Number.isFinite) ? { fillToRect } : {}),
 			};

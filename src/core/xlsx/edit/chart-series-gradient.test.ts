@@ -161,9 +161,14 @@ for (const sample of native.cases)
 				);
 			}),
 		);
-		expect(buildChartGradientDef('native', gradient).stops.map((stop) => stop.offset)).toEqual(
-			fill.stops.map((stop) => stop.position / 100).sort((a, b) => a - b),
-		);
+		const painted = buildChartGradientDef('native', gradient).stops;
+		if (gradient.interpolation === 'sigma-gamma22') {
+			expect(painted).toHaveLength(256);
+			expect([painted[0]?.offset, painted.at(-1)?.offset]).toEqual([0, 1]);
+		} else
+			expect(painted.map((stop) => stop.offset)).toEqual(
+				fill.stops.map((stop) => stop.position / 100).sort((a, b) => a - b),
+			);
 		expect((await loadXlsx(await saveXlsx(book))).sheets[0]!.drawings[0]).toMatchObject({
 			series: [{ fill }],
 		});

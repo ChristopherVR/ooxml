@@ -1,5 +1,6 @@
 import type { VisioGradientPaint, VisioFillGradient } from './model';
-import { hexToRgbChannels, toHex } from '../color/color-primitives';
+import { hexToRgbChannels } from '../color/color-primitives';
+import { sigmaGradientStops } from '../color/sigma-gradient-stops';
 import { VISIO_SIGMA_FACTORS } from './native-gradient-curve';
 import { linearGradientEndpoints } from './theme-gradient';
 
@@ -24,18 +25,7 @@ export function visioRenderedGradientStops(paint: VisioGradientPaint): VisioGrad
 	if (paint.interpolation !== 'sigma-gamma22') return paint.stops;
 	if (!canUseVisioSigmaInterpolation(paint))
 		throw new Error('The scene has invalid native gradient interpolation.');
-	const front = hexToRgbChannels(paint.stops[0]!.color)!,
-		back = hexToRgbChannels(paint.stops[1]!.color)!;
-	return VISIO_SIGMA_FACTORS.map((value, index) => {
-		const factor = value / 65536;
-		const mix = (a: number, b: number) =>
-			toHex(255 * ((a / 255) ** 2.2 * (1 - factor) + (b / 255) ** 2.2 * factor) ** (1 / 2.2));
-		return {
-			offset: Math.fround(index / 255),
-			color: `#${mix(front.r, back.r)}${mix(front.g, back.g)}${mix(front.b, back.b)}`,
-			opacity: 1,
-		};
-	});
+	return sigmaGradientStops(paint.stops)!;
 }
 
 /** Native raster stroke paint projects through physical bounds including line width. */

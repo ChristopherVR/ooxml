@@ -61,6 +61,7 @@ export function chartSeriesGradientPatch(
 		fill = {
 			kind: 'gradient',
 			angle: 90,
+			scaled: true,
 			stops: [
 				{ position: 0, color },
 				{ position: 100, color: { kind: 'scheme', value: 'lt1', transforms: [] } },

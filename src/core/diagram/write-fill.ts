@@ -51,6 +51,7 @@ export function drawingFillXml(fill: DiagramFill): string | undefined {
 			);
 		}
 		linear.setAttribute('ang', String(Math.round(fill.angle * 60000)));
+		if (fill.scaled !== undefined) linear.setAttribute('scaled', fill.scaled ? '1' : '0');
 	}
 	if (fill.path !== undefined) {
 		let path = first(root, 'path', NS.a);
