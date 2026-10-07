@@ -466,6 +466,13 @@ creation permissions and server-enforced naming uniqueness remain outstanding.
 
 ## Next releasable slices
 
+The PowerPoint DOM renderer and its element registry now ship from
+`ooxml-ui/pptx/dom`. The vanilla PowerPoint binding consumes compatibility
+re-exports of the extracted implementation, with its adjacent rendering tests
+relocated into the UI package. OpenTeams still uses the static SVG preview;
+connecting the shared DOM renderer, media lifecycle and presentation controls
+remains necessary before the full PowerPoint adapter slice is achieved.
+
 1. UI parity: match the current Teams shell, Shared/Files commands, Settings
    navigation, typography, spacing and responsive layouts against reference
    screenshots. Keep implemented preferences functional and expose unsupported

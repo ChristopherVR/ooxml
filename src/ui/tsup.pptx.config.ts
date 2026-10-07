@@ -3,6 +3,7 @@ import { rawCss } from './tsup.config';
 
 export default defineConfig({
 	entry: {
+		'dom/index': 'src/pptx/dom/index.ts',
 		index: 'src/pptx/index.ts',
 		'theme/index': 'src/pptx/theme/index.ts',
 		'loader/index': 'src/pptx/loader/index.ts',

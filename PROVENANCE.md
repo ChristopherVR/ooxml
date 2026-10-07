@@ -816,3 +816,22 @@ SVG and print budgets now account for expanded paint. Relative source imports
 remain extensionless. Saved stop rows remain intact. Translucent, themed and
 classic interpolation, arbitrary path fills and exact raster equality remain
 unverified; native-SVG comparisons were replaced for saved gradients only.
+
+## PowerPoint DOM renderer for embedded Office surfaces
+
+Source: ChristopherVR/ooxml, commit `65bc42fc7d5214784222e20db655c8cf872f1c39`.
+Every module and adjacent test under
+`viewers/pptx/packages/vanilla/src/viewer/render/` moved to
+`src/ui/src/pptx/dom/`. The binding retains compatibility re-exports through
+the new `ooxml-ui/pptx/dom` entry. Format imports now reference `ooxml-core/pptx`;
+shared UI imports are relative within their owning package. Rendering behavior
+is retained, including element registries, slide stages, charts, tables, text,
+media, SmartArt, accessibility and presentation re-rendering.
+
+The same source commit's `viewer/glyph-outline-cache.ts` moved to the DOM renderer,
+preserving the singleton used by the vanilla viewer. Its
+`viewer/i18n/translator.ts` moved to `src/ui/src/pptx/i18n/translator.ts`,
+retaining dictionary fallback and interpolation. The relocated rendering tests
+select happy-dom explicitly; UI tests resolve core source subpaths without
+depending on stale package builds. This extraction makes the actual DOM renderer
+available to OpenTeams; it does not establish embedded playback or Teams parity.

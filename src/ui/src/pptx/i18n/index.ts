@@ -3,3 +3,5 @@ export type { TranslationKey } from './translations-en';
 export { LOCALE_CATALOG } from './locale-catalog';
 export type { LocaleCatalogEntry } from './locale-catalog';
 export { ALIGNMENT_LABEL_KEYS } from './alignment-labels';
+export { createTranslator } from './translator';
+export type { Translator, TranslationMessages } from './translator';

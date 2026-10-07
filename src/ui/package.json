@@ -123,6 +123,11 @@
 			"types": "./dist/pptx/*.d.ts",
 			"import": "./dist/pptx/*.mjs",
 			"require": "./dist/pptx/*.cjs"
+		},
+		"./pptx/dom": {
+			"types": "./dist/pptx/dom/index.d.ts",
+			"import": "./dist/pptx/dom/index.mjs",
+			"require": "./dist/pptx/dom/index.cjs"
 		}
 	},
 	"publishConfig": {

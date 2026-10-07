@@ -8,6 +8,10 @@ export default defineConfig({
 	server: { fs: { allow: [resolve(__dirname, '../../../..')] } },
 	resolve: {
 		alias: [
+			{
+				find: 'ooxml-ui/pptx/dom',
+				replacement: resolve(__dirname, '../../../../src/ui/src/pptx/dom/index.ts'),
+			},
 			{ find: 'pptx-vanilla-viewer', replacement: resolve(__dirname, 'src/index.ts') },
 			// Test against workspace sources (not dists) so the suite never runs
 			// against stale build output. Mirrors the Vue package's vitest setup.
@@ -20,7 +24,10 @@ export default defineConfig({
 				find: 'ooxml-ui/pptx/ai',
 				replacement: resolve(__dirname, '../../../../src/ui/src/pptx/ai/index.ts'),
 			},
-			{ find: 'ooxml-ui/pptx', replacement: resolve(__dirname, '../../../../src/ui/src/pptx/index.ts') },
+			{
+				find: 'ooxml-ui/pptx',
+				replacement: resolve(__dirname, '../../../../src/ui/src/pptx/index.ts'),
+			},
 			{
 				find: 'pptx-viewer-core/chart',
 				replacement: resolve(__dirname, '../core/src/chart/index.ts'),

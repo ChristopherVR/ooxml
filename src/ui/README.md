@@ -237,6 +237,15 @@ importing its source into the strict UI project would bypass that boundary.
 
 ## Documentation
 
+`ooxml-ui/pptx/dom` exposes the framework-independent PowerPoint DOM renderer.
+Use `createDefaultRegistry()` with `renderSlideStage()` to render a parsed
+`PptxSlide` into a supplied `Document`. Pass the deck's canvas size, theme,
+table styles, media URL map and translator (`createTranslator()` from
+`ooxml-ui/pptx/i18n`). The stage lays out at authored dimensions and applies
+the requested scale; its host must reserve the scaled width and height.
+Embedded hosts own navigation, media cleanup, asset lifetimes and presentation
+playback. The renderer does not provide Office editing or collaboration on its own.
+
 [Core and UI source](https://github.com/ChristopherVR/ooxml) |
 [Shared UI plan](https://github.com/ChristopherVR/ooxml/blob/main/docs/ooxml-ui-plan.md)
 
