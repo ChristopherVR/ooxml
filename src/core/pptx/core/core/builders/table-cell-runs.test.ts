@@ -83,9 +83,10 @@ describe('extractTableCellTextRuns', () => {
 		);
 		const runs = extractTableCellTextRuns(cell, context);
 		expect(runs).toHaveLength(2);
-		expect(runs?.[0]).toStrictEqual({ text: 'Revenue ', fontSize: 10.5 });
+		expect(runs?.[0]).toStrictEqual({ text: 'Revenue ', fontSize: 10.5, language: 'en-US' });
 		expect(runs?.[1]).toStrictEqual({
 			text: 'grew 42%',
+			language: 'en-US',
 			bold: true,
 			italic: true,
 			underline: true,
@@ -103,6 +104,29 @@ describe('extractTableCellTextRuns', () => {
 				'</a:r></a:p></a:txBody></a:tc>',
 		);
 		expect(extractTableCellTextRuns(cell, context)?.[0].fontFamily).toBe('Traditional Arabic');
+	});
+
+	it('reads the run language', () => {
+		const cell = parseCell(
+			'<a:tc><a:txBody><a:bodyPr/><a:p>' +
+				'<a:r><a:rPr lang="ko-KR"/><a:t>회의일정</a:t></a:r>' +
+				'<a:r><a:rPr/><a:t>kWh</a:t></a:r>' +
+				'</a:p></a:txBody></a:tc>',
+		);
+		const runs = extractTableCellTextRuns(cell, context);
+		expect(runs?.[0].language).toBe('ko-KR');
+		expect(runs?.[1].language).toBeUndefined();
+	});
+
+	it("falls back to the cell's list style language", () => {
+		const cell = parseCell(
+			'<a:tc><a:txBody><a:bodyPr/><a:lstStyle><a:lvl1pPr><a:defRPr lang="ko-KR"/></a:lvl1pPr>' +
+				'</a:lstStyle><a:p><a:r><a:rPr/><a:t>회의일정</a:t></a:r>' +
+				'<a:r><a:rPr lang="en-US"/><a:t>kWh</a:t></a:r></a:p></a:txBody></a:tc>',
+		);
+		const runs = extractTableCellTextRuns(cell, context);
+		expect(runs?.[0].language).toBe('ko-KR');
+		expect(runs?.[1].language).toBe('en-US');
 	});
 
 	it('reads a run baseline shift such as the subscript in CO2', () => {
