@@ -16,3 +16,4 @@ export * from './style-definition';
 export * from './read-style';
 export * from './read-formatting';
 export * from './gradient-definition';
+export * from './bar-cluster-geometry';

@@ -553,6 +553,10 @@ export interface ChartObject {
 	chartType: ChartType;
 	/** Bar/column grouping. */
 	grouping?: 'clustered' | 'stacked' | 'percentStacked' | 'standard';
+	/** Gap between category clusters, as a percentage of one bar's width (0..500). */
+	barGapWidth?: number;
+	/** Overlap of adjacent series, in percent (-100..100). */
+	barOverlap?: number;
 	title?: string;
 	series: ChartSeries[];
 	showLegend: boolean;

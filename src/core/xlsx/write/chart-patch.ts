@@ -14,6 +14,7 @@ import { parseChart } from '../read/chart';
 import { chartXml, patchChartReferences } from './chart';
 import { escapeText } from './xml-out';
 import { patchChartColors } from './chart-colors';
+import { assertBarClusterOptions } from '../../chart/bar-cluster-geometry';
 
 type Doc = ReturnType<typeof parseXml>;
 
@@ -103,6 +104,7 @@ export function patchChartPart(
 	model: ChartObject,
 	originalPalette?: number,
 ): string | undefined {
+	assertBarClusterOptions(model);
 	let before: ChartObject;
 	try {
 		before = parseChart(xml, model.anchor, model.partName ?? '');
@@ -118,6 +120,8 @@ export function patchChartPart(
 		return chartXml(model);
 	const refs = patchChartReferences(xml, model) ?? xml;
 	const sameNames = before.series.every((s, i) => s.name === model.series[i]?.name);
+	const sameSpacing =
+		before.barGapWidth === model.barGapWidth && before.barOverlap === model.barOverlap;
 	const sameColors = before.series.every(
 		(s, i) =>
 			JSON.stringify([
@@ -142,6 +146,7 @@ export function patchChartPart(
 		before.showLegend === model.showLegend &&
 		(model.legendPosition === undefined || before.legendPosition === model.legendPosition) &&
 		sameNames &&
+		sameSpacing &&
 		sameColors &&
 		before.colorPalette === model.colorPalette
 	)
@@ -154,5 +159,27 @@ export function patchChartPart(
 	if (!sameNames) patchSeriesNames(chart, model);
 	if (!sameColors || before.colorPalette !== model.colorPalette)
 		patchChartColors(doc, chart, model, before);
+	if (!sameSpacing) {
+		const plot =
+			first(first(chart, 'plotArea', NS.c), 'barChart', NS.c) ??
+			first(first(chart, 'plotArea', NS.c), 'bar3DChart', NS.c);
+		if (plot)
+			for (const [element, value, next] of [
+				['gapWidth', model.barGapWidth, 'overlap'],
+				['overlap', model.barOverlap, 'serLines'],
+			] as const) {
+				if (value === undefined) {
+					const old = first(plot, element, NS.c);
+					if (old) plot.removeChild(old);
+				} else
+					setVal(
+						doc,
+						plot,
+						element,
+						String(value),
+						first(plot, next, NS.c) ?? first(plot, 'axId', NS.c),
+					);
+			}
+	}
 	return buildXml(doc);
 }

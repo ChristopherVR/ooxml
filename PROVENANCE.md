@@ -783,3 +783,20 @@ NoFill enabled. Nine native rounding cases retain their previous output.
 Fill probes share a second helper that creates rectangles, ellipses and genuine
 native DrawPolyline polygons. Raster evidence uses native polygons because
 manually replaced geometry rows produced blank polygon PNG exports in probes.
+
+## Shared bar cluster geometry
+
+Source: ChristopherVR/ooxml at `ab83de0bc`,
+`src/ui/src/pptx/render/chart-bar-cluster-geometry.ts`. Its width, step and cluster
+span calculation moved unchanged to strict `src/core/chart/bar-cluster-geometry.ts`
+with a format-neutral options type. PowerPoint retains its compatibility path
+and legacy missing-gap heuristic. Its horizontal bar painter now calls the same
+helper instead of repeating the formula. Existing PowerPoint bar/combo callers
+and bar rendering regressions cover the extraction; XLSX uses explicit Office
+spacing defaults and new native Excel COM measurements.
+
+The XLSX `bars` painter moved from `chart-svg-cartesian.ts` at the same commit
+to `chart-svg-bars.ts`, keeping its stacking and paint behavior. It now uses the
+shared geometry and the native horizontal series direction; SVG groups identify
+series and point indices for review and future UI hit testing. Office models and
+calculations remain in core, while the existing PowerPoint UI keeps its painter.

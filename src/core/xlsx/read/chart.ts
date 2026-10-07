@@ -184,6 +184,17 @@ export function parseChart(
 	const grouping = val(plot, 'grouping');
 	if (grouping && GROUPINGS.has(grouping))
 		object.grouping = grouping as NonNullable<ChartObject['grouping']>;
+	if (chartType === 'bar' || chartType === 'column') {
+		for (const [element, field, min, max] of [
+			['gapWidth', 'barGapWidth', 0, 500],
+			['overlap', 'barOverlap', -100, 100],
+		] as const) {
+			const raw = val(plot, element);
+			const value =
+				raw === undefined ? (field === 'barGapWidth' ? 150 : 0) : !raw.trim() ? NaN : Number(raw);
+			if (Number.isInteger(value) && value >= min && value <= max) object[field] = value;
+		}
+	}
 	const titleNode = c(chart, 'title');
 	if (titleNode && val(chart, 'autoTitleDeleted') !== '1') {
 		const title = richText(c(titleNode, 'tx'));

@@ -1,12 +1,10 @@
 import { formatAxisValue, type AxisScale } from './chart-scale';
-import { fit, line, n, rect, text, textWidth, type Rect } from './chart-svg-util';
+import { fit, line, n, text, textWidth, type Rect } from './chart-svg-util';
 import { categoryTotals, type ChartViewModel } from './chart-view';
 import { chartAreaRect, chartStroke, chartTextAttributes } from './chart-svg-appearance';
+import { bars } from './chart-svg-bars';
 
-/** Gap between bar clusters as a fraction of one bar (Excel's default `gapWidth` 150%). */
-const GAP = 1.5;
-
-interface Frame {
+export interface Frame {
 	plot: Rect;
 	/** Value to pixel along the value axis. */
 	value: (v: number) => number;
@@ -108,55 +106,6 @@ function plotted(model: ChartViewModel): (number | null)[][] {
 	return model.series.map((s) =>
 		s.values.map((v, i) => (v === null ? null : v / (totals[i] || 1))),
 	);
-}
-
-function bars(model: ChartViewModel, frame: Frame, out: string[]): void {
-	const values = plotted(model);
-	const stacked = model.grouping === 'stacked' || model.grouping === 'percentStacked';
-	const count = Math.max(1, model.series.length);
-	const barSize = frame.bandSize / ((stacked ? 1 : count) + GAP);
-	const base = frame.value(0);
-	const pos = new Array<number>(model.categories.length).fill(0);
-	const neg = new Array<number>(model.categories.length).fill(0);
-	model.series.forEach((s, si) => {
-		values[si]?.forEach((v, i) => {
-			if (v === null || i >= model.categories.length) return;
-			let from = 0;
-			let to = v;
-			if (stacked) {
-				const acc = v >= 0 ? pos : neg;
-				from = acc[i] ?? 0;
-				to = from + v;
-				acc[i] = to;
-			}
-			const a = stacked ? frame.value(from) : base;
-			const b = frame.value(to);
-			const offset = stacked ? -barSize / 2 : -((count * barSize) / 2) + si * barSize;
-			const center = frame.band(i);
-			if (model.horizontal)
-				out.push(
-					rect(
-						Math.min(a, b),
-						center + offset,
-						Math.abs(b - a),
-						barSize,
-						s.pointColors?.[i] ?? s.color,
-						s.shadowFilter,
-					),
-				);
-			else
-				out.push(
-					rect(
-						center + offset,
-						Math.min(a, b),
-						barSize,
-						Math.abs(b - a),
-						s.pointColors?.[i] ?? s.color,
-						s.shadowFilter,
-					),
-				);
-		});
-	});
 }
 
 function linesAndAreas(model: ChartViewModel, frame: Frame, out: string[]): void {
@@ -290,7 +239,7 @@ export function cartesianSvg(model: ChartViewModel, area: Rect): string {
 	}
 	const frame = axes(model, area, out);
 	if (!frame) return '';
-	if (model.type === 'bar' || model.type === 'column') bars(model, frame, out);
+	if (model.type === 'bar' || model.type === 'column') bars(model, frame, out, plotted(model));
 	else linesAndAreas(model, frame, out);
 	return out.join('');
 }

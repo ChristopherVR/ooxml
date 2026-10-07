@@ -1,6 +1,7 @@
 // Inserting and editing charts and pictures.
 import type { ChartObject, DrawingAnchor, ImageObject, Workbook } from '../model';
 import { type EditContext, sheetAt } from './context';
+import { assertBarClusterOptions } from '../../chart/bar-cluster-geometry';
 
 /** File extensions for the picture types Excel accepts. */
 export const IMAGE_EXTENSIONS: Readonly<Record<string, string>> = {
@@ -22,6 +23,7 @@ export type ChartPatch = Partial<
 
 /** Adds a chart drawn from the model (a new chart part is written on save); returns its index. */
 export function addChart(ctx: EditContext, s: number, chart: Omit<ChartObject, 'kind'>): number {
+	assertBarClusterOptions(chart);
 	const sheet = sheetAt(ctx.workbook, s);
 	return ctx.run(
 		'Insert chart',
@@ -43,6 +45,7 @@ export function addChart(ctx: EditContext, s: number, chart: Omit<ChartObject, '
  * changing the type, grouping or number of series rewrites the part from the model.
  */
 export function updateChart(ctx: EditContext, s: number, index: number, patch: ChartPatch): void {
+	assertBarClusterOptions(patch);
 	const sheet = sheetAt(ctx.workbook, s);
 	const chart = sheet.drawings[index];
 	if (!chart || chart.kind !== 'chart') throw new RangeError(`No chart at index ${index}`);

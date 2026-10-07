@@ -4,6 +4,7 @@ import { XML_HEADER, escapeAttr, escapeText } from './xml-out';
 import { chartSeriesFill } from './chart-colors';
 import { drawingColorXml } from '../../diagram/write-color';
 import { drawingFillXml } from '../../diagram/write-fill';
+import { assertBarClusterOptions } from '../../chart/bar-cluster-geometry';
 
 const pt = (values: readonly (string | number | null)[]) =>
 	values
@@ -118,14 +119,18 @@ function plotXml(chart: ChartObject): string {
 		default: {
 			const horizontal = chart.chartType === 'bar';
 			const bar = grouping === 'standard' ? 'clustered' : grouping;
-			const overlap = bar === 'clustered' ? '' : '<c:overlap val="100"/>';
-			return `<c:barChart><c:barDir val="${horizontal ? 'bar' : 'col'}"/><c:grouping val="${bar}"/><c:varyColors val="0"/>${series}<c:gapWidth val="150"/>${overlap}${AX_IDS}</c:barChart>${axes(horizontal, false)}`;
+			const overlap =
+				chart.barOverlap === undefined && bar === 'clustered'
+					? ''
+					: `<c:overlap val="${chart.barOverlap ?? 100}"/>`;
+			return `<c:barChart><c:barDir val="${horizontal ? 'bar' : 'col'}"/><c:grouping val="${bar}"/><c:varyColors val="0"/>${series}<c:gapWidth val="${chart.barGapWidth ?? 150}"/>${overlap}${AX_IDS}</c:barChart>${axes(horizontal, false)}`;
 		}
 	}
 }
 
 /** A new chart part for a chart created in the model (no source part to keep). */
 export function chartXml(chart: ChartObject): string {
+	assertBarClusterOptions(chart);
 	const title =
 		chart.title !== undefined
 			? `<c:title><c:tx><c:rich><a:bodyPr/><a:lstStyle/><a:p><a:r><a:t>${escapeText(chart.title)}</a:t></a:r></a:p></c:rich></c:tx><c:overlay val="0"/></c:title><c:autoTitleDeleted val="0"/>`

@@ -87,6 +87,10 @@ test('native dark chart styles retain gradient backgrounds and contrasting text'
 	await expect(chart.locator('linearGradient stop')).toHaveCount(6);
 	await expect(chart.locator('feDropShadow')).toHaveCount(3);
 	await expect(chart.locator('feDropShadow[stdDeviation="3"][dy="2"]')).toHaveCount(2);
+	const firstBar = chart.locator('g[data-chart-series="0"][data-chart-point="0"] rect');
+	const nextBar = chart.locator('g[data-chart-series="0"][data-chart-point="1"] rect');
+	const pitch = Number(await nextBar.getAttribute('x')) - Number(await firstBar.getAttribute('x'));
+	expect(Number(await firstBar.getAttribute('width')) / pitch).toBeCloseTo(1 / 3.24, 3);
 	await expect(chart.locator('text').filter({ hasText: 'Native style' })).toHaveAttribute(
 		'filter',
 		/title-text-shadow/,

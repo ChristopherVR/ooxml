@@ -30,6 +30,8 @@ export interface ValueAxisView extends AxisScale {
 
 /** Neutral data for a chart painter: series resolved, colours chosen, axes scaled. */
 export interface ChartViewModel {
+	barGapWidth?: number;
+	barOverlap?: number;
 	/** Native defaults and direct element formatting, resolved against the workbook theme. */
 	appearance?: ChartAppearance;
 	type: ChartType;
@@ -194,6 +196,8 @@ export function chartView(
 	});
 
 	const model: ChartViewModel = {
+		...(chart.barGapWidth === undefined ? {} : { barGapWidth: chart.barGapWidth }),
+		...(chart.barOverlap === undefined ? {} : { barOverlap: chart.barOverlap }),
 		type,
 		grouping,
 		showLegend: chart.showLegend,

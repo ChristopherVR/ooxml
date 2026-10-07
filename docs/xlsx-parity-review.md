@@ -777,3 +777,43 @@ After adding the effect-removal regression, all 14 focused native gradient and
 shadow tests passed. Core/UI typechecks and builds, 30 PowerPoint gallery tests,
 every core clean-consumer import, 93 UI entry imports and 45 custom-element
 registrations passed. The shared PowerPoint caller retains its existing output.
+
+## Native bar gap width and overlap
+
+XLSX imports and paints `c:gapWidth` and `c:overlap` using the same cluster width
+and spacing calculation as PowerPoint. Horizontal bars now order adjacent series
+in Excel's direction. Clustered, stacked and percentage-stacked charts use the
+same geometry. Gap width is measured relative to one bar's width; overlap changes
+the total cluster span before the bar is sized. PowerPoint's existing callers
+retain their absent-gap behavior, and its horizontal painter shares the helper.
+
+Core chart edits validate the OOXML integer ranges (gap 0..500, overlap -100..100),
+patch source plot properties without replacing axes, series or effects, and
+support undo/redo. Regenerated bar/column charts retain authored spacing.
+These fields are not yet exposed in a Format Data Series pane.
+
+`scripts/record-xlsx-chart-spacing.ps1` records 13 owned native workbook cases with
+three series and four categories: vertical/horizontal clustered charts under
+five gap/overlap settings, plus stacked and percentage-stacked charts. A copy
+of the native stacked file with its overlap declaration removed establishes
+Excel's imported default of 0; new authored stacked charts explicitly write 100.
+Saved and
+reopened COM point rectangles establish bar width, category pitch and adjacent
+series step. The renderer matches their normalized measurements and direction,
+including 0/100 and 500/-100 extremes. COM also reopened our edited full native
+workbook with gap 5, overlap 23, three series and the expected bar-width ratio.
+
+Playwright MCP reviewed style 209's corrected geometry (native gap 100, overlap
+-24); its browser regression verifies width relative to category pitch. This
+closes the recorded gap/overlap discrepancy, while exact plot placement, font
+measurement, reversed-axis settings and complete 3D charts remain incomplete.
+
+The native fixture supplies independent geometry measurements rather than an
+expected value computed with the renderer's formula.
+
+Validation: 8,254 core regressions passed after adding the omitted-overlap case.
+The full production browser suite passed 76 tests; the final native-style run
+passed all eight tests across six bindings. Existing PowerPoint bar tests (16),
+core/UI typechecks and builds, every core clean-consumer import, 93 UI imports and
+45 custom-element registrations passed. Exact plot dimensions remain a separate
+acceptance gap; normalized bar spacing does not establish whole-chart pixel parity.

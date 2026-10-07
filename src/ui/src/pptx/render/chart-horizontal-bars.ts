@@ -14,6 +14,7 @@
  * @module chart-horizontal-bars
  */
 import type { PptxChartData, PptxElement } from 'ooxml-core/pptx';
+import { clusteredBarGeometry } from './chart-bar-cluster-geometry';
 
 import { resolveChartTitleText } from './chart-auto-title';
 import { computeValueRangeForChart } from './chart-axis-range';
@@ -101,14 +102,11 @@ export function buildHorizontalBarViewModel(
 			// cluster, so the gap term adds to `overlapSpan` rather than multiplying
 			// a (1 + gapWidth/100) band-shrink by it; see chart-cartesian-bars.ts's
 			// `singleBarWidth` comment for the COM measurement that proved this.
-			overlap = chartData.barOverlap ?? 0,
-			overlapSpan = 1 + (seriesCount - 1) * (1 - overlap / 100),
-			singleBarHeight =
-				chartData.barGapWidth !== undefined
-					? band / (overlapSpan + Math.max(chartData.barGapWidth, 0) / 100)
-					: (band * 0.7) / seriesCount,
-			step = singleBarHeight * (1 - overlap / 100),
-			clusterHeight = singleBarHeight + step * (seriesCount - 1),
+			{
+				singleBarWidth: singleBarHeight,
+				step,
+				clusterWidth: clusterHeight,
+			} = clusteredBarGeometry(band, seriesCount, chartData),
 			groupOffset = (band - clusterHeight) / 2;
 
 		for (let ci = 0; ci < catCount; ci++) {
