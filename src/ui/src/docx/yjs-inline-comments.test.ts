@@ -73,6 +73,31 @@ for (const name of [
 		if (name === 'simple-field' || name === 'adjacent-fields') {
 			vi.stubGlobal('ClipboardEvent', Event);
 			const field = fieldResultRanges(av.state.doc)[0]!;
+			ab.stopCapturing();
+			av.dispatch(
+				av.state.tr.setSelection(
+					TextSelection.create(av.state.doc, field.from + 1, field.from + 2),
+				),
+			);
+			expect(av.pasteHTML('<b>X</b>')).toBe(true);
+			expect(av.state.doc.eq(bv.state.doc)).toBe(true);
+			expect(fieldResultRanges(bv.state.doc).map((run) => run.text)).toEqual(
+				name === 'simple-field' ? ['AXCDE'] : ['AXCDE', 'ABCDE'],
+			);
+			const saved = (await loadDocx(await b!.saveBytes())).model;
+			expect(
+				runsOf(saved)
+					.filter((run) => run.field)
+					.map((run) => run.fieldInstanceId),
+			).toEqual(
+				runsOf(a!.documentModel!)
+					.filter((run) => run.field)
+					.map((run) => run.fieldInstanceId),
+			);
+			expect(ab.undo()).toBe(true);
+			expect(av.state.doc.eq(bv.state.doc)).toBe(true);
+			expect(fieldResultRanges(bv.state.doc)[0]!.text).toBe('ABCDE');
+			ab.stopCapturing();
 			av.dispatch(
 				av.state.tr.setSelection(TextSelection.create(av.state.doc, field.from, field.to)),
 			);

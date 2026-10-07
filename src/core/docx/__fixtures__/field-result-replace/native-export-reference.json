@@ -1,0 +1,198 @@
+{
+	"applicationVersion": "16.0",
+	"applicationBuild": "16.0.20430",
+	"cases": [
+		{
+			"name": "partial-native",
+			"text": "BeforeAXCDEABCDEAfter\r",
+			"fields": [
+				{
+					"result": "AXCDE",
+					"instruction": "QUOTE \"ABCDE\"",
+					"bold": -1
+				},
+				{
+					"result": "ABCDE",
+					"instruction": "QUOTE \"ABCDE\"",
+					"bold": 0
+				}
+			]
+		},
+		{
+			"name": "partial-typing",
+			"text": "BeforeAXCDEABCDEAfter\r",
+			"fields": [
+				{
+					"result": "AXCDE",
+					"instruction": "QUOTE \"ABCDE\"",
+					"bold": -1
+				},
+				{
+					"result": "ABCDE",
+					"instruction": "QUOTE \"ABCDE\"",
+					"bold": 0
+				}
+			]
+		},
+		{
+			"name": "partial-paste",
+			"text": "BeforeAXCDEABCDEAfter\r",
+			"fields": [
+				{
+					"result": "AXCDE",
+					"instruction": "QUOTE \"ABCDE\"",
+					"bold": -1
+				},
+				{
+					"result": "ABCDE",
+					"instruction": "QUOTE \"ABCDE\"",
+					"bold": 0
+				}
+			]
+		},
+		{
+			"name": "whole-native",
+			"text": "BeforeXABCDEAfter\r",
+			"fields": [
+				{
+					"result": "X",
+					"instruction": "QUOTE \"ABCDE\"",
+					"bold": -1
+				},
+				{
+					"result": "ABCDE",
+					"instruction": "QUOTE \"ABCDE\"",
+					"bold": 0
+				}
+			]
+		},
+		{
+			"name": "whole-typing",
+			"text": "BeforeXABCDEAfter\r",
+			"fields": [
+				{
+					"result": "X",
+					"instruction": "QUOTE \"ABCDE\"",
+					"bold": -1
+				},
+				{
+					"result": "ABCDE",
+					"instruction": "QUOTE \"ABCDE\"",
+					"bold": 0
+				}
+			]
+		},
+		{
+			"name": "whole-paste",
+			"text": "BeforeXABCDEAfter\r",
+			"fields": [
+				{
+					"result": "X",
+					"instruction": "QUOTE \"ABCDE\"",
+					"bold": -1
+				},
+				{
+					"result": "ABCDE",
+					"instruction": "QUOTE \"ABCDE\"",
+					"bold": 0
+				}
+			]
+		},
+		{
+			"name": "start-native",
+			"text": "BeforeXBCDEABCDEAfter\r",
+			"fields": [
+				{
+					"result": "XBCDE",
+					"instruction": "QUOTE \"ABCDE\"",
+					"bold": -1
+				},
+				{
+					"result": "ABCDE",
+					"instruction": "QUOTE \"ABCDE\"",
+					"bold": 0
+				}
+			]
+		},
+		{
+			"name": "start-typing",
+			"text": "BeforeXBCDEABCDEAfter\r",
+			"fields": [
+				{
+					"result": "XBCDE",
+					"instruction": "QUOTE \"ABCDE\"",
+					"bold": -1
+				},
+				{
+					"result": "ABCDE",
+					"instruction": "QUOTE \"ABCDE\"",
+					"bold": 0
+				}
+			]
+		},
+		{
+			"name": "start-paste",
+			"text": "BeforeXBCDEABCDEAfter\r",
+			"fields": [
+				{
+					"result": "XBCDE",
+					"instruction": "QUOTE \"ABCDE\"",
+					"bold": -1
+				},
+				{
+					"result": "ABCDE",
+					"instruction": "QUOTE \"ABCDE\"",
+					"bold": 0
+				}
+			]
+		},
+		{
+			"name": "end-native",
+			"text": "BeforeABCDXABCDEAfter\r",
+			"fields": [
+				{
+					"result": "ABCDX",
+					"instruction": "QUOTE \"ABCDE\"",
+					"bold": -1
+				},
+				{
+					"result": "ABCDE",
+					"instruction": "QUOTE \"ABCDE\"",
+					"bold": 0
+				}
+			]
+		},
+		{
+			"name": "end-typing",
+			"text": "BeforeABCDXABCDEAfter\r",
+			"fields": [
+				{
+					"result": "ABCDX",
+					"instruction": "QUOTE \"ABCDE\"",
+					"bold": -1
+				},
+				{
+					"result": "ABCDE",
+					"instruction": "QUOTE \"ABCDE\"",
+					"bold": 0
+				}
+			]
+		},
+		{
+			"name": "end-paste",
+			"text": "BeforeABCDXABCDEAfter\r",
+			"fields": [
+				{
+					"result": "ABCDX",
+					"instruction": "QUOTE \"ABCDE\"",
+					"bold": -1
+				},
+				{
+					"result": "ABCDE",
+					"instruction": "QUOTE \"ABCDE\"",
+					"bold": 0
+				}
+			]
+		}
+	]
+}

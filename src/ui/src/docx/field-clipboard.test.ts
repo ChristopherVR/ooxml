@@ -53,6 +53,67 @@ function editor(simple: boolean) {
 	views.push(view);
 	return view;
 }
+const replacements = [
+	{ name: 'partial', from: 1, to: 2, expected: 'AXCDE' },
+	{ name: 'whole', from: 0, to: 5, expected: 'X' },
+	{ name: 'start', from: 0, to: 1, expected: 'XBCDE' },
+	{ name: 'end', from: 4, to: 5, expected: 'ABCDX' },
+];
+for (const simple of [true, false])
+	for (const replacement of replacements)
+		it(`retains a ${simple ? 'simple' : 'complex'} field during ${replacement.name} result paste`, () => {
+			const view = editor(simple);
+			const original = view.state.doc;
+			const field = fieldResultRanges(original)[0]!;
+			view.dispatch(
+				view.state.tr.setSelection(
+					TextSelection.create(
+						view.state.doc,
+						field.from + replacement.from,
+						field.from + replacement.to,
+					),
+				),
+			);
+			expect(view.pasteHTML('<b>X</b>')).toBe(true);
+			expect(fieldResultRanges(view.state.doc).map((run) => run.text)).toEqual([
+				replacement.expected,
+			]);
+			if (simple)
+				expect(
+					fieldResultRanges(view.state.doc)[0]!.marks.find(
+						(mark) => mark.type.name === 'runProperties',
+					)!.attrs.props.fieldInstanceId,
+				).toBe('first');
+			undo(view.state, view.dispatch);
+			expect(view.state.doc.eq(original)).toBe(true);
+		});
+for (const replacement of replacements)
+	it(`retains a simple field during ${replacement.name} result typing`, () => {
+		const view = editor(true);
+		const original = view.state.doc;
+		const field = fieldResultRanges(original)[0]!;
+		const from = field.from + replacement.from;
+		const to = field.from + replacement.to;
+		view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, from, to)));
+		let handled = false;
+		view.someProp('handleTextInput', (handler) => {
+			handled = Boolean(
+				handler(view, from, to, 'X', () => view.state.tr.insertText('X', from, to)),
+			);
+			return handled;
+		});
+		expect(handled).toBe(true);
+		expect(fieldResultRanges(view.state.doc).map((run) => run.text)).toEqual([
+			replacement.expected,
+		]);
+		expect(
+			fieldResultRanges(view.state.doc)[0]!.marks.find(
+				(mark) => mark.type.name === 'runProperties',
+			)!.attrs.props.fieldInstanceId,
+		).toBe('first');
+		undo(view.state, view.dispatch);
+		expect(view.state.doc.eq(original)).toBe(true);
+	});
 for (const simple of [true, false])
 	it(`copies ${simple ? 'simple' : 'complex'} field result text as formatted literal text`, () => {
 		const view = editor(simple);

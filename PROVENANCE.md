@@ -1528,3 +1528,19 @@ certification of all Microsoft 365 clipboard formats or cross-app clipboard UI.
 The UI model-adapter export driver consumes the core clipboard hooks; an owned
 native comparison verifies all three saved exports against the recorded field
 counts, text and copied bold. No clipboard, parser or provider engine is forked.
+
+## Shared Word cached-result input
+
+Source: ChristopherVR/ooxml at `797db1ba8`, core field guard, result scanner,
+clipboard projection and existing UI model adapter. The private core
+`simple-field-input.ts` retains target instructions and imported boundary
+identities for typed replacements and inline text paste, while preserving pasted
+formatting. It extends existing input hooks; no viewer codec or Yjs projection
+was copied. Empty results and structural/non-text paste remain outside coverage.
+
+The test fixture builder moved from `e2e/docx/fields.spec.ts` at that commit to
+`field-fixtures.ts` for reuse by the field input browser matrix, without changing
+fixture contents. Owned hidden Word COM scripts record four replacement fixtures
+and compare eight editor-hook/model-adapter exports on reopen. Their field codes,
+results, body text and bold match Word 16.0.20430. These are bounded native range
+and export checks, not current Microsoft 365 subscription certification.

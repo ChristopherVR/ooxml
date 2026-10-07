@@ -1,6 +1,7 @@
 import type { Node as ProseMirrorNode } from 'prosemirror-model';
 import { Plugin, TextSelection, type EditorState, type Transaction } from 'prosemirror-state';
 import { fieldClipboardSlice } from './field-clipboard';
+import { replaceSimpleFieldResult, simpleFieldPasteSlice } from './simple-field-input';
 
 /** Field marker kinds in document order. */
 function markerKinds(doc: ProseMirrorNode): string[] {
@@ -41,9 +42,12 @@ export function fieldGuardPlugin(): Plugin {
 	return new Plugin({
 		props: {
 			transformCopied: fieldClipboardSlice,
-			transformPasted: fieldClipboardSlice,
+			transformPasted: (slice, view) =>
+				simpleFieldPasteSlice(fieldClipboardSlice(slice), view?.state),
 			handleTextInput: (view, from, to, text) => {
-				const transaction = replaceAroundMarkers(view.state, from, to, text);
+				const transaction =
+					replaceAroundMarkers(view.state, from, to, text) ??
+					replaceSimpleFieldResult(view.state, from, to, text);
 				if (transaction) view.dispatch(transaction);
 				return Boolean(transaction);
 			},

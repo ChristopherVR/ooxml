@@ -546,3 +546,21 @@ All three clipboard-hook/model-adapter exports reopen in Word with the same
 field counts, complete body text and copied bold formatting as their native
 range-transfer references. `write-word-field-copy-exports.mjs` and
 `check-word-field-copy-exports.ps1` reproduce this bounded comparison.
+
+### Replacing cached field results
+
+Typing and inline text paste now retain the instruction and identity of an
+existing simple field when replacing part, all, the first character or the last
+character of its result. Pasted text retains its formatting and adopts the target
+field identity. Boundary cursors and closed paragraph or non-text slices remain
+outside this adoption. The implementation reuses the core field guard and result
+scanner; Yjs receives the same authored marks without a separate mapping.
+
+Six browser bindings cover typing, HTML paste, saved field counts and local undo
+for simple and complex results. Mounted Yjs cases cover result replacement,
+convergence, export and undo with one or two imported simple fields. Eight editor
+hook/model-adapter exports reopen in Word with matching body text, field codes,
+cached results and bold formatting against four native replacement references.
+Word 16.0.20430 converts those imported simple fields to complex fields on save.
+Deleting an entire simple result, non-text/structural paste and current Microsoft
+365 subscription certification remain unfinished.
