@@ -12,6 +12,6 @@ export * from './signaling.js';
 export * from './store.js';
 export * from './tabs.js';
 export * from './threads.js';
-export type { FollowedThread } from './followed-threads.js';
+export type { FollowedThread, ThreadFollowSettings } from './followed-threads.js';
 export * from './view.js';
 export * from './workspace.js';
