@@ -7,7 +7,7 @@
  *   sub-show ends (the "end of show" hook, not just `useCustomShowRunner` in
  *   isolation - this pins the wiring between the two).
  */
-import type { RunProgramNotice } from 'pptx-viewer-shared';
+import type { RunProgramNotice } from 'ooxml-ui/pptx';
 import React, { act, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';

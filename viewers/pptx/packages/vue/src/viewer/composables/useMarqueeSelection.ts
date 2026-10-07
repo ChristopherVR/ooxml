@@ -3,7 +3,7 @@ import {
 	computeMarqueeHitIds,
 	isAdditiveSelectionPress,
 	mergeAdditiveSelection,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { ref } from 'vue';
 import type { Ref } from 'vue';
 

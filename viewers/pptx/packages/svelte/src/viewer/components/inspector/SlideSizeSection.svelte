@@ -15,13 +15,13 @@
 		SlideSizeEmu,
 		SlideSizeOrientation,
 		SlideSizeRescaleMode,
-	} from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
 	import {
 		resolveSlideSizeSelection,
 		SLIDE_SIZE_PRESETS,
 		slideSizeFromPreset,
 		withSlideSizeOrientation,
-	} from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 	import SlideSizeRescalePrompt from './SlideSizeRescalePrompt.svelte';

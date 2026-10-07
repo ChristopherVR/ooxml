@@ -16,8 +16,8 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import type { PptxElement } from 'pptx-viewer-core';
 
-import type { FreeformToolKind } from '../internal/shared';
-import { canEditElementPoints } from '../internal/shared';
+import type { FreeformToolKind } from 'ooxml-ui/pptx';
+import { canEditElementPoints } from 'ooxml-ui/pptx';
 import { EditorStateService } from './editor-state.service';
 
 @Injectable()

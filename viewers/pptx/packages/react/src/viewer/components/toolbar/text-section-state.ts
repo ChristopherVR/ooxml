@@ -12,12 +12,12 @@ import {
 	getInlineEditorSelectionResult,
 	getSelectionTextStyleFlags,
 	TEXT_DECORATION_FLAGS,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type {
 	ElementBulletKind,
 	SelectionTextStyleFlags,
 	TextDecorationFlag,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { TableCellEditorState } from '../../types';
 

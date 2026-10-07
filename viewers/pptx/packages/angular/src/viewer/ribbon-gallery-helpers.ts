@@ -12,7 +12,7 @@
  */
 import type { PptxElement, PptxHandler, PptxTheme } from 'pptx-viewer-core';
 
-import type { RibbonGalleryApplyResult, RibbonGalleryContext } from '../internal/shared';
+import type { RibbonGalleryApplyResult, RibbonGalleryContext } from 'ooxml-ui/pptx';
 import type { EditorStateService } from './editor-state.service';
 import type { ViewerThemeGalleryService } from './viewer-theme-gallery.service';
 

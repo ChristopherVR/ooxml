@@ -8,7 +8,7 @@
 	 */
 	import type { OlePptxElement, PptxElement } from 'pptx-viewer-core';
 	import { applyOleDocumentParagraphEdit, getOleDocumentParagraphs } from 'pptx-viewer-core';
-	import { buildOleContentUpdatePatch } from 'pptx-viewer-shared';
+	import { buildOleContentUpdatePatch } from 'ooxml-ui/pptx';
 	import { onDestroy } from 'svelte';
 
 	import { useTranslator } from '../../../i18n/context';

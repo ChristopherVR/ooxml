@@ -15,8 +15,8 @@
 		ThreeViewDragDetail,
 		ThreeViewSpec,
 		ThreeViewState,
-	} from 'pptx-viewer-shared';
-	import { defineThreeViewElement, THREE_VIEW_EVENTS } from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
+	import { defineThreeViewElement, THREE_VIEW_EVENTS } from 'ooxml-ui/pptx';
 	import type { Snippet } from 'svelte';
 
 	defineThreeViewElement();

@@ -29,8 +29,8 @@ import {
 	CONNECTOR_ARROW_CONTROLS,
 	connectorArrowPatch,
 	connectorArrowValue,
-} from '../internal/shared';
-import { keyToLabel, translationsEn } from '../internal/shared-src/i18n';
+} from 'ooxml-ui/pptx';
+import { keyToLabel, translationsEn } from 'ooxml-ui/pptx/i18n';
 import {
 	ARROW_SIZE_VALUES,
 	connectorStylePatch,

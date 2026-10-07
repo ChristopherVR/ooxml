@@ -1,6 +1,6 @@
 import type { PptxElement, ShapeStyle, OlePptxElement, GroupPptxElement } from 'pptx-viewer-core';
 import { getOleObjectTypeLabel } from 'pptx-viewer-core';
-import { buildOleObjectNamePatch, canInteractWithElement } from 'pptx-viewer-shared';
+import { buildOleObjectNamePatch, canInteractWithElement } from 'ooxml-ui/pptx';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

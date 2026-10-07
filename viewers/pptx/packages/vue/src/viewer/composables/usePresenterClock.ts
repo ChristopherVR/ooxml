@@ -8,8 +8,8 @@
  * helper in Angular, which is exactly how three consoles paced a talk slightly
  * differently.
  */
-import { formatElapsed, formatTime, presenterTimerProgress } from 'pptx-viewer-shared';
-import type { PresenterTimerProgress } from 'pptx-viewer-shared';
+import { formatElapsed, formatTime, presenterTimerProgress } from 'ooxml-ui/pptx';
+import type { PresenterTimerProgress } from 'ooxml-ui/pptx';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
 

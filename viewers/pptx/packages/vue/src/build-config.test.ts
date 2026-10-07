@@ -15,7 +15,7 @@ describe('published Vue declarations', () => {
 		// The private shared package is not installed by consumers. Generating
 		// declarations without bundling leaves its public re-exports unresolved.
 		expect(options?.bundleTypes).toStrictEqual({
-			bundledPackages: ['pptx-viewer-core', 'pptx-viewer-shared'],
+			bundledPackages: ['pptx-viewer-core', 'ooxml-ui/pptx'],
 		});
 		expect(options).not.toHaveProperty('rollupTypes');
 		expect(options).not.toHaveProperty('bundledPackages');

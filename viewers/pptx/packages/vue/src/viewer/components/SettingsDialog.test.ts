@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
-import { createViewerOptionsStore, THEME_CATALOG, VIEWER_OPTIONS_TABS } from 'pptx-viewer-shared';
-import { LOCALE_CATALOG } from 'pptx-viewer-shared/i18n';
+import { createViewerOptionsStore, THEME_CATALOG, VIEWER_OPTIONS_TABS } from 'ooxml-ui/pptx';
+import { LOCALE_CATALOG } from 'ooxml-ui/pptx/i18n';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import SettingsDialog from './SettingsDialog.vue';

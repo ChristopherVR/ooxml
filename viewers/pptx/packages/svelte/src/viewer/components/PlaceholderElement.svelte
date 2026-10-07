@@ -8,7 +8,7 @@
 	 * To port a type for real: add a dedicated component and branch to it from
 	 * `ElementRenderer` before the placeholder fallback.
 	 */
-	import { shouldRenderHitTarget } from 'pptx-viewer-shared';
+	import { shouldRenderHitTarget } from 'ooxml-ui/pptx';
 
 	import { getContainerStyle, getElementHitTargetStyle, styleToString } from '../style';
 	import type { ElementRendererProps } from './props';

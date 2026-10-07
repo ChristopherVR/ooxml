@@ -1,7 +1,7 @@
 import type { MediaPptxElement } from 'pptx-viewer-core';
-import { getImageSrc, getOnlineVideoEmbed } from 'pptx-viewer-shared';
+import { getImageSrc, getOnlineVideoEmbed } from 'ooxml-ui/pptx';
 
-export { registerCrossSlideAudio } from 'pptx-viewer-shared';
+export { registerCrossSlideAudio } from 'ooxml-ui/pptx';
 
 /**
  * Source resolution for `media` (audio / video) elements (port of the vanilla

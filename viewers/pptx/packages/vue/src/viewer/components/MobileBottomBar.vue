@@ -18,7 +18,7 @@
  * no-slides gating, the pressed state and the comment badge. Conventions vs. React:
  * function-prop callbacks become emits, and the host is fixed to the bottom edge.
  */
-import type { MobileBarIntent, MobileBarRequestEvent } from 'pptx-viewer-shared';
+import type { MobileBarIntent, MobileBarRequestEvent } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

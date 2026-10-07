@@ -1,5 +1,5 @@
 import type { PptxSlide } from 'pptx-viewer-core';
-import type { CanvasSize, ReadingViewCommand, ReadingViewState } from 'pptx-viewer-shared';
+import type { CanvasSize, ReadingViewCommand, ReadingViewState } from 'ooxml-ui/pptx';
 import {
 	applyReadingViewCommand,
 	canGoNext,
@@ -12,7 +12,7 @@ import {
 	READING_VIEW_COUNTER_ATTR,
 	READING_VIEW_STAGE_ATTR,
 	readingViewFitScale,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import { createEl } from '../render';

@@ -3,7 +3,7 @@
  * adapter reflects state into it and maps its single intent onto the handlers.
  */
 import { mount } from '@vue/test-utils';
-import { registerPptxWebControls } from 'pptx-viewer-shared';
+import { registerPptxWebControls } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
 import ClipboardGroup from './ClipboardGroup.vue';

@@ -1,4 +1,19 @@
 import type { ColumnInfo, Worksheet } from '../model.js';
+import { DEFAULT_COL_WIDTH } from '../workbook.js';
+
+/** Copy visible metrics from spans without searching the column list for every column. */
+export function copyColumnWidths(sheet: Worksheet, start: number, end: number): number[] {
+	const fallback = sheet.defaultColWidth ?? DEFAULT_COL_WIDTH;
+	const widths = Array<number>(end - start + 1).fill(fallback);
+	for (let i = sheet.columns.length - 1; i >= 0; i--) {
+		const info = sheet.columns[i]!;
+		const first = Math.max(start, info.min);
+		const last = Math.min(end, info.max);
+		if (first <= last)
+			widths.fill(info.hidden ? 0 : (info.width ?? fallback), first - start, last - start + 1);
+	}
+	return widths;
+}
 
 /** Column properties without the span, for comparing neighbouring entries. */
 function propsKey(info: ColumnInfo): string {

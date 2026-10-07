@@ -6,7 +6,7 @@
  * shared by every binding. This shim preserves the historical React import
  * surface so consumers and colocated tests keep importing the same names.
  */
-export type { ParsedPpaction } from 'pptx-viewer-shared';
+export type { ParsedPpaction } from 'ooxml-ui/pptx';
 export {
 	isUrlSafe,
 	safeOpenUrl,
@@ -14,4 +14,4 @@ export {
 	resolveSlideJump,
 	isPpactionUrl,
 	parsePpactionUrl,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

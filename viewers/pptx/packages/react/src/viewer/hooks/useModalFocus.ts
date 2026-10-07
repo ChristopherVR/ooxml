@@ -1,4 +1,4 @@
-import { activateModalFocus } from 'pptx-viewer-shared';
+import { activateModalFocus } from 'ooxml-ui/pptx';
 import { useEffect, useRef } from 'react';
 import type React from 'react';
 

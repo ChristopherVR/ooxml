@@ -5,8 +5,8 @@ import {
 	MOBILE_BREAKPOINT,
 	MOBILE_LANDSCAPE_MAX_HEIGHT,
 	TABLET_BREAKPOINT,
-} from 'pptx-viewer-shared';
-import type { DeviceOrientation } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { DeviceOrientation } from 'ooxml-ui/pptx';
 import { onScopeDispose, readonly, ref, watchEffect } from 'vue';
 import type { Ref } from 'vue';
 

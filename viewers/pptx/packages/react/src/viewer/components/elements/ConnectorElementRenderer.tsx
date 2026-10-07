@@ -3,7 +3,7 @@ import {
 	connectorWrapperTransform,
 	getSelectionOutlineColor,
 	svgLineCap,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React from 'react';
 
 import { DEFAULT_STROKE_COLOR } from '../../constants';

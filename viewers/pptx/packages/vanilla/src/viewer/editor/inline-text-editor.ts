@@ -12,12 +12,12 @@ import {
 	readEditableText,
 	restoreEditorKeyboardFocus,
 	takePendingCaretPoint,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type {
 	InlineListController,
 	InlineTextEditSnapshot,
 	CollaborationInlineEditor,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import { createEl, getTextBlockStyle } from '../render';
 import type { InlineEditorSession, OpenInlineEditorOptions } from './inline-text-editor-types';

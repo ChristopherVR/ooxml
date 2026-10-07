@@ -8,8 +8,8 @@ import type {
 	PptxAiConfig,
 	PptxAiUIMessage,
 	ToolCanvasTarget,
-} from 'pptx-viewer-shared/ai';
-import { createAiChatSession } from 'pptx-viewer-shared/ai';
+} from 'ooxml-ui/pptx/ai';
+import { createAiChatSession } from 'ooxml-ui/pptx/ai';
 /**
  * Live "AI as a collaborator" focus: as each tool call streams in, the canvas
  * must navigate to the slide it targets AND flash the highlight, driven from the

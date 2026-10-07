@@ -8,7 +8,7 @@
 	 * compass grid built by the shared `buildDirectionGrid`, so a picker for
 	 * `push` and one for `cover` agree on where "up-left" sits.
 	 */
-	import { buildDirectionGrid, TRANSITION_DIR_ARROWS } from 'pptx-viewer-shared';
+	import { buildDirectionGrid, TRANSITION_DIR_ARROWS } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 

@@ -31,8 +31,8 @@
 		CHART_QUICK_ACTION_BUTTON_SIZE,
 		hideChartSeries,
 		restoreFilteredSeries,
-	} from 'pptx-viewer-shared';
-	import type { ChartQuickElementKey } from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
+	import type { ChartQuickElementKey } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 

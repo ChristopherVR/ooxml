@@ -6,7 +6,7 @@
  * `useAiChatHistory`; this component only emits. Mirrors React's AiHistoryMenu.
  */
 import { MessageSquare, Plus, Trash2 } from 'lucide-vue-next';
-import type { PptxAiChatSummary } from 'pptx-viewer-shared/ai';
+import type { PptxAiChatSummary } from 'ooxml-ui/pptx/ai';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 

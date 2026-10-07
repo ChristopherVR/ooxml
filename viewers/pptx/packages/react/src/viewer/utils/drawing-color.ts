@@ -13,4 +13,4 @@ export {
 	parseDrawingColorChoice,
 	parseDrawingColor,
 	parseDrawingColorOpacity,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

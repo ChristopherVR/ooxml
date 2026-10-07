@@ -8,8 +8,8 @@
 	 * measures the pasted element and the element renders, positions and
 	 * dismisses the strip.
 	 */
-	import type { PasteOptionsRequestEvent, PasteOptionsViewState, PasteSpecialFormat } from 'pptx-viewer-shared';
-	import { findCanvasElementNode } from 'pptx-viewer-shared';
+	import type { PasteOptionsRequestEvent, PasteOptionsViewState, PasteSpecialFormat } from 'ooxml-ui/pptx';
+	import { findCanvasElementNode } from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../i18n/context';
 
 	const { elementId, onchoose, ondismiss }: {

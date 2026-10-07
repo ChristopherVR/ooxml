@@ -8,7 +8,7 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 
-import type { MasterViewCrudAction, MasterViewCrudActionId } from '../internal/shared';
+import type { MasterViewCrudAction, MasterViewCrudActionId } from 'ooxml-ui/pptx';
 
 @Component({
 	selector: 'pptx-master-view-crud-row',

@@ -1,4 +1,4 @@
-import { AFTER_ANIMATION_VALUES } from 'pptx-viewer-shared';
+import { AFTER_ANIMATION_VALUES } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../../i18n';

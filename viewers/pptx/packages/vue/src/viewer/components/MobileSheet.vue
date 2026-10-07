@@ -12,7 +12,7 @@
  * Visibility is owned by the parent (`v-if="isMobile && open"`); the body is
  * scrollable and sized via dvh so it survives the mobile address-bar collapse.
  */
-import { activateModalFocus, MIN_TOUCH_TARGET_PX } from 'pptx-viewer-shared';
+import { activateModalFocus, MIN_TOUCH_TARGET_PX } from 'ooxml-ui/pptx';
 import { nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 

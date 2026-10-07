@@ -15,8 +15,8 @@ import {
 } from '@angular/core';
 import type { PptxElement, PptxTableData, TablePptxElement } from 'pptx-viewer-core';
 
-import type { TableStyleContext } from '../internal/shared';
-import { canDrillDown, DEFAULT_FONT_FAMILY, tableContainerCss } from '../internal/shared';
+import type { TableStyleContext } from 'ooxml-ui/pptx';
+import { canDrillDown, DEFAULT_FONT_FAMILY, tableContainerCss } from 'ooxml-ui/pptx';
 import type { StyleMap } from './element-style';
 import { LoadContentService } from './load-content.service';
 import { buildColStyles, buildTableViewModel } from './table-renderer-helpers';

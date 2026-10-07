@@ -6,7 +6,7 @@ import type {
 	SmartArtLayoutResult,
 	SmartArtNodeA11y,
 	SvgTextLine,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	buildChromeStyle,
 	buildSmartArtA11y,
@@ -19,7 +19,7 @@ import {
 	resolveRevealedDrawingShapes,
 	resolveRevealedSmartArtNodes,
 	styleShadowFilter,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import { styleToString } from '../style';
 

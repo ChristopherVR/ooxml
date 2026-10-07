@@ -6,7 +6,7 @@ import {
 	morphOptionToMode,
 	resolveSlideTransition,
 	resolveTransitionDurationMs,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import { ensurePresentationKeyframes } from './animation-dom';
 import { buildFragmentedLayer } from './fragmented-transition-layer';

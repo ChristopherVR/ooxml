@@ -17,8 +17,8 @@ import {
 import { TranslatePipe } from '@ngx-translate/core';
 import type { PptxElement } from 'pptx-viewer-core';
 
-import { CONTEXTUAL_TAB_GROUPS } from '../internal/shared';
-import type { RibbonContextualTabId } from '../internal/shared';
+import { CONTEXTUAL_TAB_GROUPS } from 'ooxml-ui/pptx';
+import type { RibbonContextualTabId } from 'ooxml-ui/pptx';
 import { RibbonGalleryComponent } from './ribbon-gallery.component';
 
 @Component({

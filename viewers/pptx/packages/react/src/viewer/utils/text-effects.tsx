@@ -23,8 +23,8 @@ import type { TextStyle } from 'pptx-viewer-core';
 import {
 	buildTextFillCss as sharedBuildTextFillCss,
 	buildTextBody3DSceneStyle as sharedBuildTextBody3DSceneStyle,
-} from 'pptx-viewer-shared';
-import type { ElementSizePx } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { ElementSizePx } from 'ooxml-ui/pptx';
 import type React from 'react';
 
 export {
@@ -35,7 +35,7 @@ export {
 	getTextAlphaOpacity,
 	buildTextGlowFilter,
 	buildTextRunFilterChain,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 /** Build CSS properties for gradient or pattern text fills. */
 export function buildTextFillCss(style: TextStyle): React.CSSProperties | undefined {

@@ -1,4 +1,4 @@
-import { getSelectionControlArtworkStyle, getSelectionOutlineColor } from 'pptx-viewer-shared';
+import { getSelectionControlArtworkStyle, getSelectionOutlineColor } from 'ooxml-ui/pptx';
 import type { CSSProperties } from 'react';
 
 const appearance = { fill: 'var(--color-primary)', borderColor: '#ffffff' };

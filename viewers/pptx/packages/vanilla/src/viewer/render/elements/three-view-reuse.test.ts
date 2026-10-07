@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import type { PptxThreeViewElement, ThreeViewSpec } from 'pptx-viewer-shared';
+import type { PptxThreeViewElement, ThreeViewSpec } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 
 import {

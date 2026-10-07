@@ -10,8 +10,8 @@
 	 * still receiving raw slide-space coordinates. The overlay sets
 	 * `pointer-events: none` so it never intercepts canvas input.
 	 */
-	import type { RemoteCursor } from 'pptx-viewer-shared';
-	import { formatCursorLabel } from 'pptx-viewer-shared';
+	import type { RemoteCursor } from 'ooxml-ui/pptx';
+	import { formatCursorLabel } from 'ooxml-ui/pptx';
 
 	import type { CollaborationCursorsProps } from './props';
 

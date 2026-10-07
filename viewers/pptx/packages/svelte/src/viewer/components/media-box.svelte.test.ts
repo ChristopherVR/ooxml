@@ -1,5 +1,5 @@
 import type { PptxElement } from 'pptx-viewer-core';
-import { hasPersistentAudio, stopAllPersistentAudio } from 'pptx-viewer-shared';
+import { hasPersistentAudio, stopAllPersistentAudio } from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -25,7 +25,7 @@ import ElementRenderer from './ElementRenderer.svelte';
 // with what args) without depending on real (start-of-)playback semantics.
 const { startMediaAutoplay } = vi.hoisted(() => ({ startMediaAutoplay: vi.fn() }));
 
-vi.mock(import('pptx-viewer-shared'), async (importOriginal) => {
+vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => {
 	const actual = await importOriginal();
 	return {
 		...actual,

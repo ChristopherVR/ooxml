@@ -4,7 +4,7 @@ import {
 	ENTRANCE_PRESET_VALUES,
 	EXIT_PRESET_VALUES,
 	MOTION_PATH_PRESETS,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../../../i18n';

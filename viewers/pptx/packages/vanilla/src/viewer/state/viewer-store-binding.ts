@@ -11,7 +11,7 @@
  * paint once by hand and subscribe separately, which is exactly how a painter
  * and its subscription drift apart.
  */
-import type { ViewerStore, ViewerStoreEquality } from 'pptx-viewer-shared';
+import type { ViewerStore, ViewerStoreEquality } from 'ooxml-ui/pptx';
 
 /**
  * Call `paint` with the selected value now, and again on every change to it.

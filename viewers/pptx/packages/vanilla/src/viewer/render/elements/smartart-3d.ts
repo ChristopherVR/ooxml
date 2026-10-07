@@ -3,7 +3,7 @@ import {
 	resolveSmartArtThreeViewSpec,
 	stripEditLayerMarkers,
 	routeEditLayerPointerToNodes,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { ElementRenderer } from '../types';
 import { renderSmartArtSvg } from './smartart';

@@ -1,5 +1,5 @@
-import type { ViewerOptionsStore } from 'pptx-viewer-shared';
-import { SHORTCUT_REFERENCE_ITEMS, TOOLBAR_TABS } from 'pptx-viewer-shared';
+import type { ViewerOptionsStore } from 'ooxml-ui/pptx';
+import { SHORTCUT_REFERENCE_ITEMS, TOOLBAR_TABS } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';

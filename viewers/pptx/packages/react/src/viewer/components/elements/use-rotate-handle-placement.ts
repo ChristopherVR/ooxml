@@ -1,4 +1,4 @@
-import { attachRotateHandlePlacement } from 'pptx-viewer-shared';
+import { attachRotateHandlePlacement } from 'ooxml-ui/pptx';
 import { useLayoutEffect, useRef } from 'react';
 
 export function useRotateHandlePlacement(elementId: string, enabled: boolean) {

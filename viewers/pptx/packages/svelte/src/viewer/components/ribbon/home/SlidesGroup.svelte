@@ -12,8 +12,8 @@
 		homeSnapshotTranslator,
 		scopeLayoutOptionsToSlide,
 		slidesHomeControls,
-	} from 'pptx-viewer-shared';
-	import type { PptxUiRibbonHomeElement, RibbonHomeRequestEvent } from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
+	import type { PptxUiRibbonHomeElement, RibbonHomeRequestEvent } from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../../../i18n/context';
 	import type { EditorState } from '../../../editor/editor-state.svelte';
 	import { createLayoutArtwork } from './home-adapter';

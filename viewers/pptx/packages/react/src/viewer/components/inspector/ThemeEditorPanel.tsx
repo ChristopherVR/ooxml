@@ -1,10 +1,10 @@
 import type { PptxTheme } from 'pptx-viewer-core';
-import { themeEditorLabels } from 'pptx-viewer-shared';
+import { themeEditorLabels } from 'ooxml-ui/pptx';
 import type {
 	PptxUiThemeEditorElement,
 	ThemeEditorApplyEvent,
 	ThemeEditorEdit,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 

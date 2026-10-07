@@ -1,4 +1,4 @@
-import { createGlyphOutlineLookup, GlyphOutlineFontCache } from 'pptx-viewer-shared';
+import { createGlyphOutlineLookup, GlyphOutlineFontCache } from 'ooxml-ui/pptx';
 
 /**
  * Module-scoped WordArt glyph-outline font cache (see `pptx-viewer-shared`'s

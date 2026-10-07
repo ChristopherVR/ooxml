@@ -14,7 +14,7 @@
 import { DestroyRef, Injector } from '@angular/core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { CollaborationConfig, YjsFactories } from '../internal/shared';
+import type { CollaborationConfig, YjsFactories } from 'ooxml-ui/pptx';
 import type {
 	AwarenessLike,
 	DestroyableYDoc,

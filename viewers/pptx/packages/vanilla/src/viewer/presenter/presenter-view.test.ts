@@ -1,6 +1,6 @@
 import type { PptxSlide } from 'pptx-viewer-core';
-import { createInitialPresentationSnapshot, PRESENTER_CONSOLE_ORDER } from 'pptx-viewer-shared';
-import type { PresentationSnapshot } from 'pptx-viewer-shared';
+import { createInitialPresentationSnapshot, PRESENTER_CONSOLE_ORDER } from 'ooxml-ui/pptx';
+import type { PresentationSnapshot } from 'ooxml-ui/pptx';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../i18n';

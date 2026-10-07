@@ -7,8 +7,8 @@
  * the historical React import surface so the chart `.tsx` renderers and
  * colocated tests keep importing the same names unchanged.
  */
-export type { PlotLayout } from 'pptx-viewer-shared';
-export type { LayoutOptions } from 'pptx-viewer-shared';
+export type { PlotLayout } from 'ooxml-ui/pptx';
+export type { LayoutOptions } from 'ooxml-ui/pptx';
 export {
 	computeLayout,
 	hasSecondaryValueAxis,
@@ -21,4 +21,4 @@ export {
 	isSeriesOnSecondaryAxis,
 	splitSeriesByAxis,
 	computeDataTableHeight,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

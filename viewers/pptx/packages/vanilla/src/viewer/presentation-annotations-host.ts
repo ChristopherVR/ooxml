@@ -1,4 +1,4 @@
-import type { PresentationSnapshot } from 'pptx-viewer-shared';
+import type { PresentationSnapshot } from 'ooxml-ui/pptx';
 
 import type { EditorController } from './editor';
 import type { Translator } from './i18n';

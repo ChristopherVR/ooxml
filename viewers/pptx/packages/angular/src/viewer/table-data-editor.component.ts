@@ -39,7 +39,7 @@ import {
 	removeLastTableElementColumn,
 	removeLastTableElementRow,
 	setTableElementCellText,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { TABLE_DATA_EDITOR_STYLES } from './table-data-editor-styles';
 import { removeColumn, removeRow } from './table-data-helpers';
 import { TableSelectionService } from './table-selection.service';

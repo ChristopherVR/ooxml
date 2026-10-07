@@ -16,7 +16,7 @@ import { DestroyRef, Injector, runInInjectionContext } from '@angular/core';
 import type { PptxSlide } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
 
-import { CONNECTION_TIMEOUT_MS } from '../internal/shared';
+import { CONNECTION_TIMEOUT_MS } from 'ooxml-ui/pptx';
 import {
 	CURSOR_PALETTE,
 	DEFAULT_CURSOR_COLOR,

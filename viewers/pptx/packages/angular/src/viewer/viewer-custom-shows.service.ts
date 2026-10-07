@@ -36,8 +36,8 @@ import {
 	presentationEntrySlideIndex,
 	resolveAuthoredCustomShowId,
 	resolveShowSlideIndexes,
-} from '../internal/shared';
-import type { AuthoredSlideRange, CustomShow, ShowOrderCustomShow } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { AuthoredSlideRange, CustomShow, ShowOrderCustomShow } from 'ooxml-ui/pptx';
 import {
 	activeCustomShowMembership,
 	customShowsFromDeck,

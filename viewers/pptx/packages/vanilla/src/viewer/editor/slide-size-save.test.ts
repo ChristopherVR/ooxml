@@ -14,7 +14,7 @@
  */
 import JSZip from 'jszip';
 import { PptxHandler } from 'pptx-viewer-core';
-import { SLIDE_SIZE_PRESETS, slideSizeFromPreset } from 'pptx-viewer-shared';
+import { SLIDE_SIZE_PRESETS, slideSizeFromPreset } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../i18n';

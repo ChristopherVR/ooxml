@@ -13,7 +13,7 @@ import { TranslateService } from '@ngx-translate/core';
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 
-import { resolveSlideSizeRescaleTransform } from '../internal/shared';
+import { resolveSlideSizeRescaleTransform } from 'ooxml-ui/pptx';
 import { EditorStateService } from './editor-state.service';
 import { LoadContentService } from './load-content.service';
 import { SlideSizeCardComponent } from './slide-size-card.component';

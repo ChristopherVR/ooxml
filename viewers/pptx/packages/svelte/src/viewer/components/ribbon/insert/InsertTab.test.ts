@@ -1,5 +1,5 @@
-import { registerPptxWebControls } from 'pptx-viewer-shared';
-import type { CanvasSize } from 'pptx-viewer-shared';
+import { registerPptxWebControls } from 'ooxml-ui/pptx';
+import type { CanvasSize } from 'ooxml-ui/pptx';
 import { flushSync, mount, tick, unmount } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 

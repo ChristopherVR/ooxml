@@ -3,7 +3,7 @@ import {
 	DESIGN_RIBBON_COMMANDS,
 	DESIGN_RIBBON_GROUPS,
 	designCommandState,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

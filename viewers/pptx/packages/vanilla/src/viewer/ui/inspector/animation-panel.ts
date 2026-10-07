@@ -8,7 +8,7 @@ import type {
 	PptxElement,
 	PptxElementAnimation,
 } from 'pptx-viewer-core';
-import type { AnimationGroup } from 'pptx-viewer-shared';
+import type { AnimationGroup } from 'ooxml-ui/pptx';
 import {
 	buildAnimationTimelineRows,
 	directionValuesFor,
@@ -20,7 +20,7 @@ import {
 	getEffectSoundState,
 	SEQUENCE_VALUES,
 	TRIGGER_VALUES,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import { playAnimationPreview } from '../../animation';
 import type { Translator } from '../../i18n';

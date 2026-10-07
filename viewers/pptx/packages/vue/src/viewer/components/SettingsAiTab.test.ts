@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils';
-import type { PptxAiChatStore } from 'pptx-viewer-shared/ai';
+import type { PptxAiChatStore } from 'ooxml-ui/pptx/ai';
 import { describe, expect, it } from 'vitest';
 
 import SettingsAiTab from './SettingsAiTab.vue';

@@ -4,4 +4,4 @@ export {
 	applyAcceptSlide,
 	collectFontsFromElement,
 	collectUsedFonts,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

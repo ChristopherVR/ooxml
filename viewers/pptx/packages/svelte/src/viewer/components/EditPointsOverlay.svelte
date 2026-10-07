@@ -11,14 +11,14 @@
 	 * re-creates it (`{#key}`) per shape, so one instance owns one session.
 	 */
 	import type { PptxElement } from 'pptx-viewer-core';
-	import type { EditPointsCommandId, EditPointsElementPatch } from 'pptx-viewer-shared';
+	import type { EditPointsCommandId, EditPointsElementPatch } from 'ooxml-ui/pptx';
 	import {
 		attachOverlayKeyboard,
 		EDIT_POINTS_STYLE,
 		EDIT_POINTS_TARGET_ATTR,
 		EditPointsSession,
 		overlayPointerInput,
-	} from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
 	import { untrack } from 'svelte';
 
 	import { useTranslator } from '../../i18n/context';

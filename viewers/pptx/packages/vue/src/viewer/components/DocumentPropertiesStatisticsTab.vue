@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { formatIsoDate as formatDate } from 'pptx-viewer-shared';
+import { formatIsoDate as formatDate } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

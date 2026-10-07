@@ -1,11 +1,11 @@
-import { buildTitleBarState } from 'pptx-viewer-shared';
+import { buildTitleBarState } from 'ooxml-ui/pptx';
 import type {
 	TitleBarAutosaveState,
 	TitleBarSearchDetail,
 	TitleBarViewState,
 	ToolbarActionId,
 	ViewerQuickAccessOptions,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 export interface TitleBarAdapterInput {
 	editable: boolean;

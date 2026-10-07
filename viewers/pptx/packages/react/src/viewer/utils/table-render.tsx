@@ -19,8 +19,8 @@ import {
 	DEFAULT_FONT_FAMILY,
 	TABLE_CELL_TEXT_DEFAULTS,
 	tableContainerCss,
-} from 'pptx-viewer-shared';
-import { translationsEn } from 'pptx-viewer-shared/i18n';
+} from 'ooxml-ui/pptx';
+import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import React from 'react';
 
 import { cn } from '../../utils';

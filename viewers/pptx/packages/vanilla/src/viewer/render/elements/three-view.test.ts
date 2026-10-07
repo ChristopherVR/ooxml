@@ -1,5 +1,5 @@
 import type { PptxChartData, PptxElement, PptxSmartArtData } from 'pptx-viewer-core';
-import type { PptxThreeViewElement, Rendering3DFlags } from 'pptx-viewer-shared';
+import type { PptxThreeViewElement, Rendering3DFlags } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../../i18n';

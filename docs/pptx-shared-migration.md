@@ -1,33 +1,40 @@
-# PowerPoint shared migration
+# PowerPoint shared implementation migration
 
-The current main branch already provides `src/core` and `src/ui` workspaces,
-shared controls and viewer compatibility aliases. New migrations extend those
-packages rather than importing another copy of the viewer engine.
+PowerPoint follows the same ownership as Word: `src/core/pptx` owns document
+operations and `src/ui/src/pptx` owns the shared renderer, web components,
+localization, export views, browser loading lifecycle and assistant UI. The
+viewer packages contain framework adapters and consume `ooxml-ui/pptx`.
 
-## Extracted APIs
+## Public entries
 
-| Source                           | Shared owner                                        | API                                                                                               |
-| -------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| Chart inspector grid edit policy | `src/core/pptx/core/utils/chart-grid-operations.ts` | Six `chartGrid*` immutable data operations via `ooxml-core/pptx`                                  |
-| Colour-picker swatch catalogue   | `src/ui/src/form/color-swatches.ts`                 | `OFFICE_COLOR_SWATCHES`, `OFFICE_COLOR_SWATCH_HEXES`, `OfficeColorSwatch` via `ooxml-ui/controls` |
+- `ooxml-ui/pptx`: rendering and web-control APIs.
+- `ooxml-ui/pptx/theme`, `/loader`, `/i18n`, `/ai`: focused entries.
+- `ooxml-ui/pptx/<module>`: explicit renderer/export leaf entries needed by
+  Angular; only built modules are public.
+- `ooxml-core/pptx/editor/<module>`: DOM-free editing, loading and collaboration
+  helpers, preserving existing function names through compatibility exports.
+- `ooxml-core/pptx/automation/schemas`: the assistant/MCP tool contracts.
 
-Grid operations remain in the PowerPoint area because they operate on the
-PowerPoint chart model, including point-formatting policy. The palette is UI
-data, shared without changing any product's existing palette or labels.
+The private `pptx-viewer-shared` package is a compatibility facade. It owns no
+renderer or document operations. Angular no longer vendors a source copy.
 
-## Viewer adoption after release
+## Compatibility and validation
 
-The viewer depends on published packages. Keep its existing grid and palette
-modules until the new shared exports are released. The first grid migration
-changed the facade too early; the follow-up restores compatibility with the
-published version. Once the APIs are published:
+PowerPoint's migrated UI keeps its existing compiler flags in a separate
+`tsconfig.pptx.json`; all other shared UI retains the strict configuration.
+Tightening these legacy flags is a separate correctness task, as with the
+existing PowerPoint engine. Importing the main UI entry does not load PowerPoint.
+The optional Three.js and AI SDK integrations remain optional peers.
 
-1. Update the appropriate viewer dependency range.
-2. Replace the grid implementation with aliased `chartGrid*` re-exports from
-   `pptx-viewer-core`, preserving the viewer's six existing names.
-3. Replace the palette with re-exports from `ooxml-ui/controls`.
-4. Run the existing shared module tests, all binding checks and browser suites.
+The original tests moved with their implementations. Tests spanning DOM and
+model operations remain in UI; core unit tests stay DOM-free. Product tests run
+with `bun run --cwd src/ui test:pptx`, against built package exports. Build core
+first, then UI, then the framework bindings. The UI package smoke check imports
+all public ESM entries, and core checks both ESM and CJS exports.
 
-The retained source modules are temporary compatibility implementations, not
-new owners. Provenance records the extracted modules and their baseline commit.
-No framework caller needs to change when adoption lands.
+Extraction provenance is recorded in `PROVENANCE.md` and the complete module
+inventory in `docs/pptx-migration-provenance.json`.
+
+Validation: 10,475 migrated UI tests, 674 extracted core unit tests, all five
+framework builds/typechecks, clean package imports, and eight browser smoke
+checks per framework. The optional live AI tests remain opt-in.

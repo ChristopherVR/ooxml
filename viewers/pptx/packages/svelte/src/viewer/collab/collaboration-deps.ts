@@ -4,7 +4,7 @@
  * repo's file-size budget; no runtime code lives here.
  */
 import type { PptxHandlerSaveOptions, PptxSlide } from 'pptx-viewer-core';
-import type { CollaborationConfig } from 'pptx-viewer-shared';
+import type { CollaborationConfig } from 'ooxml-ui/pptx';
 
 import type { CollabSessionFactory } from './collaboration-session';
 

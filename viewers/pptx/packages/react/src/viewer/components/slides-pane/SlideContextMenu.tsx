@@ -1,6 +1,6 @@
 import type { PptxSlide } from 'pptx-viewer-core';
-import { buildSlidePaneContextMenuEntries, slidePaneViewItems } from 'pptx-viewer-shared';
-import type { SlidePaneContextMenuCommandId } from 'pptx-viewer-shared';
+import { buildSlidePaneContextMenuEntries, slidePaneViewItems } from 'ooxml-ui/pptx';
+import type { SlidePaneContextMenuCommandId } from 'ooxml-ui/pptx';
 import type React from 'react';
 import { useTranslation } from 'react-i18next';
 

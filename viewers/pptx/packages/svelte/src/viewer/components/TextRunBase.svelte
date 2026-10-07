@@ -10,8 +10,8 @@
 	 * `buildParagraphs` returned `{ text, style }` only, so a linked run rendered
 	 * as ordinary text, an inline `m:oMath` as nothing, and furigana vanished.
 	 */
-	import type { ParagraphRun } from 'pptx-viewer-shared';
-	import { runEquationMathMl } from 'pptx-viewer-shared';
+	import type { ParagraphRun } from 'ooxml-ui/pptx';
+	import { runEquationMathMl } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 	import { useViewerOptions } from '../state/viewer-options-context';

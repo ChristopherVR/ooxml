@@ -1,6 +1,6 @@
 import type { PptxElement, PptxLayoutPreview } from 'pptx-viewer-core';
 import { hasShapeProperties } from 'pptx-viewer-core';
-import type { ToolbarActionId } from 'pptx-viewer-shared';
+import type { ToolbarActionId } from 'ooxml-ui/pptx';
 
 import type { EditActions } from '../../../editor/editor-edit-ops';
 import { canFormatText, readTextFormatState } from '../../../editor/editor-format-mutations';

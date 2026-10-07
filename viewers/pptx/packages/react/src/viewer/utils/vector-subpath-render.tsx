@@ -19,8 +19,8 @@
  */
 import { customGeometryPathsToSvgSubpaths } from 'pptx-viewer-core';
 import type { CustomGeometryPath, ShapeStyle } from 'pptx-viewer-core';
-import { buildSubpathPaints, svgGradientFillRef, svgLineCap } from 'pptx-viewer-shared';
-import type { SvgGradientDef } from 'pptx-viewer-shared';
+import { buildSubpathPaints, svgGradientFillRef, svgLineCap } from 'ooxml-ui/pptx';
+import type { SvgGradientDef } from 'ooxml-ui/pptx';
 import React from 'react';
 
 import { colorWithOpacity } from './color';

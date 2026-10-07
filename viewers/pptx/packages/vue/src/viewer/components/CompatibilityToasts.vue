@@ -24,7 +24,7 @@
  * block, so without it the stack only clears the status bar and overlaps the
  * strip.
  */
-import type { CompatibilityWarningToast, CompatToastsRequestEvent } from 'pptx-viewer-shared';
+import type { CompatibilityWarningToast, CompatToastsRequestEvent } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

@@ -13,8 +13,8 @@ import {
 	buildSlidesPdfBytes,
 	buildTiledSlidesPdfBytes,
 	canvasToJpegData,
-} from 'pptx-viewer-shared';
-import type { PdfTiledPageImage } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { PdfTiledPageImage } from 'ooxml-ui/pptx';
 
 import type { PdfImageData } from './pdf-builder-types';
 

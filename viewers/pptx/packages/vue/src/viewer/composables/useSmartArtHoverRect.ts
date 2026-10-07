@@ -1,5 +1,5 @@
-import { measureSvgViewportRect, smartArtNodeAtPoint } from 'pptx-viewer-shared';
-import type { InlineEditRect } from 'pptx-viewer-shared';
+import { measureSvgViewportRect, smartArtNodeAtPoint } from 'ooxml-ui/pptx';
+import type { InlineEditRect } from 'ooxml-ui/pptx';
 import { onUnmounted, ref } from 'vue';
 import type { Ref } from 'vue';
 

@@ -17,8 +17,8 @@ const { fakeCache, applyColorChangeMock } = vi.hoisted(() => ({
 	applyColorChangeMock: vi.fn(),
 }));
 
-vi.mock(import('pptx-viewer-shared'), async (importOriginal) => {
-	const actual = await importOriginal<typeof import('pptx-viewer-shared')>();
+vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => {
+	const actual = await importOriginal<typeof import('ooxml-ui/pptx')>();
 	return {
 		...actual,
 		applyColorChange: (...args: unknown[]) => applyColorChangeMock(...args),

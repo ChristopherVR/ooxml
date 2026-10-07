@@ -19,7 +19,7 @@ import {
 import { TranslateService } from '@ngx-translate/core';
 import type { PptxSlideTransition } from 'pptx-viewer-core';
 
-import type { RibbonTransitionDraft, RibbonTransitionsRequestEvent } from '../internal/shared';
+import type { RibbonTransitionDraft, RibbonTransitionsRequestEvent } from 'ooxml-ui/pptx';
 import {
 	applyRibbonTransitionDraft,
 	mergeSlideTransition,
@@ -29,7 +29,7 @@ import {
 	ribbonTransitionsSoundChange,
 	ribbonTransitionStockSoundUrl,
 	ribbonTransitionTargets,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { playAnimationSound } from './animation-sound';
 import { EditorStateService } from './editor-state.service';
 

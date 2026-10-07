@@ -1,5 +1,5 @@
 import type { PptxElement } from 'pptx-viewer-core';
-import { resolveElementInteractivity } from 'pptx-viewer-shared';
+import { resolveElementInteractivity } from 'ooxml-ui/pptx';
 import React from 'react';
 
 import { MIN_ELEMENT_SIZE } from '../../constants';

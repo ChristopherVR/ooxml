@@ -19,7 +19,7 @@ import type { UseAutosaveWiringResult } from './useAutosaveWiring';
 // than an unhandled rejection. Everything else in the shared package stays real.
 // (`vi.mock` is hoisted above the imports, so its position here is cosmetic.)
 // oxlint-disable-next-line prefer-ending-with-an-expect
-vi.mock(import('pptx-viewer-shared'), async (importOriginal) => ({
+vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => ({
 	...(await importOriginal()),
 	saveAutosaveSnapshot: async () => true,
 }));

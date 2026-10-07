@@ -8,8 +8,8 @@
  * given id removes is decided in shared, from the `data-ribbon-group` /
  * `data-ribbon-control` tags the ribbon components carry.
  */
-import { RIBBON_SCOPE_ATTR, ribbonCustomizationCss } from 'pptx-viewer-shared';
-import type { ResolvedCustomization } from 'pptx-viewer-shared';
+import { RIBBON_SCOPE_ATTR, ribbonCustomizationCss } from 'ooxml-ui/pptx';
+import type { ResolvedCustomization } from 'ooxml-ui/pptx';
 import { computed, defineComponent, h } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
 

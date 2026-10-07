@@ -16,7 +16,7 @@
  * `getTextReflectionWrapperStyle`, the text-run counterpart of a
  * shape/picture's `ShapeEffectOverlay` reflection - reused, not forked.
  */
-import type { ParagraphRun } from 'pptx-viewer-shared';
+import type { ParagraphRun } from 'ooxml-ui/pptx';
 import type { CSSProperties } from 'vue';
 
 import SlideTextRunBase from './SlideTextRunBase.vue';

@@ -21,12 +21,12 @@ import {
 	checkModifyPassword,
 	compatibilityWarningToasts,
 	readOnlyRecommendation,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import type {
 	CompatibilityWarningToast,
 	ModifyPasswordCheckResult,
 	ReadOnlyRecommendation,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { LoadContentService } from './load-content.service';
 
 /** Why the last password attempt failed; see `checkModifyPassword` (`pptx-viewer-shared`). */

@@ -6,4 +6,4 @@
  *
  * @module utils/morph-color
  */
-export { parseHexColor, lerpColor, rgbaToHex } from 'pptx-viewer-shared';
+export { parseHexColor, lerpColor, rgbaToHex } from 'ooxml-ui/pptx';

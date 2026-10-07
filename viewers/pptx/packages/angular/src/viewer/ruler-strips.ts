@@ -10,8 +10,8 @@
  * so disagreed with React, Vue, Svelte and Vanilla at every zoom level.
  */
 
-import { generateTicks } from '../internal/shared';
-import type { RulerUnit, Tick } from '../internal/shared';
+import { generateTicks } from 'ooxml-ui/pptx';
+import type { RulerUnit, Tick } from 'ooxml-ui/pptx';
 
 /** Ticks for one ruler strip, or nothing at all while the strip is hidden. */
 export function rulerStripTicks(

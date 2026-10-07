@@ -2,7 +2,7 @@ import {
 	rasterizeElement,
 	rasterizeElementTiledToCanvas,
 	rasterizeElementTiles,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { describe, it, expect, expectTypeOf, vi, beforeEach } from 'vitest';
 
 import { renderToCanvas } from '../../lib/canvas-export';
@@ -135,8 +135,8 @@ describe('rasterResultToPngBlob', () => {
 
 // Only the three driver entry points are mocked; everything else in
 // `pptx-viewer-shared` (e.g. `rasterResultToPngBlob` above) stays real.
-vi.mock<typeof import('pptx-viewer-shared')>(
-	import('pptx-viewer-shared'),
+vi.mock<typeof import('ooxml-ui/pptx')>(
+	import('ooxml-ui/pptx'),
 	async (importOriginal) => {
 		const actual = await importOriginal();
 		return {

@@ -11,8 +11,8 @@
 import type { PptxTextWarpPreset, TextSegment, TextStyle } from 'pptx-viewer-core';
 import { getSubstituteFontFamily } from 'pptx-viewer-core';
 
-import { buildGlyphEnvelopeBlock, DEFAULT_FONT_FAMILY } from '../internal/shared';
-import type { EnvelopeGlyphSlice, EnvelopeSegmentInput, WarpParagraph } from '../internal/shared';
+import { buildGlyphEnvelopeBlock, DEFAULT_FONT_FAMILY } from 'ooxml-ui/pptx';
+import type { EnvelopeGlyphSlice, EnvelopeSegmentInput, WarpParagraph } from 'ooxml-ui/pptx';
 import { getGlyphOutline, glyphOutlineFontsTick } from './glyph-outline-cache';
 
 const DEFAULT_FONT_SIZE = 18;

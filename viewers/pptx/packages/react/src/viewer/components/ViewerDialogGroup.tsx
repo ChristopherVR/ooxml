@@ -13,7 +13,7 @@ import {
 	isDialogAvailable,
 	printPropertiesFrameSlides,
 	printPropertiesSlidesPerPage,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import {
 	PasswordProtectionDialog,

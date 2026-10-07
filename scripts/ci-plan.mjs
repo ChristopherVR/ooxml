@@ -259,7 +259,8 @@ export function pptxPlan(files, { everything, reaches }) {
 			// The engine or the shared elements: every package's tests, the parity reference's browser
 			// run. Their own tests, and the other products' editors in ooxml-ui, change nothing the
 			// viewer runs.
-			if (isTestFile(file) || UI_PRODUCT.test(file)) continue;
+			if (isTestFile(file) || (UI_PRODUCT.test(file) && !file.startsWith('src/ui/src/pptx/')))
+				continue;
 			allLegs = true;
 			projects.add(PPTX_REFERENCE_PROJECT);
 			packaged = true;
@@ -324,7 +325,7 @@ export function pptxPlan(files, { everything, reaches }) {
 }
 
 /** The product editors in `src/ui/src/<product>/`; each belongs to one viewer only. */
-const UI_PRODUCT = /^src\/ui\/src\/(docx|xlsx|visio|teams)\//;
+const UI_PRODUCT = /^src\/ui\/src\/(docx|xlsx|visio|teams|pptx)\//;
 /** The groups a change to a viewer's (or its engine's) source reaches. */
 const SOURCE_GROUPS = ['types', 'unit', 'browser', 'packages'];
 
@@ -460,6 +461,7 @@ export function plan(changed, { full = false, testFiles } = {}) {
 		live.some(
 			(file) =>
 				viewerOfFile(file) === 'pptx' ||
+				file.startsWith('src/ui/src/pptx/') ||
 				(file.startsWith('src/ui/') && !UI_PRODUCT.test(file)) ||
 				(file.startsWith('src/core/') && viewersOfArea(file.split('/')[2]).includes('pptx')),
 		);

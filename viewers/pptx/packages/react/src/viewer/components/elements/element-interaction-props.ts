@@ -1,5 +1,5 @@
 import type { PptxElement } from 'pptx-viewer-core';
-import { applyHighlightClickStyle, resolveElementHighlightClick } from 'pptx-viewer-shared';
+import { applyHighlightClickStyle, resolveElementHighlightClick } from 'ooxml-ui/pptx';
 import type React from 'react';
 
 import type { ElementRendererProps } from './element-renderer-types';

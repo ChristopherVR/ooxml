@@ -12,8 +12,8 @@
  * ghosts carry their own geometry, so no element lookup is needed. Vue
  * counterpart of React's AiChangeOverlay.
  */
-import type { AiChangeBatch } from 'pptx-viewer-shared/ai';
-import { aiChangeAnimationCss, changeGhostStyle } from 'pptx-viewer-shared/ai';
+import type { AiChangeBatch } from 'ooxml-ui/pptx/ai';
+import { aiChangeAnimationCss, changeGhostStyle } from 'ooxml-ui/pptx/ai';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import type { CSSProperties } from 'vue';
 

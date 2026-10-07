@@ -11,8 +11,8 @@
 import { PptxHandler } from 'pptx-viewer-core';
 import type { PptxHandlerSaveOptions, PptxSlide } from 'pptx-viewer-core';
 
-import { createWriteBackScheduler, readSlidesFromYDoc } from '../internal/shared';
-import type { CollaborationConfig, YDocLike } from '../internal/shared';
+import { createWriteBackScheduler, readSlidesFromYDoc } from 'ooxml-ui/pptx';
+import type { CollaborationConfig, YDocLike } from 'ooxml-ui/pptx';
 import { buildSaveSlides } from './template-mode';
 import type { TemplateElementsBySlideId } from './template-mode';
 

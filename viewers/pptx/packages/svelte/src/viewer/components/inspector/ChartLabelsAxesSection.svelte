@@ -5,7 +5,7 @@
 		CHART_DATA_LABEL_POSITION_LABEL_KEYS,
 		CHART_GRIDLINE_DASH_LABEL_KEYS,
 		schemaLabel,
-	} from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 	import type { EditorState } from '../../editor/editor-state.svelte';

@@ -5,7 +5,7 @@
  * one above it, and a fixed 4px inset fitted more text on a line than PowerPoint does.
  */
 import type { TablePptxElement, XmlObject } from 'pptx-viewer-core';
-import { translationsEn } from 'pptx-viewer-shared/i18n';
+import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 

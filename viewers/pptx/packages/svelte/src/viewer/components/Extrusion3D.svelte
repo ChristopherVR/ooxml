@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Extrusion3DData, Extrusion3dCss } from 'pptx-viewer-shared';
+	import type { Extrusion3DData, Extrusion3dCss } from 'ooxml-ui/pptx';
 
 	const { data }: { data: Extrusion3DData } = $props();
 

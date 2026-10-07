@@ -1,4 +1,4 @@
-import { EQUATION_TEMPLATES } from 'pptx-viewer-shared';
+import { EQUATION_TEMPLATES } from 'ooxml-ui/pptx';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../../i18n';

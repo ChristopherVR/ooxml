@@ -343,7 +343,7 @@ describe('oleEditorDialogComponent shell wiring', () => {
 	});
 
 	it('imports shared through the vendored barrel, never the bare specifier', () => {
-		expect(COMPONENT_SOURCE).toContain("from '../internal/shared'");
-		expect(COMPONENT_SOURCE).not.toContain("from 'pptx-viewer-shared'");
+		expect(COMPONENT_SOURCE).toContain("from 'ooxml-ui/pptx'");
+		expect(COMPONENT_SOURCE).not.toContain("from 'ooxml-ui/pptx'");
 	});
 });

@@ -19,8 +19,8 @@
 		EDITOR_THUMBNAIL_WIDTH,
 		editorThumbnailHeight,
 		editorThumbnailStep,
-	} from 'pptx-viewer-shared';
-	import type { SectionContextMenuCommandId } from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
+	import type { SectionContextMenuCommandId } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 	import SectionContextMenu from './SectionContextMenu.svelte';

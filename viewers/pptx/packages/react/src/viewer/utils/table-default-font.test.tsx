@@ -9,8 +9,8 @@
  * style fonts still win below it.
  */
 import type { TablePptxElement } from 'pptx-viewer-core';
-import { DEFAULT_FONT_FAMILY } from 'pptx-viewer-shared';
-import { translationsEn } from 'pptx-viewer-shared/i18n';
+import { DEFAULT_FONT_FAMILY } from 'ooxml-ui/pptx';
+import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 

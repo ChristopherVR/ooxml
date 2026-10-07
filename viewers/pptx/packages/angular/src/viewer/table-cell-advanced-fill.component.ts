@@ -23,7 +23,7 @@ import {
 import { TranslatePipe } from '@ngx-translate/core';
 import type { PptxTableCellStyle } from 'pptx-viewer-core';
 
-import { FILL_MODE_OPTIONS, GRADIENT_TYPE_OPTIONS } from '../internal/shared';
+import { FILL_MODE_OPTIONS, GRADIENT_TYPE_OPTIONS } from 'ooxml-ui/pptx';
 import { isSelectControl } from './control-event-targets';
 import { RecentColorsService } from './recent-colors.service';
 import { fillPatternLabelKey } from './schema-token-labels';

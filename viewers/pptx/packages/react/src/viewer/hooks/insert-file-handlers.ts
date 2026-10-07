@@ -3,7 +3,7 @@
  * handlers used by useInsertElements.
  */
 import type { PptxElement, PptxSlide, ImagePptxElement, MediaPptxElement } from 'pptx-viewer-core';
-import { classifyMediaType } from 'pptx-viewer-shared';
+import { classifyMediaType } from 'ooxml-ui/pptx';
 
 import type { CanvasSize } from '../types';
 import { generateElementId } from '../utils/generate-id';

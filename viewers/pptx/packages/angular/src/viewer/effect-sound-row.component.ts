@@ -26,8 +26,8 @@ import {
 import { LucidePlay } from '@lucide/angular';
 import { TranslatePipe } from '@ngx-translate/core';
 
-import { EFFECT_SOUND_CATALOGUE, getEffectSoundAsset } from '../internal/shared';
-import type { EffectSoundState } from '../internal/shared';
+import { EFFECT_SOUND_CATALOGUE, getEffectSoundAsset } from 'ooxml-ui/pptx';
+import type { EffectSoundState } from 'ooxml-ui/pptx';
 import { playAnimationSound } from './animation-sound';
 
 const NONE_VALUE = 'none';

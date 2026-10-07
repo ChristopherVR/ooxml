@@ -26,7 +26,7 @@ const { savedSnapshots } = vi.hoisted(() => ({
 
 // Intercept the IndexedDB write (there is no IndexedDB here) and keep the
 // bytes. Everything else in the shared package stays real.
-vi.mock(import('pptx-viewer-shared'), async (importOriginal) => ({
+vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => ({
 	...(await importOriginal()),
 	saveAutosaveSnapshot: async (key: string, data: Uint8Array) => {
 		savedSnapshots.push({ key, data });

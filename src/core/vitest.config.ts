@@ -1,6 +1,16 @@
+import { fileURLToPath } from 'node:url';
+
 // The pptx tests read real decks from pptx/__tests__/fixtures (including the e2e snapshot that is
 // committed under fixtures/e2e), so nothing outside this repository is needed.
 export default {
+	resolve: {
+		alias: [
+			{
+				find: /^ooxml-core\/pptx$/,
+				replacement: fileURLToPath(new URL('./pptx/index.ts', import.meta.url)),
+			},
+		],
+	},
 	test: {
 		globals: true,
 		environment: 'node',

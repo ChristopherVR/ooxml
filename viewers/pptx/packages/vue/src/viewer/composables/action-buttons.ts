@@ -6,4 +6,4 @@
  * surface so the Insert > Action wiring and the colocated tests are unchanged.
  */
 
-export { isActionButton, buildActionButtonElement } from 'pptx-viewer-shared';
+export { isActionButton, buildActionButtonElement } from 'ooxml-ui/pptx';

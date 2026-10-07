@@ -4,8 +4,8 @@ import {
 	createGestureController,
 	isTemplateElementId,
 	resolveElementInteractivity,
-} from 'pptx-viewer-shared';
-import type { ElementInteractivity, GestureController } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { ElementInteractivity, GestureController } from 'ooxml-ui/pptx';
 import type { ComputedRef, Ref } from 'vue';
 
 import { useConnectorReroute } from './connector-reroute-store';

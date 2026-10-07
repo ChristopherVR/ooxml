@@ -7,7 +7,7 @@
  * pixel canvas, because deriving one from the other is lossy.
  */
 import { mount } from '@vue/test-utils';
-import { SLIDE_SIZE_PRESETS, slideSizeFromPreset } from 'pptx-viewer-shared';
+import { SLIDE_SIZE_PRESETS, slideSizeFromPreset } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 
 import SlideSizeCard from './SlideSizeCard.vue';

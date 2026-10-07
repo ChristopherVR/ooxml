@@ -21,8 +21,8 @@ import {
 	masterViewPseudoSlide,
 	setMasterViewBackgroundColor,
 	updateMasterViewElement,
-} from '../internal/shared';
-import type { MasterViewDocument } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { MasterViewDocument } from 'ooxml-ui/pptx';
 
 const MASTER_PATH = 'ppt/slideMasters/slideMaster1.xml';
 const LAYOUT_PATH = 'ppt/slideLayouts/slideLayout1.xml';

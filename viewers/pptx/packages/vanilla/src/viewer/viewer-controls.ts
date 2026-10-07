@@ -8,8 +8,8 @@ import {
 	resolveAuthoredSlideRange,
 	resolveShowSlideIndexes,
 	createViewerZoomStore,
-} from 'pptx-viewer-shared';
-import type { ZoomNavigationTarget } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { ZoomNavigationTarget } from 'ooxml-ui/pptx';
 
 import type { RenderController } from './render-controller';
 import { clampSlideIndex } from './state';

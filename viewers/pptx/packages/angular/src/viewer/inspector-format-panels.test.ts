@@ -6,7 +6,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { clampTransitionNumber, mergeSlideTransition } from '../internal/shared';
+import { clampTransitionNumber, mergeSlideTransition } from 'ooxml-ui/pptx';
 import { TEXT_3D_TOP_BEVEL_KEYS, bevelSizePatch } from './text-3d-bevel-section.component';
 
 describe('text 3d bevel patches', () => {

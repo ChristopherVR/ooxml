@@ -12,4 +12,4 @@ export {
 	isAudienceTab,
 	loadAudienceContent,
 	storeAudienceContent,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';

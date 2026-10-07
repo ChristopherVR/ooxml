@@ -4,13 +4,13 @@
  * log for debugging. Built into the vanilla settings dialog only when the host
  * enables the `ai` option. Vanilla counterpart of React's `SettingsAiTab`.
  */
-import { downloadBlob } from 'pptx-viewer-shared';
-import type { AiLogFormat, PptxAiChatStore, SaveChatLogFile } from 'pptx-viewer-shared/ai';
+import { downloadBlob } from 'ooxml-ui/pptx';
+import type { AiLogFormat, PptxAiChatStore, SaveChatLogFile } from 'ooxml-ui/pptx/ai';
 import {
 	collectStoredChats,
 	createChatHistoryStore,
 	exportAiChatLogs,
-} from 'pptx-viewer-shared/ai';
+} from 'ooxml-ui/pptx/ai';
 
 import type { Translator } from '../i18n';
 import { createEl } from '../render';

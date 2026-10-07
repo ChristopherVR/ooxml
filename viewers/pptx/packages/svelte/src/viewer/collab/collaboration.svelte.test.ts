@@ -7,8 +7,8 @@ import type {
 	ExternalCollaborationSnapshot,
 	YDocLike,
 	YjsFactories,
-} from 'pptx-viewer-shared';
-import { readSlidesFromYDoc, reconcileSlidesInYDoc } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import { readSlidesFromYDoc, reconcileSlidesInYDoc } from 'ooxml-ui/pptx';
 import { flushSync } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as Y from 'yjs';

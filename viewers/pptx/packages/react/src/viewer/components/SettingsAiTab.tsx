@@ -1,5 +1,5 @@
-import type { PptxAiChatStore } from 'pptx-viewer-shared/ai';
-import { createChatHistoryStore } from 'pptx-viewer-shared/ai';
+import type { PptxAiChatStore } from 'ooxml-ui/pptx/ai';
+import { createChatHistoryStore } from 'ooxml-ui/pptx/ai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LuBug, LuDownload } from 'react-icons/lu';

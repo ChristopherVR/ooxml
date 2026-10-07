@@ -19,8 +19,8 @@ import {
 	paragraphHomeControls,
 	selectionBulletKind,
 	withHomeGalleries,
-} from 'pptx-viewer-shared';
-import type { RibbonHomeRequestEvent } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { RibbonHomeRequestEvent } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

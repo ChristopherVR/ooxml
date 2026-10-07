@@ -37,12 +37,12 @@ import type {
 	RunProgramNotice,
 	SanitizedPresence,
 	SlideSizeEmu,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	DEFAULT_CANVAS_HEIGHT,
 	DEFAULT_CANVAS_WIDTH,
 	DEFAULT_STROKE_COLOR,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { ChartPartSelection } from '../render';
 

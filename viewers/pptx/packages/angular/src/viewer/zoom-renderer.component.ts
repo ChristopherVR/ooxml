@@ -8,8 +8,8 @@ import {
 	elementHitTargetStyle,
 	resolveZoomNavigationTarget,
 	shouldRenderHitTarget,
-} from '../internal/shared';
-import type { SummaryZoomTileView } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { SummaryZoomTileView } from 'ooxml-ui/pptx';
 import type { StyleMap } from './element-style';
 import { ZoomNavigationService } from './zoom-navigation.service';
 import {

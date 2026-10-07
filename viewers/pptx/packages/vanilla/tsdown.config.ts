@@ -7,7 +7,7 @@ export default defineConfig((options) => ({
 	minify: true,
 	dts: { emitDtsOnly: true },
 	deps: {
-		dts: { alwaysBundle: ['pptx-viewer-core', 'pptx-viewer-shared'] },
+		dts: { alwaysBundle: ['pptx-viewer-core'] },
 	},
 	sourcemap: false,
 	clean: !options.watch,

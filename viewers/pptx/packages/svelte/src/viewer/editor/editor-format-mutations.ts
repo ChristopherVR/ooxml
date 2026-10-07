@@ -8,7 +8,7 @@ import {
 	textFontSizePatch,
 	textFontSizePtToPx,
 	textStylePatch,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 /**
  * Pure patch builders for the formatting toolbar / inspector.

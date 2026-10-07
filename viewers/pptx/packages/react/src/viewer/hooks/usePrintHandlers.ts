@@ -27,7 +27,7 @@ import {
 	finishPrintWindow,
 	openPendingPrintWindow,
 	resolveImageResolutionScale,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { useState } from 'react';
 import type { RefObject } from 'react';
 import { useTranslation } from 'react-i18next';

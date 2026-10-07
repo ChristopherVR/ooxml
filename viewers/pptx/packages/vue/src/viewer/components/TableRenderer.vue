@@ -11,7 +11,7 @@ import type {
 	CellTextRun,
 	TableCellCss,
 	TableStyleContext,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	canDrillDown,
 	cellPatternFillCss,
@@ -21,7 +21,7 @@ import {
 	tableCellCss,
 	tableCellPointerIntent,
 	tableContainerCss,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type { ComponentPublicInstance, CSSProperties } from 'vue';
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 

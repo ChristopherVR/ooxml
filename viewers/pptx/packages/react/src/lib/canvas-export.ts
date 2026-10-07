@@ -13,7 +13,7 @@ import type { Options as Html2CanvasOptions } from 'html2canvas-pro';
  * imports `html2canvas-pro` stays here. `_testing` is re-exported so the
  * colocated unit tests keep their historical import path.
  */
-import { prepareHtml2CanvasClone, _testing } from 'pptx-viewer-shared';
+import { prepareHtml2CanvasClone, _testing } from 'ooxml-ui/pptx';
 
 export { _testing };
 

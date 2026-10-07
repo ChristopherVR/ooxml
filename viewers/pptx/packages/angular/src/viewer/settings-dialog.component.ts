@@ -26,16 +26,16 @@ import {
 } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 
-import { customizeOptionsTabs, isOptionsPageVisible, THEME_CATALOG } from '../internal/shared';
+import { customizeOptionsTabs, isOptionsPageVisible, THEME_CATALOG } from 'ooxml-ui/pptx';
 import type {
 	ThemeCatalogEntry,
 	ViewerAddinStatus,
 	ViewerOptions,
 	ViewerOptionsGroupId,
 	ViewerOptionsTabId,
-} from '../internal/shared';
-import { LOCALE_CATALOG } from '../internal/shared-src/i18n';
-import type { LocaleCatalogEntry } from '../internal/shared-src/i18n';
+} from 'ooxml-ui/pptx';
+import { LOCALE_CATALOG } from 'ooxml-ui/pptx/i18n';
+import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
 import { AiSettingsSectionComponent } from './ai/ai-settings-section.component';
 import { OptionsAddInsPaneComponent } from './options-add-ins-pane.component';
 import { OptionsPaneComponent } from './options-pane.component';
@@ -53,7 +53,7 @@ import {
 import { SettingsLanguageTabComponent } from './settings-language-tab.component';
 import { injectResolvedCustomization } from './viewer-customization.service';
 
-export type { ViewerSettings } from '../internal/shared';
+export type { ViewerSettings } from 'ooxml-ui/pptx';
 export { OPTIONS_DIALOG_TABS, resolveOptionsTab } from './settings-dialog-tabs';
 
 @Component({

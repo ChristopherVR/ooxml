@@ -4,13 +4,13 @@
 	 * adapter around the shared `pptx-ui-mobile-toolbar`, which owns the markup,
 	 * order and gating of the row.
 	 */
-	import { isActionHidden } from 'pptx-viewer-shared';
+	import { isActionHidden } from 'ooxml-ui/pptx';
 	import type {
 		MobileToolbarId,
 		MobileToolbarRequestEvent,
 		MobileToolbarViewState,
 		ToolbarActionId,
-	} from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../i18n/context';
 
 	const {

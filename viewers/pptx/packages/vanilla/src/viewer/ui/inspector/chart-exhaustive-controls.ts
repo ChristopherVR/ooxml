@@ -1,4 +1,4 @@
-import { schemaLabel } from 'pptx-viewer-shared';
+import { schemaLabel } from 'ooxml-ui/pptx';
 
 import { createInspectorCheckbox, createInspectorSelect } from './controls-extra';
 

@@ -6,8 +6,8 @@ import {
 	presenterConsoleCssVars,
 	presenterPaneAdvancesOnClick,
 	presenterTimerProgress,
-} from 'pptx-viewer-shared';
-import type { AuthoredSlideRange, ShowOrderCustomShow } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { AuthoredSlideRange, ShowOrderCustomShow } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import { buildPresenterNavigator } from './presenter-navigator';

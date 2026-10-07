@@ -7,7 +7,7 @@
  * Split out of `ActionSettingsPanel` purely for file size.
  */
 import type { ElementActionType } from 'pptx-viewer-core';
-import { toSlideIndex } from 'pptx-viewer-shared';
+import { toSlideIndex } from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 

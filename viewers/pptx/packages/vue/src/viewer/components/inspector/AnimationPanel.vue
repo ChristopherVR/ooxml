@@ -19,7 +19,7 @@ import {
 	getDensePanelTouchTargetPx,
 	motionPathFor,
 	TRIGGER_OPTIONS,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 

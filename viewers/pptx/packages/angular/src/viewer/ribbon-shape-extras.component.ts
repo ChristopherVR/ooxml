@@ -36,13 +36,13 @@ import {
 	MERGE_SHAPES_LABEL_KEY,
 	parseCropValue,
 	strokeWidthOf,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import type {
 	CropElementUpdate,
 	MergeShapeOperation,
 	RibbonHomeRequestEvent,
 	ToolbarActionId,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { EditorStateService } from './editor-state.service';
 import { canGroupSelected } from './group-lock-guard';
 import { LoadContentService } from './load-content.service';

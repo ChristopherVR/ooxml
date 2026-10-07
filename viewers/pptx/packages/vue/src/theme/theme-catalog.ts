@@ -3,5 +3,5 @@
  *
  * Re-exported here so `./theme` import paths stay stable.
  */
-export { resolveThemeCatalogEntry, THEME_CATALOG } from 'pptx-viewer-shared';
-export type { ThemeCatalogEntry } from 'pptx-viewer-shared';
+export { resolveThemeCatalogEntry, THEME_CATALOG } from 'ooxml-ui/pptx';
+export type { ThemeCatalogEntry } from 'ooxml-ui/pptx';

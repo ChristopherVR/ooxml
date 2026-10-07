@@ -36,7 +36,7 @@ import {
 	RADAR_STYLE_OPTIONS,
 	SURFACE_WIREFRAME_OPTIONS,
 	surfaceWireframePatch,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { setDataLabels, setLegend } from './chart-advanced-helpers';
 import { patchChartData, patchChartStyle } from './chart-data-helpers';
 import { CHART_EDITOR_STYLES } from './chart-editor-styles';

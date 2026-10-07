@@ -36,6 +36,10 @@ const supported = new Set([
 ]);
 // Known pure numeric functions may be independent of an edit even when evaluation is unsupported.
 const staticUnsupported = new Set([
+	// FONT reads the font table by name, not a hidden ShapeSheet reference.
+	// Keep evaluation unsupported: identifiers depend on the document/system.
+	// https://learn.microsoft.com/en-us/office/client-developer/visio/font-function
+	'FONT',
 	'ROUND',
 	'INT',
 	'MOD',

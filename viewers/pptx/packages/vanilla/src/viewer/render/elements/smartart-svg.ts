@@ -1,4 +1,4 @@
-import type { RenderedGradient, SvgTextLine } from 'pptx-viewer-shared';
+import type { RenderedGradient, SvgTextLine } from 'ooxml-ui/pptx';
 
 import { createSvgEl } from '../dom';
 

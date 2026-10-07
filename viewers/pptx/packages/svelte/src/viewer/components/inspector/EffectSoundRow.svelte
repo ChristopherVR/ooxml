@@ -8,8 +8,8 @@
 	 * `data:` URL that the core save pipeline embeds and mints a relationship
 	 * for.
 	 */
-	import { EFFECT_SOUND_CATALOGUE, getEffectSoundAsset } from 'pptx-viewer-shared';
-	import type { EffectSoundState } from 'pptx-viewer-shared';
+	import { EFFECT_SOUND_CATALOGUE, getEffectSoundAsset } from 'ooxml-ui/pptx';
+	import type { EffectSoundState } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 	import { playAnimationSound } from '../../presentation/animation-sound';

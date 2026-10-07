@@ -15,11 +15,11 @@ export {
 	computeHandoutLayout,
 	getPrintableArea,
 	generateNoteLineCount,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 export type {
 	HandoutSlidesPerPage,
 	HandoutGrid,
 	PageDimensions,
 	HandoutCellPosition,
 	HandoutPage,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

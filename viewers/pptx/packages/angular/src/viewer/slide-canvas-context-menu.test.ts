@@ -1,7 +1,7 @@
 import type { PptxElement } from 'pptx-viewer-core';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { resolveContextMenuElementId } from '../internal/shared-src/render/context-menu-target';
+import { resolveContextMenuElementId } from 'ooxml-ui/pptx/render/context-menu-target';
 import { resolveInteractiveElementId } from './selection-geometry';
 
 /**

@@ -2,7 +2,7 @@
  * ExportProgressModal: A modal overlay that shows export progress
  * for video, GIF, and package-for-sharing operations.
  */
-import { clampPercent } from 'pptx-viewer-shared';
+import { clampPercent } from 'ooxml-ui/pptx';
 import { useTranslation } from 'react-i18next';
 
 import { DialogFooter } from './DialogFooter';

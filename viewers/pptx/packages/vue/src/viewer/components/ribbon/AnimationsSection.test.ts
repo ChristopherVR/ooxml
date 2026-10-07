@@ -6,14 +6,14 @@ import {
 	EXIT_PRESET_VALUES,
 	MOTION_PATH_PRESETS,
 	registerPptxWebControls,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import AnimationsSection from './AnimationsSection.vue';
 
 const { playAnimationRibbonPreview } = vi.hoisted(() => ({ playAnimationRibbonPreview: vi.fn() }));
 
-vi.mock(import('pptx-viewer-shared'), async (original) => ({
+vi.mock(import('ooxml-ui/pptx'), async (original) => ({
 	...(await original()),
 	playAnimationRibbonPreview,
 }));

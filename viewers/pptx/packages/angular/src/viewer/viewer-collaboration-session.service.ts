@@ -19,8 +19,8 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import type { PptxHandlerSaveOptions, PptxSlide } from 'pptx-viewer-core';
 
-import type { ActiveSessionUserDescriptor } from '../internal/shared';
-import { buildActiveSessionUsers } from '../internal/shared';
+import type { ActiveSessionUserDescriptor } from 'ooxml-ui/pptx';
+import { buildActiveSessionUsers } from 'ooxml-ui/pptx';
 import type { BroadcastConfig } from './broadcast-helpers';
 import { buildBroadcastViewerUrl } from './broadcast-helpers';
 import { CollaborationService } from './collaboration.service';

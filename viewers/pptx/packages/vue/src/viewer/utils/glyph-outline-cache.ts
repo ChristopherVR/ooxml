@@ -14,7 +14,7 @@
  * `useTextWarpEnvelope`'s computed glyph layout (which reads the tick)
  * recomputes and picks them up from this same cache.
  */
-import { GlyphOutlineFontCache, createGlyphOutlineLookup } from 'pptx-viewer-shared';
+import { GlyphOutlineFontCache, createGlyphOutlineLookup } from 'ooxml-ui/pptx';
 import { ref } from 'vue';
 import type { Ref } from 'vue';
 

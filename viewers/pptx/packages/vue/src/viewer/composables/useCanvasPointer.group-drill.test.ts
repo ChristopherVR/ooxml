@@ -9,7 +9,7 @@
  * pointer, and Escape steps back out to the group.
  */
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
-import { takePendingCaretPoint } from 'pptx-viewer-shared';
+import { takePendingCaretPoint } from 'ooxml-ui/pptx';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { computed, ref, shallowRef } from 'vue';
 

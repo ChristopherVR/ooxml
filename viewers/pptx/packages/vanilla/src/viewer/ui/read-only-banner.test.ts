@@ -1,4 +1,4 @@
-import type { ReadOnlyRecommendation } from 'pptx-viewer-shared';
+import type { ReadOnlyRecommendation } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createReadOnlyBanner } from './read-only-banner';

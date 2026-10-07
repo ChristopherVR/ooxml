@@ -5,7 +5,7 @@ import type {
 	ExternalCollaborationReadiness,
 	YDocLike,
 	YjsFactories,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	createCollaborationLivePatcher,
 	createSyncGate,
@@ -15,7 +15,7 @@ import {
 	observeYDocSlides,
 	readSlidesFromYDoc,
 	reconcileSlidesInYDoc,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { ref, watch } from 'vue';
 
 import { watchLoadAdoption } from './collaboration-load-adoption';

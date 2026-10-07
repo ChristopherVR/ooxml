@@ -3,7 +3,7 @@ import type {
 	PptxAiChatSession,
 	PptxAiConfig,
 	ToolCanvasTarget,
-} from 'pptx-viewer-shared/ai';
+} from 'ooxml-ui/pptx/ai';
 import { describe, expect, it, vi } from 'vitest';
 
 import { SvelteAiChat } from './chat.svelte';

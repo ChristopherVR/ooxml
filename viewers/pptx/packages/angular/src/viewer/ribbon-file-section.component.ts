@@ -20,14 +20,14 @@ import {
 	formatBackstageSize,
 	isActionHidden,
 	listBackstageRecentFiles,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import type {
 	AccountAuthConfig,
 	BackstageCardId,
 	BackstagePage,
 	BackstageRecentFile,
 	ToolbarActionId,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { AccountPageComponent } from './account-page.component';
 import { BackstageNavIconComponent } from './backstage-nav-icon.component';
 import { injectResolvedCustomization } from './viewer-customization.service';

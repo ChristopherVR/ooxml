@@ -9,7 +9,7 @@
 	 * (a `position: fixed` child of the transformed layer would be placed
 	 * relative to that layer, not the viewport).
 	 */
-	import type { EditPointsCommandId, EditPointsMenuView } from 'pptx-viewer-shared';
+	import type { EditPointsCommandId, EditPointsMenuView } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 

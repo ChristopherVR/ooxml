@@ -28,13 +28,13 @@ import {
 import { TranslateService } from '@ngx-translate/core';
 import type { PptxElement } from 'pptx-viewer-core';
 
-import { classifyMediaType, DEFAULT_INSERT_CHART_KIND } from '../internal/shared';
+import { classifyMediaType, DEFAULT_INSERT_CHART_KIND } from 'ooxml-ui/pptx';
 import type {
 	FreeformToolKind,
 	InsertChartKind,
 	RibbonInsertRequestEvent,
 	ShapePresetType,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import {
 	newChartElement,
 	newPresetShapeElement,

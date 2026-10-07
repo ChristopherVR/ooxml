@@ -1,4 +1,4 @@
-import { tableStyleAssignmentUpdate } from 'pptx-viewer-shared';
+import { tableStyleAssignmentUpdate } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';

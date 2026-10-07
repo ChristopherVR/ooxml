@@ -20,8 +20,8 @@ import {
 	collectImagePaths,
 	masterViewCrudActions,
 	masterViewCrudFailureKey,
-} from 'pptx-viewer-shared';
-import type { MasterViewCrudActionId, MasterViewTarget } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { MasterViewCrudActionId, MasterViewTarget } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import type { Store, ViewerState } from '../state';

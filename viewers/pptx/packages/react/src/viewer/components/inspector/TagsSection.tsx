@@ -4,7 +4,7 @@ import {
 	deleteTagFromCollections,
 	flattenTagCollections,
 	updateTagInCollections,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LuChevronDown, LuChevronRight, LuTrash2 } from 'react-icons/lu';

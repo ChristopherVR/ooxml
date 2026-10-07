@@ -3,7 +3,7 @@
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import X from '@lucide/svelte/icons/x';
 	import type { PptxAppProperties, PptxCoreProperties, PptxCustomProperty } from 'pptx-viewer-core';
-	import { computeDocumentStatistics } from 'pptx-viewer-shared';
+	import { computeDocumentStatistics } from 'ooxml-ui/pptx';
 	import { untrack } from 'svelte';
 
 	import { useTranslator } from '../../../../i18n/context';

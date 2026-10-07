@@ -16,13 +16,13 @@ import type {
 	PptxCustomShow,
 	PptxTagCollection,
 } from 'pptx-viewer-core';
-import type { DeckSaveIntent, TableStyleSaveOptions, TemplateElementMap } from 'pptx-viewer-shared';
+import type { DeckSaveIntent, TableStyleSaveOptions, TemplateElementMap } from 'ooxml-ui/pptx';
 import {
 	buildDeckSaveOptions,
 	cloneSlides,
 	cloneTemplateElementsBySlideId,
 	saveDeckWithPassword,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 export interface EditorSnapshot {
 	slides: PptxSlide[];

@@ -17,8 +17,8 @@ import {
 	buildOutline,
 	mapOutlineKey,
 	OUTLINE_ROW_ATTR,
-} from 'pptx-viewer-shared';
-import type { CanvasSize, OutlineEdit, OutlineRow } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { CanvasSize, OutlineEdit, OutlineRow } from 'ooxml-ui/pptx';
 
 export interface OutlineViewSessionInput {
 	getSlides: () => PptxSlide[];

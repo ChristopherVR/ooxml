@@ -5,7 +5,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import type { SlideDiff } from '../internal/shared';
+import type { SlideDiff } from 'ooxml-ui/pptx';
 import { changeCountLabel, changeIcon, slideNumberOf, statusLabel } from './slide-diff-helpers';
 
 describe('changeIcon', () => {

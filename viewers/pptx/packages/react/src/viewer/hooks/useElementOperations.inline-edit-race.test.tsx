@@ -18,8 +18,8 @@
  * LIVE `inlineEditingText`, not the stale model segments.
  */
 import type { PptxElement, PptxSlide, TextSegment } from 'pptx-viewer-core';
-import { buildParagraphs, elementBulletKind, remapTextToSegments } from 'pptx-viewer-shared';
-import type { InlineTextEditSnapshot } from 'pptx-viewer-shared';
+import { buildParagraphs, elementBulletKind, remapTextToSegments } from 'ooxml-ui/pptx';
+import type { InlineTextEditSnapshot } from 'ooxml-ui/pptx';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';

@@ -6,5 +6,5 @@
  * This shim preserves the historical Vue import surface so `FormatPanel.vue`
  * and the colocated tests keep importing the same names unchanged.
  */
-export type { CopiedFormat } from 'pptx-viewer-shared';
-export { copyFormatFromElement, applyFormatToElement, hasCopyableFormat } from 'pptx-viewer-shared';
+export type { CopiedFormat } from 'ooxml-ui/pptx';
+export { copyFormatFromElement, applyFormatToElement, hasCopyableFormat } from 'ooxml-ui/pptx';

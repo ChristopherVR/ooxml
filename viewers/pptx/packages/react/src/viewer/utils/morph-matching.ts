@@ -10,4 +10,4 @@ export {
 	getElementMorphName,
 	matchMorphElements,
 	matchMorphElementsFull,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

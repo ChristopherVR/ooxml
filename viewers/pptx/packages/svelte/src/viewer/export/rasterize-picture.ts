@@ -3,7 +3,7 @@ import {
 	buildRasterPictureElement,
 	findCanvasElementNode,
 	rasterizeElementToDataUrl,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import { renderToCanvas } from './render-to-canvas';
 

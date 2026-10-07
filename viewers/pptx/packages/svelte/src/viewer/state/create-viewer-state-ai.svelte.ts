@@ -1,4 +1,4 @@
-import type { PptxAiBridge } from 'pptx-viewer-shared/ai';
+import type { PptxAiBridge } from 'ooxml-ui/pptx/ai';
 
 import { createSvelteAiBridge } from '../ai';
 import { AiPanelController } from '../ai/ai-panel-controller.svelte';

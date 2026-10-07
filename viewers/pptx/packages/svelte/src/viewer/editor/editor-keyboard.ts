@@ -2,8 +2,8 @@ import {
 	isEditorControlTarget,
 	isEditorTextInputTarget,
 	mapCustomizedEditorKey,
-} from 'pptx-viewer-shared';
-import type { ResolvedKeyboardCustomization } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { ResolvedKeyboardCustomization } from 'ooxml-ui/pptx';
 
 import type {
 	EditorTextAlign,

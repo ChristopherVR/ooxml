@@ -20,7 +20,7 @@ export {
 	formatCommentTimestamp,
 	getCommentMarkerPosition,
 	getConnectionSitePosition,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 /**
  * Returns true if the element is a connector or line, i.e. it renders

@@ -4,7 +4,7 @@ import {
 	HIDDEN_SLIDE_DIM_OPACITY,
 	HIDDEN_SLIDE_SLASH_GRADIENT,
 	TITLE_BAR_METRICS,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import { ACCOUNT_CSS } from './account-css';
 import { AI_CSS } from './ai-css';

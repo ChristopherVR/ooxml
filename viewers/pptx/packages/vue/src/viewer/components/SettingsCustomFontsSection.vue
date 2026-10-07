@@ -9,7 +9,7 @@
  * font set and nothing is uploaded or written into the presentation.
  */
 import { Upload } from 'lucide-vue-next';
-import { CUSTOM_FONT_ACCEPT, registerCustomFont } from 'pptx-viewer-shared';
+import { CUSTOM_FONT_ACCEPT, registerCustomFont } from 'ooxml-ui/pptx';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 

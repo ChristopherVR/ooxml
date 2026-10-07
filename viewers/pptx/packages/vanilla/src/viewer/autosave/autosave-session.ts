@@ -4,7 +4,7 @@ import type {
 	AutosaveRecord,
 	AutosaveRecoveryOffer,
 	DeckSaveIntent,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	acceptAutosaveRecovery,
 	acknowledgeAutosaveRecovery,
@@ -13,7 +13,7 @@ import {
 	resolveAutosaveActivation,
 	resolveAutosaveIntervalMs,
 	shouldShowAutosaveRecoveryPrompt,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import type { Store, ViewerState } from '../state';

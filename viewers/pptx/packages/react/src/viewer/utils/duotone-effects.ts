@@ -7,7 +7,7 @@
  * @module duotone-effects
  */
 
-export type { DuotonePreset } from 'pptx-viewer-shared';
+export type { DuotonePreset } from 'ooxml-ui/pptx';
 export {
 	mapDuotonePixels,
 	applyDuotone,
@@ -15,4 +15,4 @@ export {
 	getDuotoneCachedResult,
 	setDuotoneCachedResult,
 	DUOTONE_PRESETS,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

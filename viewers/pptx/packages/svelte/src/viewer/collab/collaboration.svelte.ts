@@ -12,13 +12,13 @@ import type {
 	ConnectionStatus,
 	RemoteCursor,
 	SanitizedPresence,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	DEFAULT_CURSOR_COLOR,
 	isMixedContentBlocked,
 	resolveTransportForServerUrl,
 	validateRoomId,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { CollaborationDeps } from './collaboration-deps';
 import { CollaborationDocument } from './collaboration-document.svelte';

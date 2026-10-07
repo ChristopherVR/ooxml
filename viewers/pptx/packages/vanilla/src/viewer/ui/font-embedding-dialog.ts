@@ -1,5 +1,5 @@
 import type { PptxEmbeddedFont, PptxSlide } from 'pptx-viewer-core';
-import { collectUsedFonts, scanAvailableFontFamilies } from 'pptx-viewer-shared';
+import { collectUsedFonts, scanAvailableFontFamilies } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import { createEl } from '../render';

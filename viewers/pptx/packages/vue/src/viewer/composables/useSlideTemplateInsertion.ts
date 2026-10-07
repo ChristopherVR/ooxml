@@ -1,7 +1,7 @@
 import { createEditorId } from 'pptx-viewer-core';
 import type { PptxSlide, PptxTheme } from 'pptx-viewer-core';
-import { buildSlideTemplateSlide, templateSchemeFromTheme } from 'pptx-viewer-shared';
-import type { SlideTemplateId } from 'pptx-viewer-shared';
+import { buildSlideTemplateSlide, templateSchemeFromTheme } from 'ooxml-ui/pptx';
+import type { SlideTemplateId } from 'ooxml-ui/pptx';
 import type { Ref, ShallowRef } from 'vue';
 
 export interface UseSlideTemplateInsertionInput {

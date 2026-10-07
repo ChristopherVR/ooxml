@@ -16,7 +16,7 @@ import type {
 	ContextMenuRequestEvent,
 	ContextMenuViewState,
 	CustomizedContextMenuEntry,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import {
 	buildContextMenuEntries,
 	canCropElement,
@@ -27,7 +27,7 @@ import {
 	isEditPointsEnabled,
 	resolveEditPointsAvailability,
 	scrollInspectorSectionIntoView,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import type { MenuTranslate } from './context-menu-translate';
 import { injectMenuTranslate } from './context-menu-translate';
 import { tableMenuContext } from './editor-context-menu-context';

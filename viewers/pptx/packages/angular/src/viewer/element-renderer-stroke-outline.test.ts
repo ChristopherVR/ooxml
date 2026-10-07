@@ -16,7 +16,7 @@
 import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 
-import { strokeOutlineViewBox } from '../internal/shared';
+import { strokeOutlineViewBox } from 'ooxml-ui/pptx';
 import { getStrokeOutline } from './element-effect-defs';
 import { getShapeFillStrokeStyle } from './element-style';
 

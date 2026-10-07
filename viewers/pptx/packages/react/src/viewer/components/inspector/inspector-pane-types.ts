@@ -18,7 +18,7 @@ import type {
 	TextStyle,
 	ParsedTableStyleMap,
 } from 'pptx-viewer-core';
-import type { SlideSizeEmu, SlideSizeRescaleMode } from 'pptx-viewer-shared';
+import type { SlideSizeEmu, SlideSizeRescaleMode } from 'ooxml-ui/pptx';
 
 import type { CanvasSize, TableCellEditorState, ViewerMode } from '../../types';
 

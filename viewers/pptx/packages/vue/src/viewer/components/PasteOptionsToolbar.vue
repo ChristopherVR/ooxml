@@ -7,8 +7,8 @@
  * `pptx-ui-paste-options`: this measures the pasted element and the element
  * renders, positions and dismisses the strip.
  */
-import type { PasteOptionsRequestEvent, PasteSpecialFormat } from 'pptx-viewer-shared';
-import { findCanvasElementNode } from 'pptx-viewer-shared';
+import type { PasteOptionsRequestEvent, PasteSpecialFormat } from 'ooxml-ui/pptx';
+import { findCanvasElementNode } from 'ooxml-ui/pptx';
 import { computed, nextTick, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 

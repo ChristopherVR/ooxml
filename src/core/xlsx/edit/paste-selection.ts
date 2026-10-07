@@ -3,6 +3,7 @@ import { cellsFromText, pasteAt } from './clipboard.js';
 import type { EditContext } from './context.js';
 import type { ClipboardPayload, PasteRequest } from './types.js';
 import { resolvePasteOptions } from './paste-options.js';
+import { pasteWidths } from './paste-widths.js';
 
 /** Repeat a copied block over a compatible selection, using one undoable paste. */
 export function pasteSelection(
@@ -18,6 +19,8 @@ export function pasteSelection(
 			? { tsv: payload, html: '', cells: cellsFromText(ctx.workbook, payload) }
 			: payload;
 	const options = resolvePasteOptions(request);
+	if (options.mode === 'widths')
+		return pasteWidths(ctx, sheet, dest, clip.cells, options.transpose, !!clip.cut);
 	const height = options.transpose ? clip.cells.cols : clip.cells.rows;
 	const width = options.transpose ? clip.cells.rows : clip.cells.cols;
 	const rows = dest.end.row - dest.start.row + 1;

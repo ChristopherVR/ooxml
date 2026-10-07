@@ -6,8 +6,8 @@ import type { PptxElement, PptxSlide, PptxSlideTransition } from 'pptx-viewer-co
  * with CSS exit animation. The *incoming* (new) slide is rendered by the
  * main SlideCanvas underneath (or on top, depending on `outgoingOnTop`).
  */
-import type { FragmentedTransitionDescriptor, MorphTransitionPlan } from 'pptx-viewer-shared';
-import { getFragmentedTransitionDescriptor } from 'pptx-viewer-shared';
+import type { FragmentedTransitionDescriptor, MorphTransitionPlan } from 'ooxml-ui/pptx';
+import { getFragmentedTransitionDescriptor } from 'ooxml-ui/pptx';
 import React, { useEffect, useRef, useMemo, useState } from 'react';
 
 import type { CanvasSize } from '../types';

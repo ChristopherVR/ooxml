@@ -13,7 +13,7 @@
 	 * read-only slide-size summary + theme sections.
 	 */
 	import type { PptxHandler, PptxTheme, PptxThemeOption } from 'pptx-viewer-core';
-	import type { CanvasSize } from 'pptx-viewer-shared';
+	import type { CanvasSize } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 	import type { EditorState } from '../../editor/editor-state.svelte';

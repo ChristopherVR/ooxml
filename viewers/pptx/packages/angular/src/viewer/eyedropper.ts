@@ -5,10 +5,10 @@
  * in `pptx-viewer-shared` (`render/eyedropper`). This shim preserves the
  * historical import surface for Angular's format-painter service.
  */
-export type { EyedropperResult } from '../internal/shared';
+export type { EyedropperResult } from 'ooxml-ui/pptx';
 export {
 	eyedropperAvailable,
 	openNativeEyeDropper,
 	pickColorByClickFallback,
 	sampleColorFromSlide,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';

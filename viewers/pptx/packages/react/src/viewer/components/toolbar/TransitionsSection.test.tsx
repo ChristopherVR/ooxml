@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import type { PptxSlide, PptxSlideTransition } from 'pptx-viewer-core';
-import { registerPptxWebControls } from 'pptx-viewer-shared';
+import { registerPptxWebControls } from 'ooxml-ui/pptx';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';

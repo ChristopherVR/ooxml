@@ -23,8 +23,8 @@ const { probeMock, discardMock, acknowledgeMock } = vi.hoisted(() => ({
 	acknowledgeMock: vi.fn(),
 }));
 
-vi.mock(import('../internal/shared'), async () => {
-	const actual = await vi.importActual<typeof import('../internal/shared')>('../internal/shared');
+vi.mock(import('ooxml-ui/pptx'), async () => {
+	const actual = await vi.importActual<typeof import('ooxml-ui/pptx')>('ooxml-ui/pptx');
 	return {
 		...actual,
 		probeAutosaveRecovery: probeMock,
@@ -34,7 +34,7 @@ vi.mock(import('../internal/shared'), async () => {
 });
 
 const { AutosaveRecoveryService } = await import('./autosave-recovery.service');
-const { autosaveRecoveryPrompt } = await import('../internal/shared');
+const { autosaveRecoveryPrompt } = await import('ooxml-ui/pptx');
 
 interface SchedulableEffect {
 	run(): void;

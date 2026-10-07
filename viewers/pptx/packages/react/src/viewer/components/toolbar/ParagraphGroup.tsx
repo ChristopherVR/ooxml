@@ -1,5 +1,5 @@
 import type { TextStyle } from 'pptx-viewer-core';
-import type { ElementBulletKind, RibbonHomeIntent } from 'pptx-viewer-shared';
+import type { ElementBulletKind, RibbonHomeIntent } from 'ooxml-ui/pptx';
 import {
 	homeGalleryApply,
 	homeGalleryControls,
@@ -7,7 +7,7 @@ import {
 	paragraphHomeAlign,
 	paragraphHomeControls,
 	withHomeGalleries,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React, { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 

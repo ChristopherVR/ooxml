@@ -4,7 +4,7 @@ import {
 	getTextBodyRotationTransform,
 	isLinkedTextBox as isLinkedTextBoxElement,
 	placeholderPromptDescriptor,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React from 'react';
 
 import { DEFAULT_TEXT_COLOR } from '../../constants';

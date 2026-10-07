@@ -14,7 +14,7 @@
  */
 import type { PptxElement } from 'pptx-viewer-core';
 import { hasShapeProperties } from 'pptx-viewer-core';
-import { getDuotoneSvgFilter } from 'pptx-viewer-shared';
+import { getDuotoneSvgFilter } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 
 const props = defineProps<{

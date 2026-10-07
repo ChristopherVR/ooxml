@@ -12,12 +12,12 @@
  * is how PowerPoint's own Paste Options toolbar behaves.
  */
 import type { PptxElement } from 'pptx-viewer-core';
-import type { PasteSpecialFormat } from 'pptx-viewer-shared';
+import type { PasteSpecialFormat } from 'ooxml-ui/pptx';
 import {
 	applyPasteSpecialFormat,
 	buildRasterPictureElement,
 	cloneElementForPaste,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { useCallback, useState } from 'react';
 
 import { renderElementToRasterDataUrl } from '../utils/export-helpers';

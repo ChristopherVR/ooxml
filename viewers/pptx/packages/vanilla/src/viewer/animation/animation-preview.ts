@@ -13,4 +13,4 @@
 export {
 	buildAnimationRibbonPreview as buildAnimationPreview,
 	playAnimationRibbonPreview as playAnimationPreview,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

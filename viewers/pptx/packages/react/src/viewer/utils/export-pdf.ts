@@ -9,9 +9,9 @@ import {
 	placeTileOnPage,
 	PDF_SLIDES_PAGE_WIDTH_PT,
 	PDF_SLIDES_PAGE_HEIGHT_PT,
-} from 'pptx-viewer-shared';
-import type { PdfTiledPageImage, RasterizeElementTilesResult } from 'pptx-viewer-shared';
-import { translationsEn } from 'pptx-viewer-shared/i18n';
+} from 'ooxml-ui/pptx';
+import type { PdfTiledPageImage, RasterizeElementTilesResult } from 'ooxml-ui/pptx';
+import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import React from 'react';
 
 import type { NotesPdfExportOptions, PdfExportOptions, PngExportOptions } from './export-helpers';

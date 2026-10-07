@@ -32,7 +32,7 @@ import type { EditorOperations } from './useEditorOperations';
 // fire-and-forget, so an unstubbed one surfaces as an unhandled rejection.
 // Everything else in the shared package stays real.
 // oxlint-disable-next-line prefer-ending-with-an-expect
-vi.mock(import('pptx-viewer-shared'), async (importOriginal) => ({
+vi.mock(import('ooxml-ui/pptx'), async (importOriginal) => ({
 	...(await importOriginal()),
 	saveAutosaveSnapshot: () => Promise.resolve(true),
 }));

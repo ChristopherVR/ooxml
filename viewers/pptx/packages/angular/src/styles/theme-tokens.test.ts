@@ -20,7 +20,7 @@ import { describe, expect, it } from 'vitest';
 // at build time. The bare specifier resolves on a developer machine through the
 // workspace link and fails in CI, where this test is the only Angular file that
 // used it.
-import { defaultCssVars } from '../internal/shared';
+import { defaultCssVars } from 'ooxml-ui/pptx';
 
 const css = readFileSync(path.join(import.meta.dirname, 'theme.css'), 'utf8');
 

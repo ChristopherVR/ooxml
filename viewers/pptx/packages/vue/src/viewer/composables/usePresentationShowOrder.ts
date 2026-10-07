@@ -1,5 +1,5 @@
 import type { PptxSlide } from 'pptx-viewer-core';
-import type { AuthoredSlideRange } from 'pptx-viewer-shared';
+import type { AuthoredSlideRange } from 'ooxml-ui/pptx';
 import {
 	firstShowSlideIndex,
 	hasShowSlideAfter,
@@ -7,7 +7,7 @@ import {
 	nextShowSlideIndex,
 	previousShowSlideIndex,
 	resolveShowSlideIndexes,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import type { ComputedRef } from 'vue';
 

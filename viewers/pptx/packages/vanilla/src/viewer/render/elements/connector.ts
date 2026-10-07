@@ -12,7 +12,7 @@ import {
 	getLineShadowParams,
 	markerPath,
 	normalizeArrow,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import { createEl, createSvgEl } from '../dom';
 import { getTextBlockStyle } from '../element-styles';

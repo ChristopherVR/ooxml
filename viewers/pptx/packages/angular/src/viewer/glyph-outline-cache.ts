@@ -17,7 +17,7 @@
 import { signal } from '@angular/core';
 import type { WritableSignal } from '@angular/core';
 
-import { GlyphOutlineFontCache, createGlyphOutlineLookup } from '../internal/shared';
+import { GlyphOutlineFontCache, createGlyphOutlineLookup } from 'ooxml-ui/pptx';
 
 export const glyphOutlineFontCache = new GlyphOutlineFontCache();
 

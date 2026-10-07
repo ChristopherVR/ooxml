@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { RECORD_COMMAND_GROUPS } from 'pptx-viewer-shared';
+import { RECORD_COMMAND_GROUPS } from 'ooxml-ui/pptx';
 import { useI18n } from 'vue-i18n';
 
 const props = defineProps<{ onRecordFromBeginning: () => void; onRecordFromCurrent: () => void }>();

@@ -23,8 +23,8 @@ import {
 	PRESENTER_CONSOLE_CLASSES,
 	PRESENTER_LAYOUT_METRICS,
 	visibleTemplateElements as filterVisibleTemplateElements,
-} from '../internal/shared';
-import type { CanvasSize } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { CanvasSize } from 'ooxml-ui/pptx';
 import { SlideCanvasComponent } from './slide-canvas.component';
 
 /** One navigator tile: the slide to draw plus its position in the deck. */

@@ -6,4 +6,4 @@
  * module preserves the original public symbol surface so colocated consumers
  * (and their tests) keep importing the same names.
  */
-export { computeMergeCellRight, computeMergeCellDown, computeSplitCell } from 'pptx-viewer-shared';
+export { computeMergeCellRight, computeMergeCellDown, computeSplitCell } from 'ooxml-ui/pptx';

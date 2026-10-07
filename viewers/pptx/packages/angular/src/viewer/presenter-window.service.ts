@@ -30,8 +30,8 @@ import {
 	secureRandomUuid,
 	mergePresentationSnapshot,
 	swapPresentationWindows,
-} from '../internal/shared';
-import type { PresentationSnapshot } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { PresentationSnapshot } from 'ooxml-ui/pptx';
 import {
 	AUDIENCE_HASH,
 	clearAudienceContent,

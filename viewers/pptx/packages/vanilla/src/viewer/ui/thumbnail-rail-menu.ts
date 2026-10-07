@@ -8,7 +8,7 @@
  *
  * @module ui/thumbnail-rail-menu
  */
-import { resolveSlidePaneClick } from 'pptx-viewer-shared';
+import { resolveSlidePaneClick } from 'ooxml-ui/pptx';
 
 /** Position and target of an open thumbnail context menu. */
 export interface ThumbnailContextMenuState {

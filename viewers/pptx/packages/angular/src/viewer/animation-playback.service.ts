@@ -39,8 +39,8 @@ import {
 	resolveMediaBookmarkTimesMs,
 	resolveMediaTimeNodeElementIds,
 	scheduleAutoAdvanceChain,
-} from '../internal/shared';
-import type { BuildRafHandle, ElementAnimationState, PlaybackContext } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { BuildRafHandle, ElementAnimationState, PlaybackContext } from 'ooxml-ui/pptx';
 import { playAnimationSound, stopAnimationSound } from './animation-sound';
 
 @Injectable()

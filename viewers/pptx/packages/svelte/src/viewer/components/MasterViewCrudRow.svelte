@@ -6,7 +6,7 @@
 	 * disabled) comes from shared `masterViewCrudActions` via
 	 * `editor.masterCrud`; this component only paints it and forwards clicks.
 	 */
-	import type { MasterViewCrudActionId } from 'pptx-viewer-shared';
+	import type { MasterViewCrudActionId } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 	import type { EditorState } from '../editor/editor-state.svelte';

@@ -22,16 +22,16 @@ import { describe, expect, it } from 'vitest';
 
 import { translationsDe, translationsEs, translationsFr, translationsZhCN } from '.';
 import { ALL_ANIMATION_PRESETS } from '../../core/src';
-import { translationsEn } from '../../shared/src/i18n';
+import { translationsEn } from '../../../../../src/ui/src/pptx/i18n';
 import {
 	ANIMATION_PRESET_VALUES,
 	animationCatalogPresetLabelKey,
 	animationPresetLabelKey,
-} from '../../shared/src/render/animation-preset-labels';
+} from '../../../../../src/ui/src/pptx/render/animation-preset-labels';
 import {
 	MOTION_PATH_PRESETS,
 	motionPathPresetLabelKey,
-} from '../../shared/src/render/motion-path-presets';
+} from '../../../../../src/ui/src/pptx/render/motion-path-presets';
 
 /** Every i18n key an animation preset can be rendered through. */
 const PRESET_KEYS: readonly string[] = [

@@ -8,7 +8,7 @@
  */
 
 import type { PptxElement } from 'pptx-viewer-core';
-import type { ElementAnimationState } from 'pptx-viewer-shared';
+import type { ElementAnimationState } from 'ooxml-ui/pptx';
 import React, { useContext } from 'react';
 
 import { Rendering3DFlagsContext } from './rendering-3d-flags-context';

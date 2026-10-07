@@ -1,5 +1,5 @@
-import type { ToolbarActionId } from 'pptx-viewer-shared';
-import { translationsEn } from 'pptx-viewer-shared/i18n';
+import type { ToolbarActionId } from 'ooxml-ui/pptx';
+import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import React from 'react';
 /**
  * Comprehensive end-to-end tests for the Toolbar component.

@@ -1,4 +1,4 @@
-import { formatVersionTimestamp as formatTimestamp, formatRelativeTime } from 'pptx-viewer-shared';
+import { formatVersionTimestamp as formatTimestamp, formatRelativeTime } from 'ooxml-ui/pptx';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LuClock, LuDownload, LuTrash2, LuX } from 'react-icons/lu';

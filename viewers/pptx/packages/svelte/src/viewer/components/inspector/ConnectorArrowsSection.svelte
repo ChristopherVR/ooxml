@@ -15,14 +15,14 @@
 	 * is what records the undo step and repaints the line.
 	 */
 	import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
-	import type { ConnectorArrowControl } from 'pptx-viewer-shared';
+	import type { ConnectorArrowControl } from 'ooxml-ui/pptx';
 	import {
 		canInteractWithElement,
 		CONNECTOR_ARROW_CONTROLS,
 		connectorArrowPatch,
 		connectorArrowValue,
 		schemaLabel,
-	} from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 	import type { EditorState } from '../../editor/editor-state.svelte';

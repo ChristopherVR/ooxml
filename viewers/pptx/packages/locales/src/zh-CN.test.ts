@@ -11,7 +11,7 @@ import { languages as vanillaLanguages } from '../../../../../demos/pptx/demo-va
 import * as vueCopy from '../../../../../demos/pptx/demo-vue/src/demo-locales';
 import { languages as vueLanguages } from '../../../../../demos/pptx/demo-vue/src/languages';
 import { localeSectionNameForKey } from '../../../scripts/locale-sections';
-import { LOCALE_CATALOG, translationsEn } from '../../shared/src/i18n';
+import { LOCALE_CATALOG, translationsEn } from '../../../../../src/ui/src/pptx/i18n';
 import { translationsZhCN } from './zh-CN';
 
 describe('simplified Chinese reference locale', () => {

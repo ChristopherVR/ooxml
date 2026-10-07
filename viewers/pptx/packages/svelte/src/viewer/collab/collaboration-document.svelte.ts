@@ -6,14 +6,14 @@ import type {
 	ExternalCollaborationReadiness,
 	YDocLike,
 	YjsFactories,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	createCollaborationLivePatcher,
 	createSyncGate,
 	createWriteBackScheduler,
 	observeExternalCollaborationReadiness,
 	readSlidesFromYDoc,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { CollaborationDeps } from './collaboration-deps';
 import {

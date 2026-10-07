@@ -15,8 +15,8 @@ import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-
 import { TranslateService } from '@ngx-translate/core';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { filterVisibleTabs, TOOLBAR_TABS } from '../internal/shared';
-import type { ViewerCustomization, ViewerOptionsToggleControl } from '../internal/shared';
+import { filterVisibleTabs, TOOLBAR_TABS } from 'ooxml-ui/pptx';
+import type { ViewerCustomization, ViewerOptionsToggleControl } from 'ooxml-ui/pptx';
 import { EditorContextMenuComponent } from './editor-context-menu.component';
 import { EditorStateService } from './editor-state.service';
 import { OptionsPaneComponent } from './options-pane.component';

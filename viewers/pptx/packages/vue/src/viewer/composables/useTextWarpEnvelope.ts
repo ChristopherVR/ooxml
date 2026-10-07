@@ -4,8 +4,8 @@ import type {
 	EnvelopeGlyphPlacement,
 	EnvelopeSegmentInput,
 	WarpParagraph,
-} from 'pptx-viewer-shared';
-import { buildGlyphEnvelopeBlock, hasGlyphEnvelope } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import { buildGlyphEnvelopeBlock, hasGlyphEnvelope } from 'ooxml-ui/pptx';
 import type { ComputedRef } from 'vue';
 import { computed } from 'vue';
 

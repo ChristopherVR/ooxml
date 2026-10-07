@@ -3,8 +3,8 @@ import {
 	resolveAutosaveIntervalMs,
 	saveAutosaveSnapshot,
 	shouldWriteAutosaveSnapshot,
-} from 'pptx-viewer-shared';
-import type { AutosaveSnapshotMark } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { AutosaveSnapshotMark } from 'ooxml-ui/pptx';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 // ---------------------------------------------------------------------------

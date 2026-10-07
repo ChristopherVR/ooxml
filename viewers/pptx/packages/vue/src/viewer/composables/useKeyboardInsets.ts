@@ -3,7 +3,7 @@ import {
 	computeScrollDelta,
 	isKeyboardOpen as isOpen,
 	readViewportMetrics,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { onMounted, onScopeDispose, readonly, ref } from 'vue';
 import type { Ref } from 'vue';
 

@@ -2,8 +2,8 @@ import {
 	appendPresentationInkPoint,
 	erasePresentationInkAt,
 	movePresenterPointer,
-} from 'pptx-viewer-shared';
-import type { PresentationInkStroke, PresentationSnapshot } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { PresentationInkStroke, PresentationSnapshot } from 'ooxml-ui/pptx';
 import { useCallback, useRef } from 'react';
 
 // Pure function of the event itself (no closure over hook state), so it lives

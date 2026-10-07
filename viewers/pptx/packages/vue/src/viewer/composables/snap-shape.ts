@@ -12,6 +12,6 @@
  * via shared's `SnapGuideInput`.
  */
 
-export { computeSnapToShape, SNAP_THRESHOLD } from 'pptx-viewer-shared';
+export { computeSnapToShape, SNAP_THRESHOLD } from 'ooxml-ui/pptx';
 
-export type { SnapSibling, SnapLine, SnapToShapeResult as SnapResult } from 'pptx-viewer-shared';
+export type { SnapSibling, SnapLine, SnapToShapeResult as SnapResult } from 'ooxml-ui/pptx';

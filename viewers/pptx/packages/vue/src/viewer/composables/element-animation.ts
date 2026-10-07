@@ -5,5 +5,5 @@
  * Angular authoring model. This shim preserves the exact symbols the Vue ribbon
  * and its colocated test import.
  */
-export type { AnimationGroup } from 'pptx-viewer-shared';
-export { applyAnimationPreset, removeElementAnimation } from 'pptx-viewer-shared';
+export type { AnimationGroup } from 'ooxml-ui/pptx';
+export { applyAnimationPreset, removeElementAnimation } from 'ooxml-ui/pptx';

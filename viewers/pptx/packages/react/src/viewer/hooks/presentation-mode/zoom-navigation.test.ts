@@ -3,8 +3,8 @@ import {
 	beginZoomExcursion,
 	buildZoomTransitionOverride,
 	resolveForwardSlideWithZoomReturn,
-} from 'pptx-viewer-shared';
-import type { ZoomExcursion, ZoomNavigationTarget } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { ZoomExcursion, ZoomNavigationTarget } from 'ooxml-ui/pptx';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // ---------------------------------------------------------------------------

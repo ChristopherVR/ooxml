@@ -3,7 +3,7 @@ import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-
 import { TranslateService } from '@ngx-translate/core';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { registerPptxWebControls } from '../internal/shared';
+import { registerPptxWebControls } from 'ooxml-ui/pptx';
 import { RibbonReviewSectionComponent } from './ribbon-review-section.component';
 
 registerPptxWebControls();

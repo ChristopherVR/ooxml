@@ -5,8 +5,8 @@
  * get built at all) is unit-testable without Angular's TestBed/DOM (this
  * package has no component-render harness yet, see `vitest.config.ts`).
  */
-import { isActionHidden } from '../internal/shared';
-import type { ToolbarActionId } from '../internal/shared';
+import { isActionHidden } from 'ooxml-ui/pptx';
+import type { ToolbarActionId } from 'ooxml-ui/pptx';
 
 /** Descriptor for a single menu row. */
 export interface MobileMenuRow {

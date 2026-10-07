@@ -18,7 +18,7 @@
 	 *   other bindings' fallback.
 	 * - Presentation mode progressively replays constant-width paths.
 	 */
-	import { getContentPartReplayStyles, INK_REPLAY_KEYFRAMES, shouldRenderHitTarget } from 'pptx-viewer-shared';
+	import { getContentPartReplayStyles, INK_REPLAY_KEYFRAMES, shouldRenderHitTarget } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 	import { buildContentPartStrokes, contentPartViewBox } from '../render';

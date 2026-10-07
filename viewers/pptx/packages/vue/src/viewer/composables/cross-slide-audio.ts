@@ -6,4 +6,4 @@
  * surface (`./cross-slide-audio`) so `ElementMediaBox.vue` and
  * its colocated tests are unchanged.
  */
-export { registerCrossSlideAudio } from 'pptx-viewer-shared';
+export { registerCrossSlideAudio } from 'ooxml-ui/pptx';

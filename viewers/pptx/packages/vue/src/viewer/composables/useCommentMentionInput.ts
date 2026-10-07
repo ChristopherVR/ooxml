@@ -11,12 +11,12 @@
  * can be open at a time).
  */
 import type { PptxCommentMention, PptxModernCommentAuthor } from 'pptx-viewer-core';
-import type { CommentMentionInsertion, CommentMentionQuery } from 'pptx-viewer-shared';
+import type { CommentMentionInsertion, CommentMentionQuery } from 'ooxml-ui/pptx';
 import {
 	commentMentionQuery,
 	insertCommentMention,
 	matchCommentMentionAuthors,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { computed, ref } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
 

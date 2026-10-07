@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { VIEWER_SHORTCUT_REFERENCE } from 'pptx-viewer-shared';
+	import { VIEWER_SHORTCUT_REFERENCE } from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../i18n/context';
 
 	const { onclose }: { onclose: () => void } = $props();

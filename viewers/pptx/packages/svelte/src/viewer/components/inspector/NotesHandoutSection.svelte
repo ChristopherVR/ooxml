@@ -5,7 +5,7 @@
 	 * `NotesHandoutCard` (React `inspector/DocumentPropertiesCards.tsx`).
 	 */
 	import type { PptxHandoutMaster, PptxNotesMaster } from 'pptx-viewer-core';
-	import type { CanvasSize } from 'pptx-viewer-shared';
+	import type { CanvasSize } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 

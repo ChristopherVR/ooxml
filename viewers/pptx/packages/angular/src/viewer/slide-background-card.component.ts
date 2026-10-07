@@ -28,8 +28,8 @@ import {
 	resolveTemplateBackgroundRows,
 	slideBackgroundClearPatch,
 	slideBackgroundClearState,
-} from '../internal/shared';
-import type { TemplateBackgroundRow } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { TemplateBackgroundRow } from 'ooxml-ui/pptx';
 import { EditorStateService } from './editor-state.service';
 import { INSPECTOR_CARD_STYLES } from './inspector-card-styles';
 import { LoadContentService } from './load-content.service';

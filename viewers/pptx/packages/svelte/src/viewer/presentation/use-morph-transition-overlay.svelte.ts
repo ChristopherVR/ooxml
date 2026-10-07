@@ -5,7 +5,7 @@ import {
 	MORPH_CROSSFADE_GROUP_CSS_TEXT,
 	MORPH_CROSSFADE_HALF_BLEND_MODE,
 	morphOptionToMode,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 /**
  * Morph-specific reactive state for `PresentationTransitionOverlay.svelte`,

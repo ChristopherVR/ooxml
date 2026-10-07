@@ -27,7 +27,7 @@
 		SMARTART_COLOR_SCHEME_LABEL_KEYS,
 		SMARTART_STYLE_LABEL_KEYS,
 		switchSmartArtLayoutData,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 	import { tick } from 'svelte';
 
 	import { useTranslator } from '../../../i18n/context';

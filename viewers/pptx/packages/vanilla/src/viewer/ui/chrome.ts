@@ -5,8 +5,8 @@ import type {
 	ReadOnlyRecommendation,
 	RunProgramNotice,
 	ToolbarActionId,
-} from 'pptx-viewer-shared';
-import { observeElementHeight } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import { observeElementHeight } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import { createEl } from '../render';

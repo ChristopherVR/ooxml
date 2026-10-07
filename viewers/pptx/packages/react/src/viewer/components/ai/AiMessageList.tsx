@@ -3,7 +3,7 @@
  * tool calls render as {@link AiToolCallCard}s inline between prose. Purely
  * presentational; auto-scrolls to the newest message.
  */
-import type { PptxAiBridge } from 'pptx-viewer-shared/ai';
+import type { PptxAiBridge } from 'ooxml-ui/pptx/ai';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LuBot, LuSparkles, LuUser } from 'react-icons/lu';

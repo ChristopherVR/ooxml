@@ -12,7 +12,7 @@
 import type { SmartArtPptxElement } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 
-import { PRESETS } from '../internal/shared';
+import { PRESETS } from 'ooxml-ui/pptx';
 import {
 	buildSmartArtInsertElement,
 	buildSmartArtNodes,

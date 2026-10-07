@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { subtitleSettingsFromOptions, subtitleSettingsLabels, updateSubtitleSettings } from 'pptx-viewer-shared';
-	import type { SubtitleSettingsChangeEvent } from 'pptx-viewer-shared';
+	import { subtitleSettingsFromOptions, subtitleSettingsLabels, updateSubtitleSettings } from 'ooxml-ui/pptx';
+	import type { SubtitleSettingsChangeEvent } from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../../../i18n/context';
 	import { useViewerOptions } from '../../../state/viewer-options-context';
 

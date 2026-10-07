@@ -10,7 +10,7 @@ import {
 	removeCommentFromList,
 	replyToCommentInList,
 	toggleCommentResolvedInList,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { computed, toValue } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 

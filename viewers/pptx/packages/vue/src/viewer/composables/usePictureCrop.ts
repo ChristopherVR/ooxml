@@ -29,8 +29,8 @@ import {
 	getImageSrc,
 	readCropInsets,
 	startCropSession,
-} from 'pptx-viewer-shared';
-import type { CropElementUpdate, CropRestoreUpdate, CropSession } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { CropElementUpdate, CropRestoreUpdate, CropSession } from 'ooxml-ui/pptx';
 import { computed, onScopeDispose, shallowRef, watch } from 'vue';
 import type { Ref } from 'vue';
 

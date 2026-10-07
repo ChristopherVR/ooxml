@@ -16,8 +16,8 @@ import {
 import { TranslateService } from '@ngx-translate/core';
 import type { PptxElement } from 'pptx-viewer-core';
 
-import { clipboardHomeControls } from '../internal/shared';
-import type { RibbonHomeRequestEvent } from '../internal/shared';
+import { clipboardHomeControls } from 'ooxml-ui/pptx';
+import type { RibbonHomeRequestEvent } from 'ooxml-ui/pptx';
 import { EditorStateService } from './editor-state.service';
 
 @Component({

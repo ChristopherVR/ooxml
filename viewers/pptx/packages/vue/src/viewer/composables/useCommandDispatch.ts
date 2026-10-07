@@ -10,8 +10,8 @@
  *    options-configured remainder arrives here.
  */
 import type { TextStyle } from 'pptx-viewer-core';
-import { DEFAULT_INSERT_CHART_KIND } from 'pptx-viewer-shared';
-import type { InsertChartKind } from 'pptx-viewer-shared';
+import { DEFAULT_INSERT_CHART_KIND } from 'ooxml-ui/pptx';
+import type { InsertChartKind } from 'ooxml-ui/pptx';
 import type { Ref } from 'vue';
 
 import type { ShapePreset } from '../components/EditorToolbar.vue';

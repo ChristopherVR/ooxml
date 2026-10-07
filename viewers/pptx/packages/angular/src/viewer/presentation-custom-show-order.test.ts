@@ -12,7 +12,7 @@
 import type { PptxSlide } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 
-import type { ShowOrderCustomShow } from '../internal/shared';
+import type { ShowOrderCustomShow } from 'ooxml-ui/pptx';
 import {
 	firstVisibleIndex,
 	hasVisibleSlideAfter,

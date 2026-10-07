@@ -1,7 +1,7 @@
 /* oxlint-disable eslint/one-var -- many independent `it()` blocks, each with
    its own locals; not intended as one statement */
 import type { PptxTableData } from 'pptx-viewer-core';
-import { computeResizedColumnWidths, computeResizedRowHeight } from 'pptx-viewer-shared';
+import { computeResizedColumnWidths, computeResizedRowHeight } from 'ooxml-ui/pptx';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { TableResizeController } from './table-resize.svelte';

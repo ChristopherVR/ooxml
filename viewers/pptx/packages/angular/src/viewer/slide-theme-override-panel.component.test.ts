@@ -14,7 +14,7 @@
 import { COLOR_MAP_ALIAS_KEYS, THEME_COLOR_SCHEME_KEYS } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 
-import { keyToLabel, translationsEn } from '../internal/shared-src/i18n';
+import { keyToLabel, translationsEn } from 'ooxml-ui/pptx/i18n';
 import { themeColorSlotLabelKey } from './schema-token-labels';
 import {
 	COLOR_MAP_ALIAS_LABEL_KEYS,

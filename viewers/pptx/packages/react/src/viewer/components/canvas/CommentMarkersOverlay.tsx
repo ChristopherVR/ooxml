@@ -7,7 +7,7 @@
  * binding (Vue, Angular, Svelte, Vanilla).
  */
 import type { PptxComment } from 'pptx-viewer-core';
-import { buildCommentMarkers, COMMENT_MARKER_SIZE } from 'pptx-viewer-shared';
+import { buildCommentMarkers, COMMENT_MARKER_SIZE } from 'ooxml-ui/pptx';
 import { useTranslation } from 'react-i18next';
 
 import type { CanvasSize } from '../../types';

@@ -1,5 +1,5 @@
-import type { ViewerMode } from 'pptx-viewer-shared';
-import { visibleTemplateElements } from 'pptx-viewer-shared';
+import type { ViewerMode } from 'ooxml-ui/pptx';
+import { visibleTemplateElements } from 'ooxml-ui/pptx';
 
 import type { CollaborationController } from '../collab';
 import type { EditorState } from '../editor/editor-state.svelte';

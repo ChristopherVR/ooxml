@@ -1,4 +1,4 @@
-import type { EditPointsCommandId, EditPointsMenuView } from 'pptx-viewer-shared';
+import type { EditPointsCommandId, EditPointsMenuView } from 'ooxml-ui/pptx';
 import { Fragment } from 'react';
 import type React from 'react';
 import { useTranslation } from 'react-i18next';

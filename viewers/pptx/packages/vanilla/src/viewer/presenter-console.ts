@@ -1,5 +1,5 @@
-import { PRESENT_BLACKOUT_Z } from 'pptx-viewer-shared';
-import type { PresentationSnapshot } from 'pptx-viewer-shared';
+import { PRESENT_BLACKOUT_Z } from 'ooxml-ui/pptx';
+import type { PresentationSnapshot } from 'ooxml-ui/pptx';
 
 /**
  * Audience-facing show effects: blackout, the laser dot, ink strokes and the

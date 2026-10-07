@@ -9,8 +9,8 @@
  * `buildCropOverlay` descriptor; the pointer wiring is `useCropOverlayDrag`.
  */
 import type { PptxElement } from 'pptx-viewer-core';
-import { buildCropOverlay, CROP_HANDLE_ARIA_KEY } from 'pptx-viewer-shared';
-import type { CropElementUpdate } from 'pptx-viewer-shared';
+import { buildCropOverlay, CROP_HANDLE_ARIA_KEY } from 'ooxml-ui/pptx';
+import type { CropElementUpdate } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

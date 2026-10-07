@@ -16,7 +16,7 @@
  * resolved function down as a prop, defers that lookup to runtime instead (see
  * issue #143, fixed the same way for `pptx-svelte-viewer`).
  */
-import type { PptxAiBridge, PptxAiConfig } from 'pptx-viewer-shared/ai';
+import type { PptxAiBridge, PptxAiConfig } from 'ooxml-ui/pptx/ai';
 import { lazy, Suspense } from 'react';
 import { LuLoaderCircle } from 'react-icons/lu';
 

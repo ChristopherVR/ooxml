@@ -3,7 +3,7 @@
  * paths). Kept as static path data + a tiny builder so no icon library is
  * pulled into the zero-dependency bundle.
  */
-import { createRibbonControlIcon } from 'pptx-viewer-shared';
+import { createRibbonControlIcon } from 'ooxml-ui/pptx';
 
 import { ICON_PATHS } from './icon-paths';
 import type { IconName } from './icon-paths';

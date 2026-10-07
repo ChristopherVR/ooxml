@@ -9,9 +9,9 @@
 	 * snapshot, so they render on an audience display as well as on the
 	 * presenter's own screen, which is why they are not gated on fullscreen.
 	 */
-	import { presenterConsoleStyleAttr, resolveAuthoredSlideRange } from 'pptx-viewer-shared';
+	import { presenterConsoleStyleAttr, resolveAuthoredSlideRange } from 'ooxml-ui/pptx';
 
-	import type { PresentationContextMenuActionId } from 'pptx-viewer-shared';
+	import type { PresentationContextMenuActionId } from 'ooxml-ui/pptx';
 
 	import type { ViewerStateBag } from '../state/create-viewer-state-types';
 	import PresentationContextMenu from './PresentationContextMenu.svelte';

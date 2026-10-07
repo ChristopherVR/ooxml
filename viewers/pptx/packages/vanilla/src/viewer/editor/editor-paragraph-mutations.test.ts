@@ -4,7 +4,7 @@ import {
 	createInlineListSeed,
 	initializeInlineListDom,
 	attachInlineListController,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { renderTextBlock } from '../render/elements/text-block';

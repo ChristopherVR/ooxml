@@ -4,7 +4,7 @@ import type {
 	PptxAiChatSummary,
 	PptxAiStoredChat,
 	PptxAiUIMessage,
-} from 'pptx-viewer-shared/ai';
+} from 'ooxml-ui/pptx/ai';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, h, ref } from 'vue';
 

@@ -13,7 +13,7 @@
  * A context avoids threading the flags through `renderBody`'s positional
  * args and every intermediate component.
  */
-import type { Rendering3DFlags } from 'pptx-viewer-shared';
+import type { Rendering3DFlags } from 'ooxml-ui/pptx';
 import { createContext } from 'react';
 
 /** All off: the safe default for anything rendered outside `PowerPointViewer` (tests, thumbnails in isolation). */

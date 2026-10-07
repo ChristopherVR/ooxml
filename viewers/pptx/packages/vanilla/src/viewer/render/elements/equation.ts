@@ -1,6 +1,6 @@
 import { hasTextProperties } from 'pptx-viewer-core';
-import type { OmmlNode } from 'pptx-viewer-shared';
-import { convertOmmlToMathMl, isEquationOnlyText, sanitizeMathMl } from 'pptx-viewer-shared';
+import type { OmmlNode } from 'ooxml-ui/pptx';
+import { convertOmmlToMathMl, isEquationOnlyText, sanitizeMathMl } from 'ooxml-ui/pptx';
 
 import { createEl } from '../dom';
 import { getTextBlockStyle } from '../element-styles';

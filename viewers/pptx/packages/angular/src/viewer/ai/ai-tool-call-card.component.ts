@@ -28,8 +28,8 @@ import {
 } from '@lucide/angular';
 import { TranslatePipe } from '@ngx-translate/core';
 
-import { describeToolActivity, summarizeToolArgs, toolLabel } from '../../internal/shared-ai';
-import type { RenderableToolPart } from '../../internal/shared-ai';
+import { describeToolActivity, summarizeToolArgs, toolLabel } from 'ooxml-ui/pptx/ai';
+import type { RenderableToolPart } from 'ooxml-ui/pptx/ai';
 
 @Component({
 	selector: 'pptx-ai-tool-call-card',

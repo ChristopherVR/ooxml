@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
-import { presenterNextDisabled, presenterPrevDisabled } from '../internal/shared';
+import { presenterNextDisabled, presenterPrevDisabled } from 'ooxml-ui/pptx';
 import { componentSource } from './component-source.test-support';
 
 /**

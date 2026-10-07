@@ -11,7 +11,7 @@ import {
 	deckIdFromBridge,
 	toolCanvasTarget,
 	toRenderableParts,
-} from 'pptx-viewer-shared/ai';
+} from 'ooxml-ui/pptx/ai';
 import type {
 	AiChangeAnimator,
 	PptxAiBridge,
@@ -19,7 +19,7 @@ import type {
 	PptxAiConfig,
 	VanillaChatController,
 	VanillaChatSnapshot,
-} from 'pptx-viewer-shared/ai';
+} from 'ooxml-ui/pptx/ai';
 
 import type { Translator } from '../i18n';
 import { createEl } from '../render';

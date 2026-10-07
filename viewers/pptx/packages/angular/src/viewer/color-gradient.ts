@@ -19,4 +19,4 @@ export {
 	buildRectPathGradient,
 	buildShapePathGradient,
 	buildCssGradientFromShapeStyle,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';

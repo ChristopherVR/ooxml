@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { PptxChartMarkerSymbol, PptxChartSeries, PptxChartType } from 'pptx-viewer-core';
-import { MARKER_SUPPORTED_TYPES, MARKER_SYMBOL_OPTIONS } from 'pptx-viewer-shared';
+import { MARKER_SUPPORTED_TYPES, MARKER_SYMBOL_OPTIONS } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

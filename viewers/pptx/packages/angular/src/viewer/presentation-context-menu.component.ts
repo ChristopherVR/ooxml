@@ -31,12 +31,12 @@ import type {
 	ContextMenuViewState,
 	PresentationContextMenuActionId,
 	PresentationContextMenuSection,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import {
 	CONTEXT_MENU_PRESENTATION_LAYER,
 	getPresentationContextMenuSections,
 	presentationViewItems,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import type { MenuTranslate } from './context-menu-translate';
 import { injectMenuTranslate } from './context-menu-translate';
 

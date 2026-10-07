@@ -13,8 +13,8 @@
  *
  * Both expose `.awareness` and `.destroy()`; no `any` leaks out.
  */
-import type { CollaborationConfig, CollaborationTransport } from 'pptx-viewer-shared';
-import { clearLocalAwareness, createDepartureChannel } from 'pptx-viewer-shared';
+import type { CollaborationConfig, CollaborationTransport } from 'ooxml-ui/pptx';
+import { clearLocalAwareness, createDepartureChannel } from 'ooxml-ui/pptx';
 
 import type { AwarenessLike } from './collaboration-types';
 

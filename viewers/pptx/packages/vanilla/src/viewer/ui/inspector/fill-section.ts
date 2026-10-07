@@ -1,9 +1,9 @@
-import type { GradientState } from 'pptx-viewer-shared';
+import type { GradientState } from 'ooxml-ui/pptx';
 import {
 	defaultGradientState,
 	gradientStopColorCommitPatch,
 	PATTERN_PRESET_OPTIONS,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';

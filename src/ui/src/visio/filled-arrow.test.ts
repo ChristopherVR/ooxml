@@ -67,7 +67,7 @@ describe('filled native straight-line markers', () => {
 		expect(xml.querySelectorAll('marker')).toHaveLength(1);
 		expect(xml.querySelector('parsererror,script,foreignObject')).toBeNull();
 	});
-	it.each(['M 0 0 L 0.01 0', 'M 0 0 Q 1 1 2 0'])(
+	it.each(['M 0 0 L 0 0', 'M 0 0 Q 1 1 2 0'])(
 		'reports unsupported code-6 setbacks for %s',
 		(path) => {
 			const model = structuredClone(demoDocument),

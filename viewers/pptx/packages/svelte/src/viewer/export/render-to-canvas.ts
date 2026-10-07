@@ -1,5 +1,5 @@
 import type { Options as Html2CanvasOptions } from 'html2canvas-pro';
-import { prepareHtml2CanvasClone } from 'pptx-viewer-shared';
+import { prepareHtml2CanvasClone } from 'ooxml-ui/pptx';
 
 /**
  * A drop-in wrapper around `html2canvas-pro` that first normalises modern CSS

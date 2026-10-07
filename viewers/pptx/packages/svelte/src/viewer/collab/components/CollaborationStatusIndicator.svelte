@@ -6,7 +6,7 @@
 	 * from `CollaborationController` and listens for `onretry` in the error
 	 * state. Svelte port of the Vue `CollaborationStatusIndicator.vue`.
 	 */
-	import type { ConnectionStatus } from 'pptx-viewer-shared';
+	import type { ConnectionStatus } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 	import type { CollaborationStatusIndicatorProps } from './props';

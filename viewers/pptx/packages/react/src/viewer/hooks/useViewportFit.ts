@@ -2,8 +2,8 @@ import {
 	calculateViewportFit,
 	EDITOR_VIEWPORT_FIT,
 	resolveViewportFitOptions,
-} from 'pptx-viewer-shared';
-import type { ViewportFitOptions } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { ViewportFitOptions } from 'ooxml-ui/pptx';
 import { useEffect, useState } from 'react';
 import type { RefObject } from 'react';
 

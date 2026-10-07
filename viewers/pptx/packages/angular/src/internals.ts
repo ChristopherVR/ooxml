@@ -143,8 +143,8 @@ export {
 	RULER_FONT_SIZE,
 	RULER_THICKNESS,
 	rulerDragToGuidePosition,
-} from './internal/shared';
-export type { RulerUnit, Tick } from './internal/shared';
+} from 'ooxml-ui/pptx';
+export type { RulerUnit, Tick } from 'ooxml-ui/pptx';
 export * from './viewer/ruler-strips';
 export * from './viewer/zoom-renderer-helpers';
 export * from './viewer/shortcut-reference';

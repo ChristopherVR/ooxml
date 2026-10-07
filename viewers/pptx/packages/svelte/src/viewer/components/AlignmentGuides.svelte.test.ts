@@ -8,7 +8,7 @@
  * shared's `Guide` shape, mirroring Vue's `CanvasGuides.vue` interaction
  * (pointer-drag + double-click delete) plus a keyboard Delete/Backspace path.
  */
-import type { Guide } from 'pptx-viewer-shared';
+import type { Guide } from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 

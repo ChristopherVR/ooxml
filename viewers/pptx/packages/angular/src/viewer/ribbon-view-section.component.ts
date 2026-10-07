@@ -18,7 +18,7 @@ import {
 } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 
-import type { RibbonViewRequestEvent } from '../internal/shared';
+import type { RibbonViewRequestEvent } from 'ooxml-ui/pptx';
 import { EditorStateService } from './editor-state.service';
 
 @Component({

@@ -12,8 +12,8 @@
 		isActionHidden,
 		resolveActiveRibbonTab,
 		visibleContextualTabs,
-	} from 'pptx-viewer-shared';
-	import type { RibbonContextualTabId } from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
+	import type { RibbonContextualTabId } from 'ooxml-ui/pptx';
 	import { useViewerCustomization } from '../../state/viewer-customization.svelte';
 	import FileTab from './file/FileTab.svelte';
 	import DocumentPropertiesDialog from './file/DocumentPropertiesDialog.svelte';

@@ -8,7 +8,7 @@
 	 * pattern fills, diagonal borders (SVG overlay), and rich per-run text.
 	 * All style resolution lives in `render/table-view.ts` + shared helpers.
 	 */
-	import { canDrillDown, shouldRenderHitTarget } from 'pptx-viewer-shared';
+	import { canDrillDown, shouldRenderHitTarget } from 'ooxml-ui/pptx';
 
 	import { buildTableRows, columnWidthStyles, tableRootStyle } from '../render';
 	import { getContainerStyle, getElementHitTargetStyle, styleToString } from '../style';

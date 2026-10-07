@@ -1,12 +1,12 @@
 import type { PptxSlide } from 'pptx-viewer-core';
-import type { RasterizeElementResult, RasterizeElementTilesResult } from 'pptx-viewer-shared';
+import type { RasterizeElementResult, RasterizeElementTilesResult } from 'ooxml-ui/pptx';
 import {
 	downloadDataUrl,
 	exportAbortError,
 	placeTileOnPage,
 	rasterResultToPngDataUrl,
 	resolveExportBaseName,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { ref } from 'vue';
 import type { Ref } from 'vue';
 

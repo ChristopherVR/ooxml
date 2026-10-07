@@ -7,5 +7,5 @@
  * lazy-loading it via dynamic `import()` (keeping the encoder out of the main
  * viewer chunk) and tests can keep importing the `GifFrame` type unchanged.
  */
-export { encodeGif } from 'pptx-viewer-shared';
-export type { GifFrame } from 'pptx-viewer-shared';
+export { encodeGif } from 'ooxml-ui/pptx';
+export type { GifFrame } from 'ooxml-ui/pptx';

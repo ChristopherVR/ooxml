@@ -1,0 +1,1519 @@
+{
+	"application": "Microsoft Visio",
+	"version": "16.0",
+	"drawingScale": 1,
+	"cases": [
+		{
+			"code": 2,
+			"size": 0,
+			"lineWidth": 0.005,
+			"length": 0.00625,
+			"ratio": 0.25,
+			"setback": 0.0,
+			"path": "M0 5.09 L0.45 5.09"
+		},
+		{
+			"code": 2,
+			"size": 0,
+			"lineWidth": 0.005,
+			"length": 0.0125,
+			"ratio": 0.5,
+			"setback": 0.0,
+			"path": "M0 5.09 L0.9 5.09"
+		},
+		{
+			"code": 2,
+			"size": 0,
+			"lineWidth": 0.005,
+			"length": 0.02475,
+			"ratio": 0.99,
+			"setback": 0.0,
+			"path": "M0 5.09 L1.78 5.09"
+		},
+		{
+			"code": 2,
+			"size": 0,
+			"lineWidth": 0.005,
+			"length": 0.025,
+			"ratio": 1,
+			"setback": 0.02,
+			"path": "M0 5.09 L0 5.09 L0.36 5.09"
+		},
+		{
+			"code": 2,
+			"size": 0,
+			"lineWidth": 0.005,
+			"length": 0.02525,
+			"ratio": 1.01,
+			"setback": 0.025,
+			"path": "M0 5.09 L0.02 5.09"
+		},
+		{
+			"code": 2,
+			"size": 0,
+			"lineWidth": 0.005,
+			"length": 0.03125,
+			"ratio": 1.25,
+			"setback": 0.025,
+			"path": "M0 5.09 L0.45 5.09"
+		},
+		{
+			"code": 2,
+			"size": 0,
+			"lineWidth": 0.005,
+			"length": 0.05,
+			"ratio": 2,
+			"setback": 0.025,
+			"path": "M0 5.09 L1.8 5.09"
+		},
+		{
+			"code": 2,
+			"size": 0,
+			"lineWidth": 0.01,
+			"length": 0.0075,
+			"ratio": 0.25,
+			"setback": 0.0,
+			"path": "M0 6.11 L0.54 6.11"
+		},
+		{
+			"code": 2,
+			"size": 0,
+			"lineWidth": 0.01,
+			"length": 0.015,
+			"ratio": 0.5,
+			"setback": 0.0,
+			"path": "M0 6.11 L1.08 6.11"
+		},
+		{
+			"code": 2,
+			"size": 0,
+			"lineWidth": 0.01,
+			"length": 0.029699999999999997,
+			"ratio": 0.99,
+			"setback": 0.0,
+			"path": "M0 6.11 L2.14 6.11"
+		},
+		{
+			"code": 2,
+			"size": 0,
+			"lineWidth": 0.01,
+			"length": 0.03,
+			"ratio": 1,
+			"setback": 0.025,
+			"path": "M0 6.11 L0 6.11 L0.36 6.11"
+		},
+		{
+			"code": 2,
+			"size": 0,
+			"lineWidth": 0.01,
+			"length": 0.0303,
+			"ratio": 1.01,
+			"setback": 0.03,
+			"path": "M0 6.11 L0.02 6.11"
+		},
+		{
+			"code": 2,
+			"size": 0,
+			"lineWidth": 0.01,
+			"length": 0.0375,
+			"ratio": 1.25,
+			"setback": 0.03,
+			"path": "M0 6.11 L0.54 6.11"
+		},
+		{
+			"code": 2,
+			"size": 0,
+			"lineWidth": 0.01,
+			"length": 0.06,
+			"ratio": 2,
+			"setback": 0.03,
+			"path": "M0 6.11 L2.16 6.11"
+		},
+		{
+			"code": 2,
+			"size": 2,
+			"lineWidth": 0.005,
+			"length": 0.01,
+			"ratio": 0.25,
+			"setback": 0.0,
+			"path": "M0 8.15 L0.72 8.15"
+		},
+		{
+			"code": 2,
+			"size": 2,
+			"lineWidth": 0.005,
+			"length": 0.02,
+			"ratio": 0.5,
+			"setback": 0.0,
+			"path": "M0 8.15 L1.44 8.15"
+		},
+		{
+			"code": 2,
+			"size": 2,
+			"lineWidth": 0.005,
+			"length": 0.0396,
+			"ratio": 0.99,
+			"setback": 0.0,
+			"path": "M0 8.15 L2.85 8.15"
+		},
+		{
+			"code": 2,
+			"size": 2,
+			"lineWidth": 0.005,
+			"length": 0.04,
+			"ratio": 1,
+			"setback": 0.035,
+			"path": "M0 8.15 L0 8.15 L0.36 8.15"
+		},
+		{
+			"code": 2,
+			"size": 2,
+			"lineWidth": 0.005,
+			"length": 0.0404,
+			"ratio": 1.01,
+			"setback": 0.04,
+			"path": "M0 8.15 L0.03 8.15"
+		},
+		{
+			"code": 2,
+			"size": 2,
+			"lineWidth": 0.005,
+			"length": 0.05,
+			"ratio": 1.25,
+			"setback": 0.04,
+			"path": "M0 8.15 L0.72 8.15"
+		},
+		{
+			"code": 2,
+			"size": 2,
+			"lineWidth": 0.005,
+			"length": 0.08,
+			"ratio": 2,
+			"setback": 0.04,
+			"path": "M0 8.15 L2.88 8.15"
+		},
+		{
+			"code": 2,
+			"size": 2,
+			"lineWidth": 0.01,
+			"length": 0.011250000000000001,
+			"ratio": 0.25,
+			"setback": 0.0,
+			"path": "M0 9.16 L0.81 9.16"
+		},
+		{
+			"code": 2,
+			"size": 2,
+			"lineWidth": 0.01,
+			"length": 0.022500000000000003,
+			"ratio": 0.5,
+			"setback": 0.0,
+			"path": "M0 9.16 L1.62 9.16"
+		},
+		{
+			"code": 2,
+			"size": 2,
+			"lineWidth": 0.01,
+			"length": 0.044550000000000006,
+			"ratio": 0.99,
+			"setback": 0.0,
+			"path": "M0 9.16 L3.21 9.16"
+		},
+		{
+			"code": 2,
+			"size": 2,
+			"lineWidth": 0.01,
+			"length": 0.045000000000000005,
+			"ratio": 1,
+			"setback": 0.04,
+			"path": "M0 9.16 L0 9.16 L0.36 9.16"
+		},
+		{
+			"code": 2,
+			"size": 2,
+			"lineWidth": 0.01,
+			"length": 0.045450000000000004,
+			"ratio": 1.01,
+			"setback": 0.045,
+			"path": "M0 9.16 L0.03 9.16"
+		},
+		{
+			"code": 2,
+			"size": 2,
+			"lineWidth": 0.01,
+			"length": 0.05625000000000001,
+			"ratio": 1.25,
+			"setback": 0.045,
+			"path": "M0 9.16 L0.81 9.16"
+		},
+		{
+			"code": 2,
+			"size": 2,
+			"lineWidth": 0.01,
+			"length": 0.09000000000000001,
+			"ratio": 2,
+			"setback": 0.045,
+			"path": "M0 9.16 L3.24 9.16"
+		},
+		{
+			"code": 2,
+			"size": 6,
+			"lineWidth": 0.005,
+			"length": 0.06375,
+			"ratio": 0.25,
+			"setback": 0.0,
+			"path": "M0 51.93 L4.59 51.93"
+		},
+		{
+			"code": 2,
+			"size": 6,
+			"lineWidth": 0.005,
+			"length": 0.1275,
+			"ratio": 0.5,
+			"setback": 0.0,
+			"path": "M0 51.93 L9.18 51.93"
+		},
+		{
+			"code": 2,
+			"size": 6,
+			"lineWidth": 0.005,
+			"length": 0.25245,
+			"ratio": 0.99,
+			"setback": 0.0,
+			"path": "M0 51.93 L18.18 51.93"
+		},
+		{
+			"code": 2,
+			"size": 6,
+			"lineWidth": 0.005,
+			"length": 0.255,
+			"ratio": 1,
+			"setback": 0.25,
+			"path": "M0 51.93 L0 51.93 L0.36 51.93"
+		},
+		{
+			"code": 2,
+			"size": 6,
+			"lineWidth": 0.005,
+			"length": 0.25755,
+			"ratio": 1.01,
+			"setback": 0.255,
+			"path": "M0 51.93 L0.18 51.93"
+		},
+		{
+			"code": 2,
+			"size": 6,
+			"lineWidth": 0.005,
+			"length": 0.31875,
+			"ratio": 1.25,
+			"setback": 0.255,
+			"path": "M0 51.93 L4.59 51.93"
+		},
+		{
+			"code": 2,
+			"size": 6,
+			"lineWidth": 0.005,
+			"length": 0.51,
+			"ratio": 2,
+			"setback": 0.255,
+			"path": "M0 51.93 L18.36 51.93"
+		},
+		{
+			"code": 2,
+			"size": 6,
+			"lineWidth": 0.01,
+			"length": 0.065,
+			"ratio": 0.25,
+			"setback": 0.0,
+			"path": "M0 52.95 L4.68 52.95"
+		},
+		{
+			"code": 2,
+			"size": 6,
+			"lineWidth": 0.01,
+			"length": 0.13,
+			"ratio": 0.5,
+			"setback": 0.0,
+			"path": "M0 52.95 L9.36 52.95"
+		},
+		{
+			"code": 2,
+			"size": 6,
+			"lineWidth": 0.01,
+			"length": 0.2574,
+			"ratio": 0.99,
+			"setback": 0.0,
+			"path": "M0 52.95 L18.53 52.95"
+		},
+		{
+			"code": 2,
+			"size": 6,
+			"lineWidth": 0.01,
+			"length": 0.26,
+			"ratio": 1,
+			"setback": 0.255,
+			"path": "M0 52.95 L0 52.95 L0.36 52.95"
+		},
+		{
+			"code": 2,
+			"size": 6,
+			"lineWidth": 0.01,
+			"length": 0.2626,
+			"ratio": 1.01,
+			"setback": 0.26,
+			"path": "M0 52.95 L0.19 52.95"
+		},
+		{
+			"code": 2,
+			"size": 6,
+			"lineWidth": 0.01,
+			"length": 0.325,
+			"ratio": 1.25,
+			"setback": 0.26,
+			"path": "M0 52.95 L4.68 52.95"
+		},
+		{
+			"code": 2,
+			"size": 6,
+			"lineWidth": 0.01,
+			"length": 0.52,
+			"ratio": 2,
+			"setback": 0.26,
+			"path": "M0 52.95 L18.72 52.95"
+		},
+		{
+			"code": 4,
+			"size": 0,
+			"lineWidth": 0.005,
+			"length": 0.0125,
+			"ratio": 0.25,
+			"setback": 0.0,
+			"path": "M0 8.05 L0.9 8.05"
+		},
+		{
+			"code": 4,
+			"size": 0,
+			"lineWidth": 0.005,
+			"length": 0.025,
+			"ratio": 0.5,
+			"setback": 0.0,
+			"path": "M0 8.05 L1.8 8.05"
+		},
+		{
+			"code": 4,
+			"size": 0,
+			"lineWidth": 0.005,
+			"length": 0.0495,
+			"ratio": 0.99,
+			"setback": 0.0,
+			"path": "M0 8.05 L3.56 8.05"
+		},
+		{
+			"code": 4,
+			"size": 0,
+			"lineWidth": 0.005,
+			"length": 0.05,
+			"ratio": 1,
+			"setback": 0.045,
+			"path": "M0 8.05 L0 8.05 L0.36 8.05"
+		},
+		{
+			"code": 4,
+			"size": 0,
+			"lineWidth": 0.005,
+			"length": 0.0505,
+			"ratio": 1.01,
+			"setback": 0.05,
+			"path": "M0 8.05 L0.04 8.05"
+		},
+		{
+			"code": 4,
+			"size": 0,
+			"lineWidth": 0.005,
+			"length": 0.0625,
+			"ratio": 1.25,
+			"setback": 0.05,
+			"path": "M0 8.05 L0.9 8.05"
+		},
+		{
+			"code": 4,
+			"size": 0,
+			"lineWidth": 0.005,
+			"length": 0.1,
+			"ratio": 2,
+			"setback": 0.05,
+			"path": "M0 8.05 L3.6 8.05"
+		},
+		{
+			"code": 4,
+			"size": 0,
+			"lineWidth": 0.01,
+			"length": 0.015,
+			"ratio": 0.25,
+			"setback": 0.0,
+			"path": "M0 9.66 L1.08 9.66"
+		},
+		{
+			"code": 4,
+			"size": 0,
+			"lineWidth": 0.01,
+			"length": 0.03,
+			"ratio": 0.5,
+			"setback": 0.0,
+			"path": "M0 9.66 L2.16 9.66"
+		},
+		{
+			"code": 4,
+			"size": 0,
+			"lineWidth": 0.01,
+			"length": 0.059399999999999994,
+			"ratio": 0.99,
+			"setback": 0.0,
+			"path": "M0 9.66 L4.28 9.66"
+		},
+		{
+			"code": 4,
+			"size": 0,
+			"lineWidth": 0.01,
+			"length": 0.06,
+			"ratio": 1,
+			"setback": 0.055,
+			"path": "M0 9.66 L0 9.66 L0.36 9.66"
+		},
+		{
+			"code": 4,
+			"size": 0,
+			"lineWidth": 0.01,
+			"length": 0.0606,
+			"ratio": 1.01,
+			"setback": 0.06,
+			"path": "M0 9.66 L0.04 9.66"
+		},
+		{
+			"code": 4,
+			"size": 0,
+			"lineWidth": 0.01,
+			"length": 0.075,
+			"ratio": 1.25,
+			"setback": 0.06,
+			"path": "M0 9.66 L1.08 9.66"
+		},
+		{
+			"code": 4,
+			"size": 0,
+			"lineWidth": 0.01,
+			"length": 0.12,
+			"ratio": 2,
+			"setback": 0.06,
+			"path": "M0 9.66 L4.32 9.66"
+		},
+		{
+			"code": 4,
+			"size": 2,
+			"lineWidth": 0.005,
+			"length": 0.02,
+			"ratio": 0.25,
+			"setback": 0.0,
+			"path": "M0 12.88 L1.44 12.88"
+		},
+		{
+			"code": 4,
+			"size": 2,
+			"lineWidth": 0.005,
+			"length": 0.04,
+			"ratio": 0.5,
+			"setback": 0.0,
+			"path": "M0 12.88 L2.88 12.88"
+		},
+		{
+			"code": 4,
+			"size": 2,
+			"lineWidth": 0.005,
+			"length": 0.0792,
+			"ratio": 0.99,
+			"setback": 0.0,
+			"path": "M0 12.88 L5.7 12.88"
+		},
+		{
+			"code": 4,
+			"size": 2,
+			"lineWidth": 0.005,
+			"length": 0.08,
+			"ratio": 1,
+			"setback": 0.075,
+			"path": "M0 12.88 L0 12.88 L0.36 12.88"
+		},
+		{
+			"code": 4,
+			"size": 2,
+			"lineWidth": 0.005,
+			"length": 0.0808,
+			"ratio": 1.01,
+			"setback": 0.08,
+			"path": "M0 12.88 L0.06 12.88"
+		},
+		{
+			"code": 4,
+			"size": 2,
+			"lineWidth": 0.005,
+			"length": 0.1,
+			"ratio": 1.25,
+			"setback": 0.08,
+			"path": "M0 12.88 L1.44 12.88"
+		},
+		{
+			"code": 4,
+			"size": 2,
+			"lineWidth": 0.005,
+			"length": 0.16,
+			"ratio": 2,
+			"setback": 0.08,
+			"path": "M0 12.88 L5.76 12.88"
+		},
+		{
+			"code": 4,
+			"size": 2,
+			"lineWidth": 0.01,
+			"length": 0.022500000000000003,
+			"ratio": 0.25,
+			"setback": 0.0,
+			"path": "M0 14.49 L1.62 14.49"
+		},
+		{
+			"code": 4,
+			"size": 2,
+			"lineWidth": 0.01,
+			"length": 0.045000000000000005,
+			"ratio": 0.5,
+			"setback": 0.0,
+			"path": "M0 14.49 L3.24 14.49"
+		},
+		{
+			"code": 4,
+			"size": 2,
+			"lineWidth": 0.01,
+			"length": 0.08910000000000001,
+			"ratio": 0.99,
+			"setback": 0.0,
+			"path": "M0 14.49 L6.42 14.49"
+		},
+		{
+			"code": 4,
+			"size": 2,
+			"lineWidth": 0.01,
+			"length": 0.09000000000000001,
+			"ratio": 1,
+			"setback": 0.085,
+			"path": "M0 14.49 L0 14.49 L0.36 14.49"
+		},
+		{
+			"code": 4,
+			"size": 2,
+			"lineWidth": 0.01,
+			"length": 0.09090000000000001,
+			"ratio": 1.01,
+			"setback": 0.09,
+			"path": "M0 14.49 L0.06 14.49"
+		},
+		{
+			"code": 4,
+			"size": 2,
+			"lineWidth": 0.01,
+			"length": 0.11250000000000002,
+			"ratio": 1.25,
+			"setback": 0.09,
+			"path": "M0 14.49 L1.62 14.49"
+		},
+		{
+			"code": 4,
+			"size": 2,
+			"lineWidth": 0.01,
+			"length": 0.18000000000000002,
+			"ratio": 2,
+			"setback": 0.09,
+			"path": "M0 14.49 L6.48 14.49"
+		},
+		{
+			"code": 4,
+			"size": 6,
+			"lineWidth": 0.005,
+			"length": 0.1275,
+			"ratio": 0.25,
+			"setback": 0.0,
+			"path": "M0 82.11 L9.18 82.11"
+		},
+		{
+			"code": 4,
+			"size": 6,
+			"lineWidth": 0.005,
+			"length": 0.255,
+			"ratio": 0.5,
+			"setback": 0.0,
+			"path": "M0 82.11 L18.36 82.11"
+		},
+		{
+			"code": 4,
+			"size": 6,
+			"lineWidth": 0.005,
+			"length": 0.5049,
+			"ratio": 0.99,
+			"setback": 0.0,
+			"path": "M0 82.11 L36.35 82.11"
+		},
+		{
+			"code": 4,
+			"size": 6,
+			"lineWidth": 0.005,
+			"length": 0.51,
+			"ratio": 1,
+			"setback": 0.5049,
+			"path": "M0 82.11 L0 82.11 L0.37 82.11"
+		},
+		{
+			"code": 4,
+			"size": 6,
+			"lineWidth": 0.005,
+			"length": 0.5151,
+			"ratio": 1.01,
+			"setback": 0.51,
+			"path": "M0 82.11 L0.37 82.11"
+		},
+		{
+			"code": 4,
+			"size": 6,
+			"lineWidth": 0.005,
+			"length": 0.6375,
+			"ratio": 1.25,
+			"setback": 0.51,
+			"path": "M0 82.11 L9.18 82.11"
+		},
+		{
+			"code": 4,
+			"size": 6,
+			"lineWidth": 0.005,
+			"length": 1.02,
+			"ratio": 2,
+			"setback": 0.51,
+			"path": "M0 82.11 L36.72 82.11"
+		},
+		{
+			"code": 4,
+			"size": 6,
+			"lineWidth": 0.01,
+			"length": 0.13,
+			"ratio": 0.25,
+			"setback": 0.0,
+			"path": "M0 83.72 L9.36 83.72"
+		},
+		{
+			"code": 4,
+			"size": 6,
+			"lineWidth": 0.01,
+			"length": 0.26,
+			"ratio": 0.5,
+			"setback": 0.0,
+			"path": "M0 83.72 L18.72 83.72"
+		},
+		{
+			"code": 4,
+			"size": 6,
+			"lineWidth": 0.01,
+			"length": 0.5148,
+			"ratio": 0.99,
+			"setback": 0.0,
+			"path": "M0 83.72 L37.07 83.72"
+		},
+		{
+			"code": 4,
+			"size": 6,
+			"lineWidth": 0.01,
+			"length": 0.52,
+			"ratio": 1,
+			"setback": 0.5147999999999999,
+			"path": "M0 83.72 L0 83.72 L0.37 83.72"
+		},
+		{
+			"code": 4,
+			"size": 6,
+			"lineWidth": 0.01,
+			"length": 0.5252,
+			"ratio": 1.01,
+			"setback": 0.52,
+			"path": "M0 83.72 L0.37 83.72"
+		},
+		{
+			"code": 4,
+			"size": 6,
+			"lineWidth": 0.01,
+			"length": 0.65,
+			"ratio": 1.25,
+			"setback": 0.52,
+			"path": "M0 83.72 L9.36 83.72"
+		},
+		{
+			"code": 4,
+			"size": 6,
+			"lineWidth": 0.01,
+			"length": 1.04,
+			"ratio": 2,
+			"setback": 0.52,
+			"path": "M0 83.72 L37.44 83.72"
+		},
+		{
+			"code": 5,
+			"size": 0,
+			"lineWidth": 0.005,
+			"length": 0.010937500000000001,
+			"ratio": 0.25,
+			"setback": 0.0,
+			"path": "M0 8.05 L0.79 8.05"
+		},
+		{
+			"code": 5,
+			"size": 0,
+			"lineWidth": 0.005,
+			"length": 0.021875000000000002,
+			"ratio": 0.5,
+			"setback": 0.0,
+			"path": "M0 8.05 L1.57 8.05"
+		},
+		{
+			"code": 5,
+			"size": 0,
+			"lineWidth": 0.005,
+			"length": 0.043312500000000004,
+			"ratio": 0.99,
+			"setback": 0.0,
+			"path": "M0 8.05 L3.12 8.05"
+		},
+		{
+			"code": 5,
+			"size": 0,
+			"lineWidth": 0.005,
+			"length": 0.043750000000000004,
+			"ratio": 1,
+			"setback": 0.03875,
+			"path": "M0 8.05 L0 8.05 L0.36 8.05"
+		},
+		{
+			"code": 5,
+			"size": 0,
+			"lineWidth": 0.005,
+			"length": 0.044187500000000005,
+			"ratio": 1.01,
+			"setback": 0.043750000000000004,
+			"path": "M0 8.05 L0.03 8.05"
+		},
+		{
+			"code": 5,
+			"size": 0,
+			"lineWidth": 0.005,
+			"length": 0.05468750000000001,
+			"ratio": 1.25,
+			"setback": 0.043750000000000004,
+			"path": "M0 8.05 L0.79 8.05"
+		},
+		{
+			"code": 5,
+			"size": 0,
+			"lineWidth": 0.005,
+			"length": 0.08750000000000001,
+			"ratio": 2,
+			"setback": 0.043750000000000004,
+			"path": "M0 8.05 L3.15 8.05"
+		},
+		{
+			"code": 5,
+			"size": 0,
+			"lineWidth": 0.01,
+			"length": 0.013125,
+			"ratio": 0.25,
+			"setback": 0.0,
+			"path": "M0 9.66 L0.94 9.66"
+		},
+		{
+			"code": 5,
+			"size": 0,
+			"lineWidth": 0.01,
+			"length": 0.02625,
+			"ratio": 0.5,
+			"setback": 0.0,
+			"path": "M0 9.66 L1.89 9.66"
+		},
+		{
+			"code": 5,
+			"size": 0,
+			"lineWidth": 0.01,
+			"length": 0.051975,
+			"ratio": 0.99,
+			"setback": 0.0,
+			"path": "M0 9.66 L3.74 9.66"
+		},
+		{
+			"code": 5,
+			"size": 0,
+			"lineWidth": 0.01,
+			"length": 0.0525,
+			"ratio": 1,
+			"setback": 0.0475,
+			"path": "M0 9.66 L0 9.66 L0.36 9.66"
+		},
+		{
+			"code": 5,
+			"size": 0,
+			"lineWidth": 0.01,
+			"length": 0.053024999999999996,
+			"ratio": 1.01,
+			"setback": 0.0525,
+			"path": "M0 9.66 L0.04 9.66"
+		},
+		{
+			"code": 5,
+			"size": 0,
+			"lineWidth": 0.01,
+			"length": 0.065625,
+			"ratio": 1.25,
+			"setback": 0.0525,
+			"path": "M0 9.66 L0.95 9.66"
+		},
+		{
+			"code": 5,
+			"size": 0,
+			"lineWidth": 0.01,
+			"length": 0.105,
+			"ratio": 2,
+			"setback": 0.0525,
+			"path": "M0 9.66 L3.78 9.66"
+		},
+		{
+			"code": 5,
+			"size": 2,
+			"lineWidth": 0.005,
+			"length": 0.0175,
+			"ratio": 0.25,
+			"setback": 0.0,
+			"path": "M0 12.88 L1.26 12.88"
+		},
+		{
+			"code": 5,
+			"size": 2,
+			"lineWidth": 0.005,
+			"length": 0.035,
+			"ratio": 0.5,
+			"setback": 0.0,
+			"path": "M0 12.88 L2.52 12.88"
+		},
+		{
+			"code": 5,
+			"size": 2,
+			"lineWidth": 0.005,
+			"length": 0.0693,
+			"ratio": 0.99,
+			"setback": 0.0,
+			"path": "M0 12.88 L4.99 12.88"
+		},
+		{
+			"code": 5,
+			"size": 2,
+			"lineWidth": 0.005,
+			"length": 0.07,
+			"ratio": 1,
+			"setback": 0.065,
+			"path": "M0 12.88 L0 12.88 L0.36 12.88"
+		},
+		{
+			"code": 5,
+			"size": 2,
+			"lineWidth": 0.005,
+			"length": 0.07070000000000001,
+			"ratio": 1.01,
+			"setback": 0.07,
+			"path": "M0 12.88 L0.05 12.88"
+		},
+		{
+			"code": 5,
+			"size": 2,
+			"lineWidth": 0.005,
+			"length": 0.08750000000000001,
+			"ratio": 1.25,
+			"setback": 0.07,
+			"path": "M0 12.88 L1.26 12.88"
+		},
+		{
+			"code": 5,
+			"size": 2,
+			"lineWidth": 0.005,
+			"length": 0.14,
+			"ratio": 2,
+			"setback": 0.07,
+			"path": "M0 12.88 L5.04 12.88"
+		},
+		{
+			"code": 5,
+			"size": 2,
+			"lineWidth": 0.01,
+			"length": 0.019687500000000004,
+			"ratio": 0.25,
+			"setback": 0.0,
+			"path": "M0 14.49 L1.42 14.49"
+		},
+		{
+			"code": 5,
+			"size": 2,
+			"lineWidth": 0.01,
+			"length": 0.03937500000000001,
+			"ratio": 0.5,
+			"setback": 0.0,
+			"path": "M0 14.49 L2.83 14.49"
+		},
+		{
+			"code": 5,
+			"size": 2,
+			"lineWidth": 0.01,
+			"length": 0.07796250000000002,
+			"ratio": 0.99,
+			"setback": 0.0,
+			"path": "M0 14.49 L5.61 14.49"
+		},
+		{
+			"code": 5,
+			"size": 2,
+			"lineWidth": 0.01,
+			"length": 0.07875000000000001,
+			"ratio": 1,
+			"setback": 0.07375,
+			"path": "M0 14.49 L0 14.49 L0.36 14.49"
+		},
+		{
+			"code": 5,
+			"size": 2,
+			"lineWidth": 0.01,
+			"length": 0.07953750000000001,
+			"ratio": 1.01,
+			"setback": 0.07875,
+			"path": "M0 14.49 L0.06 14.49"
+		},
+		{
+			"code": 5,
+			"size": 2,
+			"lineWidth": 0.01,
+			"length": 0.09843750000000001,
+			"ratio": 1.25,
+			"setback": 0.07875,
+			"path": "M0 14.49 L1.42 14.49"
+		},
+		{
+			"code": 5,
+			"size": 2,
+			"lineWidth": 0.01,
+			"length": 0.15750000000000003,
+			"ratio": 2,
+			"setback": 0.07875,
+			"path": "M0 14.49 L5.67 14.49"
+		},
+		{
+			"code": 5,
+			"size": 6,
+			"lineWidth": 0.005,
+			"length": 0.11156250000000001,
+			"ratio": 0.25,
+			"setback": 0.0,
+			"path": "M0 82.11 L8.03 82.11"
+		},
+		{
+			"code": 5,
+			"size": 6,
+			"lineWidth": 0.005,
+			"length": 0.22312500000000002,
+			"ratio": 0.5,
+			"setback": 0.0,
+			"path": "M0 82.11 L16.06 82.11"
+		},
+		{
+			"code": 5,
+			"size": 6,
+			"lineWidth": 0.005,
+			"length": 0.44178750000000006,
+			"ratio": 0.99,
+			"setback": 0.0,
+			"path": "M0 82.11 L31.81 82.11"
+		},
+		{
+			"code": 5,
+			"size": 6,
+			"lineWidth": 0.005,
+			"length": 0.44625000000000004,
+			"ratio": 1,
+			"setback": 0.44125000000000003,
+			"path": "M0 82.11 L0 82.11 L0.36 82.11"
+		},
+		{
+			"code": 5,
+			"size": 6,
+			"lineWidth": 0.005,
+			"length": 0.4507125,
+			"ratio": 1.01,
+			"setback": 0.44625000000000004,
+			"path": "M0 82.11 L0.32 82.11"
+		},
+		{
+			"code": 5,
+			"size": 6,
+			"lineWidth": 0.005,
+			"length": 0.5578125,
+			"ratio": 1.25,
+			"setback": 0.44625000000000004,
+			"path": "M0 82.11 L8.03 82.11"
+		},
+		{
+			"code": 5,
+			"size": 6,
+			"lineWidth": 0.005,
+			"length": 0.8925000000000001,
+			"ratio": 2,
+			"setback": 0.44625000000000004,
+			"path": "M0 82.11 L32.13 82.11"
+		},
+		{
+			"code": 5,
+			"size": 6,
+			"lineWidth": 0.01,
+			"length": 0.11375,
+			"ratio": 0.25,
+			"setback": 0.0,
+			"path": "M0 83.72 L8.19 83.72"
+		},
+		{
+			"code": 5,
+			"size": 6,
+			"lineWidth": 0.01,
+			"length": 0.2275,
+			"ratio": 0.5,
+			"setback": 0.0,
+			"path": "M0 83.72 L16.38 83.72"
+		},
+		{
+			"code": 5,
+			"size": 6,
+			"lineWidth": 0.01,
+			"length": 0.45045,
+			"ratio": 0.99,
+			"setback": 0.0,
+			"path": "M0 83.72 L32.43 83.72"
+		},
+		{
+			"code": 5,
+			"size": 6,
+			"lineWidth": 0.01,
+			"length": 0.455,
+			"ratio": 1,
+			"setback": 0.45,
+			"path": "M0 83.72 L0 83.72 L0.36 83.72"
+		},
+		{
+			"code": 5,
+			"size": 6,
+			"lineWidth": 0.01,
+			"length": 0.45955,
+			"ratio": 1.01,
+			"setback": 0.455,
+			"path": "M0 83.72 L0.33 83.72"
+		},
+		{
+			"code": 5,
+			"size": 6,
+			"lineWidth": 0.01,
+			"length": 0.56875,
+			"ratio": 1.25,
+			"setback": 0.455,
+			"path": "M0 83.72 L8.19 83.72"
+		},
+		{
+			"code": 5,
+			"size": 6,
+			"lineWidth": 0.01,
+			"length": 0.91,
+			"ratio": 2,
+			"setback": 0.455,
+			"path": "M0 83.72 L32.76 83.72"
+		},
+		{
+			"code": 6,
+			"size": 0,
+			"lineWidth": 0.005,
+			"length": 0.0140625,
+			"ratio": 0.25,
+			"setback": 0.0,
+			"path": "M0 8.82 L1.01 8.82"
+		},
+		{
+			"code": 6,
+			"size": 0,
+			"lineWidth": 0.005,
+			"length": 0.028125,
+			"ratio": 0.5,
+			"setback": 0.0,
+			"path": "M0 8.82 L2.02 8.82"
+		},
+		{
+			"code": 6,
+			"size": 0,
+			"lineWidth": 0.005,
+			"length": 0.0556875,
+			"ratio": 0.99,
+			"setback": 0.0,
+			"path": "M0 8.82 L4.01 8.82"
+		},
+		{
+			"code": 6,
+			"size": 0,
+			"lineWidth": 0.005,
+			"length": 0.05625,
+			"ratio": 1,
+			"setback": 0.051250000000000004,
+			"path": "M0 8.82 L0 8.82 L0.36 8.82"
+		},
+		{
+			"code": 6,
+			"size": 0,
+			"lineWidth": 0.005,
+			"length": 0.0568125,
+			"ratio": 1.01,
+			"setback": 0.05625,
+			"path": "M0 8.82 L0.04 8.82"
+		},
+		{
+			"code": 6,
+			"size": 0,
+			"lineWidth": 0.005,
+			"length": 0.0703125,
+			"ratio": 1.25,
+			"setback": 0.05625,
+			"path": "M0 8.82 L1.01 8.82"
+		},
+		{
+			"code": 6,
+			"size": 0,
+			"lineWidth": 0.005,
+			"length": 0.1125,
+			"ratio": 2,
+			"setback": 0.05625,
+			"path": "M0 8.82 L4.05 8.82"
+		},
+		{
+			"code": 6,
+			"size": 0,
+			"lineWidth": 0.01,
+			"length": 0.016875,
+			"ratio": 0.25,
+			"setback": 0.0,
+			"path": "M0 10.58 L1.22 10.58"
+		},
+		{
+			"code": 6,
+			"size": 0,
+			"lineWidth": 0.01,
+			"length": 0.03375,
+			"ratio": 0.5,
+			"setback": 0.0,
+			"path": "M0 10.58 L2.43 10.58"
+		},
+		{
+			"code": 6,
+			"size": 0,
+			"lineWidth": 0.01,
+			"length": 0.06682500000000001,
+			"ratio": 0.99,
+			"setback": 0.0,
+			"path": "M0 10.58 L4.81 10.58"
+		},
+		{
+			"code": 6,
+			"size": 0,
+			"lineWidth": 0.01,
+			"length": 0.0675,
+			"ratio": 1,
+			"setback": 0.0625,
+			"path": "M0 10.58 L0 10.58 L0.36 10.58"
+		},
+		{
+			"code": 6,
+			"size": 0,
+			"lineWidth": 0.01,
+			"length": 0.068175,
+			"ratio": 1.01,
+			"setback": 0.0675,
+			"path": "M0 10.58 L0.05 10.58"
+		},
+		{
+			"code": 6,
+			"size": 0,
+			"lineWidth": 0.01,
+			"length": 0.084375,
+			"ratio": 1.25,
+			"setback": 0.0675,
+			"path": "M0 10.58 L1.22 10.58"
+		},
+		{
+			"code": 6,
+			"size": 0,
+			"lineWidth": 0.01,
+			"length": 0.135,
+			"ratio": 2,
+			"setback": 0.0675,
+			"path": "M0 10.58 L4.86 10.58"
+		},
+		{
+			"code": 6,
+			"size": 2,
+			"lineWidth": 0.005,
+			"length": 0.0225,
+			"ratio": 0.25,
+			"setback": 0.0,
+			"path": "M0 14.11 L1.62 14.11"
+		},
+		{
+			"code": 6,
+			"size": 2,
+			"lineWidth": 0.005,
+			"length": 0.045,
+			"ratio": 0.5,
+			"setback": 0.0,
+			"path": "M0 14.11 L3.24 14.11"
+		},
+		{
+			"code": 6,
+			"size": 2,
+			"lineWidth": 0.005,
+			"length": 0.0891,
+			"ratio": 0.99,
+			"setback": 0.0,
+			"path": "M0 14.11 L6.42 14.11"
+		},
+		{
+			"code": 6,
+			"size": 2,
+			"lineWidth": 0.005,
+			"length": 0.09,
+			"ratio": 1,
+			"setback": 0.085,
+			"path": "M0 14.11 L0 14.11 L0.36 14.11"
+		},
+		{
+			"code": 6,
+			"size": 2,
+			"lineWidth": 0.005,
+			"length": 0.0909,
+			"ratio": 1.01,
+			"setback": 0.09,
+			"path": "M0 14.11 L0.06 14.11"
+		},
+		{
+			"code": 6,
+			"size": 2,
+			"lineWidth": 0.005,
+			"length": 0.11249999999999999,
+			"ratio": 1.25,
+			"setback": 0.09,
+			"path": "M0 14.11 L1.62 14.11"
+		},
+		{
+			"code": 6,
+			"size": 2,
+			"lineWidth": 0.005,
+			"length": 0.18,
+			"ratio": 2,
+			"setback": 0.09,
+			"path": "M0 14.11 L6.48 14.11"
+		},
+		{
+			"code": 6,
+			"size": 2,
+			"lineWidth": 0.01,
+			"length": 0.0253125,
+			"ratio": 0.25,
+			"setback": 0.0,
+			"path": "M0 15.87 L1.82 15.87"
+		},
+		{
+			"code": 6,
+			"size": 2,
+			"lineWidth": 0.01,
+			"length": 0.050625,
+			"ratio": 0.5,
+			"setback": 0.0,
+			"path": "M0 15.87 L3.65 15.87"
+		},
+		{
+			"code": 6,
+			"size": 2,
+			"lineWidth": 0.01,
+			"length": 0.10023750000000001,
+			"ratio": 0.99,
+			"setback": 0.0,
+			"path": "M0 15.87 L7.22 15.87"
+		},
+		{
+			"code": 6,
+			"size": 2,
+			"lineWidth": 0.01,
+			"length": 0.10125,
+			"ratio": 1,
+			"setback": 0.09625,
+			"path": "M0 15.87 L0 15.87 L0.36 15.87"
+		},
+		{
+			"code": 6,
+			"size": 2,
+			"lineWidth": 0.01,
+			"length": 0.1022625,
+			"ratio": 1.01,
+			"setback": 0.10125,
+			"path": "M0 15.87 L0.07 15.87"
+		},
+		{
+			"code": 6,
+			"size": 2,
+			"lineWidth": 0.01,
+			"length": 0.12656250000000002,
+			"ratio": 1.25,
+			"setback": 0.10125,
+			"path": "M0 15.87 L1.82 15.87"
+		},
+		{
+			"code": 6,
+			"size": 2,
+			"lineWidth": 0.01,
+			"length": 0.2025,
+			"ratio": 2,
+			"setback": 0.10125,
+			"path": "M0 15.87 L7.29 15.87"
+		},
+		{
+			"code": 6,
+			"size": 6,
+			"lineWidth": 0.005,
+			"length": 0.1434375,
+			"ratio": 0.25,
+			"setback": 0.0,
+			"path": "M0 89.95 L10.33 89.95"
+		},
+		{
+			"code": 6,
+			"size": 6,
+			"lineWidth": 0.005,
+			"length": 0.286875,
+			"ratio": 0.5,
+			"setback": 0.0,
+			"path": "M0 89.95 L20.65 89.95"
+		},
+		{
+			"code": 6,
+			"size": 6,
+			"lineWidth": 0.005,
+			"length": 0.5680125,
+			"ratio": 0.99,
+			"setback": 0.0,
+			"path": "M0 89.95 L40.9 89.95"
+		},
+		{
+			"code": 6,
+			"size": 6,
+			"lineWidth": 0.005,
+			"length": 0.57375,
+			"ratio": 1,
+			"setback": 0.5680125,
+			"path": "M0 89.95 L0 89.95 L0.41 89.95"
+		},
+		{
+			"code": 6,
+			"size": 6,
+			"lineWidth": 0.005,
+			"length": 0.5794874999999999,
+			"ratio": 1.01,
+			"setback": 0.57375,
+			"path": "M0 89.95 L0.41 89.95"
+		},
+		{
+			"code": 6,
+			"size": 6,
+			"lineWidth": 0.005,
+			"length": 0.7171875,
+			"ratio": 1.25,
+			"setback": 0.57375,
+			"path": "M0 89.95 L10.33 89.95"
+		},
+		{
+			"code": 6,
+			"size": 6,
+			"lineWidth": 0.005,
+			"length": 1.1475,
+			"ratio": 2,
+			"setback": 0.57375,
+			"path": "M0 89.95 L41.31 89.95"
+		},
+		{
+			"code": 6,
+			"size": 6,
+			"lineWidth": 0.01,
+			"length": 0.14625,
+			"ratio": 0.25,
+			"setback": 0.0,
+			"path": "M0 91.71 L10.53 91.71"
+		},
+		{
+			"code": 6,
+			"size": 6,
+			"lineWidth": 0.01,
+			"length": 0.2925,
+			"ratio": 0.5,
+			"setback": 0.0,
+			"path": "M0 91.71 L21.06 91.71"
+		},
+		{
+			"code": 6,
+			"size": 6,
+			"lineWidth": 0.01,
+			"length": 0.5791499999999999,
+			"ratio": 0.99,
+			"setback": 0.0,
+			"path": "M0 91.71 L41.7 91.71"
+		},
+		{
+			"code": 6,
+			"size": 6,
+			"lineWidth": 0.01,
+			"length": 0.585,
+			"ratio": 1,
+			"setback": 0.57915,
+			"path": "M0 91.71 L0 91.71 L0.42 91.71"
+		},
+		{
+			"code": 6,
+			"size": 6,
+			"lineWidth": 0.01,
+			"length": 0.59085,
+			"ratio": 1.01,
+			"setback": 0.585,
+			"path": "M0 91.71 L0.42 91.71"
+		},
+		{
+			"code": 6,
+			"size": 6,
+			"lineWidth": 0.01,
+			"length": 0.73125,
+			"ratio": 1.25,
+			"setback": 0.585,
+			"path": "M0 91.71 L10.53 91.71"
+		},
+		{
+			"code": 6,
+			"size": 6,
+			"lineWidth": 0.01,
+			"length": 1.17,
+			"ratio": 2,
+			"setback": 0.585,
+			"path": "M0 91.71 L42.12 91.71"
+		}
+	]
+}

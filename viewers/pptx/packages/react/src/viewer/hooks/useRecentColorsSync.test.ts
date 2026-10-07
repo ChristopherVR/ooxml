@@ -1,4 +1,4 @@
-import { seedRecentColors } from 'pptx-viewer-shared';
+import { seedRecentColors } from 'ooxml-ui/pptx';
 import { describe, expect, it } from 'vitest';
 
 import { applyRecentColorPick } from './useRecentColorsSync';

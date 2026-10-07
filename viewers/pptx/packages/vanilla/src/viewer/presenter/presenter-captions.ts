@@ -2,8 +2,8 @@ import {
 	getSpeechRecognitionCtor,
 	mergeCaptionResults,
 	subtitleRecognitionLanguage,
-} from 'pptx-viewer-shared';
-import type { SpeechRecognitionLite, SubtitleSettings } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { SpeechRecognitionLite, SubtitleSettings } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 

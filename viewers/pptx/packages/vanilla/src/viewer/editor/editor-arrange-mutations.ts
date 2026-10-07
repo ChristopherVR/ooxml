@@ -1,12 +1,12 @@
 import type { PptxElement } from 'pptx-viewer-core';
-import type { AlignEdge, DistributeAxis, ElementPosition } from 'pptx-viewer-shared';
+import type { AlignEdge, DistributeAxis, ElementPosition } from 'ooxml-ui/pptx';
 import {
 	alignElements,
 	canInteractWithElement,
 	distributeElements,
 	groupElements,
 	ungroupElements,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 /**
  * Pure slide-element-array transforms backing the ribbon's Arrange group

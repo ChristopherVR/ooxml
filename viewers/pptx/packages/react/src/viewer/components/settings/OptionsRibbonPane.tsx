@@ -1,5 +1,5 @@
-import type { ToolbarTabId, ViewerOptions } from 'pptx-viewer-shared';
-import { SHORTCUT_REFERENCE_ITEMS, TOOLBAR_TABS } from 'pptx-viewer-shared';
+import type { ToolbarTabId, ViewerOptions } from 'ooxml-ui/pptx';
+import { SHORTCUT_REFERENCE_ITEMS, TOOLBAR_TABS } from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 

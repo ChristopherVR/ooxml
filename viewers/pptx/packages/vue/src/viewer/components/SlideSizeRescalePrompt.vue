@@ -7,7 +7,7 @@
  * (`slide-size-rescale.ts`); this component only renders the two buttons and
  * forwards the pick to `useInspectorDeckActions().chooseSlideSizeRescale`.
  */
-import type { SlideSizeRescaleMode } from 'pptx-viewer-shared';
+import type { SlideSizeRescaleMode } from 'ooxml-ui/pptx';
 import { useI18n } from 'vue-i18n';
 
 import DialogFooter from './DialogFooter.vue';

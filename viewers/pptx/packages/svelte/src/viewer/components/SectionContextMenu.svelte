@@ -6,8 +6,8 @@
 	 * `buildSectionContextMenuEntries`; this component only renders it, the
 	 * sibling of `ThumbnailContextMenu.svelte`.
 	 */
-	import { buildSectionContextMenuEntries, clampFlyoutPosition } from 'pptx-viewer-shared';
-	import type { SectionContextMenuCommandId } from 'pptx-viewer-shared';
+	import { buildSectionContextMenuEntries, clampFlyoutPosition } from 'ooxml-ui/pptx';
+	import type { SectionContextMenuCommandId } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 

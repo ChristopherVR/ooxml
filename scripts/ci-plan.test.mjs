@@ -292,3 +292,12 @@ test('teams builds its packages before its typecheck and browser tests', () => {
 	assert.equal(verify[0], 'bun run build:packages');
 	assert.ok(verify.indexOf('bun run typecheck') > 0);
 });
+
+test('PowerPoint product UI reaches its own bindings without unrelated viewers', () => {
+	const result = plan(['src/ui/src/pptx/render/group-drill.ts'], { testFiles: 1 });
+	assert.equal(result.pptx.run, true);
+	assert.equal(result.build, true);
+	assert.deepEqual(viewers(result), []);
+	assert.ok(result.pptx.tests.includes('angular'));
+	assert.ok(result.pptx.tests.includes('vanilla'));
+});

@@ -1,5 +1,5 @@
-import { getSelectionControlArtworkStyle } from 'pptx-viewer-shared';
-import type { ResizeHandleId } from 'pptx-viewer-shared';
+import { getSelectionControlArtworkStyle } from 'ooxml-ui/pptx';
+import type { ResizeHandleId } from 'ooxml-ui/pptx';
 
 /** Vue sizes artwork in slide coordinates; the stage supplies the only scale. */
 export function controlArtwork(handle: ResizeHandleId | 'rotate', inverseScale: number) {

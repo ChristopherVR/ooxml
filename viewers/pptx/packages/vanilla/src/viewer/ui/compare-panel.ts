@@ -1,4 +1,4 @@
-import type { CompareResult, SlideDiff } from 'pptx-viewer-shared';
+import type { CompareResult, SlideDiff } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import { createEl } from '../render';

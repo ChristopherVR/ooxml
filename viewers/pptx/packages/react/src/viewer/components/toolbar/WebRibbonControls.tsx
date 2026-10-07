@@ -3,7 +3,7 @@ import type {
 	RibbonGroupId,
 	RibbonCommandRequestEvent,
 	RibbonToggleRequestEvent,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import React, { useEffect, useRef } from 'react';
 
 function useIntent(

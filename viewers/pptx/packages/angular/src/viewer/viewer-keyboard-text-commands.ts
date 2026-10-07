@@ -20,8 +20,8 @@ import {
 	textFontSizePatch,
 	textFontSizePtToPx,
 	textFontSizePxToPt,
-} from '../internal/shared';
-import type { InlineTextEditSnapshot } from '../internal/shared';
+} from 'ooxml-ui/pptx';
+import type { InlineTextEditSnapshot } from 'ooxml-ui/pptx';
 import type { EditorStateService } from './editor-state.service';
 import { isTextElement, patchTextStyle, textStyleOf } from './ribbon-text-helpers';
 

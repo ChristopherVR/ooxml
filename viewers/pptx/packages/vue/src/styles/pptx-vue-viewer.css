@@ -25,7 +25,7 @@
  * the whole shared render directory (not just the one file) keeps the next
  * token from repeating the bug.
  */
-@source "../../../shared/src/render/**/*.ts";
+@source "../../../../../../src/ui/src/pptx/render/**/*.ts";
 
 @import './theme.css';
 

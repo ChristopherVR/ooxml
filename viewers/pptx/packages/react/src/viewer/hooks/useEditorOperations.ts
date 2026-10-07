@@ -9,8 +9,8 @@ import {
 	downloadBlob,
 	elementPictureFilename,
 	rasterResultToPngBlob,
-} from 'pptx-viewer-shared';
-import type { ResolvedKeyboardCustomization } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { ResolvedKeyboardCustomization } from 'ooxml-ui/pptx';
 import type React from 'react';
 import { useCallback, useMemo } from 'react';
 

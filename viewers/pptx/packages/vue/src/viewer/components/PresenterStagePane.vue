@@ -9,8 +9,8 @@
  * tool owns the pointer, in which case the host annotates instead.
  */
 import type { PptxSlide } from 'pptx-viewer-core';
-import { PRESENTER_CONSOLE_CLASSES, PRESENTER_RAIL_LABEL_KEYS } from 'pptx-viewer-shared';
-import type { PresentationZoomState } from 'pptx-viewer-shared';
+import { PRESENTER_CONSOLE_CLASSES, PRESENTER_RAIL_LABEL_KEYS } from 'ooxml-ui/pptx';
+import type { PresentationZoomState } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

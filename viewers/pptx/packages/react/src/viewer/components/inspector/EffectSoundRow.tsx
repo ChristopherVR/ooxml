@@ -1,5 +1,5 @@
-import { EFFECT_SOUND_CATALOGUE, getEffectSoundAsset } from 'pptx-viewer-shared';
-import type { EffectSoundState } from 'pptx-viewer-shared';
+import { EFFECT_SOUND_CATALOGUE, getEffectSoundAsset } from 'ooxml-ui/pptx';
+import type { EffectSoundState } from 'ooxml-ui/pptx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { LuPlay } from 'react-icons/lu';

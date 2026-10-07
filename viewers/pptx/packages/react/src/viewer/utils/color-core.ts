@@ -25,4 +25,4 @@ export {
 	buildInnerShadowCssFromShapeStyle,
 	buildMultiLayerShadowCss,
 	buildGlowBoxShadow,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

@@ -25,10 +25,10 @@ import {
 } from '@angular/core';
 import type { PptxCustomShow, PptxPresentationProperties } from 'pptx-viewer-core';
 
-import { THEME_CATALOG } from '../internal/shared';
-import type { ThemeCatalogEntry, ViewerAddinStatus } from '../internal/shared';
-import { LOCALE_CATALOG } from '../internal/shared-src/i18n';
-import type { LocaleCatalogEntry } from '../internal/shared-src/i18n';
+import { THEME_CATALOG } from 'ooxml-ui/pptx';
+import type { ThemeCatalogEntry, ViewerAddinStatus } from 'ooxml-ui/pptx';
+import { LOCALE_CATALOG } from 'ooxml-ui/pptx/i18n';
+import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
 import { CollaborationService } from './collaboration.service';
 import { ComparePanelComponent } from './compare-panel.component';
 import { CustomFontsService } from './custom-fonts.service';

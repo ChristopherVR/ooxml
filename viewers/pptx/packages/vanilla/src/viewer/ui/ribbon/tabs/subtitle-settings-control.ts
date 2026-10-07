@@ -3,8 +3,8 @@ import {
 	subtitleSettingsFromOptions,
 	subtitleSettingsLabels,
 	updateSubtitleSettings,
-} from 'pptx-viewer-shared';
-import type { SubtitleSettingsChangeEvent, ViewerOptionsStore } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { SubtitleSettingsChangeEvent, ViewerOptionsStore } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../../i18n';
 

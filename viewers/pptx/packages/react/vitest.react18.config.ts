@@ -69,9 +69,9 @@ export default defineConfig({
 			{ find: /^@ai-sdk\/react$/u, replacement: require18.resolve('@ai-sdk/react') },
 			{ find: /^react-icons\//u, replacement: `${pkgDir18('react-icons')}/` },
 			{ find: /^pptx-viewer-core$/u, replacement: src('../core/src/index.ts') },
-			{ find: /^pptx-viewer-shared\/i18n$/u, replacement: src('../shared/src/i18n/index.ts') },
-			{ find: /^pptx-viewer-shared\/ai$/u, replacement: src('../shared/src/ai/index.ts') },
-			{ find: /^pptx-viewer-shared$/u, replacement: src('../shared/src/index.ts') },
+			{ find: /^pptx-viewer-shared\/i18n$/u, replacement: src('../../../../src/ui/src/pptx/i18n/index.ts') },
+			{ find: /^pptx-viewer-shared\/ai$/u, replacement: src('../../../../src/ui/src/pptx/ai/index.ts') },
+			{ find: /^pptx-viewer-shared$/u, replacement: src('../../../../src/ui/src/pptx/index.ts') },
 		],
 	},
 	test: {

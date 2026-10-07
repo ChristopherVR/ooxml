@@ -9,8 +9,8 @@
  *
  * @module collaboration/usePresenceTracking
  */
-import { BROADCAST_THROTTLE_MS, createPresenceProjector } from 'pptx-viewer-shared';
-import type { BorrowedCollaborationAwareness } from 'pptx-viewer-shared';
+import { BROADCAST_THROTTLE_MS, createPresenceProjector } from 'ooxml-ui/pptx';
+import type { BorrowedCollaborationAwareness } from 'ooxml-ui/pptx';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Awareness } from 'y-protocols/awareness';
 

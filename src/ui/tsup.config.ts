@@ -4,7 +4,7 @@ import { defineConfig } from 'tsup';
 
 // Component styles are real .css files imported as text (`import css from './x.css?raw'`), the
 // same spelling Vite and Vitest use.
-const rawCss = {
+export const rawCss = {
 	name: 'raw-css',
 	setup(build: { onResolve: Function; onLoad: Function }) {
 		build.onResolve({ filter: /\.css\?raw$/ }, (args: { resolveDir: string; path: string }) => ({

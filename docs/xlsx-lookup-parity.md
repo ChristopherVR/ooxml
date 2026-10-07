@@ -50,9 +50,10 @@ reads. The recorded application was Excel 16.0 build 20430.
 
 ## Validation and remaining limits
 
-- The full XLSX core suite passed 4,039 tests across 121 files before the
-  additional 216 native comparisons. All new comparisons and both core
-  TypeScript projects passed. The core package build passed.
+- Final integration validation at `2cd583316` passed all 4,326 XLSX tests
+  across 126 files, including the 216 native comparisons. Both core TypeScript
+  projects, the complete core package build and clean-consumer imports of
+  every ESM/CJS entry point passed.
 - A generated seven-formula workbook was saved by the library, opened,
   recalculated and saved by Excel, then reloaded and recalculated by the
   library. All seven values, including errors, remained identical. This is
@@ -63,13 +64,11 @@ reads. The recorded application was Excel 16.0 build 20430.
   TypeScript projects passed. The parser suite and sheet-qualified aggregation
   checks passed, followed by a save/reload/recalculation regression for a
   wrapped R1C1 reference (26 reference tests passed).
-- The final broad rerun hit suite-load failures during severe shared-machine
-  memory pressure and was stopped. Those suites passed when rerun separately.
-  Strict declarations emitted successfully; the latest package build remains
-  incomplete because native TypeScript's PPTX declaration emitter repeatedly
-  failed to create temporary directories (`TS5033`), including a serial retry.
-  The earlier successful full suite/build must not be read as validation of
-  every subsequent integration change.
+- An earlier broad rerun hit suite-load failures during severe shared-machine
+  memory pressure and was stopped. The native TypeScript declaration emitter
+  also failed to create temporary directories (`TS5033`). After memory recovered,
+  the full suite and unchanged build passed when run separately. No build-script
+  changes were required.
 - Binary search requires the declared sort order. The corpus does not
   establish arbitrary unsorted-input behavior or every error placement.
 - Current Microsoft 365 regex functions need further work. Microsoft

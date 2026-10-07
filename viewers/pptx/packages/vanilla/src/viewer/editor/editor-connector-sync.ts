@@ -1,4 +1,4 @@
-import { applyReroutedConnectors, rerouteConnectorsForMovedElements } from 'pptx-viewer-shared';
+import { applyReroutedConnectors, rerouteConnectorsForMovedElements } from 'ooxml-ui/pptx';
 
 import type { Store, ViewerState } from '../state';
 import { getActiveElements, replaceActiveElements } from './editor-active-elements';

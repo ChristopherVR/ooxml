@@ -8,7 +8,7 @@
  * steps back out to the group, and the member's edits land in its group.
  */
 import type { PptxElement } from 'pptx-viewer-core';
-import { setPendingCaretPoint } from 'pptx-viewer-shared';
+import { setPendingCaretPoint } from 'ooxml-ui/pptx';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../i18n';
@@ -21,7 +21,7 @@ import { createEditorOps } from './editor-operations';
 import { createStageInteractions } from './editor-stage-interactions';
 import { createSelectionOverlay } from './selection-overlay';
 
-vi.mock(import('pptx-viewer-shared'), async (original) => {
+vi.mock(import('ooxml-ui/pptx'), async (original) => {
 	const actual = await original();
 	return { ...actual, setPendingCaretPoint: vi.fn(actual.setPendingCaretPoint) };
 });

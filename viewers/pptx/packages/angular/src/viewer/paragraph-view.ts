@@ -1,13 +1,13 @@
 import type { PptxElement, TextSegment } from 'pptx-viewer-core';
 
-import { buildParagraphs } from '../internal/shared';
+import { buildParagraphs } from 'ooxml-ui/pptx';
 import type {
 	FieldSubstitutionContext,
 	PictureBulletMarker,
 	ReflectionWrapperStyle,
 	ScriptFontPiece,
 	TabbedLineRun,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import type { StyleMap } from './element-style';
 
 /**

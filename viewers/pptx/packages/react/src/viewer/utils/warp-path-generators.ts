@@ -7,10 +7,10 @@
  * working unchanged. The public symbols are identical to the previous local
  * implementation.
  */
-export type { WarpPathGenerator } from 'pptx-viewer-shared';
+export type { WarpPathGenerator } from 'ooxml-ui/pptx';
 export {
 	SVG_WARP_PRESETS,
 	WARP_PATH_GENERATORS,
 	shouldUseSvgWarp,
 	getWarpPath,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';

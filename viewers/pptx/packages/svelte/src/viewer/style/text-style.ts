@@ -1,11 +1,11 @@
 import type { PptxElement } from 'pptx-viewer-core';
 import { hasTextProperties } from 'pptx-viewer-core';
-import type { CssStyleMap } from 'pptx-viewer-shared';
+import type { CssStyleMap } from 'ooxml-ui/pptx';
 import {
 	DEFAULT_TEXT_COLOR,
 	buildTextBlockStyle,
 	buildTextBody3DSceneStyle,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 /**
  * Text-block style for elements that carry text.

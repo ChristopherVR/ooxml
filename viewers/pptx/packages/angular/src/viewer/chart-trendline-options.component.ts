@@ -27,7 +27,7 @@ import type {
 	PptxChartType,
 } from 'pptx-viewer-core';
 
-import { TRENDLINE_SUPPORTED_TYPES, TRENDLINE_TYPE_OPTIONS } from '../internal/shared';
+import { TRENDLINE_SUPPORTED_TYPES, TRENDLINE_TYPE_OPTIONS } from 'ooxml-ui/pptx';
 import { setSeriesTrendline } from './chart-advanced-helpers';
 import { CHART_EDITOR_STYLES } from './chart-editor-styles';
 import { boolFromEvent, selectValue } from './chart-event-helpers';

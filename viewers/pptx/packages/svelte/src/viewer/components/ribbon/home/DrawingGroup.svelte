@@ -14,8 +14,8 @@
 		homeSnapshotTranslator,
 		strokeColorOf,
 		withHomeGalleries,
-	} from 'pptx-viewer-shared';
-	import type { RibbonHomeRequestEvent } from 'pptx-viewer-shared';
+	} from 'ooxml-ui/pptx';
+	import type { RibbonHomeRequestEvent } from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../../../i18n/context';
 	import type { EditorState } from '../../../editor/editor-state.svelte';
 	import type { ZOrderDirection } from '../../../editor';

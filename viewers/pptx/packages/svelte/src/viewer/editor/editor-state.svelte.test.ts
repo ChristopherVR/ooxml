@@ -12,7 +12,7 @@ import {
 	createInlineListSeed,
 	initializeInlineListDom,
 	buildParagraphs,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount } from 'svelte';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -77,7 +77,7 @@ describe('editorState selection + geometry', () => {
 		editor.inlineListController = {
 			read: () => read,
 			format,
-		} as unknown as import('pptx-viewer-shared').InlineListController;
+		} as unknown as import('ooxml-ui/pptx').InlineListController;
 		const cancel = vi.fn();
 		editor.cancelInlineListEdit = cancel;
 		editor.patchSelected((current) => {
@@ -103,7 +103,7 @@ describe('editorState selection + geometry', () => {
 		editor.select('e1');
 		editor.inlineListController = {
 			read: () => ({ kind: 'unsupported', text: 'draft', reason: 'composition' }),
-		} as unknown as import('pptx-viewer-shared').InlineListController;
+		} as unknown as import('ooxml-ui/pptx').InlineListController;
 		const build = vi.fn(() => ({ textStyle: { bold: true } }));
 		editor.patchSelected(build);
 		expect(build).not.toHaveBeenCalled();

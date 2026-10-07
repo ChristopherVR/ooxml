@@ -6,13 +6,13 @@ import {
 	moveSelection,
 	resizeSelection,
 	selectionBounds,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import type {
 	ElementBoxPatch,
 	InteractionBox,
 	MarqueeRect,
 	ResizeHandleId,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 export interface EditorMarqueeRect extends MarqueeRect {
 	additive: boolean;

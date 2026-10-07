@@ -14,11 +14,11 @@ import {
 	classifyTextWarp,
 	getEnvelopeCssTransform as sharedGetEnvelopeCssTransform,
 	getSimpleCssTransform as sharedGetSimpleCssTransform,
-} from 'pptx-viewer-shared';
-import type { WarpCategory, WarpCssTransform } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { WarpCategory, WarpCssTransform } from 'ooxml-ui/pptx';
 
 export type { WarpCategory };
-export { ALL_CLASSIFIED_PRESETS } from 'pptx-viewer-shared';
+export { ALL_CLASSIFIED_PRESETS } from 'ooxml-ui/pptx';
 
 /** Classify a warp preset into a rendering strategy category. */
 export function getWarpCategory(preset: string | undefined): WarpCategory {

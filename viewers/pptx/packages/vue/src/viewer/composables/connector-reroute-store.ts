@@ -22,7 +22,7 @@
  * @module composables/connector-reroute-store
  */
 import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
-import { applyReroutedConnectors, rerouteConnectorsForMovedElements } from 'pptx-viewer-shared';
+import { applyReroutedConnectors, rerouteConnectorsForMovedElements } from 'ooxml-ui/pptx';
 import type { Ref } from 'vue';
 
 import { setTemplateElements } from './template-editing';

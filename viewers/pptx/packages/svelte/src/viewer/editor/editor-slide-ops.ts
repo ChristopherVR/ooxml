@@ -1,7 +1,7 @@
 import type { PptxSlide } from 'pptx-viewer-core';
 import { cloneSlide } from 'pptx-viewer-core';
-import { buildSlideTemplateSlide, createBlankSlide, makeSlideId } from 'pptx-viewer-shared';
-import type { SlideTemplateBuildOptions, SlideTemplateId } from 'pptx-viewer-shared';
+import { buildSlideTemplateSlide, createBlankSlide, makeSlideId } from 'ooxml-ui/pptx';
+import type { SlideTemplateBuildOptions, SlideTemplateId } from 'ooxml-ui/pptx';
 
 /**
  * Pure slide-array mutations for the Home tab's Slides group (New slide /

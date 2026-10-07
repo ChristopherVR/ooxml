@@ -17,7 +17,7 @@ import type {
 	TextStyle,
 } from 'pptx-viewer-core';
 import { duplicateElement } from 'pptx-viewer-core';
-import type { ElementBoxPatch } from 'pptx-viewer-shared';
+import type { ElementBoxPatch } from 'ooxml-ui/pptx';
 import {
 	applyFormatToElement,
 	buildDeckSaveOptions,
@@ -31,7 +31,7 @@ import {
 	resolveSlideSizeSelection,
 	saveDeckWithPassword,
 	updateSlideNotes,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Store, ViewerState } from '../state';
 import {
@@ -65,15 +65,15 @@ export interface EditorOpsDeps {
 	onHistoryChange(): void;
 	/** Options > Proofing > AutoCorrect, applied to committed inline-edit text. */
 	transformCommittedText?: (text: string) => string;
-	getPendingInlineTextEdit?: () => import('pptx-viewer-shared').PendingInlineTextEdit | undefined;
-	readInlineList?: () => import('pptx-viewer-shared').InlineListReadResult | undefined;
-	formatInlineList?: (snapshot: import('pptx-viewer-shared').InlineTextEditSnapshot) => boolean;
+	getPendingInlineTextEdit?: () => import('ooxml-ui/pptx').PendingInlineTextEdit | undefined;
+	readInlineList?: () => import('ooxml-ui/pptx').InlineListReadResult | undefined;
+	formatInlineList?: (snapshot: import('ooxml-ui/pptx').InlineTextEditSnapshot) => boolean;
 	cancelInlineList?: () => void;
 }
 
 export interface EditorOps {
-	readInlineList?: () => import('pptx-viewer-shared').InlineListReadResult | undefined;
-	formatInlineList?: (snapshot: import('pptx-viewer-shared').InlineTextEditSnapshot) => boolean;
+	readInlineList?: () => import('ooxml-ui/pptx').InlineListReadResult | undefined;
+	formatInlineList?: (snapshot: import('ooxml-ui/pptx').InlineTextEditSnapshot) => boolean;
 	cancelInlineList?: () => void;
 	/** The selected element resolved against (optionally provided) state. */
 	selectedElement(state?: ViewerState): PptxElement | undefined;
@@ -90,7 +90,7 @@ export interface EditorOps {
 	commitInlineText(
 		id: string,
 		text: string,
-		snapshot?: import('pptx-viewer-shared').InlineTextEditSnapshot,
+		snapshot?: import('ooxml-ui/pptx').InlineTextEditSnapshot,
 	): void;
 	/** Commit speaker notes and optional rich segments onto the current slide. */
 	commitNotes(notes: string, notesSegments?: TextSegment[]): void;

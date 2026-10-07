@@ -27,8 +27,8 @@ import type {
 	GestureKind,
 	InteractionBox,
 	ResizeHandleId,
-} from 'pptx-viewer-shared';
-import { createGestureController } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import { createGestureController } from 'ooxml-ui/pptx';
 import type { Ref } from 'vue';
 
 import type {

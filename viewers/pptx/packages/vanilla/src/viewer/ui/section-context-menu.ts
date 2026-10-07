@@ -5,8 +5,8 @@
  * `buildSectionContextMenuEntries`, this module is only the view (position,
  * render, dismiss) and hands the chosen command id back to the caller.
  */
-import { buildSectionContextMenuEntries, clampFlyoutPosition } from 'pptx-viewer-shared';
-import type { SectionContextMenuCommandId } from 'pptx-viewer-shared';
+import { buildSectionContextMenuEntries, clampFlyoutPosition } from 'ooxml-ui/pptx';
+import type { SectionContextMenuCommandId } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../i18n';
 import { createEl } from '../render';

@@ -26,7 +26,7 @@ import type { Page } from '@playwright/test';
 // Imported from source rather than restated here: the bindings render from this
 // list, so a spec that kept its own copy would be free to agree with nothing.
 // The bare `pptx-viewer-shared` specifier is not linked at the repo root.
-import { PRESENT_TOOLBAR_ORDER } from '../../viewers/pptx/packages/shared/src/render/present-chrome';
+import { PRESENT_TOOLBAR_ORDER } from '../../src/ui/src/pptx/render/present-chrome';
 import { fixture, loadDeckAt } from './support/deck';
 import { acrossFrameworks, splitReference } from './support/parity';
 

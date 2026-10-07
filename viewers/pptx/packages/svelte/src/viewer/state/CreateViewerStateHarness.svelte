@@ -10,7 +10,7 @@
 	 * assert on it right after `mount()` returns.
 	 */
 	import { onDestroy } from 'svelte';
-	import type { CollaborationConfig, ViewportFitOptions } from 'pptx-viewer-shared';
+	import type { CollaborationConfig, ViewportFitOptions } from 'ooxml-ui/pptx';
 
 	import { createViewerState } from './create-viewer-state.svelte';
 	import type { ViewerStateBag } from './create-viewer-state-types';

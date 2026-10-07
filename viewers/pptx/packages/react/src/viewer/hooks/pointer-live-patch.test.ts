@@ -11,8 +11,8 @@ import {
 	createCollaborationLivePatcher,
 	readSlidesFromYDoc,
 	reconcileSlidesInYDoc,
-} from 'pptx-viewer-shared';
-import type { YDocLike, YjsFactories } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { YDocLike, YjsFactories } from 'ooxml-ui/pptx';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as Y from 'yjs';
 

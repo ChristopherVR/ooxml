@@ -11,5 +11,5 @@
  * No deliberate divergence; React's previous local copy was byte-equivalent in
  * behaviour to shared's (shared was originally extracted from it).
  */
-export { convertOmmlToMathMl, ommlToMathml } from 'pptx-viewer-shared';
-export type { OmmlNode } from 'pptx-viewer-shared';
+export { convertOmmlToMathMl, ommlToMathml } from 'ooxml-ui/pptx';
+export type { OmmlNode } from 'ooxml-ui/pptx';

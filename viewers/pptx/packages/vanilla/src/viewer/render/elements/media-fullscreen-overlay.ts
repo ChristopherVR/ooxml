@@ -3,8 +3,8 @@ import {
 	MEDIA_FULLSCREEN_OVERLAY_STYLE,
 	isMediaFullscreenActive,
 	shouldShowMediaFullscreenStopButton,
-} from 'pptx-viewer-shared';
-import type { CssStyleMap } from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
+import type { CssStyleMap } from 'ooxml-ui/pptx';
 
 import { applyStyleMap, createEl, createSvgEl } from '../dom';
 import type { ElementRenderContext } from '../types';

@@ -1,8 +1,8 @@
 // oxlint-disable react-hooks/rules-of-hooks
 import { mount } from '@vue/test-utils';
 import type { PptxElement } from 'pptx-viewer-core';
-import { resolveCustomization } from 'pptx-viewer-shared';
-import type { ViewerCustomization } from 'pptx-viewer-shared';
+import { resolveCustomization } from 'ooxml-ui/pptx';
+import type { ViewerCustomization } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 import { computed, defineComponent, h, ref } from 'vue';
 

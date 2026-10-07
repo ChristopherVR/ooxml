@@ -11,14 +11,14 @@ export default defineConfig({
 		// setup. Subpath aliases must come first (first match wins).
 		alias: [
 			{
-				find: 'pptx-viewer-shared/i18n',
-				replacement: resolve(__dirname, '../shared/src/i18n/index.ts'),
+				find: 'ooxml-ui/pptx/i18n',
+				replacement: resolve(__dirname, '../../../../src/ui/src/pptx/i18n/index.ts'),
 			},
 			{
-				find: 'pptx-viewer-shared/ai',
-				replacement: resolve(__dirname, '../shared/src/ai/index.ts'),
+				find: 'ooxml-ui/pptx/ai',
+				replacement: resolve(__dirname, '../../../../src/ui/src/pptx/ai/index.ts'),
 			},
-			{ find: 'pptx-viewer-shared', replacement: resolve(__dirname, '../shared/src/index.ts') },
+			{ find: 'ooxml-ui/pptx', replacement: resolve(__dirname, '../../../../src/ui/src/pptx/index.ts') },
 			{
 				find: 'pptx-viewer-core/chart',
 				replacement: resolve(__dirname, '../core/src/chart/index.ts'),

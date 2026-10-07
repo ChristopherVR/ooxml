@@ -3,7 +3,7 @@ import {
 	motionPathPresetById,
 	MOTION_PATH_PRESETS,
 	registerPptxWebControls,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it } from 'vitest';
 

@@ -2,8 +2,8 @@
 /** Vue's Home character-formatting controls and thin editor wiring. */
 import { hasTextProperties } from 'pptx-viewer-core';
 import type { PptxElement, PptxThemeColorRef, TextStyle } from 'pptx-viewer-core';
-import type { ChangeCaseMode } from 'pptx-viewer-shared';
-import { textFontSizePtToPx } from 'pptx-viewer-shared';
+import type { ChangeCaseMode } from 'ooxml-ui/pptx';
+import { textFontSizePtToPx } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

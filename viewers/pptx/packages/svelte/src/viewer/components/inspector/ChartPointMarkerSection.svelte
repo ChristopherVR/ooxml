@@ -13,7 +13,7 @@
 	 * dropping an emptied one) cannot drift between bindings.
 	 */
 	import type { ChartPptxElement, PptxChartMarkerSymbol } from 'pptx-viewer-core';
-	import { MARKER_SUPPORTED_TYPES, MARKER_SYMBOL_OPTIONS } from 'pptx-viewer-shared';
+	import { MARKER_SUPPORTED_TYPES, MARKER_SYMBOL_OPTIONS } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
 	import type { EditorState } from '../../editor/editor-state.svelte';

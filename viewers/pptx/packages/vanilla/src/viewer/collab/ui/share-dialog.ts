@@ -4,12 +4,12 @@ import type {
 	ConnectionStatus,
 	DialogFooterAction,
 	SanitizedPresence,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	buildActiveSessionUsers,
 	buildCollaborationShareUrl,
 	resolveTransportForServerUrl,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';

@@ -17,8 +17,8 @@
 
 import { Injectable, signal } from '@angular/core';
 
-import { calculateViewportFit, EDITOR_VIEWPORT_FIT } from '../internal/shared';
-import type { CanvasSize, ViewportFitOptions } from '../internal/shared';
+import { calculateViewportFit, EDITOR_VIEWPORT_FIT } from 'ooxml-ui/pptx';
+import type { CanvasSize, ViewportFitOptions } from 'ooxml-ui/pptx';
 
 /** Live host accessors the fit computation needs. */
 interface CanvasFitHost {

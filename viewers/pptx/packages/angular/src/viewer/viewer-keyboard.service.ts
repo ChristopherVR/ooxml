@@ -31,7 +31,7 @@ import {
 	isFeatureEnabled,
 	mapCustomizedEditorKey,
 	mapSlideShowStartKey,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { EditorStateService } from './editor-state.service';
 import { escapeSelectionTarget } from './group-drill-canvas';
 import { PictureCropService } from './picture-crop.service';

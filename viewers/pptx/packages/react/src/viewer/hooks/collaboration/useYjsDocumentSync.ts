@@ -5,14 +5,14 @@ import type {
 	CollaborationConfig,
 	CollaborationLivePatcher,
 	YTransactionLike,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import {
 	reconcileSlidesInYDoc,
 	LOCAL_SYNC_ORIGIN,
 	readSlidesFromYDoc,
 	observeYDocSlides,
 	shouldRoomSlidesReplaceLoad,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 import { useEffect, useRef } from 'react';
 import type { Doc as YDoc } from 'yjs';
 

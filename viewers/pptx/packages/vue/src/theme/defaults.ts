@@ -3,4 +3,4 @@
  *
  * Re-exported here so existing `./theme` import paths stay stable.
  */
-export { defaultThemeColors, defaultRadius } from 'pptx-viewer-shared';
+export { defaultThemeColors, defaultRadius } from 'ooxml-ui/pptx';

@@ -1,6 +1,6 @@
 import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
 import { hasShapeProperties } from 'pptx-viewer-core';
-import type { CssStyleMap } from 'pptx-viewer-shared';
+import type { CssStyleMap } from 'ooxml-ui/pptx';
 import {
 	DEFAULT_STROKE_COLOR,
 	elementHitTargetStyle as sharedElementHitTargetStyle,
@@ -14,7 +14,7 @@ import {
 	isHollowShapeElement,
 	resolveShapeGeometry,
 	px,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import { merge3dStyle } from './merge-3d';
 

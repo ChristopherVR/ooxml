@@ -6,9 +6,9 @@ import type {
 	PptxAiConfig,
 	PptxAiSlidesUpdater,
 	PptxAiUIMessage,
-} from 'pptx-viewer-shared/ai';
+} from 'ooxml-ui/pptx/ai';
 // @vitest-environment happy-dom
-import { translationsEn } from 'pptx-viewer-shared/i18n';
+import { translationsEn } from 'ooxml-ui/pptx/i18n';
 /**
  * AiChatPanel end-to-end integration: the REAL panel, wired to a scripted
  * `kind: 'transport'` stub (no live model, no network) over a small in-memory

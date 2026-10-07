@@ -1,5 +1,5 @@
 import type { PptxChartType, PptxChartData } from 'pptx-viewer-core';
-import { CHART_TYPE_OPTIONS } from 'pptx-viewer-shared';
+import { CHART_TYPE_OPTIONS } from 'ooxml-ui/pptx';
 
 // ---------------------------------------------------------------------------
 // Shared CSS tokens (kept in sync with InspectorPane)

@@ -43,7 +43,7 @@ import {
 	TRANSITION_MORPH_OPTIONS,
 	TRANSITION_ORIENTATION_TYPES,
 	TRANSITION_SPEED_OPTIONS,
-} from '../internal/shared';
+} from 'ooxml-ui/pptx';
 import { EditorStateService } from './editor-state.service';
 import { INSPECTOR_CARD_STYLES } from './inspector-card-styles';
 import { SLIDE_TRANSITION_CARD_STYLES } from './slide-transition-card.styles';

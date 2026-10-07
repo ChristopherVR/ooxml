@@ -16,9 +16,9 @@ import type {
 	ViewerFontSource,
 	ViewerTheme,
 	ViewportFitOptions,
-} from 'pptx-viewer-shared';
-import type { PptxAiConfig } from 'pptx-viewer-shared/ai';
-import type { LocaleCatalogEntry } from 'pptx-viewer-shared/i18n';
+} from 'ooxml-ui/pptx';
+import type { PptxAiConfig } from 'ooxml-ui/pptx/ai';
+import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
 
 import type { AutosaveStatus } from './autosave';
 import type { ShareDefaults } from './collab/share-helpers';

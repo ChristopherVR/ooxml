@@ -2,7 +2,7 @@ import {
 	buildSaveSlides,
 	GALLERY_THEME_PRESETS,
 	partitionTemplateElements,
-} from 'pptx-viewer-shared';
+} from 'ooxml-ui/pptx';
 
 import type { EditorController } from './editor';
 import type { LoadingController } from './loading-controller';
