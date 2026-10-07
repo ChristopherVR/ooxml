@@ -11,6 +11,7 @@
 import type { PptxChartDataLabel, XmlObject } from '../types';
 import type { ResolveChartColor } from './chart-color-choice';
 import { buildDefRPrTextProperties } from './chart-def-rpr-style';
+import { buildDataLabelTx } from './chart-datalabel-rich-text';
 import { applyChartManualLayout } from './chart-layout';
 import { writeChartShapeProps } from './chart-shape-props-writer';
 
@@ -139,15 +140,12 @@ export function buildDLbl(
 		replaced.add('layout');
 		applyChartManualLayout(node, label.layout, getLocalName);
 	}
-	if (label.text !== undefined) {
+	// Text read from a "Value From Cells" range stays linked: no literal c:tx.
+	if (label.text !== undefined && !label.textFromCells) {
 		replaced.add('tx');
-		node['c:tx'] = {
-			'c:rich': {
-				'a:bodyPr': {},
-				'a:lstStyle': {},
-				'a:p': { 'a:r': { 'a:t': label.text } },
-			},
-		};
+		const txKey = existing ? findKey(existing, 'tx', getLocalName) : undefined;
+		const existingTx = txKey ? (existing?.[txKey] as XmlObject | undefined) : undefined;
+		node[txKey ?? 'c:tx'] = buildDataLabelTx(existingTx, label.text, getLocalName);
 	} else if (existing) {
 		const txKey = findKey(existing, 'tx', getLocalName);
 		if (txKey) {

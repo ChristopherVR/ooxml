@@ -240,3 +240,36 @@ UI typechecking still reports the pre-existing Teams/PowerPoint declaration-reso
 errors from concurrent main changes, with no Visio errors. Native Visio acceptance
 was repeated after the extended-property update; reparsing its resaved drawing confirms
 page order, dimensions and the refreshed Pages property vectors.
+
+## Source-backed page reordering
+
+The All pages menu now opens Reorder Pages on the shared Office dialog, with a page
+list, Move Up/Down, OK and Cancel. The draft becomes one atomic core transaction.
+Core changes page metadata and the extended-property title order while keeping page
+IDs, existing page payloads and relationships unchanged. Moving to the existing index
+returns the original bytes with no changed parts. Insertion and ordering can share a
+page transaction; shape edits still require a separate transaction.
+
+The controller preserves the selected page by ID, emits its updated index to the
+framework bindings, and checks shape selection against that relocated page. Undo and
+redo preserve page identity. Draft cancellation leaves the source unchanged; replacing
+the source closes stale drafts, and outdated errors cannot alter a new dialog draft.
+
+A native Visio 16 reference moved page ID 6 to native index 1 via Page.Index. Its order
+was 6, 0, 4, 5, 7, 8, 9. The core-produced drawing reopened in Visio with that exact
+order, seven pages and Page-4 first, then saved successfully. Native outputs remain
+local beside the scale corpus. Reproduce core output by setting
+VISIO_NATIVE_PAGE_SCALES_DIR and VISIO_NATIVE_PAGE_ORDER_OUTPUT, then running
+visio/edit-page-order.test.ts. The comparison uses the genuine scale-corpus document,
+not a synthetic package as native acceptance evidence.
+
+The six-binding browser workflow now also moves the inserted page, checks selected
+page identity through undo/redo, and downloads/reopens the ordered drawing. Page-number
+and page-count formula caches remain explicitly unrecalculated. Page rename/delete,
+broader background semantics and complete native render/save fidelity remain open.
+
+Verification: 1,967 Visio core tests passed (30 optional skips), 708 shared Visio UI
+tests passed, and six browser workflows passed across every binding. All 48 documentation
+checks passed. Strict core typechecking and core ESM/CJS plus shared UI ESM builds passed.
+UI typechecking continues to fail only on the existing Teams/PowerPoint declaration
+resolution errors. Native Visio reopen/save was verified independently of browser tests.

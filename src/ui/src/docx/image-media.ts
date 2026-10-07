@@ -11,6 +11,7 @@ import type { ThemeCatalog } from 'ooxml-core/docx';
  */
 export class ImageMediaCache {
 	private readonly urls = new Map<string, string>();
+	private readonly listeners = new Set<() => void>();
 	constructor(private readonly lookup: (partName: string) => Uint8Array | undefined) {}
 
 	urlFor(partName: string, contentType: string): string | undefined {
@@ -27,6 +28,17 @@ export class ImageMediaCache {
 		if (typeof URL.revokeObjectURL === 'function')
 			for (const url of this.urls.values()) URL.revokeObjectURL(url);
 		this.urls.clear();
+	}
+	/** Refresh mounted images when their bytes arrive after the document reference. */
+	refresh(): void {
+		this.release();
+		for (const listener of this.listeners) listener();
+	}
+	onChange(listener: () => void): () => void {
+		this.listeners.add(listener);
+		return () => {
+			this.listeners.delete(listener);
+		};
 	}
 }
 
@@ -71,11 +83,15 @@ export function imageNodeView(cache: ImageMediaCache, options: ImageNodeViewOpti
 		const content = renderSpec(node);
 		// A placeholder (unsupported drawing or text box) shows static child text that ProseMirror must leave alone.
 		if (content.tagName !== 'IMG') return { dom: content, ignoreMutation: () => true };
-		const src =
-			(node.attrs.svgPartName && cache.urlFor(String(node.attrs.svgPartName), 'image/svg+xml')) ||
-			cache.urlFor(String(node.attrs.partName), String(node.attrs.contentType));
-		if (src) content.setAttribute('src', src);
-		else content.classList.add('dve-image-missing');
+		const refresh = () => {
+			const src =
+				(node.attrs.svgPartName && cache.urlFor(String(node.attrs.svgPartName), 'image/svg+xml')) ||
+				cache.urlFor(String(node.attrs.partName), String(node.attrs.contentType));
+			if (src) content.setAttribute('src', src);
+			content.classList.toggle('dve-image-missing', !src);
+		};
+		refresh();
+		const unsubscribe = cache.onChange(refresh);
 		const dom = document.createElement('span');
 		dom.className = ['dve-picture', placementClass(node.attrs.placement)].filter(Boolean).join(' ');
 		dom.append(content);
@@ -112,6 +128,7 @@ export function imageNodeView(cache: ImageMediaCache, options: ImageNodeViewOpti
 		dom.append(handle);
 		return {
 			dom,
+			destroy: unsubscribe,
 			selectNode: () => dom.classList.add('dve-picture-selected'),
 			deselectNode: () => dom.classList.remove('dve-picture-selected'),
 			stopEvent: (event) => event.target === handle,

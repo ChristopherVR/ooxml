@@ -30,6 +30,9 @@ export interface InsertControllerHost {
 	paper(): HTMLElement | undefined;
 	toolbar(): HTMLElement | undefined;
 	reportError(error: Error): void;
+	/** Shared media hosts allocate immutable room-wide names and publish bytes before insertion. */
+	newMediaPartName?(contentType: string): string;
+	stageMedia?(partName: string, part: PendingMediaPart): void;
 }
 
 /** Picture, link, character style and hidden-text commands shared by every editor instance. */
@@ -215,7 +218,11 @@ export class InsertController {
 		const view = this.host.view();
 		if (!file || !view?.editable) return;
 		try {
-			const staged = await stagePicture(file, this.host.contentWidth());
+			const staged = await stagePicture(file, this.host.contentWidth(), this.host.newMediaPartName);
+			if (this.host.view() !== view || !view.editable) return;
+			this.host.stageMedia?.(staged.image.partName, staged.media);
+			if (staged.svg && staged.image.svgPartName)
+				this.host.stageMedia?.(staged.image.svgPartName, staged.svg);
 			this.pendingMedia.set(staged.image.partName, staged.media);
 			if (staged.svg && staged.image.svgPartName)
 				this.pendingMedia.set(staged.image.svgPartName, staged.svg);

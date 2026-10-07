@@ -1,4 +1,6 @@
 import { detectOfficeKind, type OfficeKind } from './model.js';
+import { markdownTable, type MarkdownTable } from './markdown-table.js';
+export type { MarkdownTable } from './markdown-table.js';
 
 export type ContentKind = OfficeKind | 'markdown' | 'website' | 'text';
 
@@ -72,9 +74,23 @@ export async function readContent(
 }
 
 export interface MarkdownBlock {
-	kind: 'heading' | 'paragraph' | 'code' | 'quote' | 'list';
+	kind: 'heading' | 'paragraph' | 'code' | 'quote' | 'list' | 'table';
 	text: string;
 	level: number;
+	checked?: boolean;
+	table?: MarkdownTable;
+}
+
+/** Resolve Markdown links against their file, without expanding the embedding URL policy. */
+export function markdownUrl(value: string, base: string): string | null {
+	if (!value || /[\u0000-\u0020\u007f\\]/u.test(value) || value.startsWith('//')) return null;
+	if (/^[a-z][a-z\d+.-]*:/iu.test(value) && !/^https?:\/\//iu.test(value)) return null;
+	if (!contentUrl(base, base)) return null;
+	try {
+		return contentUrl(new URL(value, base).href, base);
+	} catch {
+		return null;
+	}
 }
 
 export interface MarkdownInline {
@@ -94,7 +110,7 @@ export function markdownInline(text: string, base: string): MarkdownInline[] {
 		else if (match[2]) tokens.push({ kind: 'strong', text: match[2] });
 		else if (match[3]) tokens.push({ kind: 'emphasis', text: match[3] });
 		else {
-			const url = contentUrl(match[5], base);
+			const url = markdownUrl(match[5]!, base);
 			tokens.push(url ? { kind: 'link', text: match[4]!, url } : { kind: 'text', text: match[0] });
 		}
 		offset = match.index + match[0].length;
@@ -109,7 +125,8 @@ export function markdownBlocks(source: string): MarkdownBlock[] {
 	const lines = source.replace(/\r\n?/gu, '\n').split('\n');
 	let code: string[] | null = null;
 	let fence = '';
-	for (const line of lines) {
+	for (let index = 0; index < lines.length; index++) {
+		const line = lines[index]!;
 		const marker = /^\s{0,3}(`{3,}|~{3,})(.*)$/u.exec(line);
 		if (code) {
 			if (
@@ -131,9 +148,21 @@ export function markdownBlocks(source: string): MarkdownBlock[] {
 		if (!line.trim()) continue;
 		const heading = /^(#{1,6})\s+(.+)$/u.exec(line);
 		const list = /^\s*[-*+]\s+(.+)$/u.exec(line);
+		const table = !heading && !list && !/^>\s?/u.test(line) ? markdownTable(lines, index) : null;
+		if (table) {
+			blocks.push({ kind: 'table', text: '', level: 0, table: table.table });
+			index = table.end;
+			continue;
+		}
 		if (heading) blocks.push({ kind: 'heading', text: heading[2]!, level: heading[1]!.length });
-		else if (list) blocks.push({ kind: 'list', text: list[1]!, level: 0 });
-		else if (/^>\s?/u.test(line))
+		else if (list) {
+			const task = /^\[([ xX\t])\]\s+(.+)$/u.exec(list[1]!);
+			blocks.push(
+				task
+					? { kind: 'list', text: task[2]!, level: 0, checked: /x/iu.test(task[1]!) }
+					: { kind: 'list', text: list[1]!, level: 0 },
+			);
+		} else if (/^>\s?/u.test(line))
 			blocks.push({ kind: 'quote', text: line.replace(/^>\s?/u, ''), level: 0 });
 		else blocks.push({ kind: 'paragraph', text: line, level: 0 });
 	}

@@ -441,10 +441,15 @@ export class ViewerController {
 				? searchDocumentText(searchIndex, this.#state.search.query)
 				: EMPTY_TEXT_SEARCH;
 			const selection = this.#state.selectedShape;
+			const oldPageIndex = this.#state.pageIndex;
+			const currentPageId = this.#state.document?.pages[oldPageIndex]?.id;
+			const foundPageIndex = document.pages.findIndex((page) => page.id === currentPageId);
+			const pageIndex =
+				foundPageIndex >= 0
+					? foundPageIndex
+					: Math.min(oldPageIndex, Math.max(0, document.pages.length - 1));
 			const selectedShape =
-				selection && visibleSelection(document, this.#state.pageIndex, selection, visible)
-					? selection
-					: null;
+				selection && visibleSelection(document, pageIndex, selection, visible) ? selection : null;
 			// No external callbacks occur between history acceptance and model acceptance.
 			if (edited) history.append(edited.bytes, edited.diagnostics);
 			else if (kind === 'remote') history.append(Uint8Array.from(remote!), []);
@@ -459,11 +464,14 @@ export class ViewerController {
 					search,
 					selectedShape,
 					error: null,
-					pageIndex: Math.min(this.#state.pageIndex, Math.max(0, document.pages.length - 1)),
+					pageIndex,
 				}) &&
 				current()
-			)
-				this.#emit('document-change', { document, dirty: history.state.dirty, kind });
+			) {
+				if (pageIndex !== oldPageIndex) this.#emit('page-change', pageIndex);
+				if (current())
+					this.#emit('document-change', { document, dirty: history.state.dirty, kind });
+			}
 		} catch (cause) {
 			if (!current())
 				throw new DOMException('The diagram edit was superseded or cancelled.', 'AbortError');

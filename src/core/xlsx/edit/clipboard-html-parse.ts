@@ -4,11 +4,13 @@ import type {
 	CellValue,
 	Color,
 	HorizontalAlignment,
+	Hyperlink,
 	VerticalAlignment,
 } from '../model.js';
 import { type StylePatch, patchStyle } from '../styles.js';
 import { parseCellInput } from './deps.js';
 import type { ClipboardCell, ClipboardCells } from './types.js';
+import { hyperlinkFromHtmlAttributes } from './clipboard-links.js';
 
 const NAMED_COLORS: Record<string, string> = {
 	black: '000000',
@@ -224,6 +226,7 @@ export function parseHtmlTable(html: string, base: CellStyle): ClipboardCells | 
 	const grid: (ClipboardCell | null)[][] = [];
 	const taken = new Set<string>();
 	const merges: CellRange[] = [];
+	const hyperlinks: Hyperlink[] = [];
 	let r = 0;
 	for (const tr of table.matchAll(/<tr\b[^>]*>([\s\S]*?)(?=<tr\b|<\/tbody|<\/table|$)/gi)) {
 		const row = (grid[r] ??= []);
@@ -244,6 +247,13 @@ export function parseHtmlTable(html: string, base: CellStyle): ClipboardCells | 
 			row[c] = text === '' && !Object.keys(patch).length ? null : toCell(text, attrs, patch, base);
 			const rowSpan = Math.max(1, Number(attrs.get('rowspan') ?? 1) || 1);
 			const colSpan = Math.max(1, Number(attrs.get('colspan') ?? 1) || 1);
+			const anchor = /<a\b([^>]*)>/i.exec(inner);
+			const linkAttrs = anchor ? parseAttributes(anchor[1] ?? '') : undefined;
+			const link = hyperlinkFromHtmlAttributes(linkAttrs, {
+				start: { row: r, col: c },
+				end: { row: r + rowSpan - 1, col: c + colSpan - 1 },
+			});
+			if (link) hyperlinks.push(link);
 			if (rowSpan > 1 || colSpan > 1)
 				merges.push({
 					start: { row: r, col: c },
@@ -263,7 +273,7 @@ export function parseHtmlTable(html: string, base: CellStyle): ClipboardCells | 
 	const data = Array.from({ length: rows }, (_v, i) =>
 		Array.from({ length: cols }, (_w, j) => grid[i]?.[j] ?? null),
 	);
-	return rows && cols ? { rows, cols, data, merges } : undefined;
+	return rows && cols ? { rows, cols, data, merges, hyperlinks } : undefined;
 }
 
 function toCell(

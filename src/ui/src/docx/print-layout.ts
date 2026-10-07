@@ -262,14 +262,18 @@ export function renderPrintLayout(
 		if (borderBox) sheet.append(borderBox);
 		for (const column of page.columns) {
 			const previous = page.columns[page.columns.indexOf(column) - 1];
-			if (page.columnSeparator && previous) {
+			if (
+				(column.separator ?? page.columnSeparator) &&
+				previous &&
+				(previous.sectionIndex ?? page.sectionIndex) === (column.sectionIndex ?? page.sectionIndex)
+			) {
 				const rule = document.createElement('div');
 				rule.className = 'dve-print-column-rule';
 				Object.assign(rule.style, {
 					position: 'absolute',
 					left: `${page.marginLeftPx + (previous.xPx + previous.widthPx + column.xPx) / 2}px`,
-					top: `${page.marginTopPx}px`,
-					height: `${page.heightPx - page.marginTopPx - page.marginBottomPx}px`,
+					top: `${page.marginTopPx + (column.startYPx ?? 0)}px`,
+					height: `${(column.endYPx ?? page.heightPx - page.marginTopPx - page.marginBottomPx) - (column.startYPx ?? 0)}px`,
 					borderLeft: '1px solid currentColor',
 				});
 				sheet.append(rule);
@@ -284,11 +288,25 @@ export function renderPrintLayout(
 				columnEl.append(renderBlock(block, hitboxes, pictureUrl, column.widthPx));
 			sheet.append(columnEl);
 		}
-		const numbering = options.lineNumbers?.[page.sectionIndex];
-		if (numbering)
-			sheet.append(
-				...lineNumberLabels(page, numbering, counter, options.suppressedLineNumberParagraphs),
-			);
+		const bands = new Map<number, typeof page.columns>();
+		for (const column of page.columns) {
+			const index = column.sectionIndex ?? page.sectionIndex;
+			const band = bands.get(index) ?? [];
+			band.push(column);
+			bands.set(index, band);
+		}
+		for (const [sectionIndex, columns] of bands) {
+			const numbering = options.lineNumbers?.[sectionIndex];
+			if (numbering)
+				sheet.append(
+					...lineNumberLabels(
+						{ ...page, sectionIndex, columns },
+						numbering,
+						counter,
+						options.suppressedLineNumberParagraphs,
+					),
+				);
+		}
 		if (page.footnotes?.length) sheet.append(footnoteArea(page, hitboxes, pictureUrl));
 		for (const float of page.floats ?? []) {
 			const picture = pictureElement(float, pictureUrl);

@@ -109,6 +109,22 @@ describe('chartML data label parsing', () => {
 	// C2-G13: PowerPoint 2013+ "Value From Cells" data labels
 	// (c15:dlblFieldTable cached text, gated per-point by
 	// c15:showDataLabelsRange), distinct from a literal c:tx/c:rich override.
+	it('reads rich label text written with xml:space="preserve"', () => {
+		const series: XmlObject = {
+			'c:dLbls': {
+				'c:dLbl': {
+					'c:idx': { '@_val': '0' },
+					'c:tx': {
+						'c:rich': {
+							'a:p': { 'a:r': { 'a:t': { '@_xml:space': 'preserve', '#text': ' 1,444 ' } } },
+						},
+					},
+				},
+			},
+		};
+		expect(parseSeriesDataLabels(series, lookup)[0].text).toBe(' 1,444 ');
+	});
+
 	describe('"Value From Cells" data labels (C2-G13)', () => {
 		const fieldTableExtLst: XmlObject = {
 			'c:ext': {
@@ -140,6 +156,7 @@ describe('chartML data label parsing', () => {
 			};
 			const [label] = parseSeriesDataLabels(series, lookup);
 			expect(label.text).toBe('Alpha');
+			expect(label.textFromCells).toBe(true);
 		});
 
 		it('leaves text unset when showDataLabelsRange is absent even if a field table exists', () => {
