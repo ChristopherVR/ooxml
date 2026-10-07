@@ -31,6 +31,7 @@ const NS_R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationship
 
 const CAT_AX_ID = 111111111;
 const VAL_AX_ID = 222222222;
+const SER_AX_ID = 333333333;
 
 const SCATTER_LIKE = new Set<PptxChartType>(['scatter', 'bubble']);
 
@@ -130,6 +131,7 @@ function buildChartTypeContainer(
 	chartData: PptxChartData,
 	family: ChartFamily,
 	containerLocal: string,
+	axisIds: number[],
 ): XmlObject {
 	const container: XmlObject = {};
 	if (family === 'bar') {
@@ -182,31 +184,26 @@ function buildChartTypeContainer(
 		// Stock charts join the high/low points across categories.
 		container['c:hiLowLines'] = {};
 	}
-	if (
-		family === 'bar' ||
-		family === 'line' ||
-		family === 'area' ||
-		family === 'radar' ||
-		family === 'scatter' ||
-		family === 'bubble' ||
-		family === 'stock' ||
-		family === 'surface'
-	) {
-		container['c:axId'] = [{ '@_val': String(CAT_AX_ID) }, { '@_val': String(VAL_AX_ID) }];
+	if (axisIds.length > 0) {
+		container['c:axId'] = axisIds.map((id) => ({ '@_val': String(id) }));
 	}
 	applyGeneratedChartGroupOptions(container, containerLocal, chartData);
 	return container;
 }
 
 function buildPlotArea(chartData: PptxChartData, tag: string, family: ChartFamily): XmlObject {
+	// CT_Line3DChart and CT_Surface3DChart require three axes. CT_SurfaceChart
+	// permits two or three; generate the complete category/value/series set.
+	// CT_Bar3DChart and CT_Area3DChart permit the existing two-axis set.
+	const hasAxes = family !== 'pie' && family !== 'doughnut' && family !== 'ofPie';
+	const hasSeriesAxis = chartData.chartType === 'line3D' || family === 'surface';
+	const axisIds = hasAxes ? [CAT_AX_ID, VAL_AX_ID, ...(hasSeriesAxis ? [SER_AX_ID] : [])] : [];
 	const plotArea: XmlObject = { 'c:layout': {} };
-	plotArea[tag] = buildChartTypeContainer(chartData, family, tag.replace(/^.*:/u, ''));
+	plotArea[tag] = buildChartTypeContainer(chartData, family, tag.replace(/^.*:/u, ''), axisIds);
 	if (chartData.style) {
 		applyChartDataLabelsToXml(plotArea, chartData.style, (key) => key.replace(/^.*:/u, ''));
 	}
 
-	// Pie-family containers (pie, doughnut, ofPie) have no cartesian axes.
-	const hasAxes = family !== 'pie' && family !== 'doughnut' && family !== 'ofPie';
 	if (hasAxes && SCATTER_LIKE.has(chartData.chartType)) {
 		plotArea['c:valAx'] = [
 			buildGeneratedChartAxis(
@@ -239,6 +236,14 @@ function buildPlotArea(chartData: PptxChartData, tag: string, family: ChartFamil
 			axisFormatting(chartData, 'valAx', VAL_AX_ID),
 		);
 	}
+	if (hasSeriesAxis) {
+		plotArea['c:serAx'] = buildGeneratedChartAxis(
+			SER_AX_ID,
+			VAL_AX_ID,
+			'b',
+			axisFormatting(chartData, 'serAx', SER_AX_ID),
+		);
+	}
 	applyChartDataTable(plotArea, chartData.dataTable, (key) => key.replace(/^.*:/u, ''));
 	return plotArea;
 }
@@ -248,7 +253,10 @@ function buildPlotArea(chartData: PptxChartData, tag: string, family: ChartFamil
  * The result is ready to hand to the XML builder and write as a chart part.
  */
 export function buildChartSpaceXml(chartData: PptxChartData): XmlObject {
-	const { tag, family } = resolveChartContainerType(chartData.chartType);
+	const resolved = resolveChartContainerType(chartData.chartType);
+	const { family } = resolved;
+	const tag =
+		family === 'surface' && chartData.surfaceTopView === false ? 'c:surface3DChart' : resolved.tag;
 
 	const chart: XmlObject = {};
 	if (chartData.title) {

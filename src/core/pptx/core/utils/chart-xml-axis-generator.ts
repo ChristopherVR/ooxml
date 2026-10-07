@@ -5,7 +5,7 @@ import { applyChartAxisLabelFormatting } from './chart-axis-label-formatting';
 import { applyChartAxisScaling, upsertChartAxisChild } from './chart-axis-scaling';
 import { applyChartDateAxisUnits } from './chart-date-axis';
 
-/** Build a generated classic ChartML category, date, or value axis. */
+/** Build a generated classic ChartML category, date, value, or series axis. */
 export function buildGeneratedChartAxis(
 	axId: number,
 	crossId: number,
