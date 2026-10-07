@@ -241,6 +241,20 @@ cross-device state, viewport-level reading detection, activity notifications and
 automatic following remain outstanding. These controls follow Microsoft's
 [followed-thread inbox workflow](https://support.microsoft.com/en-us/teams/teams-channels/follow-threads-in-microsoft-teams).
 
+## Eleventh implemented slice: automatic following preferences
+
+Successful new posts (including channel file posts) and replies through the client
+actions automatically follow their thread root. Personal settings independently
+disable following started threads or replied-to threads and persist per user and
+workspace. Defaults enable both. Edits and rejected empty sends do not create
+follows, and existing follow choices are not changed retrospectively when a setting
+changes. Low-level writes through `workspace.chat` remain host-controlled and do
+not infer personal follow intent. Unit tests check both settings, restoration,
+author action results and defensive preference copies; browser acceptance checks
+post following, opting out, reload and independently enabling reply following.
+Automatic following on mentions and following all content in a channel remain
+unsupported, alongside notifications and cross-device preference sync.
+
 ## Next releasable slices
 
 1. Shared tab permissions: authenticated membership and server enforcement,

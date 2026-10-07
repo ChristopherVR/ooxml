@@ -2,7 +2,8 @@
 param(
     [string]$OutputDirectory = (Join-Path $env:TEMP ('word-continuous-' + [guid]::NewGuid())),
     [string[]]$CaseNames = @('same', 'left-margin', 'top-margin', 'columns', 'page-size', 'orientation',
-        'balanced-columns', 'balanced-odd', 'balanced-overflow', 'balanced-keep')
+        'balanced-columns', 'balanced-odd', 'balanced-overflow', 'balanced-keep',
+        'balanced-unequal', 'balanced-unequal-odd', 'balanced-unequal-overflow', 'balanced-unequal-reverse')
 )
 $ErrorActionPreference = 'Stop'
 New-Item -ItemType Directory -Force $OutputDirectory | Out-Null
@@ -19,6 +20,10 @@ try {
                 'balanced-odd' { 5 }
                 'balanced-overflow' { 120 }
                 'balanced-keep' { 5 }
+                'balanced-unequal' { 6 }
+                'balanced-unequal-odd' { 5 }
+                'balanced-unequal-overflow' { 120 }
+                'balanced-unequal-reverse' { 6 }
                 default { 2 }
             }
             $before = (1..$beforeCount | ForEach-Object { "Before$_`r" }) -join ''
@@ -38,6 +43,13 @@ try {
             $document.Range($before.Length,$before.Length).InsertBreak(3) # wdSectionBreakContinuous
             if ($kind.StartsWith('balanced-')) {
                 $document.Sections.Item(1).PageSetup.TextColumns.SetCount(2)
+            }
+            if ($kind.StartsWith('balanced-unequal')) {
+                $columns = $document.Sections.Item(1).PageSetup.TextColumns
+                $columns.SetCount(1)
+                $columns.Add($(if ($kind -eq 'balanced-unequal-reverse') { 144 } else { 288 }),36,0) | Out-Null
+                $columns.Item(1).Width = $(if ($kind -eq 'balanced-unequal-reverse') { 288 } else { 144 })
+                $columns.Item(1).SpaceAfter = 36
             }
             if ($kind -eq 'balanced-keep') {
                 $document.Paragraphs.Item(3).KeepWithNext = -1

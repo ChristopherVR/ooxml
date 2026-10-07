@@ -80,11 +80,23 @@ The browser convergence and export contract passed in all six framework mounts.
 Core and UI regressions also cover simultaneous first insertions in empty
 paragraphs, formatting, page settings, recovery, loaded opaque parts and new
 picture bytes. This is bounded evidence, not a complete M365 comparison. The
-matching loaded package remains necessary for styles, notes, comments and
+matching loaded package remains necessary for styles, notes and
 existing assets. Editing outside the body and structural table commands remain
 disabled; canonical multi-author saving, authorization and persistence remain
 host responsibilities. See `viewers/docx/docs/collaboration.md` for the API and
 limitations.
+
+Comment editing commands now live in core and the UI re-exports them. New Yjs
+rooms share independent anchor attributes and comment records, with separate
+resolution and deletion maps. Adding or deleting a thread and its anchor uses
+one local undo operation. Concurrent replies survive synchronization; deleted
+roots hide concurrent replies until undo restores the root. Imported overlapping
+anchors normalize before bootstrap, and deletion formats only the relevant Yjs
+attribute to avoid reasserting another author's concurrently deleted anchor.
+Legacy rooms without the comment capability and authority-step rooms keep comment
+editing disabled. Tests cover partitioned edits, imported threads, author undo,
+read-only peers and detached DOCX export, plus the review pane in six browser
+bindings. This does not implement M365 mentions, notifications or assigned tasks.
 
 ## Next implementation sequence
 
@@ -96,14 +108,14 @@ orientation changes still start a new page, matching native Word measurements.
 Print Layout limits column separators to their bands and retains per-section
 line numbering and section-page counts.
 
-Ten committed native DOCX references record paragraph page numbers and origins
+Fourteen committed native DOCX references record paragraph page numbers and origins
 from desktop Word `16.0.20430.20140`, with Arial 12 pt and exact line spacing.
 The installed licenses are 2021/2024, so this is explicit desktop Word evidence,
 not a current M365 subscription certification or a glyph/raster comparison.
-Equal-width paragraph columns now balance their final page before a continuous
+Equal and unequal-width paragraph columns now balance their final page before a continuous
 break, reusing the same paragraph flow, widow/orphan and keep-together rules.
 The native corpus verifies even and odd distributions, earlier-page overflow,
-and keep-with-next groups. Tables, unequal columns, floating pictures and
+keep-with-next groups and reversed unequal widths. Tables, floating pictures and
 explicit breaks still report unsupported balancing. Vertical alignment changes
 and shared-page footnote cases also retain reported approximations. Floats
 relative to changed margins and remaining complex layouts need native references.
@@ -118,7 +130,7 @@ renders it through compatibility facades. These semantic references do not
 certify font metrics, header/footer geometry, all numbering formats, or M365
 subscription behavior.
 
-1. Extend collaboration to comments, note content, headers/footers, style and
+1. Extend collaboration to note content, headers/footers, style and
    numbering definitions, using granular mappings and explicit conflict rules.
    Add granular table transactions before enabling structural table editing.
 2. Define full package bootstrap, authenticated provider permissions,

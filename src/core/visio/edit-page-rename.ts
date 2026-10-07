@@ -1,21 +1,10 @@
 import { attribute, children } from './sheet.js';
 import { fail } from './package-common.js';
 import type { VisioPackage } from './package.js';
-import { indexedPart, related, visioXml } from './parts.js';
+import { editableVisioPageRoots } from './edit-page-roots.js';
+import { mapVisioFormulaSyntax as syntax, unquotedVisioFormula } from './formula-source.js';
 
 const escape = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-/** Transform formula syntax while leaving quoted string literals byte-for-byte intact. */
-function syntax(source: string, transform: (segment: string) => string): string {
-	return source
-		.split(/("(?:[^"]|"")*")/g)
-		.map((part, index) => (index % 2 ? part : transform(part)))
-		.join('');
-}
-const unquoted = (source: string) =>
-	source
-		.split(/("(?:[^"]|"")*")/g)
-		.map((part, index) => (index % 2 ? ' ' : part))
-		.join('');
 function localCell(node: Element): string | undefined {
 	const row = node.parentNode as Element | null;
 	const section = row?.parentNode as Element | null;
@@ -56,28 +45,7 @@ export async function renameVisioPage(
 		)
 			fail('EDIT_DUPLICATE_PAGE_NAME', 'Page name already exists.');
 	}
-	const roots = new Map<string, Element>();
-	const admitted = new Map([...pagePaths.values()].map((path) => [path, 'PageContents']));
-	admitted.set(pagesPart, 'Pages');
-	const documentPart = (await related(pkg, '', 'document'))!;
-	admitted.set(documentPart, 'VisioDocument');
-	const mastersPart = await related(pkg, documentPart, 'masters', false);
-	if (mastersPart) {
-		admitted.set(mastersPart, 'Masters');
-		for (const master of children(await visioXml(pkg, mastersPart, 'Masters'), 'Master'))
-			admitted.set(await indexedPart(pkg, mastersPart, master, 'master'), 'MasterContents');
-	}
-	for (const [path, expected] of admitted) {
-		check();
-		const source =
-			path === pagesPart ? pages : (dirty.get(path) ?? (await visioXml(pkg, path, expected)));
-		roots.set(
-			path,
-			path === pagesPart
-				? pages
-				: (source.ownerDocument!.cloneNode(true) as Document).documentElement,
-		);
-	}
+	const roots = await editableVisioPageRoots(pkg, pagesPart, pages, pagePaths, dirty, check);
 	const changedCells: { node: Element; cell: string }[] = [];
 	const prefix = new RegExp(`Pages\\[${escape(oldUniversal)}\\]!`, 'gi');
 	const targetByPath = new Map([...pagePaths].map(([id, path]) => [path, id]));
@@ -87,7 +55,7 @@ export async function renameVisioPage(
 			check();
 			const formula = attribute(node, 'F');
 			if (formula) {
-				const code = unquoted(formula);
+				const code = unquotedVisioFormula(formula);
 				let target = targetByPath.get(path);
 				if (path === pagesPart) {
 					let ancestor: Node | null = node;
@@ -170,7 +138,7 @@ export async function renameVisioPage(
 			if (
 				changedCells.length &&
 				/\b(?:INDIRECT|EVALCELL|EVALTEXT|GETREF|REF|SETATREF|SETATREFEXPR|SETATREFEVAL|CALL|RUNADDON)\s*\(/i.test(
-					unquoted(formula),
+					unquotedVisioFormula(formula),
 				)
 			)
 				fail(
@@ -183,7 +151,7 @@ export async function renameVisioPage(
 					`(?:^|[^a-z0-9_.])${escape(changed.cell)}(?:$|[^a-z0-9_.])`,
 					'i',
 				);
-				if (reference.test(unquoted(formula)))
+				if (reference.test(unquotedVisioFormula(formula)))
 					fail(
 						'EDIT_UNSUPPORTED_PAGE_NAME_DEPENDENCY',
 						'String-valued page-name dependencies cannot be safely refreshed.',

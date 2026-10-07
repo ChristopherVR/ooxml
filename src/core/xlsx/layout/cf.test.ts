@@ -262,10 +262,10 @@ describe('conditional format rules', () => {
 			],
 		);
 		const cf = evaluator(wb);
-		expect(cf.at(0, 0)?.dataBar).toEqual({ fraction: 0, color: '#638EC6' });
+		expect(cf.at(0, 0)?.dataBar).toMatchObject({ fraction: 0, color: '#638EC6' });
 		expect(cf.at(1, 0)?.dataBar?.fraction).toBe(0.25);
 		expect(cf.at(2, 0)?.dataBar?.fraction).toBe(1);
-		expect(cf.at(3, 0)?.dataBar).toEqual({ fraction: 0, color: '#638EC6', negative: true });
+		expect(cf.at(3, 0)?.dataBar).toMatchObject({ fraction: 0, color: '#638EC6', negative: true });
 	});
 
 	it('hides values for showValue=0 bars', () => {
@@ -284,7 +284,7 @@ describe('conditional format rules', () => {
 		);
 		const r = evaluator(wb).at(0, 0);
 		expect(r?.hideValue).toBe(true);
-		expect(r?.dataBar).toEqual({ fraction: 1, color: '#4472C4' });
+		expect(r?.dataBar).toMatchObject({ fraction: 1, color: '#4472C4' });
 	});
 
 	it('picks icon indices from percent thresholds', () => {

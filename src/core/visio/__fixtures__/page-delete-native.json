@@ -1,0 +1,118 @@
+{
+	"application": "Microsoft Visio",
+	"version": "16.0",
+	"cases": [
+		{
+			"name": "referenced",
+			"deletedId": "0",
+			"native": {
+				"pageCount": 1,
+				"pages": [
+					{
+						"id": "4",
+						"name": "Page-2",
+						"background": false,
+						"backPage": "",
+						"width": 8.5,
+						"height": 11.0,
+						"drawingScale": 1.0,
+						"pageScale": 1.0,
+						"shapes": 1
+					}
+				],
+				"widthCache": 8.5,
+				"link": "Page-1"
+			},
+			"accepted": {
+				"pageCount": 1,
+				"pages": [
+					{
+						"id": "4",
+						"name": "Page-2",
+						"background": false,
+						"backPage": "",
+						"width": 8.5,
+						"height": 11.0,
+						"drawingScale": 1.0,
+						"pageScale": 1.0,
+						"shapes": 1
+					}
+				],
+				"widthCache": 8.5,
+				"link": "Page-1"
+			}
+		},
+		{
+			"name": "background",
+			"deletedId": "4",
+			"native": {
+				"pageCount": 1,
+				"pages": [
+					{
+						"id": "0",
+						"name": "Page-1",
+						"background": false,
+						"backPage": "",
+						"width": 8.5,
+						"height": 11.0,
+						"drawingScale": 1.0,
+						"pageScale": 1.0,
+						"shapes": 0
+					}
+				]
+			},
+			"accepted": {
+				"pageCount": 1,
+				"pages": [
+					{
+						"id": "0",
+						"name": "Page-1",
+						"background": false,
+						"backPage": "",
+						"width": 8.5,
+						"height": 11.0,
+						"drawingScale": 1.0,
+						"pageScale": 1.0,
+						"shapes": 0
+					}
+				]
+			}
+		},
+		{
+			"name": "last",
+			"deletedId": "0",
+			"native": {
+				"pageCount": 1,
+				"pages": [
+					{
+						"id": "4",
+						"name": "Page-2",
+						"background": false,
+						"backPage": "",
+						"width": 8.5,
+						"height": 11.0,
+						"drawingScale": 1.0,
+						"pageScale": 1.0,
+						"shapes": 0
+					}
+				]
+			},
+			"accepted": {
+				"pageCount": 1,
+				"pages": [
+					{
+						"id": "1",
+						"name": "Page-2",
+						"background": false,
+						"backPage": "",
+						"width": 8.5,
+						"height": 11.0,
+						"drawingScale": 1.0,
+						"pageScale": 1.0,
+						"shapes": 0
+					}
+				]
+			}
+		}
+	]
+}
