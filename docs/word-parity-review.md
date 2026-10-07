@@ -668,5 +668,22 @@ the ignored value. Four native Word 16.0 build 20430 cases corroborate default,
 never, top-level and previous-level restart behavior; edit/save/reload tests retain
 both the labels and original numbering part. This follows Microsoft's documented
 Word compatibility behavior, which differs from the generic override rule.
-Conflicting full-level/startOverride start values remain a separate open issue;
-the native reference is perpetual desktop Word, not current M365 certification.
+The native reference is perpetual desktop Word, not current M365 certification.
+
+Fifteen further native controls establish covered list start-value precedence:
+explicit full-level starts, omitted starts, standalone start overrides and
+never-restart combinations. Effective omitted abstract starts display zero;
+parser provenance retains the source omission through additive definition saves.
+Authored numeric changes take effect immediately and after reload. To author an
+explicit one from an imported omitted start, remove `startWasOmitted`. Existing
+numbering definitions remain read-only in package editing. Observed precedence
+differs from Microsoft's compatibility note in some cases, so this evidence is
+explicitly tied to the installed desktop build; M365 subscription comparison
+remains required.
+
+Hexadecimal list formatting now uses uppercase hexadecimal for values zero
+through 65535. Native Word omits the numeric placeholder above that range while
+retaining literal suffixes and brackets. Nineteen native controls and portable
+list/edit/save/reload tests cover the raw values and punctuation. Other unsupported
+numbering formats still use the existing decimal fallback; this is not complete
+locale or numbering-format parity.
