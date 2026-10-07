@@ -229,7 +229,13 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 		lastRead = {};
 	}
 
+	const selectionKey = `teams:selected:${encodeURIComponent(workspaceId)}:${encodeURIComponent(ws.user.id)}`;
 	let selected = '';
+	try {
+		selected = storage?.getItem(selectionKey)?.slice(0, 64) ?? '';
+	} catch {
+		/* Storage is optional. */
+	}
 	let query = '';
 	let replyId = '';
 	let editId = '';
@@ -378,6 +384,7 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			const text = toBase64(Y.encodeStateAsUpdate(doc));
 			if (text.length <= MAX_SNAPSHOT_CHARS) storage.setItem(STORAGE_DOC + workspaceId, text);
 			storage.setItem(STORAGE_READ + workspaceId, JSON.stringify(lastRead));
+			storage.setItem(selectionKey, selected);
 		} catch {
 			// Blocked or over quota: the convenience is lost, the app keeps working.
 		}

@@ -42,6 +42,7 @@ import { defineTeamsProfileMenu } from './profile-menu';
 import { defineTeamsAddTabDialog } from './add-tab-dialog';
 import { icon } from '../icons';
 import { defineTeamsNavigationDrawer } from './navigation-drawer';
+import { defineTeamsCreateChannelDialog } from './create-channel-dialog';
 
 export type { FileUploader } from 'ooxml-core/teams';
 export interface OpenFileDetail {
@@ -88,6 +89,7 @@ export class TeamsApp extends LitElement {
 		embeds: { attribute: false },
 		preview: { state: true },
 		addingTab: { state: true },
+		creatingChannel: { state: true },
 		rail: { state: true },
 		tab: { state: true },
 		panel: { state: true },
@@ -118,6 +120,7 @@ export class TeamsApp extends LitElement {
 	declare rail: RailView;
 	declare tab: string;
 	declare addingTab: boolean;
+	declare creatingChannel: boolean;
 	declare panel: Panel;
 	declare meeting: boolean;
 	declare settingsOpen: boolean;
@@ -156,6 +159,7 @@ export class TeamsApp extends LitElement {
 		this.preview = null;
 		this.retainedTab = undefined;
 		this.addingTab = false;
+		this.creatingChannel = false;
 		this.rail = 'teams';
 		this.tab = 'posts';
 		this.panel = '';
@@ -188,6 +192,7 @@ export class TeamsApp extends LitElement {
 		defineTeamsProfileMenu();
 		defineTeamsAddTabDialog();
 		defineTeamsNavigationDrawer();
+		defineTeamsCreateChannelDialog();
 		super.connectedCallback();
 	}
 
@@ -218,6 +223,7 @@ export class TeamsApp extends LitElement {
 		this.preview = null;
 		this.tab = 'posts';
 		this.addingTab = false;
+		this.creatingChannel = false;
 		this.navigationOpen = false;
 		this.openRequest++;
 		const named = this.userName
@@ -362,14 +368,28 @@ export class TeamsApp extends LitElement {
 	}
 
 	private createChannel(): void {
-		const name = globalThis.prompt?.('Channel name')?.trim();
-		if (name) {
-			if (!this.closePreview()) return;
-			this.teams.client?.createChannel(name);
-			void this.closeNavigation(true);
-			this.tab = 'posts';
-			this.rail = 'teams';
-			this.meeting = false;
+		this.creatingChannel = true;
+	}
+
+	private commitChannel(name: string, description: string, client: TeamsClient | null): boolean {
+		if (!this.creatingChannel || !client || client !== this.client || !this.closePreview())
+			return false;
+		client.createChannel(name, description);
+		this.creatingChannel = false;
+		this.tab = 'posts';
+		this.rail = 'teams';
+		this.meeting = false;
+		void this.closeNavigation(true);
+		void this.focusCreatedChannel();
+		return true;
+	}
+	private async focusCreatedChannel(): Promise<void> {
+		await this.updateComplete;
+		await this.renderRoot.querySelector<LitElement>('teams-create-channel-dialog')?.updateComplete;
+		const heading = this.renderRoot.querySelector<HTMLElement>('main h1');
+		if (heading && !this.creatingChannel) {
+			heading.tabIndex = -1;
+			heading.focus();
 		}
 	}
 
@@ -398,6 +418,7 @@ export class TeamsApp extends LitElement {
 	private selectChannel(id: string): boolean {
 		if (!this.closePreview()) return false;
 		this.addingTab = false;
+		this.creatingChannel = false;
 		this.teams.client?.select(id);
 		this.teams.client?.search('');
 		this.meeting = false;
@@ -471,6 +492,11 @@ export class TeamsApp extends LitElement {
 					<aside class="side">${this.sidebar(s)}</aside>
 					<main class="main">${this.main(s)}</main>
 				</div>
+				<teams-create-channel-dialog
+					?open=${this.creatingChannel}
+					.create=${(name: string, description: string) => this.commitChannel(name, description, this.client)}
+					@teams-create-channel-close=${() => (this.creatingChannel = false)}
+				></teams-create-channel-dialog>
 				<teams-navigation-drawer
 					.heading=${this.rail === 'calls' ? 'Calls' : 'Teams and channels'}
 					?open=${this.navigationOpen}
@@ -555,6 +581,7 @@ export class TeamsApp extends LitElement {
 							this.retainedTab = tab;
 							this.tab = tab.id;
 							this.addingTab = false;
+							this.creatingChannel = false;
 						}
 						return tab;
 					}}
@@ -949,6 +976,7 @@ export class TeamsApp extends LitElement {
 		this.teams.client?.closeThread();
 		this.tab = id;
 		this.addingTab = false;
+		this.creatingChannel = false;
 	}
 
 	private async openThread(id: string, action?: 'reply' | 'edit'): Promise<void> {

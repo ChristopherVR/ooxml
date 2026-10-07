@@ -46,6 +46,7 @@ export interface Message {
 
 export const MAX_MESSAGE_CHARS = 20_000;
 export const MAX_CHANNEL_NAME_CHARS = 80;
+export const MAX_CHANNEL_TOPIC_CHARS = 1024;
 export const MAX_ATTACHMENTS = 20;
 const MAX_EMOJI_CHARS = 16;
 
@@ -92,6 +93,11 @@ export function sanitizeMessageText(text: unknown): string {
 export function sanitizeChannelName(name: unknown): string {
 	if (typeof name !== 'string') return '';
 	return stripHtmlTags(name).replace(/\s+/gu, ' ').trim().slice(0, MAX_CHANNEL_NAME_CHARS);
+}
+
+/** Channel descriptions have their own bound; a description is not a channel name. */
+export function sanitizeChannelTopic(topic: unknown): string {
+	return sanitizeMessageText(topic).slice(0, MAX_CHANNEL_TOPIC_CHARS);
 }
 
 /** A reaction is one short emoji-like token: no markup, no whitespace. */

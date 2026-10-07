@@ -14,6 +14,7 @@ import {
 	type Message,
 	sanitizeAttachments,
 	sanitizeChannelName,
+	sanitizeChannelTopic,
 	sanitizeEmoji,
 	sanitizeMessageText,
 } from './model';
@@ -65,7 +66,7 @@ function readChannel(id: string, raw: unknown): Channel | null {
 	return {
 		id,
 		name,
-		topic: sanitizeChannelName(raw.get('topic')),
+		topic: sanitizeChannelTopic(raw.get('topic')),
 		kind: raw.get('kind') === 'direct' ? 'direct' : 'channel',
 		createdAt: Number(raw.get('createdAt')) || 0,
 		createdBy: String(raw.get('createdBy') ?? '').slice(0, 160),
@@ -157,7 +158,7 @@ export function createChatStore(doc: Y.Doc, user: ChatUser): ChatStore {
 			doc.transact(() => {
 				const m = new Y.Map<unknown>();
 				m.set('name', clean);
-				m.set('topic', sanitizeChannelName(topic));
+				m.set('topic', sanitizeChannelTopic(topic));
 				m.set('kind', kind);
 				m.set('createdAt', Date.now());
 				m.set('createdBy', user.id);

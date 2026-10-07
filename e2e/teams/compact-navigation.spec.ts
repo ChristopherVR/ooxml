@@ -56,8 +56,9 @@ test('opens compact channel and call navigation with drafts, keyboard focus and 
 	await navigation.getByRole('button', { name: 'General', exact: true }).click();
 	await expect(message).toHaveValue('Keep the General draft');
 	await trigger.click();
-	page.once('dialog', (dialog) => dialog.accept('Planning'));
 	await navigation.getByRole('button', { name: 'Add channel', exact: true }).click();
+	await page.getByRole('textbox', { name: 'Channel name', exact: true }).fill('Planning');
+	await page.getByRole('button', { name: 'Create', exact: true }).click();
 	await expect(page.getByRole('heading', { name: '# Planning', exact: true })).toBeFocused();
 	await expect(drawer).not.toBeVisible();
 	await page
@@ -112,6 +113,25 @@ test('keeps an edited workbook mounted when compact navigation is cancelled', as
 	const drawer = page.getByRole('dialog', { name: 'Workspace navigation', exact: true });
 	const navigation = page.locator('teams-navigation-drawer');
 	await trigger.click();
+	await navigation.getByRole('button', { name: 'Add channel', exact: true }).click();
+	const creation = page.getByRole('dialog', { name: 'Create a channel', exact: true });
+	await creation
+		.getByRole('textbox', { name: 'Channel name', exact: true })
+		.fill('Keep these details');
+	await creation
+		.getByRole('textbox', { name: 'Description (optional)', exact: true })
+		.fill('Keep this description');
+	page.once('dialog', (dialog) => dialog.dismiss());
+	await creation.getByRole('button', { name: 'Create', exact: true }).click();
+	await expect(creation).toBeVisible();
+	await expect(creation.getByRole('textbox', { name: 'Channel name', exact: true })).toHaveValue(
+		'Keep these details',
+	);
+	await expect(
+		creation.getByRole('textbox', { name: 'Description (optional)', exact: true }),
+	).toHaveValue('Keep this description');
+	await expect(formula).toHaveValue('Keep this workbook edit');
+	await creation.getByRole('button', { name: 'Cancel', exact: true }).click();
 	page.once('dialog', (dialog) => dialog.dismiss());
 	await navigation.getByRole('button', { name: 'Design', exact: true }).click();
 	await expect(drawer).toBeVisible();

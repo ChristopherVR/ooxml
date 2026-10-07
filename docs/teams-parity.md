@@ -448,6 +448,22 @@ XLSX across all six bindings. This restores navigation in OpenTeams' compact
 web shell; the native Teams mobile app, combined chat/channel navigation,
 favorites and authenticated chat membership remain separate outstanding work.
 
+## Twenty-fourth slice: channel creation dialog
+
+Add channel opens an in-app form for a name and optional description, with
+initial focus, validation, cancellation and focus restoration. Standard channels
+are the supported type; the form does not imply private or shared membership.
+Descriptions retain up to 1,024 sanitized characters, including newlines,
+through shared state and snapshots. Channel selection is remembered per user
+and workspace and falls back when a channel is unavailable. Cancelling an
+unsaved-workbook confirmation preserves both the workbook and channel form.
+Acceptance covers desktop/mobile creation, reloads, nested drawer cancellation
+and dirty XLSX handling across all six bindings. Microsoft's
+[channel creation workflow](https://support.microsoft.com/en-us/teams/teams-channels/create-a-standard-private-or-shared-channel-in-microsoft-teams)
+and [description limit](https://learn.microsoft.com/en-us/powershell/module/microsoftteams/set-teamchannel)
+are references. Multiple teams, private/shared channel membership, authenticated
+creation permissions and server-enforced naming uniqueness remain outstanding.
+
 ## Next releasable slices
 
 1. UI parity: match the current Teams shell, Shared/Files commands, Settings
