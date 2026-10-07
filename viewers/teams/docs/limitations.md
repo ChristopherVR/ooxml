@@ -19,8 +19,9 @@ notifications, a calendar, recording, background blur or live captions.
 
 ## Content workspace
 
-Word and Excel preview in native read-only editors; Visio uses its existing viewer.
-There is no shared editing or save-back to file storage. PowerPoint needs a
+Word previews read-only; Excel offers local editing and saving new channel copies
+when storage is configured; Visio uses its existing viewer.
+There is no coediting, overwrite or versioned save-back. PowerPoint needs a
 host-configured embedded viewer page. Missing integrations are reported in the pane.
 Text reads are limited to 2 MiB and native Office reads to 32 MiB.
 
@@ -30,8 +31,10 @@ structures or relative links. Raw HTML is displayed as text.
 
 Websites and HTML attachments use a sandbox without same-origin, popup or top
 navigation permission. Some sites block embedding or require permissions this
-sandbox does not grant. External open remains available. This is a local preview,
-not a shared configurable channel tab or a Microsoft Teams app integration.
+sandbox does not grant. External open remains available. File and website tab
+definitions can be shared in channels; the embedded app platform, authentication
+and permissions of Microsoft Teams are not implemented. Tab creator checks run
+in the client and require server authorization to become enforceable.
 
 ## Security and privacy
 

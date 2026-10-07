@@ -9,20 +9,20 @@ No feature is considered equivalent solely because a control is present.
 
 ## Current coverage
 
-| Area                            | Evidence in the implementation                                                           | Remaining work                                                                                              |
-| ------------------------------- | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| Channels and posts              | Yjs channel/message model, replies, reactions, author-side edit/delete checks            | Teams hierarchy, private/shared channels, membership enforcement, threaded side pane, moderation            |
-| Direct and group chats          | The channel model has a `direct` kind                                                    | No participant-scoped chat workflow or server-enforced privacy                                              |
-| Search and unread               | Message search, per-channel local read markers                                           | File search, filters, mentions, activity feed, notifications, shared read receipts                          |
-| Presence                        | Awareness, availability and typing                                                       | Authenticated identity, idle state, richer status and privacy controls                                      |
-| Meetings                        | Prejoin, microphone, camera, screen share, raised hand, mesh WebRTC                      | Scheduling, invitations, SFU, lobby, host roles, recording, captions, backgrounds and large calls           |
-| File sharing                    | Upload adapter, file cards, Files views, signed download links                           | Permissions, versions, folders, durable local-mode sharing and upload progress                              |
-| Office content                  | Recognized Office attachments; native Word, Excel and Visio preview added in this change | PowerPoint default renderer, coediting, write-back/version conflict handling and fidelity acceptance corpus |
-| Markdown                        | Safe block and flat inline subset added in this change                                   | Full CommonMark/GFM, tables, task lists, nested structure and relative links                                |
-| Sites and web apps              | Sandboxed HTML/site preview added in this change                                         | Shared configurable channel tabs, app permissions, approved origins, app messaging and authentication       |
-| Accounts and administration     | Reference server has optional shared token and origin allowlist                          | User accounts, SSO, tenant/team/channel ACLs, guests, audit, retention and policy enforcement               |
-| Bindings                        | Six lifecycle bindings share `TeamsProps` and the same app                               | Framework-by-framework browser acceptance for the new embedding prop                                        |
-| Accessibility and visual parity | Existing Lit controls and token styles                                                   | Keyboard/focus review, screen-reader acceptance, responsive/mobile workflow coverage, reference screenshots |
+| Area                            | Evidence in the implementation                                                    | Remaining work                                                                                              |
+| ------------------------------- | --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Channels and posts              | Yjs channel/message model, replies, reactions, author-side edit/delete checks     | Teams hierarchy, private/shared channels, membership enforcement, threaded side pane, moderation            |
+| Direct and group chats          | The channel model has a `direct` kind                                             | No participant-scoped chat workflow or server-enforced privacy                                              |
+| Search and unread               | Message search, per-channel local read markers                                    | File search, filters, mentions, activity feed, notifications, shared read receipts                          |
+| Presence                        | Awareness, availability and typing                                                | Authenticated identity, idle state, richer status and privacy controls                                      |
+| Meetings                        | Prejoin, microphone, camera, screen share, raised hand, mesh WebRTC               | Scheduling, invitations, SFU, lobby, host roles, recording, captions, backgrounds and large calls           |
+| File sharing                    | Upload adapter, file cards, Files views, signed download links                    | Permissions, versions, folders, durable local-mode sharing and upload progress                              |
+| Office content                  | Native Word, Excel and Visio previews; XLSX local editing and channel save copies | PowerPoint default renderer, coediting, write-back/version conflict handling and fidelity acceptance corpus |
+| Markdown                        | Safe block and flat inline subset added in this change                            | Full CommonMark/GFM, tables, task lists, nested structure and relative links                                |
+| Sites and web apps              | Sandboxed HTML/site previews and shared file/website channel tabs                 | App permissions, approved origins, app messaging and authentication                                         |
+| Accounts and administration     | Reference server has optional shared token and origin allowlist                   | User accounts, SSO, tenant/team/channel ACLs, guests, audit, retention and policy enforcement               |
+| Bindings                        | Six lifecycle bindings share `TeamsProps` and the same app                        | Framework-by-framework browser acceptance for the new embedding prop                                        |
+| Accessibility and visual parity | Existing Lit controls and token styles                                            | Keyboard/focus review, screen-reader acceptance, responsive/mobile workflow coverage, reference screenshots |
 
 ## First implemented slice: content previews
 
@@ -74,11 +74,43 @@ The custom element also exposes `previewContent({ attachment, url })` for
 host-provided content. It is a local view action and does not publish a tab or
 message to other users. For a website use `kind: 'other', mime: 'text/html'`.
 
+## Second implemented slice: shared tabs and XLSX workflows
+
+Channel members can pin an uploaded file from Files or add a named website tab.
+Tab definitions use stable IDs in the workspace CRDT and persist with its snapshot;
+selection remains local. Creator-side rename/remove checks are advisory, just like
+message ownership, and do not provide authenticated server authorization. Peer data
+is validated before rendering. Name-only attachments cannot become file tabs.
+
+With server storage or a host upload adapter configured, Excel opens in viewing
+mode and offers **Edit workbook** and **Save copy to channel**. Saving serializes
+the native workbook, uploads under a unique storage name, and posts a new attachment
+in the channel captured when the file opened. It does not overwrite the original,
+switch the tab to the saved copy, or coedit with other users. Macro workbooks keep
+their `.xlsm` extension; macro execution is not supported.
+
+Failed uploads leave the workbook dirty and available for retry. Edits made during
+upload remain dirty after the older snapshot is shared. Navigation asks before
+discarding edits and is blocked while saving. If another client removes an open
+tab, its local pane remains available until closed. Unrelated presence updates
+do not reload open content. These guards do not protect against a host forcibly
+replacing the component, identity or workspace configuration.
+
+Evidence: core tab merge/snapshot and upload tests; UI lifecycle tests; browser
+tests with two same-browser clients adding, renaming and removing a website tab;
+and an actual XLSX fixture edited, saved, parsed and reopened, including upload
+failure/retry and editing during upload. Browser coverage currently uses vanilla;
+the six bindings share the app and are built/typechecked, but are not each tested
+against this workflow in a browser.
+
+Microsoft Teams supports editing and coediting files from channel tabs and uses
+SharePoint-backed channel folders. Save copies are an incremental OpenTeams
+workflow, not evidence of matching those collaboration or storage semantics.
+
 ## Next releasable slices
 
-1. Shared channel tabs: a validated CRDT tab model with stable IDs, attachment
-   references, add/rename/remove actions, selected-tab state and explicit
-   owner/member permissions. Opening a local preview must not create a shared tab.
+1. Shared tab permissions: authenticated membership and server enforcement,
+   approved web-app origins and a supported app messaging contract.
 2. Default PowerPoint adapter: expose the existing framework-neutral renderer
    through the UI package, then consume it here without copying format or render
    logic. Test actual slide content, navigation, media and teardown.
@@ -98,6 +130,7 @@ and Microsoft-generated reference output, rather than claiming lossless parity.
 ## Microsoft reference workflows
 
 - [File and app tabs in channels and chats](https://support.microsoft.com/en-us/teams/teams-channels/use-a-tab-in-a-channel-or-chat-in-microsoft-teams)
+- [File collaboration and channel storage](https://support.microsoft.com/en-us/teams/files/collaborate-on-files-in-microsoft-teams)
 - [Web app tabs and their embedding model](https://learn.microsoft.com/microsoftteams/platform/tabs/what-are-tabs)
 - [Website tab behavior differs from Teams web apps](https://devblogs.microsoft.com/microsoft365dev/upcoming-updates-to-loading-websites-in-teams-tabs/)
 

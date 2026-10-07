@@ -4,6 +4,7 @@
 import { LitElement, html, nothing, unsafeCSS, type PropertyValues } from 'lit';
 import {
 	type FileUploader,
+	type ChannelTab,
 	type OfficeKind,
 	type TeamsClient,
 	type TeamsServerConfig,
@@ -17,7 +18,12 @@ import { definePresence } from '../../presence.js';
 import { installOfficeUiTheme } from '../../theme.js';
 import { registerTeams } from '../index.js';
 import { TeamsController } from './controller.js';
-import { defineTeamsContentPreview, type FileEmbeds } from './content-preview.js';
+import {
+	defineTeamsContentPreview,
+	type FileEmbeds,
+	type SaveFileCopy,
+} from './content-preview.js';
+import { defineTeamsChannelTab } from './channel-tab.js';
 import { defineTeamsSettings } from './teams-settings.js';
 import {
 	loadConfig,
@@ -31,6 +37,8 @@ import css from './teams-app.css?raw';
 
 export type { FileUploader } from 'ooxml-core/teams';
 export interface OpenFileDetail {
+	/** Channel captured when content opens, so saving cannot target a later selection. */
+	channelId?: string;
 	attachment: {
 		name: string;
 		kind: OfficeKind;
@@ -64,6 +72,7 @@ export class TeamsApp extends LitElement {
 		openers: { attribute: false },
 		embeds: { attribute: false },
 		preview: { state: true },
+		addingTab: { state: true },
 		rail: { state: true },
 		tab: { state: true },
 		panel: { state: true },
@@ -86,7 +95,8 @@ export class TeamsApp extends LitElement {
 	declare embeds: FileEmbeds;
 	declare preview: OpenFileDetail | null;
 	declare rail: RailView;
-	declare tab: 'posts' | 'files';
+	declare tab: string;
+	declare addingTab: boolean;
 	declare panel: Panel;
 	declare meeting: boolean;
 	declare settingsOpen: boolean;
@@ -96,6 +106,7 @@ export class TeamsApp extends LitElement {
 	private readonly teams = new TeamsController(this, (text) => this.notify(text));
 	private toastTimer: ReturnType<typeof setTimeout> | undefined;
 	private openRequest = 0;
+	private retainedTab: ChannelTab | undefined;
 
 	constructor() {
 		super();
@@ -108,6 +119,8 @@ export class TeamsApp extends LitElement {
 		this.openers = {};
 		this.embeds = {};
 		this.preview = null;
+		this.retainedTab = undefined;
+		this.addingTab = false;
 		this.rail = 'teams';
 		this.tab = 'posts';
 		this.panel = '';
@@ -129,6 +142,7 @@ export class TeamsApp extends LitElement {
 		registerTeams();
 		defineTeamsSettings();
 		defineTeamsContentPreview();
+		defineTeamsChannelTab();
 		super.connectedCallback();
 	}
 
@@ -156,6 +170,8 @@ export class TeamsApp extends LitElement {
 		].some((k) => changed.has(k as never));
 		if (!restart && this.teams.client) return;
 		this.preview = null;
+		this.tab = 'posts';
+		this.addingTab = false;
 		this.openRequest++;
 		const named = this.userName
 			? { id: this.userId || loadIdentity()?.id || crypto.randomUUID(), name: this.userName }
@@ -184,9 +200,12 @@ export class TeamsApp extends LitElement {
 	// ---- intent -> client actions -----------------------------------------------------------
 	private async openFile(a: OpenFileDetail['attachment']): Promise<void> {
 		const request = ++this.openRequest;
+		const channelId =
+			(a as { channelId?: string }).channelId ?? this.teams.state?.selectedChannelId;
 		const url = await this.teams.client?.fileUrl(a);
 		if (request !== this.openRequest || !this.isConnected) return;
-		const detail: OpenFileDetail = { attachment: a, url };
+		if (!this.canLeaveContent()) return;
+		const detail: OpenFileDetail = { attachment: a, url, ...(channelId ? { channelId } : {}) };
 		if (
 			!this.dispatchEvent(
 				new CustomEvent('teams-open-file', {
@@ -206,17 +225,31 @@ export class TeamsApp extends LitElement {
 
 	/** Preview a host-provided website or file without changing shared conversation state. */
 	previewContent(detail: OpenFileDetail): void {
+		if (!this.canLeaveContent()) return;
 		this.openRequest++;
 		this.preview = detail;
 	}
 
-	private closePreview(): void {
+	private canLeaveContent(): boolean {
+		const direct = this.shadowRoot?.querySelector<HTMLElement & { canLeave(): boolean }>(
+			'teams-content-preview',
+		);
+		const nested = this.shadowRoot
+			?.querySelector('teams-channel-tab')
+			?.shadowRoot?.querySelector<HTMLElement & { canLeave(): boolean }>('teams-content-preview');
+		return (direct ?? nested)?.canLeave() ?? true;
+	}
+
+	private closePreview(): boolean {
+		if (!this.canLeaveContent()) return false;
 		this.openRequest++;
 		this.preview = null;
+		return true;
 	}
 
 	override disconnectedCallback(): void {
-		this.closePreview();
+		this.openRequest++;
+		this.preview = null;
 		clearTimeout(this.toastTimer);
 		super.disconnectedCallback();
 	}
@@ -224,8 +257,9 @@ export class TeamsApp extends LitElement {
 	private createChannel(): void {
 		const name = globalThis.prompt?.('Channel name')?.trim();
 		if (name) {
-			this.closePreview();
+			if (!this.closePreview()) return;
 			this.teams.client?.createChannel(name);
+			this.tab = 'posts';
 			this.rail = 'teams';
 			this.meeting = false;
 		}
@@ -246,19 +280,21 @@ export class TeamsApp extends LitElement {
 	}
 
 	private startMeeting(channelId?: string): void {
-		this.closePreview();
+		if (!this.closePreview()) return;
 		void this.teams.client?.openCall(channelId);
 		this.meeting = true;
 		this.rail = 'teams';
 	}
 
-	private selectChannel(id: string): void {
-		this.closePreview();
+	private selectChannel(id: string): boolean {
+		if (!this.closePreview()) return false;
+		this.addingTab = false;
 		this.teams.client?.select(id);
 		this.teams.client?.search('');
 		this.meeting = false;
 		this.tab = 'posts';
 		this.rail = 'teams';
+		return true;
 	}
 
 	private askSettings(): void {
@@ -277,7 +313,7 @@ export class TeamsApp extends LitElement {
 						.items=${RAIL.map((i) => ({ ...i, ...(i.id === 'calls' && s.channels.some((c) => c.live) ? { badge: s.channels.filter((c) => c.live).length } : {}) }))}
 						selected=${this.rail}
 						@office-rail-select=${(e: CustomEvent<{ id: RailView }>) => {
-							this.closePreview();
+							if (!this.closePreview()) return;
 							this.rail = e.detail.id;
 							this.meeting = false;
 						}}
@@ -291,6 +327,7 @@ export class TeamsApp extends LitElement {
 					.config=${this.resolveConfig()}
 					@teams-settings-close=${() => (this.settingsOpen = false)}
 					@teams-settings-apply=${(e: CustomEvent<{ config: TeamsServerConfig }>) => {
+						if (!this.closePreview()) return;
 						saveConfig(e.detail.config);
 						this.config = e.detail.config;
 						this.settingsOpen = false;
@@ -431,6 +468,7 @@ export class TeamsApp extends LitElement {
 			return html`<teams-content-preview
 				.detail=${this.preview}
 				.embeds=${this.embeds}
+				.saveCopy=${this.saveCopyFor(this.preview, s)}
 				@teams-preview-close=${this.closePreview}
 			></teams-content-preview>`;
 		if (this.rail === 'files') return this.allFiles(s);
@@ -442,7 +480,9 @@ export class TeamsApp extends LitElement {
 							You are in a call in # ${s.call.channelName}
 							<button
 								type="button"
-								@click=${() => ((this.meeting = true), this.teams.client?.select(s.call!.channelId))}
+								@click=${() => {
+									if (this.selectChannel(s.call!.channelId)) this.meeting = true;
+								}}
 							>
 								Return to call
 							</button>
@@ -457,6 +497,13 @@ export class TeamsApp extends LitElement {
 		const channel = s.channel;
 		const c = this.teams.client;
 		const compose = s.editing ?? s.replyingTo;
+		const sharedTab = s.tabs.find((t) => t.id === this.tab);
+		if (sharedTab) this.retainedTab = sharedTab;
+		const activeTab =
+			sharedTab ??
+			(this.retainedTab?.id === this.tab && this.retainedTab.channelId === s.selectedChannelId
+				? this.retainedTab
+				: undefined);
 		return html`
 			${
 				compact
@@ -469,12 +516,50 @@ export class TeamsApp extends LitElement {
 										type="button"
 										role="tab"
 										aria-selected=${String(this.tab === t)}
-										@click=${() => (this.tab = t)}
+										@click=${() => this.selectTab(t)}
 									>
 										${t === 'posts' ? 'Posts' : 'Files'}
 									</button>`,
 								)}
+								${s.tabs.map((t) => html`<button type="button" role="tab" aria-selected=${String(this.tab === t.id)} @click=${() => this.selectTab(t.id)}>${t.name}</button>`)}
 							</nav>
+							<button
+								type="button"
+								?disabled=${!channel}
+								@click=${() => (this.addingTab = !this.addingTab)}
+							>
+								Add tab
+							</button>
+							${
+								sharedTab?.createdBy === s.user.id
+									? html` <button
+												type="button"
+												@click=${() => {
+													const name = globalThis.prompt?.('Tab name', sharedTab.name)?.trim();
+													if (name) c?.renameTab(sharedTab.id, name);
+												}}
+											>
+												Rename tab
+											</button>
+											<button
+												type="button"
+												@click=${() => {
+													if (!this.canLeaveContent()) return;
+													if (
+														globalThis.confirm?.(`Remove ${sharedTab.name} from this channel?`) ===
+															true &&
+														c?.removeTab(sharedTab.id)
+													) {
+														this.openRequest++;
+														this.preview = null;
+														this.tab = 'posts';
+													}
+												}}
+											>
+												Remove tab
+											</button>`
+									: nothing
+							}
 							<span class="topic">${channel?.topic ?? ''}</span>
 							<div class="people" aria-label="People online">
 								${s.people.slice(0, 5).map((p) => html`<office-ui-avatar size="sm" name=${p.name} seed=${p.id} color=${p.color} presence=${p.availability}></office-ui-avatar>`)}
@@ -490,34 +575,94 @@ export class TeamsApp extends LitElement {
 							</button>
 						</header>`
 			}
+			${this.addingTab && !compact ? this.tabForm() : nothing}
+			${activeTab && !sharedTab && !compact ? html`<p role="status">This tab was removed from the channel. Your open copy remains here until you close it.</p>` : nothing}
 			${
-				this.tab === 'files' && !compact
-					? this.fileList(s.files)
-					: html`
-							<office-ui-chat-list
-								.messages=${s.messages}
-								self-id=${s.user.id}
-								@office-chat-react=${(e: CustomEvent<{ messageId: string; emoji: string }>) => c?.toggleReaction(e.detail.messageId, e.detail.emoji)}
-								@office-chat-reply=${(e: CustomEvent<{ messageId: string }>) => c?.startReply(e.detail.messageId)}
-								@office-chat-edit=${(e: CustomEvent<{ messageId: string }>) => c?.startEdit(e.detail.messageId)}
-								@office-chat-delete=${(e: CustomEvent<{ messageId: string }>) => globalThis.confirm?.('Delete this message?') !== false && c?.deleteMessage(e.detail.messageId)}
-								@office-chat-open-file=${(e: CustomEvent<{ attachment: OpenFileDetail['attachment'] & { kind: OfficeKind } }>) => this.openFile(e.detail.attachment)}
-							></office-ui-chat-list>
-							<office-ui-chat-composer
-								.typing=${s.typing}
-								.replyingTo=${s.replyingTo?.authorName ?? null}
-								.editing=${s.editing !== null}
-								.value=${s.editing?.text ?? ''}
-								?disabled=${!channel}
-								placeholder=${channel ? `Message # ${channel.name}` : 'Create a channel first'}
-								@office-chat-typing=${() => c?.notifyTyping()}
-								@office-chat-cancel=${() => c?.cancelCompose()}
-								@office-chat-send=${(e: CustomEvent<{ text: string; files: File[] }>) => void c?.send(e.detail)}
-								data-compose=${compose ? 'on' : 'off'}
-							></office-ui-chat-composer>
-						`
+				activeTab && !compact
+					? html`<teams-channel-tab
+							.tab=${activeTab}
+							.client=${c ?? null}
+							.embeds=${this.embeds}
+							.canSave=${s.canUploadFiles}
+							@teams-preview-close=${() => this.selectTab('posts')}
+						></teams-channel-tab>`
+					: this.tab === 'files' && !compact
+						? this.fileList(s.files)
+						: html`
+								<office-ui-chat-list
+									.messages=${s.messages}
+									self-id=${s.user.id}
+									@office-chat-react=${(e: CustomEvent<{ messageId: string; emoji: string }>) => c?.toggleReaction(e.detail.messageId, e.detail.emoji)}
+									@office-chat-reply=${(e: CustomEvent<{ messageId: string }>) => c?.startReply(e.detail.messageId)}
+									@office-chat-edit=${(e: CustomEvent<{ messageId: string }>) => c?.startEdit(e.detail.messageId)}
+									@office-chat-delete=${(e: CustomEvent<{ messageId: string }>) => globalThis.confirm?.('Delete this message?') !== false && c?.deleteMessage(e.detail.messageId)}
+									@office-chat-open-file=${(e: CustomEvent<{ attachment: OpenFileDetail['attachment'] & { kind: OfficeKind } }>) => this.openFile(e.detail.attachment)}
+								></office-ui-chat-list>
+								<office-ui-chat-composer
+									.typing=${s.typing}
+									.replyingTo=${s.replyingTo?.authorName ?? null}
+									.editing=${s.editing !== null}
+									.value=${s.editing?.text ?? ''}
+									?disabled=${!channel}
+									placeholder=${channel ? `Message # ${channel.name}` : 'Create a channel first'}
+									@office-chat-typing=${() => c?.notifyTyping()}
+									@office-chat-cancel=${() => c?.cancelCompose()}
+									@office-chat-send=${(e: CustomEvent<{ text: string; files: File[] }>) => void c?.send(e.detail)}
+									data-compose=${compose ? 'on' : 'off'}
+								></office-ui-chat-composer>
+							`
 			}
 		`;
+	}
+
+	private selectTab(id: string): void {
+		if (!this.closePreview()) return;
+		this.tab = id;
+		this.addingTab = false;
+	}
+
+	private tabForm() {
+		return html`<form
+			class="site-preview"
+			aria-label="Add website tab"
+			@submit=${(event: SubmitEvent) => {
+				event.preventDefault();
+				const data = new FormData(event.target as HTMLFormElement);
+				const tab = this.teams.client?.addTab(String(data.get('name') ?? ''), {
+					type: 'website',
+					url: String(data.get('url') ?? ''),
+				});
+				if (tab) this.selectTab(tab.id);
+				else this.notify('Enter a tab name and a valid website URL');
+			}}
+		>
+			<input name="name" aria-label="Tab name" placeholder="Tab name" maxlength="80" required />
+			<input
+				name="url"
+				type="url"
+				aria-label="Tab website URL"
+				placeholder="https://example.com"
+				required
+			/>
+			<button type="submit">Add website tab</button
+			><button type="button" @click=${() => (this.addingTab = false)}>Cancel</button>
+		</form>`;
+	}
+
+	private pinFile(file: TeamsState['files'][number]): void {
+		if (!this.selectChannel(file.channelId ?? this.teams.state?.selectedChannelId ?? '')) return;
+		const tab = this.teams.client?.addTab(file.name, { type: 'file', attachment: file });
+		if (tab) this.selectTab(tab.id);
+		else this.notify('This file needs an uploaded URL before it can be pinned');
+	}
+
+	private saveCopyFor(detail: OpenFileDetail, state: TeamsState): SaveFileCopy | undefined {
+		const client = this.teams.client;
+		const channelId = detail.channelId;
+		if (!client || !channelId || !state.canUploadFiles) return undefined;
+		return async (file) => {
+			await client.saveFileCopy(channelId, file);
+		};
 	}
 
 	private fileList(files: TeamsState['files']) {
@@ -539,6 +684,9 @@ export class TeamsApp extends LitElement {
 										>
 									</span>
 									<button type="button" @click=${() => this.openFile(f)}>Open</button>
+									<button type="button" ?disabled=${!f.url} @click=${() => this.pinFile(f)}>
+										Pin as tab
+									</button>
 								</li>`,
 							)
 				}

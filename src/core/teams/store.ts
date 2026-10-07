@@ -9,6 +9,8 @@ import { Emitter } from '../collab/emitter.js';
 import type { ConnectionStatus } from '../collab/provider.js';
 import type { CallParticipant, CallSession, MediaDevicesLike } from './call.js';
 import type { Attachment, Channel, Message } from './model.js';
+import { sanitizeAttachment, sanitizeChannelName } from './model.js';
+import type { ChannelTab, TabContent } from './tabs.js';
 import type { StreamLike } from './peer.js';
 import {
 	type ChannelView,
@@ -80,6 +82,9 @@ export interface TeamsState {
 	files: FileEntry[];
 	/** Every file in every channel, newest first. */
 	allFiles: FileEntry[];
+	/** Shared tabs of the selected channel; selection remains local to each client. */
+	tabs: ChannelTab[];
+	canUploadFiles: boolean;
 	people: PersonView[];
 	typing: string[];
 	/** The message the composer is replying to or editing, if any. */
@@ -98,6 +103,11 @@ export interface TeamsClient {
 	readonly workspace: TeamsWorkspace;
 	select: (channelId: string) => void;
 	createChannel: (name: string, topic?: string) => void;
+	addTab: (name: string, content: TabContent) => ChannelTab | null;
+	renameTab: (id: string, name: string) => boolean;
+	removeTab: (id: string) => boolean;
+	/** Upload a uniquely named copy and post it in the specified channel. Never overwrites the source. */
+	saveFileCopy: (channelId: string, file: UploadableFile & Blob) => Promise<Attachment>;
 	send: (input: { text: string; files?: (UploadableFile & Blob)[] }) => Promise<void>;
 	startReply: (messageId: string) => void;
 	startEdit: (messageId: string) => void;
@@ -220,6 +230,10 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			messages,
 			files: filesOf(messages),
 			allFiles: allFilesOf(channels, messagesOf),
+			tabs: selected ? ws.tabs.tabs(selected) : [],
+			canUploadFiles: Boolean(
+				options.uploadFile || (ws.config.mode === 'server' && ws.config.syncUrl),
+			),
 			people: peopleViews(
 				{
 					id: ws.user.id,
@@ -369,6 +383,43 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 		},
 		on: (event, listener) => notices.on(event, listener),
 		workspace: ws,
+		addTab(name, content) {
+			const tab = ws.tabs.add(selected, name, content);
+			refresh();
+			return tab;
+		},
+		renameTab(id, name) {
+			const changed = ws.tabs.rename(id, name);
+			refresh();
+			return changed;
+		},
+		removeTab(id) {
+			const changed = ws.tabs.remove(id);
+			refresh();
+			return changed;
+		},
+		async saveFileCopy(channelId, file) {
+			if (destroyed || !visibleChannels().some((c) => c.id === channelId))
+				throw new Error('The channel is no longer available');
+			if (!options.uploadFile && !server())
+				throw new Error('Configure file storage before saving a copy');
+			const name = sanitizeChannelName(file.name);
+			if (!name || file.size > 33_554_432)
+				throw new Error('This file cannot be saved to the channel');
+			const ext = name.includes('.') ? `.${name.split('.').pop()}` : '';
+			const unique = Object.assign(new Blob([file], { type: file.type ?? '' }), {
+				name: `copy-${crypto.randomUUID()}${ext}`,
+			});
+			const uploaded = await upload(unique);
+			const attachment = sanitizeAttachment({ ...uploaded, name });
+			if (!attachment?.url) throw new Error('The copy could not be uploaded');
+			if (destroyed || !visibleChannels().some((c) => c.id === channelId))
+				throw new Error('The channel is no longer available; the uploaded copy was not shared');
+			if (!ws.chat.post(channelId, { text: `Saved a copy of ${name}`, attachments: [attachment] }))
+				throw new Error('The copy could not be shared');
+			refresh();
+			return attachment;
+		},
 		select: act((id) => {
 			if (id === selected) return;
 			selected = id;

@@ -14,12 +14,19 @@ import css from './content-preview.css?raw';
 
 /** Trusted host adapters return an embedding page URL, not an Office file URL. */
 export type FileEmbeds = Partial<Record<OfficeKind, (detail: OpenFileDetail) => string>>;
+export type SaveFileCopy = (file: File) => Promise<void>;
 
 export class TeamsContentPreview extends LitElement {
 	static override styles = unsafeCSS(css);
 	static override properties = {
 		detail: { attribute: false },
 		embeds: { attribute: false },
+		saveCopy: { attribute: false },
+		editing: { state: true },
+		dirty: { state: true },
+		saving: { state: true },
+		saveError: { state: true },
+		saved: { state: true },
 		status: { state: true },
 		text: { state: true },
 		frame: { state: true },
@@ -28,6 +35,20 @@ export class TeamsContentPreview extends LitElement {
 	};
 	declare detail: OpenFileDetail | null;
 	declare embeds: FileEmbeds;
+	declare saveCopy: SaveFileCopy | undefined;
+	declare editing: boolean;
+	declare dirty: boolean;
+	declare saving: boolean;
+	declare saveError: string;
+	declare saved: boolean;
+	private revision = 0;
+	private readonly beforeUnload = (event: BeforeUnloadEvent): void => {
+		this.commitPendingEdit();
+		if (this.dirty || this.saving) {
+			event.preventDefault();
+			event.returnValue = '';
+		}
+	};
 	declare status: 'loading' | 'ready' | 'error';
 	declare text: string;
 	declare frame: string | null;
@@ -39,6 +60,12 @@ export class TeamsContentPreview extends LitElement {
 		super();
 		this.detail = null;
 		this.embeds = {};
+		this.saveCopy = undefined;
+		this.editing = false;
+		this.dirty = false;
+		this.saving = false;
+		this.saveError = '';
+		this.saved = false;
 		this.status = 'loading';
 		this.text = '';
 		this.frame = null;
@@ -52,17 +79,44 @@ export class TeamsContentPreview extends LitElement {
 
 	override disconnectedCallback(): void {
 		this.abort?.abort();
+		this.ownerDocument.defaultView?.removeEventListener('beforeunload', this.beforeUnload);
 		super.disconnectedCallback();
 	}
 
 	override connectedCallback(): void {
 		super.connectedCallback();
+		this.ownerDocument.defaultView?.addEventListener('beforeunload', this.beforeUnload);
 		if (this.hasUpdated) void this.load();
+	}
+
+	/** Called by the workspace before replacing this pane. */
+	canLeave(): boolean {
+		if (this.saving) {
+			this.saveError = 'Wait for the workbook copy to finish saving.';
+			return false;
+		}
+		if (!this.commitPendingEdit()) {
+			this.saveError = 'Finish or cancel the current cell edit before leaving.';
+			return false;
+		}
+		return !this.dirty || globalThis.confirm?.('Discard unsaved workbook edits?') === true;
+	}
+
+	private commitPendingEdit(): boolean {
+		const viewer = this.shadowRoot?.querySelector<HTMLElement & { commitEdit(): boolean }>(
+			'xlsx-editor',
+		);
+		return viewer?.commitEdit() ?? true;
 	}
 
 	private async load(): Promise<void> {
 		this.abort?.abort();
 		const request = (this.abort = new AbortController());
+		this.editing = false;
+		this.dirty = false;
+		this.saving = false;
+		this.saveError = '';
+		this.saved = false;
 		this.status = 'loading';
 		this.text = '';
 		this.frame = null;
@@ -113,6 +167,45 @@ export class TeamsContentPreview extends LitElement {
 		}
 	}
 
+	private async saveWorkbookCopy(): Promise<void> {
+		if (this.saving || !this.saveCopy || this.native !== 'xlsx' || !this.detail) return;
+		const viewer = this.shadowRoot?.querySelector<
+			HTMLElement & { saveBytes(): Promise<Uint8Array>; markClean(): void }
+		>('xlsx-editor');
+		if (!viewer) return;
+		const callback = this.saveCopy;
+		const request = this.abort;
+		const name =
+			this.detail.attachment.name.replace(/\.[^./\\]+$/u, '') +
+			(this.detail.attachment.name.toLowerCase().endsWith('.xlsm') ? '.xlsm' : '.xlsx');
+		this.saving = true;
+		this.saveError = '';
+		this.saved = false;
+		try {
+			const pendingBytes = viewer.saveBytes();
+			const revision = this.revision;
+			const bytes = await pendingBytes;
+			if (request?.signal.aborted) return;
+			await callback(
+				new File([new Uint8Array(bytes)], name, {
+					type: name.endsWith('.xlsm')
+						? 'application/vnd.ms-excel.sheet.macroEnabled.12'
+						: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+				}),
+			);
+			if (request?.signal.aborted) return;
+			if (revision === this.revision) viewer.markClean();
+			this.saveError = '';
+			this.saved = true;
+		} catch (error) {
+			if (!request?.signal.aborted)
+				this.saveError =
+					error instanceof Error ? error.message : 'Could not save the workbook copy';
+		} finally {
+			if (!request?.signal.aborted) this.saving = false;
+		}
+	}
+
 	protected override render() {
 		const detail = this.detail;
 		if (!detail) return nothing;
@@ -121,6 +214,24 @@ export class TeamsContentPreview extends LitElement {
 		return html`<section aria-label="Content preview">
 			<header>
 				<h2>${detail.attachment.name}</h2>
+				${
+					this.native === 'xlsx' && this.status === 'ready' && this.saveCopy
+						? html` <button
+									type="button"
+									?disabled=${this.saving}
+									@click=${() => (this.editing = !this.editing)}
+								>
+									${this.editing ? 'View workbook' : 'Edit workbook'}
+								</button>
+								<button
+									type="button"
+									?disabled=${this.saving || !this.editing}
+									@click=${() => void this.saveWorkbookCopy()}
+								>
+									${this.saving ? 'Saving copy...' : 'Save copy to channel'}
+								</button>`
+						: nothing
+				}
 				${url ? html`<a href=${url} target="_blank" rel="noopener noreferrer">Open externally</a>` : nothing}
 				<button
 					type="button"
@@ -129,6 +240,9 @@ export class TeamsContentPreview extends LitElement {
 					Close preview
 				</button>
 			</header>
+			${this.saveCopy && this.native === 'xlsx' ? html`<p class="hint">Edits stay local until you save a copy to the channel. Other people keep their own copy open.</p>` : nothing}
+			${this.saved ? html`<p role="status">Workbook copy shared in the channel.</p>` : nothing}
+			${this.saveError ? html`<p role="alert">${this.saveError}</p>` : nothing}
 			${this.status === 'loading' ? html`<p role="status">Loading preview...</p>` : nothing}
 			${
 				this.status === 'error'
@@ -153,8 +267,25 @@ export class TeamsContentPreview extends LitElement {
 					? html`<docx-editor .readOnly=${true} .fileName=${detail.attachment.name}></docx-editor>`
 					: this.native === 'xlsx'
 						? html`<xlsx-editor
-								.readOnly=${true}
+								.readOnly=${!this.editing || !this.saveCopy}
 								.fileName=${detail.attachment.name}
+								@workbook-change=${() => {
+									this.revision++;
+									this.saved = false;
+								}}
+								@dirty-change=${(e: CustomEvent<{ dirty: boolean }>) => (this.dirty = e.detail.dirty)}
+								@readonly-change=${(e: CustomEvent<{ readOnly: boolean }>) => {
+									if (!this.saveCopy && !e.detail.readOnly)
+										(e.target as HTMLElement & { readOnly: boolean }).readOnly = true;
+									else this.editing = !e.detail.readOnly;
+								}}
+								@file-command=${(e: CustomEvent<{ command: string }>) => {
+									if (e.detail.command === 'save' && this.saveCopy) {
+										e.preventDefault();
+										void this.saveWorkbookCopy();
+									}
+									if (e.detail.command === 'new' || e.detail.command === 'open') e.preventDefault();
+								}}
 							></xlsx-editor>`
 						: this.native === 'vsdx'
 							? html`<visio-viewer .showToolbar=${false}></visio-viewer>`

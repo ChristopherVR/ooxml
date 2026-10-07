@@ -20,7 +20,7 @@ Leave `config` out and the element offers a settings dialog (remembered in this 
 ## Content previews
 
 Opening an attachment displays a workspace preview by default. Word and Excel use
-the native read-only editor elements; Visio uses its viewer. Markdown has a safe
+the native editor elements, initially read-only; Visio uses its viewer. Markdown has a safe
 subset renderer; text files show literal text; HTML and websites use sandboxed
 frames. `openers` and the cancelable `teams-open-file` event still take precedence.
 
@@ -43,6 +43,36 @@ content locally. For a website use `attachment: { name: 'Project site', kind:
 'other', mime: 'text/html' }`. This does not create a shared channel tab. The
 Files view also offers **Preview website**. Sites that refuse framing can be
 opened externally.
+
+## Shared channel tabs and Excel copies
+
+Use **Pin as tab** beside an uploaded file, or **Add tab** to add a named website.
+Definitions are shared; each user selects their own tab. The creator can rename
+or remove it through client-side ownership checks. Removing a tab elsewhere keeps
+an already open local pane available until it is closed.
+
+Excel offers local editing and **Save copy to channel** when file storage is
+configured. Each save uploads a uniquely named copy and posts it in the originating
+channel, preserving the original. Failed saves retain edits; navigation confirms
+discarding unsaved work and waits for an in-progress save. This is not coediting
+or versioned write-back. Hosts forcibly replacing the workspace or element must
+handle their own unsaved-work confirmation.
+
+Raw client actions:
+
+```ts
+const tab = teams.addTab('Budget', { type: 'file', attachment });
+teams.addTab('Project site', { type: 'website', url: 'https://example.com' });
+teams.renameTab(tab!.id, 'Budget review');
+teams.removeTab(tab!.id);
+await teams.saveFileCopy(channelId, file);
+```
+
+`TeamsState.tabs` contains the selected channel's definitions;
+`canUploadFiles` indicates configured storage. `OpenFileDetail.channelId` records
+the channel captured when opening. `previewContent` also accepts this field when
+a host wants to enable channel save copies. Ownership checks require server-side
+authorization before they can be treated as access control.
 
 ## Events
 

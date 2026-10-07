@@ -9,5 +9,6 @@ export * from './peer.js';
 export * from './server-config.js';
 export * from './signaling.js';
 export * from './store.js';
+export * from './tabs.js';
 export * from './view.js';
 export * from './workspace.js';
