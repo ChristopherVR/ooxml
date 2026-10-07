@@ -11,6 +11,7 @@
 import type { PptxElement } from '../core/types/elements';
 import type { PptxSlide, PptxData } from '../core/types/presentation';
 import { buildImageEffectsFilter } from './svg-image-effects';
+import { svgTextLines, type SvgTextMeasurer } from './svg-text-lines';
 import {
 	renderChartSvg,
 	renderContentPartSvg,
@@ -37,6 +38,8 @@ export interface SvgExportOptions {
 	defaultFontFamily?: string;
 	/** Default font size in points when the element does not specify one. */
 	defaultFontSize?: number;
+	/** Optional host font metrics. Headless exports fall back to measured font tables. */
+	measureText?: SvgTextMeasurer;
 }
 
 // ────────────────────────────────────────────────────────────────────
@@ -75,6 +78,7 @@ function resolveDefaults(opts?: SvgExportOptions) {
 	return {
 		defaultFontFamily: opts?.defaultFontFamily ?? 'Arial',
 		defaultFontSize: opts?.defaultFontSize ?? 18,
+		measureText: opts?.measureText,
 	};
 }
 
@@ -152,12 +156,18 @@ function renderText(el: PptxElement, defaults: ReturnType<typeof resolveDefaults
 		return '';
 	}
 
-	const segments = el.textSegments;
 	const style = el.textStyle;
 	const fontFamily = style?.fontFamily ?? defaults.defaultFontFamily;
 	const fontSize = style?.fontSize ?? defaults.defaultFontSize;
 	const color = style?.color ?? '#000000';
 	const align = style?.align ?? 'left';
+	const segments = svgTextLines(
+		el.textSegments?.length ? el.textSegments : [{ text, style: style ?? {} }],
+		style?.textWrap === 'none' ? Number.POSITIVE_INFINITY : Math.max(1, el.width - 8),
+		fontSize,
+		fontFamily,
+		defaults.measureText,
+	);
 
 	// Determine x anchor based on alignment
 	let textAnchor = 'start';
@@ -183,15 +193,7 @@ function renderText(el: PptxElement, defaults: ReturnType<typeof resolveDefaults
 			})}>`,
 		);
 
-		let dy = fontSize * 1.2; // initial line offset
-		let isFirstSegment = true;
-
 		for (const seg of segments) {
-			if (seg.isParagraphBreak) {
-				dy = fontSize * 1.2;
-				isFirstSegment = true;
-				continue;
-			}
 			if (!seg.text) {
 				continue;
 			}
@@ -199,10 +201,9 @@ function renderText(el: PptxElement, defaults: ReturnType<typeof resolveDefaults
 			const segStyle = seg.style;
 			const segAttrs: Record<string, string | number | undefined> = {};
 
-			if (isFirstSegment) {
+			if (seg.lineStart) {
 				segAttrs.x = textX;
-				segAttrs.dy = dy;
-				isFirstSegment = false;
+				segAttrs.dy = (segStyle.fontSize ?? fontSize) * 1.2;
 			}
 
 			if (segStyle.fontFamily && segStyle.fontFamily !== fontFamily) {
@@ -231,35 +232,7 @@ function renderText(el: PptxElement, defaults: ReturnType<typeof resolveDefaults
 		return parts.join('');
 	}
 
-	// Simple text (no segments)
-	const bold = style?.bold;
-	const italic = style?.italic;
-	const lines = text.split('\n');
-
-	const parts: string[] = [];
-	parts.push(
-		`<text${attrs({
-			x: textX,
-			'text-anchor': textAnchor,
-			'font-family': fontFamily,
-			'font-size': fontSize,
-			fill: color,
-			'font-weight': bold ? 'bold' : undefined,
-			'font-style': italic ? 'italic' : undefined,
-		})}>`,
-	);
-
-	for (let i = 0; i < lines.length; i++) {
-		parts.push(
-			`<tspan${attrs({
-				x: textX,
-				dy: i === 0 ? fontSize * 1.2 : fontSize * 1.2,
-			})}>${escXml(lines[i])}</tspan>`,
-		);
-	}
-
-	parts.push(`</text>`);
-	return parts.join('');
+	return '';
 }
 
 function renderShapeBody(el: PptxElement): string {
