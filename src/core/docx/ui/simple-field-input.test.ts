@@ -54,6 +54,71 @@ const doc = schema.node(
 		schema.text('R'),
 	]),
 );
+it.each(['A', '\u{1f600}', 'e\u0301', '\u{1f1e6}\u{1f1fa}', '\u{1f469}\u200d\u{1f4bb}'])(
+	'preserves the field when either deletion key removes the final grapheme %s',
+	(text) => {
+		const unicodeDoc = schema.node(
+			'doc',
+			null,
+			schema.node('paragraph', null, [
+				schema.text('L'),
+				...field(text, 'unicode'),
+				...field('CD', 'next'),
+				schema.text('R'),
+			]),
+		);
+		for (const backward of [true, false]) {
+			const pos = backward ? 2 + text.length : 2;
+			const state = EditorState.create({
+				doc: unicodeDoc,
+				selection: TextSelection.create(unicodeDoc, pos),
+			});
+			const tr = deleteSimpleFieldResult(state, backward)!;
+			expect(tr.doc.textContent).toBe('LCDR');
+			expect(fieldsBalanced(tr.doc)).toBe(true);
+			expect(tr.selection.from).toBe(5);
+			expect(fieldResultRanges(tr.doc).map((range) => range.text)).toEqual(['CD']);
+			expect(tr.doc.nodeAt(3)?.attrs.code).toBe('REF Target');
+		}
+	},
+);
+it('recognizes a final grapheme across direct formatting runs', () => {
+	const nodes = field('e', 'unicode');
+	const accent = runToInlineNodes(
+		{
+			text: '\u0301',
+			bold: true,
+			field: { instr: 'REF Target', simple: true },
+			fieldInstanceId: 'unicode',
+		},
+		schema,
+	);
+	const splitDoc = schema.node('doc', null, schema.node('paragraph', null, [...nodes, ...accent]));
+	const state = EditorState.create({ doc: splitDoc, selection: TextSelection.create(splitDoc, 3) });
+	const tr = deleteSimpleFieldResult(state, true)!;
+	expect(tr.doc.textContent).toBe('');
+	expect(fieldsBalanced(tr.doc)).toBe(true);
+	expect(tr.doc.firstChild?.childCount).toBe(4);
+});
+it('delegates partial graphemes, multi-grapheme results and opposite boundary deletions', () => {
+	for (const text of ['\u{1f600}', 'e\u0301', 'AB', '\u{1f600}A']) {
+		const resultDoc = schema.node(
+			'doc',
+			null,
+			schema.node('paragraph', null, field(text, 'unicode')),
+		);
+		const stateAt = (pos: number) =>
+			EditorState.create({ doc: resultDoc, selection: TextSelection.create(resultDoc, pos) });
+		expect(deleteSimpleFieldResult(stateAt(1), true)).toBeNull();
+		expect(deleteSimpleFieldResult(stateAt(1 + text.length), false)).toBeNull();
+		expect(deleteSimpleFieldResult(stateAt(2), true)).toBeNull();
+		expect(deleteSimpleFieldResult(stateAt(2), false)).toBeNull();
+		if (text === 'AB' || text === '\u{1f600}A') {
+			expect(deleteSimpleFieldResult(stateAt(1), false)).toBeNull();
+			expect(deleteSimpleFieldResult(stateAt(1 + text.length), true)).toBeNull();
+		}
+	}
+});
 it('shares field-aware deletion while leaving ordinary and whole-field selections to the host', () => {
 	const complex = schema.node(
 		'doc',

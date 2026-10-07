@@ -4,6 +4,8 @@ import { TextSelection } from 'prosemirror-state';
 import { fieldResultRanges, type FieldResultRange } from './field-results';
 import { inlineNodeRun, runToInlineNodes } from './run-adapter';
 
+const graphemes = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
+
 function targetField(state: EditorState, from: number, to: number): FieldResultRange | undefined {
 	return fieldResultRanges(state.doc).find(
 		(range) =>
@@ -101,9 +103,13 @@ export function replaceSimpleFieldResult(
 export function deleteSimpleFieldResult(state: EditorState, backward: boolean): Transaction | null {
 	const { from, to, empty } = state.selection;
 	if (!empty) return replaceSimpleFieldResult(state, from, to, '');
-	const start = backward ? from - 1 : from;
-	const end = backward ? to : to + 1;
-	return start >= 0 && end <= state.doc.content.size
-		? replaceSimpleFieldResult(state, start, end, '')
-		: null;
+	const field = fieldResultRanges(state.doc).find(
+		(range) => range.mark.attrs.simple && (backward ? range.to === from : range.from === from),
+	);
+	if (!field) return null;
+	// Positions count UTF-16 units, whereas a deletion can remove one grapheme
+	// containing several units, even when direct formatting splits its runs.
+	const segments = graphemes.segment(field.text)[Symbol.iterator]();
+	if (segments.next().done || !segments.next().done) return null;
+	return replaceSimpleFieldResult(state, field.from, field.to, '');
 }
