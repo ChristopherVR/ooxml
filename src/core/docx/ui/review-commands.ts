@@ -1,7 +1,7 @@
 import { TextSelection } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import { dispatchIsolatedCommand } from './command-history';
-import { moveName } from './review-schema';
+import { inlineTextRevision, clearInlineTextRevisions } from './review-inline-revisions';
 import { trackChangesPluginKey } from './track-changes-mode';
 import { formattingRevision, resolveFormattingRange } from './review-formatting';
 import {
@@ -21,7 +21,7 @@ export interface RevisionRange {
 	move?: string;
 }
 
-/** Merges adjacent text/hardBreak nodes sharing the same revision mark id into one range. */
+/** Merges adjacent inline nodes sharing the same revision identity into one range. */
 export function collectRevisionRanges(doc: import('prosemirror-model').Node): RevisionRange[] {
 	const ranges: RevisionRange[] = [];
 	doc.descendants((node, pos) => {
@@ -35,12 +35,10 @@ export function collectRevisionRanges(doc: import('prosemirror-model').Node): Re
 				to: pos + node.nodeSize - 1,
 				paragraphPos: pos,
 			});
-		if (!node.isText && node.type.name !== 'hardBreak') return;
-		const mark = node.marks.find(
-			(item) => item.type.name === 'insertion' || item.type.name === 'deletion',
-		);
+		if (!node.isInline) return;
+		const revision = inlineTextRevision(node);
 		const format = formattingRevision(node);
-		if (mark && format)
+		if (revision && format)
 			ranges.push({
 				id: format.id,
 				kind: 'formatChange',
@@ -48,11 +46,15 @@ export function collectRevisionRanges(doc: import('prosemirror-model').Node): Re
 				from: pos,
 				to: pos + node.nodeSize,
 			});
-		if (!mark && !format) return;
-		const kind = mark ? (mark.type.name === 'insertion' ? 'insert' : 'delete') : 'formatChange';
-		const id = String(mark?.attrs.id ?? format!.id);
-		const move = mark && moveName(mark.attrs.move);
-		const author = String(mark?.attrs.author ?? format!.author);
+		if (!revision && !format) return;
+		const kind = revision
+			? revision.kind === 'insert' || revision.kind === 'moveTo'
+				? 'insert'
+				: 'delete'
+			: 'formatChange';
+		const id = String(revision?.id ?? format!.id);
+		const move = revision?.move?.name;
+		const author = String(revision?.author ?? format!.author);
 		const last = ranges.at(-1);
 		if (
 			last &&
@@ -122,12 +124,14 @@ function resolveRanges(view: EditorView, ranges: RevisionRange[], mode: 'accept'
 		}
 		const removeText = (mode === 'accept') === (range.kind === 'delete');
 		if (removeText) tr = tr.delete(from, to);
-		else
+		else {
+			clearInlineTextRevisions(tr, from, to);
 			tr = tr.removeMark(
 				from,
 				to,
 				view.state.schema.marks[range.kind === 'insert' ? 'insertion' : 'deletion'],
 			);
+		}
 	}
 	return tr.setMeta(trackChangesPluginKey, { tracked: true });
 }

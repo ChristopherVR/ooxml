@@ -1,0 +1,96 @@
+{
+	"applicationVersion": "16.0",
+	"applicationBuild": "16.0.20430",
+	"cases": [
+		{
+			"name": "break-delete-accept",
+			"text": "Before\r\rAfter\r",
+			"revisions": 0,
+			"pictures": 0,
+			"footnotes": 0,
+			"footnoteRevisions": 0,
+			"pages": 1
+		},
+		{
+			"name": "break-delete-reject",
+			"text": "Before\r\f\rAfter\r",
+			"revisions": 0,
+			"pictures": 0,
+			"footnotes": 0,
+			"footnoteRevisions": 0,
+			"pages": 2
+		},
+		{
+			"name": "note-delete-accept",
+			"text": "BeforeAfter\r",
+			"revisions": 0,
+			"pictures": 0,
+			"footnotes": 0,
+			"footnoteRevisions": 0,
+			"pages": 1
+		},
+		{
+			"name": "note-delete-reject",
+			"text": "Before\u0002After\r",
+			"revisions": 0,
+			"pictures": 0,
+			"footnotes": 1,
+			"footnoteRevisions": 1,
+			"pages": 1
+		},
+		{
+			"name": "note-insert-accept",
+			"text": "Before\u0002After\r",
+			"revisions": 0,
+			"pictures": 0,
+			"footnotes": 1,
+			"footnoteRevisions": 1,
+			"pages": 1
+		},
+		{
+			"name": "note-insert-reject",
+			"text": "BeforeAfter\r",
+			"revisions": 0,
+			"pictures": 0,
+			"footnotes": 0,
+			"footnoteRevisions": 0,
+			"pages": 1
+		},
+		{
+			"name": "picture-delete-accept",
+			"text": "BeforeAfter\r",
+			"revisions": 0,
+			"pictures": 0,
+			"footnotes": 0,
+			"footnoteRevisions": 0,
+			"pages": 1
+		},
+		{
+			"name": "picture-delete-reject",
+			"text": "Before/After\r",
+			"revisions": 0,
+			"pictures": 1,
+			"footnotes": 0,
+			"footnoteRevisions": 0,
+			"pages": 1
+		},
+		{
+			"name": "picture-insert-accept",
+			"text": "Before/After\r",
+			"revisions": 0,
+			"pictures": 1,
+			"footnotes": 0,
+			"footnoteRevisions": 0,
+			"pages": 1
+		},
+		{
+			"name": "picture-insert-reject",
+			"text": "BeforeAfter\r",
+			"revisions": 0,
+			"pictures": 0,
+			"footnotes": 0,
+			"footnoteRevisions": 0,
+			"pages": 1
+		}
+	]
+}

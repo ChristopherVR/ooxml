@@ -1,0 +1,216 @@
+{
+	"applicationVersion": "16.0",
+	"applicationBuild": "16.0.20430",
+	"cases": [
+		{
+			"name": "break-insert",
+			"before": {
+				"text": "BeforeAfter\r",
+				"revisions": 0,
+				"revisionTypes": [],
+				"pictures": 0,
+				"footnotes": 0,
+				"pages": 1
+			},
+			"tracked": {
+				"text": "Before\r\f\rAfter\r",
+				"revisions": 1,
+				"revisionTypes": [1],
+				"pictures": 0,
+				"footnotes": 0,
+				"pages": 2
+			},
+			"accepted": {
+				"text": "Before\r\f\rAfter\r",
+				"revisions": 0,
+				"revisionTypes": [],
+				"pictures": 0,
+				"footnotes": 0,
+				"pages": 2
+			},
+			"rejected": {
+				"text": "BeforeAfter\r",
+				"revisions": 0,
+				"revisionTypes": [],
+				"pictures": 0,
+				"footnotes": 0,
+				"pages": 1
+			}
+		},
+		{
+			"name": "break-delete",
+			"before": {
+				"text": "Before\r\f\rAfter\r",
+				"revisions": 0,
+				"revisionTypes": [],
+				"pictures": 0,
+				"footnotes": 0,
+				"pages": 2
+			},
+			"tracked": {
+				"text": "Before\r\f\rAfter\r",
+				"revisions": 1,
+				"revisionTypes": [2],
+				"pictures": 0,
+				"footnotes": 0,
+				"pages": 2
+			},
+			"accepted": {
+				"text": "Before\r\rAfter\r",
+				"revisions": 0,
+				"revisionTypes": [],
+				"pictures": 0,
+				"footnotes": 0,
+				"pages": 1
+			},
+			"rejected": {
+				"text": "Before\r\f\rAfter\r",
+				"revisions": 0,
+				"revisionTypes": [],
+				"pictures": 0,
+				"footnotes": 0,
+				"pages": 2
+			}
+		},
+		{
+			"name": "picture-insert",
+			"before": {
+				"text": "BeforeAfter\r",
+				"revisions": 0,
+				"revisionTypes": [],
+				"pictures": 0,
+				"footnotes": 0,
+				"pages": 1
+			},
+			"tracked": {
+				"text": "Before/After\r",
+				"revisions": 1,
+				"revisionTypes": [1],
+				"pictures": 1,
+				"footnotes": 0,
+				"pages": 1
+			},
+			"accepted": {
+				"text": "Before/After\r",
+				"revisions": 0,
+				"revisionTypes": [],
+				"pictures": 1,
+				"footnotes": 0,
+				"pages": 1
+			},
+			"rejected": {
+				"text": "BeforeAfter\r",
+				"revisions": 0,
+				"revisionTypes": [],
+				"pictures": 0,
+				"footnotes": 0,
+				"pages": 1
+			}
+		},
+		{
+			"name": "picture-delete",
+			"before": {
+				"text": "Before/After\r",
+				"revisions": 0,
+				"revisionTypes": [],
+				"pictures": 1,
+				"footnotes": 0,
+				"pages": 1
+			},
+			"tracked": {
+				"text": "Before/After\r",
+				"revisions": 1,
+				"revisionTypes": [2],
+				"pictures": 1,
+				"footnotes": 0,
+				"pages": 1
+			},
+			"accepted": {
+				"text": "BeforeAfter\r",
+				"revisions": 0,
+				"revisionTypes": [],
+				"pictures": 0,
+				"footnotes": 0,
+				"pages": 1
+			},
+			"rejected": {
+				"text": "Before/After\r",
+				"revisions": 0,
+				"revisionTypes": [],
+				"pictures": 1,
+				"footnotes": 0,
+				"pages": 1
+			}
+		},
+		{
+			"name": "note-insert",
+			"before": {
+				"text": "BeforeAfter\r",
+				"revisions": 0,
+				"revisionTypes": [],
+				"pictures": 0,
+				"footnotes": 0,
+				"pages": 1
+			},
+			"tracked": {
+				"text": "Before\u0002After\r",
+				"revisions": 1,
+				"revisionTypes": [1],
+				"pictures": 0,
+				"footnotes": 1,
+				"pages": 1
+			},
+			"accepted": {
+				"text": "Before\u0002After\r",
+				"revisions": 0,
+				"revisionTypes": [],
+				"pictures": 0,
+				"footnotes": 1,
+				"pages": 1
+			},
+			"rejected": {
+				"text": "BeforeAfter\r",
+				"revisions": 0,
+				"revisionTypes": [],
+				"pictures": 0,
+				"footnotes": 0,
+				"pages": 1
+			}
+		},
+		{
+			"name": "note-delete",
+			"before": {
+				"text": "Before\u0002After\r",
+				"revisions": 0,
+				"revisionTypes": [],
+				"pictures": 0,
+				"footnotes": 1,
+				"pages": 1
+			},
+			"tracked": {
+				"text": "Before\u0002After\r",
+				"revisions": 1,
+				"revisionTypes": [2],
+				"pictures": 0,
+				"footnotes": 1,
+				"pages": 1
+			},
+			"accepted": {
+				"text": "BeforeAfter\r",
+				"revisions": 0,
+				"revisionTypes": [],
+				"pictures": 0,
+				"footnotes": 0,
+				"pages": 1
+			},
+			"rejected": {
+				"text": "Before\u0002After\r",
+				"revisions": 0,
+				"revisionTypes": [],
+				"pictures": 0,
+				"footnotes": 1,
+				"pages": 1
+			}
+		}
+	]
+}

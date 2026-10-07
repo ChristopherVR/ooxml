@@ -145,9 +145,21 @@ and page/column breaks retain run properties and revision history through editor
 conversion, peer synchronization and export. Review visibility covers inline
 atoms as well as text, using the same core policy as layout. Browser checks cover
 pictures, breaks, equations and note references across all six bindings. The
-visibility rule overrides node-view display styles. Atom revision resolution,
-recording and prior formatting display still require dedicated editor coverage;
-these checks do not establish native Word object-review parity.
+visibility rule overrides node-view display styles. Shared editor Review commands
+now enumerate and resolve inline-object text revisions, including linked moves,
+isolated undo/redo, read-only access and reused IDs from different authors. Yjs
+peers converge on acceptance/rejection and local undo. Ten native Word comparisons
+cover body picture/note insertion/deletion and page-break deletion. Desktop Word
+reopened all ten editor exports with matching body content, object counts and
+pagination and zero body revisions. The check exposed pending revisions inside
+retained notes, which remain unfinished. Picture parsing now carries its run
+property basis; removing a picture may remove its own opaque properties without
+weakening the guard for unsupported retained text or copying picture properties
+onto neighboring text. Native page-break
+insertion also revises paragraph marks, which remain outside this slice. Atom
+format-revision resolution, recording, prior formatting display and related
+non-body revision cleanup still require dedicated coverage. These checks do not
+establish complete native Word object-review parity.
 
 Print Layout now projects prior run and paragraph formatting through the same
 core helpers, including table cells, section stories and notes. Native before

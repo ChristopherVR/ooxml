@@ -1,11 +1,15 @@
 // @vitest-environment jsdom
 import { expect, it } from 'vitest';
+import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import JSZip from 'jszip';
 import { createDocument, loadDocx, saveDocx, type TextRun } from 'ooxml-core/docx';
 import { EditorState, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { modelToDoc, docToModel } from './model-adapter';
 import { reviewDisplayPlugin, type ReviewDisplayMode } from './review-display';
 import { imageNodeView, ImageMediaCache } from './image-media';
+import { acceptAllChanges, rejectAllChanges } from './review-commands';
 
 const atoms: [string, TextRun][] = [
 	['.dve-break-marker', { text: '', break: 'page' }],
@@ -108,3 +112,53 @@ it('retains page-break revision history through an editor text edit and package 
 		runs: [{ text: '! Before' }, { break: 'page', revision: { kind: 'insert', author: 'Ada' } }],
 	});
 });
+
+for (const name of [
+	'picture-insert',
+	'picture-delete',
+	'note-insert',
+	'note-delete',
+	'break-delete',
+])
+	for (const mode of ['accept', 'reject'] as const)
+		it(`exports native ${name} after editor ${mode} without leaking removed picture properties`, async () => {
+			const loaded = await loadDocx(
+				await readFile(resolve('../core/docx/__fixtures__/review-inline', `${name}-tracked.docx`)),
+			);
+			const host = document.body.appendChild(document.createElement('div'));
+			const view = new EditorView(host, {
+				state: EditorState.create({ doc: modelToDoc(loaded.model) }),
+			});
+			try {
+				expect((mode === 'accept' ? acceptAllChanges : rejectAllChanges)(view)).toBe(true);
+				const model = docToModel(view.state.doc, loaded.model);
+				const bytes = await loaded.save(model);
+				const reopened = (await loadDocx(bytes)).model;
+				const paragraphs = reopened.blocks.flatMap((block) =>
+					block.type === 'paragraph' ? [block] : [],
+				);
+				expect(paragraphs.flatMap((paragraph) => paragraph.runs).some((run) => run.revision)).toBe(
+					false,
+				);
+				const zip = await JSZip.loadAsync(bytes);
+				if (name.startsWith('picture')) {
+					const retained = (name === 'picture-insert') === (mode === 'accept');
+					const xml = await zip.file('word/document.xml')!.async('string');
+					if (retained) {
+						expect(xml).toContain('noProof');
+						expect(await zip.file('word/media/image1.png')!.async('uint8array')).toEqual(
+							loaded.media!.get('word/media/image1.png'),
+						);
+					} else expect(xml).not.toContain('noProof');
+					expect(
+						paragraphs
+							.flatMap((paragraph) => paragraph.runs)
+							.filter((run) => !run.image)
+							.every((run) => !run.sourceRunPropertiesXml?.includes('noProof')),
+					).toBe(true);
+				}
+			} finally {
+				view.destroy();
+				host.remove();
+			}
+		});

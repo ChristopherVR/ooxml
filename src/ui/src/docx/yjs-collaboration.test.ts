@@ -1,7 +1,12 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { loadDocx } from 'ooxml-core/docx';
-import { collectRevisionRanges, rejectRevisionRange } from './review-commands';
+import {
+	collectRevisionRanges,
+	rejectRevisionRange,
+	acceptAllChanges,
+	rejectAllChanges,
+} from './review-commands';
 import { afterEach, describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
 import { createDocument, saveDocx } from 'ooxml-core/docx';
@@ -121,6 +126,21 @@ describe('Word Yjs collaboration', () => {
 				],
 			});
 		}
+		const tracked = viewOf(a).state.doc;
+		expect(acceptAllChanges(viewOf(a))).toBe(true);
+		expect(viewOf(a).state.doc.eq(viewOf(b).state.doc)).toBe(true);
+		expect(collectRevisionRanges(viewOf(b).state.doc)).toEqual([]);
+		expect(a.documentModel!.blocks[0]).toMatchObject({
+			runs: [{ break: 'page' }, { text: 'Keep!' }],
+		});
+		expect(wordYjsPluginKey.getState(viewOf(a).state)!.undo()).toBe(true);
+		expect(viewOf(b).state.doc.eq(tracked)).toBe(true);
+		expect(rejectAllChanges(viewOf(b))).toBe(true);
+		expect(viewOf(a).state.doc.eq(viewOf(b).state.doc)).toBe(true);
+		expect(collectRevisionRanges(viewOf(a).state.doc)).toEqual([]);
+		expect(a.documentModel!.blocks[0]).toMatchObject({ runs: [{ image: {} }, { text: 'Keep!' }] });
+		expect(wordYjsPluginKey.getState(viewOf(b).state)!.undo()).toBe(true);
+		expect(viewOf(a).state.doc.eq(tracked)).toBe(true);
 	});
 	it('keeps Original formatting display local without changing shared content or undo', async () => {
 		const bytes = new Uint8Array(

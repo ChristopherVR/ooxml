@@ -230,8 +230,10 @@ export function buildInlineContent(
 		return runNodes(
 			doc,
 			run,
-			!run.equation && source?.equation ? undefined : source,
-			!run.equation && old && isEquationElement(old) ? undefined : old,
+			(!run.equation && source?.equation) || (!run.image && source?.image) ? undefined : source,
+			(!run.equation && old && isEquationElement(old)) || (!run.image && source?.image)
+				? undefined
+				: old,
 			opens.get(index) ?? [],
 			closes.get(index) ?? [],
 			allocator,

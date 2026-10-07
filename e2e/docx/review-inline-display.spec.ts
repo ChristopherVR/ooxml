@@ -82,4 +82,22 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 				.filter((run) => run.image || run.break || run.noteReference || run.equation)
 				.map((run) => run.revision!.kind),
 		).toEqual(['insert', 'delete', 'moveFrom', 'moveTo']);
+		await editor.getByRole('button', { name: 'Accept all', exact: true }).click();
+		await expect(body.locator('.dve-picture')).toBeVisible();
+		await expect(body.locator('.dve-equation')).toBeVisible();
+		await expect(body.locator('.dve-break-marker')).toHaveCount(0);
+		await expect(body.locator('.dve-note-reference')).toHaveCount(0);
+		await body.press('Control+z');
+		expect(
+			await editor.evaluate((element) => (element as DocxEditorElement).documentModel),
+		).toEqual(next);
+		await editor.getByRole('button', { name: 'Reject all', exact: true }).click();
+		await expect(body.locator('.dve-picture')).toHaveCount(0);
+		await expect(body.locator('.dve-equation')).toHaveCount(0);
+		await expect(body.locator('.dve-break-marker')).toBeVisible();
+		await expect(body.locator('.dve-note-reference')).toBeVisible();
+		await body.press('Control+z');
+		expect(
+			await editor.evaluate((element) => (element as DocxEditorElement).documentModel),
+		).toEqual(next);
 	});

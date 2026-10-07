@@ -28,6 +28,22 @@ function rejectUnsafeRunSegmentation(
 	oldRuns: XmlElement[],
 ): void {
 	if (!base || !oldRuns.some(runHasUnknownProperties)) return;
+	// Removing a picture deliberately removes its own opaque properties. Retained text must
+	// still pass the ordinary preservation guard; never reinterpret an unknown text run as an object.
+	if (
+		oldRuns.length === base.runs.length &&
+		oldRuns.every((node, index) => {
+			if (!runHasUnknownProperties(node)) return true;
+			const image = base.runs[index]?.image;
+			return (
+				image &&
+				!paragraph.runs.some(
+					(run) => run.image?.relId === image.relId && run.image?.partName === image.partName,
+				)
+			);
+		})
+	)
+		return;
 	// Imported opaque properties or a rejected format revision supply a complete XML basis.
 	// The writer imports that basis before applying modeled edits, independently of source slots.
 	if (

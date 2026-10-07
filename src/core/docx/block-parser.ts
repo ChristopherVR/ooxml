@@ -69,9 +69,19 @@ function parseRun(node: XmlElement, revision?: Revision): TextRun {
 	const content = runContent(node);
 	const drawing = findDrawing(content);
 	if (drawing && activeContext) {
-		const run: TextRun = { text: '', image: parseDrawing(drawing, activeContext) };
+		const run: TextRun = {
+			text: '',
+			image: parseDrawing(drawing, activeContext),
+			...parseDirectRunProperties(props),
+		};
+		if (props && runPropertiesHaveUnknownContent(props))
+			run.sourceRunPropertiesXml = buildXml(props);
 		const runRevision = revision ?? runFormatRevision(props);
 		if (runRevision) run.revision = runRevision;
+		if (revision) {
+			const formatRevision = runFormatRevision(props);
+			if (formatRevision) run.formatRevision = formatRevision;
+		}
 		return run;
 	}
 	let breakKind: 'page' | 'column' | undefined;
